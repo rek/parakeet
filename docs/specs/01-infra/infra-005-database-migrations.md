@@ -205,6 +205,18 @@ CREATE TABLE performance_metrics (
   sets_per_muscle JSONB  -- { quads: 2, glutes: 2, hamstrings: 1 }
 );
 
+-- Warmup protocol per lift (defaults to 'standard' if no row)
+CREATE TABLE warmup_configs (
+  id           UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id      UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  lift         TEXT NOT NULL CHECK (lift IN ('squat', 'bench', 'deadlift')),
+  protocol     TEXT NOT NULL DEFAULT 'standard'
+               CHECK (protocol IN ('standard', 'minimal', 'extended', 'empty_bar', 'custom')),
+  custom_steps JSONB,  -- [{ pct: number, reps: number }] only when protocol = 'custom'
+  updated_at   TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  UNIQUE(user_id, lift)
+);
+
 -- Future recovery data (stub)
 CREATE TABLE recovery_snapshots (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -230,6 +242,7 @@ CREATE INDEX idx_session_logs_user_time ON session_logs(user_id, logged_at DESC)
 CREATE INDEX idx_soreness_session ON soreness_checkins(session_id);
 CREATE INDEX idx_perf_metrics_user_lift_time ON performance_metrics(user_id, lift, recorded_at DESC);
 CREATE INDEX idx_auxiliary_assignments_block ON auxiliary_assignments(user_id, program_id, block_number);
+CREATE INDEX idx_warmup_configs_user ON warmup_configs(user_id);
 ```
 
 ## Dependencies

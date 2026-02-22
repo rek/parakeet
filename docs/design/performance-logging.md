@@ -6,7 +6,7 @@
 
 ## Overview
 
-Performance Logging lets users record their actual workout results — weights lifted, reps completed, and perceived effort (RPE) — directly within the context of their planned session. The logged data drives program adaptation suggestions and long-term progress tracking.
+Performance Logging lets users record their actual workout results — weights lifted, reps completed, and perceived effort (RPE) — directly within the context of their planned session. The logged data drives program adaptation suggestions, 1RM estimation, and long-term progress tracking.
 
 ## Problem Statement
 
@@ -28,13 +28,13 @@ Paper training logs and generic note apps are disconnected from the planned prog
 
 1. User opens the app and sees "Today" screen with the session card for the current day
 2. User taps "Start Workout"
-3. App shows the session screen: lift name, intensity type, and all planned sets pre-filled with target weight, reps, and RPE
+3. App shows the session screen: lift name, intensity type, and all planned sets pre-filled with target weight, reps, and RPE target
 4. User completes set 1 → taps the checkmark on the set row
 5. If weight or reps differed from plan, user edits the values inline (tap to edit, numeric keyboard)
 6. User optionally sets RPE via a slider (6.0 to 10.0, increments of 0.5)
 7. User repeats for all sets
 8. User taps "Complete Workout"
-9. App shows a completion summary: planned vs. actual volume, session RPE, any performance flags
+9. App shows a completion summary: planned vs. actual volume, session RPE, any performance flags, and any stars earned (new PRs)
 10. App navigates back to Today screen (next session shown)
 
 **Alternative Flows:**
@@ -42,14 +42,33 @@ Paper training logs and generic note apps are disconnected from the planned prog
 - User starts logging mid-session (forgot to tap Start): user can still log all sets and submit; `started_at` defaults to the first set entry time
 - User dropped the weight mid-session: simply edit the weight field on the affected set before checking it off
 - User did more reps than planned (e.g., did 8 instead of 5 on a rep day): enter actual reps; the system notes this as over-performance
-- User skips a session: tap "Skip" with an optional reason; session is marked skipped and the next planned session surfaces on Tomorrow
+- User skips a session: tap "Skip" with an optional reason; session is marked skipped and the next planned session surfaces
+
+**RPE Policy:**
+
+RPE is **optional per set** and optional at the session summary level. The system uses RPE data when available to improve 1RM estimates and detect loading trends, but never blocks progress if RPE is not entered. When RPE is not logged for a set, the set is still counted toward volume.
+
+**No Backfill:**
+
+Sessions can only be logged on the day they are scheduled (or makeup days within the same week — see program-generation). There is no mechanism to retroactively log a session for a past date.
+
+**RPE-Based 1RM Estimation:**
+
+When a set is logged with a high RPE (≥ 8.5) and the system determines conditions are reliable (no active disruption, soreness ≤ 2, the day's total completed sets are within normal range), that set is used as a strong signal for 1RM estimation:
+
+- Estimated 1RM = `weight × (1 + reps / 30)` (Epley formula), scaled by RPE confidence factor
+- A set at RPE 10 with 1 rep = direct 1RM measurement (highest confidence)
+- A set at RPE 8.5 with 5 reps = high-confidence estimate
+- Multiple qualifying sets per session are averaged, weighted by confidence
+
+This estimated 1RM is stored alongside the session log and used to pre-populate maxes when the user starts a new program cycle — eliminating the need to manually re-enter or remember their best lifts.
 
 ### Visual Design Notes
 
 - Set rows: each row shows set number, planned weight (grey), actual weight input (black/white), planned reps, actual reps input, RPE selector
 - Completion state: checked sets turn green with a subtle strikethrough on planned values
 - RPE selector: horizontal slider with half-point increments, shows label ("Easy", "Hard", "Max effort") at key values
-- Session summary card: large planned vs. actual volume bars (visual), completion percentage badge, note field for free text
+- Session summary card: large planned vs. actual volume bars (visual), completion percentage badge, note field for free text, stars earned for any new PRs
 - Active edge case banner (if any): amber banner at top of session screen ("Knee issue active — Squat weight auto-reduced 20%")
 
 ## User Benefits
@@ -60,6 +79,8 @@ Paper training logs and generic note apps are disconnected from the planned prog
 
 **Foundation for adaptation**: Every logged session contributes to the performance data the system uses to suggest formula adjustments, making the program smarter over time.
 
+**Automatic max tracking**: The system continuously estimates 1RM from logged sets. Users never need to remember or recalculate their maxes manually.
+
 **Searchable history**: All past sessions are accessible in the History tab, filterable by lift and date, with planned vs. actual shown for each.
 
 ## Implementation Status
@@ -68,11 +89,13 @@ Paper training logs and generic note apps are disconnected from the planned prog
 
 - Pre-filled set rows from planned session data
 - Inline weight and rep editing per set
-- RPE slider per set (optional) and per session (summary)
+- RPE slider per set (optional) and per session (summary, also optional)
 - Session start/end timestamp capture
 - Planned vs. actual volume computation on completion
 - Session skip with reason
+- RPE-based 1RM estimation per set (with confidence gating)
 - History view with lift and date filters
+- PR detection and star display at session completion (see [achievements.md](./achievements.md))
 
 ## Future Enhancements
 
@@ -85,11 +108,6 @@ Paper training logs and generic note apps are disconnected from the planned prog
 - Velocity tracking integration (via barbell velocity trackers)
 - Correlation overlay on history view (e.g., show sleep score for that day alongside performance)
 
-## Open Questions
-
-- [ ] Should RPE be required or optional per set? (Current plan: optional per set, optional summary RPE)
-- [ ] How many days back can a user backfill a missed session log?
-
 ## References
 
-- Related Design Docs: [program-generation.md](./program-generation.md), [disruption-management.md](./disruption-management.md)
+- Related Design Docs: [program-generation.md](./program-generation.md), [disruption-management.md](./disruption-management.md), [achievements.md](./achievements.md)

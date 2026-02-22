@@ -43,6 +43,9 @@ interface JITInput {
 
   // Active disruptions
   activeDisruptions: TrainingDisruption[]
+
+  // Warmup protocol for this lift (from warmup_configs, falls back to 'standard')
+  warmupConfig: WarmupProtocol
 }
 ```
 
@@ -53,6 +56,7 @@ interface JITOutput {
   sessionId: string
   generatedAt: Date
   mainLiftSets: PlannedSet[]
+  warmupSets: WarmupSet[]     // generated from mainLiftSets[0].weight_kg after Step 7
   auxiliaryWork: AuxiliaryWork[]
   volumeModifier: number      // final volume scale applied (0.0–1.2)
   intensityModifier: number   // final intensity scale applied (0.85–1.05)
@@ -146,6 +150,17 @@ Compute intensityModifier = final intensityMultiplier
 Assemble JITOutput
 ```
 
+**Step 8 — Warmup generation**
+```
+If mainLiftSets is non-empty and not skippedMainLift:
+  workingWeight = mainLiftSets[0].weight_kg
+  warmupSets = generateWarmupSets(workingWeight, warmupConfig)
+  // Special case: recovery mode (soreness 5) → force 'minimal' protocol
+  // Special case: workingWeight < 40kg → force 'minimal' protocol
+Else:
+  warmupSets = []  // no warmup if main lift is skipped
+```
+
 ### Supabase integration (called from app after soreness check-in)
 
 ```typescript
@@ -188,4 +203,5 @@ async function generateAndSaveSession(sessionId: string): Promise<JITOutput> {
 - [engine-006-mrv-mev-calculator.md](./engine-006-mrv-mev-calculator.md)
 - [engine-008-auxiliary-exercise-rotation.md](./engine-008-auxiliary-exercise-rotation.md)
 - [engine-009-soreness-adjuster.md](./engine-009-soreness-adjuster.md)
-- [infra-002-supabase-setup.md](../01-infra/infra-002-supabase-setup.md)
+- [engine-010-warmup-calculator.md](./engine-010-warmup-calculator.md)
+- [../01-infra/infra-002-supabase-setup.md](../01-infra/infra-002-supabase-setup.md)

@@ -29,6 +29,7 @@ Intermediate powerlifters understand periodization concepts but struggle to tran
 - Adjustments based on soreness ratings
 - Volume caps from MRV status
 - Intensity adjustments based on recent RPE trends
+- Time since last session of this lift type (recency factor)
 - Auxiliary exercises for the block
 
 This means the program adapts automatically as the user's state changes across the cycle. A high-soreness day gets lighter volume; a week where the lifter has already accumulated a lot of volume gets capped automatically.
@@ -40,10 +41,11 @@ This means the program adapts automatically as the user's state changes across t
 **Primary Flow:**
 
 1. User enters 1RM or 3RM for Squat, Bench, Deadlift (all in kg)
-2. User selects program length (10/12/14 weeks) and training days (3 or 4/week)
+2. User selects program length (6–14 weeks) and training days (3 or 4/week)
 3. User selects start date
 4. App shows a preview of Week 1 — session types and auxiliary exercises (no weights, since those are JIT)
-5. User activates the program → Today tab shows the first upcoming session
+5. User enters body weight (kg) — recorded as the starting body weight for this cycle
+6. User activates the program → Today tab shows the first upcoming session
 
 **Daily Workout Flow:**
 
@@ -54,13 +56,37 @@ This means the program adapts automatically as the user's state changes across t
 5. User logs each set (weight in kg, reps, optional RPE)
 6. Session completes → performance metrics computed locally → written to Supabase
 
+**Missed Session Handling:**
+
+- If a user misses a session (e.g., misses Monday's squat), they can still complete that workout **any day within the same week, up until the next scheduled session of the same lift type**
+- Example: missed Monday squat → can make it up Tuesday, Wednesday, or Thursday if the next squat isn't until Friday
+- If the makeup window passes and the session was not completed, it is marked as missed
+- The JIT generator accounts for missed sessions when computing the next session of that lift type: it factors in how long ago the last successful session was, how much volume was accumulated, and conservatively limits the load increment for the next session (a missed session cannot be treated as a full recovery week)
+- Weeks do not "wait" — the calendar advances normally regardless of whether sessions were completed
+
 **Regeneration Flow:**
 
-1. User updates their maxes after completing a training cycle
-2. User taps "New Program" from Settings
-3. App generates a new program version using updated maxes
+When the user completes a training cycle, the system automatically estimates new maxes from actual performance data collected throughout the cycle — the user does not need to recall or input maxes from memory.
+
+**How auto-max estimation works:**
+
+1. For each lift, the system collects all qualifying sets from the completed cycle — sets where:
+   - RPE was logged at ≥ 8.5, **or**
+   - The set was the final working set of a heavy day (treated as near-maximal by definition)
+   - No active disruption was flagged on that session
+   - Cumulative sets that day were within a normal range (not excessively fatigued)
+   - Soreness check-in score was ≤ 2 for the primary muscle group
+2. Each qualifying set produces an estimated 1RM (Epley + RPE confidence scaling — see [performance-logging.md](./performance-logging.md))
+3. The highest-confidence estimates are averaged, weighted toward the most recent sessions in the cycle
+4. This produces a **system-estimated 1RM** for each lift
+
+When the user taps "New Program":
+1. App shows the estimated new maxes pre-populated ("Based on your training this cycle: Squat 145kg, Bench 105kg, Deadlift 170kg")
+2. User can confirm or manually adjust any value before generating the new program
+3. App generates the new program version using the confirmed maxes
 4. Previous program is archived (full history preserved)
 5. User previews and activates
+6. App asks for current body weight (kg) again — recorded as the starting body weight for the new cycle
 
 ### Visual Design Notes
 
@@ -69,6 +95,7 @@ This means the program adapts automatically as the user's state changes across t
 - Sessions without JIT data show a "not yet generated" state — no weight preview
 - Sessions with JIT data (already opened) show a summary of the generated sets
 - All weights displayed in kg throughout the app
+- Missed sessions are shown with a grey overlay and "Missed" badge; makeup sessions (within window) show an amber "Makeup" badge
 
 ## User Benefits
 
@@ -76,7 +103,9 @@ This means the program adapts automatically as the user's state changes across t
 
 **Zero calculation required**: The app handles all percentage-to-weight conversions, rounding to the nearest 2.5kg, progressive loading changes, and MRV/MEV capping.
 
-**Transparent methodology**: Every session shows why adjustments were made: "Moderate soreness — reduced 1 set", "Approaching MRV for quads — volume capped at 3 sets".
+**Transparent methodology**: Every session shows why adjustments were made: "Moderate soreness — reduced 1 set", "Approaching MRV for quads — volume capped at 3 sets", "Last squat was 9 days ago — conservative load applied".
+
+**Auto-estimated maxes**: At the end of each cycle, maxes are pre-filled from actual performance data. No spreadsheets, no guessing — the system already knows what the user lifted.
 
 **Full history preserved**: Each program generation creates a new versioned record. All completed sessions and their actual weights are kept permanently.
 
@@ -90,36 +119,43 @@ Each main lift has a pool of 8 auxiliary exercises. Two are active each block, r
 
 Users can reorder the pool (Settings → Auxiliary Exercises) or lock individual block assignments.
 
+## Program Length
+
+Supported lengths: **6 to 14 weeks**, in 2-week increments (6, 8, 10, 12, 14). The default is 10 weeks (standard Cube Method cycle). Shorter programs (6–8 weeks) function as mini-cycles or bridge programs and use a compressed block structure:
+- 6 weeks: 1 block per lift type (2 weeks each) + 2-week deload optional
+- 8 weeks: ~2.5 weeks per block + deload
+
+The JIT generator adapts to the program length — it knows which block the session belongs to and applies the appropriate formula config regardless of total cycle length.
+
 ## Implementation Status
 
 ### Planned
 
 - 1RM and 3RM input with live Epley estimation (kg)
+- Program length selector: 6–14 weeks (2-week increments)
 - Structural program generation (no planned sets at creation)
-- JIT session generation at workout time
+- JIT session generation at workout time with recency factor (time since last lift of this type)
 - Soreness check-in gates JIT generation
 - MRV/MEV-aware volume capping
 - Auxiliary exercise pool + block rotation
 - Performance-adjusted intensity (RPE trend detection)
+- Missed session detection + within-week makeup window
+- Conservative load adjustment after missed sessions (recency factor)
 - Program preview before activation
 - Program versioning and history
+- Auto-max estimation from cycle data at regeneration time
+- Body weight capture at cycle start
 
 ## Future Enhancements
 
 **Phase 2:**
-- Auto-regeneration prompt after each completed block with suggested max increases
 - Competition date targeting (auto-calculate program length to peak on a specific date)
 
 **Long-term:**
 - Support for alternative programming systems (5/3/1, GZCLP, Juggernaut)
 
-## Open Questions
-
-- [ ] Should the app support programs shorter than 10 weeks (e.g., a 6-week mini-cycle)?
-- [ ] What should happen if the user doesn't complete all sessions in a week — does the next week start anyway, or does it wait?
-
 ## References
 
-- Related Design Docs: [user-onboarding.md](./user-onboarding.md), [formula-management.md](./formula-management.md), [volume-management.md](./volume-management.md)
+- Related Design Docs: [user-onboarding.md](./user-onboarding.md), [formula-management.md](./formula-management.md), [volume-management.md](./volume-management.md), [performance-logging.md](./performance-logging.md)
 - External: Brandon Lilly's Cube Method (10-week concurrent periodization)
 - Specs: [engine-007-jit-session-generator.md](../specs/engine-007-jit-session-generator.md), [engine-004-program-generator.md](../specs/engine-004-program-generator.md)

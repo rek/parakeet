@@ -11,12 +11,14 @@ The live workout logging screen where users check off sets, adjust weights and r
 
 **`apps/mobile/app/session/[sessionId].tsx`:**
 - On mount:
-  1. Fetch `GET /v1/sessions/:sessionId` for planned sets
-  2. Call `POST /v1/sessions/:sessionId/start` to mark in_progress
-  3. Initialize Zustand `sessionStore` with planned sets as starting values
+  1. Fetch session from Supabase — `planned_sets` already populated by JIT (run on soreness screen)
+  2. Fetch warmup config for this lift and generate warmup sets via `generateWarmupSets()`
+  3. Call `startSession()` to mark in_progress
+  4. Initialize Zustand `sessionStore` with planned sets as starting values
 - Screen layout:
   - Header: lift name, intensity type badge, block/week info
-  - Scrollable list of `SetRow` components (one per planned set)
+  - **Collapsible warmup section** above working sets (see [mobile-013-warmup-display.md](./mobile-013-warmup-display.md))
+  - Scrollable list of `SetRow` components (one per planned working set)
   - "Complete Workout" sticky footer button (enabled after at least 1 set is checked)
 
 **`apps/mobile/components/training/SetRow.tsx`:**
@@ -48,5 +50,6 @@ The live workout logging screen where users check off sets, adjust weights and r
 ## Dependencies
 
 - [mobile-004-today-screen.md](./mobile-004-today-screen.md)
-- [sessions-003-session-completion-api.md](../07-sessions/sessions-003-session-completion-api.md)
+- [mobile-013-warmup-display.md](./mobile-013-warmup-display.md)
+- [../07-sessions/sessions-003-session-completion-api.md](../07-sessions/sessions-003-session-completion-api.md)
 - [mobile-009-offline-sync.md](./mobile-009-offline-sync.md)

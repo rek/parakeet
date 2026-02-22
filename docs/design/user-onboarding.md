@@ -21,6 +21,12 @@ Strength training apps typically fail at onboarding in one of two ways: they ask
 
 **Desired outcome:** A new user completes onboarding in under 5 minutes, with a program that is visibly personalized to their actual strength, and understands exactly what Parakeet will do for them before they commit.
 
+## Design Principles
+
+**Goal is implicit, not collected.** Parakeet's goal is always stronger lifts — higher numbers in Squat, Bench, and Deadlift. There is no goal selection screen because the app serves one purpose. Offering goals like "muscle building" or "general fitness" would be misleading.
+
+**Onboarding completion requires program activation.** Users cannot explore the app before completing onboarding. The Today tab, session screen, and History tab are gated until a program is active. This ensures the first experience is the intended one: a structured workout.
+
 ## User Experience
 
 ### User Flows
@@ -43,9 +49,10 @@ Strength training apps typically fail at onboarding in one of two ways: they ask
    - "Next" button becomes active when all three lifts have valid input
 
 3. **Program Settings screen** (`/onboarding/program-settings`)
-   - Duration: segmented control "10 weeks / 12 weeks / 14 weeks" (default: 10)
+   - Duration: segmented control "6 / 8 / 10 / 12 / 14 weeks" (default: 10)
    - Days per week: picker, 3 or 4 (default: 3)
    - Start date: date picker (default: next Monday)
+   - Body weight: numeric input in kg — "Current body weight (kg)" — required
    - "Preview My Program" CTA button
 
 4. **Program Preview screen** (`/onboarding/review`)
@@ -68,11 +75,19 @@ Strength training apps typically fail at onboarding in one of two ways: they ask
 
 - If user has signed in before (Supabase user ID matches existing `profiles` row), skip all onboarding and navigate directly to the Today tab
 
+**New Cycle Body Weight Capture:**
+
+At the start of each new training cycle (including the first), the user enters their current body weight. This is used for WILKS score calculation and trend tracking across cycles. It is prompted:
+- During initial onboarding (Program Settings screen)
+- When activating a new program after completing a cycle (pre-fills from last recorded weight; user can update)
+
+Body weight is stored per cycle — not per session — to track how strength-to-bodyweight ratio changes across training history.
+
 ### Visual Design Notes
 
 - Welcome screen: full-bleed dark background, minimal text, large sign-in buttons
 - Enter Your Lifts: clean white card per lift, toggle switch prominent, estimated 1RM updates with smooth number animation as the user types
-- Program Settings: generous spacing, each control is large and tap-friendly
+- Program Settings: generous spacing, each control is large and tap-friendly; body weight field alongside duration/frequency
 - Program Preview: session cards use the same design as the main app — the user is already seeing their real interface
 
 ## User Benefits
@@ -85,6 +100,8 @@ Strength training apps typically fail at onboarding in one of two ways: they ask
 
 **JIT transparency**: The preview explains that exact weights are calculated fresh each workout based on current data — users understand the system before they use it.
 
+**Body weight tracked from day one**: WILKS score and strength-to-bodyweight trends are available from the first cycle.
+
 ## Implementation Status
 
 ### Planned
@@ -92,11 +109,14 @@ Strength training apps typically fail at onboarding in one of two ways: they ask
 - Google OAuth sign-in via Supabase Auth
 - 1RM / 3RM toggle per lift with live Epley estimation
 - All weights in kilograms
-- Program duration and frequency selection
+- Program duration selection: 6, 8, 10, 12, or 14 weeks
+- Days per week: 3 or 4
 - Start date picker
+- Body weight input (kg) during program setup
 - Program preview before activation (structural view — no planned sets shown)
 - "Don't know maxes" fallback path with kg defaults
 - Returning user fast-path (skip onboarding if profile row exists)
+- Onboarding gating: main app tabs inaccessible until program is activated
 
 ## Future Enhancements
 
@@ -110,12 +130,7 @@ Strength training apps typically fail at onboarding in one of two ways: they ask
 - Import max history from another app (CSV)
 - In-app 1RM estimation protocol: guided warm-up ramp
 
-## Open Questions
-
-- [ ] Should we collect a goal (competition date, general fitness, muscle building) during onboarding to influence program selection in future phases?
-- [ ] What is the minimum viable "onboarding complete" state — must the user activate a program, or can they explore the app first?
-
 ## References
 
-- Related Design Docs: [program-generation.md](./program-generation.md), [volume-management.md](./volume-management.md)
+- Related Design Docs: [program-generation.md](./program-generation.md), [volume-management.md](./volume-management.md), [achievements.md](./achievements.md)
 - Specs: [auth-001-supabase-auth-setup.md](../specs/auth-001-supabase-auth-setup.md), [programs-001-lifter-maxes-api.md](../specs/programs-001-lifter-maxes-api.md)
