@@ -1,0 +1,134 @@
+# Feature: Achievements & Progress Recognition
+
+**Status**: Planned
+
+**Date**: 2026-02-22
+
+## Overview
+
+Achievements gives users visible recognition for training consistency and performance milestones. This includes session streaks, cycle completion badges, per-workout performance stars (new PRs), and a WILKS score page showing strength relative to body weight. These features reinforce positive training habits and create a sense of progression beyond just the numbers.
+
+## Problem Statement
+
+Strength training is a long game. Week-to-week weight increases are small, and it's easy for lifters to feel like they're not progressing — especially during a difficult block or after a disrupted week. Without visible progress markers, motivation suffers.
+
+**Pain points:**
+- Small weight increases (1.25–2.5kg) don't feel like achievements in the moment
+- Completing an entire 10–14 week cycle is a major accomplishment that goes unrecognised in most apps
+- Lifters don't know their WILKS score or how their strength-to-bodyweight ratio has changed
+- Consistency milestones (streaks) are invisible — there's no feedback for showing up every day
+
+**Desired outcome:** Users feel rewarded for consistency and performance, see clear evidence of long-term progress across cycles, and can easily check how strong they are relative to body weight.
+
+## Features
+
+### Cycle Completion Badges
+
+A badge is awarded each time the user completes a full training cycle (activates a program, completes enough of it to be counted as finished).
+
+**Completion threshold:** A cycle is counted as complete when at least 80% of planned sessions are logged (completed or legitimately skipped with a disruption reason). Pure no-shows do not count.
+
+**Badge display:**
+- Badge count shown on the Profile tab with an icon (e.g., medal/trophy)
+- Each badge shows the cycle number, dates, and a summary stat ("Cycle 3 — 12 weeks — Squat up 12.5kg")
+- The first badge is the hardest to earn; the count is a simple, honest measure of commitment
+
+### Session Streak Counter
+
+The streak counter tracks **consecutive weeks with no missed sessions** — specifically, no sessions that were unaccounted for (every session either completed or logged as a disruption).
+
+**Streak rules:**
+- A week counts as "clean" if all scheduled sessions were completed, made up within the allowed window, or logged as a disruption
+- A pure miss (session passed with no log and no disruption report) breaks the streak
+- The streak resets to 0 on a clean miss, not a disruption miss — logging a disruption shows accountability
+- Current streak and longest-ever streak are both shown
+
+**Display:**
+- Streak counter visible on the Today tab (e.g., "🔥 7 weeks clean")
+- Longest streak shown on the Profile tab
+
+### Performance Stars
+
+At the end of each completed session, the app evaluates whether any new personal records were set. Stars are displayed on the session completion screen and logged to the PR history.
+
+**Star types:**
+
+| Star | Trigger |
+|------|---------|
+| **Estimated 1RM PR** | This session's estimated 1RM for a lift is the highest ever recorded for that lift |
+| **Volume PR** | Total volume (sets × reps × weight) for this lift in a single session is the highest ever |
+| **Rep PR at Weight** | Most reps ever logged at a given weight for a specific lift (e.g., "5 reps at 140kg Squat — new rep PR") |
+
+**Rules:**
+- PRs are evaluated per lift (Squat, Bench, Deadlift separately)
+- Only sessions with no active Major disruption are eligible (Minor and Moderate disruptions still count — the lifter showed up)
+- Stars are displayed at session completion with a brief animation; they are then accessible in lift history
+- Multiple stars can be earned in a single session
+
+**Display on session completion:**
+- Stars shown as a stack of cards: "⭐ New Squat Estimated 1RM — 152kg"
+- If no PR: no star card shown (no "you didn't break any records" message)
+
+### WILKS Score Page
+
+The WILKS score is a formula that normalises powerlifting totals (Squat + Bench + Deadlift best) against body weight, allowing fair comparison across weight classes. Parakeet calculates it using the user's most recent estimated 1RMs and the current cycle's starting body weight.
+
+**Formula:** Standard WILKS coefficient × (Squat 1RM + Bench 1RM + Deadlift 1RM)
+
+**Data sources:**
+- Total: sum of the three lifts' most recent estimated 1RMs (from session logs)
+- Body weight: the body weight recorded at the start of the current cycle
+
+**Page content:**
+- Current WILKS score (large, prominent)
+- Historical WILKS score chart — one point per completed cycle, showing trend over time
+- Current estimated 1RMs used in the calculation (with last-updated date)
+- Body weight used (with option to update current cycle's body weight if it has changed)
+- Reference context: "World-class WILKS: 500+. Advanced: 350–450. Intermediate: 250–350."
+
+**Access:** Profile tab → "WILKS Score"
+
+## User Experience
+
+### Session Completion Screen
+
+After tapping "Complete Workout":
+
+1. Standard completion summary (planned vs. actual volume)
+2. If any PRs were set: star cards slide up with brief celebration animation
+3. Cycle badge granted (if this session was the final one completing a cycle)
+4. Streak update: "Week 5 clean ✓" or "Streak reset — remember to log disruptions if you miss"
+
+### Profile Tab
+
+The Profile tab shows at a glance:
+- Cycle badge count ("4 cycles completed")
+- Current streak and best streak
+- Current WILKS score
+- PR history per lift (best estimated 1RM, best volume session, best rep-at-weight for key weights)
+
+## Implementation Status
+
+### Planned
+
+- Cycle completion detection (≥ 80% sessions completed/disrupted)
+- Cycle badge storage and display
+- Session streak tracking (weekly, disruption-aware)
+- PR detection per session (estimated 1RM, volume, rep-at-weight)
+- Stars on session completion screen
+- WILKS score calculation from estimated 1RMs + cycle body weight
+- WILKS score history chart (one point per cycle)
+- Profile tab with badge count, streaks, WILKS, PR summary
+
+## Future Enhancements
+
+**Phase 2:**
+- Share achievements (individual star card or WILKS score) as a shareable image
+- Yearly summary: total sessions, total volume, PRs broken
+
+**Long-term:**
+- Leaderboard: opt-in WILKS comparison with other Parakeet users (anonymised by default)
+
+## References
+
+- Related Design Docs: [performance-logging.md](./performance-logging.md), [program-generation.md](./program-generation.md), [user-onboarding.md](./user-onboarding.md)
