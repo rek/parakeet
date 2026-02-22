@@ -6,81 +6,103 @@
 
 ## Overview
 
-Parakeet generates a complete, personalized powerlifting program from three inputs: 1-rep max (or 3-rep max) values for Squat, Bench, and Deadlift, a desired program length, and training frequency. The program follows Brandon Lilly's Cube Method periodization structure, with all loading weights calculated automatically.
+Parakeet generates a structural training program from three inputs: 1-rep max (or 3-rep max) values for Squat, Bench, and Deadlift, a desired program length, and training frequency. The program follows Brandon Lilly's Cube Method periodization structure. Actual training weights are **not** pre-calculated — they are generated Just-In-Time (JIT) when the user opens each session, using all available data at that moment.
 
 ## Problem Statement
 
-Intermediate powerlifters understand periodization concepts but struggle to translate them into precise week-by-week loading schemes. Manual spreadsheet programming is error-prone, time-consuming, and doesn't adapt when circumstances change.
+Intermediate powerlifters understand periodization concepts but struggle to translate them into precise week-by-week loading schemes. Pre-generated programs become stale when circumstances change (soreness, fatigue, performance trend).
 
 **Pain points:**
-- Calculating exact weights from percentages every week is tedious and easy to get wrong
-- Generic programs don't use the lifter's actual strength levels
+- Pre-generated weights don't account for how the lifter feels on a given day
 - Changing one input (e.g., updating a max) requires recalculating the entire program
+- Generic programs can push athletes toward or past their max recoverable volume
 - No easy way to see the full program structure at a glance before committing to it
 
-**Desired outcome:** A lifter enters three numbers and receives a complete, ready-to-follow program — no spreadsheets, no manual calculations.
+**Desired outcome:** A lifter enters three numbers and receives a complete program structure. Each workout, the app generates precise weights, sets, and reps based on current state — soreness, recent performance, weekly volume — rather than a static pre-calculated plan.
+
+## JIT vs Pre-Generated: The Key Distinction
+
+**At program creation:** The app generates **structural scaffolding** only — session placeholders with metadata (week, block, lift, intensity type, planned date) but no planned sets.
+
+**At workout time:** When the user opens a session (after the soreness check-in), the JIT generator runs and computes:
+- Base sets/reps/weight from the formula config and current 1RM
+- Adjustments based on soreness ratings
+- Volume caps from MRV status
+- Intensity adjustments based on recent RPE trends
+- Auxiliary exercises for the block
+
+This means the program adapts automatically as the user's state changes across the cycle. A high-soreness day gets lighter volume; a week where the lifter has already accumulated a lot of volume gets capped automatically.
 
 ## User Experience
 
 ### User Flows
 
-**Primary Flow (user has 1RM data):**
+**Primary Flow:**
 
-1. User taps "Create Program" from the home screen
-2. User enters 1-rep max for Squat, Bench Press, and Deadlift
-3. User selects program length (default 10 weeks) and training days per week (default 3)
-4. User taps "Generate Program"
-5. App displays a preview of Week 1 with all sessions and weights calculated
-6. User reviews and taps "Activate Program"
-7. App navigates to the "Today" screen showing the first upcoming session
+1. User enters 1RM or 3RM for Squat, Bench, Deadlift (all in kg)
+2. User selects program length (10/12/14 weeks) and training days (3 or 4/week)
+3. User selects start date
+4. App shows a preview of Week 1 — session types and auxiliary exercises (no weights, since those are JIT)
+5. User activates the program → Today tab shows the first upcoming session
 
-**Alternative Flow (user has 3RM data):**
+**Daily Workout Flow:**
 
-1. Same entry point, but user switches toggle from "1RM" to "3RM" on each lift
-2. User enters the weight and rep count they achieved (e.g., 285 lbs × 3)
-3. App shows the estimated 1RM in real-time as the user types (using the Epley formula)
-4. Flow continues as above from step 3
-5. The estimated 1RM and the raw 3RM input are both preserved for the program record
+1. User taps "Start Today's Session" on the Today tab
+2. Soreness check-in screen appears — user rates 3 muscle groups on a 1–5 scale
+3. User taps "Generate Today's Workout" — JIT generator runs (< 1 second)
+4. Session screen opens with concrete sets, weights, and reps
+5. User logs each set (weight in kg, reps, optional RPE)
+6. Session completes → performance metrics computed locally → written to Supabase
 
 **Regeneration Flow:**
 
 1. User updates their maxes after completing a training cycle
-2. User taps "Regenerate" from the active program screen
-3. App generates a new program version using updated maxes and current formula config
-4. Previous program version is archived (full history preserved)
-5. User reviews the new Week 1 and activates
-
-**Alternative Flows / Edge Cases:**
-
-- User wants to start mid-week: they choose a start date; the first session is placed on that date and remaining sessions fill the week appropriately
-- User wants more or fewer training days: supported (3–5 days per week); lift distribution adjusts automatically
-- User has an existing active program: app warns before creating a new one and offers to archive the current
+2. User taps "New Program" from Settings
+3. App generates a new program version using updated maxes
+4. Previous program is archived (full history preserved)
+5. User previews and activates
 
 ### Visual Design Notes
 
-- Each session card displays: lift name, intensity type (Heavy / Explosive / Rep), percentage, sets × reps, and calculated weight in lbs (or kg based on preference)
+- Program grid: each session cell shows lift name and intensity badge (Heavy/Explosive/Rep/Deload)
 - Block color coding: Block 1 = blue, Block 2 = orange, Block 3 = red, Deload = grey
-- Week 1 preview is shown as a horizontal scroll of 3 session cards before activation
-- The full program view (10 weeks) uses a compact grid with expandable week rows
+- Sessions without JIT data show a "not yet generated" state — no weight preview
+- Sessions with JIT data (already opened) show a summary of the generated sets
+- All weights displayed in kg throughout the app
 
 ## User Benefits
 
-**Zero calculation required**: The app handles all percentage-to-weight conversions, rounding to the nearest 2.5 lbs, and progressive loading increases across blocks.
+**Adaptive weights**: Planned weights adjust automatically to the lifter's current state — no manual recalculation when tired, sore, or on a recovery week.
 
-**Transparent methodology**: Every session card shows the formula applied (e.g., "Block 2 Heavy: 85% × 2×3"), so the user understands exactly how their program was built and can verify it.
+**Zero calculation required**: The app handles all percentage-to-weight conversions, rounding to the nearest 2.5kg, progressive loading changes, and MRV/MEV capping.
 
-**Full history preserved**: Each program generation creates a new versioned record. Users can always look back at a previous program, compare it to the current one, and understand how their programming has evolved.
+**Transparent methodology**: Every session shows why adjustments were made: "Moderate soreness — reduced 1 set", "Approaching MRV for quads — volume capped at 3 sets".
+
+**Full history preserved**: Each program generation creates a new versioned record. All completed sessions and their actual weights are kept permanently.
+
+## Auxiliary Exercise Rotation
+
+Each main lift has a pool of 8 auxiliary exercises. Two are active each block, rotating sequentially through the pool across programs:
+- Block 1: exercises 1+2
+- Block 2: exercises 3+4
+- Block 3: exercises 5+6
+- Next program Block 1: exercises 7+8, then wraps
+
+Users can reorder the pool (Settings → Auxiliary Exercises) or lock individual block assignments.
 
 ## Implementation Status
 
 ### Planned
 
-- 1RM and 3RM input with live Epley estimation
-- Full 10-week Cube Method program generation
+- 1RM and 3RM input with live Epley estimation (kg)
+- Structural program generation (no planned sets at creation)
+- JIT session generation at workout time
+- Soreness check-in gates JIT generation
+- MRV/MEV-aware volume capping
+- Auxiliary exercise pool + block rotation
+- Performance-adjusted intensity (RPE trend detection)
 - Program preview before activation
 - Program versioning and history
-- lb/kg preference support
-- Regeneration with updated maxes
 
 ## Future Enhancements
 
@@ -90,8 +112,6 @@ Intermediate powerlifters understand periodization concepts but struggle to tran
 
 **Long-term:**
 - Support for alternative programming systems (5/3/1, GZCLP, Juggernaut)
-- Coach-assigned program import
-- Multi-athlete program management for coaches
 
 ## Open Questions
 
@@ -100,5 +120,6 @@ Intermediate powerlifters understand periodization concepts but struggle to tran
 
 ## References
 
-- Related Design Docs: [user-onboarding.md](./user-onboarding.md), [formula-management.md](./formula-management.md)
-- External: Brandon Lilly's Cube Method (10-week concurrent periodization structure)
+- Related Design Docs: [user-onboarding.md](./user-onboarding.md), [formula-management.md](./formula-management.md), [volume-management.md](./volume-management.md)
+- External: Brandon Lilly's Cube Method (10-week concurrent periodization)
+- Specs: [engine-007-jit-session-generator.md](../specs/engine-007-jit-session-generator.md), [engine-004-program-generator.md](../specs/engine-004-program-generator.md)

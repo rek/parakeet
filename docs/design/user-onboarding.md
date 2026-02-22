@@ -6,13 +6,14 @@
 
 ## Overview
 
-User Onboarding takes a new user from account creation to an activated, personalized training program in three screens. The goal is to eliminate all friction that isn't strictly necessary and get the user to their first workout as fast as possible.
+User Onboarding takes a new user from account creation to an activated, personalized training program in four screens. The goal is to eliminate all friction that isn't strictly necessary and get the user to their first workout as fast as possible.
 
 ## Problem Statement
 
 Strength training apps typically fail at onboarding in one of two ways: they ask too much (extensive questionnaires, equipment setup, goals framework) and users abandon before seeing value, or they ask too little (one-size-fits-all programs) and users churn when the program doesn't fit their actual strength level.
 
 **Pain points:**
+
 - Requiring an exact 1RM creates a barrier for users who don't test singles regularly
 - Long onboarding flows with many steps feel like commitment before the user has seen value
 - Programs that ignore actual strength levels feel generic and untrustworthy
@@ -24,83 +25,90 @@ Strength training apps typically fail at onboarding in one of two ways: they ask
 
 ### User Flows
 
-**Primary Flow (3 screens, 1RM input):**
+**Primary Flow (4 screens):**
 
 1. **Welcome screen**
    - Brief value proposition: "Cube Method programming. Personalized weights. No spreadsheets."
-   - "Sign in with Google" and "Sign in with Apple" buttons
+   - "Sign in with Google" button
    - No email/password — OAuth only for speed
+   - Uses Supabase Auth via `supabase.auth.signInWithIdToken()`
 
-2. **Enter Your Lifts screen**
+2. **Enter Your Lifts screen** (`/onboarding/lift-maxes`)
    - Three sections: Squat, Bench Press, Deadlift
    - Each section has a toggle: "1RM" | "3RM"
    - Default is 3RM (more users have a recent 3RM than a true 1RM)
-   - On 3RM mode: two fields — weight and reps (pre-filled to 3)
-   - Under each section, a small grey line: "Estimated 1RM: — lbs" (updates live as user types)
-   - lb/kg toggle at the top right (persisted to user preferences)
+   - On 3RM mode: two fields — weight (kg) and reps (pre-filled to 3)
+   - Under each section, a small grey line: "Estimated 1RM: — kg" (updates live as user types using Epley formula)
+   - All weights displayed and entered in **kilograms only**
    - "Next" button becomes active when all three lifts have valid input
 
-3. **Program Settings screen**
-   - Duration: segmented control showing "8 weeks / 10 weeks / 12 weeks" (default: 10)
-   - Days per week: stepper control, 3–5 (default: 3)
+3. **Program Settings screen** (`/onboarding/program-settings`)
+   - Duration: segmented control "10 weeks / 12 weeks / 14 weeks" (default: 10)
+   - Days per week: picker, 3 or 4 (default: 3)
    - Start date: date picker (default: next Monday)
-   - "Generate My Program" large CTA button
+   - "Preview My Program" CTA button
 
-4. **Program Preview screen** (after generation, before activation)
+4. **Program Preview screen** (`/onboarding/review`)
    - Shows Week 1 sessions as horizontal scrollable cards
-   - Each card: lift name, intensity type badge, weight × sets × reps
-   - "Looks good — Activate" button and "Edit Inputs" link (returns to screen 2)
-   - Activating navigates to the Today tab
+   - Each card: lift name, intensity type badge, auxiliary exercises for the block
+   - Note: actual weights are NOT shown here (they are JIT-generated at workout time)
+   - Shows session type labels: "Squat — Heavy Day", "Bench — Rep Day", etc.
+   - Shows auxiliary exercise pair for each session: "Auxiliaries: Pause Squat + Box Squat"
+   - "Activate Program" button → calls `createProgram()` → navigates to Today tab
+   - "Edit Inputs" link → returns to lift-maxes screen
 
 **Alternative Flow (skip maxes, use defaults):**
 
 1. On the Enter Your Lifts screen, a "I don't know my maxes" link appears at the bottom
-2. Tapping it sets placeholder maxes (Squat 135, Bench 95, Deadlift 185 lbs — typical beginner starting point)
-3. User is shown a banner: "Using estimated starting weights. Update your maxes after your first session for a personalized program."
+2. Tapping it sets placeholder maxes: Squat 100kg, Bench 70kg, Deadlift 120kg
+3. User sees a banner: "Using estimated starting weights. Update your maxes after your first session."
 4. Program is generated and activated normally
-5. After the first session is logged, the app prompts the user to enter their actual maxes
 
 **Returning User Flow:**
 
-- If user has signed in before (Firebase UID matches existing user), skip all onboarding and navigate directly to the Today tab
+- If user has signed in before (Supabase user ID matches existing `profiles` row), skip all onboarding and navigate directly to the Today tab
 
 ### Visual Design Notes
 
-- Welcome screen: full-bleed dark background, minimal text, large sign-in buttons — no distractions
+- Welcome screen: full-bleed dark background, minimal text, large sign-in buttons
 - Enter Your Lifts: clean white card per lift, toggle switch prominent, estimated 1RM updates with smooth number animation as the user types
 - Program Settings: generous spacing, each control is large and tap-friendly
-- Program Preview: the session cards use the same design as they will in the main app — the user is already seeing their real interface
+- Program Preview: session cards use the same design as the main app — the user is already seeing their real interface
 
 ## User Benefits
 
 **Low barrier to entry**: Supporting 3RM input means users who have never tested a 1-rep max can still get a personalized program. The app does the math.
 
-**Visible personalization**: The moment the user enters their lifts, they see real weights calculated for their specific numbers — not "X% of your max" but "252.5 lbs". This immediately demonstrates value.
+**Visible personalization**: The moment the user enters their lifts, they see real weights calculated for their specific numbers. This immediately demonstrates value.
 
 **Commitment only after seeing output**: The preview screen lets users see their Week 1 before activating. They're not committing to a program they haven't seen.
+
+**JIT transparency**: The preview explains that exact weights are calculated fresh each workout based on current data — users understand the system before they use it.
 
 ## Implementation Status
 
 ### Planned
 
-- Google and Apple OAuth sign-in
+- Google OAuth sign-in via Supabase Auth
 - 1RM / 3RM toggle per lift with live Epley estimation
-- lb / kg preference
+- All weights in kilograms
 - Program duration and frequency selection
 - Start date picker
-- Program preview before activation
-- "Don't know maxes" fallback path
-- Returning user fast-path (skip onboarding)
+- Program preview before activation (structural view — no planned sets shown)
+- "Don't know maxes" fallback path with kg defaults
+- Returning user fast-path (skip onboarding if profile row exists)
 
 ## Future Enhancements
 
 **Phase 2:**
+
 - Onboarding for users returning from a long break: reduced max input flow with conservative starting weights
-- Coach-assigned program: coach shares a link; athlete signs up and the program is pre-loaded
+- MRV/MEV config step during onboarding (currently uses research defaults; user can edit later in Settings)
 
 **Long-term:**
-- Import max history from another app (CSV or API integration)
-- In-app 1RM estimation protocol: guided warm-up ramp to estimate max without actually testing it
+
+- Import max history from another app (CSV)
+- In-app 1RM estimation protocol: guided warm-up ramp
 
 ## Open Questions
 
@@ -109,4 +117,5 @@ Strength training apps typically fail at onboarding in one of two ways: they ask
 
 ## References
 
-- Related Design Docs: [program-generation.md](./program-generation.md)
+- Related Design Docs: [program-generation.md](./program-generation.md), [volume-management.md](./volume-management.md)
+- Specs: [auth-001-supabase-auth-setup.md](../specs/auth-001-supabase-auth-setup.md), [programs-001-lifter-maxes-api.md](../specs/programs-001-lifter-maxes-api.md)

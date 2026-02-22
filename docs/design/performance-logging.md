@@ -92,4 +92,4 @@ Paper training logs and generic note apps are disconnected from the planned prog
 
 ## References
 
-- Related Design Docs: [program-generation.md](./program-generation.md), [edge-case-reporting.md](./edge-case-reporting.md)
+- Related Design Docs: [program-generation.md](./program-generation.md), [disruption-management.md](./disruption-management.md)
