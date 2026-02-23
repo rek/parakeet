@@ -1,0 +1,26 @@
+{
+  "name": "db",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "packages/db/src",
+  "projectType": "library",
+  "tags": ["scope:db", "type:lib"],
+  "targets": {
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "tsc --noEmit -p tsconfig.lib.json",
+        "cwd": "packages/db"
+      }
+    },
+    "build": {
+      "executor": "@nx/js:tsc",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist/packages/db",
+        "main": "packages/db/src/index.ts",
+        "tsConfig": "packages/db/tsconfig.lib.json",
+        "assets": ["packages/db/*.md"]
+      }
+    }
+  }
+}

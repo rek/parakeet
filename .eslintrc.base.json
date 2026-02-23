@@ -1,0 +1,52 @@
+{
+  "root": true,
+  "ignorePatterns": ["**/*"],
+  "plugins": ["@nx"],
+  "overrides": [
+    {
+      "files": ["*.ts", "*.tsx"],
+      "extends": [
+        "plugin:@typescript-eslint/recommended",
+        "plugin:@nx/typescript"
+      ],
+      "rules": {
+        "@typescript-eslint/no-unused-vars": ["warn", { "argsIgnorePattern": "^_" }],
+        "@typescript-eslint/no-explicit-any": "warn"
+      }
+    },
+    {
+      "files": ["*.js", "*.jsx"],
+      "extends": ["plugin:@nx/javascript"],
+      "rules": {}
+    },
+    {
+      "files": ["*.ts", "*.tsx", "*.js", "*.jsx"],
+      "rules": {
+        "@nx/enforce-module-boundaries": [
+          "error",
+          {
+            "allow": [],
+            "depConstraints": [
+              {
+                "sourceTag": "scope:mobile",
+                "onlyDependOnLibsWithTags": ["scope:engine", "scope:shared", "scope:db"]
+              },
+              {
+                "sourceTag": "scope:engine",
+                "onlyDependOnLibsWithTags": ["scope:shared"]
+              },
+              {
+                "sourceTag": "scope:db",
+                "onlyDependOnLibsWithTags": ["scope:shared"]
+              },
+              {
+                "sourceTag": "scope:shared",
+                "onlyDependOnLibsWithTags": []
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}

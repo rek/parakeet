@@ -1,0 +1,24 @@
+{
+  "compileOnSave": false,
+  "compilerOptions": {
+    "rootDir": ".",
+    "sourceMap": true,
+    "declaration": false,
+    "moduleResolution": "bundler",
+    "experimentalDecorators": true,
+    "importHelpers": true,
+    "target": "ES2022",
+    "module": "ESNext",
+    "lib": ["ES2022", "DOM"],
+    "skipLibCheck": true,
+    "skipDefaultLibCheck": true,
+    "baseUrl": ".",
+    "strict": true,
+    "paths": {
+      "@parakeet/training-engine": ["packages/training-engine/src/index.ts"],
+      "@parakeet/shared-types": ["packages/shared-types/src/index.ts"],
+      "@parakeet/db": ["packages/db/src/index.ts"]
+    }
+  },
+  "exclude": ["node_modules", "tmp"]
+}

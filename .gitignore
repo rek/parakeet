@@ -1,0 +1,43 @@
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Build outputs
+dist/
+build/
+out/
+.expo/
+ios/
+android/
+
+# Nx cache
+.nx/cache
+.nx/workspace-data
+tmp/
+
+# Environment — never commit secrets
+.env.local
+.env.production
+.env*.local
+!.env.local.example
+!.env.production.example
+
+# Supabase local config
+supabase/.branches
+supabase/.temp
+
+# iOS / Android signing artifacts
+*.p8
+*.p12
+*.mobileprovision
+google-service-account.json
+
+# Misc
+.DS_Store
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.eslintcache
+*.tsbuildinfo
