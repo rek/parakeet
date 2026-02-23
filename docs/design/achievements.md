@@ -73,7 +73,7 @@ At the end of each completed session, the app evaluates whether any new personal
 
 The WILKS score is a formula that normalises powerlifting totals (Squat + Bench + Deadlift best) against body weight, allowing fair comparison across weight classes. Parakeet calculates it using the user's most recent estimated 1RMs and the current cycle's starting body weight.
 
-**Formula:** Standard WILKS coefficient × (Squat 1RM + Bench 1RM + Deadlift 1RM)
+**Formula:** The app uses the **2020 updated Wilks formula** with sex-specific polynomial coefficients. Female and male lifters have different coefficients, reflecting different strength-to-bodyweight distributions. See [sex-based-adaptations.md](./sex-based-adaptations.md) for the coefficient source and rationale.
 
 **Data sources:**
 - Total: sum of the three lifts' most recent estimated 1RMs (from session logs)

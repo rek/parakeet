@@ -1,0 +1,54 @@
+name: EAS Build / Update
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'apps/mobile/**'
+      - 'packages/**'
+
+jobs:
+  deploy:
+    name: EAS Deploy
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Setup EAS
+        uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Detect change type (native vs JS-only)
+        id: change-type
+        run: |
+          # Check if any native-affecting files changed
+          NATIVE_PATTERNS="apps/mobile/app.json|apps/mobile/eas.json|apps/mobile/package.json|apps/mobile/metro.config.js|apps/mobile/index.js|packages/.*/package.json"
+          CHANGED=$(git diff --name-only HEAD~1 HEAD)
+          if echo "$CHANGED" | grep -qE "$NATIVE_PATTERNS"; then
+            echo "type=native" >> $GITHUB_OUTPUT
+          else
+            echo "type=js-only" >> $GITHUB_OUTPUT
+          fi
+
+      - name: EAS Update (JS-only changes)
+        if: steps.change-type.outputs.type == 'js-only'
+        working-directory: apps/mobile
+        run: eas update --branch production --message "${{ github.event.head_commit.message }}" --non-interactive
+
+      - name: EAS Build (native changes)
+        if: steps.change-type.outputs.type == 'native'
+        working-directory: apps/mobile
+        run: eas build --platform all --profile production --non-interactive

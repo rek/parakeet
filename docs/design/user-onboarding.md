@@ -53,6 +53,8 @@ Strength training apps typically fail at onboarding in one of two ways: they ask
    - Days per week: picker, 3 or 4 (default: 3)
    - Start date: date picker (default: next Monday)
    - Body weight: numeric input in kg — "Current body weight (kg)" — required
+   - Biological sex: segmented control "Female / Male / Prefer not to say" — used for MEV/MRV defaults and WILKS calculation (see [sex-based-adaptations.md](./sex-based-adaptations.md))
+   - If Female: optional prompt to enable menstrual cycle tracking (can also be done later in Settings)
    - "Preview My Program" CTA button
 
 4. **Program Preview screen** (`/onboarding/review`)

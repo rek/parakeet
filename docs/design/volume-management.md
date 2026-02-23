@@ -20,6 +20,10 @@ The goal is to accumulate volume progressively across a training block, staying 
 
 ## Default Volume Landmarks
 
+Defaults vary by biological sex. Female lifters can generally handle 20–30% more weekly volume and require more sets to achieve equivalent stimulus. See [sex-based-adaptations.md](./sex-based-adaptations.md) for the research basis.
+
+**Male defaults:**
+
 | Muscle | MEV (sets/wk) | MRV (sets/wk) |
 |--------|---------------|---------------|
 | Quads | 8 | 20 |
@@ -32,7 +36,21 @@ The goal is to accumulate volume progressively across a training block, staying 
 | Shoulders | 8 | 20 |
 | Biceps | 8 | 20 |
 
-Users can override any value in Settings → Volume Config. Changes take effect immediately on the next JIT generation.
+**Female defaults:**
+
+| Muscle | MEV (sets/wk) | MRV (sets/wk) |
+|--------|---------------|---------------|
+| Quads | 10 | 26 |
+| Hamstrings | 8 | 25 |
+| Glutes | 0 | 20 |
+| Lower Back | 7 | 15 |
+| Upper Back | 12 | 28 |
+| Chest | 10 | 26 |
+| Triceps | 8 | 24 |
+| Shoulders | 10 | 24 |
+| Biceps | 10 | 24 |
+
+The correct default table is selected automatically based on the biological sex recorded in the user profile. Users can override any value in Settings → Volume Config. Changes take effect immediately on the next JIT generation.
 
 ## Volume Counting
 

@@ -1,0 +1,42 @@
+name: CI
+
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  check:
+    name: Typecheck / Lint / Test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Restore Nx cache
+        uses: actions/cache@v4
+        with:
+          path: .nx/cache
+          key: nx-${{ hashFiles('**/package-lock.json') }}-${{ github.sha }}
+          restore-keys: |
+            nx-${{ hashFiles('**/package-lock.json') }}-
+
+      - name: Typecheck (affected)
+        run: npx nx affected --target=typecheck --base=origin/main --head=HEAD
+
+      - name: Lint (affected)
+        run: npx nx affected --target=lint --base=origin/main --head=HEAD
+
+      - name: Test (affected)
+        run: npx nx affected --target=test --base=origin/main --head=HEAD
