@@ -26,21 +26,21 @@ The formula editor screen in Settings where users view, understand, and override
 **Save flow:**
 - Tap "Save" → bottom sheet appears:
   - "Create new formula version" (default) with optional toggle: "Regenerate program with new formula"
-  - Confirm → call `POST /v1/formulas/config` with overrides
-  - If regenerate checked: call `POST /v1/programs/:id/regenerate` after config save
+  - Confirm → call `createFormulaOverride(userId, { overrides, source: 'user' })` from `apps/mobile/lib/formulas.ts`
+  - If regenerate checked: call `regenerateProgram(programId)` from `apps/mobile/lib/programs.ts` after config save
   - Success toast: "Formula updated — Program regenerated"
 
 **History tab (within formula editor):**
 - List of all formula config versions (newest first)
 - Each item: date, source badge (User / AI Suggestion / System), brief change summary
 - Tap version → view full parameters for that version
-- "Reactivate" button on historical versions → `DELETE /v1/formulas/config/:currentId` (deactivates current, activates selected)
+- "Reactivate" button on historical versions → `deactivateFormulaConfig(currentActiveId, userId)` then `createFormulaOverride()` with the selected version's overrides
 
 **AI Suggestions tab:**
 - List of pending AI suggestions (formula_configs rows where `source='ai_suggestion'` and `is_active=false`)
 - Each suggestion: affected parameter, current value, suggested value, rationale text
-- "Accept" → moves suggestion to active config via `POST /v1/formulas/config` with the suggestion's overrides
-- "Dismiss" → `DELETE /v1/formulas/config/:suggestionId`
+- "Accept" → calls `createFormulaOverride(userId, { overrides: suggestion.overrides, source: 'ai_suggestion' })` from `apps/mobile/lib/formulas.ts`
+- "Dismiss" → calls `deactivateFormulaConfig(suggestionId, userId)` (marks the suggestion row inactive)
 - Red dot badge on Settings tab when unreviewed suggestions exist
 
 ## Dependencies

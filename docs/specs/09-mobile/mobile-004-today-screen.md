@@ -10,7 +10,7 @@ The home tab that shows the user's next upcoming session and any active disrupti
 ## Tasks
 
 **`apps/mobile/app/(tabs)/today.tsx`:**
-- On mount: call `GET /v1/sessions/today` via React Query (cache: 30 seconds, background refetch on focus)
+- On mount: call `useTodaySession()` hook via React Query (cache: 30 seconds, background refetch on focus)
 - Three states:
   1. **Session found**: render `WorkoutCard` component
   2. **No session (rest day or program complete)**: render rest day message with next session date
@@ -19,7 +19,7 @@ The home tab that shows the user's next upcoming session and any active disrupti
 **`apps/mobile/components/training/WorkoutCard.tsx`:**
 - Props: `session: Session`, `onStart: () => void`
 - Header: week and block label ("Block 2 / Week 4 — Squat Heavy")
-- Body: primary lift name, intensity type badge, planned sets summary ("2 sets × 3 reps at 267.5 lbs")
+- Body: primary lift name, intensity type badge, planned sets summary ("2 sets × 3 reps at 267.5 kg")
 - Footer: planned date, "Start Workout" primary button, "Skip" secondary button (sheet confirmation)
 - Active disruption banner above the card if any active disruptions for today's lift
   - Amber background strip: "Knee injury active — Squat load reduced 20%"
@@ -29,13 +29,13 @@ The home tab that shows the user's next upcoming session and any active disrupti
 - Bottom sheet slides up
 - "Reason (optional)" text field
 - "Skip Session" red button + "Cancel" button
-- On confirm: call `PATCH /v1/sessions/:sessionId/skip`
+- On confirm: `supabase.from('sessions').update({ status: 'skipped' }).eq('id', sessionId)` (via `skipSession(sessionId)` helper in `apps/mobile/lib/sessions.ts`)
 
 **"Start Workout" navigation:**
 - Navigate to `session/[sessionId]` with session ID in URL
 
 **React Query hook (`apps/mobile/hooks/useActiveSession.ts`):**
-- `useTodaySession()` — wraps `GET /v1/sessions/today`
+- `useTodaySession()` — wraps `findTodaySession(userId)` from `sessions-001`
 - Returns `{ session, isLoading, error, refetch }`
 
 ## Dependencies

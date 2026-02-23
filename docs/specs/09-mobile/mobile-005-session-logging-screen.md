@@ -41,7 +41,7 @@ The live workout logging screen where users check off sets, adjust weights and r
   - Completion percentage
   - Session RPE (if provided)
   - Notes field (free text, optional)
-  - "Save & Finish" button → call `POST /v1/sessions/:sessionId/complete`, navigate to `/(tabs)/today`
+  - "Save & Finish" button → call `completeSession(sessionId, payload)` from `apps/mobile/lib/sessions.ts`, navigate to `/(tabs)/today`
 
 **Note field (`apps/mobile/components/training/SessionNotes.tsx`):**
 - Expandable text area at bottom of session screen

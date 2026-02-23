@@ -1,6 +1,6 @@
 # Spec: Supabase Project Setup
 
-**Status**: Planned
+**Status**: Implemented
 **Domain**: Infrastructure
 
 ## What This Covers

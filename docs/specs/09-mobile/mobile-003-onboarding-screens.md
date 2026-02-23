@@ -15,8 +15,7 @@ The three onboarding screens: lift max input, program settings, and program prev
   - Toggle: "1RM" | "3RM" (default 3RM)
   - On 1RM: single weight input field
   - On 3RM: weight input + reps input (default 3, range 2-10)
-  - Below input: "Est. 1RM: — lbs" — updates in real-time using Epley formula (computed client-side from the same formula as the engine)
-- Unit toggle (lbs/kg) at header level — converts all displayed weights
+  - Below input: "Est. 1RM: — kg" — updates in real-time using Epley formula (computed client-side from the same formula as the engine)
 - Validation: all three lifts must have valid input before "Next" is enabled
 - "I don't know my maxes" link → sets defaults and shows warning banner
 
@@ -25,7 +24,7 @@ The three onboarding screens: lift max input, program settings, and program prev
 - Days per week: stepper (3, 4, or 5), default 3
 - Start date: `DateTimePicker` (expo-datetime-picker), default next Monday
 - "Generate My Program" primary button
-- On tap: call `POST /v1/lifter-maxes` then `POST /v1/programs`, show loading state
+- On tap: call `submitMaxes()` from `apps/mobile/lib/lifter-maxes.ts`, then `createProgram()` from `apps/mobile/lib/programs.ts`; show loading state
 
 **`apps/mobile/app/(auth)/onboarding/review.tsx`:**
 - Horizontal scroll of Week 1 session cards (3 cards for 3-day program)

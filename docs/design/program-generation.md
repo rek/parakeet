@@ -24,13 +24,9 @@ Intermediate powerlifters understand periodization concepts but struggle to tran
 
 **At program creation:** The app generates **structural scaffolding** only — session placeholders with metadata (week, block, lift, intensity type, planned date) but no planned sets.
 
-**At workout time:** When the user opens a session (after the soreness check-in), the JIT generator runs and computes:
-- Base sets/reps/weight from the formula config and current 1RM
-- Adjustments based on soreness ratings
-- Volume caps from MRV status
-- Intensity adjustments based on recent RPE trends
-- Time since last session of this lift type (recency factor)
-- Auxiliary exercises for the block
+**At workout time:** When the user opens a session (after the soreness check-in), the JIT generator runs and computes a complete workout from ~43 inputs: the current 1RM, block/intensity type, soreness per muscle, accumulated weekly volume, recent RPE history, time since last session of this lift, active disruptions, menstrual cycle phase (if tracked), and more.
+
+The JIT generator is a **pluggable strategy system** — formula-based, LLM-based, and hybrid implementations can be run and compared independently. See [training-engine-architecture.md](./training-engine-architecture.md) for the full architecture, variable inventory, and strategy descriptions.
 
 This means the program adapts automatically as the user's state changes across the cycle. A high-soreness day gets lighter volume; a week where the lifter has already accumulated a lot of volume gets capped automatically.
 
@@ -158,4 +154,5 @@ The JIT generator adapts to the program length — it knows which block the sess
 
 - Related Design Docs: [user-onboarding.md](./user-onboarding.md), [formula-management.md](./formula-management.md), [volume-management.md](./volume-management.md), [performance-logging.md](./performance-logging.md)
 - External: Brandon Lilly's Cube Method (10-week concurrent periodization)
-- Specs: [engine-007-jit-session-generator.md](../specs/engine-007-jit-session-generator.md), [engine-004-program-generator.md](../specs/engine-004-program-generator.md)
+- Specs: [engine-007-jit-session-generator.md](../specs/04-engine/engine-007-jit-session-generator.md), [engine-004-program-generator.md](../specs/04-engine/engine-004-program-generator.md)
+- Architecture: [training-engine-architecture.md](./training-engine-architecture.md)

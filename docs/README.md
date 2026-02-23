@@ -1,4 +1,4 @@
-This directory contains design documents and architecture decisions
+# This directory contains design documents and architecture decisions
 
 ## Documentation Philosophy
 
@@ -36,7 +36,7 @@ We follow a two-tier documentation approach:
 **Content**: HOW
 **Includes**:
 
-- Specific implementation tasks
+- Specific implementation tasks (with checklist for done)
 - Technical dependencies
 - Code-level details
 - Progress tracking

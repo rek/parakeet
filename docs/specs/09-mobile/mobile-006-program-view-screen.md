@@ -10,7 +10,7 @@ The Program tab showing the full 10-week program in a scannable week-grid format
 ## Tasks
 
 **`apps/mobile/app/(tabs)/program.tsx`:**
-- On mount: fetch `GET /v1/programs/active` (React Query, cache 5 minutes)
+- On mount: fetch active program via `useActiveProgram()` hook calling `getActiveProgram(userId)` from `programs-003` (React Query, cache 5 minutes)
 - Header: program title, block progress indicator ("Block 2 of 3 — Week 5 of 10")
 - Scrollable list of `WeekRow` components (one per week)
 - Current week: auto-expanded, scrolled into view on mount
@@ -38,7 +38,7 @@ The Program tab showing the full 10-week program in a scannable week-grid format
 - Tap → navigate to `session/[sessionId]` if planned/in_progress; or a readonly log view if completed/skipped
 
 **No program state:**
-- If `GET /v1/programs/active` returns 404, show "No active program" with "Create Program" button
+- If `getActiveProgram()` returns `null`, show "No active program" with "Create Program" button
 
 ## Dependencies
 

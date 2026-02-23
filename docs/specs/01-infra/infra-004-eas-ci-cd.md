@@ -1,6 +1,6 @@
 # Spec: EAS Build and CI/CD
 
-**Status**: Planned
+**Status**: Implemented
 **Domain**: Infrastructure
 
 ## What This Covers

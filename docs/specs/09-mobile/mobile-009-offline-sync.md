@@ -19,18 +19,18 @@ Handling offline scenarios during active workout logging. The session logging sc
 - `actualSets` array is the authoritative in-progress state
 
 **`apps/mobile/store/syncStore.ts` (pending operations queue):**
-- Queue of pending API operations: `{ id, endpoint, method, body, createdAt }`
-- Operations are added optimistically before the network request
+- Queue of pending Supabase SDK operations: `{ id, operation: 'complete_session' | 'skip_session', payload, createdAt }`
+- Operations are added optimistically before the Supabase call
 - On success: remove from queue
 - On failure (network error): keep in queue, retry on reconnect
-- On non-retryable error (4xx): surface to user, do not retry
+- On non-retryable error (Supabase constraint violation, auth error): surface to user, do not retry
 
 **Session completion offline handling:**
-- If `POST /v1/sessions/:sessionId/complete` fails due to network:
+- If `completeSession()` Supabase SDK call fails due to network:
   1. Store complete payload in MMKV under key `pending_session_completion_:sessionId`
   2. Show success UI to user (optimistic) with a small sync indicator
   3. Register background fetch task (`expo-background-fetch`) to retry when online
-  4. On next app foreground + connectivity: retry the pending completion
+  4. On next app foreground + connectivity: retry the pending Supabase `upsert` to `session_logs`
 
 **Connectivity detection:**
 - Use `@react-native-community/netinfo` to detect online/offline state

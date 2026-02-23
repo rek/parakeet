@@ -5,37 +5,50 @@
 
 ## What This Covers
 
-Firebase Authentication integration in the mobile app: sign-in, token storage, token refresh, and sign-out.
+Supabase Authentication integration in the mobile app: Google Sign-In, session persistence, and sign-out. Auth state is managed by the `useAuth` hook; the `supabase` singleton handles token refresh automatically via AsyncStorage.
 
 ## Tasks
 
 **Packages to install:**
-- `@react-native-firebase/app`
-- `expo-auth-session` (for Google OAuth)
-- `expo-crypto` (for PKCE)
-- `expo-apple-authentication` (for Apple Sign-In, iOS only)
-- `expo-secure-store` (token storage)
+
+Already installed as part of `auth-001-supabase-auth-setup.md`:
+- `@supabase/supabase-js`
+- `@react-native-async-storage/async-storage`
+- `@react-native-google-signin/google-signin`
+
+No Firebase packages. No custom API client.
 
 **`apps/mobile/app/(auth)/welcome.tsx`:**
-- "Sign in with Google" button: triggers `promptAsync()` from `useAuthRequest()` (expo-auth-session)
-  - On success: exchange code for Firebase credential, `signInWithCredential(auth, credential)`
-  - On Firebase sign-in success: Firebase auth state listener triggers redirect to onboarding/today
-- "Sign in with Apple" button (iOS only, hidden on Android):
-  - `AppleAuthentication.signInAsync()` → get credential → Firebase credential exchange
-- Show loading state during sign-in
-
-**`apps/mobile/services/auth.ts`:**
-- `getToken(): Promise<string>` — returns current Firebase ID token (auto-refreshed by Firebase SDK)
-- `signOut(): Promise<void>` — Firebase signOut + clear SecureStore + navigate to welcome
-- `getCurrentUser(): FirebaseUser | null`
-
-**Token injection in API client:**
-- The `api-client` package calls `getToken()` before every request and sets `Authorization: Bearer <token>`
-- If token fetch fails → sign out and redirect to welcome
+- "Sign in with Google" button:
+  ```typescript
+  const { data } = await GoogleSignin.signIn()
+  await supabase.auth.signInWithIdToken({
+    provider: 'google',
+    token: data.idToken,
+  })
+  // onAuthStateChange listener (in useAuth) handles redirect
+  ```
+- "Continue with email" link (dev/testing only, hidden in production):
+  ```typescript
+  await supabase.auth.signInWithOtp({ email })
+  ```
+- Show loading state during sign-in; catch errors and show inline message
 
 **`apps/mobile/hooks/useAuth.ts`:**
-- Wraps Firebase `onAuthStateChanged` listener
-- Exposes `{ user, loading, signOut }` to components
+- Subscribe to `supabase.auth.onAuthStateChange` on mount, unsubscribe on unmount
+- Expose `{ user, session, loading, signOut }`
+- `SIGNED_IN` → check `profiles` row; if missing → navigate to `/(auth)/onboarding/lift-maxes`; else → `/(tabs)/today`
+- `SIGNED_OUT` → navigate to `/(auth)/welcome`
+- `signOut()` calls `supabase.auth.signOut()`
+
+**Token management:**
+- No manual token handling. Supabase SDK auto-refreshes the session via `autoRefreshToken: true`.
+- No `Authorization` header management — there is no custom API client. Supabase SDK attaches the session token to all RPC and table calls automatically.
+
+**`apps/mobile/app/_layout.tsx` root layout integration:**
+- Mount `useAuth` at root (or use `SessionContextProvider` from `@supabase/auth-helpers-react-native` if preferred)
+- Show splash screen (`SplashScreen.preventAutoHideAsync()`) until `loading === false`
+- Redirect guard: `user === null` → `/(auth)/welcome`; `user !== null && !hasActiveProgram` → onboarding; else → `/(tabs)/today`
 
 ## Dependencies
 

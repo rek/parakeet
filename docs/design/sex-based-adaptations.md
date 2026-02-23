@@ -12,7 +12,7 @@ Parakeet adjusts its training engine for biological sex across three areas: defa
 
 ### Volume and Recovery
 
-Research consistently shows female lifters can handle and *require* more weekly training volume than male lifters for equivalent adaptation:
+Research consistently shows female lifters can handle and _require_ more weekly training volume than male lifters for equivalent adaptation:
 
 - **Higher MEV and MRV**: Women's default volume landmarks are approximately 20–30% higher than men's. A female lifter needs more sets per week to stimulate growth, but she can also recover from more volume before hitting her limit.
 - **Faster inter-set recovery**: Women recover between sets faster than men. This affects rest time recommendations and how aggressively the JIT generator can schedule back-to-back sessions.
@@ -24,19 +24,19 @@ Source: RP Strength volume landmark research; Dr. Mike Israetel's work on MEV/MR
 
 The menstrual cycle introduces cyclical hormonal variation that has real physiological effects on training:
 
-| Phase | Days (typical 28-day cycle) | Key hormones | Physiological effects |
-|-------|---------------------------|--------------|----------------------|
-| **Menstrual** | 1–5 | Estrogen + progesterone low | Cramping, fatigue; training is fine if manageable |
-| **Follicular** | 6–13 | Estrogen rising | Best neuromuscular coordination, moderate evidence for slight strength peak |
-| **Ovulatory** | 12–16 | Estrogen peaks, LH surge | Peak strength potential; **highest injury risk** (ligament laxity) |
-| **Luteal** | 17–28 | Progesterone dominant | Higher RPE for same load, elevated core temperature, more fatigue; train normally but RPE signals are less reliable |
-| **Late luteal / PMS** | 24–28 | Both hormones dropping | Often hardest phase; treat like a mild disruption if symptoms are significant |
+| Phase                 | Days (typical 28-day cycle) | Key hormones                | Physiological effects                                                                                               |
+| --------------------- | --------------------------- | --------------------------- | ------------------------------------------------------------------------------------------------------------------- |
+| **Menstrual**         | 1–5                         | Estrogen + progesterone low | Cramping, fatigue; training is fine if manageable                                                                   |
+| **Follicular**        | 6–13                        | Estrogen rising             | Best neuromuscular coordination, moderate evidence for slight strength peak                                         |
+| **Ovulatory**         | 12–16                       | Estrogen peaks, LH surge    | Peak strength potential; **highest injury risk** (ligament laxity)                                                  |
+| **Luteal**            | 17–28                       | Progesterone dominant       | Higher RPE for same load, elevated core temperature, more fatigue; train normally but RPE signals are less reliable |
+| **Late luteal / PMS** | 24–28                       | Both hormones dropping      | Often hardest phase; treat like a mild disruption if symptoms are significant                                       |
 
 **What the science says about cycle-based periodization:**
 
-A 2024 meta-analysis (Niering et al., *Sports*) found medium effect sizes for slightly higher maximal strength in the late follicular phase. However, a critical 2025 review in *Strength & Conditioning Journal* found that **periodizing strength training specifically around the menstrual cycle has not been shown to produce better outcomes** than traditional training. Most studies in this area also have significant methodological weaknesses (hormone verification not done in 89% of screened studies per a 2025 *Journal of Applied Physiology* systematic review).
+A 2024 meta-analysis (Niering et al., _Sports_) found medium effect sizes for slightly higher maximal strength in the late follicular phase. However, a critical 2025 review in _Strength & Conditioning Journal_ found that **periodizing strength training specifically around the menstrual cycle has not been shown to produce better outcomes** than traditional training. Most studies in this area also have significant methodological weaknesses (hormone verification not done in 89% of screened studies per a 2025 _Journal of Applied Physiology_ systematic review).
 
-**The pragmatic position:** The cycle has real effects on *perceived* effort and fatigue. Parakeet already has systems (soreness check-in, RPE tracking, disruption reporting) that naturally capture this. The design does not hard-code phase-specific loading changes — instead, cycle phase provides *context* that enhances interpretation of the adaptive signals that already exist.
+**The pragmatic position:** The cycle has real effects on _perceived_ effort and fatigue. Parakeet already has systems (soreness check-in, RPE tracking, disruption reporting) that naturally capture this. The design does not hard-code phase-specific loading changes — instead, cycle phase provides _context_ that enhances interpretation of the adaptive signals that already exist.
 
 ### Injury Risk at Ovulation
 
@@ -51,6 +51,7 @@ Source: PMC11195904 (relaxin review), PMC5524267 (ACL laxity meta-analysis).
 ### 1. Biological Sex in User Profile
 
 Biological sex is collected during onboarding (a single required field). It is used for:
+
 - Selecting the correct default MEV/MRV table
 - Selecting the correct WILKS polynomial coefficients
 - Enabling the optional menstrual cycle tracking feature (female only)
@@ -61,17 +62,17 @@ This is **biological sex** (not gender identity) because it determines physiolog
 
 The default volume landmark table in `volume-management` is replaced with sex-specific values. Female defaults are approximately 20–30% higher:
 
-| Muscle | Male MEV | Male MRV | Female MEV | Female MRV |
-|--------|----------|----------|------------|------------|
-| Quads | 8 | 20 | 10 | 26 |
-| Hamstrings | 6 | 20 | 8 | 25 |
-| Glutes | 0 | 16 | 0 | 20 |
-| Lower Back | 6 | 12 | 7 | 15 |
-| Upper Back | 10 | 22 | 12 | 28 |
-| Chest | 8 | 22 | 10 | 26 |
-| Triceps | 6 | 20 | 8 | 24 |
-| Shoulders | 8 | 20 | 10 | 24 |
-| Biceps | 8 | 20 | 10 | 24 |
+| Muscle     | Male MEV | Male MRV | Female MEV | Female MRV |
+| ---------- | -------- | -------- | ---------- | ---------- |
+| Quads      | 8        | 20       | 10         | 26         |
+| Hamstrings | 6        | 20       | 8          | 25         |
+| Glutes     | 0        | 16       | 0          | 20         |
+| Lower Back | 6        | 12       | 7          | 15         |
+| Upper Back | 10       | 22       | 12         | 28         |
+| Chest      | 8        | 22       | 10         | 26         |
+| Triceps    | 6        | 20       | 8          | 24         |
+| Shoulders  | 8        | 20       | 10         | 24         |
+| Biceps     | 8        | 20       | 10         | 24         |
 
 These are starting defaults — users can override any value in Settings → Volume Config as before.
 
@@ -105,7 +106,7 @@ Menstrual cycle tracking is an **optional feature**, off by default. It does not
 
 **Why this approach:**
 
-The soreness check-in and RPE tracking already capture how the user is actually feeling. A lifter in a bad luteal phase will rate soreness high and log high RPE — the JIT generator will respond accordingly. The cycle tracking layer adds *explanatory context* ("this was a tough week because of where you were in your cycle") and optional disruption routing for severe symptoms, without requiring the engine to make assumptions about what the cycle phase means for this particular individual.
+The soreness check-in and RPE tracking already capture how the user is actually feeling. A lifter in a bad luteal phase will rate soreness high and log high RPE — the JIT generator will respond accordingly. The cycle tracking layer adds _explanatory context_ ("this was a tough week because of where you were in your cycle") and optional disruption routing for severe symptoms, without requiring the engine to make assumptions about what the cycle phase means for this particular individual.
 
 ## User Experience
 
@@ -113,7 +114,7 @@ The soreness check-in and RPE tracking already capture how the user is actually 
 
 - Biological sex field added to the Profile/Settings screen created during onboarding (same step as body weight)
 - If sex = Female: optional prompt "Would you like to track your menstrual cycle? This helps us understand your training patterns. (You can enable this later in Settings.)"
-- If enabled: user enters average cycle length (default 28 days) and date of last period start
+- If enabled: user enters average cycle length (default 28 days) and date of last period start. (Note: user should be prompted to update every cycle)
 
 ### Today Screen
 
@@ -154,10 +155,12 @@ The soreness check-in and RPE tracking already capture how the user is actually 
 ## Future Enhancements
 
 **Phase 2:**
+
 - Health app integration: import cycle data from Apple Health / Google Fit to avoid manual date entry
 - Personal pattern analysis: after 3+ cycles of data, surface whether this user shows significant cycle-performance correlation (many don't — the app won't assume they do)
 
 **Long-term:**
+
 - If the scientific evidence for cycle-based strength periodization becomes robust, incorporate phase-specific loading modulation — this is explicitly not done now because the evidence doesn't yet support it
 
 ## References

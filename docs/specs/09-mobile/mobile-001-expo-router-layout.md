@@ -11,7 +11,7 @@ Root layout, auth guard, tab navigator, and screen registration for the full app
 
 **`apps/mobile/app/_layout.tsx` (root layout):**
 - Load fonts (if custom fonts used)
-- Initialize Firebase Auth listener
+- Initialize Supabase Auth listener (`supabase.auth.onAuthStateChange`)
 - Show splash screen while auth state loads
 - Redirect: if `user === null` → `/(auth)/welcome`; if `user !== null` → `/(tabs)/today`
 - Wrap all children in theme provider and query client provider (React Query)

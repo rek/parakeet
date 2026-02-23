@@ -1,6 +1,6 @@
 # Spec: Cube Method Scheduler
 
-**Status**: Planned
+**Status**: Implemented
 **Domain**: Training Engine
 
 ## What This Covers

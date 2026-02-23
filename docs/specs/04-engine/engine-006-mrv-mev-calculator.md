@@ -1,6 +1,6 @@
 # Spec: MRV/MEV Calculator
 
-**Status**: Planned
+**Status**: Implemented
 **Domain**: Training Engine
 
 ## What This Covers

@@ -1,6 +1,6 @@
 # Spec: One-Rep Max Estimation Formulas
 
-**Status**: Planned
+**Status**: Implemented
 **Domain**: Training Engine
 
 ## What This Covers

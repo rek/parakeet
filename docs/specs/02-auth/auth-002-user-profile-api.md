@@ -1,6 +1,6 @@
 # Spec: User Profile (Supabase Direct)
 
-**Status**: Planned
+**Status**: Implemented
 **Domain**: Auth & Users
 
 ## What This Covers
@@ -30,6 +30,7 @@ async function updateProfile(update: { display_name?: string }): Promise<void> {
 ```
 
 **Settings screen:**
+
 - Display: email (from `supabase.auth.getUser()`), display_name (from `profiles`)
 - Edit: display_name field with save button → calls `updateProfile()`
 - Sign out button → calls `supabase.auth.signOut()`

@@ -1,11 +1,11 @@
 # Spec: Database Migrations (Supabase)
 
-**Status**: Planned
+**Status**: Implemented
 **Domain**: Infrastructure
 
 ## What This Covers
 
-Supabase migration files for the full schema. All weights stored as integer grams. New tables for MRV/MEV, soreness, and auxiliaries compared to v1.
+Supabase migration files for the full schema. All weights stored as integer grams. New tables for MRV/MEV, soreness, auxiliaries, cycle reviews, and developer suggestions compared to v1. `edge_cases` renamed to `disruptions`.
 
 ## Tasks
 
@@ -14,17 +14,19 @@ Supabase migration files for the full schema. All weights stored as integer gram
 - Create new migration: `supabase migration new <name>`
 - Apply locally: `supabase db reset`
 - Apply to prod: `supabase db push --db-url $PROD_DB_URL`
+- Generate TypeScript types: `npm run db:types` (after `npm run db:start`)
 
-**`001_initial_schema.sql` — all tables:**
+**`20260223000000_initial_schema.sql` — all 16 tables:**
 
 ```sql
 -- Weight storage: all weight_* columns are INTEGER grams (e.g., 140kg = 140000)
 
 -- Extend Supabase auth.users
 CREATE TABLE profiles (
-  id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
-  display_name TEXT,
-  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+  id             UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
+  display_name   TEXT,
+  biological_sex TEXT CHECK (biological_sex IN ('female', 'male', 'prefer_not_to_say')),
+  created_at     TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
 -- 1RM snapshots (append-only, newest = current)
@@ -90,7 +92,8 @@ CREATE TABLE sessions (
   -- JIT-populated fields (NULL until user opens session)
   planned_sets JSONB,
   jit_generated_at TIMESTAMPTZ,
-  jit_input_snapshot JSONB,  -- records what data was used for JIT (audit trail)
+  jit_input_snapshot JSONB,   -- records what data was used for JIT (audit trail)
+  jit_strategy TEXT CHECK (jit_strategy IN ('formula', 'llm', 'hybrid', 'formula_fallback')),
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
@@ -124,24 +127,27 @@ CREATE TABLE soreness_checkins (
   ratings JSONB NOT NULL
 );
 
--- Disruption events
-CREATE TABLE edge_cases (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
-  program_id UUID REFERENCES programs(id),
-  session_id UUID REFERENCES sessions(id),
-  reported_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-  case_type TEXT NOT NULL CHECK (case_type IN (
-    'injury', 'illness', 'travel', 'fatigue', 'equipment_unavailable', 'other'
-  )),
-  severity TEXT NOT NULL CHECK (severity IN ('minor', 'moderate', 'major')),
-  affected_date_start DATE NOT NULL,
-  affected_date_end DATE,
-  affected_lifts TEXT[],
-  description TEXT,
-  adjustment_applied JSONB,
-  resolved_at TIMESTAMPTZ,
-  status TEXT NOT NULL DEFAULT 'active' CHECK (status IN ('active', 'resolved', 'monitoring'))
+-- Disruption events (injury, illness, travel, etc.)
+-- Note: was named edge_cases in earlier drafts
+CREATE TABLE disruptions (
+  id                    UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id               UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  program_id            UUID REFERENCES programs(id),
+  session_ids_affected  UUID[],
+  reported_at           TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  disruption_type       TEXT NOT NULL CHECK (disruption_type IN (
+                          'injury', 'illness', 'travel', 'fatigue',
+                          'equipment_unavailable', 'unprogrammed_event', 'other'
+                        )),
+  severity              TEXT NOT NULL CHECK (severity IN ('minor', 'moderate', 'major')),
+  affected_date_start   DATE NOT NULL,
+  affected_date_end     DATE,
+  affected_lifts        TEXT[],
+  description           TEXT,
+  adjustment_applied    JSONB,
+  resolved_at           TIMESTAMPTZ,
+  status                TEXT NOT NULL DEFAULT 'active'
+                          CHECK (status IN ('active', 'resolved', 'monitoring'))
 );
 
 -- User's MRV/MEV per muscle group (defaults come from training-engine constants)
@@ -229,22 +235,68 @@ CREATE TABLE recovery_snapshots (
   resting_hr_bpm SMALLINT,
   raw_payload JSONB
 );
+
+-- AI-generated end-of-cycle analysis (one per program)
+CREATE TABLE cycle_reviews (
+  id               UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id          UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  program_id       UUID NOT NULL REFERENCES programs(id) ON DELETE CASCADE,
+  compiled_report  JSONB NOT NULL,  -- CycleReport struct
+  llm_response     JSONB NOT NULL,  -- CycleReview struct
+  generated_at     TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  UNIQUE(user_id, program_id)
+);
+
+-- AI structural suggestions surfaced to the developer
+CREATE TABLE developer_suggestions (
+  id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id         UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  program_id      UUID REFERENCES programs(id),
+  description     TEXT NOT NULL,
+  rationale       TEXT NOT NULL,
+  developer_note  TEXT NOT NULL,
+  created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  is_reviewed     BOOLEAN NOT NULL DEFAULT FALSE
+);
 ```
 
-**RLS policies (apply to every user table — see infra-002).**
+**RLS policies (apply to every user table — see infra-003-supabase-setup.md).**
 
 **Indexes:**
 ```sql
-CREATE INDEX idx_lifter_maxes_user_time ON lifter_maxes(user_id, recorded_at DESC);
-CREATE INDEX idx_sessions_user_date ON sessions(user_id, planned_date);
-CREATE INDEX idx_sessions_program_week ON sessions(program_id, week_number);
-CREATE INDEX idx_session_logs_user_time ON session_logs(user_id, logged_at DESC);
-CREATE INDEX idx_soreness_session ON soreness_checkins(session_id);
-CREATE INDEX idx_perf_metrics_user_lift_time ON performance_metrics(user_id, lift, recorded_at DESC);
-CREATE INDEX idx_auxiliary_assignments_block ON auxiliary_assignments(user_id, program_id, block_number);
-CREATE INDEX idx_warmup_configs_user ON warmup_configs(user_id);
+CREATE INDEX idx_lifter_maxes_user_time       ON lifter_maxes(user_id, recorded_at DESC);
+CREATE INDEX idx_sessions_user_date           ON sessions(user_id, planned_date);
+CREATE INDEX idx_sessions_program_week        ON sessions(program_id, week_number);
+CREATE INDEX idx_session_logs_user_time       ON session_logs(user_id, logged_at DESC);
+CREATE INDEX idx_soreness_session             ON soreness_checkins(session_id);
+CREATE INDEX idx_perf_metrics_user_lift_time  ON performance_metrics(user_id, lift, recorded_at DESC);
+CREATE INDEX idx_auxiliary_assignments_block  ON auxiliary_assignments(user_id, program_id, block_number);
+CREATE INDEX idx_warmup_configs_user          ON warmup_configs(user_id);
+CREATE INDEX idx_cycle_reviews_user           ON cycle_reviews(user_id, generated_at DESC);
+CREATE INDEX idx_developer_suggestions_user   ON developer_suggestions(user_id, created_at DESC);
 ```
+
+## Table Summary (16 total)
+
+| Table | Notes |
+|-------|-------|
+| `profiles` | `biological_sex` column added |
+| `lifter_maxes` | Append-only 1RM snapshots |
+| `formula_configs` | Versioned formula overrides |
+| `programs` | Structural scaffold, no sets |
+| `sessions` | `jit_strategy` column added |
+| `session_logs` | Append-only completed sets |
+| `soreness_checkins` | Pre-workout per-muscle ratings |
+| `disruptions` | Renamed from `edge_cases`; `session_ids_affected UUID[]`; `disruption_type` with `unprogrammed_event` |
+| `muscle_volume_config` | MRV/MEV user overrides |
+| `auxiliary_exercises` | Exercise pool per lift |
+| `auxiliary_assignments` | Active 2 exercises per block |
+| `performance_metrics` | Computed locally, synced |
+| `warmup_configs` | Protocol per lift |
+| `recovery_snapshots` | HRV/sleep stub |
+| `cycle_reviews` | AI end-of-cycle review, one per program |
+| `developer_suggestions` | AI structural suggestions for developer |
 
 ## Dependencies
 
-- [infra-002-supabase-setup.md](./infra-002-supabase-setup.md)
+- [infra-003-supabase-setup.md](./infra-003-supabase-setup.md)

@@ -37,12 +37,12 @@ The screen where users report injuries, illness, travel, or other disruptions an
 - Placeholder: "e.g., Left knee pain on descent, no pain on bench or deadlift"
 
 **Submit button:**
-- "Review Adjustments" → call `POST /v1/disruptions`, show loading
+- "Review Adjustments" → call `reportDisruption(userId, input)` from `apps/mobile/lib/disruptions.ts`, show loading
 
 **Adjustment Review screen (rendered after API response):**
 - List of affected sessions with before/after comparison cards
 - Each card: session date, lift, planned weight (strikethrough) → adjusted weight; or "Session Skipped" label
-- "Apply All Adjustments" primary button → call `POST /v1/disruptions/:disruptionId/apply-adjustment`
+- "Apply All Adjustments" primary button → call `applyDisruptionAdjustment(disruptionId, userId)` from `apps/mobile/lib/disruptions.ts`
 - "Skip — Keep Original Plan" secondary button → navigate back without applying
 
 **Active disruption list (accessible from Settings):**

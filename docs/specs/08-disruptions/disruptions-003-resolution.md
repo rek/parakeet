@@ -1,42 +1,117 @@
-# Spec: Disruption Resolution API
+# Spec: Disruption Resolution
 
 **Status**: Planned
 **Domain**: Disruptions
 
 ## What This Covers
 
-Endpoints for resolving disruptions (marking them done) and listing active/historical disruptions. Includes the data for the home screen active disruption banner.
+Resolving disruptions (marking them done), listing active/historical disruptions, and handling session revert when a past resolution date is specified.
 
 ## Tasks
 
-**Repository (`apps/api/src/modules/disruptions/disruptions.repository.ts`):**
-- `findActive(userId: string): Promise<TrainingDisruption[]>` — `status != 'resolved'` for this user
-- `findAll(userId: string, pagination): Promise<PaginatedResult<TrainingDisruption>>`
-- `findById(disruptionId: string, userId: string): Promise<TrainingDisruption | null>`
-- `resolve(disruptionId: string, userId: string, resolvedAt?: Date): Promise<TrainingDisruption>`
+**`apps/mobile/lib/disruptions.ts` (additions):**
 
-**Service:**
-- `resolveDisruption(disruptionId: string, userId: string, resolvedAt?: string): Promise<TrainingDisruption>`
-  - Validates disruption is active (not already resolved)
-  - Sets `status = 'resolved'`, `resolved_at = resolvedAt ?? NOW()`
-  - If `resolved_at` is in the past (user says "I recovered 2 days ago"), sessions after that date revert to their original planned weights from `programs.program_snapshot` JSONB
+```typescript
+// Resolve a disruption; optionally specify when recovery occurred
+export async function resolveDisruption(
+  disruptionId: string,
+  userId: string,
+  resolvedAt?: string  // ISO date; defaults to now
+): Promise<void> {
+  const resolvedDate = resolvedAt ?? new Date().toISOString()
 
-**Routes:**
-- `PATCH /v1/disruptions/:disruptionId/resolve`
-  - Request body: `{ resolved_at?: string }` (ISO date; defaults to now)
+  await supabase
+    .from('disruptions')
+    .update({ status: 'resolved', resolved_at: resolvedDate })
+    .eq('id', disruptionId)
+    .eq('user_id', userId)
 
-- `GET /v1/disruptions`
-  - Query: `?status=active|resolved|all` (default: all)
-  - Returns list with key fields (no nested session details in list)
+  // If resolved_at is in the past, flag future sessions for JIT re-generation.
+  // Sessions whose planned_sets were adjusted by this disruption should re-run JIT
+  // so they return to normal loading. Clear planned_sets + jit_generated_at so the
+  // JIT generator runs fresh when the user opens them.
+  if (resolvedAt && new Date(resolvedAt) < new Date()) {
+    const { data: disruption } = await supabase
+      .from('disruptions')
+      .select('session_ids_affected')
+      .eq('id', disruptionId)
+      .single()
 
-- `GET /v1/disruptions/:disruptionId`
-  - Full detail including `adjustment_applied` JSONB and linked session summaries
+    const sessionIds = disruption?.session_ids_affected ?? []
+    if (sessionIds.length > 0) {
+      await supabase
+        .from('sessions')
+        .update({ planned_sets: null, jit_generated_at: null })
+        .in('id', sessionIds)
+        .in('status', ['planned'])  // only unfilled future sessions
+    }
+  }
+}
 
-**Home screen banner data:**
-- The `GET /v1/sessions/today` response includes an `active_disruptions` array for the Today screen banner:
-  ```json
-  { "active_disruptions": [{ "case_type": "injury", "severity": "minor", "affected_lifts": ["squat"], "description": "Left knee pain" }] }
-  ```
+// Active disruptions for the Today screen banner
+export async function getActiveDisruptions(userId: string) {
+  const { data } = await supabase
+    .from('disruptions')
+    .select('id, disruption_type, severity, affected_lifts, description, affected_date_end')
+    .eq('user_id', userId)
+    .neq('status', 'resolved')
+    .order('created_at', { ascending: false })
+  return data ?? []
+}
+
+// Full history for the Settings / disruption history view
+export async function getDisruptionHistory(
+  userId: string,
+  pagination: { page: number; pageSize: number }
+) {
+  const from = pagination.page * pagination.pageSize
+  const to = from + pagination.pageSize - 1
+
+  const { data, count } = await supabase
+    .from('disruptions')
+    .select('*', { count: 'exact' })
+    .eq('user_id', userId)
+    .order('created_at', { ascending: false })
+    .range(from, to)
+
+  return { items: data ?? [], total: count ?? 0 }
+}
+
+// Full detail of a single disruption
+export async function getDisruption(disruptionId: string, userId: string) {
+  const { data } = await supabase
+    .from('disruptions')
+    .select('*')
+    .eq('id', disruptionId)
+    .eq('user_id', userId)
+    .single()
+  return data
+}
+```
+
+**Today screen active disruption banner:**
+
+The `findTodaySession()` helper (defined in `sessions-001`) includes a joined query for active disruptions:
+
+```typescript
+// In sessions-001 findTodaySession — include active disruptions in the response
+const { data } = await supabase
+  .from('sessions')
+  .select(`
+    *,
+    active_disruptions:disruptions!inner(
+      id, disruption_type, severity, affected_lifts, description
+    )
+  `)
+  .eq('user_id', userId)
+  // ... rest of today query
+```
+
+If the join is complex, call `getActiveDisruptions(userId)` separately in the Today screen's React Query hook.
+
+**Session revert logic:**
+
+When `resolved_at` is in the past, sessions that had `planned_sets` modified by this disruption have `planned_sets` and `jit_generated_at` cleared. The next time the user opens those sessions, JIT runs from scratch using the full current state (no active disruption, normal loading). There is no `program_snapshot` field — JIT re-generation is the authoritative way to restore normal session weights.
 
 ## Dependencies
 
