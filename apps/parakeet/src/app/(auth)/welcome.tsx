@@ -1,19 +1,22 @@
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
-import { useState } from 'react';
-import { ActivityIndicator, Alert, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import * as Linking from 'expo-linking';
+import { useEffect, useState } from 'react';
+import { ActivityIndicator, Alert, Platform, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 
 import { supabase } from '../../lib/supabase';
-
-// Configure once — the actual webClientId comes from your Google Cloud OAuth credentials
-GoogleSignin.configure({
-  webClientId: process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID,
-});
 
 export default function WelcomeScreen() {
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
 
+  useEffect(() => {
+    if (Platform.OS !== 'web') {
+      GoogleSignin.configure({ webClientId: process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID });
+    }
+  }, []);
+
   async function handleGoogleSignIn() {
+    if (Platform.OS === 'web') return;
     try {
       setLoading(true);
       await GoogleSignin.hasPlayServices();
@@ -38,7 +41,8 @@ export default function WelcomeScreen() {
     if (!email.trim()) return;
     try {
       setLoading(true);
-      const { error } = await supabase.auth.signInWithOtp({ email: email.trim() });
+      const emailRedirectTo = Platform.OS === 'web' ? window.location.origin : Linking.createURL('/');
+      const { error } = await supabase.auth.signInWithOtp({ email: email.trim(), options: { emailRedirectTo } });
       if (error) throw error;
       Alert.alert('Check your email', `Magic link sent to ${email}`);
     } catch (err: unknown) {

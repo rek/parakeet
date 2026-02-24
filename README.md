@@ -11,7 +11,7 @@ A Cube Method program generator and session tracker. The training engine runs lo
 ## Tech Stack
 
 - **Expo SDK 54**, React Native, TypeScript
-- **Nx monorepo** (`nx.json`) — `apps/mobile`, `packages/training-engine`, `packages/shared-types`
+- **Nx monorepo** (`nx.json`) — `apps/parakeet`, `packages/training-engine`, `packages/shared-types`
 - **Supabase** — Auth (Google OAuth) + Postgres + Realtime
 - **Vercel AI SDK** (`ai` + `@ai-sdk/anthropic`) — post-v1, optional
 
@@ -29,7 +29,7 @@ A Cube Method program generator and session tracker. The training engine runs lo
 
 ```
 apps/
-  mobile/                — Expo app (main entry point)
+  parakeet/                — Expo app (main entry point)
     app/                 — Expo Router screens
     lib/                 — Supabase SDK helpers (sessions, programs, etc.)
     hooks/               — React Query hooks
@@ -57,13 +57,35 @@ Start here:
 
 ```bash
 npm install
+```
 
-# Mobile app
-npx nx run mobile:start          # Expo dev server
-npx nx run mobile:lint           # ESLint
-npx nx run mobile:typecheck      # TypeScript check
+### parakeet dev server
 
-# Supabase (local)
-supabase start                   # Start local Postgres + Studio
-supabase db push                 # Apply migrations to hosted Supabase
+```bash
+# Start Expo dev server (iOS/Android/Web)
+npx nx run parakeet:start
+
+# Then in the Expo CLI menu:
+#   Press i  → iOS simulator
+#   Press a  → Android emulator
+#   Press w  → Web browser (Metro web)
+
+# Or start directly in web mode:
+npx nx run parakeet:serve
+```
+
+### Linting and type checking
+
+```bash
+npx nx run parakeet:lint
+npx tsc -p apps/parakeet/tsconfig.app.json --noEmit
+```
+
+### Supabase (local)
+
+```bash
+npm run db:start                 # Start local Postgres + Studio at localhost:54323
+npm run db:reset                 # Apply migrations (drop + recreate)
+npm run db:types                 # Generate TypeScript types → supabase/types.ts
+npm run db:push                  # Push migrations to hosted Supabase
 ```

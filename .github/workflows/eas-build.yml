@@ -5,7 +5,7 @@ on:
     branches:
       - main
     paths:
-      - 'apps/mobile/**'
+      - 'apps/parakeet/**'
       - 'packages/**'
 
 jobs:
@@ -35,7 +35,7 @@ jobs:
         id: change-type
         run: |
           # Check if any native-affecting files changed
-          NATIVE_PATTERNS="apps/mobile/app.json|apps/mobile/eas.json|apps/mobile/package.json|apps/mobile/metro.config.js|apps/mobile/index.js|packages/.*/package.json"
+          NATIVE_PATTERNS="apps/parakeet/app.json|apps/parakeet/eas.json|apps/parakeet/package.json|apps/parakeet/metro.config.js|apps/parakeet/index.js|packages/.*/package.json"
           CHANGED=$(git diff --name-only HEAD~1 HEAD)
           if echo "$CHANGED" | grep -qE "$NATIVE_PATTERNS"; then
             echo "type=native" >> $GITHUB_OUTPUT
@@ -45,10 +45,10 @@ jobs:
 
       - name: EAS Update (JS-only changes)
         if: steps.change-type.outputs.type == 'js-only'
-        working-directory: apps/mobile
+        working-directory: apps/parakeet
         run: eas update --branch production --message "${{ github.event.head_commit.message }}" --non-interactive
 
       - name: EAS Build (native changes)
         if: steps.change-type.outputs.type == 'native'
-        working-directory: apps/mobile
+        working-directory: apps/parakeet
         run: eas build --platform all --profile production --non-interactive

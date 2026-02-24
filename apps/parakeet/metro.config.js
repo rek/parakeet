@@ -31,8 +31,13 @@ const customConfig = {
   },
 };
 
-module.exports = withNxMetro(mergeConfig(defaultConfig, customConfig), {
+// withNxMetro overrides projectRoot to workspaceRoot (breaks expo-router).
+// Re-override it back to the app directory after the fact.
+// See: https://github.com/nrwl/nx/issues/34012
+const nxConfig = withNxMetro(mergeConfig(defaultConfig, customConfig), {
   debug: false,
   extensions: [],
   watchFolders: [...defaultConfig.watchFolders],
 });
+
+module.exports = { ...nxConfig, projectRoot };

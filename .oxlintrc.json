@@ -1,0 +1,22 @@
+{
+  "rules": {
+    "no-console": "off",
+    "no-debugger": "warn",
+    "no-unused-vars": "error",
+    "import/first": "error",
+    "import/no-duplicates": "error",
+    "import/no-anonymous-default-export": "warn",
+    "import/no-named-default": "error"
+  },
+  "env": {
+    "browser": true,
+    "node": true,
+    "es2021": true
+  },
+  "plugins": ["react", "jsx-a11y", "import"],
+  "settings": {
+    "react": {
+      "version": "detect"
+    }
+  }
+}

@@ -3,22 +3,24 @@
   "compilerOptions": {
     "rootDir": ".",
     "sourceMap": true,
-    "declaration": false,
-    "moduleResolution": "bundler",
+    "declaration": true,
+    "moduleResolution": "node",
+    "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
     "importHelpers": true,
-    "target": "ES2022",
-    "module": "ESNext",
-    "lib": ["ES2022", "DOM"],
+    "target": "es2015",
+    "module": "esnext",
+    "lib": ["es2020", "dom"],
     "skipLibCheck": true,
     "skipDefaultLibCheck": true,
     "baseUrl": ".",
-    "strict": true,
+    "types": ["node", "react-native"],
     "paths": {
-      "@parakeet/training-engine": ["packages/training-engine/src/index.ts"],
+      "@parakeet/db": ["packages/db/src/index.ts"],
       "@parakeet/shared-types": ["packages/shared-types/src/index.ts"],
-      "@parakeet/db": ["packages/db/src/index.ts"]
+      "@parakeet/training-engine": ["packages/training-engine/src/index.ts"]
     }
   },
+  "include": ["global.d.ts"],
   "exclude": ["node_modules", "tmp"]
 }
