@@ -13,7 +13,7 @@ Management of the user's auxiliary exercise pool per lift and the active block a
 - `auxiliary_exercises` — user's ordered pool per lift
 - `auxiliary_assignments` — which 2 exercises are active per lift per block
 
-**`apps/mobile/lib/auxiliary-config.ts`:**
+**`apps/parakeet/lib/auxiliary-config.ts`:**
 
 ```typescript
 // Get user's pool for a lift (ordered by position)
@@ -89,7 +89,7 @@ async function lockAssignment(
 }
 ```
 
-**Settings screen — Auxiliary Exercises (`apps/mobile/app/(tabs)/settings.tsx`):**
+**Settings screen — Auxiliary Exercises (`apps/parakeet/app/(tabs)/settings.tsx`):**
 - Shows 3 sections: Squat, Bench, Deadlift
 - Each section: ordered list with drag handles for reordering
 - "Add exercise" text input at bottom of each section

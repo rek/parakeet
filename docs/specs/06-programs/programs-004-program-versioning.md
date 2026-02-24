@@ -9,7 +9,7 @@ Creating a new program when the user updates their maxes or wants a fresh start.
 
 ## Tasks
 
-**`apps/mobile/lib/programs.ts` (regeneration helper):**
+**`apps/parakeet/lib/programs.ts` (regeneration helper):**
 
 ```typescript
 async function regenerateProgram(input: RegenerateProgramInput): Promise<Program> {

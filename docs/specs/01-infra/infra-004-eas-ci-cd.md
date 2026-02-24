@@ -5,7 +5,7 @@
 
 ## What This Covers
 
-GitHub Actions CI (lint/test/typecheck) and EAS Build/Update for mobile app deployment. No backend deployment pipeline needed (Supabase manages the DB; migrations are pushed via CLI).
+GitHub Actions CI (lint/test/typecheck) and EAS Build/Update for parakeet app deployment. No backend deployment pipeline needed (Supabase manages the DB; migrations are pushed via CLI).
 
 ## Tasks
 
@@ -16,7 +16,7 @@ eas login
 eas build:configure        # creates eas.json
 ```
 
-**`apps/mobile/eas.json`:**
+**`apps/parakeet/eas.json`:**
 ```json
 {
   "cli": { "version": ">= 13.0.0" },
@@ -56,7 +56,7 @@ eas secret:create --name EXPO_PUBLIC_SUPABASE_ANON_KEY --value "..."
 - No build step in CI (EAS handles builds asynchronously)
 
 **`.github/workflows/eas-build.yml`:**
-- Trigger: push to main (when `apps/mobile/**` or `packages/**` changed)
+- Trigger: push to main (when `apps/parakeet/**` or `packages/**` changed)
 - Determine update type:
   - JS-only changes (no native module changes): `eas update --branch production --message "$COMMIT_MESSAGE"`
   - Native changes: `eas build --platform all --profile production --non-interactive`

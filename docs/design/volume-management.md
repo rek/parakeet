@@ -135,5 +135,5 @@ The Volume Dashboard shows current-week volume vs MRV/MEV for all 9 muscle group
 ## References
 
 - Related Design Docs: [program-generation.md](./program-generation.md), [performance-logging.md](./performance-logging.md)
-- Specs: [engine-006-mrv-mev-calculator.md](../specs/engine-006-mrv-mev-calculator.md), [engine-007-jit-session-generator.md](../specs/engine-007-jit-session-generator.md), [engine-009-soreness-adjuster.md](../specs/engine-009-soreness-adjuster.md), [mobile-011-soreness-checkin-screen.md](../specs/mobile-011-soreness-checkin-screen.md), [mobile-012-volume-dashboard.md](../specs/mobile-012-volume-dashboard.md)
+- Specs: [engine-006-mrv-mev-calculator.md](../specs/engine-006-mrv-mev-calculator.md), [engine-007-jit-session-generator.md](../specs/engine-007-jit-session-generator.md), [engine-009-soreness-adjuster.md](../specs/engine-009-soreness-adjuster.md), [parakeet-011-soreness-checkin-screen.md](../specs/parakeet-011-soreness-checkin-screen.md), [parakeet-012-volume-dashboard.md](../specs/parakeet-012-volume-dashboard.md)
 - External: Dr. Mike Israetel, Renaissance Periodization — volume landmark research

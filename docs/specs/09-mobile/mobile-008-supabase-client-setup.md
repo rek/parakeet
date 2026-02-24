@@ -1,11 +1,11 @@
-# Spec: Supabase Client Setup (Mobile)
+# Spec: Supabase Client Setup (parakeet)
 
 **Status**: Implemented
-**Domain**: Mobile
+**Domain**: parakeet
 
 ## What This Covers
 
-The Supabase client singleton for the mobile app, React Query integration, and the real-time sync subscription between devices.
+The Supabase client singleton for the parakeet app, React Query integration, and the real-time sync subscription between devices.
 
 ## Tasks
 
@@ -15,9 +15,9 @@ npm install @supabase/supabase-js @react-native-async-storage/async-storage
 npm install @tanstack/react-query
 ```
 
-**`apps/mobile/lib/supabase.ts`** — see [auth-001-supabase-auth-setup.md](../02-auth/auth-001-supabase-auth-setup.md) for the client singleton definition.
+**`apps/parakeet/lib/supabase.ts`** — see [auth-001-supabase-auth-setup.md](../02-auth/auth-001-supabase-auth-setup.md) for the client singleton definition.
 
-**`apps/mobile/lib/query-client.ts`:**
+**`apps/parakeet/lib/query-client.ts`:**
 ```typescript
 import { QueryClient } from '@tanstack/react-query'
 
@@ -32,7 +32,7 @@ export const queryClient = new QueryClient({
 })
 ```
 
-**`apps/mobile/app/_layout.tsx`:**
+**`apps/parakeet/app/_layout.tsx`:**
 ```typescript
 import { QueryClientProvider } from '@tanstack/react-query'
 import { queryClient } from '@/lib/query-client'
@@ -50,7 +50,7 @@ export default function RootLayout() {
 
 **React Query hooks pattern (example):**
 ```typescript
-// apps/mobile/hooks/useActiveProgram.ts
+// apps/parakeet/hooks/useActiveProgram.ts
 export function useActiveProgram() {
   const userId = useUserId()
   return useQuery({
@@ -60,7 +60,7 @@ export function useActiveProgram() {
   })
 }
 
-// apps/mobile/hooks/useTodaySession.ts
+// apps/parakeet/hooks/useTodaySession.ts
 export function useTodaySession() {
   const userId = useUserId()
   return useQuery({
@@ -73,7 +73,7 @@ export function useTodaySession() {
 
 **Real-time sync (Supabase Realtime):**
 ```typescript
-// apps/mobile/hooks/useSessionSync.ts
+// apps/parakeet/hooks/useSessionSync.ts
 // Subscribes to changes on the sessions table for the current user
 // Useful for cross-device sync (e.g., wife's phone updates show on husband's)
 export function useSessionSync(programId: string) {

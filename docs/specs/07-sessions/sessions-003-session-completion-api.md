@@ -9,7 +9,7 @@ Writing a completed session log to Supabase, computing performance metrics local
 
 ## Tasks
 
-**`apps/mobile/lib/sessions.ts` (completion helper):**
+**`apps/parakeet/lib/sessions.ts` (completion helper):**
 
 ```typescript
 async function completeSession(

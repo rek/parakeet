@@ -1,7 +1,7 @@
 # Spec: Onboarding Screens
 
 **Status**: Implemented
-**Domain**: Mobile App
+**Domain**: parakeet App
 
 ## What This Covers
 
@@ -9,7 +9,7 @@ The three onboarding screens: lift max input, program settings, and program prev
 
 ## Tasks
 
-**`apps/mobile/app/(auth)/onboarding/lift-maxes.tsx`:**
+**`apps/parakeet/app/(auth)/onboarding/lift-maxes.tsx`:**
 - Three sections: Squat, Bench Press, Deadlift
 - Per section:
   - Toggle: "1RM" | "3RM" (default 3RM)
@@ -19,14 +19,14 @@ The three onboarding screens: lift max input, program settings, and program prev
 - Validation: all three lifts must have valid input before "Next" is enabled
 - "I don't know my maxes" link → sets defaults and shows warning banner
 
-**`apps/mobile/app/(auth)/onboarding/program-settings.tsx`:**
+**`apps/parakeet/app/(auth)/onboarding/program-settings.tsx`:**
 - Duration selector: 3-button segmented control (8 weeks | 10 weeks | 12 weeks), default 10
 - Days per week: stepper (3, 4, or 5), default 3
 - Start date: `DateTimePicker` (expo-datetime-picker), default next Monday
 - "Generate My Program" primary button
-- On tap: call `submitMaxes()` from `apps/mobile/lib/lifter-maxes.ts`, then `createProgram()` from `apps/mobile/lib/programs.ts`; show loading state
+- On tap: call `submitMaxes()` from `apps/parakeet/lib/lifter-maxes.ts`, then `createProgram()` from `apps/parakeet/lib/programs.ts`; show loading state
 
-**`apps/mobile/app/(auth)/onboarding/review.tsx`:**
+**`apps/parakeet/app/(auth)/onboarding/review.tsx`:**
 - Horizontal scroll of Week 1 session cards (3 cards for 3-day program)
 - Each card: lift name, intensity type badge (Heavy/Explosive/Rep), weight × sets × reps, planned date
 - "Looks good — Start Training" button → navigate to `/(tabs)/today`
@@ -38,5 +38,5 @@ The three onboarding screens: lift max input, program settings, and program prev
 
 ## Dependencies
 
-- [mobile-002-auth-flow.md](./mobile-002-auth-flow.md)
+- [parakeet-002-auth-flow.md](./parakeet-002-auth-flow.md)
 - [programs-002-program-generation-api.md](../06-programs/programs-002-program-generation-api.md)

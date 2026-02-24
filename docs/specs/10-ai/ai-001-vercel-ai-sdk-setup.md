@@ -17,7 +17,7 @@ npm install ai @ai-sdk/anthropic
 
 ### Environment Variables
 
-**`apps/mobile/.env.local`** (development, gitignored):
+**`apps/parakeet/.env.local`** (development, gitignored):
 ```
 EXPO_PUBLIC_ANTHROPIC_API_KEY=sk-ant-...
 ```
@@ -31,7 +31,7 @@ The `EXPO_PUBLIC_` prefix makes the key accessible in Expo's environment. For a 
 
 ### Expo Fetch Polyfill
 
-**`apps/mobile/app/_layout.tsx`** — add as the **first import** before any AI SDK usage:
+**`apps/parakeet/app/_layout.tsx`** — add as the **first import** before any AI SDK usage:
 
 ```typescript
 import 'expo/fetch'

@@ -1,7 +1,7 @@
 # Spec: Formula Editor Screen
 
 **Status**: Planned
-**Domain**: Mobile App
+**Domain**: parakeet App
 
 ## What This Covers
 
@@ -9,7 +9,7 @@ The formula editor screen in Settings where users view, understand, and override
 
 ## Tasks
 
-**`apps/mobile/app/formula/editor.tsx`:**
+**`apps/parakeet/app/formula/editor.tsx`:**
 - Tabs or accordion sections: Block 1 | Block 2 | Block 3 | Deload
 - Navigation to this screen from Settings tab → "Manage Formulas"
 
@@ -26,8 +26,8 @@ The formula editor screen in Settings where users view, understand, and override
 **Save flow:**
 - Tap "Save" → bottom sheet appears:
   - "Create new formula version" (default) with optional toggle: "Regenerate program with new formula"
-  - Confirm → call `createFormulaOverride(userId, { overrides, source: 'user' })` from `apps/mobile/lib/formulas.ts`
-  - If regenerate checked: call `regenerateProgram(programId)` from `apps/mobile/lib/programs.ts` after config save
+  - Confirm → call `createFormulaOverride(userId, { overrides, source: 'user' })` from `apps/parakeet/lib/formulas.ts`
+  - If regenerate checked: call `regenerateProgram(programId)` from `apps/parakeet/lib/programs.ts` after config save
   - Success toast: "Formula updated — Program regenerated"
 
 **History tab (within formula editor):**
@@ -39,11 +39,11 @@ The formula editor screen in Settings where users view, understand, and override
 **AI Suggestions tab:**
 - List of pending AI suggestions (formula_configs rows where `source='ai_suggestion'` and `is_active=false`)
 - Each suggestion: affected parameter, current value, suggested value, rationale text
-- "Accept" → calls `createFormulaOverride(userId, { overrides: suggestion.overrides, source: 'ai_suggestion' })` from `apps/mobile/lib/formulas.ts`
+- "Accept" → calls `createFormulaOverride(userId, { overrides: suggestion.overrides, source: 'ai_suggestion' })` from `apps/parakeet/lib/formulas.ts`
 - "Dismiss" → calls `deactivateFormulaConfig(suggestionId, userId)` (marks the suggestion row inactive)
 - Red dot badge on Settings tab when unreviewed suggestions exist
 
 ## Dependencies
 
 - [formulas-002-config-api.md](../05-data/formulas-002-config-api.md)
-- [mobile-001-expo-router-layout.md](./mobile-001-expo-router-layout.md)
+- [parakeet-001-expo-router-layout.md](./parakeet-001-expo-router-layout.md)

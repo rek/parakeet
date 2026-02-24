@@ -9,7 +9,7 @@ Helper functions for reading session data from Supabase. Used by the Today scree
 
 ## Tasks
 
-**`apps/mobile/lib/sessions.ts` (read helpers):**
+**`apps/parakeet/lib/sessions.ts` (read helpers):**
 
 ```typescript
 // Today's session: nearest upcoming session not yet completed/skipped

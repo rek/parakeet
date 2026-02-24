@@ -1,7 +1,7 @@
 # Spec: Soreness Check-In Screen
 
 **Status**: Implemented
-**Domain**: Mobile
+**Domain**: parakeet
 
 ## What This Covers
 
@@ -9,7 +9,7 @@ The pre-workout soreness rating screen that gates JIT session generation. Shown 
 
 ## Tasks
 
-**Screen: `apps/mobile/app/session/soreness.tsx`**
+**Screen: `apps/parakeet/app/session/soreness.tsx`**
 
 **Route params:** `{ sessionId: string }`
 

@@ -9,7 +9,7 @@ The user has reviewed the suggested adjustments and confirmed they want to apply
 
 ## Tasks
 
-**`apps/mobile/lib/disruptions.ts` (addition):**
+**`apps/parakeet/lib/disruptions.ts` (addition):**
 
 ```typescript
 export async function applyDisruptionAdjustment(

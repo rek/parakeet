@@ -6,7 +6,7 @@
 
 ## Context
 
-The core domain logic of Parakeet — generating programs, calculating loading percentages, applying formula configs, detecting performance patterns, and suggesting adjustments — is complex, testable in isolation, and must be kept strictly separate from both the mobile frontend and the API framework. We need to decide where this logic lives and how it is structured.
+The core domain logic of Parakeet — generating programs, calculating loading percentages, applying formula configs, detecting performance patterns, and suggesting adjustments — is complex, testable in isolation, and must be kept strictly separate from both the parakeet frontend and the API framework. We need to decide where this logic lives and how it is structured.
 
 ## Decision
 
@@ -18,7 +18,7 @@ In Phase 1, `apps/api` imports it directly as an Nx package dependency:
 import { generateProgram } from "@parakeet/training-engine";
 ```
 
-`apps/mobile` has zero access to `packages/training-engine` (enforced via Nx module boundary rules).
+`apps/parakeet` has zero access to `packages/training-engine` (enforced via Nx module boundary rules).
 
 ## Rationale
 
@@ -28,7 +28,7 @@ import { generateProgram } from "@parakeet/training-engine";
 - The engine is deterministic: same inputs always produce the same program, enabling snapshot testing
 - Framework-free: can be wrapped in any HTTP server or run in a Cloud Run Job without logic changes
 - Clear migration path: in Phase 2+, wrap with a Fastify server, deploy as a separate Cloud Run service, change one import in `programs.service.ts` to an HTTP call
-- Nx module boundary lint rules enforce that mobile never imports engine logic (prevents accidental logic leakage to client)
+- Nx module boundary lint rules enforce that parakeet never imports engine logic (prevents accidental logic leakage to client)
 - Python or other language implementations can be substituted later (the interface is well-defined via `packages/shared-types`)
 
 ### Cons
@@ -43,7 +43,7 @@ import { generateProgram } from "@parakeet/training-engine";
 - Keeps everything in one deployable
 - **Why not chosen:** Harder to test in isolation, no clear boundary prevents gradual leakage of business logic into route handlers, makes extraction to a microservice later significantly harder
 
-### Alternative 2: Training logic in `apps/mobile` (frontend calculation)
+### Alternative 2: Training logic in `apps/parakeet` (frontend calculation)
 
 - No API round-trip for program generation
 - **Why not chosen:** Explicitly prohibited by architecture requirements. Training logic must not live in the frontend. Formulas must be auditable server-side and protected from client manipulation.
@@ -95,7 +95,7 @@ import { generateProgram } from "@parakeet/training-engine";
       {
         "depConstraints": [
           {
-            "sourceTag": "scope:mobile",
+            "sourceTag": "scope:parakeet",
             "onlyDependOnLibsWithTags": ["scope:shared", "scope:client"]
           },
           {

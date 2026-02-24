@@ -5,11 +5,11 @@
 
 ## What This Covers
 
-User profile management using Supabase SDK directly from the mobile app. No custom API server.
+User profile management using Supabase SDK directly from the parakeet app. No custom API server.
 
 ## Tasks
 
-**`apps/mobile/lib/profile.ts` (helper functions):**
+**`apps/parakeet/lib/profile.ts` (helper functions):**
 
 ```typescript
 // Get current user profile

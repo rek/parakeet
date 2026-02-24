@@ -164,7 +164,7 @@ Else:
 ### Supabase integration (called from app after soreness check-in)
 
 ```typescript
-// apps/mobile/lib/session.ts
+// apps/parakeet/lib/session.ts
 async function generateAndSaveSession(sessionId: string): Promise<JITOutput> {
   const [session, oneRm, formulaConfig, soreness, weeklyVolume, mrvConfig,
          auxiliaries, recentLogs, disruptions] = await Promise.all([

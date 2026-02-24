@@ -70,7 +70,7 @@ export type CycleReview = z.infer<typeof CycleReviewSchema>
 
 ### CycleReport Compilation
 
-**`apps/mobile/lib/cycle-review.ts`:**
+**`apps/parakeet/lib/cycle-review.ts`:**
 
 ```typescript
 import { supabase } from './supabase'
@@ -146,7 +146,7 @@ No `AbortSignal.timeout()` here. Cycle review is triggered at cycle completion a
 
 ### Storing the Result
 
-**`apps/mobile/lib/cycle-review.ts` (addition):**
+**`apps/parakeet/lib/cycle-review.ts` (addition):**
 
 ```typescript
 export async function storeCycleReview(
@@ -190,7 +190,7 @@ export async function storeCycleReview(
 
 ### Trigger Flow
 
-**`apps/mobile/lib/programs.ts` — cycle completion handler:**
+**`apps/parakeet/lib/programs.ts` — cycle completion handler:**
 
 ```typescript
 // Called when a program reaches ≥80% session completion
@@ -201,7 +201,7 @@ export async function onCycleComplete(programId: string, userId: string): Promis
       const previousSummaries = await getPreviousCycleSummaries(userId, 3)
       const review = await generateCycleReview(report, previousSummaries)
       await storeCycleReview(programId, userId, report, review)
-      // Supabase Realtime triggers cache invalidation → notification in mobile-014
+      // Supabase Realtime triggers cache invalidation → notification in parakeet-014
     })
     .catch(console.error)  // LLM failure does not block cycle completion
 }
@@ -209,7 +209,7 @@ export async function onCycleComplete(programId: string, userId: string): Promis
 
 ### Multi-Cycle Context
 
-**`getPreviousCycleSummaries(userId, count)`** (in `apps/mobile/lib/cycle-review.ts`):
+**`getPreviousCycleSummaries(userId, count)`** (in `apps/parakeet/lib/cycle-review.ts`):
 - Fetches the most recent `count` completed `cycle_reviews` rows
 - Extracts `llm_response.overallAssessment` + `llm_response.progressByLift` ratings + key metrics
 - Returns as an array of short text summaries (kept brief to stay within LLM context limits)
@@ -220,4 +220,4 @@ export async function onCycleComplete(programId: string, userId: string): Promis
 - [infra-005-database-migrations.md](../01-infra/infra-005-database-migrations.md)
 - [ai-001-vercel-ai-sdk-setup.md](../10-ai/ai-001-vercel-ai-sdk-setup.md)
 - [docs/design/cycle-review-and-insights.md](../../design/cycle-review-and-insights.md)
-- [mobile-014-cycle-review-screen.md](../09-mobile/mobile-014-cycle-review-screen.md)
+- [parakeet-014-cycle-review-screen.md](../09-parakeet/parakeet-014-cycle-review-screen.md)

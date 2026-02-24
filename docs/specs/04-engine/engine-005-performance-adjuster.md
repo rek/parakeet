@@ -40,7 +40,7 @@ Analyzes logged session performance and generates adjustment suggestions when pa
 
 **Integration with Supabase (called from app after session completion):**
 ```typescript
-// apps/mobile — after session complete
+// apps/parakeet — after session complete
 const logs = await supabase
   .from('session_logs')
   .select('*')

@@ -9,7 +9,7 @@ CRUD helpers for user formula config overrides. Supabase SDK called directly fro
 
 ## Tasks
 
-**`apps/mobile/lib/formulas.ts`:**
+**`apps/parakeet/lib/formulas.ts`:**
 
 ```typescript
 import { supabase } from './supabase'
@@ -99,7 +99,7 @@ export async function deactivateFormulaConfig(
 - Deep-merges `overrides` on top of `DEFAULT_FORMULA_CONFIG`
 - Returns a complete `FormulaConfig` (no missing keys)
 
-**React Query hooks (`apps/mobile/hooks/useFormulas.ts`):**
+**React Query hooks (`apps/parakeet/hooks/useFormulas.ts`):**
 - `useFormulaConfig()` — wraps `getFormulaConfig(user.id)`
 - `useFormulaHistory()` — wraps `getFormulaHistory(user.id)`
 

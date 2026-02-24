@@ -9,7 +9,7 @@ Creating a new training program: calling the training engine locally, writing th
 
 ## Tasks
 
-**`apps/mobile/lib/programs.ts`:**
+**`apps/parakeet/lib/programs.ts`:**
 
 ```typescript
 async function createProgram(input: CreateProgramInput): Promise<Program> {
@@ -89,11 +89,11 @@ interface CreateProgramInput {
 }
 ```
 
-**Onboarding screen `apps/mobile/app/(auth)/onboarding/program-settings.tsx`:**
+**Onboarding screen `apps/parakeet/app/(auth)/onboarding/program-settings.tsx`:**
 - Inputs: total weeks (picker), days per week (picker), start date (date picker)
 - "Preview Program" button → navigate to review screen showing Week 1 session structure
 
-**Program review screen `apps/mobile/app/(auth)/onboarding/review.tsx`:**
+**Program review screen `apps/parakeet/app/(auth)/onboarding/review.tsx`:**
 - Shows Week 1: day-by-day view with lift, intensity type, auxiliary names
 - "Activate Program" button → calls `createProgram()` → navigates to Today tab
 

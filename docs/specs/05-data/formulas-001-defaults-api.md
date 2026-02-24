@@ -11,7 +11,7 @@ The `DEFAULT_FORMULA_CONFIG` constant exported from `packages/training-engine`. 
 
 **`packages/training-engine/src/config/default-formula-config.ts`:**
 - Export `DEFAULT_FORMULA_CONFIG` constant of type `FormulaConfig`
-- This constant is imported by `apps/mobile/lib/formulas.ts` (see `formulas-002-config-api.md`) and merged with any active user override row from Supabase
+- This constant is imported by `apps/parakeet/lib/formulas.ts` (see `formulas-002-config-api.md`) and merged with any active user override row from Supabase
 
 **Shape:**
 ```typescript
@@ -35,7 +35,7 @@ export const DEFAULT_FORMULA_CONFIG: FormulaConfig = {
 }
 ```
 
-**Usage in `apps/mobile/lib/formulas.ts`:**
+**Usage in `apps/parakeet/lib/formulas.ts`:**
 
 ```typescript
 import { DEFAULT_FORMULA_CONFIG } from '@parakeet/training-engine'

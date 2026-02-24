@@ -9,7 +9,7 @@ Submitting 1RM or 3RM lift data and retrieving historical max snapshots. The fir
 
 ## Tasks
 
-**`apps/mobile/lib/lifter-maxes.ts`:**
+**`apps/parakeet/lib/lifter-maxes.ts`:**
 
 ```typescript
 // Submit new maxes (onboarding or update)
@@ -81,7 +81,7 @@ interface LifterMaxesInput {
 - If `type === '3rm'`: `reps` required, 2–10
 - All three lifts required in a single submission
 
-**Onboarding screen `apps/mobile/app/(auth)/onboarding/lift-maxes.tsx`:**
+**Onboarding screen `apps/parakeet/app/(auth)/onboarding/lift-maxes.tsx`:**
 - Toggle per lift: "1RM" vs "3RM"
 - Weight input in kg with live Epley preview: "Est. 1RM: 143.0 kg"
 - Submit calls `submitMaxes()` → navigates to program-settings screen

@@ -5,7 +5,7 @@
 
 ## What This Covers
 
-Supabase Authentication integration in the mobile app. Replaces Firebase Auth entirely. Handles sign-in, session persistence, token refresh, and sign-out.
+Supabase Authentication integration in the parakeet app. Replaces Firebase Auth entirely. Handles sign-in, session persistence, token refresh, and sign-out.
 
 ## Tasks
 
@@ -16,7 +16,7 @@ npm install @supabase/supabase-js @react-native-async-storage/async-storage
 npm install @react-native-google-signin/google-signin  # Google Sign-In
 ```
 
-**`apps/mobile/lib/supabase.ts` (Supabase client singleton):**
+**`apps/parakeet/lib/supabase.ts` (Supabase client singleton):**
 
 ```typescript
 import { createClient } from '@supabase/supabase-js';
@@ -36,14 +36,14 @@ export const supabase = createClient(
 );
 ```
 
-**`apps/mobile/hooks/useAuth.ts`:**
+**`apps/parakeet/hooks/useAuth.ts`:**
 
 - Subscribe to `supabase.auth.onAuthStateChange` listener
 - Expose `{ user, session, loading, signOut }`
 - On `SIGNED_IN`: if first time (no `profiles` row), create profile row and navigate to onboarding
 - On `SIGNED_OUT`: navigate to `/(auth)/welcome`
 
-**`apps/mobile/app/(auth)/welcome.tsx` — sign-in methods:**
+**`apps/parakeet/app/(auth)/welcome.tsx` — sign-in methods:**
 
 Google Sign-In:
 

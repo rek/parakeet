@@ -107,4 +107,4 @@ All weights are rounded to the nearest 2.5kg with a minimum of 20kg (the empty b
 ## References
 
 - Related Design Docs: [program-generation.md](./program-generation.md), [performance-logging.md](./performance-logging.md)
-- Specs: [engine-010-warmup-calculator.md](../specs/04-engine/engine-010-warmup-calculator.md), [data-003-warmup-config.md](../specs/05-data/data-003-warmup-config.md), [mobile-013-warmup-display.md](../specs/09-mobile/mobile-013-warmup-display.md)
+- Specs: [engine-010-warmup-calculator.md](../specs/04-engine/engine-010-warmup-calculator.md), [data-003-warmup-config.md](../specs/05-data/data-003-warmup-config.md), [parakeet-013-warmup-display.md](../specs/09-parakeet/parakeet-013-warmup-display.md)

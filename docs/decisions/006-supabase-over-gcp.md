@@ -9,14 +9,14 @@ This app will be used by exactly 2 people (user and wife). So Cloud scale like G
 
 ## Decision
 
-Replace the entire GCP backend stack with **Supabase** (free tier). Move the training engine into the mobile app package (runs locally on-device). Eliminate the custom REST API entirely.
+Replace the entire GCP backend stack with **Supabase** (free tier). Move the training engine into the parakeet app package (runs locally on-device). Eliminate the custom REST API entirely.
 
 Stack:
 
 - **Supabase Auth** — user sign-in (replaces Firebase Auth)
 - **Supabase Postgres** — primary data store (replaces Cloud SQL + REST API)
 - **Supabase Realtime** — cross-device sync for each user's multiple devices
-- **Training engine** — runs in `packages/training-engine`, imported directly by `apps/mobile`
+- **Training engine** — runs in `packages/training-engine`, imported directly by `apps/parakeet`
 - **No backend server** — no Cloud Run, no Fastify, no custom API
 
 ## Rationale
@@ -62,7 +62,7 @@ Stack:
 - `apps/api` directory eliminated entirely — ~40% of planned codebase removed
 - `packages/api-client` eliminated — no custom HTTP client needed
 - `packages/db` eliminated — Supabase handles migrations via its CLI
-- CI/CD simplified: only EAS Build (mobile) and Supabase migrations, no container registry or deployment pipeline
+- CI/CD simplified: only EAS Build (parakeet) and Supabase migrations, no container registry or deployment pipeline
 - Training engine moves to the app: JIT generation runs instantly with no network round-trip
 - Cost: $0/month indefinitely for 2 users
 
@@ -88,13 +88,13 @@ supabase db start                      # local Postgres for development
 supabase db push --db-url $PROD_URL   # push migrations to hosted Supabase
 ```
 
-**Mobile SDK setup:**
+**parakeet SDK setup:**
 
 ```bash
 npm install @supabase/supabase-js
 ```
 
-**Supabase client (`apps/mobile/lib/supabase.ts`):**
+**Supabase client (`apps/parakeet/lib/supabase.ts`):**
 
 ```typescript
 import { createClient } from "@supabase/supabase-js";

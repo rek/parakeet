@@ -5,7 +5,7 @@
 
 ## Context
 
-We need to manage a multi-package codebase that includes a React Native mobile app, a Node.js API, and several shared TypeScript packages (training engine, API client, shared types, database utilities). We need efficient build orchestration, code sharing without publishing to npm, and tooling that supports incremental CI/CD.
+We need to manage a multi-package codebase that includes a React Native parakeet app, a Node.js API, and several shared TypeScript packages (training engine, API client, shared types, database utilities). We need efficient build orchestration, code sharing without publishing to npm, and tooling that supports incremental CI/CD.
 
 ## Decision
 
@@ -13,7 +13,7 @@ Use **Nx** as the monorepo build system and workspace manager.
 
 Key configuration:
 - Nx workspace root with `nx.json` and `package.json` at root
-- Apps in `apps/` (mobile, api)
+- Apps in `apps/` (parakeet, api)
 - Shared packages in `packages/` (training-engine, api-client, shared-types, db)
 - TypeScript path aliases in `tsconfig.base.json` for cross-package imports
 - Nx affected commands for CI to only test/build what changed
@@ -45,15 +45,15 @@ Key configuration:
 
 ### Alternative 3: Single flat package (no monorepo)
 - Everything in one `package.json`
-- **Why not chosen:** Would force training engine logic into the same deployable as the mobile app, violating the architectural constraint that training logic must not live in the frontend
+- **Why not chosen:** Would force training engine logic into the same deployable as the parakeet app, violating the architectural constraint that training logic must not live in the frontend
 
 ## Consequences
 
 ### Positive
 - `packages/training-engine` can be imported directly by `apps/api` without npm publishing
-- `packages/shared-types` ensures mobile and API share the same Zod schemas and TypeScript types
+- `packages/shared-types` ensures parakeet and API share the same Zod schemas and TypeScript types
 - CI only runs tests for changed packages, keeping build times low as the project grows
-- Clear physical separation enforces the architectural boundary: mobile cannot accidentally import from training-engine
+- Clear physical separation enforces the architectural boundary: parakeet cannot accidentally import from training-engine
 
 ### Negative
 - Developers must learn Nx concepts (targets, executors, affected)
@@ -68,8 +68,8 @@ Key configuration:
 # Create workspace
 npx create-nx-workspace@latest parakeet --preset=ts
 
-# Add Expo mobile app
-nx g @nx/expo:app mobile
+# Add Expo parakeet app
+nx g @nx/expo:app parakeet
 
 # Add Node API app
 nx g @nx/node:app api

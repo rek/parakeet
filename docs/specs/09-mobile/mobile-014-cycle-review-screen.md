@@ -1,7 +1,7 @@
 # Spec: Cycle Review Screen
 
 **Status**: Planned
-**Domain**: Mobile App
+**Domain**: parakeet App
 
 ## What This Covers
 
@@ -9,7 +9,7 @@ The cycle review screen showing LLM-generated coaching analysis after a training
 
 ## Tasks
 
-**`apps/mobile/app/history/cycle-review/[programId].tsx`:**
+**`apps/parakeet/app/history/cycle-review/[programId].tsx`:**
 
 Navigation path: History tab → completed program card → "Review" button.
 
@@ -65,7 +65,7 @@ Three cards (Squat / Bench / Deadlift), each showing:
 - Each item: description + developer note (no user actions — read-only)
 - "These items require code changes — for developer review only"
 
-**`apps/mobile/hooks/useCycleReview.ts`:**
+**`apps/parakeet/hooks/useCycleReview.ts`:**
 
 ```typescript
 export function useCycleReview(programId: string) {
@@ -99,7 +99,7 @@ export function useCycleReview(programId: string) {
 }
 ```
 
-**`apps/mobile/lib/cycle-review.ts` (read helper):**
+**`apps/parakeet/lib/cycle-review.ts` (read helper):**
 
 ```typescript
 export async function getCycleReview(programId: string, userId: string) {
@@ -121,6 +121,6 @@ export async function getCycleReview(programId: string, userId: string) {
 ## Dependencies
 
 - [engine-012-cycle-review-generator.md](../04-engine/engine-012-cycle-review-generator.md)
-- [mobile-007-formula-editor-screen.md](./mobile-007-formula-editor-screen.md)
-- [mobile-001-expo-router-layout.md](./mobile-001-expo-router-layout.md)
-- [mobile-008-supabase-client-setup.md](./mobile-008-supabase-client-setup.md)
+- [parakeet-007-formula-editor-screen.md](./parakeet-007-formula-editor-screen.md)
+- [parakeet-001-expo-router-layout.md](./parakeet-001-expo-router-layout.md)
+- [parakeet-008-supabase-client-setup.md](./parakeet-008-supabase-client-setup.md)

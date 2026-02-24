@@ -9,7 +9,7 @@ Reading program data from Supabase. Used by the Program tab (week grid) and Toda
 
 ## Tasks
 
-**`apps/mobile/lib/programs.ts` (read helpers):**
+**`apps/parakeet/lib/programs.ts` (read helpers):**
 
 ```typescript
 // Get the currently active program with its sessions

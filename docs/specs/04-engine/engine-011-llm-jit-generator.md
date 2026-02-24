@@ -107,7 +107,7 @@ export function getJITGenerator(strategy: JITStrategyName, isOnline: boolean) {
 }
 ```
 
-Strategy setting comes from `apps/mobile` Settings → Developer → JIT Strategy (default: `'auto'`).
+Strategy setting comes from `apps/parakeet` Settings → Developer → JIT Strategy (default: `'auto'`).
 
 ### Session Row Updates
 

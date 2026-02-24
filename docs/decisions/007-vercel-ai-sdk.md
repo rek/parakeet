@@ -87,7 +87,7 @@ Use the **Vercel AI SDK** (`ai` core package + `@ai-sdk/anthropic` provider) cal
 npm install ai @ai-sdk/anthropic
 ```
 
-App entry polyfill (`apps/mobile/app/_layout.tsx`, first import):
+App entry polyfill (`apps/parakeet/app/_layout.tsx`, first import):
 ```typescript
 import 'expo/fetch'
 ```

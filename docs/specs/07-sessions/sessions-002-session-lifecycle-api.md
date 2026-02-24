@@ -9,7 +9,7 @@ Helpers for transitioning session status: starting, skipping. Session completion
 
 ## Tasks
 
-**`apps/mobile/lib/sessions.ts` (lifecycle helpers, additions):**
+**`apps/parakeet/lib/sessions.ts` (lifecycle helpers, additions):**
 
 ```typescript
 // Transition session to in_progress
@@ -46,5 +46,5 @@ Before `startSession()` is called, the app must route through the soreness scree
 ## Dependencies
 
 - [sessions-001-session-read-api.md](./sessions-001-session-read-api.md)
-- [mobile-011-soreness-checkin-screen.md](../09-mobile/mobile-011-soreness-checkin-screen.md)
+- [parakeet-011-soreness-checkin-screen.md](../09-parakeet/parakeet-011-soreness-checkin-screen.md)
 - [engine-007-jit-session-generator.md](../04-engine/engine-007-jit-session-generator.md)

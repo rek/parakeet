@@ -1,7 +1,7 @@
 # Spec: Volume Dashboard
 
 **Status**: Planned
-**Domain**: Mobile
+**Domain**: parakeet
 
 ## What This Covers
 
@@ -9,9 +9,9 @@ A visual display of weekly training volume per muscle group versus each muscle's
 
 ## Tasks
 
-**Screen: `apps/mobile/app/(tabs)/today.tsx` (volume section)** — inline card at the bottom of the Today screen
+**Screen: `apps/parakeet/app/(tabs)/today.tsx` (volume section)** — inline card at the bottom of the Today screen
 
-**Full screen: `apps/mobile/app/volume.tsx`** — accessible by tapping the card or from Settings
+**Full screen: `apps/parakeet/app/volume.tsx`** — accessible by tapping the card or from Settings
 
 **Data source:**
 - `weeklyVolumeToDate` computed by calling `computeWeeklyVolume()` from `packages/training-engine` on current week's `session_logs`
@@ -42,7 +42,7 @@ A visual display of weekly training volume per muscle group versus each muscle's
 
 **React Query hook:**
 ```typescript
-// apps/mobile/hooks/useWeeklyVolume.ts
+// apps/parakeet/hooks/useWeeklyVolume.ts
 export function useWeeklyVolume() {
   const userId = useUserId()
   return useQuery({
@@ -70,4 +70,4 @@ If any muscle is `at_mrv` or `exceeded_mrv`, show a banner above the session car
 
 - [engine-006-mrv-mev-calculator.md](../04-engine/engine-006-mrv-mev-calculator.md)
 - [data-001-muscle-volume-config.md](../05-data/data-001-muscle-volume-config.md)
-- [mobile-008-supabase-client-setup.md](./mobile-008-supabase-client-setup.md)
+- [parakeet-008-supabase-client-setup.md](./parakeet-008-supabase-client-setup.md)

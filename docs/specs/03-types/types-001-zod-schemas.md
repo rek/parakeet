@@ -5,7 +5,7 @@
 
 ## What This Covers
 
-All Zod schemas in `packages/shared-types` that define the data contracts used by the mobile app and training engine. Schemas serve two purposes: runtime validation at system boundaries (user input, Supabase responses) and static TypeScript type inference via `z.infer<>`.
+All Zod schemas in `packages/shared-types` that define the data contracts used by the parakeet app and training engine. Schemas serve two purposes: runtime validation at system boundaries (user input, Supabase responses) and static TypeScript type inference via `z.infer<>`.
 
 All weight values are in **kg** (floats, multiples of 2.5). The DB stores integer grams internally, but the app and engine always work in kg. There is no lbs unit anywhere in the system.
 

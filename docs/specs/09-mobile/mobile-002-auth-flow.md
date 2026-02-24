@@ -1,11 +1,11 @@
-# Spec: Mobile Auth Flow
+# Spec: parakeet Auth Flow
 
 **Status**: Implemented
-**Domain**: Mobile App
+**Domain**: parakeet App
 
 ## What This Covers
 
-Supabase Authentication integration in the mobile app: Google Sign-In, session persistence, and sign-out. Auth state is managed by the `useAuth` hook; the `supabase` singleton handles token refresh automatically via AsyncStorage.
+Supabase Authentication integration in the parakeet app: Google Sign-In, session persistence, and sign-out. Auth state is managed by the `useAuth` hook; the `supabase` singleton handles token refresh automatically via AsyncStorage.
 
 ## Tasks
 
@@ -18,7 +18,7 @@ Already installed as part of `auth-001-supabase-auth-setup.md`:
 
 No Firebase packages. No custom API client.
 
-**`apps/mobile/app/(auth)/welcome.tsx`:**
+**`apps/parakeet/app/(auth)/welcome.tsx`:**
 - "Sign in with Google" button:
   ```typescript
   const { data } = await GoogleSignin.signIn()
@@ -34,7 +34,7 @@ No Firebase packages. No custom API client.
   ```
 - Show loading state during sign-in; catch errors and show inline message
 
-**`apps/mobile/hooks/useAuth.ts`:**
+**`apps/parakeet/hooks/useAuth.ts`:**
 - Subscribe to `supabase.auth.onAuthStateChange` on mount, unsubscribe on unmount
 - Expose `{ user, session, loading, signOut }`
 - `SIGNED_IN` → check `profiles` row; if missing → navigate to `/(auth)/onboarding/lift-maxes`; else → `/(tabs)/today`
@@ -45,12 +45,12 @@ No Firebase packages. No custom API client.
 - No manual token handling. Supabase SDK auto-refreshes the session via `autoRefreshToken: true`.
 - No `Authorization` header management — there is no custom API client. Supabase SDK attaches the session token to all RPC and table calls automatically.
 
-**`apps/mobile/app/_layout.tsx` root layout integration:**
+**`apps/parakeet/app/_layout.tsx` root layout integration:**
 - Mount `useAuth` at root (or use `SessionContextProvider` from `@supabase/auth-helpers-react-native` if preferred)
 - Show splash screen (`SplashScreen.preventAutoHideAsync()`) until `loading === false`
 - Redirect guard: `user === null` → `/(auth)/welcome`; `user !== null && !hasActiveProgram` → onboarding; else → `/(tabs)/today`
 
 ## Dependencies
 
-- [mobile-001-expo-router-layout.md](./mobile-001-expo-router-layout.md)
+- [parakeet-001-expo-router-layout.md](./parakeet-001-expo-router-layout.md)
 - [auth-001-supabase-auth-setup.md](../02-auth/auth-001-supabase-auth-setup.md)

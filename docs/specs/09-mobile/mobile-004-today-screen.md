@@ -1,7 +1,7 @@
 # Spec: Today Screen
 
 **Status**: Implemented
-**Domain**: Mobile App
+**Domain**: parakeet App
 
 ## What This Covers
 
@@ -9,14 +9,14 @@ The home tab that shows the user's next upcoming session and any active disrupti
 
 ## Tasks
 
-**`apps/mobile/app/(tabs)/today.tsx`:**
+**`apps/parakeet/app/(tabs)/today.tsx`:**
 - On mount: call `useTodaySession()` hook via React Query (cache: 30 seconds, background refetch on focus)
 - Three states:
   1. **Session found**: render `WorkoutCard` component
   2. **No session (rest day or program complete)**: render rest day message with next session date
   3. **No active program**: render "Create Your Program" CTA button → navigate to onboarding
 
-**`apps/mobile/components/training/WorkoutCard.tsx`:**
+**`apps/parakeet/components/training/WorkoutCard.tsx`:**
 - Props: `session: Session`, `onStart: () => void`
 - Header: week and block label ("Block 2 / Week 4 — Squat Heavy")
 - Body: primary lift name, intensity type badge, planned sets summary ("2 sets × 3 reps at 267.5 kg")
@@ -29,17 +29,17 @@ The home tab that shows the user's next upcoming session and any active disrupti
 - Bottom sheet slides up
 - "Reason (optional)" text field
 - "Skip Session" red button + "Cancel" button
-- On confirm: `supabase.from('sessions').update({ status: 'skipped' }).eq('id', sessionId)` (via `skipSession(sessionId)` helper in `apps/mobile/lib/sessions.ts`)
+- On confirm: `supabase.from('sessions').update({ status: 'skipped' }).eq('id', sessionId)` (via `skipSession(sessionId)` helper in `apps/parakeet/lib/sessions.ts`)
 
 **"Start Workout" navigation:**
 - Navigate to `session/[sessionId]` with session ID in URL
 
-**React Query hook (`apps/mobile/hooks/useActiveSession.ts`):**
+**React Query hook (`apps/parakeet/hooks/useActiveSession.ts`):**
 - `useTodaySession()` — wraps `findTodaySession(userId)` from `sessions-001`
 - Returns `{ session, isLoading, error, refetch }`
 
 ## Dependencies
 
-- [mobile-001-expo-router-layout.md](./mobile-001-expo-router-layout.md)
+- [parakeet-001-expo-router-layout.md](./parakeet-001-expo-router-layout.md)
 - [sessions-001-session-read-api.md](../07-sessions/sessions-001-session-read-api.md)
 - [disruptions-003-resolution.md](../08-disruptions/disruptions-003-resolution.md)

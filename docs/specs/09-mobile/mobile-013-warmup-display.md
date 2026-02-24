@@ -1,7 +1,7 @@
 # Spec: Warmup Display
 
 **Status**: Implemented
-**Domain**: Mobile
+**Domain**: parakeet
 
 ## What This Covers
 
@@ -9,7 +9,7 @@ How warmup sets are displayed and tracked in the live session screen. Warmup set
 
 ## Tasks
 
-**Screen: `apps/mobile/app/session/[sessionId].tsx` (additions)**
+**Screen: `apps/parakeet/app/session/[sessionId].tsx` (additions)**
 
 **Data flow:**
 ```typescript

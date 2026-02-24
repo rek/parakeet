@@ -1,7 +1,7 @@
 # Spec: Offline Sync and Optimistic State
 
 **Status**: Planned
-**Domain**: Mobile App
+**Domain**: parakeet App
 
 ## What This Covers
 
@@ -13,12 +13,12 @@ Handling offline scenarios during active workout logging. The session logging sc
 
 **Strategy: Optimistic local state with background sync queue**
 
-**`apps/mobile/store/sessionStore.ts` (Zustand + MMKV persistence):**
+**`apps/parakeet/store/sessionStore.ts` (Zustand + MMKV persistence):**
 - All set updates are written to MMKV immediately (survives app crash)
 - State is never lost between app background/foreground cycles
 - `actualSets` array is the authoritative in-progress state
 
-**`apps/mobile/store/syncStore.ts` (pending operations queue):**
+**`apps/parakeet/store/syncStore.ts` (pending operations queue):**
 - Queue of pending Supabase SDK operations: `{ id, operation: 'complete_session' | 'skip_session', payload, createdAt }`
 - Operations are added optimistically before the Supabase call
 - On success: remove from queue
@@ -48,4 +48,4 @@ Handling offline scenarios during active workout logging. The session logging sc
 
 ## Dependencies
 
-- [mobile-005-session-logging-screen.md](./mobile-005-session-logging-screen.md)
+- [parakeet-005-session-logging-screen.md](./parakeet-005-session-logging-screen.md)

@@ -9,7 +9,7 @@ Creating a disruption record and returning suggested adjustments for user review
 
 ## Tasks
 
-**`apps/mobile/lib/disruptions.ts`:**
+**`apps/parakeet/lib/disruptions.ts`:**
 
 ```typescript
 import { supabase } from './supabase'

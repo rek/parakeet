@@ -26,7 +26,7 @@ CREATE POLICY "users_own_warmup_config" ON warmup_configs
   FOR ALL USING (auth.uid() = user_id);
 ```
 
-**`apps/mobile/lib/warmup-config.ts`:**
+**`apps/parakeet/lib/warmup-config.ts`:**
 
 ```typescript
 // Get warmup protocol for a specific lift (falls back to 'standard' if no row)
@@ -91,7 +91,7 @@ async function resetWarmupConfig(userId: string, lift: Lift): Promise<void> {
 }
 ```
 
-**Settings screen — Warmup Protocols (`apps/mobile/app/(tabs)/settings.tsx`):**
+**Settings screen — Warmup Protocols (`apps/parakeet/app/(tabs)/settings.tsx`):**
 - Three sections: Squat, Bench, Deadlift
 - Each section has a protocol picker:
   - "Standard" — 40%×5, 60%×3, 75%×2, 90%×1 (default)

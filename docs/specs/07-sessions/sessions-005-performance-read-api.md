@@ -9,7 +9,7 @@ Helper functions for reading aggregated performance data from Supabase. Used by 
 
 ## Tasks
 
-**`apps/mobile/lib/performance.ts`:**
+**`apps/parakeet/lib/performance.ts`:**
 
 ```typescript
 // Get performance metrics for a specific lift (for progress chart)

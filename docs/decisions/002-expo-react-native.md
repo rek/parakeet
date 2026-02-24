@@ -1,11 +1,11 @@
-# ADR-002: Expo and React Native for Cross-Platform Mobile Development
+# ADR-002: Expo and React Native for Cross-Platform parakeet Development
 
 **Date**: 2025-10-14
 **Status**: Accepted
 
 ## Context
 
-We need to build a mobile dailyProvisions app for iOS and Android with native features (notifications, haptics, storage) while maintaining a single codebase and fast development velocity.
+We need to build a parakeet dailyProvisions app for iOS and Android with native features (notifications, haptics, storage) while maintaining a single codebase and fast development velocity.
 
 ## Decision
 

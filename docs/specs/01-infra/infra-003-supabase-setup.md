@@ -44,13 +44,13 @@ CREATE POLICY "users_own_data" ON <table_name>
 Apply this to: `lifter_maxes`, `formula_configs`, `programs`, `sessions`, `session_logs`, `edge_cases`, `soreness_checkins`, `auxiliary_exercises`, `auxiliary_assignments`, `muscle_volume_config`, `performance_metrics`, `recovery_snapshots`.
 
 **Keepalive (prevent free tier DB pause):**
-In `apps/mobile/lib/supabase.ts`: on app foreground event, if last ping was > 5 days ago, run:
+In `apps/parakeet/lib/supabase.ts`: on app foreground event, if last ping was > 5 days ago, run:
 ```typescript
 await supabase.from('profiles').select('id').limit(1)
 ```
 Store last ping time in AsyncStorage.
 
-**Mobile SDK installation:**
+**parakeet SDK installation:**
 ```bash
 npm install @supabase/supabase-js @react-native-async-storage/async-storage
 ```

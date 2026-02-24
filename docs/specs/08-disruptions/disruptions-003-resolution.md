@@ -9,7 +9,7 @@ Resolving disruptions (marking them done), listing active/historical disruptions
 
 ## Tasks
 
-**`apps/mobile/lib/disruptions.ts` (additions):**
+**`apps/parakeet/lib/disruptions.ts` (additions):**
 
 ```typescript
 // Resolve a disruption; optionally specify when recovery occurred

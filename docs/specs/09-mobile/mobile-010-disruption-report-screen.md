@@ -1,7 +1,7 @@
 # Spec: Disruption Report Screen
 
 **Status**: Planned
-**Domain**: Mobile App
+**Domain**: parakeet App
 
 ## What This Covers
 
@@ -9,7 +9,7 @@ The screen where users report injuries, illness, travel, or other disruptions an
 
 ## Tasks
 
-**`apps/mobile/app/disruption-report/report.tsx`:**
+**`apps/parakeet/app/disruption-report/report.tsx`:**
 - Accessible from: Today screen (floating action / banner tap), Settings → "Report Issue"
 - Multi-step form within a single scrollable screen:
 
@@ -37,12 +37,12 @@ The screen where users report injuries, illness, travel, or other disruptions an
 - Placeholder: "e.g., Left knee pain on descent, no pain on bench or deadlift"
 
 **Submit button:**
-- "Review Adjustments" → call `reportDisruption(userId, input)` from `apps/mobile/lib/disruptions.ts`, show loading
+- "Review Adjustments" → call `reportDisruption(userId, input)` from `apps/parakeet/lib/disruptions.ts`, show loading
 
 **Adjustment Review screen (rendered after API response):**
 - List of affected sessions with before/after comparison cards
 - Each card: session date, lift, planned weight (strikethrough) → adjusted weight; or "Session Skipped" label
-- "Apply All Adjustments" primary button → call `applyDisruptionAdjustment(disruptionId, userId)` from `apps/mobile/lib/disruptions.ts`
+- "Apply All Adjustments" primary button → call `applyDisruptionAdjustment(disruptionId, userId)` from `apps/parakeet/lib/disruptions.ts`
 - "Skip — Keep Original Plan" secondary button → navigate back without applying
 
 **Active disruption list (accessible from Settings):**
@@ -52,4 +52,4 @@ The screen where users report injuries, illness, travel, or other disruptions an
 
 - [disruptions-001-report.md](../08-disruptions/disruptions-001-report.md)
 - [disruptions-002-apply-adjustment.md](../08-disruptions/disruptions-002-apply-adjustment.md)
-- [mobile-001-expo-router-layout.md](./mobile-001-expo-router-layout.md)
+- [parakeet-001-expo-router-layout.md](./parakeet-001-expo-router-layout.md)

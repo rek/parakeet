@@ -5,7 +5,7 @@
 
 ## What This Covers
 
-CRUD operations for the user's MEV/MRV configuration per muscle group. Supabase SDK calls directly from the mobile app. Default values come from `DEFAULT_MRV_MEV_CONFIG` in the training engine; the user can override any value in Settings → Volume Config.
+CRUD operations for the user's MEV/MRV configuration per muscle group. Supabase SDK calls directly from the parakeet app. Default values come from `DEFAULT_MRV_MEV_CONFIG` in the training engine; the user can override any value in Settings → Volume Config.
 
 ## Tasks
 
@@ -25,7 +25,7 @@ CREATE POLICY "users_own_volume_config" ON muscle_volume_config
   FOR ALL USING (auth.uid() = user_id);
 ```
 
-**`apps/mobile/lib/volume-config.ts`:**
+**`apps/parakeet/lib/volume-config.ts`:**
 
 ```typescript
 // Fetch user's full MRV/MEV config, falling back to engine defaults for missing muscles
@@ -70,7 +70,7 @@ async function resetMuscleToDefault(userId: string, muscle: MuscleGroup): Promis
 }
 ```
 
-**Settings screen — Volume Config (`apps/mobile/app/(tabs)/settings.tsx`):**
+**Settings screen — Volume Config (`apps/parakeet/app/(tabs)/settings.tsx`):**
 - Display all 9 muscle groups with current MEV and MRV values
 - Each row: muscle name, MEV stepper input, MRV stepper input
 - Validation: `mev >= 0`, `mrv > mev`, `mrv <= 30` (hard cap)
