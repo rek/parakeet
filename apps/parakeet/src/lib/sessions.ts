@@ -2,7 +2,7 @@ import {
   suggestProgramAdjustments,
   DEFAULT_THRESHOLDS,
 } from '@parakeet/training-engine'
-import type { SessionLogSummary } from '@parakeet/training-engine'
+import type { SessionLogSummary, CompletedSetLog } from '@parakeet/training-engine'
 import type { Lift } from '@parakeet/shared-types'
 import { supabase } from './supabase'
 
@@ -140,6 +140,36 @@ export async function completeSession(
       })
     }
   }
+}
+
+// Session logs for the current calendar week (Sun–Sat)
+export async function getCurrentWeekLogs(userId: string): Promise<CompletedSetLog[]> {
+  const now = new Date()
+  const startOfWeek = new Date(now)
+  startOfWeek.setDate(now.getDate() - now.getDay())
+  startOfWeek.setHours(0, 0, 0, 0)
+  const endOfWeek = new Date(startOfWeek)
+  endOfWeek.setDate(startOfWeek.getDate() + 7)
+
+  const { data } = await supabase
+    .from('session_logs')
+    .select('actual_sets, sessions!inner(primary_lift)')
+    .eq('user_id', userId)
+    .gte('completed_at', startOfWeek.toISOString())
+    .lt('completed_at', endOfWeek.toISOString())
+
+  return (data ?? []).map((row) => {
+    const sessRaw = row.sessions as unknown
+    const sess = (Array.isArray(sessRaw) ? sessRaw[0] : sessRaw) as { primary_lift: string } | null
+    const sets = Array.isArray(row.actual_sets)
+      ? (row.actual_sets as { reps_completed?: number }[])
+      : []
+    const completedSets = sets.filter((s) => (s.reps_completed ?? 0) > 0).length
+    return {
+      lift: (sess?.primary_lift ?? 'squat') as Lift,
+      completedSets: completedSets || sets.length,
+    }
+  })
 }
 
 // --- Private helpers ---

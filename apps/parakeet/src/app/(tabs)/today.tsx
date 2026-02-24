@@ -2,6 +2,7 @@ import { router } from 'expo-router'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import {
   ActivityIndicator,
+  ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -13,12 +14,85 @@ import { WorkoutCard } from '../../components/training/WorkoutCard'
 import { useAuth } from '../../hooks/useAuth'
 import { useActiveProgram } from '../../hooks/useActiveProgram'
 import { useTodaySession } from '../../hooks/useTodaySession'
+import { useWeeklyVolume } from '../../hooks/useWeeklyVolume'
 import { getActiveDisruptions } from '../../lib/disruptions'
+import type { MuscleGroup, VolumeStatus } from '@parakeet/training-engine'
+
+// ── Volume compact card ───────────────────────────────────────────────────────
+
+const MUSCLE_LABELS: Record<MuscleGroup, string> = {
+  quads:      'Quads',
+  hamstrings: 'Hamstrings',
+  glutes:     'Glutes',
+  lower_back: 'Lower Back',
+  upper_back: 'Upper Back',
+  chest:      'Chest',
+  triceps:    'Triceps',
+  shoulders:  'Shoulders',
+  biceps:     'Biceps',
+}
+
+const BAR_COLORS: Record<VolumeStatus, string> = {
+  below_mev:       '#F59E0B',
+  in_range:        '#10B981',
+  approaching_mrv: '#FBBF24',
+  at_mrv:          '#EF4444',
+  exceeded_mrv:    '#EF4444',
+}
+
+const COMPACT_MUSCLES: MuscleGroup[] = ['quads', 'chest', 'hamstrings', 'upper_back', 'lower_back']
+
+function VolumeCompactCard() {
+  const { data } = useWeeklyVolume()
+
+  return (
+    <View style={styles.volumeCard}>
+      <View style={styles.volumeCardHeader}>
+        <Text style={styles.volumeCardTitle}>Weekly Volume</Text>
+        <TouchableOpacity onPress={() => router.push('/volume')} activeOpacity={0.7}>
+          <Text style={styles.volumeViewAll}>View All →</Text>
+        </TouchableOpacity>
+      </View>
+
+      {!data ? (
+        <Text style={styles.volumeLoading}>Loading…</Text>
+      ) : (
+        COMPACT_MUSCLES.map((muscle) => {
+          const sets   = data.weekly[muscle]
+          const mrv    = data.config[muscle].mrv
+          const status = data.status[muscle]
+          const fillPct = mrv > 0 ? Math.min(100, (sets / mrv) * 100) : 0
+          const isOver  = status === 'at_mrv' || status === 'exceeded_mrv'
+
+          return (
+            <View key={muscle} style={styles.volumeRow}>
+              <Text style={styles.volumeRowLabel}>{MUSCLE_LABELS[muscle]}</Text>
+              <View style={styles.volumeBarTrack}>
+                <View
+                  style={[
+                    styles.volumeBarFill,
+                    { width: `${fillPct}%`, backgroundColor: BAR_COLORS[status] },
+                  ]}
+                />
+              </View>
+              <Text style={[styles.volumeRowSets, isOver && styles.volumeRowSetsOver]}>
+                {sets}/{mrv}{isOver ? ' ⚠' : ''}
+              </Text>
+            </View>
+          )
+        })
+      )}
+    </View>
+  )
+}
+
+// ── Screen ────────────────────────────────────────────────────────────────────
 
 export default function TodayScreen() {
   const { user } = useAuth()
   const { data: session, isLoading: sessionLoading } = useTodaySession()
   const { data: program, isLoading: programLoading } = useActiveProgram()
+  const { data: volumeData } = useWeeklyVolume()
   const queryClient = useQueryClient()
 
   const { data: disruptions } = useQuery({
@@ -35,13 +109,24 @@ export default function TodayScreen() {
     )
   }
 
+  // Muscles at or exceeding MRV — for warning banner
+  const mrvWarningMuscles = volumeData
+    ? (Object.entries(volumeData.status) as [MuscleGroup, VolumeStatus][])
+        .filter(([, s]) => s === 'at_mrv' || s === 'exceeded_mrv')
+        .map(([m]) => MUSCLE_LABELS[m])
+    : []
+
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.title}>Parakeet</Text>
       </View>
 
-      <View style={styles.content}>
+      <ScrollView
+        style={styles.scroll}
+        contentContainerStyle={styles.content}
+        showsVerticalScrollIndicator={false}
+      >
         {!program ? (
           // No program state
           <View style={styles.emptyState}>
@@ -57,25 +142,38 @@ export default function TodayScreen() {
               <Text style={styles.primaryButtonText}>Create Program</Text>
             </TouchableOpacity>
           </View>
-        ) : session ? (
-          // Session found — show workout card
-          <WorkoutCard
-            session={session}
-            activeDisruptions={disruptions ?? []}
-            onSkipComplete={() =>
-              queryClient.invalidateQueries({ queryKey: ['session', 'today'] })
-            }
-          />
         ) : (
-          // Program exists but no session today — rest day
-          <View style={styles.restDayCard}>
-            <Text style={styles.restDayTitle}>Rest Day</Text>
-            <Text style={styles.restDaySubtitle}>
-              Keep recovering — next session coming up soon.
-            </Text>
-          </View>
+          <>
+            {/* MRV warning banner */}
+            {mrvWarningMuscles.length > 0 && (
+              <View style={styles.mrvBanner}>
+                <Text style={styles.mrvBannerText}>
+                  {mrvWarningMuscles.join(', ')} {mrvWarningMuscles.length === 1 ? 'has' : 'have'} reached weekly MRV — volume automatically reduced.
+                </Text>
+              </View>
+            )}
+
+            {session ? (
+              <WorkoutCard
+                session={session}
+                activeDisruptions={disruptions ?? []}
+                onSkipComplete={() =>
+                  queryClient.invalidateQueries({ queryKey: ['session', 'today'] })
+                }
+              />
+            ) : (
+              <View style={styles.restDayCard}>
+                <Text style={styles.restDayTitle}>Rest Day</Text>
+                <Text style={styles.restDaySubtitle}>
+                  Keep recovering — next session coming up soon.
+                </Text>
+              </View>
+            )}
+
+            <VolumeCompactCard />
+          </>
         )}
-      </View>
+      </ScrollView>
     </SafeAreaView>
   )
 }
@@ -101,8 +199,12 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     color: '#111827',
   },
-  content: {
+  scroll: {
     flex: 1,
+  },
+  content: {
+    paddingBottom: 32,
+    gap: 12,
   },
   // No program / empty state
   emptyState: {
@@ -110,6 +212,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     paddingHorizontal: 32,
+    paddingTop: 80,
   },
   emptyTitle: {
     fontSize: 24,
@@ -158,5 +261,80 @@ const styles = StyleSheet.create({
     color: '#6B7280',
     textAlign: 'center',
     lineHeight: 22,
+  },
+  // MRV warning banner
+  mrvBanner: {
+    backgroundColor: '#FEE2E2',
+    borderLeftWidth: 4,
+    borderLeftColor: '#EF4444',
+    padding: 12,
+    marginHorizontal: 16,
+    borderRadius: 4,
+  },
+  mrvBannerText: {
+    fontSize: 13,
+    color: '#7F1D1D',
+    lineHeight: 18,
+  },
+  // Volume compact card
+  volumeCard: {
+    backgroundColor: '#fff',
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+    padding: 16,
+    marginHorizontal: 16,
+  },
+  volumeCardHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  volumeCardTitle: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: '#111827',
+  },
+  volumeViewAll: {
+    fontSize: 13,
+    color: '#4F46E5',
+    fontWeight: '500',
+  },
+  volumeLoading: {
+    fontSize: 13,
+    color: '#9CA3AF',
+  },
+  volumeRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
+    gap: 8,
+  },
+  volumeRowLabel: {
+    fontSize: 13,
+    color: '#374151',
+    width: 80,
+  },
+  volumeBarTrack: {
+    flex: 1,
+    height: 8,
+    backgroundColor: '#F3F4F6',
+    borderRadius: 4,
+    overflow: 'hidden',
+  },
+  volumeBarFill: {
+    height: '100%',
+    borderRadius: 4,
+  },
+  volumeRowSets: {
+    fontSize: 12,
+    color: '#6B7280',
+    width: 52,
+    textAlign: 'right',
+  },
+  volumeRowSetsOver: {
+    color: '#EF4444',
+    fontWeight: '600',
   },
 })

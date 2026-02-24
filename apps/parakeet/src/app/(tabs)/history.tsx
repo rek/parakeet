@@ -1,10 +1,12 @@
 import { useQuery } from '@tanstack/react-query';
-import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { router } from 'expo-router';
 
 import { useAuth } from '../../hooks/useAuth';
 import { getPerformanceTrends } from '../../lib/performance';
 import { getCompletedSessions } from '../../lib/sessions';
+import { listPrograms } from '../../lib/programs';
 
 import type { PerformanceTrend } from '../../lib/performance';
 
@@ -97,6 +99,15 @@ export default function HistoryScreen() {
     enabled: !!user?.id,
   });
 
+  const programsQuery = useQuery({
+    queryKey: ['programs', 'archived', user?.id],
+    queryFn: async () => {
+      const all = await listPrograms(user!.id);
+      return (all ?? []).filter((p) => p.status === 'archived');
+    },
+    enabled: !!user?.id,
+  });
+
   const isLoading = trendsQuery.isLoading || sessionsQuery.isLoading;
 
   if (isLoading) {
@@ -131,6 +142,34 @@ export default function HistoryScreen() {
           </View>
         ) : (
           <Text style={styles.emptyText}>No performance data yet.</Text>
+        )}
+
+        {/* Completed programs section */}
+        {(programsQuery.data?.length ?? 0) > 0 && (
+          <>
+            <Text style={styles.sectionHeader}>Completed Programs</Text>
+            <View style={{ marginBottom: 24 }}>
+              {programsQuery.data!.map((program) => (
+                <View key={program.id} style={styles.programRow}>
+                  <View style={styles.programRowLeft}>
+                    <Text style={styles.programRowTitle}>
+                      Program v{program.version}
+                    </Text>
+                    <Text style={styles.sessionRowDate}>
+                      {program.total_weeks} weeks · {program.training_days_per_week} days/week
+                    </Text>
+                  </View>
+                  <TouchableOpacity
+                    style={styles.reviewButton}
+                    onPress={() => router.push(`/history/cycle-review/${program.id}`)}
+                    activeOpacity={0.8}
+                  >
+                    <Text style={styles.reviewButtonText}>Review</Text>
+                  </TouchableOpacity>
+                </View>
+              ))}
+            </View>
+          </>
         )}
 
         {/* Completed sessions section */}
@@ -260,4 +299,21 @@ const styles = StyleSheet.create({
     color: '#9ca3af',
     marginBottom: 32,
   },
+  programRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F3F4F6',
+  },
+  programRowLeft: { flex: 1, marginRight: 12 },
+  programRowTitle: { fontSize: 15, fontWeight: '600', color: '#111827', marginBottom: 2 },
+  reviewButton: {
+    backgroundColor: '#EEF2FF',
+    borderRadius: 8,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+  },
+  reviewButtonText: { fontSize: 13, fontWeight: '600', color: '#4F46E5' },
 });

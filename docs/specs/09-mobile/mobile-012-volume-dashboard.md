@@ -1,6 +1,6 @@
 # Spec: Volume Dashboard
 
-**Status**: Planned
+**Status**: Implemented
 **Domain**: parakeet
 
 ## What This Covers

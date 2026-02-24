@@ -1,7 +1,10 @@
 import { ScrollView, StyleSheet, Text, TextStyle, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { router } from 'expo-router';
+import { useQuery } from '@tanstack/react-query';
 
 import { useAuth } from '../../hooks/useAuth';
+import { supabase } from '../../lib/supabase';
 
 // ── Sub-components ────────────────────────────────────────────────────────────
 
@@ -25,7 +28,7 @@ function Row({ label, labelStyle, onPress, right }: RowProps) {
     return (
       <TouchableOpacity style={styles.row} onPress={onPress} activeOpacity={0.6}>
         <Text style={[styles.rowLabel, labelStyle]}>{label}</Text>
-        {right}
+        {right ?? <Text style={styles.chevron}>›</Text>}
       </TouchableOpacity>
     );
   }
@@ -42,6 +45,23 @@ function Row({ label, labelStyle, onPress, right }: RowProps) {
 export default function SettingsScreen() {
   const { user, signOut } = useAuth();
 
+  // Badge for pending AI formula suggestions
+  const { data: pendingSuggestions } = useQuery({
+    queryKey: ['formula', 'suggestions', 'count', user?.id],
+    queryFn: async () => {
+      const { count } = await supabase
+        .from('formula_configs')
+        .select('id', { count: 'exact', head: true })
+        .eq('user_id', user!.id)
+        .eq('source', 'ai_suggestion')
+        .eq('is_active', false);
+      return count ?? 0;
+    },
+    enabled: !!user?.id,
+    staleTime: 60 * 1000,
+  });
+
+  const hasSuggestions = (pendingSuggestions ?? 0) > 0;
   const emailInitial = user?.email ? user.email[0].toUpperCase() : '?';
 
   return (
@@ -63,12 +83,53 @@ export default function SettingsScreen() {
 
         <View style={styles.divider} />
 
+        {/* Training section */}
+        <SectionHeader label="Training" />
+        <Row
+          label="Manage Formulas"
+          onPress={() => router.push('/formula/editor')}
+          right={
+            <View style={styles.rowRight}>
+              {hasSuggestions && <View style={styles.suggestionDot} />}
+              <Text style={styles.chevron}>›</Text>
+            </View>
+          }
+        />
+        <Row
+          label="Report Issue"
+          onPress={() => router.push('/disruption-report/report')}
+        />
+        <Row
+          label="Volume & Recovery"
+          onPress={() => router.push('/volume')}
+        />
+
+        <View style={styles.divider} />
+
+        {/* Advanced section */}
+        <SectionHeader label="Advanced" />
+        <Row
+          label="Auxiliary Exercises"
+          onPress={() => {/* TODO: data-002 settings */}}
+        />
+        <Row
+          label="Warmup Protocol"
+          onPress={() => {/* TODO: data-003 settings */}}
+        />
+        <Row
+          label="Volume Config (MRV/MEV)"
+          onPress={() => {/* TODO: data-001 settings */}}
+        />
+
+        <View style={styles.divider} />
+
         {/* Account section */}
         <SectionHeader label="Account" />
         <Row
           label="Sign Out"
           labelStyle={styles.signOutLabel}
           onPress={signOut}
+          right={null}
         />
 
         <View style={styles.divider} />
@@ -158,6 +219,22 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#111827',
     flex: 1,
+  },
+  rowRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  chevron: {
+    fontSize: 20,
+    color: '#9CA3AF',
+    lineHeight: 22,
+  },
+  suggestionDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: '#EF4444',
   },
   signOutLabel: {
     color: '#dc2626',

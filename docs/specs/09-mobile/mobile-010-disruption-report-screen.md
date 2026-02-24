@@ -1,6 +1,6 @@
 # Spec: Disruption Report Screen
 
-**Status**: Planned
+**Status**: Implemented
 **Domain**: parakeet App
 
 ## What This Covers
