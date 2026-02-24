@@ -1,6 +1,6 @@
 # Spec: Program Versioning and Regeneration
 
-**Status**: Planned
+**Status**: Implemented
 **Domain**: Program Management
 
 ## What This Covers

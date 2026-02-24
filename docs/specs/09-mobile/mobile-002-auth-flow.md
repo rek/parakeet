@@ -1,6 +1,6 @@
 # Spec: Mobile Auth Flow
 
-**Status**: Planned
+**Status**: Implemented
 **Domain**: Mobile App
 
 ## What This Covers

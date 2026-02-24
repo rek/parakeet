@@ -1,6 +1,6 @@
 # Spec: Warmup Config
 
-**Status**: Planned
+**Status**: Implemented
 **Domain**: Data / User Config
 
 ## What This Covers

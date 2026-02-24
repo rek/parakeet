@@ -1,6 +1,6 @@
 # Spec: Report Disruption
 
-**Status**: Planned
+**Status**: Implemented
 **Domain**: Disruptions
 
 ## What This Covers

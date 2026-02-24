@@ -1,6 +1,6 @@
 # Spec: Muscle Volume Config
 
-**Status**: Planned
+**Status**: Implemented
 **Domain**: Data / User Config
 
 ## What This Covers

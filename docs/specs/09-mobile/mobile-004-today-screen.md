@@ -1,6 +1,6 @@
 # Spec: Today Screen
 
-**Status**: Planned
+**Status**: Implemented
 **Domain**: Mobile App
 
 ## What This Covers

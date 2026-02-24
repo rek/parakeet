@@ -1,6 +1,6 @@
 # Spec: Formula Defaults (Local Constant)
 
-**Status**: Planned
+**Status**: Implemented
 **Domain**: Formula Management
 
 ## What This Covers

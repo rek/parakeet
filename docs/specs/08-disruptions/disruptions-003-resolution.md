@@ -1,6 +1,6 @@
 # Spec: Disruption Resolution
 
-**Status**: Planned
+**Status**: Implemented
 **Domain**: Disruptions
 
 ## What This Covers

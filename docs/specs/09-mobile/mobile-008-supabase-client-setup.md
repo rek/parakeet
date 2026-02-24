@@ -1,6 +1,6 @@
 # Spec: Supabase Client Setup (Mobile)
 
-**Status**: Planned
+**Status**: Implemented
 **Domain**: Mobile
 
 ## What This Covers

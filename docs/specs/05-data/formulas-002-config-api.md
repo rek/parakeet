@@ -1,6 +1,6 @@
 # Spec: Formula Config (User Overrides)
 
-**Status**: Planned
+**Status**: Implemented
 **Domain**: Formula Management
 
 ## What This Covers

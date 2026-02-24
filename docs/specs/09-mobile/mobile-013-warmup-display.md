@@ -1,6 +1,6 @@
 # Spec: Warmup Display
 
-**Status**: Planned
+**Status**: Implemented
 **Domain**: Mobile
 
 ## What This Covers

@@ -1,6 +1,6 @@
 # Spec: Session Lifecycle (Supabase Direct)
 
-**Status**: Planned
+**Status**: Implemented
 **Domain**: Sessions & Performance
 
 ## What This Covers

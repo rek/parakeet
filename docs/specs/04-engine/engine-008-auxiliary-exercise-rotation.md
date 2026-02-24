@@ -1,6 +1,6 @@
 # Spec: Auxiliary Exercise Rotation
 
-**Status**: Planned
+**Status**: Implemented
 **Domain**: Training Engine
 
 ## What This Covers

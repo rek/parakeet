@@ -1,6 +1,6 @@
 # Spec: Disruption Adjuster Engine
 
-**Status**: Planned
+**Status**: Implemented
 **Domain**: Disruptions
 
 ## What This Covers

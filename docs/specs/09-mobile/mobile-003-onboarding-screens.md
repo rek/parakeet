@@ -1,6 +1,6 @@
 # Spec: Onboarding Screens
 
-**Status**: Planned
+**Status**: Implemented
 **Domain**: Mobile App
 
 ## What This Covers

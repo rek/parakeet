@@ -1,6 +1,6 @@
 # Spec: Apply Disruption Adjustment
 
-**Status**: Planned
+**Status**: Implemented
 **Domain**: Disruptions
 
 ## What This Covers

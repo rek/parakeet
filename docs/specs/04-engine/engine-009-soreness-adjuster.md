@@ -1,6 +1,6 @@
 # Spec: Soreness Adjuster
 
-**Status**: Planned
+**Status**: Implemented
 **Domain**: Training Engine
 
 ## What This Covers

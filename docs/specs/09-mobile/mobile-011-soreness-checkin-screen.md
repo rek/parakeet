@@ -1,6 +1,6 @@
 # Spec: Soreness Check-In Screen
 
-**Status**: Planned
+**Status**: Implemented
 **Domain**: Mobile
 
 ## What This Covers
