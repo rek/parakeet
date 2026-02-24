@@ -127,3 +127,35 @@ export interface AuxiliaryAssignment {
   exercise1: string
   exercise2: string
 }
+
+// ---------------------------------------------------------------------------
+// Performance adjuster types (engine-005)
+// ---------------------------------------------------------------------------
+
+export interface SessionLogSummary {
+  session_id: string
+  lift: Lift
+  intensity_type: IntensityType
+  actual_rpe: number | null
+  target_rpe: number
+  completion_pct: number | null
+}
+
+export interface AdjustmentThresholds {
+  rpe_deviation_threshold: number
+  consecutive_sessions_required: number
+  incomplete_session_threshold: number
+  max_suggestions_per_lift: number
+}
+
+export type PerformanceSuggestionType = 'reduce_pct' | 'increase_pct' | 'flag_for_review'
+
+export interface PerformanceSuggestion {
+  type: PerformanceSuggestionType
+  affected_lift: Lift
+  affected_block: IntensityType | null
+  pct_adjustment: number | null
+  rationale: string
+  session_id?: string
+  completion_pct?: number
+}

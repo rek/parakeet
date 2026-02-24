@@ -1,4 +1,5 @@
 export * from './disruption.schema'
+export * from './formula.schema'
 export * from './lifter-maxes.schema'
 export * from './program.schema'
 export * from './session-log.schema'
