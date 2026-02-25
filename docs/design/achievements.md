@@ -132,3 +132,4 @@ The Profile tab shows at a glance:
 ## References
 
 - Related Design Docs: [performance-logging.md](./performance-logging.md), [program-generation.md](./program-generation.md), [user-onboarding.md](./user-onboarding.md)
+- Specs: [engine-022-pr-detection.md](../specs/04-engine/engine-022-pr-detection.md), [mobile-019-achievements-screen.md](../specs/09-mobile/mobile-019-achievements-screen.md)

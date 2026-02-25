@@ -201,4 +201,4 @@ Developer suggestions are stored in a `developer_suggestions` table and viewable
 ## References
 
 - Related Design Docs: [training-engine-architecture.md](./training-engine-architecture.md), [formula-management.md](./formula-management.md), [program-generation.md](./program-generation.md), [achievements.md](./achievements.md), [sex-based-adaptations.md](./sex-based-adaptations.md)
-- Specs: [engine-005-performance-adjuster.md](../specs/04-engine/engine-005-performance-adjuster.md)
+- Specs: [engine-005-performance-adjuster.md](../specs/04-engine/engine-005-performance-adjuster.md), [engine-012-cycle-review-generator.md](../specs/04-engine/engine-012-cycle-review-generator.md), [engine-024-developer-suggestions.md](../specs/04-engine/engine-024-developer-suggestions.md), [engine-025-multi-cycle-context.md](../specs/04-engine/engine-025-multi-cycle-context.md), [mobile-014-cycle-review-screen.md](../specs/09-mobile/mobile-014-cycle-review-screen.md)

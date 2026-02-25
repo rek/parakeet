@@ -6,7 +6,8 @@
   "scripts": {
     "eas-build-post-install": "cd ../../ && node tools/scripts/eas-build-post-install.mjs . apps/parakeet",
     "android": "expo run:android",
-    "logcat": "adb logcat *:S ReactNativeJS:V ReactNative:V unknown:ReactHost:V"
+    "logcat": "adb logcat *:S ReactNativeJS:V ReactNative:V unknown:ReactHost:V",
+    "ios": "expo run:ios"
   },
   "dependencies": {
     "@ai-sdk/anthropic": "^3.0.47",

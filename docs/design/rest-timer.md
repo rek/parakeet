@@ -116,13 +116,13 @@ primary key (user_id, lift, intensity_type)
 
 ## Implementation Plan
 
-This spans multiple specs (not written yet):
+This spans multiple specs:
 
-- `engine-020` — Add `rest_seconds` to `FormulaConfig` + `DEFAULT_REST_SECONDS_MALE/FEMALE` + JIT populates `rest_after_seconds` on `PlannedSet`
-- `engine-021` — LLM JIT prompt update: rest suggestion per set (constrained ±60s)
-- `data-006` — `rest_configs` table migration + `apps/parakeet/src/lib/rest-config.ts` data-access
-- `mobile-017` — Rest timer UI component + session screen integration
-- `mobile-018` — Rest timer settings screen
+- [engine-020-rest-config.md](../specs/04-engine/engine-020-rest-config.md) — Add `rest_seconds` to `FormulaConfig` + `DEFAULT_REST_SECONDS_MALE/FEMALE` + JIT populates `restRecommendations` on `JITOutput`
+- [engine-021-llm-rest-suggestions.md](../specs/04-engine/engine-021-llm-rest-suggestions.md) — LLM JIT prompt update: rest suggestion per set (constrained ±60s)
+- [data-006-rest-config.md](../specs/05-data/data-006-rest-config.md) — `rest_configs` table migration + `apps/parakeet/src/lib/rest-config.ts` data-access
+- [mobile-017-rest-timer.md](../specs/09-mobile/mobile-017-rest-timer.md) — Rest timer UI component + session screen integration
+- [mobile-018-rest-timer-settings.md](../specs/09-mobile/mobile-018-rest-timer-settings.md) — Rest timer settings screen
 
 ### Actual Rest Duration Logging
 

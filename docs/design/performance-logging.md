@@ -119,3 +119,4 @@ This estimated 1RM is stored alongside the session log and used to pre-populate 
 - Zourdos, M.C. et al. (2016) — "Novel Resistance Training-Specific Rating of Perceived Exertion Scale Measuring Repetitions in Reserve" *J Strength Cond Res*
 - Epley, B. (1985) — 1RM prediction equation (Epley formula)
 - Architecture: [training-engine-architecture.md](./training-engine-architecture.md#progressive-overload-theoretical-assumptions)
+- Spec: [mobile-020-history-screen.md](../specs/09-mobile/mobile-020-history-screen.md)

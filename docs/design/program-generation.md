@@ -156,5 +156,5 @@ The JIT generator adapts to the program length — it knows which block the sess
 
 - Related Design Docs: [user-onboarding.md](./user-onboarding.md), [formula-management.md](./formula-management.md), [volume-management.md](./volume-management.md), [performance-logging.md](./performance-logging.md)
 - External: Brandon Lilly's Cube Method (10-week concurrent periodization)
-- Specs: [engine-007-jit-session-generator.md](../specs/04-engine/engine-007-jit-session-generator.md), [engine-004-program-generator.md](../specs/04-engine/engine-004-program-generator.md)
+- Specs: [engine-007-jit-session-generator.md](../specs/04-engine/engine-007-jit-session-generator.md), [engine-004-program-generator.md](../specs/04-engine/engine-004-program-generator.md), [sessions-006-missed-session-logic.md](../specs/07-sessions/sessions-006-missed-session-logic.md)
 - Architecture: [training-engine-architecture.md](./training-engine-architecture.md)

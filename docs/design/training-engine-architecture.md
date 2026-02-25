@@ -298,7 +298,7 @@ The `jit_comparison_logs` table in Supabase stores full inputs and outputs from 
 ## References
 
 - Related Design Docs: [program-generation.md](./program-generation.md), [performance-logging.md](./performance-logging.md), [sex-based-adaptations.md](./sex-based-adaptations.md), [disruption-management.md](./disruption-management.md), [volume-management.md](./volume-management.md), [cycle-review-and-insights.md](./cycle-review-and-insights.md)
-- Specs: [engine-007-jit-session-generator.md](../specs/04-engine/engine-007-jit-session-generator.md), [engine-005-performance-adjuster.md](../specs/04-engine/engine-005-performance-adjuster.md)
+- Specs: [engine-007-jit-session-generator.md](../specs/04-engine/engine-007-jit-session-generator.md), [engine-005-performance-adjuster.md](../specs/04-engine/engine-005-performance-adjuster.md), [engine-011-llm-jit-generator.md](../specs/04-engine/engine-011-llm-jit-generator.md), [engine-023-hybrid-jit-generator.md](../specs/04-engine/engine-023-hybrid-jit-generator.md)
 - Selye, H. (1950) — "Stress and the General Adaptation Syndrome" *BMJ* — supercompensation model
 - Bompa, T. & Haff, G. (2009) — *Periodization: Theory and Methodology of Training* — concurrent periodization, stimulus habituation
 - Kraemer, W.J. & Ratamess, N.A. (2004) — "Fundamentals of Resistance Training" *Med Sci Sports Exerc* — recovery windows, frequency

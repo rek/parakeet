@@ -72,11 +72,10 @@ This drops on every replug — re-run if you get network errors after reconnecti
 ### parakeet dev server
 
 ```bash
-# Start Expo dev server (iOS/Android/Web)
+# Start Expo dev server (Android/Web)
 npx nx run parakeet:start
 
 # Then in the Expo CLI menu:
-#   Press i  → iOS simulator
 #   Press a  → Android emulator
 #   Press w  → Web browser (Metro web)
 
