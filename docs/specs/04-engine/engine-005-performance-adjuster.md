@@ -11,7 +11,7 @@ Analyzes logged session performance and generates adjustment suggestions when pa
 
 **File: `packages/training-engine/src/adjustments/performance-adjuster.ts`**
 
-- `suggestProgramAdjustments(recentLogs: SessionLogSummary[], thresholds: AdjustmentThresholds): AdjustmentSuggestion[]`
+- [x] `suggestProgramAdjustments(recentLogs: SessionLogSummary[], thresholds: AdjustmentThresholds): AdjustmentSuggestion[]`
   - `recentLogs`: last N session logs for a specific lift (N configurable, default 6)
   - Groups logs by `lift` and `intensity_type`
   - Applies detection rules:
@@ -32,7 +32,7 @@ Analyzes logged session performance and generates adjustment suggestions when pa
   - Suggestion type: `'flag_for_review'` (no formula change)
   - Include session ID and completion percentage
 
-- `AdjustmentThresholds` type:
+- [x] `AdjustmentThresholds` type:
   - `rpe_deviation_threshold: number` (default 1.0)
   - `consecutive_sessions_required: number` (default 2)
   - `incomplete_session_threshold: number` (default 80)
@@ -60,11 +60,11 @@ await supabase.from('performance_metrics').insert({
 ```
 
 **Unit tests (`packages/training-engine/__tests__/performance-adjuster.test.ts`):**
-- 2 consecutive Squat Heavy sessions RPE 9.6 (target 8.5) → high RPE suggestion returned
-- 1 session with high RPE → no suggestion (below consecutive threshold)
-- 3 sessions alternating high/low RPE → no suggestion (not consecutive)
-- Incomplete session (60% completion) → flag_for_review suggestion
-- Low RPE pattern → increase suggestion
+- [x] 2 consecutive Squat Heavy sessions RPE 9.6 (target 8.5) → high RPE suggestion returned
+- [x] 1 session with high RPE → no suggestion (below consecutive threshold)
+- [x] 3 sessions alternating high/low RPE → no suggestion (not consecutive)
+- [x] Incomplete session (60% completion) → flag_for_review suggestion
+- [x] Low RPE pattern → increase suggestion
 
 ## Dependencies
 

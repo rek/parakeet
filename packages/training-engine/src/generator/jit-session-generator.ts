@@ -36,6 +36,9 @@ export interface JITInput {
   recentLogs: RecentSessionSummary[]
   activeDisruptions: TrainingDisruption[]
   warmupConfig: WarmupProtocol
+  // Athlete demographics — optional; used by AI JIT generator (engine-011) for contextual advice
+  biologicalSex?: 'female' | 'male'
+  userAge?: number
 }
 
 export interface AuxiliaryWork {

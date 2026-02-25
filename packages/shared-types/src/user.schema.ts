@@ -6,6 +6,7 @@ export const UserSchema = z
     email: z.string().email(),
     display_name: z.string().nullable(),
     biological_sex: z.enum(['female', 'male', 'prefer_not_to_say']).optional(),
+    date_of_birth: z.string().nullable().optional(),
     created_at: z.string().datetime(),
   })
   .strict()
@@ -16,6 +17,7 @@ export const UpdateUserSchema = z
   .object({
     display_name: z.string().optional(),
     biological_sex: z.enum(['female', 'male', 'prefer_not_to_say']).optional(),
+    date_of_birth: z.string().nullable().optional(),
   })
   .strict()
 

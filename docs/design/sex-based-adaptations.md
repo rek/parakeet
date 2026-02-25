@@ -1,6 +1,6 @@
 # Feature: Sex-Based Training Adaptations
 
-**Status**: Planned
+**Status**: Partially Implemented
 
 **Date**: 2026-02-22
 
@@ -140,17 +140,22 @@ The soreness check-in and RPE tracking already capture how the user is actually 
 
 ## Implementation Status
 
-### Planned
+### Implemented
 
-- Biological sex field in user profile (stored in Supabase `profiles` table)
-- Sex-differentiated MEV/MRV default tables
-- 2020 Wilks formula with sex-specific coefficients
-- Optional cycle tracking: phase estimation from start date + cycle length
-- Phase indicator on Today screen (when tracking enabled)
-- Ovulatory phase info note on squat-heavy sessions
-- "Menstrual symptoms" sub-type in disruption reporting
-- Cycle phase stored alongside session logs
-- Cycle pattern view in session history
+- Biological sex collected in onboarding (program-settings screen) and stored in `profiles.biological_sex`
+- Sex-differentiated MEV/MRV default tables (`DEFAULT_MRV_MEV_CONFIG_MALE` / `_FEMALE` in training engine)
+- `getMrvMevConfig()` selects correct defaults based on `biological_sex`
+- `biologicalSex` + `userAge` added as optional context fields to `JITInput` (used by LLM systems)
+- Date of birth collected in onboarding (optional birth year input) and stored in `profiles.date_of_birth`
+- See spec: [data-004-athlete-profile.md](../specs/05-data/data-004-athlete-profile.md)
+
+### Planned (specs written)
+
+- 2020 Wilks formula → [engine-013-wilks-formula.md](../specs/04-engine/engine-013-wilks-formula.md)
+- Cycle phase calculator (pure function) → [engine-014-cycle-phase-calculator.md](../specs/04-engine/engine-014-cycle-phase-calculator.md)
+- Cycle tracking DB + data-access lib → [data-005-cycle-tracking.md](../specs/05-data/data-005-cycle-tracking.md)
+- Cycle tracking settings screen + onboarding prompt → [mobile-015-cycle-tracking-settings.md](../specs/09-mobile/mobile-015-cycle-tracking-settings.md)
+- Today screen pill, ovulatory chip, disruption sub-type, history phase tag, cycle patterns view → [mobile-016-cycle-phase-ui.md](../specs/09-mobile/mobile-016-cycle-phase-ui.md)
 
 ## Future Enhancements
 

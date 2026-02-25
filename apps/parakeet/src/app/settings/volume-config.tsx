@@ -11,9 +11,10 @@ import { SafeAreaView } from 'react-native-safe-area-context'
 import { router } from 'expo-router'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 
-import { DEFAULT_MRV_MEV_CONFIG } from '@parakeet/training-engine'
-import type { MuscleGroup } from '@parakeet/training-engine'
+import { DEFAULT_MRV_MEV_CONFIG_MALE, DEFAULT_MRV_MEV_CONFIG_FEMALE } from '@parakeet/training-engine'
+import type { MrvMevConfig, MuscleGroup } from '@parakeet/training-engine'
 import { getMrvMevConfig, updateMuscleConfig, resetMuscleToDefault } from '../../lib/volume-config'
+import { getProfile } from '../../lib/profile'
 import { useAuth } from '../../hooks/useAuth'
 
 // ── Constants ─────────────────────────────────────────────────────────────────
@@ -113,14 +114,23 @@ export default function VolumeConfigScreen() {
   const { user } = useAuth()
   const queryClient = useQueryClient()
   const [draft, setDraft] = useState<Draft | null>(null)
+  const [sexDefaults, setSexDefaults] = useState<MrvMevConfig>(DEFAULT_MRV_MEV_CONFIG_MALE)
   const [isSaving, setIsSaving] = useState(false)
   const [isResetting, setIsResetting] = useState(false)
 
   const { isLoading } = useQuery({
     queryKey: ['volume', 'config', user?.id],
-    queryFn: () => getMrvMevConfig(user!.id),
+    queryFn: async () => {
+      const profile = await getProfile()
+      const data = await getMrvMevConfig(user!.id, profile?.biological_sex)
+      return { data, profile }
+    },
     enabled: !!user?.id,
-    onSuccess: (data) => {
+    onSuccess: ({ data, profile }) => {
+      const defaults = profile?.biological_sex === 'female'
+        ? DEFAULT_MRV_MEV_CONFIG_FEMALE
+        : DEFAULT_MRV_MEV_CONFIG_MALE
+      setSexDefaults(defaults)
       if (!draft) {
         setDraft(Object.fromEntries(
           MUSCLES.map((m) => [m, { mev: data[m].mev, mrv: data[m].mrv }]),
@@ -135,7 +145,7 @@ export default function VolumeConfigScreen() {
 
   function isDefaultValue(muscle: MuscleGroup): boolean {
     if (!draft) return true
-    const d = DEFAULT_MRV_MEV_CONFIG[muscle]
+    const d = sexDefaults[muscle]
     return draft[muscle].mev === d.mev && draft[muscle].mrv === d.mrv
   }
 
@@ -159,7 +169,7 @@ export default function VolumeConfigScreen() {
     try {
       await Promise.all(MUSCLES.map((m) => resetMuscleToDefault(user.id, m)))
       setDraft(Object.fromEntries(
-        MUSCLES.map((m) => [m, { ...DEFAULT_MRV_MEV_CONFIG[m] }]),
+        MUSCLES.map((m) => [m, { ...sexDefaults[m] }]),
       ) as Draft)
       queryClient.invalidateQueries({ queryKey: ['volume'] })
     } finally {

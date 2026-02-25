@@ -75,91 +75,33 @@ interface AuxiliaryWork {
 
 ### Main function
 
-- `generateJITSession(input: JITInput): JITOutput`
+- [x] `generateJITSession(input: JITInput): JITOutput`
 
 ### Adjustment pipeline (applied in order)
 
-**Step 1 — Base sets from formula**
-```
-base = calculateSets(lift, intensityType, blockNumber, oneRmKg, formulaConfig)
-```
-
-**Step 2 — Performance adjustment (RPE history)**
-```
-If last 2 completed sessions for same lift:
-  avg_rpe_deviation = mean(actual_rpe - target_rpe)
-  If avg_rpe_deviation > 1.0:
-    intensityMultiplier *= 0.975 (-2.5%)
-    rationale.push("Recent RPE above target — reduced intensity 2.5%")
-  If avg_rpe_deviation < -1.0:
-    intensityMultiplier *= 1.025 (+2.5%)
-    rationale.push("Recent RPE below target — increased intensity 2.5%")
-```
-
-**Step 3 — Soreness adjustment**
-```
-primaryMuscles = getPrimaryMusclesForSession(lift)
-worstSoreness = getWorstSoreness(primaryMuscles, sorenessRatings)
-sorenessModifier = getSorenessModifier(worstSoreness)
-
-If sorenessModifier.recoveryMode:
-  Replace base sets with recovery sets (40% × 3×5)
-  rationale.push("Severe soreness — recovery session")
-  Skip to Step 6 (auxiliaries still apply soreness check)
-Else:
-  Apply setReduction and intensityMultiplier from soreness modifier
-```
-
-**Step 4 — MRV check (primary muscles)**
-```
-For each primary muscle of this lift:
-  remaining = mrv[muscle] - weeklyVolumeToDate[muscle]
-  If remaining <= 0:
-    skippedMainLift = true
-    warnings.push("MRV exceeded for [muscle] — main lift skipped")
-    Break
-  If planned_sets > remaining:
-    planned_sets = remaining  (capped)
-    warnings.push("Approaching MRV for [muscle] — sets capped at [remaining]")
-```
-
-**Step 5 — Disruption override**
-```
-If any activeDisruptions affect this lift:
-  Apply disruption-adjuster reductions (takes full precedence over steps 2–4)
-  rationale.push(disruption.description)
-```
-
-**Step 6 — Auxiliary work**
-```
-For each auxiliary exercise (2 total):
-  base = 3–4 sets × 8–12 reps at ~65–70% of related lift oneRmKg (RPE 7–8)
-  Apply soreness check for same muscle group:
-    If soreness 3: reduce 1 set
-    If soreness 4: reduce 1 set + intensity 5%
-    If soreness 5: skip exercise entirely
-  Apply MRV check for auxiliary's primary muscle:
-    If remaining capacity < 1 set: skip, add warning
-```
-
-**Step 7 — Final output assembly**
-```
-Apply intensityMultiplier to all weight_kg values → round to nearest 2.5kg
-Compute volumeModifier = finalSets / baseSets
-Compute intensityModifier = final intensityMultiplier
-Assemble JITOutput
-```
-
-**Step 8 — Warmup generation**
-```
-If mainLiftSets is non-empty and not skippedMainLift:
-  workingWeight = mainLiftSets[0].weight_kg
-  warmupSets = generateWarmupSets(workingWeight, warmupConfig)
-  // Special case: recovery mode (soreness 5) → force 'minimal' protocol
-  // Special case: workingWeight < 40kg → force 'minimal' protocol
-Else:
-  warmupSets = []  // no warmup if main lift is skipped
-```
+- [x] **Step 1 — Base sets from formula**
+  ```
+  base = calculateSets(lift, intensityType, blockNumber, oneRmKg, formulaConfig)
+  ```
+- [x] **Step 2 — Performance adjustment (RPE history)**
+  - If avg_rpe_deviation > 1.0 over last 2 sessions: `intensityMultiplier *= 0.975`
+  - If avg_rpe_deviation < -1.0: `intensityMultiplier *= 1.025`
+- [x] **Step 3 — Soreness adjustment**
+  - If `sorenessModifier.recoveryMode`: replace base sets with recovery sets (40% × 3×5)
+  - Otherwise: apply setReduction and intensityMultiplier from soreness modifier
+- [x] **Step 4 — MRV check (primary muscles)**
+  - Cap planned_sets to remaining MRV capacity per muscle
+  - Set `skippedMainLift = true` if remaining <= 0
+- [x] **Step 5 — Disruption override**
+  - If any activeDisruptions affect this lift: apply disruption-adjuster reductions (takes full precedence over steps 2–4)
+- [x] **Step 6 — Auxiliary work**
+  - For each auxiliary exercise (2 total): base 3–4 sets × 8–12 reps at ~65–70% 1RM
+  - Apply soreness check and MRV check per auxiliary muscle
+- [x] **Step 7 — Final output assembly**
+  - Apply intensityMultiplier to all weight_kg values → round to nearest 2.5kg
+  - Compute volumeModifier and intensityModifier
+- [x] **Step 8 — Warmup generation**
+  - If mainLiftSets non-empty and not skippedMainLift: generate warmup from `mainLiftSets[0].weight_kg`
 
 ### Supabase integration (called from app after soreness check-in)
 
@@ -188,13 +130,13 @@ async function generateAndSaveSession(sessionId: string): Promise<JITOutput> {
 
 ### Integration tests
 
-- Squat 140kg, Block 1 Heavy, all soreness=1, no disruptions → `[{weight_kg: 112.5, reps: 5}, {weight_kg: 112.5, reps: 5}]`
-- Soreness=4 on quads → 0 planned sets clamped to 1 set at 107.5kg, warning added
-- 18 weekly quad sets (MRV=20) → main lift capped at 2 sets
-- 21 weekly quad sets (MRV=20) → `skippedMainLift: true`, warning added
-- 2 consecutive sessions RPE 9.5 (target 8.5) → weight reduced to 110kg (112.5 × 0.975 rounded)
-- Auxiliary: soreness=5 on chest during bench day → auxiliary Dips skipped
-- Disruption (knee injury) → overrides soreness adjustment with injury-specific reduction
+- [x] Squat 140kg, Block 1 Heavy, all soreness=1, no disruptions → `[{weight_kg: 112.5, reps: 5}, {weight_kg: 112.5, reps: 5}]`
+- [x] Soreness=4 on quads → 0 planned sets clamped to 1 set at 107.5kg, warning added
+- [x] 18 weekly quad sets (MRV=20) → main lift capped at 2 sets
+- [x] 21 weekly quad sets (MRV=20) → `skippedMainLift: true`, warning added
+- [x] 2 consecutive sessions RPE 9.5 (target 8.5) → weight reduced to 110kg (112.5 × 0.975 rounded)
+- [x] Auxiliary: soreness=5 on chest during bench day → auxiliary Dips skipped
+- [x] Disruption (knee injury) → overrides soreness adjustment with injury-specific reduction
 
 ## Dependencies
 

@@ -7,6 +7,7 @@ import {
 } from '@parakeet/training-engine'
 import { useAuth } from './useAuth'
 import { getMrvMevConfig } from '../lib/volume-config'
+import { getProfile } from '../lib/profile'
 import { getCurrentWeekLogs } from '../lib/sessions'
 
 function currentWeekStart(): string {
@@ -22,10 +23,11 @@ export function useWeeklyVolume() {
   return useQuery({
     queryKey: ['volume', 'weekly', user?.id, currentWeekStart()],
     queryFn: async () => {
-      const [logs, config] = await Promise.all([
+      const [logs, profile] = await Promise.all([
         getCurrentWeekLogs(user!.id),
-        getMrvMevConfig(user!.id),
+        getProfile(),
       ])
+      const config = await getMrvMevConfig(user!.id, profile?.biological_sex)
       const weekly = computeWeeklyVolume(logs, getMusclesForLift)
       const status = classifyVolumeStatus(weekly, config)
       const remaining = computeRemainingCapacity(weekly, config)

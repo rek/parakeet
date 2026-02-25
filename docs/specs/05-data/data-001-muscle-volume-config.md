@@ -5,7 +5,7 @@
 
 ## What This Covers
 
-CRUD operations for the user's MEV/MRV configuration per muscle group. Supabase SDK calls directly from the parakeet app. Default values come from `DEFAULT_MRV_MEV_CONFIG` in the training engine; the user can override any value in Settings → Volume Config.
+CRUD operations for the user's MEV/MRV configuration per muscle group. Supabase SDK calls directly from the parakeet app. Default values come from `DEFAULT_MRV_MEV_CONFIG_MALE` or `DEFAULT_MRV_MEV_CONFIG_FEMALE` in the training engine (selected based on the user's `biological_sex` profile field); the user can override any value in Settings → Volume Config. See [sex-based-adaptations.md](../design/../../design/sex-based-adaptations.md) for the full defaults table.
 
 ## Tasks
 
@@ -26,56 +26,16 @@ CREATE POLICY "users_own_volume_config" ON muscle_volume_config
 ```
 
 **`apps/parakeet/lib/volume-config.ts`:**
-
-```typescript
-// Fetch user's full MRV/MEV config, falling back to engine defaults for missing muscles
-async function getMrvMevConfig(userId: string): Promise<MrvMevConfig> {
-  const { data } = await supabase
-    .from('muscle_volume_config')
-    .select('muscle, mev, mrv')
-    .eq('user_id', userId)
-
-  // Merge DB rows over defaults; muscles with no row use DEFAULT_MRV_MEV_CONFIG
-  const config = { ...DEFAULT_MRV_MEV_CONFIG }
-  for (const row of data ?? []) {
-    config[row.muscle as MuscleGroup] = { mev: row.mev, mrv: row.mrv }
-  }
-  return config
-}
-
-// Upsert a single muscle's config
-async function updateMuscleConfig(
-  userId: string,
-  muscle: MuscleGroup,
-  update: { mev?: number; mrv?: number }
-): Promise<void> {
-  const existing = await getMrvMevConfig(userId)
-  const current = existing[muscle]
-  await supabase.from('muscle_volume_config').upsert({
-    user_id: userId,
-    muscle,
-    mev: update.mev ?? current.mev,
-    mrv: update.mrv ?? current.mrv,
-    updated_at: new Date().toISOString(),
-  }, { onConflict: 'user_id,muscle' })
-}
-
-// Reset a muscle back to research defaults (delete the override row)
-async function resetMuscleToDefault(userId: string, muscle: MuscleGroup): Promise<void> {
-  await supabase
-    .from('muscle_volume_config')
-    .delete()
-    .eq('user_id', userId)
-    .eq('muscle', muscle)
-}
-```
+- [x] `getMrvMevConfig(userId: string): Promise<MrvMevConfig>` — fetch user's full config, merging DB rows over engine defaults for missing muscles
+- [x] `updateMuscleConfig(userId: string, muscle: MuscleGroup, update: { mev?: number; mrv?: number }): Promise<void>` — upsert a single muscle's config
+- [x] `resetMuscleToDefault(userId: string, muscle: MuscleGroup): Promise<void>` — delete the override row, reverting to research defaults
 
 **Settings screen — Volume Config (`apps/parakeet/app/(tabs)/settings.tsx`):**
-- Display all 9 muscle groups with current MEV and MRV values
-- Each row: muscle name, MEV stepper input, MRV stepper input
-- Validation: `mev >= 0`, `mrv > mev`, `mrv <= 30` (hard cap)
-- Save button: calls `updateMuscleConfig()` for each changed row
-- "Reset to defaults" button: calls `resetMuscleToDefault()` for all muscles
+- [x] Display all 9 muscle groups with current MEV and MRV values
+- [x] Each row: muscle name, MEV stepper input, MRV stepper input
+- [x] Validation: `mev >= 0`, `mrv > mev`, `mrv <= 30` (hard cap)
+- [x] Save button: calls `updateMuscleConfig()` for each changed row
+- [x] "Reset to defaults" button: calls `resetMuscleToDefault()` for all muscles
 
 ## Dependencies
 

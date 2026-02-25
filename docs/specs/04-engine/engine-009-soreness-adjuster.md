@@ -21,7 +21,7 @@ type SorenessLevel = 1 | 2 | 3 | 4 | 5
 // 5: Severe      — should not train this muscle
 ```
 
-- `getSorenessModifier(sorenessLevel: SorenessLevel): SorenessModifier`
+- [x] `getSorenessModifier(sorenessLevel: SorenessLevel): SorenessModifier`
   - Returns the adjustment parameters for a given soreness level:
 
 ```typescript
@@ -41,29 +41,23 @@ interface SorenessModifier {
 | 4        | 2             | 0.95                | false         | "High soreness — reduced volume and intensity 5%" |
 | 5        | 0             | 0.00                | true          | "Severe soreness — recovery session only (40% × 3×5)" |
 
-- `applySorenessToSets(plannedSets: PlannedSet[], modifier: SorenessModifier, minSets?: number): PlannedSet[]`
+- [x] `applySorenessToSets(plannedSets: PlannedSet[], modifier: SorenessModifier, minSets?: number): PlannedSet[]`
   - If `recoveryMode: true`: replace all sets with 3 sets at 40% of the original weight, 5 reps, RPE 5.0
-  - Otherwise:
-    - Remove `setReduction` sets from the end of the set list (min `minSets`, default 1)
-    - Multiply each set's `weight_kg` by `intensityMultiplier`, then re-round to nearest 2.5kg
-
-- `getPrimaryMusclesForSession(lift: Lift): MuscleGroup[]`
-  - Returns the primary muscles to check soreness for before this session type:
+  - Otherwise: remove `setReduction` sets from the end (min `minSets`, default 1), multiply each `weight_kg` by `intensityMultiplier`, re-round to nearest 2.5kg
+- [x] `getPrimaryMusclesForSession(lift: Lift): MuscleGroup[]`
   - `squat`: `['quads', 'glutes', 'lower_back']`
   - `bench`: `['chest', 'triceps', 'shoulders']`
   - `deadlift`: `['hamstrings', 'glutes', 'lower_back', 'upper_back']`
-
-- `getWorstSoreness(muscles: MuscleGroup[], ratings: Record<MuscleGroup, SorenessLevel>): SorenessLevel`
+- [x] `getWorstSoreness(muscles: MuscleGroup[], ratings: Record<MuscleGroup, SorenessLevel>): SorenessLevel`
   - Returns the maximum soreness rating across the primary muscles for this session
-  - The worst muscle drives the adjustment for the entire session
 
 **Unit tests (`packages/training-engine/__tests__/soreness-adjuster.test.ts`):**
-- Soreness 1 → modifier: `{ setReduction: 0, intensityMultiplier: 1.0, recoveryMode: false }`
-- Soreness 3 → planned 2 sets → returns 1 set
-- Soreness 4 → planned 2 sets at 112.5kg → returns 0 sets (2 - 2 = 0 → clamped to min 1 set) at 107.5kg (112.5 × 0.95 = 106.875 → round to 107.5)
-- Soreness 5 → returns 3 × 5 at 40% of original weight regardless of original plan
-- `getWorstSoreness({ quads: 2, glutes: 4, lower_back: 1 })` → 4
-- `getPrimaryMusclesForSession('bench')` → `['chest', 'triceps', 'shoulders']`
+- [x] Soreness 1 → modifier: `{ setReduction: 0, intensityMultiplier: 1.0, recoveryMode: false }`
+- [x] Soreness 3 → planned 2 sets → returns 1 set
+- [x] Soreness 4 → planned 2 sets at 112.5kg → returns 0 sets (2 - 2 = 0 → clamped to min 1 set) at 107.5kg (112.5 × 0.95 = 106.875 → round to 107.5)
+- [x] Soreness 5 → returns 3 × 5 at 40% of original weight regardless of original plan
+- [x] `getWorstSoreness({ quads: 2, glutes: 4, lower_back: 1 })` → 4
+- [x] `getPrimaryMusclesForSession('bench')` → `['chest', 'triceps', 'shoulders']`
 
 ## Dependencies
 

@@ -1,14 +1,25 @@
-import { DEFAULT_MRV_MEV_CONFIG } from '@parakeet/training-engine'
+import {
+  DEFAULT_MRV_MEV_CONFIG_MALE,
+  DEFAULT_MRV_MEV_CONFIG_FEMALE,
+} from '@parakeet/training-engine'
 import type { MrvMevConfig, MuscleGroup } from '@parakeet/training-engine'
+import type { BiologicalSex } from './profile'
 import { supabase } from './supabase'
 
-export async function getMrvMevConfig(userId: string): Promise<MrvMevConfig> {
+export async function getMrvMevConfig(
+  userId: string,
+  biologicalSex?: BiologicalSex | null,
+): Promise<MrvMevConfig> {
   const { data } = await supabase
     .from('muscle_volume_config')
     .select('muscle, mev, mrv')
     .eq('user_id', userId)
 
-  const config = { ...DEFAULT_MRV_MEV_CONFIG }
+  const defaults = biologicalSex === 'female'
+    ? DEFAULT_MRV_MEV_CONFIG_FEMALE
+    : DEFAULT_MRV_MEV_CONFIG_MALE
+
+  const config = { ...defaults }
   for (const row of data ?? []) {
     config[row.muscle as MuscleGroup] = { mev: row.mev, mrv: row.mrv }
   }

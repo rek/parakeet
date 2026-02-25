@@ -10,75 +10,14 @@ Creating a new training program: calling the training engine locally, writing th
 ## Tasks
 
 **`apps/parakeet/lib/programs.ts`:**
-
-```typescript
-async function createProgram(input: CreateProgramInput): Promise<Program> {
-  const userId = (await supabase.auth.getUser()).data.user!.id
-
-  // 1. Get current 1RMs and formula config
-  const maxes = await getCurrentMaxes(userId)
-  const formulaConfig = await getFormulaConfig(userId)  // merged system defaults + user overrides
-
-  // 2. Generate structural scaffolding locally (deterministic, synchronous)
-  const scaffold = generateProgram({
-    totalWeeks: input.totalWeeks,
-    trainingDaysPerWeek: input.trainingDaysPerWeek,
-    startDate: input.startDate,
-  })
-
-  // 3. Get auxiliary pool and compute assignments
-  const auxiliaryPool = await getAuxiliaryPools(userId)
-  const blockOffset = await computeBlockOffset(userId)
-  const auxiliaryAssignments = generateAuxiliaryAssignments(
-    scaffold.programId,
-    input.totalWeeks,
-    auxiliaryPool,
-    blockOffset
-  )
-
-  // 4. Archive any currently active program
-  await supabase
-    .from('programs')
-    .update({ status: 'archived' })
-    .eq('user_id', userId)
-    .eq('status', 'active')
-
-  // 5. Insert program row
-  const { data: program } = await supabase.from('programs').insert({
-    user_id: userId,
-    status: 'active',
-    total_weeks: input.totalWeeks,
-    training_days_per_week: input.trainingDaysPerWeek,
-    start_date: input.startDate.toISOString().split('T')[0],
-    lifter_maxes_id: maxes!.id,
-    formula_config_id: formulaConfig.id,
-  }).select().single()
-
-  // 6. Bulk insert session scaffolds (planned_sets = null for all)
-  const sessionRows = scaffold.sessions.map(s => ({
-    user_id: userId,
-    program_id: program.id,
-    week_number: s.weekNumber,
-    day_number: s.dayNumber,
-    primary_lift: s.primaryLift,
-    intensity_type: s.intensityType,
-    block_number: s.blockNumber,
-    is_deload: s.isDeload,
-    planned_date: s.plannedDate.toISOString().split('T')[0],
-    status: 'planned',
-    planned_sets: null,         // populated by JIT when session opens
-    jit_generated_at: null,
-  }))
-  await supabase.from('sessions').insert(sessionRows)
-
-  // 7. Insert auxiliary assignments
-  await supabase.from('auxiliary_assignments').insert(
-    auxiliaryAssignments.map(a => ({ ...a, user_id: userId }))
-  )
-
-  return program
-}
-```
+- [x] `createProgram(input: CreateProgramInput): Promise<Program>`
+  1. Get current 1RMs and formula config
+  2. Generate structural scaffolding locally via `generateProgram()`
+  3. Get auxiliary pool and compute assignments via `generateAuxiliaryAssignments()`
+  4. Archive any currently active program (`status = 'archived'`)
+  5. Insert program row
+  6. Bulk insert session scaffolds (`planned_sets = null` for all)
+  7. Insert auxiliary assignments
 
 **`CreateProgramInput` type:**
 ```typescript
@@ -90,12 +29,12 @@ interface CreateProgramInput {
 ```
 
 **Onboarding screen `apps/parakeet/app/(auth)/onboarding/program-settings.tsx`:**
-- Inputs: total weeks (picker), days per week (picker), start date (date picker)
-- "Preview Program" button → navigate to review screen showing Week 1 session structure
+- [x] Inputs: total weeks (picker), days per week (picker), start date (date picker)
+- [x] "Preview Program" button → navigate to review screen showing Week 1 session structure
 
 **Program review screen `apps/parakeet/app/(auth)/onboarding/review.tsx`:**
-- Shows Week 1: day-by-day view with lift, intensity type, auxiliary names
-- "Activate Program" button → calls `createProgram()` → navigates to Today tab
+- [x] Shows Week 1: day-by-day view with lift, intensity type, auxiliary names
+- [x] "Activate Program" button → calls `createProgram()` → navigates to Today tab
 
 ## Dependencies
 

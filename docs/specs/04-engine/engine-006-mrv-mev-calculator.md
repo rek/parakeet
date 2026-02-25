@@ -11,18 +11,16 @@ Computes weekly volume per muscle group from completed session logs and compares
 
 **File: `packages/training-engine/src/volume/mrv-mev-calculator.ts`**
 
-- `computeWeeklyVolume(sessionLogs: CompletedSetLog[], muscleMapper: MuscleMapper): Record<MuscleGroup, number>`
+- [x] `computeWeeklyVolume(sessionLogs: CompletedSetLog[], muscleMapper: MuscleMapper): Record<MuscleGroup, number>`
   - Sums completed sets per muscle group for all logs in the current training week
-  - Each set counts as 1 unit toward the primary muscle and 0.5 toward secondary muscles (e.g. bench press: chest=primary, triceps=secondary, shoulders=secondary)
+  - Each set counts as 1 unit toward the primary muscle and 0.5 toward secondary muscles
   - Returns: `{ quads: 12, hamstrings: 8, chest: 10, triceps: 6, ... }`
-
-- `classifyVolumeStatus(weeklyVolume: Record<MuscleGroup, number>, config: MrvMevConfig): Record<MuscleGroup, VolumeStatus>`
+- [x] `classifyVolumeStatus(weeklyVolume: Record<MuscleGroup, number>, config: MrvMevConfig): Record<MuscleGroup, VolumeStatus>`
   - `VolumeStatus` enum: `'below_mev' | 'in_range' | 'approaching_mrv' | 'at_mrv' | 'exceeded_mrv'`
   - `approaching_mrv`: within 2 sets of MRV
   - `at_mrv`: exactly at MRV
   - `exceeded_mrv`: above MRV (should not normally happen; disruption)
-
-- `computeRemainingCapacity(weeklyVolume: Record<MuscleGroup, number>, config: MrvMevConfig): Record<MuscleGroup, number>`
+- [x] `computeRemainingCapacity(weeklyVolume: Record<MuscleGroup, number>, config: MrvMevConfig): Record<MuscleGroup, number>`
   - Returns sets remaining before hitting MRV per muscle group
   - Negative value means MRV is exceeded
 
@@ -53,7 +51,7 @@ export const DEFAULT_MRV_MEV_CONFIG: MrvMevConfig = {
 
 **File: `packages/training-engine/src/volume/muscle-mapper.ts`**
 
-- `getMusclesForLift(lift: Lift, exercise?: string): MuscleContribution[]`
+- [x] `getMusclesForLift(lift: Lift, exercise?: string): MuscleContribution[]`
   - Returns muscle contributions with `primary: true/false` and `contribution: number` (1.0 or 0.5)
 
 ```typescript
@@ -80,12 +78,12 @@ const LIFT_MUSCLES: Record<string, MuscleContribution[]> = {
 ```
 
 **Unit tests (`packages/training-engine/__tests__/mrv-mev-calculator.test.ts`):**
-- 3 squat sessions × 5 sets = 15 quad sets → quads: 15 (approaching_mrv at MRV=20)
-- 2 bench sessions × 3 sets = 6 chest sets + 3 tricep secondary sets (= 3 × 0.5 = 1.5 → floor to 1) → check triceps: 1
-- `computeRemainingCapacity`: 18 quad sets logged, MRV=20 → remaining: 2
-- `classifyVolumeStatus`: 12 quad sets (MEV=8, MRV=20) → `'in_range'`
-- `classifyVolumeStatus`: 19 quad sets → `'approaching_mrv'`
-- `classifyVolumeStatus`: 20 quad sets → `'at_mrv'`
+- [x] 3 squat sessions × 5 sets = 15 quad sets → quads: 15 (approaching_mrv at MRV=20)
+- [x] 2 bench sessions × 3 sets = 6 chest sets + 3 tricep secondary sets (= 3 × 0.5 = 1.5 → floor to 1) → check triceps: 1
+- [x] `computeRemainingCapacity`: 18 quad sets logged, MRV=20 → remaining: 2
+- [x] `classifyVolumeStatus`: 12 quad sets (MEV=8, MRV=20) → `'in_range'`
+- [x] `classifyVolumeStatus`: 19 quad sets → `'approaching_mrv'`
+- [x] `classifyVolumeStatus`: 20 quad sets → `'at_mrv'`
 
 ## Dependencies
 

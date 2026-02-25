@@ -5,6 +5,7 @@ import {
   ScrollView,
   StyleSheet,
   Text,
+  TextInput,
   TouchableOpacity,
   View,
   ActivityIndicator,
@@ -14,6 +15,8 @@ import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/dat
 
 import { submitMaxes } from '../../../lib/lifter-maxes'
 import { createProgram } from '../../../lib/programs'
+import { updateProfile } from '../../../lib/profile'
+import type { BiologicalSex } from '../../../lib/profile'
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -63,6 +66,8 @@ export default function ProgramSettingsScreen() {
   const [trainingDaysPerWeek, setTrainingDaysPerWeek] = useState<TrainingDays>(3)
   const [startDate, setStartDate] = useState<Date>(nextMonday)
   const [showPicker, setShowPicker] = useState(false)
+  const [biologicalSex, setBiologicalSex] = useState<BiologicalSex>('prefer_not_to_say')
+  const [birthYear, setBirthYear] = useState('')
   const [loading, setLoading] = useState(false)
 
   function handleDateChange(_event: DateTimePickerEvent, selected?: Date) {
@@ -78,7 +83,17 @@ export default function ProgramSettingsScreen() {
   async function handleGenerate() {
     try {
       setLoading(true)
-      await submitMaxes(lifts)
+      const yearNum = parseInt(birthYear, 10)
+      const dobIso = !isNaN(yearNum) && birthYear.length === 4
+        ? `${yearNum}-01-01`
+        : null
+      await Promise.all([
+        submitMaxes(lifts),
+        updateProfile({
+          biological_sex: biologicalSex,
+          date_of_birth: dobIso,
+        }),
+      ])
       const program = await createProgram({ totalWeeks, trainingDaysPerWeek, startDate })
       router.replace({
         pathname: '/(auth)/onboarding/review',
@@ -177,6 +192,53 @@ export default function ProgramSettingsScreen() {
           onChange={handleDateChange}
         />
       )}
+
+      {/* Biological sex */}
+      <Text style={styles.label}>Biological Sex</Text>
+      <Text style={styles.fieldHint}>Used for volume defaults calibrated to your physiology</Text>
+      <View style={[styles.toggle, styles.toggleMarginTop]}>
+        {(['female', 'male', 'prefer_not_to_say'] as BiologicalSex[]).map((option, index) => {
+          const labels: Record<BiologicalSex, string> = {
+            female: 'Female',
+            male: 'Male',
+            prefer_not_to_say: 'Prefer not to say',
+          }
+          const isFirst = index === 0
+          const isLast = index === 2
+          const isActive = biologicalSex === option
+          return (
+            <TouchableOpacity
+              key={option}
+              style={[
+                styles.toggleButton,
+                isFirst && styles.toggleButtonFirst,
+                isLast && styles.toggleButtonLast,
+                !isLast && styles.toggleButtonBorderRight,
+                isActive && styles.toggleButtonActive,
+              ]}
+              onPress={() => setBiologicalSex(option)}
+              activeOpacity={0.8}
+            >
+              <Text style={[styles.toggleButtonText, isActive && styles.toggleButtonTextActive]}>
+                {labels[option]}
+              </Text>
+            </TouchableOpacity>
+          )
+        })}
+      </View>
+
+      {/* Birth year */}
+      <Text style={styles.label}>Birth Year</Text>
+      <Text style={styles.fieldHint}>Optional · used for age-appropriate coaching insights</Text>
+      <TextInput
+        style={[styles.toggleMarginTop, styles.birthYearInput]}
+        placeholder="e.g. 1990"
+        placeholderTextColor="#9CA3AF"
+        value={birthYear}
+        onChangeText={(v) => setBirthYear(v.replace(/\D/g, '').slice(0, 4))}
+        keyboardType="number-pad"
+        maxLength={4}
+      />
 
       {/* Generate button */}
       <TouchableOpacity
@@ -296,5 +358,23 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 16,
     fontWeight: '600',
+  },
+  fieldHint: {
+    fontSize: 12,
+    color: '#9CA3AF',
+    marginBottom: 8,
+    lineHeight: 16,
+  },
+  toggleMarginTop: {
+    marginBottom: 28,
+  },
+  birthYearInput: {
+    borderWidth: 1,
+    borderColor: '#e5e7eb',
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    fontSize: 15,
+    color: '#111827',
   },
 })

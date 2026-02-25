@@ -10,11 +10,11 @@ Supabase migration files for the full schema. All weights stored as integer gram
 ## Tasks
 
 **Migration tooling:**
-- Migrations live at `supabase/migrations/` (managed by Supabase CLI)
-- Create new migration: `supabase migration new <name>`
-- Apply locally: `supabase db reset`
-- Apply to prod: `supabase db push --db-url $PROD_DB_URL`
-- Generate TypeScript types: `npm run db:types` (after `npm run db:start`)
+- [x] Migrations live at `supabase/migrations/` (managed by Supabase CLI)
+- [x] Create new migration: `supabase migration new <name>`
+- [x] Apply locally: `supabase db reset`
+- [x] Apply to prod: `supabase db push --db-url $PROD_DB_URL`
+- [x] Generate TypeScript types: `npm run db:types` (after `npm run db:start`)
 
 **`20260223000000_initial_schema.sql` — all 16 tables:**
 

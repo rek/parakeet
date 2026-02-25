@@ -6,7 +6,7 @@ import {
   VolumeStatus,
 } from '../types'
 
-export const DEFAULT_MRV_MEV_CONFIG: MrvMevConfig = {
+export const DEFAULT_MRV_MEV_CONFIG_MALE: MrvMevConfig = {
   quads:      { mev: 8,  mrv: 20 },
   hamstrings: { mev: 6,  mrv: 20 },
   glutes:     { mev: 0,  mrv: 16 },
@@ -17,6 +17,22 @@ export const DEFAULT_MRV_MEV_CONFIG: MrvMevConfig = {
   shoulders:  { mev: 8,  mrv: 20 },
   biceps:     { mev: 8,  mrv: 20 },
 }
+
+// Female defaults are ~20–30% higher per RP Strength research (see sex-based-adaptations.md)
+export const DEFAULT_MRV_MEV_CONFIG_FEMALE: MrvMevConfig = {
+  quads:      { mev: 10, mrv: 26 },
+  hamstrings: { mev: 8,  mrv: 25 },
+  glutes:     { mev: 0,  mrv: 20 },
+  lower_back: { mev: 7,  mrv: 15 },
+  upper_back: { mev: 12, mrv: 28 },
+  chest:      { mev: 10, mrv: 26 },
+  triceps:    { mev: 8,  mrv: 24 },
+  shoulders:  { mev: 10, mrv: 24 },
+  biceps:     { mev: 10, mrv: 24 },
+}
+
+// Backward-compat alias — existing callers unaffected
+export const DEFAULT_MRV_MEV_CONFIG = DEFAULT_MRV_MEV_CONFIG_MALE
 
 const ALL_MUSCLE_GROUPS: MuscleGroup[] = [
   'quads', 'hamstrings', 'glutes', 'lower_back', 'upper_back',

@@ -47,7 +47,7 @@ export const DEFAULT_AUXILIARY_POOLS: Record<Lift, string[]> = {
 }
 ```
 
-- `getAuxiliariesForBlock(lift: Lift, blockNumber: 1 | 2 | 3, pool: string[]): [string, string]`
+- [x] `getAuxiliariesForBlock(lift: Lift, blockNumber: 1 | 2 | 3, pool: string[]): [string, string]`
   - Sequential pool rotation: picks 2 exercises at positions `[(blockIndex × 2) % poolSize, (blockIndex × 2 + 1) % poolSize]`
   - `blockIndex = blockNumber - 1` (0-indexed)
   - Block 1: positions 0+1, Block 2: positions 2+3, Block 3: positions 4+5
@@ -62,12 +62,11 @@ export const DEFAULT_AUXILIARY_POOLS: Record<Lift, string[]> = {
 // Next program Block 2 → ['Pause Squat', 'Box Squat']  (wraps to 0, 1)
 ```
 
-- `computeBlockOffset(programHistory: ProgramRecord[]): number`
+- [x] `computeBlockOffset(programHistory: ProgramRecord[]): number`
   - Counts total blocks completed in all prior programs for this user
   - Used to continue pool rotation across programs rather than restarting from 0
   - `offset = totalCompletedBlocks × 2`
-
-- `generateAuxiliaryAssignments(programId: string, totalWeeks: number, pool: AuxiliaryPool): AuxiliaryAssignment[]`
+- [x] `generateAuxiliaryAssignments(programId: string, totalWeeks: number, pool: AuxiliaryPool): AuxiliaryAssignment[]`
   - Called from program generator at program creation time
   - Returns one `AuxiliaryAssignment` per lift per block (3 lifts × 3 blocks = 9 records)
   - Each record: `{ program_id, lift, block_number, exercise_1, exercise_2 }`
@@ -87,11 +86,11 @@ interface AuxiliaryPool {
 - Locked assignments are flagged `is_locked: true` in `auxiliary_assignments` and skipped during rotation recalculation
 
 **Unit tests (`packages/training-engine/__tests__/auxiliary-rotator.test.ts`):**
-- `getAuxiliariesForBlock('squat', 1, DEFAULT_AUXILIARY_POOLS.squat)` → `['Pause Squat', 'Box Squat']`
-- `getAuxiliariesForBlock('squat', 2, DEFAULT_AUXILIARY_POOLS.squat)` → `['Bulgarian Split Squat', 'Leg Press']`
-- `getAuxiliariesForBlock('squat', 3, DEFAULT_AUXILIARY_POOLS.squat)` → `['High-Bar Squat', 'Belt Squat']`
-- Pool wrap: 6-exercise pool, block 4 (second program block 1) → positions 0+1 again
-- `computeBlockOffset`: user completed 2 programs (3 blocks each) → offset = 12 → Block 1 of new program picks positions 12+13 mod poolSize
+- [x] `getAuxiliariesForBlock('squat', 1, DEFAULT_AUXILIARY_POOLS.squat)` → `['Pause Squat', 'Box Squat']`
+- [x] `getAuxiliariesForBlock('squat', 2, DEFAULT_AUXILIARY_POOLS.squat)` → `['Bulgarian Split Squat', 'Leg Press']`
+- [x] `getAuxiliariesForBlock('squat', 3, DEFAULT_AUXILIARY_POOLS.squat)` → `['High-Bar Squat', 'Belt Squat']`
+- [x] Pool wrap: 6-exercise pool, block 4 (second program block 1) → positions 0+1 again
+- [x] `computeBlockOffset`: user completed 2 programs (3 blocks each) → offset = 12 → Block 1 of new program picks positions 12+13 mod poolSize
 
 ## Dependencies
 

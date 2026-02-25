@@ -11,16 +11,14 @@ The `generateProgram` function now creates **structural scaffolding only** — s
 
 **File: `packages/training-engine/src/generator/program-generator.ts`**
 
-- `generateProgram(input: GenerateProgramInput): GeneratedProgramStructure`
+- [x] `generateProgram(input: GenerateProgramInput): GeneratedProgramStructure`
   - Input: `{ totalWeeks: number, trainingDaysPerWeek: number, startDate: Date }`
   - Output: program structure with sessions that have NO `planned_sets`
   - Pure function — deterministic from the same inputs
-
-- `generateWeekSessions(weekNumber, blockNumber, weekInBlock, trainingDaysPerWeek, startDate): SessionScaffold[]`
+- [x] `generateWeekSessions(weekNumber, blockNumber, weekInBlock, trainingDaysPerWeek, startDate): SessionScaffold[]`
   - Each session has: `weekNumber`, `dayNumber`, `primaryLift`, `intensityType`, `blockNumber`, `isDeload`, `plannedDate`
   - `plannedSets: null` — explicitly null, not an empty array (signals "not yet JIT-generated")
-
-- `generateDeloadWeek(weekNumber, totalWeeks, trainingDaysPerWeek, startDate): SessionScaffold[]`
+- [x] `generateDeloadWeek(weekNumber, totalWeeks, trainingDaysPerWeek, startDate): SessionScaffold[]`
   - Same structure, `isDeload: true`, `intensityType: 'deload'`
 
 **Type: `SessionScaffold`**
@@ -39,17 +37,17 @@ interface SessionScaffold {
 ```
 
 **Auxiliary assignment generation:**
-- `generateAuxiliaryAssignments(totalWeeks: number, auxiliaryPool: AuxiliaryPool): AuxiliaryAssignment[]`
+- [x] `generateAuxiliaryAssignments(totalWeeks: number, auxiliaryPool: AuxiliaryPool): AuxiliaryAssignment[]`
   - For each block (1, 2, 3) and each lift (squat, bench, deadlift):
     - Select exercises at pool positions `[(blockIndex × 2) % poolSize, (blockIndex × 2 + 1) % poolSize]`
     - Returns list of `AuxiliaryAssignment` objects to write to DB
 
 **Integration test:**
-- 10-week, 3-day program → 30 session scaffolds (3 × 10)
-- All `plannedSets` are null
-- Week 1 sessions: squat/heavy, bench/rep, deadlift/explosive
-- Week 4 sessions: squat/heavy (block 2), bench/rep (block 2), deadlift/explosive (block 2)
-- Week 10: all 3 sessions `isDeload: true`
+- [x] 10-week, 3-day program → 30 session scaffolds (3 × 10)
+- [x] All `plannedSets` are null
+- [x] Week 1 sessions: squat/heavy, bench/rep, deadlift/explosive
+- [x] Week 4 sessions: squat/heavy (block 2), bench/rep (block 2), deadlift/explosive (block 2)
+- [x] Week 10: all 3 sessions `isDeload: true`
 
 ## Dependencies
 
