@@ -73,8 +73,8 @@ CREATE TABLE programs (
   total_weeks            SMALLINT NOT NULL,
   training_days_per_week SMALLINT NOT NULL DEFAULT 3,
   start_date             DATE NOT NULL,
-  lifter_maxes_id        UUID NOT NULL REFERENCES lifter_maxes(id),
-  formula_config_id      UUID NOT NULL REFERENCES formula_configs(id),
+  lifter_maxes_id        UUID REFERENCES lifter_maxes(id),
+  formula_config_id      UUID REFERENCES formula_configs(id),
   UNIQUE(user_id, version)
 );
 

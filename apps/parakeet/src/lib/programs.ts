@@ -49,16 +49,26 @@ export async function createProgram(input: CreateProgramInput) {
     .eq('user_id', userId)
     .eq('status', 'active')
 
+  const { data: maxVersionRow } = await supabase
+    .from('programs')
+    .select('version')
+    .eq('user_id', userId)
+    .order('version', { ascending: false })
+    .limit(1)
+    .maybeSingle()
+  const nextVersion = ((maxVersionRow as { version?: number } | null)?.version ?? 0) + 1
+
   const { data: program } = await supabase
     .from('programs')
     .insert({
       user_id:                userId,
       status:                 'active',
+      version:                nextVersion,
       total_weeks:            input.totalWeeks,
       training_days_per_week: input.trainingDaysPerWeek,
       start_date:             input.startDate.toISOString().split('T')[0],
       lifter_maxes_id:        maxes?.id ?? null,
-      formula_config_id:      formulaConfig != null ? null : null, // resolved at runtime
+      formula_config_id:      null, // resolved at JIT runtime
     })
     .select()
     .single()

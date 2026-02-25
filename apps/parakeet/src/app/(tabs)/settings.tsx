@@ -110,15 +110,15 @@ export default function SettingsScreen() {
         <SectionHeader label="Advanced" />
         <Row
           label="Auxiliary Exercises"
-          onPress={() => {/* TODO: data-002 settings */}}
+          onPress={() => router.push('/settings/auxiliary-exercises')}
         />
         <Row
           label="Warmup Protocol"
-          onPress={() => {/* TODO: data-003 settings */}}
+          onPress={() => router.push('/settings/warmup-protocol')}
         />
         <Row
           label="Volume Config (MRV/MEV)"
-          onPress={() => {/* TODO: data-001 settings */}}
+          onPress={() => router.push('/settings/volume-config')}
         />
 
         <View style={styles.divider} />

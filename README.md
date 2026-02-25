@@ -59,6 +59,16 @@ Start here:
 npm install
 ```
 
+### Android physical device setup
+
+```bash
+# Run once per USB connect (forwards phone's localhost:54321 → dev machine)
+adb reverse tcp:54321 tcp:54321
+adb reverse tcp:8081 tcp:8081   # Metro (usually auto-set by Expo)
+```
+
+This drops on every replug — re-run if you get network errors after reconnecting.
+
 ### parakeet dev server
 
 ```bash
@@ -89,3 +99,69 @@ npm run db:reset                 # Apply migrations (drop + recreate)
 npm run db:types                 # Generate TypeScript types → supabase/types.ts
 npm run db:push                  # Push migrations to hosted Supabase
 ```
+
+## Production Deployment (Sideload)
+
+We sideload directly to devices — no Play Store.
+
+### 1. Create a release keystore (once)
+
+```bash
+keytool -genkey -v -keystore parakeet-release.keystore \
+  -alias parakeet -keyalg RSA -keysize 2048 -validity 10000
+```
+
+Store this file securely (not in git). Add to `.gitignore`:
+```
+parakeet-release.keystore
+```
+
+### 2. Get release SHA-1
+
+```bash
+keytool -list -v -keystore parakeet-release.keystore -alias parakeet | grep SHA1
+```
+
+### 3. Register release SHA-1 in Google Cloud Console
+
+Go to **APIs & Services → Credentials → Android OAuth client** and add the release SHA-1 alongside the debug one.
+
+Also update `apps/parakeet/android/app/google-services.json` — add a second entry in `oauth_client` with `client_type: 1` and the release `certificate_hash`.
+
+> **⚠️ Pre-production checklist:**
+> - Debug SHA-1: `5E:8F:16:06:2E:A3:CD:2C:4A:0D:54:78:76:BA:A6:F3:8C:AB:F6:25`
+> - Release SHA-1: get from step 2 above
+> - Both must be registered in GCP Console or Google Sign-In returns `DEVELOPER_ERROR`
+
+### 4. Configure signing in Gradle
+
+In `apps/parakeet/android/app/build.gradle`, add a `signingConfigs` block and wire it to the `release` build type. Use environment variables or a local `keystore.properties` file (not committed):
+
+```properties
+# keystore.properties (gitignored)
+storeFile=../parakeet-release.keystore
+storePassword=YOUR_STORE_PASSWORD
+keyAlias=parakeet
+keyPassword=YOUR_KEY_PASSWORD
+```
+
+### 5. Build release APK
+
+```bash
+cd apps/parakeet
+expo run:android --variant release
+# or
+cd android && ./gradlew assembleRelease
+```
+
+APK output: `apps/parakeet/android/app/build/outputs/apk/release/app-release.apk`
+
+### 6. Sideload to device
+
+```bash
+adb install -r apps/parakeet/android/app/build/outputs/apk/release/app-release.apk
+```
+
+### 7. Point to hosted Supabase
+
+Update `apps/parakeet/.env.local` (or a `.env.production` file) to use the hosted Supabase URL and anon key instead of `localhost`. Run `npm run db:push` first to ensure migrations are applied.
