@@ -1,6 +1,6 @@
 # Spec: Cycle Review Generator (v1.5)
 
-**Status**: Planned
+**Status**: Implemented
 **Domain**: Training Engine
 
 ## What This Covers
@@ -14,7 +14,7 @@ See `docs/design/cycle-review-and-insights.md` for the full feature design and e
 ### CycleReview Schema
 
 **`packages/shared-types/src/cycle-review.schema.ts`:**
-- [ ] Define and export `CycleReviewSchema` with all fields:
+- [x] Define and export `CycleReviewSchema` with all fields:
   - `overallAssessment`: string, max 500 chars
   - `progressByLift`: record of squat/bench/deadlift with `rating` (LiftRatingSchema) and `narrative`
   - `auxiliaryInsights`: `mostCorrelated`, `leastEffective`, `recommendedChanges`
@@ -23,47 +23,47 @@ See `docs/design/cycle-review-and-insights.md` for the full feature design and e
   - `structuralSuggestions`: array with `description`, `rationale`, `developerNote`
   - `nextCycleRecommendations`: string, max 2000 chars
   - `menstrualInsights`: optional string, max 1000 chars
-- [ ] Export `type CycleReview = z.infer<typeof CycleReviewSchema>`
+- [x] Export `type CycleReview = z.infer<typeof CycleReviewSchema>`
 
 ### CycleReport Compilation
 
-**`apps/parakeet/lib/cycle-review.ts`:**
-- [ ] `compileCycleReport(programId: string, userId: string): Promise<CycleReport>`
+**`apps/parakeet/src/lib/cycle-review.ts`:**
+- [x] `compileCycleReport(programId: string, userId: string): Promise<CycleReport>`
   - Parallel Supabase queries for: program, sessions, sessionLogs, sorenessCheckins, lifterMaxes, disruptions, auxiliaryAssignments, formulaHistory
   - Calls `assembleCycleReport()` from training-engine to transform raw rows into `CycleReport` struct
 
 **`packages/training-engine/src/review/assemble-cycle-report.ts`:**
-- [ ] `assembleCycleReport(rawData): CycleReport`
+- [x] `assembleCycleReport(rawData): CycleReport`
   - Computes derived metrics: `avgRpeVsTarget`, `mrvPct`, aux exercise → main lift performance mapping
 
 ### Cycle Review Generation
 
 **`packages/training-engine/src/review/cycle-review-generator.ts`:**
-- [ ] `generateCycleReview(cycleReport: CycleReport, previousCycleSummaries: string[]): Promise<CycleReview>`
+- [x] `generateCycleReview(cycleReport: CycleReport, previousCycleSummaries: string[]): Promise<CycleReview>`
   - Calls `generateObject()` with `CYCLE_REVIEW_MODEL` and `CYCLE_REVIEW_SYSTEM_PROMPT`
   - No `AbortSignal.timeout()` — runs asynchronously, user notified when done
 
 ### Storing the Result
 
-**`apps/parakeet/lib/cycle-review.ts` (addition):**
-- [ ] `storeCycleReview(programId, userId, compiledReport, llmResponse): Promise<void>`
+**`apps/parakeet/src/lib/cycle-review.ts` (addition):**
+- [x] `storeCycleReview(programId, userId, compiledReport, llmResponse): Promise<void>`
   - Inserts `cycle_reviews` row with `compiled_report` and `llm_response` JSONB
   - Routes `formulaSuggestions` → inserts pending `formula_configs` rows (`is_active: false`, `source: 'ai_suggestion'`)
   - Routes `structuralSuggestions` → inserts `developer_suggestions` rows
 
 ### Trigger Flow
 
-**`apps/parakeet/lib/programs.ts` — cycle completion handler:**
-- [ ] `onCycleComplete(programId: string, userId: string): Promise<void>`
-  - Triggered when program reaches ≥80% session completion
+**`apps/parakeet/src/lib/programs.ts` — cycle completion handler:**
+- [x] `onCycleComplete(programId: string, userId: string): void`
+  - Triggered when program reaches ≥80% session completion (checked in `completeSession`)
   - Runs `compileCycleReport` → `generateCycleReview` → `storeCycleReview` asynchronously (no await on outer call)
   - Errors are caught and logged; LLM failure does not block cycle completion
 
 ### Multi-Cycle Context
 
 **`getPreviousCycleSummaries(userId, count)`:**
-- [ ] Fetches most recent `count` completed `cycle_reviews` rows
-- [ ] Extracts `overallAssessment` + `progressByLift` ratings + key metrics as brief text summaries
+- [x] Fetches most recent `count` completed `cycle_reviews` rows
+- [x] Extracts `overallAssessment` + `progressByLift` ratings + key metrics as brief text summaries
 
 ## Dependencies
 

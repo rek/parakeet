@@ -8,5 +8,9 @@
   "dependencies": {
     "@parakeet/shared-types": "*",
     "tslib": "^2.3.0"
+  },
+  "devDependencies": {
+    "ts-jest": "^29.4.6",
+    "vitest": "^4.0.18"
   }
 }

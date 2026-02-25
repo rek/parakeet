@@ -218,3 +218,23 @@ export async function updateProgramStatus(
     .eq('id', programId)
     .eq('status', 'active')
 }
+
+// Triggered after each session completion when program reaches ≥80% done.
+// Fire-and-forget: errors are logged but do not block the caller.
+export function onCycleComplete(programId: string, userId: string): void {
+  import('./cycle-review')
+    .then(({ compileCycleReport, getPreviousCycleSummaries, storeCycleReview }) =>
+      import('@parakeet/training-engine')
+        .then(({ generateCycleReview }) =>
+          compileCycleReport(programId, userId)
+            .then((report) =>
+              getPreviousCycleSummaries(userId, 3).then((summaries) =>
+                generateCycleReview(report, summaries).then((review) =>
+                  storeCycleReview(programId, userId, report, review),
+                ),
+              ),
+            ),
+        ),
+    )
+    .catch((err) => console.error('[onCycleComplete] cycle review failed:', err))
+}

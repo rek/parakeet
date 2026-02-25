@@ -1,3 +1,4 @@
+import 'expo/fetch'
 import { Component, useEffect, type ReactNode } from 'react'
 import { Stack } from 'expo-router'
 import * as SplashScreen from 'expo-splash-screen'

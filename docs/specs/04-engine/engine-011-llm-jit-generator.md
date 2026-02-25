@@ -1,6 +1,6 @@
 # Spec: LLM JIT Generator (v1.5)
 
-**Status**: Planned
+**Status**: Implemented
 **Domain**: Training Engine
 
 ## What This Covers
@@ -14,13 +14,13 @@ See `docs/design/training-engine-architecture.md` for the full architecture and 
 ### JITAdjustment Schema
 
 **`packages/shared-types/src/jit.schema.ts`:**
-- [ ] Define and export `JITAdjustmentSchema`:
+- [x] Define and export `JITAdjustmentSchema`:
   ```typescript
   export const JITAdjustmentSchema = z.object({
     intensityModifier: z.number().min(0.40).max(1.20),
     setModifier: z.number().int().min(-3).max(2),
     skipMainLift: z.boolean(),
-    auxOverrides: z.record(z.enum(['skip', 'reduce', 'normal'])),
+    auxOverrides: z.record(z.string(), z.enum(['skip', 'reduce', 'normal'])),
     rationale: z.array(z.string().max(200)).max(5),
     confidence: z.enum(['high', 'medium', 'low']),
   })
@@ -30,37 +30,37 @@ See `docs/design/training-engine-architecture.md` for the full architecture and 
 ### LLMJITGenerator Implementation
 
 **`packages/training-engine/src/generator/llm-jit-generator.ts`:**
-- [ ] Implement `LLMJITGenerator` class implementing `JITGeneratorStrategy`
+- [x] Implement `LLMJITGenerator` class implementing `JITGeneratorStrategy`
   - `name = 'llm' as const`
   - Calls `generateObject()` with 5000ms `AbortSignal.timeout`
   - On success: applies adjustment via `applyAdjustment()` then `enforceHardConstraints()`
   - On any error (timeout, network, Zod parse): falls back to `FormulaJITGenerator`, returns `jit_strategy: 'formula_fallback'`
-- [ ] `buildJITContext(input: JITInput)` — omits `warmupConfig` from context sent to LLM
+- [x] `buildJITContext(input: JITInput)` — omits `warmupConfig` from context sent to LLM
 
 ### Integration with JITGeneratorRegistry
 
 **`packages/training-engine/src/generator/jit-registry.ts`:**
-- [ ] `getJITGenerator(strategy: JITStrategyName, isOnline: boolean)` — returns appropriate generator
+- [x] `getJITGenerator(strategy: JITStrategyName, isOnline: boolean)` — returns appropriate generator
   - `'formula'` → `FormulaJITGenerator`
   - `'llm'` → `LLMJITGenerator`
-  - `'hybrid'` → `HybridJITGenerator`
+  - `'hybrid'` → stub (v2)
   - `'auto'` (default): LLM if online, Formula if offline
 
 ### Session Row Updates
 
-- [ ] Confirm `jit_strategy` column is present in `sessions` table (already in infra-005 schema):
+- [x] Confirm `jit_strategy` column is present in `sessions` table (already in infra-005 schema):
   ```sql
   jit_strategy TEXT  -- 'formula' | 'llm' | 'hybrid' | 'formula_fallback'
   ```
-- [ ] Write `jit_strategy` to session row alongside `jit_generated_at` and `jit_input_snapshot` after JIT runs
+- [x] Write `jit_strategy` to session row alongside `jit_generated_at` and `jit_input_snapshot` after JIT runs
 
 ### Unit Tests
 
 **`packages/training-engine/src/generator/__tests__/llm-jit-generator.test.ts`:**
-- [ ] Valid LLM response → adjustment applied correctly to base weight
-- [ ] Timeout → fallback to formula, `jit_strategy === 'formula_fallback'`
-- [ ] Zod parse failure (intensityModifier=0.10, below 0.40 floor) → fallback to formula
-- [ ] Hard constraint: skipMainLift false but MRV already at cap → override to skip
+- [x] Valid LLM response → adjustment applied correctly to base weight
+- [x] Timeout → fallback to formula, `jit_strategy === 'formula_fallback'`
+- [x] Zod parse failure (intensityModifier=0.10, below 0.40 floor) → fallback to formula
+- [x] Hard constraint: skipMainLift false but MRV already at cap → override to skip
 
 ## Dependencies
 

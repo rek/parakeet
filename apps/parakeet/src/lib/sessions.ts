@@ -140,6 +140,22 @@ export async function completeSession(
       })
     }
   }
+
+  // Check if program has reached ≥80% completion → trigger async cycle review
+  if (session?.program_id) {
+    const { data: allSessions } = await supabase
+      .from('sessions')
+      .select('status')
+      .eq('program_id', session.program_id)
+      .eq('user_id', userId)
+
+    const total = allSessions?.length ?? 0
+    const completed = allSessions?.filter((s: { status: string }) => s.status === 'completed').length ?? 0
+    if (total > 0 && completed / total >= 0.8) {
+      const { onCycleComplete } = await import('./programs')
+      onCycleComplete(session.program_id, userId)
+    }
+  }
 }
 
 // Session logs for the current calendar week (Sun–Sat)

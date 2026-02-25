@@ -59,6 +59,8 @@ export interface JITOutput {
   rationale: string[]
   warnings: string[]
   skippedMainLift: boolean
+  /** Which strategy produced this output. Populated by registry. */
+  jit_strategy?: 'formula' | 'llm' | 'hybrid' | 'formula_fallback'
 }
 
 // ---------------------------------------------------------------------------

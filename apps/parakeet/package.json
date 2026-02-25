@@ -9,12 +9,15 @@
     "logcat": "adb logcat *:S ReactNativeJS:V ReactNative:V unknown:ReactHost:V"
   },
   "dependencies": {
+    "@ai-sdk/anthropic": "^3.0.47",
     "@expo/metro-config": "*",
     "@react-native-async-storage/async-storage": "2.2.0",
     "@react-native-community/datetimepicker": "*",
     "@react-native-google-signin/google-signin": "^16.1.1",
     "@supabase/supabase-js": "^2.97.0",
+    "@tanstack/react-query": "*",
     "@testing-library/react-native": "*",
+    "ai": "^6.0.99",
     "expo": "*",
     "expo-application": "~7.0.8",
     "expo-linking": "*",
@@ -32,7 +35,6 @@
     "react-native-svg": "*",
     "react-native-svg-transformer": "*",
     "react-native-web": "*",
-    "@tanstack/react-query": "*",
     "zustand": "^5.0.11"
   }
 }

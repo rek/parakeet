@@ -1,5 +1,5 @@
 import {
-  generateJITSession,
+  getJITGenerator,
   getMusclesForLift,
   DEFAULT_AUXILIARY_POOLS,
 } from '@parakeet/training-engine'
@@ -116,7 +116,8 @@ export async function runJITForSession(
     warmupConfig,
   }
 
-  const jitOutput = generateJITSession(jitInput)
+  const generator = getJITGenerator('auto', true)
+  const jitOutput = await generator.generate(jitInput)
 
   // Persist the generated sets back to the session row
   await supabase
@@ -124,6 +125,7 @@ export async function runJITForSession(
     .update({
       planned_sets: jitOutput.mainLiftSets,
       jit_generated_at: jitOutput.generatedAt.toISOString(),
+      jit_strategy: jitOutput.jit_strategy ?? generator.name,
       jit_input_snapshot: {
         sessionId: session.id,
         lift,

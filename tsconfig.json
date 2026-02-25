@@ -6,5 +6,6 @@
       "module": "commonjs",
       "moduleResolution": "node10"
     }
-  }
+  },
+  "references": []
 }
