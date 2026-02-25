@@ -19,8 +19,17 @@ const SORENESS_TABLE: Record<SorenessLevel, SorenessModifier> = {
   5: { setReduction: 0, intensityMultiplier: 0.00, recoveryMode: true,  warning: 'Severe soreness — recovery session only (40% × 3×5)' },
 }
 
-export function getSorenessModifier(sorenessLevel: SorenessLevel): SorenessModifier {
-  return SORENESS_TABLE[sorenessLevel]
+const SORENESS_TABLE_FEMALE: Record<SorenessLevel, SorenessModifier> = {
+  ...SORENESS_TABLE,
+  4: { setReduction: 1, intensityMultiplier: 0.97, recoveryMode: false, warning: 'High soreness — reduced 1 set and intensity 3%' },
+}
+
+export function getSorenessModifier(
+  sorenessLevel: SorenessLevel,
+  biologicalSex?: 'female' | 'male',
+): SorenessModifier {
+  const table = biologicalSex === 'female' ? SORENESS_TABLE_FEMALE : SORENESS_TABLE
+  return table[sorenessLevel]
 }
 
 export function applySorenessToSets(

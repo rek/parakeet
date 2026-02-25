@@ -1,5 +1,5 @@
 import { TrainingDisruption } from '@parakeet/shared-types'
-import { DEFAULT_FORMULA_CONFIG } from '../cube/blocks'
+import { DEFAULT_FORMULA_CONFIG_MALE } from '../cube/blocks'
 import { MrvMevConfig, MuscleGroup } from '../types'
 import { generateJITSession, JITInput } from './jit-session-generator'
 
@@ -30,7 +30,7 @@ function baseInput(overrides: Partial<JITInput> = {}): JITInput {
     primaryLift: 'squat',
     intensityType: 'heavy',
     oneRmKg: 140,
-    formulaConfig: DEFAULT_FORMULA_CONFIG,
+    formulaConfig: DEFAULT_FORMULA_CONFIG_MALE,
     sorenessRatings: {},
     weeklyVolumeToDate: {},
     mrvMevConfig: makeMrvMev(),
@@ -310,5 +310,54 @@ describe('generateJITSession — warmup', () => {
     // minimal = 2 steps (50%×5 + 75%×2), working weight = 45kg
     // 45 × 0.50 = 22.5 → round = 22.5; 45 × 0.75 = 33.75 → round = 35
     expect(out.warmupSets).toHaveLength(2)
+  })
+})
+
+// ---------------------------------------------------------------------------
+// Sex-based adaptations
+// ---------------------------------------------------------------------------
+
+describe('generateJITSession — biologicalSex auxiliary reps', () => {
+  it('no sex → auxiliary reps default to 10', () => {
+    const out = generateJITSession(baseInput())
+    out.auxiliaryWork.filter((a) => !a.skipped).forEach((a) => {
+      a.sets.forEach((s) => expect(s.reps).toBe(10))
+    })
+  })
+
+  it('male → auxiliary reps 10', () => {
+    const out = generateJITSession(baseInput({ biologicalSex: 'male' }))
+    out.auxiliaryWork.filter((a) => !a.skipped).forEach((a) => {
+      a.sets.forEach((s) => expect(s.reps).toBe(10))
+    })
+  })
+
+  it('female → auxiliary reps 12', () => {
+    const out = generateJITSession(baseInput({ biologicalSex: 'female' }))
+    out.auxiliaryWork.filter((a) => !a.skipped).forEach((a) => {
+      a.sets.forEach((s) => expect(s.reps).toBe(12))
+    })
+  })
+
+  it('female at soreness 3 → 2 sets × 12 reps', () => {
+    const out = generateJITSession(baseInput({ biologicalSex: 'female', sorenessRatings: { quads: 3 } }))
+    out.auxiliaryWork.filter((a) => !a.skipped).forEach((a) => {
+      expect(a.sets).toHaveLength(2)
+      a.sets.forEach((s) => expect(s.reps).toBe(12))
+    })
+  })
+})
+
+describe('generateJITSession — biologicalSex soreness (female level 4)', () => {
+  it('female soreness 4 → main lift −1 set (not −2)', () => {
+    // Block 1 heavy: 2 base sets; female level-4 soreness: −1 = 1 set
+    const out = generateJITSession(baseInput({ biologicalSex: 'female', sorenessRatings: { quads: 4 } }))
+    expect(out.mainLiftSets).toHaveLength(1)
+  })
+
+  it('male soreness 4 → main lift −2 sets (clamped to 1)', () => {
+    // Block 1 heavy: 2 base sets; male level-4: −2 → clamped to 1
+    const out = generateJITSession(baseInput({ biologicalSex: 'male', sorenessRatings: { quads: 4 } }))
+    expect(out.mainLiftSets).toHaveLength(1)
   })
 })

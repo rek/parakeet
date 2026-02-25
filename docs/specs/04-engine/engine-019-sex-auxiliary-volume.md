@@ -1,6 +1,6 @@
 # Spec: Sex-Aware Auxiliary Work Volume
 
-**Status**: Planned
+**Status**: Implemented
 **Domain**: Training Engine
 
 ## What This Covers

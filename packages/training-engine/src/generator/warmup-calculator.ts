@@ -1,6 +1,6 @@
 import { roundToNearest } from '../formulas/weight-rounding'
 
-export type WarmupPresetName = 'standard' | 'minimal' | 'extended' | 'empty_bar'
+export type WarmupPresetName = 'standard' | 'standard_female' | 'minimal' | 'extended' | 'empty_bar'
 
 export type WarmupProtocol =
   | { type: 'preset'; name: WarmupPresetName }
@@ -25,6 +25,13 @@ const PRESET_STEPS: Record<WarmupPresetName, WarmupStep[]> = {
     { pct: 0.60, reps: 3 },
     { pct: 0.75, reps: 2 },
     { pct: 0.90, reps: 1 },
+  ],
+  standard_female: [
+    { pct: 0.40, reps: 5 },
+    { pct: 0.55, reps: 4 },
+    { pct: 0.70, reps: 3 },
+    { pct: 0.85, reps: 2 },
+    { pct: 0.925, reps: 1 },
   ],
   minimal: [
     { pct: 0.50, reps: 5 },

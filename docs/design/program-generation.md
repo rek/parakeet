@@ -28,6 +28,8 @@ Intermediate powerlifters understand periodization concepts but struggle to tran
 
 The JIT generator is a **pluggable strategy system** — formula-based, LLM-based, and hybrid implementations can be run and compared independently. See [training-engine-architecture.md](./training-engine-architecture.md) for the full architecture, variable inventory, and strategy descriptions.
 
+**Why JIT, not pre-generated weights:** Pre-generated percentages assume a static lifter. In reality, all three dimensions of progressive overload — load, volume, and time between work — vary session to session. A lifter who trained 5 days ago, slept well, and rates soreness as 1 should receive a materially different session than the same lifter who trained 12 days ago with soreness of 4. Pre-generated programs ignore this; JIT generation uses it as primary input. See [training-engine-architecture.md](./training-engine-architecture.md#progressive-overload-theoretical-assumptions) for the research basis.
+
 This means the program adapts automatically as the user's state changes across the cycle. A high-soreness day gets lighter volume; a week where the lifter has already accumulated a lot of volume gets capped automatically.
 
 ## User Experience
@@ -57,7 +59,7 @@ This means the program adapts automatically as the user's state changes across t
 - If a user misses a session (e.g., misses Monday's squat), they can still complete that workout **any day within the same week, up until the next scheduled session of the same lift type**
 - Example: missed Monday squat → can make it up Tuesday, Wednesday, or Thursday if the next squat isn't until Friday
 - If the makeup window passes and the session was not completed, it is marked as missed
-- The JIT generator accounts for missed sessions when computing the next session of that lift type: it factors in how long ago the last successful session was, how much volume was accumulated, and conservatively limits the load increment for the next session (a missed session cannot be treated as a full recovery week)
+- The JIT generator accounts for missed sessions when computing the next session of that lift type: it factors in how long ago the last successful session was, how much volume was accumulated, and conservatively limits the load increment for the next session (a missed session cannot be treated as a full recovery week). **Research basis:** After ~7+ days without stimulus, the supercompensation window passes and the lifter returns to near-baseline for that lift (Selye, 1950 — GAS model). Treating a 10-day gap as equivalent to a 3-day gap would apply the wrong intensity, risking failure or injury.
 - Weeks do not "wait" — the calendar advances normally regardless of whether sessions were completed
 
 **Regeneration Flow:**

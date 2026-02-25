@@ -1,6 +1,6 @@
 import {
   suggestProgramAdjustments,
-  DEFAULT_THRESHOLDS,
+  getDefaultThresholds,
 } from '@parakeet/training-engine'
 import type { SessionLogSummary, CompletedSetLog } from '@parakeet/training-engine'
 import type { Lift } from '@parakeet/shared-types'
@@ -129,7 +129,13 @@ export async function completeSession(
       session.primary_lift as Lift,
       6,
     )
-    const suggestions = suggestProgramAdjustments(recentLogs, DEFAULT_THRESHOLDS)
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('biological_sex')
+      .eq('id', userId)
+      .maybeSingle()
+    const biologicalSex = profile?.biological_sex as 'female' | 'male' | undefined
+    const suggestions = suggestProgramAdjustments(recentLogs, getDefaultThresholds(biologicalSex))
 
     if (suggestions.length > 0) {
       await supabase.from('performance_metrics').insert({

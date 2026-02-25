@@ -1,6 +1,6 @@
 # Spec: standard_female Warmup Preset
 
-**Status**: Planned
+**Status**: Implemented
 **Domain**: Training Engine
 
 ## What This Covers

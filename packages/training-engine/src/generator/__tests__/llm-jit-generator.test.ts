@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { generateObject } from 'ai'
-import { DEFAULT_FORMULA_CONFIG } from '../../cube/blocks'
+import { DEFAULT_FORMULA_CONFIG_MALE } from '../../cube/blocks'
 import type { MrvMevConfig, MuscleGroup } from '../../types'
 import type { JITInput } from '../jit-session-generator'
 import { LLMJITGenerator } from '../llm-jit-generator'
@@ -34,7 +34,7 @@ function baseInput(overrides: Partial<JITInput> = {}): JITInput {
     primaryLift: 'squat',
     intensityType: 'heavy',
     oneRmKg: 140,
-    formulaConfig: DEFAULT_FORMULA_CONFIG,
+    formulaConfig: DEFAULT_FORMULA_CONFIG_MALE,
     sorenessRatings: {},
     weeklyVolumeToDate: {},
     mrvMevConfig: makeMrvMev(),

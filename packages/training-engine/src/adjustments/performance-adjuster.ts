@@ -5,16 +5,27 @@ import {
   SessionLogSummary,
 } from '../types'
 
-export const DEFAULT_THRESHOLDS: AdjustmentThresholds = {
+export const DEFAULT_THRESHOLDS_MALE: AdjustmentThresholds = {
   rpe_deviation_threshold: 1.0,
   consecutive_sessions_required: 2,
   incomplete_session_threshold: 80,
   max_suggestions_per_lift: 1,
 }
 
+export const DEFAULT_THRESHOLDS_FEMALE: AdjustmentThresholds = {
+  rpe_deviation_threshold: 1.5,
+  consecutive_sessions_required: 3,
+  incomplete_session_threshold: 80,
+  max_suggestions_per_lift: 1,
+}
+
+export function getDefaultThresholds(biologicalSex?: 'female' | 'male'): AdjustmentThresholds {
+  return biologicalSex === 'female' ? DEFAULT_THRESHOLDS_FEMALE : DEFAULT_THRESHOLDS_MALE
+}
+
 export function suggestProgramAdjustments(
   recentLogs: SessionLogSummary[],
-  thresholds: AdjustmentThresholds = DEFAULT_THRESHOLDS,
+  thresholds: AdjustmentThresholds = DEFAULT_THRESHOLDS_MALE,
 ): PerformanceSuggestion[] {
   const suggestions: PerformanceSuggestion[] = []
   const rpeSuggestionsPerLift: Partial<Record<Lift, number>> = {}

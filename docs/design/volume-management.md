@@ -16,7 +16,11 @@ Parakeet tracks weekly training volume per muscle group and compares it against 
 
 The goal is to accumulate volume progressively across a training block, staying above MEV and approaching (but not exceeding) MRV by the final week before deload.
 
-**Source:** Dr. Mike Israetel's volume landmark research (Renaissance Periodization).
+**The dose-response relationship:** A 2017 meta-analysis (Schoenfeld et al., *J Strength Cond Res*) found that more weekly sets per muscle group produce greater hypertrophy gains in a clear dose-response pattern. The MEV/MRV model reflects the asymptotic nature of this curve — gains are steep from MEV to ~75% MRV, then plateau and reverse past MRV as fatigue outpaces adaptation. Progressive volume accumulation across a block (e.g., 10 → 14 → 18 sets/week for quads) is more effective than starting at MRV, because it maximises the time spent in the steep part of the curve.
+
+**The deload is not optional:** Removing the accumulated fatigue (deload week) is what reveals the adaptation that occurred during the block. Without it, MRV-level training simply maintains fitness rather than building it. This is the functional basis of the deload gate in the block structure.
+
+**Source:** Dr. Mike Israetel's volume landmark research (Renaissance Periodization); Schoenfeld et al. (2017).
 
 ## Default Volume Landmarks
 

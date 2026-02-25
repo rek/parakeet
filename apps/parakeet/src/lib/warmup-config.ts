@@ -2,7 +2,11 @@ import type { WarmupPresetName, WarmupProtocol } from '@parakeet/training-engine
 import type { Lift } from '@parakeet/shared-types'
 import { supabase } from './supabase'
 
-export async function getWarmupConfig(userId: string, lift: Lift): Promise<WarmupProtocol> {
+export async function getWarmupConfig(
+  userId: string,
+  lift: Lift,
+  biologicalSex?: 'female' | 'male',
+): Promise<WarmupProtocol> {
   const { data } = await supabase
     .from('warmup_configs')
     .select('protocol, custom_steps')
@@ -10,21 +14,26 @@ export async function getWarmupConfig(userId: string, lift: Lift): Promise<Warmu
     .eq('lift', lift)
     .maybeSingle()
 
-  if (!data) return { type: 'preset', name: 'standard' }
+  const defaultPreset: WarmupPresetName = biologicalSex === 'female' ? 'standard_female' : 'standard'
+  if (!data) return { type: 'preset', name: defaultPreset }
   if (data.protocol === 'custom') return { type: 'custom', steps: data.custom_steps }
   return { type: 'preset', name: data.protocol as WarmupPresetName }
 }
 
-export async function getAllWarmupConfigs(userId: string): Promise<Record<Lift, WarmupProtocol>> {
+export async function getAllWarmupConfigs(
+  userId: string,
+  biologicalSex?: 'female' | 'male',
+): Promise<Record<Lift, WarmupProtocol>> {
   const { data } = await supabase
     .from('warmup_configs')
     .select('lift, protocol, custom_steps')
     .eq('user_id', userId)
 
+  const defaultPreset: WarmupPresetName = biologicalSex === 'female' ? 'standard_female' : 'standard'
   const defaults: Record<Lift, WarmupProtocol> = {
-    squat:    { type: 'preset', name: 'standard' },
-    bench:    { type: 'preset', name: 'standard' },
-    deadlift: { type: 'preset', name: 'standard' },
+    squat:    { type: 'preset', name: defaultPreset },
+    bench:    { type: 'preset', name: defaultPreset },
+    deadlift: { type: 'preset', name: defaultPreset },
   }
   for (const row of data ?? []) {
     defaults[row.lift as Lift] =

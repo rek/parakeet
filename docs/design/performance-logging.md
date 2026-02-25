@@ -52,6 +52,10 @@ RPE is **optional per set** and optional at the session summary level. The syste
 
 Sessions can only be logged on the day they are scheduled (or makeup days within the same week — see program-generation). There is no mechanism to retroactively log a session for a past date.
 
+**Why RPE Matters for Progressive Overload:**
+
+RPE (Rate of Perceived Exertion) serves two distinct roles in progressive overload. First, it is an **autoregulatory signal** — if a lifter reports RPE 9.8 on a set prescribed at RPE 8.5, the actual load exceeds intended load, and intensity should decrease on the next session of that lift. Helms et al. (2016) and Zourdos et al. (2016) validated the RIR (Reps in Reserve)-based RPE scale as an accurate proxy for daily readiness that allows individualised load adjustment without daily max testing. Second, RPE enables **1RM estimation without singles testing** — the Epley formula converts any set's weight and reps into an estimated 1RM, scaled by RPE confidence. This is the foundation of Parakeet's automatic max tracking.
+
 **RPE-Based 1RM Estimation:**
 
 When a set is logged with a high RPE (≥ 8.5) and the system determines conditions are reliable (no active disruption, soreness ≤ 2, the day's total completed sets are within normal range), that set is used as a strong signal for 1RM estimation:
@@ -100,7 +104,7 @@ This estimated 1RM is stored alongside the session log and used to pre-populate 
 ## Future Enhancements
 
 **Phase 2:**
-- Rest timer between sets (configurable per intensity type)
+- Rest timer between sets → see [rest-timer.md](./rest-timer.md) for full design
 - Barbell plate calculator overlay (shows which plates to load for a given weight)
 
 **Long-term:**
@@ -111,3 +115,7 @@ This estimated 1RM is stored alongside the session log and used to pre-populate 
 ## References
 
 - Related Design Docs: [program-generation.md](./program-generation.md), [disruption-management.md](./disruption-management.md), [achievements.md](./achievements.md)
+- Helms, E.R. et al. (2016) — "Application of the Repetitions in Reserve-Based Rating of Perceived Exertion Scale for Resistance Training" *Strength Cond J*
+- Zourdos, M.C. et al. (2016) — "Novel Resistance Training-Specific Rating of Perceived Exertion Scale Measuring Repetitions in Reserve" *J Strength Cond Res*
+- Epley, B. (1985) — 1RM prediction equation (Epley formula)
+- Architecture: [training-engine-architecture.md](./training-engine-architecture.md#progressive-overload-theoretical-assumptions)

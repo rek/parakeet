@@ -1,6 +1,6 @@
 # Spec: Sex-Differentiated Formula Config Defaults
 
-**Status**: Planned
+**Status**: Implemented
 **Domain**: Training Engine
 
 ## What This Covers

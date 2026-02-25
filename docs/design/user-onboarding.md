@@ -104,6 +104,30 @@ Body weight is stored per cycle — not per session — to track how strength-to
 
 **Body weight tracked from day one**: WILKS score and strength-to-bodyweight trends are available from the first cycle.
 
+### Settings → Profile
+
+After onboarding, the user can view and edit their profile at **Settings → Profile**. This screen is the authoritative place for the app's understanding of who the athlete is. It surfaces:
+
+- **Biological sex** — editable selector (Female / Male / Prefer not to say). Shows a brief note explaining what it affects ("used to set training defaults — you can override anything")
+- **Age** — derived from date of birth (birth year); editable. Displayed as age, not raw DOB.
+- **Body weight** — editable (kg). Used for Wilks calculation.
+- **Wilks score** — read-only, auto-computed. Shows the user's current Wilks2020 score based on their estimated 1RMs and body weight. Requires both body weight and at least one recent max. If data is missing, shows "–" with a note.
+- **Performance label** — a plain-English label derived from the Wilks score, giving context without exposing a raw number to users who find it opaque:
+
+  | Wilks range | Label |
+  |-------------|-------|
+  | < 150 | Getting started |
+  | 150–200 | Building a base |
+  | 200–250 | Intermediate |
+  | 250–300 | Solid competitor |
+  | 300–350 | Advanced |
+  | 350–400 | Elite amateur |
+  | > 400 | Elite |
+
+  These thresholds are the same for both sexes — Wilks normalises for bodyweight and sex, so a score of 300 means the same thing regardless.
+
+The Wilks score and performance label are computed client-side using `computeWilks2020` from the training engine. No server-side computation.
+
 ## Implementation Status
 
 ### Planned

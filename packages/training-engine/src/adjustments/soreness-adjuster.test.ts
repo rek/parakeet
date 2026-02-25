@@ -15,6 +15,35 @@ function makeSets(count: number, weightKg: number, reps = 5): PlannedSet[] {
   }))
 }
 
+describe('getSorenessModifier — female sex', () => {
+  it('level 4 female → reduce 1 set, 3% intensity drop', () => {
+    const m = getSorenessModifier(4, 'female')
+    expect(m.setReduction).toBe(1)
+    expect(m.intensityMultiplier).toBe(0.97)
+    expect(m.recoveryMode).toBe(false)
+  })
+
+  it('level 5 female → recovery mode (unchanged from male)', () => {
+    expect(getSorenessModifier(5, 'female').recoveryMode).toBe(true)
+  })
+
+  it('level 3 female → reduce 1 set (unchanged from male)', () => {
+    const m = getSorenessModifier(3, 'female')
+    expect(m.setReduction).toBe(1)
+    expect(m.intensityMultiplier).toBe(1.0)
+  })
+
+  it('no sex arg → male table', () => {
+    expect(getSorenessModifier(4).setReduction).toBe(2)
+    expect(getSorenessModifier(4).intensityMultiplier).toBe(0.95)
+  })
+
+  it('explicit male → male table', () => {
+    expect(getSorenessModifier(4, 'male').setReduction).toBe(2)
+    expect(getSorenessModifier(4, 'male').intensityMultiplier).toBe(0.95)
+  })
+})
+
 describe('getSorenessModifier', () => {
   it('level 1 → no adjustment', () => {
     const m = getSorenessModifier(1)

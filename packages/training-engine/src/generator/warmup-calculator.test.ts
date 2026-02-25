@@ -1,5 +1,30 @@
 import { generateWarmupSets, getPresetSteps, resolveProtocol } from './warmup-calculator'
 
+describe('getPresetSteps — standard_female', () => {
+  it('standard_female has 5 steps', () => {
+    expect(getPresetSteps('standard_female')).toHaveLength(5)
+  })
+
+  it('step 1: pct 0.40 reps 5; step 2: pct 0.55 reps 4; step 5: pct 0.925 reps 1', () => {
+    const steps = getPresetSteps('standard_female')
+    expect(steps[0]).toEqual({ pct: 0.40, reps: 5 })
+    expect(steps[1]).toEqual({ pct: 0.55, reps: 4 })
+    expect(steps[4]).toEqual({ pct: 0.925, reps: 1 })
+  })
+
+  it('100kg → 5 sets with no duplicates', () => {
+    const sets = generateWarmupSets(100, { type: 'preset', name: 'standard_female' })
+    expect(sets).toHaveLength(5)
+    expect(sets.map((s) => s.weightKg)).toEqual([40, 55, 70, 85, 92.5])
+    expect(sets.map((s) => s.reps)).toEqual([5, 4, 3, 2, 1])
+  })
+
+  it('60kg → bar minimum applies where needed', () => {
+    const sets = generateWarmupSets(60, { type: 'preset', name: 'standard_female' })
+    sets.forEach((s) => expect(s.weightKg).toBeGreaterThanOrEqual(20))
+  })
+})
+
 describe('getPresetSteps', () => {
   it('standard has 4 steps', () => {
     expect(getPresetSteps('standard')).toHaveLength(4)

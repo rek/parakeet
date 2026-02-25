@@ -1,6 +1,6 @@
 # Spec: Sex-Differentiated Performance Adjuster Thresholds
 
-**Status**: Planned
+**Status**: Implemented
 **Domain**: Training Engine
 
 ## What This Covers

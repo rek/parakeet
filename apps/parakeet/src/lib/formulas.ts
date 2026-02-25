@@ -1,9 +1,11 @@
-import { mergeFormulaConfig } from '@parakeet/training-engine'
-import { DEFAULT_FORMULA_CONFIG } from '@parakeet/training-engine'
+import { mergeFormulaConfig, getDefaultFormulaConfig } from '@parakeet/training-engine'
 import type { FormulaConfig } from '@parakeet/training-engine'
 import { supabase } from './supabase'
 
-export async function getFormulaConfig(userId: string): Promise<FormulaConfig> {
+export async function getFormulaConfig(
+  userId: string,
+  biologicalSex?: 'female' | 'male',
+): Promise<FormulaConfig> {
   const { data } = await supabase
     .from('formula_configs')
     .select('*')
@@ -11,7 +13,8 @@ export async function getFormulaConfig(userId: string): Promise<FormulaConfig> {
     .eq('is_active', true)
     .maybeSingle()
 
-  return data ? mergeFormulaConfig(DEFAULT_FORMULA_CONFIG, data.overrides) : DEFAULT_FORMULA_CONFIG
+  const base = getDefaultFormulaConfig(biologicalSex)
+  return data ? mergeFormulaConfig(base, data.overrides) : base
 }
 
 export async function createFormulaOverride(

@@ -116,7 +116,7 @@ export function generateJITSession(input: JITInput): JITOutput {
   // Step 3 — Soreness adjustment
   const primaryMuscles = getPrimaryMusclesForSession(primaryLift)
   const worstSoreness = getWorstSoreness(primaryMuscles, sorenessRatings)
-  const sorenessModifier = getSorenessModifier(worstSoreness)
+  const sorenessModifier = getSorenessModifier(worstSoreness, input.biologicalSex)
 
   if (sorenessModifier.recoveryMode) {
     inRecoveryMode = true
@@ -212,6 +212,7 @@ export function generateJITSession(input: JITInput): JITOutput {
     primaryMuscles,
     worstSoreness,
     warnings,
+    input.biologicalSex,
   )
 
   // Step 8 — Warmup
@@ -252,6 +253,7 @@ function buildAuxiliaryWork(
   primaryMuscles: MuscleGroup[],
   worstSoreness: SorenessLevel,
   warnings: string[],
+  biologicalSex?: 'female' | 'male',
 ): AuxiliaryWork[] {
   return exercises.map((exercise) => {
     // Soreness 5: skip entirely
@@ -280,7 +282,8 @@ function buildAuxiliaryWork(
       }
     }
 
-    // Base: 3 sets × 10 reps at 67.5% of 1RM, RPE 7.5
+    // Base: 3 sets × (10 male / 12 female) reps at 67.5% of 1RM, RPE 7.5
+    const baseReps = biologicalSex === 'female' ? 12 : 10
     let setCount = 3
     let intensityMult = 1.0
 
@@ -297,7 +300,7 @@ function buildAuxiliaryWork(
     const sets: PlannedSet[] = Array.from({ length: setCount }, (_, i) => ({
       set_number: i + 1,
       weight_kg: finalWeight,
-      reps: 10,
+      reps: baseReps,
       rpe_target: 7.5,
     }))
 
