@@ -6,7 +6,7 @@
 
 ## Overview
 
-Parakeet adjusts its training engine for biological sex across three areas: default volume thresholds (MEV/MRV), WILKS score calculation, and optional menstrual cycle tracking. The goal is a program that reflects how female lifters actually respond to training — not a "female mode" with different exercises, but calibrated defaults and optional cycle context that make the adaptive systems more accurate.
+Parakeet adjusts its training engine for biological sex across eight areas: default volume thresholds (MEV/MRV), formula config defaults (sets/reps/intensity), warmup protocol defaults, soreness response sensitivity, performance adjuster thresholds, auxiliary work volume, WILKS score calculation, and optional menstrual cycle tracking. The goal is a program that reflects how female lifters actually respond to training — not a "female mode" with different exercises, but calibrated defaults and optional cycle context that make the adaptive systems more accurate.
 
 ## Background: Key Differences Between Male and Female Lifters
 
@@ -138,6 +138,64 @@ The soreness check-in and RPE tracking already capture how the user is actually 
 - Each past session in the history view optionally shows the cycle phase it occurred in (if tracking was active)
 - A "Cycle patterns" view in history: overlay RPE and volume data against cycle phase — see if there are personal trends
 
+### 5. Formula Config (Sets / Reps / Intensity)
+
+Current: a single `DEFAULT_FORMULA_CONFIG` in `blocks.ts` applies to all athletes.
+
+Female lifters respond well to slightly higher volume at slightly lower absolute intensities. This is supported by faster inter-set recovery and different neuromuscular fatigue curves. Proposed sex-differentiated formula defaults:
+
+- **Set counts:** +1 set on Block 1–2 heavy/rep days (e.g., 2→3 sets Block 1 heavy)
+- **RPE targets:** −0.5 across all blocks (Block 1 heavy: 8.5→8.0; Block 3 heavy: 9.5→9.0) — female lifters frequently underestimate perceived effort relative to actual load; lower targets produce truer working sets
+- **Training max increments:** Lower upper bound for bench (2.5 kg max vs 5 kg) and squat/deadlift (7.5 kg max vs 10 kg) — accounts for lighter absolute loads where fixed kg jumps are proportionally larger
+
+Implementation approach: Add `DEFAULT_FORMULA_CONFIG_FEMALE` alongside the renamed `DEFAULT_FORMULA_CONFIG_MALE`. A `getDefaultFormulaConfig(biologicalSex?)` factory selects the right constant. `FormulaConfig` type is unchanged — user overrides always apply on top of whatever default is selected.
+
+### 6. Warmup Protocol Defaults
+
+Current: four presets (`standard`, `minimal`, `extended`, `empty_bar`), all sex-agnostic. Default is `standard` for everyone.
+
+Female lifters' faster neuromuscular recovery means their peak output requires more sub-maximal priming reps — not because they need more time, but because the activation curve is steeper. A slightly longer warmup with a finer percentage progression reaches that activation peak more reliably. Proposed:
+
+- New preset `standard_female`: 5 reps @ 40%, 4 @ 55%, 3 @ 70%, 2 @ 85%, 1 @ 92.5% (5 steps vs 4; adds a sub-60% step)
+- `standard_female` becomes the **default assigned during onboarding for female lifters** — overridable in Settings → Warmup Protocol
+- Male lifters continue to default to `standard` (unchanged)
+- `WarmupPresetName` type gains `'standard_female'` as a valid option
+
+### 7. Soreness Response
+
+Current: fixed table (`soreness 3 → −1 set`, `soreness 4 → −2 sets + 5% intensity cut`, `soreness 5 → recovery session`). Sex-agnostic.
+
+Research shows female lifters experience less acute muscle damage per training stimulus at equivalent relative intensities. The same soreness rating may encode less physiological damage in a female lifter than a male lifter, meaning the current table may over-adjust for females at level 4. Proposed:
+
+- Soreness 4 (female): −1 set (not −2), intensity multiplier 0.97 (not 0.95)
+- Soreness 5 (female): remains recovery session — this is a hard biological ceiling regardless of sex
+- Soreness 3 (female): unchanged (−1 set is already a light touch)
+- `getSorenessModifier(level, biologicalSex?)` gains an optional sex parameter; female-specific rows override the default table only at level 4
+
+### 8. Performance Adjuster Thresholds
+
+Current: `DEFAULT_THRESHOLDS` — RPE deviation ≥ 1.0 across 2 consecutive sessions triggers a ±2.5% intensity suggestion. Sex-agnostic.
+
+Female lifters' RPE naturally fluctuates across the menstrual cycle (particularly in the late luteal phase, where perceived effort rises at identical absolute loads). Without cycle tracking enabled, a 1.0 RPE deviation threshold will generate false-positive adjustment suggestions. Proposed:
+
+- `DEFAULT_THRESHOLDS_FEMALE`: RPE deviation threshold raised to 1.5, consecutive sessions raised to 3
+- `DEFAULT_THRESHOLDS_MALE`: unchanged (current values)
+- `suggestProgramAdjustments(logs, thresholds)` already accepts thresholds as a parameter — no signature change needed; the caller selects the threshold set based on `biologicalSex`
+- When cycle tracking is enabled, female thresholds may be relaxed toward male defaults in the luteal phase (future enhancement, not in this design)
+
+### 9. Auxiliary Work Volume
+
+Current: all auxiliary work defaults to 3×10 @ RPE 7.5. Sex-agnostic.
+
+Female lifters' higher MEV/MRV and faster inter-set recovery mean they can productively handle more auxiliary volume per session. The same absolute weight produces less muscle damage, so adding reps rather than sets is the appropriate lever. Proposed:
+
+- Female default: 3×12 @ RPE 7.5 (same intensity, 2 more reps per set — consistent with higher volume tolerance without increasing session density)
+- Male default: 3×10 @ RPE 7.5 (unchanged)
+- This is the starting default; per-exercise overrides in Settings → Auxiliary Exercises take precedence
+- `buildAuxiliaryWork()` gains a `biologicalSex` parameter and selects rep count accordingly
+
+---
+
 ## Implementation Status
 
 ### Implemented
@@ -156,6 +214,14 @@ The soreness check-in and RPE tracking already capture how the user is actually 
 - Cycle tracking DB + data-access lib → [data-005-cycle-tracking.md](../specs/05-data/data-005-cycle-tracking.md)
 - Cycle tracking settings screen + onboarding prompt → [mobile-015-cycle-tracking-settings.md](../specs/09-mobile/mobile-015-cycle-tracking-settings.md)
 - Today screen pill, ovulatory chip, disruption sub-type, history phase tag, cycle patterns view → [mobile-016-cycle-phase-ui.md](../specs/09-mobile/mobile-016-cycle-phase-ui.md)
+
+### Planned — sex-based engine defaults (specs written)
+
+- Sex-differentiated formula config defaults → [engine-015-sex-formula-config.md](../specs/04-engine/engine-015-sex-formula-config.md)
+- `standard_female` warmup preset + onboarding default → [engine-016-standard-female-warmup.md](../specs/04-engine/engine-016-standard-female-warmup.md)
+- Sex-aware soreness modifier at level 4 → [engine-017-sex-soreness-adjuster.md](../specs/04-engine/engine-017-sex-soreness-adjuster.md)
+- `DEFAULT_THRESHOLDS_FEMALE` for performance adjuster → [engine-018-sex-performance-thresholds.md](../specs/04-engine/engine-018-sex-performance-thresholds.md)
+- Sex-aware rep count in `buildAuxiliaryWork()` → [engine-019-sex-auxiliary-volume.md](../specs/04-engine/engine-019-sex-auxiliary-volume.md)
 
 ## Future Enhancements
 
