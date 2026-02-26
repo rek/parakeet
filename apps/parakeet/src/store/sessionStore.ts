@@ -6,6 +6,7 @@ export interface ActualSet {
   reps_completed: number
   rpe_actual?: number
   is_completed: boolean
+  actual_rest_seconds?: number
 }
 
 interface SessionState {

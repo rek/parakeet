@@ -61,7 +61,21 @@ export default function SettingsScreen() {
     staleTime: 60 * 1000,
   });
 
+  // Badge for unreviewed developer suggestions
+  const { data: unreviewedDevCount } = useQuery({
+    queryKey: ['developer', 'suggestions', 'count'],
+    queryFn: async () => {
+      const { count } = await supabase
+        .from('developer_suggestions')
+        .select('id', { count: 'exact', head: true })
+        .eq('status', 'unreviewed');
+      return count ?? 0;
+    },
+    staleTime: 60 * 1000,
+  });
+
   const hasSuggestions = (pendingSuggestions ?? 0) > 0;
+  const hasDevSuggestions = (unreviewedDevCount ?? 0) > 0;
   const emailInitial = user?.email ? user.email[0].toUpperCase() : '?';
 
   return (
@@ -130,8 +144,22 @@ export default function SettingsScreen() {
           onPress={() => router.push('/settings/warmup-protocol')}
         />
         <Row
+          label="Rest Timer"
+          onPress={() => router.push('/settings/rest-timer')}
+        />
+        <Row
           label="Volume Config (MRV/MEV)"
           onPress={() => router.push('/settings/volume-config')}
+        />
+        <Row
+          label="Developer"
+          onPress={() => router.push('/settings/developer')}
+          right={
+            <View style={styles.rowRight}>
+              {hasDevSuggestions && <View style={styles.suggestionDot} />}
+              <Text style={styles.chevron}>›</Text>
+            </View>
+          }
         />
 
         <View style={styles.divider} />

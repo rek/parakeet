@@ -1,19 +1,27 @@
 import {
   assembleCycleReport,
   generateCycleReview,
+  extractSummary,
 } from '@parakeet/training-engine'
-import type { CycleReport, RawCycleData } from '@parakeet/training-engine'
+import type { CycleReport, RawCycleData, PreviousCycleSummary } from '@parakeet/training-engine'
 import type { CycleReview } from '@parakeet/shared-types'
 import { supabase } from './supabase'
 
 export async function getCycleReview(programId: string, userId: string) {
-  const { data } = await supabase
+  const existing = await supabase
     .from('cycle_reviews')
     .select('*')
     .eq('program_id', programId)
     .eq('user_id', userId)
     .maybeSingle()
-  return data
+
+  if (existing.data) return existing.data.llm_response as CycleReview
+
+  const report = await compileCycleReport(programId, userId)
+  const previousSummaries = await getPreviousCycleSummaries(userId, programId, 3)
+  const review = await generateCycleReview(report, previousSummaries)
+  await storeCycleReview(programId, userId, report, review)
+  return review
 }
 
 export async function compileCycleReport(
@@ -85,21 +93,26 @@ export async function compileCycleReport(
 
 export async function getPreviousCycleSummaries(
   userId: string,
-  count: number,
-): Promise<string[]> {
-  const { data } = await supabase
+  beforeProgramId: string,
+  limit = 3,
+): Promise<PreviousCycleSummary[]> {
+  const { data, error } = await supabase
     .from('cycle_reviews')
-    .select('llm_response, generated_at')
+    .select('program_id, llm_response, compiled_report, created_at')
     .eq('user_id', userId)
-    .order('generated_at', { ascending: false })
-    .limit(count)
+    .neq('program_id', beforeProgramId)
+    .not('llm_response', 'is', null)
+    .order('created_at', { ascending: false })
+    .limit(limit)
 
-  return (data ?? []).map((row) => {
-    const review = row.llm_response as CycleReview
-    const liftRatings = Object.entries(review.progressByLift ?? {})
-      .map(([lift, p]) => `${lift}: ${p.rating}`)
-      .join(', ')
-    return `[${row.generated_at}] ${review.overallAssessment} Lifts: ${liftRatings}`
+  if (error) throw error
+  if (!data || data.length === 0) return []
+
+  return data.map((row, index) => {
+    const report = row.compiled_report as unknown as CycleReport
+    const review = row.llm_response as unknown as CycleReview
+    const cycleNumber = data.length - index // most recent = highest number
+    return extractSummary(report, review, cycleNumber, 0, 0, 0)
   })
 }
 
@@ -128,7 +141,7 @@ export async function storeCycleReview(
     })
   }
 
-  // Route structural suggestions → developer_suggestions
+  // Route structural suggestions → developer_suggestions (engine-024)
   for (const suggestion of llmResponse.structuralSuggestions ?? []) {
     await supabase.from('developer_suggestions').insert({
       user_id: userId,
@@ -136,6 +149,7 @@ export async function storeCycleReview(
       description: suggestion.description,
       rationale: suggestion.rationale,
       developer_note: suggestion.developerNote,
+      priority: suggestion.priority ?? 'medium',
     })
   }
 }

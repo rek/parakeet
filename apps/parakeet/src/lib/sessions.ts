@@ -1,8 +1,9 @@
 import {
   suggestProgramAdjustments,
   getDefaultThresholds,
+  isMakeupWindowExpired,
 } from '@parakeet/training-engine'
-import type { SessionLogSummary, CompletedSetLog } from '@parakeet/training-engine'
+import type { SessionLogSummary, CompletedSetLog, SessionRef } from '@parakeet/training-engine'
 import type { Lift } from '@parakeet/shared-types'
 import { supabase } from './supabase'
 
@@ -76,6 +77,10 @@ export async function getCompletedSessions(
 }
 
 // Transition session to in_progress
+// TODO (data-006): when JIT generation is wired here, fetch rest overrides and include in JITInput:
+//   const userRestOverrides = await getUserRestOverrides(userId)
+//   pass as JITInput.userRestOverrides
+//   import { getUserRestOverrides } from './rest-config'
 export async function startSession(sessionId: string): Promise<void> {
   await supabase
     .from('sessions')
@@ -192,6 +197,92 @@ export async function getCurrentWeekLogs(userId: string): Promise<CompletedSetLo
       completedSets: completedSets || sets.length,
     }
   })
+}
+
+// Mark overdue scheduled sessions as missed when their makeup window has expired.
+// Called on app foreground — fire-and-forget safe.
+export async function markMissedSessions(userId: string): Promise<void> {
+  const now = new Date()
+  const today = now.toISOString().split('T')[0]
+
+  // Fetch all scheduled sessions whose date is in the past
+  const { data: scheduled } = await supabase
+    .from('sessions')
+    .select('id, scheduled_date, primary_lift, week_number, program_id')
+    .eq('user_id', userId)
+    .eq('status', 'scheduled')
+    .lt('scheduled_date', today)
+
+  if (!scheduled || scheduled.length === 0) return
+
+  // Group by program_id so we fetch all cycle sessions once per program
+  const byProgram = new Map<string, typeof scheduled>()
+  for (const s of scheduled) {
+    const pid = s.program_id as string
+    if (!byProgram.has(pid)) byProgram.set(pid, [])
+    byProgram.get(pid)!.push(s)
+  }
+
+  for (const [programId, overdueInProgram] of byProgram) {
+    // Fetch all sessions for this program to determine makeup windows
+    const { data: allSessions } = await supabase
+      .from('sessions')
+      .select('id, scheduled_date, primary_lift, week_number')
+      .eq('program_id', programId)
+      .eq('user_id', userId)
+
+    const allSessionRefs: SessionRef[] = (allSessions ?? []).map((s) => ({
+      id: s.id as string,
+      scheduledDate: s.scheduled_date as string,
+      lift: s.primary_lift as Lift,
+      weekNumber: s.week_number as number,
+    }))
+
+    for (const session of overdueInProgram) {
+      const missedSession: SessionRef = {
+        id: session.id as string,
+        scheduledDate: session.scheduled_date as string,
+        lift: session.primary_lift as Lift,
+        weekNumber: session.week_number as number,
+      }
+
+      const expired = isMakeupWindowExpired({
+        missedSession,
+        allSessionsThisCycle: allSessionRefs,
+        today: now,
+      })
+
+      if (expired) {
+        await supabase
+          .from('sessions')
+          .update({ status: 'missed', missed_at: now.toISOString() })
+          .eq('id', session.id)
+      }
+    }
+  }
+}
+
+// Returns the number of days since the most recent completed session for a given lift.
+// Returns null when no completed session exists (first-time lifter or no history).
+export async function getDaysSinceLastSession(
+  userId: string,
+  lift: Lift,
+): Promise<number | null> {
+  const { data } = await supabase
+    .from('session_logs')
+    .select('completed_at, sessions!inner(primary_lift)')
+    .eq('user_id', userId)
+    .eq('sessions.primary_lift', lift)
+    .order('completed_at', { ascending: false })
+    .limit(1)
+    .maybeSingle()
+
+  if (!data?.completed_at) return null
+
+  const completedAt = new Date(data.completed_at as string)
+  const now = new Date()
+  const diffMs = now.getTime() - completedAt.getTime()
+  return Math.floor(diffMs / (1000 * 60 * 60 * 24))
 }
 
 // --- Private helpers ---
