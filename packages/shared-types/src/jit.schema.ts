@@ -7,6 +7,11 @@ export const JITAdjustmentSchema = z.object({
   auxOverrides: z.record(z.string(), z.enum(['skip', 'reduce', 'normal'])),
   rationale: z.array(z.string().max(200)).max(5),
   confidence: z.enum(['high', 'medium', 'low']),
+  restAdjustments: z
+    .object({
+      mainLift: z.number().optional(), // delta seconds from formula default, [-60, +60] enforced post-parse
+    })
+    .optional(),
 })
 
 export type JITAdjustment = z.infer<typeof JITAdjustmentSchema>

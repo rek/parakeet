@@ -106,18 +106,6 @@ The word "AI" in earlier versions of these docs was used loosely to mean "genera
 
 **Audit trail**: The formula history shows the full evolution of the program's parameters — useful for reflecting on what worked and what didn't over multiple training cycles.
 
-## Implementation Status
-
-### Planned
-
-- View current formula config by block and intensity type (read-only display)
-- Sample session preview per block (uses user's actual current maxes)
-- Auto-suggestion generation via `suggestProgramAdjustments()` — rule-based, runs locally after each session
-- Suggestion review (accept / dismiss) with side-by-side comparison and rationale
-- Suggestion blocked if any unreviewed suggestion already exists
-- Formula history list
-- Reactivate any historical version
-
 ## Future Enhancements
 
 **Phase 2:**

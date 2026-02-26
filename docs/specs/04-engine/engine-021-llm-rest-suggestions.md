@@ -1,6 +1,6 @@
 # Spec: LLM Rest Suggestion Integration
 
-**Status**: Planned
+**Status**: Implemented
 **Domain**: Training Engine
 
 ## What This Covers
@@ -76,11 +76,11 @@ The chip is shown when `Math.abs(llmRestSuggestion.deltaSeconds) >= 30`.
 ### Unit Tests
 
 **File: `packages/training-engine/src/generator/__tests__/llm-jit-generator.test.ts`** — add cases:
-- [ ] LLM returns `restAdjustmentSeconds: 60` → clamped to 60, added to formula base
-- [ ] LLM returns `restAdjustmentSeconds: 90` → clamped to 60 (warn logged)
-- [ ] LLM returns `restAdjustmentSeconds: -30` → formula base − 30
-- [ ] LLM omits field → formula base unchanged, `llmRestSuggestion` is undefined
-- [ ] LLM parse error → formula strategy fallback, no rest suggestion
+- [x] LLM returns `restAdjustmentSeconds: 60` → clamped to 60, added to formula base
+- [x] LLM returns `restAdjustmentSeconds: 90` → clamped to 60 (warn logged)
+- [x] LLM returns `restAdjustmentSeconds: -30` → formula base − 30
+- [x] LLM omits field → formula base unchanged, `llmRestSuggestion` is undefined
+- [x] LLM parse error → formula strategy fallback, no rest suggestion
 
 ## Dependencies
 

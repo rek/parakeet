@@ -1,6 +1,6 @@
 # Spec: Multi-Cycle Longitudinal Context
 
-**Status**: Planned
+**Status**: Implemented
 **Domain**: Training Engine
 
 ## What This Covers
@@ -138,11 +138,11 @@ export async function getCycleReview(userId: string, programId: string) {
 ### Unit Tests
 
 **File: `packages/training-engine/src/review/cycle-review-generator.test.ts`** — add:
-- [ ] `extractSummary()` correctly maps `CycleReport` + `CycleReview` to `PreviousCycleSummary`
-- [ ] `buildLiftProgress()` computes oneRmChangeKg correctly from liftSummary
-- [ ] `getPreviousCycleSummaries()` with no prior reviews → returns `[]`
-- [ ] Prompt includes serialised previous summaries when provided
-- [ ] Prompt includes "first cycle" message when `previousSummaries` is empty
+- [x] `extractSummary()` correctly maps `CycleReport` + `CycleReview` to `PreviousCycleSummary`
+- [x] `buildLiftProgress()` computes oneRmChangeKg correctly from liftSummary
+- [x] `getPreviousCycleSummaries()` with no prior reviews → returns `[]`
+- [x] Prompt includes serialised previous summaries when provided
+- [x] Prompt includes "first cycle" message when `previousSummaries` is empty
 
 ## Dependencies
 

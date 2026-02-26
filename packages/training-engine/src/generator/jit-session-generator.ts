@@ -36,9 +36,18 @@ export interface JITInput {
   recentLogs: RecentSessionSummary[]
   activeDisruptions: TrainingDisruption[]
   warmupConfig: WarmupProtocol
+  // Recency signal: days since the last completed session for this lift.
+  // null = no history (first session ever). > 7 days triggers conservative modifier.
+  daysSinceLastSession?: number | null
   // Athlete demographics — optional; used by AI JIT generator (engine-011) for contextual advice
   biologicalSex?: 'female' | 'male'
   userAge?: number
+  // User rest overrides (sourced from rest_configs table, data-006)
+  userRestOverrides?: Array<{
+    lift?: Lift
+    intensityType?: IntensityType
+    restSeconds: number
+  }>
 }
 
 export interface AuxiliaryWork {
@@ -59,8 +68,89 @@ export interface JITOutput {
   rationale: string[]
   warnings: string[]
   skippedMainLift: boolean
+  restRecommendations: {
+    /** Rest after each main working set (seconds), one entry per set by index */
+    mainLift: number[]
+    /** Rest after each auxiliary exercise (seconds), one entry per exercise */
+    auxiliary: number[]
+  }
   /** Which strategy produced this output. Populated by registry. */
   jit_strategy?: 'formula' | 'llm' | 'hybrid' | 'formula_fallback'
+  /** Present only when the LLM strategy returned a restAdjustments field.
+   *  Read by the mobile rest timer to decide whether to show the "AI suggested X min" chip. */
+  llmRestSuggestion?: {
+    /** The clamped delta (seconds) that was applied on top of the formula base */
+    deltaSeconds: number
+    /** What the formula would have produced with no LLM input */
+    formulaBaseSeconds: number
+  }
+  /** Present only when HybridJITGenerator ran both strategies.
+   *  Contains divergence metrics and the formula output for comparison display. */
+  comparisonData?: {
+    divergence: {
+      /** |llmWeight - formulaWeight| / formulaWeight */
+      weightPct: number
+      /** llmSets - formulaSets (signed) */
+      setDelta: number
+      /** First line of LLM rationale used as context summary */
+      rpeContextSummary: string
+    }
+    formulaOutput: JITOutput
+    /** True when divergence exceeds display threshold (>15% weight or setDelta !== 0) */
+    shouldSurfaceToUser: boolean
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Rest resolution helpers
+// ---------------------------------------------------------------------------
+
+type BlockKey = 'block1' | 'block2' | 'block3'
+
+function blockKey(blockNumber: 1 | 2 | 3): BlockKey {
+  return `block${blockNumber}` as BlockKey
+}
+
+/** Look up rest seconds for a main working set from formula config.
+ *  Deload sessions use the flat `deload` value; other sessions index by block + intensity. */
+function resolveMainLiftRest(
+  formulaConfig: FormulaConfig,
+  block: 1 | 2 | 3,
+  intensityType: IntensityType,
+): number {
+  if (intensityType === 'deload') {
+    return formulaConfig.rest_seconds.deload
+  }
+  const blockRest = formulaConfig.rest_seconds[blockKey(block)]
+  // intensityType is 'heavy' | 'explosive' | 'rep' here (deload handled above)
+  return blockRest[intensityType as 'heavy' | 'explosive' | 'rep']
+}
+
+/** Apply user override if one matches this lift + intensity, returning the override's
+ *  restSeconds. Specificity: lift+intensity > intensity-only > lift-only > catch-all. */
+function applyRestOverride(
+  overrides: NonNullable<JITInput['userRestOverrides']>,
+  lift: Lift,
+  intensityType: IntensityType,
+  formulaRest: number,
+): number {
+  // Most specific: both lift and intensityType match
+  const specific = overrides.find((o) => o.lift === lift && o.intensityType === intensityType)
+  if (specific) return specific.restSeconds
+
+  // intensity-only match (no lift filter)
+  const intensityOnly = overrides.find((o) => o.lift === undefined && o.intensityType === intensityType)
+  if (intensityOnly) return intensityOnly.restSeconds
+
+  // lift-only match (no intensity filter)
+  const liftOnly = overrides.find((o) => o.lift === lift && o.intensityType === undefined)
+  if (liftOnly) return liftOnly.restSeconds
+
+  // Catch-all (neither field set)
+  const catchAll = overrides.find((o) => o.lift === undefined && o.intensityType === undefined)
+  if (catchAll) return catchAll.restSeconds
+
+  return formulaRest
 }
 
 // ---------------------------------------------------------------------------
@@ -82,6 +172,7 @@ export function generateJITSession(input: JITInput): JITOutput {
     recentLogs,
     activeDisruptions,
     warmupConfig,
+    userRestOverrides,
   } = input
 
   const rationale: string[] = []
@@ -226,6 +317,18 @@ export function generateJITSession(input: JITInput): JITOutput {
     warmupSets = generateWarmupSets(workingWeight, effectiveProtocol)
   }
 
+  // Step 9 — Rest recommendations
+  const formulaMainRest = resolveMainLiftRest(formulaConfig, blockNumber, intensityType)
+  const mainLiftRest =
+    userRestOverrides && userRestOverrides.length > 0
+      ? applyRestOverride(userRestOverrides, primaryLift, intensityType, formulaMainRest)
+      : formulaMainRest
+
+  const restRecommendations = {
+    mainLift: mainLiftSets.map(() => mainLiftRest),
+    auxiliary: auxiliaryWork.map(() => formulaConfig.rest_seconds.auxiliary),
+  }
+
   return {
     sessionId,
     generatedAt: new Date(),
@@ -237,6 +340,7 @@ export function generateJITSession(input: JITInput): JITOutput {
     rationale,
     warnings,
     skippedMainLift,
+    restRecommendations,
   }
 }
 

@@ -80,21 +80,6 @@ All weights are rounded to the nearest 2.5kg with a minimum of 20kg (the empty b
 
 **Live preview in Settings**: Changing a protocol immediately shows the exact weights — the user sees the impact of their choice before committing, using their actual current maxes.
 
-## Implementation Status
-
-### Planned
-
-- `generateWarmupSets(workingWeightKg, protocol)` — core calculation function, returns array of warmup sets
-- Weight rounding to nearest 2.5kg, minimum 20kg
-- Deduplication of steps that produce the same rounded weight
-- Automatic protocol override for recovery sessions and sub-40kg working weights
-- Per-lift warmup config stored in Supabase (`warmup_configs` table)
-- Default protocol: Standard for all three lifts
-- Warmup display on session screen (collapsible, checkbox per set, auto-collapse on completion)
-- Warmup state in local Zustand store (not persisted — warmup checks are session-only)
-- Settings → Warmup with protocol picker and live preview
-- Custom protocol editor (add/remove/reorder steps)
-
 ## Future Enhancements
 
 **Phase 2:**

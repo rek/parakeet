@@ -1,6 +1,6 @@
 # Feature: Sex-Based Training Adaptations
 
-**Status**: Partially Implemented
+**Status**: Planned
 
 **Date**: 2026-02-22
 
@@ -195,33 +195,6 @@ Female lifters' higher MEV/MRV and faster inter-set recovery mean they can produ
 - `buildAuxiliaryWork()` gains a `biologicalSex` parameter and selects rep count accordingly
 
 ---
-
-## Implementation Status
-
-### Implemented
-
-- Biological sex collected in onboarding (program-settings screen) and stored in `profiles.biological_sex`
-- Sex-differentiated MEV/MRV default tables (`DEFAULT_MRV_MEV_CONFIG_MALE` / `_FEMALE` in training engine)
-- `getMrvMevConfig()` selects correct defaults based on `biological_sex`
-- `biologicalSex` + `userAge` added as optional context fields to `JITInput` (used by LLM systems)
-- Date of birth collected in onboarding (optional birth year input) and stored in `profiles.date_of_birth`
-- See spec: [data-004-athlete-profile.md](../specs/05-data/data-004-athlete-profile.md)
-
-### Planned (specs written)
-
-- 2020 Wilks formula → [engine-013-wilks-formula.md](../specs/04-engine/engine-013-wilks-formula.md)
-- Cycle phase calculator (pure function) → [engine-014-cycle-phase-calculator.md](../specs/04-engine/engine-014-cycle-phase-calculator.md)
-- Cycle tracking DB + data-access lib → [data-005-cycle-tracking.md](../specs/05-data/data-005-cycle-tracking.md)
-- Cycle tracking settings screen + onboarding prompt → [mobile-015-cycle-tracking-settings.md](../specs/09-mobile/mobile-015-cycle-tracking-settings.md)
-- Today screen pill, ovulatory chip, disruption sub-type, history phase tag, cycle patterns view → [mobile-016-cycle-phase-ui.md](../specs/09-mobile/mobile-016-cycle-phase-ui.md)
-
-### Planned — sex-based engine defaults (specs written)
-
-- Sex-differentiated formula config defaults → [engine-015-sex-formula-config.md](../specs/04-engine/engine-015-sex-formula-config.md)
-- `standard_female` warmup preset + onboarding default → [engine-016-standard-female-warmup.md](../specs/04-engine/engine-016-standard-female-warmup.md)
-- Sex-aware soreness modifier at level 4 → [engine-017-sex-soreness-adjuster.md](../specs/04-engine/engine-017-sex-soreness-adjuster.md)
-- `DEFAULT_THRESHOLDS_FEMALE` for performance adjuster → [engine-018-sex-performance-thresholds.md](../specs/04-engine/engine-018-sex-performance-thresholds.md)
-- Sex-aware rep count in `buildAuxiliaryWork()` → [engine-019-sex-auxiliary-volume.md](../specs/04-engine/engine-019-sex-auxiliary-volume.md)
 
 ## Future Enhancements
 

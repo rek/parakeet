@@ -1,6 +1,6 @@
 # Spec: PR Detection & Achievement Engine
 
-**Status**: Planned
+**Status**: Implemented
 **Domain**: Training Engine
 
 ## What This Covers
@@ -49,13 +49,13 @@ interface PRCheckInput {
   - Sessions with an active **Major** disruption: skip all PR detection. Minor/Moderate disruptions: PRs count.
 
 **Unit tests (`packages/training-engine/src/achievements/pr-detection.test.ts`):**
-- [ ] New 1RM (RPE 9.0, 3×140kg) → 1rm PR returned
-- [ ] Existing 1RM better than new → no PR
-- [ ] RPE < 8.5 → no 1RM PR eligible
-- [ ] Volume PR: higher total than history → volume PR returned
-- [ ] Rep at weight: 6 reps at 120kg when prev best was 5 → rep PR returned
-- [ ] Multiple rep PRs same session → capped at 3
-- [ ] Major disruption active → empty result
+- [x] New 1RM (RPE 9.0, 3×140kg) → 1rm PR returned
+- [x] Existing 1RM better than new → no PR
+- [x] RPE < 8.5 → no 1RM PR eligible
+- [x] Volume PR: higher total than history → volume PR returned
+- [x] Rep at weight: 6 reps at 120kg when prev best was 5 → rep PR returned
+- [x] Multiple rep PRs same session → capped at 3
+- [x] Major disruption active → empty result
 
 ---
 
@@ -87,11 +87,11 @@ interface StreakResult {
   - A week with no scheduled sessions (e.g., deload, program gap) is skipped in the streak calculation (neither breaks nor extends)
 
 **Unit tests:**
-- [ ] 5 consecutive clean weeks → streak = 5
-- [ ] Miss in week 3, then 2 clean → streak = 2, longest = depends on history before week 3
-- [ ] Disruption-logged miss → does not break streak
-- [ ] No-show (no log, no disruption) → breaks streak
-- [ ] Empty history → streak = 0
+- [x] 5 consecutive clean weeks → streak = 5
+- [x] Miss in week 3, then 2 clean → streak = 2, longest = depends on history before week 3
+- [x] Disruption-logged miss → does not break streak
+- [x] No-show (no log, no disruption) → breaks streak
+- [x] Empty history → streak = 0
 
 ---
 
@@ -119,10 +119,10 @@ interface CycleCompletionResult {
   - Called from `onCycleComplete()` in `apps/parakeet/src/lib/programs.ts` (already fires at ≥80% — this function provides the formal calculation)
 
 **Unit tests:**
-- [ ] 16/20 sessions completed, 0 disruptions → 80% → qualifies
-- [ ] 15/20 → 75% → does not qualify
-- [ ] 18/20 + 2 disruption-skipped → 100% → qualifies
-- [ ] 0 sessions → completionPct = 0 → does not qualify
+- [x] 16/20 sessions completed, 0 disruptions → 80% → qualifies
+- [x] 15/20 → 75% → does not qualify
+- [x] 18/20 + 2 disruption-skipped → 100% → qualifies
+- [x] 0 sessions → completionPct = 0 → does not qualify
 
 ---
 

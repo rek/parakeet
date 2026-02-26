@@ -1,5 +1,6 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import {
+  Modal,
   ScrollView,
   StyleSheet,
   Text,
@@ -13,6 +14,7 @@ import { getSession, startSession } from '../../lib/sessions'
 import { useSessionStore } from '../../store/sessionStore'
 import { WarmupSection } from '../../components/training/WarmupSection'
 import { SetRow } from '../../components/training/SetRow'
+import { RestTimer } from '../../components/training/RestTimer'
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -29,11 +31,29 @@ interface WarmupSet {
   label?: string
 }
 
+interface RestRecommendations {
+  mainLift: number[]
+  auxiliary: number[]
+}
+
+interface LlmRestSuggestion {
+  deltaSeconds: number
+  formulaBaseSeconds: number
+}
+
 interface JitData {
   mainLiftSets: PlannedSet[]
   warmupSets: WarmupSet[]
   auxiliaryWork: unknown
+  restRecommendations?: RestRecommendations
+  llmRestSuggestion?: LlmRestSuggestion | null
 }
+
+// ── Constants ─────────────────────────────────────────────────────────────────
+
+const DEFAULT_MAIN_REST_SECONDS = 180
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
 
 function capitalize(value: string): string {
   if (!value) return value
@@ -65,6 +85,21 @@ export default function SessionScreen() {
     week_number: number
   } | null>(null)
 
+  // Rest timer state: which main-lift set just completed
+  const [timerVisible, setTimerVisible] = useState(false)
+  const [timerDuration, setTimerDuration] = useState(DEFAULT_MAIN_REST_SECONDS)
+  const [timerLlmSuggestion, setTimerLlmSuggestion] = useState<
+    LlmRestSuggestion | undefined
+  >(undefined)
+  // The set number that triggered the timer (rest is attributed to this set)
+  const pendingRestSetNumber = useRef<number | null>(null)
+  // Ref mirror of timerVisible so handleSetUpdate closure stays stable
+  const timerVisibleRef = useRef(false)
+
+  // Rest recommendations extracted from jit output
+  const restRecommendations = useRef<RestRecommendations | null>(null)
+  const llmRestSuggestion = useRef<LlmRestSuggestion | null>(null)
+
   // ── Bootstrap ─────────────────────────────────────────────────────────────
 
   useEffect(() => {
@@ -83,6 +118,13 @@ export default function SessionScreen() {
 
     const { mainLiftSets, warmupSets: ws } = parsed
     setWarmupSets(ws ?? [])
+
+    if (parsed.restRecommendations) {
+      restRecommendations.current = parsed.restRecommendations
+    }
+    if (parsed.llmRestSuggestion) {
+      llmRestSuggestion.current = parsed.llmRestSuggestion
+    }
 
     getSession(sessionId).then((session) => {
       if (!session) {
@@ -109,14 +151,47 @@ export default function SessionScreen() {
       data: { weightKg: number; reps: number; rpe?: number; isCompleted: boolean },
     ) => {
       updateSet(setNumber, {
-        weight_grams:  Math.round(data.weightKg * 1000),
+        weight_grams:   Math.round(data.weightKg * 1000),
         reps_completed: data.reps,
-        rpe_actual:    data.rpe,
-        is_completed:  data.isCompleted,
+        rpe_actual:     data.rpe,
+        is_completed:   data.isCompleted,
       })
+
+      // When a set transitions to completed, open the rest timer.
+      // If timer is already visible (user completed a set while resting),
+      // dismiss it quietly before launching the new one.
+      if (data.isCompleted) {
+        if (timerVisibleRef.current && pendingRestSetNumber.current !== null) {
+          timerVisibleRef.current = false
+          setTimerVisible(false)
+        }
+
+        const setIndex = setNumber - 1
+        const duration =
+          restRecommendations.current?.mainLift[setIndex] ??
+          DEFAULT_MAIN_REST_SECONDS
+
+        pendingRestSetNumber.current = setNumber
+        setTimerDuration(duration)
+        setTimerLlmSuggestion(llmRestSuggestion.current ?? undefined)
+        timerVisibleRef.current = true
+        setTimerVisible(true)
+      }
     },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [updateSet],
   )
+
+  function handleTimerDone(elapsedSeconds: number) {
+    if (pendingRestSetNumber.current !== null) {
+      updateSet(pendingRestSetNumber.current, {
+        actual_rest_seconds: elapsedSeconds,
+      })
+      pendingRestSetNumber.current = null
+    }
+    timerVisibleRef.current = false
+    setTimerVisible(false)
+  }
 
   function handleComplete() {
     router.push({
@@ -137,6 +212,13 @@ export default function SessionScreen() {
     ? sessionMeta.block_number !== null
       ? `Block ${sessionMeta.block_number} · Week ${sessionMeta.week_number}`
       : `Week ${sessionMeta.week_number}`
+    : ''
+
+  // Label passed to RestTimer: "Block 3 · Heavy" style
+  const intensityLabel = sessionMeta
+    ? sessionMeta.block_number !== null
+      ? `Block ${sessionMeta.block_number} · ${capitalize(sessionMeta.intensity_type)}`
+      : capitalize(sessionMeta.intensity_type)
     : ''
 
   // ── Render ────────────────────────────────────────────────────────────────
@@ -189,7 +271,10 @@ export default function SessionScreen() {
       {/* Sticky complete button */}
       <View style={styles.stickyFooter}>
         <TouchableOpacity
-          style={[styles.completeButton, !hasCompletedSet && styles.completeButtonDisabled]}
+          style={[
+            styles.completeButton,
+            !hasCompletedSet && styles.completeButtonDisabled,
+          ]}
           onPress={handleComplete}
           disabled={!hasCompletedSet}
           activeOpacity={0.8}
@@ -197,6 +282,23 @@ export default function SessionScreen() {
           <Text style={styles.completeButtonText}>Complete Workout</Text>
         </TouchableOpacity>
       </View>
+
+      {/* Rest timer modal */}
+      <Modal
+        visible={timerVisible}
+        transparent
+        animationType="slide"
+        onRequestClose={() => handleTimerDone(0)}
+      >
+        <View style={styles.modalOverlay}>
+          <RestTimer
+            durationSeconds={timerDuration}
+            llmSuggestion={timerLlmSuggestion}
+            onDone={handleTimerDone}
+            intensityLabel={intensityLabel}
+          />
+        </View>
+      </Modal>
     </SafeAreaView>
   )
 }
@@ -263,5 +365,10 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     color: '#fff',
+  },
+  modalOverlay: {
+    flex: 1,
+    justifyContent: 'flex-end',
+    backgroundColor: 'rgba(0, 0, 0, 0.45)',
   },
 })

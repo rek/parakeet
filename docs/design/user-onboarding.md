@@ -128,22 +128,6 @@ After onboarding, the user can view and edit their profile at **Settings → Pro
 
 The Wilks score and performance label are computed client-side using `computeWilks2020` from the training engine. No server-side computation.
 
-## Implementation Status
-
-### Planned
-
-- Google OAuth sign-in via Supabase Auth
-- 1RM / 3RM toggle per lift with live Epley estimation
-- All weights in kilograms
-- Program duration selection: 6, 8, 10, 12, or 14 weeks
-- Days per week: 3 or 4
-- Start date picker
-- Body weight input (kg) during program setup
-- Program preview before activation (structural view — no planned sets shown)
-- "Don't know maxes" fallback path with kg defaults
-- Returning user fast-path (skip onboarding if profile row exists)
-- Onboarding gating: main app tabs inaccessible until program is activated
-
 ## Future Enhancements
 
 **Phase 2:**

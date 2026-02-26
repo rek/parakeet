@@ -1,5 +1,10 @@
 import { TrainingDisruption } from '@parakeet/shared-types'
-import { DEFAULT_FORMULA_CONFIG_MALE } from '../cube/blocks'
+import {
+  DEFAULT_FORMULA_CONFIG_FEMALE,
+  DEFAULT_FORMULA_CONFIG_MALE,
+  DEFAULT_REST_SECONDS_FEMALE,
+  DEFAULT_REST_SECONDS_MALE,
+} from '../cube/blocks'
 import { MrvMevConfig, MuscleGroup } from '../types'
 import { generateJITSession, JITInput } from './jit-session-generator'
 
@@ -359,5 +364,108 @@ describe('generateJITSession — biologicalSex soreness (female level 4)', () =>
     // Block 1 heavy: 2 base sets; male level-4: −2 → clamped to 1
     const out = generateJITSession(baseInput({ biologicalSex: 'male', sorenessRatings: { quads: 4 } }))
     expect(out.mainLiftSets).toHaveLength(1)
+  })
+})
+
+// ---------------------------------------------------------------------------
+// engine-020: rest recommendations
+// ---------------------------------------------------------------------------
+
+describe('generateJITSession — restRecommendations', () => {
+  it('Block 3 Heavy, male defaults → mainLift all 300s', () => {
+    const out = generateJITSession(
+      baseInput({
+        blockNumber: 3,
+        intensityType: 'heavy',
+        formulaConfig: DEFAULT_FORMULA_CONFIG_MALE,
+      }),
+    )
+    // male block3.heavy = 300
+    expect(DEFAULT_REST_SECONDS_MALE.block3.heavy).toBe(300)
+    out.restRecommendations.mainLift.forEach((r) => expect(r).toBe(300))
+  })
+
+  it('Block 2 Rep, female defaults → mainLift all 90s', () => {
+    const out = generateJITSession(
+      baseInput({
+        blockNumber: 2,
+        intensityType: 'rep',
+        formulaConfig: DEFAULT_FORMULA_CONFIG_FEMALE,
+      }),
+    )
+    // female block2.rep = 90
+    expect(DEFAULT_REST_SECONDS_FEMALE.block2.rep).toBe(90)
+    out.restRecommendations.mainLift.forEach((r) => expect(r).toBe(90))
+  })
+
+  it('user override for squat heavy → override value used instead of formula default', () => {
+    const out = generateJITSession(
+      baseInput({
+        blockNumber: 3,
+        intensityType: 'heavy',
+        primaryLift: 'squat',
+        formulaConfig: DEFAULT_FORMULA_CONFIG_MALE,
+        userRestOverrides: [{ lift: 'squat', intensityType: 'heavy', restSeconds: 240 }],
+      }),
+    )
+    out.restRecommendations.mainLift.forEach((r) => expect(r).toBe(240))
+  })
+
+  it('auxiliary always 90 regardless of block or sex', () => {
+    const maleOut = generateJITSession(
+      baseInput({
+        blockNumber: 3,
+        intensityType: 'heavy',
+        formulaConfig: DEFAULT_FORMULA_CONFIG_MALE,
+      }),
+    )
+    maleOut.restRecommendations.auxiliary.forEach((r) => expect(r).toBe(90))
+
+    const femaleOut = generateJITSession(
+      baseInput({
+        blockNumber: 1,
+        intensityType: 'explosive',
+        formulaConfig: DEFAULT_FORMULA_CONFIG_FEMALE,
+      }),
+    )
+    femaleOut.restRecommendations.auxiliary.forEach((r) => expect(r).toBe(90))
+  })
+
+  it('deload session → deload rest (90s)', () => {
+    // Use block 1 but intensityType deload to exercise the deload path
+    const out = generateJITSession(
+      baseInput({
+        blockNumber: 1,
+        intensityType: 'deload',
+        formulaConfig: DEFAULT_FORMULA_CONFIG_MALE,
+      }),
+    )
+    out.restRecommendations.mainLift.forEach((r) => expect(r).toBe(90))
+  })
+
+  it('mainLift array length matches mainLiftSets length', () => {
+    const out = generateJITSession(
+      baseInput({
+        blockNumber: 3,
+        intensityType: 'heavy',
+        formulaConfig: DEFAULT_FORMULA_CONFIG_MALE,
+      }),
+    )
+    expect(out.restRecommendations.mainLift).toHaveLength(out.mainLiftSets.length)
+  })
+
+  it('auxiliary array length matches auxiliaryWork length', () => {
+    const out = generateJITSession(baseInput())
+    expect(out.restRecommendations.auxiliary).toHaveLength(out.auxiliaryWork.length)
+  })
+
+  it('skipped main lift → empty mainLift rest array', () => {
+    const out = generateJITSession(
+      baseInput({
+        weeklyVolumeToDate: { quads: 25 },
+      }),
+    )
+    expect(out.skippedMainLift).toBe(true)
+    expect(out.restRecommendations.mainLift).toHaveLength(0)
   })
 })

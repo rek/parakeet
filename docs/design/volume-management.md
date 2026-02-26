@@ -114,18 +114,6 @@ The Volume Dashboard shows current-week volume vs MRV/MEV for all 9 muscle group
 
 **Automatic warnings on Today screen:** If any primary muscle for the upcoming session is at MRV or MRV-exceeded, a banner appears: "Your [quads] have reached their weekly MRV. Today's squat volume has been automatically reduced."
 
-## Implementation Status
-
-### Planned
-
-- `computeWeeklyVolume()` from session logs
-- `classifyVolumeStatus()` per muscle (below MEV / in range / approaching MRV / at MRV / exceeded)
-- MRV cap in JIT generator
-- Soreness check-in screen before every session
-- Volume Dashboard (compact + full view)
-- User-editable MEV/MRV config (Settings → Volume Config)
-- Warnings and rationale displayed on session screen
-
 ## Future Enhancements
 
 **Phase 2:**

@@ -30,6 +30,14 @@ export interface DeloadConfig {
   rpe_target: number
 }
 
+export interface FormulaRestSeconds {
+  block1: { heavy: number; explosive: number; rep: number }
+  block2: { heavy: number; explosive: number; rep: number }
+  block3: { heavy: number; explosive: number; rep: number }
+  deload: number
+  auxiliary: number
+}
+
 export interface FormulaConfig {
   block1: BlockConfig
   block2: BlockConfig
@@ -47,6 +55,7 @@ export interface FormulaConfig {
     deadlift_max: number
   }
   rounding_increment_kg: number
+  rest_seconds: FormulaRestSeconds
 }
 
 // Recursive partial — used for user/AI overrides stored in DB

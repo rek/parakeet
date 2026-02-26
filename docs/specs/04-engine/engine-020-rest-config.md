@@ -1,6 +1,6 @@
 # Spec: Rest Time Formula Config & JIT Integration
 
-**Status**: Planned
+**Status**: Implemented
 **Domain**: Training Engine
 
 ## What This Covers
@@ -91,11 +91,11 @@ userRestOverrides?: Array<{
 ### Unit Tests
 
 **File: `packages/training-engine/src/generator/jit-session-generator.test.ts`** — add cases:
-- [ ] Block 3 Heavy, male defaults → `restRecommendations.mainLift` all 300
-- [ ] Block 2 Rep, female defaults → `restRecommendations.mainLift` all 90
-- [ ] User override present for squat heavy → override value used instead of formula default
-- [ ] Auxiliary always 90 regardless of block or sex
-- [ ] Deload session → deload rest (90)
+- [x] Block 3 Heavy, male defaults → `restRecommendations.mainLift` all 300
+- [x] Block 2 Rep, female defaults → `restRecommendations.mainLift` all 90
+- [x] User override present for squat heavy → override value used instead of formula default
+- [x] Auxiliary always 90 regardless of block or sex
+- [x] Deload session → deload rest (90)
 
 ## Dependencies
 

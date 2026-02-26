@@ -1,6 +1,6 @@
 # Spec: Missed Session Detection & Makeup Window
 
-**Status**: Planned
+**Status**: Implemented
 **Domain**: Sessions
 
 ## What This Covers
@@ -70,10 +70,10 @@ export function isMakeupWindowExpired(input: MakeupWindowInput): boolean
 **Important:** Makeup does not extend beyond the same week unless there is no next session of that lift at all in the cycle.
 
 **Unit tests (`packages/training-engine/src/sessions/makeup-window.test.ts`):**
-- [ ] Missed Monday squat, next squat Friday → window ends Thursday → today=Wednesday → not expired
-- [ ] Missed Monday squat, next squat Friday → today=Friday → expired
-- [ ] Missed last squat of cycle → window = end of same week
-- [ ] Missed session, no next session of that lift → window = Sunday of same week
+- [x] Missed Monday squat, next squat Friday → window ends Thursday → today=Wednesday → not expired
+- [x] Missed Monday squat, next squat Friday → today=Friday → expired
+- [x] Missed last squat of cycle → window = end of same week
+- [x] Missed session, no next session of that lift → window = Sunday of same week
 
 ---
 

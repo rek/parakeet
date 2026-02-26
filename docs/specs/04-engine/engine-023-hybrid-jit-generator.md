@@ -1,6 +1,6 @@
 # Spec: Hybrid JIT Generator
 
-**Status**: Planned
+**Status**: Implemented
 **Domain**: Training Engine
 
 ## What This Covers
@@ -185,10 +185,10 @@ When `comparisonData.shouldSurfaceToUser === true`, the session screen (`[sessio
 ### Unit Tests
 
 **File: `packages/training-engine/src/generator/__tests__/hybrid-jit-generator.test.ts`:**
-- [ ] Both agree within 10% + same sets → LLM output returned
-- [ ] Diverge > 15% weight → `shouldSurfaceToUser: true` in comparisonData
-- [ ] LLM fails → formula output returned with `jit_strategy: 'formula_fallback'`
-- [ ] Formula fails → should not happen (formula is always local); test that error propagates
+- [x] Both agree within 10% + same sets → LLM output returned
+- [x] Diverge > 15% weight → `shouldSurfaceToUser: true` in comparisonData
+- [x] LLM fails → formula output returned with `jit_strategy: 'formula_fallback'`
+- [x] Formula fails → should not happen (formula is always local); test that error propagates
 
 ## Dependencies
 

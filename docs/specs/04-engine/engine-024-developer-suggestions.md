@@ -1,6 +1,6 @@
 # Spec: Developer Suggestions Channel
 
-**Status**: Planned
+**Status**: Implemented
 **Domain**: Training Engine + Data
 
 ## What This Covers

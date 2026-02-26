@@ -87,20 +87,6 @@ This estimated 1RM is stored alongside the session log and used to pre-populate 
 
 **Searchable history**: All past sessions are accessible in the History tab, filterable by lift and date, with planned vs. actual shown for each.
 
-## Implementation Status
-
-### Planned
-
-- Pre-filled set rows from planned session data
-- Inline weight and rep editing per set
-- RPE slider per set (optional) and per session (summary, also optional)
-- Session start/end timestamp capture
-- Planned vs. actual volume computation on completion
-- Session skip with reason
-- RPE-based 1RM estimation per set (with confidence gating)
-- History view with lift and date filters
-- PR detection and star display at session completion (see [achievements.md](./achievements.md))
-
 ## Future Enhancements
 
 **Phase 2:**

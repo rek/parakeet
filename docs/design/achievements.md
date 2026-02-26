@@ -107,19 +107,6 @@ The Profile tab shows at a glance:
 - Current WILKS score
 - PR history per lift (best estimated 1RM, best volume session, best rep-at-weight for key weights)
 
-## Implementation Status
-
-### Planned
-
-- Cycle completion detection (≥ 80% sessions completed/disrupted)
-- Cycle badge storage and display
-- Session streak tracking (weekly, disruption-aware)
-- PR detection per session (estimated 1RM, volume, rep-at-weight)
-- Stars on session completion screen
-- WILKS score calculation from estimated 1RMs + cycle body weight
-- WILKS score history chart (one point per cycle)
-- Profile tab with badge count, streaks, WILKS, PR summary
-
 ## Future Enhancements
 
 **Phase 2:**

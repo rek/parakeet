@@ -1,6 +1,6 @@
 # Spec: Rest Config Data Access
 
-**Status**: Planned
+**Status**: Implemented
 **Domain**: Data Access
 
 ## What This Covers

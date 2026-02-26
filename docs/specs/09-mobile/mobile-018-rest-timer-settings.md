@@ -1,6 +1,6 @@
 # Spec: Rest Timer Settings Screen
 
-**Status**: Planned
+**Status**: Implemented
 **Domain**: parakeet App
 
 ## What This Covers

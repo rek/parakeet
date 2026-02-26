@@ -111,20 +111,6 @@ If a disruption overlaps with a scheduled deload week, the deload takes preceden
 
 **Pattern awareness over time**: Multiple disruption reports for the same lift (e.g., recurring knee pain) are visible in history, helping the user and eventually the system detect patterns before they become serious.
 
-## Implementation Status
-
-### Planned
-
-- Issue type and severity selection (including Unprogrammed Event type)
-- Affected date range and lift selection
-- Automatic adjustment for Minor severity (no confirmation step)
-- User confirmation for Moderate and Major adjustments
-- Deload overlap detection (no adjustment applied over deload weeks)
-- Unprogrammed event flow with post-event soreness reporting
-- Active disruption banner on Today screen
-- Resolution flow
-- Disruption history list
-
 ## Future Enhancements
 
 **Phase 2:**

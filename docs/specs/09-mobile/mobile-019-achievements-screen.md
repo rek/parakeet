@@ -1,6 +1,6 @@
 # Spec: Achievements Screen & Session Completion Stars
 
-**Status**: Planned
+**Status**: Implemented
 **Domain**: parakeet App
 
 ## What This Covers

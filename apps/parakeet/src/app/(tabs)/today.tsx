@@ -11,11 +11,13 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context'
 
 import { WorkoutCard } from '../../components/training/WorkoutCard'
+import { StreakPill } from '../../components/achievements/StreakPill'
 import { useAuth } from '../../hooks/useAuth'
 import { useActiveProgram } from '../../hooks/useActiveProgram'
 import { useTodaySession } from '../../hooks/useTodaySession'
 import { useWeeklyVolume } from '../../hooks/useWeeklyVolume'
 import { getActiveDisruptions } from '../../lib/disruptions'
+import { getStreakData } from '../../lib/achievements'
 import type { MuscleGroup, VolumeStatus } from '@parakeet/training-engine'
 
 // ── Volume compact card ───────────────────────────────────────────────────────
@@ -101,6 +103,13 @@ export default function TodayScreen() {
     enabled: !!user?.id,
   })
 
+  const { data: streakData } = useQuery({
+    queryKey: ['achievements', 'streak', user?.id],
+    queryFn: () => getStreakData(user!.id),
+    enabled: !!user?.id,
+    staleTime: 5 * 60 * 1000,
+  })
+
   if (sessionLoading || programLoading) {
     return (
       <SafeAreaView style={styles.loadingContainer}>
@@ -120,6 +129,12 @@ export default function TodayScreen() {
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.title}>Parakeet</Text>
+        {(streakData?.currentStreak ?? 0) >= 1 && (
+          <StreakPill
+            currentStreak={streakData!.currentStreak}
+            onPress={() => router.push('/profile/achievements')}
+          />
+        )}
       </View>
 
       <ScrollView
@@ -190,6 +205,9 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
   },
   header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
     paddingHorizontal: 20,
     paddingTop: 8,
     paddingBottom: 20,

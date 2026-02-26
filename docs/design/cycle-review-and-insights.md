@@ -172,22 +172,6 @@ Examples:
 
 Developer suggestions are stored in a `developer_suggestions` table and viewable in a developer-only screen. They are never shown to the user as actionable items — only as information for the developer to evaluate.
 
-## Implementation Status
-
-### Planned
-
-- `CycleReport` data compilation (assembled from session_logs, soreness_checkins, lifter_maxes, disruptions, cycle_reviews)
-- `cycle_reviews` Supabase table (stores compiled report + LLM response per cycle)
-- LLM cycle review call (structured prompt + `CycleReview` JSON output)
-- Cycle review screen (History tab → cycle → Review)
-- Lift progress cards with LLM narrative
-- Aux exercise correlation display
-- Volume heatmap (week × muscle × MRV%)
-- Formula suggestions routed to existing suggestion/approval flow
-- Developer suggestions table + developer screen
-- Multi-cycle context: summarised previous cycle data included in LLM prompt
-- Menstrual phase overlay in report (female users with tracking enabled)
-
 ## Future Enhancements
 
 **Phase 2:**

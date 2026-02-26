@@ -125,25 +125,6 @@ Supported lengths: **6 to 14 weeks**, in 2-week increments (6, 8, 10, 12, 14). T
 
 The JIT generator adapts to the program length — it knows which block the session belongs to and applies the appropriate formula config regardless of total cycle length.
 
-## Implementation Status
-
-### Planned
-
-- 1RM and 3RM input with live Epley estimation (kg)
-- Program length selector: 6–14 weeks (2-week increments)
-- Structural program generation (no planned sets at creation)
-- JIT session generation at workout time with recency factor (time since last lift of this type)
-- Soreness check-in gates JIT generation
-- MRV/MEV-aware volume capping
-- Auxiliary exercise pool + block rotation
-- Performance-adjusted intensity (RPE trend detection)
-- Missed session detection + within-week makeup window
-- Conservative load adjustment after missed sessions (recency factor)
-- Program preview before activation
-- Program versioning and history
-- Auto-max estimation from cycle data at regeneration time
-- Body weight capture at cycle start
-
 ## Future Enhancements
 
 **Phase 2:**

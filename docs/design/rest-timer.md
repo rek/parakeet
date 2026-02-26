@@ -83,58 +83,19 @@ Auxiliary sets always use a fixed 90s rest. Not shown as prominently — a small
 
 ## Data Model
 
-**`JITOutput` type (`packages/training-engine/src/generator/jit-session-generator.ts`):**
-```typescript
-restRecommendations: {
-  mainLift: number[]    // rest_after_seconds per set index (length = mainLiftSets.length)
-  auxiliary: number[]   // one value per auxiliary exercise (fixed 90s unless LLM overrides)
-}
-```
+Rest data is carried on `JITOutput`, not on `PlannedSet`, to keep `PlannedSet` a pure planned-weight/reps structure and avoid changing the shared-types surface used by the DB schema. `JITOutput` carries a `restRecommendations` field with per-set rest durations for the main lift and a single value per auxiliary exercise.
 
-Rest is carried on `JITOutput`, not on `PlannedSet`, to keep `PlannedSet` a pure planned-weight/reps structure and avoid changing the shared-types surface used by the DB schema.
+Rest defaults are part of `FormulaConfig` — the same block/intensity type structure as set/rep parameters — so user formula overrides can adjust them. User overrides are stored per intensity-type and optionally per lift in a `rest_configs` table in Supabase.
 
-**`FormulaConfig` type (`packages/training-engine`):**
-```typescript
-rest_seconds: {
-  block1: { heavy: number; explosive: number; rep: number }
-  block2: { heavy: number; explosive: number; rep: number }
-  block3: { heavy: number; explosive: number; rep: number }
-  deload: number
-  auxiliary: number
-}
-```
+## Actual Rest Duration Logging
 
-**`rest_configs` Supabase table:**
-```sql
-user_id      uuid references profiles(id)
-lift         lift_type nullable  -- null = applies to all lifts
-intensity_type intensity_type nullable  -- null = all intensity types
-rest_seconds integer not null
-updated_at   timestamptz
-primary key (user_id, lift, intensity_type)
-```
-
-## Implementation Plan
-
-This spans multiple specs:
-
-- [engine-020-rest-config.md](../specs/04-engine/engine-020-rest-config.md) — Add `rest_seconds` to `FormulaConfig` + `DEFAULT_REST_SECONDS_MALE/FEMALE` + JIT populates `restRecommendations` on `JITOutput`
-- [engine-021-llm-rest-suggestions.md](../specs/04-engine/engine-021-llm-rest-suggestions.md) — LLM JIT prompt update: rest suggestion per set (constrained ±60s)
-- [data-006-rest-config.md](../specs/05-data/data-006-rest-config.md) — `rest_configs` table migration + `apps/parakeet/src/lib/rest-config.ts` data-access
-- [mobile-017-rest-timer.md](../specs/09-mobile/mobile-017-rest-timer.md) — Rest timer UI component + session screen integration
-- [mobile-018-rest-timer-settings.md](../specs/09-mobile/mobile-018-rest-timer-settings.md) — Rest timer settings screen
-
-### Actual Rest Duration Logging
-
-The actual rest taken between sets is logged to `session_logs.actual_sets` alongside the other per-set data. Each completed set entry gains an `actual_rest_seconds?: number` field, populated when the user taps "Done resting" or starts logging the next set.
-
-**Caveat:** We can only measure rest duration accurately if we know when the set *ended* (i.e., when the user put the bar down) and when the next set *started* (when they unrack). Tapping the checkmark to log a set is a post-hoc action — the user may have finished the lift 30 seconds before logging it. Options:
+The actual rest taken between sets can be logged alongside the other per-set data. A key design question is how to measure it accurately: tapping the checkmark to log a set is a post-hoc action — the user may have finished the lift 30 seconds before logging it. Options:
 
 1. **"Lift started" tap** — add a "Start lift" button the user taps before unracking. Timer stops and rest is calculated from previous log tap to this tap. Most accurate, adds friction.
 2. **Timer-start = log tap** — assume rest starts when the user logs the set. Off by the logging latency (typically <10s). Simplest.
 3. **User-declared** — at the end of the rest, ask "was that about right?" with a quick adjust. Preserves data quality without pre-set friction.
 
-**Decision deferred to spec phase.** Document as a known open question. The design assumes option 2 as the default implementation path, with option 1 as a future toggle in Settings → Training → Rest Timer.
+The design defaults to option 2, with option 1 as a potential future toggle in Settings → Training → Rest Timer.
 
 ## What This Does NOT Do
 

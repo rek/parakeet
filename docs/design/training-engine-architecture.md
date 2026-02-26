@@ -280,21 +280,6 @@ The `jit_comparison_logs` table in Supabase stores full inputs and outputs from 
 - `jit_comparison_logs` table + 90-day retention
 - LLM strategy benefits from sleep data automatically; Formula strategy updated separately
 
-## Implementation Status
-
-### Planned
-
-- `JITGeneratorStrategy` interface
-- `JITInput` struct with full variable set (including optional future fields)
-- `JITGeneratorRegistry` with strategy selection from settings
-- `FormulaJITGenerator` (stacking-fixed, full variable coverage)
-- `LLMJITGenerator` with structured prompt, validation, and fallback
-- `HybridJITGenerator` with comparison logging
-- Hard constraint validation layer (applied after any strategy)
-- `jit_strategy` field on sessions table
-- Developer settings screen for strategy selection
-- `jit_comparison_logs` table (development builds)
-
 ## References
 
 - Related Design Docs: [program-generation.md](./program-generation.md), [performance-logging.md](./performance-logging.md), [sex-based-adaptations.md](./sex-based-adaptations.md), [disruption-management.md](./disruption-management.md), [volume-management.md](./volume-management.md), [cycle-review-and-insights.md](./cycle-review-and-insights.md)

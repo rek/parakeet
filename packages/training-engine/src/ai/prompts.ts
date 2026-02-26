@@ -11,6 +11,12 @@ Rules:
 - setModifier must be between -3 and +2.
 - Provide 1-4 concise rationale strings explaining your reasoning.
 - If signals are mild and session should proceed normally, return intensityModifier: 1.0, setModifier: 0.
+
+Rest adjustments:
+- Optionally include "restAdjustments": { "mainLift": <delta_seconds> }, a delta in seconds from the formula default.
+- The delta must be between -60 and +60. Omit restAdjustments entirely if the formula default is appropriate.
+- Only suggest a larger rest if RPE was very high (>=9.5) or disruption/soreness is significant.
+- Only suggest shorter rest if this is a deload or RPE was notably low (<=7.5).
 `
 
 export const CYCLE_REVIEW_SYSTEM_PROMPT = `

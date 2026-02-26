@@ -83,6 +83,19 @@ export default function SettingsScreen() {
 
         <View style={styles.divider} />
 
+        {/* Achievements section */}
+        <SectionHeader label="Achievements" />
+        <Row
+          label="Achievements"
+          onPress={() => router.push('/profile/achievements')}
+        />
+        <Row
+          label="WILKS Score"
+          onPress={() => router.push('/profile/wilks')}
+        />
+
+        <View style={styles.divider} />
+
         {/* Training section */}
         <SectionHeader label="Training" />
         <Row

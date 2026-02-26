@@ -1,4 +1,20 @@
-import { FormulaConfig } from '../types'
+import { FormulaConfig, FormulaRestSeconds } from '../types'
+
+export const DEFAULT_REST_SECONDS_MALE: FormulaRestSeconds = {
+  block1: { heavy: 180, explosive: 120, rep: 120 },
+  block2: { heavy: 210, explosive: 150, rep: 120 },
+  block3: { heavy: 300, explosive: 180, rep: 150 },
+  deload: 90,
+  auxiliary: 90,
+}
+
+export const DEFAULT_REST_SECONDS_FEMALE: FormulaRestSeconds = {
+  block1: { heavy: 150, explosive: 90, rep: 90 },
+  block2: { heavy: 180, explosive: 120, rep: 90 },
+  block3: { heavy: 270, explosive: 150, rep: 120 },
+  deload: 90,
+  auxiliary: 90,
+}
 
 export const DEFAULT_FORMULA_CONFIG_MALE: FormulaConfig = {
   block1: {
@@ -29,6 +45,7 @@ export const DEFAULT_FORMULA_CONFIG_MALE: FormulaConfig = {
     deadlift_max: 10,
   },
   rounding_increment_kg: 2.5,
+  rest_seconds: DEFAULT_REST_SECONDS_MALE,
 }
 
 export const DEFAULT_FORMULA_CONFIG_FEMALE: FormulaConfig = {
@@ -60,6 +77,7 @@ export const DEFAULT_FORMULA_CONFIG_FEMALE: FormulaConfig = {
     deadlift_max: 7.5,
   },
   rounding_increment_kg: 2.5,
+  rest_seconds: DEFAULT_REST_SECONDS_FEMALE,
 }
 
 export function getDefaultFormulaConfig(biologicalSex?: 'female' | 'male'): FormulaConfig {

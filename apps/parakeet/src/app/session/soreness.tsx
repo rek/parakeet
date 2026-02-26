@@ -135,9 +135,11 @@ export default function SorenessScreen() {
         params: {
           sessionId: session.id,
           jitData: JSON.stringify({
-            mainLiftSets:  jitOutput.mainLiftSets,
-            warmupSets:    jitOutput.warmupSets,
-            auxiliaryWork: jitOutput.auxiliaryWork,
+            mainLiftSets:         jitOutput.mainLiftSets,
+            warmupSets:           jitOutput.warmupSets,
+            auxiliaryWork:        jitOutput.auxiliaryWork,
+            restRecommendations:  jitOutput.restRecommendations,
+            llmRestSuggestion:    jitOutput.llmRestSuggestion ?? null,
           }),
         },
       })
