@@ -4,14 +4,14 @@ export const LiftInputSchema = z.discriminatedUnion('type', [
   z
     .object({
       type: z.literal('1rm'),
-      weight_kg: z.number().positive(),
+      weight_kg: z.number().positive().max(500),
     })
     .strict(),
   z
     .object({
       type: z.literal('3rm'),
-      weight_kg: z.number().positive(),
-      reps: z.number().int().min(1).max(10),
+      weight_kg: z.number().positive().max(500),
+      reps: z.number().int().min(2).max(10),
     })
     .strict(),
 ])
@@ -36,7 +36,7 @@ export const LifterMaxesResponseSchema = z
       bench_kg: z.number().positive(),
       deadlift_kg: z.number().positive(),
     }),
-    source: z.enum(['input_1rm', 'input_3rm', 'system_calculated']),
+    source: z.enum(['input_1rm', 'input_3rm', 'mixed', 'system_calculated']),
     recorded_at: z.string().datetime(),
   })
   .strict()

@@ -3,7 +3,7 @@ import * as Linking from 'expo-linking';
 import { useEffect, useState } from 'react';
 import { ActivityIndicator, Alert, Platform, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 
-import { supabase } from '../../lib/supabase';
+import { signInWithGoogleToken, signInWithMagicLink } from '../../services/auth.service';
 import { colors, spacing, radii, typography } from '../../theme';
 
 export default function WelcomeScreen() {
@@ -25,11 +25,7 @@ export default function WelcomeScreen() {
       const idToken = data?.idToken;
       if (!idToken) throw new Error('No ID token from Google');
 
-      const { error } = await supabase.auth.signInWithIdToken({
-        provider: 'google',
-        token: idToken,
-      });
-      if (error) throw error;
+      await signInWithGoogleToken(idToken);
     } catch (err: unknown) {
       Alert.alert('Sign-in failed', err instanceof Error ? err.message : 'Unknown error');
     } finally {
@@ -42,8 +38,7 @@ export default function WelcomeScreen() {
     try {
       setLoading(true);
       const emailRedirectTo = Platform.OS === 'web' ? window.location.origin : Linking.createURL('/');
-      const { error } = await supabase.auth.signInWithOtp({ email: email.trim(), options: { emailRedirectTo } });
-      if (error) throw error;
+      await signInWithMagicLink(email.trim(), emailRedirectTo);
       Alert.alert('Check your email', `Magic link sent to ${email}`);
     } catch (err: unknown) {
       Alert.alert('Error', err instanceof Error ? err.message : 'Unknown error');
@@ -138,13 +133,15 @@ const styles = StyleSheet.create({
     gap: spacing[3],
   },
   googleButton: {
-    backgroundColor: '#4285F4',
+    backgroundColor: colors.bgSurface,
+    borderWidth: 1,
+    borderColor: colors.border,
     borderRadius: radii.md,
     paddingVertical: spacing[4],
     alignItems: 'center',
   },
   googleButtonText: {
-    color: colors.white,
+    color: colors.text,
     fontSize: typography.sizes.base,
     fontWeight: typography.weights.semibold,
   },

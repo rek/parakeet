@@ -15,6 +15,7 @@ import { useSessionStore } from '../../store/sessionStore'
 import { WarmupSection } from '../../components/training/WarmupSection'
 import { SetRow } from '../../components/training/SetRow'
 import { RestTimer } from '../../components/training/RestTimer'
+import { colors } from '../../theme'
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -308,7 +309,7 @@ export default function SessionScreen() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: colors.bgSurface,
   },
   scrollView: {
     flex: 1,
@@ -321,17 +322,17 @@ const styles = StyleSheet.create({
     paddingTop: 20,
     paddingBottom: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#E5E7EB',
+    borderBottomColor: colors.border,
   },
   liftTitle: {
     fontSize: 22,
     fontWeight: '700',
-    color: '#111827',
+    color: colors.text,
     marginBottom: 4,
   },
   blockWeekText: {
     fontSize: 14,
-    color: '#6B7280',
+    color: colors.textSecondary,
   },
   workingSetsHeader: {
     paddingHorizontal: 16,
@@ -340,7 +341,7 @@ const styles = StyleSheet.create({
   workingSetsTitle: {
     fontSize: 16,
     fontWeight: '700',
-    color: '#111827',
+    color: colors.text,
   },
   bottomSpacer: {
     height: 100,
@@ -349,11 +350,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 12,
     borderTopWidth: 1,
-    borderTopColor: '#E5E7EB',
-    backgroundColor: '#fff',
+    borderTopColor: colors.border,
+    backgroundColor: colors.bgSurface,
   },
   completeButton: {
-    backgroundColor: '#4F46E5',
+    backgroundColor: colors.primary,
     borderRadius: 12,
     paddingVertical: 16,
     alignItems: 'center',
@@ -364,11 +365,11 @@ const styles = StyleSheet.create({
   completeButtonText: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#fff',
+    color: colors.textInverse,
   },
   modalOverlay: {
     flex: 1,
     justifyContent: 'flex-end',
-    backgroundColor: 'rgba(0, 0, 0, 0.45)',
+    backgroundColor: colors.overlayLight,
   },
 })

@@ -10,6 +10,7 @@ import { router, useLocalSearchParams } from 'expo-router'
 import { useQuery } from '@tanstack/react-query'
 
 import { getProgram } from '../../../lib/programs'
+import { colors } from '../../../theme'
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -57,7 +58,7 @@ export default function ReviewScreen() {
   if (isPending) {
     return (
       <View style={styles.centered}>
-        <ActivityIndicator size="large" color="#4F46E5" />
+        <ActivityIndicator size="large" color={colors.primary} />
       </View>
     )
   }
@@ -136,12 +137,12 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#fff',
+    backgroundColor: colors.bgSurface,
     paddingHorizontal: 24,
   },
   errorText: {
     fontSize: 15,
-    color: '#6b7280',
+    color: colors.textSecondary,
     textAlign: 'center',
     marginBottom: 16,
   },
@@ -150,12 +151,12 @@ const styles = StyleSheet.create({
   },
   backLinkText: {
     fontSize: 14,
-    color: '#4F46E5',
+    color: colors.primary,
     fontWeight: '600',
   },
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: colors.bgSurface,
   },
   header: {
     paddingHorizontal: 24,
@@ -165,17 +166,17 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 28,
     fontWeight: '700',
-    color: '#111827',
+    color: colors.text,
     marginBottom: 6,
   },
   subtitle: {
     fontSize: 15,
-    color: '#6b7280',
+    color: colors.textSecondary,
   },
   weekLabel: {
     fontSize: 13,
     fontWeight: '600',
-    color: '#9ca3af',
+    color: colors.textTertiary,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
     paddingHorizontal: 24,
@@ -190,9 +191,9 @@ const styles = StyleSheet.create({
   },
   sessionCard: {
     width: 200,
-    backgroundColor: '#fff',
+    backgroundColor: colors.bgSurface,
     borderWidth: 1,
-    borderColor: '#e5e7eb',
+    borderColor: colors.border,
     borderRadius: 12,
     padding: 16,
     marginRight: 12,
@@ -200,34 +201,34 @@ const styles = StyleSheet.create({
   cardLift: {
     fontSize: 17,
     fontWeight: '700',
-    color: '#111827',
+    color: colors.text,
     marginBottom: 2,
   },
   cardIntensity: {
     fontSize: 13,
-    color: '#6b7280',
+    color: colors.textSecondary,
     marginBottom: 12,
     textTransform: 'capitalize',
   },
   cardDivider: {
     height: 1,
-    backgroundColor: '#f3f4f6',
+    backgroundColor: colors.bgMuted,
     marginBottom: 12,
   },
   cardDate: {
     fontSize: 13,
     fontWeight: '600',
-    color: '#374151',
+    color: colors.textSecondary,
     marginBottom: 4,
   },
   cardBlock: {
     fontSize: 12,
-    color: '#9ca3af',
+    color: colors.textTertiary,
     marginBottom: 8,
   },
   cardNote: {
     fontSize: 11,
-    color: '#d1d5db',
+    color: colors.border,
     fontStyle: 'italic',
     lineHeight: 15,
   },
@@ -237,14 +238,14 @@ const styles = StyleSheet.create({
     paddingBottom: 48,
   },
   primaryButton: {
-    backgroundColor: '#4F46E5',
+    backgroundColor: colors.primary,
     borderRadius: 12,
     paddingVertical: 16,
     alignItems: 'center',
     marginBottom: 16,
   },
   primaryButtonText: {
-    color: '#fff',
+    color: colors.textInverse,
     fontSize: 16,
     fontWeight: '600',
   },
@@ -254,7 +255,7 @@ const styles = StyleSheet.create({
   },
   editLinkText: {
     fontSize: 14,
-    color: '#6b7280',
+    color: colors.textSecondary,
     textDecorationLine: 'underline',
   },
 })

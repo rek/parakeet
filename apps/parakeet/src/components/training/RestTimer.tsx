@@ -297,7 +297,7 @@ const fullStyles = StyleSheet.create({
   },
   adjustButton: {
     paddingVertical: spacing[2.5],
-    paddingHorizontal: spacing[4.5],
+    paddingHorizontal: spacing[4],
     borderRadius: radii.md,
     backgroundColor: colors.bgMuted,
     borderWidth: 1,

@@ -11,10 +11,11 @@ import {
 import { router, useLocalSearchParams } from 'expo-router'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
-import { supabase } from '../../lib/supabase'
-import { getSession } from '../../lib/sessions'
+import { getSession, recordSorenessCheckin } from '../../lib/sessions'
 import { runJITForSession } from '../../lib/jit'
 import { useAuth } from '../../hooks/useAuth'
+import { colors } from '../../theme'
+import { BackLink } from '../../components/navigation/BackLink'
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -155,12 +156,11 @@ export default function SorenessScreen() {
   async function handleGenerate() {
     if (!session || !user) return
     try {
-      await supabase.from('soreness_checkins').insert({
-        session_id:  sessionId,
-        user_id:     user.id,
+      await recordSorenessCheckin({
+        sessionId,
+        userId: user.id,
         ratings,
-        skipped:     false,
-        recorded_at: new Date().toISOString(),
+        skipped: false,
       })
     } catch {
       // Non-critical — proceed even if the insert fails
@@ -173,12 +173,11 @@ export default function SorenessScreen() {
     const freshRatings = allFreshRatings()
     setRatings(freshRatings)
     try {
-      await supabase.from('soreness_checkins').insert({
-        session_id:  sessionId,
-        user_id:     user.id,
-        ratings:     freshRatings,
-        skipped:     true,
-        recorded_at: new Date().toISOString(),
+      await recordSorenessCheckin({
+        sessionId,
+        userId: user.id,
+        ratings: freshRatings,
+        skipped: true,
       })
     } catch {
       // Non-critical
@@ -199,9 +198,9 @@ export default function SorenessScreen() {
     <SafeAreaView style={styles.safeArea}>
       {/* Custom header */}
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} activeOpacity={0.7} style={styles.headerBack}>
-          <Text style={styles.headerBackText}>Back</Text>
-        </TouchableOpacity>
+        <View style={styles.headerBackSlot}>
+          <BackLink onPress={() => router.back()} />
+        </View>
         <Text style={styles.headerTitle} numberOfLines={1}>{liftLabel}</Text>
         <TouchableOpacity onPress={handleSkip} activeOpacity={0.7} style={styles.headerSkip}>
           <Text style={styles.headerSkipText}>Skip</Text>
@@ -252,7 +251,7 @@ export default function SorenessScreen() {
       {generating && (
         <View style={styles.generatingOverlay}>
           <View style={styles.generatingCard}>
-            <ActivityIndicator size="large" color="#4F46E5" />
+            <ActivityIndicator size="large" color={colors.primary} />
             <Text style={styles.generatingText}>Generating your workout...</Text>
           </View>
         </View>
@@ -266,40 +265,35 @@ export default function SorenessScreen() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: colors.bgSurface,
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
     paddingHorizontal: 16,
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: '#E5E7EB',
+    borderBottomColor: colors.border,
   },
-  headerBack: {
-    minWidth: 48,
-  },
-  headerBackText: {
-    fontSize: 16,
-    color: '#4F46E5',
-    fontWeight: '500',
+  headerBackSlot: {
+    width: 116,
+    alignItems: 'flex-start',
   },
   headerTitle: {
     flex: 1,
     fontSize: 16,
     fontWeight: '600',
-    color: '#111827',
+    color: colors.text,
     textAlign: 'center',
     marginHorizontal: 8,
   },
   headerSkip: {
-    minWidth: 48,
+    width: 116,
     alignItems: 'flex-end',
   },
   headerSkipText: {
     fontSize: 16,
-    color: '#4F46E5',
+    color: colors.primary,
     fontWeight: '500',
   },
   scrollView: {
@@ -313,7 +307,7 @@ const styles = StyleSheet.create({
   prompt: {
     fontSize: 17,
     fontWeight: '600',
-    color: '#111827',
+    color: colors.text,
     marginBottom: 24,
   },
   muscleRow: {
@@ -324,7 +318,7 @@ const styles = StyleSheet.create({
   },
   muscleLabel: {
     fontSize: 15,
-    color: '#111827',
+    color: colors.text,
     flex: 1,
     marginRight: 12,
   },
@@ -336,32 +330,32 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: '#F3F4F6',
+    backgroundColor: colors.bgMuted,
     alignItems: 'center',
     justifyContent: 'center',
   },
   pillActive: {
-    backgroundColor: '#4F46E5',
+    backgroundColor: colors.primary,
   },
   pillText: {
     fontSize: 15,
     fontWeight: '600',
-    color: '#374151',
+    color: colors.textSecondary,
   },
   pillTextActive: {
-    color: '#fff',
+    color: colors.textInverse,
   },
   legend: {
     fontSize: 12,
-    color: '#9CA3AF',
+    color: colors.textTertiary,
     marginTop: 8,
     marginBottom: 24,
     textAlign: 'center',
   },
   warningCard: {
-    backgroundColor: '#FFFBEB',
+    backgroundColor: colors.warningMuted,
     borderWidth: 1,
-    borderColor: '#FCD34D',
+    borderColor: colors.warning,
     borderRadius: 12,
     paddingVertical: 14,
     paddingHorizontal: 16,
@@ -369,11 +363,11 @@ const styles = StyleSheet.create({
   },
   warningText: {
     fontSize: 14,
-    color: '#92400E',
+    color: colors.warning,
     lineHeight: 20,
   },
   generateButton: {
-    backgroundColor: '#4F46E5',
+    backgroundColor: colors.primary,
     borderRadius: 12,
     paddingVertical: 16,
     alignItems: 'center',
@@ -384,16 +378,16 @@ const styles = StyleSheet.create({
   generateButtonText: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#fff',
+    color: colors.textInverse,
   },
   generatingOverlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    backgroundColor: colors.overlayLight,
     alignItems: 'center',
     justifyContent: 'center',
   },
   generatingCard: {
-    backgroundColor: '#fff',
+    backgroundColor: colors.bgSurface,
     borderRadius: 16,
     paddingVertical: 32,
     paddingHorizontal: 40,
@@ -403,6 +397,6 @@ const styles = StyleSheet.create({
   generatingText: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#111827',
+    color: colors.text,
   },
 })

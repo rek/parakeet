@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import {
   ActivityIndicator,
   ScrollView,
@@ -16,6 +16,8 @@ import type { MrvMevConfig, MuscleGroup } from '@parakeet/training-engine'
 import { getMrvMevConfig, updateMuscleConfig, resetMuscleToDefault } from '../../lib/volume-config'
 import { getProfile } from '../../lib/profile'
 import { useAuth } from '../../hooks/useAuth'
+import { colors } from '../../theme'
+import { BackLink } from '../../components/navigation/BackLink'
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
@@ -118,7 +120,7 @@ export default function VolumeConfigScreen() {
   const [isSaving, setIsSaving] = useState(false)
   const [isResetting, setIsResetting] = useState(false)
 
-  const { isLoading } = useQuery({
+  const { data: volumeConfigData, isLoading } = useQuery({
     queryKey: ['volume', 'config', user?.id],
     queryFn: async () => {
       const profile = await getProfile()
@@ -126,18 +128,21 @@ export default function VolumeConfigScreen() {
       return { data, profile }
     },
     enabled: !!user?.id,
-    onSuccess: ({ data, profile }) => {
-      const defaults = profile?.biological_sex === 'female'
-        ? DEFAULT_MRV_MEV_CONFIG_FEMALE
-        : DEFAULT_MRV_MEV_CONFIG_MALE
-      setSexDefaults(defaults)
-      if (!draft) {
-        setDraft(Object.fromEntries(
-          MUSCLES.map((m) => [m, { mev: data[m].mev, mrv: data[m].mrv }]),
-        ) as Draft)
-      }
-    },
   })
+
+  useEffect(() => {
+    if (!volumeConfigData) return
+    const { data, profile } = volumeConfigData
+    const defaults = profile?.biological_sex === 'female'
+      ? DEFAULT_MRV_MEV_CONFIG_FEMALE
+      : DEFAULT_MRV_MEV_CONFIG_MALE
+    setSexDefaults(defaults)
+    if (!draft) {
+      setDraft(Object.fromEntries(
+        MUSCLES.map((m) => [m, { mev: data[m].mev, mrv: data[m].mrv }]),
+      ) as Draft)
+    }
+  }, [draft, volumeConfigData])
 
   function updateMuscle(muscle: MuscleGroup, field: 'mev' | 'mrv', value: number) {
     setDraft((prev) => prev ? { ...prev, [muscle]: { ...prev[muscle], [field]: value } } : prev)
@@ -184,9 +189,7 @@ export default function VolumeConfigScreen() {
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-          <Text style={styles.backText}>← Back</Text>
-        </TouchableOpacity>
+        <BackLink onPress={() => router.back()} />
         <View style={styles.headerRow}>
           <Text style={styles.title}>Volume Config</Text>
           <TouchableOpacity
@@ -196,7 +199,7 @@ export default function VolumeConfigScreen() {
             activeOpacity={0.8}
           >
             {isSaving
-              ? <ActivityIndicator color="#fff" size="small" />
+              ? <ActivityIndicator color={colors.textInverse} size="small" />
               : <Text style={styles.saveButtonText}>Save</Text>
             }
           </TouchableOpacity>
@@ -208,7 +211,7 @@ export default function VolumeConfigScreen() {
 
       {isLoading || !draft ? (
         <View style={styles.loading}>
-          <ActivityIndicator color="#4F46E5" size="large" />
+          <ActivityIndicator color={colors.primary} size="large" />
         </View>
       ) : (
         <ScrollView
@@ -235,7 +238,7 @@ export default function VolumeConfigScreen() {
             activeOpacity={0.7}
           >
             {isResetting
-              ? <ActivityIndicator color="#6B7280" size="small" />
+              ? <ActivityIndicator color={colors.textSecondary} size="small" />
               : <Text style={styles.resetButtonText}>Reset All to Research Defaults</Text>
             }
           </TouchableOpacity>
@@ -248,28 +251,26 @@ export default function VolumeConfigScreen() {
 // ── Styles ────────────────────────────────────────────────────────────────────
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: '#fff' },
+  safeArea: { flex: 1, backgroundColor: colors.bgSurface },
   header: {
     paddingHorizontal: 20,
     paddingTop: 8,
     paddingBottom: 12,
     borderBottomWidth: 1,
-    borderBottomColor: '#F3F4F6',
+    borderBottomColor: colors.bgMuted,
     gap: 4,
   },
-  backButton: { marginBottom: 4 },
-  backText: { fontSize: 15, color: '#4F46E5', fontWeight: '500' },
   headerRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  title: { fontSize: 24, fontWeight: '800', color: '#111827' },
-  subtitle: { fontSize: 12, color: '#9CA3AF', lineHeight: 16 },
+  title: { fontSize: 24, fontWeight: '800', color: colors.text },
+  subtitle: { fontSize: 12, color: colors.textTertiary, lineHeight: 16 },
   saveButton: {
-    backgroundColor: '#4F46E5',
+    backgroundColor: colors.primary,
     borderRadius: 8,
     paddingHorizontal: 16,
     paddingVertical: 8,
   },
   saveButtonDisabled: { opacity: 0.4 },
-  saveButtonText: { fontSize: 14, fontWeight: '600', color: '#fff' },
+  saveButtonText: { fontSize: 14, fontWeight: '600', color: colors.textInverse },
   loading: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   scroll: { flex: 1 },
   content: { paddingHorizontal: 20, paddingTop: 16, paddingBottom: 48, gap: 2 },
@@ -277,40 +278,40 @@ const styles = StyleSheet.create({
   muscleRow: {
     paddingVertical: 14,
     borderBottomWidth: 1,
-    borderBottomColor: '#F3F4F6',
+    borderBottomColor: colors.bgMuted,
     gap: 8,
   },
   muscleRowHeader: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  muscleLabel: { fontSize: 15, fontWeight: '600', color: '#111827', flex: 1 },
+  muscleLabel: { fontSize: 15, fontWeight: '600', color: colors.text, flex: 1 },
   customBadge: {
-    backgroundColor: '#EEF2FF',
+    backgroundColor: colors.primaryMuted,
     borderRadius: 6,
     paddingHorizontal: 7,
     paddingVertical: 2,
   },
-  customBadgeText: { fontSize: 10, fontWeight: '600', color: '#4F46E5' },
+  customBadgeText: { fontSize: 10, fontWeight: '600', color: colors.primary },
   stepperRow: { flexDirection: 'row', gap: 24 },
-  errorText: { fontSize: 12, color: '#EF4444' },
+  errorText: { fontSize: 12, color: colors.danger },
 
   stepper: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  stepperLabel: { fontSize: 13, color: '#6B7280', width: 32 },
+  stepperLabel: { fontSize: 13, color: colors.textSecondary, width: 32 },
   stepperControls: { flexDirection: 'row', alignItems: 'center', gap: 4 },
   stepBtn: {
     width: 32,
     height: 32,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderColor: colors.border,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#F9FAFB',
+    backgroundColor: colors.bgSurface,
   },
   stepBtnDisabled: { opacity: 0.35 },
-  stepBtnText: { fontSize: 18, color: '#374151', lineHeight: 22 },
+  stepBtnText: { fontSize: 18, color: colors.textSecondary, lineHeight: 22 },
   stepperValue: {
     fontSize: 16,
     fontWeight: '700',
-    color: '#111827',
+    color: colors.text,
     width: 28,
     textAlign: 'center',
   },
@@ -320,9 +321,9 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderColor: colors.border,
     alignItems: 'center',
   },
   resetButtonDisabled: { opacity: 0.5 },
-  resetButtonText: { fontSize: 14, color: '#6B7280', fontWeight: '500' },
+  resetButtonText: { fontSize: 14, color: colors.textSecondary, fontWeight: '500' },
 })

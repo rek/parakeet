@@ -2,14 +2,15 @@ import { useEffect } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useAuth } from './useAuth'
 import { getCycleReview } from '../lib/cycle-review'
-import { supabase } from '../lib/supabase'
+import { qk } from '../queries/keys'
+import { onCycleReviewInserted } from '../services/cycle-review.service'
 
 export function useCycleReview(programId: string) {
   const { user } = useAuth()
   const queryClient = useQueryClient()
 
   const query = useQuery({
-    queryKey: ['cycle-review', programId, user?.id],
+    queryKey: qk.cycleReview.byProgram(programId, user?.id),
     queryFn: () => getCycleReview(programId, user!.id),
     enabled: !!user?.id && !!programId,
     // Poll every 10s until data arrives, then stop
@@ -20,25 +21,11 @@ export function useCycleReview(programId: string) {
   useEffect(() => {
     if (!programId || !user?.id) return
 
-    const channel = supabase
-      .channel(`cycle-review-${programId}`)
-      .on(
-        'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'cycle_reviews',
-          filter: `program_id=eq.${programId}`,
-        },
-        () => {
-          queryClient.invalidateQueries({ queryKey: ['cycle-review', programId] })
-        },
-      )
-      .subscribe()
-
-    return () => {
-      supabase.removeChannel(channel)
-    }
+    return onCycleReviewInserted(programId, () => {
+      queryClient.invalidateQueries({
+        queryKey: qk.cycleReview.byProgramPrefix(programId),
+      })
+    })
   }, [programId, user?.id, queryClient])
 
   return query

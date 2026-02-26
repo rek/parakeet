@@ -153,9 +153,7 @@ export default function HistoryScreen() {
               {programsQuery.data!.map((program) => (
                 <View key={program.id} style={styles.programRow}>
                   <View style={styles.programRowLeft}>
-                    <Text style={styles.programRowTitle}>
-                      Program v{program.version}
-                    </Text>
+                    <Text style={styles.programRowTitle}>Program v{program.version ?? 1}</Text>
                     <Text style={styles.sessionRowDate}>
                       {program.total_weeks} weeks · {program.training_days_per_week} days/week
                     </Text>

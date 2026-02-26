@@ -104,9 +104,20 @@ export function AchievementsSection({ userId }: AchievementsSectionProps) {
   const hasPRs = Object.values(prs).some(
     (p) => p && (p.best1rmKg > 0 || Object.keys(p.repPRs).length > 0),
   )
+  const hasStreak = !!streak && (streak.currentStreak > 0 || streak.longestStreak > 0)
+  const hasAnyAchievements = badges.length > 0 || hasStreak || hasPRs
 
   return (
     <View>
+      {!hasAnyAchievements && (
+        <View style={[styles.card, styles.emptyCard]}>
+          <Text style={styles.emptyTitle}>No achievements yet</Text>
+          <Text style={styles.emptyBody}>
+            Finish workouts consistently to unlock streaks, PRs, and cycle badges.
+          </Text>
+        </View>
+      )}
+
       {/* Cycle badges */}
       {badges.length > 0 && (
         <>
@@ -133,7 +144,7 @@ export function AchievementsSection({ userId }: AchievementsSectionProps) {
       )}
 
       {/* Streak */}
-      {streak && (streak.currentStreak > 0 || streak.longestStreak > 0) && (
+      {hasStreak && (
         <>
           <SectionHeader label="Streak" />
           <View style={styles.card}>
@@ -207,6 +218,22 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
     paddingVertical: spacing[1],
     marginBottom: spacing[1],
+  },
+  emptyCard: {
+    paddingHorizontal: spacing[4],
+    paddingVertical: spacing[4],
+    marginTop: spacing[4],
+  },
+  emptyTitle: {
+    fontSize: typography.sizes.base,
+    fontWeight: typography.weights.bold,
+    color: colors.text,
+    marginBottom: spacing[1],
+  },
+  emptyBody: {
+    fontSize: typography.sizes.sm,
+    color: colors.textSecondary,
+    lineHeight: 20,
   },
   // Badges
   badgeRow: {

@@ -10,7 +10,7 @@
 CREATE TABLE profiles (
   id              UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
   display_name    TEXT,
-  biological_sex  TEXT CHECK (biological_sex IN ('female', 'male', 'prefer_not_to_say')),
+  biological_sex  TEXT CHECK (biological_sex IN ('female', 'male')),
   created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 

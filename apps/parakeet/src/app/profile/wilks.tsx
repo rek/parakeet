@@ -5,9 +5,9 @@ import { useQuery } from '@tanstack/react-query'
 
 import { useAuth } from '../../hooks/useAuth'
 import { getWilksHistory } from '../../lib/achievements'
-import { getCurrentMaxes } from '../../lib/lifter-maxes'
-import { computeWilks2020 } from '@parakeet/training-engine'
-import { supabase } from '../../lib/supabase'
+import { getCurrentWilksSnapshot } from '../../services/wilks.service'
+import { colors } from '../../theme'
+import { BackLink } from '../../components/navigation/BackLink'
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -33,39 +33,7 @@ export default function WilksScreen() {
 
   const currentQuery = useQuery({
     queryKey: ['achievements', 'wilks-current', user?.id],
-    queryFn: async () => {
-      const [maxes, profileResult] = await Promise.all([
-        getCurrentMaxes(user!.id),
-        supabase
-          .from('profiles')
-          .select('biological_sex, bodyweight_kg')
-          .eq('id', user!.id)
-          .maybeSingle(),
-      ])
-      if (!maxes) return null
-
-      const profile = profileResult.data
-      const sex: 'male' | 'female' =
-        profile?.biological_sex === 'female' ? 'female' : 'male'
-      const bodyweightKg =
-        (profile as { bodyweight_kg?: number } | null)?.bodyweight_kg ?? 85
-
-      const squatKg = maxes.squat_1rm_grams / 1000
-      const benchKg = maxes.bench_1rm_grams / 1000
-      const deadliftKg = maxes.deadlift_1rm_grams / 1000
-      const totalKg = squatKg + benchKg + deadliftKg
-      const wilks = computeWilks2020(totalKg, bodyweightKg, sex)
-
-      return {
-        wilks: Math.round(wilks),
-        squatKg,
-        benchKg,
-        deadliftKg,
-        bodyweightKg,
-        sex,
-        recordedAt: maxes.recorded_at,
-      }
-    },
+    queryFn: () => getCurrentWilksSnapshot(user!.id),
     enabled: !!user?.id,
     staleTime: 5 * 60 * 1000,
   })
@@ -80,19 +48,13 @@ export default function WilksScreen() {
         showsVerticalScrollIndicator={false}
       >
         {/* Header */}
-        <TouchableOpacity
-          style={styles.backRow}
-          onPress={() => router.back()}
-          activeOpacity={0.7}
-        >
-          <Text style={styles.backText}>‹ Back</Text>
-        </TouchableOpacity>
+        <BackLink onPress={() => router.back()} />
 
         <Text style={styles.screenTitle}>WILKS Score</Text>
 
         {isLoading ? (
           <View style={styles.centered}>
-            <ActivityIndicator size="large" color="#4F46E5" />
+            <ActivityIndicator size="large" color={colors.primary} />
           </View>
         ) : (
           <>
@@ -170,7 +132,7 @@ export default function WilksScreen() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: colors.bgSurface,
   },
   scrollView: {
     flex: 1,
@@ -184,22 +146,15 @@ const styles = StyleSheet.create({
     paddingTop: 64,
     alignItems: 'center',
   },
-  backRow: {
-    marginBottom: 8,
-  },
-  backText: {
-    fontSize: 16,
-    color: '#4F46E5',
-  },
   screenTitle: {
     fontSize: 28,
     fontWeight: '800',
-    color: '#111827',
+    color: colors.text,
     marginBottom: 24,
   },
   // Current score card
   currentCard: {
-    backgroundColor: '#EEF2FF',
+    backgroundColor: colors.primaryMuted,
     borderRadius: 16,
     padding: 24,
     alignItems: 'center',
@@ -208,7 +163,7 @@ const styles = StyleSheet.create({
   currentScoreLabel: {
     fontSize: 13,
     fontWeight: '600',
-    color: '#4338CA',
+    color: colors.primary,
     textTransform: 'uppercase',
     letterSpacing: 0.8,
     marginBottom: 8,
@@ -216,33 +171,33 @@ const styles = StyleSheet.create({
   currentScore: {
     fontSize: 56,
     fontWeight: '800',
-    color: '#111827',
+    color: colors.text,
     marginBottom: 8,
   },
   currentMeta: {
     fontSize: 14,
-    color: '#6B7280',
+    color: colors.textSecondary,
     marginBottom: 6,
   },
   bwLink: {
     fontSize: 14,
-    color: '#4F46E5',
+    color: colors.primary,
     fontWeight: '500',
   },
   sectionHeader: {
     fontSize: 13,
     fontWeight: '600',
-    color: '#6b7280',
+    color: colors.textSecondary,
     textTransform: 'uppercase',
     letterSpacing: 0.8,
     marginBottom: 8,
     marginTop: 4,
   },
   card: {
-    backgroundColor: '#fff',
+    backgroundColor: colors.bgSurface,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderColor: colors.border,
     paddingVertical: 4,
     marginBottom: 20,
   },
@@ -254,16 +209,16 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: '#F3F4F6',
+    borderBottomColor: colors.bgMuted,
   },
   liftRowLabel: {
     fontSize: 15,
     fontWeight: '600',
-    color: '#111827',
+    color: colors.text,
   },
   liftRowValue: {
     fontSize: 14,
-    color: '#374151',
+    color: colors.textSecondary,
   },
   // History
   historyRow: {
@@ -272,23 +227,23 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: '#F3F4F6',
+    borderBottomColor: colors.bgMuted,
   },
   historyLabel: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#111827',
+    color: colors.text,
     flex: 1,
   },
   historyDate: {
     fontSize: 13,
-    color: '#6B7280',
+    color: colors.textSecondary,
     marginRight: 16,
   },
   historyScore: {
     fontSize: 16,
     fontWeight: '700',
-    color: '#4F46E5',
+    color: colors.primary,
   },
   // Reference
   refRow: {
@@ -298,15 +253,15 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 10,
     borderBottomWidth: 1,
-    borderBottomColor: '#F3F4F6',
+    borderBottomColor: colors.bgMuted,
   },
   refLabel: {
     fontSize: 14,
-    color: '#374151',
+    color: colors.textSecondary,
   },
   refRange: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#111827',
+    color: colors.text,
   },
 })

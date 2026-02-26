@@ -14,36 +14,21 @@ import { useQueryClient } from '@tanstack/react-query'
 
 import { detectSessionPRs, checkCycleCompletion } from '@parakeet/training-engine'
 import type { PR } from '@parakeet/training-engine'
-import { completeSession } from '../../lib/sessions'
-import { getPRHistory, getStreakData } from '../../lib/achievements'
+import {
+  completeSession,
+  getProgramCompletionCounts,
+  getSessionCompletionContext,
+} from '../../lib/sessions'
+import { getPRHistory, getStreakData, storePersonalRecords } from '../../lib/achievements'
 import { useSessionStore } from '../../store/sessionStore'
 import { useAuth } from '../../hooks/useAuth'
 import { StarCard } from '../../components/achievements/StarCard'
-import { supabase } from '../../lib/supabase'
 import type { Lift } from '@parakeet/shared-types'
+import { colors } from '../../theme'
 
 // ── Constants ────────────────────────────────────────────────────────────────
 
 const RPE_OPTIONS = [6, 7, 8, 9, 10] as const
-
-// ── Helpers ───────────────────────────────────────────────────────────────────
-
-/** Store earned PRs into personal_records via upsert. */
-async function persistPRs(userId: string, prs: PR[]): Promise<void> {
-  if (prs.length === 0) return
-  await supabase.from('personal_records').upsert(
-    prs.map((pr) => ({
-      user_id:     userId,
-      lift:        pr.lift,
-      pr_type:     pr.type,
-      value:       pr.value,
-      weight_kg:   pr.weightKg ?? null,
-      session_id:  pr.sessionId,
-      achieved_at: pr.achievedAt,
-    })),
-    { onConflict: 'user_id,lift,pr_type,weight_kg' },
-  )
-}
 
 // ── Screen ───────────────────────────────────────────────────────────────────
 
@@ -106,13 +91,8 @@ export default function CompleteScreen() {
 
       // Determine lift from the first actual set's planned context
       // (session store doesn't expose lift directly; derive from planned sets or fall back)
-      const { data: sessionRow } = await supabase
-        .from('sessions')
-        .select('primary_lift, program_id')
-        .eq('id', sessionId)
-        .maybeSingle()
-
-      const lift = (sessionRow?.primary_lift as Lift | null) ?? null
+      const sessionContext = await getSessionCompletionContext(sessionId)
+      const lift = (sessionContext.primaryLift as Lift | null) ?? null
 
       if (lift) {
         // PR detection
@@ -136,7 +116,7 @@ export default function CompleteScreen() {
         })
 
         if (prs.length > 0) {
-          await persistPRs(user.id, prs)
+          await storePersonalRecords(user.id, prs)
           setEarnedPRs(prs)
         }
       }
@@ -152,20 +132,11 @@ export default function CompleteScreen() {
       }
 
       // Cycle badge check
-      if (sessionRow?.program_id) {
-        const { data: allSessions } = await supabase
-          .from('sessions')
-          .select('status')
-          .eq('program_id', sessionRow.program_id as string)
-          .eq('user_id', user.id)
-
-        const total = allSessions?.length ?? 0
-        const completed = allSessions?.filter(
-          (s: { status: string }) => s.status === 'completed',
-        ).length ?? 0
-        const skipped = allSessions?.filter(
-          (s: { status: string }) => s.status === 'skipped',
-        ).length ?? 0
+      if (sessionContext.programId) {
+        const { total, completed, skipped } = await getProgramCompletionCounts(
+          sessionContext.programId,
+          user.id,
+        )
 
         const cycleResult = checkCycleCompletion({
           totalScheduledSessions:  total,
@@ -258,7 +229,7 @@ export default function CompleteScreen() {
             <TextInput
               style={styles.notesInput}
               placeholder="How did it feel? Any issues?"
-              placeholderTextColor="#9CA3AF"
+              placeholderTextColor={colors.textTertiary}
               value={notes}
               onChangeText={setNotes}
               multiline
@@ -337,7 +308,7 @@ export default function CompleteScreen() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: colors.bgSurface,
   },
   scrollView: {
     flex: 1,
@@ -350,14 +321,14 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 28,
     fontWeight: '700',
-    color: '#111827',
+    color: colors.text,
     marginBottom: 24,
     textAlign: 'center',
   },
   statsCard: {
-    backgroundColor: '#F9FAFB',
+    backgroundColor: colors.bgSurface,
     borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderColor: colors.border,
     borderRadius: 16,
     paddingHorizontal: 20,
     paddingVertical: 16,
@@ -371,21 +342,21 @@ const styles = StyleSheet.create({
   },
   statDivider: {
     height: 1,
-    backgroundColor: '#E5E7EB',
+    backgroundColor: colors.border,
   },
   statLabel: {
     fontSize: 15,
-    color: '#6B7280',
+    color: colors.textSecondary,
   },
   statValue: {
     fontSize: 18,
     fontWeight: '700',
-    color: '#111827',
+    color: colors.text,
   },
   sectionLabel: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#374151',
+    color: colors.textSecondary,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
     marginBottom: 12,
@@ -399,38 +370,38 @@ const styles = StyleSheet.create({
     flex: 1,
     height: 48,
     borderRadius: 12,
-    backgroundColor: '#F3F4F6',
+    backgroundColor: colors.bgMuted,
     borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderColor: colors.border,
     alignItems: 'center',
     justifyContent: 'center',
   },
   rpePillActive: {
-    backgroundColor: '#4F46E5',
-    borderColor: '#4F46E5',
+    backgroundColor: colors.primary,
+    borderColor: colors.primary,
   },
   rpePillText: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#374151',
+    color: colors.textSecondary,
   },
   rpePillTextActive: {
-    color: '#fff',
+    color: colors.textInverse,
   },
   notesInput: {
     borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderColor: colors.border,
     borderRadius: 12,
     paddingHorizontal: 16,
     paddingVertical: 14,
     fontSize: 15,
-    color: '#111827',
+    color: colors.text,
     minHeight: 100,
     marginBottom: 32,
-    backgroundColor: '#fff',
+    backgroundColor: colors.bgSurface,
   },
   saveButton: {
-    backgroundColor: '#4F46E5',
+    backgroundColor: colors.primary,
     borderRadius: 12,
     paddingVertical: 16,
     alignItems: 'center',
@@ -441,14 +412,14 @@ const styles = StyleSheet.create({
   saveButtonText: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#fff',
+    color: colors.textInverse,
   },
   // Achievement surfaces
   starsSection: {
     marginBottom: 20,
   },
   streakLine: {
-    backgroundColor: '#F0FDF4',
+    backgroundColor: colors.successMuted,
     borderRadius: 10,
     paddingHorizontal: 16,
     paddingVertical: 12,
@@ -457,17 +428,17 @@ const styles = StyleSheet.create({
   streakText: {
     fontSize: 15,
     fontWeight: '600',
-    color: '#166534',
+    color: colors.success,
   },
   streakResetLine: {
-    backgroundColor: '#FFFBEB',
+    backgroundColor: colors.warningMuted,
   },
   streakResetText: {
     fontSize: 14,
-    color: '#92400E',
+    color: colors.warning,
   },
   cycleBadgeLine: {
-    backgroundColor: '#EEF2FF',
+    backgroundColor: colors.primaryMuted,
     borderRadius: 10,
     paddingHorizontal: 16,
     paddingVertical: 12,
@@ -476,7 +447,7 @@ const styles = StyleSheet.create({
   cycleBadgeText: {
     fontSize: 16,
     fontWeight: '700',
-    color: '#4338CA',
+    color: colors.primary,
     textAlign: 'center',
   },
 })

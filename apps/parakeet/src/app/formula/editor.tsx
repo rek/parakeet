@@ -14,18 +14,19 @@ import { SafeAreaView } from 'react-native-safe-area-context'
 import { router } from 'expo-router'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 
-import { DEFAULT_FORMULA_CONFIG } from '@parakeet/training-engine'
-import type { FormulaConfig, BlockConfig, BlockIntensityConfig, RepIntensityConfig } from '@parakeet/training-engine'
+import type { FormulaConfig, BlockIntensityConfig, RepIntensityConfig } from '@parakeet/training-engine'
 import {
   getFormulaConfig,
   getFormulaHistory,
+  getPendingAiFormulaSuggestions,
   createFormulaOverride,
   deactivateFormulaConfig,
 } from '../../lib/formulas'
 import { getActiveProgram } from '../../lib/programs'
 import { getCurrentOneRmKg } from '../../lib/lifter-maxes'
 import { useAuth } from '../../hooks/useAuth'
-import { supabase } from '../../lib/supabase'
+import { colors } from '../../theme'
+import { BackLink } from '../../components/navigation/BackLink'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -235,7 +236,7 @@ function IntensityRow({ label, draft, oneRmKg, isEditing, onToggleEdit, onUpdate
                 onChangeText={(v) => onUpdate({ ...draft, repsMax: v || undefined })}
                 keyboardType="number-pad"
                 placeholder="—"
-                placeholderTextColor="#9CA3AF"
+                placeholderTextColor={colors.textTertiary}
               />
             </View>
             <View style={styles.editField}>
@@ -282,16 +283,7 @@ export default function FormulaEditorScreen() {
 
   const { data: aiSuggestions } = useQuery({
     queryKey: ['formula', 'suggestions', user?.id],
-    queryFn: async () => {
-      const { data } = await supabase
-        .from('formula_configs')
-        .select('*')
-        .eq('user_id', user!.id)
-        .eq('source', 'ai_suggestion')
-        .eq('is_active', false)
-        .order('created_at', { ascending: false })
-      return data ?? []
-    },
+    queryFn: () => getPendingAiFormulaSuggestions(user!.id),
     enabled: !!user?.id && topTab === 'suggestions',
   })
 
@@ -421,9 +413,7 @@ export default function FormulaEditorScreen() {
     <SafeAreaView style={styles.safeArea}>
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-          <Text style={styles.backText}>← Back</Text>
-        </TouchableOpacity>
+        <BackLink onPress={() => router.back()} />
         <View style={styles.headerRow}>
           <Text style={styles.title}>Formulas</Text>
           {topTab === 'editor' && (
@@ -485,7 +475,7 @@ export default function FormulaEditorScreen() {
             showsVerticalScrollIndicator={false}
           >
             {configLoading || !draft ? (
-              <ActivityIndicator color="#4F46E5" style={{ marginTop: 40 }} />
+              <ActivityIndicator color={colors.primary} style={{ marginTop: 40 }} />
             ) : (
               <>
                 {oneRmKg > 0 && (
@@ -594,7 +584,7 @@ export default function FormulaEditorScreen() {
               <Switch
                 value={regenerate}
                 onValueChange={setRegenerate}
-                trackColor={{ true: '#4F46E5' }}
+                trackColor={{ true: colors.primary }}
               />
             </View>
             {regenerate && (
@@ -610,7 +600,7 @@ export default function FormulaEditorScreen() {
               activeOpacity={0.8}
             >
               {isSaving ? (
-                <ActivityIndicator color="#fff" size="small" />
+                <ActivityIndicator color={colors.textInverse} size="small" />
               ) : (
                 <Text style={styles.sheetConfirmText}>
                   {regenerate ? 'Save & Regenerate Program' : 'Save Formula'}
@@ -636,196 +626,194 @@ export default function FormulaEditorScreen() {
 // ── Styles ────────────────────────────────────────────────────────────────────
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: '#fff' },
+  safeArea: { flex: 1, backgroundColor: colors.bgSurface },
   header: {
     paddingHorizontal: 20,
     paddingTop: 8,
     paddingBottom: 12,
     borderBottomWidth: 1,
-    borderBottomColor: '#F3F4F6',
+    borderBottomColor: colors.bgMuted,
   },
-  backButton: { marginBottom: 8 },
-  backText: { fontSize: 15, color: '#4F46E5', fontWeight: '500' },
   headerRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  title: { fontSize: 24, fontWeight: '800', color: '#111827' },
+  title: { fontSize: 24, fontWeight: '800', color: colors.text },
   saveButton: {
-    backgroundColor: '#4F46E5',
+    backgroundColor: colors.primary,
     borderRadius: 8,
     paddingHorizontal: 16,
     paddingVertical: 8,
   },
-  saveButtonText: { fontSize: 14, fontWeight: '600', color: '#fff' },
+  saveButtonText: { fontSize: 14, fontWeight: '600', color: colors.textInverse },
 
   // Top tabs
   topTabs: {
     flexDirection: 'row',
     borderBottomWidth: 1,
-    borderBottomColor: '#E5E7EB',
+    borderBottomColor: colors.border,
   },
   topTab: {
     flex: 1,
     paddingVertical: 12,
     alignItems: 'center',
   },
-  topTabActive: { borderBottomWidth: 2, borderBottomColor: '#4F46E5' },
-  topTabText: { fontSize: 14, color: '#6B7280', fontWeight: '500' },
-  topTabTextActive: { color: '#4F46E5', fontWeight: '600' },
-  badge: { color: '#EF4444' },
+  topTabActive: { borderBottomWidth: 2, borderBottomColor: colors.primary },
+  topTabText: { fontSize: 14, color: colors.textSecondary, fontWeight: '500' },
+  topTabTextActive: { color: colors.primary, fontWeight: '600' },
+  badge: { color: colors.danger },
 
   // Block sub-tabs
-  blockTabsScroll: { maxHeight: 44, borderBottomWidth: 1, borderBottomColor: '#F3F4F6' },
+  blockTabsScroll: { maxHeight: 44, borderBottomWidth: 1, borderBottomColor: colors.bgMuted },
   blockTabs: { flexDirection: 'row', paddingHorizontal: 16, gap: 4, alignItems: 'center' },
   blockTab: {
     paddingHorizontal: 14,
     paddingVertical: 10,
     borderRadius: 8,
   },
-  blockTabActive: { backgroundColor: '#EEF2FF' },
-  blockTabText: { fontSize: 14, color: '#6B7280', fontWeight: '500' },
-  blockTabTextActive: { color: '#4F46E5', fontWeight: '600' },
+  blockTabActive: { backgroundColor: colors.primaryMuted },
+  blockTabText: { fontSize: 14, color: colors.textSecondary, fontWeight: '500' },
+  blockTabTextActive: { color: colors.primary, fontWeight: '600' },
 
   scroll: { flex: 1 },
   content: { padding: 16, gap: 10, paddingBottom: 40 },
 
   exampleNote: {
     fontSize: 12,
-    color: '#9CA3AF',
+    color: colors.textTertiary,
     marginBottom: 4,
   },
 
   // Intensity row
   intensityRow: {
     borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderColor: colors.border,
     borderRadius: 12,
     padding: 14,
     gap: 4,
   },
-  intensityRowActive: { borderColor: '#4F46E5', backgroundColor: '#FAFAFA' },
+  intensityRowActive: { borderColor: colors.primary, backgroundColor: colors.bgSurface },
   intensityRowHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
   },
-  intensityLabel: { fontSize: 15, fontWeight: '600', color: '#111827' },
-  sampleWeight: { fontSize: 13, color: '#6B7280' },
-  intensitySummary: { fontSize: 13, color: '#6B7280', lineHeight: 18 },
+  intensityLabel: { fontSize: 15, fontWeight: '600', color: colors.text },
+  sampleWeight: { fontSize: 13, color: colors.textSecondary },
+  intensitySummary: { fontSize: 13, color: colors.textSecondary, lineHeight: 18 },
 
   // Edit fields
   editFields: { marginTop: 12 },
   editRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
   editField: { minWidth: 60, flex: 1 },
-  editFieldLabel: { fontSize: 11, color: '#6B7280', marginBottom: 4 },
+  editFieldLabel: { fontSize: 11, color: colors.textSecondary, marginBottom: 4 },
   editInput: {
     borderWidth: 1,
-    borderColor: '#D1D5DB',
+    borderColor: colors.border,
     borderRadius: 8,
     paddingHorizontal: 10,
     paddingVertical: 8,
     fontSize: 15,
-    color: '#111827',
+    color: colors.text,
   },
 
   // History
   historyItem: {
     borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderColor: colors.border,
     borderRadius: 12,
     padding: 14,
     gap: 6,
   },
   historyHeader: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  historyDate: { fontSize: 14, color: '#374151', flex: 1 },
+  historyDate: { fontSize: 14, color: colors.textSecondary, flex: 1 },
   sourceBadge: {
-    backgroundColor: '#F3F4F6',
+    backgroundColor: colors.bgMuted,
     borderRadius: 6,
     paddingHorizontal: 8,
     paddingVertical: 2,
   },
-  sourceBadgeAi: { backgroundColor: '#EDE9FE' },
-  sourceBadgeText: { fontSize: 11, fontWeight: '600', color: '#374151' },
+  sourceBadgeAi: { backgroundColor: colors.primaryMuted },
+  sourceBadgeText: { fontSize: 11, fontWeight: '600', color: colors.textSecondary },
   activeBadge: {
-    backgroundColor: '#D1FAE5',
+    backgroundColor: colors.successMuted,
     borderRadius: 6,
     paddingHorizontal: 8,
     paddingVertical: 2,
   },
-  activeBadgeText: { fontSize: 11, fontWeight: '600', color: '#065F46' },
-  historyRationale: { fontSize: 13, color: '#6B7280', lineHeight: 18 },
+  activeBadgeText: { fontSize: 11, fontWeight: '600', color: colors.success },
+  historyRationale: { fontSize: 13, color: colors.textSecondary, lineHeight: 18 },
   reactivateButton: {
     alignSelf: 'flex-start',
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: '#4F46E5',
+    borderColor: colors.primary,
     marginTop: 4,
   },
-  reactivateButtonText: { fontSize: 13, color: '#4F46E5', fontWeight: '600' },
+  reactivateButtonText: { fontSize: 13, color: colors.primary, fontWeight: '600' },
 
   // AI suggestions
   suggestionCard: {
     borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderColor: colors.border,
     borderRadius: 12,
     padding: 14,
     gap: 10,
   },
-  suggestionRationale: { fontSize: 14, color: '#374151', lineHeight: 20 },
+  suggestionRationale: { fontSize: 14, color: colors.textSecondary, lineHeight: 20 },
   suggestionActions: { flexDirection: 'row', gap: 10 },
   acceptButton: {
     flex: 1,
-    backgroundColor: '#4F46E5',
+    backgroundColor: colors.primary,
     borderRadius: 10,
     paddingVertical: 12,
     alignItems: 'center',
   },
-  acceptButtonText: { fontSize: 14, fontWeight: '600', color: '#fff' },
+  acceptButtonText: { fontSize: 14, fontWeight: '600', color: colors.textInverse },
   dismissButton: {
     flex: 1,
     borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderColor: colors.border,
     borderRadius: 10,
     paddingVertical: 12,
     alignItems: 'center',
   },
-  dismissButtonText: { fontSize: 14, color: '#374151', fontWeight: '500' },
+  dismissButtonText: { fontSize: 14, color: colors.textSecondary, fontWeight: '500' },
 
-  emptyText: { fontSize: 14, color: '#9CA3AF', textAlign: 'center', marginTop: 32 },
+  emptyText: { fontSize: 14, color: colors.textTertiary, textAlign: 'center', marginTop: 32 },
 
   // Save sheet
   sheetBackdrop: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
+    backgroundColor: colors.overlayLight,
     justifyContent: 'flex-end',
   },
   sheet: {
-    backgroundColor: '#fff',
+    backgroundColor: colors.bgSurface,
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     padding: 24,
     paddingBottom: 40,
     gap: 12,
   },
-  sheetTitle: { fontSize: 18, fontWeight: '700', color: '#111827' },
-  sheetSubtitle: { fontSize: 14, color: '#6B7280', lineHeight: 20 },
+  sheetTitle: { fontSize: 18, fontWeight: '700', color: colors.text },
+  sheetSubtitle: { fontSize: 14, color: colors.textSecondary, lineHeight: 20 },
   sheetToggleRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  sheetToggleLabel: { fontSize: 15, color: '#111827', flex: 1, marginRight: 12 },
-  sheetToggleNote: { fontSize: 13, color: '#6B7280', lineHeight: 18 },
+  sheetToggleLabel: { fontSize: 15, color: colors.text, flex: 1, marginRight: 12 },
+  sheetToggleNote: { fontSize: 13, color: colors.textSecondary, lineHeight: 18 },
   sheetConfirmButton: {
-    backgroundColor: '#4F46E5',
+    backgroundColor: colors.primary,
     borderRadius: 12,
     paddingVertical: 16,
     alignItems: 'center',
   },
-  sheetConfirmText: { fontSize: 16, fontWeight: '600', color: '#fff' },
+  sheetConfirmText: { fontSize: 16, fontWeight: '600', color: colors.textInverse },
   sheetCancelButton: {
     borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderColor: colors.border,
     borderRadius: 12,
     paddingVertical: 16,
     alignItems: 'center',
   },
-  sheetCancelText: { fontSize: 15, fontWeight: '500', color: '#374151' },
+  sheetCancelText: { fontSize: 15, fontWeight: '500', color: colors.textSecondary },
   buttonDisabled: { opacity: 0.4 },
 })

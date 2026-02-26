@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import {
   ActivityIndicator,
   ScrollView,
@@ -21,6 +21,8 @@ import type { Lift } from '@parakeet/shared-types'
 import { getAllWarmupConfigs, updateWarmupConfig } from '../../lib/warmup-config'
 import { getCurrentOneRmKg } from '../../lib/lifter-maxes'
 import { useAuth } from '../../hooks/useAuth'
+import { colors } from '../../theme'
+import { BackLink } from '../../components/navigation/BackLink'
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
@@ -158,7 +160,7 @@ function LiftSection({ lift, protocol, oneRmKg, isSaving, onChange, onSave }: Li
           activeOpacity={0.8}
         >
           {isSaving
-            ? <ActivityIndicator color="#fff" size="small" />
+            ? <ActivityIndicator color={colors.textInverse} size="small" />
             : <Text style={styles.saveLiftButtonText}>Save</Text>
           }
         </TouchableOpacity>
@@ -218,14 +220,17 @@ export default function WarmupProtocolScreen() {
   const [protocols, setProtocols] = useState<Record<Lift, WarmupProtocol> | null>(null)
   const [saving, setSaving] = useState<Partial<Record<Lift, boolean>>>({})
 
-  const { isLoading } = useQuery({
+  const { data: warmupData, isLoading } = useQuery({
     queryKey: ['warmup', 'configs', user?.id],
     queryFn: () => getAllWarmupConfigs(user!.id),
     enabled: !!user?.id,
-    onSuccess: (data) => {
-      if (!protocols) setProtocols(data)
-    },
   })
+
+  useEffect(() => {
+    if (warmupData && !protocols) {
+      setProtocols(warmupData)
+    }
+  }, [protocols, warmupData])
 
   const { data: maxes } = useQuery({
     queryKey: ['maxes', 'all', user?.id],
@@ -254,15 +259,13 @@ export default function WarmupProtocolScreen() {
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-          <Text style={styles.backText}>← Back</Text>
-        </TouchableOpacity>
+        <BackLink onPress={() => router.back()} />
         <Text style={styles.title}>Warmup Protocol</Text>
       </View>
 
       {isLoading || !protocols ? (
         <View style={styles.loading}>
-          <ActivityIndicator color="#4F46E5" size="large" />
+          <ActivityIndicator color={colors.primary} size="large" />
         </View>
       ) : (
         <ScrollView
@@ -291,17 +294,15 @@ export default function WarmupProtocolScreen() {
 // ── Styles ────────────────────────────────────────────────────────────────────
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: '#fff' },
+  safeArea: { flex: 1, backgroundColor: colors.bgSurface },
   header: {
     paddingHorizontal: 20,
     paddingTop: 8,
     paddingBottom: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#F3F4F6',
+    borderBottomColor: colors.bgMuted,
   },
-  backButton: { marginBottom: 8 },
-  backText: { fontSize: 15, color: '#4F46E5', fontWeight: '500' },
-  title: { fontSize: 24, fontWeight: '800', color: '#111827' },
+  title: { fontSize: 24, fontWeight: '800', color: colors.text },
   loading: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   scroll: { flex: 1 },
   content: { paddingBottom: 48 },
@@ -310,87 +311,87 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingVertical: 20,
     borderBottomWidth: 1,
-    borderBottomColor: '#F3F4F6',
+    borderBottomColor: colors.bgMuted,
     gap: 12,
   },
   liftSectionHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  liftSectionTitle: { fontSize: 18, fontWeight: '700', color: '#111827' },
+  liftSectionTitle: { fontSize: 18, fontWeight: '700', color: colors.text },
   saveLiftButton: {
-    backgroundColor: '#4F46E5',
+    backgroundColor: colors.primary,
     borderRadius: 8,
     paddingHorizontal: 14,
     paddingVertical: 7,
   },
   saveLiftButtonDisabled: { opacity: 0.4 },
-  saveLiftButtonText: { fontSize: 13, fontWeight: '600', color: '#fff' },
+  saveLiftButtonText: { fontSize: 13, fontWeight: '600', color: colors.textInverse },
 
   presetGrid: { gap: 8 },
   presetCard: {
     borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderColor: colors.border,
     borderRadius: 10,
     padding: 12,
     gap: 2,
   },
-  presetCardSelected: { borderColor: '#4F46E5', backgroundColor: '#EEF2FF' },
-  presetLabel: { fontSize: 14, fontWeight: '600', color: '#374151' },
-  presetLabelSelected: { color: '#4F46E5' },
-  presetDescription: { fontSize: 12, color: '#9CA3AF' },
+  presetCardSelected: { borderColor: colors.primary, backgroundColor: colors.primaryMuted },
+  presetLabel: { fontSize: 14, fontWeight: '600', color: colors.textSecondary },
+  presetLabelSelected: { color: colors.primary },
+  presetDescription: { fontSize: 12, color: colors.textTertiary },
 
   // Custom editor
   customEditor: {
-    backgroundColor: '#F9FAFB',
+    backgroundColor: colors.bgSurface,
     borderRadius: 10,
     padding: 12,
     gap: 8,
   },
-  customEditorTitle: { fontSize: 13, fontWeight: '600', color: '#374151', marginBottom: 4 },
+  customEditorTitle: { fontSize: 13, fontWeight: '600', color: colors.textSecondary, marginBottom: 4 },
   customStep: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 10,
   },
   customStepField: { flexDirection: 'row', alignItems: 'center', gap: 4 },
-  customStepLabel: { fontSize: 12, color: '#6B7280', width: 28 },
+  customStepLabel: { fontSize: 12, color: colors.textSecondary, width: 28 },
   customStepInput: {
     borderWidth: 1,
-    borderColor: '#D1D5DB',
+    borderColor: colors.border,
     borderRadius: 8,
     paddingHorizontal: 10,
     paddingVertical: 6,
     fontSize: 15,
-    color: '#111827',
+    color: colors.text,
     width: 48,
     textAlign: 'center',
   },
-  customStepSep: { fontSize: 16, color: '#6B7280' },
+  customStepSep: { fontSize: 16, color: colors.textSecondary },
   removeStep: {
     width: 28,
     height: 28,
     borderRadius: 14,
-    backgroundColor: '#FEE2E2',
+    backgroundColor: colors.dangerMuted,
     alignItems: 'center',
     justifyContent: 'center',
     marginLeft: 'auto',
   },
-  removeStepText: { fontSize: 18, color: '#EF4444', lineHeight: 22 },
+  removeStepText: { fontSize: 18, color: colors.danger, lineHeight: 22 },
   addStep: {
     paddingVertical: 8,
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: '#D1D5DB',
+    borderColor: colors.border,
     borderRadius: 8,
     borderStyle: 'dashed',
   },
-  addStepText: { fontSize: 13, color: '#6B7280', fontWeight: '500' },
+  addStepText: { fontSize: 13, color: colors.textSecondary, fontWeight: '500' },
 
   // Preview
   preview: {
-    backgroundColor: '#F0FDF4',
+    backgroundColor: colors.successMuted,
     borderRadius: 8,
     padding: 10,
     gap: 4,
   },
-  previewTitle: { fontSize: 11, color: '#16A34A', fontWeight: '600' },
-  previewSets: { fontSize: 13, color: '#15803D', lineHeight: 18 },
+  previewTitle: { fontSize: 11, color: colors.success, fontWeight: '600' },
+  previewSets: { fontSize: 13, color: colors.success, lineHeight: 18 },
 })

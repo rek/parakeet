@@ -17,6 +17,8 @@ import { getFormulaConfig } from './formulas'
 import { getMrvMevConfig } from './volume-config'
 import { getActiveAssignments } from './auxiliary-config'
 import { getWarmupConfig } from './warmup-config'
+import { estimateOneRmKgFromProfile } from './max-estimation'
+import type { BiologicalSex } from './profile'
 
 export async function runJITForSession(
   session: {
@@ -44,8 +46,35 @@ export async function runJITForSession(
       getWarmupConfig(userId, lift),
     ])
 
-  if (oneRmKg === null) {
-    throw new Error('No 1RM found for lift')
+  let resolvedOneRmKg = oneRmKg
+  if (resolvedOneRmKg === null) {
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', userId)
+      .maybeSingle()
+
+    const rawBodyweight = (profile as { bodyweight_kg?: number | string | null } | null)?.bodyweight_kg
+    const bodyweightKg =
+      typeof rawBodyweight === 'number'
+        ? rawBodyweight
+        : typeof rawBodyweight === 'string'
+          ? parseFloat(rawBodyweight)
+          : null
+
+    const biologicalSex = (
+      (profile as { biological_sex?: BiologicalSex | null } | null)?.biological_sex ?? null
+    )
+    const dateOfBirth = (
+      (profile as { date_of_birth?: string | null } | null)?.date_of_birth ?? null
+    )
+
+    resolvedOneRmKg = estimateOneRmKgFromProfile({
+      lift,
+      biologicalSex,
+      dateOfBirth,
+      bodyweightKg,
+    })
   }
 
   // Resolve auxiliary pair — fall back to first two from default pool
@@ -105,7 +134,7 @@ export async function runJITForSession(
     blockNumber,
     primaryLift: lift,
     intensityType,
-    oneRmKg,
+    oneRmKg: resolvedOneRmKg,
     formulaConfig,
     sorenessRatings,
     weeklyVolumeToDate,

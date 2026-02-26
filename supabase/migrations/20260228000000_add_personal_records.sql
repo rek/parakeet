@@ -1,7 +1,7 @@
 CREATE TABLE personal_records (
   id          uuid DEFAULT gen_random_uuid() PRIMARY KEY,
   user_id     uuid NOT NULL REFERENCES profiles(id),
-  lift        lift_type NOT NULL,
+  lift        text NOT NULL CHECK (lift IN ('squat', 'bench', 'deadlift')),
   pr_type     text NOT NULL CHECK (pr_type IN ('estimated_1rm','volume','rep_at_weight')),
   value       numeric NOT NULL,
   weight_kg   numeric,

@@ -6,8 +6,9 @@ import { useQueryClient } from '@tanstack/react-query'
 import { useCycleReview } from '../../../hooks/useCycleReview'
 import { createFormulaOverride, deactivateFormulaConfig } from '../../../lib/formulas'
 import { useAuth } from '../../../hooks/useAuth'
-import type { MuscleGroup } from '@parakeet/training-engine'
-import type { FormulaConfig } from '@parakeet/training-engine'
+import type { FormulaConfig, MuscleGroup } from '@parakeet/training-engine'
+import { colors } from '../../../theme'
+import { BackLink } from '../../../components/navigation/BackLink'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -64,10 +65,10 @@ interface CycleReviewData {
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 const RATING_STYLES: Record<ProgressRating, { bg: string; text: string; label: string }> = {
-  excellent:  { bg: '#D1FAE5', text: '#065F46', label: 'Excellent' },
-  good:       { bg: '#DBEAFE', text: '#1E40AF', label: 'Good' },
-  stalled:    { bg: '#FEF3C7', text: '#92400E', label: 'Stalled' },
-  concerning: { bg: '#FEE2E2', text: '#7F1D1D', label: 'Concerning' },
+  excellent:  { bg: colors.successMuted, text: colors.success, label: 'Excellent' },
+  good:       { bg: colors.infoMuted, text: colors.info, label: 'Good' },
+  stalled:    { bg: colors.warningMuted, text: colors.warning, label: 'Stalled' },
+  concerning: { bg: colors.dangerMuted, text: colors.danger, label: 'Concerning' },
 }
 
 const MUSCLES: MuscleGroup[] = [
@@ -81,10 +82,10 @@ const MUSCLE_LABELS: Record<MuscleGroup, string> = {
 }
 
 function volumeColor(sets: number, mev: number, mrv: number): string {
-  if (sets > mrv)             return '#FCA5A5'
-  if (sets >= mrv * 0.8)      return '#FCD34D'
-  if (sets >= mev)            return '#6EE7B7'
-  return '#F3F4F6'
+  if (sets > mrv)             return colors.danger
+  if (sets >= mrv * 0.8)      return colors.warning
+  if (sets >= mev)            return colors.success
+  return colors.bgMuted
 }
 
 // ── Screen ────────────────────────────────────────────────────────────────────
@@ -95,12 +96,7 @@ export default function CycleReviewScreen() {
   const queryClient = useQueryClient()
   const { data: review, isLoading } = useCycleReview(programId)
 
-  // Parse llm_response JSONB
-  const llmData: CycleReviewData = review?.review_notes
-    ? (typeof review.review_notes === 'string'
-        ? JSON.parse(review.review_notes)
-        : review.review_notes)
-    : {}
+  const llmData: CycleReviewData = (review ?? {}) as CycleReviewData
 
   async function handleAcceptSuggestion(s: FormulaSuggestion) {
     if (!user) return
@@ -123,13 +119,11 @@ export default function CycleReviewScreen() {
     return (
       <SafeAreaView style={styles.safeArea}>
         <View style={styles.header}>
-          <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-            <Text style={styles.backText}>← Back</Text>
-          </TouchableOpacity>
+          <BackLink onPress={() => router.back()} />
           <Text style={styles.title}>Cycle Review</Text>
         </View>
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#4F46E5" />
+          <ActivityIndicator size="large" color={colors.primary} />
           <Text style={styles.loadingTitle}>Analysis in progress…</Text>
           <Text style={styles.loadingSubtitle}>
             Generating your coaching review — usually takes under 30 seconds
@@ -147,9 +141,7 @@ export default function CycleReviewScreen() {
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-          <Text style={styles.backText}>← Back</Text>
-        </TouchableOpacity>
+        <BackLink onPress={() => router.back()} />
         <Text style={styles.title}>Cycle Review</Text>
       </View>
 
@@ -292,12 +284,12 @@ export default function CycleReviewScreen() {
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Formula Suggestions</Text>
             {formulas.map((s, i) => {
-              const priorityColors = { high: '#FEE2E2', medium: '#FEF3C7', low: '#F3F4F6' }
+              const priorityColors = { high: colors.dangerMuted, medium: colors.warningMuted, low: colors.bgMuted }
               return (
                 <View key={i} style={styles.suggestionCard}>
                   <View style={styles.suggestionHeader}>
                     <Text style={styles.suggestionDescription}>{s.description}</Text>
-                    <View style={[styles.priorityBadge, { backgroundColor: priorityColors[s.priority] ?? '#F3F4F6' }]}>
+                    <View style={[styles.priorityBadge, { backgroundColor: priorityColors[s.priority] ?? colors.bgMuted }]}>
                       <Text style={styles.priorityText}>{s.priority}</Text>
                     </View>
                   </View>
@@ -364,17 +356,15 @@ export default function CycleReviewScreen() {
 // ── Styles ────────────────────────────────────────────────────────────────────
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: '#fff' },
+  safeArea: { flex: 1, backgroundColor: colors.bgSurface },
   header: {
     paddingHorizontal: 20,
     paddingTop: 8,
     paddingBottom: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#F3F4F6',
+    borderBottomColor: colors.bgMuted,
   },
-  backButton: { marginBottom: 8 },
-  backText: { fontSize: 15, color: '#4F46E5', fontWeight: '500' },
-  title: { fontSize: 24, fontWeight: '800', color: '#111827' },
+  title: { fontSize: 24, fontWeight: '800', color: colors.text },
 
   loadingContainer: {
     flex: 1,
@@ -383,126 +373,126 @@ const styles = StyleSheet.create({
     paddingHorizontal: 32,
     gap: 12,
   },
-  loadingTitle: { fontSize: 18, fontWeight: '700', color: '#111827', textAlign: 'center' },
-  loadingSubtitle: { fontSize: 14, color: '#6B7280', textAlign: 'center', lineHeight: 20 },
+  loadingTitle: { fontSize: 18, fontWeight: '700', color: colors.text, textAlign: 'center' },
+  loadingSubtitle: { fontSize: 14, color: colors.textSecondary, textAlign: 'center', lineHeight: 20 },
 
   scroll: { flex: 1 },
   content: { padding: 16, gap: 16, paddingBottom: 48 },
 
   // Summary card
   summaryCard: {
-    backgroundColor: '#EEF2FF',
+    backgroundColor: colors.primaryMuted,
     borderRadius: 16,
     padding: 16,
     gap: 8,
   },
   summaryMeta: { flexDirection: 'row', gap: 16, flexWrap: 'wrap' },
-  summaryMetaText: { fontSize: 12, color: '#4F46E5', fontWeight: '600' },
-  overallAssessment: { fontSize: 15, color: '#111827', lineHeight: 22 },
+  summaryMetaText: { fontSize: 12, color: colors.primary, fontWeight: '600' },
+  overallAssessment: { fontSize: 15, color: colors.text, lineHeight: 22 },
 
   // Sections
   section: { gap: 10 },
-  sectionTitle: { fontSize: 16, fontWeight: '700', color: '#111827' },
+  sectionTitle: { fontSize: 16, fontWeight: '700', color: colors.text },
 
   // Lift cards
   liftCard: {
     borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderColor: colors.border,
     borderRadius: 12,
     padding: 14,
     gap: 4,
   },
   liftCardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  liftName: { fontSize: 16, fontWeight: '700', color: '#111827' },
+  liftName: { fontSize: 16, fontWeight: '700', color: colors.text },
   ratingBadge: { borderRadius: 8, paddingHorizontal: 10, paddingVertical: 4 },
   ratingText: { fontSize: 12, fontWeight: '600' },
-  liftDelta: { fontSize: 14, color: '#374151', fontWeight: '500' },
-  liftNarrative: { fontSize: 13, color: '#6B7280', lineHeight: 18 },
+  liftDelta: { fontSize: 14, color: colors.textSecondary, fontWeight: '500' },
+  liftNarrative: { fontSize: 13, color: colors.textSecondary, lineHeight: 18 },
 
   // Auxiliary
-  auxSubtitle: { fontSize: 13, fontWeight: '600', color: '#374151' },
+  auxSubtitle: { fontSize: 13, fontWeight: '600', color: colors.textSecondary },
   auxItem: { paddingLeft: 8, gap: 2 },
-  auxExercise: { fontSize: 14, fontWeight: '600', color: '#111827' },
-  auxExplanation: { fontSize: 13, color: '#6B7280', lineHeight: 18 },
-  auxChange: { fontSize: 14, color: '#374151', lineHeight: 20 },
+  auxExercise: { fontSize: 14, fontWeight: '600', color: colors.text },
+  auxExplanation: { fontSize: 13, color: colors.textSecondary, lineHeight: 18 },
+  auxChange: { fontSize: 14, color: colors.textSecondary, lineHeight: 20 },
 
   // Heatmap
   heatmapRow: { flexDirection: 'row', alignItems: 'center' },
   heatmapWeekCell: { width: 32, alignItems: 'center' },
-  heatmapWeek: { fontSize: 10, color: '#6B7280' },
+  heatmapWeek: { fontSize: 10, color: colors.textSecondary },
   heatmapCell: {
     width: 32,
     height: 32,
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
-    borderColor: '#F3F4F6',
+    borderColor: colors.bgMuted,
   },
-  heatmapHeader: { fontSize: 9, fontWeight: '600', color: '#6B7280' },
-  heatmapValue: { fontSize: 10, color: '#374151' },
+  heatmapHeader: { fontSize: 9, fontWeight: '600', color: colors.textSecondary },
+  heatmapValue: { fontSize: 10, color: colors.textSecondary },
 
   // Formula suggestions
   suggestionCard: {
     borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderColor: colors.border,
     borderRadius: 12,
     padding: 14,
     gap: 8,
   },
   suggestionHeader: { flexDirection: 'row', alignItems: 'flex-start', gap: 8 },
-  suggestionDescription: { fontSize: 14, fontWeight: '600', color: '#111827', flex: 1 },
+  suggestionDescription: { fontSize: 14, fontWeight: '600', color: colors.text, flex: 1 },
   priorityBadge: { borderRadius: 6, paddingHorizontal: 8, paddingVertical: 2 },
-  priorityText: { fontSize: 11, fontWeight: '600', color: '#374151', textTransform: 'capitalize' },
-  suggestionRationale: { fontSize: 13, color: '#6B7280', lineHeight: 18 },
+  priorityText: { fontSize: 11, fontWeight: '600', color: colors.textSecondary, textTransform: 'capitalize' },
+  suggestionRationale: { fontSize: 13, color: colors.textSecondary, lineHeight: 18 },
   suggestionActions: { flexDirection: 'row', gap: 10 },
   acceptButton: {
     flex: 1,
-    backgroundColor: '#4F46E5',
+    backgroundColor: colors.primary,
     borderRadius: 10,
     paddingVertical: 10,
     alignItems: 'center',
   },
-  acceptButtonText: { fontSize: 14, fontWeight: '600', color: '#fff' },
+  acceptButtonText: { fontSize: 14, fontWeight: '600', color: colors.textInverse },
   dismissButton: {
     flex: 1,
     borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderColor: colors.border,
     borderRadius: 10,
     paddingVertical: 10,
     alignItems: 'center',
   },
-  dismissButtonText: { fontSize: 14, color: '#374151' },
+  dismissButtonText: { fontSize: 14, color: colors.textSecondary },
 
   // Next cycle
   nextCycleCard: {
-    backgroundColor: '#F0FDF4',
+    backgroundColor: colors.successMuted,
     borderRadius: 16,
     padding: 16,
     gap: 10,
   },
-  nextCycleTitle: { fontSize: 16, fontWeight: '700', color: '#065F46' },
-  nextCycleText: { fontSize: 14, color: '#065F46', lineHeight: 20 },
+  nextCycleTitle: { fontSize: 16, fontWeight: '700', color: colors.success },
+  nextCycleText: { fontSize: 14, color: colors.success, lineHeight: 20 },
   startNextButton: {
     alignSelf: 'flex-start',
     paddingHorizontal: 16,
     paddingVertical: 10,
-    backgroundColor: '#10B981',
+    backgroundColor: colors.success,
     borderRadius: 10,
   },
-  startNextButtonText: { fontSize: 14, fontWeight: '600', color: '#fff' },
+  startNextButtonText: { fontSize: 14, fontWeight: '600', color: colors.textInverse },
 
   // Dev section
   devSection: {
     borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderColor: colors.border,
     borderRadius: 12,
     padding: 14,
     gap: 8,
-    backgroundColor: '#FAFAFA',
+    backgroundColor: colors.bgSurface,
   },
-  devSectionTitle: { fontSize: 14, fontWeight: '700', color: '#374151' },
-  devNote: { fontSize: 12, color: '#9CA3AF', fontStyle: 'italic' },
+  devSectionTitle: { fontSize: 14, fontWeight: '700', color: colors.textSecondary },
+  devNote: { fontSize: 12, color: colors.textTertiary, fontStyle: 'italic' },
   devItem: { paddingLeft: 8, gap: 2 },
-  devItemText: { fontSize: 13, color: '#374151', lineHeight: 18 },
-  devItemNote: { fontSize: 12, color: '#9CA3AF' },
+  devItemText: { fontSize: 13, color: colors.textSecondary, lineHeight: 18 },
+  devItemNote: { fontSize: 12, color: colors.textTertiary },
 })

@@ -4,10 +4,20 @@ import { router } from 'expo-router';
 import { useQuery } from '@tanstack/react-query';
 
 import { useAuth } from '../../hooks/useAuth';
-import { supabase } from '../../lib/supabase';
+import { getProfile } from '../../lib/profile';
+import { qk } from '../../queries/keys';
+import {
+  getPendingFormulaSuggestionCount,
+  getUnreviewedDeveloperSuggestionCount,
+} from '../../services/settings.service';
 import { colors, spacing, radii, typography } from '../../theme';
 
 // ── Sub-components ────────────────────────────────────────────────────────────
+
+const SEX_LABEL: Record<string, string> = {
+  female: 'Female',
+  male: 'Male',
+};
 
 interface SectionHeaderProps {
   label: string;
@@ -47,35 +57,36 @@ export default function SettingsScreen() {
   const { user, signOut } = useAuth();
 
   const { data: pendingSuggestions } = useQuery({
-    queryKey: ['formula', 'suggestions', 'count', user?.id],
-    queryFn: async () => {
-      const { count } = await supabase
-        .from('formula_configs')
-        .select('id', { count: 'exact', head: true })
-        .eq('user_id', user!.id)
-        .eq('source', 'ai_suggestion')
-        .eq('is_active', false);
-      return count ?? 0;
-    },
+    queryKey: qk.formula.suggestionsCount(user?.id),
+    queryFn: () => getPendingFormulaSuggestionCount(user!.id),
     enabled: !!user?.id,
     staleTime: 60 * 1000,
   });
 
   const { data: unreviewedDevCount } = useQuery({
-    queryKey: ['developer', 'suggestions', 'count'],
-    queryFn: async () => {
-      const { count } = await supabase
-        .from('developer_suggestions')
-        .select('id', { count: 'exact', head: true })
-        .eq('status', 'unreviewed');
-      return count ?? 0;
-    },
+    queryKey: qk.developer.suggestionsCount(),
+    queryFn: getUnreviewedDeveloperSuggestionCount,
     staleTime: 60 * 1000,
+  });
+
+  const { data: profile, isLoading: isProfileLoading } = useQuery({
+    queryKey: qk.profile.current(),
+    queryFn: getProfile,
+    staleTime: 5 * 60 * 1000,
   });
 
   const hasSuggestions = (pendingSuggestions ?? 0) > 0;
   const hasDevSuggestions = (unreviewedDevCount ?? 0) > 0;
-  const emailInitial = user?.email ? user.email[0].toUpperCase() : '?';
+
+  const sexLabel = profile?.biological_sex
+    ? (SEX_LABEL[profile.biological_sex] ?? profile.biological_sex)
+    : '—';
+
+  const birthYear = profile?.date_of_birth
+    ? new Date(profile.date_of_birth).getFullYear().toString()
+    : '—';
+
+  const displayName = profile?.display_name ?? '—';
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -86,12 +97,33 @@ export default function SettingsScreen() {
       >
         <Text style={styles.screenTitle}>Settings</Text>
 
-        {/* Profile section */}
-        <View style={styles.profileSection}>
-          <View style={styles.avatar}>
-            <Text style={styles.avatarInitial}>{emailInitial}</Text>
+        <View style={styles.profileInlineHeader}>
+          <View style={styles.profileInlineHeaderTextWrap}>
+            <Text style={styles.profileInlineTitle}>Profile</Text>
+            <Text style={styles.emailText}>{user?.email ?? '—'}</Text>
           </View>
-          <Text style={styles.emailText}>{user?.email ?? '—'}</Text>
+          <TouchableOpacity
+            style={styles.editButton}
+            onPress={() => router.push('/profile')}
+            activeOpacity={0.7}
+          >
+            <Text style={styles.editButtonText}>Edit</Text>
+          </TouchableOpacity>
+        </View>
+
+        <View style={styles.inlineInfoWrap}>
+          <View style={styles.inlineInfoRow}>
+            <Text style={styles.inlineInfoLabel}>Name</Text>
+            <Text style={styles.inlineInfoValue}>{isProfileLoading ? 'Loading…' : displayName}</Text>
+          </View>
+          <View style={styles.inlineInfoRow}>
+            <Text style={styles.inlineInfoLabel}>Gender</Text>
+            <Text style={styles.inlineInfoValue}>{isProfileLoading ? 'Loading…' : sexLabel}</Text>
+          </View>
+          <View style={styles.inlineInfoRow}>
+            <Text style={styles.inlineInfoLabel}>Birth year</Text>
+            <Text style={styles.inlineInfoValue}>{isProfileLoading ? 'Loading…' : birthYear}</Text>
+          </View>
         </View>
 
         <View style={styles.divider} />
@@ -204,36 +236,63 @@ const styles = StyleSheet.create({
     fontSize: typography.sizes['2xl'],
     fontWeight: typography.weights.black,
     color: colors.text,
-    marginBottom: spacing[8],
+    marginBottom: spacing[6],
     letterSpacing: typography.letterSpacing.tight,
   },
-  // Profile
-  profileSection: {
+  profileInlineHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: spacing[2],
-    marginBottom: spacing[6],
+    justifyContent: 'space-between',
+    marginBottom: spacing[3],
   },
-  avatar: {
-    width: 48,
-    height: 48,
-    borderRadius: radii.full,
-    backgroundColor: colors.primaryMuted,
-    borderWidth: 1.5,
-    borderColor: colors.primary,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: spacing[3.5],
+  profileInlineHeaderTextWrap: {
+    flex: 1,
+    marginRight: spacing[3],
   },
-  avatarInitial: {
-    fontSize: typography.sizes.lg,
+  profileInlineTitle: {
+    fontSize: typography.sizes.xs,
     fontWeight: typography.weights.bold,
-    color: colors.primary,
+    color: colors.textTertiary,
+    textTransform: 'uppercase',
+    letterSpacing: typography.letterSpacing.widest,
+    marginBottom: spacing[1],
+  },
+  editButton: {
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: radii.md,
+    paddingHorizontal: spacing[3],
+    paddingVertical: spacing[1.5],
+    backgroundColor: colors.bgSurface,
+  },
+  editButtonText: {
+    fontSize: typography.sizes.sm,
+    fontWeight: typography.weights.semibold,
+    color: colors.textSecondary,
   },
   emailText: {
     fontSize: typography.sizes.base,
     color: colors.textSecondary,
-    flexShrink: 1,
+  },
+  inlineInfoWrap: {
+    borderTopWidth: 1,
+    borderBottomWidth: 1,
+    borderColor: colors.borderMuted,
+  },
+  inlineInfoRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: spacing[2.5],
+  },
+  inlineInfoLabel: {
+    fontSize: typography.sizes.sm,
+    color: colors.textSecondary,
+  },
+  inlineInfoValue: {
+    fontSize: typography.sizes.sm,
+    fontWeight: typography.weights.semibold,
+    color: colors.text,
   },
   // Divider
   divider: {

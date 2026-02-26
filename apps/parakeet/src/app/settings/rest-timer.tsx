@@ -17,6 +17,8 @@ import { getUserRestOverrides, setRestOverride, resetRestOverrides } from '../..
 import { getRestTimerPrefs, setRestTimerPrefs } from '../../lib/settings'
 import type { RestTimerPrefs } from '../../lib/settings'
 import { useAuth } from '../../hooks/useAuth'
+import { colors } from '../../theme'
+import { BackLink } from '../../components/navigation/BackLink'
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
@@ -89,7 +91,7 @@ function DurationRow({ label, totalSeconds, isOpen, isSaving, onToggle, onConfir
         <Text style={styles.durationRowLabel}>{label}</Text>
         <View style={styles.durationRowRight}>
           {isSaving
-            ? <ActivityIndicator size="small" color="#4F46E5" />
+            ? <ActivityIndicator size="small" color={colors.primary} />
             : <Text style={styles.durationValue}>{formatDuration(totalSeconds)}</Text>
           }
           <Text style={[styles.chevron, isOpen && styles.chevronOpen]}>›</Text>
@@ -208,26 +210,28 @@ export default function RestTimerSettingsScreen() {
   const [resetting, setResetting] = useState(false)
 
   // Load existing overrides from Supabase
-  const { isLoading } = useQuery({
+  const { data: overridesData, isLoading } = useQuery({
     queryKey: ['rest', 'overrides', user?.id],
     queryFn: () => getUserRestOverrides(user!.id),
     enabled: !!user?.id,
-    onSuccess: (data) => {
-      const map: Partial<Record<IntensityType | 'auxiliary', number>> = {}
-      for (const row of data) {
-        if (row.lift == null && row.intensityType != null) {
-          map[row.intensityType] = row.restSeconds
-        }
-        // auxiliary: lift=null, intensityType=null catch-all not used here;
-        // the spec writes lift=NULL rows keyed by intensityType only.
-        // For auxiliary section we look for a row with no intensityType and no lift.
-        if (row.lift == null && row.intensityType == null) {
-          map['auxiliary'] = row.restSeconds
-        }
-      }
-      setDurations(map)
-    },
   })
+
+  useEffect(() => {
+    if (!overridesData) return
+    const map: Partial<Record<IntensityType | 'auxiliary', number>> = {}
+    for (const row of overridesData) {
+      if (row.lift == null && row.intensityType != null) {
+        map[row.intensityType] = row.restSeconds
+      }
+      // auxiliary: lift=null, intensityType=null catch-all not used here;
+      // the spec writes lift=NULL rows keyed by intensityType only.
+      // For auxiliary section we look for a row with no intensityType and no lift.
+      if (row.lift == null && row.intensityType == null) {
+        map.auxiliary = row.restSeconds
+      }
+    }
+    setDurations(map)
+  }, [overridesData])
 
   // Load device-local prefs
   useEffect(() => {
@@ -284,15 +288,13 @@ export default function RestTimerSettingsScreen() {
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-          <Text style={styles.backText}>← Back</Text>
-        </TouchableOpacity>
+        <BackLink onPress={() => router.back()} />
         <Text style={styles.title}>Rest Timer</Text>
       </View>
 
       {isLoading ? (
         <View style={styles.loading}>
-          <ActivityIndicator color="#4F46E5" size="large" />
+          <ActivityIndicator color={colors.primary} size="large" />
         </View>
       ) : (
         <ScrollView
@@ -326,7 +328,7 @@ export default function RestTimerSettingsScreen() {
             activeOpacity={0.8}
           >
             {resetting
-              ? <ActivityIndicator size="small" color="#6B7280" />
+              ? <ActivityIndicator size="small" color={colors.textSecondary} />
               : <Text style={styles.resetButtonText}>Reset to defaults</Text>
             }
           </TouchableOpacity>
@@ -352,7 +354,7 @@ export default function RestTimerSettingsScreen() {
               <Switch
                 value={prefs.audioAlert}
                 onValueChange={(v) => handleTogglePref('audioAlert', v)}
-                trackColor={{ true: '#4F46E5' }}
+                trackColor={{ true: colors.primary }}
               />
             </View>
             <View style={styles.separator} />
@@ -361,7 +363,7 @@ export default function RestTimerSettingsScreen() {
               <Switch
                 value={prefs.hapticAlert}
                 onValueChange={(v) => handleTogglePref('hapticAlert', v)}
-                trackColor={{ true: '#4F46E5' }}
+                trackColor={{ true: colors.primary }}
               />
             </View>
             <View style={styles.separator} />
@@ -371,7 +373,7 @@ export default function RestTimerSettingsScreen() {
                 <Switch
                   value={prefs.llmSuggestions}
                   onValueChange={(v) => handleTogglePref('llmSuggestions', v)}
-                  trackColor={{ true: '#4F46E5' }}
+                  trackColor={{ true: colors.primary }}
                 />
               </View>
               <Text style={styles.toggleSubtext}>Requires AI workout generation</Text>
@@ -389,17 +391,15 @@ export default function RestTimerSettingsScreen() {
 // ── Styles ────────────────────────────────────────────────────────────────────
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: '#fff' },
+  safeArea: { flex: 1, backgroundColor: colors.bgSurface },
   header: {
     paddingHorizontal: 20,
     paddingTop: 8,
     paddingBottom: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#F3F4F6',
+    borderBottomColor: colors.bgMuted,
   },
-  backButton: { marginBottom: 8 },
-  backText: { fontSize: 15, color: '#4F46E5', fontWeight: '500' },
-  title: { fontSize: 24, fontWeight: '800', color: '#111827' },
+  title: { fontSize: 24, fontWeight: '800', color: colors.text },
   loading: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   scroll: { flex: 1 },
   content: { paddingHorizontal: 20, paddingBottom: 48, paddingTop: 20 },
@@ -407,7 +407,7 @@ const styles = StyleSheet.create({
   sectionHeader: {
     fontSize: 13,
     fontWeight: '600',
-    color: '#6B7280',
+    color: colors.textSecondary,
     textTransform: 'uppercase',
     letterSpacing: 0.8,
     marginBottom: 8,
@@ -416,15 +416,15 @@ const styles = StyleSheet.create({
 
   card: {
     borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderColor: colors.border,
     borderRadius: 12,
-    backgroundColor: '#fff',
+    backgroundColor: colors.bgSurface,
     overflow: 'hidden',
   },
 
   separator: {
     height: 1,
-    backgroundColor: '#F3F4F6',
+    backgroundColor: colors.bgMuted,
     marginHorizontal: 16,
   },
 
@@ -435,25 +435,25 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 14,
   },
-  durationRowLabel: { flex: 1, fontSize: 16, color: '#111827' },
+  durationRowLabel: { flex: 1, fontSize: 16, color: colors.text },
   durationRowRight: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  durationValue: { fontSize: 15, color: '#4F46E5', fontWeight: '500' },
-  chevron: { fontSize: 20, color: '#9CA3AF', lineHeight: 22, transform: [{ rotate: '90deg' }] },
+  durationValue: { fontSize: 15, color: colors.primary, fontWeight: '500' },
+  chevron: { fontSize: 20, color: colors.textTertiary, lineHeight: 22, transform: [{ rotate: '90deg' }] },
   chevronOpen: { transform: [{ rotate: '270deg' }] },
 
   // Inline picker
   pickerContainer: {
     flexDirection: 'row',
-    backgroundColor: '#F9FAFB',
+    backgroundColor: colors.bgSurface,
     borderTopWidth: 1,
-    borderTopColor: '#F3F4F6',
+    borderTopColor: colors.bgMuted,
     paddingHorizontal: 16,
     paddingVertical: 12,
     gap: 12,
     alignItems: 'flex-start',
   },
   pickerColumn: { alignItems: 'center', gap: 4 },
-  pickerColumnLabel: { fontSize: 11, fontWeight: '600', color: '#9CA3AF', textTransform: 'uppercase' },
+  pickerColumnLabel: { fontSize: 11, fontWeight: '600', color: colors.textTertiary, textTransform: 'uppercase' },
   pickerScroll: { maxHeight: 152 },
   pickerScrollContent: { gap: 2 },
   pickerItem: {
@@ -461,9 +461,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     borderRadius: 8,
   },
-  pickerItemSelected: { backgroundColor: '#EEF2FF' },
-  pickerItemText: { fontSize: 17, fontWeight: '500', color: '#374151', textAlign: 'center' },
-  pickerItemTextSelected: { color: '#4F46E5', fontWeight: '700' },
+  pickerItemSelected: { backgroundColor: colors.primaryMuted },
+  pickerItemText: { fontSize: 17, fontWeight: '500', color: colors.textSecondary, textAlign: 'center' },
+  pickerItemTextSelected: { color: colors.primary, fontWeight: '700' },
 
   pickerConfirmColumn: {
     flex: 1,
@@ -472,15 +472,15 @@ const styles = StyleSheet.create({
     gap: 8,
     paddingTop: 24,
   },
-  pickerPreviewText: { fontSize: 18, fontWeight: '700', color: '#111827' },
-  pickerWarning: { fontSize: 11, color: '#EF4444' },
+  pickerPreviewText: { fontSize: 18, fontWeight: '700', color: colors.text },
+  pickerWarning: { fontSize: 11, color: colors.danger },
   confirmButton: {
-    backgroundColor: '#4F46E5',
+    backgroundColor: colors.primary,
     borderRadius: 8,
     paddingHorizontal: 24,
     paddingVertical: 9,
   },
-  confirmButtonText: { fontSize: 14, fontWeight: '600', color: '#fff' },
+  confirmButtonText: { fontSize: 14, fontWeight: '600', color: colors.textInverse },
 
   // Reset button
   resetButton: {
@@ -490,12 +490,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: '#D1D5DB',
+    borderColor: colors.border,
     minWidth: 64,
     alignItems: 'center',
   },
   resetButtonDisabled: { opacity: 0.4 },
-  resetButtonText: { fontSize: 13, color: '#6B7280', fontWeight: '500' },
+  resetButtonText: { fontSize: 13, color: colors.textSecondary, fontWeight: '500' },
 
   // Toggle rows
   toggleRow: {
@@ -504,10 +504,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 14,
   },
-  toggleLabel: { flex: 1, fontSize: 16, color: '#111827' },
+  toggleLabel: { flex: 1, fontSize: 16, color: colors.text },
   toggleSubtext: {
     fontSize: 12,
-    color: '#9CA3AF',
+    color: colors.textTertiary,
     paddingHorizontal: 16,
     paddingBottom: 12,
     marginTop: -8,
@@ -516,12 +516,12 @@ const styles = StyleSheet.create({
   // Preview card
   preview: {
     marginTop: 24,
-    backgroundColor: '#F0FDF4',
+    backgroundColor: colors.successMuted,
     borderRadius: 10,
     padding: 14,
     gap: 4,
   },
-  previewTitle: { fontSize: 11, color: '#16A34A', fontWeight: '600' },
-  previewBody: { fontSize: 14, color: '#15803D', lineHeight: 20 },
+  previewTitle: { fontSize: 11, color: colors.success, fontWeight: '600' },
+  previewBody: { fontSize: 14, color: colors.success, lineHeight: 20 },
   previewTime: { fontWeight: '700' },
 })

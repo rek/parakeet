@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import {
   Alert,
   Platform,
@@ -17,6 +17,7 @@ import { submitMaxes } from '../../../lib/lifter-maxes'
 import { createProgram } from '../../../lib/programs'
 import { updateProfile } from '../../../lib/profile'
 import type { BiologicalSex } from '../../../lib/profile'
+import { colors } from '../../../theme'
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -59,16 +60,25 @@ function formatStartDate(date: Date): string {
 // ── Screen ───────────────────────────────────────────────────────────────────
 
 export default function ProgramSettingsScreen() {
-  const params = useLocalSearchParams<{ lifts: string }>()
-  const lifts = JSON.parse(params.lifts ?? '{}') as LiftsPayload
+  const params = useLocalSearchParams<{ lifts?: string; estimatedStart?: string }>()
+  const usingEstimatedStart = params.estimatedStart === '1'
+  const lifts = useMemo(() => {
+    if (!params.lifts) return null
+    try {
+      return JSON.parse(params.lifts) as LiftsPayload
+    } catch {
+      return null
+    }
+  }, [params.lifts])
 
   const [totalWeeks, setTotalWeeks] = useState<TotalWeeks>(10)
   const [trainingDaysPerWeek, setTrainingDaysPerWeek] = useState<TrainingDays>(3)
   const [startDate, setStartDate] = useState<Date>(nextMonday)
   const [showPicker, setShowPicker] = useState(false)
-  const [biologicalSex, setBiologicalSex] = useState<BiologicalSex>('prefer_not_to_say')
+  const [gender, setGender] = useState<BiologicalSex | null>(null)
   const [birthYear, setBirthYear] = useState('')
   const [loading, setLoading] = useState(false)
+  const birthYearIsValid = /^\d{4}$/.test(birthYear)
 
   function handleDateChange(_event: DateTimePickerEvent, selected?: Date) {
     // On Android the picker closes itself; on iOS it stays open (inline)
@@ -81,19 +91,34 @@ export default function ProgramSettingsScreen() {
   }
 
   async function handleGenerate() {
+    if (!gender) {
+      Alert.alert('Missing info', 'Select a gender to generate your program.')
+      return
+    }
+    if (!birthYearIsValid) {
+      Alert.alert('Missing info', 'Enter your 4-digit birth year to generate your program.')
+      return
+    }
     try {
       setLoading(true)
       const yearNum = parseInt(birthYear, 10)
-      const dobIso = !isNaN(yearNum) && birthYear.length === 4
-        ? `${yearNum}-01-01`
-        : null
-      await Promise.all([
-        submitMaxes(lifts),
+      const dobIso = `${yearNum}-01-01`
+      if (!usingEstimatedStart && !lifts) {
+        throw new Error('Missing lift maxes input')
+      }
+
+      const updates: Promise<unknown>[] = [
         updateProfile({
-          biological_sex: biologicalSex,
+          biological_sex: gender,
           date_of_birth: dobIso,
         }),
-      ])
+      ]
+
+      if (!usingEstimatedStart && lifts) {
+        updates.push(submitMaxes(lifts))
+      }
+
+      await Promise.all(updates)
       const program = await createProgram({ totalWeeks, trainingDaysPerWeek, startDate })
       router.replace({
         pathname: '/(auth)/onboarding/review',
@@ -108,6 +133,7 @@ export default function ProgramSettingsScreen() {
 
   const WEEK_OPTIONS: TotalWeeks[] = [10, 12, 14]
   const DAY_OPTIONS: TrainingDays[] = [3, 4]
+  const canGenerate = !loading && !!gender && birthYearIsValid
 
   return (
     <ScrollView
@@ -193,19 +219,18 @@ export default function ProgramSettingsScreen() {
         />
       )}
 
-      {/* Biological sex */}
-      <Text style={styles.label}>Biological Sex</Text>
+      {/* Gender */}
+      <Text style={styles.label}>Gender</Text>
       <Text style={styles.fieldHint}>Used for volume defaults calibrated to your physiology</Text>
       <View style={[styles.toggle, styles.toggleMarginTop]}>
-        {(['female', 'male', 'prefer_not_to_say'] as BiologicalSex[]).map((option, index) => {
+        {(['female', 'male'] as BiologicalSex[]).map((option, index) => {
           const labels: Record<BiologicalSex, string> = {
             female: 'Female',
             male: 'Male',
-            prefer_not_to_say: 'Prefer not to say',
           }
           const isFirst = index === 0
-          const isLast = index === 2
-          const isActive = biologicalSex === option
+          const isLast = index === 1
+          const isActive = gender === option
           return (
             <TouchableOpacity
               key={option}
@@ -216,7 +241,7 @@ export default function ProgramSettingsScreen() {
                 !isLast && styles.toggleButtonBorderRight,
                 isActive && styles.toggleButtonActive,
               ]}
-              onPress={() => setBiologicalSex(option)}
+              onPress={() => setGender(option)}
               activeOpacity={0.8}
             >
               <Text style={[styles.toggleButtonText, isActive && styles.toggleButtonTextActive]}>
@@ -229,11 +254,11 @@ export default function ProgramSettingsScreen() {
 
       {/* Birth year */}
       <Text style={styles.label}>Birth Year</Text>
-      <Text style={styles.fieldHint}>Optional · used for age-appropriate coaching insights</Text>
+      <Text style={styles.fieldHint}>Required · used for age-appropriate coaching insights</Text>
       <TextInput
-        style={[styles.toggleMarginTop, styles.birthYearInput]}
+        style={[styles.toggleMarginTop, styles.birthYearInput, birthYear.length > 0 && !birthYearIsValid && styles.birthYearInputError]}
         placeholder="e.g. 1990"
-        placeholderTextColor="#9CA3AF"
+        placeholderTextColor={colors.textTertiary}
         value={birthYear}
         onChangeText={(v) => setBirthYear(v.replace(/\D/g, '').slice(0, 4))}
         keyboardType="number-pad"
@@ -242,17 +267,20 @@ export default function ProgramSettingsScreen() {
 
       {/* Generate button */}
       <TouchableOpacity
-        style={[styles.primaryButton, loading && styles.primaryButtonDisabled]}
+        style={[styles.primaryButton, !canGenerate && styles.primaryButtonDisabled]}
         onPress={handleGenerate}
-        disabled={loading}
+        disabled={!canGenerate}
         activeOpacity={0.8}
       >
         {loading ? (
-          <ActivityIndicator color="#fff" />
+          <ActivityIndicator color={colors.textInverse} />
         ) : (
           <Text style={styles.primaryButtonText}>Generate My Program</Text>
         )}
       </TouchableOpacity>
+      {!canGenerate ? (
+        <Text style={styles.validationHint}>Select gender and enter birth year to enable program generation.</Text>
+      ) : null}
     </ScrollView>
   )
 }
@@ -262,7 +290,7 @@ export default function ProgramSettingsScreen() {
 const styles = StyleSheet.create({
   scrollView: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: colors.bgSurface,
   },
   container: {
     paddingHorizontal: 24,
@@ -272,19 +300,19 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 28,
     fontWeight: '700',
-    color: '#111827',
+    color: colors.text,
     marginBottom: 8,
   },
   subtitle: {
     fontSize: 15,
-    color: '#6b7280',
+    color: colors.textSecondary,
     marginBottom: 40,
     lineHeight: 22,
   },
   label: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#374151',
+    color: colors.textSecondary,
     marginBottom: 10,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
@@ -292,7 +320,7 @@ const styles = StyleSheet.create({
   toggle: {
     flexDirection: 'row',
     borderWidth: 1,
-    borderColor: '#e5e7eb',
+    borderColor: colors.border,
     borderRadius: 12,
     overflow: 'hidden',
     marginBottom: 28,
@@ -301,7 +329,7 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingVertical: 12,
     alignItems: 'center',
-    backgroundColor: '#f9fafb',
+    backgroundColor: colors.bgSurface,
   },
   toggleButtonFirst: {
     // no extra style needed; border-radius handled by overflow on parent
@@ -311,25 +339,25 @@ const styles = StyleSheet.create({
   },
   toggleButtonBorderRight: {
     borderRightWidth: 1,
-    borderRightColor: '#e5e7eb',
+    borderRightColor: colors.border,
   },
   toggleButtonActive: {
-    backgroundColor: '#4F46E5',
+    backgroundColor: colors.primary,
   },
   toggleButtonText: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#6b7280',
+    color: colors.textSecondary,
   },
   toggleButtonTextActive: {
-    color: '#fff',
+    color: colors.textInverse,
   },
   dateRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     borderWidth: 1,
-    borderColor: '#e5e7eb',
+    borderColor: colors.border,
     borderRadius: 12,
     paddingHorizontal: 16,
     paddingVertical: 14,
@@ -337,31 +365,37 @@ const styles = StyleSheet.create({
   },
   dateText: {
     fontSize: 15,
-    color: '#111827',
+    color: colors.text,
   },
   changeLink: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#4F46E5',
+    color: colors.primary,
   },
   primaryButton: {
-    backgroundColor: '#4F46E5',
+    backgroundColor: colors.primary,
     borderRadius: 12,
     paddingVertical: 16,
     alignItems: 'center',
     marginTop: 16,
   },
   primaryButtonDisabled: {
-    opacity: 0.6,
+    opacity: 0.45,
   },
   primaryButtonText: {
-    color: '#fff',
+    color: colors.textInverse,
     fontSize: 16,
     fontWeight: '600',
   },
+  validationHint: {
+    marginTop: 10,
+    fontSize: 13,
+    color: colors.textTertiary,
+    textAlign: 'center',
+  },
   fieldHint: {
     fontSize: 12,
-    color: '#9CA3AF',
+    color: colors.textTertiary,
     marginBottom: 8,
     lineHeight: 16,
   },
@@ -370,11 +404,14 @@ const styles = StyleSheet.create({
   },
   birthYearInput: {
     borderWidth: 1,
-    borderColor: '#e5e7eb',
+    borderColor: colors.border,
     borderRadius: 12,
     paddingHorizontal: 16,
     paddingVertical: 14,
     fontSize: 15,
-    color: '#111827',
+    color: colors.text,
+  },
+  birthYearInputError: {
+    borderColor: colors.danger,
   },
 })

@@ -5,8 +5,8 @@
 
 CREATE TABLE rest_configs (
   user_id        uuid        NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
-  lift           lift_type,
-  intensity_type intensity_type,
+  lift           text CHECK (lift IN ('squat', 'bench', 'deadlift')),
+  intensity_type text CHECK (intensity_type IN ('heavy', 'explosive', 'rep', 'deload')),
   rest_seconds   integer     NOT NULL CHECK (rest_seconds BETWEEN 30 AND 600),
   updated_at     timestamptz NOT NULL DEFAULT now()
 );

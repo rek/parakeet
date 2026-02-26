@@ -9,6 +9,7 @@ import {
 } from 'react-native'
 import { router } from 'expo-router'
 import { estimateOneRepMax_Epley } from '@parakeet/training-engine'
+import { colors } from '../../../theme'
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -39,12 +40,6 @@ const LIFT_LABELS: Record<LiftKey, string> = {
 }
 
 const LIFT_ORDER: LiftKey[] = ['squat', 'bench', 'deadlift']
-
-const DEFAULT_MAXES: Record<LiftKey, number> = {
-  squat: 100,
-  bench: 70,
-  deadlift: 120,
-}
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -130,7 +125,7 @@ function LiftSection({ liftKey, state, onChange }: LiftSectionProps) {
       <TextInput
         style={styles.input}
         placeholder="0.0 kg"
-        placeholderTextColor="#9ca3af"
+        placeholderTextColor={colors.textTertiary}
         value={state.weightKg}
         onChangeText={(v) => onChange(liftKey, { weightKg: v })}
         keyboardType="decimal-pad"
@@ -142,7 +137,7 @@ function LiftSection({ liftKey, state, onChange }: LiftSectionProps) {
         <TextInput
           style={styles.input}
           placeholder="3"
-          placeholderTextColor="#9ca3af"
+          placeholderTextColor={colors.textTertiary}
           value={state.reps}
           onChangeText={(v) => onChange(liftKey, { reps: v })}
           keyboardType="number-pad"
@@ -167,35 +162,41 @@ export default function LiftMaxesScreen() {
     bench: makeDefaultState(),
     deadlift: makeDefaultState(),
   })
-  const [usingDefaults, setUsingDefaults] = useState(false)
+  const [usingEstimatedStart, setUsingEstimatedStart] = useState(false)
 
   function handleChange(key: LiftKey, update: Partial<LiftState>) {
+    setUsingEstimatedStart(false)
     setLifts((prev) => ({ ...prev, [key]: { ...prev[key], ...update } }))
   }
 
-  function handleUseDefaults() {
+  function handleUseEstimatedStart() {
     setLifts({
-      squat:    { type: '1rm', weightKg: String(DEFAULT_MAXES.squat),    reps: '3' },
-      bench:    { type: '1rm', weightKg: String(DEFAULT_MAXES.bench),    reps: '3' },
-      deadlift: { type: '1rm', weightKg: String(DEFAULT_MAXES.deadlift), reps: '3' },
+      squat:    makeDefaultState(),
+      bench:    makeDefaultState(),
+      deadlift: makeDefaultState(),
     })
-    setUsingDefaults(true)
+    setUsingEstimatedStart(true)
   }
 
-  const allValid = LIFT_ORDER.every((k) => isLiftValid(lifts[k]))
+  const allValid = usingEstimatedStart || LIFT_ORDER.every((k) => isLiftValid(lifts[k]))
 
   function handleNext() {
     if (!allValid) return
 
-    const payload: LiftsPayload = {
-      squat:    buildLiftInput(lifts.squat),
-      bench:    buildLiftInput(lifts.bench),
-      deadlift: buildLiftInput(lifts.deadlift),
-    }
+    const payload: LiftsPayload | null = usingEstimatedStart
+      ? null
+      : {
+        squat:    buildLiftInput(lifts.squat),
+        bench:    buildLiftInput(lifts.bench),
+        deadlift: buildLiftInput(lifts.deadlift),
+      }
 
     router.push({
       pathname: '/(auth)/onboarding/program-settings',
-      params: { lifts: JSON.stringify(payload) },
+      params: {
+        lifts: payload ? JSON.stringify(payload) : '',
+        estimatedStart: usingEstimatedStart ? '1' : '0',
+      },
     })
   }
 
@@ -210,10 +211,10 @@ export default function LiftMaxesScreen() {
         We'll use these to build your first training program.
       </Text>
 
-      {usingDefaults && (
+      {usingEstimatedStart && (
         <View style={styles.warningBanner}>
           <Text style={styles.warningText}>
-            Using default maxes — update these before your first session.
+            Maxes left blank. We&apos;ll estimate your starting loads and calibrate from your logged sessions.
           </Text>
         </View>
       )}
@@ -236,7 +237,7 @@ export default function LiftMaxesScreen() {
         <Text style={styles.primaryButtonText}>Next</Text>
       </TouchableOpacity>
 
-      <TouchableOpacity style={styles.defaultsLink} onPress={handleUseDefaults} activeOpacity={0.7}>
+      <TouchableOpacity style={styles.defaultsLink} onPress={handleUseEstimatedStart} activeOpacity={0.7}>
         <Text style={styles.defaultsLinkText}>I don't know my maxes</Text>
       </TouchableOpacity>
     </ScrollView>
@@ -248,7 +249,7 @@ export default function LiftMaxesScreen() {
 const styles = StyleSheet.create({
   scrollView: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: colors.bgSurface,
   },
   container: {
     paddingHorizontal: 24,
@@ -258,19 +259,19 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 28,
     fontWeight: '700',
-    color: '#111827',
+    color: colors.text,
     marginBottom: 8,
   },
   subtitle: {
     fontSize: 15,
-    color: '#6b7280',
+    color: colors.textSecondary,
     marginBottom: 32,
     lineHeight: 22,
   },
   warningBanner: {
-    backgroundColor: '#fef9c3',
+    backgroundColor: colors.warningMuted,
     borderWidth: 1,
-    borderColor: '#fde047',
+    borderColor: colors.warning,
     borderRadius: 10,
     paddingVertical: 12,
     paddingHorizontal: 16,
@@ -278,7 +279,7 @@ const styles = StyleSheet.create({
   },
   warningText: {
     fontSize: 13,
-    color: '#713f12',
+    color: colors.warning,
     lineHeight: 18,
   },
   section: {
@@ -287,14 +288,14 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 17,
     fontWeight: '600',
-    color: '#111827',
+    color: colors.text,
     marginBottom: 12,
   },
   toggle: {
     flexDirection: 'row',
     marginBottom: 12,
     borderWidth: 1,
-    borderColor: '#e5e7eb',
+    borderColor: colors.border,
     borderRadius: 12,
     overflow: 'hidden',
   },
@@ -302,45 +303,45 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingVertical: 10,
     alignItems: 'center',
-    backgroundColor: '#f9fafb',
+    backgroundColor: colors.bgSurface,
   },
   toggleButtonLeft: {
     borderRightWidth: 1,
-    borderRightColor: '#e5e7eb',
+    borderRightColor: colors.border,
   },
   toggleButtonRight: {},
   toggleButtonActive: {
-    backgroundColor: '#4F46E5',
+    backgroundColor: colors.primary,
   },
   toggleButtonText: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#6b7280',
+    color: colors.textSecondary,
   },
   toggleButtonTextActive: {
-    color: '#fff',
+    color: colors.textInverse,
   },
   input: {
     borderWidth: 1,
-    borderColor: '#e5e7eb',
+    borderColor: colors.border,
     borderRadius: 12,
     paddingHorizontal: 16,
     paddingVertical: 14,
     fontSize: 16,
-    color: '#111827',
+    color: colors.text,
     marginBottom: 10,
   },
   estimated: {
     fontSize: 13,
-    color: '#6b7280',
+    color: colors.textSecondary,
     marginTop: 2,
   },
   estimatedValue: {
     fontWeight: '600',
-    color: '#111827',
+    color: colors.text,
   },
   primaryButton: {
-    backgroundColor: '#4F46E5',
+    backgroundColor: colors.primary,
     borderRadius: 12,
     paddingVertical: 16,
     alignItems: 'center',
@@ -350,7 +351,7 @@ const styles = StyleSheet.create({
     opacity: 0.4,
   },
   primaryButtonText: {
-    color: '#fff',
+    color: colors.textInverse,
     fontSize: 16,
     fontWeight: '600',
   },
@@ -360,7 +361,7 @@ const styles = StyleSheet.create({
   },
   defaultsLinkText: {
     fontSize: 14,
-    color: '#6b7280',
+    color: colors.textSecondary,
     textDecorationLine: 'underline',
   },
 })

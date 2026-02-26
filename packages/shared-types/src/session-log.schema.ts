@@ -4,7 +4,7 @@ export const ActualSetSchema = z
   .object({
     set_number: z.number().int().positive(),
     weight_kg: z.number().positive(),
-    reps_completed: z.number().int().positive(),
+    reps_completed: z.number().int().min(0),
     rpe_actual: z.number().min(6).max(10).optional(),
     notes: z.string().optional(),
   })

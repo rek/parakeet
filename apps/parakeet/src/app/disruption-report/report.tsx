@@ -14,6 +14,8 @@ import { router } from 'expo-router'
 import { reportDisruption, applyDisruptionAdjustment } from '../../lib/disruptions'
 import { useAuth } from '../../hooks/useAuth'
 import type { DisruptionType, Severity, DisruptionWithSuggestions } from '@parakeet/shared-types'
+import { colors } from '../../theme'
+import { BackLink } from '../../components/navigation/BackLink'
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
@@ -32,13 +34,22 @@ type Lift = typeof LIFTS[number]
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
-type AdjustmentAction = 'weight_reduced' | 'session_skipped' | 'reps_reduced'
+type AdjustmentAction =
+  | 'weight_reduced'
+  | 'session_skipped'
+  | 'reps_reduced'
+  | 'skip'
+  | 'reduce_volume'
+  | 'reduce_intensity'
+  | 'substitute'
+  | 'reschedule'
 
 interface AdjSuggestion {
   session_id: string
   action: AdjustmentAction
   reduction_pct?: number
   reps_reduction?: number
+  substitution_note?: string
   rationale?: string
 }
 
@@ -48,22 +59,25 @@ function todayIso(): string {
   return new Date().toISOString().split('T')[0]
 }
 
-function formatDate(iso: string): string {
-  return new Date(iso).toLocaleDateString('en-AU', { weekday: 'short', month: 'short', day: 'numeric' })
-}
-
 function describeAction(suggestion: AdjSuggestion): string {
   switch (suggestion.action) {
     case 'session_skipped':
+    case 'skip':
       return 'Session skipped'
     case 'weight_reduced':
+    case 'reduce_intensity':
       return suggestion.reduction_pct != null
         ? `Weight reduced by ${suggestion.reduction_pct}%`
         : 'Weight reduced'
     case 'reps_reduced':
+    case 'reduce_volume':
       return suggestion.reps_reduction != null
         ? `Reps reduced by ${suggestion.reps_reduction}`
         : 'Reps reduced'
+    case 'substitute':
+      return suggestion.substitution_note ?? 'Exercise substituted'
+    case 'reschedule':
+      return 'Session rescheduled'
   }
 }
 
@@ -184,7 +198,7 @@ export default function DisruptionReportScreen() {
               <View key={i} style={styles.adjustmentCard}>
                 <View style={[
                   styles.adjustmentBadge,
-                  s.action === 'session_skipped' && styles.adjustmentBadgeSkip,
+                  (s.action === 'session_skipped' || s.action === 'skip') && styles.adjustmentBadgeSkip,
                 ]}>
                   <Text style={styles.adjustmentBadgeText}>{describeAction(s)}</Text>
                 </View>
@@ -203,7 +217,7 @@ export default function DisruptionReportScreen() {
               activeOpacity={0.8}
             >
               {isApplying ? (
-                <ActivityIndicator color="#fff" size="small" />
+                <ActivityIndicator color={colors.textInverse} size="small" />
               ) : (
                 <Text style={styles.applyButtonText}>Apply All Adjustments</Text>
               )}
@@ -230,9 +244,7 @@ export default function DisruptionReportScreen() {
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-          <Text style={styles.backText}>← Back</Text>
-        </TouchableOpacity>
+        <BackLink onPress={() => router.back()} />
         <Text style={styles.title}>Report Issue</Text>
       </View>
 
@@ -264,19 +276,19 @@ export default function DisruptionReportScreen() {
         <SectionLabel label="2. How severe?" />
         <View style={styles.severityRow}>
           {(['minor', 'moderate', 'major'] as Severity[]).map((s) => {
-            const colors = {
-              minor:    { bg: '#FEF3C7', border: '#D97706', text: '#92400E' },
-              moderate: { bg: '#FFEDD5', border: '#EA580C', text: '#7C2D12' },
-              major:    { bg: '#FEE2E2', border: '#DC2626', text: '#7F1D1D' },
+            const severityPalette = {
+              minor:    { bg: colors.warningMuted, border: colors.warning, text: colors.warning },
+              moderate: { bg: colors.secondaryMuted, border: colors.secondary, text: colors.warning },
+              major:    { bg: colors.dangerMuted, border: colors.danger, text: colors.danger },
             }
-            const c = colors[s]
+            const c = severityPalette[s]
             const selected = selectedSeverity === s
             return (
               <TouchableOpacity
                 key={s}
                 style={[
                   styles.severityButton,
-                  { borderColor: selected ? c.border : '#E5E7EB', backgroundColor: selected ? c.bg : '#fff' },
+                  { borderColor: selected ? c.border : colors.border, backgroundColor: selected ? c.bg : colors.bgSurface },
                 ]}
                 onPress={() => setSelectedSeverity(s)}
                 activeOpacity={0.7}
@@ -299,7 +311,7 @@ export default function DisruptionReportScreen() {
               value={startDate}
               onChangeText={setStartDate}
               placeholder="YYYY-MM-DD"
-              placeholderTextColor="#9CA3AF"
+              placeholderTextColor={colors.textTertiary}
               keyboardType="numeric"
             />
           </View>
@@ -311,7 +323,7 @@ export default function DisruptionReportScreen() {
                 value={endDate}
                 onChangeText={setEndDate}
                 placeholder="YYYY-MM-DD"
-                placeholderTextColor="#9CA3AF"
+                placeholderTextColor={colors.textTertiary}
                 keyboardType="numeric"
               />
             </View>
@@ -361,7 +373,7 @@ export default function DisruptionReportScreen() {
           value={description}
           onChangeText={setDescription}
           placeholder="e.g. Left knee pain on descent, no pain on bench or deadlift"
-          placeholderTextColor="#9CA3AF"
+          placeholderTextColor={colors.textTertiary}
           multiline
           numberOfLines={4}
           textAlignVertical="top"
@@ -378,7 +390,7 @@ export default function DisruptionReportScreen() {
           activeOpacity={0.8}
         >
           {isSubmitting ? (
-            <ActivityIndicator color="#fff" size="small" />
+            <ActivityIndicator color={colors.textInverse} size="small" />
           ) : (
             <Text style={styles.submitButtonText}>Review Adjustments</Text>
           )}
@@ -391,25 +403,23 @@ export default function DisruptionReportScreen() {
 // ── Styles ────────────────────────────────────────────────────────────────────
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: '#fff' },
+  safeArea: { flex: 1, backgroundColor: colors.bgSurface },
   header: {
     paddingHorizontal: 20,
     paddingTop: 8,
     paddingBottom: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#F3F4F6',
+    borderBottomColor: colors.bgMuted,
   },
-  backButton: { marginBottom: 8 },
-  backText: { fontSize: 15, color: '#4F46E5', fontWeight: '500' },
-  title: { fontSize: 24, fontWeight: '800', color: '#111827' },
-  subtitle: { fontSize: 14, color: '#6B7280', marginTop: 4, lineHeight: 20 },
+  title: { fontSize: 24, fontWeight: '800', color: colors.text },
+  subtitle: { fontSize: 14, color: colors.textSecondary, marginTop: 4, lineHeight: 20 },
   scroll: { flex: 1 },
   content: { paddingHorizontal: 20, paddingTop: 20, paddingBottom: 40, gap: 8 },
 
   sectionLabel: {
     fontSize: 15,
     fontWeight: '700',
-    color: '#111827',
+    color: colors.text,
     marginTop: 8,
     marginBottom: 8,
   },
@@ -424,7 +434,7 @@ const styles = StyleSheet.create({
   typeCard: {
     width: '30%',
     borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderColor: colors.border,
     borderRadius: 12,
     paddingVertical: 14,
     paddingHorizontal: 8,
@@ -432,12 +442,12 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   typeCardSelected: {
-    borderColor: '#4F46E5',
-    backgroundColor: '#EEF2FF',
+    borderColor: colors.primary,
+    backgroundColor: colors.primaryMuted,
   },
   typeIcon: { fontSize: 20 },
-  typeLabel: { fontSize: 12, color: '#374151', textAlign: 'center' },
-  typeLabelSelected: { color: '#4F46E5', fontWeight: '600' },
+  typeLabel: { fontSize: 12, color: colors.textSecondary, textAlign: 'center' },
+  typeLabelSelected: { color: colors.primary, fontWeight: '600' },
 
   // Severity
   severityRow: { flexDirection: 'row', gap: 10, marginBottom: 8 },
@@ -448,20 +458,20 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     alignItems: 'center',
   },
-  severityText: { fontSize: 14, fontWeight: '600', color: '#374151' },
+  severityText: { fontSize: 14, fontWeight: '600', color: colors.textSecondary },
 
   // Date
   dateRow: { flexDirection: 'row', gap: 12, marginBottom: 8 },
   dateField: { flex: 1 },
-  dateFieldLabel: { fontSize: 12, color: '#6B7280', marginBottom: 4 },
+  dateFieldLabel: { fontSize: 12, color: colors.textSecondary, marginBottom: 4 },
   dateInput: {
     borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderColor: colors.border,
     borderRadius: 10,
     paddingHorizontal: 12,
     paddingVertical: 10,
     fontSize: 14,
-    color: '#111827',
+    color: colors.text,
   },
   ongoingToggle: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 8 },
   checkbox: {
@@ -469,13 +479,13 @@ const styles = StyleSheet.create({
     height: 20,
     borderRadius: 4,
     borderWidth: 2,
-    borderColor: '#D1D5DB',
+    borderColor: colors.border,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  checkboxChecked: { borderColor: '#4F46E5', backgroundColor: '#4F46E5' },
-  checkmark: { fontSize: 12, color: '#fff', fontWeight: '700' },
-  ongoingLabel: { fontSize: 14, color: '#374151' },
+  checkboxChecked: { borderColor: colors.primary, backgroundColor: colors.primary },
+  checkmark: { fontSize: 12, color: colors.textInverse, fontWeight: '700' },
+  ongoingLabel: { fontSize: 14, color: colors.textSecondary },
 
   // Lifts
   liftRow: { flexDirection: 'row', gap: 10, flexWrap: 'wrap', marginBottom: 8 },
@@ -484,49 +494,49 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     borderRadius: 20,
     borderWidth: 1,
-    borderColor: '#E5E7EB',
-    backgroundColor: '#fff',
+    borderColor: colors.border,
+    backgroundColor: colors.bgSurface,
   },
-  liftChipSelected: { borderColor: '#4F46E5', backgroundColor: '#EEF2FF' },
-  liftChipText: { fontSize: 14, color: '#374151', fontWeight: '500' },
-  liftChipTextSelected: { color: '#4F46E5', fontWeight: '600' },
+  liftChipSelected: { borderColor: colors.primary, backgroundColor: colors.primaryMuted },
+  liftChipText: { fontSize: 14, color: colors.textSecondary, fontWeight: '500' },
+  liftChipTextSelected: { color: colors.primary, fontWeight: '600' },
 
   // Description
   descriptionInput: {
     borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderColor: colors.border,
     borderRadius: 12,
     padding: 14,
     fontSize: 15,
-    color: '#111827',
+    color: colors.text,
     minHeight: 96,
     marginBottom: 8,
   },
 
-  errorText: { fontSize: 14, color: '#EF4444', marginBottom: 8 },
+  errorText: { fontSize: 14, color: colors.danger, marginBottom: 8 },
 
   // Buttons
   submitButton: {
-    backgroundColor: '#4F46E5',
+    backgroundColor: colors.primary,
     borderRadius: 12,
     paddingVertical: 16,
     alignItems: 'center',
     marginTop: 8,
   },
-  submitButtonText: { fontSize: 16, fontWeight: '600', color: '#fff' },
+  submitButtonText: { fontSize: 16, fontWeight: '600', color: colors.textInverse },
   buttonDisabled: { opacity: 0.4 },
 
   // Review state
   noAdjustments: {
     padding: 20,
-    backgroundColor: '#F0FDF4',
+    backgroundColor: colors.successMuted,
     borderRadius: 12,
     marginBottom: 16,
   },
-  noAdjustmentsText: { fontSize: 15, color: '#15803D', textAlign: 'center', lineHeight: 22 },
+  noAdjustmentsText: { fontSize: 15, color: colors.success, textAlign: 'center', lineHeight: 22 },
   adjustmentCard: {
     borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderColor: colors.border,
     borderRadius: 12,
     padding: 16,
     marginBottom: 10,
@@ -534,28 +544,28 @@ const styles = StyleSheet.create({
   },
   adjustmentBadge: {
     alignSelf: 'flex-start',
-    backgroundColor: '#FEF3C7',
+    backgroundColor: colors.warningMuted,
     borderRadius: 8,
     paddingHorizontal: 10,
     paddingVertical: 4,
   },
-  adjustmentBadgeSkip: { backgroundColor: '#FEE2E2' },
-  adjustmentBadgeText: { fontSize: 13, fontWeight: '600', color: '#374151' },
-  adjustmentRationale: { fontSize: 13, color: '#6B7280', lineHeight: 18 },
+  adjustmentBadgeSkip: { backgroundColor: colors.dangerMuted },
+  adjustmentBadgeText: { fontSize: 13, fontWeight: '600', color: colors.textSecondary },
+  adjustmentRationale: { fontSize: 13, color: colors.textSecondary, lineHeight: 18 },
   reviewActions: { gap: 12, marginTop: 16 },
   applyButton: {
-    backgroundColor: '#4F46E5',
+    backgroundColor: colors.primary,
     borderRadius: 12,
     paddingVertical: 16,
     alignItems: 'center',
   },
-  applyButtonText: { fontSize: 16, fontWeight: '600', color: '#fff' },
+  applyButtonText: { fontSize: 16, fontWeight: '600', color: colors.textInverse },
   skipButton: {
     borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderColor: colors.border,
     borderRadius: 12,
     paddingVertical: 16,
     alignItems: 'center',
   },
-  skipButtonText: { fontSize: 15, fontWeight: '500', color: '#374151' },
+  skipButtonText: { fontSize: 15, fontWeight: '500', color: colors.textSecondary },
 })

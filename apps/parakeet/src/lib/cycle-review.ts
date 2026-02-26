@@ -149,7 +149,6 @@ export async function storeCycleReview(
       description: suggestion.description,
       rationale: suggestion.rationale,
       developer_note: suggestion.developerNote,
-      priority: suggestion.priority ?? 'medium',
     })
   }
 }

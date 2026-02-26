@@ -1,11 +1,6 @@
 import { QueryClient } from '@tanstack/react-query'
+import { queryDefaultOptions } from '../queries/default-options'
 
 export const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      staleTime: 1000 * 60 * 5,   // 5 minutes
-      gcTime:    1000 * 60 * 60,   // 1 hour
-      retry: 2,
-    },
-  },
+  defaultOptions: queryDefaultOptions,
 })

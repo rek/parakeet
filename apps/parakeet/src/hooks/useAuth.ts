@@ -1,7 +1,12 @@
 import { router } from 'expo-router';
 import { useEffect, useState } from 'react';
 
-import { supabase } from '../lib/supabase';
+import {
+  ensureSignedInUserProfile,
+  getInitialAuthSession,
+  onAuthStateChanged,
+  signOut as signOutUser,
+} from '../services/auth.service';
 
 import type { Session, User } from '@supabase/supabase-js';
 
@@ -18,31 +23,26 @@ export function useAuth(): AuthState {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session: s } }) => {
+    getInitialAuthSession().then((s) => {
       setSession(s);
       setUser(s?.user ?? null);
       setLoading(false);
     });
 
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (_event, s) => {
+    const subscription = onAuthStateChanged(async (_event, s) => {
       setSession(s);
       setUser(s?.user ?? null);
 
       if (_event === 'SIGNED_IN' && s?.user) {
-        const { data } = await supabase
-          .from('profiles')
-          .select('id')
-          .eq('id', s.user.id)
-          .single();
-        if (!data) {
-          await supabase.from('profiles').insert({
-            id: s.user.id,
-            display_name: s.user.user_metadata?.['full_name'] ?? null,
-          });
-          router.replace('/(auth)/onboarding/lift-maxes');
-        } else {
+        try {
+          const profileStatus = await ensureSignedInUserProfile(s.user);
+          if (profileStatus === 'profile_created') {
+            router.replace('/(auth)/onboarding/lift-maxes');
+          } else {
+            router.replace('/(tabs)/today');
+          }
+        } catch (error) {
+          console.error('[auth] SIGNED_IN bootstrap failed:', error);
           router.replace('/(tabs)/today');
         }
       } else if (_event === 'SIGNED_OUT') {
@@ -54,7 +54,7 @@ export function useAuth(): AuthState {
   }, []);
 
   async function signOut() {
-    await supabase.auth.signOut();
+    await signOutUser();
   }
 
   return { user, session, loading, signOut };

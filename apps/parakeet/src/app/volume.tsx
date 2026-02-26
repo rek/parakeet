@@ -1,9 +1,11 @@
-import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
+import { ScrollView, StyleSheet, Text, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { router } from 'expo-router'
 
 import { useWeeklyVolume } from '../hooks/useWeeklyVolume'
 import type { MuscleGroup, VolumeStatus } from '@parakeet/training-engine'
+import { colors } from '../theme'
+import { BackLink } from '../components/navigation/BackLink'
 
 const MUSCLES: MuscleGroup[] = [
   'quads', 'hamstrings', 'glutes', 'lower_back', 'upper_back',
@@ -23,11 +25,11 @@ const MUSCLE_LABELS: Record<MuscleGroup, string> = {
 }
 
 const BAR_COLORS: Record<VolumeStatus, string> = {
-  below_mev:      '#F59E0B',
-  in_range:       '#10B981',
-  approaching_mrv: '#FBBF24',
-  at_mrv:         '#EF4444',
-  exceeded_mrv:   '#EF4444',
+  below_mev:      colors.warning,
+  in_range:       colors.success,
+  approaching_mrv: colors.warning,
+  at_mrv:         colors.danger,
+  exceeded_mrv:   colors.danger,
 }
 
 interface MuscleBarProps {
@@ -68,9 +70,7 @@ export default function VolumeScreen() {
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-          <Text style={styles.backText}>← Back</Text>
-        </TouchableOpacity>
+        <BackLink onPress={() => router.back()} />
         <Text style={styles.title}>Weekly Volume</Text>
       </View>
 
@@ -119,27 +119,19 @@ export default function VolumeScreen() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: colors.bgSurface,
   },
   header: {
     paddingHorizontal: 20,
     paddingTop: 8,
     paddingBottom: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#F3F4F6',
-  },
-  backButton: {
-    marginBottom: 8,
-  },
-  backText: {
-    fontSize: 15,
-    color: '#4F46E5',
-    fontWeight: '500',
+    borderBottomColor: colors.bgMuted,
   },
   title: {
     fontSize: 24,
     fontWeight: '800',
-    color: '#111827',
+    color: colors.text,
   },
   scroll: {
     flex: 1,
@@ -151,7 +143,7 @@ const styles = StyleSheet.create({
   },
   subtitle: {
     fontSize: 14,
-    color: '#6B7280',
+    color: colors.textSecondary,
     marginBottom: 16,
   },
   legend: {
@@ -172,7 +164,7 @@ const styles = StyleSheet.create({
   },
   legendText: {
     fontSize: 11,
-    color: '#6B7280',
+    color: colors.textSecondary,
     textTransform: 'capitalize',
   },
   mevNote: {
@@ -184,15 +176,15 @@ const styles = StyleSheet.create({
   mevMarkerSample: {
     width: 2,
     height: 12,
-    backgroundColor: '#6B7280',
+    backgroundColor: colors.textSecondary,
   },
   mevNoteText: {
     fontSize: 11,
-    color: '#6B7280',
+    color: colors.textSecondary,
   },
   loadingText: {
     fontSize: 14,
-    color: '#9CA3AF',
+    color: colors.textTertiary,
     textAlign: 'center',
     marginTop: 32,
   },
@@ -205,7 +197,7 @@ const styles = StyleSheet.create({
   barLabel: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#374151',
+    color: colors.textSecondary,
   },
   barContainer: {
     flexDirection: 'row',
@@ -215,7 +207,7 @@ const styles = StyleSheet.create({
   barTrack: {
     flex: 1,
     height: 12,
-    backgroundColor: '#F3F4F6',
+    backgroundColor: colors.bgMuted,
     borderRadius: 6,
     overflow: 'visible',
     position: 'relative',
@@ -229,17 +221,17 @@ const styles = StyleSheet.create({
     top: -2,
     width: 2,
     height: 16,
-    backgroundColor: '#6B7280',
+    backgroundColor: colors.textSecondary,
     borderRadius: 1,
   },
   barSets: {
     fontSize: 12,
-    color: '#6B7280',
+    color: colors.textSecondary,
     width: 64,
     textAlign: 'right',
   },
   barSetsOver: {
-    color: '#EF4444',
+    color: colors.danger,
     fontWeight: '600',
   },
 })

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import {
   ActivityIndicator,
   ScrollView,
@@ -21,6 +21,8 @@ import {
 } from '../../lib/auxiliary-config'
 import { getActiveProgram } from '../../lib/programs'
 import { useAuth } from '../../hooks/useAuth'
+import { colors } from '../../theme'
+import { BackLink } from '../../components/navigation/BackLink'
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
@@ -184,7 +186,7 @@ function LiftSection({
           activeOpacity={0.8}
         >
           {isSavingPool
-            ? <ActivityIndicator color="#fff" size="small" />
+            ? <ActivityIndicator color={colors.textInverse} size="small" />
             : <Text style={styles.saveBtnText}>Save Pool</Text>
           }
         </TouchableOpacity>
@@ -197,7 +199,7 @@ function LiftSection({
         <TextInput
           style={styles.addInput}
           placeholder="Add exercise…"
-          placeholderTextColor="#9CA3AF"
+          placeholderTextColor={colors.textTertiary}
           value={newExercise}
           onChangeText={setNewExercise}
           onSubmitEditing={addExercise}
@@ -224,7 +226,7 @@ function LiftSection({
               activeOpacity={0.8}
             >
               {isSavingAssignment
-                ? <ActivityIndicator color="#4F46E5" size="small" />
+                ? <ActivityIndicator color={colors.primary} size="small" />
                 : <Text style={styles.saveAssignmentBtnText}>Lock</Text>
               }
             </TouchableOpacity>
@@ -262,32 +264,47 @@ export default function AuxiliaryExercisesScreen() {
   const [savingPool, setSavingPool] = useState<Partial<Record<Lift, boolean>>>({})
   const [savingAssignment, setSavingAssignment] = useState<Partial<Record<Lift, boolean>>>({})
 
-  const { isLoading } = useQuery({
+  const { data: poolData, isLoading } = useQuery({
     queryKey: ['auxiliary', 'pools', user?.id],
     queryFn: () => getAuxiliaryPools(user!.id),
     enabled: !!user?.id,
-    onSuccess: (data) => {
-      if (!pools) setPools(data)
-    },
   })
 
-  useQuery({
+  const { data: activeProgram } = useQuery({
     queryKey: ['programs', 'active', user?.id],
     queryFn: () => getActiveProgram(user!.id),
     enabled: !!user?.id,
-    onSuccess: async (program) => {
-      if (!program) return
-      const bn = currentBlockNumber(program.start_date, program.total_weeks)
+  })
+
+  useEffect(() => {
+    if (poolData && !pools) {
+      setPools(poolData)
+    }
+  }, [poolData, pools])
+
+  useEffect(() => {
+    let isMounted = true
+
+    async function syncAssignmentsFromProgram() {
+      if (!activeProgram || !activeProgram.start_date || !user?.id) return
+      const bn = currentBlockNumber(activeProgram.start_date, activeProgram.total_weeks)
       setBlockNumber(bn)
-      setProgramId(program.id)
-      const loaded = await getActiveAssignments(user!.id, program.id, bn)
+      setProgramId(activeProgram.id)
+      const loaded = await getActiveAssignments(user.id, activeProgram.id, bn)
+      if (!isMounted) return
       setAssignments(
         Object.fromEntries(
           LIFTS.map((l) => [l, loaded[l] ?? (pools ? [pools[l][0], pools[l][1]] : ['', ''])]),
         ) as Partial<Assignments>,
       )
-    },
-  })
+    }
+
+    void syncAssignmentsFromProgram()
+
+    return () => {
+      isMounted = false
+    }
+  }, [activeProgram, pools, user?.id])
 
   async function handleSavePool(lift: Lift) {
     if (!pools || !user) return
@@ -315,16 +332,14 @@ export default function AuxiliaryExercisesScreen() {
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-          <Text style={styles.backText}>← Back</Text>
-        </TouchableOpacity>
+        <BackLink onPress={() => router.back()} />
         <Text style={styles.title}>Auxiliary Exercises</Text>
         <Text style={styles.subtitle}>Reorder to influence future rotation · add custom exercises</Text>
       </View>
 
       {isLoading || !pools ? (
         <View style={styles.loading}>
-          <ActivityIndicator color="#4F46E5" size="large" />
+          <ActivityIndicator color={colors.primary} size="large" />
         </View>
       ) : (
         <ScrollView
@@ -357,19 +372,17 @@ export default function AuxiliaryExercisesScreen() {
 // ── Styles ────────────────────────────────────────────────────────────────────
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: '#fff' },
+  safeArea: { flex: 1, backgroundColor: colors.bgSurface },
   header: {
     paddingHorizontal: 20,
     paddingTop: 8,
     paddingBottom: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#F3F4F6',
+    borderBottomColor: colors.bgMuted,
     gap: 2,
   },
-  backButton: { marginBottom: 6 },
-  backText: { fontSize: 15, color: '#4F46E5', fontWeight: '500' },
-  title: { fontSize: 24, fontWeight: '800', color: '#111827' },
-  subtitle: { fontSize: 12, color: '#9CA3AF', lineHeight: 16 },
+  title: { fontSize: 24, fontWeight: '800', color: colors.text },
+  subtitle: { fontSize: 12, color: colors.textTertiary, lineHeight: 16 },
   loading: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   scroll: { flex: 1 },
   content: { paddingBottom: 48 },
@@ -378,20 +391,20 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingVertical: 20,
     borderBottomWidth: 1,
-    borderBottomColor: '#F3F4F6',
+    borderBottomColor: colors.bgMuted,
     gap: 10,
   },
   liftHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  liftTitle: { fontSize: 18, fontWeight: '700', color: '#111827' },
-  sectionLabel: { fontSize: 12, fontWeight: '600', color: '#6B7280', textTransform: 'uppercase', letterSpacing: 0.5 },
+  liftTitle: { fontSize: 18, fontWeight: '700', color: colors.text },
+  sectionLabel: { fontSize: 12, fontWeight: '600', color: colors.textSecondary, textTransform: 'uppercase', letterSpacing: 0.5 },
   saveBtn: {
-    backgroundColor: '#4F46E5',
+    backgroundColor: colors.primary,
     borderRadius: 8,
     paddingHorizontal: 12,
     paddingVertical: 6,
   },
   saveBtnDisabled: { opacity: 0.4 },
-  saveBtnText: { fontSize: 13, fontWeight: '600', color: '#fff' },
+  saveBtnText: { fontSize: 13, fontWeight: '600', color: colors.textInverse },
 
   poolList: { gap: 4 },
   poolItem: {
@@ -399,86 +412,86 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 8,
     paddingHorizontal: 10,
-    backgroundColor: '#F9FAFB',
+    backgroundColor: colors.bgSurface,
     borderRadius: 8,
     gap: 8,
   },
-  poolPosition: { fontSize: 12, color: '#9CA3AF', width: 20, textAlign: 'right' },
-  poolExercise: { flex: 1, fontSize: 14, color: '#111827' },
+  poolPosition: { fontSize: 12, color: colors.textTertiary, width: 20, textAlign: 'right' },
+  poolExercise: { flex: 1, fontSize: 14, color: colors.text },
   poolActions: { flexDirection: 'row', gap: 4 },
   reorderBtn: {
     width: 28,
     height: 28,
     borderRadius: 6,
     borderWidth: 1,
-    borderColor: '#E5E7EB',
-    backgroundColor: '#fff',
+    borderColor: colors.border,
+    backgroundColor: colors.bgSurface,
     alignItems: 'center',
     justifyContent: 'center',
   },
   reorderBtnDisabled: { opacity: 0.25 },
-  reorderBtnText: { fontSize: 14, color: '#374151' },
+  reorderBtnText: { fontSize: 14, color: colors.textSecondary },
   removeBtn: {
     width: 28,
     height: 28,
     borderRadius: 6,
-    backgroundColor: '#FEE2E2',
+    backgroundColor: colors.dangerMuted,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  removeBtnText: { fontSize: 16, color: '#EF4444', lineHeight: 20 },
+  removeBtnText: { fontSize: 16, color: colors.danger, lineHeight: 20 },
 
   addRow: { flexDirection: 'row', gap: 8 },
   addInput: {
     flex: 1,
     borderWidth: 1,
-    borderColor: '#D1D5DB',
+    borderColor: colors.border,
     borderRadius: 8,
     paddingHorizontal: 12,
     paddingVertical: 9,
     fontSize: 14,
-    color: '#111827',
+    color: colors.text,
   },
   addBtn: {
-    backgroundColor: '#4F46E5',
+    backgroundColor: colors.primary,
     borderRadius: 8,
     paddingHorizontal: 14,
     paddingVertical: 9,
     justifyContent: 'center',
   },
   addBtnDisabled: { opacity: 0.35 },
-  addBtnText: { fontSize: 14, fontWeight: '600', color: '#fff' },
+  addBtnText: { fontSize: 14, fontWeight: '600', color: colors.textInverse },
 
   assignmentCard: {
-    backgroundColor: '#EEF2FF',
+    backgroundColor: colors.primaryMuted,
     borderRadius: 10,
     padding: 12,
     gap: 8,
   },
   assignmentHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  assignmentTitle: { fontSize: 13, fontWeight: '600', color: '#4F46E5' },
+  assignmentTitle: { fontSize: 13, fontWeight: '600', color: colors.primary },
   saveAssignmentBtn: {
     borderWidth: 1,
-    borderColor: '#4F46E5',
+    borderColor: colors.primary,
     borderRadius: 6,
     paddingHorizontal: 10,
     paddingVertical: 4,
   },
-  saveAssignmentBtnText: { fontSize: 12, fontWeight: '600', color: '#4F46E5' },
+  saveAssignmentBtnText: { fontSize: 12, fontWeight: '600', color: colors.primary },
 
   slotPicker: { gap: 4 },
-  slotLabel: { fontSize: 11, color: '#6B7280', fontWeight: '600', textTransform: 'uppercase', letterSpacing: 0.4 },
+  slotLabel: { fontSize: 11, color: colors.textSecondary, fontWeight: '600', textTransform: 'uppercase', letterSpacing: 0.4 },
   slotControls: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   slotArrow: {
     width: 28,
     height: 28,
     borderRadius: 6,
-    backgroundColor: '#fff',
+    backgroundColor: colors.bgSurface,
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
-    borderColor: '#C7D2FE',
+    borderColor: colors.primaryMuted,
   },
-  slotArrowText: { fontSize: 18, color: '#4F46E5', lineHeight: 22 },
-  slotValue: { flex: 1, fontSize: 14, color: '#111827', fontWeight: '500' },
+  slotArrowText: { fontSize: 18, color: colors.primary, lineHeight: 22 },
+  slotValue: { flex: 1, fontSize: 14, color: colors.text, fontWeight: '500' },
 })

@@ -18,6 +18,8 @@ import {
   updateSuggestionStatus,
 } from '../../lib/developer-suggestions'
 import type { DeveloperSuggestion } from '../../lib/developer-suggestions'
+import { colors } from '../../theme'
+import { BackLink } from '../../components/navigation/BackLink'
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
@@ -58,9 +60,9 @@ interface PriorityBadgeProps {
 
 function PriorityBadge({ priority }: PriorityBadgeProps) {
   const color =
-    priority === 'high' ? '#EF4444' : priority === 'medium' ? '#F59E0B' : '#9CA3AF'
+    priority === 'high' ? colors.danger : priority === 'medium' ? colors.warning : colors.textTertiary
   const bg =
-    priority === 'high' ? '#FEF2F2' : priority === 'medium' ? '#FFFBEB' : '#F3F4F6'
+    priority === 'high' ? colors.dangerMuted : priority === 'medium' ? colors.warningMuted : colors.bgMuted
   return (
     <View style={[styles.priorityBadge, { backgroundColor: bg }]}>
       <Text style={[styles.priorityBadgeText, { color }]}>{priority.toUpperCase()}</Text>
@@ -92,7 +94,7 @@ function SuggestionCard({ suggestion, onAcknowledge, onDismiss, isUpdating }: Su
       </View>
       {isUpdating ? (
         <View style={styles.suggestionActions}>
-          <ActivityIndicator color="#4F46E5" size="small" />
+          <ActivityIndicator color={colors.primary} size="small" />
         </View>
       ) : (
         <View style={styles.suggestionActions}>
@@ -208,9 +210,7 @@ export default function DeveloperSettingsScreen() {
       >
         {/* Header */}
         <View style={styles.header}>
-          <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
-            <Text style={styles.backLabel}>‹ Settings</Text>
-          </TouchableOpacity>
+          <BackLink label="Settings" onPress={() => router.back()} />
         </View>
 
         <Text style={styles.screenTitle}>Developer</Text>
@@ -228,7 +228,7 @@ export default function DeveloperSettingsScreen() {
         </Text>
 
         {loading ? (
-          <ActivityIndicator style={styles.loader} color="#111827" />
+          <ActivityIndicator style={styles.loader} color={colors.text} />
         ) : (
           <View style={styles.strategyList}>
             {STRATEGY_OPTIONS.map((option) => (
@@ -323,7 +323,7 @@ export default function DeveloperSettingsScreen() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: colors.bgSurface,
   },
   scrollView: {
     flex: 1,
@@ -335,42 +335,34 @@ const styles = StyleSheet.create({
   },
   header: {
     marginBottom: 8,
-  },
-  backBtn: {
-    paddingVertical: 4,
-  },
-  backLabel: {
-    fontSize: 16,
-    color: '#6b7280',
-  },
-  screenTitle: {
+  },  screenTitle: {
     fontSize: 28,
     fontWeight: '800',
-    color: '#111827',
+    color: colors.text,
     marginBottom: 8,
   },
   screenSubtitle: {
     fontSize: 14,
-    color: '#6b7280',
+    color: colors.textSecondary,
     marginBottom: 24,
     lineHeight: 20,
   },
   divider: {
     height: 1,
-    backgroundColor: '#F3F4F6',
+    backgroundColor: colors.bgMuted,
     marginBottom: 24,
   },
   sectionHeader: {
     fontSize: 13,
     fontWeight: '600',
-    color: '#6b7280',
+    color: colors.textSecondary,
     textTransform: 'uppercase',
     letterSpacing: 0.8,
     marginBottom: 8,
   },
   sectionNote: {
     fontSize: 13,
-    color: '#9ca3af',
+    color: colors.textTertiary,
     marginBottom: 16,
     lineHeight: 18,
   },
@@ -384,19 +376,19 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     borderRadius: 10,
     borderWidth: 1.5,
-    borderColor: '#E5E7EB',
-    backgroundColor: '#FAFAFA',
+    borderColor: colors.border,
+    backgroundColor: colors.bgSurface,
   },
   strategyRowSelected: {
-    borderColor: '#111827',
-    backgroundColor: '#F9FAFB',
+    borderColor: colors.text,
+    backgroundColor: colors.bgSurface,
   },
   strategyRadio: {
     width: 20,
     height: 20,
     borderRadius: 10,
     borderWidth: 2,
-    borderColor: '#D1D5DB',
+    borderColor: colors.border,
     marginRight: 12,
     marginTop: 1,
     alignItems: 'center',
@@ -406,7 +398,7 @@ const styles = StyleSheet.create({
     width: 10,
     height: 10,
     borderRadius: 5,
-    backgroundColor: '#111827',
+    backgroundColor: colors.text,
   },
   strategyText: {
     flex: 1,
@@ -414,15 +406,15 @@ const styles = StyleSheet.create({
   strategyLabel: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#6b7280',
+    color: colors.textSecondary,
     marginBottom: 2,
   },
   strategyLabelSelected: {
-    color: '#111827',
+    color: colors.text,
   },
   strategyDescription: {
     fontSize: 13,
-    color: '#9ca3af',
+    color: colors.textTertiary,
     lineHeight: 18,
   },
   loader: {
@@ -430,7 +422,7 @@ const styles = StyleSheet.create({
   },
   savingLabel: {
     fontSize: 13,
-    color: '#9ca3af',
+    color: colors.textTertiary,
     textAlign: 'center',
     marginTop: 12,
   },
@@ -443,34 +435,34 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   unreviewedBadge: {
-    backgroundColor: '#FEF2F2',
+    backgroundColor: colors.dangerMuted,
     borderRadius: 12,
     paddingHorizontal: 10,
     paddingVertical: 3,
   },
-  unreviewedBadgeText: { fontSize: 11, fontWeight: '700', color: '#EF4444' },
-  emptyText: { fontSize: 14, color: '#9CA3AF', paddingVertical: 8 },
+  unreviewedBadgeText: { fontSize: 11, fontWeight: '700', color: colors.danger },
+  emptyText: { fontSize: 14, color: colors.textTertiary, paddingVertical: 8 },
   suggestionList: { gap: 12 },
 
   // Suggestion card
   suggestionCard: {
     borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderColor: colors.border,
     borderRadius: 12,
     padding: 14,
     gap: 8,
-    backgroundColor: '#FAFAFA',
+    backgroundColor: colors.bgSurface,
   },
   suggestionCardHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
   },
-  suggestionDate: { fontSize: 11, color: '#9CA3AF' },
-  suggestionDescription: { fontSize: 15, fontWeight: '600', color: '#111827', lineHeight: 20 },
-  suggestionRationale: { fontSize: 13, color: '#4B5563', lineHeight: 18 },
+  suggestionDate: { fontSize: 11, color: colors.textTertiary },
+  suggestionDescription: { fontSize: 15, fontWeight: '600', color: colors.text, lineHeight: 20 },
+  suggestionRationale: { fontSize: 13, color: colors.textSecondary, lineHeight: 18 },
   devNoteContainer: {
-    backgroundColor: '#EEF2FF',
+    backgroundColor: colors.primaryMuted,
     borderRadius: 8,
     padding: 10,
     gap: 2,
@@ -478,30 +470,30 @@ const styles = StyleSheet.create({
   devNoteLabel: {
     fontSize: 10,
     fontWeight: '700',
-    color: '#6366F1',
+    color: colors.primary,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
   },
-  devNoteText: { fontSize: 13, color: '#3730A3', lineHeight: 18 },
+  devNoteText: { fontSize: 13, color: colors.primary, lineHeight: 18 },
   suggestionActions: { flexDirection: 'row', gap: 8, paddingTop: 4 },
   acknowledgeBtn: {
     flex: 1,
-    backgroundColor: '#4F46E5',
+    backgroundColor: colors.primary,
     borderRadius: 8,
     paddingVertical: 9,
     alignItems: 'center',
   },
-  acknowledgeBtnText: { fontSize: 13, fontWeight: '600', color: '#fff' },
+  acknowledgeBtnText: { fontSize: 13, fontWeight: '600', color: colors.textInverse },
   dismissBtn: {
     flex: 1,
     borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderColor: colors.border,
     borderRadius: 8,
     paddingVertical: 9,
     alignItems: 'center',
-    backgroundColor: '#fff',
+    backgroundColor: colors.bgSurface,
   },
-  dismissBtnText: { fontSize: 13, fontWeight: '500', color: '#6B7280' },
+  dismissBtnText: { fontSize: 13, fontWeight: '500', color: colors.textSecondary },
 
   // Priority badge
   priorityBadge: { borderRadius: 6, paddingHorizontal: 8, paddingVertical: 3 },
@@ -514,21 +506,21 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingVertical: 12,
     borderTopWidth: 1,
-    borderTopColor: '#F3F4F6',
+    borderTopColor: colors.bgMuted,
     marginTop: 4,
   },
-  historySummaryText: { fontSize: 13, color: '#6B7280' },
-  historyChevron: { fontSize: 11, color: '#9CA3AF' },
+  historySummaryText: { fontSize: 13, color: colors.textSecondary },
+  historyChevron: { fontSize: 11, color: colors.textTertiary },
   historyCard: {
     paddingVertical: 10,
     paddingHorizontal: 12,
-    backgroundColor: '#F9FAFB',
+    backgroundColor: colors.bgSurface,
     borderRadius: 8,
     gap: 4,
     marginTop: 4,
   },
   historyCardHeader: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  historyStatus: { fontSize: 11, color: '#6B7280', textTransform: 'capitalize' },
-  historyDescription: { fontSize: 13, color: '#374151' },
-  historyDate: { fontSize: 11, color: '#9CA3AF' },
+  historyStatus: { fontSize: 11, color: colors.textSecondary, textTransform: 'capitalize' },
+  historyDescription: { fontSize: 13, color: colors.textSecondary },
+  historyDate: { fontSize: 11, color: colors.textTertiary },
 })

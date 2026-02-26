@@ -1,4 +1,5 @@
 import { estimateOneRepMax_Epley, gramsToKg, kgToGrams } from '@parakeet/training-engine'
+import { LifterMaxesInputSchema } from '@parakeet/shared-types'
 import type { Lift } from '@parakeet/shared-types'
 import { supabase } from './supabase'
 
@@ -14,6 +15,8 @@ export interface LifterMaxesInput {
   deadlift: LiftInput
 }
 
+type MaxSource = 'input_1rm' | 'input_3rm' | 'mixed'
+
 function resolve1Rm(input: LiftInput): number {
   if (input.type === '3rm' && input.reps) {
     return estimateOneRepMax_Epley(input.weightKg, input.reps)
@@ -21,7 +24,7 @@ function resolve1Rm(input: LiftInput): number {
   return input.weightKg
 }
 
-function inferSource(input: LifterMaxesInput): string {
+function inferSource(input: LifterMaxesInput): MaxSource {
   const types = [input.squat.type, input.bench.type, input.deadlift.type]
   if (types.every((t) => t === '1rm')) return 'input_1rm'
   if (types.every((t) => t === '3rm')) return 'input_3rm'
@@ -29,10 +32,32 @@ function inferSource(input: LifterMaxesInput): string {
 }
 
 export async function submitMaxes(input: LifterMaxesInput) {
-  const { data: { user } } = await supabase.auth.getUser()
-  const userId = user!.id
+  const parsed = LifterMaxesInputSchema.safeParse({
+    squat: {
+      type: input.squat.type,
+      weight_kg: input.squat.weightKg,
+      ...(input.squat.type === '3rm' ? { reps: input.squat.reps } : {}),
+    },
+    bench: {
+      type: input.bench.type,
+      weight_kg: input.bench.weightKg,
+      ...(input.bench.type === '3rm' ? { reps: input.bench.reps } : {}),
+    },
+    deadlift: {
+      type: input.deadlift.type,
+      weight_kg: input.deadlift.weightKg,
+      ...(input.deadlift.type === '3rm' ? { reps: input.deadlift.reps } : {}),
+    },
+  })
+  if (!parsed.success) {
+    throw new Error(parsed.error.issues[0]?.message ?? 'Invalid max input')
+  }
 
-  const { data } = await supabase
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) throw new Error('Not authenticated')
+  const userId = user.id
+
+  const { data, error } = await supabase
     .from('lifter_maxes')
     .insert({
       user_id:              userId,
@@ -51,6 +76,7 @@ export async function submitMaxes(input: LifterMaxesInput) {
     .select()
     .single()
 
+  if (error) throw error
   return data
 }
 
