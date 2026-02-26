@@ -11,6 +11,7 @@ import { SafeAreaView } from 'react-native-safe-area-context'
 
 import { WeekRow } from '../../components/program/WeekRow'
 import { useActiveProgram } from '../../hooks/useActiveProgram'
+import { colors, spacing, typography } from '../../theme'
 
 interface ProgramSession {
   id: string
@@ -45,7 +46,7 @@ export default function ProgramScreen() {
   if (isLoading) {
     return (
       <SafeAreaView style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#4F46E5" />
+        <ActivityIndicator size="large" color={colors.primary} />
       </SafeAreaView>
     )
   }
@@ -107,58 +108,60 @@ export default function ProgramScreen() {
 const styles = StyleSheet.create({
   loadingContainer: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: colors.bg,
     justifyContent: 'center',
     alignItems: 'center',
   },
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: colors.bg,
   },
   header: {
-    paddingHorizontal: 20,
-    paddingTop: 8,
-    paddingBottom: 20,
+    paddingHorizontal: spacing[5],
+    paddingTop: spacing[2],
+    paddingBottom: spacing[5],
   },
   title: {
-    fontSize: 28,
-    fontWeight: '800',
-    color: '#111827',
-    marginBottom: 4,
+    fontSize: typography.sizes['2xl'],
+    fontWeight: typography.weights.black,
+    color: colors.text,
+    marginBottom: spacing[1],
+    letterSpacing: typography.letterSpacing.tight,
   },
   subtitle: {
-    fontSize: 14,
-    color: '#6B7280',
+    fontSize: typography.sizes.sm,
+    color: colors.textSecondary,
   },
   scrollView: {
     flex: 1,
   },
   scrollContent: {
-    paddingBottom: 32,
+    paddingBottom: spacing[8],
   },
   // Empty state
   emptyState: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    paddingHorizontal: 32,
+    paddingHorizontal: spacing[8],
   },
   emptyTitle: {
-    fontSize: 20,
-    fontWeight: '600',
-    color: '#111827',
-    marginBottom: 24,
+    fontSize: typography.sizes.lg,
+    fontWeight: typography.weights.semibold,
+    color: colors.text,
+    marginBottom: spacing[6],
   },
   primaryButton: {
-    backgroundColor: '#4F46E5',
+    backgroundColor: colors.primary,
     borderRadius: 12,
-    paddingVertical: 16,
-    paddingHorizontal: 32,
+    paddingVertical: spacing[4],
+    paddingHorizontal: spacing[8],
     alignItems: 'center',
   },
   primaryButtonText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#fff',
+    fontSize: typography.sizes.base,
+    fontWeight: typography.weights.bold,
+    color: colors.textInverse,
+    letterSpacing: typography.letterSpacing.wide,
   },
 })

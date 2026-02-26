@@ -2,6 +2,7 @@ import { router } from 'expo-router'
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 
 import { BlockBadge } from './BlockBadge'
+import { colors, spacing, radii, typography } from '../../theme'
 
 interface SessionSummaryProps {
   session: {
@@ -17,10 +18,10 @@ interface SessionSummaryProps {
 }
 
 const STATUS_DOT_COLOR: Record<string, string> = {
-  planned:     '#9CA3AF',
-  in_progress: '#3B82F6',
-  completed:   '#10B981',
-  skipped:     '#EF4444',
+  planned:     colors.textTertiary,
+  in_progress: colors.info,
+  completed:   colors.success,
+  skipped:     colors.danger,
 }
 
 function formatDate(dateString: string): string {
@@ -37,7 +38,7 @@ function capitalize(value: string): string {
 }
 
 export function SessionSummary({ session }: SessionSummaryProps) {
-  const dotColor = STATUS_DOT_COLOR[session.status] ?? '#9CA3AF'
+  const dotColor = STATUS_DOT_COLOR[session.status] ?? colors.textTertiary
   const isActionable = session.status === 'planned' || session.status === 'in_progress'
 
   function handlePress() {
@@ -72,27 +73,27 @@ const styles = StyleSheet.create({
   row: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 10,
+    paddingVertical: spacing[2.5],
     borderBottomWidth: 1,
-    borderBottomColor: '#F3F4F6',
+    borderBottomColor: colors.borderMuted,
   },
   statusDot: {
-    width: 12,
-    height: 12,
-    borderRadius: 6,
-    marginRight: 12,
+    width: 10,
+    height: 10,
+    borderRadius: radii.full,
+    marginRight: spacing[3],
   },
   middle: {
     flex: 1,
   },
   liftText: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: '#111827',
-    marginBottom: 2,
+    fontSize: typography.sizes.base,
+    fontWeight: typography.weights.semibold,
+    color: colors.text,
+    marginBottom: spacing[0.5],
   },
   dateText: {
-    fontSize: 13,
-    color: '#6B7280',
+    fontSize: typography.sizes.sm,
+    color: colors.textSecondary,
   },
 })

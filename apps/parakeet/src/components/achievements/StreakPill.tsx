@@ -1,4 +1,5 @@
 import { StyleSheet, Text, TouchableOpacity } from 'react-native'
+import { colors, radii, spacing, typography } from '../../theme'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -28,15 +29,17 @@ export function StreakPill({ currentStreak, onPress }: StreakPillProps) {
 
 const styles = StyleSheet.create({
   pill: {
-    backgroundColor: '#FEF3C7',
-    borderRadius: 999,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
+    backgroundColor: colors.secondaryMuted,
+    borderRadius: radii.full,
+    borderWidth: 1,
+    borderColor: colors.secondary,
+    paddingHorizontal: spacing[3],
+    paddingVertical: spacing[1],
     alignSelf: 'flex-start',
   },
   text: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: '#92400E',
+    fontSize: typography.sizes.sm,
+    fontWeight: typography.weights.bold,
+    color: colors.secondary,
   },
 })

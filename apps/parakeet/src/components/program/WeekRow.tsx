@@ -3,6 +3,7 @@ import { StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 
 import { BlockBadge } from './BlockBadge'
 import { SessionSummary } from './SessionSummary'
+import { colors, spacing, radii, typography } from '../../theme'
 
 interface WeekSession {
   id: string
@@ -29,17 +30,17 @@ export function WeekRow({ weekNumber, sessions, isCurrentWeek }: WeekRowProps) {
   const firstBlockNumber = sessions[0]?.block_number ?? null
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, isCurrentWeek && styles.containerCurrent]}>
       <TouchableOpacity
         style={styles.header}
         onPress={() => setExpanded((prev) => !prev)}
         activeOpacity={0.7}
       >
         <View style={styles.headerLeft}>
-          <Text style={styles.weekLabel}>
+          <Text style={[styles.weekLabel, isCurrentWeek && styles.weekLabelCurrent]}>
             Week {weekNumber}
             {isCurrentWeek ? (
-              <Text style={styles.currentBadge}> (Current)</Text>
+              <Text style={styles.currentBadge}> · Now</Text>
             ) : null}
           </Text>
           <Text style={styles.fraction}>
@@ -66,51 +67,57 @@ export function WeekRow({ weekNumber, sessions, isCurrentWeek }: WeekRowProps) {
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: '#fff',
-    borderRadius: 12,
+    backgroundColor: colors.bgSurface,
+    borderRadius: radii.md,
     borderWidth: 1,
-    borderColor: '#E5E7EB',
-    marginHorizontal: 16,
-    marginBottom: 12,
+    borderColor: colors.border,
+    marginHorizontal: spacing[4],
+    marginBottom: spacing[3],
     overflow: 'hidden',
+  },
+  containerCurrent: {
+    borderColor: colors.primary,
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingVertical: 14,
+    paddingHorizontal: spacing[4],
+    paddingVertical: spacing[3.5],
   },
   headerLeft: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
+    gap: spacing[3],
   },
   headerRight: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 10,
+    gap: spacing[2.5],
   },
   weekLabel: {
-    fontSize: 15,
-    fontWeight: '700',
-    color: '#111827',
+    fontSize: typography.sizes.base,
+    fontWeight: typography.weights.bold,
+    color: colors.text,
+  },
+  weekLabelCurrent: {
+    color: colors.primary,
   },
   currentBadge: {
-    fontSize: 13,
-    fontWeight: '500',
-    color: '#10B981',
+    fontSize: typography.sizes.sm,
+    fontWeight: typography.weights.medium,
+    color: colors.primary,
   },
   fraction: {
-    fontSize: 13,
-    color: '#6B7280',
+    fontSize: typography.sizes.sm,
+    color: colors.textSecondary,
   },
   chevron: {
-    fontSize: 11,
-    color: '#9CA3AF',
+    fontSize: 10,
+    color: colors.textTertiary,
   },
   sessionList: {
-    paddingHorizontal: 16,
-    paddingBottom: 4,
+    paddingHorizontal: spacing[4],
+    paddingBottom: spacing[1],
   },
 })

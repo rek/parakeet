@@ -7,6 +7,7 @@ import { useAuth } from '../../hooks/useAuth';
 import { getPerformanceTrends } from '../../lib/performance';
 import { getCompletedSessions } from '../../lib/sessions';
 import { listPrograms } from '../../lib/programs';
+import { colors, spacing, radii, typography } from '../../theme';
 
 import type { PerformanceTrend } from '../../lib/performance';
 
@@ -22,9 +23,9 @@ interface TrendCardProps {
 
 function TrendCard({ trend }: TrendCardProps) {
   const trendConfig = {
-    improving: { symbol: '↑', color: '#16a34a' },
-    stable: { symbol: '→', color: '#6b7280' },
-    declining: { symbol: '↓', color: '#dc2626' },
+    improving: { symbol: '↑', color: colors.success },
+    stable:    { symbol: '→', color: colors.textSecondary },
+    declining: { symbol: '↓', color: colors.danger },
   } as const;
 
   const { symbol, color } = trendConfig[trend.trend];
@@ -76,7 +77,7 @@ function SessionRow({ session }: SessionRowProps) {
         <Text style={styles.sessionRowDate}>{session.planned_date ?? '—'}</Text>
       </View>
       <View style={styles.completedBadge}>
-        <Text style={styles.completedBadgeText}>Completed</Text>
+        <Text style={styles.completedBadgeText}>Done</Text>
       </View>
     </View>
   );
@@ -114,7 +115,7 @@ export default function HistoryScreen() {
     return (
       <SafeAreaView style={styles.safeArea}>
         <View style={styles.centered}>
-          <ActivityIndicator size="large" color="#4F46E5" />
+          <ActivityIndicator size="large" color={colors.primary} />
         </View>
       </SafeAreaView>
     );
@@ -148,7 +149,7 @@ export default function HistoryScreen() {
         {(programsQuery.data?.length ?? 0) > 0 && (
           <>
             <Text style={styles.sectionHeader}>Completed Programs</Text>
-            <View style={{ marginBottom: 24 }}>
+            <View style={{ marginBottom: spacing[6] }}>
               {programsQuery.data!.map((program) => (
                 <View key={program.id} style={styles.programRow}>
                   <View style={styles.programRowLeft}>
@@ -194,15 +195,15 @@ export default function HistoryScreen() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: colors.bg,
   },
   scrollView: {
     flex: 1,
   },
   container: {
-    paddingHorizontal: 24,
-    paddingTop: 24,
-    paddingBottom: 48,
+    paddingHorizontal: spacing[6],
+    paddingTop: spacing[6],
+    paddingBottom: spacing[12],
   },
   centered: {
     flex: 1,
@@ -210,54 +211,57 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   screenTitle: {
-    fontSize: 28,
-    fontWeight: '800',
-    color: '#111827',
-    marginBottom: 24,
+    fontSize: typography.sizes['2xl'],
+    fontWeight: typography.weights.black,
+    color: colors.text,
+    marginBottom: spacing[6],
+    letterSpacing: typography.letterSpacing.tight,
   },
   sectionHeader: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: '#6b7280',
+    fontSize: typography.sizes.xs,
+    fontWeight: typography.weights.bold,
+    color: colors.textTertiary,
     textTransform: 'uppercase',
-    letterSpacing: 0.8,
-    marginBottom: 12,
-    marginTop: 8,
+    letterSpacing: typography.letterSpacing.widest,
+    marginBottom: spacing[3],
+    marginTop: spacing[2],
   },
   // Trend cards
   trendRow: {
     flexDirection: 'row',
-    marginBottom: 32,
+    marginBottom: spacing[8],
+    gap: spacing[2],
   },
   trendCard: {
     flex: 1,
     borderWidth: 1,
-    borderColor: '#e5e7eb',
-    borderRadius: 12,
-    padding: 12,
-    margin: 4,
-    backgroundColor: '#fff',
+    borderColor: colors.border,
+    borderRadius: radii.md,
+    padding: spacing[3],
+    backgroundColor: colors.bgSurface,
   },
   trendLiftName: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: '#6b7280',
-    marginBottom: 4,
+    fontSize: typography.sizes.xs,
+    fontWeight: typography.weights.bold,
+    color: colors.textTertiary,
+    textTransform: 'uppercase',
+    letterSpacing: typography.letterSpacing.wide,
+    marginBottom: spacing[1],
   },
   trendOneRm: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: '#111827',
-    marginBottom: 2,
+    fontSize: typography.sizes.md,
+    fontWeight: typography.weights.black,
+    color: colors.text,
+    marginBottom: spacing[0.5],
   },
   trendArrow: {
-    fontSize: 20,
-    fontWeight: '700',
-    marginBottom: 6,
+    fontSize: typography.sizes.xl,
+    fontWeight: typography.weights.bold,
+    marginBottom: spacing[1.5],
   },
   trendMeta: {
-    fontSize: 11,
-    color: '#9ca3af',
+    fontSize: typography.sizes.xs,
+    color: colors.textTertiary,
     lineHeight: 16,
   },
   // Session rows
@@ -265,55 +269,68 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingVertical: 12,
+    paddingVertical: spacing[3],
     borderBottomWidth: 1,
-    borderBottomColor: '#F3F4F6',
+    borderBottomColor: colors.borderMuted,
   },
   sessionRowLeft: {
     flex: 1,
-    marginRight: 12,
+    marginRight: spacing[3],
   },
   sessionRowTitle: {
-    fontSize: 16,
-    fontWeight: '500',
-    color: '#111827',
-    marginBottom: 2,
+    fontSize: typography.sizes.base,
+    fontWeight: typography.weights.medium,
+    color: colors.text,
+    marginBottom: spacing[0.5],
   },
   sessionRowDate: {
-    fontSize: 13,
-    color: '#6b7280',
+    fontSize: typography.sizes.sm,
+    color: colors.textSecondary,
   },
   completedBadge: {
-    backgroundColor: '#dcfce7',
-    borderRadius: 6,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
+    backgroundColor: colors.successMuted,
+    borderRadius: radii.xs,
+    paddingHorizontal: spacing[2],
+    paddingVertical: spacing[1],
+    borderWidth: 1,
+    borderColor: colors.success,
   },
   completedBadgeText: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: '#16a34a',
+    fontSize: typography.sizes.xs,
+    fontWeight: typography.weights.bold,
+    color: colors.success,
   },
   emptyText: {
-    fontSize: 15,
-    color: '#9ca3af',
-    marginBottom: 32,
+    fontSize: typography.sizes.base,
+    color: colors.textTertiary,
+    marginBottom: spacing[8],
   },
   programRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingVertical: 12,
+    paddingVertical: spacing[3],
     borderBottomWidth: 1,
-    borderBottomColor: '#F3F4F6',
+    borderBottomColor: colors.borderMuted,
   },
-  programRowLeft: { flex: 1, marginRight: 12 },
-  programRowTitle: { fontSize: 15, fontWeight: '600', color: '#111827', marginBottom: 2 },
+  programRowLeft: { flex: 1, marginRight: spacing[3] },
+  programRowTitle: {
+    fontSize: typography.sizes.base,
+    fontWeight: typography.weights.semibold,
+    color: colors.text,
+    marginBottom: spacing[0.5],
+  },
   reviewButton: {
-    backgroundColor: '#EEF2FF',
-    borderRadius: 8,
-    paddingHorizontal: 14,
-    paddingVertical: 8,
+    backgroundColor: colors.primaryMuted,
+    borderRadius: radii.sm,
+    paddingHorizontal: spacing[3.5],
+    paddingVertical: spacing[2],
+    borderWidth: 1,
+    borderColor: colors.primary,
   },
-  reviewButtonText: { fontSize: 13, fontWeight: '600', color: '#4F46E5' },
+  reviewButtonText: {
+    fontSize: typography.sizes.sm,
+    fontWeight: typography.weights.bold,
+    color: colors.primary,
+  },
 });

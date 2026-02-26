@@ -5,6 +5,7 @@ import { useQuery } from '@tanstack/react-query';
 
 import { useAuth } from '../../hooks/useAuth';
 import { supabase } from '../../lib/supabase';
+import { colors, spacing, radii, typography } from '../../theme';
 
 // ── Sub-components ────────────────────────────────────────────────────────────
 
@@ -45,7 +46,6 @@ function Row({ label, labelStyle, onPress, right }: RowProps) {
 export default function SettingsScreen() {
   const { user, signOut } = useAuth();
 
-  // Badge for pending AI formula suggestions
   const { data: pendingSuggestions } = useQuery({
     queryKey: ['formula', 'suggestions', 'count', user?.id],
     queryFn: async () => {
@@ -61,7 +61,6 @@ export default function SettingsScreen() {
     staleTime: 60 * 1000,
   });
 
-  // Badge for unreviewed developer suggestions
   const { data: unreviewedDevCount } = useQuery({
     queryKey: ['developer', 'suggestions', 'count'],
     queryFn: async () => {
@@ -191,96 +190,99 @@ export default function SettingsScreen() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: colors.bg,
   },
   scrollView: {
     flex: 1,
   },
   container: {
-    paddingHorizontal: 24,
-    paddingTop: 24,
-    paddingBottom: 48,
+    paddingHorizontal: spacing[6],
+    paddingTop: spacing[6],
+    paddingBottom: spacing[12],
   },
   screenTitle: {
-    fontSize: 28,
-    fontWeight: '800',
-    color: '#111827',
-    marginBottom: 32,
+    fontSize: typography.sizes['2xl'],
+    fontWeight: typography.weights.black,
+    color: colors.text,
+    marginBottom: spacing[8],
+    letterSpacing: typography.letterSpacing.tight,
   },
   // Profile
   profileSection: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 8,
-    marginBottom: 24,
+    paddingVertical: spacing[2],
+    marginBottom: spacing[6],
   },
   avatar: {
     width: 48,
     height: 48,
-    borderRadius: 24,
-    backgroundColor: '#e5e7eb',
+    borderRadius: radii.full,
+    backgroundColor: colors.primaryMuted,
+    borderWidth: 1.5,
+    borderColor: colors.primary,
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 14,
+    marginRight: spacing[3.5],
   },
   avatarInitial: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: '#111827',
+    fontSize: typography.sizes.lg,
+    fontWeight: typography.weights.bold,
+    color: colors.primary,
   },
   emailText: {
-    fontSize: 15,
-    color: '#111827',
+    fontSize: typography.sizes.base,
+    color: colors.textSecondary,
     flexShrink: 1,
   },
   // Divider
   divider: {
     height: 1,
-    backgroundColor: '#F3F4F6',
-    marginBottom: 16,
+    backgroundColor: colors.borderMuted,
+    marginVertical: spacing[4],
   },
   // Section header
   sectionHeader: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: '#6b7280',
+    fontSize: typography.sizes.xs,
+    fontWeight: typography.weights.bold,
+    color: colors.textTertiary,
     textTransform: 'uppercase',
-    letterSpacing: 0.8,
-    marginBottom: 4,
+    letterSpacing: typography.letterSpacing.widest,
+    marginBottom: spacing[1],
   },
   // Rows
   row: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 16,
+    paddingVertical: spacing[4],
     borderBottomWidth: 1,
-    borderBottomColor: '#F3F4F6',
+    borderBottomColor: colors.borderMuted,
   },
   rowLabel: {
-    fontSize: 16,
-    color: '#111827',
+    fontSize: typography.sizes.base,
+    color: colors.text,
     flex: 1,
   },
   rowRight: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
+    gap: spacing[1.5],
   },
   chevron: {
-    fontSize: 20,
-    color: '#9CA3AF',
-    lineHeight: 22,
+    fontSize: 22,
+    color: colors.textTertiary,
+    lineHeight: 24,
   },
   suggestionDot: {
     width: 8,
     height: 8,
-    borderRadius: 4,
-    backgroundColor: '#EF4444',
+    borderRadius: radii.full,
+    backgroundColor: colors.primary,
   },
   signOutLabel: {
-    color: '#dc2626',
+    color: colors.danger,
   },
   versionLabel: {
-    color: '#9ca3af',
+    color: colors.textTertiary,
   },
 });

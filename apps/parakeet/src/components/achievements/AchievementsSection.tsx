@@ -4,6 +4,7 @@ import { useQuery } from '@tanstack/react-query'
 
 import { getCycleBadges, getStreakData, getPRHistory } from '../../lib/achievements'
 import type { HistoricalPRs } from '../../lib/achievements'
+import { colors, spacing, radii, typography } from '../../theme'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -21,7 +22,6 @@ function PRRow({ lift, prs }: { lift: string; prs: HistoricalPRs }) {
   const liftLabel = lift.charAt(0).toUpperCase() + lift.slice(1)
   const best1rm = prs.best1rmKg > 0 ? `${prs.best1rmKg.toFixed(1)} kg est. 1RM` : null
 
-  // Find best rep-at-weight (highest weight with a rep PR)
   const repPRWeights = Object.keys(prs.repPRs).map(Number).sort((a, b) => b - a)
   const topRepWeight = repPRWeights[0]
   const topRepCount = topRepWeight !== undefined ? prs.repPRs[topRepWeight] : null
@@ -88,7 +88,7 @@ export function AchievementsSection({ userId }: AchievementsSectionProps) {
   if (isLoading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="small" color="#4F46E5" />
+        <ActivityIndicator size="small" color={colors.primary} />
       </View>
     )
   }
@@ -188,109 +188,111 @@ export function AchievementsSection({ userId }: AchievementsSectionProps) {
 
 const styles = StyleSheet.create({
   loadingContainer: {
-    paddingVertical: 32,
+    paddingVertical: spacing[8],
     alignItems: 'center',
   },
   sectionHeader: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: '#6b7280',
+    fontSize: typography.sizes.xs,
+    fontWeight: typography.weights.bold,
+    color: colors.textTertiary,
     textTransform: 'uppercase',
-    letterSpacing: 0.8,
-    marginBottom: 8,
-    marginTop: 16,
+    letterSpacing: typography.letterSpacing.widest,
+    marginBottom: spacing[2],
+    marginTop: spacing[4],
   },
   card: {
-    backgroundColor: '#fff',
-    borderRadius: 12,
+    backgroundColor: colors.bgSurface,
+    borderRadius: radii.md,
     borderWidth: 1,
-    borderColor: '#E5E7EB',
-    paddingVertical: 4,
-    marginBottom: 4,
+    borderColor: colors.border,
+    paddingVertical: spacing[1],
+    marginBottom: spacing[1],
   },
   // Badges
   badgeRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
+    paddingHorizontal: spacing[4],
+    paddingVertical: spacing[3],
     borderBottomWidth: 1,
-    borderBottomColor: '#F3F4F6',
+    borderBottomColor: colors.borderMuted,
   },
   badgeLeft: {
     flex: 1,
   },
   badgeTitle: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: '#111827',
-    marginBottom: 2,
+    fontSize: typography.sizes.base,
+    fontWeight: typography.weights.semibold,
+    color: colors.text,
+    marginBottom: spacing[0.5],
   },
   badgeMeta: {
-    fontSize: 13,
-    color: '#6B7280',
+    fontSize: typography.sizes.sm,
+    color: colors.textSecondary,
   },
   chevron: {
-    fontSize: 20,
-    color: '#9CA3AF',
-    lineHeight: 22,
+    fontSize: 22,
+    color: colors.textTertiary,
+    lineHeight: 24,
   },
   // Streak
   streakRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 10,
+    paddingHorizontal: spacing[4],
+    paddingVertical: spacing[2.5],
   },
   streakEmoji: {
     fontSize: 16,
-    marginRight: 8,
+    marginRight: spacing[2],
     width: 22,
   },
   streakLabel: {
-    fontSize: 14,
-    color: '#6B7280',
+    fontSize: typography.sizes.sm,
+    color: colors.textSecondary,
     width: 64,
   },
   streakValue: {
-    fontSize: 15,
-    fontWeight: '700',
-    color: '#111827',
+    fontSize: typography.sizes.base,
+    fontWeight: typography.weights.bold,
+    color: colors.secondary,
     flex: 1,
   },
   streakMeta: {
-    fontSize: 14,
-    color: '#374151',
+    fontSize: typography.sizes.sm,
+    color: colors.textSecondary,
     flex: 1,
   },
   // Personal records
   prBlock: {
-    paddingHorizontal: 16,
-    paddingVertical: 10,
+    paddingHorizontal: spacing[4],
+    paddingVertical: spacing[2.5],
     borderBottomWidth: 1,
-    borderBottomColor: '#F3F4F6',
+    borderBottomColor: colors.borderMuted,
   },
   prLiftName: {
-    fontSize: 14,
-    fontWeight: '700',
-    color: '#111827',
-    marginBottom: 4,
+    fontSize: typography.sizes.sm,
+    fontWeight: typography.weights.bold,
+    color: colors.primary,
+    marginBottom: spacing[1],
+    textTransform: 'uppercase',
+    letterSpacing: typography.letterSpacing.wide,
   },
   prLine: {
-    fontSize: 13,
-    color: '#374151',
-    marginBottom: 2,
+    fontSize: typography.sizes.sm,
+    color: colors.textSecondary,
+    marginBottom: spacing[0.5],
   },
   // WILKS
   wilksRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 14,
+    paddingHorizontal: spacing[4],
+    paddingVertical: spacing[3.5],
   },
   wilksHint: {
-    fontSize: 15,
-    color: '#374151',
+    fontSize: typography.sizes.base,
+    color: colors.textSecondary,
     flex: 1,
   },
 })

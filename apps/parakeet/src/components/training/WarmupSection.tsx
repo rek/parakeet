@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native'
+import { colors, spacing, radii, typography } from '../../theme'
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -72,7 +73,6 @@ export function WarmupSection({ sets, completedIndices, onToggle }: WarmupSectio
 
   return (
     <View style={styles.container}>
-      {/* Collapsible header */}
       <TouchableOpacity
         style={styles.header}
         onPress={() => setCollapsed((prev) => !prev)}
@@ -89,7 +89,6 @@ export function WarmupSection({ sets, completedIndices, onToggle }: WarmupSectio
         </View>
       </TouchableOpacity>
 
-      {/* Set rows */}
       {!collapsed && (
         <View style={styles.setList}>
           {sets.map((set, index) => (
@@ -104,7 +103,6 @@ export function WarmupSection({ sets, completedIndices, onToggle }: WarmupSectio
         </View>
       )}
 
-      {/* Divider */}
       <View style={styles.divider} />
     </View>
   )
@@ -114,50 +112,50 @@ export function WarmupSection({ sets, completedIndices, onToggle }: WarmupSectio
 
 const styles = StyleSheet.create({
   container: {
-    marginBottom: 8,
+    marginBottom: spacing[2],
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingVertical: 14,
+    paddingHorizontal: spacing[4],
+    paddingVertical: spacing[3.5],
   },
   headerTitle: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: '#111827',
+    fontSize: typography.sizes.base,
+    fontWeight: typography.weights.bold,
+    color: colors.text,
   },
   headerRight: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    gap: spacing[2],
   },
   summary: {
-    fontSize: 13,
-    color: '#6B7280',
+    fontSize: typography.sizes.sm,
+    color: colors.textSecondary,
   },
   chevron: {
-    fontSize: 12,
-    color: '#6B7280',
+    fontSize: 11,
+    color: colors.textTertiary,
   },
   setList: {
-    paddingHorizontal: 16,
-    paddingBottom: 8,
+    paddingHorizontal: spacing[4],
+    paddingBottom: spacing[2],
   },
   setRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 10,
+    paddingVertical: spacing[2.5],
   },
   setRowDone: {
     opacity: 0.4,
   },
   setNumber: {
     width: 28,
-    fontSize: 14,
-    color: '#6B7280',
-    fontWeight: '500',
+    fontSize: typography.sizes.sm,
+    color: colors.textSecondary,
+    fontWeight: typography.weights.medium,
   },
   setMiddle: {
     flex: 1,
@@ -165,47 +163,47 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   weightText: {
-    fontSize: 15,
-    color: '#111827',
-    fontWeight: '600',
+    fontSize: typography.sizes.base,
+    color: colors.text,
+    fontWeight: typography.weights.semibold,
   },
   weightStrike: {
     textDecorationLine: 'line-through',
   },
   repsText: {
-    fontSize: 15,
-    color: '#374151',
+    fontSize: typography.sizes.base,
+    color: colors.textSecondary,
   },
   setLabel: {
-    fontSize: 13,
-    color: '#6B7280',
+    fontSize: typography.sizes.sm,
+    color: colors.textSecondary,
   },
   textFaded: {
-    color: '#9CA3AF',
+    color: colors.textTertiary,
   },
   checkbox: {
     width: 22,
     height: 22,
-    borderRadius: 11,
+    borderRadius: radii.full,
     borderWidth: 1.5,
-    borderColor: '#D1D5DB',
+    borderColor: colors.border,
     alignItems: 'center',
     justifyContent: 'center',
   },
   checkboxDone: {
-    backgroundColor: '#4F46E5',
-    borderColor: '#4F46E5',
+    backgroundColor: colors.primary,
+    borderColor: colors.primary,
   },
   checkmark: {
     fontSize: 12,
-    color: '#fff',
-    fontWeight: '700',
+    color: colors.textInverse,
+    fontWeight: typography.weights.bold,
     lineHeight: 14,
   },
   divider: {
     height: 1,
-    backgroundColor: '#E5E7EB',
-    marginHorizontal: 16,
-    marginTop: 4,
+    backgroundColor: colors.border,
+    marginHorizontal: spacing[4],
+    marginTop: spacing[1],
   },
 })

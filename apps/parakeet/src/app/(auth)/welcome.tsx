@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { ActivityIndicator, Alert, Platform, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 
 import { supabase } from '../../lib/supabase';
+import { colors, spacing, radii, typography } from '../../theme';
 
 export default function WelcomeScreen() {
   const [email, setEmail] = useState('');
@@ -29,7 +30,6 @@ export default function WelcomeScreen() {
         token: idToken,
       });
       if (error) throw error;
-      // Navigation handled by useAuth onAuthStateChange
     } catch (err: unknown) {
       Alert.alert('Sign-in failed', err instanceof Error ? err.message : 'Unknown error');
     } finally {
@@ -54,34 +54,47 @@ export default function WelcomeScreen() {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Parakeet</Text>
-      <Text style={styles.subtitle}>Your powerlifting training companion</Text>
-
-      <TouchableOpacity style={styles.googleButton} onPress={handleGoogleSignIn} disabled={loading}>
-        <Text style={styles.googleButtonText}>Continue with Google</Text>
-      </TouchableOpacity>
-
-      <View style={styles.divider}>
-        <View style={styles.dividerLine} />
-        <Text style={styles.dividerText}>or</Text>
-        <View style={styles.dividerLine} />
+      {/* Brand mark */}
+      <View style={styles.brandSection}>
+        <Text style={styles.wordmark}>PARAKEET</Text>
+        <View style={styles.accentBar} />
+        <Text style={styles.tagline}>Powerlifting. Engineered.</Text>
       </View>
 
-      <TextInput
-        style={styles.input}
-        placeholder="Email address"
-        value={email}
-        onChangeText={setEmail}
-        keyboardType="email-address"
-        autoCapitalize="none"
-        autoComplete="email"
-        editable={!loading}
-      />
-      <TouchableOpacity style={styles.emailButton} onPress={handleEmailOtp} disabled={loading || !email.trim()}>
-        <Text style={styles.emailButtonText}>Send magic link</Text>
-      </TouchableOpacity>
+      {/* Auth form */}
+      <View style={styles.formSection}>
+        <TouchableOpacity style={styles.googleButton} onPress={handleGoogleSignIn} disabled={loading}>
+          <Text style={styles.googleButtonText}>Continue with Google</Text>
+        </TouchableOpacity>
 
-      {loading && <ActivityIndicator style={styles.spinner} />}
+        <View style={styles.divider}>
+          <View style={styles.dividerLine} />
+          <Text style={styles.dividerText}>or</Text>
+          <View style={styles.dividerLine} />
+        </View>
+
+        <TextInput
+          style={styles.input}
+          placeholder="Email address"
+          placeholderTextColor={colors.textTertiary}
+          value={email}
+          onChangeText={setEmail}
+          keyboardType="email-address"
+          autoCapitalize="none"
+          autoComplete="email"
+          editable={!loading}
+        />
+        <TouchableOpacity
+          style={[styles.emailButton, (!email.trim() || loading) && styles.buttonDisabled]}
+          onPress={handleEmailOtp}
+          disabled={loading || !email.trim()}
+          activeOpacity={0.85}
+        >
+          <Text style={styles.emailButtonText}>Send magic link</Text>
+        </TouchableOpacity>
+      </View>
+
+      {loading && <ActivityIndicator style={styles.spinner} color={colors.primary} />}
     </View>
   );
 }
@@ -90,69 +103,92 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     justifyContent: 'center',
-    paddingHorizontal: 32,
-    backgroundColor: '#fff',
+    paddingHorizontal: spacing[8],
+    backgroundColor: colors.bg,
   },
-  title: {
-    fontSize: 40,
-    fontWeight: '700',
-    textAlign: 'center',
-    marginBottom: 8,
+  // Brand
+  brandSection: {
+    alignItems: 'center',
+    marginBottom: spacing[12],
   },
-  subtitle: {
-    fontSize: 16,
-    color: '#6b7280',
+  wordmark: {
+    fontSize: typography.sizes['5xl'],
+    fontWeight: typography.weights.black,
+    color: colors.primary,
+    letterSpacing: typography.letterSpacing.widest,
     textAlign: 'center',
-    marginBottom: 48,
+  },
+  accentBar: {
+    width: 48,
+    height: 3,
+    backgroundColor: colors.secondary,
+    borderRadius: radii.full,
+    marginTop: spacing[2],
+    marginBottom: spacing[3],
+  },
+  tagline: {
+    fontSize: typography.sizes.base,
+    color: colors.textSecondary,
+    fontWeight: typography.weights.medium,
+    letterSpacing: typography.letterSpacing.wider,
+    textTransform: 'uppercase',
+  },
+  // Form
+  formSection: {
+    gap: spacing[3],
   },
   googleButton: {
     backgroundColor: '#4285F4',
-    borderRadius: 12,
-    paddingVertical: 16,
+    borderRadius: radii.md,
+    paddingVertical: spacing[4],
     alignItems: 'center',
-    marginBottom: 24,
   },
   googleButtonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '600',
+    color: colors.white,
+    fontSize: typography.sizes.base,
+    fontWeight: typography.weights.semibold,
   },
   divider: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 24,
+    marginVertical: spacing[1],
   },
   dividerLine: {
     flex: 1,
     height: 1,
-    backgroundColor: '#e5e7eb',
+    backgroundColor: colors.border,
   },
   dividerText: {
-    marginHorizontal: 12,
-    color: '#9ca3af',
-    fontSize: 14,
+    marginHorizontal: spacing[3],
+    color: colors.textTertiary,
+    fontSize: typography.sizes.sm,
   },
   input: {
     borderWidth: 1,
-    borderColor: '#e5e7eb',
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-    fontSize: 16,
-    marginBottom: 12,
+    borderColor: colors.border,
+    borderRadius: radii.md,
+    paddingHorizontal: spacing[4],
+    paddingVertical: spacing[4],
+    fontSize: typography.sizes.base,
+    color: colors.text,
+    backgroundColor: colors.bgSurface,
   },
   emailButton: {
-    backgroundColor: '#111827',
-    borderRadius: 12,
-    paddingVertical: 16,
+    backgroundColor: colors.primary,
+    borderRadius: radii.md,
+    paddingVertical: spacing[4],
     alignItems: 'center',
   },
+  buttonDisabled: {
+    opacity: 0.45,
+  },
   emailButtonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '600',
+    color: colors.textInverse,
+    fontSize: typography.sizes.base,
+    fontWeight: typography.weights.bold,
+    letterSpacing: typography.letterSpacing.wide,
   },
   spinner: {
-    marginTop: 24,
+    marginTop: spacing[6],
   },
 });

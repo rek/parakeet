@@ -1,25 +1,26 @@
 import { StyleSheet, Text, View } from 'react-native'
+import { colors, radii, spacing, typography } from '../../theme'
 
 interface BlockBadgeProps {
   block: number | null
 }
 
 interface BadgeConfig {
-  backgroundColor: string
-  color: string
+  bg: string
+  text: string
   label: string
 }
 
 function getBadgeConfig(block: number | null): BadgeConfig {
   switch (block) {
     case 1:
-      return { backgroundColor: '#DBEAFE', color: '#1D4ED8', label: 'B1' }
+      return { bg: colors.infoMuted,      text: colors.info,      label: 'B1' }
     case 2:
-      return { backgroundColor: '#FED7AA', color: '#C2410C', label: 'B2' }
+      return { bg: colors.secondaryMuted, text: colors.secondary, label: 'B2' }
     case 3:
-      return { backgroundColor: '#FECACA', color: '#B91C1C', label: 'B3' }
+      return { bg: colors.dangerMuted,    text: colors.danger,    label: 'B3' }
     default:
-      return { backgroundColor: '#F3F4F6', color: '#6B7280', label: 'DL' }
+      return { bg: colors.bgMuted,        text: colors.textSecondary, label: 'DL' }
   }
 }
 
@@ -27,20 +28,21 @@ export function BlockBadge({ block }: BlockBadgeProps) {
   const config = getBadgeConfig(block)
 
   return (
-    <View style={[styles.badge, { backgroundColor: config.backgroundColor }]}>
-      <Text style={[styles.label, { color: config.color }]}>{config.label}</Text>
+    <View style={[styles.badge, { backgroundColor: config.bg }]}>
+      <Text style={[styles.label, { color: config.text }]}>{config.label}</Text>
     </View>
   )
 }
 
 const styles = StyleSheet.create({
   badge: {
-    borderRadius: 10,
-    paddingHorizontal: 8,
-    paddingVertical: 3,
+    borderRadius: radii.xs,
+    paddingHorizontal: spacing[2],
+    paddingVertical: spacing[0.5],
   },
   label: {
-    fontSize: 12,
-    fontWeight: '600',
+    fontSize: typography.sizes.xs,
+    fontWeight: typography.weights.bold,
+    letterSpacing: typography.letterSpacing.wide,
   },
 })

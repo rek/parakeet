@@ -7,6 +7,7 @@ import { QueryClientProvider } from '@tanstack/react-query'
 import { queryClient } from '../lib/query-client'
 import { useAuth } from '../hooks/useAuth'
 import '../lib/supabase'
+import { colors } from '../theme'
 
 class ErrorBoundary extends Component<{ children: ReactNode }, { error: Error | null }> {
   state = { error: null }
@@ -15,11 +16,11 @@ class ErrorBoundary extends Component<{ children: ReactNode }, { error: Error | 
     const { error } = this.state
     if (error) {
       return (
-        <ScrollView style={{ flex: 1, padding: 24, backgroundColor: '#fff' }}>
-          <Text style={{ fontSize: 18, fontWeight: '700', color: '#dc2626', marginBottom: 8 }}>
+        <ScrollView style={{ flex: 1, padding: 24, backgroundColor: colors.bg }}>
+          <Text style={{ fontSize: 18, fontWeight: '700', color: colors.danger, marginBottom: 8 }}>
             Crash
           </Text>
-          <Text style={{ fontFamily: 'monospace', fontSize: 12, color: '#374151' }}>
+          <Text style={{ fontFamily: 'monospace', fontSize: 12, color: colors.textSecondary }}>
             {(error as Error).message}{'\n\n'}{(error as Error).stack}
           </Text>
         </ScrollView>

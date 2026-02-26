@@ -18,13 +18,14 @@ import { useTodaySession } from '../../hooks/useTodaySession'
 import { useWeeklyVolume } from '../../hooks/useWeeklyVolume'
 import { getActiveDisruptions } from '../../lib/disruptions'
 import { getStreakData } from '../../lib/achievements'
+import { colors, spacing, radii, typography } from '../../theme'
 import type { MuscleGroup, VolumeStatus } from '@parakeet/training-engine'
 
 // ── Volume compact card ───────────────────────────────────────────────────────
 
 const MUSCLE_LABELS: Record<MuscleGroup, string> = {
   quads:      'Quads',
-  hamstrings: 'Hamstrings',
+  hamstrings: 'Hams',
   glutes:     'Glutes',
   lower_back: 'Lower Back',
   upper_back: 'Upper Back',
@@ -35,11 +36,11 @@ const MUSCLE_LABELS: Record<MuscleGroup, string> = {
 }
 
 const BAR_COLORS: Record<VolumeStatus, string> = {
-  below_mev:       '#F59E0B',
-  in_range:        '#10B981',
-  approaching_mrv: '#FBBF24',
-  at_mrv:          '#EF4444',
-  exceeded_mrv:    '#EF4444',
+  below_mev:       colors.warning,
+  in_range:        colors.success,
+  approaching_mrv: colors.secondary,
+  at_mrv:          colors.danger,
+  exceeded_mrv:    colors.danger,
 }
 
 const COMPACT_MUSCLES: MuscleGroup[] = ['quads', 'chest', 'hamstrings', 'upper_back', 'lower_back']
@@ -113,12 +114,11 @@ export default function TodayScreen() {
   if (sessionLoading || programLoading) {
     return (
       <SafeAreaView style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#4F46E5" />
+        <ActivityIndicator size="large" color={colors.primary} />
       </SafeAreaView>
     )
   }
 
-  // Muscles at or exceeding MRV — for warning banner
   const mrvWarningMuscles = volumeData
     ? (Object.entries(volumeData.status) as [MuscleGroup, VolumeStatus][])
         .filter(([, s]) => s === 'at_mrv' || s === 'exceeded_mrv')
@@ -128,7 +128,7 @@ export default function TodayScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.title}>Parakeet</Text>
+        <Text style={styles.title}>PARAKEET</Text>
         {(streakData?.currentStreak ?? 0) >= 1 && (
           <StreakPill
             currentStreak={streakData!.currentStreak}
@@ -143,7 +143,6 @@ export default function TodayScreen() {
         showsVerticalScrollIndicator={false}
       >
         {!program ? (
-          // No program state
           <View style={styles.emptyState}>
             <Text style={styles.emptyTitle}>Welcome to Parakeet</Text>
             <Text style={styles.emptySubtitle}>
@@ -159,7 +158,6 @@ export default function TodayScreen() {
           </View>
         ) : (
           <>
-            {/* MRV warning banner */}
             {mrvWarningMuscles.length > 0 && (
               <View style={styles.mrvBanner}>
                 <Text style={styles.mrvBannerText}>
@@ -196,163 +194,168 @@ export default function TodayScreen() {
 const styles = StyleSheet.create({
   loadingContainer: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: colors.bg,
     justifyContent: 'center',
     alignItems: 'center',
   },
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: colors.bg,
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 20,
-    paddingTop: 8,
-    paddingBottom: 20,
+    paddingHorizontal: spacing[5],
+    paddingTop: spacing[2],
+    paddingBottom: spacing[5],
   },
   title: {
-    fontSize: 28,
-    fontWeight: '800',
-    color: '#111827',
+    fontSize: typography.sizes['2xl'],
+    fontWeight: typography.weights.black,
+    color: colors.primary,
+    letterSpacing: typography.letterSpacing.wider,
   },
   scroll: {
     flex: 1,
   },
   content: {
-    paddingBottom: 32,
-    gap: 12,
+    paddingBottom: spacing[8],
+    gap: spacing[3],
   },
-  // No program / empty state
+  // Empty state
   emptyState: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    paddingHorizontal: 32,
+    paddingHorizontal: spacing[8],
     paddingTop: 80,
   },
   emptyTitle: {
-    fontSize: 24,
-    fontWeight: '700',
-    color: '#111827',
-    marginBottom: 8,
+    fontSize: typography.sizes.xl,
+    fontWeight: typography.weights.extrabold,
+    color: colors.text,
+    marginBottom: spacing[2],
     textAlign: 'center',
   },
   emptySubtitle: {
-    fontSize: 16,
-    color: '#6B7280',
+    fontSize: typography.sizes.base,
+    color: colors.textSecondary,
     textAlign: 'center',
-    marginBottom: 32,
+    marginBottom: spacing[8],
     lineHeight: 22,
   },
   primaryButton: {
-    backgroundColor: '#4F46E5',
-    borderRadius: 12,
-    paddingVertical: 16,
-    paddingHorizontal: 32,
+    backgroundColor: colors.primary,
+    borderRadius: radii.md,
+    paddingVertical: spacing[4],
+    paddingHorizontal: spacing[8],
     alignItems: 'center',
   },
   primaryButtonText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#fff',
+    fontSize: typography.sizes.base,
+    fontWeight: typography.weights.bold,
+    color: colors.textInverse,
+    letterSpacing: typography.letterSpacing.wide,
   },
   // Rest day card
   restDayCard: {
-    backgroundColor: '#fff',
-    borderRadius: 16,
+    backgroundColor: colors.bgSurface,
+    borderRadius: radii.lg,
     borderWidth: 1,
-    borderColor: '#E5E7EB',
-    padding: 28,
-    marginHorizontal: 16,
+    borderColor: colors.border,
+    padding: spacing[7],
+    marginHorizontal: spacing[4],
     alignItems: 'center',
   },
   restDayTitle: {
-    fontSize: 26,
-    fontWeight: '700',
-    color: '#111827',
-    marginBottom: 8,
+    fontSize: typography.sizes.xl,
+    fontWeight: typography.weights.extrabold,
+    color: colors.text,
+    marginBottom: spacing[2],
+    letterSpacing: typography.letterSpacing.wide,
   },
   restDaySubtitle: {
-    fontSize: 15,
-    color: '#6B7280',
+    fontSize: typography.sizes.base,
+    color: colors.textSecondary,
     textAlign: 'center',
     lineHeight: 22,
   },
   // MRV warning banner
   mrvBanner: {
-    backgroundColor: '#FEE2E2',
-    borderLeftWidth: 4,
-    borderLeftColor: '#EF4444',
-    padding: 12,
-    marginHorizontal: 16,
-    borderRadius: 4,
+    backgroundColor: colors.dangerMuted,
+    borderLeftWidth: 3,
+    borderLeftColor: colors.danger,
+    paddingVertical: spacing[3],
+    paddingHorizontal: spacing[4],
+    marginHorizontal: spacing[4],
+    borderRadius: radii.xs,
   },
   mrvBannerText: {
-    fontSize: 13,
-    color: '#7F1D1D',
+    fontSize: typography.sizes.sm,
+    color: colors.danger,
     lineHeight: 18,
   },
   // Volume compact card
   volumeCard: {
-    backgroundColor: '#fff',
-    borderRadius: 16,
+    backgroundColor: colors.bgSurface,
+    borderRadius: radii.lg,
     borderWidth: 1,
-    borderColor: '#E5E7EB',
-    padding: 16,
-    marginHorizontal: 16,
+    borderColor: colors.border,
+    padding: spacing[4],
+    marginHorizontal: spacing[4],
   },
   volumeCardHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 12,
+    marginBottom: spacing[3],
   },
   volumeCardTitle: {
-    fontSize: 15,
-    fontWeight: '700',
-    color: '#111827',
+    fontSize: typography.sizes.base,
+    fontWeight: typography.weights.bold,
+    color: colors.text,
+    letterSpacing: typography.letterSpacing.wide,
   },
   volumeViewAll: {
-    fontSize: 13,
-    color: '#4F46E5',
-    fontWeight: '500',
+    fontSize: typography.sizes.sm,
+    color: colors.primary,
+    fontWeight: typography.weights.semibold,
   },
   volumeLoading: {
-    fontSize: 13,
-    color: '#9CA3AF',
+    fontSize: typography.sizes.sm,
+    color: colors.textTertiary,
   },
   volumeRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 8,
-    gap: 8,
+    marginBottom: spacing[2],
+    gap: spacing[2],
   },
   volumeRowLabel: {
-    fontSize: 13,
-    color: '#374151',
-    width: 80,
+    fontSize: typography.sizes.sm,
+    color: colors.textSecondary,
+    width: 76,
   },
   volumeBarTrack: {
     flex: 1,
-    height: 8,
-    backgroundColor: '#F3F4F6',
-    borderRadius: 4,
+    height: 6,
+    backgroundColor: colors.bgMuted,
+    borderRadius: radii.full,
     overflow: 'hidden',
   },
   volumeBarFill: {
     height: '100%',
-    borderRadius: 4,
+    borderRadius: radii.full,
   },
   volumeRowSets: {
-    fontSize: 12,
-    color: '#6B7280',
+    fontSize: typography.sizes.xs,
+    color: colors.textTertiary,
     width: 52,
     textAlign: 'right',
   },
   volumeRowSetsOver: {
-    color: '#EF4444',
-    fontWeight: '600',
+    color: colors.danger,
+    fontWeight: typography.weights.semibold,
   },
 })

@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react'
 import { Animated, StyleSheet, Text, View } from 'react-native'
 import type { PR } from '@parakeet/training-engine'
+import { colors, radii, spacing, typography } from '../../theme'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -67,24 +68,24 @@ const styles = StyleSheet.create({
   card: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FFFBEB',
+    backgroundColor: colors.secondaryMuted,
     borderWidth: 1.5,
-    borderColor: '#F59E0B',
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-    marginBottom: 10,
+    borderColor: colors.secondary,
+    borderRadius: radii.md,
+    paddingHorizontal: spacing[4],
+    paddingVertical: spacing[3.5],
+    marginBottom: spacing[2.5],
   },
   star: {
     fontSize: 22,
-    marginRight: 12,
+    marginRight: spacing[3],
   },
   textContainer: {
     flex: 1,
   },
   prText: {
-    fontSize: 15,
-    fontWeight: '700',
-    color: '#92400E',
+    fontSize: typography.sizes.base,
+    fontWeight: typography.weights.bold,
+    color: colors.secondary,
   },
 })
