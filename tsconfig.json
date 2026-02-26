@@ -7,5 +7,12 @@
       "moduleResolution": "node10"
     }
   },
-  "references": []
+  "references": [
+    {
+      "path": "./packages/training-engine"
+    },
+    {
+      "path": "./packages/shared-types"
+    }
+  ]
 }

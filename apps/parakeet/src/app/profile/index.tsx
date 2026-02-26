@@ -9,11 +9,14 @@ import {
   View,
 } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
+import { router } from 'expo-router'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 
+import { FormFeedback } from '../../components/ui/FormFeedback'
 import { getProfile, updateProfile } from '../../lib/profile'
 import type { BiologicalSex } from '../../lib/profile'
 import { colors, spacing, radii, typography } from '../../theme'
+import { BackLink } from '../../components/navigation/BackLink'
 
 const GENDER_OPTIONS: { value: BiologicalSex; label: string }[] = [
   { value: 'female', label: 'Female' },
@@ -116,6 +119,8 @@ export default function ProfileScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+        <BackLink onPress={() => router.back()} />
+
         <Text style={styles.title}>Edit Profile</Text>
 
         <View style={styles.card}>
@@ -179,8 +184,7 @@ export default function ProfileScreen() {
           </View>
         </View>
 
-        {saveError ? <Text style={styles.errorText}>{saveError}</Text> : null}
-        {saveSuccess ? <Text style={styles.successText}>Saved.</Text> : null}
+        <FormFeedback success={saveSuccess} error={saveError} />
 
         <TouchableOpacity
           style={[
@@ -275,16 +279,6 @@ const styles = StyleSheet.create({
   sexOptionTextSelected: {
     color: colors.primary,
     fontWeight: typography.weights.semibold,
-  },
-  errorText: {
-    marginTop: spacing[4],
-    color: colors.danger,
-    fontSize: typography.sizes.sm,
-  },
-  successText: {
-    marginTop: spacing[4],
-    color: colors.success,
-    fontSize: typography.sizes.sm,
   },
   saveButton: {
     marginTop: spacing[5],

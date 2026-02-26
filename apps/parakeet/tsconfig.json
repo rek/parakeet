@@ -14,10 +14,13 @@
   "include": [".expo/types/**/*.ts", "expo-env.d.ts"],
   "references": [
     {
-      "path": "./tsconfig.app.json"
+      "path": "../../packages/shared-types"
     },
     {
-      "path": "./tsconfig.spec.json"
+      "path": "../../packages/training-engine"
+    },
+    {
+      "path": "./tsconfig.app.json"
     }
   ]
 }

@@ -5,7 +5,7 @@ import { colors, spacing, radii, typography } from '../../theme'
 // ── Types ────────────────────────────────────────────────────────────────────
 
 interface WarmupSet {
-  weight_kg: number
+  weightKg: number
   reps: number
   label?: string
 }
@@ -18,9 +18,9 @@ export interface WarmupSectionProps {
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
-function formatWeight(weight_kg: number): string {
-  if (weight_kg <= 20) return `Bar (20 kg)`
-  return `${weight_kg} kg`
+function formatWeight(weightKg: number): string {
+  if (weightKg <= 20) return `Bar (20 kg)`
+  return `${weightKg} kg`
 }
 
 // ── Sub-component: single warmup set row ─────────────────────────────────────
@@ -40,7 +40,7 @@ function WarmupSetRow({ index, set, isDone, onToggle }: WarmupSetRowProps) {
       </Text>
       <View style={styles.setMiddle}>
         <Text style={[styles.weightText, isDone && styles.textFaded, isDone && styles.weightStrike]}>
-          {formatWeight(set.weight_kg)}
+          {formatWeight(set.weightKg)}
         </Text>
         <Text style={[styles.repsText, isDone && styles.textFaded]}>
           {' '}× {set.reps}
@@ -68,7 +68,7 @@ export function WarmupSection({ sets, completedIndices, onToggle }: WarmupSectio
   const [collapsed, setCollapsed] = useState(false)
 
   const maxWeight = sets.length > 0
-    ? Math.max(...sets.map((s) => s.weight_kg))
+    ? Math.max(...sets.map((s) => s.weightKg))
     : 0
 
   return (

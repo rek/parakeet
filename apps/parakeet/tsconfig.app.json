@@ -2,7 +2,8 @@
   "extends": "./tsconfig.json",
   "compilerOptions": {
     "outDir": "../../dist/out-tsc",
-    "types": ["node"]
+    "types": ["node"],
+    "composite": true
   },
   "files": ["../../node_modules/@nx/expo/typings/svg.d.ts"],
   "exclude": [
@@ -26,14 +27,15 @@
     "**/*.js",
     "**/*.jsx",
     ".expo/types/**/*.ts",
-    "expo-env.d.ts"
+    "expo-env.d.ts",
+    "../../supabase/types.ts"
   ],
   "references": [
     {
-      "path": "../../packages/shared-types"
+      "path": "../../packages/shared-types/tsconfig.lib.json"
     },
     {
-      "path": "../../packages/training-engine"
+      "path": "../../packages/training-engine/tsconfig.lib.json"
     }
   ]
 }

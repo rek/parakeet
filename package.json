@@ -13,7 +13,10 @@
     "parakeet:start": "nx start parakeet",
     "parakeet:android": "nx run-android parakeet",
     "start": "nx start parakeet",
+    "bridge": "adb reverse tcp:54321 tcp:54321 && adb reverse tcp:8081 tcp:8081",
     "android": "nx run-android parakeet",
+    "check:supabase-import-boundary": "node tools/scripts/check-supabase-import-boundary.mjs",
+    "check:supabase-ui-boundary": "node tools/scripts/check-supabase-ui-boundary.mjs",
     "db:start": "npx supabase start",
     "db:stop": "npx supabase stop",
     "db:reset": "npx supabase db reset",
@@ -55,6 +58,7 @@
     "metro-config": "~0.83.0",
     "metro-resolver": "~0.83.0",
     "nx": "22.5.2",
+    "oxlint": "^1.50.0",
     "prettier": "~3.6.2",
     "tslib": "^2.3.0",
     "typescript": "~5.9.2"

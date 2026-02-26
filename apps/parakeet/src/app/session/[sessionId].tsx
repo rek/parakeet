@@ -27,7 +27,7 @@ interface PlannedSet {
 }
 
 interface WarmupSet {
-  weight_kg: number
+  weightKg: number
   reps: number
   label?: string
 }
@@ -127,6 +127,10 @@ export default function SessionScreen() {
       llmRestSuggestion.current = parsed.llmRestSuggestion
     }
 
+    // Initialize store synchronously so stale is_completed from a prior session
+    // can never race with the user completing sets and navigating to complete screen.
+    initSession(sessionId, mainLiftSets)
+
     getSession(sessionId).then((session) => {
       if (!session) {
         router.back()
@@ -138,7 +142,6 @@ export default function SessionScreen() {
         block_number:   session.block_number ?? null,
         week_number:    session.week_number,
       })
-      initSession(sessionId, mainLiftSets)
       startSession(sessionId)
     })
   // eslint-disable-next-line react-hooks/exhaustive-deps

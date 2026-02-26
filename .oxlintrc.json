@@ -16,7 +16,7 @@
   "plugins": ["react", "jsx-a11y", "import"],
   "settings": {
     "react": {
-      "version": "detect"
+      "version": "19"
     }
   }
 }

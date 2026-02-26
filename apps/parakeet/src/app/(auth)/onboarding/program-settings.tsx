@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import {
   Alert,
   Platform,
@@ -15,7 +15,7 @@ import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/dat
 
 import { submitMaxes } from '../../../lib/lifter-maxes'
 import { createProgram } from '../../../lib/programs'
-import { updateProfile } from '../../../lib/profile'
+import { getProfile, updateProfile } from '../../../lib/profile'
 import type { BiologicalSex } from '../../../lib/profile'
 import { colors } from '../../../theme'
 
@@ -78,7 +78,26 @@ export default function ProgramSettingsScreen() {
   const [gender, setGender] = useState<BiologicalSex | null>(null)
   const [birthYear, setBirthYear] = useState('')
   const [loading, setLoading] = useState(false)
+  const [profileLoading, setProfileLoading] = useState(true)
+  const [hasProfileGender, setHasProfileGender] = useState(false)
+  const [hasProfileBirthYear, setHasProfileBirthYear] = useState(false)
   const birthYearIsValid = /^\d{4}$/.test(birthYear)
+
+  useEffect(() => {
+    getProfile()
+      .then((profile) => {
+        if (profile?.biological_sex) {
+          setGender(profile.biological_sex)
+          setHasProfileGender(true)
+        }
+        if (profile?.date_of_birth) {
+          setBirthYear(profile.date_of_birth.slice(0, 4))
+          setHasProfileBirthYear(true)
+        }
+      })
+      .catch(() => {})
+      .finally(() => setProfileLoading(false))
+  }, [])
 
   function handleDateChange(_event: DateTimePickerEvent, selected?: Date) {
     // On Android the picker closes itself; on iOS it stays open (inline)
@@ -107,12 +126,14 @@ export default function ProgramSettingsScreen() {
         throw new Error('Missing lift maxes input')
       }
 
-      const updates: Promise<unknown>[] = [
-        updateProfile({
-          biological_sex: gender,
-          date_of_birth: dobIso,
-        }),
-      ]
+      const updates: Promise<unknown>[] = []
+
+      if (!hasProfileGender || !hasProfileBirthYear) {
+        updates.push(updateProfile({
+          ...(!hasProfileGender ? { biological_sex: gender } : {}),
+          ...(!hasProfileBirthYear ? { date_of_birth: dobIso } : {}),
+        }))
+      }
 
       if (!usingEstimatedStart && lifts) {
         updates.push(submitMaxes(lifts))
@@ -133,7 +154,7 @@ export default function ProgramSettingsScreen() {
 
   const WEEK_OPTIONS: TotalWeeks[] = [10, 12, 14]
   const DAY_OPTIONS: TrainingDays[] = [3, 4]
-  const canGenerate = !loading && !!gender && birthYearIsValid
+  const canGenerate = !loading && !profileLoading && !!gender && birthYearIsValid
 
   return (
     <ScrollView
@@ -220,50 +241,58 @@ export default function ProgramSettingsScreen() {
       )}
 
       {/* Gender */}
-      <Text style={styles.label}>Gender</Text>
-      <Text style={styles.fieldHint}>Used for volume defaults calibrated to your physiology</Text>
-      <View style={[styles.toggle, styles.toggleMarginTop]}>
-        {(['female', 'male'] as BiologicalSex[]).map((option, index) => {
-          const labels: Record<BiologicalSex, string> = {
-            female: 'Female',
-            male: 'Male',
-          }
-          const isFirst = index === 0
-          const isLast = index === 1
-          const isActive = gender === option
-          return (
-            <TouchableOpacity
-              key={option}
-              style={[
-                styles.toggleButton,
-                isFirst && styles.toggleButtonFirst,
-                isLast && styles.toggleButtonLast,
-                !isLast && styles.toggleButtonBorderRight,
-                isActive && styles.toggleButtonActive,
-              ]}
-              onPress={() => setGender(option)}
-              activeOpacity={0.8}
-            >
-              <Text style={[styles.toggleButtonText, isActive && styles.toggleButtonTextActive]}>
-                {labels[option]}
-              </Text>
-            </TouchableOpacity>
-          )
-        })}
-      </View>
+      {!hasProfileGender && (
+        <>
+          <Text style={styles.label}>Gender</Text>
+          <Text style={styles.fieldHint}>Used for volume defaults calibrated to your physiology</Text>
+          <View style={[styles.toggle, styles.toggleMarginTop]}>
+            {(['female', 'male'] as BiologicalSex[]).map((option, index) => {
+              const labels: Record<BiologicalSex, string> = {
+                female: 'Female',
+                male: 'Male',
+              }
+              const isFirst = index === 0
+              const isLast = index === 1
+              const isActive = gender === option
+              return (
+                <TouchableOpacity
+                  key={option}
+                  style={[
+                    styles.toggleButton,
+                    isFirst && styles.toggleButtonFirst,
+                    isLast && styles.toggleButtonLast,
+                    !isLast && styles.toggleButtonBorderRight,
+                    isActive && styles.toggleButtonActive,
+                  ]}
+                  onPress={() => setGender(option)}
+                  activeOpacity={0.8}
+                >
+                  <Text style={[styles.toggleButtonText, isActive && styles.toggleButtonTextActive]}>
+                    {labels[option]}
+                  </Text>
+                </TouchableOpacity>
+              )
+            })}
+          </View>
+        </>
+      )}
 
       {/* Birth year */}
-      <Text style={styles.label}>Birth Year</Text>
-      <Text style={styles.fieldHint}>Required · used for age-appropriate coaching insights</Text>
-      <TextInput
-        style={[styles.toggleMarginTop, styles.birthYearInput, birthYear.length > 0 && !birthYearIsValid && styles.birthYearInputError]}
-        placeholder="e.g. 1990"
-        placeholderTextColor={colors.textTertiary}
-        value={birthYear}
-        onChangeText={(v) => setBirthYear(v.replace(/\D/g, '').slice(0, 4))}
-        keyboardType="number-pad"
-        maxLength={4}
-      />
+      {!hasProfileBirthYear && (
+        <>
+          <Text style={styles.label}>Birth Year</Text>
+          <Text style={styles.fieldHint}>Required · used for age-appropriate coaching insights</Text>
+          <TextInput
+            style={[styles.toggleMarginTop, styles.birthYearInput, birthYear.length > 0 && !birthYearIsValid && styles.birthYearInputError]}
+            placeholder="e.g. 1990"
+            placeholderTextColor={colors.textTertiary}
+            value={birthYear}
+            onChangeText={(v) => setBirthYear(v.replace(/\D/g, '').slice(0, 4))}
+            keyboardType="number-pad"
+            maxLength={4}
+          />
+        </>
+      )}
 
       {/* Generate button */}
       <TouchableOpacity
@@ -278,8 +307,16 @@ export default function ProgramSettingsScreen() {
           <Text style={styles.primaryButtonText}>Generate My Program</Text>
         )}
       </TouchableOpacity>
-      {!canGenerate ? (
-        <Text style={styles.validationHint}>Select gender and enter birth year to enable program generation.</Text>
+      {!canGenerate && !profileLoading ? (
+        <Text style={styles.validationHint}>
+          {!gender && !birthYearIsValid && !hasProfileGender && !hasProfileBirthYear
+            ? 'Select gender and enter birth year to enable program generation.'
+            : !gender && !hasProfileGender
+            ? 'Select gender to enable program generation.'
+            : !birthYearIsValid && !hasProfileBirthYear
+            ? 'Enter birth year to enable program generation.'
+            : null}
+        </Text>
       ) : null}
     </ScrollView>
   )
