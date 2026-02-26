@@ -46,7 +46,6 @@ Sex-specific default `FormulaConfig` objects for the Cube Method scheduler. Fema
 ## Usage Context
 
 - Program creation (`apps/parakeet/src/lib/programs.ts`): call `getDefaultFormulaConfig(profile.biological_sex)` when no user formula override exists, instead of hardcoding `DEFAULT_FORMULA_CONFIG`
-- `prefer_not_to_say` → treated as `'male'` (conservative; more volume is not always better)
 
 ## Dependencies
 

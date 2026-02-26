@@ -38,7 +38,6 @@ WILKS score calculation using the 2020 updated coefficients. Normalises total li
 - Cycle review screen (`history/cycle-review/[programId].tsx`): shows WILKS change from start → end of cycle
   - Requires `bodyweightKg` and `biologicalSex` from user profile; `totalKg` from 1RM estimates at cycle start/end
 - History screen: all-time WILKS trend chart (future)
-- `prefer_not_to_say` → use `'male'` coefficients (conservative; affects score magnitude but not trend direction)
 
 ## Dependencies
 

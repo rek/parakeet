@@ -1,5 +1,4 @@
-import { Lift } from '@parakeet/shared-types'
-import { Severity } from '@parakeet/shared-types'
+import { Lift, Severity } from '@parakeet/shared-types'
 
 // ---------------------------------------------------------------------------
 // PR Detection (engine-022)

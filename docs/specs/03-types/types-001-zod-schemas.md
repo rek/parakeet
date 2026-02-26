@@ -12,7 +12,7 @@ All weight values are in **kg** (floats, multiples of 2.5). The DB stores intege
 ## Tasks
 
 **`packages/shared-types/src/user.schema.ts`:**
-- [x] `UserSchema`: id, email, display_name, biological_sex ('female'|'male'|'prefer_not_to_say'), created_at
+- [x] `UserSchema`: id, email, display_name, biological_sex ('female'|'male'), created_at
 - [x] `UpdateUserSchema`: `Partial<Pick<User, 'display_name' | 'biological_sex'>>`
 
 **`packages/shared-types/src/program.schema.ts`:**
@@ -26,11 +26,14 @@ All weight values are in **kg** (floats, multiples of 2.5). The DB stores intege
 
 **`packages/shared-types/src/lifter-maxes.schema.ts`:**
 - [x] `LiftInputSchema`: z.union of `{ type: '1rm', weight_kg: number }` and `{ type: '3rm', weight_kg: number, reps: number }`
+  - `weight_kg`: `> 0` and `<= 500`
+  - `3rm.reps`: integer `2..10`
 - [x] `LifterMaxesInputSchema`: squat, bench, deadlift (each LiftInputSchema)
-- [x] `LifterMaxesResponseSchema`: id, calculated_1rm (squat_kg, bench_kg, deadlift_kg), source, recorded_at
+- [x] `LifterMaxesResponseSchema`: id, calculated_1rm (squat_kg, bench_kg, deadlift_kg), source (`input_1rm | input_3rm | mixed | system_calculated`), recorded_at
 
 **`packages/shared-types/src/session-log.schema.ts`:**
 - [x] `ActualSetSchema`: set_number, weight_kg (number), reps_completed, rpe_actual (optional), notes (optional)
+  - `reps_completed` allows `0` to represent a failed/time-capped set attempt
 - [x] `CompleteSessionSchema`: actual_sets array, session_rpe (optional), session_notes (optional), started_at (optional), completed_at (optional)
 - [x] `SessionLogSchema`: id, session_id, logged_at, actual_sets, session_rpe, completion_pct, performance_vs_plan
 

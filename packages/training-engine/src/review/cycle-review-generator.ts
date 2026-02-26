@@ -1,7 +1,6 @@
 import { generateObject } from 'ai'
 import { CycleReviewSchema } from '@parakeet/shared-types'
-import type { CycleReview } from '@parakeet/shared-types'
-import type { Lift } from '@parakeet/shared-types'
+import type { CycleReview, Lift } from '@parakeet/shared-types'
 import { CYCLE_REVIEW_MODEL } from '../ai/models'
 import { CYCLE_REVIEW_SYSTEM_PROMPT } from '../ai/prompts'
 import type { CycleReport, LiftSummary, AuxLiftCorrelation } from './assemble-cycle-report'

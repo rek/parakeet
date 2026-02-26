@@ -14,7 +14,8 @@ Submitting 1RM or 3RM lift data and retrieving historical max snapshots. The fir
   - For 3RM inputs: estimate 1RM using Epley formula
   - Stores calculated 1RM as integer grams (`kgToGrams()`)
   - Preserves raw input (input_grams and input_reps)
-  - `source`: `'input_1rm' | 'input_3rm' | 'mixed'`
+  - `source`: `'input_1rm' | 'input_3rm' | 'mixed'` (mixed = per-lift mode selection is independent)
+  - Validates payload with shared Zod schema before insert
 - [x] `getCurrentMaxes(userId: string): Promise<LifterMaxes | null>` — most recent row
 - [x] `getCurrentOneRmKg(userId: string, lift: Lift): Promise<number | null>` — returns kg float from most recent row
 
@@ -33,7 +34,7 @@ interface LifterMaxesInput {
 - [x] All three lifts required in a single submission
 
 **Onboarding screen `apps/parakeet/app/(auth)/onboarding/lift-maxes.tsx`:**
-- [x] Toggle per lift: "1RM" vs "3RM"
+- [x] Toggle per lift: "1RM" vs "3RM" (each lift is independent; changing one does not affect others)
 - [x] Weight input in kg with live Epley preview: "Est. 1RM: 143.0 kg"
 - [x] Submit calls `submitMaxes()` → navigates to program-settings screen
 

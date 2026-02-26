@@ -42,6 +42,7 @@ Strength training apps typically fail at onboarding in one of two ways: they ask
 2. **Enter Your Lifts screen** (`/onboarding/lift-maxes`)
    - Three sections: Squat, Bench Press, Deadlift
    - Each section has a toggle: "1RM" | "3RM"
+   - Toggles are independent per lift (mixed entry is allowed, e.g. Squat 1RM + Bench 3RM + Deadlift 1RM)
    - Default is 3RM (more users have a recent 3RM than a true 1RM)
    - On 3RM mode: two fields — weight (kg) and reps (pre-filled to 3)
    - Under each section, a small grey line: "Estimated 1RM: — kg" (updates live as user types using Epley formula)
@@ -49,11 +50,11 @@ Strength training apps typically fail at onboarding in one of two ways: they ask
    - "Next" button becomes active when all three lifts have valid input
 
 3. **Program Settings screen** (`/onboarding/program-settings`)
-   - Duration: segmented control "6 / 8 / 10 / 12 / 14 weeks" (default: 10)
+   - Duration: segmented control "10 / 12 / 14 weeks" (default: 10)
    - Days per week: picker, 3 or 4 (default: 3)
    - Start date: date picker (default: next Monday)
-   - Body weight: numeric input in kg — "Current body weight (kg)" — required
-   - Biological sex: segmented control "Female / Male / Prefer not to say" — used for MEV/MRV defaults and WILKS calculation (see [sex-based-adaptations.md](./sex-based-adaptations.md))
+   - Biological sex: segmented control "Female / Male" — required; used for MEV/MRV defaults and WILKS calculation (see [sex-based-adaptations.md](./sex-based-adaptations.md))
+   - Birth year: numeric input (YYYY) — required; used for age-aware context and estimates
    - If Female: optional prompt to enable menstrual cycle tracking (can also be done later in Settings)
    - "Preview My Program" CTA button
 
@@ -66,12 +67,12 @@ Strength training apps typically fail at onboarding in one of two ways: they ask
    - "Activate Program" button → calls `createProgram()` → navigates to Today tab
    - "Edit Inputs" link → returns to lift-maxes screen
 
-**Alternative Flow (skip maxes, use defaults):**
+**Alternative Flow (skip maxes, estimated start):**
 
 1. On the Enter Your Lifts screen, a "I don't know my maxes" link appears at the bottom
-2. Tapping it sets placeholder maxes: Squat 100kg, Bench 70kg, Deadlift 120kg
-3. User sees a banner: "Using estimated starting weights. Update your maxes after your first session."
-4. Program is generated and activated normally
+2. Tapping it clears all lift input fields and enables "estimated start" mode
+3. User sees a banner: "Maxes left blank. We'll estimate your starting loads and calibrate from your logged sessions."
+4. Program is generated without writing an onboarding lifter_maxes row; first-session JIT uses demographic estimates until real performance data is logged
 
 **Returning User Flow:**
 
@@ -108,7 +109,7 @@ Body weight is stored per cycle — not per session — to track how strength-to
 
 After onboarding, the user can view and edit their profile at **Settings → Profile**. This screen is the authoritative place for the app's understanding of who the athlete is. It surfaces:
 
-- **Biological sex** — editable selector (Female / Male / Prefer not to say). Shows a brief note explaining what it affects ("used to set training defaults — you can override anything")
+- **Biological sex** — editable selector (Female / Male). Shows a brief note explaining what it affects ("used to set training defaults — you can override anything")
 - **Age** — derived from date of birth (birth year); editable. Displayed as age, not raw DOB.
 - **Body weight** — editable (kg). Used for Wilks calculation.
 - **Wilks score** — read-only, auto-computed. Shows the user's current Wilks2020 score based on their estimated 1RMs and body weight. Requires both body weight and at least one recent max. If data is missing, shows "–" with a note.

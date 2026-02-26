@@ -13,18 +13,29 @@ The three onboarding screens: lift max input, program settings, and program prev
 - Three sections: Squat, Bench Press, Deadlift
 - Per section:
   - Toggle: "1RM" | "3RM" (default 3RM)
+  - Toggle is independent per lift (mixed modes are supported in one submission)
   - On 1RM: single weight input field
   - On 3RM: weight input + reps input (default 3, range 2-10)
   - Below input: "Est. 1RM: — kg" — updates in real-time using Epley formula (computed client-side from the same formula as the engine)
-- Validation: all three lifts must have valid input before "Next" is enabled
-- "I don't know my maxes" link → sets defaults and shows warning banner
+- Validation: all three lifts must be valid before "Next", unless user explicitly selects estimated-start mode
+- "I don't know my maxes" link:
+  - clears all lift inputs
+  - enables estimated-start mode
+  - shows warning banner
+  - passes `estimatedStart=1` to program settings
 
 **`apps/parakeet/app/(auth)/onboarding/program-settings.tsx`:**
-- Duration selector: 3-button segmented control (8 weeks | 10 weeks | 12 weeks), default 10
-- Days per week: stepper (3, 4, or 5), default 3
+- Duration selector: 3-button segmented control (10 weeks | 12 weeks | 14 weeks), default 10
+- Days per week: segmented control (3 or 4), default 3
 - Start date: `DateTimePicker` (expo-datetime-picker), default next Monday
+- Gender (required): Female / Male
+- Birth year (required): 4 digits
 - "Generate My Program" primary button
-- On tap: call `submitMaxes()` from `apps/parakeet/lib/lifter-maxes.ts`, then `createProgram()` from `apps/parakeet/lib/programs.ts`; show loading state
+- On tap:
+  - always updates profile demographics
+  - if not estimated-start mode: calls `submitMaxes()` then `createProgram()`
+  - if estimated-start mode: skips `submitMaxes()` and calls `createProgram()` directly
+  - shows loading state and validation hints
 
 **`apps/parakeet/app/(auth)/onboarding/review.tsx`:**
 - Horizontal scroll of Week 1 session cards (3 cards for 3-day program)

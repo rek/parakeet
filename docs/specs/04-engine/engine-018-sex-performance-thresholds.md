@@ -43,7 +43,6 @@ Adds `DEFAULT_THRESHOLDS_FEMALE` alongside the renamed `DEFAULT_THRESHOLDS_MALE`
 ## Usage Context
 
 - When cycle tracking is enabled (future — engine-014), thresholds for female lifters in the luteal phase may be further relaxed; this is a future enhancement and not part of this spec
-- `prefer_not_to_say` → uses male thresholds (higher sensitivity; conservative)
 
 ## Dependencies
 

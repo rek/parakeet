@@ -25,7 +25,7 @@ Supabase migration files for the full schema. All weights stored as integer gram
 CREATE TABLE profiles (
   id             UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
   display_name   TEXT,
-  biological_sex TEXT CHECK (biological_sex IN ('female', 'male', 'prefer_not_to_say')),
+  biological_sex TEXT CHECK (biological_sex IN ('female', 'male')),
   created_at     TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
@@ -34,7 +34,7 @@ CREATE TABLE lifter_maxes (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
   recorded_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-  source TEXT NOT NULL CHECK (source IN ('input_1rm', 'input_3rm', 'system_calculated')),
+  source TEXT NOT NULL CHECK (source IN ('input_1rm', 'input_3rm', 'mixed', 'system_calculated')),
   squat_1rm_grams INTEGER NOT NULL,
   bench_1rm_grams INTEGER NOT NULL,
   deadlift_1rm_grams INTEGER NOT NULL,
