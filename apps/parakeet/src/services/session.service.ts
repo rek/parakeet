@@ -38,7 +38,16 @@ export interface CompleteSessionInput {
     weight_grams: number;
     reps_completed: number;
     rpe_actual?: number;
+    actual_rest_seconds?: number;
     notes?: string;
+  }[];
+  auxiliarySets?: {
+    exercise: string;
+    set_number: number;
+    weight_grams: number;
+    reps_completed: number;
+    rpe_actual?: number;
+    actual_rest_seconds?: number;
   }[];
   sessionRpe?: number;
   startedAt?: Date;
@@ -58,6 +67,8 @@ export interface CompletedSessionListItem {
   status: string;
   week_number: number;
   block_number: number;
+  cycle_phase: string | null;
+  rpe: number | null;
 }
 
 // Today's session: nearest upcoming session not yet completed/skipped
@@ -118,10 +129,6 @@ export async function recordSorenessCheckin(input: {
 }
 
 // Transition session to in_progress
-// TODO (data-006): when JIT generation is wired here, fetch rest overrides and include in JITInput:
-//   const userRestOverrides = await getUserRestOverrides(userId)
-//   pass as JITInput.userRestOverrides
-//   import { getUserRestOverrides } from './rest-config'
 export async function startSession(sessionId: string): Promise<void> {
   await updateSessionToInProgress(sessionId);
 }
@@ -137,7 +144,7 @@ export async function completeSession(
   userId: string,
   input: CompleteSessionInput,
 ): Promise<void> {
-  const { actualSets, sessionRpe, startedAt, completedAt } = input;
+  const { actualSets, auxiliarySets, sessionRpe, startedAt, completedAt } = input;
   if (actualSets.length === 0) {
     throw new Error('At least one set is required');
   }
@@ -173,6 +180,7 @@ export async function completeSession(
     sessionId,
     userId,
     actualSets: normalizedSets,
+    auxiliarySets,
     sessionRpe,
     completionPct,
     performanceVsPlan,

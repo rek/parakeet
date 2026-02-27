@@ -1,6 +1,7 @@
 import { router } from 'expo-router'
 import { useState } from 'react'
 import {
+  Alert,
   Modal,
   StyleSheet,
   Text,
@@ -10,6 +11,8 @@ import {
 } from 'react-native'
 
 import { skipSession } from '../../lib/sessions'
+import { resolveDisruption } from '../../lib/disruptions'
+import { useAuth } from '../../hooks/useAuth'
 import { colors, spacing, radii, typography } from '../../theme'
 
 interface ActiveDisruption {
@@ -33,6 +36,7 @@ interface WorkoutCardProps {
   }
   activeDisruptions?: ActiveDisruption[]
   onSkipComplete?: () => void
+  onDisruptionResolved?: () => void
 }
 
 const INTENSITY_BADGE: Record<string, { bg: string; text: string }> = {
@@ -67,7 +71,9 @@ export function WorkoutCard({
   session,
   activeDisruptions = [],
   onSkipComplete,
+  onDisruptionResolved,
 }: WorkoutCardProps) {
+  const { user } = useAuth()
   const [skipModalVisible, setSkipModalVisible] = useState(false)
   const [skipReason, setSkipReason] = useState('')
   const [isSkipping, setIsSkipping] = useState(false)
@@ -105,6 +111,24 @@ export function WorkoutCard({
     setSkipReason('')
   }
 
+  function handleDisruptionPress(disruption: ActiveDisruption) {
+    Alert.alert(
+      disruption.disruption_type.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase()),
+      `Severity: ${disruption.severity}${disruption.description ? `\n${disruption.description}` : ''}`,
+      [
+        {
+          text: 'Mark as resolved',
+          onPress: async () => {
+            if (!user) return
+            await resolveDisruption(disruption.id, user.id)
+            onDisruptionResolved?.()
+          },
+        },
+        { text: 'Cancel', style: 'cancel' },
+      ],
+    )
+  }
+
   const badge = getIntensityBadge(session.intensity_type)
   const blockLabel =
     session.block_number !== null
@@ -114,12 +138,17 @@ export function WorkoutCard({
   return (
     <View>
       {relevantDisruptions.map((disruption) => (
-        <View key={disruption.id} style={styles.disruptionBanner}>
+        <TouchableOpacity
+          key={disruption.id}
+          style={styles.disruptionBanner}
+          onPress={() => handleDisruptionPress(disruption)}
+          activeOpacity={0.7}
+        >
           <Text style={styles.disruptionText}>
             ⚡ Active disruption:{' '}
-            {disruption.disruption_type.replace(/_/g, ' ')} ({disruption.severity}) — load adjusted
+            {disruption.disruption_type.replace(/_/g, ' ')} ({disruption.severity}) — tap to resolve
           </Text>
-        </View>
+        </TouchableOpacity>
       ))}
 
       <View style={styles.card}>

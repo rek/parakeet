@@ -9,8 +9,8 @@ export async function fetchTodaySession(userId: string, today: string) {
     .from('sessions')
     .select('*')
     .eq('user_id', userId)
-    .in('status', ['planned', 'in_progress'])
-    .gte('planned_date', today)
+    .in('status', ['planned', 'in_progress', 'completed'])
+    .eq('planned_date', today)
     .order('planned_date', { ascending: true })
     .limit(1)
     .maybeSingle();
@@ -59,14 +59,29 @@ export async function fetchCompletedSessions(
   const { data } = await db
     .from('sessions')
     .select(
-      'id, primary_lift, intensity_type, planned_date, status, week_number, block_number',
+      'id, primary_lift, intensity_type, planned_date, status, week_number, block_number, session_logs(cycle_phase, session_rpe)',
     )
     .eq('user_id', userId)
     .eq('status', 'completed')
     .order('planned_date', { ascending: false })
     .range(page * pageSize, (page + 1) * pageSize - 1);
 
-  return data ?? [];
+  return (data ?? []).map((row) => {
+    const logs = Array.isArray(row.session_logs) ? row.session_logs : []
+    type LogRow = { cycle_phase?: string | null; session_rpe?: number | null }
+    const log = (logs[0] as LogRow | undefined)
+    return {
+      id:             row.id,
+      primary_lift:   row.primary_lift,
+      intensity_type: row.intensity_type,
+      planned_date:   row.planned_date,
+      status:         row.status,
+      week_number:    row.week_number,
+      block_number:   row.block_number,
+      cycle_phase:    log?.cycle_phase ?? null,
+      rpe:            log?.session_rpe ?? null,
+    }
+  })
 }
 
 export async function fetchProgramSessionStatuses(programId: string, userId: string) {
@@ -114,6 +129,7 @@ export async function insertSessionLog(input: {
   sessionId: string;
   userId: string;
   actualSets: unknown[];
+  auxiliarySets?: unknown[];
   sessionRpe: number | undefined;
   completionPct: number;
   performanceVsPlan: 'over' | 'at' | 'under' | 'incomplete';
@@ -124,6 +140,7 @@ export async function insertSessionLog(input: {
     session_id: input.sessionId,
     user_id: input.userId,
     actual_sets: input.actualSets,
+    auxiliary_sets: input.auxiliarySets ?? null,
     session_rpe: input.sessionRpe ?? null,
     completion_pct: input.completionPct,
     performance_vs_plan: input.performanceVsPlan,

@@ -46,3 +46,6 @@ vitest.config.*.timestamp*
 
 # Agents
 .claude/settings.local.json
+
+docs/archive
+.gitnexus

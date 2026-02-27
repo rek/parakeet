@@ -9,7 +9,7 @@
 
 // ── Primitive palette ─────────────────────────────────────────────────────────
 
-const palette = {
+export const palette = {
   // Lime / parrot green — primary accent
   lime300: '#BEF264',
   lime400: '#A3E635',
@@ -43,6 +43,23 @@ const palette = {
   // Teal / info
   teal400: '#2DD4BF',
   teal500: '#14B8A6',
+
+  // Emerald
+  emerald100: '#D1FAE5',
+  emerald800: '#065F46',
+
+  // Red
+  red100: '#FEE2E2',
+  red800: '#991B1B',
+
+  // Indigo
+  indigo100: '#E0E7FF',
+  indigo800: '#3730A3',
+
+  // Amber
+  amber50: '#FFFBEB',
+  amber100: '#FEF3C7',
+  amber800: '#92400E',
 
   // Zinc / neutrals
   zinc50:  '#FAFAFA',
@@ -243,5 +260,5 @@ export const shadows = {
 
 // ── Convenience re-export ─────────────────────────────────────────────────────
 
-export const theme = { colors, typography, spacing, radii, shadows } as const
+export const theme = { colors, palette, typography, spacing, radii, shadows } as const
 export type Theme = typeof theme

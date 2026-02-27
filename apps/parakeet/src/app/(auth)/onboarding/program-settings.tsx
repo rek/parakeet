@@ -4,6 +4,7 @@ import {
   Platform,
   ScrollView,
   StyleSheet,
+  Switch,
   Text,
   TextInput,
   TouchableOpacity,
@@ -16,6 +17,8 @@ import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/dat
 import { submitMaxes } from '../../../lib/lifter-maxes'
 import { createProgram } from '../../../lib/programs'
 import { getProfile, updateProfile } from '../../../lib/profile'
+import { updateCycleConfig } from '../../../lib/cycle-tracking'
+import { useAuth } from '../../../hooks/useAuth'
 import type { BiologicalSex } from '../../../lib/profile'
 import { colors } from '../../../theme'
 
@@ -60,6 +63,7 @@ function formatStartDate(date: Date): string {
 // ── Screen ───────────────────────────────────────────────────────────────────
 
 export default function ProgramSettingsScreen() {
+  const { user } = useAuth()
   const params = useLocalSearchParams<{ lifts?: string; estimatedStart?: string }>()
   const usingEstimatedStart = params.estimatedStart === '1'
   const lifts = useMemo(() => {
@@ -77,11 +81,19 @@ export default function ProgramSettingsScreen() {
   const [showPicker, setShowPicker] = useState(false)
   const [gender, setGender] = useState<BiologicalSex | null>(null)
   const [birthYear, setBirthYear] = useState('')
+  // Cycle tracking onboarding (female only)
+  const [cycleTrackingEnabled, setCycleTrackingEnabled] = useState(false)
+  const [cycleLength, setCycleLength] = useState(28)
+  const [lastPeriodStart, setLastPeriodStart] = useState<Date | null>(null)
+  const [showCyclePicker, setShowCyclePicker] = useState(false)
+  const [bodyweightKg, setBodyweightKg] = useState('')
   const [loading, setLoading] = useState(false)
   const [profileLoading, setProfileLoading] = useState(true)
   const [hasProfileGender, setHasProfileGender] = useState(false)
   const [hasProfileBirthYear, setHasProfileBirthYear] = useState(false)
+  const [hasProfileBodyweight, setHasProfileBodyweight] = useState(false)
   const birthYearIsValid = /^\d{4}$/.test(birthYear)
+  const bodyweightIsValid = parseFloat(bodyweightKg) > 0
 
   useEffect(() => {
     getProfile()
@@ -93,6 +105,10 @@ export default function ProgramSettingsScreen() {
         if (profile?.date_of_birth) {
           setBirthYear(profile.date_of_birth.slice(0, 4))
           setHasProfileBirthYear(true)
+        }
+        if (profile?.bodyweight_kg) {
+          setBodyweightKg(String(profile.bodyweight_kg))
+          setHasProfileBodyweight(true)
         }
       })
       .catch(() => {})
@@ -128,15 +144,24 @@ export default function ProgramSettingsScreen() {
 
       const updates: Promise<unknown>[] = []
 
-      if (!hasProfileGender || !hasProfileBirthYear) {
+      if (!hasProfileGender || !hasProfileBirthYear || !hasProfileBodyweight) {
         updates.push(updateProfile({
           ...(!hasProfileGender ? { biological_sex: gender } : {}),
           ...(!hasProfileBirthYear ? { date_of_birth: dobIso } : {}),
+          ...(!hasProfileBodyweight ? { bodyweight_kg: parseFloat(bodyweightKg) } : {}),
         }))
       }
 
       if (!usingEstimatedStart && lifts) {
         updates.push(submitMaxes(lifts))
+      }
+
+      if (cycleTrackingEnabled) {
+        updates.push(updateCycleConfig(user!.id, {
+          is_enabled: true,
+          cycle_length_days: cycleLength,
+          last_period_start: lastPeriodStart ? lastPeriodStart.toISOString().split('T')[0] : null,
+        }))
       }
 
       await Promise.all(updates)
@@ -154,7 +179,7 @@ export default function ProgramSettingsScreen() {
 
   const WEEK_OPTIONS: TotalWeeks[] = [10, 12, 14]
   const DAY_OPTIONS: TrainingDays[] = [3, 4]
-  const canGenerate = !loading && !profileLoading && !!gender && birthYearIsValid
+  const canGenerate = !loading && !profileLoading && !!gender && birthYearIsValid && (hasProfileBodyweight || bodyweightIsValid)
 
   return (
     <ScrollView
@@ -294,6 +319,96 @@ export default function ProgramSettingsScreen() {
         </>
       )}
 
+      {/* Body weight */}
+      {!hasProfileBodyweight && (
+        <>
+          <Text style={styles.label}>Body Weight</Text>
+          <Text style={styles.fieldHint}>Required · used for Wilks score calculations</Text>
+          <TextInput
+            style={[styles.toggleMarginTop, styles.birthYearInput, bodyweightKg.length > 0 && !bodyweightIsValid && styles.birthYearInputError]}
+            placeholder="e.g. 80.5 kg"
+            placeholderTextColor={colors.textTertiary}
+            value={bodyweightKg}
+            onChangeText={(v) => setBodyweightKg(v.replace(/[^\d.]/g, ''))}
+            keyboardType="decimal-pad"
+          />
+        </>
+      )}
+
+      {/* Cycle tracking prompt — female only */}
+      {(gender === 'female' || hasProfileGender) && (
+        <>
+          <Text style={styles.label}>Cycle Tracking</Text>
+          <Text style={styles.fieldHint}>
+            Track your menstrual cycle to add context to training patterns — no symptoms required. You can always change this in Settings.
+          </Text>
+          <View style={styles.cycleToggleRow}>
+            <Text style={styles.cycleToggleLabel}>Enable cycle tracking</Text>
+            <Switch
+              value={cycleTrackingEnabled}
+              onValueChange={setCycleTrackingEnabled}
+              trackColor={{ false: colors.borderMuted, true: colors.primary }}
+              thumbColor={colors.textInverse}
+            />
+          </View>
+
+          {cycleTrackingEnabled && (
+            <>
+              {/* Cycle length */}
+              <View style={styles.cycleLengthRow}>
+                <Text style={styles.cycleLengthLabel}>Avg cycle length</Text>
+                <View style={styles.cycleStepper}>
+                  <TouchableOpacity
+                    style={styles.cycleStepBtn}
+                    onPress={() => setCycleLength((v) => Math.max(24, v - 1))}
+                    activeOpacity={0.7}
+                  >
+                    <Text style={styles.cycleStepBtnText}>−</Text>
+                  </TouchableOpacity>
+                  <Text style={styles.cycleStepValue}>{cycleLength} days</Text>
+                  <TouchableOpacity
+                    style={styles.cycleStepBtn}
+                    onPress={() => setCycleLength((v) => Math.min(35, v + 1))}
+                    activeOpacity={0.7}
+                  >
+                    <Text style={styles.cycleStepBtnText}>+</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+
+              {/* Last period date */}
+              <View style={styles.dateRow}>
+                <Text style={styles.dateText}>
+                  Last period:{' '}
+                  {lastPeriodStart
+                    ? lastPeriodStart.toISOString().split('T')[0]
+                    : 'not set'}
+                </Text>
+                <TouchableOpacity
+                  onPress={() => setShowCyclePicker((v) => !v)}
+                  activeOpacity={0.7}
+                >
+                  <Text style={styles.changeLink}>Set date</Text>
+                </TouchableOpacity>
+              </View>
+
+              {showCyclePicker && (
+                <DateTimePicker
+                  value={lastPeriodStart ?? new Date()}
+                  mode="date"
+                  display={Platform.OS === 'ios' ? 'inline' : 'default'}
+                  maximumDate={new Date()}
+                  onChange={(_e, d) => {
+                    if (Platform.OS === 'android') setShowCyclePicker(false)
+                    if (d) setLastPeriodStart(d)
+                  }}
+                />
+              )}
+            </>
+          )}
+        </>
+      )}
+
       {/* Generate button */}
       <TouchableOpacity
         style={[styles.primaryButton, !canGenerate && styles.primaryButtonDisabled]}
@@ -309,13 +424,15 @@ export default function ProgramSettingsScreen() {
       </TouchableOpacity>
       {!canGenerate && !profileLoading ? (
         <Text style={styles.validationHint}>
-          {!gender && !birthYearIsValid && !hasProfileGender && !hasProfileBirthYear
-            ? 'Select gender and enter birth year to enable program generation.'
-            : !gender && !hasProfileGender
-            ? 'Select gender to enable program generation.'
-            : !birthYearIsValid && !hasProfileBirthYear
-            ? 'Enter birth year to enable program generation.'
-            : null}
+          {[
+            !gender && !hasProfileGender ? 'select gender' : null,
+            !birthYearIsValid && !hasProfileBirthYear ? 'enter birth year' : null,
+            !bodyweightIsValid && !hasProfileBodyweight ? 'enter body weight' : null,
+          ]
+            .filter(Boolean)
+            .join(', ')
+            .replace(/,([^,]*)$/, ' and$1')
+            .replace(/^./, (c) => c.toUpperCase()) + ' to enable program generation.'}
         </Text>
       ) : null}
     </ScrollView>
@@ -450,5 +567,57 @@ const styles = StyleSheet.create({
   },
   birthYearInputError: {
     borderColor: colors.danger,
+  },
+  cycleToggleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    marginBottom: 16,
+  },
+  cycleToggleLabel: {
+    fontSize: 15,
+    color: colors.text,
+  },
+  cycleLengthRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 12,
+  },
+  cycleLengthLabel: {
+    fontSize: 14,
+    color: colors.textSecondary,
+  },
+  cycleStepper: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  cycleStepBtn: {
+    width: 32,
+    height: 32,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: colors.border,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  cycleStepBtnText: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: colors.text,
+    lineHeight: 20,
+  },
+  cycleStepValue: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: colors.text,
+    minWidth: 64,
+    textAlign: 'center',
   },
 })

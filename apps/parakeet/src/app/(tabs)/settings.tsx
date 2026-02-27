@@ -88,6 +88,8 @@ export default function SettingsScreen() {
 
   const displayName = profile?.display_name ?? '—';
 
+  const bodyweightKg = profile?.bodyweight_kg != null ? `${profile.bodyweight_kg} kg` : '—';
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <ScrollView
@@ -124,6 +126,10 @@ export default function SettingsScreen() {
             <Text style={styles.inlineInfoLabel}>Birth year</Text>
             <Text style={styles.inlineInfoValue}>{isProfileLoading ? 'Loading…' : birthYear}</Text>
           </View>
+          <View style={styles.inlineInfoRow}>
+            <Text style={styles.inlineInfoLabel}>Bodyweight</Text>
+            <Text style={styles.inlineInfoValue}>{isProfileLoading ? 'Loading…' : bodyweightKg}</Text>
+          </View>
         </View>
 
         <View style={styles.divider} />
@@ -154,10 +160,6 @@ export default function SettingsScreen() {
           }
         />
         <Row
-          label="Report Issue"
-          onPress={() => router.push('/disruption-report/report')}
-        />
-        <Row
           label="Volume & Recovery"
           onPress={() => router.push('/volume')}
         />
@@ -182,6 +184,12 @@ export default function SettingsScreen() {
           label="Volume Config (MRV/MEV)"
           onPress={() => router.push('/settings/volume-config')}
         />
+        {profile?.biological_sex === 'female' && (
+          <Row
+            label="Cycle Tracking"
+            onPress={() => router.push('/settings/cycle-tracking')}
+          />
+        )}
         <Row
           label="Developer"
           onPress={() => router.push('/settings/developer')}

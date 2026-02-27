@@ -16,10 +16,36 @@ import { useAuth } from '../../hooks/useAuth'
 import { useActiveProgram } from '../../hooks/useActiveProgram'
 import { useTodaySession } from '../../hooks/useTodaySession'
 import { useWeeklyVolume } from '../../hooks/useWeeklyVolume'
+import { useCyclePhase } from '../../hooks/useCyclePhase'
 import { getActiveDisruptions } from '../../lib/disruptions'
 import { getStreakData } from '../../lib/achievements'
-import { colors, spacing, radii, typography } from '../../theme'
+import { colors, palette, spacing, radii, typography } from '../../theme'
 import type { MuscleGroup, VolumeStatus } from '@parakeet/training-engine'
+
+// ── Cycle phase constants ─────────────────────────────────────────────────────
+
+const CYCLE_PHASE_BG: Record<string, string> = {
+  menstrual:   palette.red100,
+  follicular:  palette.emerald100,
+  ovulatory:   palette.amber100,
+  luteal:      palette.indigo100,
+  late_luteal: palette.indigo100,
+}
+const CYCLE_PHASE_TEXT: Record<string, string> = {
+  menstrual:   palette.red800,
+  follicular:  palette.emerald800,
+  ovulatory:   palette.amber800,
+  luteal:      palette.indigo800,
+  late_luteal: palette.indigo800,
+}
+
+const CYCLE_PHASE_LABELS: Record<string, string> = {
+  menstrual:   'Menstrual',
+  follicular:  'Follicular',
+  ovulatory:   'Ovulatory',
+  luteal:      'Luteal',
+  late_luteal: 'Late Luteal',
+}
 
 // ── Volume compact card ───────────────────────────────────────────────────────
 
@@ -96,6 +122,7 @@ export default function TodayScreen() {
   const { data: session, isLoading: sessionLoading } = useTodaySession()
   const { data: program, isLoading: programLoading } = useActiveProgram()
   const { data: volumeData } = useWeeklyVolume()
+  const { data: cycleContext } = useCyclePhase()
   const queryClient = useQueryClient()
 
   const { data: disruptions } = useQuery({
@@ -158,6 +185,22 @@ export default function TodayScreen() {
           </View>
         ) : (
           <>
+            {/* Cycle phase pill */}
+            {cycleContext && (
+              <TouchableOpacity
+                style={[
+                  styles.cyclePhasePill,
+                  { backgroundColor: CYCLE_PHASE_BG[cycleContext.phase] },
+                ]}
+                onPress={() => router.push('/settings/cycle-tracking')}
+                activeOpacity={0.7}
+              >
+                <Text style={[styles.cyclePhasePillText, { color: CYCLE_PHASE_TEXT[cycleContext.phase] }]}>
+                  {CYCLE_PHASE_LABELS[cycleContext.phase]} · Day {cycleContext.dayOfCycle}
+                </Text>
+              </TouchableOpacity>
+            )}
+
             {mrvWarningMuscles.length > 0 && (
               <View style={styles.mrvBanner}>
                 <Text style={styles.mrvBannerText}>
@@ -166,14 +209,34 @@ export default function TodayScreen() {
               </View>
             )}
 
-            {session ? (
-              <WorkoutCard
-                session={session}
-                activeDisruptions={disruptions ?? []}
-                onSkipComplete={() =>
-                  queryClient.invalidateQueries({ queryKey: ['session', 'today'] })
-                }
-              />
+            {session?.status === 'completed' ? (
+              <View style={styles.workoutDoneCard}>
+                <Text style={styles.workoutDoneTitle}>Workout Done ✓</Text>
+                <Text style={styles.workoutDoneSubtitle}>
+                  {session.primary_lift.charAt(0).toUpperCase() + session.primary_lift.slice(1)} — great work today.
+                </Text>
+              </View>
+            ) : session ? (
+              <>
+                <WorkoutCard
+                  session={session}
+                  activeDisruptions={disruptions ?? []}
+                  onSkipComplete={() =>
+                    queryClient.invalidateQueries({ queryKey: ['session', 'today'] })
+                  }
+                  onDisruptionResolved={() =>
+                    queryClient.invalidateQueries({ queryKey: ['disruptions', 'active', user?.id] })
+                  }
+                />
+                {/* Ovulatory info chip — squat days only */}
+                {cycleContext?.isOvulatoryWindow && session.primary_lift === 'squat' && (
+                  <View style={styles.ovulatoryChip}>
+                    <Text style={styles.ovulatoryChipText}>
+                      ℹ Ovulatory phase — high-load squat day. Focus on knee tracking and warm-up quality.
+                    </Text>
+                  </View>
+                )}
+              </>
             ) : (
               <View style={styles.restDayCard}>
                 <Text style={styles.restDayTitle}>Rest Day</Text>
@@ -182,6 +245,14 @@ export default function TodayScreen() {
                 </Text>
               </View>
             )}
+
+            <TouchableOpacity
+              style={styles.reportIssueLink}
+              onPress={() => router.push('/disruption-report/report')}
+              activeOpacity={0.6}
+            >
+              <Text style={styles.reportIssueLinkText}>Something's off? Report an issue →</Text>
+            </TouchableOpacity>
 
             <VolumeCompactCard />
           </>
@@ -257,6 +328,55 @@ const styles = StyleSheet.create({
     fontWeight: typography.weights.bold,
     color: colors.textInverse,
     letterSpacing: typography.letterSpacing.wide,
+  },
+  // Cycle phase pill
+  cyclePhasePill: {
+    alignSelf: 'flex-start',
+    marginHorizontal: spacing[4],
+    borderRadius: radii.full,
+    paddingHorizontal: spacing[3],
+    paddingVertical: spacing[1.5],
+  },
+  cyclePhasePillText: {
+    fontSize: typography.sizes.sm,
+    fontWeight: typography.weights.semibold,
+  },
+  // Ovulatory info chip
+  ovulatoryChip: {
+    backgroundColor: palette.amber50,
+    marginHorizontal: spacing[4],
+    borderRadius: radii.sm,
+    paddingHorizontal: spacing[3],
+    paddingVertical: spacing[2.5],
+  },
+  ovulatoryChipText: {
+    fontSize: typography.sizes.sm,
+    color: palette.amber800,
+    lineHeight: 18,
+  },
+  // Workout done card
+  workoutDoneCard: {
+    backgroundColor: colors.successMuted,
+    borderRadius: radii.lg,
+    borderWidth: 1,
+    borderColor: colors.success,
+    padding: spacing[7],
+    marginHorizontal: spacing[4],
+    alignItems: 'center' as const,
+  },
+  workoutDoneTitle: {
+    fontSize: typography.sizes.xl,
+    fontWeight: typography.weights.extrabold,
+    color: colors.success,
+    marginBottom: spacing[2],
+    letterSpacing: typography.letterSpacing.wide,
+  },
+  workoutDoneSubtitle: {
+    fontSize: typography.sizes.base,
+    color: colors.success,
+    textAlign: 'center' as const,
+    lineHeight: 22,
+    opacity: 0.8,
   },
   // Rest day card
   restDayCard: {
@@ -357,5 +477,13 @@ const styles = StyleSheet.create({
   volumeRowSetsOver: {
     color: colors.danger,
     fontWeight: typography.weights.semibold,
+  },
+  reportIssueLink: {
+    alignItems: 'center',
+    paddingVertical: spacing[2],
+  },
+  reportIssueLinkText: {
+    fontSize: typography.sizes.sm,
+    color: colors.textTertiary,
   },
 })

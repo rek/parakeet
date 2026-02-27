@@ -67,7 +67,7 @@ export default function ProfileScreen() {
       birthYear !== initialBirthYear ||
       bodyweightKg !== initialBodyweight
     )
-  }, [profile, displayName, gender, birthYear])
+  }, [profile, displayName, gender, birthYear, bodyweightKg])
 
   const saveMutation = useMutation({
     mutationFn: async () => {

@@ -10,12 +10,15 @@ import {
 } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { router } from 'expo-router'
+import { useQuery } from '@tanstack/react-query'
 
 import { reportDisruption, applyDisruptionAdjustment } from '../../lib/disruptions'
 import { useAuth } from '../../hooks/useAuth'
+import { getProfile } from '../../lib/profile'
 import type { DisruptionType, Severity, DisruptionWithSuggestions } from '@parakeet/shared-types'
 import { colors } from '../../theme'
 import { BackLink } from '../../components/navigation/BackLink'
+import { qk } from '../../queries/keys'
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
@@ -94,6 +97,14 @@ type ScreenState = 'form' | 'review'
 export default function DisruptionReportScreen() {
   const { user } = useAuth()
 
+  const { data: profile } = useQuery({
+    queryKey: qk.profile.current(),
+    queryFn: getProfile,
+    staleTime: 5 * 60 * 1000,
+  })
+
+  const isFemale = profile?.biological_sex === 'female'
+
   // Screen state
   const [screenState, setScreenState] = useState<ScreenState>('form')
   const [disruption, setDisruption] = useState<DisruptionWithSuggestions | null>(null)
@@ -107,6 +118,7 @@ export default function DisruptionReportScreen() {
   const [selectedLifts, setSelectedLifts]   = useState<Set<Lift>>(new Set())
   const [allLifts, setAllLifts]             = useState(false)
   const [description, setDescription]       = useState('')
+  const [isMenstrualSymptoms, setIsMenstrualSymptoms] = useState(false)
 
   // Loading states
   const [isSubmitting, setIsSubmitting]   = useState(false)
@@ -114,6 +126,24 @@ export default function DisruptionReportScreen() {
   const [submitError, setSubmitError]     = useState<string | null>(null)
 
   // ── Handlers ────────────────────────────────────────────────────────────────
+
+  function handleMenstrualSymptoms() {
+    if (isMenstrualSymptoms) {
+      setIsMenstrualSymptoms(false)
+      setSelectedType(null)
+      setSelectedSeverity(null)
+      setAllLifts(false)
+      setSelectedLifts(new Set())
+      setDescription('')
+    } else {
+      setIsMenstrualSymptoms(true)
+      setSelectedType('fatigue')
+      setSelectedSeverity('minor')
+      setAllLifts(true)
+      setSelectedLifts(new Set(LIFTS))
+      setDescription('Menstrual symptoms')
+    }
+  }
 
   function toggleLift(lift: Lift) {
     const next = new Set(selectedLifts)
@@ -260,16 +290,31 @@ export default function DisruptionReportScreen() {
           {DISRUPTION_TYPES.map((t) => (
             <TouchableOpacity
               key={t.value}
-              style={[styles.typeCard, selectedType === t.value && styles.typeCardSelected]}
-              onPress={() => setSelectedType(selectedType === t.value ? null : t.value)}
+              style={[styles.typeCard, selectedType === t.value && !isMenstrualSymptoms && styles.typeCardSelected]}
+              onPress={() => {
+                setIsMenstrualSymptoms(false)
+                setSelectedType(selectedType === t.value ? null : t.value)
+              }}
               activeOpacity={0.7}
             >
               <Text style={styles.typeIcon}>{t.icon}</Text>
-              <Text style={[styles.typeLabel, selectedType === t.value && styles.typeLabelSelected]}>
+              <Text style={[styles.typeLabel, selectedType === t.value && !isMenstrualSymptoms && styles.typeLabelSelected]}>
                 {t.label}
               </Text>
             </TouchableOpacity>
           ))}
+          {isFemale && (
+            <TouchableOpacity
+              style={[styles.typeCard, isMenstrualSymptoms && styles.typeCardSelected]}
+              onPress={handleMenstrualSymptoms}
+              activeOpacity={0.7}
+            >
+              <Text style={styles.typeIcon}>🌸</Text>
+              <Text style={[styles.typeLabel, isMenstrualSymptoms && styles.typeLabelSelected]}>
+                Menstrual symptoms
+              </Text>
+            </TouchableOpacity>
+          )}
         </View>
 
         {/* Step 2: Severity */}

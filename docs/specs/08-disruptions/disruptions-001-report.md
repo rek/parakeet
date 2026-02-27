@@ -39,16 +39,35 @@ export async function reportDisruption(
 
   if (error) throw error
 
-  // 2. Fetch affected sessions (RLS ensures they belong to this user)
-  const sessionIds = input.session_ids_affected ?? []
-  const affectedSessions = sessionIds.length > 0
-    ? (await supabase
-        .from('sessions')
-        .select('id, primary_lift, planned_sets, status')
-        .in('id', sessionIds)
-        .in('status', ['planned', 'in_progress'])
-      ).data ?? []
-    : []
+  // 2. Fetch affected sessions
+  // If session_ids_affected explicitly provided, use those; otherwise discover by date range.
+  // Discovered IDs are stored back onto the disruption row so applyDisruptionAdjustment can find them.
+  const explicitIds = input.session_ids_affected ?? []
+  let affectedSessions = []
+  if (explicitIds.length > 0) {
+    affectedSessions = (await supabase
+      .from('sessions')
+      .select('id, primary_lift, planned_sets, status')
+      .in('id', explicitIds)
+      .in('status', ['planned', 'in_progress'])
+    ).data ?? []
+  } else {
+    let query = supabase
+      .from('sessions')
+      .select('id, primary_lift, planned_sets, status')
+      .eq('user_id', userId)
+      .in('status', ['planned', 'in_progress'])
+      .gte('planned_date', input.affected_date_start)
+    if (input.affected_date_end) query = query.lte('planned_date', input.affected_date_end)
+    const rows = (await query).data ?? []
+    affectedSessions = (input.affected_lifts?.length)
+      ? rows.filter(s => input.affected_lifts!.includes(s.primary_lift))
+      : rows
+    const discoveredIds = affectedSessions.map(s => s.id)
+    if (discoveredIds.length > 0) {
+      await supabase.from('disruptions').update({ session_ids_affected: discoveredIds }).eq('id', disruption.id)
+    }
+  }
 
   // 3. Generate suggestions locally using training-engine
   const suggestedAdjustments = suggestDisruptionAdjustment(disruption, affectedSessions)

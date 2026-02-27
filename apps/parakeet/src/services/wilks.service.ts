@@ -18,11 +18,11 @@ export async function getCurrentWilksSnapshot(userId: string): Promise<CurrentWi
     getCurrentMaxes(userId),
     getProfileById(userId),
   ]);
-  if (!maxes) return null;
+  if (!maxes || !profile?.bodyweight_kg) return null;
 
   const sex: 'male' | 'female' =
-    profile?.biological_sex === 'female' ? 'female' : 'male';
-  const bodyweightKg = 85;
+    profile.biological_sex === 'female' ? 'female' : 'male';
+  const bodyweightKg = profile.bodyweight_kg;
 
   const squatKg = maxes.squat_1rm_grams / 1000;
   const benchKg = maxes.bench_1rm_grams / 1000;

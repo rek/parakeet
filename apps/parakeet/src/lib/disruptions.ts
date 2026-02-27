@@ -28,14 +28,37 @@ export async function reportDisruption(
 
   if (error) throw error
 
-  const sessionIds = input.session_ids_affected ?? []
-  const affectedSessions = sessionIds.length > 0
-    ? ((await supabase
-        .from('sessions')
-        .select('id, primary_lift, planned_sets, status')
-        .in('id', sessionIds)
-        .in('status', ['planned', 'in_progress'])).data ?? [])
-    : []
+  let affectedSessions: SessionRow[] = []
+  const explicitIds = input.session_ids_affected ?? []
+  if (explicitIds.length > 0) {
+    affectedSessions = (await supabase
+      .from('sessions')
+      .select('id, primary_lift, planned_sets, status')
+      .in('id', explicitIds)
+      .in('status', ['planned', 'in_progress'])
+    ).data ?? []
+  } else {
+    let query = supabase
+      .from('sessions')
+      .select('id, primary_lift, planned_sets, status')
+      .eq('user_id', userId)
+      .in('status', ['planned', 'in_progress'])
+      .gte('planned_date', input.affected_date_start)
+    if (input.affected_date_end) {
+      query = query.lte('planned_date', input.affected_date_end)
+    }
+    const rows = (await query).data ?? []
+    affectedSessions = (input.affected_lifts && input.affected_lifts.length > 0)
+      ? rows.filter((s) => input.affected_lifts!.includes(s.primary_lift))
+      : rows
+    const discoveredIds = affectedSessions.map((s) => s.id)
+    if (discoveredIds.length > 0) {
+      await supabase
+        .from('disruptions')
+        .update({ session_ids_affected: discoveredIds })
+        .eq('id', disruption.id)
+    }
+  }
 
   const suggested_adjustments = suggestDisruptionAdjustment(disruption, affectedSessions)
 
@@ -59,12 +82,28 @@ export async function applyDisruptionAdjustment(
   if (!disruption) throw new Error('Disruption not found or already applied')
 
   const sessionIds = disruption.session_ids_affected ?? []
-  const affectedSessions = sessionIds.length > 0
-    ? ((await supabase
-        .from('sessions')
-        .select('id, primary_lift, planned_sets, status')
-        .in('id', sessionIds)).data ?? [])
-    : []
+  let affectedSessions: SessionRow[] = []
+  if (sessionIds.length > 0) {
+    affectedSessions = (await supabase
+      .from('sessions')
+      .select('id, primary_lift, planned_sets, status')
+      .in('id', sessionIds)
+    ).data ?? []
+  } else if (disruption.affected_date_start) {
+    let query = supabase
+      .from('sessions')
+      .select('id, primary_lift, planned_sets, status')
+      .eq('user_id', userId)
+      .in('status', ['planned', 'in_progress'])
+      .gte('planned_date', disruption.affected_date_start)
+    if (disruption.affected_date_end) {
+      query = query.lte('planned_date', disruption.affected_date_end)
+    }
+    const rows = (await query).data ?? []
+    affectedSessions = (disruption.affected_lifts && disruption.affected_lifts.length > 0)
+      ? rows.filter((s) => disruption.affected_lifts!.includes(s.primary_lift))
+      : rows
+  }
 
   const suggestions = suggestDisruptionAdjustment(disruption, affectedSessions)
 
@@ -189,6 +228,13 @@ export async function getDisruption(disruptionId: string, userId: string) {
 }
 
 // --- Local types ---
+
+interface SessionRow {
+  id: string
+  primary_lift: string
+  planned_sets: unknown
+  status: string
+}
 
 interface PlannedSet {
   weight_kg: number

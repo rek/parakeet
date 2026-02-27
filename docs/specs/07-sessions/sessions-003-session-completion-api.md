@@ -27,11 +27,20 @@ interface CompleteSessionInput {
     rpe_actual?: number    // 6.0–10.0 in 0.5 increments
     notes?: string
   }[]
+  auxiliarySets?: {        // optional; absent if no auxiliary work was done
+    exercise: string
+    set_number: number
+    weight_grams: number
+    reps_completed: number
+    rpe_actual?: number
+  }[]
   sessionRpe?: number
   startedAt?: Date
   completedAt?: Date
 }
 ```
+
+**`session_logs.auxiliary_sets`:** JSONB column (nullable); populated by migration `20260305000000_add_auxiliary_sets_to_session_logs.sql`.
 
 **`classifyPerformance` helper:**
 - [x] `'over'`: avg actual reps > planned reps by >10%

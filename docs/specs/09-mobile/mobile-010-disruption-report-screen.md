@@ -10,7 +10,8 @@ The screen where users report injuries, illness, travel, or other disruptions an
 ## Tasks
 
 **`apps/parakeet/app/disruption-report/report.tsx`:**
-- Accessible from: Today screen (floating action / banner tap), Settings → "Report Issue"
+
+- Accessible from: Today screen — "Something's off? Report an issue" link below workout/rest card
 - Multi-step form within a single scrollable screen:
 
 **Step 1 — Issue Type:**
@@ -45,8 +46,9 @@ The screen where users report injuries, illness, travel, or other disruptions an
 - "Apply All Adjustments" primary button → call `applyDisruptionAdjustment(disruptionId, userId)` from `apps/parakeet/lib/disruptions.ts`
 - "Skip — Keep Original Plan" secondary button → navigate back without applying
 
-**Active disruption list (accessible from Settings):**
-- List of active disruptions with resolve button per case
+**Active disruption banners (Today screen WorkoutCard):**
+
+- Tappable banners above the workout card; tap opens an Alert with "Mark as resolved" option
 
 ## Dependencies
 

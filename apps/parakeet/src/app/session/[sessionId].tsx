@@ -32,6 +32,13 @@ interface WarmupSet {
   label?: string
 }
 
+interface AuxiliaryWork {
+  exercise: string
+  sets: PlannedSet[]
+  skipped: boolean
+  skipReason?: string
+}
+
 interface RestRecommendations {
   mainLift: number[]
   auxiliary: number[]
@@ -45,7 +52,7 @@ interface LlmRestSuggestion {
 interface JitData {
   mainLiftSets: PlannedSet[]
   warmupSets: WarmupSet[]
-  auxiliaryWork: unknown
+  auxiliaryWork: AuxiliaryWork[]
   restRecommendations?: RestRecommendations
   llmRestSuggestion?: LlmRestSuggestion | null
 }
@@ -53,12 +60,20 @@ interface JitData {
 // ── Constants ─────────────────────────────────────────────────────────────────
 
 const DEFAULT_MAIN_REST_SECONDS = 180
+const DEFAULT_AUX_REST_SECONDS = 90
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 function capitalize(value: string): string {
   if (!value) return value
   return value.charAt(0).toUpperCase() + value.slice(1)
+}
+
+function formatExerciseName(name: string): string {
+  return name
+    .split('_')
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ')
 }
 
 // ── Screen ───────────────────────────────────────────────────────────────────
@@ -71,14 +86,18 @@ export default function SessionScreen() {
 
   const {
     actualSets,
+    auxiliarySets,
     plannedSets,
     warmupCompleted,
     initSession,
+    initAuxiliary,
     updateSet,
+    updateAuxiliarySet,
     setWarmupDone,
   } = useSessionStore()
 
   const [warmupSets, setWarmupSets] = useState<WarmupSet[]>([])
+  const [auxiliaryWork, setAuxiliaryWork] = useState<AuxiliaryWork[]>([])
   const [sessionMeta, setSessionMeta] = useState<{
     primary_lift: string
     intensity_type: string
@@ -94,6 +113,8 @@ export default function SessionScreen() {
   >(undefined)
   // The set number that triggered the timer (rest is attributed to this set)
   const pendingRestSetNumber = useRef<number | null>(null)
+  // For auxiliary: { exercise, setNumber } that triggered the timer
+  const pendingAuxRest = useRef<{ exercise: string; setNumber: number } | null>(null)
   // Ref mirror of timerVisible so handleSetUpdate closure stays stable
   const timerVisibleRef = useRef(false)
 
@@ -117,7 +138,7 @@ export default function SessionScreen() {
       return
     }
 
-    const { mainLiftSets, warmupSets: ws } = parsed
+    const { mainLiftSets, warmupSets: ws, auxiliaryWork: aux } = parsed
     setWarmupSets(ws ?? [])
 
     if (parsed.restRecommendations) {
@@ -130,6 +151,12 @@ export default function SessionScreen() {
     // Initialize store synchronously so stale is_completed from a prior session
     // can never race with the user completing sets and navigating to complete screen.
     initSession(sessionId, mainLiftSets)
+
+    const activeAux = (aux ?? []).filter((a) => !a.skipped)
+    setAuxiliaryWork(aux ?? [])
+    if (activeAux.length > 0) {
+      initAuxiliary(activeAux.map((a) => ({ exercise: a.exercise, sets: a.sets })))
+    }
 
     getSession(sessionId).then((session) => {
       if (!session) {
@@ -165,10 +192,13 @@ export default function SessionScreen() {
       // If timer is already visible (user completed a set while resting),
       // dismiss it quietly before launching the new one.
       if (data.isCompleted) {
-        if (timerVisibleRef.current && pendingRestSetNumber.current !== null) {
+        if (timerVisibleRef.current) {
           timerVisibleRef.current = false
           setTimerVisible(false)
         }
+
+        // No rest timer after the last set
+        if (setNumber >= plannedSets.length) return
 
         const setIndex = setNumber - 1
         const duration =
@@ -176,6 +206,7 @@ export default function SessionScreen() {
           DEFAULT_MAIN_REST_SECONDS
 
         pendingRestSetNumber.current = setNumber
+        pendingAuxRest.current = null
         setTimerDuration(duration)
         setTimerLlmSuggestion(llmRestSuggestion.current ?? undefined)
         timerVisibleRef.current = true
@@ -186,18 +217,68 @@ export default function SessionScreen() {
     [updateSet],
   )
 
+  const handleAuxSetUpdate = useCallback(
+    (
+      exerciseIndex: number,
+      exercise: string,
+      setNumber: number,
+      setsInExercise: number,
+      data: { weightKg: number; reps: number; rpe?: number; isCompleted: boolean },
+    ) => {
+      updateAuxiliarySet(exercise, setNumber, {
+        weight_grams:   Math.round(data.weightKg * 1000),
+        reps_completed: data.reps,
+        rpe_actual:     data.rpe,
+        is_completed:   data.isCompleted,
+      })
+
+      if (data.isCompleted) {
+        if (timerVisibleRef.current) {
+          timerVisibleRef.current = false
+          setTimerVisible(false)
+        }
+
+        // No rest timer after the last set of this exercise
+        if (setNumber >= setsInExercise) return
+
+        const duration =
+          restRecommendations.current?.auxiliary[exerciseIndex] ??
+          DEFAULT_AUX_REST_SECONDS
+
+        pendingRestSetNumber.current = null
+        pendingAuxRest.current = { exercise, setNumber }
+        setTimerDuration(duration)
+        setTimerLlmSuggestion(undefined)
+        timerVisibleRef.current = true
+        setTimerVisible(true)
+      }
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [updateAuxiliarySet],
+  )
+
   function handleTimerDone(elapsedSeconds: number) {
     if (pendingRestSetNumber.current !== null) {
       updateSet(pendingRestSetNumber.current, {
         actual_rest_seconds: elapsedSeconds,
       })
       pendingRestSetNumber.current = null
+    } else if (pendingAuxRest.current !== null) {
+      const { exercise, setNumber } = pendingAuxRest.current
+      updateAuxiliarySet(exercise, setNumber, {
+        actual_rest_seconds: elapsedSeconds,
+      })
+      pendingAuxRest.current = null
     }
     timerVisibleRef.current = false
     setTimerVisible(false)
   }
 
   function handleComplete() {
+    if (timerVisibleRef.current) {
+      timerVisibleRef.current = false
+      setTimerVisible(false)
+    }
     router.push({
       pathname: '/session/complete',
       params: { sessionId },
@@ -224,6 +305,12 @@ export default function SessionScreen() {
       ? `Block ${sessionMeta.block_number} · ${capitalize(sessionMeta.intensity_type)}`
       : capitalize(sessionMeta.intensity_type)
     : ''
+
+  // Group auxiliary sets by exercise for rendering
+  const auxByExercise = auxiliaryWork.map((aw) => ({
+    ...aw,
+    actualSets: auxiliarySets.filter((s) => s.exercise === aw.exercise),
+  }))
 
   // ── Render ────────────────────────────────────────────────────────────────
 
@@ -267,6 +354,50 @@ export default function SessionScreen() {
             />
           )
         })}
+
+        {/* Auxiliary work section */}
+        {auxiliaryWork.length > 0 && (
+          <View style={styles.auxSection}>
+            <View style={styles.workingSetsHeader}>
+              <Text style={styles.workingSetsTitle}>Auxiliary Work</Text>
+            </View>
+
+            {auxByExercise.map((aw, exerciseIndex) => (
+              <View key={aw.exercise} style={styles.auxExercise}>
+                <Text style={styles.auxExerciseName}>
+                  {formatExerciseName(aw.exercise)}
+                </Text>
+
+                {aw.skipped ? (
+                  <Text style={styles.auxSkippedText}>
+                    Skipped{aw.skipReason ? ` — ${aw.skipReason}` : ''}
+                  </Text>
+                ) : (
+                  aw.actualSets.map((actualSet) => {
+                    const planned = aw.sets[actualSet.set_number - 1]
+                    return (
+                      <SetRow
+                        key={`${aw.exercise}-${actualSet.set_number}`}
+                        setNumber={actualSet.set_number}
+                        plannedWeightKg={planned?.weight_kg ?? actualSet.weight_grams / 1000}
+                        plannedReps={planned?.reps ?? actualSet.reps_completed}
+                        onUpdate={(data) =>
+                          handleAuxSetUpdate(
+                            exerciseIndex,
+                            aw.exercise,
+                            actualSet.set_number,
+                            aw.sets.length,
+                            data,
+                          )
+                        }
+                      />
+                    )
+                  })
+                )}
+              </View>
+            ))}
+          </View>
+        )}
 
         {/* Bottom padding for sticky button */}
         <View style={styles.bottomSpacer} />
@@ -345,6 +476,28 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '700',
     color: colors.text,
+  },
+  auxSection: {
+    marginTop: 8,
+    borderTopWidth: 1,
+    borderTopColor: colors.border,
+  },
+  auxExercise: {
+    marginBottom: 8,
+  },
+  auxExerciseName: {
+    paddingHorizontal: 16,
+    paddingBottom: 8,
+    fontSize: 14,
+    fontWeight: '600',
+    color: colors.textSecondary,
+  },
+  auxSkippedText: {
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    fontSize: 14,
+    color: colors.textTertiary,
+    fontStyle: 'italic',
   },
   bottomSpacer: {
     height: 100,

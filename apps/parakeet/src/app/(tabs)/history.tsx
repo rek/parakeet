@@ -4,12 +4,37 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 
 import { useAuth } from '../../hooks/useAuth';
+import { useCyclePhase } from '../../hooks/useCyclePhase';
 import { getPerformanceTrends } from '../../lib/performance';
 import { getCompletedSessions } from '../../lib/sessions';
 import { listPrograms } from '../../lib/programs';
 import { colors, spacing, radii, typography } from '../../theme';
 
 import type { PerformanceTrend } from '../../lib/performance';
+
+// ── Cycle phase constants ─────────────────────────────────────────────────────
+
+const PHASE_TAG_BG: Record<string, string> = {
+  menstrual:   '#FEE2E2',
+  follicular:  '#D1FAE5',
+  ovulatory:   '#FEF3C7',
+  luteal:      '#E0E7FF',
+  late_luteal: '#E0E7FF',
+}
+const PHASE_TAG_TEXT: Record<string, string> = {
+  menstrual:   '#991B1B',
+  follicular:  '#065F46',
+  ovulatory:   '#92400E',
+  luteal:      '#3730A3',
+  late_luteal: '#3730A3',
+}
+const PHASE_LABELS: Record<string, string> = {
+  menstrual:   'Menstrual',
+  follicular:  'Follicular',
+  ovulatory:   'Ovulatory',
+  luteal:      'Luteal',
+  late_luteal: 'Late Luteal',
+}
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -74,7 +99,16 @@ function SessionRow({ session }: SessionRowProps) {
         <Text style={styles.sessionRowTitle}>
           {liftName} — {intensityName}
         </Text>
-        <Text style={styles.sessionRowDate}>{session.planned_date ?? '—'}</Text>
+        <View style={styles.sessionRowMeta}>
+          <Text style={styles.sessionRowDate}>{session.planned_date ?? '—'}</Text>
+          {session.cycle_phase && (
+            <View style={[styles.phaseTag, { backgroundColor: PHASE_TAG_BG[session.cycle_phase] }]}>
+              <Text style={[styles.phaseTagText, { color: PHASE_TAG_TEXT[session.cycle_phase] }]}>
+                {PHASE_LABELS[session.cycle_phase] ?? session.cycle_phase}
+              </Text>
+            </View>
+          )}
+        </View>
       </View>
       <View style={styles.completedBadge}>
         <Text style={styles.completedBadgeText}>Done</Text>
@@ -87,6 +121,7 @@ function SessionRow({ session }: SessionRowProps) {
 
 export default function HistoryScreen() {
   const { user } = useAuth();
+  const { data: cycleContext } = useCyclePhase();
 
   const trendsQuery = useQuery({
     queryKey: ['performance', 'trends', user?.id],
@@ -168,6 +203,20 @@ export default function HistoryScreen() {
                 </View>
               ))}
             </View>
+          </>
+        )}
+
+        {/* Cycle Patterns — only when tracking is active and there's phase data */}
+        {cycleContext && sessionsQuery.data?.some((s) => s.cycle_phase) && (
+          <>
+            <Text style={styles.sectionHeader}>Cycle</Text>
+            <TouchableOpacity
+              style={styles.cyclePatternButton}
+              onPress={() => router.push('/history/cycle-patterns')}
+              activeOpacity={0.7}
+            >
+              <Text style={styles.cyclePatternButtonText}>Cycle Patterns →</Text>
+            </TouchableOpacity>
           </>
         )}
 
@@ -284,6 +333,35 @@ const styles = StyleSheet.create({
   sessionRowDate: {
     fontSize: typography.sizes.sm,
     color: colors.textSecondary,
+  },
+  sessionRowMeta: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing[2],
+    flexWrap: 'wrap',
+    marginTop: spacing[0.5],
+  },
+  phaseTag: {
+    borderRadius: radii.xs,
+    paddingHorizontal: spacing[1.5],
+    paddingVertical: 2,
+  },
+  phaseTagText: {
+    fontSize: typography.sizes.xs,
+    fontWeight: typography.weights.semibold,
+  },
+  cyclePatternButton: {
+    backgroundColor: '#FEF3C7',
+    borderRadius: radii.sm,
+    paddingHorizontal: spacing[4],
+    paddingVertical: spacing[3],
+    marginBottom: spacing[4],
+    alignSelf: 'flex-start',
+  },
+  cyclePatternButtonText: {
+    fontSize: typography.sizes.sm,
+    fontWeight: typography.weights.semibold,
+    color: '#92400E',
   },
   completedBadge: {
     backgroundColor: colors.successMuted,

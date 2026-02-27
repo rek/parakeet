@@ -17,6 +17,7 @@ import { getFormulaConfig } from './formulas'
 import { getMrvMevConfig } from './volume-config'
 import { getActiveAssignments } from './auxiliary-config'
 import { getWarmupConfig } from './warmup-config'
+import { getUserRestOverrides } from './rest-config'
 import { estimateOneRmKgFromProfile } from './max-estimation'
 import type { BiologicalSex } from './profile'
 
@@ -37,13 +38,14 @@ export async function runJITForSession(
   const blockNumber = session.block_number as 1 | 2 | 3
 
   // Fetch all config in parallel
-  const [oneRmKg, formulaConfig, mrvMevConfig, assignments, warmupConfig] =
+  const [oneRmKg, formulaConfig, mrvMevConfig, assignments, warmupConfig, userRestOverrides] =
     await Promise.all([
       getCurrentOneRmKg(userId, lift),
       getFormulaConfig(userId),
       getMrvMevConfig(userId),
       getActiveAssignments(userId, session.program_id, blockNumber),
       getWarmupConfig(userId, lift),
+      getUserRestOverrides(userId),
     ])
 
   let resolvedOneRmKg = oneRmKg
@@ -143,6 +145,7 @@ export async function runJITForSession(
     recentLogs,
     activeDisruptions,
     warmupConfig,
+    userRestOverrides,
   }
 
   const generator = getJITGenerator('auto', true)

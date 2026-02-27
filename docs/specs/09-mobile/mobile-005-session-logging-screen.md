@@ -19,6 +19,7 @@ The live workout logging screen where users check off sets, adjust weights and r
   - Header: lift name, intensity type badge, block/week info
   - **Collapsible warmup section** above working sets (see [parakeet-013-warmup-display.md](./parakeet-013-warmup-display.md))
   - Scrollable list of `SetRow` components (one per planned working set)
+  - **Auxiliary Work section** below working sets: one sub-section per exercise with exercise name header + `SetRow` per set; skipped exercises (high soreness/MRV exceeded) show muted skip reason text instead of rows
   - "Complete Workout" sticky footer button (enabled after at least 1 set is checked)
 
 **`apps/parakeet/components/training/SetRow.tsx`:**
@@ -31,9 +32,9 @@ The live workout logging screen where users check off sets, adjust weights and r
 - Checkmark is tappable again to un-complete a set (user can correct mistakes)
 
 **`apps/parakeet/store/sessionStore.ts` (Zustand):**
-- State: `{ sessionId, plannedSets, actualSets: ActualSet[], sessionRpe, sessionNotes, startedAt }`
-- Actions: `updateSet(setNumber, data)`, `completeSet(setNumber)`, `setSessionRpe(rpe)`, `reset()`
-- Persisted to MMKV for crash recovery (user can close app and return to in-progress session)
+
+- State: `{ sessionId, plannedSets, actualSets: ActualSet[], auxiliarySets: AuxiliaryActualSet[], sessionRpe, startedAt }`
+- Actions: `updateSet`, `updateAuxiliarySet(exercise, setNumber, data)`, `initAuxiliary(work)`, `setSessionRpe`, `reset()`
 
 **`apps/parakeet/app/session/complete.tsx`:**
 - Summary view after submitting:

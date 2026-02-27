@@ -18,4 +18,8 @@ export const qk = {
   developer: {
     suggestionsCount: () => ['developer', 'suggestions', 'count'] as const,
   },
+  cycle: {
+    phase: (userId?: string) => ['cycle', 'phase', userId] as const,
+    config: (userId?: string) => ['cycle', 'config', userId] as const,
+  },
 } as const;

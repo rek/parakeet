@@ -20,6 +20,7 @@ import {
   getSessionCompletionContext,
 } from '../../lib/sessions'
 import { getPRHistory, getStreakData, storePersonalRecords } from '../../lib/achievements'
+import { stampCyclePhaseOnSession } from '../../lib/cycle-tracking'
 import { useSessionStore } from '../../store/sessionStore'
 import { useAuth } from '../../hooks/useAuth'
 import { StarCard } from '../../components/achievements/StarCard'
@@ -39,6 +40,7 @@ export default function CompleteScreen() {
   const {
     sessionId,
     actualSets,
+    auxiliarySets,
     sessionRpe,
     startedAt,
     plannedSets,
@@ -77,15 +79,29 @@ export default function CompleteScreen() {
     try {
       await completeSession(sessionId, user.id, {
         actualSets: actualSets.map((s) => ({
-          set_number:      s.set_number,
-          weight_grams:    s.weight_grams,
-          reps_completed:  s.reps_completed,
-          rpe_actual:      s.rpe_actual,
-          notes:           notes.trim() || undefined,
+          set_number:           s.set_number,
+          weight_grams:         s.weight_grams,
+          reps_completed:       s.reps_completed,
+          rpe_actual:           s.rpe_actual,
+          actual_rest_seconds:  s.actual_rest_seconds,
+          notes:                notes.trim() || undefined,
         })),
+        auxiliarySets: auxiliarySets.length > 0
+          ? auxiliarySets.map((s) => ({
+              exercise:             s.exercise,
+              set_number:           s.set_number,
+              weight_grams:         s.weight_grams,
+              reps_completed:       s.reps_completed,
+              rpe_actual:           s.rpe_actual,
+              actual_rest_seconds:  s.actual_rest_seconds,
+            }))
+          : undefined,
         sessionRpe,
         startedAt,
       })
+
+      // Stamp cycle phase on the session log (no-op if tracking disabled)
+      stampCyclePhaseOnSession(user.id, sessionId).catch(() => {})
 
       // ── Achievement detection ──────────────────────────────────────────────
 
@@ -151,7 +167,8 @@ export default function CompleteScreen() {
       setSaved(true)
 
       await queryClient.invalidateQueries({ queryKey: ['session'] })
-      await queryClient.invalidateQueries({ queryKey: ['today'] })
+      await queryClient.invalidateQueries({ queryKey: ['sessions', 'completed'] })
+      await queryClient.invalidateQueries({ queryKey: ['performance', 'trends'] })
       await queryClient.invalidateQueries({ queryKey: ['achievements'] })
     } catch (err: unknown) {
       Alert.alert(
@@ -164,8 +181,8 @@ export default function CompleteScreen() {
   }
 
   function handleDone() {
-    reset()
     router.replace('/(tabs)/today')
+    setTimeout(reset, 400)
   }
 
   // ── Render ────────────────────────────────────────────────────────────────
