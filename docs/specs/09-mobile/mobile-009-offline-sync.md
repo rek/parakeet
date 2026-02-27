@@ -1,6 +1,6 @@
 # Spec: Offline Sync and Optimistic State
 
-**Status**: Planned
+**Status**: Implemented
 **Domain**: parakeet App
 
 ## What This Covers
@@ -33,7 +33,6 @@ Handling offline scenarios during active workout logging. The session logging sc
   4. On next app foreground + connectivity: retry the pending Supabase `upsert` to `session_logs`
 
 **Connectivity detection:**
-- Use `@react-native-community/netinfo` to detect online/offline state
 - Show offline banner in session screen when connectivity is lost
 - Banner disappears and pending sync triggers when connectivity restored
 
@@ -45,6 +44,26 @@ Handling offline scenarios during active workout logging. The session logging sc
 **React Query integration:**
 - Mutations (complete session, skip session) use React Query's `onMutate` / `onError` / `onSettled` for optimistic updates
 - If mutation fails: rollback optimistic state and re-fetch from server
+
+## Implementation Notes
+
+- AsyncStorage used instead of MMKV (already installed, avoids native module overhead)
+- `expo-background-fetch` not used; queue drains on foreground + connectivity restore
+- `sessionStore` uses Zustand `persist` + AsyncStorage; `warmupCompleted` (Set) and `startedAt` (Date) excluded from persistence to avoid serialization issues
+- `syncStore` persists queue to AsyncStorage; survives app restart/crash
+- `useSyncQueue` mounted at root layout; processes up to `MAX_RETRIES=5` per op
+- Non-retryable errors (Supabase constraint, auth) dequeue + alert user
+- Network errors detected by message heuristic (`isNetworkError` in `useSyncQueue.ts`)
+
+## Files
+
+- `src/store/syncStore.ts` — pending op queue
+- `src/store/sessionStore.ts` — added AsyncStorage persistence
+- `src/hooks/useNetworkStatus.ts` — pure-JS connectivity probe via `AppState` + `fetch` (no native module)
+- `src/hooks/useSyncQueue.ts` — drains queue on reconnect
+- `src/app/session/[sessionId].tsx` — offline banner
+- `src/app/session/complete.tsx` — offline-safe completion
+- `src/app/_layout.tsx` — mounts `useSyncQueue`
 
 ## Dependencies
 
