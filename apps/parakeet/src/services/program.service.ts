@@ -1,3 +1,4 @@
+import * as Sentry from '@sentry/react-native';
 import {
   computeBlockOffset,
   generateAuxiliaryAssignments,
@@ -162,5 +163,5 @@ export function onCycleComplete(programId: string, userId: string): void {
             ),
         ),
     )
-    .catch((err) => console.error('[onCycleComplete] cycle review failed:', err));
+    .catch((err) => Sentry.captureException(err));
 }

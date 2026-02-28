@@ -2,6 +2,7 @@ import { router } from 'expo-router'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import {
   ActivityIndicator,
+  Alert,
   ScrollView,
   StyleSheet,
   Text,
@@ -17,10 +18,69 @@ import { useActiveProgram } from '../../hooks/useActiveProgram'
 import { useTodaySession } from '../../hooks/useTodaySession'
 import { useWeeklyVolume } from '../../hooks/useWeeklyVolume'
 import { useCyclePhase } from '../../hooks/useCyclePhase'
-import { getActiveDisruptions } from '../../lib/disruptions'
+import * as Sentry from '@sentry/react-native'
+import { getActiveDisruptions, resolveDisruption } from '../../lib/disruptions'
 import { getStreakData } from '../../lib/achievements'
 import { colors, palette, spacing, radii, typography } from '../../theme'
 import type { MuscleGroup, VolumeStatus } from '@parakeet/training-engine'
+
+// ── Active disruptions banner ─────────────────────────────────────────────────
+
+interface ActiveDisruption {
+  id: string
+  disruption_type: string
+  severity: string
+}
+
+function ActiveDisruptionsBanner({
+  disruptions,
+  userId,
+  onResolved,
+}: {
+  disruptions: ActiveDisruption[]
+  userId: string
+  onResolved: () => void
+}) {
+  if (!disruptions.length) return null
+
+  function handleResolve(d: ActiveDisruption) {
+    Alert.alert(
+      `${d.disruption_type} (${d.severity})`,
+      'Mark this disruption as resolved?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Mark Resolved',
+          onPress: async () => {
+            try {
+              await resolveDisruption(d.id, userId)
+              onResolved()
+            } catch (err) {
+              Sentry.captureException(err)
+            }
+          },
+        },
+      ],
+    )
+  }
+
+  return (
+    <>
+      {disruptions.map((d) => (
+        <TouchableOpacity
+          key={d.id}
+          style={styles.disruptionBanner}
+          onPress={() => handleResolve(d)}
+          activeOpacity={0.75}
+        >
+          <Text style={styles.disruptionBannerText}>
+            ⚡ {d.disruption_type} ({d.severity}) — tap to resolve
+          </Text>
+        </TouchableOpacity>
+      ))}
+    </>
+  )
+}
 
 // ── Cycle phase constants ─────────────────────────────────────────────────────
 
@@ -207,6 +267,16 @@ export default function TodayScreen() {
                   {mrvWarningMuscles.join(', ')} {mrvWarningMuscles.length === 1 ? 'has' : 'have'} reached weekly MRV — volume automatically reduced.
                 </Text>
               </View>
+            )}
+
+            {disruptions && disruptions.length > 0 && (
+              <ActiveDisruptionsBanner
+                disruptions={disruptions}
+                userId={user!.id}
+                onResolved={() =>
+                  queryClient.invalidateQueries({ queryKey: ['disruptions', 'active', user?.id] })
+                }
+              />
             )}
 
             {session?.status === 'completed' ? (
@@ -477,6 +547,20 @@ const styles = StyleSheet.create({
   volumeRowSetsOver: {
     color: colors.danger,
     fontWeight: typography.weights.semibold,
+  },
+  disruptionBanner: {
+    backgroundColor: colors.warningMuted,
+    borderLeftWidth: 3,
+    borderLeftColor: colors.warning,
+    paddingVertical: spacing[3],
+    paddingHorizontal: spacing[4],
+    marginHorizontal: spacing[4],
+    borderRadius: radii.xs,
+  },
+  disruptionBannerText: {
+    fontSize: typography.sizes.sm,
+    color: colors.warning,
+    lineHeight: 18,
   },
   reportIssueButton: {
     borderWidth: 1,

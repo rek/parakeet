@@ -1,5 +1,5 @@
 -- Stores side-by-side formula vs LLM JIT outputs for developer analysis.
--- Owner-only app: no RLS needed on this table.
+-- RLS added in 20260302000000_add_jit_comparison_logs_rls.sql
 -- 90-day retention recommended (run via Supabase scheduled function):
 --   DELETE FROM jit_comparison_logs WHERE created_at < now() - INTERVAL '90 days';
 

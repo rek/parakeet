@@ -1,3 +1,4 @@
+import * as Sentry from '@sentry/react-native';
 import type { AuthChangeEvent, Session, Subscription, User } from '@supabase/supabase-js';
 
 import {
@@ -27,16 +28,14 @@ export async function ensureSignedInUserProfile(user: User): Promise<OnSignedInR
     const existingProfileId = await findProfileId(user.id);
     if (existingProfileId) return 'existing_profile';
   } catch (error) {
-    // Auth callback can race with session persistence; continue with best effort.
-    console.warn('[auth] profile lookup failed during SIGNED_IN:', error);
+    Sentry.captureException(error)
   }
 
   try {
     await insertInitialProfile(user);
     return 'profile_created';
   } catch (error) {
-    // If profile creation fails (e.g. already exists/race), continue as existing user.
-    console.warn('[auth] profile bootstrap failed during SIGNED_IN:', error);
+    Sentry.captureException(error)
     return 'existing_profile';
   }
 }

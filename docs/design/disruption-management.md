@@ -1,6 +1,6 @@
 # Feature: Disruption Management
 
-**Status**: Planned
+**Status**: Implemented
 
 **Date**: 2026-02-22
 
@@ -86,9 +86,9 @@ If a disruption overlaps with a scheduled deload week, the deload takes preceden
 **Resolution Flow:**
 
 1. User taps the active disruption banner on the Today screen
-2. User taps "Mark as Resolved" (or sets a resolved date if it ended in the past)
-3. App confirms: "Great — returning to normal schedule from [date]"
-4. Banner disappears; upcoming sessions revert to original planned weights
+2. Alert shows type + severity with "Mark Resolved" / "Cancel"
+3. On confirm: disruption status → resolved; affected sessions have `planned_sets` cleared for JIT re-generation
+4. Banner disappears; upcoming sessions regenerate at normal loading on next open
 
 ### Visual Design Notes
 
@@ -97,7 +97,7 @@ If a disruption overlaps with a scheduled deload week, the deload takes preceden
 - Date range: start date picker (defaults to today) + optional end date picker
 - Lift selector: tap-to-toggle chips for each lift, plus "All Lifts" shortcut
 - Adjustment preview: two-column card per affected session — left side "Current", right side "Proposed" with weight and any substitution notes (shown for Moderate/Major; auto-applied for Minor)
-- Active disruption banner: amber top-of-screen strip with issue type icon, severity, and "View Details" tap
+- Active disruption banner: amber left-bordered strip on Today screen, one per active disruption, shows type + severity; tap → Alert with "Mark Resolved" / "Cancel"; visible on rest days, workout-done days, and active session days (resolution not gated on session presence)
 
 ## User Benefits
 

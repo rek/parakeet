@@ -1,4 +1,6 @@
 import 'expo/fetch'
+import './sentry'
+import * as Sentry from '@sentry/react-native'
 import { Component, useEffect, type ReactNode } from 'react'
 import { Stack } from 'expo-router'
 import * as SplashScreen from 'expo-splash-screen'
@@ -63,7 +65,7 @@ function RootLayoutNav() {
   )
 }
 
-export default function RootLayout() {
+function RootLayout() {
   return (
     <ErrorBoundary>
       <QueryClientProvider client={queryClient}>
@@ -72,3 +74,5 @@ export default function RootLayout() {
     </ErrorBoundary>
   )
 }
+
+export default Sentry.wrap(RootLayout)

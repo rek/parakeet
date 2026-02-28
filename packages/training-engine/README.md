@@ -1,6 +1,6 @@
 # training-engine
 
-This library was generated with [Nx](https://nx.dev).
+the reason we have this engine is...
 
 ## Building
 

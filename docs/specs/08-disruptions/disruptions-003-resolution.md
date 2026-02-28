@@ -91,23 +91,11 @@ export async function getDisruption(disruptionId: string, userId: string) {
 
 **Today screen active disruption banner:**
 
-The `findTodaySession()` helper (defined in `sessions-001`) includes a joined query for active disruptions:
+`getActiveDisruptions(userId)` is called separately in the Today screen via a React Query hook (not joined into `findTodaySession`). The result is rendered by `ActiveDisruptionsBanner` in `today.tsx` — one amber banner per active disruption, always visible regardless of session state (rest day, workout-done, or active session).
 
-```typescript
-// In sessions-001 findTodaySession — include active disruptions in the response
-const { data } = await supabase
-  .from('sessions')
-  .select(`
-    *,
-    active_disruptions:disruptions!inner(
-      id, disruption_type, severity, affected_lifts, description
-    )
-  `)
-  .eq('user_id', userId)
-  // ... rest of today query
-```
+Tapping a banner shows an Alert with "Mark Resolved" / "Cancel". On confirm, `resolveDisruption(id, userId)` is called and the `['disruptions', 'active', userId]` query is invalidated.
 
-If the join is complex, call `getActiveDisruptions(userId)` separately in the Today screen's React Query hook.
+`WorkoutCard` receives `activeDisruptions` for contextual display only (which lifts are affected) — resolution is not handled there.
 
 **Session revert logic:**
 

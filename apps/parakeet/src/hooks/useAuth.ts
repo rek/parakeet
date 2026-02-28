@@ -1,3 +1,4 @@
+import * as Sentry from '@sentry/react-native';
 import { router } from 'expo-router';
 import { useEffect, useState } from 'react';
 
@@ -42,7 +43,7 @@ export function useAuth(): AuthState {
             router.replace('/(tabs)/today');
           }
         } catch (error) {
-          console.error('[auth] SIGNED_IN bootstrap failed:', error);
+          Sentry.captureException(error)
           router.replace('/(tabs)/today');
         }
       } else if (_event === 'SIGNED_OUT') {

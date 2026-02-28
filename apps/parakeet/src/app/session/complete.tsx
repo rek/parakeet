@@ -12,6 +12,7 @@ import { router } from 'expo-router'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { useQueryClient } from '@tanstack/react-query'
 
+import * as Sentry from '@sentry/react-native'
 import type { PR } from '@parakeet/training-engine'
 import { completeSession } from '../../lib/sessions'
 import { stampCyclePhaseOnSession } from '../../lib/cycle-tracking'
@@ -121,7 +122,7 @@ export default function CompleteScreen() {
       })
 
       // Stamp cycle phase on the session log (no-op if tracking disabled)
-      stampCyclePhaseOnSession(user.id, sessionId).catch(() => {})
+      stampCyclePhaseOnSession(user.id, sessionId).catch((err) => Sentry.captureException(err))
 
       // ── Achievement detection ──────────────────────────────────────────────
 
@@ -145,6 +146,7 @@ export default function CompleteScreen() {
         setPendingSync(true)
         setSaved(true)
       } else {
+        Sentry.captureException(err)
         Alert.alert(
           'Could not save workout',
           err instanceof Error ? err.message : 'An error occurred — please try again.',

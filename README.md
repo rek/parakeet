@@ -29,13 +29,32 @@ A Cube Method program generator and session tracker. The training engine runs lo
 
 ```
 apps/
-  parakeet/                — Expo app (main entry point)
-    app/                 — Expo Router screens
-    lib/                 — Supabase SDK helpers (sessions, programs, etc.)
-    hooks/               — React Query hooks
+  parakeet/                — Expo app (shell: routing, config, entry)
+    src/
+      app/               — Expo Router screens
+        (auth)/          — Onboarding + auth flows
+        (tabs)/          — Tab nav screens (today, history, settings)
+        session/         — Session logging, soreness, complete
+        settings/        — All settings sub-screens
+        formula/         — Formula editor
+        disruption-report/
+        history/         — Cycle review, cycle patterns
+        profile/         — Achievements, Wilks
+      components/        — Shared UI components
+      data/              — Repository layer (Supabase queries per domain)
+      hooks/             — React hooks (auth, sync, etc.)
+      lib/               — Supabase SDK helpers (sessions, programs, etc.)
+      queries/           — React Query hooks
+      network/           — Supabase client + low-level DB access
+      services/          — Service layer (auth, etc.)
+      store/             — Global state
+      theme/             — Colors, typography, spacing
+      types/             — 
+      utils/             — App-level utilities
 packages/
   training-engine/       — Cube Method formulas, JIT generator, AI strategies
   shared-types/          — Zod schemas shared between app and engine
+  db/                    — DB utilities and type helpers
 supabase/
   migrations/            — SQL migration files (pushed via supabase db push)
 docs/

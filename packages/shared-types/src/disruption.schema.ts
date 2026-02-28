@@ -48,7 +48,7 @@ export const DisruptionSchema = z
     user_id: z.string().uuid(),
     program_id: z.string().uuid().nullable(),
     session_ids_affected: z.array(z.string().uuid()).nullable(),
-    reported_at: z.string().datetime(),
+    reported_at: z.string().datetime({ offset: true }),
     disruption_type: DisruptionTypeSchema,
     severity: SeveritySchema,
     affected_date_start: z.string().date(),

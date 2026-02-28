@@ -15,6 +15,7 @@ import {
 import { router, useLocalSearchParams } from 'expo-router'
 import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker'
 
+import * as Sentry from '@sentry/react-native'
 import { submitMaxes } from '../../../lib/lifter-maxes'
 import { createProgram } from '../../../lib/programs'
 import { getProfile, updateProfile } from '../../../lib/profile'
@@ -175,6 +176,7 @@ export default function ProgramSettingsScreen() {
         params: { programId: program!.id },
       })
     } catch (err: unknown) {
+      Sentry.captureException(err)
       const msg =
         err instanceof Error
           ? err.message

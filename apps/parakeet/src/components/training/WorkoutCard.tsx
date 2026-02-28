@@ -10,6 +10,7 @@ import {
   View,
 } from 'react-native'
 
+import * as Sentry from '@sentry/react-native'
 import { getSession, skipSession } from '../../lib/sessions'
 import { resolveDisruption } from '../../lib/disruptions'
 import { useAuth } from '../../hooks/useAuth'
@@ -115,8 +116,12 @@ export function WorkoutCard({
           text: 'Mark as resolved',
           onPress: async () => {
             if (!user) return
-            await resolveDisruption(disruption.id, user.id)
-            onDisruptionResolved?.()
+            try {
+              await resolveDisruption(disruption.id, user.id)
+              onDisruptionResolved?.()
+            } catch (err) {
+              Sentry.captureException(err)
+            }
           },
         },
         { text: 'Cancel', style: 'cancel' },
