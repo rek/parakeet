@@ -34,8 +34,8 @@ export type PlannedSet = z.infer<typeof PlannedSetSchema>
 
 export const SessionSchema = z
   .object({
-    id: z.string().uuid(),
-    program_id: z.string().uuid(),
+    id: z.uuid(),
+    program_id: z.uuid(),
     week_number: z.number().int().positive(),
     day_number: z.number().int().min(1).max(7),
     primary_lift: LiftSchema,
@@ -44,7 +44,7 @@ export const SessionSchema = z
     is_deload: z.boolean(),
     planned_sets: z.array(PlannedSetSchema).nullable(),
     status: z.enum(['planned', 'in_progress', 'completed', 'skipped']),
-    planned_date: z.string().date().nullable(),
+    planned_date: z.iso.date().nullable(),
   })
   .strict()
 
@@ -52,14 +52,14 @@ export type Session = z.infer<typeof SessionSchema>
 
 export const ProgramSchema = z
   .object({
-    id: z.string().uuid(),
-    user_id: z.string().uuid(),
+    id: z.uuid(),
+    user_id: z.uuid(),
     version: z.number().int().positive(),
     status: z.enum(['active', 'completed', 'archived']),
     total_weeks: z.number().int().positive(),
     training_days_per_week: z.number().int().min(1).max(7),
-    start_date: z.string().date(),
-    created_at: z.string().datetime(),
+    start_date: z.iso.date(),
+    created_at: z.iso.datetime({ offset: true }),
   })
   .strict()
 
@@ -73,11 +73,11 @@ export type ProgramWithSessions = z.infer<typeof ProgramWithSessionsSchema>
 
 export const CreateProgramSchema = z
   .object({
-    lifter_maxes_id: z.string().uuid().optional(),
-    formula_config_id: z.string().uuid().optional(),
+    lifter_maxes_id: z.uuid().optional(),
+    formula_config_id: z.uuid().optional(),
     total_weeks: z.number().int().min(1).max(52),
     training_days_per_week: z.number().int().min(1).max(7),
-    start_date: z.string().date(),
+    start_date: z.iso.date(),
   })
   .strict()
 

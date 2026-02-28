@@ -30,14 +30,14 @@ export type LifterMaxesInput = z.infer<typeof LifterMaxesInputSchema>
 
 export const LifterMaxesResponseSchema = z
   .object({
-    id: z.string().uuid(),
+    id: z.uuid(),
     calculated_1rm: z.object({
       squat_kg: z.number().positive(),
       bench_kg: z.number().positive(),
       deadlift_kg: z.number().positive(),
     }),
     source: z.enum(['input_1rm', 'input_3rm', 'mixed', 'system_calculated']),
-    recorded_at: z.string().datetime(),
+    recorded_at: z.iso.datetime({ offset: true }),
   })
   .strict()
 

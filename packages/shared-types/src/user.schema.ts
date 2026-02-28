@@ -2,12 +2,12 @@ import { z } from 'zod'
 
 export const UserSchema = z
   .object({
-    id: z.string().uuid(),
+    id: z.uuid(),
     email: z.string().email(),
     display_name: z.string().nullable(),
     biological_sex: z.enum(['female', 'male']).optional(),
     date_of_birth: z.string().nullable().optional(),
-    created_at: z.string().datetime(),
+    created_at: z.iso.datetime({ offset: true }),
   })
   .strict()
 

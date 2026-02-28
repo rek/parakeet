@@ -20,11 +20,11 @@ export const CreateDisruptionSchema = z
   .object({
     disruption_type: DisruptionTypeSchema,
     severity: SeveritySchema,
-    affected_date_start: z.string().date(),
-    affected_date_end: z.string().date().optional(),
+    affected_date_start: z.iso.date(),
+    affected_date_end: z.iso.date().optional(),
     affected_lifts: z.array(z.enum(['squat', 'bench', 'deadlift'])).optional(),
     description: z.string().optional(),
-    session_ids_affected: z.array(z.string().uuid()).optional(),
+    session_ids_affected: z.array(z.uuid()).optional(),
   })
   .strict()
 
@@ -32,7 +32,7 @@ export type CreateDisruption = z.infer<typeof CreateDisruptionSchema>
 
 export const AdjustmentSuggestionSchema = z
   .object({
-    session_id: z.string().uuid(),
+    session_id: z.uuid(),
     action: z.enum(['skip', 'reduce_volume', 'reduce_intensity', 'substitute', 'reschedule']),
     reduction_pct: z.number().min(0).max(100).optional(),
     rationale: z.string(),
@@ -44,18 +44,18 @@ export type AdjustmentSuggestion = z.infer<typeof AdjustmentSuggestionSchema>
 
 export const DisruptionSchema = z
   .object({
-    id: z.string().uuid(),
-    user_id: z.string().uuid(),
-    program_id: z.string().uuid().nullable(),
-    session_ids_affected: z.array(z.string().uuid()).nullable(),
-    reported_at: z.string().datetime({ offset: true }),
+    id: z.uuid(),
+    user_id: z.uuid(),
+    program_id: z.uuid().nullable(),
+    session_ids_affected: z.array(z.uuid()).nullable(),
+    reported_at: z.iso.datetime({ offset: true }),
     disruption_type: DisruptionTypeSchema,
     severity: SeveritySchema,
-    affected_date_start: z.string().date(),
-    affected_date_end: z.string().date().nullable(),
+    affected_date_start: z.iso.date(),
+    affected_date_end: z.iso.date().nullable(),
     affected_lifts: z.array(z.string()).nullable(),
     description: z.string().nullable(),
-    resolved_at: z.string().datetime().nullable(),
+    resolved_at: z.iso.datetime({ offset: true }).nullable(),
     status: z.enum(['active', 'resolved', 'monitoring']),
   })
   .strict()
