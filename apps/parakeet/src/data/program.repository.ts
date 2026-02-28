@@ -1,10 +1,8 @@
+import { DbInsert } from '../network/database';
 import { typedSupabase } from '../network/supabase-client';
 
-// TODO: remove cast once all query return types are verified against service layer
-const db = typedSupabase as any;
-
 export async function listArchivedProgramBlocks(userId: string) {
-  const { data, error } = await db
+  const { data, error } = await typedSupabase
     .from('programs')
     .select('total_weeks, status')
     .eq('user_id', userId)
@@ -15,7 +13,7 @@ export async function listArchivedProgramBlocks(userId: string) {
 }
 
 export async function archiveActivePrograms(userId: string): Promise<void> {
-  const { error } = await db
+  const { error } = await typedSupabase
     .from('programs')
     .update({ status: 'archived' })
     .eq('user_id', userId)
@@ -24,7 +22,7 @@ export async function archiveActivePrograms(userId: string): Promise<void> {
 }
 
 export async function fetchLatestProgramVersion(userId: string): Promise<number> {
-  const { data, error } = await db
+  const { data, error } = await typedSupabase
     .from('programs')
     .select('version')
     .eq('user_id', userId)
@@ -36,8 +34,11 @@ export async function fetchLatestProgramVersion(userId: string): Promise<number>
   return ((data as { version?: number } | null)?.version ?? 0) as number;
 }
 
-export async function insertProgramRow(input: Record<string, unknown>) {
-  const { data, error } = await db
+type Program = Exclude<
+  DbInsert<'programs'>, 'id'
+>
+export async function insertProgramRow(input: Program) {
+  const { data, error } = await typedSupabase
     .from('programs')
     .insert(input)
     .select()
@@ -47,18 +48,18 @@ export async function insertProgramRow(input: Record<string, unknown>) {
   return data;
 }
 
-export async function insertSessionRows(rows: Record<string, unknown>[]): Promise<void> {
-  const { error } = await db.from('sessions').insert(rows);
+export async function insertSessionRows(rows: DbInsert<'sessions'>[]): Promise<void> {
+  const { error } = await typedSupabase.from('sessions').insert(rows);
   if (error) throw error;
 }
 
-export async function insertAuxiliaryAssignmentRows(rows: Record<string, unknown>[]): Promise<void> {
-  const { error } = await db.from('auxiliary_assignments').insert(rows);
+export async function insertAuxiliaryAssignmentRows(rows: DbInsert<'auxiliary_assignments'>[]): Promise<void> {
+  const { error } = await typedSupabase.from('auxiliary_assignments').insert(rows);
   if (error) throw error;
 }
 
 export async function fetchActiveProgramWithSessions(userId: string) {
-  const { data, error } = await db
+  const { data, error } = await typedSupabase
     .from('programs')
     .select(`
       *,
@@ -74,7 +75,7 @@ export async function fetchActiveProgramWithSessions(userId: string) {
 }
 
 export async function fetchProgramWithSessions(programId: string) {
-  const { data, error } = await db
+  const { data, error } = await typedSupabase
     .from('programs')
     .select('*, sessions(*)')
     .eq('id', programId)
@@ -85,7 +86,7 @@ export async function fetchProgramWithSessions(programId: string) {
 }
 
 export async function fetchProgramsList(userId: string) {
-  const { data, error } = await db
+  const { data, error } = await typedSupabase
     .from('programs')
     .select('id, version, status, total_weeks, training_days_per_week, start_date, created_at')
     .eq('user_id', userId)
@@ -99,7 +100,7 @@ export async function updateProgramStatusIfActive(
   programId: string,
   status: 'completed' | 'archived',
 ): Promise<void> {
-  const { error } = await db
+  const { error } = await typedSupabase
     .from('programs')
     .update({ status })
     .eq('id', programId)

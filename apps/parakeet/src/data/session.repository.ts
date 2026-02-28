@@ -1,12 +1,10 @@
 import type { Lift } from '@parakeet/shared-types';
 
 import { typedSupabase } from '../network/supabase-client';
-
-// TODO: remove cast once all query return types are verified against service layer
-const db = typedSupabase as any;
+import { DbInsert, Json } from '../network/database';
 
 export async function fetchTodaySession(userId: string, today: string) {
-  const { data, error } = await db
+  const { data, error } = await typedSupabase
     .from('sessions')
     .select('*')
     .eq('user_id', userId)
@@ -21,7 +19,7 @@ export async function fetchTodaySession(userId: string, today: string) {
 }
 
 export async function fetchSessionById(sessionId: string) {
-  const { data, error } = await db
+  const { data, error } = await typedSupabase
     .from('sessions')
     .select('*')
     .eq('id', sessionId)
@@ -32,7 +30,7 @@ export async function fetchSessionById(sessionId: string) {
 }
 
 export async function fetchSessionCompletionContext(sessionId: string) {
-  const { data, error } = await db
+  const { data, error } = await typedSupabase
     .from('sessions')
     .select('primary_lift, program_id')
     .eq('id', sessionId)
@@ -43,7 +41,7 @@ export async function fetchSessionCompletionContext(sessionId: string) {
 }
 
 export async function fetchSessionsForWeek(programId: string, weekNumber: number) {
-  const { data, error } = await db
+  const { data, error } = await typedSupabase
     .from('sessions')
     .select(
       'id, week_number, day_number, primary_lift, intensity_type, block_number, is_deload, planned_date, status, jit_generated_at',
@@ -61,7 +59,7 @@ export async function fetchCompletedSessions(
   page: number,
   pageSize: number,
 ) {
-  const { data, error } = await db
+  const { data, error } = await typedSupabase
     .from('sessions')
     .select(
       'id, primary_lift, intensity_type, planned_date, status, week_number, block_number, session_logs(cycle_phase, session_rpe)',
@@ -91,7 +89,7 @@ export async function fetchCompletedSessions(
 }
 
 export async function fetchProgramSessionStatuses(programId: string, userId: string) {
-  const { data, error } = await db
+  const { data, error } = await typedSupabase
     .from('sessions')
     .select('status')
     .eq('program_id', programId)
@@ -107,7 +105,7 @@ export async function insertSorenessCheckin(input: {
   ratings: Record<string, number>;
   skipped: boolean;
 }): Promise<void> {
-  const { error } = await db.from('soreness_checkins').insert({
+  const { error } = await typedSupabase.from('soreness_checkins').insert({
     session_id: input.sessionId,
     user_id: input.userId,
     ratings: input.ratings,
@@ -118,18 +116,18 @@ export async function insertSorenessCheckin(input: {
 }
 
 export async function updateSessionToInProgress(sessionId: string): Promise<void> {
-  const { error } = await db
+  const { error } = await typedSupabase
     .from('sessions')
-    .update({ status: 'in_progress', started_at: new Date().toISOString() })
+    .update({ status: 'in_progress' })
     .eq('id', sessionId)
     .eq('status', 'planned');
   if (error) throw error;
 }
 
-export async function updateSessionToSkipped(sessionId: string, reason?: string): Promise<void> {
-  const { error } = await db
+export async function updateSessionToSkipped(sessionId: string, _reason?: string): Promise<void> {
+  const { error } = await typedSupabase
     .from('sessions')
-    .update({ status: 'skipped', notes: reason ?? null })
+    .update({ status: 'skipped' })
     .eq('id', sessionId)
     .in('status', ['planned', 'in_progress']);
   if (error) throw error;
@@ -138,15 +136,15 @@ export async function updateSessionToSkipped(sessionId: string, reason?: string)
 export async function insertSessionLog(input: {
   sessionId: string;
   userId: string;
-  actualSets: unknown[];
-  auxiliarySets?: unknown[];
+  actualSets: Json[];
+  auxiliarySets?: Json[];
   sessionRpe: number | undefined;
   completionPct: number;
   performanceVsPlan: 'over' | 'at' | 'under' | 'incomplete';
   startedAt?: Date;
   completedAt?: Date;
-}): Promise<void> {
-  const { error } = await db.from('session_logs').insert({
+}): Promise<string> {
+  const { data, error } = await typedSupabase.from('session_logs').insert({
     session_id: input.sessionId,
     user_id: input.userId,
     actual_sets: input.actualSets,
@@ -156,12 +154,13 @@ export async function insertSessionLog(input: {
     performance_vs_plan: input.performanceVsPlan,
     started_at: input.startedAt?.toISOString() ?? null,
     completed_at: (input.completedAt ?? new Date()).toISOString(),
-  });
+  }).select('id').single();
   if (error) throw error;
+  return data.id;
 }
 
 export async function updateSessionToCompleted(sessionId: string): Promise<void> {
-  const { error } = await db
+  const { error } = await typedSupabase
     .from('sessions')
     .update({ status: 'completed', completed_at: new Date().toISOString() })
     .eq('id', sessionId);
@@ -169,7 +168,7 @@ export async function updateSessionToCompleted(sessionId: string): Promise<void>
 }
 
 export async function fetchProfileSex(userId: string): Promise<'female' | 'male' | undefined> {
-  const { data, error } = await db
+  const { data, error } = await typedSupabase
     .from('profiles')
     .select('biological_sex')
     .eq('id', userId)
@@ -180,17 +179,10 @@ export async function fetchProfileSex(userId: string): Promise<'female' | 'male'
   return sex === 'female' || sex === 'male' ? sex : undefined;
 }
 
-export async function insertPerformanceMetric(input: {
-  sessionId: string;
-  userId: string;
-  suggestions: unknown;
-}): Promise<void> {
-  const { error } = await db.from('performance_metrics').insert({
-    session_id: input.sessionId,
-    user_id: input.userId,
-    suggestions: input.suggestions,
-    computed_at: new Date().toISOString(),
-  });
+export type PerformanceMetricsInsert = DbInsert<'performance_metrics'>;
+
+export async function insertPerformanceMetric(input: PerformanceMetricsInsert): Promise<void> {
+  const { error } = await typedSupabase.from('performance_metrics').insert(input);
   if (error) throw error;
 }
 
@@ -199,7 +191,7 @@ export async function fetchRecentLogsForLift(
   lift: Lift,
   limit: number,
 ) {
-  const { data, error } = await db
+  const { data, error } = await typedSupabase
     .from('session_logs')
     .select('id, completion_pct, session_rpe, sessions!inner(primary_lift, intensity_type)')
     .eq('user_id', userId)
@@ -212,7 +204,7 @@ export async function fetchRecentLogsForLift(
 }
 
 export async function fetchCurrentWeekLogs(userId: string, startIso: string, endIso: string) {
-  const { data, error } = await db
+  const { data, error } = await typedSupabase
     .from('session_logs')
     .select('actual_sets, sessions!inner(primary_lift)')
     .eq('user_id', userId)
@@ -224,21 +216,21 @@ export async function fetchCurrentWeekLogs(userId: string, startIso: string, end
 }
 
 export async function fetchOverdueScheduledSessions(userId: string, today: string) {
-  const { data, error } = await db
+  const { data, error } = await typedSupabase
     .from('sessions')
-    .select('id, scheduled_date, primary_lift, week_number, program_id')
+    .select('id, planned_date, primary_lift, week_number, program_id')
     .eq('user_id', userId)
-    .eq('status', 'scheduled')
-    .lt('scheduled_date', today);
+    .eq('status', 'planned')
+    .lt('planned_date', today);
 
   if (error) throw error;
   return data ?? [];
 }
 
 export async function fetchProgramSessionsForMakeup(programId: string, userId: string) {
-  const { data, error } = await db
+  const { data, error } = await typedSupabase
     .from('sessions')
-    .select('id, scheduled_date, primary_lift, week_number')
+    .select('id, planned_date, primary_lift, week_number')
     .eq('program_id', programId)
     .eq('user_id', userId);
 
@@ -246,10 +238,10 @@ export async function fetchProgramSessionsForMakeup(programId: string, userId: s
   return data ?? [];
 }
 
-export async function markSessionAsMissed(sessionId: string, missedAtIso: string): Promise<void> {
-  const { error } = await db
+export async function markSessionAsMissed(sessionId: string): Promise<void> {
+  const { error } = await typedSupabase
     .from('sessions')
-    .update({ status: 'missed', missed_at: missedAtIso })
+    .update({ status: 'missed' })
     .eq('id', sessionId);
   if (error) throw error;
 }
@@ -258,7 +250,7 @@ export async function fetchLastCompletedAtForLift(
   userId: string,
   lift: Lift,
 ) {
-  const { data, error } = await db
+  const { data, error } = await typedSupabase
     .from('session_logs')
     .select('completed_at, sessions!inner(primary_lift)')
     .eq('user_id', userId)

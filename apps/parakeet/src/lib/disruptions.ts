@@ -2,7 +2,7 @@ import {
   suggestDisruptionAdjustment,
   roundToNearest,
 } from '@parakeet/training-engine'
-import type { CreateDisruption, DisruptionWithSuggestions } from '@parakeet/shared-types'
+import type { CreateDisruption, DisruptionWithSuggestions, Lift } from '@parakeet/shared-types'
 import { supabase } from './supabase'
 
 // Report a disruption and return suggested adjustments for user review
@@ -229,7 +229,7 @@ export async function getDisruption(disruptionId: string, userId: string) {
 
 interface SessionRow {
   id: string
-  primary_lift: string
+  primary_lift: Lift
   planned_sets: unknown
   status: string
 }

@@ -113,7 +113,6 @@ export default function CyclePatternsScreen() {
   const uniquePhasesFilled = PHASES.filter((p) => stats[p].sessionCount > 0).length
   const hasEnoughData = phasedSessions.length >= MIN_CYCLES_FOR_PATTERNS * 4
 
-  const maxRpe = Math.max(...PHASES.map((p) => stats[p].avgRpe ?? 0), 0.01)
   const insight = generateInsight(stats)
 
   return (

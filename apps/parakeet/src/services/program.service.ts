@@ -104,7 +104,14 @@ async function buildProgram(input: CreateProgramInput, withFormulaConfigId: bool
 
   await insertSessionRows(sessionRows);
   await insertAuxiliaryAssignmentRows(
-    auxiliaryAssignments.map((a) => ({ ...a, user_id: userId })),
+    auxiliaryAssignments.map((a) => ({
+      user_id: userId,
+      program_id: a.programId,
+      block_number: a.blockNumber,
+      lift: a.lift,
+      exercise_1: a.exercise1,
+      exercise_2: a.exercise2,
+    })),
   );
 
   return program;

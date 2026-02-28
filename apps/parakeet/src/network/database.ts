@@ -1,4 +1,4 @@
-import type { Database as SupabaseDatabase } from '../../../../supabase/types';
+import type { Database as SupabaseDatabase, Json } from '../../../../supabase/types';
 
 // Hard-fail typecheck when generated Supabase DB types are missing/empty.
 type HasNonEmptyPublicTables<DB> = DB extends { public: { Tables: infer Tables } }
@@ -10,6 +10,7 @@ type AssertTrue<T extends true> = T;
 type __SupabaseTypesMustBeGenerated = AssertTrue<HasNonEmptyPublicTables<SupabaseDatabase>>;
 void (0 as unknown as __SupabaseTypesMustBeGenerated);
 
+export type { Json };
 export type Database = SupabaseDatabase;
 export type DbTable = keyof Database['public']['Tables'];
 export type DbRow<TTable extends DbTable> = Database['public']['Tables'][TTable]['Row'];

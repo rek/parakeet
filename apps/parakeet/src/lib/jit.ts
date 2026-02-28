@@ -10,7 +10,7 @@ import type {
   MuscleGroup,
   RecentSessionSummary,
 } from '@parakeet/training-engine'
-import type { Lift } from '@parakeet/shared-types'
+import { LiftSchema, IntensityTypeSchema, BlockNumberSchema, DisruptionSchema } from '@parakeet/shared-types'
 import { supabase } from './supabase'
 import { getCurrentOneRmKg } from './lifter-maxes'
 import { getFormulaConfig } from './formulas'
@@ -20,22 +20,18 @@ import { getWarmupConfig } from './warmup-config'
 import { getUserRestOverrides } from './rest-config'
 import { estimateOneRmKgFromProfile } from './max-estimation'
 import { fetchProfileSex } from '../data/session.repository'
+import { getSession } from './sessions'
+
+type Session = Awaited<ReturnType<typeof getSession>>
 
 export async function runJITForSession(
-  session: {
-    id: string
-    week_number: number
-    block_number: number
-    primary_lift: string
-    intensity_type: string
-    program_id: string
-  },
+  session: NonNullable<Session>,
   userId: string,
   sorenessRatings: Partial<Record<MuscleGroup, SorenessLevel>>,
 ): Promise<JITOutput> {
-  const lift = session.primary_lift as Lift
-  const intensityType = session.intensity_type as any
-  const blockNumber = session.block_number as 1 | 2 | 3
+  const lift = LiftSchema.parse(session.primary_lift)
+  const intensityType = IntensityTypeSchema.parse(session.intensity_type)
+  const blockNumber = BlockNumberSchema.parse(session.block_number)
 
   // Fetch all config in parallel
   const [oneRmKg, formulaConfig, biologicalSex, assignments, warmupConfig, userRestOverrides] =
@@ -91,7 +87,7 @@ export async function runJITForSession(
     .limit(6)
 
   const recentLogs: RecentSessionSummary[] = (recentData ?? []).map((r) => ({
-    actual_rpe: (r as any).session_rpe ?? null,
+    actual_rpe: r.session_rpe ?? null,
     target_rpe: 8.5,
   }))
 
@@ -105,7 +101,8 @@ export async function runJITForSession(
 
   const weeklyVolumeToDate: Partial<Record<MuscleGroup, number>> = {}
   for (const log of weekLogs ?? []) {
-    const logLift = (log.sessions as any)?.primary_lift as Lift | undefined
+    const rawLift = log.sessions[0]?.primary_lift
+    const logLift = LiftSchema.safeParse(rawLift).data
     if (!logLift) continue
     const muscles = getMusclesForLift(logLift)
     const setCount = Array.isArray(log.actual_sets)
@@ -120,11 +117,11 @@ export async function runJITForSession(
   // Active (unresolved) training disruptions
   const { data: disruptionRows } = await supabase
     .from('disruptions')
-    .select('*')
+    .select('id, user_id, program_id, session_ids_affected, reported_at, disruption_type, severity, affected_date_start, affected_date_end, affected_lifts, description, resolved_at, status')
     .eq('user_id', userId)
     .neq('status', 'resolved')
 
-  const activeDisruptions = (disruptionRows ?? []) as any[]
+  const activeDisruptions = (disruptionRows ?? []).map(row => DisruptionSchema.parse(row))
 
   // Build JIT input and generate
   const jitInput: JITInput = {

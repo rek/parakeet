@@ -10,11 +10,14 @@ import {
   View,
 } from 'react-native'
 
-import { skipSession } from '../../lib/sessions'
+import { getSession, skipSession } from '../../lib/sessions'
 import { resolveDisruption } from '../../lib/disruptions'
 import { useAuth } from '../../hooks/useAuth'
 import { colors, spacing, radii, typography } from '../../theme'
 
+// ── Types ────────────────────────────────────────────────────────────────────
+
+type Session = Awaited<ReturnType<typeof getSession>>
 interface ActiveDisruption {
   id: string
   disruption_type: string
@@ -24,16 +27,7 @@ interface ActiveDisruption {
 }
 
 interface WorkoutCardProps {
-  session: {
-    id: string
-    primary_lift: string
-    intensity_type: string
-    block_number: number | null
-    week_number: number
-    planned_date: string
-    planned_sets: unknown[] | null
-    status: string
-  }
+  session: NonNullable<Session>
   activeDisruptions?: ActiveDisruption[]
   onSkipComplete?: () => void
   onDisruptionResolved?: () => void
@@ -49,7 +43,8 @@ function getIntensityBadge(intensityType: string) {
   return INTENSITY_BADGE[intensityType.toLowerCase()] ?? { bg: colors.bgMuted, text: colors.textSecondary }
 }
 
-function formatDate(dateString: string): string {
+function formatDate(dateString: string | null): string {
+  if (!dateString) return ''
   return new Date(dateString).toLocaleDateString('en-AU', {
     weekday: 'short',
     month: 'short',
@@ -175,7 +170,7 @@ export function WorkoutCard({
             Workout generated when you start
           </Text>
         ) : (
-          <Text style={styles.setsText}>{session.planned_sets.length} sets</Text>
+          <Text style={styles.setsText}>{(session.planned_sets as unknown[]).length} sets</Text>
         )}
 
         {/* Planned date */}

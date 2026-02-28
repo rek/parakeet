@@ -1,15 +1,11 @@
 import type { PR } from '@parakeet/training-engine';
 import type { Lift } from '@parakeet/shared-types';
-
 import { typedSupabase } from '../network/supabase-client';
-
-// TODO: remove cast once all query return types are verified against service layer
-const db = typedSupabase as any;
 
 export async function upsertPersonalRecords(userId: string, prs: PR[]): Promise<void> {
   if (prs.length === 0) return;
 
-  const { error } = await db.from('personal_records').upsert(
+  const { error } = await typedSupabase.from('personal_records').upsert(
     prs.map((pr) => ({
       user_id: userId,
       lift: pr.lift,
@@ -25,7 +21,7 @@ export async function upsertPersonalRecords(userId: string, prs: PR[]): Promise<
 }
 
 export async function fetchPersonalRecords(userId: string, lift: Lift) {
-  const { data, error } = await db
+  const { data, error } = await typedSupabase
     .from('personal_records')
     .select('pr_type, value, weight_kg')
     .eq('user_id', userId)
@@ -36,7 +32,7 @@ export async function fetchPersonalRecords(userId: string, lift: Lift) {
 }
 
 export async function fetchSessionsForStreak(userId: string) {
-  const { data, error } = await db
+  const { data, error } = await typedSupabase
     .from('sessions')
     .select('id, planned_date, status')
     .eq('user_id', userId)
@@ -48,7 +44,7 @@ export async function fetchSessionsForStreak(userId: string) {
 }
 
 export async function fetchDisruptionsForStreak(userId: string) {
-  const { data, error } = await db
+  const { data, error } = await typedSupabase
     .from('disruptions')
     .select('affected_date_start, affected_date_end, session_ids_affected')
     .eq('user_id', userId);
@@ -58,7 +54,7 @@ export async function fetchDisruptionsForStreak(userId: string) {
 }
 
 export async function fetchProgramsForCycleBadges(userId: string) {
-  const { data, error } = await db
+  const { data, error } = await typedSupabase
     .from('programs')
     .select('id, version, start_date, total_weeks, status')
     .eq('user_id', userId)
@@ -70,7 +66,7 @@ export async function fetchProgramsForCycleBadges(userId: string) {
 }
 
 export async function fetchProfileForWilks(userId: string) {
-  const { data, error } = await db
+  const { data, error } = await typedSupabase
     .from('profiles')
     .select('biological_sex, bodyweight_kg')
     .eq('id', userId)
@@ -81,7 +77,7 @@ export async function fetchProfileForWilks(userId: string) {
 }
 
 export async function fetchMaxesForWilks(userId: string) {
-  const { data, error } = await db
+  const { data, error } = await typedSupabase
     .from('lifter_maxes')
     .select('recorded_at, squat_1rm_grams, bench_1rm_grams, deadlift_1rm_grams')
     .eq('user_id', userId)
@@ -92,7 +88,7 @@ export async function fetchMaxesForWilks(userId: string) {
 }
 
 export async function fetchProgramsForWilks(userId: string) {
-  const { data, error } = await db
+  const { data, error } = await typedSupabase
     .from('programs')
     .select('id, version, start_date')
     .eq('user_id', userId)

@@ -13,24 +13,24 @@ Logic for detecting missed sessions, the within-week makeup window, and the cons
 
 **File: `apps/parakeet/src/lib/sessions.ts`**
 
-A session transitions to `missed` status automatically. A background check runs when the user opens the app (on app foreground), comparing all `scheduled` sessions against the current date:
+A session transitions to `missed` status automatically. A background check runs when the user opens the app (on app foreground), comparing all `planned` sessions against the current date:
 
 ```typescript
 export async function markMissedSessions(userId: string): Promise<void> {
   const now = new Date()
-  const { data: scheduled } = await supabase
+  const { data: planned } = await supabase
     .from('sessions')
-    .select('id, scheduled_date, lift, week_number')
+    .select('id, planned_date, primary_lift, week_number')
     .eq('user_id', userId)
-    .eq('status', 'scheduled')
-    .lt('scheduled_date', now.toISOString().split('T')[0])  // past dates only
+    .eq('status', 'planned')
+    .lt('planned_date', now.toISOString().split('T')[0])  // past dates only
 
-  for (const session of scheduled ?? []) {
+  for (const session of planned ?? []) {
     const isPastMakeupWindow = isMakeupWindowExpired(session, now)
     if (isPastMakeupWindow) {
       await supabase
         .from('sessions')
-        .update({ status: 'missed', missed_at: now.toISOString() })
+        .update({ status: 'missed' })
         .eq('id', session.id)
     }
   }
@@ -46,7 +46,7 @@ export async function markMissedSessions(userId: string): Promise<void> {
 ```typescript
 interface SessionRef {
   id: string
-  scheduledDate: string      // ISO date
+  scheduledDate: string      // ISO date — mapped from sessions.planned_date
   lift: Lift
   weekNumber: number
 }

@@ -8,6 +8,10 @@ export const IntensityTypeSchema = z.enum(['heavy', 'explosive', 'rep', 'deload'
 
 export type IntensityType = z.infer<typeof IntensityTypeSchema>
 
+export const BlockNumberSchema = z.union([z.literal(1), z.literal(2), z.literal(3)])
+
+export type BlockNumber = z.infer<typeof BlockNumberSchema>
+
 // weight_kg must be a positive multiple of 2.5 kg
 const weightKgSchema = z
   .number()

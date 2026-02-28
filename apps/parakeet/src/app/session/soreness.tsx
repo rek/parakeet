@@ -130,7 +130,7 @@ export default function SorenessScreen() {
     if (!session || !user) return
     setGenerating(true)
     try {
-      const jitOutput = await runJITForSession(session, user.id, ratingsToUse as any)
+      const jitOutput = await runJITForSession(session, user.id, ratingsToUse)
       router.replace({
         pathname: '/session/[sessionId]',
         params: {

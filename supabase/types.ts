@@ -140,6 +140,33 @@ export type Database = {
           },
         ]
       }
+      cycle_tracking: {
+        Row: {
+          cycle_length_days: number
+          id: string
+          is_enabled: boolean
+          last_period_start: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          cycle_length_days?: number
+          id?: string
+          is_enabled?: boolean
+          last_period_start?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          cycle_length_days?: number
+          id?: string
+          is_enabled?: boolean
+          last_period_start?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       developer_suggestions: {
         Row: {
           created_at: string
@@ -676,9 +703,11 @@ export type Database = {
       session_logs: {
         Row: {
           actual_sets: Json
+          auxiliary_sets: Json | null
           completed_at: string | null
           completion_pct: number | null
           corrects_log_id: string | null
+          cycle_phase: string | null
           duration_seconds: number | null
           id: string
           is_correction: boolean
@@ -692,9 +721,11 @@ export type Database = {
         }
         Insert: {
           actual_sets: Json
+          auxiliary_sets?: Json | null
           completed_at?: string | null
           completion_pct?: number | null
           corrects_log_id?: string | null
+          cycle_phase?: string | null
           duration_seconds?: number | null
           id?: string
           is_correction?: boolean
@@ -708,9 +739,11 @@ export type Database = {
         }
         Update: {
           actual_sets?: Json
+          auxiliary_sets?: Json | null
           completed_at?: string | null
           completion_pct?: number | null
           corrects_log_id?: string | null
+          cycle_phase?: string | null
           duration_seconds?: number | null
           id?: string
           is_correction?: boolean
@@ -742,6 +775,7 @@ export type Database = {
       sessions: {
         Row: {
           block_number: number | null
+          completed_at: string | null
           created_at: string
           day_number: number
           id: string
@@ -761,6 +795,7 @@ export type Database = {
         }
         Insert: {
           block_number?: number | null
+          completed_at?: string | null
           created_at?: string
           day_number: number
           id?: string
@@ -780,6 +815,7 @@ export type Database = {
         }
         Update: {
           block_number?: number | null
+          completed_at?: string | null
           created_at?: string
           day_number?: number
           id?: string

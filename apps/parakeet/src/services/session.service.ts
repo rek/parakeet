@@ -176,7 +176,7 @@ export async function completeSession(
     (normalizedSets.filter((s) => s.reps_completed > 0).length / plannedCount) * 100;
   const performanceVsPlan = classifyPerformance(normalizedSets, completionPct);
 
-  await insertSessionLog({
+  const sessionLogId = await insertSessionLog({
     sessionId,
     userId,
     actualSets: normalizedSets,
@@ -201,9 +201,13 @@ export async function completeSession(
 
     if (suggestions.length > 0) {
       await insertPerformanceMetric({
-        sessionId,
-        userId,
-        suggestions,
+        session_log_id: sessionLogId,
+        user_id: userId,
+        lift: session.primary_lift,
+        intensity_type: session.intensity_type as string,
+        recorded_at: new Date().toISOString(),
+        week_number: session.week_number ?? null,
+        block_number: (session.block_number as number | null) ?? null,
       });
     }
   }
@@ -275,7 +279,7 @@ export async function markMissedSessions(userId: string): Promise<void> {
 
     const allSessionRefs: SessionRef[] = allSessions.map((s: any) => ({
       id: s.id as string,
-      scheduledDate: s.scheduled_date as string,
+      scheduledDate: s.planned_date as string,
       lift: s.primary_lift as Lift,
       weekNumber: s.week_number as number,
     }));
@@ -283,7 +287,7 @@ export async function markMissedSessions(userId: string): Promise<void> {
     for (const session of overdueInProgram) {
       const missedSession: SessionRef = {
         id: session.id as string,
-        scheduledDate: session.scheduled_date as string,
+        scheduledDate: session.planned_date as string,
         lift: session.primary_lift as Lift,
         weekNumber: session.week_number as number,
       };
@@ -295,7 +299,7 @@ export async function markMissedSessions(userId: string): Promise<void> {
       });
 
       if (expired) {
-        await markSessionAsMissed(session.id, now.toISOString());
+        await markSessionAsMissed(session.id);
       }
     }
   }

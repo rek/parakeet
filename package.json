@@ -54,6 +54,7 @@
     "@swc-node/register": "~1.11.1",
     "@swc/core": "~1.15.5",
     "@swc/helpers": "~0.5.18",
+    "@types/jest": "^30.0.0",
     "@types/react": "19.1.0",
     "babel-preset-expo": "~54.0.7",
     "metro-config": "~0.83.0",
