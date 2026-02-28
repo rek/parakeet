@@ -7,11 +7,12 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native'
-import { router, useLocalSearchParams } from 'expo-router'
+import { router, useFocusEffect, useLocalSearchParams } from 'expo-router'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
 import { getSession, startSession } from '../../lib/sessions'
 import { useSessionStore } from '../../store/sessionStore'
+import { useNetworkStatus } from '../../hooks/useNetworkStatus'
 import { WarmupSection } from '../../components/training/WarmupSection'
 import { SetRow } from '../../components/training/SetRow'
 import { RestTimer } from '../../components/training/RestTimer'
@@ -85,42 +86,41 @@ export default function SessionScreen() {
   }>()
 
   const {
+    sessionId: storeSessionId,
     actualSets,
     auxiliarySets,
     plannedSets,
     warmupCompleted,
+    sessionMeta,
+    timerState,
     initSession,
     initAuxiliary,
     updateSet,
     updateAuxiliarySet,
     setWarmupDone,
+    setSessionMeta,
+    setCachedJitData,
+    openTimer,
+    tickTimer,
+    adjustTimer,
+    closeTimer,
   } = useSessionStore()
 
-  const [warmupSets, setWarmupSets] = useState<WarmupSet[]>([])
+  const [warmupSetsState, setWarmupSetsState] = useState<WarmupSet[]>([])
   const [auxiliaryWork, setAuxiliaryWork] = useState<AuxiliaryWork[]>([])
-  const [sessionMeta, setSessionMeta] = useState<{
-    primary_lift: string
-    intensity_type: string
-    block_number: number | null
-    week_number: number
-  } | null>(null)
 
-  // Rest timer state: which main-lift set just completed
-  const [timerVisible, setTimerVisible] = useState(false)
-  const [timerDuration, setTimerDuration] = useState(DEFAULT_MAIN_REST_SECONDS)
-  const [timerLlmSuggestion, setTimerLlmSuggestion] = useState<
-    LlmRestSuggestion | undefined
-  >(undefined)
-  // The set number that triggered the timer (rest is attributed to this set)
-  const pendingRestSetNumber = useRef<number | null>(null)
-  // For auxiliary: { exercise, setNumber } that triggered the timer
-  const pendingAuxRest = useRef<{ exercise: string; setNumber: number } | null>(null)
-  // Ref mirror of timerVisible so handleSetUpdate closure stays stable
-  const timerVisibleRef = useRef(false)
+  // Mirror plannedSets.length in a ref so stable callbacks see the current value
+  const plannedSetsLengthRef = useRef(0)
+  useEffect(() => {
+    plannedSetsLengthRef.current = plannedSets.length
+  }, [plannedSets.length])
 
-  // Rest recommendations extracted from jit output
+  // Rest recommendations extracted from jit output (re-populated on each mount)
   const restRecommendations = useRef<RestRecommendations | null>(null)
   const llmRestSuggestion = useRef<LlmRestSuggestion | null>(null)
+
+  // Interval ref for focus-managed timer ticking
+  const tickIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
   // ── Bootstrap ─────────────────────────────────────────────────────────────
 
@@ -138,8 +138,10 @@ export default function SessionScreen() {
       return
     }
 
+    setCachedJitData(jitData)
+
     const { mainLiftSets, warmupSets: ws, auxiliaryWork: aux } = parsed
-    setWarmupSets(ws ?? [])
+    setWarmupSetsState(ws ?? [])
 
     if (parsed.restRecommendations) {
       restRecommendations.current = parsed.restRecommendations
@@ -148,31 +150,55 @@ export default function SessionScreen() {
       llmRestSuggestion.current = parsed.llmRestSuggestion
     }
 
-    // Initialize store synchronously so stale is_completed from a prior session
-    // can never race with the user completing sets and navigating to complete screen.
-    initSession(sessionId, mainLiftSets)
+    // Only re-initialize if this is a different session (guard against re-mount via banner)
+    if (storeSessionId !== sessionId) {
+      initSession(sessionId, mainLiftSets)
 
-    const activeAux = (aux ?? []).filter((a) => !a.skipped)
-    setAuxiliaryWork(aux ?? [])
-    if (activeAux.length > 0) {
-      initAuxiliary(activeAux.map((a) => ({ exercise: a.exercise, sets: a.sets })))
-    }
-
-    getSession(sessionId).then((session) => {
-      if (!session) {
-        router.back()
-        return
+      const activeAux = (aux ?? []).filter((a) => !a.skipped)
+      setAuxiliaryWork(aux ?? [])
+      if (activeAux.length > 0) {
+        initAuxiliary(activeAux.map((a) => ({ exercise: a.exercise, sets: a.sets })))
       }
-      setSessionMeta({
-        primary_lift:   session.primary_lift,
-        intensity_type: session.intensity_type,
-        block_number:   session.block_number ?? null,
-        week_number:    session.week_number,
+
+      getSession(sessionId).then((session) => {
+        if (!session) {
+          router.back()
+          return
+        }
+        setSessionMeta({
+          primary_lift:   session.primary_lift,
+          intensity_type: session.intensity_type,
+          block_number:   session.block_number ?? null,
+          week_number:    session.week_number,
+        })
+        startSession(sessionId)
       })
-      startSession(sessionId)
-    })
+    } else {
+      // Returning to an existing session — restore aux work display
+      setAuxiliaryWork(aux ?? [])
+    }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
+
+  // ── Focus-managed timer interval ───────────────────────────────────────────
+
+  useFocusEffect(
+    useCallback(() => {
+      // Catch up on elapsed time if timer is running
+      if (timerState?.visible && timerState.timerStartedAt) {
+        tickTimer()
+        tickIntervalRef.current = setInterval(() => tickTimer(), 1000)
+      }
+
+      return () => {
+        if (tickIntervalRef.current !== null) {
+          clearInterval(tickIntervalRef.current)
+          tickIntervalRef.current = null
+        }
+      }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [timerState?.visible, timerState?.timerStartedAt])
+  )
 
   // ── Handlers ──────────────────────────────────────────────────────────────
 
@@ -188,33 +214,23 @@ export default function SessionScreen() {
         is_completed:   data.isCompleted,
       })
 
-      // When a set transitions to completed, open the rest timer.
-      // If timer is already visible (user completed a set while resting),
-      // dismiss it quietly before launching the new one.
       if (data.isCompleted) {
-        if (timerVisibleRef.current) {
-          timerVisibleRef.current = false
-          setTimerVisible(false)
-        }
-
         // No rest timer after the last set
-        if (setNumber >= plannedSets.length) return
+        if (setNumber >= plannedSetsLengthRef.current) return
 
         const setIndex = setNumber - 1
         const duration =
           restRecommendations.current?.mainLift[setIndex] ??
           DEFAULT_MAIN_REST_SECONDS
 
-        pendingRestSetNumber.current = setNumber
-        pendingAuxRest.current = null
-        setTimerDuration(duration)
-        setTimerLlmSuggestion(llmRestSuggestion.current ?? undefined)
-        timerVisibleRef.current = true
-        setTimerVisible(true)
+        openTimer({
+          durationSeconds: duration,
+          pendingMainSetNumber: setNumber,
+        })
       }
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [updateSet],
+    [updateSet, openTimer],
   )
 
   const handleAuxSetUpdate = useCallback(
@@ -233,11 +249,6 @@ export default function SessionScreen() {
       })
 
       if (data.isCompleted) {
-        if (timerVisibleRef.current) {
-          timerVisibleRef.current = false
-          setTimerVisible(false)
-        }
-
         // No rest timer after the last set of this exercise
         if (setNumber >= setsInExercise) return
 
@@ -245,45 +256,45 @@ export default function SessionScreen() {
           restRecommendations.current?.auxiliary[exerciseIndex] ??
           DEFAULT_AUX_REST_SECONDS
 
-        pendingRestSetNumber.current = null
-        pendingAuxRest.current = { exercise, setNumber }
-        setTimerDuration(duration)
-        setTimerLlmSuggestion(undefined)
-        timerVisibleRef.current = true
-        setTimerVisible(true)
+        openTimer({
+          durationSeconds: duration,
+          pendingAuxExercise: exercise,
+          pendingAuxSetNumber: setNumber,
+        })
       }
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [updateAuxiliarySet],
+    [updateAuxiliarySet, openTimer],
   )
 
-  function handleTimerDone(elapsedSeconds: number) {
-    if (pendingRestSetNumber.current !== null) {
-      updateSet(pendingRestSetNumber.current, {
+  function handleTimerDone() {
+    // Read pending attribution before closing (closeTimer nulls timerState)
+    const pendingMain = timerState?.pendingMainSetNumber ?? null
+    const pendingAuxExercise = timerState?.pendingAuxExercise ?? null
+    const pendingAuxSet = timerState?.pendingAuxSetNumber ?? null
+
+    const elapsedSeconds = closeTimer()
+
+    if (pendingMain !== null) {
+      updateSet(pendingMain, { actual_rest_seconds: elapsedSeconds })
+    } else if (pendingAuxExercise !== null && pendingAuxSet !== null) {
+      updateAuxiliarySet(pendingAuxExercise, pendingAuxSet, {
         actual_rest_seconds: elapsedSeconds,
       })
-      pendingRestSetNumber.current = null
-    } else if (pendingAuxRest.current !== null) {
-      const { exercise, setNumber } = pendingAuxRest.current
-      updateAuxiliarySet(exercise, setNumber, {
-        actual_rest_seconds: elapsedSeconds,
-      })
-      pendingAuxRest.current = null
     }
-    timerVisibleRef.current = false
-    setTimerVisible(false)
   }
 
   function handleComplete() {
-    if (timerVisibleRef.current) {
-      timerVisibleRef.current = false
-      setTimerVisible(false)
+    if (timerState?.visible) {
+      closeTimer()
     }
     router.push({
       pathname: '/session/complete',
       params: { sessionId },
     })
   }
+
+  const { isOffline } = useNetworkStatus()
 
   // ── Derived state ─────────────────────────────────────────────────────────
 
@@ -306,6 +317,12 @@ export default function SessionScreen() {
       : capitalize(sessionMeta.intensity_type)
     : ''
 
+  // LLM suggestion is only relevant for main set timers
+  const activeLlmSuggestion =
+    timerState?.pendingMainSetNumber !== null
+      ? (llmRestSuggestion.current ?? undefined)
+      : undefined
+
   // Group auxiliary sets by exercise for rendering
   const auxByExercise = auxiliaryWork.map((aw) => ({
     ...aw,
@@ -316,6 +333,11 @@ export default function SessionScreen() {
 
   return (
     <SafeAreaView style={styles.safeArea}>
+      {isOffline && (
+        <View style={styles.offlineBanner}>
+          <Text style={styles.offlineBannerText}>No connection — sets saved locally</Text>
+        </View>
+      )}
       <ScrollView
         style={styles.scrollView}
         contentContainerStyle={styles.container}
@@ -328,9 +350,9 @@ export default function SessionScreen() {
         </View>
 
         {/* Warmup section */}
-        {warmupSets.length > 0 && (
+        {warmupSetsState.length > 0 && (
           <WarmupSection
-            sets={warmupSets}
+            sets={warmupSetsState}
             completedIndices={warmupCompleted}
             onToggle={setWarmupDone}
           />
@@ -420,15 +442,18 @@ export default function SessionScreen() {
 
       {/* Rest timer modal */}
       <Modal
-        visible={timerVisible}
+        visible={timerState?.visible ?? false}
         transparent
         animationType="slide"
-        onRequestClose={() => handleTimerDone(0)}
+        onRequestClose={handleTimerDone}
       >
         <View style={styles.modalOverlay}>
           <RestTimer
-            durationSeconds={timerDuration}
-            llmSuggestion={timerLlmSuggestion}
+            durationSeconds={timerState?.durationSeconds ?? DEFAULT_MAIN_REST_SECONDS}
+            elapsed={timerState?.elapsed ?? 0}
+            offset={timerState?.offset ?? 0}
+            onAdjust={adjustTimer}
+            llmSuggestion={activeLlmSuggestion}
             onDone={handleTimerDone}
             intensityLabel={intensityLabel}
           />
@@ -527,5 +552,16 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'flex-end',
     backgroundColor: colors.overlayLight,
+  },
+  offlineBanner: {
+    backgroundColor: colors.warning,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+  },
+  offlineBannerText: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: colors.textInverse,
+    textAlign: 'center',
   },
 })

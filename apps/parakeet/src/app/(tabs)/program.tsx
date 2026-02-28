@@ -1,5 +1,6 @@
 import { router } from 'expo-router'
 import {
+  Alert,
   ActivityIndicator,
   ScrollView,
   StyleSheet,
@@ -8,42 +9,44 @@ import {
   View,
 } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
 
 import { WeekRow } from '../../components/program/WeekRow'
 import { useActiveProgram } from '../../hooks/useActiveProgram'
+import { useAuth } from '../../hooks/useAuth'
+import { updateProgramStatus } from '../../lib/programs'
+import { qk } from '../../queries/keys'
 import { colors, spacing, typography } from '../../theme'
-
-interface ProgramSession {
-  id: string
-  day_number: number
-  primary_lift: string
-  intensity_type: string
-  planned_date: string
-  status: string
-  block_number: number | null
-  week_number: number
-}
-
-function groupByWeek(sessions: ProgramSession[]): [number, ProgramSession[]][] {
-  const map = new Map<number, ProgramSession[]>()
-  for (const s of sessions) {
-    if (!map.has(s.week_number)) map.set(s.week_number, [])
-    map.get(s.week_number)!.push(s)
-  }
-  return Array.from(map.entries()).sort(([a], [b]) => a - b)
-}
-
-function determineCurrentWeek(sessions: ProgramSession[]): number {
-  const activeSession = sessions.find(
-    (s) => s.status === 'planned' || s.status === 'in_progress',
-  )
-  return activeSession?.week_number ?? 1
-}
+import { groupByWeek, determineCurrentWeek } from '../../utils/program-utils'
+import type { ProgramSession } from '../../utils/program-utils'
 
 export default function ProgramScreen() {
   const { data: program, isLoading } = useActiveProgram()
+  const { user, loading: authLoading } = useAuth()
+  const queryClient = useQueryClient()
 
-  if (isLoading) {
+  const abandon = useMutation({
+    mutationFn: (programId: string) => updateProgramStatus(programId, 'archived'),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: qk.program.active(user?.id) }),
+  })
+
+  function confirmAbandon() {
+    if (!program) return
+    Alert.alert(
+      'Abandon Program',
+      'This will archive your current program. You can start a new one anytime.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Abandon',
+          style: 'destructive',
+          onPress: () => abandon.mutate(program.id),
+        },
+      ],
+    )
+  }
+
+  if (isLoading || authLoading) {
     return (
       <SafeAreaView style={styles.loadingContainer}>
         <ActivityIndicator size="large" color={colors.primary} />
@@ -81,7 +84,12 @@ export default function ProgramScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.title}>My Program</Text>
+        <View style={styles.headerRow}>
+          <Text style={styles.title}>My Program</Text>
+          <TouchableOpacity onPress={confirmAbandon} disabled={abandon.isPending}>
+            <Text style={styles.abandonText}>Abandon</Text>
+          </TouchableOpacity>
+        </View>
         <Text style={styles.subtitle}>
           Block {currentBlock} of 3 · Week {currentWeek} of {program.total_weeks}
         </Text>
@@ -137,6 +145,16 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     paddingBottom: spacing[8],
+  },
+  headerRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: spacing[1],
+  },
+  abandonText: {
+    fontSize: typography.sizes.sm,
+    color: colors.danger,
   },
   // Empty state
   emptyState: {

@@ -1,4 +1,5 @@
-# Dependencies
+#
+Dependencies
 node_modules/
 .pnp
 .pnp.js
@@ -49,3 +50,8 @@ vitest.config.*.timestamp*
 
 docs/archive
 .gitnexus
+parakeet-release.keystore
+
+# artifacts
+build-*.aab
+**/images/backup/*

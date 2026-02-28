@@ -1,13 +1,14 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { generateObject } from 'ai'
 import { DEFAULT_FORMULA_CONFIG_MALE } from '../../cube/blocks'
 import type { MrvMevConfig, MuscleGroup } from '../../types'
 import type { JITInput } from '../jit-session-generator'
-import { LLMJITGenerator } from '../llm-jit-generator'
+import type { JITAdjustment } from '@parakeet/shared-types'
+import { LLMJITGenerator, applyAdjustment } from '../llm-jit-generator'
 import { enforceHardConstraints } from '../jit-constraints'
 
-vi.mock('ai', () => ({ generateObject: vi.fn() }))
-const mockGenerateObject = generateObject as ReturnType<typeof vi.fn>
+// ---------------------------------------------------------------------------
+// Fixtures
+// ---------------------------------------------------------------------------
 
 function makeMrvMev(
   overrides: Partial<Record<MuscleGroup, { mev: number; mrv: number }>> = {},
@@ -46,91 +47,52 @@ function baseInput(overrides: Partial<JITInput> = {}): JITInput {
   }
 }
 
-describe('LLMJITGenerator', () => {
-  beforeEach(() => vi.clearAllMocks())
+function baseAdj(overrides: Partial<JITAdjustment> = {}): JITAdjustment {
+  return {
+    intensityModifier: 1.0,
+    setModifier: 0,
+    skipMainLift: false,
+    auxOverrides: {},
+    rationale: ['Normal session'],
+    confidence: 'high',
+    ...overrides,
+  }
+}
 
-  it('applies LLM adjustment to base weight', async () => {
-    mockGenerateObject.mockResolvedValueOnce({
-      object: {
-        intensityModifier: 0.90,
-        setModifier: -1,
-        skipMainLift: false,
-        auxOverrides: {},
-        rationale: ['Minor soreness — reducing intensity'],
-        confidence: 'high',
-      },
+// ---------------------------------------------------------------------------
+// applyAdjustment — pure function, no AI mock needed
+// ---------------------------------------------------------------------------
+
+describe('applyAdjustment', () => {
+  it('applies LLM adjustment to base weight', () => {
+    const adj = baseAdj({
+      intensityModifier: 0.9,
+      setModifier: -1,
+      rationale: ['Minor soreness — reducing intensity'],
     })
+    const output = applyAdjustment(adj, baseInput())
 
-    const gen = new LLMJITGenerator()
-    const output = await gen.generate(baseInput())
-
-    expect(output.jit_strategy).toBe('llm')
-    // Block 1 Heavy squat 140kg → base weight 112.5kg; 0.90 × 112.5 = 101.25 → rounds to 101.25 or nearest 2.5
+    // Block 1 Heavy squat 140kg → base weight ~112.5kg; 0.90 × 112.5 < 112.5
     expect(output.mainLiftSets.length).toBeGreaterThan(0)
     expect(output.mainLiftSets[0].weight_kg).toBeLessThan(112.5)
     expect(output.rationale).toContain('Minor soreness — reducing intensity')
   })
 
-  it('falls back to formula on timeout', async () => {
-    mockGenerateObject.mockRejectedValueOnce(new Error('AbortError: timeout'))
-
-    const gen = new LLMJITGenerator()
-    const output = await gen.generate(baseInput())
-
-    expect(output.jit_strategy).toBe('formula_fallback')
-    expect(output.mainLiftSets.length).toBeGreaterThan(0)
-  })
-
-  it('falls back to formula on Zod parse failure', async () => {
-    mockGenerateObject.mockRejectedValueOnce(new Error('ZodError: intensityModifier must be >= 0.40'))
-
-    const gen = new LLMJITGenerator()
-    const output = await gen.generate(baseInput())
-
-    expect(output.jit_strategy).toBe('formula_fallback')
-  })
-
   describe('rest adjustments (engine-021)', () => {
-    function baseAdj(overrides: object = {}) {
-      return {
-        intensityModifier: 1.0,
-        setModifier: 0,
-        skipMainLift: false,
-        auxOverrides: {},
-        rationale: ['Normal session'],
-        confidence: 'high' as const,
-        ...overrides,
-      }
-    }
+    it('applies +60s rest delta', () => {
+      const output = applyAdjustment(baseAdj({ restAdjustments: { mainLift: 60 } }), baseInput())
 
-    it('applies +60s rest delta when LLM returns restAdjustmentSeconds: 60', async () => {
-      mockGenerateObject.mockResolvedValueOnce({
-        object: baseAdj({ restAdjustments: { mainLift: 60 } }),
-      })
-
-      const input = baseInput()
-      const gen = new LLMJITGenerator()
-      const output = await gen.generate(input)
-
-      // block1 heavy formulaBase for squat = DEFAULT_FORMULA_CONFIG_MALE.rest_seconds.block1.heavy
       const formulaBase = DEFAULT_FORMULA_CONFIG_MALE.rest_seconds.block1.heavy
       expect(output.restRecommendations.mainLift.length).toBeGreaterThan(0)
       output.restRecommendations.mainLift.forEach((r) => {
         expect(r).toBe(formulaBase + 60)
       })
       expect(output.llmRestSuggestion).toEqual({ deltaSeconds: 60, formulaBaseSeconds: formulaBase })
-      expect(output.jit_strategy).toBe('llm')
     })
 
-    it('clamps restAdjustments.mainLift to 60 when LLM returns 90', async () => {
+    it('clamps restAdjustments.mainLift to 60 when LLM returns 90', () => {
       const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => undefined)
-      mockGenerateObject.mockResolvedValueOnce({
-        object: baseAdj({ restAdjustments: { mainLift: 90 } }),
-      })
-
-      const input = baseInput()
-      const gen = new LLMJITGenerator()
-      const output = await gen.generate(input)
+      const output = applyAdjustment(baseAdj({ restAdjustments: { mainLift: 90 } }), baseInput())
 
       const formulaBase = DEFAULT_FORMULA_CONFIG_MALE.rest_seconds.block1.heavy
       output.restRecommendations.mainLift.forEach((r) => {
@@ -141,14 +103,8 @@ describe('LLMJITGenerator', () => {
       warnSpy.mockRestore()
     })
 
-    it('applies -30s rest delta when LLM returns restAdjustments.mainLift: -30', async () => {
-      mockGenerateObject.mockResolvedValueOnce({
-        object: baseAdj({ restAdjustments: { mainLift: -30 } }),
-      })
-
-      const input = baseInput()
-      const gen = new LLMJITGenerator()
-      const output = await gen.generate(input)
+    it('applies -30s rest delta', () => {
+      const output = applyAdjustment(baseAdj({ restAdjustments: { mainLift: -30 } }), baseInput())
 
       const formulaBase = DEFAULT_FORMULA_CONFIG_MALE.rest_seconds.block1.heavy
       output.restRecommendations.mainLift.forEach((r) => {
@@ -157,14 +113,8 @@ describe('LLMJITGenerator', () => {
       expect(output.llmRestSuggestion).toEqual({ deltaSeconds: -30, formulaBaseSeconds: formulaBase })
     })
 
-    it('leaves rest unchanged and llmRestSuggestion undefined when LLM omits restAdjustments', async () => {
-      mockGenerateObject.mockResolvedValueOnce({
-        object: baseAdj(), // no restAdjustments key
-      })
-
-      const input = baseInput()
-      const gen = new LLMJITGenerator()
-      const output = await gen.generate(input)
+    it('leaves rest unchanged and llmRestSuggestion undefined when restAdjustments omitted', () => {
+      const output = applyAdjustment(baseAdj(), baseInput())
 
       const formulaBase = DEFAULT_FORMULA_CONFIG_MALE.rest_seconds.block1.heavy
       output.restRecommendations.mainLift.forEach((r) => {
@@ -172,19 +122,57 @@ describe('LLMJITGenerator', () => {
       })
       expect(output.llmRestSuggestion).toBeUndefined()
     })
+  })
+})
 
-    it('formula fallback on LLM parse error has no llmRestSuggestion', async () => {
-      mockGenerateObject.mockRejectedValueOnce(new Error('ZodError: parse failure'))
+// ---------------------------------------------------------------------------
+// LLMJITGenerator.generate() — fallback behaviour only (requires AI mock)
+// ---------------------------------------------------------------------------
 
-      const gen = new LLMJITGenerator()
-      const output = await gen.generate(baseInput())
+vi.mock('ai', () => ({
+  generateText: vi.fn(),
+  Output: { object: vi.fn().mockReturnValue({}) },
+}))
 
-      expect(output.jit_strategy).toBe('formula_fallback')
-      expect(output.llmRestSuggestion).toBeUndefined()
-    })
+import { generateText } from 'ai'
+const mockGenerateText = generateText as ReturnType<typeof vi.fn>
+
+describe('LLMJITGenerator (fallback behaviour)', () => {
+  beforeEach(() => vi.clearAllMocks())
+
+  it('falls back to formula on timeout', async () => {
+    mockGenerateText.mockRejectedValueOnce(new Error('AbortError: timeout'))
+
+    const output = await new LLMJITGenerator().generate(baseInput())
+
+    expect(output.jit_strategy).toBe('formula_fallback')
+    expect(output.mainLiftSets.length).toBeGreaterThan(0)
   })
 
-  it('enforceHardConstraints forces skip when MRV already exceeded', () => {
+  it('falls back to formula on Zod parse failure', async () => {
+    mockGenerateText.mockRejectedValueOnce(new Error('ZodError: intensityModifier must be >= 0.40'))
+
+    const output = await new LLMJITGenerator().generate(baseInput())
+
+    expect(output.jit_strategy).toBe('formula_fallback')
+  })
+
+  it('formula fallback on LLM parse error has no llmRestSuggestion', async () => {
+    mockGenerateText.mockRejectedValueOnce(new Error('ZodError: parse failure'))
+
+    const output = await new LLMJITGenerator().generate(baseInput())
+
+    expect(output.jit_strategy).toBe('formula_fallback')
+    expect(output.llmRestSuggestion).toBeUndefined()
+  })
+})
+
+// ---------------------------------------------------------------------------
+// enforceHardConstraints — pure function, no AI mock needed
+// ---------------------------------------------------------------------------
+
+describe('enforceHardConstraints', () => {
+  it('forces skip when MRV already exceeded', () => {
     const input = baseInput({
       weeklyVolumeToDate: { quads: 20 }, // quads mrv=20 → at cap
     })

@@ -1,0 +1,53 @@
+{
+    "name": "parakeet",
+    "$schema": "../../node_modules/nx/schemas/project-schema.json",
+    "sourceRoot": "apps/parakeet/src",
+    "projectType": "application",
+    "tags": [
+        "scope:client",
+        "type:app"
+    ],
+    "// targets": "to see all targets run: nx show project parakeet --web",
+    "targets": {
+        "buildApk": {
+            "executor": "nx:run-commands",
+            "options": {
+                "commands": [
+                    {
+                        "command": "cd apps/parakeet/android && ./gradlew assembleRelease --warning-mode=all",
+                        "description": "Build release APK"
+                    },
+                    {
+                        "command": "mkdir -p dist/apps/parakeet",
+                        "description": "Create dist directory"
+                    },
+                    {
+                        "command": "cp apps/parakeet/android/app/build/outputs/apk/release/app-release.apk dist/apps/parakeet/parakeet-release.apk",
+                        "description": "Copy APK to dist"
+                    }
+                ],
+                "parallel": false
+            },
+            "outputs": [
+                "{workspaceRoot}/dist/apps/parakeet"
+            ]
+        },
+        "web-export": {
+            "executor": "nx:run-commands",
+            "outputs": [
+                "{workspaceRoot}/dist/web/parakeet"
+            ],
+            "options": {
+                "command": "npx expo export --platform web --output-dir ../../dist/web/parakeet",
+                "cwd": "apps/parakeet"
+            }
+        },
+        "install": {
+            "executor": "nx:run-commands",
+            "options": {
+                "command": "adb install -r dist/apps/parakeet/parakeet-release.apk ",
+                "cwd": ""
+            }
+        }
+    }
+}

@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import { useQueryClient } from '@tanstack/react-query'
 import {
   Alert,
   Platform,
@@ -19,6 +20,7 @@ import { createProgram } from '../../../lib/programs'
 import { getProfile, updateProfile } from '../../../lib/profile'
 import { updateCycleConfig } from '../../../lib/cycle-tracking'
 import { useAuth } from '../../../hooks/useAuth'
+import { qk } from '../../../queries/keys'
 import type { BiologicalSex } from '../../../lib/profile'
 import { colors } from '../../../theme'
 
@@ -64,6 +66,7 @@ function formatStartDate(date: Date): string {
 
 export default function ProgramSettingsScreen() {
   const { user } = useAuth()
+  const queryClient = useQueryClient()
   const params = useLocalSearchParams<{ lifts?: string; estimatedStart?: string }>()
   const usingEstimatedStart = params.estimatedStart === '1'
   const lifts = useMemo(() => {
@@ -166,12 +169,17 @@ export default function ProgramSettingsScreen() {
 
       await Promise.all(updates)
       const program = await createProgram({ totalWeeks, trainingDaysPerWeek, startDate })
+      await queryClient.invalidateQueries({ queryKey: qk.program.active(user?.id) })
       router.replace({
         pathname: '/(auth)/onboarding/review',
         params: { programId: program!.id },
       })
     } catch (err: unknown) {
-      Alert.alert('Error', err instanceof Error ? err.message : 'Failed to create program')
+      const msg =
+        err instanceof Error
+          ? err.message
+          : (err as { message?: string })?.message ?? 'Failed to create program'
+      Alert.alert('Error', msg)
     } finally {
       setLoading(false)
     }
@@ -336,7 +344,7 @@ export default function ProgramSettingsScreen() {
       )}
 
       {/* Cycle tracking prompt — female only */}
-      {(gender === 'female' || hasProfileGender) && (
+      {gender === 'female' && (
         <>
           <Text style={styles.label}>Cycle Tracking</Text>
           <Text style={styles.fieldHint}>

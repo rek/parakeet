@@ -247,11 +247,11 @@ export default function TodayScreen() {
             )}
 
             <TouchableOpacity
-              style={styles.reportIssueLink}
+              style={styles.reportIssueButton}
               onPress={() => router.push('/disruption-report/report')}
-              activeOpacity={0.6}
+              activeOpacity={0.75}
             >
-              <Text style={styles.reportIssueLinkText}>Something's off? Report an issue →</Text>
+              <Text style={styles.reportIssueButtonText}>⚠ Log a Disruption</Text>
             </TouchableOpacity>
 
             <VolumeCompactCard />
@@ -478,12 +478,18 @@ const styles = StyleSheet.create({
     color: colors.danger,
     fontWeight: typography.weights.semibold,
   },
-  reportIssueLink: {
+  reportIssueButton: {
+    borderWidth: 1,
+    borderColor: colors.warning,
+    borderRadius: radii.md,
+    paddingVertical: spacing[3],
+    marginHorizontal: spacing[4],
     alignItems: 'center',
-    paddingVertical: spacing[2],
   },
-  reportIssueLinkText: {
+  reportIssueButtonText: {
     fontSize: typography.sizes.sm,
-    color: colors.textTertiary,
+    fontWeight: typography.weights.semibold,
+    color: colors.warning,
+    letterSpacing: typography.letterSpacing.wide,
   },
 })

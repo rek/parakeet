@@ -7,7 +7,6 @@
     "icon": "./assets/images/icon.png",
     "scheme": "parakeet",
     "userInterfaceStyle": "automatic",
-    "newArchEnabled": true,
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.adam.tombleson.parakeet"
@@ -17,7 +16,6 @@
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "edgeToEdgeEnabled": true,
       "package": "com.adam.tombleson.parakeet"
     },
     "web": {
@@ -38,6 +36,11 @@
           "backgroundColor": "#100a11"
         }
       ]
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "50f6e375-0065-4338-b537-17ca0ac587b3"
+      }
+    }
   }
 }

@@ -19,7 +19,7 @@ import { getActiveAssignments } from './auxiliary-config'
 import { getWarmupConfig } from './warmup-config'
 import { getUserRestOverrides } from './rest-config'
 import { estimateOneRmKgFromProfile } from './max-estimation'
-import type { BiologicalSex } from './profile'
+import { fetchProfileSex } from '../data/session.repository'
 
 export async function runJITForSession(
   session: {
@@ -38,21 +38,23 @@ export async function runJITForSession(
   const blockNumber = session.block_number as 1 | 2 | 3
 
   // Fetch all config in parallel
-  const [oneRmKg, formulaConfig, mrvMevConfig, assignments, warmupConfig, userRestOverrides] =
+  const [oneRmKg, formulaConfig, biologicalSex, assignments, warmupConfig, userRestOverrides] =
     await Promise.all([
       getCurrentOneRmKg(userId, lift),
       getFormulaConfig(userId),
-      getMrvMevConfig(userId),
+      fetchProfileSex(userId),
       getActiveAssignments(userId, session.program_id, blockNumber),
       getWarmupConfig(userId, lift),
       getUserRestOverrides(userId),
     ])
 
+  const mrvMevConfig = await getMrvMevConfig(userId, biologicalSex)
+
   let resolvedOneRmKg = oneRmKg
   if (resolvedOneRmKg === null) {
     const { data: profile } = await supabase
       .from('profiles')
-      .select('*')
+      .select('bodyweight_kg, date_of_birth')
       .eq('id', userId)
       .maybeSingle()
 
@@ -64,16 +66,11 @@ export async function runJITForSession(
           ? parseFloat(rawBodyweight)
           : null
 
-    const biologicalSex = (
-      (profile as { biological_sex?: BiologicalSex | null } | null)?.biological_sex ?? null
-    )
-    const dateOfBirth = (
-      (profile as { date_of_birth?: string | null } | null)?.date_of_birth ?? null
-    )
+    const dateOfBirth = (profile as { date_of_birth?: string | null } | null)?.date_of_birth ?? null
 
     resolvedOneRmKg = estimateOneRmKgFromProfile({
       lift,
-      biologicalSex,
+      biologicalSex: biologicalSex ?? null,
       dateOfBirth,
       bodyweightKg,
     })
@@ -146,6 +143,7 @@ export async function runJITForSession(
     activeDisruptions,
     warmupConfig,
     userRestOverrides,
+    biologicalSex: biologicalSex ?? undefined,
   }
 
   const generator = getJITGenerator('auto', true)

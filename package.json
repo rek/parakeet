@@ -26,7 +26,7 @@
   "dependencies": {
     "@expo/metro-config": "~54.0.9",
     "@expo/metro-runtime": "~6.1.2",
-    "@react-native-community/datetimepicker": "^8.6.0",
+    "@react-native-community/datetimepicker": "8.4.4",
     "@tanstack/react-query": "^5.90.21",
     "expo": "~54.0.0",
     "expo-constants": "~18.0.13",

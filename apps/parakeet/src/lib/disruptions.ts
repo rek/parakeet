@@ -168,22 +168,20 @@ export async function resolveDisruption(
     .eq('id', disruptionId)
     .eq('user_id', userId)
 
-  // Clear planned_sets on future planned sessions so JIT regenerates without disruption
-  if (resolvedAt && new Date(resolvedAt) < new Date()) {
-    const { data: disruption } = await supabase
-      .from('disruptions')
-      .select('session_ids_affected')
-      .eq('id', disruptionId)
-      .single()
+  // Always clear planned_sets on future planned sessions so JIT regenerates without disruption
+  const { data: disruption } = await supabase
+    .from('disruptions')
+    .select('session_ids_affected')
+    .eq('id', disruptionId)
+    .single()
 
-    const sessionIds = disruption?.session_ids_affected ?? []
-    if (sessionIds.length > 0) {
-      await supabase
-        .from('sessions')
-        .update({ planned_sets: null, jit_generated_at: null })
-        .in('id', sessionIds)
-        .in('status', ['planned'])
-    }
+  const sessionIds = disruption?.session_ids_affected ?? []
+  if (sessionIds.length > 0) {
+    await supabase
+      .from('sessions')
+      .update({ planned_sets: null, jit_generated_at: null })
+      .in('id', sessionIds)
+      .in('status', ['planned'])
   }
 }
 

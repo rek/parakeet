@@ -6,6 +6,9 @@ import { colors, spacing, radii, typography } from '../../theme'
 
 export interface RestTimerProps {
   durationSeconds: number
+  elapsed: number
+  offset: number
+  onAdjust: (deltaSecs: number) => void
   llmSuggestion?: {
     deltaSeconds: number
     formulaBaseSeconds: number
@@ -24,7 +27,7 @@ function formatMMSS(totalSeconds: number): string {
   return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`
 }
 
-// ── Custom hook ───────────────────────────────────────────────────────────────
+// ── Internal hook (used only by AuxiliaryPill) ────────────────────────────────
 
 function useRestTimer(durationSeconds: number) {
   const [elapsed, setElapsed] = useState(0)
@@ -61,7 +64,7 @@ function useRestTimer(durationSeconds: number) {
   return { elapsed, remaining, overtime, stop, addOffset }
 }
 
-// ── Pill variant (auxiliary sets) ─────────────────────────────────────────────
+// ── Pill variant (auxiliary sets, inline use) ─────────────────────────────────
 
 function AuxiliaryPill({
   durationSeconds,
@@ -101,17 +104,16 @@ function AuxiliaryPill({
 
 function FullTimer({
   durationSeconds,
+  elapsed,
+  offset,
+  onAdjust,
   llmSuggestion,
   onDone,
   intensityLabel,
 }: Omit<RestTimerProps, 'isAuxiliary'>) {
-  const { elapsed, remaining, overtime, stop, addOffset } =
-    useRestTimer(durationSeconds)
-
-  function handleDone() {
-    stop()
-    onDone(elapsed)
-  }
+  const effectiveDuration = Math.max(0, durationSeconds + offset)
+  const remaining = Math.max(0, effectiveDuration - elapsed)
+  const overtime = elapsed > effectiveDuration
 
   const showAiChip =
     llmSuggestion !== undefined &&
@@ -123,7 +125,7 @@ function FullTimer({
       : 0
 
   const displayText = overtime
-    ? `+${formatMMSS(elapsed - durationSeconds)}`
+    ? `+${formatMMSS(elapsed - effectiveDuration)}`
     : formatMMSS(remaining)
 
   return (
@@ -147,7 +149,7 @@ function FullTimer({
       <View style={fullStyles.controlRow}>
         <TouchableOpacity
           style={fullStyles.adjustButton}
-          onPress={() => addOffset(-30)}
+          onPress={() => onAdjust(-30)}
           activeOpacity={0.7}
         >
           <Text style={fullStyles.adjustButtonText}>−30s</Text>
@@ -155,7 +157,7 @@ function FullTimer({
 
         <TouchableOpacity
           style={fullStyles.doneButton}
-          onPress={handleDone}
+          onPress={() => onDone(elapsed)}
           activeOpacity={0.8}
         >
           <Text style={fullStyles.doneButtonText}>Done resting</Text>
@@ -163,7 +165,7 @@ function FullTimer({
 
         <TouchableOpacity
           style={fullStyles.adjustButton}
-          onPress={() => addOffset(30)}
+          onPress={() => onAdjust(30)}
           activeOpacity={0.7}
         >
           <Text style={fullStyles.adjustButtonText}>+30s</Text>
@@ -177,6 +179,9 @@ function FullTimer({
 
 export function RestTimer({
   durationSeconds,
+  elapsed,
+  offset,
+  onAdjust,
   llmSuggestion,
   onDone,
   intensityLabel,
@@ -191,6 +196,9 @@ export function RestTimer({
   return (
     <FullTimer
       durationSeconds={durationSeconds}
+      elapsed={elapsed}
+      offset={offset}
+      onAdjust={onAdjust}
       llmSuggestion={llmSuggestion}
       onDone={onDone}
       intensityLabel={intensityLabel}

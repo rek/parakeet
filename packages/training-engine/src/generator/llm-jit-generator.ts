@@ -1,4 +1,4 @@
-import { generateObject } from 'ai'
+import { generateText, Output } from 'ai'
 import { JITAdjustmentSchema } from '@parakeet/shared-types'
 import type { JITAdjustment } from '@parakeet/shared-types'
 import type { JITGeneratorStrategy } from './jit-strategy'
@@ -25,14 +25,14 @@ export class LLMJITGenerator implements JITGeneratorStrategy {
 
   async generate(input: JITInput): Promise<JITOutput> {
     try {
-      const { object } = await generateObject({
+      const { output: adj } = await generateText({
         model: JIT_MODEL,
-        schema: JITAdjustmentSchema,
+        output: Output.object({ schema: JITAdjustmentSchema }),
         system: JIT_SYSTEM_PROMPT,
         prompt: JSON.stringify(buildJITContext(input)),
         abortSignal: AbortSignal.timeout(5000),
       })
-      const output = applyAdjustment(object, input)
+      const output = applyAdjustment(adj, input)
       return { ...enforceHardConstraints(output, input), jit_strategy: 'llm' }
     } catch {
       const fallback = await new FormulaJITGenerator().generate(input)
@@ -59,7 +59,7 @@ function buildJITContext(input: JITInput): object {
   }
 }
 
-function applyAdjustment(adj: JITAdjustment, input: JITInput): JITOutput {
+export function applyAdjustment(adj: JITAdjustment, input: JITInput): JITOutput {
   const baseSets = calculateSets(
     input.primaryLift,
     input.intensityType,

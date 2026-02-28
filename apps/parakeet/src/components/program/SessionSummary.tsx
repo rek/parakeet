@@ -11,6 +11,7 @@ interface SessionSummaryProps {
     primary_lift: string
     intensity_type: string
     planned_date: string
+    completed_at: string | null
     status: string
     block_number: number | null
     week_number: number
@@ -61,7 +62,9 @@ export function SessionSummary({ session }: SessionSummaryProps) {
         <Text style={styles.liftText}>
           {capitalize(session.primary_lift)} — {session.intensity_type}
         </Text>
-        <Text style={styles.dateText}>{formatDate(session.planned_date)}</Text>
+        <Text style={styles.dateText}>
+          {session.completed_at ? formatDate(session.completed_at) : formatDate(session.planned_date)}
+        </Text>
       </View>
 
       <BlockBadge block={session.block_number} />

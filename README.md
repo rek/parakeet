@@ -53,52 +53,6 @@ Start here:
 3. `docs/decisions/007-vercel-ai-sdk.md` — AI SDK choice and rationale
 4. `docs/README.md` — complete docs index
 
-## Development
-
-```bash
-npm install
-```
-
-### Android physical device setup
-
-```bash
-# Run once per USB connect (forwards phone's localhost:54321 → dev machine)
-adb reverse tcp:54321 tcp:54321
-adb reverse tcp:8081 tcp:8081   # Metro (usually auto-set by Expo)
-```
-
-This drops on every replug — re-run if you get network errors after reconnecting.
-
-### parakeet dev server
-
-```bash
-# Start Expo dev server (Android/Web)
-npx nx run parakeet:start
-
-# Then in the Expo CLI menu:
-#   Press a  → Android emulator
-#   Press w  → Web browser (Metro web)
-
-# Or start directly in web mode:
-npx nx run parakeet:serve
-```
-
-### Linting and type checking
-
-```bash
-npx nx run parakeet:lint
-npx tsc -p apps/parakeet/tsconfig.app.json --noEmit
-```
-
-### Supabase (local)
-
-```bash
-npm run db:start                 # Start local Postgres + Studio at localhost:54323
-npm run db:reset                 # Apply migrations (drop + recreate)
-npm run db:types                 # Generate TypeScript types → supabase/types.ts
-npm run db:push                  # Push migrations to hosted Supabase
-```
-
 ## Production Deployment (Sideload)
 
 We sideload directly to devices — no Play Store.
@@ -144,23 +98,6 @@ keyAlias=parakeet
 keyPassword=YOUR_KEY_PASSWORD
 ```
 
-### 5. Build release APK
-
-```bash
-cd apps/parakeet
-expo run:android --variant release
-# or
-cd android && ./gradlew assembleRelease
-```
-
-APK output: `apps/parakeet/android/app/build/outputs/apk/release/app-release.apk`
-
-### 6. Sideload to device
-
-```bash
-adb install -r apps/parakeet/android/app/build/outputs/apk/release/app-release.apk
-```
-
 ### 7. Point to hosted Supabase
 
 Update `apps/parakeet/.env.local` (or a `.env.production` file) to use the hosted Supabase URL and anon key instead of `localhost`. Run `npm run db:push` first to ensure migrations are applied.
@@ -174,3 +111,5 @@ If Google sign-in fails with `TypeError: Network request failed`, check local Su
 3. Ensure phone and dev machine are on the same Wi-Fi network/subnet. This was the root cause in a real failure case.
 4. Verify on phone browser: `http://<LAN_IP>:54321/auth/v1/health` should load.
 5. If still failing, check firewall/VPN/guest-network isolation on the dev machine/router.
+
+For building apk's we need to use prod supabase, since metro does not run we cannot point to local

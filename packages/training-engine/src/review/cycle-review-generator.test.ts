@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { generateObject } from 'ai'
+import { generateText } from 'ai'
 import {
   assembleCycleReviewPrompt,
   buildLiftProgress,
@@ -10,8 +10,11 @@ import type { PreviousCycleSummary } from './cycle-review-generator'
 import type { CycleReport } from './assemble-cycle-report'
 import type { CycleReview } from '@parakeet/shared-types'
 
-vi.mock('ai', () => ({ generateObject: vi.fn() }))
-const mockGenerateObject = generateObject as ReturnType<typeof vi.fn>
+vi.mock('ai', () => ({
+  generateText: vi.fn(),
+  Output: { object: vi.fn().mockReturnValue({}) },
+}))
+const mockGenerateText = generateText as ReturnType<typeof vi.fn>
 
 // ---------------------------------------------------------------------------
 // Fixtures
@@ -231,43 +234,41 @@ describe('assembleCycleReviewPrompt', () => {
 describe('generateCycleReview', () => {
   beforeEach(() => vi.clearAllMocks())
 
-  it('passes prompt with previous summaries to generateObject', async () => {
+  it('passes prompt with previous summaries to generateText', async () => {
     const fakeReview = makeReview()
-    mockGenerateObject.mockResolvedValueOnce({ object: fakeReview })
+    mockGenerateText.mockResolvedValueOnce({ output: fakeReview })
 
     const report = makeReport()
     const prevSummary = extractSummary(report, makeReview(), 1, 80, 80, 400)
 
     await generateCycleReview(report, [prevSummary])
 
-    expect(mockGenerateObject).toHaveBeenCalledOnce()
-    const call = mockGenerateObject.mock.calls[0][0]
+    expect(mockGenerateText).toHaveBeenCalledOnce()
+    const call = mockGenerateText.mock.calls[0][0]
     expect(call.prompt).toContain('Previous 1 cycle(s) summary:')
   })
 
   it('passes "first cycle" message when no previous summaries', async () => {
-    const fakeReview = makeReview()
-    mockGenerateObject.mockResolvedValueOnce({ object: fakeReview })
+    mockGenerateText.mockResolvedValueOnce({ output: makeReview() })
 
     await generateCycleReview(makeReport(), [])
 
-    const call = mockGenerateObject.mock.calls[0][0]
+    const call = mockGenerateText.mock.calls[0][0]
     expect(call.prompt).toContain('first completed cycle')
   })
 
   it('defaults to empty previousSummaries when not provided', async () => {
-    const fakeReview = makeReview()
-    mockGenerateObject.mockResolvedValueOnce({ object: fakeReview })
+    mockGenerateText.mockResolvedValueOnce({ output: makeReview() })
 
     await generateCycleReview(makeReport())
 
-    const call = mockGenerateObject.mock.calls[0][0]
+    const call = mockGenerateText.mock.calls[0][0]
     expect(call.prompt).toContain('first completed cycle')
   })
 
   it('returns the LLM CycleReview object', async () => {
     const fakeReview = makeReview({ overallAssessment: 'Excellent cycle.' })
-    mockGenerateObject.mockResolvedValueOnce({ object: fakeReview })
+    mockGenerateText.mockResolvedValueOnce({ output: fakeReview })
 
     const result = await generateCycleReview(makeReport())
     expect(result.overallAssessment).toBe('Excellent cycle.')

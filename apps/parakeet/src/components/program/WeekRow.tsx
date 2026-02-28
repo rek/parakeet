@@ -11,6 +11,7 @@ interface WeekSession {
   primary_lift: string
   intensity_type: string
   planned_date: string
+  completed_at: string | null
   status: string
   block_number: number | null
   week_number: number

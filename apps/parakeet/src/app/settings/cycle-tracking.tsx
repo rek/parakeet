@@ -209,13 +209,24 @@ export default function CycleTrackingScreen() {
               </View>
 
               {showDatePicker && isEnabled && (
-                <DateTimePicker
-                  value={lastPeriodStart ? new Date(lastPeriodStart) : new Date()}
-                  mode="date"
-                  display={Platform.OS === 'ios' ? 'inline' : 'default'}
-                  maximumDate={new Date()}
-                  onChange={handleDateChange}
-                />
+                <>
+                  <DateTimePicker
+                    value={lastPeriodStart ? new Date(lastPeriodStart) : new Date()}
+                    mode="date"
+                    display={Platform.OS === 'ios' ? 'inline' : 'default'}
+                    maximumDate={new Date()}
+                    onChange={handleDateChange}
+                  />
+                  {Platform.OS === 'ios' && (
+                    <TouchableOpacity
+                      style={styles.doneBtn}
+                      onPress={() => setShowDatePicker(false)}
+                      activeOpacity={0.8}
+                    >
+                      <Text style={styles.doneBtnText}>Done</Text>
+                    </TouchableOpacity>
+                  )}
+                </>
               )}
             </View>
 
@@ -444,5 +455,17 @@ const styles = StyleSheet.create({
   legendLabel: {
     fontSize: typography.sizes.xs,
     color: colors.textSecondary,
+  },
+  doneBtn: {
+    marginTop: spacing[2],
+    alignItems: 'center',
+    paddingVertical: spacing[3],
+    borderRadius: radii.md,
+    backgroundColor: colors.primary,
+  },
+  doneBtnText: {
+    fontSize: typography.sizes.base,
+    fontWeight: typography.weights.semibold,
+    color: colors.textInverse,
   },
 })

@@ -12,19 +12,17 @@ import { router } from 'expo-router'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { useQueryClient } from '@tanstack/react-query'
 
-import { detectSessionPRs, checkCycleCompletion } from '@parakeet/training-engine'
 import type { PR } from '@parakeet/training-engine'
-import {
-  completeSession,
-  getProgramCompletionCounts,
-  getSessionCompletionContext,
-} from '../../lib/sessions'
-import { getPRHistory, getStreakData, storePersonalRecords } from '../../lib/achievements'
+import { completeSession } from '../../lib/sessions'
 import { stampCyclePhaseOnSession } from '../../lib/cycle-tracking'
+import { detectAchievements } from '../../hooks/useAchievementDetection'
 import { useSessionStore } from '../../store/sessionStore'
+import { useSyncStore } from '../../store/syncStore'
 import { useAuth } from '../../hooks/useAuth'
+import { useNetworkStatus } from '../../hooks/useNetworkStatus'
+import { isNetworkError } from '../../hooks/useSyncQueue'
 import { StarCard } from '../../components/achievements/StarCard'
-import type { Lift } from '@parakeet/shared-types'
+import { qk } from '../../queries/keys'
 import { colors } from '../../theme'
 
 // ── Constants ────────────────────────────────────────────────────────────────
@@ -36,6 +34,8 @@ const RPE_OPTIONS = [6, 7, 8, 9, 10] as const
 export default function CompleteScreen() {
   const { user } = useAuth()
   const queryClient = useQueryClient()
+  const { isOnline } = useNetworkStatus()
+  const { enqueue } = useSyncStore()
 
   const {
     sessionId,
@@ -50,6 +50,7 @@ export default function CompleteScreen() {
 
   const [notes, setNotes] = useState('')
   const [saving, setSaving] = useState(false)
+  const [pendingSync, setPendingSync] = useState(false)
 
   // Post-save achievement state
   const [earnedPRs, setEarnedPRs] = useState<PR[]>([])
@@ -75,27 +76,46 @@ export default function CompleteScreen() {
       return
     }
 
+    // Build payload once (used for both online save and offline queue)
+    const notesValue = notes.trim() || undefined
+    const completionPayload = {
+      sessionId,
+      userId: user.id,
+      actualSets: actualSets.map((s) => ({
+        set_number:          s.set_number,
+        weight_grams:        s.weight_grams,
+        reps_completed:      s.reps_completed,
+        rpe_actual:          s.rpe_actual,
+        actual_rest_seconds: s.actual_rest_seconds,
+        notes:               notesValue,
+      })),
+      auxiliarySets: auxiliarySets.length > 0
+        ? auxiliarySets.map((s) => ({
+            exercise:            s.exercise,
+            set_number:          s.set_number,
+            weight_grams:        s.weight_grams,
+            reps_completed:      s.reps_completed,
+            rpe_actual:          s.rpe_actual,
+            actual_rest_seconds: s.actual_rest_seconds,
+          }))
+        : undefined,
+      sessionRpe,
+      startedAt: startedAt?.toISOString(),
+    }
+
+    // Offline: queue and show optimistic success
+    if (!isOnline) {
+      enqueue({ operation: 'complete_session', payload: completionPayload })
+      setPendingSync(true)
+      setSaved(true)
+      return
+    }
+
     setSaving(true)
     try {
       await completeSession(sessionId, user.id, {
-        actualSets: actualSets.map((s) => ({
-          set_number:           s.set_number,
-          weight_grams:         s.weight_grams,
-          reps_completed:       s.reps_completed,
-          rpe_actual:           s.rpe_actual,
-          actual_rest_seconds:  s.actual_rest_seconds,
-          notes:                notes.trim() || undefined,
-        })),
-        auxiliarySets: auxiliarySets.length > 0
-          ? auxiliarySets.map((s) => ({
-              exercise:             s.exercise,
-              set_number:           s.set_number,
-              weight_grams:         s.weight_grams,
-              reps_completed:       s.reps_completed,
-              rpe_actual:           s.rpe_actual,
-              actual_rest_seconds:  s.actual_rest_seconds,
-            }))
-          : undefined,
+        actualSets: completionPayload.actualSets,
+        auxiliarySets: completionPayload.auxiliarySets,
         sessionRpe,
         startedAt,
       })
@@ -105,64 +125,11 @@ export default function CompleteScreen() {
 
       // ── Achievement detection ──────────────────────────────────────────────
 
-      // Determine lift from the first actual set's planned context
-      // (session store doesn't expose lift directly; derive from planned sets or fall back)
-      const sessionContext = await getSessionCompletionContext(sessionId)
-      const lift = (sessionContext.primaryLift as Lift | null) ?? null
-
-      if (lift) {
-        // PR detection
-        const historicalPRs = await getPRHistory(user.id, lift)
-        const completedSetsForPR = actualSets
-          .filter((s) => s.reps_completed > 0)
-          .map((s) => ({
-            weightKg:         s.weight_grams / 1000,
-            reps:             s.reps_completed,
-            rpe:              s.rpe_actual,
-            estimated1rmKg:   s.rpe_actual !== undefined && s.rpe_actual >= 8.5
-              ? (s.weight_grams / 1000) * (1 + s.reps_completed / 30)
-              : undefined,
-          }))
-
-        const prs = detectSessionPRs({
-          sessionId,
-          lift,
-          completedSets: completedSetsForPR,
-          historicalPRs,
-        })
-
-        if (prs.length > 0) {
-          await storePersonalRecords(user.id, prs)
-          setEarnedPRs(prs)
-        }
-      }
-
-      // Streak check
-      const streakResult = await getStreakData(user.id)
-      if (streakResult.currentStreak > 0) {
-        setStreakWeeks(streakResult.currentStreak)
-        setStreakReset(false)
-      } else {
-        setStreakReset(true)
-        setStreakWeeks(null)
-      }
-
-      // Cycle badge check
-      if (sessionContext.programId) {
-        const { total, completed, skipped } = await getProgramCompletionCounts(
-          sessionContext.programId,
-          user.id,
-        )
-
-        const cycleResult = checkCycleCompletion({
-          totalScheduledSessions:  total,
-          completedSessions:       completed,
-          skippedWithDisruption:   skipped,
-        })
-        if (cycleResult.qualifiesForBadge) {
-          setCycleBadgeEarned(true)
-        }
-      }
+      const achievements = await detectAchievements(sessionId, user.id, actualSets)
+      if (achievements.earnedPRs.length > 0) setEarnedPRs(achievements.earnedPRs)
+      if (achievements.streakWeeks !== null) setStreakWeeks(achievements.streakWeeks)
+      setStreakReset(achievements.streakReset)
+      if (achievements.cycleBadgeEarned) setCycleBadgeEarned(true)
 
       setSaved(true)
 
@@ -170,11 +137,19 @@ export default function CompleteScreen() {
       await queryClient.invalidateQueries({ queryKey: ['sessions', 'completed'] })
       await queryClient.invalidateQueries({ queryKey: ['performance', 'trends'] })
       await queryClient.invalidateQueries({ queryKey: ['achievements'] })
+      await queryClient.invalidateQueries({ queryKey: qk.program.active(user?.id) })
     } catch (err: unknown) {
-      Alert.alert(
-        'Could not save workout',
-        err instanceof Error ? err.message : 'An error occurred — please try again.',
-      )
+      if (isNetworkError(err)) {
+        // Lost connection mid-save: queue for retry
+        enqueue({ operation: 'complete_session', payload: completionPayload })
+        setPendingSync(true)
+        setSaved(true)
+      } else {
+        Alert.alert(
+          'Could not save workout',
+          err instanceof Error ? err.message : 'An error occurred — please try again.',
+        )
+      }
     } finally {
       setSaving(false)
     }
@@ -196,6 +171,13 @@ export default function CompleteScreen() {
       >
         {/* Title */}
         <Text style={styles.title}>Workout Complete 🎉</Text>
+
+        {/* Pending sync indicator */}
+        {pendingSync && (
+          <View style={styles.syncBanner}>
+            <Text style={styles.syncBannerText}>Syncing when connection restores...</Text>
+          </View>
+        )}
 
         {/* Stats card */}
         <View style={styles.statsCard}>
@@ -430,6 +412,20 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     color: colors.textInverse,
+  },
+  syncBanner: {
+    backgroundColor: colors.warningMuted,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: colors.warning,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    marginBottom: 20,
+  },
+  syncBannerText: {
+    fontSize: 13,
+    color: colors.warning,
+    textAlign: 'center',
   },
   // Achievement surfaces
   starsSection: {

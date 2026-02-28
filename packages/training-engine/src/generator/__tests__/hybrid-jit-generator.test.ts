@@ -1,14 +1,11 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { generateObject } from 'ai'
 import { DEFAULT_FORMULA_CONFIG_MALE } from '../../cube/blocks'
 import type { MrvMevConfig, MuscleGroup } from '../../types'
 import type { JITInput } from '../jit-session-generator'
+import type { JITAdjustment } from '@parakeet/shared-types'
 import { HybridJITGenerator, computeDivergence } from '../hybrid-jit-generator'
-import { LLMJITGenerator } from '../llm-jit-generator'
+import { LLMJITGenerator, applyAdjustment } from '../llm-jit-generator'
 import { FormulaJITGenerator } from '../formula-jit-generator'
-
-vi.mock('ai', () => ({ generateObject: vi.fn() }))
-const mockGenerateObject = generateObject as ReturnType<typeof vi.fn>
 
 // ---------------------------------------------------------------------------
 // Fixtures
@@ -51,17 +48,18 @@ function baseInput(overrides: Partial<JITInput> = {}): JITInput {
   }
 }
 
-/** Build a minimal LLM response object accepted by JITAdjustmentSchema */
-function llmAdj(overrides: object = {}) {
-  return {
+/** Build a real JITOutput (no AI call) by applying an adjustment via the pure helper. */
+function buildLlmOutput(adj: Partial<JITAdjustment>, input: JITInput) {
+  const fullAdj: JITAdjustment = {
     intensityModifier: 1.0,
     setModifier: 0,
     skipMainLift: false,
     auxOverrides: {},
     rationale: ['Normal session'],
-    confidence: 'high' as const,
-    ...overrides,
+    confidence: 'high',
+    ...adj,
   }
+  return { ...applyAdjustment(fullAdj, input), jit_strategy: 'llm' as const }
 }
 
 // ---------------------------------------------------------------------------
@@ -114,21 +112,20 @@ describe('computeDivergence', () => {
 })
 
 // ---------------------------------------------------------------------------
-// HybridJITGenerator integration tests
+// HybridJITGenerator integration tests — inject LLM output via spyOn
 // ---------------------------------------------------------------------------
 
 describe('HybridJITGenerator', () => {
   beforeEach(() => vi.clearAllMocks())
 
   it('returns LLM output when both agree within 10% and same set count', async () => {
-    // Formula: block1 heavy 140kg → 4 sets @ 112.5kg (DEFAULT_FORMULA_CONFIG_MALE)
-    // LLM: same set count, weight within 10% → should agree
-    mockGenerateObject.mockResolvedValueOnce({
-      object: llmAdj({ intensityModifier: 1.0, setModifier: 0 }),
-    })
+    const input = baseInput()
+    const llmGen = new LLMJITGenerator()
+    // intensityModifier: 1.0, setModifier: 0 → same weight and count as formula
+    vi.spyOn(llmGen, 'generate').mockResolvedValueOnce(buildLlmOutput({}, input))
 
-    const gen = new HybridJITGenerator()
-    const output = await gen.generate(baseInput())
+    const gen = new HybridJITGenerator(new FormulaJITGenerator(), llmGen)
+    const output = await gen.generate(input)
 
     expect(output.jit_strategy).toBe('llm')
     expect(output.comparisonData).toBeDefined()
@@ -138,13 +135,15 @@ describe('HybridJITGenerator', () => {
   })
 
   it('sets shouldSurfaceToUser: true when weight diverges >15%', async () => {
-    // LLM returns intensityModifier: 0.80 → 80% of formula weight → 20% divergence
-    mockGenerateObject.mockResolvedValueOnce({
-      object: llmAdj({ intensityModifier: 0.80, setModifier: 0 }),
-    })
+    const input = baseInput()
+    const llmGen = new LLMJITGenerator()
+    // 0.80 × formula weight → ~20% divergence
+    vi.spyOn(llmGen, 'generate').mockResolvedValueOnce(
+      buildLlmOutput({ intensityModifier: 0.8 }, input),
+    )
 
-    const gen = new HybridJITGenerator()
-    const output = await gen.generate(baseInput())
+    const gen = new HybridJITGenerator(new FormulaJITGenerator(), llmGen)
+    const output = await gen.generate(input)
 
     expect(output.jit_strategy).toBe('llm')
     expect(output.comparisonData).toBeDefined()
@@ -154,13 +153,14 @@ describe('HybridJITGenerator', () => {
   })
 
   it('sets shouldSurfaceToUser: true when set count differs', async () => {
-    // LLM drops 1 set via setModifier: -1
-    mockGenerateObject.mockResolvedValueOnce({
-      object: llmAdj({ intensityModifier: 1.0, setModifier: -1 }),
-    })
+    const input = baseInput()
+    const llmGen = new LLMJITGenerator()
+    vi.spyOn(llmGen, 'generate').mockResolvedValueOnce(
+      buildLlmOutput({ setModifier: -1 }, input),
+    )
 
-    const gen = new HybridJITGenerator()
-    const output = await gen.generate(baseInput())
+    const gen = new HybridJITGenerator(new FormulaJITGenerator(), llmGen)
+    const output = await gen.generate(input)
 
     expect(output.jit_strategy).toBe('llm')
     expect(output.comparisonData!.shouldSurfaceToUser).toBe(true)
@@ -168,8 +168,6 @@ describe('HybridJITGenerator', () => {
   })
 
   it('falls back to formula with jit_strategy formula_fallback when LLM rejects', async () => {
-    // Directly mock LLMJITGenerator.generate to reject — LLMJITGenerator internally catches
-    // generateObject errors, so we must mock at the generate() boundary to simulate true rejection.
     const llmGen = new LLMJITGenerator()
     vi.spyOn(llmGen, 'generate').mockRejectedValueOnce(new Error('Network timeout'))
 
@@ -182,18 +180,20 @@ describe('HybridJITGenerator', () => {
   })
 
   it('preserves formula output in comparisonData.formulaOutput', async () => {
-    mockGenerateObject.mockResolvedValueOnce({
-      object: llmAdj({ intensityModifier: 0.75, setModifier: -1 }),
-    })
+    const input = baseInput()
+    const llmGen = new LLMJITGenerator()
+    vi.spyOn(llmGen, 'generate').mockResolvedValueOnce(
+      buildLlmOutput({ intensityModifier: 0.75, setModifier: -1 }, input),
+    )
 
-    const gen = new HybridJITGenerator()
-    const output = await gen.generate(baseInput())
+    const gen = new HybridJITGenerator(new FormulaJITGenerator(), llmGen)
+    const output = await gen.generate(input)
 
     expect(output.comparisonData).toBeDefined()
     const formulaOutput = output.comparisonData!.formulaOutput
     expect(formulaOutput.sessionId).toBe('sess-hybrid-001')
     expect(formulaOutput.mainLiftSets.length).toBeGreaterThan(0)
-    // Formula output should have normal (unmodified) weight
+    // Formula weight unmodified > LLM weight at 0.75×
     expect(formulaOutput.mainLiftSets[0].weight_kg).toBeGreaterThan(
       output.mainLiftSets[0]?.weight_kg ?? 0,
     )
@@ -201,12 +201,14 @@ describe('HybridJITGenerator', () => {
 
   it('calls the comparisonLogger when provided', async () => {
     const logger = vi.fn()
-    mockGenerateObject.mockResolvedValueOnce({
-      object: llmAdj({ intensityModifier: 0.80, setModifier: 0 }),
-    })
+    const input = baseInput()
+    const llmGen = new LLMJITGenerator()
+    vi.spyOn(llmGen, 'generate').mockResolvedValueOnce(
+      buildLlmOutput({ intensityModifier: 0.8 }, input),
+    )
 
-    const gen = new HybridJITGenerator(undefined, undefined, logger)
-    await gen.generate(baseInput())
+    const gen = new HybridJITGenerator(new FormulaJITGenerator(), llmGen, logger)
+    await gen.generate(input)
 
     expect(logger).toHaveBeenCalledTimes(1)
     const [logInput, logFormula, logLlm, logDivergence] = logger.mock.calls[0]
@@ -228,12 +230,11 @@ describe('HybridJITGenerator', () => {
   })
 
   it('does not call logger when no logger provided (no error)', async () => {
-    mockGenerateObject.mockResolvedValueOnce({
-      object: llmAdj(),
-    })
+    const input = baseInput()
+    const llmGen = new LLMJITGenerator()
+    vi.spyOn(llmGen, 'generate').mockResolvedValueOnce(buildLlmOutput({}, input))
 
-    const gen = new HybridJITGenerator()
-    // should not throw even with no logger
-    await expect(gen.generate(baseInput())).resolves.toBeDefined()
+    const gen = new HybridJITGenerator(new FormulaJITGenerator(), llmGen)
+    await expect(gen.generate(input)).resolves.toBeDefined()
   })
 })

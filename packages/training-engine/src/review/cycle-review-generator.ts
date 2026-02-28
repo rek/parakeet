@@ -1,4 +1,4 @@
-import { generateObject } from 'ai'
+import { generateText, Output } from 'ai'
 import { CycleReviewSchema } from '@parakeet/shared-types'
 import type { CycleReview, Lift } from '@parakeet/shared-types'
 import { CYCLE_REVIEW_MODEL } from '../ai/models'
@@ -156,11 +156,11 @@ export async function generateCycleReview(
 ): Promise<CycleReview> {
   const prompt = assembleCycleReviewPrompt(cycleReport, previousSummaries)
 
-  const { object } = await generateObject({
+  const { output } = await generateText({
     model: CYCLE_REVIEW_MODEL,
-    schema: CycleReviewSchema,
+    output: Output.object({ schema: CycleReviewSchema }),
     system: CYCLE_REVIEW_SYSTEM_PROMPT,
     prompt,
   })
-  return object
+  return output
 }

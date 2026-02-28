@@ -10,12 +10,12 @@ import {
   fetchMaxesForWilks,
   fetchPersonalRecords,
   fetchProfileForWilks,
-  fetchProgramSessionStatuses,
   fetchProgramsForCycleBadges,
   fetchProgramsForWilks,
   fetchSessionsForStreak,
   upsertPersonalRecords,
 } from '../data/achievement.repository';
+import { fetchProgramSessionStatuses } from '../data/session.repository';
 
 export interface HistoricalPRs {
   best1rmKg: number;
