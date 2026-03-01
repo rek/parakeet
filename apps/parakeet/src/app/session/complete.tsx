@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState } from 'react';
 import {
   Alert,
   ScrollView,
@@ -7,36 +7,35 @@ import {
   TextInput,
   TouchableOpacity,
   View,
-} from 'react-native'
-import { router } from 'expo-router'
-import { SafeAreaView } from 'react-native-safe-area-context'
-import { useQueryClient } from '@tanstack/react-query'
-
-import { captureException } from '../../utils/captureException'
-import type { PR } from '@parakeet/training-engine'
-import { completeSession } from '../../lib/sessions'
-import { stampCyclePhaseOnSession } from '../../lib/cycle-tracking'
-import { detectAchievements } from '../../hooks/useAchievementDetection'
-import { useSessionStore } from '../../store/sessionStore'
-import { useSyncStore } from '../../store/syncStore'
-import { useAuth } from '../../hooks/useAuth'
-import { useNetworkStatus } from '../../hooks/useNetworkStatus'
-import { isNetworkError } from '../../hooks/useSyncQueue'
-import { StarCard } from '../../components/achievements/StarCard'
-import { qk } from '../../queries/keys'
-import { colors } from '../../theme'
+} from 'react-native';
+import type { PR } from '@parakeet/training-engine';
+import { useQueryClient } from '@tanstack/react-query';
+import { router } from 'expo-router';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { StarCard } from '../../components/achievements/StarCard';
+import { detectAchievements } from '../../hooks/useAchievementDetection';
+import { useAuth } from '../../hooks/useAuth';
+import { useNetworkStatus } from '../../hooks/useNetworkStatus';
+import { isNetworkError } from '../../hooks/useSyncQueue';
+import { stampCyclePhaseOnSession } from '../../lib/cycle-tracking';
+import { completeSession } from '../../lib/sessions';
+import { qk } from '../../queries/keys';
+import { useSessionStore } from '../../store/sessionStore';
+import { useSyncStore } from '../../store/syncStore';
+import { colors } from '../../theme';
+import { captureException } from '../../utils/captureException';
 
 // ── Constants ────────────────────────────────────────────────────────────────
 
-const RPE_OPTIONS = [6, 7, 8, 9, 10] as const
+const RPE_OPTIONS = [6, 7, 8, 9, 10] as const;
 
 // ── Screen ───────────────────────────────────────────────────────────────────
 
 export default function CompleteScreen() {
-  const { user } = useAuth()
-  const queryClient = useQueryClient()
-  const { isOnline } = useNetworkStatus()
-  const { enqueue } = useSyncStore()
+  const { user } = useAuth();
+  const queryClient = useQueryClient();
+  const { isOnline } = useNetworkStatus();
+  const { enqueue } = useSyncStore();
 
   const {
     sessionId,
@@ -47,119 +46,136 @@ export default function CompleteScreen() {
     plannedSets,
     setSessionRpe,
     reset,
-  } = useSessionStore()
+  } = useSessionStore();
 
-  const [notes, setNotes] = useState('')
-  const [saving, setSaving] = useState(false)
-  const [pendingSync, setPendingSync] = useState(false)
+  const [notes, setNotes] = useState('');
+  const [saving, setSaving] = useState(false);
+  const [pendingSync, setPendingSync] = useState(false);
 
   // Post-save achievement state
-  const [earnedPRs, setEarnedPRs] = useState<PR[]>([])
-  const [streakWeeks, setStreakWeeks] = useState<number | null>(null)
-  const [streakReset, setStreakReset] = useState(false)
-  const [cycleBadgeEarned, setCycleBadgeEarned] = useState(false)
-  const [saved, setSaved] = useState(false)
+  const [earnedPRs, setEarnedPRs] = useState<PR[]>([]);
+  const [streakWeeks, setStreakWeeks] = useState<number | null>(null);
+  const [streakReset, setStreakReset] = useState(false);
+  const [cycleBadgeEarned, setCycleBadgeEarned] = useState(false);
+  const [saved, setSaved] = useState(false);
 
   // ── Derived stats ─────────────────────────────────────────────────────────
 
-  const totalSets = actualSets.length
-  const completedSets = actualSets.filter((s) => s.is_completed).length
+  const totalSets = actualSets.length;
+  const completedSets = actualSets.filter((s) => s.is_completed).length;
   const completionPct =
-    totalSets > 0
-      ? ((completedSets / totalSets) * 100).toFixed(0)
-      : '0'
+    totalSets > 0 ? ((completedSets / totalSets) * 100).toFixed(0) : '0';
 
   // ── Handlers ──────────────────────────────────────────────────────────────
 
   async function handleSaveAndFinish() {
     if (!sessionId || !user) {
-      Alert.alert('Error', 'Session data is missing — please restart the app.')
-      return
+      Alert.alert('Error', 'Session data is missing — please restart the app.');
+      return;
     }
 
     // Build payload once (used for both online save and offline queue)
-    const notesValue = notes.trim() || undefined
+    const notesValue = notes.trim() || undefined;
     const completionPayload = {
       sessionId,
       userId: user.id,
       actualSets: actualSets.map((s) => ({
-        set_number:          s.set_number,
-        weight_grams:        s.weight_grams,
-        reps_completed:      s.reps_completed,
-        rpe_actual:          s.rpe_actual,
+        set_number: s.set_number,
+        weight_grams: s.weight_grams,
+        reps_completed: s.reps_completed,
+        is_completed: s.is_completed,
+        rpe_actual: s.rpe_actual,
         actual_rest_seconds: s.actual_rest_seconds,
-        notes:               notesValue,
+        notes: notesValue,
       })),
-      auxiliarySets: auxiliarySets.length > 0
-        ? auxiliarySets.map((s) => ({
-            exercise:            s.exercise,
-            set_number:          s.set_number,
-            weight_grams:        s.weight_grams,
-            reps_completed:      s.reps_completed,
-            rpe_actual:          s.rpe_actual,
-            actual_rest_seconds: s.actual_rest_seconds,
-          }))
-        : undefined,
+      auxiliarySets:
+        auxiliarySets.length > 0
+          ? auxiliarySets.map((s) => ({
+              exercise: s.exercise,
+              set_number: s.set_number,
+              weight_grams: s.weight_grams,
+              reps_completed: s.reps_completed,
+              is_completed: s.is_completed,
+              rpe_actual: s.rpe_actual,
+              actual_rest_seconds: s.actual_rest_seconds,
+            }))
+          : undefined,
       sessionRpe,
       startedAt: startedAt?.toISOString(),
-    }
+    };
 
     // Offline: queue and show optimistic success
     if (!isOnline) {
-      enqueue({ operation: 'complete_session', payload: completionPayload })
-      setPendingSync(true)
-      setSaved(true)
-      return
+      enqueue({ operation: 'complete_session', payload: completionPayload });
+      setPendingSync(true);
+      setSaved(true);
+      return;
     }
 
-    setSaving(true)
+    setSaving(true);
     try {
       await completeSession(sessionId, user.id, {
         actualSets: completionPayload.actualSets,
         auxiliarySets: completionPayload.auxiliarySets,
         sessionRpe,
         startedAt,
-      })
+      });
 
       // Stamp cycle phase on the session log (no-op if tracking disabled)
-      stampCyclePhaseOnSession(user.id, sessionId).catch((err) => captureException(err))
+      stampCyclePhaseOnSession(user.id, sessionId).catch((err) =>
+        captureException(err)
+      );
 
       // ── Achievement detection ──────────────────────────────────────────────
 
-      const achievements = await detectAchievements(sessionId, user.id, actualSets)
-      if (achievements.earnedPRs.length > 0) setEarnedPRs(achievements.earnedPRs)
-      if (achievements.streakWeeks !== null) setStreakWeeks(achievements.streakWeeks)
-      setStreakReset(achievements.streakReset)
-      if (achievements.cycleBadgeEarned) setCycleBadgeEarned(true)
+      const achievements = await detectAchievements(
+        sessionId,
+        user.id,
+        actualSets
+      );
+      if (achievements.earnedPRs.length > 0)
+        setEarnedPRs(achievements.earnedPRs);
+      if (achievements.streakWeeks !== null)
+        setStreakWeeks(achievements.streakWeeks);
+      setStreakReset(achievements.streakReset);
+      if (achievements.cycleBadgeEarned) setCycleBadgeEarned(true);
 
-      setSaved(true)
+      setSaved(true);
 
-      await queryClient.invalidateQueries({ queryKey: ['session'] })
-      await queryClient.invalidateQueries({ queryKey: ['sessions', 'completed'] })
-      await queryClient.invalidateQueries({ queryKey: ['performance', 'trends'] })
-      await queryClient.invalidateQueries({ queryKey: ['achievements'] })
-      await queryClient.invalidateQueries({ queryKey: qk.program.active(user?.id) })
+      await queryClient.invalidateQueries({ queryKey: ['session'] });
+      await queryClient.invalidateQueries({
+        queryKey: ['sessions', 'completed'],
+      });
+      await queryClient.invalidateQueries({
+        queryKey: ['performance', 'trends'],
+      });
+      await queryClient.invalidateQueries({ queryKey: ['achievements'] });
+      await queryClient.invalidateQueries({
+        queryKey: qk.program.active(user?.id),
+      });
     } catch (err: unknown) {
       if (isNetworkError(err)) {
         // Lost connection mid-save: queue for retry
-        enqueue({ operation: 'complete_session', payload: completionPayload })
-        setPendingSync(true)
-        setSaved(true)
+        enqueue({ operation: 'complete_session', payload: completionPayload });
+        setPendingSync(true);
+        setSaved(true);
       } else {
-        captureException(err)
+        captureException(err);
         Alert.alert(
           'Could not save workout',
-          err instanceof Error ? err.message : 'An error occurred — please try again.',
-        )
+          err instanceof Error
+            ? err.message
+            : 'An error occurred — please try again.'
+        );
       }
     } finally {
-      setSaving(false)
+      setSaving(false);
     }
   }
 
   function handleDone() {
-    router.replace('/(tabs)/today')
-    setTimeout(reset, 400)
+    router.replace('/(tabs)/today');
+    setTimeout(reset, 400);
   }
 
   // ── Render ────────────────────────────────────────────────────────────────
@@ -177,7 +193,9 @@ export default function CompleteScreen() {
         {/* Pending sync indicator */}
         {pendingSync && (
           <View style={styles.syncBanner}>
-            <Text style={styles.syncBannerText}>Syncing when connection restores...</Text>
+            <Text style={styles.syncBannerText}>
+              Syncing when connection restores...
+            </Text>
           </View>
         )}
 
@@ -190,7 +208,9 @@ export default function CompleteScreen() {
           <View style={styles.statDivider} />
           <View style={styles.statRow}>
             <Text style={styles.statLabel}>Sets completed</Text>
-            <Text style={styles.statValue}>{completedSets}/{totalSets}</Text>
+            <Text style={styles.statValue}>
+              {completedSets}/{totalSets}
+            </Text>
           </View>
           {plannedSets.length > 0 && (
             <>
@@ -209,7 +229,7 @@ export default function CompleteScreen() {
             <Text style={styles.sectionLabel}>Overall Session RPE</Text>
             <View style={styles.rpeRow}>
               {RPE_OPTIONS.map((level) => {
-                const isActive = sessionRpe === level
+                const isActive = sessionRpe === level;
                 return (
                   <TouchableOpacity
                     key={level}
@@ -217,11 +237,16 @@ export default function CompleteScreen() {
                     onPress={() => setSessionRpe(level)}
                     activeOpacity={0.7}
                   >
-                    <Text style={[styles.rpePillText, isActive && styles.rpePillTextActive]}>
+                    <Text
+                      style={[
+                        styles.rpePillText,
+                        isActive && styles.rpePillTextActive,
+                      ]}
+                    >
                       {level}
                     </Text>
                   </TouchableOpacity>
-                )
+                );
               })}
             </View>
 
@@ -301,7 +326,7 @@ export default function CompleteScreen() {
         )}
       </ScrollView>
     </SafeAreaView>
-  )
+  );
 }
 
 // ── Styles ───────────────────────────────────────────────────────────────────
@@ -465,4 +490,4 @@ const styles = StyleSheet.create({
     color: colors.primary,
     textAlign: 'center',
   },
-})
+});

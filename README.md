@@ -71,6 +71,24 @@ Start here:
 2. `docs/decisions/006-supabase-over-gcp.md` — why no backend
 3. `docs/decisions/007-vercel-ai-sdk.md` — AI SDK choice and rationale
 4. `docs/README.md` — complete docs index
+5. `docs/dev.md` — developer workflows (commands for test, typecheck, build, db)
+
+## Testing (Quick Start)
+
+Use Nx targets as the source of truth:
+
+```bash
+# Run all configured project tests
+nx run-many -t test
+
+# Run only affected tests in current branch
+nx affected -t test
+
+# Run app-only tests
+nx run parakeet:test
+```
+
+For details on where test targets are defined and how runners are configured, see `docs/dev.md`.
 
 ## Production Deployment (Sideload)
 

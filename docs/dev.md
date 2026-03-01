@@ -59,6 +59,26 @@ npx tsc -p apps/parakeet/tsconfig.app.json --noEmit
 tsc --noEmit -p apps/parakeet/tsconfig.typecheck.json
 ```
 
+### Testing
+
+```bash
+# Canonical: run all project tests
+nx run-many -t test
+
+# Run only tests affected by your branch changes
+nx affected -t test
+
+# Run app-only tests
+nx run parakeet:test
+
+# Run a single test file directly
+npx vitest run apps/parakeet/src/services/session.service.test.ts
+```
+
+Where test behavior is defined:
+- Per-project test targets live in each `project.json` (for example `apps/parakeet/project.json`).
+- Package-level test runner config lives beside the package (for example `packages/*/jest.config.cts`, `packages/training-engine/vitest.config.mts`).
+
 ### Type ownership rules
 
 - `supabase/types.ts` is generated DB contract only. Do not hand-edit.

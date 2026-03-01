@@ -849,6 +849,7 @@ export type Database = {
           ratings: Json
           recorded_at: string
           session_id: string
+          skipped: boolean
           user_id: string
         }
         Insert: {
@@ -856,6 +857,7 @@ export type Database = {
           ratings: Json
           recorded_at?: string
           session_id: string
+          skipped?: boolean
           user_id: string
         }
         Update: {
@@ -863,6 +865,7 @@ export type Database = {
           ratings?: Json
           recorded_at?: string
           session_id?: string
+          skipped?: boolean
           user_id?: string
         }
         Relationships: [

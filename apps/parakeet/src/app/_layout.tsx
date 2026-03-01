@@ -1,16 +1,17 @@
-import 'expo/fetch'
-import * as Sentry from '@sentry/react-native'
-import { Component, useEffect, type ReactNode } from 'react'
-import { Stack } from 'expo-router'
-import * as SplashScreen from 'expo-splash-screen'
-import { ScrollView, Text, View } from 'react-native'
-import { QueryClientProvider } from '@tanstack/react-query'
-import { queryClient } from '../lib/query-client'
-import { useAuth } from '../hooks/useAuth'
-import { useSyncQueue } from '../hooks/useSyncQueue'
-import '../lib/supabase'
-import { colors } from '../theme'
-import { ReturnToSessionBanner } from '../components/session/ReturnToSessionBanner'
+import 'expo/fetch';
+import { Component, useEffect, type ReactNode } from 'react';
+import { ScrollView, Text, View } from 'react-native';
+import * as Sentry from '@sentry/react-native';
+import { QueryClientProvider } from '@tanstack/react-query';
+import { Stack } from 'expo-router';
+import * as SplashScreen from 'expo-splash-screen';
+import { useAuth } from '../hooks/useAuth';
+import { useMissedSessionReconciliation } from '../hooks/useMissedSessionReconciliation';
+import { useSyncQueue } from '../hooks/useSyncQueue';
+import { queryClient } from '../lib/query-client';
+import '../lib/supabase';
+import { ReturnToSessionBanner } from '../components/session/ReturnToSessionBanner';
+import { colors } from '../theme';
 
 Sentry.init({
   dsn: 'https://c482059524039032385f5b63dcc3900d@o4510964260864000.ingest.de.sentry.io/4510964263616592',
@@ -31,38 +32,61 @@ Sentry.init({
   // spotlight: __DEV__,
 });
 
-class ErrorBoundary extends Component<{ children: ReactNode }, { error: Error | null }> {
-  state = { error: null }
-  static getDerivedStateFromError(error: Error) { return { error } }
+class ErrorBoundary extends Component<
+  { children: ReactNode },
+  { error: Error | null }
+> {
+  state = { error: null };
+  static getDerivedStateFromError(error: Error) {
+    return { error };
+  }
   render() {
-    const { error } = this.state
+    const { error } = this.state;
     if (error) {
       return (
-        <ScrollView style={{ flex: 1, padding: 24, backgroundColor: colors.bg }}>
-          <Text style={{ fontSize: 18, fontWeight: '700', color: colors.danger, marginBottom: 8 }}>
+        <ScrollView
+          style={{ flex: 1, padding: 24, backgroundColor: colors.bg }}
+        >
+          <Text
+            style={{
+              fontSize: 18,
+              fontWeight: '700',
+              color: colors.danger,
+              marginBottom: 8,
+            }}
+          >
             Crash
           </Text>
-          <Text style={{ fontFamily: 'monospace', fontSize: 12, color: colors.textSecondary }}>
-            {(error as Error).message}{'\n\n'}{(error as Error).stack}
+          <Text
+            style={{
+              fontFamily: 'monospace',
+              fontSize: 12,
+              color: colors.textSecondary,
+            }}
+          >
+            {(error as Error).message}
+            {'\n\n'}
+            {(error as Error).stack}
           </Text>
         </ScrollView>
-      )
+      );
     }
-    return this.props.children
+    return this.props.children;
   }
 }
 
-SplashScreen.preventAutoHideAsync()
+SplashScreen.preventAutoHideAsync();
 
 function RootLayoutNav() {
-  const { loading } = useAuth()
-  useSyncQueue()
+  const { loading } = useAuth();
+  useSyncQueue();
+  useMissedSessionReconciliation();
 
   useEffect(() => {
     if (!loading) {
-      SplashScreen.hideAsync()
+      SplashScreen.hideAsync();
     }
-  }, [loading])
+  }, [loading]);
 
   return (
     <View style={{ flex: 1 }}>
@@ -80,7 +104,7 @@ function RootLayoutNav() {
         <ReturnToSessionBanner />
       </View>
     </View>
-  )
+  );
 }
 
 function RootLayout() {
@@ -90,7 +114,7 @@ function RootLayout() {
         <RootLayoutNav />
       </QueryClientProvider>
     </ErrorBoundary>
-  )
+  );
 }
 
-export default Sentry.wrap(RootLayout)
+export default Sentry.wrap(RootLayout);

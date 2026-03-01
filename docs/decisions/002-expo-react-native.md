@@ -5,7 +5,7 @@
 
 ## Context
 
-We need to build a parakeet dailyProvisions app for iOS and Android with native features (notifications, haptics, storage) while maintaining a single codebase and fast development velocity.
+We need to build a parakeet app for web and Android with native features (notifications, haptics, storage) while maintaining a single codebase and fast development velocity.
 
 ## Decision
 
@@ -21,7 +21,7 @@ Key components:
 
 ### Pros
 
-- Single codebase for iOS, Android, and potentially web
+- Single codebase for Android and web
 - Fast development with hot reload and excellent DX
 - No native code required for most features
 - OTA updates for quick bug fixes
@@ -71,7 +71,6 @@ Key components:
 
 ```bash
 npm start        # Start dev server
-npm run ios      # iOS simulator
 npm run android  # Android emulator
 ```
 

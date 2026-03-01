@@ -1,24 +1,23 @@
-import {
-  suggestProgramAdjustments,
-  getDefaultThresholds,
-  isMakeupWindowExpired,
-} from '@parakeet/training-engine';
-import type {
-  SessionLogSummary,
-  CompletedSetLog,
-  SessionRef,
-} from '@parakeet/training-engine';
 import type { Lift } from '@parakeet/shared-types';
 import { LiftSchema } from '@parakeet/shared-types';
-
+import {
+  getDefaultThresholds,
+  isMakeupWindowExpired,
+  suggestProgramAdjustments,
+} from '@parakeet/training-engine';
+import type {
+  CompletedSetLog,
+  SessionLogSummary,
+  SessionRef,
+} from '@parakeet/training-engine';
 import {
   fetchCompletedSessions,
   fetchCurrentWeekLogs,
   fetchLastCompletedAtForLift,
   fetchOverdueScheduledSessions,
   fetchProfileSex,
-  fetchProgramSessionStatuses,
   fetchProgramSessionsForMakeup,
+  fetchProgramSessionStatuses,
   fetchRecentLogsForLift,
   fetchSessionById,
   fetchSessionCompletionContext,
@@ -33,8 +32,8 @@ import {
   updateSessionToSkipped,
 } from '../data/session.repository';
 import type {
-  CompleteSessionInput,
   CompletedSessionListItem,
+  CompleteSessionInput,
   SessionCompletionContext,
 } from '../types/domain';
 
@@ -46,8 +45,7 @@ export type {
 
 // Today's session: nearest upcoming session not yet completed/skipped
 export async function findTodaySession(userId: string) {
-  const today = new Date().toISOString().split('T')[0];
-  return fetchTodaySession(userId, today);
+  return fetchTodaySession(userId);
 }
 
 // Full session detail
@@ -56,17 +54,22 @@ export async function getSession(sessionId: string) {
 }
 
 export async function getSessionCompletionContext(
-  sessionId: string,
+  sessionId: string
 ): Promise<SessionCompletionContext> {
   const data = await fetchSessionCompletionContext(sessionId);
   return {
-    primaryLift: data?.primary_lift ? LiftSchema.parse(data.primary_lift) : null,
+    primaryLift: data?.primary_lift
+      ? LiftSchema.parse(data.primary_lift)
+      : null,
     programId: data?.program_id ?? null,
   };
 }
 
 // All sessions for a given week of a program
-export async function getSessionsForWeek(programId: string, weekNumber: number) {
+export async function getSessionsForWeek(
+  programId: string,
+  weekNumber: number
+) {
   return fetchSessionsForWeek(programId, weekNumber);
 }
 
@@ -74,12 +77,15 @@ export async function getSessionsForWeek(programId: string, weekNumber: number) 
 export async function getCompletedSessions(
   userId: string,
   page: number,
-  pageSize = 20,
+  pageSize = 20
 ): Promise<CompletedSessionListItem[]> {
   return fetchCompletedSessions(userId, page, pageSize);
 }
 
-export async function getProgramCompletionCounts(programId: string, userId: string): Promise<{
+export async function getProgramCompletionCounts(
+  programId: string,
+  userId: string
+): Promise<{
   total: number;
   completed: number;
   skipped: number;
@@ -106,7 +112,10 @@ export async function startSession(sessionId: string): Promise<void> {
 }
 
 // Skip a session (planned or in_progress → skipped)
-export async function skipSession(sessionId: string, reason?: string): Promise<void> {
+export async function skipSession(
+  sessionId: string,
+  reason?: string
+): Promise<void> {
   await updateSessionToSkipped(sessionId, reason);
 }
 
@@ -114,9 +123,10 @@ export async function skipSession(sessionId: string, reason?: string): Promise<v
 export async function completeSession(
   sessionId: string,
   userId: string,
-  input: CompleteSessionInput,
+  input: CompleteSessionInput
 ): Promise<void> {
-  const { actualSets, auxiliarySets, sessionRpe, startedAt, completedAt } = input;
+  const { actualSets, auxiliarySets, sessionRpe, startedAt, completedAt } =
+    input;
   if (actualSets.length === 0) {
     throw new Error('At least one set is required');
   }
@@ -133,26 +143,62 @@ export async function completeSession(
     }
     if (
       set.rpe_actual !== undefined &&
-      (!Number.isFinite(set.rpe_actual) || set.rpe_actual < 6 || set.rpe_actual > 10)
+      (!Number.isFinite(set.rpe_actual) ||
+        set.rpe_actual < 6 ||
+        set.rpe_actual > 10)
     ) {
       throw new Error('Invalid RPE value');
     }
-    return set;
+    return { ...set, is_completed: set.is_completed === true };
+  });
+  const normalizedAuxiliarySets = auxiliarySets?.map((set) => {
+    if (!Number.isInteger(set.set_number) || set.set_number <= 0) {
+      throw new Error('Invalid auxiliary set number');
+    }
+    if (!Number.isFinite(set.weight_grams) || set.weight_grams < 0) {
+      throw new Error('Invalid auxiliary set weight');
+    }
+    if (!Number.isInteger(set.reps_completed) || set.reps_completed < 0) {
+      throw new Error('Invalid auxiliary reps completed');
+    }
+    if (
+      set.rpe_actual !== undefined &&
+      (!Number.isFinite(set.rpe_actual) ||
+        set.rpe_actual < 6 ||
+        set.rpe_actual > 10)
+    ) {
+      throw new Error('Invalid auxiliary RPE value');
+    }
+    return { ...set, is_completed: set.is_completed === true };
   });
 
   const session = await getSession(sessionId);
   const plannedCountRaw =
-    (Array.isArray(session?.planned_sets) ? session.planned_sets.length : null) ?? normalizedSets.length;
-  const plannedCount = plannedCountRaw > 0 ? plannedCountRaw : normalizedSets.length;
-  const completionPct =
-    (normalizedSets.filter((s) => s.reps_completed > 0).length / plannedCount) * 100;
-  const performanceVsPlan = classifyPerformance(normalizedSets, completionPct);
+    (Array.isArray(session?.planned_sets)
+      ? session.planned_sets.length
+      : null) ?? normalizedSets.length;
+  const plannedCount =
+    plannedCountRaw > 0 ? plannedCountRaw : normalizedSets.length;
+  const completedCount = normalizedSets.filter((s) => s.is_completed).length;
+  const completionPct = (completedCount / plannedCount) * 100;
+  const performanceVsPlan = classifyPerformance(
+    completedCount,
+    plannedCount,
+    completionPct
+  );
+
+  const setsForLog = normalizedSets.map(
+    ({ is_completed: _isCompleted, ...set }) => set
+  );
+  const auxiliarySetsForLog = normalizedAuxiliarySets?.map(
+    ({ is_completed: _isCompleted, ...set }) => set
+  );
 
   const sessionLogId = await insertSessionLog({
     sessionId,
     userId,
-    actualSets: normalizedSets,
-    auxiliarySets,
+    actualSets: setsForLog,
+    auxiliarySets: auxiliarySetsForLog,
     sessionRpe,
     completionPct,
     performanceVsPlan,
@@ -166,10 +212,13 @@ export async function completeSession(
     const recentLogs = await getRecentLogsForLift(
       userId,
       LiftSchema.parse(session.primary_lift),
-      6,
+      6
     );
     const biologicalSex = await fetchProfileSex(userId);
-    const suggestions = suggestProgramAdjustments(recentLogs, getDefaultThresholds(biologicalSex));
+    const suggestions = suggestProgramAdjustments(
+      recentLogs,
+      getDefaultThresholds(biologicalSex)
+    );
 
     if (suggestions.length > 0) {
       await insertPerformanceMetric({
@@ -186,7 +235,10 @@ export async function completeSession(
 
   // Check if program has reached ≥80% completion → trigger async cycle review
   if (session?.program_id) {
-    const statuses = await fetchProgramSessionStatuses(session.program_id, userId);
+    const statuses = await fetchProgramSessionStatuses(
+      session.program_id,
+      userId
+    );
     const total = statuses.length;
     const completed = statuses.filter((s) => s.status === 'completed').length;
     if (total > 0 && completed / total >= 0.8) {
@@ -197,7 +249,9 @@ export async function completeSession(
 }
 
 // Session logs for the current calendar week (Sun–Sat)
-export async function getCurrentWeekLogs(userId: string): Promise<CompletedSetLog[]> {
+export async function getCurrentWeekLogs(
+  userId: string
+): Promise<CompletedSetLog[]> {
   const now = new Date();
   const startOfWeek = new Date(now);
   startOfWeek.setDate(now.getDate() - now.getDay());
@@ -208,12 +262,14 @@ export async function getCurrentWeekLogs(userId: string): Promise<CompletedSetLo
   const rows = await fetchCurrentWeekLogs(
     userId,
     startOfWeek.toISOString(),
-    endOfWeek.toISOString(),
+    endOfWeek.toISOString()
   );
 
   return rows.map((row) => {
     const sets = row.actual_sets;
-    const completedSets = sets.filter((s) => (s.reps_completed ?? 0) > 0).length;
+    const completedSets = sets.filter(
+      (s) => (s.reps_completed ?? 0) > 0
+    ).length;
     return {
       lift: row.primary_lift,
       completedSets: completedSets || sets.length,
@@ -275,7 +331,7 @@ export async function markMissedSessions(userId: string): Promise<void> {
 // Returns null when no completed session exists (first-time lifter or no history).
 export async function getDaysSinceLastSession(
   userId: string,
-  lift: Lift,
+  lift: Lift
 ): Promise<number | null> {
   const data = await fetchLastCompletedAtForLift(userId, lift);
   if (!data?.completed_at) return null;
@@ -291,22 +347,22 @@ export async function getDaysSinceLastSession(
 type PerformanceVsPlan = 'over' | 'at' | 'under' | 'incomplete';
 
 function classifyPerformance(
-  actualSets: CompleteSessionInput['actualSets'],
-  completionPct: number,
+  completedCount: number,
+  plannedCount: number,
+  completionPct: number
 ): PerformanceVsPlan {
-  void actualSets;
   if (completionPct < 50) return 'incomplete';
   if (completionPct < 90) return 'under';
-  // "over" means avg actual > planned by >10% — without knowing planned reps per set,
-  // we use completion_pct > 110 as a proxy (set count exceeded plan)
-  if (completionPct > 110) return 'over';
+  // With explicit completion flags and planned denominator, completion > 110%
+  // means confirmed completed sets exceeded planned set count.
+  if (plannedCount > 0 && completedCount / plannedCount > 1.1) return 'over';
   return 'at';
 }
 
 async function getRecentLogsForLift(
   userId: string,
   lift: Lift,
-  limit: number,
+  limit: number
 ): Promise<SessionLogSummary[]> {
   const rows = await fetchRecentLogsForLift(userId, lift, limit);
 

@@ -1,47 +1,49 @@
-import { create } from 'zustand'
-import { persist, createJSONStorage } from 'zustand/middleware'
-import AsyncStorage from '@react-native-async-storage/async-storage'
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { create } from 'zustand';
+import { createJSONStorage, persist } from 'zustand/middleware';
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
 export interface CompleteSessionPayload {
-  sessionId: string
-  userId: string
+  sessionId: string;
+  userId: string;
   actualSets: {
-    set_number: number
-    weight_grams: number
-    reps_completed: number
-    rpe_actual?: number
-    actual_rest_seconds?: number
-    notes?: string
-  }[]
+    set_number: number;
+    weight_grams: number;
+    reps_completed: number;
+    is_completed: boolean;
+    rpe_actual?: number;
+    actual_rest_seconds?: number;
+    notes?: string;
+  }[];
   auxiliarySets?: {
-    exercise: string
-    set_number: number
-    weight_grams: number
-    reps_completed: number
-    rpe_actual?: number
-    actual_rest_seconds?: number
-  }[]
-  sessionRpe?: number
-  startedAt?: string  // ISO string
+    exercise: string;
+    set_number: number;
+    weight_grams: number;
+    reps_completed: number;
+    is_completed: boolean;
+    rpe_actual?: number;
+    actual_rest_seconds?: number;
+  }[];
+  sessionRpe?: number;
+  startedAt?: string; // ISO string
 }
 
 export interface PendingOperation {
-  id: string
-  operation: 'complete_session' | 'skip_session'
-  payload: CompleteSessionPayload
-  createdAt: string
-  retryCount: number
+  id: string;
+  operation: 'complete_session' | 'skip_session';
+  payload: CompleteSessionPayload;
+  createdAt: string;
+  retryCount: number;
 }
 
 // ── Store ────────────────────────────────────────────────────────────────────
 
 interface SyncState {
-  queue: PendingOperation[]
-  enqueue: (op: Pick<PendingOperation, 'operation' | 'payload'>) => void
-  dequeue: (id: string) => void
-  incrementRetry: (id: string) => void
+  queue: PendingOperation[];
+  enqueue: (op: Pick<PendingOperation, 'operation' | 'payload'>) => void;
+  dequeue: (id: string) => void;
+  incrementRetry: (id: string) => void;
 }
 
 export const useSyncStore = create<SyncState>()(
@@ -49,31 +51,34 @@ export const useSyncStore = create<SyncState>()(
     (set) => ({
       queue: [],
 
-      enqueue: (op) => set((state) => ({
-        queue: [
-          ...state.queue,
-          {
-            ...op,
-            id: `${Date.now()}-${Math.random().toString(36).slice(2)}`,
-            createdAt: new Date().toISOString(),
-            retryCount: 0,
-          },
-        ],
-      })),
+      enqueue: (op) =>
+        set((state) => ({
+          queue: [
+            ...state.queue,
+            {
+              ...op,
+              id: `${Date.now()}-${Math.random().toString(36).slice(2)}`,
+              createdAt: new Date().toISOString(),
+              retryCount: 0,
+            },
+          ],
+        })),
 
-      dequeue: (id) => set((state) => ({
-        queue: state.queue.filter((op) => op.id !== id),
-      })),
+      dequeue: (id) =>
+        set((state) => ({
+          queue: state.queue.filter((op) => op.id !== id),
+        })),
 
-      incrementRetry: (id) => set((state) => ({
-        queue: state.queue.map((op) =>
-          op.id === id ? { ...op, retryCount: op.retryCount + 1 } : op
-        ),
-      })),
+      incrementRetry: (id) =>
+        set((state) => ({
+          queue: state.queue.map((op) =>
+            op.id === id ? { ...op, retryCount: op.retryCount + 1 } : op
+          ),
+        })),
     }),
     {
       name: 'parakeet-sync-queue',
       storage: createJSONStorage(() => AsyncStorage),
     }
   )
-)
+);
