@@ -1,5 +1,4 @@
-import { useState } from 'react'
-import { useQuery } from '@tanstack/react-query'
+import { useState } from 'react';
 import {
   ActivityIndicator,
   ScrollView,
@@ -8,112 +7,148 @@ import {
   TouchableOpacity,
   useWindowDimensions,
   View,
-} from 'react-native'
-import { SafeAreaView } from 'react-native-safe-area-context'
-import { useLocalSearchParams, router } from 'expo-router'
-import { LineChart } from 'react-native-chart-kit'
-import { estimateOneRepMax_Epley, gramsToKg } from '@parakeet/training-engine'
-
-import { useAuth } from '../../../hooks/useAuth'
-import { getPerformanceByLift } from '../../../lib/performance'
-import { getPerformanceTrends } from '../../../lib/performance'
-import { colors, palette, spacing, radii, typography } from '../../../theme'
-import { formatDate } from '../../../utils/date'
-
-import type { Lift } from '@parakeet/shared-types'
+} from 'react-native';
+import type { Lift } from '@parakeet/shared-types';
+import { estimateOneRepMax_Epley, gramsToKg } from '@parakeet/training-engine';
+import { useQuery } from '@tanstack/react-query';
+import { router, useLocalSearchParams } from 'expo-router';
+import { LineChart } from 'react-native-chart-kit';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { useAuth } from '../../../hooks/useAuth';
+import {
+  getPerformanceByLift,
+  getPerformanceTrends,
+} from '../../../lib/performance';
+import { colors, palette, radii, spacing, typography } from '../../../theme';
+import { formatDate } from '../../../utils/date';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
-type IntensityFilter = 'all' | 'heavy' | 'explosive' | 'rep' | 'deload'
+type IntensityFilter = 'all' | 'heavy' | 'explosive' | 'rep' | 'deload';
 
-const LIFT_LABELS: Record<Lift, string> = { squat: 'Squat', bench: 'Bench', deadlift: 'Deadlift' }
+const LIFT_LABELS: Record<Lift, string> = {
+  squat: 'Squat',
+  bench: 'Bench',
+  deadlift: 'Deadlift',
+};
 const LIFT_COLORS: Record<Lift, string> = {
-  squat:    palette.lime400,
-  bench:    palette.orange500,
+  squat: palette.lime400,
+  bench: palette.orange500,
   deadlift: palette.teal400,
-}
+};
 const INTENSITY_LABELS: Record<string, string> = {
-  heavy: 'Heavy', explosive: 'Explosive', rep: 'Rep', deload: 'Deload',
-}
-const INTENSITY_FILTERS: IntensityFilter[] = ['all', 'heavy', 'explosive', 'rep', 'deload']
+  heavy: 'Heavy',
+  explosive: 'Explosive',
+  rep: 'Rep',
+  deload: 'Deload',
+};
+const INTENSITY_FILTERS: IntensityFilter[] = [
+  'all',
+  'heavy',
+  'explosive',
+  'rep',
+  'deload',
+];
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 function estimateBestOneRm(actualSets: unknown): number {
-  if (!Array.isArray(actualSets) || actualSets.length === 0) return 0
-  let best = 0
-  for (const s of actualSets as { weight_grams?: number; reps_completed?: number }[]) {
-    if (!s.weight_grams || !s.reps_completed || s.reps_completed <= 0) continue
-    const est = estimateOneRepMax_Epley(gramsToKg(s.weight_grams), s.reps_completed)
-    if (est > best) best = est
+  if (!Array.isArray(actualSets) || actualSets.length === 0) return 0;
+  let best = 0;
+  for (const s of actualSets as {
+    weight_grams?: number;
+    reps_completed?: number;
+  }[]) {
+    if (!s.weight_grams || !s.reps_completed || s.reps_completed <= 0) continue;
+    const est = estimateOneRepMax_Epley(
+      gramsToKg(s.weight_grams),
+      s.reps_completed
+    );
+    if (est > best) best = est;
   }
-  return best
+  return best;
 }
 
 function getSessionJoin(sessions: unknown): { intensity_type?: string } | null {
-  if (!sessions) return null
-  return (Array.isArray(sessions) ? sessions[0] : sessions) as { intensity_type?: string } | null
+  if (!sessions) return null;
+  return (Array.isArray(sessions) ? sessions[0] : sessions) as {
+    intensity_type?: string;
+  } | null;
 }
 
 // ── Screen ────────────────────────────────────────────────────────────────────
 
 export default function LiftHistoryScreen() {
-  const { lift } = useLocalSearchParams<{ lift: string }>()
-  const { user } = useAuth()
-  const { width } = useWindowDimensions()
-  const chartWidth = width - spacing[6] * 2 - spacing[4] * 2
+  const { lift } = useLocalSearchParams<{ lift: string }>();
+  const { user } = useAuth();
+  const { width } = useWindowDimensions();
+  const chartWidth = width - spacing[6] * 2 - spacing[4] * 2;
 
-  const [intensityFilter, setIntensityFilter] = useState<IntensityFilter>('all')
+  const [intensityFilter, setIntensityFilter] =
+    useState<IntensityFilter>('all');
 
   const historyQuery = useQuery({
     queryKey: ['performance', 'lift', lift, user?.id],
     queryFn: () => getPerformanceByLift(user!.id, lift as Lift),
     enabled: !!user?.id && !!lift,
-  })
+  });
 
   const trendsQuery = useQuery({
     queryKey: ['performance', 'trends', user?.id],
     queryFn: () => getPerformanceTrends(user!.id),
     enabled: !!user?.id,
     staleTime: 60_000,
-  })
+  });
 
-  const liftLabel = LIFT_LABELS[lift as Lift] ?? lift
-  const liftColor = LIFT_COLORS[lift as Lift] ?? palette.lime400
+  const liftLabel = LIFT_LABELS[lift as Lift] ?? lift;
+  const liftColor = LIFT_COLORS[lift as Lift] ?? palette.lime400;
 
-  const currentOneRm = trendsQuery.data?.find(t => t.lift === lift)?.estimatedOneRmKg
+  const currentOneRm = trendsQuery.data?.find(
+    (t) => t.lift === lift
+  )?.estimatedOneRmKg;
 
-  const rows = historyQuery.data ?? []
+  const rows = historyQuery.data ?? [];
 
   // Build chart data (oldest → newest, non-zero 1RM only)
   const chartEntries = [...rows]
     .reverse()
-    .map(row => ({
+    .map((row) => ({
       date: row.completed_at,
       oneRm: estimateBestOneRm(row.actual_sets),
     }))
-    .filter(e => e.date && e.oneRm > 0)
+    .filter((e) => e.date && e.oneRm > 0);
 
-  const labelStep = Math.max(1, Math.ceil(chartEntries.length / 6))
-  const chartData = chartEntries.length >= 2
-    ? {
-        labels: chartEntries.map((e, i) => {
-          if (i % labelStep !== 0) return ''
-          const d = new Date(e.date!)
-          return `${d.getMonth() + 1}/${d.getDate()}`
-        }),
-        datasets: [{
-          data: chartEntries.map(e => parseFloat(e.oneRm.toFixed(1))),
-          color: (opacity = 1) => liftColor + Math.round(opacity * 255).toString(16).padStart(2, '0'),
-          strokeWidth: 2,
-        }],
-      }
-    : null
+  const labelStep = Math.max(1, Math.ceil(chartEntries.length / 6));
+  const chartData =
+    chartEntries.length >= 2
+      ? {
+          labels: chartEntries.map((e, i) => {
+            if (i % labelStep !== 0) return '';
+            const d = new Date(e.date!);
+            return `${d.getMonth() + 1}/${d.getDate()}`;
+          }),
+          datasets: [
+            {
+              data: chartEntries.map((e) => parseFloat(e.oneRm.toFixed(1))),
+              color: (opacity = 1) =>
+                liftColor +
+                Math.round(opacity * 255)
+                  .toString(16)
+                  .padStart(2, '0'),
+              strokeWidth: 2,
+            },
+          ],
+        }
+      : null;
 
   // Session list filtered by intensity
-  const filteredRows = intensityFilter === 'all'
-    ? rows
-    : rows.filter(row => getSessionJoin(row.sessions)?.intensity_type === intensityFilter)
+  const filteredRows =
+    intensityFilter === 'all'
+      ? rows
+      : rows.filter(
+          (row) =>
+            getSessionJoin(row.sessions)?.intensity_type === intensityFilter
+        );
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -123,7 +158,11 @@ export default function LiftHistoryScreen() {
         showsVerticalScrollIndicator={false}
       >
         {/* Header */}
-        <TouchableOpacity style={styles.backButton} onPress={() => router.back()} activeOpacity={0.7}>
+        <TouchableOpacity
+          style={styles.backButton}
+          onPress={() => router.back()}
+          activeOpacity={0.7}
+        >
           <Text style={styles.backText}>← History</Text>
         </TouchableOpacity>
 
@@ -131,7 +170,9 @@ export default function LiftHistoryScreen() {
           <Text style={styles.liftTitle}>{liftLabel}</Text>
           {currentOneRm != null && (
             <View style={styles.oneRmBadge}>
-              <Text style={styles.oneRmBadgeText}>{currentOneRm.toFixed(1)} kg</Text>
+              <Text style={styles.oneRmBadgeText}>
+                {currentOneRm.toFixed(1)} kg
+              </Text>
             </View>
           )}
         </View>
@@ -155,38 +196,51 @@ export default function LiftHistoryScreen() {
               chartConfig={{
                 backgroundGradientFrom: colors.bgSurface,
                 backgroundGradientTo: colors.bgSurface,
-                color: (opacity = 1) => liftColor + Math.round(opacity * 255).toString(16).padStart(2, '0'),
+                color: (opacity = 1) =>
+                  liftColor +
+                  Math.round(opacity * 255)
+                    .toString(16)
+                    .padStart(2, '0'),
                 labelColor: () => colors.textTertiary,
                 strokeWidth: 2,
-                dotColor: liftColor,
-                propsForDots: { r: '3', fill: liftColor },
+                propsForDots: { r: '3', fill: liftColor, stroke: liftColor },
                 propsForBackgroundLines: {
                   stroke: colors.border,
                   strokeDasharray: '',
                 },
               }}
               style={{ borderRadius: radii.sm }}
-              formatYLabel={v => `${v}`}
+              formatYLabel={(v) => `${v}`}
               yAxisSuffix=" kg"
             />
           </View>
         ) : (
           <Text style={styles.emptyText}>
-            {rows.length === 0 ? 'No sessions logged yet.' : 'Not enough data to plot.'}
+            {rows.length === 0
+              ? 'No sessions logged yet.'
+              : 'Not enough data to plot.'}
           </Text>
         )}
 
         {/* Intensity filter chips */}
         <Text style={styles.sectionHeader}>Sessions</Text>
         <View style={styles.filterRow}>
-          {INTENSITY_FILTERS.map(f => (
+          {INTENSITY_FILTERS.map((f) => (
             <TouchableOpacity
               key={f}
-              style={[styles.filterChip, intensityFilter === f && styles.filterChipActive]}
+              style={[
+                styles.filterChip,
+                intensityFilter === f && styles.filterChipActive,
+              ]}
               onPress={() => setIntensityFilter(f)}
               activeOpacity={0.7}
             >
-              <Text style={[styles.filterChipText, intensityFilter === f && styles.filterChipTextActive]}>
+              <Text
+                style={[
+                  styles.filterChipText,
+                  intensityFilter === f && styles.filterChipTextActive,
+                ]}
+              >
                 {f === 'all' ? 'All' : INTENSITY_LABELS[f]}
               </Text>
             </TouchableOpacity>
@@ -196,28 +250,39 @@ export default function LiftHistoryScreen() {
         {/* Session list */}
         {filteredRows.length > 0 ? (
           <View>
-            {filteredRows.map(row => {
-              const sess = getSessionJoin(row.sessions)
-              const intensityName = INTENSITY_LABELS[sess?.intensity_type ?? ''] ?? sess?.intensity_type ?? '—'
-              const oneRm = estimateBestOneRm(row.actual_sets)
+            {filteredRows.map((row) => {
+              const sess = getSessionJoin(row.sessions);
+              const intensityName =
+                INTENSITY_LABELS[sess?.intensity_type ?? ''] ??
+                sess?.intensity_type ??
+                '—';
+              const oneRm = estimateBestOneRm(row.actual_sets);
               return (
                 <View key={row.id} style={styles.sessionRow}>
                   <View style={styles.sessionLeft}>
-                    <Text style={styles.sessionDate}>{formatDate(row.completed_at ?? '')}</Text>
+                    <Text style={styles.sessionDate}>
+                      {formatDate(row.completed_at ?? '')}
+                    </Text>
                     <View style={styles.intensityBadge}>
-                      <Text style={styles.intensityBadgeText}>{intensityName}</Text>
+                      <Text style={styles.intensityBadgeText}>
+                        {intensityName}
+                      </Text>
                     </View>
                   </View>
                   <View style={styles.sessionRight}>
                     {oneRm > 0 && (
-                      <Text style={styles.sessionOneRm}>{oneRm.toFixed(1)} kg</Text>
+                      <Text style={styles.sessionOneRm}>
+                        {oneRm.toFixed(1)} kg
+                      </Text>
                     )}
                     {row.session_rpe != null && (
-                      <Text style={styles.sessionRpe}>RPE {row.session_rpe}</Text>
+                      <Text style={styles.sessionRpe}>
+                        RPE {row.session_rpe}
+                      </Text>
                     )}
                   </View>
                 </View>
-              )
+              );
             })}
           </View>
         ) : (
@@ -225,13 +290,13 @@ export default function LiftHistoryScreen() {
         )}
       </ScrollView>
     </SafeAreaView>
-  )
+  );
 }
 
 // ── Styles ────────────────────────────────────────────────────────────────────
 
 const styles = StyleSheet.create({
-  safeArea:   { flex: 1, backgroundColor: colors.bg },
+  safeArea: { flex: 1, backgroundColor: colors.bg },
   scrollView: { flex: 1 },
   container: {
     paddingHorizontal: spacing[6],
@@ -297,7 +362,12 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
   },
   // Intensity filter chips
-  filterRow: { flexDirection: 'row', gap: spacing[2], marginBottom: spacing[3], flexWrap: 'wrap' },
+  filterRow: {
+    flexDirection: 'row',
+    gap: spacing[2],
+    marginBottom: spacing[3],
+    flexWrap: 'wrap',
+  },
   filterChip: {
     borderWidth: 1,
     borderColor: colors.border,
@@ -306,13 +376,19 @@ const styles = StyleSheet.create({
     paddingVertical: spacing[1.5],
     backgroundColor: colors.bgSurface,
   },
-  filterChipActive: { borderColor: colors.primary, backgroundColor: colors.primaryMuted },
+  filterChipActive: {
+    borderColor: colors.primary,
+    backgroundColor: colors.primaryMuted,
+  },
   filterChipText: {
     fontSize: typography.sizes.sm,
     fontWeight: typography.weights.medium,
     color: colors.textSecondary,
   },
-  filterChipTextActive: { color: colors.primary, fontWeight: typography.weights.bold },
+  filterChipTextActive: {
+    color: colors.primary,
+    fontWeight: typography.weights.bold,
+  },
   // Session rows
   sessionRow: {
     flexDirection: 'row',
@@ -322,7 +398,12 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: colors.borderMuted,
   },
-  sessionLeft: { flexDirection: 'row', alignItems: 'center', gap: spacing[2], flex: 1 },
+  sessionLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing[2],
+    flex: 1,
+  },
   sessionDate: {
     fontSize: typography.sizes.sm,
     color: colors.textSecondary,
@@ -355,4 +436,4 @@ const styles = StyleSheet.create({
     color: colors.textTertiary,
     marginBottom: spacing[8],
   },
-})
+});
