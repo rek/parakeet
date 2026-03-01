@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { DEFAULT_FORMULA_CONFIG_MALE } from '../../cube/blocks'
 import type { MrvMevConfig, MuscleGroup } from '../../types'
 import type { JITInput } from '../jit-session-generator'
-import type { JITAdjustment } from '@parakeet/shared-types'
+import type { JITAdjustment, PlannedSet } from '@parakeet/shared-types'
 import { HybridJITGenerator, computeDivergence } from '../hybrid-jit-generator'
 import { LLMJITGenerator, applyAdjustment } from '../llm-jit-generator'
 import { FormulaJITGenerator } from '../formula-jit-generator'
@@ -85,7 +85,7 @@ describe('computeDivergence', () => {
         { set_number: 1, weight_kg: 100, reps: 5, rpe_target: 8 },
         { set_number: 2, weight_kg: 100, reps: 5, rpe_target: 8 },
       ],
-      rationale: [],
+      rationale: [] as string[],
     } as Parameters<typeof computeDivergence>[0]
 
     const llm = {
@@ -100,10 +100,10 @@ describe('computeDivergence', () => {
   })
 
   it('returns weightPct 0 when formula has no sets', () => {
-    const formula = { mainLiftSets: [], rationale: [] } as Parameters<typeof computeDivergence>[0]
+    const formula = { mainLiftSets: [] as PlannedSet[], rationale: [] as string[] } as Parameters<typeof computeDivergence>[0]
     const llm = {
       mainLiftSets: [{ set_number: 1, weight_kg: 100, reps: 5, rpe_target: 8 }],
-      rationale: [],
+      rationale: [] as string[],
     } as Parameters<typeof computeDivergence>[0]
 
     const result = computeDivergence(formula, llm)
