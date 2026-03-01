@@ -19,6 +19,7 @@ import { computeCyclePhase } from '@parakeet/training-engine'
 import { BackLink } from '../../components/navigation/BackLink'
 import { colors, spacing, radii, typography } from '../../theme'
 import { qk } from '../../queries/keys'
+import { formatDate } from '../../utils/date'
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
@@ -44,13 +45,6 @@ const PHASE_LABELS: Record<string, string> = {
   ovulatory:   'Ovulatory',
   luteal:      'Luteal',
   late_luteal: 'Late Luteal',
-}
-
-const MONTH_NAMES = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
-
-function formatDate(iso: string): string {
-  const d = new Date(iso)
-  return `${MONTH_NAMES[d.getUTCMonth()]} ${d.getUTCDate()}, ${d.getUTCFullYear()}`
 }
 
 // ── Phase calendar helpers ────────────────────────────────────────────────────

@@ -206,6 +206,7 @@ export default function RestTimerSettingsScreen() {
     audioAlert: true,
     hapticAlert: true,
     llmSuggestions: true,
+    backgroundRestNotification: false,
   })
   const [resetting, setResetting] = useState(false)
 
@@ -377,6 +378,18 @@ export default function RestTimerSettingsScreen() {
                 />
               </View>
               <Text style={styles.toggleSubtext}>Requires AI workout generation</Text>
+            </View>
+            <View style={styles.separator} />
+            <View>
+              <View style={styles.toggleRow}>
+                <Text style={styles.toggleLabel}>Background rest notification</Text>
+                <Switch
+                  value={prefs.backgroundRestNotification}
+                  onValueChange={(v) => handleTogglePref('backgroundRestNotification', v)}
+                  trackColor={{ true: colors.primary }}
+                />
+              </View>
+              <Text style={styles.toggleSubtext}>Notifies when rest ends while app is backgrounded</Text>
             </View>
           </View>
 

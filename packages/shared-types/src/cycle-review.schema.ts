@@ -34,10 +34,11 @@ const StructuralSuggestionSchema = z.object({
 
 export const CycleReviewSchema = z.object({
   overallAssessment: z.string().max(500),
-  progressByLift: z.record(
-    z.enum(['squat', 'bench', 'deadlift']),
-    LiftProgressSchema,
-  ),
+  progressByLift: z.object({
+    squat: LiftProgressSchema,
+    bench: LiftProgressSchema,
+    deadlift: LiftProgressSchema,
+  }),
   auxiliaryInsights: z.object({
     mostCorrelated: z.array(CorrelatedExerciseSchema),
     leastEffective: z.array(CorrelatedExerciseSchema),

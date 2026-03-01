@@ -27,6 +27,7 @@
       "typedRoutes": true
     },
     "plugins": [
+      "expo-notifications",
       [
         "expo-splash-screen",
         {

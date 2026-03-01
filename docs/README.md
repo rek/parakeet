@@ -38,7 +38,7 @@ We follow a two-tier documentation approach:
 
 - Specific implementation tasks (with checklist for done)
 - Technical dependencies
-- Code-level details
+- Minimal Code-level details only if required
 - Progress tracking
 - Task relationships
 

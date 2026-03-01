@@ -28,12 +28,14 @@ export interface RestTimerPrefs {
   audioAlert: boolean
   hapticAlert: boolean
   llmSuggestions: boolean
+  backgroundRestNotification: boolean
 }
 
 const DEFAULT_REST_TIMER_PREFS: RestTimerPrefs = {
   audioAlert: true,
   hapticAlert: true,
   llmSuggestions: true,
+  backgroundRestNotification: false,
 }
 
 export async function getRestTimerPrefs(): Promise<RestTimerPrefs> {

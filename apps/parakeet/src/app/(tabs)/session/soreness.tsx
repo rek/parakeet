@@ -11,12 +11,12 @@ import {
 import { router, useLocalSearchParams } from 'expo-router'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
-import { captureException } from '../../utils/captureException'
-import { getLatestSorenessCheckin, getSession, recordSorenessCheckin } from '../../lib/sessions'
-import { runJITForSession } from '../../lib/jit'
-import { useAuth } from '../../hooks/useAuth'
-import { colors } from '../../theme'
-import { BackLink } from '../../components/navigation/BackLink'
+import { captureException } from '../../../utils/captureException'
+import { getLatestSorenessCheckin, getSession, recordSorenessCheckin } from '../../../lib/sessions'
+import { runJITForSession } from '../../../lib/jit'
+import { useAuth } from '../../../hooks/useAuth'
+import { colors } from '../../../theme'
+import { BackLink } from '../../../components/navigation/BackLink'
 
 // ── Types ────────────────────────────────────────────────────────────────────
 

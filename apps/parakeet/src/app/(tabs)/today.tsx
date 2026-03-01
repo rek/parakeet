@@ -2,7 +2,6 @@ import { router } from 'expo-router'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import {
   ActivityIndicator,
-  Alert,
   ScrollView,
   StyleSheet,
   Text,
@@ -13,74 +12,16 @@ import { SafeAreaView } from 'react-native-safe-area-context'
 
 import { WorkoutCard } from '../../components/training/WorkoutCard'
 import { StreakPill } from '../../components/achievements/StreakPill'
+import { DisruptionChipsRow } from '../../components/disruption/DisruptionChipsRow'
 import { useAuth } from '../../hooks/useAuth'
 import { useActiveProgram } from '../../hooks/useActiveProgram'
 import { useTodaySession } from '../../hooks/useTodaySession'
 import { useWeeklyVolume } from '../../hooks/useWeeklyVolume'
 import { useCyclePhase } from '../../hooks/useCyclePhase'
-import { captureException } from '../../utils/captureException'
-import { getActiveDisruptions, resolveDisruption } from '../../lib/disruptions'
+import { getActiveDisruptions } from '../../lib/disruptions'
 import { getStreakData } from '../../lib/achievements'
 import { colors, palette, spacing, radii, typography } from '../../theme'
 import type { MuscleGroup, VolumeStatus } from '@parakeet/training-engine'
-
-// ── Active disruptions banner ─────────────────────────────────────────────────
-
-interface ActiveDisruption {
-  id: string
-  disruption_type: string
-  severity: string
-}
-
-function ActiveDisruptionsBanner({
-  disruptions,
-  userId,
-  onResolved,
-}: {
-  disruptions: ActiveDisruption[]
-  userId: string
-  onResolved: () => void
-}) {
-  if (!disruptions.length) return null
-
-  function handleResolve(d: ActiveDisruption) {
-    Alert.alert(
-      `${d.disruption_type} (${d.severity})`,
-      'Mark this disruption as resolved?',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Mark Resolved',
-          onPress: async () => {
-            try {
-              await resolveDisruption(d.id, userId)
-              onResolved()
-            } catch (err) {
-              captureException(err)
-            }
-          },
-        },
-      ],
-    )
-  }
-
-  return (
-    <>
-      {disruptions.map((d) => (
-        <TouchableOpacity
-          key={d.id}
-          style={styles.disruptionBanner}
-          onPress={() => handleResolve(d)}
-          activeOpacity={0.75}
-        >
-          <Text style={styles.disruptionBannerText}>
-            ⚡ {d.disruption_type} ({d.severity}) — tap to resolve
-          </Text>
-        </TouchableOpacity>
-      ))}
-    </>
-  )
-}
 
 // ── Cycle phase constants ─────────────────────────────────────────────────────
 
@@ -270,7 +211,7 @@ export default function TodayScreen() {
             )}
 
             {disruptions && disruptions.length > 0 && (
-              <ActiveDisruptionsBanner
+              <DisruptionChipsRow
                 disruptions={disruptions}
                 userId={user!.id}
                 onResolved={() =>

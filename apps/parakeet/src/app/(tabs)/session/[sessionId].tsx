@@ -10,13 +10,14 @@ import {
 import { router, useFocusEffect, useLocalSearchParams } from 'expo-router'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
-import { getSession, startSession } from '../../lib/sessions'
-import { useSessionStore } from '../../store/sessionStore'
-import { useNetworkStatus } from '../../hooks/useNetworkStatus'
-import { WarmupSection } from '../../components/training/WarmupSection'
-import { SetRow } from '../../components/training/SetRow'
-import { RestTimer } from '../../components/training/RestTimer'
-import { colors } from '../../theme'
+import { getSession, startSession } from '../../../lib/sessions'
+import { useSessionStore } from '../../../store/sessionStore'
+import { useNetworkStatus } from '../../../hooks/useNetworkStatus'
+import { WarmupSection } from '../../../components/training/WarmupSection'
+import { SetRow } from '../../../components/training/SetRow'
+import { RestTimer } from '../../../components/training/RestTimer'
+import { LiftHistorySheet } from '../../../components/session/LiftHistorySheet'
+import { colors } from '../../../theme'
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -80,9 +81,10 @@ function formatExerciseName(name: string): string {
 // ── Screen ───────────────────────────────────────────────────────────────────
 
 export default function SessionScreen() {
-  const { sessionId, jitData } = useLocalSearchParams<{
+  const { sessionId, jitData, openHistory } = useLocalSearchParams<{
     sessionId: string
     jitData: string
+    openHistory?: string
   }>()
 
   const {
@@ -108,6 +110,12 @@ export default function SessionScreen() {
 
   const [warmupSetsState, setWarmupSetsState] = useState<WarmupSet[]>([])
   const [auxiliaryWork, setAuxiliaryWork] = useState<AuxiliaryWork[]>([])
+  const [historySheetVisible, setHistorySheetVisible] = useState(false)
+
+  // Auto-open history sheet when banner navigates back with openHistory param
+  useEffect(() => {
+    if (openHistory === '1') setHistorySheetVisible(true)
+  }, [openHistory])
 
   // Mirror plannedSets.length in a ref so stable callbacks see the current value
   const plannedSetsLengthRef = useRef(0)
@@ -439,6 +447,13 @@ export default function SessionScreen() {
           <Text style={styles.completeButtonText}>Complete Workout</Text>
         </TouchableOpacity>
       </View>
+
+      {/* Mini lift history sheet */}
+      <LiftHistorySheet
+        lift={sessionMeta?.primary_lift ?? ''}
+        visible={historySheetVisible}
+        onClose={() => setHistorySheetVisible(false)}
+      />
 
       {/* Rest timer modal */}
       <Modal

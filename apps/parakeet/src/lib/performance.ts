@@ -1,6 +1,9 @@
 import { estimateOneRepMax_Epley, gramsToKg } from '@parakeet/training-engine'
 import type { Lift } from '@parakeet/shared-types'
 import { supabase } from './supabase'
+import { processRecentHistory } from './performance-helpers'
+
+export type { LiftHistory, LiftHistoryEntry } from './performance-helpers'
 
 export interface PerformanceTrend {
   lift: Lift
@@ -131,4 +134,29 @@ function estimateHeaviestOneRm(actualSets: unknown): number {
 function average(nums: number[]): number {
   if (nums.length === 0) return 0
   return nums.reduce((a, b) => a + b, 0) / nums.length
+}
+
+// Lightweight recent-history query for the in-session mini history sheet
+export async function getRecentLiftHistory(
+  userId: string,
+  lift: Lift,
+  limit = 5,
+) {
+  const { data } = await supabase
+    .from('session_logs')
+    .select('completed_at, completion_pct, session_rpe, actual_sets, sessions!inner(primary_lift)')
+    .eq('user_id', userId)
+    .eq('sessions.primary_lift', lift)
+    .order('completed_at', { ascending: false })
+    .limit(limit)
+
+  return processRecentHistory(
+    (data ?? []).map((r) => ({
+      completed_at: r.completed_at ?? '',
+      actual_sets: r.actual_sets,
+      session_rpe: r.session_rpe ?? null,
+      completion_pct: r.completion_pct ?? null,
+      sessions: r.sessions,
+    })),
+  )
 }

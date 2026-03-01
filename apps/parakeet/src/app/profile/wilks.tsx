@@ -8,6 +8,7 @@ import { getWilksHistory } from '../../lib/achievements'
 import { getCurrentWilksSnapshot } from '../../services/wilks.service'
 import { colors } from '../../theme'
 import { BackLink } from '../../components/navigation/BackLink'
+import { formatDate } from '../../utils/date'
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -102,7 +103,7 @@ export default function WilksScreen() {
                   {historyQuery.data!.map((point) => (
                     <View key={point.cycleNumber} style={styles.historyRow}>
                       <Text style={styles.historyLabel}>Cycle {point.cycleNumber}</Text>
-                      <Text style={styles.historyDate}>{point.date}</Text>
+                      <Text style={styles.historyDate}>{formatDate(point.date)}</Text>
                       <Text style={styles.historyScore}>{point.wilksScore}</Text>
                     </View>
                   ))}

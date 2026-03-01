@@ -4,6 +4,7 @@ import { useAuth } from './useAuth'
 import { getCycleReview } from '../lib/cycle-review'
 import { qk } from '../queries/keys'
 import { onCycleReviewInserted } from '../services/cycle-review.service'
+import { captureException } from '../utils/captureException'
 
 export function useCycleReview(programId: string) {
   const { user } = useAuth()
@@ -13,9 +14,15 @@ export function useCycleReview(programId: string) {
     queryKey: qk.cycleReview.byProgram(programId, user?.id),
     queryFn: () => getCycleReview(programId, user!.id),
     enabled: !!user?.id && !!programId,
-    // Poll every 10s until data arrives, then stop
-    refetchInterval: (query) => (query.state.data ? false : 10_000),
+    // Poll every 10s until data arrives. Stop polling if the query errors.
+    refetchInterval: (query) => (query.state.data || query.state.error ? false : 10_000),
   })
+
+  useEffect(() => {
+    if (query.error) {
+      captureException(query.error)
+    }
+  }, [query.error])
 
   // Realtime subscription for instant update when row is inserted
   useEffect(() => {

@@ -9,6 +9,7 @@ import { getPerformanceTrends } from '../../lib/performance';
 import { getCompletedSessions } from '../../lib/sessions';
 import { listPrograms } from '../../lib/programs';
 import { colors, spacing, radii, typography } from '../../theme';
+import { formatDate } from '../../utils/date';
 
 import type { PerformanceTrend } from '../../lib/performance';
 
@@ -100,7 +101,7 @@ function SessionRow({ session }: SessionRowProps) {
           {liftName} — {intensityName}
         </Text>
         <View style={styles.sessionRowMeta}>
-          <Text style={styles.sessionRowDate}>{session.planned_date ?? '—'}</Text>
+          <Text style={styles.sessionRowDate}>{formatDate(session.completed_at ?? session.planned_date)}</Text>
           {session.cycle_phase && (
             <View style={[styles.phaseTag, { backgroundColor: PHASE_TAG_BG[session.cycle_phase] }]}>
               <Text style={[styles.phaseTagText, { color: PHASE_TAG_TEXT[session.cycle_phase] }]}>

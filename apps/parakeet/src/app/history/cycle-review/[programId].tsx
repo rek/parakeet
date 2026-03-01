@@ -92,7 +92,14 @@ export default function CycleReviewScreen() {
   const { programId } = useLocalSearchParams<{ programId: string }>()
   const { user } = useAuth()
   const queryClient = useQueryClient()
-  const { data: review, isLoading } = useCycleReview(programId)
+  const {
+    data: review,
+    isLoading,
+    isError,
+    error,
+    refetch,
+    isRefetching,
+  } = useCycleReview(programId)
 
   const llmData: CycleReviewData = (review ?? {}) as CycleReviewData
 
@@ -113,7 +120,7 @@ export default function CycleReviewScreen() {
 
   // ── Loading state ──────────────────────────────────────────────────────────
 
-  if (isLoading || !review) {
+  if (isLoading) {
     return (
       <SafeAreaView style={styles.safeArea}>
         <View style={styles.header}>
@@ -126,6 +133,60 @@ export default function CycleReviewScreen() {
           <Text style={styles.loadingSubtitle}>
             Generating your coaching review — usually takes under 30 seconds
           </Text>
+        </View>
+      </SafeAreaView>
+    )
+  }
+
+  if (isError) {
+    return (
+      <SafeAreaView style={styles.safeArea}>
+        <View style={styles.header}>
+          <BackLink onPress={() => router.back()} />
+          <Text style={styles.title}>Cycle Review</Text>
+        </View>
+        <View style={styles.loadingContainer}>
+          <Text style={styles.loadingTitle}>Could not load cycle review</Text>
+          <Text style={styles.loadingSubtitle}>
+            {error instanceof Error ? error.message : 'Please try again.'}
+          </Text>
+          <TouchableOpacity
+            style={styles.retryButton}
+            onPress={() => void refetch()}
+            disabled={isRefetching}
+            activeOpacity={0.8}
+          >
+            <Text style={styles.retryButtonText}>
+              {isRefetching ? 'Retrying…' : 'Retry'}
+            </Text>
+          </TouchableOpacity>
+        </View>
+      </SafeAreaView>
+    )
+  }
+
+  if (!review) {
+    return (
+      <SafeAreaView style={styles.safeArea}>
+        <View style={styles.header}>
+          <BackLink onPress={() => router.back()} />
+          <Text style={styles.title}>Cycle Review</Text>
+        </View>
+        <View style={styles.loadingContainer}>
+          <Text style={styles.loadingTitle}>No cycle review found</Text>
+          <Text style={styles.loadingSubtitle}>
+            Complete another session or refresh in a moment.
+          </Text>
+          <TouchableOpacity
+            style={styles.retryButton}
+            onPress={() => void refetch()}
+            disabled={isRefetching}
+            activeOpacity={0.8}
+          >
+            <Text style={styles.retryButtonText}>
+              {isRefetching ? 'Refreshing…' : 'Refresh'}
+            </Text>
+          </TouchableOpacity>
         </View>
       </SafeAreaView>
     )
@@ -373,6 +434,18 @@ const styles = StyleSheet.create({
   },
   loadingTitle: { fontSize: 18, fontWeight: '700', color: colors.text, textAlign: 'center' },
   loadingSubtitle: { fontSize: 14, color: colors.textSecondary, textAlign: 'center', lineHeight: 20 },
+  retryButton: {
+    marginTop: 16,
+    backgroundColor: colors.primary,
+    borderRadius: 10,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+  },
+  retryButtonText: {
+    color: colors.textInverse,
+    fontSize: 14,
+    fontWeight: '700',
+  },
 
   scroll: { flex: 1 },
   content: { padding: 16, gap: 16, paddingBottom: 48 },

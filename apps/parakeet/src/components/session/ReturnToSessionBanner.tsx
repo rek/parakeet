@@ -1,7 +1,12 @@
-import { useEffect, useState } from 'react'
-import { StyleSheet, Text, TouchableOpacity,  } from 'react-native'
+import { useEffect, useRef, useState } from 'react'
+import { StyleSheet, Text, TouchableOpacity } from 'react-native'
 import { router, usePathname } from 'expo-router'
+import * as Haptics from 'expo-haptics'
+
 import { useSessionStore } from '../../store/sessionStore'
+import { getRestTimerPrefs } from '../../lib/settings'
+import { detectOvertimeEdge } from '../../utils/overtimeEdge'
+import { useRestNotifications } from '../../hooks/useRestNotifications'
 import { colors, radii, spacing, typography } from '../../theme'
 
 function capitalize(value: string): string {
@@ -17,6 +22,8 @@ function formatMMSS(totalSeconds: number): string {
 }
 
 export function ReturnToSessionBanner() {
+  useRestNotifications()
+
   const sessionId = useSessionStore((s) => s.sessionId)
   const sessionMeta = useSessionStore((s) => s.sessionMeta)
   const cachedJitData = useSessionStore((s) => s.cachedJitData)
@@ -24,25 +31,49 @@ export function ReturnToSessionBanner() {
 
   const pathname = usePathname()
 
+  // Edge-detector ref: resets whenever a new timer starts or closes
+  const prevOvertimeRef = useRef(false)
+  const hapticAlertRef = useRef(true)  // matches RestTimerPrefs default
+
+  // Load haptic preference once
+  useEffect(() => {
+    getRestTimerPrefs().then((p) => { hapticAlertRef.current = p.hapticAlert })
+  }, [])
+
+  // Reset edge detector when the timer changes (new rest interval or closes)
+  useEffect(() => {
+    prevOvertimeRef.current = false
+  }, [timerState?.visible, timerState?.durationSeconds])
+
   // Local tick to force re-render every second for live countdown
+  // Also checks for haptic trigger via getState() to avoid stale closure
   const [, setTick] = useState(0)
   useEffect(() => {
     if (!timerState?.visible) return
-    const id = setInterval(() => setTick((n) => n + 1), 1000)
+    const id = setInterval(() => {
+      setTick((n) => n + 1)
+
+      // Read fresh timerState to avoid stale closure
+      const ts = useSessionStore.getState().timerState
+      if (!ts?.visible) return
+
+      const elapsed = ts.timerStartedAt != null
+        ? Math.floor((Date.now() - ts.timerStartedAt) / 1000)
+        : ts.elapsed
+      const remaining = ts.durationSeconds + ts.offset - elapsed
+
+      if (detectOvertimeEdge(prevOvertimeRef.current, remaining) && hapticAlertRef.current) {
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning).catch(() => {})
+      }
+      prevOvertimeRef.current = remaining <= 0
+    }, 1000)
     return () => clearInterval(id)
   }, [timerState?.visible])
 
   if (!sessionId) return null
   if (pathname.startsWith('/session')) return null
-  if (timerState?.visible !== true) return null
 
-  const elapsed = timerState.timerStartedAt != null
-    ? Math.floor((Date.now() - timerState.timerStartedAt) / 1000)
-    : timerState.elapsed
-
-  const effectiveDuration = timerState.durationSeconds + timerState.offset
-  const remaining = effectiveDuration - elapsed
-  const overtime = remaining <= 0
+  const timerActive = timerState?.visible === true
 
   const liftLabel = sessionMeta
     ? `${capitalize(sessionMeta.primary_lift)} — ${capitalize(sessionMeta.intensity_type)}`
@@ -54,12 +85,21 @@ export function ReturnToSessionBanner() {
       : `Week ${sessionMeta.week_number}`
     : ''
 
-  const restLabel = overtime ? 'Rest done' : `Rest: ${formatMMSS(remaining)}`
+  let restLabel = 'In progress →'
+  let overtime = false
+  if (timerActive && timerState) {
+    const elapsed = timerState.timerStartedAt != null
+      ? Math.floor((Date.now() - timerState.timerStartedAt) / 1000)
+      : timerState.elapsed
+    const remaining = timerState.durationSeconds + timerState.offset - elapsed
+    overtime = remaining <= 0
+    restLabel = overtime ? 'Rest done' : `Rest: ${formatMMSS(remaining)}`
+  }
 
   function handlePress() {
     router.push({
       pathname: '/session/[sessionId]',
-      params: { sessionId: sessionId!, jitData: cachedJitData ?? '' },
+      params: { sessionId: sessionId!, jitData: cachedJitData ?? '', openHistory: '1' },
     })
   }
 

@@ -101,6 +101,9 @@ NX_DAEMON=false nx run-many -t test
 - Domain types shared across app + engine live in `packages/shared-types`.
 - Engine-only algorithm/config types live in `packages/training-engine/src/types.ts`.
 - App data layers should parse JSON columns at boundaries using `apps/parakeet/src/network/json-codecs.ts` instead of ad-hoc `as` casts.
+- Query Supabase from `apps/parakeet/src/data/*` repositories using `typedSupabase`; avoid direct table access in `lib/*`, hooks, or screens.
+- Map DB row shapes to domain/engine input shapes in repositories. Do not pass raw DB rows downstream.
+- Never assume timestamp or JSON column names from memory; use `supabase/types.ts` as the source of truth and fail fast on repository query errors.
 
 
 ### Android physical device setup

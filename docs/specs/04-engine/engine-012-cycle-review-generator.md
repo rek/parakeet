@@ -1,6 +1,6 @@
 # Spec: Cycle Review Generator (v1.5)
 
-**Status**: Implemented
+**Status**: Implemented — core flow complete; known limitations documented inline
 **Domain**: Training Engine
 
 ## What This Covers
@@ -31,6 +31,7 @@ See `docs/design/cycle-review-and-insights.md` for the full feature design and e
 - [x] `compileCycleReport(programId: string, userId: string): Promise<CycleReport>`
   - Parallel Supabase queries for: program, sessions, sessionLogs, sorenessCheckins, lifterMaxes, disruptions, auxiliaryAssignments, formulaHistory
   - Calls `assembleCycleReport()` from training-engine to transform raw rows into `CycleReport` struct
+  - Note: `soreness_checkins` and `disruptions` are queried by `user_id` only (not scoped to program date range), so cross-cycle data may be included. Field names in `RawSorenessCheckin` (`muscle_group`, `soreness_level`, `checked_in_at`) match the current DB schema; verify on any schema migration.
 
 **`packages/training-engine/src/review/assemble-cycle-report.ts`:**
 - [x] `assembleCycleReport(rawData): CycleReport`
@@ -39,7 +40,8 @@ See `docs/design/cycle-review-and-insights.md` for the full feature design and e
 ### Cycle Review Generation
 
 **`packages/training-engine/src/review/cycle-review-generator.ts`:**
-- [x] `generateCycleReview(cycleReport: CycleReport, previousCycleSummaries: string[]): Promise<CycleReview>`
+
+- [x] `generateCycleReview(cycleReport: CycleReport, previousSummaries: PreviousCycleSummary[]): Promise<CycleReview>`
   - Calls `generateObject()` with `CYCLE_REVIEW_MODEL` and `CYCLE_REVIEW_SYSTEM_PROMPT`
   - No `AbortSignal.timeout()` — runs asynchronously, user notified when done
 
@@ -57,13 +59,16 @@ See `docs/design/cycle-review-and-insights.md` for the full feature design and e
 - [x] `onCycleComplete(programId: string, userId: string): void`
   - Triggered when program reaches ≥80% session completion (checked in `completeSession`)
   - Runs `compileCycleReport` → `generateCycleReview` → `storeCycleReview` asynchronously (no await on outer call)
-  - Errors are caught and logged; LLM failure does not block cycle completion
+  - Errors caught and logged via `captureException`; LLM failure does not block cycle completion; no row is inserted on failure
+  - Note: `getCycleReview()` also triggers generation on-demand when no row exists. If the user opens the cycle review screen before `onCycleComplete` completes, both paths may execute concurrently — `storeCycleReview` will insert a duplicate row. Known race condition with no current guard.
+  - Note: The UI must distinguish "no review yet" from "review failed" — these are different states. See mobile-014 for screen-level handling.
 
 ### Multi-Cycle Context
 
-**`getPreviousCycleSummaries(userId, count)`:**
-- [x] Fetches most recent `count` completed `cycle_reviews` rows
-- [x] Extracts `overallAssessment` + `progressByLift` ratings + key metrics as brief text summaries
+**`getPreviousCycleSummaries(userId: string, beforeProgramId: string, limit = 3): Promise<PreviousCycleSummary[]>`:**
+
+- [x] Fetches most recent `limit` completed `cycle_reviews` rows, excluding `beforeProgramId` (prevents self-reference when called during the same cycle's generation)
+- [x] Maps each row to a typed `PreviousCycleSummary` via `extractSummary()` from training-engine
 
 ## Dependencies
 
@@ -71,4 +76,4 @@ See `docs/design/cycle-review-and-insights.md` for the full feature design and e
 - [infra-005-database-migrations.md](../01-infra/infra-005-database-migrations.md)
 - [ai-001-vercel-ai-sdk-setup.md](../10-ai/ai-001-vercel-ai-sdk-setup.md)
 - [docs/design/cycle-review-and-insights.md](../../design/cycle-review-and-insights.md)
-- [parakeet-014-cycle-review-screen.md](../09-parakeet/parakeet-014-cycle-review-screen.md)
+- [mobile-014-cycle-review-screen.md](../09-mobile/mobile-014-cycle-review-screen.md)

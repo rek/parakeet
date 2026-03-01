@@ -144,7 +144,7 @@ export async function fetchCompletedSessions(
   const { data, error } = await typedSupabase
     .from('sessions')
     .select(
-      'id, primary_lift, intensity_type, planned_date, status, week_number, block_number, session_logs(cycle_phase, session_rpe)'
+      'id, primary_lift, intensity_type, planned_date, completed_at, status, week_number, block_number, session_logs(cycle_phase, session_rpe)'
     )
     .eq('user_id', userId)
     .eq('status', 'completed')
@@ -162,6 +162,7 @@ export async function fetchCompletedSessions(
       primary_lift: parseLift(row.primary_lift),
       intensity_type: parseIntensity(row.intensity_type),
       planned_date: row.planned_date,
+      completed_at: row.completed_at ?? null,
       status: parseSessionStatus(row.status),
       week_number: row.week_number,
       block_number: row.block_number,

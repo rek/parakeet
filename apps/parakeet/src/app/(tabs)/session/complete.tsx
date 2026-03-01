@@ -12,18 +12,18 @@ import type { PR } from '@parakeet/training-engine';
 import { useQueryClient } from '@tanstack/react-query';
 import { router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { StarCard } from '../../components/achievements/StarCard';
-import { detectAchievements } from '../../hooks/useAchievementDetection';
-import { useAuth } from '../../hooks/useAuth';
-import { useNetworkStatus } from '../../hooks/useNetworkStatus';
-import { isNetworkError } from '../../hooks/useSyncQueue';
-import { stampCyclePhaseOnSession } from '../../lib/cycle-tracking';
-import { completeSession } from '../../lib/sessions';
-import { qk } from '../../queries/keys';
-import { useSessionStore } from '../../store/sessionStore';
-import { useSyncStore } from '../../store/syncStore';
-import { colors } from '../../theme';
-import { captureException } from '../../utils/captureException';
+import { StarCard } from '../../../components/achievements/StarCard';
+import { detectAchievements } from '../../../hooks/useAchievementDetection';
+import { useAuth } from '../../../hooks/useAuth';
+import { useNetworkStatus } from '../../../hooks/useNetworkStatus';
+import { isNetworkError } from '../../../hooks/useSyncQueue';
+import { stampCyclePhaseOnSession } from '../../../lib/cycle-tracking';
+import { completeSession } from '../../../lib/sessions';
+import { qk } from '../../../queries/keys';
+import { useSessionStore } from '../../../store/sessionStore';
+import { useSyncStore } from '../../../store/syncStore';
+import { colors } from '../../../theme';
+import { captureException } from '../../../utils/captureException';
 
 // ── Constants ────────────────────────────────────────────────────────────────
 

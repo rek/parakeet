@@ -4,6 +4,7 @@ import { StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 import { BlockBadge } from './BlockBadge'
 import { colors, spacing, radii, typography } from '../../theme'
 import type { ProgramSession } from '../../utils/program-utils'
+import { formatDate } from '../../utils/date'
 
 interface SessionSummaryProps {
   session: ProgramSession
@@ -14,14 +15,6 @@ const STATUS_DOT_COLOR: Record<string, string> = {
   in_progress: colors.info,
   completed:   colors.success,
   skipped:     colors.danger,
-}
-
-function formatDate(dateString: string): string {
-  return new Date(dateString).toLocaleDateString('en-AU', {
-    weekday: 'short',
-    month: 'short',
-    day: 'numeric',
-  })
 }
 
 function capitalize(value: string): string {

@@ -60,6 +60,10 @@ export default function TabsLayout() {
             tabIcon(focused, 'settings', 'settings-outline')({ color, size }),
         }}
       />
+      <Tabs.Screen
+        name="session"
+        options={{ href: null }}
+      />
     </Tabs>
   )
 }

@@ -31,6 +31,7 @@ export interface CompletedSessionListItem {
   primary_lift: Lift;
   intensity_type: IntensityType;
   planned_date: string | null;
+  completed_at: string | null;
   status: SessionStatus;
   week_number: number;
   block_number: number | null;

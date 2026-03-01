@@ -9,7 +9,9 @@ import {
 } from 'react-native';
 import { router } from 'expo-router';
 import { getSession, skipSession } from '../../lib/sessions';
+import { useSessionStore } from '../../store/sessionStore';
 import { colors, radii, spacing, typography } from '../../theme';
+import { formatDate } from '../../utils/date';
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -35,24 +37,26 @@ function getIntensityBadge(intensityType: string) {
   );
 }
 
-function formatDate(dateString: string | null): string {
-  if (!dateString) return '';
-  return new Date(dateString).toLocaleDateString('en-AU', {
-    weekday: 'short',
-    month: 'short',
-    day: 'numeric',
-  });
-}
 
 export function WorkoutCard({ session, onSkipComplete }: WorkoutCardProps) {
   const [skipModalVisible, setSkipModalVisible] = useState(false);
   const [skipReason, setSkipReason] = useState('');
   const [isSkipping, setIsSkipping] = useState(false);
 
+  const cachedJitData = useSessionStore((s) => s.cachedJitData);
+  const isInProgress = session.status === 'in_progress';
+
   function handleStartWorkout() {
     router.push({
       pathname: '/session/soreness',
       params: { sessionId: session.id },
+    });
+  }
+
+  function handleResumeWorkout() {
+    router.push({
+      pathname: '/session/[sessionId]',
+      params: { sessionId: session.id, jitData: cachedJitData ?? '' },
     });
   }
 
@@ -122,10 +126,12 @@ export function WorkoutCard({ session, onSkipComplete }: WorkoutCardProps) {
         <View style={styles.buttonRow}>
           <TouchableOpacity
             style={[styles.button, styles.startButton]}
-            onPress={handleStartWorkout}
+            onPress={isInProgress ? handleResumeWorkout : handleStartWorkout}
             activeOpacity={0.85}
           >
-            <Text style={styles.startButtonText}>Start Workout</Text>
+            <Text style={styles.startButtonText}>
+              {isInProgress ? 'Resume Workout' : 'Start Workout'}
+            </Text>
           </TouchableOpacity>
 
           <TouchableOpacity

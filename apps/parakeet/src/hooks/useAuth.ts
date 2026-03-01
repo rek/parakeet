@@ -34,7 +34,7 @@ export function useAuth(): AuthState {
       setSession(s);
       setUser(s?.user ?? null);
 
-      if (_event === 'SIGNED_IN' && s?.user) {
+      if ((_event === 'SIGNED_IN' || _event === 'INITIAL_SESSION') && s?.user) {
         try {
           const profileStatus = await ensureSignedInUserProfile(s.user);
           if (profileStatus === 'profile_created') {
