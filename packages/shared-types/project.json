@@ -5,6 +5,13 @@
   "projectType": "library",
   "tags": ["scope:shared", "type:lib"],
   "targets": {
+    "test": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "npx vitest run",
+        "cwd": "packages/shared-types"
+      }
+    },
     "lint": {
       "executor": "nx:run-commands",
       "options": {

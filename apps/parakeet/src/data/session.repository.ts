@@ -203,6 +203,23 @@ export async function insertSorenessCheckin(input: {
   if (error) throw error;
 }
 
+// Returns the ratings from the most recent soreness check-in for a user,
+// regardless of whether it was tied to a session. Used to pre-populate
+// the soreness screen after an unprogrammed event injection.
+export async function getLatestSorenessRatings(
+  userId: string,
+): Promise<Record<string, number> | null> {
+  const { data } = await typedSupabase
+    .from('soreness_checkins')
+    .select('ratings, skipped')
+    .eq('user_id', userId)
+    .order('recorded_at', { ascending: false })
+    .limit(1)
+    .single();
+  if (!data || data.skipped) return null;
+  return data.ratings as Record<string, number>;
+}
+
 export async function updateSessionToInProgress(
   sessionId: string
 ): Promise<void> {

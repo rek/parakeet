@@ -4,12 +4,12 @@
     "outDir": "../../dist/out-tsc",
     "module": "commonjs",
     "moduleResolution": "node10",
-    "types": ["jest", "node"],
+    "types": ["vitest/globals", "node"],
     "composite": false,
     "declaration": false
   },
   "include": [
-    "jest.config.cts",
+    "vitest.config.mts",
     "src/**/*.ts"
   ]
 }

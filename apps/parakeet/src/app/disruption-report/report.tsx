@@ -61,6 +61,13 @@ const SORENESS_CHIPS: { value: SorenessLevel; label: string }[] = [
   { value: 'very_sore', label: 'Very Sore' },
 ]
 
+const SORENESS_NUMERIC: Record<SorenessLevel, number> = {
+  none:      1,
+  mild:      2,
+  sore:      3,
+  very_sore: 4,
+}
+
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 function todayIso(): string {
@@ -214,10 +221,10 @@ export default function DisruptionReportScreen() {
       }
 
       if (selectedType === 'unprogrammed_event') {
-        const hasSoreness = Object.values(eventSoreness).some((l) => l !== 'none')
-        if (hasSoreness) {
-          await applyUnprogrammedEventSoreness(user.id, eventSoreness)
-        }
+        const numericSoreness = Object.fromEntries(
+          Object.entries(eventSoreness).map(([m, l]) => [m, SORENESS_NUMERIC[l]]),
+        )
+        await applyUnprogrammedEventSoreness(user.id, numericSoreness)
       }
 
       setDisruption(result)

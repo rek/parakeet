@@ -11,6 +11,7 @@ export {
   getSessionsForWeek,
   getCompletedSessions,
   getProgramCompletionCounts,
+  getLatestSorenessCheckin,
   recordSorenessCheckin,
   startSession,
   skipSession,

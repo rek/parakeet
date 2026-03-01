@@ -848,7 +848,7 @@ export type Database = {
           id: string
           ratings: Json
           recorded_at: string
-          session_id: string
+          session_id: string | null
           skipped: boolean
           user_id: string
         }
@@ -856,7 +856,7 @@ export type Database = {
           id?: string
           ratings: Json
           recorded_at?: string
-          session_id: string
+          session_id?: string | null
           skipped?: boolean
           user_id: string
         }

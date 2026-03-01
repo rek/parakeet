@@ -25,6 +25,7 @@ import {
   fetchTodaySession,
   insertPerformanceMetric,
   insertSessionLog,
+  getLatestSorenessRatings,
   insertSorenessCheckin,
   markSessionAsMissed,
   updateSessionToCompleted,
@@ -104,6 +105,12 @@ export async function recordSorenessCheckin(input: {
   skipped: boolean;
 }): Promise<void> {
   await insertSorenessCheckin(input);
+}
+
+export async function getLatestSorenessCheckin(
+  userId: string,
+): Promise<Record<string, number> | null> {
+  return getLatestSorenessRatings(userId);
 }
 
 // Transition session to in_progress

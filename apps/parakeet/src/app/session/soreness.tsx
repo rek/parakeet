@@ -12,7 +12,7 @@ import { router, useLocalSearchParams } from 'expo-router'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
 import { captureException } from '../../utils/captureException'
-import { getSession, recordSorenessCheckin } from '../../lib/sessions'
+import { getLatestSorenessCheckin, getSession, recordSorenessCheckin } from '../../lib/sessions'
 import { runJITForSession } from '../../lib/jit'
 import { useAuth } from '../../hooks/useAuth'
 import { colors } from '../../theme'
@@ -99,19 +99,21 @@ export default function SorenessScreen() {
   // ── Bootstrap ─────────────────────────────────────────────────────────────
 
   useEffect(() => {
-    if (!sessionId) return
-    getSession(sessionId).then((data) => {
-      setSession(data)
-      // Initialise all relevant muscles to 1 (fresh)
-      if (data?.primary_lift) {
-        const initialRatings: Record<string, number> = {}
-        for (const muscle of LIFT_MUSCLES[data.primary_lift] ?? []) {
-          initialRatings[muscle] = 1
+    if (!sessionId || !user) return
+    Promise.all([getSession(sessionId), getLatestSorenessCheckin(user.id)]).then(
+      ([data, latest]) => {
+        setSession(data)
+        if (data?.primary_lift) {
+          const muscles = LIFT_MUSCLES[data.primary_lift] ?? []
+          const initialRatings: Record<string, number> = {}
+          for (const muscle of muscles) {
+            initialRatings[muscle] = latest?.[muscle] ?? 1
+          }
+          setRatings(initialRatings)
         }
-        setRatings(initialRatings)
-      }
-    })
-  }, [sessionId])
+      },
+    )
+  }, [sessionId, user])
 
   // ── Helpers ───────────────────────────────────────────────────────────────
 

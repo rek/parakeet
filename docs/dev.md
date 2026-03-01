@@ -71,13 +71,29 @@ nx affected -t test
 # Run app-only tests
 nx run parakeet:test
 
+# Run one package
+nx run training-engine:test
+nx run shared-types:test
+nx run db:test
+
 # Run a single test file directly
 npx vitest run apps/parakeet/src/services/session.service.test.ts
 ```
 
 Where test behavior is defined:
 - Per-project test targets live in each `project.json` (for example `apps/parakeet/project.json`).
-- Package-level test runner config lives beside the package (for example `packages/*/jest.config.cts`, `packages/training-engine/vitest.config.mts`).
+- Package-level test runner config lives beside the package (for example `packages/*/vitest.config.mts`).
+
+Current projects with `test` targets:
+- `parakeet` (`apps/parakeet`)
+- `training-engine` (`packages/training-engine`)
+- `shared-types` (`packages/shared-types`)
+- `db` (`packages/db`)
+
+If `nx run-many -t test` appears stuck:
+```bash
+NX_DAEMON=false nx run-many -t test
+```
 
 ### Type ownership rules
 
