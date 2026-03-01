@@ -44,7 +44,7 @@ export type {
   SessionCompletionContext,
 } from '../types/domain';
 
-// Today's session: nearest upcoming session not yet completed/skipped
+// Today's session: active in-progress session first, else nearest planned session
 export async function findTodaySession(userId: string) {
   return fetchTodaySession(userId);
 }

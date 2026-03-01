@@ -30,8 +30,13 @@ See `docs/design/cycle-review-and-insights.md` for the full feature design and e
 **`apps/parakeet/src/lib/cycle-review.ts`:**
 - [x] `compileCycleReport(programId: string, userId: string): Promise<CycleReport>`
   - Parallel Supabase queries for: program, sessions, sessionLogs, sorenessCheckins, lifterMaxes, disruptions, auxiliaryAssignments, formulaHistory
+  - Data access should be delegated to typed repository functions in `apps/parakeet/src/data/cycle-review.repository.ts` (no ad-hoc Supabase table access in UI/service/lib consumers).
   - Calls `assembleCycleReport()` from training-engine to transform raw rows into `CycleReport` struct
-  - Note: `soreness_checkins` and `disruptions` are queried by `user_id` only (not scoped to program date range), so cross-cycle data may be included. Field names in `RawSorenessCheckin` (`muscle_group`, `soreness_level`, `checked_in_at`) match the current DB schema; verify on any schema migration.
+  - Note: `soreness_checkins` and `disruptions` are queried by `user_id` only (not scoped to program date range), so cross-cycle data may be included.
+  - Current schema mapping requirements:
+    - `soreness_checkins` source is `ratings` JSON + `recorded_at`; map to engine shape (`muscle_group`, `soreness_level`, `checked_in_at`) at the repository boundary.
+    - `lifter_maxes` source is wide columns (`squat_1rm_grams`, `bench_1rm_grams`, `deadlift_1rm_grams`); expand to per-lift rows before passing into `assembleCycleReport()`.
+  - Cycle review history uses `cycle_reviews.generated_at` for recency ordering (not `created_at`).
 
 **`packages/training-engine/src/review/assemble-cycle-report.ts`:**
 - [x] `assembleCycleReport(rawData): CycleReport`
@@ -52,6 +57,7 @@ See `docs/design/cycle-review-and-insights.md` for the full feature design and e
   - Inserts `cycle_reviews` row with `compiled_report` and `llm_response` JSONB
   - Routes `formulaSuggestions` → inserts pending `formula_configs` rows (`is_active: false`, `source: 'ai_suggestion'`)
   - Routes `structuralSuggestions` → inserts `developer_suggestions` rows
+  - Handle repository query errors explicitly and fail fast; do not silently continue on failed inserts/selects.
 
 ### Trigger Flow
 

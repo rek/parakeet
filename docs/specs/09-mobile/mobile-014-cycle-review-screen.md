@@ -18,11 +18,13 @@ Navigation path: History tab → completed program card → "Review" button.
 - If no row exists yet: show "Analysis in progress..." with spinner + "Generating your coaching review — usually takes under 30 seconds" subtitle
 - Poll every 10 seconds via React Query `refetchInterval: 10_000` until row appears
 - Once row exists: render full review
+- If query fails: render explicit error state with retry action (do not show indefinite loading)
 
 **Supabase Realtime (preferred over polling):**
 - Subscribe to `cycle_reviews` insert events filtered by `program_id`
 - On insert: invalidate React Query cache → triggers re-render
 - Cancel `refetchInterval` once row is present
+- Also stop polling on hard query error; capture the error via Sentry.
 
 **Screen sections (in order):**
 
@@ -54,6 +56,7 @@ Three cards (Squat / Bench / Deadlift), each showing:
 - "Accept" button → calls `createFormulaOverride()` with `suggestion.overrides`; dismisses card
 - "Dismiss" button → calls `deactivateFormulaConfig(suggestionId, userId)`; dismisses card
 - On accept: show "Formula updated" toast + navigate to formula editor if user wants to review
+- Suggestion identity must map to persisted `formula_configs` rows if dismiss is expected to mutate backend state.
 
 ### 6. Next Cycle Recommendations
 - LLM `nextCycleRecommendations` text (natural language summary)
@@ -113,6 +116,8 @@ export async function getCycleReview(programId: string, userId: string) {
 }
 ```
 
+Current behavior note: this helper may generate and store a review when a row is missing (not strictly read-only), so UI must treat "missing row" and "error" as separate states.
+
 **Notification:**
 - When `cycle_reviews` row is inserted, the Realtime subscription triggers cache invalidation
 - If app is backgrounded, `expo-notifications` local notification: "Your cycle review is ready" with deep link to `history/cycle-review/[programId]`
@@ -124,3 +129,5 @@ export async function getCycleReview(programId: string, userId: string) {
 - [parakeet-007-formula-editor-screen.md](./parakeet-007-formula-editor-screen.md)
 - [parakeet-001-expo-router-layout.md](./parakeet-001-expo-router-layout.md)
 - [parakeet-008-supabase-client-setup.md](./parakeet-008-supabase-client-setup.md)
+
+---

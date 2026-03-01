@@ -79,18 +79,31 @@ function toProgramSessionView(row: {
 export async function fetchTodaySession(
   userId: string
 ): Promise<SessionRow | null> {
-  const { data, error } = await typedSupabase
+  const { data: inProgressData, error: inProgressError } = await typedSupabase
     .from('sessions')
     .select('*')
     .eq('user_id', userId)
-    .in('status', ['planned', 'in_progress'])
+    .eq('status', 'in_progress')
     .not('planned_date', 'is', null)
     .order('planned_date', { ascending: true })
     .limit(1)
     .maybeSingle();
 
-  if (error) throw error;
-  return data;
+  if (inProgressError) throw inProgressError;
+  if (inProgressData) return inProgressData;
+
+  const { data: plannedData, error: plannedError } = await typedSupabase
+    .from('sessions')
+    .select('*')
+    .eq('user_id', userId)
+    .eq('status', 'planned')
+    .not('planned_date', 'is', null)
+    .order('planned_date', { ascending: true })
+    .limit(1)
+    .maybeSingle();
+
+  if (plannedError) throw plannedError;
+  return plannedData;
 }
 
 export async function fetchSessionById(

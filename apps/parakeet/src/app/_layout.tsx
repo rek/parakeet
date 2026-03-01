@@ -5,6 +5,7 @@ import * as Sentry from '@sentry/react-native';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuth } from '../hooks/useAuth';
 import { useMissedSessionReconciliation } from '../hooks/useMissedSessionReconciliation';
 import { useSyncQueue } from '../hooks/useSyncQueue';
@@ -79,6 +80,7 @@ SplashScreen.preventAutoHideAsync();
 
 function RootLayoutNav() {
   const { loading } = useAuth();
+  const insets = useSafeAreaInsets();
   useSyncQueue();
   useMissedSessionReconciliation();
 
@@ -97,7 +99,12 @@ function RootLayoutNav() {
         <Stack.Screen name="formula" options={{ presentation: 'modal' }} />
       </Stack>
       <View
-        style={{ position: 'absolute', bottom: 80, left: 0, right: 0 }}
+        style={{
+          position: 'absolute',
+          top: insets.top + 8,
+          left: 0,
+          right: 0,
+        }}
         pointerEvents="box-none"
       >
         <ReturnToSessionBanner />

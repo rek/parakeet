@@ -11,7 +11,7 @@ Logic for detecting missed sessions, the within-week makeup window, and the cons
 
 ### Missed Session Detection
 
-**File: `apps/parakeet/src/lib/sessions.ts`**
+**File: `apps/parakeet/src/services/session.service.ts` (re-exported via `apps/parakeet/src/lib/sessions.ts`)**
 
 A session transitions to `missed` status automatically. A background check runs when the user opens the app (on app foreground), comparing all `planned` sessions against the current date:
 
@@ -65,7 +65,7 @@ export function isMakeupWindowExpired(input: MakeupWindowInput): boolean
 2. Makeup window end = day before that next session's scheduled date
 3. If no next session of that lift exists (last in cycle): makeup window = end of the same calendar week (Sunday)
 4. If `today > makeupWindowEnd` → expired → session is missed
-5. If `today <= makeupWindowEnd` → still within window → session remains `scheduled` (user can still complete it)
+5. If `today <= makeupWindowEnd` → still within window → session remains `planned` (user can still complete it)
 
 **Important:** Makeup does not extend beyond the same week unless there is no next session of that lift at all in the cycle.
 
@@ -79,7 +79,7 @@ export function isMakeupWindowExpired(input: MakeupWindowInput): boolean
 
 ### `daysSinceLastSession` Recency Signal
 
-**File: `apps/parakeet/src/lib/sessions.ts`** — extend `getJITInputForSession()`:
+**File: `apps/parakeet/src/services/session.service.ts`** — `getDaysSinceLastSession()`:
 
 ```typescript
 // For a given lift, find the most recent COMPLETED session of that lift
@@ -108,13 +108,13 @@ Passed into `JITInput.daysSinceLastSession`. Already used by the JIT generator's
 
 ### Makeup Session Display
 
-**`apps/parakeet/app/(tabs)/today.tsx`** — visual treatment:
+**`apps/parakeet/src/app/(tabs)/today.tsx`** — visual treatment:
 
 - Sessions within their makeup window show an **amber "Makeup" badge** on the session card
 - Missed sessions (window expired) show a **grey overlay** + "Missed" badge
 - The Today tab always shows the chronologically next incomplete session — if a makeup session is available, it surfaces above the next scheduled session
 
-**`apps/parakeet/app/(tabs)/today.tsx`** — session card order:
+**`apps/parakeet/src/app/(tabs)/today.tsx`** — session card order:
 1. Active makeup sessions (in makeup window, not yet completed) — amber badge
 2. Today's scheduled session (if any)
 3. Next scheduled session (if today has none)

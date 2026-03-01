@@ -130,8 +130,6 @@ function FullTimer({
 
   return (
     <View style={fullStyles.container}>
-      <View style={fullStyles.handle} />
-
       <Text style={fullStyles.intensityLabel}>{intensityLabel}</Text>
 
       <Text style={[fullStyles.countdown, overtime && fullStyles.countdownOvertime]}>
@@ -248,21 +246,15 @@ const pillStyles = StyleSheet.create({
 const fullStyles = StyleSheet.create({
   container: {
     backgroundColor: colors.bgElevated,
-    borderTopLeftRadius: radii['2xl'],
-    borderTopRightRadius: radii['2xl'],
-    borderTopWidth: 1,
+    borderRadius: radii.xl,
+    borderWidth: 1,
     borderColor: colors.border,
-    paddingHorizontal: spacing[6],
-    paddingBottom: spacing[10],
-    paddingTop: spacing[3],
+    paddingHorizontal: spacing[5],
+    paddingBottom: spacing[5],
+    paddingTop: spacing[4],
     alignItems: 'center',
-  },
-  handle: {
-    width: 40,
-    height: 4,
-    borderRadius: radii.full,
-    backgroundColor: colors.border,
-    marginBottom: spacing[5],
+    width: '100%',
+    maxWidth: 560,
   },
   intensityLabel: {
     fontSize: typography.sizes.sm,

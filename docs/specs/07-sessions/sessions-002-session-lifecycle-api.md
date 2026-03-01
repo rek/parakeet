@@ -9,7 +9,7 @@ Helpers for transitioning session status: starting, skipping. Session completion
 
 ## Tasks
 
-**`apps/parakeet/lib/sessions.ts` (lifecycle helpers, additions):**
+**`apps/parakeet/src/services/session.service.ts` (lifecycle helpers; re-exported via `apps/parakeet/src/lib/sessions.ts`):**
 - [x] `startSession(sessionId: string): Promise<void>` — transition `planned → in_progress`; guarded with `.eq('status', 'planned')`
 - [x] `skipSession(sessionId: string, reason?: string): Promise<void>` — transition `planned | in_progress → skipped`
 
@@ -30,5 +30,5 @@ The `.eq('status', ...)` and `.in('status', [...])` guards on Supabase updates s
 ## Dependencies
 
 - [sessions-001-session-read-api.md](./sessions-001-session-read-api.md)
-- [parakeet-011-soreness-checkin-screen.md](../09-parakeet/parakeet-011-soreness-checkin-screen.md)
+- [mobile-011-soreness-checkin-screen.md](../09-mobile/mobile-011-soreness-checkin-screen.md)
 - [engine-007-jit-session-generator.md](../04-engine/engine-007-jit-session-generator.md)

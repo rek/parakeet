@@ -1,10 +1,8 @@
 # Feature: [Feature Name]
 
-**Status**: Draft | In Review | Approved | Implemented
+**Status**: Draft | In Review | Implemented
 
-**Author**: [Your Name]
-
-**Date**: [YYYY-MM-DD]
+**Date**: [DD-M-YYYY] (eg: 10 Jan 2025)
 
 > **Design Doc Philosophy**: This document describes WHAT the feature does and WHY, from a user perspective. Technical implementation details (HOW) are tracked in Beads for granular task management. Keep this doc user-focused, concise, and free of code/implementation specifics.
 

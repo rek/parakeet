@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import {
-  Modal,
   ScrollView,
   StyleSheet,
   Text,
@@ -8,7 +7,7 @@ import {
   View,
 } from 'react-native'
 import { router, useFocusEffect, useLocalSearchParams } from 'expo-router'
-import { SafeAreaView } from 'react-native-safe-area-context'
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 
 import { getSession, startSession } from '../../../lib/sessions'
 import { useSessionStore } from '../../../store/sessionStore'
@@ -111,6 +110,7 @@ export default function SessionScreen() {
   const [warmupSetsState, setWarmupSetsState] = useState<WarmupSet[]>([])
   const [auxiliaryWork, setAuxiliaryWork] = useState<AuxiliaryWork[]>([])
   const [historySheetVisible, setHistorySheetVisible] = useState(false)
+  const insets = useSafeAreaInsets()
 
   // Auto-open history sheet when banner navigates back with openHistory param
   useEffect(() => {
@@ -455,14 +455,12 @@ export default function SessionScreen() {
         onClose={() => setHistorySheetVisible(false)}
       />
 
-      {/* Rest timer modal */}
-      <Modal
-        visible={timerState?.visible ?? false}
-        transparent
-        animationType="slide"
-        onRequestClose={handleTimerDone}
-      >
-        <View style={styles.modalOverlay}>
+      {/* Rest timer overlay (non-modal so tab navigation remains available) */}
+      {timerState?.visible && (
+        <View
+          pointerEvents="box-none"
+          style={[styles.restTimerOverlay, { top: insets.top + 8 }]}
+        >
           <RestTimer
             durationSeconds={timerState?.durationSeconds ?? DEFAULT_MAIN_REST_SECONDS}
             elapsed={timerState?.elapsed ?? 0}
@@ -473,7 +471,7 @@ export default function SessionScreen() {
             intensityLabel={intensityLabel}
           />
         </View>
-      </Modal>
+      )}
     </SafeAreaView>
   )
 }
@@ -563,10 +561,12 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: colors.textInverse,
   },
-  modalOverlay: {
-    flex: 1,
-    justifyContent: 'flex-end',
-    backgroundColor: colors.overlayLight,
+  restTimerOverlay: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    alignItems: 'center',
+    paddingHorizontal: 8,
   },
   offlineBanner: {
     backgroundColor: colors.warning,

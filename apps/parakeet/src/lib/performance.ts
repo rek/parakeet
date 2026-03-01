@@ -136,6 +136,51 @@ function average(nums: number[]): number {
   return nums.reduce((a, b) => a + b, 0) / nums.length
 }
 
+// Weekly sets completed per lift (for volume bar chart)
+export async function getWeeklySetsPerLift(
+  userId: string,
+  weeks = 8,
+): Promise<{ weekStart: string; lift: Lift; setsCompleted: number }[]> {
+  const fromDate = new Date()
+  fromDate.setDate(fromDate.getDate() - weeks * 7)
+
+  const { data } = await supabase
+    .from('session_logs')
+    .select('completed_at, actual_sets, sessions!inner(primary_lift, status)')
+    .eq('user_id', userId)
+    .eq('sessions.status', 'completed')
+    .gte('completed_at', fromDate.toISOString())
+    .order('completed_at', { ascending: true })
+
+  if (!data) return []
+
+  const grouped = new Map<string, number>()
+
+  for (const row of data) {
+    const session = Array.isArray(row.sessions) ? row.sessions[0] : row.sessions
+    const lift = session?.primary_lift as Lift | undefined
+    if (!lift || !row.completed_at) continue
+
+    const weekStart = getIsoWeekStart(row.completed_at)
+    const key = `${weekStart}__${lift}`
+    const setCount = Array.isArray(row.actual_sets) ? row.actual_sets.length : 0
+    grouped.set(key, (grouped.get(key) ?? 0) + setCount)
+  }
+
+  return Array.from(grouped.entries()).map(([key, setsCompleted]) => {
+    const [weekStart, lift] = key.split('__') as [string, Lift]
+    return { weekStart, lift, setsCompleted }
+  })
+}
+
+function getIsoWeekStart(dateStr: string): string {
+  const d = new Date(dateStr)
+  const day = d.getUTCDay() // 0=Sun
+  const diff = (day === 0 ? -6 : 1 - day) // shift to Monday
+  d.setUTCDate(d.getUTCDate() + diff)
+  return d.toISOString().slice(0, 10) // YYYY-MM-DD
+}
+
 // Lightweight recent-history query for the in-session mini history sheet
 export async function getRecentLiftHistory(
   userId: string,
