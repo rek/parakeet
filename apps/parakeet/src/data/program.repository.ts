@@ -1,5 +1,11 @@
-import { DbInsert } from '../network/database';
+import type { DbInsert, DbRow } from '../network/database';
 import { typedSupabase } from '../network/supabase-client';
+import type { ProgramListItem, ProgramSessionView } from '../types/domain';
+
+function parseProgramStatus(status: string): ProgramListItem['status'] {
+  if (status === 'active' || status === 'completed' || status === 'archived') return status;
+  throw new Error(`Unexpected program status: ${status}`);
+}
 
 export async function listArchivedProgramBlocks(userId: string) {
   const { data, error } = await typedSupabase
@@ -31,13 +37,11 @@ export async function fetchLatestProgramVersion(userId: string): Promise<number>
     .maybeSingle();
 
   if (error) throw error;
-  return ((data as { version?: number } | null)?.version ?? 0) as number;
+  return data?.version ?? 0;
 }
 
-type Program = Exclude<
-  DbInsert<'programs'>, 'id'
->
-export async function insertProgramRow(input: Program) {
+type ProgramInsert = Omit<DbInsert<'programs'>, 'id'>
+export async function insertProgramRow(input: ProgramInsert) {
   const { data, error } = await typedSupabase
     .from('programs')
     .insert(input)
@@ -45,8 +49,11 @@ export async function insertProgramRow(input: Program) {
     .single();
 
   if (error) throw error;
-  return data;
+  return data as Program;
 }
+
+type Program = DbRow<'programs'>
+type ProgramWithProgramSessions = Program & { sessions: ProgramSessionView[] | null }
 
 export async function insertSessionRows(rows: DbInsert<'sessions'>[]): Promise<void> {
   const { error } = await typedSupabase.from('sessions').insert(rows);
@@ -71,7 +78,7 @@ export async function fetchActiveProgramWithSessions(userId: string) {
     .maybeSingle();
 
   if (error) throw error;
-  return data;
+  return data as ProgramWithProgramSessions | null;
 }
 
 export async function fetchProgramWithSessions(programId: string) {
@@ -82,10 +89,10 @@ export async function fetchProgramWithSessions(programId: string) {
     .maybeSingle();
 
   if (error) throw error;
-  return data;
+  return data as ProgramWithProgramSessions | null;
 }
 
-export async function fetchProgramsList(userId: string) {
+export async function fetchProgramsList(userId: string): Promise<ProgramListItem[]> {
   const { data, error } = await typedSupabase
     .from('programs')
     .select('id, version, status, total_weeks, training_days_per_week, start_date, created_at')
@@ -93,7 +100,15 @@ export async function fetchProgramsList(userId: string) {
     .order('created_at', { ascending: false });
 
   if (error) throw error;
-  return data ?? [];
+  return (data ?? []).map((row) => ({
+    id: row.id,
+    version: row.version ?? null,
+    status: parseProgramStatus(row.status),
+    total_weeks: row.total_weeks,
+    training_days_per_week: row.training_days_per_week,
+    start_date: row.start_date,
+    created_at: row.created_at,
+  }));
 }
 
 export async function updateProgramStatusIfActive(

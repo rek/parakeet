@@ -2,10 +2,12 @@ import { z } from 'zod'
 
 export const ActualSetSchema = z
   .object({
+    exercise: z.string().optional(),
     set_number: z.number().int().positive(),
-    weight_kg: z.number().positive(),
+    weight_grams: z.number().int().nonnegative(),
     reps_completed: z.number().int().min(0),
     rpe_actual: z.number().min(6).max(10).optional(),
+    actual_rest_seconds: z.number().int().nonnegative().optional(),
     notes: z.string().optional(),
   })
   .strict()

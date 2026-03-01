@@ -4,22 +4,11 @@ import { StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 import { BlockBadge } from './BlockBadge'
 import { SessionSummary } from './SessionSummary'
 import { colors, spacing, radii, typography } from '../../theme'
-
-interface WeekSession {
-  id: string
-  day_number: number
-  primary_lift: string
-  intensity_type: string
-  planned_date: string
-  completed_at: string | null
-  status: string
-  block_number: number | null
-  week_number: number
-}
+import type { ProgramSession } from '../../utils/program-utils'
 
 interface WeekRowProps {
   weekNumber: number
-  sessions: WeekSession[]
+  sessions: ProgramSession[]
   isCurrentWeek: boolean
 }
 

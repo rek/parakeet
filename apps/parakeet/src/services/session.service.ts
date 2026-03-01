@@ -9,6 +9,7 @@ import type {
   SessionRef,
 } from '@parakeet/training-engine';
 import type { Lift } from '@parakeet/shared-types';
+import { LiftSchema } from '@parakeet/shared-types';
 
 import {
   fetchCompletedSessions,
@@ -31,45 +32,17 @@ import {
   updateSessionToInProgress,
   updateSessionToSkipped,
 } from '../data/session.repository';
+import type {
+  CompleteSessionInput,
+  CompletedSessionListItem,
+  SessionCompletionContext,
+} from '../types/domain';
 
-export interface CompleteSessionInput {
-  actualSets: {
-    set_number: number;
-    weight_grams: number;
-    reps_completed: number;
-    rpe_actual?: number;
-    actual_rest_seconds?: number;
-    notes?: string;
-  }[];
-  auxiliarySets?: {
-    exercise: string;
-    set_number: number;
-    weight_grams: number;
-    reps_completed: number;
-    rpe_actual?: number;
-    actual_rest_seconds?: number;
-  }[];
-  sessionRpe?: number;
-  startedAt?: Date;
-  completedAt?: Date;
-}
-
-export interface SessionCompletionContext {
-  primaryLift: Lift | null;
-  programId: string | null;
-}
-
-export interface CompletedSessionListItem {
-  id: string;
-  primary_lift: string;
-  intensity_type: string;
-  planned_date: string | null;
-  status: string;
-  week_number: number;
-  block_number: number;
-  cycle_phase: string | null;
-  rpe: number | null;
-}
+export type {
+  CompleteSessionInput,
+  CompletedSessionListItem,
+  SessionCompletionContext,
+} from '../types/domain';
 
 // Today's session: nearest upcoming session not yet completed/skipped
 export async function findTodaySession(userId: string) {
@@ -87,7 +60,7 @@ export async function getSessionCompletionContext(
 ): Promise<SessionCompletionContext> {
   const data = await fetchSessionCompletionContext(sessionId);
   return {
-    primaryLift: (data?.primary_lift as Lift | null) ?? null,
+    primaryLift: data?.primary_lift ? LiftSchema.parse(data.primary_lift) : null,
     programId: data?.program_id ?? null,
   };
 }
@@ -103,8 +76,7 @@ export async function getCompletedSessions(
   page: number,
   pageSize = 20,
 ): Promise<CompletedSessionListItem[]> {
-  const rows = await fetchCompletedSessions(userId, page, pageSize);
-  return rows as CompletedSessionListItem[];
+  return fetchCompletedSessions(userId, page, pageSize);
 }
 
 export async function getProgramCompletionCounts(programId: string, userId: string): Promise<{
@@ -114,8 +86,8 @@ export async function getProgramCompletionCounts(programId: string, userId: stri
 }> {
   const statuses = await fetchProgramSessionStatuses(programId, userId);
   const total = statuses.length;
-  const completed = statuses.filter((s: { status: string }) => s.status === 'completed').length;
-  const skipped = statuses.filter((s: { status: string }) => s.status === 'skipped').length;
+  const completed = statuses.filter((s) => s.status === 'completed').length;
+  const skipped = statuses.filter((s) => s.status === 'skipped').length;
   return { total, completed, skipped };
 }
 
@@ -170,7 +142,7 @@ export async function completeSession(
 
   const session = await getSession(sessionId);
   const plannedCountRaw =
-    (session?.planned_sets as unknown[] | null)?.length ?? normalizedSets.length;
+    (Array.isArray(session?.planned_sets) ? session.planned_sets.length : null) ?? normalizedSets.length;
   const plannedCount = plannedCountRaw > 0 ? plannedCountRaw : normalizedSets.length;
   const completionPct =
     (normalizedSets.filter((s) => s.reps_completed > 0).length / plannedCount) * 100;
@@ -193,7 +165,7 @@ export async function completeSession(
   if (session?.primary_lift) {
     const recentLogs = await getRecentLogsForLift(
       userId,
-      session.primary_lift as Lift,
+      LiftSchema.parse(session.primary_lift),
       6,
     );
     const biologicalSex = await fetchProfileSex(userId);
@@ -204,10 +176,10 @@ export async function completeSession(
         session_log_id: sessionLogId,
         user_id: userId,
         lift: session.primary_lift,
-        intensity_type: session.intensity_type as string,
+        intensity_type: session.intensity_type,
         recorded_at: new Date().toISOString(),
         week_number: session.week_number ?? null,
-        block_number: (session.block_number as number | null) ?? null,
+        block_number: session.block_number ?? null,
       });
     }
   }
@@ -216,7 +188,7 @@ export async function completeSession(
   if (session?.program_id) {
     const statuses = await fetchProgramSessionStatuses(session.program_id, userId);
     const total = statuses.length;
-    const completed = statuses.filter((s: { status: string }) => s.status === 'completed').length;
+    const completed = statuses.filter((s) => s.status === 'completed').length;
     if (total > 0 && completed / total >= 0.8) {
       const { onCycleComplete } = await import('../lib/programs');
       onCycleComplete(session.program_id, userId);
@@ -239,17 +211,11 @@ export async function getCurrentWeekLogs(userId: string): Promise<CompletedSetLo
     endOfWeek.toISOString(),
   );
 
-  return rows.map((row: any) => {
-    const sessRaw = row.sessions as unknown;
-    const sess = (Array.isArray(sessRaw) ? sessRaw[0] : sessRaw) as
-      | { primary_lift: string }
-      | null;
-    const sets = Array.isArray(row.actual_sets)
-      ? (row.actual_sets as { reps_completed?: number }[])
-      : [];
+  return rows.map((row) => {
+    const sets = row.actual_sets;
     const completedSets = sets.filter((s) => (s.reps_completed ?? 0) > 0).length;
     return {
-      lift: (sess?.primary_lift ?? 'squat') as Lift,
+      lift: row.primary_lift,
       completedSets: completedSets || sets.length,
     };
   });
@@ -268,7 +234,7 @@ export async function markMissedSessions(userId: string): Promise<void> {
   // Group by program_id so we fetch all cycle sessions once per program
   const byProgram = new Map<string, typeof scheduled>();
   for (const s of scheduled) {
-    const pid = s.program_id as string;
+    const pid = s.program_id;
     if (!byProgram.has(pid)) byProgram.set(pid, []);
     byProgram.get(pid)!.push(s);
   }
@@ -277,19 +243,19 @@ export async function markMissedSessions(userId: string): Promise<void> {
     // Fetch all sessions for this program to determine makeup windows
     const allSessions = await fetchProgramSessionsForMakeup(programId, userId);
 
-    const allSessionRefs: SessionRef[] = allSessions.map((s: any) => ({
-      id: s.id as string,
-      scheduledDate: s.planned_date as string,
-      lift: s.primary_lift as Lift,
-      weekNumber: s.week_number as number,
+    const allSessionRefs: SessionRef[] = allSessions.map((s) => ({
+      id: s.id,
+      scheduledDate: s.planned_date,
+      lift: s.primary_lift,
+      weekNumber: s.week_number,
     }));
 
     for (const session of overdueInProgram) {
       const missedSession: SessionRef = {
-        id: session.id as string,
-        scheduledDate: session.planned_date as string,
-        lift: session.primary_lift as Lift,
-        weekNumber: session.week_number as number,
+        id: session.id,
+        scheduledDate: session.planned_date,
+        lift: session.primary_lift,
+        weekNumber: session.week_number,
       };
 
       const expired = isMakeupWindowExpired({
@@ -314,7 +280,7 @@ export async function getDaysSinceLastSession(
   const data = await fetchLastCompletedAtForLift(userId, lift);
   if (!data?.completed_at) return null;
 
-  const completedAt = new Date(data.completed_at as string);
+  const completedAt = new Date(data.completed_at);
   const now = new Date();
   const diffMs = now.getTime() - completedAt.getTime();
   return Math.floor(diffMs / (1000 * 60 * 60 * 24));
@@ -344,16 +310,12 @@ async function getRecentLogsForLift(
 ): Promise<SessionLogSummary[]> {
   const rows = await fetchRecentLogsForLift(userId, lift, limit);
 
-  return rows.map((row: any) => {
-    const sessRaw = row.sessions as unknown;
-    const sess = (Array.isArray(sessRaw) ? sessRaw[0] : sessRaw) as
-      | { primary_lift: string; intensity_type: string }
-      | null;
+  return rows.map((row) => {
     return {
-      session_id: row.id,
-      lift: (sess?.primary_lift ?? lift) as Lift,
-      intensity_type: (sess?.intensity_type ?? 'heavy') as SessionLogSummary['intensity_type'],
-      actual_rpe: row.session_rpe ?? null,
+      session_id: row.session_id,
+      lift: row.lift ?? lift,
+      intensity_type: row.intensity_type,
+      actual_rpe: row.actual_rpe ?? null,
       target_rpe: 8.5,
       completion_pct: row.completion_pct ?? null,
     };

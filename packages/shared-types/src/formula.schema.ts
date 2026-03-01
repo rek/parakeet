@@ -72,6 +72,8 @@ export const FormulaOverridesSchema = z.object({
     .optional(),
 })
 
+export type FormulaOverrides = z.infer<typeof FormulaOverridesSchema>
+
 export const CreateFormulaConfigSchema = z.object({
   overrides:     FormulaOverridesSchema,
   source:        z.enum(['user', 'ai_suggestion']),

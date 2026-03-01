@@ -15,6 +15,7 @@ import { router } from 'expo-router'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 
 import type { FormulaConfig, BlockIntensityConfig, RepIntensityConfig } from '@parakeet/training-engine'
+import type { FormulaOverrides } from '@parakeet/shared-types'
 import {
   getFormulaConfig,
   getFormulaHistory,
@@ -27,6 +28,7 @@ import { getCurrentOneRmKg } from '../../lib/lifter-maxes'
 import { useAuth } from '../../hooks/useAuth'
 import { colors } from '../../theme'
 import { BackLink } from '../../components/navigation/BackLink'
+import { parseFormulaOverridesJson } from '../../network/json-codecs'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -100,7 +102,7 @@ function initDraft(config: FormulaConfig): DraftConfig {
   }
 }
 
-function draftToOverrides(draft: DraftConfig): Partial<FormulaConfig> {
+function draftToOverrides(draft: DraftConfig): FormulaOverrides {
   const p = (s: string) => parseFloat(s) || 0
   const i = (s: string) => parseInt(s, 10) || 0
 
@@ -335,7 +337,7 @@ export default function FormulaEditorScreen() {
   async function handleAcceptSuggestion(suggestionId: string, overrides: unknown) {
     if (!user) return
     await createFormulaOverride(user.id, {
-      overrides: overrides as Partial<FormulaConfig>,
+      overrides: parseFormulaOverridesJson(overrides),
       source: 'ai_suggestion',
     })
     queryClient.invalidateQueries({ queryKey: ['formula'] })
@@ -350,7 +352,7 @@ export default function FormulaEditorScreen() {
   async function handleReactivate(configId: string, overrides: unknown) {
     if (!user) return
     await createFormulaOverride(user.id, {
-      overrides: overrides as Partial<FormulaConfig>,
+      overrides: parseFormulaOverridesJson(overrides),
       source: 'user',
     })
     queryClient.invalidateQueries({ queryKey: ['formula'] })

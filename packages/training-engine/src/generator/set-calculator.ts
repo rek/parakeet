@@ -1,7 +1,7 @@
 import { IntensityType, Lift, PlannedSet } from '@parakeet/shared-types'
 import { InvalidInputError } from '../errors'
 import { roundToNearest } from '../formulas/weight-rounding'
-import { BlockConfig, FormulaConfig, FormulaConfigOverrides } from '../types'
+import { BlockConfig, DeepPartial, FormulaConfig, FormulaConfigOverrides } from '../types'
 
 export function calculateSets(
   _lift: Lift,
@@ -78,9 +78,6 @@ function deepMerge<T extends object>(target: T, source: DeepPartial<T>): T {
   }
   return result
 }
-
-// Local alias for the recursive partial used in deepMerge
-type DeepPartial<T> = { [K in keyof T]?: T[K] extends object ? DeepPartial<T[K]> : T[K] }
 
 export function mergeFormulaConfig(
   systemDefaults: FormulaConfig,

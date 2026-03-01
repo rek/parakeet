@@ -33,8 +33,14 @@ export type CreateDisruption = z.infer<typeof CreateDisruptionSchema>
 export const AdjustmentSuggestionSchema = z
   .object({
     session_id: z.uuid(),
-    action: z.enum(['skip', 'reduce_volume', 'reduce_intensity', 'substitute', 'reschedule']),
+    action: z.enum([
+      'weight_reduced',
+      'reps_reduced',
+      'session_skipped',
+      'exercise_substituted',
+    ]),
     reduction_pct: z.number().min(0).max(100).optional(),
+    reps_reduction: z.number().int().positive().optional(),
     rationale: z.string(),
     substitution_note: z.string().optional(),
   })

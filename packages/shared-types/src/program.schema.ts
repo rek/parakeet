@@ -43,7 +43,7 @@ export const SessionSchema = z
     block_number: z.number().int().min(1).max(3).nullable(),
     is_deload: z.boolean(),
     planned_sets: z.array(PlannedSetSchema).nullable(),
-    status: z.enum(['planned', 'in_progress', 'completed', 'skipped']),
+    status: z.enum(['planned', 'in_progress', 'completed', 'skipped', 'missed']),
     planned_date: z.iso.date().nullable(),
   })
   .strict()

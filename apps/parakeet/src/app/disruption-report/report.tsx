@@ -17,7 +17,12 @@ import DateTimePicker, { type DateTimePickerEvent } from '@react-native-communit
 import { reportDisruption, applyDisruptionAdjustment, applyUnprogrammedEventSoreness } from '../../lib/disruptions'
 import { useAuth } from '../../hooks/useAuth'
 import { getProfile } from '../../lib/profile'
-import type { DisruptionType, Severity, DisruptionWithSuggestions } from '@parakeet/shared-types'
+import type {
+  AdjustmentSuggestion,
+  DisruptionType,
+  Severity,
+  DisruptionWithSuggestions,
+} from '@parakeet/shared-types'
 import type { MuscleGroup } from '@parakeet/training-engine'
 import { colors } from '../../theme'
 import { BackLink } from '../../components/navigation/BackLink'
@@ -56,27 +61,6 @@ const SORENESS_CHIPS: { value: SorenessLevel; label: string }[] = [
   { value: 'very_sore', label: 'Very Sore' },
 ]
 
-// ── Types ─────────────────────────────────────────────────────────────────────
-
-type AdjustmentAction =
-  | 'weight_reduced'
-  | 'session_skipped'
-  | 'reps_reduced'
-  | 'skip'
-  | 'reduce_volume'
-  | 'reduce_intensity'
-  | 'substitute'
-  | 'reschedule'
-
-interface AdjSuggestion {
-  session_id: string
-  action: AdjustmentAction
-  reduction_pct?: number
-  reps_reduction?: number
-  substitution_note?: string
-  rationale?: string
-}
-
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 function todayIso(): string {
@@ -99,25 +83,20 @@ function formatDisplayDate(iso: string): string {
   })
 }
 
-function describeAction(suggestion: AdjSuggestion): string {
+function describeAction(suggestion: AdjustmentSuggestion): string {
   switch (suggestion.action) {
     case 'session_skipped':
-    case 'skip':
       return 'Session skipped'
     case 'weight_reduced':
-    case 'reduce_intensity':
       return suggestion.reduction_pct != null
         ? `Weight reduced by ${suggestion.reduction_pct}%`
         : 'Weight reduced'
     case 'reps_reduced':
-    case 'reduce_volume':
       return suggestion.reps_reduction != null
         ? `Reps reduced by ${suggestion.reps_reduction}`
         : 'Reps reduced'
-    case 'substitute':
+    case 'exercise_substituted':
       return suggestion.substitution_note ?? 'Exercise substituted'
-    case 'reschedule':
-      return 'Session rescheduled'
   }
 }
 
@@ -266,11 +245,11 @@ export default function DisruptionReportScreen() {
   // ── Render: review state ─────────────────────────────────────────────────
 
   if (screenState === 'review' && disruption) {
-    const suggestions = (disruption.suggested_adjustments ?? []) as AdjSuggestion[]
+    const suggestions = disruption.suggested_adjustments ?? []
 
     // Group by action label for a compact summary
     type GroupKey = string
-    const groups = suggestions.reduce<Map<GroupKey, { s: AdjSuggestion; count: number }>>(
+    const groups = suggestions.reduce<Map<GroupKey, { s: AdjustmentSuggestion; count: number }>>(
       (acc, s) => {
         const key = describeAction(s)
         const existing = acc.get(key)
@@ -315,7 +294,7 @@ export default function DisruptionReportScreen() {
                 <View key={label} style={styles.adjustmentCard}>
                   <View style={[
                     styles.adjustmentBadge,
-                    (s.action === 'session_skipped' || s.action === 'skip') && styles.adjustmentBadgeSkip,
+                    s.action === 'session_skipped' && styles.adjustmentBadgeSkip,
                   ]}>
                     <Text style={styles.adjustmentBadgeText}>{label}</Text>
                   </View>

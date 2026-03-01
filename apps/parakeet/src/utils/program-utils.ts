@@ -1,14 +1,6 @@
-export interface ProgramSession {
-  id: string
-  day_number: number
-  primary_lift: string
-  intensity_type: string
-  planned_date: string
-  completed_at: string | null
-  status: string
-  block_number: number | null
-  week_number: number
-}
+import type { ProgramSessionView } from '../types/domain'
+
+export type ProgramSession = ProgramSessionView
 
 /** Groups sessions by week_number, sorted ascending. */
 export function groupByWeek(sessions: ProgramSession[]): [number, ProgramSession[]][] {

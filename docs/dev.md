@@ -56,7 +56,15 @@ nx run parakeet:serve
 ```bash
 nx run parakeet:lint
 npx tsc -p apps/parakeet/tsconfig.app.json --noEmit
+tsc --noEmit -p apps/parakeet/tsconfig.typecheck.json
 ```
+
+### Type ownership rules
+
+- `supabase/types.ts` is generated DB contract only. Do not hand-edit.
+- Domain types shared across app + engine live in `packages/shared-types`.
+- Engine-only algorithm/config types live in `packages/training-engine/src/types.ts`.
+- App data layers should parse JSON columns at boundaries using `apps/parakeet/src/network/json-codecs.ts` instead of ad-hoc `as` casts.
 
 
 ### Android physical device setup

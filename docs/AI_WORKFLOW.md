@@ -18,7 +18,6 @@ This guide explains how to effectively use AI (Claude) to build features in this
    ```
 
 2. AI will create `/docs/designs/[feature-name].md` covering:
-
    - Problem statement
    - Technical approach
    - Component structure
@@ -27,7 +26,6 @@ This guide explains how to effectively use AI (Claude) to build features in this
    - Testing strategy
 
 3. **Review the design** - This is critical! Check:
-
    - Does it solve the right problem?
    - Is the approach sound?
    - Are dependencies identified?
@@ -57,7 +55,6 @@ This guide explains how to effectively use AI (Claude) to build features in this
    ```
 
 2. AI will create a task list with:
-
    - Specific implementation steps (to go into Beads)
    - Logical ordering (dependencies first)
    - Testing checkpoints
@@ -83,14 +80,12 @@ This guide explains how to effectively use AI (Claude) to build features in this
    ```
 
 2. **Incremental Development**:
-
    - Implement one component/task at a time
    - Test after each step
    - Commit working code frequently
    - Reference the design doc if AI deviates
 
 3. **Keep AI on track**:
-
    - "Follow the design in /docs/designs/[feature-name].md"
    - "This should match the [Component] structure we designed"
    - "Check this against our data flow diagram"
@@ -118,7 +113,6 @@ This guide explains how to effectively use AI (Claude) to build features in this
    ```
 
 2. **AI-Assisted Review**:
-
    - Compare implementation to design
    - Check for TypeScript errors
    - Review test coverage
@@ -169,7 +163,7 @@ I want to add [feature description].
 
 Before we start, determine:
 1. What library type is needed? (feature, ui, data-access, util)
-2. What scope? (dailyProvisions, shared)
+2. What scope? (parakeet, shared)
 3. Will this require multiple libraries working together?
 
 Then follow our workflow:
@@ -189,11 +183,11 @@ Use the template at /docs/designs/_TEMPLATE.md
 **NX-Specific Feature Prompts:**
 
 ```
-Generate a new feature library for [feature name] in the dailyProvisions app.
+Generate a new feature library for [feature name] in the parakeet app.
 
 Steps:
-1. Create library: libs/dailyProvisions/feature-[name]
-2. Add tags: "type:feature" and "scope:dailyProvisions"
+1. Create library: libs/parakeet/feature-[name]
+2. Add tags: "type:feature" and "scope:parakeet"
 3. This feature can import from ui, data-access, and util libraries
 4. Create the main [FeatureName]Screen component
 ```
@@ -212,8 +206,8 @@ Steps:
 Set up a data-access library for [data domain].
 
 Steps:
-1. Create library: libs/dailyProvisions/data-[name]
-2. Add tags: "type:data-access" and "scope:dailyProvisions"
+1. Create library: libs/parakeet/data-[name]
+2. Add tags: "type:data-access" and "scope:parakeet"
 3. This library can ONLY import from util libraries
 4. Add functions for fetching, storing, and managing [data domain] data
 ```
@@ -347,8 +341,8 @@ Follow PROJECT_ORGANIZATION.md dependency rules."
 → AI creates `/docs/designs/user-profile-edit.md`
 → Design specifies:
 
-- `libs/dailyProvisions/feature-profile-edit` (main feature)
-- `libs/dailyProvisions/data-profile` (profile data management)
+- `libs/parakeet/feature-profile-edit` (main feature)
+- `libs/parakeet/data-profile` (profile data management)
 - `libs/shared/ui-avatar-picker` (reusable avatar picker)
   → You review and approve
 
@@ -376,8 +370,8 @@ Prompt: "Let's implement user profile editing following /docs/designs/user-profi
 Step 1: Create the data-access library
 
 nx g @nx/react-native:lib data-profile \
-  --directory=libs/dailyProvisions/data-profile \
-  --tags='type:data-access,scope:dailyProvisions'
+  --directory=libs/parakeet/data-profile \
+  --tags='type:data-access,scope:parakeet'
 
 Add functions: getProfile, updateProfile, saveProfileOffline"
 ```
@@ -402,11 +396,11 @@ This should be a pure presentational component with no data fetching."
 Prompt: "Step 3: Create the profile edit feature library
 
 nx g @nx/react-native:lib feature-profile-edit \
-  --directory=libs/dailyProvisions/feature-profile-edit \
-  --tags='type:feature,scope:dailyProvisions'
+  --directory=libs/parakeet/feature-profile-edit \
+  --tags='type:feature,scope:parakeet'
 
 Create ProfileEditScreen that:
-- Imports from @choiganz/dailyProvisions/data-profile
+- Imports from @choiganz/parakeet/data-profile
 - Imports from @choiganz/shared/ui-avatar-picker
 - Handles the user flow and state management"
 ```

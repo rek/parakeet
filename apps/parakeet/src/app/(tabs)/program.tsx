@@ -74,7 +74,7 @@ export default function ProgramScreen() {
     )
   }
 
-  const sessions: ProgramSession[] = (program.sessions ?? []) as ProgramSession[]
+  const sessions: ProgramSession[] = program.sessions ?? []
   const weekGroups = groupByWeek(sessions)
   const currentWeek = determineCurrentWeek(sessions)
 

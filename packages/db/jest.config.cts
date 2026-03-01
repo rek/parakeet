@@ -1,5 +1,5 @@
 module.exports = {
-  displayName: 'dailyProvisions',
+  displayName: 'db',
   resolver: require.resolve('./jest.resolver.js'),
   preset: 'jest-expo',
   moduleFileExtensions: ['ts', 'js', 'html', 'tsx', 'jsx'],

@@ -20,6 +20,9 @@ import {
 import { getAuthenticatedUserId } from '../data/profile.repository';
 import { getAuxiliaryPools } from '../lib/auxiliary-config';
 import { getCurrentMaxes } from '../lib/lifter-maxes';
+import type { ProgramListItem } from '../types/domain';
+
+export type { ProgramListItem } from '../types/domain';
 
 export interface CreateProgramInput {
   totalWeeks: 10 | 12 | 14;
@@ -29,19 +32,9 @@ export interface CreateProgramInput {
 
 export type RegenerateProgramInput = CreateProgramInput;
 
-export interface ProgramListItem {
-  id: string;
-  version: number | null;
-  status: string;
-  total_weeks: number;
-  training_days_per_week: number;
-  start_date: string;
-  created_at: string;
-}
-
 async function getBlockOffset(userId: string): Promise<number> {
   const data = await listArchivedProgramBlocks(userId);
-  const history = data.map((p: { total_weeks: number }) => ({
+  const history = data.map((p) => ({
     completedBlocks: Math.floor(p.total_weeks / 4),
   }));
   return computeBlockOffset(history);
@@ -82,7 +75,7 @@ async function buildProgram(input: CreateProgramInput, withFormulaConfigId: bool
   });
 
   const auxiliaryAssignments = generateAuxiliaryAssignments(
-    program!.id,
+    program.id,
     input.totalWeeks,
     auxiliaryPool,
     blockOffset,
@@ -90,7 +83,7 @@ async function buildProgram(input: CreateProgramInput, withFormulaConfigId: bool
 
   const sessionRows = scaffold.sessions.map((s) => ({
     user_id: userId,
-    program_id: program!.id,
+    program_id: program.id,
     week_number: s.weekNumber,
     day_number: s.dayNumber,
     primary_lift: s.primaryLift,
@@ -134,9 +127,8 @@ export async function getProgram(programId: string) {
   return fetchProgramWithSessions(programId);
 }
 
-export async function listPrograms(userId: string) {
-  const rows = await fetchProgramsList(userId);
-  return rows as ProgramListItem[];
+export async function listPrograms(userId: string): Promise<ProgramListItem[]> {
+  return fetchProgramsList(userId);
 }
 
 export async function updateProgramStatus(

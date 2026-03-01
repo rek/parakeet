@@ -1,8 +1,8 @@
 import { getDefaultFormulaConfig, mergeFormulaConfig } from '@parakeet/training-engine';
 import type { FormulaConfig } from '@parakeet/training-engine';
+import type { FormulaOverrides } from '@parakeet/shared-types';
 
 import {
-  type FormulaConfigInsert,
   activateFormulaConfigById,
   deactivateActiveFormulaConfigs,
   deactivateFormulaConfigById,
@@ -12,6 +12,7 @@ import {
   listFormulaConfigs,
   listPendingAiFormulaSuggestions,
 } from '../data/formula.repository';
+import { parseFormulaOverridesJson } from '../network/json-codecs';
 
 export async function getFormulaConfig(
   userId: string,
@@ -21,14 +22,14 @@ export async function getFormulaConfig(
 
   const base = getDefaultFormulaConfig(biologicalSex);
   return activeConfig
-    ? mergeFormulaConfig(base, activeConfig.overrides as Partial<FormulaConfig>)
+    ? mergeFormulaConfig(base, parseFormulaOverridesJson(activeConfig.overrides))
     : base;
 }
 
 export async function createFormulaOverride(
   userId: string,
   input: {
-    overrides: Partial<FormulaConfig>;
+    overrides: FormulaOverrides;
     source: 'user' | 'ai_suggestion';
     ai_rationale?: string;
   },
@@ -37,7 +38,7 @@ export async function createFormulaOverride(
 
   await insertFormulaConfig({
     user_id: userId,
-    overrides: input.overrides as FormulaConfigInsert['overrides'],
+    overrides: parseFormulaOverridesJson(input.overrides),
     source: input.source,
     ai_rationale: input.ai_rationale ?? null,
     is_active: true,

@@ -1,8 +1,10 @@
 import { typedSupabase } from '../network/supabase-client';
-import type { DbInsert, DbRow } from '../network/database';
+import type { DbInsert, DbRow, Json } from '../network/database';
 
 export type FormulaConfigRow = DbRow<'formula_configs'>;
-export type FormulaConfigInsert = DbInsert<'formula_configs'>;
+export type FormulaConfigInsert = Omit<DbInsert<'formula_configs'>, 'overrides'> & {
+  overrides: Json;
+};
 
 export async function getActiveFormulaConfigRow(userId: string): Promise<FormulaConfigRow | null> {
   const { data, error } = await typedSupabase

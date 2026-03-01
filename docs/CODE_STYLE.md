@@ -23,13 +23,7 @@ import { Dependencies } from 'packages';
  * Explain why/how it is used
  *
  */
-export function ComponentName({
-  param1,
-  param2,
-}: {
-  param1: string;
-  param2: boolean;
-}) {
+export function ComponentName({ param1, param2 }: { param1: string; param2: boolean }) {
   // Implementation
 }
 ```
@@ -37,12 +31,7 @@ export function ComponentName({
 NOTE: used an object as the first argument, instead of multiple arguments. AKA: prefer single arity functions
 
 ```typescript
-function updateProfile(profile: {
-  id: string;
-  name: string;
-  email: string;
-  avatarUrl?: string;
-}): Promise<void> {
+function updateProfile(profile: { id: string; name: string; email: string; avatarUrl?: string }): Promise<void> {
   // Implementation
 }
 ```
@@ -56,8 +45,6 @@ function updateProfile(profile: any) {
 ```
 
 ### Type Organization
-
-**CRITICAL: AVOID CREATING SEPARATE TYPES FILES**
 
 Use TypeScript's type inference utilities instead of creating separate type definitions. This keeps types co-located with their implementation and avoids duplication.
 
@@ -79,13 +66,7 @@ type NotificationSettings = Awaited<ReturnType<typeof getNotificationSettings>>;
 
 ```typescript
 // For component props - use ComponentProps or Parameters
-export function MyComponent({
-  title,
-  onPress,
-}: {
-  title: string;
-  onPress: () => void;
-}) {
+export function MyComponent({ title, onPress }: { title: string; onPress: () => void }) {
   // Implementation
 }
 
@@ -106,24 +87,6 @@ export const SUPPORTED_LANGUAGES = [
 type SupportedLanguage = (typeof SUPPORTED_LANGUAGES)[number];
 type LanguageCode = (typeof SUPPORTED_LANGUAGES)[number]['code'];
 ```
-
-**❌ NEVER DO THIS:**
-
-```typescript
-// DON'T create separate type files
-// types.ts
-export type NotificationSettings = {
-  enabled: boolean;
-  time: string;
-  timezone: string;
-};
-```
-
-**When you MUST define a type (rare):**
-
-1. Define it inline in the same file where it's used
-2. Use `type` (not `interface`) and do NOT export it
-3. Only export if it's part of a public API contract (e.g., database schema)
 
 **DO NOT add explicit return types to functions** - let TypeScript infer them:
 
@@ -306,7 +269,7 @@ libs/{scope}/{type}-{name}/
 **Important:** Library tags in `project.json` must include:
 
 - `type:{feature|ui|data-access|util}`
-- `scope:{dailyProvisions|shared}`
+- `scope:{parakeet|shared}`
 
 ---
 
@@ -359,38 +322,38 @@ Each module should:
 #### Good - Modular structure within libraries
 
 ```text
-libs/dailyProvisions/data-dailyProvisions/src/lib/
-  getDevotionalsByDate.ts
-  seeddailyProvisions.ts
-  getDevotionalsCount.ts
-  hasDevotionals.ts
+libs/parakeet/data-parakeet/src/lib/
+  getXByDate.ts
+  seedparakeet.ts
+  getItemCount.ts
+  hasItem.ts
 ```
 
 Import files directly (no barrel files):
 
 ```typescript
 // From other libraries
-import { hasDevotionals } from '@choiganz/dailyProvisions/data-dailyProvisions';
+import { hasWorkouts } from '@parakeet/data-parakeet';
 // This resolves to the library's index.ts which exports public API
 
 // Within the same library
-import { hasDevotionals } from './hasDevotionals';
+import { hasWorkouts } from './hasWorkouts';
 ```
 
 #### Bad - Monolithic service file
 
 ```text
-libs/dailyProvisions/data-dailyProvisions/src/lib/
-  dailyProvisionservice.ts  // ❌ Contains 6+ functions in one file
+libs/parakeet/data-parakeet/src/lib/
+  parakeetervice.ts  // ❌ Contains 6+ functions in one file
 ```
 
 #### Also Bad - Barrel files within library folders
 
 ```text
-libs/dailyProvisions/data-dailyProvisions/src/lib/
+libs/parakeet/data-parakeet/src/lib/
   services/
     index.ts  // ❌ Unnecessary re-export layer
-    getDevotionalsByDate.ts
+    getWorkoutsByDate.ts
     ...
 ```
 
@@ -401,7 +364,7 @@ libs/dailyProvisions/data-dailyProvisions/src/lib/
 - Can lead to circular dependency issues
 - The library's root `index.ts` is the only barrel you need
 
-**Note:** Each library has a root `index.ts` (e.g., `libs/dailyProvisions/data-dailyProvisions/src/index.ts`) that exports the library's public API. This is the ONLY barrel file and is required by NX.
+**Note:** Each library has a root `index.ts` (e.g., `libs/parakeet/data-parakeet/src/index.ts`) that exports the library's public API. This is the ONLY barrel file and is required by NX.
 
 #### Benefits of modular structure
 
@@ -511,7 +474,10 @@ export class ApiError extends Error {
 }
 
 export class ValidationError extends Error {
-  constructor(message: string, public field: string) {
+  constructor(
+    message: string,
+    public field: string
+  ) {
     super(message);
     this.name = 'ValidationError';
   }
@@ -531,7 +497,7 @@ See [Project Organization - Feature-Based Testing](./PROJECT_ORGANIZATION.md#fea
 **Util Libraries** - Unit tests (required)
 
 ```typescript
-// libs/dailyProvisions/util-display/src/lib/formatDate.test.ts
+// libs/parakeet/util-display/src/lib/formatDate.test.ts
 import { formatDate } from './formatDate';
 
 describe('formatDate', () => {
@@ -544,16 +510,16 @@ describe('formatDate', () => {
 **Data-Access Libraries** - Unit tests (required)
 
 ```typescript
-// libs/dailyProvisions/data-dailyProvisions/src/lib/getdailyProvisions.test.ts
-import { getdailyProvisions } from './getdailyProvisions';
+// libs/parakeet/data-parakeet/src/lib/getparakeet.test.ts
+import { getparakeet } from './getparakeet';
 
 // Mock external dependencies
 jest.mock('@/database');
 
-describe('getdailyProvisions', () => {
-  it('fetches dailyProvisions by id', async () => {
-    const dailyProvisions = await getdailyProvisions('123');
-    expect(dailyProvisions).toBeDefined();
+describe('getparakeet', () => {
+  it('fetches parakeet by id', async () => {
+    const parakeet = await getparakeet('123');
+    expect(parakeet).toBeDefined();
   });
 });
 ```
@@ -579,19 +545,19 @@ describe('Button', () => {
 **Feature Libraries** - Integration tests (required)
 
 ```typescript
-// libs/dailyProvisions/feature-archive/src/lib/ArchiveScreen.test.tsx
+// libs/parakeet/feature-archive/src/lib/ArchiveScreen.test.tsx
 import { render, waitFor } from '@testing-library/react-native';
 import { ArchiveScreen } from './ArchiveScreen';
 
 // Mock data-access dependencies
-jest.mock('@choiganz/dailyProvisions/data-dailyProvisions');
+jest.mock('@parakeet/data-parakeet');
 
 describe('ArchiveScreen', () => {
-  it('displays dailyProvisions when loaded', async () => {
+  it('displays parakeet when loaded', async () => {
     const { getByText } = render(<ArchiveScreen />);
 
     await waitFor(() => {
-      expect(getByText('My dailyProvisions')).toBeTruthy();
+      expect(getByText('My parakeet')).toBeTruthy();
     });
   });
 });
@@ -607,10 +573,10 @@ nx test
 nx affected:test
 
 # Run tests for a specific library
-nx test dailyProvisions-feature-archive
+nx test parakeet-feature-archive
 
 # Run tests in watch mode
-nx test dailyProvisions-feature-archive --watch
+nx test parakeet-feature-archive --watch
 
 # Run all tests in parallel
 nx run-many -t test
@@ -621,14 +587,14 @@ nx run-many -t test
 Tests live alongside the code they test:
 
 ```
-libs/dailyProvisions/feature-archive/
+libs/parakeet/feature-archive/
   src/
     lib/
       ArchiveScreen.tsx
       ArchiveScreen.test.tsx        # ✅ Co-located
       components/
-        dailyProvisionsCard.tsx
-        dailyProvisionsCard.test.tsx     # ✅ Co-located
+        parakeetCard.tsx
+        parakeetCard.test.tsx     # ✅ Co-located
 ```
 
 **Benefits:**
@@ -743,10 +709,7 @@ setLoading(true);
  * const profile = await fetchUserProfile('123');
  * ```
  */
-export async function fetchUserProfile(
-  userId: string,
-  options?: FetchOptions
-): Promise<UserProfile> {
+export async function fetchUserProfile(userId: string, options?: FetchOptions): Promise<UserProfile> {
   // Implementation
 }
 ````
@@ -761,10 +724,7 @@ export async function fetchUserProfile(
 import { useCallback, useMemo } from 'react';
 
 // Memoize expensive computations
-const sortedUsers = useMemo(
-  () => users.sort((a, b) => a.name.localeCompare(b.name)),
-  [users]
-);
+const sortedUsers = useMemo(() => users.sort((a, b) => a.name.localeCompare(b.name)), [users]);
 
 // Memoize callbacks passed to child components
 const handleUserSelect = useCallback((userId: string) => {

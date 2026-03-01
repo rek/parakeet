@@ -2,8 +2,26 @@ import {
   suggestDisruptionAdjustment,
   roundToNearest,
 } from '@parakeet/training-engine'
-import type { CreateDisruption, DisruptionWithSuggestions, Lift } from '@parakeet/shared-types'
+import { LiftSchema } from '@parakeet/shared-types'
+import type {
+  CreateDisruption,
+  DisruptionWithSuggestions,
+  Lift,
+} from '@parakeet/shared-types'
+import type { DbRow } from '../network/database'
+import { parseAdjustmentSuggestionsJson, parsePlannedSetsJson } from '../network/json-codecs'
 import { supabase } from './supabase'
+
+type SessionRow = Pick<DbRow<'sessions'>, 'id' | 'primary_lift' | 'planned_sets' | 'status'>
+type SuggestedSession = { id: string; primary_lift: Lift; status: string }
+
+function toSuggestedSessions(rows: SessionRow[]): SuggestedSession[] {
+  return rows.map((row) => ({
+    id: row.id,
+    primary_lift: LiftSchema.parse(row.primary_lift),
+    status: row.status,
+  }))
+}
 
 // Report a disruption and return suggested adjustments for user review
 export async function reportDisruption(
@@ -60,7 +78,9 @@ export async function reportDisruption(
     }
   }
 
-  const suggested_adjustments = suggestDisruptionAdjustment(disruption, affectedSessions)
+  const suggested_adjustments = parseAdjustmentSuggestionsJson(
+    suggestDisruptionAdjustment(disruption, toSuggestedSessions(affectedSessions)),
+  )
 
   return { ...disruption, suggested_adjustments }
 }
@@ -105,12 +125,14 @@ export async function applyDisruptionAdjustment(
       : rows
   }
 
-  const suggestions = suggestDisruptionAdjustment(disruption, affectedSessions)
+  const suggestions = parseAdjustmentSuggestionsJson(
+    suggestDisruptionAdjustment(disruption, toSuggestedSessions(affectedSessions)),
+  )
 
   for (const suggestion of suggestions) {
     if (suggestion.action === 'weight_reduced' && suggestion.reduction_pct != null) {
       const session = affectedSessions.find((s) => s.id === suggestion.session_id)
-      const sets = session?.planned_sets as PlannedSet[] | null
+      const sets = parsePlannedSetsJson(session?.planned_sets)
       if (!sets) continue
 
       const adjustedSets = sets.map((set) => ({
@@ -133,7 +155,7 @@ export async function applyDisruptionAdjustment(
 
     if (suggestion.action === 'reps_reduced' && suggestion.reps_reduction != null) {
       const session = affectedSessions.find((s) => s.id === suggestion.session_id)
-      const sets = session?.planned_sets as PlannedSet[] | null
+      const sets = parsePlannedSetsJson(session?.planned_sets)
       if (!sets) continue
 
       const adjustedSets = sets.map((set) => ({
@@ -248,16 +270,3 @@ export async function applyUnprogrammedEventSoreness(
 // --- Local types ---
 
 type SorenessLevel = 'none' | 'mild' | 'sore' | 'very_sore'
-
-interface SessionRow {
-  id: string
-  primary_lift: Lift
-  planned_sets: unknown
-  status: string
-}
-
-interface PlannedSet {
-  weight_kg: number
-  reps: number
-  [key: string]: unknown
-}

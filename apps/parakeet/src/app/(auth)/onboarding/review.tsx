@@ -11,6 +11,7 @@ import { useQuery } from '@tanstack/react-query'
 
 import { getProgram } from '../../../lib/programs'
 import { colors } from '../../../theme'
+import type { ProgramSessionView } from '../../../types/domain'
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -28,20 +29,6 @@ function formatSessionDate(dateStr: string): string {
 function capitalize(str: string): string {
   if (!str) return str
   return str.charAt(0).toUpperCase() + str.slice(1)
-}
-
-// ── Types ────────────────────────────────────────────────────────────────────
-
-interface Session {
-  id: string
-  week_number: number
-  day_number: number
-  primary_lift: string
-  intensity_type: string
-  block_number: number
-  is_deload: boolean
-  planned_date: string
-  status: string
 }
 
 // ── Screen ───────────────────────────────────────────────────────────────────
@@ -74,7 +61,7 @@ export default function ReviewScreen() {
     )
   }
 
-  const week1Sessions: Session[] = ((program.sessions ?? []) as Session[])
+  const week1Sessions: ProgramSessionView[] = (program.sessions ?? [])
     .filter((s) => s.week_number === 1)
     .sort((a, b) => a.day_number - b.day_number)
 
