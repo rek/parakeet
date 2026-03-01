@@ -94,6 +94,15 @@ export async function applyDisruptionAdjustment(
 
 **JIT-not-yet-generated sessions:** If `planned_sets` is null (JIT hasn't run yet), adjustments cannot be applied until JIT runs. The disruption should be noted as `activeDisruptions` in the `JITInput`; the `FormulaJITGenerator` and `LLMJITGenerator` both handle active disruptions during session generation (see `engine-007`).
 
+## Minor severity auto-apply
+
+Design intent: minor disruptions apply immediately without requiring the user to tap "Apply". The review screen still shows — but as a read-only confirmation rather than a prompt to confirm.
+
+- [x] In `handleSubmit()` (report.tsx): after `reportDisruption()` resolves, if `selectedSeverity === 'minor'`, immediately call `applyDisruptionAdjustment(result.id, userId)` before `setScreenState('review')`
+- [x] Pass an `autoApplied` flag into the review state (e.g. via a `useState<boolean>` set before `setScreenState`)
+- [x] In the review screen: if `autoApplied === true`, hide the "Apply All Adjustments" button and replace with a read-only note: "Adjustments auto-applied (minor severity)"
+- [x] Moderate + major: unchanged — user must confirm
+
 ## Dependencies
 
 - [disruptions-001-report.md](./disruptions-001-report.md)

@@ -11,7 +11,7 @@ import {
 import { router, useLocalSearchParams } from 'expo-router'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
-import * as Sentry from '@sentry/react-native'
+import { captureException } from '../../utils/captureException'
 import { getSession, recordSorenessCheckin } from '../../lib/sessions'
 import { runJITForSession } from '../../lib/jit'
 import { useAuth } from '../../hooks/useAuth'
@@ -146,7 +146,7 @@ export default function SorenessScreen() {
         },
       })
     } catch (err: unknown) {
-      Sentry.captureException(err)
+      captureException(err)
       Alert.alert(
         'Generation failed',
         err instanceof Error ? err.message : 'Unable to generate workout — try again.',
@@ -165,7 +165,7 @@ export default function SorenessScreen() {
         skipped: false,
       })
     } catch (err) {
-      Sentry.captureException(err)
+      captureException(err)
     }
     await runJIT(ratings)
   }
@@ -182,7 +182,7 @@ export default function SorenessScreen() {
         skipped: true,
       })
     } catch (err) {
-      Sentry.captureException(err)
+      captureException(err)
     }
     await runJIT(freshRatings)
   }

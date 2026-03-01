@@ -1,13 +1,15 @@
 # Spec: [Feature Name]
 
 **Status**: Planned | In Progress | Implemented
-**Domain**: Training Engine | parakeet App | Data / User Config | Infra | Auth
+**Domain**: Training Engine | UI | Data / User Config | Infra | Auth
 
 ## What This Covers
 
 One paragraph describing what this spec covers and why.
 
 ## Tasks
+
+NOTE: include less specific code (unless really important for details) and more written instructions
 
 **`path/to/file.ts`:**
 - [ ] `functionName(param: Type): ReturnType` — brief description

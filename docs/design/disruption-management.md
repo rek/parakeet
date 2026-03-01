@@ -63,24 +63,28 @@ Life constantly interrupts training. Without a structured way to log and respond
 
 8. Active disruption appears as a banner on the Today screen until resolved
 
-**Unprogrammed Event Flow:**
+**Unprogrammed Event Flow** *(planned — spec disruptions-005)*:
 
 1. User selects "Unprogrammed Event" as the disruption type
-2. User enters the event name (e.g., "Hyrox competition")
-3. User enters the event date(s)
-4. App asks: "What's sore or hurting after this event?" — user can select from a muscle group list (same as soreness check-in) and rate severity
-5. The reported soreness is injected into the soreness model the same as a pre-session soreness check-in, affecting the next JIT generation for any overlapping sessions
-6. The event is logged in disruption history as an unprogrammed event; any sessions that were missed are marked as disruption-skipped
+2. Severity is fixed at "major" automatically (full deload treatment for affected sessions)
+3. User enters the event name (prepended to description)
+4. User selects affected date range
+5. App shows post-event soreness section: 6 muscle groups (Quads/Hamstrings/Glutes/Lower Back/Upper Back/Chest), each with None/Mild/Sore/Very Sore chips
+6. On submit: soreness is injected into `soreness_checkins` (same table as pre-session check-in); next JIT generation picks it up automatically
+7. No explicit weight adjustments are generated — soreness injection IS the adjustment
 
-**Deload Overlap:**
+**Deload Overlap** *(future enhancement — not planned for current sprint)*:
 
-If a disruption overlaps with a scheduled deload week, the deload takes precedence — **no additional adjustment is applied on top of the deload**. The deload itself already provides recovery. The disruption is still logged (for history purposes), but the session weights are left at deload levels.
+If a disruption overlaps with a scheduled deload week, the intended behaviour is that the deload takes precedence. This logic is not yet implemented.
+
+**Mid-session Reporting** *(future enhancement — not planned for current sprint)*:
+
+Reporting a disruption from within an active session (e.g., to immediately reduce the current session's weight) has no entry point built yet.
 
 **Alternative Flows:**
 
-- Reporting mid-session: user taps "Report Issue" from the active session screen; affected lift weight can be reduced immediately for the current session
 - Reporting travel affecting multiple weeks: set end date to end of travel; all sessions in that range are marked with a travel note and volume is reduced
-- Reporting illness that clears up early: tap "Mark as Resolved" from the disruption detail screen; program returns to normal schedule from that date
+- Reporting illness that clears up early: tap the amber banner on the Today screen → "Mark Resolved"; upcoming sessions revert to normal loading on next open
 - Reporting "bad day" fatigue: severity = Minor → auto-applied at -10% weight; if severe, set to Moderate and confirm a session skip
 
 **Resolution Flow:**
@@ -94,7 +98,7 @@ If a disruption overlaps with a scheduled deload week, the deload takes preceden
 
 - Issue type selector: grid of cards with icons (bandage for injury, thermometer for illness, airplane for travel, flame for fatigue, dumbbell-slash for equipment, trophy for event, etc.)
 - Severity selector: three clearly differentiated buttons with color coding (yellow/orange/red)
-- Date range: start date picker (defaults to today) + optional end date picker
+- Date range: start date picker (defaults to today) + end date picker (defaults to today; hidden when "ongoing" is toggled)
 - Lift selector: tap-to-toggle chips for each lift, plus "All Lifts" shortcut
 - Adjustment preview: two-column card per affected session — left side "Current", right side "Proposed" with weight and any substitution notes (shown for Moderate/Major; auto-applied for Minor)
 - Active disruption banner: amber left-bordered strip on Today screen, one per active disruption, shows type + severity; tap → Alert with "Mark Resolved" / "Cancel"; visible on rest days, workout-done days, and active session days (resolution not gated on session presence)
@@ -128,3 +132,4 @@ If a disruption overlaps with a scheduled deload week, the deload takes preceden
 - Spec: [disruptions-002-apply-adjustment.md](../specs/08-disruptions/disruptions-002-apply-adjustment.md)
 - Spec: [disruptions-003-resolution.md](../specs/08-disruptions/disruptions-003-resolution.md)
 - Spec: [disruptions-004-adjuster-engine.md](../specs/08-disruptions/disruptions-004-adjuster-engine.md)
+- Spec: [disruptions-005-unprogrammed-event.md](../specs/08-disruptions/disruptions-005-unprogrammed-event.md)

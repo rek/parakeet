@@ -5,101 +5,37 @@
 
 ## What This Covers
 
-Resolving disruptions (marking them done), listing active/historical disruptions, and handling session revert when a past resolution date is specified.
+How active disruptions are resolved when the user recovers — marking them done, reverting affected sessions to normal loading, and removing the banner from the Today screen.
 
-## Tasks
+## Data layer (`lib/disruptions.ts`)
 
-**`apps/parakeet/lib/disruptions.ts` (additions):**
+`resolveDisruption(disruptionId, userId, resolvedAt?)` sets the disruption status to `resolved` and stamps `resolved_at` (defaults to now if not provided). It then clears `planned_sets` and `jit_generated_at` on all `planned` sessions listed in `session_ids_affected`, so JIT regenerates them at normal loading on next open.
 
-```typescript
-// Resolve a disruption; optionally specify when recovery occurred
-export async function resolveDisruption(
-  disruptionId: string,
-  userId: string,
-  resolvedAt?: string  // ISO date; defaults to now
-): Promise<void> {
-  const resolvedDate = resolvedAt ?? new Date().toISOString()
+`getActiveDisruptions(userId)` returns all disruptions where status is not `resolved`, ordered newest-first. Used by the Today screen banner.
 
-  await supabase
-    .from('disruptions')
-    .update({ status: 'resolved', resolved_at: resolvedDate })
-    .eq('id', disruptionId)
-    .eq('user_id', userId)
+`getDisruptionHistory(userId, { page, pageSize })` returns paginated full history for a future history view.
 
-  // If resolved_at is in the past, flag future sessions for JIT re-generation.
-  // Sessions whose planned_sets were adjusted by this disruption should re-run JIT
-  // so they return to normal loading. Clear planned_sets + jit_generated_at so the
-  // JIT generator runs fresh when the user opens them.
-  if (resolvedAt && new Date(resolvedAt) < new Date()) {
-    const { data: disruption } = await supabase
-      .from('disruptions')
-      .select('session_ids_affected')
-      .eq('id', disruptionId)
-      .single()
+`getDisruption(disruptionId, userId)` returns a single disruption by ID.
 
-    const sessionIds = disruption?.session_ids_affected ?? []
-    if (sessionIds.length > 0) {
-      await supabase
-        .from('sessions')
-        .update({ planned_sets: null, jit_generated_at: null })
-        .in('id', sessionIds)
-        .in('status', ['planned'])  // only unfilled future sessions
-    }
-  }
-}
+## Today screen banner (`today.tsx`)
 
-// Active disruptions for the Today screen banner
-export async function getActiveDisruptions(userId: string) {
-  const { data } = await supabase
-    .from('disruptions')
-    .select('id, disruption_type, severity, affected_lifts, description, affected_date_end')
-    .eq('user_id', userId)
-    .neq('status', 'resolved')
-    .order('created_at', { ascending: false })
-  return data ?? []
-}
+Active disruptions are fetched separately from the session (React Query key: `['disruptions', 'active', userId]`). The `ActiveDisruptionsBanner` component renders one amber left-bordered strip per active disruption, always visible regardless of whether there is a session today (rest days, workout-done days, and active session days all show the banner).
 
-// Full history for the Settings / disruption history view
-export async function getDisruptionHistory(
-  userId: string,
-  pagination: { page: number; pageSize: number }
-) {
-  const from = pagination.page * pagination.pageSize
-  const to = from + pagination.pageSize - 1
+## Recovery flow
 
-  const { data, count } = await supabase
-    .from('disruptions')
-    .select('*', { count: 'exact' })
-    .eq('user_id', userId)
-    .order('created_at', { ascending: false })
-    .range(from, to)
+- [x] User sees amber banner: `⚡ illness (moderate) — tap to resolve`
+- [x] User taps banner → Alert shows disruption type + severity with "Mark Resolved" / "Cancel"
+- [x] User taps "Mark Resolved" → `resolveDisruption` called, `resolved_at` stamped to now
+- [x] Disruption status set to `resolved` in DB
+- [x] future `planned_sets` and `jit_generated_at` cleared on all planned sessions that were adjusted
+- [x] React Query invalidates active disruptions query → banner disappears
+- [x] Next time user opens an affected session, JIT runs fresh at normal loading
 
-  return { items: data ?? [], total: count ?? 0 }
-}
+`WorkoutCard` has no disruption awareness — the prop was removed entirely. Resolution and display both live in `today.tsx`.
 
-// Full detail of a single disruption
-export async function getDisruption(disruptionId: string, userId: string) {
-  const { data } = await supabase
-    .from('disruptions')
-    .select('*')
-    .eq('id', disruptionId)
-    .eq('user_id', userId)
-    .single()
-  return data
-}
-```
+## Session revert
 
-**Today screen active disruption banner:**
-
-`getActiveDisruptions(userId)` is called separately in the Today screen via a React Query hook (not joined into `findTodaySession`). The result is rendered by `ActiveDisruptionsBanner` in `today.tsx` — one amber banner per active disruption, always visible regardless of session state (rest day, workout-done, or active session).
-
-Tapping a banner shows an Alert with "Mark Resolved" / "Cancel". On confirm, `resolveDisruption(id, userId)` is called and the `['disruptions', 'active', userId]` query is invalidated.
-
-`WorkoutCard` receives `activeDisruptions` for contextual display only (which lifts are affected) — resolution is not handled there.
-
-**Session revert logic:**
-
-When `resolved_at` is in the past, sessions that had `planned_sets` modified by this disruption have `planned_sets` and `jit_generated_at` cleared. The next time the user opens those sessions, JIT runs from scratch using the full current state (no active disruption, normal loading). There is no `program_snapshot` field — JIT re-generation is the authoritative way to restore normal session weights.
+There is no stored program snapshot. JIT re-generation is the authoritative way to restore normal weights. Clearing `planned_sets` + `jit_generated_at` on the affected sessions is sufficient — on next open those sessions regenerate as if the disruption never existed.
 
 ## Dependencies
 

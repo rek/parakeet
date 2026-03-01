@@ -225,7 +225,29 @@ export async function getDisruption(disruptionId: string, userId: string) {
   return data
 }
 
+// Inject post-event soreness into soreness_checkins so JIT picks it up on next generation
+export async function applyUnprogrammedEventSoreness(
+  userId: string,
+  soreness: Record<string, SorenessLevel>,
+): Promise<void> {
+  const today = new Date().toISOString().split('T')[0]
+  const entries = Object.entries(soreness).filter(([, level]) => level !== 'none')
+  if (entries.length === 0) return
+
+  await supabase.from('soreness_checkins').insert(
+    entries.map(([muscle_group, level]) => ({
+      user_id:      userId,
+      muscle_group,
+      level,
+      checkin_date: today,
+      session_id:   null,
+    })),
+  )
+}
+
 // --- Local types ---
+
+type SorenessLevel = 'none' | 'mild' | 'sore' | 'very_sore'
 
 interface SessionRow {
   id: string

@@ -18,7 +18,7 @@ import { useActiveProgram } from '../../hooks/useActiveProgram'
 import { useTodaySession } from '../../hooks/useTodaySession'
 import { useWeeklyVolume } from '../../hooks/useWeeklyVolume'
 import { useCyclePhase } from '../../hooks/useCyclePhase'
-import * as Sentry from '@sentry/react-native'
+import { captureException } from '../../utils/captureException'
 import { getActiveDisruptions, resolveDisruption } from '../../lib/disruptions'
 import { getStreakData } from '../../lib/achievements'
 import { colors, palette, spacing, radii, typography } from '../../theme'
@@ -56,7 +56,7 @@ function ActiveDisruptionsBanner({
               await resolveDisruption(d.id, userId)
               onResolved()
             } catch (err) {
-              Sentry.captureException(err)
+              captureException(err)
             }
           },
         },
@@ -290,12 +290,8 @@ export default function TodayScreen() {
               <>
                 <WorkoutCard
                   session={session}
-                  activeDisruptions={disruptions ?? []}
                   onSkipComplete={() =>
                     queryClient.invalidateQueries({ queryKey: ['session', 'today'] })
-                  }
-                  onDisruptionResolved={() =>
-                    queryClient.invalidateQueries({ queryKey: ['disruptions', 'active', user?.id] })
                   }
                 />
                 {/* Ovulatory info chip — squat days only */}

@@ -10,28 +10,16 @@ import {
   View,
 } from 'react-native'
 
-import * as Sentry from '@sentry/react-native'
 import { getSession, skipSession } from '../../lib/sessions'
-import { resolveDisruption } from '../../lib/disruptions'
-import { useAuth } from '../../hooks/useAuth'
 import { colors, spacing, radii, typography } from '../../theme'
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
 type Session = Awaited<ReturnType<typeof getSession>>
-interface ActiveDisruption {
-  id: string
-  disruption_type: string
-  severity: string
-  affected_lifts: string[] | null
-  description: string | null
-}
 
 interface WorkoutCardProps {
   session: NonNullable<Session>
-  activeDisruptions?: ActiveDisruption[]
   onSkipComplete?: () => void
-  onDisruptionResolved?: () => void
 }
 
 const INTENSITY_BADGE: Record<string, { bg: string; text: string }> = {
@@ -53,30 +41,13 @@ function formatDate(dateString: string | null): string {
   })
 }
 
-function isDisruptionRelevant(
-  disruption: ActiveDisruption,
-  primaryLift: string,
-): boolean {
-  return (
-    disruption.affected_lifts === null ||
-    disruption.affected_lifts.includes(primaryLift)
-  )
-}
-
 export function WorkoutCard({
   session,
-  activeDisruptions = [],
   onSkipComplete,
-  onDisruptionResolved,
 }: WorkoutCardProps) {
-  const { user } = useAuth()
   const [skipModalVisible, setSkipModalVisible] = useState(false)
   const [skipReason, setSkipReason] = useState('')
   const [isSkipping, setIsSkipping] = useState(false)
-
-  const relevantDisruptions = activeDisruptions.filter((d) =>
-    isDisruptionRelevant(d, session.primary_lift),
-  )
 
   function handleStartWorkout() {
     router.push({
@@ -107,28 +78,6 @@ export function WorkoutCard({
     setSkipReason('')
   }
 
-  function handleDisruptionPress(disruption: ActiveDisruption) {
-    Alert.alert(
-      disruption.disruption_type.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase()),
-      `Severity: ${disruption.severity}${disruption.description ? `\n${disruption.description}` : ''}`,
-      [
-        {
-          text: 'Mark as resolved',
-          onPress: async () => {
-            if (!user) return
-            try {
-              await resolveDisruption(disruption.id, user.id)
-              onDisruptionResolved?.()
-            } catch (err) {
-              Sentry.captureException(err)
-            }
-          },
-        },
-        { text: 'Cancel', style: 'cancel' },
-      ],
-    )
-  }
-
   const badge = getIntensityBadge(session.intensity_type)
   const blockLabel =
     session.block_number !== null
@@ -136,21 +85,7 @@ export function WorkoutCard({
       : `Week ${session.week_number}`
 
   return (
-    <View>
-      {relevantDisruptions.map((disruption) => (
-        <TouchableOpacity
-          key={disruption.id}
-          style={styles.disruptionBanner}
-          onPress={() => handleDisruptionPress(disruption)}
-          activeOpacity={0.7}
-        >
-          <Text style={styles.disruptionText}>
-            ⚡ Active disruption:{' '}
-            {disruption.disruption_type.replace(/_/g, ' ')} ({disruption.severity}) — tap to resolve
-          </Text>
-        </TouchableOpacity>
-      ))}
-
+    <>
       <View style={styles.card}>
         {/* Lift name + intensity badge */}
         <View style={styles.cardHeader}>
@@ -249,26 +184,11 @@ export function WorkoutCard({
           </View>
         </View>
       </Modal>
-    </View>
+    </>
   )
 }
 
 const styles = StyleSheet.create({
-  disruptionBanner: {
-    backgroundColor: colors.secondaryMuted,
-    borderLeftWidth: 3,
-    borderLeftColor: colors.secondary,
-    paddingVertical: spacing[3],
-    paddingHorizontal: spacing[4],
-    marginHorizontal: spacing[4],
-    marginBottom: spacing[2],
-    borderRadius: radii.xs,
-  },
-  disruptionText: {
-    fontSize: typography.sizes.sm,
-    color: colors.secondary,
-    lineHeight: 18,
-  },
   card: {
     backgroundColor: colors.bgSurface,
     borderRadius: radii.lg,

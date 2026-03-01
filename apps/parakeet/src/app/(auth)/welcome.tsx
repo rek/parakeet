@@ -3,7 +3,7 @@ import * as Linking from 'expo-linking';
 import { useEffect, useState } from 'react';
 import { ActivityIndicator, Alert, Platform, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 
-import * as Sentry from '@sentry/react-native';
+import { captureException } from '../../utils/captureException'
 import { signInWithGoogleToken, signInWithMagicLink } from '../../services/auth.service';
 import { colors, spacing, radii, typography } from '../../theme';
 
@@ -28,7 +28,7 @@ export default function WelcomeScreen() {
 
       await signInWithGoogleToken(idToken);
     } catch (err: unknown) {
-      Sentry.captureException(err)
+      captureException(err)
       Alert.alert('Sign-in failed', err instanceof Error ? err.message : 'Unknown error');
     } finally {
       setLoading(false);
@@ -43,7 +43,7 @@ export default function WelcomeScreen() {
       await signInWithMagicLink(email.trim(), emailRedirectTo);
       Alert.alert('Check your email', `Magic link sent to ${email}`);
     } catch (err: unknown) {
-      Sentry.captureException(err)
+      captureException(err)
       Alert.alert('Error', err instanceof Error ? err.message : 'Unknown error');
     } finally {
       setLoading(false);

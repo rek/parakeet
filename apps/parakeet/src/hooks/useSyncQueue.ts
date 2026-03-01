@@ -2,7 +2,7 @@ import { useEffect, useRef } from 'react'
 import { Alert } from 'react-native'
 import { useQueryClient } from '@tanstack/react-query'
 
-import * as Sentry from '@sentry/react-native'
+import { captureException } from '../utils/captureException'
 import { useNetworkStatus } from './useNetworkStatus'
 import { useSyncStore } from '../store/syncStore'
 import { completeSession } from '../lib/sessions'
@@ -77,7 +77,7 @@ export function useSyncQueue() {
           if (isNetworkError(err)) {
             incrementRetry(op.id)
           } else {
-            Sentry.captureException(err)
+            captureException(err)
             dequeue(op.id)
             Alert.alert(
               'Sync Failed',

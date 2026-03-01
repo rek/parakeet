@@ -1,4 +1,4 @@
-import * as Sentry from '@sentry/react-native';
+import { captureException } from '../utils/captureException'
 import {
   computeBlockOffset,
   generateAuxiliaryAssignments,
@@ -163,5 +163,5 @@ export function onCycleComplete(programId: string, userId: string): void {
             ),
         ),
     )
-    .catch((err) => Sentry.captureException(err));
+    .catch((err) => captureException(err));
 }
