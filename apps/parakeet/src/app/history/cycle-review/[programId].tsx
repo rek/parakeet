@@ -6,6 +6,7 @@ import { useQueryClient } from '@tanstack/react-query'
 import { useCycleReview } from '../../../hooks/useCycleReview'
 import { createFormulaOverride, deactivateFormulaConfig } from '../../../lib/formulas'
 import { useAuth } from '../../../hooks/useAuth'
+import { MUSCLE_GROUPS } from '@parakeet/training-engine'
 import type { FormulaConfig, MuscleGroup } from '@parakeet/training-engine'
 import { colors } from '../../../theme'
 import { BackLink } from '../../../components/navigation/BackLink'
@@ -71,10 +72,7 @@ const RATING_STYLES: Record<ProgressRating, { bg: string; text: string; label: s
   concerning: { bg: colors.dangerMuted, text: colors.danger, label: 'Concerning' },
 }
 
-const MUSCLES: MuscleGroup[] = [
-  'quads', 'hamstrings', 'glutes', 'lower_back', 'upper_back',
-  'chest', 'triceps', 'shoulders', 'biceps',
-]
+const MUSCLES = MUSCLE_GROUPS
 
 const MUSCLE_LABELS: Record<MuscleGroup, string> = {
   quads: 'Q', hamstrings: 'H', glutes: 'G', lower_back: 'LB', upper_back: 'UB',

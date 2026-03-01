@@ -1,88 +1,88 @@
-import { router } from 'expo-router'
-import { useState } from 'react'
+import { useState } from 'react';
 import {
-  Alert,
   Modal,
   StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
   View,
-} from 'react-native'
-
-import { getSession, skipSession } from '../../lib/sessions'
-import { colors, spacing, radii, typography } from '../../theme'
+} from 'react-native';
+import { router } from 'expo-router';
+import { getSession, skipSession } from '../../lib/sessions';
+import { colors, radii, spacing, typography } from '../../theme';
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
-type Session = Awaited<ReturnType<typeof getSession>>
+type Session = Awaited<ReturnType<typeof getSession>>;
 
 interface WorkoutCardProps {
-  session: NonNullable<Session>
-  onSkipComplete?: () => void
+  session: NonNullable<Session>;
+  onSkipComplete?: () => void;
 }
 
 const INTENSITY_BADGE: Record<string, { bg: string; text: string }> = {
-  heavy:     { bg: colors.danger,    text: colors.text },
-  explosive: { bg: colors.primary,   text: colors.textInverse },
-  rep:       { bg: colors.success,   text: colors.textInverse },
-}
+  heavy: { bg: colors.danger, text: colors.text },
+  explosive: { bg: colors.primary, text: colors.textInverse },
+  rep: { bg: colors.success, text: colors.textInverse },
+};
 
 function getIntensityBadge(intensityType: string) {
-  return INTENSITY_BADGE[intensityType.toLowerCase()] ?? { bg: colors.bgMuted, text: colors.textSecondary }
+  return (
+    INTENSITY_BADGE[intensityType.toLowerCase()] ?? {
+      bg: colors.bgMuted,
+      text: colors.textSecondary,
+    }
+  );
 }
 
 function formatDate(dateString: string | null): string {
-  if (!dateString) return ''
+  if (!dateString) return '';
   return new Date(dateString).toLocaleDateString('en-AU', {
     weekday: 'short',
     month: 'short',
     day: 'numeric',
-  })
+  });
 }
 
-export function WorkoutCard({
-  session,
-  onSkipComplete,
-}: WorkoutCardProps) {
-  const [skipModalVisible, setSkipModalVisible] = useState(false)
-  const [skipReason, setSkipReason] = useState('')
-  const [isSkipping, setIsSkipping] = useState(false)
+export function WorkoutCard({ session, onSkipComplete }: WorkoutCardProps) {
+  const [skipModalVisible, setSkipModalVisible] = useState(false);
+  const [skipReason, setSkipReason] = useState('');
+  const [isSkipping, setIsSkipping] = useState(false);
 
   function handleStartWorkout() {
     router.push({
       pathname: '/session/soreness',
       params: { sessionId: session.id },
-    })
+    });
   }
 
   function handleSkipPress() {
-    setSkipReason('')
-    setSkipModalVisible(true)
+    setSkipReason('');
+    setSkipModalVisible(true);
   }
 
   async function handleConfirmSkip() {
-    if (isSkipping) return
-    setIsSkipping(true)
+    if (isSkipping) return;
+    setIsSkipping(true);
     try {
-      await skipSession(session.id, skipReason.trim() || undefined)
-      setSkipModalVisible(false)
-      onSkipComplete?.()
+      await skipSession(session.id, skipReason.trim() || undefined);
+      setSkipModalVisible(false);
+      onSkipComplete?.();
     } finally {
-      setIsSkipping(false)
+      setIsSkipping(false);
     }
   }
 
   function handleCancelSkip() {
-    setSkipModalVisible(false)
-    setSkipReason('')
+    setSkipModalVisible(false);
+    setSkipReason('');
   }
 
-  const badge = getIntensityBadge(session.intensity_type)
+  const badge = getIntensityBadge(session.intensity_type);
   const blockLabel =
     session.block_number !== null
       ? `Block ${session.block_number} · Week ${session.week_number}`
-      : `Week ${session.week_number}`
+      : `Week ${session.week_number}`;
 
   return (
     <>
@@ -110,7 +110,9 @@ export function WorkoutCard({
             Workout generated when you start
           </Text>
         ) : (
-          <Text style={styles.setsText}>{(session.planned_sets as unknown[]).length} sets</Text>
+          <Text style={styles.setsText}>
+            {(session.planned_sets as unknown[]).length} sets
+          </Text>
         )}
 
         {/* Planned date */}
@@ -185,7 +187,7 @@ export function WorkoutCard({
         </View>
       </Modal>
     </>
-  )
+  );
 }
 
 const styles = StyleSheet.create({
@@ -331,4 +333,4 @@ const styles = StyleSheet.create({
     fontWeight: typography.weights.semibold,
     color: colors.textSecondary,
   },
-})
+});

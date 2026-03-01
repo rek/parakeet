@@ -18,6 +18,7 @@ import { reportDisruption, applyDisruptionAdjustment, applyUnprogrammedEventSore
 import { useAuth } from '../../hooks/useAuth'
 import { getProfile } from '../../lib/profile'
 import type { DisruptionType, Severity, DisruptionWithSuggestions } from '@parakeet/shared-types'
+import type { MuscleGroup } from '@parakeet/training-engine'
 import { colors } from '../../theme'
 import { BackLink } from '../../components/navigation/BackLink'
 import { qk } from '../../queries/keys'
@@ -39,7 +40,7 @@ type Lift = typeof LIFTS[number]
 
 type SorenessLevel = 'none' | 'mild' | 'sore' | 'very_sore'
 
-const MUSCLE_GROUPS = [
+const SORENESS_MUSCLES: { value: MuscleGroup; label: string }[] = [
   { value: 'quads',      label: 'Quads' },
   { value: 'hamstrings', label: 'Hamstrings' },
   { value: 'glutes',     label: 'Glutes' },
@@ -556,7 +557,7 @@ export default function DisruptionReportScreen() {
             />
 
             <SectionLabel label="Post-event soreness" />
-            {MUSCLE_GROUPS.map((mg) => (
+            {SORENESS_MUSCLES.map((mg) => (
               <View key={mg.value} style={styles.sorenessRow}>
                 <Text style={styles.sorenessMuscleLabel}>{mg.label}</Text>
                 <View style={styles.sorenessChips}>

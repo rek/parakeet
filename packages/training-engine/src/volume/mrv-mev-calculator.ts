@@ -1,5 +1,6 @@
 import {
   CompletedSetLog,
+  MUSCLE_GROUPS,
   MrvMevConfig,
   MuscleGroup,
   MuscleMapper,
@@ -34,13 +35,8 @@ export const DEFAULT_MRV_MEV_CONFIG_FEMALE: MrvMevConfig = {
 // Backward-compat alias — existing callers unaffected
 export const DEFAULT_MRV_MEV_CONFIG = DEFAULT_MRV_MEV_CONFIG_MALE
 
-const ALL_MUSCLE_GROUPS: MuscleGroup[] = [
-  'quads', 'hamstrings', 'glutes', 'lower_back', 'upper_back',
-  'chest', 'triceps', 'shoulders', 'biceps',
-]
-
 function emptyVolumeMap(): Record<MuscleGroup, number> {
-  return Object.fromEntries(ALL_MUSCLE_GROUPS.map((m) => [m, 0])) as Record<MuscleGroup, number>
+  return Object.fromEntries(MUSCLE_GROUPS.map((m) => [m, 0])) as Record<MuscleGroup, number>
 }
 
 export function computeWeeklyVolume(
@@ -58,7 +54,7 @@ export function computeWeeklyVolume(
 
   // Floor fractional contributions (secondary muscles accumulate in 0.5 increments)
   return Object.fromEntries(
-    ALL_MUSCLE_GROUPS.map((m) => [m, Math.floor(raw[m])]),
+    MUSCLE_GROUPS.map((m) => [m, Math.floor(raw[m])]),
   ) as Record<MuscleGroup, number>
 }
 
@@ -67,7 +63,7 @@ export function classifyVolumeStatus(
   config: MrvMevConfig,
 ): Record<MuscleGroup, VolumeStatus> {
   return Object.fromEntries(
-    ALL_MUSCLE_GROUPS.map((muscle) => {
+    MUSCLE_GROUPS.map((muscle) => {
       const sets = weeklyVolume[muscle]
       const { mev, mrv } = config[muscle]
 
@@ -94,6 +90,6 @@ export function computeRemainingCapacity(
   config: MrvMevConfig,
 ): Record<MuscleGroup, number> {
   return Object.fromEntries(
-    ALL_MUSCLE_GROUPS.map((muscle) => [muscle, config[muscle].mrv - weeklyVolume[muscle]]),
+    MUSCLE_GROUPS.map((muscle) => [muscle, config[muscle].mrv - weeklyVolume[muscle]]),
   ) as Record<MuscleGroup, number>
 }

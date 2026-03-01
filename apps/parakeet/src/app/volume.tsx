@@ -3,14 +3,12 @@ import { SafeAreaView } from 'react-native-safe-area-context'
 import { router } from 'expo-router'
 
 import { useWeeklyVolume } from '../hooks/useWeeklyVolume'
+import { MUSCLE_GROUPS } from '@parakeet/training-engine'
 import type { MuscleGroup, VolumeStatus } from '@parakeet/training-engine'
 import { colors } from '../theme'
 import { BackLink } from '../components/navigation/BackLink'
 
-const MUSCLES: MuscleGroup[] = [
-  'quads', 'hamstrings', 'glutes', 'lower_back', 'upper_back',
-  'chest', 'triceps', 'shoulders', 'biceps',
-]
+const MUSCLES = MUSCLE_GROUPS
 
 const MUSCLE_LABELS: Record<MuscleGroup, string> = {
   quads:      'Quads',

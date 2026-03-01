@@ -11,7 +11,7 @@ import { SafeAreaView } from 'react-native-safe-area-context'
 import { router } from 'expo-router'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 
-import { DEFAULT_MRV_MEV_CONFIG_MALE, DEFAULT_MRV_MEV_CONFIG_FEMALE } from '@parakeet/training-engine'
+import { DEFAULT_MRV_MEV_CONFIG_MALE, DEFAULT_MRV_MEV_CONFIG_FEMALE, MUSCLE_GROUPS } from '@parakeet/training-engine'
 import type { MrvMevConfig, MuscleGroup } from '@parakeet/training-engine'
 import { getMrvMevConfig, updateMuscleConfig, resetMuscleToDefault } from '../../lib/volume-config'
 import { getProfile } from '../../lib/profile'
@@ -21,10 +21,7 @@ import { BackLink } from '../../components/navigation/BackLink'
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
-const MUSCLES: MuscleGroup[] = [
-  'quads', 'hamstrings', 'glutes', 'lower_back', 'upper_back',
-  'chest', 'triceps', 'shoulders', 'biceps',
-]
+const MUSCLES = MUSCLE_GROUPS
 
 const MUSCLE_LABELS: Record<MuscleGroup, string> = {
   quads:      'Quads',

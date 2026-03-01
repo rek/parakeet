@@ -48,6 +48,7 @@
   },
   "devDependencies": {
     "@expo/cli": "~54.0.16",
+    "@ianvs/prettier-plugin-sort-imports": "^4.7.1",
     "@nx/expo": "22.5.2",
     "@nx/js": "22.5.2",
     "@nx/workspace": "22.5.2",

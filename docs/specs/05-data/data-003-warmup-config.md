@@ -16,7 +16,8 @@ CREATE TABLE warmup_configs (
   user_id      UUID NOT NULL REFERENCES auth.users(id),
   lift         TEXT NOT NULL,    -- 'squat' | 'bench' | 'deadlift'
   protocol     TEXT NOT NULL DEFAULT 'standard',
-                                 -- 'standard' | 'minimal' | 'extended' | 'empty_bar' | 'custom'
+                                 -- 'standard' | 'minimal' | 'extended' | 'empty_bar' | 'custom' | 'standard_female'
+                                 -- 'standard_female' is the engine default for female users; stored if they save without changing
   custom_steps JSONB,            -- only when protocol = 'custom'; [{ pct, reps }, ...]
   updated_at   TIMESTAMPTZ NOT NULL DEFAULT now(),
   UNIQUE(user_id, lift)
@@ -27,8 +28,8 @@ CREATE POLICY "users_own_warmup_config" ON warmup_configs
 ```
 
 **`apps/parakeet/lib/warmup-config.ts`:**
-- [x] `getWarmupConfig(userId: string, lift: Lift): Promise<WarmupProtocol>` — fetch protocol for a lift, falling back to `{ type: 'preset', name: 'standard' }` if no row
-- [x] `getAllWarmupConfigs(userId: string): Promise<Record<Lift, WarmupProtocol>>` — fetch all 3 lifts in one call, applying defaults where rows are missing
+- [x] `getWarmupConfig(userId: string, lift: Lift, biologicalSex?): Promise<WarmupProtocol>` — fetch protocol for a lift, falling back to `standard_female` (female) or `standard` (male/unset) if no row
+- [x] `getAllWarmupConfigs(userId: string, biologicalSex?): Promise<Record<Lift, WarmupProtocol>>` — fetch all 3 lifts in one call, applying sex-appropriate defaults where rows are missing
 - [x] `updateWarmupConfig(userId: string, lift: Lift, protocol: WarmupProtocol): Promise<void>` — upsert protocol for a lift
 - [x] `resetWarmupConfig(userId: string, lift: Lift): Promise<void>` — delete override row, reverting to standard default
 

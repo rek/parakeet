@@ -12,13 +12,13 @@ CRUD operations for the user's MEV/MRV configuration per muscle group. Supabase 
 **Table: `muscle_volume_config`**
 ```sql
 CREATE TABLE muscle_volume_config (
-  id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id     UUID NOT NULL REFERENCES auth.users(id),
-  muscle      TEXT NOT NULL,   -- MuscleGroup enum value
-  mev         INTEGER NOT NULL, -- sets/week
-  mrv         INTEGER NOT NULL, -- sets/week
-  updated_at  TIMESTAMPTZ NOT NULL DEFAULT now(),
-  UNIQUE(user_id, muscle)
+  id                  UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id             UUID NOT NULL REFERENCES auth.users(id),
+  muscle_group        TEXT NOT NULL,      -- MuscleGroup enum value
+  mev_sets_per_week   SMALLINT NOT NULL,  -- sets/week
+  mrv_sets_per_week   SMALLINT NOT NULL,  -- sets/week
+  updated_at          TIMESTAMPTZ NOT NULL DEFAULT now(),
+  UNIQUE(user_id, muscle_group)
 );
 
 CREATE POLICY "users_own_volume_config" ON muscle_volume_config

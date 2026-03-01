@@ -69,16 +69,12 @@ export type FormulaConfigOverrides = DeepPartial<FormulaConfig>
 // Muscle volume types (engine-006)
 // ---------------------------------------------------------------------------
 
-export type MuscleGroup =
-  | 'quads'
-  | 'hamstrings'
-  | 'glutes'
-  | 'lower_back'
-  | 'upper_back'
-  | 'chest'
-  | 'triceps'
-  | 'shoulders'
-  | 'biceps'
+export const MUSCLE_GROUPS = [
+  'quads', 'hamstrings', 'glutes', 'lower_back', 'upper_back',
+  'chest', 'triceps', 'shoulders', 'biceps',
+] as const
+
+export type MuscleGroup = (typeof MUSCLE_GROUPS)[number]
 
 export type VolumeStatus =
   | 'below_mev'
