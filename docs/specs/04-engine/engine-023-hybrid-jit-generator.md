@@ -90,7 +90,6 @@ comparisonData?: {
 
 ### jit_comparison_logs Table
 
-Add to migration:
 ```sql
 CREATE TABLE jit_comparison_logs (
   id              uuid DEFAULT gen_random_uuid() PRIMARY KEY,
@@ -109,6 +108,7 @@ CREATE TABLE jit_comparison_logs (
 ```
 
 **`logComparison()` in `packages/training-engine/src/generator/hybrid-jit-generator.ts`:**
+
 ```typescript
 async function logComparison(
   input: JITInput,
@@ -129,6 +129,8 @@ async function logComparison(
 }
 ```
 
+- [x] Wire app-side call to `logComparison()` from session generation flow (table exists but rows are not written during live sessions)
+
 ---
 
 ### Developer Mode Strategy Selector
@@ -136,7 +138,8 @@ async function logComparison(
 **`apps/parakeet/app/settings/developer.tsx`** — extend existing developer settings screen:
 
 Add a "JIT Strategy" section:
-```
+
+```text
 JIT Strategy
 ────────────────────────────────
 ● Auto  (LLM if online, formula if offline)
@@ -146,6 +149,7 @@ JIT Strategy
 ```
 
 Selection persisted to Async Storage:
+
 ```typescript
 // apps/parakeet/src/lib/settings.ts
 const JIT_STRATEGY_KEY = 'jit_strategy_override'
@@ -153,6 +157,7 @@ type JITStrategyOverride = 'auto' | 'formula' | 'llm' | 'hybrid'
 ```
 
 Read by `JITGeneratorRegistry` before generating each session:
+
 ```typescript
 // packages/training-engine/src/generator/jit-generator-registry.ts
 const override = await getJITStrategyOverride()
@@ -160,13 +165,15 @@ const strategy = resolveStrategy(override, isOnline)
 return registry.get(strategy).generate(input)
 ```
 
+- [x] Wire `JITGeneratorRegistry` to read strategy override from AsyncStorage — currently calls `getJITGenerator('auto', true)` unconditionally; `hybrid` strategy is never selected
+
 ---
 
 ### Divergence Display in Session Screen
 
 When `comparisonData.shouldSurfaceToUser === true`, the session screen (`[sessionId].tsx`) renders a `<ComparisonCard>` above the set list:
 
-```
+```text
 ┌──────────────────────────────────────┐
 │  Formula: 2 × 107.5 kg              │
 │  AI:      1 × 95 kg                 │
@@ -185,6 +192,7 @@ When `comparisonData.shouldSurfaceToUser === true`, the session screen (`[sessio
 ### Unit Tests
 
 **File: `packages/training-engine/src/generator/__tests__/hybrid-jit-generator.test.ts`:**
+
 - [x] Both agree within 10% + same sets → LLM output returned
 - [x] Diverge > 15% weight → `shouldSurfaceToUser: true` in comparisonData
 - [x] LLM fails → formula output returned with `jit_strategy: 'formula_fallback'`

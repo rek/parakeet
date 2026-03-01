@@ -12,6 +12,7 @@ import type {
 } from '@parakeet/training-engine'
 import { LiftSchema, IntensityTypeSchema, BlockNumberSchema, DisruptionSchema } from '@parakeet/shared-types'
 import { supabase } from './supabase'
+import { getJITStrategyOverride } from './settings'
 import { getCurrentOneRmKg } from './lifter-maxes'
 import { getFormulaConfig } from './formulas'
 import { getMrvMevConfig } from './volume-config'
@@ -143,7 +144,26 @@ export async function runJITForSession(
     biologicalSex: biologicalSex ?? undefined,
   }
 
-  const generator = getJITGenerator('auto', true)
+  const strategyOverride = await getJITStrategyOverride()
+
+  const comparisonLogger = (
+    input: JITInput,
+    formulaOutput: JITOutput,
+    llmOutput: JITOutput,
+    divergence: unknown,
+  ) => {
+    void supabase.from('jit_comparison_logs').insert({
+      user_id: userId,
+      session_id: session.id,
+      jit_input: input,
+      formula_output: formulaOutput,
+      llm_output: llmOutput,
+      divergence,
+      strategy_used: 'llm',
+    })
+  }
+
+  const generator = getJITGenerator(strategyOverride, true, comparisonLogger)
   const jitOutput = await generator.generate(jitInput)
 
   // Persist the generated sets back to the session row
