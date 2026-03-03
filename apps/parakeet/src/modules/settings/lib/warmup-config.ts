@@ -20,13 +20,14 @@ export async function getWarmupConfig(
   lift: Lift,
   biologicalSex?: 'female' | 'male',
 ): Promise<WarmupProtocol> {
-  const { data } = await typedSupabase
+  const { data, error } = await typedSupabase
     .from('warmup_configs')
     .select('protocol, custom_steps')
     .eq('user_id', userId)
     .eq('lift', lift)
     .maybeSingle()
 
+  if (error) throw error
   const defaultPreset: WarmupPresetName = biologicalSex === 'female' ? 'standard_female' : 'standard'
   if (!data) return { type: 'preset', name: defaultPreset }
   if (data.protocol === 'custom') return { type: 'custom', steps: parseCustomSteps(data.custom_steps) }
@@ -37,11 +38,12 @@ export async function getAllWarmupConfigs(
   userId: string,
   biologicalSex?: 'female' | 'male',
 ): Promise<Record<Lift, WarmupProtocol>> {
-  const { data } = await typedSupabase
+  const { data, error } = await typedSupabase
     .from('warmup_configs')
     .select('lift, protocol, custom_steps')
     .eq('user_id', userId)
 
+  if (error) throw error
   const defaultPreset: WarmupPresetName = biologicalSex === 'female' ? 'standard_female' : 'standard'
   const defaults: Record<Lift, WarmupProtocol> = {
     squat: { type: 'preset', name: defaultPreset },

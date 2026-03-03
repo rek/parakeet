@@ -83,13 +83,14 @@ export async function submitMaxes(input: LifterMaxesInput) {
 }
 
 export async function getCurrentMaxes(userId: string) {
-  const { data } = await typedSupabase
+  const { data, error } = await typedSupabase
     .from('lifter_maxes')
     .select('*')
     .eq('user_id', userId)
     .order('recorded_at', { ascending: false })
     .limit(1)
     .maybeSingle()
+  if (error) throw error
   return data
 }
 

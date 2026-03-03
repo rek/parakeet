@@ -22,12 +22,13 @@ export async function getAuthenticatedUserId(): Promise<string | null> {
 }
 
 export async function getProfileById(userId: string): Promise<ProfileRecord | null> {
-  const { data } = await typedSupabase
+  const { data, error } = await typedSupabase
     .from('profiles')
     .select('id, display_name, biological_sex, date_of_birth, bodyweight_kg, created_at')
     .eq('id', userId)
     .maybeSingle();
 
+  if (error) throw error;
   return data ?? null;
 }
 

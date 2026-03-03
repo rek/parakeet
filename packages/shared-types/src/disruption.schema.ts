@@ -61,6 +61,7 @@ export const DisruptionSchema = z
     affected_date_end: z.iso.date().nullable(),
     affected_lifts: z.array(z.string()).nullable(),
     description: z.string().nullable(),
+    adjustment_applied: z.array(AdjustmentSuggestionSchema).nullable(),
     resolved_at: z.iso.datetime({ offset: true }).nullable(),
     status: z.enum(['active', 'resolved', 'monitoring']),
   })

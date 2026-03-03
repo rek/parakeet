@@ -33,12 +33,13 @@ export async function getPerformanceByLift(
     query = query.gte('completed_at', fromDate.toISOString())
   }
 
-  const { data } = await query
+  const { data, error } = await query
+  if (error) throw error
   return data ?? []
 }
 
 export async function getPerformanceTrends(userId: string): Promise<PerformanceTrend[]> {
-  const { data } = await typedSupabase
+  const { data, error } = await typedSupabase
     .from('session_logs')
     .select(`
       completion_pct, session_rpe, actual_sets,
@@ -48,16 +49,18 @@ export async function getPerformanceTrends(userId: string): Promise<PerformanceT
     .order('completed_at', { ascending: false })
     .limit(30)
 
+  if (error) throw error
   return computeTrends(data ?? [])
 }
 
 export async function getPendingAdjustmentSuggestions(userId: string) {
-  const { data } = await typedSupabase
+  const { data, error } = await typedSupabase
     .from('performance_metrics')
     .select('*')
     .eq('user_id', userId)
     .eq('reviewed', false)
     .order('computed_at', { ascending: false })
+  if (error) throw error
   return (data as Array<{ suggestions?: unknown[] }> | null)?.flatMap((r) => r.suggestions ?? []) ?? []
 }
 
@@ -138,7 +141,7 @@ export async function getWeeklySetsPerLift(
   const fromDate = new Date()
   fromDate.setDate(fromDate.getDate() - weeks * 7)
 
-  const { data } = await typedSupabase
+  const { data, error } = await typedSupabase
     .from('session_logs')
     .select('completed_at, actual_sets, sessions!inner(primary_lift, status)')
     .eq('user_id', userId)
@@ -146,6 +149,7 @@ export async function getWeeklySetsPerLift(
     .gte('completed_at', fromDate.toISOString())
     .order('completed_at', { ascending: true })
 
+  if (error) throw error
   if (!data) return []
 
   const grouped = new Map<string, number>()
@@ -180,7 +184,7 @@ export async function getRecentLiftHistory(
   lift: Lift,
   limit = 5,
 ) {
-  const { data } = await typedSupabase
+  const { data, error } = await typedSupabase
     .from('session_logs')
     .select('completed_at, completion_pct, session_rpe, actual_sets, sessions!inner(primary_lift)')
     .eq('user_id', userId)
@@ -188,6 +192,7 @@ export async function getRecentLiftHistory(
     .order('completed_at', { ascending: false })
     .limit(limit)
 
+  if (error) throw error
   return processRecentHistory(
     (data ?? []).map((r) => ({
       completed_at: r.completed_at ?? '',

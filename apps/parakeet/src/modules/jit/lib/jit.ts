@@ -116,7 +116,7 @@ export async function runJITForSession(
 
   const { data: disruptionRows } = await typedSupabase
     .from('disruptions')
-    .select('id, user_id, program_id, session_ids_affected, reported_at, disruption_type, severity, affected_date_start, affected_date_end, affected_lifts, description, resolved_at, status')
+    .select('id, user_id, program_id, session_ids_affected, reported_at, disruption_type, severity, affected_date_start, affected_date_end, affected_lifts, description, adjustment_applied, resolved_at, status')
     .eq('user_id', userId)
     .neq('status', 'resolved')
 

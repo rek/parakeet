@@ -15,11 +15,12 @@ export async function getMrvMevConfig(
   userId: string,
   biologicalSex?: BiologicalSex | null,
 ): Promise<MrvMevConfig> {
-  const { data } = await typedSupabase
+  const { data, error } = await typedSupabase
     .from('muscle_volume_config')
     .select('muscle_group, mev_sets_per_week, mrv_sets_per_week')
     .eq('user_id', userId)
 
+  if (error) throw error
   const defaults =
     biologicalSex === 'female'
       ? DEFAULT_MRV_MEV_CONFIG_FEMALE

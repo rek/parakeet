@@ -236,13 +236,14 @@ export async function insertSorenessCheckin(input: {
 export async function getLatestSorenessRatings(
   userId: string,
 ): Promise<Record<string, number> | null> {
-  const { data } = await typedSupabase
+  const { data, error } = await typedSupabase
     .from('soreness_checkins')
     .select('ratings, skipped')
     .eq('user_id', userId)
     .order('recorded_at', { ascending: false })
     .limit(1)
-    .single();
+    .maybeSingle();
+  if (error) throw error;
   if (!data || data.skipped) return null;
   return data.ratings as Record<string, number>;
 }

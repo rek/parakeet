@@ -11,10 +11,11 @@ import {
 } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { router } from 'expo-router'
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import DateTimePicker, { type DateTimePickerEvent } from '@react-native-community/datetimepicker'
 
 import { reportDisruption, applyDisruptionAdjustment, applyUnprogrammedEventSoreness } from '@modules/disruptions'
+import { captureException } from '@platform/utils/captureException'
 import { useAuth } from '@modules/auth'
 import { getProfile } from '@modules/profile'
 import type {
@@ -108,6 +109,7 @@ type ScreenState = 'form' | 'review'
 
 export default function DisruptionReportScreen() {
   const { user } = useAuth()
+  const queryClient = useQueryClient()
 
   const { data: profile } = useQuery({
     queryKey: qk.profile.current(),
@@ -216,9 +218,11 @@ export default function DisruptionReportScreen() {
         await applyUnprogrammedEventSoreness(user.id, numericSoreness)
       }
 
+      void queryClient.invalidateQueries({ queryKey: ['disruptions', 'active', user.id] })
       setDisruption(result)
       setScreenState('review')
-    } catch {
+    } catch (err) {
+      captureException(err)
       setSubmitError('Failed to submit. Please try again.')
     } finally {
       setIsSubmitting(false)

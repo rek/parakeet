@@ -96,15 +96,16 @@ export async function applyDisruptionAdjustment(
   disruptionId: string,
   userId: string,
 ): Promise<void> {
-  const { data: disruption } = await typedSupabase
+  const { data: disruption, error: disruptionError } = await typedSupabase
     .from('disruptions')
     .select('*')
     .eq('id', disruptionId)
     .eq('user_id', userId)
     .eq('status', 'active')
     .is('adjustment_applied', null)
-    .single()
+    .maybeSingle()
 
+  if (disruptionError) throw disruptionError
   if (!disruption) throw new Error('Disruption not found or already applied')
 
   const sessionIds = disruption.session_ids_affected ?? []
@@ -218,12 +219,13 @@ export async function resolveDisruption(
 }
 
 export async function getActiveDisruptions(userId: string) {
-  const { data } = await typedSupabase
+  const { data, error } = await typedSupabase
     .from('disruptions')
     .select('id, disruption_type, severity, affected_lifts, description, affected_date_end')
     .eq('user_id', userId)
     .neq('status', 'resolved')
-    .order('created_at', { ascending: false })
+    .order('reported_at', { ascending: false })
+  if (error) throw error
   return data ?? []
 }
 
@@ -234,23 +236,25 @@ export async function getDisruptionHistory(
   const from = pagination.page * pagination.pageSize
   const to = from + pagination.pageSize - 1
 
-  const { data, count } = await typedSupabase
+  const { data, count, error } = await typedSupabase
     .from('disruptions')
     .select('*', { count: 'exact' })
     .eq('user_id', userId)
-    .order('created_at', { ascending: false })
+    .order('reported_at', { ascending: false })
     .range(from, to)
 
+  if (error) throw error
   return { items: data ?? [], total: count ?? 0 }
 }
 
 export async function getDisruption(disruptionId: string, userId: string) {
-  const { data } = await typedSupabase
+  const { data, error } = await typedSupabase
     .from('disruptions')
     .select('*')
     .eq('id', disruptionId)
     .eq('user_id', userId)
-    .single()
+    .maybeSingle()
+  if (error) throw error
   return data
 }
 

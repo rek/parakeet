@@ -3,13 +3,14 @@ import type { Lift } from '@parakeet/shared-types'
 import { typedSupabase } from '@platform/supabase'
 
 export async function getAuxiliaryPool(userId: string, lift: Lift): Promise<string[]> {
-  const { data } = await typedSupabase
+  const { data, error } = await typedSupabase
     .from('auxiliary_exercises')
     .select('exercise_name')
     .eq('user_id', userId)
     .eq('lift', lift)
     .order('pool_position')
 
+  if (error) throw error
   if (!data || data.length === 0) return DEFAULT_AUXILIARY_POOLS[lift]
   return data.map((r) => r.exercise_name)
 }
@@ -44,13 +45,14 @@ export async function getActiveAssignments(
   programId: string,
   blockNumber: 1 | 2 | 3,
 ): Promise<Partial<Record<Lift, [string, string]>>> {
-  const { data } = await typedSupabase
+  const { data, error } = await typedSupabase
     .from('auxiliary_assignments')
     .select('lift, exercise_1, exercise_2')
     .eq('user_id', userId)
     .eq('program_id', programId)
     .eq('block_number', blockNumber)
 
+  if (error) throw error
   return Object.fromEntries(
     (data ?? []).map((r) => [r.lift, [r.exercise_1, r.exercise_2]]),
   ) as Partial<Record<Lift, [string, string]>>
