@@ -28,7 +28,6 @@ import { getCurrentOneRmKg } from '@modules/program'
 import { useAuth } from '@modules/auth'
 import { colors } from '../../theme'
 import { BackLink } from '../../components/navigation/BackLink'
-import { parseFormulaOverridesJson } from '@platform/network'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -337,7 +336,7 @@ export default function FormulaEditorScreen() {
   async function handleAcceptSuggestion(suggestionId: string, overrides: unknown) {
     if (!user) return
     await createFormulaOverride(user.id, {
-      overrides: parseFormulaOverridesJson(overrides),
+      overrides,
       source: 'ai_suggestion',
     })
     queryClient.invalidateQueries({ queryKey: ['formula'] })
@@ -352,7 +351,7 @@ export default function FormulaEditorScreen() {
   async function handleReactivate(configId: string, overrides: unknown) {
     if (!user) return
     await createFormulaOverride(user.id, {
-      overrides: parseFormulaOverridesJson(overrides),
+      overrides,
       source: 'user',
     })
     queryClient.invalidateQueries({ queryKey: ['formula'] })

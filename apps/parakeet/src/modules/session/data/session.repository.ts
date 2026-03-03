@@ -1,13 +1,13 @@
 import type { ActualSet, IntensityType, Lift } from '@parakeet/shared-types';
 import { IntensityTypeSchema, LiftSchema } from '@parakeet/shared-types';
 import type { DbInsert, DbRow } from '@platform/supabase';
-import { parseActualSetsJson } from '@platform/network';
 import { typedSupabase } from '@platform/supabase';
 import type {
   CompletedSessionListItem,
   ProgramSessionView,
   SessionStatus,
 } from '@shared/types/domain';
+import { parseActualSetsJson } from './session-codecs';
 
 type SessionRow = DbRow<'sessions'>;
 
@@ -91,6 +91,19 @@ export async function fetchTodaySession(
 
   if (inProgressError) throw inProgressError;
   if (inProgressData) return inProgressData;
+
+  const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+  const { data: completedTodayData, error: completedTodayError } = await typedSupabase
+    .from('sessions')
+    .select('*')
+    .eq('user_id', userId)
+    .eq('status', 'completed')
+    .gte('completed_at', twentyFourHoursAgo)
+    .order('completed_at', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  if (completedTodayError) throw completedTodayError;
+  if (completedTodayData) return completedTodayData;
 
   const { data: plannedData, error: plannedError } = await typedSupabase
     .from('sessions')

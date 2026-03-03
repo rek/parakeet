@@ -1,6 +1,5 @@
 import { getDefaultFormulaConfig, mergeFormulaConfig } from '@parakeet/training-engine';
 import type { FormulaConfig } from '@parakeet/training-engine';
-import type { FormulaOverrides } from '@parakeet/shared-types';
 
 import {
   activateFormulaConfigById,
@@ -12,7 +11,7 @@ import {
   listFormulaConfigs,
   listPendingAiFormulaSuggestions,
 } from '../data/formula.repository';
-import { parseFormulaOverridesJson } from '@platform/network';
+import { parseFormulaOverridesJson } from '../data/formula-codecs';
 
 export async function getFormulaConfig(
   userId: string,
@@ -29,7 +28,7 @@ export async function getFormulaConfig(
 export async function createFormulaOverride(
   userId: string,
   input: {
-    overrides: FormulaOverrides;
+    overrides: unknown;
     source: 'user' | 'ai_suggestion';
     ai_rationale?: string;
   },

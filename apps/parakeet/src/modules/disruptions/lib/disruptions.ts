@@ -10,9 +10,9 @@ import type {
   Lift,
 } from '@parakeet/shared-types'
 import { DisruptionSchema } from '@parakeet/shared-types'
-import { parseAdjustmentSuggestionsJson, parsePlannedSetsJson } from '@platform/network'
 import type { DbRow } from '@platform/supabase'
 import { typedSupabase } from '@platform/supabase'
+import { parseAdjustmentSuggestionsJson, parsePlannedSetsJson } from '../data/disruption-codecs'
 
 type SessionRow = Pick<DbRow<'sessions'>, 'id' | 'primary_lift' | 'planned_sets' | 'status'>
 type SuggestedSession = { id: string; primary_lift: Lift; status: string }

@@ -106,7 +106,6 @@ export default function CompleteScreen() {
     // Offline: queue and show optimistic success
     if (!isOnline) {
       enqueue({ operation: 'complete_session', payload: completionPayload });
-      queryClient.setQueryData(qk.session.today(user?.id), null);
       setPendingSync(true);
       setSaved(true);
       return;
@@ -126,35 +125,37 @@ export default function CompleteScreen() {
         captureException(err)
       );
 
-      queryClient.setQueryData(qk.session.today(user?.id), null);
-
-      // ── Achievement detection ──────────────────────────────────────────────
-
-      const achievements = await detectAchievements(
-        sessionId,
-        user.id,
-        actualSets
-      );
-      if (achievements.earnedPRs.length > 0)
-        setEarnedPRs(achievements.earnedPRs);
-      if (achievements.streakWeeks !== null)
-        setStreakWeeks(achievements.streakWeeks);
-      setStreakReset(achievements.streakReset);
-      if (achievements.cycleBadgeEarned) setCycleBadgeEarned(true);
-
+      // Data is committed — show the saved state regardless of what follows
       setSaved(true);
 
-      await queryClient.invalidateQueries({ queryKey: ['session'] });
-      await queryClient.invalidateQueries({
+      void queryClient.invalidateQueries({ queryKey: ['session'] });
+      void queryClient.invalidateQueries({
         queryKey: ['sessions', 'completed'],
       });
-      await queryClient.invalidateQueries({
+      void queryClient.invalidateQueries({
         queryKey: ['performance', 'trends'],
       });
-      await queryClient.invalidateQueries({ queryKey: ['achievements'] });
-      await queryClient.invalidateQueries({
+      void queryClient.invalidateQueries({ queryKey: ['achievements'] });
+      void queryClient.invalidateQueries({
         queryKey: qk.program.active(user?.id),
       });
+
+      // ── Achievement detection (best-effort) ───────────────────────────────
+      try {
+        const achievements = await detectAchievements(
+          sessionId,
+          user.id,
+          actualSets
+        );
+        if (achievements.earnedPRs.length > 0)
+          setEarnedPRs(achievements.earnedPRs);
+        if (achievements.streakWeeks !== null)
+          setStreakWeeks(achievements.streakWeeks);
+        setStreakReset(achievements.streakReset);
+        if (achievements.cycleBadgeEarned) setCycleBadgeEarned(true);
+      } catch (achievementErr) {
+        captureException(achievementErr);
+      }
     } catch (err: unknown) {
       if (isNetworkError(err)) {
         // Lost connection mid-save: queue for retry

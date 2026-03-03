@@ -11,10 +11,11 @@ The home tab that shows the user's next upcoming session and any active disrupti
 
 **`apps/parakeet/app/(tabs)/today.tsx`:**
 - On mount: call `useTodaySession()` hook via React Query (cache: 30 seconds, background refetch on focus)
-- Three states:
-  1. **Session found**: render `WorkoutCard` component
-  2. **No session (rest day or program complete)**: render rest day message with next session date
-  3. **No active program**: render "Create Your Program" CTA button → navigate to onboarding
+- Four states:
+  1. **Session completed today** (`session.status === 'completed'`): render "Workout Done ✓" card with lift name
+  2. **Session found** (in_progress or planned): render `WorkoutCard` component
+  3. **No session (rest day or program complete)**: render rest day message with next session date
+  4. **No active program**: render "Create Your Program" CTA button → navigate to onboarding
 
 **`apps/parakeet/components/training/WorkoutCard.tsx`:**
 - Props: `session: Session`, `onStart: () => void`
@@ -34,13 +35,13 @@ The home tab that shows the user's next upcoming session and any active disrupti
 **"Start Workout" navigation:**
 - Navigate to `session/[sessionId]` with session ID in URL
 
-**React Query hook (`apps/parakeet/hooks/useActiveSession.ts`):**
+**React Query hook (`apps/parakeet/src/modules/session/hooks/useTodaySession.ts`):**
 - `useTodaySession()` — selects session in priority order:
-  1. Session with `status = in_progress` (earliest `planned_date` if multiple)
-  2. Otherwise nearest `planned` session by `planned_date` ascending (not same-date-only)
-  3. Otherwise `null` → rest-day / program-complete state
-- Does **not** include `completed` sessions in the result
-- Returns `{ session, isLoading, error, refetch }`
+  1. Active `in_progress` session (earliest `planned_date` if multiple)
+  2. `completed` session with `planned_date = today` (enables "Workout Done" state)
+  3. Nearest `planned` session by `planned_date` ascending
+  4. `null` → rest-day / program-complete state
+- Returns `{ data: session, isLoading, error }`
 
 **Foreground reconciliation (in app `_layout.tsx` or Today mount):**
 - On app foreground / Today tab focus: call `markMissedSessions(userId)` then invalidate `['session', 'today']` and `['sessions']` React Query keys

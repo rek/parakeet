@@ -7,11 +7,11 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import { router } from 'expo-router';
 import { getSession, skipSession } from '@modules/session';
 import { getReadyCachedJitData } from '@platform/store/sessionStore';
-import { colors, radii, spacing, typography } from '../../theme';
 import { formatDate } from '@shared/utils/date';
+import { router } from 'expo-router';
+import { colors, radii, spacing, typography } from '../../theme';
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
