@@ -34,7 +34,7 @@ export function useAuth(): AuthState {
       setSession(s);
       setUser(s?.user ?? null);
 
-      if ((_event === 'SIGNED_IN' || _event === 'INITIAL_SESSION') && s?.user) {
+      if (_event === 'SIGNED_IN' && s?.user) {
         try {
           const profileStatus = await ensureSignedInUserProfile(s.user);
           if (profileStatus === 'profile_created') {
@@ -46,6 +46,9 @@ export function useAuth(): AuthState {
           Sentry.captureException(error)
           router.replace('/(tabs)/today');
         }
+      } else if (_event === 'INITIAL_SESSION' && s?.user) {
+        // Restore session — ensure profile exists but don't redirect; app is already on the right screen
+        ensureSignedInUserProfile(s.user).catch((err) => Sentry.captureException(err));
       } else if (_event === 'SIGNED_OUT') {
         router.replace('/(auth)/welcome');
       }
