@@ -3,12 +3,12 @@ import { SafeAreaView } from 'react-native-safe-area-context'
 import { router } from 'expo-router'
 import { useQuery } from '@tanstack/react-query'
 
-import { useAuth } from '../../hooks/useAuth'
-import { getWilksHistory } from '../../lib/achievements'
-import { getCurrentWilksSnapshot } from '../../services/wilks.service'
+import { useAuth } from '@modules/auth'
+import { getWilksHistory } from '@modules/achievements'
+import { getCurrentWilksSnapshot } from '@modules/wilks'
 import { colors } from '../../theme'
 import { BackLink } from '../../components/navigation/BackLink'
-import { formatDate } from '../../utils/date'
+import { formatDate } from '@shared/utils/date'
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 

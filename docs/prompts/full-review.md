@@ -114,8 +114,8 @@ For each screen, check: does it handle loading, error, and empty states?
 ### 5. Architecture & Dependency Rule Violations
 
 - Do any `apps/parakeet/src/` files import directly from `packages/training-engine` bypassing lib boundaries?
-- Do any `ui` libs import from `data-access` or `feature` libs?
-- Are Supabase calls happening in components directly instead of via `apps/parakeet/src/lib/`?
+- Do any module `ui/` areas import repository code directly instead of going through module application/public APIs?
+- Are Supabase calls happening in screens/components directly instead of via `modules/*/data/*` repositories?
 - Is any business logic (JIT, adjustments, volume math) duplicated between `packages/training-engine` and app-layer code?
 - Does `packages/shared-types` import from `packages/training-engine` (wrong direction)?
 

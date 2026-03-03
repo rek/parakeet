@@ -1,0 +1,100 @@
+import type { PR } from '@parakeet/training-engine';
+import type { Lift } from '@parakeet/shared-types';
+import { typedSupabase } from '@platform/supabase';
+
+export async function upsertPersonalRecords(userId: string, prs: PR[]): Promise<void> {
+  if (prs.length === 0) return;
+
+  const { error } = await typedSupabase.from('personal_records').upsert(
+    prs.map((pr) => ({
+      user_id: userId,
+      lift: pr.lift,
+      pr_type: pr.type,
+      value: pr.value,
+      weight_kg: pr.weightKg ?? null,
+      session_id: pr.sessionId,
+      achieved_at: pr.achievedAt,
+    })),
+    { onConflict: 'user_id,lift,pr_type,weight_kg' },
+  );
+  if (error) throw error;
+}
+
+export async function fetchPersonalRecords(userId: string, lift: Lift) {
+  const { data, error } = await typedSupabase
+    .from('personal_records')
+    .select('pr_type, value, weight_kg')
+    .eq('user_id', userId)
+    .eq('lift', lift);
+
+  if (error) throw error;
+  return data ?? [];
+}
+
+export async function fetchSessionsForStreak(userId: string) {
+  const { data, error } = await typedSupabase
+    .from('sessions')
+    .select('id, planned_date, status')
+    .eq('user_id', userId)
+    .not('planned_date', 'is', null)
+    .order('planned_date', { ascending: true });
+
+  if (error) throw error;
+  return data ?? [];
+}
+
+export async function fetchDisruptionsForStreak(userId: string) {
+  const { data, error } = await typedSupabase
+    .from('disruptions')
+    .select('affected_date_start, affected_date_end, session_ids_affected')
+    .eq('user_id', userId);
+
+  if (error) throw error;
+  return data ?? [];
+}
+
+export async function fetchProgramsForCycleBadges(userId: string) {
+  const { data, error } = await typedSupabase
+    .from('programs')
+    .select('id, version, start_date, total_weeks, status')
+    .eq('user_id', userId)
+    .in('status', ['completed', 'archived'])
+    .order('version', { ascending: true });
+
+  if (error) throw error;
+  return data ?? [];
+}
+
+export async function fetchProfileForWilks(userId: string) {
+  const { data, error } = await typedSupabase
+    .from('profiles')
+    .select('biological_sex, bodyweight_kg')
+    .eq('id', userId)
+    .maybeSingle();
+
+  if (error) throw error;
+  return data;
+}
+
+export async function fetchMaxesForWilks(userId: string) {
+  const { data, error } = await typedSupabase
+    .from('lifter_maxes')
+    .select('recorded_at, squat_1rm_grams, bench_1rm_grams, deadlift_1rm_grams')
+    .eq('user_id', userId)
+    .order('recorded_at', { ascending: true });
+
+  if (error) throw error;
+  return data ?? [];
+}
+
+export async function fetchProgramsForWilks(userId: string) {
+  const { data, error } = await typedSupabase
+    .from('programs')
+    .select('id, version, start_date')
+    .eq('user_id', userId)
+    .in('status', ['completed', 'archived'])
+    .order('version', { ascending: true });
+
+  if (error) throw error;
+  return data ?? [];
+}

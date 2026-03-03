@@ -46,7 +46,7 @@ No RLS write for regular users — suggestions are written server-side via the c
 The `CycleReview` type already contains `structuralSuggestions`. After the LLM returns a valid `CycleReview`, extract and store developer suggestions:
 
 ```typescript
-// In apps/parakeet/src/lib/cycle-review.ts — storeCycleReview()
+// In apps/parakeet/src/modules/cycle-review/lib/cycle-review.ts — storeCycleReview()
 if (review.structuralSuggestions?.length) {
   await supabase.from('developer_suggestions').insert(
     review.structuralSuggestions.map(s => ({
@@ -61,13 +61,13 @@ if (review.structuralSuggestions?.length) {
 }
 ```
 
-This extends the existing `storeCycleReview()` function in `apps/parakeet/src/lib/cycle-review.ts`.
+This extends the existing `storeCycleReview()` function in `apps/parakeet/src/modules/cycle-review/lib/cycle-review.ts`.
 
 ---
 
 ### Data Access
 
-**File: `apps/parakeet/src/lib/developer-suggestions.ts`**
+**File: `apps/parakeet/src/modules/settings/lib/developer-suggestions.ts`**
 
 ```typescript
 import { supabase } from './supabase'

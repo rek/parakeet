@@ -9,9 +9,9 @@ import {
   View,
 } from 'react-native'
 
-import { resolveDisruption } from '../../lib/disruptions'
-import { captureException } from '../../utils/captureException'
-import { formatDate } from '../../utils/date'
+import { resolveDisruption } from '@modules/disruptions'
+import { captureException } from '@platform/utils/captureException'
+import { formatDate } from '@shared/utils/date'
 import { colors, palette, radii, spacing, typography } from '../../theme'
 
 // ── Types ─────────────────────────────────────────────────────────────────────

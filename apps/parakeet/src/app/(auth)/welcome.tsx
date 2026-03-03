@@ -3,8 +3,8 @@ import * as Linking from 'expo-linking';
 import { useEffect, useState } from 'react';
 import { ActivityIndicator, Alert, Platform, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 
-import { captureException } from '../../utils/captureException'
-import { signInWithGoogleToken, signInWithMagicLink } from '../../services/auth.service';
+import { captureException } from '@platform/utils/captureException'
+import { signInWithGoogleToken, signInWithMagicLink } from '@modules/auth';
 import { colors, spacing, radii, typography } from '../../theme';
 
 export default function WelcomeScreen() {

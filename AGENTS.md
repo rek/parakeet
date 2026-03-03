@@ -1,12 +1,9 @@
 # Agent Guardrails
 
-## Type Safety
+## Docs Entry Point
 
-- Treat `supabase/types.ts` as generated DB shape only. Never hand-edit.
-- Shared domain contracts belong in `packages/shared-types`; engine-internal contracts belong in `packages/training-engine/src/types.ts`.
-- Do not create local duplicate interfaces for `Session`/`Program`/`Disruption` shapes in UI code when a canonical type already exists.
-- Parse JSON columns at repository boundaries via `apps/parakeet/src/network/json-codecs.ts`; do not pass raw `Json` into services/UI.
-- Keep `lib/*` re-export contracts stable. If service-level types are moved, re-export them from service modules to avoid downstream breakage.
+- Start documentation discovery from `docs/README.md`.
+- Treat `docs/PROJECT_ORGANIZATION.md` as canonical for app/module/platform/shared boundaries.
 
 ## Validation
 

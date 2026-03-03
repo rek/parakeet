@@ -14,13 +14,13 @@ import { useQuery } from '@tanstack/react-query';
 import { router, useLocalSearchParams } from 'expo-router';
 import { LineChart } from 'react-native-chart-kit';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useAuth } from '../../../hooks/useAuth';
+import { useAuth } from '@modules/auth';
 import {
   getPerformanceByLift,
   getPerformanceTrends,
-} from '../../../lib/performance';
+} from '@modules/history';
 import { colors, palette, radii, spacing, typography } from '../../../theme';
-import { formatDate } from '../../../utils/date';
+import { formatDate } from '@shared/utils/date';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 

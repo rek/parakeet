@@ -1,51 +1,55 @@
-# This directory contains design documents and architecture decisions
+# Docs Index
 
-## Documentation Philosophy
+Use this as the single entry point for project documentation.
 
-We follow a two-tier documentation approach:
+## Start Here
 
-### 📄 Design Docs (High-Level)
+1. [PROJECT_ORGANIZATION.md](./PROJECT_ORGANIZATION.md)
+   Canonical repo/app structure and import boundaries (`modules`, `platform`, `shared`).
+2. [dev.md](./dev.md)
+   Day-to-day commands (typecheck, tests, db workflows).
+3. [CODE_STYLE.md](./CODE_STYLE.md)
+   TypeScript and React Native conventions. Starts with a Quick Reference.
+4. [AI_WORKFLOW.md](./AI_WORKFLOW.md)
+   Design → plan → implementation workflow.
 
-**Purpose**: User-focused feature documentation
-**Audience**: You (the product owner), future developers, stakeholders
-**Content**: WHAT and WHY
+## Feature Navigator
 
-**Location**: `/docs/designs/`
+Use this to find code without searching. Full detail in [FEATURE_MAP.md](./FEATURE_MAP.md).
 
-**Includes**:
+| Feature | Import alias | Covers |
+| ------- | ----------- | ------ |
+| Auth | `@modules/auth` | Sign-in, Google OAuth, email OTP, session |
+| Program | `@modules/program` | Active program, lifter maxes, auxiliary config, formula config |
+| Session | `@modules/session` | Session lifecycle, JIT trigger, rest timer, sync queue |
+| JIT | `@modules/jit` | JIT session generation (formula/LLM/hybrid strategies) |
+| History | `@modules/history` | Performance trends, lift history, recent sets |
+| Disruptions | `@modules/disruptions` | Report/apply/resolve training disruptions |
+| Cycle Review | `@modules/cycle-review` | Post-cycle analysis, LLM coaching, developer suggestions |
+| Cycle Tracking | `@modules/cycle-tracking` | Menstrual cycle config, current phase |
+| Settings | `@modules/settings` | Rest prefs, warmup config, JIT strategy, developer suggestions |
+| Achievements | `@modules/achievements` | PRs, streaks, Wilks badges, detection hook |
+| Training Volume | `@modules/training-volume` | Weekly volume, MRV/MEV config |
+| Wilks | `@modules/wilks` | Wilks score computation |
+| Profile | `@modules/profile` | User profile CRUD |
 
-- Feature overview and user benefits
-- Links to Figma
-- User flows and interactions
-- Problem statements
-- Implementation status
-- Future enhancements
+**Platform (infra):** `@platform/supabase`, `@platform/query`, `@platform/network`, `@platform/store`
+**Shared (cross-feature):** `@shared/types`, `@shared/utils`, `@shared/constants`
+**Engine (pure domain):** `@parakeet/training-engine` — no Supabase, no React
 
-**Excludes**:
+## Architecture
 
-- Code implementations
-- API contracts
-- Database schemas
-- Component structures
-- Testing strategies
+- [design/training-engine-architecture.md](./design/training-engine-architecture.md)
+- [decisions/](./decisions/) (ADRs)
 
-### 🔵 Specs (Granular Tasks)
+## Product/Feature Docs
 
-**Purpose**: Technical implementation tracking
-**Audience**: AI assistant, developers
-**Content**: HOW
-**Includes**:
+- [design/](./design/) for product-level intent (what/why)
+- [specs/](./specs/) for implementation tasks (how)
+- [IMPLEMENTATION_STATUS.md](./IMPLEMENTATION_STATUS.md) for what's done vs planned
 
-- Specific implementation tasks (with checklist for done)
-- Technical dependencies
-- Minimal Code-level details only if required
-- Progress tracking
-- Task relationships
+## Templates
 
-## Why This Approach?
-
-**Design Docs** give you a clear picture of what features exist and how users experience them - without overwhelming technical noise.
-
-**Specs** handle the nitty-gritty implementation details that change frequently and aren't needed for understanding the product.
-
-**Result**: Clean, maintainable documentation that serves both product and technical needs.
+- [design/_TEMPLATE.md](./design/_TEMPLATE.md)
+- [decisions/_TEMPLATE.md](./decisions/_TEMPLATE.md)
+- [specs/_TEMPLATE.md](./specs/_TEMPLATE.md)

@@ -9,7 +9,7 @@ Helpers for transitioning session status: starting, skipping. Session completion
 
 ## Tasks
 
-**`apps/parakeet/src/services/session.service.ts` (lifecycle helpers; re-exported via `apps/parakeet/src/lib/sessions.ts`):**
+**`apps/parakeet/src/modules/session/application/session.service.ts` (lifecycle helpers; re-exported via `apps/parakeet/src/modules/session/application/session.service.ts`):**
 - [x] `startSession(sessionId: string): Promise<void>` — transition `planned → in_progress`; guarded with `.eq('status', 'planned')`
 - [x] `skipSession(sessionId: string, reason?: string): Promise<void>` — transition `planned | in_progress → skipped`
 

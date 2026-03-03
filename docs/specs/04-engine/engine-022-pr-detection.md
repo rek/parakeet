@@ -116,7 +116,7 @@ interface CycleCompletionResult {
 - [x] `checkCycleCompletion(input: CycleCompletionInput): CycleCompletionResult`
   - `completionPct = (completedSessions + skippedWithDisruption) / totalScheduledSessions`
   - `qualifiesForBadge = completionPct >= 0.80`
-  - Called from `onCycleComplete()` in `apps/parakeet/src/lib/programs.ts` (already fires at ≥80% — this function provides the formal calculation)
+  - Called from `onCycleComplete()` in `apps/parakeet/src/modules/program/application/program.service.ts` (already fires at ≥80% — this function provides the formal calculation)
 
 **Unit tests:**
 - [x] 16/20 sessions completed, 0 disruptions → 80% → qualifies
@@ -128,7 +128,7 @@ interface CycleCompletionResult {
 
 ### Supabase Integration
 
-Called from `apps/parakeet/src/lib/sessions.ts` → `completeSession()`:
+Called from `apps/parakeet/src/modules/session/application/session.service.ts` → `completeSession()`:
 
 ```typescript
 // After session completion, in completeSession():
@@ -166,7 +166,7 @@ CREATE TABLE personal_records (
 CREATE UNIQUE INDEX pr_unique ON personal_records (user_id, lift, pr_type, COALESCE(weight_kg, -1));
 ```
 
-**`getPRHistory(userId, lift)` in `apps/parakeet/src/lib/achievements.ts`:**
+**`getPRHistory(userId, lift)` in `apps/parakeet/src/modules/achievements/application/achievement.service.ts`:**
 - Fetch all rows from `personal_records` for this user+lift
 - Map into `historicalPRs` shape expected by `detectSessionPRs`
 

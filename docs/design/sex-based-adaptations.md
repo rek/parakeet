@@ -218,3 +218,10 @@ Female lifters' higher MEV/MRV and faster inter-set recovery mean they can produ
 - [2020 Wilks Formula](https://worldpowerlifting.com/wilks-formula/)
 - RP Strength — Volume landmarks and female training differences
 - Related Design Docs: [volume-management.md](./volume-management.md), [disruption-management.md](./disruption-management.md), [user-onboarding.md](./user-onboarding.md), [achievements.md](./achievements.md)
+
+---
+
+## Implementation Notes
+
+- `DEFAULT_MRV_MEV_CONFIG_FEMALE` and `DEFAULT_THRESHOLDS_FEMALE` implemented and wired in service logic.
+- `standard_female` warmup preset fully integrated: DB constraint updated (`20260308000001_add_standard_female_warmup_protocol.sql`) and JIT path now fetches `biologicalSex` before the parallel config fetch so `getWarmupConfig` receives it correctly.

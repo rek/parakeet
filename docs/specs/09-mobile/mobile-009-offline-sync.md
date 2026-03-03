@@ -57,10 +57,10 @@ Handling offline scenarios during active workout logging. The session logging sc
 
 ## Files
 
-- `src/store/syncStore.ts` — pending op queue
-- `src/store/sessionStore.ts` — added AsyncStorage persistence
-- `src/hooks/useNetworkStatus.ts` — pure-JS connectivity probe via `AppState` + `fetch` (no native module)
-- `src/hooks/useSyncQueue.ts` — drains queue on reconnect
+- `src/platform/store/syncStore.ts` — pending op queue
+- `src/platform/store/sessionStore.ts` — added AsyncStorage persistence
+- `src/platform/network/useNetworkStatus.ts` — pure-JS connectivity probe via `AppState` + `fetch` (no native module)
+- `src/modules/session/hooks/useSyncQueue.ts` — drains queue on reconnect
 - `src/app/session/[sessionId].tsx` — offline banner
 - `src/app/session/complete.tsx` — offline-safe completion
 - `src/app/_layout.tsx` — mounts `useSyncQueue`

@@ -27,7 +27,7 @@ npm install react-native-chart-kit
 
 ---
 
-### ✅ 2. `apps/parakeet/src/lib/performance.ts` — add `getWeeklySetsPerLift`
+### ✅ 2. `apps/parakeet/src/modules/history/lib/performance.ts` — add `getWeeklySetsPerLift`
 
 Implemented. Queries `session_logs` joined with `sessions`, groups by ISO week start (Monday) + `primary_lift`, sums `actual_sets` array length per group. Returns sorted by `weekStart` ASC.
 

@@ -253,12 +253,12 @@ Runs both strategies and produces a comparison. Primary use is during the develo
 ## Developer Mode
 
 Settings → Developer → JIT Strategy:
-- `auto` (default) — LLM if online, Formula if offline
+- `auto` (default) — always attempts LLM; uses 5-second timeout + fallback to detect offline rather than proactive network check. `jit_strategy` on the session row records `formula_fallback` when this occurs.
 - `formula` — always Formula
 - `llm` — always LLM
-- `hybrid` — run both, show comparison card in session screen
+- `hybrid` — run both, log to `jit_comparison_logs`, show comparison card in session screen
 
-The `jit_comparison_logs` table in Supabase stores full inputs and outputs from all strategies when running in hybrid mode. This table is truncated after 90 days (development data, not primary training record).
+The `jit_comparison_logs` table in Supabase stores full inputs and outputs from both strategies when running in hybrid mode. The comparison logger is wired in the JIT entrypoint and fires only when hybrid mode is active. This table is truncated after 90 days (development data, not primary training record).
 
 ## Staged Rollout
 
@@ -292,3 +292,4 @@ The `jit_comparison_logs` table in Supabase stores full inputs and outputs from 
 - Helms, E.R. et al. (2016) — "Application of the RIR-Based RPE Scale for Resistance Training" *Strength Cond J*
 - Zourdos, M.C. et al. (2016) — "Novel Resistance Training-Specific RPE Scale Measuring Repetitions in Reserve" *J Strength Cond Res*
 - Grgic, J. et al. (2018) — "Effects of Rest Interval Duration in Resistance Training on Measures of Muscular Strength" *Sports Med*
+

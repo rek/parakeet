@@ -9,7 +9,7 @@ Helper functions for reading session data from Supabase. Used by the Today scree
 
 ## Tasks
 
-**`apps/parakeet/src/services/session.service.ts` (read helpers; re-exported via `apps/parakeet/src/lib/sessions.ts`):**
+**`apps/parakeet/src/modules/session/application/session.service.ts` (read helpers; re-exported via `apps/parakeet/src/modules/session/application/session.service.ts`):**
 - [x] `findTodaySession(userId: string): Promise<Session | null>` — prioritize active `in_progress`; otherwise return nearest `planned` session by `planned_date` ascending (never select `completed`)
 - [x] `getSession(sessionId: string): Promise<Session | null>` — full session detail including `planned_sets` (RLS ensures ownership)
 - [x] `getSessionsForWeek(programId: string, weekNumber: number): Promise<Session[]>` — all sessions for a week, excluding `planned_sets` for performance

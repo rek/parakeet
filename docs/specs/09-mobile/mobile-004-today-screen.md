@@ -35,11 +35,19 @@ The home tab that shows the user's next upcoming session and any active disrupti
 - Navigate to `session/[sessionId]` with session ID in URL
 
 **React Query hook (`apps/parakeet/hooks/useActiveSession.ts`):**
-- `useTodaySession()` — wraps `findTodaySession(userId)` from `sessions-001`
+- `useTodaySession()` — selects session in priority order:
+  1. Session with `status = in_progress` (earliest `planned_date` if multiple)
+  2. Otherwise nearest `planned` session by `planned_date` ascending (not same-date-only)
+  3. Otherwise `null` → rest-day / program-complete state
+- Does **not** include `completed` sessions in the result
 - Returns `{ session, isLoading, error, refetch }`
+
+**Foreground reconciliation (in app `_layout.tsx` or Today mount):**
+- On app foreground / Today tab focus: call `markMissedSessions(userId)` then invalidate `['session', 'today']` and `['sessions']` React Query keys
 
 ## Dependencies
 
 - [parakeet-001-expo-router-layout.md](./parakeet-001-expo-router-layout.md)
 - [sessions-001-session-read-api.md](../07-sessions/sessions-001-session-read-api.md)
 - [disruptions-003-resolution.md](../08-disruptions/disruptions-003-resolution.md)
+

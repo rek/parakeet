@@ -1,69 +1,68 @@
-import { ScrollView, StyleSheet, Text, View } from 'react-native'
-import { SafeAreaView } from 'react-native-safe-area-context'
-import { router } from 'expo-router'
-
-import { useWeeklyVolume } from '../hooks/useWeeklyVolume'
-import { MUSCLE_GROUPS } from '@parakeet/training-engine'
-import type { MuscleGroup, VolumeStatus } from '@parakeet/training-engine'
-import { colors } from '../theme'
-import { BackLink } from '../components/navigation/BackLink'
-
-const MUSCLES = MUSCLE_GROUPS
-
-const MUSCLE_LABELS: Record<MuscleGroup, string> = {
-  quads:      'Quads',
-  hamstrings: 'Hamstrings',
-  glutes:     'Glutes',
-  lower_back: 'Lower Back',
-  upper_back: 'Upper Back',
-  chest:      'Chest',
-  triceps:    'Triceps',
-  shoulders:  'Shoulders',
-  biceps:     'Biceps',
-}
+import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import type { MuscleGroup, VolumeStatus } from '@parakeet/training-engine';
+import { router } from 'expo-router';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { BackLink } from '../components/navigation/BackLink';
+import {
+  MUSCLE_GROUPS_ORDER,
+  MUSCLE_LABELS_FULL,
+} from '@shared/constants/training';
+import { useWeeklyVolume } from '@modules/training-volume';
+import { colors } from '../theme';
 
 const BAR_COLORS: Record<VolumeStatus, string> = {
-  below_mev:      colors.warning,
-  in_range:       colors.success,
+  below_mev: colors.warning,
+  in_range: colors.success,
   approaching_mrv: colors.warning,
-  at_mrv:         colors.danger,
-  exceeded_mrv:   colors.danger,
-}
+  at_mrv: colors.danger,
+  exceeded_mrv: colors.danger,
+};
 
 interface MuscleBarProps {
-  muscle: MuscleGroup
-  sets: number
-  mrv: number
-  mev: number
-  status: VolumeStatus
+  muscle: MuscleGroup;
+  sets: number;
+  mrv: number;
+  mev: number;
+  status: VolumeStatus;
 }
 
 function MuscleBar({ muscle, sets, mrv, mev, status }: MuscleBarProps) {
-  const fillPct = Math.min(100, mrv > 0 ? (sets / mrv) * 100 : 0)
-  const mevPct  = mrv > 0 ? (mev / mrv) * 100 : 0
-  const color   = BAR_COLORS[status]
-  const isOver  = status === 'at_mrv' || status === 'exceeded_mrv'
+  const fillPct = Math.min(100, mrv > 0 ? (sets / mrv) * 100 : 0);
+  const mevPct = mrv > 0 ? (mev / mrv) * 100 : 0;
+  const color = BAR_COLORS[status];
+  const isOver = status === 'at_mrv' || status === 'exceeded_mrv';
 
   return (
     <View style={styles.barRow}>
-      <Text style={styles.barLabel}>{MUSCLE_LABELS[muscle]}</Text>
+      <Text style={styles.barLabel}>{MUSCLE_LABELS_FULL[muscle]}</Text>
       <View style={styles.barContainer}>
         <View style={styles.barTrack}>
-          <View style={[styles.barFill, { width: `${fillPct}%`, backgroundColor: color }]} />
+          <View
+            style={[
+              styles.barFill,
+              { width: `${fillPct}%`, backgroundColor: color },
+            ]}
+          />
           {mevPct > 0 && (
-            <View style={[styles.mevMarker, { left: `${mevPct}%` as unknown as number }]} />
+            <View
+              style={[
+                styles.mevMarker,
+                { left: `${mevPct}%` as unknown as number },
+              ]}
+            />
           )}
         </View>
         <Text style={[styles.barSets, isOver && styles.barSetsOver]}>
-          {sets}/{mrv}{isOver ? ' ⚠' : ''}
+          {sets}/{mrv}
+          {isOver ? ' ⚠' : ''}
         </Text>
       </View>
     </View>
-  )
+  );
 }
 
 export default function VolumeScreen() {
-  const { data, isLoading } = useWeeklyVolume()
+  const { data, isLoading } = useWeeklyVolume();
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -80,9 +79,18 @@ export default function VolumeScreen() {
         <Text style={styles.subtitle}>Sets this week vs. your MRV targets</Text>
 
         <View style={styles.legend}>
-          {(['below_mev', 'in_range', 'approaching_mrv', 'at_mrv'] as VolumeStatus[]).map((s) => (
+          {(
+            [
+              'below_mev',
+              'in_range',
+              'approaching_mrv',
+              'at_mrv',
+            ] as VolumeStatus[]
+          ).map((s) => (
             <View key={s} style={styles.legendItem}>
-              <View style={[styles.legendDot, { backgroundColor: BAR_COLORS[s] }]} />
+              <View
+                style={[styles.legendDot, { backgroundColor: BAR_COLORS[s] }]}
+              />
               <Text style={styles.legendText}>{s.replace(/_/g, ' ')}</Text>
             </View>
           ))}
@@ -97,7 +105,7 @@ export default function VolumeScreen() {
           <Text style={styles.loadingText}>Loading…</Text>
         ) : (
           <View style={styles.bars}>
-            {MUSCLES.map((muscle) => (
+            {MUSCLE_GROUPS_ORDER.map((muscle) => (
               <MuscleBar
                 key={muscle}
                 muscle={muscle}
@@ -111,7 +119,7 @@ export default function VolumeScreen() {
         )}
       </ScrollView>
     </SafeAreaView>
-  )
+  );
 }
 
 const styles = StyleSheet.create({
@@ -232,4 +240,4 @@ const styles = StyleSheet.create({
     color: colors.danger,
     fontWeight: '600',
   },
-})
+});

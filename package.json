@@ -17,6 +17,7 @@
     "android": "nx run-android parakeet",
     "check:supabase-import-boundary": "node tools/scripts/check-supabase-import-boundary.mjs",
     "check:supabase-ui-boundary": "node tools/scripts/check-supabase-ui-boundary.mjs",
+    "check:module-boundary": "node tools/scripts/check-module-boundary.mjs",
     "db:start": "npx supabase start",
     "db:stop": "npx supabase stop",
     "db:reset": "npx supabase db reset",

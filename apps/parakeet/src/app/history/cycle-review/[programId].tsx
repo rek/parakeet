@@ -3,13 +3,13 @@ import { SafeAreaView } from 'react-native-safe-area-context'
 import { router, useLocalSearchParams } from 'expo-router'
 import { useQueryClient } from '@tanstack/react-query'
 
-import { useCycleReview } from '../../../hooks/useCycleReview'
-import { createFormulaOverride, deactivateFormulaConfig } from '../../../lib/formulas'
-import { useAuth } from '../../../hooks/useAuth'
-import { MUSCLE_GROUPS } from '@parakeet/training-engine'
+import { useCycleReview } from '@modules/cycle-review'
+import { createFormulaOverride, deactivateFormulaConfig } from '@modules/formula'
+import { useAuth } from '@modules/auth'
 import type { FormulaConfig, MuscleGroup } from '@parakeet/training-engine'
 import { colors } from '../../../theme'
 import { BackLink } from '../../../components/navigation/BackLink'
+import { MUSCLE_GROUPS_ORDER, MUSCLE_LABELS_ABBR } from '@shared/constants/training'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -72,12 +72,7 @@ const RATING_STYLES: Record<ProgressRating, { bg: string; text: string; label: s
   concerning: { bg: colors.dangerMuted, text: colors.danger, label: 'Concerning' },
 }
 
-const MUSCLES = MUSCLE_GROUPS
-
-const MUSCLE_LABELS: Record<MuscleGroup, string> = {
-  quads: 'Q', hamstrings: 'H', glutes: 'G', lower_back: 'LB', upper_back: 'UB',
-  chest: 'Ch', triceps: 'Tr', shoulders: 'Sh', biceps: 'Bi',
-}
+const MUSCLES = MUSCLE_GROUPS_ORDER
 
 function volumeColor(sets: number, mev: number, mrv: number): string {
   if (sets > mrv)             return colors.danger
@@ -99,6 +94,9 @@ export default function CycleReviewScreen() {
     error,
     refetch,
     isRefetching,
+    triggerReview,
+    isTriggeringReview,
+    triggerError,
   } = useCycleReview(programId)
 
   const llmData: CycleReviewData = (review ?? {}) as CycleReviewData
@@ -173,9 +171,12 @@ export default function CycleReviewScreen() {
           <Text style={styles.title}>Cycle Review</Text>
         </View>
         <View style={styles.loadingContainer}>
-          <Text style={styles.loadingTitle}>No cycle review found</Text>
+          <ActivityIndicator size="large" color={colors.primary} />
+          <Text style={styles.loadingTitle}>Generating your review…</Text>
           <Text style={styles.loadingSubtitle}>
-            Complete another session or refresh in a moment.
+            {triggerError instanceof Error
+              ? `Generation failed: ${triggerError.message}`
+              : 'Usually takes under 30 seconds. Checking automatically.'}
           </Text>
           <TouchableOpacity
             style={styles.retryButton}
@@ -184,7 +185,17 @@ export default function CycleReviewScreen() {
             activeOpacity={0.8}
           >
             <Text style={styles.retryButtonText}>
-              {isRefetching ? 'Refreshing…' : 'Refresh'}
+              {isRefetching ? 'Checking…' : 'Check Now'}
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.generateButton}
+            onPress={() => triggerReview()}
+            disabled={isTriggeringReview}
+            activeOpacity={0.8}
+          >
+            <Text style={styles.generateButtonText}>
+              {isTriggeringReview ? 'Generating…' : 'Generate Now'}
             </Text>
           </TouchableOpacity>
         </View>
@@ -310,7 +321,7 @@ export default function CycleReviewScreen() {
                   <View style={styles.heatmapWeekCell} />
                   {MUSCLES.map((m) => (
                     <View key={m} style={styles.heatmapCell}>
-                      <Text style={styles.heatmapHeader}>{MUSCLE_LABELS[m]}</Text>
+                      <Text style={styles.heatmapHeader}>{MUSCLE_LABELS_ABBR[m]}</Text>
                     </View>
                   ))}
                 </View>
@@ -440,6 +451,19 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     paddingHorizontal: 16,
     paddingVertical: 10,
+  },
+  generateButton: {
+    marginTop: 8,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: 10,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+  },
+  generateButtonText: {
+    color: colors.textSecondary,
+    fontSize: 14,
+    fontWeight: '600',
   },
   retryButtonText: {
     color: colors.textInverse,

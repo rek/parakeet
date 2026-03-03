@@ -13,15 +13,19 @@ import { SafeAreaView } from 'react-native-safe-area-context'
 import { WorkoutCard } from '../../components/training/WorkoutCard'
 import { StreakPill } from '../../components/achievements/StreakPill'
 import { DisruptionChipsRow } from '../../components/disruption/DisruptionChipsRow'
-import { useAuth } from '../../hooks/useAuth'
-import { useActiveProgram } from '../../hooks/useActiveProgram'
-import { useTodaySession } from '../../hooks/useTodaySession'
-import { useWeeklyVolume } from '../../hooks/useWeeklyVolume'
-import { useCyclePhase } from '../../hooks/useCyclePhase'
-import { getActiveDisruptions } from '../../lib/disruptions'
-import { getStreakData } from '../../lib/achievements'
+import { useAuth } from '@modules/auth'
+import { useActiveProgram } from '@modules/program'
+import { useTodaySession } from '@modules/session'
+import { useWeeklyVolume } from '@modules/training-volume'
+import { useCyclePhase } from '@modules/cycle-tracking'
+import { getActiveDisruptions } from '@modules/disruptions'
+import { getStreakData } from '@modules/achievements'
 import { colors, palette, spacing, radii, typography } from '../../theme'
 import type { MuscleGroup, VolumeStatus } from '@parakeet/training-engine'
+import {
+  COMPACT_VOLUME_MUSCLES,
+  MUSCLE_LABELS_COMPACT,
+} from '@shared/constants/training'
 
 // ── Cycle phase constants ─────────────────────────────────────────────────────
 
@@ -50,18 +54,6 @@ const CYCLE_PHASE_LABELS: Record<string, string> = {
 
 // ── Volume compact card ───────────────────────────────────────────────────────
 
-const MUSCLE_LABELS: Record<MuscleGroup, string> = {
-  quads:      'Quads',
-  hamstrings: 'Hams',
-  glutes:     'Glutes',
-  lower_back: 'Lower Back',
-  upper_back: 'Upper Back',
-  chest:      'Chest',
-  triceps:    'Triceps',
-  shoulders:  'Shoulders',
-  biceps:     'Biceps',
-}
-
 const BAR_COLORS: Record<VolumeStatus, string> = {
   below_mev:       colors.warning,
   in_range:        colors.success,
@@ -69,8 +61,6 @@ const BAR_COLORS: Record<VolumeStatus, string> = {
   at_mrv:          colors.danger,
   exceeded_mrv:    colors.danger,
 }
-
-const COMPACT_MUSCLES: MuscleGroup[] = ['quads', 'chest', 'hamstrings', 'upper_back', 'lower_back']
 
 function VolumeCompactCard() {
   const { data } = useWeeklyVolume()
@@ -87,7 +77,7 @@ function VolumeCompactCard() {
       {!data ? (
         <Text style={styles.volumeLoading}>Loading…</Text>
       ) : (
-        COMPACT_MUSCLES.map((muscle) => {
+        COMPACT_VOLUME_MUSCLES.map((muscle) => {
           const sets   = data.weekly[muscle]
           const mrv    = data.config[muscle].mrv
           const status = data.status[muscle]
@@ -96,7 +86,7 @@ function VolumeCompactCard() {
 
           return (
             <View key={muscle} style={styles.volumeRow}>
-              <Text style={styles.volumeRowLabel}>{MUSCLE_LABELS[muscle]}</Text>
+              <Text style={styles.volumeRowLabel}>{MUSCLE_LABELS_COMPACT[muscle]}</Text>
               <View style={styles.volumeBarTrack}>
                 <View
                   style={[
@@ -150,7 +140,7 @@ export default function TodayScreen() {
   const mrvWarningMuscles = volumeData
     ? (Object.entries(volumeData.status) as [MuscleGroup, VolumeStatus][])
         .filter(([, s]) => s === 'at_mrv' || s === 'exceeded_mrv')
-        .map(([m]) => MUSCLE_LABELS[m])
+        .map(([m]) => MUSCLE_LABELS_COMPACT[m])
     : []
 
   return (

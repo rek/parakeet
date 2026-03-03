@@ -18,9 +18,9 @@ import {
 } from '@parakeet/training-engine'
 import type { WarmupPresetName, WarmupProtocol, WarmupStep } from '@parakeet/training-engine'
 import type { Lift } from '@parakeet/shared-types'
-import { getAllWarmupConfigs, updateWarmupConfig } from '../../lib/warmup-config'
-import { getCurrentOneRmKg } from '../../lib/lifter-maxes'
-import { useAuth } from '../../hooks/useAuth'
+import { getAllWarmupConfigs, updateWarmupConfig } from '@modules/settings'
+import { getCurrentOneRmKg } from '@modules/program'
+import { useAuth } from '@modules/auth'
 import { colors } from '../../theme'
 import { BackLink } from '../../components/navigation/BackLink'
 

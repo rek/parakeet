@@ -9,9 +9,9 @@ import {
 import { router, useFocusEffect, useLocalSearchParams } from 'expo-router'
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 
-import { getSession, startSession } from '../../../lib/sessions'
-import { useSessionStore } from '../../../store/sessionStore'
-import { useNetworkStatus } from '../../../hooks/useNetworkStatus'
+import { getSession, startSession } from '@modules/session'
+import { useSessionStore } from '@platform/store/sessionStore'
+import { useNetworkStatus } from '@platform/network'
 import { WarmupSection } from '../../../components/training/WarmupSection'
 import { SetRow } from '../../../components/training/SetRow'
 import { RestTimer } from '../../../components/training/RestTimer'

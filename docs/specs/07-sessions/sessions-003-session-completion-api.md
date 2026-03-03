@@ -9,7 +9,7 @@ Writing a completed session log to Supabase, computing performance metrics local
 
 ## Tasks
 
-**`apps/parakeet/src/services/session.service.ts` (completion helper; re-exported via `apps/parakeet/src/lib/sessions.ts`):**
+**`apps/parakeet/src/modules/session/application/session.service.ts` (completion helper; re-exported via `apps/parakeet/src/modules/session/application/session.service.ts`):**
 - [x] `completeSession(sessionId: string, userId: string, input: CompleteSessionInput): Promise<void>`
   1. Compute completion stats locally from explicit `is_completed` confirmations (`completionPct`, `classifyPerformance`)
   2. Insert `session_logs` row with `actual_sets` JSONB (weights stored in grams)

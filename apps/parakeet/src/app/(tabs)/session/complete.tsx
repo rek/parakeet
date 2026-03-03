@@ -13,17 +13,16 @@ import { useQueryClient } from '@tanstack/react-query';
 import { router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StarCard } from '../../../components/achievements/StarCard';
-import { detectAchievements } from '../../../hooks/useAchievementDetection';
-import { useAuth } from '../../../hooks/useAuth';
-import { useNetworkStatus } from '../../../hooks/useNetworkStatus';
-import { isNetworkError } from '../../../hooks/useSyncQueue';
-import { stampCyclePhaseOnSession } from '../../../lib/cycle-tracking';
-import { completeSession } from '../../../lib/sessions';
-import { qk } from '../../../queries/keys';
-import { useSessionStore } from '../../../store/sessionStore';
-import { useSyncStore } from '../../../store/syncStore';
+import { detectAchievements } from '@modules/achievements';
+import { useAuth } from '@modules/auth';
+import { useNetworkStatus } from '@platform/network';
+import { stampCyclePhaseOnSession } from '@modules/cycle-tracking';
+import { completeSession, isNetworkError } from '@modules/session';
+import { qk } from '@platform/query';
+import { useSessionStore } from '@platform/store/sessionStore';
+import { useSyncStore } from '@platform/store/syncStore';
 import { colors } from '../../../theme';
-import { captureException } from '../../../utils/captureException';
+import { captureException } from '@platform/utils/captureException';
 
 // ── Constants ────────────────────────────────────────────────────────────────
 
@@ -107,6 +106,7 @@ export default function CompleteScreen() {
     // Offline: queue and show optimistic success
     if (!isOnline) {
       enqueue({ operation: 'complete_session', payload: completionPayload });
+      queryClient.setQueryData(qk.session.today(user?.id), null);
       setPendingSync(true);
       setSaved(true);
       return;
@@ -125,6 +125,8 @@ export default function CompleteScreen() {
       stampCyclePhaseOnSession(user.id, sessionId).catch((err) =>
         captureException(err)
       );
+
+      queryClient.setQueryData(qk.session.today(user?.id), null);
 
       // ── Achievement detection ──────────────────────────────────────────────
 

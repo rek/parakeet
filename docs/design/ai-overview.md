@@ -56,7 +56,7 @@ Map of every place AI interacts with Parakeet. Two types of AI: **LLM** (Claude 
 - `packages/training-engine/src/generator/llm-jit-generator.ts`
 - `packages/training-engine/src/generator/formula-jit-generator.ts`
 - `packages/training-engine/src/generator/jit-registry.ts`
-- `apps/parakeet/src/lib/jit.ts` ← app orchestrator
+- `apps/parakeet/src/modules/jit/lib/jit.ts` ← app orchestrator
 
 ---
 
@@ -129,8 +129,8 @@ Map of every place AI interacts with Parakeet. Two types of AI: **LLM** (Claude 
 **Key files:**
 - `packages/training-engine/src/review/cycle-review-generator.ts`
 - `packages/training-engine/src/review/assemble-cycle-report.ts`
-- `apps/parakeet/src/lib/cycle-review.ts` ← routing + storage
-- `apps/parakeet/src/services/program.service.ts` ← trigger
+- `apps/parakeet/src/modules/cycle-review/lib/cycle-review.ts` ← routing + storage
+- `apps/parakeet/src/modules/program/application/program.service.ts` ← trigger
 
 ---
 
@@ -166,7 +166,7 @@ Map of every place AI interacts with Parakeet. Two types of AI: **LLM** (Claude 
 
 **Key files:**
 - `apps/parakeet/src/app/settings/developer.tsx`
-- `apps/parakeet/src/lib/developer-suggestions.ts`
+- `apps/parakeet/src/modules/settings/lib/developer-suggestions.ts`
 
 ---
 
@@ -184,7 +184,7 @@ Map of every place AI interacts with Parakeet. Two types of AI: **LLM** (Claude 
 
 **Key files:**
 - `packages/training-engine/src/disruption-adjuster.ts`
-- `apps/parakeet/src/lib/disruptions.ts`
+- `apps/parakeet/src/modules/disruptions/lib/disruptions.ts`
 - `apps/parakeet/src/app/disruption-report/report.tsx`
 
 ---

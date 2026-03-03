@@ -27,10 +27,10 @@ See `docs/design/cycle-review-and-insights.md` for the full feature design and e
 
 ### CycleReport Compilation
 
-**`apps/parakeet/src/lib/cycle-review.ts`:**
+**`apps/parakeet/src/modules/cycle-review/lib/cycle-review.ts`:**
 - [x] `compileCycleReport(programId: string, userId: string): Promise<CycleReport>`
   - Parallel Supabase queries for: program, sessions, sessionLogs, sorenessCheckins, lifterMaxes, disruptions, auxiliaryAssignments, formulaHistory
-  - Data access should be delegated to typed repository functions in `apps/parakeet/src/data/cycle-review.repository.ts` (no ad-hoc Supabase table access in UI/service/lib consumers).
+  - Data access should be delegated to typed repository functions in `apps/parakeet/src/modules/cycle-review/data/cycle-review.repository.ts` (no ad-hoc Supabase table access in UI/service/lib consumers).
   - Calls `assembleCycleReport()` from training-engine to transform raw rows into `CycleReport` struct
   - Note: `soreness_checkins` and `disruptions` are queried by `user_id` only (not scoped to program date range), so cross-cycle data may be included.
   - Current schema mapping requirements:
@@ -52,7 +52,7 @@ See `docs/design/cycle-review-and-insights.md` for the full feature design and e
 
 ### Storing the Result
 
-**`apps/parakeet/src/lib/cycle-review.ts` (addition):**
+**`apps/parakeet/src/modules/cycle-review/lib/cycle-review.ts` (addition):**
 - [x] `storeCycleReview(programId, userId, compiledReport, llmResponse): Promise<void>`
   - Inserts `cycle_reviews` row with `compiled_report` and `llm_response` JSONB
   - Routes `formulaSuggestions` → inserts pending `formula_configs` rows (`is_active: false`, `source: 'ai_suggestion'`)
@@ -61,7 +61,7 @@ See `docs/design/cycle-review-and-insights.md` for the full feature design and e
 
 ### Trigger Flow
 
-**`apps/parakeet/src/lib/programs.ts` — cycle completion handler:**
+**`apps/parakeet/src/modules/program/application/program.service.ts` — cycle completion handler:**
 - [x] `onCycleComplete(programId: string, userId: string): void`
   - Triggered when program reaches ≥80% session completion (checked in `completeSession`)
   - Runs `compileCycleReport` → `generateCycleReview` → `storeCycleReview` asynchronously (no await on outer call)

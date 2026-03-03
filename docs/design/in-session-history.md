@@ -2,11 +2,7 @@
 
 **Status**: Approved
 
-**Author**: Adam
-
 **Date**: 2026-02-27
-
-> **Design Doc Philosophy**: This document describes WHAT the feature does and WHY, from a user perspective. Technical implementation details (HOW) are tracked in Beads for granular task management. Keep this doc user-focused, concise, and free of code/implementation specifics.
 
 ## Overview
 
@@ -14,16 +10,14 @@ While logging sets during a workout, users can freely navigate to any screen in 
 
 ## Problem Statement
 
-Rest periods between heavy sets can last 3–5 minutes. Users are curious about their performance history during this time but are currently trapped on the session screen with no way to browse data. Navigating away loses the rest timer state entirely.
+Rest periods between heavy sets can last 3–5 minutes. Users want to navigate freely during rest without losing the timer. Navigating away loses the rest countdown, forcing a guess on return.
 
 **Pain points:**
 
-- Can't check historical 1RM trends while resting
-- Can't review weekly volume vs. MRV targets mid-session
-- Can't look at past cycle reviews or achievements while waiting
 - Navigating away loses the rest countdown, forcing a guess on return
+- Session screen feels like a locked-down form — can't naturally tab away and return
 
-**Desired outcome:** The app feels open and explorable during workouts, not like a locked-down logging form.
+**Desired outcome:** The app feels open and explorable during workouts; rest timer persists across navigation.
 
 ## User Experience
 
@@ -60,9 +54,7 @@ Rest periods between heavy sets can last 3–5 minutes. Users are curious about 
 
 ## User Benefits
 
-**Full data access during rest**: Browse all of your historical data — trends, PRs, volume, cycle reviews, achievements — without interrupting the workout.
-
-**Timer keeps running**: Rest time tracks accurately even when you're reading your history. No more guessing how long you've been resting.
+**Timer keeps running**: Rest time tracks accurately even when you've navigated away. No more guessing how long you've been resting.
 
 **No workflow disruption**: Returning to the session is one tap. The session exactly where you left it.
 
@@ -81,15 +73,38 @@ Rest periods between heavy sets can last 3–5 minutes. Users are curious about 
 
 - Banner taps open a mini-history sheet for the current lift without leaving the session screen
 - Haptic pulse when rest timer expires while browsing another screen
-
-**Long-term:**
-
 - Notification when rest is done (if app is backgrounded)
 
-## Open Questions
+## Delivery Order
 
-- None — design decisions resolved before implementation
+1. **Phase 2A — Mini History Sheet**
+   - Spec: `mobile-022-in-session-mini-history-sheet.md`
+   - Goal: improve in-session data access without leaving logging context.
+2. **Phase 2B — Rest Expiry Haptics While Browsing**
+   - Spec: `mobile-023-rest-expiry-haptics-while-browsing.md`
+   - Goal: improve rest-timing awareness on non-session screens.
+3. **Long-term — Background Rest-Done Notification**
+   - Spec: `mobile-024-rest-done-background-notification.md`
+   - Goal: preserve rest-timing awareness when app is backgrounded.
+
+## Acceptance Gates
+
+- **Gate A (for Phase 2A):**
+  - Active session remains intact while mini-history sheet is opened/closed repeatedly.
+  - Rest timer continuity is preserved during sheet interaction.
+  - Empty/error/offline states are visible and non-blocking.
+
+- **Gate B (for Phase 2B):**
+  - Haptic triggers exactly once when rest crosses into overtime while browsing.
+  - No repeated haptic spam in overtime.
+  - No regressions to banner countdown or session return flow.
+
+- **Gate C (for Long-term):**
+  - Notification schedules on background with active rest and cancels on early return/completion.
+  - Tap deep-links back to the active session correctly.
+  - Stale notifications are ignored safely if session is no longer active.
 
 ## References
 
 - Related Design Docs: [rest-timer.md](./rest-timer.md)
+- Specs: [mobile-021-in-session-history.md](../specs/09-mobile/mobile-021-in-session-history.md), [mobile-022-in-session-mini-history-sheet.md](../specs/09-mobile/mobile-022-in-session-mini-history-sheet.md), [mobile-023-rest-expiry-haptics-while-browsing.md](../specs/09-mobile/mobile-023-rest-expiry-haptics-while-browsing.md), [mobile-024-rest-done-background-notification.md](../specs/09-mobile/mobile-024-rest-done-background-notification.md)

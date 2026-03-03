@@ -11,34 +11,24 @@ import {
 import { router, useLocalSearchParams } from 'expo-router'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
-import { captureException } from '../../../utils/captureException'
-import { getLatestSorenessCheckin, getSession, recordSorenessCheckin } from '../../../lib/sessions'
-import { runJITForSession } from '../../../lib/jit'
-import { useAuth } from '../../../hooks/useAuth'
+import { captureException } from '@platform/utils/captureException'
+import { getLatestSorenessCheckin, getSession, recordSorenessCheckin } from '@modules/session'
+import { runJITForSession } from '@modules/jit'
+import { useAuth } from '@modules/auth'
 import { colors } from '../../../theme'
 import { BackLink } from '../../../components/navigation/BackLink'
+import type { Lift } from '@parakeet/shared-types'
+import type { MuscleGroup } from '@parakeet/training-engine'
+import {
+  LIFT_PRIMARY_SORENESS_MUSCLES,
+  MUSCLE_LABELS_FULL,
+} from '@shared/constants/training'
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
 type Session = Awaited<ReturnType<typeof getSession>>
 
 // ── Constants ────────────────────────────────────────────────────────────────
-
-const LIFT_MUSCLES: Record<string, string[]> = {
-  squat:    ['quads', 'glutes', 'lower_back'],
-  bench:    ['chest', 'triceps', 'shoulders'],
-  deadlift: ['hamstrings', 'glutes', 'lower_back'],
-}
-
-const MUSCLE_LABELS: Record<string, string> = {
-  quads:      'Quads',
-  glutes:     'Glutes',
-  lower_back: 'Lower Back',
-  chest:      'Chest',
-  triceps:    'Triceps',
-  shoulders:  'Shoulders',
-  hamstrings: 'Hamstrings',
-}
 
 const RATING_LEVELS = [1, 2, 3, 4, 5] as const
 
@@ -50,13 +40,13 @@ function capitalize(value: string): string {
 // ── Sub-component: single muscle rating row ───────────────────────────────
 
 interface MuscleRatingRowProps {
-  muscle: string
+  muscle: MuscleGroup
   rating: number
-  onChange: (muscle: string, rating: number) => void
+  onChange: (muscle: MuscleGroup, rating: number) => void
 }
 
 function MuscleRatingRow({ muscle, rating, onChange }: MuscleRatingRowProps) {
-  const label = MUSCLE_LABELS[muscle] ?? capitalize(muscle.replace(/_/g, ' '))
+  const label = MUSCLE_LABELS_FULL[muscle] ?? capitalize(muscle.replace(/_/g, ' '))
 
   return (
     <View style={styles.muscleRow}>
@@ -93,7 +83,7 @@ export default function SorenessScreen() {
   const [generating, setGenerating] = useState(false)
 
   const muscles = session
-    ? (LIFT_MUSCLES[session.primary_lift] ?? [])
+    ? (LIFT_PRIMARY_SORENESS_MUSCLES[session.primary_lift as Lift] ?? [])
     : []
 
   // ── Bootstrap ─────────────────────────────────────────────────────────────
@@ -104,7 +94,7 @@ export default function SorenessScreen() {
       ([data, latest]) => {
         setSession(data)
         if (data?.primary_lift) {
-          const muscles = LIFT_MUSCLES[data.primary_lift] ?? []
+          const muscles = LIFT_PRIMARY_SORENESS_MUSCLES[data.primary_lift as Lift] ?? []
           const initialRatings: Record<string, number> = {}
           for (const muscle of muscles) {
             initialRatings[muscle] = latest?.[muscle] ?? 1
@@ -117,7 +107,7 @@ export default function SorenessScreen() {
 
   // ── Helpers ───────────────────────────────────────────────────────────────
 
-  function handleRatingChange(muscle: string, rating: number) {
+  function handleRatingChange(muscle: MuscleGroup, rating: number) {
     setRatings((prev) => ({ ...prev, [muscle]: rating }))
   }
 

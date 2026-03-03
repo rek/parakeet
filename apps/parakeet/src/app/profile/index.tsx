@@ -13,8 +13,8 @@ import { router } from 'expo-router'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 
 import { FormFeedback } from '../../components/ui/FormFeedback'
-import { getProfile, updateProfile } from '../../lib/profile'
-import type { BiologicalSex } from '../../lib/profile'
+import { getProfile, updateProfile } from '@modules/profile'
+import type { BiologicalSex } from '@modules/profile'
 import { colors, spacing, radii, typography } from '../../theme'
 import { BackLink } from '../../components/navigation/BackLink'
 

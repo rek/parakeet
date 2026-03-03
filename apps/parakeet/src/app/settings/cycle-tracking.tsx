@@ -13,13 +13,13 @@ import { router } from 'expo-router'
 import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker'
 import { useQueryClient } from '@tanstack/react-query'
 
-import { useAuth } from '../../hooks/useAuth'
-import { getCycleConfig, updateCycleConfig } from '../../lib/cycle-tracking'
+import { useAuth } from '@modules/auth'
+import { getCycleConfig, updateCycleConfig } from '@modules/cycle-tracking'
 import { computeCyclePhase } from '@parakeet/training-engine'
 import { BackLink } from '../../components/navigation/BackLink'
 import { colors, spacing, radii, typography } from '../../theme'
-import { qk } from '../../queries/keys'
-import { formatDate } from '../../utils/date'
+import { qk } from '@platform/query'
+import { formatDate } from '@shared/utils/date'
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 

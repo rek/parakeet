@@ -3,10 +3,9 @@ import { StyleSheet, Text, TouchableOpacity } from 'react-native'
 import { router, usePathname } from 'expo-router'
 import * as Haptics from 'expo-haptics'
 
-import { useSessionStore } from '../../store/sessionStore'
-import { getRestTimerPrefs } from '../../lib/settings'
-import { detectOvertimeEdge } from '../../utils/overtimeEdge'
-import { useRestNotifications } from '../../hooks/useRestNotifications'
+import { useSessionStore } from '@platform/store/sessionStore'
+import { getRestTimerPrefs } from '@modules/settings'
+import { detectOvertimeEdge, useRestNotifications } from '@modules/session'
 import { colors, radii, spacing, typography } from '../../theme'
 
 function capitalize(value: string): string {

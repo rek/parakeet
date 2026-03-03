@@ -40,7 +40,7 @@ Supabase schema and data-access functions for storing the user's menstrual cycle
 
 ### Data Access Lib
 
-**`apps/parakeet/src/lib/cycle-tracking.ts`:**
+**`apps/parakeet/src/modules/cycle-tracking/lib/cycle-tracking.ts`:**
 - [ ] Export `CycleConfig` interface: `{ is_enabled, cycle_length_days, last_period_start }`
 - [ ] `getCycleConfig(userId: string): Promise<CycleConfig>` — get or create user's cycle config (upsert on first access)
 - [ ] `updateCycleConfig(userId: string, update: Partial<Pick<CycleConfig, 'is_enabled' | 'cycle_length_days' | 'last_period_start'>>): Promise<void>`
@@ -53,7 +53,7 @@ Supabase schema and data-access functions for storing the user's menstrual cycle
 
 ### React Query Hook
 
-**`apps/parakeet/src/hooks/useCyclePhase.ts`:**
+**`apps/parakeet/src/modules/cycle-tracking/hooks/useCyclePhase.ts`:**
 - [ ] `useCyclePhase()` — React Query hook wrapping `getCurrentCycleContext(user.id)`
   - `staleTime: 5 * 60 * 1000` (5 min — phase changes slowly)
 

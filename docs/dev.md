@@ -77,7 +77,7 @@ nx run shared-types:test
 nx run db:test
 
 # Run a single test file directly
-npx vitest run apps/parakeet/src/services/session.service.test.ts
+npx vitest run apps/parakeet/src/modules/session/data/session.repository.test.ts
 ```
 
 Where test behavior is defined:
@@ -100,8 +100,8 @@ NX_DAEMON=false nx run-many -t test
 - `supabase/types.ts` is generated DB contract only. Do not hand-edit.
 - Domain types shared across app + engine live in `packages/shared-types`.
 - Engine-only algorithm/config types live in `packages/training-engine/src/types.ts`.
-- App data layers should parse JSON columns at boundaries using `apps/parakeet/src/network/json-codecs.ts` instead of ad-hoc `as` casts.
-- Query Supabase from `apps/parakeet/src/data/*` repositories using `typedSupabase`; avoid direct table access in `lib/*`, hooks, or screens.
+- App data layers should parse JSON columns at boundaries using `apps/parakeet/src/platform/network/json-codecs.ts` instead of ad-hoc `as` casts.
+- Query Supabase from `apps/parakeet/src/modules/*/data/*` repositories using `typedSupabase`; avoid direct table access in hooks, screens, or UI components.
 - Map DB row shapes to domain/engine input shapes in repositories. Do not pass raw DB rows downstream.
 - Never assume timestamp or JSON column names from memory; use `supabase/types.ts` as the source of truth and fail fast on repository query errors.
 

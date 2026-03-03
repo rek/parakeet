@@ -16,6 +16,10 @@
     "baseUrl": ".",
     "types": ["node", "react-native"],
     "paths": {
+      "@app/*": ["apps/parakeet/src/*"],
+      "@modules/*": ["apps/parakeet/src/modules/*"],
+      "@platform/*": ["apps/parakeet/src/platform/*"],
+      "@shared/*": ["apps/parakeet/src/shared/*"],
       "@parakeet/db": ["packages/db/src/index.ts"],
       "@parakeet/shared-types": ["packages/shared-types/src/index.ts"],
       "@parakeet/training-engine": ["packages/training-engine/src/index.ts"]

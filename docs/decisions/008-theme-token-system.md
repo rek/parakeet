@@ -206,7 +206,7 @@ Modern variant of the styled-system approach with a global theme registry.
 ## Implementation Notes
 
 ### File location
-`apps/parakeet/src/theme.ts` — single file, sibling to `src/app/`, `src/lib/`, `src/hooks/`.
+`apps/parakeet/src/theme.ts` — single file, sibling to `src/app/`, `src/modules/`, `src/platform/`, `src/shared/`.
 
 ### Migration approach
 1. Create `theme.ts` with all tokens (use existing palette as starting point)

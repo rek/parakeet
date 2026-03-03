@@ -2,8 +2,8 @@ import { ActivityIndicator, StyleSheet, Text, TouchableOpacity, View } from 'rea
 import { router } from 'expo-router'
 import { useQuery } from '@tanstack/react-query'
 
-import { getCycleBadges, getStreakData, getPRHistory } from '../../lib/achievements'
-import type { HistoricalPRs } from '../../lib/achievements'
+import { getCycleBadges, getStreakData, getPRHistory } from '@modules/achievements'
+import type { HistoricalPRs } from '@modules/achievements'
 import { colors, spacing, radii, typography } from '../../theme'
 
 // ── Types ─────────────────────────────────────────────────────────────────────

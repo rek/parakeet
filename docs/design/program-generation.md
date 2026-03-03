@@ -58,7 +58,7 @@ This means the program adapts automatically as the user's state changes across t
 
 - If a user misses a session (e.g., misses Monday's squat), they can still complete that workout **any day within the same week, up until the next scheduled session of the same lift type**
 - Example: missed Monday squat → can make it up Tuesday, Wednesday, or Thursday if the next squat isn't until Friday
-- If the makeup window passes and the session was not completed, it is marked as missed
+- If the makeup window passes and the session was not completed, it is marked as missed; `markMissedSessions` is called on app foreground to keep state current
 - The JIT generator accounts for missed sessions when computing the next session of that lift type: it factors in how long ago the last successful session was, how much volume was accumulated, and conservatively limits the load increment for the next session (a missed session cannot be treated as a full recovery week). **Research basis:** After ~7+ days without stimulus, the supercompensation window passes and the lifter returns to near-baseline for that lift (Selye, 1950 — GAS model). Treating a 10-day gap as equivalent to a 3-day gap would apply the wrong intensity, risking failure or injury.
 - Weeks do not "wait" — the calendar advances normally regardless of whether sessions were completed
 
@@ -139,3 +139,4 @@ The JIT generator adapts to the program length — it knows which block the sess
 - External: Brandon Lilly's Cube Method (10-week concurrent periodization)
 - Specs: [engine-007-jit-session-generator.md](../specs/04-engine/engine-007-jit-session-generator.md), [engine-004-program-generator.md](../specs/04-engine/engine-004-program-generator.md), [sessions-006-missed-session-logic.md](../specs/07-sessions/sessions-006-missed-session-logic.md)
 - Architecture: [training-engine-architecture.md](./training-engine-architecture.md)
+

@@ -11,29 +11,18 @@ import { SafeAreaView } from 'react-native-safe-area-context'
 import { router } from 'expo-router'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 
-import { DEFAULT_MRV_MEV_CONFIG_MALE, DEFAULT_MRV_MEV_CONFIG_FEMALE, MUSCLE_GROUPS } from '@parakeet/training-engine'
+import { DEFAULT_MRV_MEV_CONFIG_MALE, DEFAULT_MRV_MEV_CONFIG_FEMALE } from '@parakeet/training-engine'
 import type { MrvMevConfig, MuscleGroup } from '@parakeet/training-engine'
-import { getMrvMevConfig, updateMuscleConfig, resetMuscleToDefault } from '../../lib/volume-config'
-import { getProfile } from '../../lib/profile'
-import { useAuth } from '../../hooks/useAuth'
+import { getMrvMevConfig, updateMuscleConfig, resetMuscleToDefault } from '@modules/training-volume'
+import { getProfile } from '@modules/profile'
+import { useAuth } from '@modules/auth'
 import { colors } from '../../theme'
 import { BackLink } from '../../components/navigation/BackLink'
+import { MUSCLE_GROUPS_ORDER, MUSCLE_LABELS_FULL } from '@shared/constants/training'
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
-const MUSCLES = MUSCLE_GROUPS
-
-const MUSCLE_LABELS: Record<MuscleGroup, string> = {
-  quads:      'Quads',
-  hamstrings: 'Hamstrings',
-  glutes:     'Glutes',
-  lower_back: 'Lower Back',
-  upper_back: 'Upper Back',
-  chest:      'Chest',
-  triceps:    'Triceps',
-  shoulders:  'Shoulders',
-  biceps:     'Biceps',
-}
+const MUSCLES = MUSCLE_GROUPS_ORDER
 
 const MAX_MRV = 30
 
@@ -91,7 +80,7 @@ function MuscleRow({ muscle, mev, mrv, isDefault, onMevChange, onMrvChange }: Mu
   return (
     <View style={styles.muscleRow}>
       <View style={styles.muscleRowHeader}>
-        <Text style={styles.muscleLabel}>{MUSCLE_LABELS[muscle]}</Text>
+        <Text style={styles.muscleLabel}>{MUSCLE_LABELS_FULL[muscle]}</Text>
         {!isDefault && <View style={styles.customBadge}><Text style={styles.customBadgeText}>custom</Text></View>}
       </View>
       <View style={styles.stepperRow}>

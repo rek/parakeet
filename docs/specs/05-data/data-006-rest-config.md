@@ -5,7 +5,7 @@
 
 ## What This Covers
 
-Supabase table for user-stored rest time overrides, and the data-access wrapper in `apps/parakeet/src/lib/rest-config.ts`.
+Supabase table for user-stored rest time overrides, and the data-access wrapper in `apps/parakeet/src/modules/settings/lib/rest-config.ts`.
 
 ## Tasks
 
@@ -39,7 +39,7 @@ CREATE POLICY "users manage own rest configs"
 
 ### Data Access
 
-**File: `apps/parakeet/src/lib/rest-config.ts`**
+**File: `apps/parakeet/src/modules/settings/lib/rest-config.ts`**
 
 ```typescript
 import { supabase } from './supabase'
@@ -82,7 +82,7 @@ export async function resetRestOverrides(userId: string) {
 }
 ```
 
-**Session prep integration** — in `apps/parakeet/src/lib/sessions.ts`, before calling the JIT generator, fetch overrides:
+**Session prep integration** — in `apps/parakeet/src/modules/session/application/session.service.ts`, before calling the JIT generator, fetch overrides:
 ```typescript
 const userRestOverrides = await getUserRestOverrides(userId)
 // Pass as JITInput.userRestOverrides

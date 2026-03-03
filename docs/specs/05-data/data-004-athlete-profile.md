@@ -20,7 +20,7 @@ Storage and collection of athlete demographic data: gender, date of birth, and b
 - [x] `UserSchema`: add `date_of_birth: z.string().nullable().optional()`
 - [x] `UpdateUserSchema`: same addition
 
-**`apps/parakeet/src/lib/profile.ts`:**
+**`apps/parakeet/src/modules/profile/application/profile.service.ts`:**
 - [x] `Profile` interface: includes `biological_sex: BiologicalSex | null` and `date_of_birth: string | null`
 - [x] `getProfile()`: SELECT includes `biological_sex, date_of_birth`
 - [x] `updateProfile(update)`: accepts `biological_sex` and `date_of_birth`
@@ -33,10 +33,10 @@ Storage and collection of athlete demographic data: gender, date of birth, and b
 **DB migration — `supabase/migrations/20260303000000_add_bodyweight_to_profiles.sql`:**
 - [x] `ALTER TABLE profiles ADD COLUMN bodyweight_kg NUMERIC(5,2);`
 
-**`apps/parakeet/src/data/profile.repository.ts`:**
+**`apps/parakeet/src/modules/profile/data/profile.repository.ts`:**
 - [x] Add `bodyweight_kg` to `ProfileRecord`, `ProfileUpdateRecord`, and SELECT
 
-**`apps/parakeet/src/services/profile.service.ts`:**
+**`apps/parakeet/src/modules/profile/application/profile.service.ts`:**
 - [x] `Profile.bodyweight_kg: number | null`
 - [x] `UpdateProfileInput` includes `bodyweight_kg`
 

@@ -151,7 +151,7 @@ JIT Strategy
 Selection persisted to Async Storage:
 
 ```typescript
-// apps/parakeet/src/lib/settings.ts
+// apps/parakeet/src/modules/settings/lib/settings.ts
 const JIT_STRATEGY_KEY = 'jit_strategy_override'
 type JITStrategyOverride = 'auto' | 'formula' | 'llm' | 'hybrid'
 ```

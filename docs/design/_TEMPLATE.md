@@ -4,7 +4,7 @@
 
 **Date**: [DD-M-YYYY] (eg: 10 Jan 2025)
 
-> **Design Doc Philosophy**: This document describes WHAT the feature does and WHY, from a user perspective. Technical implementation details (HOW) are tracked in Beads for granular task management. Keep this doc user-focused, concise, and free of code/implementation specifics.
+> **Design Doc Philosophy**: This document describes WHAT the feature does and WHY, from a user perspective. Technical implementation details (HOW) are tracked in specs for granular task management. Keep this doc user-focused, concise, and free of code/implementation specifics.
 
 ## Overview
 
@@ -51,35 +51,6 @@ Describe how users interact with this feature:
 
 **Benefit 3**: Description
 
-## Implementation Status
-
-### ✅ Completed
-
-- Feature/component that's done
-- Another completed item
-
-### 🔄 In Progress
-
-- Work currently being done
-
-### 📋 Planned
-
-- Future work items
-
-## Future Enhancements
-
-What could be added later but is out of scope for now?
-
-**Phase 2:**
-
-- Enhancement 1
-- Enhancement 2
-
-**Long-term:**
-
-- Future vision item 1
-- Future vision item 2
-
 ## Open Questions
 
 - [ ] Question that needs answering?
@@ -87,7 +58,7 @@ What could be added later but is out of scope for now?
 
 ## References
 
-- Related Beads: bead-123, bead-456
+- Related Spec: spec-123, spec-456
 - Related Design Docs: [doc-name.md](./doc-name.md)
 - External Resources: Links to research, competitors, etc.
 
@@ -114,4 +85,4 @@ What could be added later but is out of scope for now?
 - Testing code examples
 - Step-by-step technical instructions
 
-**Remember:** Beads track the technical HOW. Design docs explain the user-focused WHAT and WHY.
+**Remember:** Specs track the technical HOW. Design docs explain the user-focused WHAT and WHY.

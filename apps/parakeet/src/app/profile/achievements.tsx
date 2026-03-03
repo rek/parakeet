@@ -2,7 +2,7 @@ import { ScrollView, StyleSheet, Text } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { router } from 'expo-router'
 
-import { useAuth } from '../../hooks/useAuth'
+import { useAuth } from '@modules/auth'
 import { AchievementsSection } from '../../components/achievements/AchievementsSection'
 import { colors } from '../../theme'
 import { BackLink } from '../../components/navigation/BackLink'

@@ -1,5 +1,27 @@
 # Code Style Guide
 
+## Quick Reference
+
+The 15 rules that matter most — read this, then consult the full guide only as needed.
+
+1. **Single-arg objects** — `function foo({ a, b }: { a: string; b: number })`, not multiple args
+2. **No explicit return types** — let TypeScript infer; never write `: Promise<Foo>`
+3. **Derive types from implementations** — `Awaited<ReturnType<typeof fn>>`, `ComponentProps<typeof Comp>`
+4. **No `any`** — use `unknown`, or narrow the type
+5. **`as const`** for constant objects/arrays; derive union types from them
+6. **Import order**: React/RN → third-party → `@modules/*` → `@platform/*` → `@shared/*` → local
+7. **Module imports** — `@modules/<feature>`, never deep paths like `@modules/session/application/...`
+8. **Hook return shape** — `{ data, isLoading, error }` (object, not positional array)
+9. **File naming** — `PascalCase.tsx` for components, `camelCase.ts` for everything else, `use*.ts` for hooks
+10. **Test with Vitest** — not Jest; run with `nx run <package>:test`
+11. **No new legacy folders** — no new `lib/`, `services/`, `hooks/`, `utils/` at top-level in `src/`
+12. **Module boundary** — validate with `npm run check:module-boundary` after structural changes
+13. **Prefer `modules/<feature>/` for new business code** — infra goes in `platform/`, cross-feature in `shared/`
+14. **`FlatList` over `ScrollView`** for lists; use `keyExtractor` + `getItemLayout`
+15. **Accessibility** — add `accessible`, `accessibilityLabel`, `accessibilityRole` to interactive elements
+
+---
+
 ## TypeScript
 
 ### General Principles
@@ -203,73 +225,26 @@ export const useFeature = (
 
 ---
 
-## NX Library Organization
+## App Architecture Organization
 
-This project uses NX monorepo architecture. See [Project Organization](./PROJECT_ORGANIZATION.md) for comprehensive details.
+See [Project Organization](./PROJECT_ORGANIZATION.md) for canonical boundaries.
 
-### Library Types Quick Reference
+High-level rule:
 
-| Type          | Purpose                                    | Can Import From       |
-| ------------- | ------------------------------------------ | --------------------- |
-| `feature`     | Smart components, business logic, features | ui, data-access, util |
-| `ui`          | Presentational components                  | util only             |
-| `data-access` | API calls, state management                | util only             |
-| `util`        | Pure functions, helpers                    | nothing               |
+- `app/` composes and routes
+- `modules/` owns feature behavior
+- `platform/` owns infra/runtime
+- `shared/` owns reusable cross-feature code
 
-**Apps are shells** - routing and config only. All features belong in `libs/`.
+### Where Code Goes
 
-### When to Create a New Library
+Use these placement rules:
 
-**Create a new library when:**
+- Feature/domain behavior: `apps/parakeet/src/modules/<feature>/...`
+- Infrastructure/runtime concerns: `apps/parakeet/src/platform/...`
+- Cross-feature reusable code: `apps/parakeet/src/shared/...`
 
-- Starting a new feature (`feature-*`)
-- Building reusable UI components (`ui-*`)
-- Adding data fetching/state management (`data-access-*`)
-- Creating shared utilities (`util-*`)
-
-**Add to existing library when:**
-
-- Extending an existing feature's functionality
-- Adding a variant of an existing component
-- Adding related utility functions
-
-**Decision Tree:**
-
-```
-Is it a user-facing feature/page?
-  └─ Yes → Create `feature-*` library
-  └─ No → Continue...
-
-Is it a reusable UI component with no business logic?
-  └─ Yes → Create `ui-*` library (or add to existing ui lib)
-  └─ No → Continue...
-
-Does it fetch data or manage state?
-  └─ Yes → Create `data-access-*` library (or add to existing)
-  └─ No → Continue...
-
-Is it a pure utility/helper function?
-  └─ Yes → Create `util-*` library (or add to existing)
-  └─ No → Re-evaluate your approach
-```
-
-### Library Structure
-
-Each library follows this structure:
-
-```
-libs/{scope}/{type}-{name}/
-  src/
-    lib/              # Library code goes here
-    index.ts          # Public API exports
-  project.json        # NX project config with tags
-  tsconfig.json
-```
-
-**Important:** Library tags in `project.json` must include:
-
-- `type:{feature|ui|data-access|util}`
-- `scope:{parakeet|shared}`
+Add to existing module folders before creating new top-level folders.
 
 ---
 
@@ -294,66 +269,62 @@ import { Text, View } from 'react-native';
 // 2. Third-party libraries
 import { useNavigation } from '@react-navigation/native';
 import axios from 'axios';
-// 3. Local components
-import { Button } from '@/components/Button';
-import { Header } from '@/components/Header';
-// 4. Hooks
-import { useAuth } from '@/hooks/useAuth';
-import { useTheme } from '@/hooks/useTheme';
-import type { User } from '@/types/User';
-// 5. Utils and types
-import { formatDate } from '@/utils/formatDate';
+// 3. App aliases (module/platform/shared)
+import { useAuth } from '@modules/auth';
+import { qk } from '@platform/query';
+import { formatDate } from '@shared/utils/date';
+// 4. Local components/types
+import { Button } from '../components/Button';
 // 6. Styles
 import { styles } from './ComponentName.styles';
 ```
 
 ### Module Organization
 
-**Important:** In NX monorepos, organize code into libraries first (see [NX Library Organization](#nx-library-organization) above), then apply these module organization principles within each library.
-
 **One function per file** - Never create files with multiple functions grouped together. That's what folders are for.
 
 Each module should:
 
-- Live in the appropriate NX library (feature, ui, data-access, or util)
+- Live in the appropriate `modules/<feature>` area
 - Have its own file named after the function
-- Be in a folder representing the feature/domain within the library
+- Be in a folder representing the feature/domain
 
-#### Good - Modular structure within libraries
+#### Good - Modular structure in a feature module
 
 ```text
-libs/parakeet/data-parakeet/src/lib/
-  getXByDate.ts
-  seedparakeet.ts
-  getItemCount.ts
-  hasItem.ts
+apps/parakeet/src/modules/program/
+  application/
+  data/
+  hooks/
+  model/
+  ui/
+  index.ts
 ```
 
 Import files directly (no barrel files):
 
 ```typescript
-// From other libraries
-import { hasWorkouts } from '@parakeet/data-parakeet';
-// This resolves to the library's index.ts which exports public API
+// From another module (public API)
+import { getActiveProgram } from '@modules/program';
 
-// Within the same library
+// Within the same module
 import { hasWorkouts } from './hasWorkouts';
 ```
 
 #### Bad - Monolithic service file
 
 ```text
-libs/parakeet/data-parakeet/src/lib/
-  parakeetervice.ts  // ❌ Contains 6+ functions in one file
+apps/parakeet/src/modules/session/application/
+  session.service.ts  // ❌ Contains too many unrelated functions in one file
 ```
 
 #### Also Bad - Barrel files within library folders
 
 ```text
-libs/parakeet/data-parakeet/src/lib/
-  services/
+apps/parakeet/src/modules/program/
+  application/
     index.ts  // ❌ Unnecessary re-export layer
-    getWorkoutsByDate.ts
+    createProgram.ts
     ...
 ```
 
@@ -497,7 +468,7 @@ See [Project Organization - Feature-Based Testing](./PROJECT_ORGANIZATION.md#fea
 **Util Libraries** - Unit tests (required)
 
 ```typescript
-// libs/parakeet/util-display/src/lib/formatDate.test.ts
+// apps/parakeet/src/shared/utils/date.test.ts
 import { formatDate } from './formatDate';
 
 describe('formatDate', () => {
@@ -510,7 +481,7 @@ describe('formatDate', () => {
 **Data-Access Libraries** - Unit tests (required)
 
 ```typescript
-// libs/parakeet/data-parakeet/src/lib/getparakeet.test.ts
+// apps/parakeet/src/modules/session/data/session.repository.test.ts
 import { getparakeet } from './getparakeet';
 
 // Mock external dependencies
@@ -527,7 +498,7 @@ describe('getparakeet', () => {
 **UI Libraries** - Component tests (required)
 
 ```typescript
-// libs/shared/ui-button/src/lib/Button.test.tsx
+// apps/parakeet/src/shared/ui/Button.test.tsx
 import { fireEvent, render } from '@testing-library/react-native';
 import { Button } from './Button';
 
@@ -545,7 +516,7 @@ describe('Button', () => {
 **Feature Libraries** - Integration tests (required)
 
 ```typescript
-// libs/parakeet/feature-archive/src/lib/ArchiveScreen.test.tsx
+// apps/parakeet/src/modules/history/ui/HistoryScreen.test.tsx
 import { render, waitFor } from '@testing-library/react-native';
 import { ArchiveScreen } from './ArchiveScreen';
 

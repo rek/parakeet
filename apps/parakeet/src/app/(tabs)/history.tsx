@@ -13,17 +13,17 @@ import { useQuery } from '@tanstack/react-query';
 import { router } from 'expo-router';
 import { LineChart } from 'react-native-chart-kit';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useAuth } from '../../hooks/useAuth';
-import { useCyclePhase } from '../../hooks/useCyclePhase';
+import { useAuth } from '@modules/auth';
+import { useCyclePhase } from '@modules/cycle-tracking';
 import {
   getPerformanceTrends,
   getWeeklySetsPerLift,
-} from '../../lib/performance';
-import type { PerformanceTrend } from '../../lib/performance';
-import { listPrograms } from '../../lib/programs';
-import { getCompletedSessions } from '../../lib/sessions';
+} from '@modules/history';
+import type { PerformanceTrend } from '@modules/history';
+import { listPrograms } from '@modules/program';
+import { getCompletedSessions } from '@modules/session';
 import { colors, palette, radii, spacing, typography } from '../../theme';
-import { formatDate } from '../../utils/date';
+import { formatDate } from '@shared/utils/date';
 
 // ── Cycle phase constants ─────────────────────────────────────────────────────
 

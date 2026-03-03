@@ -31,7 +31,7 @@ A Cube Method program generator and session tracker. The training engine runs lo
 apps/
   parakeet/                — Expo app (shell: routing, config, entry)
     src/
-      app/               — Expo Router screens
+      app/               — Expo Router shell/screens (composition + navigation only)
         (auth)/          — Onboarding + auth flows
         (tabs)/          — Tab nav screens (today, history, settings)
         session/         — Session logging, soreness, complete
@@ -40,20 +40,27 @@ apps/
         disruption-report/
         history/         — Cycle review, cycle patterns
         profile/         — Achievements, Wilks
-      components/        — Shared UI components
-      data/              — Repository layer (Supabase queries per domain)
-      hooks/             — React hooks (auth, sync, etc.)
-      lib/               — Supabase SDK helpers (sessions, programs, etc.)
-      queries/           — React Query hooks
-      network/           — Supabase client + low-level DB access
-      services/          — Service layer (auth, etc.)
-      store/             — Global state
+      modules/           — Feature duck modules (auth/session/program/etc)
+        <feature>/
+          ui/            — Feature UI components
+          hooks/         — Feature hooks
+          application/   — Use-cases/orchestration
+          data/          — Repositories/persistence boundaries
+          model/         — Feature-local types/model objects
+          index.ts       — Public feature API
+      platform/          — App-wide technical infrastructure
+        supabase/        — Typed supabase client + DB types
+        network/         — JSON codecs and network utilities
+        query/           — Query keys/defaults
+        lib/             — Platform runtime adapters
+        store/           — App runtime stores
+        utils/           — Infra-level utilities
+      shared/            — Cross-feature app code (ui/utils/types/constants)
+      components/        — Legacy compatibility (migrating to modules/shared)
       theme/             — Colors, typography, spacing
-      types/             — 
-      utils/             — App-level utilities
 packages/
-  training-engine/       — Cube Method formulas, JIT generator, AI strategies
-  shared-types/          — Zod schemas shared between app and engine
+  training-engine/       — Pure training domain logic (module facades under src/modules/*)
+  shared-types/          — Shared Zod contracts (module facades under src/modules/*)
   db/                    — DB utilities and type helpers
 supabase/
   migrations/            — SQL migration files (pushed via supabase db push)
@@ -67,11 +74,11 @@ docs/
 
 Start here:
 
-1. `docs/design/training-engine-architecture.md` — full system overview and AI strategy
-2. `docs/decisions/006-supabase-over-gcp.md` — why no backend
-3. `docs/decisions/007-vercel-ai-sdk.md` — AI SDK choice and rationale
-4. `docs/README.md` — complete docs index
-5. `docs/dev.md` — developer workflows (commands for test, typecheck, build, db)
+1. `docs/README.md` — central docs index (start here)
+2. `docs/PROJECT_ORGANIZATION.md` — canonical structure and boundaries
+3. `docs/design/training-engine-architecture.md` — full system overview and AI strategy
+4. `docs/decisions/006-supabase-over-gcp.md` — why no backend
+5. `docs/decisions/007-vercel-ai-sdk.md` — AI SDK choice and rationale
 
 ## Testing (Quick Start)
 

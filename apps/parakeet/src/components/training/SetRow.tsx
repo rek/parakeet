@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react'
 import { StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native'
+import { Ionicons } from '@expo/vector-icons'
 import { colors, spacing, radii, typography } from '../../theme'
+import { PlateCalculatorSheet } from '../session/PlateCalculatorSheet'
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -25,6 +27,7 @@ export function SetRow({ setNumber, plannedWeightKg, plannedReps, onUpdate }: Se
   const [reps, setReps] = useState(plannedReps)
   const [rpe, setRpe] = useState<number | undefined>(undefined)
   const [isCompleted, setIsCompleted] = useState(false)
+  const [plateSheetVisible, setPlateSheetVisible] = useState(false)
 
   useEffect(() => {
     onUpdate({ weightKg, reps, rpe, isCompleted })
@@ -87,6 +90,16 @@ export function SetRow({ setNumber, plannedWeightKg, plannedReps, onUpdate }: Se
         />
         <Text style={styles.unitText}>kg</Text>
 
+        {weightKg > 0 && (
+          <TouchableOpacity
+            style={styles.plateButton}
+            onPress={() => setPlateSheetVisible(true)}
+            activeOpacity={0.7}
+          >
+            <Ionicons name="barbell-outline" size={16} color={colors.textSecondary} />
+          </TouchableOpacity>
+        )}
+
         <Text style={styles.multiplyText}>×</Text>
 
         <TextInput
@@ -141,6 +154,12 @@ export function SetRow({ setNumber, plannedWeightKg, plannedReps, onUpdate }: Se
           <Text style={styles.adjustButtonText}>+2.5</Text>
         </TouchableOpacity>
       </View>
+
+      <PlateCalculatorSheet
+        visible={plateSheetVisible}
+        onClose={() => setPlateSheetVisible(false)}
+        targetKg={weightKg}
+      />
     </View>
   )
 }
@@ -182,6 +201,12 @@ const styles = StyleSheet.create({
   unitText: {
     fontSize: typography.sizes.sm,
     color: colors.textSecondary,
+  },
+  plateButton: {
+    width: 28,
+    height: 28,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   multiplyText: {
     fontSize: typography.sizes.base,

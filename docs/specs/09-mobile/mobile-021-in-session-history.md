@@ -11,7 +11,7 @@ Enables the user to navigate freely to any app screen (history, volume, achievem
 
 ### 1. Session Store Extensions
 
-**`apps/parakeet/src/store/sessionStore.ts`:**
+**`apps/parakeet/src/platform/store/sessionStore.ts`:**
 
 Add to `SessionState` interface:
 - [x] `sessionMeta: { primary_lift: string; intensity_type: string; block_number: number | null; week_number: number } | null`

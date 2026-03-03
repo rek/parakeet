@@ -8,10 +8,10 @@ import {
   View,
 } from 'react-native';
 import { router } from 'expo-router';
-import { getSession, skipSession } from '../../lib/sessions';
-import { useSessionStore } from '../../store/sessionStore';
+import { getSession, skipSession } from '@modules/session';
+import { getReadyCachedJitData } from '@platform/store/sessionStore';
 import { colors, radii, spacing, typography } from '../../theme';
-import { formatDate } from '../../utils/date';
+import { formatDate } from '@shared/utils/date';
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -37,13 +37,11 @@ function getIntensityBadge(intensityType: string) {
   );
 }
 
-
 export function WorkoutCard({ session, onSkipComplete }: WorkoutCardProps) {
   const [skipModalVisible, setSkipModalVisible] = useState(false);
   const [skipReason, setSkipReason] = useState('');
   const [isSkipping, setIsSkipping] = useState(false);
 
-  const cachedJitData = useSessionStore((s) => s.cachedJitData);
   const isInProgress = session.status === 'in_progress';
 
   function handleStartWorkout() {
@@ -53,10 +51,12 @@ export function WorkoutCard({ session, onSkipComplete }: WorkoutCardProps) {
     });
   }
 
-  function handleResumeWorkout() {
+  async function handleResumeWorkout() {
+    const jit = await getReadyCachedJitData();
+    if (!jit) return;
     router.push({
       pathname: '/session/[sessionId]',
-      params: { sessionId: session.id, jitData: cachedJitData ?? '' },
+      params: { sessionId: session.id, jitData: jit },
     });
   }
 
@@ -133,14 +133,15 @@ export function WorkoutCard({ session, onSkipComplete }: WorkoutCardProps) {
               {isInProgress ? 'Resume Workout' : 'Start Workout'}
             </Text>
           </TouchableOpacity>
-
-          <TouchableOpacity
-            style={[styles.button, styles.skipButton]}
-            onPress={handleSkipPress}
-            activeOpacity={0.8}
-          >
-            <Text style={styles.skipButtonText}>Skip</Text>
-          </TouchableOpacity>
+          {!isInProgress && (
+            <TouchableOpacity
+              style={[styles.button, styles.skipButton]}
+              onPress={handleSkipPress}
+              activeOpacity={0.8}
+            >
+              <Text style={styles.skipButtonText}>Skip</Text>
+            </TouchableOpacity>
+          )}
         </View>
       </View>
 

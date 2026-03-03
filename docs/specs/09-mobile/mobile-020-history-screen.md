@@ -16,7 +16,7 @@ The History tab showing performance trends, completed sessions, and archived pro
 **Performance Trends (top section):**
 - Per-lift trend cards: Squat / Bench / Deadlift
 - Each card: estimated 1RM trend line (chart) over last N sessions with RPE data
-- Fetched via `getPerformanceTrends(userId, lift)` from `apps/parakeet/src/lib/performance.ts`
+- Fetched via `getPerformanceTrends(userId, lift)` from `apps/parakeet/src/modules/history/lib/performance.ts`
 - Trend direction badge: ↑ / → / ↓ based on slope of last 4 estimates
 - Tapping a card expands to show individual session data points
 
@@ -34,11 +34,11 @@ The History tab showing performance trends, completed sessions, and archived pro
 
 ### Data Access
 
-Uses existing functions in `apps/parakeet/src/lib/`:
-- `getCompletedSessions(userId)` from `sessions.ts`
-- `getPerformanceTrends(userId, lift)` from `performance.ts`
-- `listPrograms(userId)` from `programs.ts` (returns all statuses including archived)
-- `getCurrentWeekLogs(userId)` from `sessions.ts` (for the trend calculation)
+Uses existing module APIs:
+- `getCompletedSessions(userId)` from `apps/parakeet/src/modules/session/application/session.service.ts`
+- `getPerformanceTrends(userId, lift)` from `apps/parakeet/src/modules/history/lib/performance.ts`
+- `listPrograms(userId)` from `apps/parakeet/src/modules/program/application/program.service.ts` (returns all statuses including archived)
+- `getCurrentWeekLogs(userId)` from `apps/parakeet/src/modules/session/application/session.service.ts` (for the trend calculation)
 
 React Query hooks (from `mobile-008`): `usePerformanceTrends`, `useCompletedSessions` — cached 2 min.
 

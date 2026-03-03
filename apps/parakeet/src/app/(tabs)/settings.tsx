@@ -3,13 +3,13 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { useQuery } from '@tanstack/react-query';
 
-import { useAuth } from '../../hooks/useAuth';
-import { getProfile } from '../../lib/profile';
-import { qk } from '../../queries/keys';
+import { useAuth } from '@modules/auth';
+import { getProfile } from '@modules/profile';
+import { qk } from '@platform/query';
 import {
   getPendingFormulaSuggestionCount,
   getUnreviewedDeveloperSuggestionCount,
-} from '../../services/settings.service';
+} from '@modules/settings';
 import { colors, spacing, radii, typography } from '../../theme';
 
 // ── Sub-components ────────────────────────────────────────────────────────────

@@ -45,7 +45,7 @@ AI rest suggestions        [●] On
 
 **Alerts toggles:** Persisted to Async Storage (not Supabase — device-local preference):
 ```typescript
-// apps/parakeet/src/lib/settings.ts
+// apps/parakeet/src/modules/settings/lib/settings.ts
 const REST_TIMER_PREFS_KEY = 'rest_timer_prefs'
 
 interface RestTimerPrefs {

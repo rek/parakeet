@@ -22,13 +22,13 @@ import {
   getPendingAiFormulaSuggestions,
   createFormulaOverride,
   deactivateFormulaConfig,
-} from '../../lib/formulas'
-import { getActiveProgram } from '../../lib/programs'
-import { getCurrentOneRmKg } from '../../lib/lifter-maxes'
-import { useAuth } from '../../hooks/useAuth'
+} from '@modules/formula'
+import { getActiveProgram } from '@modules/program'
+import { getCurrentOneRmKg } from '@modules/program'
+import { useAuth } from '@modules/auth'
 import { colors } from '../../theme'
 import { BackLink } from '../../components/navigation/BackLink'
-import { parseFormulaOverridesJson } from '../../network/json-codecs'
+import { parseFormulaOverridesJson } from '@platform/network'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -319,7 +319,7 @@ export default function FormulaEditorScreen() {
       const overrides = draftToOverrides(draft)
       await createFormulaOverride(user.id, { overrides, source: 'user' })
       if (regenerate && activeProgram) {
-        const { regenerateProgram } = await import('../../lib/programs')
+        const { regenerateProgram } = await import('@modules/program')
         await regenerateProgram({
           totalWeeks: activeProgram.total_weeks as 10 | 12 | 14,
           trainingDaysPerWeek: activeProgram.training_days_per_week as 3 | 4,

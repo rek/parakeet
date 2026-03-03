@@ -18,9 +18,9 @@ import {
   reorderAuxiliaryPool,
   getActiveAssignments,
   lockAssignment,
-} from '../../lib/auxiliary-config'
-import { getActiveProgram } from '../../lib/programs'
-import { useAuth } from '../../hooks/useAuth'
+} from '@modules/program'
+import { getActiveProgram } from '@modules/program'
+import { useAuth } from '@modules/auth'
 import { colors } from '../../theme'
 import { BackLink } from '../../components/navigation/BackLink'
 

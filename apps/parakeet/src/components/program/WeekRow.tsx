@@ -4,7 +4,7 @@ import { StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 import { BlockBadge } from './BlockBadge'
 import { SessionSummary } from './SessionSummary'
 import { colors, spacing, radii, typography } from '../../theme'
-import type { ProgramSession } from '../../utils/program-utils'
+import type { ProgramSession } from '@modules/program'
 
 interface WeekRowProps {
   weekNumber: number

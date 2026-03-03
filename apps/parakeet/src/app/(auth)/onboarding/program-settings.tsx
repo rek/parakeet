@@ -15,14 +15,14 @@ import {
 import { router, useLocalSearchParams } from 'expo-router'
 import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker'
 
-import { captureException } from '../../../utils/captureException'
-import { submitMaxes } from '../../../lib/lifter-maxes'
-import { createProgram } from '../../../lib/programs'
-import { getProfile, updateProfile } from '../../../lib/profile'
-import { updateCycleConfig } from '../../../lib/cycle-tracking'
-import { useAuth } from '../../../hooks/useAuth'
-import { qk } from '../../../queries/keys'
-import type { BiologicalSex } from '../../../lib/profile'
+import { captureException } from '@platform/utils/captureException'
+import { submitMaxes } from '@modules/program'
+import { createProgram } from '@modules/program'
+import { getProfile, updateProfile } from '@modules/profile'
+import { updateCycleConfig } from '@modules/cycle-tracking'
+import { useAuth } from '@modules/auth'
+import { qk } from '@platform/query'
+import type { BiologicalSex } from '@modules/profile'
 import { colors } from '../../../theme'
 
 // ── Types ────────────────────────────────────────────────────────────────────

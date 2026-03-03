@@ -55,7 +55,7 @@ Pure function that estimates current menstrual cycle phase from the date of the 
 
 ## Usage Context
 
-- `apps/parakeet/src/hooks/useCyclePhase.ts` — React Query hook that calls this with stored config
+- `apps/parakeet/src/modules/cycle-tracking/hooks/useCyclePhase.ts` — React Query hook that calls this with stored config
 - Today screen: phase indicator pill ("Follicular · Day 9")
 - Today screen: ovulatory info chip on squat-heavy sessions (isOvulatoryWindow)
 - JIT generator context (engine-011): passes `cycleContext` for LLM coaching notes

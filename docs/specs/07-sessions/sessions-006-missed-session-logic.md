@@ -11,7 +11,7 @@ Logic for detecting missed sessions, the within-week makeup window, and the cons
 
 ### Missed Session Detection
 
-**File: `apps/parakeet/src/services/session.service.ts` (re-exported via `apps/parakeet/src/lib/sessions.ts`)**
+**File: `apps/parakeet/src/modules/session/application/session.service.ts` (re-exported via `apps/parakeet/src/modules/session/application/session.service.ts`)**
 
 A session transitions to `missed` status automatically. A background check runs when the user opens the app (on app foreground), comparing all `planned` sessions against the current date:
 
@@ -79,7 +79,7 @@ export function isMakeupWindowExpired(input: MakeupWindowInput): boolean
 
 ### `daysSinceLastSession` Recency Signal
 
-**File: `apps/parakeet/src/services/session.service.ts`** — `getDaysSinceLastSession()`:
+**File: `apps/parakeet/src/modules/session/application/session.service.ts`** — `getDaysSinceLastSession()`:
 
 ```typescript
 // For a given lift, find the most recent COMPLETED session of that lift

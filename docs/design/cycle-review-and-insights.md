@@ -69,6 +69,8 @@ CycleReport {
 }
 ```
 
+> **Implementation note:** The query fields in `fetchCycleReportSourceData` (in `data/cycle-review.repository.ts`) must stay aligned with the active Supabase schema. Verify column names against migrations before deploying schema changes that touch `sessions`, `session_logs`, `soreness_checkins`, `lifter_maxes`, `disruptions`, `auxiliary_assignments`, or `formula_configs`.
+
 ### LLM Analysis
 
 The structured report is sent to an LLM with a system prompt that establishes it as an expert powerlifting coach reviewing a complete training cycle.
@@ -186,3 +188,4 @@ Developer suggestions are stored in a `developer_suggestions` table and viewable
 
 - Related Design Docs: [training-engine-architecture.md](./training-engine-architecture.md), [formula-management.md](./formula-management.md), [program-generation.md](./program-generation.md), [achievements.md](./achievements.md), [sex-based-adaptations.md](./sex-based-adaptations.md)
 - Specs: [engine-005-performance-adjuster.md](../specs/04-engine/engine-005-performance-adjuster.md), [engine-012-cycle-review-generator.md](../specs/04-engine/engine-012-cycle-review-generator.md), [engine-024-developer-suggestions.md](../specs/04-engine/engine-024-developer-suggestions.md), [engine-025-multi-cycle-context.md](../specs/04-engine/engine-025-multi-cycle-context.md), [mobile-014-cycle-review-screen.md](../specs/09-mobile/mobile-014-cycle-review-screen.md)
+

@@ -61,9 +61,11 @@ Life constantly interrupts training. Without a structured way to log and respond
 | Moderate | Weight reduced 40%, consider substitution — requires user confirmation |
 | Major | Session skipped, note added to program — requires user confirmation |
 
-8. Active disruption appears as a banner on the Today screen until resolved
+> **Fatigue type note:** For the Fatigue disruption type, the engine always applies `weight_reduced` (not `reps_reduced`), regardless of severity. Minor fatigue = 10% weight reduction (lighter than the generic 20% minor rule); moderate/major follow the standard table above.
 
-**Unprogrammed Event Flow** *(planned — spec disruptions-005)*:
+8. Active disruption appears as a chip in the Today screen chip row until resolved
+
+**Unprogrammed Event Flow** *(partially implemented — spec disruptions-005)*:
 
 1. User selects "Unprogrammed Event" as the disruption type
 2. Severity is fixed at "major" automatically (full deload treatment for affected sessions)
@@ -84,15 +86,15 @@ Reporting a disruption from within an active session (e.g., to immediately reduc
 **Alternative Flows:**
 
 - Reporting travel affecting multiple weeks: set end date to end of travel; all sessions in that range are marked with a travel note and volume is reduced
-- Reporting illness that clears up early: tap the amber banner on the Today screen → "Mark Resolved"; upcoming sessions revert to normal loading on next open
-- Reporting "bad day" fatigue: severity = Minor → auto-applied at -10% weight; if severe, set to Moderate and confirm a session skip
+- Reporting illness that clears up early: tap the illness chip on the Today screen → bottom sheet → "Mark Resolved"; upcoming sessions revert to normal loading on next open
+- Reporting "bad day" fatigue: type = Fatigue, severity = Minor → auto-applied at -10% weight (fatigue-specific minor rule); if more severe, set to Moderate and confirm a session skip
 
 **Resolution Flow:**
 
-1. User taps the active disruption banner on the Today screen
-2. Alert shows type + severity with "Mark Resolved" / "Cancel"
-3. On confirm: disruption status → resolved; affected sessions have `planned_sets` cleared for JIT re-generation
-4. Banner disappears; upcoming sessions regenerate at normal loading on next open
+1. User taps a disruption chip in the Today screen chip row
+2. Bottom sheet modal shows type, severity, description, affected lifts, end date
+3. User taps "Mark Resolved" → Alert confirms → disruption status → resolved; affected sessions have `planned_sets` cleared for JIT re-generation
+4. Chip disappears from row; upcoming sessions regenerate at normal loading on next open
 
 ### Visual Design Notes
 
@@ -101,7 +103,7 @@ Reporting a disruption from within an active session (e.g., to immediately reduc
 - Date range: start date picker (defaults to today) + end date picker (defaults to today; hidden when "ongoing" is toggled)
 - Lift selector: tap-to-toggle chips for each lift, plus "All Lifts" shortcut
 - Adjustment preview: two-column card per affected session — left side "Current", right side "Proposed" with weight and any substitution notes (shown for Moderate/Major; auto-applied for Minor)
-- Active disruption banner: amber left-bordered strip on Today screen, one per active disruption, shows type + severity; tap → Alert with "Mark Resolved" / "Cancel"; visible on rest days, workout-done days, and active session days (resolution not gated on session presence)
+- Active disruption chips: horizontal scrollable pill row on Today screen, one chip per active disruption, shows `⚡ {type}` with severity-colored border/dot (minor=amber, moderate=orange, major=red); tap → bottom sheet modal with details + "Mark Resolved"; visible on rest days, workout-done days, and active session days (resolution not gated on session presence)
 
 ## User Benefits
 
@@ -133,3 +135,4 @@ Reporting a disruption from within an active session (e.g., to immediately reduc
 - Spec: [disruptions-003-resolution.md](../specs/08-disruptions/disruptions-003-resolution.md)
 - Spec: [disruptions-004-adjuster-engine.md](../specs/08-disruptions/disruptions-004-adjuster-engine.md)
 - Spec: [disruptions-005-unprogrammed-event.md](../specs/08-disruptions/disruptions-005-unprogrammed-event.md)
+

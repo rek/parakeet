@@ -26,7 +26,7 @@ Adds `DEFAULT_THRESHOLDS_FEMALE` alongside the renamed `DEFAULT_THRESHOLDS_MALE`
   - `'male'` or `undefined` → `DEFAULT_THRESHOLDS_MALE`
 - [ ] `suggestProgramAdjustments` unchanged — it already accepts `thresholds` as a parameter
 
-**File: `apps/parakeet/src/lib/performance.ts`**
+**File: `apps/parakeet/src/modules/history/lib/performance.ts`**
 
 - [ ] Update `getPendingAdjustmentSuggestions(userId)` (or equivalent caller) to call `getDefaultThresholds(profile.biological_sex)` when selecting thresholds, rather than using `DEFAULT_THRESHOLDS` directly
   - `biological_sex` available from `getProfile(userId)` — may already be in scope

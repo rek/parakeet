@@ -9,9 +9,9 @@ import {
 import { router, useLocalSearchParams } from 'expo-router'
 import { useQuery } from '@tanstack/react-query'
 
-import { getProgram } from '../../../lib/programs'
+import { getProgram } from '@modules/program'
 import { colors } from '../../../theme'
-import type { ProgramSessionView } from '../../../types/domain'
+import type { ProgramSessionView } from '@shared/types/domain'
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 

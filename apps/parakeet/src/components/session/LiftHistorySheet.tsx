@@ -2,11 +2,11 @@ import { ActivityIndicator, Modal, ScrollView, StyleSheet, Text, TouchableOpacit
 import { useQuery } from '@tanstack/react-query'
 
 import type { Lift } from '@parakeet/shared-types'
-import { getRecentLiftHistory } from '../../lib/performance'
-import { useAuth } from '../../hooks/useAuth'
-import { useNetworkStatus } from '../../hooks/useNetworkStatus'
+import { getRecentLiftHistory } from '@modules/history'
+import { useAuth } from '@modules/auth'
+import { useNetworkStatus } from '@platform/network'
 import { colors, spacing, typography } from '../../theme'
-import { formatDate } from '../../utils/date'
+import { formatDate } from '@shared/utils/date'
 
 // ── Types ────────────────────────────────────────────────────────────────────
 

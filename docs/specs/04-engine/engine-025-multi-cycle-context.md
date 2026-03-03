@@ -45,7 +45,7 @@ Summaries are **derived from stored `cycle_reviews` rows** — not re-computed f
 
 ### getPreviousCycleSummaries
 
-**File: `apps/parakeet/src/lib/cycle-review.ts`** — already has this function stub. Implement fully:
+**File: `apps/parakeet/src/modules/cycle-review/lib/cycle-review.ts`** — already has this function stub. Implement fully:
 
 ```typescript
 export async function getPreviousCycleSummaries(
@@ -121,7 +121,7 @@ Do not repeat information from previous cycles in your response — focus on wha
 
 ### compileCycleReport Integration
 
-**File: `apps/parakeet/src/lib/cycle-review.ts`** — `compileCycleReport()` already assembles the current cycle's data. Extend the call site in `getCycleReview()` to also fetch and pass previous summaries:
+**File: `apps/parakeet/src/modules/cycle-review/lib/cycle-review.ts`** — `compileCycleReport()` already assembles the current cycle's data. Extend the call site in `getCycleReview()` to also fetch and pass previous summaries:
 
 ```typescript
 export async function getCycleReview(userId: string, programId: string) {

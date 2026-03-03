@@ -11,13 +11,13 @@ import { SafeAreaView } from 'react-native-safe-area-context'
 import { router } from 'expo-router'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 
-import { getJITStrategyOverride, setJITStrategyOverride } from '../../lib/settings'
-import type { JITStrategyOverride } from '../../lib/settings'
+import { getJITStrategyOverride, setJITStrategyOverride } from '@modules/settings'
+import type { JITStrategyOverride } from '@modules/settings'
 import {
   getDeveloperSuggestions,
   updateSuggestionStatus,
-} from '../../lib/developer-suggestions'
-import type { DeveloperSuggestion } from '../../lib/developer-suggestions'
+} from '@modules/settings'
+import type { DeveloperSuggestion } from '@modules/settings'
 import { colors } from '../../theme'
 import { BackLink } from '../../components/navigation/BackLink'
 

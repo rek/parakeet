@@ -14,19 +14,20 @@ import { router } from 'expo-router'
 import { useQuery } from '@tanstack/react-query'
 import DateTimePicker, { type DateTimePickerEvent } from '@react-native-community/datetimepicker'
 
-import { reportDisruption, applyDisruptionAdjustment, applyUnprogrammedEventSoreness } from '../../lib/disruptions'
-import { useAuth } from '../../hooks/useAuth'
-import { getProfile } from '../../lib/profile'
+import { reportDisruption, applyDisruptionAdjustment, applyUnprogrammedEventSoreness } from '@modules/disruptions'
+import { useAuth } from '@modules/auth'
+import { getProfile } from '@modules/profile'
 import type {
   AdjustmentSuggestion,
   DisruptionType,
   Severity,
   DisruptionWithSuggestions,
+  Lift,
 } from '@parakeet/shared-types'
-import type { MuscleGroup } from '@parakeet/training-engine'
 import { colors } from '../../theme'
 import { BackLink } from '../../components/navigation/BackLink'
-import { qk } from '../../queries/keys'
+import { qk } from '@platform/query'
+import { SORENESS_MUSCLES_DEFAULT, TRAINING_LIFTS } from '@shared/constants/training'
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
@@ -40,19 +41,7 @@ const DISRUPTION_TYPES: { value: DisruptionType; label: string; icon: string }[]
   { value: 'other',                label: 'Other',                icon: '•' },
 ]
 
-const LIFTS = ['squat', 'bench', 'deadlift'] as const
-type Lift = typeof LIFTS[number]
-
 type SorenessLevel = 'none' | 'mild' | 'sore' | 'very_sore'
-
-const SORENESS_MUSCLES: { value: MuscleGroup; label: string }[] = [
-  { value: 'quads',      label: 'Quads' },
-  { value: 'hamstrings', label: 'Hamstrings' },
-  { value: 'glutes',     label: 'Glutes' },
-  { value: 'lower_back', label: 'Lower Back' },
-  { value: 'upper_back', label: 'Upper Back' },
-  { value: 'chest',      label: 'Chest' },
-]
 
 const SORENESS_CHIPS: { value: SorenessLevel; label: string }[] = [
   { value: 'none',      label: 'None' },
@@ -168,7 +157,7 @@ export default function DisruptionReportScreen() {
       setSelectedType('fatigue')
       setSelectedSeverity('minor')
       setAllLifts(true)
-      setSelectedLifts(new Set(LIFTS))
+      setSelectedLifts(new Set(TRAINING_LIFTS))
       setDescription('Menstrual symptoms')
     }
   }
@@ -190,7 +179,7 @@ export default function DisruptionReportScreen() {
       setSelectedLifts(new Set())
     } else {
       setAllLifts(true)
-      setSelectedLifts(new Set(LIFTS))
+      setSelectedLifts(new Set(TRAINING_LIFTS))
     }
   }
 
@@ -506,7 +495,7 @@ export default function DisruptionReportScreen() {
         {/* Step 4: Affected lifts */}
         <SectionLabel label="4. Which lifts?" />
         <View style={styles.liftRow}>
-          {LIFTS.map((lift) => (
+          {TRAINING_LIFTS.map((lift) => (
             <TouchableOpacity
               key={lift}
               style={[styles.liftChip, selectedLifts.has(lift) && styles.liftChipSelected]}
@@ -543,7 +532,7 @@ export default function DisruptionReportScreen() {
             />
 
             <SectionLabel label="Post-event soreness" />
-            {SORENESS_MUSCLES.map((mg) => (
+            {SORENESS_MUSCLES_DEFAULT.map((mg) => (
               <View key={mg.value} style={styles.sorenessRow}>
                 <Text style={styles.sorenessMuscleLabel}>{mg.label}</Text>
                 <View style={styles.sorenessChips}>

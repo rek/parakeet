@@ -3,8 +3,8 @@ import { ScrollView, StyleSheet, Text, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { router } from 'expo-router'
 
-import { useAuth } from '../../hooks/useAuth'
-import { getCompletedSessions } from '../../lib/sessions'
+import { useAuth } from '@modules/auth'
+import { getCompletedSessions } from '@modules/session'
 import { BackLink } from '../../components/navigation/BackLink'
 import { colors, spacing, radii, typography } from '../../theme'
 

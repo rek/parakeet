@@ -28,7 +28,7 @@ Adds a `standard_female` warmup preset — a 5-step protocol with finer percenta
 - [ ] `generateWarmupSets(100, { type: 'preset', name: 'standard_female' })` produces 5 warmup sets (no duplicates expected at 100 kg working weight)
 - [ ] `generateWarmupSets(60, { type: 'preset', name: 'standard_female' })` — verify 20 kg bar minimum applies and duplicate-skip logic still works
 
-**File: `apps/parakeet/src/lib/warmup-config.ts`**
+**File: `apps/parakeet/src/modules/settings/lib/warmup-config.ts`**
 
 - [ ] Update `getWarmupConfig(userId)` default resolution: when no user config row exists, select `standard_female` if `profiles.biological_sex === 'female'`, otherwise `standard`
   - Requires joining or pre-loading `biological_sex` from `profiles` — pass as optional param `getWarmupConfig(userId, biologicalSex?)` rather than fetching inside

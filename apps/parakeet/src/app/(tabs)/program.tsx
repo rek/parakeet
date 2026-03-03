@@ -12,13 +12,13 @@ import { SafeAreaView } from 'react-native-safe-area-context'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 
 import { WeekRow } from '../../components/program/WeekRow'
-import { useActiveProgram } from '../../hooks/useActiveProgram'
-import { useAuth } from '../../hooks/useAuth'
-import { updateProgramStatus } from '../../lib/programs'
-import { qk } from '../../queries/keys'
+import { useActiveProgram } from '@modules/program'
+import { useAuth } from '@modules/auth'
+import { updateProgramStatus } from '@modules/program'
+import { qk } from '@platform/query'
 import { colors, spacing, typography } from '../../theme'
-import { groupByWeek, determineCurrentWeek } from '../../utils/program-utils'
-import type { ProgramSession } from '../../utils/program-utils'
+import { groupByWeek, determineCurrentWeek } from '@modules/program'
+import type { ProgramSession } from '@modules/program'
 
 export default function ProgramScreen() {
   const { data: program, isLoading } = useActiveProgram()

@@ -25,7 +25,7 @@ Two surfaces: (1) session completion stars shown immediately after each workout,
 - Streak update line below stars: "Week 7 clean ✓" or if streak reset: "Streak reset — log disruptions to protect your streak" (amber, only shown on reset)
 - Cycle badge granted line: shown only when `checkCycleCompletion()` returns `qualifiesForBadge: true` for the now-completed cycle
 
-**`apps/parakeet/src/lib/achievements.ts`:**
+**`apps/parakeet/src/modules/achievements/application/achievement.service.ts`:**
 - `getPRHistory(userId: string, lift: Lift): Promise<HistoricalPRs>` — fetches `personal_records` from Supabase
 - `getStreakData(userId: string): Promise<StreakResult>` — fetches week history from `sessions` + `disruptions`, calls `computeStreak()`
 - `getCycleBadges(userId: string): Promise<CycleBadge[]>` — fetches completed programs where `completion_pct >= 0.80`
