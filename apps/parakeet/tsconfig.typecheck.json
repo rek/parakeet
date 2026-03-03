@@ -9,7 +9,8 @@
     "resolveJsonModule": true,
     "strict": true,
     "composite": false,
-    "declaration": false
+    "declaration": false,
+    "types": ["vitest/globals", "node"]
   },
   "include": [
     "src/**/*.ts",

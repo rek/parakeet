@@ -89,6 +89,16 @@ Reporting a disruption from within an active session (e.g., to immediately reduc
 - Reporting illness that clears up early: tap the illness chip on the Today screen → bottom sheet → "Mark Resolved"; upcoming sessions revert to normal loading on next open
 - Reporting "bad day" fatigue: type = Fatigue, severity = Minor → auto-applied at -10% weight (fatigue-specific minor rule); if more severe, set to Moderate and confirm a session skip
 
+**Edit End Date Flow:**
+
+1. User taps a disruption chip in the Today screen chip row
+2. Bottom sheet modal shows type, severity, description, affected lifts, and "Until" row
+3. User taps the "Until" row → inline date picker opens
+4. User selects a new end date → "Save End Date" button appears
+5. On save: `affected_date_end` is updated; chip remains active until resolved
+
+This flow is useful for ongoing disruptions that have a known recovery date, or to shorten the affected range when recovering earlier than expected.
+
 **Resolution Flow:**
 
 1. User taps a disruption chip in the Today screen chip row
@@ -103,7 +113,7 @@ Reporting a disruption from within an active session (e.g., to immediately reduc
 - Date range: start date picker (defaults to today) + end date picker (defaults to today; hidden when "ongoing" is toggled)
 - Lift selector: tap-to-toggle chips for each lift, plus "All Lifts" shortcut
 - Adjustment preview: two-column card per affected session — left side "Current", right side "Proposed" with weight and any substitution notes (shown for Moderate/Major; auto-applied for Minor)
-- Active disruption chips: horizontal scrollable pill row on Today screen, one chip per active disruption, shows `⚡ {type}` with severity-colored border/dot (minor=amber, moderate=orange, major=red); tap → bottom sheet modal with details + "Mark Resolved"; visible on rest days, workout-done days, and active session days (resolution not gated on session presence)
+- Active disruption chips: horizontal scrollable pill row on Today screen, one chip per active disruption, shows `⚡ {type}` with severity-colored border/dot (minor=amber, moderate=orange, major=red); tap → bottom sheet modal with details, an editable end date (tap "Until" row → inline date picker → "Save End Date"), and "Mark Resolved"; visible on rest days, workout-done days, and active session days
 
 ## User Benefits
 

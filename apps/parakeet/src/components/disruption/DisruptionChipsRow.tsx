@@ -2,16 +2,18 @@ import { useState } from 'react'
 import {
   Alert,
   Modal,
+  Platform,
   ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
 } from 'react-native'
+import DateTimePicker, { type DateTimePickerEvent } from '@react-native-community/datetimepicker'
 
-import { resolveDisruption } from '@modules/disruptions'
+import { resolveDisruption, updateDisruptionEndDate } from '@modules/disruptions'
 import { captureException } from '@platform/utils/captureException'
-import { formatDate } from '@shared/utils/date'
+import { formatDate, localDateIso } from '@shared/utils/date'
 import { colors, palette, radii, spacing, typography } from '../../theme'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -63,6 +65,28 @@ function DisruptionDetailModal({
   onClose: () => void
   onResolved: () => void
 }) {
+  const [showDatePicker, setShowDatePicker] = useState(false)
+  const [pendingEndDate, setPendingEndDate] = useState<string | null>(null)
+  const [saving, setSaving] = useState(false)
+
+  const displayEndDate = pendingEndDate ?? disruption?.affected_date_end ?? null
+  const hasUnsavedDate = pendingEndDate !== null && pendingEndDate !== disruption?.affected_date_end
+
+  async function handleSaveEndDate() {
+    if (!disruption || !pendingEndDate) return
+    setSaving(true)
+    try {
+      await updateDisruptionEndDate(disruption.id, userId, pendingEndDate)
+      onResolved()
+      setPendingEndDate(null)
+      setShowDatePicker(false)
+    } catch (err) {
+      captureException(err)
+    } finally {
+      setSaving(false)
+    }
+  }
+
   async function handleResolve() {
     if (!disruption) return
     try {
@@ -81,6 +105,12 @@ function DisruptionDetailModal({
     ])
   }
 
+  function handleClose() {
+    setPendingEndDate(null)
+    setShowDatePicker(false)
+    onClose()
+  }
+
   const sevColor = disruption ? severityColor(disruption.severity) : colors.warning
 
   return (
@@ -88,10 +118,10 @@ function DisruptionDetailModal({
       visible={!!disruption}
       transparent
       animationType="slide"
-      onRequestClose={onClose}
+      onRequestClose={handleClose}
     >
       <View style={styles.overlay}>
-        <TouchableOpacity style={styles.backdrop} activeOpacity={1} onPress={onClose} />
+        <TouchableOpacity style={styles.backdrop} activeOpacity={1} onPress={handleClose} />
         <View style={styles.sheet}>
           <View style={styles.handle} />
 
@@ -106,7 +136,7 @@ function DisruptionDetailModal({
                 </Text>
               </View>
             </View>
-            <TouchableOpacity onPress={onClose} hitSlop={12} activeOpacity={0.7}>
+            <TouchableOpacity onPress={handleClose} hitSlop={12} activeOpacity={0.7}>
               <Text style={styles.closeBtn}>✕</Text>
             </TouchableOpacity>
           </View>
@@ -125,14 +155,44 @@ function DisruptionDetailModal({
               </View>
             ) : null}
 
-            <View style={styles.detailRow}>
+            <TouchableOpacity
+              style={styles.detailRow}
+              onPress={() => setShowDatePicker((v) => !v)}
+              activeOpacity={0.7}
+            >
               <Text style={styles.detailLabel}>Until</Text>
-              <Text style={styles.detailValue}>
-                {disruption?.affected_date_end
-                  ? formatDate(disruption.affected_date_end)
-                  : 'Ongoing'}
+              <Text style={[styles.detailValue, !displayEndDate && styles.detailValueMuted]}>
+                {displayEndDate ? formatDate(displayEndDate) : 'Ongoing'}
               </Text>
-            </View>
+              <Text style={styles.editHint}>Edit</Text>
+            </TouchableOpacity>
+
+            {showDatePicker && (
+              <DateTimePicker
+                mode="date"
+                value={displayEndDate ? new Date(displayEndDate + 'T00:00:00') : new Date()}
+                minimumDate={disruption?.affected_date_end
+                  ? new Date(disruption.affected_date_end + 'T00:00:00')
+                  : new Date()}
+                onChange={(_e: DateTimePickerEvent, d?: Date) => {
+                  if (Platform.OS === 'android') setShowDatePicker(false)
+                  if (d) setPendingEndDate(localDateIso(d))
+                }}
+              />
+            )}
+
+            {hasUnsavedDate && (
+              <TouchableOpacity
+                style={[styles.saveEndDateBtn, saving && styles.btnDisabled]}
+                onPress={handleSaveEndDate}
+                disabled={saving}
+                activeOpacity={0.8}
+              >
+                <Text style={styles.saveEndDateBtnText}>
+                  {saving ? 'Saving…' : 'Save End Date'}
+                </Text>
+              </TouchableOpacity>
+            )}
           </View>
 
           <TouchableOpacity style={styles.resolveBtn} onPress={confirmResolve} activeOpacity={0.8}>
@@ -306,6 +366,31 @@ const styles = StyleSheet.create({
   },
   capitalize: {
     textTransform: 'capitalize',
+  },
+  detailValueMuted: {
+    color: colors.textTertiary,
+    fontStyle: 'italic',
+  },
+  editHint: {
+    fontSize: typography.sizes.xs,
+    color: colors.primary,
+    fontWeight: typography.weights.semibold,
+    alignSelf: 'center',
+  },
+  saveEndDateBtn: {
+    marginTop: spacing[2],
+    backgroundColor: colors.primary,
+    borderRadius: radii.sm,
+    paddingVertical: spacing[2.5],
+    alignItems: 'center',
+  },
+  saveEndDateBtnText: {
+    fontSize: typography.sizes.sm,
+    fontWeight: typography.weights.semibold,
+    color: colors.textInverse,
+  },
+  btnDisabled: {
+    opacity: 0.5,
   },
   resolveBtn: {
     backgroundColor: colors.primary,

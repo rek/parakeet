@@ -29,6 +29,7 @@ import { colors } from '../../theme'
 import { BackLink } from '../../components/navigation/BackLink'
 import { qk } from '@platform/query'
 import { SORENESS_MUSCLES_DEFAULT, TRAINING_LIFTS } from '@shared/constants/training'
+import { localDateIso } from '@shared/utils/date'
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
@@ -61,11 +62,7 @@ const SORENESS_NUMERIC: Record<SorenessLevel, number> = {
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 function todayIso(): string {
-  return new Date().toISOString().split('T')[0]
-}
-
-function isoDate(d: Date): string {
-  return d.toISOString().split('T')[0]
+  return localDateIso(new Date())
 }
 
 function parseIso(s: string): Date {
@@ -456,7 +453,7 @@ export default function DisruptionReportScreen() {
                 maximumDate={new Date()}
                 onChange={(_e: DateTimePickerEvent, d?: Date) => {
                   if (Platform.OS === 'android') setShowStartPicker(false)
-                  if (d) setStartDate(isoDate(d))
+                  if (d) setStartDate(localDateIso(d))
                 }}
               />
             )}
@@ -478,7 +475,7 @@ export default function DisruptionReportScreen() {
                   minimumDate={parseIso(startDate)}
                   onChange={(_e: DateTimePickerEvent, d?: Date) => {
                     if (Platform.OS === 'android') setShowEndPicker(false)
-                    if (d) setEndDate(isoDate(d))
+                    if (d) setEndDate(localDateIso(d))
                   }}
                 />
               )}

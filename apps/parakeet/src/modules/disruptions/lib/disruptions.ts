@@ -189,6 +189,19 @@ export async function applyDisruptionAdjustment(
     .eq('id', disruptionId)
 }
 
+export async function updateDisruptionEndDate(
+  disruptionId: string,
+  userId: string,
+  endDate: string,
+): Promise<void> {
+  const { error } = await typedSupabase
+    .from('disruptions')
+    .update({ affected_date_end: endDate })
+    .eq('id', disruptionId)
+    .eq('user_id', userId)
+  if (error) throw error
+}
+
 export async function resolveDisruption(
   disruptionId: string,
   userId: string,
