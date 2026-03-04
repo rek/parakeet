@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 import * as Haptics from 'expo-haptics'
 import { Audio } from 'expo-av'
+import { getRestTimerPrefs } from '../../modules/settings'
 import { formatMMSS } from '../../shared/utils'
 import { colors, spacing, radii, typography } from '../../theme'
 
@@ -127,13 +128,21 @@ function FullTimer({
   const overtime = elapsed > effectiveDuration
 
   const prevOvertimeRef = useRef(false)
+  const audioAlertRef = useRef(true)
+  const hapticAlertRef = useRef(true)
+  useEffect(() => {
+    getRestTimerPrefs().then((p) => {
+      audioAlertRef.current = p.audioAlert
+      hapticAlertRef.current = p.hapticAlert
+    })
+  }, [])
   useEffect(() => {
     prevOvertimeRef.current = false
   }, [durationSeconds, offset])
   useEffect(() => {
     if (overtime && !prevOvertimeRef.current) {
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy).catch(() => {})
-      playDing()
+      if (hapticAlertRef.current) Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy).catch(() => {})
+      if (audioAlertRef.current) playDing()
     }
     prevOvertimeRef.current = overtime
   }, [overtime])

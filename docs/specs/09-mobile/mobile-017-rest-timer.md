@@ -57,9 +57,10 @@ Overtime mode: countdown text turns red, shows "+00:12" style elapsed-over displ
 
 AI suggestion chip: shown when `llmSuggestion` is present and `Math.abs(llmSuggestion.deltaSeconds) >= 30`. Text: "AI: [formulaBase ± delta] suggested". Tapping chip does nothing (informational only).
 
-**Audio + haptic:**
-- `expo-av` for audio: short tone at 0:00 (and optionally at 30s warning, user-configurable in mobile-018)
-- `expo-haptics` for haptic: `Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success)` at 0:00
+**Audio + haptic (fires when overtime edge is detected, i.e. `elapsed > effectiveDuration` for first time):**
+- `expo-av` (`Audio.Sound.createAsync`) plays `assets/sounds/ding.wav` (880Hz tone, 0.35s, auto-unloads after playback); respects `RestTimerPrefs.audioAlert`
+- `expo-haptics` `Haptics.impactAsync(ImpactFeedbackStyle.Heavy)` at 0:00; respects `RestTimerPrefs.hapticAlert`
+- Both implemented in `FullTimer` via `useEffect([overtime])` + `prevOvertimeRef` edge detection; resets on `[durationSeconds, offset]` change
 
 ---
 
