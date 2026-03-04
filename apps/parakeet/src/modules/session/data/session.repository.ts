@@ -491,6 +491,15 @@ export async function fetchProgramSessionsForMakeup(
   });
 }
 
+export async function updateSessionToPlanned(sessionId: string): Promise<void> {
+  const { error } = await typedSupabase
+    .from('sessions')
+    .update({ status: 'planned' })
+    .eq('id', sessionId)
+    .eq('status', 'in_progress');
+  if (error) throw error;
+}
+
 export async function markSessionAsMissed(sessionId: string): Promise<void> {
   const { error } = await typedSupabase
     .from('sessions')
