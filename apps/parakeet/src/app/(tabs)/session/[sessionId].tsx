@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import {
+  Alert,
   ScrollView,
   StyleSheet,
   Text,
@@ -8,8 +9,9 @@ import {
 } from 'react-native'
 import { router, useFocusEffect, useLocalSearchParams } from 'expo-router'
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
+import { useQueryClient } from '@tanstack/react-query'
 
-import { getSession, startSession } from '@modules/session'
+import { abandonSession, getSession, startSession } from '@modules/session'
 import { useSessionStore } from '@platform/store/sessionStore'
 import { useNetworkStatus } from '@platform/network'
 import { WarmupSection } from '../../../components/training/WarmupSection'
@@ -106,6 +108,8 @@ export default function SessionScreen() {
     adjustTimer,
     closeTimer,
   } = useSessionStore()
+
+  const queryClient = useQueryClient()
 
   const [warmupSetsState, setWarmupSetsState] = useState<WarmupSet[]>([])
   const [auxiliaryWork, setAuxiliaryWork] = useState<AuxiliaryWork[]>([])
@@ -292,6 +296,27 @@ export default function SessionScreen() {
     }
   }
 
+  function handleAbandon() {
+    Alert.alert(
+      'Abandon Workout?',
+      'This will reset the session back to planned. Any progress will be lost.',
+      [
+        { text: 'Keep Going', style: 'cancel' },
+        {
+          text: 'Abandon',
+          style: 'destructive',
+          onPress: async () => {
+            if (timerState?.visible) closeTimer()
+            await abandonSession(sessionId)
+            reset()
+            void queryClient.invalidateQueries({ queryKey: ['session'] })
+            router.replace('/(tabs)/today')
+          },
+        },
+      ],
+    )
+  }
+
   function handleComplete() {
     if (timerState?.visible) {
       closeTimer()
@@ -433,7 +458,7 @@ export default function SessionScreen() {
         <View style={styles.bottomSpacer} />
       </ScrollView>
 
-      {/* Sticky complete button */}
+      {/* Sticky footer: complete + abandon */}
       <View style={styles.stickyFooter}>
         <TouchableOpacity
           style={[
@@ -443,8 +468,21 @@ export default function SessionScreen() {
           onPress={handleComplete}
           disabled={!hasCompletedSet}
           activeOpacity={0.8}
+          accessible
+          accessibilityLabel="Complete workout"
+          accessibilityRole="button"
         >
           <Text style={styles.completeButtonText}>Complete Workout</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.abandonButton}
+          onPress={handleAbandon}
+          activeOpacity={0.8}
+          accessible
+          accessibilityLabel="Abandon workout"
+          accessibilityRole="button"
+        >
+          <Text style={styles.abandonButtonText}>Abandon Workout</Text>
         </TouchableOpacity>
       </View>
 
@@ -538,7 +576,7 @@ const styles = StyleSheet.create({
     fontStyle: 'italic',
   },
   bottomSpacer: {
-    height: 100,
+    height: 140,
   },
   stickyFooter: {
     paddingHorizontal: 16,
@@ -560,6 +598,20 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     color: colors.textInverse,
+  },
+  abandonButton: {
+    marginTop: 8,
+    borderRadius: 12,
+    paddingVertical: 14,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.bgMuted,
+  },
+  abandonButtonText: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: colors.textSecondary,
   },
   restTimerOverlay: {
     position: 'absolute',

@@ -31,6 +31,7 @@ import {
   markSessionAsMissed,
   updateSessionToCompleted,
   updateSessionToInProgress,
+  updateSessionToPlanned,
   updateSessionToSkipped,
 } from '../data/session.repository';
 import type {
@@ -131,6 +132,11 @@ export async function skipSession(
   reason?: string
 ): Promise<void> {
   await updateSessionToSkipped(sessionId, reason);
+}
+
+// Abandon an in-progress session, resetting it back to planned
+export async function abandonSession(sessionId: string): Promise<void> {
+  await updateSessionToPlanned(sessionId);
 }
 
 // Complete a session: log sets, update status, run performance adjuster
