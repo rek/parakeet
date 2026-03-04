@@ -12,6 +12,3 @@ plate calculator
 i dont understand it, i dont see the plates i need to use
 just a bar weight selector
 
-## 2
-
-when rest timer hits zero, it should buzz or make noise

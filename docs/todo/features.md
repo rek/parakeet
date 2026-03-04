@@ -23,16 +23,7 @@ for unending programs, we need an option to 'finish' them, which perhaps is just
 bar weight needs to be settable from settings page
 need to be careful to then factor this into every calculation everywhere it is to be found, since the whole app currently uses a hardcoded 20kg bar
 
-## 9
-
-on the history page, the graph is only 1rm progression
-we need to change it to also show:
-
-- volume per workout over time
-- heavyist lift
-- and also filter by whatever is selected as filter below (eg: heavy, explosive)
-
 ## 10
 
 remove belt squat from aux lifts, we never do that
-add 1inch pause bench
+add 1 inch pause bench

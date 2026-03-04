@@ -25,6 +25,7 @@ import { formatDate } from '@shared/utils/date';
 // ── Types ─────────────────────────────────────────────────────────────────────
 
 type IntensityFilter = 'all' | 'heavy' | 'explosive' | 'rep' | 'deload';
+type ChartType = '1rm' | 'volume' | 'heaviest';
 
 const LIFT_LABELS: Record<Lift, string> = {
   squat: 'Squat',
@@ -49,16 +50,20 @@ const INTENSITY_FILTERS: IntensityFilter[] = [
   'rep',
   'deload',
 ];
+const CHART_TYPES: { key: ChartType; label: string; suffix: string }[] = [
+  { key: '1rm', label: '1RM', suffix: ' kg' },
+  { key: 'volume', label: 'Volume', suffix: ' kg' },
+  { key: 'heaviest', label: 'Heaviest', suffix: ' kg' },
+];
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
+
+type ActualSet = { weight_grams?: number; reps_completed?: number };
 
 function estimateBestOneRm(actualSets: unknown): number {
   if (!Array.isArray(actualSets) || actualSets.length === 0) return 0;
   let best = 0;
-  for (const s of actualSets as {
-    weight_grams?: number;
-    reps_completed?: number;
-  }[]) {
+  for (const s of actualSets as ActualSet[]) {
     if (!s.weight_grams || !s.reps_completed || s.reps_completed <= 0) continue;
     const est = estimateOneRepMax_Epley(
       gramsToKg(s.weight_grams),
@@ -67,6 +72,27 @@ function estimateBestOneRm(actualSets: unknown): number {
     if (est > best) best = est;
   }
   return best;
+}
+
+function computeSessionVolume(actualSets: unknown): number {
+  if (!Array.isArray(actualSets) || actualSets.length === 0) return 0;
+  let total = 0;
+  for (const s of actualSets as ActualSet[]) {
+    if (!s.weight_grams || !s.reps_completed || s.reps_completed <= 0) continue;
+    total += gramsToKg(s.weight_grams) * s.reps_completed;
+  }
+  return total;
+}
+
+function computeHeaviestLift(actualSets: unknown): number {
+  if (!Array.isArray(actualSets) || actualSets.length === 0) return 0;
+  let heaviest = 0;
+  for (const s of actualSets as ActualSet[]) {
+    if (!s.weight_grams) continue;
+    const kg = gramsToKg(s.weight_grams);
+    if (kg > heaviest) heaviest = kg;
+  }
+  return heaviest;
 }
 
 function getSessionJoin(sessions: unknown): { intensity_type?: string } | null {
@@ -86,6 +112,7 @@ export default function LiftHistoryScreen() {
 
   const [intensityFilter, setIntensityFilter] =
     useState<IntensityFilter>('all');
+  const [chartType, setChartType] = useState<ChartType>('1rm');
 
   const historyQuery = useQuery({
     queryKey: ['performance', 'lift', lift, user?.id],
@@ -109,18 +136,34 @@ export default function LiftHistoryScreen() {
 
   const rows = historyQuery.data ?? [];
 
-  // Build chart data (oldest → newest, non-zero 1RM only)
-  const chartEntries = [...rows]
-    .reverse()
-    .map((row) => ({
-      date: row.completed_at,
-      oneRm: estimateBestOneRm(row.actual_sets),
-    }))
-    .filter((e) => e.date && e.oneRm > 0);
+  // Session list filtered by intensity
+  const filteredRows =
+    intensityFilter === 'all'
+      ? rows
+      : rows.filter(
+          (row) =>
+            getSessionJoin(row.sessions)?.intensity_type === intensityFilter
+        );
+
+  // Build chart data from filteredRows (oldest → newest), responding to both
+  // intensity filter and chart type
+  const chartSourceRows = [...filteredRows].reverse();
+
+  const getChartValue = (row: (typeof rows)[number]): number => {
+    if (chartType === '1rm') return estimateBestOneRm(row.actual_sets);
+    if (chartType === 'volume') return computeSessionVolume(row.actual_sets);
+    return computeHeaviestLift(row.actual_sets);
+  };
+
+  const chartEntries = chartSourceRows
+    .map((row) => ({ date: row.completed_at, value: getChartValue(row) }))
+    .filter((e) => e.date && e.value > 0);
 
   const labelStep = Math.max(1, Math.ceil(chartEntries.length / 6));
+  const activeChartDef = CHART_TYPES.find((c) => c.key === chartType)!;
+
   const chartData =
-    chartEntries.length >= 2
+    chartEntries.length >= 1
       ? {
           labels: chartEntries.map((e, i) => {
             if (i % labelStep !== 0) return '';
@@ -129,7 +172,7 @@ export default function LiftHistoryScreen() {
           }),
           datasets: [
             {
-              data: chartEntries.map((e) => parseFloat(e.oneRm.toFixed(1))),
+              data: chartEntries.map((e) => parseFloat(e.value.toFixed(1))),
               color: (opacity = 1) =>
                 liftColor +
                 Math.round(opacity * 255)
@@ -140,15 +183,6 @@ export default function LiftHistoryScreen() {
           ],
         }
       : null;
-
-  // Session list filtered by intensity
-  const filteredRows =
-    intensityFilter === 'all'
-      ? rows
-      : rows.filter(
-          (row) =>
-            getSessionJoin(row.sessions)?.intensity_type === intensityFilter
-        );
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -177,8 +211,31 @@ export default function LiftHistoryScreen() {
           )}
         </View>
 
-        {/* 1RM chart */}
-        <Text style={styles.sectionHeader}>1RM Progression</Text>
+        {/* Chart type tabs */}
+        <View style={styles.chartTypeRow}>
+          {CHART_TYPES.map((ct) => (
+            <TouchableOpacity
+              key={ct.key}
+              style={[
+                styles.chartTypeChip,
+                chartType === ct.key && styles.chartTypeChipActive,
+              ]}
+              onPress={() => setChartType(ct.key)}
+              activeOpacity={0.7}
+            >
+              <Text
+                style={[
+                  styles.chartTypeChipText,
+                  chartType === ct.key && styles.chartTypeChipTextActive,
+                ]}
+              >
+                {ct.label}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+
+        {/* Chart */}
         {historyQuery.isLoading ? (
           <View style={styles.chartPlaceholder}>
             <ActivityIndicator color={colors.primary} />
@@ -210,14 +267,20 @@ export default function LiftHistoryScreen() {
                 },
               }}
               style={{ borderRadius: radii.sm }}
-              formatYLabel={(v) => `${v}`}
-              yAxisSuffix=" kg"
+              formatYLabel={(v) =>
+                chartType === 'volume'
+                  ? `${Math.round(Number(v))}`
+                  : `${v}`
+              }
+              yAxisSuffix={activeChartDef.suffix}
             />
           </View>
         ) : (
           <Text style={styles.emptyText}>
             {rows.length === 0
               ? 'No sessions logged yet.'
+              : filteredRows.length === 0
+              ? 'No sessions match this filter.'
               : 'Not enough data to plot.'}
           </Text>
         )}
@@ -313,7 +376,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: spacing[6],
+    marginBottom: spacing[4],
   },
   liftTitle: {
     fontSize: typography.sizes['2xl'],
@@ -333,6 +396,34 @@ const styles = StyleSheet.create({
     fontSize: typography.sizes.md,
     fontWeight: typography.weights.bold,
     color: colors.primary,
+  },
+  // Chart type selector
+  chartTypeRow: {
+    flexDirection: 'row',
+    gap: spacing[2],
+    marginBottom: spacing[3],
+  },
+  chartTypeChip: {
+    flex: 1,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: radii.sm,
+    paddingVertical: spacing[2],
+    backgroundColor: colors.bgSurface,
+  },
+  chartTypeChipActive: {
+    borderColor: colors.primary,
+    backgroundColor: colors.primaryMuted,
+  },
+  chartTypeChipText: {
+    fontSize: typography.sizes.sm,
+    fontWeight: typography.weights.medium,
+    color: colors.textSecondary,
+  },
+  chartTypeChipTextActive: {
+    color: colors.primary,
+    fontWeight: typography.weights.bold,
   },
   sectionHeader: {
     fontSize: typography.sizes.xs,

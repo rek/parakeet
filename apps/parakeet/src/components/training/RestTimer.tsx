@@ -1,6 +1,26 @@
 import { useEffect, useRef, useState } from 'react'
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native'
+import * as Haptics from 'expo-haptics'
+import { Audio } from 'expo-av'
+import { formatMMSS } from '../../shared/utils'
 import { colors, spacing, radii, typography } from '../../theme'
+
+async function playDing() {
+  try {
+    const { sound } = await Audio.Sound.createAsync(
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      require('../../../assets/sounds/ding.wav')
+    )
+    await sound.playAsync()
+    sound.setOnPlaybackStatusUpdate((status) => {
+      if (status.isLoaded && status.didJustFinish) {
+        sound.unloadAsync().catch(() => {})
+      }
+    })
+  } catch {
+    // audio unavailable
+  }
+}
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -16,15 +36,6 @@ export interface RestTimerProps {
   onDone: (elapsedSeconds: number) => void
   intensityLabel: string
   isAuxiliary?: boolean
-}
-
-// ── Helpers ───────────────────────────────────────────────────────────────────
-
-function formatMMSS(totalSeconds: number): string {
-  const absSeconds = Math.abs(Math.floor(totalSeconds))
-  const m = Math.floor(absSeconds / 60)
-  const s = absSeconds % 60
-  return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`
 }
 
 // ── Internal hook (used only by AuxiliaryPill) ────────────────────────────────
@@ -114,6 +125,18 @@ function FullTimer({
   const effectiveDuration = Math.max(0, durationSeconds + offset)
   const remaining = Math.max(0, effectiveDuration - elapsed)
   const overtime = elapsed > effectiveDuration
+
+  const prevOvertimeRef = useRef(false)
+  useEffect(() => {
+    prevOvertimeRef.current = false
+  }, [durationSeconds, offset])
+  useEffect(() => {
+    if (overtime && !prevOvertimeRef.current) {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy).catch(() => {})
+      playDing()
+    }
+    prevOvertimeRef.current = overtime
+  }, [overtime])
 
   const showAiChip =
     llmSuggestion !== undefined &&

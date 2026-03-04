@@ -22,7 +22,8 @@
     "db:stop": "npx supabase stop",
     "db:reset": "npx supabase db reset",
     "db:push": "npx supabase db push",
-    "db:types": "npx supabase gen types typescript --local > supabase/types.ts"
+    "db:types": "npx supabase gen types typescript --local > supabase/types.ts",
+    "ios": "expo run:ios"
   },
   "dependencies": {
     "@expo/metro-config": "~54.0.9",

@@ -72,7 +72,7 @@ const LIFT_COLORS: Record<Lift, string> = {
 
 function buildVolumeChartData(weeklyData: WeeklyVolRow[]) {
   const weeks = [...new Set(weeklyData.map((d) => d.weekStart))].sort();
-  if (weeks.length < 2) return null;
+  if (weeks.length < 1) return null;
 
   const labels = weeks.map((w) => {
     const d = new Date(w);

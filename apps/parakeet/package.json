@@ -23,6 +23,7 @@
     "ai": "^6.0.99",
     "expo": "*",
     "expo-application": "~7.0.8",
+    "expo-av": "~16.0.8",
     "expo-haptics": "~15.0.8",
     "expo-linking": "*",
     "expo-notifications": "~0.32.16",

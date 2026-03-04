@@ -6,18 +6,12 @@ import * as Haptics from 'expo-haptics'
 import { useSessionStore } from '@platform/store/sessionStore'
 import { getRestTimerPrefs } from '@modules/settings'
 import { detectOvertimeEdge, useRestNotifications } from '@modules/session'
+import { formatMMSS } from '../../shared/utils'
 import { colors, radii, spacing, typography } from '../../theme'
 
 function capitalize(value: string): string {
   if (!value) return value
   return value.charAt(0).toUpperCase() + value.slice(1)
-}
-
-function formatMMSS(totalSeconds: number): string {
-  const s = Math.max(0, Math.floor(totalSeconds))
-  const m = Math.floor(s / 60)
-  const sec = s % 60
-  return `${String(m).padStart(2, '0')}:${String(sec).padStart(2, '0')}`
 }
 
 export function ReturnToSessionBanner() {
