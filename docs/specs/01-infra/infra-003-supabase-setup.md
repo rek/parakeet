@@ -32,7 +32,6 @@ Create and configure the Supabase project, set up local development environment,
 **Auth providers (in Supabase dashboard):**
 - [x] Enable Email auth (for initial testing, no email confirmation required for personal use)
 - [x] Enable Google OAuth: configure Google Cloud OAuth credentials → paste client ID/secret into Supabase
-- [x] Enable Apple OAuth: configure Apple Developer Sign-in → paste client ID/secret into Supabase
 
 **Row Level Security:**
 Every user-data table must have RLS enabled and a policy that restricts access to the owning user:

@@ -9,31 +9,29 @@ npm run db:types                 # Generate TypeScript types → supabase/types.
 npm run db:push                  # Push migrations to hosted Supabase
 ```
 
-### Build APK
+### Build production APK
 
-new: `nx buildApk parakeet`
-
-old:
-
-# this makes an aab, only good for confirming build is good or giving to play store
-```sh
-nx build parakeet --local --platform android
-```
+Requires the native Android project to exist (`apps/parakeet/android/`). If it doesn't, run prebuild first:
 
 ```bash
-cd apps/parakeet/android && ./gradlew build --warning-mode=all
-# or
-cd apps/parakeet && expo run:android --variant release
-# or
-cd android && ./gradlew assembleRelease
+# One-time: generate native Android project (re-run if you add/remove native packages)
+cd apps/parakeet
+npx expo prebuild --platform android --clean
 ```
 
-APK output: `apps/parakeet/android/app/build/outputs/apk/release/app-release.apk`
+Then build and copy to `dist/`:
+
+```bash
+# From workspace root — builds APK and copies to dist/apps/parakeet/parakeet-release.apk
+nx buildApk parakeet
+```
+
+Env vars: the build picks up `.env.production` automatically via `app.config.ts`. Prod Supabase credentials are already set there.
 
 ### Sideload to device
 
 ```bash
-adb install -r apps/parakeet/android/app/build/outputs/apk/release/app-release.apk
+adb install -r dist/apps/parakeet/parakeet-release.apk
 ```
 
 ### Local development

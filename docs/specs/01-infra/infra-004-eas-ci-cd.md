@@ -1,80 +1,92 @@
-# Spec: EAS Build and CI/CD
+# Spec: CI and Android Build / Deployment
 
 **Status**: Implemented
 **Domain**: Infrastructure
 
 ## What This Covers
 
-GitHub Actions CI (lint/test/typecheck) and EAS Build/Update for parakeet app deployment. No backend deployment pipeline needed (Supabase manages the DB; migrations are pushed via CLI).
+GitHub Actions CI (lint/test/typecheck) and local Android APK builds for distribution. No iOS support — Android only. No Play Store — APK is sideloaded directly onto devices. No automated build CI (builds are run locally by the developer).
 
-## Tasks
+## Platform
 
-**EAS Setup:**
-- [x] Install and configure EAS CLI:
-  ```bash
-  npm install -g eas-cli
-  eas login
-  eas build:configure        # creates eas.json
-  ```
+**Android only.** iOS is not supported. Do not add iOS-specific configuration.
 
-**`apps/parakeet/eas.json`:**
-- [x] Configure `eas.json` with development, preview, and production build profiles:
-  ```json
-  {
-    "cli": { "version": ">= 13.0.0" },
-    "build": {
-      "development": {
-        "developmentClient": true,
-        "distribution": "internal",
-        "env": { "EXPO_PUBLIC_SUPABASE_URL": "http://localhost:54321", "EXPO_PUBLIC_SUPABASE_ANON_KEY": "..." }
-      },
-      "preview": {
-        "distribution": "internal",
-        "env": { "EXPO_PUBLIC_SUPABASE_URL": "https://<ref>.supabase.co", "EXPO_PUBLIC_SUPABASE_ANON_KEY": "..." }
-      },
-      "production": {
-        "autoIncrement": true,
-        "env": { "EXPO_PUBLIC_SUPABASE_URL": "https://<ref>.supabase.co", "EXPO_PUBLIC_SUPABASE_ANON_KEY": "..." }
-      }
-    },
-    "submit": {
-      "production": {
-        "ios": { "appleId": "...", "ascAppId": "..." },
-        "android": { "serviceAccountKeyPath": "./google-service-account.json" }
-      }
-    }
-  }
-  ```
-
-**EAS Secrets:**
-- [x] Store production Supabase URL and anon key as EAS secrets:
-  ```bash
-  eas secret:create --name EXPO_PUBLIC_SUPABASE_URL --value "https://..."
-  eas secret:create --name EXPO_PUBLIC_SUPABASE_ANON_KEY --value "..."
-  ```
+## CI (GitHub Actions)
 
 **`.github/workflows/ci.yml`:**
-- [x] Trigger: pull_request to main
-- [x] Steps: checkout → `npm ci` → `nx affected --target=typecheck` → `nx affected --target=lint` → `nx affected --target=test`
-  - No build step in CI (EAS handles builds asynchronously)
+- Trigger: push or pull_request to main
+- Steps: checkout → `npm ci` → `nx affected --target=typecheck` → `nx affected --target=lint` → `nx affected --target=test`
+- No build step in CI — builds are done locally
 
-**`.github/workflows/eas-build.yml`:**
-- [x] Trigger: push to main (when `apps/parakeet/**` or `packages/**` changed)
-- [x] Determine update type:
-  - JS-only changes (no native module changes): `eas update --branch production --message "$COMMIT_MESSAGE"`
-  - Native changes: `eas build --platform all --profile production --non-interactive`
-- [x] Store `EXPO_TOKEN` as GitHub secret
+## Local Android Build
 
-**Database migration workflow:**
-- [x] Local development: `supabase db reset` (wipes local, reapplies all migrations)
-- [x] Production: `supabase db push` from developer machine (personal app, no automated migration pipeline needed)
-- [x] Keep `supabase/migrations/` committed to git for reproducibility
+Production APK is built locally and sideloaded onto devices.
 
-**Rollback:**
-- [x] EAS Update: `eas update --branch production --message "Rollback" --republish <update-id>`
-- [x] DB migration: write a down migration SQL file manually, push via `supabase db push`
+**One-time setup:**
+```bash
+# Generate native Android project (only needed when native deps change)
+cd apps/parakeet
+EXPO_PUBLIC_SUPABASE_URL=https://<ref>.supabase.co \
+EXPO_PUBLIC_SUPABASE_ANON_KEY=<prod_anon_key> \
+npx expo prebuild --platform android --clean
+```
+
+**Build release APK:**
+```bash
+cd apps/parakeet/android
+./gradlew assembleRelease
+# Output: android/app/build/outputs/apk/release/app-release.apk
+```
+
+**Distribute:**
+- Share `app-release.apk` directly (AirDrop, file share, etc.)
+- Enable "Install unknown apps" on device settings
+- No signing config needed for sideloading to personal devices (debug signing is fine)
+
+**Env vars for prod build:**
+- Set `EXPO_PUBLIC_SUPABASE_URL` and `EXPO_PUBLIC_SUPABASE_ANON_KEY` as shell env vars before `expo prebuild`, or put them in `.env.production` (gitignored)
+
+## `apps/parakeet/eas.json`
+
+Kept for local development profiles only (not used in CI):
+```json
+{
+  "cli": { "appVersionSource": "remote" },
+  "build": {
+    "development": {
+      "developmentClient": true,
+      "distribution": "internal"
+    },
+    "preview": {
+      "distribution": "internal",
+      "android": { "buildType": "apk" }
+    },
+    "production": {
+      "android": { "buildType": "apk" }
+    }
+  }
+}
+```
+
+## Database Migration Workflow
+
+- Local development: `npx supabase db reset` (wipes local, reapplies all migrations)
+- Production: `npx supabase db push` from developer machine
+- Keep `supabase/migrations/` committed to git for reproducibility
+
+**Check migration status:**
+```bash
+npx supabase migration list   # shows local vs remote
+npx supabase db push --dry-run  # preview what would be pushed
+npx supabase db push            # apply to prod
+```
+
+## Rollback
+
+- APK: reinstall the previous APK file
+- DB migration: write a down migration SQL file manually, push via `npx supabase db push`
 
 ## Dependencies
 
 - [infra-001-nx-monorepo-setup.md](./infra-001-nx-monorepo-setup.md)
-- [infra-002-supabase-setup.md](./infra-002-supabase-setup.md)
+- [infra-003-supabase-setup.md](./infra-003-supabase-setup.md)

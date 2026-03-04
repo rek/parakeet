@@ -41,7 +41,7 @@ Root layout, auth guard, tab navigator, and screen registration for the full app
 
 **Deep link registration (`apps/parakeet/app.config.ts`):**
 - Register URL scheme `parakeet://` for future deep linking support
-- Register associated domains for Universal Links (iOS) and App Links (Android)
+- Register URL scheme `parakeet://` and App Links (Android) for deep linking support
 
 ## Dependencies
 
