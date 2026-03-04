@@ -96,6 +96,7 @@ export interface CompletedSetLog {
   lift: Lift
   completedSets: number
   exercise?: string
+  setRpes?: (number | undefined)[]  // one entry per set; undefined = not recorded
 }
 
 // ---------------------------------------------------------------------------

@@ -6,6 +6,7 @@ import {
   MuscleMapper,
   VolumeStatus,
 } from '../types'
+import { rpeSetMultiplier } from './rpe-scaler'
 
 export const DEFAULT_MRV_MEV_CONFIG_MALE: MrvMevConfig = {
   quads:      { mev: 8,  mrv: 20 },
@@ -47,8 +48,11 @@ export function computeWeeklyVolume(
 
   for (const log of sessionLogs) {
     const muscles = muscleMapper(log.lift, log.exercise)
+    const effectiveSets: number = log.setRpes
+      ? log.setRpes.reduce((sum: number, rpe) => sum + rpeSetMultiplier(rpe), 0)
+      : log.completedSets
     for (const { muscle, contribution } of muscles) {
-      raw[muscle] += log.completedSets * contribution
+      raw[muscle] += effectiveSets * contribution
     }
   }
 

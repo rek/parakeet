@@ -1,4 +1,5 @@
 import { getMusclesForExercise, getMusclesForLift } from './muscle-mapper'
+import { rpeSetMultiplier } from './rpe-scaler'
 import {
   DEFAULT_MRV_MEV_CONFIG,
   classifyVolumeStatus,
@@ -42,6 +43,33 @@ describe('computeWeeklyVolume', () => {
     expect(volume.hamstrings).toBe(5)
   })
 
+  it('setRpes scales effective sets — RPE 7 = 0.5 per set', () => {
+    // 4 sets all at RPE 7 → effectiveSets = 4 × 0.5 = 2.0
+    const logs = [{ lift: 'squat' as const, completedSets: 4, setRpes: [7, 7, 7, 7] as (number | undefined)[] }]
+    const volume = computeWeeklyVolume(logs, getMusclesForLift)
+    expect(volume.quads).toBe(2)    // floor(2.0 × 1.0)
+    expect(volume.hamstrings).toBe(1) // floor(2.0 × 0.5)
+  })
+
+  it('setRpes with mixed RPEs — RPE 5 sets dont count', () => {
+    // 2 sets at RPE 9 (1.0) + 2 sets at RPE 5 (0.0) → effective = 2
+    const logs = [{ lift: 'bench' as const, completedSets: 4, setRpes: [9, 9, 5, 5] as (number | undefined)[] }]
+    const volume = computeWeeklyVolume(logs, getMusclesForLift)
+    expect(volume.chest).toBe(2)
+  })
+
+  it('setRpes with undefined falls back to 1.0 per set', () => {
+    const logs = [{ lift: 'deadlift' as const, completedSets: 3, setRpes: [undefined, undefined, undefined] as (number | undefined)[] }]
+    const volume = computeWeeklyVolume(logs, getMusclesForLift)
+    expect(volume.hamstrings).toBe(3)
+  })
+
+  it('missing setRpes uses completedSets as before', () => {
+    const logs = [{ lift: 'squat' as const, completedSets: 5 }]
+    const volume = computeWeeklyVolume(logs, getMusclesForLift)
+    expect(volume.quads).toBe(5)
+  })
+
   it('session with 0 completedSets contributes nothing', () => {
     const logs = [
       { lift: 'squat' as const, completedSets: 4 },
@@ -66,6 +94,16 @@ describe('computeWeeklyVolume', () => {
     expect(volume.upper_back).toBe(2)   // deadlift 4×0.5
     expect(volume.biceps).toBe(0)       // not mapped to any main lift
   })
+})
+
+describe('rpeSetMultiplier', () => {
+  it('undefined → 1.0 (conservative)', () => expect(rpeSetMultiplier(undefined)).toBe(1.0))
+  it('5 → 0.0 (not a hard set)', () => expect(rpeSetMultiplier(5)).toBe(0.0))
+  it('6 → 0.25', () => expect(rpeSetMultiplier(6)).toBe(0.25))
+  it('7 → 0.5', () => expect(rpeSetMultiplier(7)).toBe(0.5))
+  it('8 → 0.75', () => expect(rpeSetMultiplier(8)).toBe(0.75))
+  it('9 → 1.0', () => expect(rpeSetMultiplier(9)).toBe(1.0))
+  it('10 → 1.0', () => expect(rpeSetMultiplier(10)).toBe(1.0))
 })
 
 describe('getMusclesForLift — exercise name lookup', () => {

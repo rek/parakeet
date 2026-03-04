@@ -2,6 +2,7 @@ import {
   getJITGenerator,
   getMusclesForLift,
   getMusclesForExercise,
+  rpeSetMultiplier,
   DEFAULT_AUXILIARY_POOLS,
 } from '@parakeet/training-engine'
 import type {
@@ -106,30 +107,34 @@ export async function runJITForSession(
     const logLift = LiftSchema.safeParse(rawLift).data
     if (!logLift) continue
 
-    // Main lift sets
-    const setCount = Array.isArray(log.actual_sets)
-      ? (log.actual_sets as unknown[]).length
-      : 0
+    // Main lift sets — sum RPE-scaled effective sets
+    type SetWithRpe = { rpe_actual?: number }
+    const mainSets = Array.isArray(log.actual_sets)
+      ? (log.actual_sets as SetWithRpe[])
+      : []
+    const mainEffective = mainSets.reduce((sum, s) => sum + rpeSetMultiplier(s.rpe_actual), 0)
     const mainMuscles = getMusclesForLift(logLift)
     for (const { muscle, contribution } of mainMuscles) {
       weeklyVolumeToDate[muscle] =
-        (weeklyVolumeToDate[muscle] ?? 0) + Math.round(setCount * contribution)
+        (weeklyVolumeToDate[muscle] ?? 0) + Math.floor(mainEffective * contribution)
     }
 
-    // Aux sets grouped by exercise name for per-exercise muscle mapping
+    // Aux sets — grouped by exercise, RPE-scaled
     const auxSets = Array.isArray(log.auxiliary_sets)
-      ? (log.auxiliary_sets as { exercise?: string }[])
+      ? (log.auxiliary_sets as { exercise?: string; rpe_actual?: number }[])
       : []
     const auxByExercise = new Map<string, number>()
     for (const s of auxSets) {
-      if (s.exercise) auxByExercise.set(s.exercise, (auxByExercise.get(s.exercise) ?? 0) + 1)
+      if (s.exercise) {
+        auxByExercise.set(s.exercise, (auxByExercise.get(s.exercise) ?? 0) + rpeSetMultiplier(s.rpe_actual))
+      }
     }
-    for (const [exercise, count] of auxByExercise) {
+    for (const [exercise, effective] of auxByExercise) {
       const auxMuscles = getMusclesForExercise(exercise)
       const muscles = auxMuscles.length > 0 ? auxMuscles : getMusclesForLift(logLift)
       for (const { muscle, contribution } of muscles) {
         weeklyVolumeToDate[muscle] =
-          (weeklyVolumeToDate[muscle] ?? 0) + Math.round(count * contribution)
+          (weeklyVolumeToDate[muscle] ?? 0) + Math.floor(effective * contribution)
       }
     }
   }

@@ -299,18 +299,22 @@ export async function getCurrentWeekLogs(
 
   return rows.flatMap((row) => {
     const entries: CompletedSetLog[] = [
-      { lift: row.primary_lift, completedSets: row.actual_sets.length },
+      {
+        lift: row.primary_lift,
+        completedSets: row.actual_sets.length,
+        setRpes: row.actual_sets.map((s) => s.rpe_actual ?? undefined),
+      },
     ];
-    // Group aux sets by exercise name and emit separate entries so
-    // getMusclesForLift can apply per-exercise muscle mapping
-    const auxByExercise = new Map<string, number>();
+    // Group aux sets by exercise name, preserving per-set RPEs
+    const auxByExercise = new Map<string, (number | undefined)[]>();
     for (const s of row.auxiliary_sets) {
       const name = (s as { exercise?: string }).exercise;
       if (!name) continue;
-      auxByExercise.set(name, (auxByExercise.get(name) ?? 0) + 1);
+      if (!auxByExercise.has(name)) auxByExercise.set(name, []);
+      auxByExercise.get(name)!.push(s.rpe_actual ?? undefined);
     }
-    for (const [exercise, count] of auxByExercise) {
-      entries.push({ lift: row.primary_lift, completedSets: count, exercise });
+    for (const [exercise, rpes] of auxByExercise) {
+      entries.push({ lift: row.primary_lift, completedSets: rpes.length, exercise, setRpes: rpes });
     }
     return entries;
   });

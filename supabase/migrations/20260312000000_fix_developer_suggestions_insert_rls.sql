@@ -257,6 +257,17 @@ CREATE TABLE IF NOT EXISTS "public"."performance_metrics" (
 ALTER TABLE "public"."performance_metrics" OWNER TO "postgres";
 
 
+CREATE TABLE IF NOT EXISTS "public"."period_starts" (
+    "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
+    "user_id" "uuid" NOT NULL,
+    "start_date" "date" NOT NULL,
+    "created_at" timestamp with time zone DEFAULT "now"() NOT NULL
+);
+
+
+ALTER TABLE "public"."period_starts" OWNER TO "postgres";
+
+
 CREATE TABLE IF NOT EXISTS "public"."personal_records" (
     "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
     "user_id" "uuid" NOT NULL,
@@ -394,7 +405,7 @@ ALTER TABLE "public"."sessions" OWNER TO "postgres";
 
 CREATE TABLE IF NOT EXISTS "public"."soreness_checkins" (
     "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
-    "session_id" "uuid" NOT NULL,
+    "session_id" "uuid",
     "user_id" "uuid" NOT NULL,
     "recorded_at" timestamp with time zone DEFAULT "now"() NOT NULL,
     "ratings" "jsonb" NOT NULL,
@@ -413,7 +424,7 @@ CREATE TABLE IF NOT EXISTS "public"."warmup_configs" (
     "custom_steps" "jsonb",
     "updated_at" timestamp with time zone DEFAULT "now"() NOT NULL,
     CONSTRAINT "warmup_configs_lift_check" CHECK (("lift" = ANY (ARRAY['squat'::"text", 'bench'::"text", 'deadlift'::"text"]))),
-    CONSTRAINT "warmup_configs_protocol_check" CHECK (("protocol" = ANY (ARRAY['standard'::"text", 'minimal'::"text", 'extended'::"text", 'empty_bar'::"text", 'custom'::"text"])))
+    CONSTRAINT "warmup_configs_protocol_check" CHECK (("protocol" = ANY (ARRAY['standard'::"text", 'minimal'::"text", 'extended'::"text", 'empty_bar'::"text", 'custom'::"text", 'standard_female'::"text"])))
 );
 
 
@@ -502,6 +513,11 @@ ALTER TABLE ONLY "public"."muscle_volume_config"
 
 ALTER TABLE ONLY "public"."performance_metrics"
     ADD CONSTRAINT "performance_metrics_pkey" PRIMARY KEY ("id");
+
+
+
+ALTER TABLE ONLY "public"."period_starts"
+    ADD CONSTRAINT "period_starts_pkey" PRIMARY KEY ("id");
 
 
 
@@ -603,6 +619,10 @@ CREATE INDEX "jit_comparison_logs_user_id_idx" ON "public"."jit_comparison_logs"
 
 
 
+CREATE UNIQUE INDEX "period_starts_user_date_uniq" ON "public"."period_starts" USING "btree" ("user_id", "start_date");
+
+
+
 CREATE UNIQUE INDEX "pr_unique" ON "public"."personal_records" USING "btree" ("user_id", "lift", "pr_type", "weight_kg") NULLS NOT DISTINCT;
 
 
@@ -696,6 +716,11 @@ ALTER TABLE ONLY "public"."performance_metrics"
 
 
 
+ALTER TABLE ONLY "public"."period_starts"
+    ADD CONSTRAINT "period_starts_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "public"."profiles"("id") ON DELETE CASCADE;
+
+
+
 ALTER TABLE ONLY "public"."personal_records"
     ADD CONSTRAINT "personal_records_session_id_fkey" FOREIGN KEY ("session_id") REFERENCES "public"."sessions"("id");
 
@@ -776,15 +801,15 @@ ALTER TABLE ONLY "public"."warmup_configs"
 
 
 
-CREATE POLICY "Users manage own cycle config" ON "public"."cycle_tracking" USING (("auth"."uid"() = "user_id")) WITH CHECK (("auth"."uid"() = "user_id"));
+CREATE POLICY "Users manage own cycle config" ON "public"."cycle_tracking" USING ((( SELECT "auth"."uid"() AS "uid") = "user_id")) WITH CHECK ((( SELECT "auth"."uid"() AS "uid") = "user_id"));
 
 
 
-CREATE POLICY "authenticated users can read developer suggestions" ON "public"."developer_suggestions" FOR SELECT USING (("auth"."uid"() IS NOT NULL));
+CREATE POLICY "authenticated users can read developer suggestions" ON "public"."developer_suggestions" FOR SELECT USING ((( SELECT "auth"."uid"() AS "uid") IS NOT NULL));
 
 
 
-CREATE POLICY "authenticated users update developer suggestions" ON "public"."developer_suggestions" FOR UPDATE USING (("auth"."uid"() IS NOT NULL));
+CREATE POLICY "authenticated users update developer suggestions" ON "public"."developer_suggestions" FOR UPDATE USING ((( SELECT "auth"."uid"() AS "uid") IS NOT NULL));
 
 
 
@@ -821,6 +846,9 @@ ALTER TABLE "public"."muscle_volume_config" ENABLE ROW LEVEL SECURITY;
 ALTER TABLE "public"."performance_metrics" ENABLE ROW LEVEL SECURITY;
 
 
+ALTER TABLE "public"."period_starts" ENABLE ROW LEVEL SECURITY;
+
+
 ALTER TABLE "public"."personal_records" ENABLE ROW LEVEL SECURITY;
 
 
@@ -836,10 +864,6 @@ ALTER TABLE "public"."recovery_snapshots" ENABLE ROW LEVEL SECURITY;
 ALTER TABLE "public"."rest_configs" ENABLE ROW LEVEL SECURITY;
 
 
-CREATE POLICY "service role writes developer suggestions" ON "public"."developer_suggestions" FOR INSERT WITH CHECK (true);
-
-
-
 ALTER TABLE "public"."session_logs" ENABLE ROW LEVEL SECURITY;
 
 
@@ -849,79 +873,83 @@ ALTER TABLE "public"."sessions" ENABLE ROW LEVEL SECURITY;
 ALTER TABLE "public"."soreness_checkins" ENABLE ROW LEVEL SECURITY;
 
 
-CREATE POLICY "users manage own personal records" ON "public"."personal_records" USING (("auth"."uid"() = "user_id"));
+CREATE POLICY "users manage own personal records" ON "public"."personal_records" USING ((( SELECT "auth"."uid"() AS "uid") = "user_id"));
 
 
 
-CREATE POLICY "users manage own rest configs" ON "public"."rest_configs" USING (("auth"."uid"() = "user_id"));
+CREATE POLICY "users manage own rest configs" ON "public"."rest_configs" USING ((( SELECT "auth"."uid"() AS "uid") = "user_id"));
 
 
 
-CREATE POLICY "users see own jit logs" ON "public"."jit_comparison_logs" USING (("user_id" = "auth"."uid"()));
+CREATE POLICY "users see own jit logs" ON "public"."jit_comparison_logs" USING (("user_id" = ( SELECT "auth"."uid"() AS "uid")));
 
 
 
-CREATE POLICY "users_own_data" ON "public"."auxiliary_assignments" USING (("auth"."uid"() = "user_id"));
+CREATE POLICY "users_own_data" ON "public"."auxiliary_assignments" USING ((( SELECT "auth"."uid"() AS "uid") = "user_id"));
 
 
 
-CREATE POLICY "users_own_data" ON "public"."auxiliary_exercises" USING (("auth"."uid"() = "user_id"));
+CREATE POLICY "users_own_data" ON "public"."auxiliary_exercises" USING ((( SELECT "auth"."uid"() AS "uid") = "user_id"));
 
 
 
-CREATE POLICY "users_own_data" ON "public"."cycle_reviews" USING (("auth"."uid"() = "user_id"));
+CREATE POLICY "users_own_data" ON "public"."cycle_reviews" USING ((( SELECT "auth"."uid"() AS "uid") = "user_id"));
 
 
 
-CREATE POLICY "users_own_data" ON "public"."developer_suggestions" USING (("auth"."uid"() = "user_id"));
+CREATE POLICY "users_own_data" ON "public"."developer_suggestions" USING ((( SELECT "auth"."uid"() AS "uid") = "user_id"));
 
 
 
-CREATE POLICY "users_own_data" ON "public"."disruptions" USING (("auth"."uid"() = "user_id"));
+CREATE POLICY "users_own_data" ON "public"."disruptions" USING ((( SELECT "auth"."uid"() AS "uid") = "user_id"));
 
 
 
-CREATE POLICY "users_own_data" ON "public"."formula_configs" USING (("auth"."uid"() = "user_id"));
+CREATE POLICY "users_own_data" ON "public"."formula_configs" USING ((( SELECT "auth"."uid"() AS "uid") = "user_id"));
 
 
 
-CREATE POLICY "users_own_data" ON "public"."lifter_maxes" USING (("auth"."uid"() = "user_id"));
+CREATE POLICY "users_own_data" ON "public"."lifter_maxes" USING ((( SELECT "auth"."uid"() AS "uid") = "user_id"));
 
 
 
-CREATE POLICY "users_own_data" ON "public"."muscle_volume_config" USING (("auth"."uid"() = "user_id"));
+CREATE POLICY "users_own_data" ON "public"."muscle_volume_config" USING ((( SELECT "auth"."uid"() AS "uid") = "user_id"));
 
 
 
-CREATE POLICY "users_own_data" ON "public"."performance_metrics" USING (("auth"."uid"() = "user_id"));
+CREATE POLICY "users_own_data" ON "public"."performance_metrics" USING ((( SELECT "auth"."uid"() AS "uid") = "user_id"));
 
 
 
-CREATE POLICY "users_own_data" ON "public"."programs" USING (("auth"."uid"() = "user_id"));
+CREATE POLICY "users_own_data" ON "public"."period_starts" USING ((( SELECT "auth"."uid"() AS "uid") = "user_id")) WITH CHECK ((( SELECT "auth"."uid"() AS "uid") = "user_id"));
 
 
 
-CREATE POLICY "users_own_data" ON "public"."recovery_snapshots" USING (("auth"."uid"() = "user_id"));
+CREATE POLICY "users_own_data" ON "public"."programs" USING ((( SELECT "auth"."uid"() AS "uid") = "user_id"));
 
 
 
-CREATE POLICY "users_own_data" ON "public"."session_logs" USING (("auth"."uid"() = "user_id"));
+CREATE POLICY "users_own_data" ON "public"."recovery_snapshots" USING ((( SELECT "auth"."uid"() AS "uid") = "user_id"));
 
 
 
-CREATE POLICY "users_own_data" ON "public"."sessions" USING (("auth"."uid"() = "user_id"));
+CREATE POLICY "users_own_data" ON "public"."session_logs" USING ((( SELECT "auth"."uid"() AS "uid") = "user_id"));
 
 
 
-CREATE POLICY "users_own_data" ON "public"."soreness_checkins" USING (("auth"."uid"() = "user_id"));
+CREATE POLICY "users_own_data" ON "public"."sessions" USING ((( SELECT "auth"."uid"() AS "uid") = "user_id"));
 
 
 
-CREATE POLICY "users_own_data" ON "public"."warmup_configs" USING (("auth"."uid"() = "user_id"));
+CREATE POLICY "users_own_data" ON "public"."soreness_checkins" USING ((( SELECT "auth"."uid"() AS "uid") = "user_id"));
 
 
 
-CREATE POLICY "users_own_profile" ON "public"."profiles" USING (("auth"."uid"() = "id"));
+CREATE POLICY "users_own_data" ON "public"."warmup_configs" USING ((( SELECT "auth"."uid"() AS "uid") = "user_id"));
+
+
+
+CREATE POLICY "users_own_profile" ON "public"."profiles" USING ((( SELECT "auth"."uid"() AS "uid") = "id"));
 
 
 
@@ -1177,6 +1205,12 @@ GRANT ALL ON TABLE "public"."muscle_volume_config" TO "service_role";
 GRANT ALL ON TABLE "public"."performance_metrics" TO "anon";
 GRANT ALL ON TABLE "public"."performance_metrics" TO "authenticated";
 GRANT ALL ON TABLE "public"."performance_metrics" TO "service_role";
+
+
+
+GRANT ALL ON TABLE "public"."period_starts" TO "anon";
+GRANT ALL ON TABLE "public"."period_starts" TO "authenticated";
+GRANT ALL ON TABLE "public"."period_starts" TO "service_role";
 
 
 
