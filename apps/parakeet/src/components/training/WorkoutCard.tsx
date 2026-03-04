@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import {
+  Alert,
   Modal,
   StyleSheet,
   Text,
@@ -7,7 +8,8 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import { getSession, skipSession } from '@modules/session';
+import { getInProgressSession, getSession, skipSession } from '@modules/session';
+import { useAuth } from '@modules/auth';
 import { getReadyCachedJitData } from '@platform/store/sessionStore';
 import { formatDate } from '@shared/utils/date';
 import { router } from 'expo-router';
@@ -38,13 +40,25 @@ function getIntensityBadge(intensityType: string) {
 }
 
 export function WorkoutCard({ session, onSkipComplete }: WorkoutCardProps) {
+  const { user } = useAuth();
   const [skipModalVisible, setSkipModalVisible] = useState(false);
   const [skipReason, setSkipReason] = useState('');
   const [isSkipping, setIsSkipping] = useState(false);
 
   const isInProgress = session.status === 'in_progress';
 
-  function handleStartWorkout() {
+  async function handleStartWorkout() {
+    if (user) {
+      const active = await getInProgressSession(user.id);
+      if (active && active.id !== session.id) {
+        Alert.alert(
+          'Workout In Progress',
+          'You already have a workout in progress. Please finish or skip it before starting a new one.',
+          [{ text: 'OK' }]
+        );
+        return;
+      }
+    }
     router.push({
       pathname: '/session/soreness',
       params: { sessionId: session.id },

@@ -1,9 +1,11 @@
 import { router } from 'expo-router'
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native'
+import { Alert, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 
 import { BlockBadge } from './BlockBadge'
 import { colors, spacing, radii, typography } from '../../theme'
 import type { ProgramSession } from '@modules/program'
+import { getInProgressSession } from '@modules/session'
+import { useAuth } from '@modules/auth'
 import { formatDate } from '@shared/utils/date'
 
 interface SessionSummaryProps {
@@ -23,11 +25,25 @@ function capitalize(value: string): string {
 }
 
 export function SessionSummary({ session }: SessionSummaryProps) {
+  const { user } = useAuth()
   const dotColor = STATUS_DOT_COLOR[session.status] ?? colors.textTertiary
   const isActionable = session.status === 'planned' || session.status === 'in_progress'
 
-  function handlePress() {
+  async function handlePress() {
     if (!isActionable) return
+
+    if (session.status === 'planned' && user) {
+      const active = await getInProgressSession(user.id)
+      if (active && active.id !== session.id) {
+        Alert.alert(
+          'Workout In Progress',
+          'You already have a workout in progress. Please finish or skip it before starting a new one.',
+          [{ text: 'OK' }]
+        )
+        return
+      }
+    }
+
     router.push({
       pathname: '/session/soreness',
       params: { sessionId: session.id },

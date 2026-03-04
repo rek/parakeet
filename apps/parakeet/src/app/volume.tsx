@@ -11,7 +11,7 @@ import { useWeeklyVolume } from '@modules/training-volume';
 import { colors } from '../theme';
 
 const BAR_COLORS: Record<VolumeStatus, string> = {
-  below_mev: colors.warning,
+  below_mev: colors.info,
   in_range: colors.success,
   approaching_mrv: colors.warning,
   at_mrv: colors.danger,
@@ -51,11 +51,14 @@ function MuscleBar({ muscle, sets, mrv, mev, status }: MuscleBarProps) {
               ]}
             />
           )}
+          <View style={styles.mrvMarker} />
         </View>
-        <Text style={[styles.barSets, isOver && styles.barSetsOver]}>
-          {sets}/{mrv}
-          {isOver ? ' ⚠' : ''}
-        </Text>
+        <View style={styles.barStats}>
+          <Text style={[styles.barSets, isOver && styles.barSetsOver]}>
+            {sets}{isOver ? ' ⚠' : ''}
+          </Text>
+          <Text style={styles.barMrv}>/{mrv}</Text>
+        </View>
       </View>
     </View>
   );
@@ -76,7 +79,7 @@ export default function VolumeScreen() {
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
       >
-        <Text style={styles.subtitle}>Sets this week vs. your MRV targets</Text>
+        <Text style={styles.subtitle}>Sets completed this week · numbers show sets / MRV target</Text>
 
         <View style={styles.legend}>
           {(
@@ -96,9 +99,15 @@ export default function VolumeScreen() {
           ))}
         </View>
 
-        <View style={styles.mevNote}>
-          <View style={styles.mevMarkerSample} />
-          <Text style={styles.mevNoteText}>MEV marker</Text>
+        <View style={styles.markerNotes}>
+          <View style={styles.markerNote}>
+            <View style={styles.mevMarkerSample} />
+            <Text style={styles.mevNoteText}>MEV</Text>
+          </View>
+          <View style={styles.markerNote}>
+            <View style={styles.mrvMarkerSample} />
+            <Text style={styles.mevNoteText}>MRV</Text>
+          </View>
         </View>
 
         {isLoading || !data ? (
@@ -173,16 +182,25 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
     textTransform: 'capitalize',
   },
-  mevNote: {
+  markerNotes: {
+    flexDirection: 'row',
+    gap: 16,
+    marginBottom: 20,
+  },
+  markerNote: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    marginBottom: 20,
   },
   mevMarkerSample: {
     width: 2,
     height: 12,
-    backgroundColor: colors.textSecondary,
+    backgroundColor: colors.text,
+  },
+  mrvMarkerSample: {
+    width: 2,
+    height: 12,
+    backgroundColor: colors.textTertiary,
   },
   mevNoteText: {
     fontSize: 11,
@@ -227,17 +245,34 @@ const styles = StyleSheet.create({
     top: -2,
     width: 2,
     height: 16,
-    backgroundColor: colors.textSecondary,
+    backgroundColor: colors.text,
     borderRadius: 1,
+  },
+  mrvMarker: {
+    position: 'absolute',
+    right: 0,
+    top: -2,
+    width: 2,
+    height: 16,
+    backgroundColor: colors.textTertiary,
+    borderRadius: 1,
+  },
+  barStats: {
+    flexDirection: 'row',
+    alignItems: 'baseline',
+    width: 64,
+    justifyContent: 'flex-end',
   },
   barSets: {
     fontSize: 12,
+    fontWeight: '600',
+    color: colors.text,
+  },
+  barMrv: {
+    fontSize: 11,
     color: colors.textSecondary,
-    width: 64,
-    textAlign: 'right',
   },
   barSetsOver: {
     color: colors.danger,
-    fontWeight: '600',
   },
 });

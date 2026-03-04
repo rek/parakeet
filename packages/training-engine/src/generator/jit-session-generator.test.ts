@@ -218,6 +218,7 @@ function makeDisruption(severity: 'minor' | 'moderate' | 'major', lift = 'squat'
     affected_date_end: null,
     affected_lifts: [lift],
     description: 'Knee injury',
+    adjustment_applied: null,
     resolved_at: null,
     status: 'active',
   }

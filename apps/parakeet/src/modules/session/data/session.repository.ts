@@ -495,3 +495,16 @@ export async function fetchLastCompletedAtForLift(
   if (error) throw error;
   return data ? { completed_at: data.completed_at } : null;
 }
+
+export async function fetchInProgressSession(
+  userId: string
+): Promise<{ id: string } | null> {
+  const { data, error } = await typedSupabase
+    .from('sessions')
+    .select('id')
+    .eq('user_id', userId)
+    .eq('status', 'in_progress')
+    .maybeSingle();
+  if (error) throw error;
+  return data;
+}

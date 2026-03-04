@@ -13,6 +13,7 @@ import type {
 import {
   fetchCompletedSessions,
   fetchCurrentWeekLogs,
+  fetchInProgressSession,
   fetchLastCompletedAtForLift,
   fetchOverdueScheduledSessions,
   fetchProfileSex,
@@ -111,6 +112,12 @@ export async function getLatestSorenessCheckin(
   userId: string,
 ): Promise<Record<string, number> | null> {
   return getLatestSorenessRatings(userId);
+}
+
+export async function getInProgressSession(
+  userId: string
+): Promise<{ id: string } | null> {
+  return fetchInProgressSession(userId);
 }
 
 // Transition session to in_progress
@@ -272,16 +279,10 @@ export async function getCurrentWeekLogs(
     endOfWeek.toISOString()
   );
 
-  return rows.map((row) => {
-    const sets = row.actual_sets;
-    const completedSets = sets.filter(
-      (s) => (s.reps_completed ?? 0) > 0
-    ).length;
-    return {
-      lift: row.primary_lift,
-      completedSets: completedSets || sets.length,
-    };
-  });
+  return rows.map((row) => ({
+    lift: row.primary_lift,
+    completedSets: row.actual_sets.length,
+  }));
 }
 
 // Mark overdue scheduled sessions as missed when their makeup window has expired.
