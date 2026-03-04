@@ -56,6 +56,49 @@ export async function getCurrentCycleContext(userId: string): Promise<CycleConte
   return computeCyclePhase(new Date(config.last_period_start), config.cycle_length_days)
 }
 
+// ── Period start history ──────────────────────────────────────────────────────
+
+export interface PeriodStartEntry {
+  id: string
+  start_date: string // 'YYYY-MM-DD'
+}
+
+export async function getPeriodStartHistory(userId: string): Promise<PeriodStartEntry[]> {
+  const { data, error } = await typedSupabase
+    .from('period_starts')
+    .select('id, start_date')
+    .eq('user_id', userId)
+    .order('start_date', { ascending: false })
+  if (error) throw error
+  return data ?? []
+}
+
+export async function addPeriodStart(userId: string, startDate: string): Promise<PeriodStartEntry[]> {
+  const { error: insertError } = await typedSupabase
+    .from('period_starts')
+    .upsert({ user_id: userId, start_date: startDate }, { onConflict: 'user_id,start_date' })
+  if (insertError) throw insertError
+
+  const history = await getPeriodStartHistory(userId)
+  const mostRecent = history[0]?.start_date ?? null
+  await updateCycleConfig(userId, { last_period_start: mostRecent })
+  return history
+}
+
+export async function deletePeriodStart(userId: string, entryId: string): Promise<PeriodStartEntry[]> {
+  const { error } = await typedSupabase
+    .from('period_starts')
+    .delete()
+    .eq('id', entryId)
+    .eq('user_id', userId)
+  if (error) throw error
+
+  const history = await getPeriodStartHistory(userId)
+  const mostRecent = history[0]?.start_date ?? null
+  await updateCycleConfig(userId, { last_period_start: mostRecent })
+  return history
+}
+
 export async function stampCyclePhaseOnSession(
   userId: string,
   sessionId: string,

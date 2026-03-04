@@ -503,6 +503,27 @@ export type Database = {
           },
         ]
       }
+      period_starts: {
+        Row: {
+          id: string
+          user_id: string
+          start_date: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          start_date: string
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          start_date?: string
+          created_at?: string
+        }
+        Relationships: []
+      }
       personal_records: {
         Row: {
           achieved_at: string

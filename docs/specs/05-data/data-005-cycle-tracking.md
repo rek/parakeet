@@ -7,6 +7,20 @@
 
 Supabase schema and data-access functions for storing the user's menstrual cycle configuration (enabled toggle, cycle length, last period start date) and recording the cycle phase at session log time.
 
+### Period Start History (added 2026-03-11)
+
+A `period_starts` table stores every recorded period start as an event row. When the user picks a date in settings, `addPeriodStart` upserts a row and syncs `cycle_tracking.last_period_start` to the most-recent entry. Deleting an entry (via `deletePeriodStart`) re-syncs the cache. The settings screen shows the full history list with per-entry Remove buttons.
+
+New DB objects:
+- `period_starts` table (`id`, `user_id`, `start_date DATE`, `created_at`) with unique index on `(user_id, start_date)`
+- RLS policy: `users_own_data`
+- Migration: `20260311000000_add_period_start_history.sql`
+
+New lib functions in `cycle-tracking.ts`:
+- `getPeriodStartHistory(userId)` → `PeriodStartEntry[]` (descending by date)
+- `addPeriodStart(userId, startDate)` → `PeriodStartEntry[]` (upsert + sync cache)
+- `deletePeriodStart(userId, entryId)` → `PeriodStartEntry[]` (delete + sync cache)
+
 ## Tasks
 
 ### DB Migration

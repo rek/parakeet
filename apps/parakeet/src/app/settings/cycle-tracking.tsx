@@ -14,7 +14,14 @@ import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/dat
 import { useQueryClient } from '@tanstack/react-query'
 
 import { useAuth } from '@modules/auth'
-import { getCycleConfig, updateCycleConfig } from '@modules/cycle-tracking'
+import {
+  getCycleConfig,
+  updateCycleConfig,
+  getPeriodStartHistory,
+  addPeriodStart,
+  deletePeriodStart,
+} from '@modules/cycle-tracking'
+import type { PeriodStartEntry } from '@modules/cycle-tracking'
 import { computeCyclePhase } from '@parakeet/training-engine'
 import { BackLink } from '../../components/navigation/BackLink'
 import { colors, spacing, radii, typography } from '../../theme'
@@ -69,6 +76,7 @@ export default function CycleTrackingScreen() {
   const [lastPeriodStart, setLastPeriodStart] = useState<string | null>(null)
   const [showDatePicker, setShowDatePicker] = useState(false)
   const [loading, setLoading] = useState(true)
+  const [history, setHistory] = useState<PeriodStartEntry[]>([])
 
   useEffect(() => {
     if (!user?.id) return
@@ -80,6 +88,7 @@ export default function CycleTrackingScreen() {
       })
       .catch(() => {})
       .finally(() => setLoading(false))
+    getPeriodStartHistory(user.id).then(setHistory).catch(() => {})
   }, [user?.id])
 
   async function save(update: Parameters<typeof updateCycleConfig>[1]) {
@@ -103,12 +112,24 @@ export default function CycleTrackingScreen() {
     await save({ cycle_length_days: next })
   }
 
-  function handleDateChange(_event: DateTimePickerEvent, selected?: Date) {
+  async function handleDateChange(_event: DateTimePickerEvent, selected?: Date) {
     if (Platform.OS === 'android') setShowDatePicker(false)
-    if (!selected) return
+    if (!selected || !user?.id) return
     const iso = selected.toISOString().split('T')[0]
-    setLastPeriodStart(iso)
-    save({ last_period_start: iso }).catch(() => {})
+    const updated = await addPeriodStart(user.id, iso)
+    setHistory(updated)
+    setLastPeriodStart(updated[0]?.start_date ?? null)
+    await queryClient.invalidateQueries({ queryKey: qk.cycle.phase(user.id) })
+    await queryClient.invalidateQueries({ queryKey: qk.cycle.config(user.id) })
+  }
+
+  async function handleDeleteEntry(entryId: string) {
+    if (!user?.id) return
+    const updated = await deletePeriodStart(user.id, entryId)
+    setHistory(updated)
+    setLastPeriodStart(updated[0]?.start_date ?? null)
+    await queryClient.invalidateQueries({ queryKey: qk.cycle.phase(user.id) })
+    await queryClient.invalidateQueries({ queryKey: qk.cycle.config(user.id) })
   }
 
   // ── Derived ────────────────────────────────────────────────────────────────
@@ -233,6 +254,28 @@ export default function CycleTrackingScreen() {
                 <Text style={[styles.phaseNextPeriod, { color: PHASE_TEXT_COLORS[cycleContext.phase] }]}>
                   Next period expected: {nextPeriodDate ? formatDate(nextPeriodDate) : '—'}
                 </Text>
+              </View>
+            )}
+
+            {/* Period history */}
+            {isEnabled && (
+              <View style={styles.card}>
+                <Text style={styles.calendarTitle}>Period History</Text>
+                {history.length === 0 ? (
+                  <Text style={styles.emptyHint}>No entries yet — update the date above to record one.</Text>
+                ) : (
+                  history.map((entry) => (
+                    <View key={entry.id} style={styles.historyRow}>
+                      <Text style={styles.historyDate}>{formatDate(entry.start_date)}</Text>
+                      <TouchableOpacity
+                        onPress={() => handleDeleteEntry(entry.id)}
+                        hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                      >
+                        <Text style={styles.deleteLink}>Remove</Text>
+                      </TouchableOpacity>
+                    </View>
+                  ))
+                )}
               </View>
             )}
 
@@ -461,5 +504,26 @@ const styles = StyleSheet.create({
     fontSize: typography.sizes.base,
     fontWeight: typography.weights.semibold,
     color: colors.textInverse,
+  },
+  historyRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: spacing[2],
+    borderBottomWidth: 1,
+    borderBottomColor: colors.borderMuted,
+  },
+  historyDate: {
+    fontSize: typography.sizes.base,
+    color: colors.text,
+  },
+  deleteLink: {
+    fontSize: typography.sizes.sm,
+    fontWeight: typography.weights.semibold,
+    color: colors.danger,
+  },
+  emptyHint: {
+    fontSize: typography.sizes.sm,
+    color: colors.textSecondary,
   },
 })

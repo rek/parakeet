@@ -7,6 +7,8 @@
 
 Settings screen for managing menstrual cycle tracking. Only shown for users with `biological_sex = 'female'` (or who explicitly navigate here). Allows enabling/disabling the feature, setting cycle length, and logging the last period start date.
 
+Each period start date is stored as a history event (see `data-005-cycle-tracking.md`). The settings screen shows a Period History card with all past entries and a Remove button per entry.
+
 Also covers the optional prompt shown at the end of onboarding for female users.
 
 ## Tasks
