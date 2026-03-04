@@ -525,6 +525,39 @@ export async function fetchLastCompletedAtForLift(
   return data ? { completed_at: data.completed_at } : null;
 }
 
+export interface SessionLogDetail {
+  actual_sets: ActualSet[];
+  auxiliary_sets: ActualSet[];
+  session_rpe: number | null;
+  completion_pct: number | null;
+  performance_vs_plan: string | null;
+  started_at: string | null;
+  completed_at: string | null;
+  session_notes: string | null;
+}
+
+export async function fetchSessionLogBySessionId(
+  sessionId: string
+): Promise<SessionLogDetail | null> {
+  const { data, error } = await typedSupabase
+    .from('session_logs')
+    .select('actual_sets, auxiliary_sets, session_rpe, completion_pct, performance_vs_plan, started_at, completed_at, session_notes')
+    .eq('session_id', sessionId)
+    .maybeSingle();
+  if (error) throw error;
+  if (!data) return null;
+  return {
+    actual_sets: parseActualSetsJson(data.actual_sets),
+    auxiliary_sets: parseActualSetsJson(data.auxiliary_sets),
+    session_rpe: data.session_rpe ?? null,
+    completion_pct: data.completion_pct ?? null,
+    performance_vs_plan: data.performance_vs_plan ?? null,
+    started_at: data.started_at ?? null,
+    completed_at: data.completed_at ?? null,
+    session_notes: data.session_notes ?? null,
+  };
+}
+
 export async function fetchInProgressSession(
   userId: string
 ): Promise<{ id: string } | null> {

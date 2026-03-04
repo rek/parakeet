@@ -6,6 +6,12 @@ When resolved, remove it from here, and update any relevant design/spec docs wit
 
 When possible, solve in red/green style.
 
+## 1
+
+plate calculator
+i dont understand it, i dont see the plates i need to use
+just a bar weight selector
+
 ## 2
 
 on the today screen,
@@ -28,3 +34,19 @@ go back to program screen and start a new workout
 finish logging that one, something strange is going on
 needs further research
 
+## 6
+
+from the program screen, when opening a currently active workout
+it should skip the soreness assesment screen and go right to the workout logging one. because actually this information should already be collected
+
+## 7
+
+after updating body weight, wilks score should reflect that change right away
+
+## 8
+
+When opening the first workout in my new program, the rest timer came up and said I had rested for thousand of seconds . It's possible this was from an unfinished workout yesterday.
+
+## 9
+
+In the workout I put RPE 5 after each lift. In the screen where it says workout complete I could not save and finish because of "invalid rpe value", I could go back and change it. Might be good to only be able to enter valid rpe

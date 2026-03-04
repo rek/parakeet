@@ -130,6 +130,9 @@ function TrendCard({ trend }: { trend: PerformanceTrend }) {
 }
 
 function SessionRow({ session }: { session: CompletedSession }) {
+  function handlePress() {
+    router.push(`/history/${session.id}`)
+  }
   const intensityLabel: Record<string, string> = {
     heavy: 'Heavy',
     explosive: 'Explosive',
@@ -142,7 +145,7 @@ function SessionRow({ session }: { session: CompletedSession }) {
     intensityLabel[session.intensity_type] ?? session.intensity_type;
 
   return (
-    <View style={styles.sessionRow}>
+    <TouchableOpacity style={styles.sessionRow} onPress={handlePress} activeOpacity={0.7}>
       <View style={styles.sessionRowLeft}>
         <Text style={styles.sessionRowTitle}>
           {liftName} — {intensityName}
@@ -170,10 +173,8 @@ function SessionRow({ session }: { session: CompletedSession }) {
           )}
         </View>
       </View>
-      <View style={styles.completedBadge}>
-        <Text style={styles.completedBadgeText}>Done</Text>
-      </View>
-    </View>
+      <Text style={styles.sessionRowChevron}>›</Text>
+    </TouchableOpacity>
   );
 }
 
@@ -200,10 +201,10 @@ export default function HistoryScreen() {
   });
 
   const programsQuery = useQuery({
-    queryKey: ['programs', 'archived', user?.id],
+    queryKey: ['programs', 'previous', user?.id],
     queryFn: async () => {
       const all = await listPrograms(user!.id);
-      return (all ?? []).filter((p) => p.status === 'archived');
+      return (all ?? []).filter((p) => p.status !== 'active');
     },
     enabled: !!user?.id,
   });
@@ -306,20 +307,33 @@ export default function HistoryScreen() {
           </Text>
         )}
 
-        {/* Completed programs */}
+        {/* Previous programs */}
         {(programsQuery.data?.length ?? 0) > 0 && (
           <>
-            <Text style={styles.sectionHeader}>Completed Programs</Text>
+            <Text style={styles.sectionHeader}>Previous Programs</Text>
             <View style={{ marginBottom: spacing[6] }}>
               {programsQuery.data!.map((program) => (
                 <View key={program.id} style={styles.programRow}>
                   <View style={styles.programRowLeft}>
-                    <Text style={styles.programRowTitle}>
-                      Program v{program.version ?? 1}
-                    </Text>
+                    <View style={styles.programRowTitleRow}>
+                      <Text style={styles.programRowTitle}>
+                        Program v{program.version ?? 1}
+                      </Text>
+                      <View style={[
+                        styles.programStatusBadge,
+                        program.status === 'completed' ? styles.programStatusCompleted : styles.programStatusAbandoned,
+                      ]}>
+                        <Text style={[
+                          styles.programStatusText,
+                          program.status === 'completed' ? styles.programStatusTextCompleted : styles.programStatusTextAbandoned,
+                        ]}>
+                          {program.status === 'completed' ? 'Completed' : 'Abandoned'}
+                        </Text>
+                      </View>
+                    </View>
                     <Text style={styles.sessionRowDate}>
-                      {program.total_weeks} weeks ·{' '}
-                      {program.training_days_per_week} days/week
+                      {program.total_weeks} weeks · {program.training_days_per_week} days/week
+                      {program.start_date ? ` · Started ${formatDate(program.start_date)}` : ''}
                     </Text>
                   </View>
                   <TouchableOpacity
@@ -536,18 +550,10 @@ const styles = StyleSheet.create({
     fontSize: typography.sizes.xs,
     fontWeight: typography.weights.semibold,
   },
-  completedBadge: {
-    backgroundColor: colors.successMuted,
-    borderRadius: radii.xs,
-    paddingHorizontal: spacing[2],
-    paddingVertical: spacing[1],
-    borderWidth: 1,
-    borderColor: colors.success,
-  },
-  completedBadgeText: {
-    fontSize: typography.sizes.xs,
-    fontWeight: typography.weights.bold,
-    color: colors.success,
+  sessionRowChevron: {
+    fontSize: typography.sizes.xl,
+    color: colors.textTertiary,
+    marginLeft: spacing[2],
   },
   emptyText: {
     fontSize: typography.sizes.base,
@@ -564,12 +570,27 @@ const styles = StyleSheet.create({
     borderBottomColor: colors.borderMuted,
   },
   programRowLeft: { flex: 1, marginRight: spacing[3] },
+  programRowTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing[2],
+    marginBottom: spacing[0.5],
+  },
   programRowTitle: {
     fontSize: typography.sizes.base,
     fontWeight: typography.weights.semibold,
     color: colors.text,
-    marginBottom: spacing[0.5],
   },
+  programStatusBadge: {
+    borderRadius: radii.xs,
+    paddingHorizontal: spacing[1.5],
+    paddingVertical: 2,
+  },
+  programStatusCompleted: { backgroundColor: colors.successMuted },
+  programStatusAbandoned: { backgroundColor: colors.bgMuted },
+  programStatusText: { fontSize: typography.sizes.xs, fontWeight: typography.weights.semibold },
+  programStatusTextCompleted: { color: colors.success },
+  programStatusTextAbandoned: { color: colors.textSecondary },
   reviewButton: {
     backgroundColor: colors.primaryMuted,
     borderRadius: radii.sm,

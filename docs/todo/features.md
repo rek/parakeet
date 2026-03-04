@@ -4,29 +4,10 @@ Always consider the docs/designs first, to find where each feature request fits 
 
 Read docs/README.md and other relevant docs to get a good picture of our system before starting to plan a feature.
 
-## 1
-
-in history, there is no way to actually go 'into' a workout
-to see the actual lifts and things done
-only the summary is there to see an overview
-
-## 2
-
-in history page, do we have a way to see previous programs? (completed, abandoned etc)
-
 ## 3
 
 if you log a 'no equipment' disruption,
 then the aux should increase and include some extra bodyweight stuff to compensate
-
-## 4
-
-can you cancel or abandon a workout once you have started it?
-perhaps you clicked it by mistake and want to reset it back to un-done state to complete at another time
-
-## 5
-
-need to finish setting up supabase prod, so we can finish deployment of real app version for users
 
 ## 6
 
@@ -36,3 +17,22 @@ only the next single workout. and once that is completed, then it will generate 
 ## 7
 
 for unending programs, we need an option to 'finish' them, which perhaps is just the same as 'abandon' and we should rename that to 'end program'?
+
+## 8
+
+bar weight needs to be settable from settings page
+need to be careful to then factor this into every calculation everywhere it is to be found, since the whole app currently uses a hardcoded 20kg bar
+
+## 9
+
+on the history page, the graph is only 1rm progression
+we need to change it to also show:
+
+- volume per workout over time
+- heavyist lift
+- and also filter by whatever is selected as filter below (eg: heavy, explosive)
+
+## 10
+
+remove belt squat from aux lifts, we never do that
+add 1inch pause bench

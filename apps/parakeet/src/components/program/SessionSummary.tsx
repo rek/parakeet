@@ -49,12 +49,13 @@ export function SessionSummary({ session }: SessionSummaryProps) {
     ? colors.primary
     : isLocked
       ? colors.textTertiary
-      : {
-          planned:   colors.textTertiary,
-          completed: colors.success,
-          skipped:   colors.danger,
-          missed:    colors.danger,
-        }[session.status] ?? colors.textTertiary
+      : ({
+          in_progress: colors.primary,
+          planned:     colors.textTertiary,
+          completed:   colors.success,
+          skipped:     colors.danger,
+          missed:      colors.danger,
+        } as Record<string, string>)[session.status] ?? colors.textTertiary
 
   return (
     <TouchableOpacity

@@ -14,6 +14,7 @@ import {
   fetchCompletedSessions,
   fetchCurrentWeekLogs,
   fetchInProgressSession,
+  fetchSessionLogBySessionId,
   fetchTodaySessions,
   fetchLastCompletedAtForLift,
   fetchOverdueScheduledSessions,
@@ -60,6 +61,11 @@ export async function findTodaySessions(userId: string) {
 // Full session detail
 export async function getSession(sessionId: string) {
   return fetchSessionById(sessionId);
+}
+
+// Full session log (actual sets, aux sets, RPE, etc.)
+export async function getSessionLog(sessionId: string) {
+  return fetchSessionLogBySessionId(sessionId);
 }
 
 export async function getSessionCompletionContext(
