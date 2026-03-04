@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import {
   ActivityIndicator,
   Alert,
@@ -75,12 +75,15 @@ function MuscleRatingRow({ muscle, rating, onChange }: MuscleRatingRowProps) {
 // ── Screen ───────────────────────────────────────────────────────────────────
 
 export default function SorenessScreen() {
-  const { sessionId } = useLocalSearchParams<{ sessionId: string }>()
+  const { sessionId, autoGenerate } = useLocalSearchParams<{ sessionId: string; autoGenerate?: string }>()
   const { user } = useAuth()
+
+  const isAutoGenerate = autoGenerate === '1'
 
   const [session, setSession] = useState<Session>(null)
   const [ratings, setRatings] = useState<Record<string, number>>({})
   const [generating, setGenerating] = useState(false)
+  const autoGenerateTriggered = useRef(false)
 
   const muscles = session
     ? (LIFT_PRIMARY_SORENESS_MUSCLES[session.primary_lift as Lift] ?? [])
@@ -104,6 +107,18 @@ export default function SorenessScreen() {
       },
     )
   }, [sessionId, user])
+
+  // ── Auto-generate: skip form and re-run JIT when resuming in-progress session ──
+
+  useEffect(() => {
+    if (!isAutoGenerate || !session || !user || autoGenerateTriggered.current) return
+    // Wait for ratings to be populated (bootstrap sets them after session loads)
+    const expectedMuscles = LIFT_PRIMARY_SORENESS_MUSCLES[session.primary_lift as Lift] ?? []
+    if (expectedMuscles.length > 0 && Object.keys(ratings).length === 0) return
+    autoGenerateTriggered.current = true
+    void runJIT(ratings)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isAutoGenerate, session, user, ratings])
 
   // ── Helpers ───────────────────────────────────────────────────────────────
 

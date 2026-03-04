@@ -19,6 +19,10 @@ resume workout in the from page does nothing
 but going to the 'in progress' one allowed me to start that workout again
 so something about in progress workouts and being able to resume ones you have started is not working currently
 
+##
+
+when rest timer hits zero, it should buzz or make noise
+
 ## 4
 
 cycle tracking:
@@ -34,19 +38,3 @@ go back to program screen and start a new workout
 finish logging that one, something strange is going on
 needs further research
 
-## 6
-
-from the program screen, when opening a currently active workout
-it should skip the soreness assesment screen and go right to the workout logging one. because actually this information should already be collected
-
-## 7
-
-after updating body weight, wilks score should reflect that change right away
-
-## 8
-
-When opening the first workout in my new program, the rest timer came up and said I had rested for thousand of seconds . It's possible this was from an unfinished workout yesterday.
-
-## 9
-
-In the workout I put RPE 5 after each lift. In the screen where it says workout complete I could not save and finish because of "invalid rpe value", I could go back and change it. Might be good to only be able to enter valid rpe

@@ -32,11 +32,18 @@ export function SessionSummary({ session }: SessionSummaryProps) {
     if (!isActionable) return
     if (isInProgress) {
       const jit = await getReadyCachedJitData()
-      if (!jit) return
-      router.push({
-        pathname: '/session/[sessionId]',
-        params: { sessionId: session.id, jitData: jit },
-      })
+      if (jit) {
+        router.push({
+          pathname: '/session/[sessionId]',
+          params: { sessionId: session.id, jitData: jit },
+        })
+      } else {
+        // JIT data not cached (e.g. app restart) — skip soreness form and re-generate
+        router.push({
+          pathname: '/session/soreness',
+          params: { sessionId: session.id, autoGenerate: '1' },
+        })
+      }
       return
     }
     router.push({

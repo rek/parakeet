@@ -87,6 +87,8 @@ export default function ProfileScreen() {
       setSaveSuccess(true)
       setSaveError(null)
       await queryClient.invalidateQueries({ queryKey: ['profile'] })
+      await queryClient.invalidateQueries({ queryKey: ['achievements', 'wilks-current'] })
+      await queryClient.invalidateQueries({ queryKey: ['achievements', 'wilks-history'] })
     },
     onError: () => {
       setSaveSuccess(false)

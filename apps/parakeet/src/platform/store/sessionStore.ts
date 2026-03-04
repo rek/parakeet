@@ -95,6 +95,7 @@ export const useSessionStore = create<SessionState>()(
         })),
         warmupCompleted: new Set(),
         sessionRpe: undefined,
+        timerState: null,
       }),
 
       initAuxiliary: (work) => set({
