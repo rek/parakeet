@@ -399,6 +399,7 @@ export async function fetchRecentLogsForLift(
 
 export interface CurrentWeekLogRow {
   actual_sets: ActualSet[];
+  auxiliary_sets: ActualSet[];
   primary_lift: Lift;
 }
 
@@ -409,7 +410,7 @@ export async function fetchCurrentWeekLogs(
 ): Promise<CurrentWeekLogRow[]> {
   const { data, error } = await typedSupabase
     .from('session_logs')
-    .select('actual_sets, sessions!inner(primary_lift)')
+    .select('actual_sets, auxiliary_sets, sessions!inner(primary_lift)')
     .eq('user_id', userId)
     .gte('completed_at', startIso)
     .lt('completed_at', endIso);
@@ -421,6 +422,7 @@ export async function fetchCurrentWeekLogs(
     );
     return {
       actual_sets: parseActualSetsJson(row.actual_sets),
+      auxiliary_sets: parseActualSetsJson(row.auxiliary_sets),
       primary_lift: parseLift(session?.primary_lift ?? 'squat'),
     };
   });

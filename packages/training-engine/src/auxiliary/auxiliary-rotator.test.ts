@@ -17,7 +17,7 @@ describe('getAuxiliariesForBlock — default squat pool', () => {
   })
 
   it('block 3 → positions 4+5', () => {
-    expect(getAuxiliariesForBlock('squat', 3, pool)).toEqual(['High-Bar Squat', 'Belt Squat'])
+    expect(getAuxiliariesForBlock('squat', 3, pool)).toEqual(['High-Bar Squat', 'Hack Squat'])
   })
 
   it('wraps on a 6-exercise pool with startOffset=6 (second program, block 1 → 0+1 again)', () => {
@@ -39,12 +39,12 @@ describe('computeBlockOffset', () => {
     expect(computeBlockOffset([{ completedBlocks: 3 }, { completedBlocks: 3 }])).toBe(12)
   })
 
-  it('offset 12 with 8-exercise squat pool → block 1 picks positions 4+5', () => {
-    const pool = DEFAULT_AUXILIARY_POOLS.squat // 8 exercises
+  it('offset 12 with 7-exercise squat pool → block 1 picks positions 5+6', () => {
+    const pool = DEFAULT_AUXILIARY_POOLS.squat // 7 exercises
     const [ex1, ex2] = getAuxiliariesForBlock('squat', 1, pool, 12)
-    // pos1 = (12 + 0) % 8 = 4 → 'High-Bar Squat', pos2 = 13 % 8 = 5 → 'Belt Squat'
-    expect(ex1).toBe('High-Bar Squat')
-    expect(ex2).toBe('Belt Squat')
+    // pos1 = (12 + 0) % 7 = 5 → 'Hack Squat', pos2 = 13 % 7 = 6 → 'Front Squat'
+    expect(ex1).toBe('Hack Squat')
+    expect(ex2).toBe('Front Squat')
   })
 })
 
@@ -68,9 +68,9 @@ describe('generateAuxiliaryAssignments', () => {
   it('applies startOffset across programs', () => {
     const result = generateAuxiliaryAssignments('prog-2', 10, pool, 6)
     const sqB1 = result.find((r) => r.lift === 'squat' && r.blockNumber === 1)
-    // offset=6, pool size=8: pos1=(6+0)%8=6→'Hack Squat', pos2=(6+1)%8=7→'Front Squat'
-    expect(sqB1?.exercise1).toBe('Hack Squat')
-    expect(sqB1?.exercise2).toBe('Front Squat')
+    // offset=6, pool size=7: pos1=(6+0)%7=6→'Front Squat', pos2=(6+1)%7=0→'Pause Squat'
+    expect(sqB1?.exercise1).toBe('Front Squat')
+    expect(sqB1?.exercise2).toBe('Pause Squat')
   })
 
   it('skips lifts missing from pool', () => {

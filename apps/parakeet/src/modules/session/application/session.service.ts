@@ -297,10 +297,23 @@ export async function getCurrentWeekLogs(
     endOfWeek.toISOString()
   );
 
-  return rows.map((row) => ({
-    lift: row.primary_lift,
-    completedSets: row.actual_sets.length,
-  }));
+  return rows.flatMap((row) => {
+    const entries: CompletedSetLog[] = [
+      { lift: row.primary_lift, completedSets: row.actual_sets.length },
+    ];
+    // Group aux sets by exercise name and emit separate entries so
+    // getMusclesForLift can apply per-exercise muscle mapping
+    const auxByExercise = new Map<string, number>();
+    for (const s of row.auxiliary_sets) {
+      const name = (s as { exercise?: string }).exercise;
+      if (!name) continue;
+      auxByExercise.set(name, (auxByExercise.get(name) ?? 0) + 1);
+    }
+    for (const [exercise, count] of auxByExercise) {
+      entries.push({ lift: row.primary_lift, completedSets: count, exercise });
+    }
+    return entries;
+  });
 }
 
 // Mark overdue scheduled sessions as missed when their makeup window has expired.

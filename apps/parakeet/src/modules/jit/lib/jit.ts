@@ -1,6 +1,7 @@
 import {
   getJITGenerator,
   getMusclesForLift,
+  getMusclesForExercise,
   DEFAULT_AUXILIARY_POOLS,
 } from '@parakeet/training-engine'
 import type {
@@ -93,7 +94,7 @@ export async function runJITForSession(
 
   const { data: weekLogs } = await typedSupabase
     .from('session_logs')
-    .select('actual_sets, sessions!inner(primary_lift, week_number, program_id)')
+    .select('actual_sets, auxiliary_sets, sessions!inner(primary_lift, week_number, program_id)')
     .eq('user_id', userId)
     .eq('sessions.program_id', session.program_id)
     .eq('sessions.week_number', session.week_number)
@@ -104,13 +105,32 @@ export async function runJITForSession(
     const rawLift = joinedSession?.primary_lift
     const logLift = LiftSchema.safeParse(rawLift).data
     if (!logLift) continue
-    const muscles = getMusclesForLift(logLift)
+
+    // Main lift sets
     const setCount = Array.isArray(log.actual_sets)
       ? (log.actual_sets as unknown[]).length
       : 0
-    for (const { muscle, contribution } of muscles) {
+    const mainMuscles = getMusclesForLift(logLift)
+    for (const { muscle, contribution } of mainMuscles) {
       weeklyVolumeToDate[muscle] =
         (weeklyVolumeToDate[muscle] ?? 0) + Math.round(setCount * contribution)
+    }
+
+    // Aux sets grouped by exercise name for per-exercise muscle mapping
+    const auxSets = Array.isArray(log.auxiliary_sets)
+      ? (log.auxiliary_sets as { exercise?: string }[])
+      : []
+    const auxByExercise = new Map<string, number>()
+    for (const s of auxSets) {
+      if (s.exercise) auxByExercise.set(s.exercise, (auxByExercise.get(s.exercise) ?? 0) + 1)
+    }
+    for (const [exercise, count] of auxByExercise) {
+      const auxMuscles = getMusclesForExercise(exercise)
+      const muscles = auxMuscles.length > 0 ? auxMuscles : getMusclesForLift(logLift)
+      for (const { muscle, contribution } of muscles) {
+        weeklyVolumeToDate[muscle] =
+          (weeklyVolumeToDate[muscle] ?? 0) + Math.round(count * contribution)
+      }
     }
   }
 

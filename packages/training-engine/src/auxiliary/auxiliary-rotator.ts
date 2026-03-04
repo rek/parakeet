@@ -8,7 +8,6 @@ export const DEFAULT_AUXILIARY_POOLS: Record<Lift, string[]> = {
     'Bulgarian Split Squat',
     'Leg Press',
     'High-Bar Squat',
-    'Belt Squat',
     'Hack Squat',
     'Front Squat',
   ],
@@ -21,6 +20,7 @@ export const DEFAULT_AUXILIARY_POOLS: Record<Lift, string[]> = {
     'JM Press',
     'Board Press',
     'Spoto Press',
+    '1 Inch Pause Bench',
   ],
   deadlift: [
     'Romanian DL',

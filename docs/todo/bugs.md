@@ -12,3 +12,6 @@ plate calculator
 i dont understand it, i dont see the plates i need to use
 just a bar weight selector
 
+## 2
+
+by default the workouts in a plan should be mon-wed-friday

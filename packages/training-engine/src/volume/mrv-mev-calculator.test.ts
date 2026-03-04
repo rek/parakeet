@@ -1,4 +1,4 @@
-import { getMusclesForLift } from './muscle-mapper'
+import { getMusclesForExercise, getMusclesForLift } from './muscle-mapper'
 import {
   DEFAULT_MRV_MEV_CONFIG,
   classifyVolumeStatus,
@@ -65,6 +65,73 @@ describe('computeWeeklyVolume', () => {
     expect(volume.lower_back).toBe(6)   // squat 4×0.5 + deadlift 4×1.0 = 2 + 4
     expect(volume.upper_back).toBe(2)   // deadlift 4×0.5
     expect(volume.biceps).toBe(0)       // not mapped to any main lift
+  })
+})
+
+describe('getMusclesForLift — exercise name lookup', () => {
+  it('falls back to lift map when no exercise given', () => {
+    const muscles = getMusclesForLift('bench')
+    expect(muscles.find((m) => m.muscle === 'chest')?.contribution).toBe(1.0)
+    expect(muscles.find((m) => m.muscle === 'triceps')?.contribution).toBe(0.5)
+  })
+
+  it('uses per-exercise map when exercise name is known', () => {
+    const muscles = getMusclesForLift('bench', 'Close-Grip Bench')
+    expect(muscles.find((m) => m.muscle === 'triceps')?.contribution).toBe(1.0)
+    expect(muscles.find((m) => m.muscle === 'chest')?.contribution).toBe(0.5)
+  })
+
+  it('falls back to lift map when exercise name is unknown', () => {
+    const muscles = getMusclesForLift('squat', 'Some Unknown Exercise')
+    expect(muscles.find((m) => m.muscle === 'quads')?.contribution).toBe(1.0)
+  })
+
+  it('Overhead Press maps to shoulders primary, not chest', () => {
+    const muscles = getMusclesForLift('bench', 'Overhead Press')
+    expect(muscles.find((m) => m.muscle === 'shoulders')?.contribution).toBe(1.0)
+    expect(muscles.find((m) => m.muscle === 'chest')).toBeUndefined()
+  })
+
+  it('Romanian DL maps hamstrings + glutes primary, lower_back secondary', () => {
+    const muscles = getMusclesForLift('deadlift', 'Romanian DL')
+    expect(muscles.find((m) => m.muscle === 'hamstrings')?.contribution).toBe(1.0)
+    expect(muscles.find((m) => m.muscle === 'glutes')?.contribution).toBe(1.0)
+    expect(muscles.find((m) => m.muscle === 'lower_back')?.contribution).toBe(0.5)
+  })
+})
+
+describe('getMusclesForExercise', () => {
+  it('returns empty array for unknown exercise', () => {
+    expect(getMusclesForExercise('Unknown')).toEqual([])
+  })
+
+  it('Bulgarian Split Squat: quads + glutes primary, hamstrings secondary, no lower_back', () => {
+    const m = getMusclesForExercise('Bulgarian Split Squat')
+    expect(m.find((x) => x.muscle === 'quads')?.contribution).toBe(1.0)
+    expect(m.find((x) => x.muscle === 'glutes')?.contribution).toBe(1.0)
+    expect(m.find((x) => x.muscle === 'hamstrings')?.contribution).toBe(0.5)
+    expect(m.find((x) => x.muscle === 'lower_back')).toBeUndefined()
+  })
+
+  it('Rack Pulls: upper_back + lower_back primary only', () => {
+    const m = getMusclesForExercise('Rack Pulls')
+    expect(m.find((x) => x.muscle === 'upper_back')?.contribution).toBe(1.0)
+    expect(m.find((x) => x.muscle === 'lower_back')?.contribution).toBe(1.0)
+    expect(m.find((x) => x.muscle === 'hamstrings')).toBeUndefined()
+  })
+})
+
+describe('computeWeeklyVolume — aux exercise entries', () => {
+  it('aux Close-Grip Bench entry counts triceps 1.0, chest 0.5', () => {
+    const logs = [
+      { lift: 'bench' as const, completedSets: 4 },
+      { lift: 'bench' as const, completedSets: 3, exercise: 'Close-Grip Bench' },
+    ]
+    const volume = computeWeeklyVolume(logs, getMusclesForLift)
+    // bench: chest 4×1.0 + cgb: chest 3×0.5 = 4+1=5
+    expect(volume.chest).toBe(5)
+    // bench: triceps 4×0.5 + cgb: triceps 3×1.0 = 2+3=5
+    expect(volume.triceps).toBe(5)
   })
 })
 
