@@ -14,6 +14,7 @@ import {
   fetchCompletedSessions,
   fetchCurrentWeekLogs,
   fetchInProgressSession,
+  fetchTodaySessions,
   fetchLastCompletedAtForLift,
   fetchOverdueScheduledSessions,
   fetchProfileSex,
@@ -48,6 +49,11 @@ export type {
 // Today's session: active in-progress session first, else nearest planned session
 export async function findTodaySession(userId: string) {
   return fetchTodaySession(userId);
+}
+
+// All sessions relevant to today: planned_date = today + any in_progress
+export async function findTodaySessions(userId: string) {
+  return fetchTodaySessions(userId);
 }
 
 // Full session detail

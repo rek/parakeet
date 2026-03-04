@@ -9,9 +9,10 @@ Helpers for transitioning session status: starting, skipping. Session completion
 
 ## Tasks
 
-**`apps/parakeet/src/modules/session/application/session.service.ts` (lifecycle helpers; re-exported via `apps/parakeet/src/modules/session/application/session.service.ts`):**
+**`apps/parakeet/src/modules/session/application/session.service.ts` (lifecycle helpers):**
 - [x] `startSession(sessionId: string): Promise<void>` — transition `planned → in_progress`; guarded with `.eq('status', 'planned')`
 - [x] `skipSession(sessionId: string, reason?: string): Promise<void>` — transition `planned | in_progress → skipped`
+- [x] `getInProgressSession(userId: string): Promise<{ id: string } | null>` — returns the active in_progress session, if any
 
 **Status transition rules:**
 - `planned → in_progress` — valid (startSession)
@@ -20,12 +21,20 @@ Helpers for transitioning session status: starting, skipping. Session completion
 - `completed → *` — invalid; completed sessions are immutable
 - `skipped → *` — invalid; skipped sessions are immutable
 
-The `.eq('status', ...)` and `.in('status', [...])` guards on Supabase updates silently no-op on invalid transitions (0 rows updated). The app checks for 0 rows affected and shows an error toast if needed.
+The `.eq('status', ...)` guards silently no-op on invalid transitions. The UI prevents invalid starts at the UI layer (see below).
+
+**Single active session enforcement:**
+- Only one `in_progress` session is permitted per user at a time
+- Enforced at the UI layer: both `WorkoutCard` and `SessionSummary` check `useInProgressSession()` at render time
+  - `WorkoutCard`: if another session is active, "Start Workout" shows as greyed "Another session active" (no-op)
+  - `SessionSummary`: planned rows dim to 45% opacity + 🔒 icon; tap is disabled
+- No `Alert.alert()` dialogs are used; the locked state is entirely visual
 
 **Soreness check-in gate:**
-- [x] Before `startSession()` is called, the app must route through the soreness screen (`session/soreness.tsx`)
-  - The soreness check-in writes to `soreness_checkins` and then triggers JIT generation before the session begins
-  - The actual `startSession()` call happens after JIT completes and the user taps "Start Workout"
+- [x] Before `startSession()` is called, the app routes through `session/soreness.tsx` **only for `planned` sessions**
+  - The soreness check-in writes to `soreness_checkins` and triggers JIT generation
+  - The actual `startSession()` call happens inside `session/[sessionId].tsx` after JIT data is loaded
+- [x] Resuming an `in_progress` session bypasses the soreness screen entirely — navigates directly to `session/[sessionId]` with cached JIT data
 
 ## Dependencies
 

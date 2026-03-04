@@ -1,22 +1,15 @@
 import { router } from 'expo-router'
-import { Alert, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
+import { StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 
 import { BlockBadge } from './BlockBadge'
 import { colors, spacing, radii, typography } from '../../theme'
 import type { ProgramSession } from '@modules/program'
-import { getInProgressSession } from '@modules/session'
-import { useAuth } from '@modules/auth'
+import { useInProgressSession } from '@modules/session'
+import { getReadyCachedJitData } from '@platform/store/sessionStore'
 import { formatDate } from '@shared/utils/date'
 
 interface SessionSummaryProps {
   session: ProgramSession
-}
-
-const STATUS_DOT_COLOR: Record<string, string> = {
-  planned:     colors.textTertiary,
-  in_progress: colors.info,
-  completed:   colors.success,
-  skipped:     colors.danger,
 }
 
 function capitalize(value: string): string {
@@ -25,44 +18,67 @@ function capitalize(value: string): string {
 }
 
 export function SessionSummary({ session }: SessionSummaryProps) {
-  const { user } = useAuth()
-  const dotColor = STATUS_DOT_COLOR[session.status] ?? colors.textTertiary
-  const isActionable = session.status === 'planned' || session.status === 'in_progress'
+  const { data: activeSession } = useInProgressSession()
+
+  const isInProgress = session.status === 'in_progress'
+  const isLocked =
+    session.status === 'planned' &&
+    !!activeSession &&
+    activeSession.id !== session.id
+
+  const isActionable = (isInProgress || session.status === 'planned') && !isLocked
 
   async function handlePress() {
     if (!isActionable) return
-
-    if (session.status === 'planned' && user) {
-      const active = await getInProgressSession(user.id)
-      if (active && active.id !== session.id) {
-        Alert.alert(
-          'Workout In Progress',
-          'You already have a workout in progress. Please finish or skip it before starting a new one.',
-          [{ text: 'OK' }]
-        )
-        return
-      }
+    if (isInProgress) {
+      const jit = await getReadyCachedJitData()
+      if (!jit) return
+      router.push({
+        pathname: '/session/[sessionId]',
+        params: { sessionId: session.id, jitData: jit },
+      })
+      return
     }
-
     router.push({
       pathname: '/session/soreness',
       params: { sessionId: session.id },
     })
   }
 
+  const dotColor = isInProgress
+    ? colors.primary
+    : isLocked
+      ? colors.textTertiary
+      : {
+          planned:   colors.textTertiary,
+          completed: colors.success,
+          skipped:   colors.danger,
+          missed:    colors.danger,
+        }[session.status] ?? colors.textTertiary
+
   return (
     <TouchableOpacity
-      style={styles.row}
+      style={[styles.row, isLocked && styles.rowLocked]}
       onPress={handlePress}
       activeOpacity={isActionable ? 0.7 : 1}
     >
       <View style={[styles.statusDot, { backgroundColor: dotColor }]} />
 
       <View style={styles.middle}>
-        <Text style={styles.liftText}>
-          {capitalize(session.primary_lift)} — {session.intensity_type}
-        </Text>
-        <Text style={styles.dateText}>
+        <View style={styles.liftRow}>
+          <Text style={[styles.liftText, isLocked && styles.liftTextLocked]}>
+            {capitalize(session.primary_lift)} — {session.intensity_type}
+          </Text>
+          {isInProgress && (
+            <View style={styles.activeBadge}>
+              <Text style={styles.activeBadgeText}>Active</Text>
+            </View>
+          )}
+          {isLocked && (
+            <Text style={styles.lockIcon}>🔒</Text>
+          )}
+        </View>
+        <Text style={[styles.dateText, isLocked && styles.dateTextLocked]}>
           {session.completed_at ? formatDate(session.completed_at) : formatDate(session.planned_date)}
         </Text>
       </View>
@@ -80,6 +96,9 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: colors.borderMuted,
   },
+  rowLocked: {
+    opacity: 0.45,
+  },
   statusDot: {
     width: 10,
     height: 10,
@@ -89,14 +108,40 @@ const styles = StyleSheet.create({
   middle: {
     flex: 1,
   },
+  liftRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing[2],
+    marginBottom: spacing[0.5],
+  },
   liftText: {
     fontSize: typography.sizes.base,
     fontWeight: typography.weights.semibold,
     color: colors.text,
-    marginBottom: spacing[0.5],
+  },
+  liftTextLocked: {
+    color: colors.textSecondary,
+  },
+  activeBadge: {
+    backgroundColor: colors.primary,
+    borderRadius: radii.full,
+    paddingHorizontal: spacing[2],
+    paddingVertical: 2,
+  },
+  activeBadgeText: {
+    fontSize: typography.sizes.xs,
+    fontWeight: typography.weights.bold,
+    color: colors.textInverse,
+    letterSpacing: typography.letterSpacing.wide,
+  },
+  lockIcon: {
+    fontSize: 11,
   },
   dateText: {
     fontSize: typography.sizes.sm,
     color: colors.textSecondary,
+  },
+  dateTextLocked: {
+    color: colors.textTertiary,
   },
 })

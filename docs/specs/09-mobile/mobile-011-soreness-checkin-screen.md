@@ -5,7 +5,7 @@
 
 ## What This Covers
 
-The pre-workout soreness rating screen that gates JIT session generation. Shown every time the user opens a session. After completing the ratings, the JIT generator runs and the workout screen opens with concrete sets.
+The pre-workout soreness rating screen that gates JIT session generation. Shown only when **starting a new (`planned`) session**. Resuming an already `in_progress` session bypasses this screen entirely — both `WorkoutCard` ("Resume Workout" button) and `SessionSummary` (tapping an in_progress row) navigate directly to `session/[sessionId]` using cached JIT data.
 
 ## Tasks
 

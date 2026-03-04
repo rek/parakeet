@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import {
-  Alert,
   Modal,
   StyleSheet,
   Text,
@@ -8,8 +7,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import { getInProgressSession, getSession, skipSession } from '@modules/session';
-import { useAuth } from '@modules/auth';
+import { getSession, skipSession } from '@modules/session';
 import { getReadyCachedJitData } from '@platform/store/sessionStore';
 import { formatDate } from '@shared/utils/date';
 import { router } from 'expo-router';
@@ -22,6 +20,7 @@ type Session = Awaited<ReturnType<typeof getSession>>;
 interface WorkoutCardProps {
   session: NonNullable<Session>;
   onSkipComplete?: () => void;
+  isLocked?: boolean;
 }
 
 const INTENSITY_BADGE: Record<string, { bg: string; text: string }> = {
@@ -39,26 +38,15 @@ function getIntensityBadge(intensityType: string) {
   );
 }
 
-export function WorkoutCard({ session, onSkipComplete }: WorkoutCardProps) {
-  const { user } = useAuth();
+export function WorkoutCard({ session, onSkipComplete, isLocked = false }: WorkoutCardProps) {
   const [skipModalVisible, setSkipModalVisible] = useState(false);
   const [skipReason, setSkipReason] = useState('');
   const [isSkipping, setIsSkipping] = useState(false);
 
   const isInProgress = session.status === 'in_progress';
 
-  async function handleStartWorkout() {
-    if (user) {
-      const active = await getInProgressSession(user.id);
-      if (active && active.id !== session.id) {
-        Alert.alert(
-          'Workout In Progress',
-          'You already have a workout in progress. Please finish or skip it before starting a new one.',
-          [{ text: 'OK' }]
-        );
-        return;
-      }
-    }
+  function handleStartWorkout() {
+    if (isLocked) return;
     router.push({
       pathname: '/session/soreness',
       params: { sessionId: session.id },
@@ -139,12 +127,12 @@ export function WorkoutCard({ session, onSkipComplete }: WorkoutCardProps) {
         {/* Action buttons */}
         <View style={styles.buttonRow}>
           <TouchableOpacity
-            style={[styles.button, styles.startButton]}
+            style={[styles.button, isLocked ? styles.startButtonLocked : styles.startButton]}
             onPress={isInProgress ? handleResumeWorkout : handleStartWorkout}
-            activeOpacity={0.85}
+            activeOpacity={isLocked ? 1 : 0.85}
           >
-            <Text style={styles.startButtonText}>
-              {isInProgress ? 'Resume Workout' : 'Start Workout'}
+            <Text style={[styles.startButtonText, isLocked && styles.startButtonTextLocked]}>
+              {isInProgress ? 'Resume Workout' : isLocked ? 'Another session active' : 'Start Workout'}
             </Text>
           </TouchableOpacity>
           {!isInProgress && (
@@ -279,11 +267,20 @@ const styles = StyleSheet.create({
   startButton: {
     backgroundColor: colors.primary,
   },
+  startButtonLocked: {
+    backgroundColor: colors.bgMuted,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
   startButtonText: {
     fontSize: typography.sizes.base,
     fontWeight: typography.weights.bold,
     color: colors.textInverse,
     letterSpacing: typography.letterSpacing.wide,
+  },
+  startButtonTextLocked: {
+    color: colors.textTertiary,
+    fontWeight: typography.weights.medium,
   },
   skipButton: {
     borderWidth: 1,

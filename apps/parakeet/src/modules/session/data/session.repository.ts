@@ -119,6 +119,26 @@ export async function fetchTodaySession(
   return plannedData;
 }
 
+export async function fetchTodaySessions(
+  userId: string
+): Promise<SessionRow[]> {
+  const today = new Date().toISOString().split('T')[0]
+  const { data, error } = await typedSupabase
+    .from('sessions')
+    .select('*')
+    .eq('user_id', userId)
+    .or(`planned_date.eq.${today},status.eq.in_progress`)
+    .order('planned_date', { ascending: true })
+  if (error) throw error
+  // Deduplicate: in_progress session may match both conditions
+  const seen = new Set<string>()
+  return (data ?? []).filter(row => {
+    if (seen.has(row.id)) return false
+    seen.add(row.id)
+    return true
+  })
+}
+
 export async function fetchSessionById(
   sessionId: string
 ): Promise<SessionRow | null> {

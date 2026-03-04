@@ -7,6 +7,7 @@ import {
   View,
 } from 'react-native'
 import { router, useFocusEffect, useLocalSearchParams } from 'expo-router'
+import { useQueryClient } from '@tanstack/react-query'
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 
 import { getSession, startSession } from '@modules/session'
@@ -107,6 +108,7 @@ export default function SessionScreen() {
     closeTimer,
   } = useSessionStore()
 
+  const queryClient = useQueryClient()
   const [warmupSetsState, setWarmupSetsState] = useState<WarmupSet[]>([])
   const [auxiliaryWork, setAuxiliaryWork] = useState<AuxiliaryWork[]>([])
   const [historySheetVisible, setHistorySheetVisible] = useState(false)
@@ -179,7 +181,9 @@ export default function SessionScreen() {
           block_number:   session.block_number ?? null,
           week_number:    session.week_number,
         })
-        startSession(sessionId)
+        startSession(sessionId).then(() => {
+          void queryClient.invalidateQueries({ queryKey: ['session'] })
+        })
       })
     } else {
       // Returning to an existing session — restore aux work display

@@ -13,13 +13,6 @@ resume workout in the from page does nothing
 but going to the 'in progress' one allowed me to start that workout again
 so something about in progress workouts and being able to resume ones you have started is not working currently
 
-## 3
-
-also on the today screen, when a workout is done
-we see the 'finished' state card (good)
-but this section should allow us to see all of todays workouts (perhaps we have done multiple)
-eg: if we have another one that is pending/current then that should appear there too below the completed card (and if it is current, should allow resume etc)
-
 ## 4
 
 cycle tracking:

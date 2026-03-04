@@ -1,5 +1,6 @@
 export * from './application/session.service';
 export * from './hooks/useTodaySession';
+export * from './hooks/useInProgressSession';
 export * from './hooks/useMissedSessionReconciliation';
 export * from './hooks/useRestNotifications';
 export * from './hooks/useSyncQueue';

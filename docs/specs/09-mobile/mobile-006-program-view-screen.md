@@ -33,9 +33,14 @@ The Program tab showing the full 10-week program in a scannable week-grid format
 
 **`apps/parakeet/components/program/SessionSummary.tsx`:**
 - Props: `session: Session`
-- Shows: day number, primary lift, intensity type, planned date, weight × sets × reps
-- Status indicator: ○ planned, ● in_progress, ✓ completed, ✗ skipped
-- Tap → navigate to `session/[sessionId]` if planned/in_progress; or a readonly log view if completed/skipped
+- Uses `useInProgressSession()` hook internally to determine locked state
+- Shows: primary lift, intensity type, planned/completed date, block badge
+- Status indicator dot + row behaviour:
+  - `planned` (no active session): grey dot, tappable → soreness check-in
+  - `planned` (another session in_progress): row dimmed to 45% opacity + 🔒 icon, tap disabled
+  - `in_progress`: lime green dot + green "Active" pill badge, tappable → navigates **directly to session screen** (bypasses soreness)
+  - `completed`: green dot, not tappable
+  - `skipped` / `missed`: red dot, not tappable
 
 **No program state:**
 - If `getActiveProgram()` returns `null`, show "No active program" with "Create Program" button

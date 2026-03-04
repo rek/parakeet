@@ -29,16 +29,25 @@ A visual display of weekly training volume per muscle group versus each muscle's
   └──────────────────────────────────────┘
 ```
 
-**Full volume dashboard:**
+**Full volume dashboard (`apps/parakeet/src/app/volume.tsx`):**
 - One bar per muscle group (all 9)
-- Bar fills from 0 to MRV
-- MEV marker line shown at MEV position
+- Bar fills from 0 to MRV (right edge = MRV)
+- MEV marker: white tick at the MEV position — always visible over any fill color
+- MRV marker: grey tick at the right end of the bar track
+- Legend shows both MEV and MRV tick samples
+- Right-side label: `{sets}` (bold) `/{mrv}` (muted) — e.g., "12/20"
+- Subtitle: "Sets completed this week · numbers show sets / MRV target"
 - Color coding:
-  - Below MEV: orange (not enough stimulus yet)
+  - Below MEV: teal/info (not enough stimulus yet)
   - In range: green
-  - Approaching MRV (within 2 sets): yellow
+  - Approaching MRV (within 2 sets): amber/warning
   - At MRV: red
   - Exceeded MRV: red with ⚠ icon
+
+**Set counting:**
+- Weekly sets come from `session_logs.actual_sets.length` (total sets in each completed session log)
+- A `session_log` row only exists for completed sessions, so all sets in it count toward weekly volume
+- Previous filter (`reps_completed > 0`) was removed as it under-counted when users didn't enter every rep
 
 **React Query hook:**
 ```typescript

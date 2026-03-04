@@ -15,7 +15,7 @@ import { StreakPill } from '../../components/achievements/StreakPill'
 import { DisruptionChipsRow } from '../../components/disruption/DisruptionChipsRow'
 import { useAuth } from '@modules/auth'
 import { useActiveProgram } from '@modules/program'
-import { useTodaySession } from '@modules/session'
+import { useTodaySessions, useInProgressSession } from '@modules/session'
 import { useWeeklyVolume } from '@modules/training-volume'
 import { useCyclePhase } from '@modules/cycle-tracking'
 import { getActiveDisruptions } from '@modules/disruptions'
@@ -108,9 +108,21 @@ function VolumeCompactCard() {
 
 // ── Screen ────────────────────────────────────────────────────────────────────
 
+function WorkoutDoneCard({ session }: { session: { primary_lift: string } }) {
+  return (
+    <View style={styles.workoutDoneCard}>
+      <Text style={styles.workoutDoneTitle}>Workout Done ✓</Text>
+      <Text style={styles.workoutDoneSubtitle}>
+        {session.primary_lift.charAt(0).toUpperCase() + session.primary_lift.slice(1)} — great work today.
+      </Text>
+    </View>
+  )
+}
+
 export default function TodayScreen() {
   const { user } = useAuth()
-  const { data: session, isLoading: sessionLoading } = useTodaySession()
+  const { data: sessions = [], isLoading: sessionLoading } = useTodaySessions()
+  const { data: activeSession } = useInProgressSession()
   const { data: program, isLoading: programLoading } = useActiveProgram()
   const { data: volumeData } = useWeeklyVolume()
   const { data: cycleContext } = useCyclePhase()
@@ -210,37 +222,46 @@ export default function TodayScreen() {
               />
             )}
 
-            {session?.status === 'completed' ? (
-              <View style={styles.workoutDoneCard}>
-                <Text style={styles.workoutDoneTitle}>Workout Done ✓</Text>
-                <Text style={styles.workoutDoneSubtitle}>
-                  {session.primary_lift.charAt(0).toUpperCase() + session.primary_lift.slice(1)} — great work today.
-                </Text>
-              </View>
-            ) : session ? (
-              <>
-                <WorkoutCard
-                  session={session}
-                  onSkipComplete={() =>
-                    queryClient.invalidateQueries({ queryKey: ['session', 'today'] })
-                  }
-                />
-                {/* Ovulatory info chip — squat days only */}
-                {cycleContext?.isOvulatoryWindow && session.primary_lift === 'squat' && (
-                  <View style={styles.ovulatoryChip}>
-                    <Text style={styles.ovulatoryChipText}>
-                      ℹ Ovulatory phase — high-load squat day. Focus on knee tracking and warm-up quality.
-                    </Text>
-                  </View>
-                )}
-              </>
-            ) : (
+            {sessions.length === 0 ? (
               <View style={styles.restDayCard}>
                 <Text style={styles.restDayTitle}>Rest Day</Text>
                 <Text style={styles.restDaySubtitle}>
                   Keep recovering — next session coming up soon.
                 </Text>
               </View>
+            ) : (
+              [...sessions]
+                .sort((a, b) => {
+                  const order: Record<string, number> = { in_progress: 0, planned: 1, completed: 2, skipped: 3, missed: 4 }
+                  return (order[a.status] ?? 5) - (order[b.status] ?? 5)
+                })
+                .map(s => {
+                  if (s.status === 'completed') {
+                    return <WorkoutDoneCard key={s.id} session={s} />
+                  }
+                  const isLocked =
+                    s.status === 'planned' &&
+                    !!activeSession &&
+                    activeSession.id !== s.id
+                  return (
+                    <View key={s.id}>
+                      <WorkoutCard
+                        session={s}
+                        isLocked={isLocked}
+                        onSkipComplete={() =>
+                          queryClient.invalidateQueries({ queryKey: ['session', 'today'] })
+                        }
+                      />
+                      {cycleContext?.isOvulatoryWindow && s.primary_lift === 'squat' && (
+                        <View style={styles.ovulatoryChip}>
+                          <Text style={styles.ovulatoryChipText}>
+                            ℹ Ovulatory phase — high-load squat day. Focus on knee tracking and warm-up quality.
+                          </Text>
+                        </View>
+                      )}
+                    </View>
+                  )
+                })
             )}
 
             <TouchableOpacity

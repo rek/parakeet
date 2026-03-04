@@ -41,6 +41,31 @@ describe('computeWeeklyVolume', () => {
     // hamstrings: squat 4×0.5 + deadlift 3×1.0 = 2 + 3 = 5
     expect(volume.hamstrings).toBe(5)
   })
+
+  it('session with 0 completedSets contributes nothing', () => {
+    const logs = [
+      { lift: 'squat' as const, completedSets: 4 },
+      { lift: 'squat' as const, completedSets: 0 },
+    ]
+    const volume = computeWeeklyVolume(logs, getMusclesForLift)
+    expect(volume.quads).toBe(4)
+  })
+
+  it('full week: squat + bench + deadlift, 4 sets each → typical in-range volumes', () => {
+    const logs = [
+      { lift: 'squat' as const, completedSets: 4 },
+      { lift: 'bench' as const, completedSets: 4 },
+      { lift: 'deadlift' as const, completedSets: 4 },
+    ]
+    const volume = computeWeeklyVolume(logs, getMusclesForLift)
+    expect(volume.quads).toBe(4)        // squat primary
+    expect(volume.chest).toBe(4)        // bench primary
+    expect(volume.glutes).toBe(8)       // squat 4×1.0 + deadlift 4×1.0
+    expect(volume.hamstrings).toBe(6)   // squat 4×0.5 + deadlift 4×1.0 = 2 + 4
+    expect(volume.lower_back).toBe(6)   // squat 4×0.5 + deadlift 4×1.0 = 2 + 4
+    expect(volume.upper_back).toBe(2)   // deadlift 4×0.5
+    expect(volume.biceps).toBe(0)       // not mapped to any main lift
+  })
 })
 
 describe('classifyVolumeStatus', () => {
