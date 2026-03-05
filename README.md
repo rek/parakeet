@@ -109,8 +109,9 @@ keytool -genkey -v -keystore parakeet-release.keystore \
 ```
 
 Store this file securely (not in git). Add to `.gitignore`:
+
 ```
-parakeet-release.keystore
+apps/parakeet/android/parakeet-release.keystore
 ```
 
 ### 2. Get release SHA-1
@@ -126,6 +127,7 @@ Go to **APIs & Services → Credentials → Android OAuth client** and add the r
 Also update `apps/parakeet/android/app/google-services.json` — add a second entry in `oauth_client` with `client_type: 1` and the release `certificate_hash`.
 
 > **⚠️ Pre-production checklist:**
+>
 > - Debug SHA-1: `5E:8F:16:06:2E:A3:CD:2C:4A:0D:54:78:76:BA:A6:F3:8C:AB:F6:25`
 > - Release SHA-1: get from step 2 above
 > - Both must be registered in GCP Console or Google Sign-In returns `DEVELOPER_ERROR`

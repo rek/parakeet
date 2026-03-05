@@ -19,19 +19,20 @@ cd apps/parakeet
 npx expo prebuild --platform android --clean
 ```
 
-Then build and copy to `dist/`:
+Then build:
 
 ```bash
 # From workspace root — builds APK and copies to dist/apps/parakeet/parakeet-release.apk
-nx buildApk parakeet
+nx build parakeet
 ```
 
-Env vars: the build picks up `.env.production` automatically via `app.config.ts`. Prod Supabase credentials are already set there.
+Env vars: `nx build parakeet` sources workspace-root `.env.production`, disables Expo dotenv auto-loading (`EXPO_NO_DOTENV=1`), unsets `EXPO_PUBLIC_SUPABASE_URL_ANDROID`, and fails fast if `EXPO_PUBLIC_SUPABASE_URL` or `EXPO_PUBLIC_SUPABASE_ANON_KEY` are missing.
+Note: app runtime only honors `EXPO_PUBLIC_SUPABASE_URL_ANDROID` in `__DEV__`; production always uses `EXPO_PUBLIC_SUPABASE_URL`.
 
 ### Sideload to device
 
 ```bash
-adb install -r dist/apps/parakeet/parakeet-release.apk
+nx install parakeet
 ```
 
 ### Local development
@@ -79,16 +80,19 @@ npx vitest run apps/parakeet/src/modules/session/data/session.repository.test.ts
 ```
 
 Where test behavior is defined:
+
 - Per-project test targets live in each `project.json` (for example `apps/parakeet/project.json`).
 - Package-level test runner config lives beside the package (for example `packages/*/vitest.config.mts`).
 
 Current projects with `test` targets:
+
 - `parakeet` (`apps/parakeet`)
 - `training-engine` (`packages/training-engine`)
 - `shared-types` (`packages/shared-types`)
 - `db` (`packages/db`)
 
 If `nx run-many -t test` appears stuck:
+
 ```bash
 NX_DAEMON=false nx run-many -t test
 ```
@@ -102,7 +106,6 @@ NX_DAEMON=false nx run-many -t test
 - Query Supabase from `apps/parakeet/src/modules/*/data/*` repositories using `typedSupabase`; avoid direct table access in hooks, screens, or UI components.
 - Map DB row shapes to domain/engine input shapes in repositories. Do not pass raw DB rows downstream.
 - Never assume timestamp or JSON column names from memory; use `supabase/types.ts` as the source of truth and fail fast on repository query errors.
-
 
 ### Android physical device setup
 

@@ -41,12 +41,13 @@ function resolveSupabaseUrl(rawUrl: string): string {
   return rawUrl;
 }
 
-const platformOverrideUrl =
-  Platform.OS === 'android'
+const platformOverrideUrl = __DEV__
+  ? Platform.OS === 'android'
     ? supabaseUrlAndroid
     : Platform.OS === 'ios'
       ? supabaseUrlIos
-      : undefined;
+      : undefined
+  : undefined;
 
 const resolvedSupabaseUrl = platformOverrideUrl
   ? platformOverrideUrl

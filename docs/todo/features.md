@@ -22,10 +22,3 @@ for unending programs, we need an option to 'finish' them, which perhaps is just
 
 bar weight needs to be settable from settings page
 need to be careful to then factor this into every calculation everywhere it is to be found, since the whole app currently uses a hardcoded 20kg bar
-
-## 9
-
-create log viewing app, so we can easily browse all AI interactions
-reference: docs/design/ai-overview.md
-we need to see the inputs and outputs
-make it awesome

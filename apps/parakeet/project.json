@@ -23,12 +23,12 @@
                 "cwd": "apps/parakeet"
             }
         },
-        "buildApk": {
+        "build": {
             "executor": "nx:run-commands",
             "options": {
                 "commands": [
                     {
-                        "command": "cd apps/parakeet/android && ./gradlew assembleRelease --warning-mode=all",
+                        "command": "cd apps/parakeet/android && set -a && . ../../../.env.production && set +a && unset EXPO_PUBLIC_SUPABASE_URL_ANDROID && test -n \"$EXPO_PUBLIC_SUPABASE_URL\" && test -n \"$EXPO_PUBLIC_SUPABASE_ANON_KEY\" && EXPO_NO_DOTENV=1 NODE_ENV=production ./gradlew assembleRelease --warning-mode=all",
                         "description": "Build release APK"
                     },
                     {
@@ -56,10 +56,17 @@
                 "cwd": "apps/parakeet"
             }
         },
+        "uninstall": {
+            "executor": "nx:run-commands",
+            "options": {
+                "command": "adb uninstall com.adam.tombleson.parakeet",
+                "cwd": ""
+            }
+        },
         "install": {
             "executor": "nx:run-commands",
             "options": {
-                "command": "adb install -r dist/apps/parakeet/parakeet-release.apk ",
+                "command": "adb install -r dist/apps/parakeet/parakeet-release.apk",
                 "cwd": ""
             }
         }
