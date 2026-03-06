@@ -10,10 +10,6 @@ Always start by understanding basic docs overview: `docs/README.md`
 
 At the end remember to update design and specs at end with work actually done. then review this whole process and factor in any learnings into generic docs when done too so we optimize for next time.
 
-## 1
-
-Expo AV has been deprecated and will be removed in SDK 54. Use the `expo-audio` and `expo-video` packages to replace the required functionality.
-
 
 ## 5
 

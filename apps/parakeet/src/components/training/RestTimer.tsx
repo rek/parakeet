@@ -1,23 +1,17 @@
 import { useEffect, useRef, useState } from 'react'
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 import * as Haptics from 'expo-haptics'
-import { Audio } from 'expo-av'
+import { createAudioPlayer } from 'expo-audio'
 import { getRestTimerPrefs } from '../../modules/settings'
 import { formatMMSS } from '../../shared/utils'
 import { colors, spacing, radii, typography } from '../../theme'
 
-async function playDing() {
+function playDing() {
   try {
-    const { sound } = await Audio.Sound.createAsync(
-      // eslint-disable-next-line @typescript-eslint/no-require-imports
-      require('../../../assets/sounds/ding.wav')
-    )
-    await sound.playAsync()
-    sound.setOnPlaybackStatusUpdate((status) => {
-      if (status.isLoaded && status.didJustFinish) {
-        sound.unloadAsync().catch(() => {})
-      }
-    })
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const player = createAudioPlayer(require('../../../assets/sounds/ding.wav'))
+    player.play()
+    setTimeout(() => player.remove(), 3000)
   } catch {
     // audio unavailable
   }

@@ -11,7 +11,7 @@
     "lint": "nx affected --target=lint",
     "test": "nx affected --target=test",
     "parakeet:start": "nx start parakeet",
-    "parakeet:android": "nx run-android parakeet",
+    "parakeet:android": "node tools/scripts/set-android-supabase-ip.mjs && nx run-android parakeet",
     "start": "nx start parakeet",
     "bridge": "adb reverse tcp:54321 tcp:54321 && adb reverse tcp:8081 tcp:8081",
     "android": "nx run-android parakeet",

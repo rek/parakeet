@@ -36,7 +36,8 @@
           "resizeMode": "contain",
           "backgroundColor": "#100a11"
         }
-      ]
+      ],
+      "expo-audio"
     ],
     "extra": {
       "eas": {
