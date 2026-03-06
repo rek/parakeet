@@ -1,4 +1,7 @@
 import { useState } from 'react';
+import { useSupabase } from '../lib/SupabaseContext';
+import { isEnvAvailable } from '../lib/supabase';
+import { theme } from '../lib/theme';
 import { ComparisonLogs } from './ComparisonLogs';
 import { CycleReviews } from './CycleReviews';
 import { DeveloperSuggestions } from './DeveloperSuggestions';
@@ -179,6 +182,7 @@ const reviewModel = 'gpt-5';
 
 export function App() {
   const [page, setPage] = useState<Page>('timeline');
+  const { env, setEnv } = useSupabase();
 
   return (
     <div
@@ -222,7 +226,7 @@ export function App() {
                 height: 28,
                 borderRadius: 6,
                 background: 'var(--accent-dim)',
-                border: '1px solid rgba(245,158,11,0.3)',
+                border: `1px solid ${theme.border.accentStrong}`,
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -253,34 +257,47 @@ export function App() {
               </div>
             </div>
           </div>
-          {/* Live indicator */}
-          <div
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: 6,
-              marginTop: 8,
-            }}
-          >
-            <div
-              style={{
-                width: 5,
-                height: 5,
-                borderRadius: '50%',
-                background: 'var(--green)',
-                animation: 'pulse-dot 2s ease-in-out infinite',
-                boxShadow: '0 0 6px var(--green)',
-              }}
-            />
-            <span
-              style={{
-                fontSize: 10,
-                color: 'var(--text-muted)',
-                letterSpacing: '0.04em',
-              }}
-            >
-              connected · local supabase
-            </span>
+          {/* Env toggle */}
+          <div style={{ display: 'flex', gap: 4, marginTop: 10 }}>
+            {(['local', 'prod'] as const).map((e) => {
+              const available = isEnvAvailable(e);
+              const active = env === e;
+              return (
+                <button
+                  key={e}
+                  onClick={() => available && setEnv(e)}
+                  title={available ? `Switch to ${e}` : `${e} not configured`}
+                  style={{
+                    flex: 1,
+                    padding: '4px 0',
+                    borderRadius: 4,
+                    border: active
+                      ? `1px solid ${e === 'prod' ? 'var(--red)' : 'var(--green)'}`
+                      : '1px solid var(--border)',
+                    background: active
+                      ? e === 'prod'
+                        ? theme.bg.redDim
+                        : theme.bg.greenDim
+                      : 'transparent',
+                    color: active
+                      ? e === 'prod'
+                        ? 'var(--red)'
+                        : 'var(--green)'
+                      : available
+                        ? 'var(--text-dim)'
+                        : 'var(--text-muted)',
+                    fontSize: 10,
+                    fontFamily: 'var(--mono)',
+                    cursor: available ? 'pointer' : 'not-allowed',
+                    opacity: available ? 1 : 0.4,
+                    letterSpacing: '0.04em',
+                    fontWeight: active ? 600 : 400,
+                  }}
+                >
+                  {e}
+                </button>
+              );
+            })}
           </div>
         </div>
 

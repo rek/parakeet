@@ -1,20 +1,51 @@
-## Dashboard
+# Dashboard — AI Telemetry
 
-- Timeline — chronological feed of all AI events with colored dots + stat cards at top
-- JIT Sessions — per-session adjustments with intensity bar visualization, set delta, rationale bullets, and expandable input/output JSON
-- Hybrid Comparisons — side-by-side Formula vs LLM diff with divergence highlighting and DIVERGED/CONSENSUS badges
-- Cycle Reviews — full Sonnet output: assessment, lift ratings, formula suggestions, structural suggestions, next-cycle recs
-- Formula Suggestions — AI-proposed formula overrides with active/inactive status and parameter key-value display
-- Developer Suggestions — priority-sorted structural feedback with colored left border and dev notes
+Internal dev tool for inspecting AI decisions in the Parakeet training app.
 
-Aesthetic: near-black with amber gold accents, JetBrains Mono throughout, collapsible JSON trees, subtle noise texture, staggered fade-in animations.
+## Views
+
+| View | Description |
+|------|-------------|
+| Timeline | Chronological feed of all AI events |
+| JIT Sessions | Per-session adjustments: intensity bar, set delta, rationale, JSON |
+| Hybrid Comparisons | Formula vs LLM diff with DIVERGED/CONSENSUS badges |
+| Cycle Reviews | Full Sonnet output: assessment, ratings, suggestions |
+| Formula Suggestions | AI-proposed formula overrides with active/inactive status |
+| Developer Suggestions | Priority-sorted structural feedback |
+
+## Commands
+
+```sh
+# Dev server
+npx nx serve dashboard
+
+# Type check
+npx tsc --noEmit -p apps/dashboard/tsconfig.app.json
+
+# Lint
+npx nx lint dashboard
+```
 
 ## Setup
 
-Get keys:
+Copy env vars (local Supabase service_role key):
 
 ```sh
 npx supabase status -o env
+# copy API URL + service_role key into apps/dashboard/.env.local
 ```
 
-for `.env.local`
+`.env.local` keys:
+
+```
+VITE_SUPABASE_URL=http://localhost:54321
+VITE_SUPABASE_KEY=<service_role key>
+
+# Optional — enables prod toggle in the sidebar:
+VITE_SUPABASE_PROD_URL=https://your-project.supabase.co
+VITE_SUPABASE_PROD_KEY=<prod service_role key>
+```
+
+## Theming
+
+CSS variables are in `src/styles.css`. TypeScript references are in `src/lib/theme.ts` — use these in inline styles instead of raw `rgba()`/hex literals.

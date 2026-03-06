@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 import type { DbRow } from '@platform/supabase';
 import { JsonViewer } from '../components/JsonViewer';
-import { supabase } from '../lib/supabase';
+import { useSupabase } from '../lib/SupabaseContext';
+import { theme } from '../lib/theme';
 
 type CycleReview = DbRow<'cycle_reviews'>;
 
@@ -48,7 +49,7 @@ function RatingChip({ rating }: { rating: string }) {
   };
   const v = map[rating.toLowerCase()] ?? {
     color: 'var(--text-dim)',
-    bg: 'rgba(255,255,255,0.05)',
+    bg: theme.bg.surfaceOverlay,
   };
   return (
     <span
@@ -86,10 +87,10 @@ function ReviewCard({ review }: { review: CycleReview }) {
       }}
     >
       {/* Header */}
-      <div
+      <button
+        className="btn-reset"
         style={{
           padding: '14px 16px',
-          cursor: 'pointer',
           userSelect: 'none',
         }}
         onClick={() => setExpanded(!expanded)}
@@ -170,7 +171,7 @@ function ReviewCard({ review }: { review: CycleReview }) {
             )}
           </div>
         </div>
-      </div>
+      </button>
 
       {expanded && (
         <div style={{ borderTop: '1px solid var(--border)' }}>
@@ -297,7 +298,7 @@ function ReviewCard({ review }: { review: CycleReview }) {
                       padding: '10px 12px',
                       background: 'var(--blue-dim)',
                       borderRadius: 6,
-                      border: '1px solid rgba(96,165,250,0.15)',
+                      border: `1px solid ${theme.border.blueLight}`,
                     }}
                   >
                     <div
@@ -377,7 +378,7 @@ function ReviewCard({ review }: { review: CycleReview }) {
                       padding: '10px 12px',
                       background: 'var(--purple-dim)',
                       borderRadius: 6,
-                      border: '1px solid rgba(167,139,250,0.15)',
+                      border: `1px solid ${theme.border.purpleLight}`,
                     }}
                   >
                     <div
@@ -410,7 +411,7 @@ function ReviewCard({ review }: { review: CycleReview }) {
                                 ? 'var(--red-dim)'
                                 : s.priority === 'medium'
                                   ? 'var(--accent-dim)'
-                                  : 'rgba(255,255,255,0.05)',
+                                  : theme.bg.surfaceOverlay,
                             fontWeight: 700,
                           }}
                         >
@@ -538,6 +539,7 @@ function ReviewCard({ review }: { review: CycleReview }) {
 }
 
 export function CycleReviews() {
+  const { supabase } = useSupabase();
   const [reviews, setReviews] = useState<CycleReview[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -556,7 +558,7 @@ export function CycleReviews() {
       setLoading(false);
     }
     load();
-  }, []);
+  }, [supabase]);
 
   return (
     <div>

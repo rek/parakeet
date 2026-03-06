@@ -26,12 +26,37 @@
   --text-bright: #e8edf7;
   --mono: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace;
   --sans: 'Space Grotesk', system-ui, sans-serif;
+
+  /* Border colours (colour at reduced opacity) */
+  --accent-border: rgba(245, 158, 11, 0.25);
+  --accent-border-strong: rgba(245, 158, 11, 0.3);
+  --blue-border: rgba(96, 165, 250, 0.2);
+  --blue-border-light: rgba(96, 165, 250, 0.15);
+  --green-border: rgba(52, 211, 153, 0.2);
+  --red-border: rgba(248, 113, 113, 0.2);
+  --purple-border: rgba(167, 139, 250, 0.2);
+  --purple-border-light: rgba(167, 139, 250, 0.15);
+  --purple-border-strong: rgba(167, 139, 250, 0.25);
+
+  /* Subtle surface overlays */
+  --purple-subtle: rgba(167, 139, 250, 0.04);
+  --surface-overlay: rgba(255, 255, 255, 0.05);
 }
 
 * {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
+}
+
+/* Reset button appearance for div-replacement buttons */
+.btn-reset {
+  all: unset;
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+  cursor: pointer;
+  text-align: left;
 }
 
 html, body, #root {

@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 import type { DbRow } from '@platform/supabase';
 import { priorityBadge, statusBadge } from '../components/Badge';
-import { supabase } from '../lib/supabase';
+import { useSupabase } from '../lib/SupabaseContext';
+import { theme } from '../lib/theme';
 
 type DeveloperSuggestion = DbRow<'developer_suggestions'>;
 
@@ -18,7 +19,6 @@ function fmt(ts: string) {
 function SuggestionCard({ suggestion }: { suggestion: DeveloperSuggestion }) {
   const [expanded, setExpanded] = useState(false);
 
-  const priorityOrder = { high: 0, medium: 1, low: 2 };
   const priorityColor = {
     high: 'var(--red)',
     medium: 'var(--accent)',
@@ -32,15 +32,16 @@ function SuggestionCard({ suggestion }: { suggestion: DeveloperSuggestion }) {
     <div
       style={{
         background: 'var(--surface)',
-        border: `1px solid ${suggestion.priority === 'high' ? 'rgba(248,113,113,0.2)' : 'var(--border)'}`,
+        border: `1px solid ${suggestion.priority === 'high' ? theme.border.red : theme.border.base}`,
         borderLeft: `3px solid ${pColor}`,
         borderRadius: 8,
         overflow: 'hidden',
         transition: 'border-color 0.15s',
       }}
     >
-      <div
-        style={{ padding: '13px 16px', cursor: 'pointer', userSelect: 'none' }}
+      <button
+        className="btn-reset"
+        style={{ padding: '13px 16px', userSelect: 'none' }}
         onClick={() => setExpanded(!expanded)}
       >
         <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
@@ -94,7 +95,7 @@ function SuggestionCard({ suggestion }: { suggestion: DeveloperSuggestion }) {
             </p>
           </div>
         </div>
-      </div>
+      </button>
 
       {expanded && (
         <div style={{ borderTop: '1px solid var(--border)' }}>
@@ -152,7 +153,7 @@ function SuggestionCard({ suggestion }: { suggestion: DeveloperSuggestion }) {
                 padding: '12px 14px',
                 background: 'var(--purple-dim)',
                 borderRadius: 6,
-                border: '1px solid rgba(167,139,250,0.2)',
+                border: `1px solid ${theme.border.purple}`,
               }}
             >
               <div
@@ -202,6 +203,7 @@ function SuggestionCard({ suggestion }: { suggestion: DeveloperSuggestion }) {
 }
 
 export function DeveloperSuggestions() {
+  const { supabase } = useSupabase();
   const [suggestions, setSuggestions] = useState<DeveloperSuggestion[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -221,7 +223,7 @@ export function DeveloperSuggestions() {
       setLoading(false);
     }
     load();
-  }, []);
+  }, [supabase]);
 
   const filtered =
     filter === 'all'

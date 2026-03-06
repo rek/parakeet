@@ -2,7 +2,8 @@ import { useEffect, useState } from 'react';
 import type { DbRow } from '@platform/supabase';
 import { Badge } from '../components/Badge';
 import { JsonViewer } from '../components/JsonViewer';
-import { supabase } from '../lib/supabase';
+import { useSupabase } from '../lib/SupabaseContext';
+import { theme } from '../lib/theme';
 
 type FormulaConfig = DbRow<'formula_configs'>;
 
@@ -23,15 +24,15 @@ function FormulaCard({ config }: { config: FormulaConfig }) {
     <div
       style={{
         background: 'var(--surface)',
-        border: `1px solid ${config.source === 'ai_suggestion' ? 'rgba(96,165,250,0.2)' : 'var(--border)'}`,
+        border: `1px solid ${config.source === 'ai_suggestion' ? theme.border.blue : theme.border.base}`,
         borderRadius: 8,
         overflow: 'hidden',
       }}
     >
-      <div
+      <button
+        className="btn-reset"
         style={{
           padding: '12px 16px',
-          cursor: 'pointer',
           userSelect: 'none',
           display: 'flex',
           alignItems: 'center',
@@ -104,7 +105,7 @@ function FormulaCard({ config }: { config: FormulaConfig }) {
             {Object.keys(config.overrides ?? {}).length}
           </div>
         </div>
-      </div>
+      </button>
 
       {expanded && (
         <div
@@ -202,6 +203,7 @@ function FormulaCard({ config }: { config: FormulaConfig }) {
 }
 
 export function FormulaSuggestions() {
+  const { supabase } = useSupabase();
   const [configs, setConfigs] = useState<FormulaConfig[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -221,7 +223,7 @@ export function FormulaSuggestions() {
       setLoading(false);
     }
     load();
-  }, []);
+  }, [supabase]);
 
   const filtered = configs.filter((c) => {
     if (filter === 'ai') return c.source === 'ai_suggestion';

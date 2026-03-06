@@ -2,7 +2,8 @@ import { useEffect, useState } from 'react';
 import type { DbRow } from '@platform/supabase';
 import { strategyBadge } from '../components/Badge';
 import { JsonViewer } from '../components/JsonViewer';
-import { supabase } from '../lib/supabase';
+import { useSupabase } from '../lib/SupabaseContext';
+import { theme } from '../lib/theme';
 
 type JITComparisonLog = DbRow<'jit_comparison_logs'>;
 
@@ -85,7 +86,7 @@ function DiffValue({
                 padding: '1px 5px',
                 background: 'var(--accent-dim)',
                 borderRadius: 3,
-                border: '1px solid rgba(245,158,11,0.25)',
+                border: `1px solid ${theme.border.accent}`,
               }}
             >
               DIFF
@@ -121,22 +122,22 @@ function ComparisonCard({ log }: { log: JITComparisonLog }) {
     <div
       style={{
         background: 'var(--surface)',
-        border: `1px solid ${hasDivergence ? 'rgba(167,139,250,0.25)' : 'var(--border)'}`,
+        border: `1px solid ${hasDivergence ? theme.border.purpleStrong : 'var(--border)'}`,
         borderRadius: 8,
         overflow: 'hidden',
         transition: 'border-color 0.15s',
       }}
     >
       {/* Header */}
-      <div
+      <button
+        className="btn-reset"
         style={{
           padding: '12px 16px',
           display: 'flex',
           alignItems: 'center',
           gap: 12,
-          cursor: 'pointer',
           userSelect: 'none',
-          background: hasDivergence ? 'rgba(167,139,250,0.04)' : 'transparent',
+          background: hasDivergence ? theme.bg.purpleSubtle : 'transparent',
         }}
         onClick={() => setExpanded(!expanded)}
       >
@@ -167,7 +168,7 @@ function ComparisonCard({ log }: { log: JITComparisonLog }) {
                   padding: '2px 6px',
                   background: 'var(--purple-dim)',
                   borderRadius: 3,
-                  border: '1px solid rgba(167,139,250,0.25)',
+                  border: `1px solid ${theme.border.purpleStrong}`,
                   fontWeight: 700,
                 }}
               >
@@ -183,7 +184,7 @@ function ComparisonCard({ log }: { log: JITComparisonLog }) {
                   padding: '2px 6px',
                   background: 'var(--green-dim)',
                   borderRadius: 3,
-                  border: '1px solid rgba(52,211,153,0.2)',
+                  border: `1px solid ${theme.border.green}`,
                 }}
               >
                 CONSENSUS
@@ -251,7 +252,7 @@ function ComparisonCard({ log }: { log: JITComparisonLog }) {
             )}
           </div>
         )}
-      </div>
+      </button>
 
       {expanded && (
         <div style={{ borderTop: '1px solid var(--border)' }}>
@@ -502,7 +503,7 @@ function ComparisonCard({ log }: { log: JITComparisonLog }) {
             <div
               style={{
                 padding: '12px 16px',
-                background: 'rgba(167,139,250,0.04)',
+                background: theme.bg.purpleSubtle,
                 borderBottom: '1px solid var(--border)',
                 display: 'flex',
                 gap: 16,
@@ -551,6 +552,7 @@ function ComparisonCard({ log }: { log: JITComparisonLog }) {
 }
 
 export function ComparisonLogs() {
+  const { supabase } = useSupabase();
   const [logs, setLogs] = useState<JITComparisonLog[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -570,7 +572,7 @@ export function ComparisonLogs() {
       setLoading(false);
     }
     load();
-  }, []);
+  }, [supabase]);
 
   const filtered = onlyDiverged
     ? logs.filter(

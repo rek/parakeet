@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import type { DbRow } from '@platform/supabase';
 import { strategyBadge } from '../components/Badge';
 import { JsonViewer } from '../components/JsonViewer';
-import { supabase } from '../lib/supabase';
+import { useSupabase } from '../lib/SupabaseContext';
 
 type Session = DbRow<'sessions'>;
 
@@ -110,13 +110,13 @@ function SessionCard({ session }: { session: Session }) {
       }
     >
       {/* Header */}
-      <div
+      <button
+        className="btn-reset"
         style={{
           padding: '12px 16px',
           display: 'flex',
           alignItems: 'center',
           gap: 12,
-          cursor: 'pointer',
           userSelect: 'none',
         }}
         onClick={() => setExpanded(!expanded)}
@@ -205,7 +205,7 @@ function SessionCard({ session }: { session: Session }) {
             </div>
           </div>
         </div>
-      </div>
+      </button>
 
       {expanded && (
         <div style={{ borderTop: '1px solid var(--border)' }}>
@@ -406,6 +406,7 @@ function SessionCard({ session }: { session: Session }) {
 }
 
 export function JITLogs() {
+  const { supabase } = useSupabase();
   const [sessions, setSessions] = useState<Session[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -428,7 +429,7 @@ export function JITLogs() {
       setLoading(false);
     }
     load();
-  }, []);
+  }, [supabase]);
 
   const filtered =
     filter === 'all'

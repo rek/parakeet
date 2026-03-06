@@ -94,8 +94,9 @@ function JsonNode({ keyName, value, depth, defaultCollapsed }: {
 
   return (
     <div style={{ paddingLeft: depth * 14 }}>
-      <div
-        style={{ display: 'flex', alignItems: 'center', gap: '2px', cursor: 'pointer', userSelect: 'none' }}
+      <button
+        className="btn-reset"
+        style={{ display: 'flex', alignItems: 'center', gap: '2px', userSelect: 'none' }}
         onClick={() => setExpanded(!expanded)}
       >
         <NodeToggle expanded={expanded} onClick={() => setExpanded(!expanded)} />
@@ -111,7 +112,7 @@ function JsonNode({ keyName, value, depth, defaultCollapsed }: {
           )}
           {!expanded && close}
         </span>
-      </div>
+      </button>
       {expanded && (
         <div style={{ borderLeft: '1px solid var(--border)', marginLeft: 5 }}>
           {entries.map(([k, v]) => (
@@ -147,13 +148,13 @@ export function JsonViewer({ data, depth = 0, defaultCollapsed = true, label }: 
       overflow: 'hidden',
     }}>
       {label && (
-        <div
+        <button
+          className="btn-reset"
           onClick={() => setOpen(!open)}
           style={{
             padding: '6px 10px',
             background: 'var(--surface)',
             borderBottom: open ? '1px solid var(--border)' : 'none',
-            cursor: 'pointer',
             display: 'flex',
             alignItems: 'center',
             gap: 6,
@@ -164,7 +165,7 @@ export function JsonViewer({ data, depth = 0, defaultCollapsed = true, label }: 
           <span style={{ color: 'var(--text-dim)', fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.08em' }}>
             {label}
           </span>
-        </div>
+        </button>
       )}
       {open && (
         <div style={{

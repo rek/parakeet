@@ -1,15 +1,17 @@
+import { theme } from '../lib/theme';
+
 interface BadgeProps {
   label: string;
   variant?: 'accent' | 'blue' | 'green' | 'red' | 'purple' | 'muted';
 }
 
 const variants = {
-  accent: { color: 'var(--accent)', bg: 'var(--accent-dim)', border: 'rgba(245,158,11,0.25)' },
-  blue:   { color: 'var(--blue)',   bg: 'var(--blue-dim)',   border: 'rgba(96,165,250,0.2)' },
-  green:  { color: 'var(--green)',  bg: 'var(--green-dim)',  border: 'rgba(52,211,153,0.2)' },
-  red:    { color: 'var(--red)',    bg: 'var(--red-dim)',    border: 'rgba(248,113,113,0.2)' },
-  purple: { color: 'var(--purple)', bg: 'var(--purple-dim)', border: 'rgba(167,139,250,0.2)' },
-  muted:  { color: 'var(--text-dim)', bg: 'rgba(255,255,255,0.04)', border: 'var(--border)' },
+  accent: { color: theme.color.accent, bg: theme.bg.accentDim,    border: theme.border.accent },
+  blue:   { color: theme.color.blue,   bg: theme.bg.blueDim,      border: theme.border.blue },
+  green:  { color: theme.color.green,  bg: theme.bg.greenDim,     border: theme.border.green },
+  red:    { color: theme.color.red,    bg: theme.bg.redDim,       border: theme.border.red },
+  purple: { color: theme.color.purple, bg: theme.bg.purpleDim,    border: theme.border.purple },
+  muted:  { color: theme.color.textDim, bg: theme.bg.surfaceOverlay, border: theme.border.base },
 };
 
 export function Badge({ label, variant = 'muted' }: BadgeProps) {

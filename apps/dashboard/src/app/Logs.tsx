@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { supabase } from '../lib/supabase';
+import { useSupabase } from '../lib/SupabaseContext';
 import { strategyBadge } from '../components/Badge';
 
 interface TimelineEvent {
@@ -78,6 +78,7 @@ function StatCard({ label, value, color }: { label: string; value: number; color
 }
 
 export function Logs() {
+  const { supabase } = useSupabase();
   const [events, setEvents] = useState<TimelineEvent[]>([]);
   const [stats, setStats] = useState<Stats>({ jit: 0, hybrid: 0, cycleReviews: 0, formulaSuggestions: 0, devSuggestions: 0 });
   const [loading, setLoading] = useState(true);
@@ -184,7 +185,7 @@ export function Logs() {
       setLoading(false);
     }
     load();
-  }, []);
+  }, [supabase]);
 
   return (
     <div>
@@ -267,7 +268,7 @@ export function Logs() {
                     }}>
                       {cfg.label}
                     </span>
-                    {event.type === 'jit' && event.meta?.strategy && strategyBadge(event.meta.strategy as string)}
+                    {event.type === 'jit' && typeof event.meta?.strategy === 'string' && strategyBadge(event.meta.strategy)}
                     <span style={{ color: 'var(--text-bright)', fontWeight: 600, fontSize: 12 }}>{event.label}</span>
                   </div>
                   <div style={{ display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap' }}>
