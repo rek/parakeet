@@ -22,10 +22,6 @@ explain how it should work
 why two buttons after pressing review?
 (check now, which flashes, and generate now)
 
-## 6
-
-add a 'scroll down to refresh' on the 'today' page. it should reset all query cache
-
 ## 7
 
 When I leave a workout in the middle, and I try to enter it from the workout tab it takes me to the soreness evaluation and removes all the ticks of completed lifts. The rest timer still runs.

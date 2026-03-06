@@ -1,7 +1,9 @@
 import { router } from 'expo-router'
+import { useCallback, useState } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import {
   ActivityIndicator,
+  RefreshControl,
   ScrollView,
   StyleSheet,
   Text,
@@ -127,6 +129,13 @@ export default function TodayScreen() {
   const { data: volumeData } = useWeeklyVolume()
   const { data: cycleContext } = useCyclePhase()
   const queryClient = useQueryClient()
+  const [refreshing, setRefreshing] = useState(false)
+
+  const handleRefresh = useCallback(async () => {
+    setRefreshing(true)
+    await queryClient.invalidateQueries()
+    setRefreshing(false)
+  }, [queryClient])
 
   const { data: disruptions } = useQuery({
     queryKey: ['disruptions', 'active', user?.id],
@@ -171,6 +180,9 @@ export default function TodayScreen() {
         style={styles.scroll}
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />
+        }
       >
         {!program ? (
           <View style={styles.emptyState}>
