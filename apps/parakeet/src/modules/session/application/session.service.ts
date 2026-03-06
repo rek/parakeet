@@ -176,7 +176,7 @@ export async function completeSession(
     if (
       set.rpe_actual !== undefined &&
       (!Number.isFinite(set.rpe_actual) ||
-        set.rpe_actual < 6 ||
+        set.rpe_actual < 1 ||
         set.rpe_actual > 10)
     ) {
       throw new Error('Invalid RPE value');
@@ -196,7 +196,7 @@ export async function completeSession(
     if (
       set.rpe_actual !== undefined &&
       (!Number.isFinite(set.rpe_actual) ||
-        set.rpe_actual < 6 ||
+        set.rpe_actual < 1 ||
         set.rpe_actual > 10)
     ) {
       throw new Error('Invalid auxiliary RPE value');

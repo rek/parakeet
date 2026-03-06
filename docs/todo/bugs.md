@@ -28,6 +28,3 @@ why two buttons after pressing review?
 
 After doing a complete week of workouts the volume tab says 0 for biceps
 
-## 10
-
-In the workout I put RPE 5 after each lift. In the screen where it says workout complete I could not save and finish because of "invalid rpe value", I could go back and change it. what i want changed is to allow all rpe's from 1-10 to be valid
