@@ -36,7 +36,19 @@ For app refactors, run:
 - `tsc --noEmit -p apps/parakeet/tsconfig.typecheck.json`
 - `npm run check:module-boundary`
 
+For the dashboard app:
+
+- `tsc --noEmit -p apps/dashboard/tsconfig.app.json`
+- `npx nx lint dashboard`
+
 Add targeted tests when moving logic or changing behavior.
+
+## Dashboard-specific conventions
+
+- Lint: `npx nx lint dashboard` — uses oxlint (same as `apps/parakeet`)
+- Theme: all colours/borders must use `src/lib/theme.ts` constants or CSS vars from `src/styles.css`; no raw `rgba()`/hex in component files
+- Interactive divs: use `<button className="btn-reset">` not `<div onClick>`
+- Env switching: `SupabaseContext` — all components get `supabase` via `useSupabase()`, add to `useEffect` deps
 
 ## Prompt Starter
 

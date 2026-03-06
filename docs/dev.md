@@ -1,5 +1,20 @@
 # Commands for developers
 
+### Dashboard (AI telemetry web app)
+
+```bash
+npx nx serve dashboard              # Dev server at http://localhost:4200
+
+# Validate
+npx tsc --noEmit -p apps/dashboard/tsconfig.app.json
+npx nx lint dashboard
+```
+
+Setup: copy local Supabase service_role key into `apps/dashboard/.env.local`.
+See `apps/dashboard/README.md` for full setup and optional prod env vars.
+
+---
+
 ### Supabase (local)
 
 ```bash

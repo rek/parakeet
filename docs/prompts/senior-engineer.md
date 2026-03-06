@@ -60,7 +60,9 @@ Output format:
 - No teaching content.
 - No summaries.
 
-- Always update relevant documentation when finished,
-  - update state in specs - eg: [x] feature one
-  - add learning into other directional documents
-  - prompt user with other learnings for compounding/improvement advice
+- Always update relevant documentation when finished:
+  - Mark completed items in `docs/todo/features.md` and relevant spec files
+  - Update or create the design doc in `docs/design/` for the feature worked on
+  - Add learnings to `docs/AI_WORKFLOW.md` and `docs/CODE_STYLE.md` if patterns emerged
+  - Update `docs/dev.md` if new commands or workflows were introduced
+  - Prompt user with compounding/improvement advice based on what was learned

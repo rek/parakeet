@@ -785,3 +785,57 @@ if (__DEV__) {
   console.log('User data:', user);
 }
 ```
+
+---
+
+## Dashboard (`apps/dashboard`) — Web-specific conventions
+
+The dashboard is a plain React/Vite app with inline styles (no StyleSheet). Different rules apply.
+
+### Theming
+
+All colours live in `src/styles.css` as CSS custom properties. Import `theme.ts` in components — never write raw `rgba()` or hex literals in component files.
+
+```ts
+import { theme } from '../lib/theme';
+
+// Good
+border: `1px solid ${theme.border.accent}`
+background: theme.bg.purpleDim
+
+// Bad
+border: '1px solid rgba(245,158,11,0.25)'
+background: 'rgba(167,139,250,0.12)'
+```
+
+To add a new colour: add the CSS var to `:root` in `styles.css`, then add a constant to `theme.ts`.
+
+### Interactive elements
+
+`<div onClick>` is a lint error (oxlint a11y). Use `<button className="btn-reset">` instead.
+
+```tsx
+// Good
+<button className="btn-reset" onClick={() => setOpen(!open)}>
+  ...
+</button>
+
+// Bad — lint error
+<div onClick={() => setOpen(!open)}>
+  ...
+</div>
+```
+
+`btn-reset` is defined in `styles.css` (`all: unset; display: block; width: 100%; cursor: pointer; text-align: left`).
+
+### TypeScript guards for `unknown` in JSX
+
+When a `Record<string, unknown>` value is used in JSX children, narrow it explicitly:
+
+```tsx
+// Bad — TS error: 'unknown' not assignable to ReactNode
+{meta?.strategy && renderBadge(meta.strategy as string)}
+
+// Good
+{typeof meta?.strategy === 'string' && renderBadge(meta.strategy)}
+```
