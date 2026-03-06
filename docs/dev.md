@@ -50,6 +50,22 @@ nx android parakeet
 nx run parakeet:serve
 ```
 
+If you want Wi-Fi IP mode instead of USB reverse, auto-update Android Supabase URL with:
+
+```bash
+npm run parakeet:android:ip
+# optional explicit IP:
+# npm run parakeet:android:ip -- --ip=192.168.1.42
+```
+
+For stable local auth/dev on a physical Android phone, prefer USB + `adb reverse` with `localhost` Supabase:
+
+```bash
+# .env.local
+EXPO_PUBLIC_SUPABASE_URL=http://localhost:54321
+# leave EXPO_PUBLIC_SUPABASE_URL_ANDROID unset for USB workflow
+```
+
 ### Linting and type checking
 
 ```bash
@@ -116,3 +132,4 @@ adb reverse tcp:8081 tcp:8081   # Metro (usually auto-set by Expo)
 ```
 
 This drops on every replug — re-run if you get network errors after reconnecting.
+Only use `EXPO_PUBLIC_SUPABASE_URL_ANDROID=http://<LAN_IP>:54321` when debugging over Wi-Fi.

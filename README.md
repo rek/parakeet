@@ -153,9 +153,9 @@ Update `apps/parakeet/.env.local` (or a `.env.production` file) to use the hoste
 If Google sign-in fails with `TypeError: Network request failed`, check local Supabase reachability first.
 
 1. Confirm the app log prints the Supabase URL (`[supabase] URL: ...`).
-2. For physical Android devices, set `EXPO_PUBLIC_SUPABASE_URL_ANDROID` to your dev machine LAN IP, e.g. `http://192.168.1.96:54321` (not `localhost`, not `10.0.2.2`).
-3. Ensure phone and dev machine are on the same Wi-Fi network/subnet. This was the root cause in a real failure case.
-4. Verify on phone browser: `http://<LAN_IP>:54321/auth/v1/health` should load.
+2. Preferred for physical Android devices: USB + `adb reverse`, keep `EXPO_PUBLIC_SUPABASE_URL=http://localhost:54321`, and leave `EXPO_PUBLIC_SUPABASE_URL_ANDROID` unset.
+3. Run `adb reverse tcp:54321 tcp:54321` and `adb reverse tcp:8081 tcp:8081`.
+4. If using Wi-Fi debugging instead of USB, set `EXPO_PUBLIC_SUPABASE_URL_ANDROID` to your dev machine LAN IP and verify on phone browser: `http://<LAN_IP>:54321/auth/v1/health`.
 5. If still failing, check firewall/VPN/guest-network isolation on the dev machine/router.
 
 For building apk's we need to use prod supabase, since metro does not run we cannot point to local
