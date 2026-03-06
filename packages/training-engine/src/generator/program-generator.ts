@@ -1,5 +1,13 @@
 import { IntensityType, Lift } from '@parakeet/shared-types'
-import { calculateSessionDate, getBlockNumber, getIntensityTypeForWeek, isDeloadWeek, getWeekInBlock } from '../cube/scheduler'
+import {
+  calculateSessionDate,
+  computeDayOffsets,
+  DEFAULT_TRAINING_DAYS,
+  getBlockNumber,
+  getIntensityTypeForWeek,
+  isDeloadWeek,
+  getWeekInBlock,
+} from '../cube/scheduler'
 import {
   AuxiliaryAssignment,
   AuxiliaryPool,
@@ -14,10 +22,10 @@ export function generateWeekSessions(
   weekNumber: number,
   blockNumber: 1 | 2 | 3,
   _weekInBlock: number,
-  trainingDaysPerWeek: number,
+  dayOffsets: number[],
   startDate: Date,
 ): SessionScaffold[] {
-  return Array.from({ length: trainingDaysPerWeek }, (_, dayIndex) => {
+  return Array.from({ length: dayOffsets.length }, (_, dayIndex) => {
     const lift = LIFT_ORDER[dayIndex % LIFT_ORDER.length]
     return {
       weekNumber,
@@ -26,7 +34,7 @@ export function generateWeekSessions(
       intensityType: getIntensityTypeForWeek(weekNumber, lift),
       blockNumber,
       isDeload: false,
-      plannedDate: calculateSessionDate(startDate, weekNumber, dayIndex, trainingDaysPerWeek),
+      plannedDate: calculateSessionDate(startDate, weekNumber, dayIndex, dayOffsets),
       plannedSets: null,
       jitGeneratedAt: null,
     }
@@ -36,10 +44,10 @@ export function generateWeekSessions(
 export function generateDeloadWeek(
   weekNumber: number,
   _totalWeeks: number,
-  trainingDaysPerWeek: number,
+  dayOffsets: number[],
   startDate: Date,
 ): SessionScaffold[] {
-  return Array.from({ length: trainingDaysPerWeek }, (_, dayIndex) => {
+  return Array.from({ length: dayOffsets.length }, (_, dayIndex) => {
     const lift = LIFT_ORDER[dayIndex % LIFT_ORDER.length]
     return {
       weekNumber,
@@ -48,7 +56,7 @@ export function generateDeloadWeek(
       intensityType: 'deload' as IntensityType,
       blockNumber: null,
       isDeload: true,
-      plannedDate: calculateSessionDate(startDate, weekNumber, dayIndex, trainingDaysPerWeek),
+      plannedDate: calculateSessionDate(startDate, weekNumber, dayIndex, dayOffsets),
       plannedSets: null,
       jitGeneratedAt: null,
     }
@@ -57,15 +65,17 @@ export function generateDeloadWeek(
 
 export function generateProgram(input: GenerateProgramInput): GeneratedProgramStructure {
   const { totalWeeks, trainingDaysPerWeek, startDate } = input
+  const selectedDays = input.trainingDays ?? DEFAULT_TRAINING_DAYS[trainingDaysPerWeek]
+  const dayOffsets = computeDayOffsets(selectedDays)
   const sessions: SessionScaffold[] = []
 
   for (let week = 1; week <= totalWeeks; week++) {
     if (isDeloadWeek(week, totalWeeks)) {
-      sessions.push(...generateDeloadWeek(week, totalWeeks, trainingDaysPerWeek, startDate))
+      sessions.push(...generateDeloadWeek(week, totalWeeks, dayOffsets, startDate))
     } else {
       const blockNumber = getBlockNumber(week) as 1 | 2 | 3
       const weekInBlock = getWeekInBlock(week)
-      sessions.push(...generateWeekSessions(week, blockNumber, weekInBlock, trainingDaysPerWeek, startDate))
+      sessions.push(...generateWeekSessions(week, blockNumber, weekInBlock, dayOffsets, startDate))
     }
   }
 

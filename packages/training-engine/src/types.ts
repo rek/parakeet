@@ -119,6 +119,7 @@ export interface GenerateProgramInput {
   totalWeeks: number
   trainingDaysPerWeek: number
   startDate: Date
+  trainingDays?: number[] // weekday indices 0=Sun..6=Sat; defaults to DEFAULT_TRAINING_DAYS[trainingDaysPerWeek]
 }
 
 export interface GeneratedProgramStructure {

@@ -1,3 +1,4 @@
+import { useMemo, useState } from 'react'
 import {
   ActivityIndicator,
   ScrollView,
@@ -7,102 +8,172 @@ import {
   View,
 } from 'react-native'
 import { router, useLocalSearchParams } from 'expo-router'
-import { useQuery } from '@tanstack/react-query'
+import { useQueryClient } from '@tanstack/react-query'
 
-import { getProgram } from '@modules/program'
-import { colors } from '../../../theme'
-import type { ProgramSessionView } from '@shared/types/domain'
+import { createProgram } from '@modules/program'
+import { useAuth } from '@modules/auth'
+import { qk } from '@platform/query'
+import { generateProgram, nextDateForWeekday, DEFAULT_TRAINING_DAYS } from '@parakeet/training-engine'
+import { captureException } from '@platform/utils/captureException'
+import { colors, spacing, typography, radii } from '../../../theme'
 
-// ── Helpers ──────────────────────────────────────────────────────────────────
+// ── Constants ─────────────────────────────────────────────────────────────────
 
-const WEEKDAY_SHORT = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+const DAY_LABELS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
 const MONTH_SHORT = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
 
-function formatSessionDate(dateStr: string): string {
-  // dateStr is ISO date: "2025-02-24"
-  // Parse as local date to avoid UTC midnight-to-previous-day shift
-  const [year, month, day] = dateStr.split('-').map(Number)
-  const d = new Date(year, month - 1, day)
-  return `${WEEKDAY_SHORT[d.getDay()]} ${MONTH_SHORT[d.getMonth()]} ${d.getDate()}`
+// ── Helpers ───────────────────────────────────────────────────────────────────
+
+function formatSessionDate(date: Date): string {
+  return `${DAY_LABELS[date.getDay()]} ${MONTH_SHORT[date.getMonth()]} ${date.getDate()}`
 }
 
 function capitalize(str: string): string {
-  if (!str) return str
-  return str.charAt(0).toUpperCase() + str.slice(1)
+  return str ? str.charAt(0).toUpperCase() + str.slice(1) : str
 }
 
 // ── Screen ───────────────────────────────────────────────────────────────────
 
 export default function ReviewScreen() {
-  const { programId } = useLocalSearchParams<{ programId: string }>()
+  const { user } = useAuth()
+  const queryClient = useQueryClient()
+  const { totalWeeks: tw, trainingDaysPerWeek: tdpw } = useLocalSearchParams<{
+    totalWeeks: string
+    trainingDaysPerWeek: string
+  }>()
 
-  const { data: program, isPending, isError } = useQuery({
-    queryKey: ['program', programId],
-    queryFn: () => getProgram(programId),
-    enabled: !!programId,
-  })
+  const totalWeeks = Number(tw)
+  const trainingDaysPerWeek = Number(tdpw) as 3 | 4
 
-  if (isPending) {
-    return (
-      <View style={styles.centered}>
-        <ActivityIndicator size="large" color={colors.primary} />
-      </View>
-    )
+  const [selectedDays, setSelectedDays] = useState<number[]>(
+    () => DEFAULT_TRAINING_DAYS[trainingDaysPerWeek] ?? [1, 3, 5],
+  )
+  const [loading, setLoading] = useState(false)
+
+  // startDate = next occurrence of the earliest selected day
+  const startDate = useMemo(() => {
+    const sorted = [...selectedDays].sort((a, b) => a - b)
+    return nextDateForWeekday(sorted[0])
+  }, [selectedDays])
+
+  // Compute week 1 preview locally — no DB call needed
+  const week1Sessions = useMemo(() => {
+    if (!totalWeeks || !trainingDaysPerWeek || selectedDays.length !== trainingDaysPerWeek) return []
+    const result = generateProgram({
+      totalWeeks,
+      trainingDaysPerWeek,
+      startDate,
+      trainingDays: selectedDays,
+    })
+    return result.sessions
+      .filter((s) => s.weekNumber === 1)
+      .sort((a, b) => a.dayNumber - b.dayNumber)
+  }, [selectedDays, startDate, totalWeeks, trainingDaysPerWeek])
+
+  function toggleDay(day: number) {
+    setSelectedDays((prev) => {
+      if (prev.includes(day)) {
+        // Don't allow going below required count
+        if (prev.length <= trainingDaysPerWeek) return prev
+        return prev.filter((d) => d !== day)
+      } else {
+        // Don't allow exceeding required count
+        if (prev.length >= trainingDaysPerWeek) return prev
+        return [...prev, day]
+      }
+    })
   }
 
-  if (isError || !program) {
-    return (
-      <View style={styles.centered}>
-        <Text style={styles.errorText}>Failed to load program. Please try again.</Text>
-        <TouchableOpacity style={styles.backLink} onPress={() => router.back()}>
-          <Text style={styles.backLinkText}>Go back</Text>
-        </TouchableOpacity>
-      </View>
-    )
+  async function handleStart() {
+    setLoading(true)
+    try {
+      await createProgram({ totalWeeks: totalWeeks as 10 | 12 | 14, trainingDaysPerWeek, startDate, trainingDays: selectedDays })
+      await queryClient.invalidateQueries({ queryKey: qk.program.active(user?.id) })
+      router.replace('/(tabs)/today')
+    } catch (err) {
+      captureException(err)
+    } finally {
+      setLoading(false)
+    }
   }
 
-  const week1Sessions: ProgramSessionView[] = (program.sessions ?? [])
-    .filter((s) => s.week_number === 1)
-    .sort((a, b) => a.day_number - b.day_number)
+  const daysSelected = selectedDays.length === trainingDaysPerWeek
 
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.title}>Your Program</Text>
-        <Text style={styles.subtitle}>
-          {program.total_weeks}-week program · {program.training_days_per_week} days/week
-        </Text>
-      </View>
-
-      <Text style={styles.weekLabel}>Week 1 Preview</Text>
-
       <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={styles.sessionsRow}
-        style={styles.sessionsScroll}
+        style={styles.scroll}
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
       >
-        {week1Sessions.map((session) => (
-          <View key={session.id} style={styles.sessionCard}>
-            <Text style={styles.cardLift}>
-              {capitalize(session.primary_lift)}
-            </Text>
-            <Text style={styles.cardIntensity}>{session.intensity_type}</Text>
-            <View style={styles.cardDivider} />
-            <Text style={styles.cardDate}>{formatSessionDate(session.planned_date)}</Text>
-            <Text style={styles.cardBlock}>Block {session.block_number}</Text>
-            <Text style={styles.cardNote}>Sets generated before workout</Text>
-          </View>
-        ))}
+        {/* Header */}
+        <View style={styles.header}>
+          <Text style={styles.title}>Your Schedule</Text>
+          <Text style={styles.subtitle}>
+            {totalWeeks}-week program · pick your {trainingDaysPerWeek} training days
+          </Text>
+        </View>
+
+        {/* Day picker */}
+        <Text style={styles.sectionLabel}>Training Days</Text>
+        <View style={styles.dayRow}>
+          {DAY_LABELS.map((label, weekday) => {
+            const active = selectedDays.includes(weekday)
+            return (
+              <TouchableOpacity
+                key={weekday}
+                style={[styles.dayChip, active && styles.dayChipActive]}
+                onPress={() => toggleDay(weekday)}
+                activeOpacity={0.7}
+              >
+                <Text style={[styles.dayChipText, active && styles.dayChipTextActive]}>
+                  {label}
+                </Text>
+              </TouchableOpacity>
+            )
+          })}
+        </View>
+        {!daysSelected && (
+          <Text style={styles.dayHint}>
+            Select exactly {trainingDaysPerWeek} days
+          </Text>
+        )}
+
+        {/* Week 1 preview */}
+        <Text style={styles.sectionLabel}>Week 1 Preview</Text>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.sessionsRow}
+          style={styles.sessionsScroll}
+        >
+          {week1Sessions.map((session, i) => (
+            <View key={i} style={styles.sessionCard}>
+              <Text style={styles.cardDay}>
+                {formatSessionDate(session.plannedDate)}
+              </Text>
+              <Text style={styles.cardLift}>{capitalize(session.primaryLift)}</Text>
+              <Text style={styles.cardIntensity}>{session.intensityType}</Text>
+              <View style={styles.cardDivider} />
+              <Text style={styles.cardNote}>Sets generated before workout</Text>
+            </View>
+          ))}
+        </ScrollView>
       </ScrollView>
 
+      {/* Footer */}
       <View style={styles.footer}>
         <TouchableOpacity
-          style={styles.primaryButton}
-          onPress={() => router.replace('/(tabs)/today')}
+          style={[styles.primaryButton, (!daysSelected || loading) && styles.primaryButtonDisabled]}
+          onPress={handleStart}
+          disabled={!daysSelected || loading}
           activeOpacity={0.8}
         >
-          <Text style={styles.primaryButtonText}>Start Training</Text>
+          {loading ? (
+            <ActivityIndicator color={colors.textInverse} />
+          ) : (
+            <Text style={styles.primaryButtonText}>Start Training</Text>
+          )}
         </TouchableOpacity>
 
         <TouchableOpacity
@@ -117,33 +188,18 @@ export default function ReviewScreen() {
   )
 }
 
-// ── Styles ───────────────────────────────────────────────────────────────────
+// ── Styles ────────────────────────────────────────────────────────────────────
 
 const styles = StyleSheet.create({
-  centered: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: colors.bgSurface,
-    paddingHorizontal: 24,
-  },
-  errorText: {
-    fontSize: 15,
-    color: colors.textSecondary,
-    textAlign: 'center',
-    marginBottom: 16,
-  },
-  backLink: {
-    marginTop: 8,
-  },
-  backLinkText: {
-    fontSize: 14,
-    color: colors.primary,
-    fontWeight: '600',
-  },
   container: {
     flex: 1,
     backgroundColor: colors.bgSurface,
+  },
+  scroll: {
+    flex: 1,
+  },
+  scrollContent: {
+    paddingBottom: 16,
   },
   header: {
     paddingHorizontal: 24,
@@ -160,58 +216,87 @@ const styles = StyleSheet.create({
     fontSize: 15,
     color: colors.textSecondary,
   },
-  weekLabel: {
+  sectionLabel: {
     fontSize: 13,
     fontWeight: '600',
     color: colors.textTertiary,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
     paddingHorizontal: 24,
-    marginBottom: 14,
+    marginBottom: 12,
+  },
+  dayRow: {
+    flexDirection: 'row',
+    paddingHorizontal: 24,
+    gap: spacing[2],
+    marginBottom: 8,
+    flexWrap: 'wrap',
+  },
+  dayChip: {
+    paddingHorizontal: spacing[3],
+    paddingVertical: spacing[2],
+    borderRadius: radii.full,
+    borderWidth: 1.5,
+    borderColor: colors.border,
+    backgroundColor: colors.bgSurface,
+  },
+  dayChipActive: {
+    borderColor: colors.primary,
+    backgroundColor: colors.primaryMuted,
+  },
+  dayChipText: {
+    fontSize: typography.sizes.sm,
+    fontWeight: typography.weights.semibold,
+    color: colors.textSecondary,
+  },
+  dayChipTextActive: {
+    color: colors.primary,
+  },
+  dayHint: {
+    fontSize: typography.sizes.xs,
+    color: colors.textTertiary,
+    paddingHorizontal: 24,
+    marginBottom: 4,
   },
   sessionsScroll: {
     flexGrow: 0,
+    marginBottom: 32,
   },
   sessionsRow: {
     paddingHorizontal: 24,
-    paddingBottom: 8,
+    paddingBottom: 4,
   },
   sessionCard: {
-    width: 200,
+    width: 160,
     backgroundColor: colors.bgSurface,
     borderWidth: 1,
     borderColor: colors.border,
     borderRadius: 12,
-    padding: 16,
+    padding: 14,
     marginRight: 12,
   },
+  cardDay: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: colors.primary,
+    marginBottom: 6,
+  },
   cardLift: {
-    fontSize: 17,
+    fontSize: 16,
     fontWeight: '700',
     color: colors.text,
     marginBottom: 2,
   },
   cardIntensity: {
-    fontSize: 13,
+    fontSize: 12,
     color: colors.textSecondary,
-    marginBottom: 12,
+    marginBottom: 10,
     textTransform: 'capitalize',
   },
   cardDivider: {
     height: 1,
     backgroundColor: colors.bgMuted,
-    marginBottom: 12,
-  },
-  cardDate: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: colors.textSecondary,
-    marginBottom: 4,
-  },
-  cardBlock: {
-    fontSize: 12,
-    color: colors.textTertiary,
-    marginBottom: 8,
+    marginBottom: 10,
   },
   cardNote: {
     fontSize: 11,
@@ -221,8 +306,11 @@ const styles = StyleSheet.create({
   },
   footer: {
     paddingHorizontal: 24,
-    paddingTop: 32,
+    paddingTop: 16,
     paddingBottom: 48,
+    borderTopWidth: 1,
+    borderTopColor: colors.borderMuted,
+    backgroundColor: colors.bgSurface,
   },
   primaryButton: {
     backgroundColor: colors.primary,
@@ -230,6 +318,9 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
     alignItems: 'center',
     marginBottom: 16,
+  },
+  primaryButtonDisabled: {
+    opacity: 0.45,
   },
   primaryButtonText: {
     color: colors.textInverse,

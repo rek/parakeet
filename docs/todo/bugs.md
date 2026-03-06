@@ -4,22 +4,11 @@ This contains a list of currently active bugs. An AI agent should work through t
 
 When resolved, remove it from here, and update any relevant design/spec docs with changes.
 
-When possible, solve in red/green style.
+When possible, solve in red/green TDD style.
 
-## 1
+Always start by understanding basic docs overview: `docs/README.md`
 
-plate calculator
-i dont understand it, i dont see the plates i need to use
-just a bar weight selector
-
-## 2
-
-by default the workouts in a plan should be mon-wed-friday
-
-## 3
-
-review the 'your program' screen after program generation with the 'start training' button. i dont see the purpose in it
-perhaps we need to allow for custom day setting (ref bug 2) and this would make more sense to show the previwe of it
+At the end remember to update design and specs at end with work actually done. then review this whole process and factor in any learnings into generic docs when done too so we optimize for next time.
 
 ## 4
 
@@ -36,3 +25,22 @@ why two buttons after pressing review?
 ## 6
 
 add a 'scroll down to refresh' on the 'today' page. it should reset all query cache
+
+## 7
+
+When I leave a workout in the middle, and I try to enter it from the workout tab it takes me to the soreness evaluation and removes all the ticks of completed lifts. The rest timer still runs.
+
+When resuming a workout from the today screen all is well.
+
+## 8
+
+In the history tab the graph in the middle of the screen doesn't update.
+i think this is the Weekly volume
+
+## 9
+
+After doing a complete week of workouts the volume tab says 0 for biceps
+
+## 10
+
+In the workout I put RPE 5 after each lift. In the screen where it says workout complete I could not save and finish because of "invalid rpe value", I could go back and change it. what i want changed is to allow all rpe's from 1-10 to be valid

@@ -28,6 +28,7 @@ export interface CreateProgramInput {
   totalWeeks: 10 | 12 | 14;
   trainingDaysPerWeek: 3 | 4;
   startDate: Date;
+  trainingDays?: number[]; // weekday indices 0=Sun..6=Sat
 }
 
 export type RegenerateProgramInput = CreateProgramInput;
@@ -54,6 +55,7 @@ async function buildProgram(input: CreateProgramInput, withFormulaConfigId: bool
     totalWeeks: input.totalWeeks,
     trainingDaysPerWeek: input.trainingDaysPerWeek,
     startDate: input.startDate,
+    trainingDays: input.trainingDays,
   });
 
   const auxiliaryPool = await getAuxiliaryPools(userId);

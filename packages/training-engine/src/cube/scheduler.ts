@@ -8,11 +8,26 @@ const CUBE_ROTATION: Record<number, Record<Lift, IntensityType>> = {
   3: { squat: 'rep', bench: 'explosive', deadlift: 'heavy' },
 }
 
-// Day offsets from program start (Monday = 0)
-const DAY_OFFSETS: Record<number, number[]> = {
-  3: [0, 2, 4],
-  4: [0, 1, 3, 5],
-  5: [0, 1, 2, 4, 5],
+// Default training weekdays per frequency (0=Sun, 1=Mon, ..., 6=Sat)
+export const DEFAULT_TRAINING_DAYS: Record<number, number[]> = {
+  3: [1, 3, 5],      // Mon, Wed, Fri
+  4: [1, 2, 4, 6],   // Mon, Tue, Thu, Sat
+  5: [1, 2, 3, 5, 6],
+}
+
+// Given selected weekday indices, return offsets from the earliest day
+export function computeDayOffsets(selectedDays: number[]): number[] {
+  const sorted = [...selectedDays].sort((a, b) => a - b)
+  return sorted.map((d) => d - sorted[0])
+}
+
+// Next date that falls on a given weekday (0=Sun..6=Sat), always in the future
+export function nextDateForWeekday(weekday: number): Date {
+  const d = new Date()
+  d.setHours(0, 0, 0, 0)
+  const diff = (weekday - d.getDay() + 7) % 7
+  d.setDate(d.getDate() + (diff === 0 ? 7 : diff))
+  return d
 }
 
 export function getBlockNumber(weekNumber: number): 1 | 2 | 3 {
@@ -38,21 +53,15 @@ export function calculateSessionDate(
   startDate: Date,
   weekNumber: number,
   dayIndex: number, // 0-based index within training days
-  trainingDaysPerWeek: number,
+  dayOffsets: number[], // offsets in days from startDate for each training day
 ): Date {
-  const offsets = DAY_OFFSETS[trainingDaysPerWeek]
-  if (!offsets) {
+  if (dayIndex < 0 || dayIndex >= dayOffsets.length) {
     throw new InvalidInputError(
-      `Unsupported trainingDaysPerWeek: ${trainingDaysPerWeek}. Supported: 3, 4, 5.`,
-    )
-  }
-  if (dayIndex < 0 || dayIndex >= offsets.length) {
-    throw new InvalidInputError(
-      `dayIndex ${dayIndex} out of range for ${trainingDaysPerWeek}-day program.`,
+      `dayIndex ${dayIndex} out of range for ${dayOffsets.length}-day program.`,
     )
   }
   const weekOffset = (weekNumber - 1) * 7
-  const dayOffset = offsets[dayIndex]
+  const dayOffset = dayOffsets[dayIndex]
   const result = new Date(startDate)
   result.setDate(result.getDate() + weekOffset + dayOffset)
   return result

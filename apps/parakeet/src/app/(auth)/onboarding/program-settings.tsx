@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useState } from 'react'
-import { useQueryClient } from '@tanstack/react-query'
 import {
   Alert,
   Platform,
@@ -13,15 +12,13 @@ import {
   ActivityIndicator,
 } from 'react-native'
 import { router, useLocalSearchParams } from 'expo-router'
-import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker'
+import DateTimePicker from '@react-native-community/datetimepicker'
 
 import { captureException } from '@platform/utils/captureException'
 import { submitMaxes } from '@modules/program'
-import { createProgram } from '@modules/program'
 import { getProfile, updateProfile } from '@modules/profile'
 import { updateCycleConfig } from '@modules/cycle-tracking'
 import { useAuth } from '@modules/auth'
-import { qk } from '@platform/query'
 import type { BiologicalSex } from '@modules/profile'
 import { colors } from '../../../theme'
 
@@ -42,32 +39,10 @@ interface LiftsPayload {
   deadlift: LiftInput
 }
 
-// ── Helpers ──────────────────────────────────────────────────────────────────
-
-function nextMonday(): Date {
-  const d = new Date()
-  const day = d.getDay() // 0=Sun
-  const daysUntilMonday = day === 0 ? 1 : 8 - day
-  d.setDate(d.getDate() + daysUntilMonday)
-  d.setHours(0, 0, 0, 0)
-  return d
-}
-
-const WEEKDAY_NAMES = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
-const MONTH_NAMES = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
-
-function formatStartDate(date: Date): string {
-  const weekday = WEEKDAY_NAMES[date.getDay()]
-  const month = MONTH_NAMES[date.getMonth()]
-  const day = date.getDate()
-  return `${weekday} ${month} ${day}`
-}
-
 // ── Screen ───────────────────────────────────────────────────────────────────
 
 export default function ProgramSettingsScreen() {
   const { user } = useAuth()
-  const queryClient = useQueryClient()
   const params = useLocalSearchParams<{ lifts?: string; estimatedStart?: string }>()
   const usingEstimatedStart = params.estimatedStart === '1'
   const lifts = useMemo(() => {
@@ -81,8 +56,6 @@ export default function ProgramSettingsScreen() {
 
   const [totalWeeks, setTotalWeeks] = useState<TotalWeeks>(10)
   const [trainingDaysPerWeek, setTrainingDaysPerWeek] = useState<TrainingDays>(3)
-  const [startDate, setStartDate] = useState<Date>(nextMonday)
-  const [showPicker, setShowPicker] = useState(false)
   const [gender, setGender] = useState<BiologicalSex | null>(null)
   const [birthYear, setBirthYear] = useState('')
   // Cycle tracking onboarding (female only)
@@ -118,16 +91,6 @@ export default function ProgramSettingsScreen() {
       .catch(() => {})
       .finally(() => setProfileLoading(false))
   }, [])
-
-  function handleDateChange(_event: DateTimePickerEvent, selected?: Date) {
-    // On Android the picker closes itself; on iOS it stays open (inline)
-    if (Platform.OS === 'android') {
-      setShowPicker(false)
-    }
-    if (selected) {
-      setStartDate(selected)
-    }
-  }
 
   async function handleGenerate() {
     if (!gender) {
@@ -169,11 +132,12 @@ export default function ProgramSettingsScreen() {
       }
 
       await Promise.all(updates)
-      const program = await createProgram({ totalWeeks, trainingDaysPerWeek, startDate })
-      await queryClient.invalidateQueries({ queryKey: qk.program.active(user?.id) })
       router.replace({
         pathname: '/(auth)/onboarding/review',
-        params: { programId: program!.id },
+        params: {
+          totalWeeks: String(totalWeeks),
+          trainingDaysPerWeek: String(trainingDaysPerWeek),
+        },
       })
     } catch (err: unknown) {
       captureException(err)
@@ -255,25 +219,6 @@ export default function ProgramSettingsScreen() {
           )
         })}
       </View>
-
-      {/* Start date */}
-      <Text style={styles.label}>Start Date</Text>
-      <View style={styles.dateRow}>
-        <Text style={styles.dateText}>Starting: {formatStartDate(startDate)}</Text>
-        <TouchableOpacity onPress={() => setShowPicker((v) => !v)} activeOpacity={0.7}>
-          <Text style={styles.changeLink}>Change</Text>
-        </TouchableOpacity>
-      </View>
-
-      {showPicker && (
-        <DateTimePicker
-          value={startDate}
-          mode="date"
-          display={Platform.OS === 'ios' ? 'inline' : 'default'}
-          minimumDate={new Date()}
-          onChange={handleDateChange}
-        />
-      )}
 
       {/* Gender */}
       {!hasProfileGender && (

@@ -1,10 +1,13 @@
 import { InvalidInputError } from '../errors'
 import {
   calculateSessionDate,
+  computeDayOffsets,
+  DEFAULT_TRAINING_DAYS,
   getBlockNumber,
   getIntensityTypeForWeek,
   getWeekInBlock,
   isDeloadWeek,
+  nextDateForWeekday,
 } from './scheduler'
 
 describe('getBlockNumber', () => {
@@ -72,40 +75,76 @@ describe('getIntensityTypeForWeek — all 9 week/lift combinations', () => {
   })
 })
 
+describe('DEFAULT_TRAINING_DAYS', () => {
+  it('3-day defaults to Mon/Wed/Fri (1, 3, 5)', () => {
+    expect(DEFAULT_TRAINING_DAYS[3]).toEqual([1, 3, 5])
+  })
+
+  it('4-day defaults to Mon/Tue/Thu/Sat (1, 2, 4, 6)', () => {
+    expect(DEFAULT_TRAINING_DAYS[4]).toEqual([1, 2, 4, 6])
+  })
+})
+
+describe('computeDayOffsets', () => {
+  it('Mon/Wed/Fri → [0, 2, 4]', () => {
+    expect(computeDayOffsets([1, 3, 5])).toEqual([0, 2, 4])
+  })
+
+  it('Mon/Tue/Thu/Sat → [0, 1, 3, 5]', () => {
+    expect(computeDayOffsets([1, 2, 4, 6])).toEqual([0, 1, 3, 5])
+  })
+
+  it('sorts before computing offsets', () => {
+    expect(computeDayOffsets([5, 1, 3])).toEqual([0, 2, 4])
+  })
+})
+
+describe('nextDateForWeekday', () => {
+  it('returns a date in the future (never today)', () => {
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+    const result = nextDateForWeekday(today.getDay())
+    expect(result.getTime()).toBeGreaterThan(today.getTime())
+  })
+
+  it('returns a date on the requested weekday', () => {
+    // Monday = 1
+    const result = nextDateForWeekday(1)
+    expect(result.getDay()).toBe(1)
+  })
+})
+
 describe('calculateSessionDate', () => {
   const monday = new Date('2026-01-05') // a Monday
+  const monWedFriOffsets = [0, 2, 4]
 
-  it('week 1 day 1 (3-day program) = start date', () => {
-    const result = calculateSessionDate(monday, 1, 0, 3)
+  it('week 1 day 1 (3-day Mon/Wed/Fri) = start date', () => {
+    const result = calculateSessionDate(monday, 1, 0, monWedFriOffsets)
     expect(result.toISOString().slice(0, 10)).toBe('2026-01-05')
   })
 
-  it('week 1 day 2 (3-day program) = start + 2 days', () => {
-    const result = calculateSessionDate(monday, 1, 1, 3)
+  it('week 1 day 2 (3-day Mon/Wed/Fri) = start + 2 days (Wed)', () => {
+    const result = calculateSessionDate(monday, 1, 1, monWedFriOffsets)
     expect(result.toISOString().slice(0, 10)).toBe('2026-01-07')
   })
 
-  it('week 1 day 3 (3-day program) = start + 4 days', () => {
-    const result = calculateSessionDate(monday, 1, 2, 3)
+  it('week 1 day 3 (3-day Mon/Wed/Fri) = start + 4 days (Fri)', () => {
+    const result = calculateSessionDate(monday, 1, 2, monWedFriOffsets)
     expect(result.toISOString().slice(0, 10)).toBe('2026-01-09')
   })
 
-  it('week 2 day 3 (3-day program) = start + 11 days', () => {
-    const result = calculateSessionDate(monday, 2, 2, 3)
+  it('week 2 day 3 (3-day Mon/Wed/Fri) = start + 11 days', () => {
+    const result = calculateSessionDate(monday, 2, 2, monWedFriOffsets)
     expect(result.toISOString().slice(0, 10)).toBe('2026-01-16')
   })
 
   it('does not mutate the startDate', () => {
     const original = monday.toISOString()
-    calculateSessionDate(monday, 3, 0, 3)
+    calculateSessionDate(monday, 3, 0, monWedFriOffsets)
     expect(monday.toISOString()).toBe(original)
   })
 
-  it('throws for unsupported trainingDaysPerWeek', () => {
-    expect(() => calculateSessionDate(monday, 1, 0, 2)).toThrow(InvalidInputError)
-  })
-
   it('throws for out-of-range dayIndex', () => {
-    expect(() => calculateSessionDate(monday, 1, 3, 3)).toThrow(InvalidInputError)
+    expect(() => calculateSessionDate(monday, 1, 3, monWedFriOffsets)).toThrow(InvalidInputError)
   })
 })

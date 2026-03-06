@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Modal, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
+import { Modal, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { calculatePlates } from '@parakeet/training-engine'
 import { colors, spacing, typography } from '../../theme'
@@ -113,13 +113,9 @@ export function PlateCalculatorSheet({ visible, onClose, targetKg }: Props) {
             </View>
           </View>
 
-          <ScrollView
-            style={styles.scroll}
-            contentContainerStyle={styles.scrollContent}
-            showsVerticalScrollIndicator={false}
-          >
+          <View style={styles.content}>
             {renderContent()}
-          </ScrollView>
+          </View>
         </View>
       </View>
     </Modal>
@@ -206,10 +202,7 @@ const styles = StyleSheet.create({
   toggleBtnTextActive: {
     color: colors.primary,
   },
-  scroll: {
-    flex: 1,
-  },
-  scrollContent: {
+  content: {
     paddingHorizontal: spacing[4],
     paddingVertical: spacing[3],
   },
