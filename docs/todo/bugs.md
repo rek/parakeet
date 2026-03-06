@@ -10,9 +10,10 @@ Always start by understanding basic docs overview: `docs/README.md`
 
 At the end remember to update design and specs at end with work actually done. then review this whole process and factor in any learnings into generic docs when done too so we optimize for next time.
 
-## 4
+## 1
 
-history page should always show graphs. we don't need to acculmate 2+ weeks of sessions to show graphs?
+Expo AV has been deprecated and will be removed in SDK 54. Use the `expo-audio` and `expo-video` packages to replace the required functionality.
+
 
 ## 5
 
@@ -22,16 +23,6 @@ explain how it should work
 why two buttons after pressing review?
 (check now, which flashes, and generate now)
 
-## 7
-
-When I leave a workout in the middle, and I try to enter it from the workout tab it takes me to the soreness evaluation and removes all the ticks of completed lifts. The rest timer still runs.
-
-When resuming a workout from the today screen all is well.
-
-## 8
-
-In the history tab the graph in the middle of the screen doesn't update.
-i think this is the Weekly volume
 
 ## 9
 

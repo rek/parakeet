@@ -71,8 +71,15 @@ const LIFT_COLORS: Record<Lift, string> = {
 // ── Chart helpers ─────────────────────────────────────────────────────────────
 
 function buildVolumeChartData(weeklyData: WeeklyVolRow[]) {
-  const weeks = [...new Set(weeklyData.map((d) => d.weekStart))].sort();
+  let weeks = [...new Set(weeklyData.map((d) => d.weekStart))].sort();
   if (weeks.length < 1) return null;
+
+  // react-native-chart-kit requires 2+ data points to draw a line
+  if (weeks.length === 1) {
+    const prev = new Date(weeks[0]);
+    prev.setDate(prev.getDate() - 7);
+    weeks = [prev.toISOString().slice(0, 10), weeks[0]];
+  }
 
   const labels = weeks.map((w) => {
     const d = new Date(w);
@@ -301,9 +308,7 @@ export default function HistoryScreen() {
           </View>
         ) : (
           <Text style={[styles.emptyText, { marginBottom: spacing[8] }]}>
-            {volumeQuery.isLoading
-              ? 'Loading…'
-              : 'Complete 2+ weeks of sessions to see volume trends.'}
+            {volumeQuery.isLoading ? 'Loading…' : 'No volume data yet.'}
           </Text>
         )}
 
