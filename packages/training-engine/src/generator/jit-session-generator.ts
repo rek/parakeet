@@ -268,6 +268,12 @@ export function generateJITSession(input: JITInput): JITOutput {
     }
   }
 
+  // Note no-equipment disruption in rationale (aux boost handled in buildAuxiliaryWork)
+  const hasNoEquipmentDisruption = activeDisruptions.some((d) => d.disruption_type === 'equipment_unavailable')
+  if (hasNoEquipmentDisruption) {
+    rationale.push('No equipment available — auxiliary volume increased with bodyweight compensation exercises')
+  }
+
   // Step 7 — Final main lift sets
   let mainLiftSets: PlannedSet[]
 
@@ -304,6 +310,8 @@ export function generateJITSession(input: JITInput): JITOutput {
     worstSoreness,
     warnings,
     input.biologicalSex,
+    activeDisruptions,
+    primaryLift,
   )
 
   // Step 8 — Warmup
@@ -348,6 +356,63 @@ export function generateJITSession(input: JITInput): JITOutput {
 // Auxiliary work builder
 // ---------------------------------------------------------------------------
 
+// Per-exercise weight percentage of primary lift 1RM.
+// Default (not in map) is 0.675 — appropriate for compound variations close to the main lift.
+// Exercises that diverge significantly from the primary lift pattern need their own value:
+//   - Unilateral exercises: much lower absolute load per side
+//   - Spinal-loading technique lifts (Good Mornings): kept light for safety
+//   - OHP/JM Press: bench 1RM doesn't transfer well to vertical pressing
+//   - Isolation (curls): primary lift 1RM is irrelevant
+const AUX_WEIGHT_PCT: Record<string, number> = {
+  // Squat — unilateral / machine (lower absolute load)
+  'Bulgarian Split Squat': 0.40,
+  // Deadlift — spinal-loading technique lift (keep light)
+  'Good Mornings': 0.35,
+  // Bench — vertical press / tricep isolation (bench 1RM doesn't transfer)
+  'Overhead Press': 0.58,
+  'JM Press': 0.50,
+  // Biceps isolation (bench/squat/deadlift 1RM is irrelevant)
+  'Barbell Curl': 0.35,
+  'Dumbbell Curl': 0.30,
+  'Cable Curl': 0.30,
+  'EZ-Bar Curl': 0.33,
+}
+
+// Per-exercise rep targets. Overrides the sex-based fallback (10M / 12F).
+// Strength variations use lower reps; hypertrophy / isolation use higher reps.
+const AUX_REP_TARGETS: Record<string, number> = {
+  // Squat — strength
+  'Pause Squat': 4, 'Box Squat': 4, 'Front Squat': 4, 'High-Bar Squat': 4,
+  // Squat — hypertrophy
+  'Bulgarian Split Squat': 10, 'Leg Press': 12, 'Hack Squat': 10,
+  // Bench — strength
+  'Close-Grip Bench': 5, 'Floor Press': 5, 'Board Press': 4,
+  'Spoto Press': 5, '1 Inch Pause Bench': 4, 'JM Press': 6,
+  // Bench — hypertrophy
+  'Incline DB Press': 10, 'Dips': 10, 'Overhead Press': 8,
+  // Bench — biceps
+  'Barbell Curl': 10, 'Dumbbell Curl': 12, 'Cable Curl': 12, 'EZ-Bar Curl': 10,
+  // Deadlift — strength
+  'Block Pulls': 4, 'Deficit DL': 4, 'Sumo DL': 4, 'Rack Pulls': 4,
+  // Deadlift — hypertrophy / high-rep
+  'Romanian DL': 8, 'Stiff-Leg DL': 8, 'Good Mornings': 10, 'Hyperextensions': 15,
+}
+
+const BODYWEIGHT_POOLS: Record<Lift, { male: readonly string[]; female: readonly string[] }> = {
+  squat: {
+    male: ['Jump Squat', 'Pistol Squat', 'Bulgarian Split Squat', 'Box Jump'],
+    female: ['Sumo Squat', 'Curtsy Lunge', 'Hip Thrust', 'Glute Bridge'],
+  },
+  bench: {
+    male: ['Decline Push-ups', 'Diamond Push-ups', 'Archer Push-ups', 'Pike Push-ups'],
+    female: ['Standard Push-ups', 'Wide Push-ups', 'Pike Push-ups', 'Close-Grip Push-ups'],
+  },
+  deadlift: {
+    male: ['Nordic Hamstring Curl', 'Single-Leg RDL', 'Bodyweight Good Morning', 'Hyperextension'],
+    female: ['Hip Thrust', 'Single-Leg Glute Bridge', 'Donkey Kick', 'Glute Kickback'],
+  },
+}
+
 function buildAuxiliaryWork(
   exercises: [string, string],
   oneRmKg: number,
@@ -358,8 +423,12 @@ function buildAuxiliaryWork(
   worstSoreness: SorenessLevel,
   warnings: string[],
   biologicalSex?: 'female' | 'male',
+  activeDisruptions?: TrainingDisruption[],
+  primaryLift?: Lift,
 ): AuxiliaryWork[] {
-  return exercises.map((exercise) => {
+  const hasNoEquipment = activeDisruptions?.some((d) => d.disruption_type === 'equipment_unavailable') ?? false
+
+  const result = exercises.map((exercise) => {
     // Soreness 5: skip entirely
     if (worstSoreness >= 5) {
       return {
@@ -386,8 +455,9 @@ function buildAuxiliaryWork(
       }
     }
 
-    // Base: 3 sets × (10 male / 12 female) reps at 67.5% of 1RM, RPE 7.5
+    // Base: per-exercise rep target (falls back to 10 male / 12 female)
     const baseReps = biologicalSex === 'female' ? 12 : 10
+    const reps = AUX_REP_TARGETS[exercise] ?? baseReps
     let setCount = 3
     let intensityMult = 1.0
 
@@ -398,18 +468,46 @@ function buildAuxiliaryWork(
       setCount = Math.max(1, setCount - 1)
     }
 
-    const baseAuxWeight = roundToNearest(oneRmKg * 0.675)
+    // No-equipment disruption: add an extra set to compensate for reduced barbell work
+    if (hasNoEquipment) {
+      setCount += 1
+    }
+
+    const baseAuxWeight = roundToNearest(oneRmKg * (AUX_WEIGHT_PCT[exercise] ?? 0.675))
     const finalWeight = roundToNearest(baseAuxWeight * intensityMult)
 
     const sets: PlannedSet[] = Array.from({ length: setCount }, (_, i) => ({
       set_number: i + 1,
       weight_kg: finalWeight,
-      reps: baseReps,
+      reps,
       rpe_target: 7.5,
     }))
 
     return { exercise, sets, skipped: false }
   }) as AuxiliaryWork[]
+
+  // No-equipment disruption: append bodyweight compensation exercises
+  if (hasNoEquipment && primaryLift && worstSoreness < 5) {
+    const pool = BODYWEIGHT_POOLS[primaryLift]
+    const isFemale = biologicalSex === 'female'
+    const [bw1, bw2] = isFemale ? pool.female : pool.male
+    // Female pool uses moderate exercises (Hip Thrust, Push-ups) → 15 reps
+    // Male pool uses harder exercises (Nordic Curl, Pistol Squat) → 10 reps
+    const bwReps = isFemale ? 15 : 10
+    const bwSets = (name: string): AuxiliaryWork => ({
+      exercise: name,
+      sets: Array.from({ length: 3 }, (_, i) => ({
+        set_number: i + 1,
+        weight_kg: 0,
+        reps: bwReps,
+        rpe_target: 7.0,
+      })),
+      skipped: false,
+    })
+    result.push(bwSets(bw1), bwSets(bw2))
+  }
+
+  return result
 }
 
 // Re-export SorenessModifier so callers don't need a separate import

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -7,53 +7,57 @@ import {
   Text,
   TouchableOpacity,
   View,
-} from 'react-native'
-import { router, useLocalSearchParams } from 'expo-router'
-import { SafeAreaView } from 'react-native-safe-area-context'
-
-import { captureException } from '@platform/utils/captureException'
-import { getLatestSorenessCheckin, getSession, recordSorenessCheckin } from '@modules/session'
-import { runJITForSession } from '@modules/jit'
-import { useAuth } from '@modules/auth'
-import { colors } from '../../../theme'
-import { BackLink } from '../../../components/navigation/BackLink'
-import type { Lift } from '@parakeet/shared-types'
-import type { MuscleGroup } from '@parakeet/training-engine'
+} from 'react-native';
+import { useAuth } from '@modules/auth';
+import { runJITForSession } from '@modules/jit';
+import {
+  getLatestSorenessCheckin,
+  getSession,
+  recordSorenessCheckin,
+} from '@modules/session';
+import type { Lift } from '@parakeet/shared-types';
+import type { MuscleGroup } from '@parakeet/training-engine';
+import { captureException } from '@platform/utils/captureException';
 import {
   LIFT_PRIMARY_SORENESS_MUSCLES,
   MUSCLE_LABELS_FULL,
-} from '@shared/constants/training'
+} from '@shared/constants/training';
+import { router, useLocalSearchParams } from 'expo-router';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { BackLink } from '../../../components/navigation/BackLink';
+import { colors } from '../../../theme';
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
-type Session = Awaited<ReturnType<typeof getSession>>
+type Session = Awaited<ReturnType<typeof getSession>>;
 
 // ── Constants ────────────────────────────────────────────────────────────────
 
-const RATING_LEVELS = [1, 2, 3, 4, 5] as const
+const RATING_LEVELS = [1, 2, 3, 4, 5] as const;
 
 function capitalize(value: string): string {
-  if (!value) return value
-  return value.charAt(0).toUpperCase() + value.slice(1)
+  if (!value) return value;
+  return value.charAt(0).toUpperCase() + value.slice(1);
 }
 
 // ── Sub-component: single muscle rating row ───────────────────────────────
 
 interface MuscleRatingRowProps {
-  muscle: MuscleGroup
-  rating: number
-  onChange: (muscle: MuscleGroup, rating: number) => void
+  muscle: MuscleGroup;
+  rating: number;
+  onChange: (muscle: MuscleGroup, rating: number) => void;
 }
 
 function MuscleRatingRow({ muscle, rating, onChange }: MuscleRatingRowProps) {
-  const label = MUSCLE_LABELS_FULL[muscle] ?? capitalize(muscle.replace(/_/g, ' '))
+  const label =
+    MUSCLE_LABELS_FULL[muscle] ?? capitalize(muscle.replace(/_/g, ' '));
 
   return (
     <View style={styles.muscleRow}>
       <Text style={styles.muscleLabel}>{label}</Text>
       <View style={styles.ratingPills}>
         {RATING_LEVELS.map((level) => {
-          const isActive = rating === level
+          const isActive = rating === level;
           return (
             <TouchableOpacity
               key={level}
@@ -61,145 +65,156 @@ function MuscleRatingRow({ muscle, rating, onChange }: MuscleRatingRowProps) {
               onPress={() => onChange(muscle, level)}
               activeOpacity={0.7}
             >
-              <Text style={[styles.pillText, isActive && styles.pillTextActive]}>
+              <Text
+                style={[styles.pillText, isActive && styles.pillTextActive]}
+              >
                 {level}
               </Text>
             </TouchableOpacity>
-          )
+          );
         })}
       </View>
     </View>
-  )
+  );
 }
 
 // ── Screen ───────────────────────────────────────────────────────────────────
 
 export default function SorenessScreen() {
-  const { sessionId, autoGenerate } = useLocalSearchParams<{ sessionId: string; autoGenerate?: string }>()
-  const { user } = useAuth()
+  const { sessionId, autoGenerate } = useLocalSearchParams<{
+    sessionId: string;
+    autoGenerate?: string;
+  }>();
+  const { user } = useAuth();
 
-  const isAutoGenerate = autoGenerate === '1'
+  const isAutoGenerate = autoGenerate === '1';
 
-  const [session, setSession] = useState<Session>(null)
-  const [ratings, setRatings] = useState<Record<string, number>>({})
-  const [generating, setGenerating] = useState(false)
-  const autoGenerateTriggered = useRef(false)
+  const [session, setSession] = useState<Session>(null);
+  const [ratings, setRatings] = useState<Record<string, number>>({});
+  const [generating, setGenerating] = useState(false);
+  const autoGenerateTriggered = useRef(false);
 
   const muscles = session
     ? (LIFT_PRIMARY_SORENESS_MUSCLES[session.primary_lift as Lift] ?? [])
-    : []
+    : [];
 
   // ── Bootstrap ─────────────────────────────────────────────────────────────
 
   useEffect(() => {
-    if (!sessionId || !user) return
-    Promise.all([getSession(sessionId), getLatestSorenessCheckin(user.id)]).then(
-      ([data, latest]) => {
-        setSession(data)
-        if (data?.primary_lift) {
-          const muscles = LIFT_PRIMARY_SORENESS_MUSCLES[data.primary_lift as Lift] ?? []
-          const initialRatings: Record<string, number> = {}
-          for (const muscle of muscles) {
-            initialRatings[muscle] = latest?.[muscle] ?? 1
-          }
-          setRatings(initialRatings)
+    if (!sessionId || !user) return;
+    Promise.all([
+      getSession(sessionId),
+      getLatestSorenessCheckin(user.id),
+    ]).then(([data, latest]) => {
+      setSession(data);
+      if (data?.primary_lift) {
+        const muscles =
+          LIFT_PRIMARY_SORENESS_MUSCLES[data.primary_lift as Lift] ?? [];
+        const initialRatings: Record<string, number> = {};
+        for (const muscle of muscles) {
+          initialRatings[muscle] = latest?.[muscle] ?? 1;
         }
-      },
-    )
-  }, [sessionId, user])
+        setRatings(initialRatings);
+      }
+    });
+  }, [sessionId, user]);
 
   // ── Auto-generate: skip form and re-run JIT when resuming in-progress session ──
 
   useEffect(() => {
-    if (!isAutoGenerate || !session || !user || autoGenerateTriggered.current) return
+    if (!isAutoGenerate || !session || !user || autoGenerateTriggered.current)
+      return;
     // Wait for ratings to be populated (bootstrap sets them after session loads)
-    const expectedMuscles = LIFT_PRIMARY_SORENESS_MUSCLES[session.primary_lift as Lift] ?? []
-    if (expectedMuscles.length > 0 && Object.keys(ratings).length === 0) return
-    autoGenerateTriggered.current = true
-    void runJIT(ratings)
+    const expectedMuscles =
+      LIFT_PRIMARY_SORENESS_MUSCLES[session.primary_lift as Lift] ?? [];
+    if (expectedMuscles.length > 0 && Object.keys(ratings).length === 0) return;
+    autoGenerateTriggered.current = true;
+    void runJIT(ratings);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isAutoGenerate, session, user, ratings])
+  }, [isAutoGenerate, session, user, ratings]);
 
   // ── Helpers ───────────────────────────────────────────────────────────────
 
   function handleRatingChange(muscle: MuscleGroup, rating: number) {
-    setRatings((prev) => ({ ...prev, [muscle]: rating }))
+    setRatings((prev) => ({ ...prev, [muscle]: rating }));
   }
 
   function allFreshRatings(): Record<string, number> {
-    const fresh: Record<string, number> = {}
+    const fresh: Record<string, number> = {};
     for (const muscle of muscles) {
-      fresh[muscle] = 1
+      fresh[muscle] = 1;
     }
-    return fresh
+    return fresh;
   }
 
   async function runJIT(ratingsToUse: Record<string, number>) {
-    if (!session || !user) return
-    setGenerating(true)
+    if (!session || !user) return;
+    setGenerating(true);
     try {
-      const jitOutput = await runJITForSession(session, user.id, ratingsToUse)
+      const jitOutput = await runJITForSession(session, user.id, ratingsToUse);
       router.replace({
         pathname: '/session/[sessionId]',
         params: {
           sessionId: session.id,
           jitData: JSON.stringify({
-            mainLiftSets:         jitOutput.mainLiftSets,
-            warmupSets:           jitOutput.warmupSets,
-            auxiliaryWork:        jitOutput.auxiliaryWork,
-            restRecommendations:  jitOutput.restRecommendations,
-            llmRestSuggestion:    jitOutput.llmRestSuggestion ?? null,
+            mainLiftSets: jitOutput.mainLiftSets,
+            warmupSets: jitOutput.warmupSets,
+            auxiliaryWork: jitOutput.auxiliaryWork,
+            restRecommendations: jitOutput.restRecommendations,
+            llmRestSuggestion: jitOutput.llmRestSuggestion ?? null,
           }),
         },
-      })
+      });
     } catch (err: unknown) {
-      captureException(err)
+      captureException(err);
       Alert.alert(
         'Generation failed',
-        err instanceof Error ? err.message : 'Unable to generate workout — try again.',
-      )
-      setGenerating(false)
+        err instanceof Error
+          ? err.message
+          : 'Unable to generate workout — try again.'
+      );
+      setGenerating(false);
     }
   }
 
   async function handleGenerate() {
-    if (!session || !user) return
+    if (!session || !user) return;
     try {
       await recordSorenessCheckin({
         sessionId,
         userId: user.id,
         ratings,
         skipped: false,
-      })
+      });
     } catch (err) {
-      captureException(err)
+      captureException(err);
     }
-    await runJIT(ratings)
+    await runJIT(ratings);
   }
 
   async function handleSkip() {
-    if (!session || !user) return
-    const freshRatings = allFreshRatings()
-    setRatings(freshRatings)
+    if (!session || !user) return;
+    const freshRatings = allFreshRatings();
+    setRatings(freshRatings);
     try {
       await recordSorenessCheckin({
         sessionId,
         userId: user.id,
         ratings: freshRatings,
         skipped: true,
-      })
+      });
     } catch (err) {
-      captureException(err)
+      captureException(err);
     }
-    await runJIT(freshRatings)
+    await runJIT(freshRatings);
   }
 
   // ── Derived state ─────────────────────────────────────────────────────────
 
-  const hasSevereSoreness = Object.values(ratings).some((r) => r === 5)
+  const hasSevereSoreness = Object.values(ratings).some((r) => r === 5);
   const liftLabel = session
     ? `${capitalize(session.primary_lift)} — ${capitalize(session.intensity_type)}`
-    : 'Loading...'
+    : 'Loading...';
 
   // ── Render ────────────────────────────────────────────────────────────────
 
@@ -210,8 +225,14 @@ export default function SorenessScreen() {
         <View style={styles.headerBackSlot}>
           <BackLink onPress={() => router.back()} />
         </View>
-        <Text style={styles.headerTitle} numberOfLines={1}>{liftLabel}</Text>
-        <TouchableOpacity onPress={handleSkip} activeOpacity={0.7} style={styles.headerSkip}>
+        <Text style={styles.headerTitle} numberOfLines={1}>
+          {liftLabel}
+        </Text>
+        <TouchableOpacity
+          onPress={handleSkip}
+          activeOpacity={0.7}
+          style={styles.headerSkip}
+        >
           <Text style={styles.headerSkipText}>Skip</Text>
         </TouchableOpacity>
       </View>
@@ -234,7 +255,9 @@ export default function SorenessScreen() {
         ))}
 
         {/* Rating legend */}
-        <Text style={styles.legend}>1=Fresh  2=Mild  3=Moderate  4=High  5=Severe</Text>
+        <Text style={styles.legend}>
+          1=Fresh 2=Mild 3=Moderate 4=High 5=Severe
+        </Text>
 
         {/* Severe soreness warning */}
         {hasSevereSoreness && (
@@ -247,12 +270,17 @@ export default function SorenessScreen() {
 
         {/* Generate button */}
         <TouchableOpacity
-          style={[styles.generateButton, (!session || generating) && styles.generateButtonDisabled]}
+          style={[
+            styles.generateButton,
+            (!session || generating) && styles.generateButtonDisabled,
+          ]}
           onPress={handleGenerate}
           disabled={!session || generating}
           activeOpacity={0.8}
         >
-          <Text style={styles.generateButtonText}>Generate Today's Workout →</Text>
+          <Text style={styles.generateButtonText}>
+            Generate Today's Workout →
+          </Text>
         </TouchableOpacity>
       </ScrollView>
 
@@ -261,12 +289,14 @@ export default function SorenessScreen() {
         <View style={styles.generatingOverlay}>
           <View style={styles.generatingCard}>
             <ActivityIndicator size="large" color={colors.primary} />
-            <Text style={styles.generatingText}>Generating your workout...</Text>
+            <Text style={styles.generatingText}>
+              Generating your workout...
+            </Text>
           </View>
         </View>
       )}
     </SafeAreaView>
-  )
+  );
 }
 
 // ── Styles ───────────────────────────────────────────────────────────────────
@@ -408,4 +438,4 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: colors.text,
   },
-})
+});

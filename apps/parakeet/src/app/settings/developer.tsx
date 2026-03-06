@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react';
 import {
   ActivityIndicator,
   ScrollView,
@@ -6,27 +6,29 @@ import {
   Text,
   TouchableOpacity,
   View,
-} from 'react-native'
-import { SafeAreaView } from 'react-native-safe-area-context'
-import { router } from 'expo-router'
-import { useQuery, useQueryClient } from '@tanstack/react-query'
-
-import { getJITStrategyOverride, setJITStrategyOverride } from '@modules/settings'
-import type { JITStrategyOverride } from '@modules/settings'
+} from 'react-native';
 import {
   getDeveloperSuggestions,
+  getJITStrategyOverride,
+  setJITStrategyOverride,
   updateSuggestionStatus,
-} from '@modules/settings'
-import type { DeveloperSuggestion } from '@modules/settings'
-import { colors } from '../../theme'
-import { BackLink } from '../../components/navigation/BackLink'
+} from '@modules/settings';
+import type {
+  DeveloperSuggestion,
+  JITStrategyOverride,
+} from '@modules/settings';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { router } from 'expo-router';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { BackLink } from '../../components/navigation/BackLink';
+import { colors } from '../../theme';
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
 interface StrategyOption {
-  value: JITStrategyOverride
-  label: string
-  description: string
+  value: JITStrategyOverride;
+  label: string;
+  description: string;
 }
 
 const STRATEGY_OPTIONS: StrategyOption[] = [
@@ -50,34 +52,49 @@ const STRATEGY_OPTIONS: StrategyOption[] = [
     label: 'Hybrid',
     description: 'Runs both in parallel; shows comparison in session',
   },
-]
+];
 
 // ── Cycle Feedback sub-components ─────────────────────────────────────────────
 
 interface PriorityBadgeProps {
-  priority: DeveloperSuggestion['priority']
+  priority: DeveloperSuggestion['priority'];
 }
 
 function PriorityBadge({ priority }: PriorityBadgeProps) {
   const color =
-    priority === 'high' ? colors.danger : priority === 'medium' ? colors.warning : colors.textTertiary
+    priority === 'high'
+      ? colors.danger
+      : priority === 'medium'
+        ? colors.warning
+        : colors.textTertiary;
   const bg =
-    priority === 'high' ? colors.dangerMuted : priority === 'medium' ? colors.warningMuted : colors.bgMuted
+    priority === 'high'
+      ? colors.dangerMuted
+      : priority === 'medium'
+        ? colors.warningMuted
+        : colors.bgMuted;
   return (
     <View style={[styles.priorityBadge, { backgroundColor: bg }]}>
-      <Text style={[styles.priorityBadgeText, { color }]}>{priority.toUpperCase()}</Text>
+      <Text style={[styles.priorityBadgeText, { color }]}>
+        {priority.toUpperCase()}
+      </Text>
     </View>
-  )
+  );
 }
 
 interface SuggestionCardProps {
-  suggestion: DeveloperSuggestion
-  onAcknowledge: () => void
-  onDismiss: () => void
-  isUpdating: boolean
+  suggestion: DeveloperSuggestion;
+  onAcknowledge: () => void;
+  onDismiss: () => void;
+  isUpdating: boolean;
 }
 
-function SuggestionCard({ suggestion, onAcknowledge, onDismiss, isUpdating }: SuggestionCardProps) {
+function SuggestionCard({
+  suggestion,
+  onAcknowledge,
+  onDismiss,
+  isUpdating,
+}: SuggestionCardProps) {
   return (
     <View style={styles.suggestionCard}>
       <View style={styles.suggestionCardHeader}>
@@ -115,15 +132,15 @@ function SuggestionCard({ suggestion, onAcknowledge, onDismiss, isUpdating }: Su
         </View>
       )}
     </View>
-  )
+  );
 }
 
 // ── JIT Strategy sub-components ────────────────────────────────────────────────
 
 interface StrategyRowProps {
-  option: StrategyOption
-  selected: boolean
-  onPress: () => void
+  option: StrategyOption;
+  selected: boolean;
+  onPress: () => void;
 }
 
 function StrategyRow({ option, selected, onPress }: StrategyRowProps) {
@@ -137,67 +154,78 @@ function StrategyRow({ option, selected, onPress }: StrategyRowProps) {
         {selected && <View style={styles.strategyRadioInner} />}
       </View>
       <View style={styles.strategyText}>
-        <Text style={[styles.strategyLabel, selected && styles.strategyLabelSelected]}>
+        <Text
+          style={[
+            styles.strategyLabel,
+            selected && styles.strategyLabelSelected,
+          ]}
+        >
           {option.label}
         </Text>
         <Text style={styles.strategyDescription}>{option.description}</Text>
       </View>
     </TouchableOpacity>
-  )
+  );
 }
 
 // ── Screen ────────────────────────────────────────────────────────────────────
 
 export default function DeveloperSettingsScreen() {
-  const [strategy, setStrategy] = useState<JITStrategyOverride>('auto')
-  const [loading, setLoading] = useState(true)
-  const [saving, setSaving] = useState(false)
-  const [updatingId, setUpdatingId] = useState<string | null>(null)
-  const [showHistory, setShowHistory] = useState(false)
-  const queryClient = useQueryClient()
+  const [strategy, setStrategy] = useState<JITStrategyOverride>('auto');
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [updatingId, setUpdatingId] = useState<string | null>(null);
+  const [showHistory, setShowHistory] = useState(false);
+  const queryClient = useQueryClient();
 
   useEffect(() => {
     getJITStrategyOverride()
       .then(setStrategy)
-      .finally(() => setLoading(false))
-  }, [])
+      .finally(() => setLoading(false));
+  }, []);
 
   const handleSelect = useCallback(
     async (value: JITStrategyOverride) => {
-      if (saving || value === strategy) return
-      setSaving(true)
-      setStrategy(value)
+      if (saving || value === strategy) return;
+      setSaving(true);
+      setStrategy(value);
       try {
-        await setJITStrategyOverride(value)
+        await setJITStrategyOverride(value);
       } finally {
-        setSaving(false)
+        setSaving(false);
       }
     },
-    [saving, strategy],
-  )
+    [saving, strategy]
+  );
 
   const { data: suggestions = [] } = useQuery({
     queryKey: ['developer', 'suggestions'],
     queryFn: getDeveloperSuggestions,
     staleTime: 30 * 1000,
-  })
+  });
 
-  const unreviewed = suggestions.filter((s) => s.status === 'unreviewed')
-  const reviewed = suggestions.filter((s) => s.status !== 'unreviewed')
-  const acknowledgedCount = reviewed.filter((s) => s.status === 'acknowledged').length
-  const implementedCount = reviewed.filter((s) => s.status === 'implemented').length
-  const dismissedCount = reviewed.filter((s) => s.status === 'dismissed').length
+  const unreviewed = suggestions.filter((s) => s.status === 'unreviewed');
+  const reviewed = suggestions.filter((s) => s.status !== 'unreviewed');
+  const acknowledgedCount = reviewed.filter(
+    (s) => s.status === 'acknowledged'
+  ).length;
+  const implementedCount = reviewed.filter(
+    (s) => s.status === 'implemented'
+  ).length;
+  const dismissedCount = reviewed.filter(
+    (s) => s.status === 'dismissed'
+  ).length;
 
   async function handleUpdateSuggestion(
     id: string,
-    status: 'acknowledged' | 'implemented' | 'dismissed',
+    status: 'acknowledged' | 'implemented' | 'dismissed'
   ) {
-    setUpdatingId(id)
+    setUpdatingId(id);
     try {
-      await updateSuggestionStatus(id, status)
-      queryClient.invalidateQueries({ queryKey: ['developer', 'suggestions'] })
+      await updateSuggestionStatus(id, status);
+      queryClient.invalidateQueries({ queryKey: ['developer', 'suggestions'] });
     } finally {
-      setUpdatingId(null)
+      setUpdatingId(null);
     }
   }
 
@@ -242,9 +270,7 @@ export default function DeveloperSettingsScreen() {
           </View>
         )}
 
-        {saving && (
-          <Text style={styles.savingLabel}>Saving...</Text>
-        )}
+        {saving && <Text style={styles.savingLabel}>Saving...</Text>}
 
         <View style={styles.divider} />
 
@@ -253,12 +279,15 @@ export default function DeveloperSettingsScreen() {
           <Text style={styles.sectionHeader}>Cycle Feedback</Text>
           {unreviewed.length > 0 && (
             <View style={styles.unreviewedBadge}>
-              <Text style={styles.unreviewedBadgeText}>{unreviewed.length} unreviewed</Text>
+              <Text style={styles.unreviewedBadgeText}>
+                {unreviewed.length} unreviewed
+              </Text>
             </View>
           )}
         </View>
         <Text style={styles.sectionNote}>
-          Structural suggestions from cycle review analysis that require code changes.
+          Structural suggestions from cycle review analysis that require code
+          changes.
         </Text>
 
         {unreviewed.length === 0 && (
@@ -271,7 +300,9 @@ export default function DeveloperSettingsScreen() {
               key={s.id}
               suggestion={s}
               isUpdating={updatingId === s.id}
-              onAcknowledge={() => void handleUpdateSuggestion(s.id, 'acknowledged')}
+              onAcknowledge={() =>
+                void handleUpdateSuggestion(s.id, 'acknowledged')
+              }
               onDismiss={() => void handleUpdateSuggestion(s.id, 'dismissed')}
             />
           ))}
@@ -286,14 +317,20 @@ export default function DeveloperSettingsScreen() {
             >
               <Text style={styles.historySummaryText}>
                 {[
-                  acknowledgedCount > 0 ? `Acknowledged (${acknowledgedCount})` : null,
-                  implementedCount > 0 ? `Implemented (${implementedCount})` : null,
+                  acknowledgedCount > 0
+                    ? `Acknowledged (${acknowledgedCount})`
+                    : null,
+                  implementedCount > 0
+                    ? `Implemented (${implementedCount})`
+                    : null,
                   dismissedCount > 0 ? `Dismissed (${dismissedCount})` : null,
                 ]
                   .filter(Boolean)
                   .join('  ')}
               </Text>
-              <Text style={styles.historyChevron}>{showHistory ? '▲' : '▼'}</Text>
+              <Text style={styles.historyChevron}>
+                {showHistory ? '▲' : '▼'}
+              </Text>
             </TouchableOpacity>
 
             {showHistory &&
@@ -315,7 +352,7 @@ export default function DeveloperSettingsScreen() {
         )}
       </ScrollView>
     </SafeAreaView>
-  )
+  );
 }
 
 // ── Styles ────────────────────────────────────────────────────────────────────
@@ -335,7 +372,8 @@ const styles = StyleSheet.create({
   },
   header: {
     marginBottom: 8,
-  },  screenTitle: {
+  },
+  screenTitle: {
     fontSize: 28,
     fontWeight: '800',
     color: colors.text,
@@ -440,7 +478,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical: 3,
   },
-  unreviewedBadgeText: { fontSize: 11, fontWeight: '700', color: colors.danger },
+  unreviewedBadgeText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: colors.danger,
+  },
   emptyText: { fontSize: 14, color: colors.textTertiary, paddingVertical: 8 },
   suggestionList: { gap: 12 },
 
@@ -459,8 +501,17 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   suggestionDate: { fontSize: 11, color: colors.textTertiary },
-  suggestionDescription: { fontSize: 15, fontWeight: '600', color: colors.text, lineHeight: 20 },
-  suggestionRationale: { fontSize: 13, color: colors.textSecondary, lineHeight: 18 },
+  suggestionDescription: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: colors.text,
+    lineHeight: 20,
+  },
+  suggestionRationale: {
+    fontSize: 13,
+    color: colors.textSecondary,
+    lineHeight: 18,
+  },
   devNoteContainer: {
     backgroundColor: colors.primaryMuted,
     borderRadius: 8,
@@ -483,7 +534,11 @@ const styles = StyleSheet.create({
     paddingVertical: 9,
     alignItems: 'center',
   },
-  acknowledgeBtnText: { fontSize: 13, fontWeight: '600', color: colors.textInverse },
+  acknowledgeBtnText: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: colors.textInverse,
+  },
   dismissBtn: {
     flex: 1,
     borderWidth: 1,
@@ -493,7 +548,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: colors.bgSurface,
   },
-  dismissBtnText: { fontSize: 13, fontWeight: '500', color: colors.textSecondary },
+  dismissBtnText: {
+    fontSize: 13,
+    fontWeight: '500',
+    color: colors.textSecondary,
+  },
 
   // Priority badge
   priorityBadge: { borderRadius: 6, paddingHorizontal: 8, paddingVertical: 3 },
@@ -520,7 +579,11 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   historyCardHeader: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  historyStatus: { fontSize: 11, color: colors.textSecondary, textTransform: 'capitalize' },
+  historyStatus: {
+    fontSize: 11,
+    color: colors.textSecondary,
+    textTransform: 'capitalize',
+  },
   historyDescription: { fontSize: 13, color: colors.textSecondary },
   historyDate: { fontSize: 11, color: colors.textTertiary },
-})
+});

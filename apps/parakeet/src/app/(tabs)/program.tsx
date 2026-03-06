@@ -1,37 +1,41 @@
-import { router } from 'expo-router'
 import {
-  Alert,
   ActivityIndicator,
+  Alert,
   ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
-} from 'react-native'
-import { SafeAreaView } from 'react-native-safe-area-context'
-import { useMutation, useQueryClient } from '@tanstack/react-query'
-
-import { WeekRow } from '../../components/program/WeekRow'
-import { useActiveProgram } from '@modules/program'
-import { useAuth } from '@modules/auth'
-import { updateProgramStatus } from '@modules/program'
-import { qk } from '@platform/query'
-import { colors, spacing, typography } from '../../theme'
-import { groupByWeek, determineCurrentWeek } from '@modules/program'
-import type { ProgramSession } from '@modules/program'
+} from 'react-native';
+import { useAuth } from '@modules/auth';
+import {
+  determineCurrentWeek,
+  groupByWeek,
+  updateProgramStatus,
+  useActiveProgram,
+} from '@modules/program';
+import type { ProgramSession } from '@modules/program';
+import { qk } from '@platform/query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { router } from 'expo-router';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { WeekRow } from '../../components/program/WeekRow';
+import { colors, spacing, typography } from '../../theme';
 
 export default function ProgramScreen() {
-  const { data: program, isLoading } = useActiveProgram()
-  const { user, loading: authLoading } = useAuth()
-  const queryClient = useQueryClient()
+  const { data: program, isLoading } = useActiveProgram();
+  const { user, loading: authLoading } = useAuth();
+  const queryClient = useQueryClient();
 
   const abandon = useMutation({
-    mutationFn: (programId: string) => updateProgramStatus(programId, 'archived'),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: qk.program.active(user?.id) }),
-  })
+    mutationFn: (programId: string) =>
+      updateProgramStatus(programId, 'archived'),
+    onSuccess: () =>
+      queryClient.invalidateQueries({ queryKey: qk.program.active(user?.id) }),
+  });
 
   function confirmAbandon() {
-    if (!program) return
+    if (!program) return;
     Alert.alert(
       'Abandon Program',
       'This will archive your current program. You can start a new one anytime.',
@@ -42,8 +46,8 @@ export default function ProgramScreen() {
           style: 'destructive',
           onPress: () => abandon.mutate(program.id),
         },
-      ],
-    )
+      ]
+    );
   }
 
   if (isLoading || authLoading) {
@@ -51,7 +55,7 @@ export default function ProgramScreen() {
       <SafeAreaView style={styles.loadingContainer}>
         <ActivityIndicator size="large" color={colors.primary} />
       </SafeAreaView>
-    )
+    );
   }
 
   if (!program) {
@@ -71,27 +75,33 @@ export default function ProgramScreen() {
           </TouchableOpacity>
         </View>
       </SafeAreaView>
-    )
+    );
   }
 
-  const sessions: ProgramSession[] = program.sessions ?? []
-  const weekGroups = groupByWeek(sessions)
-  const currentWeek = determineCurrentWeek(sessions)
+  const sessions: ProgramSession[] = program.sessions ?? [];
+  const weekGroups = groupByWeek(sessions);
+  const currentWeek = determineCurrentWeek(sessions);
 
-  const currentWeekSessions = sessions.filter((s) => s.week_number === currentWeek)
-  const currentBlock = currentWeekSessions[0]?.block_number ?? 1
+  const currentWeekSessions = sessions.filter(
+    (s) => s.week_number === currentWeek
+  );
+  const currentBlock = currentWeekSessions[0]?.block_number ?? 1;
 
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
         <View style={styles.headerRow}>
           <Text style={styles.title}>My Program</Text>
-          <TouchableOpacity onPress={confirmAbandon} disabled={abandon.isPending}>
+          <TouchableOpacity
+            onPress={confirmAbandon}
+            disabled={abandon.isPending}
+          >
             <Text style={styles.abandonText}>Abandon</Text>
           </TouchableOpacity>
         </View>
         <Text style={styles.subtitle}>
-          Block {currentBlock} of 3 · Week {currentWeek} of {program.total_weeks}
+          Block {currentBlock} of 3 · Week {currentWeek} of{' '}
+          {program.total_weeks}
         </Text>
       </View>
 
@@ -110,7 +120,7 @@ export default function ProgramScreen() {
         ))}
       </ScrollView>
     </SafeAreaView>
-  )
+  );
 }
 
 const styles = StyleSheet.create({
@@ -182,4 +192,4 @@ const styles = StyleSheet.create({
     color: colors.textInverse,
     letterSpacing: typography.letterSpacing.wide,
   },
-})
+});

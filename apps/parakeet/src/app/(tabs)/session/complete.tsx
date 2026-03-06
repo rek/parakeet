@@ -8,21 +8,21 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import { detectAchievements } from '@modules/achievements';
+import { useAuth } from '@modules/auth';
+import { stampCyclePhaseOnSession } from '@modules/cycle-tracking';
+import { completeSession, isNetworkError } from '@modules/session';
 import type { PR } from '@parakeet/training-engine';
+import { useNetworkStatus } from '@platform/network';
+import { qk } from '@platform/query';
+import { useSessionStore } from '@platform/store/sessionStore';
+import { useSyncStore } from '@platform/store/syncStore';
+import { captureException } from '@platform/utils/captureException';
 import { useQueryClient } from '@tanstack/react-query';
 import { router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StarCard } from '../../../components/achievements/StarCard';
-import { detectAchievements } from '@modules/achievements';
-import { useAuth } from '@modules/auth';
-import { useNetworkStatus } from '@platform/network';
-import { stampCyclePhaseOnSession } from '@modules/cycle-tracking';
-import { completeSession, isNetworkError } from '@modules/session';
-import { qk } from '@platform/query';
-import { useSessionStore } from '@platform/store/sessionStore';
-import { useSyncStore } from '@platform/store/syncStore';
 import { colors } from '../../../theme';
-import { captureException } from '@platform/utils/captureException';
 
 // ── Constants ────────────────────────────────────────────────────────────────
 

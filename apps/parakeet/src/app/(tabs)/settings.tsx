@@ -1,16 +1,22 @@
-import { ScrollView, StyleSheet, Text, TextStyle, TouchableOpacity, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { router } from 'expo-router';
-import { useQuery } from '@tanstack/react-query';
-
+import {
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextStyle,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 import { useAuth } from '@modules/auth';
 import { getProfile } from '@modules/profile';
-import { qk } from '@platform/query';
 import {
   getPendingFormulaSuggestionCount,
   getUnreviewedDeveloperSuggestionCount,
 } from '@modules/settings';
-import { colors, spacing, radii, typography } from '../../theme';
+import { qk } from '@platform/query';
+import { useQuery } from '@tanstack/react-query';
+import { router } from 'expo-router';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { colors, radii, spacing, typography } from '../../theme';
 
 // ── Sub-components ────────────────────────────────────────────────────────────
 
@@ -37,7 +43,11 @@ interface RowProps {
 function Row({ label, labelStyle, onPress, right }: RowProps) {
   if (onPress) {
     return (
-      <TouchableOpacity style={styles.row} onPress={onPress} activeOpacity={0.6}>
+      <TouchableOpacity
+        style={styles.row}
+        onPress={onPress}
+        activeOpacity={0.6}
+      >
         <Text style={[styles.rowLabel, labelStyle]}>{label}</Text>
         {right ?? <Text style={styles.chevron}>›</Text>}
       </TouchableOpacity>
@@ -88,7 +98,8 @@ export default function SettingsScreen() {
 
   const displayName = profile?.display_name ?? '—';
 
-  const bodyweightKg = profile?.bodyweight_kg != null ? `${profile.bodyweight_kg} kg` : '—';
+  const bodyweightKg =
+    profile?.bodyweight_kg != null ? `${profile.bodyweight_kg} kg` : '—';
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -116,19 +127,27 @@ export default function SettingsScreen() {
         <View style={styles.inlineInfoWrap}>
           <View style={styles.inlineInfoRow}>
             <Text style={styles.inlineInfoLabel}>Name</Text>
-            <Text style={styles.inlineInfoValue}>{isProfileLoading ? 'Loading…' : displayName}</Text>
+            <Text style={styles.inlineInfoValue}>
+              {isProfileLoading ? 'Loading…' : displayName}
+            </Text>
           </View>
           <View style={styles.inlineInfoRow}>
             <Text style={styles.inlineInfoLabel}>Gender</Text>
-            <Text style={styles.inlineInfoValue}>{isProfileLoading ? 'Loading…' : sexLabel}</Text>
+            <Text style={styles.inlineInfoValue}>
+              {isProfileLoading ? 'Loading…' : sexLabel}
+            </Text>
           </View>
           <View style={styles.inlineInfoRow}>
             <Text style={styles.inlineInfoLabel}>Birth year</Text>
-            <Text style={styles.inlineInfoValue}>{isProfileLoading ? 'Loading…' : birthYear}</Text>
+            <Text style={styles.inlineInfoValue}>
+              {isProfileLoading ? 'Loading…' : birthYear}
+            </Text>
           </View>
           <View style={styles.inlineInfoRow}>
             <Text style={styles.inlineInfoLabel}>Bodyweight</Text>
-            <Text style={styles.inlineInfoValue}>{isProfileLoading ? 'Loading…' : bodyweightKg}</Text>
+            <Text style={styles.inlineInfoValue}>
+              {isProfileLoading ? 'Loading…' : bodyweightKg}
+            </Text>
           </View>
         </View>
 
@@ -159,10 +178,7 @@ export default function SettingsScreen() {
             </View>
           }
         />
-        <Row
-          label="Volume & Recovery"
-          onPress={() => router.push('/volume')}
-        />
+        <Row label="Volume & Recovery" onPress={() => router.push('/volume')} />
 
         <View style={styles.divider} />
 
@@ -216,10 +232,7 @@ export default function SettingsScreen() {
 
         {/* App section */}
         <SectionHeader label="App" />
-        <Row
-          label="Version 0.1.0"
-          labelStyle={styles.versionLabel}
-        />
+        <Row label="Version 0.1.0" labelStyle={styles.versionLabel} />
       </ScrollView>
     </SafeAreaView>
   );

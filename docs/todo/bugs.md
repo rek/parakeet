@@ -8,8 +8,7 @@ When possible, solve in red/green TDD style.
 
 Always start by understanding basic docs overview: `docs/README.md`
 
-At the end remember to update design and specs at end with work actually done. then review this whole process and factor in any learnings into generic docs when done too so we optimize for next time.
-
+At the end remember to update design and specs at end with work actually done. then review this whole process and factor in any learnings into generic docs when done too so we optimize for next time. This is also referring to the AI Agent process and which prompts/scripts (readme files) we have with instructions.
 
 ## 5
 
@@ -18,9 +17,4 @@ its a bit weird, something seems broken on it
 explain how it should work
 why two buttons after pressing review?
 (check now, which flashes, and generate now)
-
-
-## 9
-
-After doing a complete week of workouts the volume tab says 0 for biceps
-
+(also it never seems to generate a program review...)

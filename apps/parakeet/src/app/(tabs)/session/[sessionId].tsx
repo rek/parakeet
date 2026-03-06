@@ -151,7 +151,9 @@ export default function SessionScreen() {
 
     // If no jitData param, try recovering from the store's cached JIT (resume path
     // when navigating from program tab without cached JIT in route params)
-    const effectiveJitData = jitData ?? (currentStoreSessionId === sessionId ? storeState.cachedJitData : null);
+    const effectiveJitData =
+      jitData ??
+      (currentStoreSessionId === sessionId ? storeState.cachedJitData : null);
 
     if (!effectiveJitData) {
       router.back();

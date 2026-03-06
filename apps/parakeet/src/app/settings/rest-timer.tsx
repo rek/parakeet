@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
   ScrollView,
@@ -7,79 +7,94 @@ import {
   Text,
   TouchableOpacity,
   View,
-} from 'react-native'
-import { SafeAreaView } from 'react-native-safe-area-context'
-import { router } from 'expo-router'
-import { useQuery, useQueryClient } from '@tanstack/react-query'
-
-import type { IntensityType } from '@parakeet/shared-types'
-import { getUserRestOverrides, setRestOverride, resetRestOverrides } from '@modules/settings'
-import { getRestTimerPrefs, setRestTimerPrefs } from '@modules/settings'
-import type { RestTimerPrefs } from '@modules/settings'
-import { useAuth } from '@modules/auth'
-import { colors } from '../../theme'
-import { BackLink } from '../../components/navigation/BackLink'
+} from 'react-native';
+import { useAuth } from '@modules/auth';
+import {
+  getRestTimerPrefs,
+  getUserRestOverrides,
+  resetRestOverrides,
+  setRestOverride,
+  setRestTimerPrefs,
+} from '@modules/settings';
+import type { RestTimerPrefs } from '@modules/settings';
+import type { IntensityType } from '@parakeet/shared-types';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { router } from 'expo-router';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { BackLink } from '../../components/navigation/BackLink';
+import { colors } from '../../theme';
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
 // Intensity-type duration rows in display order
-const INTENSITY_ROWS: { type: IntensityType; label: string; defaultSeconds: number }[] = [
-  { type: 'heavy',     label: 'Heavy sets',     defaultSeconds: 180 },
-  { type: 'explosive', label: 'Explosive sets',  defaultSeconds: 150 },
-  { type: 'rep',       label: 'Rep sets',        defaultSeconds: 120 },
-  { type: 'deload',    label: 'Deload sets',     defaultSeconds:  90 },
-]
+const INTENSITY_ROWS: {
+  type: IntensityType;
+  label: string;
+  defaultSeconds: number;
+}[] = [
+  { type: 'heavy', label: 'Heavy sets', defaultSeconds: 180 },
+  { type: 'explosive', label: 'Explosive sets', defaultSeconds: 150 },
+  { type: 'rep', label: 'Rep sets', defaultSeconds: 120 },
+  { type: 'deload', label: 'Deload sets', defaultSeconds: 90 },
+];
 
 // Auxiliary row shown in its own section
-const AUXILIARY_DEFAULT_SECONDS = 90
+const AUXILIARY_DEFAULT_SECONDS = 90;
 
 // Picker options
-const MINUTE_OPTIONS = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
-const SECOND_OPTIONS = [0, 15, 30, 45]
+const MINUTE_OPTIONS = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
+const SECOND_OPTIONS = [0, 15, 30, 45];
 
-const MIN_SECONDS = 30
-const MAX_SECONDS = 600
+const MIN_SECONDS = 30;
+const MAX_SECONDS = 600;
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 function formatDuration(totalSeconds: number): string {
-  const m = Math.floor(totalSeconds / 60)
-  const s = totalSeconds % 60
-  if (s === 0) return `${m} min`
-  return `${m} min ${s} s`
+  const m = Math.floor(totalSeconds / 60);
+  const s = totalSeconds % 60;
+  if (s === 0) return `${m} min`;
+  return `${m} min ${s} s`;
 }
 
 function clampSeconds(minutes: number, seconds: number): number {
-  return Math.min(MAX_SECONDS, Math.max(MIN_SECONDS, minutes * 60 + seconds))
+  return Math.min(MAX_SECONDS, Math.max(MIN_SECONDS, minutes * 60 + seconds));
 }
 
 // ── Duration row with inline picker ──────────────────────────────────────────
 
 interface DurationRowProps {
-  label: string
-  totalSeconds: number
-  isOpen: boolean
-  isSaving: boolean
-  onToggle: () => void
-  onConfirm: (seconds: number) => void
+  label: string;
+  totalSeconds: number;
+  isOpen: boolean;
+  isSaving: boolean;
+  onToggle: () => void;
+  onConfirm: (seconds: number) => void;
 }
 
-function DurationRow({ label, totalSeconds, isOpen, isSaving, onToggle, onConfirm }: DurationRowProps) {
-  const currentMinutes = Math.floor(totalSeconds / 60)
-  const currentSeconds = totalSeconds % 60
+function DurationRow({
+  label,
+  totalSeconds,
+  isOpen,
+  isSaving,
+  onToggle,
+  onConfirm,
+}: DurationRowProps) {
+  const currentMinutes = Math.floor(totalSeconds / 60);
+  const currentSeconds = totalSeconds % 60;
 
-  const [draftMinutes, setDraftMinutes] = useState(currentMinutes)
-  const [draftSeconds, setDraftSeconds] = useState(currentSeconds)
+  const [draftMinutes, setDraftMinutes] = useState(currentMinutes);
+  const [draftSeconds, setDraftSeconds] = useState(currentSeconds);
 
   // Sync draft when the row opens (value may have changed elsewhere)
   useEffect(() => {
     if (isOpen) {
-      setDraftMinutes(Math.floor(totalSeconds / 60))
-      setDraftSeconds(totalSeconds % 60)
+      setDraftMinutes(Math.floor(totalSeconds / 60));
+      setDraftSeconds(totalSeconds % 60);
     }
-  }, [isOpen, totalSeconds])
+  }, [isOpen, totalSeconds]);
 
-  const draftTotal = clampSeconds(draftMinutes, draftSeconds)
+  const draftTotal = clampSeconds(draftMinutes, draftSeconds);
 
   return (
     <View>
@@ -90,10 +105,13 @@ function DurationRow({ label, totalSeconds, isOpen, isSaving, onToggle, onConfir
       >
         <Text style={styles.durationRowLabel}>{label}</Text>
         <View style={styles.durationRowRight}>
-          {isSaving
-            ? <ActivityIndicator size="small" color={colors.primary} />
-            : <Text style={styles.durationValue}>{formatDuration(totalSeconds)}</Text>
-          }
+          {isSaving ? (
+            <ActivityIndicator size="small" color={colors.primary} />
+          ) : (
+            <Text style={styles.durationValue}>
+              {formatDuration(totalSeconds)}
+            </Text>
+          )}
           <Text style={[styles.chevron, isOpen && styles.chevronOpen]}>›</Text>
         </View>
       </TouchableOpacity>
@@ -111,11 +129,19 @@ function DurationRow({ label, totalSeconds, isOpen, isSaving, onToggle, onConfir
               {MINUTE_OPTIONS.map((m) => (
                 <TouchableOpacity
                   key={m}
-                  style={[styles.pickerItem, draftMinutes === m && styles.pickerItemSelected]}
+                  style={[
+                    styles.pickerItem,
+                    draftMinutes === m && styles.pickerItemSelected,
+                  ]}
                   onPress={() => setDraftMinutes(m)}
                   activeOpacity={0.7}
                 >
-                  <Text style={[styles.pickerItemText, draftMinutes === m && styles.pickerItemTextSelected]}>
+                  <Text
+                    style={[
+                      styles.pickerItemText,
+                      draftMinutes === m && styles.pickerItemTextSelected,
+                    ]}
+                  >
                     {m}
                   </Text>
                 </TouchableOpacity>
@@ -134,11 +160,19 @@ function DurationRow({ label, totalSeconds, isOpen, isSaving, onToggle, onConfir
               {SECOND_OPTIONS.map((s) => (
                 <TouchableOpacity
                   key={s}
-                  style={[styles.pickerItem, draftSeconds === s && styles.pickerItemSelected]}
+                  style={[
+                    styles.pickerItem,
+                    draftSeconds === s && styles.pickerItemSelected,
+                  ]}
                   onPress={() => setDraftSeconds(s)}
                   activeOpacity={0.7}
                 >
-                  <Text style={[styles.pickerItemText, draftSeconds === s && styles.pickerItemTextSelected]}>
+                  <Text
+                    style={[
+                      styles.pickerItemText,
+                      draftSeconds === s && styles.pickerItemTextSelected,
+                    ]}
+                  >
                     {String(s).padStart(2, '0')}
                   </Text>
                 </TouchableOpacity>
@@ -148,9 +182,13 @@ function DurationRow({ label, totalSeconds, isOpen, isSaving, onToggle, onConfir
 
           {/* Confirm */}
           <View style={styles.pickerConfirmColumn}>
-            <Text style={styles.pickerPreviewText}>{formatDuration(draftTotal)}</Text>
+            <Text style={styles.pickerPreviewText}>
+              {formatDuration(draftTotal)}
+            </Text>
             {draftTotal < MIN_SECONDS && (
-              <Text style={styles.pickerWarning}>min {formatDuration(MIN_SECONDS)}</Text>
+              <Text style={styles.pickerWarning}>
+                min {formatDuration(MIN_SECONDS)}
+              </Text>
             )}
             <TouchableOpacity
               style={styles.confirmButton}
@@ -163,19 +201,19 @@ function DurationRow({ label, totalSeconds, isOpen, isSaving, onToggle, onConfir
         </View>
       )}
     </View>
-  )
+  );
 }
 
 // ── Preview card ──────────────────────────────────────────────────────────────
 
 interface PreviewCardProps {
-  heavySeconds: number
+  heavySeconds: number;
 }
 
 function PreviewCard({ heavySeconds }: PreviewCardProps) {
-  const minutes = Math.floor(heavySeconds / 60)
-  const seconds = heavySeconds % 60
-  const timeStr = `${minutes}:${String(seconds).padStart(2, '0')}`
+  const minutes = Math.floor(heavySeconds / 60);
+  const seconds = heavySeconds % 60;
+  const timeStr = `${minutes}:${String(seconds).padStart(2, '0')}`;
 
   return (
     <View style={styles.preview}>
@@ -186,104 +224,113 @@ function PreviewCard({ heavySeconds }: PreviewCardProps) {
         {'  after each set'}
       </Text>
     </View>
-  )
+  );
 }
 
 // ── Screen ────────────────────────────────────────────────────────────────────
 
 export default function RestTimerSettingsScreen() {
-  const { user } = useAuth()
-  const queryClient = useQueryClient()
+  const { user } = useAuth();
+  const queryClient = useQueryClient();
 
   // Map intensityType → seconds (null = use default)
-  const [durations, setDurations] = useState<Partial<Record<IntensityType | 'auxiliary', number>>>({})
+  const [durations, setDurations] = useState<
+    Partial<Record<IntensityType | 'auxiliary', number>>
+  >({});
   // Which row's picker is open (null = none)
-  const [openRow, setOpenRow] = useState<IntensityType | 'auxiliary' | null>(null)
+  const [openRow, setOpenRow] = useState<IntensityType | 'auxiliary' | null>(
+    null
+  );
   // Per-row saving indicator
-  const [saving, setSaving] = useState<Partial<Record<IntensityType | 'auxiliary', boolean>>>({})
+  const [saving, setSaving] = useState<
+    Partial<Record<IntensityType | 'auxiliary', boolean>>
+  >({});
   // Alert/pref toggles
   const [prefs, setPrefs] = useState<RestTimerPrefs>({
     audioAlert: true,
     hapticAlert: true,
     llmSuggestions: true,
     backgroundRestNotification: false,
-  })
-  const [resetting, setResetting] = useState(false)
+  });
+  const [resetting, setResetting] = useState(false);
 
   // Load existing overrides from Supabase
   const { data: overridesData, isLoading } = useQuery({
     queryKey: ['rest', 'overrides', user?.id],
     queryFn: () => getUserRestOverrides(user!.id),
     enabled: !!user?.id,
-  })
+  });
 
   useEffect(() => {
-    if (!overridesData) return
-    const map: Partial<Record<IntensityType | 'auxiliary', number>> = {}
+    if (!overridesData) return;
+    const map: Partial<Record<IntensityType | 'auxiliary', number>> = {};
     for (const row of overridesData) {
       if (row.lift == null && row.intensityType != null) {
-        map[row.intensityType] = row.restSeconds
+        map[row.intensityType] = row.restSeconds;
       }
       // auxiliary: lift=null, intensityType=null catch-all not used here;
       // the spec writes lift=NULL rows keyed by intensityType only.
       // For auxiliary section we look for a row with no intensityType and no lift.
       if (row.lift == null && row.intensityType == null) {
-        map.auxiliary = row.restSeconds
+        map.auxiliary = row.restSeconds;
       }
     }
-    setDurations(map)
-  }, [overridesData])
+    setDurations(map);
+  }, [overridesData]);
 
   // Load device-local prefs
   useEffect(() => {
-    getRestTimerPrefs().then(setPrefs)
-  }, [])
+    getRestTimerPrefs().then(setPrefs);
+  }, []);
 
   function getSeconds(key: IntensityType | 'auxiliary'): number {
-    if (durations[key] != null) return durations[key] as number
-    if (key === 'auxiliary') return AUXILIARY_DEFAULT_SECONDS
-    const row = INTENSITY_ROWS.find((r) => r.type === key)
-    return row?.defaultSeconds ?? 120
+    if (durations[key] != null) return durations[key] as number;
+    if (key === 'auxiliary') return AUXILIARY_DEFAULT_SECONDS;
+    const row = INTENSITY_ROWS.find((r) => r.type === key);
+    return row?.defaultSeconds ?? 120;
   }
 
-  async function handleConfirm(key: IntensityType | 'auxiliary', seconds: number) {
-    if (!user) return
-    setSaving((prev) => ({ ...prev, [key]: true }))
-    setOpenRow(null)
+  async function handleConfirm(
+    key: IntensityType | 'auxiliary',
+    seconds: number
+  ) {
+    if (!user) return;
+    setSaving((prev) => ({ ...prev, [key]: true }));
+    setOpenRow(null);
     try {
       if (key === 'auxiliary') {
         // catch-all row: no lift, no intensityType
-        await setRestOverride(user.id, seconds, undefined, undefined)
+        await setRestOverride(user.id, seconds, undefined, undefined);
       } else {
-        await setRestOverride(user.id, seconds, undefined, key)
+        await setRestOverride(user.id, seconds, undefined, key);
       }
-      setDurations((prev) => ({ ...prev, [key]: seconds }))
-      queryClient.invalidateQueries({ queryKey: ['rest', 'overrides'] })
+      setDurations((prev) => ({ ...prev, [key]: seconds }));
+      queryClient.invalidateQueries({ queryKey: ['rest', 'overrides'] });
     } finally {
-      setSaving((prev) => ({ ...prev, [key]: false }))
+      setSaving((prev) => ({ ...prev, [key]: false }));
     }
   }
 
   async function handleReset() {
-    if (!user) return
-    setResetting(true)
+    if (!user) return;
+    setResetting(true);
     try {
-      await resetRestOverrides(user.id)
-      setDurations({})
-      queryClient.invalidateQueries({ queryKey: ['rest', 'overrides'] })
+      await resetRestOverrides(user.id);
+      setDurations({});
+      queryClient.invalidateQueries({ queryKey: ['rest', 'overrides'] });
     } finally {
-      setResetting(false)
+      setResetting(false);
     }
   }
 
   async function handleTogglePref(key: keyof RestTimerPrefs, value: boolean) {
-    const next = { ...prefs, [key]: value }
-    setPrefs(next)
-    await setRestTimerPrefs({ [key]: value })
+    const next = { ...prefs, [key]: value };
+    setPrefs(next);
+    await setRestTimerPrefs({ [key]: value });
   }
 
   function toggleRow(key: IntensityType | 'auxiliary') {
-    setOpenRow((prev) => (prev === key ? null : key))
+    setOpenRow((prev) => (prev === key ? null : key));
   }
 
   return (
@@ -317,25 +364,33 @@ export default function RestTimerSettingsScreen() {
                   onToggle={() => toggleRow(row.type)}
                   onConfirm={(s) => handleConfirm(row.type, s)}
                 />
-                {i < INTENSITY_ROWS.length - 1 && <View style={styles.separator} />}
+                {i < INTENSITY_ROWS.length - 1 && (
+                  <View style={styles.separator} />
+                )}
               </View>
             ))}
           </View>
 
           <TouchableOpacity
-            style={[styles.resetButton, resetting && styles.resetButtonDisabled]}
+            style={[
+              styles.resetButton,
+              resetting && styles.resetButtonDisabled,
+            ]}
             onPress={handleReset}
             disabled={resetting}
             activeOpacity={0.8}
           >
-            {resetting
-              ? <ActivityIndicator size="small" color={colors.textSecondary} />
-              : <Text style={styles.resetButtonText}>Reset to defaults</Text>
-            }
+            {resetting ? (
+              <ActivityIndicator size="small" color={colors.textSecondary} />
+            ) : (
+              <Text style={styles.resetButtonText}>Reset to defaults</Text>
+            )}
           </TouchableOpacity>
 
           {/* ── Auxiliary section ──────────────────────────────────────────── */}
-          <Text style={[styles.sectionHeader, styles.sectionHeaderSpaced]}>Auxiliary</Text>
+          <Text style={[styles.sectionHeader, styles.sectionHeaderSpaced]}>
+            Auxiliary
+          </Text>
           <View style={styles.card}>
             <DurationRow
               label="Auxiliary sets"
@@ -348,7 +403,9 @@ export default function RestTimerSettingsScreen() {
           </View>
 
           {/* ── Alerts section ─────────────────────────────────────────────── */}
-          <Text style={[styles.sectionHeader, styles.sectionHeaderSpaced]}>Alerts</Text>
+          <Text style={[styles.sectionHeader, styles.sectionHeaderSpaced]}>
+            Alerts
+          </Text>
           <View style={styles.card}>
             <View style={styles.toggleRow}>
               <Text style={styles.toggleLabel}>Audio alert at 0:00</Text>
@@ -377,19 +434,27 @@ export default function RestTimerSettingsScreen() {
                   trackColor={{ true: colors.primary }}
                 />
               </View>
-              <Text style={styles.toggleSubtext}>Requires AI workout generation</Text>
+              <Text style={styles.toggleSubtext}>
+                Requires AI workout generation
+              </Text>
             </View>
             <View style={styles.separator} />
             <View>
               <View style={styles.toggleRow}>
-                <Text style={styles.toggleLabel}>Background rest notification</Text>
+                <Text style={styles.toggleLabel}>
+                  Background rest notification
+                </Text>
                 <Switch
                   value={prefs.backgroundRestNotification}
-                  onValueChange={(v) => handleTogglePref('backgroundRestNotification', v)}
+                  onValueChange={(v) =>
+                    handleTogglePref('backgroundRestNotification', v)
+                  }
                   trackColor={{ true: colors.primary }}
                 />
               </View>
-              <Text style={styles.toggleSubtext}>Notifies when rest ends while app is backgrounded</Text>
+              <Text style={styles.toggleSubtext}>
+                Notifies when rest ends while app is backgrounded
+              </Text>
             </View>
           </View>
 
@@ -398,7 +463,7 @@ export default function RestTimerSettingsScreen() {
         </ScrollView>
       )}
     </SafeAreaView>
-  )
+  );
 }
 
 // ── Styles ────────────────────────────────────────────────────────────────────
@@ -451,7 +516,12 @@ const styles = StyleSheet.create({
   durationRowLabel: { flex: 1, fontSize: 16, color: colors.text },
   durationRowRight: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   durationValue: { fontSize: 15, color: colors.primary, fontWeight: '500' },
-  chevron: { fontSize: 20, color: colors.textTertiary, lineHeight: 22, transform: [{ rotate: '90deg' }] },
+  chevron: {
+    fontSize: 20,
+    color: colors.textTertiary,
+    lineHeight: 22,
+    transform: [{ rotate: '90deg' }],
+  },
   chevronOpen: { transform: [{ rotate: '270deg' }] },
 
   // Inline picker
@@ -466,7 +536,12 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
   },
   pickerColumn: { alignItems: 'center', gap: 4 },
-  pickerColumnLabel: { fontSize: 11, fontWeight: '600', color: colors.textTertiary, textTransform: 'uppercase' },
+  pickerColumnLabel: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: colors.textTertiary,
+    textTransform: 'uppercase',
+  },
   pickerScroll: { maxHeight: 152 },
   pickerScrollContent: { gap: 2 },
   pickerItem: {
@@ -475,7 +550,12 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   pickerItemSelected: { backgroundColor: colors.primaryMuted },
-  pickerItemText: { fontSize: 17, fontWeight: '500', color: colors.textSecondary, textAlign: 'center' },
+  pickerItemText: {
+    fontSize: 17,
+    fontWeight: '500',
+    color: colors.textSecondary,
+    textAlign: 'center',
+  },
   pickerItemTextSelected: { color: colors.primary, fontWeight: '700' },
 
   pickerConfirmColumn: {
@@ -493,7 +573,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     paddingVertical: 9,
   },
-  confirmButtonText: { fontSize: 14, fontWeight: '600', color: colors.textInverse },
+  confirmButtonText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: colors.textInverse,
+  },
 
   // Reset button
   resetButton: {
@@ -508,7 +592,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   resetButtonDisabled: { opacity: 0.4 },
-  resetButtonText: { fontSize: 13, color: colors.textSecondary, fontWeight: '500' },
+  resetButtonText: {
+    fontSize: 13,
+    color: colors.textSecondary,
+    fontWeight: '500',
+  },
 
   // Toggle rows
   toggleRow: {
@@ -537,4 +625,4 @@ const styles = StyleSheet.create({
   previewTitle: { fontSize: 11, color: colors.success, fontWeight: '600' },
   previewBody: { fontSize: 14, color: colors.success, lineHeight: 20 },
   previewTime: { fontWeight: '700' },
-})
+});

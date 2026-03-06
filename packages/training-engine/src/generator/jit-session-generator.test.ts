@@ -90,6 +90,56 @@ describe('generateJITSession — clean session (no adjustments)', () => {
 })
 
 // ---------------------------------------------------------------------------
+// Per-exercise rep targets
+// ---------------------------------------------------------------------------
+
+describe('generateJITSession — per-exercise rep targets', () => {
+  it('strength aux (Pause Squat) → 4 reps', () => {
+    const out = generateJITSession(baseInput({ activeAuxiliaries: ['Pause Squat', 'Box Squat'] }))
+    expect(out.auxiliaryWork[0].sets[0].reps).toBe(4)
+    expect(out.auxiliaryWork[1].sets[0].reps).toBe(4)
+  })
+
+  it('hypertrophy aux (Romanian DL) → 8 reps', () => {
+    const out = generateJITSession(
+      baseInput({ primaryLift: 'deadlift', activeAuxiliaries: ['Romanian DL', 'Good Mornings'] }),
+    )
+    expect(out.auxiliaryWork[0].sets[0].reps).toBe(8)   // Romanian DL
+    expect(out.auxiliaryWork[1].sets[0].reps).toBe(10)  // Good Mornings
+  })
+
+  it('high-rep aux (Hyperextensions) → 15 reps', () => {
+    const out = generateJITSession(
+      baseInput({ primaryLift: 'deadlift', activeAuxiliaries: ['Hyperextensions', 'Romanian DL'] }),
+    )
+    expect(out.auxiliaryWork[0].sets[0].reps).toBe(15)
+  })
+
+  it('unknown exercise → falls back to baseReps (10 male)', () => {
+    const out = generateJITSession(baseInput({ activeAuxiliaries: ['Some Unknown Exercise', 'Another Unknown'] }))
+    expect(out.auxiliaryWork[0].sets[0].reps).toBe(10)
+  })
+
+  it('unknown exercise → falls back to baseReps (12 female)', () => {
+    const out = generateJITSession(
+      baseInput({ biologicalSex: 'female', activeAuxiliaries: ['Some Unknown Exercise', 'Another Unknown'] }),
+    )
+    expect(out.auxiliaryWork[0].sets[0].reps).toBe(12)
+  })
+
+  it('biceps aux (Barbell Curl) → 10 reps, weight at 35% of 1RM not 67.5%', () => {
+    // bench 1RM 140kg → Barbell Curl should be 140*0.35=49→50kg (rounded), not 140*0.675=94.5kg
+    const out = generateJITSession(
+      baseInput({ primaryLift: 'bench', oneRmKg: 140, activeAuxiliaries: ['Barbell Curl', 'Dumbbell Curl'] }),
+    )
+    expect(out.auxiliaryWork[0].sets[0].reps).toBe(10)
+    expect(out.auxiliaryWork[0].sets[0].weight_kg).toBe(50)   // 140 * 0.35 = 49 → 50
+    expect(out.auxiliaryWork[1].sets[0].reps).toBe(12)
+    expect(out.auxiliaryWork[1].sets[0].weight_kg).toBe(42.5) // 140 * 0.30 = 42 → 42.5
+  })
+})
+
+// ---------------------------------------------------------------------------
 // Integration test 2: soreness adjustment
 // ---------------------------------------------------------------------------
 
@@ -323,30 +373,33 @@ describe('generateJITSession — warmup', () => {
 // Sex-based adaptations
 // ---------------------------------------------------------------------------
 
+// Use unmapped exercise names so tests verify the sex-based fallback, not per-exercise targets
+const UNKNOWN_AUX: [string, string] = ['Custom Exercise A', 'Custom Exercise B']
+
 describe('generateJITSession — biologicalSex auxiliary reps', () => {
   it('no sex → auxiliary reps default to 10', () => {
-    const out = generateJITSession(baseInput())
+    const out = generateJITSession(baseInput({ activeAuxiliaries: UNKNOWN_AUX }))
     out.auxiliaryWork.filter((a) => !a.skipped).forEach((a) => {
       a.sets.forEach((s) => expect(s.reps).toBe(10))
     })
   })
 
   it('male → auxiliary reps 10', () => {
-    const out = generateJITSession(baseInput({ biologicalSex: 'male' }))
+    const out = generateJITSession(baseInput({ biologicalSex: 'male', activeAuxiliaries: UNKNOWN_AUX }))
     out.auxiliaryWork.filter((a) => !a.skipped).forEach((a) => {
       a.sets.forEach((s) => expect(s.reps).toBe(10))
     })
   })
 
   it('female → auxiliary reps 12', () => {
-    const out = generateJITSession(baseInput({ biologicalSex: 'female' }))
+    const out = generateJITSession(baseInput({ biologicalSex: 'female', activeAuxiliaries: UNKNOWN_AUX }))
     out.auxiliaryWork.filter((a) => !a.skipped).forEach((a) => {
       a.sets.forEach((s) => expect(s.reps).toBe(12))
     })
   })
 
   it('female at soreness 3 → 2 sets × 12 reps', () => {
-    const out = generateJITSession(baseInput({ biologicalSex: 'female', sorenessRatings: { quads: 3 } }))
+    const out = generateJITSession(baseInput({ biologicalSex: 'female', sorenessRatings: { quads: 3 }, activeAuxiliaries: UNKNOWN_AUX }))
     out.auxiliaryWork.filter((a) => !a.skipped).forEach((a) => {
       expect(a.sets).toHaveLength(2)
       a.sets.forEach((s) => expect(s.reps).toBe(12))
@@ -468,5 +521,159 @@ describe('generateJITSession — restRecommendations', () => {
     )
     expect(out.skippedMainLift).toBe(true)
     expect(out.restRecommendations.mainLift).toHaveLength(0)
+  })
+})
+
+// ---------------------------------------------------------------------------
+// No-equipment disruption: aux boost + bodyweight compensation
+// ---------------------------------------------------------------------------
+
+function makeEquipmentDisruption(overrides: Partial<TrainingDisruption> = {}): TrainingDisruption {
+  return {
+    id: 'dis-001',
+    user_id: 'user-001',
+    program_id: null,
+    session_ids_affected: null,
+    reported_at: '2026-03-06T10:00:00Z',
+    disruption_type: 'equipment_unavailable',
+    severity: 'moderate',
+    affected_date_start: '2026-03-06',
+    affected_date_end: null,
+    affected_lifts: null,
+    description: 'No gym access today',
+    adjustment_applied: null,
+    resolved_at: null,
+    status: 'active',
+    ...overrides,
+  }
+}
+
+describe('generateJITSession — equipment_unavailable disruption', () => {
+  it('adds 2 bodyweight exercises to auxiliaryWork', () => {
+    const out = generateJITSession(
+      baseInput({ activeDisruptions: [makeEquipmentDisruption()] }),
+    )
+    expect(out.auxiliaryWork).toHaveLength(4) // 2 regular + 2 bodyweight
+  })
+
+  it('bodyweight exercises have weight_kg = 0', () => {
+    const out = generateJITSession(
+      baseInput({ activeDisruptions: [makeEquipmentDisruption()] }),
+    )
+    const bwExercises = out.auxiliaryWork.slice(2)
+    for (const ex of bwExercises) {
+      expect(ex.skipped).toBe(false)
+      expect(ex.sets.every((s) => s.weight_kg === 0)).toBe(true)
+    }
+  })
+
+  it('male: bodyweight exercises have 3 sets × 10 reps at RPE 7.0', () => {
+    const out = generateJITSession(
+      baseInput({ activeDisruptions: [makeEquipmentDisruption()] }),
+    )
+    const bwExercises = out.auxiliaryWork.slice(2)
+    for (const ex of bwExercises) {
+      expect(ex.sets).toHaveLength(3)
+      expect(ex.sets[0].reps).toBe(10)
+      expect(ex.sets[0].rpe_target).toBe(7.0)
+    }
+  })
+
+  it('female: bodyweight exercises have 3 sets × 15 reps at RPE 7.0', () => {
+    const out = generateJITSession(
+      baseInput({ biologicalSex: 'female', activeDisruptions: [makeEquipmentDisruption()] }),
+    )
+    const bwExercises = out.auxiliaryWork.slice(2)
+    for (const ex of bwExercises) {
+      expect(ex.sets).toHaveLength(3)
+      expect(ex.sets[0].reps).toBe(15)
+      expect(ex.sets[0].rpe_target).toBe(7.0)
+    }
+  })
+
+  it('regular aux exercises get +1 set (4 total instead of 3)', () => {
+    const out = generateJITSession(
+      baseInput({ activeDisruptions: [makeEquipmentDisruption()] }),
+    )
+    const regularAux = out.auxiliaryWork.slice(0, 2)
+    for (const ex of regularAux) {
+      expect(ex.sets).toHaveLength(4)
+    }
+  })
+
+  it('adds no-equipment rationale message', () => {
+    const out = generateJITSession(
+      baseInput({ activeDisruptions: [makeEquipmentDisruption()] }),
+    )
+    expect(out.rationale.some((r) => r.includes('bodyweight compensation'))).toBe(true)
+  })
+
+  // Male (default / unspecified sex)
+  it('male squat → explosive/strength bodyweight variations', () => {
+    const out = generateJITSession(
+      baseInput({ primaryLift: 'squat', activeDisruptions: [makeEquipmentDisruption()] }),
+    )
+    const bwNames = out.auxiliaryWork.slice(2).map((ex) => ex.exercise)
+    expect(bwNames).toEqual(['Jump Squat', 'Pistol Squat'])
+  })
+
+  it('male bench → upper-body intensity variations', () => {
+    const out = generateJITSession(
+      baseInput({ primaryLift: 'bench', activeDisruptions: [makeEquipmentDisruption()] }),
+    )
+    const bwNames = out.auxiliaryWork.slice(2).map((ex) => ex.exercise)
+    expect(bwNames).toEqual(['Decline Push-ups', 'Diamond Push-ups'])
+  })
+
+  it('male deadlift → posterior chain bodyweight variations', () => {
+    const out = generateJITSession(
+      baseInput({ primaryLift: 'deadlift', activeDisruptions: [makeEquipmentDisruption()] }),
+    )
+    const bwNames = out.auxiliaryWork.slice(2).map((ex) => ex.exercise)
+    expect(bwNames).toEqual(['Nordic Hamstring Curl', 'Single-Leg RDL'])
+  })
+
+  // Female
+  it('female squat → glute/hip-focused bodyweight variations', () => {
+    const out = generateJITSession(
+      baseInput({ primaryLift: 'squat', biologicalSex: 'female', activeDisruptions: [makeEquipmentDisruption()] }),
+    )
+    const bwNames = out.auxiliaryWork.slice(2).map((ex) => ex.exercise)
+    expect(bwNames).toEqual(['Sumo Squat', 'Curtsy Lunge'])
+  })
+
+  it('female bench → accessible push-up variations', () => {
+    const out = generateJITSession(
+      baseInput({ primaryLift: 'bench', biologicalSex: 'female', activeDisruptions: [makeEquipmentDisruption()] }),
+    )
+    const bwNames = out.auxiliaryWork.slice(2).map((ex) => ex.exercise)
+    expect(bwNames).toEqual(['Standard Push-ups', 'Wide Push-ups'])
+  })
+
+  it('female deadlift → glute-focused bodyweight variations', () => {
+    const out = generateJITSession(
+      baseInput({ primaryLift: 'deadlift', biologicalSex: 'female', activeDisruptions: [makeEquipmentDisruption()] }),
+    )
+    const bwNames = out.auxiliaryWork.slice(2).map((ex) => ex.exercise)
+    expect(bwNames).toEqual(['Hip Thrust', 'Single-Leg Glute Bridge'])
+  })
+
+  it('rest recommendations length matches auxiliaryWork length (4 items)', () => {
+    const out = generateJITSession(
+      baseInput({ activeDisruptions: [makeEquipmentDisruption()] }),
+    )
+    expect(out.restRecommendations.auxiliary).toHaveLength(out.auxiliaryWork.length)
+  })
+
+  it('no bodyweight exercises added when soreness >= 5', () => {
+    const out = generateJITSession(
+      baseInput({
+        activeDisruptions: [makeEquipmentDisruption()],
+        sorenessRatings: { quads: 5 },
+      }),
+    )
+    // All aux exercises should be skipped; no bodyweight appended
+    expect(out.auxiliaryWork).toHaveLength(2)
+    expect(out.auxiliaryWork.every((ex) => ex.skipped)).toBe(true)
   })
 })

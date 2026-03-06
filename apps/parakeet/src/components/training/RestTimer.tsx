@@ -1,17 +1,19 @@
-import { useEffect, useRef, useState } from 'react'
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native'
-import * as Haptics from 'expo-haptics'
-import { createAudioPlayer } from 'expo-audio'
-import { getRestTimerPrefs } from '../../modules/settings'
-import { formatMMSS } from '../../shared/utils'
-import { colors, spacing, radii, typography } from '../../theme'
+import { useEffect, useRef, useState } from 'react';
+import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { createAudioPlayer } from 'expo-audio';
+import * as Haptics from 'expo-haptics';
+import { getRestTimerPrefs } from '../../modules/settings';
+import { formatMMSS } from '../../shared/utils';
+import { colors, radii, spacing, typography } from '../../theme';
 
 function playDing() {
   try {
     // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const player = createAudioPlayer(require('../../../assets/sounds/ding.wav'))
-    player.play()
-    setTimeout(() => player.remove(), 3000)
+    const player = createAudioPlayer(
+      require('../../../assets/sounds/ding.wav')
+    );
+    player.play();
+    setTimeout(() => player.remove(), 3000);
   } catch {
     // audio unavailable
   }
@@ -20,54 +22,54 @@ function playDing() {
 // ── Types ────────────────────────────────────────────────────────────────────
 
 export interface RestTimerProps {
-  durationSeconds: number
-  elapsed: number
-  offset: number
-  onAdjust: (deltaSecs: number) => void
+  durationSeconds: number;
+  elapsed: number;
+  offset: number;
+  onAdjust: (deltaSecs: number) => void;
   llmSuggestion?: {
-    deltaSeconds: number
-    formulaBaseSeconds: number
-  }
-  onDone: (elapsedSeconds: number) => void
-  intensityLabel: string
-  isAuxiliary?: boolean
+    deltaSeconds: number;
+    formulaBaseSeconds: number;
+  };
+  onDone: (elapsedSeconds: number) => void;
+  intensityLabel: string;
+  isAuxiliary?: boolean;
 }
 
 // ── Internal hook (used only by AuxiliaryPill) ────────────────────────────────
 
 function useRestTimer(durationSeconds: number) {
-  const [elapsed, setElapsed] = useState(0)
-  const [offset, setOffset] = useState(0)
-  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  const [elapsed, setElapsed] = useState(0);
+  const [offset, setOffset] = useState(0);
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
     intervalRef.current = setInterval(() => {
-      setElapsed((prev) => prev + 1)
-    }, 1000)
+      setElapsed((prev) => prev + 1);
+    }, 1000);
     return () => {
-      if (intervalRef.current !== null) clearInterval(intervalRef.current)
-    }
-  }, [])
+      if (intervalRef.current !== null) clearInterval(intervalRef.current);
+    };
+  }, []);
 
   function stop() {
     if (intervalRef.current !== null) {
-      clearInterval(intervalRef.current)
-      intervalRef.current = null
+      clearInterval(intervalRef.current);
+      intervalRef.current = null;
     }
   }
 
-  const effectiveDuration = Math.max(0, durationSeconds + offset)
-  const remaining = Math.max(0, effectiveDuration - elapsed)
-  const overtime = elapsed > effectiveDuration
+  const effectiveDuration = Math.max(0, durationSeconds + offset);
+  const remaining = Math.max(0, effectiveDuration - elapsed);
+  const overtime = elapsed > effectiveDuration;
 
   function addOffset(delta: number) {
     setOffset((prev) => {
-      const next = prev + delta
-      return Math.max(-durationSeconds, next)
-    })
+      const next = prev + delta;
+      return Math.max(-durationSeconds, next);
+    });
   }
 
-  return { elapsed, remaining, overtime, stop, addOffset }
+  return { elapsed, remaining, overtime, stop, addOffset };
 }
 
 // ── Pill variant (auxiliary sets, inline use) ─────────────────────────────────
@@ -76,19 +78,19 @@ function AuxiliaryPill({
   durationSeconds,
   onDone,
 }: {
-  durationSeconds: number
-  onDone: (elapsedSeconds: number) => void
+  durationSeconds: number;
+  onDone: (elapsedSeconds: number) => void;
 }) {
-  const { elapsed, remaining, overtime, stop } = useRestTimer(durationSeconds)
+  const { elapsed, remaining, overtime, stop } = useRestTimer(durationSeconds);
 
   function handleDone() {
-    stop()
-    onDone(elapsed)
+    stop();
+    onDone(elapsed);
   }
 
   const displayText = overtime
     ? `+${formatMMSS(elapsed - durationSeconds)}`
-    : formatMMSS(remaining)
+    : formatMMSS(remaining);
 
   return (
     <View style={pillStyles.container}>
@@ -103,7 +105,7 @@ function AuxiliaryPill({
         <Text style={pillStyles.doneText}>Done</Text>
       </TouchableOpacity>
     </View>
-  )
+  );
 }
 
 // ── Full timer (main sets) ────────────────────────────────────────────────────
@@ -117,48 +119,50 @@ function FullTimer({
   onDone,
   intensityLabel,
 }: Omit<RestTimerProps, 'isAuxiliary'>) {
-  const effectiveDuration = Math.max(0, durationSeconds + offset)
-  const remaining = Math.max(0, effectiveDuration - elapsed)
-  const overtime = elapsed > effectiveDuration
+  const effectiveDuration = Math.max(0, durationSeconds + offset);
+  const remaining = Math.max(0, effectiveDuration - elapsed);
+  const overtime = elapsed > effectiveDuration;
 
-  const prevOvertimeRef = useRef(false)
-  const audioAlertRef = useRef(true)
-  const hapticAlertRef = useRef(true)
+  const prevOvertimeRef = useRef(false);
+  const audioAlertRef = useRef(true);
+  const hapticAlertRef = useRef(true);
   useEffect(() => {
     getRestTimerPrefs().then((p) => {
-      audioAlertRef.current = p.audioAlert
-      hapticAlertRef.current = p.hapticAlert
-    })
-  }, [])
+      audioAlertRef.current = p.audioAlert;
+      hapticAlertRef.current = p.hapticAlert;
+    });
+  }, []);
   useEffect(() => {
-    prevOvertimeRef.current = false
-  }, [durationSeconds, offset])
+    prevOvertimeRef.current = false;
+  }, [durationSeconds, offset]);
   useEffect(() => {
     if (overtime && !prevOvertimeRef.current) {
-      if (hapticAlertRef.current) Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy).catch(() => {})
-      if (audioAlertRef.current) playDing()
+      if (hapticAlertRef.current)
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy).catch(() => {});
+      if (audioAlertRef.current) playDing();
     }
-    prevOvertimeRef.current = overtime
-  }, [overtime])
+    prevOvertimeRef.current = overtime;
+  }, [overtime]);
 
   const showAiChip =
-    llmSuggestion !== undefined &&
-    Math.abs(llmSuggestion.deltaSeconds) >= 30
+    llmSuggestion !== undefined && Math.abs(llmSuggestion.deltaSeconds) >= 30;
 
   const aiSuggestedSeconds =
     llmSuggestion !== undefined
       ? llmSuggestion.formulaBaseSeconds + llmSuggestion.deltaSeconds
-      : 0
+      : 0;
 
   const displayText = overtime
     ? `+${formatMMSS(elapsed - effectiveDuration)}`
-    : formatMMSS(remaining)
+    : formatMMSS(remaining);
 
   return (
     <View style={fullStyles.container}>
       <Text style={fullStyles.intensityLabel}>{intensityLabel}</Text>
 
-      <Text style={[fullStyles.countdown, overtime && fullStyles.countdownOvertime]}>
+      <Text
+        style={[fullStyles.countdown, overtime && fullStyles.countdownOvertime]}
+      >
         {displayText}
       </Text>
 
@@ -196,7 +200,7 @@ function FullTimer({
         </TouchableOpacity>
       </View>
     </View>
-  )
+  );
 }
 
 // ── Public export ─────────────────────────────────────────────────────────────
@@ -212,9 +216,7 @@ export function RestTimer({
   isAuxiliary = false,
 }: RestTimerProps) {
   if (isAuxiliary) {
-    return (
-      <AuxiliaryPill durationSeconds={durationSeconds} onDone={onDone} />
-    )
+    return <AuxiliaryPill durationSeconds={durationSeconds} onDone={onDone} />;
   }
 
   return (
@@ -227,7 +229,7 @@ export function RestTimer({
       onDone={onDone}
       intensityLabel={intensityLabel}
     />
-  )
+  );
 }
 
 // ── Styles: pill ──────────────────────────────────────────────────────────────
@@ -265,7 +267,7 @@ const pillStyles = StyleSheet.create({
     fontWeight: typography.weights.bold,
     color: colors.textInverse,
   },
-})
+});
 
 // ── Styles: full ──────────────────────────────────────────────────────────────
 
@@ -347,4 +349,4 @@ const fullStyles = StyleSheet.create({
     color: colors.textInverse,
     letterSpacing: typography.letterSpacing.wide,
   },
-})
+});

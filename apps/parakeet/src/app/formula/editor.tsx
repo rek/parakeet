@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react';
 import {
   ActivityIndicator,
   Modal,
@@ -9,172 +9,184 @@ import {
   TextInput,
   TouchableOpacity,
   View,
-} from 'react-native'
-import { SafeAreaView } from 'react-native-safe-area-context'
-import { router } from 'expo-router'
-import { useQuery, useQueryClient } from '@tanstack/react-query'
-
-import type { FormulaConfig, BlockIntensityConfig, RepIntensityConfig } from '@parakeet/training-engine'
-import type { FormulaOverrides } from '@parakeet/shared-types'
+} from 'react-native';
+import { useAuth } from '@modules/auth';
 import {
+  createFormulaOverride,
+  deactivateFormulaConfig,
   getFormulaConfig,
   getFormulaHistory,
   getPendingAiFormulaSuggestions,
-  createFormulaOverride,
-  deactivateFormulaConfig,
-} from '@modules/formula'
-import { getActiveProgram } from '@modules/program'
-import { getCurrentOneRmKg } from '@modules/program'
-import { useAuth } from '@modules/auth'
-import { colors } from '../../theme'
-import { BackLink } from '../../components/navigation/BackLink'
+} from '@modules/formula';
+import { getActiveProgram, getCurrentOneRmKg } from '@modules/program';
+import type { FormulaOverrides } from '@parakeet/shared-types';
+import type {
+  BlockIntensityConfig,
+  FormulaConfig,
+  RepIntensityConfig,
+} from '@parakeet/training-engine';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { router } from 'expo-router';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { BackLink } from '../../components/navigation/BackLink';
+import { colors } from '../../theme';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
-type TopTab = 'editor' | 'history' | 'suggestions'
-type BlockKey = 'block1' | 'block2' | 'block3' | 'deload'
-type IntensityKey = 'heavy' | 'explosive' | 'rep'
+type TopTab = 'editor' | 'history' | 'suggestions';
+type BlockKey = 'block1' | 'block2' | 'block3' | 'deload';
+type IntensityKey = 'heavy' | 'explosive' | 'rep';
 
 interface RowDraft {
-  pct: string
-  sets: string
-  reps: string
-  repsMax?: string
-  rpeTarget: string
-  setsMin?: string
-  setsMax?: string
-  repsMin?: string
+  pct: string;
+  sets: string;
+  reps: string;
+  repsMax?: string;
+  rpeTarget: string;
+  setsMin?: string;
+  setsMax?: string;
+  repsMin?: string;
 }
 
 type DraftConfig = {
   [B in BlockKey]: {
-    heavy?:     RowDraft
-    explosive?: RowDraft
-    rep?:       RowDraft
-  }
-}
+    heavy?: RowDraft;
+    explosive?: RowDraft;
+    rep?: RowDraft;
+  };
+};
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
-function toRowDraft(config: BlockIntensityConfig | RepIntensityConfig): RowDraft {
+function toRowDraft(
+  config: BlockIntensityConfig | RepIntensityConfig
+): RowDraft {
   if ('sets_min' in config) {
     return {
-      pct:      String(Math.round(config.pct * 100)),
-      sets:     String(config.sets_min),
-      reps:     String(config.reps_min),
+      pct: String(Math.round(config.pct * 100)),
+      sets: String(config.sets_min),
+      reps: String(config.reps_min),
       rpeTarget: String(config.rpe_target),
-      setsMin:  String(config.sets_min),
-      setsMax:  String(config.sets_max),
-      repsMin:  String(config.reps_min),
-      repsMax:  String(config.reps_max),
-    }
+      setsMin: String(config.sets_min),
+      setsMax: String(config.sets_max),
+      repsMin: String(config.reps_min),
+      repsMax: String(config.reps_max),
+    };
   }
   return {
-    pct:      String(Math.round(config.pct * 100)),
-    sets:     String(config.sets),
-    reps:     String(config.reps),
-    repsMax:  config.reps_max != null ? String(config.reps_max) : undefined,
+    pct: String(Math.round(config.pct * 100)),
+    sets: String(config.sets),
+    reps: String(config.reps),
+    repsMax: config.reps_max != null ? String(config.reps_max) : undefined,
     rpeTarget: String(config.rpe_target),
-  }
+  };
 }
 
 function initDraft(config: FormulaConfig): DraftConfig {
   return {
     block1: {
-      heavy:     toRowDraft(config.block1.heavy),
+      heavy: toRowDraft(config.block1.heavy),
       explosive: toRowDraft(config.block1.explosive),
-      rep:       toRowDraft(config.block1.rep),
+      rep: toRowDraft(config.block1.rep),
     },
     block2: {
-      heavy:     toRowDraft(config.block2.heavy),
+      heavy: toRowDraft(config.block2.heavy),
       explosive: toRowDraft(config.block2.explosive),
-      rep:       toRowDraft(config.block2.rep),
+      rep: toRowDraft(config.block2.rep),
     },
     block3: {
-      heavy:     toRowDraft(config.block3.heavy),
+      heavy: toRowDraft(config.block3.heavy),
       explosive: toRowDraft(config.block3.explosive),
-      rep:       toRowDraft(config.block3.rep),
+      rep: toRowDraft(config.block3.rep),
     },
     deload: {
       heavy: toRowDraft(config.deload),
     },
-  }
+  };
 }
 
 function draftToOverrides(draft: DraftConfig): FormulaOverrides {
-  const p = (s: string) => parseFloat(s) || 0
-  const i = (s: string) => parseInt(s, 10) || 0
+  const p = (s: string) => parseFloat(s) || 0;
+  const i = (s: string) => parseInt(s, 10) || 0;
 
   function blockRow(row: RowDraft): BlockIntensityConfig {
     return {
-      pct:       p(row.pct) / 100,
-      sets:      i(row.sets),
-      reps:      i(row.reps),
+      pct: p(row.pct) / 100,
+      sets: i(row.sets),
+      reps: i(row.reps),
       rpe_target: p(row.rpeTarget),
       ...(row.repsMax ? { reps_max: i(row.repsMax) } : {}),
-    }
+    };
   }
 
   function repRow(row: RowDraft): RepIntensityConfig {
     return {
-      pct:       p(row.pct) / 100,
-      sets_min:  i(row.setsMin ?? row.sets),
-      sets_max:  i(row.setsMax ?? row.sets),
-      reps_min:  i(row.repsMin ?? row.reps),
-      reps_max:  i(row.repsMax ?? row.reps),
+      pct: p(row.pct) / 100,
+      sets_min: i(row.setsMin ?? row.sets),
+      sets_max: i(row.setsMax ?? row.sets),
+      reps_min: i(row.repsMin ?? row.reps),
+      reps_max: i(row.repsMax ?? row.reps),
       rpe_target: p(row.rpeTarget),
-    }
+    };
   }
 
   return {
     block1: {
-      heavy:     blockRow(draft.block1.heavy!),
+      heavy: blockRow(draft.block1.heavy!),
       explosive: blockRow(draft.block1.explosive!),
-      rep:       repRow(draft.block1.rep!),
+      rep: repRow(draft.block1.rep!),
     },
     block2: {
-      heavy:     blockRow(draft.block2.heavy!),
+      heavy: blockRow(draft.block2.heavy!),
       explosive: blockRow(draft.block2.explosive!),
-      rep:       repRow(draft.block2.rep!),
+      rep: repRow(draft.block2.rep!),
     },
     block3: {
-      heavy:     blockRow(draft.block3.heavy!),
+      heavy: blockRow(draft.block3.heavy!),
       explosive: blockRow(draft.block3.explosive!),
-      rep:       repRow(draft.block3.rep!),
+      rep: repRow(draft.block3.rep!),
     },
     deload: {
-      pct:       p(draft.deload.heavy!.pct) / 100,
-      sets:      i(draft.deload.heavy!.sets),
-      reps:      i(draft.deload.heavy!.reps),
+      pct: p(draft.deload.heavy!.pct) / 100,
+      sets: i(draft.deload.heavy!.sets),
+      reps: i(draft.deload.heavy!.reps),
       rpe_target: p(draft.deload.heavy!.rpeTarget),
     },
-  }
+  };
 }
 
 function exampleWeight(pct: string, oneRmKg: number): string {
-  const p = parseFloat(pct)
-  if (!p || !oneRmKg) return '—'
-  return `${Math.round((p / 100) * oneRmKg * 2) / 2} kg`
+  const p = parseFloat(pct);
+  if (!p || !oneRmKg) return '—';
+  return `${Math.round((p / 100) * oneRmKg * 2) / 2} kg`;
 }
 
 // ── Editable row ──────────────────────────────────────────────────────────────
 
 interface RowProps {
-  label: string
-  draft: RowDraft
-  oneRmKg: number
-  isEditing: boolean
-  onToggleEdit: () => void
-  onUpdate: (next: RowDraft) => void
-  isRep?: boolean
+  label: string;
+  draft: RowDraft;
+  oneRmKg: number;
+  isEditing: boolean;
+  onToggleEdit: () => void;
+  onUpdate: (next: RowDraft) => void;
+  isRep?: boolean;
 }
 
-function IntensityRow({ label, draft, oneRmKg, isEditing, onToggleEdit, onUpdate, isRep }: RowProps) {
+function IntensityRow({
+  label,
+  draft,
+  oneRmKg,
+  isEditing,
+  onToggleEdit,
+  onUpdate,
+  isRep,
+}: RowProps) {
   const summary = isRep
     ? `${draft.pct}% — ${draft.setsMin ?? draft.sets}–${draft.setsMax ?? draft.sets} sets × ${draft.repsMin ?? draft.reps}–${draft.repsMax ?? draft.reps} reps — RPE ${draft.rpeTarget}`
-    : `${draft.pct}% — ${draft.sets} sets × ${draft.reps}${draft.repsMax ? `–${draft.repsMax}` : ''} reps — RPE ${draft.rpeTarget}`
+    : `${draft.pct}% — ${draft.sets} sets × ${draft.reps}${draft.repsMax ? `–${draft.repsMax}` : ''} reps — RPE ${draft.rpeTarget}`;
 
-  const sampleKg = exampleWeight(draft.pct, oneRmKg)
+  const sampleKg = exampleWeight(draft.pct, oneRmKg);
 
   return (
     <TouchableOpacity
@@ -201,11 +213,17 @@ function IntensityRow({ label, draft, oneRmKg, isEditing, onToggleEdit, onUpdate
               />
             </View>
             <View style={styles.editField}>
-              <Text style={styles.editFieldLabel}>{isRep ? 'Sets min' : 'Sets'}</Text>
+              <Text style={styles.editFieldLabel}>
+                {isRep ? 'Sets min' : 'Sets'}
+              </Text>
               <TextInput
                 style={styles.editInput}
                 value={isRep ? (draft.setsMin ?? draft.sets) : draft.sets}
-                onChangeText={(v) => onUpdate(isRep ? { ...draft, setsMin: v } : { ...draft, sets: v })}
+                onChangeText={(v) =>
+                  onUpdate(
+                    isRep ? { ...draft, setsMin: v } : { ...draft, sets: v }
+                  )
+                }
                 keyboardType="number-pad"
               />
             </View>
@@ -221,20 +239,30 @@ function IntensityRow({ label, draft, oneRmKg, isEditing, onToggleEdit, onUpdate
               </View>
             )}
             <View style={styles.editField}>
-              <Text style={styles.editFieldLabel}>{isRep ? 'Reps min' : 'Reps'}</Text>
+              <Text style={styles.editFieldLabel}>
+                {isRep ? 'Reps min' : 'Reps'}
+              </Text>
               <TextInput
                 style={styles.editInput}
                 value={isRep ? (draft.repsMin ?? draft.reps) : draft.reps}
-                onChangeText={(v) => onUpdate(isRep ? { ...draft, repsMin: v } : { ...draft, reps: v })}
+                onChangeText={(v) =>
+                  onUpdate(
+                    isRep ? { ...draft, repsMin: v } : { ...draft, reps: v }
+                  )
+                }
                 keyboardType="number-pad"
               />
             </View>
             <View style={styles.editField}>
-              <Text style={styles.editFieldLabel}>{isRep ? 'Reps max' : 'Reps max'}</Text>
+              <Text style={styles.editFieldLabel}>
+                {isRep ? 'Reps max' : 'Reps max'}
+              </Text>
               <TextInput
                 style={styles.editInput}
                 value={draft.repsMax ?? ''}
-                onChangeText={(v) => onUpdate({ ...draft, repsMax: v || undefined })}
+                onChangeText={(v) =>
+                  onUpdate({ ...draft, repsMax: v || undefined })
+                }
                 keyboardType="number-pad"
                 placeholder="—"
                 placeholderTextColor={colors.textTertiary}
@@ -253,128 +281,138 @@ function IntensityRow({ label, draft, oneRmKg, isEditing, onToggleEdit, onUpdate
         </View>
       )}
     </TouchableOpacity>
-  )
+  );
 }
 
 // ── Main screen ───────────────────────────────────────────────────────────────
 
 export default function FormulaEditorScreen() {
-  const { user } = useAuth()
-  const queryClient = useQueryClient()
+  const { user } = useAuth();
+  const queryClient = useQueryClient();
 
-  const [topTab, setTopTab]           = useState<TopTab>('editor')
-  const [activeBlock, setActiveBlock] = useState<BlockKey>('block1')
-  const [editingRow, setEditingRow]   = useState<string | null>(null)
-  const [draft, setDraft]             = useState<DraftConfig | null>(null)
-  const [showSaveSheet, setShowSaveSheet] = useState(false)
-  const [regenerate, setRegenerate]   = useState(false)
-  const [isSaving, setIsSaving]       = useState(false)
+  const [topTab, setTopTab] = useState<TopTab>('editor');
+  const [activeBlock, setActiveBlock] = useState<BlockKey>('block1');
+  const [editingRow, setEditingRow] = useState<string | null>(null);
+  const [draft, setDraft] = useState<DraftConfig | null>(null);
+  const [showSaveSheet, setShowSaveSheet] = useState(false);
+  const [regenerate, setRegenerate] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
 
   const { data: config, isLoading: configLoading } = useQuery({
     queryKey: ['formula', 'config', user?.id],
     queryFn: () => getFormulaConfig(user!.id),
     enabled: !!user?.id,
-  })
+  });
 
   const { data: history } = useQuery({
     queryKey: ['formula', 'history', user?.id],
     queryFn: () => getFormulaHistory(user!.id),
     enabled: !!user?.id && topTab === 'history',
-  })
+  });
 
   const { data: aiSuggestions } = useQuery({
     queryKey: ['formula', 'suggestions', user?.id],
     queryFn: () => getPendingAiFormulaSuggestions(user!.id),
     enabled: !!user?.id && topTab === 'suggestions',
-  })
+  });
 
   const { data: oneRmKg = 0 } = useQuery({
     queryKey: ['maxes', 'squat-1rm', user?.id],
     queryFn: () => getCurrentOneRmKg(user!.id, 'squat'),
     enabled: !!user?.id,
     select: (v) => v ?? 0,
-  })
+  });
 
   const { data: activeProgram } = useQuery({
     queryKey: ['program', 'active', user?.id],
     queryFn: () => getActiveProgram(user!.id),
     enabled: !!user?.id,
-  })
+  });
 
   useEffect(() => {
     if (config && !draft) {
-      setDraft(initDraft(config))
+      setDraft(initDraft(config));
     }
-  }, [config, draft])
+  }, [config, draft]);
 
-  const updateRow = useCallback((block: BlockKey, row: IntensityKey, next: RowDraft) => {
-    setDraft((prev) => prev ? { ...prev, [block]: { ...prev[block], [row]: next } } : prev)
-  }, [])
+  const updateRow = useCallback(
+    (block: BlockKey, row: IntensityKey, next: RowDraft) => {
+      setDraft((prev) =>
+        prev ? { ...prev, [block]: { ...prev[block], [row]: next } } : prev
+      );
+    },
+    []
+  );
 
   async function handleSave() {
-    if (!draft || !user) return
-    setIsSaving(true)
+    if (!draft || !user) return;
+    setIsSaving(true);
     try {
-      const overrides = draftToOverrides(draft)
-      await createFormulaOverride(user.id, { overrides, source: 'user' })
+      const overrides = draftToOverrides(draft);
+      await createFormulaOverride(user.id, { overrides, source: 'user' });
       if (regenerate && activeProgram) {
-        const { regenerateProgram } = await import('@modules/program')
+        const { regenerateProgram } = await import('@modules/program');
         await regenerateProgram({
           totalWeeks: activeProgram.total_weeks as 10 | 12 | 14,
           trainingDaysPerWeek: activeProgram.training_days_per_week as 3 | 4,
           startDate: new Date(),
-        })
+        });
       }
-      queryClient.invalidateQueries({ queryKey: ['formula'] })
-      setShowSaveSheet(false)
-      router.back()
+      queryClient.invalidateQueries({ queryKey: ['formula'] });
+      setShowSaveSheet(false);
+      router.back();
     } finally {
-      setIsSaving(false)
+      setIsSaving(false);
     }
   }
 
-  async function handleAcceptSuggestion(suggestionId: string, overrides: unknown) {
-    if (!user) return
+  async function handleAcceptSuggestion(
+    suggestionId: string,
+    overrides: unknown
+  ) {
+    if (!user) return;
     await createFormulaOverride(user.id, {
       overrides,
       source: 'ai_suggestion',
-    })
-    queryClient.invalidateQueries({ queryKey: ['formula'] })
+    });
+    queryClient.invalidateQueries({ queryKey: ['formula'] });
   }
 
   async function handleDismissSuggestion(suggestionId: string) {
-    if (!user) return
-    await deactivateFormulaConfig(suggestionId, user.id)
-    queryClient.invalidateQueries({ queryKey: ['formula', 'suggestions'] })
+    if (!user) return;
+    await deactivateFormulaConfig(suggestionId, user.id);
+    queryClient.invalidateQueries({ queryKey: ['formula', 'suggestions'] });
   }
 
   async function handleReactivate(configId: string, overrides: unknown) {
-    if (!user) return
+    if (!user) return;
     await createFormulaOverride(user.id, {
       overrides,
       source: 'user',
-    })
-    queryClient.invalidateQueries({ queryKey: ['formula'] })
+    });
+    queryClient.invalidateQueries({ queryKey: ['formula'] });
   }
 
   // ── Block tab content ──────────────────────────────────────────────────────
 
   function renderBlockContent(block: BlockKey) {
-    if (!draft) return null
-    const blockDraft = draft[block]
+    if (!draft) return null;
+    const blockDraft = draft[block];
 
     if (block === 'deload') {
-      const d = blockDraft.heavy!
+      const d = blockDraft.heavy!;
       return (
         <IntensityRow
           label="Deload"
           draft={d}
           oneRmKg={oneRmKg}
           isEditing={editingRow === 'deload-heavy'}
-          onToggleEdit={() => setEditingRow(editingRow === 'deload-heavy' ? null : 'deload-heavy')}
+          onToggleEdit={() =>
+            setEditingRow(editingRow === 'deload-heavy' ? null : 'deload-heavy')
+          }
           onUpdate={(next) => updateRow(block, 'heavy', next)}
         />
-      )
+      );
     }
 
     return (
@@ -384,7 +422,11 @@ export default function FormulaEditorScreen() {
           draft={blockDraft.heavy!}
           oneRmKg={oneRmKg}
           isEditing={editingRow === `${block}-heavy`}
-          onToggleEdit={() => setEditingRow(editingRow === `${block}-heavy` ? null : `${block}-heavy`)}
+          onToggleEdit={() =>
+            setEditingRow(
+              editingRow === `${block}-heavy` ? null : `${block}-heavy`
+            )
+          }
           onUpdate={(next) => updateRow(block, 'heavy', next)}
         />
         <IntensityRow
@@ -392,7 +434,11 @@ export default function FormulaEditorScreen() {
           draft={blockDraft.explosive!}
           oneRmKg={oneRmKg}
           isEditing={editingRow === `${block}-explosive`}
-          onToggleEdit={() => setEditingRow(editingRow === `${block}-explosive` ? null : `${block}-explosive`)}
+          onToggleEdit={() =>
+            setEditingRow(
+              editingRow === `${block}-explosive` ? null : `${block}-explosive`
+            )
+          }
           onUpdate={(next) => updateRow(block, 'explosive', next)}
         />
         <IntensityRow
@@ -400,12 +446,14 @@ export default function FormulaEditorScreen() {
           draft={blockDraft.rep!}
           oneRmKg={oneRmKg}
           isEditing={editingRow === `${block}-rep`}
-          onToggleEdit={() => setEditingRow(editingRow === `${block}-rep` ? null : `${block}-rep`)}
+          onToggleEdit={() =>
+            setEditingRow(editingRow === `${block}-rep` ? null : `${block}-rep`)
+          }
           onUpdate={(next) => updateRow(block, 'rep', next)}
           isRep
         />
       </>
-    )
+    );
   }
 
   // ── Render ────────────────────────────────────────────────────────────────
@@ -438,7 +486,12 @@ export default function FormulaEditorScreen() {
             onPress={() => setTopTab(t)}
             activeOpacity={0.7}
           >
-            <Text style={[styles.topTabText, topTab === t && styles.topTabTextActive]}>
+            <Text
+              style={[
+                styles.topTabText,
+                topTab === t && styles.topTabTextActive,
+              ]}
+            >
               {t.charAt(0).toUpperCase() + t.slice(1)}
               {t === 'suggestions' && (aiSuggestions?.length ?? 0) > 0 && (
                 <Text style={styles.badge}> ●</Text>
@@ -452,20 +505,34 @@ export default function FormulaEditorScreen() {
       {topTab === 'editor' && (
         <>
           {/* Block sub-tabs */}
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.blockTabsScroll}>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            style={styles.blockTabsScroll}
+          >
             <View style={styles.blockTabs}>
-              {(['block1', 'block2', 'block3', 'deload'] as BlockKey[]).map((b) => (
-                <TouchableOpacity
-                  key={b}
-                  style={[styles.blockTab, activeBlock === b && styles.blockTabActive]}
-                  onPress={() => setActiveBlock(b)}
-                  activeOpacity={0.7}
-                >
-                  <Text style={[styles.blockTabText, activeBlock === b && styles.blockTabTextActive]}>
-                    {b === 'deload' ? 'Deload' : `Block ${b.slice(-1)}`}
-                  </Text>
-                </TouchableOpacity>
-              ))}
+              {(['block1', 'block2', 'block3', 'deload'] as BlockKey[]).map(
+                (b) => (
+                  <TouchableOpacity
+                    key={b}
+                    style={[
+                      styles.blockTab,
+                      activeBlock === b && styles.blockTabActive,
+                    ]}
+                    onPress={() => setActiveBlock(b)}
+                    activeOpacity={0.7}
+                  >
+                    <Text
+                      style={[
+                        styles.blockTabText,
+                        activeBlock === b && styles.blockTabTextActive,
+                      ]}
+                    >
+                      {b === 'deload' ? 'Deload' : `Block ${b.slice(-1)}`}
+                    </Text>
+                  </TouchableOpacity>
+                )
+              )}
             </View>
           </ScrollView>
 
@@ -476,7 +543,10 @@ export default function FormulaEditorScreen() {
             showsVerticalScrollIndicator={false}
           >
             {configLoading || !draft ? (
-              <ActivityIndicator color={colors.primary} style={{ marginTop: 40 }} />
+              <ActivityIndicator
+                color={colors.primary}
+                style={{ marginTop: 40 }}
+              />
             ) : (
               <>
                 {oneRmKg > 0 && (
@@ -493,19 +563,31 @@ export default function FormulaEditorScreen() {
 
       {/* History tab */}
       {topTab === 'history' && (
-        <ScrollView style={styles.scroll} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+        <ScrollView
+          style={styles.scroll}
+          contentContainerStyle={styles.content}
+          showsVerticalScrollIndicator={false}
+        >
           {(history ?? []).map((item) => (
             <View key={item.id} style={styles.historyItem}>
               <View style={styles.historyHeader}>
                 <Text style={styles.historyDate}>
-                  {new Date(item.created_at).toLocaleDateString('en-AU', { dateStyle: 'medium' })}
+                  {new Date(item.created_at).toLocaleDateString('en-AU', {
+                    dateStyle: 'medium',
+                  })}
                 </Text>
-                <View style={[
-                  styles.sourceBadge,
-                  item.source === 'ai_suggestion' && styles.sourceBadgeAi,
-                ]}>
+                <View
+                  style={[
+                    styles.sourceBadge,
+                    item.source === 'ai_suggestion' && styles.sourceBadgeAi,
+                  ]}
+                >
                   <Text style={styles.sourceBadgeText}>
-                    {item.source === 'user' ? 'User' : item.source === 'ai_suggestion' ? 'AI' : 'System'}
+                    {item.source === 'user'
+                      ? 'User'
+                      : item.source === 'ai_suggestion'
+                        ? 'AI'
+                        : 'System'}
                   </Text>
                 </View>
                 {item.is_active && (
@@ -536,16 +618,24 @@ export default function FormulaEditorScreen() {
 
       {/* AI Suggestions tab */}
       {topTab === 'suggestions' && (
-        <ScrollView style={styles.scroll} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+        <ScrollView
+          style={styles.scroll}
+          contentContainerStyle={styles.content}
+          showsVerticalScrollIndicator={false}
+        >
           {(aiSuggestions ?? []).map((item) => (
             <View key={item.id} style={styles.suggestionCard}>
               {item.ai_rationale && (
-                <Text style={styles.suggestionRationale}>{item.ai_rationale}</Text>
+                <Text style={styles.suggestionRationale}>
+                  {item.ai_rationale}
+                </Text>
               )}
               <View style={styles.suggestionActions}>
                 <TouchableOpacity
                   style={styles.acceptButton}
-                  onPress={() => handleAcceptSuggestion(item.id, item.overrides)}
+                  onPress={() =>
+                    handleAcceptSuggestion(item.id, item.overrides)
+                  }
                   activeOpacity={0.8}
                 >
                   <Text style={styles.acceptButtonText}>Accept</Text>
@@ -577,11 +667,14 @@ export default function FormulaEditorScreen() {
           <View style={styles.sheet}>
             <Text style={styles.sheetTitle}>Save Formula</Text>
             <Text style={styles.sheetSubtitle}>
-              This will create a new formula version. Your current version is saved in history.
+              This will create a new formula version. Your current version is
+              saved in history.
             </Text>
 
             <View style={styles.sheetToggleRow}>
-              <Text style={styles.sheetToggleLabel}>Regenerate program with new formula</Text>
+              <Text style={styles.sheetToggleLabel}>
+                Regenerate program with new formula
+              </Text>
               <Switch
                 value={regenerate}
                 onValueChange={setRegenerate}
@@ -590,12 +683,16 @@ export default function FormulaEditorScreen() {
             </View>
             {regenerate && (
               <Text style={styles.sheetToggleNote}>
-                All planned sessions will be regenerated. Completed sessions are preserved.
+                All planned sessions will be regenerated. Completed sessions are
+                preserved.
               </Text>
             )}
 
             <TouchableOpacity
-              style={[styles.sheetConfirmButton, isSaving && styles.buttonDisabled]}
+              style={[
+                styles.sheetConfirmButton,
+                isSaving && styles.buttonDisabled,
+              ]}
               onPress={handleSave}
               disabled={isSaving}
               activeOpacity={0.8}
@@ -621,7 +718,7 @@ export default function FormulaEditorScreen() {
         </View>
       </Modal>
     </SafeAreaView>
-  )
+  );
 }
 
 // ── Styles ────────────────────────────────────────────────────────────────────
@@ -635,7 +732,11 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: colors.bgMuted,
   },
-  headerRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  headerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
   title: { fontSize: 24, fontWeight: '800', color: colors.text },
   saveButton: {
     backgroundColor: colors.primary,
@@ -643,7 +744,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 8,
   },
-  saveButtonText: { fontSize: 14, fontWeight: '600', color: colors.textInverse },
+  saveButtonText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: colors.textInverse,
+  },
 
   // Top tabs
   topTabs: {
@@ -662,15 +767,28 @@ const styles = StyleSheet.create({
   badge: { color: colors.danger },
 
   // Block sub-tabs
-  blockTabsScroll: { maxHeight: 44, borderBottomWidth: 1, borderBottomColor: colors.bgMuted },
-  blockTabs: { flexDirection: 'row', paddingHorizontal: 16, gap: 4, alignItems: 'center' },
+  blockTabsScroll: {
+    maxHeight: 44,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.bgMuted,
+  },
+  blockTabs: {
+    flexDirection: 'row',
+    paddingHorizontal: 16,
+    gap: 4,
+    alignItems: 'center',
+  },
   blockTab: {
     paddingHorizontal: 14,
     paddingVertical: 10,
     borderRadius: 8,
   },
   blockTabActive: { backgroundColor: colors.primaryMuted },
-  blockTabText: { fontSize: 14, color: colors.textSecondary, fontWeight: '500' },
+  blockTabText: {
+    fontSize: 14,
+    color: colors.textSecondary,
+    fontWeight: '500',
+  },
   blockTabTextActive: { color: colors.primary, fontWeight: '600' },
 
   scroll: { flex: 1 },
@@ -690,7 +808,10 @@ const styles = StyleSheet.create({
     padding: 14,
     gap: 4,
   },
-  intensityRowActive: { borderColor: colors.primary, backgroundColor: colors.bgSurface },
+  intensityRowActive: {
+    borderColor: colors.primary,
+    backgroundColor: colors.bgSurface,
+  },
   intensityRowHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -698,13 +819,21 @@ const styles = StyleSheet.create({
   },
   intensityLabel: { fontSize: 15, fontWeight: '600', color: colors.text },
   sampleWeight: { fontSize: 13, color: colors.textSecondary },
-  intensitySummary: { fontSize: 13, color: colors.textSecondary, lineHeight: 18 },
+  intensitySummary: {
+    fontSize: 13,
+    color: colors.textSecondary,
+    lineHeight: 18,
+  },
 
   // Edit fields
   editFields: { marginTop: 12 },
   editRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
   editField: { minWidth: 60, flex: 1 },
-  editFieldLabel: { fontSize: 11, color: colors.textSecondary, marginBottom: 4 },
+  editFieldLabel: {
+    fontSize: 11,
+    color: colors.textSecondary,
+    marginBottom: 4,
+  },
   editInput: {
     borderWidth: 1,
     borderColor: colors.border,
@@ -732,7 +861,11 @@ const styles = StyleSheet.create({
     paddingVertical: 2,
   },
   sourceBadgeAi: { backgroundColor: colors.primaryMuted },
-  sourceBadgeText: { fontSize: 11, fontWeight: '600', color: colors.textSecondary },
+  sourceBadgeText: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: colors.textSecondary,
+  },
   activeBadge: {
     backgroundColor: colors.successMuted,
     borderRadius: 6,
@@ -740,7 +873,11 @@ const styles = StyleSheet.create({
     paddingVertical: 2,
   },
   activeBadgeText: { fontSize: 11, fontWeight: '600', color: colors.success },
-  historyRationale: { fontSize: 13, color: colors.textSecondary, lineHeight: 18 },
+  historyRationale: {
+    fontSize: 13,
+    color: colors.textSecondary,
+    lineHeight: 18,
+  },
   reactivateButton: {
     alignSelf: 'flex-start',
     paddingHorizontal: 12,
@@ -750,7 +887,11 @@ const styles = StyleSheet.create({
     borderColor: colors.primary,
     marginTop: 4,
   },
-  reactivateButtonText: { fontSize: 13, color: colors.primary, fontWeight: '600' },
+  reactivateButtonText: {
+    fontSize: 13,
+    color: colors.primary,
+    fontWeight: '600',
+  },
 
   // AI suggestions
   suggestionCard: {
@@ -760,7 +901,11 @@ const styles = StyleSheet.create({
     padding: 14,
     gap: 10,
   },
-  suggestionRationale: { fontSize: 14, color: colors.textSecondary, lineHeight: 20 },
+  suggestionRationale: {
+    fontSize: 14,
+    color: colors.textSecondary,
+    lineHeight: 20,
+  },
   suggestionActions: { flexDirection: 'row', gap: 10 },
   acceptButton: {
     flex: 1,
@@ -769,7 +914,11 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     alignItems: 'center',
   },
-  acceptButtonText: { fontSize: 14, fontWeight: '600', color: colors.textInverse },
+  acceptButtonText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: colors.textInverse,
+  },
   dismissButton: {
     flex: 1,
     borderWidth: 1,
@@ -778,9 +927,18 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     alignItems: 'center',
   },
-  dismissButtonText: { fontSize: 14, color: colors.textSecondary, fontWeight: '500' },
+  dismissButtonText: {
+    fontSize: 14,
+    color: colors.textSecondary,
+    fontWeight: '500',
+  },
 
-  emptyText: { fontSize: 14, color: colors.textTertiary, textAlign: 'center', marginTop: 32 },
+  emptyText: {
+    fontSize: 14,
+    color: colors.textTertiary,
+    textAlign: 'center',
+    marginTop: 32,
+  },
 
   // Save sheet
   sheetBackdrop: {
@@ -798,16 +956,33 @@ const styles = StyleSheet.create({
   },
   sheetTitle: { fontSize: 18, fontWeight: '700', color: colors.text },
   sheetSubtitle: { fontSize: 14, color: colors.textSecondary, lineHeight: 20 },
-  sheetToggleRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  sheetToggleLabel: { fontSize: 15, color: colors.text, flex: 1, marginRight: 12 },
-  sheetToggleNote: { fontSize: 13, color: colors.textSecondary, lineHeight: 18 },
+  sheetToggleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  sheetToggleLabel: {
+    fontSize: 15,
+    color: colors.text,
+    flex: 1,
+    marginRight: 12,
+  },
+  sheetToggleNote: {
+    fontSize: 13,
+    color: colors.textSecondary,
+    lineHeight: 18,
+  },
   sheetConfirmButton: {
     backgroundColor: colors.primary,
     borderRadius: 12,
     paddingVertical: 16,
     alignItems: 'center',
   },
-  sheetConfirmText: { fontSize: 16, fontWeight: '600', color: colors.textInverse },
+  sheetConfirmText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: colors.textInverse,
+  },
   sheetCancelButton: {
     borderWidth: 1,
     borderColor: colors.border,
@@ -815,6 +990,10 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
     alignItems: 'center',
   },
-  sheetCancelText: { fontSize: 15, fontWeight: '500', color: colors.textSecondary },
+  sheetCancelText: {
+    fontSize: 15,
+    fontWeight: '500',
+    color: colors.textSecondary,
+  },
   buttonDisabled: { opacity: 0.4 },
-})
+});

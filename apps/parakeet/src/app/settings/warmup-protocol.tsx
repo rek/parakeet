@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
   ScrollView,
@@ -7,65 +7,79 @@ import {
   TextInput,
   TouchableOpacity,
   View,
-} from 'react-native'
-import { SafeAreaView } from 'react-native-safe-area-context'
-import { router } from 'expo-router'
-import { useQuery, useQueryClient } from '@tanstack/react-query'
-
-import {
-  generateWarmupSets,
-  getPresetSteps,
-} from '@parakeet/training-engine'
-import type { WarmupPresetName, WarmupProtocol, WarmupStep } from '@parakeet/training-engine'
-import type { Lift } from '@parakeet/shared-types'
-import { getAllWarmupConfigs, updateWarmupConfig } from '@modules/settings'
-import { getCurrentOneRmKg } from '@modules/program'
-import { useAuth } from '@modules/auth'
-import { colors } from '../../theme'
-import { BackLink } from '../../components/navigation/BackLink'
+} from 'react-native';
+import { useAuth } from '@modules/auth';
+import { getCurrentOneRmKg } from '@modules/program';
+import { getAllWarmupConfigs, updateWarmupConfig } from '@modules/settings';
+import type { Lift } from '@parakeet/shared-types';
+import { generateWarmupSets, getPresetSteps } from '@parakeet/training-engine';
+import type {
+  WarmupPresetName,
+  WarmupProtocol,
+  WarmupStep,
+} from '@parakeet/training-engine';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { router } from 'expo-router';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { BackLink } from '../../components/navigation/BackLink';
+import { colors } from '../../theme';
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
-const LIFTS: Lift[] = ['squat', 'bench', 'deadlift']
+const LIFTS: Lift[] = ['squat', 'bench', 'deadlift'];
 
 const LIFT_LABELS: Record<Lift, string> = {
-  squat: 'Squat', bench: 'Bench', deadlift: 'Deadlift',
-}
+  squat: 'Squat',
+  bench: 'Bench',
+  deadlift: 'Deadlift',
+};
 
-const PRESETS: { name: WarmupPresetName; label: string; description: string }[] = [
-  { name: 'standard',  label: 'Standard',       description: '4 sets — 40/60/75/90%' },
-  { name: 'minimal',   label: 'Minimal',         description: '2 sets — 50/75%' },
-  { name: 'extended',  label: 'Extended',        description: '6 sets — 30/50/65/80/90/95%' },
-  { name: 'empty_bar', label: 'Empty Bar First', description: '4 sets — bar/50/70/85%' },
-]
+const PRESETS: {
+  name: WarmupPresetName;
+  label: string;
+  description: string;
+}[] = [
+  { name: 'standard', label: 'Standard', description: '4 sets — 40/60/75/90%' },
+  { name: 'minimal', label: 'Minimal', description: '2 sets — 50/75%' },
+  {
+    name: 'extended',
+    label: 'Extended',
+    description: '6 sets — 30/50/65/80/90/95%',
+  },
+  {
+    name: 'empty_bar',
+    label: 'Empty Bar First',
+    description: '4 sets — bar/50/70/85%',
+  },
+];
 
 // Working weight estimate: 80% of 1RM is representative for a heavy block
-const WORKING_PCT = 0.80
+const WORKING_PCT = 0.8;
 
 // ── Custom step editor ────────────────────────────────────────────────────────
 
 interface CustomStepEditorProps {
-  steps: WarmupStep[]
-  onChange: (steps: WarmupStep[]) => void
+  steps: WarmupStep[];
+  onChange: (steps: WarmupStep[]) => void;
 }
 
 function CustomStepEditor({ steps, onChange }: CustomStepEditorProps) {
   function updateStep(i: number, field: keyof WarmupStep, raw: string) {
-    const value = parseInt(raw, 10)
-    if (isNaN(value)) return
+    const value = parseInt(raw, 10);
+    if (isNaN(value)) return;
     const next = steps.map((s, idx) =>
-      idx === i ? { ...s, [field]: field === 'pct' ? value / 100 : value } : s,
-    )
-    onChange(next)
+      idx === i ? { ...s, [field]: field === 'pct' ? value / 100 : value } : s
+    );
+    onChange(next);
   }
 
   function addStep() {
-    const lastPct = steps.length > 0 ? steps[steps.length - 1].pct : 0.5
-    onChange([...steps, { pct: Math.min(0.99, lastPct + 0.1), reps: 3 }])
+    const lastPct = steps.length > 0 ? steps[steps.length - 1].pct : 0.5;
+    onChange([...steps, { pct: Math.min(0.99, lastPct + 0.1), reps: 3 }]);
   }
 
   function removeStep(i: number) {
-    onChange(steps.filter((_, idx) => idx !== i))
+    onChange(steps.filter((_, idx) => idx !== i));
   }
 
   return (
@@ -103,25 +117,29 @@ function CustomStepEditor({ steps, onChange }: CustomStepEditorProps) {
           </TouchableOpacity>
         </View>
       ))}
-      <TouchableOpacity style={styles.addStep} onPress={addStep} activeOpacity={0.7}>
+      <TouchableOpacity
+        style={styles.addStep}
+        onPress={addStep}
+        activeOpacity={0.7}
+      >
         <Text style={styles.addStepText}>+ Add Step</Text>
       </TouchableOpacity>
     </View>
-  )
+  );
 }
 
 // ── Warmup preview ────────────────────────────────────────────────────────────
 
 interface WarmupPreviewProps {
-  protocol: WarmupProtocol
-  oneRmKg: number
-  lift: Lift
+  protocol: WarmupProtocol;
+  oneRmKg: number;
+  lift: Lift;
 }
 
 function WarmupPreview({ protocol, oneRmKg, lift }: WarmupPreviewProps) {
-  if (!oneRmKg) return null
-  const workingWeight = Math.round(oneRmKg * WORKING_PCT * 2) / 2
-  const sets = generateWarmupSets(workingWeight, protocol)
+  if (!oneRmKg) return null;
+  const workingWeight = Math.round(oneRmKg * WORKING_PCT * 2) / 2;
+  const sets = generateWarmupSets(workingWeight, protocol);
 
   return (
     <View style={styles.preview}>
@@ -132,37 +150,48 @@ function WarmupPreview({ protocol, oneRmKg, lift }: WarmupPreviewProps) {
         {sets.map((s) => `${s.displayWeight}×${s.reps}`).join(' → ')}
       </Text>
     </View>
-  )
+  );
 }
 
 // ── Lift section ──────────────────────────────────────────────────────────────
 
 interface LiftSectionProps {
-  lift: Lift
-  protocol: WarmupProtocol
-  oneRmKg: number
-  isSaving: boolean
-  onChange: (p: WarmupProtocol) => void
-  onSave: () => void
+  lift: Lift;
+  protocol: WarmupProtocol;
+  oneRmKg: number;
+  isSaving: boolean;
+  onChange: (p: WarmupProtocol) => void;
+  onSave: () => void;
 }
 
-function LiftSection({ lift, protocol, oneRmKg, isSaving, onChange, onSave }: LiftSectionProps) {
-  const selectedPreset = protocol.type === 'preset' ? protocol.name : null
+function LiftSection({
+  lift,
+  protocol,
+  oneRmKg,
+  isSaving,
+  onChange,
+  onSave,
+}: LiftSectionProps) {
+  const selectedPreset = protocol.type === 'preset' ? protocol.name : null;
 
   return (
     <View style={styles.liftSection}>
       <View style={styles.liftSectionHeader}>
         <Text style={styles.liftSectionTitle}>{LIFT_LABELS[lift]}</Text>
         <TouchableOpacity
-          style={[styles.saveLiftButton, isSaving && styles.saveLiftButtonDisabled]}
+          style={[
+            styles.saveLiftButton,
+            isSaving && styles.saveLiftButtonDisabled,
+          ]}
           onPress={onSave}
           disabled={isSaving}
           activeOpacity={0.8}
         >
-          {isSaving
-            ? <ActivityIndicator color={colors.textInverse} size="small" />
-            : <Text style={styles.saveLiftButtonText}>Save</Text>
-          }
+          {isSaving ? (
+            <ActivityIndicator color={colors.textInverse} size="small" />
+          ) : (
+            <Text style={styles.saveLiftButtonText}>Save</Text>
+          )}
         </TouchableOpacity>
       </View>
 
@@ -171,27 +200,46 @@ function LiftSection({ lift, protocol, oneRmKg, isSaving, onChange, onSave }: Li
         {PRESETS.map((p) => (
           <TouchableOpacity
             key={p.name}
-            style={[styles.presetCard, selectedPreset === p.name && styles.presetCardSelected]}
+            style={[
+              styles.presetCard,
+              selectedPreset === p.name && styles.presetCardSelected,
+            ]}
             onPress={() => onChange({ type: 'preset', name: p.name })}
             activeOpacity={0.7}
           >
-            <Text style={[styles.presetLabel, selectedPreset === p.name && styles.presetLabelSelected]}>
+            <Text
+              style={[
+                styles.presetLabel,
+                selectedPreset === p.name && styles.presetLabelSelected,
+              ]}
+            >
               {p.label}
             </Text>
             <Text style={styles.presetDescription}>{p.description}</Text>
           </TouchableOpacity>
         ))}
         <TouchableOpacity
-          style={[styles.presetCard, protocol.type === 'custom' && styles.presetCardSelected]}
-          onPress={() => onChange({
-            type: 'custom',
-            steps: protocol.type === 'custom'
-              ? protocol.steps
-              : getPresetSteps('standard'),
-          })}
+          style={[
+            styles.presetCard,
+            protocol.type === 'custom' && styles.presetCardSelected,
+          ]}
+          onPress={() =>
+            onChange({
+              type: 'custom',
+              steps:
+                protocol.type === 'custom'
+                  ? protocol.steps
+                  : getPresetSteps('standard'),
+            })
+          }
           activeOpacity={0.7}
         >
-          <Text style={[styles.presetLabel, protocol.type === 'custom' && styles.presetLabelSelected]}>
+          <Text
+            style={[
+              styles.presetLabel,
+              protocol.type === 'custom' && styles.presetLabelSelected,
+            ]}
+          >
             Custom
           </Text>
           <Text style={styles.presetDescription}>Define your own steps</Text>
@@ -209,28 +257,31 @@ function LiftSection({ lift, protocol, oneRmKg, isSaving, onChange, onSave }: Li
       {/* Preview */}
       <WarmupPreview protocol={protocol} oneRmKg={oneRmKg} lift={lift} />
     </View>
-  )
+  );
 }
 
 // ── Screen ────────────────────────────────────────────────────────────────────
 
 export default function WarmupProtocolScreen() {
-  const { user } = useAuth()
-  const queryClient = useQueryClient()
-  const [protocols, setProtocols] = useState<Record<Lift, WarmupProtocol> | null>(null)
-  const [saving, setSaving] = useState<Partial<Record<Lift, boolean>>>({})
+  const { user } = useAuth();
+  const queryClient = useQueryClient();
+  const [protocols, setProtocols] = useState<Record<
+    Lift,
+    WarmupProtocol
+  > | null>(null);
+  const [saving, setSaving] = useState<Partial<Record<Lift, boolean>>>({});
 
   const { data: warmupData, isLoading } = useQuery({
     queryKey: ['warmup', 'configs', user?.id],
     queryFn: () => getAllWarmupConfigs(user!.id),
     enabled: !!user?.id,
-  })
+  });
 
   useEffect(() => {
     if (warmupData && !protocols) {
-      setProtocols(warmupData)
+      setProtocols(warmupData);
     }
-  }, [protocols, warmupData])
+  }, [protocols, warmupData]);
 
   const { data: maxes } = useQuery({
     queryKey: ['maxes', 'all', user?.id],
@@ -239,20 +290,20 @@ export default function WarmupProtocolScreen() {
         getCurrentOneRmKg(user!.id, 'squat'),
         getCurrentOneRmKg(user!.id, 'bench'),
         getCurrentOneRmKg(user!.id, 'deadlift'),
-      ])
-      return { squat: squat ?? 0, bench: bench ?? 0, deadlift: deadlift ?? 0 }
+      ]);
+      return { squat: squat ?? 0, bench: bench ?? 0, deadlift: deadlift ?? 0 };
     },
     enabled: !!user?.id,
-  })
+  });
 
   async function handleSaveLift(lift: Lift) {
-    if (!protocols || !user) return
-    setSaving((prev) => ({ ...prev, [lift]: true }))
+    if (!protocols || !user) return;
+    setSaving((prev) => ({ ...prev, [lift]: true }));
     try {
-      await updateWarmupConfig(user.id, lift, protocols[lift])
-      queryClient.invalidateQueries({ queryKey: ['warmup'] })
+      await updateWarmupConfig(user.id, lift, protocols[lift]);
+      queryClient.invalidateQueries({ queryKey: ['warmup'] });
     } finally {
-      setSaving((prev) => ({ ...prev, [lift]: false }))
+      setSaving((prev) => ({ ...prev, [lift]: false }));
     }
   }
 
@@ -281,14 +332,16 @@ export default function WarmupProtocolScreen() {
               protocol={protocols[lift]}
               oneRmKg={maxes?.[lift] ?? 0}
               isSaving={!!saving[lift]}
-              onChange={(p) => setProtocols((prev) => prev ? { ...prev, [lift]: p } : prev)}
+              onChange={(p) =>
+                setProtocols((prev) => (prev ? { ...prev, [lift]: p } : prev))
+              }
               onSave={() => handleSaveLift(lift)}
             />
           ))}
         </ScrollView>
       )}
     </SafeAreaView>
-  )
+  );
 }
 
 // ── Styles ────────────────────────────────────────────────────────────────────
@@ -314,7 +367,11 @@ const styles = StyleSheet.create({
     borderBottomColor: colors.bgMuted,
     gap: 12,
   },
-  liftSectionHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  liftSectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
   liftSectionTitle: { fontSize: 18, fontWeight: '700', color: colors.text },
   saveLiftButton: {
     backgroundColor: colors.primary,
@@ -323,7 +380,11 @@ const styles = StyleSheet.create({
     paddingVertical: 7,
   },
   saveLiftButtonDisabled: { opacity: 0.4 },
-  saveLiftButtonText: { fontSize: 13, fontWeight: '600', color: colors.textInverse },
+  saveLiftButtonText: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: colors.textInverse,
+  },
 
   presetGrid: { gap: 8 },
   presetCard: {
@@ -333,7 +394,10 @@ const styles = StyleSheet.create({
     padding: 12,
     gap: 2,
   },
-  presetCardSelected: { borderColor: colors.primary, backgroundColor: colors.primaryMuted },
+  presetCardSelected: {
+    borderColor: colors.primary,
+    backgroundColor: colors.primaryMuted,
+  },
   presetLabel: { fontSize: 14, fontWeight: '600', color: colors.textSecondary },
   presetLabelSelected: { color: colors.primary },
   presetDescription: { fontSize: 12, color: colors.textTertiary },
@@ -345,7 +409,12 @@ const styles = StyleSheet.create({
     padding: 12,
     gap: 8,
   },
-  customEditorTitle: { fontSize: 13, fontWeight: '600', color: colors.textSecondary, marginBottom: 4 },
+  customEditorTitle: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: colors.textSecondary,
+    marginBottom: 4,
+  },
   customStep: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -394,4 +463,4 @@ const styles = StyleSheet.create({
   },
   previewTitle: { fontSize: 11, color: colors.success, fontWeight: '600' },
   previewSets: { fontSize: 13, color: colors.success, lineHeight: 18 },
-})
+});

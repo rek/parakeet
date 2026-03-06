@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
   ScrollView,
@@ -7,63 +7,69 @@ import {
   TextInput,
   TouchableOpacity,
   View,
-} from 'react-native'
-import { SafeAreaView } from 'react-native-safe-area-context'
-import { router } from 'expo-router'
-import { useQuery, useQueryClient } from '@tanstack/react-query'
-
-import type { Lift } from '@parakeet/shared-types'
+} from 'react-native';
+import { useAuth } from '@modules/auth';
 import {
-  getAuxiliaryPools,
-  reorderAuxiliaryPool,
   getActiveAssignments,
+  getActiveProgram,
+  getAuxiliaryPools,
   lockAssignment,
-} from '@modules/program'
-import { getActiveProgram } from '@modules/program'
-import { useAuth } from '@modules/auth'
-import { colors } from '../../theme'
-import { BackLink } from '../../components/navigation/BackLink'
+  reorderAuxiliaryPool,
+} from '@modules/program';
+import type { Lift } from '@parakeet/shared-types';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { router } from 'expo-router';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { BackLink } from '../../components/navigation/BackLink';
+import { colors } from '../../theme';
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
-const LIFTS: Lift[] = ['squat', 'bench', 'deadlift']
+const LIFTS: Lift[] = ['squat', 'bench', 'deadlift'];
 
 const LIFT_LABELS: Record<Lift, string> = {
-  squat: 'Squat', bench: 'Bench', deadlift: 'Deadlift',
-}
+  squat: 'Squat',
+  bench: 'Bench',
+  deadlift: 'Deadlift',
+};
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
-function currentBlockNumber(startDateStr: string, totalWeeks: number): 1 | 2 | 3 {
-  const start = new Date(startDateStr)
-  const now = new Date()
-  const weeksPassed = Math.floor((now.getTime() - start.getTime()) / (7 * 24 * 60 * 60 * 1000))
-  const weeksPerBlock = Math.floor(totalWeeks / 3)
-  const block = Math.min(3, Math.floor(weeksPassed / weeksPerBlock) + 1)
-  return block as 1 | 2 | 3
+function currentBlockNumber(
+  startDateStr: string,
+  totalWeeks: number
+): 1 | 2 | 3 {
+  const start = new Date(startDateStr);
+  const now = new Date();
+  const weeksPassed = Math.floor(
+    (now.getTime() - start.getTime()) / (7 * 24 * 60 * 60 * 1000)
+  );
+  const weeksPerBlock = Math.floor(totalWeeks / 3);
+  const block = Math.min(3, Math.floor(weeksPassed / weeksPerBlock) + 1);
+  return block as 1 | 2 | 3;
 }
 
 // ── Pool list ─────────────────────────────────────────────────────────────────
 
 interface PoolListProps {
-  pool: string[]
-  onReorder: (pool: string[]) => void
-  onRemove: (i: number) => void
+  pool: string[];
+  onReorder: (pool: string[]) => void;
+  onRemove: (i: number) => void;
 }
 
 function PoolList({ pool, onReorder, onRemove }: PoolListProps) {
   function moveUp(i: number) {
-    if (i === 0) return
-    const next = [...pool]
-    ;[next[i - 1], next[i]] = [next[i], next[i - 1]]
-    onReorder(next)
+    if (i === 0) return;
+    const next = [...pool];
+    [next[i - 1], next[i]] = [next[i], next[i - 1]];
+    onReorder(next);
   }
 
   function moveDown(i: number) {
-    if (i === pool.length - 1) return
-    const next = [...pool]
-    ;[next[i], next[i + 1]] = [next[i + 1], next[i]]
-    onReorder(next)
+    if (i === pool.length - 1) return;
+    const next = [...pool];
+    [next[i], next[i + 1]] = [next[i + 1], next[i]];
+    onReorder(next);
   }
 
   return (
@@ -71,7 +77,9 @@ function PoolList({ pool, onReorder, onRemove }: PoolListProps) {
       {pool.map((ex, i) => (
         <View key={`${ex}-${i}`} style={styles.poolItem}>
           <Text style={styles.poolPosition}>{i + 1}.</Text>
-          <Text style={styles.poolExercise} numberOfLines={1}>{ex}</Text>
+          <Text style={styles.poolExercise} numberOfLines={1}>
+            {ex}
+          </Text>
           <View style={styles.poolActions}>
             <TouchableOpacity
               style={[styles.reorderBtn, i === 0 && styles.reorderBtnDisabled]}
@@ -82,7 +90,10 @@ function PoolList({ pool, onReorder, onRemove }: PoolListProps) {
               <Text style={styles.reorderBtnText}>↑</Text>
             </TouchableOpacity>
             <TouchableOpacity
-              style={[styles.reorderBtn, i === pool.length - 1 && styles.reorderBtnDisabled]}
+              style={[
+                styles.reorderBtn,
+                i === pool.length - 1 && styles.reorderBtnDisabled,
+              ]}
               onPress={() => moveDown(i)}
               disabled={i === pool.length - 1}
               activeOpacity={0.7}
@@ -100,79 +111,95 @@ function PoolList({ pool, onReorder, onRemove }: PoolListProps) {
         </View>
       ))}
     </View>
-  )
+  );
 }
 
 // ── Assignment picker ─────────────────────────────────────────────────────────
 
 interface SlotPickerProps {
-  label: string
-  value: string
-  pool: string[]
-  onChange: (v: string) => void
+  label: string;
+  value: string;
+  pool: string[];
+  onChange: (v: string) => void;
 }
 
 function SlotPicker({ label, value, pool, onChange }: SlotPickerProps) {
-  const idx = pool.indexOf(value)
+  const idx = pool.indexOf(value);
 
   function prev() {
-    const next = (idx - 1 + pool.length) % pool.length
-    onChange(pool[next])
+    const next = (idx - 1 + pool.length) % pool.length;
+    onChange(pool[next]);
   }
 
   function next() {
-    const next = (idx + 1) % pool.length
-    onChange(pool[next])
+    const next = (idx + 1) % pool.length;
+    onChange(pool[next]);
   }
 
   return (
     <View style={styles.slotPicker}>
       <Text style={styles.slotLabel}>{label}</Text>
       <View style={styles.slotControls}>
-        <TouchableOpacity style={styles.slotArrow} onPress={prev} activeOpacity={0.7}>
+        <TouchableOpacity
+          style={styles.slotArrow}
+          onPress={prev}
+          activeOpacity={0.7}
+        >
           <Text style={styles.slotArrowText}>‹</Text>
         </TouchableOpacity>
-        <Text style={styles.slotValue} numberOfLines={1}>{value}</Text>
-        <TouchableOpacity style={styles.slotArrow} onPress={next} activeOpacity={0.7}>
+        <Text style={styles.slotValue} numberOfLines={1}>
+          {value}
+        </Text>
+        <TouchableOpacity
+          style={styles.slotArrow}
+          onPress={next}
+          activeOpacity={0.7}
+        >
           <Text style={styles.slotArrowText}>›</Text>
         </TouchableOpacity>
       </View>
     </View>
-  )
+  );
 }
 
 // ── Lift section ──────────────────────────────────────────────────────────────
 
 interface LiftSectionProps {
-  lift: Lift
-  pool: string[]
-  assignment: [string, string] | null
-  blockNumber: 1 | 2 | 3 | null
-  isSavingPool: boolean
-  isSavingAssignment: boolean
-  onPoolChange: (pool: string[]) => void
-  onSavePool: () => void
-  onAssignmentChange: (pair: [string, string]) => void
-  onSaveAssignment: () => void
+  lift: Lift;
+  pool: string[];
+  assignment: [string, string] | null;
+  blockNumber: 1 | 2 | 3 | null;
+  isSavingPool: boolean;
+  isSavingAssignment: boolean;
+  onPoolChange: (pool: string[]) => void;
+  onSavePool: () => void;
+  onAssignmentChange: (pair: [string, string]) => void;
+  onSaveAssignment: () => void;
 }
 
 function LiftSection({
-  lift, pool, assignment, blockNumber,
-  isSavingPool, isSavingAssignment,
-  onPoolChange, onSavePool,
-  onAssignmentChange, onSaveAssignment,
+  lift,
+  pool,
+  assignment,
+  blockNumber,
+  isSavingPool,
+  isSavingAssignment,
+  onPoolChange,
+  onSavePool,
+  onAssignmentChange,
+  onSaveAssignment,
 }: LiftSectionProps) {
-  const [newExercise, setNewExercise] = useState('')
+  const [newExercise, setNewExercise] = useState('');
 
   function addExercise() {
-    const trimmed = newExercise.trim()
-    if (!trimmed || pool.includes(trimmed)) return
-    onPoolChange([...pool, trimmed])
-    setNewExercise('')
+    const trimmed = newExercise.trim();
+    if (!trimmed || pool.includes(trimmed)) return;
+    onPoolChange([...pool, trimmed]);
+    setNewExercise('');
   }
 
   function removeExercise(i: number) {
-    onPoolChange(pool.filter((_, idx) => idx !== i))
+    onPoolChange(pool.filter((_, idx) => idx !== i));
   }
 
   return (
@@ -185,15 +212,20 @@ function LiftSection({
           disabled={isSavingPool}
           activeOpacity={0.8}
         >
-          {isSavingPool
-            ? <ActivityIndicator color={colors.textInverse} size="small" />
-            : <Text style={styles.saveBtnText}>Save Pool</Text>
-          }
+          {isSavingPool ? (
+            <ActivityIndicator color={colors.textInverse} size="small" />
+          ) : (
+            <Text style={styles.saveBtnText}>Save Pool</Text>
+          )}
         </TouchableOpacity>
       </View>
 
       <Text style={styles.sectionLabel}>Pool Order</Text>
-      <PoolList pool={pool} onReorder={onPoolChange} onRemove={removeExercise} />
+      <PoolList
+        pool={pool}
+        onReorder={onPoolChange}
+        onRemove={removeExercise}
+      />
 
       <View style={styles.addRow}>
         <TextInput
@@ -218,17 +250,23 @@ function LiftSection({
       {assignment && blockNumber && pool.length >= 2 && (
         <View style={styles.assignmentCard}>
           <View style={styles.assignmentHeader}>
-            <Text style={styles.assignmentTitle}>Block {blockNumber} Assignment</Text>
+            <Text style={styles.assignmentTitle}>
+              Block {blockNumber} Assignment
+            </Text>
             <TouchableOpacity
-              style={[styles.saveAssignmentBtn, isSavingAssignment && styles.saveBtnDisabled]}
+              style={[
+                styles.saveAssignmentBtn,
+                isSavingAssignment && styles.saveBtnDisabled,
+              ]}
               onPress={onSaveAssignment}
               disabled={isSavingAssignment}
               activeOpacity={0.8}
             >
-              {isSavingAssignment
-                ? <ActivityIndicator color={colors.primary} size="small" />
-                : <Text style={styles.saveAssignmentBtnText}>Lock</Text>
-              }
+              {isSavingAssignment ? (
+                <ActivityIndicator color={colors.primary} size="small" />
+              ) : (
+                <Text style={styles.saveAssignmentBtnText}>Lock</Text>
+              )}
             </TouchableOpacity>
           </View>
           <SlotPicker
@@ -246,86 +284,96 @@ function LiftSection({
         </View>
       )}
     </View>
-  )
+  );
 }
 
 // ── Screen ────────────────────────────────────────────────────────────────────
 
-type Pools = Record<Lift, string[]>
-type Assignments = Record<Lift, [string, string]>
+type Pools = Record<Lift, string[]>;
+type Assignments = Record<Lift, [string, string]>;
 
 export default function AuxiliaryExercisesScreen() {
-  const { user } = useAuth()
-  const queryClient = useQueryClient()
-  const [pools, setPools] = useState<Pools | null>(null)
-  const [assignments, setAssignments] = useState<Partial<Assignments>>({})
-  const [blockNumber, setBlockNumber] = useState<1 | 2 | 3 | null>(null)
-  const [programId, setProgramId] = useState<string | null>(null)
-  const [savingPool, setSavingPool] = useState<Partial<Record<Lift, boolean>>>({})
-  const [savingAssignment, setSavingAssignment] = useState<Partial<Record<Lift, boolean>>>({})
+  const { user } = useAuth();
+  const queryClient = useQueryClient();
+  const [pools, setPools] = useState<Pools | null>(null);
+  const [assignments, setAssignments] = useState<Partial<Assignments>>({});
+  const [blockNumber, setBlockNumber] = useState<1 | 2 | 3 | null>(null);
+  const [programId, setProgramId] = useState<string | null>(null);
+  const [savingPool, setSavingPool] = useState<Partial<Record<Lift, boolean>>>(
+    {}
+  );
+  const [savingAssignment, setSavingAssignment] = useState<
+    Partial<Record<Lift, boolean>>
+  >({});
 
   const { data: poolData, isLoading } = useQuery({
     queryKey: ['auxiliary', 'pools', user?.id],
     queryFn: () => getAuxiliaryPools(user!.id),
     enabled: !!user?.id,
-  })
+  });
 
   const { data: activeProgram } = useQuery({
     queryKey: ['programs', 'active', user?.id],
     queryFn: () => getActiveProgram(user!.id),
     enabled: !!user?.id,
-  })
+  });
 
   useEffect(() => {
     if (poolData && !pools) {
-      setPools(poolData)
+      setPools(poolData);
     }
-  }, [poolData, pools])
+  }, [poolData, pools]);
 
   useEffect(() => {
-    let isMounted = true
+    let isMounted = true;
 
     async function syncAssignmentsFromProgram() {
-      if (!activeProgram || !activeProgram.start_date || !user?.id) return
-      const bn = currentBlockNumber(activeProgram.start_date, activeProgram.total_weeks)
-      setBlockNumber(bn)
-      setProgramId(activeProgram.id)
-      const loaded = await getActiveAssignments(user.id, activeProgram.id, bn)
-      if (!isMounted) return
+      if (!activeProgram || !activeProgram.start_date || !user?.id) return;
+      const bn = currentBlockNumber(
+        activeProgram.start_date,
+        activeProgram.total_weeks
+      );
+      setBlockNumber(bn);
+      setProgramId(activeProgram.id);
+      const loaded = await getActiveAssignments(user.id, activeProgram.id, bn);
+      if (!isMounted) return;
       setAssignments(
         Object.fromEntries(
-          LIFTS.map((l) => [l, loaded[l] ?? (pools ? [pools[l][0], pools[l][1]] : ['', ''])]),
-        ) as Partial<Assignments>,
-      )
+          LIFTS.map((l) => [
+            l,
+            loaded[l] ?? (pools ? [pools[l][0], pools[l][1]] : ['', '']),
+          ])
+        ) as Partial<Assignments>
+      );
     }
 
-    void syncAssignmentsFromProgram()
+    void syncAssignmentsFromProgram();
 
     return () => {
-      isMounted = false
-    }
-  }, [activeProgram, pools, user?.id])
+      isMounted = false;
+    };
+  }, [activeProgram, pools, user?.id]);
 
   async function handleSavePool(lift: Lift) {
-    if (!pools || !user) return
-    setSavingPool((prev) => ({ ...prev, [lift]: true }))
+    if (!pools || !user) return;
+    setSavingPool((prev) => ({ ...prev, [lift]: true }));
     try {
-      await reorderAuxiliaryPool(user.id, lift, pools[lift])
-      queryClient.invalidateQueries({ queryKey: ['auxiliary'] })
+      await reorderAuxiliaryPool(user.id, lift, pools[lift]);
+      queryClient.invalidateQueries({ queryKey: ['auxiliary'] });
     } finally {
-      setSavingPool((prev) => ({ ...prev, [lift]: false }))
+      setSavingPool((prev) => ({ ...prev, [lift]: false }));
     }
   }
 
   async function handleSaveAssignment(lift: Lift) {
-    if (!user || !programId || !blockNumber || !assignments[lift]) return
-    const [ex1, ex2] = assignments[lift]!
-    setSavingAssignment((prev) => ({ ...prev, [lift]: true }))
+    if (!user || !programId || !blockNumber || !assignments[lift]) return;
+    const [ex1, ex2] = assignments[lift]!;
+    setSavingAssignment((prev) => ({ ...prev, [lift]: true }));
     try {
-      await lockAssignment(user.id, programId, lift, blockNumber, ex1, ex2)
-      queryClient.invalidateQueries({ queryKey: ['auxiliary'] })
+      await lockAssignment(user.id, programId, lift, blockNumber, ex1, ex2);
+      queryClient.invalidateQueries({ queryKey: ['auxiliary'] });
     } finally {
-      setSavingAssignment((prev) => ({ ...prev, [lift]: false }))
+      setSavingAssignment((prev) => ({ ...prev, [lift]: false }));
     }
   }
 
@@ -334,7 +382,9 @@ export default function AuxiliaryExercisesScreen() {
       <View style={styles.header}>
         <BackLink onPress={() => router.back()} />
         <Text style={styles.title}>Auxiliary Exercises</Text>
-        <Text style={styles.subtitle}>Reorder to influence future rotation · add custom exercises</Text>
+        <Text style={styles.subtitle}>
+          Reorder to influence future rotation · add custom exercises
+        </Text>
       </View>
 
       {isLoading || !pools ? (
@@ -353,20 +403,26 @@ export default function AuxiliaryExercisesScreen() {
               key={lift}
               lift={lift}
               pool={pools[lift]}
-              assignment={(assignments[lift] ?? null) as [string, string] | null}
+              assignment={
+                (assignments[lift] ?? null) as [string, string] | null
+              }
               blockNumber={blockNumber}
               isSavingPool={!!savingPool[lift]}
               isSavingAssignment={!!savingAssignment[lift]}
-              onPoolChange={(p) => setPools((prev) => prev ? { ...prev, [lift]: p } : prev)}
+              onPoolChange={(p) =>
+                setPools((prev) => (prev ? { ...prev, [lift]: p } : prev))
+              }
               onSavePool={() => handleSavePool(lift)}
-              onAssignmentChange={(pair) => setAssignments((prev) => ({ ...prev, [lift]: pair }))}
+              onAssignmentChange={(pair) =>
+                setAssignments((prev) => ({ ...prev, [lift]: pair }))
+              }
               onSaveAssignment={() => handleSaveAssignment(lift)}
             />
           ))}
         </ScrollView>
       )}
     </SafeAreaView>
-  )
+  );
 }
 
 // ── Styles ────────────────────────────────────────────────────────────────────
@@ -394,9 +450,19 @@ const styles = StyleSheet.create({
     borderBottomColor: colors.bgMuted,
     gap: 10,
   },
-  liftHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  liftHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
   liftTitle: { fontSize: 18, fontWeight: '700', color: colors.text },
-  sectionLabel: { fontSize: 12, fontWeight: '600', color: colors.textSecondary, textTransform: 'uppercase', letterSpacing: 0.5 },
+  sectionLabel: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: colors.textSecondary,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
   saveBtn: {
     backgroundColor: colors.primary,
     borderRadius: 8,
@@ -416,7 +482,12 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     gap: 8,
   },
-  poolPosition: { fontSize: 12, color: colors.textTertiary, width: 20, textAlign: 'right' },
+  poolPosition: {
+    fontSize: 12,
+    color: colors.textTertiary,
+    width: 20,
+    textAlign: 'right',
+  },
   poolExercise: { flex: 1, fontSize: 14, color: colors.text },
   poolActions: { flexDirection: 'row', gap: 4 },
   reorderBtn: {
@@ -468,7 +539,11 @@ const styles = StyleSheet.create({
     padding: 12,
     gap: 8,
   },
-  assignmentHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  assignmentHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
   assignmentTitle: { fontSize: 13, fontWeight: '600', color: colors.primary },
   saveAssignmentBtn: {
     borderWidth: 1,
@@ -477,10 +552,20 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical: 4,
   },
-  saveAssignmentBtnText: { fontSize: 12, fontWeight: '600', color: colors.primary },
+  saveAssignmentBtnText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: colors.primary,
+  },
 
   slotPicker: { gap: 4 },
-  slotLabel: { fontSize: 11, color: colors.textSecondary, fontWeight: '600', textTransform: 'uppercase', letterSpacing: 0.4 },
+  slotLabel: {
+    fontSize: 11,
+    color: colors.textSecondary,
+    fontWeight: '600',
+    textTransform: 'uppercase',
+    letterSpacing: 0.4,
+  },
   slotControls: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   slotArrow: {
     width: 28,
@@ -494,4 +579,4 @@ const styles = StyleSheet.create({
   },
   slotArrowText: { fontSize: 18, color: colors.primary, lineHeight: 22 },
   slotValue: { flex: 1, fontSize: 14, color: colors.text, fontWeight: '500' },
-})
+});

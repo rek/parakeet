@@ -29,6 +29,33 @@
 - [ ] Female input at soreness 5: auxiliary skipped (unchanged)
 - [ ] MRV cap logic still skips auxiliary regardless of sex
 
+## Auxiliary Weight Calibration (`AUX_WEIGHT_PCT`)
+
+Default weight is `67.5%` of the primary lift 1RM — appropriate for compound variations close to the main lift pattern. Exercises that diverge from this pattern use per-exercise overrides:
+
+| Exercise | % of 1RM | Reason |
+|---|---|---|
+| Bulgarian Split Squat | 40% | Unilateral — absolute load per side is much lower |
+| Good Mornings | 35% | Spinal-loading technique lift — kept light for safety |
+| Overhead Press | 58% | Vertical press; bench 1RM doesn't transfer well |
+| JM Press | 50% | Tricep isolation; bench 1RM doesn't transfer |
+| Barbell Curl | 35% | Isolation; primary lift 1RM is irrelevant |
+| Dumbbell Curl | 30% | Isolation |
+| Cable Curl | 30% | Isolation |
+| EZ-Bar Curl | 33% | Isolation |
+
+All other exercises default to `67.5%`.
+
+## Auxiliary Rep Calibration (`AUX_REP_TARGETS`)
+
+Default is `10` (male) / `12` (female). Per-exercise overrides:
+
+| Category | Examples | Reps |
+|---|---|---|
+| Strength variations | Pause Squat, Box Squat, Block Pulls, Board Press | 4–6 |
+| Hypertrophy compounds | Romanian DL, Bulgarian Split Squat, Incline DB Press | 8–10 |
+| High-rep / isolation | Hyperextensions, Leg Press, curls | 10–15 |
+
 ## Usage Context
 
 - `JITInput.biologicalSex` is already defined as optional — no type changes needed

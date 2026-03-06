@@ -8,22 +8,19 @@ import {
   useWindowDimensions,
   View,
 } from 'react-native';
+import { useAuth } from '@modules/auth';
+import { useCyclePhase } from '@modules/cycle-tracking';
+import { getPerformanceTrends, getWeeklySetsPerLift } from '@modules/history';
+import type { PerformanceTrend } from '@modules/history';
+import { listPrograms } from '@modules/program';
+import { getCompletedSessions } from '@modules/session';
 import type { Lift } from '@parakeet/shared-types';
+import { formatDate } from '@shared/utils/date';
 import { useQuery } from '@tanstack/react-query';
 import { router } from 'expo-router';
 import { LineChart } from 'react-native-chart-kit';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useAuth } from '@modules/auth';
-import { useCyclePhase } from '@modules/cycle-tracking';
-import {
-  getPerformanceTrends,
-  getWeeklySetsPerLift,
-} from '@modules/history';
-import type { PerformanceTrend } from '@modules/history';
-import { listPrograms } from '@modules/program';
-import { getCompletedSessions } from '@modules/session';
 import { colors, palette, radii, spacing, typography } from '../../theme';
-import { formatDate } from '@shared/utils/date';
 
 // ── Cycle phase constants ─────────────────────────────────────────────────────
 
@@ -138,7 +135,7 @@ function TrendCard({ trend }: { trend: PerformanceTrend }) {
 
 function SessionRow({ session }: { session: CompletedSession }) {
   function handlePress() {
-    router.push(`/history/${session.id}`)
+    router.push(`/history/${session.id}`);
   }
   const intensityLabel: Record<string, string> = {
     heavy: 'Heavy',
@@ -152,7 +149,11 @@ function SessionRow({ session }: { session: CompletedSession }) {
     intensityLabel[session.intensity_type] ?? session.intensity_type;
 
   return (
-    <TouchableOpacity style={styles.sessionRow} onPress={handlePress} activeOpacity={0.7}>
+    <TouchableOpacity
+      style={styles.sessionRow}
+      onPress={handlePress}
+      activeOpacity={0.7}
+    >
       <View style={styles.sessionRowLeft}>
         <Text style={styles.sessionRowTitle}>
           {liftName} — {intensityName}
@@ -324,21 +325,34 @@ export default function HistoryScreen() {
                       <Text style={styles.programRowTitle}>
                         Program v{program.version ?? 1}
                       </Text>
-                      <View style={[
-                        styles.programStatusBadge,
-                        program.status === 'completed' ? styles.programStatusCompleted : styles.programStatusAbandoned,
-                      ]}>
-                        <Text style={[
-                          styles.programStatusText,
-                          program.status === 'completed' ? styles.programStatusTextCompleted : styles.programStatusTextAbandoned,
-                        ]}>
-                          {program.status === 'completed' ? 'Completed' : 'Abandoned'}
+                      <View
+                        style={[
+                          styles.programStatusBadge,
+                          program.status === 'completed'
+                            ? styles.programStatusCompleted
+                            : styles.programStatusAbandoned,
+                        ]}
+                      >
+                        <Text
+                          style={[
+                            styles.programStatusText,
+                            program.status === 'completed'
+                              ? styles.programStatusTextCompleted
+                              : styles.programStatusTextAbandoned,
+                          ]}
+                        >
+                          {program.status === 'completed'
+                            ? 'Completed'
+                            : 'Abandoned'}
                         </Text>
                       </View>
                     </View>
                     <Text style={styles.sessionRowDate}>
-                      {program.total_weeks} weeks · {program.training_days_per_week} days/week
-                      {program.start_date ? ` · Started ${formatDate(program.start_date)}` : ''}
+                      {program.total_weeks} weeks ·{' '}
+                      {program.training_days_per_week} days/week
+                      {program.start_date
+                        ? ` · Started ${formatDate(program.start_date)}`
+                        : ''}
                     </Text>
                   </View>
                   <TouchableOpacity
@@ -593,7 +607,10 @@ const styles = StyleSheet.create({
   },
   programStatusCompleted: { backgroundColor: colors.successMuted },
   programStatusAbandoned: { backgroundColor: colors.bgMuted },
-  programStatusText: { fontSize: typography.sizes.xs, fontWeight: typography.weights.semibold },
+  programStatusText: {
+    fontSize: typography.sizes.xs,
+    fontWeight: typography.weights.semibold,
+  },
   programStatusTextCompleted: { color: colors.success },
   programStatusTextAbandoned: { color: colors.textSecondary },
   reviewButton: {

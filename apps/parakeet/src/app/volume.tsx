@@ -1,13 +1,13 @@
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useWeeklyVolume } from '@modules/training-volume';
 import type { MuscleGroup, VolumeStatus } from '@parakeet/training-engine';
-import { router } from 'expo-router';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { BackLink } from '../components/navigation/BackLink';
 import {
   MUSCLE_GROUPS_ORDER,
   MUSCLE_LABELS_FULL,
 } from '@shared/constants/training';
-import { useWeeklyVolume } from '@modules/training-volume';
+import { router } from 'expo-router';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { BackLink } from '../components/navigation/BackLink';
 import { colors } from '../theme';
 
 const BAR_COLORS: Record<VolumeStatus, string> = {
@@ -55,7 +55,8 @@ function MuscleBar({ muscle, sets, mrv, mev, status }: MuscleBarProps) {
         </View>
         <View style={styles.barStats}>
           <Text style={[styles.barSets, isOver && styles.barSetsOver]}>
-            {sets}{isOver ? ' ⚠' : ''}
+            {sets}
+            {isOver ? ' ⚠' : ''}
           </Text>
           <Text style={styles.barMrv}>/{mrv}</Text>
         </View>
@@ -79,7 +80,9 @@ export default function VolumeScreen() {
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
       >
-        <Text style={styles.subtitle}>Sets completed this week · numbers show sets / MRV target</Text>
+        <Text style={styles.subtitle}>
+          Sets completed this week · numbers show sets / MRV target
+        </Text>
 
         <View style={styles.legend}>
           {(

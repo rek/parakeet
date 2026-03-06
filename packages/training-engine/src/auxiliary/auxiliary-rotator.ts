@@ -21,6 +21,10 @@ export const DEFAULT_AUXILIARY_POOLS: Record<Lift, string[]> = {
     'Board Press',
     'Spoto Press',
     '1 Inch Pause Bench',
+    'Barbell Curl',
+    'Dumbbell Curl',
+    'Cable Curl',
+    'EZ-Bar Curl',
   ],
   deadlift: [
     'Romanian DL',

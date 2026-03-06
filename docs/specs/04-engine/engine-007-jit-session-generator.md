@@ -95,7 +95,9 @@ interface AuxiliaryWork {
 - [x] **Step 5 — Disruption override**
   - If any activeDisruptions affect this lift: apply disruption-adjuster reductions (takes full precedence over steps 2–4)
 - [x] **Step 6 — Auxiliary work**
-  - For each auxiliary exercise (2 total): base 3–4 sets × 8–12 reps at ~65–70% 1RM
+  - For each auxiliary exercise (2 total): base 3–4 sets at 67.5% 1RM (default), per-exercise rep target, RPE 7.5
+  - Per-exercise weight %: `AUX_WEIGHT_PCT[exercise] ?? 0.675` — divergent exercises (Good Mornings, Bulgarian Split Squat, OHP, JM Press, curls) use lower percentages; see table in engine-019
+  - Per-exercise rep target: `AUX_REP_TARGETS[exercise] ?? baseReps` — strength variations 4–6 reps; hypertrophy 8–12; isolation/high-rep 10–15
   - Apply soreness check and MRV check per auxiliary muscle
 - [x] **Step 7 — Final output assembly**
   - Apply intensityMultiplier to all weight_kg values → round to nearest 2.5kg

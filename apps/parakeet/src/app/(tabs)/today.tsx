@@ -1,6 +1,4 @@
-import { router } from 'expo-router'
-import { useCallback, useState } from 'react'
-import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { useCallback, useState } from 'react';
 import {
   ActivityIndicator,
   RefreshControl,
@@ -9,69 +7,73 @@ import {
   Text,
   TouchableOpacity,
   View,
-} from 'react-native'
-import { SafeAreaView } from 'react-native-safe-area-context'
-
-import { WorkoutCard } from '../../components/training/WorkoutCard'
-import { StreakPill } from '../../components/achievements/StreakPill'
-import { DisruptionChipsRow } from '../../components/disruption/DisruptionChipsRow'
-import { useAuth } from '@modules/auth'
-import { useActiveProgram } from '@modules/program'
-import { useTodaySessions, useInProgressSession } from '@modules/session'
-import { useWeeklyVolume } from '@modules/training-volume'
-import { useCyclePhase } from '@modules/cycle-tracking'
-import { getActiveDisruptions } from '@modules/disruptions'
-import { getStreakData } from '@modules/achievements'
-import { colors, palette, spacing, radii, typography } from '../../theme'
-import type { MuscleGroup, VolumeStatus } from '@parakeet/training-engine'
+} from 'react-native';
+import { getStreakData } from '@modules/achievements';
+import { useAuth } from '@modules/auth';
+import { useCyclePhase } from '@modules/cycle-tracking';
+import { getActiveDisruptions } from '@modules/disruptions';
+import { useActiveProgram } from '@modules/program';
+import { useInProgressSession, useTodaySessions } from '@modules/session';
+import { useWeeklyVolume } from '@modules/training-volume';
+import type { MuscleGroup, VolumeStatus } from '@parakeet/training-engine';
 import {
   COMPACT_VOLUME_MUSCLES,
   MUSCLE_LABELS_COMPACT,
-} from '@shared/constants/training'
+} from '@shared/constants/training';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { router } from 'expo-router';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { StreakPill } from '../../components/achievements/StreakPill';
+import { DisruptionChipsRow } from '../../components/disruption/DisruptionChipsRow';
+import { WorkoutCard } from '../../components/training/WorkoutCard';
+import { colors, palette, radii, spacing, typography } from '../../theme';
 
 // ── Cycle phase constants ─────────────────────────────────────────────────────
 
 const CYCLE_PHASE_BG: Record<string, string> = {
-  menstrual:   palette.red100,
-  follicular:  palette.emerald100,
-  ovulatory:   palette.amber100,
-  luteal:      palette.indigo100,
+  menstrual: palette.red100,
+  follicular: palette.emerald100,
+  ovulatory: palette.amber100,
+  luteal: palette.indigo100,
   late_luteal: palette.indigo100,
-}
+};
 const CYCLE_PHASE_TEXT: Record<string, string> = {
-  menstrual:   palette.red800,
-  follicular:  palette.emerald800,
-  ovulatory:   palette.amber800,
-  luteal:      palette.indigo800,
+  menstrual: palette.red800,
+  follicular: palette.emerald800,
+  ovulatory: palette.amber800,
+  luteal: palette.indigo800,
   late_luteal: palette.indigo800,
-}
+};
 
 const CYCLE_PHASE_LABELS: Record<string, string> = {
-  menstrual:   'Menstrual',
-  follicular:  'Follicular',
-  ovulatory:   'Ovulatory',
-  luteal:      'Luteal',
+  menstrual: 'Menstrual',
+  follicular: 'Follicular',
+  ovulatory: 'Ovulatory',
+  luteal: 'Luteal',
   late_luteal: 'Late Luteal',
-}
+};
 
 // ── Volume compact card ───────────────────────────────────────────────────────
 
 const BAR_COLORS: Record<VolumeStatus, string> = {
-  below_mev:       colors.warning,
-  in_range:        colors.success,
+  below_mev: colors.warning,
+  in_range: colors.success,
   approaching_mrv: colors.secondary,
-  at_mrv:          colors.danger,
-  exceeded_mrv:    colors.danger,
-}
+  at_mrv: colors.danger,
+  exceeded_mrv: colors.danger,
+};
 
 function VolumeCompactCard() {
-  const { data } = useWeeklyVolume()
+  const { data } = useWeeklyVolume();
 
   return (
     <View style={styles.volumeCard}>
       <View style={styles.volumeCardHeader}>
         <Text style={styles.volumeCardTitle}>Weekly Volume</Text>
-        <TouchableOpacity onPress={() => router.push('/volume')} activeOpacity={0.7}>
+        <TouchableOpacity
+          onPress={() => router.push('/volume')}
+          activeOpacity={0.7}
+        >
           <Text style={styles.volumeViewAll}>View All →</Text>
         </TouchableOpacity>
       </View>
@@ -80,32 +82,43 @@ function VolumeCompactCard() {
         <Text style={styles.volumeLoading}>Loading…</Text>
       ) : (
         COMPACT_VOLUME_MUSCLES.map((muscle) => {
-          const sets   = data.weekly[muscle]
-          const mrv    = data.config[muscle].mrv
-          const status = data.status[muscle]
-          const fillPct = mrv > 0 ? Math.min(100, (sets / mrv) * 100) : 0
-          const isOver  = status === 'at_mrv' || status === 'exceeded_mrv'
+          const sets = data.weekly[muscle];
+          const mrv = data.config[muscle].mrv;
+          const status = data.status[muscle];
+          const fillPct = mrv > 0 ? Math.min(100, (sets / mrv) * 100) : 0;
+          const isOver = status === 'at_mrv' || status === 'exceeded_mrv';
 
           return (
             <View key={muscle} style={styles.volumeRow}>
-              <Text style={styles.volumeRowLabel}>{MUSCLE_LABELS_COMPACT[muscle]}</Text>
+              <Text style={styles.volumeRowLabel}>
+                {MUSCLE_LABELS_COMPACT[muscle]}
+              </Text>
               <View style={styles.volumeBarTrack}>
                 <View
                   style={[
                     styles.volumeBarFill,
-                    { width: `${fillPct}%`, backgroundColor: BAR_COLORS[status] },
+                    {
+                      width: `${fillPct}%`,
+                      backgroundColor: BAR_COLORS[status],
+                    },
                   ]}
                 />
               </View>
-              <Text style={[styles.volumeRowSets, isOver && styles.volumeRowSetsOver]}>
-                {sets}/{mrv}{isOver ? ' ⚠' : ''}
+              <Text
+                style={[
+                  styles.volumeRowSets,
+                  isOver && styles.volumeRowSetsOver,
+                ]}
+              >
+                {sets}/{mrv}
+                {isOver ? ' ⚠' : ''}
               </Text>
             </View>
-          )
+          );
         })
       )}
     </View>
-  )
+  );
 }
 
 // ── Screen ────────────────────────────────────────────────────────────────────
@@ -115,54 +128,56 @@ function WorkoutDoneCard({ session }: { session: { primary_lift: string } }) {
     <View style={styles.workoutDoneCard}>
       <Text style={styles.workoutDoneTitle}>Workout Done ✓</Text>
       <Text style={styles.workoutDoneSubtitle}>
-        {session.primary_lift.charAt(0).toUpperCase() + session.primary_lift.slice(1)} — great work today.
+        {session.primary_lift.charAt(0).toUpperCase() +
+          session.primary_lift.slice(1)}{' '}
+        — great work today.
       </Text>
     </View>
-  )
+  );
 }
 
 export default function TodayScreen() {
-  const { user } = useAuth()
-  const { data: sessions = [], isLoading: sessionLoading } = useTodaySessions()
-  const { data: activeSession } = useInProgressSession()
-  const { data: program, isLoading: programLoading } = useActiveProgram()
-  const { data: volumeData } = useWeeklyVolume()
-  const { data: cycleContext } = useCyclePhase()
-  const queryClient = useQueryClient()
-  const [refreshing, setRefreshing] = useState(false)
+  const { user } = useAuth();
+  const { data: sessions = [], isLoading: sessionLoading } = useTodaySessions();
+  const { data: activeSession } = useInProgressSession();
+  const { data: program, isLoading: programLoading } = useActiveProgram();
+  const { data: volumeData } = useWeeklyVolume();
+  const { data: cycleContext } = useCyclePhase();
+  const queryClient = useQueryClient();
+  const [refreshing, setRefreshing] = useState(false);
 
   const handleRefresh = useCallback(async () => {
-    setRefreshing(true)
-    await queryClient.invalidateQueries()
-    setRefreshing(false)
-  }, [queryClient])
+    setRefreshing(true);
+    await queryClient.invalidateQueries();
+    setRefreshing(false);
+  }, [queryClient]);
 
   const { data: disruptions } = useQuery({
     queryKey: ['disruptions', 'active', user?.id],
     queryFn: () => getActiveDisruptions(user!.id),
     enabled: !!user?.id,
-  })
+  });
 
   const { data: streakData } = useQuery({
     queryKey: ['achievements', 'streak', user?.id],
     queryFn: () => getStreakData(user!.id),
     enabled: !!user?.id,
     staleTime: 5 * 60 * 1000,
-  })
+  });
 
   if (sessionLoading || programLoading) {
     return (
       <SafeAreaView style={styles.loadingContainer}>
         <ActivityIndicator size="large" color={colors.primary} />
       </SafeAreaView>
-    )
+    );
   }
 
   const mrvWarningMuscles = volumeData
     ? (Object.entries(volumeData.status) as [MuscleGroup, VolumeStatus][])
         .filter(([, s]) => s === 'at_mrv' || s === 'exceeded_mrv')
         .map(([m]) => MUSCLE_LABELS_COMPACT[m])
-    : []
+    : [];
 
   return (
     <SafeAreaView style={styles.container}>
@@ -210,8 +225,14 @@ export default function TodayScreen() {
                 onPress={() => router.push('/settings/cycle-tracking')}
                 activeOpacity={0.7}
               >
-                <Text style={[styles.cyclePhasePillText, { color: CYCLE_PHASE_TEXT[cycleContext.phase] }]}>
-                  {CYCLE_PHASE_LABELS[cycleContext.phase]} · Day {cycleContext.dayOfCycle}
+                <Text
+                  style={[
+                    styles.cyclePhasePillText,
+                    { color: CYCLE_PHASE_TEXT[cycleContext.phase] },
+                  ]}
+                >
+                  {CYCLE_PHASE_LABELS[cycleContext.phase]} · Day{' '}
+                  {cycleContext.dayOfCycle}
                 </Text>
               </TouchableOpacity>
             )}
@@ -219,7 +240,9 @@ export default function TodayScreen() {
             {mrvWarningMuscles.length > 0 && (
               <View style={styles.mrvBanner}>
                 <Text style={styles.mrvBannerText}>
-                  {mrvWarningMuscles.join(', ')} {mrvWarningMuscles.length === 1 ? 'has' : 'have'} reached weekly MRV — volume automatically reduced.
+                  {mrvWarningMuscles.join(', ')}{' '}
+                  {mrvWarningMuscles.length === 1 ? 'has' : 'have'} reached
+                  weekly MRV — volume automatically reduced.
                 </Text>
               </View>
             )}
@@ -229,7 +252,9 @@ export default function TodayScreen() {
                 disruptions={disruptions}
                 userId={user!.id}
                 onResolved={() =>
-                  queryClient.invalidateQueries({ queryKey: ['disruptions', 'active', user?.id] })
+                  queryClient.invalidateQueries({
+                    queryKey: ['disruptions', 'active', user?.id],
+                  })
                 }
               />
             )}
@@ -244,35 +269,45 @@ export default function TodayScreen() {
             ) : (
               [...sessions]
                 .sort((a, b) => {
-                  const order: Record<string, number> = { in_progress: 0, planned: 1, completed: 2, skipped: 3, missed: 4 }
-                  return (order[a.status] ?? 5) - (order[b.status] ?? 5)
+                  const order: Record<string, number> = {
+                    in_progress: 0,
+                    planned: 1,
+                    completed: 2,
+                    skipped: 3,
+                    missed: 4,
+                  };
+                  return (order[a.status] ?? 5) - (order[b.status] ?? 5);
                 })
-                .map(s => {
+                .map((s) => {
                   if (s.status === 'completed') {
-                    return <WorkoutDoneCard key={s.id} session={s} />
+                    return <WorkoutDoneCard key={s.id} session={s} />;
                   }
                   const isLocked =
                     s.status === 'planned' &&
                     !!activeSession &&
-                    activeSession.id !== s.id
+                    activeSession.id !== s.id;
                   return (
                     <View key={s.id}>
                       <WorkoutCard
                         session={s}
                         isLocked={isLocked}
                         onSkipComplete={() =>
-                          queryClient.invalidateQueries({ queryKey: ['session', 'today'] })
+                          queryClient.invalidateQueries({
+                            queryKey: ['session', 'today'],
+                          })
                         }
                       />
-                      {cycleContext?.isOvulatoryWindow && s.primary_lift === 'squat' && (
-                        <View style={styles.ovulatoryChip}>
-                          <Text style={styles.ovulatoryChipText}>
-                            ℹ Ovulatory phase — high-load squat day. Focus on knee tracking and warm-up quality.
-                          </Text>
-                        </View>
-                      )}
+                      {cycleContext?.isOvulatoryWindow &&
+                        s.primary_lift === 'squat' && (
+                          <View style={styles.ovulatoryChip}>
+                            <Text style={styles.ovulatoryChipText}>
+                              ℹ Ovulatory phase — high-load squat day. Focus on
+                              knee tracking and warm-up quality.
+                            </Text>
+                          </View>
+                        )}
                     </View>
-                  )
+                  );
                 })
             )}
 
@@ -281,7 +316,9 @@ export default function TodayScreen() {
               onPress={() => router.push('/disruption-report/report')}
               activeOpacity={0.75}
             >
-              <Text style={styles.reportIssueButtonText}>⚠ Log a Disruption</Text>
+              <Text style={styles.reportIssueButtonText}>
+                ⚠ Log a Disruption
+              </Text>
             </TouchableOpacity>
 
             <VolumeCompactCard />
@@ -289,7 +326,7 @@ export default function TodayScreen() {
         )}
       </ScrollView>
     </SafeAreaView>
-  )
+  );
 }
 
 const styles = StyleSheet.create({
@@ -536,4 +573,4 @@ const styles = StyleSheet.create({
     color: colors.warning,
     letterSpacing: typography.letterSpacing.wide,
   },
-})
+});

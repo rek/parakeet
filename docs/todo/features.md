@@ -2,12 +2,7 @@
 
 Always consider the docs/designs first, to find where each feature request fits into the overall architecture of the app.
 
-Read docs/README.md and other relevant docs to get a good picture of our system before starting to plan a feature.
-
-## 3
-
-if you log a 'no equipment' disruption,
-then the aux should increase and include some extra bodyweight stuff to compensate
+Read `docs/README.md` and other relevant docs to get a good picture of our system before starting to plan a feature.
 
 ## 6
 

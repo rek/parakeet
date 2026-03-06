@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState } from 'react';
 import {
   Platform,
   ScrollView,
@@ -7,144 +7,152 @@ import {
   Text,
   TouchableOpacity,
   View,
-} from 'react-native'
-import { SafeAreaView } from 'react-native-safe-area-context'
-import { router } from 'expo-router'
-import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker'
-import { useQueryClient } from '@tanstack/react-query'
-
-import { useAuth } from '@modules/auth'
+} from 'react-native';
+import { useAuth } from '@modules/auth';
 import {
-  getCycleConfig,
-  updateCycleConfig,
-  getPeriodStartHistory,
   addPeriodStart,
   deletePeriodStart,
-} from '@modules/cycle-tracking'
-import type { PeriodStartEntry } from '@modules/cycle-tracking'
-import { computeCyclePhase } from '@parakeet/training-engine'
-import { BackLink } from '../../components/navigation/BackLink'
-import { colors, spacing, radii, typography } from '../../theme'
-import { qk } from '@platform/query'
-import { formatDate } from '@shared/utils/date'
+  getCycleConfig,
+  getPeriodStartHistory,
+  updateCycleConfig,
+} from '@modules/cycle-tracking';
+import type { PeriodStartEntry } from '@modules/cycle-tracking';
+import { computeCyclePhase } from '@parakeet/training-engine';
+import { qk } from '@platform/query';
+import DateTimePicker, {
+  DateTimePickerEvent,
+} from '@react-native-community/datetimepicker';
+import { formatDate } from '@shared/utils/date';
+import { useQueryClient } from '@tanstack/react-query';
+import { router } from 'expo-router';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { BackLink } from '../../components/navigation/BackLink';
+import { colors, radii, spacing, typography } from '../../theme';
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
 const PHASE_COLORS: Record<string, string> = {
-  menstrual:   '#FEE2E2',
-  follicular:  '#D1FAE5',
-  ovulatory:   '#FEF3C7',
-  luteal:      '#E0E7FF',
+  menstrual: '#FEE2E2',
+  follicular: '#D1FAE5',
+  ovulatory: '#FEF3C7',
+  luteal: '#E0E7FF',
   late_luteal: '#E0E7FF',
-}
+};
 
 const PHASE_TEXT_COLORS: Record<string, string> = {
-  menstrual:   '#991B1B',
-  follicular:  '#065F46',
-  ovulatory:   '#92400E',
-  luteal:      '#3730A3',
+  menstrual: '#991B1B',
+  follicular: '#065F46',
+  ovulatory: '#92400E',
+  luteal: '#3730A3',
   late_luteal: '#3730A3',
-}
+};
 
 const PHASE_LABELS: Record<string, string> = {
-  menstrual:   'Menstrual',
-  follicular:  'Follicular',
-  ovulatory:   'Ovulatory',
-  luteal:      'Luteal',
+  menstrual: 'Menstrual',
+  follicular: 'Follicular',
+  ovulatory: 'Ovulatory',
+  luteal: 'Luteal',
   late_luteal: 'Late Luteal',
-}
+};
 
 // ── Phase calendar helpers ────────────────────────────────────────────────────
 
 function getPhaseForDay(day: number, cycleLength: number): string {
-  const scaled = cycleLength === 28 ? day : Math.round(day * 28 / cycleLength)
-  if (scaled <= 5)       return 'menstrual'
-  if (scaled <= 11)      return 'follicular'
-  if (scaled <= 16)      return 'ovulatory'
-  if (scaled <= 23)      return 'luteal'
-  return 'late_luteal'
+  const scaled =
+    cycleLength === 28 ? day : Math.round((day * 28) / cycleLength);
+  if (scaled <= 5) return 'menstrual';
+  if (scaled <= 11) return 'follicular';
+  if (scaled <= 16) return 'ovulatory';
+  if (scaled <= 23) return 'luteal';
+  return 'late_luteal';
 }
 
 // ── Screen ────────────────────────────────────────────────────────────────────
 
 export default function CycleTrackingScreen() {
-  const { user } = useAuth()
-  const queryClient = useQueryClient()
+  const { user } = useAuth();
+  const queryClient = useQueryClient();
 
-  const [isEnabled, setIsEnabled] = useState(false)
-  const [cycleLength, setCycleLength] = useState(28)
-  const [lastPeriodStart, setLastPeriodStart] = useState<string | null>(null)
-  const [showDatePicker, setShowDatePicker] = useState(false)
-  const [loading, setLoading] = useState(true)
-  const [history, setHistory] = useState<PeriodStartEntry[]>([])
+  const [isEnabled, setIsEnabled] = useState(false);
+  const [cycleLength, setCycleLength] = useState(28);
+  const [lastPeriodStart, setLastPeriodStart] = useState<string | null>(null);
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [history, setHistory] = useState<PeriodStartEntry[]>([]);
 
   useEffect(() => {
-    if (!user?.id) return
+    if (!user?.id) return;
     getCycleConfig(user.id)
       .then((cfg) => {
-        setIsEnabled(cfg.is_enabled)
-        setCycleLength(cfg.cycle_length_days)
-        setLastPeriodStart(cfg.last_period_start)
+        setIsEnabled(cfg.is_enabled);
+        setCycleLength(cfg.cycle_length_days);
+        setLastPeriodStart(cfg.last_period_start);
       })
       .catch(() => {})
-      .finally(() => setLoading(false))
-    getPeriodStartHistory(user.id).then(setHistory).catch(() => {})
-  }, [user?.id])
+      .finally(() => setLoading(false));
+    getPeriodStartHistory(user.id)
+      .then(setHistory)
+      .catch(() => {});
+  }, [user?.id]);
 
   async function save(update: Parameters<typeof updateCycleConfig>[1]) {
-    if (!user?.id) return
-    await updateCycleConfig(user.id, update)
-    await queryClient.invalidateQueries({ queryKey: qk.cycle.phase(user.id) })
-    await queryClient.invalidateQueries({ queryKey: qk.cycle.config(user.id) })
+    if (!user?.id) return;
+    await updateCycleConfig(user.id, update);
+    await queryClient.invalidateQueries({ queryKey: qk.cycle.phase(user.id) });
+    await queryClient.invalidateQueries({ queryKey: qk.cycle.config(user.id) });
   }
 
   async function handleToggle(value: boolean) {
-    setIsEnabled(value)
+    setIsEnabled(value);
     if (value && !lastPeriodStart) {
-      setShowDatePicker(true)
+      setShowDatePicker(true);
     }
-    await save({ is_enabled: value })
+    await save({ is_enabled: value });
   }
 
   async function handleCycleLengthChange(delta: number) {
-    const next = Math.min(35, Math.max(24, cycleLength + delta))
-    setCycleLength(next)
-    await save({ cycle_length_days: next })
+    const next = Math.min(35, Math.max(24, cycleLength + delta));
+    setCycleLength(next);
+    await save({ cycle_length_days: next });
   }
 
-  async function handleDateChange(_event: DateTimePickerEvent, selected?: Date) {
-    if (Platform.OS === 'android') setShowDatePicker(false)
-    if (!selected || !user?.id) return
-    const iso = selected.toISOString().split('T')[0]
-    const updated = await addPeriodStart(user.id, iso)
-    setHistory(updated)
-    setLastPeriodStart(updated[0]?.start_date ?? null)
-    await queryClient.invalidateQueries({ queryKey: qk.cycle.phase(user.id) })
-    await queryClient.invalidateQueries({ queryKey: qk.cycle.config(user.id) })
+  async function handleDateChange(
+    _event: DateTimePickerEvent,
+    selected?: Date
+  ) {
+    if (Platform.OS === 'android') setShowDatePicker(false);
+    if (!selected || !user?.id) return;
+    const iso = selected.toISOString().split('T')[0];
+    const updated = await addPeriodStart(user.id, iso);
+    setHistory(updated);
+    setLastPeriodStart(updated[0]?.start_date ?? null);
+    await queryClient.invalidateQueries({ queryKey: qk.cycle.phase(user.id) });
+    await queryClient.invalidateQueries({ queryKey: qk.cycle.config(user.id) });
   }
 
   async function handleDeleteEntry(entryId: string) {
-    if (!user?.id) return
-    const updated = await deletePeriodStart(user.id, entryId)
-    setHistory(updated)
-    setLastPeriodStart(updated[0]?.start_date ?? null)
-    await queryClient.invalidateQueries({ queryKey: qk.cycle.phase(user.id) })
-    await queryClient.invalidateQueries({ queryKey: qk.cycle.config(user.id) })
+    if (!user?.id) return;
+    const updated = await deletePeriodStart(user.id, entryId);
+    setHistory(updated);
+    setLastPeriodStart(updated[0]?.start_date ?? null);
+    await queryClient.invalidateQueries({ queryKey: qk.cycle.phase(user.id) });
+    await queryClient.invalidateQueries({ queryKey: qk.cycle.config(user.id) });
   }
 
   // ── Derived ────────────────────────────────────────────────────────────────
 
-  const cycleContext = isEnabled && lastPeriodStart
-    ? computeCyclePhase(new Date(lastPeriodStart), cycleLength)
-    : null
+  const cycleContext =
+    isEnabled && lastPeriodStart
+      ? computeCyclePhase(new Date(lastPeriodStart), cycleLength)
+      : null;
 
   const nextPeriodDate = lastPeriodStart
     ? (() => {
-        const d = new Date(lastPeriodStart)
-        d.setDate(d.getDate() + cycleLength)
-        return d.toISOString().split('T')[0]
+        const d = new Date(lastPeriodStart);
+        d.setDate(d.getDate() + cycleLength);
+        return d.toISOString().split('T')[0];
       })()
-    : null
+    : null;
 
   // ── Render ─────────────────────────────────────────────────────────────────
 
@@ -174,7 +182,10 @@ export default function CycleTrackingScreen() {
                 <Switch
                   value={isEnabled}
                   onValueChange={handleToggle}
-                  trackColor={{ false: colors.borderMuted, true: colors.primary }}
+                  trackColor={{
+                    false: colors.borderMuted,
+                    true: colors.primary,
+                  }}
                   thumbColor={colors.textInverse}
                 />
               </View>
@@ -186,17 +197,28 @@ export default function CycleTrackingScreen() {
               <Text style={styles.fieldLabel}>Avg cycle length</Text>
               <View style={styles.stepperRow}>
                 <TouchableOpacity
-                  style={[styles.stepperBtn, !isEnabled && styles.stepperBtnDisabled]}
+                  style={[
+                    styles.stepperBtn,
+                    !isEnabled && styles.stepperBtnDisabled,
+                  ]}
                   onPress={() => isEnabled && handleCycleLengthChange(-1)}
                   activeOpacity={0.7}
                 >
                   <Text style={styles.stepperBtnText}>−</Text>
                 </TouchableOpacity>
-                <Text style={[styles.stepperValue, !isEnabled && styles.textDisabled]}>
+                <Text
+                  style={[
+                    styles.stepperValue,
+                    !isEnabled && styles.textDisabled,
+                  ]}
+                >
                   {cycleLength} days
                 </Text>
                 <TouchableOpacity
-                  style={[styles.stepperBtn, !isEnabled && styles.stepperBtnDisabled]}
+                  style={[
+                    styles.stepperBtn,
+                    !isEnabled && styles.stepperBtnDisabled,
+                  ]}
                   onPress={() => isEnabled && handleCycleLengthChange(1)}
                   activeOpacity={0.7}
                 >
@@ -209,7 +231,9 @@ export default function CycleTrackingScreen() {
               {/* Last period start */}
               <Text style={styles.fieldLabel}>Last period started</Text>
               <View style={styles.dateRow}>
-                <Text style={[styles.dateText, !isEnabled && styles.textDisabled]}>
+                <Text
+                  style={[styles.dateText, !isEnabled && styles.textDisabled]}
+                >
                   {lastPeriodStart ? formatDate(lastPeriodStart) : 'Not set'}
                 </Text>
                 <TouchableOpacity
@@ -217,7 +241,12 @@ export default function CycleTrackingScreen() {
                   activeOpacity={0.7}
                   disabled={!isEnabled}
                 >
-                  <Text style={[styles.updateLink, !isEnabled && styles.textDisabled]}>
+                  <Text
+                    style={[
+                      styles.updateLink,
+                      !isEnabled && styles.textDisabled,
+                    ]}
+                  >
                     Update
                   </Text>
                 </TouchableOpacity>
@@ -226,7 +255,9 @@ export default function CycleTrackingScreen() {
               {showDatePicker && isEnabled && (
                 <>
                   <DateTimePicker
-                    value={lastPeriodStart ? new Date(lastPeriodStart) : new Date()}
+                    value={
+                      lastPeriodStart ? new Date(lastPeriodStart) : new Date()
+                    }
                     mode="date"
                     display={Platform.OS === 'ios' ? 'inline' : 'default'}
                     maximumDate={new Date()}
@@ -247,12 +278,29 @@ export default function CycleTrackingScreen() {
 
             {/* Current phase display */}
             {cycleContext && (
-              <View style={[styles.card, { backgroundColor: PHASE_COLORS[cycleContext.phase] }]}>
-                <Text style={[styles.phaseCurrentLabel, { color: PHASE_TEXT_COLORS[cycleContext.phase] }]}>
-                  Currently: {PHASE_LABELS[cycleContext.phase]} · Day {cycleContext.dayOfCycle}
+              <View
+                style={[
+                  styles.card,
+                  { backgroundColor: PHASE_COLORS[cycleContext.phase] },
+                ]}
+              >
+                <Text
+                  style={[
+                    styles.phaseCurrentLabel,
+                    { color: PHASE_TEXT_COLORS[cycleContext.phase] },
+                  ]}
+                >
+                  Currently: {PHASE_LABELS[cycleContext.phase]} · Day{' '}
+                  {cycleContext.dayOfCycle}
                 </Text>
-                <Text style={[styles.phaseNextPeriod, { color: PHASE_TEXT_COLORS[cycleContext.phase] }]}>
-                  Next period expected: {nextPeriodDate ? formatDate(nextPeriodDate) : '—'}
+                <Text
+                  style={[
+                    styles.phaseNextPeriod,
+                    { color: PHASE_TEXT_COLORS[cycleContext.phase] },
+                  ]}
+                >
+                  Next period expected:{' '}
+                  {nextPeriodDate ? formatDate(nextPeriodDate) : '—'}
                 </Text>
               </View>
             )}
@@ -262,11 +310,15 @@ export default function CycleTrackingScreen() {
               <View style={styles.card}>
                 <Text style={styles.calendarTitle}>Period History</Text>
                 {history.length === 0 ? (
-                  <Text style={styles.emptyHint}>No entries yet — update the date above to record one.</Text>
+                  <Text style={styles.emptyHint}>
+                    No entries yet — update the date above to record one.
+                  </Text>
                 ) : (
                   history.map((entry) => (
                     <View key={entry.id} style={styles.historyRow}>
-                      <Text style={styles.historyDate}>{formatDate(entry.start_date)}</Text>
+                      <Text style={styles.historyDate}>
+                        {formatDate(entry.start_date)}
+                      </Text>
                       <TouchableOpacity
                         onPress={() => handleDeleteEntry(entry.id)}
                         hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
@@ -285,9 +337,9 @@ export default function CycleTrackingScreen() {
                 <Text style={styles.calendarTitle}>Cycle Overview</Text>
                 <View style={styles.calendarGrid}>
                   {Array.from({ length: cycleLength }, (_, i) => {
-                    const day = i + 1
-                    const phase = getPhaseForDay(day, cycleLength)
-                    const isCurrent = cycleContext?.dayOfCycle === day
+                    const day = i + 1;
+                    const phase = getPhaseForDay(day, cycleLength);
+                    const isCurrent = cycleContext?.dayOfCycle === day;
                     return (
                       <View
                         key={day}
@@ -297,24 +349,41 @@ export default function CycleTrackingScreen() {
                           isCurrent && styles.calendarDayCurrent,
                         ]}
                       >
-                        <Text style={[
-                          styles.calendarDayText,
-                          { color: PHASE_TEXT_COLORS[phase] },
-                          isCurrent && styles.calendarDayTextCurrent,
-                        ]}>
+                        <Text
+                          style={[
+                            styles.calendarDayText,
+                            { color: PHASE_TEXT_COLORS[phase] },
+                            isCurrent && styles.calendarDayTextCurrent,
+                          ]}
+                        >
                           {day}
                         </Text>
                       </View>
-                    )
+                    );
                   })}
                 </View>
 
                 {/* Legend */}
                 <View style={styles.legend}>
-                  {(['menstrual', 'follicular', 'ovulatory', 'luteal', 'late_luteal'] as const).map((phase) => (
+                  {(
+                    [
+                      'menstrual',
+                      'follicular',
+                      'ovulatory',
+                      'luteal',
+                      'late_luteal',
+                    ] as const
+                  ).map((phase) => (
                     <View key={phase} style={styles.legendItem}>
-                      <View style={[styles.legendDot, { backgroundColor: PHASE_COLORS[phase] }]} />
-                      <Text style={styles.legendLabel}>{PHASE_LABELS[phase]}</Text>
+                      <View
+                        style={[
+                          styles.legendDot,
+                          { backgroundColor: PHASE_COLORS[phase] },
+                        ]}
+                      />
+                      <Text style={styles.legendLabel}>
+                        {PHASE_LABELS[phase]}
+                      </Text>
                     </View>
                   ))}
                 </View>
@@ -324,7 +393,7 @@ export default function CycleTrackingScreen() {
         )}
       </ScrollView>
     </SafeAreaView>
-  )
+  );
 }
 
 // ── Styles ────────────────────────────────────────────────────────────────────
@@ -526,4 +595,4 @@ const styles = StyleSheet.create({
     fontSize: typography.sizes.sm,
     color: colors.textSecondary,
   },
-})
+});

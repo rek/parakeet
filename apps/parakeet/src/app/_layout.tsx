@@ -1,16 +1,16 @@
 import 'expo/fetch';
 import { useEffect } from 'react';
 import { View } from 'react-native';
+import { useAuth } from '@modules/auth';
+import { useMissedSessionReconciliation, useSyncQueue } from '@modules/session';
+import { queryClient } from '@platform/query';
 import * as Sentry from '@sentry/react-native';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useAuth } from '@modules/auth';
-import { useMissedSessionReconciliation, useSyncQueue } from '@modules/session';
-import { queryClient } from '@platform/query';
+// import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import '@platform/supabase/bootstrap';
-import { ReturnToSessionBanner } from '../components/session/ReturnToSessionBanner';
+// import { ReturnToSessionBanner } from '../components/session/ReturnToSessionBanner';
 import { ErrorBoundary } from '../components/ui/ErrorBoundary';
 
 Sentry.init({
@@ -36,7 +36,7 @@ SplashScreen.preventAutoHideAsync();
 
 function RootLayoutNav() {
   const { loading } = useAuth();
-  const insets = useSafeAreaInsets();
+  // const insets = useSafeAreaInsets();
   useSyncQueue();
   useMissedSessionReconciliation();
 
