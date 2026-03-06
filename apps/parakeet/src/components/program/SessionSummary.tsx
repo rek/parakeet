@@ -5,7 +5,7 @@ import { BlockBadge } from './BlockBadge'
 import { colors, spacing, radii, typography } from '../../theme'
 import type { ProgramSession } from '@modules/program'
 import { useInProgressSession } from '@modules/session'
-import { getReadyCachedJitData } from '@platform/store/sessionStore'
+import { useSessionStore } from '@platform/store/sessionStore'
 import { formatDate } from '@shared/utils/date'
 
 interface SessionSummaryProps {
@@ -28,22 +28,18 @@ export function SessionSummary({ session }: SessionSummaryProps) {
 
   const isActionable = (isInProgress || session.status === 'planned') && !isLocked
 
-  async function handlePress() {
+  function handlePress() {
     if (!isActionable) return
     if (isInProgress) {
-      const jit = await getReadyCachedJitData()
-      if (jit) {
-        router.push({
-          pathname: '/session/[sessionId]',
-          params: { sessionId: session.id, jitData: jit },
-        })
-      } else {
-        // JIT data not cached (e.g. app restart) — skip soreness form and re-generate
-        router.push({
-          pathname: '/session/soreness',
-          params: { sessionId: session.id, autoGenerate: '1' },
-        })
-      }
+      // Read JIT synchronously from store — no timeout, session screen recovers if null
+      const jit = useSessionStore.getState().cachedJitData
+      router.push({
+        pathname: '/session/[sessionId]',
+        params: {
+          sessionId: session.id,
+          ...(jit ? { jitData: jit } : {}),
+        },
+      })
       return
     }
     router.push({

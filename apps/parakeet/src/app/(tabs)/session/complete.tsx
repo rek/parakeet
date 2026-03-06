@@ -136,6 +136,7 @@ export default function CompleteScreen() {
         queryKey: ['performance', 'trends'],
       });
       void queryClient.invalidateQueries({ queryKey: ['achievements'] });
+      void queryClient.invalidateQueries({ queryKey: ['volume', 'weekly'] });
       void queryClient.invalidateQueries({
         queryKey: qk.program.active(user?.id),
       });

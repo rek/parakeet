@@ -91,7 +91,6 @@ export default function SessionScreen() {
   }>();
 
   const {
-    sessionId: storeSessionId,
     actualSets,
     auxiliarySets,
     plannedSets,
@@ -140,20 +139,34 @@ export default function SessionScreen() {
   // ── Bootstrap ─────────────────────────────────────────────────────────────
 
   useEffect(() => {
-    if (!sessionId || !jitData) {
+    if (!sessionId) {
+      router.back();
+      return;
+    }
+
+    // Read current store state directly — avoids stale closure from first render
+    // (Zustand may not have finished hydrating from AsyncStorage at render time)
+    const storeState = useSessionStore.getState();
+    const currentStoreSessionId = storeState.sessionId;
+
+    // If no jitData param, try recovering from the store's cached JIT (resume path
+    // when navigating from program tab without cached JIT in route params)
+    const effectiveJitData = jitData ?? (currentStoreSessionId === sessionId ? storeState.cachedJitData : null);
+
+    if (!effectiveJitData) {
       router.back();
       return;
     }
 
     let parsed: JitData;
     try {
-      parsed = JSON.parse(jitData) as JitData;
+      parsed = JSON.parse(effectiveJitData) as JitData;
     } catch {
       router.back();
       return;
     }
 
-    setCachedJitData(jitData);
+    setCachedJitData(effectiveJitData);
 
     const { mainLiftSets, warmupSets: ws, auxiliaryWork: aux } = parsed;
     setWarmupSetsState(ws ?? []);
@@ -166,7 +179,7 @@ export default function SessionScreen() {
     }
 
     // Only re-initialize if this is a different session (guard against re-mount via banner)
-    if (storeSessionId !== sessionId) {
+    if (currentStoreSessionId !== sessionId) {
       initSession(sessionId, mainLiftSets);
 
       const activeAux = (aux ?? []).filter((a) => !a.skipped);
@@ -193,7 +206,7 @@ export default function SessionScreen() {
         });
       });
     } else {
-      // Returning to an existing session — restore aux work display
+      // Returning to an existing session — restore aux work display, preserve actualSets
       setAuxiliaryWork(aux ?? []);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
