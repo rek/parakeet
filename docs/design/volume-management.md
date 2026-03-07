@@ -1,6 +1,6 @@
 # Feature: Volume Management
 
-**Status**: Planned
+**Status**: Implemented
 
 **Date**: 2026-02-22
 

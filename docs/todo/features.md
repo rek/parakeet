@@ -23,5 +23,6 @@ Muscle mappings per aux exercise + JIT volume augmentation (auto-add targeted au
 **Spec:** [docs/specs/05-data/data-002-auxiliary-exercise-config.md](../specs/05-data/data-002-auxiliary-exercise-config.md) — "Muscle Mapping Extension" section
 
 **Implementation order:**
-1. Wire muscle mappings to DB + show chips in UI (muscle mapping extension in spec above)
-2. Implement JIT auto-augment (needs muscle mappings + exercise type system first)
+1. Wire muscle mappings to DB + show chips in UI ✅ (implemented)
+2. Exercise type system (weighted/bodyweight/timed) ✅ (implemented — Bug 1)
+3. JIT auto-augment — spec: [engine-027-jit-volume-augmentation.md](../specs/04-engine/engine-027-jit-volume-augmentation.md)

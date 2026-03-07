@@ -14,8 +14,4 @@ Then ALWAYS read about the bug in question, first find the relevant design doc, 
 
 At the end remember to update design and specs at end with work actually done. then review this whole process and factor in any learnings into generic docs when done too so we optimize for next time. This is also referring to the AI Agent process and which prompts/scripts (readme files) we have with instructions.
 
-## 1
-
-some aux stuff does not make sense.
-
-eg: 'assult bike' does have 'weight' or 'reps' really? perhaps time and reps! need to consider good defaults for it tho
+_(No open bugs)_
