@@ -8,13 +8,13 @@ Map of every place AI interacts with Parakeet. Two types of AI: **LLM** (Claude 
 
 | Model | Use | Timeout |
 |-------|-----|---------|
-| `claude-haiku-4-5` | JIT session generation | 5s → formula fallback |
-| `claude-sonnet-4-6` | Cycle review generation | none (async) |
+| `gpt-4o-mini` | JIT session generation, motivational messages | 5s (JIT) / 8s (motivational) → formula fallback |
+| `gpt-5` | Cycle review generation | none (async) |
 
-- SDK: `@ai-sdk/anthropic` via Vercel AI SDK (`generateObject()`)
+- SDK: `@ai-sdk/openai` via Vercel AI SDK (`generateText()` / `Output.object()`)
 - Config: `packages/training-engine/src/ai/models.ts`
 - Polyfill: `apps/parakeet/src/app/_layout.tsx` → `import 'expo/fetch'`
-- API key: `EXPO_PUBLIC_ANTHROPIC_API_KEY` (bundled; ok for 2-user app)
+- API key: `EXPO_PUBLIC_OPENAI_API_KEY` (bundled; ok for 2-user app)
 
 ---
 
@@ -170,7 +170,31 @@ Map of every place AI interacts with Parakeet. Two types of AI: **LLM** (Claude 
 
 ---
 
-### 7. Disruption Adjustment (formula-only, not LLM)
+### 7. Motivational Message (post-workout)
+
+**What:** LLM-generated 1-2 sentence motivational message shown on the "Workout Done" card.
+
+**Trigger:** User views the Today tab after completing one or more sessions.
+
+**Input (`MotivationalContext`):**
+- `primaryLifts`, `intensityTypes`, `weekNumber`, `blockNumber`, `isDeload`
+- `sessionRpe`, `performanceVsPlan` (from `session_logs`)
+- `newPRs` (from `personal_records` with matching `session_id`)
+- `currentStreak`, `biologicalSex`, `cyclePhase`
+
+**LLM call:** `generateText()` with `JIT_MODEL` (gpt-4o-mini), plain text output (no schema), 8s timeout.
+
+**Priority rules:** PRs > high RPE > over-performance > under-performance > deload. Secondary: streak, cycle phase.
+
+**Caching:** React Query with `staleTime: Infinity` keyed on session IDs — generated once per set of completed sessions.
+
+**Key files:**
+- `apps/parakeet/src/modules/session/application/motivational-message.service.ts`
+- `apps/parakeet/src/app/(tabs)/today.tsx` — `WorkoutDoneCard` component
+
+---
+
+### 8. Disruption Adjustment (formula-only, not LLM)
 
 **What:** Rule-based session adjustments after athlete reports injury/illness/fatigue.
 
@@ -189,7 +213,7 @@ Map of every place AI interacts with Parakeet. Two types of AI: **LLM** (Claude 
 
 ---
 
-### 8. Sex & Cycle Context (passthrough to LLM)
+### 9. Sex & Cycle Context (passthrough to LLM)
 
 **What:** Biological sex and menstrual cycle phase are surfaced to LLM as context; they also drive formula defaults.
 

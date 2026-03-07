@@ -8,10 +8,12 @@ import { DeveloperSuggestions } from './DeveloperSuggestions';
 import { FormulaSuggestions } from './FormulaSuggestions';
 import { JITLogs } from './JITLogs';
 import { Logs } from './Logs';
+import { WorkoutSummaries } from './WorkoutSummaries';
 
 type Page =
   | 'timeline'
   | 'jit'
+  | 'workouts'
   | 'hybrid'
   | 'cycle_reviews'
   | 'formula'
@@ -39,6 +41,13 @@ const NAV: NavItem[] = [
     icon: '⚡',
     color: 'var(--accent)',
     description: 'Session adjustments',
+  },
+  {
+    id: 'workouts',
+    label: 'Workout Summaries',
+    icon: '●',
+    color: 'var(--green)',
+    description: 'Completed sessions',
   },
   {
     id: 'hybrid',
@@ -163,6 +172,8 @@ function PageContent({ page }: { page: Page }) {
       return <Logs />;
     case 'jit':
       return <JITLogs />;
+    case 'workouts':
+      return <WorkoutSummaries />;
     case 'hybrid':
       return <ComparisonLogs />;
     case 'cycle_reviews':

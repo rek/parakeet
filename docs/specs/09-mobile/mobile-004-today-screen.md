@@ -15,8 +15,8 @@ The home tab that shows all of today's sessions and any active disruption banner
 - States:
   1. **No active program**: render "Create Your Program" CTA button → navigate to onboarding
   2. **No sessions for today**: render rest day card
-  3. **One or more sessions**: render all sessions sorted by status priority (in_progress → planned → completed → skipped)
-     - `completed` → `WorkoutDoneCard` ("Workout Done ✓" with lift name)
+  3. **One or more sessions**: completed sessions grouped into a single `WorkoutDoneCard`; remaining sessions sorted by status priority (in_progress → planned → skipped)
+     - All `completed` → single `WorkoutDoneCard` showing lift names + LLM motivational message (see [mobile-029-motivational-message.md](./mobile-029-motivational-message.md))
      - `in_progress` / `planned` → `WorkoutCard`; planned sessions show `isLocked=true` if another session is already in_progress
 
 **`apps/parakeet/components/training/WorkoutCard.tsx`:**

@@ -24,3 +24,12 @@ when i click done on a set, then it should have a little floating box guy below 
 ## 4
 
 i want freedom to just do any aux thing at anytime in my workout and log it. currently i have to only do what is prescribed. but in reality, humans are fickle and sometimes we just have the urge to do a set of somthing else
+
+## 5
+
+import/export data
+
+## 6
+
+next session page for unending workouts is kinda useless.
+on the program tab

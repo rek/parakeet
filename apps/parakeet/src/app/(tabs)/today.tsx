@@ -13,7 +13,13 @@ import { useAuth } from '@modules/auth';
 import { useCyclePhase } from '@modules/cycle-tracking';
 import { getActiveDisruptions } from '@modules/disruptions';
 import { useActiveProgram } from '@modules/program';
-import { useInProgressSession, useTodaySessions } from '@modules/session';
+import {
+  fetchMotivationalContext,
+  generateMotivationalMessage,
+  useInProgressSession,
+  useTodaySessions,
+} from '@modules/session';
+import type { CompletedSessionRef } from '@modules/session';
 import { useWeeklyVolume } from '@modules/training-volume';
 import type { MuscleGroup, VolumeStatus } from '@parakeet/training-engine';
 import {
@@ -123,15 +129,46 @@ function VolumeCompactCard() {
 
 // ── Screen ────────────────────────────────────────────────────────────────────
 
-function WorkoutDoneCard({ session }: { session: { primary_lift: string } }) {
+function WorkoutDoneCard({
+  sessions,
+  currentStreak,
+  cyclePhase,
+}: {
+  sessions: CompletedSessionRef[];
+  currentStreak: number;
+  cyclePhase: string | null;
+}) {
+  const sessionIds = sessions.map((s) => s.id);
+
+  const { data: message, isLoading } = useQuery({
+    queryKey: ['motivational-message', ...sessionIds],
+    queryFn: () =>
+      fetchMotivationalContext(sessions, currentStreak, cyclePhase).then(
+        generateMotivationalMessage,
+      ),
+    staleTime: Infinity,
+    retry: false,
+  });
+
+  const lifts = sessions
+    .map(
+      (s) => s.primary_lift.charAt(0).toUpperCase() + s.primary_lift.slice(1)
+    )
+    .join(', ');
+
   return (
     <View style={styles.workoutDoneCard}>
       <Text style={styles.workoutDoneTitle}>Workout Done ✓</Text>
-      <Text style={styles.workoutDoneSubtitle}>
-        {session.primary_lift.charAt(0).toUpperCase() +
-          session.primary_lift.slice(1)}{' '}
-        — great work today.
-      </Text>
+      <Text style={styles.workoutDoneLift}>{lifts}</Text>
+      {isLoading ? (
+        <ActivityIndicator
+          size="small"
+          color={colors.success}
+          style={{ opacity: 0.5, marginTop: spacing[2] }}
+        />
+      ) : message ? (
+        <Text style={styles.workoutDoneSubtitle}>{message}</Text>
+      ) : null}
     </View>
   );
 }
@@ -267,8 +304,7 @@ export default function TodayScreen() {
                 </Text>
               </View>
             ) : (
-              [...sessions]
-                .sort((a, b) => {
+              (() => {
                   const order: Record<string, number> = {
                     in_progress: 0,
                     planned: 1,
@@ -276,39 +312,55 @@ export default function TodayScreen() {
                     skipped: 3,
                     missed: 4,
                   };
-                  return (order[a.status] ?? 5) - (order[b.status] ?? 5);
-                })
-                .map((s) => {
-                  if (s.status === 'completed') {
-                    return <WorkoutDoneCard key={s.id} session={s} />;
-                  }
-                  const isLocked =
-                    s.status === 'planned' &&
-                    !!activeSession &&
-                    activeSession.id !== s.id;
-                  return (
-                    <View key={s.id}>
-                      <WorkoutCard
-                        session={s}
-                        isLocked={isLocked}
-                        onSkipComplete={() =>
-                          queryClient.invalidateQueries({
-                            queryKey: ['session', 'today'],
-                          })
-                        }
-                      />
-                      {cycleContext?.isOvulatoryWindow &&
-                        s.primary_lift === 'squat' && (
-                          <View style={styles.ovulatoryChip}>
-                            <Text style={styles.ovulatoryChipText}>
-                              ℹ Ovulatory phase — high-load squat day. Focus on
-                              knee tracking and warm-up quality.
-                            </Text>
-                          </View>
-                        )}
-                    </View>
+                  const sorted = [...sessions].sort(
+                    (a, b) => (order[a.status] ?? 5) - (order[b.status] ?? 5)
                   );
-                })
+                  const completedSessions = sorted.filter(
+                    (s) => s.status === 'completed'
+                  );
+                  const otherSessions = sorted.filter(
+                    (s) => s.status !== 'completed'
+                  );
+                  return (
+                    <>
+                      {completedSessions.length > 0 && (
+                        <WorkoutDoneCard
+                          sessions={completedSessions}
+                          currentStreak={streakData?.currentStreak ?? 0}
+                          cyclePhase={cycleContext?.phase ?? null}
+                        />
+                      )}
+                      {otherSessions.map((s) => {
+                        const isLocked =
+                          s.status === 'planned' &&
+                          !!activeSession &&
+                          activeSession.id !== s.id;
+                        return (
+                          <View key={s.id}>
+                            <WorkoutCard
+                              session={s}
+                              isLocked={isLocked}
+                              onSkipComplete={() =>
+                                queryClient.invalidateQueries({
+                                  queryKey: ['session', 'today'],
+                                })
+                              }
+                            />
+                            {cycleContext?.isOvulatoryWindow &&
+                              s.primary_lift === 'squat' && (
+                                <View style={styles.ovulatoryChip}>
+                                  <Text style={styles.ovulatoryChipText}>
+                                    ℹ Ovulatory phase — high-load squat day. Focus on
+                                    knee tracking and warm-up quality.
+                                  </Text>
+                                </View>
+                              )}
+                          </View>
+                        );
+                      })}
+                    </>
+                  );
+                })()
             )}
 
             <TouchableOpacity
@@ -435,15 +487,23 @@ const styles = StyleSheet.create({
     fontSize: typography.sizes.xl,
     fontWeight: typography.weights.extrabold,
     color: colors.success,
-    marginBottom: spacing[2],
+    marginBottom: spacing[1],
     letterSpacing: typography.letterSpacing.wide,
   },
-  workoutDoneSubtitle: {
+  workoutDoneLift: {
     fontSize: typography.sizes.base,
+    fontWeight: typography.weights.semibold,
     color: colors.success,
     textAlign: 'center' as const,
-    lineHeight: 22,
+    opacity: 0.7,
+  },
+  workoutDoneSubtitle: {
+    fontSize: typography.sizes.sm,
+    color: colors.success,
+    textAlign: 'center' as const,
+    lineHeight: 20,
     opacity: 0.8,
+    marginTop: spacing[2],
   },
   // Rest day card
   restDayCard: {

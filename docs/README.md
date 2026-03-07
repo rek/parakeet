@@ -21,7 +21,7 @@ Use this to find code without searching. Full detail in [FEATURE_MAP.md](./FEATU
 | ------- | ----------- | ------ |
 | Auth | `@modules/auth` | Sign-in, Google OAuth, email OTP, session |
 | Program | `@modules/program` | Active program, lifter maxes, auxiliary config, formula config |
-| Session | `@modules/session` | Session lifecycle, JIT trigger, rest timer, sync queue |
+| Session | `@modules/session` | Session lifecycle, JIT trigger, rest timer, sync queue, motivational message |
 | JIT | `@modules/jit` | JIT session generation (formula/LLM/hybrid strategies) |
 | History | `@modules/history` | Performance trends, lift history, recent sets |
 | Disruptions | `@modules/disruptions` | Report/apply/resolve training disruptions |

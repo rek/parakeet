@@ -29,6 +29,7 @@ apps/dashboard/
       app.tsx              # Sidebar nav + local/prod toggle
       Logs.tsx             # Timeline — all AI events
       JITLogs.tsx          # JIT session adjustments
+      WorkoutSummaries.tsx # Completed sessions — RPE, PRs, performance
       ComparisonLogs.tsx   # Hybrid strategy diffs
       CycleReviews.tsx     # Cycle review output
       FormulaSuggestions.tsx
@@ -66,6 +67,7 @@ import { theme } from '../lib/theme';
 
 - [x] Timeline view (all AI events unified feed)
 - [x] JIT sessions view
+- [x] Workout Summaries view — last 50 completed sessions with RPE, performance vs plan, PRs, completion %
 - [x] Hybrid comparisons view
 - [x] Cycle reviews view
 - [x] Formula suggestions view

@@ -77,7 +77,7 @@ Module/platform/shared architecture is the canonical app structure. Legacy top-l
 
 - [x] `@modules/auth` — sign-in, Google OAuth, email OTP
 - [x] `@modules/program` — active program, maxes, auxiliary config, formula config
-- [x] `@modules/session` — lifecycle, JIT trigger, rest timer, sync, missed reconciliation
+- [x] `@modules/session` — lifecycle, JIT trigger, rest timer, sync, missed reconciliation, motivational message
 - [x] `@modules/jit` — JIT generation strategies
 - [x] `@modules/history` — performance trends, lift history
 - [x] `@modules/disruptions` — report/apply/resolve disruptions
@@ -119,6 +119,7 @@ Module/platform/shared architecture is the canonical app structure. Legacy top-l
 - [x] mobile-025: Barbell plate calculator
 - [x] mobile-026: History tab upgrade
 - [x] mobile-028: Unending program UI — Program Style toggle (onboarding), program tab unending branch, "End Program" global rename
+- [x] mobile-029: Motivational message — LLM-generated post-workout message on WorkoutDoneCard; context-aware (RPE, PRs, streak, sex, cycle phase); multiple-sessions-per-day consolidated into single card
 
 ---
 
@@ -136,6 +137,18 @@ Module/platform/shared architecture is the canonical app structure. Legacy top-l
 ## Program Modes
 
 - [x] programs-005: Unending program mode — `program_mode`, `unending_session_counter`, lazy session generation, cycle review on "End Program"; orchestration in `program/application/unending-session.ts`; multiple-workouts-per-day fix; cycle badge suppression for unending
+
+---
+
+## Dashboard (`apps/dashboard`)
+
+- [x] Timeline view (all AI events)
+- [x] JIT sessions view
+- [x] Workout Summaries view — completed sessions with RPE, PRs, performance vs plan, completion %
+- [x] Hybrid comparisons view
+- [x] Cycle reviews view
+- [x] Formula suggestions view
+- [x] Developer suggestions view
 
 ---
 

@@ -23,9 +23,9 @@ Key exports: `useActiveProgram`, `ProgramService`, `getCurrentMaxes`, `submitMax
 ### `@modules/session`
 
 Path: `modules/session/`
-Covers: Session CRUD, JIT trigger, rest timer notifications, sync queue, missed session reconciliation, overtime edge detection.
+Covers: Session CRUD, JIT trigger, rest timer notifications, sync queue, missed session reconciliation, overtime edge detection, post-workout motivational message (LLM).
 
-Key exports: `useTodaySession`, `useMissedSessionReconciliation`, `useRestNotifications`, `useSyncQueue`, `SessionService`, `findTodaySession`, `startSession`, `completeSession`, `skipSession`, `detectOvertimeEdge`.
+Key exports: `useTodaySession`, `useTodaySessions`, `useMissedSessionReconciliation`, `useRestNotifications`, `useSyncQueue`, `SessionService`, `findTodaySession`, `startSession`, `completeSession`, `skipSession`, `detectOvertimeEdge`, `fetchMotivationalContext`, `generateMotivationalMessage`.
 
 ### `@modules/jit`
 
