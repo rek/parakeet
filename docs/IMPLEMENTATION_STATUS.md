@@ -181,6 +181,13 @@ Module/platform/shared architecture is the canonical app structure. Legacy top-l
 
 ---
 
+## Bug Fixes
+
+- [x] Disruption skip — skipped/missed sessions in program grid now show "Skipped"/"Missed" pill badges (previously only a red dot, no text label) — `SessionSummary.tsx`
+- [x] Disruption skip — `handleApply()` now invalidates `program.active` + `session.today` queries so the program grid refreshes immediately after adjustment is applied — `report.tsx`
+
+---
+
 ## Planned / Future
 
 - [ ] Sleep data integration (wearables → JIT context)

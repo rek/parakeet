@@ -16,9 +16,6 @@ At the end remember to update design and specs at end with work actually done. t
 
 ## 1
 
-generate review program page
-its a bit weird, something seems broken on it
-explain how it should work
-why two buttons after pressing review?
-(check now, which flashes, and generate now)
-(also it never seems to generate a program review...)
+some aux stuff does not make sense.
+
+eg: 'assult bike' does have 'weight' or 'reps' really? perhaps time and reps! need to consider good defaults for it tho

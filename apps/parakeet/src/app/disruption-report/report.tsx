@@ -231,6 +231,8 @@ export default function DisruptionReportScreen() {
     setIsApplying(true)
     try {
       await applyDisruptionAdjustment(disruption.id, user.id)
+      void queryClient.invalidateQueries({ queryKey: qk.program.active(user.id) })
+      void queryClient.invalidateQueries({ queryKey: qk.session.today(user.id) })
       router.back()
     } finally {
       setIsApplying(false)
