@@ -108,3 +108,15 @@ At the end: update design doc status, finalize specs, update IMPLEMENTATION_STAT
 **"Work logged anyway" pattern for ad-hoc data** — when adding anything that rides existing save paths (e.g. ad-hoc sets flowing through the `auxiliarySets` → `completeSession` pipeline), verify the destination payload is unfiltered before building the feature. If it is, no new API surface is needed — just UI + a store action.
 
 **Extract modal components immediately** — any modal with its own text input, local state, and button logic is a natural component boundary. If you write it inline, extract it in the same session before committing. The rule: if it has its own `useState`, it should be its own component.
+
+**Match the tool to the scope** — a one-time admin operation (CSV import, data migration, backfill) does not need a mobile UI. A CLI script is faster to build, easier to reason about, and carries no ongoing maintenance cost. Ask: who runs this, how often, and is it reversible? If the answer is "one person, once, manually" — make it a script.
+
+**Read the actual data before designing the format** — the design doc assumed Strong CSV format, but the real file used a completely different schema (NextSet). Always check the actual input before finalising a parser. In a features.md workflow, if a file path is provided, scan it immediately during Orient rather than waiting until implementation.
+
+**Auto-detect formats over flag switching** — when a script may need to handle multiple input formats, detect from the header row rather than requiring a `--format` flag. Fewer args = less user error. A `detectFormat(header)` function is cheap and makes the common case zero-config.
+
+**Nullable schema columns need three-file updates** — making a DB column nullable requires: (1) migration, (2) `supabase/types.ts` hand-edit, (3) grep every call site for non-null assumptions. For `sessions.program_id`, the cascade hit `fetchOverdueScheduledSessions` (inner join guarantees non-null → `!` assertion) and `jit.ts` (JIT never runs on import sessions → `!` assertion). Always grep the column name across the full codebase before declaring done.
+
+**Sentinel values need constraint updates** — when using a new enum-like value as a sentinel (e.g., `intensity_type = 'import'`), check whether the column has a DB CHECK constraint and update it in the same migration. Forgetting this produces a runtime error, not a TypeScript error.**
+
+**`createClient` without Database generic resolves to `never` table types** — in CLI scripts outside the app build system, `createClient()` (without type params) gives a client where all `.from()` calls produce `never`. Fix: `createClient<any>()` and cast the client to `any` inside the insert function. The alternative (importing Database from `supabase/types.ts`) requires tsconfig path resolution that CLI scripts don't have.

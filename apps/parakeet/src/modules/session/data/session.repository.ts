@@ -463,7 +463,8 @@ export async function fetchOverdueScheduledSessions(
       planned_date: row.planned_date,
       primary_lift: parseLift(row.primary_lift),
       week_number: row.week_number,
-      program_id: row.program_id,
+      // Inner join on programs guarantees program_id is non-null here
+      program_id: row.program_id!,
     };
   });
 }
