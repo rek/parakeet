@@ -51,6 +51,7 @@ interface SessionState {
 
   updateSet: (setNumber: number, data: Partial<ActualSet>) => void
   updateAuxiliarySet: (exercise: string, setNumber: number, data: Partial<AuxiliaryActualSet>) => void
+  addAdHocSet: (exercise: string) => void
   setWarmupDone: (index: number, done: boolean) => void
   setSessionRpe: (rpe: number) => void
   initSession: (sessionId: string, plannedSets: { weight_kg: number; reps: number }[]) => void
@@ -121,6 +122,23 @@ export const useSessionStore = create<SessionState>()(
           s.exercise === exercise && s.set_number === setNumber ? { ...s, ...data } : s,
         ),
       })),
+
+      addAdHocSet: (exercise) => set((state) => {
+        const existing = state.auxiliarySets.filter((s) => s.exercise === exercise);
+        const last = existing[existing.length - 1];
+        return {
+          auxiliarySets: [
+            ...state.auxiliarySets,
+            {
+              exercise,
+              set_number: existing.length + 1,
+              weight_grams: last?.weight_grams ?? 0,
+              reps_completed: last?.reps_completed ?? 5,
+              is_completed: false,
+            },
+          ],
+        };
+      }),
 
       setWarmupDone: (index, done) => set((state) => {
         const next = new Set(state.warmupCompleted)

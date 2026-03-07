@@ -34,7 +34,8 @@ The live workout logging screen where users check off sets, adjust weights and r
 **`apps/parakeet/store/sessionStore.ts` (Zustand):**
 
 - State: `{ sessionId, plannedSets, actualSets: ActualSet[], auxiliarySets: AuxiliaryActualSet[], sessionRpe, startedAt }`
-- Actions: `updateSet`, `updateAuxiliarySet(exercise, setNumber, data)`, `initAuxiliary(work)`, `setSessionRpe`, `reset()`
+- Actions: `updateSet`, `updateAuxiliarySet(exercise, setNumber, data)`, `initAuxiliary(work)`, `addAdHocSet(exercise)`, `setSessionRpe`, `reset()`
+- See also [mobile-030-ad-hoc-auxiliary-exercises.md](./mobile-030-ad-hoc-auxiliary-exercises.md) for ad-hoc exercise logging
 
 **`apps/parakeet/app/session/complete.tsx`:**
 - Summary view after submitting:

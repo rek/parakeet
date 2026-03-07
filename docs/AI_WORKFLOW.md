@@ -82,3 +82,7 @@ At the end: update design doc status, finalize specs, update IMPLEMENTATION_STAT
 **Lazy generation pattern for unending modes** — check for an existing record first, then generate and persist only if missing. Never generate unconditionally or you'll duplicate rows across concurrent requests.
 
 **Regression guards to write first** — before implementing unending logic, write the guards that prevent regressions in the scheduled path: `fetchOverdueScheduledSessions` filtering by `program_mode`, `completeSession` checking `program_mode` before the 80% gate. Write these before the feature code so they're in place from the start.
+
+**Small UI features need no spec-first ceremony** — for simple, self-contained UI additions (a button, a modal, a store action with no DB changes), going straight to implement → typecheck → doc is faster than design → spec → implement. Skip the design doc draft if the feature fits in a sentence. Write the spec *after* to record what was actually built.
+
+**"Work logged anyway" pattern for ad-hoc data** — when adding anything that rides existing save paths (e.g. ad-hoc sets flowing through the `auxiliarySets` → `completeSession` pipeline), verify the destination payload is unfiltered before building the feature. If it is, no new API surface is needed — just UI + a store action.

@@ -1,9 +1,11 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   Alert,
+  Modal,
   ScrollView,
   StyleSheet,
   Text,
+  TextInput,
   TouchableOpacity,
   View,
 } from 'react-native';
@@ -101,6 +103,7 @@ export default function SessionScreen() {
     initAuxiliary,
     updateSet,
     updateAuxiliarySet,
+    addAdHocSet,
     setWarmupDone,
     setSessionMeta,
     setCachedJitData,
@@ -115,6 +118,9 @@ export default function SessionScreen() {
 
   const [warmupSetsState, setWarmupSetsState] = useState<WarmupSet[]>([]);
   const [auxiliaryWork, setAuxiliaryWork] = useState<AuxiliaryWork[]>([]);
+  const [adHocExercises, setAdHocExercises] = useState<string[]>([]);
+  const [addExerciseVisible, setAddExerciseVisible] = useState(false);
+  const [exerciseInput, setExerciseInput] = useState('');
   const [historySheetVisible, setHistorySheetVisible] = useState(false);
   const insets = useSafeAreaInsets();
 
@@ -210,6 +216,16 @@ export default function SessionScreen() {
     } else {
       // Returning to an existing session — restore aux work display, preserve actualSets
       setAuxiliaryWork(aux ?? []);
+      // Restore ad-hoc exercises: any exercise in the store not in prescribed aux
+      const prescribed = new Set((aux ?? []).map((a) => a.exercise));
+      const adHoc = [
+        ...new Set(
+          storeState.auxiliarySets
+            .filter((s) => !prescribed.has(s.exercise))
+            .map((s) => s.exercise)
+        ),
+      ];
+      setAdHocExercises(adHoc);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -326,6 +342,21 @@ export default function SessionScreen() {
         actual_rest_seconds: elapsedSeconds,
       });
     }
+  }
+
+  function handleConfirmAddExercise() {
+    const name = exerciseInput.trim().toLowerCase().replace(/\s+/g, '_');
+    if (!name) return;
+    if (!adHocExercises.includes(name)) {
+      setAdHocExercises((prev) => [...prev, name]);
+      addAdHocSet(name);
+    }
+    setExerciseInput('');
+    setAddExerciseVisible(false);
+  }
+
+  function handleAddAdHocSet(exercise: string) {
+    addAdHocSet(exercise);
   }
 
   function handleAbandon() {
@@ -459,7 +490,7 @@ export default function SessionScreen() {
         })}
 
         {/* Auxiliary work section */}
-        {auxiliaryWork.length > 0 && (
+        {(auxiliaryWork.length > 0 || adHocExercises.length > 0) && (
           <View style={styles.auxSection}>
             <View style={styles.workingSetsHeader}>
               <Text style={styles.workingSetsTitle}>Auxiliary Work</Text>
@@ -501,8 +532,57 @@ export default function SessionScreen() {
                 )}
               </View>
             ))}
+
+            {adHocExercises.map((exercise, exerciseIndex) => {
+              const sets = auxiliarySets.filter((s) => s.exercise === exercise);
+              return (
+                <View key={exercise} style={styles.auxExercise}>
+                  <View style={styles.adHocExerciseHeader}>
+                    <Text style={styles.auxExerciseName}>
+                      {formatExerciseName(exercise)}
+                    </Text>
+                    <TouchableOpacity
+                      onPress={() => handleAddAdHocSet(exercise)}
+                      hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                      accessibilityLabel={`Add set for ${exercise}`}
+                      accessibilityRole="button"
+                    >
+                      <Text style={styles.addSetButton}>+ Set</Text>
+                    </TouchableOpacity>
+                  </View>
+                  {sets.map((actualSet) => (
+                    <SetRow
+                      key={`${exercise}-${actualSet.set_number}`}
+                      setNumber={actualSet.set_number}
+                      plannedWeightKg={actualSet.weight_grams / 1000}
+                      plannedReps={actualSet.reps_completed}
+                      onUpdate={(data) =>
+                        handleAuxSetUpdate(
+                          auxByExercise.length + exerciseIndex,
+                          exercise,
+                          actualSet.set_number,
+                          sets.length,
+                          data
+                        )
+                      }
+                    />
+                  ))}
+                </View>
+              );
+            })}
           </View>
         )}
+
+        {/* Add exercise button */}
+        <TouchableOpacity
+          style={styles.addExerciseButton}
+          onPress={() => setAddExerciseVisible(true)}
+          activeOpacity={0.7}
+          accessibilityLabel="Add exercise"
+          accessibilityRole="button"
+        >
+          <Text style={styles.addExerciseButtonText}>+ Add Exercise</Text>
+        </TouchableOpacity>
 
         {/* Bottom padding for sticky button */}
         <View style={styles.bottomSpacer} />
@@ -532,6 +612,59 @@ export default function SessionScreen() {
         visible={historySheetVisible}
         onClose={() => setHistorySheetVisible(false)}
       />
+
+      {/* Add exercise modal */}
+      <Modal
+        visible={addExerciseVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setAddExerciseVisible(false)}
+      >
+        <TouchableOpacity
+          style={styles.modalBackdrop}
+          activeOpacity={1}
+          onPress={() => setAddExerciseVisible(false)}
+        >
+          <View
+            style={styles.modalCard}
+            onStartShouldSetResponder={() => true}
+          >
+            <Text style={styles.modalTitle}>Add Exercise</Text>
+            <TextInput
+              style={styles.modalInput}
+              placeholder="e.g. face pulls, lat pulldown"
+              placeholderTextColor={colors.textTertiary}
+              value={exerciseInput}
+              onChangeText={setExerciseInput}
+              autoFocus
+              returnKeyType="done"
+              onSubmitEditing={handleConfirmAddExercise}
+              autoCapitalize="none"
+            />
+            <View style={styles.modalButtons}>
+              <TouchableOpacity
+                style={styles.modalCancelButton}
+                onPress={() => {
+                  setExerciseInput('');
+                  setAddExerciseVisible(false);
+                }}
+              >
+                <Text style={styles.modalCancelText}>Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[
+                  styles.modalAddButton,
+                  !exerciseInput.trim() && styles.modalAddButtonDisabled,
+                ]}
+                onPress={handleConfirmAddExercise}
+                disabled={!exerciseInput.trim()}
+              >
+                <Text style={styles.modalAddText}>Add</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </TouchableOpacity>
+      </Modal>
 
       {/* Rest timer overlay (non-modal so tab navigation remains available) */}
       {timerState?.visible && (
@@ -661,6 +794,96 @@ const styles = StyleSheet.create({
     right: 0,
     alignItems: 'center',
     paddingHorizontal: 8,
+  },
+  adHocExerciseHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingBottom: 8,
+  },
+  addSetButton: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: colors.primary,
+  },
+  addExerciseButton: {
+    marginHorizontal: 16,
+    marginTop: 12,
+    marginBottom: 4,
+    paddingVertical: 12,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderStyle: 'dashed',
+    alignItems: 'center',
+  },
+  addExerciseButtonText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: colors.textSecondary,
+  },
+  modalBackdrop: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 24,
+  },
+  modalCard: {
+    width: '100%',
+    backgroundColor: colors.bgSurface,
+    borderRadius: 16,
+    padding: 24,
+  },
+  modalTitle: {
+    fontSize: 17,
+    fontWeight: '700',
+    color: colors.text,
+    marginBottom: 16,
+  },
+  modalInput: {
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: 10,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    fontSize: 15,
+    color: colors.text,
+    marginBottom: 20,
+    backgroundColor: colors.bgSurface,
+  },
+  modalButtons: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  modalCancelButton: {
+    flex: 1,
+    paddingVertical: 12,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: colors.border,
+    alignItems: 'center',
+  },
+  modalCancelText: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: colors.textSecondary,
+  },
+  modalAddButton: {
+    flex: 1,
+    paddingVertical: 12,
+    borderRadius: 10,
+    backgroundColor: colors.primary,
+    alignItems: 'center',
+  },
+  modalAddButtonDisabled: {
+    opacity: 0.4,
+  },
+  modalAddText: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: colors.textInverse,
   },
   offlineBanner: {
     backgroundColor: colors.warning,
