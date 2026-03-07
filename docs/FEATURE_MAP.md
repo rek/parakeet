@@ -37,16 +37,16 @@ Key exports: `runJIT` (or equivalent from `lib/jit`), `estimateMax`.
 ### `@modules/history`
 
 Path: `modules/history/`
-Covers: Performance trends by lift, recent lift history for in-session sheet, performance helpers.
+Covers: Performance trends by lift, recent lift history for in-session sheet, performance helpers, chart data builders, trend presentation constants.
 
-Key exports: `getPerformanceByLift`, `getPerformanceTrends`, `getRecentLiftHistory`, `processRecentHistory`.
+Key exports: `getPerformanceByLift`, `getPerformanceTrends`, `getRecentLiftHistory`, `processRecentHistory`, `buildVolumeChartData`, `TREND_CONFIG`.
 
 ### `@modules/disruptions`
 
 Path: `modules/disruptions/`
-Covers: Report, apply adjustment, resolve, and list training disruptions.
+Covers: Report, apply adjustment, resolve, and list training disruptions. Domain presets for menstrual symptoms and severity inference.
 
-Key exports: `reportDisruption`, `applyDisruptionAdjustment`, `resolveDisruption`, `getActiveDisruptions`, `getDisruptionHistory`.
+Key exports: `reportDisruption`, `applyDisruptionAdjustment`, `resolveDisruption`, `getActiveDisruptions`, `getDisruptionHistory`, `SORENESS_NUMERIC`, `inferEffectiveSeverity`, `getMenstrualSymptomsPreset`.
 
 ### `@modules/cycle-review`
 

@@ -142,6 +142,22 @@ Module/platform/shared architecture is the canonical app structure. Legacy top-l
 
 ---
 
+## Refactors
+
+- [x] refactor-001: Extract business logic from React components — domain logic moved to training-engine and module utils; presentation constants consolidated. See below for details.
+  - `getPhaseForDay` → `training-engine/formulas/cycle-phase.ts` (removed duplicate from settings/cycle-tracking)
+  - `estimateWorkingWeight` → `training-engine/formulas/weight-rounding.ts` (removed `WORKING_PCT` from settings/warmup-protocol)
+  - `currentBlockNumber`, `unendingBlockNumber` → `modules/program/utils/program-utils.ts`
+  - `classifyVolumeLevel`, `getMrvWarningMuscles` → `modules/training-volume/utils/volume-thresholds.ts`
+  - `toRowDraft`, `initDraft`, `draftToOverrides`, `exampleWeight` → `modules/formula/lib/formula-draft.ts`
+  - `SORENESS_NUMERIC`, `inferEffectiveSeverity`, `getMenstrualSymptomsPreset` → `modules/disruptions/lib/disruption-presets.ts`
+  - `partitionTodaySessions` → `modules/session/utils/session-sorting.ts`
+  - `buildVolumeChartData` → `modules/history/utils/chart-helpers.ts`
+  - `CYCLE_PHASE_LABELS/BG/TEXT` → `modules/cycle-tracking/ui/cycle-phase-styles.ts` (consolidated from 4 files)
+  - `TREND_CONFIG` → `modules/history/ui/trend-styles.ts` (consolidated from 2 files)
+
+---
+
 ## Dashboard (`apps/dashboard`)
 
 - [x] Timeline view (all AI events)
