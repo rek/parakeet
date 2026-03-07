@@ -5,7 +5,7 @@ import { strategyBadge } from '../components/Badge';
 interface TimelineEvent {
   id: string;
   ts: string;
-  type: 'jit' | 'hybrid' | 'cycle_review' | 'formula_suggestion' | 'developer_suggestion';
+  type: 'jit' | 'hybrid' | 'cycle_review' | 'formula_suggestion' | 'developer_suggestion' | 'motivational';
   label: string;
   sub: string;
   meta?: Record<string, unknown>;
@@ -49,6 +49,12 @@ const typeConfig = {
     label: 'DEV',
     icon: '◈',
   },
+  motivational: {
+    color: 'var(--accent)',
+    bg: 'var(--accent-dim)',
+    label: 'MOTIV',
+    icon: '✦',
+  },
 };
 
 interface Stats {
@@ -57,6 +63,7 @@ interface Stats {
   cycleReviews: number;
   formulaSuggestions: number;
   devSuggestions: number;
+  motivational: number;
 }
 
 function StatCard({ label, value, color }: { label: string; value: number; color: string }) {
@@ -80,17 +87,17 @@ function StatCard({ label, value, color }: { label: string; value: number; color
 export function Logs() {
   const { supabase } = useSupabase();
   const [events, setEvents] = useState<TimelineEvent[]>([]);
-  const [stats, setStats] = useState<Stats>({ jit: 0, hybrid: 0, cycleReviews: 0, formulaSuggestions: 0, devSuggestions: 0 });
+  const [stats, setStats] = useState<Stats>({ jit: 0, hybrid: 0, cycleReviews: 0, formulaSuggestions: 0, devSuggestions: 0, motivational: 0 });
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function load() {
       setLoading(true);
 
-      const [jitRes, hybridRes, reviewRes, formulaRes, devRes] = await Promise.all([
+      const [jitRes, hybridRes, reviewRes, formulaRes, devRes, motivRes] = await Promise.all([
         supabase
           .from('sessions')
-          .select('id, jit_generated_at, jit_strategy, scheduled_date, week_number, block_number')
+          .select('id, jit_generated_at, jit_strategy, planned_date, week_number, block_number')
           .not('jit_generated_at', 'is', null)
           .order('jit_generated_at', { ascending: false })
           .limit(30),
@@ -115,6 +122,11 @@ export function Logs() {
           .select('id, created_at, priority, status, description')
           .order('created_at', { ascending: false })
           .limit(20),
+        supabase
+          .from('motivational_message_logs')
+          .select('id, created_at, message, context')
+          .order('created_at', { ascending: false })
+          .limit(30),
       ]);
 
       const all: TimelineEvent[] = [];
@@ -122,7 +134,7 @@ export function Logs() {
       (jitRes.data ?? []).forEach((s: Record<string, unknown>) => {
         all.push({
           id: `jit-${s.id}`,
-          ts: (s.jit_generated_at ?? s.scheduled_date) as string,
+          ts: (s.jit_generated_at ?? s.planned_date) as string,
           type: 'jit',
           label: `JIT Generated — W${s.week_number} B${s.block_number}`,
           sub: `Strategy: ${s.jit_strategy ?? 'formula'} · session/${(s.id as string).slice(0, 8)}…`,
@@ -171,6 +183,20 @@ export function Logs() {
         });
       });
 
+      (motivRes.data ?? []).forEach((m: Record<string, unknown>) => {
+        const ctx = m.context as Record<string, unknown> | null;
+        const lifts = (ctx?.primaryLifts as string[] | undefined) ?? [];
+        const liftLabel = lifts.length > 0 ? lifts.map((l) => l.charAt(0).toUpperCase() + l.slice(1)).join(', ') : 'Workout';
+        const msg = m.message as string;
+        all.push({
+          id: `motiv-${m.id}`,
+          ts: m.created_at as string,
+          type: 'motivational',
+          label: `Motivational Message — ${liftLabel}`,
+          sub: msg.slice(0, 100) + (msg.length > 100 ? '…' : ''),
+        });
+      });
+
       all.sort((a, b) => new Date(b.ts).getTime() - new Date(a.ts).getTime());
       setEvents(all);
 
@@ -180,6 +206,7 @@ export function Logs() {
         cycleReviews: reviewRes.data?.length ?? 0,
         formulaSuggestions: formulaRes.data?.length ?? 0,
         devSuggestions: devRes.data?.length ?? 0,
+        motivational: motivRes.data?.length ?? 0,
       });
 
       setLoading(false);
@@ -206,6 +233,7 @@ export function Logs() {
           <StatCard label="Cycle Reviews" value={stats.cycleReviews} color="var(--green)" />
           <StatCard label="Formula Suggestions" value={stats.formulaSuggestions} color="var(--blue)" />
           <StatCard label="Dev Suggestions" value={stats.devSuggestions} color="var(--red)" />
+          <StatCard label="Motivational" value={stats.motivational} color="var(--accent)" />
         </div>
       )}
 

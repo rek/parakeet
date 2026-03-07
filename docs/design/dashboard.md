@@ -27,9 +27,10 @@ apps/dashboard/
     styles.css             # CSS custom properties (colours, borders, overlays)
     app/
       app.tsx              # Sidebar nav + local/prod toggle
-      Logs.tsx             # Timeline — all AI events
+      Logs.tsx             # Timeline — all AI events unified feed
       JITLogs.tsx          # JIT session adjustments
       WorkoutSummaries.tsx # Completed sessions — RPE, PRs, performance
+      MotivationalLogs.tsx # Post-workout motivational messages — LLM input context + output
       ComparisonLogs.tsx   # Hybrid strategy diffs
       CycleReviews.tsx     # Cycle review output
       FormulaSuggestions.tsx
@@ -38,6 +39,20 @@ apps/dashboard/
       Badge.tsx            # Colour-coded status badges
       JsonViewer.tsx       # Collapsible JSON tree
 ```
+
+## Timeline Aggregation Rule
+
+`Logs.tsx` is the unified AI event feed. **Every new dashboard page that reads from its own Supabase table must also add a corresponding entry to `Logs.tsx`**. Failure to do so means the Timeline shows 0 for that event type while the detail page shows data — a confusing discrepancy.
+
+Checklist when adding a new dashboard page:
+1. Add the Supabase query to `Promise.all` in `Logs.tsx`
+2. Add an entry to `typeConfig` with colour/label/icon
+3. Add a field to `Stats` and a `StatCard`
+4. Map the results to `TimelineEvent[]`
+
+## JsonViewer Usage
+
+`JsonViewer` requires either `label` (gives it a toggle button) or `defaultCollapsed={false}` (renders open immediately). Without one of these, content initialises hidden with no UI escape hatch — visually appears empty.
 
 ## Env Switching
 
@@ -65,9 +80,10 @@ import { theme } from '../lib/theme';
 
 ## Implementation Status
 
-- [x] Timeline view (all AI events unified feed)
+- [x] Timeline view (all AI events unified feed) — JIT, hybrid, cycle review, formula suggestion, developer suggestion, motivational
 - [x] JIT sessions view
 - [x] Workout Summaries view — last 50 completed sessions with RPE, performance vs plan, PRs, completion %
+- [x] Motivational messages view — LLM input context (completionPct, topWeightKg, totalSetsCompleted, PRs, RPE, cycle phase) + generated message
 - [x] Hybrid comparisons view
 - [x] Cycle reviews view
 - [x] Formula suggestions view
