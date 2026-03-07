@@ -440,12 +440,14 @@ export async function fetchOverdueScheduledSessions(
   userId: string,
   today: string
 ): Promise<OverdueScheduledSessionRow[]> {
+  // Exclude unending programs — their sessions are always planned for today and can't go overdue
   const { data, error } = await typedSupabase
     .from('sessions')
-    .select('id, planned_date, primary_lift, week_number, program_id')
+    .select('id, planned_date, primary_lift, week_number, program_id, programs!inner(program_mode)')
     .eq('user_id', userId)
     .eq('status', 'planned')
-    .lt('planned_date', today);
+    .lt('planned_date', today)
+    .eq('programs.program_mode', 'scheduled');
 
   if (error) throw error;
   return (data ?? []).map((row) => {

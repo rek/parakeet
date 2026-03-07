@@ -605,10 +605,12 @@ export type Database = {
           formula_config_id: string | null
           id: string
           lifter_maxes_id: string | null
+          program_mode: string
           start_date: string
           status: string
-          total_weeks: number
+          total_weeks: number | null
           training_days_per_week: number
+          unending_session_counter: number
           user_id: string
           version: number
         }
@@ -617,10 +619,12 @@ export type Database = {
           formula_config_id?: string | null
           id?: string
           lifter_maxes_id?: string | null
+          program_mode?: string
           start_date: string
           status?: string
-          total_weeks: number
+          total_weeks?: number | null
           training_days_per_week?: number
+          unending_session_counter?: number
           user_id: string
           version?: number
         }
@@ -629,10 +633,12 @@ export type Database = {
           formula_config_id?: string | null
           id?: string
           lifter_maxes_id?: string | null
+          program_mode?: string
           start_date?: string
           status?: string
-          total_weeks?: number
+          total_weeks?: number | null
           training_days_per_week?: number
+          unending_session_counter?: number
           user_id?: string
           version?: number
         }

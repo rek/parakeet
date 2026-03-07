@@ -82,6 +82,43 @@ export function generateProgram(input: GenerateProgramInput): GeneratedProgramSt
   return { sessions }
 }
 
+export interface NextUnendingSessionInput {
+  sessionCounter: number      // program.unending_session_counter (0-based)
+  trainingDaysPerWeek: number
+}
+
+export interface NextUnendingSessionResult {
+  weekNumber: number          // synthetic, monotonically increasing
+  dayNumber: number           // 1..trainingDaysPerWeek
+  primaryLift: Lift
+  intensityType: IntensityType
+  blockNumber: 1 | 2 | 3
+  isDeload: boolean
+}
+
+// Computes the metadata for the next session in an unending program.
+// All values are derived arithmetically from the session counter — no DB access needed.
+export function nextUnendingSession(input: NextUnendingSessionInput): NextUnendingSessionResult {
+  const { sessionCounter, trainingDaysPerWeek } = input
+  const daysPerWeek = Math.max(1, trainingDaysPerWeek)
+
+  const weekNumber = Math.floor(sessionCounter / daysPerWeek) + 1
+  const dayNumber = (sessionCounter % daysPerWeek) + 1
+  const lift = LIFT_ORDER[(sessionCounter % daysPerWeek) % LIFT_ORDER.length]
+
+  // Blocks cycle 1→2→3→1… every 3 training weeks (same as scheduled)
+  const blockNumber = (((Math.floor((weekNumber - 1) / 3)) % 3) + 1) as 1 | 2 | 3
+
+  // Deload every 4th week equivalent (week 4, 8, 12, …)
+  const isDeload = weekNumber % 4 === 0
+
+  const intensityType: IntensityType = isDeload
+    ? 'deload'
+    : getIntensityTypeForWeek(weekNumber, lift)
+
+  return { weekNumber, dayNumber, primaryLift: lift, intensityType, blockNumber, isDeload }
+}
+
 export function generateAuxiliaryAssignments(
   _totalWeeks: number,
   auxiliaryPool: AuxiliaryPool,

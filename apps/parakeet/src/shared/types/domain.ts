@@ -61,7 +61,9 @@ export interface ProgramListItem
     Program,
     | 'id'
     | 'status'
+    | 'program_mode'
     | 'total_weeks'
+    | 'unending_session_counter'
     | 'training_days_per_week'
     | 'start_date'
     | 'created_at'

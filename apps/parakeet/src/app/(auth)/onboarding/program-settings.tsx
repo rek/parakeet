@@ -26,6 +26,7 @@ import { colors } from '../../../theme'
 
 type TotalWeeks = 10 | 12 | 14
 type TrainingDays = 3 | 4
+type ProgramMode = 'scheduled' | 'unending'
 
 interface LiftInput {
   type: '1rm' | '3rm'
@@ -54,6 +55,7 @@ export default function ProgramSettingsScreen() {
     }
   }, [params.lifts])
 
+  const [programMode, setProgramMode] = useState<ProgramMode>('scheduled')
   const [totalWeeks, setTotalWeeks] = useState<TotalWeeks>(10)
   const [trainingDaysPerWeek, setTrainingDaysPerWeek] = useState<TrainingDays>(3)
   const [gender, setGender] = useState<BiologicalSex | null>(null)
@@ -137,6 +139,7 @@ export default function ProgramSettingsScreen() {
         params: {
           totalWeeks: String(totalWeeks),
           trainingDaysPerWeek: String(trainingDaysPerWeek),
+          programMode,
         },
       })
     } catch (err: unknown) {
@@ -164,16 +167,20 @@ export default function ProgramSettingsScreen() {
       <Text style={styles.title}>Program Settings</Text>
       <Text style={styles.subtitle}>Customize your training block before we build your program.</Text>
 
-      {/* Duration */}
-      <Text style={styles.label}>Duration</Text>
-      <View style={styles.toggle}>
-        {WEEK_OPTIONS.map((weeks, index) => {
+      {/* Program Style */}
+      <Text style={styles.label}>Program Style</Text>
+      <Text style={styles.fieldHint}>
+        Scheduled follows a fixed-length cycle. Unending generates each workout one at a time, indefinitely.
+      </Text>
+      <View style={[styles.toggle, styles.toggleMarginTop]}>
+        {(['scheduled', 'unending'] as ProgramMode[]).map((mode, index) => {
           const isFirst = index === 0
-          const isLast = index === WEEK_OPTIONS.length - 1
-          const isActive = totalWeeks === weeks
+          const isLast = index === 1
+          const isActive = programMode === mode
+          const label = mode === 'scheduled' ? 'Scheduled' : 'Unending'
           return (
             <TouchableOpacity
-              key={weeks}
+              key={mode}
               style={[
                 styles.toggleButton,
                 isFirst && styles.toggleButtonFirst,
@@ -181,16 +188,48 @@ export default function ProgramSettingsScreen() {
                 !isLast && styles.toggleButtonBorderRight,
                 isActive && styles.toggleButtonActive,
               ]}
-              onPress={() => setTotalWeeks(weeks)}
+              onPress={() => setProgramMode(mode)}
               activeOpacity={0.8}
             >
               <Text style={[styles.toggleButtonText, isActive && styles.toggleButtonTextActive]}>
-                {weeks} weeks
+                {label}
               </Text>
             </TouchableOpacity>
           )
         })}
       </View>
+
+      {/* Duration — only for scheduled programs */}
+      {programMode === 'scheduled' && (
+        <>
+          <Text style={styles.label}>Duration</Text>
+          <View style={styles.toggle}>
+            {WEEK_OPTIONS.map((weeks, index) => {
+              const isFirst = index === 0
+              const isLast = index === WEEK_OPTIONS.length - 1
+              const isActive = totalWeeks === weeks
+              return (
+                <TouchableOpacity
+                  key={weeks}
+                  style={[
+                    styles.toggleButton,
+                    isFirst && styles.toggleButtonFirst,
+                    isLast && styles.toggleButtonLast,
+                    !isLast && styles.toggleButtonBorderRight,
+                    isActive && styles.toggleButtonActive,
+                  ]}
+                  onPress={() => setTotalWeeks(weeks)}
+                  activeOpacity={0.8}
+                >
+                  <Text style={[styles.toggleButtonText, isActive && styles.toggleButtonTextActive]}>
+                    {weeks} weeks
+                  </Text>
+                </TouchableOpacity>
+              )
+            })}
+          </View>
+        </>
+      )}
 
       {/* Days per week */}
       <Text style={styles.label}>Days / Week</Text>

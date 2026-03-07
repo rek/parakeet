@@ -95,7 +95,7 @@ export async function fetchProgramWithSessions(programId: string) {
 export async function fetchProgramsList(userId: string): Promise<ProgramListItem[]> {
   const { data, error } = await typedSupabase
     .from('programs')
-    .select('id, version, status, total_weeks, training_days_per_week, start_date, created_at')
+    .select('id, version, status, program_mode, total_weeks, unending_session_counter, training_days_per_week, start_date, created_at')
     .eq('user_id', userId)
     .order('created_at', { ascending: false });
 
@@ -104,7 +104,9 @@ export async function fetchProgramsList(userId: string): Promise<ProgramListItem
     id: row.id,
     version: row.version ?? null,
     status: parseProgramStatus(row.status),
-    total_weeks: row.total_weeks,
+    program_mode: (row.program_mode === 'unending' ? 'unending' : 'scheduled') as 'scheduled' | 'unending',
+    total_weeks: row.total_weeks ?? null,
+    unending_session_counter: row.unending_session_counter ?? 0,
     training_days_per_week: row.training_days_per_week,
     start_date: row.start_date,
     created_at: row.created_at,
@@ -121,4 +123,28 @@ export async function updateProgramStatusIfActive(
     .eq('id', programId)
     .eq('status', 'active');
   if (error) throw error;
+}
+
+export async function updateUnendingSessionCounter(
+  programId: string,
+  newCount: number,
+): Promise<void> {
+  const { error } = await typedSupabase
+    .from('programs')
+    .update({ unending_session_counter: newCount })
+    .eq('id', programId);
+  if (error) throw error;
+}
+
+export async function fetchActiveProgramMode(
+  userId: string,
+): Promise<{ id: string; program_mode: string; training_days_per_week: number; unending_session_counter: number } | null> {
+  const { data, error } = await typedSupabase
+    .from('programs')
+    .select('id, program_mode, training_days_per_week, unending_session_counter')
+    .eq('user_id', userId)
+    .eq('status', 'active')
+    .maybeSingle();
+  if (error) throw error;
+  return data;
 }

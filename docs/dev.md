@@ -130,7 +130,7 @@ NX_DAEMON=false nx run-many -t test
 
 ### Type ownership rules
 
-- `supabase/types.ts` is generated DB contract only. Do not hand-edit.
+- `supabase/types.ts` is generated DB contract only. Prefer `npm run db:types` after applying migrations. If the local Supabase instance is not running, hand-edit conservatively and re-generate at the next opportunity.
 - Domain types shared across app + engine live in `packages/shared-types`.
 - Engine-only algorithm/config types live in `packages/training-engine/src/types.ts`.
 - App data layers should parse JSON columns at boundaries using `apps/parakeet/src/platform/network/json-codecs.ts` instead of ad-hoc `as` casts.

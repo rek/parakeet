@@ -3,11 +3,13 @@ import {
   computeBlockOffset,
   generateAuxiliaryAssignments,
   generateProgram,
+  nextUnendingSession,
 } from '@parakeet/training-engine';
 
 import {
   archiveActivePrograms,
   fetchActiveProgramWithSessions,
+  fetchActiveProgramMode,
   fetchLatestProgramVersion,
   fetchProgramWithSessions,
   fetchProgramsList,
@@ -16,6 +18,7 @@ import {
   insertSessionRows,
   listArchivedProgramBlocks,
   updateProgramStatusIfActive,
+  updateUnendingSessionCounter,
 } from '../data/program.repository';
 import { getAuthenticatedUserId } from '../data/profile.repository';
 import { getAuxiliaryPools } from '../lib/auxiliary-config';
@@ -25,18 +28,20 @@ import type { ProgramListItem } from '@shared/types/domain';
 export type { ProgramListItem } from '@shared/types/domain';
 
 export interface CreateProgramInput {
-  totalWeeks: 10 | 12 | 14;
+  totalWeeks?: 10 | 12 | 14;  // not required for unending programs
   trainingDaysPerWeek: 3 | 4;
   startDate: Date;
   trainingDays?: number[]; // weekday indices 0=Sun..6=Sat
+  programMode?: 'scheduled' | 'unending';
 }
 
-export type RegenerateProgramInput = CreateProgramInput;
+export type RegenerateProgramInput = Omit<CreateProgramInput, 'programMode'>;
 
 async function getBlockOffset(userId: string): Promise<number> {
   const data = await listArchivedProgramBlocks(userId);
   const history = data.map((p) => ({
-    completedBlocks: Math.floor(p.total_weeks / 4),
+    // For unending programs total_weeks is null; treat as 0 blocks contributed
+    completedBlocks: Math.floor((p.total_weeks ?? 0) / 4),
   }));
   return computeBlockOffset(history);
 }
@@ -49,56 +54,39 @@ async function getRequiredUserId(): Promise<string> {
 
 async function buildProgram(input: CreateProgramInput, withFormulaConfigId: boolean) {
   const userId = await getRequiredUserId();
+  const isUnending = input.programMode === 'unending';
 
   const maxes = await getCurrentMaxes(userId);
-  const scaffold = generateProgram({
-    totalWeeks: input.totalWeeks,
-    trainingDaysPerWeek: input.trainingDaysPerWeek,
-    startDate: input.startDate,
-    trainingDays: input.trainingDays,
-  });
-
   const auxiliaryPool = await getAuxiliaryPools(userId);
   const blockOffset = await getBlockOffset(userId);
 
   await archiveActivePrograms(userId);
 
   const nextVersion = (await fetchLatestProgramVersion(userId)) + 1;
+  const today = input.startDate.toISOString().split('T')[0];
 
   const program = await insertProgramRow({
     user_id: userId,
     status: 'active',
     version: nextVersion,
-    total_weeks: input.totalWeeks,
+    total_weeks: isUnending ? null : (input.totalWeeks ?? 10),
     training_days_per_week: input.trainingDaysPerWeek,
-    start_date: input.startDate.toISOString().split('T')[0],
+    start_date: today,
     lifter_maxes_id: maxes?.id ?? null,
+    program_mode: isUnending ? 'unending' : 'scheduled',
+    unending_session_counter: 0,
     ...(withFormulaConfigId ? { formula_config_id: null } : {}),
   });
 
+  // Auxiliary assignments are generated for all 3 blocks upfront for both modes.
+  // For unending programs the blocks cycle indefinitely; the same 3-block assignments reuse.
   const auxiliaryAssignments = generateAuxiliaryAssignments(
     program.id,
-    input.totalWeeks,
+    input.totalWeeks ?? 9, // 9-week placeholder ensures 3 blocks generated
     auxiliaryPool,
     blockOffset,
   );
 
-  const sessionRows = scaffold.sessions.map((s) => ({
-    user_id: userId,
-    program_id: program.id,
-    week_number: s.weekNumber,
-    day_number: s.dayNumber,
-    primary_lift: s.primaryLift,
-    intensity_type: s.intensityType,
-    block_number: s.blockNumber,
-    is_deload: s.isDeload,
-    planned_date: s.plannedDate.toISOString().split('T')[0],
-    status: 'planned',
-    planned_sets: null,
-    jit_generated_at: null,
-  }));
-
-  await insertSessionRows(sessionRows);
   await insertAuxiliaryAssignmentRows(
     auxiliaryAssignments.map((a) => ({
       user_id: userId,
@@ -109,6 +97,49 @@ async function buildProgram(input: CreateProgramInput, withFormulaConfigId: bool
       exercise_2: a.exercise2,
     })),
   );
+
+  if (isUnending) {
+    // Create just the first session — subsequent sessions are generated lazily
+    const first = nextUnendingSession({ sessionCounter: 0, trainingDaysPerWeek: input.trainingDaysPerWeek });
+    await insertSessionRows([{
+      user_id: userId,
+      program_id: program.id,
+      week_number: first.weekNumber,
+      day_number: first.dayNumber,
+      primary_lift: first.primaryLift,
+      intensity_type: first.intensityType,
+      block_number: first.blockNumber,
+      is_deload: first.isDeload,
+      planned_date: today,
+      status: 'planned',
+      planned_sets: null,
+      jit_generated_at: null,
+    }]);
+  } else {
+    const scaffold = generateProgram({
+      totalWeeks: input.totalWeeks ?? 10,
+      trainingDaysPerWeek: input.trainingDaysPerWeek,
+      startDate: input.startDate,
+      trainingDays: input.trainingDays,
+    });
+
+    const sessionRows = scaffold.sessions.map((s) => ({
+      user_id: userId,
+      program_id: program.id,
+      week_number: s.weekNumber,
+      day_number: s.dayNumber,
+      primary_lift: s.primaryLift,
+      intensity_type: s.intensityType,
+      block_number: s.blockNumber,
+      is_deload: s.isDeload,
+      planned_date: s.plannedDate.toISOString().split('T')[0],
+      status: 'planned',
+      planned_sets: null,
+      jit_generated_at: null,
+    }));
+
+    await insertSessionRows(sessionRows);
+  }
 
   return program;
 }
@@ -136,9 +167,15 @@ export async function listPrograms(userId: string): Promise<ProgramListItem[]> {
 export async function updateProgramStatus(
   programId: string,
   status: 'completed' | 'archived',
+  options?: { triggerCycleReview?: boolean; userId?: string },
 ): Promise<void> {
   await updateProgramStatusIfActive(programId, status);
+  if (options?.triggerCycleReview && options.userId) {
+    onCycleComplete(programId, options.userId);
+  }
 }
+
+export { fetchActiveProgramMode, updateUnendingSessionCounter } from '../data/program.repository';
 
 // Triggered after each session completion when program reaches ≥80% done.
 // Fire-and-forget: errors are logged but do not block the caller.

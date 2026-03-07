@@ -8,7 +8,7 @@ For details on any item, see the linked spec file.
 
 ## Training Engine (`packages/training-engine`)
 
-336 tests passing (Vitest). All specs implemented.
+396 tests passing (Vitest). All specs implemented.
 
 - [x] engine-001: 1RM formulas — Epley, grams↔kg helpers
 - [x] engine-002: Cube method scheduler — blocks.ts
@@ -35,6 +35,7 @@ For details on any item, see the linked spec file.
 - [x] engine-023: Hybrid JIT generator — `hybrid-jit-generator.ts`, `comparisonData` on output
 - [x] engine-024: Developer suggestions — `cycle-review.ts` extended; `developer_suggestions` table
 - [x] engine-025: Multi-cycle context — `PreviousCycleSummary`, `getPreviousCycleSummaries`
+- [x] engine-026: Unending session generator — `nextUnendingSession()` pure function; lift rotation, block cycling, deload cadence
 
 ---
 
@@ -66,6 +67,7 @@ For details on any item, see the linked spec file.
 - [x] 20260229000000: `developer_suggestions` table
 - [x] 20260301000000: `jit_comparison_logs` table
 - [x] 20260304000000: `cycle_tracking` table + `session_logs.cycle_phase` column
+- [x] 20260307000000: `programs.program_mode`, `programs.unending_session_counter`; `programs.total_weeks` nullable
 
 ---
 
@@ -116,6 +118,7 @@ Module/platform/shared architecture is the canonical app structure. Legacy top-l
 - [x] mobile-024: Rest done background notification
 - [x] mobile-025: Barbell plate calculator
 - [x] mobile-026: History tab upgrade
+- [x] mobile-028: Unending program UI — Program Style toggle (onboarding), program tab unending branch, "End Program" global rename
 
 ---
 
@@ -130,9 +133,15 @@ Module/platform/shared architecture is the canonical app structure. Legacy top-l
 
 ---
 
+## Program Modes
+
+- [x] programs-005: Unending program mode — `program_mode`, `unending_session_counter`, lazy session generation, cycle review on "End Program"
+
+---
+
 ## Planned / Future
 
-- [ ] JIT-only mode (no base program; fully autonomous from history)
+- [ ] Sleep data integration (wearables → JIT context)
 - [ ] Sleep data integration (wearables → JIT context)
 - [ ] Health app integration for cycle tracking
 - [ ] Multi-cycle pattern analysis for female lifters

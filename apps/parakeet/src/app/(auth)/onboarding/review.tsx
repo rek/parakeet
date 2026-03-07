@@ -37,13 +37,15 @@ function capitalize(str: string): string {
 export default function ReviewScreen() {
   const { user } = useAuth()
   const queryClient = useQueryClient()
-  const { totalWeeks: tw, trainingDaysPerWeek: tdpw } = useLocalSearchParams<{
+  const { totalWeeks: tw, trainingDaysPerWeek: tdpw, programMode: pm } = useLocalSearchParams<{
     totalWeeks: string
     trainingDaysPerWeek: string
+    programMode?: string
   }>()
 
   const totalWeeks = Number(tw)
   const trainingDaysPerWeek = Number(tdpw) as 3 | 4
+  const isUnending = pm === 'unending'
 
   const [selectedDays, setSelectedDays] = useState<number[]>(
     () => DEFAULT_TRAINING_DAYS[trainingDaysPerWeek] ?? [1, 3, 5],
@@ -56,8 +58,9 @@ export default function ReviewScreen() {
     return nextDateForWeekday(sorted[0])
   }, [selectedDays])
 
-  // Compute week 1 preview locally — no DB call needed
+  // Compute week 1 preview locally — no DB call needed (scheduled only)
   const week1Sessions = useMemo(() => {
+    if (isUnending) return []
     if (!totalWeeks || !trainingDaysPerWeek || selectedDays.length !== trainingDaysPerWeek) return []
     const result = generateProgram({
       totalWeeks,
@@ -68,7 +71,7 @@ export default function ReviewScreen() {
     return result.sessions
       .filter((s) => s.weekNumber === 1)
       .sort((a, b) => a.dayNumber - b.dayNumber)
-  }, [selectedDays, startDate, totalWeeks, trainingDaysPerWeek])
+  }, [isUnending, selectedDays, startDate, totalWeeks, trainingDaysPerWeek])
 
   function toggleDay(day: number) {
     setSelectedDays((prev) => {
@@ -87,7 +90,13 @@ export default function ReviewScreen() {
   async function handleStart() {
     setLoading(true)
     try {
-      await createProgram({ totalWeeks: totalWeeks as 10 | 12 | 14, trainingDaysPerWeek, startDate, trainingDays: selectedDays })
+      await createProgram({
+        totalWeeks: isUnending ? undefined : totalWeeks as 10 | 12 | 14,
+        trainingDaysPerWeek,
+        startDate,
+        trainingDays: selectedDays,
+        programMode: isUnending ? 'unending' : 'scheduled',
+      })
       await queryClient.invalidateQueries({ queryKey: qk.program.active(user?.id) })
       router.replace('/(tabs)/today')
     } catch (err) {
@@ -110,7 +119,9 @@ export default function ReviewScreen() {
         <View style={styles.header}>
           <Text style={styles.title}>Your Schedule</Text>
           <Text style={styles.subtitle}>
-            {totalWeeks}-week program · pick your {trainingDaysPerWeek} training days
+            {isUnending
+              ? `Unending program · pick your ${trainingDaysPerWeek} training days`
+              : `${totalWeeks}-week program · pick your ${trainingDaysPerWeek} training days`}
           </Text>
         </View>
 
@@ -139,26 +150,40 @@ export default function ReviewScreen() {
           </Text>
         )}
 
-        {/* Week 1 preview */}
-        <Text style={styles.sectionLabel}>Week 1 Preview</Text>
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.sessionsRow}
-          style={styles.sessionsScroll}
-        >
-          {week1Sessions.map((session, i) => (
-            <View key={i} style={styles.sessionCard}>
-              <Text style={styles.cardDay}>
-                {formatSessionDate(session.plannedDate)}
+        {/* Preview section */}
+        {isUnending ? (
+          <>
+            <Text style={styles.sectionLabel}>First Session</Text>
+            <View style={styles.unendingPreview}>
+              <Text style={styles.unendingPreviewTitle}>Squat · Heavy · Block 1</Text>
+              <Text style={styles.unendingPreviewNote}>
+                Your first workout is ready to go. After each session, the next one is generated fresh from your results.
               </Text>
-              <Text style={styles.cardLift}>{capitalize(session.primaryLift)}</Text>
-              <Text style={styles.cardIntensity}>{session.intensityType}</Text>
-              <View style={styles.cardDivider} />
-              <Text style={styles.cardNote}>Sets generated before workout</Text>
             </View>
-          ))}
-        </ScrollView>
+          </>
+        ) : (
+          <>
+            <Text style={styles.sectionLabel}>Week 1 Preview</Text>
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.sessionsRow}
+              style={styles.sessionsScroll}
+            >
+              {week1Sessions.map((session, i) => (
+                <View key={i} style={styles.sessionCard}>
+                  <Text style={styles.cardDay}>
+                    {formatSessionDate(session.plannedDate)}
+                  </Text>
+                  <Text style={styles.cardLift}>{capitalize(session.primaryLift)}</Text>
+                  <Text style={styles.cardIntensity}>{session.intensityType}</Text>
+                  <View style={styles.cardDivider} />
+                  <Text style={styles.cardNote}>Sets generated before workout</Text>
+                </View>
+              ))}
+            </ScrollView>
+          </>
+        )}
       </ScrollView>
 
       {/* Footer */}
@@ -335,5 +360,25 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: colors.textSecondary,
     textDecorationLine: 'underline',
+  },
+  unendingPreview: {
+    marginHorizontal: 24,
+    marginBottom: 32,
+    backgroundColor: colors.bgSurface,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: 12,
+    padding: 16,
+  },
+  unendingPreviewTitle: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: colors.text,
+    marginBottom: 8,
+  },
+  unendingPreviewNote: {
+    fontSize: 13,
+    color: colors.textSecondary,
+    lineHeight: 19,
   },
 })

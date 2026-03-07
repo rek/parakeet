@@ -3,6 +3,7 @@ import { LiftSchema } from '@parakeet/shared-types';
 import {
   getDefaultThresholds,
   isMakeupWindowExpired,
+  nextUnendingSession,
   suggestProgramAdjustments,
 } from '@parakeet/training-engine';
 import type {
@@ -36,6 +37,11 @@ import {
   updateSessionToPlanned,
   updateSessionToSkipped,
 } from '../data/session.repository';
+import {
+  fetchActiveProgramMode,
+  insertSessionRows,
+  updateUnendingSessionCounter,
+} from '../../program/data/program.repository';
 import type {
   CompletedSessionListItem,
   CompleteSessionInput,
@@ -48,9 +54,18 @@ export type {
   SessionCompletionContext,
 } from '@shared/types/domain';
 
-// Today's session: active in-progress session first, else nearest planned session
+// Today's session: active in-progress session first, else nearest planned session.
+// For unending programs, generates the next session lazily if none exists.
 export async function findTodaySession(userId: string) {
-  return fetchTodaySession(userId);
+  const session = await fetchTodaySession(userId);
+  if (session) return session;
+
+  const program = await fetchActiveProgramMode(userId);
+  if (program?.program_mode === 'unending') {
+    return generateNextUnendingSession(program, userId);
+  }
+
+  return null;
 }
 
 // All sessions relevant to today: planned_date = today + any in_progress
@@ -265,17 +280,21 @@ export async function completeSession(
     }
   }
 
-  // Check if program has reached ≥80% completion → trigger async cycle review
+  // Check if program has reached ≥80% completion → trigger async cycle review.
+  // Unending programs have no fixed session count; cycle review is triggered manually via End Program.
   if (session?.program_id) {
-    const statuses = await fetchProgramSessionStatuses(
-      session.program_id,
-      userId
-    );
-    const total = statuses.length;
-    const completed = statuses.filter((s) => s.status === 'completed').length;
-    if (total > 0 && completed / total >= 0.8) {
-      const { onCycleComplete } = await import('../lib/programs');
-      onCycleComplete(session.program_id, userId);
+    const programMeta = await fetchActiveProgramMode(userId);
+    if (programMeta?.program_mode !== 'unending') {
+      const statuses = await fetchProgramSessionStatuses(
+        session.program_id,
+        userId
+      );
+      const total = statuses.length;
+      const completed = statuses.filter((s) => s.status === 'completed').length;
+      if (total > 0 && completed / total >= 0.8) {
+        const { onCycleComplete } = await import('../lib/programs');
+        onCycleComplete(session.program_id, userId);
+      }
     }
   }
 }
@@ -386,6 +405,40 @@ export async function getDaysSinceLastSession(
 }
 
 // --- Private helpers ---
+
+// Generates and inserts the next session for an unending program,
+// then increments the program's session counter. Returns the new session row.
+async function generateNextUnendingSession(
+  program: { id: string; training_days_per_week: number; unending_session_counter: number },
+  userId: string
+) {
+  const next = nextUnendingSession({
+    sessionCounter: program.unending_session_counter,
+    trainingDaysPerWeek: program.training_days_per_week,
+  });
+
+  const today = new Date().toISOString().split('T')[0];
+
+  await insertSessionRows([{
+    user_id: userId,
+    program_id: program.id,
+    week_number: next.weekNumber,
+    day_number: next.dayNumber,
+    primary_lift: next.primaryLift,
+    intensity_type: next.intensityType,
+    block_number: next.blockNumber,
+    is_deload: next.isDeload,
+    planned_date: today,
+    status: 'planned',
+    planned_sets: null,
+    jit_generated_at: null,
+  }]);
+
+  await updateUnendingSessionCounter(program.id, program.unending_session_counter + 1);
+
+  // Fetch and return the newly inserted session so callers get a full SessionRow
+  return fetchTodaySession(userId);
+}
 
 type PerformanceVsPlan = 'over' | 'at' | 'under' | 'incomplete';
 

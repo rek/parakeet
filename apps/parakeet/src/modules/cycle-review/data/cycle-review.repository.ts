@@ -148,7 +148,7 @@ export async function fetchCycleReportSourceData(
   return {
     program: {
       id: programResult.data.id,
-      total_weeks: programResult.data.total_weeks,
+      total_weeks: programResult.data.total_weeks ?? 0,
       start_date: programResult.data.start_date,
       status: programResult.data.status,
     },

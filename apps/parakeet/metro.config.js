@@ -1,7 +1,10 @@
 const { withNxMetro } = require('@nx/expo');
 const { getDefaultConfig } = require('@expo/metro-config');
 const { mergeConfig } = require('metro-config');
-const { withSentryConfig } = require('@sentry/react-native/metro');
+const {
+  withSentryConfig,
+  getSentryExpoConfig,
+} = require('@sentry/react-native/metro');
 const path = require('path');
 
 const workspaceRoot = path.resolve(__dirname, '../..');
@@ -41,4 +44,5 @@ const nxConfig = withNxMetro(mergeConfig(defaultConfig, customConfig), {
   watchFolders: [...defaultConfig.watchFolders],
 });
 
-module.exports = withSentryConfig({ ...nxConfig, projectRoot });
+// module.exports = withSentryConfig({ ...nxConfig, projectRoot });
+module.exports = getSentryExpoConfig(projectRoot, { ...nxConfig, projectRoot });

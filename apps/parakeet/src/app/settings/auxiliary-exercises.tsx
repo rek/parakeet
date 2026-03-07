@@ -329,10 +329,19 @@ export default function AuxiliaryExercisesScreen() {
 
     async function syncAssignmentsFromProgram() {
       if (!activeProgram || !activeProgram.start_date || !user?.id) return;
-      const bn = currentBlockNumber(
-        activeProgram.start_date,
-        activeProgram.total_weeks
-      );
+      let bn: 1 | 2 | 3;
+      if (activeProgram.program_mode === 'unending') {
+        // For unending programs, derive block from session counter
+        const counter = activeProgram.unending_session_counter ?? 0;
+        const daysPerWeek = activeProgram.training_days_per_week ?? 3;
+        const weekNumber = Math.floor(counter / daysPerWeek) + 1;
+        bn = (((Math.floor((weekNumber - 1) / 3)) % 3) + 1) as 1 | 2 | 3;
+      } else {
+        bn = currentBlockNumber(
+          activeProgram.start_date,
+          activeProgram.total_weeks ?? 9
+        );
+      }
       setBlockNumber(bn);
       setProgramId(activeProgram.id);
       const loaded = await getActiveAssignments(user.id, activeProgram.id, bn);

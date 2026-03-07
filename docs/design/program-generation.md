@@ -125,6 +125,22 @@ Supported lengths: **6 to 14 weeks**, in 2-week increments (6, 8, 10, 12, 14). T
 
 The JIT generator adapts to the program length — it knows which block the session belongs to and applies the appropriate formula config regardless of total cycle length.
 
+## Program Modes
+
+There are two program modes:
+
+- **Scheduled** (default): Fixed-length cycle (10–14 weeks). All sessions created as structural scaffolding at program creation. The Program tab shows the full week/block grid.
+- **Unending**: No fixed end date. One session exists at a time; the next is generated after each completion. The Program tab shows only the upcoming session. See [unending-programs.md](./unending-programs.md).
+
+Both modes use the same JIT generation pipeline. The only difference is when sessions are created (all upfront vs. one at a time) and how the program is ended.
+
+## Ending a Program
+
+The "End Program" button appears on the Program tab for all programs.
+
+- **Scheduled**: Archives the program. No cycle review is triggered (the 80%-completion auto-review already handles normal completion).
+- **Unending**: Archives the program and triggers a cycle review covering the full program.
+
 ## Future Enhancements
 
 **Phase 2:**
@@ -135,7 +151,7 @@ The JIT generator adapts to the program length — it knows which block the sess
 
 ## References
 
-- Related Design Docs: [user-onboarding.md](./user-onboarding.md), [formula-management.md](./formula-management.md), [volume-management.md](./volume-management.md), [performance-logging.md](./performance-logging.md)
+- Related Design Docs: [user-onboarding.md](./user-onboarding.md), [formula-management.md](./formula-management.md), [volume-management.md](./volume-management.md), [performance-logging.md](./performance-logging.md), [unending-programs.md](./unending-programs.md)
 - External: Brandon Lilly's Cube Method (10-week concurrent periodization)
 - Specs: [engine-007-jit-session-generator.md](../specs/04-engine/engine-007-jit-session-generator.md), [engine-004-program-generator.md](../specs/04-engine/engine-004-program-generator.md), [sessions-006-missed-session-logic.md](../specs/07-sessions/sessions-006-missed-session-logic.md)
 - Architecture: [training-engine-architecture.md](./training-engine-architecture.md)

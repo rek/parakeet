@@ -15,6 +15,7 @@ import {
   useActiveProgram,
 } from '@modules/program';
 import type { ProgramSession } from '@modules/program';
+import { useTodaySession } from '@modules/session';
 import { qk } from '@platform/query';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { router } from 'expo-router';
@@ -24,30 +25,35 @@ import { colors, spacing, typography } from '../../theme';
 
 export default function ProgramScreen() {
   const { data: program, isLoading } = useActiveProgram();
+  const { data: todaySession } = useTodaySession();
   const { user, loading: authLoading } = useAuth();
   const queryClient = useQueryClient();
 
-  const abandon = useMutation({
+  const isUnending = program?.program_mode === 'unending';
+
+  const endProgram = useMutation({
     mutationFn: (programId: string) =>
-      updateProgramStatus(programId, 'archived'),
+      updateProgramStatus(programId, 'archived', {
+        triggerCycleReview: isUnending,
+        userId: user?.id,
+      }),
     onSuccess: () =>
       queryClient.invalidateQueries({ queryKey: qk.program.active(user?.id) }),
   });
 
-  function confirmAbandon() {
+  function confirmEndProgram() {
     if (!program) return;
-    Alert.alert(
-      'Abandon Program',
-      'This will archive your current program. You can start a new one anytime.',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Abandon',
-          style: 'destructive',
-          onPress: () => abandon.mutate(program.id),
-        },
-      ]
-    );
+    const message = isUnending
+      ? 'This will close your program and generate a full cycle review.'
+      : 'This will archive your current program. You can start a new one anytime.';
+    Alert.alert('End Program', message, [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'End Program',
+        style: 'destructive',
+        onPress: () => endProgram.mutate(program.id),
+      },
+    ]);
   }
 
   if (isLoading || authLoading) {
@@ -78,6 +84,57 @@ export default function ProgramScreen() {
     );
   }
 
+  if (isUnending) {
+    const counter = program.unending_session_counter ?? 0;
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={styles.header}>
+          <View style={styles.headerRow}>
+            <Text style={styles.title}>My Program</Text>
+            <TouchableOpacity
+              onPress={confirmEndProgram}
+              disabled={endProgram.isPending}
+            >
+              <Text style={styles.endProgramText}>End Program</Text>
+            </TouchableOpacity>
+          </View>
+          <Text style={styles.subtitle}>Unending · Session {counter}</Text>
+        </View>
+
+        <View style={styles.unendingBody}>
+          {todaySession ? (
+            <View style={styles.nextSessionCard}>
+              <Text style={styles.nextSessionLabel}>Next Session</Text>
+              <Text style={styles.nextSessionLift}>
+                {capitalize(todaySession.primary_lift)}
+              </Text>
+              <View style={styles.badgeRow}>
+                <View style={styles.badge}>
+                  <Text style={styles.badgeText}>
+                    {capitalize(todaySession.intensity_type)}
+                  </Text>
+                </View>
+                {todaySession.block_number != null && (
+                  <View style={[styles.badge, styles.badgeSecondary]}>
+                    <Text style={styles.badgeText}>Block {todaySession.block_number}</Text>
+                  </View>
+                )}
+              </View>
+              <Text style={styles.nextSessionNote}>
+                Sets generated when you start
+              </Text>
+            </View>
+          ) : (
+            <View style={styles.nextSessionCard}>
+              <Text style={styles.nextSessionNote}>Loading next session…</Text>
+            </View>
+          )}
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  // Scheduled program — existing grid view
   const sessions: ProgramSession[] = program.sessions ?? [];
   const weekGroups = groupByWeek(sessions);
   const currentWeek = determineCurrentWeek(sessions);
@@ -93,10 +150,10 @@ export default function ProgramScreen() {
         <View style={styles.headerRow}>
           <Text style={styles.title}>My Program</Text>
           <TouchableOpacity
-            onPress={confirmAbandon}
-            disabled={abandon.isPending}
+            onPress={confirmEndProgram}
+            disabled={endProgram.isPending}
           >
-            <Text style={styles.abandonText}>Abandon</Text>
+            <Text style={styles.endProgramText}>End Program</Text>
           </TouchableOpacity>
         </View>
         <Text style={styles.subtitle}>
@@ -121,6 +178,10 @@ export default function ProgramScreen() {
       </ScrollView>
     </SafeAreaView>
   );
+}
+
+function capitalize(str: string): string {
+  return str ? str.charAt(0).toUpperCase() + str.slice(1) : str;
 }
 
 const styles = StyleSheet.create({
@@ -162,7 +223,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: spacing[1],
   },
-  abandonText: {
+  endProgramText: {
     fontSize: typography.sizes.sm,
     color: colors.danger,
   },
@@ -191,5 +252,56 @@ const styles = StyleSheet.create({
     fontWeight: typography.weights.bold,
     color: colors.textInverse,
     letterSpacing: typography.letterSpacing.wide,
+  },
+  // Unending view
+  unendingBody: {
+    flex: 1,
+    paddingHorizontal: spacing[5],
+    paddingTop: spacing[2],
+  },
+  nextSessionCard: {
+    backgroundColor: colors.bgSurface,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: colors.border,
+    padding: spacing[6],
+  },
+  nextSessionLabel: {
+    fontSize: typography.sizes.xs,
+    fontWeight: typography.weights.semibold,
+    color: colors.textTertiary,
+    textTransform: 'uppercase',
+    letterSpacing: 0.8,
+    marginBottom: spacing[2],
+  },
+  nextSessionLift: {
+    fontSize: typography.sizes['2xl'],
+    fontWeight: typography.weights.black,
+    color: colors.text,
+    marginBottom: spacing[3],
+  },
+  badgeRow: {
+    flexDirection: 'row',
+    gap: spacing[2],
+    marginBottom: spacing[4],
+  },
+  badge: {
+    backgroundColor: colors.primaryMuted,
+    borderRadius: 8,
+    paddingHorizontal: spacing[3],
+    paddingVertical: spacing[1],
+  },
+  badgeSecondary: {
+    backgroundColor: colors.bgMuted,
+  },
+  badgeText: {
+    fontSize: typography.sizes.xs,
+    fontWeight: typography.weights.semibold,
+    color: colors.primary,
+  },
+  nextSessionNote: {
+    fontSize: typography.sizes.sm,
+    color: colors.textTertiary,
+    fontStyle: 'italic',
   },
 });
