@@ -14,9 +14,9 @@ const CorrelatedExerciseSchema = z.object({
 })
 
 const RecommendedChangesSchema = z.object({
-  add: z.array(z.string()).optional(),
-  remove: z.array(z.string()).optional(),
-  reorder: z.array(z.string()).optional(),
+  add: z.array(z.string()),
+  remove: z.array(z.string()),
+  reorder: z.array(z.string()),
 })
 
 const FormulaSuggestionSchema = z.object({
@@ -47,12 +47,12 @@ export const CycleReviewSchema = z.object({
   volumeInsights: z.object({
     musclesUnderRecovered: z.array(z.string()),
     musclesUndertrained: z.array(z.string()),
-    frequencyRecommendation: z.string().optional(),
+    frequencyRecommendation: z.string().nullable(),
   }),
   formulaSuggestions: z.array(FormulaSuggestionSchema),
   structuralSuggestions: z.array(StructuralSuggestionSchema),
   nextCycleRecommendations: z.string().max(2000),
-  menstrualInsights: z.string().max(1000).optional(),
+  menstrualInsights: z.string().max(1000).nullable(),
 })
 
 export type CycleReview = z.infer<typeof CycleReviewSchema>
