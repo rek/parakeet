@@ -15,6 +15,7 @@ import {
 import { qk } from '@platform/query';
 import { useQuery } from '@tanstack/react-query';
 import { router } from 'expo-router';
+import Constants from 'expo-constants';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { colors, radii, spacing, typography } from '../../theme';
 
@@ -232,7 +233,21 @@ export default function SettingsScreen() {
 
         {/* App section */}
         <SectionHeader label="App" />
-        <Row label="Version 0.1.0" labelStyle={styles.versionLabel} />
+        <Row
+          label={`Version ${Constants.expoConfig?.version ?? '—'}`}
+          labelStyle={styles.versionLabel}
+          right={
+            <Text style={styles.buildDate}>
+              {Constants.expoConfig?.extra?.buildDate
+                ? new Date(Constants.expoConfig.extra.buildDate as string).toLocaleDateString('en-GB', {
+                    day: 'numeric',
+                    month: 'short',
+                    year: 'numeric',
+                  })
+                : 'dev'}
+            </Text>
+          }
+        />
       </ScrollView>
     </SafeAreaView>
   );
@@ -363,6 +378,10 @@ const styles = StyleSheet.create({
     color: colors.danger,
   },
   versionLabel: {
+    color: colors.textTertiary,
+  },
+  buildDate: {
+    fontSize: typography.sizes.sm,
     color: colors.textTertiary,
   },
 });

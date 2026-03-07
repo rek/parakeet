@@ -62,11 +62,15 @@ export type NextUnendingSessionResult = {
 - [x] `fetchActiveProgramMode(userId)` — returns `{ id, program_mode, training_days_per_week, unending_session_counter }` (no sessions join)
 - [x] `fetchProgramsList` — returns `program_mode` and `unending_session_counter` fields
 
+**`apps/parakeet/src/modules/program/application/unending-session.ts`** (dedicated orchestration file):
+- [x] `UnendingProgramRef` interface — `{ id, training_days_per_week, unending_session_counter }`
+- [x] `appendNextUnendingSession(program, userId, plannedDate, options?)` — owns all unending session row building, insertion, and counter management; `options.skipCounterIncrement: true` for program-creation call site
+
 **`apps/parakeet/src/modules/program/application/program.service.ts`:**
 - [x] `CreateProgramInput.totalWeeks` — now optional
 - [x] `CreateProgramInput.programMode?: 'scheduled' | 'unending'`
 - [x] `buildProgram` — branches on `isUnending`:
-  - Unending: inserts program row with `total_weeks: null`, `program_mode: 'unending'`, `unending_session_counter: 0`; then inserts exactly 1 initial session using `nextUnendingSession({ sessionCounter: 0, trainingDaysPerWeek })` with `planned_date = today`; auxiliary assignments still generated (3 blocks) for future use
+  - Unending: inserts program row; calls `appendNextUnendingSession(..., { skipCounterIncrement: true })` for the first session; auxiliary assignments still generated (3 blocks)
   - Scheduled: existing flow unchanged
 - [x] `updateProgramStatus(programId, status, options?)` — `options.triggerCycleReview` calls `onCycleComplete(programId, userId)` after archiving; used when ending an unending program
 - [x] Re-exports `fetchActiveProgramMode` and `updateUnendingSessionCounter` from repository
@@ -74,16 +78,19 @@ export type NextUnendingSessionResult = {
 ## Session Module
 
 **`apps/parakeet/src/modules/session/application/session.service.ts`:**
-- [x] `findTodaySession(userId)` — if no existing session and `program_mode === 'unending'`, calls `generateNextUnendingSession(program, userId)` to lazily create the next session
-- [x] `generateNextUnendingSession(program, userId)` (private):
-  1. Calls `nextUnendingSession({ sessionCounter, trainingDaysPerWeek })`
-  2. Inserts session row with `planned_date = today`, `status = 'planned'`, `planned_sets = null`
-  3. Calls `updateUnendingSessionCounter(programId, counter + 1)`
-  4. Returns new session
+- [x] `findTodaySession(userId)` — for unending programs: fetches program mode first; generates the next session if current session is `null` OR `completed` (allows multiple workouts per day)
+- [x] `generateNextUnendingSession(program: UnendingProgramRef, userId)` (private) — 3-line wrapper: delegates to `appendNextUnendingSession` then re-fetches session row
 - [x] `completeSession` — skips 80% `onCycleComplete` gate when `program_mode === 'unending'` (cycle review only triggered via "End Program")
 
 **`apps/parakeet/src/modules/session/data/session.repository.ts`:**
 - [x] `fetchOverdueScheduledSessions` — joins `programs!inner(program_mode)` and filters `.eq('programs.program_mode', 'scheduled')` so unending sessions (always dated today) are never marked missed
+- [x] `fetchSessionCompletionContext` — joins `programs(program_mode)` to expose program mode to achievement detection
+
+**`apps/parakeet/src/shared/types/domain.ts`:**
+- [x] `SessionCompletionContext.programMode: string | null` — added so achievement hooks can gate on program mode
+
+**`apps/parakeet/src/modules/achievements/hooks/useAchievementDetection.ts`:**
+- [x] `detectAchievements` — skips `checkCycleCompletion` when `programMode === 'unending'`; prevents spurious "Cycle complete!" badge after the first unending session
 
 ## Regression Guards
 
@@ -91,6 +98,8 @@ export type NextUnendingSessionResult = {
 |---|---|
 | Unending sessions marked missed | `fetchOverdueScheduledSessions` filters `program_mode = 'scheduled'` |
 | Auto cycle review fires mid-unending | `completeSession` checks `program_mode` before 80% gate |
+| "Cycle complete" badge fires on every unending session | `detectAchievements` checks `programMode !== 'unending'` before `checkCycleCompletion` |
+| User blocked from training again same day (unending) | `findTodaySession` treats `completed` sessions as "no session" for unending programs |
 | `total_weeks` null breaks scheduled paths | All call sites use `?? 0` or `?? 9` fallback |
 | Auxiliary exercises screen breaks | `currentBlockNumber` branches on `program_mode` to derive block from `unending_session_counter` |
 | Cycle review compilation breaks | `total_weeks ?? 0` in `cycle-review.repository.ts` |

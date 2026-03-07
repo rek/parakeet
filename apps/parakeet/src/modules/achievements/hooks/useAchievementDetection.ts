@@ -78,7 +78,8 @@ export async function detectAchievements(
     result.streakReset = true
   }
 
-  if (sessionContext.programId) {
+  // Unending programs have no fixed session count — cycle badge is not applicable.
+  if (sessionContext.programId && sessionContext.programMode !== 'unending') {
     const { total, completed, skipped } = await getProgramCompletionCounts(
       sessionContext.programId,
       userId,

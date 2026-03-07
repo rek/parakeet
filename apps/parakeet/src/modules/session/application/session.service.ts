@@ -3,7 +3,6 @@ import { LiftSchema } from '@parakeet/shared-types';
 import {
   getDefaultThresholds,
   isMakeupWindowExpired,
-  nextUnendingSession,
   suggestProgramAdjustments,
 } from '@parakeet/training-engine';
 import type {
@@ -27,6 +26,7 @@ import {
   fetchSessionCompletionContext,
   fetchSessionsForWeek,
   fetchTodaySession,
+  fetchPlannedSessionForProgram,
   insertPerformanceMetric,
   insertSessionLog,
   getLatestSorenessRatings,
@@ -37,11 +37,8 @@ import {
   updateSessionToPlanned,
   updateSessionToSkipped,
 } from '../data/session.repository';
-import {
-  fetchActiveProgramMode,
-  insertSessionRows,
-  updateUnendingSessionCounter,
-} from '../../program/data/program.repository';
+import { fetchActiveProgramMode } from '../../program/data/program.repository';
+import { appendNextUnendingSession, type UnendingProgramRef } from '../../program/application/unending-session';
 import type {
   CompletedSessionListItem,
   CompleteSessionInput,
@@ -58,13 +55,20 @@ export type {
 // For unending programs, generates the next session lazily if none exists.
 export async function findTodaySession(userId: string) {
   const session = await fetchTodaySession(userId);
-  if (session) return session;
-
+  // For unending programs, a completed session is not "today's session" —
+  // the next one should be generated immediately so the user can train again.
   const program = await fetchActiveProgramMode(userId);
   if (program?.program_mode === 'unending') {
-    return generateNextUnendingSession(program, userId);
+    if (!session || session.status === 'completed') {
+      // Guard: if a planned session already exists, return it without generating another.
+      // This prevents duplicate generation on each pull-to-refresh.
+      const existingPlanned = await fetchPlannedSessionForProgram(program.id, userId);
+      if (existingPlanned) return existingPlanned;
+      return generateNextUnendingSession(program, userId);
+    }
   }
 
+  if (session) return session;
   return null;
 }
 
@@ -92,6 +96,7 @@ export async function getSessionCompletionContext(
       ? LiftSchema.parse(data.primary_lift)
       : null,
     programId: data?.program_id ?? null,
+    programMode: data?.program_mode ?? null,
   };
 }
 
@@ -408,36 +413,12 @@ export async function getDaysSinceLastSession(
 
 // Generates and inserts the next session for an unending program,
 // then increments the program's session counter. Returns the new session row.
-async function generateNextUnendingSession(
-  program: { id: string; training_days_per_week: number; unending_session_counter: number },
-  userId: string
-) {
-  const next = nextUnendingSession({
-    sessionCounter: program.unending_session_counter,
-    trainingDaysPerWeek: program.training_days_per_week,
-  });
-
+async function generateNextUnendingSession(program: UnendingProgramRef, userId: string) {
   const today = new Date().toISOString().split('T')[0];
-
-  await insertSessionRows([{
-    user_id: userId,
-    program_id: program.id,
-    week_number: next.weekNumber,
-    day_number: next.dayNumber,
-    primary_lift: next.primaryLift,
-    intensity_type: next.intensityType,
-    block_number: next.blockNumber,
-    is_deload: next.isDeload,
-    planned_date: today,
-    status: 'planned',
-    planned_sets: null,
-    jit_generated_at: null,
-  }]);
-
-  await updateUnendingSessionCounter(program.id, program.unending_session_counter + 1);
-
-  // Fetch and return the newly inserted session so callers get a full SessionRow
-  return fetchTodaySession(userId);
+  await appendNextUnendingSession(program, userId, today);
+  // Fetch by program_id+planned status so we get the newly created session,
+  // not the completed session that fetchTodaySession would return first.
+  return fetchPlannedSessionForProgram(program.id, userId);
 }
 
 type PerformanceVsPlan = 'over' | 'at' | 'under' | 'incomplete';

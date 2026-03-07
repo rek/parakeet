@@ -3,8 +3,8 @@ import {
   computeBlockOffset,
   generateAuxiliaryAssignments,
   generateProgram,
-  nextUnendingSession,
 } from '@parakeet/training-engine';
+import { appendNextUnendingSession } from './unending-session';
 
 import {
   archiveActivePrograms,
@@ -100,21 +100,12 @@ async function buildProgram(input: CreateProgramInput, withFormulaConfigId: bool
 
   if (isUnending) {
     // Create just the first session — subsequent sessions are generated lazily
-    const first = nextUnendingSession({ sessionCounter: 0, trainingDaysPerWeek: input.trainingDaysPerWeek });
-    await insertSessionRows([{
-      user_id: userId,
-      program_id: program.id,
-      week_number: first.weekNumber,
-      day_number: first.dayNumber,
-      primary_lift: first.primaryLift,
-      intensity_type: first.intensityType,
-      block_number: first.blockNumber,
-      is_deload: first.isDeload,
-      planned_date: today,
-      status: 'planned',
-      planned_sets: null,
-      jit_generated_at: null,
-    }]);
+    await appendNextUnendingSession(
+      { id: program.id, training_days_per_week: input.trainingDaysPerWeek, unending_session_counter: 0 },
+      userId,
+      today,
+      { skipCounterIncrement: true },
+    );
   } else {
     const scaffold = generateProgram({
       totalWeeks: input.totalWeeks ?? 10,

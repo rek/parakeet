@@ -135,13 +135,12 @@ Module/platform/shared architecture is the canonical app structure. Legacy top-l
 
 ## Program Modes
 
-- [x] programs-005: Unending program mode — `program_mode`, `unending_session_counter`, lazy session generation, cycle review on "End Program"
+- [x] programs-005: Unending program mode — `program_mode`, `unending_session_counter`, lazy session generation, cycle review on "End Program"; orchestration in `program/application/unending-session.ts`; multiple-workouts-per-day fix; cycle badge suppression for unending
 
 ---
 
 ## Planned / Future
 
-- [ ] Sleep data integration (wearables → JIT context)
 - [ ] Sleep data integration (wearables → JIT context)
 - [ ] Health app integration for cycle tracking
 - [ ] Multi-cycle pattern analysis for female lifters

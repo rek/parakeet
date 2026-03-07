@@ -154,15 +154,19 @@ export async function fetchSessionById(
 
 export async function fetchSessionCompletionContext(
   sessionId: string
-): Promise<Pick<SessionRow, 'primary_lift' | 'program_id'> | null> {
+): Promise<(Pick<SessionRow, 'primary_lift' | 'program_id'> & { program_mode: string | null }) | null> {
   const { data, error } = await typedSupabase
     .from('sessions')
-    .select('primary_lift, program_id')
+    .select('primary_lift, program_id, programs(program_mode)')
     .eq('id', sessionId)
     .maybeSingle();
 
   if (error) throw error;
-  return data;
+  if (!data) return null;
+  const programMode = Array.isArray(data.programs)
+    ? (data.programs[0]?.program_mode ?? null)
+    : ((data.programs as { program_mode: string } | null)?.program_mode ?? null);
+  return { primary_lift: data.primary_lift, program_id: data.program_id, program_mode: programMode };
 }
 
 export async function fetchSessionsForWeek(
@@ -570,6 +574,25 @@ export async function fetchInProgressSession(
     .select('id')
     .eq('user_id', userId)
     .eq('status', 'in_progress')
+    .maybeSingle();
+  if (error) throw error;
+  return data;
+}
+
+// Fetch the earliest planned session for a given program. Used by unending mode
+// to detect whether a next session was already generated before creating another.
+export async function fetchPlannedSessionForProgram(
+  programId: string,
+  userId: string
+): Promise<SessionRow | null> {
+  const { data, error } = await typedSupabase
+    .from('sessions')
+    .select('*')
+    .eq('program_id', programId)
+    .eq('user_id', userId)
+    .eq('status', 'planned')
+    .order('planned_date', { ascending: true })
+    .limit(1)
     .maybeSingle();
   if (error) throw error;
   return data;

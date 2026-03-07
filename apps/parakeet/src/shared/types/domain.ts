@@ -42,6 +42,7 @@ export interface CompletedSessionListItem {
 export interface SessionCompletionContext {
   primaryLift: Lift | null;
   programId: string | null;
+  programMode: string | null;
 }
 
 export interface CompleteSessionSetInput extends ActualSet {

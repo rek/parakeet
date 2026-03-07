@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState } from 'react';
 import {
   ScrollView,
   StyleSheet,
@@ -6,94 +6,94 @@ import {
   TextInput,
   TouchableOpacity,
   View,
-} from 'react-native'
-import { router } from 'expo-router'
-import { estimateOneRepMax_Epley } from '@parakeet/training-engine'
-import { colors } from '../../../theme'
+} from 'react-native';
+import { estimateOneRepMax_Epley } from '@parakeet/training-engine';
+import { router } from 'expo-router';
+import { colors } from '../../../theme';
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
 interface LiftState {
-  type: '1rm' | '3rm'
-  weightKg: string
-  reps: string
+  type: '1rm' | '3rm';
+  weightKg: string;
+  reps: string;
 }
 
 interface LiftInput {
-  type: '1rm' | '3rm'
-  weightKg: number
-  reps?: number
+  type: '1rm' | '3rm';
+  weightKg: number;
+  reps?: number;
 }
 
 interface LiftsPayload {
-  squat: LiftInput
-  bench: LiftInput
-  deadlift: LiftInput
+  squat: LiftInput;
+  bench: LiftInput;
+  deadlift: LiftInput;
 }
 
-type LiftKey = 'squat' | 'bench' | 'deadlift'
+type LiftKey = 'squat' | 'bench' | 'deadlift';
 
 const LIFT_LABELS: Record<LiftKey, string> = {
   squat: 'Squat',
   bench: 'Bench Press',
   deadlift: 'Deadlift',
-}
+};
 
-const LIFT_ORDER: LiftKey[] = ['squat', 'bench', 'deadlift']
+const LIFT_ORDER: LiftKey[] = ['squat', 'bench', 'deadlift'];
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
 function makeDefaultState(): LiftState {
-  return { type: '3rm', weightKg: '', reps: '3' }
+  return { type: '3rm', weightKg: '', reps: '3' };
 }
 
 function computeEstimated1RM(state: LiftState): string {
-  const weight = parseFloat(state.weightKg)
-  if (!weight || weight <= 0) return '—'
+  const weight = parseFloat(state.weightKg);
+  if (!weight || weight <= 0) return '—';
 
   if (state.type === '1rm') {
-    return weight.toFixed(1) + ' kg'
+    return weight.toFixed(1) + ' kg';
   }
 
-  const reps = parseInt(state.reps, 10)
-  if (!reps || reps < 2 || reps > 10) return '—'
+  const reps = parseInt(state.reps, 10);
+  if (!reps || reps < 2 || reps > 10) return '—';
 
   try {
-    const estimated = estimateOneRepMax_Epley(weight, reps)
-    return estimated.toFixed(1) + ' kg'
+    const estimated = estimateOneRepMax_Epley(weight, reps);
+    return estimated.toFixed(1) + ' kg';
   } catch {
-    return '—'
+    return '—';
   }
 }
 
 function isLiftValid(state: LiftState): boolean {
-  const weight = parseFloat(state.weightKg)
-  if (!weight || weight <= 0) return false
+  const weight = parseFloat(state.weightKg);
+  if (!weight || weight <= 0) return false;
   if (state.type === '3rm') {
-    const reps = parseInt(state.reps, 10)
-    if (!reps || reps < 2 || reps > 10) return false
+    const reps = parseInt(state.reps, 10);
+    if (!reps || reps < 2 || reps > 10) return false;
   }
-  return true
+  return true;
 }
 
 function buildLiftInput(state: LiftState): LiftInput {
-  const weight = parseFloat(state.weightKg)
+  const weight = parseFloat(state.weightKg);
   if (state.type === '1rm') {
-    return { type: '1rm', weightKg: weight }
+    return { type: '1rm', weightKg: weight };
   }
-  return { type: '3rm', weightKg: weight, reps: parseInt(state.reps, 10) }
+  return { type: '3rm', weightKg: weight, reps: parseInt(state.reps, 10) };
 }
 
 // ── Sub-component: single lift section ──────────────────────────────────────
 
 interface LiftSectionProps {
-  liftKey: LiftKey
-  state: LiftState
-  onChange: (key: LiftKey, update: Partial<LiftState>) => void
+  liftKey: LiftKey;
+  state: LiftState;
+  onChange: (key: LiftKey, update: Partial<LiftState>) => void;
 }
 
 function LiftSection({ liftKey, state, onChange }: LiftSectionProps) {
-  const estimated = computeEstimated1RM(state)
+  const estimated = computeEstimated1RM(state);
 
   return (
     <View style={styles.section}>
@@ -102,20 +102,38 @@ function LiftSection({ liftKey, state, onChange }: LiftSectionProps) {
       {/* Segmented toggle: 1RM | 3RM */}
       <View style={styles.toggle}>
         <TouchableOpacity
-          style={[styles.toggleButton, styles.toggleButtonLeft, state.type === '1rm' && styles.toggleButtonActive]}
+          style={[
+            styles.toggleButton,
+            styles.toggleButtonLeft,
+            state.type === '1rm' && styles.toggleButtonActive,
+          ]}
           onPress={() => onChange(liftKey, { type: '1rm' })}
           activeOpacity={0.8}
         >
-          <Text style={[styles.toggleButtonText, state.type === '1rm' && styles.toggleButtonTextActive]}>
+          <Text
+            style={[
+              styles.toggleButtonText,
+              state.type === '1rm' && styles.toggleButtonTextActive,
+            ]}
+          >
             1RM
           </Text>
         </TouchableOpacity>
         <TouchableOpacity
-          style={[styles.toggleButton, styles.toggleButtonRight, state.type === '3rm' && styles.toggleButtonActive]}
+          style={[
+            styles.toggleButton,
+            styles.toggleButtonRight,
+            state.type === '3rm' && styles.toggleButtonActive,
+          ]}
           onPress={() => onChange(liftKey, { type: '3rm' })}
           activeOpacity={0.8}
         >
-          <Text style={[styles.toggleButtonText, state.type === '3rm' && styles.toggleButtonTextActive]}>
+          <Text
+            style={[
+              styles.toggleButtonText,
+              state.type === '3rm' && styles.toggleButtonTextActive,
+            ]}
+          >
             3RM
           </Text>
         </TouchableOpacity>
@@ -151,7 +169,7 @@ function LiftSection({ liftKey, state, onChange }: LiftSectionProps) {
         Est. 1RM: <Text style={styles.estimatedValue}>{estimated}</Text>
       </Text>
     </View>
-  )
+  );
 }
 
 // ── Screen ───────────────────────────────────────────────────────────────────
@@ -161,43 +179,33 @@ export default function LiftMaxesScreen() {
     squat: makeDefaultState(),
     bench: makeDefaultState(),
     deadlift: makeDefaultState(),
-  })
-  const [usingEstimatedStart, setUsingEstimatedStart] = useState(false)
-
+  });
   function handleChange(key: LiftKey, update: Partial<LiftState>) {
-    setUsingEstimatedStart(false)
-    setLifts((prev) => ({ ...prev, [key]: { ...prev[key], ...update } }))
+    setLifts((prev) => ({ ...prev, [key]: { ...prev[key], ...update } }));
   }
 
   function handleUseEstimatedStart() {
-    setLifts({
-      squat:    makeDefaultState(),
-      bench:    makeDefaultState(),
-      deadlift: makeDefaultState(),
-    })
-    setUsingEstimatedStart(true)
+    router.push({
+      pathname: '/(auth)/onboarding/program-settings',
+      params: { lifts: '', estimatedStart: '1' },
+    });
   }
 
-  const allValid = usingEstimatedStart || LIFT_ORDER.every((k) => isLiftValid(lifts[k]))
+  const allValid = LIFT_ORDER.every((k) => isLiftValid(lifts[k]));
 
   function handleNext() {
-    if (!allValid) return
+    if (!allValid) return;
 
-    const payload: LiftsPayload | null = usingEstimatedStart
-      ? null
-      : {
-        squat:    buildLiftInput(lifts.squat),
-        bench:    buildLiftInput(lifts.bench),
-        deadlift: buildLiftInput(lifts.deadlift),
-      }
+    const payload: LiftsPayload = {
+      squat: buildLiftInput(lifts.squat),
+      bench: buildLiftInput(lifts.bench),
+      deadlift: buildLiftInput(lifts.deadlift),
+    };
 
     router.push({
       pathname: '/(auth)/onboarding/program-settings',
-      params: {
-        lifts: payload ? JSON.stringify(payload) : '',
-        estimatedStart: usingEstimatedStart ? '1' : '0',
-      },
-    })
+      params: { lifts: JSON.stringify(payload), estimatedStart: '0' },
+    });
   }
 
   return (
@@ -214,7 +222,8 @@ export default function LiftMaxesScreen() {
       {usingEstimatedStart && (
         <View style={styles.warningBanner}>
           <Text style={styles.warningText}>
-            Maxes left blank. We&apos;ll estimate your starting loads and calibrate from your logged sessions.
+            Maxes left blank. We&apos;ll estimate your starting loads and
+            calibrate from your logged sessions.
           </Text>
         </View>
       )}
@@ -229,7 +238,10 @@ export default function LiftMaxesScreen() {
       ))}
 
       <TouchableOpacity
-        style={[styles.primaryButton, !allValid && styles.primaryButtonDisabled]}
+        style={[
+          styles.primaryButton,
+          !allValid && styles.primaryButtonDisabled,
+        ]}
         onPress={handleNext}
         disabled={!allValid}
         activeOpacity={0.8}
@@ -237,11 +249,15 @@ export default function LiftMaxesScreen() {
         <Text style={styles.primaryButtonText}>Next</Text>
       </TouchableOpacity>
 
-      <TouchableOpacity style={styles.defaultsLink} onPress={handleUseEstimatedStart} activeOpacity={0.7}>
+      <TouchableOpacity
+        style={styles.defaultsLink}
+        onPress={handleUseEstimatedStart}
+        activeOpacity={0.7}
+      >
         <Text style={styles.defaultsLinkText}>I don't know my maxes</Text>
       </TouchableOpacity>
     </ScrollView>
-  )
+  );
 }
 
 // ── Styles ───────────────────────────────────────────────────────────────────
@@ -364,4 +380,4 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
     textDecorationLine: 'underline',
   },
-})
+});
