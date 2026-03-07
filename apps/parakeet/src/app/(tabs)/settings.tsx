@@ -9,6 +9,7 @@ import {
 import { useAuth } from '@modules/auth';
 import { getProfile } from '@modules/profile';
 import {
+  exportTrainingData,
   getBarWeightKg,
   getPendingFormulaSuggestionCount,
   getUnreviewedDeveloperSuggestionCount,
@@ -19,7 +20,7 @@ import { qk } from '@platform/query';
 import { useQuery } from '@tanstack/react-query';
 import { router } from 'expo-router';
 import Constants from 'expo-constants';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { colors, radii, spacing, typography } from '../../theme';
 
@@ -76,6 +77,18 @@ export default function SettingsScreen() {
   useEffect(() => {
     getBarWeightKg().then(setBarWeightKgState);
   }, []);
+
+  const [isExporting, setIsExporting] = useState(false);
+
+  const handleExport = useCallback(async () => {
+    if (!user?.id || isExporting) return;
+    setIsExporting(true);
+    try {
+      await exportTrainingData(user.id);
+    } finally {
+      setIsExporting(false);
+    }
+  }, [user?.id, isExporting]);
 
   async function handleBarWeightChange(kg: BarWeightKg) {
     setBarWeightKgState(kg);
@@ -256,6 +269,10 @@ export default function SettingsScreen() {
 
         {/* Account section */}
         <SectionHeader label="Account" />
+        <Row
+          label={isExporting ? 'Exporting…' : 'Export Data'}
+          onPress={handleExport}
+        />
         <Row
           label="Sign Out"
           labelStyle={styles.signOutLabel}
