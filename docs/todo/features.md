@@ -12,11 +12,7 @@ Then ALWAYS read about the feature in question, first find the relevant design d
 
 At the end: update design doc status → Implemented, update specs to match what was actually built, update `IMPLEMENTATION_STATUS.md`, then review this whole process and add any learnings to `docs/AI_WORKFLOW.md`.
 
-## 5
-
-export data... just in case
-
-## 6
+## 1
 
 we should have muscle mappings per aux exercise.
 this is to enable a feature which is:
@@ -27,4 +23,10 @@ so there is kinda of a three level mapping:
 muscle group -> main exercise
 aux exercise -> muscle group
 
-this should allow us also then to add a 'general' group, so that we can put cardio or core things in there that we can randomally add in. or use in future programmes.
+this should allow us also then to add a 'general' group, so that we can put cardio or core things in there that we can randomally add in (different feature perhaps). or use in future programmes.
+
+i guess another idea is to have more AUXILIARY_POOLS, as lots of those guys are not actually right for the main lifts. is this our only aux lift mapping page?(packages/training-engine/src/auxiliary/auxiliary-rotator.ts)
+
+this is also because i want lots of possible aux, but i don't want them to be in the pool of forced regular ones for the main lifts
+
+help me condense this rambling into some design doc changes/feature

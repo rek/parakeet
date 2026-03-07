@@ -16,7 +16,7 @@ Helper functions for reading aggregated performance data from Supabase. Used by 
 
 **`computeTrends` (local, in app):**
 - [x] Groups last 30 session logs by `primary_lift`
-- [x] Per lift: avg `completion_pct`, latest estimated 1RM (Epley from heaviest actual set), trend direction
+- [x] Per lift: avg `completion_pct`, rolling best estimated 1RM (max Epley estimate across last 10 sessions), trend direction
   - Trend: compare estimated 1RM from sessions 1-5 vs sessions 25-30; if delta > 2.5kg → improving; if < -2.5kg → declining; else stable
 
 **Response shape for trends (all weights in kg):**

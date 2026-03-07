@@ -26,7 +26,7 @@ The History tab shows estimated 1RM as a single number with a direction arrow (�
 ### History Tab (main screen)
 
 **1RM section** — three lift cards (Squat / Bench / Deadlift):
-- Shows current estimated 1RM + trend direction (unchanged from current)
+- Shows rolling best estimated 1RM (max across last 5 sessions) + trend direction
 - Cards are now tappable → navigates to per-lift drill-down
 
 **Volume section** (new):

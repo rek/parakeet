@@ -1,6 +1,6 @@
 # Feature: Data Export
 
-**Status**: Draft
+**Status**: Implemented
 
 **Date**: 7-3-2026
 
@@ -34,7 +34,7 @@ All training data lives in Supabase. Users have no offline copy and no way to ac
 
 ### Visual Design Notes
 
-- Single "Export Data" row in Settings (Data or Account section)
+- Single "Export Data" row in Settings (Account section)
 - Tapping it triggers the export immediately — no configuration screen needed
 - Share sheet is the native OS mechanism; no custom UI required
 
@@ -42,8 +42,10 @@ All training data lives in Supabase. Users have no offline copy and no way to ac
 
 The export covers completed workout sessions and the sets performed within them:
 
-- Session date, lift, and status
-- Each set: weight (in kg), reps completed, RPE if recorded
+- Session date, lift, intensity type, and completion timestamp
+- Session RPE (if recorded)
+- Each main set: weight (in kg), reps completed, RPE if recorded
+- Auxiliary sets (raw, as logged)
 
 Config data (formula history, volume targets, program structure) is not included — this export is a training log, not a full system backup.
 
@@ -55,10 +57,7 @@ Config data (formula history, volume targets, program structure) is not included
 
 **Portability**: Raw JSON is structured and machine-readable — usable in spreadsheets, scripts, or any future tool.
 
-## Open Questions
-
-- [ ] Should the export include auxiliary sets, or main lifts only?
-
 ## References
 
 - Related Design Doc: [csv-import.md](./csv-import.md) — the import counterpart; export format should be compatible where possible
+- Spec: [mobile-032-data-export.md](../specs/09-mobile/mobile-032-data-export.md)

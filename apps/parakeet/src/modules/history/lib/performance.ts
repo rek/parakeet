@@ -88,7 +88,7 @@ function computeTrends(rows: RawLogRow[]): PerformanceTrend[] {
 
   for (const [lift, liftRows] of byLift) {
     const oneRmSeries = liftRows.map((r) => estimateHeaviestOneRm(r.actual_sets))
-    const latestOneRm = oneRmSeries[0] ?? 0
+    const latestOneRm = Math.max(0, ...oneRmSeries.slice(0, 10))
 
     const recent = average(oneRmSeries.slice(0, 5))
     const older = average(oneRmSeries.slice(-5))
