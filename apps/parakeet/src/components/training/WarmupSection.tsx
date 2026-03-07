@@ -14,12 +14,13 @@ export interface WarmupSectionProps {
   sets: WarmupSet[]
   completedIndices: Set<number>
   onToggle: (index: number, done: boolean) => void
+  barWeightKg?: number
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
-function formatWeight(weightKg: number): string {
-  if (weightKg <= 20) return `Bar (20 kg)`
+function formatWeight(weightKg: number, barWeightKg: number): string {
+  if (weightKg <= barWeightKg) return `Bar (${barWeightKg} kg)`
   return `${weightKg} kg`
 }
 
@@ -30,9 +31,10 @@ interface WarmupSetRowProps {
   set: WarmupSet
   isDone: boolean
   onToggle: (index: number, done: boolean) => void
+  barWeightKg: number
 }
 
-function WarmupSetRow({ index, set, isDone, onToggle }: WarmupSetRowProps) {
+function WarmupSetRow({ index, set, isDone, onToggle, barWeightKg }: WarmupSetRowProps) {
   return (
     <TouchableOpacity
       style={[styles.setRow, isDone && styles.setRowDone]}
@@ -44,7 +46,7 @@ function WarmupSetRow({ index, set, isDone, onToggle }: WarmupSetRowProps) {
       </Text>
       <View style={styles.setMiddle}>
         <Text style={[styles.weightText, isDone && styles.textFaded, isDone && styles.weightStrike]}>
-          {formatWeight(set.weightKg)}
+          {formatWeight(set.weightKg, barWeightKg)}
         </Text>
         <Text style={[styles.repsText, isDone && styles.textFaded]}>
           {' '}× {set.reps}
@@ -64,7 +66,7 @@ function WarmupSetRow({ index, set, isDone, onToggle }: WarmupSetRowProps) {
 
 // ── Main component ────────────────────────────────────────────────────────────
 
-export function WarmupSection({ sets, completedIndices, onToggle }: WarmupSectionProps) {
+export function WarmupSection({ sets, completedIndices, onToggle, barWeightKg = 20 }: WarmupSectionProps) {
   const [collapsed, setCollapsed] = useState(false)
 
   const maxWeight = sets.length > 0
@@ -98,6 +100,7 @@ export function WarmupSection({ sets, completedIndices, onToggle }: WarmupSectio
               set={set}
               isDone={completedIndices.has(index)}
               onToggle={onToggle}
+              barWeightKg={barWeightKg}
             />
           ))}
         </View>

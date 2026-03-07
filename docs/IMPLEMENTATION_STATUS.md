@@ -123,9 +123,10 @@ Module/platform/shared architecture is the canonical app structure. Legacy top-l
 - [x] mobile-024: Rest done background notification
 - [x] mobile-025: Barbell plate calculator
 - [x] mobile-026: History tab upgrade
-- [x] mobile-028: Unending program UI — Program Style toggle (onboarding), program tab unending branch, "End Program" global rename
+- [x] mobile-028: Unending program UI — Program Style toggle (onboarding), program tab unending branch, "End Program" global rename; next-session formula estimate card (weight, sets×reps, RPE, last-RPE adjustment hint)
 - [x] mobile-029: Motivational message — LLM-generated post-workout message on WorkoutDoneCard; context-aware (RPE, PRs, streak, sex, cycle phase); multiple-sessions-per-day consolidated into single card
 - [x] mobile-030: Ad-hoc auxiliary exercises — "+ Add Exercise" modal + "+ Set" button; `addAdHocSet` store action; resume recovery from persisted store
+- [x] mobile-031: Bar weight setting — 15/20 kg toggle in Settings › Training; propagated to warmup floors, recovery mode floors, WarmupSection display label, PlateCalculatorSheet (unified AsyncStorage key `bar_weight_kg`); engine params default to 20
 
 ---
 

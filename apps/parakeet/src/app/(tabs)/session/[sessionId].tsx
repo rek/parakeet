@@ -8,6 +8,7 @@ import {
   View,
 } from 'react-native';
 import { abandonSession, getSession, startSession } from '@modules/session';
+import { getBarWeightKg } from '@modules/settings';
 import { useNetworkStatus } from '@platform/network';
 import { useSessionStore } from '@platform/store/sessionStore';
 import { useQueryClient } from '@tanstack/react-query';
@@ -118,6 +119,11 @@ export default function SessionScreen() {
 
   const [warmupSetsState, setWarmupSetsState] = useState<WarmupSet[]>([]);
   const [auxiliaryWork, setAuxiliaryWork] = useState<AuxiliaryWork[]>([]);
+  const [barWeightKg, setBarWeightKg] = useState(20);
+
+  useEffect(() => {
+    getBarWeightKg().then(setBarWeightKg);
+  }, []);
   const [adHocExercises, setAdHocExercises] = useState<string[]>([]);
   const [addExerciseVisible, setAddExerciseVisible] = useState(false);
   const [historySheetVisible, setHistorySheetVisible] = useState(false);
@@ -501,6 +507,7 @@ export default function SessionScreen() {
             sets={warmupSetsState}
             completedIndices={warmupCompleted}
             onToggle={setWarmupDone}
+            barWeightKg={barWeightKg}
           />
         )}
 

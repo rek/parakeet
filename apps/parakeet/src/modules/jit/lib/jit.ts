@@ -20,7 +20,7 @@ import {
   getActiveAssignments,
 } from '@modules/program'
 import { getMrvMevConfig } from '@modules/training-volume'
-import { getJITStrategyOverride, getUserRestOverrides, getWarmupConfig } from '@modules/settings'
+import { getBarWeightKg, getJITStrategyOverride, getUserRestOverrides, getWarmupConfig } from '@modules/settings'
 import type { Json } from '@platform/supabase'
 import { typedSupabase } from '@platform/supabase'
 import { fetchProfileSex } from '../../session/data/session.repository'
@@ -39,13 +39,14 @@ export async function runJITForSession(
 
   const biologicalSex = await fetchProfileSex(userId)
 
-  const [oneRmKg, formulaConfig, assignments, warmupConfig, userRestOverrides] =
+  const [oneRmKg, formulaConfig, assignments, warmupConfig, userRestOverrides, barWeightKg] =
     await Promise.all([
       getCurrentOneRmKg(userId, lift),
       getFormulaConfig(userId),
       getActiveAssignments(userId, session.program_id!, blockNumber),
       getWarmupConfig(userId, lift, biologicalSex),
       getUserRestOverrides(userId),
+      getBarWeightKg(),
     ])
 
   const mrvMevConfig = await getMrvMevConfig(userId, biologicalSex)
@@ -164,6 +165,7 @@ export async function runJITForSession(
     warmupConfig,
     userRestOverrides,
     biologicalSex: biologicalSex ?? undefined,
+    barWeightKg,
   }
 
   const strategyOverride = await getJITStrategyOverride()

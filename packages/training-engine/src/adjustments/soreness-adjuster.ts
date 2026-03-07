@@ -36,11 +36,12 @@ export function applySorenessToSets(
   plannedSets: PlannedSet[],
   modifier: SorenessModifier,
   minSets = 1,
+  barWeightKg = 20,
 ): PlannedSet[] {
   if (plannedSets.length === 0) return plannedSets
 
   if (modifier.recoveryMode) {
-    const recoveryWeight = Math.max(20, roundToNearest(plannedSets[0].weight_kg * 0.40))
+    const recoveryWeight = Math.max(barWeightKg, roundToNearest(plannedSets[0].weight_kg * 0.40))
     return Array.from({ length: 3 }, (_, i) => ({
       set_number: i + 1,
       weight_kg: recoveryWeight,

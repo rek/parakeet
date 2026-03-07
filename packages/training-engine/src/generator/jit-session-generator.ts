@@ -48,6 +48,8 @@ export interface JITInput {
     intensityType?: IntensityType
     restSeconds: number
   }>
+  // Bar weight in kg — minimum warmup and recovery floor (default 20)
+  barWeightKg?: number
 }
 
 export interface AuxiliaryWork {
@@ -173,6 +175,7 @@ export function generateJITSession(input: JITInput): JITOutput {
     activeDisruptions,
     warmupConfig,
     userRestOverrides,
+    barWeightKg = 20,
   } = input
 
   const rationale: string[] = []
@@ -278,7 +281,7 @@ export function generateJITSession(input: JITInput): JITOutput {
   let mainLiftSets: PlannedSet[]
 
   if (inRecoveryMode) {
-    const recoveryWeight = Math.max(20, roundToNearest(baseWeight * 0.40))
+    const recoveryWeight = Math.max(barWeightKg, roundToNearest(baseWeight * 0.40))
     mainLiftSets = Array.from({ length: 3 }, (_, i) => ({
       set_number: i + 1,
       weight_kg: recoveryWeight,
@@ -322,7 +325,7 @@ export function generateJITSession(input: JITInput): JITOutput {
       inRecoveryMode || workingWeight < 40
         ? { type: 'preset' as const, name: 'minimal' as const }
         : warmupConfig
-    warmupSets = generateWarmupSets(workingWeight, effectiveProtocol)
+    warmupSets = generateWarmupSets(workingWeight, effectiveProtocol, barWeightKg)
   }
 
   // Step 9 — Rest recommendations

@@ -46,6 +46,17 @@ function contextBadges(ctx: Record<string, unknown>) {
       variant: perf === 'over' ? 'green' : perf === 'at' ? 'blue' : 'accent',
     });
   }
+  const pct = ctx.completionPct as number | null;
+  if (pct != null) {
+    badges.push({
+      label: `${pct}% done`,
+      variant: pct >= 95 ? 'green' : pct >= 75 ? 'blue' : 'accent',
+    });
+  }
+  const topKg = ctx.topWeightKg as number | null;
+  if (topKg != null) badges.push({ label: `${topKg}kg top`, variant: 'accent' });
+  const sets = ctx.totalSetsCompleted as number | undefined;
+  if (sets != null && sets > 0) badges.push({ label: `${sets} sets`, variant: 'muted' });
   if (ctx.isDeload) badges.push({ label: 'Deload', variant: 'muted' });
   const streak = ctx.currentStreak as number | undefined;
   if (streak && streak >= 5) badges.push({ label: `${streak}w streak`, variant: 'green' });
@@ -146,7 +157,7 @@ function LogCard({ log }: { log: MotivationalLog }) {
           >
             Full Context (LLM Input)
           </div>
-          <JsonViewer data={ctx} />
+          <JsonViewer data={ctx} defaultCollapsed={false} />
           <div
             style={{
               fontSize: 9,
