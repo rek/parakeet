@@ -69,6 +69,20 @@ Volume is counted as **sets per muscle group per week**:
 
 Volume is computed from `session_logs` (actual completed sets), not `sessions.planned_sets`. Only completed sessions count.
 
+## Auxiliary Exercise Muscle Mapping
+
+Auxiliary exercises also contribute to weekly muscle volume, so they need the same muscle group mappings as main lifts. Each auxiliary exercise has one or more primary muscles (contribution 1.0) and optionally secondary muscles (contribution 0.5).
+
+**Source of truth:** `packages/training-engine/src/volume/muscle-mapper.ts` — the `EXERCISE_MUSCLES` map covers 65+ exercises. The function `getMusclesForExercise(name)` returns `MuscleContribution[]`.
+
+**Storage:** `auxiliary_exercises.primary_muscles text[]` stores the names of muscles with contribution >= 1.0. Secondary muscles (0.5) are not stored in this column but are still used by the engine at JIT generation time via the in-memory map.
+
+**Write-time population:** When a user saves their pool via the settings screen (`reorderAuxiliaryPool`), each exercise name is looked up in `EXERCISE_MUSCLES` and the primary muscle names are written to the column. Custom exercises not present in the map get `[]`.
+
+**UI:** The auxiliary exercises settings screen shows small muscle chips below each exercise name. Chips are computed inline from `getMusclesForExercise()` (not read from the DB column) so they reflect correct data even before the user taps Save.
+
+**Future:** This mapping is the foundation for auto-augmenting sessions when a muscle group is below MEV — the system can identify which aux exercises target that muscle and add them to the session.
+
 ## Pre-Workout Soreness Check-In
 
 Before every session, the user rates soreness for the primary muscles involved in that day's lift. This must be completed before JIT generation runs.
