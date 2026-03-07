@@ -102,3 +102,9 @@ At the end: update design doc status, finalize specs, update IMPLEMENTATION_STAT
 **Cross-module AI calls should share model instances** — rather than creating a new OpenAI client in each service file, export model constants from a central location (`training-engine/src/ai/models.ts`). This prevents version drift, ensures consistent model selection, and avoids duplicate API key resolution.
 
 **features.md as an agent task queue** — `docs/todo/features.md` serves as a task queue for AI agents. Each feature is a numbered item with user-voice description. The agent reads the list, picks the next item, implements it following the full AI workflow (orient → design → plan → implement → validate → wrap up), and updates docs. The file header contains standing instructions that remind the agent to update docs at the end and review the process for workflow improvements.
+
+**Small UI features need no spec-first ceremony** — for simple, self-contained UI additions (a button, a modal, a store action with no DB changes), going straight to implement → typecheck → doc is faster than design → spec → implement. Skip the design doc draft if the feature fits in a sentence. Write the spec *after* to record what was actually built.
+
+**"Work logged anyway" pattern for ad-hoc data** — when adding anything that rides existing save paths (e.g. ad-hoc sets flowing through the `auxiliarySets` → `completeSession` pipeline), verify the destination payload is unfiltered before building the feature. If it is, no new API surface is needed — just UI + a store action.
+
+**Extract modal components immediately** — any modal with its own text input, local state, and button logic is a natural component boundary. If you write it inline, extract it in the same session before committing. The rule: if it has its own `useState`, it should be its own component.
