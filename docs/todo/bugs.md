@@ -25,9 +25,4 @@ why two buttons after pressing review?
 
 ## 2
 
-there is some bug with the unending workout program mode
-if we scroll down to refresh on the today page, it keeps adding new workouts to that page
-
-## 3
-
-clicking 'i dont know my maxes' on the program generation page should just take the user to the next page without requiring them to click next
+when i end an unending program, it should also remove all my pending un-completed workouts, or something like this. the situation i get currently get is that i end it, then start a new program, and i have a duplicate workouts on the today screen from the old program

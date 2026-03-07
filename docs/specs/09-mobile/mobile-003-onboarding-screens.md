@@ -17,12 +17,9 @@ The three onboarding screens: lift max input, program settings, and program prev
   - On 1RM: single weight input field
   - On 3RM: weight input + reps input (default 3, range 2-10)
   - Below input: "Est. 1RM: — kg" — updates in real-time using Epley formula (computed client-side from the same formula as the engine)
-- Validation: all three lifts must be valid before "Next", unless user explicitly selects estimated-start mode
+- Validation: all three lifts must be valid before "Next"
 - "I don't know my maxes" link:
-  - clears all lift inputs
-  - enables estimated-start mode
-  - shows warning banner
-  - passes `estimatedStart=1` to program settings
+  - navigates immediately to program settings with `estimatedStart=1` (no intermediate state, no extra Next tap required)
 
 **`apps/parakeet/app/(auth)/onboarding/program-settings.tsx`:**
 - Duration selector: 3-button segmented control (10 weeks | 12 weeks | 14 weeks), default 10

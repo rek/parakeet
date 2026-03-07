@@ -219,15 +219,6 @@ export default function LiftMaxesScreen() {
         We'll use these to build your first training program.
       </Text>
 
-      {usingEstimatedStart && (
-        <View style={styles.warningBanner}>
-          <Text style={styles.warningText}>
-            Maxes left blank. We&apos;ll estimate your starting loads and
-            calibrate from your logged sessions.
-          </Text>
-        </View>
-      )}
-
       {LIFT_ORDER.map((key) => (
         <LiftSection
           key={key}

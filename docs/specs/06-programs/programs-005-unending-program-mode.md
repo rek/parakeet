@@ -78,13 +78,14 @@ export type NextUnendingSessionResult = {
 ## Session Module
 
 **`apps/parakeet/src/modules/session/application/session.service.ts`:**
-- [x] `findTodaySession(userId)` — for unending programs: fetches program mode first; generates the next session if current session is `null` OR `completed` (allows multiple workouts per day)
-- [x] `generateNextUnendingSession(program: UnendingProgramRef, userId)` (private) — 3-line wrapper: delegates to `appendNextUnendingSession` then re-fetches session row
+- [x] `findTodaySession(userId)` — for unending programs: fetches program mode first; if current session is `null` OR `completed`, checks for an existing planned session first (idempotency guard via `fetchPlannedSessionForProgram`); only generates if none exists
+- [x] `generateNextUnendingSession(program: UnendingProgramRef, userId)` (private) — delegates to `appendNextUnendingSession` then fetches via `fetchPlannedSessionForProgram` (not `fetchTodaySession`, which returns the stale completed session)
 - [x] `completeSession` — skips 80% `onCycleComplete` gate when `program_mode === 'unending'` (cycle review only triggered via "End Program")
 
 **`apps/parakeet/src/modules/session/data/session.repository.ts`:**
 - [x] `fetchOverdueScheduledSessions` — joins `programs!inner(program_mode)` and filters `.eq('programs.program_mode', 'scheduled')` so unending sessions (always dated today) are never marked missed
 - [x] `fetchSessionCompletionContext` — joins `programs(program_mode)` to expose program mode to achievement detection
+- [x] `fetchPlannedSessionForProgram(programId, userId)` — fetches the earliest planned session for a given program; used by `findTodaySession` to guard against duplicate generation on pull-to-refresh
 
 **`apps/parakeet/src/shared/types/domain.ts`:**
 - [x] `SessionCompletionContext.programMode: string | null` — added so achievement hooks can gate on program mode
@@ -100,6 +101,7 @@ export type NextUnendingSessionResult = {
 | Auto cycle review fires mid-unending | `completeSession` checks `program_mode` before 80% gate |
 | "Cycle complete" badge fires on every unending session | `detectAchievements` checks `programMode !== 'unending'` before `checkCycleCompletion` |
 | User blocked from training again same day (unending) | `findTodaySession` treats `completed` sessions as "no session" for unending programs |
+| Pull-to-refresh generates duplicate sessions (unending) | `findTodaySession` checks `fetchPlannedSessionForProgram` before generating; `generateNextUnendingSession` returns planned session not completed one |
 | `total_weeks` null breaks scheduled paths | All call sites use `?? 0` or `?? 9` fallback |
 | Auxiliary exercises screen breaks | `currentBlockNumber` branches on `program_mode` to derive block from `unending_session_counter` |
 | Cycle review compilation breaks | `total_weeks ?? 0` in `cycle-review.repository.ts` |
