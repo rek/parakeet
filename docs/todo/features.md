@@ -21,10 +21,6 @@ need to be careful to then factor this into every calculation everywhere it is t
 
 when i click done on a set, then it should have a little floating box guy below the rest timer that asks for RPE. keep the existing rpe input box inline too, just incase i want to modify after the fact
 
-## 3
-
-if i feel like i have more energy and want to do another workout in the unending program mode, i cannot, as it does not let me start anothr workout anytime. what can be done about this?
-
 ## 4
 
 i want freedom to just do any aux thing at anytime in my workout and log it. currently i have to only do what is prescribed. but in reality, humans are fickle and sometimes we just have the urge to do a set of somthing else

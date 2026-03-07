@@ -239,12 +239,12 @@ export async function completeSession(
     completionPct
   );
 
-  const setsForLog = normalizedSets.map(
-    ({ is_completed: _isCompleted, ...set }) => set
-  );
-  const auxiliarySetsForLog = normalizedAuxiliarySets?.map(
-    ({ is_completed: _isCompleted, ...set }) => set
-  );
+  const setsForLog = normalizedSets
+    .filter((s) => s.is_completed)
+    .map(({ is_completed: _isCompleted, ...set }) => set);
+  const auxiliarySetsForLog = normalizedAuxiliarySets
+    ?.filter((s) => s.is_completed)
+    .map(({ is_completed: _isCompleted, ...set }) => set);
 
   const sessionLogId = await insertSessionLog({
     sessionId,

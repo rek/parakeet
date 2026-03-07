@@ -11,7 +11,7 @@ import { SafeAreaView } from 'react-native-safe-area-context'
 import { getSession, getSessionLog } from '@modules/session'
 import { BackLink } from '../../components/navigation/BackLink'
 import { colors, radii, spacing, typography } from '../../theme'
-import { formatDate } from '@shared/utils/date'
+import { formatDate, formatTime } from '@shared/utils/date'
 import type { Lift } from '@parakeet/shared-types'
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -86,7 +86,9 @@ export default function SessionDetailScreen() {
 
   const liftLabel = LIFT_LABELS[session.primary_lift as Lift] ?? capitalize(session.primary_lift)
   const intensityLabel = capitalize(session.intensity_type)
-  const dateLabel = formatDate(session.completed_at ?? session.planned_date)
+  const completedAt = session.completed_at ?? null
+  const dateLabel = formatDate(completedAt ?? session.planned_date)
+  const timeLabel = completedAt ? formatTime(completedAt) : ''
 
   const mainSets = log?.actual_sets ?? []
   const auxSets = log?.auxiliary_sets ?? []
@@ -113,7 +115,7 @@ export default function SessionDetailScreen() {
         {/* Title */}
         <Text style={styles.title}>{liftLabel} — {intensityLabel}</Text>
         <Text style={styles.subtitle}>
-          Week {session.week_number}{session.block_number ? ` · Block ${session.block_number}` : ''} · {dateLabel}
+          Week {session.week_number}{session.block_number ? ` · Block ${session.block_number}` : ''} · {dateLabel}{timeLabel ? ` · ${timeLabel}` : ''}
         </Text>
 
         {/* Summary row */}

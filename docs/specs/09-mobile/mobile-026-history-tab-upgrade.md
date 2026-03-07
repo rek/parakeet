@@ -65,6 +65,33 @@ Implemented. Dynamic route under `history/lift/` segment.
 
 ---
 
+---
+
+### ✅ 5. Completion time display (2026-03-07)
+
+Added `formatTime(input)` to `apps/parakeet/src/shared/utils/date.ts` — returns `HH:MM` in device local time, empty string for null/invalid.
+
+Three surfaces updated to show time alongside date:
+
+- `history.tsx` `SessionRow`: `"7 Mar · 09:30"`
+- `history/[sessionId].tsx` subtitle: `"Week 3 · Block 1 · 7 Mar · 09:30"`
+- `history/lift/[lift].tsx` session rows: `"7 Mar · 09:30"`
+
+Time is omitted (no separator) when `completed_at` is null.
+
+---
+
+### ✅ 6. Fix: only completed sets saved to session log (2026-03-07)
+
+**Bug**: `completeSession` in `modules/session/application/session.service.ts` was storing all sets in `actual_sets`/`auxiliary_sets` — including those the user never completed — because `is_completed` was stripped before the insert without filtering first.
+
+**Fix**: filter `normalizedSets` and `normalizedAuxiliarySets` to `is_completed === true` before stripping the flag and inserting. The `completion_pct` / `performance_vs_plan` calculation is unaffected (computed before the filter). Offline sync path goes through the same `completeSession` function; no separate fix needed.
+
+Files changed:
+- `apps/parakeet/src/modules/session/application/session.service.ts` — lines 242–247
+
+---
+
 ## Acceptance Gates
 
 - Volume chart renders with 3 coloured lines; legend shows Squat/Bench/Deadlift

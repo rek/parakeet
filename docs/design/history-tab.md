@@ -2,7 +2,7 @@
 
 **Status**: Implemented
 
-**Date**: 2026-03-01
+**Date**: 2026-03-01 (upgraded 2026-03-07)
 
 ## Overview
 
@@ -65,6 +65,12 @@ The History tab shows estimated 1RM as a single number with a direction arrow (�
 ## Delivery
 
 Single phase — spec: [mobile-026-history-tab-upgrade.md](../specs/09-mobile/mobile-026-history-tab-upgrade.md)
+
+## Additional Enhancements (2026-03-07)
+
+- **Completion time shown**: all three history surfaces (session list, session detail, lift detail) now display `HH:MM` completion time alongside the date (e.g. "7 Mar · 09:30")
+- **Only completed sets stored**: fixed a bug where `completeSession` was saving *all* sets (including skipped/incomplete ones) to `session_logs.actual_sets` and `auxiliary_sets`. Now only sets with `is_completed === true` are persisted. The `completion_pct` and `performance_vs_plan` calculations were already correct (they used `is_completed` before the bug); only the stored set arrays were affected.
+- **Session detail shows only completed sets**: `history/[sessionId].tsx` naturally shows what was actually performed, since the source data is now clean.
 
 ## References
 

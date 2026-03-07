@@ -15,7 +15,7 @@ import type { PerformanceTrend } from '@modules/history';
 import { listPrograms } from '@modules/program';
 import { getCompletedSessions } from '@modules/session';
 import type { Lift } from '@parakeet/shared-types';
-import { formatDate } from '@shared/utils/date';
+import { formatDate, formatTime } from '@shared/utils/date';
 import { useQuery } from '@tanstack/react-query';
 import { router } from 'expo-router';
 import { LineChart } from 'react-native-chart-kit';
@@ -161,6 +161,9 @@ function SessionRow({ session }: { session: CompletedSession }) {
         <View style={styles.sessionRowMeta}>
           <Text style={styles.sessionRowDate}>
             {formatDate(session.completed_at ?? session.planned_date)}
+            {session.completed_at && formatTime(session.completed_at)
+              ? ` · ${formatTime(session.completed_at)}`
+              : ''}
           </Text>
           {session.cycle_phase && (
             <View

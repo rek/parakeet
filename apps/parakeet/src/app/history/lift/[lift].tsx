@@ -20,7 +20,7 @@ import {
   getPerformanceTrends,
 } from '@modules/history';
 import { colors, palette, radii, spacing, typography } from '../../../theme';
-import { formatDate } from '@shared/utils/date';
+import { formatDate, formatTime } from '@shared/utils/date';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -325,6 +325,9 @@ export default function LiftHistoryScreen() {
                   <View style={styles.sessionLeft}>
                     <Text style={styles.sessionDate}>
                       {formatDate(row.completed_at ?? '')}
+                      {row.completed_at && formatTime(row.completed_at)
+                        ? ` · ${formatTime(row.completed_at)}`
+                        : ''}
                     </Text>
                     <View style={styles.intensityBadge}>
                       <Text style={styles.intensityBadgeText}>

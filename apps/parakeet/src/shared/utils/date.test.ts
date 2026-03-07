@@ -1,4 +1,4 @@
-import { formatDate, localDateIso } from './date';
+import { formatDate, formatTime, localDateIso } from './date';
 
 describe('date', () => {
   it('returns YYYY-MM-DD in local time', () => {
@@ -30,5 +30,26 @@ describe('date', () => {
 
   it('invalid string → em dash', () => {
     expect(formatDate('not-a-date')).toBe('—');
+  });
+});
+
+describe('formatTime', () => {
+  it('null/undefined → empty string', () => {
+    expect(formatTime(null)).toBe('');
+    expect(formatTime(undefined)).toBe('');
+  });
+
+  it('formats HH:MM in local time', () => {
+    const d = new Date(2026, 2, 7, 9, 5); // 09:05 local
+    expect(formatTime(d)).toBe('09:05');
+  });
+
+  it('formats a Date object with double-digit hour and minute', () => {
+    const d = new Date(2026, 2, 7, 14, 30);
+    expect(formatTime(d)).toBe('14:30');
+  });
+
+  it('invalid string → empty string', () => {
+    expect(formatTime('not-a-date')).toBe('');
   });
 });
