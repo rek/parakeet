@@ -17,10 +17,6 @@ At the end remember to update design and specs at end with work actually done. t
 bar weight needs to be settable from settings page
 need to be careful to then factor this into every calculation everywhere it is to be found, since the whole app currently uses a hardcoded 20kg bar
 
-## 2
-
-when i click done on a set, then it should have a little floating box guy below the rest timer that asks for RPE. keep the existing rpe input box inline too, just incase i want to modify after the fact
-
 ## 4
 
 i want freedom to just do any aux thing at anytime in my workout and log it. currently i have to only do what is prescribed. but in reality, humans are fickle and sometimes we just have the urge to do a set of somthing else
