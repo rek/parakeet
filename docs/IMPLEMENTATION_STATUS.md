@@ -68,6 +68,10 @@ For details on any item, see the linked spec file.
 - [x] 20260301000000: `jit_comparison_logs` table
 - [x] 20260304000000: `cycle_tracking` table + `session_logs.cycle_phase` column
 - [x] 20260307000000: `programs.program_mode`, `programs.unending_session_counter`; `programs.total_weeks` nullable
+- [x] 20260312000000: Fix developer_suggestions insert RLS; full initial schema re-applied
+- [x] 20260312000001: Unending program mode columns
+- [x] 20260313000000: `motivational_message_logs` table
+- [x] 20260314000000: `sessions.program_id` nullable; `'import'` added to `intensity_type` constraint
 
 ---
 
@@ -168,6 +172,12 @@ Module/platform/shared architecture is the canonical app structure. Legacy top-l
 - [x] Cycle reviews view
 - [x] Formula suggestions view
 - [x] Developer suggestions view
+
+---
+
+## Scripts (`scripts/`)
+
+- [x] `scripts/import-csv.ts` — historical CSV import CLI; auto-detects NextSet and Strong formats; interactive exercise mapping; inserts sessions with `program_id=null` and `intensity_type='import'`
 
 ---
 

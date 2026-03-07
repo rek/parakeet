@@ -43,7 +43,7 @@ export async function runJITForSession(
     await Promise.all([
       getCurrentOneRmKg(userId, lift),
       getFormulaConfig(userId),
-      getActiveAssignments(userId, session.program_id, blockNumber),
+      getActiveAssignments(userId, session.program_id!, blockNumber),
       getWarmupConfig(userId, lift, biologicalSex),
       getUserRestOverrides(userId),
       getBarWeightKg(),
@@ -98,7 +98,7 @@ export async function runJITForSession(
     .from('session_logs')
     .select('actual_sets, auxiliary_sets, sessions!inner(primary_lift, week_number, program_id)')
     .eq('user_id', userId)
-    .eq('sessions.program_id', session.program_id)
+    .eq('sessions.program_id', session.program_id!)
     .eq('sessions.week_number', session.week_number)
 
   const weeklyVolumeToDate: Partial<Record<MuscleGroup, number>> = {}
