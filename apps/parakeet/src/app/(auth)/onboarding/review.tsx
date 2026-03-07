@@ -76,8 +76,6 @@ export default function ReviewScreen() {
   function toggleDay(day: number) {
     setSelectedDays((prev) => {
       if (prev.includes(day)) {
-        // Don't allow going below required count
-        if (prev.length <= trainingDaysPerWeek) return prev
         return prev.filter((d) => d !== day)
       } else {
         // Don't allow exceeding required count

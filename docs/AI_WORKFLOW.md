@@ -50,6 +50,16 @@ Add targeted tests when moving logic or changing behavior.
 - Interactive divs: use `<button className="btn-reset">` not `<div onClick>`
 - Env switching: `SupabaseContext` — all components get `supabase` via `useSupabase()`, add to `useEffect` deps
 
+## 5) Wrap Up
+
+After implementation:
+
+1. Update design doc status from **Draft** → **Implemented** and add spec file links.
+2. Write or update spec files to match what was actually built (not what was originally planned).
+3. Update `docs/IMPLEMENTATION_STATUS.md` — new checklist entries, corrected test counts, new migrations.
+4. Update `supabase/types.ts` if you added migrations without running `npm run db:types` (see dev.md).
+5. Review these workflow docs for any learnings and update them.
+
 ## Prompt Starter
 
 ```text
@@ -58,4 +68,17 @@ Start by creating/updating:
 1) docs/design/<name>.md
 2) docs/specs/<id>-<name>.md
 Then implement in small slices with validation after each slice.
+At the end: update design doc status, finalize specs, update IMPLEMENTATION_STATUS.md.
 ```
+
+## Key Learnings
+
+**Design before spec before implement** — the user review pass between design doc and spec catches cross-mode regressions before any code is written. Don't skip it.
+
+**Nullable schema columns cascade** — making a DB column nullable (e.g., `total_weeks`) requires updating: the migration, `supabase/types.ts`, Zod schemas in `shared-types`, domain types in `shared/types/domain.ts`, and every call site that assumed the value was always present. Grep for the column name before starting.
+
+**`supabase/types.ts` must be kept in sync with migrations** — `npm run db:types` is the correct path. If local Supabase is not running, hand-edit cautiously and note it for the next `db:reset` run.
+
+**Lazy generation pattern for unending modes** — check for an existing record first, then generate and persist only if missing. Never generate unconditionally or you'll duplicate rows across concurrent requests.
+
+**Regression guards to write first** — before implementing unending logic, write the guards that prevent regressions in the scheduled path: `fetchOverdueScheduledSessions` filtering by `program_mode`, `completeSession` checking `program_mode` before the 80% gate. Write these before the feature code so they're in place from the start.
