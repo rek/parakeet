@@ -66,3 +66,8 @@ Output format:
   - Add learnings to `docs/AI_WORKFLOW.md` and `docs/CODE_STYLE.md` if patterns emerged
   - Update `docs/dev.md` if new commands or workflows were introduced
   - Prompt user with compounding/improvement advice based on what was learned
+
+- Dashboard-specific rules when adding a new page:
+  - Also add the new event type to `Logs.tsx` (Timeline) — `typeConfig`, `Stats`, `StatCard`, query in `Promise.all`, event mapping. See `docs/design/dashboard.md`.
+  - Verify Supabase column names against `supabase/migrations/` SQL, not sibling query files.
+  - `JsonViewer` requires `label` OR `defaultCollapsed={false}` — without one, content is permanently hidden.

@@ -16,6 +16,10 @@ export interface MotivationalContext {
   currentStreak: number;
   biologicalSex: 'female' | 'male' | null;
   cyclePhase: string | null;
+  // Performance detail
+  completionPct: number | null;
+  topWeightKg: number | null;
+  totalSetsCompleted: number;
 }
 
 export interface CompletedSessionRef {
@@ -37,7 +41,7 @@ export async function fetchMotivationalContext(
   const [logsResult, prsResult, profile] = await Promise.all([
     typedSupabase
       .from('session_logs')
-      .select('session_rpe, performance_vs_plan')
+      .select('session_rpe, performance_vs_plan, actual_sets, completion_pct')
       .in('session_id', sessionIds),
     typedSupabase
       .from('personal_records')
@@ -46,8 +50,10 @@ export async function fetchMotivationalContext(
     getProfile(),
   ]);
 
+  const logs = logsResult.data ?? [];
+
   // Take the highest RPE across all sessions logged today
-  const sessionRpe = (logsResult.data ?? []).reduce<number | null>(
+  const sessionRpe = logs.reduce<number | null>(
     (max, row) => {
       const rpe = row.session_rpe as number | null;
       if (rpe == null) return max;
@@ -57,12 +63,36 @@ export async function fetchMotivationalContext(
   );
 
   const performanceVsPlan =
-    (logsResult.data?.[0]?.performance_vs_plan as
+    (logs[0]?.performance_vs_plan as
       | 'under'
       | 'at'
       | 'over'
       | 'incomplete'
       | null) ?? null;
+
+  // Average completion % across all session logs
+  const completionPcts = logs
+    .map((r) => r.completion_pct as number | null)
+    .filter((v): v is number => v != null);
+  const completionPct =
+    completionPcts.length > 0
+      ? Math.round(completionPcts.reduce((a, b) => a + b, 0) / completionPcts.length)
+      : null;
+
+  // Flatten all actual_sets across sessions to derive top weight and set count
+  const allSets = logs.flatMap((r) => {
+    const raw = r.actual_sets;
+    return Array.isArray(raw)
+      ? (raw as Array<{ weight_grams?: number; reps_completed?: number }>)
+      : [];
+  });
+  const totalSetsCompleted = allSets.length;
+  const maxGrams = allSets.reduce<number | null>((max, s) => {
+    const g = s.weight_grams;
+    if (g == null) return max;
+    return max == null ? g : Math.max(max, g);
+  }, null);
+  const topWeightKg = maxGrams != null ? Math.round(maxGrams / 1000) : null;
 
   const newPRs = (prsResult.data ?? []).map((row) => ({
     lift: row.lift as string,
@@ -81,6 +111,9 @@ export async function fetchMotivationalContext(
     currentStreak,
     biologicalSex: profile?.biological_sex ?? null,
     cyclePhase,
+    completionPct,
+    topWeightKg,
+    totalSetsCompleted,
   };
 }
 
@@ -88,12 +121,14 @@ const SYSTEM_PROMPT = `You are a concise, encouraging powerlifting coach writing
 
 Priority rules (apply the highest matching rule first):
 1. If newPRs is non-empty: lead with praise for the personal record, naming the lift and PR type (e.g. "new estimated 1RM")
-2. If sessionRpe >= 9: acknowledge the grit and mental fortitude required to push that hard
-3. If performanceVsPlan is "over": note the overdelivery, keep the athlete grounded but proud
-4. If performanceVsPlan is "under": gently reinforce that consistency across sessions beats any single heroic effort
+2. If sessionRpe >= 9: acknowledge the grit required; you may reference the top weight (topWeightKg) if non-null
+3. If performanceVsPlan is "over": note the overdelivery, keep the athlete grounded but proud; reference topWeightKg if relevant
+4. If performanceVsPlan is "under" or completionPct < 80: gently reinforce that consistency beats any single heroic effort
 5. If isDeload is true: praise the discipline and intelligence of intentionally backing off
 
 Secondary context (weave in if space allows):
+- If topWeightKg is non-null: you may reference the actual weight lifted to make the message specific (e.g. "moving Xkg")
+- If totalSetsCompleted is notable (high volume): briefly acknowledge the work done
 - If currentStreak >= 5: briefly acknowledge the consistency streak
 - If biologicalSex is "female" and cyclePhase is "ovulatory": may acknowledge training strong through a demanding hormonal phase
 
@@ -102,7 +137,7 @@ Style rules:
 - For male athletes: direct, coach-to-athlete delivery
 - Never say "great work today", "keep it up", "you've got this", it's too boring and generic. Say something that shows character and personality and is a bit funny. Perhaps in a British kinda way
 - Exclamation points or emojis are fine.
-- Max 2 sentences. Be specific to the data provided — reference the actual lift names or block number if relevant.`;
+- Max 2 sentences. Be specific to the data provided — reference the actual lift names, weight, or block number if relevant.`;
 
 export async function generateMotivationalMessage(
   ctx: MotivationalContext,

@@ -179,12 +179,15 @@ Map of every place AI interacts with Parakeet. Two types of AI: **LLM** (Claude 
 **Input (`MotivationalContext`):**
 - `primaryLifts`, `intensityTypes`, `weekNumber`, `blockNumber`, `isDeload`
 - `sessionRpe`, `performanceVsPlan` (from `session_logs`)
+- `completionPct` — average completion % across sessions (from `session_logs.completion_pct`)
+- `topWeightKg` — max `weight_grams / 1000` across all `actual_sets` (lets LLM reference real weights)
+- `totalSetsCompleted` — total set count across sessions
 - `newPRs` (from `personal_records` with matching `session_id`)
 - `currentStreak`, `biologicalSex`, `cyclePhase`
 
 **LLM call:** `generateText()` with `JIT_MODEL` (gpt-4o-mini), plain text output (no schema), 8s timeout.
 
-**Priority rules:** PRs > high RPE > over-performance > under-performance > deload. Secondary: streak, cycle phase.
+**Priority rules:** PRs > high RPE (may cite `topWeightKg`) > over-performance > under-performance/low `completionPct` > deload. Secondary: `topWeightKg` for specificity, high `totalSetsCompleted`, streak, cycle phase.
 
 **Caching:** React Query with `staleTime: Infinity` keyed on session IDs — generated once per set of completed sessions.
 
