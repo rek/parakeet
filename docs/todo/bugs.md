@@ -23,6 +23,3 @@ why two buttons after pressing review?
 (check now, which flashes, and generate now)
 (also it never seems to generate a program review...)
 
-## 2
-
-when i end an unending program, it should also remove all my pending un-completed workouts, or something like this. the situation i get currently get is that i end it, then start a new program, and i have a duplicate workouts on the today screen from the old program

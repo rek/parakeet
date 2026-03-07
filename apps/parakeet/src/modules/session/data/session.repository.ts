@@ -579,6 +579,19 @@ export async function fetchInProgressSession(
   return data;
 }
 
+// Cancel all planned sessions for a program when it is archived/ended.
+// Prevents leftover planned sessions from surfacing on the Today screen.
+export async function cancelPlannedSessionsForProgram(
+  programId: string
+): Promise<void> {
+  const { error } = await typedSupabase
+    .from('sessions')
+    .update({ status: 'skipped' })
+    .eq('program_id', programId)
+    .eq('status', 'planned');
+  if (error) throw error;
+}
+
 // Fetch the earliest planned session for a given program. Used by unending mode
 // to detect whether a next session was already generated before creating another.
 export async function fetchPlannedSessionForProgram(

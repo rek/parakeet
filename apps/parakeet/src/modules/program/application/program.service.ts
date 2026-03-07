@@ -20,6 +20,7 @@ import {
   updateProgramStatusIfActive,
   updateUnendingSessionCounter,
 } from '../data/program.repository';
+import { cancelPlannedSessionsForProgram } from '../../session/data/session.repository';
 import { getAuthenticatedUserId } from '../data/profile.repository';
 import { getAuxiliaryPools } from '../lib/auxiliary-config';
 import { getCurrentMaxes } from '../lib/lifter-maxes';
@@ -160,6 +161,7 @@ export async function updateProgramStatus(
   status: 'completed' | 'archived',
   options?: { triggerCycleReview?: boolean; userId?: string },
 ): Promise<void> {
+  await cancelPlannedSessionsForProgram(programId);
   await updateProgramStatusIfActive(programId, status);
   if (options?.triggerCycleReview && options.userId) {
     onCycleComplete(programId, options.userId);

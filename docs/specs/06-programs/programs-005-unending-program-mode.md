@@ -72,7 +72,7 @@ export type NextUnendingSessionResult = {
 - [x] `buildProgram` — branches on `isUnending`:
   - Unending: inserts program row; calls `appendNextUnendingSession(..., { skipCounterIncrement: true })` for the first session; auxiliary assignments still generated (3 blocks)
   - Scheduled: existing flow unchanged
-- [x] `updateProgramStatus(programId, status, options?)` — `options.triggerCycleReview` calls `onCycleComplete(programId, userId)` after archiving; used when ending an unending program
+- [x] `updateProgramStatus(programId, status, options?)` — calls `cancelPlannedSessionsForProgram` first (skips leftover planned sessions), then archives the program; `options.triggerCycleReview` triggers cycle review
 - [x] Re-exports `fetchActiveProgramMode` and `updateUnendingSessionCounter` from repository
 
 ## Session Module
@@ -102,6 +102,7 @@ export type NextUnendingSessionResult = {
 | "Cycle complete" badge fires on every unending session | `detectAchievements` checks `programMode !== 'unending'` before `checkCycleCompletion` |
 | User blocked from training again same day (unending) | `findTodaySession` treats `completed` sessions as "no session" for unending programs |
 | Pull-to-refresh generates duplicate sessions (unending) | `findTodaySession` checks `fetchPlannedSessionForProgram` before generating; `generateNextUnendingSession` returns planned session not completed one |
+| Leftover planned sessions after End Program | `updateProgramStatus` calls `cancelPlannedSessionsForProgram` before archiving — skips all planned sessions for the program |
 | `total_weeks` null breaks scheduled paths | All call sites use `?? 0` or `?? 9` fallback |
 | Auxiliary exercises screen breaks | `currentBlockNumber` branches on `program_mode` to derive block from `unending_session_counter` |
 | Cycle review compilation breaks | `total_weeks ?? 0` in `cycle-review.repository.ts` |
