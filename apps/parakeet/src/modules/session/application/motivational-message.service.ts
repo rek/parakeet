@@ -1,7 +1,8 @@
-import { generateText } from 'ai';
-import { JIT_MODEL } from '@parakeet/training-engine';
-import { typedSupabase } from '@platform/supabase';
 import { getProfile } from '@modules/profile';
+import { JIT_MODEL } from '@parakeet/training-engine';
+import type { Json } from '@platform/supabase';
+import { typedSupabase } from '@platform/supabase';
+import { generateText } from 'ai';
 
 export interface MotivationalContext {
   primaryLifts: string[];
@@ -29,7 +30,7 @@ export interface CompletedSessionRef {
 export async function fetchMotivationalContext(
   sessions: CompletedSessionRef[],
   currentStreak: number,
-  cyclePhase: string | null,
+  cyclePhase: string | null
 ): Promise<MotivationalContext> {
   const sessionIds = sessions.map((s) => s.id);
 
@@ -46,14 +47,17 @@ export async function fetchMotivationalContext(
   ]);
 
   // Take the highest RPE across all sessions logged today
-  const sessionRpe = (logsResult.data ?? []).reduce<number | null>((max, row) => {
-    const rpe = row.session_rpe as number | null;
-    if (rpe == null) return max;
-    return max == null ? rpe : Math.max(max, rpe);
-  }, null);
+  const sessionRpe = (logsResult.data ?? []).reduce<number | null>(
+    (max, row) => {
+      const rpe = row.session_rpe as number | null;
+      if (rpe == null) return max;
+      return max == null ? rpe : Math.max(max, rpe);
+    },
+    null
+  );
 
   const performanceVsPlan =
-    ((logsResult.data?.[0]?.performance_vs_plan) as
+    (logsResult.data?.[0]?.performance_vs_plan as
       | 'under'
       | 'at'
       | 'over'
@@ -96,18 +100,40 @@ Secondary context (weave in if space allows):
 Style rules:
 - For female athletes: acknowledge strength and resilience with warmth
 - For male athletes: direct, coach-to-athlete delivery
-- Never say "great work today", "keep it up", "you've got this"
-- Never use exclamation points or emojis
+- Never say "great work today", "keep it up", "you've got this", it's too boring and generic. Say something that shows character and personality and is a bit funny. Perhaps in a British kinda way
+- Exclamation points or emojis are fine.
 - Max 2 sentences. Be specific to the data provided — reference the actual lift names or block number if relevant.`;
 
 export async function generateMotivationalMessage(
   ctx: MotivationalContext,
+  sessionIds?: string[],
+  userId?: string
 ): Promise<string> {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 8000);
   const result = await generateText({
     model: JIT_MODEL,
     system: SYSTEM_PROMPT,
     prompt: JSON.stringify(ctx),
-    abortSignal: AbortSignal.timeout(8000),
+    abortSignal: controller.signal,
   });
-  return result.text.trim();
+  clearTimeout(timer);
+  const message = result.text.trim();
+
+  // Fire-and-forget: persist the log for dashboard telemetry
+  if (userId && sessionIds?.length) {
+    typedSupabase
+      .from('motivational_message_logs')
+      .insert({
+        user_id: userId,
+        session_ids: sessionIds,
+        context: JSON.parse(JSON.stringify(ctx)) as Json,
+        message,
+      })
+      .then(({ error }) => {
+        if (error) console.warn('Failed to persist motivational log:', error);
+      });
+  }
+
+  return message;
 }

@@ -309,6 +309,41 @@ export type Database = {
         }
         Relationships: []
       }
+      motivational_message_logs: {
+        Row: {
+          id: string
+          user_id: string
+          session_ids: string[]
+          context: Json
+          message: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          session_ids: string[]
+          context: Json
+          message: string
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          session_ids?: string[]
+          context?: Json
+          message?: string
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "motivational_message_logs_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       jit_comparison_logs: {
         Row: {
           created_at: string

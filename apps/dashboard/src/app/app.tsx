@@ -8,12 +8,14 @@ import { DeveloperSuggestions } from './DeveloperSuggestions';
 import { FormulaSuggestions } from './FormulaSuggestions';
 import { JITLogs } from './JITLogs';
 import { Logs } from './Logs';
+import { MotivationalLogs } from './MotivationalLogs';
 import { WorkoutSummaries } from './WorkoutSummaries';
 
 type Page =
   | 'timeline'
   | 'jit'
   | 'workouts'
+  | 'motivational'
   | 'hybrid'
   | 'cycle_reviews'
   | 'formula'
@@ -48,6 +50,13 @@ const NAV: NavItem[] = [
     icon: '●',
     color: 'var(--green)',
     description: 'Completed sessions',
+  },
+  {
+    id: 'motivational',
+    label: 'Motivational Msgs',
+    icon: '✦',
+    color: 'var(--accent)',
+    description: 'LLM input + output',
   },
   {
     id: 'hybrid',
@@ -174,6 +183,8 @@ function PageContent({ page }: { page: Page }) {
       return <JITLogs />;
     case 'workouts':
       return <WorkoutSummaries />;
+    case 'motivational':
+      return <MotivationalLogs />;
     case 'hybrid':
       return <ComparisonLogs />;
     case 'cycle_reviews':

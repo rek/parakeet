@@ -133,22 +133,26 @@ function WorkoutDoneCard({
   sessions,
   currentStreak,
   cyclePhase,
+  userId,
 }: {
   sessions: CompletedSessionRef[];
   currentStreak: number;
   cyclePhase: string | null;
+  userId: string;
 }) {
   const sessionIds = sessions.map((s) => s.id);
 
-  const { data: message, isLoading } = useQuery({
+  const { data: message, isLoading, error } = useQuery({
     queryKey: ['motivational-message', ...sessionIds],
-    queryFn: () =>
-      fetchMotivationalContext(sessions, currentStreak, cyclePhase).then(
-        generateMotivationalMessage,
-      ),
+    queryFn: async () => {
+      const ctx = await fetchMotivationalContext(sessions, currentStreak, cyclePhase);
+      return generateMotivationalMessage(ctx, sessionIds, userId);
+    },
     staleTime: Infinity,
     retry: false,
   });
+
+  if (error) console.warn('Motivational message error:', error);
 
   const lifts = sessions
     .map(
@@ -328,6 +332,7 @@ export default function TodayScreen() {
                           sessions={completedSessions}
                           currentStreak={streakData?.currentStreak ?? 0}
                           cyclePhase={cycleContext?.phase ?? null}
+                          userId={user!.id}
                         />
                       )}
                       {otherSessions.map((s) => {
@@ -499,10 +504,9 @@ const styles = StyleSheet.create({
   },
   workoutDoneSubtitle: {
     fontSize: typography.sizes.sm,
-    color: colors.success,
+    color: palette.amber500,
     textAlign: 'center' as const,
     lineHeight: 20,
-    opacity: 0.8,
     marginTop: spacing[2],
   },
   // Rest day card
