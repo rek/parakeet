@@ -6,6 +6,7 @@ import { useQueryClient } from '@tanstack/react-query'
 import { useCycleReview } from '@modules/cycle-review'
 import { createFormulaOverride, deactivateFormulaConfig } from '@modules/formula'
 import { useAuth } from '@modules/auth'
+import { classifyVolumeLevel } from '@modules/training-volume'
 import type { FormulaConfig, MuscleGroup } from '@parakeet/training-engine'
 import { colors } from '../../../theme'
 import { BackLink } from '../../../components/navigation/BackLink'
@@ -74,12 +75,12 @@ const RATING_STYLES: Record<ProgressRating, { bg: string; text: string; label: s
 
 const MUSCLES = MUSCLE_GROUPS_ORDER
 
-function volumeColor(sets: number, mev: number, mrv: number): string {
-  if (sets > mrv)             return colors.danger
-  if (sets >= mrv * 0.8)      return colors.warning
-  if (sets >= mev)            return colors.success
-  return colors.bgMuted
-}
+const VOLUME_LEVEL_COLORS = {
+  exceeded: colors.danger,
+  approaching: colors.warning,
+  in_range: colors.success,
+  below: colors.bgMuted,
+} as const
 
 // ── Screen ────────────────────────────────────────────────────────────────────
 
@@ -336,7 +337,7 @@ export default function CycleReviewScreen() {
                       return (
                         <View
                           key={m}
-                          style={[styles.heatmapCell, { backgroundColor: volumeColor(sets, 6, 20) }]}
+                          style={[styles.heatmapCell, { backgroundColor: VOLUME_LEVEL_COLORS[classifyVolumeLevel(sets, 6, 20)] }]}
                         >
                           <Text style={styles.heatmapValue}>{sets || ''}</Text>
                         </View>

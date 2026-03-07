@@ -15,6 +15,18 @@ export interface CycleContext {
 
 const MS_PER_DAY = 24 * 60 * 60 * 1000
 
+export function getPhaseForDay(dayOfCycle: number, cycleLength = 28): CyclePhase {
+  const scaledDay = cycleLength === 28
+    ? dayOfCycle
+    : Math.round(dayOfCycle * 28 / cycleLength)
+
+  if (scaledDay <= 5)       return 'menstrual'
+  if (scaledDay <= 11)      return 'follicular'
+  if (scaledDay <= 16)      return 'ovulatory'
+  if (scaledDay <= 23)      return 'luteal'
+  return 'late_luteal'
+}
+
 export function computeCyclePhase(
   lastPeriodStart: Date,
   cycleLength = 28,
@@ -25,20 +37,12 @@ export function computeCyclePhase(
   const dayOfCycle = (daysSincePeriodStart % cycleLength) + 1
   const daysUntilNextPeriod = cycleLength - dayOfCycle
 
-  // Scale to 28-day equivalent before applying phase boundaries
   const scaledDay = cycleLength === 28
     ? dayOfCycle
     : Math.round(dayOfCycle * 28 / cycleLength)
 
-  let phase: CyclePhase
-  if (scaledDay <= 5)       phase = 'menstrual'
-  else if (scaledDay <= 11) phase = 'follicular'
-  else if (scaledDay <= 16) phase = 'ovulatory'
-  else if (scaledDay <= 23) phase = 'luteal'
-  else                      phase = 'late_luteal'
-
   return {
-    phase,
+    phase: getPhaseForDay(dayOfCycle, cycleLength),
     dayOfCycle,
     daysUntilNextPeriod,
     isOvulatoryWindow: scaledDay >= 12 && scaledDay <= 16,

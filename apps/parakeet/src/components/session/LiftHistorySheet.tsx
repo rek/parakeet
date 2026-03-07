@@ -2,7 +2,8 @@ import { ActivityIndicator, Modal, ScrollView, StyleSheet, Text, TouchableOpacit
 import { useQuery } from '@tanstack/react-query'
 
 import type { Lift } from '@parakeet/shared-types'
-import { getRecentLiftHistory } from '@modules/history'
+import { getRecentLiftHistory, TREND_CONFIG } from '@modules/history'
+import type { TrendDirection } from '@modules/history'
 import { useAuth } from '@modules/auth'
 import { useNetworkStatus } from '@platform/network'
 import { colors, spacing, typography } from '../../theme'
@@ -29,17 +30,12 @@ function formatOneRm(kg: number): string {
   return `${Math.round(kg)} kg`
 }
 
-function trendSymbol(trend: 'improving' | 'stable' | 'declining' | null): string {
-  if (trend === 'improving') return '↑'
-  if (trend === 'declining') return '↓'
-  if (trend === 'stable') return '→'
-  return ''
+function trendSymbol(trend: TrendDirection | null): string {
+  return trend ? TREND_CONFIG[trend].symbol : ''
 }
 
-function trendColor(trend: 'improving' | 'stable' | 'declining' | null): string {
-  if (trend === 'improving') return colors.success
-  if (trend === 'declining') return colors.danger
-  return colors.textSecondary
+function trendColor(trend: TrendDirection | null): string {
+  return trend ? TREND_CONFIG[trend].color : colors.textSecondary
 }
 
 // ── Component ─────────────────────────────────────────────────────────────────

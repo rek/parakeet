@@ -7,3 +7,4 @@ export * from './hooks/useRestNotifications';
 export * from './hooks/useSyncQueue';
 export * from './lib/sessions';
 export * from './utils/overtime-edge';
+export * from './utils/session-sorting';

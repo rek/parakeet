@@ -14,7 +14,15 @@ import { router } from 'expo-router'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import DateTimePicker, { type DateTimePickerEvent } from '@react-native-community/datetimepicker'
 
-import { reportDisruption, applyDisruptionAdjustment, applyUnprogrammedEventSoreness } from '@modules/disruptions'
+import {
+  applyDisruptionAdjustment,
+  applyUnprogrammedEventSoreness,
+  getMenstrualSymptomsPreset,
+  inferEffectiveSeverity,
+  reportDisruption,
+  SORENESS_NUMERIC,
+} from '@modules/disruptions'
+import type { SorenessLevel } from '@modules/disruptions'
 import { captureException } from '@platform/utils/captureException'
 import { useAuth } from '@modules/auth'
 import { getProfile } from '@modules/profile'
@@ -43,21 +51,12 @@ const DISRUPTION_TYPES: { value: DisruptionType; label: string; icon: string }[]
   { value: 'other',                label: 'Other',                icon: '•' },
 ]
 
-type SorenessLevel = 'none' | 'mild' | 'sore' | 'very_sore'
-
 const SORENESS_CHIPS: { value: SorenessLevel; label: string }[] = [
   { value: 'none',      label: 'None' },
   { value: 'mild',      label: 'Mild' },
   { value: 'sore',      label: 'Sore' },
   { value: 'very_sore', label: 'Very Sore' },
 ]
-
-const SORENESS_NUMERIC: Record<SorenessLevel, number> = {
-  none:      1,
-  mild:      2,
-  sore:      3,
-  very_sore: 4,
-}
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -152,12 +151,13 @@ export default function DisruptionReportScreen() {
       setSelectedLifts(new Set())
       setDescription('')
     } else {
+      const preset = getMenstrualSymptomsPreset()
       setIsMenstrualSymptoms(true)
-      setSelectedType('fatigue')
-      setSelectedSeverity('minor')
-      setAllLifts(true)
-      setSelectedLifts(new Set(TRAINING_LIFTS))
-      setDescription('Menstrual symptoms')
+      setSelectedType(preset.type)
+      setSelectedSeverity(preset.severity)
+      setAllLifts(preset.allLifts)
+      setSelectedLifts(preset.lifts)
+      setDescription(preset.description)
     }
   }
 
@@ -184,7 +184,7 @@ export default function DisruptionReportScreen() {
 
   async function handleSubmit() {
     if (!selectedType || !user) return
-    const effectiveSeverity = selectedType === 'unprogrammed_event' ? 'major' : selectedSeverity
+    const effectiveSeverity = inferEffectiveSeverity(selectedType, selectedSeverity)
     if (!effectiveSeverity) return
     setSubmitError(null)
     setIsSubmitting(true)

@@ -10,11 +10,13 @@ import {
 } from 'react-native';
 import { useAuth } from '@modules/auth';
 import {
+  currentBlockNumber,
   getActiveAssignments,
   getActiveProgram,
   getAuxiliaryPools,
   lockAssignment,
   reorderAuxiliaryPool,
+  unendingBlockNumber,
 } from '@modules/program';
 import type { Lift } from '@parakeet/shared-types';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
@@ -32,22 +34,6 @@ const LIFT_LABELS: Record<Lift, string> = {
   bench: 'Bench',
   deadlift: 'Deadlift',
 };
-
-// ── Helpers ───────────────────────────────────────────────────────────────────
-
-function currentBlockNumber(
-  startDateStr: string,
-  totalWeeks: number
-): 1 | 2 | 3 {
-  const start = new Date(startDateStr);
-  const now = new Date();
-  const weeksPassed = Math.floor(
-    (now.getTime() - start.getTime()) / (7 * 24 * 60 * 60 * 1000)
-  );
-  const weeksPerBlock = Math.floor(totalWeeks / 3);
-  const block = Math.min(3, Math.floor(weeksPassed / weeksPerBlock) + 1);
-  return block as 1 | 2 | 3;
-}
 
 // ── Pool list ─────────────────────────────────────────────────────────────────
 
@@ -331,11 +317,10 @@ export default function AuxiliaryExercisesScreen() {
       if (!activeProgram || !activeProgram.start_date || !user?.id) return;
       let bn: 1 | 2 | 3;
       if (activeProgram.program_mode === 'unending') {
-        // For unending programs, derive block from session counter
-        const counter = activeProgram.unending_session_counter ?? 0;
-        const daysPerWeek = activeProgram.training_days_per_week ?? 3;
-        const weekNumber = Math.floor(counter / daysPerWeek) + 1;
-        bn = (((Math.floor((weekNumber - 1) / 3)) % 3) + 1) as 1 | 2 | 3;
+        bn = unendingBlockNumber(
+          activeProgram.unending_session_counter ?? 0,
+          activeProgram.training_days_per_week ?? 3,
+        );
       } else {
         bn = currentBlockNumber(
           activeProgram.start_date,

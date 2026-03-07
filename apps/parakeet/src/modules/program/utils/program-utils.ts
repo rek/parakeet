@@ -11,6 +11,28 @@ export function groupByWeek(sessions: ProgramSession[]): [number, ProgramSession
   return Array.from(map.entries()).sort(([a], [b]) => a - b)
 }
 
+const MS_PER_WEEK = 7 * 24 * 60 * 60 * 1000
+
+export function currentBlockNumber(
+  startDate: string,
+  totalWeeks: number,
+): 1 | 2 | 3 {
+  const weeksPassed = Math.floor(
+    (Date.now() - new Date(startDate).getTime()) / MS_PER_WEEK,
+  )
+  const weeksPerBlock = Math.floor(totalWeeks / 3)
+  const block = Math.min(3, Math.floor(weeksPassed / weeksPerBlock) + 1)
+  return block as 1 | 2 | 3
+}
+
+export function unendingBlockNumber(
+  sessionCounter: number,
+  daysPerWeek: number,
+): 1 | 2 | 3 {
+  const weekNumber = Math.floor(sessionCounter / daysPerWeek) + 1
+  return ((Math.floor((weekNumber - 1) / 3) % 3) + 1) as 1 | 2 | 3
+}
+
 export function determineCurrentWeek(sessions: ProgramSession[]): number {
   const activeSession = sessions.find(
     (s) => s.status === 'planned' || s.status === 'in_progress',

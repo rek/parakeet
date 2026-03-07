@@ -1,4 +1,4 @@
-import { computeCyclePhase } from './cycle-phase'
+import { computeCyclePhase, getPhaseForDay } from './cycle-phase'
 
 function daysAfter(start: Date, days: number): Date {
   return new Date(start.getTime() + days * 24 * 60 * 60 * 1000)
@@ -88,6 +88,31 @@ describe('computeCyclePhase — non-28-day cycle', () => {
     const ctx = computeCyclePhase(start, 35, daysAfter(start, 35))
     expect(ctx.dayOfCycle).toBe(1)
     expect(ctx.phase).toBe('menstrual')
+  })
+})
+
+describe('getPhaseForDay', () => {
+  it('returns correct phases for 28-day cycle boundaries', () => {
+    expect(getPhaseForDay(1)).toBe('menstrual')
+    expect(getPhaseForDay(5)).toBe('menstrual')
+    expect(getPhaseForDay(6)).toBe('follicular')
+    expect(getPhaseForDay(11)).toBe('follicular')
+    expect(getPhaseForDay(12)).toBe('ovulatory')
+    expect(getPhaseForDay(16)).toBe('ovulatory')
+    expect(getPhaseForDay(17)).toBe('luteal')
+    expect(getPhaseForDay(23)).toBe('luteal')
+    expect(getPhaseForDay(24)).toBe('late_luteal')
+    expect(getPhaseForDay(28)).toBe('late_luteal')
+  })
+
+  it('scales correctly for 35-day cycle', () => {
+    // day 17 in 35-day cycle → scaled = round(17*28/35) = round(13.6) = 14 → ovulatory
+    expect(getPhaseForDay(17, 35)).toBe('ovulatory')
+    expect(getPhaseForDay(1, 35)).toBe('menstrual')
+  })
+
+  it('defaults to 28-day cycle when cycleLength omitted', () => {
+    expect(getPhaseForDay(12)).toBe('ovulatory')
   })
 })
 

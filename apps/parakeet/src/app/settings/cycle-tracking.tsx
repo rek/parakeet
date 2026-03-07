@@ -11,13 +11,16 @@ import {
 import { useAuth } from '@modules/auth';
 import {
   addPeriodStart,
+  CYCLE_PHASE_BG,
+  CYCLE_PHASE_LABELS,
+  CYCLE_PHASE_TEXT,
   deletePeriodStart,
   getCycleConfig,
   getPeriodStartHistory,
   updateCycleConfig,
 } from '@modules/cycle-tracking';
 import type { PeriodStartEntry } from '@modules/cycle-tracking';
-import { computeCyclePhase } from '@parakeet/training-engine';
+import { computeCyclePhase, getPhaseForDay } from '@parakeet/training-engine';
 import { qk } from '@platform/query';
 import DateTimePicker, {
   DateTimePickerEvent,
@@ -28,44 +31,6 @@ import { router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { BackLink } from '../../components/navigation/BackLink';
 import { colors, radii, spacing, typography } from '../../theme';
-
-// ── Constants ─────────────────────────────────────────────────────────────────
-
-const PHASE_COLORS: Record<string, string> = {
-  menstrual: '#FEE2E2',
-  follicular: '#D1FAE5',
-  ovulatory: '#FEF3C7',
-  luteal: '#E0E7FF',
-  late_luteal: '#E0E7FF',
-};
-
-const PHASE_TEXT_COLORS: Record<string, string> = {
-  menstrual: '#991B1B',
-  follicular: '#065F46',
-  ovulatory: '#92400E',
-  luteal: '#3730A3',
-  late_luteal: '#3730A3',
-};
-
-const PHASE_LABELS: Record<string, string> = {
-  menstrual: 'Menstrual',
-  follicular: 'Follicular',
-  ovulatory: 'Ovulatory',
-  luteal: 'Luteal',
-  late_luteal: 'Late Luteal',
-};
-
-// ── Phase calendar helpers ────────────────────────────────────────────────────
-
-function getPhaseForDay(day: number, cycleLength: number): string {
-  const scaled =
-    cycleLength === 28 ? day : Math.round((day * 28) / cycleLength);
-  if (scaled <= 5) return 'menstrual';
-  if (scaled <= 11) return 'follicular';
-  if (scaled <= 16) return 'ovulatory';
-  if (scaled <= 23) return 'luteal';
-  return 'late_luteal';
-}
 
 // ── Screen ────────────────────────────────────────────────────────────────────
 
@@ -281,22 +246,22 @@ export default function CycleTrackingScreen() {
               <View
                 style={[
                   styles.card,
-                  { backgroundColor: PHASE_COLORS[cycleContext.phase] },
+                  { backgroundColor: CYCLE_PHASE_BG[cycleContext.phase] },
                 ]}
               >
                 <Text
                   style={[
                     styles.phaseCurrentLabel,
-                    { color: PHASE_TEXT_COLORS[cycleContext.phase] },
+                    { color: CYCLE_PHASE_TEXT[cycleContext.phase] },
                   ]}
                 >
-                  Currently: {PHASE_LABELS[cycleContext.phase]} · Day{' '}
+                  Currently: {CYCLE_PHASE_LABELS[cycleContext.phase]} · Day{' '}
                   {cycleContext.dayOfCycle}
                 </Text>
                 <Text
                   style={[
                     styles.phaseNextPeriod,
-                    { color: PHASE_TEXT_COLORS[cycleContext.phase] },
+                    { color: CYCLE_PHASE_TEXT[cycleContext.phase] },
                   ]}
                 >
                   Next period expected:{' '}
@@ -345,14 +310,14 @@ export default function CycleTrackingScreen() {
                         key={day}
                         style={[
                           styles.calendarDay,
-                          { backgroundColor: PHASE_COLORS[phase] },
+                          { backgroundColor: CYCLE_PHASE_BG[phase] },
                           isCurrent && styles.calendarDayCurrent,
                         ]}
                       >
                         <Text
                           style={[
                             styles.calendarDayText,
-                            { color: PHASE_TEXT_COLORS[phase] },
+                            { color: CYCLE_PHASE_TEXT[phase] },
                             isCurrent && styles.calendarDayTextCurrent,
                           ]}
                         >
@@ -378,11 +343,11 @@ export default function CycleTrackingScreen() {
                       <View
                         style={[
                           styles.legendDot,
-                          { backgroundColor: PHASE_COLORS[phase] },
+                          { backgroundColor: CYCLE_PHASE_BG[phase] },
                         ]}
                       />
                       <Text style={styles.legendLabel}>
-                        {PHASE_LABELS[phase]}
+                        {CYCLE_PHASE_LABELS[phase]}
                       </Text>
                     </View>
                   ))}

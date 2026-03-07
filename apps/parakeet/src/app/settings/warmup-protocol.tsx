@@ -12,7 +12,7 @@ import { useAuth } from '@modules/auth';
 import { getCurrentOneRmKg } from '@modules/program';
 import { getAllWarmupConfigs, updateWarmupConfig } from '@modules/settings';
 import type { Lift } from '@parakeet/shared-types';
-import { generateWarmupSets, getPresetSteps } from '@parakeet/training-engine';
+import { estimateWorkingWeight, generateWarmupSets, getPresetSteps } from '@parakeet/training-engine';
 import type {
   WarmupPresetName,
   WarmupProtocol,
@@ -53,8 +53,6 @@ const PRESETS: {
   },
 ];
 
-// Working weight estimate: 80% of 1RM is representative for a heavy block
-const WORKING_PCT = 0.8;
 
 // ── Custom step editor ────────────────────────────────────────────────────────
 
@@ -138,7 +136,7 @@ interface WarmupPreviewProps {
 
 function WarmupPreview({ protocol, oneRmKg, lift }: WarmupPreviewProps) {
   if (!oneRmKg) return null;
-  const workingWeight = Math.round(oneRmKg * WORKING_PCT * 2) / 2;
+  const workingWeight = estimateWorkingWeight(oneRmKg);
   const sets = generateWarmupSets(workingWeight, protocol);
 
   return (

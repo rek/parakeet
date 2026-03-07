@@ -9,12 +9,13 @@ import {
   View,
 } from 'react-native';
 import { useAuth } from '@modules/auth';
-import { useCyclePhase } from '@modules/cycle-tracking';
-import { getPerformanceTrends, getWeeklySetsPerLift } from '@modules/history';
+import { CYCLE_PHASE_BG, CYCLE_PHASE_LABELS, CYCLE_PHASE_TEXT, useCyclePhase } from '@modules/cycle-tracking';
+import { buildVolumeChartData, getPerformanceTrends, getWeeklySetsPerLift, TREND_CONFIG } from '@modules/history';
 import type { PerformanceTrend } from '@modules/history';
 import { listPrograms } from '@modules/program';
 import { getCompletedSessions } from '@modules/session';
 import type { Lift } from '@parakeet/shared-types';
+import type { CyclePhase } from '@parakeet/training-engine';
 import { formatDate, formatTime } from '@shared/utils/date';
 import { useQuery } from '@tanstack/react-query';
 import { router } from 'expo-router';
@@ -22,36 +23,11 @@ import { LineChart } from 'react-native-chart-kit';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { colors, palette, radii, spacing, typography } from '../../theme';
 
-// ── Cycle phase constants ─────────────────────────────────────────────────────
-
-const PHASE_TAG_BG: Record<string, string> = {
-  menstrual: palette.red100,
-  follicular: palette.emerald100,
-  ovulatory: palette.amber100,
-  luteal: palette.indigo100,
-  late_luteal: palette.indigo100,
-};
-const PHASE_TAG_TEXT: Record<string, string> = {
-  menstrual: palette.red800,
-  follicular: palette.emerald800,
-  ovulatory: palette.amber800,
-  luteal: palette.indigo800,
-  late_luteal: palette.indigo800,
-};
-const PHASE_LABELS: Record<string, string> = {
-  menstrual: 'Menstrual',
-  follicular: 'Follicular',
-  ovulatory: 'Ovulatory',
-  luteal: 'Luteal',
-  late_luteal: 'Late Luteal',
-};
-
 // ── Types ─────────────────────────────────────────────────────────────────────
 
 type CompletedSession = Awaited<
   ReturnType<typeof getCompletedSessions>
 >[number];
-type WeeklyVolRow = { weekStart: string; lift: Lift; setsCompleted: number };
 type LiftFilter = 'all' | Lift;
 
 const LIFT_LABELS: Record<Lift, string> = {
@@ -65,54 +41,10 @@ const LIFT_COLORS: Record<Lift, string> = {
   deadlift: palette.teal400,
 };
 
-// ── Chart helpers ─────────────────────────────────────────────────────────────
-
-function buildVolumeChartData(weeklyData: WeeklyVolRow[]) {
-  let weeks = [...new Set(weeklyData.map((d) => d.weekStart))].sort();
-  if (weeks.length < 1) return null;
-
-  // react-native-chart-kit requires 2+ data points to draw a line
-  if (weeks.length === 1) {
-    const prev = new Date(weeks[0]);
-    prev.setDate(prev.getDate() - 7);
-    weeks = [prev.toISOString().slice(0, 10), weeks[0]];
-  }
-
-  const labels = weeks.map((w) => {
-    const d = new Date(w);
-    return `${d.getUTCMonth() + 1}/${d.getUTCDate()}`;
-  });
-
-  const datasets = (['squat', 'bench', 'deadlift'] as Lift[]).map((lift) => {
-    const hex = LIFT_COLORS[lift];
-    return {
-      data: weeks.map((week) => {
-        const entry = weeklyData.find(
-          (d) => d.weekStart === week && d.lift === lift
-        );
-        return entry?.setsCompleted ?? 0;
-      }),
-      color: (opacity = 1) =>
-        hex +
-        Math.round(opacity * 255)
-          .toString(16)
-          .padStart(2, '0'),
-      strokeWidth: 2,
-    };
-  });
-
-  return { labels, datasets };
-}
-
 // ── Sub-components ────────────────────────────────────────────────────────────
 
 function TrendCard({ trend }: { trend: PerformanceTrend }) {
-  const trendConfig = {
-    improving: { symbol: '↑', color: colors.success },
-    stable: { symbol: '→', color: colors.textSecondary },
-    declining: { symbol: '↓', color: colors.danger },
-  } as const;
-  const { symbol, color } = trendConfig[trend.trend];
+  const { symbol, color } = TREND_CONFIG[trend.trend];
 
   return (
     <TouchableOpacity
@@ -169,16 +101,16 @@ function SessionRow({ session }: { session: CompletedSession }) {
             <View
               style={[
                 styles.phaseTag,
-                { backgroundColor: PHASE_TAG_BG[session.cycle_phase] },
+                { backgroundColor: CYCLE_PHASE_BG[session.cycle_phase as CyclePhase] },
               ]}
             >
               <Text
                 style={[
                   styles.phaseTagText,
-                  { color: PHASE_TAG_TEXT[session.cycle_phase] },
+                  { color: CYCLE_PHASE_TEXT[session.cycle_phase as CyclePhase] },
                 ]}
               >
-                {PHASE_LABELS[session.cycle_phase] ?? session.cycle_phase}
+                {CYCLE_PHASE_LABELS[session.cycle_phase as CyclePhase] ?? session.cycle_phase}
               </Text>
             </View>
           )}
@@ -242,7 +174,7 @@ export default function HistoryScreen() {
       : (sessionsQuery.data ?? []).filter((s) => s.primary_lift === liftFilter);
 
   const volumeChartData = volumeQuery.data
-    ? buildVolumeChartData(volumeQuery.data)
+    ? buildVolumeChartData(volumeQuery.data, LIFT_COLORS)
     : null;
 
   return (

@@ -10,18 +10,19 @@ import {
 } from 'react-native';
 import { getStreakData } from '@modules/achievements';
 import { useAuth } from '@modules/auth';
-import { useCyclePhase } from '@modules/cycle-tracking';
+import { CYCLE_PHASE_BG, CYCLE_PHASE_LABELS, CYCLE_PHASE_TEXT, useCyclePhase } from '@modules/cycle-tracking';
 import { getActiveDisruptions } from '@modules/disruptions';
 import { useActiveProgram } from '@modules/program';
 import {
   fetchMotivationalContext,
   generateMotivationalMessage,
+  partitionTodaySessions,
   useInProgressSession,
   useTodaySessions,
 } from '@modules/session';
 import type { CompletedSessionRef } from '@modules/session';
-import { useWeeklyVolume } from '@modules/training-volume';
-import type { MuscleGroup, VolumeStatus } from '@parakeet/training-engine';
+import { getMrvWarningMuscles, useWeeklyVolume } from '@modules/training-volume';
+import type { VolumeStatus } from '@parakeet/training-engine';
 import {
   COMPACT_VOLUME_MUSCLES,
   MUSCLE_LABELS_COMPACT,
@@ -33,31 +34,6 @@ import { StreakPill } from '../../components/achievements/StreakPill';
 import { DisruptionChipsRow } from '../../components/disruption/DisruptionChipsRow';
 import { WorkoutCard } from '../../components/training/WorkoutCard';
 import { colors, palette, radii, spacing, typography } from '../../theme';
-
-// ── Cycle phase constants ─────────────────────────────────────────────────────
-
-const CYCLE_PHASE_BG: Record<string, string> = {
-  menstrual: palette.red100,
-  follicular: palette.emerald100,
-  ovulatory: palette.amber100,
-  luteal: palette.indigo100,
-  late_luteal: palette.indigo100,
-};
-const CYCLE_PHASE_TEXT: Record<string, string> = {
-  menstrual: palette.red800,
-  follicular: palette.emerald800,
-  ovulatory: palette.amber800,
-  luteal: palette.indigo800,
-  late_luteal: palette.indigo800,
-};
-
-const CYCLE_PHASE_LABELS: Record<string, string> = {
-  menstrual: 'Menstrual',
-  follicular: 'Follicular',
-  ovulatory: 'Ovulatory',
-  luteal: 'Luteal',
-  late_luteal: 'Late Luteal',
-};
 
 // ── Volume compact card ───────────────────────────────────────────────────────
 
@@ -215,9 +191,7 @@ export default function TodayScreen() {
   }
 
   const mrvWarningMuscles = volumeData
-    ? (Object.entries(volumeData.status) as [MuscleGroup, VolumeStatus][])
-        .filter(([, s]) => s === 'at_mrv' || s === 'exceeded_mrv')
-        .map(([m]) => MUSCLE_LABELS_COMPACT[m])
+    ? getMrvWarningMuscles(volumeData.status).map((m) => MUSCLE_LABELS_COMPACT[m])
     : [];
 
   return (
@@ -309,22 +283,8 @@ export default function TodayScreen() {
               </View>
             ) : (
               (() => {
-                  const order: Record<string, number> = {
-                    in_progress: 0,
-                    planned: 1,
-                    completed: 2,
-                    skipped: 3,
-                    missed: 4,
-                  };
-                  const sorted = [...sessions].sort(
-                    (a, b) => (order[a.status] ?? 5) - (order[b.status] ?? 5)
-                  );
-                  const completedSessions = sorted.filter(
-                    (s) => s.status === 'completed'
-                  );
-                  const otherSessions = sorted.filter(
-                    (s) => s.status !== 'completed'
-                  );
+                  const { completed: completedSessions, upcoming: otherSessions } =
+                    partitionTodaySessions(sessions);
                   return (
                     <>
                       {completedSessions.length > 0 && (

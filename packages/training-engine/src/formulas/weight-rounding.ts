@@ -9,3 +9,7 @@ export function gramsToKg(grams: number): number {
 export function kgToGrams(kg: number): number {
   return Math.round(kg * 1000)
 }
+
+export function estimateWorkingWeight(oneRmKg: number, workingPct = 0.8): number {
+  return Math.round(oneRmKg * workingPct * 2) / 2
+}

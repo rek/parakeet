@@ -4,30 +4,15 @@ import { SafeAreaView } from 'react-native-safe-area-context'
 import { router } from 'expo-router'
 
 import { useAuth } from '@modules/auth'
+import { CYCLE_PHASE_BG, CYCLE_PHASE_LABELS } from '@modules/cycle-tracking'
 import { getCompletedSessions } from '@modules/session'
+import type { CyclePhase } from '@parakeet/training-engine'
 import { BackLink } from '../../components/navigation/BackLink'
 import { colors, spacing, radii, typography } from '../../theme'
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
-const PHASES = ['menstrual', 'follicular', 'ovulatory', 'luteal', 'late_luteal'] as const
-type CyclePhase = typeof PHASES[number]
-
-const PHASE_LABELS: Record<CyclePhase, string> = {
-  menstrual:   'Menstrual',
-  follicular:  'Follicular',
-  ovulatory:   'Ovulatory',
-  luteal:      'Luteal',
-  late_luteal: 'Late Luteal',
-}
-
-const PHASE_BAR_BG: Record<CyclePhase, string> = {
-  menstrual:   '#FEE2E2',
-  follicular:  '#D1FAE5',
-  ovulatory:   '#FEF3C7',
-  luteal:      '#E0E7FF',
-  late_luteal: '#C7D2FE',
-}
+const PHASES: CyclePhase[] = ['menstrual', 'follicular', 'ovulatory', 'luteal', 'late_luteal']
 
 const PHASE_BAR_FILL: Record<CyclePhase, string> = {
   menstrual:   '#F87171',
@@ -91,7 +76,7 @@ function generateInsight(stats: Record<CyclePhase, PhaseStats>): string | null {
 
   if (maxPhase === minPhase) return null
 
-  return `Your average RPE in the ${PHASE_LABELS[maxPhase].toLowerCase()} phase (${stats[maxPhase].avgRpe!.toFixed(1)}) is higher than in the ${PHASE_LABELS[minPhase].toLowerCase()} phase (${stats[minPhase].avgRpe!.toFixed(1)}). This is a common pattern.`
+  return `Your average RPE in the ${CYCLE_PHASE_LABELS[maxPhase].toLowerCase()} phase (${stats[maxPhase].avgRpe!.toFixed(1)}) is higher than in the ${CYCLE_PHASE_LABELS[minPhase].toLowerCase()} phase (${stats[minPhase].avgRpe!.toFixed(1)}). This is a common pattern.`
 }
 
 // ── Screen ────────────────────────────────────────────────────────────────────
@@ -140,8 +125,8 @@ export default function CyclePatternsScreen() {
           const barPct = stat.avgRpe != null ? (stat.avgRpe / 10) * 100 : 0
           return (
             <View key={phase} style={styles.barRow}>
-              <Text style={styles.barLabel}>{PHASE_LABELS[phase]}</Text>
-              <View style={[styles.barTrack, { backgroundColor: PHASE_BAR_BG[phase] }]}>
+              <Text style={styles.barLabel}>{CYCLE_PHASE_LABELS[phase]}</Text>
+              <View style={[styles.barTrack, { backgroundColor: CYCLE_PHASE_BG[phase] }]}>
                 <View
                   style={[
                     styles.barFill,
@@ -168,8 +153,8 @@ export default function CyclePatternsScreen() {
           const barPct = (stat.sessionCount / maxCount) * 100
           return (
             <View key={phase} style={styles.barRow}>
-              <Text style={styles.barLabel}>{PHASE_LABELS[phase]}</Text>
-              <View style={[styles.barTrack, { backgroundColor: PHASE_BAR_BG[phase] }]}>
+              <Text style={styles.barLabel}>{CYCLE_PHASE_LABELS[phase]}</Text>
+              <View style={[styles.barTrack, { backgroundColor: CYCLE_PHASE_BG[phase] }]}>
                 <View
                   style={[
                     styles.barFill,
