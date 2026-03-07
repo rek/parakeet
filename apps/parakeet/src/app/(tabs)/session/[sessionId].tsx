@@ -18,6 +18,7 @@ import {
 } from 'react-native-safe-area-context';
 import { LiftHistorySheet } from '../../../components/session/LiftHistorySheet';
 import { RestTimer } from '../../../components/training/RestTimer';
+import { RpeQuickPicker } from '../../../components/training/RpeQuickPicker';
 import { SetRow } from '../../../components/training/SetRow';
 import { WarmupSection } from '../../../components/training/WarmupSection';
 import { colors } from '../../../theme';
@@ -116,6 +117,8 @@ export default function SessionScreen() {
   const [warmupSetsState, setWarmupSetsState] = useState<WarmupSet[]>([]);
   const [auxiliaryWork, setAuxiliaryWork] = useState<AuxiliaryWork[]>([]);
   const [historySheetVisible, setHistorySheetVisible] = useState(false);
+  const [pendingRpeSetNumber, setPendingRpeSetNumber] = useState<number | null>(null);
+  const [pendingAuxRpe, setPendingAuxRpe] = useState<{ exercise: string; setNumber: number } | null>(null);
   const insets = useSafeAreaInsets();
 
   // Auto-open history sheet when banner navigates back with openHistory param
@@ -246,6 +249,10 @@ export default function SessionScreen() {
         isCompleted: boolean;
       }
     ) => {
+      const wasCompleted = useSessionStore
+        .getState()
+        .actualSets.find((s) => s.set_number === setNumber)?.is_completed ?? false;
+
       updateSet(setNumber, {
         weight_grams: Math.round(data.weightKg * 1000),
         reps_completed: data.reps,
@@ -254,6 +261,10 @@ export default function SessionScreen() {
       });
 
       if (data.isCompleted) {
+        if (!wasCompleted) {
+          setPendingRpeSetNumber(setNumber);
+        }
+
         // No rest timer after the last set
         if (setNumber >= plannedSetsLengthRef.current) return;
 
@@ -266,6 +277,8 @@ export default function SessionScreen() {
           durationSeconds: duration,
           pendingMainSetNumber: setNumber,
         });
+      } else {
+        setPendingRpeSetNumber((prev) => (prev === setNumber ? null : prev));
       }
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -285,6 +298,11 @@ export default function SessionScreen() {
         isCompleted: boolean;
       }
     ) => {
+      const wasAuxCompleted = useSessionStore
+        .getState()
+        .auxiliarySets.find((s) => s.exercise === exercise && s.set_number === setNumber)
+        ?.is_completed ?? false;
+
       updateAuxiliarySet(exercise, setNumber, {
         weight_grams: Math.round(data.weightKg * 1000),
         reps_completed: data.reps,
@@ -293,6 +311,10 @@ export default function SessionScreen() {
       });
 
       if (data.isCompleted) {
+        if (!wasAuxCompleted) {
+          setPendingAuxRpe({ exercise, setNumber });
+        }
+
         // No rest timer after the last set of this exercise
         if (setNumber >= setsInExercise) return;
 
@@ -305,6 +327,10 @@ export default function SessionScreen() {
           pendingAuxExercise: exercise,
           pendingAuxSetNumber: setNumber,
         });
+      } else {
+        setPendingAuxRpe((prev) =>
+          prev?.exercise === exercise && prev?.setNumber === setNumber ? null : prev
+        );
       }
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -326,6 +352,21 @@ export default function SessionScreen() {
         actual_rest_seconds: elapsedSeconds,
       });
     }
+  }
+
+  function handleRpeQuickSelect(rpe: number) {
+    if (pendingRpeSetNumber !== null) {
+      updateSet(pendingRpeSetNumber, { rpe_actual: rpe });
+      setPendingRpeSetNumber(null);
+    } else if (pendingAuxRpe !== null) {
+      updateAuxiliarySet(pendingAuxRpe.exercise, pendingAuxRpe.setNumber, { rpe_actual: rpe });
+      setPendingAuxRpe(null);
+    }
+  }
+
+  function handleRpeQuickSkip() {
+    setPendingRpeSetNumber(null);
+    setPendingAuxRpe(null);
   }
 
   function handleAbandon() {
@@ -453,7 +494,9 @@ export default function SessionScreen() {
                 planned?.weight_kg ?? actualSet.weight_grams / 1000
               }
               plannedReps={planned?.reps ?? actualSet.reps_completed}
+              rpeValue={actualSet.rpe_actual}
               onUpdate={(data) => handleSetUpdate(actualSet.set_number, data)}
+              onRpePress={() => setPendingRpeSetNumber(actualSet.set_number)}
             />
           );
         })}
@@ -486,6 +529,10 @@ export default function SessionScreen() {
                           planned?.weight_kg ?? actualSet.weight_grams / 1000
                         }
                         plannedReps={planned?.reps ?? actualSet.reps_completed}
+                        rpeValue={actualSet.rpe_actual}
+                        onRpePress={() =>
+                          setPendingAuxRpe({ exercise: aw.exercise, setNumber: actualSet.set_number })
+                        }
                         onUpdate={(data) =>
                           handleAuxSetUpdate(
                             exerciseIndex,
@@ -533,23 +580,33 @@ export default function SessionScreen() {
         onClose={() => setHistorySheetVisible(false)}
       />
 
-      {/* Rest timer overlay (non-modal so tab navigation remains available) */}
-      {timerState?.visible && (
+      {/* Rest timer + floating RPE picker overlay */}
+      {(timerState?.visible || pendingRpeSetNumber !== null || pendingAuxRpe !== null) && (
         <View
           pointerEvents="box-none"
           style={[styles.restTimerOverlay, { top: insets.top + 8 }]}
         >
-          <RestTimer
-            durationSeconds={
-              timerState?.durationSeconds ?? DEFAULT_MAIN_REST_SECONDS
-            }
-            elapsed={timerState?.elapsed ?? 0}
-            offset={timerState?.offset ?? 0}
-            onAdjust={adjustTimer}
-            llmSuggestion={activeLlmSuggestion}
-            onDone={handleTimerDone}
-            intensityLabel={intensityLabel}
-          />
+          {timerState?.visible && (
+            <RestTimer
+              durationSeconds={
+                timerState?.durationSeconds ?? DEFAULT_MAIN_REST_SECONDS
+              }
+              elapsed={timerState?.elapsed ?? 0}
+              offset={timerState?.offset ?? 0}
+              onAdjust={adjustTimer}
+              llmSuggestion={activeLlmSuggestion}
+              onDone={handleTimerDone}
+              intensityLabel={intensityLabel}
+            />
+          )}
+          {(pendingRpeSetNumber !== null || pendingAuxRpe !== null) && (
+            <View style={timerState?.visible ? styles.rpePickerSpaced : undefined}>
+              <RpeQuickPicker
+                onSelect={handleRpeQuickSelect}
+                onSkip={handleRpeQuickSkip}
+              />
+            </View>
+          )}
         </View>
       )}
     </SafeAreaView>
@@ -661,6 +718,11 @@ const styles = StyleSheet.create({
     right: 0,
     alignItems: 'center',
     paddingHorizontal: 8,
+    gap: 8,
+  },
+  rpePickerSpaced: {
+    width: '100%',
+    maxWidth: 560,
   },
   offlineBanner: {
     backgroundColor: colors.warning,

@@ -8,12 +8,21 @@ import { colors, radii, spacing, typography } from '../../theme';
 
 function playDing() {
   try {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const player = createAudioPlayer(
-      require('../../../assets/sounds/ding.wav')
-    );
-    player.play();
-    setTimeout(() => player.remove(), 3000);
+    // Play 3 dings with short gaps so the alert is noticeable
+    for (let i = 0; i < 3; i++) {
+      setTimeout(() => {
+        try {
+          // eslint-disable-next-line @typescript-eslint/no-require-imports
+          const player = createAudioPlayer(
+            require('../../../assets/sounds/ding.wav')
+          );
+          player.play();
+          setTimeout(() => player.remove(), 3000);
+        } catch {
+          // audio unavailable
+        }
+      }, i * 400);
+    }
   } catch {
     // audio unavailable
   }

@@ -17,15 +17,17 @@ export interface SetRowProps {
   setNumber: number
   plannedWeightKg: number
   plannedReps: number
+  rpeValue?: number
   onUpdate: (data: SetUpdateData) => void
+  onRpePress?: () => void
 }
 
 // ── Component ─────────────────────────────────────────────────────────────────
 
-export function SetRow({ setNumber, plannedWeightKg, plannedReps, onUpdate }: SetRowProps) {
+export function SetRow({ setNumber, plannedWeightKg, plannedReps, rpeValue, onUpdate, onRpePress }: SetRowProps) {
   const [weightKg, setWeightKg] = useState(plannedWeightKg)
   const [reps, setReps] = useState(plannedReps)
-  const [rpe, setRpe] = useState<number | undefined>(undefined)
+  const [rpe, setRpe] = useState<number | undefined>(rpeValue)
   const [isCompleted, setIsCompleted] = useState(false)
   const [plateSheetVisible, setPlateSheetVisible] = useState(false)
 
@@ -33,6 +35,11 @@ export function SetRow({ setNumber, plannedWeightKg, plannedReps, onUpdate }: Se
     onUpdate({ weightKg, reps, rpe, isCompleted })
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [weightKg, reps, rpe, isCompleted])
+
+  // Sync external RPE (e.g. from floating quick-picker) into local state
+  useEffect(() => {
+    setRpe(rpeValue)
+  }, [rpeValue])
 
   function handleWeightChange(text: string) {
     const parsed = parseFloat(text)
@@ -52,17 +59,6 @@ export function SetRow({ setNumber, plannedWeightKg, plannedReps, onUpdate }: Se
     }
   }
 
-  function handleRpeChange(text: string) {
-    if (text === '') {
-      setRpe(undefined)
-      return
-    }
-    const parsed = parseFloat(text)
-    if (!isNaN(parsed) && parsed >= 1 && parsed <= 10) {
-      setRpe(parsed)
-    }
-  }
-
   function handleToggleComplete() {
     setIsCompleted((prev) => !prev)
   }
@@ -78,7 +74,7 @@ export function SetRow({ setNumber, plannedWeightKg, plannedReps, onUpdate }: Se
         <Text style={styles.setLabel}>Set {setNumber}</Text>
 
         <TextInput
-          style={styles.weightInput}
+          style={[styles.weightInput, isCompleted && styles.inputLocked]}
           value={weightKg === 0 ? '' : String(weightKg)}
           onChangeText={handleWeightChange}
           keyboardType="decimal-pad"
@@ -87,10 +83,11 @@ export function SetRow({ setNumber, plannedWeightKg, plannedReps, onUpdate }: Se
           placeholder={String(plannedWeightKg)}
           placeholderTextColor={colors.textTertiary}
           textAlign="center"
+          editable={!isCompleted}
         />
         <Text style={styles.unitText}>kg</Text>
 
-        {weightKg > 0 && (
+        {weightKg > 0 && !isCompleted && (
           <TouchableOpacity
             style={styles.plateButton}
             onPress={() => setPlateSheetVisible(true)}
@@ -103,7 +100,7 @@ export function SetRow({ setNumber, plannedWeightKg, plannedReps, onUpdate }: Se
         <Text style={styles.multiplyText}>×</Text>
 
         <TextInput
-          style={styles.repsInput}
+          style={[styles.repsInput, isCompleted && styles.inputLocked]}
           value={reps === 0 ? '' : String(reps)}
           onChangeText={handleRepsChange}
           keyboardType="number-pad"
@@ -112,19 +109,18 @@ export function SetRow({ setNumber, plannedWeightKg, plannedReps, onUpdate }: Se
           placeholder={String(plannedReps)}
           placeholderTextColor={colors.textTertiary}
           textAlign="center"
+          editable={!isCompleted}
         />
 
-        <TextInput
-          style={styles.rpeInput}
-          value={rpe !== undefined ? String(rpe) : ''}
-          onChangeText={handleRpeChange}
-          keyboardType="decimal-pad"
-          returnKeyType="done"
-          selectTextOnFocus
-          placeholder="RPE"
-          placeholderTextColor={colors.textTertiary}
-          textAlign="center"
-        />
+        <TouchableOpacity
+          style={[styles.rpeChip, rpe !== undefined && styles.rpeChipFilled, !isCompleted && styles.rpeChipDisabled]}
+          onPress={isCompleted ? onRpePress : undefined}
+          activeOpacity={0.7}
+        >
+          <Text style={[styles.rpeChipText, rpe === undefined && styles.rpeChipPlaceholder]}>
+            {rpe !== undefined ? String(rpe) : 'RPE'}
+          </Text>
+        </TouchableOpacity>
 
         <TouchableOpacity
           style={[styles.checkButton, isCompleted && styles.checkButtonDone]}
@@ -138,22 +134,24 @@ export function SetRow({ setNumber, plannedWeightKg, plannedReps, onUpdate }: Se
       </View>
 
       {/* Quick-increment buttons */}
-      <View style={styles.adjustRow}>
-        <TouchableOpacity
-          style={styles.adjustButton}
-          onPress={() => handleWeightAdjust(-2.5)}
-          activeOpacity={0.7}
-        >
-          <Text style={styles.adjustButtonText}>−2.5</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={styles.adjustButton}
-          onPress={() => handleWeightAdjust(2.5)}
-          activeOpacity={0.7}
-        >
-          <Text style={styles.adjustButtonText}>+2.5</Text>
-        </TouchableOpacity>
-      </View>
+      {!isCompleted && (
+        <View style={styles.adjustRow}>
+          <TouchableOpacity
+            style={styles.adjustButton}
+            onPress={() => handleWeightAdjust(-2.5)}
+            activeOpacity={0.7}
+          >
+            <Text style={styles.adjustButtonText}>−2.5</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.adjustButton}
+            onPress={() => handleWeightAdjust(2.5)}
+            activeOpacity={0.7}
+          >
+            <Text style={styles.adjustButtonText}>+2.5</Text>
+          </TouchableOpacity>
+        </View>
+      )}
 
       <PlateCalculatorSheet
         visible={plateSheetVisible}
@@ -223,16 +221,35 @@ const styles = StyleSheet.create({
     backgroundColor: colors.bgSurface,
     paddingHorizontal: spacing[1],
   },
-  rpeInput: {
+  inputLocked: {
+    opacity: 0.5,
+    backgroundColor: colors.bgMuted,
+  },
+  rpeChipDisabled: {
+    opacity: 0.35,
+  },
+  rpeChip: {
     width: 48,
     height: 40,
     borderWidth: 1,
     borderColor: colors.border,
     borderRadius: radii.sm,
-    fontSize: typography.sizes.sm,
-    color: colors.text,
     backgroundColor: colors.bgSurface,
-    paddingHorizontal: spacing[1],
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  rpeChipFilled: {
+    borderColor: colors.primary,
+    backgroundColor: colors.primaryMuted,
+  },
+  rpeChipText: {
+    fontSize: typography.sizes.sm,
+    fontWeight: typography.weights.semibold,
+    color: colors.text,
+  },
+  rpeChipPlaceholder: {
+    color: colors.textTertiary,
+    fontWeight: typography.weights.regular,
   },
   checkButton: {
     width: 44,
