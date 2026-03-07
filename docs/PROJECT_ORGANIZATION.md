@@ -27,7 +27,8 @@ Canonical architecture reference for this repo.
 - `hooks/` - feature hooks
 - `lib/` - module public utilities/contracts
 - `model/` - feature-local model/types
-- `ui/` - feature UI
+- `ui/` - feature-scoped presentation constants and styles
+- `utils/` - pure functions extracted from components (testable, no React deps)
 - `index.ts` - module public API
 
 ## Import Boundaries

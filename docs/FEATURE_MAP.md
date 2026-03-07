@@ -58,9 +58,9 @@ Key exports: `useCycleReview`, `CycleReviewService`, `getCycleReview`, `compileC
 ### `@modules/cycle-tracking`
 
 Path: `modules/cycle-tracking/`
-Covers: Menstrual cycle config (length, start date), current cycle phase calculation, stamping phase on session complete.
+Covers: Menstrual cycle config (length, start date), current cycle phase calculation, stamping phase on session complete, shared cycle phase presentation constants.
 
-Key exports: `useCyclePhase`, `getCycleConfig`, `updateCycleConfig`, `getCurrentCycleContext`, `stampCyclePhaseOnSession`.
+Key exports: `useCyclePhase`, `getCycleConfig`, `updateCycleConfig`, `getCurrentCycleContext`, `stampCyclePhaseOnSession`, `CYCLE_PHASE_LABELS`, `CYCLE_PHASE_BG`, `CYCLE_PHASE_TEXT`.
 
 ### `@modules/settings`
 
@@ -79,9 +79,9 @@ Key exports: `useAchievementDetection`, `getPRHistory`, `getStreakData`, `getCyc
 ### `@modules/training-volume`
 
 Path: `modules/training-volume/`
-Covers: Weekly volume per muscle group, MRV/MEV config CRUD.
+Covers: Weekly volume per muscle group, MRV/MEV config CRUD, volume threshold classification.
 
-Key exports: `useWeeklyVolume`, `getMrvMevConfig`, `updateMuscleConfig`, `resetMuscleToDefault`.
+Key exports: `useWeeklyVolume`, `getMrvMevConfig`, `updateMuscleConfig`, `resetMuscleToDefault`, `classifyVolumeLevel`, `getMrvWarningMuscles`.
 
 ### `@modules/wilks`
 

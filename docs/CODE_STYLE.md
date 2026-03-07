@@ -246,6 +246,17 @@ Use these placement rules:
 
 Add to existing module folders before creating new top-level folders.
 
+### No Business Logic in Components
+
+React components (`app/`, `components/`) should only contain: state, thin event handlers, and JSX. Extract these to module `utils/` or `lib/` (or `training-engine` if pure domain math):
+
+- **Domain calculations** — block derivation, phase mapping, severity inference, weight rounding
+- **Data transformations** — draft→overrides, chart data building, session partitioning
+- **Domain constants** — thresholds, presets, numeric mappings (e.g., `SORENESS_NUMERIC`)
+- **Presentation constants shared across 3+ files** — color/label/icon mappings go in `modules/<feature>/ui/`
+
+Red flags in component code: complex ternaries encoding domain rules, filter/map chains on domain data, hardcoded domain constants, duplicated presentation constants.
+
 ---
 
 ## File Organization

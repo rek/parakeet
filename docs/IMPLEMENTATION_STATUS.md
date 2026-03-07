@@ -8,7 +8,7 @@ For details on any item, see the linked spec file.
 
 ## Training Engine (`packages/training-engine`)
 
-396 tests passing (Vitest). All specs implemented.
+406 tests passing (Vitest). All specs implemented.
 
 - [x] engine-001: 1RM formulas — Epley, grams↔kg helpers
 - [x] engine-002: Cube method scheduler — blocks.ts
@@ -76,16 +76,17 @@ For details on any item, see the linked spec file.
 Module/platform/shared architecture is the canonical app structure. Legacy top-level folders removed.
 
 - [x] `@modules/auth` — sign-in, Google OAuth, email OTP
-- [x] `@modules/program` — active program, maxes, auxiliary config, formula config
-- [x] `@modules/session` — lifecycle, JIT trigger, rest timer, sync, missed reconciliation, motivational message
+- [x] `@modules/program` — active program, maxes, auxiliary config, formula config, block number utils
+- [x] `@modules/session` — lifecycle, JIT trigger, rest timer, sync, missed reconciliation, motivational message, session sorting
 - [x] `@modules/jit` — JIT generation strategies
-- [x] `@modules/history` — performance trends, lift history
-- [x] `@modules/disruptions` — report/apply/resolve disruptions
+- [x] `@modules/history` — performance trends, lift history, chart data builders, trend presentation
+- [x] `@modules/disruptions` — report/apply/resolve disruptions, severity inference, menstrual preset
 - [x] `@modules/cycle-review` — post-cycle analysis, LLM report, developer suggestions
-- [x] `@modules/cycle-tracking` — menstrual cycle config and phase calculation
+- [x] `@modules/cycle-tracking` — menstrual cycle config, phase calculation, shared phase presentation constants
 - [x] `@modules/settings` — rest prefs, warmup config, JIT strategy, developer suggestions UI
 - [x] `@modules/achievements` — PRs, streaks, Wilks badges
-- [x] `@modules/training-volume` — weekly volume, MRV/MEV config
+- [x] `@modules/training-volume` — weekly volume, MRV/MEV config, volume threshold classification
+- [x] `@modules/formula` — formula config CRUD, draft-to-overrides transformer
 - [x] `@modules/wilks` — Wilks score
 - [x] `@modules/profile` — athlete profile CRUD
 
@@ -120,6 +121,7 @@ Module/platform/shared architecture is the canonical app structure. Legacy top-l
 - [x] mobile-026: History tab upgrade
 - [x] mobile-028: Unending program UI — Program Style toggle (onboarding), program tab unending branch, "End Program" global rename
 - [x] mobile-029: Motivational message — LLM-generated post-workout message on WorkoutDoneCard; context-aware (RPE, PRs, streak, sex, cycle phase); multiple-sessions-per-day consolidated into single card
+- [x] mobile-030: Ad-hoc auxiliary exercises — "+ Add Exercise" modal + "+ Set" button; `addAdHocSet` store action; resume recovery from persisted store
 
 ---
 
