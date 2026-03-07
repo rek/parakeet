@@ -6,7 +6,7 @@ import { colors, spacing, typography } from '../../theme'
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
-const STORAGE_KEY = 'plateCalc_barKg'
+const STORAGE_KEY = 'bar_weight_kg'
 const BAR_OPTIONS = [20, 15] as const
 type BarKg = (typeof BAR_OPTIONS)[number]
 

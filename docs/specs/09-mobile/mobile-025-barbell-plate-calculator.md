@@ -25,8 +25,8 @@ A sheet that tells the user exactly which plates to load for a given weight. Ope
   - Each row: plate weight (bold) + count (e.g. "20 kg × 2")
   - Header row shows total weight and bar weight
   - If remainder > 0, show amber note: "Nearest achievable: Xkg — {remainder}kg short"
-- [x] Bar weight toggle: 20 kg (default) / 15 kg — tapping switches instantly, no separate settings needed
-  - Persist preference in AsyncStorage under key `plateCalc_barKg`
+- [x] Bar weight toggle: 20 kg (default) / 15 kg — tapping switches instantly
+  - Persist preference in AsyncStorage under key `bar_weight_kg` (shared with global bar weight setting — see mobile-031)
 - [x] Empty state: if targetKg ≤ barKg, show "Bar only — no plates needed"
 
 **`apps/parakeet/src/components/training/SetRow.tsx`:**

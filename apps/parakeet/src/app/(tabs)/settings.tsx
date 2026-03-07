@@ -9,13 +9,17 @@ import {
 import { useAuth } from '@modules/auth';
 import { getProfile } from '@modules/profile';
 import {
+  getBarWeightKg,
   getPendingFormulaSuggestionCount,
   getUnreviewedDeveloperSuggestionCount,
+  setBarWeightKg,
 } from '@modules/settings';
+import type { BarWeightKg } from '@modules/settings';
 import { qk } from '@platform/query';
 import { useQuery } from '@tanstack/react-query';
 import { router } from 'expo-router';
 import Constants from 'expo-constants';
+import { useEffect, useState } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { colors, radii, spacing, typography } from '../../theme';
 
@@ -66,6 +70,17 @@ function Row({ label, labelStyle, onPress, right }: RowProps) {
 
 export default function SettingsScreen() {
   const { user, signOut } = useAuth();
+
+  const [barWeightKg, setBarWeightKgState] = useState<BarWeightKg>(20);
+
+  useEffect(() => {
+    getBarWeightKg().then(setBarWeightKgState);
+  }, []);
+
+  async function handleBarWeightChange(kg: BarWeightKg) {
+    setBarWeightKgState(kg);
+    await setBarWeightKg(kg);
+  }
 
   const { data: pendingSuggestions } = useQuery({
     queryKey: qk.formula.suggestionsCount(user?.id),
@@ -169,6 +184,25 @@ export default function SettingsScreen() {
 
         {/* Training section */}
         <SectionHeader label="Training" />
+        <Row
+          label="Bar Weight"
+          right={
+            <View style={styles.toggleGroup}>
+              {([15, 20] as BarWeightKg[]).map((kg) => (
+                <TouchableOpacity
+                  key={kg}
+                  style={[styles.toggleBtn, barWeightKg === kg && styles.toggleBtnActive]}
+                  onPress={() => handleBarWeightChange(kg)}
+                  activeOpacity={0.7}
+                >
+                  <Text style={[styles.toggleBtnText, barWeightKg === kg && styles.toggleBtnTextActive]}>
+                    {kg} kg
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          }
+        />
         <Row
           label="Manage Formulas"
           onPress={() => router.push('/formula/editor')}
@@ -383,5 +417,29 @@ const styles = StyleSheet.create({
   buildDate: {
     fontSize: typography.sizes.sm,
     color: colors.textTertiary,
+  },
+  toggleGroup: {
+    flexDirection: 'row',
+    gap: spacing[2],
+  },
+  toggleBtn: {
+    paddingHorizontal: spacing[3],
+    paddingVertical: spacing[1],
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.bgMuted,
+  },
+  toggleBtnActive: {
+    borderColor: colors.primary,
+    backgroundColor: colors.primaryMuted,
+  },
+  toggleBtnText: {
+    fontSize: typography.sizes.sm,
+    color: colors.textSecondary,
+    fontWeight: typography.weights.medium,
+  },
+  toggleBtnTextActive: {
+    color: colors.primary,
   },
 });

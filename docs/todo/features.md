@@ -12,7 +12,7 @@ Then ALWAYS read about the bug in question, first find the relevant design doc, 
 
 At the end remember to update design and specs at end with work actually done. then review this whole process and factor in any learnings into generic docs when done too so we optimize for next time. This is also referring to the AI Agent process and which prompts/scripts (readme files) we have with instructions.
 
-## 1
+## 1 ✓ DONE (mobile-031)
 
 bar weight needs to be settable from settings page
 need to be careful to then factor this into every calculation everywhere it is to be found, since the whole app currently uses a hardcoded 20kg bar
@@ -34,8 +34,3 @@ to find the unique exersises. how to sync them to our system?
 ## 5
 
 export data... just in case
-
-## 6
-
-next session page for unending workouts is kinda useless.
-on the program tab

@@ -7,7 +7,7 @@ export type WarmupProtocol =
   | { type: 'custom'; steps: WarmupStep[] }
 
 export interface WarmupStep {
-  pct: number  // fraction of working weight; 0 = fixed 20kg (bar)
+  pct: number  // fraction of working weight; 0 = resolves to bar weight via Math.max(barWeightKg, ...)
   reps: number
 }
 
@@ -45,7 +45,7 @@ const PRESET_STEPS: Record<WarmupPresetName, WarmupStep[]> = {
     { pct: 0.90, reps: 1 },
     { pct: 0.95, reps: 1 },
   ],
-  // pct: 0 → always resolves to 20kg (bar) via Math.max(20, ...)
+  // pct: 0 → always resolves to bar weight via Math.max(barWeightKg, ...)
   empty_bar: [
     { pct: 0.00, reps: 10 },
     { pct: 0.50, reps: 5  },
@@ -66,18 +66,19 @@ export function resolveProtocol(protocol: WarmupProtocol): WarmupStep[] {
 export function generateWarmupSets(
   workingWeightKg: number,
   protocol: WarmupProtocol,
+  barWeightKg = 20,
 ): WarmupSet[] {
   const steps = resolveProtocol(protocol)
   const sets: WarmupSet[] = []
   let prevWeight: number | null = null
 
   for (const step of steps) {
-    const weightKg = Math.max(20, roundToNearest(workingWeightKg * step.pct))
+    const weightKg = Math.max(barWeightKg, roundToNearest(workingWeightKg * step.pct))
 
     // Skip duplicate consecutive weights
     if (prevWeight !== null && weightKg === prevWeight) continue
 
-    const displayWeight = weightKg === 20 ? '20 kg (bar)' : `${weightKg} kg`
+    const displayWeight = weightKg === barWeightKg ? `${barWeightKg} kg (bar)` : `${weightKg} kg`
 
     sets.push({
       setNumber: sets.length + 1,

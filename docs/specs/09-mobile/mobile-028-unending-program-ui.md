@@ -35,6 +35,13 @@ UI changes for unending program mode: onboarding Program Style toggle, review sc
 - [x] "End Program" button (red) — Alert title: `"End Program"`, message: `"This will archive your program and generate a cycle review."`, destructive confirm action
 - [x] On confirm: `updateProgramStatus(id, 'archived', { triggerCycleReview: true, userId })`
 
+**Next session preview (formula estimate):**
+- [x] Three parallel queries (enabled only for unending): `getCurrentOneRmKg`, `getFormulaConfig`, `getRecentLiftHistory(lift, 1)`
+- [x] Calls `calculateSets(lift, intensityType, blockNumber, oneRmKg, formulaConfig)` in a try/catch to produce estimated sets
+- [x] Card shows: `~{weight}kg · {sets}×{reps} · RPE {target}` from first set; `reps_range` formatted as `min–max`
+- [x] If last session RPE available: `"Last RPE: {rpe} — load may adjust down/up"` based on delta vs target RPE (≥1.0 above → down; ≥1.5 below → up)
+- [x] Bottom note: `"Formula estimate · adjusted at session start"` (or fallback `"Sets generated when you start"` if estimate unavailable)
+
 **Scheduled branch (unchanged except rename):**
 - [x] "Abandon" button text → "End Program"
 - [x] Alert title/button: "End Program" (same archive behavior, no cycle review change)

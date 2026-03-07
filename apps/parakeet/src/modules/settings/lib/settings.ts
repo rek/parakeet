@@ -1,5 +1,23 @@
 import AsyncStorage from '@react-native-async-storage/async-storage'
 
+const BAR_WEIGHT_KEY = 'bar_weight_kg'
+
+export type BarWeightKg = 15 | 20
+
+export async function getBarWeightKg(): Promise<BarWeightKg> {
+  try {
+    const raw = await AsyncStorage.getItem(BAR_WEIGHT_KEY)
+    if (raw === '15') return 15
+    return 20
+  } catch {
+    return 20
+  }
+}
+
+export async function setBarWeightKg(kg: BarWeightKg): Promise<void> {
+  await AsyncStorage.setItem(BAR_WEIGHT_KEY, String(kg))
+}
+
 const JIT_STRATEGY_KEY = 'jit_strategy_override'
 
 export type JITStrategyOverride = 'auto' | 'formula' | 'llm' | 'hybrid'
