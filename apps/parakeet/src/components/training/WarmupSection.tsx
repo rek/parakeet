@@ -34,7 +34,11 @@ interface WarmupSetRowProps {
 
 function WarmupSetRow({ index, set, isDone, onToggle }: WarmupSetRowProps) {
   return (
-    <View style={[styles.setRow, isDone && styles.setRowDone]}>
+    <TouchableOpacity
+      style={[styles.setRow, isDone && styles.setRowDone]}
+      onPress={() => onToggle(index, !isDone)}
+      activeOpacity={0.7}
+    >
       <Text style={[styles.setNumber, isDone && styles.textFaded]}>
         {index + 1}
       </Text>
@@ -51,14 +55,10 @@ function WarmupSetRow({ index, set, isDone, onToggle }: WarmupSetRowProps) {
           </Text>
         ) : null}
       </View>
-      <TouchableOpacity
-        style={[styles.checkbox, isDone && styles.checkboxDone]}
-        onPress={() => onToggle(index, !isDone)}
-        activeOpacity={0.7}
-      >
+      <View style={[styles.checkbox, isDone && styles.checkboxDone]}>
         {isDone && <Text style={styles.checkmark}>✓</Text>}
-      </TouchableOpacity>
-    </View>
+      </View>
+    </TouchableOpacity>
   )
 }
 
