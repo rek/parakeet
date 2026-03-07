@@ -8,8 +8,11 @@ import {
   View,
 } from 'react-native';
 import { useAuth } from '@modules/auth';
+import { getFormulaConfig } from '@modules/formula';
+import { getRecentLiftHistory } from '@modules/history';
 import {
   determineCurrentWeek,
+  getCurrentOneRmKg,
   groupByWeek,
   updateProgramStatus,
   useActiveProgram,
@@ -17,7 +20,9 @@ import {
 import type { ProgramSession } from '@modules/program';
 import { useTodaySession } from '@modules/session';
 import { qk } from '@platform/query';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { calculateSets } from '@parakeet/training-engine';
+import type { IntensityType, Lift } from '@parakeet/shared-types';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { WeekRow } from '../../components/program/WeekRow';
@@ -30,6 +35,29 @@ export default function ProgramScreen() {
   const queryClient = useQueryClient();
 
   const isUnending = program?.program_mode === 'unending';
+
+  const nextLift = todaySession?.primary_lift as Lift | undefined;
+
+  const { data: oneRmKg } = useQuery({
+    queryKey: ['maxes', user?.id, nextLift, '1rm'],
+    queryFn: () => getCurrentOneRmKg(user!.id, nextLift!),
+    enabled: isUnending && !!user?.id && !!nextLift,
+    staleTime: 60_000,
+  });
+
+  const { data: formulaConfig } = useQuery({
+    queryKey: ['formula', 'config', user?.id],
+    queryFn: () => getFormulaConfig(user!.id),
+    enabled: isUnending && !!user?.id,
+    staleTime: 60_000,
+  });
+
+  const { data: liftHistory } = useQuery({
+    queryKey: ['liftHistory', user?.id, nextLift, 'preview'],
+    queryFn: () => getRecentLiftHistory(user!.id, nextLift!, 1),
+    enabled: isUnending && !!user?.id && !!nextLift,
+    staleTime: 60_000,
+  });
 
   const endProgram = useMutation({
     mutationFn: (programId: string) =>
@@ -86,6 +114,34 @@ export default function ProgramScreen() {
 
   if (isUnending) {
     const counter = program.unending_session_counter ?? 0;
+
+    const blockNum = ((todaySession?.block_number ?? 1) as 1 | 2 | 3);
+    const intensityType = (todaySession?.intensity_type ?? 'heavy') as IntensityType;
+    let estimatedSets = null;
+    try {
+      if (oneRmKg && formulaConfig && todaySession && nextLift) {
+        estimatedSets = calculateSets(nextLift, intensityType, blockNum, oneRmKg, formulaConfig);
+      }
+    } catch {}
+    const firstSet = estimatedSets?.[0] ?? null;
+    const setCount = estimatedSets?.length ?? null;
+    const lastSessionRpe = liftHistory?.entries?.[0]?.sessionRpe ?? null;
+
+    const repsLabel = firstSet
+      ? firstSet.reps_range
+        ? `${firstSet.reps_range[0]}–${firstSet.reps_range[1]}`
+        : `${firstSet.reps}`
+      : null;
+
+    const rpeTarget = firstSet?.rpe_target ?? null;
+    const rpeAdjustNote = rpeTarget != null && lastSessionRpe != null
+      ? lastSessionRpe - rpeTarget >= 1.0
+        ? ' — load may adjust down'
+        : rpeTarget - lastSessionRpe >= 1.5
+          ? ' — load may adjust up'
+          : ''
+      : '';
+
     return (
       <SafeAreaView style={styles.container}>
         <View style={styles.header}>
@@ -120,8 +176,20 @@ export default function ProgramScreen() {
                   </View>
                 )}
               </View>
+              {firstSet && (
+                <View style={styles.estimateRow}>
+                  <Text style={styles.estimateText}>
+                    ~{firstSet.weight_kg}kg · {setCount}×{repsLabel}{rpeTarget != null ? ` · RPE ${rpeTarget}` : ''}
+                  </Text>
+                  {lastSessionRpe != null && (
+                    <Text style={styles.lastRpeText}>
+                      Last RPE: {lastSessionRpe.toFixed(1)}{rpeAdjustNote}
+                    </Text>
+                  )}
+                </View>
+              )}
               <Text style={styles.nextSessionNote}>
-                Sets generated when you start
+                {firstSet ? 'Formula estimate · adjusted at session start' : 'Sets generated when you start'}
               </Text>
             </View>
           ) : (
@@ -303,5 +371,22 @@ const styles = StyleSheet.create({
     fontSize: typography.sizes.sm,
     color: colors.textTertiary,
     fontStyle: 'italic',
+  },
+  estimateRow: {
+    marginTop: spacing[3],
+    paddingTop: spacing[3],
+    borderTopWidth: 1,
+    borderTopColor: colors.border,
+    marginBottom: spacing[3],
+    gap: spacing[1],
+  },
+  estimateText: {
+    fontSize: typography.sizes.base,
+    fontWeight: typography.weights.semibold,
+    color: colors.text,
+  },
+  lastRpeText: {
+    fontSize: typography.sizes.xs,
+    color: colors.textTertiary,
   },
 });
