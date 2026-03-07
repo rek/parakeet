@@ -8,6 +8,7 @@ import {
 } from './cycle-review-generator'
 import type { PreviousCycleSummary } from './cycle-review-generator'
 import type { CycleReport } from './assemble-cycle-report'
+import { CycleReviewSchema } from '@parakeet/shared-types'
 import type { CycleReview } from '@parakeet/shared-types'
 
 vi.mock('ai', () => ({
@@ -92,6 +93,7 @@ function makeReview(overrides: Partial<CycleReview> = {}): CycleReview {
     formulaSuggestions: [],
     structuralSuggestions: [],
     nextCycleRecommendations: 'Increase squat frequency.',
+    menstrualInsights: null,
     ...overrides,
   }
 }
@@ -272,5 +274,48 @@ describe('generateCycleReview', () => {
 
     const result = await generateCycleReview(makeReport())
     expect(result.overallAssessment).toBe('Excellent cycle.')
+  })
+})
+
+// ---------------------------------------------------------------------------
+// CycleReviewSchema — OpenAI structured output compatibility
+// ---------------------------------------------------------------------------
+
+describe('CycleReviewSchema', () => {
+  it('requires all recommendedChanges fields (add/remove/reorder must be arrays)', () => {
+    const valid = makeReview()
+    expect(() => CycleReviewSchema.parse(valid)).not.toThrow()
+
+    const missingAdd = {
+      ...valid,
+      auxiliaryInsights: {
+        ...valid.auxiliaryInsights,
+        recommendedChanges: { remove: [], reorder: [] },
+      },
+    }
+    expect(() => CycleReviewSchema.parse(missingAdd)).toThrow()
+  })
+
+  it('requires frequencyRecommendation to be present (null allowed)', () => {
+    const valid = makeReview()
+    expect(() =>
+      CycleReviewSchema.parse({
+        ...valid,
+        volumeInsights: { ...valid.volumeInsights, frequencyRecommendation: null },
+      }),
+    ).not.toThrow()
+
+    expect(() =>
+      CycleReviewSchema.parse({
+        ...valid,
+        volumeInsights: { musclesUnderRecovered: [], musclesUndertrained: [] },
+      }),
+    ).toThrow()
+  })
+
+  it('requires menstrualInsights to be present (null allowed)', () => {
+    const valid = makeReview()
+    expect(() => CycleReviewSchema.parse({ ...valid, menstrualInsights: null })).not.toThrow()
+    expect(() => CycleReviewSchema.parse({ ...valid, menstrualInsights: undefined })).toThrow()
   })
 })
