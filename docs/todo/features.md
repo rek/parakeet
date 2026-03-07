@@ -17,9 +17,23 @@ At the end remember to update design and specs at end with work actually done. t
 bar weight needs to be settable from settings page
 need to be careful to then factor this into every calculation everywhere it is to be found, since the whole app currently uses a hardcoded 20kg bar
 
+## 2
+
+need a csv import feature
+
+data structure:
+Date,Group,Exercise,Reps,Weight,IsCompleted,IsAMRAP,Notes
+
+example row:
+2025-03-14,Group 1,Barbell Deadlift,8,92.50,true,false,
+
+you can scan the file i wanna import here: /home/adam/Downloads/NextSetWorkoutLog.csv
+
+to find the unique exersises. how to sync them to our system?
+
 ## 5
 
-import/export data
+export data... just in case
 
 ## 6
 
