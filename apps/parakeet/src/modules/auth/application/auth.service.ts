@@ -24,18 +24,14 @@ export function onAuthStateChanged(
 }
 
 export async function ensureSignedInUserProfile(user: User): Promise<OnSignedInResult> {
-  try {
-    const existingProfileId = await findProfileId(user.id);
-    if (existingProfileId) return 'existing_profile';
-  } catch (error) {
-    Sentry.captureException(error)
-  }
+  const existingProfileId = await findProfileId(user.id);
+  if (existingProfileId) return 'existing_profile';
 
   try {
     await insertInitialProfile(user);
     return 'profile_created';
   } catch (error) {
-    Sentry.captureException(error)
+    Sentry.captureException(error);
     return 'existing_profile';
   }
 }
