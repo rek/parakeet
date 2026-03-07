@@ -16,6 +16,7 @@ import {
   SafeAreaView,
   useSafeAreaInsets,
 } from 'react-native-safe-area-context';
+import { AddExerciseModal } from '../../../components/session/AddExerciseModal';
 import { LiftHistorySheet } from '../../../components/session/LiftHistorySheet';
 import { RestTimer } from '../../../components/training/RestTimer';
 import { SetRow } from '../../../components/training/SetRow';
@@ -101,6 +102,7 @@ export default function SessionScreen() {
     initAuxiliary,
     updateSet,
     updateAuxiliarySet,
+    addAdHocSet,
     setWarmupDone,
     setSessionMeta,
     setCachedJitData,
@@ -115,6 +117,8 @@ export default function SessionScreen() {
 
   const [warmupSetsState, setWarmupSetsState] = useState<WarmupSet[]>([]);
   const [auxiliaryWork, setAuxiliaryWork] = useState<AuxiliaryWork[]>([]);
+  const [adHocExercises, setAdHocExercises] = useState<string[]>([]);
+  const [addExerciseVisible, setAddExerciseVisible] = useState(false);
   const [historySheetVisible, setHistorySheetVisible] = useState(false);
   const insets = useSafeAreaInsets();
 
@@ -210,6 +214,16 @@ export default function SessionScreen() {
     } else {
       // Returning to an existing session — restore aux work display, preserve actualSets
       setAuxiliaryWork(aux ?? []);
+      // Restore ad-hoc exercises: any exercise in the store not in prescribed aux
+      const prescribed = new Set((aux ?? []).map((a) => a.exercise));
+      const adHoc = [
+        ...new Set(
+          storeState.auxiliarySets
+            .filter((s) => !prescribed.has(s.exercise))
+            .map((s) => s.exercise)
+        ),
+      ];
+      setAdHocExercises(adHoc);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -326,6 +340,18 @@ export default function SessionScreen() {
         actual_rest_seconds: elapsedSeconds,
       });
     }
+  }
+
+  function handleConfirmAddExercise(name: string) {
+    if (!adHocExercises.includes(name)) {
+      setAdHocExercises((prev) => [...prev, name]);
+      addAdHocSet(name);
+    }
+    setAddExerciseVisible(false);
+  }
+
+  function handleAddAdHocSet(exercise: string) {
+    addAdHocSet(exercise);
   }
 
   function handleAbandon() {
@@ -459,7 +485,7 @@ export default function SessionScreen() {
         })}
 
         {/* Auxiliary work section */}
-        {auxiliaryWork.length > 0 && (
+        {(auxiliaryWork.length > 0 || adHocExercises.length > 0) && (
           <View style={styles.auxSection}>
             <View style={styles.workingSetsHeader}>
               <Text style={styles.workingSetsTitle}>Auxiliary Work</Text>
@@ -501,8 +527,57 @@ export default function SessionScreen() {
                 )}
               </View>
             ))}
+
+            {adHocExercises.map((exercise, exerciseIndex) => {
+              const sets = auxiliarySets.filter((s) => s.exercise === exercise);
+              return (
+                <View key={exercise} style={styles.auxExercise}>
+                  <View style={styles.adHocExerciseHeader}>
+                    <Text style={styles.auxExerciseName}>
+                      {formatExerciseName(exercise)}
+                    </Text>
+                    <TouchableOpacity
+                      onPress={() => handleAddAdHocSet(exercise)}
+                      hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                      accessibilityLabel={`Add set for ${exercise}`}
+                      accessibilityRole="button"
+                    >
+                      <Text style={styles.addSetButton}>+ Set</Text>
+                    </TouchableOpacity>
+                  </View>
+                  {sets.map((actualSet) => (
+                    <SetRow
+                      key={`${exercise}-${actualSet.set_number}`}
+                      setNumber={actualSet.set_number}
+                      plannedWeightKg={actualSet.weight_grams / 1000}
+                      plannedReps={actualSet.reps_completed}
+                      onUpdate={(data) =>
+                        handleAuxSetUpdate(
+                          auxByExercise.length + exerciseIndex,
+                          exercise,
+                          actualSet.set_number,
+                          sets.length,
+                          data
+                        )
+                      }
+                    />
+                  ))}
+                </View>
+              );
+            })}
           </View>
         )}
+
+        {/* Add exercise button */}
+        <TouchableOpacity
+          style={styles.addExerciseButton}
+          onPress={() => setAddExerciseVisible(true)}
+          activeOpacity={0.7}
+          accessibilityLabel="Add exercise"
+          accessibilityRole="button"
+        >
+          <Text style={styles.addExerciseButtonText}>+ Add Exercise</Text>
+        </TouchableOpacity>
 
         {/* Bottom padding for sticky button */}
         <View style={styles.bottomSpacer} />
@@ -531,6 +606,13 @@ export default function SessionScreen() {
         lift={sessionMeta?.primary_lift ?? ''}
         visible={historySheetVisible}
         onClose={() => setHistorySheetVisible(false)}
+      />
+
+      {/* Add exercise modal */}
+      <AddExerciseModal
+        visible={addExerciseVisible}
+        onConfirm={handleConfirmAddExercise}
+        onClose={() => setAddExerciseVisible(false)}
       />
 
       {/* Rest timer overlay (non-modal so tab navigation remains available) */}
@@ -661,6 +743,34 @@ const styles = StyleSheet.create({
     right: 0,
     alignItems: 'center',
     paddingHorizontal: 8,
+  },
+  adHocExerciseHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingBottom: 8,
+  },
+  addSetButton: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: colors.primary,
+  },
+  addExerciseButton: {
+    marginHorizontal: 16,
+    marginTop: 12,
+    marginBottom: 4,
+    paddingVertical: 12,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderStyle: 'dashed',
+    alignItems: 'center',
+  },
+  addExerciseButtonText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: colors.textSecondary,
   },
   offlineBanner: {
     backgroundColor: colors.warning,

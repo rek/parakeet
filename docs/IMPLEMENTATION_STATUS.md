@@ -119,6 +119,7 @@ Module/platform/shared architecture is the canonical app structure. Legacy top-l
 - [x] mobile-025: Barbell plate calculator
 - [x] mobile-026: History tab upgrade
 - [x] mobile-028: Unending program UI — Program Style toggle (onboarding), program tab unending branch, "End Program" global rename
+- [x] mobile-030: Ad-hoc auxiliary exercises — "+ Add Exercise" modal + "+ Set" button; `addAdHocSet` store action; resume recovery from persisted store
 
 ---
 
