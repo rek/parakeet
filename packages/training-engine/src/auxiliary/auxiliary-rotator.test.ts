@@ -9,20 +9,20 @@ describe('getAuxiliariesForBlock — default squat pool', () => {
   const pool = DEFAULT_AUXILIARY_POOLS.squat
 
   it('block 1 → positions 0+1', () => {
-    expect(getAuxiliariesForBlock('squat', 1, pool)).toEqual(['Pause Squat', 'Box Squat'])
+    expect(getAuxiliariesForBlock('squat', 1, pool)).toEqual([pool[0], pool[1]])
   })
 
   it('block 2 → positions 2+3', () => {
-    expect(getAuxiliariesForBlock('squat', 2, pool)).toEqual(['Bulgarian Split Squat', 'Leg Press'])
+    expect(getAuxiliariesForBlock('squat', 2, pool)).toEqual([pool[2], pool[3]])
   })
 
   it('block 3 → positions 4+5', () => {
-    expect(getAuxiliariesForBlock('squat', 3, pool)).toEqual(['High-Bar Squat', 'Hack Squat'])
+    expect(getAuxiliariesForBlock('squat', 3, pool)).toEqual([pool[4], pool[5]])
   })
 
   it('wraps on a 6-exercise pool with startOffset=6 (second program, block 1 → 0+1 again)', () => {
     const small = pool.slice(0, 6) // 6 exercises
-    expect(getAuxiliariesForBlock('squat', 1, small, 6)).toEqual(['Pause Squat', 'Box Squat'])
+    expect(getAuxiliariesForBlock('squat', 1, small, 6)).toEqual([small[0], small[1]])
   })
 })
 
@@ -39,12 +39,12 @@ describe('computeBlockOffset', () => {
     expect(computeBlockOffset([{ completedBlocks: 3 }, { completedBlocks: 3 }])).toBe(12)
   })
 
-  it('offset 12 with 7-exercise squat pool → block 1 picks positions 5+6', () => {
-    const pool = DEFAULT_AUXILIARY_POOLS.squat // 7 exercises
+  it('offset 12 with N-exercise squat pool → block 1 picks correct positions', () => {
+    const pool = DEFAULT_AUXILIARY_POOLS.squat
+    const n = pool.length
     const [ex1, ex2] = getAuxiliariesForBlock('squat', 1, pool, 12)
-    // pos1 = (12 + 0) % 7 = 5 → 'Hack Squat', pos2 = 13 % 7 = 6 → 'Front Squat'
-    expect(ex1).toBe('Hack Squat')
-    expect(ex2).toBe('Front Squat')
+    expect(ex1).toBe(pool[12 % n])
+    expect(ex2).toBe(pool[13 % n])
   })
 })
 
@@ -66,11 +66,12 @@ describe('generateAuxiliaryAssignments', () => {
   })
 
   it('applies startOffset across programs', () => {
+    const sqPool = pool.squat
+    const n = sqPool.length
     const result = generateAuxiliaryAssignments('prog-2', 10, pool, 6)
     const sqB1 = result.find((r) => r.lift === 'squat' && r.blockNumber === 1)
-    // offset=6, pool size=7: pos1=(6+0)%7=6→'Front Squat', pos2=(6+1)%7=0→'Pause Squat'
-    expect(sqB1?.exercise1).toBe('Front Squat')
-    expect(sqB1?.exercise2).toBe('Pause Squat')
+    expect(sqB1?.exercise1).toBe(sqPool[6 % n])
+    expect(sqB1?.exercise2).toBe(sqPool[7 % n])
   })
 
   it('skips lifts missing from pool', () => {

@@ -12,29 +12,19 @@ Then ALWAYS read about the feature in question, first find the relevant design d
 
 At the end: update design doc status → Implemented, update specs to match what was actually built, update `IMPLEMENTATION_STATUS.md`, then review this whole process and add any learnings to `docs/AI_WORKFLOW.md`.
 
-## 1 ✓ DONE (mobile-031)
-
-bar weight needs to be settable from settings page
-need to be careful to then factor this into every calculation everywhere it is to be found, since the whole app currently uses a hardcoded 20kg bar
-
-## 2 ✓ DONE
-
-need a csv import feature
-
-data structure:
-Date,Group,Exercise,Reps,Weight,IsCompleted,IsAMRAP,Notes
-
-example row:
-2025-03-14,Group 1,Barbell Deadlift,8,92.50,true,false,
-
-you can scan the file i wanna import here: /home/adam/Downloads/NextSetWorkoutLog.csv
-
-to find the unique exersises. how to sync them to our system?
-
-→ Implemented as `scripts/import-csv.ts` (CLI, not mobile UI — one-time migration doesn't warrant screens).
-Auto-detects NextSet + Strong formats. Interactive exercise mapping. Stores as program_id=null historical sessions.
-See `docs/design/csv-import.md`. Migration: 20260314000000.
-
 ## 5
 
 export data... just in case
+
+## 6
+
+we should have muscle mappings per aux exercise.
+this is to enable a feature which is:
+
+- if our MRV is too low, we can auto add a workout, or extend a workout with aux that is targeted to those specific under stimulated muscles
+
+so there is kinda of a three level mapping:
+muscle group -> main exercise
+aux exercise -> muscle group
+
+this should allow us also then to add a 'general' group, so that we can put cardio or core things in there that we can randomally add in. or use in future programmes.
