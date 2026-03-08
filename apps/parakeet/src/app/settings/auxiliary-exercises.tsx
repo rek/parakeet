@@ -14,11 +14,14 @@ import {
   getActiveAssignments,
   getActiveProgram,
   getAuxiliaryPools,
+  getPrimaryMuscles,
   lockAssignment,
   reorderAuxiliaryPool,
   unendingBlockNumber,
 } from '@modules/program';
 import type { Lift } from '@parakeet/shared-types';
+import type { MuscleGroup } from '@parakeet/training-engine';
+import { MUSCLE_LABELS_COMPACT } from '@shared/constants/training';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -34,6 +37,24 @@ const LIFT_LABELS: Record<Lift, string> = {
   bench: 'Bench',
   deadlift: 'Deadlift',
 };
+
+// ── Muscle chips ──────────────────────────────────────────────────────────────
+
+function MuscleChips({ exerciseName }: { exerciseName: string }) {
+  const muscles = getPrimaryMuscles(exerciseName);
+  if (muscles.length === 0) return null;
+  return (
+    <View style={styles.chipRow}>
+      {muscles.map((m) => (
+        <View key={m} style={styles.chip}>
+          <Text style={styles.chipText}>
+            {MUSCLE_LABELS_COMPACT[m as MuscleGroup] ?? m}
+          </Text>
+        </View>
+      ))}
+    </View>
+  );
+}
 
 // ── Pool list ─────────────────────────────────────────────────────────────────
 
@@ -63,9 +84,12 @@ function PoolList({ pool, onReorder, onRemove }: PoolListProps) {
       {pool.map((ex, i) => (
         <View key={`${ex}-${i}`} style={styles.poolItem}>
           <Text style={styles.poolPosition}>{i + 1}.</Text>
-          <Text style={styles.poolExercise} numberOfLines={1}>
-            {ex}
-          </Text>
+          <View style={styles.poolExerciseCol}>
+            <Text style={styles.poolExercise} numberOfLines={1}>
+              {ex}
+            </Text>
+            <MuscleChips exerciseName={ex} />
+          </View>
           <View style={styles.poolActions}>
             <TouchableOpacity
               style={[styles.reorderBtn, i === 0 && styles.reorderBtnDisabled]}
@@ -469,7 +493,7 @@ const styles = StyleSheet.create({
   poolList: { gap: 4 },
   poolItem: {
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     paddingVertical: 8,
     paddingHorizontal: 10,
     backgroundColor: colors.bgSurface,
@@ -481,9 +505,19 @@ const styles = StyleSheet.create({
     color: colors.textTertiary,
     width: 20,
     textAlign: 'right',
+    paddingTop: 2,
   },
-  poolExercise: { flex: 1, fontSize: 14, color: colors.text },
-  poolActions: { flexDirection: 'row', gap: 4 },
+  poolExerciseCol: { flex: 1, gap: 4 },
+  poolExercise: { fontSize: 14, color: colors.text },
+  chipRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 4 },
+  chip: {
+    backgroundColor: colors.primaryMuted,
+    borderRadius: 4,
+    paddingHorizontal: 5,
+    paddingVertical: 1,
+  },
+  chipText: { fontSize: 10, color: colors.primary, fontWeight: '600' },
+  poolActions: { flexDirection: 'row', gap: 4, paddingTop: 2 },
   reorderBtn: {
     width: 28,
     height: 28,

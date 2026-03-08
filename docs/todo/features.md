@@ -14,19 +14,15 @@ At the end: update design doc status → Implemented, update specs to match what
 
 ## 1
 
-we should have muscle mappings per aux exercise.
-this is to enable a feature which is:
+Muscle mappings per aux exercise + JIT volume augmentation (auto-add targeted aux when muscles are below MEV).
 
-- if our MRV is too low, we can auto add a workout, or extend a workout with aux that is targeted to those specific under stimulated muscles
+**Design docs:**
+- [docs/design/volume-management.md](../design/volume-management.md) — "Auxiliary Exercise Muscle Mapping" section
+- [docs/design/jit-volume-augmentation.md](../design/jit-volume-augmentation.md) — the auto-augment JIT idea
 
-so there is kinda of a three level mapping:
-muscle group -> main exercise
-aux exercise -> muscle group
+**Spec:** [docs/specs/05-data/data-002-auxiliary-exercise-config.md](../specs/05-data/data-002-auxiliary-exercise-config.md) — "Muscle Mapping Extension" section
 
-this should allow us also then to add a 'general' group, so that we can put cardio or core things in there that we can randomally add in (different feature perhaps). or use in future programmes.
-
-i guess another idea is to have more AUXILIARY_POOLS, as lots of those guys are not actually right for the main lifts. is this our only aux lift mapping page?(packages/training-engine/src/auxiliary/auxiliary-rotator.ts)
-
-this is also because i want lots of possible aux, but i don't want them to be in the pool of forced regular ones for the main lifts
-
-help me condense this rambling into some design doc changes/feature
+**Implementation order:**
+1. Wire muscle mappings to DB + show chips in UI ✅ (implemented)
+2. Exercise type system (weighted/bodyweight/timed) ✅ (implemented — Bug 1)
+3. JIT auto-augment — spec: [engine-027-jit-volume-augmentation.md](../specs/04-engine/engine-027-jit-volume-augmentation.md)

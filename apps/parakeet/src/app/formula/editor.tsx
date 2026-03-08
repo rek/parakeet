@@ -226,7 +226,7 @@ export default function FormulaEditorScreen() {
     try {
       const overrides = draftToOverrides(draft);
       await createFormulaOverride(user.id, { overrides, source: 'user' });
-      if (regenerate && activeProgram) {
+      if (regenerate && activeProgram && activeProgram.total_weeks) {
         const { regenerateProgram } = await import('@modules/program');
         await regenerateProgram({
           totalWeeks: activeProgram.total_weeks as 10 | 12 | 14,

@@ -1,6 +1,7 @@
 import { DEFAULT_AUXILIARY_POOLS } from '@parakeet/training-engine'
 import type { Lift } from '@parakeet/shared-types'
 import { typedSupabase } from '@platform/supabase'
+import { getPrimaryMuscles } from '../utils/auxiliary-muscles'
 
 export async function getAuxiliaryPool(userId: string, lift: Lift): Promise<string[]> {
   const { data, error } = await typedSupabase
@@ -35,7 +36,7 @@ export async function reorderAuxiliaryPool(
     lift,
     exercise_name: name,
     pool_position: i,
-    primary_muscles: [],
+    primary_muscles: getPrimaryMuscles(name),
   }))
   await typedSupabase.from('auxiliary_exercises').insert(rows)
 }
