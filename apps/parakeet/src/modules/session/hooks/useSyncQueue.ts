@@ -37,10 +37,16 @@ export function useSyncQueue() {
     if (processingRef.current) return
     processingRef.current = true
 
+    let syncedCount = 0
+
     try {
       for (const op of queue) {
         if (op.retryCount >= MAX_RETRIES) {
           dequeue(op.id)
+          Alert.alert(
+            'Sync Failed',
+            'Your workout data could not be saved after multiple attempts. Please check your connection and try again.',
+          )
           continue
         }
 
@@ -57,6 +63,7 @@ export function useSyncQueue() {
             })
 
             dequeue(op.id)
+            syncedCount++
 
             await queryClient.invalidateQueries({ queryKey: ['session'] })
             await queryClient.invalidateQueries({ queryKey: ['sessions', 'completed'] })
@@ -75,6 +82,15 @@ export function useSyncQueue() {
             )
           }
         }
+      }
+
+      if (syncedCount > 0) {
+        Alert.alert(
+          'Workouts Synced',
+          syncedCount === 1
+            ? 'Your workout has been saved successfully.'
+            : `${syncedCount} workouts have been saved successfully.`,
+        )
       }
     } finally {
       processingRef.current = false
