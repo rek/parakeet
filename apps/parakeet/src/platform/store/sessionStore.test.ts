@@ -1,3 +1,5 @@
+import { useSessionStore } from './sessionStore';
+
 vi.mock('@react-native-async-storage/async-storage', () => ({
   default: {
     getItem: vi.fn().mockResolvedValue(null),
@@ -5,8 +7,6 @@ vi.mock('@react-native-async-storage/async-storage', () => ({
     removeItem: vi.fn().mockResolvedValue(undefined),
   },
 }));
-
-import { useSessionStore } from './sessionStore';
 
 describe('sessionStore persistence', () => {
   beforeEach(() => {
@@ -49,7 +49,10 @@ describe('sessionStore persistence', () => {
 
   it('merge always initializes warmupCompleted as empty Set', () => {
     const opts = (useSessionStore as any).persist.getOptions();
-    const merged = opts.merge({ warmupCompleted: [1, 2, 3] }, useSessionStore.getState());
+    const merged = opts.merge(
+      { warmupCompleted: [1, 2, 3] },
+      useSessionStore.getState()
+    );
     expect(merged.warmupCompleted).toBeInstanceOf(Set);
     expect(merged.warmupCompleted.size).toBe(0);
   });
