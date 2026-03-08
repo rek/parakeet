@@ -14,7 +14,7 @@ import type {
 } from '@parakeet/training-engine'
 import { LiftSchema, IntensityTypeSchema, BlockNumberSchema, DisruptionSchema } from '@parakeet/shared-types'
 import { getFormulaConfig } from '@modules/formula'
-import { getSession } from '@modules/session'
+import { getSession, fetchProfileSex, getDaysSinceLastSession } from '@modules/session'
 import {
   getCurrentOneRmKg,
   getActiveAssignments,
@@ -23,8 +23,14 @@ import { getMrvMevConfig } from '@modules/training-volume'
 import { getBarWeightKg, getJITStrategyOverride, getUserRestOverrides, getWarmupConfig } from '@modules/settings'
 import type { Json } from '@platform/supabase'
 import { typedSupabase } from '@platform/supabase'
-import { fetchProfileSex } from '@modules/session'
+import { captureException } from '@platform/utils/captureException'
 import { estimateOneRmKgFromProfile } from './max-estimation'
+import {
+  fetchJitProfile,
+  fetchRecentSessionLogsForLift,
+  fetchWeeklySessionLogs,
+  fetchActiveDisruptions,
+} from '../data/jit.repository'
 
 type Session = Awaited<ReturnType<typeof getSession>>
 
@@ -56,14 +62,12 @@ export async function runJITForSession(
   const mrvMevConfig = await getMrvMevConfig(userId, biologicalSex)
 
   let resolvedOneRmKg = oneRmKg
-  if (resolvedOneRmKg === null) {
-    const { data: profile } = await typedSupabase
-      .from('profiles')
-      .select('bodyweight_kg, date_of_birth')
-      .eq('id', userId)
-      .maybeSingle()
+  let dateOfBirth: string | null = null
 
-    const rawBodyweight = (profile as { bodyweight_kg?: number | string | null } | null)?.bodyweight_kg
+  if (resolvedOneRmKg === null) {
+    const profile = await fetchJitProfile(userId)
+
+    const rawBodyweight = profile?.bodyweight_kg
     const bodyweightKg =
       typeof rawBodyweight === 'number'
         ? rawBodyweight
@@ -71,7 +75,7 @@ export async function runJITForSession(
           ? parseFloat(rawBodyweight)
           : null
 
-    const dateOfBirth = (profile as { date_of_birth?: string | null } | null)?.date_of_birth ?? null
+    dateOfBirth = profile?.date_of_birth ?? null
 
     resolvedOneRmKg = estimateOneRmKgFromProfile({
       lift,
@@ -79,34 +83,34 @@ export async function runJITForSession(
       dateOfBirth,
       bodyweightKg,
     })
+  } else {
+    // Fetch profile only for date_of_birth when 1RM is already known
+    const profile = await fetchJitProfile(userId)
+    dateOfBirth = profile?.date_of_birth ?? null
   }
+
+  const userAge =
+    dateOfBirth != null
+      ? Math.floor((Date.now() - new Date(dateOfBirth).getTime()) / (365.25 * 24 * 60 * 60 * 1000))
+      : undefined
+
+  const daysSinceLastSession = await getDaysSinceLastSession(userId, lift)
 
   const activeAuxiliaries: [string, string] =
     assignments[lift]
     ?? [DEFAULT_AUXILIARY_POOLS[lift][0], DEFAULT_AUXILIARY_POOLS[lift][1]] as [string, string]
 
-  const { data: recentData } = await typedSupabase
-    .from('session_logs')
-    .select('session_rpe, sessions!inner(primary_lift)')
-    .eq('user_id', userId)
-    .eq('sessions.primary_lift', lift)
-    .order('completed_at', { ascending: false })
-    .limit(6)
+  const recentData = await fetchRecentSessionLogsForLift(userId, lift, 6)
 
-  const recentLogs: RecentSessionSummary[] = (recentData ?? []).map((r) => ({
+  const recentLogs: RecentSessionSummary[] = recentData.map((r) => ({
     actual_rpe: r.session_rpe ?? null,
     target_rpe: 8.5,
   }))
 
-  const { data: weekLogs } = await typedSupabase
-    .from('session_logs')
-    .select('actual_sets, auxiliary_sets, sessions!inner(primary_lift, week_number, program_id)')
-    .eq('user_id', userId)
-    .eq('sessions.program_id', session.program_id)
-    .eq('sessions.week_number', session.week_number)
+  const weekLogs = await fetchWeeklySessionLogs(userId, session.program_id, session.week_number)
 
   const weeklyVolumeToDate: Partial<Record<MuscleGroup, number>> = {}
-  for (const log of weekLogs ?? []) {
+  for (const log of weekLogs) {
     const joinedSession = Array.isArray(log.sessions) ? log.sessions[0] : log.sessions
     const rawLift = joinedSession?.primary_lift
     const logLift = LiftSchema.safeParse(rawLift).data
@@ -144,13 +148,8 @@ export async function runJITForSession(
     }
   }
 
-  const { data: disruptionRows } = await typedSupabase
-    .from('disruptions')
-    .select('id, user_id, program_id, session_ids_affected, reported_at, disruption_type, severity, affected_date_start, affected_date_end, affected_lifts, description, adjustment_applied, resolved_at, status')
-    .eq('user_id', userId)
-    .neq('status', 'resolved')
-
-  const activeDisruptions = (disruptionRows ?? []).map((row) => DisruptionSchema.parse(row))
+  const disruptionRows = await fetchActiveDisruptions(userId)
+  const activeDisruptions = disruptionRows.map((row) => DisruptionSchema.parse(row))
 
   const jitInput: JITInput = {
     sessionId: session.id,
@@ -170,6 +169,8 @@ export async function runJITForSession(
     userRestOverrides,
     biologicalSex: biologicalSex ?? undefined,
     barWeightKg,
+    daysSinceLastSession: daysSinceLastSession ?? undefined,
+    userAge,
   }
 
   const strategyOverride = await getJITStrategyOverride()
@@ -188,7 +189,9 @@ export async function runJITForSession(
       llm_output: llmOutput as unknown as Json,
       divergence: divergence as unknown as Json,
       strategy_used: 'llm',
-    }])
+    }]).then(({ error }) => {
+      if (error) captureException(error)
+    })
   }
 
   const generator = getJITGenerator(strategyOverride, true, comparisonLogger)
