@@ -1,6 +1,7 @@
 import { ActivityIndicator, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { router, useLocalSearchParams } from 'expo-router'
+import { useEffect, useState } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 
 import { useCycleReview } from '@modules/cycle-review'
@@ -100,6 +101,14 @@ export default function CycleReviewScreen() {
     triggerError,
   } = useCycleReview(programId)
 
+  const [showRetry, setShowRetry] = useState(false)
+
+  useEffect(() => {
+    if (review) return
+    const timer = setTimeout(() => setShowRetry(true), 60_000)
+    return () => clearTimeout(timer)
+  }, [review])
+
   const llmData: CycleReviewData = (review ?? {}) as CycleReviewData
 
   async function handleAcceptSuggestion(s: FormulaSuggestion) {
@@ -132,6 +141,18 @@ export default function CycleReviewScreen() {
           <Text style={styles.loadingSubtitle}>
             Generating your coaching review — usually takes under 30 seconds
           </Text>
+          {showRetry && (
+            <TouchableOpacity
+              style={styles.generateButton}
+              onPress={() => triggerReview()}
+              disabled={isTriggeringReview}
+              activeOpacity={0.8}
+            >
+              <Text style={styles.generateButtonText}>
+                {isTriggeringReview ? 'Generating…' : 'Review not ready — tap to retry'}
+              </Text>
+            </TouchableOpacity>
+          )}
         </View>
       </SafeAreaView>
     )

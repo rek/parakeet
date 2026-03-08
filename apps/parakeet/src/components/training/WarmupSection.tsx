@@ -12,7 +12,7 @@ interface WarmupSet {
 
 export interface WarmupSectionProps {
   sets: WarmupSet[]
-  completedIndices: Set<number>
+  completedIndices: number[]
   onToggle: (index: number, done: boolean) => void
   barWeightKg?: number
 }
@@ -98,7 +98,7 @@ export function WarmupSection({ sets, completedIndices, onToggle, barWeightKg = 
               key={index}
               index={index}
               set={set}
-              isDone={completedIndices.has(index)}
+              isDone={completedIndices.includes(index)}
               onToggle={onToggle}
               barWeightKg={barWeightKg}
             />

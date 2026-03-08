@@ -7,14 +7,10 @@ import type { ProgramSession } from '@modules/program'
 import { useInProgressSession } from '@modules/session'
 import { useSessionStore } from '@platform/store/sessionStore'
 import { formatDate } from '@shared/utils/date'
+import { capitalize } from '@shared/utils/string'
 
 interface SessionSummaryProps {
   session: ProgramSession
-}
-
-function capitalize(value: string): string {
-  if (!value) return value
-  return value.charAt(0).toUpperCase() + value.slice(1)
 }
 
 export function SessionSummary({ session }: SessionSummaryProps) {

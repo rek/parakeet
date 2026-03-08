@@ -37,8 +37,7 @@ import {
   updateSessionToPlanned,
   updateSessionToSkipped,
 } from '../data/session.repository';
-import { fetchActiveProgramMode } from '../../program/data/program.repository';
-import { appendNextUnendingSession, type UnendingProgramRef } from '../../program/application/unending-session';
+import { fetchActiveProgramMode, appendNextUnendingSession, type UnendingProgramRef } from '@modules/program';
 import type {
   CompletedSessionListItem,
   CompleteSessionInput,

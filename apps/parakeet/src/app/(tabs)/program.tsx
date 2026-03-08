@@ -26,6 +26,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { WeekRow } from '../../components/program/WeekRow';
+import { capitalize } from '@shared/utils/string';
 import { colors, spacing, typography } from '../../theme';
 
 export default function ProgramScreen() {
@@ -248,9 +249,6 @@ export default function ProgramScreen() {
   );
 }
 
-function capitalize(str: string): string {
-  return str ? str.charAt(0).toUpperCase() + str.slice(1) : str;
-}
 
 const styles = StyleSheet.create({
   loadingContainer: {

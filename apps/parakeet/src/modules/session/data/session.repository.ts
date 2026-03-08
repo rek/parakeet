@@ -105,12 +105,14 @@ export async function fetchTodaySession(
   if (completedTodayError) throw completedTodayError;
   if (completedTodayData) return completedTodayData;
 
+  const today = new Date().toISOString().split('T')[0];
   const { data: plannedData, error: plannedError } = await typedSupabase
     .from('sessions')
     .select('*')
     .eq('user_id', userId)
     .eq('status', 'planned')
     .not('planned_date', 'is', null)
+    .gte('planned_date', today)
     .order('planned_date', { ascending: true })
     .limit(1)
     .maybeSingle();

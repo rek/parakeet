@@ -27,6 +27,8 @@ import {
   COMPACT_VOLUME_MUSCLES,
   MUSCLE_LABELS_COMPACT,
 } from '@shared/constants/training';
+import { captureException } from '@platform/utils/captureException';
+import { capitalize } from '@shared/utils/string';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -128,13 +130,12 @@ function WorkoutDoneCard({
     retry: false,
   });
 
-  if (error) console.warn('Motivational message error:', error);
+  if (error) {
+    console.warn('Motivational message error:', error);
+    captureException(error);
+  }
 
-  const lifts = sessions
-    .map(
-      (s) => s.primary_lift.charAt(0).toUpperCase() + s.primary_lift.slice(1)
-    )
-    .join(', ');
+  const lifts = sessions.map((s) => capitalize(s.primary_lift)).join(', ');
 
   return (
     <View style={styles.workoutDoneCard}>

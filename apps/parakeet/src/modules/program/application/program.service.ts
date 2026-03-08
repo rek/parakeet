@@ -20,7 +20,7 @@ import {
   updateProgramStatusIfActive,
   updateUnendingSessionCounter,
 } from '../data/program.repository';
-import { cancelPlannedSessionsForProgram } from '../../session/data/session.repository';
+import { cancelPlannedSessionsForProgram } from '@modules/session';
 import { getAuthenticatedUserId } from '../data/profile.repository';
 import { getAuxiliaryPools } from '../lib/auxiliary-config';
 import { getCurrentMaxes } from '../lib/lifter-maxes';
