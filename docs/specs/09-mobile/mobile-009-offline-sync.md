@@ -13,24 +13,25 @@ Handling offline scenarios during active workout logging. The session logging sc
 
 **Strategy: Optimistic local state with background sync queue**
 
-**`apps/parakeet/store/sessionStore.ts` (Zustand + MMKV persistence):**
-- All set updates are written to MMKV immediately (survives app crash)
+**`src/platform/store/sessionStore.ts` (Zustand + AsyncStorage persistence):**
+- All set updates are written to AsyncStorage immediately via Zustand `persist` middleware (survives app crash)
 - State is never lost between app background/foreground cycles
 - `actualSets` array is the authoritative in-progress state
+- `warmupCompleted` (Set) and `startedAt` (Date) require special handling: `warmupCompleted` is excluded from persistence; `startedAt` is rehydrated via a custom `merge` function
 
-**`apps/parakeet/store/syncStore.ts` (pending operations queue):**
-- Queue of pending Supabase SDK operations: `{ id, operation: 'complete_session' | 'skip_session', payload, createdAt }`
+**`src/platform/store/syncStore.ts` (pending operations queue):**
+- Queue of pending Supabase SDK operations: `{ id, operation: 'complete_session', payload, createdAt, retryCount }`
+- Only `complete_session` is queued; skip operations are fire-and-forget (no queue entry)
 - Operations are added optimistically before the Supabase call
 - On success: remove from queue
-- On failure (network error): keep in queue, retry on reconnect
-- On non-retryable error (Supabase constraint violation, auth error): surface to user, do not retry
+- On failure (network error): keep in queue, increment `retryCount`, retry on reconnect
+- On non-retryable error (Supabase constraint violation, auth error): dequeue + alert user
 
 **Session completion offline handling:**
 - If `completeSession()` Supabase SDK call fails due to network:
-  1. Store complete payload in MMKV under key `pending_session_completion_:sessionId`
+  1. Enqueue operation in `syncStore` (persisted to AsyncStorage)
   2. Show success UI to user (optimistic) with a small sync indicator
-  3. Register background fetch task (`expo-background-fetch`) to retry when online
-  4. On next app foreground + connectivity: retry the pending Supabase `upsert` to `session_logs`
+  3. On next foreground + connectivity restore: `useSyncQueue` drains the queue automatically (no background fetch task)
 
 **Connectivity detection:**
 - Show offline banner in session screen when connectivity is lost

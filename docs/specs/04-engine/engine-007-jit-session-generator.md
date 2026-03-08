@@ -94,6 +94,7 @@ interface AuxiliaryWork {
   - Set `skippedMainLift = true` if remaining <= 0
 - [x] **Step 5 — Disruption override**
   - If any activeDisruptions affect this lift: apply disruption-adjuster reductions (takes full precedence over steps 2–4)
+  - **Deload interaction**: During deload weeks the base sets from Step 1 are already reduced (lower volume/intensity). Disruption reductions in Step 5 apply on top of those already-reduced values, so the effects compound conservatively. This is intentional — a disruption during a deload means even lighter work, which is the correct conservative response.
 - [x] **Step 6 — Auxiliary work**
   - For each auxiliary exercise (2 total): base 3–4 sets at 67.5% 1RM (default), per-exercise rep target, RPE 7.5
   - Per-exercise weight %: `AUX_WEIGHT_PCT[exercise] ?? 0.675` — divergent exercises (Good Mornings, Bulgarian Split Squat, OHP, JM Press, curls) use lower percentages; see table in engine-019

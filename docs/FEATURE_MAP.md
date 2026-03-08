@@ -138,7 +138,7 @@ Pure TypeScript. No React, no Supabase.
 What it contains: 1RM formulas, cube scheduler, loading calculator, program generator, JIT session generator, MRV/MEV calculator, performance adjuster, auxiliary rotator, soreness adjuster, warmup calculator, Wilks formula, cycle phase calculator, PR detection, cycle review generator, hybrid JIT strategy, developer suggestion engine.
 
 Entry: `packages/training-engine/src/index.ts`
-Tests: Vitest, 336 tests — `nx run training-engine:test`
+Tests: Vitest, 409 tests — `nx run training-engine:test`
 
 ### `@parakeet/shared-types`
 
