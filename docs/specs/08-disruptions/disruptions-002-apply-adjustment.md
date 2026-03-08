@@ -103,6 +103,14 @@ Design intent: minor disruptions apply immediately without requiring the user to
 - [x] In the review screen: if `autoApplied === true`, hide the "Apply All Adjustments" button and replace with a read-only note: "Adjustments auto-applied (minor severity)"
 - [x] Moderate + major: unchanged — user must confirm
 
+## Query invalidation after apply
+
+After `applyDisruptionAdjustment` resolves in `handleApply()` (report.tsx), invalidate both:
+- `qk.program.active(userId)` — so the program grid reflects updated session statuses (e.g., `planned` → `skipped`)
+- `qk.session.today(userId)` — so the Today screen reflects any status change to today's session
+
+Without these invalidations the program view shows stale data (sessions still appear as `planned` even after being marked `skipped`).
+
 ## Dependencies
 
 - [disruptions-001-report.md](./disruptions-001-report.md)

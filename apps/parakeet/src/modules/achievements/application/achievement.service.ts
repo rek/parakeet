@@ -170,6 +170,8 @@ export async function getCycleBadges(userId: string): Promise<CycleBadge[]> {
   const badges: CycleBadge[] = [];
 
   for (const program of programs) {
+    if (!program.total_weeks) continue;
+
     const allSessions = await fetchProgramSessionStatuses(program.id as string, userId);
     const total = allSessions.length;
     if (total === 0) continue;
@@ -188,7 +190,7 @@ export async function getCycleBadges(userId: string): Promise<CycleBadge[]> {
         programId: program.id as string,
         cycleNumber: program.version as number,
         startDate: program.start_date as string,
-        weekCount: program.total_weeks as number,
+        weekCount: program.total_weeks ?? 0,
         completionPct,
       });
     }

@@ -9,6 +9,7 @@ export const ActualSetSchema = z
     rpe_actual: z.number().min(6).max(10).optional(),
     actual_rest_seconds: z.number().int().nonnegative().optional(),
     notes: z.string().optional(),
+    exercise_type: z.enum(['weighted', 'bodyweight', 'timed']).optional(),
   })
   .strict()
 

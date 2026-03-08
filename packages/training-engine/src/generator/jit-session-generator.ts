@@ -6,6 +6,7 @@ import {
   SorenessLevel,
   SorenessModifier,
 } from '../adjustments/soreness-adjuster'
+import { ExerciseType, getExerciseType } from '../auxiliary/exercise-types'
 import { roundToNearest } from '../formulas/weight-rounding'
 import { FormulaConfig, MrvMevConfig, MuscleGroup } from '../types'
 import { getMusclesForLift } from '../volume/muscle-mapper'
@@ -57,6 +58,7 @@ export interface AuxiliaryWork {
   sets: PlannedSet[]
   skipped: boolean
   skipReason?: string
+  exerciseType: ExerciseType
 }
 
 export interface JITOutput {
@@ -432,29 +434,46 @@ function buildAuxiliaryWork(
   const hasNoEquipment = activeDisruptions?.some((d) => d.disruption_type === 'equipment_unavailable') ?? false
 
   const result = exercises.map((exercise) => {
+    const exerciseType = getExerciseType(exercise)
+
     // Soreness 5: skip entirely
     if (worstSoreness >= 5) {
       return {
         exercise,
+        exerciseType,
         sets: [],
         skipped: true,
         skipReason: 'Severe soreness — auxiliary exercise skipped',
       }
     }
 
-    // MRV check: insufficient remaining capacity after main lift
-    for (const muscle of primaryMuscles) {
-      const weeklyVol = weeklyVolumeToDate[muscle] ?? 0
-      const { mrv } = mrvMevConfig[muscle]
-      const remaining = mrv - weeklyVol - mainLiftSetCount
-      if (remaining < 1) {
-        warnings.push(`Approaching MRV for ${muscle} — ${exercise} skipped`)
-        return {
-          exercise,
-          sets: [],
-          skipped: true,
-          skipReason: `MRV approaching for ${muscle}`,
+    // Timed exercises are not load-bearing — skip MRV check
+    if (exerciseType !== 'timed') {
+      // MRV check: insufficient remaining capacity after main lift
+      for (const muscle of primaryMuscles) {
+        const weeklyVol = weeklyVolumeToDate[muscle] ?? 0
+        const { mrv } = mrvMevConfig[muscle]
+        const remaining = mrv - weeklyVol - mainLiftSetCount
+        if (remaining < 1) {
+          warnings.push(`Approaching MRV for ${muscle} — ${exercise} skipped`)
+          return {
+            exercise,
+            exerciseType,
+            sets: [],
+            skipped: true,
+            skipReason: `MRV approaching for ${muscle}`,
+          }
         }
+      }
+    }
+
+    // Timed exercises: single "set" with weight 0, reps 0 — UI renders as mark-complete
+    if (exerciseType === 'timed') {
+      return {
+        exercise,
+        exerciseType,
+        sets: [{ set_number: 1, weight_kg: 0, reps: 0, rpe_target: 7.0 }],
+        skipped: false,
       }
     }
 
@@ -476,8 +495,10 @@ function buildAuxiliaryWork(
       setCount += 1
     }
 
-    const baseAuxWeight = roundToNearest(oneRmKg * (AUX_WEIGHT_PCT[exercise] ?? 0.675))
-    const finalWeight = roundToNearest(baseAuxWeight * intensityMult)
+    // Bodyweight: no load — weight 0, reps only
+    const finalWeight = exerciseType === 'bodyweight'
+      ? 0
+      : roundToNearest(roundToNearest(oneRmKg * (AUX_WEIGHT_PCT[exercise] ?? 0.675)) * intensityMult)
 
     const sets: PlannedSet[] = Array.from({ length: setCount }, (_, i) => ({
       set_number: i + 1,
@@ -486,7 +507,7 @@ function buildAuxiliaryWork(
       rpe_target: 7.5,
     }))
 
-    return { exercise, sets, skipped: false }
+    return { exercise, exerciseType, sets, skipped: false }
   }) as AuxiliaryWork[]
 
   // No-equipment disruption: append bodyweight compensation exercises
@@ -499,6 +520,7 @@ function buildAuxiliaryWork(
     const bwReps = isFemale ? 15 : 10
     const bwSets = (name: string): AuxiliaryWork => ({
       exercise: name,
+      exerciseType: 'bodyweight' as ExerciseType,
       sets: Array.from({ length: 3 }, (_, i) => ({
         set_number: i + 1,
         weight_kg: 0,
