@@ -20,18 +20,9 @@ What parts in our system lack this integration? Give suggestions.
 - Design: Needs design doc. Related context: [volume-mrv-methodology.md](../design/volume-mrv-methodology.md), [disruption-management.md](../design/disruption-management.md)
 - Specs: None yet
 
-## 3 — Docs agent discoverability ✅
+## 3
 
-Optimize docs for agent discoverability. Done — this file is the single agent entry point, with doc links per item.
+aux exersies page
+setting block 1 assignments
+what does 'lock' do?
 
-## 4
-
-ERROR Encountered two children with the same key, `%s`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version. .$Barbell Front Squat
-
-Code: SlotDropdown.tsx
-56 | autoFocus
-57 | />
-
-> 58 | <FlatList
-
-     |             ^

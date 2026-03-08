@@ -8,6 +8,7 @@ import {
 } from 'react-native';
 import { useAuth } from '@modules/auth';
 import { getProfile } from '@modules/profile';
+import { useFeatureEnabled } from '@modules/feature-flags';
 import {
   exportTrainingData,
   getBarWeightKg,
@@ -114,6 +115,16 @@ export default function SettingsScreen() {
     getBarWeightKg(profile?.biological_sex).then(setBarWeightKgState);
   }, [profile?.biological_sex]);
 
+  const showAchievements = useFeatureEnabled('achievements');
+  const showWilks = useFeatureEnabled('wilks');
+  const showVolume = useFeatureEnabled('volumeDashboard');
+  const showAuxiliary = useFeatureEnabled('auxiliary');
+  const showWarmups = useFeatureEnabled('warmups');
+  const showRestTimer = useFeatureEnabled('restTimer');
+  const showCycleTracking = useFeatureEnabled('cycleTracking');
+  const showDeveloper = useFeatureEnabled('developer');
+  const showFormulaSuggestions = useFeatureEnabled('formulaSuggestions');
+
   const hasSuggestions = (pendingSuggestions ?? 0) > 0;
   const hasDevSuggestions = (unreviewedDevCount ?? 0) > 0;
 
@@ -183,17 +194,24 @@ export default function SettingsScreen() {
         <View style={styles.divider} />
 
         {/* Achievements section */}
-        <SectionHeader label="Achievements" />
-        <Row
-          label="Achievements"
-          onPress={() => router.push('/profile/achievements')}
-        />
-        <Row
-          label="WILKS Score"
-          onPress={() => router.push('/profile/wilks')}
-        />
-
-        <View style={styles.divider} />
+        {(showAchievements || showWilks) && (
+          <>
+            <SectionHeader label="Achievements" />
+            {showAchievements && (
+              <Row
+                label="Achievements"
+                onPress={() => router.push('/profile/achievements')}
+              />
+            )}
+            {showWilks && (
+              <Row
+                label="WILKS Score"
+                onPress={() => router.push('/profile/wilks')}
+              />
+            )}
+            <View style={styles.divider} />
+          </>
+        )}
 
         {/* Training section */}
         <SectionHeader label="Training" />
@@ -221,49 +239,65 @@ export default function SettingsScreen() {
           onPress={() => router.push('/formula/editor')}
           right={
             <View style={styles.rowRight}>
-              {hasSuggestions && <View style={styles.suggestionDot} />}
+              {showFormulaSuggestions && hasSuggestions && <View style={styles.suggestionDot} />}
               <Text style={styles.chevron}>›</Text>
             </View>
           }
         />
-        <Row label="Volume & Recovery" onPress={() => router.push('/volume')} />
+        {showVolume && (
+          <Row label="Volume & Recovery" onPress={() => router.push('/volume')} />
+        )}
 
         <View style={styles.divider} />
 
         {/* Advanced section */}
         <SectionHeader label="Advanced" />
         <Row
-          label="Auxiliary Exercises"
-          onPress={() => router.push('/settings/auxiliary-exercises')}
+          label="Features"
+          onPress={() => router.push('/settings/features')}
         />
-        <Row
-          label="Warmup Protocol"
-          onPress={() => router.push('/settings/warmup-protocol')}
-        />
-        <Row
-          label="Rest Timer"
-          onPress={() => router.push('/settings/rest-timer')}
-        />
-        <Row
-          label="Volume Config (MRV/MEV)"
-          onPress={() => router.push('/settings/volume-config')}
-        />
-        {profile?.biological_sex === 'female' && (
+        {showAuxiliary && (
+          <Row
+            label="Auxiliary Exercises"
+            onPress={() => router.push('/settings/auxiliary-exercises')}
+          />
+        )}
+        {showWarmups && (
+          <Row
+            label="Warmup Protocol"
+            onPress={() => router.push('/settings/warmup-protocol')}
+          />
+        )}
+        {showRestTimer && (
+          <Row
+            label="Rest Timer"
+            onPress={() => router.push('/settings/rest-timer')}
+          />
+        )}
+        {showVolume && (
+          <Row
+            label="Volume Config (MRV/MEV)"
+            onPress={() => router.push('/settings/volume-config')}
+          />
+        )}
+        {showCycleTracking && profile?.biological_sex === 'female' && (
           <Row
             label="Cycle Tracking"
             onPress={() => router.push('/settings/cycle-tracking')}
           />
         )}
-        <Row
-          label="Developer"
-          onPress={() => router.push('/settings/developer')}
-          right={
-            <View style={styles.rowRight}>
-              {hasDevSuggestions && <View style={styles.suggestionDot} />}
-              <Text style={styles.chevron}>›</Text>
-            </View>
-          }
-        />
+        {showDeveloper && (
+          <Row
+            label="Developer"
+            onPress={() => router.push('/settings/developer')}
+            right={
+              <View style={styles.rowRight}>
+                {hasDevSuggestions && <View style={styles.suggestionDot} />}
+                <Text style={styles.chevron}>›</Text>
+              </View>
+            }
+          />
+        )}
 
         <View style={styles.divider} />
 

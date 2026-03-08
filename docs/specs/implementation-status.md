@@ -129,6 +129,7 @@ Module/platform/shared architecture is the canonical app structure. Legacy top-l
 - [x] mobile-030: Ad-hoc auxiliary exercises — "+ Add Exercise" modal + "+ Set" button; `addAdHocSet` store action; resume recovery from persisted store
 - [x] mobile-031: Bar weight setting — 15/20 kg toggle in Settings › Training; propagated to warmup floors, recovery mode floors, WarmupSection display label, PlateCalculatorSheet (unified AsyncStorage key `bar_weight_kg`); engine params default to 20
 - [x] mobile-032: Ad-hoc workouts — `session/adhoc.tsx` lift/intensity picker; `createAdHocSession` service; JIT adapted for null program_id; "Ad-Hoc Workout" button on Today screen; WorkoutCard shows "Ad-Hoc Workout" label. See `sessions-008-adhoc-workouts.md`.
+- [x] mobile-033: Feature flags — `modules/feature-flags/` module with registry, AsyncStorage persistence, `useFeatureEnabled` hook. Settings › Features screen with Simple/Full presets and per-feature toggles. 16 toggleable features across 5 categories. Gates applied to Today screen and Settings screen.
 
 ---
 

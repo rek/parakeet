@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 import { getStreakData } from '@modules/achievements';
 import { useAuth } from '@modules/auth';
+import { useFeatureEnabled } from '@modules/feature-flags';
 import { CYCLE_PHASE_BG, CYCLE_PHASE_LABELS, CYCLE_PHASE_TEXT, useCyclePhase } from '@modules/cycle-tracking';
 import { getActiveDisruptions } from '@modules/disruptions';
 import { useActiveProgram } from '@modules/program';
@@ -112,11 +113,13 @@ function WorkoutDoneCard({
   currentStreak,
   cyclePhase,
   userId,
+  showMotivational,
 }: {
   sessions: CompletedSessionRef[];
   currentStreak: number;
   cyclePhase: string | null;
   userId: string;
+  showMotivational: boolean;
 }) {
   const sessionIds = sessions.map((s) => s.id);
 
@@ -128,6 +131,7 @@ function WorkoutDoneCard({
     },
     staleTime: Infinity,
     retry: false,
+    enabled: showMotivational,
   });
 
   if (error) {
@@ -141,7 +145,7 @@ function WorkoutDoneCard({
     <View style={styles.workoutDoneCard}>
       <Text style={styles.workoutDoneTitle}>Workout Done ✓</Text>
       <Text style={styles.workoutDoneLift}>{lifts}</Text>
-      {isLoading ? (
+      {showMotivational && isLoading ? (
         <ActivityIndicator
           size="small"
           color={colors.success}
@@ -163,6 +167,13 @@ export default function TodayScreen() {
   const { data: cycleContext } = useCyclePhase();
   const queryClient = useQueryClient();
   const [refreshing, setRefreshing] = useState(false);
+
+  const showStreaks = useFeatureEnabled('streaks');
+  const showCycleTracking = useFeatureEnabled('cycleTracking');
+  const showVolume = useFeatureEnabled('volumeDashboard');
+  const showDisruptions = useFeatureEnabled('disruptions');
+  const showAdHoc = useFeatureEnabled('adHocWorkouts');
+  const showMotivational = useFeatureEnabled('motivationalMessages');
 
   const handleRefresh = useCallback(async () => {
     setRefreshing(true);
@@ -199,7 +210,7 @@ export default function TodayScreen() {
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.title}>PARAKEET</Text>
-        {(streakData?.currentStreak ?? 0) >= 1 && (
+        {showStreaks && (streakData?.currentStreak ?? 0) >= 1 && (
           <StreakPill
             currentStreak={streakData!.currentStreak}
             onPress={() => router.push('/profile/achievements')}
@@ -232,7 +243,7 @@ export default function TodayScreen() {
         ) : (
           <>
             {/* Cycle phase pill */}
-            {cycleContext && (
+            {showCycleTracking && cycleContext && (
               <TouchableOpacity
                 style={[
                   styles.cyclePhasePill,
@@ -253,7 +264,7 @@ export default function TodayScreen() {
               </TouchableOpacity>
             )}
 
-            {mrvWarningMuscles.length > 0 && (
+            {showVolume && mrvWarningMuscles.length > 0 && (
               <View style={styles.mrvBanner}>
                 <Text style={styles.mrvBannerText}>
                   {mrvWarningMuscles.join(', ')}{' '}
@@ -263,7 +274,7 @@ export default function TodayScreen() {
               </View>
             )}
 
-            {disruptions && disruptions.length > 0 && (
+            {showDisruptions && disruptions && disruptions.length > 0 && (
               <DisruptionChipsRow
                 disruptions={disruptions}
                 userId={user!.id}
@@ -294,6 +305,7 @@ export default function TodayScreen() {
                           currentStreak={streakData?.currentStreak ?? 0}
                           cyclePhase={cycleContext?.phase ?? null}
                           userId={user!.id}
+                          showMotivational={showMotivational}
                         />
                       )}
                       {otherSessions.map((s) => {
@@ -312,7 +324,7 @@ export default function TodayScreen() {
                                 })
                               }
                             />
-                            {cycleContext?.isOvulatoryWindow &&
+                            {showCycleTracking && cycleContext?.isOvulatoryWindow &&
                               s.primary_lift === 'squat' && (
                                 <View style={styles.ovulatoryChip}>
                                   <Text style={styles.ovulatoryChipText}>
@@ -329,25 +341,29 @@ export default function TodayScreen() {
                 })()
             )}
 
-            <TouchableOpacity
-              style={styles.adHocButton}
-              onPress={() => router.push('/session/adhoc')}
-              activeOpacity={0.75}
-            >
-              <Text style={styles.adHocButtonText}>+ Ad-Hoc Workout</Text>
-            </TouchableOpacity>
+            {showAdHoc && (
+              <TouchableOpacity
+                style={styles.adHocButton}
+                onPress={() => router.push('/session/adhoc')}
+                activeOpacity={0.75}
+              >
+                <Text style={styles.adHocButtonText}>+ Ad-Hoc Workout</Text>
+              </TouchableOpacity>
+            )}
 
-            <TouchableOpacity
-              style={styles.reportIssueButton}
-              onPress={() => router.push('/disruption-report/report')}
-              activeOpacity={0.75}
-            >
-              <Text style={styles.reportIssueButtonText}>
-                ⚠ Log a Disruption
-              </Text>
-            </TouchableOpacity>
+            {showDisruptions && (
+              <TouchableOpacity
+                style={styles.reportIssueButton}
+                onPress={() => router.push('/disruption-report/report')}
+                activeOpacity={0.75}
+              >
+                <Text style={styles.reportIssueButtonText}>
+                  ⚠ Log a Disruption
+                </Text>
+              </TouchableOpacity>
+            )}
 
-            <VolumeCompactCard />
+            {showVolume && <VolumeCompactCard />}
           </>
         )}
       </ScrollView>

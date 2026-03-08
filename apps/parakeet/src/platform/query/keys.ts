@@ -22,4 +22,7 @@ export const qk = {
     phase: (userId?: string) => ['cycle', 'phase', userId] as const,
     config: (userId?: string) => ['cycle', 'config', userId] as const,
   },
+  featureFlags: {
+    all: () => ['feature-flags'] as const,
+  },
 } as const;
