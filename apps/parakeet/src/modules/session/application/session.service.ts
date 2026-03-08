@@ -169,12 +169,22 @@ export async function getInProgressSession(
 }
 
 // Create a standalone ad-hoc session (no program context) and return its ID.
+// Free-form: omit lift/intensityType, optionally provide activityName.
+// Lift-specific: provide lift + intensityType for a traditional ad-hoc session.
 export async function createAdHocSession(
   userId: string,
-  lift: 'squat' | 'bench' | 'deadlift',
-  intensityType: 'heavy' | 'explosive' | 'rep',
+  options?: {
+    lift?: 'squat' | 'bench' | 'deadlift';
+    intensityType?: 'heavy' | 'explosive' | 'rep';
+    activityName?: string;
+  },
 ): Promise<string> {
-  return insertAdHocSession({ userId, lift, intensityType });
+  return insertAdHocSession({
+    userId,
+    lift: options?.lift,
+    intensityType: options?.intensityType,
+    activityName: options?.activityName,
+  });
 }
 
 // Transition session to in_progress
@@ -203,7 +213,7 @@ export async function completeSession(
 ): Promise<void> {
   const { actualSets, auxiliarySets, sessionRpe, startedAt, completedAt } =
     input;
-  if (actualSets.length === 0) {
+  if (actualSets.length === 0 && (!auxiliarySets || auxiliarySets.length === 0)) {
     throw new Error('At least one set is required');
   }
 
@@ -301,7 +311,7 @@ export async function completeSession(
         session_log_id: sessionLogId,
         user_id: userId,
         lift: session.primary_lift,
-        intensity_type: session.intensity_type,
+        intensity_type: session.intensity_type!,
         recorded_at: new Date().toISOString(),
         week_number: session.week_number ?? null,
         block_number: session.block_number ?? null,

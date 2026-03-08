@@ -41,10 +41,11 @@ interface SessionState {
   sessionRpe: number | undefined
   startedAt: Date | undefined
   sessionMeta: {
-    primary_lift: string
-    intensity_type: string
+    primary_lift: string | null
+    intensity_type: string | null
     block_number: number | null
     week_number: number
+    activity_name?: string | null
   } | null
   cachedJitData: string | null
   timerState: TimerState | null

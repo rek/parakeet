@@ -20,7 +20,7 @@ export function useFeatureFlags() {
     queryKey: qk.featureFlags.all(),
     queryFn: getFeatureFlags,
     staleTime: Infinity,
-    initialData: DEFAULT_FLAGS,
+    placeholderData: DEFAULT_FLAGS,
   })
 
   async function toggle({ id, enabled }: { id: FeatureId; enabled: boolean }) {
@@ -42,7 +42,7 @@ export function useFeatureEnabled(id: FeatureId) {
     queryKey: qk.featureFlags.all(),
     queryFn: getFeatureFlags,
     staleTime: Infinity,
-    initialData: DEFAULT_FLAGS,
+    placeholderData: DEFAULT_FLAGS,
   })
 
   return flags[id]

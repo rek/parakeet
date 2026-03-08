@@ -48,8 +48,8 @@ export async function exportTrainingData(userId: string): Promise<void> {
 
       return {
         date: row.planned_date ?? row.completed_at?.split('T')[0] ?? '',
-        lift: row.primary_lift,
-        intensity_type: row.intensity_type,
+        lift: row.primary_lift ?? '',
+        intensity_type: row.intensity_type ?? '',
         completed_at: row.completed_at ?? '',
         ...(log.session_rpe != null ? { session_rpe: log.session_rpe } : {}),
         sets,

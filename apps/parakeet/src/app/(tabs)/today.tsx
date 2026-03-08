@@ -140,7 +140,7 @@ function WorkoutDoneCard({
     captureException(error);
   }
 
-  const lifts = sessions.map((s) => capitalize(s.primary_lift)).join(', ');
+  const lifts = sessions.map((s) => capitalize(s.primary_lift ?? '')).join(', ');
 
   return (
     <View style={styles.workoutDoneCard}>

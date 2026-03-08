@@ -209,7 +209,7 @@ export default function SorenessScreen() {
 
   const hasSevereSoreness = Object.values(ratings).some((r) => r === 5);
   const liftLabel = session
-    ? `${capitalize(session.primary_lift)} — ${capitalize(session.intensity_type)}`
+    ? `${capitalize(session.primary_lift!)} — ${capitalize(session.intensity_type!)}`
     : 'Loading...';
 
   // ── Render ────────────────────────────────────────────────────────────────

@@ -20,11 +20,11 @@ interface SessionJoinLiftIntensity extends SessionJoinLift {
   intensity_type: string;
 }
 
-function parseLift(value: string): Lift {
+function parseLift(value: string | null): Lift {
   return LiftSchema.parse(value);
 }
 
-function parseIntensity(value: string): IntensityType {
+function parseIntensity(value: string | null): IntensityType {
   const result = IntensityTypeSchema.safeParse(value);
   return result.success ? result.data : 'heavy';
 }
@@ -51,8 +51,8 @@ function toProgramSessionView(row: {
   id: string;
   week_number: number;
   day_number: number;
-  primary_lift: string;
-  intensity_type: string;
+  primary_lift: string | null;
+  intensity_type: string | null;
   block_number: number | null;
   is_deload: boolean;
   planned_date: string | null;
@@ -278,16 +278,18 @@ export async function getLatestSorenessRatings(
 
 export async function insertAdHocSession(input: {
   userId: string;
-  lift: Lift;
-  intensityType: 'heavy' | 'explosive' | 'rep';
+  lift?: Lift;
+  intensityType?: 'heavy' | 'explosive' | 'rep';
+  activityName?: string;
 }): Promise<string> {
   const today = localDateString();
   const { data, error } = await typedSupabase
     .from('sessions')
     .insert({
       user_id: input.userId,
-      primary_lift: input.lift,
-      intensity_type: input.intensityType,
+      primary_lift: input.lift ?? null,
+      intensity_type: input.intensityType ?? null,
+      activity_name: input.activityName ?? null,
       program_id: null,
       block_number: null,
       week_number: 0,

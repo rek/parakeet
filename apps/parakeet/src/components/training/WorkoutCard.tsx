@@ -47,6 +47,14 @@ export function WorkoutCard({ session, onSkipComplete, isLocked = false }: Worko
 
   function handleStartWorkout() {
     if (isLocked) return;
+    // Free-form ad-hoc: skip soreness/JIT, go straight to session screen
+    if (isFreeFormAdHoc) {
+      router.push({
+        pathname: '/session/[sessionId]',
+        params: { sessionId: session.id, freeForm: '1' },
+      });
+      return;
+    }
     router.push({
       pathname: '/session/soreness',
       params: { sessionId: session.id },
@@ -54,6 +62,14 @@ export function WorkoutCard({ session, onSkipComplete, isLocked = false }: Worko
   }
 
   async function handleResumeWorkout() {
+    // Free-form ad-hoc: no JIT data needed
+    if (isFreeFormAdHoc) {
+      router.push({
+        pathname: '/session/[sessionId]',
+        params: { sessionId: session.id, freeForm: '1' },
+      });
+      return;
+    }
     const jit = await getReadyCachedJitData();
     if (!jit) {
       // Cached JIT data is gone — re-run through soreness/JIT flow to regenerate
@@ -91,9 +107,11 @@ export function WorkoutCard({ session, onSkipComplete, isLocked = false }: Worko
     setSkipReason('');
   }
 
-  const badge = getIntensityBadge(session.intensity_type);
-  const blockLabel =
-    session.program_id === null
+  const isFreeFormAdHoc = session.program_id === null && !session.primary_lift;
+  const badge = session.intensity_type ? getIntensityBadge(session.intensity_type) : null;
+  const blockLabel = isFreeFormAdHoc
+    ? (session.activity_name ?? 'Ad-Hoc Workout')
+    : session.program_id === null
       ? 'Ad-Hoc Workout'
       : session.block_number !== null
         ? `Block ${session.block_number} · Week ${session.week_number}`
@@ -105,22 +123,31 @@ export function WorkoutCard({ session, onSkipComplete, isLocked = false }: Worko
         {/* Lift name + intensity badge */}
         <View style={styles.cardHeader}>
           <Text style={styles.liftName}>
-            {session.primary_lift.charAt(0).toUpperCase() +
-              session.primary_lift.slice(1)}
+            {isFreeFormAdHoc
+              ? (session.activity_name ?? 'Ad-Hoc Workout')
+              : session.primary_lift
+                ? session.primary_lift.charAt(0).toUpperCase() + session.primary_lift.slice(1)
+                : 'Workout'}
           </Text>
-          <View style={[styles.intensityBadge, { backgroundColor: badge.bg }]}>
-            <Text style={[styles.intensityBadgeText, { color: badge.text }]}>
-              {session.intensity_type.charAt(0).toUpperCase() +
-                session.intensity_type.slice(1)}
-            </Text>
-          </View>
+          {badge && (
+            <View style={[styles.intensityBadge, { backgroundColor: badge.bg }]}>
+              <Text style={[styles.intensityBadgeText, { color: badge.text }]}>
+                {session.intensity_type!.charAt(0).toUpperCase() +
+                  session.intensity_type!.slice(1)}
+              </Text>
+            </View>
+          )}
         </View>
 
         {/* Block / week */}
         <Text style={styles.blockWeekText}>{blockLabel}</Text>
 
         {/* Sets info */}
-        {session.planned_sets === null ? (
+        {isFreeFormAdHoc ? (
+          <Text style={styles.noSetsText}>
+            Add exercises as you go
+          </Text>
+        ) : session.planned_sets === null ? (
           <Text style={styles.noSetsText}>
             Workout generated when you start
           </Text>

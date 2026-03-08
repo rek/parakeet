@@ -65,7 +65,7 @@ export function ReturnToSessionBanner() {
   const timerActive = timerState?.visible === true
 
   const liftLabel = sessionMeta
-    ? `${capitalize(sessionMeta.primary_lift)} — ${capitalize(sessionMeta.intensity_type)}`
+    ? `${capitalize(sessionMeta.primary_lift ?? '')} — ${capitalize(sessionMeta.intensity_type ?? '')}`
     : 'Session'
 
   const blockLabel = sessionMeta

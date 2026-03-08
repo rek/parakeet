@@ -67,10 +67,10 @@ export async function getPendingAdjustmentSuggestions(userId: string) {
 interface RawLogRow {
   completion_pct: number | null
   actual_sets: unknown
-  sessions: { primary_lift: string }[] | { primary_lift: string } | null
+  sessions: { primary_lift: string | null }[] | { primary_lift: string | null } | null
 }
 
-function getSessions(row: RawLogRow): { primary_lift: string } | null {
+function getSessions(row: RawLogRow): { primary_lift: string | null } | null {
   if (!row.sessions) return null
   return Array.isArray(row.sessions) ? (row.sessions[0] ?? null) : row.sessions
 }

@@ -23,18 +23,6 @@ At the end of the week, I want to review how my body feels and see if it matches
   - [data-007-weekly-body-reviews.md](../specs/05-data/data-007-weekly-body-reviews.md)
 - Status: Design + specs complete. Ready to implement.
 
-## 4
-
-adhoc workouts should actually not be associated with a main lift or intensity. this possible?
-
-its more for logging into our system extra stuff we do through out the week
-
-like perhaps we did a run, or some friends asked us to do HIIT etc
-
-## 5
-
-i toggled wilks back on in the features in settings, but it didn't show up on the wilks page yet?
-
 ## 6
 
 when i abandon an ad-hoc workout, i expect it to be gone from the home screen

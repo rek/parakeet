@@ -85,11 +85,14 @@ function formatExerciseName(name: string): string {
 // ── Screen ───────────────────────────────────────────────────────────────────
 
 export default function SessionScreen() {
-  const { sessionId, jitData, openHistory } = useLocalSearchParams<{
+  const { sessionId, jitData, openHistory, freeForm } = useLocalSearchParams<{
     sessionId: string;
     jitData: string;
     openHistory?: string;
+    freeForm?: string;
   }>();
+
+  const isFreeForm = freeForm === '1';
 
   const {
     actualSets,
@@ -161,6 +164,35 @@ export default function SessionScreen() {
     // (Zustand may not have finished hydrating from AsyncStorage at render time)
     const storeState = useSessionStore.getState();
     const currentStoreSessionId = storeState.sessionId;
+
+    // Free-form ad-hoc: no JIT data needed, start with empty session
+    if (isFreeForm) {
+      if (currentStoreSessionId !== sessionId) {
+        initSession(sessionId, []);
+
+        getSession(sessionId).then((session) => {
+          if (!session) {
+            router.back();
+            return;
+          }
+          setSessionMeta({
+            primary_lift: session.primary_lift,
+            intensity_type: session.intensity_type,
+            block_number: session.block_number ?? null,
+            week_number: session.week_number,
+            activity_name: session.activity_name,
+          });
+          void queryClient.invalidateQueries({ queryKey: ['session'] });
+        });
+      } else {
+        // Resuming free-form: restore ad-hoc exercises from store
+        const adHoc = [
+          ...new Set(storeState.auxiliarySets.map((s) => s.exercise)),
+        ];
+        setAdHocExercises(adHoc);
+      }
+      return;
+    }
 
     // If no jitData param, try recovering from the store's cached JIT (resume path
     // when navigating from program tab without cached JIT in route params)
@@ -436,20 +468,26 @@ export default function SessionScreen() {
 
   // ── Derived state ─────────────────────────────────────────────────────────
 
-  const hasCompletedSet = actualSets.some((s) => s.is_completed);
+  const hasCompletedSet =
+    actualSets.some((s) => s.is_completed) ||
+    auxiliarySets.some((s) => s.is_completed);
 
   const liftHeader = sessionMeta
-    ? `${capitalize(sessionMeta.primary_lift)} — ${capitalize(sessionMeta.intensity_type)}`
+    ? sessionMeta.primary_lift
+      ? `${capitalize(sessionMeta.primary_lift)} — ${capitalize(sessionMeta.intensity_type ?? '')}`
+      : (sessionMeta as { activity_name?: string | null }).activity_name ?? 'Ad-Hoc Workout'
     : '';
 
   const blockWeekLabel = sessionMeta
-    ? sessionMeta.block_number !== null
-      ? `Block ${sessionMeta.block_number} · Week ${sessionMeta.week_number}`
-      : `Week ${sessionMeta.week_number}`
+    ? !sessionMeta.primary_lift
+      ? '' // Free-form ad-hoc — no block/week context
+      : sessionMeta.block_number !== null
+        ? `Block ${sessionMeta.block_number} · Week ${sessionMeta.week_number}`
+        : `Week ${sessionMeta.week_number}`
     : '';
 
   // Label passed to RestTimer: "Block 3 · Heavy" style
-  const intensityLabel = sessionMeta
+  const intensityLabel = sessionMeta?.intensity_type
     ? sessionMeta.block_number !== null
       ? `Block ${sessionMeta.block_number} · ${capitalize(sessionMeta.intensity_type)}`
       : capitalize(sessionMeta.intensity_type)
@@ -511,28 +549,31 @@ export default function SessionScreen() {
           />
         )}
 
-        {/* Working sets header */}
-        <View style={styles.workingSetsHeader}>
-          <Text style={styles.workingSetsTitle}>Working Sets</Text>
-        </View>
+        {/* Working sets header + rows (hidden for free-form) */}
+        {actualSets.length > 0 && (
+          <>
+            <View style={styles.workingSetsHeader}>
+              <Text style={styles.workingSetsTitle}>Working Sets</Text>
+            </View>
 
-        {/* Set rows */}
-        {actualSets.map((actualSet, index) => {
-          const planned = plannedSets[index];
-          return (
-            <SetRow
-              key={actualSet.set_number}
-              setNumber={actualSet.set_number}
-              plannedWeightKg={
-                planned?.weight_kg ?? actualSet.weight_grams / 1000
-              }
-              plannedReps={planned?.reps ?? actualSet.reps_completed}
-              rpeValue={actualSet.rpe_actual}
-              onUpdate={(data) => handleSetUpdate(actualSet.set_number, data)}
-              onRpePress={() => setPendingRpeSetNumber(actualSet.set_number)}
-            />
-          );
-        })}
+            {actualSets.map((actualSet, index) => {
+              const planned = plannedSets[index];
+              return (
+                <SetRow
+                  key={actualSet.set_number}
+                  setNumber={actualSet.set_number}
+                  plannedWeightKg={
+                    planned?.weight_kg ?? actualSet.weight_grams / 1000
+                  }
+                  plannedReps={planned?.reps ?? actualSet.reps_completed}
+                  rpeValue={actualSet.rpe_actual}
+                  onUpdate={(data) => handleSetUpdate(actualSet.set_number, data)}
+                  onRpePress={() => setPendingRpeSetNumber(actualSet.set_number)}
+                />
+              );
+            })}
+          </>
+        )}
 
         {/* Auxiliary work section */}
         {(auxiliaryWork.length > 0 || adHocExercises.length > 0) && (

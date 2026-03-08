@@ -149,6 +149,8 @@ At the end: update design doc status, finalize specs, update implementation-stat
 
 **Derive sentinel values for required-but-meaningless columns** — when a DB column is `NOT NULL` but semantically irrelevant for a new session type (e.g., `week_number` for ad-hoc sessions), use a sentinel value (0) rather than making the column nullable. Making a column nullable cascades across: migration, `supabase/types.ts`, Zod schemas, domain types, and all call sites. A sentinel value with a UI-layer check is cheaper and avoids the cascade.
 
+**Sometimes the cascade is worth it** — when a column is semantically wrong for a new mode (e.g., `primary_lift` for a free-form workout that has no lift), making it nullable is the right choice despite the cascade. The cascade for `primary_lift`/`intensity_type` touched ~15 files but each fix was mechanical: `!` assertions for program-session code paths (where values are always present), `?? ''` fallbacks for display code, and type widening for internal interfaces. Batch these fixes with a subagent. The alternative (sentinel values like `primary_lift='none'`) pollutes every query, breaks Zod parsing, and requires more guards than the nullable cascade.
+
 **Derive blockNumber from intensityType for JIT when no program** — ad-hoc sessions have no block context. Map intensityType → blockNumber: heavy→1, explosive→2, rep→3. This keeps the engine formula selection correct without schema changes. Pass empty `weeklyVolumeToDate` since there is no program-week volume to track.
 
 ### Agent Patterns

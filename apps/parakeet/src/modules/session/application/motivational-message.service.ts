@@ -24,8 +24,8 @@ export interface MotivationalContext {
 
 export interface CompletedSessionRef {
   id: string;
-  primary_lift: string;
-  intensity_type: string;
+  primary_lift: string | null;
+  intensity_type: string | null;
   week_number: number;
   block_number: number | null;
   is_deload: boolean;
@@ -100,8 +100,8 @@ export async function fetchMotivationalContext(
   }));
 
   return {
-    primaryLifts: sessions.map((s) => s.primary_lift),
-    intensityTypes: sessions.map((s) => s.intensity_type),
+    primaryLifts: sessions.map((s) => s.primary_lift).filter((v): v is string => v != null),
+    intensityTypes: sessions.map((s) => s.intensity_type).filter((v): v is string => v != null),
     weekNumber: sessions[0]?.week_number ?? 1,
     blockNumber: sessions[0]?.block_number ?? null,
     isDeload: sessions[0]?.is_deload ?? false,

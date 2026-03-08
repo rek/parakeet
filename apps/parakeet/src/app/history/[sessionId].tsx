@@ -81,8 +81,8 @@ export default function SessionDetailScreen() {
     )
   }
 
-  const liftLabel = LIFT_LABELS[session.primary_lift as Lift] ?? capitalize(session.primary_lift)
-  const intensityLabel = capitalize(session.intensity_type)
+  const liftLabel = LIFT_LABELS[session.primary_lift as Lift] ?? capitalize(session.primary_lift ?? '')
+  const intensityLabel = capitalize(session.intensity_type ?? '')
   const completedAt = session.completed_at ?? null
   const dateLabel = formatDate(completedAt ?? session.planned_date)
   const timeLabel = completedAt ? formatTime(completedAt) : ''

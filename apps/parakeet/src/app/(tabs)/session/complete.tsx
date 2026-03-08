@@ -60,8 +60,12 @@ export default function CompleteScreen() {
 
   // ── Derived stats ─────────────────────────────────────────────────────────
 
-  const totalSets = actualSets.length;
-  const completedSets = actualSets.filter((s) => s.is_completed).length;
+  // For free-form ad-hoc (no main lift sets), use auxiliary sets for stats
+  const isAuxOnly = actualSets.length === 0 && auxiliarySets.length > 0;
+  const totalSets = isAuxOnly ? auxiliarySets.length : actualSets.length;
+  const completedSets = isAuxOnly
+    ? auxiliarySets.filter((s) => s.is_completed).length
+    : actualSets.filter((s) => s.is_completed).length;
   const completionPct =
     totalSets > 0 ? ((completedSets / totalSets) * 100).toFixed(0) : '0';
 

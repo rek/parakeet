@@ -8,8 +8,8 @@ export interface RawSession {
   id: string
   week_number: number
   block_number: number
-  primary_lift: string
-  intensity_type: string
+  primary_lift: string | null
+  intensity_type: string | null
   status: string
   planned_sets: unknown[] | null
 }
@@ -200,6 +200,7 @@ export function assembleCycleReport(raw: RawCycleData): CycleReport {
     for (const session of weekSessions) {
       const sets = Array.isArray(session.planned_sets) ? session.planned_sets.length : 0
       const lift = session.primary_lift
+      if (lift == null) continue
       setsByMuscle[lift] = (setsByMuscle[lift] ?? 0) + sets
     }
     weeklyVolume.push({ week, setsByMuscle, mrvPctByMuscle: {} })

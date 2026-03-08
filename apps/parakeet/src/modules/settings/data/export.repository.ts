@@ -1,10 +1,10 @@
 import { typedSupabase } from '@platform/supabase';
 
 export interface ExportSessionRow {
-  primary_lift: string;
+  primary_lift: string | null;
   planned_date: string | null;
   completed_at: string | null;
-  intensity_type: string;
+  intensity_type: string | null;
   session_logs: {
     actual_sets: unknown;
     auxiliary_sets: unknown;

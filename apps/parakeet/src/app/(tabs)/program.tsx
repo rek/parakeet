@@ -163,12 +163,12 @@ export default function ProgramScreen() {
             <View style={styles.nextSessionCard}>
               <Text style={styles.nextSessionLabel}>Next Session</Text>
               <Text style={styles.nextSessionLift}>
-                {capitalize(todaySession.primary_lift)}
+                {capitalize(todaySession.primary_lift!)}
               </Text>
               <View style={styles.badgeRow}>
                 <View style={styles.badge}>
                   <Text style={styles.badgeText}>
-                    {capitalize(todaySession.intensity_type)}
+                    {capitalize(todaySession.intensity_type!)}
                   </Text>
                 </View>
                 {todaySession.block_number != null && (

@@ -850,14 +850,15 @@ export type Database = {
           created_at: string
           day_number: number
           id: string
-          intensity_type: string
+          activity_name: string | null
+          intensity_type: string | null
           is_deload: boolean
           jit_generated_at: string | null
           jit_input_snapshot: Json | null
           jit_strategy: string | null
           planned_date: string | null
           planned_sets: Json | null
-          primary_lift: string
+          primary_lift: string | null
           program_id: string | null
           status: string
           updated_at: string
@@ -870,14 +871,15 @@ export type Database = {
           created_at?: string
           day_number: number
           id?: string
-          intensity_type: string
+          activity_name?: string | null
+          intensity_type?: string | null
           is_deload?: boolean
           jit_generated_at?: string | null
           jit_input_snapshot?: Json | null
           jit_strategy?: string | null
           planned_date?: string | null
           planned_sets?: Json | null
-          primary_lift: string
+          primary_lift?: string | null
           program_id?: string | null
           status?: string
           updated_at?: string
@@ -890,14 +892,15 @@ export type Database = {
           created_at?: string
           day_number?: number
           id?: string
-          intensity_type?: string
+          activity_name?: string | null
+          intensity_type?: string | null
           is_deload?: boolean
           jit_generated_at?: string | null
           jit_input_snapshot?: Json | null
           jit_strategy?: string | null
           planned_date?: string | null
           planned_sets?: Json | null
-          primary_lift?: string
+          primary_lift?: string | null
           program_id?: string | null
           status?: string
           updated_at?: string

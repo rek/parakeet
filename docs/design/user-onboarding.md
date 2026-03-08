@@ -81,6 +81,7 @@ Strength training apps typically fail at onboarding in one of two ways: they ask
 **New Cycle Body Weight Capture:**
 
 At the start of each new training cycle (including the first), the user enters their current body weight. This is used for WILKS score calculation and trend tracking across cycles. It is prompted:
+
 - During initial onboarding (Program Settings screen)
 - When activating a new program after completing a cycle (pre-fills from last recorded weight; user can update)
 
@@ -115,31 +116,19 @@ After onboarding, the user can view and edit their profile at **Settings → Pro
 - **Wilks score** — read-only, auto-computed. Shows the user's current Wilks2020 score based on their estimated 1RMs and body weight. Requires both body weight and at least one recent max. If data is missing, shows "–" with a note.
 - **Performance label** — a plain-English label derived from the Wilks score, giving context without exposing a raw number to users who find it opaque:
 
-  | Wilks range | Label |
-  |-------------|-------|
-  | < 150 | Getting started |
-  | 150–200 | Building a base |
-  | 200–250 | Intermediate |
-  | 250–300 | Solid competitor |
-  | 300–350 | Advanced |
-  | 350–400 | Elite amateur |
-  | > 400 | Elite |
+  | Wilks range | Label            |
+  | ----------- | ---------------- |
+  | < 150       | Getting started  |
+  | 150–200     | Building a base  |
+  | 200–250     | Intermediate     |
+  | 250–300     | Solid competitor |
+  | 300–350     | Advanced         |
+  | 350–400     | Elite amateur    |
+  | > 400       | Elite            |
 
   These thresholds are the same for both sexes — Wilks normalises for bodyweight and sex, so a score of 300 means the same thing regardless.
 
 The Wilks score and performance label are computed client-side using `computeWilks2020` from the training engine. No server-side computation.
-
-## Future Enhancements
-
-**Phase 2:**
-
-- Onboarding for users returning from a long break: reduced max input flow with conservative starting weights
-- MRV/MEV config step during onboarding (currently uses research defaults; user can edit later in Settings)
-
-**Long-term:**
-
-- Import max history from another app (CSV)
-- In-app 1RM estimation protocol: guided warm-up ramp
 
 ## References
 

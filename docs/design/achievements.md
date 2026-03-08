@@ -13,6 +13,7 @@ Achievements gives users visible recognition for training consistency and perfor
 Strength training is a long game. Week-to-week weight increases are small, and it's easy for lifters to feel like they're not progressing — especially during a difficult block or after a disrupted week. Without visible progress markers, motivation suffers.
 
 **Pain points:**
+
 - Small weight increases (1.25–2.5kg) don't feel like achievements in the moment
 - Completing an entire 10–14 week cycle is a major accomplishment that goes unrecognised in most apps
 - Lifters don't know their WILKS score or how their strength-to-bodyweight ratio has changed
@@ -29,6 +30,7 @@ A badge is awarded each time the user completes a full training cycle (activates
 **Completion threshold:** A cycle is counted as complete when at least 80% of planned sessions are logged (completed or legitimately skipped with a disruption reason). Pure no-shows do not count.
 
 **Badge display:**
+
 - Badge count shown on the Profile tab with an icon (e.g., medal/trophy)
 - Each badge shows the cycle number, dates, and a summary stat ("Cycle 3 — 12 weeks — Squat up 12.5kg")
 - The first badge is the hardest to earn; the count is a simple, honest measure of commitment
@@ -38,12 +40,14 @@ A badge is awarded each time the user completes a full training cycle (activates
 The streak counter tracks **consecutive weeks with no missed sessions** — specifically, no sessions that were unaccounted for (every session either completed or logged as a disruption).
 
 **Streak rules:**
+
 - A week counts as "clean" if all scheduled sessions were completed, made up within the allowed window, or logged as a disruption
 - A pure miss (session passed with no log and no disruption report) breaks the streak
 - The streak resets to 0 on a clean miss, not a disruption miss — logging a disruption shows accountability
 - Current streak and longest-ever streak are both shown
 
 **Display:**
+
 - Streak counter visible on the Today tab (e.g., "🔥 7 weeks clean")
 - Longest streak shown on the Profile tab
 
@@ -53,19 +57,21 @@ At the end of each completed session, the app evaluates whether any new personal
 
 **Star types:**
 
-| Star | Trigger |
-|------|---------|
-| **Estimated 1RM PR** | This session's estimated 1RM for a lift is the highest ever recorded for that lift |
-| **Volume PR** | Total volume (sets × reps × weight) for this lift in a single session is the highest ever |
+| Star                 | Trigger                                                                                                  |
+| -------------------- | -------------------------------------------------------------------------------------------------------- |
+| **Estimated 1RM PR** | This session's estimated 1RM for a lift is the highest ever recorded for that lift                       |
+| **Volume PR**        | Total volume (sets × reps × weight) for this lift in a single session is the highest ever                |
 | **Rep PR at Weight** | Most reps ever logged at a given weight for a specific lift (e.g., "5 reps at 140kg Squat — new rep PR") |
 
 **Rules:**
+
 - PRs are evaluated per lift (Squat, Bench, Deadlift separately)
 - Only sessions with no active Major disruption are eligible (Minor and Moderate disruptions still count — the lifter showed up)
 - Stars are displayed at session completion with a brief animation; they are then accessible in lift history
 - Multiple stars can be earned in a single session
 
 **Display on session completion:**
+
 - Stars shown as a stack of cards: "⭐ New Squat Estimated 1RM — 152kg"
 - If no PR: no star card shown (no "you didn't break any records" message)
 
@@ -76,10 +82,12 @@ The WILKS score is a formula that normalises powerlifting totals (Squat + Bench 
 **Formula:** The app uses the **2020 updated Wilks formula** with sex-specific polynomial coefficients. Female and male lifters have different coefficients, reflecting different strength-to-bodyweight distributions. See [sex-based-adaptations.md](./sex-based-adaptations.md) for the coefficient source and rationale.
 
 **Data sources:**
+
 - Total: sum of the three lifts' most recent estimated 1RMs (from session logs)
 - Body weight: the body weight recorded at the start of the current cycle
 
 **Page content:**
+
 - Current WILKS score (large, prominent)
 - Historical WILKS score chart — one point per completed cycle, showing trend over time
 - Current estimated 1RMs used in the calculation (with last-updated date)
@@ -102,6 +110,7 @@ After tapping "Complete Workout":
 ### Profile Tab
 
 The Profile tab shows at a glance:
+
 - Cycle badge count ("4 cycles completed")
 - Current streak and best streak
 - Current WILKS score
@@ -110,11 +119,13 @@ The Profile tab shows at a glance:
 ## Future Enhancements
 
 **Phase 2:**
+
 - Share achievements (individual star card or WILKS score) as a shareable image
 - Yearly summary: total sessions, total volume, PRs broken
 
 **Long-term:**
-- Leaderboard: opt-in WILKS comparison with other Parakeet users (anonymised by default)
+
+- Leaderboard: opt-in WILKS comparison with other Parakeet users
 
 ## References
 

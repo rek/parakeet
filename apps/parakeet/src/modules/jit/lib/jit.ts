@@ -41,6 +41,16 @@ export async function runJITForSession(
   userId: string,
   sorenessRatings: Partial<Record<MuscleGroup, SorenessLevel>>,
 ): Promise<JITOutput> {
+  // Free-form ad-hoc sessions have no primary lift — return empty JIT output
+  if (!session.primary_lift) {
+    return {
+      mainLiftSets: [],
+      warmupSets: [],
+      auxiliaryWork: [],
+      generatedAt: new Date(),
+    } as unknown as JITOutput
+  }
+
   const lift = LiftSchema.parse(session.primary_lift)
   const intensityType = IntensityTypeSchema.parse(session.intensity_type)
 

@@ -44,7 +44,7 @@ export function useRestNotifications(): void {
 
         if (remaining <= 0) return
 
-        scheduleRestNotification(meta.primary_lift, meta.intensity_type, remaining)
+        scheduleRestNotification(meta.primary_lift!, meta.intensity_type!, remaining)
           .then((id) => { pendingNotifIdRef.current = id })
           .catch(() => {})
       } else if (nextState === 'active') {

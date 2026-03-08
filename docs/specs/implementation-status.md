@@ -73,6 +73,7 @@ For details on any item, see the linked spec file.
 - [x] 20260312000001: Unending program mode columns
 - [x] 20260313000000: `motivational_message_logs` table
 - [x] 20260314000000: `sessions.program_id` nullable; `'import'` added to `intensity_type` constraint
+- [x] 20260308000000: Free-form ad-hoc — `primary_lift` nullable, `intensity_type` nullable, `activity_name` column
 
 ---
 
@@ -128,7 +129,8 @@ Module/platform/shared architecture is the canonical app structure. Legacy top-l
 - [x] mobile-029: Motivational message — LLM-generated post-workout message on WorkoutDoneCard; context-aware (RPE, PRs, streak, sex, cycle phase); multiple-sessions-per-day consolidated into single card
 - [x] mobile-030: Ad-hoc auxiliary exercises — "+ Add Exercise" modal + "+ Set" button; `addAdHocSet` store action; resume recovery from persisted store
 - [x] mobile-031: Bar weight setting — 15/20 kg toggle in Settings › Training; propagated to warmup floors, recovery mode floors, WarmupSection display label, PlateCalculatorSheet (unified AsyncStorage key `bar_weight_kg`); engine params default to 20
-- [x] mobile-032: Ad-hoc workouts — `session/adhoc.tsx` lift/intensity picker; `createAdHocSession` service; JIT adapted for null program_id; "Ad-Hoc Workout" button on Today screen; WorkoutCard shows "Ad-Hoc Workout" label. See `sessions-008-adhoc-workouts.md`.
+- [x] mobile-032: Ad-hoc workouts — `session/adhoc.tsx`; `createAdHocSession` service; JIT adapted for null program_id; "Ad-Hoc Workout" button on Today screen; WorkoutCard shows "Ad-Hoc Workout" label. See `sessions-008-adhoc-workouts.md`.
+- [x] mobile-034: Free-form ad-hoc — `primary_lift`/`intensity_type` nullable; `activity_name` column; ad-hoc screen simplified to name input; session screen handles freeForm param (no JIT/soreness); complete allows aux-only; WorkoutCard routes directly to session screen for free-form
 - [x] mobile-033: Feature flags — `modules/feature-flags/` module with registry, AsyncStorage persistence, `useFeatureEnabled` hook. Settings › Features screen with Simple/Full presets and per-feature toggles. 16 toggleable features across 5 categories. Gates applied to Today screen and Settings screen.
 
 ---
