@@ -103,6 +103,7 @@ export async function stampCyclePhaseOnSession(
   userId: string,
   sessionId: string,
 ): Promise<void> {
+  // No-ops when cycle tracking is disabled or no period start date is recorded.
   const context = await getCurrentCycleContext(userId)
   if (!context) return
   const { error } = await typedSupabase

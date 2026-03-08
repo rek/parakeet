@@ -47,13 +47,13 @@ describe('sessionStore persistence', () => {
     expect(merged.startedAt).toBeUndefined();
   });
 
-  it('merge always initializes warmupCompleted as empty Set', () => {
+  it('merge preserves warmupCompleted array from persisted state', () => {
     const opts = (useSessionStore as any).persist.getOptions();
     const merged = opts.merge(
       { warmupCompleted: [1, 2, 3] },
       useSessionStore.getState()
     );
-    expect(merged.warmupCompleted).toBeInstanceOf(Set);
-    expect(merged.warmupCompleted.size).toBe(0);
+    expect(Array.isArray(merged.warmupCompleted)).toBe(true);
+    expect(merged.warmupCompleted).toEqual([1, 2, 3]);
   });
 });
