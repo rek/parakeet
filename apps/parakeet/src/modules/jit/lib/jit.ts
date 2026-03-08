@@ -50,7 +50,7 @@ export async function runJITForSession(
       getActiveAssignments(userId, session.program_id, blockNumber),
       getWarmupConfig(userId, lift, biologicalSex),
       getUserRestOverrides(userId),
-      getBarWeightKg(),
+      getBarWeightKg(biologicalSex),
     ])
 
   const mrvMevConfig = await getMrvMevConfig(userId, biologicalSex)

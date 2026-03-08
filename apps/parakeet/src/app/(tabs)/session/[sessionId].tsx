@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import { getProfile } from '@modules/profile';
 import { abandonSession, getSession, startSession } from '@modules/session';
 import { getBarWeightKg } from '@modules/settings';
 import { useNetworkStatus } from '@platform/network';
@@ -123,7 +124,9 @@ export default function SessionScreen() {
   const [barWeightKg, setBarWeightKg] = useState(20);
 
   useEffect(() => {
-    getBarWeightKg().then(setBarWeightKg);
+    getProfile()
+      .then((profile) => getBarWeightKg(profile?.biological_sex))
+      .then(setBarWeightKg);
   }, []);
   const [adHocExercises, setAdHocExercises] = useState<string[]>([]);
   const [addExerciseVisible, setAddExerciseVisible] = useState(false);

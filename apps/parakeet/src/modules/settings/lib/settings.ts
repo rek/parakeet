@@ -4,13 +4,15 @@ const BAR_WEIGHT_KEY = 'bar_weight_kg'
 
 export type BarWeightKg = 15 | 20
 
-export async function getBarWeightKg(): Promise<BarWeightKg> {
+export async function getBarWeightKg(biologicalSex?: string | null): Promise<BarWeightKg> {
+  const defaultWeight: BarWeightKg = biologicalSex === 'female' ? 15 : 20
   try {
     const raw = await AsyncStorage.getItem(BAR_WEIGHT_KEY)
     if (raw === '15') return 15
-    return 20
+    if (raw === '20') return 20
+    return defaultWeight
   } catch {
-    return 20
+    return defaultWeight
   }
 }
 

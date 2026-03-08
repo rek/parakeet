@@ -9,6 +9,7 @@ import {
   View,
 } from 'react-native';
 import { useAuth } from '@modules/auth';
+import { getProfile } from '@modules/profile';
 import { getCurrentOneRmKg } from '@modules/program';
 import { getAllWarmupConfigs, updateWarmupConfig } from '@modules/settings';
 import type { Lift } from '@parakeet/shared-types';
@@ -19,6 +20,7 @@ import type {
   WarmupStep,
 } from '@parakeet/training-engine';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { qk } from '@platform/query';
 import { router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { BackLink } from '../../components/navigation/BackLink';
@@ -269,9 +271,15 @@ export default function WarmupProtocolScreen() {
   > | null>(null);
   const [saving, setSaving] = useState<Partial<Record<Lift, boolean>>>({});
 
+  const { data: profile } = useQuery({
+    queryKey: qk.profile.current(),
+    queryFn: getProfile,
+    staleTime: 5 * 60 * 1000,
+  });
+
   const { data: warmupData, isLoading } = useQuery({
     queryKey: ['warmup', 'configs', user?.id],
-    queryFn: () => getAllWarmupConfigs(user!.id),
+    queryFn: () => getAllWarmupConfigs(user!.id, profile?.biological_sex ?? undefined),
     enabled: !!user?.id,
   });
 

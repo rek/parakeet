@@ -74,10 +74,6 @@ export default function SettingsScreen() {
 
   const [barWeightKg, setBarWeightKgState] = useState<BarWeightKg>(20);
 
-  useEffect(() => {
-    getBarWeightKg().then(setBarWeightKgState);
-  }, []);
-
   const [isExporting, setIsExporting] = useState(false);
 
   const handleExport = useCallback(async () => {
@@ -113,6 +109,10 @@ export default function SettingsScreen() {
     queryFn: getProfile,
     staleTime: 5 * 60 * 1000,
   });
+
+  useEffect(() => {
+    getBarWeightKg(profile?.biological_sex).then(setBarWeightKgState);
+  }, [profile?.biological_sex]);
 
   const hasSuggestions = (pendingSuggestions ?? 0) > 0;
   const hasDevSuggestions = (unreviewedDevCount ?? 0) > 0;
