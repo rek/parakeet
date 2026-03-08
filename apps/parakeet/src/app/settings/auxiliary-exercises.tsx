@@ -4,7 +4,6 @@ import {
   ScrollView,
   StyleSheet,
   Text,
-  TextInput,
   TouchableOpacity,
   View,
 } from 'react-native';
@@ -14,18 +13,20 @@ import {
   getActiveAssignments,
   getActiveProgram,
   getAuxiliaryPools,
-  getPrimaryMuscles,
   lockAssignment,
   reorderAuxiliaryPool,
   unendingBlockNumber,
 } from '@modules/program';
 import type { Lift } from '@parakeet/shared-types';
-import type { MuscleGroup } from '@parakeet/training-engine';
-import { MUSCLE_LABELS_COMPACT } from '@shared/constants/training';
+import { getExerciseType } from '@parakeet/training-engine';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { BackLink } from '../../components/navigation/BackLink';
+import { AddExerciseModal } from '../../components/session/AddExerciseModal';
+import { MuscleChips } from '../../components/settings/MuscleChips';
+import { SlotDropdown } from '../../components/settings/SlotDropdown';
+import { qk } from '@platform/query';
 import { colors } from '../../theme';
 
 // ── Constants ─────────────────────────────────────────────────────────────────
@@ -37,24 +38,6 @@ const LIFT_LABELS: Record<Lift, string> = {
   bench: 'Bench',
   deadlift: 'Deadlift',
 };
-
-// ── Muscle chips ──────────────────────────────────────────────────────────────
-
-function MuscleChips({ exerciseName }: { exerciseName: string }) {
-  const muscles = getPrimaryMuscles(exerciseName);
-  if (muscles.length === 0) return null;
-  return (
-    <View style={styles.chipRow}>
-      {muscles.map((m) => (
-        <View key={m} style={styles.chip}>
-          <Text style={styles.chipText}>
-            {MUSCLE_LABELS_COMPACT[m as MuscleGroup] ?? m}
-          </Text>
-        </View>
-      ))}
-    </View>
-  );
-}
 
 // ── Pool list ─────────────────────────────────────────────────────────────────
 
@@ -79,95 +62,65 @@ function PoolList({ pool, onReorder, onRemove }: PoolListProps) {
     onReorder(next);
   }
 
+  if (pool.length === 0) {
+    return (
+      <View style={styles.emptyPool}>
+        <Text style={styles.emptyPoolText}>No exercises in pool — add one below.</Text>
+      </View>
+    );
+  }
+
   return (
     <View style={styles.poolList}>
-      {pool.map((ex, i) => (
-        <View key={`${ex}-${i}`} style={styles.poolItem}>
-          <Text style={styles.poolPosition}>{i + 1}.</Text>
-          <View style={styles.poolExerciseCol}>
-            <Text style={styles.poolExercise} numberOfLines={1}>
-              {ex}
-            </Text>
-            <MuscleChips exerciseName={ex} />
+      {pool.map((ex, i) => {
+        const isBW = getExerciseType(ex) === 'bodyweight';
+        return (
+          <View key={`${ex}-${i}`} style={styles.poolItem}>
+            <Text style={styles.poolPosition}>{i + 1}.</Text>
+            <View style={styles.poolExerciseCol}>
+              <View style={styles.poolExerciseRow}>
+                <Text style={styles.poolExercise} numberOfLines={1}>
+                  {ex}
+                </Text>
+                {isBW && (
+                  <View style={styles.bwBadge}>
+                    <Text style={styles.bwBadgeText}>BW</Text>
+                  </View>
+                )}
+              </View>
+              <MuscleChips exerciseName={ex} />
+            </View>
+            <View style={styles.poolActions}>
+              <TouchableOpacity
+                style={[styles.reorderBtn, i === 0 && styles.reorderBtnDisabled]}
+                onPress={() => moveUp(i)}
+                disabled={i === 0}
+                activeOpacity={0.7}
+              >
+                <Text style={styles.reorderBtnText}>↑</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[
+                  styles.reorderBtn,
+                  i === pool.length - 1 && styles.reorderBtnDisabled,
+                ]}
+                onPress={() => moveDown(i)}
+                disabled={i === pool.length - 1}
+                activeOpacity={0.7}
+              >
+                <Text style={styles.reorderBtnText}>↓</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.removeBtn}
+                onPress={() => onRemove(i)}
+                activeOpacity={0.7}
+              >
+                <Text style={styles.removeBtnText}>×</Text>
+              </TouchableOpacity>
+            </View>
           </View>
-          <View style={styles.poolActions}>
-            <TouchableOpacity
-              style={[styles.reorderBtn, i === 0 && styles.reorderBtnDisabled]}
-              onPress={() => moveUp(i)}
-              disabled={i === 0}
-              activeOpacity={0.7}
-            >
-              <Text style={styles.reorderBtnText}>↑</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[
-                styles.reorderBtn,
-                i === pool.length - 1 && styles.reorderBtnDisabled,
-              ]}
-              onPress={() => moveDown(i)}
-              disabled={i === pool.length - 1}
-              activeOpacity={0.7}
-            >
-              <Text style={styles.reorderBtnText}>↓</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={styles.removeBtn}
-              onPress={() => onRemove(i)}
-              activeOpacity={0.7}
-            >
-              <Text style={styles.removeBtnText}>×</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      ))}
-    </View>
-  );
-}
-
-// ── Assignment picker ─────────────────────────────────────────────────────────
-
-interface SlotPickerProps {
-  label: string;
-  value: string;
-  pool: string[];
-  onChange: (v: string) => void;
-}
-
-function SlotPicker({ label, value, pool, onChange }: SlotPickerProps) {
-  const idx = pool.indexOf(value);
-
-  function prev() {
-    const next = (idx - 1 + pool.length) % pool.length;
-    onChange(pool[next]);
-  }
-
-  function next() {
-    const next = (idx + 1) % pool.length;
-    onChange(pool[next]);
-  }
-
-  return (
-    <View style={styles.slotPicker}>
-      <Text style={styles.slotLabel}>{label}</Text>
-      <View style={styles.slotControls}>
-        <TouchableOpacity
-          style={styles.slotArrow}
-          onPress={prev}
-          activeOpacity={0.7}
-        >
-          <Text style={styles.slotArrowText}>‹</Text>
-        </TouchableOpacity>
-        <Text style={styles.slotValue} numberOfLines={1}>
-          {value}
-        </Text>
-        <TouchableOpacity
-          style={styles.slotArrow}
-          onPress={next}
-          activeOpacity={0.7}
-        >
-          <Text style={styles.slotArrowText}>›</Text>
-        </TouchableOpacity>
-      </View>
+        );
+      })}
     </View>
   );
 }
@@ -180,6 +133,7 @@ interface LiftSectionProps {
   assignment: [string, string] | null;
   blockNumber: 1 | 2 | 3 | null;
   isSavingPool: boolean;
+  isDirtyPool: boolean;
   isSavingAssignment: boolean;
   onPoolChange: (pool: string[]) => void;
   onSavePool: () => void;
@@ -193,19 +147,18 @@ function LiftSection({
   assignment,
   blockNumber,
   isSavingPool,
+  isDirtyPool,
   isSavingAssignment,
   onPoolChange,
   onSavePool,
   onAssignmentChange,
   onSaveAssignment,
 }: LiftSectionProps) {
-  const [newExercise, setNewExercise] = useState('');
+  const [pickerVisible, setPickerVisible] = useState(false);
 
-  function addExercise() {
-    const trimmed = newExercise.trim();
-    if (!trimmed || pool.includes(trimmed)) return;
-    onPoolChange([...pool, trimmed]);
-    setNewExercise('');
+  function addExercise(name: string) {
+    if (!name || pool.includes(name)) return;
+    onPoolChange([...pool, name]);
   }
 
   function removeExercise(i: number) {
@@ -217,7 +170,11 @@ function LiftSection({
       <View style={styles.liftHeader}>
         <Text style={styles.liftTitle}>{LIFT_LABELS[lift]}</Text>
         <TouchableOpacity
-          style={[styles.saveBtn, isSavingPool && styles.saveBtnDisabled]}
+          style={[
+            styles.saveBtn,
+            isDirtyPool && styles.saveBtnDirty,
+            isSavingPool && styles.saveBtnDisabled,
+          ]}
           onPress={onSavePool}
           disabled={isSavingPool}
           activeOpacity={0.8}
@@ -225,7 +182,9 @@ function LiftSection({
           {isSavingPool ? (
             <ActivityIndicator color={colors.textInverse} size="small" />
           ) : (
-            <Text style={styles.saveBtnText}>Save Pool</Text>
+            <Text style={[styles.saveBtnText, isDirtyPool && styles.saveBtnTextDirty]}>
+              {isDirtyPool ? 'Save Pool ·' : 'Save Pool'}
+            </Text>
           )}
         </TouchableOpacity>
       </View>
@@ -237,25 +196,20 @@ function LiftSection({
         onRemove={removeExercise}
       />
 
-      <View style={styles.addRow}>
-        <TextInput
-          style={styles.addInput}
-          placeholder="Add exercise…"
-          placeholderTextColor={colors.textTertiary}
-          value={newExercise}
-          onChangeText={setNewExercise}
-          onSubmitEditing={addExercise}
-          returnKeyType="done"
-        />
-        <TouchableOpacity
-          style={[styles.addBtn, !newExercise.trim() && styles.addBtnDisabled]}
-          onPress={addExercise}
-          disabled={!newExercise.trim()}
-          activeOpacity={0.7}
-        >
-          <Text style={styles.addBtnText}>Add</Text>
-        </TouchableOpacity>
-      </View>
+      <TouchableOpacity
+        style={styles.addBtn}
+        onPress={() => setPickerVisible(true)}
+        activeOpacity={0.7}
+      >
+        <Text style={styles.addBtnText}>+ Add Exercise</Text>
+      </TouchableOpacity>
+      <AddExerciseModal
+        visible={pickerVisible}
+        onConfirm={(name) => { addExercise(name); setPickerVisible(false); }}
+        onClose={() => setPickerVisible(false)}
+        defaultLift={lift}
+        excludeNames={pool}
+      />
 
       {assignment && blockNumber && pool.length >= 2 && (
         <View style={styles.assignmentCard}>
@@ -279,13 +233,13 @@ function LiftSection({
               )}
             </TouchableOpacity>
           </View>
-          <SlotPicker
+          <SlotDropdown
             label="Slot 1"
             value={assignment[0]}
             pool={pool}
             onChange={(v) => onAssignmentChange([v, assignment[1]])}
           />
-          <SlotPicker
+          <SlotDropdown
             label="Slot 2"
             value={assignment[1]}
             pool={pool}
@@ -309,12 +263,9 @@ export default function AuxiliaryExercisesScreen() {
   const [assignments, setAssignments] = useState<Partial<Assignments>>({});
   const [blockNumber, setBlockNumber] = useState<1 | 2 | 3 | null>(null);
   const [programId, setProgramId] = useState<string | null>(null);
-  const [savingPool, setSavingPool] = useState<Partial<Record<Lift, boolean>>>(
-    {}
-  );
-  const [savingAssignment, setSavingAssignment] = useState<
-    Partial<Record<Lift, boolean>>
-  >({});
+  const [savingPool, setSavingPool] = useState<Partial<Record<Lift, boolean>>>({});
+  const [savingAssignment, setSavingAssignment] = useState<Partial<Record<Lift, boolean>>>({});
+  const [dirtyPools, setDirtyPools] = useState<Partial<Record<Lift, boolean>>>({});
 
   const { data: poolData, isLoading } = useQuery({
     queryKey: ['auxiliary', 'pools', user?.id],
@@ -323,7 +274,7 @@ export default function AuxiliaryExercisesScreen() {
   });
 
   const { data: activeProgram } = useQuery({
-    queryKey: ['programs', 'active', user?.id],
+    queryKey: qk.program.active(user?.id),
     queryFn: () => getActiveProgram(user!.id),
     enabled: !!user?.id,
   });
@@ -378,6 +329,7 @@ export default function AuxiliaryExercisesScreen() {
     try {
       await reorderAuxiliaryPool(user.id, lift, pools[lift]);
       queryClient.invalidateQueries({ queryKey: ['auxiliary'] });
+      setDirtyPools((prev) => ({ ...prev, [lift]: false }));
     } finally {
       setSavingPool((prev) => ({ ...prev, [lift]: false }));
     }
@@ -426,10 +378,22 @@ export default function AuxiliaryExercisesScreen() {
               }
               blockNumber={blockNumber}
               isSavingPool={!!savingPool[lift]}
+              isDirtyPool={!!dirtyPools[lift]}
               isSavingAssignment={!!savingAssignment[lift]}
-              onPoolChange={(p) =>
-                setPools((prev) => (prev ? { ...prev, [lift]: p } : prev))
-              }
+              onPoolChange={(p) => {
+                setPools((prev) => (prev ? { ...prev, [lift]: p } : prev));
+                setDirtyPools((prev) => ({ ...prev, [lift]: true }));
+                // If an assigned exercise was removed from the pool, reset it to a valid entry
+                setAssignments((prev) => {
+                  const current = prev[lift];
+                  if (!current) return prev;
+                  const [ex1, ex2] = current;
+                  const newEx1 = p.includes(ex1) ? ex1 : (p[0] ?? '');
+                  const newEx2 = p.includes(ex2) ? ex2 : (p[1] ?? '');
+                  if (newEx1 === ex1 && newEx2 === ex2) return prev;
+                  return { ...prev, [lift]: [newEx1, newEx2] };
+                });
+              }}
               onSavePool={() => handleSavePool(lift)}
               onAssignmentChange={(pair) =>
                 setAssignments((prev) => ({ ...prev, [lift]: pair }))
@@ -482,15 +446,31 @@ const styles = StyleSheet.create({
     letterSpacing: 0.5,
   },
   saveBtn: {
-    backgroundColor: colors.primary,
     borderRadius: 8,
     paddingHorizontal: 12,
     paddingVertical: 6,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.bgSurface,
+  },
+  saveBtnDirty: {
+    backgroundColor: colors.primary,
+    borderColor: colors.primary,
   },
   saveBtnDisabled: { opacity: 0.4 },
-  saveBtnText: { fontSize: 13, fontWeight: '600', color: colors.textInverse },
+  saveBtnText: { fontSize: 13, fontWeight: '600', color: colors.textSecondary },
+  saveBtnTextDirty: { color: colors.textInverse },
 
   poolList: { gap: 4 },
+  emptyPool: {
+    paddingVertical: 12,
+    alignItems: 'center',
+  },
+  emptyPoolText: {
+    fontSize: 13,
+    color: colors.textTertiary,
+    fontStyle: 'italic',
+  },
   poolItem: {
     flexDirection: 'row',
     alignItems: 'flex-start',
@@ -508,15 +488,15 @@ const styles = StyleSheet.create({
     paddingTop: 2,
   },
   poolExerciseCol: { flex: 1, gap: 4 },
-  poolExercise: { fontSize: 14, color: colors.text },
-  chipRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 4 },
-  chip: {
-    backgroundColor: colors.primaryMuted,
+  poolExerciseRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  poolExercise: { fontSize: 14, color: colors.text, flexShrink: 1 },
+  bwBadge: {
+    backgroundColor: colors.bgMuted,
     borderRadius: 4,
     paddingHorizontal: 5,
     paddingVertical: 1,
   },
-  chipText: { fontSize: 10, color: colors.primary, fontWeight: '600' },
+  bwBadgeText: { fontSize: 10, color: colors.textSecondary, fontWeight: '600' },
   poolActions: { flexDirection: 'row', gap: 4, paddingTop: 2 },
   reorderBtn: {
     width: 28,
@@ -540,25 +520,13 @@ const styles = StyleSheet.create({
   },
   removeBtnText: { fontSize: 16, color: colors.danger, lineHeight: 20 },
 
-  addRow: { flexDirection: 'row', gap: 8 },
-  addInput: {
-    flex: 1,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 9,
-    fontSize: 14,
-    color: colors.text,
-  },
   addBtn: {
     backgroundColor: colors.primary,
     borderRadius: 8,
-    paddingHorizontal: 14,
-    paddingVertical: 9,
-    justifyContent: 'center',
+    paddingVertical: 10,
+    alignItems: 'center',
+    marginTop: 4,
   },
-  addBtnDisabled: { opacity: 0.35 },
   addBtnText: { fontSize: 14, fontWeight: '600', color: colors.textInverse },
 
   assignmentCard: {
@@ -585,26 +553,4 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: colors.primary,
   },
-
-  slotPicker: { gap: 4 },
-  slotLabel: {
-    fontSize: 11,
-    color: colors.textSecondary,
-    fontWeight: '600',
-    textTransform: 'uppercase',
-    letterSpacing: 0.4,
-  },
-  slotControls: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  slotArrow: {
-    width: 28,
-    height: 28,
-    borderRadius: 6,
-    backgroundColor: colors.bgSurface,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: colors.primaryMuted,
-  },
-  slotArrowText: { fontSize: 18, color: colors.primary, lineHeight: 22 },
-  slotValue: { flex: 1, fontSize: 14, color: colors.text, fontWeight: '500' },
 });

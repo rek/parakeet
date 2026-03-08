@@ -1,60 +1,6 @@
 import { Lift } from '@parakeet/shared-types'
 import { AuxiliaryPool } from '../types'
-
-export const DEFAULT_AUXILIARY_POOLS: Record<Lift, string[]> = {
-  squat: [
-    'Plate Twist',
-    'Barbell Box Squat',
-    'Dumbbell Step Up',
-    'Dumbbell Thruster',
-    'Front barbell box squat',
-    'Plank',
-    'Dumbbell Lunge',
-    'Dumbbell hang clean press',
-    'Barbell Squat Hold',
-    'Barbell Thruster',
-    'Barbell clean hang clean squat',
-    'Power Clean',
-    'Barbell Front Squat',
-    'Sled',
-  ],
-  bench: [
-    'Lat Pulldown',
-    'Close-Grip Barbell Bench Press',
-    'Dumbbell Incline Bench Press',
-    'Barbell Pause Bench Press',
-    'Dumbbell Curl',
-    'Decline Barbell Bench Press',
-    'Barbell Incline Bench Press',
-    'Dumbbell Fly',
-    'Barbell Reverse Curl',
-    'Chin Up (weighted)',
-    'Barbell Hang Clean Press',
-    'Seated machine row',
-    'Assault Bike 5 mins',
-    'Barbell Clean Press',
-    'Barbell Push Press',
-  ],
-  deadlift: [
-    'Rack Pull',
-    'Kettlebell Swing',
-    'Pendlay Row',
-    'Barbell Row',
-    'Romanian Dumbbell Deadlift',
-    'Barbell Russian Twist',
-    'Hexbar Deadlift',
-    'Hexbar Deadlift Deficit',
-    'Dumbbell Upright Row',
-    'Dumbbell Row',
-    '50kg Breifcase Carry',
-    'Sumo Deadlift',
-    'Hanging',
-    'Barbell Clean Jerk',
-    'Deficit Deadlift',
-    'Kettlebell Deadlift',
-    'Dumbbell Snatch',
-  ],
-}
+export { DEFAULT_AUXILIARY_POOLS } from './exercise-catalog'
 
 export interface ProgramRecord {
   completedBlocks: number
