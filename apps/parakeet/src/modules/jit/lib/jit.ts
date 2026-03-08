@@ -23,7 +23,7 @@ import { getMrvMevConfig } from '@modules/training-volume'
 import { getBarWeightKg, getJITStrategyOverride, getUserRestOverrides, getWarmupConfig } from '@modules/settings'
 import type { Json } from '@platform/supabase'
 import { typedSupabase } from '@platform/supabase'
-import { fetchProfileSex } from '../../session/data/session.repository'
+import { fetchProfileSex } from '@modules/session'
 import { estimateOneRmKgFromProfile } from './max-estimation'
 
 type Session = Awaited<ReturnType<typeof getSession>>
