@@ -15,6 +15,7 @@ import { useAuth } from '@modules/auth'
 import { qk } from '@platform/query'
 import { generateProgram, nextDateForWeekday, DEFAULT_TRAINING_DAYS } from '@parakeet/training-engine'
 import { captureException } from '@platform/utils/captureException'
+import { capitalize } from '@shared/utils/string'
 import { colors, spacing, typography, radii } from '../../../theme'
 
 // ── Constants ─────────────────────────────────────────────────────────────────
@@ -26,10 +27,6 @@ const MONTH_SHORT = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Se
 
 function formatSessionDate(date: Date): string {
   return `${DAY_LABELS[date.getDay()]} ${MONTH_SHORT[date.getMonth()]} ${date.getDate()}`
-}
-
-function capitalize(str: string): string {
-  return str ? str.charAt(0).toUpperCase() + str.slice(1) : str
 }
 
 // ── Screen ───────────────────────────────────────────────────────────────────

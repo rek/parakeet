@@ -12,16 +12,13 @@ import { getSession, getSessionLog } from '@modules/session'
 import { BackLink } from '../../components/navigation/BackLink'
 import { colors, radii, spacing, typography } from '../../theme'
 import { formatDate, formatTime } from '@shared/utils/date'
+import { capitalize } from '@shared/utils/string'
 import type { Lift } from '@parakeet/shared-types'
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 function gramsToKg(grams: number): string {
   return (grams / 1000).toFixed(1)
-}
-
-function capitalize(s: string): string {
-  return s.charAt(0).toUpperCase() + s.slice(1)
 }
 
 const LIFT_LABELS: Record<Lift, string> = {

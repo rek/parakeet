@@ -22,6 +22,7 @@ import {
   LIFT_PRIMARY_SORENESS_MUSCLES,
   MUSCLE_LABELS_FULL,
 } from '@shared/constants/training';
+import { capitalize } from '@shared/utils/string';
 import { router, useLocalSearchParams } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { BackLink } from '../../../components/navigation/BackLink';
@@ -34,11 +35,6 @@ type Session = Awaited<ReturnType<typeof getSession>>;
 // ── Constants ────────────────────────────────────────────────────────────────
 
 const RATING_LEVELS = [1, 2, 3, 4, 5] as const;
-
-function capitalize(value: string): string {
-  if (!value) return value;
-  return value.charAt(0).toUpperCase() + value.slice(1);
-}
 
 // ── Sub-component: single muscle rating row ───────────────────────────────
 

@@ -8,6 +8,7 @@ import { useAuth } from '@modules/auth'
 import { useNetworkStatus } from '@platform/network'
 import { colors, spacing, typography } from '../../theme'
 import { formatDate } from '@shared/utils/date'
+import { capitalize } from '@shared/utils/string'
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -15,13 +16,6 @@ interface Props {
   lift: string
   visible: boolean
   onClose: () => void
-}
-
-// ── Helpers ───────────────────────────────────────────────────────────────────
-
-function capitalize(v: string) {
-  if (!v) return v
-  return v.charAt(0).toUpperCase() + v.slice(1)
 }
 
 

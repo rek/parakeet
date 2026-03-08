@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react'
 import { Animated, StyleSheet, Text, View } from 'react-native'
 import type { PR } from '@parakeet/training-engine'
+import { capitalize } from '@shared/utils/string'
 import { colors, radii, spacing, typography } from '../../theme'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -9,12 +10,6 @@ interface StarCardProps {
   pr: PR
   /** Delay in ms before the slide-up animation starts (for staggering). */
   delay?: number
-}
-
-// ── Helpers ───────────────────────────────────────────────────────────────────
-
-function capitalize(s: string): string {
-  return s.charAt(0).toUpperCase() + s.slice(1)
 }
 
 function formatPRText(pr: PR): string {

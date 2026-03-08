@@ -7,12 +7,8 @@ import { useSessionStore } from '@platform/store/sessionStore'
 import { getRestTimerPrefs } from '@modules/settings'
 import { detectOvertimeEdge, useRestNotifications } from '@modules/session'
 import { formatMMSS } from '../../shared/utils'
+import { capitalize } from '@shared/utils/string'
 import { colors, radii, spacing, typography } from '../../theme'
-
-function capitalize(value: string): string {
-  if (!value) return value
-  return value.charAt(0).toUpperCase() + value.slice(1)
-}
 
 export function ReturnToSessionBanner() {
   useRestNotifications()
