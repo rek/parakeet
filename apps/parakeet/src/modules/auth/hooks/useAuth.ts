@@ -49,7 +49,9 @@ export function useAuth(): AuthState {
       } else if (_event === 'INITIAL_SESSION' && s?.user) {
         // Restore session — ensure profile exists but don't redirect; app is already on the right screen
         ensureSignedInUserProfile(s.user).catch((err) => Sentry.captureException(err));
-      } else if (_event === 'SIGNED_OUT') {
+      } else if (_event === 'SIGNED_OUT' || (_event === 'TOKEN_REFRESHED' && !s)) {
+        // SIGNED_OUT: explicit sign-out or token refresh failure invalidated the session.
+        // TOKEN_REFRESHED with null session: refresh failed before SIGNED_OUT fires.
         router.replace('/(auth)/welcome');
       }
     });
