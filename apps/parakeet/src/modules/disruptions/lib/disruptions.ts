@@ -324,7 +324,6 @@ export async function applyUnprogrammedEventSoreness(
     user_id: userId,
     session_id: inProgressSession?.id ?? null,
     ratings,
-    source: 'unprogrammed_event',
-    checked_at: new Date().toISOString(),
+    skipped: false,
   });
 }
