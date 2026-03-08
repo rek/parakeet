@@ -1,5 +1,6 @@
 import { IntensityType, Lift } from '@parakeet/shared-types'
 import { InvalidInputError } from '../errors'
+import { localDateString } from '../utils/date'
 
 // Cube Method rotation: index = weekInBlock - 1
 const CUBE_ROTATION: Record<number, Record<Lift, IntensityType>> = {
@@ -21,12 +22,12 @@ export function computeDayOffsets(selectedDays: number[]): number[] {
   return sorted.map((d) => d - sorted[0])
 }
 
-// Next date that falls on a given weekday (0=Sun..6=Sat), always in the future
+// Next date that falls on a given weekday (0=Sun..6=Sat), today or future
 export function nextDateForWeekday(weekday: number): Date {
   const d = new Date()
   d.setHours(0, 0, 0, 0)
   const diff = (weekday - d.getDay() + 7) % 7
-  d.setDate(d.getDate() + (diff === 0 ? 7 : diff))
+  d.setDate(d.getDate() + diff)
   return d
 }
 
@@ -57,20 +58,20 @@ export function nextTrainingDate(trainingDays: number[], referenceDate?: Date): 
   const today = d.getDay()
 
   if (trainingDays.includes(today)) {
-    return d.toISOString().split('T')[0]
+    return localDateString(d)
   }
 
   const sorted = [...trainingDays].sort((a, b) => a - b)
   for (const day of sorted) {
     if (day > today) {
       d.setDate(d.getDate() + (day - today))
-      return d.toISOString().split('T')[0]
+      return localDateString(d)
     }
   }
   // Wrap to next week
   const daysUntilNext = 7 - today + sorted[0]
   d.setDate(d.getDate() + daysUntilNext)
-  return d.toISOString().split('T')[0]
+  return localDateString(d)
 }
 
 export function calculateSessionDate(

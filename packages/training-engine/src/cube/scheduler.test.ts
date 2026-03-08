@@ -1,4 +1,5 @@
 import { InvalidInputError } from '../errors'
+import { localDateString } from '../utils/date'
 import {
   calculateSessionDate,
   computeDayOffsets,
@@ -101,11 +102,11 @@ describe('computeDayOffsets', () => {
 })
 
 describe('nextDateForWeekday', () => {
-  it('returns a date in the future (never today)', () => {
+  it('returns today when today matches the requested weekday', () => {
     const today = new Date()
     today.setHours(0, 0, 0, 0)
     const result = nextDateForWeekday(today.getDay())
-    expect(result.getTime()).toBeGreaterThan(today.getTime())
+    expect(result.getTime()).toBe(today.getTime())
   })
 
   it('returns a date on the requested weekday', () => {
@@ -120,31 +121,31 @@ describe('nextTrainingDate', () => {
   it('returns today when today is a training day', () => {
     const wed = new Date(2026, 2, 11) // Wed Mar 11
     const result = nextTrainingDate([1, 3, 5], wed)
-    expect(result).toBe(wed.toISOString().split('T')[0])
+    expect(result).toBe(localDateString(wed))
   })
 
   it('returns the next training day when today is not a training day', () => {
     const tue = new Date(2026, 2, 10) // Tue Mar 10
     const expected = new Date(2026, 2, 11) // Wed Mar 11
-    expect(nextTrainingDate([1, 3, 5], tue)).toBe(expected.toISOString().split('T')[0])
+    expect(nextTrainingDate([1, 3, 5], tue)).toBe(localDateString(expected))
   })
 
   it('wraps to next week when no remaining training days this week', () => {
     const sat = new Date(2026, 2, 14) // Sat Mar 14
     const expected = new Date(2026, 2, 16) // Mon Mar 16
-    expect(nextTrainingDate([1, 3, 5], sat)).toBe(expected.toISOString().split('T')[0])
+    expect(nextTrainingDate([1, 3, 5], sat)).toBe(localDateString(expected))
   })
 
   it('handles Sunday training day on Sunday', () => {
     const sun = new Date(2026, 2, 8) // Sun Mar 8
     const result = nextTrainingDate([0, 2, 4], sun)
-    expect(result).toBe(sun.toISOString().split('T')[0])
+    expect(result).toBe(localDateString(sun))
   })
 
   it('handles unsorted training days input', () => {
     const tue = new Date(2026, 2, 10) // Tue Mar 10
     const expected = new Date(2026, 2, 11) // Wed Mar 11
-    expect(nextTrainingDate([5, 1, 3], tue)).toBe(expected.toISOString().split('T')[0])
+    expect(nextTrainingDate([5, 1, 3], tue)).toBe(localDateString(expected))
   })
 })
 

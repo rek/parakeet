@@ -39,7 +39,9 @@ export type Database = {
           block_number: number
           created_at: string
           exercise_1: string
+          exercise_1_locked: boolean
           exercise_2: string
+          exercise_2_locked: boolean
           id: string
           lift: string
           program_id: string
@@ -49,7 +51,9 @@ export type Database = {
           block_number: number
           created_at?: string
           exercise_1: string
+          exercise_1_locked?: boolean
           exercise_2: string
+          exercise_2_locked?: boolean
           id?: string
           lift: string
           program_id: string
@@ -59,7 +63,9 @@ export type Database = {
           block_number?: number
           created_at?: string
           exercise_1?: string
+          exercise_1_locked?: boolean
           exercise_2?: string
+          exercise_2_locked?: boolean
           id?: string
           lift?: string
           program_id?: string
