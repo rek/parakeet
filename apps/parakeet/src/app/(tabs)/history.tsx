@@ -283,7 +283,7 @@ export default function HistoryScreen() {
                       </View>
                     </View>
                     <Text style={styles.sessionRowDate}>
-                      {program.total_weeks} weeks ·{' '}
+                      {program.total_weeks ? `${program.total_weeks} weeks` : 'Unending'} ·{' '}
                       {program.training_days_per_week} days/week
                       {program.start_date
                         ? ` · Started ${formatDate(program.start_date)}`
