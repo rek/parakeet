@@ -50,6 +50,7 @@ export function AddExerciseModal({ visible, onConfirm, onClose }: Props) {
             placeholderTextColor={colors.textTertiary}
             value={input}
             onChangeText={setInput}
+            // eslint-disable-next-line jsx-a11y/no-autofocus -- intentional for modal UX
             autoFocus
             returnKeyType="done"
             onSubmitEditing={handleConfirm}

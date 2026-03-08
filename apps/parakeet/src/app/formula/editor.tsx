@@ -20,12 +20,9 @@ import {
   getFormulaHistory,
   getPendingAiFormulaSuggestions,
   initDraft,
-  toRowDraft,
 } from '@modules/formula';
 import type { BlockKey, DraftConfig, RowDraft } from '@modules/formula';
 import { getActiveProgram, getCurrentOneRmKg } from '@modules/program';
-import type { FormulaOverrides } from '@parakeet/shared-types';
-import type { FormulaConfig } from '@parakeet/training-engine';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
