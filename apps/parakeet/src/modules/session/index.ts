@@ -8,3 +8,4 @@ export * from './hooks/useSyncQueue';
 export * from './lib/sessions';
 export * from './utils/overtime-edge';
 export * from './utils/session-sorting';
+export { fetchProfileSex, cancelPlannedSessionsForProgram } from './data/session.repository';
