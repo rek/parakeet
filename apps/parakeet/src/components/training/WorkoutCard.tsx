@@ -55,7 +55,14 @@ export function WorkoutCard({ session, onSkipComplete, isLocked = false }: Worko
 
   async function handleResumeWorkout() {
     const jit = await getReadyCachedJitData();
-    if (!jit) return;
+    if (!jit) {
+      // Cached JIT data is gone — re-run through soreness/JIT flow to regenerate
+      router.push({
+        pathname: '/session/soreness',
+        params: { sessionId: session.id },
+      });
+      return;
+    }
     router.push({
       pathname: '/session/[sessionId]',
       params: { sessionId: session.id, jitData: jit },

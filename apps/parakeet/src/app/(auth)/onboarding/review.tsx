@@ -93,6 +93,7 @@ export default function ReviewScreen() {
         programMode: isUnending ? 'unending' : 'scheduled',
       })
       await queryClient.invalidateQueries({ queryKey: qk.program.active(user?.id) })
+      await queryClient.invalidateQueries({ queryKey: qk.session.today(user?.id) })
       router.replace('/(tabs)/today')
     } catch (err) {
       captureException(err)

@@ -4,6 +4,7 @@ import {
   DEFAULT_TRAINING_DAYS,
   generateAuxiliaryAssignments,
   generateProgram,
+  localDateString,
   nextTrainingDate,
 } from '@parakeet/training-engine';
 import { appendNextUnendingSession } from './unending-session';
@@ -22,7 +23,7 @@ import {
   updateProgramStatusIfActive,
   updateUnendingSessionCounter,
 } from '../data/program.repository';
-import { cancelPlannedSessionsForProgram } from '@modules/session';
+import { cancelPlannedSessionsForProgram } from '@modules/session/data/session.repository';
 import { getAuthenticatedUserId } from '../data/profile.repository';
 import { getAuxiliaryPools } from '../lib/auxiliary-config';
 import { getCurrentMaxes } from '../lib/lifter-maxes';
@@ -66,7 +67,7 @@ async function buildProgram(input: CreateProgramInput, withFormulaConfigId: bool
   await archiveActivePrograms(userId);
 
   const nextVersion = (await fetchLatestProgramVersion(userId)) + 1;
-  const today = input.startDate.toISOString().split('T')[0];
+  const today = localDateString(input.startDate);
 
   const program = await insertProgramRow({
     user_id: userId,
@@ -129,7 +130,7 @@ async function buildProgram(input: CreateProgramInput, withFormulaConfigId: bool
       intensity_type: s.intensityType,
       block_number: s.blockNumber,
       is_deload: s.isDeload,
-      planned_date: s.plannedDate.toISOString().split('T')[0],
+      planned_date: localDateString(s.plannedDate),
       status: 'planned',
       planned_sets: null,
       jit_generated_at: null,
@@ -178,7 +179,7 @@ export { fetchActiveProgramMode, updateUnendingSessionCounter } from '../data/pr
 // Triggered after each session completion when program reaches ≥80% done.
 // Fire-and-forget: errors are logged but do not block the caller.
 export function onCycleComplete(programId: string, userId: string): void {
-  import('../lib/cycle-review')
+  import('@modules/cycle-review/lib/cycle-review')
     .then(({ compileCycleReport, getPreviousCycleSummaries, storeCycleReview }) =>
       import('@parakeet/training-engine')
         .then(({ generateCycleReview }) =>

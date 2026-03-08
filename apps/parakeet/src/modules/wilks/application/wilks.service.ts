@@ -1,7 +1,7 @@
 import { computeWilks2020 } from '@parakeet/training-engine';
 
 import { getProfileById } from '../data/profile.repository';
-import { getCurrentMaxes } from '../lib/lifter-maxes';
+import { getCurrentMaxes } from '@modules/program/lib/lifter-maxes';
 
 export interface CurrentWilksSnapshot {
   wilks: number;

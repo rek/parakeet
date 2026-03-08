@@ -2,7 +2,7 @@
 import { useCallback, useEffect, useRef } from 'react';
 import { AppState, type AppStateStatus } from 'react-native';
 import { useQueryClient } from '@tanstack/react-query';
-import { useAuth } from '@modules/auth';
+import { useAuth } from '@modules/auth/hooks/useAuth';
 import { qk } from '@platform/query';
 import { captureException } from '@platform/utils/captureException';
 import { markMissedSessions } from '../application/session.service';

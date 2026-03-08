@@ -1,5 +1,6 @@
 import type { ActualSet, IntensityType, Lift } from '@parakeet/shared-types';
 import { IntensityTypeSchema, LiftSchema } from '@parakeet/shared-types';
+import { localDateString } from '@parakeet/training-engine';
 import type { DbInsert, DbRow } from '@platform/supabase';
 import { typedSupabase } from '@platform/supabase';
 import type {
@@ -24,7 +25,8 @@ function parseLift(value: string): Lift {
 }
 
 function parseIntensity(value: string): IntensityType {
-  return IntensityTypeSchema.parse(value);
+  const result = IntensityTypeSchema.safeParse(value);
+  return result.success ? result.data : 'heavy';
 }
 
 function parseSessionStatus(value: string): SessionStatus {
@@ -105,7 +107,7 @@ export async function fetchTodaySession(
   if (completedTodayError) throw completedTodayError;
   if (completedTodayData) return completedTodayData;
 
-  const today = new Date().toISOString().split('T')[0];
+  const today = localDateString();
   const { data: plannedData, error: plannedError } = await typedSupabase
     .from('sessions')
     .select('*')
@@ -124,7 +126,7 @@ export async function fetchTodaySession(
 export async function fetchTodaySessions(
   userId: string
 ): Promise<SessionRow[]> {
-  const today = new Date().toISOString().split('T')[0]
+  const today = localDateString()
   const { data, error } = await typedSupabase
     .from('sessions')
     .select('*')
@@ -279,7 +281,7 @@ export async function insertAdHocSession(input: {
   lift: Lift;
   intensityType: 'heavy' | 'explosive' | 'rep';
 }): Promise<string> {
-  const today = new Date().toISOString().split('T')[0];
+  const today = localDateString();
   const { data, error } = await typedSupabase
     .from('sessions')
     .insert({

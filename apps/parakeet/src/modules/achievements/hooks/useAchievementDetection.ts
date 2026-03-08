@@ -8,7 +8,7 @@ import type { Lift } from '@parakeet/shared-types'
 import {
   getSessionCompletionContext,
   getProgramCompletionCounts,
-} from '@modules/session'
+} from '@modules/session/application/session.service'
 import { getPRHistory, getStreakData, storePersonalRecords } from '../application/achievement.service'
 
 export interface ActualSet {

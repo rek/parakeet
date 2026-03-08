@@ -4,7 +4,7 @@ import {
   MUSCLE_GROUPS,
 } from '@parakeet/training-engine'
 import type { MrvMevConfig, MuscleGroup } from '@parakeet/training-engine'
-import type { BiologicalSex } from '@modules/profile'
+import type { BiologicalSex } from '@modules/profile/application/profile.service'
 import { typedSupabase } from '@platform/supabase'
 
 function isMuscleGroup(v: string): v is MuscleGroup {

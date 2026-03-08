@@ -1,6 +1,6 @@
 import { roundToNearest } from '@parakeet/training-engine'
 import type { Lift } from '@parakeet/shared-types'
-import type { BiologicalSex } from '@modules/profile'
+import type { BiologicalSex } from '@modules/profile/application/profile.service'
 
 const DEFAULT_BODYWEIGHT_KG: Record<BiologicalSex, number> = {
   female: 70,

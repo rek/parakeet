@@ -5,10 +5,10 @@ import {
   computeRemainingCapacity,
   getMusclesForLift,
 } from '@parakeet/training-engine'
-import { useAuth } from '@modules/auth'
+import { useAuth } from '@modules/auth/hooks/useAuth'
 import { getMrvMevConfig } from '../lib/volume-config'
-import { getProfile } from '@modules/profile'
-import { getCurrentWeekLogs } from '@modules/session'
+import { getProfile } from '@modules/profile/application/profile.service'
+import { getCurrentWeekLogs } from '@modules/session/application/session.service'
 
 function currentWeekStart(): string {
   const now = new Date()

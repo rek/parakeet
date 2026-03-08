@@ -57,7 +57,7 @@ export function SlotDropdown({ label, value, pool, onChange }: SlotDropdownProps
             />
             <FlatList
               data={filtered}
-              keyExtractor={(ex) => ex}
+              keyExtractor={(ex, i) => `${ex}-${i}`}
               keyboardShouldPersistTaps="handled"
               renderItem={({ item: ex }) => (
                 <TouchableOpacity style={styles.option} onPress={() => select(ex)} activeOpacity={0.7}>

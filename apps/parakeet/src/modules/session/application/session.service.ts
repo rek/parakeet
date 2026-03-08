@@ -4,6 +4,7 @@ import {
   DEFAULT_TRAINING_DAYS,
   getDefaultThresholds,
   isMakeupWindowExpired,
+  localDateString,
   nextTrainingDate,
   suggestProgramAdjustments,
 } from '@parakeet/training-engine';
@@ -41,6 +42,7 @@ import {
   updateSessionToSkipped,
 } from '../data/session.repository';
 import { fetchActiveProgramMode, appendNextUnendingSession, type UnendingProgramRef } from '@modules/program';
+import { captureException } from '@platform/utils/captureException';
 import type {
   CompletedSessionListItem,
   CompleteSessionInput,
@@ -77,9 +79,15 @@ export async function findTodaySession(userId: string) {
 // All sessions relevant to today: planned_date = today + any in_progress
 // For unending programs, triggers lazy session generation first.
 export async function findTodaySessions(userId: string) {
-  const program = await fetchActiveProgramMode(userId);
-  if (program?.program_mode === 'unending') {
-    await findTodaySession(userId);
+  try {
+    const program = await fetchActiveProgramMode(userId);
+    if (program?.program_mode === 'unending') {
+      await findTodaySession(userId);
+    }
+  } catch (err) {
+    // Don't let program-mode lookup failures break the session list.
+    // The direct fetchTodaySessions query still works without program context.
+    captureException(err);
   }
   return fetchTodaySessions(userId);
 }
@@ -313,7 +321,7 @@ export async function completeSession(
       const total = statuses.length;
       const completed = statuses.filter((s) => s.status === 'completed').length;
       if (total > 0 && completed / total >= 0.8) {
-        const { onCycleComplete } = await import('../lib/programs');
+        const { onCycleComplete } = await import('@modules/program/application/program.service');
         onCycleComplete(session.program_id, userId);
       }
     }
@@ -364,7 +372,7 @@ export async function getCurrentWeekLogs(
 // Called on app foreground — fire-and-forget safe.
 export async function markMissedSessions(userId: string): Promise<void> {
   const now = new Date();
-  const today = now.toISOString().split('T')[0];
+  const today = localDateString(now);
 
   // Fetch all scheduled sessions whose date is in the past
   const scheduled = await fetchOverdueScheduledSessions(userId, today);

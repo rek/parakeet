@@ -1,4 +1,5 @@
 import { useCallback, useState } from 'react';
+import { useFocusEffect } from 'expo-router';
 import {
   ActivityIndicator,
   RefreshControl,
@@ -160,7 +161,7 @@ function WorkoutDoneCard({
 
 export default function TodayScreen() {
   const { user } = useAuth();
-  const { data: sessions = [], isLoading: sessionLoading } = useTodaySessions();
+  const { data: sessions = [], isLoading: sessionLoading, isError: sessionError } = useTodaySessions();
   const { data: activeSession } = useInProgressSession();
   const { data: program, isLoading: programLoading } = useActiveProgram();
   const { data: volumeData } = useWeeklyVolume();
@@ -180,6 +181,15 @@ export default function TodayScreen() {
     await queryClient.invalidateQueries();
     setRefreshing(false);
   }, [queryClient]);
+
+  // Invalidate session queries when this tab gains focus (e.g. returning from
+  // the ad-hoc or session screens). refetchOnWindowFocus is inert in React
+  // Native without a global focusManager, so this handles tab switches.
+  useFocusEffect(
+    useCallback(() => {
+      void queryClient.invalidateQueries({ queryKey: ['session'] });
+    }, [queryClient])
+  );
 
   const { data: disruptions } = useQuery({
     queryKey: ['disruptions', 'active', user?.id],
@@ -286,7 +296,18 @@ export default function TodayScreen() {
               />
             )}
 
-            {sessions.length === 0 ? (
+            {sessionError && sessions.length === 0 ? (
+              <TouchableOpacity
+                style={[styles.restDayCard, { borderColor: colors.danger }]}
+                onPress={handleRefresh}
+                activeOpacity={0.7}
+              >
+                <Text style={styles.restDayTitle}>Could not load sessions</Text>
+                <Text style={styles.restDaySubtitle}>
+                  Tap to retry, or pull down to refresh.
+                </Text>
+              </TouchableOpacity>
+            ) : sessions.length === 0 ? (
               <View style={styles.restDayCard}>
                 <Text style={styles.restDayTitle}>Rest Day</Text>
                 <Text style={styles.restDaySubtitle}>

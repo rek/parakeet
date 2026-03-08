@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react'
 import { AppState } from 'react-native'
 
-import { getRestTimerPrefs } from '@modules/settings'
+import { getRestTimerPrefs } from '@modules/settings/lib/settings'
 import { useSessionStore } from '@platform/store/sessionStore'
 import {
   cancelRestNotification,

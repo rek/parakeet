@@ -1,6 +1,6 @@
 import { useEffect } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { useAuth } from '@modules/auth'
+import { useAuth } from '@modules/auth/hooks/useAuth'
 import { qk } from '@platform/query'
 import { captureException } from '@platform/utils/captureException'
 import {

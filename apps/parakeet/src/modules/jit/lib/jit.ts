@@ -4,6 +4,7 @@ import {
   getMusclesForExercise,
   rpeSetMultiplier,
   DEFAULT_AUXILIARY_POOLS,
+  getAuxiliariesForBlock,
 } from '@parakeet/training-engine'
 import type {
   JITInput,
@@ -13,14 +14,15 @@ import type {
   RecentSessionSummary,
 } from '@parakeet/training-engine'
 import { LiftSchema, IntensityTypeSchema, BlockNumberSchema, DisruptionSchema } from '@parakeet/shared-types'
-import { getFormulaConfig } from '@modules/formula'
-import { getSession, fetchProfileSex, getDaysSinceLastSession } from '@modules/session'
-import {
-  getCurrentOneRmKg,
-  getActiveAssignments,
-} from '@modules/program'
-import { getMrvMevConfig } from '@modules/training-volume'
-import { getBarWeightKg, getJITStrategyOverride, getUserRestOverrides, getWarmupConfig } from '@modules/settings'
+import { getFormulaConfig } from '@modules/formula/application/formula.service'
+import { getSession, getDaysSinceLastSession } from '@modules/session/application/session.service'
+import { fetchProfileSex } from '@modules/session/data/session.repository'
+import { getCurrentOneRmKg } from '@modules/program/lib/lifter-maxes'
+import { getActiveAssignments, getAuxiliaryPool } from '@modules/program/lib/auxiliary-config'
+import { getMrvMevConfig } from '@modules/training-volume/lib/volume-config'
+import { getJITStrategyOverride, getBarWeightKg } from '@modules/settings/lib/settings'
+import { getUserRestOverrides } from '@modules/settings/lib/rest-config'
+import { getWarmupConfig } from '@modules/settings/lib/warmup-config'
 import type { Json } from '@platform/supabase'
 import { typedSupabase } from '@platform/supabase'
 import { captureException } from '@platform/utils/captureException'
@@ -50,7 +52,7 @@ export async function runJITForSession(
 
   const biologicalSex = await fetchProfileSex(userId)
 
-  const [oneRmKg, formulaConfig, assignments, warmupConfig, userRestOverrides, barWeightKg] =
+  const [oneRmKg, formulaConfig, assignments, warmupConfig, userRestOverrides, barWeightKg, pool] =
     await Promise.all([
       getCurrentOneRmKg(userId, lift),
       getFormulaConfig(userId),
@@ -58,6 +60,7 @@ export async function runJITForSession(
       getWarmupConfig(userId, lift, biologicalSex),
       getUserRestOverrides(userId),
       getBarWeightKg(biologicalSex),
+      getAuxiliaryPool(userId, lift),
     ])
 
   const mrvMevConfig = await getMrvMevConfig(userId, biologicalSex)
@@ -97,9 +100,15 @@ export async function runJITForSession(
 
   const daysSinceLastSession = await getDaysSinceLastSession(userId, lift)
 
-  const activeAuxiliaries: [string, string] =
-    (assignments?.[lift])
-    ?? [DEFAULT_AUXILIARY_POOLS[lift][0], DEFAULT_AUXILIARY_POOLS[lift][1]] as [string, string]
+  // For each slot: if locked, use the stored exercise; otherwise compute from pool rotation.
+  const liftAssignment = assignments?.[lift]
+  const rotationDefaults = isAdHoc
+    ? ([DEFAULT_AUXILIARY_POOLS[lift][0], DEFAULT_AUXILIARY_POOLS[lift][1]] as [string, string])
+    : getAuxiliariesForBlock(lift, blockNumber, pool)
+  const activeAuxiliaries: [string, string] = [
+    liftAssignment?.exercise_1_locked ? liftAssignment.exercise_1 : rotationDefaults[0],
+    liftAssignment?.exercise_2_locked ? liftAssignment.exercise_2 : rotationDefaults[1],
+  ]
 
   const recentData = await fetchRecentSessionLogsForLift(userId, lift, 6)
 

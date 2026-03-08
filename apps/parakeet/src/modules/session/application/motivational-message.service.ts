@@ -1,4 +1,4 @@
-import { getProfile } from '@modules/profile';
+import { getProfile } from '@modules/profile/application/profile.service';
 import { JIT_MODEL } from '@parakeet/training-engine';
 import type { Json } from '@platform/supabase';
 import { typedSupabase } from '@platform/supabase';

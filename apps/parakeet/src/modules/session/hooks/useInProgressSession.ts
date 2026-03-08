@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
-import { useAuth } from '@modules/auth'
+import { useAuth } from '@modules/auth/hooks/useAuth'
 import { getInProgressSession } from '../application/session.service'
 
 export function useInProgressSession() {
