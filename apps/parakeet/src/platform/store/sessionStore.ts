@@ -37,7 +37,7 @@ interface SessionState {
   plannedSets: { weight_kg: number; reps: number }[]
   actualSets: ActualSet[]
   auxiliarySets: AuxiliaryActualSet[]
-  warmupCompleted: Set<number>
+  warmupCompleted: number[]
   sessionRpe: number | undefined
   startedAt: Date | undefined
   sessionMeta: {
@@ -77,7 +77,7 @@ export const useSessionStore = create<SessionState>()(
       plannedSets: [],
       actualSets: [],
       auxiliarySets: [],
-      warmupCompleted: new Set(),
+      warmupCompleted: [],
       sessionRpe: undefined,
       startedAt: undefined,
       sessionMeta: null,
@@ -94,7 +94,7 @@ export const useSessionStore = create<SessionState>()(
           reps_completed: s.reps,
           is_completed: false,
         })),
-        warmupCompleted: new Set(),
+        warmupCompleted: [],
         sessionRpe: undefined,
         timerState: null,
       }),
@@ -140,12 +140,11 @@ export const useSessionStore = create<SessionState>()(
         };
       }),
 
-      setWarmupDone: (index, done) => set((state) => {
-        const next = new Set(state.warmupCompleted)
-        if (done) next.add(index)
-        else next.delete(index)
-        return { warmupCompleted: next }
-      }),
+      setWarmupDone: (index, done) => set((state) => ({
+        warmupCompleted: done
+          ? state.warmupCompleted.includes(index) ? state.warmupCompleted : [...state.warmupCompleted, index]
+          : state.warmupCompleted.filter((i) => i !== index),
+      })),
 
       setSessionRpe: (rpe) => set({ sessionRpe: rpe }),
 
@@ -196,7 +195,7 @@ export const useSessionStore = create<SessionState>()(
         plannedSets: [],
         actualSets: [],
         auxiliarySets: [],
-        warmupCompleted: new Set(),
+        warmupCompleted: [],
         sessionRpe: undefined,
         startedAt: undefined,
         sessionMeta: null,
@@ -212,6 +211,7 @@ export const useSessionStore = create<SessionState>()(
         plannedSets: state.plannedSets,
         actualSets: state.actualSets,
         auxiliarySets: state.auxiliarySets,
+        warmupCompleted: state.warmupCompleted,
         sessionRpe: state.sessionRpe,
         sessionMeta: state.sessionMeta,
         cachedJitData: state.cachedJitData,
@@ -223,7 +223,6 @@ export const useSessionStore = create<SessionState>()(
         return {
           ...current,
           ...p,
-          warmupCompleted: new Set(),
           startedAt: p?.startedAt ? new Date(p.startedAt as unknown as string) : undefined,
         };
       },
