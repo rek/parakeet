@@ -118,6 +118,7 @@ export default function CompleteScreen() {
         auxiliarySets: completionPayload.auxiliarySets,
         sessionRpe,
         startedAt,
+        completedAt: new Date(),
       });
 
       // Stamp cycle phase on the session log (no-op if tracking disabled)

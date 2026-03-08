@@ -23,6 +23,7 @@ import { RestTimer } from '../../../components/training/RestTimer';
 import { RpeQuickPicker } from '../../../components/training/RpeQuickPicker';
 import { SetRow } from '../../../components/training/SetRow';
 import { WarmupSection } from '../../../components/training/WarmupSection';
+import { capitalize } from '@shared/utils/string';
 import { colors } from '../../../theme';
 
 // ── Types ────────────────────────────────────────────────────────────────────
@@ -72,11 +73,6 @@ const DEFAULT_MAIN_REST_SECONDS = 180;
 const DEFAULT_AUX_REST_SECONDS = 90;
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
-
-function capitalize(value: string): string {
-  if (!value) return value;
-  return value.charAt(0).toUpperCase() + value.slice(1);
-}
 
 function formatExerciseName(name: string): string {
   return name
