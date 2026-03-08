@@ -78,15 +78,20 @@ describe('suggestDisruptionAdjustment — travel', () => {
 })
 
 describe('suggestDisruptionAdjustment — fatigue', () => {
-  it('fatigue affecting deadlift only → 10% weight_reduced on DL, squat/bench unchanged', () => {
+  it('minor fatigue → informational only, no suggestions returned', () => {
     const result = suggestDisruptionAdjustment(
       makeDisruption('fatigue', 'minor', ['deadlift']),
       [squat, bench, deadlift],
     )
-    expect(result).toHaveLength(1)
-    expect(result[0].session_id).toBe('s3')
-    expect(result[0].action).toBe('weight_reduced')
-    expect(result[0].reduction_pct).toBe(10)
+    expect(result).toHaveLength(0)
+  })
+
+  it('minor fatigue with no lift filter → still no suggestions', () => {
+    const result = suggestDisruptionAdjustment(
+      makeDisruption('fatigue', 'minor', null),
+      [squat, bench, deadlift],
+    )
+    expect(result).toHaveLength(0)
   })
 
   it('moderate fatigue → 20% weight_reduced', () => {
@@ -111,7 +116,7 @@ describe('suggestDisruptionAdjustment — equipment_unavailable', () => {
 describe('suggestDisruptionAdjustment — affected_lifts filter', () => {
   it('null affected_lifts → applies to all sessions', () => {
     const result = suggestDisruptionAdjustment(
-      makeDisruption('fatigue', 'minor', null),
+      makeDisruption('fatigue', 'moderate', null),
       [squat, bench, deadlift],
     )
     expect(result).toHaveLength(3)
@@ -119,7 +124,7 @@ describe('suggestDisruptionAdjustment — affected_lifts filter', () => {
 
   it('empty affected_lifts → applies to all sessions', () => {
     const result = suggestDisruptionAdjustment(
-      makeDisruption('fatigue', 'minor', []),
+      makeDisruption('fatigue', 'moderate', []),
       [squat, bench, deadlift],
     )
     expect(result).toHaveLength(3)

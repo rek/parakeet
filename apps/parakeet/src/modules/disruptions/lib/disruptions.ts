@@ -94,6 +94,11 @@ export async function reportDisruption(
 
   const parsedDisruption: TrainingDisruption =
     DisruptionSchema.parse(disruption);
+
+  const future_sessions_count = affectedSessions.filter(
+    (s) => s.planned_sets === null
+  ).length;
+
   const suggested_adjustments = parseAdjustmentSuggestionsJson(
     suggestDisruptionAdjustment(
       parsedDisruption,
@@ -101,7 +106,7 @@ export async function reportDisruption(
     )
   );
 
-  return { ...parsedDisruption, suggested_adjustments };
+  return { ...parsedDisruption, suggested_adjustments, future_sessions_count };
 }
 
 export async function applyDisruptionAdjustment(

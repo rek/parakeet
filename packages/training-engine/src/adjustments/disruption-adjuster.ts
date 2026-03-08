@@ -80,7 +80,9 @@ function buildSuggestions(
       if (severity === 'moderate') {
         return [{ session_id: sessionId, action: 'weight_reduced', reduction_pct: 20, rationale: 'Moderate fatigue — reduce intensity 20%' }]
       }
-      return [{ session_id: sessionId, action: 'weight_reduced', reduction_pct: 10, rationale: 'Minor fatigue — reduce intensity 10%' }]
+      // Minor fatigue: informational only — disruption is recorded in JIT context
+      // but no automatic weight reduction is applied
+      return []
 
     case 'equipment_unavailable':
       return [{

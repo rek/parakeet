@@ -71,6 +71,8 @@ export type TrainingDisruption = z.infer<typeof DisruptionSchema>
 
 export const DisruptionWithSuggestionsSchema = DisruptionSchema.extend({
   suggested_adjustments: z.array(AdjustmentSuggestionSchema),
+  // Sessions with null planned_sets that will be adjusted at JIT time
+  future_sessions_count: z.number().int().nonnegative().optional(),
 })
 
 export type DisruptionWithSuggestions = z.infer<typeof DisruptionWithSuggestionsSchema>

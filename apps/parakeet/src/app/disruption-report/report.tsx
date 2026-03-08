@@ -276,7 +276,7 @@ export default function DisruptionReportScreen() {
           contentContainerStyle={styles.content}
           showsVerticalScrollIndicator={false}
         >
-          {suggestions.length === 0 ? (
+          {suggestions.length === 0 && !disruption.future_sessions_count ? (
             <View style={styles.noAdjustments}>
               <Text style={styles.noAdjustmentsText}>
                 {disruption.disruption_type === 'unprogrammed_event'
@@ -286,22 +286,33 @@ export default function DisruptionReportScreen() {
             </View>
           ) : (
             <>
-              <Text style={styles.adjustmentSummaryHeader}>
-                {suggestions.length} session{suggestions.length !== 1 ? 's' : ''} affected
-              </Text>
-              {Array.from(groups.entries()).map(([label, { s, count }]) => (
-                <View key={label} style={styles.adjustmentCard}>
-                  <View style={[
-                    styles.adjustmentBadge,
-                    s.action === 'session_skipped' && styles.adjustmentBadgeSkip,
-                  ]}>
-                    <Text style={styles.adjustmentBadgeText}>{label}</Text>
-                  </View>
-                  <Text style={styles.adjustmentCount}>
-                    {count} session{count !== 1 ? 's' : ''}
+              {suggestions.length > 0 && (
+                <>
+                  <Text style={styles.adjustmentSummaryHeader}>
+                    {suggestions.length} session{suggestions.length !== 1 ? 's' : ''} affected
+                  </Text>
+                  {Array.from(groups.entries()).map(([label, { s, count }]) => (
+                    <View key={label} style={styles.adjustmentCard}>
+                      <View style={[
+                        styles.adjustmentBadge,
+                        s.action === 'session_skipped' && styles.adjustmentBadgeSkip,
+                      ]}>
+                        <Text style={styles.adjustmentBadgeText}>{label}</Text>
+                      </View>
+                      <Text style={styles.adjustmentCount}>
+                        {count} session{count !== 1 ? 's' : ''}
+                      </Text>
+                    </View>
+                  ))}
+                </>
+              )}
+              {(disruption.future_sessions_count ?? 0) > 0 && (
+                <View style={styles.futureSessionsNote}>
+                  <Text style={styles.futureSessionsNoteText}>
+                    {disruption.future_sessions_count} future session{disruption.future_sessions_count !== 1 ? 's' : ''} will be adjusted when generated.
                   </Text>
                 </View>
-              ))}
+              )}
             </>
           )}
 
@@ -310,8 +321,10 @@ export default function DisruptionReportScreen() {
               <>
                 <View style={styles.autoAppliedNote}>
                   <Text style={styles.autoAppliedNoteText}>
-                    {autoApplied
+                    {autoApplied && suggestions.length > 0
                       ? 'Adjustments auto-applied (minor severity)'
+                      : autoApplied
+                      ? 'Disruption recorded — no weight changes needed at this level'
                       : 'Soreness injected — no session changes required'}
                   </Text>
                 </View>
@@ -762,6 +775,14 @@ const styles = StyleSheet.create({
   adjustmentBadgeSkip: { backgroundColor: colors.dangerMuted },
   adjustmentBadgeText: { fontSize: 13, fontWeight: '600' as const, color: colors.textSecondary },
   adjustmentRationale: { fontSize: 13, color: colors.textSecondary, lineHeight: 18 },
+  futureSessionsNote: {
+    padding: 14,
+    backgroundColor: colors.bgMuted,
+    borderRadius: 10,
+    marginTop: 4,
+    marginBottom: 4,
+  },
+  futureSessionsNoteText: { fontSize: 13, color: colors.textSecondary, lineHeight: 18 },
   autoAppliedNote: {
     padding: 16,
     backgroundColor: colors.successMuted,
