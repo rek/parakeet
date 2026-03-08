@@ -216,7 +216,17 @@ export const useSessionStore = create<SessionState>()(
         sessionMeta: state.sessionMeta,
         cachedJitData: state.cachedJitData,
         timerState: state.timerState,
+        startedAt: state.startedAt,
       }),
+      merge: (persisted, current) => {
+        const p = persisted as Partial<SessionState> | undefined;
+        return {
+          ...current,
+          ...p,
+          warmupCompleted: new Set(),
+          startedAt: p?.startedAt ? new Date(p.startedAt as unknown as string) : undefined,
+        };
+      },
     },
   ),
 )
