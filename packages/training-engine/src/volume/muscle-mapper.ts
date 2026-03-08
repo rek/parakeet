@@ -1,5 +1,6 @@
 import { Lift } from '@parakeet/shared-types';
 import { MuscleContribution } from '../types';
+import { getPrimaryMusclesForExercise } from '../auxiliary/exercise-catalog';
 
 // Primary lift → muscle contributions
 // 1.0 = primary mover, 0.5 = significant secondary
@@ -24,8 +25,8 @@ const LIFT_MUSCLES: Record<string, MuscleContribution[]> = {
   ],
 };
 
-// Per-exercise muscle contributions for auxiliary lifts.
-// Exercise names must match DEFAULT_AUXILIARY_POOLS exactly.
+// Per-exercise muscle contributions with full 1.0/0.5 detail.
+// Catalog exercises not listed here fall back to catalog primaryMuscles (all at 1.0).
 //
 // NOTE: Contribution weights here use a simple 1.0 / 0.5 model consistent with
 // RP Strength's set-counting framework. EMG studies could provide finer-grained
@@ -173,5 +174,12 @@ export function getMusclesForLift(
 export function getMusclesForExercise(
   exerciseName: string
 ): MuscleContribution[] {
-  return EXERCISE_MUSCLES[exerciseName] ?? [];
+  // Prefer the detailed EXERCISE_MUSCLES map (has 1.0/0.5 breakdown).
+  if (EXERCISE_MUSCLES[exerciseName]) return EXERCISE_MUSCLES[exerciseName];
+  // Fall back to catalog primary muscles (all at 1.0 contribution).
+  const catalogMuscles = getPrimaryMusclesForExercise(exerciseName);
+  if (catalogMuscles.length > 0) {
+    return catalogMuscles.map((muscle) => ({ muscle, contribution: 1.0 }));
+  }
+  return [];
 }

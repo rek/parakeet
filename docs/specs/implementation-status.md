@@ -128,6 +128,7 @@ Module/platform/shared architecture is the canonical app structure. Legacy top-l
 - [x] mobile-029: Motivational message — LLM-generated post-workout message on WorkoutDoneCard; context-aware (RPE, PRs, streak, sex, cycle phase); multiple-sessions-per-day consolidated into single card
 - [x] mobile-030: Ad-hoc auxiliary exercises — "+ Add Exercise" modal + "+ Set" button; `addAdHocSet` store action; resume recovery from persisted store
 - [x] mobile-031: Bar weight setting — 15/20 kg toggle in Settings › Training; propagated to warmup floors, recovery mode floors, WarmupSection display label, PlateCalculatorSheet (unified AsyncStorage key `bar_weight_kg`); engine params default to 20
+- [x] mobile-032: Ad-hoc workouts — `session/adhoc.tsx` lift/intensity picker; `createAdHocSession` service; JIT adapted for null program_id; "Ad-Hoc Workout" button on Today screen; WorkoutCard shows "Ad-Hoc Workout" label. See `sessions-008-adhoc-workouts.md`.
 
 ---
 
@@ -141,6 +142,10 @@ Module/platform/shared architecture is the canonical app structure. Legacy top-l
 - [x] data-006: Rest config — `rest_configs` table; per-lift rest overrides
 - [x] data-002 extension: Aux exercise muscle mapping — `getPrimaryMuscles()` in `@modules/program`; `reorderAuxiliaryPool` populates `primary_muscles`; muscle chips in `settings/auxiliary-exercises.tsx`
 - [x] data-002 extension: Aux exercise type UI — `SetRow` `exerciseType` prop; bodyweight hides weight; timed shows mark-complete only
+- [x] data-002 bugfix: Block assignment UX — `SlotPicker` (arrow scroller) replaced with `SlotDropdown` (tap trigger → bottom-sheet modal with search + FlatList); `MuscleChips` extracted to `components/settings/MuscleChips.tsx`
+- [x] data-002 extension: Exercise catalog — `EXERCISE_CATALOG` in `exercise-catalog.ts` as single source of truth; `DEFAULT_AUXILIARY_POOLS` derived from catalog; `getAllExercises()`, `getPrimaryMusclesForExercise()`, `getLiftForExercise()` exported; 53 entries (6 squat, 9 bench, 11 deadlift, 27 general/bodyweight); pool cull removed inappropriate exercises (Olympic complexes, conditioning work, arm isolation in wrong pool)
+- [x] data-002 extension: Add Exercise Modal context — `defaultLift` pre-filters to relevant lift section; `excludeNames` greys out already-pooled exercises; horizontal filter pills (All/Squat/Bench/Deadlift/General); settings screen passes `lift` + `pool` to the modal
+- [x] data-002 bugfix: Settings screen — dirty indicator on Save Pool button; empty pool state; BW badge for bodyweight exercises; stale assignment validation when exercise is removed from pool; `activeProgram` query key canonicalized to `qk.program.active`
 
 ---
 

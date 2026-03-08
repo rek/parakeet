@@ -15,7 +15,10 @@ Also covers global rename of "Abandon" → "End Program" across all program type
 - [x] `programs.program_mode TEXT NOT NULL DEFAULT 'scheduled'` — check constraint: `scheduled | unending`
 - [x] `programs.unending_session_counter INTEGER NOT NULL DEFAULT 0`
 - [x] `programs.total_weeks` — drop NOT NULL (nullable for unending programs)
-- [x] `supabase/types.ts` updated to reflect new columns (hand-edited — see dev.md note)
+- [x] `supabase/types.ts` updated to reflect new columns (hand-edited — see guide/dev.md note)
+
+**`supabase/migrations/20260316000000_add_training_days_to_programs.sql`:**
+- [x] `programs.training_days SMALLINT[] DEFAULT NULL` — stores selected weekday indices (0=Sun..6=Sat); nullable for legacy programs (falls back to `DEFAULT_TRAINING_DAYS[training_days_per_week]`)
 
 ## Training Engine
 
@@ -28,6 +31,9 @@ Also covers global rename of "Abandon" → "End Program" across all program type
   - `isDeload = weekNumber % 4 === 0`
   - `intensityType` — delegates to `getIntensityTypeForWeek(weekNumber, lift)`; deload weeks override to `'deload'`
 - [x] Exported from `packages/training-engine/src/modules/program-generation/index.ts`
+
+**`packages/training-engine/src/cube/scheduler.ts`:**
+- [x] `nextTrainingDate(trainingDays: number[], referenceDate?: Date): string` — returns today's date if today is a training day, otherwise the nearest future training day; used by session generation to set correct `planned_date` for unending sessions
 
 **Types:**
 ```typescript
@@ -59,11 +65,11 @@ export type NextUnendingSessionResult = {
 
 **`apps/parakeet/src/modules/program/data/program.repository.ts`:**
 - [x] `updateUnendingSessionCounter(programId, newCount)` — increments the counter after each lazy-generated session
-- [x] `fetchActiveProgramMode(userId)` — returns `{ id, program_mode, training_days_per_week, unending_session_counter }` (no sessions join)
+- [x] `fetchActiveProgramMode(userId)` — returns `{ id, program_mode, training_days_per_week, unending_session_counter, training_days }` (no sessions join)
 - [x] `fetchProgramsList` — returns `program_mode` and `unending_session_counter` fields
 
 **`apps/parakeet/src/modules/program/application/unending-session.ts`** (dedicated orchestration file):
-- [x] `UnendingProgramRef` interface — `{ id, training_days_per_week, unending_session_counter }`
+- [x] `UnendingProgramRef` interface — `{ id, training_days_per_week, unending_session_counter, training_days }`
 - [x] `appendNextUnendingSession(program, userId, plannedDate, options?)` — owns all unending session row building, insertion, and counter management; `options.skipCounterIncrement: true` for program-creation call site
 
 **`apps/parakeet/src/modules/program/application/program.service.ts`:**
@@ -79,7 +85,8 @@ export type NextUnendingSessionResult = {
 
 **`apps/parakeet/src/modules/session/application/session.service.ts`:**
 - [x] `findTodaySession(userId)` — for unending programs: fetches program mode first; if current session is `null` OR `completed`, checks for an existing planned session first (idempotency guard via `fetchPlannedSessionForProgram`); only generates if none exists
-- [x] `generateNextUnendingSession(program: UnendingProgramRef, userId)` (private) — delegates to `appendNextUnendingSession` then fetches via `fetchPlannedSessionForProgram` (not `fetchTodaySession`, which returns the stale completed session)
+- [x] `generateNextUnendingSession(program: UnendingProgramRef, userId)` (private) — resolves `training_days` (from program or `DEFAULT_TRAINING_DAYS` fallback), uses `nextTrainingDate()` to compute `planned_date` for the next training day (today if today is a training day), then delegates to `appendNextUnendingSession`; fetches via `fetchPlannedSessionForProgram`
+- [x] `findTodaySessions(userId)` — for unending programs, triggers `findTodaySession` first (lazy generation) before fetching all today's sessions; ensures the Today screen shows sessions on training days
 - [x] `completeSession` — skips 80% `onCycleComplete` gate when `program_mode === 'unending'` (cycle review only triggered via "End Program")
 
 **`apps/parakeet/src/modules/session/data/session.repository.ts`:**
@@ -104,5 +111,7 @@ export type NextUnendingSessionResult = {
 | Pull-to-refresh generates duplicate sessions (unending) | `findTodaySession` checks `fetchPlannedSessionForProgram` before generating; `generateNextUnendingSession` returns planned session not completed one |
 | Leftover planned sessions after End Program | `updateProgramStatus` calls `cancelPlannedSessionsForProgram` before archiving — skips all planned sessions for the program |
 | `total_weeks` null breaks scheduled paths | All call sites use `?? 0` or `?? 9` fallback |
+| Unending shows "Rest Day" on training days | `findTodaySessions` triggers lazy generation; `generateNextUnendingSession` uses `nextTrainingDate()` with stored `training_days` |
+| Legacy programs without `training_days` | Falls back to `DEFAULT_TRAINING_DAYS[training_days_per_week]` |
 | Auxiliary exercises screen breaks | `currentBlockNumber` branches on `program_mode` to derive block from `unending_session_counter` |
 | Cycle review compilation breaks | `total_weeks ?? 0` in `cycle-review.repository.ts` |

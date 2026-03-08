@@ -1,58 +1,33 @@
-export type ExerciseType = 'weighted' | 'bodyweight' | 'timed'
+import { EXERCISE_CATALOG } from './exercise-catalog';
+
+export type { ExerciseType } from './exercise-catalog';
+
+// Fast lookup: catalog name → type
+const CATALOG_TYPE = new Map(EXERCISE_CATALOG.map((e) => [e.name, e.type]));
 
 /**
- * Explicit type overrides for exercises that are not loaded barbell/dumbbell movements.
- * Anything not in this map defaults to 'weighted'.
+ * Explicit overrides for exercises not in the catalog (user-added custom names
+ * and common spelling variants).
  */
-export const EXERCISE_TYPES: Record<string, ExerciseType> = {
-  // ── Timed / conditioning ────────────────────────────────────────────────────
-  'Assault Bike 5 mins': 'timed',
-  'Plank': 'timed',
-  'Hanging': 'timed',
-  '50kg Breifcase Carry': 'timed',
-
-  // ── Bodyweight — squat pool ─────────────────────────────────────────────────
-  'Plate Twist': 'bodyweight',
-
-  // ── Bodyweight — BODYWEIGHT_POOLS (no-equipment disruption) ─────────────────
-  'Jump Squat': 'bodyweight',
-  'Pistol Squat': 'bodyweight',
-  'Box Jump': 'bodyweight',
-  'Sumo Squat': 'bodyweight',
-  'Curtsy Lunge': 'bodyweight',
-  'Hip Thrust': 'bodyweight',
-  'Glute Bridge': 'bodyweight',
-  'Decline Push-ups': 'bodyweight',
-  'Diamond Push-ups': 'bodyweight',
-  'Archer Push-ups': 'bodyweight',
-  'Pike Push-ups': 'bodyweight',
-  'Standard Push-ups': 'bodyweight',
-  'Wide Push-ups': 'bodyweight',
-  'Close-Grip Push-ups': 'bodyweight',
-  'Nordic Hamstring Curl': 'bodyweight',
-  'Single-Leg RDL': 'bodyweight',
-  'Bodyweight Good Morning': 'bodyweight',
-  'Hyperextension': 'bodyweight',
-  'Single-Leg Glute Bridge': 'bodyweight',
-  'Donkey Kick': 'bodyweight',
-  'Glute Kickback': 'bodyweight',
-
-  // ── Common user-added bodyweight exercises ───────────────────────────────────
-  'Pull-ups': 'bodyweight',
+const EXERCISE_TYPES_FALLBACK: Record<
+  string,
+  'weighted' | 'bodyweight' | 'timed'
+> = {
   'Pull Ups': 'bodyweight',
-  'Pullups': 'bodyweight',
-  'Chin-ups': 'bodyweight',
+  Pullups: 'bodyweight',
   'Chin Ups': 'bodyweight',
-  'Push-ups': 'bodyweight',
   'Push Ups': 'bodyweight',
-  'Dips': 'bodyweight',
-  'Bodyweight Squat': 'bodyweight',
-  'Air Squat': 'bodyweight',
-  'Lunge': 'bodyweight',
   'Step Up': 'bodyweight',
-}
+  'Bodyweight Squat': 'bodyweight',
+};
 
-/** Returns the exercise type; defaults to 'weighted' for unknown exercises. */
-export function getExerciseType(exerciseName: string): ExerciseType {
-  return EXERCISE_TYPES[exerciseName] ?? 'weighted'
+/** Returns the exercise type; catalog first, then fallback map, then 'weighted'. */
+export function getExerciseType(
+  exerciseName: string
+): 'weighted' | 'bodyweight' | 'timed' {
+  return (
+    CATALOG_TYPE.get(exerciseName) ??
+    EXERCISE_TYPES_FALLBACK[exerciseName] ??
+    'weighted'
+  );
 }

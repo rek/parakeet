@@ -41,11 +41,12 @@ export async function runJITForSession(
 ): Promise<JITOutput> {
   const lift = LiftSchema.parse(session.primary_lift)
   const intensityType = IntensityTypeSchema.parse(session.intensity_type)
-  const blockNumber = BlockNumberSchema.parse(session.block_number)
 
-  if (!session.program_id) {
-    throw new Error('Cannot run JIT on session without program')
-  }
+  // For ad-hoc sessions (no program), derive block number from intensity type
+  const isAdHoc = session.program_id === null
+  const blockNumber = isAdHoc
+    ? (intensityType === 'heavy' ? 1 : intensityType === 'explosive' ? 2 : 3)
+    : BlockNumberSchema.parse(session.block_number)
 
   const biologicalSex = await fetchProfileSex(userId)
 
@@ -53,7 +54,7 @@ export async function runJITForSession(
     await Promise.all([
       getCurrentOneRmKg(userId, lift),
       getFormulaConfig(userId),
-      getActiveAssignments(userId, session.program_id, blockNumber),
+      isAdHoc ? Promise.resolve(null) : getActiveAssignments(userId, session.program_id!, blockNumber),
       getWarmupConfig(userId, lift, biologicalSex),
       getUserRestOverrides(userId),
       getBarWeightKg(biologicalSex),
@@ -97,7 +98,7 @@ export async function runJITForSession(
   const daysSinceLastSession = await getDaysSinceLastSession(userId, lift)
 
   const activeAuxiliaries: [string, string] =
-    assignments[lift]
+    (assignments?.[lift])
     ?? [DEFAULT_AUXILIARY_POOLS[lift][0], DEFAULT_AUXILIARY_POOLS[lift][1]] as [string, string]
 
   const recentData = await fetchRecentSessionLogsForLift(userId, lift, 6)
@@ -107,43 +108,47 @@ export async function runJITForSession(
     target_rpe: 8.5,
   }))
 
-  const weekLogs = await fetchWeeklySessionLogs(userId, session.program_id, session.week_number)
-
+  // For ad-hoc sessions, skip program-week volume — no cycle context.
   const weeklyVolumeToDate: Partial<Record<MuscleGroup, number>> = {}
-  for (const log of weekLogs) {
-    const joinedSession = Array.isArray(log.sessions) ? log.sessions[0] : log.sessions
-    const rawLift = joinedSession?.primary_lift
-    const logLift = LiftSchema.safeParse(rawLift).data
-    if (!logLift) continue
 
-    // Main lift sets — sum RPE-scaled effective sets
-    type SetWithRpe = { rpe_actual?: number }
-    const mainSets = Array.isArray(log.actual_sets)
-      ? (log.actual_sets as SetWithRpe[])
-      : []
-    const mainEffective = mainSets.reduce((sum, s) => sum + rpeSetMultiplier(s.rpe_actual), 0)
-    const mainMuscles = getMusclesForLift(logLift)
-    for (const { muscle, contribution } of mainMuscles) {
-      weeklyVolumeToDate[muscle] =
-        (weeklyVolumeToDate[muscle] ?? 0) + Math.floor(mainEffective * contribution)
-    }
+  if (!isAdHoc) {
+    const weekLogs = await fetchWeeklySessionLogs(userId, session.program_id!, session.week_number)
 
-    // Aux sets — grouped by exercise, RPE-scaled
-    const auxSets = Array.isArray(log.auxiliary_sets)
-      ? (log.auxiliary_sets as { exercise?: string; rpe_actual?: number }[])
-      : []
-    const auxByExercise = new Map<string, number>()
-    for (const s of auxSets) {
-      if (s.exercise) {
-        auxByExercise.set(s.exercise, (auxByExercise.get(s.exercise) ?? 0) + rpeSetMultiplier(s.rpe_actual))
-      }
-    }
-    for (const [exercise, effective] of auxByExercise) {
-      const auxMuscles = getMusclesForExercise(exercise)
-      const muscles = auxMuscles.length > 0 ? auxMuscles : getMusclesForLift(logLift)
-      for (const { muscle, contribution } of muscles) {
+    for (const log of weekLogs) {
+      const joinedSession = Array.isArray(log.sessions) ? log.sessions[0] : log.sessions
+      const rawLift = joinedSession?.primary_lift
+      const logLift = LiftSchema.safeParse(rawLift).data
+      if (!logLift) continue
+
+      // Main lift sets — sum RPE-scaled effective sets
+      type SetWithRpe = { rpe_actual?: number }
+      const mainSets = Array.isArray(log.actual_sets)
+        ? (log.actual_sets as SetWithRpe[])
+        : []
+      const mainEffective = mainSets.reduce((sum, s) => sum + rpeSetMultiplier(s.rpe_actual), 0)
+      const mainMuscles = getMusclesForLift(logLift)
+      for (const { muscle, contribution } of mainMuscles) {
         weeklyVolumeToDate[muscle] =
-          (weeklyVolumeToDate[muscle] ?? 0) + Math.floor(effective * contribution)
+          (weeklyVolumeToDate[muscle] ?? 0) + Math.floor(mainEffective * contribution)
+      }
+
+      // Aux sets — grouped by exercise, RPE-scaled
+      const auxSets = Array.isArray(log.auxiliary_sets)
+        ? (log.auxiliary_sets as { exercise?: string; rpe_actual?: number }[])
+        : []
+      const auxByExercise = new Map<string, number>()
+      for (const s of auxSets) {
+        if (s.exercise) {
+          auxByExercise.set(s.exercise, (auxByExercise.get(s.exercise) ?? 0) + rpeSetMultiplier(s.rpe_actual))
+        }
+      }
+      for (const [exercise, effective] of auxByExercise) {
+        const auxMuscles = getMusclesForExercise(exercise)
+        const muscles = auxMuscles.length > 0 ? auxMuscles : getMusclesForLift(logLift)
+        for (const { muscle, contribution } of muscles) {
+          weeklyVolumeToDate[muscle] =
+            (weeklyVolumeToDate[muscle] ?? 0) + Math.floor(effective * contribution)
+        }
       }
     }
   }

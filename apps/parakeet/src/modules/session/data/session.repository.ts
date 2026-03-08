@@ -274,6 +274,32 @@ export async function getLatestSorenessRatings(
   return data.ratings as Record<string, number>;
 }
 
+export async function insertAdHocSession(input: {
+  userId: string;
+  lift: Lift;
+  intensityType: 'heavy' | 'explosive' | 'rep';
+}): Promise<string> {
+  const today = new Date().toISOString().split('T')[0];
+  const { data, error } = await typedSupabase
+    .from('sessions')
+    .insert({
+      user_id: input.userId,
+      primary_lift: input.lift,
+      intensity_type: input.intensityType,
+      program_id: null,
+      block_number: null,
+      week_number: 0,
+      day_number: 0,
+      is_deload: false,
+      planned_date: today,
+      status: 'planned',
+    })
+    .select('id')
+    .single();
+  if (error) throw error;
+  return data.id;
+}
+
 export async function updateSessionToInProgress(
   sessionId: string
 ): Promise<void> {

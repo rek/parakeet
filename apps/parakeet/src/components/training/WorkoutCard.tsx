@@ -86,9 +86,11 @@ export function WorkoutCard({ session, onSkipComplete, isLocked = false }: Worko
 
   const badge = getIntensityBadge(session.intensity_type);
   const blockLabel =
-    session.block_number !== null
-      ? `Block ${session.block_number} · Week ${session.week_number}`
-      : `Week ${session.week_number}`;
+    session.program_id === null
+      ? 'Ad-Hoc Workout'
+      : session.block_number !== null
+        ? `Block ${session.block_number} · Week ${session.week_number}`
+        : `Week ${session.week_number}`;
 
   return (
     <>

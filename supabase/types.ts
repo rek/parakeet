@@ -644,6 +644,7 @@ export type Database = {
           start_date: string
           status: string
           total_weeks: number | null
+          training_days: number[] | null
           training_days_per_week: number
           unending_session_counter: number
           user_id: string
@@ -658,6 +659,7 @@ export type Database = {
           start_date: string
           status?: string
           total_weeks?: number | null
+          training_days?: number[] | null
           training_days_per_week?: number
           unending_session_counter?: number
           user_id: string
@@ -672,6 +674,7 @@ export type Database = {
           start_date?: string
           status?: string
           total_weeks?: number | null
+          training_days?: number[] | null
           training_days_per_week?: number
           unending_session_counter?: number
           user_id?: string

@@ -138,10 +138,10 @@ export async function updateUnendingSessionCounter(
 
 export async function fetchActiveProgramMode(
   userId: string,
-): Promise<{ id: string; program_mode: string; training_days_per_week: number; unending_session_counter: number } | null> {
+): Promise<{ id: string; program_mode: string; training_days_per_week: number; unending_session_counter: number; training_days: number[] | null } | null> {
   const { data, error } = await typedSupabase
     .from('programs')
-    .select('id, program_mode, training_days_per_week, unending_session_counter')
+    .select('id, program_mode, training_days_per_week, unending_session_counter, training_days')
     .eq('user_id', userId)
     .eq('status', 'active')
     .maybeSingle();

@@ -44,7 +44,7 @@ npx nx lint parakeet
 
 ## After finishing
 
-- Update `docs/todo/features.md` if a feature item was completed
+- Update `docs/backlog.md` if a backlog item was completed
 - Update the relevant design doc (`docs/design/`) if architecture changed
-- Add new patterns to `docs/CODE_STYLE.md` or `docs/AI_WORKFLOW.md`
-- Update `docs/dev.md` if new commands were introduced
+- Add new patterns to `docs/guide/code-style.md` or `docs/guide/ai-workflow.md`
+- Update `docs/guide/dev.md` if new commands were introduced

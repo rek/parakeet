@@ -20,6 +20,7 @@ describe('appendNextUnendingSession', () => {
       id: 'prog-1',
       training_days_per_week: 3,
       unending_session_counter: 0,
+      training_days: null,
     };
     await appendNextUnendingSession(program, 'user-1', '2026-03-07');
 
@@ -45,6 +46,7 @@ describe('appendNextUnendingSession', () => {
       id: 'prog-1',
       training_days_per_week: 3,
       unending_session_counter: 5,
+      training_days: null,
     };
     await appendNextUnendingSession(program, 'user-1', '2026-03-07');
 
@@ -56,6 +58,7 @@ describe('appendNextUnendingSession', () => {
       id: 'prog-1',
       training_days_per_week: 3,
       unending_session_counter: 0,
+      training_days: null,
     };
     await appendNextUnendingSession(program, 'user-1', '2026-03-07', {
       skipCounterIncrement: true,

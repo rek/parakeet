@@ -1,8 +1,10 @@
 import { captureException } from '../utils/captureException'
 import {
   computeBlockOffset,
+  DEFAULT_TRAINING_DAYS,
   generateAuxiliaryAssignments,
   generateProgram,
+  nextTrainingDate,
 } from '@parakeet/training-engine';
 import { appendNextUnendingSession } from './unending-session';
 
@@ -72,6 +74,7 @@ async function buildProgram(input: CreateProgramInput, withFormulaConfigId: bool
     version: nextVersion,
     total_weeks: isUnending ? null : (input.totalWeeks ?? 10),
     training_days_per_week: input.trainingDaysPerWeek,
+    training_days: input.trainingDays ?? null,
     start_date: today,
     lifter_maxes_id: maxes?.id ?? null,
     program_mode: isUnending ? 'unending' : 'scheduled',
@@ -101,10 +104,12 @@ async function buildProgram(input: CreateProgramInput, withFormulaConfigId: bool
 
   if (isUnending) {
     // Create just the first session — subsequent sessions are generated lazily
+    const trainingDays = input.trainingDays ?? DEFAULT_TRAINING_DAYS[input.trainingDaysPerWeek] ?? [1, 3, 5];
+    const firstDate = nextTrainingDate(trainingDays);
     await appendNextUnendingSession(
-      { id: program.id, training_days_per_week: input.trainingDaysPerWeek, unending_session_counter: 0 },
+      { id: program.id, training_days_per_week: input.trainingDaysPerWeek, unending_session_counter: 0, training_days: input.trainingDays ?? null },
       userId,
-      today,
+      firstDate,
       { skipCounterIncrement: true },
     );
   } else {

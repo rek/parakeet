@@ -1,8 +1,10 @@
 import type { Lift } from '@parakeet/shared-types';
 import { LiftSchema } from '@parakeet/shared-types';
 import {
+  DEFAULT_TRAINING_DAYS,
   getDefaultThresholds,
   isMakeupWindowExpired,
+  nextTrainingDate,
   suggestProgramAdjustments,
 } from '@parakeet/training-engine';
 import type {
@@ -27,6 +29,7 @@ import {
   fetchSessionsForWeek,
   fetchTodaySession,
   fetchPlannedSessionForProgram,
+  insertAdHocSession,
   insertPerformanceMetric,
   insertSessionLog,
   getLatestSorenessRatings,
@@ -72,7 +75,12 @@ export async function findTodaySession(userId: string) {
 }
 
 // All sessions relevant to today: planned_date = today + any in_progress
+// For unending programs, triggers lazy session generation first.
 export async function findTodaySessions(userId: string) {
+  const program = await fetchActiveProgramMode(userId);
+  if (program?.program_mode === 'unending') {
+    await findTodaySession(userId);
+  }
   return fetchTodaySessions(userId);
 }
 
@@ -150,6 +158,15 @@ export async function getInProgressSession(
   userId: string
 ): Promise<{ id: string } | null> {
   return fetchInProgressSession(userId);
+}
+
+// Create a standalone ad-hoc session (no program context) and return its ID.
+export async function createAdHocSession(
+  userId: string,
+  lift: 'squat' | 'bench' | 'deadlift',
+  intensityType: 'heavy' | 'explosive' | 'rep',
+): Promise<string> {
+  return insertAdHocSession({ userId, lift, intensityType });
 }
 
 // Transition session to in_progress
@@ -413,8 +430,9 @@ export async function getDaysSinceLastSession(
 // Generates and inserts the next session for an unending program,
 // then increments the program's session counter. Returns the new session row.
 async function generateNextUnendingSession(program: UnendingProgramRef, userId: string) {
-  const today = new Date().toISOString().split('T')[0];
-  await appendNextUnendingSession(program, userId, today);
+  const trainingDays = program.training_days ?? DEFAULT_TRAINING_DAYS[program.training_days_per_week] ?? [1, 3, 5];
+  const plannedDate = nextTrainingDate(trainingDays);
+  await appendNextUnendingSession(program, userId, plannedDate);
   // Fetch by program_id+planned status so we get the newly created session,
   // not the completed session that fetchTodaySession would return first.
   return fetchPlannedSessionForProgram(program.id, userId);

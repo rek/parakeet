@@ -227,7 +227,7 @@ export const useFeature = (
 
 ## App Architecture Organization
 
-See [Project Organization](./PROJECT_ORGANIZATION.md) for canonical boundaries.
+See [Project Organization](./project-organization.md) for canonical boundaries.
 
 High-level rule:
 
@@ -402,6 +402,8 @@ const handleSubmit = async () => {
 
 ## Error Handling
 
+Never swallow errors silently — always report to Sentry via `captureException`. Prefer try/catch with meaningful fallback behavior.
+
 ### Component Error Boundaries
 
 ```typescript
@@ -472,7 +474,7 @@ export class ValidationError extends Error {
 
 Tests are co-located with the libraries they test. Each library must be independently testable.
 
-See [Project Organization - Feature-Based Testing](./PROJECT_ORGANIZATION.md#feature-based-testing) for comprehensive strategy.
+See [Project Organization - Feature-Based Testing](./project-organization.md#feature-based-testing) for comprehensive strategy.
 
 ### Testing Requirements by Library Type
 
@@ -850,3 +852,11 @@ When a `Record<string, unknown>` value is used in JSX children, narrow it explic
 // Good
 {typeof meta?.strategy === 'string' && renderBadge(meta.strategy)}
 ```
+
+### Adding a new dashboard page
+
+When adding a page backed by its own Supabase table, also update `Logs.tsx` (Timeline): add the event type to `typeConfig`, `Stats`, `StatCard`, and the `Promise.all` query. See `docs/design/dashboard.md` for the full checklist.
+
+### `JsonViewer` visibility
+
+`JsonViewer` with `defaultCollapsed={true}` and no `label` is permanently hidden — the component has no toggle UI without a label. Always pass either a `label` prop or `defaultCollapsed={false}`.

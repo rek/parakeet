@@ -235,17 +235,17 @@ Review how the project is organized for AI-assisted development. The goal: an ag
 
 #### 9a. Prompt inventory
 
-We have four prompts in `docs/prompts/`:
+We have three prompts in `docs/prompts/`:
 
 - `full-review.md` (this file) — comprehensive system review
 - `implement-review.md` — post-review finding implementation
 - `refactor.md` — code quality cleanup
-- `senior-engineer.md` — general coding persona
+
+(The former `senior-engineer.md` persona was merged into `docs/guide/code-style.md`.)
 
 Evaluate:
 
 - Is there a prompt missing? (e.g., exploration/discovery, feature implementation from scratch, bug triage, spec writing)
-- Is `senior-engineer.md` too generic? It doesn't reference the module architecture, the `utils/` extraction pattern, or the training-engine boundary. Should it be updated or merged into CLAUDE.md?
 - Is there a prompt index or guidance on when to use which prompt?
 
 #### 9b. Workflow automation
@@ -254,24 +254,22 @@ The gist at https://gist.github.com/manuelschipper/149ebf6b2d150ccaccc84ee9a9df5
 
 Evaluate whether custom commands would reduce drift for:
 
-- **New feature kickoff** — orient > check IMPLEMENTATION_STATUS > create design doc > create spec (currently manual per AI_WORKFLOW.md)
-- **Post-implementation wrap-up** — update design doc status, finalize spec, update IMPLEMENTATION_STATUS, update FEATURE_MAP (currently manual, often skipped)
+- **New feature kickoff** — orient > check implementation-status > create design doc > create spec (currently manual per guide/ai-workflow.md)
+- **Post-implementation wrap-up** — update design doc status, finalize spec, update implementation-status (currently manual, often skipped)
 - **Exploration** — parallel agent deep-dive into a subsystem before starting work
 - **Verification** — typecheck + lint + test + boundary check as one command
 
-#### 9c. AI_WORKFLOW.md health
+#### 9c. ai-workflow.md health
 
-The Key Learnings section is ~70 entries and growing. Evaluate:
+The Key Learnings section is categorized into 5 groups (Database & Schema, UI & Components, Engine & Domain Logic, Architecture & Workflow, Agent Patterns). Evaluate:
 
-- Are any learnings now redundant with CLAUDE.md or CODE_STYLE.md? (deduplicate)
+- Are any learnings now redundant with CLAUDE.md or guide/code-style.md? (deduplicate)
 - Are any learnings stale or no longer applicable? (remove)
-- Should learnings be categorized (DB patterns, UI patterns, engine patterns, workflow patterns) rather than one flat list?
 - Is the core workflow (Orient > Design > Plan > Implement > Validate > Wrap Up) still accurate and sufficient?
 
 #### 9d. Documentation gaps and redundancy
 
-- **MEMORY.md vs project docs**: MEMORY.md stores implementation details that arguably belong in IMPLEMENTATION_STATUS.md or FEATURE_MAP.md. Is MEMORY.md doing too much? Should it be trimmed to only store things that don't belong in checked-in docs?
-- **IMPLEMENTATION_STATUS.md vs FEATURE_MAP.md**: both track what exists. Is there unnecessary overlap? Could they be merged or better cross-referenced?
+- **MEMORY.md vs project docs**: MEMORY.md stores implementation details that arguably belong in implementation-status.md. Is MEMORY.md doing too much? Should it be trimmed to only store things that don't belong in checked-in docs?
 - **Design doc freshness**: are any `docs/design/*.md` files stale (describe a planned state that was implemented differently)?
 - **Spec freshness**: are there specs with unchecked boxes for features that were actually built?
 - **Missing docs**: is there anything an agent needs to know that isn't written down anywhere? (e.g., how to run the app locally, how to test against prod Supabase, how the dashboard relates to the main app)
@@ -284,7 +282,7 @@ Evaluate whether a lightweight lifecycle would help:
 
 - Do features get stuck in limbo (partially implemented, no clear status)?
 - Would a feature index with states reduce the need to grep across docs?
-- Is `docs/todo/features.md` serving as a task queue effectively, or is it stale?
+- Is `docs/backlog.md` serving as a task queue effectively, or is it stale?
 
 ---
 

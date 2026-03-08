@@ -5,6 +5,7 @@ export interface UnendingProgramRef {
   id: string;
   training_days_per_week: number;
   unending_session_counter: number;
+  training_days: number[] | null;
 }
 
 // Builds and inserts the next session row for an unending program.

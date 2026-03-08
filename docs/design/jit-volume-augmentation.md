@@ -17,6 +17,7 @@ This builds on the muscle mapping foundation (Feature 1 — aux exercise → mus
 The program prescribes a fixed auxiliary block each session. But training is messy — sessions get skipped, disruptions happen, some weeks the main lift dominates and the auxiliary work barely scratches a muscle group. By the end of the week, a muscle can be well below MEV with no prescribed work left to make it up.
 
 Currently:
+
 - The system knows which muscles are below MEV (the volume dashboard shows this)
 - But it does nothing about it — the next session's program is unchanged
 - The user has to notice the gap themselves and add ad-hoc sets
@@ -29,7 +30,7 @@ Desired outcome: if a muscle is under-stimulated and there's capacity left in th
 
 1. User opens today's session — it generates as usual
 2. At the bottom of the auxiliary work section, a new "Volume Top-Up" card appears
-3. The card explains: *"Your hamstrings are below their weekly minimum. We've added Romanian DLs to today's session."*
+3. The card explains: _"Your hamstrings are below their weekly minimum. We've added Romanian DLs to today's session."_
 4. The user sees 2–3 extra sets of a targeted exercise, clearly labelled as auto-added
 5. They complete them like any other aux set — or skip them individually
 
@@ -63,6 +64,7 @@ Desired outcome: if a muscle is under-stimulated and there's capacity left in th
 ## Dependencies
 
 This feature requires:
+
 - **Muscle mappings per aux exercise** (Feature 1) — the engine must know which muscles each exercise targets before it can select appropriate top-up exercises
 - **Exercise type system** (Bug 1) — only `weighted` and `bodyweight` exercises can be auto-added; `timed` cardio is excluded from top-ups
 
@@ -75,5 +77,5 @@ This feature requires:
 ## References
 
 - Related Design Docs: [volume-management.md](./volume-management.md), [auxiliary-exercise-types.md](./auxiliary-exercise-types.md)
-- Features list: [docs/todo/features.md](../todo/features.md) — Feature 1
+- Backlog: [docs/backlog.md](../backlog.md) — Item 1
 - Engine: `packages/training-engine/src/auxiliary/auxiliary-rotator.ts`, `packages/training-engine/src/generator/jit-session-generator.ts`

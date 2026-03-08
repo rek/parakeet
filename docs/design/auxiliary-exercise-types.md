@@ -51,9 +51,11 @@ Timed exercises contribute volume via their muscle mapping (if any — cardio ex
 
 ## Design Decisions
 
-**Type is assigned at the engine level** — the `EXERCISE_TYPES` lookup in the training engine is the source of truth. The UI reads type from `AuxiliaryWork.exerciseType` rather than trying to infer it from the exercise name.
+**Type is assigned at the engine level** — `packages/training-engine/src/auxiliary/exercise-catalog.ts` is the canonical source of truth. `exercise-types.ts` delegates to the catalog via a fast `Map` lookup, with a small fallback table for common user-typed spelling variants (e.g. "Pull Ups", "Pullups"). The UI reads type from `AuxiliaryWork.exerciseType` rather than trying to infer it from the exercise name.
 
-**Unknown exercises default to `weighted`** — custom exercises the user adds that aren't in the map get `weighted` behaviour, which is the safest default (weight and reps are optional to fill in).
+**Single catalog, derived artifacts** — `EXERCISE_CATALOG` is the single typed source of truth. `DEFAULT_AUXILIARY_POOLS`, `getMusclesForExercise()`, `getExerciseType()`, and the manual-add picker all derive from it. Adding an exercise requires editing only `exercise-catalog.ts`.
+
+**Unknown exercises default to `weighted`** — custom exercises the user adds that aren't in the catalog get `weighted` behaviour, which is the safest default (weight and reps are optional to fill in).
 
 **`timed` exercises are not skipped at MRV** — they don't consume meaningful muscle sets, so MRV gating does not apply. They are always included unless the session is skipped entirely.
 
@@ -61,4 +63,4 @@ Timed exercises contribute volume via their muscle mapping (if any — cardio ex
 
 - Related Design Docs: [volume-management.md](./volume-management.md), [ad-hoc-auxiliary-exercises.md](./ad-hoc-auxiliary-exercises.md)
 - Related Spec: [data-002-auxiliary-exercise-config.md](../specs/05-data/data-002-auxiliary-exercise-config.md)
-- Engine: `packages/training-engine/src/auxiliary/auxiliary-rotator.ts`
+- Engine: `packages/training-engine/src/auxiliary/exercise-catalog.ts`

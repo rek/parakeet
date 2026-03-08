@@ -49,6 +49,30 @@ export function getIntensityTypeForWeek(weekNumber: number, lift: Lift): Intensi
   return CUBE_ROTATION[weekInBlock][lift]
 }
 
+// Nearest date (today or future) that falls on one of the given training weekdays.
+// Returns today if today is a training day, otherwise the next future training day.
+export function nextTrainingDate(trainingDays: number[], referenceDate?: Date): string {
+  const d = referenceDate ? new Date(referenceDate) : new Date()
+  d.setHours(0, 0, 0, 0)
+  const today = d.getDay()
+
+  if (trainingDays.includes(today)) {
+    return d.toISOString().split('T')[0]
+  }
+
+  const sorted = [...trainingDays].sort((a, b) => a - b)
+  for (const day of sorted) {
+    if (day > today) {
+      d.setDate(d.getDate() + (day - today))
+      return d.toISOString().split('T')[0]
+    }
+  }
+  // Wrap to next week
+  const daysUntilNext = 7 - today + sorted[0]
+  d.setDate(d.getDate() + daysUntilNext)
+  return d.toISOString().split('T')[0]
+}
+
 export function calculateSessionDate(
   startDate: Date,
   weekNumber: number,

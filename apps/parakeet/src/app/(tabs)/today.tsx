@@ -330,6 +330,14 @@ export default function TodayScreen() {
             )}
 
             <TouchableOpacity
+              style={styles.adHocButton}
+              onPress={() => router.push('/session/adhoc')}
+              activeOpacity={0.75}
+            >
+              <Text style={styles.adHocButtonText}>+ Ad-Hoc Workout</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
               style={styles.reportIssueButton}
               onPress={() => router.push('/disruption-report/report')}
               activeOpacity={0.75}
@@ -583,6 +591,20 @@ const styles = StyleSheet.create({
     fontSize: typography.sizes.sm,
     color: colors.warning,
     lineHeight: 18,
+  },
+  adHocButton: {
+    borderWidth: 1,
+    borderColor: colors.primary,
+    borderRadius: radii.md,
+    paddingVertical: spacing[3],
+    marginHorizontal: spacing[4],
+    alignItems: 'center',
+  },
+  adHocButtonText: {
+    fontSize: typography.sizes.sm,
+    fontWeight: typography.weights.semibold,
+    color: colors.primary,
+    letterSpacing: typography.letterSpacing.wide,
   },
   reportIssueButton: {
     borderWidth: 1,
