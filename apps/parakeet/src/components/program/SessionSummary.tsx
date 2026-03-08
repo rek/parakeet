@@ -78,6 +78,16 @@ export function SessionSummary({ session }: SessionSummaryProps) {
               <Text style={styles.activeBadgeText}>Active</Text>
             </View>
           )}
+          {session.status === 'skipped' && (
+            <View style={styles.skippedBadge}>
+              <Text style={styles.skippedBadgeText}>Skipped</Text>
+            </View>
+          )}
+          {session.status === 'missed' && (
+            <View style={styles.missedBadge}>
+              <Text style={styles.missedBadgeText}>Missed</Text>
+            </View>
+          )}
           {isLocked && (
             <Text style={styles.lockIcon}>🔒</Text>
           )}
@@ -140,6 +150,30 @@ const styles = StyleSheet.create({
   },
   lockIcon: {
     fontSize: 11,
+  },
+  skippedBadge: {
+    backgroundColor: colors.dangerMuted,
+    borderRadius: radii.full,
+    paddingHorizontal: spacing[2],
+    paddingVertical: 2,
+  },
+  skippedBadgeText: {
+    fontSize: typography.sizes.xs,
+    fontWeight: typography.weights.bold,
+    color: colors.danger,
+    letterSpacing: typography.letterSpacing.wide,
+  },
+  missedBadge: {
+    backgroundColor: colors.dangerMuted,
+    borderRadius: radii.full,
+    paddingHorizontal: spacing[2],
+    paddingVertical: 2,
+  },
+  missedBadgeText: {
+    fontSize: typography.sizes.xs,
+    fontWeight: typography.weights.bold,
+    color: colors.danger,
+    letterSpacing: typography.letterSpacing.wide,
   },
   dateText: {
     fontSize: typography.sizes.sm,

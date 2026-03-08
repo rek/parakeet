@@ -18,13 +18,14 @@ export interface SetRowProps {
   plannedWeightKg: number
   plannedReps: number
   rpeValue?: number
+  exerciseType?: 'weighted' | 'bodyweight' | 'timed'
   onUpdate: (data: SetUpdateData) => void
   onRpePress?: () => void
 }
 
 // ── Component ─────────────────────────────────────────────────────────────────
 
-export function SetRow({ setNumber, plannedWeightKg, plannedReps, rpeValue, onUpdate, onRpePress }: SetRowProps) {
+export function SetRow({ setNumber, plannedWeightKg, plannedReps, rpeValue, exerciseType = 'weighted', onUpdate, onRpePress }: SetRowProps) {
   const [weightKg, setWeightKg] = useState(plannedWeightKg)
   const [reps, setReps] = useState(plannedReps)
   const [rpe, setRpe] = useState<number | undefined>(rpeValue)
@@ -67,37 +68,62 @@ export function SetRow({ setNumber, plannedWeightKg, plannedReps, rpeValue, onUp
     setWeightKg((prev) => Math.max(0, Math.round((prev + delta) * 10) / 10))
   }
 
+  // Timed exercises: just a "mark complete" button — no inputs
+  if (exerciseType === 'timed') {
+    return (
+      <View style={[styles.wrapper, isCompleted && styles.wrapperCompleted]}>
+        <View style={styles.row}>
+          <Text style={styles.setLabel}>Complete</Text>
+          <Text style={styles.timedLabel}>as prescribed</Text>
+          <TouchableOpacity
+            style={[styles.checkButton, isCompleted && styles.checkButtonDone]}
+            onPress={handleToggleComplete}
+            activeOpacity={0.7}
+          >
+            <Text style={[styles.checkButtonText, isCompleted && styles.checkButtonTextDone]}>
+              ✓
+            </Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    )
+  }
+
   return (
     <View style={[styles.wrapper, isCompleted && styles.wrapperCompleted]}>
       {/* Main input row */}
       <View style={styles.row}>
         <Text style={styles.setLabel}>Set {setNumber}</Text>
 
-        <TextInput
-          style={[styles.weightInput, isCompleted && styles.inputLocked]}
-          value={weightKg === 0 ? '' : String(weightKg)}
-          onChangeText={handleWeightChange}
-          keyboardType="decimal-pad"
-          returnKeyType="done"
-          selectTextOnFocus
-          placeholder={String(plannedWeightKg)}
-          placeholderTextColor={colors.textTertiary}
-          textAlign="center"
-          editable={!isCompleted}
-        />
-        <Text style={styles.unitText}>kg</Text>
+        {exerciseType !== 'bodyweight' && (
+          <>
+            <TextInput
+              style={[styles.weightInput, isCompleted && styles.inputLocked]}
+              value={weightKg === 0 ? '' : String(weightKg)}
+              onChangeText={handleWeightChange}
+              keyboardType="decimal-pad"
+              returnKeyType="done"
+              selectTextOnFocus
+              placeholder={String(plannedWeightKg)}
+              placeholderTextColor={colors.textTertiary}
+              textAlign="center"
+              editable={!isCompleted}
+            />
+            <Text style={styles.unitText}>kg</Text>
 
-        {weightKg > 0 && !isCompleted && (
-          <TouchableOpacity
-            style={styles.plateButton}
-            onPress={() => setPlateSheetVisible(true)}
-            activeOpacity={0.7}
-          >
-            <Ionicons name="barbell-outline" size={16} color={colors.textSecondary} />
-          </TouchableOpacity>
+            {weightKg > 0 && !isCompleted && (
+              <TouchableOpacity
+                style={styles.plateButton}
+                onPress={() => setPlateSheetVisible(true)}
+                activeOpacity={0.7}
+              >
+                <Ionicons name="barbell-outline" size={16} color={colors.textSecondary} />
+              </TouchableOpacity>
+            )}
+
+            <Text style={styles.multiplyText}>×</Text>
+          </>
         )}
-
-        <Text style={styles.multiplyText}>×</Text>
 
         <TextInput
           style={[styles.repsInput, isCompleted && styles.inputLocked]}
@@ -133,8 +159,8 @@ export function SetRow({ setNumber, plannedWeightKg, plannedReps, rpeValue, onUp
         </TouchableOpacity>
       </View>
 
-      {/* Quick-increment buttons */}
-      {!isCompleted && (
+      {/* Quick-increment buttons — weighted only */}
+      {!isCompleted && exerciseType === 'weighted' && (
         <View style={styles.adjustRow}>
           <TouchableOpacity
             style={styles.adjustButton}
@@ -184,6 +210,12 @@ const styles = StyleSheet.create({
     fontSize: typography.sizes.sm,
     fontWeight: typography.weights.semibold,
     color: colors.textSecondary,
+  },
+  timedLabel: {
+    flex: 1,
+    fontSize: typography.sizes.sm,
+    color: colors.textTertiary,
+    fontStyle: 'italic',
   },
   weightInput: {
     width: 70,

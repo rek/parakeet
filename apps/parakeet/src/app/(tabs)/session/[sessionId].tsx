@@ -45,6 +45,7 @@ interface AuxiliaryWork {
   sets: PlannedSet[];
   skipped: boolean;
   skipReason?: string;
+  exerciseType?: 'weighted' | 'bodyweight' | 'timed';
 }
 
 interface RestRecommendations {
@@ -563,6 +564,7 @@ export default function SessionScreen() {
                         }
                         plannedReps={planned?.reps ?? actualSet.reps_completed}
                         rpeValue={actualSet.rpe_actual}
+                        exerciseType={aw.exerciseType}
                         onRpePress={() =>
                           setPendingAuxRpe({ exercise: aw.exercise, setNumber: actualSet.set_number })
                         }

@@ -91,13 +91,14 @@ export function applyAdjustment(adj: JITAdjustment, input: JITInput): JITOutput 
   const auxiliaryWork: AuxiliaryWork[] = input.activeAuxiliaries.map((exercise) => {
     const override: 'skip' | 'reduce' | 'normal' | undefined = adj.auxOverrides[exercise]
     if (override === 'skip') {
-      return { exercise, sets: [], skipped: true, skipReason: 'LLM: skip override' }
+      return { exercise, exerciseType: 'weighted' as const, sets: [], skipped: true, skipReason: 'LLM: skip override' }
     }
     const baseAuxWeight = roundToNearest(input.oneRmKg * 0.675)
     const auxWeight = override === 'reduce' ? roundToNearest(baseAuxWeight * 0.90) : baseAuxWeight
     const setCount = override === 'reduce' ? 2 : 3
     return {
       exercise,
+      exerciseType: 'weighted' as const,
       sets: Array.from({ length: setCount }, (_, i) => ({
         set_number: i + 1,
         weight_kg: auxWeight,

@@ -40,7 +40,8 @@ The Program tab showing the full 10-week program in a scannable week-grid format
   - `planned` (another session in_progress): row dimmed to 45% opacity + 🔒 icon, tap disabled
   - `in_progress`: lime green dot + green "Active" pill badge, tappable → navigates **directly to session screen** (bypasses soreness)
   - `completed`: green dot, not tappable
-  - `skipped` / `missed`: red dot, not tappable
+  - `skipped`: red dot + red "Skipped" pill badge (same style as "Active"), not tappable
+  - `missed`: red dot + red "Missed" pill badge, not tappable
 
 **No program state:**
 - If `getActiveProgram()` returns `null`, show "No active program" with "Create Program" button

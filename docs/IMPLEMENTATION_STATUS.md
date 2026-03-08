@@ -8,7 +8,7 @@ For details on any item, see the linked spec file.
 
 ## Training Engine (`packages/training-engine`)
 
-406 tests passing (Vitest). All specs implemented.
+409 tests passing (Vitest). All specs implemented.
 
 - [x] engine-001: 1RM formulas — Epley, grams↔kg helpers
 - [x] engine-002: Cube method scheduler — blocks.ts
@@ -36,6 +36,7 @@ For details on any item, see the linked spec file.
 - [x] engine-024: Developer suggestions — `cycle-review.ts` extended; `developer_suggestions` table
 - [x] engine-025: Multi-cycle context — `PreviousCycleSummary`, `getPreviousCycleSummaries`
 - [x] engine-026: Unending session generator — `nextUnendingSession()` pure function; lift rotation, block cycling, deload cadence
+- [x] engine-bug-001: Exercise type system — `auxiliary/exercise-types.ts`; `ExerciseType` (`weighted`/`bodyweight`/`timed`); `AuxiliaryWork.exerciseType`; timed exercises skip MRV; bodyweight sets `weight_kg: 0`
 
 ---
 
@@ -138,6 +139,8 @@ Module/platform/shared architecture is the canonical app structure. Legacy top-l
 - [x] data-004: Athlete profile — `profiles.biological_sex`, `profiles.date_of_birth`; onboarding wired
 - [x] data-005: Cycle tracking — `cycle_tracking` table; `session_logs.cycle_phase`
 - [x] data-006: Rest config — `rest_configs` table; per-lift rest overrides
+- [x] data-002 extension: Aux exercise muscle mapping — `getPrimaryMuscles()` in `@modules/program`; `reorderAuxiliaryPool` populates `primary_muscles`; muscle chips in `settings/auxiliary-exercises.tsx`
+- [x] data-002 extension: Aux exercise type UI — `SetRow` `exerciseType` prop; bodyweight hides weight; timed shows mark-complete only
 
 ---
 
@@ -178,6 +181,13 @@ Module/platform/shared architecture is the canonical app structure. Legacy top-l
 ## Scripts (`scripts/`)
 
 - [x] `scripts/import-csv.ts` — historical CSV import CLI; auto-detects NextSet and Strong formats; interactive exercise mapping; inserts sessions with `program_id=null` and `intensity_type='import'`
+
+---
+
+## Bug Fixes
+
+- [x] Disruption skip — skipped/missed sessions in program grid now show "Skipped"/"Missed" pill badges (previously only a red dot, no text label) — `SessionSummary.tsx`
+- [x] Disruption skip — `handleApply()` now invalidates `program.active` + `session.today` queries so the program grid refreshes immediately after adjustment is applied — `report.tsx`
 
 ---
 
