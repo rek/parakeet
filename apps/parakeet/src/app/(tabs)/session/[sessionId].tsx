@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { useKeepAwake } from 'expo-keep-awake';
 import {
   Alert,
   ScrollView,
@@ -95,6 +96,7 @@ export default function SessionScreen() {
   }>();
 
   const isFreeForm = freeForm === '1';
+  useKeepAwake();
 
   const {
     actualSets,
