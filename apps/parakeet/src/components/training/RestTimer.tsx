@@ -14,7 +14,7 @@ function playDing() {
         try {
           // eslint-disable-next-line @typescript-eslint/no-require-imports
           const player = createAudioPlayer(
-            require('../../../assets/sounds/ding.wav')
+            require('../../../assets/sounds/pickupCoin.wav')
           );
           player.play();
           setTimeout(() => player.remove(), 3000);

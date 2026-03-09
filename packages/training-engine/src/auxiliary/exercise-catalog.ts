@@ -46,12 +46,6 @@ export const EXERCISE_CATALOG: ExerciseCatalogEntry[] = [
     type: 'weighted',
   },
   {
-    name: 'Power Clean',
-    associatedLift: 'squat',
-    primaryMuscles: ['upper_back', 'glutes'],
-    type: 'weighted',
-  },
-  {
     name: 'Barbell Front Squat',
     associatedLift: 'squat',
     primaryMuscles: ['quads', 'upper_back'],
@@ -59,12 +53,6 @@ export const EXERCISE_CATALOG: ExerciseCatalogEntry[] = [
   },
 
   // ── Bench auxiliaries ─────────────────────────────────────────────────────
-  {
-    name: 'Lat Pulldown',
-    associatedLift: 'bench',
-    primaryMuscles: ['upper_back'],
-    type: 'weighted',
-  },
   {
     name: 'Close-Grip Barbell Bench Press',
     associatedLift: 'bench',
@@ -99,12 +87,6 @@ export const EXERCISE_CATALOG: ExerciseCatalogEntry[] = [
     name: 'Dumbbell Fly',
     associatedLift: 'bench',
     primaryMuscles: ['chest'],
-    type: 'weighted',
-  },
-  {
-    name: 'Seated machine row',
-    associatedLift: 'bench',
-    primaryMuscles: ['upper_back'],
     type: 'weighted',
   },
   {
@@ -151,6 +133,24 @@ export const EXERCISE_CATALOG: ExerciseCatalogEntry[] = [
   },
 
   // ── Deadlift auxiliaries ──────────────────────────────────────────────────
+  {
+    name: 'Power Clean',
+    associatedLift: 'deadlift',
+    primaryMuscles: ['upper_back', 'glutes'],
+    type: 'weighted',
+  },
+  {
+    name: 'Lat Pulldown',
+    associatedLift: 'deadlift',
+    primaryMuscles: ['upper_back'],
+    type: 'weighted',
+  },
+  {
+    name: 'Seated machine row',
+    associatedLift: 'deadlift',
+    primaryMuscles: ['upper_back'],
+    type: 'weighted',
+  },
   {
     name: 'Rack Pull',
     associatedLift: 'deadlift',
