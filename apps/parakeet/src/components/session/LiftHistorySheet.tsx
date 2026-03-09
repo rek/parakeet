@@ -1,12 +1,14 @@
+import { useMemo } from 'react'
 import { ActivityIndicator, Modal, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 import { useQuery } from '@tanstack/react-query'
 
 import type { Lift } from '@parakeet/shared-types'
-import { getRecentLiftHistory, TREND_CONFIG } from '@modules/history'
+import { getRecentLiftHistory, getTrendConfig } from '@modules/history'
 import type { TrendDirection } from '@modules/history'
 import { useAuth } from '@modules/auth'
 import { useNetworkStatus } from '@platform/network'
-import { colors, spacing, typography } from '../../theme'
+import { spacing, typography } from '../../theme'
+import { useTheme } from '../../theme/ThemeContext'
 import { formatDate } from '@shared/utils/date'
 import { capitalize } from '@shared/utils/string'
 
@@ -24,19 +26,22 @@ function formatOneRm(kg: number): string {
   return `${Math.round(kg)} kg`
 }
 
-function trendSymbol(trend: TrendDirection | null): string {
-  return trend ? TREND_CONFIG[trend].symbol : ''
-}
-
-function trendColor(trend: TrendDirection | null): string {
-  return trend ? TREND_CONFIG[trend].color : colors.textSecondary
-}
-
 // ── Component ─────────────────────────────────────────────────────────────────
 
 export function LiftHistorySheet({ lift, visible, onClose }: Props) {
+  const { colors } = useTheme()
   const { user } = useAuth()
   const { isOffline } = useNetworkStatus()
+
+  const trendConfig = getTrendConfig(colors)
+
+  function trendSymbol(trend: TrendDirection | null): string {
+    return trend ? trendConfig[trend].symbol : ''
+  }
+
+  function trendColor(trend: TrendDirection | null): string {
+    return trend ? trendConfig[trend].color : colors.textSecondary
+  }
 
   const { data, isLoading, isError } = useQuery({
     queryKey: ['liftHistory', user?.id, lift],
@@ -44,6 +49,108 @@ export function LiftHistorySheet({ lift, visible, onClose }: Props) {
     enabled: visible && !!user?.id && !!lift,
     staleTime: 60_000,
   })
+
+  const styles = useMemo(() => StyleSheet.create({
+    overlay: {
+      flex: 1,
+      justifyContent: 'flex-end',
+      backgroundColor: colors.overlayLight,
+    },
+    sheet: {
+      backgroundColor: colors.bgSurface,
+      borderTopLeftRadius: 20,
+      borderTopRightRadius: 20,
+      paddingBottom: 40,
+      maxHeight: '65%',
+    },
+    handle: {
+      width: 36,
+      height: 4,
+      borderRadius: 2,
+      backgroundColor: colors.border,
+      alignSelf: 'center',
+      marginTop: spacing[2],
+      marginBottom: spacing[1],
+    },
+    header: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingHorizontal: spacing[4],
+      paddingVertical: spacing[3],
+      borderBottomWidth: 1,
+      borderBottomColor: colors.border,
+    },
+    title: {
+      flex: 1,
+      fontSize: typography.sizes.base,
+      fontWeight: typography.weights.bold,
+      color: colors.text,
+    },
+    closeBtn: {
+      fontSize: 16,
+      color: colors.textSecondary,
+      fontWeight: typography.weights.bold,
+    },
+    scroll: {
+      flex: 1,
+    },
+    scrollContent: {
+      paddingHorizontal: spacing[4],
+      paddingVertical: spacing[3],
+    },
+    center: {
+      alignItems: 'center',
+      paddingVertical: spacing[6],
+      gap: spacing[2],
+    },
+    stateText: {
+      fontSize: typography.sizes.sm,
+      color: colors.textSecondary,
+      textAlign: 'center',
+    },
+    stateSubtext: {
+      fontSize: typography.sizes.xs,
+      color: colors.textTertiary,
+      textAlign: 'center',
+    },
+    trendRow: {
+      marginBottom: spacing[3],
+    },
+    trendText: {
+      fontSize: typography.sizes.sm,
+      fontWeight: typography.weights.semibold,
+    },
+    tableHeader: {
+      flexDirection: 'row',
+      paddingBottom: spacing[2],
+      borderBottomWidth: 1,
+      borderBottomColor: colors.border,
+      marginBottom: spacing[1],
+    },
+    headerCell: {
+      fontSize: typography.sizes.xs,
+      fontWeight: typography.weights.semibold,
+      color: colors.textTertiary,
+      textTransform: 'uppercase',
+      letterSpacing: 0.5,
+    },
+    row: {
+      flexDirection: 'row',
+      paddingVertical: spacing[2],
+    },
+    rowAlt: {
+      backgroundColor: colors.bgMuted,
+    },
+    cell: {
+      fontSize: typography.sizes.sm,
+      color: colors.text,
+    },
+    // Column widths
+    colDate:       { flex: 2 },
+    colOneRm:      { flex: 2, textAlign: 'right' as const },
+    colRpe:        { flex: 1, textAlign: 'right' as const },
+    colCompletion: { flex: 1.5, textAlign: 'right' as const },
+  }), [colors])
 
   const title = `Recent ${capitalize(lift)} Performance`
 
@@ -146,107 +253,3 @@ export function LiftHistorySheet({ lift, visible, onClose }: Props) {
     </Modal>
   )
 }
-
-// ── Styles ────────────────────────────────────────────────────────────────────
-
-const styles = StyleSheet.create({
-  overlay: {
-    flex: 1,
-    justifyContent: 'flex-end',
-    backgroundColor: colors.overlayLight,
-  },
-  sheet: {
-    backgroundColor: colors.bgSurface,
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    paddingBottom: 40,
-    maxHeight: '65%',
-  },
-  handle: {
-    width: 36,
-    height: 4,
-    borderRadius: 2,
-    backgroundColor: colors.border,
-    alignSelf: 'center',
-    marginTop: spacing[2],
-    marginBottom: spacing[1],
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: spacing[4],
-    paddingVertical: spacing[3],
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
-  },
-  title: {
-    flex: 1,
-    fontSize: typography.sizes.base,
-    fontWeight: typography.weights.bold,
-    color: colors.text,
-  },
-  closeBtn: {
-    fontSize: 16,
-    color: colors.textSecondary,
-    fontWeight: typography.weights.bold,
-  },
-  scroll: {
-    flex: 1,
-  },
-  scrollContent: {
-    paddingHorizontal: spacing[4],
-    paddingVertical: spacing[3],
-  },
-  center: {
-    alignItems: 'center',
-    paddingVertical: spacing[6],
-    gap: spacing[2],
-  },
-  stateText: {
-    fontSize: typography.sizes.sm,
-    color: colors.textSecondary,
-    textAlign: 'center',
-  },
-  stateSubtext: {
-    fontSize: typography.sizes.xs,
-    color: colors.textTertiary,
-    textAlign: 'center',
-  },
-  trendRow: {
-    marginBottom: spacing[3],
-  },
-  trendText: {
-    fontSize: typography.sizes.sm,
-    fontWeight: typography.weights.semibold,
-  },
-  tableHeader: {
-    flexDirection: 'row',
-    paddingBottom: spacing[2],
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
-    marginBottom: spacing[1],
-  },
-  headerCell: {
-    fontSize: typography.sizes.xs,
-    fontWeight: typography.weights.semibold,
-    color: colors.textTertiary,
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-  },
-  row: {
-    flexDirection: 'row',
-    paddingVertical: spacing[2],
-  },
-  rowAlt: {
-    backgroundColor: colors.bgMuted,
-  },
-  cell: {
-    fontSize: typography.sizes.sm,
-    color: colors.text,
-  },
-  // Column widths
-  colDate:       { flex: 2 },
-  colOneRm:      { flex: 2, textAlign: 'right' },
-  colRpe:        { flex: 1, textAlign: 'right' },
-  colCompletion: { flex: 1.5, textAlign: 'right' },
-})

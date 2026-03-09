@@ -256,7 +256,36 @@ export const shadows = {
     shadowRadius: 14,
     elevation: 8,
   },
+
+  glowPink: {
+    shadowColor: '#EC4899',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.45,
+    shadowRadius: 14,
+    elevation: 8,
+  },
 } as const
+
+// ── Hot-pink color scheme ─────────────────────────────────────────────────────
+
+export const hotPinkColors = {
+  ...colors,
+  primary:       '#EC4899',
+  primaryDim:    '#DB2777',
+  primaryMuted:  '#1A0812',
+  primarySubtle: '#110509',
+  borderFocus:   '#EC4899',
+} as const
+
+// ── Multi-theme exports ───────────────────────────────────────────────────────
+
+export type ColorScheme = typeof colors
+export type ThemeName = 'default' | 'hot-pink'
+
+export const COLOR_SCHEMES: Record<ThemeName, ColorScheme> = {
+  'default':  colors,
+  'hot-pink': hotPinkColors,
+}
 
 // ── Convenience re-export ─────────────────────────────────────────────────────
 

@@ -1,6 +1,6 @@
 import { Component, type ReactNode } from 'react';
 import { ScrollView, Text } from 'react-native';
-import { colors } from '../../theme';
+import { colors as defaultColors } from '../../theme';
 
 export class ErrorBoundary extends Component<
   { children: ReactNode },
@@ -15,13 +15,13 @@ export class ErrorBoundary extends Component<
     if (error) {
       return (
         <ScrollView
-          style={{ flex: 1, padding: 24, backgroundColor: colors.bg }}
+          style={{ flex: 1, padding: 24, backgroundColor: defaultColors.bg }}
         >
           <Text
             style={{
               fontSize: 18,
               fontWeight: '700',
-              color: colors.danger,
+              color: defaultColors.danger,
               marginBottom: 8,
             }}
           >
@@ -31,7 +31,7 @@ export class ErrorBoundary extends Component<
             style={{
               fontFamily: 'monospace',
               fontSize: 12,
-              color: colors.textSecondary,
+              color: defaultColors.textSecondary,
             }}
           >
             {(error as Error).message}

@@ -1,8 +1,9 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useMemo, useRef } from 'react'
 import { Animated, StyleSheet, Text, View } from 'react-native'
 import type { PR } from '@parakeet/training-engine'
 import { capitalize } from '@shared/utils/string'
-import { colors, radii, spacing, typography } from '../../theme'
+import { radii, spacing, typography } from '../../theme'
+import { useTheme } from '../../theme/ThemeContext'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -27,6 +28,7 @@ function formatPRText(pr: PR): string {
 // ── Component ─────────────────────────────────────────────────────────────────
 
 export function StarCard({ pr, delay = 0 }: StarCardProps) {
+  const { colors } = useTheme()
   const translateY = useRef(new Animated.Value(24)).current
   const opacity = useRef(new Animated.Value(0)).current
 
@@ -47,6 +49,32 @@ export function StarCard({ pr, delay = 0 }: StarCardProps) {
     ]).start()
   }, [delay, opacity, translateY])
 
+  const styles = useMemo(() => StyleSheet.create({
+    card: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      backgroundColor: colors.secondaryMuted,
+      borderWidth: 1.5,
+      borderColor: colors.secondary,
+      borderRadius: radii.md,
+      paddingHorizontal: spacing[4],
+      paddingVertical: spacing[3.5],
+      marginBottom: spacing[2.5],
+    },
+    star: {
+      fontSize: 22,
+      marginRight: spacing[3],
+    },
+    textContainer: {
+      flex: 1,
+    },
+    prText: {
+      fontSize: typography.sizes.base,
+      fontWeight: typography.weights.bold,
+      color: colors.secondary,
+    },
+  }), [colors])
+
   return (
     <Animated.View style={[styles.card, { opacity, transform: [{ translateY }] }]}>
       <Text style={styles.star}>⭐</Text>
@@ -56,31 +84,3 @@ export function StarCard({ pr, delay = 0 }: StarCardProps) {
     </Animated.View>
   )
 }
-
-// ── Styles ────────────────────────────────────────────────────────────────────
-
-const styles = StyleSheet.create({
-  card: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: colors.secondaryMuted,
-    borderWidth: 1.5,
-    borderColor: colors.secondary,
-    borderRadius: radii.md,
-    paddingHorizontal: spacing[4],
-    paddingVertical: spacing[3.5],
-    marginBottom: spacing[2.5],
-  },
-  star: {
-    fontSize: 22,
-    marginRight: spacing[3],
-  },
-  textContainer: {
-    flex: 1,
-  },
-  prText: {
-    fontSize: typography.sizes.base,
-    fontWeight: typography.weights.bold,
-    color: colors.secondary,
-  },
-})

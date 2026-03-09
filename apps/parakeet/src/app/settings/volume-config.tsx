@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
   ScrollView,
@@ -27,13 +27,110 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { BackLink } from '../../components/navigation/BackLink';
-import { colors } from '../../theme';
+import type { ColorScheme } from '../../theme';
+import { useTheme } from '../../theme/ThemeContext';
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
 const MUSCLES = MUSCLE_GROUPS_ORDER;
 
 const MAX_MRV = 30;
+
+// ── Styles ────────────────────────────────────────────────────────────────────
+
+function buildStyles(colors: ColorScheme) {
+  return StyleSheet.create({
+    safeArea: { flex: 1, backgroundColor: colors.bgSurface },
+    header: {
+      paddingHorizontal: 20,
+      paddingTop: 8,
+      paddingBottom: 12,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.bgMuted,
+      gap: 4,
+    },
+    headerRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+    },
+    title: { fontSize: 24, fontWeight: '800', color: colors.text },
+    subtitle: { fontSize: 12, color: colors.textTertiary, lineHeight: 16 },
+    saveButton: {
+      backgroundColor: colors.primary,
+      borderRadius: 8,
+      paddingHorizontal: 16,
+      paddingVertical: 8,
+    },
+    saveButtonDisabled: { opacity: 0.4 },
+    saveButtonText: {
+      fontSize: 14,
+      fontWeight: '600',
+      color: colors.textInverse,
+    },
+    loading: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+    scroll: { flex: 1 },
+    content: { paddingHorizontal: 20, paddingTop: 16, paddingBottom: 48, gap: 2 },
+
+    muscleRow: {
+      paddingVertical: 14,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.bgMuted,
+      gap: 8,
+    },
+    muscleRowHeader: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+    muscleLabel: { fontSize: 15, fontWeight: '600', color: colors.text, flex: 1 },
+    customBadge: {
+      backgroundColor: colors.primaryMuted,
+      borderRadius: 6,
+      paddingHorizontal: 7,
+      paddingVertical: 2,
+    },
+    customBadgeText: { fontSize: 10, fontWeight: '600', color: colors.primary },
+    stepperRow: { flexDirection: 'row', gap: 24 },
+    errorText: { fontSize: 12, color: colors.danger },
+
+    stepper: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+    stepperLabel: { fontSize: 13, color: colors.textSecondary, width: 32 },
+    stepperControls: { flexDirection: 'row', alignItems: 'center', gap: 4 },
+    stepBtn: {
+      width: 32,
+      height: 32,
+      borderRadius: 8,
+      borderWidth: 1,
+      borderColor: colors.border,
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: colors.bgSurface,
+    },
+    stepBtnDisabled: { opacity: 0.35 },
+    stepBtnText: { fontSize: 18, color: colors.textSecondary, lineHeight: 22 },
+    stepperValue: {
+      fontSize: 16,
+      fontWeight: '700',
+      color: colors.text,
+      width: 28,
+      textAlign: 'center',
+    },
+
+    resetButton: {
+      marginTop: 16,
+      paddingVertical: 14,
+      borderRadius: 12,
+      borderWidth: 1,
+      borderColor: colors.border,
+      alignItems: 'center',
+    },
+    resetButtonDisabled: { opacity: 0.5 },
+    resetButtonText: {
+      fontSize: 14,
+      color: colors.textSecondary,
+      fontWeight: '500',
+    },
+  });
+}
+
+type Styles = ReturnType<typeof buildStyles>;
 
 // ── Stepper ───────────────────────────────────────────────────────────────────
 
@@ -43,9 +140,10 @@ interface StepperProps {
   min: number;
   max: number;
   onChange: (v: number) => void;
+  styles: Styles;
 }
 
-function Stepper({ label, value, min, max, onChange }: StepperProps) {
+function Stepper({ label, value, min, max, onChange, styles }: StepperProps) {
   return (
     <View style={styles.stepper}>
       <Text style={styles.stepperLabel}>{label}</Text>
@@ -81,6 +179,7 @@ interface MuscleRowProps {
   isDefault: boolean;
   onMevChange: (v: number) => void;
   onMrvChange: (v: number) => void;
+  styles: Styles;
 }
 
 function MuscleRow({
@@ -90,6 +189,7 @@ function MuscleRow({
   isDefault,
   onMevChange,
   onMrvChange,
+  styles,
 }: MuscleRowProps) {
   const mrvError = mrv <= mev;
 
@@ -110,6 +210,7 @@ function MuscleRow({
           min={0}
           max={mrv - 1}
           onChange={onMevChange}
+          styles={styles}
         />
         <Stepper
           label="MRV"
@@ -117,6 +218,7 @@ function MuscleRow({
           min={mev + 1}
           max={MAX_MRV}
           onChange={onMrvChange}
+          styles={styles}
         />
       </View>
       {mrvError && (
@@ -131,6 +233,8 @@ function MuscleRow({
 type Draft = Record<MuscleGroup, { mev: number; mrv: number }>;
 
 export default function VolumeConfigScreen() {
+  const { colors } = useTheme();
+  const styles = useMemo(() => buildStyles(colors), [colors]);
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const [draft, setDraft] = useState<Draft | null>(null);
@@ -264,6 +368,7 @@ export default function VolumeConfigScreen() {
               isDefault={isDefaultValue(muscle)}
               onMevChange={(v) => updateMuscle(muscle, 'mev', v)}
               onMrvChange={(v) => updateMuscle(muscle, 'mrv', v)}
+              styles={styles}
             />
           ))}
 
@@ -289,95 +394,3 @@ export default function VolumeConfigScreen() {
     </SafeAreaView>
   );
 }
-
-// ── Styles ────────────────────────────────────────────────────────────────────
-
-const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: colors.bgSurface },
-  header: {
-    paddingHorizontal: 20,
-    paddingTop: 8,
-    paddingBottom: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.bgMuted,
-    gap: 4,
-  },
-  headerRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  title: { fontSize: 24, fontWeight: '800', color: colors.text },
-  subtitle: { fontSize: 12, color: colors.textTertiary, lineHeight: 16 },
-  saveButton: {
-    backgroundColor: colors.primary,
-    borderRadius: 8,
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-  },
-  saveButtonDisabled: { opacity: 0.4 },
-  saveButtonText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: colors.textInverse,
-  },
-  loading: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  scroll: { flex: 1 },
-  content: { paddingHorizontal: 20, paddingTop: 16, paddingBottom: 48, gap: 2 },
-
-  muscleRow: {
-    paddingVertical: 14,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.bgMuted,
-    gap: 8,
-  },
-  muscleRowHeader: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  muscleLabel: { fontSize: 15, fontWeight: '600', color: colors.text, flex: 1 },
-  customBadge: {
-    backgroundColor: colors.primaryMuted,
-    borderRadius: 6,
-    paddingHorizontal: 7,
-    paddingVertical: 2,
-  },
-  customBadgeText: { fontSize: 10, fontWeight: '600', color: colors.primary },
-  stepperRow: { flexDirection: 'row', gap: 24 },
-  errorText: { fontSize: 12, color: colors.danger },
-
-  stepper: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  stepperLabel: { fontSize: 13, color: colors.textSecondary, width: 32 },
-  stepperControls: { flexDirection: 'row', alignItems: 'center', gap: 4 },
-  stepBtn: {
-    width: 32,
-    height: 32,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: colors.border,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: colors.bgSurface,
-  },
-  stepBtnDisabled: { opacity: 0.35 },
-  stepBtnText: { fontSize: 18, color: colors.textSecondary, lineHeight: 22 },
-  stepperValue: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: colors.text,
-    width: 28,
-    textAlign: 'center',
-  },
-
-  resetButton: {
-    marginTop: 16,
-    paddingVertical: 14,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: colors.border,
-    alignItems: 'center',
-  },
-  resetButtonDisabled: { opacity: 0.5 },
-  resetButtonText: {
-    fontSize: 14,
-    color: colors.textSecondary,
-    fontWeight: '500',
-  },
-});

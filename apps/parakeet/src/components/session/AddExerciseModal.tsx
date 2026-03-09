@@ -14,7 +14,9 @@ import type { ExerciseCatalogEntry } from '@parakeet/training-engine';
 import type { Lift } from '@parakeet/shared-types';
 import { MUSCLE_LABELS_COMPACT } from '@shared/constants/training';
 import type { MuscleGroup } from '@parakeet/training-engine';
-import { colors, spacing, typography, radii } from '../../theme';
+import { spacing, typography, radii } from '../../theme';
+import type { ColorScheme } from '../../theme';
+import { useTheme } from '../../theme/ThemeContext';
 
 type SectionFilter = 'all' | Lift | 'general'
 
@@ -52,10 +54,157 @@ interface ListItem {
   excluded?: boolean
 }
 
+function buildStyles(colors: ColorScheme) {
+  return StyleSheet.create({
+    backdrop: {
+      flex: 1,
+      backgroundColor: 'rgba(0,0,0,0.5)',
+      justifyContent: 'flex-start',
+    },
+    sheet: {
+      flex: 1,
+      backgroundColor: colors.bgSurface,
+      borderBottomLeftRadius: radii.lg,
+      borderBottomRightRadius: radii.lg,
+      maxHeight: '80%',
+      paddingBottom: spacing[8],
+    },
+    header: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      paddingHorizontal: spacing[5],
+      paddingTop: spacing[5],
+      paddingBottom: spacing[3],
+    },
+    title: {
+      fontSize: typography.sizes.lg,
+      fontWeight: typography.weights.bold,
+      color: colors.text,
+    },
+    closeBtn: {
+      fontSize: typography.sizes.base,
+      color: colors.textTertiary,
+      padding: spacing[1],
+    },
+    searchInput: {
+      marginHorizontal: spacing[5],
+      marginBottom: spacing[3],
+      borderWidth: 1,
+      borderColor: colors.border,
+      borderRadius: radii.md,
+      paddingHorizontal: spacing[4],
+      paddingVertical: spacing[3],
+      fontSize: typography.sizes.base,
+      color: colors.text,
+      backgroundColor: colors.bgSurface,
+    },
+    list: {
+      flex: 1,
+      paddingHorizontal: spacing[5],
+    },
+    sectionHeader: {
+      fontSize: typography.sizes.xs,
+      fontWeight: typography.weights.semibold,
+      color: colors.textTertiary,
+      textTransform: 'uppercase',
+      letterSpacing: 0.8,
+      marginTop: spacing[4],
+      marginBottom: spacing[1],
+    },
+    filterRow: {
+      flexGrow: 0,
+      marginBottom: spacing[2],
+    },
+    filterRowContent: {
+      paddingHorizontal: spacing[5],
+      gap: spacing[2],
+    },
+    filterPill: {
+      paddingHorizontal: spacing[3],
+      paddingVertical: spacing[1],
+      borderRadius: radii.full,
+      borderWidth: 1,
+      borderColor: colors.border,
+      backgroundColor: colors.bgSurface,
+    },
+    filterPillActive: {
+      backgroundColor: colors.primary,
+      borderColor: colors.primary,
+    },
+    filterPillText: {
+      fontSize: typography.sizes.sm,
+      color: colors.textSecondary,
+      fontWeight: typography.weights.medium,
+    },
+    filterPillTextActive: {
+      color: colors.textInverse,
+    },
+    exerciseRow: {
+      paddingVertical: spacing[3],
+      borderBottomWidth: 1,
+      borderBottomColor: colors.borderMuted,
+    },
+    exerciseRowExcluded: {
+      flexDirection: 'row',
+      alignItems: 'flex-start',
+      opacity: 0.45,
+    },
+    exerciseRowInner: {
+      flex: 1,
+    },
+    addedLabel: {
+      fontSize: typography.sizes.xs,
+      color: colors.textTertiary,
+      fontWeight: typography.weights.medium,
+      paddingTop: 3,
+      marginLeft: spacing[2],
+    },
+    exerciseName: {
+      fontSize: typography.sizes.base,
+      color: colors.text,
+      fontWeight: typography.weights.medium,
+      marginBottom: spacing[1],
+    },
+    exerciseNameExcluded: {
+      color: colors.textSecondary,
+    },
+    chipRow: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: spacing[1],
+    },
+    chip: {
+      backgroundColor: colors.bgMuted,
+      borderRadius: radii.full,
+      paddingHorizontal: spacing[2],
+      paddingVertical: 2,
+    },
+    chipText: {
+      fontSize: typography.sizes.xs,
+      color: colors.textSecondary,
+    },
+    customRow: {
+      paddingVertical: spacing[4],
+      marginTop: spacing[3],
+      borderTopWidth: 1,
+      borderTopColor: colors.border,
+      alignItems: 'center',
+    },
+    customText: {
+      fontSize: typography.sizes.base,
+      color: colors.primary,
+      fontWeight: typography.weights.semibold,
+    },
+  });
+}
+
 export function AddExerciseModal({ visible, onConfirm, onClose, defaultLift, excludeNames }: Props) {
+  const { colors } = useTheme();
   const [query, setQuery] = useState('');
   const [liftFilter, setLiftFilter] = useState<SectionFilter>(defaultLift ?? 'all');
 
+  const styles = useMemo(() => buildStyles(colors), [colors]);
   const allExercises = useMemo(() => getAllExercises(), [])
 
   const listItems = useMemo((): ListItem[] => {
@@ -245,146 +394,3 @@ export function AddExerciseModal({ visible, onConfirm, onClose, defaultLift, exc
     </Modal>
   )
 }
-
-const styles = StyleSheet.create({
-  backdrop: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    justifyContent: 'flex-start',
-  },
-  sheet: {
-    flex: 1,
-    backgroundColor: colors.bgSurface,
-    borderBottomLeftRadius: radii.lg,
-    borderBottomRightRadius: radii.lg,
-    maxHeight: '80%',
-    paddingBottom: spacing[8],
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: spacing[5],
-    paddingTop: spacing[5],
-    paddingBottom: spacing[3],
-  },
-  title: {
-    fontSize: typography.sizes.lg,
-    fontWeight: typography.weights.bold,
-    color: colors.text,
-  },
-  closeBtn: {
-    fontSize: typography.sizes.base,
-    color: colors.textTertiary,
-    padding: spacing[1],
-  },
-  searchInput: {
-    marginHorizontal: spacing[5],
-    marginBottom: spacing[3],
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: radii.md,
-    paddingHorizontal: spacing[4],
-    paddingVertical: spacing[3],
-    fontSize: typography.sizes.base,
-    color: colors.text,
-    backgroundColor: colors.bgSurface,
-  },
-  list: {
-    flex: 1,
-    paddingHorizontal: spacing[5],
-  },
-  sectionHeader: {
-    fontSize: typography.sizes.xs,
-    fontWeight: typography.weights.semibold,
-    color: colors.textTertiary,
-    textTransform: 'uppercase',
-    letterSpacing: 0.8,
-    marginTop: spacing[4],
-    marginBottom: spacing[1],
-  },
-  filterRow: {
-    flexGrow: 0,
-    marginBottom: spacing[2],
-  },
-  filterRowContent: {
-    paddingHorizontal: spacing[5],
-    gap: spacing[2],
-  },
-  filterPill: {
-    paddingHorizontal: spacing[3],
-    paddingVertical: spacing[1],
-    borderRadius: radii.full,
-    borderWidth: 1,
-    borderColor: colors.border,
-    backgroundColor: colors.bgSurface,
-  },
-  filterPillActive: {
-    backgroundColor: colors.primary,
-    borderColor: colors.primary,
-  },
-  filterPillText: {
-    fontSize: typography.sizes.sm,
-    color: colors.textSecondary,
-    fontWeight: typography.weights.medium,
-  },
-  filterPillTextActive: {
-    color: colors.textInverse,
-  },
-  exerciseRow: {
-    paddingVertical: spacing[3],
-    borderBottomWidth: 1,
-    borderBottomColor: colors.borderMuted,
-  },
-  exerciseRowExcluded: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    opacity: 0.45,
-  },
-  exerciseRowInner: {
-    flex: 1,
-  },
-  addedLabel: {
-    fontSize: typography.sizes.xs,
-    color: colors.textTertiary,
-    fontWeight: typography.weights.medium,
-    paddingTop: 3,
-    marginLeft: spacing[2],
-  },
-  exerciseName: {
-    fontSize: typography.sizes.base,
-    color: colors.text,
-    fontWeight: typography.weights.medium,
-    marginBottom: spacing[1],
-  },
-  exerciseNameExcluded: {
-    color: colors.textSecondary,
-  },
-  chipRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: spacing[1],
-  },
-  chip: {
-    backgroundColor: colors.bgMuted,
-    borderRadius: radii.full,
-    paddingHorizontal: spacing[2],
-    paddingVertical: 2,
-  },
-  chipText: {
-    fontSize: typography.sizes.xs,
-    color: colors.textSecondary,
-  },
-  customRow: {
-    paddingVertical: spacing[4],
-    marginTop: spacing[3],
-    borderTopWidth: 1,
-    borderTopColor: colors.border,
-    alignItems: 'center',
-  },
-  customText: {
-    fontSize: typography.sizes.base,
-    color: colors.primary,
-    fontWeight: typography.weights.semibold,
-  },
-})

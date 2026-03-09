@@ -347,21 +347,18 @@ export async function completeSession(
   }
 }
 
-// Session logs for the current calendar week (Sun–Sat)
+// Session logs for the rolling 7-day window ending now
 export async function getCurrentWeekLogs(
   userId: string
 ): Promise<CompletedSetLog[]> {
   const now = new Date();
-  const startOfWeek = new Date(now);
-  startOfWeek.setDate(now.getDate() - now.getDay());
-  startOfWeek.setHours(0, 0, 0, 0);
-  const endOfWeek = new Date(startOfWeek);
-  endOfWeek.setDate(startOfWeek.getDate() + 7);
+  const start = new Date(now);
+  start.setDate(now.getDate() - 7);
 
   const rows = await fetchCurrentWeekLogs(
     userId,
-    startOfWeek.toISOString(),
-    endOfWeek.toISOString()
+    start.toISOString(),
+    now.toISOString()
   );
 
   return rows.flatMap((row) => {

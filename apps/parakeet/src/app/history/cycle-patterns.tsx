@@ -1,3 +1,4 @@
+import { useMemo } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { ScrollView, StyleSheet, Text, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
@@ -8,7 +9,9 @@ import { CYCLE_PHASE_BG, CYCLE_PHASE_LABELS } from '@modules/cycle-tracking'
 import { getCompletedSessions } from '@modules/session'
 import type { CyclePhase } from '@parakeet/training-engine'
 import { BackLink } from '../../components/navigation/BackLink'
-import { colors, spacing, radii, typography } from '../../theme'
+import { spacing, radii, typography } from '../../theme'
+import type { ColorScheme } from '../../theme'
+import { useTheme } from '../../theme/ThemeContext'
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
@@ -79,9 +82,97 @@ function generateInsight(stats: Record<CyclePhase, PhaseStats>): string | null {
   return `Your average RPE in the ${CYCLE_PHASE_LABELS[maxPhase].toLowerCase()} phase (${stats[maxPhase].avgRpe!.toFixed(1)}) is higher than in the ${CYCLE_PHASE_LABELS[minPhase].toLowerCase()} phase (${stats[minPhase].avgRpe!.toFixed(1)}). This is a common pattern.`
 }
 
+function buildStyles(colors: ColorScheme) {
+  return StyleSheet.create({
+    safeArea: { flex: 1, backgroundColor: colors.bg },
+    scrollView: { flex: 1 },
+    container: {
+      paddingHorizontal: spacing[5],
+      paddingTop: spacing[4],
+      paddingBottom: spacing[12],
+    },
+    title: {
+      fontSize: typography.sizes['2xl'],
+      fontWeight: typography.weights.black,
+      color: colors.text,
+      marginBottom: spacing[5],
+      marginTop: spacing[2],
+      letterSpacing: typography.letterSpacing.tight,
+    },
+    noticeCard: {
+      backgroundColor: colors.warningMuted,
+      borderRadius: radii.md,
+      padding: spacing[4],
+      marginBottom: spacing[5],
+    },
+    noticeText: {
+      fontSize: typography.sizes.sm,
+      color: colors.warning,
+      lineHeight: 18,
+    },
+    sectionHeader: {
+      fontSize: typography.sizes.xs,
+      fontWeight: typography.weights.bold,
+      color: colors.textTertiary,
+      textTransform: 'uppercase',
+      letterSpacing: typography.letterSpacing.widest,
+      marginBottom: spacing[3],
+    },
+    barRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      marginBottom: spacing[2.5],
+      gap: spacing[2],
+    },
+    barLabel: {
+      fontSize: typography.sizes.sm,
+      color: colors.textSecondary,
+      width: 84,
+    },
+    barTrack: {
+      flex: 1,
+      height: 20,
+      borderRadius: radii.xs,
+      overflow: 'hidden',
+    },
+    barFill: {
+      height: '100%',
+      borderRadius: radii.xs,
+    },
+    barValue: {
+      fontSize: typography.sizes.sm,
+      color: colors.textSecondary,
+      width: 64,
+      textAlign: 'right',
+    },
+    insightCard: {
+      backgroundColor: colors.bgSurface,
+      borderRadius: radii.md,
+      borderWidth: 1,
+      borderColor: colors.border,
+      padding: spacing[4],
+      marginTop: spacing[6],
+    },
+    insightText: {
+      fontSize: typography.sizes.base,
+      color: colors.text,
+      lineHeight: 22,
+    },
+    emptyText: {
+      fontSize: typography.sizes.base,
+      color: colors.textTertiary,
+      marginTop: spacing[8],
+      textAlign: 'center',
+      lineHeight: 22,
+    },
+  })
+}
+
 // ── Screen ────────────────────────────────────────────────────────────────────
 
 export default function CyclePatternsScreen() {
+  const { colors } = useTheme()
+  const styles = useMemo(() => buildStyles(colors), [colors])
   const { user } = useAuth()
 
   const { data: sessions, isLoading } = useQuery({
@@ -185,88 +276,3 @@ export default function CyclePatternsScreen() {
   )
 }
 
-// ── Styles ────────────────────────────────────────────────────────────────────
-
-const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: colors.bg },
-  scrollView: { flex: 1 },
-  container: {
-    paddingHorizontal: spacing[5],
-    paddingTop: spacing[4],
-    paddingBottom: spacing[12],
-  },
-  title: {
-    fontSize: typography.sizes['2xl'],
-    fontWeight: typography.weights.black,
-    color: colors.text,
-    marginBottom: spacing[5],
-    marginTop: spacing[2],
-    letterSpacing: typography.letterSpacing.tight,
-  },
-  noticeCard: {
-    backgroundColor: colors.warningMuted,
-    borderRadius: radii.md,
-    padding: spacing[4],
-    marginBottom: spacing[5],
-  },
-  noticeText: {
-    fontSize: typography.sizes.sm,
-    color: colors.warning,
-    lineHeight: 18,
-  },
-  sectionHeader: {
-    fontSize: typography.sizes.xs,
-    fontWeight: typography.weights.bold,
-    color: colors.textTertiary,
-    textTransform: 'uppercase',
-    letterSpacing: typography.letterSpacing.widest,
-    marginBottom: spacing[3],
-  },
-  barRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: spacing[2.5],
-    gap: spacing[2],
-  },
-  barLabel: {
-    fontSize: typography.sizes.sm,
-    color: colors.textSecondary,
-    width: 84,
-  },
-  barTrack: {
-    flex: 1,
-    height: 20,
-    borderRadius: radii.xs,
-    overflow: 'hidden',
-  },
-  barFill: {
-    height: '100%',
-    borderRadius: radii.xs,
-  },
-  barValue: {
-    fontSize: typography.sizes.sm,
-    color: colors.textSecondary,
-    width: 64,
-    textAlign: 'right',
-  },
-  insightCard: {
-    backgroundColor: colors.bgSurface,
-    borderRadius: radii.md,
-    borderWidth: 1,
-    borderColor: colors.border,
-    padding: spacing[4],
-    marginTop: spacing[6],
-  },
-  insightText: {
-    fontSize: typography.sizes.base,
-    color: colors.text,
-    lineHeight: 22,
-  },
-  emptyText: {
-    fontSize: typography.sizes.base,
-    color: colors.textTertiary,
-    marginTop: spacing[8],
-    textAlign: 'center',
-    lineHeight: 22,
-  },
-})

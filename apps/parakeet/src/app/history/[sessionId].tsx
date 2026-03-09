@@ -1,3 +1,4 @@
+import { useMemo } from 'react'
 import {
   ActivityIndicator,
   ScrollView,
@@ -10,7 +11,9 @@ import { useQuery } from '@tanstack/react-query'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { getSession, getSessionLog } from '@modules/session'
 import { BackLink } from '../../components/navigation/BackLink'
-import { colors, radii, spacing, typography } from '../../theme'
+import { radii, spacing, typography } from '../../theme'
+import type { ColorScheme } from '../../theme'
+import { useTheme } from '../../theme/ThemeContext'
 import { formatDate, formatTime } from '@shared/utils/date'
 import { capitalize } from '@shared/utils/string'
 import type { Lift } from '@parakeet/shared-types'
@@ -34,16 +37,119 @@ const PERFORMANCE_LABELS: Record<string, string> = {
   incomplete: 'Incomplete',
 }
 
-const PERFORMANCE_COLORS: Record<string, string> = {
-  over: colors.success,
-  at: colors.success,
-  under: colors.warning,
-  incomplete: colors.danger,
+function getPerformanceColors(colors: ColorScheme): Record<string, string> {
+  return {
+    over: colors.success,
+    at: colors.success,
+    under: colors.warning,
+    incomplete: colors.danger,
+  }
+}
+
+function buildStyles(colors: ColorScheme) {
+  return StyleSheet.create({
+    safeArea: { flex: 1, backgroundColor: colors.bg },
+    header: { paddingHorizontal: spacing[4], paddingTop: spacing[2] },
+    scroll: { flex: 1 },
+    content: {
+      paddingHorizontal: spacing[5],
+      paddingTop: spacing[4],
+      paddingBottom: spacing[12],
+    },
+    loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+    title: {
+      fontSize: typography.sizes['2xl'],
+      fontWeight: typography.weights.black,
+      color: colors.text,
+      marginBottom: spacing[1],
+      letterSpacing: typography.letterSpacing.tight,
+    },
+    subtitle: {
+      fontSize: typography.sizes.sm,
+      color: colors.textSecondary,
+      marginBottom: spacing[5],
+    },
+    summaryRow: {
+      flexDirection: 'row',
+      gap: spacing[3],
+      marginBottom: spacing[6],
+      flexWrap: 'wrap',
+    },
+    summaryChip: {
+      backgroundColor: colors.bgSurface,
+      borderWidth: 1,
+      borderColor: colors.border,
+      borderRadius: radii.md,
+      paddingHorizontal: spacing[3.5],
+      paddingVertical: spacing[2.5],
+      alignItems: 'center',
+      minWidth: 80,
+    },
+    summaryChipLabel: {
+      fontSize: typography.sizes.xs,
+      color: colors.textTertiary,
+      fontWeight: typography.weights.medium,
+      textTransform: 'uppercase',
+      letterSpacing: typography.letterSpacing.wide,
+      marginBottom: spacing[0.5],
+    },
+    summaryChipValue: {
+      fontSize: typography.sizes.base,
+      fontWeight: typography.weights.bold,
+      color: colors.text,
+    },
+    sectionHeader: {
+      fontSize: typography.sizes.xs,
+      fontWeight: typography.weights.bold,
+      color: colors.textTertiary,
+      textTransform: 'uppercase',
+      letterSpacing: typography.letterSpacing.widest,
+      marginBottom: spacing[2],
+      marginTop: spacing[2],
+    },
+    setsTable: {
+      backgroundColor: colors.bgSurface,
+      borderRadius: radii.md,
+      borderWidth: 1,
+      borderColor: colors.border,
+      overflow: 'hidden',
+      marginBottom: spacing[5],
+    },
+    tableHeader: {
+      flexDirection: 'row',
+      backgroundColor: colors.bgMuted,
+      paddingVertical: spacing[2],
+      paddingHorizontal: spacing[3],
+    },
+    tableRow: {
+      flexDirection: 'row',
+      paddingVertical: spacing[2.5],
+      paddingHorizontal: spacing[3],
+    },
+    tableRowAlt: { backgroundColor: colors.bgMuted + '55' },
+    tableCell: {
+      fontSize: typography.sizes.sm,
+      color: colors.text,
+    },
+    tableCellSet: { width: 36, color: colors.textSecondary },
+    tableCellWeight: { flex: 1 },
+    tableCellReps: { width: 48, textAlign: 'center' },
+    tableCellRpe: { width: 48, textAlign: 'right', color: colors.textSecondary },
+    emptyText: {
+      fontSize: typography.sizes.base,
+      color: colors.textTertiary,
+      textAlign: 'center',
+      marginTop: spacing[8],
+    },
+  })
 }
 
 // ── Screen ───────────────────────────────────────────────────────────────────
 
 export default function SessionDetailScreen() {
+  const { colors } = useTheme()
+  const styles = useMemo(() => buildStyles(colors), [colors])
+  const performanceColors = useMemo(() => getPerformanceColors(colors), [colors])
   const { sessionId } = useLocalSearchParams<{ sessionId: string }>()
 
   const { data: session, isLoading: sessionLoading } = useQuery({
@@ -135,7 +241,7 @@ export default function SessionDetailScreen() {
                 <Text style={styles.summaryChipLabel}>vs Plan</Text>
                 <Text style={[
                   styles.summaryChipValue,
-                  { color: PERFORMANCE_COLORS[log.performance_vs_plan] ?? colors.text }
+                  { color: performanceColors[log.performance_vs_plan] ?? colors.text }
                 ]}>
                   {PERFORMANCE_LABELS[log.performance_vs_plan] ?? log.performance_vs_plan}
                 </Text>
@@ -201,101 +307,3 @@ export default function SessionDetailScreen() {
     </SafeAreaView>
   )
 }
-
-// ── Styles ───────────────────────────────────────────────────────────────────
-
-const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: colors.bg },
-  header: { paddingHorizontal: spacing[4], paddingTop: spacing[2] },
-  scroll: { flex: 1 },
-  content: {
-    paddingHorizontal: spacing[5],
-    paddingTop: spacing[4],
-    paddingBottom: spacing[12],
-  },
-  loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  title: {
-    fontSize: typography.sizes['2xl'],
-    fontWeight: typography.weights.black,
-    color: colors.text,
-    marginBottom: spacing[1],
-    letterSpacing: typography.letterSpacing.tight,
-  },
-  subtitle: {
-    fontSize: typography.sizes.sm,
-    color: colors.textSecondary,
-    marginBottom: spacing[5],
-  },
-  summaryRow: {
-    flexDirection: 'row',
-    gap: spacing[3],
-    marginBottom: spacing[6],
-    flexWrap: 'wrap',
-  },
-  summaryChip: {
-    backgroundColor: colors.bgSurface,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: radii.md,
-    paddingHorizontal: spacing[3.5],
-    paddingVertical: spacing[2.5],
-    alignItems: 'center',
-    minWidth: 80,
-  },
-  summaryChipLabel: {
-    fontSize: typography.sizes.xs,
-    color: colors.textTertiary,
-    fontWeight: typography.weights.medium,
-    textTransform: 'uppercase',
-    letterSpacing: typography.letterSpacing.wide,
-    marginBottom: spacing[0.5],
-  },
-  summaryChipValue: {
-    fontSize: typography.sizes.base,
-    fontWeight: typography.weights.bold,
-    color: colors.text,
-  },
-  sectionHeader: {
-    fontSize: typography.sizes.xs,
-    fontWeight: typography.weights.bold,
-    color: colors.textTertiary,
-    textTransform: 'uppercase',
-    letterSpacing: typography.letterSpacing.widest,
-    marginBottom: spacing[2],
-    marginTop: spacing[2],
-  },
-  setsTable: {
-    backgroundColor: colors.bgSurface,
-    borderRadius: radii.md,
-    borderWidth: 1,
-    borderColor: colors.border,
-    overflow: 'hidden',
-    marginBottom: spacing[5],
-  },
-  tableHeader: {
-    flexDirection: 'row',
-    backgroundColor: colors.bgMuted,
-    paddingVertical: spacing[2],
-    paddingHorizontal: spacing[3],
-  },
-  tableRow: {
-    flexDirection: 'row',
-    paddingVertical: spacing[2.5],
-    paddingHorizontal: spacing[3],
-  },
-  tableRowAlt: { backgroundColor: colors.bgMuted + '55' },
-  tableCell: {
-    fontSize: typography.sizes.sm,
-    color: colors.text,
-  },
-  tableCellSet: { width: 36, color: colors.textSecondary },
-  tableCellWeight: { flex: 1 },
-  tableCellReps: { width: 48, textAlign: 'center' },
-  tableCellRpe: { width: 48, textAlign: 'right', color: colors.textSecondary },
-  emptyText: {
-    fontSize: typography.sizes.base,
-    color: colors.textTertiary,
-    textAlign: 'center',
-    marginTop: spacing[8],
-  },
-})

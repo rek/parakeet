@@ -1,5 +1,8 @@
+import { useMemo } from 'react'
 import { StyleSheet, Text, View } from 'react-native'
-import { colors, radii, spacing, typography } from '../../theme'
+import { radii, spacing, typography } from '../../theme'
+import { useTheme } from '../../theme/ThemeContext'
+import type { ColorScheme } from '../../theme'
 
 interface BlockBadgeProps {
   block: number | null
@@ -11,7 +14,7 @@ interface BadgeConfig {
   label: string
 }
 
-function getBadgeConfig(block: number | null): BadgeConfig {
+function getBadgeConfig(block: number | null, colors: ColorScheme): BadgeConfig {
   switch (block) {
     case 1:
       return { bg: colors.infoMuted,      text: colors.info,      label: 'B1' }
@@ -25,7 +28,21 @@ function getBadgeConfig(block: number | null): BadgeConfig {
 }
 
 export function BlockBadge({ block }: BlockBadgeProps) {
-  const config = getBadgeConfig(block)
+  const { colors } = useTheme()
+  const config = getBadgeConfig(block, colors)
+
+  const styles = useMemo(() => StyleSheet.create({
+    badge: {
+      borderRadius: radii.xs,
+      paddingHorizontal: spacing[2],
+      paddingVertical: spacing[0.5],
+    },
+    label: {
+      fontSize: typography.sizes.xs,
+      fontWeight: typography.weights.bold,
+      letterSpacing: typography.letterSpacing.wide,
+    },
+  }), [])
 
   return (
     <View style={[styles.badge, { backgroundColor: config.bg }]}>
@@ -33,16 +50,3 @@ export function BlockBadge({ block }: BlockBadgeProps) {
     </View>
   )
 }
-
-const styles = StyleSheet.create({
-  badge: {
-    borderRadius: radii.xs,
-    paddingHorizontal: spacing[2],
-    paddingVertical: spacing[0.5],
-  },
-  label: {
-    fontSize: typography.sizes.xs,
-    fontWeight: typography.weights.bold,
-    letterSpacing: typography.letterSpacing.wide,
-  },
-})

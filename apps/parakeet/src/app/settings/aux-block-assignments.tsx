@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Animated,
@@ -27,7 +27,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { BackLink } from '../../components/navigation/BackLink';
 import { SlotDropdown } from '../../components/settings/SlotDropdown';
 import { qk } from '@platform/query';
-import { colors } from '../../theme';
+import type { ColorScheme } from '../../theme';
+import { useTheme } from '../../theme/ThemeContext';
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
@@ -45,9 +46,114 @@ const BLOCK_INTENSITY: Record<1 | 2 | 3, string> = {
   3: 'Rep',
 };
 
+// ── Styles ────────────────────────────────────────────────────────────────────
+
+function buildStyles(colors: ColorScheme) {
+  return StyleSheet.create({
+    safeArea: { flex: 1, backgroundColor: colors.bg },
+
+    header: {
+      paddingHorizontal: 20,
+      paddingTop: 8,
+      paddingBottom: 16,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.bgMuted,
+      gap: 2,
+    },
+    title: { fontSize: 24, fontWeight: '800', color: colors.text },
+    subtitle: { fontSize: 12, color: colors.textTertiary, lineHeight: 16 },
+
+    loading: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+
+    emptyState: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+      paddingHorizontal: 32,
+      gap: 8,
+    },
+    emptyStateText: { fontSize: 16, fontWeight: '600', color: colors.text, textAlign: 'center' },
+    emptyStateSubtext: { fontSize: 13, color: colors.textTertiary, textAlign: 'center' },
+
+    tabs: {
+      flexDirection: 'row',
+      paddingHorizontal: 16,
+      paddingVertical: 12,
+      gap: 8,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.bgMuted,
+    },
+    tab: {
+      flex: 1,
+      paddingVertical: 7,
+      borderRadius: 8,
+      alignItems: 'center',
+      backgroundColor: colors.bgMuted,
+    },
+    tabActive: { backgroundColor: colors.primary },
+    tabText: { fontSize: 12, fontWeight: '600', color: colors.textSecondary },
+    tabTextActive: { color: colors.textInverse },
+
+    scroll: { flex: 1 },
+    content: { padding: 16, gap: 12, paddingBottom: 48 },
+
+    liftCard: {
+      backgroundColor: colors.bgSurface,
+      borderRadius: 12,
+      padding: 14,
+      gap: 12,
+      borderWidth: 1,
+      borderColor: colors.border,
+    },
+    liftTitle: { fontSize: 15, fontWeight: '700', color: colors.text },
+
+    slotRow: { gap: 6 },
+    slotLabelRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+    },
+    slotLabel: {
+      fontSize: 11,
+      fontWeight: '600',
+      color: colors.textSecondary,
+      textTransform: 'uppercase',
+      letterSpacing: 0.4,
+    },
+    savedFlash: {
+      fontSize: 11,
+      color: colors.primary,
+      fontWeight: '600',
+      marginRight: 'auto',
+      marginLeft: 8,
+    },
+
+    autoRow: {
+      backgroundColor: colors.bgMuted,
+      borderRadius: 8,
+      borderWidth: 1,
+      borderColor: colors.border,
+      paddingHorizontal: 12,
+      paddingVertical: 10,
+    },
+    autoText: {
+      fontSize: 14,
+      color: colors.textTertiary,
+      fontStyle: 'italic',
+    },
+  });
+}
+
+type Styles = ReturnType<typeof buildStyles>;
+
 // ── SavedFlash ─────────────────────────────────────────────────────────────────
 
-function SavedFlash({ visible }: { visible: boolean }) {
+interface SavedFlashProps {
+  visible: boolean;
+  styles: Styles;
+}
+
+function SavedFlash({ visible, styles }: SavedFlashProps) {
   const opacity = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
@@ -77,6 +183,9 @@ interface SlotRowProps {
   savedFlash: boolean;
   onLockToggle: () => void;
   onExerciseChange: (ex: string) => void;
+  styles: Styles;
+  primaryColor: string;
+  textTertiaryColor: string;
 }
 
 function SlotRow({
@@ -89,20 +198,23 @@ function SlotRow({
   savedFlash,
   onLockToggle,
   onExerciseChange,
+  styles,
+  primaryColor,
+  textTertiaryColor,
 }: SlotRowProps) {
   return (
     <View style={styles.slotRow}>
       <View style={styles.slotLabelRow}>
         <Text style={styles.slotLabel}>{label}</Text>
-        <SavedFlash visible={savedFlash} />
+        <SavedFlash visible={savedFlash} styles={styles} />
         {saving ? (
-          <ActivityIndicator size="small" color={colors.primary} />
+          <ActivityIndicator size="small" color={primaryColor} />
         ) : (
           <TouchableOpacity onPress={onLockToggle} activeOpacity={0.7} hitSlop={8}>
             <Ionicons
               name={locked ? 'lock-closed' : 'lock-open-outline'}
               size={16}
-              color={locked ? colors.primary : colors.textTertiary}
+              color={locked ? primaryColor : textTertiaryColor}
             />
           </TouchableOpacity>
         )}
@@ -135,6 +247,9 @@ interface LiftCardProps {
   saving: boolean;
   savedFlash: { slot1: boolean; slot2: boolean };
   onSlotChange: (slot: 1 | 2, exercise: string, locked: boolean) => void;
+  styles: Styles;
+  primaryColor: string;
+  textTertiaryColor: string;
 }
 
 function LiftCard({
@@ -145,6 +260,9 @@ function LiftCard({
   saving,
   savedFlash,
   onSlotChange,
+  styles,
+  primaryColor,
+  textTertiaryColor,
 }: LiftCardProps) {
   const [auto1, auto2] = pool.length >= 2
     ? getAuxiliariesForBlock(lift, blockNumber, pool)
@@ -165,6 +283,9 @@ function LiftCard({
           onSlotChange(1, assignment.exercise_1, !assignment.exercise_1_locked)
         }
         onExerciseChange={(ex) => onSlotChange(1, ex, true)}
+        styles={styles}
+        primaryColor={primaryColor}
+        textTertiaryColor={textTertiaryColor}
       />
       <SlotRow
         label="Slot 2"
@@ -178,6 +299,9 @@ function LiftCard({
           onSlotChange(2, assignment.exercise_2, !assignment.exercise_2_locked)
         }
         onExerciseChange={(ex) => onSlotChange(2, ex, true)}
+        styles={styles}
+        primaryColor={primaryColor}
+        textTertiaryColor={textTertiaryColor}
       />
     </View>
   );
@@ -194,6 +318,8 @@ function flashKey(blockNumber: 1 | 2 | 3, lift: Lift) {
 }
 
 export default function AuxBlockAssignmentsScreen() {
+  const { colors } = useTheme();
+  const styles = useMemo(() => buildStyles(colors), [colors]);
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState<1 | 2 | 3>(1);
   const [programId, setProgramId] = useState<string | null>(null);
@@ -379,6 +505,9 @@ export default function AuxBlockAssignmentsScreen() {
                   onSlotChange={(slot, exercise, locked) =>
                     void handleSlotChange(activeTab, lift, slot, exercise, locked)
                   }
+                  styles={styles}
+                  primaryColor={colors.primary}
+                  textTertiaryColor={colors.textTertiary}
                 />
               );
             })}
@@ -388,99 +517,3 @@ export default function AuxBlockAssignmentsScreen() {
     </SafeAreaView>
   );
 }
-
-// ── Styles ────────────────────────────────────────────────────────────────────
-
-const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: colors.bg },
-
-  header: {
-    paddingHorizontal: 20,
-    paddingTop: 8,
-    paddingBottom: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.bgMuted,
-    gap: 2,
-  },
-  title: { fontSize: 24, fontWeight: '800', color: colors.text },
-  subtitle: { fontSize: 12, color: colors.textTertiary, lineHeight: 16 },
-
-  loading: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-
-  emptyState: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: 32,
-    gap: 8,
-  },
-  emptyStateText: { fontSize: 16, fontWeight: '600', color: colors.text, textAlign: 'center' },
-  emptyStateSubtext: { fontSize: 13, color: colors.textTertiary, textAlign: 'center' },
-
-  tabs: {
-    flexDirection: 'row',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    gap: 8,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.bgMuted,
-  },
-  tab: {
-    flex: 1,
-    paddingVertical: 7,
-    borderRadius: 8,
-    alignItems: 'center',
-    backgroundColor: colors.bgMuted,
-  },
-  tabActive: { backgroundColor: colors.primary },
-  tabText: { fontSize: 12, fontWeight: '600', color: colors.textSecondary },
-  tabTextActive: { color: colors.textInverse },
-
-  scroll: { flex: 1 },
-  content: { padding: 16, gap: 12, paddingBottom: 48 },
-
-  liftCard: {
-    backgroundColor: colors.bgSurface,
-    borderRadius: 12,
-    padding: 14,
-    gap: 12,
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  liftTitle: { fontSize: 15, fontWeight: '700', color: colors.text },
-
-  slotRow: { gap: 6 },
-  slotLabelRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  slotLabel: {
-    fontSize: 11,
-    fontWeight: '600',
-    color: colors.textSecondary,
-    textTransform: 'uppercase',
-    letterSpacing: 0.4,
-  },
-  savedFlash: {
-    fontSize: 11,
-    color: colors.primary,
-    fontWeight: '600',
-    marginRight: 'auto',
-    marginLeft: 8,
-  },
-
-  autoRow: {
-    backgroundColor: colors.bgMuted,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: colors.border,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-  },
-  autoText: {
-    fontSize: 14,
-    color: colors.textTertiary,
-    fontStyle: 'italic',
-  },
-});

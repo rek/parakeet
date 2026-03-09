@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { useFocusEffect } from 'expo-router';
 import {
   ActivityIndicator,
@@ -37,20 +37,299 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { StreakPill } from '../../components/achievements/StreakPill';
 import { DisruptionChipsRow } from '../../components/disruption/DisruptionChipsRow';
 import { WorkoutCard } from '../../components/training/WorkoutCard';
-import { colors, palette, radii, spacing, typography } from '../../theme';
+import { palette, radii, spacing, typography } from '../../theme';
+import type { ColorScheme } from '../../theme';
+import { useTheme } from '../../theme/ThemeContext';
+
+// ── Styles builder ────────────────────────────────────────────────────────────
+
+function buildStyles(colors: ColorScheme) {
+  return StyleSheet.create({
+    loadingContainer: {
+      flex: 1,
+      backgroundColor: colors.bg,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    container: {
+      flex: 1,
+      backgroundColor: colors.bg,
+    },
+    header: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      paddingHorizontal: spacing[5],
+      paddingTop: spacing[2],
+      paddingBottom: spacing[5],
+    },
+    title: {
+      fontSize: typography.sizes['2xl'],
+      fontWeight: typography.weights.black,
+      color: colors.primary,
+      letterSpacing: typography.letterSpacing.wider,
+    },
+    scroll: {
+      flex: 1,
+    },
+    content: {
+      paddingBottom: spacing[8],
+      gap: spacing[3],
+    },
+    // Empty state
+    emptyState: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+      paddingHorizontal: spacing[8],
+      paddingTop: 80,
+    },
+    emptyTitle: {
+      fontSize: typography.sizes.xl,
+      fontWeight: typography.weights.extrabold,
+      color: colors.text,
+      marginBottom: spacing[2],
+      textAlign: 'center',
+    },
+    emptySubtitle: {
+      fontSize: typography.sizes.base,
+      color: colors.textSecondary,
+      textAlign: 'center',
+      marginBottom: spacing[8],
+      lineHeight: 22,
+    },
+    primaryButton: {
+      backgroundColor: colors.primary,
+      borderRadius: radii.md,
+      paddingVertical: spacing[4],
+      paddingHorizontal: spacing[8],
+      alignItems: 'center',
+    },
+    primaryButtonText: {
+      fontSize: typography.sizes.base,
+      fontWeight: typography.weights.bold,
+      color: colors.textInverse,
+      letterSpacing: typography.letterSpacing.wide,
+    },
+    // Cycle phase pill
+    cyclePhasePill: {
+      alignSelf: 'flex-start',
+      marginHorizontal: spacing[4],
+      borderRadius: radii.full,
+      paddingHorizontal: spacing[3],
+      paddingVertical: spacing[1.5],
+    },
+    cyclePhasePillText: {
+      fontSize: typography.sizes.sm,
+      fontWeight: typography.weights.semibold,
+    },
+    // Ovulatory info chip
+    ovulatoryChip: {
+      backgroundColor: palette.amber50,
+      marginHorizontal: spacing[4],
+      borderRadius: radii.sm,
+      paddingHorizontal: spacing[3],
+      paddingVertical: spacing[2.5],
+    },
+    ovulatoryChipText: {
+      fontSize: typography.sizes.sm,
+      color: palette.amber800,
+      lineHeight: 18,
+    },
+    // Workout done card
+    workoutDoneCard: {
+      backgroundColor: colors.successMuted,
+      borderRadius: radii.lg,
+      borderWidth: 1,
+      borderColor: colors.success,
+      padding: spacing[7],
+      marginHorizontal: spacing[4],
+      alignItems: 'center' as const,
+    },
+    workoutDoneTitle: {
+      fontSize: typography.sizes.xl,
+      fontWeight: typography.weights.extrabold,
+      color: colors.success,
+      marginBottom: spacing[1],
+      letterSpacing: typography.letterSpacing.wide,
+    },
+    workoutDoneLift: {
+      fontSize: typography.sizes.base,
+      fontWeight: typography.weights.semibold,
+      color: colors.success,
+      textAlign: 'center' as const,
+      opacity: 0.7,
+    },
+    workoutDoneSubtitle: {
+      fontSize: typography.sizes.sm,
+      color: palette.amber500,
+      textAlign: 'center' as const,
+      lineHeight: 20,
+      marginTop: spacing[2],
+    },
+    // Rest day card
+    restDayCard: {
+      backgroundColor: colors.bgSurface,
+      borderRadius: radii.lg,
+      borderWidth: 1,
+      borderColor: colors.border,
+      padding: spacing[7],
+      marginHorizontal: spacing[4],
+      alignItems: 'center',
+    },
+    restDayTitle: {
+      fontSize: typography.sizes.xl,
+      fontWeight: typography.weights.extrabold,
+      color: colors.text,
+      marginBottom: spacing[2],
+      letterSpacing: typography.letterSpacing.wide,
+    },
+    restDaySubtitle: {
+      fontSize: typography.sizes.base,
+      color: colors.textSecondary,
+      textAlign: 'center',
+      lineHeight: 22,
+    },
+    // MRV warning banner
+    mrvBanner: {
+      backgroundColor: colors.dangerMuted,
+      borderLeftWidth: 3,
+      borderLeftColor: colors.danger,
+      paddingVertical: spacing[3],
+      paddingHorizontal: spacing[4],
+      marginHorizontal: spacing[4],
+      borderRadius: radii.xs,
+    },
+    mrvBannerText: {
+      fontSize: typography.sizes.sm,
+      color: colors.danger,
+      lineHeight: 18,
+    },
+    // Volume compact card
+    volumeCard: {
+      backgroundColor: colors.bgSurface,
+      borderRadius: radii.lg,
+      borderWidth: 1,
+      borderColor: colors.border,
+      padding: spacing[4],
+      marginHorizontal: spacing[4],
+    },
+    volumeCardHeader: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      marginBottom: spacing[3],
+    },
+    volumeCardTitle: {
+      fontSize: typography.sizes.base,
+      fontWeight: typography.weights.bold,
+      color: colors.text,
+      letterSpacing: typography.letterSpacing.wide,
+    },
+    volumeViewAll: {
+      fontSize: typography.sizes.sm,
+      color: colors.primary,
+      fontWeight: typography.weights.semibold,
+    },
+    volumeLoading: {
+      fontSize: typography.sizes.sm,
+      color: colors.textTertiary,
+    },
+    volumeRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      marginBottom: spacing[2],
+      gap: spacing[2],
+    },
+    volumeRowLabel: {
+      fontSize: typography.sizes.sm,
+      color: colors.textSecondary,
+      width: 76,
+    },
+    volumeBarTrack: {
+      flex: 1,
+      height: 6,
+      backgroundColor: colors.bgMuted,
+      borderRadius: radii.full,
+      overflow: 'hidden',
+    },
+    volumeBarFill: {
+      height: '100%',
+      borderRadius: radii.full,
+    },
+    volumeRowSets: {
+      fontSize: typography.sizes.xs,
+      color: colors.textTertiary,
+      width: 52,
+      textAlign: 'right',
+    },
+    volumeRowSetsOver: {
+      color: colors.danger,
+      fontWeight: typography.weights.semibold,
+    },
+    disruptionBanner: {
+      backgroundColor: colors.warningMuted,
+      borderLeftWidth: 3,
+      borderLeftColor: colors.warning,
+      paddingVertical: spacing[3],
+      paddingHorizontal: spacing[4],
+      marginHorizontal: spacing[4],
+      borderRadius: radii.xs,
+    },
+    disruptionBannerText: {
+      fontSize: typography.sizes.sm,
+      color: colors.warning,
+      lineHeight: 18,
+    },
+    adHocButton: {
+      borderWidth: 1,
+      borderColor: colors.primary,
+      borderRadius: radii.md,
+      paddingVertical: spacing[3],
+      marginHorizontal: spacing[4],
+      alignItems: 'center',
+    },
+    adHocButtonText: {
+      fontSize: typography.sizes.sm,
+      fontWeight: typography.weights.semibold,
+      color: colors.primary,
+      letterSpacing: typography.letterSpacing.wide,
+    },
+    reportIssueButton: {
+      borderWidth: 1,
+      borderColor: colors.warning,
+      borderRadius: radii.md,
+      paddingVertical: spacing[3],
+      marginHorizontal: spacing[4],
+      alignItems: 'center',
+    },
+    reportIssueButtonText: {
+      fontSize: typography.sizes.sm,
+      fontWeight: typography.weights.semibold,
+      color: colors.warning,
+      letterSpacing: typography.letterSpacing.wide,
+    },
+  });
+}
+
+function getBarColors(colors: ColorScheme): Record<VolumeStatus, string> {
+  return {
+    below_mev: colors.warning,
+    in_range: colors.success,
+    approaching_mrv: colors.secondary,
+    at_mrv: colors.danger,
+    exceeded_mrv: colors.danger,
+  };
+}
 
 // ── Volume compact card ───────────────────────────────────────────────────────
 
-const BAR_COLORS: Record<VolumeStatus, string> = {
-  below_mev: colors.warning,
-  in_range: colors.success,
-  approaching_mrv: colors.secondary,
-  at_mrv: colors.danger,
-  exceeded_mrv: colors.danger,
-};
-
 function VolumeCompactCard() {
+  const { colors } = useTheme();
   const { data } = useWeeklyVolume();
+
+  const styles = useMemo(() => buildStyles(colors), [colors]);
+  const barColors = useMemo(() => getBarColors(colors), [colors]);
 
   return (
     <View style={styles.volumeCard}>
@@ -85,7 +364,7 @@ function VolumeCompactCard() {
                     styles.volumeBarFill,
                     {
                       width: `${fillPct}%`,
-                      backgroundColor: BAR_COLORS[status],
+                      backgroundColor: barColors[status],
                     },
                   ]}
                 />
@@ -122,6 +401,8 @@ function WorkoutDoneCard({
   userId: string;
   showMotivational: boolean;
 }) {
+  const { colors } = useTheme();
+  const styles = useMemo(() => buildStyles(colors), [colors]);
   const sessionIds = sessions.map((s) => s.id);
 
   const { data: message, isLoading, error } = useQuery({
@@ -160,6 +441,7 @@ function WorkoutDoneCard({
 }
 
 export default function TodayScreen() {
+  const { colors } = useTheme();
   const { user } = useAuth();
   const { data: sessions = [], isLoading: sessionLoading, isError: sessionError } = useTodaySessions();
   const { data: activeSession } = useInProgressSession();
@@ -168,6 +450,8 @@ export default function TodayScreen() {
   const { data: cycleContext } = useCyclePhase();
   const queryClient = useQueryClient();
   const [refreshing, setRefreshing] = useState(false);
+
+  const styles = useMemo(() => buildStyles(colors), [colors]);
 
   const showStreaks = useFeatureEnabled('streaks');
   const showCycleTracking = useFeatureEnabled('cycleTracking');
@@ -391,270 +675,3 @@ export default function TodayScreen() {
     </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  loadingContainer: {
-    flex: 1,
-    backgroundColor: colors.bg,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  container: {
-    flex: 1,
-    backgroundColor: colors.bg,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: spacing[5],
-    paddingTop: spacing[2],
-    paddingBottom: spacing[5],
-  },
-  title: {
-    fontSize: typography.sizes['2xl'],
-    fontWeight: typography.weights.black,
-    color: colors.primary,
-    letterSpacing: typography.letterSpacing.wider,
-  },
-  scroll: {
-    flex: 1,
-  },
-  content: {
-    paddingBottom: spacing[8],
-    gap: spacing[3],
-  },
-  // Empty state
-  emptyState: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: spacing[8],
-    paddingTop: 80,
-  },
-  emptyTitle: {
-    fontSize: typography.sizes.xl,
-    fontWeight: typography.weights.extrabold,
-    color: colors.text,
-    marginBottom: spacing[2],
-    textAlign: 'center',
-  },
-  emptySubtitle: {
-    fontSize: typography.sizes.base,
-    color: colors.textSecondary,
-    textAlign: 'center',
-    marginBottom: spacing[8],
-    lineHeight: 22,
-  },
-  primaryButton: {
-    backgroundColor: colors.primary,
-    borderRadius: radii.md,
-    paddingVertical: spacing[4],
-    paddingHorizontal: spacing[8],
-    alignItems: 'center',
-  },
-  primaryButtonText: {
-    fontSize: typography.sizes.base,
-    fontWeight: typography.weights.bold,
-    color: colors.textInverse,
-    letterSpacing: typography.letterSpacing.wide,
-  },
-  // Cycle phase pill
-  cyclePhasePill: {
-    alignSelf: 'flex-start',
-    marginHorizontal: spacing[4],
-    borderRadius: radii.full,
-    paddingHorizontal: spacing[3],
-    paddingVertical: spacing[1.5],
-  },
-  cyclePhasePillText: {
-    fontSize: typography.sizes.sm,
-    fontWeight: typography.weights.semibold,
-  },
-  // Ovulatory info chip
-  ovulatoryChip: {
-    backgroundColor: palette.amber50,
-    marginHorizontal: spacing[4],
-    borderRadius: radii.sm,
-    paddingHorizontal: spacing[3],
-    paddingVertical: spacing[2.5],
-  },
-  ovulatoryChipText: {
-    fontSize: typography.sizes.sm,
-    color: palette.amber800,
-    lineHeight: 18,
-  },
-  // Workout done card
-  workoutDoneCard: {
-    backgroundColor: colors.successMuted,
-    borderRadius: radii.lg,
-    borderWidth: 1,
-    borderColor: colors.success,
-    padding: spacing[7],
-    marginHorizontal: spacing[4],
-    alignItems: 'center' as const,
-  },
-  workoutDoneTitle: {
-    fontSize: typography.sizes.xl,
-    fontWeight: typography.weights.extrabold,
-    color: colors.success,
-    marginBottom: spacing[1],
-    letterSpacing: typography.letterSpacing.wide,
-  },
-  workoutDoneLift: {
-    fontSize: typography.sizes.base,
-    fontWeight: typography.weights.semibold,
-    color: colors.success,
-    textAlign: 'center' as const,
-    opacity: 0.7,
-  },
-  workoutDoneSubtitle: {
-    fontSize: typography.sizes.sm,
-    color: palette.amber500,
-    textAlign: 'center' as const,
-    lineHeight: 20,
-    marginTop: spacing[2],
-  },
-  // Rest day card
-  restDayCard: {
-    backgroundColor: colors.bgSurface,
-    borderRadius: radii.lg,
-    borderWidth: 1,
-    borderColor: colors.border,
-    padding: spacing[7],
-    marginHorizontal: spacing[4],
-    alignItems: 'center',
-  },
-  restDayTitle: {
-    fontSize: typography.sizes.xl,
-    fontWeight: typography.weights.extrabold,
-    color: colors.text,
-    marginBottom: spacing[2],
-    letterSpacing: typography.letterSpacing.wide,
-  },
-  restDaySubtitle: {
-    fontSize: typography.sizes.base,
-    color: colors.textSecondary,
-    textAlign: 'center',
-    lineHeight: 22,
-  },
-  // MRV warning banner
-  mrvBanner: {
-    backgroundColor: colors.dangerMuted,
-    borderLeftWidth: 3,
-    borderLeftColor: colors.danger,
-    paddingVertical: spacing[3],
-    paddingHorizontal: spacing[4],
-    marginHorizontal: spacing[4],
-    borderRadius: radii.xs,
-  },
-  mrvBannerText: {
-    fontSize: typography.sizes.sm,
-    color: colors.danger,
-    lineHeight: 18,
-  },
-  // Volume compact card
-  volumeCard: {
-    backgroundColor: colors.bgSurface,
-    borderRadius: radii.lg,
-    borderWidth: 1,
-    borderColor: colors.border,
-    padding: spacing[4],
-    marginHorizontal: spacing[4],
-  },
-  volumeCardHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: spacing[3],
-  },
-  volumeCardTitle: {
-    fontSize: typography.sizes.base,
-    fontWeight: typography.weights.bold,
-    color: colors.text,
-    letterSpacing: typography.letterSpacing.wide,
-  },
-  volumeViewAll: {
-    fontSize: typography.sizes.sm,
-    color: colors.primary,
-    fontWeight: typography.weights.semibold,
-  },
-  volumeLoading: {
-    fontSize: typography.sizes.sm,
-    color: colors.textTertiary,
-  },
-  volumeRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: spacing[2],
-    gap: spacing[2],
-  },
-  volumeRowLabel: {
-    fontSize: typography.sizes.sm,
-    color: colors.textSecondary,
-    width: 76,
-  },
-  volumeBarTrack: {
-    flex: 1,
-    height: 6,
-    backgroundColor: colors.bgMuted,
-    borderRadius: radii.full,
-    overflow: 'hidden',
-  },
-  volumeBarFill: {
-    height: '100%',
-    borderRadius: radii.full,
-  },
-  volumeRowSets: {
-    fontSize: typography.sizes.xs,
-    color: colors.textTertiary,
-    width: 52,
-    textAlign: 'right',
-  },
-  volumeRowSetsOver: {
-    color: colors.danger,
-    fontWeight: typography.weights.semibold,
-  },
-  disruptionBanner: {
-    backgroundColor: colors.warningMuted,
-    borderLeftWidth: 3,
-    borderLeftColor: colors.warning,
-    paddingVertical: spacing[3],
-    paddingHorizontal: spacing[4],
-    marginHorizontal: spacing[4],
-    borderRadius: radii.xs,
-  },
-  disruptionBannerText: {
-    fontSize: typography.sizes.sm,
-    color: colors.warning,
-    lineHeight: 18,
-  },
-  adHocButton: {
-    borderWidth: 1,
-    borderColor: colors.primary,
-    borderRadius: radii.md,
-    paddingVertical: spacing[3],
-    marginHorizontal: spacing[4],
-    alignItems: 'center',
-  },
-  adHocButtonText: {
-    fontSize: typography.sizes.sm,
-    fontWeight: typography.weights.semibold,
-    color: colors.primary,
-    letterSpacing: typography.letterSpacing.wide,
-  },
-  reportIssueButton: {
-    borderWidth: 1,
-    borderColor: colors.warning,
-    borderRadius: radii.md,
-    paddingVertical: spacing[3],
-    marginHorizontal: spacing[4],
-    alignItems: 'center',
-  },
-  reportIssueButtonText: {
-    fontSize: typography.sizes.sm,
-    fontWeight: typography.weights.semibold,
-    color: colors.warning,
-    letterSpacing: typography.letterSpacing.wide,
-  },
-});

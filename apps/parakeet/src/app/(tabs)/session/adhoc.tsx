@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -14,10 +14,85 @@ import { captureException } from '@platform/utils/captureException';
 import { router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { BackLink } from '../../../components/navigation/BackLink';
-import { colors, radii, spacing, typography } from '../../../theme';
+import { radii, spacing, typography } from '../../../theme';
+import type { ColorScheme } from '../../../theme';
+import { useTheme } from '../../../theme/ThemeContext';
+
+function buildStyles(colors: ColorScheme) {
+  return StyleSheet.create({
+    safeArea: {
+      flex: 1,
+      backgroundColor: colors.bgSurface,
+    },
+    header: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingHorizontal: spacing[4],
+      paddingVertical: spacing[3],
+      borderBottomWidth: 1,
+      borderBottomColor: colors.border,
+    },
+    headerTitle: {
+      flex: 1,
+      fontSize: typography.sizes.base,
+      fontWeight: typography.weights.semibold,
+      color: colors.text,
+      textAlign: 'center',
+    },
+    headerSpacer: {
+      width: 80,
+    },
+    content: {
+      flex: 1,
+      paddingHorizontal: spacing[5],
+      paddingTop: spacing[6],
+    },
+    sectionLabel: {
+      fontSize: typography.sizes.sm,
+      fontWeight: typography.weights.semibold,
+      color: colors.textSecondary,
+      letterSpacing: typography.letterSpacing.wider,
+      textTransform: 'uppercase',
+      marginBottom: spacing[3],
+    },
+    nameInput: {
+      fontSize: typography.sizes.base,
+      color: colors.text,
+      borderWidth: 1,
+      borderColor: colors.border,
+      borderRadius: radii.md,
+      paddingHorizontal: spacing[4],
+      paddingVertical: spacing[3],
+      backgroundColor: colors.bgSurface,
+    },
+    hint: {
+      fontSize: typography.sizes.sm,
+      color: colors.textTertiary,
+      marginTop: spacing[3],
+    },
+    startButton: {
+      marginTop: spacing[8],
+      backgroundColor: colors.primary,
+      borderRadius: radii.md,
+      paddingVertical: spacing[4],
+      alignItems: 'center',
+    },
+    startButtonDisabled: {
+      opacity: 0.5,
+    },
+    startButtonText: {
+      fontSize: typography.sizes.base,
+      fontWeight: typography.weights.bold,
+      color: colors.textInverse,
+      letterSpacing: typography.letterSpacing.wide,
+    },
+  });
+}
 
 export default function AdHocScreen() {
+  const { colors } = useTheme();
   const { user } = useAuth();
+  const styles = useMemo(() => buildStyles(colors), [colors]);
   const [activityName, setActivityName] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -84,71 +159,3 @@ export default function AdHocScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: colors.bgSurface,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: spacing[4],
-    paddingVertical: spacing[3],
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
-  },
-  headerTitle: {
-    flex: 1,
-    fontSize: typography.sizes.base,
-    fontWeight: typography.weights.semibold,
-    color: colors.text,
-    textAlign: 'center',
-  },
-  headerSpacer: {
-    width: 80,
-  },
-  content: {
-    flex: 1,
-    paddingHorizontal: spacing[5],
-    paddingTop: spacing[6],
-  },
-  sectionLabel: {
-    fontSize: typography.sizes.sm,
-    fontWeight: typography.weights.semibold,
-    color: colors.textSecondary,
-    letterSpacing: typography.letterSpacing.wider,
-    textTransform: 'uppercase',
-    marginBottom: spacing[3],
-  },
-  nameInput: {
-    fontSize: typography.sizes.base,
-    color: colors.text,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: radii.md,
-    paddingHorizontal: spacing[4],
-    paddingVertical: spacing[3],
-    backgroundColor: colors.bgSurface,
-  },
-  hint: {
-    fontSize: typography.sizes.sm,
-    color: colors.textTertiary,
-    marginTop: spacing[3],
-  },
-  startButton: {
-    marginTop: spacing[8],
-    backgroundColor: colors.primary,
-    borderRadius: radii.md,
-    paddingVertical: spacing[4],
-    alignItems: 'center',
-  },
-  startButtonDisabled: {
-    opacity: 0.5,
-  },
-  startButtonText: {
-    fontSize: typography.sizes.base,
-    fontWeight: typography.weights.bold,
-    color: colors.textInverse,
-    letterSpacing: typography.letterSpacing.wide,
-  },
-});

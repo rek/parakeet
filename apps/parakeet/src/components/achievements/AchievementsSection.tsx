@@ -1,10 +1,13 @@
+import { useMemo } from 'react'
 import { ActivityIndicator, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 import { router } from 'expo-router'
 import { useQuery } from '@tanstack/react-query'
 
 import { getCycleBadges, getStreakData, getPRHistory } from '@modules/achievements'
 import type { HistoricalPRs } from '@modules/achievements'
-import { colors, spacing, radii, typography } from '../../theme'
+import { spacing, radii, typography } from '../../theme'
+import { useTheme } from '../../theme/ThemeContext'
+import type { ColorScheme } from '../../theme'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -12,13 +15,142 @@ interface AchievementsSectionProps {
   userId: string
 }
 
+type SectionStyles = ReturnType<typeof buildStyles>
+
+// ── Styles builder ────────────────────────────────────────────────────────────
+
+function buildStyles(colors: ColorScheme) {
+  return StyleSheet.create({
+    loadingContainer: {
+      paddingVertical: spacing[8],
+      alignItems: 'center',
+    },
+    sectionHeader: {
+      fontSize: typography.sizes.xs,
+      fontWeight: typography.weights.bold,
+      color: colors.textTertiary,
+      textTransform: 'uppercase',
+      letterSpacing: typography.letterSpacing.widest,
+      marginBottom: spacing[2],
+      marginTop: spacing[4],
+    },
+    card: {
+      backgroundColor: colors.bgSurface,
+      borderRadius: radii.md,
+      borderWidth: 1,
+      borderColor: colors.border,
+      paddingVertical: spacing[1],
+      marginBottom: spacing[1],
+    },
+    emptyCard: {
+      paddingHorizontal: spacing[4],
+      paddingVertical: spacing[4],
+      marginTop: spacing[4],
+    },
+    emptyTitle: {
+      fontSize: typography.sizes.base,
+      fontWeight: typography.weights.bold,
+      color: colors.text,
+      marginBottom: spacing[1],
+    },
+    emptyBody: {
+      fontSize: typography.sizes.sm,
+      color: colors.textSecondary,
+      lineHeight: 20,
+    },
+    badgeRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingHorizontal: spacing[4],
+      paddingVertical: spacing[3],
+      borderBottomWidth: 1,
+      borderBottomColor: colors.borderMuted,
+    },
+    badgeLeft: {
+      flex: 1,
+    },
+    badgeTitle: {
+      fontSize: typography.sizes.base,
+      fontWeight: typography.weights.semibold,
+      color: colors.text,
+      marginBottom: spacing[0.5],
+    },
+    badgeMeta: {
+      fontSize: typography.sizes.sm,
+      color: colors.textSecondary,
+    },
+    chevron: {
+      fontSize: 22,
+      color: colors.textTertiary,
+      lineHeight: 24,
+    },
+    streakRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingHorizontal: spacing[4],
+      paddingVertical: spacing[2.5],
+    },
+    streakEmoji: {
+      fontSize: 16,
+      marginRight: spacing[2],
+      width: 22,
+    },
+    streakLabel: {
+      fontSize: typography.sizes.sm,
+      color: colors.textSecondary,
+      width: 64,
+    },
+    streakValue: {
+      fontSize: typography.sizes.base,
+      fontWeight: typography.weights.bold,
+      color: colors.secondary,
+      flex: 1,
+    },
+    streakMeta: {
+      fontSize: typography.sizes.sm,
+      color: colors.textSecondary,
+      flex: 1,
+    },
+    prBlock: {
+      paddingHorizontal: spacing[4],
+      paddingVertical: spacing[2.5],
+      borderBottomWidth: 1,
+      borderBottomColor: colors.borderMuted,
+    },
+    prLiftName: {
+      fontSize: typography.sizes.sm,
+      fontWeight: typography.weights.bold,
+      color: colors.primary,
+      marginBottom: spacing[1],
+      textTransform: 'uppercase',
+      letterSpacing: typography.letterSpacing.wide,
+    },
+    prLine: {
+      fontSize: typography.sizes.sm,
+      color: colors.textSecondary,
+      marginBottom: spacing[0.5],
+    },
+    wilksRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingHorizontal: spacing[4],
+      paddingVertical: spacing[3.5],
+    },
+    wilksHint: {
+      fontSize: typography.sizes.base,
+      color: colors.textSecondary,
+      flex: 1,
+    },
+  })
+}
+
 // ── Sub-components ────────────────────────────────────────────────────────────
 
-function SectionHeader({ label }: { label: string }) {
+function SectionHeader({ label, styles }: { label: string; styles: SectionStyles }) {
   return <Text style={styles.sectionHeader}>{label}</Text>
 }
 
-function PRRow({ lift, prs }: { lift: string; prs: HistoricalPRs }) {
+function PRRow({ lift, prs, styles }: { lift: string; prs: HistoricalPRs; styles: SectionStyles }) {
   const liftLabel = lift.charAt(0).toUpperCase() + lift.slice(1)
   const best1rm = prs.best1rmKg > 0 ? `${prs.best1rmKg.toFixed(1)} kg est. 1RM` : null
 
@@ -43,6 +175,10 @@ function PRRow({ lift, prs }: { lift: string; prs: HistoricalPRs }) {
 // ── Component ─────────────────────────────────────────────────────────────────
 
 export function AchievementsSection({ userId }: AchievementsSectionProps) {
+  const { colors } = useTheme()
+
+  const styles = useMemo(() => buildStyles(colors), [colors])
+
   const badgesQuery = useQuery({
     queryKey: ['achievements', 'badges', userId],
     queryFn: () => getCycleBadges(userId),
@@ -121,7 +257,7 @@ export function AchievementsSection({ userId }: AchievementsSectionProps) {
       {/* Cycle badges */}
       {badges.length > 0 && (
         <>
-          <SectionHeader label={`Cycles Completed [ ${badges.length} badge${badges.length !== 1 ? 's' : ''} ]`} />
+          <SectionHeader label={`Cycles Completed [ ${badges.length} badge${badges.length !== 1 ? 's' : ''} ]`} styles={styles} />
           <View style={styles.card}>
             {badges.map((badge) => (
               <TouchableOpacity
@@ -146,7 +282,7 @@ export function AchievementsSection({ userId }: AchievementsSectionProps) {
       {/* Streak */}
       {hasStreak && (
         <>
-          <SectionHeader label="Streak" />
+          <SectionHeader label="Streak" styles={styles} />
           <View style={styles.card}>
             {streak.currentStreak > 0 && (
               <View style={styles.streakRow}>
@@ -169,20 +305,20 @@ export function AchievementsSection({ userId }: AchievementsSectionProps) {
       {/* Personal records */}
       {hasPRs && (
         <>
-          <SectionHeader label="Personal Records" />
+          <SectionHeader label="Personal Records" styles={styles} />
           <View style={styles.card}>
             {(['squat', 'bench', 'deadlift'] as const).map((lift) => {
               const liftPRs = prs[lift]
               if (!liftPRs) return null
               if (liftPRs.best1rmKg === 0 && Object.keys(liftPRs.repPRs).length === 0) return null
-              return <PRRow key={lift} lift={lift} prs={liftPRs} />
+              return <PRRow key={lift} lift={lift} prs={liftPRs} styles={styles} />
             })}
           </View>
         </>
       )}
 
       {/* WILKS */}
-      <SectionHeader label="WILKS Score" />
+      <SectionHeader label="WILKS Score" styles={styles} />
       <TouchableOpacity
         style={[styles.card, styles.wilksRow]}
         onPress={() => router.push('/profile/wilks')}
@@ -194,132 +330,3 @@ export function AchievementsSection({ userId }: AchievementsSectionProps) {
     </View>
   )
 }
-
-// ── Styles ────────────────────────────────────────────────────────────────────
-
-const styles = StyleSheet.create({
-  loadingContainer: {
-    paddingVertical: spacing[8],
-    alignItems: 'center',
-  },
-  sectionHeader: {
-    fontSize: typography.sizes.xs,
-    fontWeight: typography.weights.bold,
-    color: colors.textTertiary,
-    textTransform: 'uppercase',
-    letterSpacing: typography.letterSpacing.widest,
-    marginBottom: spacing[2],
-    marginTop: spacing[4],
-  },
-  card: {
-    backgroundColor: colors.bgSurface,
-    borderRadius: radii.md,
-    borderWidth: 1,
-    borderColor: colors.border,
-    paddingVertical: spacing[1],
-    marginBottom: spacing[1],
-  },
-  emptyCard: {
-    paddingHorizontal: spacing[4],
-    paddingVertical: spacing[4],
-    marginTop: spacing[4],
-  },
-  emptyTitle: {
-    fontSize: typography.sizes.base,
-    fontWeight: typography.weights.bold,
-    color: colors.text,
-    marginBottom: spacing[1],
-  },
-  emptyBody: {
-    fontSize: typography.sizes.sm,
-    color: colors.textSecondary,
-    lineHeight: 20,
-  },
-  // Badges
-  badgeRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: spacing[4],
-    paddingVertical: spacing[3],
-    borderBottomWidth: 1,
-    borderBottomColor: colors.borderMuted,
-  },
-  badgeLeft: {
-    flex: 1,
-  },
-  badgeTitle: {
-    fontSize: typography.sizes.base,
-    fontWeight: typography.weights.semibold,
-    color: colors.text,
-    marginBottom: spacing[0.5],
-  },
-  badgeMeta: {
-    fontSize: typography.sizes.sm,
-    color: colors.textSecondary,
-  },
-  chevron: {
-    fontSize: 22,
-    color: colors.textTertiary,
-    lineHeight: 24,
-  },
-  // Streak
-  streakRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: spacing[4],
-    paddingVertical: spacing[2.5],
-  },
-  streakEmoji: {
-    fontSize: 16,
-    marginRight: spacing[2],
-    width: 22,
-  },
-  streakLabel: {
-    fontSize: typography.sizes.sm,
-    color: colors.textSecondary,
-    width: 64,
-  },
-  streakValue: {
-    fontSize: typography.sizes.base,
-    fontWeight: typography.weights.bold,
-    color: colors.secondary,
-    flex: 1,
-  },
-  streakMeta: {
-    fontSize: typography.sizes.sm,
-    color: colors.textSecondary,
-    flex: 1,
-  },
-  // Personal records
-  prBlock: {
-    paddingHorizontal: spacing[4],
-    paddingVertical: spacing[2.5],
-    borderBottomWidth: 1,
-    borderBottomColor: colors.borderMuted,
-  },
-  prLiftName: {
-    fontSize: typography.sizes.sm,
-    fontWeight: typography.weights.bold,
-    color: colors.primary,
-    marginBottom: spacing[1],
-    textTransform: 'uppercase',
-    letterSpacing: typography.letterSpacing.wide,
-  },
-  prLine: {
-    fontSize: typography.sizes.sm,
-    color: colors.textSecondary,
-    marginBottom: spacing[0.5],
-  },
-  // WILKS
-  wilksRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: spacing[4],
-    paddingVertical: spacing[3.5],
-  },
-  wilksHint: {
-    fontSize: typography.sizes.base,
-    color: colors.textSecondary,
-    flex: 1,
-  },
-})

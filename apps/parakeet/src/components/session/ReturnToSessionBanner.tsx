@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { StyleSheet, Text, TouchableOpacity } from 'react-native'
 import { router, usePathname } from 'expo-router'
 import * as Haptics from 'expo-haptics'
@@ -8,15 +8,47 @@ import { getRestTimerPrefs } from '@modules/settings'
 import { detectOvertimeEdge } from '@modules/session'
 import { formatMMSS } from '../../shared/utils'
 import { capitalize } from '@shared/utils/string'
-import { colors, radii, spacing, typography } from '../../theme'
+import { radii, spacing, typography } from '../../theme'
+import { useTheme } from '../../theme/ThemeContext'
 
 export function ReturnToSessionBanner() {
+  const { colors } = useTheme()
   const sessionId = useSessionStore((s) => s.sessionId)
   const sessionMeta = useSessionStore((s) => s.sessionMeta)
   const cachedJitData = useSessionStore((s) => s.cachedJitData)
   const timerState = useSessionStore((s) => s.timerState)
 
   const pathname = usePathname()
+
+  const styles = useMemo(() => StyleSheet.create({
+    pill: {
+      alignSelf: 'center',
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing[3],
+      backgroundColor: colors.primary,
+      borderRadius: radii.full,
+      paddingHorizontal: spacing[4],
+      paddingVertical: spacing[2],
+    },
+    pillOvertime: {
+      backgroundColor: colors.warning,
+    },
+    label: {
+      fontSize: typography.sizes.sm,
+      fontWeight: typography.weights.semibold,
+      color: colors.textInverse,
+      flexShrink: 1,
+    },
+    rest: {
+      fontSize: typography.sizes.sm,
+      fontWeight: typography.weights.bold,
+      color: colors.textInverse,
+    },
+    restOvertime: {
+      color: colors.textInverse,
+    },
+  }), [colors])
 
   // Edge-detector ref: resets whenever a new timer starts or closes
   const prevOvertimeRef = useRef(false)
@@ -105,33 +137,3 @@ export function ReturnToSessionBanner() {
     </TouchableOpacity>
   )
 }
-
-const styles = StyleSheet.create({
-  pill: {
-    alignSelf: 'center',
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing[3],
-    backgroundColor: colors.primary,
-    borderRadius: radii.full,
-    paddingHorizontal: spacing[4],
-    paddingVertical: spacing[2],
-  },
-  pillOvertime: {
-    backgroundColor: colors.warning,
-  },
-  label: {
-    fontSize: typography.sizes.sm,
-    fontWeight: typography.weights.semibold,
-    color: colors.textInverse,
-    flexShrink: 1,
-  },
-  rest: {
-    fontSize: typography.sizes.sm,
-    fontWeight: typography.weights.bold,
-    color: colors.textInverse,
-  },
-  restOvertime: {
-    color: colors.textInverse,
-  },
-})

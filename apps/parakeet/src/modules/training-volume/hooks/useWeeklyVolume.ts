@@ -10,18 +10,16 @@ import { getMrvMevConfig } from '../lib/volume-config'
 import { getProfile } from '@modules/profile/application/profile.service'
 import { getCurrentWeekLogs } from '@modules/session/application/session.service'
 
-function currentWeekStart(): string {
-  const now = new Date()
-  const start = new Date(now)
-  start.setDate(now.getDate() - now.getDay())
-  start.setHours(0, 0, 0, 0)
+function rollingWindowStart(): string {
+  const start = new Date()
+  start.setDate(start.getDate() - 7)
   return start.toISOString().split('T')[0]
 }
 
 export function useWeeklyVolume() {
   const { user } = useAuth()
   return useQuery({
-    queryKey: ['volume', 'weekly', user?.id, currentWeekStart()],
+    queryKey: ['volume', 'weekly', user?.id, rollingWindowStart()],
     queryFn: async () => {
       const [logs, profile] = await Promise.all([
         getCurrentWeekLogs(user!.id),

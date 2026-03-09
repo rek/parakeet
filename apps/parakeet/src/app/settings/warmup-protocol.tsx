@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
   ScrollView,
@@ -24,7 +24,8 @@ import { qk } from '@platform/query';
 import { router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { BackLink } from '../../components/navigation/BackLink';
-import { colors } from '../../theme';
+import type { ColorScheme } from '../../theme';
+import { useTheme } from '../../theme/ThemeContext';
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
@@ -55,15 +56,140 @@ const PRESETS: {
   },
 ];
 
+// ── Styles ────────────────────────────────────────────────────────────────────
+
+function buildStyles(colors: ColorScheme) {
+  return StyleSheet.create({
+    safeArea: { flex: 1, backgroundColor: colors.bgSurface },
+    header: {
+      paddingHorizontal: 20,
+      paddingTop: 8,
+      paddingBottom: 16,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.bgMuted,
+    },
+    title: { fontSize: 24, fontWeight: '800', color: colors.text },
+    loading: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+    scroll: { flex: 1 },
+    content: { paddingBottom: 48 },
+
+    liftSection: {
+      paddingHorizontal: 20,
+      paddingVertical: 20,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.bgMuted,
+      gap: 12,
+    },
+    liftSectionHeader: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+    },
+    liftSectionTitle: { fontSize: 18, fontWeight: '700', color: colors.text },
+    saveLiftButton: {
+      backgroundColor: colors.primary,
+      borderRadius: 8,
+      paddingHorizontal: 14,
+      paddingVertical: 7,
+    },
+    saveLiftButtonDisabled: { opacity: 0.4 },
+    saveLiftButtonText: {
+      fontSize: 13,
+      fontWeight: '600',
+      color: colors.textInverse,
+    },
+
+    presetGrid: { gap: 8 },
+    presetCard: {
+      borderWidth: 1,
+      borderColor: colors.border,
+      borderRadius: 10,
+      padding: 12,
+      gap: 2,
+    },
+    presetCardSelected: {
+      borderColor: colors.primary,
+      backgroundColor: colors.primaryMuted,
+    },
+    presetLabel: { fontSize: 14, fontWeight: '600', color: colors.textSecondary },
+    presetLabelSelected: { color: colors.primary },
+    presetDescription: { fontSize: 12, color: colors.textTertiary },
+
+    // Custom editor
+    customEditor: {
+      backgroundColor: colors.bgSurface,
+      borderRadius: 10,
+      padding: 12,
+      gap: 8,
+    },
+    customEditorTitle: {
+      fontSize: 13,
+      fontWeight: '600',
+      color: colors.textSecondary,
+      marginBottom: 4,
+    },
+    customStep: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 10,
+    },
+    customStepField: { flexDirection: 'row', alignItems: 'center', gap: 4 },
+    customStepLabel: { fontSize: 12, color: colors.textSecondary, width: 28 },
+    customStepInput: {
+      borderWidth: 1,
+      borderColor: colors.border,
+      borderRadius: 8,
+      paddingHorizontal: 10,
+      paddingVertical: 6,
+      fontSize: 15,
+      color: colors.text,
+      width: 48,
+      textAlign: 'center',
+    },
+    customStepSep: { fontSize: 16, color: colors.textSecondary },
+    removeStep: {
+      width: 28,
+      height: 28,
+      borderRadius: 14,
+      backgroundColor: colors.dangerMuted,
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginLeft: 'auto',
+    },
+    removeStepText: { fontSize: 18, color: colors.danger, lineHeight: 22 },
+    addStep: {
+      paddingVertical: 8,
+      alignItems: 'center',
+      borderWidth: 1,
+      borderColor: colors.border,
+      borderRadius: 8,
+      borderStyle: 'dashed',
+    },
+    addStepText: { fontSize: 13, color: colors.textSecondary, fontWeight: '500' },
+
+    // Preview
+    preview: {
+      backgroundColor: colors.successMuted,
+      borderRadius: 8,
+      padding: 10,
+      gap: 4,
+    },
+    previewTitle: { fontSize: 11, color: colors.success, fontWeight: '600' },
+    previewSets: { fontSize: 13, color: colors.success, lineHeight: 18 },
+  });
+}
+
+type Styles = ReturnType<typeof buildStyles>;
 
 // ── Custom step editor ────────────────────────────────────────────────────────
 
 interface CustomStepEditorProps {
   steps: WarmupStep[];
   onChange: (steps: WarmupStep[]) => void;
+  styles: Styles;
 }
 
-function CustomStepEditor({ steps, onChange }: CustomStepEditorProps) {
+function CustomStepEditor({ steps, onChange, styles }: CustomStepEditorProps) {
   function updateStep(i: number, field: keyof WarmupStep, raw: string) {
     const value = parseInt(raw, 10);
     if (isNaN(value)) return;
@@ -134,9 +260,10 @@ interface WarmupPreviewProps {
   protocol: WarmupProtocol;
   oneRmKg: number;
   lift: Lift;
+  styles: Styles;
 }
 
-function WarmupPreview({ protocol, oneRmKg, lift }: WarmupPreviewProps) {
+function WarmupPreview({ protocol, oneRmKg, lift, styles }: WarmupPreviewProps) {
   if (!oneRmKg) return null;
   const workingWeight = estimateWorkingWeight(oneRmKg);
   const sets = generateWarmupSets(workingWeight, protocol);
@@ -162,6 +289,8 @@ interface LiftSectionProps {
   isSaving: boolean;
   onChange: (p: WarmupProtocol) => void;
   onSave: () => void;
+  styles: Styles;
+  textInverseColor: string;
 }
 
 function LiftSection({
@@ -171,6 +300,8 @@ function LiftSection({
   isSaving,
   onChange,
   onSave,
+  styles,
+  textInverseColor,
 }: LiftSectionProps) {
   const selectedPreset = protocol.type === 'preset' ? protocol.name : null;
 
@@ -188,7 +319,7 @@ function LiftSection({
           activeOpacity={0.8}
         >
           {isSaving ? (
-            <ActivityIndicator color={colors.textInverse} size="small" />
+            <ActivityIndicator color={textInverseColor} size="small" />
           ) : (
             <Text style={styles.saveLiftButtonText}>Save</Text>
           )}
@@ -251,11 +382,12 @@ function LiftSection({
         <CustomStepEditor
           steps={protocol.steps}
           onChange={(steps) => onChange({ type: 'custom', steps })}
+          styles={styles}
         />
       )}
 
       {/* Preview */}
-      <WarmupPreview protocol={protocol} oneRmKg={oneRmKg} lift={lift} />
+      <WarmupPreview protocol={protocol} oneRmKg={oneRmKg} lift={lift} styles={styles} />
     </View>
   );
 }
@@ -263,6 +395,8 @@ function LiftSection({
 // ── Screen ────────────────────────────────────────────────────────────────────
 
 export default function WarmupProtocolScreen() {
+  const { colors } = useTheme();
+  const styles = useMemo(() => buildStyles(colors), [colors]);
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const [protocols, setProtocols] = useState<Record<
@@ -342,6 +476,8 @@ export default function WarmupProtocolScreen() {
                 setProtocols((prev) => (prev ? { ...prev, [lift]: p } : prev))
               }
               onSave={() => handleSaveLift(lift)}
+              styles={styles}
+              textInverseColor={colors.textInverse}
             />
           ))}
         </ScrollView>
@@ -349,124 +485,3 @@ export default function WarmupProtocolScreen() {
     </SafeAreaView>
   );
 }
-
-// ── Styles ────────────────────────────────────────────────────────────────────
-
-const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: colors.bgSurface },
-  header: {
-    paddingHorizontal: 20,
-    paddingTop: 8,
-    paddingBottom: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.bgMuted,
-  },
-  title: { fontSize: 24, fontWeight: '800', color: colors.text },
-  loading: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  scroll: { flex: 1 },
-  content: { paddingBottom: 48 },
-
-  liftSection: {
-    paddingHorizontal: 20,
-    paddingVertical: 20,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.bgMuted,
-    gap: 12,
-  },
-  liftSectionHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  liftSectionTitle: { fontSize: 18, fontWeight: '700', color: colors.text },
-  saveLiftButton: {
-    backgroundColor: colors.primary,
-    borderRadius: 8,
-    paddingHorizontal: 14,
-    paddingVertical: 7,
-  },
-  saveLiftButtonDisabled: { opacity: 0.4 },
-  saveLiftButtonText: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: colors.textInverse,
-  },
-
-  presetGrid: { gap: 8 },
-  presetCard: {
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 10,
-    padding: 12,
-    gap: 2,
-  },
-  presetCardSelected: {
-    borderColor: colors.primary,
-    backgroundColor: colors.primaryMuted,
-  },
-  presetLabel: { fontSize: 14, fontWeight: '600', color: colors.textSecondary },
-  presetLabelSelected: { color: colors.primary },
-  presetDescription: { fontSize: 12, color: colors.textTertiary },
-
-  // Custom editor
-  customEditor: {
-    backgroundColor: colors.bgSurface,
-    borderRadius: 10,
-    padding: 12,
-    gap: 8,
-  },
-  customEditorTitle: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: colors.textSecondary,
-    marginBottom: 4,
-  },
-  customStep: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-  },
-  customStepField: { flexDirection: 'row', alignItems: 'center', gap: 4 },
-  customStepLabel: { fontSize: 12, color: colors.textSecondary, width: 28 },
-  customStepInput: {
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 8,
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    fontSize: 15,
-    color: colors.text,
-    width: 48,
-    textAlign: 'center',
-  },
-  customStepSep: { fontSize: 16, color: colors.textSecondary },
-  removeStep: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    backgroundColor: colors.dangerMuted,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginLeft: 'auto',
-  },
-  removeStepText: { fontSize: 18, color: colors.danger, lineHeight: 22 },
-  addStep: {
-    paddingVertical: 8,
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 8,
-    borderStyle: 'dashed',
-  },
-  addStepText: { fontSize: 13, color: colors.textSecondary, fontWeight: '500' },
-
-  // Preview
-  preview: {
-    backgroundColor: colors.successMuted,
-    borderRadius: 8,
-    padding: 10,
-    gap: 4,
-  },
-  previewTitle: { fontSize: 11, color: colors.success, fontWeight: '600' },
-  previewSets: { fontSize: 13, color: colors.success, lineHeight: 18 },
-});

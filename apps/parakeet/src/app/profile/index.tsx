@@ -15,7 +15,9 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { FormFeedback } from '../../components/ui/FormFeedback'
 import { getProfile, updateProfile } from '@modules/profile'
 import type { BiologicalSex } from '@modules/profile'
-import { colors, spacing, radii, typography } from '../../theme'
+import { spacing, radii, typography } from '../../theme'
+import type { ColorScheme } from '../../theme'
+import { useTheme } from '../../theme/ThemeContext'
 import { BackLink } from '../../components/navigation/BackLink'
 
 const GENDER_OPTIONS: { value: BiologicalSex; label: string }[] = [
@@ -23,11 +25,108 @@ const GENDER_OPTIONS: { value: BiologicalSex; label: string }[] = [
   { value: 'male', label: 'Male' },
 ]
 
-function FieldLabel({ label }: { label: string }) {
+function buildStyles(colors: ColorScheme) {
+  return StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: colors.bg,
+    },
+    content: {
+      paddingHorizontal: spacing[5],
+      paddingTop: spacing[5],
+      paddingBottom: spacing[12],
+    },
+    title: {
+      fontSize: typography.sizes['2xl'],
+      fontWeight: typography.weights.black,
+      color: colors.text,
+      letterSpacing: typography.letterSpacing.tight,
+      marginBottom: spacing[6],
+    },
+    card: {
+      backgroundColor: colors.bgSurface,
+      borderRadius: radii.lg,
+      borderWidth: 1,
+      borderColor: colors.border,
+      padding: spacing[4],
+    },
+    fieldBlock: {
+      marginBottom: spacing[5],
+    },
+    fieldBlockLast: {
+      marginBottom: 0,
+    },
+    fieldLabel: {
+      fontSize: typography.sizes.sm,
+      fontWeight: typography.weights.semibold,
+      color: colors.textSecondary,
+      marginBottom: spacing[2],
+      textTransform: 'uppercase',
+      letterSpacing: typography.letterSpacing.wide,
+    },
+    input: {
+      borderWidth: 1,
+      borderColor: colors.border,
+      borderRadius: radii.md,
+      backgroundColor: colors.bg,
+      color: colors.text,
+      paddingHorizontal: spacing[3],
+      paddingVertical: spacing[3],
+      fontSize: typography.sizes.base,
+    },
+    inputError: {
+      borderColor: colors.danger,
+    },
+    sexRow: {
+      gap: spacing[2],
+    },
+    sexOption: {
+      borderWidth: 1,
+      borderColor: colors.border,
+      backgroundColor: colors.bg,
+      borderRadius: radii.md,
+      paddingVertical: spacing[2.5],
+      paddingHorizontal: spacing[3],
+    },
+    sexOptionSelected: {
+      borderColor: colors.primary,
+      backgroundColor: colors.primaryMuted,
+    },
+    sexOptionText: {
+      color: colors.textSecondary,
+      fontSize: typography.sizes.base,
+      fontWeight: typography.weights.medium,
+    },
+    sexOptionTextSelected: {
+      color: colors.primary,
+      fontWeight: typography.weights.semibold,
+    },
+    saveButton: {
+      marginTop: spacing[5],
+      backgroundColor: colors.primary,
+      borderRadius: radii.md,
+      paddingVertical: spacing[3.5],
+      alignItems: 'center',
+    },
+    saveButtonDisabled: {
+      opacity: 0.5,
+    },
+    saveButtonText: {
+      color: colors.textInverse,
+      fontSize: typography.sizes.base,
+      fontWeight: typography.weights.bold,
+      letterSpacing: typography.letterSpacing.wide,
+    },
+  })
+}
+
+function FieldLabel({ label, styles }: { label: string; styles: ReturnType<typeof buildStyles> }) {
   return <Text style={styles.fieldLabel}>{label}</Text>
 }
 
 export default function ProfileScreen() {
+  const { colors } = useTheme()
+  const styles = useMemo(() => buildStyles(colors), [colors])
   const queryClient = useQueryClient()
 
   const { data: profile, isLoading } = useQuery({
@@ -127,7 +226,7 @@ export default function ProfileScreen() {
 
         <View style={styles.card}>
           <View style={styles.fieldBlock}>
-            <FieldLabel label="Name" />
+            <FieldLabel label="Name" styles={styles} />
             <TextInput
               style={styles.input}
               value={displayName}
@@ -140,7 +239,7 @@ export default function ProfileScreen() {
           </View>
 
           <View style={styles.fieldBlock}>
-            <FieldLabel label="Gender" />
+            <FieldLabel label="Gender" styles={styles} />
             <View style={styles.sexRow}>
               {GENDER_OPTIONS.map((option) => {
                 const selected = gender === option.value
@@ -161,7 +260,7 @@ export default function ProfileScreen() {
           </View>
 
           <View style={styles.fieldBlock}>
-            <FieldLabel label="Birth Year" />
+            <FieldLabel label="Birth Year" styles={styles} />
             <TextInput
               style={[styles.input, !birthYearIsValid && styles.inputError]}
               value={birthYear}
@@ -174,7 +273,7 @@ export default function ProfileScreen() {
           </View>
 
           <View style={styles.fieldBlockLast}>
-            <FieldLabel label="Bodyweight (kg)" />
+            <FieldLabel label="Bodyweight (kg)" styles={styles} />
             <TextInput
               style={styles.input}
               value={bodyweightKg}
@@ -207,95 +306,3 @@ export default function ProfileScreen() {
   )
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.bg,
-  },
-  content: {
-    paddingHorizontal: spacing[5],
-    paddingTop: spacing[5],
-    paddingBottom: spacing[12],
-  },
-  title: {
-    fontSize: typography.sizes['2xl'],
-    fontWeight: typography.weights.black,
-    color: colors.text,
-    letterSpacing: typography.letterSpacing.tight,
-    marginBottom: spacing[6],
-  },
-  card: {
-    backgroundColor: colors.bgSurface,
-    borderRadius: radii.lg,
-    borderWidth: 1,
-    borderColor: colors.border,
-    padding: spacing[4],
-  },
-  fieldBlock: {
-    marginBottom: spacing[5],
-  },
-  fieldBlockLast: {
-    marginBottom: 0,
-  },
-  fieldLabel: {
-    fontSize: typography.sizes.sm,
-    fontWeight: typography.weights.semibold,
-    color: colors.textSecondary,
-    marginBottom: spacing[2],
-    textTransform: 'uppercase',
-    letterSpacing: typography.letterSpacing.wide,
-  },
-  input: {
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: radii.md,
-    backgroundColor: colors.bg,
-    color: colors.text,
-    paddingHorizontal: spacing[3],
-    paddingVertical: spacing[3],
-    fontSize: typography.sizes.base,
-  },
-  inputError: {
-    borderColor: colors.danger,
-  },
-  sexRow: {
-    gap: spacing[2],
-  },
-  sexOption: {
-    borderWidth: 1,
-    borderColor: colors.border,
-    backgroundColor: colors.bg,
-    borderRadius: radii.md,
-    paddingVertical: spacing[2.5],
-    paddingHorizontal: spacing[3],
-  },
-  sexOptionSelected: {
-    borderColor: colors.primary,
-    backgroundColor: colors.primaryMuted,
-  },
-  sexOptionText: {
-    color: colors.textSecondary,
-    fontSize: typography.sizes.base,
-    fontWeight: typography.weights.medium,
-  },
-  sexOptionTextSelected: {
-    color: colors.primary,
-    fontWeight: typography.weights.semibold,
-  },
-  saveButton: {
-    marginTop: spacing[5],
-    backgroundColor: colors.primary,
-    borderRadius: radii.md,
-    paddingVertical: spacing[3.5],
-    alignItems: 'center',
-  },
-  saveButtonDisabled: {
-    opacity: 0.5,
-  },
-  saveButtonText: {
-    color: colors.textInverse,
-    fontSize: typography.sizes.base,
-    fontWeight: typography.weights.bold,
-    letterSpacing: typography.letterSpacing.wide,
-  },
-})

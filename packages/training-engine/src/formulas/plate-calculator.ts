@@ -5,9 +5,9 @@ export type PlateKg = (typeof PLATE_SIZES_KG)[number]
 export const PLATE_COLORS: Record<PlateKg, string> = {
   25: '#DC2626',
   20: '#1D4ED8',
-  15: '#D97706',
+  15: '#FACC15',
   10: '#15803D',
-  5:  '#D4D4D8',
+  5:  '#27272A',
   2.5: '#F87171',
   1.25: '#A1A1AA',
 }

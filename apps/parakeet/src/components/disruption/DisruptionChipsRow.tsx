@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import {
   Alert,
   Modal,
@@ -14,7 +14,9 @@ import DateTimePicker, { type DateTimePickerEvent } from '@react-native-communit
 import { resolveDisruption, updateDisruptionEndDate } from '@modules/disruptions'
 import { captureException } from '@platform/utils/captureException'
 import { formatDate, localDateIso } from '@shared/utils/date'
-import { colors, palette, radii, spacing, typography } from '../../theme'
+import { palette, radii, spacing, typography } from '../../theme'
+import { useTheme } from '../../theme/ThemeContext'
+import type { ColorScheme } from '../../theme'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -29,13 +31,13 @@ export interface ActiveDisruption {
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
-function severityColor(severity: string): string {
+function severityColor(severity: string, colors: ColorScheme): string {
   if (severity === 'major') return colors.danger
   if (severity === 'moderate') return palette.orange500
   return colors.warning
 }
 
-function chipBg(severity: string): string {
+function chipBg(severity: string, colors: ColorScheme): string {
   if (severity === 'major') return colors.dangerMuted
   return colors.warningMuted
 }
@@ -52,6 +54,158 @@ function typeLabel(disruption_type: string): string {
     .join(' ')
 }
 
+function buildStyles(colors: ColorScheme) {
+  return StyleSheet.create({
+    scrollContent: {
+      paddingHorizontal: spacing[4],
+      gap: spacing[2],
+    },
+    chip: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing[1.5],
+      borderWidth: 1,
+      borderRadius: 999,
+      paddingHorizontal: spacing[3],
+      paddingVertical: spacing[2],
+    },
+    dot: {
+      width: 6,
+      height: 6,
+      borderRadius: 3,
+    },
+    chipText: {
+      fontSize: typography.sizes.xs,
+      fontWeight: typography.weights.semibold,
+      letterSpacing: typography.letterSpacing.wide,
+    },
+    // Modal
+    overlay: {
+      flex: 1,
+      justifyContent: 'flex-end',
+    },
+    backdrop: {
+      ...StyleSheet.absoluteFillObject,
+      backgroundColor: colors.overlayLight,
+    },
+    sheet: {
+      backgroundColor: colors.bgSurface,
+      borderTopLeftRadius: 20,
+      borderTopRightRadius: 20,
+      paddingBottom: 40,
+    },
+    handle: {
+      width: 36,
+      height: 4,
+      borderRadius: 2,
+      backgroundColor: colors.border,
+      alignSelf: 'center',
+      marginTop: spacing[2],
+      marginBottom: spacing[1],
+    },
+    modalHeader: {
+      flexDirection: 'row',
+      alignItems: 'flex-start',
+      paddingHorizontal: spacing[4],
+      paddingVertical: spacing[3],
+      borderBottomWidth: 1,
+      borderBottomColor: colors.border,
+    },
+    modalHeaderText: {
+      flex: 1,
+      gap: spacing[1.5],
+    },
+    modalTitle: {
+      fontSize: typography.sizes.lg,
+      fontWeight: typography.weights.bold,
+      color: colors.text,
+    },
+    severityPill: {
+      alignSelf: 'flex-start',
+      borderWidth: 1,
+      borderRadius: 999,
+      paddingHorizontal: spacing[2],
+      paddingVertical: 2,
+      backgroundColor: colors.bgMuted,
+    },
+    severityPillText: {
+      fontSize: typography.sizes.xs,
+      fontWeight: typography.weights.semibold,
+      textTransform: 'capitalize',
+    },
+    closeBtn: {
+      fontSize: 16,
+      color: colors.textSecondary,
+      fontWeight: typography.weights.bold,
+    },
+    modalBody: {
+      paddingHorizontal: spacing[4],
+      paddingVertical: spacing[4],
+      gap: spacing[3],
+    },
+    description: {
+      fontSize: typography.sizes.sm,
+      color: colors.textSecondary,
+      lineHeight: 20,
+    },
+    detailRow: {
+      flexDirection: 'row',
+      gap: spacing[3],
+    },
+    detailLabel: {
+      fontSize: typography.sizes.sm,
+      color: colors.textTertiary,
+      width: 60,
+    },
+    detailValue: {
+      fontSize: typography.sizes.sm,
+      color: colors.text,
+      flex: 1,
+    },
+    capitalize: {
+      textTransform: 'capitalize',
+    },
+    detailValueMuted: {
+      color: colors.textTertiary,
+      fontStyle: 'italic',
+    },
+    editHint: {
+      fontSize: typography.sizes.xs,
+      color: colors.primary,
+      fontWeight: typography.weights.semibold,
+      alignSelf: 'center',
+    },
+    saveEndDateBtn: {
+      marginTop: spacing[2],
+      backgroundColor: colors.primary,
+      borderRadius: radii.sm,
+      paddingVertical: spacing[2.5],
+      alignItems: 'center',
+    },
+    saveEndDateBtnText: {
+      fontSize: typography.sizes.sm,
+      fontWeight: typography.weights.semibold,
+      color: colors.textInverse,
+    },
+    btnDisabled: {
+      opacity: 0.5,
+    },
+    resolveBtn: {
+      backgroundColor: colors.primary,
+      marginHorizontal: spacing[4],
+      borderRadius: radii.md,
+      paddingVertical: spacing[3.5],
+      alignItems: 'center',
+    },
+    resolveBtnText: {
+      fontSize: typography.sizes.sm,
+      fontWeight: typography.weights.bold,
+      color: colors.textInverse,
+      letterSpacing: typography.letterSpacing.wide,
+    },
+  })
+}
+
 // ── Detail modal ──────────────────────────────────────────────────────────────
 
 function DisruptionDetailModal({
@@ -65,9 +219,12 @@ function DisruptionDetailModal({
   onClose: () => void
   onResolved: () => void
 }) {
+  const { colors } = useTheme()
   const [showDatePicker, setShowDatePicker] = useState(false)
   const [pendingEndDate, setPendingEndDate] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
+
+  const styles = useMemo(() => buildStyles(colors), [colors])
 
   const displayEndDate = pendingEndDate ?? disruption?.affected_date_end ?? null
   const hasUnsavedDate = pendingEndDate !== null && pendingEndDate !== disruption?.affected_date_end
@@ -111,7 +268,7 @@ function DisruptionDetailModal({
     onClose()
   }
 
-  const sevColor = disruption ? severityColor(disruption.severity) : colors.warning
+  const sevColor = disruption ? severityColor(disruption.severity, colors) : colors.warning
 
   return (
     <Modal
@@ -213,7 +370,10 @@ interface Props {
 }
 
 export function DisruptionChipsRow({ disruptions, userId, onResolved }: Props) {
+  const { colors } = useTheme()
   const [selected, setSelected] = useState<ActiveDisruption | null>(null)
+
+  const styles = useMemo(() => buildStyles(colors), [colors])
 
   if (!disruptions.length) return null
 
@@ -225,11 +385,11 @@ export function DisruptionChipsRow({ disruptions, userId, onResolved }: Props) {
         contentContainerStyle={styles.scrollContent}
       >
         {disruptions.map((d) => {
-          const sevColor = severityColor(d.severity)
+          const sevColor = severityColor(d.severity, colors)
           return (
             <TouchableOpacity
               key={d.id}
-              style={[styles.chip, { borderColor: sevColor, backgroundColor: chipBg(d.severity) }]}
+              style={[styles.chip, { borderColor: sevColor, backgroundColor: chipBg(d.severity, colors) }]}
               onPress={() => setSelected(d)}
               activeOpacity={0.75}
             >
@@ -254,155 +414,3 @@ export function DisruptionChipsRow({ disruptions, userId, onResolved }: Props) {
     </View>
   )
 }
-
-// ── Styles ────────────────────────────────────────────────────────────────────
-
-const styles = StyleSheet.create({
-  scrollContent: {
-    paddingHorizontal: spacing[4],
-    gap: spacing[2],
-  },
-  chip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing[1.5],
-    borderWidth: 1,
-    borderRadius: 999,
-    paddingHorizontal: spacing[3],
-    paddingVertical: spacing[2],
-  },
-  dot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-  },
-  chipText: {
-    fontSize: typography.sizes.xs,
-    fontWeight: typography.weights.semibold,
-    letterSpacing: typography.letterSpacing.wide,
-  },
-  // Modal
-  overlay: {
-    flex: 1,
-    justifyContent: 'flex-end',
-  },
-  backdrop: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: colors.overlayLight,
-  },
-  sheet: {
-    backgroundColor: colors.bgSurface,
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    paddingBottom: 40,
-  },
-  handle: {
-    width: 36,
-    height: 4,
-    borderRadius: 2,
-    backgroundColor: colors.border,
-    alignSelf: 'center',
-    marginTop: spacing[2],
-    marginBottom: spacing[1],
-  },
-  modalHeader: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    paddingHorizontal: spacing[4],
-    paddingVertical: spacing[3],
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
-  },
-  modalHeaderText: {
-    flex: 1,
-    gap: spacing[1.5],
-  },
-  modalTitle: {
-    fontSize: typography.sizes.lg,
-    fontWeight: typography.weights.bold,
-    color: colors.text,
-  },
-  severityPill: {
-    alignSelf: 'flex-start',
-    borderWidth: 1,
-    borderRadius: 999,
-    paddingHorizontal: spacing[2],
-    paddingVertical: 2,
-    backgroundColor: colors.bgMuted,
-  },
-  severityPillText: {
-    fontSize: typography.sizes.xs,
-    fontWeight: typography.weights.semibold,
-    textTransform: 'capitalize',
-  },
-  closeBtn: {
-    fontSize: 16,
-    color: colors.textSecondary,
-    fontWeight: typography.weights.bold,
-  },
-  modalBody: {
-    paddingHorizontal: spacing[4],
-    paddingVertical: spacing[4],
-    gap: spacing[3],
-  },
-  description: {
-    fontSize: typography.sizes.sm,
-    color: colors.textSecondary,
-    lineHeight: 20,
-  },
-  detailRow: {
-    flexDirection: 'row',
-    gap: spacing[3],
-  },
-  detailLabel: {
-    fontSize: typography.sizes.sm,
-    color: colors.textTertiary,
-    width: 60,
-  },
-  detailValue: {
-    fontSize: typography.sizes.sm,
-    color: colors.text,
-    flex: 1,
-  },
-  capitalize: {
-    textTransform: 'capitalize',
-  },
-  detailValueMuted: {
-    color: colors.textTertiary,
-    fontStyle: 'italic',
-  },
-  editHint: {
-    fontSize: typography.sizes.xs,
-    color: colors.primary,
-    fontWeight: typography.weights.semibold,
-    alignSelf: 'center',
-  },
-  saveEndDateBtn: {
-    marginTop: spacing[2],
-    backgroundColor: colors.primary,
-    borderRadius: radii.sm,
-    paddingVertical: spacing[2.5],
-    alignItems: 'center',
-  },
-  saveEndDateBtnText: {
-    fontSize: typography.sizes.sm,
-    fontWeight: typography.weights.semibold,
-    color: colors.textInverse,
-  },
-  btnDisabled: {
-    opacity: 0.5,
-  },
-  resolveBtn: {
-    backgroundColor: colors.primary,
-    marginHorizontal: spacing[4],
-    borderRadius: radii.md,
-    paddingVertical: spacing[3.5],
-    alignItems: 'center',
-  },
-  resolveBtnText: {
-    fontSize: typography.sizes.sm,
-    fontWeight: typography.weights.bold,
-    color: colors.textInverse,
-    letterSpacing: typography.letterSpacing.wide,
-  },
-})

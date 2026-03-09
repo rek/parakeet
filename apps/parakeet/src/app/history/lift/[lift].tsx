@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import {
   ActivityIndicator,
   ScrollView,
@@ -19,7 +19,9 @@ import {
   getPerformanceByLift,
   getPerformanceTrends,
 } from '@modules/history';
-import { colors, palette, radii, spacing, typography } from '../../../theme';
+import { palette, radii, spacing, typography } from '../../../theme';
+import type { ColorScheme } from '../../../theme';
+import { useTheme } from '../../../theme/ThemeContext';
 import { formatDate, formatTime } from '@shared/utils/date';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -102,9 +104,184 @@ function getSessionJoin(sessions: unknown): { intensity_type?: string } | null {
   } | null;
 }
 
+function buildStyles(colors: ColorScheme) {
+  return StyleSheet.create({
+    safeArea: { flex: 1, backgroundColor: colors.bg },
+    scrollView: { flex: 1 },
+    container: {
+      paddingHorizontal: spacing[6],
+      paddingTop: spacing[4],
+      paddingBottom: spacing[12],
+    },
+    backButton: { marginBottom: spacing[4] },
+    backText: {
+      fontSize: typography.sizes.sm,
+      color: colors.primary,
+      fontWeight: typography.weights.medium,
+    },
+    header: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      marginBottom: spacing[4],
+    },
+    liftTitle: {
+      fontSize: typography.sizes['2xl'],
+      fontWeight: typography.weights.black,
+      color: colors.text,
+      letterSpacing: typography.letterSpacing.tight,
+    },
+    oneRmBadge: {
+      backgroundColor: colors.primaryMuted,
+      borderRadius: radii.sm,
+      paddingHorizontal: spacing[3],
+      paddingVertical: spacing[1.5],
+      borderWidth: 1,
+      borderColor: colors.primary,
+    },
+    oneRmBadgeText: {
+      fontSize: typography.sizes.md,
+      fontWeight: typography.weights.bold,
+      color: colors.primary,
+    },
+    // Chart type selector
+    chartTypeRow: {
+      flexDirection: 'row',
+      gap: spacing[2],
+      marginBottom: spacing[3],
+    },
+    chartTypeChip: {
+      flex: 1,
+      alignItems: 'center',
+      borderWidth: 1,
+      borderColor: colors.border,
+      borderRadius: radii.sm,
+      paddingVertical: spacing[2],
+      backgroundColor: colors.bgSurface,
+    },
+    chartTypeChipActive: {
+      borderColor: colors.primary,
+      backgroundColor: colors.primaryMuted,
+    },
+    chartTypeChipText: {
+      fontSize: typography.sizes.sm,
+      fontWeight: typography.weights.medium,
+      color: colors.textSecondary,
+    },
+    chartTypeChipTextActive: {
+      color: colors.primary,
+      fontWeight: typography.weights.bold,
+    },
+    sectionHeader: {
+      fontSize: typography.sizes.xs,
+      fontWeight: typography.weights.bold,
+      color: colors.textTertiary,
+      textTransform: 'uppercase',
+      letterSpacing: typography.letterSpacing.widest,
+      marginBottom: spacing[3],
+      marginTop: spacing[2],
+    },
+    chartCard: {
+      backgroundColor: colors.bgSurface,
+      borderWidth: 1,
+      borderColor: colors.border,
+      borderRadius: radii.md,
+      padding: spacing[4],
+      marginBottom: spacing[6],
+    },
+    chartPlaceholder: {
+      height: 180,
+      justifyContent: 'center',
+      alignItems: 'center',
+      backgroundColor: colors.bgSurface,
+      borderRadius: radii.md,
+      marginBottom: spacing[6],
+      borderWidth: 1,
+      borderColor: colors.border,
+    },
+    // Intensity filter chips
+    filterRow: {
+      flexDirection: 'row',
+      gap: spacing[2],
+      marginBottom: spacing[3],
+      flexWrap: 'wrap',
+    },
+    filterChip: {
+      borderWidth: 1,
+      borderColor: colors.border,
+      borderRadius: radii.sm,
+      paddingHorizontal: spacing[3],
+      paddingVertical: spacing[1.5],
+      backgroundColor: colors.bgSurface,
+    },
+    filterChipActive: {
+      borderColor: colors.primary,
+      backgroundColor: colors.primaryMuted,
+    },
+    filterChipText: {
+      fontSize: typography.sizes.sm,
+      fontWeight: typography.weights.medium,
+      color: colors.textSecondary,
+    },
+    filterChipTextActive: {
+      color: colors.primary,
+      fontWeight: typography.weights.bold,
+    },
+    // Session rows
+    sessionRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      paddingVertical: spacing[3],
+      borderBottomWidth: 1,
+      borderBottomColor: colors.borderMuted,
+    },
+    sessionLeft: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing[2],
+      flex: 1,
+    },
+    sessionDate: {
+      fontSize: typography.sizes.sm,
+      color: colors.textSecondary,
+    },
+    intensityBadge: {
+      backgroundColor: colors.bgElevated,
+      borderRadius: radii.xs,
+      paddingHorizontal: spacing[2],
+      paddingVertical: 2,
+      borderWidth: 1,
+      borderColor: colors.border,
+    },
+    intensityBadgeText: {
+      fontSize: typography.sizes.xs,
+      fontWeight: typography.weights.medium,
+      color: colors.textSecondary,
+    },
+    sessionRight: { alignItems: 'flex-end', gap: spacing[0.5] },
+    sessionOneRm: {
+      fontSize: typography.sizes.base,
+      fontWeight: typography.weights.bold,
+      color: colors.text,
+    },
+    sessionRpe: {
+      fontSize: typography.sizes.xs,
+      color: colors.textTertiary,
+    },
+    emptyText: {
+      fontSize: typography.sizes.base,
+      color: colors.textTertiary,
+      marginBottom: spacing[8],
+    },
+  });
+}
+
 // ── Screen ────────────────────────────────────────────────────────────────────
 
 export default function LiftHistoryScreen() {
+  const { colors } = useTheme();
+  const styles = useMemo(() => buildStyles(colors), [colors]);
   const { lift } = useLocalSearchParams<{ lift: string }>();
   const { user } = useAuth();
   const { width } = useWindowDimensions();
@@ -257,7 +434,7 @@ export default function LiftHistoryScreen() {
                   liftColor +
                   Math.round(opacity * 255)
                     .toString(16)
-                    .padStart(2, '0'),
+                    .padStart(2, '00'),
                 labelColor: () => colors.textTertiary,
                 strokeWidth: 2,
                 propsForDots: { r: '3', fill: liftColor, stroke: liftColor },
@@ -358,176 +535,3 @@ export default function LiftHistoryScreen() {
     </SafeAreaView>
   );
 }
-
-// ── Styles ────────────────────────────────────────────────────────────────────
-
-const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: colors.bg },
-  scrollView: { flex: 1 },
-  container: {
-    paddingHorizontal: spacing[6],
-    paddingTop: spacing[4],
-    paddingBottom: spacing[12],
-  },
-  backButton: { marginBottom: spacing[4] },
-  backText: {
-    fontSize: typography.sizes.sm,
-    color: colors.primary,
-    fontWeight: typography.weights.medium,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: spacing[4],
-  },
-  liftTitle: {
-    fontSize: typography.sizes['2xl'],
-    fontWeight: typography.weights.black,
-    color: colors.text,
-    letterSpacing: typography.letterSpacing.tight,
-  },
-  oneRmBadge: {
-    backgroundColor: colors.primaryMuted,
-    borderRadius: radii.sm,
-    paddingHorizontal: spacing[3],
-    paddingVertical: spacing[1.5],
-    borderWidth: 1,
-    borderColor: colors.primary,
-  },
-  oneRmBadgeText: {
-    fontSize: typography.sizes.md,
-    fontWeight: typography.weights.bold,
-    color: colors.primary,
-  },
-  // Chart type selector
-  chartTypeRow: {
-    flexDirection: 'row',
-    gap: spacing[2],
-    marginBottom: spacing[3],
-  },
-  chartTypeChip: {
-    flex: 1,
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: radii.sm,
-    paddingVertical: spacing[2],
-    backgroundColor: colors.bgSurface,
-  },
-  chartTypeChipActive: {
-    borderColor: colors.primary,
-    backgroundColor: colors.primaryMuted,
-  },
-  chartTypeChipText: {
-    fontSize: typography.sizes.sm,
-    fontWeight: typography.weights.medium,
-    color: colors.textSecondary,
-  },
-  chartTypeChipTextActive: {
-    color: colors.primary,
-    fontWeight: typography.weights.bold,
-  },
-  sectionHeader: {
-    fontSize: typography.sizes.xs,
-    fontWeight: typography.weights.bold,
-    color: colors.textTertiary,
-    textTransform: 'uppercase',
-    letterSpacing: typography.letterSpacing.widest,
-    marginBottom: spacing[3],
-    marginTop: spacing[2],
-  },
-  chartCard: {
-    backgroundColor: colors.bgSurface,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: radii.md,
-    padding: spacing[4],
-    marginBottom: spacing[6],
-  },
-  chartPlaceholder: {
-    height: 180,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: colors.bgSurface,
-    borderRadius: radii.md,
-    marginBottom: spacing[6],
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  // Intensity filter chips
-  filterRow: {
-    flexDirection: 'row',
-    gap: spacing[2],
-    marginBottom: spacing[3],
-    flexWrap: 'wrap',
-  },
-  filterChip: {
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: radii.sm,
-    paddingHorizontal: spacing[3],
-    paddingVertical: spacing[1.5],
-    backgroundColor: colors.bgSurface,
-  },
-  filterChipActive: {
-    borderColor: colors.primary,
-    backgroundColor: colors.primaryMuted,
-  },
-  filterChipText: {
-    fontSize: typography.sizes.sm,
-    fontWeight: typography.weights.medium,
-    color: colors.textSecondary,
-  },
-  filterChipTextActive: {
-    color: colors.primary,
-    fontWeight: typography.weights.bold,
-  },
-  // Session rows
-  sessionRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingVertical: spacing[3],
-    borderBottomWidth: 1,
-    borderBottomColor: colors.borderMuted,
-  },
-  sessionLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing[2],
-    flex: 1,
-  },
-  sessionDate: {
-    fontSize: typography.sizes.sm,
-    color: colors.textSecondary,
-  },
-  intensityBadge: {
-    backgroundColor: colors.bgElevated,
-    borderRadius: radii.xs,
-    paddingHorizontal: spacing[2],
-    paddingVertical: 2,
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  intensityBadgeText: {
-    fontSize: typography.sizes.xs,
-    fontWeight: typography.weights.medium,
-    color: colors.textSecondary,
-  },
-  sessionRight: { alignItems: 'flex-end', gap: spacing[0.5] },
-  sessionOneRm: {
-    fontSize: typography.sizes.base,
-    fontWeight: typography.weights.bold,
-    color: colors.text,
-  },
-  sessionRpe: {
-    fontSize: typography.sizes.xs,
-    color: colors.textTertiary,
-  },
-  emptyText: {
-    fontSize: typography.sizes.base,
-    color: colors.textTertiary,
-    marginBottom: spacing[8],
-  },
-});

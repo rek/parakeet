@@ -21,9 +21,11 @@ import { qk } from '@platform/query';
 import { useQuery } from '@tanstack/react-query';
 import { router } from 'expo-router';
 import Constants from 'expo-constants';
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useMemo } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { colors, radii, spacing, typography } from '../../theme';
+import { radii, spacing, typography } from '../../theme';
+import type { ColorScheme, ThemeName } from '../../theme';
+import { useTheme } from '../../theme/ThemeContext';
 
 // ── Sub-components ────────────────────────────────────────────────────────────
 
@@ -34,9 +36,10 @@ const SEX_LABEL: Record<string, string> = {
 
 interface SectionHeaderProps {
   label: string;
+  styles: ReturnType<typeof buildStyles>;
 }
 
-function SectionHeader({ label }: SectionHeaderProps) {
+function SectionHeader({ label, styles }: SectionHeaderProps) {
   return <Text style={styles.sectionHeader}>{label}</Text>;
 }
 
@@ -45,9 +48,10 @@ interface RowProps {
   labelStyle?: TextStyle;
   onPress?: () => void;
   right?: React.ReactNode;
+  styles: ReturnType<typeof buildStyles>;
 }
 
-function Row({ label, labelStyle, onPress, right }: RowProps) {
+function Row({ label, labelStyle, onPress, right, styles }: RowProps) {
   if (onPress) {
     return (
       <TouchableOpacity
@@ -68,10 +72,170 @@ function Row({ label, labelStyle, onPress, right }: RowProps) {
   );
 }
 
+function buildStyles(colors: ColorScheme) {
+  return StyleSheet.create({
+    safeArea: {
+      flex: 1,
+      backgroundColor: colors.bg,
+    },
+    scrollView: {
+      flex: 1,
+    },
+    container: {
+      paddingHorizontal: spacing[6],
+      paddingTop: spacing[6],
+      paddingBottom: spacing[12],
+    },
+    screenTitle: {
+      fontSize: typography.sizes['2xl'],
+      fontWeight: typography.weights.black,
+      color: colors.text,
+      marginBottom: spacing[6],
+      letterSpacing: typography.letterSpacing.tight,
+    },
+    profileInlineHeader: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      marginBottom: spacing[3],
+    },
+    profileInlineHeaderTextWrap: {
+      flex: 1,
+      marginRight: spacing[3],
+    },
+    profileInlineTitle: {
+      fontSize: typography.sizes.xs,
+      fontWeight: typography.weights.bold,
+      color: colors.textTertiary,
+      textTransform: 'uppercase',
+      letterSpacing: typography.letterSpacing.widest,
+      marginBottom: spacing[1],
+    },
+    editButton: {
+      borderWidth: 1,
+      borderColor: colors.border,
+      borderRadius: radii.md,
+      paddingHorizontal: spacing[3],
+      paddingVertical: spacing[1.5],
+      backgroundColor: colors.bgSurface,
+    },
+    editButtonText: {
+      fontSize: typography.sizes.sm,
+      fontWeight: typography.weights.semibold,
+      color: colors.textSecondary,
+    },
+    emailText: {
+      fontSize: typography.sizes.base,
+      color: colors.textSecondary,
+    },
+    inlineInfoWrap: {
+      borderTopWidth: 1,
+      borderBottomWidth: 1,
+      borderColor: colors.borderMuted,
+    },
+    inlineInfoRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      paddingVertical: spacing[2.5],
+    },
+    inlineInfoLabel: {
+      fontSize: typography.sizes.sm,
+      color: colors.textSecondary,
+    },
+    inlineInfoValue: {
+      fontSize: typography.sizes.sm,
+      fontWeight: typography.weights.semibold,
+      color: colors.text,
+    },
+    // Divider
+    divider: {
+      height: 1,
+      backgroundColor: colors.borderMuted,
+      marginVertical: spacing[4],
+    },
+    // Section header
+    sectionHeader: {
+      fontSize: typography.sizes.xs,
+      fontWeight: typography.weights.bold,
+      color: colors.textTertiary,
+      textTransform: 'uppercase',
+      letterSpacing: typography.letterSpacing.widest,
+      marginBottom: spacing[1],
+    },
+    // Rows
+    row: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingVertical: spacing[4],
+      borderBottomWidth: 1,
+      borderBottomColor: colors.borderMuted,
+    },
+    rowLabel: {
+      fontSize: typography.sizes.base,
+      color: colors.text,
+      flex: 1,
+    },
+    rowRight: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing[1.5],
+    },
+    chevron: {
+      fontSize: 22,
+      color: colors.textTertiary,
+      lineHeight: 24,
+    },
+    suggestionDot: {
+      width: 8,
+      height: 8,
+      borderRadius: radii.full,
+      backgroundColor: colors.primary,
+    },
+    signOutLabel: {
+      color: colors.danger,
+    },
+    versionLabel: {
+      color: colors.textTertiary,
+    },
+    buildDate: {
+      fontSize: typography.sizes.sm,
+      color: colors.textTertiary,
+    },
+    toggleGroup: {
+      flexDirection: 'row',
+      gap: spacing[2],
+    },
+    toggleBtn: {
+      paddingHorizontal: spacing[3],
+      paddingVertical: spacing[1],
+      borderRadius: 6,
+      borderWidth: 1,
+      borderColor: colors.border,
+      backgroundColor: colors.bgMuted,
+    },
+    toggleBtnActive: {
+      borderColor: colors.primary,
+      backgroundColor: colors.primaryMuted,
+    },
+    toggleBtnText: {
+      fontSize: typography.sizes.sm,
+      color: colors.textSecondary,
+      fontWeight: typography.weights.medium,
+    },
+    toggleBtnTextActive: {
+      color: colors.primary,
+    },
+  });
+}
+
 // ── Screen ────────────────────────────────────────────────────────────────────
 
 export default function SettingsScreen() {
+  const { colors, themeName, setTheme } = useTheme();
   const { user, signOut } = useAuth();
+
+  const styles = useMemo(() => buildStyles(colors), [colors]);
 
   const [barWeightKg, setBarWeightKgState] = useState<BarWeightKg>(20);
 
@@ -141,6 +305,11 @@ export default function SettingsScreen() {
   const bodyweightKg =
     profile?.bodyweight_kg != null ? `${profile.bodyweight_kg} kg` : '—';
 
+  const THEME_OPTIONS: { key: ThemeName; label: string }[] = [
+    { key: 'default', label: 'Default' },
+    { key: 'hot-pink', label: 'Hot Pink' },
+  ];
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <ScrollView
@@ -196,17 +365,19 @@ export default function SettingsScreen() {
         {/* Achievements section */}
         {(showAchievements || showWilks) && (
           <>
-            <SectionHeader label="Achievements" />
+            <SectionHeader label="Achievements" styles={styles} />
             {showAchievements && (
               <Row
                 label="Achievements"
                 onPress={() => router.push('/profile/achievements')}
+                styles={styles}
               />
             )}
             {showWilks && (
               <Row
                 label="WILKS Score"
                 onPress={() => router.push('/profile/wilks')}
+                styles={styles}
               />
             )}
             <View style={styles.divider} />
@@ -214,9 +385,10 @@ export default function SettingsScreen() {
         )}
 
         {/* Training section */}
-        <SectionHeader label="Training" />
+        <SectionHeader label="Training" styles={styles} />
         <Row
           label="Bar Weight"
+          styles={styles}
           right={
             <View style={styles.toggleGroup}>
               {([15, 20] as BarWeightKg[]).map((kg) => (
@@ -237,6 +409,7 @@ export default function SettingsScreen() {
         <Row
           label="Manage Formulas"
           onPress={() => router.push('/formula/editor')}
+          styles={styles}
           right={
             <View style={styles.rowRight}>
               {showFormulaSuggestions && hasSuggestions && <View style={styles.suggestionDot} />}
@@ -245,51 +418,58 @@ export default function SettingsScreen() {
           }
         />
         {showVolume && (
-          <Row label="Volume & Recovery" onPress={() => router.push('/volume')} />
+          <Row label="Volume & Recovery" onPress={() => router.push('/volume')} styles={styles} />
         )}
 
         <View style={styles.divider} />
 
         {/* Advanced section */}
-        <SectionHeader label="Advanced" />
+        <SectionHeader label="Advanced" styles={styles} />
         <Row
           label="Features"
           onPress={() => router.push('/settings/features')}
+          styles={styles}
         />
         {showAuxiliary && (
           <Row
             label="Auxiliary Exercises"
             onPress={() => router.push('/settings/auxiliary-exercises')}
+            styles={styles}
           />
         )}
         {showWarmups && (
           <Row
             label="Warmup Protocol"
             onPress={() => router.push('/settings/warmup-protocol')}
+            styles={styles}
           />
         )}
         {showRestTimer && (
           <Row
             label="Rest Timer"
             onPress={() => router.push('/settings/rest-timer')}
+            styles={styles}
           />
         )}
         {showVolume && (
           <Row
             label="Volume Config (MRV/MEV)"
             onPress={() => router.push('/settings/volume-config')}
+            styles={styles}
           />
         )}
         {showCycleTracking && profile?.biological_sex === 'female' && (
           <Row
             label="Cycle Tracking"
             onPress={() => router.push('/settings/cycle-tracking')}
+            styles={styles}
           />
         )}
         {showDeveloper && (
           <Row
             label="Developer"
             onPress={() => router.push('/settings/developer')}
+            styles={styles}
             right={
               <View style={styles.rowRight}>
                 {hasDevSuggestions && <View style={styles.suggestionDot} />}
@@ -301,26 +481,54 @@ export default function SettingsScreen() {
 
         <View style={styles.divider} />
 
+        {/* Appearance section */}
+        <SectionHeader label="Appearance" styles={styles} />
+        <Row
+          label="Theme"
+          styles={styles}
+          right={
+            <View style={styles.toggleGroup}>
+              {THEME_OPTIONS.map((opt) => (
+                <TouchableOpacity
+                  key={opt.key}
+                  style={[styles.toggleBtn, themeName === opt.key && styles.toggleBtnActive]}
+                  onPress={() => setTheme(opt.key)}
+                  activeOpacity={0.7}
+                >
+                  <Text style={[styles.toggleBtnText, themeName === opt.key && styles.toggleBtnTextActive]}>
+                    {opt.label}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          }
+        />
+
+        <View style={styles.divider} />
+
         {/* Account section */}
-        <SectionHeader label="Account" />
+        <SectionHeader label="Account" styles={styles} />
         <Row
           label={isExporting ? 'Exporting…' : 'Export Data'}
           onPress={handleExport}
+          styles={styles}
         />
         <Row
           label="Sign Out"
           labelStyle={styles.signOutLabel}
           onPress={signOut}
           right={null}
+          styles={styles}
         />
 
         <View style={styles.divider} />
 
         {/* App section */}
-        <SectionHeader label="App" />
+        <SectionHeader label="App" styles={styles} />
         <Row
           label={`Version ${Constants.expoConfig?.version ?? '—'}`}
           labelStyle={styles.versionLabel}
+          styles={styles}
           right={
             <Text style={styles.buildDate}>
               {Constants.expoConfig?.extra?.buildDate
@@ -337,160 +545,3 @@ export default function SettingsScreen() {
     </SafeAreaView>
   );
 }
-
-// ── Styles ────────────────────────────────────────────────────────────────────
-
-const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: colors.bg,
-  },
-  scrollView: {
-    flex: 1,
-  },
-  container: {
-    paddingHorizontal: spacing[6],
-    paddingTop: spacing[6],
-    paddingBottom: spacing[12],
-  },
-  screenTitle: {
-    fontSize: typography.sizes['2xl'],
-    fontWeight: typography.weights.black,
-    color: colors.text,
-    marginBottom: spacing[6],
-    letterSpacing: typography.letterSpacing.tight,
-  },
-  profileInlineHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: spacing[3],
-  },
-  profileInlineHeaderTextWrap: {
-    flex: 1,
-    marginRight: spacing[3],
-  },
-  profileInlineTitle: {
-    fontSize: typography.sizes.xs,
-    fontWeight: typography.weights.bold,
-    color: colors.textTertiary,
-    textTransform: 'uppercase',
-    letterSpacing: typography.letterSpacing.widest,
-    marginBottom: spacing[1],
-  },
-  editButton: {
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: radii.md,
-    paddingHorizontal: spacing[3],
-    paddingVertical: spacing[1.5],
-    backgroundColor: colors.bgSurface,
-  },
-  editButtonText: {
-    fontSize: typography.sizes.sm,
-    fontWeight: typography.weights.semibold,
-    color: colors.textSecondary,
-  },
-  emailText: {
-    fontSize: typography.sizes.base,
-    color: colors.textSecondary,
-  },
-  inlineInfoWrap: {
-    borderTopWidth: 1,
-    borderBottomWidth: 1,
-    borderColor: colors.borderMuted,
-  },
-  inlineInfoRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingVertical: spacing[2.5],
-  },
-  inlineInfoLabel: {
-    fontSize: typography.sizes.sm,
-    color: colors.textSecondary,
-  },
-  inlineInfoValue: {
-    fontSize: typography.sizes.sm,
-    fontWeight: typography.weights.semibold,
-    color: colors.text,
-  },
-  // Divider
-  divider: {
-    height: 1,
-    backgroundColor: colors.borderMuted,
-    marginVertical: spacing[4],
-  },
-  // Section header
-  sectionHeader: {
-    fontSize: typography.sizes.xs,
-    fontWeight: typography.weights.bold,
-    color: colors.textTertiary,
-    textTransform: 'uppercase',
-    letterSpacing: typography.letterSpacing.widest,
-    marginBottom: spacing[1],
-  },
-  // Rows
-  row: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: spacing[4],
-    borderBottomWidth: 1,
-    borderBottomColor: colors.borderMuted,
-  },
-  rowLabel: {
-    fontSize: typography.sizes.base,
-    color: colors.text,
-    flex: 1,
-  },
-  rowRight: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing[1.5],
-  },
-  chevron: {
-    fontSize: 22,
-    color: colors.textTertiary,
-    lineHeight: 24,
-  },
-  suggestionDot: {
-    width: 8,
-    height: 8,
-    borderRadius: radii.full,
-    backgroundColor: colors.primary,
-  },
-  signOutLabel: {
-    color: colors.danger,
-  },
-  versionLabel: {
-    color: colors.textTertiary,
-  },
-  buildDate: {
-    fontSize: typography.sizes.sm,
-    color: colors.textTertiary,
-  },
-  toggleGroup: {
-    flexDirection: 'row',
-    gap: spacing[2],
-  },
-  toggleBtn: {
-    paddingHorizontal: spacing[3],
-    paddingVertical: spacing[1],
-    borderRadius: 6,
-    borderWidth: 1,
-    borderColor: colors.border,
-    backgroundColor: colors.bgMuted,
-  },
-  toggleBtnActive: {
-    borderColor: colors.primary,
-    backgroundColor: colors.primaryMuted,
-  },
-  toggleBtnText: {
-    fontSize: typography.sizes.sm,
-    color: colors.textSecondary,
-    fontWeight: typography.weights.medium,
-  },
-  toggleBtnTextActive: {
-    color: colors.primary,
-  },
-});

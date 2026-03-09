@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
   Modal,
@@ -27,12 +27,292 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { BackLink } from '../../components/navigation/BackLink';
-import { colors } from '../../theme';
+import type { ColorScheme } from '../../theme';
+import { useTheme } from '../../theme/ThemeContext';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
 type TopTab = 'editor' | 'history' | 'suggestions';
 type IntensityKey = 'heavy' | 'explosive' | 'rep';
+
+// ── Styles ────────────────────────────────────────────────────────────────────
+
+function buildStyles(colors: ColorScheme) {
+  return StyleSheet.create({
+    safeArea: { flex: 1, backgroundColor: colors.bgSurface },
+    header: {
+      paddingHorizontal: 20,
+      paddingTop: 8,
+      paddingBottom: 12,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.bgMuted,
+    },
+    headerRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+    },
+    title: { fontSize: 24, fontWeight: '800', color: colors.text },
+    saveButton: {
+      backgroundColor: colors.primary,
+      borderRadius: 8,
+      paddingHorizontal: 16,
+      paddingVertical: 8,
+    },
+    saveButtonText: {
+      fontSize: 14,
+      fontWeight: '600',
+      color: colors.textInverse,
+    },
+
+    // Top tabs
+    topTabs: {
+      flexDirection: 'row',
+      borderBottomWidth: 1,
+      borderBottomColor: colors.border,
+    },
+    topTab: {
+      flex: 1,
+      paddingVertical: 12,
+      alignItems: 'center',
+    },
+    topTabActive: { borderBottomWidth: 2, borderBottomColor: colors.primary },
+    topTabText: { fontSize: 14, color: colors.textSecondary, fontWeight: '500' },
+    topTabTextActive: { color: colors.primary, fontWeight: '600' },
+    badge: { color: colors.danger },
+
+    // Block sub-tabs
+    blockTabsScroll: {
+      maxHeight: 44,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.bgMuted,
+    },
+    blockTabs: {
+      flexDirection: 'row',
+      paddingHorizontal: 16,
+      gap: 4,
+      alignItems: 'center',
+    },
+    blockTab: {
+      paddingHorizontal: 14,
+      paddingVertical: 10,
+      borderRadius: 8,
+    },
+    blockTabActive: { backgroundColor: colors.primaryMuted },
+    blockTabText: {
+      fontSize: 14,
+      color: colors.textSecondary,
+      fontWeight: '500',
+    },
+    blockTabTextActive: { color: colors.primary, fontWeight: '600' },
+
+    scroll: { flex: 1 },
+    content: { padding: 16, gap: 10, paddingBottom: 40 },
+
+    exampleNote: {
+      fontSize: 12,
+      color: colors.textTertiary,
+      marginBottom: 4,
+    },
+
+    // Intensity row
+    intensityRow: {
+      borderWidth: 1,
+      borderColor: colors.border,
+      borderRadius: 12,
+      padding: 14,
+      gap: 4,
+    },
+    intensityRowActive: {
+      borderColor: colors.primary,
+      backgroundColor: colors.bgSurface,
+    },
+    intensityRowHeader: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+    },
+    intensityLabel: { fontSize: 15, fontWeight: '600', color: colors.text },
+    sampleWeight: { fontSize: 13, color: colors.textSecondary },
+    intensitySummary: {
+      fontSize: 13,
+      color: colors.textSecondary,
+      lineHeight: 18,
+    },
+
+    // Edit fields
+    editFields: { marginTop: 12 },
+    editRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
+    editField: { minWidth: 60, flex: 1 },
+    editFieldLabel: {
+      fontSize: 11,
+      color: colors.textSecondary,
+      marginBottom: 4,
+    },
+    editInput: {
+      borderWidth: 1,
+      borderColor: colors.border,
+      borderRadius: 8,
+      paddingHorizontal: 10,
+      paddingVertical: 8,
+      fontSize: 15,
+      color: colors.text,
+    },
+
+    // History
+    historyItem: {
+      borderWidth: 1,
+      borderColor: colors.border,
+      borderRadius: 12,
+      padding: 14,
+      gap: 6,
+    },
+    historyHeader: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+    historyDate: { fontSize: 14, color: colors.textSecondary, flex: 1 },
+    sourceBadge: {
+      backgroundColor: colors.bgMuted,
+      borderRadius: 6,
+      paddingHorizontal: 8,
+      paddingVertical: 2,
+    },
+    sourceBadgeAi: { backgroundColor: colors.primaryMuted },
+    sourceBadgeText: {
+      fontSize: 11,
+      fontWeight: '600',
+      color: colors.textSecondary,
+    },
+    activeBadge: {
+      backgroundColor: colors.successMuted,
+      borderRadius: 6,
+      paddingHorizontal: 8,
+      paddingVertical: 2,
+    },
+    activeBadgeText: { fontSize: 11, fontWeight: '600', color: colors.success },
+    historyRationale: {
+      fontSize: 13,
+      color: colors.textSecondary,
+      lineHeight: 18,
+    },
+    reactivateButton: {
+      alignSelf: 'flex-start',
+      paddingHorizontal: 12,
+      paddingVertical: 6,
+      borderRadius: 8,
+      borderWidth: 1,
+      borderColor: colors.primary,
+      marginTop: 4,
+    },
+    reactivateButtonText: {
+      fontSize: 13,
+      color: colors.primary,
+      fontWeight: '600',
+    },
+
+    // AI suggestions
+    suggestionCard: {
+      borderWidth: 1,
+      borderColor: colors.border,
+      borderRadius: 12,
+      padding: 14,
+      gap: 10,
+    },
+    suggestionRationale: {
+      fontSize: 14,
+      color: colors.textSecondary,
+      lineHeight: 20,
+    },
+    suggestionActions: { flexDirection: 'row', gap: 10 },
+    acceptButton: {
+      flex: 1,
+      backgroundColor: colors.primary,
+      borderRadius: 10,
+      paddingVertical: 12,
+      alignItems: 'center',
+    },
+    acceptButtonText: {
+      fontSize: 14,
+      fontWeight: '600',
+      color: colors.textInverse,
+    },
+    dismissButton: {
+      flex: 1,
+      borderWidth: 1,
+      borderColor: colors.border,
+      borderRadius: 10,
+      paddingVertical: 12,
+      alignItems: 'center',
+    },
+    dismissButtonText: {
+      fontSize: 14,
+      color: colors.textSecondary,
+      fontWeight: '500',
+    },
+
+    emptyText: {
+      fontSize: 14,
+      color: colors.textTertiary,
+      textAlign: 'center',
+      marginTop: 32,
+    },
+
+    // Save sheet
+    sheetBackdrop: {
+      flex: 1,
+      backgroundColor: colors.overlayLight,
+      justifyContent: 'flex-end',
+    },
+    sheet: {
+      backgroundColor: colors.bgSurface,
+      borderTopLeftRadius: 20,
+      borderTopRightRadius: 20,
+      padding: 24,
+      paddingBottom: 40,
+      gap: 12,
+    },
+    sheetTitle: { fontSize: 18, fontWeight: '700', color: colors.text },
+    sheetSubtitle: { fontSize: 14, color: colors.textSecondary, lineHeight: 20 },
+    sheetToggleRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+    },
+    sheetToggleLabel: {
+      fontSize: 15,
+      color: colors.text,
+      flex: 1,
+      marginRight: 12,
+    },
+    sheetToggleNote: {
+      fontSize: 13,
+      color: colors.textSecondary,
+      lineHeight: 18,
+    },
+    sheetConfirmButton: {
+      backgroundColor: colors.primary,
+      borderRadius: 12,
+      paddingVertical: 16,
+      alignItems: 'center',
+    },
+    sheetConfirmText: {
+      fontSize: 16,
+      fontWeight: '600',
+      color: colors.textInverse,
+    },
+    sheetCancelButton: {
+      borderWidth: 1,
+      borderColor: colors.border,
+      borderRadius: 12,
+      paddingVertical: 16,
+      alignItems: 'center',
+    },
+    sheetCancelText: {
+      fontSize: 15,
+      fontWeight: '500',
+      color: colors.textSecondary,
+    },
+    buttonDisabled: { opacity: 0.4 },
+  })
+}
 
 // ── Editable row ──────────────────────────────────────────────────────────────
 
@@ -55,6 +335,8 @@ function IntensityRow({
   onUpdate,
   isRep,
 }: RowProps) {
+  const { colors } = useTheme();
+  const styles = useMemo(() => buildStyles(colors), [colors]);
   const summary = isRep
     ? `${draft.pct}% — ${draft.setsMin ?? draft.sets}–${draft.setsMax ?? draft.sets} sets × ${draft.repsMin ?? draft.reps}–${draft.repsMax ?? draft.reps} reps — RPE ${draft.rpeTarget}`
     : `${draft.pct}% — ${draft.sets} sets × ${draft.reps}${draft.repsMax ? `–${draft.repsMax}` : ''} reps — RPE ${draft.rpeTarget}`;
@@ -160,6 +442,8 @@ function IntensityRow({
 // ── Main screen ───────────────────────────────────────────────────────────────
 
 export default function FormulaEditorScreen() {
+  const { colors } = useTheme();
+  const styles = useMemo(() => buildStyles(colors), [colors]);
   const { user } = useAuth();
   const queryClient = useQueryClient();
 
@@ -594,279 +878,3 @@ export default function FormulaEditorScreen() {
   );
 }
 
-// ── Styles ────────────────────────────────────────────────────────────────────
-
-const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: colors.bgSurface },
-  header: {
-    paddingHorizontal: 20,
-    paddingTop: 8,
-    paddingBottom: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.bgMuted,
-  },
-  headerRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  title: { fontSize: 24, fontWeight: '800', color: colors.text },
-  saveButton: {
-    backgroundColor: colors.primary,
-    borderRadius: 8,
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-  },
-  saveButtonText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: colors.textInverse,
-  },
-
-  // Top tabs
-  topTabs: {
-    flexDirection: 'row',
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
-  },
-  topTab: {
-    flex: 1,
-    paddingVertical: 12,
-    alignItems: 'center',
-  },
-  topTabActive: { borderBottomWidth: 2, borderBottomColor: colors.primary },
-  topTabText: { fontSize: 14, color: colors.textSecondary, fontWeight: '500' },
-  topTabTextActive: { color: colors.primary, fontWeight: '600' },
-  badge: { color: colors.danger },
-
-  // Block sub-tabs
-  blockTabsScroll: {
-    maxHeight: 44,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.bgMuted,
-  },
-  blockTabs: {
-    flexDirection: 'row',
-    paddingHorizontal: 16,
-    gap: 4,
-    alignItems: 'center',
-  },
-  blockTab: {
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-    borderRadius: 8,
-  },
-  blockTabActive: { backgroundColor: colors.primaryMuted },
-  blockTabText: {
-    fontSize: 14,
-    color: colors.textSecondary,
-    fontWeight: '500',
-  },
-  blockTabTextActive: { color: colors.primary, fontWeight: '600' },
-
-  scroll: { flex: 1 },
-  content: { padding: 16, gap: 10, paddingBottom: 40 },
-
-  exampleNote: {
-    fontSize: 12,
-    color: colors.textTertiary,
-    marginBottom: 4,
-  },
-
-  // Intensity row
-  intensityRow: {
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 12,
-    padding: 14,
-    gap: 4,
-  },
-  intensityRowActive: {
-    borderColor: colors.primary,
-    backgroundColor: colors.bgSurface,
-  },
-  intensityRowHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  intensityLabel: { fontSize: 15, fontWeight: '600', color: colors.text },
-  sampleWeight: { fontSize: 13, color: colors.textSecondary },
-  intensitySummary: {
-    fontSize: 13,
-    color: colors.textSecondary,
-    lineHeight: 18,
-  },
-
-  // Edit fields
-  editFields: { marginTop: 12 },
-  editRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
-  editField: { minWidth: 60, flex: 1 },
-  editFieldLabel: {
-    fontSize: 11,
-    color: colors.textSecondary,
-    marginBottom: 4,
-  },
-  editInput: {
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 8,
-    paddingHorizontal: 10,
-    paddingVertical: 8,
-    fontSize: 15,
-    color: colors.text,
-  },
-
-  // History
-  historyItem: {
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 12,
-    padding: 14,
-    gap: 6,
-  },
-  historyHeader: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  historyDate: { fontSize: 14, color: colors.textSecondary, flex: 1 },
-  sourceBadge: {
-    backgroundColor: colors.bgMuted,
-    borderRadius: 6,
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-  },
-  sourceBadgeAi: { backgroundColor: colors.primaryMuted },
-  sourceBadgeText: {
-    fontSize: 11,
-    fontWeight: '600',
-    color: colors.textSecondary,
-  },
-  activeBadge: {
-    backgroundColor: colors.successMuted,
-    borderRadius: 6,
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-  },
-  activeBadgeText: { fontSize: 11, fontWeight: '600', color: colors.success },
-  historyRationale: {
-    fontSize: 13,
-    color: colors.textSecondary,
-    lineHeight: 18,
-  },
-  reactivateButton: {
-    alignSelf: 'flex-start',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: colors.primary,
-    marginTop: 4,
-  },
-  reactivateButtonText: {
-    fontSize: 13,
-    color: colors.primary,
-    fontWeight: '600',
-  },
-
-  // AI suggestions
-  suggestionCard: {
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 12,
-    padding: 14,
-    gap: 10,
-  },
-  suggestionRationale: {
-    fontSize: 14,
-    color: colors.textSecondary,
-    lineHeight: 20,
-  },
-  suggestionActions: { flexDirection: 'row', gap: 10 },
-  acceptButton: {
-    flex: 1,
-    backgroundColor: colors.primary,
-    borderRadius: 10,
-    paddingVertical: 12,
-    alignItems: 'center',
-  },
-  acceptButtonText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: colors.textInverse,
-  },
-  dismissButton: {
-    flex: 1,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 10,
-    paddingVertical: 12,
-    alignItems: 'center',
-  },
-  dismissButtonText: {
-    fontSize: 14,
-    color: colors.textSecondary,
-    fontWeight: '500',
-  },
-
-  emptyText: {
-    fontSize: 14,
-    color: colors.textTertiary,
-    textAlign: 'center',
-    marginTop: 32,
-  },
-
-  // Save sheet
-  sheetBackdrop: {
-    flex: 1,
-    backgroundColor: colors.overlayLight,
-    justifyContent: 'flex-end',
-  },
-  sheet: {
-    backgroundColor: colors.bgSurface,
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    padding: 24,
-    paddingBottom: 40,
-    gap: 12,
-  },
-  sheetTitle: { fontSize: 18, fontWeight: '700', color: colors.text },
-  sheetSubtitle: { fontSize: 14, color: colors.textSecondary, lineHeight: 20 },
-  sheetToggleRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  sheetToggleLabel: {
-    fontSize: 15,
-    color: colors.text,
-    flex: 1,
-    marginRight: 12,
-  },
-  sheetToggleNote: {
-    fontSize: 13,
-    color: colors.textSecondary,
-    lineHeight: 18,
-  },
-  sheetConfirmButton: {
-    backgroundColor: colors.primary,
-    borderRadius: 12,
-    paddingVertical: 16,
-    alignItems: 'center',
-  },
-  sheetConfirmText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: colors.textInverse,
-  },
-  sheetCancelButton: {
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 12,
-    paddingVertical: 16,
-    alignItems: 'center',
-  },
-  sheetCancelText: {
-    fontSize: 15,
-    fontWeight: '500',
-    color: colors.textSecondary,
-  },
-  buttonDisabled: { opacity: 0.4 },
-});

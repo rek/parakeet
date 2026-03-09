@@ -1,10 +1,11 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { createAudioPlayer } from 'expo-audio';
 import * as Haptics from 'expo-haptics';
 import { getRestTimerPrefs } from '../../modules/settings';
 import { formatMMSS } from '../../shared/utils';
-import { colors, radii, spacing, typography } from '../../theme';
+import { radii, spacing, typography } from '../../theme';
+import { useTheme } from '../../theme/ThemeContext';
 
 function playDing() {
   try {
@@ -90,7 +91,43 @@ function AuxiliaryPill({
   durationSeconds: number;
   onDone: (elapsedSeconds: number) => void;
 }) {
+  const { colors } = useTheme();
   const { elapsed, remaining, overtime, stop } = useRestTimer(durationSeconds);
+
+  const pillStyles = useMemo(() => StyleSheet.create({
+    container: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      alignSelf: 'flex-start',
+      backgroundColor: colors.bgMuted,
+      borderRadius: radii.full,
+      borderWidth: 1,
+      borderColor: colors.border,
+      paddingVertical: spacing[1.5],
+      paddingHorizontal: spacing[3],
+      marginTop: spacing[1.5],
+      gap: spacing[2.5],
+    },
+    time: {
+      fontSize: typography.sizes.sm,
+      fontWeight: typography.weights.semibold,
+      color: colors.textSecondary,
+    },
+    timeOvertime: {
+      color: colors.danger,
+    },
+    doneButton: {
+      backgroundColor: colors.primary,
+      borderRadius: radii.sm,
+      paddingVertical: spacing[1],
+      paddingHorizontal: spacing[2.5],
+    },
+    doneText: {
+      fontSize: typography.sizes.xs,
+      fontWeight: typography.weights.bold,
+      color: colors.textInverse,
+    },
+  }), [colors]);
 
   function handleDone() {
     stop();
@@ -128,9 +165,90 @@ function FullTimer({
   onDone,
   intensityLabel,
 }: Omit<RestTimerProps, 'isAuxiliary'>) {
+  const { colors } = useTheme();
   const effectiveDuration = Math.max(0, durationSeconds + offset);
   const remaining = Math.max(0, effectiveDuration - elapsed);
   const overtime = elapsed > effectiveDuration;
+
+  const fullStyles = useMemo(() => StyleSheet.create({
+    container: {
+      backgroundColor: colors.bgElevated,
+      borderRadius: radii.xl,
+      borderWidth: 1,
+      borderColor: colors.border,
+      paddingHorizontal: spacing[5],
+      paddingBottom: spacing[5],
+      paddingTop: spacing[4],
+      alignItems: 'center',
+      width: '100%',
+      maxWidth: 560,
+    },
+    intensityLabel: {
+      fontSize: typography.sizes.sm,
+      fontWeight: typography.weights.medium,
+      color: colors.textSecondary,
+      textTransform: 'uppercase',
+      letterSpacing: typography.letterSpacing.wider,
+      marginBottom: spacing[4],
+    },
+    countdown: {
+      fontSize: 72,
+      fontWeight: typography.weights.black,
+      color: colors.text,
+      letterSpacing: -3,
+      marginBottom: spacing[4],
+      fontVariant: ['tabular-nums'],
+    },
+    countdownOvertime: {
+      color: colors.danger,
+    },
+    aiChip: {
+      backgroundColor: colors.primaryMuted,
+      borderRadius: radii.full,
+      borderWidth: 1,
+      borderColor: colors.primary,
+      paddingVertical: spacing[1.5],
+      paddingHorizontal: spacing[3.5],
+      marginBottom: spacing[6],
+    },
+    aiChipText: {
+      fontSize: typography.sizes.sm,
+      fontWeight: typography.weights.medium,
+      color: colors.primary,
+    },
+    controlRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing[3],
+      marginTop: spacing[2],
+    },
+    adjustButton: {
+      paddingVertical: spacing[2.5],
+      paddingHorizontal: spacing[4],
+      borderRadius: radii.md,
+      backgroundColor: colors.bgMuted,
+      borderWidth: 1,
+      borderColor: colors.border,
+    },
+    adjustButtonText: {
+      fontSize: typography.sizes.base,
+      fontWeight: typography.weights.semibold,
+      color: colors.textSecondary,
+    },
+    doneButton: {
+      flex: 1,
+      backgroundColor: colors.primary,
+      borderRadius: radii.md,
+      paddingVertical: spacing[3.5],
+      alignItems: 'center',
+    },
+    doneButtonText: {
+      fontSize: typography.sizes.base,
+      fontWeight: typography.weights.bold,
+      color: colors.textInverse,
+      letterSpacing: typography.letterSpacing.wide,
+    },
+  }), [colors]);
 
   const prevOvertimeRef = useRef(false);
   const audioAlertRef = useRef(true);
@@ -240,122 +358,3 @@ export function RestTimer({
     />
   );
 }
-
-// ── Styles: pill ──────────────────────────────────────────────────────────────
-
-const pillStyles = StyleSheet.create({
-  container: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    alignSelf: 'flex-start',
-    backgroundColor: colors.bgMuted,
-    borderRadius: radii.full,
-    borderWidth: 1,
-    borderColor: colors.border,
-    paddingVertical: spacing[1.5],
-    paddingHorizontal: spacing[3],
-    marginTop: spacing[1.5],
-    gap: spacing[2.5],
-  },
-  time: {
-    fontSize: typography.sizes.sm,
-    fontWeight: typography.weights.semibold,
-    color: colors.textSecondary,
-  },
-  timeOvertime: {
-    color: colors.danger,
-  },
-  doneButton: {
-    backgroundColor: colors.primary,
-    borderRadius: radii.sm,
-    paddingVertical: spacing[1],
-    paddingHorizontal: spacing[2.5],
-  },
-  doneText: {
-    fontSize: typography.sizes.xs,
-    fontWeight: typography.weights.bold,
-    color: colors.textInverse,
-  },
-});
-
-// ── Styles: full ──────────────────────────────────────────────────────────────
-
-const fullStyles = StyleSheet.create({
-  container: {
-    backgroundColor: colors.bgElevated,
-    borderRadius: radii.xl,
-    borderWidth: 1,
-    borderColor: colors.border,
-    paddingHorizontal: spacing[5],
-    paddingBottom: spacing[5],
-    paddingTop: spacing[4],
-    alignItems: 'center',
-    width: '100%',
-    maxWidth: 560,
-  },
-  intensityLabel: {
-    fontSize: typography.sizes.sm,
-    fontWeight: typography.weights.medium,
-    color: colors.textSecondary,
-    textTransform: 'uppercase',
-    letterSpacing: typography.letterSpacing.wider,
-    marginBottom: spacing[4],
-  },
-  countdown: {
-    fontSize: 72,
-    fontWeight: typography.weights.black,
-    color: colors.text,
-    letterSpacing: -3,
-    marginBottom: spacing[4],
-    fontVariant: ['tabular-nums'],
-  },
-  countdownOvertime: {
-    color: colors.danger,
-  },
-  aiChip: {
-    backgroundColor: colors.primaryMuted,
-    borderRadius: radii.full,
-    borderWidth: 1,
-    borderColor: colors.primary,
-    paddingVertical: spacing[1.5],
-    paddingHorizontal: spacing[3.5],
-    marginBottom: spacing[6],
-  },
-  aiChipText: {
-    fontSize: typography.sizes.sm,
-    fontWeight: typography.weights.medium,
-    color: colors.primary,
-  },
-  controlRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing[3],
-    marginTop: spacing[2],
-  },
-  adjustButton: {
-    paddingVertical: spacing[2.5],
-    paddingHorizontal: spacing[4],
-    borderRadius: radii.md,
-    backgroundColor: colors.bgMuted,
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  adjustButtonText: {
-    fontSize: typography.sizes.base,
-    fontWeight: typography.weights.semibold,
-    color: colors.textSecondary,
-  },
-  doneButton: {
-    flex: 1,
-    backgroundColor: colors.primary,
-    borderRadius: radii.md,
-    paddingVertical: spacing[3.5],
-    alignItems: 'center',
-  },
-  doneButtonText: {
-    fontSize: typography.sizes.base,
-    fontWeight: typography.weights.bold,
-    color: colors.textInverse,
-    letterSpacing: typography.letterSpacing.wide,
-  },
-});

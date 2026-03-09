@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -31,7 +31,8 @@ import { capitalize } from '@shared/utils/string';
 import { router, useLocalSearchParams } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { BackLink } from '../../../components/navigation/BackLink';
-import { colors } from '../../../theme';
+import type { ColorScheme } from '../../../theme';
+import { useTheme } from '../../../theme/ThemeContext';
 
 // ── Constants ────────────────────────────────────────────────────────────────
 
@@ -39,15 +40,225 @@ const RATING_LEVELS = [1, 2, 3, 4, 5] as const;
 const READINESS_LEVELS = [1, 2, 3] as const;
 const MUSCLES_EXPANDED_KEY = 'readiness_muscles_expanded';
 
+// ── Styles builder ────────────────────────────────────────────────────────────
+
+function buildStyles(colors: ColorScheme) {
+  return StyleSheet.create({
+    safeArea: {
+      flex: 1,
+      backgroundColor: colors.bgSurface,
+    },
+    header: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingHorizontal: 16,
+      paddingVertical: 12,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.border,
+    },
+    headerBackSlot: {
+      width: 116,
+      alignItems: 'flex-start',
+    },
+    headerTitle: {
+      flex: 1,
+      fontSize: 16,
+      fontWeight: '600',
+      color: colors.text,
+      textAlign: 'center',
+      marginHorizontal: 8,
+    },
+    headerSkip: {
+      width: 116,
+      alignItems: 'flex-end',
+    },
+    headerSkipText: {
+      fontSize: 16,
+      color: colors.primary,
+      fontWeight: '500',
+    },
+    scrollView: {
+      flex: 1,
+    },
+    container: {
+      paddingHorizontal: 24,
+      paddingTop: 24,
+      paddingBottom: 48,
+    },
+    prompt: {
+      fontSize: 17,
+      fontWeight: '600',
+      color: colors.text,
+      marginBottom: 24,
+    },
+    muscleRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      marginBottom: 16,
+    },
+    muscleLabel: {
+      fontSize: 15,
+      color: colors.text,
+      flex: 1,
+      marginRight: 12,
+    },
+    ratingPills: {
+      flexDirection: 'row',
+      gap: 6,
+    },
+    pill: {
+      width: 44,
+      height: 44,
+      borderRadius: 22,
+      backgroundColor: colors.bgMuted,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    pillActive: {
+      backgroundColor: colors.primary,
+    },
+    pillText: {
+      fontSize: 15,
+      fontWeight: '600',
+      color: colors.textSecondary,
+    },
+    pillTextActive: {
+      color: colors.textInverse,
+    },
+    legend: {
+      fontSize: 12,
+      color: colors.textTertiary,
+      marginTop: 8,
+      marginBottom: 8,
+      textAlign: 'center',
+    },
+    expandHeader: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      paddingVertical: 12,
+      borderTopWidth: 1,
+      borderTopColor: colors.border,
+      marginTop: 4,
+    },
+    expandHeaderText: {
+      fontSize: 14,
+      fontWeight: '600',
+      color: colors.textSecondary,
+      textTransform: 'uppercase',
+      letterSpacing: 0.5,
+    },
+    expandChevron: {
+      fontSize: 12,
+      color: colors.textTertiary,
+    },
+    readinessSection: {
+      marginTop: 8,
+      marginBottom: 16,
+      gap: 12,
+    },
+    readinessRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+    },
+    readinessLabel: {
+      fontSize: 15,
+      color: colors.text,
+      flex: 1,
+      marginRight: 12,
+    },
+    readinessPills: {
+      flexDirection: 'row',
+      gap: 6,
+    },
+    readinessPill: {
+      paddingHorizontal: 12,
+      height: 36,
+      borderRadius: 18,
+      alignItems: 'center',
+      justifyContent: 'center',
+      borderWidth: 1.5,
+      borderColor: 'transparent',
+    },
+    readinessPillText: {
+      fontSize: 13,
+      fontWeight: '600',
+      color: colors.textSecondary,
+    },
+    cycleChip: {
+      backgroundColor: colors.primaryMuted,
+      borderRadius: 10,
+      paddingHorizontal: 14,
+      paddingVertical: 8,
+      marginBottom: 16,
+    },
+    cycleChipText: {
+      fontSize: 13,
+      color: colors.primary,
+      fontWeight: '500',
+    },
+    warningCard: {
+      backgroundColor: colors.warningMuted,
+      borderWidth: 1,
+      borderColor: colors.warning,
+      borderRadius: 12,
+      paddingVertical: 14,
+      paddingHorizontal: 16,
+      marginBottom: 24,
+    },
+    warningText: {
+      fontSize: 14,
+      color: colors.warning,
+      lineHeight: 20,
+    },
+    generateButton: {
+      backgroundColor: colors.primary,
+      borderRadius: 12,
+      paddingVertical: 16,
+      alignItems: 'center',
+    },
+    generateButtonDisabled: {
+      opacity: 0.4,
+    },
+    generateButtonText: {
+      fontSize: 16,
+      fontWeight: '600',
+      color: colors.textInverse,
+    },
+    generatingOverlay: {
+      ...StyleSheet.absoluteFillObject,
+      backgroundColor: colors.overlayLight,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    generatingCard: {
+      backgroundColor: colors.bgSurface,
+      borderRadius: 16,
+      paddingVertical: 32,
+      paddingHorizontal: 40,
+      alignItems: 'center',
+      gap: 16,
+    },
+    generatingText: {
+      fontSize: 16,
+      fontWeight: '600',
+      color: colors.text,
+    },
+  });
+}
+
 // ── Sub-components ────────────────────────────────────────────────────────────
 
 interface MuscleRatingRowProps {
   muscle: MuscleGroup;
   rating: number;
   onChange: (muscle: MuscleGroup, rating: number) => void;
+  styles: ReturnType<typeof buildStyles>;
 }
 
-function MuscleRatingRow({ muscle, rating, onChange }: MuscleRatingRowProps) {
+function MuscleRatingRow({ muscle, rating, onChange, styles }: MuscleRatingRowProps) {
   const label =
     MUSCLE_LABELS_FULL[muscle] ?? capitalize(muscle.replace(/_/g, ' '));
 
@@ -81,9 +292,11 @@ interface ReadinessPillRowProps {
   labels: Record<number, string>;
   value: ReadinessLevel;
   onChange: (v: ReadinessLevel) => void;
+  styles: ReturnType<typeof buildStyles>;
+  colors: ColorScheme;
 }
 
-function ReadinessPillRow({ label, levels, labels, value, onChange }: ReadinessPillRowProps) {
+function ReadinessPillRow({ label, levels, labels, value, onChange, styles, colors }: ReadinessPillRowProps) {
   const levelColors: Record<number, string> = {
     1: colors.warning,
     2: colors.textSecondary,
@@ -128,12 +341,14 @@ function ReadinessPillRow({ label, levels, labels, value, onChange }: ReadinessP
 type Session = Awaited<ReturnType<typeof getSession>>;
 
 export default function SorenessScreen() {
+  const { colors } = useTheme();
   const { sessionId, autoGenerate } = useLocalSearchParams<{
     sessionId: string;
     autoGenerate?: string;
   }>();
   const { user } = useAuth();
 
+  const styles = useMemo(() => buildStyles(colors), [colors]);
   const isAutoGenerate = autoGenerate === '1';
 
   const [session, setSession] = useState<Session>(null);
@@ -349,6 +564,7 @@ export default function SorenessScreen() {
             muscle={muscle}
             rating={ratings[muscle] ?? 1}
             onChange={handleRatingChange}
+            styles={styles}
           />
         ))}
 
@@ -367,6 +583,7 @@ export default function SorenessScreen() {
             muscle={muscle}
             rating={otherSoreness[muscle] ?? 1}
             onChange={handleOtherRatingChange}
+            styles={styles}
           />
         ))}
 
@@ -383,6 +600,8 @@ export default function SorenessScreen() {
             labels={READINESS_LABELS.sleep}
             value={sleepQuality}
             onChange={setSleepQuality}
+            styles={styles}
+            colors={colors}
           />
           <ReadinessPillRow
             label="Energy"
@@ -390,6 +609,8 @@ export default function SorenessScreen() {
             labels={READINESS_LABELS.energy}
             value={energyLevel}
             onChange={setEnergyLevel}
+            styles={styles}
+            colors={colors}
           />
         </View>
 
@@ -440,209 +661,3 @@ export default function SorenessScreen() {
   );
 }
 
-// ── Styles ───────────────────────────────────────────────────────────────────
-
-const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: colors.bgSurface,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
-  },
-  headerBackSlot: {
-    width: 116,
-    alignItems: 'flex-start',
-  },
-  headerTitle: {
-    flex: 1,
-    fontSize: 16,
-    fontWeight: '600',
-    color: colors.text,
-    textAlign: 'center',
-    marginHorizontal: 8,
-  },
-  headerSkip: {
-    width: 116,
-    alignItems: 'flex-end',
-  },
-  headerSkipText: {
-    fontSize: 16,
-    color: colors.primary,
-    fontWeight: '500',
-  },
-  scrollView: {
-    flex: 1,
-  },
-  container: {
-    paddingHorizontal: 24,
-    paddingTop: 24,
-    paddingBottom: 48,
-  },
-  prompt: {
-    fontSize: 17,
-    fontWeight: '600',
-    color: colors.text,
-    marginBottom: 24,
-  },
-  muscleRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: 16,
-  },
-  muscleLabel: {
-    fontSize: 15,
-    color: colors.text,
-    flex: 1,
-    marginRight: 12,
-  },
-  ratingPills: {
-    flexDirection: 'row',
-    gap: 6,
-  },
-  pill: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: colors.bgMuted,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  pillActive: {
-    backgroundColor: colors.primary,
-  },
-  pillText: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: colors.textSecondary,
-  },
-  pillTextActive: {
-    color: colors.textInverse,
-  },
-  legend: {
-    fontSize: 12,
-    color: colors.textTertiary,
-    marginTop: 8,
-    marginBottom: 8,
-    textAlign: 'center',
-  },
-  expandHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingVertical: 12,
-    borderTopWidth: 1,
-    borderTopColor: colors.border,
-    marginTop: 4,
-  },
-  expandHeaderText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: colors.textSecondary,
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-  },
-  expandChevron: {
-    fontSize: 12,
-    color: colors.textTertiary,
-  },
-  readinessSection: {
-    marginTop: 8,
-    marginBottom: 16,
-    gap: 12,
-  },
-  readinessRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  readinessLabel: {
-    fontSize: 15,
-    color: colors.text,
-    flex: 1,
-    marginRight: 12,
-  },
-  readinessPills: {
-    flexDirection: 'row',
-    gap: 6,
-  },
-  readinessPill: {
-    paddingHorizontal: 12,
-    height: 36,
-    borderRadius: 18,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1.5,
-    borderColor: 'transparent',
-  },
-  readinessPillText: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: colors.textSecondary,
-  },
-  cycleChip: {
-    backgroundColor: colors.primaryMuted,
-    borderRadius: 10,
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    marginBottom: 16,
-  },
-  cycleChipText: {
-    fontSize: 13,
-    color: colors.primary,
-    fontWeight: '500',
-  },
-  warningCard: {
-    backgroundColor: colors.warningMuted,
-    borderWidth: 1,
-    borderColor: colors.warning,
-    borderRadius: 12,
-    paddingVertical: 14,
-    paddingHorizontal: 16,
-    marginBottom: 24,
-  },
-  warningText: {
-    fontSize: 14,
-    color: colors.warning,
-    lineHeight: 20,
-  },
-  generateButton: {
-    backgroundColor: colors.primary,
-    borderRadius: 12,
-    paddingVertical: 16,
-    alignItems: 'center',
-  },
-  generateButtonDisabled: {
-    opacity: 0.4,
-  },
-  generateButtonText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: colors.textInverse,
-  },
-  generatingOverlay: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: colors.overlayLight,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  generatingCard: {
-    backgroundColor: colors.bgSurface,
-    borderRadius: 16,
-    paddingVertical: 32,
-    paddingHorizontal: 40,
-    alignItems: 'center',
-    gap: 16,
-  },
-  generatingText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: colors.text,
-  },
-});

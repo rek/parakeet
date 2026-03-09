@@ -1,9 +1,10 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 
 import { BlockBadge } from './BlockBadge'
 import { SessionSummary } from './SessionSummary'
-import { colors, spacing, radii, typography } from '../../theme'
+import { spacing, radii, typography } from '../../theme'
+import { useTheme } from '../../theme/ThemeContext'
 import type { ProgramSession } from '@modules/program'
 
 interface WeekRowProps {
@@ -13,11 +14,69 @@ interface WeekRowProps {
 }
 
 export function WeekRow({ weekNumber, sessions, isCurrentWeek }: WeekRowProps) {
+  const { colors } = useTheme()
   const [expanded, setExpanded] = useState(isCurrentWeek)
 
   const completedCount = sessions.filter((s) => s.status === 'completed').length
   const totalCount = sessions.length
   const firstBlockNumber = sessions[0]?.block_number ?? null
+
+  const styles = useMemo(() => StyleSheet.create({
+    container: {
+      backgroundColor: colors.bgSurface,
+      borderRadius: radii.md,
+      borderWidth: 1,
+      borderColor: colors.border,
+      marginHorizontal: spacing[4],
+      marginBottom: spacing[3],
+      overflow: 'hidden',
+    },
+    containerCurrent: {
+      borderColor: colors.primary,
+    },
+    header: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      paddingHorizontal: spacing[4],
+      paddingVertical: spacing[3.5],
+    },
+    headerLeft: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing[3],
+    },
+    headerRight: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing[2.5],
+    },
+    weekLabel: {
+      fontSize: typography.sizes.base,
+      fontWeight: typography.weights.bold,
+      color: colors.text,
+    },
+    weekLabelCurrent: {
+      color: colors.primary,
+    },
+    currentBadge: {
+      fontSize: typography.sizes.sm,
+      fontWeight: typography.weights.medium,
+      color: colors.primary,
+    },
+    fraction: {
+      fontSize: typography.sizes.sm,
+      color: colors.textSecondary,
+    },
+    chevron: {
+      fontSize: 10,
+      color: colors.textTertiary,
+    },
+    sessionList: {
+      paddingHorizontal: spacing[4],
+      paddingBottom: spacing[1],
+    },
+  }), [colors])
 
   return (
     <View style={[styles.container, isCurrentWeek && styles.containerCurrent]}>
@@ -54,60 +113,3 @@ export function WeekRow({ weekNumber, sessions, isCurrentWeek }: WeekRowProps) {
     </View>
   )
 }
-
-const styles = StyleSheet.create({
-  container: {
-    backgroundColor: colors.bgSurface,
-    borderRadius: radii.md,
-    borderWidth: 1,
-    borderColor: colors.border,
-    marginHorizontal: spacing[4],
-    marginBottom: spacing[3],
-    overflow: 'hidden',
-  },
-  containerCurrent: {
-    borderColor: colors.primary,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: spacing[4],
-    paddingVertical: spacing[3.5],
-  },
-  headerLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing[3],
-  },
-  headerRight: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing[2.5],
-  },
-  weekLabel: {
-    fontSize: typography.sizes.base,
-    fontWeight: typography.weights.bold,
-    color: colors.text,
-  },
-  weekLabelCurrent: {
-    color: colors.primary,
-  },
-  currentBadge: {
-    fontSize: typography.sizes.sm,
-    fontWeight: typography.weights.medium,
-    color: colors.primary,
-  },
-  fraction: {
-    fontSize: typography.sizes.sm,
-    color: colors.textSecondary,
-  },
-  chevron: {
-    fontSize: 10,
-    color: colors.textTertiary,
-  },
-  sessionList: {
-    paddingHorizontal: spacing[4],
-    paddingBottom: spacing[1],
-  },
-})

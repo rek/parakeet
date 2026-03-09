@@ -1,15 +1,42 @@
+import { useMemo } from 'react'
 import { ScrollView, StyleSheet, Text } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { router } from 'expo-router'
 
 import { useAuth } from '@modules/auth'
 import { AchievementsSection } from '../../components/achievements/AchievementsSection'
-import { colors } from '../../theme'
+import type { ColorScheme } from '../../theme'
+import { useTheme } from '../../theme/ThemeContext'
 import { BackLink } from '../../components/navigation/BackLink'
 
 // ── Screen ────────────────────────────────────────────────────────────────────
 
+function buildStyles(colors: ColorScheme) {
+  return StyleSheet.create({
+    safeArea: {
+      flex: 1,
+      backgroundColor: colors.bgSurface,
+    },
+    scrollView: {
+      flex: 1,
+    },
+    container: {
+      paddingHorizontal: 24,
+      paddingTop: 16,
+      paddingBottom: 48,
+    },
+    screenTitle: {
+      fontSize: 28,
+      fontWeight: '800',
+      color: colors.text,
+      marginBottom: 8,
+    },
+  })
+}
+
 export default function AchievementsScreen() {
+  const { colors } = useTheme()
+  const styles = useMemo(() => buildStyles(colors), [colors])
   const { user } = useAuth()
 
   return (
@@ -29,26 +56,3 @@ export default function AchievementsScreen() {
     </SafeAreaView>
   )
 }
-
-// ── Styles ────────────────────────────────────────────────────────────────────
-
-const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: colors.bgSurface,
-  },
-  scrollView: {
-    flex: 1,
-  },
-  container: {
-    paddingHorizontal: 24,
-    paddingTop: 16,
-    paddingBottom: 48,
-  },
-  screenTitle: {
-    fontSize: 28,
-    fontWeight: '800',
-    color: colors.text,
-    marginBottom: 8,
-  },
-})

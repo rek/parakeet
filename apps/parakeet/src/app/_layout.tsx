@@ -12,6 +12,7 @@ import * as SplashScreen from 'expo-splash-screen';
 import '@platform/supabase/bootstrap';
 // import { ReturnToSessionBanner } from '../components/session/ReturnToSessionBanner';
 import { ErrorBoundary } from '../components/ui/ErrorBoundary';
+import { ThemeProvider } from '../theme/ThemeContext';
 
 Sentry.init({
   dsn: 'https://c482059524039032385f5b63dcc3900d@o4510964260864000.ingest.de.sentry.io/4510964263616592',
@@ -75,9 +76,11 @@ function RootLayoutNav() {
 function RootLayout() {
   return (
     <ErrorBoundary>
-      <QueryClientProvider client={queryClient}>
-        <RootLayoutNav />
-      </QueryClientProvider>
+      <ThemeProvider>
+        <QueryClientProvider client={queryClient}>
+          <RootLayoutNav />
+        </QueryClientProvider>
+      </ThemeProvider>
     </ErrorBoundary>
   );
 }

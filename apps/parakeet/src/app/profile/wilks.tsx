@@ -1,3 +1,4 @@
+import { useMemo } from 'react'
 import { ActivityIndicator, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { router } from 'expo-router'
@@ -6,7 +7,8 @@ import { useQuery } from '@tanstack/react-query'
 import { useAuth } from '@modules/auth'
 import { getWilksHistory } from '@modules/achievements'
 import { getCurrentWilksSnapshot } from '@modules/wilks'
-import { colors } from '../../theme'
+import type { ColorScheme } from '../../theme'
+import { useTheme } from '../../theme/ThemeContext'
 import { BackLink } from '../../components/navigation/BackLink'
 import { formatDate } from '@shared/utils/date'
 
@@ -20,9 +22,150 @@ const WILKS_CONTEXT = [
   { label: 'Beginner', range: '<250' },
 ]
 
+function buildStyles(colors: ColorScheme) {
+  return StyleSheet.create({
+    safeArea: {
+      flex: 1,
+      backgroundColor: colors.bgSurface,
+    },
+    scrollView: {
+      flex: 1,
+    },
+    container: {
+      paddingHorizontal: 24,
+      paddingTop: 16,
+      paddingBottom: 48,
+    },
+    centered: {
+      paddingTop: 64,
+      alignItems: 'center',
+    },
+    screenTitle: {
+      fontSize: 28,
+      fontWeight: '800',
+      color: colors.text,
+      marginBottom: 24,
+    },
+    // Current score card
+    currentCard: {
+      backgroundColor: colors.primaryMuted,
+      borderRadius: 16,
+      padding: 24,
+      alignItems: 'center',
+      marginBottom: 24,
+    },
+    currentScoreLabel: {
+      fontSize: 13,
+      fontWeight: '600',
+      color: colors.primary,
+      textTransform: 'uppercase',
+      letterSpacing: 0.8,
+      marginBottom: 8,
+    },
+    currentScore: {
+      fontSize: 56,
+      fontWeight: '800',
+      color: colors.text,
+      marginBottom: 8,
+    },
+    currentMeta: {
+      fontSize: 14,
+      color: colors.textSecondary,
+      marginBottom: 6,
+    },
+    bwLink: {
+      fontSize: 14,
+      color: colors.primary,
+      fontWeight: '500',
+    },
+    sectionHeader: {
+      fontSize: 13,
+      fontWeight: '600',
+      color: colors.textSecondary,
+      textTransform: 'uppercase',
+      letterSpacing: 0.8,
+      marginBottom: 8,
+      marginTop: 4,
+    },
+    card: {
+      backgroundColor: colors.bgSurface,
+      borderRadius: 12,
+      borderWidth: 1,
+      borderColor: colors.border,
+      paddingVertical: 4,
+      marginBottom: 20,
+    },
+    // Lifts used
+    liftRow: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      paddingHorizontal: 16,
+      paddingVertical: 12,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.bgMuted,
+    },
+    liftRowLabel: {
+      fontSize: 15,
+      fontWeight: '600',
+      color: colors.text,
+    },
+    liftRowValue: {
+      fontSize: 14,
+      color: colors.textSecondary,
+    },
+    // History
+    historyRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingHorizontal: 16,
+      paddingVertical: 12,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.bgMuted,
+    },
+    historyLabel: {
+      fontSize: 14,
+      fontWeight: '600',
+      color: colors.text,
+      flex: 1,
+    },
+    historyDate: {
+      fontSize: 13,
+      color: colors.textSecondary,
+      marginRight: 16,
+    },
+    historyScore: {
+      fontSize: 16,
+      fontWeight: '700',
+      color: colors.primary,
+    },
+    // Reference
+    refRow: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      paddingHorizontal: 16,
+      paddingVertical: 10,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.bgMuted,
+    },
+    refLabel: {
+      fontSize: 14,
+      color: colors.textSecondary,
+    },
+    refRange: {
+      fontSize: 14,
+      fontWeight: '600',
+      color: colors.text,
+    },
+  })
+}
+
 // ── Screen ────────────────────────────────────────────────────────────────────
 
 export default function WilksScreen() {
+  const { colors } = useTheme()
+  const styles = useMemo(() => buildStyles(colors), [colors])
   const { user } = useAuth()
 
   const historyQuery = useQuery({
@@ -127,142 +270,3 @@ export default function WilksScreen() {
     </SafeAreaView>
   )
 }
-
-// ── Styles ────────────────────────────────────────────────────────────────────
-
-const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: colors.bgSurface,
-  },
-  scrollView: {
-    flex: 1,
-  },
-  container: {
-    paddingHorizontal: 24,
-    paddingTop: 16,
-    paddingBottom: 48,
-  },
-  centered: {
-    paddingTop: 64,
-    alignItems: 'center',
-  },
-  screenTitle: {
-    fontSize: 28,
-    fontWeight: '800',
-    color: colors.text,
-    marginBottom: 24,
-  },
-  // Current score card
-  currentCard: {
-    backgroundColor: colors.primaryMuted,
-    borderRadius: 16,
-    padding: 24,
-    alignItems: 'center',
-    marginBottom: 24,
-  },
-  currentScoreLabel: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: colors.primary,
-    textTransform: 'uppercase',
-    letterSpacing: 0.8,
-    marginBottom: 8,
-  },
-  currentScore: {
-    fontSize: 56,
-    fontWeight: '800',
-    color: colors.text,
-    marginBottom: 8,
-  },
-  currentMeta: {
-    fontSize: 14,
-    color: colors.textSecondary,
-    marginBottom: 6,
-  },
-  bwLink: {
-    fontSize: 14,
-    color: colors.primary,
-    fontWeight: '500',
-  },
-  sectionHeader: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: colors.textSecondary,
-    textTransform: 'uppercase',
-    letterSpacing: 0.8,
-    marginBottom: 8,
-    marginTop: 4,
-  },
-  card: {
-    backgroundColor: colors.bgSurface,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: colors.border,
-    paddingVertical: 4,
-    marginBottom: 20,
-  },
-  // Lifts used
-  liftRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.bgMuted,
-  },
-  liftRowLabel: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: colors.text,
-  },
-  liftRowValue: {
-    fontSize: 14,
-    color: colors.textSecondary,
-  },
-  // History
-  historyRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.bgMuted,
-  },
-  historyLabel: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: colors.text,
-    flex: 1,
-  },
-  historyDate: {
-    fontSize: 13,
-    color: colors.textSecondary,
-    marginRight: 16,
-  },
-  historyScore: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: colors.primary,
-  },
-  // Reference
-  refRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.bgMuted,
-  },
-  refLabel: {
-    fontSize: 14,
-    color: colors.textSecondary,
-  },
-  refRange: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: colors.text,
-  },
-})

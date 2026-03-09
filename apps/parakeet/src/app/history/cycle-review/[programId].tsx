@@ -1,7 +1,7 @@
 import { ActivityIndicator, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { router, useLocalSearchParams } from 'expo-router'
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 
 import { useCycleReview } from '@modules/cycle-review'
@@ -9,7 +9,8 @@ import { createFormulaOverride, deactivateFormulaConfig } from '@modules/formula
 import { useAuth } from '@modules/auth'
 import { classifyVolumeLevel } from '@modules/training-volume'
 import type { FormulaConfig, MuscleGroup } from '@parakeet/training-engine'
-import { colors } from '../../../theme'
+import type { ColorScheme } from '../../../theme'
+import { useTheme } from '../../../theme/ThemeContext'
 import { BackLink } from '../../../components/navigation/BackLink'
 import { MUSCLE_GROUPS_ORDER, MUSCLE_LABELS_ABBR } from '@shared/constants/training'
 
@@ -67,25 +68,202 @@ interface CycleReviewData {
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
-const RATING_STYLES: Record<ProgressRating, { bg: string; text: string; label: string }> = {
-  excellent:  { bg: colors.successMuted, text: colors.success, label: 'Excellent' },
-  good:       { bg: colors.infoMuted, text: colors.info, label: 'Good' },
-  stalled:    { bg: colors.warningMuted, text: colors.warning, label: 'Stalled' },
-  concerning: { bg: colors.dangerMuted, text: colors.danger, label: 'Concerning' },
+function getRatingStyles(colors: ColorScheme): Record<ProgressRating, { bg: string; text: string; label: string }> {
+  return {
+    excellent:  { bg: colors.successMuted, text: colors.success, label: 'Excellent' },
+    good:       { bg: colors.infoMuted, text: colors.info, label: 'Good' },
+    stalled:    { bg: colors.warningMuted, text: colors.warning, label: 'Stalled' },
+    concerning: { bg: colors.dangerMuted, text: colors.danger, label: 'Concerning' },
+  }
+}
+
+function getVolumeLevelColors(colors: ColorScheme) {
+  return {
+    exceeded: colors.danger,
+    approaching: colors.warning,
+    in_range: colors.success,
+    below: colors.bgMuted,
+  } as const
 }
 
 const MUSCLES = MUSCLE_GROUPS_ORDER
 
-const VOLUME_LEVEL_COLORS = {
-  exceeded: colors.danger,
-  approaching: colors.warning,
-  in_range: colors.success,
-  below: colors.bgMuted,
-} as const
+function buildStyles(colors: ColorScheme) {
+  return StyleSheet.create({
+    safeArea: { flex: 1, backgroundColor: colors.bgSurface },
+    header: {
+      paddingHorizontal: 20,
+      paddingTop: 8,
+      paddingBottom: 16,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.bgMuted,
+    },
+    title: { fontSize: 24, fontWeight: '800', color: colors.text },
+
+    loadingContainer: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+      paddingHorizontal: 32,
+      gap: 12,
+    },
+    loadingTitle: { fontSize: 18, fontWeight: '700', color: colors.text, textAlign: 'center' },
+    loadingSubtitle: { fontSize: 14, color: colors.textSecondary, textAlign: 'center', lineHeight: 20 },
+    retryButton: {
+      marginTop: 16,
+      backgroundColor: colors.primary,
+      borderRadius: 10,
+      paddingHorizontal: 16,
+      paddingVertical: 10,
+    },
+    generateButton: {
+      marginTop: 8,
+      borderWidth: 1,
+      borderColor: colors.border,
+      borderRadius: 10,
+      paddingHorizontal: 16,
+      paddingVertical: 10,
+    },
+    generateButtonText: {
+      color: colors.textSecondary,
+      fontSize: 14,
+      fontWeight: '600',
+    },
+    retryButtonText: {
+      color: colors.textInverse,
+      fontSize: 14,
+      fontWeight: '700',
+    },
+
+    scroll: { flex: 1 },
+    content: { padding: 16, gap: 16, paddingBottom: 48 },
+
+    // Summary card
+    summaryCard: {
+      backgroundColor: colors.primaryMuted,
+      borderRadius: 16,
+      padding: 16,
+      gap: 8,
+    },
+    summaryMeta: { flexDirection: 'row', gap: 16, flexWrap: 'wrap' },
+    summaryMetaText: { fontSize: 12, color: colors.primary, fontWeight: '600' },
+    overallAssessment: { fontSize: 15, color: colors.text, lineHeight: 22 },
+
+    // Sections
+    section: { gap: 10 },
+    sectionTitle: { fontSize: 16, fontWeight: '700', color: colors.text },
+
+    // Lift cards
+    liftCard: {
+      borderWidth: 1,
+      borderColor: colors.border,
+      borderRadius: 12,
+      padding: 14,
+      gap: 4,
+    },
+    liftCardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+    liftName: { fontSize: 16, fontWeight: '700', color: colors.text },
+    ratingBadge: { borderRadius: 8, paddingHorizontal: 10, paddingVertical: 4 },
+    ratingText: { fontSize: 12, fontWeight: '600' },
+    liftDelta: { fontSize: 14, color: colors.textSecondary, fontWeight: '500' },
+    liftNarrative: { fontSize: 13, color: colors.textSecondary, lineHeight: 18 },
+
+    // Auxiliary
+    auxSubtitle: { fontSize: 13, fontWeight: '600', color: colors.textSecondary },
+    auxItem: { paddingLeft: 8, gap: 2 },
+    auxExercise: { fontSize: 14, fontWeight: '600', color: colors.text },
+    auxExplanation: { fontSize: 13, color: colors.textSecondary, lineHeight: 18 },
+    auxChange: { fontSize: 14, color: colors.textSecondary, lineHeight: 20 },
+
+    // Heatmap
+    heatmapRow: { flexDirection: 'row', alignItems: 'center' },
+    heatmapWeekCell: { width: 32, alignItems: 'center' },
+    heatmapWeek: { fontSize: 10, color: colors.textSecondary },
+    heatmapCell: {
+      width: 32,
+      height: 32,
+      alignItems: 'center',
+      justifyContent: 'center',
+      borderWidth: 1,
+      borderColor: colors.bgMuted,
+    },
+    heatmapHeader: { fontSize: 9, fontWeight: '600', color: colors.textSecondary },
+    heatmapValue: { fontSize: 10, color: colors.textSecondary },
+
+    // Formula suggestions
+    suggestionCard: {
+      borderWidth: 1,
+      borderColor: colors.border,
+      borderRadius: 12,
+      padding: 14,
+      gap: 8,
+    },
+    suggestionHeader: { flexDirection: 'row', alignItems: 'flex-start', gap: 8 },
+    suggestionDescription: { fontSize: 14, fontWeight: '600', color: colors.text, flex: 1 },
+    priorityBadge: { borderRadius: 6, paddingHorizontal: 8, paddingVertical: 2 },
+    priorityText: { fontSize: 11, fontWeight: '600', color: colors.textSecondary, textTransform: 'capitalize' },
+    suggestionRationale: { fontSize: 13, color: colors.textSecondary, lineHeight: 18 },
+    suggestionActions: { flexDirection: 'row', gap: 10 },
+    acceptButton: {
+      flex: 1,
+      backgroundColor: colors.primary,
+      borderRadius: 10,
+      paddingVertical: 10,
+      alignItems: 'center',
+    },
+    acceptButtonText: { fontSize: 14, fontWeight: '600', color: colors.textInverse },
+    dismissButton: {
+      flex: 1,
+      borderWidth: 1,
+      borderColor: colors.border,
+      borderRadius: 10,
+      paddingVertical: 10,
+      alignItems: 'center',
+    },
+    dismissButtonText: { fontSize: 14, color: colors.textSecondary },
+
+    // Next cycle
+    nextCycleCard: {
+      backgroundColor: colors.successMuted,
+      borderRadius: 16,
+      padding: 16,
+      gap: 10,
+    },
+    nextCycleTitle: { fontSize: 16, fontWeight: '700', color: colors.success },
+    nextCycleText: { fontSize: 14, color: colors.success, lineHeight: 20 },
+    startNextButton: {
+      alignSelf: 'flex-start',
+      paddingHorizontal: 16,
+      paddingVertical: 10,
+      backgroundColor: colors.success,
+      borderRadius: 10,
+    },
+    startNextButtonText: { fontSize: 14, fontWeight: '600', color: colors.textInverse },
+
+    // Dev section
+    devSection: {
+      borderWidth: 1,
+      borderColor: colors.border,
+      borderRadius: 12,
+      padding: 14,
+      gap: 8,
+      backgroundColor: colors.bgSurface,
+    },
+    devSectionTitle: { fontSize: 14, fontWeight: '700', color: colors.textSecondary },
+    devNote: { fontSize: 12, color: colors.textTertiary, fontStyle: 'italic' },
+    devItem: { paddingLeft: 8, gap: 2 },
+    devItemText: { fontSize: 13, color: colors.textSecondary, lineHeight: 18 },
+    devItemNote: { fontSize: 12, color: colors.textTertiary },
+  })
+}
 
 // ── Screen ────────────────────────────────────────────────────────────────────
 
 export default function CycleReviewScreen() {
+  const { colors } = useTheme()
+  const styles = useMemo(() => buildStyles(colors), [colors])
+  const ratingStyles = useMemo(() => getRatingStyles(colors), [colors])
+  const volumeLevelColors = useMemo(() => getVolumeLevelColors(colors), [colors])
   const { programId } = useLocalSearchParams<{ programId: string }>()
   const { user } = useAuth()
   const queryClient = useQueryClient()
@@ -268,7 +446,7 @@ export default function CycleReviewScreen() {
             {(['squat', 'bench', 'deadlift'] as string[]).map((lift) => {
               const lp = progress[lift]
               if (!lp) return null
-              const rs = RATING_STYLES[lp.rating] ?? RATING_STYLES.good
+              const rs = ratingStyles[lp.rating] ?? ratingStyles.good
               const delta = lp.oneRmEnd - lp.oneRmStart
               return (
                 <View key={lift} style={styles.liftCard}>
@@ -358,7 +536,7 @@ export default function CycleReviewScreen() {
                       return (
                         <View
                           key={m}
-                          style={[styles.heatmapCell, { backgroundColor: VOLUME_LEVEL_COLORS[classifyVolumeLevel(sets, 6, 20)] }]}
+                          style={[styles.heatmapCell, { backgroundColor: volumeLevelColors[classifyVolumeLevel(sets, 6, 20)] }]}
                         >
                           <Text style={styles.heatmapValue}>{sets || ''}</Text>
                         </View>
@@ -376,7 +554,7 @@ export default function CycleReviewScreen() {
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Formula Suggestions</Text>
             {formulas.map((s, i) => {
-              const priorityColors = { high: colors.dangerMuted, medium: colors.warningMuted, low: colors.bgMuted }
+              const priorityColors = { high: colors.dangerMuted, medium: colors.warningMuted, low: colors.bgMuted } as const
               return (
                 <View key={i} style={styles.suggestionCard}>
                   <View style={styles.suggestionHeader}>
@@ -444,172 +622,3 @@ export default function CycleReviewScreen() {
     </SafeAreaView>
   )
 }
-
-// ── Styles ────────────────────────────────────────────────────────────────────
-
-const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: colors.bgSurface },
-  header: {
-    paddingHorizontal: 20,
-    paddingTop: 8,
-    paddingBottom: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.bgMuted,
-  },
-  title: { fontSize: 24, fontWeight: '800', color: colors.text },
-
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: 32,
-    gap: 12,
-  },
-  loadingTitle: { fontSize: 18, fontWeight: '700', color: colors.text, textAlign: 'center' },
-  loadingSubtitle: { fontSize: 14, color: colors.textSecondary, textAlign: 'center', lineHeight: 20 },
-  retryButton: {
-    marginTop: 16,
-    backgroundColor: colors.primary,
-    borderRadius: 10,
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-  },
-  generateButton: {
-    marginTop: 8,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 10,
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-  },
-  generateButtonText: {
-    color: colors.textSecondary,
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  retryButtonText: {
-    color: colors.textInverse,
-    fontSize: 14,
-    fontWeight: '700',
-  },
-
-  scroll: { flex: 1 },
-  content: { padding: 16, gap: 16, paddingBottom: 48 },
-
-  // Summary card
-  summaryCard: {
-    backgroundColor: colors.primaryMuted,
-    borderRadius: 16,
-    padding: 16,
-    gap: 8,
-  },
-  summaryMeta: { flexDirection: 'row', gap: 16, flexWrap: 'wrap' },
-  summaryMetaText: { fontSize: 12, color: colors.primary, fontWeight: '600' },
-  overallAssessment: { fontSize: 15, color: colors.text, lineHeight: 22 },
-
-  // Sections
-  section: { gap: 10 },
-  sectionTitle: { fontSize: 16, fontWeight: '700', color: colors.text },
-
-  // Lift cards
-  liftCard: {
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 12,
-    padding: 14,
-    gap: 4,
-  },
-  liftCardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  liftName: { fontSize: 16, fontWeight: '700', color: colors.text },
-  ratingBadge: { borderRadius: 8, paddingHorizontal: 10, paddingVertical: 4 },
-  ratingText: { fontSize: 12, fontWeight: '600' },
-  liftDelta: { fontSize: 14, color: colors.textSecondary, fontWeight: '500' },
-  liftNarrative: { fontSize: 13, color: colors.textSecondary, lineHeight: 18 },
-
-  // Auxiliary
-  auxSubtitle: { fontSize: 13, fontWeight: '600', color: colors.textSecondary },
-  auxItem: { paddingLeft: 8, gap: 2 },
-  auxExercise: { fontSize: 14, fontWeight: '600', color: colors.text },
-  auxExplanation: { fontSize: 13, color: colors.textSecondary, lineHeight: 18 },
-  auxChange: { fontSize: 14, color: colors.textSecondary, lineHeight: 20 },
-
-  // Heatmap
-  heatmapRow: { flexDirection: 'row', alignItems: 'center' },
-  heatmapWeekCell: { width: 32, alignItems: 'center' },
-  heatmapWeek: { fontSize: 10, color: colors.textSecondary },
-  heatmapCell: {
-    width: 32,
-    height: 32,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: colors.bgMuted,
-  },
-  heatmapHeader: { fontSize: 9, fontWeight: '600', color: colors.textSecondary },
-  heatmapValue: { fontSize: 10, color: colors.textSecondary },
-
-  // Formula suggestions
-  suggestionCard: {
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 12,
-    padding: 14,
-    gap: 8,
-  },
-  suggestionHeader: { flexDirection: 'row', alignItems: 'flex-start', gap: 8 },
-  suggestionDescription: { fontSize: 14, fontWeight: '600', color: colors.text, flex: 1 },
-  priorityBadge: { borderRadius: 6, paddingHorizontal: 8, paddingVertical: 2 },
-  priorityText: { fontSize: 11, fontWeight: '600', color: colors.textSecondary, textTransform: 'capitalize' },
-  suggestionRationale: { fontSize: 13, color: colors.textSecondary, lineHeight: 18 },
-  suggestionActions: { flexDirection: 'row', gap: 10 },
-  acceptButton: {
-    flex: 1,
-    backgroundColor: colors.primary,
-    borderRadius: 10,
-    paddingVertical: 10,
-    alignItems: 'center',
-  },
-  acceptButtonText: { fontSize: 14, fontWeight: '600', color: colors.textInverse },
-  dismissButton: {
-    flex: 1,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 10,
-    paddingVertical: 10,
-    alignItems: 'center',
-  },
-  dismissButtonText: { fontSize: 14, color: colors.textSecondary },
-
-  // Next cycle
-  nextCycleCard: {
-    backgroundColor: colors.successMuted,
-    borderRadius: 16,
-    padding: 16,
-    gap: 10,
-  },
-  nextCycleTitle: { fontSize: 16, fontWeight: '700', color: colors.success },
-  nextCycleText: { fontSize: 14, color: colors.success, lineHeight: 20 },
-  startNextButton: {
-    alignSelf: 'flex-start',
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    backgroundColor: colors.success,
-    borderRadius: 10,
-  },
-  startNextButtonText: { fontSize: 14, fontWeight: '600', color: colors.textInverse },
-
-  // Dev section
-  devSection: {
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 12,
-    padding: 14,
-    gap: 8,
-    backgroundColor: colors.bgSurface,
-  },
-  devSectionTitle: { fontSize: 14, fontWeight: '700', color: colors.textSecondary },
-  devNote: { fontSize: 12, color: colors.textTertiary, fontStyle: 'italic' },
-  devItem: { paddingLeft: 8, gap: 2 },
-  devItemText: { fontSize: 13, color: colors.textSecondary, lineHeight: 18 },
-  devItemNote: { fontSize: 12, color: colors.textTertiary },
-})

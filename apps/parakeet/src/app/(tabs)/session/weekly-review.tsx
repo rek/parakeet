@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   Alert,
   ScrollView,
@@ -29,7 +29,8 @@ import { capitalize } from '@shared/utils/string';
 import { router, useLocalSearchParams } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { BackLink } from '../../../components/navigation/BackLink';
-import { colors } from '../../../theme';
+import type { ColorScheme } from '../../../theme';
+import { useTheme } from '../../../theme/ThemeContext';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -37,11 +38,218 @@ type FatigueRatings = Partial<Record<MuscleGroup, FatigueLevel>>;
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
-function volumeBarColor(pct: number): string {
+function volumeBarColor(pct: number, colors: ColorScheme): string {
   if (pct >= 1.0) return colors.danger;
   if (pct >= 0.85) return colors.warning;
   if (pct >= 0.5) return colors.success;
   return colors.info;
+}
+
+function buildStyles(colors: ColorScheme) {
+  return StyleSheet.create({
+    safeArea: { flex: 1, backgroundColor: colors.bgSurface },
+    header: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingHorizontal: 16,
+      paddingVertical: 12,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.border,
+    },
+    headerBackSlot: { width: 100 },
+    headerTitle: {
+      flex: 1,
+      fontSize: 16,
+      fontWeight: '600',
+      color: colors.text,
+      textAlign: 'center',
+    },
+    scrollView: { flex: 1 },
+    container: {
+      paddingHorizontal: 24,
+      paddingTop: 24,
+      paddingBottom: 48,
+    },
+    prompt: {
+      fontSize: 15,
+      color: colors.textSecondary,
+      marginBottom: 24,
+      lineHeight: 22,
+    },
+    reviewRow: {
+      marginBottom: 20,
+    },
+    reviewRowHeader: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      marginBottom: 6,
+    },
+    reviewMuscleLabel: {
+      fontSize: 15,
+      color: colors.text,
+      flex: 1,
+      marginRight: 8,
+    },
+    reviewPills: {
+      flexDirection: 'row',
+      gap: 4,
+    },
+    pill: {
+      width: 36,
+      height: 36,
+      borderRadius: 18,
+      backgroundColor: colors.bgMuted,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    pillActive: {
+      backgroundColor: colors.primary,
+    },
+    pillText: {
+      fontSize: 13,
+      fontWeight: '600',
+      color: colors.textSecondary,
+    },
+    pillTextActive: {
+      color: colors.textInverse,
+    },
+    volumeBarTrack: {
+      height: 4,
+      borderRadius: 2,
+      flexDirection: 'row',
+      overflow: 'hidden',
+      backgroundColor: colors.bgMuted,
+    },
+    volumeBarFill: {
+      height: 4,
+      borderRadius: 2,
+    },
+    volumeBarEmpty: {
+      height: 4,
+    },
+    volumeBarLabel: {
+      fontSize: 11,
+      color: colors.textTertiary,
+      marginTop: 4,
+    },
+    legend: {
+      fontSize: 12,
+      color: colors.textTertiary,
+      textAlign: 'center',
+      marginBottom: 24,
+      marginTop: 4,
+    },
+    sectionLabel: {
+      fontSize: 14,
+      fontWeight: '600',
+      color: colors.textSecondary,
+      textTransform: 'uppercase',
+      letterSpacing: 0.5,
+      marginBottom: 10,
+    },
+    notesInput: {
+      borderWidth: 1,
+      borderColor: colors.border,
+      borderRadius: 12,
+      paddingHorizontal: 16,
+      paddingVertical: 12,
+      fontSize: 15,
+      color: colors.text,
+      minHeight: 80,
+      marginBottom: 24,
+      backgroundColor: colors.bgSurface,
+    },
+    warningCard: {
+      backgroundColor: colors.warningMuted,
+      borderWidth: 1,
+      borderColor: colors.warning,
+      borderRadius: 12,
+      paddingVertical: 12,
+      paddingHorizontal: 16,
+      marginBottom: 16,
+    },
+    warningText: {
+      fontSize: 13,
+      color: colors.warning,
+      lineHeight: 18,
+    },
+    saveButton: {
+      backgroundColor: colors.primary,
+      borderRadius: 12,
+      paddingVertical: 16,
+      alignItems: 'center',
+    },
+    saveButtonDisabled: { opacity: 0.5 },
+    saveButtonText: {
+      fontSize: 16,
+      fontWeight: '600',
+      color: colors.textInverse,
+    },
+    // Mismatch summary
+    mismatchContainer: {
+      padding: 24,
+    },
+    mismatchTitle: {
+      fontSize: 22,
+      fontWeight: '700',
+      color: colors.text,
+      marginBottom: 8,
+    },
+    mismatchSubtitle: {
+      fontSize: 14,
+      color: colors.textSecondary,
+      marginBottom: 20,
+      lineHeight: 20,
+    },
+    mismatchRow: {
+      paddingVertical: 12,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.border,
+    },
+    mismatchMuscleName: {
+      fontSize: 15,
+      fontWeight: '600',
+      color: colors.text,
+      marginBottom: 4,
+    },
+    mismatchDetails: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+    },
+    mismatchNumbers: {
+      fontSize: 13,
+      color: colors.textSecondary,
+    },
+    mismatchDirection: {
+      fontSize: 13,
+      fontWeight: '600',
+    },
+    mismatchSuggestion: {
+      backgroundColor: colors.warningMuted,
+      borderRadius: 10,
+      padding: 14,
+      marginTop: 16,
+    },
+    mismatchSuggestionText: {
+      fontSize: 13,
+      color: colors.warning,
+      lineHeight: 18,
+    },
+    doneButton: {
+      backgroundColor: colors.primary,
+      borderRadius: 12,
+      paddingVertical: 16,
+      alignItems: 'center',
+      marginTop: 24,
+    },
+    doneButtonText: {
+      fontSize: 16,
+      fontWeight: '600',
+      color: colors.textInverse,
+    },
+  });
 }
 
 // ── Sub-component: single muscle review row ───────────────────────────────────
@@ -51,12 +259,14 @@ interface MuscleReviewRowProps {
   rating: FatigueLevel;
   predicted: PredictedFatigue;
   onChange: (muscle: MuscleGroup, rating: FatigueLevel) => void;
+  styles: ReturnType<typeof buildStyles>;
+  colors: ColorScheme;
 }
 
-function MuscleReviewRow({ muscle, rating, predicted, onChange }: MuscleReviewRowProps) {
+function MuscleReviewRow({ muscle, rating, predicted, onChange, styles, colors }: MuscleReviewRowProps) {
   const label = MUSCLE_LABELS_FULL[muscle] ?? capitalize(muscle.replace(/_/g, ' '));
   const barPct = Math.min(1, predicted.volumePct);
-  const barColor = volumeBarColor(predicted.volumePct);
+  const barColor = volumeBarColor(predicted.volumePct, colors);
   const FATIGUE_LEVELS: FatigueLevel[] = [1, 2, 3, 4, 5];
 
   return (
@@ -98,9 +308,11 @@ function MuscleReviewRow({ muscle, rating, predicted, onChange }: MuscleReviewRo
 interface MismatchSummaryProps {
   mismatches: FatigueMismatch[];
   onDone: () => void;
+  styles: ReturnType<typeof buildStyles>;
+  colors: ColorScheme;
 }
 
-function MismatchSummary({ mismatches, onDone }: MismatchSummaryProps) {
+function MismatchSummary({ mismatches, onDone, styles, colors }: MismatchSummaryProps) {
   const hasAccumulating = mismatches.some((m) => m.direction === 'accumulating_fatigue');
 
   return (
@@ -150,10 +362,12 @@ function MismatchSummary({ mismatches, onDone }: MismatchSummaryProps) {
 // ── Screen ───────────────────────────────────────────────────────────────────
 
 export default function WeeklyReviewScreen() {
+  const { colors } = useTheme();
   const { programId, weekNumber: weekNumberParam } = useLocalSearchParams<{
     programId: string;
     weekNumber: string;
   }>();
+  const styles = useMemo(() => buildStyles(colors), [colors]);
   const weekNumber = parseInt(weekNumberParam ?? '0', 10);
   const { user } = useAuth();
 
@@ -228,6 +442,8 @@ export default function WeeklyReviewScreen() {
           <MismatchSummary
             mismatches={mismatches}
             onDone={() => router.replace('/(tabs)/today')}
+            styles={styles}
+            colors={colors}
           />
         </ScrollView>
       </SafeAreaView>
@@ -258,7 +474,7 @@ export default function WeeklyReviewScreen() {
         )}
 
         <Text style={styles.prompt}>
-          Rate how each muscle actually feels. The bars show this week's training volume vs MRV.
+          Rate how each muscle actually feels. The bars show the last 7 days of training volume vs MRV.
         </Text>
 
         {predicted && MUSCLE_GROUPS.map((muscle) => (
@@ -268,6 +484,8 @@ export default function WeeklyReviewScreen() {
             rating={(ratings[muscle] ?? 1) as FatigueLevel}
             predicted={predicted[muscle]}
             onChange={handleRatingChange}
+            styles={styles}
+            colors={colors}
           />
         ))}
 
@@ -300,209 +518,3 @@ export default function WeeklyReviewScreen() {
   );
 }
 
-// ── Styles ───────────────────────────────────────────────────────────────────
-
-const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: colors.bgSurface },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
-  },
-  headerBackSlot: { width: 100 },
-  headerTitle: {
-    flex: 1,
-    fontSize: 16,
-    fontWeight: '600',
-    color: colors.text,
-    textAlign: 'center',
-  },
-  scrollView: { flex: 1 },
-  container: {
-    paddingHorizontal: 24,
-    paddingTop: 24,
-    paddingBottom: 48,
-  },
-  prompt: {
-    fontSize: 15,
-    color: colors.textSecondary,
-    marginBottom: 24,
-    lineHeight: 22,
-  },
-  reviewRow: {
-    marginBottom: 20,
-  },
-  reviewRowHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: 6,
-  },
-  reviewMuscleLabel: {
-    fontSize: 15,
-    color: colors.text,
-    flex: 1,
-    marginRight: 8,
-  },
-  reviewPills: {
-    flexDirection: 'row',
-    gap: 4,
-  },
-  pill: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: colors.bgMuted,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  pillActive: {
-    backgroundColor: colors.primary,
-  },
-  pillText: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: colors.textSecondary,
-  },
-  pillTextActive: {
-    color: colors.textInverse,
-  },
-  volumeBarTrack: {
-    height: 4,
-    borderRadius: 2,
-    flexDirection: 'row',
-    overflow: 'hidden',
-    backgroundColor: colors.bgMuted,
-  },
-  volumeBarFill: {
-    height: 4,
-    borderRadius: 2,
-  },
-  volumeBarEmpty: {
-    height: 4,
-  },
-  volumeBarLabel: {
-    fontSize: 11,
-    color: colors.textTertiary,
-    marginTop: 4,
-  },
-  legend: {
-    fontSize: 12,
-    color: colors.textTertiary,
-    textAlign: 'center',
-    marginBottom: 24,
-    marginTop: 4,
-  },
-  sectionLabel: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: colors.textSecondary,
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-    marginBottom: 10,
-  },
-  notesInput: {
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    fontSize: 15,
-    color: colors.text,
-    minHeight: 80,
-    marginBottom: 24,
-    backgroundColor: colors.bgSurface,
-  },
-  warningCard: {
-    backgroundColor: colors.warningMuted,
-    borderWidth: 1,
-    borderColor: colors.warning,
-    borderRadius: 12,
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    marginBottom: 16,
-  },
-  warningText: {
-    fontSize: 13,
-    color: colors.warning,
-    lineHeight: 18,
-  },
-  saveButton: {
-    backgroundColor: colors.primary,
-    borderRadius: 12,
-    paddingVertical: 16,
-    alignItems: 'center',
-  },
-  saveButtonDisabled: { opacity: 0.5 },
-  saveButtonText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: colors.textInverse,
-  },
-  // Mismatch summary
-  mismatchContainer: {
-    padding: 24,
-  },
-  mismatchTitle: {
-    fontSize: 22,
-    fontWeight: '700',
-    color: colors.text,
-    marginBottom: 8,
-  },
-  mismatchSubtitle: {
-    fontSize: 14,
-    color: colors.textSecondary,
-    marginBottom: 20,
-    lineHeight: 20,
-  },
-  mismatchRow: {
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
-  },
-  mismatchMuscleName: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: colors.text,
-    marginBottom: 4,
-  },
-  mismatchDetails: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  mismatchNumbers: {
-    fontSize: 13,
-    color: colors.textSecondary,
-  },
-  mismatchDirection: {
-    fontSize: 13,
-    fontWeight: '600',
-  },
-  mismatchSuggestion: {
-    backgroundColor: colors.warningMuted,
-    borderRadius: 10,
-    padding: 14,
-    marginTop: 16,
-  },
-  mismatchSuggestionText: {
-    fontSize: 13,
-    color: colors.warning,
-    lineHeight: 18,
-  },
-  doneButton: {
-    backgroundColor: colors.primary,
-    borderRadius: 12,
-    paddingVertical: 16,
-    alignItems: 'center',
-    marginTop: 24,
-  },
-  doneButtonText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: colors.textInverse,
-  },
-});

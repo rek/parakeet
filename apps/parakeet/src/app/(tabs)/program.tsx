@@ -22,14 +22,160 @@ import { useTodaySession } from '@modules/session';
 import { qk } from '@platform/query';
 import { calculateSets } from '@parakeet/training-engine';
 import type { IntensityType, Lift } from '@parakeet/shared-types';
+import { useMemo } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { WeekRow } from '../../components/program/WeekRow';
 import { capitalize } from '@shared/utils/string';
-import { colors, spacing, typography } from '../../theme';
+import { spacing, typography } from '../../theme';
+import type { ColorScheme } from '../../theme';
+import { useTheme } from '../../theme/ThemeContext';
+
+function buildStyles(colors: ColorScheme) {
+  return StyleSheet.create({
+    loadingContainer: {
+      flex: 1,
+      backgroundColor: colors.bg,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    container: {
+      flex: 1,
+      backgroundColor: colors.bg,
+    },
+    header: {
+      paddingHorizontal: spacing[5],
+      paddingTop: spacing[2],
+      paddingBottom: spacing[5],
+    },
+    title: {
+      fontSize: typography.sizes['2xl'],
+      fontWeight: typography.weights.black,
+      color: colors.text,
+      marginBottom: spacing[1],
+      letterSpacing: typography.letterSpacing.tight,
+    },
+    subtitle: {
+      fontSize: typography.sizes.sm,
+      color: colors.textSecondary,
+    },
+    scrollView: {
+      flex: 1,
+    },
+    scrollContent: {
+      paddingBottom: spacing[8],
+    },
+    headerRow: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      marginBottom: spacing[1],
+    },
+    endProgramText: {
+      fontSize: typography.sizes.sm,
+      color: colors.danger,
+    },
+    // Empty state
+    emptyState: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+      paddingHorizontal: spacing[8],
+    },
+    emptyTitle: {
+      fontSize: typography.sizes.lg,
+      fontWeight: typography.weights.semibold,
+      color: colors.text,
+      marginBottom: spacing[6],
+    },
+    primaryButton: {
+      backgroundColor: colors.primary,
+      borderRadius: 12,
+      paddingVertical: spacing[4],
+      paddingHorizontal: spacing[8],
+      alignItems: 'center',
+    },
+    primaryButtonText: {
+      fontSize: typography.sizes.base,
+      fontWeight: typography.weights.bold,
+      color: colors.textInverse,
+      letterSpacing: typography.letterSpacing.wide,
+    },
+    // Unending view
+    unendingBody: {
+      flex: 1,
+      paddingHorizontal: spacing[5],
+      paddingTop: spacing[2],
+    },
+    nextSessionCard: {
+      backgroundColor: colors.bgSurface,
+      borderRadius: 16,
+      borderWidth: 1,
+      borderColor: colors.border,
+      padding: spacing[6],
+    },
+    nextSessionLabel: {
+      fontSize: typography.sizes.xs,
+      fontWeight: typography.weights.semibold,
+      color: colors.textTertiary,
+      textTransform: 'uppercase',
+      letterSpacing: 0.8,
+      marginBottom: spacing[2],
+    },
+    nextSessionLift: {
+      fontSize: typography.sizes['2xl'],
+      fontWeight: typography.weights.black,
+      color: colors.text,
+      marginBottom: spacing[3],
+    },
+    badgeRow: {
+      flexDirection: 'row',
+      gap: spacing[2],
+      marginBottom: spacing[4],
+    },
+    badge: {
+      backgroundColor: colors.primaryMuted,
+      borderRadius: 8,
+      paddingHorizontal: spacing[3],
+      paddingVertical: spacing[1],
+    },
+    badgeSecondary: {
+      backgroundColor: colors.bgMuted,
+    },
+    badgeText: {
+      fontSize: typography.sizes.xs,
+      fontWeight: typography.weights.semibold,
+      color: colors.primary,
+    },
+    nextSessionNote: {
+      fontSize: typography.sizes.sm,
+      color: colors.textTertiary,
+      fontStyle: 'italic',
+    },
+    estimateRow: {
+      marginTop: spacing[3],
+      paddingTop: spacing[3],
+      borderTopWidth: 1,
+      borderTopColor: colors.border,
+      marginBottom: spacing[3],
+      gap: spacing[1],
+    },
+    estimateText: {
+      fontSize: typography.sizes.base,
+      fontWeight: typography.weights.semibold,
+      color: colors.text,
+    },
+    lastRpeText: {
+      fontSize: typography.sizes.xs,
+      color: colors.textTertiary,
+    },
+  });
+}
 
 export default function ProgramScreen() {
+  const { colors } = useTheme();
+  const styles = useMemo(() => buildStyles(colors), [colors]);
   const { data: program, isLoading } = useActiveProgram();
   const { data: todaySession } = useTodaySession();
   const { user, loading: authLoading } = useAuth();
@@ -248,143 +394,3 @@ export default function ProgramScreen() {
     </SafeAreaView>
   );
 }
-
-
-const styles = StyleSheet.create({
-  loadingContainer: {
-    flex: 1,
-    backgroundColor: colors.bg,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  container: {
-    flex: 1,
-    backgroundColor: colors.bg,
-  },
-  header: {
-    paddingHorizontal: spacing[5],
-    paddingTop: spacing[2],
-    paddingBottom: spacing[5],
-  },
-  title: {
-    fontSize: typography.sizes['2xl'],
-    fontWeight: typography.weights.black,
-    color: colors.text,
-    marginBottom: spacing[1],
-    letterSpacing: typography.letterSpacing.tight,
-  },
-  subtitle: {
-    fontSize: typography.sizes.sm,
-    color: colors.textSecondary,
-  },
-  scrollView: {
-    flex: 1,
-  },
-  scrollContent: {
-    paddingBottom: spacing[8],
-  },
-  headerRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: spacing[1],
-  },
-  endProgramText: {
-    fontSize: typography.sizes.sm,
-    color: colors.danger,
-  },
-  // Empty state
-  emptyState: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: spacing[8],
-  },
-  emptyTitle: {
-    fontSize: typography.sizes.lg,
-    fontWeight: typography.weights.semibold,
-    color: colors.text,
-    marginBottom: spacing[6],
-  },
-  primaryButton: {
-    backgroundColor: colors.primary,
-    borderRadius: 12,
-    paddingVertical: spacing[4],
-    paddingHorizontal: spacing[8],
-    alignItems: 'center',
-  },
-  primaryButtonText: {
-    fontSize: typography.sizes.base,
-    fontWeight: typography.weights.bold,
-    color: colors.textInverse,
-    letterSpacing: typography.letterSpacing.wide,
-  },
-  // Unending view
-  unendingBody: {
-    flex: 1,
-    paddingHorizontal: spacing[5],
-    paddingTop: spacing[2],
-  },
-  nextSessionCard: {
-    backgroundColor: colors.bgSurface,
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: colors.border,
-    padding: spacing[6],
-  },
-  nextSessionLabel: {
-    fontSize: typography.sizes.xs,
-    fontWeight: typography.weights.semibold,
-    color: colors.textTertiary,
-    textTransform: 'uppercase',
-    letterSpacing: 0.8,
-    marginBottom: spacing[2],
-  },
-  nextSessionLift: {
-    fontSize: typography.sizes['2xl'],
-    fontWeight: typography.weights.black,
-    color: colors.text,
-    marginBottom: spacing[3],
-  },
-  badgeRow: {
-    flexDirection: 'row',
-    gap: spacing[2],
-    marginBottom: spacing[4],
-  },
-  badge: {
-    backgroundColor: colors.primaryMuted,
-    borderRadius: 8,
-    paddingHorizontal: spacing[3],
-    paddingVertical: spacing[1],
-  },
-  badgeSecondary: {
-    backgroundColor: colors.bgMuted,
-  },
-  badgeText: {
-    fontSize: typography.sizes.xs,
-    fontWeight: typography.weights.semibold,
-    color: colors.primary,
-  },
-  nextSessionNote: {
-    fontSize: typography.sizes.sm,
-    color: colors.textTertiary,
-    fontStyle: 'italic',
-  },
-  estimateRow: {
-    marginTop: spacing[3],
-    paddingTop: spacing[3],
-    borderTopWidth: 1,
-    borderTopColor: colors.border,
-    marginBottom: spacing[3],
-    gap: spacing[1],
-  },
-  estimateText: {
-    fontSize: typography.sizes.base,
-    fontWeight: typography.weights.semibold,
-    color: colors.text,
-  },
-  lastRpeText: {
-    fontSize: typography.sizes.xs,
-    color: colors.textTertiary,
-  },
-});

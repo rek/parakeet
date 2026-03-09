@@ -20,7 +20,8 @@ import { getProfile, updateProfile } from '@modules/profile'
 import { updateCycleConfig } from '@modules/cycle-tracking'
 import { useAuth } from '@modules/auth'
 import type { BiologicalSex } from '@modules/profile'
-import { colors } from '../../../theme'
+import type { ColorScheme } from '../../../theme'
+import { useTheme } from '../../../theme/ThemeContext'
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -40,9 +41,196 @@ interface LiftsPayload {
   deadlift: LiftInput
 }
 
+// ── Styles ────────────────────────────────────────────────────────────────────
+
+function buildStyles(colors: ColorScheme) {
+  return StyleSheet.create({
+    scrollView: {
+      flex: 1,
+      backgroundColor: colors.bgSurface,
+    },
+    container: {
+      paddingHorizontal: 24,
+      paddingTop: 64,
+      paddingBottom: 48,
+    },
+    title: {
+      fontSize: 28,
+      fontWeight: '700',
+      color: colors.text,
+      marginBottom: 8,
+    },
+    subtitle: {
+      fontSize: 15,
+      color: colors.textSecondary,
+      marginBottom: 40,
+      lineHeight: 22,
+    },
+    label: {
+      fontSize: 14,
+      fontWeight: '600',
+      color: colors.textSecondary,
+      marginBottom: 10,
+      textTransform: 'uppercase',
+      letterSpacing: 0.5,
+    },
+    toggle: {
+      flexDirection: 'row',
+      borderWidth: 1,
+      borderColor: colors.border,
+      borderRadius: 12,
+      overflow: 'hidden',
+      marginBottom: 28,
+    },
+    toggleButton: {
+      flex: 1,
+      paddingVertical: 12,
+      alignItems: 'center',
+      backgroundColor: colors.bgSurface,
+    },
+    toggleButtonFirst: {
+      // no extra style needed; border-radius handled by overflow on parent
+    },
+    toggleButtonLast: {
+      // no extra style needed
+    },
+    toggleButtonBorderRight: {
+      borderRightWidth: 1,
+      borderRightColor: colors.border,
+    },
+    toggleButtonActive: {
+      backgroundColor: colors.primary,
+    },
+    toggleButtonText: {
+      fontSize: 14,
+      fontWeight: '600',
+      color: colors.textSecondary,
+    },
+    toggleButtonTextActive: {
+      color: colors.textInverse,
+    },
+    dateRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      borderWidth: 1,
+      borderColor: colors.border,
+      borderRadius: 12,
+      paddingHorizontal: 16,
+      paddingVertical: 14,
+      marginBottom: 12,
+    },
+    dateText: {
+      fontSize: 15,
+      color: colors.text,
+    },
+    changeLink: {
+      fontSize: 14,
+      fontWeight: '600',
+      color: colors.primary,
+    },
+    primaryButton: {
+      backgroundColor: colors.primary,
+      borderRadius: 12,
+      paddingVertical: 16,
+      alignItems: 'center',
+      marginTop: 16,
+    },
+    primaryButtonDisabled: {
+      opacity: 0.45,
+    },
+    primaryButtonText: {
+      color: colors.textInverse,
+      fontSize: 16,
+      fontWeight: '600',
+    },
+    validationHint: {
+      marginTop: 10,
+      fontSize: 13,
+      color: colors.textTertiary,
+      textAlign: 'center',
+    },
+    fieldHint: {
+      fontSize: 12,
+      color: colors.textTertiary,
+      marginBottom: 8,
+      lineHeight: 16,
+    },
+    toggleMarginTop: {
+      marginBottom: 28,
+    },
+    birthYearInput: {
+      borderWidth: 1,
+      borderColor: colors.border,
+      borderRadius: 12,
+      paddingHorizontal: 16,
+      paddingVertical: 14,
+      fontSize: 15,
+      color: colors.text,
+    },
+    birthYearInputError: {
+      borderColor: colors.danger,
+    },
+    cycleToggleRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      borderWidth: 1,
+      borderColor: colors.border,
+      borderRadius: 12,
+      paddingHorizontal: 16,
+      paddingVertical: 14,
+      marginBottom: 16,
+    },
+    cycleToggleLabel: {
+      fontSize: 15,
+      color: colors.text,
+    },
+    cycleLengthRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      marginBottom: 12,
+    },
+    cycleLengthLabel: {
+      fontSize: 14,
+      color: colors.textSecondary,
+    },
+    cycleStepper: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 12,
+    },
+    cycleStepBtn: {
+      width: 32,
+      height: 32,
+      borderRadius: 8,
+      borderWidth: 1,
+      borderColor: colors.border,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    cycleStepBtnText: {
+      fontSize: 18,
+      fontWeight: '600',
+      color: colors.text,
+      lineHeight: 20,
+    },
+    cycleStepValue: {
+      fontSize: 14,
+      fontWeight: '600',
+      color: colors.text,
+      minWidth: 64,
+      textAlign: 'center',
+    },
+  })
+}
+
 // ── Screen ───────────────────────────────────────────────────────────────────
 
 export default function ProgramSettingsScreen() {
+  const { colors } = useTheme()
+  const styles = useMemo(() => buildStyles(colors), [colors])
   const { user } = useAuth()
   const params = useLocalSearchParams<{ lifts?: string; estimatedStart?: string }>()
   const usingEstimatedStart = params.estimatedStart === '1'
@@ -432,186 +620,3 @@ export default function ProgramSettingsScreen() {
     </ScrollView>
   )
 }
-
-// ── Styles ───────────────────────────────────────────────────────────────────
-
-const styles = StyleSheet.create({
-  scrollView: {
-    flex: 1,
-    backgroundColor: colors.bgSurface,
-  },
-  container: {
-    paddingHorizontal: 24,
-    paddingTop: 64,
-    paddingBottom: 48,
-  },
-  title: {
-    fontSize: 28,
-    fontWeight: '700',
-    color: colors.text,
-    marginBottom: 8,
-  },
-  subtitle: {
-    fontSize: 15,
-    color: colors.textSecondary,
-    marginBottom: 40,
-    lineHeight: 22,
-  },
-  label: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: colors.textSecondary,
-    marginBottom: 10,
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-  },
-  toggle: {
-    flexDirection: 'row',
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 12,
-    overflow: 'hidden',
-    marginBottom: 28,
-  },
-  toggleButton: {
-    flex: 1,
-    paddingVertical: 12,
-    alignItems: 'center',
-    backgroundColor: colors.bgSurface,
-  },
-  toggleButtonFirst: {
-    // no extra style needed; border-radius handled by overflow on parent
-  },
-  toggleButtonLast: {
-    // no extra style needed
-  },
-  toggleButtonBorderRight: {
-    borderRightWidth: 1,
-    borderRightColor: colors.border,
-  },
-  toggleButtonActive: {
-    backgroundColor: colors.primary,
-  },
-  toggleButtonText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: colors.textSecondary,
-  },
-  toggleButtonTextActive: {
-    color: colors.textInverse,
-  },
-  dateRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-    marginBottom: 12,
-  },
-  dateText: {
-    fontSize: 15,
-    color: colors.text,
-  },
-  changeLink: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: colors.primary,
-  },
-  primaryButton: {
-    backgroundColor: colors.primary,
-    borderRadius: 12,
-    paddingVertical: 16,
-    alignItems: 'center',
-    marginTop: 16,
-  },
-  primaryButtonDisabled: {
-    opacity: 0.45,
-  },
-  primaryButtonText: {
-    color: colors.textInverse,
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  validationHint: {
-    marginTop: 10,
-    fontSize: 13,
-    color: colors.textTertiary,
-    textAlign: 'center',
-  },
-  fieldHint: {
-    fontSize: 12,
-    color: colors.textTertiary,
-    marginBottom: 8,
-    lineHeight: 16,
-  },
-  toggleMarginTop: {
-    marginBottom: 28,
-  },
-  birthYearInput: {
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-    fontSize: 15,
-    color: colors.text,
-  },
-  birthYearInputError: {
-    borderColor: colors.danger,
-  },
-  cycleToggleRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-    marginBottom: 16,
-  },
-  cycleToggleLabel: {
-    fontSize: 15,
-    color: colors.text,
-  },
-  cycleLengthRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: 12,
-  },
-  cycleLengthLabel: {
-    fontSize: 14,
-    color: colors.textSecondary,
-  },
-  cycleStepper: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-  },
-  cycleStepBtn: {
-    width: 32,
-    height: 32,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: colors.border,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  cycleStepBtnText: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: colors.text,
-    lineHeight: 20,
-  },
-  cycleStepValue: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: colors.text,
-    minWidth: 64,
-    textAlign: 'center',
-  },
-})

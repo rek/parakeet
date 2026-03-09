@@ -1,5 +1,7 @@
+import { useMemo } from 'react'
 import { StyleSheet, Text, TouchableOpacity } from 'react-native'
-import { colors, radii, spacing, typography } from '../../theme'
+import { radii, spacing, typography } from '../../theme'
+import { useTheme } from '../../theme/ThemeContext'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -11,6 +13,25 @@ interface StreakPillProps {
 // ── Component ─────────────────────────────────────────────────────────────────
 
 export function StreakPill({ currentStreak, onPress }: StreakPillProps) {
+  const { colors } = useTheme()
+
+  const styles = useMemo(() => StyleSheet.create({
+    pill: {
+      backgroundColor: colors.secondaryMuted,
+      borderRadius: radii.full,
+      borderWidth: 1,
+      borderColor: colors.secondary,
+      paddingHorizontal: spacing[3],
+      paddingVertical: spacing[1],
+      alignSelf: 'flex-start',
+    },
+    text: {
+      fontSize: typography.sizes.sm,
+      fontWeight: typography.weights.bold,
+      color: colors.secondary,
+    },
+  }), [colors])
+
   if (currentStreak < 1) return null
 
   return (
@@ -24,22 +45,3 @@ export function StreakPill({ currentStreak, onPress }: StreakPillProps) {
     </TouchableOpacity>
   )
 }
-
-// ── Styles ────────────────────────────────────────────────────────────────────
-
-const styles = StyleSheet.create({
-  pill: {
-    backgroundColor: colors.secondaryMuted,
-    borderRadius: radii.full,
-    borderWidth: 1,
-    borderColor: colors.secondary,
-    paddingHorizontal: spacing[3],
-    paddingVertical: spacing[1],
-    alignSelf: 'flex-start',
-  },
-  text: {
-    fontSize: typography.sizes.sm,
-    fontWeight: typography.weights.bold,
-    color: colors.secondary,
-  },
-})

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import {
   ScrollView,
   StyleSheet,
@@ -9,7 +9,8 @@ import {
 } from 'react-native';
 import { estimateOneRepMax_Epley } from '@parakeet/training-engine';
 import { router } from 'expo-router';
-import { colors } from '../../../theme';
+import type { ColorScheme } from '../../../theme';
+import { useTheme } from '../../../theme/ThemeContext';
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -40,6 +41,132 @@ const LIFT_LABELS: Record<LiftKey, string> = {
 };
 
 const LIFT_ORDER: LiftKey[] = ['squat', 'bench', 'deadlift'];
+
+// ── Styles ────────────────────────────────────────────────────────────────────
+
+function buildStyles(colors: ColorScheme) {
+  return StyleSheet.create({
+    scrollView: {
+      flex: 1,
+      backgroundColor: colors.bgSurface,
+    },
+    container: {
+      paddingHorizontal: 24,
+      paddingTop: 64,
+      paddingBottom: 48,
+    },
+    title: {
+      fontSize: 28,
+      fontWeight: '700',
+      color: colors.text,
+      marginBottom: 8,
+    },
+    subtitle: {
+      fontSize: 15,
+      color: colors.textSecondary,
+      marginBottom: 32,
+      lineHeight: 22,
+    },
+    warningBanner: {
+      backgroundColor: colors.warningMuted,
+      borderWidth: 1,
+      borderColor: colors.warning,
+      borderRadius: 10,
+      paddingVertical: 12,
+      paddingHorizontal: 16,
+      marginBottom: 24,
+    },
+    warningText: {
+      fontSize: 13,
+      color: colors.warning,
+      lineHeight: 18,
+    },
+    section: {
+      marginBottom: 32,
+    },
+    sectionTitle: {
+      fontSize: 17,
+      fontWeight: '600',
+      color: colors.text,
+      marginBottom: 12,
+    },
+    toggle: {
+      flexDirection: 'row',
+      marginBottom: 12,
+      borderWidth: 1,
+      borderColor: colors.border,
+      borderRadius: 12,
+      overflow: 'hidden',
+    },
+    toggleButton: {
+      flex: 1,
+      paddingVertical: 10,
+      alignItems: 'center',
+      backgroundColor: colors.bgSurface,
+    },
+    toggleButtonLeft: {
+      borderRightWidth: 1,
+      borderRightColor: colors.border,
+    },
+    toggleButtonRight: {},
+    toggleButtonActive: {
+      backgroundColor: colors.primary,
+    },
+    toggleButtonText: {
+      fontSize: 14,
+      fontWeight: '600',
+      color: colors.textSecondary,
+    },
+    toggleButtonTextActive: {
+      color: colors.textInverse,
+    },
+    input: {
+      borderWidth: 1,
+      borderColor: colors.border,
+      borderRadius: 12,
+      paddingHorizontal: 16,
+      paddingVertical: 14,
+      fontSize: 16,
+      color: colors.text,
+      marginBottom: 10,
+    },
+    estimated: {
+      fontSize: 13,
+      color: colors.textSecondary,
+      marginTop: 2,
+    },
+    estimatedValue: {
+      fontWeight: '600',
+      color: colors.text,
+    },
+    primaryButton: {
+      backgroundColor: colors.primary,
+      borderRadius: 12,
+      paddingVertical: 16,
+      alignItems: 'center',
+      marginTop: 8,
+    },
+    primaryButtonDisabled: {
+      opacity: 0.4,
+    },
+    primaryButtonText: {
+      color: colors.textInverse,
+      fontSize: 16,
+      fontWeight: '600',
+    },
+    defaultsLink: {
+      marginTop: 20,
+      alignItems: 'center',
+    },
+    defaultsLinkText: {
+      fontSize: 14,
+      color: colors.textSecondary,
+      textDecorationLine: 'underline',
+    },
+  });
+}
+
+type Styles = ReturnType<typeof buildStyles>;
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -90,9 +217,11 @@ interface LiftSectionProps {
   liftKey: LiftKey;
   state: LiftState;
   onChange: (key: LiftKey, update: Partial<LiftState>) => void;
+  styles: Styles;
+  textTertiaryColor: string;
 }
 
-function LiftSection({ liftKey, state, onChange }: LiftSectionProps) {
+function LiftSection({ liftKey, state, onChange, styles, textTertiaryColor }: LiftSectionProps) {
   const estimated = computeEstimated1RM(state);
 
   return (
@@ -143,7 +272,7 @@ function LiftSection({ liftKey, state, onChange }: LiftSectionProps) {
       <TextInput
         style={styles.input}
         placeholder="0.0 kg"
-        placeholderTextColor={colors.textTertiary}
+        placeholderTextColor={textTertiaryColor}
         value={state.weightKg}
         onChangeText={(v) => onChange(liftKey, { weightKg: v })}
         keyboardType="decimal-pad"
@@ -155,7 +284,7 @@ function LiftSection({ liftKey, state, onChange }: LiftSectionProps) {
         <TextInput
           style={styles.input}
           placeholder="3"
-          placeholderTextColor={colors.textTertiary}
+          placeholderTextColor={textTertiaryColor}
           value={state.reps}
           onChangeText={(v) => onChange(liftKey, { reps: v })}
           keyboardType="number-pad"
@@ -175,6 +304,8 @@ function LiftSection({ liftKey, state, onChange }: LiftSectionProps) {
 // ── Screen ───────────────────────────────────────────────────────────────────
 
 export default function LiftMaxesScreen() {
+  const { colors } = useTheme();
+  const styles = useMemo(() => buildStyles(colors), [colors]);
   const [lifts, setLifts] = useState<Record<LiftKey, LiftState>>({
     squat: makeDefaultState(),
     bench: makeDefaultState(),
@@ -225,6 +356,8 @@ export default function LiftMaxesScreen() {
           liftKey={key}
           state={lifts[key]}
           onChange={handleChange}
+          styles={styles}
+          textTertiaryColor={colors.textTertiary}
         />
       ))}
 
@@ -250,125 +383,3 @@ export default function LiftMaxesScreen() {
     </ScrollView>
   );
 }
-
-// ── Styles ───────────────────────────────────────────────────────────────────
-
-const styles = StyleSheet.create({
-  scrollView: {
-    flex: 1,
-    backgroundColor: colors.bgSurface,
-  },
-  container: {
-    paddingHorizontal: 24,
-    paddingTop: 64,
-    paddingBottom: 48,
-  },
-  title: {
-    fontSize: 28,
-    fontWeight: '700',
-    color: colors.text,
-    marginBottom: 8,
-  },
-  subtitle: {
-    fontSize: 15,
-    color: colors.textSecondary,
-    marginBottom: 32,
-    lineHeight: 22,
-  },
-  warningBanner: {
-    backgroundColor: colors.warningMuted,
-    borderWidth: 1,
-    borderColor: colors.warning,
-    borderRadius: 10,
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    marginBottom: 24,
-  },
-  warningText: {
-    fontSize: 13,
-    color: colors.warning,
-    lineHeight: 18,
-  },
-  section: {
-    marginBottom: 32,
-  },
-  sectionTitle: {
-    fontSize: 17,
-    fontWeight: '600',
-    color: colors.text,
-    marginBottom: 12,
-  },
-  toggle: {
-    flexDirection: 'row',
-    marginBottom: 12,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 12,
-    overflow: 'hidden',
-  },
-  toggleButton: {
-    flex: 1,
-    paddingVertical: 10,
-    alignItems: 'center',
-    backgroundColor: colors.bgSurface,
-  },
-  toggleButtonLeft: {
-    borderRightWidth: 1,
-    borderRightColor: colors.border,
-  },
-  toggleButtonRight: {},
-  toggleButtonActive: {
-    backgroundColor: colors.primary,
-  },
-  toggleButtonText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: colors.textSecondary,
-  },
-  toggleButtonTextActive: {
-    color: colors.textInverse,
-  },
-  input: {
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-    fontSize: 16,
-    color: colors.text,
-    marginBottom: 10,
-  },
-  estimated: {
-    fontSize: 13,
-    color: colors.textSecondary,
-    marginTop: 2,
-  },
-  estimatedValue: {
-    fontWeight: '600',
-    color: colors.text,
-  },
-  primaryButton: {
-    backgroundColor: colors.primary,
-    borderRadius: 12,
-    paddingVertical: 16,
-    alignItems: 'center',
-    marginTop: 8,
-  },
-  primaryButtonDisabled: {
-    opacity: 0.4,
-  },
-  primaryButtonText: {
-    color: colors.textInverse,
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  defaultsLink: {
-    marginTop: 20,
-    alignItems: 'center',
-  },
-  defaultsLinkText: {
-    fontSize: 14,
-    color: colors.textSecondary,
-    textDecorationLine: 'underline',
-  },
-});

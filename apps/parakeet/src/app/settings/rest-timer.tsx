@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
   ScrollView,
@@ -22,7 +22,8 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { BackLink } from '../../components/navigation/BackLink';
-import { colors } from '../../theme';
+import type { ColorScheme } from '../../theme';
+import { useTheme } from '../../theme/ThemeContext';
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
@@ -61,6 +62,171 @@ function clampSeconds(minutes: number, seconds: number): number {
   return Math.min(MAX_SECONDS, Math.max(MIN_SECONDS, minutes * 60 + seconds));
 }
 
+// ── Styles ────────────────────────────────────────────────────────────────────
+
+function buildStyles(colors: ColorScheme) {
+  return StyleSheet.create({
+    safeArea: { flex: 1, backgroundColor: colors.bgSurface },
+    header: {
+      paddingHorizontal: 20,
+      paddingTop: 8,
+      paddingBottom: 16,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.bgMuted,
+    },
+    title: { fontSize: 24, fontWeight: '800', color: colors.text },
+    loading: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+    scroll: { flex: 1 },
+    content: { paddingHorizontal: 20, paddingBottom: 48, paddingTop: 20 },
+
+    sectionHeader: {
+      fontSize: 13,
+      fontWeight: '600',
+      color: colors.textSecondary,
+      textTransform: 'uppercase',
+      letterSpacing: 0.8,
+      marginBottom: 8,
+    },
+    sectionHeaderSpaced: { marginTop: 24 },
+
+    card: {
+      borderWidth: 1,
+      borderColor: colors.border,
+      borderRadius: 12,
+      backgroundColor: colors.bgSurface,
+      overflow: 'hidden',
+    },
+
+    separator: {
+      height: 1,
+      backgroundColor: colors.bgMuted,
+      marginHorizontal: 16,
+    },
+
+    // Duration row
+    durationRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingHorizontal: 16,
+      paddingVertical: 14,
+    },
+    durationRowLabel: { flex: 1, fontSize: 16, color: colors.text },
+    durationRowRight: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+    durationValue: { fontSize: 15, color: colors.primary, fontWeight: '500' },
+    chevron: {
+      fontSize: 20,
+      color: colors.textTertiary,
+      lineHeight: 22,
+      transform: [{ rotate: '90deg' }],
+    },
+    chevronOpen: { transform: [{ rotate: '270deg' }] },
+
+    // Inline picker
+    pickerContainer: {
+      flexDirection: 'row',
+      backgroundColor: colors.bgSurface,
+      borderTopWidth: 1,
+      borderTopColor: colors.bgMuted,
+      paddingHorizontal: 16,
+      paddingVertical: 12,
+      gap: 12,
+      alignItems: 'flex-start',
+    },
+    pickerColumn: { alignItems: 'center', gap: 4 },
+    pickerColumnLabel: {
+      fontSize: 11,
+      fontWeight: '600',
+      color: colors.textTertiary,
+      textTransform: 'uppercase',
+    },
+    pickerScroll: { maxHeight: 152 },
+    pickerScrollContent: { gap: 2 },
+    pickerItem: {
+      paddingVertical: 8,
+      paddingHorizontal: 16,
+      borderRadius: 8,
+    },
+    pickerItemSelected: { backgroundColor: colors.primaryMuted },
+    pickerItemText: {
+      fontSize: 17,
+      fontWeight: '500',
+      color: colors.textSecondary,
+      textAlign: 'center',
+    },
+    pickerItemTextSelected: { color: colors.primary, fontWeight: '700' },
+
+    pickerConfirmColumn: {
+      flex: 1,
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: 8,
+      paddingTop: 24,
+    },
+    pickerPreviewText: { fontSize: 18, fontWeight: '700', color: colors.text },
+    pickerWarning: { fontSize: 11, color: colors.danger },
+    confirmButton: {
+      backgroundColor: colors.primary,
+      borderRadius: 8,
+      paddingHorizontal: 24,
+      paddingVertical: 9,
+    },
+    confirmButtonText: {
+      fontSize: 14,
+      fontWeight: '600',
+      color: colors.textInverse,
+    },
+
+    // Reset button
+    resetButton: {
+      marginTop: 10,
+      alignSelf: 'flex-end',
+      paddingVertical: 8,
+      paddingHorizontal: 14,
+      borderRadius: 8,
+      borderWidth: 1,
+      borderColor: colors.border,
+      minWidth: 64,
+      alignItems: 'center',
+    },
+    resetButtonDisabled: { opacity: 0.4 },
+    resetButtonText: {
+      fontSize: 13,
+      color: colors.textSecondary,
+      fontWeight: '500',
+    },
+
+    // Toggle rows
+    toggleRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingHorizontal: 16,
+      paddingVertical: 14,
+    },
+    toggleLabel: { flex: 1, fontSize: 16, color: colors.text },
+    toggleSubtext: {
+      fontSize: 12,
+      color: colors.textTertiary,
+      paddingHorizontal: 16,
+      paddingBottom: 12,
+      marginTop: -8,
+    },
+
+    // Preview card
+    preview: {
+      marginTop: 24,
+      backgroundColor: colors.successMuted,
+      borderRadius: 10,
+      padding: 14,
+      gap: 4,
+    },
+    previewTitle: { fontSize: 11, color: colors.success, fontWeight: '600' },
+    previewBody: { fontSize: 14, color: colors.success, lineHeight: 20 },
+    previewTime: { fontWeight: '700' },
+  });
+}
+
+type Styles = ReturnType<typeof buildStyles>;
+
 // ── Duration row with inline picker ──────────────────────────────────────────
 
 interface DurationRowProps {
@@ -70,6 +236,8 @@ interface DurationRowProps {
   isSaving: boolean;
   onToggle: () => void;
   onConfirm: (seconds: number) => void;
+  styles: Styles;
+  primaryColor: string;
 }
 
 function DurationRow({
@@ -79,6 +247,8 @@ function DurationRow({
   isSaving,
   onToggle,
   onConfirm,
+  styles,
+  primaryColor,
 }: DurationRowProps) {
   const currentMinutes = Math.floor(totalSeconds / 60);
   const currentSeconds = totalSeconds % 60;
@@ -106,7 +276,7 @@ function DurationRow({
         <Text style={styles.durationRowLabel}>{label}</Text>
         <View style={styles.durationRowRight}>
           {isSaving ? (
-            <ActivityIndicator size="small" color={colors.primary} />
+            <ActivityIndicator size="small" color={primaryColor} />
           ) : (
             <Text style={styles.durationValue}>
               {formatDuration(totalSeconds)}
@@ -208,9 +378,10 @@ function DurationRow({
 
 interface PreviewCardProps {
   heavySeconds: number;
+  styles: Styles;
 }
 
-function PreviewCard({ heavySeconds }: PreviewCardProps) {
+function PreviewCard({ heavySeconds, styles }: PreviewCardProps) {
   const minutes = Math.floor(heavySeconds / 60);
   const seconds = heavySeconds % 60;
   const timeStr = `${minutes}:${String(seconds).padStart(2, '0')}`;
@@ -230,6 +401,8 @@ function PreviewCard({ heavySeconds }: PreviewCardProps) {
 // ── Screen ────────────────────────────────────────────────────────────────────
 
 export default function RestTimerSettingsScreen() {
+  const { colors } = useTheme();
+  const styles = useMemo(() => buildStyles(colors), [colors]);
   const { user } = useAuth();
   const queryClient = useQueryClient();
 
@@ -363,6 +536,8 @@ export default function RestTimerSettingsScreen() {
                   isSaving={!!saving[row.type]}
                   onToggle={() => toggleRow(row.type)}
                   onConfirm={(s) => handleConfirm(row.type, s)}
+                  styles={styles}
+                  primaryColor={colors.primary}
                 />
                 {i < INTENSITY_ROWS.length - 1 && (
                   <View style={styles.separator} />
@@ -399,6 +574,8 @@ export default function RestTimerSettingsScreen() {
               isSaving={!!saving['auxiliary']}
               onToggle={() => toggleRow('auxiliary')}
               onConfirm={(s) => handleConfirm('auxiliary', s)}
+              styles={styles}
+              primaryColor={colors.primary}
             />
           </View>
 
@@ -459,170 +636,9 @@ export default function RestTimerSettingsScreen() {
           </View>
 
           {/* ── Live preview ───────────────────────────────────────────────── */}
-          <PreviewCard heavySeconds={getSeconds('heavy')} />
+          <PreviewCard heavySeconds={getSeconds('heavy')} styles={styles} />
         </ScrollView>
       )}
     </SafeAreaView>
   );
 }
-
-// ── Styles ────────────────────────────────────────────────────────────────────
-
-const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: colors.bgSurface },
-  header: {
-    paddingHorizontal: 20,
-    paddingTop: 8,
-    paddingBottom: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.bgMuted,
-  },
-  title: { fontSize: 24, fontWeight: '800', color: colors.text },
-  loading: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  scroll: { flex: 1 },
-  content: { paddingHorizontal: 20, paddingBottom: 48, paddingTop: 20 },
-
-  sectionHeader: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: colors.textSecondary,
-    textTransform: 'uppercase',
-    letterSpacing: 0.8,
-    marginBottom: 8,
-  },
-  sectionHeaderSpaced: { marginTop: 24 },
-
-  card: {
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 12,
-    backgroundColor: colors.bgSurface,
-    overflow: 'hidden',
-  },
-
-  separator: {
-    height: 1,
-    backgroundColor: colors.bgMuted,
-    marginHorizontal: 16,
-  },
-
-  // Duration row
-  durationRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-  },
-  durationRowLabel: { flex: 1, fontSize: 16, color: colors.text },
-  durationRowRight: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  durationValue: { fontSize: 15, color: colors.primary, fontWeight: '500' },
-  chevron: {
-    fontSize: 20,
-    color: colors.textTertiary,
-    lineHeight: 22,
-    transform: [{ rotate: '90deg' }],
-  },
-  chevronOpen: { transform: [{ rotate: '270deg' }] },
-
-  // Inline picker
-  pickerContainer: {
-    flexDirection: 'row',
-    backgroundColor: colors.bgSurface,
-    borderTopWidth: 1,
-    borderTopColor: colors.bgMuted,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    gap: 12,
-    alignItems: 'flex-start',
-  },
-  pickerColumn: { alignItems: 'center', gap: 4 },
-  pickerColumnLabel: {
-    fontSize: 11,
-    fontWeight: '600',
-    color: colors.textTertiary,
-    textTransform: 'uppercase',
-  },
-  pickerScroll: { maxHeight: 152 },
-  pickerScrollContent: { gap: 2 },
-  pickerItem: {
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-    borderRadius: 8,
-  },
-  pickerItemSelected: { backgroundColor: colors.primaryMuted },
-  pickerItemText: {
-    fontSize: 17,
-    fontWeight: '500',
-    color: colors.textSecondary,
-    textAlign: 'center',
-  },
-  pickerItemTextSelected: { color: colors.primary, fontWeight: '700' },
-
-  pickerConfirmColumn: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    paddingTop: 24,
-  },
-  pickerPreviewText: { fontSize: 18, fontWeight: '700', color: colors.text },
-  pickerWarning: { fontSize: 11, color: colors.danger },
-  confirmButton: {
-    backgroundColor: colors.primary,
-    borderRadius: 8,
-    paddingHorizontal: 24,
-    paddingVertical: 9,
-  },
-  confirmButtonText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: colors.textInverse,
-  },
-
-  // Reset button
-  resetButton: {
-    marginTop: 10,
-    alignSelf: 'flex-end',
-    paddingVertical: 8,
-    paddingHorizontal: 14,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: colors.border,
-    minWidth: 64,
-    alignItems: 'center',
-  },
-  resetButtonDisabled: { opacity: 0.4 },
-  resetButtonText: {
-    fontSize: 13,
-    color: colors.textSecondary,
-    fontWeight: '500',
-  },
-
-  // Toggle rows
-  toggleRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-  },
-  toggleLabel: { flex: 1, fontSize: 16, color: colors.text },
-  toggleSubtext: {
-    fontSize: 12,
-    color: colors.textTertiary,
-    paddingHorizontal: 16,
-    paddingBottom: 12,
-    marginTop: -8,
-  },
-
-  // Preview card
-  preview: {
-    marginTop: 24,
-    backgroundColor: colors.successMuted,
-    borderRadius: 10,
-    padding: 14,
-    gap: 4,
-  },
-  previewTitle: { fontSize: 11, color: colors.success, fontWeight: '600' },
-  previewBody: { fontSize: 14, color: colors.success, lineHeight: 20 },
-  previewTime: { fontWeight: '700' },
-});

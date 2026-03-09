@@ -16,12 +16,186 @@ import { qk } from '@platform/query'
 import { generateProgram, nextDateForWeekday, DEFAULT_TRAINING_DAYS } from '@parakeet/training-engine'
 import { captureException } from '@platform/utils/captureException'
 import { capitalize } from '@shared/utils/string'
-import { colors, spacing, typography, radii } from '../../../theme'
+import type { ColorScheme } from '../../../theme'
+import { spacing, typography, radii } from '../../../theme'
+import { useTheme } from '../../../theme/ThemeContext'
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
 const DAY_LABELS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
 const MONTH_SHORT = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+
+// ── Styles ────────────────────────────────────────────────────────────────────
+
+function buildStyles(colors: ColorScheme) {
+  return StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: colors.bgSurface,
+    },
+    scroll: {
+      flex: 1,
+    },
+    scrollContent: {
+      paddingBottom: 16,
+    },
+    header: {
+      paddingHorizontal: 24,
+      paddingTop: 64,
+      paddingBottom: 24,
+    },
+    title: {
+      fontSize: 28,
+      fontWeight: '700',
+      color: colors.text,
+      marginBottom: 6,
+    },
+    subtitle: {
+      fontSize: 15,
+      color: colors.textSecondary,
+    },
+    sectionLabel: {
+      fontSize: 13,
+      fontWeight: '600',
+      color: colors.textTertiary,
+      textTransform: 'uppercase',
+      letterSpacing: 0.5,
+      paddingHorizontal: 24,
+      marginBottom: 12,
+    },
+    dayRow: {
+      flexDirection: 'row',
+      paddingHorizontal: 24,
+      gap: spacing[2],
+      marginBottom: 8,
+      flexWrap: 'wrap',
+    },
+    dayChip: {
+      paddingHorizontal: spacing[3],
+      paddingVertical: spacing[2],
+      borderRadius: radii.full,
+      borderWidth: 1.5,
+      borderColor: colors.border,
+      backgroundColor: colors.bgSurface,
+    },
+    dayChipActive: {
+      borderColor: colors.primary,
+      backgroundColor: colors.primaryMuted,
+    },
+    dayChipText: {
+      fontSize: typography.sizes.sm,
+      fontWeight: typography.weights.semibold,
+      color: colors.textSecondary,
+    },
+    dayChipTextActive: {
+      color: colors.primary,
+    },
+    dayHint: {
+      fontSize: typography.sizes.xs,
+      color: colors.textTertiary,
+      paddingHorizontal: 24,
+      marginBottom: 4,
+    },
+    sessionsScroll: {
+      flexGrow: 0,
+      marginBottom: 32,
+    },
+    sessionsRow: {
+      paddingHorizontal: 24,
+      paddingBottom: 4,
+    },
+    sessionCard: {
+      width: 160,
+      backgroundColor: colors.bgSurface,
+      borderWidth: 1,
+      borderColor: colors.border,
+      borderRadius: 12,
+      padding: 14,
+      marginRight: 12,
+    },
+    cardDay: {
+      fontSize: 13,
+      fontWeight: '700',
+      color: colors.primary,
+      marginBottom: 6,
+    },
+    cardLift: {
+      fontSize: 16,
+      fontWeight: '700',
+      color: colors.text,
+      marginBottom: 2,
+    },
+    cardIntensity: {
+      fontSize: 12,
+      color: colors.textSecondary,
+      marginBottom: 10,
+      textTransform: 'capitalize',
+    },
+    cardDivider: {
+      height: 1,
+      backgroundColor: colors.bgMuted,
+      marginBottom: 10,
+    },
+    cardNote: {
+      fontSize: 11,
+      color: colors.border,
+      fontStyle: 'italic',
+      lineHeight: 15,
+    },
+    footer: {
+      paddingHorizontal: 24,
+      paddingTop: 16,
+      paddingBottom: 48,
+      borderTopWidth: 1,
+      borderTopColor: colors.borderMuted,
+      backgroundColor: colors.bgSurface,
+    },
+    primaryButton: {
+      backgroundColor: colors.primary,
+      borderRadius: 12,
+      paddingVertical: 16,
+      alignItems: 'center',
+      marginBottom: 16,
+    },
+    primaryButtonDisabled: {
+      opacity: 0.45,
+    },
+    primaryButtonText: {
+      color: colors.textInverse,
+      fontSize: 16,
+      fontWeight: '600',
+    },
+    editLink: {
+      alignItems: 'center',
+      paddingVertical: 8,
+    },
+    editLinkText: {
+      fontSize: 14,
+      color: colors.textSecondary,
+      textDecorationLine: 'underline',
+    },
+    unendingPreview: {
+      marginHorizontal: 24,
+      marginBottom: 32,
+      backgroundColor: colors.bgSurface,
+      borderWidth: 1,
+      borderColor: colors.border,
+      borderRadius: 12,
+      padding: 16,
+    },
+    unendingPreviewTitle: {
+      fontSize: 15,
+      fontWeight: '600',
+      color: colors.text,
+      marginBottom: 8,
+    },
+    unendingPreviewNote: {
+      fontSize: 13,
+      color: colors.textSecondary,
+      lineHeight: 19,
+    },
+  })
+}
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -32,6 +206,8 @@ function formatSessionDate(date: Date): string {
 // ── Screen ───────────────────────────────────────────────────────────────────
 
 export default function ReviewScreen() {
+  const { colors } = useTheme()
+  const styles = useMemo(() => buildStyles(colors), [colors])
   const { user } = useAuth()
   const queryClient = useQueryClient()
   const { totalWeeks: tw, trainingDaysPerWeek: tdpw, programMode: pm } = useLocalSearchParams<{
@@ -208,173 +384,3 @@ export default function ReviewScreen() {
     </View>
   )
 }
-
-// ── Styles ────────────────────────────────────────────────────────────────────
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.bgSurface,
-  },
-  scroll: {
-    flex: 1,
-  },
-  scrollContent: {
-    paddingBottom: 16,
-  },
-  header: {
-    paddingHorizontal: 24,
-    paddingTop: 64,
-    paddingBottom: 24,
-  },
-  title: {
-    fontSize: 28,
-    fontWeight: '700',
-    color: colors.text,
-    marginBottom: 6,
-  },
-  subtitle: {
-    fontSize: 15,
-    color: colors.textSecondary,
-  },
-  sectionLabel: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: colors.textTertiary,
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-    paddingHorizontal: 24,
-    marginBottom: 12,
-  },
-  dayRow: {
-    flexDirection: 'row',
-    paddingHorizontal: 24,
-    gap: spacing[2],
-    marginBottom: 8,
-    flexWrap: 'wrap',
-  },
-  dayChip: {
-    paddingHorizontal: spacing[3],
-    paddingVertical: spacing[2],
-    borderRadius: radii.full,
-    borderWidth: 1.5,
-    borderColor: colors.border,
-    backgroundColor: colors.bgSurface,
-  },
-  dayChipActive: {
-    borderColor: colors.primary,
-    backgroundColor: colors.primaryMuted,
-  },
-  dayChipText: {
-    fontSize: typography.sizes.sm,
-    fontWeight: typography.weights.semibold,
-    color: colors.textSecondary,
-  },
-  dayChipTextActive: {
-    color: colors.primary,
-  },
-  dayHint: {
-    fontSize: typography.sizes.xs,
-    color: colors.textTertiary,
-    paddingHorizontal: 24,
-    marginBottom: 4,
-  },
-  sessionsScroll: {
-    flexGrow: 0,
-    marginBottom: 32,
-  },
-  sessionsRow: {
-    paddingHorizontal: 24,
-    paddingBottom: 4,
-  },
-  sessionCard: {
-    width: 160,
-    backgroundColor: colors.bgSurface,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 12,
-    padding: 14,
-    marginRight: 12,
-  },
-  cardDay: {
-    fontSize: 13,
-    fontWeight: '700',
-    color: colors.primary,
-    marginBottom: 6,
-  },
-  cardLift: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: colors.text,
-    marginBottom: 2,
-  },
-  cardIntensity: {
-    fontSize: 12,
-    color: colors.textSecondary,
-    marginBottom: 10,
-    textTransform: 'capitalize',
-  },
-  cardDivider: {
-    height: 1,
-    backgroundColor: colors.bgMuted,
-    marginBottom: 10,
-  },
-  cardNote: {
-    fontSize: 11,
-    color: colors.border,
-    fontStyle: 'italic',
-    lineHeight: 15,
-  },
-  footer: {
-    paddingHorizontal: 24,
-    paddingTop: 16,
-    paddingBottom: 48,
-    borderTopWidth: 1,
-    borderTopColor: colors.borderMuted,
-    backgroundColor: colors.bgSurface,
-  },
-  primaryButton: {
-    backgroundColor: colors.primary,
-    borderRadius: 12,
-    paddingVertical: 16,
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  primaryButtonDisabled: {
-    opacity: 0.45,
-  },
-  primaryButtonText: {
-    color: colors.textInverse,
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  editLink: {
-    alignItems: 'center',
-    paddingVertical: 8,
-  },
-  editLinkText: {
-    fontSize: 14,
-    color: colors.textSecondary,
-    textDecorationLine: 'underline',
-  },
-  unendingPreview: {
-    marginHorizontal: 24,
-    marginBottom: 32,
-    backgroundColor: colors.bgSurface,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 12,
-    padding: 16,
-  },
-  unendingPreviewTitle: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: colors.text,
-    marginBottom: 8,
-  },
-  unendingPreviewNote: {
-    fontSize: 13,
-    color: colors.textSecondary,
-    lineHeight: 19,
-  },
-})

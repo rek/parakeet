@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   Platform,
   ScrollView,
@@ -30,11 +30,218 @@ import { useQueryClient } from '@tanstack/react-query';
 import { router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { BackLink } from '../../components/navigation/BackLink';
-import { colors, radii, spacing, typography } from '../../theme';
+import type { ColorScheme } from '../../theme';
+import { radii, spacing, typography } from '../../theme';
+import { useTheme } from '../../theme/ThemeContext';
+
+// ── Styles ────────────────────────────────────────────────────────────────────
+
+function buildStyles(colors: ColorScheme) {
+  return StyleSheet.create({
+    safeArea: { flex: 1, backgroundColor: colors.bg },
+    scrollView: { flex: 1 },
+    container: {
+      paddingHorizontal: spacing[5],
+      paddingTop: spacing[4],
+      paddingBottom: spacing[12],
+      gap: spacing[3],
+    },
+    headerRow: {
+      marginBottom: spacing[2],
+    },
+    title: {
+      fontSize: typography.sizes['2xl'],
+      fontWeight: typography.weights.black,
+      color: colors.text,
+      marginTop: spacing[2],
+      letterSpacing: typography.letterSpacing.tight,
+    },
+    card: {
+      backgroundColor: colors.bgSurface,
+      borderRadius: radii.lg,
+      borderWidth: 1,
+      borderColor: colors.border,
+      padding: spacing[4],
+    },
+    cardDisabled: {
+      opacity: 0.5,
+    },
+    toggleRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      gap: spacing[3],
+    },
+    toggleTextWrap: { flex: 1 },
+    toggleLabel: {
+      fontSize: typography.sizes.base,
+      fontWeight: typography.weights.semibold,
+      color: colors.text,
+      marginBottom: spacing[0.5],
+    },
+    toggleHint: {
+      fontSize: typography.sizes.sm,
+      color: colors.textSecondary,
+      lineHeight: 18,
+    },
+    fieldLabel: {
+      fontSize: typography.sizes.sm,
+      fontWeight: typography.weights.semibold,
+      color: colors.textSecondary,
+      textTransform: 'uppercase',
+      letterSpacing: typography.letterSpacing.wide,
+      marginBottom: spacing[2],
+    },
+    stepperRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing[4],
+      marginBottom: spacing[3],
+    },
+    stepperBtn: {
+      width: 36,
+      height: 36,
+      borderRadius: radii.md,
+      borderWidth: 1,
+      borderColor: colors.border,
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: colors.bgMuted,
+    },
+    stepperBtnDisabled: { opacity: 0.4 },
+    stepperBtnText: {
+      fontSize: 20,
+      fontWeight: typography.weights.bold,
+      color: colors.text,
+      lineHeight: 22,
+    },
+    stepperValue: {
+      fontSize: typography.sizes.lg,
+      fontWeight: typography.weights.bold,
+      color: colors.text,
+      minWidth: 80,
+      textAlign: 'center',
+    },
+    divider: {
+      height: 1,
+      backgroundColor: colors.borderMuted,
+      marginBottom: spacing[3],
+    },
+    dateRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+    },
+    dateText: {
+      fontSize: typography.sizes.base,
+      color: colors.text,
+    },
+    updateLink: {
+      fontSize: typography.sizes.sm,
+      fontWeight: typography.weights.semibold,
+      color: colors.primary,
+    },
+    textDisabled: { color: colors.textTertiary },
+    phaseCurrentLabel: {
+      fontSize: typography.sizes.base,
+      fontWeight: typography.weights.bold,
+      marginBottom: spacing[1],
+    },
+    phaseNextPeriod: {
+      fontSize: typography.sizes.sm,
+    },
+    calendarTitle: {
+      fontSize: typography.sizes.sm,
+      fontWeight: typography.weights.bold,
+      color: colors.textSecondary,
+      textTransform: 'uppercase',
+      letterSpacing: typography.letterSpacing.wide,
+      marginBottom: spacing[3],
+    },
+    calendarGrid: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: 4,
+      marginBottom: spacing[3],
+    },
+    calendarDay: {
+      width: 28,
+      height: 28,
+      borderRadius: 6,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    calendarDayCurrent: {
+      borderWidth: 2,
+      borderColor: colors.text,
+    },
+    calendarDayText: {
+      fontSize: 10,
+      fontWeight: typography.weights.semibold,
+    },
+    calendarDayTextCurrent: {
+      fontWeight: typography.weights.black,
+    },
+    legend: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: spacing[2],
+    },
+    legendItem: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing[1],
+    },
+    legendDot: {
+      width: 10,
+      height: 10,
+      borderRadius: radii.full,
+    },
+    legendLabel: {
+      fontSize: typography.sizes.xs,
+      color: colors.textSecondary,
+    },
+    doneBtn: {
+      marginTop: spacing[2],
+      alignItems: 'center',
+      paddingVertical: spacing[3],
+      borderRadius: radii.md,
+      backgroundColor: colors.primary,
+    },
+    doneBtnText: {
+      fontSize: typography.sizes.base,
+      fontWeight: typography.weights.semibold,
+      color: colors.textInverse,
+    },
+    historyRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      paddingVertical: spacing[2],
+      borderBottomWidth: 1,
+      borderBottomColor: colors.borderMuted,
+    },
+    historyDate: {
+      fontSize: typography.sizes.base,
+      color: colors.text,
+    },
+    deleteLink: {
+      fontSize: typography.sizes.sm,
+      fontWeight: typography.weights.semibold,
+      color: colors.danger,
+    },
+    emptyHint: {
+      fontSize: typography.sizes.sm,
+      color: colors.textSecondary,
+    },
+  });
+}
 
 // ── Screen ────────────────────────────────────────────────────────────────────
 
 export default function CycleTrackingScreen() {
+  const { colors } = useTheme();
+  const styles = useMemo(() => buildStyles(colors), [colors]);
   const { user } = useAuth();
   const queryClient = useQueryClient();
 
@@ -360,204 +567,3 @@ export default function CycleTrackingScreen() {
     </SafeAreaView>
   );
 }
-
-// ── Styles ────────────────────────────────────────────────────────────────────
-
-const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: colors.bg },
-  scrollView: { flex: 1 },
-  container: {
-    paddingHorizontal: spacing[5],
-    paddingTop: spacing[4],
-    paddingBottom: spacing[12],
-    gap: spacing[3],
-  },
-  headerRow: {
-    marginBottom: spacing[2],
-  },
-  title: {
-    fontSize: typography.sizes['2xl'],
-    fontWeight: typography.weights.black,
-    color: colors.text,
-    marginTop: spacing[2],
-    letterSpacing: typography.letterSpacing.tight,
-  },
-  card: {
-    backgroundColor: colors.bgSurface,
-    borderRadius: radii.lg,
-    borderWidth: 1,
-    borderColor: colors.border,
-    padding: spacing[4],
-  },
-  cardDisabled: {
-    opacity: 0.5,
-  },
-  toggleRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: spacing[3],
-  },
-  toggleTextWrap: { flex: 1 },
-  toggleLabel: {
-    fontSize: typography.sizes.base,
-    fontWeight: typography.weights.semibold,
-    color: colors.text,
-    marginBottom: spacing[0.5],
-  },
-  toggleHint: {
-    fontSize: typography.sizes.sm,
-    color: colors.textSecondary,
-    lineHeight: 18,
-  },
-  fieldLabel: {
-    fontSize: typography.sizes.sm,
-    fontWeight: typography.weights.semibold,
-    color: colors.textSecondary,
-    textTransform: 'uppercase',
-    letterSpacing: typography.letterSpacing.wide,
-    marginBottom: spacing[2],
-  },
-  stepperRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing[4],
-    marginBottom: spacing[3],
-  },
-  stepperBtn: {
-    width: 36,
-    height: 36,
-    borderRadius: radii.md,
-    borderWidth: 1,
-    borderColor: colors.border,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: colors.bgMuted,
-  },
-  stepperBtnDisabled: { opacity: 0.4 },
-  stepperBtnText: {
-    fontSize: 20,
-    fontWeight: typography.weights.bold,
-    color: colors.text,
-    lineHeight: 22,
-  },
-  stepperValue: {
-    fontSize: typography.sizes.lg,
-    fontWeight: typography.weights.bold,
-    color: colors.text,
-    minWidth: 80,
-    textAlign: 'center',
-  },
-  divider: {
-    height: 1,
-    backgroundColor: colors.borderMuted,
-    marginBottom: spacing[3],
-  },
-  dateRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  dateText: {
-    fontSize: typography.sizes.base,
-    color: colors.text,
-  },
-  updateLink: {
-    fontSize: typography.sizes.sm,
-    fontWeight: typography.weights.semibold,
-    color: colors.primary,
-  },
-  textDisabled: { color: colors.textTertiary },
-  phaseCurrentLabel: {
-    fontSize: typography.sizes.base,
-    fontWeight: typography.weights.bold,
-    marginBottom: spacing[1],
-  },
-  phaseNextPeriod: {
-    fontSize: typography.sizes.sm,
-  },
-  calendarTitle: {
-    fontSize: typography.sizes.sm,
-    fontWeight: typography.weights.bold,
-    color: colors.textSecondary,
-    textTransform: 'uppercase',
-    letterSpacing: typography.letterSpacing.wide,
-    marginBottom: spacing[3],
-  },
-  calendarGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 4,
-    marginBottom: spacing[3],
-  },
-  calendarDay: {
-    width: 28,
-    height: 28,
-    borderRadius: 6,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  calendarDayCurrent: {
-    borderWidth: 2,
-    borderColor: colors.text,
-  },
-  calendarDayText: {
-    fontSize: 10,
-    fontWeight: typography.weights.semibold,
-  },
-  calendarDayTextCurrent: {
-    fontWeight: typography.weights.black,
-  },
-  legend: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: spacing[2],
-  },
-  legendItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing[1],
-  },
-  legendDot: {
-    width: 10,
-    height: 10,
-    borderRadius: radii.full,
-  },
-  legendLabel: {
-    fontSize: typography.sizes.xs,
-    color: colors.textSecondary,
-  },
-  doneBtn: {
-    marginTop: spacing[2],
-    alignItems: 'center',
-    paddingVertical: spacing[3],
-    borderRadius: radii.md,
-    backgroundColor: colors.primary,
-  },
-  doneBtnText: {
-    fontSize: typography.sizes.base,
-    fontWeight: typography.weights.semibold,
-    color: colors.textInverse,
-  },
-  historyRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingVertical: spacing[2],
-    borderBottomWidth: 1,
-    borderBottomColor: colors.borderMuted,
-  },
-  historyDate: {
-    fontSize: typography.sizes.base,
-    color: colors.text,
-  },
-  deleteLink: {
-    fontSize: typography.sizes.sm,
-    fontWeight: typography.weights.semibold,
-    color: colors.danger,
-  },
-  emptyHint: {
-    fontSize: typography.sizes.sm,
-    color: colors.textSecondary,
-  },
-});

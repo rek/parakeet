@@ -1,10 +1,12 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Modal, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { calculatePlates, PLATE_COLORS } from '@parakeet/training-engine'
 import type { PlateKg } from '@parakeet/training-engine'
 import { getDisabledPlates, setDisabledPlates } from '@modules/settings'
-import { colors, spacing, typography } from '../../theme'
+import { spacing, typography } from '../../theme'
+import type { ColorScheme } from '../../theme'
+import { useTheme } from '../../theme/ThemeContext'
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
@@ -22,11 +24,196 @@ interface Props {
   targetKg: number
 }
 
+function buildStyles(colors: ColorScheme) {
+  return StyleSheet.create({
+    overlay: {
+      flex: 1,
+      justifyContent: 'flex-end',
+      backgroundColor: colors.overlayLight,
+    },
+    sheet: {
+      backgroundColor: colors.bgSurface,
+      borderTopLeftRadius: 20,
+      borderTopRightRadius: 20,
+      paddingBottom: 40,
+      maxHeight: '65%',
+    },
+    handle: {
+      width: 36,
+      height: 4,
+      borderRadius: 2,
+      backgroundColor: colors.border,
+      alignSelf: 'center',
+      marginTop: spacing[2],
+      marginBottom: spacing[1],
+    },
+    header: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingHorizontal: spacing[4],
+      paddingVertical: spacing[3],
+      borderBottomWidth: 1,
+      borderBottomColor: colors.border,
+    },
+    title: {
+      flex: 1,
+      fontSize: typography.sizes.base,
+      fontWeight: typography.weights.bold,
+      color: colors.text,
+    },
+    closeBtn: {
+      fontSize: 16,
+      color: colors.textSecondary,
+      fontWeight: typography.weights.bold,
+    },
+    toggleRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingHorizontal: spacing[4],
+      paddingVertical: spacing[3],
+      borderBottomWidth: 1,
+      borderBottomColor: colors.border,
+    },
+    toggleLabel: {
+      flex: 1,
+      fontSize: typography.sizes.sm,
+      color: colors.textSecondary,
+    },
+    toggleGroup: {
+      flexDirection: 'row',
+      gap: spacing[2],
+    },
+    toggleBtn: {
+      paddingHorizontal: spacing[3],
+      paddingVertical: spacing[1],
+      borderRadius: 6,
+      borderWidth: 1,
+      borderColor: colors.border,
+      backgroundColor: colors.bgMuted,
+    },
+    toggleBtnActive: {
+      borderColor: colors.primary,
+      backgroundColor: colors.primaryMuted,
+    },
+    toggleBtnText: {
+      fontSize: typography.sizes.sm,
+      color: colors.textSecondary,
+      fontWeight: typography.weights.medium,
+    },
+    toggleBtnTextActive: {
+      color: colors.primary,
+    },
+    plateToggleSection: {
+      paddingHorizontal: spacing[4],
+      paddingVertical: spacing[3],
+      borderBottomWidth: 1,
+      borderBottomColor: colors.border,
+    },
+    plateToggleLabel: {
+      fontSize: typography.sizes.sm,
+      color: colors.textSecondary,
+      marginBottom: spacing[2],
+    },
+    plateToggleRow: {
+      flexDirection: 'row',
+      gap: spacing[2],
+      flexWrap: 'wrap',
+    },
+    plateDot: {
+      width: 40,
+      height: 40,
+      borderRadius: 20,
+      borderWidth: 2,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    plateDotLabel: {
+      fontSize: typography.sizes.xs,
+      fontWeight: typography.weights.bold,
+      color: colors.textSecondary,
+    },
+    plateDotLabelEnabled: {
+      color: colors.textInverse,
+    },
+    content: {
+      paddingHorizontal: spacing[4],
+      paddingVertical: spacing[3],
+    },
+    summaryRow: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      paddingVertical: spacing[2],
+      borderBottomWidth: 1,
+      borderBottomColor: colors.border,
+    },
+    summaryRowLast: {
+      marginBottom: spacing[4],
+    },
+    summaryLabel: {
+      fontSize: typography.sizes.sm,
+      color: colors.textSecondary,
+    },
+    summaryValue: {
+      fontSize: typography.sizes.sm,
+      fontWeight: typography.weights.semibold,
+      color: colors.text,
+    },
+    sectionLabel: {
+      fontSize: typography.sizes.xs,
+      fontWeight: typography.weights.semibold,
+      color: colors.textTertiary,
+      letterSpacing: 1,
+      marginBottom: spacing[2],
+    },
+    plateRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingVertical: spacing[2],
+      borderBottomWidth: 1,
+      borderBottomColor: colors.borderMuted,
+    },
+    plateKg: {
+      flex: 1,
+      fontSize: typography.sizes.md,
+      fontWeight: typography.weights.bold,
+      color: colors.text,
+    },
+    plateCount: {
+      fontSize: typography.sizes.base,
+      color: colors.textSecondary,
+    },
+    remainderBox: {
+      marginTop: spacing[4],
+      padding: spacing[3],
+      borderRadius: 8,
+      backgroundColor: colors.warningMuted,
+      borderWidth: 1,
+      borderColor: colors.warning,
+    },
+    remainderText: {
+      fontSize: typography.sizes.sm,
+      color: colors.warning,
+    },
+    center: {
+      alignItems: 'center',
+      paddingVertical: spacing[6],
+    },
+    emptyText: {
+      fontSize: typography.sizes.sm,
+      color: colors.textSecondary,
+      textAlign: 'center',
+    },
+  })
+}
+
 // ── Component ─────────────────────────────────────────────────────────────────
 
 export function PlateCalculatorSheet({ visible, onClose, targetKg }: Props) {
+  const { colors } = useTheme()
   const [barKg, setBarKg] = useState<BarKg>(20)
   const [disabledPlates, setDisabledPlatesState] = useState<PlateKg[]>([])
+
+  const styles = useMemo(() => buildStyles(colors), [colors])
 
   useEffect(() => {
     AsyncStorage.getItem(STORAGE_KEY).then((stored) => {
@@ -159,185 +346,3 @@ export function PlateCalculatorSheet({ visible, onClose, targetKg }: Props) {
     </Modal>
   )
 }
-
-// ── Styles ────────────────────────────────────────────────────────────────────
-
-const styles = StyleSheet.create({
-  overlay: {
-    flex: 1,
-    justifyContent: 'flex-end',
-    backgroundColor: colors.overlayLight,
-  },
-  sheet: {
-    backgroundColor: colors.bgSurface,
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    paddingBottom: 40,
-    maxHeight: '65%',
-  },
-  handle: {
-    width: 36,
-    height: 4,
-    borderRadius: 2,
-    backgroundColor: colors.border,
-    alignSelf: 'center',
-    marginTop: spacing[2],
-    marginBottom: spacing[1],
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: spacing[4],
-    paddingVertical: spacing[3],
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
-  },
-  title: {
-    flex: 1,
-    fontSize: typography.sizes.base,
-    fontWeight: typography.weights.bold,
-    color: colors.text,
-  },
-  closeBtn: {
-    fontSize: 16,
-    color: colors.textSecondary,
-    fontWeight: typography.weights.bold,
-  },
-  toggleRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: spacing[4],
-    paddingVertical: spacing[3],
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
-  },
-  toggleLabel: {
-    flex: 1,
-    fontSize: typography.sizes.sm,
-    color: colors.textSecondary,
-  },
-  toggleGroup: {
-    flexDirection: 'row',
-    gap: spacing[2],
-  },
-  toggleBtn: {
-    paddingHorizontal: spacing[3],
-    paddingVertical: spacing[1],
-    borderRadius: 6,
-    borderWidth: 1,
-    borderColor: colors.border,
-    backgroundColor: colors.bgMuted,
-  },
-  toggleBtnActive: {
-    borderColor: colors.primary,
-    backgroundColor: colors.primaryMuted,
-  },
-  toggleBtnText: {
-    fontSize: typography.sizes.sm,
-    color: colors.textSecondary,
-    fontWeight: typography.weights.medium,
-  },
-  toggleBtnTextActive: {
-    color: colors.primary,
-  },
-  plateToggleSection: {
-    paddingHorizontal: spacing[4],
-    paddingVertical: spacing[3],
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
-  },
-  plateToggleLabel: {
-    fontSize: typography.sizes.sm,
-    color: colors.textSecondary,
-    marginBottom: spacing[2],
-  },
-  plateToggleRow: {
-    flexDirection: 'row',
-    gap: spacing[2],
-    flexWrap: 'wrap',
-  },
-  plateDot: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    borderWidth: 2,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  plateDotLabel: {
-    fontSize: typography.sizes.xs,
-    fontWeight: typography.weights.bold,
-    color: colors.textSecondary,
-  },
-  plateDotLabelEnabled: {
-    color: colors.textInverse,
-  },
-  content: {
-    paddingHorizontal: spacing[4],
-    paddingVertical: spacing[3],
-  },
-  summaryRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    paddingVertical: spacing[2],
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
-  },
-  summaryRowLast: {
-    marginBottom: spacing[4],
-  },
-  summaryLabel: {
-    fontSize: typography.sizes.sm,
-    color: colors.textSecondary,
-  },
-  summaryValue: {
-    fontSize: typography.sizes.sm,
-    fontWeight: typography.weights.semibold,
-    color: colors.text,
-  },
-  sectionLabel: {
-    fontSize: typography.sizes.xs,
-    fontWeight: typography.weights.semibold,
-    color: colors.textTertiary,
-    letterSpacing: 1,
-    marginBottom: spacing[2],
-  },
-  plateRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: spacing[2],
-    borderBottomWidth: 1,
-    borderBottomColor: colors.borderMuted,
-  },
-  plateKg: {
-    flex: 1,
-    fontSize: typography.sizes.md,
-    fontWeight: typography.weights.bold,
-    color: colors.text,
-  },
-  plateCount: {
-    fontSize: typography.sizes.base,
-    color: colors.textSecondary,
-  },
-  remainderBox: {
-    marginTop: spacing[4],
-    padding: spacing[3],
-    borderRadius: 8,
-    backgroundColor: colors.warningMuted,
-    borderWidth: 1,
-    borderColor: colors.warning,
-  },
-  remainderText: {
-    fontSize: typography.sizes.sm,
-    color: colors.warning,
-  },
-  center: {
-    alignItems: 'center',
-    paddingVertical: spacing[6],
-  },
-  emptyText: {
-    fontSize: typography.sizes.sm,
-    color: colors.textSecondary,
-    textAlign: 'center',
-  },
-})

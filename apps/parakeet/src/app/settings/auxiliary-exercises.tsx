@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
   ScrollView,
@@ -20,7 +20,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { BackLink } from '../../components/navigation/BackLink';
 import { AddExerciseModal } from '../../components/session/AddExerciseModal';
 import { MuscleChips } from '../../components/settings/MuscleChips';
-import { colors } from '../../theme';
+import type { ColorScheme } from '../../theme';
+import { useTheme } from '../../theme/ThemeContext';
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
@@ -32,15 +33,161 @@ const LIFT_LABELS: Record<Lift, string> = {
   deadlift: 'Deadlift',
 };
 
+// ── Styles ─────────────────────────────────────────────────────────────────────
+
+function buildStyles(colors: ColorScheme) {
+  return StyleSheet.create({
+    safeArea: { flex: 1, backgroundColor: colors.bgSurface },
+    header: {
+      paddingHorizontal: 20,
+      paddingTop: 8,
+      paddingBottom: 16,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.bgMuted,
+      gap: 2,
+    },
+    title: { fontSize: 24, fontWeight: '800', color: colors.text },
+    subtitle: { fontSize: 12, color: colors.textTertiary, lineHeight: 16 },
+    loading: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+    scroll: { flex: 1 },
+    content: { paddingBottom: 48 },
+
+    liftSection: {
+      paddingHorizontal: 20,
+      paddingVertical: 20,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.bgMuted,
+      gap: 10,
+    },
+    liftHeader: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+    },
+    liftTitle: { fontSize: 18, fontWeight: '700', color: colors.text },
+    sectionLabel: {
+      fontSize: 12,
+      fontWeight: '600',
+      color: colors.textSecondary,
+      textTransform: 'uppercase',
+      letterSpacing: 0.5,
+    },
+    saveBtn: {
+      borderRadius: 8,
+      paddingHorizontal: 12,
+      paddingVertical: 6,
+      borderWidth: 1,
+      borderColor: colors.border,
+      backgroundColor: colors.bgSurface,
+    },
+    saveBtnDirty: {
+      backgroundColor: colors.primary,
+      borderColor: colors.primary,
+    },
+    saveBtnDisabled: { opacity: 0.4 },
+    saveBtnText: { fontSize: 13, fontWeight: '600', color: colors.textSecondary },
+    saveBtnTextDirty: { color: colors.textInverse },
+
+    poolList: { gap: 4 },
+    emptyPool: {
+      paddingVertical: 12,
+      alignItems: 'center',
+    },
+    emptyPoolText: {
+      fontSize: 13,
+      color: colors.textTertiary,
+      fontStyle: 'italic',
+    },
+    poolItem: {
+      flexDirection: 'row',
+      alignItems: 'flex-start',
+      paddingVertical: 8,
+      paddingHorizontal: 10,
+      backgroundColor: colors.bgSurface,
+      borderRadius: 8,
+      gap: 8,
+    },
+    poolPosition: {
+      fontSize: 12,
+      color: colors.textTertiary,
+      width: 20,
+      textAlign: 'right',
+      paddingTop: 2,
+    },
+    poolExerciseCol: { flex: 1, gap: 4 },
+    poolExerciseRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+    poolExercise: { fontSize: 14, color: colors.text, flexShrink: 1 },
+    bwBadge: {
+      backgroundColor: colors.bgMuted,
+      borderRadius: 4,
+      paddingHorizontal: 5,
+      paddingVertical: 1,
+    },
+    bwBadgeText: { fontSize: 10, color: colors.textSecondary, fontWeight: '600' },
+    poolActions: { flexDirection: 'row', gap: 4, paddingTop: 2 },
+    reorderBtn: {
+      width: 28,
+      height: 28,
+      borderRadius: 6,
+      borderWidth: 1,
+      borderColor: colors.border,
+      backgroundColor: colors.bgSurface,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    reorderBtnDisabled: { opacity: 0.25 },
+    reorderBtnText: { fontSize: 14, color: colors.textSecondary },
+    removeBtn: {
+      width: 28,
+      height: 28,
+      borderRadius: 6,
+      backgroundColor: colors.dangerMuted,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    removeBtnText: { fontSize: 16, color: colors.danger, lineHeight: 20 },
+
+    addBtn: {
+      backgroundColor: colors.primary,
+      borderRadius: 8,
+      paddingVertical: 10,
+      alignItems: 'center',
+      marginTop: 4,
+    },
+    addBtnText: { fontSize: 14, fontWeight: '600', color: colors.textInverse },
+
+    blockAssignmentsLink: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      marginHorizontal: 20,
+      marginTop: 16,
+      marginBottom: 4,
+      paddingHorizontal: 14,
+      paddingVertical: 12,
+      backgroundColor: colors.bgSurface,
+      borderRadius: 10,
+      borderWidth: 1,
+      borderColor: colors.border,
+    },
+    blockAssignmentsLinkText: { fontSize: 15, fontWeight: '600', color: colors.text },
+    blockAssignmentsChevron: { fontSize: 20, color: colors.textSecondary },
+  })
+}
+
 // ── Pool list ─────────────────────────────────────────────────────────────────
+
+type Styles = ReturnType<typeof buildStyles>;
 
 interface PoolListProps {
   pool: string[];
   onReorder: (pool: string[]) => void;
   onRemove: (i: number) => void;
+  styles: Styles;
+  primaryColor: string;
 }
 
-function PoolList({ pool, onReorder, onRemove }: PoolListProps) {
+function PoolList({ pool, onReorder, onRemove, styles }: PoolListProps) {
   function moveUp(i: number) {
     if (i === 0) return;
     const next = [...pool];
@@ -127,6 +274,8 @@ interface LiftSectionProps {
   isDirtyPool: boolean;
   onPoolChange: (pool: string[]) => void;
   onSavePool: () => void;
+  styles: Styles;
+  primaryColor: string;
 }
 
 function LiftSection({
@@ -136,6 +285,8 @@ function LiftSection({
   isDirtyPool,
   onPoolChange,
   onSavePool,
+  styles,
+  primaryColor,
 }: LiftSectionProps) {
   const [pickerVisible, setPickerVisible] = useState(false);
 
@@ -163,7 +314,7 @@ function LiftSection({
           activeOpacity={0.8}
         >
           {isSavingPool ? (
-            <ActivityIndicator color={colors.textInverse} size="small" />
+            <ActivityIndicator color={primaryColor} size="small" />
           ) : (
             <Text style={[styles.saveBtnText, isDirtyPool && styles.saveBtnTextDirty]}>
               {isDirtyPool ? 'Save Pool ·' : 'Save Pool'}
@@ -177,6 +328,8 @@ function LiftSection({
         pool={pool}
         onReorder={onPoolChange}
         onRemove={removeExercise}
+        styles={styles}
+        primaryColor={primaryColor}
       />
 
       <TouchableOpacity
@@ -202,6 +355,8 @@ function LiftSection({
 type Pools = Record<Lift, string[]>;
 
 export default function AuxiliaryExercisesScreen() {
+  const { colors } = useTheme();
+  const styles = useMemo(() => buildStyles(colors), [colors]);
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const [pools, setPools] = useState<Pools | null>(null);
@@ -274,6 +429,8 @@ export default function AuxiliaryExercisesScreen() {
                 setDirtyPools((prev) => ({ ...prev, [lift]: true }));
               }}
               onSavePool={() => handleSavePool(lift)}
+              styles={styles}
+              primaryColor={colors.primary}
             />
           ))}
         </ScrollView>
@@ -282,142 +439,3 @@ export default function AuxiliaryExercisesScreen() {
   );
 }
 
-// ── Styles ────────────────────────────────────────────────────────────────────
-
-const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: colors.bgSurface },
-  header: {
-    paddingHorizontal: 20,
-    paddingTop: 8,
-    paddingBottom: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.bgMuted,
-    gap: 2,
-  },
-  title: { fontSize: 24, fontWeight: '800', color: colors.text },
-  subtitle: { fontSize: 12, color: colors.textTertiary, lineHeight: 16 },
-  loading: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  scroll: { flex: 1 },
-  content: { paddingBottom: 48 },
-
-  liftSection: {
-    paddingHorizontal: 20,
-    paddingVertical: 20,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.bgMuted,
-    gap: 10,
-  },
-  liftHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  liftTitle: { fontSize: 18, fontWeight: '700', color: colors.text },
-  sectionLabel: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: colors.textSecondary,
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-  },
-  saveBtn: {
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderWidth: 1,
-    borderColor: colors.border,
-    backgroundColor: colors.bgSurface,
-  },
-  saveBtnDirty: {
-    backgroundColor: colors.primary,
-    borderColor: colors.primary,
-  },
-  saveBtnDisabled: { opacity: 0.4 },
-  saveBtnText: { fontSize: 13, fontWeight: '600', color: colors.textSecondary },
-  saveBtnTextDirty: { color: colors.textInverse },
-
-  poolList: { gap: 4 },
-  emptyPool: {
-    paddingVertical: 12,
-    alignItems: 'center',
-  },
-  emptyPoolText: {
-    fontSize: 13,
-    color: colors.textTertiary,
-    fontStyle: 'italic',
-  },
-  poolItem: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    paddingVertical: 8,
-    paddingHorizontal: 10,
-    backgroundColor: colors.bgSurface,
-    borderRadius: 8,
-    gap: 8,
-  },
-  poolPosition: {
-    fontSize: 12,
-    color: colors.textTertiary,
-    width: 20,
-    textAlign: 'right',
-    paddingTop: 2,
-  },
-  poolExerciseCol: { flex: 1, gap: 4 },
-  poolExerciseRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  poolExercise: { fontSize: 14, color: colors.text, flexShrink: 1 },
-  bwBadge: {
-    backgroundColor: colors.bgMuted,
-    borderRadius: 4,
-    paddingHorizontal: 5,
-    paddingVertical: 1,
-  },
-  bwBadgeText: { fontSize: 10, color: colors.textSecondary, fontWeight: '600' },
-  poolActions: { flexDirection: 'row', gap: 4, paddingTop: 2 },
-  reorderBtn: {
-    width: 28,
-    height: 28,
-    borderRadius: 6,
-    borderWidth: 1,
-    borderColor: colors.border,
-    backgroundColor: colors.bgSurface,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  reorderBtnDisabled: { opacity: 0.25 },
-  reorderBtnText: { fontSize: 14, color: colors.textSecondary },
-  removeBtn: {
-    width: 28,
-    height: 28,
-    borderRadius: 6,
-    backgroundColor: colors.dangerMuted,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  removeBtnText: { fontSize: 16, color: colors.danger, lineHeight: 20 },
-
-  addBtn: {
-    backgroundColor: colors.primary,
-    borderRadius: 8,
-    paddingVertical: 10,
-    alignItems: 'center',
-    marginTop: 4,
-  },
-  addBtnText: { fontSize: 14, fontWeight: '600', color: colors.textInverse },
-
-  blockAssignmentsLink: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginHorizontal: 20,
-    marginTop: 16,
-    marginBottom: 4,
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-    backgroundColor: colors.bgSurface,
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  blockAssignmentsLinkText: { fontSize: 15, fontWeight: '600', color: colors.text },
-  blockAssignmentsChevron: { fontSize: 20, color: colors.textSecondary },
-});

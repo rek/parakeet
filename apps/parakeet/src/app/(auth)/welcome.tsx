@@ -1,13 +1,115 @@
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
 import * as Linking from 'expo-linking';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, Alert, Platform, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 
 import { captureException } from '@platform/utils/captureException'
 import { signInWithGoogleToken, signInWithMagicLink } from '@modules/auth';
-import { colors, spacing, radii, typography } from '../../theme';
+import { spacing, radii, typography } from '../../theme';
+import type { ColorScheme } from '../../theme';
+import { useTheme } from '../../theme/ThemeContext';
+
+function buildStyles(colors: ColorScheme) {
+  return StyleSheet.create({
+    container: {
+      flex: 1,
+      justifyContent: 'center',
+      paddingHorizontal: spacing[8],
+      backgroundColor: colors.bg,
+    },
+    // Brand
+    brandSection: {
+      alignItems: 'center',
+      marginBottom: spacing[12],
+    },
+    wordmark: {
+      fontSize: typography.sizes['5xl'],
+      fontWeight: typography.weights.black,
+      color: colors.primary,
+      letterSpacing: typography.letterSpacing.widest,
+      textAlign: 'center',
+    },
+    accentBar: {
+      width: 48,
+      height: 3,
+      backgroundColor: colors.secondary,
+      borderRadius: radii.full,
+      marginTop: spacing[2],
+      marginBottom: spacing[3],
+    },
+    tagline: {
+      fontSize: typography.sizes.base,
+      color: colors.textSecondary,
+      fontWeight: typography.weights.medium,
+      letterSpacing: typography.letterSpacing.wider,
+      textTransform: 'uppercase',
+    },
+    // Form
+    formSection: {
+      gap: spacing[3],
+    },
+    googleButton: {
+      backgroundColor: colors.bgSurface,
+      borderWidth: 1,
+      borderColor: colors.border,
+      borderRadius: radii.md,
+      paddingVertical: spacing[4],
+      alignItems: 'center',
+    },
+    googleButtonText: {
+      color: colors.text,
+      fontSize: typography.sizes.base,
+      fontWeight: typography.weights.semibold,
+    },
+    divider: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      marginVertical: spacing[1],
+    },
+    dividerLine: {
+      flex: 1,
+      height: 1,
+      backgroundColor: colors.border,
+    },
+    dividerText: {
+      marginHorizontal: spacing[3],
+      color: colors.textTertiary,
+      fontSize: typography.sizes.sm,
+    },
+    input: {
+      borderWidth: 1,
+      borderColor: colors.border,
+      borderRadius: radii.md,
+      paddingHorizontal: spacing[4],
+      paddingVertical: spacing[4],
+      fontSize: typography.sizes.base,
+      color: colors.text,
+      backgroundColor: colors.bgSurface,
+    },
+    emailButton: {
+      backgroundColor: colors.primary,
+      borderRadius: radii.md,
+      paddingVertical: spacing[4],
+      alignItems: 'center',
+    },
+    buttonDisabled: {
+      opacity: 0.45,
+    },
+    emailButtonText: {
+      color: colors.textInverse,
+      fontSize: typography.sizes.base,
+      fontWeight: typography.weights.bold,
+      letterSpacing: typography.letterSpacing.wide,
+    },
+    spinner: {
+      marginTop: spacing[6],
+    },
+  })
+}
 
 export default function WelcomeScreen() {
+  const { colors } = useTheme();
+  const styles = useMemo(() => buildStyles(colors), [colors]);
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -97,98 +199,3 @@ export default function WelcomeScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: 'center',
-    paddingHorizontal: spacing[8],
-    backgroundColor: colors.bg,
-  },
-  // Brand
-  brandSection: {
-    alignItems: 'center',
-    marginBottom: spacing[12],
-  },
-  wordmark: {
-    fontSize: typography.sizes['5xl'],
-    fontWeight: typography.weights.black,
-    color: colors.primary,
-    letterSpacing: typography.letterSpacing.widest,
-    textAlign: 'center',
-  },
-  accentBar: {
-    width: 48,
-    height: 3,
-    backgroundColor: colors.secondary,
-    borderRadius: radii.full,
-    marginTop: spacing[2],
-    marginBottom: spacing[3],
-  },
-  tagline: {
-    fontSize: typography.sizes.base,
-    color: colors.textSecondary,
-    fontWeight: typography.weights.medium,
-    letterSpacing: typography.letterSpacing.wider,
-    textTransform: 'uppercase',
-  },
-  // Form
-  formSection: {
-    gap: spacing[3],
-  },
-  googleButton: {
-    backgroundColor: colors.bgSurface,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: radii.md,
-    paddingVertical: spacing[4],
-    alignItems: 'center',
-  },
-  googleButtonText: {
-    color: colors.text,
-    fontSize: typography.sizes.base,
-    fontWeight: typography.weights.semibold,
-  },
-  divider: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginVertical: spacing[1],
-  },
-  dividerLine: {
-    flex: 1,
-    height: 1,
-    backgroundColor: colors.border,
-  },
-  dividerText: {
-    marginHorizontal: spacing[3],
-    color: colors.textTertiary,
-    fontSize: typography.sizes.sm,
-  },
-  input: {
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: radii.md,
-    paddingHorizontal: spacing[4],
-    paddingVertical: spacing[4],
-    fontSize: typography.sizes.base,
-    color: colors.text,
-    backgroundColor: colors.bgSurface,
-  },
-  emailButton: {
-    backgroundColor: colors.primary,
-    borderRadius: radii.md,
-    paddingVertical: spacing[4],
-    alignItems: 'center',
-  },
-  buttonDisabled: {
-    opacity: 0.45,
-  },
-  emailButtonText: {
-    color: colors.textInverse,
-    fontSize: typography.sizes.base,
-    fontWeight: typography.weights.bold,
-    letterSpacing: typography.letterSpacing.wide,
-  },
-  spinner: {
-    marginTop: spacing[6],
-  },
-});

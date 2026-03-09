@@ -1,4 +1,4 @@
-import { useCallback } from 'react'
+import { useCallback, useMemo } from 'react'
 import {
   ScrollView,
   StyleSheet,
@@ -18,13 +18,115 @@ import type { FeatureCategory, FeatureId } from '@modules/feature-flags'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { router } from 'expo-router'
 
-import { colors, radii, spacing, typography } from '../../theme'
+import { radii, spacing, typography } from '../../theme'
+import type { ColorScheme } from '../../theme'
+import { useTheme } from '../../theme/ThemeContext'
 
 function isPresetMatch(flags: Record<FeatureId, boolean>, preset: Record<FeatureId, boolean>) {
   return (Object.keys(preset) as FeatureId[]).every((id) => flags[id] === preset[id])
 }
 
+function buildStyles(colors: ColorScheme) {
+  return StyleSheet.create({
+    safeArea: {
+      flex: 1,
+      backgroundColor: colors.bg,
+    },
+    scrollView: {
+      flex: 1,
+    },
+    container: {
+      paddingHorizontal: spacing[6],
+      paddingTop: spacing[4],
+      paddingBottom: spacing[12],
+    },
+    backText: {
+      fontSize: typography.sizes.base,
+      color: colors.primary,
+      marginBottom: spacing[3],
+    },
+    screenTitle: {
+      fontSize: typography.sizes['2xl'],
+      fontWeight: typography.weights.black,
+      color: colors.text,
+      marginBottom: spacing[1],
+      letterSpacing: typography.letterSpacing.tight,
+    },
+    subtitle: {
+      fontSize: typography.sizes.sm,
+      color: colors.textSecondary,
+      marginBottom: spacing[5],
+      lineHeight: 20,
+    },
+    presetRow: {
+      flexDirection: 'row',
+      gap: spacing[2],
+      marginBottom: spacing[6],
+    },
+    presetBtn: {
+      paddingHorizontal: spacing[4],
+      paddingVertical: spacing[2],
+      borderRadius: radii.full,
+      borderWidth: 1,
+      borderColor: colors.border,
+      backgroundColor: colors.bgMuted,
+    },
+    presetBtnActive: {
+      borderColor: colors.primary,
+      backgroundColor: colors.primaryMuted,
+    },
+    presetBtnCustom: {
+      borderColor: colors.textTertiary,
+      backgroundColor: 'transparent',
+    },
+    presetBtnText: {
+      fontSize: typography.sizes.sm,
+      fontWeight: typography.weights.semibold,
+      color: colors.textSecondary,
+    },
+    presetBtnTextActive: {
+      color: colors.primary,
+    },
+    presetBtnTextCustom: {
+      color: colors.textTertiary,
+    },
+    sectionHeader: {
+      fontSize: typography.sizes.xs,
+      fontWeight: typography.weights.bold,
+      color: colors.textTertiary,
+      textTransform: 'uppercase',
+      letterSpacing: typography.letterSpacing.widest,
+      marginBottom: spacing[1],
+      marginTop: spacing[4],
+    },
+    featureRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingVertical: spacing[3],
+      borderBottomWidth: 1,
+      borderBottomColor: colors.borderMuted,
+    },
+    featureInfo: {
+      flex: 1,
+      marginRight: spacing[3],
+    },
+    featureLabel: {
+      fontSize: typography.sizes.base,
+      color: colors.text,
+      fontWeight: typography.weights.medium,
+    },
+    featureDesc: {
+      fontSize: typography.sizes.xs,
+      color: colors.textTertiary,
+      marginTop: 2,
+      lineHeight: 16,
+    },
+  })
+}
+
 export default function FeaturesScreen() {
+  const { colors } = useTheme()
+  const styles = useMemo(() => buildStyles(colors), [colors])
   const { flags, toggle, applyPreset } = useFeatureFlags()
 
   const activePreset = isPresetMatch(flags, SIMPLE_PRESET)
@@ -124,98 +226,3 @@ export default function FeaturesScreen() {
   )
 }
 
-const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: colors.bg,
-  },
-  scrollView: {
-    flex: 1,
-  },
-  container: {
-    paddingHorizontal: spacing[6],
-    paddingTop: spacing[4],
-    paddingBottom: spacing[12],
-  },
-  backText: {
-    fontSize: typography.sizes.base,
-    color: colors.primary,
-    marginBottom: spacing[3],
-  },
-  screenTitle: {
-    fontSize: typography.sizes['2xl'],
-    fontWeight: typography.weights.black,
-    color: colors.text,
-    marginBottom: spacing[1],
-    letterSpacing: typography.letterSpacing.tight,
-  },
-  subtitle: {
-    fontSize: typography.sizes.sm,
-    color: colors.textSecondary,
-    marginBottom: spacing[5],
-    lineHeight: 20,
-  },
-  presetRow: {
-    flexDirection: 'row',
-    gap: spacing[2],
-    marginBottom: spacing[6],
-  },
-  presetBtn: {
-    paddingHorizontal: spacing[4],
-    paddingVertical: spacing[2],
-    borderRadius: radii.full,
-    borderWidth: 1,
-    borderColor: colors.border,
-    backgroundColor: colors.bgMuted,
-  },
-  presetBtnActive: {
-    borderColor: colors.primary,
-    backgroundColor: colors.primaryMuted,
-  },
-  presetBtnCustom: {
-    borderColor: colors.textTertiary,
-    backgroundColor: 'transparent',
-  },
-  presetBtnText: {
-    fontSize: typography.sizes.sm,
-    fontWeight: typography.weights.semibold,
-    color: colors.textSecondary,
-  },
-  presetBtnTextActive: {
-    color: colors.primary,
-  },
-  presetBtnTextCustom: {
-    color: colors.textTertiary,
-  },
-  sectionHeader: {
-    fontSize: typography.sizes.xs,
-    fontWeight: typography.weights.bold,
-    color: colors.textTertiary,
-    textTransform: 'uppercase',
-    letterSpacing: typography.letterSpacing.widest,
-    marginBottom: spacing[1],
-    marginTop: spacing[4],
-  },
-  featureRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: spacing[3],
-    borderBottomWidth: 1,
-    borderBottomColor: colors.borderMuted,
-  },
-  featureInfo: {
-    flex: 1,
-    marginRight: spacing[3],
-  },
-  featureLabel: {
-    fontSize: typography.sizes.base,
-    color: colors.text,
-    fontWeight: typography.weights.medium,
-  },
-  featureDesc: {
-    fontSize: typography.sizes.xs,
-    color: colors.textTertiary,
-    marginTop: 2,
-    lineHeight: 16,
-  },
-})

@@ -1,7 +1,8 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native'
 import { Ionicons } from '@expo/vector-icons'
-import { colors, spacing, radii, typography } from '../../theme'
+import { spacing, radii, typography } from '../../theme'
+import { useTheme } from '../../theme/ThemeContext'
 import { PlateCalculatorSheet } from '../session/PlateCalculatorSheet'
 
 // ── Types ────────────────────────────────────────────────────────────────────
@@ -26,11 +27,149 @@ export interface SetRowProps {
 // ── Component ─────────────────────────────────────────────────────────────────
 
 export function SetRow({ setNumber, plannedWeightKg, plannedReps, rpeValue, exerciseType = 'weighted', onUpdate, onRpePress }: SetRowProps) {
+  const { colors } = useTheme()
   const [weightKg, setWeightKg] = useState(plannedWeightKg)
   const [reps, setReps] = useState(plannedReps)
   const [rpe, setRpe] = useState<number | undefined>(rpeValue)
   const [isCompleted, setIsCompleted] = useState(false)
   const [plateSheetVisible, setPlateSheetVisible] = useState(false)
+
+  const styles = useMemo(() => StyleSheet.create({
+    wrapper: {
+      paddingHorizontal: spacing[4],
+      paddingVertical: spacing[2.5],
+      borderBottomWidth: 1,
+      borderBottomColor: colors.borderMuted,
+    },
+    wrapperCompleted: {
+      backgroundColor: colors.successMuted,
+    },
+    row: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing[1.5],
+    },
+    setLabel: {
+      width: 48,
+      fontSize: typography.sizes.sm,
+      fontWeight: typography.weights.semibold,
+      color: colors.textSecondary,
+    },
+    timedLabel: {
+      flex: 1,
+      fontSize: typography.sizes.sm,
+      color: colors.textTertiary,
+      fontStyle: 'italic',
+    },
+    weightInput: {
+      width: 70,
+      height: 40,
+      borderWidth: 1,
+      borderColor: colors.border,
+      borderRadius: radii.sm,
+      fontSize: typography.sizes.base,
+      color: colors.text,
+      backgroundColor: colors.bgSurface,
+      paddingHorizontal: spacing[1],
+    },
+    unitText: {
+      fontSize: typography.sizes.sm,
+      color: colors.textSecondary,
+    },
+    plateButton: {
+      width: 28,
+      height: 28,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    multiplyText: {
+      fontSize: typography.sizes.base,
+      color: colors.textTertiary,
+    },
+    repsInput: {
+      width: 48,
+      height: 40,
+      borderWidth: 1,
+      borderColor: colors.border,
+      borderRadius: radii.sm,
+      fontSize: typography.sizes.base,
+      color: colors.text,
+      backgroundColor: colors.bgSurface,
+      paddingHorizontal: spacing[1],
+    },
+    inputLocked: {
+      opacity: 0.5,
+      backgroundColor: colors.bgMuted,
+    },
+    rpeChipDisabled: {
+      opacity: 0.35,
+    },
+    rpeChip: {
+      width: 48,
+      height: 40,
+      borderWidth: 1,
+      borderColor: colors.border,
+      borderRadius: radii.sm,
+      backgroundColor: colors.bgSurface,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    rpeChipFilled: {
+      borderColor: colors.primary,
+      backgroundColor: colors.primaryMuted,
+    },
+    rpeChipText: {
+      fontSize: typography.sizes.sm,
+      fontWeight: typography.weights.semibold,
+      color: colors.text,
+    },
+    rpeChipPlaceholder: {
+      color: colors.textTertiary,
+      fontWeight: typography.weights.regular,
+    },
+    checkButton: {
+      width: 44,
+      height: 44,
+      borderRadius: radii.full,
+      borderWidth: 1.5,
+      borderColor: colors.border,
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginLeft: spacing[1],
+    },
+    checkButtonDone: {
+      backgroundColor: colors.primary,
+      borderColor: colors.primary,
+    },
+    checkButtonText: {
+      fontSize: 18,
+      color: colors.textTertiary,
+      fontWeight: typography.weights.bold,
+      lineHeight: 22,
+    },
+    checkButtonTextDone: {
+      color: colors.textInverse,
+    },
+    adjustRow: {
+      flexDirection: 'row',
+      gap: spacing[2],
+      marginTop: spacing[1.5],
+      marginLeft: 54,
+    },
+    adjustButton: {
+      paddingHorizontal: spacing[3],
+      paddingVertical: spacing[1],
+      borderRadius: radii.sm,
+      backgroundColor: colors.bgMuted,
+      borderWidth: 1,
+      borderColor: colors.border,
+    },
+    adjustButtonText: {
+      fontSize: typography.sizes.sm,
+      fontWeight: typography.weights.semibold,
+      color: colors.textSecondary,
+    },
+  }), [colors])
 
   useEffect(() => {
     onUpdate({ weightKg, reps, rpe, isCompleted })
@@ -187,142 +326,3 @@ export function SetRow({ setNumber, plannedWeightKg, plannedReps, rpeValue, exer
     </View>
   )
 }
-
-// ── Styles ───────────────────────────────────────────────────────────────────
-
-const styles = StyleSheet.create({
-  wrapper: {
-    paddingHorizontal: spacing[4],
-    paddingVertical: spacing[2.5],
-    borderBottomWidth: 1,
-    borderBottomColor: colors.borderMuted,
-  },
-  wrapperCompleted: {
-    backgroundColor: colors.successMuted,
-  },
-  row: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing[1.5],
-  },
-  setLabel: {
-    width: 48,
-    fontSize: typography.sizes.sm,
-    fontWeight: typography.weights.semibold,
-    color: colors.textSecondary,
-  },
-  timedLabel: {
-    flex: 1,
-    fontSize: typography.sizes.sm,
-    color: colors.textTertiary,
-    fontStyle: 'italic',
-  },
-  weightInput: {
-    width: 70,
-    height: 40,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: radii.sm,
-    fontSize: typography.sizes.base,
-    color: colors.text,
-    backgroundColor: colors.bgSurface,
-    paddingHorizontal: spacing[1],
-  },
-  unitText: {
-    fontSize: typography.sizes.sm,
-    color: colors.textSecondary,
-  },
-  plateButton: {
-    width: 28,
-    height: 28,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  multiplyText: {
-    fontSize: typography.sizes.base,
-    color: colors.textTertiary,
-  },
-  repsInput: {
-    width: 48,
-    height: 40,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: radii.sm,
-    fontSize: typography.sizes.base,
-    color: colors.text,
-    backgroundColor: colors.bgSurface,
-    paddingHorizontal: spacing[1],
-  },
-  inputLocked: {
-    opacity: 0.5,
-    backgroundColor: colors.bgMuted,
-  },
-  rpeChipDisabled: {
-    opacity: 0.35,
-  },
-  rpeChip: {
-    width: 48,
-    height: 40,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: radii.sm,
-    backgroundColor: colors.bgSurface,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  rpeChipFilled: {
-    borderColor: colors.primary,
-    backgroundColor: colors.primaryMuted,
-  },
-  rpeChipText: {
-    fontSize: typography.sizes.sm,
-    fontWeight: typography.weights.semibold,
-    color: colors.text,
-  },
-  rpeChipPlaceholder: {
-    color: colors.textTertiary,
-    fontWeight: typography.weights.regular,
-  },
-  checkButton: {
-    width: 44,
-    height: 44,
-    borderRadius: radii.full,
-    borderWidth: 1.5,
-    borderColor: colors.border,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginLeft: spacing[1],
-  },
-  checkButtonDone: {
-    backgroundColor: colors.primary,
-    borderColor: colors.primary,
-  },
-  checkButtonText: {
-    fontSize: 18,
-    color: colors.textTertiary,
-    fontWeight: typography.weights.bold,
-    lineHeight: 22,
-  },
-  checkButtonTextDone: {
-    color: colors.textInverse,
-  },
-  adjustRow: {
-    flexDirection: 'row',
-    gap: spacing[2],
-    marginTop: spacing[1.5],
-    marginLeft: 54,
-  },
-  adjustButton: {
-    paddingHorizontal: spacing[3],
-    paddingVertical: spacing[1],
-    borderRadius: radii.sm,
-    backgroundColor: colors.bgMuted,
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  adjustButtonText: {
-    fontSize: typography.sizes.sm,
-    fontWeight: typography.weights.semibold,
-    color: colors.textSecondary,
-  },
-})
