@@ -36,6 +36,10 @@ For details on any item, see the linked spec file.
 - [x] engine-024: Developer suggestions — `cycle-review.ts` extended; `developer_suggestions` table
 - [x] engine-025: Multi-cycle context — `PreviousCycleSummary`, `getPreviousCycleSummaries`
 - [x] engine-026: Unending session generator — `nextUnendingSession()` pure function; lift rotation, block cycling, deload cadence
+- [x] engine-027: JIT volume augmentation — `buildVolumeTopUp()` in `jit-session-generator.ts`; `JITInput.auxiliaryPool`; `AuxiliaryWork.isTopUp`/`.topUpReason`; app caller merges all 3 lift pools; UI shows "Volume top-up" divider + reason subtitle; 18 new tests
+- [x] engine-028: Readiness adjuster — `getReadinessModifier(sleep, energy)` in `adjustments/readiness-adjuster.ts`; applied at JIT Step 2b; 9 tests
+- [x] engine-029: Fatigue predictor — `computePredictedFatigue`, `detectMismatches` in `volume/fatigue-predictor.ts`; mismatch threshold ≥2 levels; sorted by delta; 9 tests
+- [x] engine-030: Cycle phase JIT adjuster — `getCyclePhaseModifier(phase)` in `adjustments/cycle-phase-adjuster.ts`; applied at JIT Step 2c; McNulty 2020 phase lookup; 6 tests
 - [x] engine-bug-001: Exercise type system — `auxiliary/exercise-types.ts`; `ExerciseType` (`weighted`/`bodyweight`/`timed`); `AuxiliaryWork.exerciseType`; timed exercises skip MRV; bodyweight sets `weight_kg: 0`
 
 ---
@@ -74,6 +78,7 @@ For details on any item, see the linked spec file.
 - [x] 20260313000000: `motivational_message_logs` table
 - [x] 20260314000000: `sessions.program_id` nullable; `'import'` added to `intensity_type` constraint
 - [x] 20260308000000: Free-form ad-hoc — `primary_lift` nullable, `intensity_type` nullable, `activity_name` column
+- [x] 20260318000000: `weekly_body_reviews` table (engine-029 data store)
 
 ---
 
@@ -131,6 +136,8 @@ Module/platform/shared architecture is the canonical app structure. Legacy top-l
 - [x] mobile-031: Bar weight setting — 15/20 kg toggle in Settings › Training; propagated to warmup floors, recovery mode floors, WarmupSection display label, PlateCalculatorSheet (unified AsyncStorage key `bar_weight_kg`); engine params default to 20
 - [x] mobile-032: Ad-hoc workouts — `session/adhoc.tsx`; `createAdHocSession` service; JIT adapted for null program_id; "Ad-Hoc Workout" button on Today screen; WorkoutCard shows "Ad-Hoc Workout" label. See `sessions-008-adhoc-workouts.md`.
 - [x] mobile-034: Free-form ad-hoc — `primary_lift`/`intensity_type` nullable; `activity_name` column; ad-hoc screen simplified to name input; session screen handles freeForm param (no JIT/soreness); complete allows aux-only; WorkoutCard routes directly to session screen for free-form
+- [x] mobile-035: Enhanced readiness check-in — expanded soreness.tsx with "Other muscles" collapsible (all 9), sleep/energy pills, cycle phase informational chip; sleep/energy passed to JIT; ratings stored in `soreness_checkins.ratings` JSONB
+- [x] mobile-036: Weekly body review — `session/weekly-review.tsx`; triggered on end-of-week (scheduled) or every 3rd session (unending); mismatch summary with direction arrows and MRV suggestion
 - [x] mobile-033: Feature flags — `modules/feature-flags/` module with registry, AsyncStorage persistence, `useFeatureEnabled` hook. Settings › Features screen with Simple/Full presets and per-feature toggles. 16 toggleable features across 5 categories. Gates applied to Today screen and Settings screen.
 
 ---
@@ -143,6 +150,7 @@ Module/platform/shared architecture is the canonical app structure. Legacy top-l
 - [x] data-004: Athlete profile — `profiles.biological_sex`, `profiles.date_of_birth`; onboarding wired
 - [x] data-005: Cycle tracking — `cycle_tracking` table; `session_logs.cycle_phase`
 - [x] data-006: Rest config — `rest_configs` table; per-lift rest overrides
+- [x] data-007: Weekly body reviews — `weekly_body_reviews` table (migration 20260318000000); `modules/body-review` with `saveWeeklyBodyReview`, `getWeeklyBodyReviews`, `getLatestWeeklyReview`; `checkEndOfWeek` service function in session module
 - [x] data-002 extension: Aux exercise muscle mapping — `getPrimaryMuscles()` in `@modules/program`; `reorderAuxiliaryPool` populates `primary_muscles`; muscle chips in `settings/auxiliary-exercises.tsx`
 - [x] data-002 extension: Aux exercise type UI — `SetRow` `exerciseType` prop; bodyweight hides weight; timed shows mark-complete only
 - [x] data-002 bugfix: Block assignment UX — `SlotPicker` (arrow scroller) replaced with `SlotDropdown` (tap trigger → bottom-sheet modal with search + FlatList); `MuscleChips` extracted to `components/settings/MuscleChips.tsx`
@@ -200,6 +208,19 @@ Module/platform/shared architecture is the canonical app structure. Legacy top-l
 ---
 
 ## Planned / Future
+
+### 4-Day Programs with Overhead Press — [design doc](../design/four-day-ohp.md)
+
+- [ ] types-002: Add `overhead_press` to Lift enum
+- [ ] engine-031: 4-lift cube rotation
+- [ ] engine-032: OHP formula config defaults
+- [ ] engine-033: OHP auxiliary exercise catalog
+- [ ] engine-034: OHP muscle mapping for primary lift volume
+- [ ] mobile-037: Conditional OHP max collection in onboarding
+- [ ] mobile-038: 3/4-day program creation selector
+- [ ] data-008: OHP lifter maxes schema
+
+### Other
 
 - [ ] Sleep data integration (wearables → JIT context)
 - [ ] Health app integration for cycle tracking

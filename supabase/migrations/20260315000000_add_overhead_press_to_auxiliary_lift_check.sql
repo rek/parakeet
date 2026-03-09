@@ -12,4 +12,4 @@ ALTER TABLE "public"."sessions"
 
 ALTER TABLE "public"."sessions"
   ADD CONSTRAINT "sessions_primary_lift_check"
-  CHECK (("primary_lift" = ANY (ARRAY['squat'::"text", 'bench'::"text", 'deadlift'::"text", 'overhead_press'::"text"])));
+  CHECK (("primary_lift" IS NULL OR "primary_lift" = ANY (ARRAY['squat'::"text", 'bench'::"text", 'deadlift'::"text", 'overhead_press'::"text"])));

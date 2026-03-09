@@ -2,7 +2,7 @@
 ALTER TABLE sessions ALTER COLUMN primary_lift DROP NOT NULL;
 ALTER TABLE sessions DROP CONSTRAINT sessions_primary_lift_check;
 ALTER TABLE sessions ADD CONSTRAINT sessions_primary_lift_check
-  CHECK (primary_lift IS NULL OR primary_lift = ANY (ARRAY['squat','bench','deadlift']));
+  CHECK (primary_lift IS NULL OR primary_lift = ANY (ARRAY['squat','bench','deadlift','overhead_press']));
 
 -- Make intensity_type nullable
 ALTER TABLE sessions ALTER COLUMN intensity_type DROP NOT NULL;
