@@ -1,17 +1,5 @@
-import { MUSCLE_GROUPS, MrvMevConfig } from '../types'
 import { computePredictedFatigue, detectMismatches } from './fatigue-predictor'
-
-const CONFIG: MrvMevConfig = {
-  quads:      { mev: 8,  mrv: 20 },
-  hamstrings: { mev: 6,  mrv: 20 },
-  glutes:     { mev: 0,  mrv: 16 },
-  lower_back: { mev: 6,  mrv: 12 },
-  upper_back: { mev: 10, mrv: 22 },
-  chest:      { mev: 8,  mrv: 22 },
-  triceps:    { mev: 6,  mrv: 20 },
-  shoulders:  { mev: 8,  mrv: 20 },
-  biceps:     { mev: 8,  mrv: 20 },
-}
+import { DEFAULT_MRV_MEV_CONFIG_MALE as CONFIG } from './mrv-mev-calculator'
 
 describe('computePredictedFatigue', () => {
   it('below MEV → predicted = 1', () => {

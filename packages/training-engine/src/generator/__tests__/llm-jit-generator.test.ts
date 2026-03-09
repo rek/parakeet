@@ -1,31 +1,14 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { DEFAULT_FORMULA_CONFIG_MALE } from '../../cube/blocks'
-import type { MrvMevConfig, MuscleGroup } from '../../types'
 import type { JITInput } from '../jit-session-generator'
 import type { JITAdjustment } from '@parakeet/shared-types'
+import { DEFAULT_MRV_MEV_CONFIG_MALE } from '../../volume/mrv-mev-calculator'
 import { LLMJITGenerator, applyAdjustment } from '../llm-jit-generator'
 import { enforceHardConstraints } from '../jit-constraints'
 
 // ---------------------------------------------------------------------------
 // Fixtures
 // ---------------------------------------------------------------------------
-
-function makeMrvMev(
-  overrides: Partial<Record<MuscleGroup, { mev: number; mrv: number }>> = {},
-): MrvMevConfig {
-  const defaults: MrvMevConfig = {
-    quads: { mev: 8, mrv: 20 },
-    hamstrings: { mev: 6, mrv: 16 },
-    glutes: { mev: 6, mrv: 18 },
-    lower_back: { mev: 4, mrv: 12 },
-    upper_back: { mev: 8, mrv: 20 },
-    chest: { mev: 8, mrv: 20 },
-    triceps: { mev: 6, mrv: 16 },
-    shoulders: { mev: 6, mrv: 16 },
-    biceps: { mev: 4, mrv: 12 },
-  }
-  return { ...defaults, ...overrides }
-}
 
 function baseInput(overrides: Partial<JITInput> = {}): JITInput {
   return {
@@ -38,7 +21,7 @@ function baseInput(overrides: Partial<JITInput> = {}): JITInput {
     formulaConfig: DEFAULT_FORMULA_CONFIG_MALE,
     sorenessRatings: {},
     weeklyVolumeToDate: {},
-    mrvMevConfig: makeMrvMev(),
+    mrvMevConfig: DEFAULT_MRV_MEV_CONFIG_MALE,
     activeAuxiliaries: ['Pause Squat', 'Box Squat'],
     recentLogs: [],
     activeDisruptions: [],

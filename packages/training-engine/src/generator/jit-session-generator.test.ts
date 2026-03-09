@@ -6,28 +6,8 @@ import {
   DEFAULT_REST_SECONDS_MALE,
 } from '../cube/blocks';
 import { MrvMevConfig, MuscleGroup } from '../types';
+import { DEFAULT_MRV_MEV_CONFIG_MALE } from '../volume/mrv-mev-calculator';
 import { generateJITSession, JITInput } from './jit-session-generator';
-
-// ---------------------------------------------------------------------------
-// Helpers
-// ---------------------------------------------------------------------------
-
-function makeMrvMev(
-  overrides: Partial<Record<MuscleGroup, { mev: number; mrv: number }>> = {}
-): MrvMevConfig {
-  const defaults: MrvMevConfig = {
-    quads: { mev: 8, mrv: 20 },
-    hamstrings: { mev: 6, mrv: 16 },
-    glutes: { mev: 6, mrv: 18 },
-    lower_back: { mev: 4, mrv: 12 },
-    upper_back: { mev: 8, mrv: 20 },
-    chest: { mev: 8, mrv: 20 },
-    triceps: { mev: 6, mrv: 16 },
-    shoulders: { mev: 6, mrv: 16 },
-    biceps: { mev: 4, mrv: 12 },
-  };
-  return { ...defaults, ...overrides };
-}
 
 function baseInput(overrides: Partial<JITInput> = {}): JITInput {
   return {
@@ -40,7 +20,7 @@ function baseInput(overrides: Partial<JITInput> = {}): JITInput {
     formulaConfig: DEFAULT_FORMULA_CONFIG_MALE,
     sorenessRatings: {},
     weeklyVolumeToDate: {},
-    mrvMevConfig: makeMrvMev(),
+    mrvMevConfig: DEFAULT_MRV_MEV_CONFIG_MALE,
     activeAuxiliaries: ['Pause Squat', 'Box Squat'],
     recentLogs: [],
     activeDisruptions: [],
@@ -325,7 +305,7 @@ describe('generateJITSession — MRV checks', () => {
         blockNumber: 3,
         intensityType: 'rep',
         weeklyVolumeToDate: { quads: 18 },
-        mrvMevConfig: makeMrvMev({ quads: { mev: 8, mrv: 20 } }),
+        mrvMevConfig: DEFAULT_MRV_MEV_CONFIG_MALE,
       })
     );
     // base = 3 sets, remaining quads = 2, cap to 2
@@ -337,7 +317,7 @@ describe('generateJITSession — MRV checks', () => {
     const out = generateJITSession(
       baseInput({
         weeklyVolumeToDate: { quads: 21 },
-        mrvMevConfig: makeMrvMev({ quads: { mev: 8, mrv: 20 } }),
+        mrvMevConfig: DEFAULT_MRV_MEV_CONFIG_MALE,
       })
     );
     expect(out.skippedMainLift).toBe(true);
@@ -903,27 +883,27 @@ describe('generateJITSession — equipment_unavailable disruption', () => {
 // engine-027: volume top-up
 // ---------------------------------------------------------------------------
 
+// Helper: set all muscles at their MEV except the specified ones, so only
+// those muscles appear as top-up candidates. This prevents other high-deficit
+// muscles from winning the top-2 sort.
+function atMevExcept(
+  config: MrvMevConfig,
+  ...except: MuscleGroup[]
+): Partial<Record<MuscleGroup, number>> {
+  const result: Partial<Record<MuscleGroup, number>> = {};
+  for (const [muscle, { mev }] of Object.entries(config) as [
+    MuscleGroup,
+    { mev: number; mrv: number },
+  ][]) {
+    if (!except.includes(muscle)) result[muscle] = mev;
+  }
+  return result;
+}
+
 describe('generateJITSession — volume top-up (engine-027)', () => {
   // Pool covers hamstrings (Romanian DL → hamstrings 1.0), quads (Leg Press → quads 1.0)
   // and Stiff-Leg DL (hamstrings 1.0) as a fallback for the exclusion test.
   const pool = ['Romanian DL', 'Stiff-Leg DL', 'Leg Press'];
-
-  // Helper: set all muscles at their MEV except the specified ones, so only
-  // those muscles appear as top-up candidates. This prevents other high-deficit
-  // muscles from winning the top-2 sort.
-  function atMevExcept(
-    config: MrvMevConfig,
-    ...except: MuscleGroup[]
-  ): Partial<Record<MuscleGroup, number>> {
-    const result: Partial<Record<MuscleGroup, number>> = {};
-    for (const [muscle, { mev }] of Object.entries(config) as [
-      MuscleGroup,
-      { mev: number; mrv: number },
-    ][]) {
-      if (!except.includes(muscle)) result[muscle] = mev;
-    }
-    return result;
-  }
 
   it('no auxiliaryPool → no top-up exercises appended', () => {
     const out = generateJITSession(baseInput());
@@ -937,12 +917,11 @@ describe('generateJITSession — volume top-up (engine-027)', () => {
 
   it('muscle at/above MEV after main lift → no top-up for that muscle', () => {
     // hamstrings MEV=6; weeklyVol=5; squat contributes 0.5 × 2 sets = floor(1) → projected=6 ≥ 6 → no deficit
-    const mrvMev = makeMrvMev();
     const out = generateJITSession(
       baseInput({
         auxiliaryPool: pool,
-        weeklyVolumeToDate: { ...atMevExcept(mrvMev), hamstrings: 5 },
-        mrvMevConfig: mrvMev,
+        weeklyVolumeToDate: { ...atMevExcept(DEFAULT_MRV_MEV_CONFIG_MALE), hamstrings: 5 },
+        mrvMevConfig: DEFAULT_MRV_MEV_CONFIG_MALE,
       })
     );
     const topUps = out.auxiliaryWork.filter((a) => a.isTopUp);
@@ -953,12 +932,11 @@ describe('generateJITSession — volume top-up (engine-027)', () => {
 
   it('muscle below MEV → top-up exercise appended with isTopUp=true', () => {
     // hamstrings MEV=6; only deficient muscle; Romanian DL targets hamstrings 1.0
-    const mrvMev = makeMrvMev();
     const out = generateJITSession(
       baseInput({
         auxiliaryPool: pool,
-        weeklyVolumeToDate: atMevExcept(mrvMev, 'hamstrings'),
-        mrvMevConfig: mrvMev,
+        weeklyVolumeToDate: atMevExcept(DEFAULT_MRV_MEV_CONFIG_MALE, 'hamstrings'),
+        mrvMevConfig: DEFAULT_MRV_MEV_CONFIG_MALE,
       })
     );
     const topUps = out.auxiliaryWork.filter((a) => a.isTopUp);
@@ -968,7 +946,7 @@ describe('generateJITSession — volume top-up (engine-027)', () => {
   });
 
   it('top-up sets capped at 3', () => {
-    const mrvMev = makeMrvMev({ hamstrings: { mev: 20, mrv: 30 } });
+    const mrvMev = { ...DEFAULT_MRV_MEV_CONFIG_MALE, hamstrings: { mev: 20, mrv: 30 } };
     const out = generateJITSession(
       baseInput({
         auxiliaryPool: pool,
@@ -993,12 +971,13 @@ describe('generateJITSession — volume top-up (engine-027)', () => {
       baseInput({
         auxiliaryPool: broadPool,
         weeklyVolumeToDate: {},
-        mrvMevConfig: makeMrvMev({
+        mrvMevConfig: {
+          ...DEFAULT_MRV_MEV_CONFIG_MALE,
           chest: { mev: 20, mrv: 30 },
           upper_back: { mev: 20, mrv: 30 },
           triceps: { mev: 20, mrv: 30 },
           biceps: { mev: 20, mrv: 30 },
-        }),
+        },
       })
     );
     const topUps = out.auxiliaryWork.filter((a) => a.isTopUp);
@@ -1007,13 +986,12 @@ describe('generateJITSession — volume top-up (engine-027)', () => {
 
   it('excludes exercises already in activeAuxiliaries', () => {
     // Romanian DL is the best hamstring match; make it an active auxiliary
-    const mrvMev = makeMrvMev();
     const out = generateJITSession(
       baseInput({
         auxiliaryPool: pool,
-        weeklyVolumeToDate: atMevExcept(mrvMev, 'hamstrings'),
+        weeklyVolumeToDate: atMevExcept(DEFAULT_MRV_MEV_CONFIG_MALE, 'hamstrings'),
         activeAuxiliaries: ['Romanian DL', 'Box Squat'],
-        mrvMevConfig: mrvMev,
+        mrvMevConfig: DEFAULT_MRV_MEV_CONFIG_MALE,
       })
     );
     const topUps = out.auxiliaryWork.filter((a) => a.isTopUp);
@@ -1027,12 +1005,11 @@ describe('generateJITSession — volume top-up (engine-027)', () => {
   it('no qualifying exercise in pool → no top-up for that muscle', () => {
     // Pool has no exercises targeting hamstrings with contribution >= 1.0
     const noHamstringPool = ['Leg Press', 'Close-Grip Bench'];
-    const mrvMev = makeMrvMev();
     const out = generateJITSession(
       baseInput({
         auxiliaryPool: noHamstringPool,
-        weeklyVolumeToDate: atMevExcept(mrvMev, 'hamstrings'),
-        mrvMevConfig: mrvMev,
+        weeklyVolumeToDate: atMevExcept(DEFAULT_MRV_MEV_CONFIG_MALE, 'hamstrings'),
+        mrvMevConfig: DEFAULT_MRV_MEV_CONFIG_MALE,
       })
     );
     const topUps = out.auxiliaryWork.filter(
@@ -1042,12 +1019,11 @@ describe('generateJITSession — volume top-up (engine-027)', () => {
   });
 
   it('top-up rationale added to output rationale[]', () => {
-    const mrvMev = makeMrvMev();
     const out = generateJITSession(
       baseInput({
         auxiliaryPool: pool,
-        weeklyVolumeToDate: atMevExcept(mrvMev, 'hamstrings'),
-        mrvMevConfig: mrvMev,
+        weeklyVolumeToDate: atMevExcept(DEFAULT_MRV_MEV_CONFIG_MALE, 'hamstrings'),
+        mrvMevConfig: DEFAULT_MRV_MEV_CONFIG_MALE,
       })
     );
     const hasTopUpRationale = out.rationale.some((r) =>
@@ -1064,31 +1040,16 @@ describe('generateJITSession — volume top-up (engine-027)', () => {
 describe('generateJITSession — volume top-up MEV pro-rating', () => {
   const pool = ['Romanian DL', 'Stiff-Leg DL', 'Leg Press'];
 
-  function atMevExcept(
-    config: MrvMevConfig,
-    ...except: MuscleGroup[]
-  ): Partial<Record<MuscleGroup, number>> {
-    const result: Partial<Record<MuscleGroup, number>> = {};
-    for (const [muscle, { mev }] of Object.entries(config) as [
-      MuscleGroup,
-      { mev: number; mrv: number },
-    ][]) {
-      if (!except.includes(muscle)) result[muscle] = mev;
-    }
-    return result;
-  }
-
   it('session 1 of 3: moderate deficit does NOT trigger top-up', () => {
     // hamstrings MEV=6; effectiveMev = ceil(6*1/3) = 2
     // squat contributes hamstrings 0.5 × 2 sets = floor(1) → projected=1
     // deficit = 2-1 = 1, but other muscles at MEV; only 1 set top-up possible
     // Set weeklyVol for hamstrings to 1 so projected=2 → deficit=0
-    const mrvMev = makeMrvMev();
     const out = generateJITSession(
       baseInput({
         auxiliaryPool: pool,
-        weeklyVolumeToDate: { ...atMevExcept(mrvMev), hamstrings: 1 },
-        mrvMevConfig: mrvMev,
+        weeklyVolumeToDate: { ...atMevExcept(DEFAULT_MRV_MEV_CONFIG_MALE), hamstrings: 1 },
+        mrvMevConfig: DEFAULT_MRV_MEV_CONFIG_MALE,
         sessionIndex: 1,
         totalSessionsThisWeek: 3,
       })
@@ -1101,12 +1062,11 @@ describe('generateJITSession — volume top-up MEV pro-rating', () => {
 
   it('session 3 of 3: full MEV applies — same as no pro-rating', () => {
     // hamstrings MEV=6; effectiveMev = ceil(6*3/3) = 6; weeklyVol=0 → deficit=6-projected
-    const mrvMev = makeMrvMev();
     const out = generateJITSession(
       baseInput({
         auxiliaryPool: pool,
-        weeklyVolumeToDate: atMevExcept(mrvMev, 'hamstrings'),
-        mrvMevConfig: mrvMev,
+        weeklyVolumeToDate: atMevExcept(DEFAULT_MRV_MEV_CONFIG_MALE, 'hamstrings'),
+        mrvMevConfig: DEFAULT_MRV_MEV_CONFIG_MALE,
         sessionIndex: 3,
         totalSessionsThisWeek: 3,
       })
@@ -1119,12 +1079,11 @@ describe('generateJITSession — volume top-up MEV pro-rating', () => {
   it('session 2 of 3: only severe deficit triggers', () => {
     // hamstrings MEV=6; effectiveMev = ceil(6*2/3) = 4
     // weeklyVol=3, squat contributes floor(2*0.5)=1 → projected=4 → deficit=0
-    const mrvMev = makeMrvMev();
     const outNoTrigger = generateJITSession(
       baseInput({
         auxiliaryPool: pool,
-        weeklyVolumeToDate: { ...atMevExcept(mrvMev), hamstrings: 3 },
-        mrvMevConfig: mrvMev,
+        weeklyVolumeToDate: { ...atMevExcept(DEFAULT_MRV_MEV_CONFIG_MALE), hamstrings: 3 },
+        mrvMevConfig: DEFAULT_MRV_MEV_CONFIG_MALE,
         sessionIndex: 2,
         totalSessionsThisWeek: 3,
       })
@@ -1138,8 +1097,8 @@ describe('generateJITSession — volume top-up MEV pro-rating', () => {
     const outTrigger = generateJITSession(
       baseInput({
         auxiliaryPool: pool,
-        weeklyVolumeToDate: atMevExcept(mrvMev, 'hamstrings'),
-        mrvMevConfig: mrvMev,
+        weeklyVolumeToDate: atMevExcept(DEFAULT_MRV_MEV_CONFIG_MALE, 'hamstrings'),
+        mrvMevConfig: DEFAULT_MRV_MEV_CONFIG_MALE,
         sessionIndex: 2,
         totalSessionsThisWeek: 3,
       })
@@ -1152,12 +1111,11 @@ describe('generateJITSession — volume top-up MEV pro-rating', () => {
 
   it('missing sessionIndex/totalSessionsThisWeek falls back to full MEV', () => {
     // Same as the existing "muscle below MEV" test — no pro-rating fields
-    const mrvMev = makeMrvMev();
     const out = generateJITSession(
       baseInput({
         auxiliaryPool: pool,
-        weeklyVolumeToDate: atMevExcept(mrvMev, 'hamstrings'),
-        mrvMevConfig: mrvMev,
+        weeklyVolumeToDate: atMevExcept(DEFAULT_MRV_MEV_CONFIG_MALE, 'hamstrings'),
+        mrvMevConfig: DEFAULT_MRV_MEV_CONFIG_MALE,
         // sessionIndex and totalSessionsThisWeek intentionally omitted
       })
     );
