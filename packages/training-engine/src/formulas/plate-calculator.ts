@@ -19,12 +19,19 @@ export type PlateResult = {
   remainder: number
 }
 
-export function calculatePlates(targetKg: number, barKg: number): PlateResult {
+export function calculatePlates(
+  targetKg: number,
+  barKg: number,
+  availablePlates?: PlateKg[],
+): PlateResult {
+  const sizes = availablePlates
+    ? PLATE_SIZES_KG.filter((p) => availablePlates.includes(p))
+    : PLATE_SIZES_KG
   const weightPerSide = (targetKg - barKg) / 2
   const platesPerSide: { kg: PlateKg; count: number }[] = []
   let remaining = weightPerSide
 
-  for (const plate of PLATE_SIZES_KG) {
+  for (const plate of sizes) {
     if (remaining <= 0) break
     const count = Math.floor(remaining / plate)
     if (count > 0) {

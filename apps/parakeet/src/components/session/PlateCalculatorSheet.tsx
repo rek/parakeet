@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react'
 import { Modal, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 import AsyncStorage from '@react-native-async-storage/async-storage'
-import { calculatePlates } from '@parakeet/training-engine'
+import { calculatePlates, PLATE_COLORS } from '@parakeet/training-engine'
+import type { PlateKg } from '@parakeet/training-engine'
+import { getDisabledPlates, setDisabledPlates } from '@modules/settings'
 import { colors, spacing, typography } from '../../theme'
 
 // ── Constants ─────────────────────────────────────────────────────────────────
@@ -9,6 +11,8 @@ import { colors, spacing, typography } from '../../theme'
 const STORAGE_KEY = 'bar_weight_kg'
 const BAR_OPTIONS = [20, 15] as const
 type BarKg = (typeof BAR_OPTIONS)[number]
+
+const TOGGLEABLE_PLATES: PlateKg[] = [25, 20, 15, 10, 5, 2.5, 1.25]
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -22,12 +26,24 @@ interface Props {
 
 export function PlateCalculatorSheet({ visible, onClose, targetKg }: Props) {
   const [barKg, setBarKg] = useState<BarKg>(20)
+  const [disabledPlates, setDisabledPlatesState] = useState<PlateKg[]>([])
 
   useEffect(() => {
     AsyncStorage.getItem(STORAGE_KEY).then((stored) => {
       if (stored === '15') setBarKg(15)
     })
+    getDisabledPlates().then(setDisabledPlatesState)
   }, [])
+
+  const availablePlates = TOGGLEABLE_PLATES.filter((p) => !disabledPlates.includes(p))
+
+  async function handlePlateToggle(plate: PlateKg) {
+    const next = disabledPlates.includes(plate)
+      ? disabledPlates.filter((p) => p !== plate)
+      : [...disabledPlates, plate]
+    setDisabledPlatesState(next)
+    await setDisabledPlates(next)
+  }
 
   function handleBarToggle(kg: BarKg) {
     setBarKg(kg)
@@ -35,7 +51,7 @@ export function PlateCalculatorSheet({ visible, onClose, targetKg }: Props) {
   }
 
   const isBarOnly = targetKg <= barKg
-  const result = isBarOnly ? null : calculatePlates(targetKg, barKg)
+  const result = isBarOnly ? null : calculatePlates(targetKg, barKg, availablePlates)
 
   function renderContent() {
     if (isBarOnly) {
@@ -110,6 +126,28 @@ export function PlateCalculatorSheet({ visible, onClose, targetKg }: Props) {
                   </Text>
                 </TouchableOpacity>
               ))}
+            </View>
+          </View>
+
+          {/* Plate availability toggles */}
+          <View style={styles.plateToggleSection}>
+            <Text style={styles.plateToggleLabel}>Available plates</Text>
+            <View style={styles.plateToggleRow}>
+              {TOGGLEABLE_PLATES.map((kg) => {
+                const enabled = !disabledPlates.includes(kg)
+                return (
+                  <TouchableOpacity
+                    key={kg}
+                    style={[styles.plateDot, { borderColor: PLATE_COLORS[kg] }, enabled && { backgroundColor: PLATE_COLORS[kg] }]}
+                    onPress={() => handlePlateToggle(kg)}
+                    activeOpacity={0.7}
+                  >
+                    <Text style={[styles.plateDotLabel, enabled && styles.plateDotLabelEnabled]}>
+                      {kg}
+                    </Text>
+                  </TouchableOpacity>
+                )
+              })}
             </View>
           </View>
 
@@ -201,6 +239,38 @@ const styles = StyleSheet.create({
   },
   toggleBtnTextActive: {
     color: colors.primary,
+  },
+  plateToggleSection: {
+    paddingHorizontal: spacing[4],
+    paddingVertical: spacing[3],
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+  },
+  plateToggleLabel: {
+    fontSize: typography.sizes.sm,
+    color: colors.textSecondary,
+    marginBottom: spacing[2],
+  },
+  plateToggleRow: {
+    flexDirection: 'row',
+    gap: spacing[2],
+    flexWrap: 'wrap',
+  },
+  plateDot: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    borderWidth: 2,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  plateDotLabel: {
+    fontSize: typography.sizes.xs,
+    fontWeight: typography.weights.bold,
+    color: colors.textSecondary,
+  },
+  plateDotLabelEnabled: {
+    color: colors.textInverse,
   },
   content: {
     paddingHorizontal: spacing[4],

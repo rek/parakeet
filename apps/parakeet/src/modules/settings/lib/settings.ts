@@ -1,4 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage'
+import type { PlateKg } from '@parakeet/training-engine'
 
 const BAR_WEIGHT_KEY = 'bar_weight_kg'
 
@@ -38,6 +39,23 @@ export async function setJITStrategyOverride(strategy: JITStrategyOverride): Pro
   await AsyncStorage.setItem(JIT_STRATEGY_KEY, strategy)
 }
 
+const DISABLED_PLATES_KEY = 'disabled_plates_kg'
+
+/** Returns plates that are disabled (not available in the user's gym). Default: none disabled. */
+export async function getDisabledPlates(): Promise<PlateKg[]> {
+  try {
+    const raw = await AsyncStorage.getItem(DISABLED_PLATES_KEY)
+    if (!raw) return []
+    return JSON.parse(raw) as PlateKg[]
+  } catch {
+    return []
+  }
+}
+
+export async function setDisabledPlates(disabled: PlateKg[]): Promise<void> {
+  await AsyncStorage.setItem(DISABLED_PLATES_KEY, JSON.stringify(disabled))
+}
+
 const REST_TIMER_PREFS_KEY = 'rest_timer_prefs'
 
 export interface RestTimerPrefs {
@@ -51,7 +69,7 @@ const DEFAULT_REST_TIMER_PREFS: RestTimerPrefs = {
   audioAlert: true,
   hapticAlert: true,
   llmSuggestions: true,
-  backgroundRestNotification: false,
+  backgroundRestNotification: true,
 }
 
 export async function getRestTimerPrefs(): Promise<RestTimerPrefs> {

@@ -10,7 +10,8 @@ import {
 } from 'react-native';
 import { getProfile } from '@modules/profile';
 import { abandonSession, getSession, startSession } from '@modules/session';
-import { getBarWeightKg } from '@modules/settings';
+import { getBarWeightKg, getDisabledPlates } from '@modules/settings';
+import type { PlateKg } from '@parakeet/training-engine';
 import { useNetworkStatus } from '@platform/network';
 import { useSessionStore } from '@platform/store/sessionStore';
 import { useQueryClient } from '@tanstack/react-query';
@@ -125,11 +126,13 @@ export default function SessionScreen() {
   const [warmupSetsState, setWarmupSetsState] = useState<WarmupSet[]>([]);
   const [auxiliaryWork, setAuxiliaryWork] = useState<AuxiliaryWork[]>([]);
   const [barWeightKg, setBarWeightKg] = useState(20);
+  const [disabledPlates, setDisabledPlates] = useState<PlateKg[]>([]);
 
   useEffect(() => {
     getProfile()
       .then((profile) => getBarWeightKg(profile?.biological_sex))
       .then(setBarWeightKg);
+    getDisabledPlates().then(setDisabledPlates);
   }, []);
   const [adHocExercises, setAdHocExercises] = useState<string[]>([]);
   const [addExerciseVisible, setAddExerciseVisible] = useState(false);
@@ -553,6 +556,7 @@ export default function SessionScreen() {
             completedIndices={warmupCompleted}
             onToggle={setWarmupDone}
             barWeightKg={barWeightKg}
+            disabledPlates={disabledPlates}
           />
         )}
 
