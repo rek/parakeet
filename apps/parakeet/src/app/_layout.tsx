@@ -2,7 +2,7 @@ import 'expo/fetch';
 import { useEffect } from 'react';
 import { View } from 'react-native';
 import { useAuth } from '@modules/auth';
-import { useMissedSessionReconciliation, useSyncQueue } from '@modules/session';
+import { useMissedSessionReconciliation, useRestNotifications, useSyncQueue } from '@modules/session';
 import { queryClient } from '@platform/query';
 import * as Sentry from '@sentry/react-native';
 import { QueryClientProvider } from '@tanstack/react-query';
@@ -39,6 +39,7 @@ function RootLayoutNav() {
   // const insets = useSafeAreaInsets();
   useSyncQueue();
   useMissedSessionReconciliation();
+  useRestNotifications();
 
   useEffect(() => {
     if (!loading) {

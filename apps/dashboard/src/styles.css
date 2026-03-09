@@ -43,6 +43,14 @@
   --surface-overlay: rgba(255, 255, 255, 0.05);
 }
 
+[data-theme="hot-pink"] {
+  --accent: #ec4899;
+  --accent-dim: rgba(236, 72, 153, 0.15);
+  --accent-glow: rgba(236, 72, 153, 0.35);
+  --accent-border: rgba(236, 72, 153, 0.25);
+  --accent-border-strong: rgba(236, 72, 153, 0.30);
+}
+
 * {
   box-sizing: border-box;
   margin: 0;

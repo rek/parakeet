@@ -250,7 +250,7 @@ export default function RestTimerSettingsScreen() {
     audioAlert: true,
     hapticAlert: true,
     llmSuggestions: true,
-    backgroundRestNotification: false,
+    backgroundRestNotification: true,
   });
   const [resetting, setResetting] = useState(false);
 

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useSupabase } from '../lib/SupabaseContext';
 import { isEnvAvailable } from '../lib/supabase';
 import { theme } from '../lib/theme';
@@ -10,6 +10,30 @@ import { JITLogs } from './JITLogs';
 import { Logs } from './Logs';
 import { MotivationalLogs } from './MotivationalLogs';
 import { WorkoutSummaries } from './WorkoutSummaries';
+
+type ThemeId = 'default' | 'hot-pink';
+
+const THEMES: { id: ThemeId; color: string; label: string }[] = [
+  { id: 'default', color: '#f59e0b', label: 'amber' },
+  { id: 'hot-pink', color: '#ec4899', label: 'pink' },
+];
+
+function useTheme() {
+  const [themeId, setThemeId] = useState<ThemeId>(() => {
+    return (localStorage.getItem('dashboard-theme') as ThemeId) ?? 'default';
+  });
+
+  useEffect(() => {
+    if (themeId === 'default') {
+      document.documentElement.removeAttribute('data-theme');
+    } else {
+      document.documentElement.dataset.theme = themeId;
+    }
+    localStorage.setItem('dashboard-theme', themeId);
+  }, [themeId]);
+
+  return { themeId, setThemeId };
+}
 
 type Page =
   | 'timeline'
@@ -117,7 +141,13 @@ function NavButton({
         textAlign: 'left',
         transition: 'all 0.12s ease',
         background: active
-          ? `rgba(${item.color === 'var(--accent)' ? '245,158,11' : item.color === 'var(--purple)' ? '167,139,250' : item.color === 'var(--green)' ? '52,211,153' : item.color === 'var(--blue)' ? '96,165,250' : '248,113,113'}, 0.12)`
+          ? ({
+              'var(--accent)': 'var(--accent-dim)',
+              'var(--green)': 'var(--green-dim)',
+              'var(--purple)': 'var(--purple-dim)',
+              'var(--blue)': 'var(--blue-dim)',
+              'var(--red)': 'var(--red-dim)',
+            }[item.color] ?? 'var(--accent-dim)')
           : hovered
             ? 'var(--surface-hover)'
             : 'transparent',
@@ -205,6 +235,7 @@ const reviewModel = 'gpt-5';
 export function App() {
   const [page, setPage] = useState<Page>('timeline');
   const { env, setEnv } = useSupabase();
+  const { themeId, setThemeId } = useTheme();
 
   return (
     <div
@@ -375,6 +406,32 @@ export function App() {
             <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
               <span style={{ color: 'var(--blue)', fontSize: 9 }}>●</span>
               <span>{reviewModel} (Review)</span>
+            </div>
+          </div>
+          <div style={{ marginTop: 10 }}>
+            <div style={{ marginBottom: 4 }}>Theme</div>
+            <div style={{ display: 'flex', gap: 4 }}>
+              {THEMES.map((t) => (
+                <button
+                  key={t.id}
+                  onClick={() => setThemeId(t.id)}
+                  title={t.label}
+                  style={{
+                    background: 'none',
+                    border: `1px solid ${themeId === t.id ? t.color : 'var(--border)'}`,
+                    borderRadius: 4,
+                    padding: '3px 8px',
+                    cursor: 'pointer',
+                    fontSize: 11,
+                    color: t.color,
+                    fontFamily: 'var(--mono)',
+                    opacity: themeId === t.id ? 1 : 0.45,
+                    letterSpacing: '0.02em',
+                  }}
+                >
+                  {t.label}
+                </button>
+              ))}
             </div>
           </div>
         </div>

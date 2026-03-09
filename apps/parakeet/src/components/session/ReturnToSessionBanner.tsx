@@ -5,14 +5,12 @@ import * as Haptics from 'expo-haptics'
 
 import { useSessionStore } from '@platform/store/sessionStore'
 import { getRestTimerPrefs } from '@modules/settings'
-import { detectOvertimeEdge, useRestNotifications } from '@modules/session'
+import { detectOvertimeEdge } from '@modules/session'
 import { formatMMSS } from '../../shared/utils'
 import { capitalize } from '@shared/utils/string'
 import { colors, radii, spacing, typography } from '../../theme'
 
 export function ReturnToSessionBanner() {
-  useRestNotifications()
-
   const sessionId = useSessionStore((s) => s.sessionId)
   const sessionMeta = useSessionStore((s) => s.sessionMeta)
   const cachedJitData = useSessionStore((s) => s.cachedJitData)
