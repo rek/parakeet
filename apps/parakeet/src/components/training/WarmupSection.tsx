@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native'
+import { calculatePlates, PLATE_COLORS } from '@parakeet/training-engine'
 import { colors, spacing, radii, typography } from '../../theme'
 
 // ── Types ────────────────────────────────────────────────────────────────────
@@ -9,6 +10,40 @@ interface WarmupSet {
   reps: number
   label?: string
 }
+
+// ── PlateDisplay sub-component ────────────────────────────────────────────────
+
+function PlateDisplay({ weightKg, barWeightKg }: { weightKg: number; barWeightKg: number }) {
+  if (weightKg <= barWeightKg) return null
+  const { platesPerSide } = calculatePlates(weightKg, barWeightKg)
+
+  return (
+    <View style={plateStyles.row}>
+      {platesPerSide.flatMap(({ kg, count }) =>
+        Array.from({ length: count }, (_, i) => (
+          <View
+            key={`${kg}-${i}`}
+            style={[plateStyles.dot, { backgroundColor: PLATE_COLORS[kg] }]}
+          />
+        ))
+      )}
+    </View>
+  )
+}
+
+const plateStyles = StyleSheet.create({
+  row: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
+    marginLeft: spacing[2],
+  },
+  dot: {
+    width: 9,
+    height: 9,
+    borderRadius: radii.full,
+  },
+})
 
 export interface WarmupSectionProps {
   sets: WarmupSet[]
@@ -56,6 +91,7 @@ function WarmupSetRow({ index, set, isDone, onToggle, barWeightKg }: WarmupSetRo
             {' · '}{set.label}
           </Text>
         ) : null}
+        <PlateDisplay weightKg={set.weightKg} barWeightKg={barWeightKg} />
       </View>
       <View style={[styles.checkbox, isDone && styles.checkboxDone]}>
         {isDone && <Text style={styles.checkmark}>✓</Text>}
