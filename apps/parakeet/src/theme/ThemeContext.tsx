@@ -21,7 +21,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     AsyncStorage.getItem(THEME_KEY).then((stored) => {
-      if (stored === 'hot-pink') setThemeName('hot-pink')
+      if (stored === 'valkyrie') setThemeName('valkyrie')
     })
   }, [])
 

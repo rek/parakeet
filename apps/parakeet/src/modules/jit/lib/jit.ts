@@ -67,9 +67,12 @@ export async function runJITForSession(
 
   const biologicalSex = await fetchProfileSex(userId)
 
-  const [oneRmKg, formulaConfig, assignments, warmupConfig, userRestOverrides, barWeightKg, pool, allPools] =
+  const [oneRmKg, squatOneRmKg, benchOneRmKg, deadliftOneRmKg, formulaConfig, assignments, warmupConfig, userRestOverrides, barWeightKg, pool, allPools] =
     await Promise.all([
       getCurrentOneRmKg(userId, lift),
+      getCurrentOneRmKg(userId, 'squat'),
+      getCurrentOneRmKg(userId, 'bench'),
+      getCurrentOneRmKg(userId, 'deadlift'),
       getFormulaConfig(userId),
       isAdHoc ? Promise.resolve(null) : getActiveAssignments(userId, session.program_id!, blockNumber),
       getWarmupConfig(userId, lift, biologicalSex),
@@ -233,6 +236,11 @@ export async function runJITForSession(
     daysSinceLastSession: daysSinceLastSession ?? undefined,
     userAge,
     auxiliaryPool,
+    allOneRmKg: {
+      ...(squatOneRmKg != null && { squat: squatOneRmKg }),
+      ...(benchOneRmKg != null && { bench: benchOneRmKg }),
+      ...(deadliftOneRmKg != null && { deadlift: deadliftOneRmKg }),
+    },
     sleepQuality,
     energyLevel,
     cyclePhase,

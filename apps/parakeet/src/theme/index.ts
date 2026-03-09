@@ -266,9 +266,9 @@ export const shadows = {
   },
 } as const
 
-// ── Hot-pink color scheme ─────────────────────────────────────────────────────
+// ── Valkyrie color scheme ─────────────────────────────────────────────────────
 
-export const hotPinkColors = {
+export const valkyrieColors = {
   ...colors,
   primary:       '#EC4899',
   primaryDim:    '#DB2777',
@@ -279,12 +279,12 @@ export const hotPinkColors = {
 
 // ── Multi-theme exports ───────────────────────────────────────────────────────
 
-export type ColorScheme = typeof colors
-export type ThemeName = 'default' | 'hot-pink'
+export type ColorScheme = { readonly [K in keyof typeof colors]: string }
+export type ThemeName = 'default' | 'valkyrie'
 
 export const COLOR_SCHEMES: Record<ThemeName, ColorScheme> = {
   'default':  colors,
-  'hot-pink': hotPinkColors,
+  'valkyrie': valkyrieColors,
 }
 
 // ── Convenience re-export ─────────────────────────────────────────────────────

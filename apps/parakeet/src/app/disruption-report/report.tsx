@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import {
   ActivityIndicator,
   Platform,
@@ -33,7 +33,8 @@ import type {
   DisruptionWithSuggestions,
   Lift,
 } from '@parakeet/shared-types'
-import { colors } from '../../theme'
+import type { ColorScheme } from '../../theme'
+import { useTheme } from '../../theme/ThemeContext'
 import { BackLink } from '../../components/navigation/BackLink'
 import { qk } from '@platform/query'
 import { SORENESS_MUSCLES_DEFAULT, TRAINING_LIFTS } from '@shared/constants/training'
@@ -93,10 +94,225 @@ function describeAction(suggestion: AdjustmentSuggestion): string {
   }
 }
 
-// ── Section header ────────────────────────────────────────────────────────────
+// ── Styles ────────────────────────────────────────────────────────────────────
 
-function SectionLabel({ label }: { label: string }) {
-  return <Text style={styles.sectionLabel}>{label}</Text>
+function buildStyles(colors: ColorScheme) {
+  return StyleSheet.create({
+    safeArea: { flex: 1, backgroundColor: colors.bgSurface },
+    header: {
+      paddingHorizontal: 20,
+      paddingTop: 8,
+      paddingBottom: 16,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.bgMuted,
+    },
+    title: { fontSize: 24, fontWeight: '800', color: colors.text },
+    subtitle: { fontSize: 14, color: colors.textSecondary, marginTop: 4, lineHeight: 20 },
+    scroll: { flex: 1 },
+    content: { paddingHorizontal: 20, paddingTop: 20, paddingBottom: 40, gap: 8 },
+
+    sectionLabel: {
+      fontSize: 15,
+      fontWeight: '700',
+      color: colors.text,
+      marginTop: 8,
+      marginBottom: 8,
+    },
+
+    // Type grid
+    typeGrid: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: 10,
+      marginBottom: 8,
+    },
+    typeCard: {
+      width: '30%',
+      borderWidth: 1,
+      borderColor: colors.border,
+      borderRadius: 12,
+      paddingVertical: 14,
+      paddingHorizontal: 8,
+      alignItems: 'center',
+      gap: 6,
+    },
+    typeCardSelected: {
+      borderColor: colors.primary,
+      backgroundColor: colors.primaryMuted,
+    },
+    typeIcon: { fontSize: 20 },
+    typeLabel: { fontSize: 12, color: colors.textSecondary, textAlign: 'center' },
+    typeLabelSelected: { color: colors.primary, fontWeight: '600' },
+
+    // Severity
+    severityRow: { flexDirection: 'row', gap: 10, marginBottom: 8 },
+    severityButton: {
+      flex: 1,
+      borderWidth: 1.5,
+      borderRadius: 12,
+      paddingVertical: 14,
+      alignItems: 'center',
+    },
+    severityText: { fontSize: 14, fontWeight: '600', color: colors.textSecondary },
+
+    // Date
+    dateRow: { flexDirection: 'row', gap: 12, marginBottom: 8 },
+    dateField: { flex: 1 },
+    dateFieldLabel: { fontSize: 12, color: colors.textSecondary, marginBottom: 4 },
+    datePill: {
+      borderWidth: 1,
+      borderColor: colors.border,
+      borderRadius: 10,
+      paddingHorizontal: 12,
+      paddingVertical: 10,
+    },
+    datePillText: {
+      fontSize: 14,
+      color: colors.text,
+    },
+    ongoingToggle: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 8 },
+    checkbox: {
+      width: 20,
+      height: 20,
+      borderRadius: 4,
+      borderWidth: 2,
+      borderColor: colors.border,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    checkboxChecked: { borderColor: colors.primary, backgroundColor: colors.primary },
+    checkmark: { fontSize: 12, color: colors.textInverse, fontWeight: '700' },
+    ongoingLabel: { fontSize: 14, color: colors.textSecondary },
+
+    // Lifts
+    liftRow: { flexDirection: 'row', gap: 10, flexWrap: 'wrap', marginBottom: 8 },
+    liftChip: {
+      paddingHorizontal: 18,
+      paddingVertical: 10,
+      borderRadius: 20,
+      borderWidth: 1,
+      borderColor: colors.border,
+      backgroundColor: colors.bgSurface,
+    },
+    liftChipSelected: { borderColor: colors.primary, backgroundColor: colors.primaryMuted },
+    liftChipText: { fontSize: 14, color: colors.textSecondary, fontWeight: '500' },
+    liftChipTextSelected: { color: colors.primary, fontWeight: '600' },
+
+    // Description
+    descriptionInput: {
+      borderWidth: 1,
+      borderColor: colors.border,
+      borderRadius: 12,
+      padding: 14,
+      fontSize: 15,
+      color: colors.text,
+      minHeight: 96,
+      marginBottom: 8,
+    },
+
+    errorText: { fontSize: 14, color: colors.danger, marginBottom: 8 },
+
+    // Buttons
+    submitButton: {
+      backgroundColor: colors.primary,
+      borderRadius: 12,
+      paddingVertical: 16,
+      alignItems: 'center',
+      marginTop: 8,
+    },
+    submitButtonText: { fontSize: 16, fontWeight: '600', color: colors.textInverse },
+    buttonDisabled: { opacity: 0.4 },
+
+    // Review state
+    noAdjustments: {
+      padding: 20,
+      backgroundColor: colors.successMuted,
+      borderRadius: 12,
+      marginBottom: 16,
+    },
+    noAdjustmentsText: { fontSize: 15, color: colors.success, textAlign: 'center', lineHeight: 22 },
+    adjustmentSummaryHeader: {
+      fontSize: 14,
+      fontWeight: '600' as const,
+      color: colors.textSecondary,
+      marginBottom: 12,
+    },
+    adjustmentCard: {
+      flexDirection: 'row' as const,
+      alignItems: 'center' as const,
+      justifyContent: 'space-between' as const,
+      borderWidth: 1,
+      borderColor: colors.border,
+      borderRadius: 12,
+      padding: 16,
+      marginBottom: 10,
+    },
+    adjustmentCount: {
+      fontSize: 13,
+      color: colors.textTertiary,
+    },
+    adjustmentBadge: {
+      alignSelf: 'flex-start' as const,
+      backgroundColor: colors.warningMuted,
+      borderRadius: 8,
+      paddingHorizontal: 10,
+      paddingVertical: 4,
+    },
+    adjustmentBadgeSkip: { backgroundColor: colors.dangerMuted },
+    adjustmentBadgeText: { fontSize: 13, fontWeight: '600' as const, color: colors.textSecondary },
+    adjustmentRationale: { fontSize: 13, color: colors.textSecondary, lineHeight: 18 },
+    futureSessionsNote: {
+      padding: 14,
+      backgroundColor: colors.bgMuted,
+      borderRadius: 10,
+      marginTop: 4,
+      marginBottom: 4,
+    },
+    futureSessionsNoteText: { fontSize: 13, color: colors.textSecondary, lineHeight: 18 },
+    autoAppliedNote: {
+      padding: 16,
+      backgroundColor: colors.successMuted,
+      borderRadius: 12,
+      alignItems: 'center',
+    },
+    autoAppliedNoteText: { fontSize: 14, color: colors.success, fontWeight: '600', textAlign: 'center' },
+    // Soreness
+    sorenessRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      marginBottom: 10,
+      gap: 8,
+    },
+    sorenessMuscleLabel: { fontSize: 13, color: colors.textSecondary, width: 90 },
+    sorenessChips: { flexDirection: 'row', gap: 6, flex: 1 },
+    sorenessChip: {
+      flex: 1,
+      paddingVertical: 6,
+      borderRadius: 8,
+      borderWidth: 1,
+      borderColor: colors.border,
+      alignItems: 'center',
+    },
+    sorenessChipSelected: { borderColor: colors.warning, backgroundColor: colors.warningMuted },
+    sorenessChipText: { fontSize: 11, color: colors.textTertiary },
+    sorenessChipTextSelected: { color: colors.warning, fontWeight: '600' },
+    reviewActions: { gap: 12, marginTop: 16 },
+    applyButton: {
+      backgroundColor: colors.primary,
+      borderRadius: 12,
+      paddingVertical: 16,
+      alignItems: 'center',
+    },
+    applyButtonText: { fontSize: 16, fontWeight: '600', color: colors.textInverse },
+    skipButton: {
+      borderWidth: 1,
+      borderColor: colors.border,
+      borderRadius: 12,
+      paddingVertical: 16,
+      alignItems: 'center',
+    },
+    skipButtonText: { fontSize: 15, fontWeight: '500', color: colors.textSecondary },
+  })
 }
 
 // ── Main screen ───────────────────────────────────────────────────────────────
@@ -104,6 +320,8 @@ function SectionLabel({ label }: { label: string }) {
 type ScreenState = 'form' | 'review'
 
 export default function DisruptionReportScreen() {
+  const { colors } = useTheme()
+  const styles = useMemo(() => buildStyles(colors), [colors])
   const { user } = useAuth()
   const queryClient = useQueryClient()
 
@@ -384,7 +602,7 @@ export default function DisruptionReportScreen() {
         showsVerticalScrollIndicator={false}
       >
         {/* Step 1: Type */}
-        <SectionLabel label="1. What happened?" />
+        <Text style={styles.sectionLabel}>1. What happened?</Text>
         <View style={styles.typeGrid}>
           {DISRUPTION_TYPES.map((t) => (
             <TouchableOpacity
@@ -419,7 +637,7 @@ export default function DisruptionReportScreen() {
         {/* Step 2: Severity (hidden for unprogrammed events — fixed to major) */}
         {!isUnprogrammedEvent && (
         <>
-        <SectionLabel label="2. How severe?" />
+        <Text style={styles.sectionLabel}>2. How severe?</Text>
         <View style={styles.severityRow}>
           {(['minor', 'moderate', 'major'] as Severity[]).map((s) => {
             const severityPalette = {
@@ -450,7 +668,7 @@ export default function DisruptionReportScreen() {
         )}
 
         {/* Step 3: Date range */}
-        <SectionLabel label="3. When?" />
+        <Text style={styles.sectionLabel}>3. When?</Text>
         <View style={styles.dateRow}>
           <View style={styles.dateField}>
             <Text style={styles.dateFieldLabel}>Start</Text>
@@ -509,7 +727,7 @@ export default function DisruptionReportScreen() {
         </TouchableOpacity>
 
         {/* Step 4: Affected lifts */}
-        <SectionLabel label="4. Which lifts?" />
+        <Text style={styles.sectionLabel}>4. Which lifts?</Text>
         <View style={styles.liftRow}>
           {TRAINING_LIFTS.map((lift) => (
             <TouchableOpacity
@@ -537,7 +755,7 @@ export default function DisruptionReportScreen() {
         {/* Unprogrammed event: event name + post-event soreness */}
         {isUnprogrammedEvent && (
           <>
-            <SectionLabel label="Event name" />
+            <Text style={styles.sectionLabel}>Event name</Text>
             <TextInput
               style={styles.descriptionInput}
               value={eventName}
@@ -547,7 +765,7 @@ export default function DisruptionReportScreen() {
               returnKeyType="done"
             />
 
-            <SectionLabel label="Post-event soreness" />
+            <Text style={styles.sectionLabel}>Post-event soreness</Text>
             {SORENESS_MUSCLES_DEFAULT.map((mg) => (
               <View key={mg.value} style={styles.sorenessRow}>
                 <Text style={styles.sorenessMuscleLabel}>{mg.label}</Text>
@@ -576,7 +794,7 @@ export default function DisruptionReportScreen() {
         )}
 
         {/* Step 5: Description */}
-        <SectionLabel label="5. More details (optional)" />
+        <Text style={styles.sectionLabel}>5. More details (optional)</Text>
         <TextInput
           style={styles.descriptionInput}
           value={description}
@@ -608,222 +826,3 @@ export default function DisruptionReportScreen() {
     </SafeAreaView>
   )
 }
-
-// ── Styles ────────────────────────────────────────────────────────────────────
-
-const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: colors.bgSurface },
-  header: {
-    paddingHorizontal: 20,
-    paddingTop: 8,
-    paddingBottom: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.bgMuted,
-  },
-  title: { fontSize: 24, fontWeight: '800', color: colors.text },
-  subtitle: { fontSize: 14, color: colors.textSecondary, marginTop: 4, lineHeight: 20 },
-  scroll: { flex: 1 },
-  content: { paddingHorizontal: 20, paddingTop: 20, paddingBottom: 40, gap: 8 },
-
-  sectionLabel: {
-    fontSize: 15,
-    fontWeight: '700',
-    color: colors.text,
-    marginTop: 8,
-    marginBottom: 8,
-  },
-
-  // Type grid
-  typeGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 10,
-    marginBottom: 8,
-  },
-  typeCard: {
-    width: '30%',
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 12,
-    paddingVertical: 14,
-    paddingHorizontal: 8,
-    alignItems: 'center',
-    gap: 6,
-  },
-  typeCardSelected: {
-    borderColor: colors.primary,
-    backgroundColor: colors.primaryMuted,
-  },
-  typeIcon: { fontSize: 20 },
-  typeLabel: { fontSize: 12, color: colors.textSecondary, textAlign: 'center' },
-  typeLabelSelected: { color: colors.primary, fontWeight: '600' },
-
-  // Severity
-  severityRow: { flexDirection: 'row', gap: 10, marginBottom: 8 },
-  severityButton: {
-    flex: 1,
-    borderWidth: 1.5,
-    borderRadius: 12,
-    paddingVertical: 14,
-    alignItems: 'center',
-  },
-  severityText: { fontSize: 14, fontWeight: '600', color: colors.textSecondary },
-
-  // Date
-  dateRow: { flexDirection: 'row', gap: 12, marginBottom: 8 },
-  dateField: { flex: 1 },
-  dateFieldLabel: { fontSize: 12, color: colors.textSecondary, marginBottom: 4 },
-  datePill: {
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 10,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-  },
-  datePillText: {
-    fontSize: 14,
-    color: colors.text,
-  },
-  ongoingToggle: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 8 },
-  checkbox: {
-    width: 20,
-    height: 20,
-    borderRadius: 4,
-    borderWidth: 2,
-    borderColor: colors.border,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  checkboxChecked: { borderColor: colors.primary, backgroundColor: colors.primary },
-  checkmark: { fontSize: 12, color: colors.textInverse, fontWeight: '700' },
-  ongoingLabel: { fontSize: 14, color: colors.textSecondary },
-
-  // Lifts
-  liftRow: { flexDirection: 'row', gap: 10, flexWrap: 'wrap', marginBottom: 8 },
-  liftChip: {
-    paddingHorizontal: 18,
-    paddingVertical: 10,
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: colors.border,
-    backgroundColor: colors.bgSurface,
-  },
-  liftChipSelected: { borderColor: colors.primary, backgroundColor: colors.primaryMuted },
-  liftChipText: { fontSize: 14, color: colors.textSecondary, fontWeight: '500' },
-  liftChipTextSelected: { color: colors.primary, fontWeight: '600' },
-
-  // Description
-  descriptionInput: {
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 12,
-    padding: 14,
-    fontSize: 15,
-    color: colors.text,
-    minHeight: 96,
-    marginBottom: 8,
-  },
-
-  errorText: { fontSize: 14, color: colors.danger, marginBottom: 8 },
-
-  // Buttons
-  submitButton: {
-    backgroundColor: colors.primary,
-    borderRadius: 12,
-    paddingVertical: 16,
-    alignItems: 'center',
-    marginTop: 8,
-  },
-  submitButtonText: { fontSize: 16, fontWeight: '600', color: colors.textInverse },
-  buttonDisabled: { opacity: 0.4 },
-
-  // Review state
-  noAdjustments: {
-    padding: 20,
-    backgroundColor: colors.successMuted,
-    borderRadius: 12,
-    marginBottom: 16,
-  },
-  noAdjustmentsText: { fontSize: 15, color: colors.success, textAlign: 'center', lineHeight: 22 },
-  adjustmentSummaryHeader: {
-    fontSize: 14,
-    fontWeight: '600' as const,
-    color: colors.textSecondary,
-    marginBottom: 12,
-  },
-  adjustmentCard: {
-    flexDirection: 'row' as const,
-    alignItems: 'center' as const,
-    justifyContent: 'space-between' as const,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 10,
-  },
-  adjustmentCount: {
-    fontSize: 13,
-    color: colors.textTertiary,
-  },
-  adjustmentBadge: {
-    alignSelf: 'flex-start' as const,
-    backgroundColor: colors.warningMuted,
-    borderRadius: 8,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-  },
-  adjustmentBadgeSkip: { backgroundColor: colors.dangerMuted },
-  adjustmentBadgeText: { fontSize: 13, fontWeight: '600' as const, color: colors.textSecondary },
-  adjustmentRationale: { fontSize: 13, color: colors.textSecondary, lineHeight: 18 },
-  futureSessionsNote: {
-    padding: 14,
-    backgroundColor: colors.bgMuted,
-    borderRadius: 10,
-    marginTop: 4,
-    marginBottom: 4,
-  },
-  futureSessionsNoteText: { fontSize: 13, color: colors.textSecondary, lineHeight: 18 },
-  autoAppliedNote: {
-    padding: 16,
-    backgroundColor: colors.successMuted,
-    borderRadius: 12,
-    alignItems: 'center',
-  },
-  autoAppliedNoteText: { fontSize: 14, color: colors.success, fontWeight: '600', textAlign: 'center' },
-  // Soreness
-  sorenessRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 10,
-    gap: 8,
-  },
-  sorenessMuscleLabel: { fontSize: 13, color: colors.textSecondary, width: 90 },
-  sorenessChips: { flexDirection: 'row', gap: 6, flex: 1 },
-  sorenessChip: {
-    flex: 1,
-    paddingVertical: 6,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: colors.border,
-    alignItems: 'center',
-  },
-  sorenessChipSelected: { borderColor: colors.warning, backgroundColor: colors.warningMuted },
-  sorenessChipText: { fontSize: 11, color: colors.textTertiary },
-  sorenessChipTextSelected: { color: colors.warning, fontWeight: '600' },
-  reviewActions: { gap: 12, marginTop: 16 },
-  applyButton: {
-    backgroundColor: colors.primary,
-    borderRadius: 12,
-    paddingVertical: 16,
-    alignItems: 'center',
-  },
-  applyButtonText: { fontSize: 16, fontWeight: '600', color: colors.textInverse },
-  skipButton: {
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 12,
-    paddingVertical: 16,
-    alignItems: 'center',
-  },
-  skipButtonText: { fontSize: 15, fontWeight: '500', color: colors.textSecondary },
-})

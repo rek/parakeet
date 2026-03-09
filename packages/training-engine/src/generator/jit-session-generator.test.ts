@@ -1123,3 +1123,52 @@ describe('generateJITSession — volume top-up MEV pro-rating', () => {
     expect(topUps.length).toBeGreaterThan(0);
   });
 });
+
+// ---------------------------------------------------------------------------
+// engine-027 bug fix: cross-lift 1RM for top-up weight calculation
+// ---------------------------------------------------------------------------
+
+describe('generateJITSession — volume top-up cross-lift 1RM', () => {
+  it('uses bench 1RM for bench top-up exercise during squat session', () => {
+    // Squat session with chest deficit; top-up should be a bench exercise.
+    // allOneRmKg provides separate bench 1RM (60kg) vs squat 1RM (200kg).
+    // 'Dumbbell Incline Bench Press' is in the catalog with associatedLift='bench'.
+    const out = generateJITSession(
+      baseInput({
+        primaryLift: 'squat',
+        oneRmKg: 200,
+        allOneRmKg: { squat: 200, bench: 60, deadlift: 150 },
+        auxiliaryPool: ['Dumbbell Incline Bench Press'],
+        weeklyVolumeToDate: atMevExcept(DEFAULT_MRV_MEV_CONFIG_MALE, 'chest'),
+        mrvMevConfig: DEFAULT_MRV_MEV_CONFIG_MALE,
+      })
+    );
+    const topUp = out.auxiliaryWork.find((a) => a.isTopUp && a.exercise === 'Dumbbell Incline Bench Press');
+    expect(topUp).toBeDefined();
+    // Weight must be based on bench 1RM (60), not squat 1RM (200)
+    // default AUX_WEIGHT_PCT (0.675) → roundToNearest(60 * 0.675) ≈ 40 → well under 100
+    topUp!.sets.forEach((s) => {
+      expect(s.weight_kg).toBeLessThan(100);
+    });
+  });
+
+  it('falls back to primary lift 1RM when allOneRmKg is absent', () => {
+    const out = generateJITSession(
+      baseInput({
+        primaryLift: 'squat',
+        oneRmKg: 200,
+        // allOneRmKg intentionally omitted
+        auxiliaryPool: ['Dumbbell Incline Bench Press'],
+        weeklyVolumeToDate: atMevExcept(DEFAULT_MRV_MEV_CONFIG_MALE, 'chest'),
+        mrvMevConfig: DEFAULT_MRV_MEV_CONFIG_MALE,
+      })
+    );
+    const topUp = out.auxiliaryWork.find((a) => a.isTopUp && a.exercise === 'Dumbbell Incline Bench Press');
+    expect(topUp).toBeDefined();
+    // Falls back to squat 1RM (200): AUX_WEIGHT_PCT=0.3 → roundToNearest(200×0.3)=60
+    // With correct bench 1RM (60): roundToNearest(60×0.3)=18 — meaningfully different
+    topUp!.sets.forEach((s) => {
+      expect(s.weight_kg).toBe(60);
+    });
+  });
+});

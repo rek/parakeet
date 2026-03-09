@@ -307,7 +307,7 @@ export default function SettingsScreen() {
 
   const THEME_OPTIONS: { key: ThemeName; label: string }[] = [
     { key: 'default', label: 'Default' },
-    { key: 'hot-pink', label: 'Hot Pink' },
+    { key: 'valkyrie', label: 'Valkyrie' },
   ];
 
   return (

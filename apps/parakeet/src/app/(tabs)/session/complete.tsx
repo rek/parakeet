@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import {
   Alert,
   ScrollView,
@@ -22,15 +22,232 @@ import { useQueryClient } from '@tanstack/react-query';
 import { router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StarCard } from '../../../components/achievements/StarCard';
-import { colors } from '../../../theme';
+import type { ColorScheme } from '../../../theme';
+import { useTheme } from '../../../theme/ThemeContext';
 
 // ── Constants ────────────────────────────────────────────────────────────────
 
 const RPE_OPTIONS = [6, 7, 8, 9, 10] as const;
 
+// ── Styles ────────────────────────────────────────────────────────────────────
+
+function buildStyles(colors: ColorScheme) {
+  return StyleSheet.create({
+    safeArea: {
+      flex: 1,
+      backgroundColor: colors.bgSurface,
+    },
+    scrollView: {
+      flex: 1,
+    },
+    container: {
+      paddingHorizontal: 24,
+      paddingTop: 32,
+      paddingBottom: 48,
+    },
+    title: {
+      fontSize: 28,
+      fontWeight: '700',
+      color: colors.text,
+      marginBottom: 24,
+      textAlign: 'center',
+    },
+    statsCard: {
+      backgroundColor: colors.bgSurface,
+      borderWidth: 1,
+      borderColor: colors.border,
+      borderRadius: 16,
+      paddingHorizontal: 20,
+      paddingVertical: 16,
+      marginBottom: 32,
+    },
+    statRow: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      paddingVertical: 8,
+    },
+    statDivider: {
+      height: 1,
+      backgroundColor: colors.border,
+    },
+    statLabel: {
+      fontSize: 15,
+      color: colors.textSecondary,
+    },
+    statValue: {
+      fontSize: 18,
+      fontWeight: '700',
+      color: colors.text,
+    },
+    sectionLabel: {
+      fontSize: 14,
+      fontWeight: '600',
+      color: colors.textSecondary,
+      textTransform: 'uppercase',
+      letterSpacing: 0.5,
+      marginBottom: 12,
+    },
+    rpeRow: {
+      flexDirection: 'row',
+      gap: 8,
+      marginBottom: 32,
+    },
+    rpePill: {
+      flex: 1,
+      height: 48,
+      borderRadius: 12,
+      backgroundColor: colors.bgMuted,
+      borderWidth: 1,
+      borderColor: colors.border,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    rpePillActive: {
+      backgroundColor: colors.primary,
+      borderColor: colors.primary,
+    },
+    rpePillText: {
+      fontSize: 16,
+      fontWeight: '600',
+      color: colors.textSecondary,
+    },
+    rpePillTextActive: {
+      color: colors.textInverse,
+    },
+    notesInput: {
+      borderWidth: 1,
+      borderColor: colors.border,
+      borderRadius: 12,
+      paddingHorizontal: 16,
+      paddingVertical: 14,
+      fontSize: 15,
+      color: colors.text,
+      minHeight: 100,
+      marginBottom: 32,
+      backgroundColor: colors.bgSurface,
+    },
+    saveButton: {
+      backgroundColor: colors.primary,
+      borderRadius: 12,
+      paddingVertical: 16,
+      alignItems: 'center',
+    },
+    saveButtonDisabled: {
+      opacity: 0.6,
+    },
+    saveButtonText: {
+      fontSize: 16,
+      fontWeight: '600',
+      color: colors.textInverse,
+    },
+    syncBanner: {
+      backgroundColor: colors.warningMuted,
+      borderRadius: 10,
+      borderWidth: 1,
+      borderColor: colors.warning,
+      paddingHorizontal: 16,
+      paddingVertical: 10,
+      marginBottom: 20,
+    },
+    syncBannerText: {
+      fontSize: 13,
+      color: colors.warning,
+      textAlign: 'center',
+    },
+    // Achievement surfaces
+    starsSection: {
+      marginBottom: 20,
+    },
+    streakLine: {
+      backgroundColor: colors.successMuted,
+      borderRadius: 10,
+      paddingHorizontal: 16,
+      paddingVertical: 12,
+      marginBottom: 12,
+    },
+    streakText: {
+      fontSize: 15,
+      fontWeight: '600',
+      color: colors.success,
+    },
+    streakResetLine: {
+      backgroundColor: colors.warningMuted,
+    },
+    streakResetText: {
+      fontSize: 14,
+      color: colors.warning,
+    },
+    cycleBadgeLine: {
+      backgroundColor: colors.primaryMuted,
+      borderRadius: 10,
+      paddingHorizontal: 16,
+      paddingVertical: 12,
+      marginBottom: 20,
+    },
+    cycleBadgeText: {
+      fontSize: 16,
+      fontWeight: '700',
+      color: colors.primary,
+      textAlign: 'center',
+    },
+    reviewPromptCard: {
+      backgroundColor: colors.bgSurface,
+      borderWidth: 1,
+      borderColor: colors.border,
+      borderRadius: 16,
+      paddingHorizontal: 20,
+      paddingVertical: 18,
+      marginBottom: 20,
+    },
+    reviewPromptTitle: {
+      fontSize: 16,
+      fontWeight: '700',
+      color: colors.text,
+      marginBottom: 6,
+    },
+    reviewPromptSubtext: {
+      fontSize: 13,
+      color: colors.textSecondary,
+      marginBottom: 16,
+      lineHeight: 18,
+    },
+    reviewPromptButtons: {
+      flexDirection: 'row',
+      gap: 10,
+    },
+    reviewButton: {
+      flex: 1,
+      backgroundColor: colors.primary,
+      borderRadius: 10,
+      paddingVertical: 12,
+      alignItems: 'center',
+    },
+    reviewButtonText: {
+      fontSize: 15,
+      fontWeight: '600',
+      color: colors.textInverse,
+    },
+    reviewSkipButton: {
+      flex: 1,
+      backgroundColor: colors.bgMuted,
+      borderRadius: 10,
+      paddingVertical: 12,
+      alignItems: 'center',
+    },
+    reviewSkipButtonText: {
+      fontSize: 15,
+      fontWeight: '600',
+      color: colors.textSecondary,
+    },
+  });
+}
+
 // ── Screen ───────────────────────────────────────────────────────────────────
 
 export default function CompleteScreen() {
+  const { colors } = useTheme();
+  const styles = useMemo(() => buildStyles(colors), [colors]);
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const { isOnline } = useNetworkStatus();
@@ -392,215 +609,3 @@ export default function CompleteScreen() {
     </SafeAreaView>
   );
 }
-
-// ── Styles ───────────────────────────────────────────────────────────────────
-
-const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: colors.bgSurface,
-  },
-  scrollView: {
-    flex: 1,
-  },
-  container: {
-    paddingHorizontal: 24,
-    paddingTop: 32,
-    paddingBottom: 48,
-  },
-  title: {
-    fontSize: 28,
-    fontWeight: '700',
-    color: colors.text,
-    marginBottom: 24,
-    textAlign: 'center',
-  },
-  statsCard: {
-    backgroundColor: colors.bgSurface,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 16,
-    paddingHorizontal: 20,
-    paddingVertical: 16,
-    marginBottom: 32,
-  },
-  statRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: 8,
-  },
-  statDivider: {
-    height: 1,
-    backgroundColor: colors.border,
-  },
-  statLabel: {
-    fontSize: 15,
-    color: colors.textSecondary,
-  },
-  statValue: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: colors.text,
-  },
-  sectionLabel: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: colors.textSecondary,
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-    marginBottom: 12,
-  },
-  rpeRow: {
-    flexDirection: 'row',
-    gap: 8,
-    marginBottom: 32,
-  },
-  rpePill: {
-    flex: 1,
-    height: 48,
-    borderRadius: 12,
-    backgroundColor: colors.bgMuted,
-    borderWidth: 1,
-    borderColor: colors.border,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  rpePillActive: {
-    backgroundColor: colors.primary,
-    borderColor: colors.primary,
-  },
-  rpePillText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: colors.textSecondary,
-  },
-  rpePillTextActive: {
-    color: colors.textInverse,
-  },
-  notesInput: {
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-    fontSize: 15,
-    color: colors.text,
-    minHeight: 100,
-    marginBottom: 32,
-    backgroundColor: colors.bgSurface,
-  },
-  saveButton: {
-    backgroundColor: colors.primary,
-    borderRadius: 12,
-    paddingVertical: 16,
-    alignItems: 'center',
-  },
-  saveButtonDisabled: {
-    opacity: 0.6,
-  },
-  saveButtonText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: colors.textInverse,
-  },
-  syncBanner: {
-    backgroundColor: colors.warningMuted,
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: colors.warning,
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    marginBottom: 20,
-  },
-  syncBannerText: {
-    fontSize: 13,
-    color: colors.warning,
-    textAlign: 'center',
-  },
-  // Achievement surfaces
-  starsSection: {
-    marginBottom: 20,
-  },
-  streakLine: {
-    backgroundColor: colors.successMuted,
-    borderRadius: 10,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    marginBottom: 12,
-  },
-  streakText: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: colors.success,
-  },
-  streakResetLine: {
-    backgroundColor: colors.warningMuted,
-  },
-  streakResetText: {
-    fontSize: 14,
-    color: colors.warning,
-  },
-  cycleBadgeLine: {
-    backgroundColor: colors.primaryMuted,
-    borderRadius: 10,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    marginBottom: 20,
-  },
-  cycleBadgeText: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: colors.primary,
-    textAlign: 'center',
-  },
-  reviewPromptCard: {
-    backgroundColor: colors.bgSurface,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 16,
-    paddingHorizontal: 20,
-    paddingVertical: 18,
-    marginBottom: 20,
-  },
-  reviewPromptTitle: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: colors.text,
-    marginBottom: 6,
-  },
-  reviewPromptSubtext: {
-    fontSize: 13,
-    color: colors.textSecondary,
-    marginBottom: 16,
-    lineHeight: 18,
-  },
-  reviewPromptButtons: {
-    flexDirection: 'row',
-    gap: 10,
-  },
-  reviewButton: {
-    flex: 1,
-    backgroundColor: colors.primary,
-    borderRadius: 10,
-    paddingVertical: 12,
-    alignItems: 'center',
-  },
-  reviewButtonText: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: colors.textInverse,
-  },
-  reviewSkipButton: {
-    flex: 1,
-    backgroundColor: colors.bgMuted,
-    borderRadius: 10,
-    paddingVertical: 12,
-    alignItems: 'center',
-  },
-  reviewSkipButtonText: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: colors.textSecondary,
-  },
-});

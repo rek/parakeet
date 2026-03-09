@@ -16,6 +16,7 @@ import {
   SorenessLevel,
   SorenessModifier,
 } from '../adjustments/soreness-adjuster';
+import { getLiftForExercise } from '../auxiliary/exercise-catalog';
 import { ExerciseType, getExerciseType } from '../auxiliary/exercise-types';
 import { CyclePhase } from '../formulas/cycle-phase';
 import { roundToNearest } from '../formulas/weight-rounding';
@@ -71,6 +72,8 @@ export interface JITInput {
   barWeightKg?: number;
   // Flat pool of all available exercises across all lifts, used for volume top-up (engine-027)
   auxiliaryPool?: string[];
+  // 1RM for each lift — used by volume top-up to calculate correct weights for cross-lift exercises
+  allOneRmKg?: Partial<Record<Lift, number>>;
   // Readiness signals (engine-028): 1=poor/low, 2=ok/normal, 3=great/high
   sleepQuality?: ReadinessLevel;
   energyLevel?: ReadinessLevel;
@@ -441,7 +444,8 @@ export function generateJITSession(input: JITInput): JITOutput {
       activeAuxiliaries,
       input.biologicalSex,
       input.sessionIndex,
-      input.totalSessionsThisWeek
+      input.totalSessionsThisWeek,
+      input.allOneRmKg,
     );
     for (const tu of topUps) {
       auxiliaryWork.push(tu);
@@ -811,7 +815,8 @@ function buildVolumeTopUp(
   activeAuxiliaries: [string, string],
   biologicalSex?: 'female' | 'male',
   sessionIndex?: number,
-  totalSessionsThisWeek?: number
+  totalSessionsThisWeek?: number,
+  allOneRmKg?: Partial<Record<Lift, number>>,
 ): AuxiliaryWork[] {
   // Build main lift muscle contributions to project post-session volume
   const liftMuscles = getMusclesForLift(primaryLift);
@@ -864,10 +869,15 @@ function buildVolumeTopUp(
 
     const baseReps = biologicalSex === 'female' ? 12 : 10;
     const reps = AUX_REP_TARGETS[exercise] ?? baseReps;
+    const exerciseLift = getLiftForExercise(exercise);
+    const effectiveOneRmKg =
+      exerciseLift && allOneRmKg?.[exerciseLift] != null
+        ? allOneRmKg[exerciseLift]!
+        : oneRmKg;
     const finalWeight =
       exerciseType === 'bodyweight'
         ? 0
-        : roundToNearest(oneRmKg * (AUX_WEIGHT_PCT[exercise] ?? 0.675));
+        : roundToNearest(effectiveOneRmKg * (AUX_WEIGHT_PCT[exercise] ?? 0.675));
 
     const sets: PlannedSet[] = Array.from({ length: setCount }, (_, i) => ({
       set_number: i + 1,

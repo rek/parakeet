@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useKeepAwake } from 'expo-keep-awake';
 import {
   Alert,
@@ -24,7 +24,8 @@ import { RpeQuickPicker } from '../../../components/training/RpeQuickPicker';
 import { SetRow } from '../../../components/training/SetRow';
 import { WarmupSection } from '../../../components/training/WarmupSection';
 import { capitalize } from '@shared/utils/string';
-import { colors } from '../../../theme';
+import type { ColorScheme } from '../../../theme';
+import { useTheme } from '../../../theme/ThemeContext';
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -85,7 +86,186 @@ function formatExerciseName(name: string): string {
 
 // ── Screen ───────────────────────────────────────────────────────────────────
 
+// ── Styles ───────────────────────────────────────────────────────────────────
+
+function buildStyles(colors: ColorScheme) {
+  return StyleSheet.create({
+    safeArea: {
+      flex: 1,
+      backgroundColor: colors.bgSurface,
+    },
+    scrollView: {
+      flex: 1,
+    },
+    container: {
+      paddingBottom: 16,
+    },
+    sessionHeader: {
+      paddingHorizontal: 16,
+      paddingTop: 20,
+      paddingBottom: 16,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.border,
+    },
+    sessionHeaderRow: {
+      flexDirection: 'row',
+      alignItems: 'flex-start',
+      justifyContent: 'space-between',
+    },
+    sessionHeaderText: {
+      flex: 1,
+    },
+    abandonX: {
+      fontSize: 18,
+      color: colors.textTertiary,
+      lineHeight: 22,
+      paddingLeft: 8,
+    },
+    liftTitle: {
+      fontSize: 22,
+      fontWeight: '700',
+      color: colors.text,
+      marginBottom: 4,
+    },
+    blockWeekText: {
+      fontSize: 14,
+      color: colors.textSecondary,
+    },
+    workingSetsHeader: {
+      paddingHorizontal: 16,
+      paddingVertical: 14,
+    },
+    workingSetsTitle: {
+      fontSize: 16,
+      fontWeight: '700',
+      color: colors.text,
+    },
+    auxSection: {
+      marginTop: 8,
+      borderTopWidth: 1,
+      borderTopColor: colors.border,
+    },
+    auxExercise: {
+      marginBottom: 8,
+    },
+    auxExerciseName: {
+      paddingHorizontal: 16,
+      paddingBottom: 8,
+      fontSize: 14,
+      fontWeight: '600',
+      color: colors.textSecondary,
+    },
+    auxSkippedText: {
+      paddingHorizontal: 16,
+      paddingVertical: 12,
+      fontSize: 14,
+      color: colors.textTertiary,
+      fontStyle: 'italic',
+    },
+    topUpDivider: {
+      paddingHorizontal: 16,
+      paddingVertical: 10,
+      borderTopWidth: 1,
+      borderTopColor: colors.border,
+      marginTop: 4,
+    },
+    topUpDividerText: {
+      fontSize: 12,
+      fontWeight: '600',
+      color: colors.textTertiary,
+      textTransform: 'uppercase',
+      letterSpacing: 0.5,
+    },
+    topUpReason: {
+      paddingHorizontal: 16,
+      paddingBottom: 6,
+      fontSize: 12,
+      color: colors.textTertiary,
+      fontStyle: 'italic',
+    },
+    adHocExerciseHeader: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      paddingHorizontal: 16,
+      paddingBottom: 8,
+    },
+    addSetButton: {
+      fontSize: 13,
+      fontWeight: '600',
+      color: colors.primary,
+    },
+    addExerciseButton: {
+      marginHorizontal: 16,
+      marginTop: 12,
+      marginBottom: 4,
+      paddingVertical: 12,
+      borderRadius: 10,
+      borderWidth: 1,
+      borderColor: colors.border,
+      borderStyle: 'dashed',
+      alignItems: 'center',
+    },
+    addExerciseButtonText: {
+      fontSize: 14,
+      fontWeight: '600',
+      color: colors.textSecondary,
+    },
+    bottomSpacer: {
+      height: 100,
+    },
+    stickyFooter: {
+      paddingHorizontal: 16,
+      paddingVertical: 12,
+      borderTopWidth: 1,
+      borderTopColor: colors.border,
+      backgroundColor: colors.bgSurface,
+    },
+    completeButton: {
+      backgroundColor: colors.primary,
+      borderRadius: 12,
+      paddingVertical: 16,
+      alignItems: 'center',
+    },
+    completeButtonDisabled: {
+      opacity: 0.4,
+    },
+    completeButtonText: {
+      fontSize: 16,
+      fontWeight: '600',
+      color: colors.textInverse,
+    },
+    restTimerOverlay: {
+      position: 'absolute',
+      left: 0,
+      right: 0,
+      alignItems: 'center',
+      paddingHorizontal: 8,
+      gap: 8,
+    },
+    rpePickerSpaced: {
+      width: '100%',
+      maxWidth: 560,
+    },
+    offlineBanner: {
+      backgroundColor: colors.warning,
+      paddingHorizontal: 16,
+      paddingVertical: 8,
+    },
+    offlineBannerText: {
+      fontSize: 13,
+      fontWeight: '600',
+      color: colors.textInverse,
+      textAlign: 'center',
+    },
+  });
+}
+
+// ── Screen ───────────────────────────────────────────────────────────────────
+
 export default function SessionScreen() {
+  const { colors } = useTheme();
+  const styles = useMemo(() => buildStyles(colors), [colors]);
   const { sessionId, jitData, openHistory, freeForm } = useLocalSearchParams<{
     sessionId: string;
     jitData: string;
@@ -796,175 +976,3 @@ export default function SessionScreen() {
   );
 }
 
-// ── Styles ───────────────────────────────────────────────────────────────────
-
-const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: colors.bgSurface,
-  },
-  scrollView: {
-    flex: 1,
-  },
-  container: {
-    paddingBottom: 16,
-  },
-  sessionHeader: {
-    paddingHorizontal: 16,
-    paddingTop: 20,
-    paddingBottom: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
-  },
-  sessionHeaderRow: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    justifyContent: 'space-between',
-  },
-  sessionHeaderText: {
-    flex: 1,
-  },
-  abandonX: {
-    fontSize: 18,
-    color: colors.textTertiary,
-    lineHeight: 22,
-    paddingLeft: 8,
-  },
-  liftTitle: {
-    fontSize: 22,
-    fontWeight: '700',
-    color: colors.text,
-    marginBottom: 4,
-  },
-  blockWeekText: {
-    fontSize: 14,
-    color: colors.textSecondary,
-  },
-  workingSetsHeader: {
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-  },
-  workingSetsTitle: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: colors.text,
-  },
-  auxSection: {
-    marginTop: 8,
-    borderTopWidth: 1,
-    borderTopColor: colors.border,
-  },
-  auxExercise: {
-    marginBottom: 8,
-  },
-  auxExerciseName: {
-    paddingHorizontal: 16,
-    paddingBottom: 8,
-    fontSize: 14,
-    fontWeight: '600',
-    color: colors.textSecondary,
-  },
-  auxSkippedText: {
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    fontSize: 14,
-    color: colors.textTertiary,
-    fontStyle: 'italic',
-  },
-  topUpDivider: {
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    borderTopWidth: 1,
-    borderTopColor: colors.border,
-    marginTop: 4,
-  },
-  topUpDividerText: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: colors.textTertiary,
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-  },
-  topUpReason: {
-    paddingHorizontal: 16,
-    paddingBottom: 6,
-    fontSize: 12,
-    color: colors.textTertiary,
-    fontStyle: 'italic',
-  },
-  adHocExerciseHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingBottom: 8,
-  },
-  addSetButton: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: colors.primary,
-  },
-  addExerciseButton: {
-    marginHorizontal: 16,
-    marginTop: 12,
-    marginBottom: 4,
-    paddingVertical: 12,
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderStyle: 'dashed',
-    alignItems: 'center',
-  },
-  addExerciseButtonText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: colors.textSecondary,
-  },
-  bottomSpacer: {
-    height: 100,
-  },
-  stickyFooter: {
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderTopWidth: 1,
-    borderTopColor: colors.border,
-    backgroundColor: colors.bgSurface,
-  },
-  completeButton: {
-    backgroundColor: colors.primary,
-    borderRadius: 12,
-    paddingVertical: 16,
-    alignItems: 'center',
-  },
-  completeButtonDisabled: {
-    opacity: 0.4,
-  },
-  completeButtonText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: colors.textInverse,
-  },
-  restTimerOverlay: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    alignItems: 'center',
-    paddingHorizontal: 8,
-    gap: 8,
-  },
-  rpePickerSpaced: {
-    width: '100%',
-    maxWidth: 560,
-  },
-  offlineBanner: {
-    backgroundColor: colors.warning,
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-  },
-  offlineBannerText: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: colors.textInverse,
-    textAlign: 'center',
-  },
-});

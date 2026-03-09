@@ -15,7 +15,7 @@ Depends on:
 
 ### Engine — `packages/training-engine/src/generator/jit-session-generator.ts`
 
-- [x] Added `auxiliaryPool?: string[]`, `sessionIndex?: number`, `totalSessionsThisWeek?: number` to `JITInput`
+- [x] Added `auxiliaryPool?: string[]`, `sessionIndex?: number`, `totalSessionsThisWeek?: number`, `allOneRmKg?: Partial<Record<Lift, number>>` to `JITInput`
 - [x] Added `isTopUp?: boolean` and `topUpReason?: string` to `AuxiliaryWork` interface
 - [x] Added Step 6b "Volume Top-Up" in the pipeline — runs after `buildAuxiliaryWork` (Step 6), before warmup (Step 8)
 - [x] New function `buildVolumeTopUp()` in same file
@@ -26,7 +26,7 @@ Depends on:
 3. Sort by deficit descending, take top 2
 4. For each: filter `auxiliaryPool` for exercises where `getMusclesForExercise(ex)` has contribution ≥ 1.0 for that muscle, not `timed`, not already in `usedExercises` (starts from `activeAuxiliaries`, grows as top-ups are picked)
 5. If no match: skip. Otherwise pick first, add to `usedExercises`
-6. `setCount = max(1, min(3, deficit, remainingMrv))`; weight from `AUX_WEIGHT_PCT`; reps from `AUX_REP_TARGETS`
+6. `setCount = max(1, min(3, deficit, remainingMrv))`; weight uses `getLiftForExercise(exercise)` to look up the correct 1RM from `allOneRmKg` (falls back to primary lift `oneRmKg` when absent or exercise has no catalog lift); reps from `AUX_REP_TARGETS`
 7. Append `AuxiliaryWork` with `isTopUp: true`, `topUpReason: "<muscle> below MEV"` (underscores replaced with spaces)
 8. Per top-up: push `"Added <exercise>: <topUpReason>"` into `rationale[]`
 
@@ -46,9 +46,12 @@ Note: top-up skipped silently (no warning) when no candidate exists; rationale e
 - [x] Session 3/3: full MEV applies (same as no pro-rating)
 - [x] Session 2/3: only severe deficit triggers
 - [x] Missing sessionIndex/totalSessionsThisWeek falls back to full MEV
+- [x] Cross-lift top-up uses correct 1RM (bench exercise during squat day uses bench 1RM, not squat 1RM)
+- [x] Missing allOneRmKg falls back to primary lift 1RM
 
 ### Caller — `apps/parakeet/src/modules/jit/lib/jit.ts`
 
+- [x] Fetch all 3 lift 1RMs in parallel (`getCurrentOneRmKg` for squat/bench/deadlift) and pass as `allOneRmKg`
 - [x] Fetch all 3 pools in parallel via `getAuxiliaryPools(userId)` (added alongside existing `getAuxiliaryPool` call)
 - [x] Merge: `[...allPools.squat, ...allPools.bench, ...allPools.deadlift]` (not deduped — duplicates are filtered by `usedExercises` in the engine)
 - [x] `auxiliaryPool: []` for ad-hoc sessions (no program context)

@@ -36,7 +36,7 @@ For details on any item, see the linked spec file.
 - [x] engine-024: Developer suggestions — `cycle-review.ts` extended; `developer_suggestions` table
 - [x] engine-025: Multi-cycle context — `PreviousCycleSummary`, `getPreviousCycleSummaries`
 - [x] engine-026: Unending session generator — `nextUnendingSession()` pure function; lift rotation, block cycling, deload cadence
-- [x] engine-027: JIT volume augmentation — `buildVolumeTopUp()` in `jit-session-generator.ts`; `JITInput.auxiliaryPool`; `AuxiliaryWork.isTopUp`/`.topUpReason`; app caller merges all 3 lift pools; UI shows "Volume top-up" divider + reason subtitle; MEV pro-rated by week progress (`sessionIndex`/`totalSessionsThisWeek`) so early-week sessions don't over-trigger; 22 tests
+- [x] engine-027: JIT volume augmentation — `buildVolumeTopUp()` in `jit-session-generator.ts`; `JITInput.auxiliaryPool`/`allOneRmKg`; `AuxiliaryWork.isTopUp`/`.topUpReason`; app caller merges all 3 lift pools + passes all 3 lift 1RMs; cross-lift top-up uses correct 1RM via `getLiftForExercise()`; UI shows "Volume top-up" divider + reason subtitle; MEV pro-rated by week progress; 24 tests
 - [x] engine-028: Readiness adjuster — `getReadinessModifier(sleep, energy)` in `adjustments/readiness-adjuster.ts`; applied at JIT Step 2b; 9 tests
 - [x] engine-029: Fatigue predictor — `computePredictedFatigue`, `detectMismatches` in `volume/fatigue-predictor.ts`; mismatch threshold ≥2 levels; sorted by delta; 9 tests
 - [x] engine-030: Cycle phase JIT adjuster — `getCyclePhaseModifier(phase)` in `adjustments/cycle-phase-adjuster.ts`; applied at JIT Step 2c; McNulty 2020 phase lookup; 6 tests
