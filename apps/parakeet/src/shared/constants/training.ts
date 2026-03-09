@@ -55,6 +55,11 @@ export const LIFT_PRIMARY_SORENESS_MUSCLES: Record<Lift, readonly MuscleGroup[]>
   deadlift: ['hamstrings', 'glutes', 'lower_back'],
 }
 
+export const READINESS_LABELS = {
+  sleep: { 1: 'Poor', 2: 'OK', 3: 'Great' } as const,
+  energy: { 1: 'Low', 2: 'Normal', 3: 'High' } as const,
+} as const
+
 export const SORENESS_MUSCLES_DEFAULT: ReadonlyArray<{
   value: MuscleGroup
   label: string

@@ -1,5 +1,5 @@
-import { typedSupabase } from '@platform/supabase';
 import type { Json } from '@platform/supabase';
+import { typedSupabase, fromJson, toJson } from '@platform/supabase';
 import type { CycleReport, RawCycleData } from '@parakeet/training-engine';
 import type { CycleReview } from '@parakeet/shared-types';
 
@@ -38,7 +38,7 @@ export async function fetchCycleReviewByProgram(
     .maybeSingle();
 
   if (error) throw error;
-  return data ? (data.llm_response as unknown as CycleReview) : null;
+  return data ? fromJson<CycleReview>(data.llm_response) : null;
 }
 
 export async function fetchCycleReportSourceData(
@@ -212,8 +212,8 @@ export async function insertCycleReviewRow(input: {
     {
       program_id: input.programId,
       user_id: input.userId,
-      compiled_report: input.compiledReport as unknown as Json,
-      llm_response: input.llmResponse as unknown as Json,
+      compiled_report: toJson(input.compiledReport),
+      llm_response: toJson(input.llmResponse),
     },
     { onConflict: 'user_id,program_id', ignoreDuplicates: true },
   );
@@ -230,7 +230,7 @@ export async function insertFormulaSuggestionConfig(input: {
     user_id: input.userId,
     is_active: false,
     source: input.source,
-    overrides: input.overrides as unknown as Json,
+    overrides: toJson(input.overrides),
     ai_rationale: input.aiRationale,
   });
   if (error) throw error;

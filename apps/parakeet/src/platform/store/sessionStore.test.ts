@@ -1,3 +1,4 @@
+import type { SessionState } from './sessionStore';
 import { useSessionStore } from './sessionStore';
 
 vi.mock('@react-native-async-storage/async-storage', () => ({
@@ -7,6 +8,14 @@ vi.mock('@react-native-async-storage/async-storage', () => ({
     removeItem: vi.fn().mockResolvedValue(undefined),
   },
 }));
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function getPersistOptions(store: unknown): {
+  partialize: (state: SessionState) => Partial<SessionState>;
+  merge: (persisted: unknown, current: SessionState) => SessionState;
+} {
+  return (store as any).persist.getOptions();
+}
 
 describe('sessionStore persistence', () => {
   beforeEach(() => {
@@ -21,7 +30,7 @@ describe('sessionStore persistence', () => {
     expect(state.startedAt).toBeInstanceOf(Date);
 
     // Simulate Zustand persist round-trip: partialize → JSON.stringify → JSON.parse → merge
-    const opts = (store as any).persist.getOptions();
+    const opts = getPersistOptions(store);
 
     const partialized = opts.partialize(state);
     const serialized = JSON.parse(JSON.stringify(partialized));
@@ -32,23 +41,23 @@ describe('sessionStore persistence', () => {
     // merge should reconstruct it as a Date
     const merged = opts.merge(serialized, store.getState());
     expect(merged.startedAt).toBeInstanceOf(Date);
-    expect(merged.startedAt.toISOString()).toBe(state.startedAt!.toISOString());
+    expect(merged.startedAt!.toISOString()).toBe(state.startedAt!.toISOString());
   });
 
   it('merge handles missing startedAt gracefully', () => {
-    const opts = (useSessionStore as any).persist.getOptions();
+    const opts = getPersistOptions(useSessionStore);
     const merged = opts.merge({}, useSessionStore.getState());
     expect(merged.startedAt).toBeUndefined();
   });
 
   it('merge handles undefined persisted state', () => {
-    const opts = (useSessionStore as any).persist.getOptions();
+    const opts = getPersistOptions(useSessionStore);
     const merged = opts.merge(undefined, useSessionStore.getState());
     expect(merged.startedAt).toBeUndefined();
   });
 
   it('merge preserves warmupCompleted array from persisted state', () => {
-    const opts = (useSessionStore as any).persist.getOptions();
+    const opts = getPersistOptions(useSessionStore);
     const merged = opts.merge(
       { warmupCompleted: [1, 2, 3] },
       useSessionStore.getState()

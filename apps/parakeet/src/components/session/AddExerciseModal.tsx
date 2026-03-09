@@ -250,12 +250,13 @@ const styles = StyleSheet.create({
   backdrop: {
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.5)',
-    justifyContent: 'flex-end',
+    justifyContent: 'flex-start',
   },
   sheet: {
+    flex: 1,
     backgroundColor: colors.bgSurface,
-    borderTopLeftRadius: radii.lg,
-    borderTopRightRadius: radii.lg,
+    borderBottomLeftRadius: radii.lg,
+    borderBottomRightRadius: radii.lg,
     maxHeight: '80%',
     paddingBottom: spacing[8],
   },

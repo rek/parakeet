@@ -1,3 +1,4 @@
+import type { DimensionValue } from 'react-native';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useWeeklyVolume } from '@modules/training-volume';
 import type { MuscleGroup, VolumeStatus } from '@parakeet/training-engine';
@@ -47,7 +48,7 @@ function MuscleBar({ muscle, sets, mrv, mev, status }: MuscleBarProps) {
             <View
               style={[
                 styles.mevMarker,
-                { left: `${mevPct}%` as unknown as number },
+                { left: `${mevPct}%` as DimensionValue },
               ]}
             />
           )}

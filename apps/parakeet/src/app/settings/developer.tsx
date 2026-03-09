@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import {
   ActivityIndicator,
+  Alert,
   ScrollView,
   StyleSheet,
   Text,
@@ -8,11 +9,13 @@ import {
   View,
 } from 'react-native';
 import {
+  deleteAllUserData,
   getDeveloperSuggestions,
   getJITStrategyOverride,
   setJITStrategyOverride,
   updateSuggestionStatus,
 } from '@modules/settings';
+import { useAuth } from '@modules/auth';
 import type {
   DeveloperSuggestion,
   JITStrategyOverride,
@@ -171,11 +174,13 @@ function StrategyRow({ option, selected, onPress }: StrategyRowProps) {
 // ── Screen ────────────────────────────────────────────────────────────────────
 
 export default function DeveloperSettingsScreen() {
+  const { user, signOut } = useAuth();
   const [strategy, setStrategy] = useState<JITStrategyOverride>('auto');
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [updatingId, setUpdatingId] = useState<string | null>(null);
   const [showHistory, setShowHistory] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   const queryClient = useQueryClient();
 
   useEffect(() => {
@@ -227,6 +232,30 @@ export default function DeveloperSettingsScreen() {
     } finally {
       setUpdatingId(null);
     }
+  }
+
+  function handleDeleteAllData() {
+    Alert.alert(
+      'Delete All Data',
+      'This will permanently delete all your training data and sign you out. Cannot be undone.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete Everything',
+          style: 'destructive',
+          onPress: async () => {
+            if (!user?.id || isDeleting) return;
+            setIsDeleting(true);
+            try {
+              await deleteAllUserData(user.id);
+              await signOut();
+            } finally {
+              setIsDeleting(false);
+            }
+          },
+        },
+      ]
+    );
   }
 
   return (
@@ -350,6 +379,25 @@ export default function DeveloperSettingsScreen() {
               ))}
           </>
         )}
+        <View style={styles.divider} />
+
+        {/* Reset section */}
+        <Text style={styles.sectionHeader}>Reset</Text>
+        <Text style={styles.sectionNote}>
+          Wipes all training data and signs you out. Cannot be undone.
+        </Text>
+        <TouchableOpacity
+          style={[styles.deleteBtn, isDeleting && styles.deleteBtnDisabled]}
+          onPress={handleDeleteAllData}
+          disabled={isDeleting}
+          activeOpacity={0.7}
+        >
+          {isDeleting ? (
+            <ActivityIndicator color={colors.textInverse} size="small" />
+          ) : (
+            <Text style={styles.deleteBtnText}>Delete All Data</Text>
+          )}
+        </TouchableOpacity>
       </ScrollView>
     </SafeAreaView>
   );
@@ -586,4 +634,20 @@ const styles = StyleSheet.create({
   },
   historyDescription: { fontSize: 13, color: colors.textSecondary },
   historyDate: { fontSize: 11, color: colors.textTertiary },
+
+  // Reset section
+  deleteBtn: {
+    backgroundColor: colors.danger,
+    borderRadius: 10,
+    paddingVertical: 14,
+    alignItems: 'center',
+  },
+  deleteBtnDisabled: {
+    opacity: 0.5,
+  },
+  deleteBtnText: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: colors.textInverse,
+  },
 });

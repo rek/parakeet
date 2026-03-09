@@ -643,3 +643,51 @@ export async function fetchPlannedSessionForProgram(
   if (error) throw error;
   return data;
 }
+
+export interface EndOfWeekContext {
+  programId: string | null;
+  programMode: 'scheduled' | 'unending' | null;
+  weekNumber: number;
+  /** For unending programs — the counter value after completing this session */
+  unendingSessionCounter: number | null;
+}
+
+export async function fetchEndOfWeekContext(
+  sessionId: string
+): Promise<EndOfWeekContext | null> {
+  const { data, error } = await typedSupabase
+    .from('sessions')
+    .select('program_id, week_number, programs(program_mode, unending_session_counter)')
+    .eq('id', sessionId)
+    .maybeSingle();
+
+  if (error) throw error;
+  if (!data) return null;
+
+  const programs = Array.isArray(data.programs) ? data.programs[0] : data.programs;
+  const programMode = programs?.program_mode as 'scheduled' | 'unending' | null ?? null;
+  const counter = programs?.unending_session_counter ?? null;
+
+  return {
+    programId: data.program_id,
+    programMode,
+    weekNumber: data.week_number,
+    unendingSessionCounter: typeof counter === 'number' ? counter : null,
+  };
+}
+
+/** Returns true when no sessions with a higher week_number exist in the same program.
+ *  Used to detect end-of-week for scheduled programs. */
+export async function fetchHasNextWeekSessions(
+  programId: string,
+  currentWeekNumber: number
+): Promise<boolean> {
+  const { count, error } = await typedSupabase
+    .from('sessions')
+    .select('id', { count: 'exact', head: true })
+    .eq('program_id', programId)
+    .gt('week_number', currentWeekNumber);
+
+  if (error) throw error;
+  return (count ?? 0) > 0;
+}

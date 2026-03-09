@@ -677,3 +677,132 @@ describe('generateJITSession — equipment_unavailable disruption', () => {
     expect(out.auxiliaryWork.every((ex) => ex.skipped)).toBe(true)
   })
 })
+
+// ---------------------------------------------------------------------------
+// engine-027: volume top-up
+// ---------------------------------------------------------------------------
+
+describe('generateJITSession — volume top-up (engine-027)', () => {
+  // Pool covers hamstrings (Romanian DL → hamstrings 1.0), quads (Leg Press → quads 1.0)
+  // and Stiff-Leg DL (hamstrings 1.0) as a fallback for the exclusion test.
+  const pool = ['Romanian DL', 'Stiff-Leg DL', 'Leg Press']
+
+  // Helper: set all muscles at their MEV except the specified ones, so only
+  // those muscles appear as top-up candidates. This prevents other high-deficit
+  // muscles from winning the top-2 sort.
+  function atMevExcept(
+    config: MrvMevConfig,
+    ...except: MuscleGroup[]
+  ): Partial<Record<MuscleGroup, number>> {
+    const result: Partial<Record<MuscleGroup, number>> = {}
+    for (const [muscle, { mev }] of Object.entries(config) as [MuscleGroup, { mev: number; mrv: number }][]) {
+      if (!except.includes(muscle)) result[muscle] = mev
+    }
+    return result
+  }
+
+  it('no auxiliaryPool → no top-up exercises appended', () => {
+    const out = generateJITSession(baseInput())
+    expect(out.auxiliaryWork.every((a) => !a.isTopUp)).toBe(true)
+  })
+
+  it('empty auxiliaryPool → no top-up exercises appended', () => {
+    const out = generateJITSession(baseInput({ auxiliaryPool: [] }))
+    expect(out.auxiliaryWork.every((a) => !a.isTopUp)).toBe(true)
+  })
+
+  it('muscle at/above MEV after main lift → no top-up for that muscle', () => {
+    // hamstrings MEV=6; weeklyVol=5; squat contributes 0.5 × 2 sets = floor(1) → projected=6 ≥ 6 → no deficit
+    const mrvMev = makeMrvMev()
+    const out = generateJITSession(baseInput({
+      auxiliaryPool: pool,
+      weeklyVolumeToDate: { ...atMevExcept(mrvMev), hamstrings: 5 },
+      mrvMevConfig: mrvMev,
+    }))
+    const topUps = out.auxiliaryWork.filter((a) => a.isTopUp)
+    expect(topUps.every((a) => !a.topUpReason?.includes('hamstrings'))).toBe(true)
+  })
+
+  it('muscle below MEV → top-up exercise appended with isTopUp=true', () => {
+    // hamstrings MEV=6; only deficient muscle; Romanian DL targets hamstrings 1.0
+    const mrvMev = makeMrvMev()
+    const out = generateJITSession(baseInput({
+      auxiliaryPool: pool,
+      weeklyVolumeToDate: atMevExcept(mrvMev, 'hamstrings'),
+      mrvMevConfig: mrvMev,
+    }))
+    const topUps = out.auxiliaryWork.filter((a) => a.isTopUp)
+    expect(topUps.length).toBeGreaterThan(0)
+    expect(topUps[0].isTopUp).toBe(true)
+    expect(topUps[0].topUpReason).toContain('below MEV')
+  })
+
+  it('top-up sets capped at 3', () => {
+    const mrvMev = makeMrvMev({ hamstrings: { mev: 20, mrv: 30 } })
+    const out = generateJITSession(baseInput({
+      auxiliaryPool: pool,
+      weeklyVolumeToDate: atMevExcept(mrvMev, 'hamstrings'),
+      mrvMevConfig: mrvMev,
+    }))
+    const topUps = out.auxiliaryWork.filter((a) => a.isTopUp)
+    topUps.forEach((a) => expect(a.sets.length).toBeLessThanOrEqual(3))
+  })
+
+  it('max 2 top-up exercises even when 3+ muscles below MEV', () => {
+    // Use a large pool that covers many muscles; keep all at 0 volume
+    const broadPool = ['Romanian DL', 'Leg Press', 'Incline DB Press', 'Close-Grip Bench', 'Barbell Curl']
+    const out = generateJITSession(baseInput({
+      auxiliaryPool: broadPool,
+      weeklyVolumeToDate: {},
+      mrvMevConfig: makeMrvMev({
+        chest: { mev: 20, mrv: 30 },
+        upper_back: { mev: 20, mrv: 30 },
+        triceps: { mev: 20, mrv: 30 },
+        biceps: { mev: 20, mrv: 30 },
+      }),
+    }))
+    const topUps = out.auxiliaryWork.filter((a) => a.isTopUp)
+    expect(topUps.length).toBeLessThanOrEqual(2)
+  })
+
+  it('excludes exercises already in activeAuxiliaries', () => {
+    // Romanian DL is the best hamstring match; make it an active auxiliary
+    const mrvMev = makeMrvMev()
+    const out = generateJITSession(baseInput({
+      auxiliaryPool: pool,
+      weeklyVolumeToDate: atMevExcept(mrvMev, 'hamstrings'),
+      activeAuxiliaries: ['Romanian DL', 'Box Squat'],
+      mrvMevConfig: mrvMev,
+    }))
+    const topUps = out.auxiliaryWork.filter((a) => a.isTopUp)
+    expect(topUps.every((a) => a.exercise !== 'Romanian DL')).toBe(true)
+    // Stiff-Leg DL should be used instead
+    if (topUps.length > 0) {
+      expect(topUps[0].exercise).toBe('Stiff-Leg DL')
+    }
+  })
+
+  it('no qualifying exercise in pool → no top-up for that muscle', () => {
+    // Pool has no exercises targeting hamstrings with contribution >= 1.0
+    const noHamstringPool = ['Leg Press', 'Close-Grip Bench']
+    const mrvMev = makeMrvMev()
+    const out = generateJITSession(baseInput({
+      auxiliaryPool: noHamstringPool,
+      weeklyVolumeToDate: atMevExcept(mrvMev, 'hamstrings'),
+      mrvMevConfig: mrvMev,
+    }))
+    const topUps = out.auxiliaryWork.filter((a) => a.isTopUp && a.topUpReason?.includes('hamstrings'))
+    expect(topUps).toHaveLength(0)
+  })
+
+  it('top-up rationale added to output rationale[]', () => {
+    const mrvMev = makeMrvMev()
+    const out = generateJITSession(baseInput({
+      auxiliaryPool: pool,
+      weeklyVolumeToDate: atMevExcept(mrvMev, 'hamstrings'),
+      mrvMevConfig: mrvMev,
+    }))
+    const hasTopUpRationale = out.rationale.some((r) => r.includes('below MEV'))
+    expect(hasTopUpRationale).toBe(true)
+  })
+})

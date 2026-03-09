@@ -30,6 +30,8 @@ import {
   fetchSessionsForWeek,
   fetchTodaySession,
   fetchPlannedSessionForProgram,
+  fetchEndOfWeekContext,
+  fetchHasNextWeekSessions,
   insertAdHocSession,
   insertPerformanceMetric,
   insertSessionLog,
@@ -488,4 +490,43 @@ async function getRecentLogsForLift(
       completion_pct: row.completion_pct ?? null,
     };
   });
+}
+
+export interface EndOfWeekResult {
+  shouldPrompt: boolean;
+  programId: string | null;
+  weekNumber: number;
+}
+
+/** After completing a session, determine if we should prompt the end-of-week body review.
+ *  - Scheduled: prompt when this was the last session of the week (no sessions with higher week_number)
+ *    OR no more sessions exist in the program.
+ *  - Unending: prompt every 3rd completed session (counter % 3 === 0).
+ *  - Ad-hoc: never prompt.
+ */
+export async function checkEndOfWeek(sessionId: string): Promise<EndOfWeekResult> {
+  const ctx = await fetchEndOfWeekContext(sessionId);
+  if (!ctx || !ctx.programId || ctx.programMode === null) {
+    return { shouldPrompt: false, programId: null, weekNumber: 0 };
+  }
+
+  if (ctx.programMode === 'unending') {
+    const counter = ctx.unendingSessionCounter ?? 0;
+    return {
+      shouldPrompt: counter > 0 && counter % 3 === 0,
+      programId: ctx.programId,
+      weekNumber: ctx.weekNumber,
+    };
+  }
+
+  if (ctx.programMode === 'scheduled') {
+    const hasNext = await fetchHasNextWeekSessions(ctx.programId, ctx.weekNumber);
+    return {
+      shouldPrompt: !hasNext,
+      programId: ctx.programId,
+      weekNumber: ctx.weekNumber,
+    };
+  }
+
+  return { shouldPrompt: false, programId: null, weekNumber: 0 };
 }

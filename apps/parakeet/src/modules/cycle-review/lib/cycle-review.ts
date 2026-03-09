@@ -5,6 +5,7 @@ import {
 } from '@parakeet/training-engine'
 import type { CycleReport, RawCycleData, PreviousCycleSummary } from '@parakeet/training-engine'
 import type { CycleReview } from '@parakeet/shared-types'
+import { fromJson } from '@platform/supabase'
 import {
   fetchCycleReportSourceData,
   fetchCycleReviewByProgram,
@@ -43,8 +44,8 @@ export async function getPreviousCycleSummaries(
   if (!data || data.length === 0) return []
 
   return data.map((row, index) => {
-    const report = row.compiled_report as unknown as CycleReport
-    const review = row.llm_response as unknown as CycleReview
+    const report = fromJson<CycleReport>(row.compiled_report)
+    const review = fromJson<CycleReview>(row.llm_response)
     const cycleNumber = data.length - index
     return extractSummary(report, review, cycleNumber, 0, 0, 0)
   })

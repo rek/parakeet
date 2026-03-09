@@ -6,10 +6,13 @@ import {
   SorenessLevel,
   SorenessModifier,
 } from '../adjustments/soreness-adjuster'
+import { getReadinessModifier, ReadinessLevel } from '../adjustments/readiness-adjuster'
+import { getCyclePhaseModifier } from '../adjustments/cycle-phase-adjuster'
 import { ExerciseType, getExerciseType } from '../auxiliary/exercise-types'
 import { roundToNearest } from '../formulas/weight-rounding'
+import { CyclePhase } from '../formulas/cycle-phase'
 import { FormulaConfig, MrvMevConfig, MuscleGroup } from '../types'
-import { getMusclesForLift } from '../volume/muscle-mapper'
+import { getMusclesForExercise, getMusclesForLift } from '../volume/muscle-mapper'
 import { calculateSets } from './set-calculator'
 import { generateWarmupSets, WarmupProtocol, WarmupSet } from './warmup-calculator'
 
@@ -51,6 +54,13 @@ export interface JITInput {
   }>
   // Bar weight in kg — minimum warmup and recovery floor (default 20)
   barWeightKg?: number
+  // Flat pool of all available exercises across all lifts, used for volume top-up (engine-027)
+  auxiliaryPool?: string[]
+  // Readiness signals (engine-028): 1=poor/low, 2=ok/normal, 3=great/high
+  sleepQuality?: ReadinessLevel
+  energyLevel?: ReadinessLevel
+  // Menstrual cycle phase for cycle-aware JIT adjustments (engine-030)
+  cyclePhase?: CyclePhase
 }
 
 export interface AuxiliaryWork {
@@ -59,6 +69,10 @@ export interface AuxiliaryWork {
   skipped: boolean
   skipReason?: string
   exerciseType: ExerciseType
+  /** True when this exercise was auto-added to top up a muscle below MEV (engine-027) */
+  isTopUp?: boolean
+  /** Human-readable reason for the top-up, e.g. "hamstrings below MEV" */
+  topUpReason?: string
 }
 
 export interface JITOutput {
@@ -102,6 +116,23 @@ export interface JITOutput {
     formulaOutput: JITOutput
     /** True when divergence exceeds display threshold (>15% weight or setDelta !== 0) */
     shouldSurfaceToUser: boolean
+  }
+}
+
+/** Produces a minimal JITOutput for free-form ad-hoc sessions (no primary lift). */
+export function createAdHocJITOutput(): JITOutput {
+  return {
+    sessionId: '',
+    generatedAt: new Date(),
+    mainLiftSets: [],
+    warmupSets: [],
+    auxiliaryWork: [],
+    volumeModifier: 1,
+    intensityModifier: 1,
+    rationale: ['Ad-hoc session — no JIT generation'],
+    warnings: [],
+    skippedMainLift: true,
+    restRecommendations: { mainLift: [], auxiliary: [] },
   }
 }
 
@@ -207,6 +238,22 @@ export function generateJITSession(input: JITInput): JITOutput {
       intensityMultiplier *= 1.025
       rationale.push('Recent RPE below target — increased intensity 2.5%')
     }
+  }
+
+  // Step 2b — Readiness adjustment (sleep quality + energy level)
+  const readinessModifier = getReadinessModifier(input.sleepQuality, input.energyLevel)
+  if (readinessModifier.setReduction > 0 || readinessModifier.intensityMultiplier !== 1.0) {
+    plannedCount = Math.max(1, plannedCount - readinessModifier.setReduction)
+    intensityMultiplier *= readinessModifier.intensityMultiplier
+    if (readinessModifier.rationale) rationale.push(readinessModifier.rationale)
+  }
+
+  // Step 2c — Cycle phase adjustment
+  const cyclePhaseModifier = getCyclePhaseModifier(input.cyclePhase)
+  if (cyclePhaseModifier.volumeModifier !== 0 || cyclePhaseModifier.intensityMultiplier !== 1.0) {
+    plannedCount = Math.max(1, plannedCount + cyclePhaseModifier.volumeModifier)
+    intensityMultiplier *= cyclePhaseModifier.intensityMultiplier
+    if (cyclePhaseModifier.rationale) rationale.push(cyclePhaseModifier.rationale)
   }
 
   // Step 3 — Soreness adjustment
@@ -318,6 +365,24 @@ export function generateJITSession(input: JITInput): JITOutput {
     activeDisruptions,
     primaryLift,
   )
+
+  // Step 6b — Volume top-up (engine-027): append exercises for under-MEV muscles
+  if (input.auxiliaryPool && input.auxiliaryPool.length > 0) {
+    const topUps = buildVolumeTopUp(
+      input.auxiliaryPool,
+      primaryLift,
+      oneRmKg,
+      mainLiftSets.length,
+      weeklyVolumeToDate,
+      mrvMevConfig,
+      activeAuxiliaries,
+      input.biologicalSex,
+    )
+    for (const tu of topUps) {
+      auxiliaryWork.push(tu)
+      rationale.push(`Added ${tu.exercise}: ${tu.topUpReason}`)
+    }
+  }
 
   // Step 8 — Warmup
   let warmupSets: WarmupSet[] = []
@@ -530,6 +595,102 @@ function buildAuxiliaryWork(
       skipped: false,
     })
     result.push(bwSets(bw1), bwSets(bw2))
+  }
+
+  return result
+}
+
+// ---------------------------------------------------------------------------
+// Volume top-up builder (engine-027)
+// ---------------------------------------------------------------------------
+
+/**
+ * Auto-selects auxiliary exercises from the pool to top up muscles that will
+ * still be below MEV after this session's main lift sets complete.
+ *
+ * Constraints (from spec engine-027):
+ *   - Max 2 muscles per session
+ *   - Only weighted/bodyweight exercises (exclude timed)
+ *   - Max 3 sets per top-up
+ *   - Exercises already in activeAuxiliaries are excluded
+ *   - No top-up if no exercise in the pool targets the deficient muscle
+ */
+function buildVolumeTopUp(
+  auxiliaryPool: string[],
+  primaryLift: Lift,
+  oneRmKg: number,
+  mainLiftSetCount: number,
+  weeklyVolumeToDate: Partial<Record<MuscleGroup, number>>,
+  mrvMevConfig: MrvMevConfig,
+  activeAuxiliaries: [string, string],
+  biologicalSex?: 'female' | 'male',
+): AuxiliaryWork[] {
+  // Build main lift muscle contributions to project post-session volume
+  const liftMuscles = getMusclesForLift(primaryLift)
+  const mainContrib = new Map<MuscleGroup, number>()
+  for (const { muscle, contribution } of liftMuscles) {
+    mainContrib.set(muscle, (mainContrib.get(muscle) ?? 0) + contribution)
+  }
+
+  // Find muscles below MEV after factoring in today's main lift
+  const candidates: Array<{ muscle: MuscleGroup; deficit: number }> = []
+  for (const muscle of Object.keys(mrvMevConfig) as MuscleGroup[]) {
+    const { mev } = mrvMevConfig[muscle]
+    if (mev <= 0) continue
+    const weeklyVol = weeklyVolumeToDate[muscle] ?? 0
+    const contrib = mainContrib.get(muscle) ?? 0
+    const projected = weeklyVol + Math.floor(mainLiftSetCount * contrib)
+    const deficit = mev - projected
+    if (deficit > 0) candidates.push({ muscle, deficit })
+  }
+
+  // Highest deficit first, max 2 muscles
+  candidates.sort((a, b) => b.deficit - a.deficit)
+  const topCandidates = candidates.slice(0, 2)
+
+  const result: AuxiliaryWork[] = []
+  const usedExercises = new Set<string>(activeAuxiliaries)
+
+  for (const { muscle, deficit } of topCandidates) {
+    // Find a qualifying exercise from the pool
+    const qualifying = auxiliaryPool.filter((exercise) => {
+      if (usedExercises.has(exercise)) return false
+      if (getExerciseType(exercise) === 'timed') return false
+      return getMusclesForExercise(exercise).some(
+        (m) => m.muscle === muscle && m.contribution >= 1.0,
+      )
+    })
+    if (qualifying.length === 0) continue
+
+    const exercise = qualifying[0]
+    usedExercises.add(exercise)
+
+    const exerciseType = getExerciseType(exercise)
+    const remainingMrv = mrvMevConfig[muscle].mrv - (weeklyVolumeToDate[muscle] ?? 0)
+    const setCount = Math.max(1, Math.min(3, deficit, remainingMrv))
+
+    const baseReps = biologicalSex === 'female' ? 12 : 10
+    const reps = AUX_REP_TARGETS[exercise] ?? baseReps
+    const finalWeight =
+      exerciseType === 'bodyweight'
+        ? 0
+        : roundToNearest(oneRmKg * (AUX_WEIGHT_PCT[exercise] ?? 0.675))
+
+    const sets: PlannedSet[] = Array.from({ length: setCount }, (_, i) => ({
+      set_number: i + 1,
+      weight_kg: finalWeight,
+      reps,
+      rpe_target: 7.5,
+    }))
+
+    result.push({
+      exercise,
+      exerciseType,
+      sets,
+      skipped: false,
+      isTopUp: true,
+      topUpReason: `${muscle.replace('_', ' ')} below MEV`,
+    })
   }
 
   return result

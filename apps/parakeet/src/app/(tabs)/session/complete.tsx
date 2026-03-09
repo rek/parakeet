@@ -11,7 +11,7 @@ import {
 import { detectAchievements } from '@modules/achievements';
 import { useAuth } from '@modules/auth';
 import { stampCyclePhaseOnSession } from '@modules/cycle-tracking';
-import { completeSession, isNetworkError } from '@modules/session';
+import { checkEndOfWeek, completeSession, isNetworkError } from '@modules/session';
 import type { PR } from '@parakeet/training-engine';
 import { useNetworkStatus } from '@platform/network';
 import { qk } from '@platform/query';
@@ -57,6 +57,11 @@ export default function CompleteScreen() {
   const [streakReset, setStreakReset] = useState(false);
   const [cycleBadgeEarned, setCycleBadgeEarned] = useState(false);
   const [saved, setSaved] = useState(false);
+
+  // End-of-week body review prompt
+  const [showReviewPrompt, setShowReviewPrompt] = useState(false);
+  const [reviewProgramId, setReviewProgramId] = useState<string | null>(null);
+  const [reviewWeekNumber, setReviewWeekNumber] = useState(0);
 
   // ── Derived stats ─────────────────────────────────────────────────────────
 
@@ -161,6 +166,18 @@ export default function CompleteScreen() {
         if (achievements.cycleBadgeEarned) setCycleBadgeEarned(true);
       } catch (achievementErr) {
         captureException(achievementErr);
+      }
+
+      // ── End-of-week body review prompt (best-effort) ──────────────────────
+      try {
+        const eow = await checkEndOfWeek(sessionId);
+        if (eow.shouldPrompt) {
+          setReviewProgramId(eow.programId);
+          setReviewWeekNumber(eow.weekNumber);
+          setShowReviewPrompt(true);
+        }
+      } catch (eowErr) {
+        captureException(eowErr);
       }
     } catch (err: unknown) {
       if (isNetworkError(err)) {
@@ -320,6 +337,44 @@ export default function CompleteScreen() {
             {cycleBadgeEarned && (
               <View style={styles.cycleBadgeLine}>
                 <Text style={styles.cycleBadgeText}>Cycle complete! 🏆</Text>
+              </View>
+            )}
+
+            {/* End-of-week body review prompt */}
+            {showReviewPrompt && (
+              <View style={styles.reviewPromptCard}>
+                <Text style={styles.reviewPromptTitle}>
+                  End of week — how does your body feel?
+                </Text>
+                <Text style={styles.reviewPromptSubtext}>
+                  Compare how you feel vs what the system predicted
+                </Text>
+                <View style={styles.reviewPromptButtons}>
+                  <TouchableOpacity
+                    style={styles.reviewButton}
+                    onPress={() => {
+                      setShowReviewPrompt(false);
+                      router.push({
+                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                        pathname: '/session/weekly-review' as any,
+                        params: {
+                          programId: reviewProgramId ?? '',
+                          weekNumber: String(reviewWeekNumber),
+                        },
+                      });
+                    }}
+                    activeOpacity={0.8}
+                  >
+                    <Text style={styles.reviewButtonText}>Review</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={styles.reviewSkipButton}
+                    onPress={() => setShowReviewPrompt(false)}
+                    activeOpacity={0.7}
+                  >
+                    <Text style={styles.reviewSkipButtonText}>Skip</Text>
+                  </TouchableOpacity>
+                </View>
               </View>
             )}
 
@@ -498,5 +553,54 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: colors.primary,
     textAlign: 'center',
+  },
+  reviewPromptCard: {
+    backgroundColor: colors.bgSurface,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: 16,
+    paddingHorizontal: 20,
+    paddingVertical: 18,
+    marginBottom: 20,
+  },
+  reviewPromptTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: colors.text,
+    marginBottom: 6,
+  },
+  reviewPromptSubtext: {
+    fontSize: 13,
+    color: colors.textSecondary,
+    marginBottom: 16,
+    lineHeight: 18,
+  },
+  reviewPromptButtons: {
+    flexDirection: 'row',
+    gap: 10,
+  },
+  reviewButton: {
+    flex: 1,
+    backgroundColor: colors.primary,
+    borderRadius: 10,
+    paddingVertical: 12,
+    alignItems: 'center',
+  },
+  reviewButtonText: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: colors.textInverse,
+  },
+  reviewSkipButton: {
+    flex: 1,
+    backgroundColor: colors.bgMuted,
+    borderRadius: 10,
+    paddingVertical: 12,
+    alignItems: 'center',
+  },
+  reviewSkipButtonText: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: colors.textSecondary,
   },
 });

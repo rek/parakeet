@@ -9,3 +9,4 @@ export * as SettingsModule from './settings';
 export * as WilksModule from './wilks';
 export * as TrainingVolumeModule from './training-volume';
 export * as CycleTrackingModule from './cycle-tracking';
+export * as BodyReviewModule from './body-review';

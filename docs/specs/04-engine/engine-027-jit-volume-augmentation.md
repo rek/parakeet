@@ -1,6 +1,6 @@
 # Spec: JIT Volume Augmentation
 
-**Status**: Planned
+**Status**: Implemented
 **Domain**: Training Engine + UI
 
 ## What This Covers
@@ -11,75 +11,53 @@ Depends on:
 - **Muscle mappings** (Feature 1) — `getMusclesForExercise()` in `muscle-mapper.ts`
 - **Exercise type system** (Bug 1) — only `weighted` and `bodyweight` exercises are top-up candidates; `timed` is excluded
 
-## Tasks
+## Implementation
 
-### Engine
+### Engine — `packages/training-engine/src/generator/jit-session-generator.ts`
 
-**`packages/training-engine/src/generator/jit-session-generator.ts`:**
+- [x] Added `auxiliaryPool?: string[]` to `JITInput`
+- [x] Added `isTopUp?: boolean` and `topUpReason?: string` to `AuxiliaryWork` interface
+- [x] Added Step 6b "Volume Top-Up" in the pipeline — runs after `buildAuxiliaryWork` (Step 6), before warmup (Step 8)
+- [x] New function `buildVolumeTopUp()` in same file
 
-- [ ] Add `auxiliaryPool?: string[]` to `JITInput` — the full merged pool across all lifts (caller supplies this; used only for top-up candidate selection)
-- [ ] Add `isTopUp?: boolean` and `topUpReason?: string` to `AuxiliaryWork` interface
-- [ ] Add Step 7 in the pipeline: "Volume Top-Up" — runs after `buildAuxiliaryWork`, before warmup
+**`buildVolumeTopUp()` actual algorithm:**
+1. Build main lift muscle contributions map (from `getMusclesForLift`)
+2. For each muscle where `mev > 0`: `projected = weeklyVol + floor(mainLiftSetCount × contrib)`, `deficit = mev - projected`; collect where `deficit > 0`
+3. Sort by deficit descending, take top 2
+4. For each: filter `auxiliaryPool` for exercises where `getMusclesForExercise(ex)` has contribution ≥ 1.0 for that muscle, not `timed`, not already in `usedExercises` (starts from `activeAuxiliaries`, grows as top-ups are picked)
+5. If no match: skip. Otherwise pick first, add to `usedExercises`
+6. `setCount = max(1, min(3, deficit, remainingMrv))`; weight from `AUX_WEIGHT_PCT`; reps from `AUX_REP_TARGETS`
+7. Append `AuxiliaryWork` with `isTopUp: true`, `topUpReason: "<muscle> below MEV"` (underscores replaced with spaces)
+8. Per top-up: push `"Added <exercise>: <topUpReason>"` into `rationale[]`
 
-**New function `buildVolumeTopUp()`** in the same file (or extracted to `auxiliary/volume-top-up.ts` if it grows large):
+Note: top-up skipped silently (no warning) when no candidate exists; rationale entry only added when a top-up is actually selected.
 
-```
-Inputs:
-  weeklyVolumeToDate  — current weekly sets per muscle (from JITInput)
-  mrvMevConfig        — MEV/MRV caps per muscle
-  mainLiftSetCount    — sets generated for the main lift (to account for their volume before checking MEV)
-  alreadyAssigned     — exercise names already in the session (activeAuxiliaries) — don't re-add
-  auxiliaryPool       — full candidate pool (JITInput.auxiliaryPool)
-  oneRmKg             — for weight calculation (delegates to same AUX_WEIGHT_PCT logic)
-  biologicalSex       — for rep targets and weight scaling
+**Tests** — 18 new tests in `src/generator/jit-session-generator.test.ts`:
+- [x] No `auxiliaryPool` → no top-ups
+- [x] Empty `auxiliaryPool` → no top-ups
+- [x] Muscle at/above MEV after main lift → no top-up for it
+- [x] Muscle below MEV → top-up appended with `isTopUp: true`
+- [x] Sets capped at 3
+- [x] Max 2 top-ups across the session
+- [x] Excludes exercises already in `activeAuxiliaries`
+- [x] No qualifying exercise in pool → no top-up for that muscle
+- [x] Top-up rationale added to `rationale[]`
 
-Algorithm:
-  1. For each muscle where mev > 0:
-       deficit = mev - (weeklyVolumeToDate[muscle] ?? 0) - (mainLiftSetsContribution for that muscle)
-     Collect muscles where deficit > 0 (i.e. still below MEV even after today's planned volume)
-  2. Sort by deficit descending (most deficient first)
-  3. Cap at 2 muscles
-  4. For each deficient muscle:
-       a. Filter auxiliaryPool to exercises where:
-            - getMusclesForExercise(ex) has contribution >= 1.0 for this muscle
-            - getExerciseType(ex) !== 'timed'
-            - ex not in alreadyAssigned
-       b. If no candidates: skip (note in warnings)
-       c. Pick first candidate (pool order = user-defined preference)
-       d. Clamp set count to min(3, floor(remaining MRV capacity for that muscle))
-       e. Generate sets using same AUX_WEIGHT_PCT / AUX_REP_TARGETS logic
-       f. Return AuxiliaryWork with isTopUp: true, topUpReason: "<muscle> below MEV"
+### Caller — `apps/parakeet/src/modules/jit/lib/jit.ts`
 
-Returns: AuxiliaryWork[] (empty if no top-ups needed)
-```
+- [x] Fetch all 3 pools in parallel via `getAuxiliaryPools(userId)` (added alongside existing `getAuxiliaryPool` call)
+- [x] Merge: `[...allPools.squat, ...allPools.bench, ...allPools.deadlift]` (not deduped — duplicates are filtered by `usedExercises` in the engine)
+- [x] `auxiliaryPool: []` for ad-hoc sessions (no program context)
+- [x] Actual file path: `apps/parakeet/src/modules/jit/lib/jit.ts` (not `modules/session/application/jit.ts` as spec assumed)
 
-- [ ] Append top-up results to `auxiliaryWork` in the JIT pipeline output
-- [ ] Add `topUpCount` to `JITOutput.warnings` or rationale when top-ups are added (e.g. `"Added Romanian DL — hamstrings below MEV"`)
+### UI — `apps/parakeet/src/app/(tabs)/session/[sessionId].tsx`
 
-**Tests** (`src/generator/jit-session-generator.test.ts`):
-- [ ] No top-up when all muscles at or above MEV
-- [ ] Top-up added when muscle is below MEV and candidate exists in pool
-- [ ] Top-up skipped for `timed` exercises
-- [ ] Top-up skipped when exercise already in `activeAuxiliaries`
-- [ ] Capped at 2 top-up exercises per session even when 3+ muscles are deficient
-- [ ] Set count clamped by remaining MRV capacity
-- [ ] No top-up when `auxiliaryPool` is not provided (field is optional — graceful degradation)
-
-### Caller (App Layer)
-
-**`apps/parakeet/src/modules/session/application/jit.ts`** (or wherever JIT is assembled):
-- [ ] When building `JITInput`, fetch the full user pool via `getAuxiliaryPools(userId)` and merge all three lift pools into `auxiliaryPool: [...squat, ...bench, ...deadlift]` (deduped)
-  - This gives the widest selection of exercises across all muscle groups
-  - Already fetched for `activeAuxiliaries` at program creation — should be accessible at JIT time
-
-### UI
-
-**`apps/parakeet/src/app/(tabs)/session/[sessionId].tsx`:**
-- [ ] Update local `AuxiliaryWork` interface to include `isTopUp?: boolean` and `topUpReason?: string`
-- [ ] In the aux exercise list render, group top-up items separately below regular aux
-- [ ] Show a divider label above the first top-up item: "Volume top-up"
-- [ ] Show `topUpReason` as a small subtitle below the exercise name (e.g. "hamstrings below MEV")
-- [ ] Top-up exercises render with same `SetRow` behaviour as regular aux (same `exerciseType` logic applies)
+- [x] Updated local `AuxiliaryWork` interface with `isTopUp?` and `topUpReason?`
+- [x] `auxByExercise` mapped with `origIndex` to preserve rest-timer index across two render groups
+- [x] Split into `regularAux` (non-top-up) and `topUpAux` (top-up)
+- [x] "VOLUME TOP-UP" divider (uppercase, muted, letter-spaced) above first top-up item
+- [x] `topUpReason` rendered as muted italic subtitle below exercise name
+- [x] Same `SetRow` / `handleAuxSetUpdate` flow — `origIndex` used instead of `exerciseIndex` to keep rest timer indexing correct
 
 **Visual spec for top-up section:**
 ```

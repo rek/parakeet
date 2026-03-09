@@ -5,6 +5,7 @@ import {
   rpeSetMultiplier,
   DEFAULT_AUXILIARY_POOLS,
   getAuxiliariesForBlock,
+  createAdHocJITOutput,
 } from '@parakeet/training-engine'
 import type {
   JITInput,
@@ -12,19 +13,21 @@ import type {
   SorenessLevel,
   MuscleGroup,
   RecentSessionSummary,
+  ReadinessLevel,
+  CyclePhase,
 } from '@parakeet/training-engine'
+import { getCurrentCycleContext } from '@modules/cycle-tracking'
 import { LiftSchema, IntensityTypeSchema, BlockNumberSchema, DisruptionSchema } from '@parakeet/shared-types'
 import { getFormulaConfig } from '@modules/formula/application/formula.service'
 import { getSession, getDaysSinceLastSession } from '@modules/session/application/session.service'
 import { fetchProfileSex } from '@modules/session/data/session.repository'
 import { getCurrentOneRmKg } from '@modules/program/lib/lifter-maxes'
-import { getActiveAssignments, getAuxiliaryPool } from '@modules/program/lib/auxiliary-config'
+import { getActiveAssignments, getAuxiliaryPool, getAuxiliaryPools } from '@modules/program/lib/auxiliary-config'
 import { getMrvMevConfig } from '@modules/training-volume/lib/volume-config'
 import { getJITStrategyOverride, getBarWeightKg } from '@modules/settings/lib/settings'
 import { getUserRestOverrides } from '@modules/settings/lib/rest-config'
 import { getWarmupConfig } from '@modules/settings/lib/warmup-config'
-import type { Json } from '@platform/supabase'
-import { typedSupabase } from '@platform/supabase'
+import { typedSupabase, toJson } from '@platform/supabase'
 import { captureException } from '@platform/utils/captureException'
 import { estimateOneRmKgFromProfile } from './max-estimation'
 import {
@@ -40,15 +43,15 @@ export async function runJITForSession(
   session: NonNullable<Session>,
   userId: string,
   sorenessRatings: Partial<Record<MuscleGroup, SorenessLevel>>,
+  sleepQuality?: ReadinessLevel,
+  energyLevel?: ReadinessLevel,
+  /** Optional: pass cycle phase from the UI layer to avoid a double-fetch.
+   *  If not provided, jit.ts will fetch it internally for female users. */
+  cyclePhaseOverride?: CyclePhase,
 ): Promise<JITOutput> {
   // Free-form ad-hoc sessions have no primary lift — return empty JIT output
   if (!session.primary_lift) {
-    return {
-      mainLiftSets: [],
-      warmupSets: [],
-      auxiliaryWork: [],
-      generatedAt: new Date(),
-    } as unknown as JITOutput
+    return createAdHocJITOutput()
   }
 
   const lift = LiftSchema.parse(session.primary_lift)
@@ -62,7 +65,7 @@ export async function runJITForSession(
 
   const biologicalSex = await fetchProfileSex(userId)
 
-  const [oneRmKg, formulaConfig, assignments, warmupConfig, userRestOverrides, barWeightKg, pool] =
+  const [oneRmKg, formulaConfig, assignments, warmupConfig, userRestOverrides, barWeightKg, pool, allPools] =
     await Promise.all([
       getCurrentOneRmKg(userId, lift),
       getFormulaConfig(userId),
@@ -71,6 +74,7 @@ export async function runJITForSession(
       getUserRestOverrides(userId),
       getBarWeightKg(biologicalSex),
       getAuxiliaryPool(userId, lift),
+      isAdHoc ? Promise.resolve(null) : getAuxiliaryPools(userId),
     ])
 
   const mrvMevConfig = await getMrvMevConfig(userId, biologicalSex)
@@ -109,6 +113,17 @@ export async function runJITForSession(
       : undefined
 
   const daysSinceLastSession = await getDaysSinceLastSession(userId, lift)
+
+  // Cycle phase for female users (engine-030); use caller-provided value if available
+  let cyclePhase: CyclePhase | undefined = cyclePhaseOverride
+  if (cyclePhase === undefined && biologicalSex === 'female') {
+    try {
+      const cycleContext = await getCurrentCycleContext(userId)
+      cyclePhase = cycleContext?.phase
+    } catch {
+      // non-fatal — cycle phase adjustment is best-effort
+    }
+  }
 
   // For each slot: if locked, use the stored exercise; otherwise compute from pool rotation.
   const liftAssignment = assignments?.[lift]
@@ -175,6 +190,11 @@ export async function runJITForSession(
   const disruptionRows = await fetchActiveDisruptions(userId)
   const activeDisruptions = disruptionRows.map((row) => DisruptionSchema.parse(row))
 
+  // Merge all three lift pools for widest top-up selection (engine-027)
+  const auxiliaryPool = allPools
+    ? [...allPools.squat, ...allPools.bench, ...allPools.deadlift]
+    : []
+
   const jitInput: JITInput = {
     sessionId: session.id,
     weekNumber: session.week_number,
@@ -195,6 +215,10 @@ export async function runJITForSession(
     barWeightKg,
     daysSinceLastSession: daysSinceLastSession ?? undefined,
     userAge,
+    auxiliaryPool,
+    sleepQuality,
+    energyLevel,
+    cyclePhase,
   }
 
   const strategyOverride = await getJITStrategyOverride()
@@ -208,10 +232,10 @@ export async function runJITForSession(
     void typedSupabase.from('jit_comparison_logs').insert([{
       user_id: userId,
       session_id: session.id,
-      jit_input: input as unknown as Json,
-      formula_output: formulaOutput as unknown as Json,
-      llm_output: llmOutput as unknown as Json,
-      divergence: divergence as unknown as Json,
+      jit_input: toJson(input),
+      formula_output: toJson(formulaOutput),
+      llm_output: toJson(llmOutput),
+      divergence: toJson(divergence),
       strategy_used: 'llm',
     }]).then(({ error }) => {
       if (error) captureException(error)

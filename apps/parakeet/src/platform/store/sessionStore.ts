@@ -32,7 +32,7 @@ interface TimerState {
   pendingAuxSetNumber: number | null
 }
 
-interface SessionState {
+export interface SessionState {
   sessionId: string | null
   plannedSets: { weight_kg: number; reps: number }[]
   actualSets: ActualSet[]
@@ -220,11 +220,12 @@ export const useSessionStore = create<SessionState>()(
         startedAt: state.startedAt,
       }),
       merge: (persisted, current) => {
+        const raw = persisted as Partial<Record<string, unknown>> | undefined;
         const p = persisted as Partial<SessionState> | undefined;
         return {
           ...current,
           ...p,
-          startedAt: p?.startedAt ? new Date(p.startedAt as unknown as string) : undefined,
+          startedAt: typeof raw?.startedAt === 'string' ? new Date(raw.startedAt) : undefined,
         };
       },
     },

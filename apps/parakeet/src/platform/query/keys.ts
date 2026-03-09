@@ -25,4 +25,9 @@ export const qk = {
   featureFlags: {
     all: () => ['feature-flags'] as const,
   },
+  weeklyBodyReview: {
+    list: (userId?: string) => ['weekly-body-reviews', userId] as const,
+    byWeek: (userId?: string, programId?: string, weekNumber?: number) =>
+      ['weekly-body-review', userId, programId, weekNumber] as const,
+  },
 } as const;

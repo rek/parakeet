@@ -153,7 +153,7 @@ export function WorkoutCard({ session, onSkipComplete, isLocked = false }: Worko
           </Text>
         ) : (
           <Text style={styles.setsText}>
-            {(session.planned_sets as unknown[]).length} sets
+            {Array.isArray(session.planned_sets) ? session.planned_sets.length : 0} sets
           </Text>
         )}
 

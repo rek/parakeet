@@ -48,6 +48,8 @@ interface AuxiliaryWork {
   skipped: boolean;
   skipReason?: string;
   exerciseType?: 'weighted' | 'bodyweight' | 'timed';
+  isTopUp?: boolean;
+  topUpReason?: string;
 }
 
 interface RestRecommendations {
@@ -500,10 +502,13 @@ export default function SessionScreen() {
       : undefined;
 
   // Group auxiliary sets by exercise for rendering
-  const auxByExercise = auxiliaryWork.map((aw) => ({
+  const auxByExercise = auxiliaryWork.map((aw, origIndex) => ({
     ...aw,
+    origIndex,
     actualSets: auxiliarySets.filter((s) => s.exercise === aw.exercise),
   }));
+  const regularAux = auxByExercise.filter((aw) => !aw.isTopUp);
+  const topUpAux = auxByExercise.filter((aw) => aw.isTopUp);
 
   // ── Render ────────────────────────────────────────────────────────────────
 
@@ -582,7 +587,7 @@ export default function SessionScreen() {
               <Text style={styles.workingSetsTitle}>Auxiliary Work</Text>
             </View>
 
-            {auxByExercise.map((aw, exerciseIndex) => (
+            {regularAux.map((aw) => (
               <View key={aw.exercise} style={styles.auxExercise}>
                 <Text style={styles.auxExerciseName}>
                   {formatExerciseName(aw.exercise)}
@@ -610,7 +615,7 @@ export default function SessionScreen() {
                         }
                         onUpdate={(data) =>
                           handleAuxSetUpdate(
-                            exerciseIndex,
+                            aw.origIndex,
                             aw.exercise,
                             actualSet.set_number,
                             aw.sets.length,
@@ -623,6 +628,57 @@ export default function SessionScreen() {
                 )}
               </View>
             ))}
+
+            {topUpAux.length > 0 && (
+              <>
+                <View style={styles.topUpDivider}>
+                  <Text style={styles.topUpDividerText}>Volume top-up</Text>
+                </View>
+                {topUpAux.map((aw) => (
+                  <View key={aw.exercise} style={styles.auxExercise}>
+                    <Text style={styles.auxExerciseName}>
+                      {formatExerciseName(aw.exercise)}
+                    </Text>
+                    {aw.topUpReason && (
+                      <Text style={styles.topUpReason}>{aw.topUpReason}</Text>
+                    )}
+                    {aw.skipped ? (
+                      <Text style={styles.auxSkippedText}>
+                        Skipped{aw.skipReason ? ` — ${aw.skipReason}` : ''}
+                      </Text>
+                    ) : (
+                      aw.actualSets.map((actualSet) => {
+                        const planned = aw.sets[actualSet.set_number - 1];
+                        return (
+                          <SetRow
+                            key={`${aw.exercise}-${actualSet.set_number}`}
+                            setNumber={actualSet.set_number}
+                            plannedWeightKg={
+                              planned?.weight_kg ?? actualSet.weight_grams / 1000
+                            }
+                            plannedReps={planned?.reps ?? actualSet.reps_completed}
+                            rpeValue={actualSet.rpe_actual}
+                            exerciseType={aw.exerciseType}
+                            onRpePress={() =>
+                              setPendingAuxRpe({ exercise: aw.exercise, setNumber: actualSet.set_number })
+                            }
+                            onUpdate={(data) =>
+                              handleAuxSetUpdate(
+                                aw.origIndex,
+                                aw.exercise,
+                                actualSet.set_number,
+                                aw.sets.length,
+                                data
+                              )
+                            }
+                          />
+                        );
+                      })
+                    )}
+                  </View>
+                ))}
+              </>
+            )}
 
             {adHocExercises.map((exercise, exerciseIndex) => {
               const sets = auxiliarySets.filter((s) => s.exercise === exercise);
@@ -820,6 +876,27 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 12,
     fontSize: 14,
+    color: colors.textTertiary,
+    fontStyle: 'italic',
+  },
+  topUpDivider: {
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderTopWidth: 1,
+    borderTopColor: colors.border,
+    marginTop: 4,
+  },
+  topUpDividerText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: colors.textTertiary,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  topUpReason: {
+    paddingHorizontal: 16,
+    paddingBottom: 6,
+    fontSize: 12,
     color: colors.textTertiary,
     fontStyle: 'italic',
   },

@@ -1,7 +1,6 @@
 import type { WarmupPresetName, WarmupProtocol } from '@parakeet/training-engine'
 import type { Lift } from '@parakeet/shared-types'
-import type { Json } from '@platform/supabase'
-import { typedSupabase } from '@platform/supabase'
+import { typedSupabase, toJson } from '@platform/supabase'
 
 function parseCustomSteps(value: unknown): Extract<WarmupProtocol, { type: 'custom' }>['steps'] {
   if (!Array.isArray(value)) return []
@@ -69,7 +68,7 @@ export async function updateWarmupConfig(
       user_id: userId,
       lift,
       protocol: protocol.type === 'custom' ? 'custom' : protocol.name,
-      custom_steps: protocol.type === 'custom' ? (protocol.steps as unknown as Json) : null,
+      custom_steps: protocol.type === 'custom' ? toJson(protocol.steps) : null,
       updated_at: new Date().toISOString(),
     },
     { onConflict: 'user_id,lift' },

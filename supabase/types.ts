@@ -223,6 +223,50 @@ export type Database = {
           },
         ]
       }
+      weekly_body_reviews: {
+        Row: {
+          id: string
+          user_id: string
+          program_id: string | null
+          week_number: number
+          felt_soreness: Json
+          predicted_fatigue: Json
+          mismatches: Json
+          notes: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          program_id?: string | null
+          week_number: number
+          felt_soreness: Json
+          predicted_fatigue: Json
+          mismatches?: Json
+          notes?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          program_id?: string | null
+          week_number?: number
+          felt_soreness?: Json
+          predicted_fatigue?: Json
+          mismatches?: Json
+          notes?: string | null
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "weekly_body_reviews_program_id_fkey"
+            columns: ["program_id"]
+            isOneToOne: false
+            referencedRelation: "programs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       disruptions: {
         Row: {
           adjustment_applied: Json | null
