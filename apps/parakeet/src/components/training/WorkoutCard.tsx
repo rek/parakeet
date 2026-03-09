@@ -110,7 +110,7 @@ export function WorkoutCard({ session, onSkipComplete, isLocked = false }: Worko
   const isFreeFormAdHoc = session.program_id === null && !session.primary_lift;
   const badge = session.intensity_type ? getIntensityBadge(session.intensity_type) : null;
   const blockLabel = isFreeFormAdHoc
-    ? (session.activity_name ?? 'Ad-Hoc Workout')
+    ? 'Free-form workout'
     : session.program_id === null
       ? 'Ad-Hoc Workout'
       : session.block_number !== null
@@ -171,7 +171,7 @@ export function WorkoutCard({ session, onSkipComplete, isLocked = false }: Worko
               {isInProgress ? 'Resume Workout' : isLocked ? 'Another session active' : 'Start Workout'}
             </Text>
           </TouchableOpacity>
-          {!isInProgress && (
+          {!isInProgress && !isFreeFormAdHoc && (
             <TouchableOpacity
               style={[styles.button, styles.skipButton]}
               onPress={handleSkipPress}

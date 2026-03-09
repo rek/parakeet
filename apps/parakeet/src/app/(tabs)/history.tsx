@@ -75,10 +75,13 @@ function SessionRow({ session }: { session: CompletedSession }) {
     rep: 'Rep',
     deload: 'Deload',
   };
-  const liftName =
-    LIFT_LABELS[session.primary_lift as Lift] ?? session.primary_lift;
-  const intensityName =
-    intensityLabel[session.intensity_type] ?? session.intensity_type;
+  const isAdHoc = !session.primary_lift;
+  const liftName = isAdHoc
+    ? (session.activity_name ?? 'Ad-Hoc Workout')
+    : (LIFT_LABELS[session.primary_lift as Lift] ?? session.primary_lift);
+  const intensityName = isAdHoc
+    ? null
+    : (intensityLabel[session.intensity_type!] ?? session.intensity_type);
 
   return (
     <TouchableOpacity
@@ -88,7 +91,7 @@ function SessionRow({ session }: { session: CompletedSession }) {
     >
       <View style={styles.sessionRowLeft}>
         <Text style={styles.sessionRowTitle}>
-          {liftName} — {intensityName}
+          {intensityName ? `${liftName} — ${intensityName}` : liftName}
         </Text>
         <View style={styles.sessionRowMeta}>
           <Text style={styles.sessionRowDate}>

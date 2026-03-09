@@ -35,6 +35,8 @@ import {
   fetchRecentSessionLogsForLift,
   fetchWeeklySessionLogs,
   fetchActiveDisruptions,
+  fetchWeekSessionCounts,
+  fetchProgramWeekInfo,
 } from '../data/jit.repository'
 
 type Session = Awaited<ReturnType<typeof getSession>>
@@ -144,9 +146,15 @@ export async function runJITForSession(
 
   // For ad-hoc sessions, skip program-week volume — no cycle context.
   const weeklyVolumeToDate: Partial<Record<MuscleGroup, number>> = {}
+  let sessionIndex: number | undefined
+  let totalSessionsThisWeek: number | undefined
 
   if (!isAdHoc) {
-    const weekLogs = await fetchWeeklySessionLogs(userId, session.program_id!, session.week_number)
+    const [weekLogs, weekCounts, weekInfo] = await Promise.all([
+      fetchWeeklySessionLogs(userId, session.program_id!, session.week_number),
+      fetchWeekSessionCounts(session.program_id!, session.week_number),
+      fetchProgramWeekInfo(session.program_id!),
+    ])
 
     for (const log of weekLogs) {
       const joinedSession = Array.isArray(log.sessions) ? log.sessions[0] : log.sessions
@@ -185,6 +193,15 @@ export async function runJITForSession(
         }
       }
     }
+
+    // Compute week progress for pro-rated MEV in volume top-up
+    if (weekInfo.programMode === 'unending') {
+      totalSessionsThisWeek = weekInfo.trainingDaysPerWeek
+      sessionIndex = (weekInfo.unendingSessionCounter % weekInfo.trainingDaysPerWeek) + 1
+    } else {
+      totalSessionsThisWeek = weekCounts.total
+      sessionIndex = weekCounts.completed + 1
+    }
   }
 
   const disruptionRows = await fetchActiveDisruptions(userId)
@@ -219,6 +236,8 @@ export async function runJITForSession(
     sleepQuality,
     energyLevel,
     cyclePhase,
+    sessionIndex,
+    totalSessionsThisWeek,
   }
 
   const strategyOverride = await getJITStrategyOverride()

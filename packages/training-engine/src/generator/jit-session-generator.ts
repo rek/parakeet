@@ -61,6 +61,9 @@ export interface JITInput {
   energyLevel?: ReadinessLevel
   // Menstrual cycle phase for cycle-aware JIT adjustments (engine-030)
   cyclePhase?: CyclePhase
+  // Week progress for pro-rated MEV threshold in volume top-up (engine-027 fix)
+  sessionIndex?: number          // 1-based position within the training week
+  totalSessionsThisWeek?: number // total planned sessions for this week
 }
 
 export interface AuxiliaryWork {
@@ -377,6 +380,8 @@ export function generateJITSession(input: JITInput): JITOutput {
       mrvMevConfig,
       activeAuxiliaries,
       input.biologicalSex,
+      input.sessionIndex,
+      input.totalSessionsThisWeek,
     )
     for (const tu of topUps) {
       auxiliaryWork.push(tu)
@@ -624,6 +629,8 @@ function buildVolumeTopUp(
   mrvMevConfig: MrvMevConfig,
   activeAuxiliaries: [string, string],
   biologicalSex?: 'female' | 'male',
+  sessionIndex?: number,
+  totalSessionsThisWeek?: number,
 ): AuxiliaryWork[] {
   // Build main lift muscle contributions to project post-session volume
   const liftMuscles = getMusclesForLift(primaryLift)
@@ -640,7 +647,11 @@ function buildVolumeTopUp(
     const weeklyVol = weeklyVolumeToDate[muscle] ?? 0
     const contrib = mainContrib.get(muscle) ?? 0
     const projected = weeklyVol + Math.floor(mainLiftSetCount * contrib)
-    const deficit = mev - projected
+    const effectiveMev =
+      sessionIndex && totalSessionsThisWeek && totalSessionsThisWeek > 0
+        ? Math.ceil(mev * sessionIndex / totalSessionsThisWeek)
+        : mev
+    const deficit = effectiveMev - projected
     if (deficit > 0) candidates.push({ muscle, deficit })
   }
 

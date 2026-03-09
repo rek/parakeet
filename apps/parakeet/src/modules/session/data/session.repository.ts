@@ -24,6 +24,11 @@ function parseLift(value: string | null): Lift {
   return LiftSchema.parse(value);
 }
 
+function parseLiftNullable(value: string | null): Lift | null {
+  const result = LiftSchema.safeParse(value);
+  return result.success ? result.data : null;
+}
+
 function parseIntensity(value: string | null): IntensityType {
   const result = IntensityTypeSchema.safeParse(value);
   return result.success ? result.data : 'heavy';
@@ -198,7 +203,7 @@ export async function fetchCompletedSessions(
   const { data, error } = await typedSupabase
     .from('sessions')
     .select(
-      'id, primary_lift, intensity_type, planned_date, completed_at, status, week_number, block_number, session_logs(cycle_phase, session_rpe)'
+      'id, primary_lift, intensity_type, activity_name, planned_date, completed_at, status, week_number, block_number, session_logs(cycle_phase, session_rpe)'
     )
     .eq('user_id', userId)
     .eq('status', 'completed')
@@ -213,8 +218,9 @@ export async function fetchCompletedSessions(
       | undefined;
     return {
       id: row.id,
-      primary_lift: parseLift(row.primary_lift),
-      intensity_type: parseIntensity(row.intensity_type),
+      primary_lift: parseLiftNullable(row.primary_lift),
+      intensity_type: row.primary_lift ? parseIntensity(row.intensity_type) : null,
+      activity_name: row.activity_name ?? null,
       planned_date: row.planned_date,
       completed_at: row.completed_at ?? null,
       status: parseSessionStatus(row.status),
@@ -538,6 +544,14 @@ export async function updateSessionToPlanned(sessionId: string): Promise<void> {
     .update({ status: 'planned' })
     .eq('id', sessionId)
     .eq('status', 'in_progress');
+  if (error) throw error;
+}
+
+export async function deleteSession(sessionId: string): Promise<void> {
+  const { error } = await typedSupabase
+    .from('sessions')
+    .delete()
+    .eq('id', sessionId);
   if (error) throw error;
 }
 

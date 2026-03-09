@@ -60,6 +60,41 @@ export async function fetchWeeklySessionLogs(
   return (data ?? []) as JitWeeklyLogRow[]
 }
 
+export async function fetchWeekSessionCounts(
+  programId: string,
+  weekNumber: number,
+): Promise<{ total: number; completed: number }> {
+  const { data, error } = await typedSupabase
+    .from('sessions')
+    .select('id, status')
+    .eq('program_id', programId)
+    .eq('week_number', weekNumber)
+
+  if (error) throw error
+  const rows = data ?? []
+  return {
+    total: rows.length,
+    completed: rows.filter((r) => r.status === 'completed').length,
+  }
+}
+
+export async function fetchProgramWeekInfo(
+  programId: string,
+): Promise<{ programMode: string; trainingDaysPerWeek: number; unendingSessionCounter: number }> {
+  const { data, error } = await typedSupabase
+    .from('programs')
+    .select('program_mode, training_days_per_week, unending_session_counter')
+    .eq('id', programId)
+    .single()
+
+  if (error) throw error
+  return {
+    programMode: data.program_mode ?? 'scheduled',
+    trainingDaysPerWeek: data.training_days_per_week ?? 3,
+    unendingSessionCounter: data.unending_session_counter ?? 0,
+  }
+}
+
 export interface JitDisruptionRow {
   id: string
   user_id: string

@@ -806,3 +806,93 @@ describe('generateJITSession — volume top-up (engine-027)', () => {
     expect(hasTopUpRationale).toBe(true)
   })
 })
+
+// ---------------------------------------------------------------------------
+// engine-027 fix: volume top-up MEV pro-rating by week progress
+// ---------------------------------------------------------------------------
+
+describe('generateJITSession — volume top-up MEV pro-rating', () => {
+  const pool = ['Romanian DL', 'Stiff-Leg DL', 'Leg Press']
+
+  function atMevExcept(
+    config: MrvMevConfig,
+    ...except: MuscleGroup[]
+  ): Partial<Record<MuscleGroup, number>> {
+    const result: Partial<Record<MuscleGroup, number>> = {}
+    for (const [muscle, { mev }] of Object.entries(config) as [MuscleGroup, { mev: number; mrv: number }][]) {
+      if (!except.includes(muscle)) result[muscle] = mev
+    }
+    return result
+  }
+
+  it('session 1 of 3: moderate deficit does NOT trigger top-up', () => {
+    // hamstrings MEV=6; effectiveMev = ceil(6*1/3) = 2
+    // squat contributes hamstrings 0.5 × 2 sets = floor(1) → projected=1
+    // deficit = 2-1 = 1, but other muscles at MEV; only 1 set top-up possible
+    // Set weeklyVol for hamstrings to 1 so projected=2 → deficit=0
+    const mrvMev = makeMrvMev()
+    const out = generateJITSession(baseInput({
+      auxiliaryPool: pool,
+      weeklyVolumeToDate: { ...atMevExcept(mrvMev), hamstrings: 1 },
+      mrvMevConfig: mrvMev,
+      sessionIndex: 1,
+      totalSessionsThisWeek: 3,
+    }))
+    const topUps = out.auxiliaryWork.filter((a) => a.isTopUp && a.topUpReason?.includes('hamstrings'))
+    expect(topUps).toHaveLength(0)
+  })
+
+  it('session 3 of 3: full MEV applies — same as no pro-rating', () => {
+    // hamstrings MEV=6; effectiveMev = ceil(6*3/3) = 6; weeklyVol=0 → deficit=6-projected
+    const mrvMev = makeMrvMev()
+    const out = generateJITSession(baseInput({
+      auxiliaryPool: pool,
+      weeklyVolumeToDate: atMevExcept(mrvMev, 'hamstrings'),
+      mrvMevConfig: mrvMev,
+      sessionIndex: 3,
+      totalSessionsThisWeek: 3,
+    }))
+    const topUps = out.auxiliaryWork.filter((a) => a.isTopUp)
+    expect(topUps.length).toBeGreaterThan(0)
+    expect(topUps[0].topUpReason).toContain('below MEV')
+  })
+
+  it('session 2 of 3: only severe deficit triggers', () => {
+    // hamstrings MEV=6; effectiveMev = ceil(6*2/3) = 4
+    // weeklyVol=3, squat contributes floor(2*0.5)=1 → projected=4 → deficit=0
+    const mrvMev = makeMrvMev()
+    const outNoTrigger = generateJITSession(baseInput({
+      auxiliaryPool: pool,
+      weeklyVolumeToDate: { ...atMevExcept(mrvMev), hamstrings: 3 },
+      mrvMevConfig: mrvMev,
+      sessionIndex: 2,
+      totalSessionsThisWeek: 3,
+    }))
+    const noTrigger = outNoTrigger.auxiliaryWork.filter((a) => a.isTopUp && a.topUpReason?.includes('hamstrings'))
+    expect(noTrigger).toHaveLength(0)
+
+    // weeklyVol=0, projected=1 → deficit=3 → triggers
+    const outTrigger = generateJITSession(baseInput({
+      auxiliaryPool: pool,
+      weeklyVolumeToDate: atMevExcept(mrvMev, 'hamstrings'),
+      mrvMevConfig: mrvMev,
+      sessionIndex: 2,
+      totalSessionsThisWeek: 3,
+    }))
+    const trigger = outTrigger.auxiliaryWork.filter((a) => a.isTopUp && a.topUpReason?.includes('hamstrings'))
+    expect(trigger.length).toBeGreaterThan(0)
+  })
+
+  it('missing sessionIndex/totalSessionsThisWeek falls back to full MEV', () => {
+    // Same as the existing "muscle below MEV" test — no pro-rating fields
+    const mrvMev = makeMrvMev()
+    const out = generateJITSession(baseInput({
+      auxiliaryPool: pool,
+      weeklyVolumeToDate: atMevExcept(mrvMev, 'hamstrings'),
+      mrvMevConfig: mrvMev,
+      // sessionIndex and totalSessionsThisWeek intentionally omitted
+    }))
+    const topUps = out.auxiliaryWork.filter((a) => a.isTopUp)
+    expect(topUps.length).toBeGreaterThan(0)
+  })
+})

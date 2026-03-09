@@ -15,14 +15,14 @@ Depends on:
 
 ### Engine — `packages/training-engine/src/generator/jit-session-generator.ts`
 
-- [x] Added `auxiliaryPool?: string[]` to `JITInput`
+- [x] Added `auxiliaryPool?: string[]`, `sessionIndex?: number`, `totalSessionsThisWeek?: number` to `JITInput`
 - [x] Added `isTopUp?: boolean` and `topUpReason?: string` to `AuxiliaryWork` interface
 - [x] Added Step 6b "Volume Top-Up" in the pipeline — runs after `buildAuxiliaryWork` (Step 6), before warmup (Step 8)
 - [x] New function `buildVolumeTopUp()` in same file
 
 **`buildVolumeTopUp()` actual algorithm:**
 1. Build main lift muscle contributions map (from `getMusclesForLift`)
-2. For each muscle where `mev > 0`: `projected = weeklyVol + floor(mainLiftSetCount × contrib)`, `deficit = mev - projected`; collect where `deficit > 0`
+2. For each muscle where `mev > 0`: `projected = weeklyVol + floor(mainLiftSetCount × contrib)`; pro-rate MEV by week progress: `effectiveMev = ceil(mev × sessionIndex / totalSessionsThisWeek)` (falls back to full `mev` when params are absent); `deficit = effectiveMev - projected`; collect where `deficit > 0`
 3. Sort by deficit descending, take top 2
 4. For each: filter `auxiliaryPool` for exercises where `getMusclesForExercise(ex)` has contribution ≥ 1.0 for that muscle, not `timed`, not already in `usedExercises` (starts from `activeAuxiliaries`, grows as top-ups are picked)
 5. If no match: skip. Otherwise pick first, add to `usedExercises`
@@ -32,7 +32,7 @@ Depends on:
 
 Note: top-up skipped silently (no warning) when no candidate exists; rationale entry only added when a top-up is actually selected.
 
-**Tests** — 18 new tests in `src/generator/jit-session-generator.test.ts`:
+**Tests** — 22 tests in `src/generator/jit-session-generator.test.ts`:
 - [x] No `auxiliaryPool` → no top-ups
 - [x] Empty `auxiliaryPool` → no top-ups
 - [x] Muscle at/above MEV after main lift → no top-up for it
@@ -42,6 +42,10 @@ Note: top-up skipped silently (no warning) when no candidate exists; rationale e
 - [x] Excludes exercises already in `activeAuxiliaries`
 - [x] No qualifying exercise in pool → no top-up for that muscle
 - [x] Top-up rationale added to `rationale[]`
+- [x] Session 1/3: moderate deficit does NOT trigger (pro-rated MEV is low)
+- [x] Session 3/3: full MEV applies (same as no pro-rating)
+- [x] Session 2/3: only severe deficit triggers
+- [x] Missing sessionIndex/totalSessionsThisWeek falls back to full MEV
 
 ### Caller — `apps/parakeet/src/modules/jit/lib/jit.ts`
 
@@ -49,6 +53,9 @@ Note: top-up skipped silently (no warning) when no candidate exists; rationale e
 - [x] Merge: `[...allPools.squat, ...allPools.bench, ...allPools.deadlift]` (not deduped — duplicates are filtered by `usedExercises` in the engine)
 - [x] `auxiliaryPool: []` for ad-hoc sessions (no program context)
 - [x] Actual file path: `apps/parakeet/src/modules/jit/lib/jit.ts` (not `modules/session/application/jit.ts` as spec assumed)
+- [x] `fetchWeekSessionCounts()` and `fetchProgramWeekInfo()` in `jit.repository.ts` — fetched in parallel with `weekLogs`
+- [x] Scheduled: `sessionIndex = completed + 1`, `totalSessionsThisWeek = total sessions for week`
+- [x] Unending: `totalSessionsThisWeek = training_days_per_week`, `sessionIndex = (counter % daysPerWeek) + 1`
 
 ### UI — `apps/parakeet/src/app/(tabs)/session/[sessionId].tsx`
 

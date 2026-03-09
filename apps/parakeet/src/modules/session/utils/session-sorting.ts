@@ -6,14 +6,24 @@ const STATUS_ORDER: Record<string, number> = {
   missed: 4,
 }
 
-export function partitionTodaySessions<T extends { status: string }>(
+function isAdHoc(s: { program_id?: string | null; primary_lift?: string | null }): boolean {
+  return s.program_id === null && !s.primary_lift
+}
+
+export function partitionTodaySessions<
+  T extends { status: string; program_id?: string | null; primary_lift?: string | null },
+>(
   sessions: T[],
 ): { completed: T[]; upcoming: T[] } {
   const sorted = [...sessions].sort(
     (a, b) => (STATUS_ORDER[a.status] ?? 5) - (STATUS_ORDER[b.status] ?? 5),
   )
   return {
-    completed: sorted.filter((s) => s.status === 'completed'),
-    upcoming: sorted.filter((s) => s.status !== 'completed'),
+    // Exclude completed ad-hoc — they don't need a "done" card
+    completed: sorted.filter((s) => s.status === 'completed' && !isAdHoc(s)),
+    // Exclude finished/abandoned ad-hoc from the upcoming list
+    upcoming: sorted.filter(
+      (s) => s.status !== 'completed' && !(isAdHoc(s) && (s.status === 'skipped' || s.status === 'missed')),
+    ),
   }
 }

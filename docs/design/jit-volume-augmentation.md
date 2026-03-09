@@ -68,11 +68,12 @@ This feature requires:
 - **Muscle mappings per aux exercise** (Feature 1) — the engine must know which muscles each exercise targets before it can select appropriate top-up exercises
 - **Exercise type system** (Bug 1) — only `weighted` and `bodyweight` exercises can be auto-added; `timed` cardio is excluded from top-ups
 
-## Open Questions
+## Open Questions (resolved)
 
-- [ ] Should top-up exercises be drawn only from the user's existing pool, or from a wider set of exercises?
-- [ ] What's the cap on auto-added sets? (Proposed: max 3 sets per top-up exercise, max 1 top-up exercise per deficient muscle)
-- [ ] Should the user be able to disable this feature entirely in settings?
+- [x] **Pool source**: full merged pool across all 3 lifts (widest selection)
+- [x] **Max top-ups**: max 3 sets per exercise, 1 exercise per deficient muscle, max 2 muscles per session
+- [x] **Disable toggle**: not needed (2-user app)
+- [x] **Early-week aggression**: MEV threshold is pro-rated by week progress (`effectiveMev = ceil(mev × sessionIndex / totalSessionsThisWeek)`), so session 1 of 3 uses ~33% of MEV and top-ups only trigger for severe deficits. Full MEV applies on the last session of the week.
 
 ## References
 

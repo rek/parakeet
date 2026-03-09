@@ -28,8 +28,9 @@ export interface ProgramSessionView {
 
 export interface CompletedSessionListItem {
   id: string;
-  primary_lift: Lift;
-  intensity_type: IntensityType;
+  primary_lift: Lift | null;
+  intensity_type: IntensityType | null;
+  activity_name: string | null;
   planned_date: string | null;
   completed_at: string | null;
   status: SessionStatus;

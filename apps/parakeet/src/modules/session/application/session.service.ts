@@ -42,6 +42,7 @@ import {
   updateSessionToInProgress,
   updateSessionToPlanned,
   updateSessionToSkipped,
+  deleteSession,
 } from '../data/session.repository';
 import { fetchActiveProgramMode, appendNextUnendingSession, type UnendingProgramRef } from '@modules/program';
 import { captureException } from '@platform/utils/captureException';
@@ -204,6 +205,12 @@ export async function skipSession(
 
 // Abandon an in-progress session, resetting it back to planned
 export async function abandonSession(sessionId: string): Promise<void> {
+  const session = await fetchSessionById(sessionId);
+  // Ad-hoc sessions have no program — delete them entirely on abandon
+  if (session && !session.program_id) {
+    await deleteSession(sessionId);
+    return;
+  }
   await updateSessionToPlanned(sessionId);
 }
 
