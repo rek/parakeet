@@ -22,18 +22,16 @@ describe('getAuxiliariesForBlock — default squat pool', () => {
     ]);
   });
 
-  it('block 3 → positions 4+0 (wraps on 5-item pool)', () => {
+  it('block 3 → positions 4+5', () => {
     expect(getAuxiliariesForBlock('squat', 3, pool)).toEqual([
       pool[4],
-      pool[0],
+      pool[5],
     ]);
   });
 
-  it('wraps on a 5-exercise pool with startOffset=6 (second program, block 1 → 1+2)', () => {
-    expect(getAuxiliariesForBlock('squat', 1, pool, 6)).toEqual([
-      pool[1],
-      pool[2],
-    ]);
+  it('wraps correctly: 5-item pool with startOffset=6 (second program, block 1 → 1+2)', () => {
+    const smallPool = ['A', 'B', 'C', 'D', 'E'];
+    expect(getAuxiliariesForBlock('squat', 1, smallPool, 6)).toEqual(['B', 'C']);
   });
 });
 

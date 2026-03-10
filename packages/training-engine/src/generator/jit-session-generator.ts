@@ -16,7 +16,12 @@ import {
   SorenessLevel,
   SorenessModifier,
 } from '../adjustments/soreness-adjuster';
-import { getLiftForExercise } from '../auxiliary/exercise-catalog';
+import {
+  getLiftForExercise,
+  getBodyweightPool,
+  getWeightPct,
+  getRepTarget,
+} from '../auxiliary/exercise-catalog';
 import { ExerciseType, getExerciseType } from '../auxiliary/exercise-types';
 import { CyclePhase } from '../formulas/cycle-phase';
 import { roundToNearest } from '../formulas/weight-rounding';
@@ -508,164 +513,6 @@ export function generateJITSession(input: JITInput): JITOutput {
 // Auxiliary work builder
 // ---------------------------------------------------------------------------
 
-// Per-exercise weight percentage of primary lift 1RM.
-// Every weighted exercise in EXERCISE_CATALOG should have an entry here.
-// Default (not in map) is 0.675 — only hit by user-added custom exercises.
-export const AUX_WEIGHT_PCT: Record<string, number> = {
-  // ── Squat auxiliaries (% of squat 1RM) ──────────────────────────────────────
-  'Barbell Box Squat': 0.7, // close variant with pause
-  'Dumbbell Step Up': 0.15, // unilateral, dumbbell
-  'Dumbbell Lunge': 0.15, // unilateral, dumbbell
-  'Front Barbell Box Squat': 0.55, // front squat + box
-  'Power Clean': 0.5, // explosive, technical
-  'Barbell Front Squat': 0.65, // front squat ~80% of back squat
-  'Bulgarian Split Squat': 0.4, // unilateral
-
-  // ── Bench auxiliaries (% of bench 1RM) ──────────────────────────────────────
-  'Lat Pulldown': 0.55, // different pattern, machine
-  'Close-Grip Barbell Bench Press': 0.75, // close variant
-  'Dumbbell Incline Bench Press': 0.3, // dumbbell + incline
-  'Barbell Pause Bench Press': 0.75, // close variant with pause
-  'Decline Barbell Bench Press': 0.75, // close variant
-  'Barbell Incline Bench Press': 0.65, // incline reduces load
-  'Dumbbell Fly': 0.12, // isolation, dumbbell, stretched position
-  'Seated machine row': 0.55, // different pattern, machine
-  'Overhead Press': 0.58, // vertical press, poor bench transfer
-  'JM Press': 0.5, // tricep isolation
-
-  // ── Bench — biceps isolation ────────────────────────────────────────────────
-  'Barbell Curl': 0.2,
-  'Dumbbell Curl': 0.15,
-  'Cable Curl': 0.15,
-  'EZ-Bar Curl': 0.2,
-
-  // ── Deadlift auxiliaries (% of deadlift 1RM) ───────────────────────────────
-  'Rack Pull': 0.8, // shortened ROM, heavier
-  'Kettlebell Swing': 0.15, // explosive, KB size limit
-  'Pendlay Row': 0.35, // different pattern
-  'Barbell Row': 0.4, // different pattern
-  'Romanian Dumbbell Deadlift': 0.2, // dumbbell, each hand
-  'Hexbar Deadlift': 0.75, // close variant
-  'Hexbar Deadlift Deficit': 0.65, // deficit makes it harder
-  'Dumbbell Row': 0.2, // unilateral, dumbbell
-  'Sumo Deadlift': 0.75, // close variant
-  'Deficit Deadlift': 0.7, // harder variant
-  'Kettlebell Deadlift': 0.15, // KB size limit
-  'Good Mornings': 0.35, // spinal-loading, keep light
-
-  // ── General weighted ────────────────────────────────────────────────────────
-  'Chin Up (weighted)': 0.2,
-};
-
-// Per-exercise rep targets. Overrides the sex-based fallback (10M / 12F).
-// Strength variations use lower reps; hypertrophy / isolation use higher reps.
-// Both canonical catalog names and common short names are included.
-const AUX_REP_TARGETS: Record<string, number> = {
-  // Squat — strength (catalog + short names)
-  'Barbell Box Squat': 4,
-  'Barbell Front Squat': 4,
-  'Front Barbell Box Squat': 4,
-  'Pause Squat': 4,
-  'Box Squat': 4,
-  'Front Squat': 4,
-  'High-Bar Squat': 4,
-  // Squat — hypertrophy
-  'Bulgarian Split Squat': 10,
-  'Dumbbell Step Up': 10,
-  'Dumbbell Lunge': 10,
-  'Leg Press': 12,
-  'Hack Squat': 10,
-  // Squat — power
-  'Power Clean': 3,
-  // Bench — strength (catalog + short names)
-  'Close-Grip Barbell Bench Press': 5,
-  'Barbell Pause Bench Press': 4,
-  'Decline Barbell Bench Press': 5,
-  'Close-Grip Bench': 5,
-  'Floor Press': 5,
-  'Board Press': 4,
-  'Spoto Press': 5,
-  '1 Inch Pause Bench': 4,
-  'JM Press': 6,
-  // Bench — hypertrophy (catalog + short names)
-  'Dumbbell Incline Bench Press': 10,
-  'Barbell Incline Bench Press': 8,
-  'Dumbbell Fly': 12,
-  'Incline DB Press': 10,
-  Dips: 10,
-  'Overhead Press': 8,
-  // Bench — biceps
-  'Barbell Curl': 10,
-  'Dumbbell Curl': 12,
-  'Cable Curl': 12,
-  'EZ-Bar Curl': 10,
-  // Bench — machine / back
-  'Lat Pulldown': 10,
-  'Seated machine row': 10,
-  // Deadlift — strength (catalog + short names)
-  'Rack Pull': 4,
-  'Deficit Deadlift': 4,
-  'Sumo Deadlift': 4,
-  'Hexbar Deadlift': 4,
-  'Hexbar Deadlift Deficit': 4,
-  'Block Pulls': 4,
-  'Deficit DL': 4,
-  'Sumo DL': 4,
-  'Rack Pulls': 4,
-  // Deadlift — hypertrophy / high-rep (catalog + short names)
-  'Romanian Dumbbell Deadlift': 8,
-  'Pendlay Row': 8,
-  'Barbell Row': 8,
-  'Dumbbell Row': 10,
-  'Kettlebell Swing': 12,
-  'Kettlebell Deadlift': 8,
-  Hyperextension: 15,
-  'Romanian DL': 8,
-  'Stiff-Leg DL': 8,
-  'Good Mornings': 10,
-  Hyperextensions: 15,
-  // General weighted
-  'Chin Up (weighted)': 8,
-};
-
-const BODYWEIGHT_POOLS: Record<
-  Lift,
-  { male: readonly string[]; female: readonly string[] }
-> = {
-  squat: {
-    male: ['Jump Squat', 'Pistol Squat', 'Bulgarian Split Squat', 'Box Jump'],
-    female: ['Sumo Squat', 'Curtsy Lunge', 'Hip Thrust', 'Glute Bridge'],
-  },
-  bench: {
-    male: [
-      'Decline Push-ups',
-      'Diamond Push-ups',
-      'Archer Push-ups',
-      'Pike Push-ups',
-    ],
-    female: [
-      'Standard Push-ups',
-      'Wide Push-ups',
-      'Pike Push-ups',
-      'Close-Grip Push-ups',
-    ],
-  },
-  deadlift: {
-    male: [
-      'Nordic Hamstring Curl',
-      'Single-Leg RDL',
-      'Bodyweight Good Morning',
-      'Hyperextension',
-    ],
-    female: [
-      'Hip Thrust',
-      'Single-Leg Glute Bridge',
-      'Donkey Kick',
-      'Glute Kickback',
-    ],
-  },
-};
-
 function buildAuxiliaryWork(
   exercises: [string, string],
   oneRmKg: number,
@@ -730,7 +577,7 @@ function buildAuxiliaryWork(
 
     // Base: per-exercise rep target (falls back to 10 male / 12 female)
     const baseReps = biologicalSex === 'female' ? 12 : 10;
-    const reps = AUX_REP_TARGETS[exercise] ?? baseReps;
+    const reps = getRepTarget(exercise, baseReps);
     let setCount = 3;
     let intensityMult = 1.0;
 
@@ -751,8 +598,7 @@ function buildAuxiliaryWork(
       exerciseType === 'bodyweight'
         ? 0
         : roundToNearest(
-            roundToNearest(oneRmKg * (AUX_WEIGHT_PCT[exercise] ?? 0.675)) *
-              intensityMult
+            roundToNearest(oneRmKg * getWeightPct(exercise)) * intensityMult
           );
 
     const sets: PlannedSet[] = Array.from({ length: setCount }, (_, i) => ({
@@ -767,9 +613,9 @@ function buildAuxiliaryWork(
 
   // No-equipment disruption: append bodyweight compensation exercises
   if (hasNoEquipment && primaryLift && worstSoreness < 5) {
-    const pool = BODYWEIGHT_POOLS[primaryLift];
     const isFemale = biologicalSex === 'female';
-    const [bw1, bw2] = isFemale ? pool.female : pool.male;
+    const sex = isFemale ? 'female' : 'male';
+    const [bw1, bw2] = getBodyweightPool(primaryLift, sex);
     // Female pool uses moderate exercises (Hip Thrust, Push-ups) → 15 reps
     // Male pool uses harder exercises (Nordic Curl, Pistol Squat) → 10 reps
     const bwReps = isFemale ? 15 : 10;
@@ -868,7 +714,7 @@ function buildVolumeTopUp(
     const setCount = Math.max(1, Math.min(3, deficit, remainingMrv));
 
     const baseReps = biologicalSex === 'female' ? 12 : 10;
-    const reps = AUX_REP_TARGETS[exercise] ?? baseReps;
+    const reps = getRepTarget(exercise, baseReps);
     const exerciseLift = getLiftForExercise(exercise);
     const effectiveOneRmKg =
       exerciseLift && allOneRmKg?.[exerciseLift] != null
@@ -877,7 +723,7 @@ function buildVolumeTopUp(
     const finalWeight =
       exerciseType === 'bodyweight'
         ? 0
-        : roundToNearest(effectiveOneRmKg * (AUX_WEIGHT_PCT[exercise] ?? 0.675));
+        : roundToNearest(effectiveOneRmKg * getWeightPct(exercise));
 
     const sets: PlannedSet[] = Array.from({ length: setCount }, (_, i) => ({
       set_number: i + 1,

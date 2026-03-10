@@ -136,7 +136,7 @@ describe('getMusclesForLift — exercise name lookup', () => {
   });
 
   it('uses per-exercise map when exercise name is known', () => {
-    const muscles = getMusclesForLift('bench', 'Close-Grip Bench');
+    const muscles = getMusclesForLift('bench', 'Close-Grip Barbell Bench Press');
     expect(muscles.find((m) => m.muscle === 'triceps')?.contribution).toBe(1.0);
     expect(muscles.find((m) => m.muscle === 'chest')?.contribution).toBe(0.5);
   });
@@ -155,7 +155,7 @@ describe('getMusclesForLift — exercise name lookup', () => {
   });
 
   it('Romanian DL maps hamstrings + glutes primary, lower_back secondary', () => {
-    const muscles = getMusclesForLift('deadlift', 'Romanian DL');
+    const muscles = getMusclesForLift('deadlift', 'Romanian Dumbbell Deadlift');
     expect(muscles.find((m) => m.muscle === 'hamstrings')?.contribution).toBe(
       1.0
     );
@@ -179,8 +179,8 @@ describe('getMusclesForExercise', () => {
     expect(m.find((x) => x.muscle === 'lower_back')).toBeUndefined();
   });
 
-  it('Rack Pulls: upper_back + lower_back primary only', () => {
-    const m = getMusclesForExercise('Rack Pulls');
+  it('Rack Pull: upper_back + lower_back primary only', () => {
+    const m = getMusclesForExercise('Rack Pull');
     expect(m.find((x) => x.muscle === 'upper_back')?.contribution).toBe(1.0);
     expect(m.find((x) => x.muscle === 'lower_back')?.contribution).toBe(1.0);
     expect(m.find((x) => x.muscle === 'hamstrings')).toBeUndefined();
@@ -188,13 +188,13 @@ describe('getMusclesForExercise', () => {
 });
 
 describe('computeWeeklyVolume — aux exercise entries', () => {
-  it('aux Close-Grip Bench entry counts triceps 1.0, chest 0.5', () => {
+  it('aux Close-Grip Barbell Bench Press entry counts triceps 1.0, chest 0.5', () => {
     const logs = [
       { lift: 'bench' as const, completedSets: 4 },
       {
         lift: 'bench' as const,
         completedSets: 3,
-        exercise: 'Close-Grip Bench',
+        exercise: 'Close-Grip Barbell Bench Press',
       },
     ];
     const volume = computeWeeklyVolume(logs, getMusclesForLift);

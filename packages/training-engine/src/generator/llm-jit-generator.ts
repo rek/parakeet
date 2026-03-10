@@ -3,7 +3,7 @@ import { JITAdjustmentSchema } from '@parakeet/shared-types'
 import type { JITAdjustment } from '@parakeet/shared-types'
 import type { JITGeneratorStrategy } from './jit-strategy'
 import type { JITInput, JITOutput, AuxiliaryWork } from './jit-session-generator'
-import { AUX_WEIGHT_PCT } from './jit-session-generator'
+import { getWeightPct } from '../auxiliary/exercise-catalog'
 import { FormulaJITGenerator } from './formula-jit-generator'
 import { enforceHardConstraints } from './jit-constraints'
 import { JIT_MODEL } from '../ai/models'
@@ -94,7 +94,7 @@ export function applyAdjustment(adj: JITAdjustment, input: JITInput): JITOutput 
     if (override === 'skip') {
       return { exercise, exerciseType: 'weighted' as const, sets: [], skipped: true, skipReason: 'LLM: skip override' }
     }
-    const baseAuxWeight = roundToNearest(input.oneRmKg * (AUX_WEIGHT_PCT[exercise] ?? 0.675))
+    const baseAuxWeight = roundToNearest(input.oneRmKg * getWeightPct(exercise))
     const auxWeight = override === 'reduce' ? roundToNearest(baseAuxWeight * 0.90) : baseAuxWeight
     const setCount = override === 'reduce' ? 2 : 3
     return {

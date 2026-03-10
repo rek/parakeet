@@ -86,22 +86,22 @@ describe('generateJITSession — per-exercise rep targets', () => {
     expect(out.auxiliaryWork[1].sets[0].reps).toBe(4);
   });
 
-  it('hypertrophy aux (Romanian DL) → 8 reps', () => {
+  it('hypertrophy aux (Romanian Dumbbell Deadlift) → 8 reps', () => {
     const out = generateJITSession(
       baseInput({
         primaryLift: 'deadlift',
-        activeAuxiliaries: ['Romanian DL', 'Good Mornings'],
+        activeAuxiliaries: ['Romanian Dumbbell Deadlift', 'Good Mornings'],
       })
     );
-    expect(out.auxiliaryWork[0].sets[0].reps).toBe(8); // Romanian DL
+    expect(out.auxiliaryWork[0].sets[0].reps).toBe(8); // Romanian Dumbbell Deadlift
     expect(out.auxiliaryWork[1].sets[0].reps).toBe(10); // Good Mornings
   });
 
-  it('high-rep aux (Hyperextensions) → 15 reps', () => {
+  it('high-rep aux (Hyperextension) → 15 reps', () => {
     const out = generateJITSession(
       baseInput({
         primaryLift: 'deadlift',
-        activeAuxiliaries: ['Hyperextensions', 'Romanian DL'],
+        activeAuxiliaries: ['Hyperextension', 'Romanian Dumbbell Deadlift'],
       })
     );
     expect(out.auxiliaryWork[0].sets[0].reps).toBe(15);
@@ -451,7 +451,7 @@ describe('generateJITSession — auxiliary soreness on bench day', () => {
         blockNumber: 1,
         oneRmKg: 100,
         sorenessRatings: { chest: 5 },
-        activeAuxiliaries: ['Close-Grip Bench', 'Dips'],
+        activeAuxiliaries: ['Close-Grip Barbell Bench Press', 'Dips'],
       })
     );
     out.auxiliaryWork.forEach((a) => {
@@ -471,7 +471,11 @@ describe('generateJITSession — auxiliary soreness on bench day', () => {
 
   it('soreness=4 on quads → auxiliary 1 set at 95% intensity', () => {
     const out = generateJITSession(
-      baseInput({ sorenessRatings: { quads: 4 } })
+      baseInput({
+        sorenessRatings: { quads: 4 },
+        // Use unknown exercises so they fall back to 0.675 default weightPct
+        activeAuxiliaries: ['Unknown Aux A', 'Unknown Aux B'],
+      })
     );
     out.auxiliaryWork.forEach((a) => {
       expect(a.skipped).toBe(false);
@@ -901,9 +905,9 @@ function atMevExcept(
 }
 
 describe('generateJITSession — volume top-up (engine-027)', () => {
-  // Pool covers hamstrings (Romanian DL → hamstrings 1.0), quads (Leg Press → quads 1.0)
-  // and Stiff-Leg DL (hamstrings 1.0) as a fallback for the exclusion test.
-  const pool = ['Romanian DL', 'Stiff-Leg DL', 'Leg Press'];
+  // Pool covers hamstrings (Romanian Dumbbell Deadlift → hamstrings 1.0), quads (Leg Press → quads 1.0)
+  // and Stiff-Leg Deadlift (hamstrings 1.0) as a fallback for the exclusion test.
+  const pool = ['Romanian Dumbbell Deadlift', 'Stiff-Leg Deadlift', 'Leg Press'];
 
   it('no auxiliaryPool → no top-up exercises appended', () => {
     const out = generateJITSession(baseInput());
@@ -961,10 +965,10 @@ describe('generateJITSession — volume top-up (engine-027)', () => {
   it('max 2 top-up exercises even when 3+ muscles below MEV', () => {
     // Use a large pool that covers many muscles; keep all at 0 volume
     const broadPool = [
-      'Romanian DL',
+      'Romanian Dumbbell Deadlift',
       'Leg Press',
-      'Incline DB Press',
-      'Close-Grip Bench',
+      'Dumbbell Incline Bench Press',
+      'Close-Grip Barbell Bench Press',
       'Barbell Curl',
     ];
     const out = generateJITSession(
@@ -985,26 +989,26 @@ describe('generateJITSession — volume top-up (engine-027)', () => {
   });
 
   it('excludes exercises already in activeAuxiliaries', () => {
-    // Romanian DL is the best hamstring match; make it an active auxiliary
+    // Romanian Dumbbell Deadlift is the best hamstring match; make it an active auxiliary
     const out = generateJITSession(
       baseInput({
         auxiliaryPool: pool,
         weeklyVolumeToDate: atMevExcept(DEFAULT_MRV_MEV_CONFIG_MALE, 'hamstrings'),
-        activeAuxiliaries: ['Romanian DL', 'Box Squat'],
+        activeAuxiliaries: ['Romanian Dumbbell Deadlift', 'Box Squat'],
         mrvMevConfig: DEFAULT_MRV_MEV_CONFIG_MALE,
       })
     );
     const topUps = out.auxiliaryWork.filter((a) => a.isTopUp);
-    expect(topUps.every((a) => a.exercise !== 'Romanian DL')).toBe(true);
-    // Stiff-Leg DL should be used instead
+    expect(topUps.every((a) => a.exercise !== 'Romanian Dumbbell Deadlift')).toBe(true);
+    // Stiff-Leg Deadlift should be used instead
     if (topUps.length > 0) {
-      expect(topUps[0].exercise).toBe('Stiff-Leg DL');
+      expect(topUps[0].exercise).toBe('Stiff-Leg Deadlift');
     }
   });
 
   it('no qualifying exercise in pool → no top-up for that muscle', () => {
     // Pool has no exercises targeting hamstrings with contribution >= 1.0
-    const noHamstringPool = ['Leg Press', 'Close-Grip Bench'];
+    const noHamstringPool = ['Leg Press', 'Close-Grip Barbell Bench Press'];
     const out = generateJITSession(
       baseInput({
         auxiliaryPool: noHamstringPool,
@@ -1038,7 +1042,7 @@ describe('generateJITSession — volume top-up (engine-027)', () => {
 // ---------------------------------------------------------------------------
 
 describe('generateJITSession — volume top-up MEV pro-rating', () => {
-  const pool = ['Romanian DL', 'Stiff-Leg DL', 'Leg Press'];
+  const pool = ['Romanian Dumbbell Deadlift', 'Stiff-Leg Deadlift', 'Leg Press'];
 
   it('session 1 of 3: moderate deficit does NOT trigger top-up', () => {
     // hamstrings MEV=6; effectiveMev = ceil(6*1/3) = 2
