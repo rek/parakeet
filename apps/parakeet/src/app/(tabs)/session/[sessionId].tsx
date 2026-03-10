@@ -9,6 +9,8 @@ import {
   View,
 } from 'react-native';
 import { abandonSession, getSession, startSession } from '@modules/session';
+import { getRestTimerPrefs } from '@modules/settings';
+import type { RestTimerPrefs } from '@modules/settings';
 import { useNetworkStatus } from '@platform/network';
 import { useSessionStore } from '@platform/store/sessionStore';
 import { useQueryClient } from '@tanstack/react-query';
@@ -324,10 +326,26 @@ export default function SessionScreen() {
   const restRecommendations = useRef<RestRecommendations | null>(null);
   const llmRestSuggestion = useRef<LlmRestSuggestion | null>(null);
 
+  // Timer prefs loaded once on mount
+  const restTimerPrefsRef = useRef<RestTimerPrefs>({
+    audioAlert: true,
+    hapticAlert: true,
+    llmSuggestions: true,
+    backgroundRestNotification: true,
+    mainSetsEnabled: true,
+    auxSetsEnabled: true,
+    postWarmupEnabled: true,
+    postWarmupSeconds: 120,
+  });
+
   // Interval ref for focus-managed timer ticking
   const tickIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   // ── Bootstrap ─────────────────────────────────────────────────────────────
+
+  useEffect(() => {
+    getRestTimerPrefs().then((p) => { restTimerPrefsRef.current = p; });
+  }, []);
 
   useEffect(() => {
     if (!sessionId) {
@@ -495,6 +513,8 @@ export default function SessionScreen() {
         // No rest timer after the last set
         if (setNumber >= plannedSetsLengthRef.current) return;
 
+        if (!restTimerPrefsRef.current.mainSetsEnabled) return;
+
         const setIndex = setNumber - 1;
         const duration =
           restRecommendations.current?.mainLift[setIndex] ??
@@ -544,6 +564,8 @@ export default function SessionScreen() {
 
         // No rest timer after the last set of this exercise
         if (setNumber >= setsInExercise) return;
+
+        if (!restTimerPrefsRef.current.auxSetsEnabled) return;
 
         const duration =
           restRecommendations.current?.auxiliary[exerciseIndex] ??
@@ -722,7 +744,18 @@ export default function SessionScreen() {
           <WarmupSection
             sets={warmupSetsState}
             completedIndices={warmupCompleted}
-            onToggle={setWarmupDone}
+            onToggle={(index, done) => {
+              setWarmupDone(index, done);
+              if (
+                done &&
+                index === warmupSetsState.length - 1 &&
+                restTimerPrefsRef.current.postWarmupEnabled
+              ) {
+                openTimer({
+                  durationSeconds: restTimerPrefsRef.current.postWarmupSeconds,
+                });
+              }
+            }}
           />
         )}
 

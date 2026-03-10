@@ -71,7 +71,7 @@ export async function findTodaySession(userId: string) {
       // This prevents duplicate generation on each pull-to-refresh.
       const existingPlanned = await fetchPlannedSessionForProgram(program.id, userId);
       if (existingPlanned) return existingPlanned;
-      return generateNextUnendingSession(program, userId);
+      return generateNextUnendingSession(program, userId, session?.status === 'completed');
     }
   }
 
@@ -453,9 +453,14 @@ export async function getDaysSinceLastSession(
 
 // Generates and inserts the next session for an unending program,
 // then increments the program's session counter. Returns the new session row.
-async function generateNextUnendingSession(program: UnendingProgramRef, userId: string) {
+async function generateNextUnendingSession(program: UnendingProgramRef, userId: string, skipToday = false) {
   const trainingDays = program.training_days ?? DEFAULT_TRAINING_DAYS[program.training_days_per_week] ?? [1, 3, 5];
-  const plannedDate = nextTrainingDate(trainingDays);
+  let ref: Date | undefined;
+  if (skipToday) {
+    ref = new Date();
+    ref.setDate(ref.getDate() + 1);
+  }
+  const plannedDate = nextTrainingDate(trainingDays, ref);
   await appendNextUnendingSession(program, userId, plannedDate);
   // Fetch by program_id+planned status so we get the newly created session,
   // not the completed session that fetchTodaySession would return first.

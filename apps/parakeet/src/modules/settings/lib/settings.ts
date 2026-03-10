@@ -63,6 +63,10 @@ export interface RestTimerPrefs {
   hapticAlert: boolean
   llmSuggestions: boolean
   backgroundRestNotification: boolean
+  mainSetsEnabled: boolean
+  auxSetsEnabled: boolean
+  postWarmupEnabled: boolean
+  postWarmupSeconds: number
 }
 
 const DEFAULT_REST_TIMER_PREFS: RestTimerPrefs = {
@@ -70,6 +74,10 @@ const DEFAULT_REST_TIMER_PREFS: RestTimerPrefs = {
   hapticAlert: true,
   llmSuggestions: true,
   backgroundRestNotification: true,
+  mainSetsEnabled: true,
+  auxSetsEnabled: true,
+  postWarmupEnabled: true,
+  postWarmupSeconds: 120,
 }
 
 export async function getRestTimerPrefs(): Promise<RestTimerPrefs> {

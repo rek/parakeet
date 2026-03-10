@@ -374,6 +374,77 @@ function DurationRow({
   );
 }
 
+// ── Timer controls section ────────────────────────────────────────────────────
+
+interface TimerControlsSectionProps {
+  prefs: RestTimerPrefs;
+  postWarmupOpen: boolean;
+  postWarmupSaving: boolean;
+  onTogglePostWarmupRow: () => void;
+  onConfirmPostWarmup: (seconds: number) => void;
+  onTogglePref: (key: keyof RestTimerPrefs, value: boolean) => Promise<void>;
+  styles: Styles;
+  primaryColor: string;
+}
+
+function TimerControlsSection({
+  prefs,
+  postWarmupOpen,
+  postWarmupSaving,
+  onTogglePostWarmupRow,
+  onConfirmPostWarmup,
+  onTogglePref,
+  styles,
+  primaryColor,
+}: TimerControlsSectionProps) {
+  return (
+    <>
+      <Text style={[styles.sectionHeader, styles.sectionHeaderSpaced]}>
+        Timers
+      </Text>
+      <View style={styles.card}>
+        <DurationRow
+          label="After last warmup"
+          totalSeconds={prefs.postWarmupSeconds}
+          isOpen={postWarmupOpen}
+          isSaving={postWarmupSaving}
+          onToggle={onTogglePostWarmupRow}
+          onConfirm={onConfirmPostWarmup}
+          styles={styles}
+          primaryColor={primaryColor}
+        />
+        <View style={styles.separator} />
+        <View style={styles.toggleRow}>
+          <Text style={styles.toggleLabel}>Working set timers</Text>
+          <Switch
+            value={prefs.mainSetsEnabled}
+            onValueChange={(v) => onTogglePref('mainSetsEnabled', v)}
+            trackColor={{ true: primaryColor }}
+          />
+        </View>
+        <View style={styles.separator} />
+        <View style={styles.toggleRow}>
+          <Text style={styles.toggleLabel}>Auxiliary set timers</Text>
+          <Switch
+            value={prefs.auxSetsEnabled}
+            onValueChange={(v) => onTogglePref('auxSetsEnabled', v)}
+            trackColor={{ true: primaryColor }}
+          />
+        </View>
+        <View style={styles.separator} />
+        <View style={styles.toggleRow}>
+          <Text style={styles.toggleLabel}>Rest after last warmup</Text>
+          <Switch
+            value={prefs.postWarmupEnabled}
+            onValueChange={(v) => onTogglePref('postWarmupEnabled', v)}
+            trackColor={{ true: primaryColor }}
+          />
+        </View>
+      </View>
+    </>
+  );
+}
+
 // ── Preview card ──────────────────────────────────────────────────────────────
 
 interface PreviewCardProps {
@@ -424,7 +495,13 @@ export default function RestTimerSettingsScreen() {
     hapticAlert: true,
     llmSuggestions: true,
     backgroundRestNotification: true,
+    mainSetsEnabled: true,
+    auxSetsEnabled: true,
+    postWarmupEnabled: true,
+    postWarmupSeconds: 120,
   });
+  const [postWarmupOpen, setPostWarmupOpen] = useState(false);
+  const [postWarmupSaving, setPostWarmupSaving] = useState(false);
   const [resetting, setResetting] = useState(false);
 
   // Load existing overrides from Supabase
@@ -493,6 +570,17 @@ export default function RestTimerSettingsScreen() {
       queryClient.invalidateQueries({ queryKey: ['rest', 'overrides'] });
     } finally {
       setResetting(false);
+    }
+  }
+
+  async function handlePostWarmupConfirm(seconds: number) {
+    setPostWarmupSaving(true);
+    setPostWarmupOpen(false);
+    try {
+      await setRestTimerPrefs({ postWarmupSeconds: seconds });
+      setPrefs((prev) => ({ ...prev, postWarmupSeconds: seconds }));
+    } finally {
+      setPostWarmupSaving(false);
     }
   }
 
@@ -578,6 +666,18 @@ export default function RestTimerSettingsScreen() {
               primaryColor={colors.primary}
             />
           </View>
+
+          {/* ── Timer controls section ─────────────────────────────────────── */}
+          <TimerControlsSection
+            prefs={prefs}
+            postWarmupOpen={postWarmupOpen}
+            postWarmupSaving={postWarmupSaving}
+            onTogglePostWarmupRow={() => setPostWarmupOpen((prev) => !prev)}
+            onConfirmPostWarmup={handlePostWarmupConfirm}
+            onTogglePref={handleTogglePref}
+            styles={styles}
+            primaryColor={colors.primary}
+          />
 
           {/* ── Alerts section ─────────────────────────────────────────────── */}
           <Text style={[styles.sectionHeader, styles.sectionHeaderSpaced]}>

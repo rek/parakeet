@@ -47,9 +47,11 @@ vi.mock('@platform/utils/captureException', () => ({
   captureException: mockCaptureException,
 }));
 
+const mockNextTrainingDate = vi.hoisted(() => vi.fn(() => '2026-03-09'));
+
 vi.mock('@parakeet/training-engine', () => ({
   DEFAULT_TRAINING_DAYS: { 3: [1, 3, 5] },
-  nextTrainingDate: vi.fn(() => '2026-03-09'),
+  nextTrainingDate: mockNextTrainingDate,
   suggestProgramAdjustments: vi.fn(() => []),
   getDefaultThresholds: vi.fn(() => ({})),
   isMakeupWindowExpired: vi.fn(() => false),
@@ -115,6 +117,53 @@ describe('findTodaySession', () => {
     const result = await findTodaySession('user-1');
 
     expect(result).toEqual(generated);
+  });
+
+  it('generates next session without skipToday ref when no session exists (today is valid)', async () => {
+    const generated = { id: 's2', status: 'planned' };
+    mockFetchTodaySession.mockResolvedValue(null);
+    mockFetchActiveProgramMode.mockResolvedValue({
+      id: 'p1',
+      program_mode: 'unending',
+      training_days_per_week: 3,
+      training_days: [1, 3, 5],
+      unending_session_counter: 2,
+    });
+    mockFetchPlannedSessionForProgram
+      .mockResolvedValueOnce(null)
+      .mockResolvedValueOnce(generated);
+
+    await findTodaySession('user-1');
+
+    // Called with no reference date — nextTrainingDate may return today
+    expect(mockNextTrainingDate).toHaveBeenCalledWith([1, 3, 5], undefined);
+  });
+
+  it('generates next session with tomorrow reference when unending session is completed', async () => {
+    const completedSession = { id: 's1', status: 'completed', planned_date: '2026-03-09' };
+    const generated = { id: 's2', status: 'planned' };
+    mockFetchTodaySession.mockResolvedValue(completedSession);
+    mockFetchActiveProgramMode.mockResolvedValue({
+      id: 'p1',
+      program_mode: 'unending',
+      training_days_per_week: 3,
+      training_days: [1, 3, 5],
+      unending_session_counter: 3,
+    });
+    mockFetchPlannedSessionForProgram
+      .mockResolvedValueOnce(null)
+      .mockResolvedValueOnce(generated);
+
+    await findTodaySession('user-1');
+
+    // Called with a Date reference set to tomorrow — ensures today is skipped
+    const [, refArg] = mockNextTrainingDate.mock.calls[0];
+    expect(refArg).toBeInstanceOf(Date);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const refDay = new Date(refArg as Date);
+    refDay.setHours(0, 0, 0, 0);
+    expect(refDay.getTime()).toBeGreaterThan(today.getTime());
   });
 
   it('returns existing planned session for unending program without generating', async () => {
