@@ -21,6 +21,7 @@ import {
 } from 'react-native-safe-area-context';
 import { AddExerciseModal } from '../../../components/session/AddExerciseModal';
 import { LiftHistorySheet } from '../../../components/session/LiftHistorySheet';
+import { PostRestOverlay } from '../../../components/training/PostRestOverlay';
 import { RestTimer } from '../../../components/training/RestTimer';
 import { RpeQuickPicker } from '../../../components/training/RpeQuickPicker';
 import { SetRow } from '../../../components/training/SetRow';
@@ -62,6 +63,14 @@ interface RestRecommendations {
 interface LlmRestSuggestion {
   deltaSeconds: number;
   formulaBaseSeconds: number;
+}
+
+interface PostRestState {
+  pendingMainSetNumber: number | null;
+  actualRestSeconds: number;
+  liftStartedAt: number;
+  plannedReps: number;
+  resetSecondsRemaining: number | null;
 }
 
 interface JitData {
@@ -307,6 +316,8 @@ export default function SessionScreen() {
   const [adHocExercises, setAdHocExercises] = useState<string[]>([]);
   const [addExerciseVisible, setAddExerciseVisible] = useState(false);
   const [historySheetVisible, setHistorySheetVisible] = useState(false);
+  const [postRestState, setPostRestState] = useState<PostRestState | null>(null);
+  const resetIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const [pendingRpeSetNumber, setPendingRpeSetNumber] = useState<number | null>(null);
   const [pendingAuxRpe, setPendingAuxRpe] = useState<{ exercise: string; setNumber: number } | null>(null);
   const insets = useSafeAreaInsets();
@@ -345,6 +356,9 @@ export default function SessionScreen() {
 
   useEffect(() => {
     getRestTimerPrefs().then((p) => { restTimerPrefsRef.current = p; });
+    return () => {
+      if (resetIntervalRef.current !== null) clearInterval(resetIntervalRef.current);
+    };
   }, []);
 
   useEffect(() => {
@@ -601,6 +615,52 @@ export default function SessionScreen() {
         actual_rest_seconds: elapsedSeconds,
       });
     }
+
+    // Show PostRestOverlay for main sets (not post-warmup, not aux)
+    if (pendingMain !== null) {
+      setPostRestState({
+        pendingMainSetNumber: pendingMain,
+        actualRestSeconds: elapsedSeconds,
+        liftStartedAt: Date.now(),
+        plannedReps: plannedSets[pendingMain - 1]?.reps ?? 0,
+        resetSecondsRemaining: null,
+      });
+    }
+  }
+
+  function handleLiftComplete() {
+    if (resetIntervalRef.current !== null) {
+      clearInterval(resetIntervalRef.current);
+      resetIntervalRef.current = null;
+    }
+    setPostRestState(null);
+  }
+
+  function handlePostRestReset() {
+    if (!postRestState) return;
+    if (resetIntervalRef.current !== null) {
+      clearInterval(resetIntervalRef.current);
+      resetIntervalRef.current = null;
+    }
+    const newRest = postRestState.actualRestSeconds + 15;
+    if (postRestState.pendingMainSetNumber !== null) {
+      updateSet(postRestState.pendingMainSetNumber, { actual_rest_seconds: newRest });
+    }
+    setPostRestState((prev) =>
+      prev ? { ...prev, actualRestSeconds: newRest, resetSecondsRemaining: 15 } : null
+    );
+    resetIntervalRef.current = setInterval(() => {
+      setPostRestState((prev) => {
+        if (!prev || prev.resetSecondsRemaining === null) return prev;
+        const next = prev.resetSecondsRemaining - 1;
+        if (next <= 0) {
+          clearInterval(resetIntervalRef.current!);
+          resetIntervalRef.current = null;
+          return { ...prev, resetSecondsRemaining: null };
+        }
+        return { ...prev, resetSecondsRemaining: next };
+      });
+    }, 1000);
   }
 
   function handleRpeQuickSelect(rpe: number) {
@@ -641,6 +701,8 @@ export default function SessionScreen() {
           style: 'destructive',
           onPress: async () => {
             if (timerState?.visible) closeTimer();
+            if (resetIntervalRef.current !== null) { clearInterval(resetIntervalRef.current); resetIntervalRef.current = null; }
+            setPostRestState(null);
             await abandonSession(sessionId);
             reset();
             void queryClient.invalidateQueries({ queryKey: ['session'] });
@@ -976,8 +1038,8 @@ export default function SessionScreen() {
         onClose={() => setAddExerciseVisible(false)}
       />
 
-      {/* Rest timer + floating RPE picker overlay */}
-      {(timerState?.visible || pendingRpeSetNumber !== null || pendingAuxRpe !== null) && (
+      {/* Rest timer + post-rest overlay + floating RPE picker */}
+      {(timerState?.visible || postRestState !== null || pendingRpeSetNumber !== null || pendingAuxRpe !== null) && (
         <View
           pointerEvents="box-none"
           style={[styles.restTimerOverlay, { top: insets.top + 8 }]}
@@ -993,10 +1055,19 @@ export default function SessionScreen() {
               llmSuggestion={activeLlmSuggestion}
               onDone={handleTimerDone}
               intensityLabel={intensityLabel}
+              autoHideOnExpiry
+            />
+          )}
+          {postRestState !== null && !timerState?.visible && (
+            <PostRestOverlay
+              plannedReps={postRestState.plannedReps}
+              onLiftComplete={handleLiftComplete}
+              onReset15s={handlePostRestReset}
+              resetCountdown={postRestState.resetSecondsRemaining}
             />
           )}
           {(pendingRpeSetNumber !== null || pendingAuxRpe !== null) && (
-            <View style={timerState?.visible ? styles.rpePickerSpaced : undefined}>
+            <View style={(timerState?.visible || postRestState !== null) ? styles.rpePickerSpaced : undefined}>
               <RpeQuickPicker
                 onSelect={handleRpeQuickSelect}
                 onSkip={handleRpeQuickSkip}

@@ -3,6 +3,7 @@ import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { createAudioPlayer } from 'expo-audio';
 import * as Haptics from 'expo-haptics';
 import { getRestTimerPrefs } from '../../modules/settings';
+import { shouldFirePrepareWarning } from '../../modules/session/utils/prepare-warning';
 import { formatMMSS } from '../../shared/utils';
 import { radii, spacing, typography } from '../../theme';
 import { useTheme } from '../../theme/ThemeContext';
@@ -43,6 +44,8 @@ export interface RestTimerProps {
   onDone: (elapsedSeconds: number) => void;
   intensityLabel: string;
   isAuxiliary?: boolean;
+  /** When true, automatically calls onDone ~1.5s after the timer hits 0:00 */
+  autoHideOnExpiry?: boolean;
 }
 
 // ── Internal hook (used only by AuxiliaryPill) ────────────────────────────────
@@ -164,6 +167,7 @@ function FullTimer({
   llmSuggestion,
   onDone,
   intensityLabel,
+  autoHideOnExpiry = false,
 }: Omit<RestTimerProps, 'isAuxiliary'>) {
   const { colors } = useTheme();
   const effectiveDuration = Math.max(0, durationSeconds + offset);
@@ -271,6 +275,29 @@ function FullTimer({
     prevOvertimeRef.current = overtime;
   }, [overtime]);
 
+  // 15-second prepare warning (fires once per timer session)
+  const warnFiredRef = useRef(false);
+  useEffect(() => { warnFiredRef.current = false; }, [durationSeconds]);
+  useEffect(() => {
+    if (shouldFirePrepareWarning(remaining, overtime, warnFiredRef.current)) {
+      warnFiredRef.current = true;
+      if (hapticAlertRef.current)
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => {});
+      if (audioAlertRef.current) playDing();
+    }
+  }, [remaining, overtime]);
+
+  // Auto-hide: call onDone ~1.5s after hitting 0:00 (sound plays first)
+  const autoHideFiredRef = useRef(false);
+  useEffect(() => { autoHideFiredRef.current = false; }, [durationSeconds]);
+  useEffect(() => {
+    if (!autoHideOnExpiry || !overtime || autoHideFiredRef.current) return;
+    autoHideFiredRef.current = true;
+    const t = setTimeout(() => onDone(elapsed), 1500);
+    return () => clearTimeout(t);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [overtime, autoHideOnExpiry]);
+
   const showAiChip =
     llmSuggestion !== undefined && Math.abs(llmSuggestion.deltaSeconds) >= 30;
 
@@ -341,6 +368,7 @@ export function RestTimer({
   onDone,
   intensityLabel,
   isAuxiliary = false,
+  autoHideOnExpiry = false,
 }: RestTimerProps) {
   if (isAuxiliary) {
     return <AuxiliaryPill durationSeconds={durationSeconds} onDone={onDone} />;
@@ -355,6 +383,7 @@ export function RestTimer({
       llmSuggestion={llmSuggestion}
       onDone={onDone}
       intensityLabel={intensityLabel}
+      autoHideOnExpiry={autoHideOnExpiry}
     />
   );
 }
