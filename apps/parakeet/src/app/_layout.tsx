@@ -1,7 +1,7 @@
 import 'expo/fetch';
 import { useEffect } from 'react';
 import { View } from 'react-native';
-import { useAuth } from '@modules/auth';
+import { AuthProvider, useAuthContext } from '@modules/auth';
 import { useMissedSessionReconciliation, useRestNotifications, useSyncQueue } from '@modules/session';
 import { queryClient } from '@platform/query';
 import * as Sentry from '@sentry/react-native';
@@ -36,7 +36,7 @@ Sentry.init({
 SplashScreen.preventAutoHideAsync();
 
 function RootLayoutNav() {
-  const { loading } = useAuth();
+  const { loading } = useAuthContext();
   // const insets = useSafeAreaInsets();
   useSyncQueue();
   useMissedSessionReconciliation();
@@ -78,7 +78,9 @@ function RootLayout() {
     <ErrorBoundary>
       <ThemeProvider>
         <QueryClientProvider client={queryClient}>
-          <RootLayoutNav />
+          <AuthProvider>
+            <RootLayoutNav />
+          </AuthProvider>
         </QueryClientProvider>
       </ThemeProvider>
     </ErrorBoundary>
