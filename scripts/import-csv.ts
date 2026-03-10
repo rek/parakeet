@@ -286,7 +286,32 @@ const PRESET_MAPPINGS: Record<string, ExerciseResolution> = {
     exerciseName: 'Barbell Push Press',
     forLift: 'overhead_press',
   },
+
+  // Anette's NextSet exercises
+  // — Aux (powerlifting-relevant) —
+  'Barbell block bench': { kind: 'aux', exerciseName: 'Barbell block bench', forLift: 'bench' },
+  'barbell decline bench': { kind: 'aux', exerciseName: 'barbell decline bench', forLift: 'bench' },
+  'Barbell pause bench': { kind: 'aux', exerciseName: 'Barbell pause bench', forLift: 'bench' },
+  'closegrip bench': { kind: 'aux', exerciseName: 'closegrip bench', forLift: 'bench' },
+  'block pulls': { kind: 'aux', exerciseName: 'block pulls', forLift: 'deadlift' },
+  'pause squat': { kind: 'aux', exerciseName: 'pause squat', forLift: 'squat' },
+
+  // — Skip (olympic lifts & junk) —
+  'Barbell Clean': { kind: 'skip' },
+  'barbell clean and jerk': { kind: 'skip' },
+  'Barbell push jerk': { kind: 'skip' },
+  'Hang Clean': { kind: 'skip' },
+  'Snatch': { kind: 'skip' },
+  'Sumo deadlift high pull': { kind: 'skip' },
+  'hang': { kind: 'skip' },
+  'Front Dumbbell Raise': { kind: 'skip' },
+  'Exercise': { kind: 'skip' },
 };
+
+// Case-insensitive lookup map built from PRESET_MAPPINGS.
+const PRESET_MAP_CI = new Map<string, ExerciseResolution>(
+  Object.entries(PRESET_MAPPINGS).map(([k, v]) => [k.toLowerCase(), v])
+);
 
 // Variants that look like a main lift but are actually accessories — never auto-match these.
 const SQUAT_VARIANTS = [
@@ -608,11 +633,12 @@ async function mapExercises(
   const mapping = new Map<string, ExerciseResolution>();
   const canonicalLifts = ['squat', 'bench', 'deadlift', 'overhead_press'];
 
-  // Apply presets silently first
+  // Apply presets silently first (case-insensitive)
   const needsPrompt: string[] = [];
   for (const name of exerciseNames) {
-    if (PRESET_MAPPINGS[name]) {
-      mapping.set(name, PRESET_MAPPINGS[name]);
+    const preset = PRESET_MAP_CI.get(name.toLowerCase());
+    if (preset) {
+      mapping.set(name, preset);
     } else {
       needsPrompt.push(name);
     }

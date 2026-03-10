@@ -2,6 +2,9 @@
   "expo": {
     "android": {
       "package": "com.adam.tombleson.parakeet"
-    }
+    },
+    "plugins": [
+      "@sentry/react-native"
+    ]
   }
 }

@@ -21,6 +21,7 @@ import { router } from 'expo-router'
 import { radii, spacing, typography } from '../../theme'
 import type { ColorScheme } from '../../theme'
 import { useTheme } from '../../theme/ThemeContext'
+import { BackLink } from '../../components/navigation/BackLink'
 
 function isPresetMatch(flags: Record<FeatureId, boolean>, preset: Record<FeatureId, boolean>) {
   return (Object.keys(preset) as FeatureId[]).every((id) => flags[id] === preset[id])
@@ -39,11 +40,6 @@ function buildStyles(colors: ColorScheme) {
       paddingHorizontal: spacing[6],
       paddingTop: spacing[4],
       paddingBottom: spacing[12],
-    },
-    backText: {
-      fontSize: typography.sizes.base,
-      color: colors.primary,
-      marginBottom: spacing[3],
     },
     screenTitle: {
       fontSize: typography.sizes['2xl'],
@@ -149,9 +145,7 @@ export default function FeaturesScreen() {
         contentContainerStyle={styles.container}
         showsVerticalScrollIndicator={false}
       >
-        <TouchableOpacity onPress={() => router.back()} activeOpacity={0.6}>
-          <Text style={styles.backText}>‹ Settings</Text>
-        </TouchableOpacity>
+        <BackLink label="Settings" onPress={() => router.back()} />
 
         <Text style={styles.screenTitle}>Features</Text>
         <Text style={styles.subtitle}>
