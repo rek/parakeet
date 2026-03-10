@@ -34,6 +34,7 @@
     "expo-splash-screen": "*",
     "expo-status-bar": "*",
     "expo-system-ui": "*",
+    "expo-updates": "~29.0.16",
     "jest-expo": "*",
     "metro-config": "*",
     "metro-resolver": "*",

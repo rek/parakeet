@@ -1,0 +1,49 @@
+name: EAS Update
+
+on:
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: Update channel
+        required: true
+        default: preview
+        type: choice
+        options:
+          - development
+          - preview
+          - production
+      message:
+        description: Update message
+        required: false
+        default: ""
+
+jobs:
+  update:
+    name: EAS Update (${{ github.event.inputs.branch }})
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Setup EAS
+        uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+
+      - name: Publish update
+        working-directory: apps/parakeet
+        run: |
+          eas update \
+            --branch ${{ github.event.inputs.branch }} \
+            --message "${{ github.event.inputs.message || github.event.head_commit.message }}" \
+            --non-interactive
