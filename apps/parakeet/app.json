@@ -41,8 +41,9 @@
     ],
     "extra": {
       "eas": {
-        "projectId": "50f6e375-0065-4338-b537-17ca0ac587b3"
+        "projectId": "b18331dc-0e4d-4562-9bdd-62a6e89f12a7"
       }
-    }
+    },
+    "owner": "valkeet"
   }
 }

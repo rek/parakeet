@@ -24,7 +24,23 @@ npm run db:types                 # Generate TypeScript types → supabase/types.
 npm run db:push                  # Push migrations to hosted Supabase
 ```
 
-### Build production APK
+### Build production APK (EAS — preferred)
+
+Builds are triggered manually via GitHub Actions:
+
+1. Go to **Actions → EAS Build** in the GitHub repo
+2. Click **Run workflow**
+3. Select a profile: `preview` (internal APK) or `production`
+4. Click **Run workflow**
+
+EAS builds remotely and env vars are pulled from EAS secrets (managed on expo.dev → project → Secrets).
+
+Profiles:
+- `development` — dev client, internal distribution
+- `preview` — APK, internal distribution (sideload-ready)
+- `production` — APK, production
+
+### Build production APK (local)
 
 Requires the native Android project to exist (`apps/parakeet/android/`). If it doesn't, run prebuild first:
 
