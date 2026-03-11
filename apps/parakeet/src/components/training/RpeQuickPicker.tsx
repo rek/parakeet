@@ -1,5 +1,5 @@
 import { useMemo } from 'react'
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native'
+import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 import { radii, spacing, typography } from '../../theme'
 import { useTheme } from '../../theme/ThemeContext'
 
@@ -36,8 +36,6 @@ export function RpeQuickPicker({ onSelect, onSkip }: RpeQuickPickerProps) {
     },
     buttons: {
       flexDirection: 'row',
-      flexWrap: 'wrap',
-      justifyContent: 'center',
       gap: spacing[1.5],
     },
     rpeButton: {
@@ -64,7 +62,11 @@ export function RpeQuickPicker({ onSelect, onSkip }: RpeQuickPickerProps) {
   return (
     <View style={styles.container}>
       <Text style={styles.label}>How'd that feel?</Text>
-      <View style={styles.buttons}>
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={styles.buttons}
+      >
         {RPE_OPTIONS.map((rpe) => (
           <TouchableOpacity
             key={rpe}
@@ -75,7 +77,7 @@ export function RpeQuickPicker({ onSelect, onSkip }: RpeQuickPickerProps) {
             <Text style={styles.rpeText}>{rpe}</Text>
           </TouchableOpacity>
         ))}
-      </View>
+      </ScrollView>
       <TouchableOpacity
         onPress={onSkip}
         hitSlop={{ top: 8, bottom: 8, left: 12, right: 12 }}
