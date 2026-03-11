@@ -20,6 +20,7 @@
 import * as fs from 'fs';
 import * as readline from 'readline';
 import { createClient } from '@supabase/supabase-js';
+import { EXERCISE_CATALOG } from '../../packages/training-engine/src/auxiliary/exercise-catalog';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -289,23 +290,43 @@ const PRESET_MAPPINGS: Record<string, ExerciseResolution> = {
 
   // Anette's NextSet exercises
   // — Aux (powerlifting-relevant) —
-  'Barbell block bench': { kind: 'aux', exerciseName: 'Barbell block bench', forLift: 'bench' },
-  'barbell decline bench': { kind: 'aux', exerciseName: 'barbell decline bench', forLift: 'bench' },
-  'Barbell pause bench': { kind: 'aux', exerciseName: 'Barbell pause bench', forLift: 'bench' },
-  'closegrip bench': { kind: 'aux', exerciseName: 'closegrip bench', forLift: 'bench' },
-  'block pulls': { kind: 'aux', exerciseName: 'block pulls', forLift: 'deadlift' },
-  'pause squat': { kind: 'aux', exerciseName: 'pause squat', forLift: 'squat' },
+  'Barbell block bench': {
+    kind: 'aux',
+    exerciseName: 'Barbell Block Bench Press',
+    forLift: 'bench',
+  },
+  'barbell decline bench': {
+    kind: 'aux',
+    exerciseName: 'Decline Barbell Bench Press',
+    forLift: 'bench',
+  },
+  'Barbell pause bench': {
+    kind: 'aux',
+    exerciseName: 'Barbell Pause Bench Press',
+    forLift: 'bench',
+  },
+  'closegrip bench': {
+    kind: 'aux',
+    exerciseName: 'Close-Grip Barbell Bench Press',
+    forLift: 'bench',
+  },
+  'block pulls': {
+    kind: 'aux',
+    exerciseName: 'Rack Pull',
+    forLift: 'deadlift',
+  },
+  'pause squat': { kind: 'aux', exerciseName: 'Pause Squat', forLift: 'squat' },
 
   // — Skip (olympic lifts & junk) —
-  'Barbell Clean': { kind: 'skip' },
-  'barbell clean and jerk': { kind: 'skip' },
+  'Barbell Clean': { kind: 'aux', exerciseName: 'Power Clean', forLift: 'deadlift' },
+  'barbell clean and jerk': { kind: 'aux', exerciseName: 'Clean and Jerk', forLift: 'deadlift' },
   'Barbell push jerk': { kind: 'skip' },
-  'Hang Clean': { kind: 'skip' },
-  'Snatch': { kind: 'skip' },
+  'Hang Clean': { kind: 'aux', exerciseName: 'Barbell Hang Clean', forLift: 'deadlift' },
+  Snatch: { kind: 'aux', exerciseName: 'Barbell Snatch', forLift: 'deadlift' },
   'Sumo deadlift high pull': { kind: 'skip' },
-  'hang': { kind: 'skip' },
+  hang: { kind: 'aux', exerciseName: 'Deadhang', forLift: 'deadlift' },
   'Front Dumbbell Raise': { kind: 'skip' },
-  'Exercise': { kind: 'skip' },
+  Exercise: { kind: 'skip' },
 };
 
 // Case-insensitive lookup map built from PRESET_MAPPINGS.
@@ -994,6 +1015,29 @@ Get the service key from: npx supabase status  (the "Secret" key)
   }
   if (skippedSets > 0)
     console.log(`  Skipped sets:             ${skippedSets}`);
+
+  // Show aux exercises that are missing from EXERCISE_CATALOG
+  const catalogNames = new Set(
+    EXERCISE_CATALOG.map((e) => e.name.toLowerCase())
+  );
+  const missingFromCatalog = [...mapping.values()]
+    .filter(
+      (v): v is Extract<ExerciseResolution, { kind: 'aux' }> => v.kind === 'aux'
+    )
+    .map((v) => ({ name: v.exerciseName, forLift: v.forLift }))
+    .filter(({ name }) => !catalogNames.has(name.toLowerCase()))
+    // deduplicate
+    .filter(({ name }, i, arr) => arr.findIndex((x) => x.name === name) === i);
+
+  if (missingFromCatalog.length > 0) {
+    console.log(`\nNot in exercise-catalog.ts (${missingFromCatalog.length}):`);
+    for (const { name, forLift } of missingFromCatalog) {
+      console.log(`  "${name}"  →  ${forLift} pool`);
+    }
+    console.log(
+      `  (Add these to packages/training-engine/src/auxiliary/exercise-catalog.ts)`
+    );
+  }
 
   if (isDryRun) {
     console.log('\n--dry-run flag set. No data was written.');
