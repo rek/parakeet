@@ -1,6 +1,4 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-// ── Tests ────────────────────────────────────────────────────────────────────
-
 import {
   findTodaySession,
   findTodaySessions,
@@ -8,6 +6,9 @@ import {
 } from './session.service';
 
 // ── Mocks ────────────────────────────────────────────────────────────────────
+// Only the exports actually called by findTodaySession, findTodaySessions,
+// and getInProgressSession. Factory mocks are required because path aliases
+// (@platform/supabase etc.) can't resolve in the test environment for automock.
 
 const mockFetchTodaySession = vi.hoisted(() => vi.fn());
 const mockFetchTodaySessions = vi.hoisted(() => vi.fn());
@@ -15,34 +16,15 @@ const mockFetchInProgressSession = vi.hoisted(() => vi.fn());
 const mockFetchPlannedSessionForProgram = vi.hoisted(() => vi.fn());
 const mockFetchActiveProgramMode = vi.hoisted(() => vi.fn());
 const mockCaptureException = vi.hoisted(() => vi.fn());
+const mockNextTrainingDate = vi.hoisted(() =>
+  vi.fn((_days: number[]) => '2026-03-09')
+);
 
 vi.mock('../data/session.repository', () => ({
   fetchTodaySession: mockFetchTodaySession,
   fetchTodaySessions: mockFetchTodaySessions,
   fetchInProgressSession: mockFetchInProgressSession,
   fetchPlannedSessionForProgram: mockFetchPlannedSessionForProgram,
-  insertSorenessCheckin: vi.fn(),
-  getLatestSorenessRatings: vi.fn(),
-  insertAdHocSession: vi.fn(),
-  updateSessionToInProgress: vi.fn(),
-  updateSessionToSkipped: vi.fn(),
-  updateSessionToPlanned: vi.fn(),
-  updateSessionToCompleted: vi.fn(),
-  fetchSessionById: vi.fn(),
-  fetchSessionLogBySessionId: vi.fn(),
-  fetchSessionsForWeek: vi.fn(),
-  fetchCompletedSessions: vi.fn(),
-  fetchProgramSessionStatuses: vi.fn(),
-  fetchSessionCompletionContext: vi.fn(),
-  fetchCurrentWeekLogs: vi.fn(),
-  fetchOverdueScheduledSessions: vi.fn(),
-  fetchProgramSessionsForMakeup: vi.fn(),
-  fetchRecentLogsForLift: vi.fn(),
-  fetchProfileSex: vi.fn(),
-  fetchLastCompletedAtForLift: vi.fn(),
-  insertSessionLog: vi.fn(),
-  insertPerformanceMetric: vi.fn(),
-  markSessionAsMissed: vi.fn(),
 }));
 
 vi.mock('@modules/program', () => ({
@@ -54,22 +36,14 @@ vi.mock('@platform/utils/captureException', () => ({
   captureException: mockCaptureException,
 }));
 
-const mockNextTrainingDate = vi.hoisted(() =>
-  vi.fn((_days: number[], _ref?: Date) => '2026-03-09')
-);
-
 vi.mock('@parakeet/training-engine', () => ({
   DEFAULT_TRAINING_DAYS: { 3: [1, 3, 5] },
   nextTrainingDate: mockNextTrainingDate,
-  suggestProgramAdjustments: vi.fn(() => []),
-  getDefaultThresholds: vi.fn(() => ({})),
-  isMakeupWindowExpired: vi.fn(() => false),
 }));
 
-vi.mock('@parakeet/shared-types', () => ({
-  LiftSchema: { parse: (v: string) => v },
-  IntensityTypeSchema: { parse: (v: string) => v },
-}));
+vi.mock('@parakeet/shared-types', () => ({}));
+
+// ── Tests ────────────────────────────────────────────────────────────────────
 
 describe('findTodaySession', () => {
   beforeEach(() => {
