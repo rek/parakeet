@@ -1,9 +1,10 @@
 # Backlog
 
-To assign work to an agent, say: **"Read docs/backlog.md and do item N"**
+If you are a human, say to an Agent: **"Read docs/backlog.md and do item N"**
 
-Follow the [AI Workflow](./guide/ai-workflow.md) (orient → design → plan → implement → validate → wrap up).
-All items: remove when resolved
+If you are an AI Agent, first read: `docs/README.md` and understand our intent and architecture.
+
+Then always make sure to follow the [AI Workflow](./guide/ai-workflow.md) (orient → design → plan → implement → validate → wrap up).
 
 At the end: update design doc status → Implemented, update specs to match what was actually built, update `implementation-status.md`, then review and add any learnings to `docs/guide/ai-workflow.md`.
 
@@ -32,3 +33,11 @@ At the end: update design doc status → Implemented, update specs to match what
 ## 14
 
 **Simulation CI improvements.** The `training-sim:validate` target runs in CI. Future work: add threshold tracking (warn if violations increase between PRs), generate JSON artifacts for trend analysis, add more life scripts (e.g., peaking, competition prep, return-from-layoff).
+
+## 15
+
+**llm challenge mode**: when we do some kind of JIT calculation, or a session decision, using our engine, what do you think about having a llm also take that raw inputs and try and make the same decision.
+
+or get a llm to review the output of the decision we have made, and give it an accuracy score, and if it passes a certian threshold we accept it
+
+brainstorm 4-5 ideas like this to see if we can find a good integration/review level/balance

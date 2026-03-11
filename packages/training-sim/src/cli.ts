@@ -1,9 +1,10 @@
 import { runSimulation } from './simulator'
 import { generateReport, formatReport, formatReportJson } from './reporter'
-import { ALL_PERSONAS, ADAM, LISA, INJURED_IVAN, BUSY_BEE, SARAH, JUNIOR_JAKE, ELITE_EVA } from './personas'
+import { ADAM, LISA, INJURED_IVAN, BUSY_BEE, SARAH, JUNIOR_JAKE, ELITE_EVA } from './personas'
 import { ADHERENT_MALE, ADHERENT_FEMALE, STABLE_FEMALE, JUNIOR_MALE, ELITE_FEMALE, INJURED_SCRIPT, BUSY_SCRIPT } from './scripts'
 import { ILLNESS_SCRIPT, NO_EQUIPMENT_SCRIPT, FATIGUE_ACCUMULATION_SCRIPT } from './scripts/illness'
-import { ADHERENT_MODEL, BEGINNER_MODEL, FATIGUED_MODEL } from './personas/performance-models'
+import { FAILED_SETS_SCRIPT } from './scripts/failed-sets'
+import { ADHERENT_MODEL, BEGINNER_MODEL, FATIGUED_MODEL, STRUGGLING_MODEL } from './personas/performance-models'
 import { SimulationReport } from './types'
 
 const jsonOutput = process.argv.includes('--json')
@@ -21,6 +22,8 @@ const scenarios = [
   { persona: ADAM, script: ILLNESS_SCRIPT, model: ADHERENT_MODEL },
   { persona: LISA, script: NO_EQUIPMENT_SCRIPT, model: ADHERENT_MODEL },
   { persona: ADAM, script: FATIGUE_ACCUMULATION_SCRIPT, model: FATIGUED_MODEL },
+  // Set failure scenarios
+  { persona: ADAM, script: FAILED_SETS_SCRIPT, model: STRUGGLING_MODEL },
 ]
 
 const reports: SimulationReport[] = []

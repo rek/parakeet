@@ -3,7 +3,7 @@ import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { createAudioPlayer } from 'expo-audio';
 import * as Haptics from 'expo-haptics';
 import { getRestTimerPrefs } from '../../modules/settings';
-import { shouldFirePrepareWarning } from '../../modules/session/utils/prepare-warning';
+import { shouldFirePrepareWarning } from '@modules/session';
 import { formatMMSS } from '../../shared/utils';
 import { radii, spacing, typography } from '../../theme';
 import { useTheme } from '../../theme/ThemeContext';
@@ -46,6 +46,8 @@ export interface RestTimerProps {
   isAuxiliary?: boolean;
   /** When true, automatically calls onDone ~1.5s after the timer hits 0:00 */
   autoHideOnExpiry?: boolean;
+  /** Extra seconds added to the timer duration from an intra-session adaptation */
+  bonusSeconds?: number;
 }
 
 // ── Internal hook (used only by AuxiliaryPill) ────────────────────────────────
@@ -168,9 +170,11 @@ function FullTimer({
   onDone,
   intensityLabel,
   autoHideOnExpiry = false,
+  bonusSeconds = 0,
 }: Omit<RestTimerProps, 'isAuxiliary'>) {
   const { colors } = useTheme();
-  const effectiveDuration = Math.max(0, durationSeconds + offset);
+  const totalDuration = durationSeconds + bonusSeconds;
+  const effectiveDuration = Math.max(0, totalDuration + offset);
   const remaining = Math.max(0, effectiveDuration - elapsed);
   const overtime = elapsed > effectiveDuration;
 
@@ -220,6 +224,20 @@ function FullTimer({
       fontWeight: typography.weights.medium,
       color: colors.primary,
     },
+    bonusChip: {
+      backgroundColor: colors.warningMuted,
+      borderRadius: radii.full,
+      borderWidth: 1,
+      borderColor: colors.warning,
+      paddingVertical: spacing[1.5],
+      paddingHorizontal: spacing[3.5],
+      marginBottom: spacing[3],
+    },
+    bonusChipText: {
+      fontSize: typography.sizes.sm,
+      fontWeight: typography.weights.medium,
+      color: colors.warning,
+    },
     controlRow: {
       flexDirection: 'row',
       alignItems: 'center',
@@ -265,7 +283,7 @@ function FullTimer({
   }, []);
   useEffect(() => {
     prevOvertimeRef.current = false;
-  }, [durationSeconds, offset]);
+  }, [totalDuration, offset]);
   useEffect(() => {
     if (overtime && !prevOvertimeRef.current) {
       if (hapticAlertRef.current)
@@ -277,7 +295,7 @@ function FullTimer({
 
   // 15-second prepare warning (fires once per timer session)
   const warnFiredRef = useRef(false);
-  useEffect(() => { warnFiredRef.current = false; }, [durationSeconds]);
+  useEffect(() => { warnFiredRef.current = false; }, [totalDuration]);
   useEffect(() => {
     if (shouldFirePrepareWarning(remaining, overtime, warnFiredRef.current)) {
       warnFiredRef.current = true;
@@ -289,7 +307,7 @@ function FullTimer({
 
   // Auto-hide: call onDone ~1.5s after hitting 0:00 (sound plays first)
   const autoHideFiredRef = useRef(false);
-  useEffect(() => { autoHideFiredRef.current = false; }, [durationSeconds]);
+  useEffect(() => { autoHideFiredRef.current = false; }, [totalDuration]);
   useEffect(() => {
     if (!autoHideOnExpiry || !overtime || autoHideFiredRef.current) return;
     autoHideFiredRef.current = true;
@@ -319,6 +337,12 @@ function FullTimer({
       >
         {displayText}
       </Text>
+
+      {bonusSeconds > 0 && (
+        <View style={fullStyles.bonusChip}>
+          <Text style={fullStyles.bonusChipText}>+{bonusSeconds}s bonus rest</Text>
+        </View>
+      )}
 
       {showAiChip && (
         <View style={fullStyles.aiChip}>
@@ -369,6 +393,7 @@ export function RestTimer({
   intensityLabel,
   isAuxiliary = false,
   autoHideOnExpiry = false,
+  bonusSeconds = 0,
 }: RestTimerProps) {
   if (isAuxiliary) {
     return <AuxiliaryPill durationSeconds={durationSeconds} onDone={onDone} />;
@@ -384,6 +409,7 @@ export function RestTimer({
       onDone={onDone}
       intensityLabel={intensityLabel}
       autoHideOnExpiry={autoHideOnExpiry}
+      bonusSeconds={bonusSeconds}
     />
   );
 }

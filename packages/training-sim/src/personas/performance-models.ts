@@ -27,3 +27,12 @@ export const OVERTRAINED_MODEL: PerformanceModelConfig = {
   rpeDeviation: 1.0,
   rpeFatiguePerWeek: 0.3,
 }
+
+/** Struggling lifter — minimal gains, frequently fails sets (15% of sets) */
+export const STRUGGLING_MODEL: PerformanceModelConfig = {
+  oneRmGainPerCycle: 0.005,
+  rpeDeviation: 0.5,
+  rpeFatiguePerWeek: 0.3,
+  setFailureRate: 0.15,
+  failureRepReduction: 1,
+}

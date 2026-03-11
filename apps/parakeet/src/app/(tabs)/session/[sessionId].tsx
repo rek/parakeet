@@ -231,6 +231,21 @@ function buildStyles(colors: ColorScheme) {
       color: colors.textInverse,
       textAlign: 'center',
     },
+    adaptationBanner: {
+      marginHorizontal: 16,
+      marginBottom: 8,
+      paddingHorizontal: 12,
+      paddingVertical: 8,
+      borderRadius: 8,
+      backgroundColor: colors.warningMuted,
+      borderWidth: 1,
+      borderColor: colors.warning,
+    },
+    adaptationBannerText: {
+      fontSize: 13,
+      fontWeight: '600',
+      color: colors.warning,
+    },
   });
 }
 
@@ -256,6 +271,7 @@ export default function SessionScreen() {
     warmupCompleted,
     sessionMeta,
     timerState,
+    currentAdaptation,
     initSession,
     initAuxiliary,
     addAdHocSet,
@@ -267,6 +283,7 @@ export default function SessionScreen() {
     tickTimer,
     adjustTimer,
     closeTimer,
+    resetAdaptation,
     reset,
   } = useSessionStore();
 
@@ -290,9 +307,25 @@ export default function SessionScreen() {
     plannedSetsLengthRef.current = plannedSets.length;
   }, [plannedSets.length]);
 
+  // Clear adaptation when all main sets are completed (user moves to auxiliary work)
+  useEffect(() => {
+    if (
+      currentAdaptation !== null &&
+      actualSets.length > 0 &&
+      actualSets.every((s) => s.is_completed)
+    ) {
+      resetAdaptation();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [actualSets]);
+
   // Rest recommendations extracted from jit output (re-populated on each mount)
   const restRecommendations = useRef<RestRecommendations | null>(null);
   const llmRestSuggestion = useRef<LlmRestSuggestion | null>(null);
+
+  // Intra-session adaptation context — set once from parsed JIT data
+  const oneRmKgRef = useRef<number | undefined>(undefined);
+  const biologicalSexRef = useRef<'male' | 'female' | undefined>(undefined);
 
   // Timer prefs loaded once on mount
   const restTimerPrefsRef = useRef<RestTimerPrefs>({
@@ -332,6 +365,8 @@ export default function SessionScreen() {
     restRecommendations,
     auxiliaryWork,
     plannedSetsLengthRef,
+    oneRmKgRef,
+    biologicalSexRef,
   });
 
   // ── Bootstrap ─────────────────────────────────────────────────────────────
@@ -411,6 +446,9 @@ export default function SessionScreen() {
     }
     if (parsed.llmRestSuggestion) {
       llmRestSuggestion.current = parsed.llmRestSuggestion;
+    }
+    if (parsed.oneRmKg != null) {
+      oneRmKgRef.current = parsed.oneRmKg;
     }
 
     // Only re-initialize if this is a different session (guard against re-mount via banner)
@@ -616,22 +654,50 @@ export default function SessionScreen() {
               <Text style={styles.workingSetsTitle}>Working Sets</Text>
             </View>
 
-            {actualSets.map((actualSet, index) => {
-              const planned = plannedSets[index];
-              return (
-                <SetRow
-                  key={actualSet.set_number}
-                  setNumber={actualSet.set_number}
-                  plannedWeightKg={
-                    planned?.weight_kg ?? actualSet.weight_grams / 1000
+            {/* Intra-session adaptation banner */}
+            {currentAdaptation !== null &&
+              (currentAdaptation.adaptationType === 'weight_reduced' ||
+                currentAdaptation.adaptationType === 'sets_capped') && (
+              <View style={styles.adaptationBanner}>
+                <Text style={styles.adaptationBannerText}>
+                  {currentAdaptation.rationale}
+                </Text>
+              </View>
+            )}
+
+            {(() => {
+              // Pre-compute adapted weight by uncompleted-set position
+              let uncompletedIndex = 0;
+              return actualSets.map((actualSet, index) => {
+                const planned = plannedSets[index];
+                let displayWeightKg = planned?.weight_kg ?? actualSet.weight_grams / 1000;
+
+                if (
+                  !actualSet.is_completed &&
+                  currentAdaptation !== null &&
+                  (currentAdaptation.adaptationType === 'weight_reduced' ||
+                    currentAdaptation.adaptationType === 'sets_capped')
+                ) {
+                  const adaptedSet = currentAdaptation.sets[uncompletedIndex];
+                  if (adaptedSet != null) {
+                    displayWeightKg = adaptedSet.weight_kg;
                   }
-                  plannedReps={planned?.reps ?? actualSet.reps_completed}
-                  rpeValue={actualSet.rpe_actual}
-                  onUpdate={(data) => handleSetUpdate(actualSet.set_number, data)}
-                  onRpePress={() => requestMainRpe(actualSet.set_number)}
-                />
-              );
-            })}
+                  uncompletedIndex += 1;
+                }
+
+                return (
+                  <SetRow
+                    key={actualSet.set_number}
+                    setNumber={actualSet.set_number}
+                    plannedWeightKg={displayWeightKg}
+                    plannedReps={planned?.reps ?? actualSet.reps_completed}
+                    rpeValue={actualSet.rpe_actual}
+                    onUpdate={(data) => handleSetUpdate(actualSet.set_number, data)}
+                    onRpePress={() => requestMainRpe(actualSet.set_number)}
+                  />
+                );
+              });
+            })()}
           </>
         )}
 
@@ -858,6 +924,12 @@ export default function SessionScreen() {
               onDone={handleTimerDone}
               intensityLabel={intensity}
               autoHideOnExpiry
+              bonusSeconds={
+                timerState?.pendingMainSetNumber !== null &&
+                currentAdaptation?.adaptationType === 'extended_rest'
+                  ? (currentAdaptation.restBonusSeconds ?? 0)
+                  : 0
+              }
             />
           )}
           {postRestState !== null && !timerState?.visible && (

@@ -14,8 +14,6 @@ export const ILLNESS_SCRIPT: LifeScript = {
 
     for (let week = 0; week < weeks; week++) {
       for (let dayInWeek = 0; dayInWeek < 7; dayInWeek++) {
-        const absoluteDay = week * 7 + dayInWeek
-
         // Week 5 (index 4): illness hits Monday
         if (week === 4 && dayInWeek === 0) {
           events.push({

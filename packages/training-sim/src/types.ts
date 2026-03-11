@@ -77,6 +77,10 @@ export interface PerformanceModelConfig {
   rpeDeviation: number
   /** How much RPE creeps up per week of a block (fatigue effect) */
   rpeFatiguePerWeek: number
+  /** Probability (0–1) that any given set is failed (default 0) */
+  setFailureRate?: number
+  /** How many reps short of target on a failed set (default 1) */
+  failureRepReduction?: number
 }
 
 // ---------------------------------------------------------------------------
@@ -109,6 +113,13 @@ export interface SimulatedSession {
   cyclePhase?: CyclePhase
   weeklyVolumeSnapshot: Partial<Record<MuscleGroup, number>>
   volumeStatusSnapshot: Partial<Record<MuscleGroup, VolumeStatus>>
+
+  // Intra-session adaptations
+  adaptationsApplied?: Array<{
+    afterSet: number
+    adaptationType: string
+    rationale: string
+  }>
 
   // Flags
   skipped: boolean
@@ -144,6 +155,7 @@ export type InvariantCategory =
   | 'cycle_phase'
   | 'auxiliary_balance'
   | 'session_sanity'
+  | 'intra_session_adaptation'
 
 export interface InvariantViolation {
   category: InvariantCategory

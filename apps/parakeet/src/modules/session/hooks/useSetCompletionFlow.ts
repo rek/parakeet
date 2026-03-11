@@ -1,4 +1,6 @@
 import { useCallback, useRef, useState } from 'react';
+import type { Lift } from '@parakeet/shared-types';
+import { adaptRemainingPlan } from '@parakeet/training-engine';
 import type { RestTimerPrefs } from '@modules/settings';
 import { useSessionStore } from '@platform/store/sessionStore';
 import type { AuxiliaryWork, PostRestState, RestRecommendations } from '../model/types';
@@ -10,11 +12,15 @@ export function useSetCompletionFlow({
   restRecommendations,
   auxiliaryWork,
   plannedSetsLengthRef,
+  oneRmKgRef,
+  biologicalSexRef,
 }: {
   restTimerPrefsRef: React.RefObject<RestTimerPrefs>;
   restRecommendations: React.RefObject<RestRecommendations | null>;
   auxiliaryWork: AuxiliaryWork[];
   plannedSetsLengthRef: React.RefObject<number>;
+  oneRmKgRef: React.RefObject<number | undefined>;
+  biologicalSexRef: React.RefObject<'male' | 'female' | undefined>;
 }) {
   const {
     timerState,
@@ -23,6 +29,10 @@ export function useSetCompletionFlow({
     updateAuxiliarySet,
     openTimer,
     closeTimer,
+    sessionMeta,
+    recordSetFailure,
+    recordSetSuccess,
+    setAdaptation,
   } = useSessionStore();
 
   const [postRestState, setPostRestState] = useState<PostRestState | null>(null);
@@ -212,6 +222,7 @@ export function useSetCompletionFlow({
       updateAuxiliarySet(auxExercise, auxSetNumber, {
         actual_rest_seconds: totalRest,
       });
+      // Auxiliary completions don't affect main lift failure tracking
 
       const nextAuxSet = auxSetNumber + 1;
       const auxWork = auxiliaryWork.find((aw) => aw.exercise === auxExercise);
@@ -245,7 +256,9 @@ export function useSetCompletionFlow({
         }
       }
     } else {
-      // Main lift complete
+      // Main lift complete — reset consecutive failure tracking
+      recordSetSuccess();
+
       if (prevSetNumber !== null) {
         updateSet(prevSetNumber, { actual_rest_seconds: totalRest });
       }
@@ -280,11 +293,62 @@ export function useSetCompletionFlow({
       dismissPostRest();
 
     if (auxExercise !== null && auxSetNumber !== null) {
+      // Auxiliary failure — just log rest, no main-lift adaptation
       updateAuxiliarySet(auxExercise, auxSetNumber, {
         actual_rest_seconds: totalRest,
       });
-    } else if (prevSetNumber !== null) {
-      updateSet(prevSetNumber, { actual_rest_seconds: totalRest });
+    } else {
+      // Main lift failure
+      if (prevSetNumber !== null) {
+        updateSet(prevSetNumber, { actual_rest_seconds: totalRest });
+      }
+
+      recordSetFailure();
+
+      // Read updated failure count directly from store (set is synchronous)
+      const newFailureCount =
+        useSessionStore.getState().consecutiveMainLiftFailures;
+
+      const primaryLift = sessionMeta?.primary_lift as Lift | null | undefined;
+
+      const resolvedOneRmKg = oneRmKgRef.current;
+      if (primaryLift && resolvedOneRmKg != null) {
+        const state = useSessionStore.getState();
+        const completedSets = state.actualSets
+          .filter((s) => s.is_completed)
+          .map((s) => ({
+            planned_reps: state.plannedSets[s.set_number - 1]?.reps ?? s.reps_completed,
+            actual_reps: s.reps_completed,
+            weight_kg: s.weight_grams / 1000,
+          }));
+        // Remaining sets are those not yet completed, starting from the next set
+        const startIdx = prevSetNumber ?? 0;
+        const remainingSets = state.plannedSets
+          .slice(startIdx)
+          .reduce<{ set_number: number; weight_kg: number; reps: number }[]>((acc, s, idx) => {
+            const setNumber = startIdx + idx + 1;
+            const isCompleted = state.actualSets.some(
+              (a) => a.set_number === setNumber && a.is_completed
+            );
+            if (!isCompleted) {
+              acc.push({ set_number: setNumber, weight_kg: s.weight_kg, reps: s.reps });
+            }
+            return acc;
+          }, []);
+
+        const adapted = adaptRemainingPlan({
+          completedSets,
+          remainingSets,
+          consecutiveFailures: newFailureCount,
+          primaryLift,
+          oneRmKg: resolvedOneRmKg,
+          biologicalSex: biologicalSexRef.current,
+        });
+
+        if (adapted.adaptationType !== 'none') {
+          setAdaptation(adapted);
+        }
+      }
     }
   }
 

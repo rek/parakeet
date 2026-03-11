@@ -59,6 +59,7 @@ After implementation:
 3. Update `../specs/implementation-status.md` — new checklist entries, corrected test counts, new migrations.
 4. Update `supabase/types.ts` if you added migrations without running `npm run db:types` (see dev.md).
 5. Review these workflow docs for any learnings and update them.
+6. Close any associated Github Issues or remove items from backlog.md
 
 ## Prompt Starter
 

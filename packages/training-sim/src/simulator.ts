@@ -8,10 +8,7 @@ import {
   DEFAULT_MRV_MEV_CONFIG_FEMALE,
   DEFAULT_AUXILIARY_POOLS,
   generateAuxiliaryAssignments,
-  getBlockNumber,
   getWeekInBlock,
-  getIntensityTypeForWeek,
-  computeWeeklyVolume,
   classifyVolumeStatus,
   getMusclesForLift,
   RecentSessionSummary,
@@ -19,6 +16,8 @@ import {
   MrvMevConfig,
   MuscleGroup,
   CompletedSetLog,
+  adaptRemainingPlan,
+  IntraSessionContext,
 } from '@parakeet/training-engine'
 import {
   CyclePhase,
@@ -254,6 +253,60 @@ export function runSimulation(options: SimulatorOptions): SimulationLog {
     // Run JIT
     const jitOutput = generateJITSession(jitInput)
 
+    // Simulate set-level failures and intra-session adaptations
+    const setFailureRate = performanceModel.setFailureRate ?? 0
+    const failureRepReduction = performanceModel.failureRepReduction ?? 1
+    const adaptationsApplied: SimulatedSession['adaptationsApplied'] = []
+    let completedAllSets = true
+
+    if (setFailureRate > 0 && jitOutput.mainLiftSets.length > 0) {
+      let consecutiveFailures = 0
+      let activeSets = [...jitOutput.mainLiftSets]
+
+      for (let setIndex = 0; setIndex < activeSets.length; setIndex++) {
+        // Use a deterministic failure check based on day + set index to avoid
+        // random variance between runs while still distributing failures naturally
+        const failureSeed = (day * 31 + setIndex * 7 + scaffold.weekNumber * 13) % 100
+        const setFailed = failureSeed < setFailureRate * 100
+
+        if (setFailed) {
+          consecutiveFailures++
+          completedAllSets = false
+
+          // Build context for remaining sets (the sets after this one)
+          const remainingSets = activeSets.slice(setIndex + 1)
+          if (remainingSets.length > 0) {
+            const ctx: IntraSessionContext = {
+              completedSets: activeSets.slice(0, setIndex + 1).map((s) => ({
+                planned_reps: s.reps,
+                actual_reps: s.reps - failureRepReduction,
+                weight_kg: s.weight_kg,
+              })),
+              remainingSets,
+              consecutiveFailures,
+              primaryLift: scaffold.primaryLift,
+              oneRmKg: currentMaxes[scaffold.primaryLift],
+              biologicalSex: persona.biologicalSex,
+            }
+
+            const adapted = adaptRemainingPlan(ctx)
+
+            if (adapted.adaptationType !== 'none') {
+              adaptationsApplied.push({
+                afterSet: setIndex,
+                adaptationType: adapted.adaptationType,
+                rationale: adapted.rationale,
+              })
+              // Replace remaining sets in activeSets with the adapted plan
+              activeSets = [...activeSets.slice(0, setIndex + 1), ...adapted.sets]
+            }
+          }
+        } else {
+          consecutiveFailures = 0
+        }
+      }
+    }
+
     // Simulate athlete performance response
     const weekInBlock = getWeekInBlock(scaffold.weekNumber)
     const targetRpe = jitOutput.mainLiftSets[0]?.rpe_target ?? 7
@@ -290,13 +343,14 @@ export function runSimulation(options: SimulatorOptions): SimulationLog {
       warmupSets: jitOutput.warmupSets,
       auxiliaryWork: jitOutput.auxiliaryWork,
       simulatedRpe,
-      completedAllSets: true,
+      completedAllSets,
       sorenessRatings,
       sleepQuality: event.sleep,
       energyLevel: event.energy,
       cyclePhase,
       weeklyVolumeSnapshot: { ...weeklyVolume },
       volumeStatusSnapshot: volumeStatus as Partial<Record<MuscleGroup, import('@parakeet/training-engine').VolumeStatus>>,
+      adaptationsApplied: adaptationsApplied.length > 0 ? adaptationsApplied : undefined,
       skipped: false,
     })
 

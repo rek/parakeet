@@ -1,6 +1,7 @@
 import { create } from 'zustand'
 import { persist, createJSONStorage } from 'zustand/middleware'
 import AsyncStorage from '@react-native-async-storage/async-storage'
+import type { AdaptedPlan } from '@parakeet/training-engine'
 
 export interface ActualSet {
   set_number: number
@@ -49,6 +50,8 @@ export interface SessionState {
   } | null
   cachedJitData: string | null
   timerState: TimerState | null
+  consecutiveMainLiftFailures: number
+  currentAdaptation: AdaptedPlan | null
 
   updateSet: (setNumber: number, data: Partial<ActualSet>) => void
   updateAuxiliarySet: (exercise: string, setNumber: number, data: Partial<AuxiliaryActualSet>) => void
@@ -60,6 +63,10 @@ export interface SessionState {
   initAuxiliary: (work: { exercise: string; sets: { weight_kg: number; reps: number }[] }[]) => void
   setSessionMeta: (meta: SessionState['sessionMeta']) => void
   setCachedJitData: (raw: string) => void
+  recordSetFailure: () => void
+  recordSetSuccess: () => void
+  setAdaptation: (plan: AdaptedPlan) => void
+  resetAdaptation: () => void
   openTimer: (opts: {
     durationSeconds: number
     pendingMainSetNumber?: number
@@ -85,6 +92,8 @@ export const useSessionStore = create<SessionState>()(
       sessionMeta: null,
       cachedJitData: null,
       timerState: null,
+      consecutiveMainLiftFailures: 0,
+      currentAdaptation: null,
 
       initSession: (sessionId, plannedSets) => set({
         sessionId,
@@ -167,6 +176,22 @@ export const useSessionStore = create<SessionState>()(
 
       setCachedJitData: (raw) => set({ cachedJitData: raw }),
 
+      recordSetFailure: () => set((state) => ({
+        consecutiveMainLiftFailures: state.consecutiveMainLiftFailures + 1,
+      })),
+
+      recordSetSuccess: () => set({
+        consecutiveMainLiftFailures: 0,
+        currentAdaptation: null,
+      }),
+
+      setAdaptation: (plan) => set({ currentAdaptation: plan }),
+
+      resetAdaptation: () => set({
+        consecutiveMainLiftFailures: 0,
+        currentAdaptation: null,
+      }),
+
       openTimer: ({ durationSeconds, pendingMainSetNumber, pendingAuxExercise, pendingAuxSetNumber }) =>
         set({
           timerState: {
@@ -216,6 +241,8 @@ export const useSessionStore = create<SessionState>()(
         sessionMeta: null,
         cachedJitData: null,
         timerState: null,
+        consecutiveMainLiftFailures: 0,
+        currentAdaptation: null,
       }),
     }),
     {

@@ -13,6 +13,7 @@ import { useAuth } from '@modules/auth';
 import { getCurrentCycleContext } from '@modules/cycle-tracking';
 import { getCyclePhaseModifier } from '@parakeet/training-engine';
 import { runJITForSession } from '@modules/jit';
+import { getCurrentOneRmKg } from '@modules/program';
 import {
   getLatestSorenessCheckin,
   getSession,
@@ -456,14 +457,18 @@ export default function SorenessScreen() {
     if (!session || !user) return;
     setGenerating(true);
     try {
-      const jitOutput = await runJITForSession(
-        session,
-        user.id,
-        ratingsToUse,
-        sleepQuality,
-        energyLevel,
-        cyclePhase ?? undefined,
-      );
+      const primaryLift = session.primary_lift as Lift | null;
+      const [jitOutput, fetchedOneRmKg] = await Promise.all([
+        runJITForSession(
+          session,
+          user.id,
+          ratingsToUse,
+          sleepQuality,
+          energyLevel,
+          cyclePhase ?? undefined,
+        ),
+        primaryLift ? getCurrentOneRmKg(user.id, primaryLift) : Promise.resolve(null),
+      ]);
       router.replace({
         pathname: '/session/[sessionId]',
         params: {
@@ -474,6 +479,7 @@ export default function SorenessScreen() {
             auxiliaryWork: jitOutput.auxiliaryWork,
             restRecommendations: jitOutput.restRecommendations,
             llmRestSuggestion: jitOutput.llmRestSuggestion ?? null,
+            oneRmKg: fetchedOneRmKg ?? undefined,
           }),
         },
       });

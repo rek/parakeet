@@ -272,6 +272,7 @@ export const ELITE_FEMALE: LifeScript = {
 
 // Re-export new scripts
 export { ILLNESS_SCRIPT, NO_EQUIPMENT_SCRIPT, FATIGUE_ACCUMULATION_SCRIPT } from './illness'
+export { FAILED_SETS_SCRIPT } from './failed-sets'
 
 export const ALL_SCRIPTS: LifeScript[] = [
   ADHERENT_MALE,

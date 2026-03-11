@@ -1,4 +1,4 @@
-import { SimulationLog, SimulationReport, InvariantViolation } from './types'
+import { SimulationLog, SimulationReport } from './types'
 import { checkAllInvariants } from './invariants'
 
 export function generateReport(log: SimulationLog): SimulationReport {

@@ -47,6 +47,8 @@ export interface JitData {
   auxiliaryWork: AuxiliaryWork[];
   restRecommendations?: RestRecommendations;
   llmRestSuggestion?: LlmRestSuggestion | null;
+  /** The lifter's 1RM in kg for the primary lift — used for intra-session adaptation */
+  oneRmKg?: number;
 }
 
 export const DEFAULT_MAIN_REST_SECONDS = 180;
