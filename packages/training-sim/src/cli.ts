@@ -1,7 +1,7 @@
 import { runSimulation } from './simulator'
 import { generateReport, formatReport, formatReportJson } from './reporter'
-import { ALL_PERSONAS, ADAM, LISA, INJURED_IVAN, BUSY_BEE } from './personas'
-import { ADHERENT_MALE, ADHERENT_FEMALE, INJURED_SCRIPT, BUSY_SCRIPT } from './scripts'
+import { ALL_PERSONAS, ADAM, LISA, INJURED_IVAN, BUSY_BEE, SARAH, JUNIOR_JAKE, ELITE_EVA } from './personas'
+import { ADHERENT_MALE, ADHERENT_FEMALE, STABLE_FEMALE, JUNIOR_MALE, ELITE_FEMALE, INJURED_SCRIPT, BUSY_SCRIPT } from './scripts'
 import { ILLNESS_SCRIPT, NO_EQUIPMENT_SCRIPT, FATIGUE_ACCUMULATION_SCRIPT } from './scripts/illness'
 import { ADHERENT_MODEL, BEGINNER_MODEL, FATIGUED_MODEL } from './personas/performance-models'
 import { SimulationReport } from './types'
@@ -14,6 +14,9 @@ const scenarios = [
   { persona: LISA, script: ADHERENT_FEMALE, model: ADHERENT_MODEL },
   { persona: INJURED_IVAN, script: INJURED_SCRIPT, model: FATIGUED_MODEL },
   { persona: BUSY_BEE, script: BUSY_SCRIPT, model: BEGINNER_MODEL },
+  { persona: SARAH, script: STABLE_FEMALE, model: ADHERENT_MODEL },
+  { persona: JUNIOR_JAKE, script: JUNIOR_MALE, model: BEGINNER_MODEL },
+  { persona: ELITE_EVA, script: ELITE_FEMALE, model: ADHERENT_MODEL },
   // Extended scenarios
   { persona: ADAM, script: ILLNESS_SCRIPT, model: ADHERENT_MODEL },
   { persona: LISA, script: NO_EQUIPMENT_SCRIPT, model: ADHERENT_MODEL },

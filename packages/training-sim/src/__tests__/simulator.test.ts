@@ -113,7 +113,7 @@ describe('Simulator', () => {
 })
 
 describe('Report', () => {
-  it('generates a report and catches volume issues for adherent male', () => {
+  it('generates a clean report for adherent male after engine fixes', () => {
     const log = runSimulation({
       persona: ADAM,
       script: ADHERENT_MALE,
@@ -122,14 +122,10 @@ describe('Report', () => {
     const report = generateReport(log)
 
     expect(report.summary.totalSessions).toBeGreaterThan(0)
-    // The simulation correctly identifies that glutes+lower_back exceed MRV
-    // because squats and deadlifts both contribute to these muscle groups.
-    // This is a real finding — the invariant checker is working.
-    expect(report.summary.totalViolations).toBeGreaterThan(0)
-
-    // All violations should be volume_safety related
-    const categories = new Set(report.violations.map((v) => v.category))
-    expect(categories.has('volume_safety')).toBe(true)
+    // After fixing muscle contributions (Olympic lifts glutes 1.0→0.5,
+    // squat aux glutes 1.0→0.75) and simulator block-wrap bug,
+    // adherent male should pass with no errors.
+    expect(report.summary.errors).toBe(0)
   })
 
   it('generates a report for all personas without crashing', () => {

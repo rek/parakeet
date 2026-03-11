@@ -612,25 +612,33 @@ function buildAuxiliaryWork(
   }) as AuxiliaryWork[];
 
   // No-equipment disruption: append bodyweight compensation exercises
+  // Cap total exercises at 5 to keep session length manageable
   if (hasNoEquipment && primaryLift && worstSoreness < 5) {
-    const isFemale = biologicalSex === 'female';
-    const sex = isFemale ? 'female' : 'male';
-    const [bw1, bw2] = getBodyweightPool(primaryLift, sex);
-    // Female pool uses moderate exercises (Hip Thrust, Push-ups) → 15 reps
-    // Male pool uses harder exercises (Nordic Curl, Pistol Squat) → 10 reps
-    const bwReps = isFemale ? 15 : 10;
-    const bwSets = (name: string): AuxiliaryWork => ({
-      exercise: name,
-      exerciseType: 'bodyweight' as ExerciseType,
-      sets: Array.from({ length: 3 }, (_, i) => ({
-        set_number: i + 1,
-        weight_kg: 0,
-        reps: bwReps,
-        rpe_target: 7.0,
-      })),
-      skipped: false,
-    });
-    result.push(bwSets(bw1), bwSets(bw2));
+    const activeExerciseCount = result.filter((a) => !a.skipped).length;
+    const maxTotalExercises = 5; // main lift counts as 1 if present
+    const slotsAvailable = Math.max(0, maxTotalExercises - activeExerciseCount);
+
+    if (slotsAvailable > 0) {
+      const isFemale = biologicalSex === 'female';
+      const sex = isFemale ? 'female' : 'male';
+      const [bw1, bw2] = getBodyweightPool(primaryLift, sex);
+      const bwReps = isFemale ? 15 : 10;
+      const bwSets = (name: string): AuxiliaryWork => ({
+        exercise: name,
+        exerciseType: 'bodyweight' as ExerciseType,
+        sets: Array.from({ length: 3 }, (_, i) => ({
+          set_number: i + 1,
+          weight_kg: 0,
+          reps: bwReps,
+          rpe_target: 7.0,
+        })),
+        skipped: false,
+      });
+      const bwExercises = [bw1, bw2].slice(0, slotsAvailable);
+      for (const bw of bwExercises) {
+        result.push(bwSets(bw));
+      }
+    }
   }
 
   return result;

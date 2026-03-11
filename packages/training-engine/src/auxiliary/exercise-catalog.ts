@@ -43,6 +43,10 @@ export const EXERCISE_CATALOG: ExerciseCatalogEntry[] = [
     associatedLift: 'squat',
     primaryMuscles: ['quads', 'glutes'],
     type: 'weighted',
+    muscleContributions: [
+      { muscle: 'quads', contribution: 1.0 },
+      { muscle: 'glutes', contribution: 0.75 },
+    ],
     weightPct: 0.7,
     repTarget: 4,
   },
@@ -51,6 +55,10 @@ export const EXERCISE_CATALOG: ExerciseCatalogEntry[] = [
     associatedLift: 'squat',
     primaryMuscles: ['quads', 'glutes'],
     type: 'weighted',
+    muscleContributions: [
+      { muscle: 'quads', contribution: 1.0 },
+      { muscle: 'glutes', contribution: 0.75 },
+    ],
     weightPct: 0.15,
     repTarget: 10,
   },
@@ -59,6 +67,10 @@ export const EXERCISE_CATALOG: ExerciseCatalogEntry[] = [
     associatedLift: 'squat',
     primaryMuscles: ['quads', 'glutes'],
     type: 'weighted',
+    muscleContributions: [
+      { muscle: 'quads', contribution: 1.0 },
+      { muscle: 'glutes', contribution: 0.75 },
+    ],
     weightPct: 0.15,
     repTarget: 10,
   },
@@ -430,11 +442,11 @@ export const EXERCISE_CATALOG: ExerciseCatalogEntry[] = [
   {
     name: 'Barbell Hang Clean',
     associatedLift: 'deadlift',
-    primaryMuscles: ['upper_back', 'glutes'],
+    primaryMuscles: ['upper_back'],
     type: 'weighted',
     muscleContributions: [
       { muscle: 'upper_back', contribution: 1.0 },
-      { muscle: 'glutes', contribution: 1.0 },
+      { muscle: 'glutes', contribution: 0.5 },
       { muscle: 'hamstrings', contribution: 0.5 },
     ],
     weightPct: 0.5,
@@ -443,11 +455,11 @@ export const EXERCISE_CATALOG: ExerciseCatalogEntry[] = [
   {
     name: 'Clean and Jerk',
     associatedLift: 'deadlift',
-    primaryMuscles: ['upper_back', 'glutes', 'shoulders'],
+    primaryMuscles: ['upper_back', 'shoulders'],
     type: 'weighted',
     muscleContributions: [
       { muscle: 'upper_back', contribution: 1.0 },
-      { muscle: 'glutes', contribution: 1.0 },
+      { muscle: 'glutes', contribution: 0.5 },
       { muscle: 'shoulders', contribution: 0.5 },
     ],
     weightPct: 0.55,
@@ -456,8 +468,12 @@ export const EXERCISE_CATALOG: ExerciseCatalogEntry[] = [
   {
     name: 'Power Clean',
     associatedLift: 'deadlift',
-    primaryMuscles: ['upper_back', 'glutes'],
+    primaryMuscles: ['upper_back'],
     type: 'weighted',
+    muscleContributions: [
+      { muscle: 'upper_back', contribution: 1.0 },
+      { muscle: 'glutes', contribution: 0.5 },
+    ],
     weightPct: 0.5,
     repTarget: 3,
   },
@@ -627,11 +643,11 @@ export const EXERCISE_CATALOG: ExerciseCatalogEntry[] = [
   {
     name: 'Barbell Snatch',
     associatedLift: 'deadlift',
-    primaryMuscles: ['upper_back', 'glutes', 'shoulders'],
+    primaryMuscles: ['upper_back', 'shoulders'],
     type: 'weighted',
     muscleContributions: [
       { muscle: 'upper_back', contribution: 1.0 },
-      { muscle: 'glutes', contribution: 1.0 },
+      { muscle: 'glutes', contribution: 0.5 },
       { muscle: 'shoulders', contribution: 0.5 },
     ],
     weightPct: 0.45,
@@ -640,8 +656,12 @@ export const EXERCISE_CATALOG: ExerciseCatalogEntry[] = [
   {
     name: 'Dumbbell Snatch',
     associatedLift: 'deadlift',
-    primaryMuscles: ['upper_back', 'glutes'],
+    primaryMuscles: ['upper_back'],
     type: 'weighted',
+    muscleContributions: [
+      { muscle: 'upper_back', contribution: 1.0 },
+      { muscle: 'glutes', contribution: 0.5 },
+    ],
     weightPct: 0.3,
     repTarget: 5,
   },

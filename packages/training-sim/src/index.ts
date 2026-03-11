@@ -1,9 +1,2 @@
-export * from './types'
-export { runSimulation } from './simulator'
-export type { SimulatorOptions } from './simulator'
-export { generateReport, formatReport, formatReportJson } from './reporter'
-export { checkAllInvariants, checkVolumeSafety, checkIntensityCoherence, checkDisruptionResponse, checkCyclePhaseCompliance, checkAuxiliaryBalance, checkSessionSanity, checkRpeDrift, checkMuscleCoverage } from './invariants'
-export { ALL_PERSONAS, ADAM, LISA, INJURED_IVAN, BUSY_BEE } from './personas'
-export { ADHERENT_MODEL, BEGINNER_MODEL, FATIGUED_MODEL, OVERTRAINED_MODEL } from './personas/performance-models'
-export { ALL_SCRIPTS, ADHERENT_MALE, ADHERENT_FEMALE, INJURED_SCRIPT, BUSY_SCRIPT } from './scripts'
-export { ILLNESS_SCRIPT, NO_EQUIPMENT_SCRIPT, FATIGUE_ACCUMULATION_SCRIPT } from './scripts/illness'
+// CLI entry point: cli.ts
+// This package has no library consumers — run via `nx run training-sim:sim`

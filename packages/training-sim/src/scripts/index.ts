@@ -166,12 +166,117 @@ export const BUSY_SCRIPT: LifeScript = {
   })(),
 }
 
+/**
+ * Stable female — 43yr advanced lifter, 12 weeks, consistent training.
+ * Period every 30 days (longer cycle). No disruptions. Tests mature female volume tolerance.
+ */
+export const STABLE_FEMALE: LifeScript = {
+  name: 'stable-female',
+  description: '12-week cycle, advanced female, 30-day menstrual cycle, no disruptions',
+  events: (() => {
+    const weeks = 12
+    const events: DayEvent[] = []
+    const trainingDaysInWeek = [0, 2, 4]
+    const cycleLength = 30
+
+    for (let week = 0; week < weeks; week++) {
+      for (let dayInWeek = 0; dayInWeek < 7; dayInWeek++) {
+        const absoluteDay = week * 7 + dayInWeek
+        const dayInCycle = absoluteDay % cycleLength
+
+        if (absoluteDay % cycleLength === 0) {
+          events.push({ type: 'period-start' })
+        } else if (trainingDaysInWeek.includes(dayInWeek)) {
+          const sleep: 1 | 2 | 3 = dayInCycle < 5 ? 2 : 3
+          const energy: 1 | 2 | 3 = dayInCycle < 5 ? 2 : dayInCycle > 23 ? 2 : 3
+
+          events.push({
+            type: 'train',
+            sleep,
+            energy,
+            soreness: dayInCycle > 23 ? {
+              ratings: { glutes: 2, lower_back: 2 },
+            } : undefined,
+          })
+        } else {
+          events.push({ type: 'rest' })
+        }
+      }
+    }
+    return events
+  })(),
+}
+
+/**
+ * Junior male — 12 weeks, eager and adherent, occasional poor sleep (young lifestyle).
+ * No disruptions. Tests beginner volume handling.
+ */
+export const JUNIOR_MALE: LifeScript = {
+  name: 'junior-male',
+  description: '12-week cycle, beginner, inconsistent sleep but full adherence',
+  events: (() => {
+    const weeks = 12
+    const events: DayEvent[] = []
+    const trainingDaysInWeek = [0, 2, 4]
+
+    for (let week = 0; week < weeks; week++) {
+      for (let dayInWeek = 0; dayInWeek < 7; dayInWeek++) {
+        const absoluteDay = week * 7 + dayInWeek
+
+        if (trainingDaysInWeek.includes(dayInWeek)) {
+          // Young lifter: inconsistent sleep, usually high energy
+          const sleep: 1 | 2 | 3 = absoluteDay % 4 === 0 ? 1 : absoluteDay % 3 === 0 ? 2 : 3
+          const energy: 1 | 2 | 3 = 3
+          events.push({ type: 'train', sleep, energy })
+        } else {
+          events.push({ type: 'rest' })
+        }
+      }
+    }
+    return events
+  })(),
+}
+
+/**
+ * Elite female — 12 weeks, highly consistent, period tracking, zero disruptions.
+ * Tests advanced lifter volume at high absolute loads.
+ */
+export const ELITE_FEMALE: LifeScript = {
+  name: 'elite-female',
+  description: '12-week cycle, advanced female, 26-day cycle, perfect adherence',
+  events: (() => {
+    const weeks = 12
+    const events: DayEvent[] = []
+    const trainingDaysInWeek = [0, 2, 4]
+    const cycleLength = 26
+
+    for (let week = 0; week < weeks; week++) {
+      for (let dayInWeek = 0; dayInWeek < 7; dayInWeek++) {
+        const absoluteDay = week * 7 + dayInWeek
+        const dayInCycle = absoluteDay % cycleLength
+
+        if (absoluteDay % cycleLength === 0) {
+          events.push({ type: 'period-start' })
+        } else if (trainingDaysInWeek.includes(dayInWeek)) {
+          const sleep: 1 | 2 | 3 = 3
+          const energy: 1 | 2 | 3 = dayInCycle < 4 ? 2 : dayInCycle > 20 ? 2 : 3
+          events.push({ type: 'train', sleep, energy })
+        } else {
+          events.push({ type: 'rest' })
+        }
+      }
+    }
+    return events
+  })(),
+}
+
 // Re-export new scripts
 export { ILLNESS_SCRIPT, NO_EQUIPMENT_SCRIPT, FATIGUE_ACCUMULATION_SCRIPT } from './illness'
 
 export const ALL_SCRIPTS: LifeScript[] = [
   ADHERENT_MALE,
   ADHERENT_FEMALE,
+  STABLE_FEMALE,
   INJURED_SCRIPT,
   BUSY_SCRIPT,
 ]

@@ -8,7 +8,7 @@ import { MuscleContribution } from '../types';
 const LIFT_MUSCLES: Record<string, MuscleContribution[]> = {
   squat: [
     { muscle: 'quads', contribution: 1.0 },
-    { muscle: 'glutes', contribution: 1.0 },
+    { muscle: 'glutes', contribution: 0.75 },
     { muscle: 'hamstrings', contribution: 0.5 },
     { muscle: 'lower_back', contribution: 0.5 },
   ],
@@ -19,7 +19,7 @@ const LIFT_MUSCLES: Record<string, MuscleContribution[]> = {
   ],
   deadlift: [
     { muscle: 'hamstrings', contribution: 1.0 },
-    { muscle: 'glutes', contribution: 1.0 },
+    { muscle: 'glutes', contribution: 0.75 },
     { muscle: 'lower_back', contribution: 1.0 },
     { muscle: 'upper_back', contribution: 0.5 },
   ],

@@ -207,10 +207,11 @@ export function runSimulation(options: SimulatorOptions): SimulationLog {
     const sorenessRatings: Partial<Record<MuscleGroup, SorenessLevel>> =
       event.soreness?.ratings ?? {}
 
-    // Look up aux assignments for this block+lift
+    // Look up aux assignments for this block+lift (wrap to 1-3 since rotator generates 3 blocks)
     const blockNum = scaffold.blockNumber ?? 1
+    const wrappedBlock = ((blockNum - 1) % 3) + 1
     const auxForSession = auxAssignments.find(
-      (a: { blockNumber: number; lift: string }) => a.blockNumber === blockNum && a.lift === scaffold.primaryLift,
+      (a: { blockNumber: number; lift: string }) => a.blockNumber === wrappedBlock && a.lift === scaffold.primaryLift,
     )
     const activeAux: [string, string] = auxForSession
       ? [auxForSession.exercise1, auxForSession.exercise2]
@@ -265,7 +266,7 @@ export function runSimulation(options: SimulatorOptions): SimulationLog {
     // Update weekly volume tracking
     const completedSetLogs = buildCompletedSetLogs(scaffold.primaryLift, jitOutput)
     for (const log of completedSetLogs) {
-      const muscles = getMusclesForLift(log.lift)
+      const muscles = getMusclesForLift(log.lift, log.exercise)
       for (const { muscle, contribution } of muscles) {
         weeklyVolume[muscle] = (weeklyVolume[muscle] ?? 0) + log.completedSets * contribution
       }
