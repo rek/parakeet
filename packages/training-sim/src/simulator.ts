@@ -128,21 +128,20 @@ export function runSimulation(options: SimulatorOptions): SimulationLog {
   let weeklyVolume: Partial<Record<MuscleGroup, number>> = {}
   let currentWeek = 0
 
-  for (let day = 0; day < totalDays; day++) {
-    const event = script.events[day]
-    const weekNumber = Math.floor(day / 7) + 1
-
-    // Reset weekly volume on new week
-    if (weekNumber !== currentWeek) {
-      currentWeek = weekNumber
+  // Helper: reset weekly volume when scaffold week changes
+  function maybeResetWeek(scaffoldWeek: number) {
+    if (scaffoldWeek !== currentWeek) {
+      currentWeek = scaffoldWeek
       weeklyVolume = {}
-
-      // Record 1RM progression at start of each week
       oneRmProgression.push({
-        weekNumber,
+        weekNumber: scaffoldWeek,
         maxes: { ...currentMaxes },
       })
     }
+  }
+
+  for (let day = 0; day < totalDays; day++) {
+    const event = script.events[day]
 
     // Expire disruptions
     for (let i = activeDisruptions.length - 1; i >= 0; i--) {
@@ -183,6 +182,7 @@ export function runSimulation(options: SimulatorOptions): SimulationLog {
       skippedDays++
       if (sessionIndex < program.sessions.length) {
         const scaffold = program.sessions[sessionIndex]
+        maybeResetWeek(scaffold.weekNumber)
         sessions.push(makeSkippedSession(day, scaffold, event.reason))
         sessionIndex++
       }
@@ -194,6 +194,9 @@ export function runSimulation(options: SimulatorOptions): SimulationLog {
 
     const scaffold = program.sessions[sessionIndex]
     sessionIndex++
+
+    // Reset weekly volume when scaffold week changes (not calendar week)
+    maybeResetWeek(scaffold.weekNumber)
 
     // Determine cycle phase for female athletes
     let cyclePhase: CyclePhase | undefined
