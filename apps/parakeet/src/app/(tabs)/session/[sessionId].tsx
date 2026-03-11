@@ -641,12 +641,59 @@ export default function SessionScreen() {
     }
   }
 
-  function handleLiftComplete() {
+  function dismissPostRest() {
     if (resetIntervalRef.current !== null) {
       clearInterval(resetIntervalRef.current);
       resetIntervalRef.current = null;
     }
+    // Total rest = timer rest + lift time (time since overlay appeared)
+    const totalRest = postRestState
+      ? postRestState.actualRestSeconds + Math.round((Date.now() - postRestState.liftStartedAt) / 1000)
+      : 0;
+    const prevSetNumber = postRestState?.pendingMainSetNumber ?? null;
+    const nextSetNumber = prevSetNumber != null ? prevSetNumber + 1 : null;
     setPostRestState(null);
+    return { totalRest, prevSetNumber, nextSetNumber };
+  }
+
+  function handleLiftComplete() {
+    const { totalRest, prevSetNumber, nextSetNumber } = dismissPostRest();
+
+    // Log total rest on the previous set
+    if (prevSetNumber !== null) {
+      updateSet(prevSetNumber, { actual_rest_seconds: totalRest });
+    }
+
+    // Mark the next set as completed and show RPE picker
+    if (nextSetNumber !== null && nextSetNumber <= plannedSets.length) {
+      const planned = plannedSets[nextSetNumber - 1];
+      updateSet(nextSetNumber, {
+        weight_grams: Math.round(planned.weight_kg * 1000),
+        reps_completed: planned.reps,
+        is_completed: true,
+      });
+      setPendingRpeSetNumber(nextSetNumber);
+
+      // Start rest timer for next set (unless it's the last)
+      if (nextSetNumber < plannedSetsLengthRef.current && restTimerPrefsRef.current.mainSetsEnabled) {
+        const duration =
+          restRecommendations.current?.mainLift[nextSetNumber - 1] ??
+          DEFAULT_MAIN_REST_SECONDS;
+        openTimer({
+          durationSeconds: duration,
+          pendingMainSetNumber: nextSetNumber,
+        });
+      }
+    }
+  }
+
+  function handleLiftFailed() {
+    const { totalRest, prevSetNumber } = dismissPostRest();
+
+    // Log total rest on the previous set
+    if (prevSetNumber !== null) {
+      updateSet(prevSetNumber, { actual_rest_seconds: totalRest });
+    }
   }
 
   function handlePostRestReset() {
@@ -1099,6 +1146,7 @@ export default function SessionScreen() {
             <PostRestOverlay
               plannedReps={postRestState.plannedReps}
               onLiftComplete={handleLiftComplete}
+              onLiftFailed={handleLiftFailed}
               onReset15s={handlePostRestReset}
               resetCountdown={postRestState.resetSecondsRemaining}
             />

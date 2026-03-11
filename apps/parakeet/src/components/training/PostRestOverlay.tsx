@@ -6,6 +6,7 @@ import { useTheme } from '../../theme/ThemeContext';
 interface PostRestOverlayProps {
   plannedReps: number;
   onLiftComplete: () => void;
+  onLiftFailed: () => void;
   onReset15s: () => void;
   resetCountdown: number | null;
 }
@@ -13,6 +14,7 @@ interface PostRestOverlayProps {
 export function PostRestOverlay({
   plannedReps,
   onLiftComplete,
+  onLiftFailed,
   onReset15s,
   resetCountdown,
 }: PostRestOverlayProps) {
@@ -39,8 +41,13 @@ export function PostRestOverlay({
       textTransform: 'uppercase',
       letterSpacing: typography.letterSpacing.wider,
     },
-    liftButton: {
+    buttonRow: {
+      flexDirection: 'row',
+      gap: spacing[2.5],
       width: '100%',
+    },
+    liftButton: {
+      flex: 1,
       backgroundColor: colors.primary,
       borderRadius: radii.md,
       paddingVertical: spacing[3.5],
@@ -51,6 +58,20 @@ export function PostRestOverlay({
       fontWeight: typography.weights.bold,
       color: colors.textInverse,
       letterSpacing: typography.letterSpacing.wide,
+    },
+    failedButton: {
+      flex: 1,
+      backgroundColor: colors.bgMuted,
+      borderRadius: radii.md,
+      paddingVertical: spacing[3.5],
+      alignItems: 'center',
+      borderWidth: 1,
+      borderColor: colors.border,
+    },
+    failedButtonText: {
+      fontSize: typography.sizes.base,
+      fontWeight: typography.weights.semibold,
+      color: colors.textSecondary,
     },
     resetButton: {
       width: '100%',
@@ -80,13 +101,22 @@ export function PostRestOverlay({
     <View style={styles.container}>
       <Text style={styles.label}>Go lift!</Text>
 
-      <TouchableOpacity
-        style={styles.liftButton}
-        onPress={onLiftComplete}
-        activeOpacity={0.8}
-      >
-        <Text style={styles.liftButtonText}>Lift complete</Text>
-      </TouchableOpacity>
+      <View style={styles.buttonRow}>
+        <TouchableOpacity
+          style={styles.liftButton}
+          onPress={onLiftComplete}
+          activeOpacity={0.8}
+        >
+          <Text style={styles.liftButtonText}>Complete</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.failedButton}
+          onPress={onLiftFailed}
+          activeOpacity={0.7}
+        >
+          <Text style={styles.failedButtonText}>Failed</Text>
+        </TouchableOpacity>
+      </View>
 
       <TouchableOpacity
         style={styles.resetButton}
