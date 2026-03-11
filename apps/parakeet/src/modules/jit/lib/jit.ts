@@ -31,6 +31,7 @@ import {
   getJITGenerator,
   getMusclesForExercise,
   getMusclesForLift,
+  reviewJITDecision,
   rpeSetMultiplier,
 } from '@parakeet/training-engine';
 import type {
@@ -341,14 +342,32 @@ export async function runJITForSession(
       planned_sets: jitOutput.mainLiftSets,
       jit_generated_at: jitOutput.generatedAt.toISOString(),
       jit_strategy: jitOutput.jit_strategy ?? generator.name,
-      jit_input_snapshot: {
-        sessionId: session.id,
-        lift,
-        blockNumber,
-        intensityType,
-      },
+      jit_input_snapshot: toJson(jitInput),
     })
     .eq('id', session.id);
+
+  // Fire-and-forget: async judge review (runs during warmup)
+  reviewJITDecision(jitInput, jitOutput)
+    .then((review) => {
+      void typedSupabase
+        .from('challenge_reviews')
+        .insert([
+          {
+            user_id: userId,
+            session_id: session.id,
+            score: review.score,
+            verdict: review.verdict,
+            concerns: toJson(review.concerns),
+            suggested_overrides: review.suggestedOverrides
+              ? toJson(review.suggestedOverrides)
+              : null,
+          },
+        ])
+        .then(({ error }) => {
+          if (error) captureException(error);
+        });
+    })
+    .catch(captureException);
 
   return jitOutput;
 }

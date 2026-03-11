@@ -1,0 +1,33 @@
+import { JudgeReviewSchema } from '@parakeet/shared-types';
+import type { JudgeReview } from '@parakeet/shared-types';
+import { generateText, Output } from 'ai';
+
+import { JIT_MODEL } from '../ai/models';
+import { JUDGE_REVIEW_SYSTEM_PROMPT } from '../ai/prompts';
+import type { JITInput, JITOutput } from '../generator/jit-session-generator';
+
+export type { JudgeReview };
+
+const SILENT_PASS: JudgeReview = {
+  score: 100,
+  verdict: 'accept',
+  concerns: [],
+};
+
+export async function reviewJITDecision(
+  input: JITInput,
+  output: JITOutput
+): Promise<JudgeReview> {
+  try {
+    const { output: review } = await generateText({
+      model: JIT_MODEL,
+      output: Output.object({ schema: JudgeReviewSchema }),
+      system: JUDGE_REVIEW_SYSTEM_PROMPT,
+      prompt: JSON.stringify({ input, output }),
+      abortSignal: AbortSignal.timeout(8000),
+    });
+    return review;
+  } catch {
+    return SILENT_PASS;
+  }
+}

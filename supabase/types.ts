@@ -34,6 +34,88 @@ export type Database = {
   }
   public: {
     Tables: {
+      challenge_reviews: {
+        Row: {
+          id: string
+          user_id: string
+          session_id: string
+          created_at: string
+          score: number
+          verdict: string
+          concerns: Json
+          suggested_overrides: Json | null
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          session_id: string
+          created_at?: string
+          score: number
+          verdict: string
+          concerns?: Json
+          suggested_overrides?: Json | null
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          session_id?: string
+          created_at?: string
+          score?: number
+          verdict?: string
+          concerns?: Json
+          suggested_overrides?: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "challenge_reviews_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      decision_replay_logs: {
+        Row: {
+          id: string
+          user_id: string
+          session_id: string
+          created_at: string
+          prescription_score: number
+          rpe_accuracy: number
+          volume_appropriateness: string
+          insights: Json
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          session_id: string
+          created_at?: string
+          prescription_score: number
+          rpe_accuracy: number
+          volume_appropriateness: string
+          insights?: Json
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          session_id?: string
+          created_at?: string
+          prescription_score?: number
+          rpe_accuracy?: number
+          volume_appropriateness?: string
+          insights?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "decision_replay_logs_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       auxiliary_assignments: {
         Row: {
           block_number: number

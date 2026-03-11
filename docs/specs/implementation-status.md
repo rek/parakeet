@@ -51,6 +51,7 @@ For details on any item, see the linked spec file.
 - [x] `disruption.schema.ts` — `CreateDisruption`, `TrainingDisruption`, `DisruptionWithSuggestions`
 - [x] `jit.schema.ts` — `JITAdjustmentSchema`, `JITAdjustment`
 - [x] `cycle-review.schema.ts` — `CycleReviewSchema`, `CycleReview`
+- [x] `challenge.schema.ts` — `JudgeReviewSchema`, `JudgeReview`, `DecisionReplaySchema`, `DecisionReplay`
 
 ---
 
@@ -79,6 +80,7 @@ For details on any item, see the linked spec file.
 - [x] 20260314000000: `sessions.program_id` nullable; `'import'` added to `intensity_type` constraint
 - [x] 20260308000000: Free-form ad-hoc — `primary_lift` nullable, `intensity_type` nullable, `activity_name` column
 - [x] 20260318000000: `weekly_body_reviews` table (engine-029 data store)
+- [x] 20260321000000: `challenge_reviews` + `decision_replay_logs` tables (LLM challenge mode)
 
 ---
 
@@ -191,6 +193,8 @@ Module/platform/shared architecture is the canonical app structure. Legacy top-l
 - [x] Cycle reviews view
 - [x] Formula suggestions view
 - [x] Developer suggestions view
+- [x] Challenge Reviews view — post-hoc JIT judge scores + concerns
+- [x] Decision Replay view — retrospective prescription accuracy scores
 
 ---
 
@@ -222,7 +226,7 @@ Module/platform/shared architecture is the canonical app structure. Legacy top-l
 
 ### LLM Challenge Mode — [design doc](../design/llm-challenge-mode.md) | [spec](10-ai/ai-002-challenge-mode.md)
 
-- [ ] ai-002: Challenge mode — Zod schemas, system prompts, engine review functions, DB tables, app integration (judge + replay), dashboard pages, ai-overview.md fixes
+- [x] ai-002: Challenge mode — `JudgeReviewSchema`/`DecisionReplaySchema` in shared-types; `JUDGE_REVIEW_SYSTEM_PROMPT`/`DECISION_REPLAY_SYSTEM_PROMPT` in prompts.ts; `reviewJITDecision` + `scoreDecisionReplay` engine functions; `challenge_reviews` + `decision_replay_logs` DB tables; judge fires from `runJITForSession()` (fire-and-forget); replay fires from `completeSession()` (fire-and-forget); challenge banner on session screen; dashboard pages for both; `jit_input_snapshot` expanded to full JITInput; ai-overview.md updated with §10/§11
 
 ### Other
 

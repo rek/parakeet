@@ -1,6 +1,6 @@
 # AI Overview
 
-Map of every place AI interacts with Parakeet. Two types of AI: **LLM** (Claude via Vercel AI SDK) and **formula** (deterministic rule-based engine). Disruption adjustment is formula-only; everything else is LLM-optional or LLM-enhanced.
+Map of every place AI interacts with Parakeet. Two types of AI: **LLM** (LLM via Vercel AI SDK) and **formula** (deterministic rule-based engine). Disruption adjustment is formula-only; everything else is LLM-optional or LLM-enhanced.
 
 ---
 
@@ -10,6 +10,8 @@ Map of every place AI interacts with Parakeet. Two types of AI: **LLM** (Claude 
 |-------|-----|---------|
 | `gpt-4o-mini` | JIT session generation, motivational messages | 5s (JIT) / 8s (motivational) → formula fallback |
 | `gpt-5` | Cycle review generation | none (async) |
+
+> See `packages/training-engine/src/ai/models.ts` for current config.
 
 - SDK: `@ai-sdk/openai` via Vercel AI SDK (`generateText()` / `Output.object()`)
 - Config: `packages/training-engine/src/ai/models.ts`
@@ -36,10 +38,10 @@ Map of every place AI interacts with Parakeet. Two types of AI: **LLM** (Claude 
 **Strategy (user-selectable):**
 - `auto` → LLM if online, formula if offline
 - `formula` → deterministic, always offline-capable
-- `llm` → Claude Haiku only
+- `llm` → `JIT_MODEL` only
 - `hybrid` → both in parallel (see §2)
 
-**LLM call:** `generateObject()` → `JITAdjustmentSchema` (Zod)
+**LLM call:** `generateText()` with `Output.object()` → `JITAdjustmentSchema` (Zod)
 
 **Output:**
 - `intensityModifier` (0.40–1.20 × formula weight)
@@ -111,7 +113,7 @@ Map of every place AI interacts with Parakeet. Two types of AI: **LLM** (Claude 
 - `PreviousCycleSummaries[]` (multi-cycle context via engine-025)
 - Menstrual phase overlay (if cycle tracking enabled)
 
-**LLM call:** `generateObject()` → `CycleReviewSchema` (Zod), no timeout.
+**LLM call:** `generateText()` with `Output.object()` → `CycleReviewSchema` (Zod), no timeout.
 
 **Output fields:**
 | Field | Description | Routed to |
@@ -221,8 +223,8 @@ Map of every place AI interacts with Parakeet. Two types of AI: **LLM** (Claude 
 **What:** Biological sex and menstrual cycle phase are surfaced to LLM as context; they also drive formula defaults.
 
 **How it enters the AI pipeline:**
-- `biologicalSex` + `userAge` in `JITInput` → sent to Haiku in JIT prompt
-- `menstrualCycleInsights` in `CycleReviewSchema` → Sonnet uses phase data if provided
+- `biologicalSex` + `userAge` in `JITInput` → sent to `JIT_MODEL` in JIT prompt
+- `menstrualCycleInsights` in `CycleReviewSchema` → `CYCLE_REVIEW_MODEL` uses phase data if provided
 - `session_logs.cycle_phase` stamped at session completion
 
 **Formula-level effects (not LLM):**
@@ -237,11 +239,71 @@ Map of every place AI interacts with Parakeet. Two types of AI: **LLM** (Claude 
 
 ---
 
+### 10. Post-Hoc Review Judge (Challenge Mode)
+
+**What:** Async LLM review of formula JIT output. Fires after JIT persists, surfaces concerns during warmup.
+
+**Trigger:** After `runJITForSession()` persists to DB — fire-and-forget.
+
+**Input:** Full `JITInput` + `JITOutput` (formula's decision + rationale).
+
+**LLM call:** `generateText()` with `Output.object()` → `JudgeReviewSchema` (Zod), `JIT_MODEL`, 8s timeout.
+
+**Output (`JudgeReview`):**
+- `score` (0–100)
+- `verdict`: `accept` | `flag`
+- `concerns`: max 3 specific issues
+- `suggestedOverrides`: optional partial adjustments
+
+**Stored:** `challenge_reviews` table.
+
+**UI:** If `verdict === 'flag'`: amber banner on session screen with first concern. Tap to expand. Dismiss button.
+
+**Failure mode:** On error returns silent pass (score 100, accept). Does not block session.
+
+**Key files:**
+- `packages/training-engine/src/review/judge-reviewer.ts`
+- `apps/parakeet/src/modules/jit/lib/jit.ts` ← fire-and-forget caller
+- `apps/parakeet/src/app/(tabs)/session/[sessionId].tsx` ← banner UI
+
+---
+
+### 11. Decision Replay Scoring (Challenge Mode)
+
+**What:** Async LLM scoring after session completion. Compares prescribed vs actual outcomes.
+
+**Trigger:** After `completeSession()` — fire-and-forget.
+
+**Input:** `jit_input_snapshot` + `planned_sets` (from session) + `actual_sets`, `auxiliary_sets`, `session_rpe` (from session_logs).
+
+**LLM call:** `generateText()` with `Output.object()` → `DecisionReplaySchema` (Zod), `JIT_MODEL`, 10s timeout.
+
+**Output (`DecisionReplay`):**
+- `prescriptionScore` (0–100)
+- `rpeAccuracy` (0–100)
+- `volumeAppropriateness`: `too_much` | `right` | `too_little`
+- `insights`: max 5 actionable observations
+
+**Stored:** `decision_replay_logs` table.
+
+**UI:** Dashboard only — no in-app surface. Trend charts, per-lift breakdowns.
+
+**Failure mode:** Silently swallowed. Does not block session completion.
+
+**Key files:**
+- `packages/training-engine/src/review/decision-replay.ts`
+- `apps/parakeet/src/modules/session/application/decision-replay.service.ts` ← app orchestrator
+- `apps/parakeet/src/modules/session/application/session.service.ts` ← fire-and-forget caller
+
+---
+
 ## Prompts & Constraints
 
 **`packages/training-engine/src/ai/prompts.ts`**
 - `JIT_SYSTEM_PROMPT` — expert coach; precedence: disruptions > soreness > RPE
 - `CYCLE_REVIEW_SYSTEM_PROMPT` — multi-dimensional analysis (lift-by-lift, aux, volume, formula, structural)
+- `JUDGE_REVIEW_SYSTEM_PROMPT` — expert coach reviewing generated session; double-penalty detection, aux conflicts, rest checks
+- `DECISION_REPLAY_SYSTEM_PROMPT` — sports scientist scoring prescription accuracy; RPE deviation thresholds, volume appropriateness
 
 **`packages/training-engine/src/ai/constraints.ts`**
 - `JIT_INTENSITY_MIN/MAX` = 0.40 / 1.20
@@ -255,5 +317,7 @@ Map of every place AI interacts with Parakeet. Two types of AI: **LLM** (Claude 
 All LLM outputs validated before use:
 - `JITAdjustmentSchema` → `packages/shared-types/src/jit.schema.ts`
 - `CycleReviewSchema` → `packages/shared-types/src/cycle-review.schema.ts`
+- `JudgeReviewSchema` → `packages/shared-types/src/challenge.schema.ts`
+- `DecisionReplaySchema` → `packages/shared-types/src/challenge.schema.ts`
 
 Parse failure → formula fallback (JIT) or caught error (cycle review).

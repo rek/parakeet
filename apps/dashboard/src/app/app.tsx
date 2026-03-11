@@ -10,6 +10,8 @@ import { FormulaSuggestions } from './FormulaSuggestions';
 import { JITLogs } from './JITLogs';
 import { Logs } from './Logs';
 import { MotivationalLogs } from './MotivationalLogs';
+import { ChallengeReviews } from './ChallengeReviews';
+import { DecisionReplay } from './DecisionReplay';
 import { WorkoutSummaries } from './WorkoutSummaries';
 
 type ThemeId = 'default' | 'hot-pink';
@@ -41,6 +43,8 @@ type Page =
   | 'jit'
   | 'workouts'
   | 'motivational'
+  | 'challenge'
+  | 'replay'
   | 'hybrid'
   | 'cycle_reviews'
   | 'formula'
@@ -82,6 +86,20 @@ const NAV: NavItem[] = [
     icon: '✦',
     color: 'var(--accent)',
     description: 'LLM input + output',
+  },
+  {
+    id: 'challenge',
+    label: 'Challenge Reviews',
+    icon: '⚑',
+    color: 'var(--accent)',
+    description: 'Post-hoc JIT judge',
+  },
+  {
+    id: 'replay',
+    label: 'Decision Replay',
+    icon: '↺',
+    color: 'var(--blue)',
+    description: 'Prescription accuracy',
   },
   {
     id: 'hybrid',
@@ -216,6 +234,10 @@ function PageContent({ page }: { page: Page }) {
       return <WorkoutSummaries />;
     case 'motivational':
       return <MotivationalLogs />;
+    case 'challenge':
+      return <ChallengeReviews />;
+    case 'replay':
+      return <DecisionReplay />;
     case 'hybrid':
       return <ComparisonLogs />;
     case 'cycle_reviews':

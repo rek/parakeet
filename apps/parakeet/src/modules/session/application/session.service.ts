@@ -346,6 +346,13 @@ export async function completeSession(
     }
   }
 
+  // Fire-and-forget: decision replay scoring
+  import('./decision-replay.service')
+    .then(({ scoreDecisionReplayAsync }) =>
+      scoreDecisionReplayAsync(sessionId, userId)
+    )
+    .catch(captureException);
+
   // Check if program has reached ≥80% completion → trigger async cycle review.
   // Unending programs have no fixed session count; cycle review is triggered manually via End Program.
   if (session?.program_id) {

@@ -40,9 +40,10 @@ import {
 import type { RestTimerPrefs } from '@modules/settings';
 import type { PlateKg } from '@parakeet/training-engine';
 import { useNetworkStatus } from '@platform/network';
+import { typedSupabase } from '@platform/supabase';
 import { useSessionStore } from '@platform/store/sessionStore';
 import { sessionLabel } from '@shared/utils/string';
-import { useQueryClient } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useKeepAwake } from 'expo-keep-awake';
 import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import {
@@ -257,6 +258,38 @@ function buildStyles(colors: ColorScheme) {
       fontSize: 13,
       fontWeight: '600',
       color: colors.warning,
+    },
+    challengeBanner: {
+      marginHorizontal: 16,
+      marginBottom: 8,
+      paddingHorizontal: 12,
+      paddingVertical: 10,
+      borderRadius: 8,
+      backgroundColor: colors.warningMuted,
+      borderWidth: 1,
+      borderColor: colors.warning,
+    },
+    challengeBannerRow: {
+      flexDirection: 'row' as const,
+      alignItems: 'center' as const,
+      justifyContent: 'space-between' as const,
+    },
+    challengeBannerText: {
+      flex: 1,
+      fontSize: 13,
+      fontWeight: '600',
+      color: colors.warning,
+    },
+    challengeDismiss: {
+      paddingLeft: 8,
+      fontSize: 13,
+      color: colors.textTertiary,
+    },
+    challengeDetail: {
+      marginTop: 6,
+      fontSize: 12,
+      color: colors.warning,
+      lineHeight: 18,
     },
   });
 }
@@ -636,6 +669,30 @@ export default function SessionScreen() {
   );
   const auxCount = regularAux.length + topUpAux.length;
 
+  // ── Challenge review banner ─────────────────────────────────────────────
+  const [challengeDismissed, setChallengeDismissed] = useState(false);
+  const [challengeExpanded, setChallengeExpanded] = useState(false);
+  const { data: challengeReview } = useQuery({
+    queryKey: ['challenge_review', sessionId],
+    queryFn: async () => {
+      const { data } = await typedSupabase
+        .from('challenge_reviews')
+        .select('score, verdict, concerns, suggested_overrides')
+        .eq('session_id', sessionId)
+        .limit(1)
+        .single();
+      return data;
+    },
+    enabled: !isFreeForm && !challengeDismissed,
+    refetchInterval: (query) => (query.state.data ? false : 3000),
+    staleTime: Infinity,
+  });
+  const showChallengeBanner =
+    !challengeDismissed &&
+    challengeReview?.verdict === 'flag' &&
+    Array.isArray(challengeReview.concerns) &&
+    challengeReview.concerns.length > 0;
+
   // ── Render ────────────────────────────────────────────────────────────────
 
   return (
@@ -669,6 +726,35 @@ export default function SessionScreen() {
             </TouchableOpacity>
           </View>
         </View>
+
+        {/* Challenge review banner */}
+        {showChallengeBanner && (
+          <TouchableOpacity
+            style={styles.challengeBanner}
+            onPress={() => setChallengeExpanded(!challengeExpanded)}
+            activeOpacity={0.7}
+          >
+            <View style={styles.challengeBannerRow}>
+              <Text style={styles.challengeBannerText}>
+                {String((challengeReview.concerns as string[])[0])}
+              </Text>
+              <TouchableOpacity
+                onPress={() => setChallengeDismissed(true)}
+                hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+              >
+                <Text style={styles.challengeDismiss}>✕</Text>
+              </TouchableOpacity>
+            </View>
+            {challengeExpanded &&
+              (challengeReview.concerns as string[])
+                .slice(1)
+                .map((concern, i) => (
+                  <Text key={i} style={styles.challengeDetail}>
+                    {String(concern)}
+                  </Text>
+                ))}
+          </TouchableOpacity>
+        )}
 
         {/* Warmup section */}
         {warmupSetsState.length > 0 && (

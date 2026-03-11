@@ -6,3 +6,4 @@ export * from './modules/lifter-maxes';
 export * from './modules/program';
 export * from './modules/session';
 export * from './modules/user';
+export * from './modules/challenge';
