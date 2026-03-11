@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Ionicons } from '@expo/vector-icons';
 import { useKeepAwake } from 'expo-keep-awake';
 import {
   Alert,
@@ -206,6 +207,17 @@ function buildStyles(colors: ColorScheme) {
       fontWeight: '600',
       color: colors.primary,
     },
+    adHocSetRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+    },
+    adHocSetRowContent: {
+      flex: 1,
+    },
+    removeSetButton: {
+      paddingHorizontal: 6,
+      paddingVertical: 4,
+    },
     addExerciseButton: {
       marginHorizontal: 16,
       marginTop: 12,
@@ -299,6 +311,7 @@ export default function SessionScreen() {
     updateSet,
     updateAuxiliarySet,
     addAdHocSet,
+    removeAdHocSet,
     setWarmupDone,
     setSessionMeta,
     setCachedJitData,
@@ -690,6 +703,16 @@ export default function SessionScreen() {
     addAdHocSet(exercise);
   }
 
+  function handleRemoveAdHocSet(exercise: string, setNumber: number) {
+    const remaining = auxiliarySets.filter(
+      (s) => s.exercise === exercise && !(s.set_number === setNumber),
+    )
+    if (remaining.length === 0) {
+      setAdHocExercises((prev) => prev.filter((e) => e !== exercise))
+    }
+    removeAdHocSet(exercise, setNumber)
+  }
+
   function handleAbandon() {
     Alert.alert(
       'Abandon Workout?',
@@ -965,25 +988,39 @@ export default function SessionScreen() {
                     </TouchableOpacity>
                   </View>
                   {sets.map((actualSet) => (
-                    <SetRow
-                      key={`${exercise}-${actualSet.set_number}`}
-                      setNumber={actualSet.set_number}
-                      plannedWeightKg={actualSet.weight_grams / 1000}
-                      plannedReps={actualSet.reps_completed}
-                      rpeValue={actualSet.rpe_actual}
-                      onRpePress={() =>
-                        setPendingAuxRpe({ exercise, setNumber: actualSet.set_number })
-                      }
-                      onUpdate={(data) =>
-                        handleAuxSetUpdate(
-                          auxByExercise.length + exerciseIndex,
-                          exercise,
-                          actualSet.set_number,
-                          sets.length,
-                          data
-                        )
-                      }
-                    />
+                    <View key={`${exercise}-${actualSet.set_number}`} style={styles.adHocSetRow}>
+                      <View style={styles.adHocSetRowContent}>
+                        <SetRow
+                          setNumber={actualSet.set_number}
+                          plannedWeightKg={actualSet.weight_grams / 1000}
+                          plannedReps={actualSet.reps_completed}
+                          rpeValue={actualSet.rpe_actual}
+                          onRpePress={() =>
+                            setPendingAuxRpe({ exercise, setNumber: actualSet.set_number })
+                          }
+                          onUpdate={(data) =>
+                            handleAuxSetUpdate(
+                              auxByExercise.length + exerciseIndex,
+                              exercise,
+                              actualSet.set_number,
+                              sets.length,
+                              data
+                            )
+                          }
+                        />
+                      </View>
+                      {!actualSet.is_completed && (
+                        <TouchableOpacity
+                          style={styles.removeSetButton}
+                          onPress={() => handleRemoveAdHocSet(exercise, actualSet.set_number)}
+                          hitSlop={{ top: 8, bottom: 8, left: 4, right: 8 }}
+                          accessibilityLabel={`Remove set ${actualSet.set_number}`}
+                          accessibilityRole="button"
+                        >
+                          <Ionicons name="close-circle" size={18} color={colors.textTertiary} />
+                        </TouchableOpacity>
+                      )}
+                    </View>
                   ))}
                 </View>
               );

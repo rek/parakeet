@@ -1,4 +1,11 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+// ── Tests ────────────────────────────────────────────────────────────────────
+
+import {
+  findTodaySession,
+  findTodaySessions,
+  getInProgressSession,
+} from './session.service';
 
 // ── Mocks ────────────────────────────────────────────────────────────────────
 
@@ -47,7 +54,9 @@ vi.mock('@platform/utils/captureException', () => ({
   captureException: mockCaptureException,
 }));
 
-const mockNextTrainingDate = vi.hoisted(() => vi.fn(() => '2026-03-09'));
+const mockNextTrainingDate = vi.hoisted(() =>
+  vi.fn((_days: number[], _ref?: Date) => '2026-03-09')
+);
 
 vi.mock('@parakeet/training-engine', () => ({
   DEFAULT_TRAINING_DAYS: { 3: [1, 3, 5] },
@@ -62,21 +71,17 @@ vi.mock('@parakeet/shared-types', () => ({
   IntensityTypeSchema: { parse: (v: string) => v },
 }));
 
-// ── Tests ────────────────────────────────────────────────────────────────────
-
-import {
-  findTodaySession,
-  findTodaySessions,
-  getInProgressSession,
-} from './session.service';
-
 describe('findTodaySession', () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
   it('returns in_progress session for scheduled program', async () => {
-    const session = { id: 's1', status: 'in_progress', planned_date: '2026-03-08' };
+    const session = {
+      id: 's1',
+      status: 'in_progress',
+      planned_date: '2026-03-08',
+    };
     mockFetchTodaySession.mockResolvedValue(session);
     mockFetchActiveProgramMode.mockResolvedValue({
       id: 'p1',
@@ -140,7 +145,11 @@ describe('findTodaySession', () => {
   });
 
   it('generates next session with tomorrow reference when unending session is completed', async () => {
-    const completedSession = { id: 's1', status: 'completed', planned_date: '2026-03-09' };
+    const completedSession = {
+      id: 's1',
+      status: 'completed',
+      planned_date: '2026-03-09',
+    };
     const generated = { id: 's2', status: 'planned' };
     mockFetchTodaySession.mockResolvedValue(completedSession);
     mockFetchActiveProgramMode.mockResolvedValue({

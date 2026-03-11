@@ -4,6 +4,7 @@ import { Ionicons } from '@expo/vector-icons'
 import { spacing, radii, typography } from '../../theme'
 import { useTheme } from '../../theme/ThemeContext'
 import { PlateCalculatorSheet } from '../session/PlateCalculatorSheet'
+import { parseWeightInput } from './weight-input'
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -29,6 +30,7 @@ export interface SetRowProps {
 export function SetRow({ setNumber, plannedWeightKg, plannedReps, rpeValue, exerciseType = 'weighted', onUpdate, onRpePress }: SetRowProps) {
   const { colors } = useTheme()
   const [weightKg, setWeightKg] = useState(plannedWeightKg)
+  const [weightText, setWeightText] = useState(plannedWeightKg === 0 ? '' : String(plannedWeightKg))
   const [reps, setReps] = useState(plannedReps)
   const [rpe, setRpe] = useState<number | undefined>(rpeValue)
   const [isCompleted, setIsCompleted] = useState(false)
@@ -182,12 +184,9 @@ export function SetRow({ setNumber, plannedWeightKg, plannedReps, rpeValue, exer
   }, [rpeValue])
 
   function handleWeightChange(text: string) {
-    const parsed = parseFloat(text)
-    if (!isNaN(parsed) && parsed >= 0) {
-      setWeightKg(parsed)
-    } else if (text === '' || text === '.') {
-      setWeightKg(0)
-    }
+    setWeightText(text)
+    const kg = parseWeightInput(text)
+    setWeightKg(kg)
   }
 
   function handleRepsChange(text: string) {
@@ -204,7 +203,11 @@ export function SetRow({ setNumber, plannedWeightKg, plannedReps, rpeValue, exer
   }
 
   function handleWeightAdjust(delta: number) {
-    setWeightKg((prev) => Math.max(0, Math.round((prev + delta) * 10) / 10))
+    setWeightKg((prev) => {
+      const next = Math.max(0, Math.round((prev + delta) * 10) / 10)
+      setWeightText(next === 0 ? '' : String(next))
+      return next
+    })
   }
 
   // Timed exercises: just a "mark complete" button — no inputs
@@ -238,7 +241,7 @@ export function SetRow({ setNumber, plannedWeightKg, plannedReps, rpeValue, exer
           <>
             <TextInput
               style={[styles.weightInput, isCompleted && styles.inputLocked]}
-              value={weightKg === 0 ? '' : String(weightKg)}
+              value={weightText}
               onChangeText={handleWeightChange}
               keyboardType="decimal-pad"
               returnKeyType="done"

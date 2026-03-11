@@ -53,6 +53,7 @@ export interface SessionState {
   updateSet: (setNumber: number, data: Partial<ActualSet>) => void
   updateAuxiliarySet: (exercise: string, setNumber: number, data: Partial<AuxiliaryActualSet>) => void
   addAdHocSet: (exercise: string) => void
+  removeAdHocSet: (exercise: string, setNumber: number) => void
   setWarmupDone: (index: number, done: boolean) => void
   setSessionRpe: (rpe: number) => void
   initSession: (sessionId: string, plannedSets: { weight_kg: number; reps: number }[]) => void
@@ -139,6 +140,19 @@ export const useSessionStore = create<SessionState>()(
             },
           ],
         };
+      }),
+
+      removeAdHocSet: (exercise, setNumber) => set((state) => {
+        const remaining = state.auxiliarySets
+          .filter((s) => !(s.exercise === exercise && s.set_number === setNumber))
+          .map((s) => {
+            // Renumber sets for the affected exercise
+            if (s.exercise === exercise && s.set_number > setNumber) {
+              return { ...s, set_number: s.set_number - 1 }
+            }
+            return s
+          })
+        return { auxiliarySets: remaining }
       }),
 
       setWarmupDone: (index, done) => set((state) => ({
