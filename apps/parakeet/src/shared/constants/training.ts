@@ -43,6 +43,11 @@ export const COMPACT_VOLUME_MUSCLES: readonly MuscleGroup[] = [
 
 export const TRAINING_LIFTS: readonly Lift[] = ['squat', 'bench', 'deadlift']
 
+export const SEX_LABELS: Record<string, string> = {
+  female: 'Female',
+  male: 'Male',
+}
+
 export const LIFT_LABELS: Record<Lift, string> = {
   squat: 'Squat',
   bench: 'Bench',
@@ -53,6 +58,19 @@ export const LIFT_PRIMARY_SORENESS_MUSCLES: Record<Lift, readonly MuscleGroup[]>
   squat: ['quads', 'glutes', 'lower_back'],
   bench: ['chest', 'triceps', 'shoulders'],
   deadlift: ['hamstrings', 'glutes', 'lower_back'],
+}
+
+export const BLOCK_INTENSITY: Record<1 | 2 | 3, string> = {
+  1: 'Heavy',
+  2: 'Explosive',
+  3: 'Rep',
+}
+
+export const INTENSITY_LABELS: Record<string, string> = {
+  heavy: 'Heavy',
+  explosive: 'Explosive',
+  rep: 'Rep',
+  deload: 'Deload',
 }
 
 export const READINESS_LABELS = {

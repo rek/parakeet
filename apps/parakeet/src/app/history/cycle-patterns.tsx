@@ -5,82 +5,20 @@ import { SafeAreaView } from 'react-native-safe-area-context'
 import { router } from 'expo-router'
 
 import { useAuth } from '@modules/auth'
-import { CYCLE_PHASE_BG, CYCLE_PHASE_LABELS } from '@modules/cycle-tracking'
+import {
+  computePhaseStats,
+  CYCLE_PHASE_BG,
+  CYCLE_PHASE_LABELS,
+  CYCLE_PHASES,
+  generateInsight,
+  MIN_CYCLES_FOR_PATTERNS,
+  PHASE_BAR_FILL,
+} from '@modules/cycle-tracking'
 import { getCompletedSessions } from '@modules/session'
-import type { CyclePhase } from '@parakeet/training-engine'
 import { BackLink } from '../../components/navigation/BackLink'
 import { spacing, radii, typography } from '../../theme'
 import type { ColorScheme } from '../../theme'
 import { useTheme } from '../../theme/ThemeContext'
-
-// ── Constants ─────────────────────────────────────────────────────────────────
-
-const PHASES: CyclePhase[] = ['menstrual', 'follicular', 'ovulatory', 'luteal', 'late_luteal']
-
-const PHASE_BAR_FILL: Record<CyclePhase, string> = {
-  menstrual:   '#F87171',
-  follicular:  '#34D399',
-  ovulatory:   '#FBBF24',
-  luteal:      '#818CF8',
-  late_luteal: '#6366F1',
-}
-
-const MIN_CYCLES_FOR_PATTERNS = 2
-
-// ── Helpers ───────────────────────────────────────────────────────────────────
-
-interface PhaseStats {
-  avgRpe: number | null
-  sessionCount: number
-}
-
-function computePhaseStats(
-  sessions: Array<{ cycle_phase: string | null; rpe?: number | null }>,
-): Record<CyclePhase, PhaseStats> {
-  const buckets: Record<CyclePhase, { rpeSum: number; rpeCount: number; total: number }> = {
-    menstrual:   { rpeSum: 0, rpeCount: 0, total: 0 },
-    follicular:  { rpeSum: 0, rpeCount: 0, total: 0 },
-    ovulatory:   { rpeSum: 0, rpeCount: 0, total: 0 },
-    luteal:      { rpeSum: 0, rpeCount: 0, total: 0 },
-    late_luteal: { rpeSum: 0, rpeCount: 0, total: 0 },
-  }
-
-  for (const s of sessions) {
-    if (!s.cycle_phase || !(s.cycle_phase in buckets)) continue
-    const phase = s.cycle_phase as CyclePhase
-    buckets[phase].total++
-    if (s.rpe != null) {
-      buckets[phase].rpeSum += s.rpe
-      buckets[phase].rpeCount++
-    }
-  }
-
-  return Object.fromEntries(
-    PHASES.map((phase) => {
-      const b = buckets[phase]
-      return [phase, {
-        avgRpe: b.rpeCount > 0 ? b.rpeSum / b.rpeCount : null,
-        sessionCount: b.total,
-      }]
-    }),
-  ) as Record<CyclePhase, PhaseStats>
-}
-
-function generateInsight(stats: Record<CyclePhase, PhaseStats>): string | null {
-  const withRpe = PHASES.filter((p) => stats[p].avgRpe != null)
-  if (withRpe.length < 2) return null
-
-  let maxPhase = withRpe[0]
-  let minPhase = withRpe[0]
-  for (const p of withRpe) {
-    if (stats[p].avgRpe! > stats[maxPhase].avgRpe!) maxPhase = p
-    if (stats[p].avgRpe! < stats[minPhase].avgRpe!) minPhase = p
-  }
-
-  if (maxPhase === minPhase) return null
-
-  return `Your average RPE in the ${CYCLE_PHASE_LABELS[maxPhase].toLowerCase()} phase (${stats[maxPhase].avgRpe!.toFixed(1)}) is higher than in the ${CYCLE_PHASE_LABELS[minPhase].toLowerCase()} phase (${stats[minPhase].avgRpe!.toFixed(1)}). This is a common pattern.`
-}
 
 function buildStyles(colors: ColorScheme) {
   return StyleSheet.create({
@@ -186,7 +124,7 @@ export default function CyclePatternsScreen() {
 
   // Estimate distinct cycles: rough heuristic — count sessions with cycle data
   // across phase transitions. Use simple count ÷ 4 phases as a proxy.
-  const uniquePhasesFilled = PHASES.filter((p) => stats[p].sessionCount > 0).length
+  const uniquePhasesFilled = CYCLE_PHASES.filter((p) => stats[p].sessionCount > 0).length
   const hasEnoughData = phasedSessions.length >= MIN_CYCLES_FOR_PATTERNS * 4
 
   const insight = generateInsight(stats)
@@ -211,7 +149,7 @@ export default function CyclePatternsScreen() {
 
         {/* RPE by phase */}
         <Text style={styles.sectionHeader}>Average RPE by Phase</Text>
-        {PHASES.map((phase) => {
+        {CYCLE_PHASES.map((phase) => {
           const stat = stats[phase]
           const barPct = stat.avgRpe != null ? (stat.avgRpe / 10) * 100 : 0
           return (
@@ -238,9 +176,9 @@ export default function CyclePatternsScreen() {
 
         {/* Session count by phase */}
         <Text style={[styles.sectionHeader, { marginTop: spacing[6] }]}>Sessions per Phase</Text>
-        {PHASES.map((phase) => {
+        {CYCLE_PHASES.map((phase) => {
           const stat = stats[phase]
-          const maxCount = Math.max(...PHASES.map((p) => stats[p].sessionCount), 1)
+          const maxCount = Math.max(...CYCLE_PHASES.map((p) => stats[p].sessionCount), 1)
           const barPct = (stat.sessionCount / maxCount) * 100
           return (
             <View key={phase} style={styles.barRow}>

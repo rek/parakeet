@@ -1,6 +1,18 @@
 import type { CyclePhase } from '@parakeet/training-engine'
 import { palette } from '../../../theme'
 
+export const CYCLE_PHASES: readonly CyclePhase[] = [
+  'menstrual', 'follicular', 'ovulatory', 'luteal', 'late_luteal',
+] as const
+
+export const PHASE_BAR_FILL: Record<CyclePhase, string> = {
+  menstrual:   '#F87171',
+  follicular:  '#34D399',
+  ovulatory:   '#FBBF24',
+  luteal:      '#818CF8',
+  late_luteal: '#6366F1',
+}
+
 export const CYCLE_PHASE_LABELS: Record<CyclePhase, string> = {
   menstrual:   'Menstrual',
   follicular:  'Follicular',

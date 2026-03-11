@@ -20,6 +20,7 @@ import {
   groupAuxiliaryWork,
   DEFAULT_MAIN_REST_SECONDS,
 } from '@modules/session';
+import { computeDisplayWeights } from '@modules/jit';
 import type {
   AuxiliaryWork,
   JitData,
@@ -665,26 +666,10 @@ export default function SessionScreen() {
               </View>
             )}
 
-            {(() => {
-              // Pre-compute adapted weight by uncompleted-set position
-              let uncompletedIndex = 0;
-              return actualSets.map((actualSet, index) => {
-                const planned = plannedSets[index];
-                let displayWeightKg = planned?.weight_kg ?? actualSet.weight_grams / 1000;
-
-                if (
-                  !actualSet.is_completed &&
-                  currentAdaptation !== null &&
-                  (currentAdaptation.adaptationType === 'weight_reduced' ||
-                    currentAdaptation.adaptationType === 'sets_capped')
-                ) {
-                  const adaptedSet = currentAdaptation.sets[uncompletedIndex];
-                  if (adaptedSet != null) {
-                    displayWeightKg = adaptedSet.weight_kg;
-                  }
-                  uncompletedIndex += 1;
-                }
-
+            {computeDisplayWeights(actualSets, plannedSets, currentAdaptation).map(
+              ({ displayWeightKg, originalIndex }) => {
+                const actualSet = actualSets[originalIndex];
+                const planned = plannedSets[originalIndex];
                 return (
                   <SetRow
                     key={actualSet.set_number}
@@ -696,8 +681,8 @@ export default function SessionScreen() {
                     onRpePress={() => requestMainRpe(actualSet.set_number)}
                   />
                 );
-              });
-            })()}
+              },
+            )}
           </>
         )}
 

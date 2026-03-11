@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import type { DimensionValue } from 'react-native';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
-import { useWeeklyVolume } from '@modules/training-volume';
+import { getVolumeStatusColor, isVolumeOverMrv, useWeeklyVolume, volumeFillPct } from '@modules/training-volume';
 import type { MuscleGroup, VolumeStatus } from '@parakeet/training-engine';
 import {
   MUSCLE_GROUPS_ORDER,
@@ -13,31 +13,21 @@ import { BackLink } from '../components/navigation/BackLink';
 import { useTheme } from '../theme/ThemeContext';
 import type { ColorScheme } from '../theme';
 
-function getBarColors(colors: ColorScheme): Record<VolumeStatus, string> {
-  return {
-    below_mev: colors.info,
-    in_range: colors.success,
-    approaching_mrv: colors.warning,
-    at_mrv: colors.danger,
-    exceeded_mrv: colors.danger,
-  };
-}
-
 interface MuscleBarProps {
   muscle: MuscleGroup;
   sets: number;
   mrv: number;
   mev: number;
   status: VolumeStatus;
-  barColors: Record<VolumeStatus, string>;
+  colors: ColorScheme;
   styles: ReturnType<typeof buildStyles>;
 }
 
-function MuscleBar({ muscle, sets, mrv, mev, status, barColors, styles }: MuscleBarProps) {
-  const fillPct = Math.min(100, mrv > 0 ? (sets / mrv) * 100 : 0);
+function MuscleBar({ muscle, sets, mrv, mev, status, colors, styles }: MuscleBarProps) {
+  const fillPct = volumeFillPct(sets, mrv);
   const mevPct = mrv > 0 ? (mev / mrv) * 100 : 0;
-  const color = barColors[status];
-  const isOver = status === 'at_mrv' || status === 'exceeded_mrv';
+  const color = getVolumeStatusColor(status, colors);
+  const isOver = isVolumeOverMrv(status);
 
   return (
     <View style={styles.barRow}>
@@ -225,7 +215,6 @@ export default function VolumeScreen() {
   const { data, isLoading } = useWeeklyVolume();
 
   const styles = useMemo(() => buildStyles(colors), [colors]);
-  const barColors = useMemo(() => getBarColors(colors), [colors]);
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -254,7 +243,7 @@ export default function VolumeScreen() {
           ).map((s) => (
             <View key={s} style={styles.legendItem}>
               <View
-                style={[styles.legendDot, { backgroundColor: barColors[s] }]}
+                style={[styles.legendDot, { backgroundColor: getVolumeStatusColor(s, colors) }]}
               />
               <Text style={styles.legendText}>{s.replace(/_/g, ' ')}</Text>
             </View>
@@ -284,7 +273,7 @@ export default function VolumeScreen() {
                 mrv={data.config[muscle].mrv}
                 mev={data.config[muscle].mev}
                 status={data.status[muscle]}
-                barColors={barColors}
+                colors={colors}
                 styles={styles}
               />
             ))}

@@ -11,7 +11,7 @@ import {
 import { detectAchievements } from '@modules/achievements';
 import { useAuth } from '@modules/auth';
 import { stampCyclePhaseOnSession } from '@modules/cycle-tracking';
-import { checkEndOfWeek, completeSession, isNetworkError } from '@modules/session';
+import { checkEndOfWeek, completeSession, computeSessionStats, isNetworkError, RPE_OPTIONS } from '@modules/session';
 import type { PR } from '@parakeet/training-engine';
 import { useNetworkStatus } from '@platform/network';
 import { qk } from '@platform/query';
@@ -24,10 +24,6 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { StarCard } from '../../../components/achievements/StarCard';
 import type { ColorScheme } from '../../../theme';
 import { useTheme } from '../../../theme/ThemeContext';
-
-// ── Constants ────────────────────────────────────────────────────────────────
-
-const RPE_OPTIONS = [6, 7, 8, 9, 10] as const;
 
 // ── Styles ────────────────────────────────────────────────────────────────────
 
@@ -283,13 +279,7 @@ export default function CompleteScreen() {
   // ── Derived stats ─────────────────────────────────────────────────────────
 
   // For free-form ad-hoc (no main lift sets), use auxiliary sets for stats
-  const isAuxOnly = actualSets.length === 0 && auxiliarySets.length > 0;
-  const totalSets = isAuxOnly ? auxiliarySets.length : actualSets.length;
-  const completedSets = isAuxOnly
-    ? auxiliarySets.filter((s) => s.is_completed).length
-    : actualSets.filter((s) => s.is_completed).length;
-  const completionPct =
-    totalSets > 0 ? ((completedSets / totalSets) * 100).toFixed(0) : '0';
+  const { totalSets, completedSets, completionPct } = computeSessionStats(actualSets, auxiliarySets);
 
   // ── Handlers ──────────────────────────────────────────────────────────────
 

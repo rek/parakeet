@@ -8,6 +8,7 @@ import { useCycleReview } from '@modules/cycle-review'
 import { createFormulaOverride, deactivateFormulaConfig } from '@modules/formula'
 import { useAuth } from '@modules/auth'
 import { classifyVolumeLevel } from '@modules/training-volume'
+import { getRatingStyles, getVolumeLevelColors } from '@modules/history'
 import type { FormulaConfig, MuscleGroup } from '@parakeet/training-engine'
 import type { ColorScheme } from '../../../theme'
 import { useTheme } from '../../../theme/ThemeContext'
@@ -67,24 +68,6 @@ interface CycleReviewData {
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
-
-function getRatingStyles(colors: ColorScheme): Record<ProgressRating, { bg: string; text: string; label: string }> {
-  return {
-    excellent:  { bg: colors.successMuted, text: colors.success, label: 'Excellent' },
-    good:       { bg: colors.infoMuted, text: colors.info, label: 'Good' },
-    stalled:    { bg: colors.warningMuted, text: colors.warning, label: 'Stalled' },
-    concerning: { bg: colors.dangerMuted, text: colors.danger, label: 'Concerning' },
-  }
-}
-
-function getVolumeLevelColors(colors: ColorScheme) {
-  return {
-    exceeded: colors.danger,
-    approaching: colors.warning,
-    in_range: colors.success,
-    below: colors.bgMuted,
-  } as const
-}
 
 const MUSCLES = MUSCLE_GROUPS_ORDER
 

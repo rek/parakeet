@@ -6,21 +6,13 @@ import { useQuery } from '@tanstack/react-query'
 
 import { useAuth } from '@modules/auth'
 import { getWilksHistory } from '@modules/achievements'
-import { getCurrentWilksSnapshot } from '@modules/wilks'
+import { getCurrentWilksSnapshot, WILKS_CONTEXT } from '@modules/wilks'
 import type { ColorScheme } from '../../theme'
 import { useTheme } from '../../theme/ThemeContext'
 import { BackLink } from '../../components/navigation/BackLink'
 import { formatDate } from '@shared/utils/date'
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
-
-const WILKS_CONTEXT = [
-  { label: 'World-class', range: '500+' },
-  { label: 'Elite', range: '450–500' },
-  { label: 'Advanced', range: '350–450' },
-  { label: 'Intermediate', range: '250–350' },
-  { label: 'Beginner', range: '<250' },
-]
 
 function buildStyles(colors: ColorScheme) {
   return StyleSheet.create({

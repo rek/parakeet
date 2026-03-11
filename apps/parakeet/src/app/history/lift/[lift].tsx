@@ -9,7 +9,6 @@ import {
   View,
 } from 'react-native';
 import type { Lift } from '@parakeet/shared-types';
-import { estimateOneRepMax_Epley, gramsToKg } from '@parakeet/training-engine';
 import { useQuery } from '@tanstack/react-query';
 import { router, useLocalSearchParams } from 'expo-router';
 import { LineChart } from 'react-native-chart-kit';
@@ -18,10 +17,16 @@ import { useAuth } from '@modules/auth';
 import {
   getPerformanceByLift,
   getPerformanceTrends,
+  estimateBestOneRm,
+  computeSessionVolume,
+  computeHeaviestLift,
+  getSessionJoin,
+  buildLiftChartData,
 } from '@modules/history';
 import { palette, radii, spacing, typography } from '../../../theme';
 import type { ColorScheme } from '../../../theme';
 import { useTheme } from '../../../theme/ThemeContext';
+import { INTENSITY_LABELS, LIFT_LABELS } from '@shared/constants';
 import { formatDate, formatTime } from '@shared/utils/date';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -29,21 +34,10 @@ import { formatDate, formatTime } from '@shared/utils/date';
 type IntensityFilter = 'all' | 'heavy' | 'explosive' | 'rep' | 'deload';
 type ChartType = '1rm' | 'volume' | 'heaviest';
 
-const LIFT_LABELS: Record<Lift, string> = {
-  squat: 'Squat',
-  bench: 'Bench',
-  deadlift: 'Deadlift',
-};
 const LIFT_COLORS: Record<Lift, string> = {
   squat: palette.lime400,
   bench: palette.orange500,
   deadlift: palette.teal400,
-};
-const INTENSITY_LABELS: Record<string, string> = {
-  heavy: 'Heavy',
-  explosive: 'Explosive',
-  rep: 'Rep',
-  deload: 'Deload',
 };
 const INTENSITY_FILTERS: IntensityFilter[] = [
   'all',
@@ -59,50 +53,6 @@ const CHART_TYPES: { key: ChartType; label: string; suffix: string }[] = [
 ];
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
-
-type ActualSet = { weight_grams?: number; reps_completed?: number };
-
-function estimateBestOneRm(actualSets: unknown): number {
-  if (!Array.isArray(actualSets) || actualSets.length === 0) return 0;
-  let best = 0;
-  for (const s of actualSets as ActualSet[]) {
-    if (!s.weight_grams || !s.reps_completed || s.reps_completed <= 0 || s.reps_completed > 20) continue;
-    const est = estimateOneRepMax_Epley(
-      gramsToKg(s.weight_grams),
-      s.reps_completed
-    );
-    if (est > best) best = est;
-  }
-  return best;
-}
-
-function computeSessionVolume(actualSets: unknown): number {
-  if (!Array.isArray(actualSets) || actualSets.length === 0) return 0;
-  let total = 0;
-  for (const s of actualSets as ActualSet[]) {
-    if (!s.weight_grams || !s.reps_completed || s.reps_completed <= 0) continue;
-    total += gramsToKg(s.weight_grams) * s.reps_completed;
-  }
-  return total;
-}
-
-function computeHeaviestLift(actualSets: unknown): number {
-  if (!Array.isArray(actualSets) || actualSets.length === 0) return 0;
-  let heaviest = 0;
-  for (const s of actualSets as ActualSet[]) {
-    if (!s.weight_grams) continue;
-    const kg = gramsToKg(s.weight_grams);
-    if (kg > heaviest) heaviest = kg;
-  }
-  return heaviest;
-}
-
-function getSessionJoin(sessions: unknown): { intensity_type?: string } | null {
-  if (!sessions) return null;
-  return (Array.isArray(sessions) ? sessions[0] : sessions) as {
-    intensity_type?: string;
-  } | null;
-}
 
 function buildStyles(colors: ColorScheme) {
   return StyleSheet.create({
@@ -334,32 +284,11 @@ export default function LiftHistoryScreen() {
 
   const chartEntries = chartSourceRows
     .map((row) => ({ date: row.completed_at, value: getChartValue(row) }))
-    .filter((e) => e.date && e.value > 0);
+    .filter((e): e is { date: string; value: number } => !!e.date && e.value > 0);
 
-  const labelStep = Math.max(1, Math.ceil(chartEntries.length / 6));
   const activeChartDef = CHART_TYPES.find((c) => c.key === chartType)!;
 
-  const chartData =
-    chartEntries.length >= 1
-      ? {
-          labels: chartEntries.map((e, i) => {
-            if (i % labelStep !== 0) return '';
-            const d = new Date(e.date!);
-            return `${d.getMonth() + 1}/${d.getDate()}`;
-          }),
-          datasets: [
-            {
-              data: chartEntries.map((e) => parseFloat(e.value.toFixed(1))),
-              color: (opacity = 1) =>
-                liftColor +
-                Math.round(opacity * 255)
-                  .toString(16)
-                  .padStart(2, '0'),
-              strokeWidth: 2,
-            },
-          ],
-        }
-      : null;
+  const chartData = buildLiftChartData(chartEntries, liftColor);
 
   return (
     <SafeAreaView style={styles.safeArea}>

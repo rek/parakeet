@@ -11,8 +11,11 @@ import {
 import { useAuth } from '@modules/auth';
 import {
   addPeriodStart,
+  clampCycleLength,
+  computeNextPeriodDate,
   CYCLE_PHASE_BG,
   CYCLE_PHASE_LABELS,
+  CYCLE_PHASES,
   CYCLE_PHASE_TEXT,
   deletePeriodStart,
   getCycleConfig,
@@ -283,7 +286,7 @@ export default function CycleTrackingScreen() {
   }
 
   async function handleCycleLengthChange(delta: number) {
-    const next = Math.min(35, Math.max(24, cycleLength + delta));
+    const next = clampCycleLength(cycleLength + delta);
     setCycleLength(next);
     await save({ cycle_length_days: next });
   }
@@ -319,11 +322,7 @@ export default function CycleTrackingScreen() {
       : null;
 
   const nextPeriodDate = lastPeriodStart
-    ? (() => {
-        const d = new Date(lastPeriodStart);
-        d.setDate(d.getDate() + cycleLength);
-        return d.toISOString().split('T')[0];
-      })()
+    ? computeNextPeriodDate(lastPeriodStart, cycleLength)
     : null;
 
   // ── Render ─────────────────────────────────────────────────────────────────
@@ -537,15 +536,7 @@ export default function CycleTrackingScreen() {
 
                 {/* Legend */}
                 <View style={styles.legend}>
-                  {(
-                    [
-                      'menstrual',
-                      'follicular',
-                      'ovulatory',
-                      'luteal',
-                      'late_luteal',
-                    ] as const
-                  ).map((phase) => (
+                  {CYCLE_PHASES.map((phase) => (
                     <View key={phase} style={styles.legendItem}>
                       <View
                         style={[

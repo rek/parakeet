@@ -10,6 +10,7 @@ import {
 import { useAuth } from '@modules/auth';
 import { getFormulaConfig } from '@modules/formula';
 import { getRecentLiftHistory } from '@modules/history';
+import { computeRpeAdjustmentNote } from '@modules/jit';
 import {
   determineCurrentWeek,
   getCurrentOneRmKg,
@@ -281,13 +282,7 @@ export default function ProgramScreen() {
       : null;
 
     const rpeTarget = firstSet?.rpe_target ?? null;
-    const rpeAdjustNote = rpeTarget != null && lastSessionRpe != null
-      ? lastSessionRpe - rpeTarget >= 1.0
-        ? ' — load may adjust down'
-        : rpeTarget - lastSessionRpe >= 1.5
-          ? ' — load may adjust up'
-          : ''
-      : '';
+    const rpeAdjustNote = computeRpeAdjustmentNote(rpeTarget, lastSessionRpe);
 
     return (
       <SafeAreaView style={styles.container}>

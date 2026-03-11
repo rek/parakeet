@@ -23,8 +23,7 @@ import {
   useTodaySessions,
 } from '@modules/session';
 import type { CompletedSessionRef } from '@modules/session';
-import { getMrvWarningMuscles, useWeeklyVolume } from '@modules/training-volume';
-import type { VolumeStatus } from '@parakeet/training-engine';
+import { getVolumeStatusColor, getMrvWarningMuscles, isVolumeOverMrv, useWeeklyVolume, volumeFillPct } from '@modules/training-volume';
 import {
   COMPACT_VOLUME_MUSCLES,
   MUSCLE_LABELS_COMPACT,
@@ -312,16 +311,6 @@ function buildStyles(colors: ColorScheme) {
   });
 }
 
-function getBarColors(colors: ColorScheme): Record<VolumeStatus, string> {
-  return {
-    below_mev: colors.warning,
-    in_range: colors.success,
-    approaching_mrv: colors.secondary,
-    at_mrv: colors.danger,
-    exceeded_mrv: colors.danger,
-  };
-}
-
 // ── Volume compact card ───────────────────────────────────────────────────────
 
 function VolumeCompactCard() {
@@ -329,7 +318,6 @@ function VolumeCompactCard() {
   const { data } = useWeeklyVolume();
 
   const styles = useMemo(() => buildStyles(colors), [colors]);
-  const barColors = useMemo(() => getBarColors(colors), [colors]);
 
   return (
     <View style={styles.volumeCard}>
@@ -350,8 +338,8 @@ function VolumeCompactCard() {
           const sets = data.weekly[muscle];
           const mrv = data.config[muscle].mrv;
           const status = data.status[muscle];
-          const fillPct = mrv > 0 ? Math.min(100, (sets / mrv) * 100) : 0;
-          const isOver = status === 'at_mrv' || status === 'exceeded_mrv';
+          const fillPct = volumeFillPct(sets, mrv);
+          const isOver = isVolumeOverMrv(status);
 
           return (
             <View key={muscle} style={styles.volumeRow}>
@@ -364,7 +352,7 @@ function VolumeCompactCard() {
                     styles.volumeBarFill,
                     {
                       width: `${fillPct}%`,
-                      backgroundColor: barColors[status],
+                      backgroundColor: getVolumeStatusColor(status, colors),
                     },
                   ]}
                 />

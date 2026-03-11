@@ -1,4 +1,5 @@
 export * from './application/settings.service';
+export * from './constants/warmup-presets';
 export * from './application/export.service';
 export * from './lib/settings';
 export * from './lib/rest-config';

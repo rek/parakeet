@@ -9,42 +9,18 @@ import {
 import { router, useLocalSearchParams } from 'expo-router'
 import { useQuery } from '@tanstack/react-query'
 import { SafeAreaView } from 'react-native-safe-area-context'
-import { getSession, getSessionLog } from '@modules/session'
+import { getSession, getSessionLog, PERFORMANCE_LABELS, getPerformanceColors } from '@modules/session'
 import { BackLink } from '../../components/navigation/BackLink'
 import { radii, spacing, typography } from '../../theme'
 import type { ColorScheme } from '../../theme'
 import { useTheme } from '../../theme/ThemeContext'
+import { LIFT_LABELS } from '@shared/constants'
 import { formatDate, formatTime } from '@shared/utils/date'
 import { capitalize } from '@shared/utils/string'
 import type { Lift } from '@parakeet/shared-types'
+import { gramsToKg } from '@parakeet/training-engine'
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
-
-function gramsToKg(grams: number): string {
-  return (grams / 1000).toFixed(1)
-}
-
-const LIFT_LABELS: Record<Lift, string> = {
-  squat: 'Squat',
-  bench: 'Bench',
-  deadlift: 'Deadlift',
-}
-
-const PERFORMANCE_LABELS: Record<string, string> = {
-  over: 'Above plan',
-  at: 'On plan',
-  under: 'Below plan',
-  incomplete: 'Incomplete',
-}
-
-function getPerformanceColors(colors: ColorScheme): Record<string, string> {
-  return {
-    over: colors.success,
-    at: colors.success,
-    under: colors.warning,
-    incomplete: colors.danger,
-  }
-}
 
 function buildStyles(colors: ColorScheme) {
   return StyleSheet.create({
@@ -264,7 +240,7 @@ export default function SessionDetailScreen() {
               {mainSets.map((set, i) => (
                 <View key={i} style={[styles.tableRow, i % 2 === 1 && styles.tableRowAlt]}>
                   <Text style={[styles.tableCell, styles.tableCellSet]}>{set.set_number}</Text>
-                  <Text style={[styles.tableCell, styles.tableCellWeight]}>{gramsToKg(set.weight_grams)} kg</Text>
+                  <Text style={[styles.tableCell, styles.tableCellWeight]}>{gramsToKg(set.weight_grams).toFixed(1)} kg</Text>
                   <Text style={[styles.tableCell, styles.tableCellReps]}>{set.reps_completed}</Text>
                   <Text style={[styles.tableCell, styles.tableCellRpe]}>
                     {set.rpe_actual != null ? set.rpe_actual : '—'}
@@ -289,7 +265,7 @@ export default function SessionDetailScreen() {
               {sets.map((set, i) => (
                 <View key={i} style={[styles.tableRow, i % 2 === 1 && styles.tableRowAlt]}>
                   <Text style={[styles.tableCell, styles.tableCellSet]}>{set.set_number}</Text>
-                  <Text style={[styles.tableCell, styles.tableCellWeight]}>{gramsToKg(set.weight_grams)} kg</Text>
+                  <Text style={[styles.tableCell, styles.tableCellWeight]}>{gramsToKg(set.weight_grams).toFixed(1)} kg</Text>
                   <Text style={[styles.tableCell, styles.tableCellReps]}>{set.reps_completed}</Text>
                   <Text style={[styles.tableCell, styles.tableCellRpe]}>
                     {set.rpe_actual != null ? set.rpe_actual : '—'}

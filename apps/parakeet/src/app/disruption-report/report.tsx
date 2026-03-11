@@ -17,9 +17,13 @@ import DateTimePicker, { type DateTimePickerEvent } from '@react-native-communit
 import {
   applyDisruptionAdjustment,
   applyUnprogrammedEventSoreness,
+  DISRUPTION_TYPES,
   getMenstrualSymptomsPreset,
+  getSeverityPalette,
+  groupSuggestions,
   inferEffectiveSeverity,
   reportDisruption,
+  SORENESS_CHIPS,
   SORENESS_NUMERIC,
 } from '@modules/disruptions'
 import type { SorenessLevel } from '@modules/disruptions'
@@ -27,7 +31,6 @@ import { captureException } from '@platform/utils/captureException'
 import { useAuth } from '@modules/auth'
 import { getProfile } from '@modules/profile'
 import type {
-  AdjustmentSuggestion,
   DisruptionType,
   Severity,
   DisruptionWithSuggestions,
@@ -39,25 +42,6 @@ import { BackLink } from '../../components/navigation/BackLink'
 import { qk } from '@platform/query'
 import { SORENESS_MUSCLES_DEFAULT, TRAINING_LIFTS } from '@shared/constants/training'
 import { localDateIso } from '@shared/utils/date'
-
-// ── Constants ─────────────────────────────────────────────────────────────────
-
-const DISRUPTION_TYPES: { value: DisruptionType; label: string; icon: string }[] = [
-  { value: 'injury',               label: 'Injury',               icon: '🩹' },
-  { value: 'illness',              label: 'Illness',              icon: '🤒' },
-  { value: 'travel',               label: 'Travel',               icon: '✈️' },
-  { value: 'fatigue',              label: 'Fatigue',              icon: '🔋' },
-  { value: 'equipment_unavailable',label: 'No Equipment',         icon: '🏋️' },
-  { value: 'unprogrammed_event',   label: 'Unplanned Event',      icon: '📅' },
-  { value: 'other',                label: 'Other',                icon: '•' },
-]
-
-const SORENESS_CHIPS: { value: SorenessLevel; label: string }[] = [
-  { value: 'none',      label: 'None' },
-  { value: 'mild',      label: 'Mild' },
-  { value: 'sore',      label: 'Sore' },
-  { value: 'very_sore', label: 'Very Sore' },
-]
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -75,23 +59,6 @@ function formatDisplayDate(iso: string): string {
     day: 'numeric',
     month: 'short',
   })
-}
-
-function describeAction(suggestion: AdjustmentSuggestion): string {
-  switch (suggestion.action) {
-    case 'session_skipped':
-      return 'Session skipped'
-    case 'weight_reduced':
-      return suggestion.reduction_pct != null
-        ? `Weight reduced by ${suggestion.reduction_pct}%`
-        : 'Weight reduced'
-    case 'reps_reduced':
-      return suggestion.reps_reduction != null
-        ? `Reps reduced by ${suggestion.reps_reduction}`
-        : 'Reps reduced'
-    case 'exercise_substituted':
-      return suggestion.substitution_note ?? 'Exercise substituted'
-  }
 }
 
 // ── Styles ────────────────────────────────────────────────────────────────────
@@ -465,20 +432,7 @@ export default function DisruptionReportScreen() {
     const suggestions = disruption.suggested_adjustments ?? []
 
     // Group by action label for a compact summary
-    type GroupKey = string
-    const groups = suggestions.reduce<Map<GroupKey, { s: AdjustmentSuggestion; count: number }>>(
-      (acc, s) => {
-        const key = describeAction(s)
-        const existing = acc.get(key)
-        if (existing) {
-          existing.count++
-        } else {
-          acc.set(key, { s, count: 1 })
-        }
-        return acc
-      },
-      new Map(),
-    )
+    const groups = groupSuggestions(suggestions)
 
     return (
       <SafeAreaView style={styles.safeArea}>
@@ -640,11 +594,7 @@ export default function DisruptionReportScreen() {
         <Text style={styles.sectionLabel}>2. How severe?</Text>
         <View style={styles.severityRow}>
           {(['minor', 'moderate', 'major'] as Severity[]).map((s) => {
-            const severityPalette = {
-              minor:    { bg: colors.warningMuted, border: colors.warning, text: colors.warning },
-              moderate: { bg: colors.secondaryMuted, border: colors.secondary, text: colors.warning },
-              major:    { bg: colors.dangerMuted, border: colors.danger, text: colors.danger },
-            }
+            const severityPalette = getSeverityPalette(colors)
             const c = severityPalette[s]
             const selected = selectedSeverity === s
             return (

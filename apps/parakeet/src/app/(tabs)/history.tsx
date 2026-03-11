@@ -13,9 +13,10 @@ import { CYCLE_PHASE_BG, CYCLE_PHASE_LABELS, CYCLE_PHASE_TEXT, useCyclePhase } f
 import { buildVolumeChartData, getPerformanceTrends, getWeeklySetsPerLift, getTrendConfig } from '@modules/history';
 import type { PerformanceTrend } from '@modules/history';
 import { listPrograms } from '@modules/program';
-import { getCompletedSessions } from '@modules/session';
+import { getCompletedSessions, formatSessionDisplay } from '@modules/session';
 import type { Lift } from '@parakeet/shared-types';
 import type { CyclePhase } from '@parakeet/training-engine';
+import { LIFT_LABELS } from '@shared/constants';
 import { formatDate, formatTime } from '@shared/utils/date';
 import { useQuery } from '@tanstack/react-query';
 import { router } from 'expo-router';
@@ -31,11 +32,6 @@ type CompletedSession = Awaited<
 >[number];
 type LiftFilter = 'all' | Lift;
 
-const LIFT_LABELS: Record<Lift, string> = {
-  squat: 'Squat',
-  bench: 'Bench',
-  deadlift: 'Deadlift',
-};
 const LIFT_COLORS: Record<Lift, string> = {
   squat: palette.lime400,
   bench: palette.orange500,
@@ -338,19 +334,7 @@ export default function HistoryScreen() {
   }
 
   function renderSessionRow(session: CompletedSession) {
-    const intensityLabel: Record<string, string> = {
-      heavy: 'Heavy',
-      explosive: 'Explosive',
-      rep: 'Rep',
-      deload: 'Deload',
-    };
-    const isAdHoc = !session.primary_lift;
-    const liftName = isAdHoc
-      ? (session.activity_name ?? 'Ad-Hoc Workout')
-      : (LIFT_LABELS[session.primary_lift as Lift] ?? session.primary_lift);
-    const intensityName = isAdHoc
-      ? null
-      : (intensityLabel[session.intensity_type!] ?? session.intensity_type);
+    const { liftName, intensityName } = formatSessionDisplay(session);
 
     return (
       <TouchableOpacity

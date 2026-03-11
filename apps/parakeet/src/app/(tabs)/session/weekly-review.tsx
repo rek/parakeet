@@ -9,8 +9,8 @@ import {
   View,
 } from 'react-native';
 import { useAuth } from '@modules/auth';
-import { saveWeeklyBodyReview, getWeeklyVolumeForReview } from '@modules/body-review';
-import { getMrvMevConfig } from '@modules/training-volume';
+import { saveWeeklyBodyReview, getWeeklyVolumeForReview, MISMATCH_DIRECTION_LABELS } from '@modules/body-review';
+import { getMrvMevConfig, volumeBarColor } from '@modules/training-volume';
 import {
   computePredictedFatigue,
   detectMismatches,
@@ -37,13 +37,6 @@ import { useTheme } from '../../../theme/ThemeContext';
 type FatigueRatings = Partial<Record<MuscleGroup, FatigueLevel>>;
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
-
-function volumeBarColor(pct: number, colors: ColorScheme): string {
-  if (pct >= 1.0) return colors.danger;
-  if (pct >= 0.85) return colors.warning;
-  if (pct >= 0.5) return colors.success;
-  return colors.info;
-}
 
 function buildStyles(colors: ColorScheme) {
   return StyleSheet.create({
@@ -325,7 +318,7 @@ function MismatchSummary({ mismatches, onDone, styles, colors }: MismatchSummary
           </Text>
           {mismatches.map((m) => {
             const label = MUSCLE_LABELS_FULL[m.muscle] ?? m.muscle;
-            const dir = m.direction === 'accumulating_fatigue' ? '↑ Accumulating' : '↓ Recovering';
+            const dir = MISMATCH_DIRECTION_LABELS[m.direction] ?? m.direction;
             const dirColor = m.direction === 'accumulating_fatigue' ? colors.warning : colors.success;
             return (
               <View key={m.muscle} style={styles.mismatchRow}>

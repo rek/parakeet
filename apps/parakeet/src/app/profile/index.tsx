@@ -13,7 +13,7 @@ import { router } from 'expo-router'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 
 import { FormFeedback } from '../../components/ui/FormFeedback'
-import { getProfile, updateProfile } from '@modules/profile'
+import { getProfile, updateProfile, isValidBirthYear, birthYearToDobIso } from '@modules/profile'
 import type { BiologicalSex } from '@modules/profile'
 import { spacing, radii, typography } from '../../theme'
 import type { ColorScheme } from '../../theme'
@@ -150,7 +150,7 @@ export default function ProfileScreen() {
     setBodyweightKg(profile.bodyweight_kg != null ? profile.bodyweight_kg.toString() : '')
   }, [profile])
 
-  const birthYearIsValid = /^\d{4}$/.test(birthYear)
+  const birthYearIsValid = isValidBirthYear(birthYear)
 
   const isDirty = useMemo(() => {
     const initialName = profile?.display_name ?? ''
@@ -170,8 +170,7 @@ export default function ProfileScreen() {
 
   const saveMutation = useMutation({
     mutationFn: async () => {
-      const yearNum = parseInt(birthYear, 10)
-      const dobIso = `${yearNum}-01-01`
+      const dobIso = birthYearToDobIso(birthYear)
 
       const parsedBodyweight = bodyweightKg.trim() ? parseFloat(bodyweightKg) : null
 

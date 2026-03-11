@@ -15,15 +15,11 @@ import { useAuth } from '@modules/auth'
 import { qk } from '@platform/query'
 import { generateProgram, nextDateForWeekday, DEFAULT_TRAINING_DAYS } from '@parakeet/training-engine'
 import { captureException } from '@platform/utils/captureException'
+import { DAY_LABELS, MONTH_SHORT } from '@shared/constants'
 import { capitalize } from '@shared/utils/string'
 import type { ColorScheme } from '../../../theme'
 import { spacing, typography, radii } from '../../../theme'
 import { useTheme } from '../../../theme/ThemeContext'
-
-// ── Constants ─────────────────────────────────────────────────────────────────
-
-const DAY_LABELS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
-const MONTH_SHORT = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
 
 // ── Styles ────────────────────────────────────────────────────────────────────
 

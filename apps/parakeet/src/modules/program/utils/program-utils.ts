@@ -33,6 +33,26 @@ export function unendingBlockNumber(
   return ((Math.floor((weekNumber - 1) / 3) % 3) + 1) as 1 | 2 | 3
 }
 
+/** Get the current block number for any program mode. */
+export function getCurrentBlock(program: {
+  program_mode?: string | null
+  unending_session_counter?: number | null
+  training_days_per_week?: number | null
+  start_date?: string | null
+  total_weeks?: number | null
+}): 1 | 2 | 3 {
+  if (program.program_mode === 'unending') {
+    return unendingBlockNumber(
+      program.unending_session_counter ?? 0,
+      program.training_days_per_week ?? 3,
+    )
+  }
+  return currentBlockNumber(
+    program.start_date!,
+    program.total_weeks ?? 9,
+  )
+}
+
 export function determineCurrentWeek(sessions: ProgramSession[]): number {
   const activeSession = sessions.find(
     (s) => s.status === 'planned' || s.status === 'in_progress',

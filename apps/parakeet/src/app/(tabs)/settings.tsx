@@ -7,7 +7,7 @@ import {
   View,
 } from 'react-native';
 import { useAuth } from '@modules/auth';
-import { getProfile } from '@modules/profile';
+import { getProfile, formatBirthYear, formatBodyweight } from '@modules/profile';
 import { useFeatureEnabled } from '@modules/feature-flags';
 import {
   exportTrainingData,
@@ -24,15 +24,11 @@ import Constants from 'expo-constants';
 import { useEffect, useState, useCallback, useMemo } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { radii, spacing, typography } from '../../theme';
-import type { ColorScheme, ThemeName } from '../../theme';
+import type { ColorScheme } from '../../theme';
 import { useTheme } from '../../theme/ThemeContext';
+import { SEX_LABELS, THEME_OPTIONS } from '@shared/constants';
 
 // ── Sub-components ────────────────────────────────────────────────────────────
-
-const SEX_LABEL: Record<string, string> = {
-  female: 'Female',
-  male: 'Male',
-};
 
 interface SectionHeaderProps {
   label: string;
@@ -303,22 +299,14 @@ export default function SettingsScreen() {
   const hasDevSuggestions = (unreviewedDevCount ?? 0) > 0;
 
   const sexLabel = profile?.biological_sex
-    ? (SEX_LABEL[profile.biological_sex] ?? profile.biological_sex)
+    ? (SEX_LABELS[profile.biological_sex] ?? profile.biological_sex)
     : '—';
 
-  const birthYear = profile?.date_of_birth
-    ? new Date(profile.date_of_birth).getFullYear().toString()
-    : '—';
+  const birthYear = formatBirthYear(profile?.date_of_birth);
 
   const displayName = profile?.display_name ?? '—';
 
-  const bodyweightKg =
-    profile?.bodyweight_kg != null ? `${profile.bodyweight_kg} kg` : '—';
-
-  const THEME_OPTIONS: { key: ThemeName; label: string }[] = [
-    { key: 'default', label: 'Default' },
-    { key: 'valkyrie', label: 'Valkyrie' },
-  ];
+  const bodyweightKg = formatBodyweight(profile?.bodyweight_kg);
 
   return (
     <SafeAreaView style={styles.safeArea}>

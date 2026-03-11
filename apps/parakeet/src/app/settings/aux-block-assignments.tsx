@@ -11,12 +11,11 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '@modules/auth';
 import {
-  currentBlockNumber,
+  getCurrentBlock,
   getActiveProgram,
   getAllBlockAssignments,
   getAuxiliaryPools,
   saveBlockAssignment,
-  unendingBlockNumber,
 } from '@modules/program';
 import type { SlotAssignment } from '@modules/program';
 import type { Lift } from '@parakeet/shared-types';
@@ -27,6 +26,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { BackLink } from '../../components/navigation/BackLink';
 import { SlotDropdown } from '../../components/settings/SlotDropdown';
 import { qk } from '@platform/query';
+import { BLOCK_INTENSITY } from '@shared/constants/training';
 import type { ColorScheme } from '../../theme';
 import { useTheme } from '../../theme/ThemeContext';
 
@@ -38,12 +38,6 @@ const LIFT_LABELS: Record<Lift, string> = {
   squat: 'Squat',
   bench: 'Bench',
   deadlift: 'Deadlift',
-};
-
-const BLOCK_INTENSITY: Record<1 | 2 | 3, string> = {
-  1: 'Heavy',
-  2: 'Explosive',
-  3: 'Rep',
 };
 
 // ── Styles ────────────────────────────────────────────────────────────────────
@@ -351,18 +345,7 @@ export default function AuxBlockAssignmentsScreen() {
       setIsUnending(unending);
       setProgramId(activeProgram.id);
 
-      let currentBn: 1 | 2 | 3;
-      if (unending) {
-        currentBn = unendingBlockNumber(
-          activeProgram.unending_session_counter ?? 0,
-          activeProgram.training_days_per_week ?? 3,
-        );
-      } else {
-        currentBn = currentBlockNumber(
-          activeProgram.start_date!,
-          activeProgram.total_weeks ?? 9,
-        );
-      }
+      const currentBn = getCurrentBlock(activeProgram);
       setActiveTab(currentBn);
 
       const loaded = await getAllBlockAssignments(user.id, activeProgram.id);

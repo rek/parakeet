@@ -16,6 +16,7 @@ import { runJITForSession } from '@modules/jit';
 import { getCurrentOneRmKg } from '@modules/program';
 import {
   getLatestSorenessCheckin,
+  getReadinessPillColors,
   getSession,
   recordSorenessCheckin,
 } from '@modules/session';
@@ -298,16 +299,7 @@ interface ReadinessPillRowProps {
 }
 
 function ReadinessPillRow({ label, levels, labels, value, onChange, styles, colors }: ReadinessPillRowProps) {
-  const levelColors: Record<number, string> = {
-    1: colors.warning,
-    2: colors.textSecondary,
-    3: colors.success,
-  };
-  const levelBg: Record<number, string> = {
-    1: colors.warningMuted,
-    2: colors.bgMuted,
-    3: colors.successMuted,
-  };
+  const pillColors = getReadinessPillColors(colors);
 
   return (
     <View style={styles.readinessRow}>
@@ -320,13 +312,13 @@ function ReadinessPillRow({ label, levels, labels, value, onChange, styles, colo
               key={level}
               style={[
                 styles.readinessPill,
-                { backgroundColor: isActive ? levelBg[level] : colors.bgMuted },
-                isActive && { borderColor: levelColors[level], borderWidth: 1.5 },
+                { backgroundColor: isActive ? pillColors.bg[level] : colors.bgMuted },
+                isActive && { borderColor: pillColors.text[level], borderWidth: 1.5 },
               ]}
               onPress={() => onChange(level as ReadinessLevel)}
               activeOpacity={0.7}
             >
-              <Text style={[styles.readinessPillText, isActive && { color: levelColors[level] }]}>
+              <Text style={[styles.readinessPillText, isActive && { color: pillColors.text[level] }]}>
                 {labels[level]}
               </Text>
             </TouchableOpacity>

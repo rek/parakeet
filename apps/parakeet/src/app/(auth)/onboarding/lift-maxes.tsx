@@ -7,7 +7,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import { estimateOneRepMax_Epley } from '@parakeet/training-engine';
+import { computeEstimated1RM, isLiftValid } from '@modules/onboarding';
 import { router } from 'expo-router';
 import type { ColorScheme } from '../../../theme';
 import { useTheme } from '../../../theme/ThemeContext';
@@ -172,35 +172,6 @@ type Styles = ReturnType<typeof buildStyles>;
 
 function makeDefaultState(): LiftState {
   return { type: '3rm', weightKg: '', reps: '3' };
-}
-
-function computeEstimated1RM(state: LiftState): string {
-  const weight = parseFloat(state.weightKg);
-  if (!weight || weight <= 0) return '—';
-
-  if (state.type === '1rm') {
-    return weight.toFixed(1) + ' kg';
-  }
-
-  const reps = parseInt(state.reps, 10);
-  if (!reps || reps < 2 || reps > 10) return '—';
-
-  try {
-    const estimated = estimateOneRepMax_Epley(weight, reps);
-    return estimated.toFixed(1) + ' kg';
-  } catch {
-    return '—';
-  }
-}
-
-function isLiftValid(state: LiftState): boolean {
-  const weight = parseFloat(state.weightKg);
-  if (!weight || weight <= 0) return false;
-  if (state.type === '3rm') {
-    const reps = parseInt(state.reps, 10);
-    if (!reps || reps < 2 || reps > 10) return false;
-  }
-  return true;
 }
 
 function buildLiftInput(state: LiftState): LiftInput {

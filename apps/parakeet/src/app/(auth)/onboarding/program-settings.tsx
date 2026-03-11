@@ -16,7 +16,7 @@ import DateTimePicker from '@react-native-community/datetimepicker'
 
 import { captureException } from '@platform/utils/captureException'
 import { submitMaxes } from '@modules/program'
-import { getProfile, updateProfile } from '@modules/profile'
+import { getProfile, updateProfile, isValidBirthYear, isValidBodyweight, birthYearToDobIso } from '@modules/profile'
 import { updateCycleConfig } from '@modules/cycle-tracking'
 import { useAuth } from '@modules/auth'
 import type { BiologicalSex } from '@modules/profile'
@@ -259,8 +259,8 @@ export default function ProgramSettingsScreen() {
   const [hasProfileGender, setHasProfileGender] = useState(false)
   const [hasProfileBirthYear, setHasProfileBirthYear] = useState(false)
   const [hasProfileBodyweight, setHasProfileBodyweight] = useState(false)
-  const birthYearIsValid = /^\d{4}$/.test(birthYear)
-  const bodyweightIsValid = parseFloat(bodyweightKg) > 0
+  const birthYearIsValid = isValidBirthYear(birthYear)
+  const bodyweightIsValid = isValidBodyweight(bodyweightKg)
 
   useEffect(() => {
     getProfile()
@@ -293,8 +293,7 @@ export default function ProgramSettingsScreen() {
     }
     try {
       setLoading(true)
-      const yearNum = parseInt(birthYear, 10)
-      const dobIso = `${yearNum}-01-01`
+      const dobIso = birthYearToDobIso(birthYear)
       if (!usingEstimatedStart && !lifts) {
         throw new Error('Missing lift maxes input')
       }
