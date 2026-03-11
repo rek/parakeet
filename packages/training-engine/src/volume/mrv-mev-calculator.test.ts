@@ -15,9 +15,9 @@ describe('computeWeeklyVolume', () => {
     }));
     const volume = computeWeeklyVolume(logs, getMusclesForLift);
     expect(volume.quads).toBe(15);
-    expect(volume.glutes).toBe(11); // floor(15 × 0.75)
-    expect(volume.hamstrings).toBe(7); // floor(15 × 0.5)
-    expect(volume.lower_back).toBe(7);
+    expect(volume.glutes).toBe(11); // round(15 × 0.75)
+    expect(volume.hamstrings).toBe(8); // round(15 × 0.5)
+    expect(volume.lower_back).toBe(8);
   });
 
   it('1 bench session × 3 sets → chest: 3, triceps: 1 (floor of 1.5), shoulders: 1', () => {
@@ -146,6 +146,20 @@ describe('getMusclesForLift — exercise name lookup', () => {
     expect(muscles.find((m) => m.muscle === 'quads')?.contribution).toBe(1.0);
   });
 
+  it('null lift with no exercise returns empty array', () => {
+    expect(getMusclesForLift(null)).toEqual([]);
+  });
+
+  it('null lift with unknown exercise returns empty array', () => {
+    expect(getMusclesForLift(null, 'Some Unknown Exercise')).toEqual([]);
+  });
+
+  it('null lift with known exercise still uses catalog', () => {
+    const muscles = getMusclesForLift(null, 'Close-Grip Barbell Bench Press');
+    expect(muscles.find((m) => m.muscle === 'triceps')?.contribution).toBe(1.0);
+    expect(muscles.find((m) => m.muscle === 'chest')?.contribution).toBe(0.5);
+  });
+
   it('Overhead Press maps to shoulders primary, not chest', () => {
     const muscles = getMusclesForLift('bench', 'Overhead Press');
     expect(muscles.find((m) => m.muscle === 'shoulders')?.contribution).toBe(
@@ -198,10 +212,10 @@ describe('computeWeeklyVolume — aux exercise entries', () => {
       },
     ];
     const volume = computeWeeklyVolume(logs, getMusclesForLift);
-    // bench: chest 4×1.0 + cgb: chest 3×0.5 = 4+1=5
-    expect(volume.chest).toBe(5);
-    // bench: triceps 4×0.4 + cgb: triceps 3×1.0 = 1.6+3=4.6 → floor = 4
-    expect(volume.triceps).toBe(4);
+    // bench: chest 4×1.0 + cgb: chest 3×0.5 = 4+1.5=5.5 → round = 6
+    expect(volume.chest).toBe(6);
+    // bench: triceps 4×0.4 + cgb: triceps 3×1.0 = 1.6+3=4.6 → round = 5
+    expect(volume.triceps).toBe(5);
   });
 
   it('Barbell Curl aux entry counts biceps > 0', () => {
@@ -221,6 +235,41 @@ describe('computeWeeklyVolume — aux exercise entries', () => {
     ];
     const volume = computeWeeklyVolume(logs, getMusclesForLift);
     expect(volume.biceps).toBe(3);
+  });
+});
+
+describe('computeWeeklyVolume — ad-hoc sessions (null lift)', () => {
+  it('null lift with catalog exercise attributes volume correctly', () => {
+    const logs = [
+      {
+        lift: null,
+        completedSets: 4,
+        exercise: 'Close-Grip Barbell Bench Press',
+      },
+    ];
+    const volume = computeWeeklyVolume(logs, getMusclesForLift);
+    // triceps 4×1.0 = 4, chest 4×0.5 = 2, shoulders 4×0.5 = 2
+    expect(volume.triceps).toBe(4);
+    expect(volume.chest).toBe(2);
+    expect(volume.shoulders).toBe(2);
+    expect(volume.quads).toBe(0);
+  });
+
+  it('null lift with unknown exercise contributes zero volume', () => {
+    const logs = [
+      { lift: null, completedSets: 5, exercise: 'My Custom Exercise' },
+    ];
+    const volume = computeWeeklyVolume(logs, getMusclesForLift);
+    expect(volume.quads).toBe(0);
+    expect(volume.chest).toBe(0);
+    expect(volume.triceps).toBe(0);
+  });
+
+  it('null lift with no exercise contributes zero volume', () => {
+    const logs = [{ lift: null, completedSets: 5 }];
+    const volume = computeWeeklyVolume(logs, getMusclesForLift);
+    expect(volume.quads).toBe(0);
+    expect(volume.chest).toBe(0);
   });
 });
 

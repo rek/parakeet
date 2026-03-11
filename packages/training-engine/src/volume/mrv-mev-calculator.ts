@@ -58,7 +58,7 @@ export function computeWeeklyVolume(
 
   // Floor fractional contributions (secondary muscles accumulate in 0.5 increments)
   return Object.fromEntries(
-    MUSCLE_GROUPS.map((m) => [m, Math.floor(raw[m])]),
+    MUSCLE_GROUPS.map((m) => [m, Math.round(raw[m])]),
   ) as Record<MuscleGroup, number>
 }
 

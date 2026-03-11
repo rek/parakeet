@@ -442,7 +442,7 @@ export async function fetchRecentLogsForLift(
 export interface CurrentWeekLogRow {
   actual_sets: ActualSet[];
   auxiliary_sets: ActualSet[];
-  primary_lift: Lift;
+  primary_lift: Lift | null;
 }
 
 export async function fetchCurrentWeekLogs(
@@ -465,7 +465,7 @@ export async function fetchCurrentWeekLogs(
     return {
       actual_sets: parseActualSetsJson(row.actual_sets),
       auxiliary_sets: parseActualSetsJson(row.auxiliary_sets),
-      primary_lift: parseLift(session?.primary_lift ?? 'squat'),
+      primary_lift: session?.primary_lift ? parseLift(session.primary_lift) : null,
     };
   });
 }

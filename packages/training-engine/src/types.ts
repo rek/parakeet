@@ -90,10 +90,10 @@ export interface MuscleContribution {
   contribution: number // 1.0 primary, 0.5 secondary
 }
 
-export type MuscleMapper = (lift: Lift, exercise?: string) => MuscleContribution[]
+export type MuscleMapper = (lift: Lift | null, exercise?: string) => MuscleContribution[]
 
 export interface CompletedSetLog {
-  lift: Lift
+  lift: Lift | null
   completedSets: number
   exercise?: string
   setRpes?: (number | undefined)[]  // one entry per set; undefined = not recorded

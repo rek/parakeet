@@ -26,7 +26,7 @@ const LIFT_MUSCLES: Record<string, MuscleContribution[]> = {
 };
 
 export function getMusclesForLift(
-  lift: Lift,
+  lift: Lift | null,
   exercise?: string
 ): MuscleContribution[] {
   if (exercise) {
@@ -39,6 +39,7 @@ export function getMusclesForLift(
       }));
     }
   }
+  if (!lift) return [];
   return LIFT_MUSCLES[lift] ?? [];
 }
 
