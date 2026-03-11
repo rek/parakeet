@@ -9,7 +9,24 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import { abandonSession, getSession, startSession } from '@modules/session';
+import {
+  abandonSession,
+  getSession,
+  startSession,
+  useSetCompletionFlow,
+  formatExerciseName,
+  buildBlockWeekLabel,
+  buildIntensityLabel,
+  groupAuxiliaryWork,
+  DEFAULT_MAIN_REST_SECONDS,
+} from '@modules/session';
+import type {
+  AuxiliaryWork,
+  JitData,
+  LlmRestSuggestion,
+  RestRecommendations,
+  WarmupSet,
+} from '@modules/session';
 import { getRestTimerPrefs } from '@modules/settings';
 import type { RestTimerPrefs } from '@modules/settings';
 import { useNetworkStatus } from '@platform/network';
@@ -27,78 +44,9 @@ import { RestTimer } from '../../../components/training/RestTimer';
 import { RpeQuickPicker } from '../../../components/training/RpeQuickPicker';
 import { SetRow } from '../../../components/training/SetRow';
 import { WarmupSection } from '../../../components/training/WarmupSection';
-import { capitalize, sessionLabel } from '@shared/utils/string';
+import { sessionLabel } from '@shared/utils/string';
 import type { ColorScheme } from '../../../theme';
 import { useTheme } from '../../../theme/ThemeContext';
-
-// ── Types ────────────────────────────────────────────────────────────────────
-
-interface PlannedSet {
-  weight_kg: number;
-  reps: number;
-  rpe_target?: number;
-  set_type?: string;
-}
-
-interface WarmupSet {
-  weightKg: number;
-  reps: number;
-  label?: string;
-}
-
-interface AuxiliaryWork {
-  exercise: string;
-  sets: PlannedSet[];
-  skipped: boolean;
-  skipReason?: string;
-  exerciseType?: 'weighted' | 'bodyweight' | 'timed';
-  isTopUp?: boolean;
-  topUpReason?: string;
-}
-
-interface RestRecommendations {
-  mainLift: number[];
-  auxiliary: number[];
-}
-
-interface LlmRestSuggestion {
-  deltaSeconds: number;
-  formulaBaseSeconds: number;
-}
-
-interface PostRestState {
-  pendingMainSetNumber: number | null;
-  pendingAuxExercise: string | null;
-  pendingAuxSetNumber: number | null;
-  actualRestSeconds: number;
-  liftStartedAt: number;
-  plannedReps: number;
-  resetSecondsRemaining: number | null;
-}
-
-interface JitData {
-  mainLiftSets: PlannedSet[];
-  warmupSets: WarmupSet[];
-  auxiliaryWork: AuxiliaryWork[];
-  restRecommendations?: RestRecommendations;
-  llmRestSuggestion?: LlmRestSuggestion | null;
-}
-
-// ── Constants ─────────────────────────────────────────────────────────────────
-
-const DEFAULT_MAIN_REST_SECONDS = 180;
-const DEFAULT_AUX_REST_SECONDS = 90;
-
-// ── Helpers ───────────────────────────────────────────────────────────────────
-
-function formatExerciseName(name: string): string {
-  return name
-    .split('_')
-    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-    .join(' ');
-}
-
-// ── Screen ───────────────────────────────────────────────────────────────────
 
 // ── Styles ───────────────────────────────────────────────────────────────────
 
@@ -310,8 +258,6 @@ export default function SessionScreen() {
     timerState,
     initSession,
     initAuxiliary,
-    updateSet,
-    updateAuxiliarySet,
     addAdHocSet,
     removeAdHocSet,
     setWarmupDone,
@@ -331,10 +277,6 @@ export default function SessionScreen() {
   const [adHocExercises, setAdHocExercises] = useState<string[]>([]);
   const [addExerciseVisible, setAddExerciseVisible] = useState(false);
   const [historySheetVisible, setHistorySheetVisible] = useState(false);
-  const [postRestState, setPostRestState] = useState<PostRestState | null>(null);
-  const resetIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const [pendingRpeSetNumber, setPendingRpeSetNumber] = useState<number | null>(null);
-  const [pendingAuxRpe, setPendingAuxRpe] = useState<{ exercise: string; setNumber: number } | null>(null);
   const insets = useSafeAreaInsets();
 
   // Auto-open history sheet when banner navigates back with openHistory param
@@ -367,13 +309,37 @@ export default function SessionScreen() {
   // Interval ref for focus-managed timer ticking
   const tickIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
+  // ── Set completion flow (rest timer → overlay → RPE) ──────────────────────
+
+  const {
+    postRestState,
+    pendingRpeSetNumber,
+    pendingAuxRpe,
+    handleSetUpdate,
+    handleAuxSetUpdate,
+    handleTimerDone,
+    handleLiftComplete,
+    handleLiftFailed,
+    handlePostRestReset,
+    handleRpeQuickSelect,
+    handleRpeQuickSkip,
+    requestMainRpe,
+    requestAuxRpe,
+    cleanupResetInterval,
+    clearPostRestState,
+  } = useSetCompletionFlow({
+    restTimerPrefsRef,
+    restRecommendations,
+    auxiliaryWork,
+    plannedSetsLengthRef,
+  });
+
   // ── Bootstrap ─────────────────────────────────────────────────────────────
 
   useEffect(() => {
     getRestTimerPrefs().then((p) => { restTimerPrefsRef.current = p; });
-    return () => {
-      if (resetIntervalRef.current !== null) clearInterval(resetIntervalRef.current);
-    };
+    return () => { cleanupResetInterval(); };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -511,283 +477,7 @@ export default function SessionScreen() {
     }, [timerState?.visible, timerState?.timerStartedAt])
   );
 
-  // ── Handlers ──────────────────────────────────────────────────────────────
-
-  const handleSetUpdate = useCallback(
-    (
-      setNumber: number,
-      data: {
-        weightKg: number;
-        reps: number;
-        rpe?: number;
-        isCompleted: boolean;
-      }
-    ) => {
-      const wasCompleted = useSessionStore
-        .getState()
-        .actualSets.find((s) => s.set_number === setNumber)?.is_completed ?? false;
-
-      updateSet(setNumber, {
-        weight_grams: Math.round(data.weightKg * 1000),
-        reps_completed: data.reps,
-        rpe_actual: data.rpe,
-        is_completed: data.isCompleted,
-      });
-
-      if (data.isCompleted) {
-        if (!wasCompleted) {
-          setPendingRpeSetNumber(setNumber);
-        }
-
-        // No rest timer after the last set
-        if (setNumber >= plannedSetsLengthRef.current) return;
-
-        if (!restTimerPrefsRef.current.mainSetsEnabled) return;
-
-        const setIndex = setNumber - 1;
-        const duration =
-          restRecommendations.current?.mainLift[setIndex] ??
-          DEFAULT_MAIN_REST_SECONDS;
-
-        openTimer({
-          durationSeconds: duration,
-          pendingMainSetNumber: setNumber,
-        });
-      } else {
-        setPendingRpeSetNumber((prev) => (prev === setNumber ? null : prev));
-      }
-    },
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [updateSet, openTimer]
-  );
-
-  const handleAuxSetUpdate = useCallback(
-    (
-      exerciseIndex: number,
-      exercise: string,
-      setNumber: number,
-      setsInExercise: number,
-      data: {
-        weightKg: number;
-        reps: number;
-        rpe?: number;
-        isCompleted: boolean;
-      }
-    ) => {
-      const wasAuxCompleted = useSessionStore
-        .getState()
-        .auxiliarySets.find((s) => s.exercise === exercise && s.set_number === setNumber)
-        ?.is_completed ?? false;
-
-      updateAuxiliarySet(exercise, setNumber, {
-        weight_grams: Math.round(data.weightKg * 1000),
-        reps_completed: data.reps,
-        rpe_actual: data.rpe,
-        is_completed: data.isCompleted,
-      });
-
-      if (data.isCompleted) {
-        if (!wasAuxCompleted) {
-          setPendingAuxRpe({ exercise, setNumber });
-        }
-
-        // No rest timer after the last set of this exercise
-        if (setNumber >= setsInExercise) return;
-
-        if (!restTimerPrefsRef.current.auxSetsEnabled) return;
-
-        const duration =
-          restRecommendations.current?.auxiliary[exerciseIndex] ??
-          DEFAULT_AUX_REST_SECONDS;
-
-        openTimer({
-          durationSeconds: duration,
-          pendingAuxExercise: exercise,
-          pendingAuxSetNumber: setNumber,
-        });
-      } else {
-        setPendingAuxRpe((prev) =>
-          prev?.exercise === exercise && prev?.setNumber === setNumber ? null : prev
-        );
-      }
-    },
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [updateAuxiliarySet, openTimer]
-  );
-
-  function handleTimerDone() {
-    // Read pending attribution before closing (closeTimer nulls timerState)
-    const pendingMain = timerState?.pendingMainSetNumber ?? null;
-    const pendingAuxExercise = timerState?.pendingAuxExercise ?? null;
-    const pendingAuxSet = timerState?.pendingAuxSetNumber ?? null;
-
-    const elapsedSeconds = closeTimer();
-
-    if (pendingMain !== null) {
-      updateSet(pendingMain, { actual_rest_seconds: elapsedSeconds });
-    } else if (pendingAuxExercise !== null && pendingAuxSet !== null) {
-      updateAuxiliarySet(pendingAuxExercise, pendingAuxSet, {
-        actual_rest_seconds: elapsedSeconds,
-      });
-    }
-
-    // Show PostRestOverlay for main sets and auxiliary sets
-    if (pendingMain !== null) {
-      setPostRestState({
-        pendingMainSetNumber: pendingMain,
-        pendingAuxExercise: null,
-        pendingAuxSetNumber: null,
-        actualRestSeconds: elapsedSeconds,
-        liftStartedAt: Date.now(),
-        plannedReps: plannedSets[pendingMain - 1]?.reps ?? 0,
-        resetSecondsRemaining: null,
-      });
-    } else if (pendingAuxExercise !== null && pendingAuxSet !== null) {
-      const auxWork = auxiliaryWork.find((aw) => aw.exercise === pendingAuxExercise);
-      const auxPlannedReps = auxWork?.sets[pendingAuxSet - 1]?.reps ?? 0;
-      setPostRestState({
-        pendingMainSetNumber: null,
-        pendingAuxExercise,
-        pendingAuxSetNumber: pendingAuxSet,
-        actualRestSeconds: elapsedSeconds,
-        liftStartedAt: Date.now(),
-        plannedReps: auxPlannedReps,
-        resetSecondsRemaining: null,
-      });
-    }
-  }
-
-  function dismissPostRest() {
-    if (resetIntervalRef.current !== null) {
-      clearInterval(resetIntervalRef.current);
-      resetIntervalRef.current = null;
-    }
-    // Total rest = timer rest + lift time (time since overlay appeared)
-    const totalRest = postRestState
-      ? postRestState.actualRestSeconds + Math.round((Date.now() - postRestState.liftStartedAt) / 1000)
-      : 0;
-    const prevSetNumber = postRestState?.pendingMainSetNumber ?? null;
-    const nextSetNumber = prevSetNumber != null ? prevSetNumber + 1 : null;
-    const auxExercise = postRestState?.pendingAuxExercise ?? null;
-    const auxSetNumber = postRestState?.pendingAuxSetNumber ?? null;
-    setPostRestState(null);
-    return { totalRest, prevSetNumber, nextSetNumber, auxExercise, auxSetNumber };
-  }
-
-  function handleLiftComplete() {
-    const { totalRest, prevSetNumber, nextSetNumber, auxExercise, auxSetNumber } = dismissPostRest();
-
-    if (auxExercise !== null && auxSetNumber !== null) {
-      // Auxiliary lift complete
-      updateAuxiliarySet(auxExercise, auxSetNumber, { actual_rest_seconds: totalRest });
-
-      const nextAuxSet = auxSetNumber + 1;
-      const auxWork = auxiliaryWork.find((aw) => aw.exercise === auxExercise);
-      const totalAuxSets = auxWork?.sets.length ?? 0;
-
-      if (nextAuxSet <= totalAuxSets) {
-        const planned = auxWork!.sets[nextAuxSet - 1];
-        updateAuxiliarySet(auxExercise, nextAuxSet, {
-          weight_grams: Math.round(planned.weight_kg * 1000),
-          reps_completed: planned.reps,
-          is_completed: true,
-        });
-        setPendingAuxRpe({ exercise: auxExercise, setNumber: nextAuxSet });
-
-        // Start rest timer for next aux set (unless it's the last)
-        if (nextAuxSet < totalAuxSets && restTimerPrefsRef.current.auxSetsEnabled) {
-          const exerciseIndex = auxiliaryWork.findIndex((aw) => aw.exercise === auxExercise);
-          const duration =
-            restRecommendations.current?.auxiliary[exerciseIndex] ??
-            DEFAULT_AUX_REST_SECONDS;
-          openTimer({
-            durationSeconds: duration,
-            pendingAuxExercise: auxExercise,
-            pendingAuxSetNumber: nextAuxSet,
-          });
-        }
-      }
-    } else {
-      // Main lift complete
-      if (prevSetNumber !== null) {
-        updateSet(prevSetNumber, { actual_rest_seconds: totalRest });
-      }
-
-      if (nextSetNumber !== null && nextSetNumber <= plannedSets.length) {
-        const planned = plannedSets[nextSetNumber - 1];
-        updateSet(nextSetNumber, {
-          weight_grams: Math.round(planned.weight_kg * 1000),
-          reps_completed: planned.reps,
-          is_completed: true,
-        });
-        setPendingRpeSetNumber(nextSetNumber);
-
-        if (nextSetNumber < plannedSetsLengthRef.current && restTimerPrefsRef.current.mainSetsEnabled) {
-          const duration =
-            restRecommendations.current?.mainLift[nextSetNumber - 1] ??
-            DEFAULT_MAIN_REST_SECONDS;
-          openTimer({
-            durationSeconds: duration,
-            pendingMainSetNumber: nextSetNumber,
-          });
-        }
-      }
-    }
-  }
-
-  function handleLiftFailed() {
-    const { totalRest, prevSetNumber, auxExercise, auxSetNumber } = dismissPostRest();
-
-    if (auxExercise !== null && auxSetNumber !== null) {
-      updateAuxiliarySet(auxExercise, auxSetNumber, { actual_rest_seconds: totalRest });
-    } else if (prevSetNumber !== null) {
-      updateSet(prevSetNumber, { actual_rest_seconds: totalRest });
-    }
-  }
-
-  function handlePostRestReset() {
-    if (!postRestState) return;
-    if (resetIntervalRef.current !== null) {
-      clearInterval(resetIntervalRef.current);
-      resetIntervalRef.current = null;
-    }
-    const newRest = postRestState.actualRestSeconds + 15;
-    if (postRestState.pendingMainSetNumber !== null) {
-      updateSet(postRestState.pendingMainSetNumber, { actual_rest_seconds: newRest });
-    } else if (postRestState.pendingAuxExercise !== null && postRestState.pendingAuxSetNumber !== null) {
-      updateAuxiliarySet(postRestState.pendingAuxExercise, postRestState.pendingAuxSetNumber, { actual_rest_seconds: newRest });
-    }
-    setPostRestState((prev) =>
-      prev ? { ...prev, actualRestSeconds: newRest, resetSecondsRemaining: 15 } : null
-    );
-    resetIntervalRef.current = setInterval(() => {
-      setPostRestState((prev) => {
-        if (!prev || prev.resetSecondsRemaining === null) return prev;
-        const next = prev.resetSecondsRemaining - 1;
-        if (next <= 0) {
-          clearInterval(resetIntervalRef.current!);
-          resetIntervalRef.current = null;
-          return { ...prev, resetSecondsRemaining: null };
-        }
-        return { ...prev, resetSecondsRemaining: next };
-      });
-    }, 1000);
-  }
-
-  function handleRpeQuickSelect(rpe: number) {
-    if (pendingRpeSetNumber !== null) {
-      updateSet(pendingRpeSetNumber, { rpe_actual: rpe });
-      setPendingRpeSetNumber(null);
-    } else if (pendingAuxRpe !== null) {
-      updateAuxiliarySet(pendingAuxRpe.exercise, pendingAuxRpe.setNumber, { rpe_actual: rpe });
-      setPendingAuxRpe(null);
-    }
-  }
-
-  function handleRpeQuickSkip() {
-    setPendingRpeSetNumber(null);
-    setPendingAuxRpe(null);
-  }
+  // ── Screen-local handlers ─────────────────────────────────────────────────
 
   function handleConfirmAddExercise(name: string) {
     if (!adHocExercises.includes(name)) {
@@ -822,8 +512,8 @@ export default function SessionScreen() {
           style: 'destructive',
           onPress: async () => {
             if (timerState?.visible) closeTimer();
-            if (resetIntervalRef.current !== null) { clearInterval(resetIntervalRef.current); resetIntervalRef.current = null; }
-            setPostRestState(null);
+            cleanupResetInterval();
+            clearPostRestState();
             await abandonSession(sessionId);
             reset();
             void queryClient.invalidateQueries({ queryKey: ['session'] });
@@ -853,21 +543,8 @@ export default function SessionScreen() {
     auxiliarySets.some((s) => s.is_completed);
 
   const liftHeader = sessionMeta ? sessionLabel(sessionMeta) : '';
-
-  const blockWeekLabel = sessionMeta
-    ? !sessionMeta.primary_lift
-      ? '' // Free-form ad-hoc — no block/week context
-      : sessionMeta.block_number !== null
-        ? `Block ${sessionMeta.block_number} · Week ${sessionMeta.week_number}`
-        : `Week ${sessionMeta.week_number}`
-    : '';
-
-  // Label passed to RestTimer: "Block 3 · Heavy" style
-  const intensityLabel = sessionMeta?.intensity_type
-    ? sessionMeta.block_number !== null
-      ? `Block ${sessionMeta.block_number} · ${capitalize(sessionMeta.intensity_type)}`
-      : capitalize(sessionMeta.intensity_type)
-    : '';
+  const blockWeek = buildBlockWeekLabel(sessionMeta);
+  const intensity = buildIntensityLabel(sessionMeta);
 
   // LLM suggestion is only relevant for main set timers
   const activeLlmSuggestion =
@@ -875,14 +552,8 @@ export default function SessionScreen() {
       ? (llmRestSuggestion.current ?? undefined)
       : undefined;
 
-  // Group auxiliary sets by exercise for rendering
-  const auxByExercise = auxiliaryWork.map((aw, origIndex) => ({
-    ...aw,
-    origIndex,
-    actualSets: auxiliarySets.filter((s) => s.exercise === aw.exercise),
-  }));
-  const regularAux = auxByExercise.filter((aw) => !aw.isTopUp);
-  const topUpAux = auxByExercise.filter((aw) => aw.isTopUp);
+  const { regularAux, topUpAux } = groupAuxiliaryWork(auxiliaryWork, auxiliarySets);
+  const auxCount = regularAux.length + topUpAux.length;
 
   // ── Render ────────────────────────────────────────────────────────────────
 
@@ -905,7 +576,7 @@ export default function SessionScreen() {
           <View style={styles.sessionHeaderRow}>
             <View style={styles.sessionHeaderText}>
               <Text style={styles.liftTitle}>{liftHeader}</Text>
-              <Text style={styles.blockWeekText}>{blockWeekLabel}</Text>
+              <Text style={styles.blockWeekText}>{blockWeek}</Text>
             </View>
             <TouchableOpacity
               onPress={handleAbandon}
@@ -957,7 +628,7 @@ export default function SessionScreen() {
                   plannedReps={planned?.reps ?? actualSet.reps_completed}
                   rpeValue={actualSet.rpe_actual}
                   onUpdate={(data) => handleSetUpdate(actualSet.set_number, data)}
-                  onRpePress={() => setPendingRpeSetNumber(actualSet.set_number)}
+                  onRpePress={() => requestMainRpe(actualSet.set_number)}
                 />
               );
             })}
@@ -995,7 +666,7 @@ export default function SessionScreen() {
                         rpeValue={actualSet.rpe_actual}
                         exerciseType={aw.exerciseType}
                         onRpePress={() =>
-                          setPendingAuxRpe({ exercise: aw.exercise, setNumber: actualSet.set_number })
+                          requestAuxRpe(aw.exercise, actualSet.set_number)
                         }
                         onUpdate={(data) =>
                           handleAuxSetUpdate(
@@ -1044,7 +715,7 @@ export default function SessionScreen() {
                             rpeValue={actualSet.rpe_actual}
                             exerciseType={aw.exerciseType}
                             onRpePress={() =>
-                              setPendingAuxRpe({ exercise: aw.exercise, setNumber: actualSet.set_number })
+                              requestAuxRpe(aw.exercise, actualSet.set_number)
                             }
                             onUpdate={(data) =>
                               handleAuxSetUpdate(
@@ -1090,11 +761,11 @@ export default function SessionScreen() {
                           plannedReps={actualSet.reps_completed}
                           rpeValue={actualSet.rpe_actual}
                           onRpePress={() =>
-                            setPendingAuxRpe({ exercise, setNumber: actualSet.set_number })
+                            requestAuxRpe(exercise, actualSet.set_number)
                           }
                           onUpdate={(data) =>
                             handleAuxSetUpdate(
-                              auxByExercise.length + exerciseIndex,
+                              auxCount + exerciseIndex,
                               exercise,
                               actualSet.set_number,
                               sets.length,
@@ -1185,7 +856,7 @@ export default function SessionScreen() {
               onAdjust={adjustTimer}
               llmSuggestion={activeLlmSuggestion}
               onDone={handleTimerDone}
-              intensityLabel={intensityLabel}
+              intensityLabel={intensity}
               autoHideOnExpiry
             />
           )}
@@ -1211,4 +882,3 @@ export default function SessionScreen() {
     </SafeAreaView>
   );
 }
-

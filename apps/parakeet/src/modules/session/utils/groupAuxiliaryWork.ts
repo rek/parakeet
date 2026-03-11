@@ -1,0 +1,14 @@
+import type { AuxiliaryWork } from '../model/types';
+import type { AuxiliaryActualSet } from '@platform/store/sessionStore';
+
+export function groupAuxiliaryWork(auxiliaryWork: AuxiliaryWork[], auxiliarySets: AuxiliaryActualSet[]) {
+  const auxByExercise = auxiliaryWork.map((aw, origIndex) => ({
+    ...aw,
+    origIndex,
+    actualSets: auxiliarySets.filter((s) => s.exercise === aw.exercise),
+  }));
+  return {
+    regularAux: auxByExercise.filter((aw) => !aw.isTopUp),
+    topUpAux: auxByExercise.filter((aw) => aw.isTopUp),
+  };
+}

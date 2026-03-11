@@ -107,23 +107,28 @@ tsc --noEmit -p apps/parakeet/tsconfig.typecheck.json
 
 ### Testing
 
+Always run tests via **nx** from the workspace root. Never call `npx vitest` directly — path aliases (`@modules`, `@platform`, `@shared`) only resolve through each project's vitest config.
+
 ```bash
 # Canonical: run all project tests
-nx run-many -t test
+npx nx run-many -t test
 
 # Run only tests affected by your branch changes
-nx affected -t test
+npx nx affected -t test
 
-# Run app-only tests
-nx run parakeet:test
+# Single project
+npx nx test parakeet
+npx nx test training-engine
+npx nx test shared-types
+npx nx test db
 
-# Run one package
-nx run training-engine:test
-nx run shared-types:test
-nx run db:test
+# Filter to specific files (pass vitest args after --)
+npx nx test parakeet -- src/modules/session/utils/
+npx nx test parakeet -- src/modules/session/utils/computeDismissResult.test.ts
 
-# Run a single test file directly
-npx vitest run apps/parakeet/src/modules/session/data/session.repository.test.ts
+# Reporters
+npx nx test parakeet -- --reporter=verbose   # see individual test names
+npx nx test parakeet -- --reporter=json      # machine-readable output
 ```
 
 Where test behavior is defined:
