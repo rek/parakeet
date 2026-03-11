@@ -68,6 +68,8 @@ interface LlmRestSuggestion {
 
 interface PostRestState {
   pendingMainSetNumber: number | null;
+  pendingAuxExercise: string | null;
+  pendingAuxSetNumber: number | null;
   actualRestSeconds: number;
   liftStartedAt: number;
   plannedReps: number;
@@ -629,13 +631,27 @@ export default function SessionScreen() {
       });
     }
 
-    // Show PostRestOverlay for main sets (not post-warmup, not aux)
+    // Show PostRestOverlay for main sets and auxiliary sets
     if (pendingMain !== null) {
       setPostRestState({
         pendingMainSetNumber: pendingMain,
+        pendingAuxExercise: null,
+        pendingAuxSetNumber: null,
         actualRestSeconds: elapsedSeconds,
         liftStartedAt: Date.now(),
         plannedReps: plannedSets[pendingMain - 1]?.reps ?? 0,
+        resetSecondsRemaining: null,
+      });
+    } else if (pendingAuxExercise !== null && pendingAuxSet !== null) {
+      const auxWork = auxiliaryWork.find((aw) => aw.exercise === pendingAuxExercise);
+      const auxPlannedReps = auxWork?.sets[pendingAuxSet - 1]?.reps ?? 0;
+      setPostRestState({
+        pendingMainSetNumber: null,
+        pendingAuxExercise,
+        pendingAuxSetNumber: pendingAuxSet,
+        actualRestSeconds: elapsedSeconds,
+        liftStartedAt: Date.now(),
+        plannedReps: auxPlannedReps,
         resetSecondsRemaining: null,
       });
     }
@@ -652,46 +668,79 @@ export default function SessionScreen() {
       : 0;
     const prevSetNumber = postRestState?.pendingMainSetNumber ?? null;
     const nextSetNumber = prevSetNumber != null ? prevSetNumber + 1 : null;
+    const auxExercise = postRestState?.pendingAuxExercise ?? null;
+    const auxSetNumber = postRestState?.pendingAuxSetNumber ?? null;
     setPostRestState(null);
-    return { totalRest, prevSetNumber, nextSetNumber };
+    return { totalRest, prevSetNumber, nextSetNumber, auxExercise, auxSetNumber };
   }
 
   function handleLiftComplete() {
-    const { totalRest, prevSetNumber, nextSetNumber } = dismissPostRest();
+    const { totalRest, prevSetNumber, nextSetNumber, auxExercise, auxSetNumber } = dismissPostRest();
 
-    // Log total rest on the previous set
-    if (prevSetNumber !== null) {
-      updateSet(prevSetNumber, { actual_rest_seconds: totalRest });
-    }
+    if (auxExercise !== null && auxSetNumber !== null) {
+      // Auxiliary lift complete
+      updateAuxiliarySet(auxExercise, auxSetNumber, { actual_rest_seconds: totalRest });
 
-    // Mark the next set as completed and show RPE picker
-    if (nextSetNumber !== null && nextSetNumber <= plannedSets.length) {
-      const planned = plannedSets[nextSetNumber - 1];
-      updateSet(nextSetNumber, {
-        weight_grams: Math.round(planned.weight_kg * 1000),
-        reps_completed: planned.reps,
-        is_completed: true,
-      });
-      setPendingRpeSetNumber(nextSetNumber);
+      const nextAuxSet = auxSetNumber + 1;
+      const auxWork = auxiliaryWork.find((aw) => aw.exercise === auxExercise);
+      const totalAuxSets = auxWork?.sets.length ?? 0;
 
-      // Start rest timer for next set (unless it's the last)
-      if (nextSetNumber < plannedSetsLengthRef.current && restTimerPrefsRef.current.mainSetsEnabled) {
-        const duration =
-          restRecommendations.current?.mainLift[nextSetNumber - 1] ??
-          DEFAULT_MAIN_REST_SECONDS;
-        openTimer({
-          durationSeconds: duration,
-          pendingMainSetNumber: nextSetNumber,
+      if (nextAuxSet <= totalAuxSets) {
+        const planned = auxWork!.sets[nextAuxSet - 1];
+        updateAuxiliarySet(auxExercise, nextAuxSet, {
+          weight_grams: Math.round(planned.weight_kg * 1000),
+          reps_completed: planned.reps,
+          is_completed: true,
         });
+        setPendingAuxRpe({ exercise: auxExercise, setNumber: nextAuxSet });
+
+        // Start rest timer for next aux set (unless it's the last)
+        if (nextAuxSet < totalAuxSets && restTimerPrefsRef.current.auxSetsEnabled) {
+          const exerciseIndex = auxiliaryWork.findIndex((aw) => aw.exercise === auxExercise);
+          const duration =
+            restRecommendations.current?.auxiliary[exerciseIndex] ??
+            DEFAULT_AUX_REST_SECONDS;
+          openTimer({
+            durationSeconds: duration,
+            pendingAuxExercise: auxExercise,
+            pendingAuxSetNumber: nextAuxSet,
+          });
+        }
+      }
+    } else {
+      // Main lift complete
+      if (prevSetNumber !== null) {
+        updateSet(prevSetNumber, { actual_rest_seconds: totalRest });
+      }
+
+      if (nextSetNumber !== null && nextSetNumber <= plannedSets.length) {
+        const planned = plannedSets[nextSetNumber - 1];
+        updateSet(nextSetNumber, {
+          weight_grams: Math.round(planned.weight_kg * 1000),
+          reps_completed: planned.reps,
+          is_completed: true,
+        });
+        setPendingRpeSetNumber(nextSetNumber);
+
+        if (nextSetNumber < plannedSetsLengthRef.current && restTimerPrefsRef.current.mainSetsEnabled) {
+          const duration =
+            restRecommendations.current?.mainLift[nextSetNumber - 1] ??
+            DEFAULT_MAIN_REST_SECONDS;
+          openTimer({
+            durationSeconds: duration,
+            pendingMainSetNumber: nextSetNumber,
+          });
+        }
       }
     }
   }
 
   function handleLiftFailed() {
-    const { totalRest, prevSetNumber } = dismissPostRest();
+    const { totalRest, prevSetNumber, auxExercise, auxSetNumber } = dismissPostRest();
 
-    // Log total rest on the previous set
-    if (prevSetNumber !== null) {
+    if (auxExercise !== null && auxSetNumber !== null) {
+      updateAuxiliarySet(auxExercise, auxSetNumber, { actual_rest_seconds: totalRest });
+    } else if (prevSetNumber !== null) {
       updateSet(prevSetNumber, { actual_rest_seconds: totalRest });
     }
   }
@@ -705,6 +754,8 @@ export default function SessionScreen() {
     const newRest = postRestState.actualRestSeconds + 15;
     if (postRestState.pendingMainSetNumber !== null) {
       updateSet(postRestState.pendingMainSetNumber, { actual_rest_seconds: newRest });
+    } else if (postRestState.pendingAuxExercise !== null && postRestState.pendingAuxSetNumber !== null) {
+      updateAuxiliarySet(postRestState.pendingAuxExercise, postRestState.pendingAuxSetNumber, { actual_rest_seconds: newRest });
     }
     setPostRestState((prev) =>
       prev ? { ...prev, actualRestSeconds: newRest, resetSecondsRemaining: 15 } : null
