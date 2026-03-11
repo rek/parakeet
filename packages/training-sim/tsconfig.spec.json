@@ -1,0 +1,15 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "outDir": "../../dist/out-tsc",
+    "module": "commonjs",
+    "moduleResolution": "node10",
+    "types": ["vitest/globals", "node"],
+    "composite": false,
+    "declaration": false
+  },
+  "include": [
+    "vitest.config.mts",
+    "src/**/*.ts"
+  ]
+}

@@ -1,0 +1,15 @@
+{
+  "name": "@parakeet/training-sim",
+  "version": "0.0.1",
+  "private": true,
+  "type": "commonjs",
+  "main": "./src/index.ts",
+  "types": "./src/index.d.ts",
+  "dependencies": {
+    "@parakeet/shared-types": "*",
+    "@parakeet/training-engine": "*"
+  },
+  "devDependencies": {
+    "vitest": "^4.0.18"
+  }
+}

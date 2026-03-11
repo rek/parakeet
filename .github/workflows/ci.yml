@@ -43,3 +43,6 @@ jobs:
 
       - name: Test (affected)
         run: npx nx affected --target=test --base=origin/main --head=HEAD
+
+      - name: Validate training engine
+        run: npx nx run training-sim:validate

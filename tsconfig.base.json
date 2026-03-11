@@ -22,7 +22,8 @@
       "@shared/*": ["apps/parakeet/src/shared/*"],
       "@parakeet/db": ["packages/db/src/index.ts"],
       "@parakeet/shared-types": ["packages/shared-types/src/index.ts"],
-      "@parakeet/training-engine": ["packages/training-engine/src/index.ts"]
+      "@parakeet/training-engine": ["packages/training-engine/src/index.ts"],
+      "@parakeet/training-sim": ["packages/training-sim/src/index.ts"]
     }
   },
   "include": ["global.d.ts"],

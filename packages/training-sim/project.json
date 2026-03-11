@@ -1,0 +1,37 @@
+{
+  "name": "training-sim",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "packages/training-sim/src",
+  "projectType": "library",
+  "tags": ["scope:sim", "type:lib"],
+  "targets": {
+    "lint": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "oxlint src --deny-warnings --ignore-pattern 'src/**/*.spec.ts' --ignore-pattern 'src/**/*.test.ts'",
+        "cwd": "packages/training-sim"
+      }
+    },
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "tsc --noEmit -p tsconfig.lib.json && tsc --noEmit -p tsconfig.spec.json",
+        "cwd": "packages/training-sim"
+      }
+    },
+    "test": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "npx vitest run",
+        "cwd": "packages/training-sim"
+      }
+    },
+    "validate": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "npx tsx src/cli.ts",
+        "cwd": "packages/training-sim"
+      }
+    }
+  }
+}
