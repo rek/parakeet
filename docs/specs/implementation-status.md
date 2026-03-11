@@ -220,6 +220,10 @@ Module/platform/shared architecture is the canonical app structure. Legacy top-l
 - [ ] mobile-038: 3/4-day program creation selector
 - [ ] data-008: OHP lifter maxes schema
 
+### LLM Challenge Mode — [design doc](../design/llm-challenge-mode.md) | [spec](10-ai/ai-002-challenge-mode.md)
+
+- [ ] ai-002: Challenge mode — Zod schemas, system prompts, engine review functions, DB tables, app integration (judge + replay), dashboard pages, ai-overview.md fixes
+
 ### Other
 
 - [ ] Sleep data integration (wearables → JIT context)

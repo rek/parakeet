@@ -10,6 +10,22 @@ At the end: update design doc status → Implemented, update specs to match what
 
 ---
 
+## 6
+
+there has to be some more funny badges we can give users. lets brainstorm 20 kinds. feel free to make some of them wild
+
+## 7
+
+review time. are components in apps/parakeet/src/components pure (enough)? understand what type of things should go in there, and review the ones that exist
+
+## 8
+
+refactor time. lets review all our tsx files in this folder: apps/parakeet/src/app
+
+which ones break the rules and contain business logic?
+
+use arch-code-review agent
+
 ## 9
 
 4-day programs with overhead press as a first-class primary lift. See [design doc](design/four-day-ohp.md) and [implementation status](specs/implementation-status.md#planned--future). ~30 files, 8 specs.
@@ -36,8 +52,4 @@ At the end: update design doc status → Implemented, update specs to match what
 
 ## 15
 
-**llm challenge mode**: when we do some kind of JIT calculation, or a session decision, using our engine, what do you think about having a llm also take that raw inputs and try and make the same decision.
-
-or get a llm to review the output of the decision we have made, and give it an accuracy score, and if it passes a certian threshold we accept it
-
-brainstorm 4-5 ideas like this to see if we can find a good integration/review level/balance
+**LLM Challenge Mode.** Use LLMs to validate/challenge formula engine decisions — post-hoc review, retrospective scoring, constraint audits, consensus voting, or adaptive thresholds. See [design doc](design/llm-challenge-mode.md). Pick an approach, then implement.
