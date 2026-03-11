@@ -181,6 +181,20 @@ export const EXERCISE_CATALOG: ExerciseCatalogEntry[] = [
     repTarget: 10,
   },
 
+  {
+    name: 'Barbell Thruster',
+    associatedLift: 'squat',
+    primaryMuscles: ['quads', 'glutes', 'shoulders'],
+    type: 'weighted',
+    muscleContributions: [
+      { muscle: 'quads', contribution: 1.0 },
+      { muscle: 'glutes', contribution: 1.0 },
+      { muscle: 'shoulders', contribution: 0.5 },
+    ],
+    weightPct: 0.5,
+    repTarget: 6,
+  },
+
   // ── Bench auxiliaries ─────────────────────────────────────────────────────
   {
     name: 'Close-Grip Barbell Bench Press',
@@ -288,6 +302,31 @@ export const EXERCISE_CATALOG: ExerciseCatalogEntry[] = [
     ],
     weightPct: 0.8,
     repTarget: 4,
+  },
+  {
+    name: 'Barbell Block Bench Press',
+    associatedLift: 'bench',
+    primaryMuscles: ['chest', 'triceps'],
+    type: 'weighted',
+    muscleContributions: [
+      { muscle: 'chest', contribution: 1.0 },
+      { muscle: 'triceps', contribution: 0.5 },
+    ],
+    weightPct: 0.85,
+    repTarget: 4,
+  },
+  {
+    name: 'Barbell Push Press',
+    associatedLift: 'bench',
+    primaryMuscles: ['shoulders', 'triceps'],
+    type: 'weighted',
+    muscleContributions: [
+      { muscle: 'shoulders', contribution: 1.0 },
+      { muscle: 'triceps', contribution: 1.0 },
+      { muscle: 'upper_back', contribution: 0.5 },
+    ],
+    weightPct: 0.7,
+    repTarget: 5,
   },
   {
     name: 'JM Press',
@@ -566,6 +605,16 @@ export const EXERCISE_CATALOG: ExerciseCatalogEntry[] = [
     type: 'weighted',
     weightPct: 0.3,
     repTarget: 5,
+  },
+  {
+    name: 'Deadhang',
+    associatedLift: 'deadlift',
+    primaryMuscles: ['upper_back'],
+    type: 'timed',
+    muscleContributions: [
+      { muscle: 'upper_back', contribution: 1.0 },
+      { muscle: 'shoulders', contribution: 0.5 },
+    ],
   },
 
   // ── General — no single-lift affinity ─────────────────────────────────────
