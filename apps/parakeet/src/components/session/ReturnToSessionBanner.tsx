@@ -7,7 +7,7 @@ import { useSessionStore } from '@platform/store/sessionStore'
 import { getRestTimerPrefs } from '@modules/settings'
 import { detectOvertimeEdge } from '@modules/session'
 import { formatMMSS } from '../../shared/utils'
-import { capitalize } from '@shared/utils/string'
+import { sessionLabel } from '@shared/utils/string'
 import { radii, spacing, typography } from '../../theme'
 import { useTheme } from '../../theme/ThemeContext'
 
@@ -94,9 +94,7 @@ export function ReturnToSessionBanner() {
 
   const timerActive = timerState?.visible === true
 
-  const liftLabel = sessionMeta
-    ? `${capitalize(sessionMeta.primary_lift ?? '')} — ${capitalize(sessionMeta.intensity_type ?? '')}`
-    : 'Session'
+  const liftLabel = sessionMeta ? sessionLabel(sessionMeta) : 'Session'
 
   const blockLabel = sessionMeta
     ? sessionMeta.block_number !== null

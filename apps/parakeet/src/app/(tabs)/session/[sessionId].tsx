@@ -27,7 +27,7 @@ import { RestTimer } from '../../../components/training/RestTimer';
 import { RpeQuickPicker } from '../../../components/training/RpeQuickPicker';
 import { SetRow } from '../../../components/training/SetRow';
 import { WarmupSection } from '../../../components/training/WarmupSection';
-import { capitalize } from '@shared/utils/string';
+import { capitalize, sessionLabel } from '@shared/utils/string';
 import type { ColorScheme } from '../../../theme';
 import { useTheme } from '../../../theme/ThemeContext';
 
@@ -801,11 +801,7 @@ export default function SessionScreen() {
     actualSets.some((s) => s.is_completed) ||
     auxiliarySets.some((s) => s.is_completed);
 
-  const liftHeader = sessionMeta
-    ? sessionMeta.primary_lift
-      ? `${capitalize(sessionMeta.primary_lift)} — ${capitalize(sessionMeta.intensity_type ?? '')}`
-      : (sessionMeta as { activity_name?: string | null }).activity_name ?? 'Ad-Hoc Workout'
-    : '';
+  const liftHeader = sessionMeta ? sessionLabel(sessionMeta) : '';
 
   const blockWeekLabel = sessionMeta
     ? !sessionMeta.primary_lift

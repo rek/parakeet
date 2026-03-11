@@ -27,7 +27,7 @@ import {
   MUSCLE_LABELS_FULL,
   READINESS_LABELS,
 } from '@shared/constants/training';
-import { capitalize } from '@shared/utils/string';
+import { capitalize, sessionLabel } from '@shared/utils/string';
 import { router, useLocalSearchParams } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { BackLink } from '../../../components/navigation/BackLink';
@@ -525,9 +525,7 @@ export default function SorenessScreen() {
   // ── Derived state ─────────────────────────────────────────────────────────
 
   const hasSevereSoreness = Object.values(ratings).some((r) => r === 5);
-  const liftLabel = session
-    ? `${capitalize(session.primary_lift!)} — ${capitalize(session.intensity_type!)}`
-    : 'Loading...';
+  const liftLabel = session ? sessionLabel(session) : 'Loading...';
 
   // ── Render ────────────────────────────────────────────────────────────────
 
