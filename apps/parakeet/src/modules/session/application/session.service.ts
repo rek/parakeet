@@ -71,7 +71,7 @@ export async function findTodaySession(userId: string) {
       // This prevents duplicate generation on each pull-to-refresh.
       const existingPlanned = await fetchPlannedSessionForProgram(program.id, userId);
       if (existingPlanned) return existingPlanned;
-      return generateNextUnendingSession(program, userId, session?.status === 'completed');
+      return generateNextUnendingSession(program, userId);
     }
   }
 
@@ -82,17 +82,24 @@ export async function findTodaySession(userId: string) {
 // All sessions relevant to today: planned_date = today + any in_progress
 // For unending programs, triggers lazy session generation first.
 export async function findTodaySessions(userId: string) {
+  let unendingSession: Awaited<ReturnType<typeof findTodaySession>> = null;
   try {
     const program = await fetchActiveProgramMode(userId);
     if (program?.program_mode === 'unending') {
-      await findTodaySession(userId);
+      unendingSession = await findTodaySession(userId);
     }
   } catch (err) {
     // Don't let program-mode lookup failures break the session list.
     // The direct fetchTodaySessions query still works without program context.
     captureException(err);
   }
-  return fetchTodaySessions(userId);
+  const sessions = await fetchTodaySessions(userId);
+  // For unending programs, if no sessions matched today's date,
+  // include the nearest planned session so the user always sees their next workout.
+  if (sessions.length === 0 && unendingSession?.status === 'planned') {
+    return [unendingSession];
+  }
+  return sessions;
 }
 
 // Full session detail
@@ -453,14 +460,9 @@ export async function getDaysSinceLastSession(
 
 // Generates and inserts the next session for an unending program,
 // then increments the program's session counter. Returns the new session row.
-async function generateNextUnendingSession(program: UnendingProgramRef, userId: string, skipToday = false) {
+async function generateNextUnendingSession(program: UnendingProgramRef, userId: string) {
   const trainingDays = program.training_days ?? DEFAULT_TRAINING_DAYS[program.training_days_per_week] ?? [1, 3, 5];
-  let ref: Date | undefined;
-  if (skipToday) {
-    ref = new Date();
-    ref.setDate(ref.getDate() + 1);
-  }
-  const plannedDate = nextTrainingDate(trainingDays, ref);
+  const plannedDate = nextTrainingDate(trainingDays);
   await appendNextUnendingSession(program, userId, plannedDate);
   // Fetch by program_id+planned status so we get the newly created session,
   // not the completed session that fetchTodaySession would return first.

@@ -141,10 +141,10 @@ describe('findTodaySession', () => {
     await findTodaySession('user-1');
 
     // Called with no reference date — nextTrainingDate may return today
-    expect(mockNextTrainingDate).toHaveBeenCalledWith([1, 3, 5], undefined);
+    expect(mockNextTrainingDate).toHaveBeenCalledWith([1, 3, 5]);
   });
 
-  it('generates next session with tomorrow reference when unending session is completed', async () => {
+  it('generates next session from today (no skip) when unending session is completed', async () => {
     const completedSession = {
       id: 's1',
       status: 'completed',
@@ -165,14 +165,8 @@ describe('findTodaySession', () => {
 
     await findTodaySession('user-1');
 
-    // Called with a Date reference set to tomorrow — ensures today is skipped
-    const [, refArg] = mockNextTrainingDate.mock.calls[0];
-    expect(refArg).toBeInstanceOf(Date);
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const refDay = new Date(refArg as Date);
-    refDay.setHours(0, 0, 0, 0);
-    expect(refDay.getTime()).toBeGreaterThan(today.getTime());
+    // Called with no reference date — today is NOT skipped
+    expect(mockNextTrainingDate).toHaveBeenCalledWith([1, 3, 5]);
   });
 
   it('returns existing planned session for unending program without generating', async () => {
@@ -250,6 +244,55 @@ describe('findTodaySessions', () => {
 
     expect(result).toEqual(sessions);
     expect(mockCaptureException).toHaveBeenCalled();
+  });
+
+  it('returns nearest planned session for unending program when no sessions match today', async () => {
+    const futureSession = {
+      id: 's-next',
+      status: 'planned',
+      planned_date: '2026-03-14',
+    };
+    mockFetchActiveProgramMode.mockResolvedValue({
+      id: 'p1',
+      program_mode: 'unending',
+      training_days_per_week: 3,
+      training_days: null,
+      unending_session_counter: 5,
+    });
+    // findTodaySession path: no existing session → guard returns null → generate → return planned
+    mockFetchTodaySession.mockResolvedValue(null);
+    mockFetchPlannedSessionForProgram
+      .mockResolvedValueOnce(null) // guard check
+      .mockResolvedValueOnce(futureSession); // after generation
+    // fetchTodaySessions returns empty — session is for a future date
+    mockFetchTodaySessions.mockResolvedValue([]);
+
+    const result = await findTodaySessions('user-1');
+
+    expect(result).toEqual([futureSession]);
+  });
+
+  it('does not duplicate sessions when fetchTodaySessions already includes the planned session', async () => {
+    const plannedSession = {
+      id: 's-today',
+      status: 'planned',
+      planned_date: '2026-03-11',
+    };
+    mockFetchActiveProgramMode.mockResolvedValue({
+      id: 'p1',
+      program_mode: 'unending',
+      training_days_per_week: 3,
+      training_days: null,
+      unending_session_counter: 5,
+    });
+    mockFetchTodaySession.mockResolvedValue(null);
+    mockFetchPlannedSessionForProgram.mockResolvedValue(plannedSession);
+    // fetchTodaySessions already includes this session (planned_date = today)
+    mockFetchTodaySessions.mockResolvedValue([plannedSession]);
+
+    const result = await findTodaySessions('user-1');
+
+    expect(result).toEqual([plannedSession]);
   });
 
   it('returns sessions when no active program exists', async () => {
