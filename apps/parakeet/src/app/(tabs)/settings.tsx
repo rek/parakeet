@@ -202,6 +202,16 @@ function buildStyles(colors: ColorScheme) {
       fontSize: typography.sizes.sm,
       color: colors.textTertiary,
     },
+    devBadge: {
+      fontSize: typography.sizes.xs,
+      fontWeight: typography.weights.bold,
+      color: colors.primary,
+      backgroundColor: colors.primaryMuted,
+      paddingHorizontal: spacing[1.5],
+      paddingVertical: 2,
+      borderRadius: radii.sm,
+      overflow: 'hidden',
+    },
     toggleGroup: {
       flexDirection: 'row',
       gap: spacing[2],
@@ -530,15 +540,18 @@ export default function SettingsScreen() {
           labelStyle={styles.versionLabel}
           styles={styles}
           right={
-            <Text style={styles.buildDate}>
-              {Constants.expoConfig?.extra?.buildDate
-                ? new Date(Constants.expoConfig.extra.buildDate as string).toLocaleDateString('en-GB', {
-                    day: 'numeric',
-                    month: 'short',
-                    year: 'numeric',
-                  })
-                : 'dev'}
-            </Text>
+            <View style={styles.rowRight}>
+              {__DEV__ && <Text style={styles.devBadge}>DEV</Text>}
+              <Text style={styles.buildDate}>
+                {Constants.expoConfig?.extra?.buildDate
+                  ? new Date(Constants.expoConfig.extra.buildDate as string).toLocaleDateString('en-GB', {
+                      day: 'numeric',
+                      month: 'short',
+                      year: 'numeric',
+                    })
+                  : 'dev'}
+              </Text>
+            </View>
           }
         />
       </ScrollView>
