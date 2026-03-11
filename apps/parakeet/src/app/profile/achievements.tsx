@@ -1,13 +1,15 @@
-import { useMemo } from 'react'
-import { ScrollView, StyleSheet, Text } from 'react-native'
-import { SafeAreaView } from 'react-native-safe-area-context'
-import { router } from 'expo-router'
+import { useMemo } from 'react';
+import { ScrollView, StyleSheet, Text } from 'react-native';
 
-import { useAuth } from '@modules/auth'
-import { AchievementsSection } from '../../components/achievements/AchievementsSection'
-import type { ColorScheme } from '../../theme'
-import { useTheme } from '../../theme/ThemeContext'
-import { BackLink } from '../../components/navigation/BackLink'
+import { useAchievementsData } from '@modules/achievements';
+import { useAuth } from '@modules/auth';
+import { router } from 'expo-router';
+import { SafeAreaView } from 'react-native-safe-area-context';
+
+import { AchievementsSection } from '../../components/achievements/AchievementsSection';
+import { BackLink } from '../../components/navigation/BackLink';
+import type { ColorScheme } from '../../theme';
+import { useTheme } from '../../theme/ThemeContext';
 
 // ── Screen ────────────────────────────────────────────────────────────────────
 
@@ -31,13 +33,15 @@ function buildStyles(colors: ColorScheme) {
       color: colors.text,
       marginBottom: 8,
     },
-  })
+  });
 }
 
 export default function AchievementsScreen() {
-  const { colors } = useTheme()
-  const styles = useMemo(() => buildStyles(colors), [colors])
-  const { user } = useAuth()
+  const { colors } = useTheme();
+  const styles = useMemo(() => buildStyles(colors), [colors]);
+  const { user } = useAuth();
+
+  const { badges, streak, prs, isLoading } = useAchievementsData(user?.id);
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -51,8 +55,17 @@ export default function AchievementsScreen() {
 
         <Text style={styles.screenTitle}>Achievements</Text>
 
-        {user && <AchievementsSection userId={user.id} />}
+        <AchievementsSection
+          badges={badges}
+          streak={streak}
+          prs={prs}
+          isLoading={isLoading}
+          onBadgePress={(programId) =>
+            router.push(`/history/cycle-review/${programId}`)
+          }
+          onWilksPress={() => router.push('/profile/wilks')}
+        />
       </ScrollView>
     </SafeAreaView>
-  )
+  );
 }

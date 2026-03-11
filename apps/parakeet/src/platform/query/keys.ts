@@ -9,11 +9,14 @@ export const qk = {
     today: (userId?: string) => ['session', 'today', userId] as const,
   },
   cycleReview: {
-    byProgramPrefix: (programId: string) => ['cycle-review', programId] as const,
-    byProgram: (programId: string, userId?: string) => ['cycle-review', programId, userId] as const,
+    byProgramPrefix: (programId: string) =>
+      ['cycle-review', programId] as const,
+    byProgram: (programId: string, userId?: string) =>
+      ['cycle-review', programId, userId] as const,
   },
   formula: {
-    suggestionsCount: (userId?: string) => ['formula', 'suggestions', 'count', userId] as const,
+    suggestionsCount: (userId?: string) =>
+      ['formula', 'suggestions', 'count', userId] as const,
   },
   developer: {
     suggestionsCount: () => ['developer', 'suggestions', 'count'] as const,

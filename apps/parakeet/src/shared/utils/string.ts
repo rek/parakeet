@@ -11,7 +11,9 @@ export function sessionLabel(meta: {
 }): string {
   if (meta.primary_lift) {
     const lift = capitalize(meta.primary_lift);
-    const intensity = meta.intensity_type ? capitalize(meta.intensity_type) : '';
+    const intensity = meta.intensity_type
+      ? capitalize(meta.intensity_type)
+      : '';
     return intensity ? `${lift} — ${intensity}` : lift;
   }
   return meta.activity_name ?? 'Ad-Hoc Workout';

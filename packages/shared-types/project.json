@@ -35,6 +35,13 @@
         "tsConfig": "packages/shared-types/tsconfig.lib.json",
         "assets": ["packages/shared-types/*.md"]
       }
+    },
+    "format": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "npx prettier --write \"src/**/*.{ts,tsx}\"",
+        "cwd": "packages/shared-types"
+      }
     }
   }
 }

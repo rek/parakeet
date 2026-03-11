@@ -1,4 +1,4 @@
-import { captureException } from '../utils/captureException'
+import { cancelPlannedSessionsForProgram } from '@modules/session/data/session.repository';
 import {
   computeBlockOffset,
   DEFAULT_TRAINING_DAYS,
@@ -7,15 +7,16 @@ import {
   localDateString,
   nextTrainingDate,
 } from '@parakeet/training-engine';
-import { appendNextUnendingSession } from './unending-session';
+import type { ProgramListItem } from '@shared/types/domain';
 
+import { getAuthenticatedUserId } from '../data/profile.repository';
 import {
   archiveActivePrograms,
-  fetchActiveProgramWithSessions,
   fetchActiveProgramMode,
+  fetchActiveProgramWithSessions,
   fetchLatestProgramVersion,
-  fetchProgramWithSessions,
   fetchProgramsList,
+  fetchProgramWithSessions,
   insertAuxiliaryAssignmentRows,
   insertProgramRow,
   insertSessionRows,
@@ -23,16 +24,15 @@ import {
   updateProgramStatusIfActive,
   updateUnendingSessionCounter,
 } from '../data/program.repository';
-import { cancelPlannedSessionsForProgram } from '@modules/session/data/session.repository';
-import { getAuthenticatedUserId } from '../data/profile.repository';
 import { getAuxiliaryPools } from '../lib/auxiliary-config';
 import { getCurrentMaxes } from '../lib/lifter-maxes';
-import type { ProgramListItem } from '@shared/types/domain';
+import { captureException } from '../utils/captureException';
+import { appendNextUnendingSession } from './unending-session';
 
 export type { ProgramListItem } from '@shared/types/domain';
 
 export interface CreateProgramInput {
-  totalWeeks?: 10 | 12 | 14;  // not required for unending programs
+  totalWeeks?: 10 | 12 | 14; // not required for unending programs
   trainingDaysPerWeek: 3 | 4;
   startDate: Date;
   trainingDays?: number[]; // weekday indices 0=Sun..6=Sat
@@ -56,7 +56,10 @@ async function getRequiredUserId(): Promise<string> {
   return userId;
 }
 
-async function buildProgram(input: CreateProgramInput, withFormulaConfigId: boolean) {
+async function buildProgram(
+  input: CreateProgramInput,
+  withFormulaConfigId: boolean
+) {
   const userId = await getRequiredUserId();
   const isUnending = input.programMode === 'unending';
 
@@ -89,7 +92,7 @@ async function buildProgram(input: CreateProgramInput, withFormulaConfigId: bool
     program.id,
     input.totalWeeks ?? 9, // 9-week placeholder ensures 3 blocks generated
     auxiliaryPool,
-    blockOffset,
+    blockOffset
   );
 
   await insertAuxiliaryAssignmentRows(
@@ -100,18 +103,24 @@ async function buildProgram(input: CreateProgramInput, withFormulaConfigId: bool
       lift: a.lift,
       exercise_1: a.exercise1,
       exercise_2: a.exercise2,
-    })),
+    }))
   );
 
   if (isUnending) {
     // Create just the first session — subsequent sessions are generated lazily
-    const trainingDays = input.trainingDays ?? DEFAULT_TRAINING_DAYS[input.trainingDaysPerWeek] ?? [1, 3, 5];
+    const trainingDays = input.trainingDays ??
+      DEFAULT_TRAINING_DAYS[input.trainingDaysPerWeek] ?? [1, 3, 5];
     const firstDate = nextTrainingDate(trainingDays);
     await appendNextUnendingSession(
-      { id: program.id, training_days_per_week: input.trainingDaysPerWeek, unending_session_counter: 0, training_days: input.trainingDays ?? null },
+      {
+        id: program.id,
+        training_days_per_week: input.trainingDaysPerWeek,
+        unending_session_counter: 0,
+        training_days: input.trainingDays ?? null,
+      },
       userId,
       firstDate,
-      { skipCounterIncrement: true },
+      { skipCounterIncrement: true }
     );
   } else {
     const scaffold = generateProgram({
@@ -165,7 +174,7 @@ export async function listPrograms(userId: string): Promise<ProgramListItem[]> {
 export async function updateProgramStatus(
   programId: string,
   status: 'completed' | 'archived',
-  options?: { triggerCycleReview?: boolean; userId?: string },
+  options?: { triggerCycleReview?: boolean; userId?: string }
 ): Promise<void> {
   await cancelPlannedSessionsForProgram(programId);
   await updateProgramStatusIfActive(programId, status);
@@ -174,24 +183,26 @@ export async function updateProgramStatus(
   }
 }
 
-export { fetchActiveProgramMode, updateUnendingSessionCounter } from '../data/program.repository';
+export {
+  fetchActiveProgramMode,
+  updateUnendingSessionCounter,
+} from '../data/program.repository';
 
 // Triggered after each session completion when program reaches ≥80% done.
 // Fire-and-forget: errors are logged but do not block the caller.
 export function onCycleComplete(programId: string, userId: string): void {
   import('@modules/cycle-review/lib/cycle-review')
-    .then(({ compileCycleReport, getPreviousCycleSummaries, storeCycleReview }) =>
-      import('@parakeet/training-engine')
-        .then(({ generateCycleReview }) =>
-          compileCycleReport(programId, userId)
-            .then((report) =>
-              getPreviousCycleSummaries(userId, programId, 3).then((summaries) =>
-                generateCycleReview(report, summaries).then((review) =>
-                  storeCycleReview(programId, userId, report, review),
-                ),
-              ),
-            ),
-        ),
+    .then(
+      ({ compileCycleReport, getPreviousCycleSummaries, storeCycleReview }) =>
+        import('@parakeet/training-engine').then(({ generateCycleReview }) =>
+          compileCycleReport(programId, userId).then((report) =>
+            getPreviousCycleSummaries(userId, programId, 3).then((summaries) =>
+              generateCycleReview(report, summaries).then((review) =>
+                storeCycleReview(programId, userId, report, review)
+              )
+            )
+          )
+        )
     )
     .catch((err) => captureException(err));
 }

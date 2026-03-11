@@ -33,7 +33,13 @@ function isPrimitive(val: unknown): val is string | number | boolean | null {
   return val === null || typeof val !== 'object';
 }
 
-function NodeToggle({ expanded, onClick }: { expanded: boolean; onClick: () => void }) {
+function NodeToggle({
+  expanded,
+  onClick,
+}: {
+  expanded: boolean;
+  onClick: () => void;
+}) {
   return (
     <button
       onClick={onClick}
@@ -54,7 +60,12 @@ function NodeToggle({ expanded, onClick }: { expanded: boolean; onClick: () => v
   );
 }
 
-function JsonNode({ keyName, value, depth, defaultCollapsed }: {
+function JsonNode({
+  keyName,
+  value,
+  depth,
+  defaultCollapsed,
+}: {
   keyName?: string;
   value: JsonValue;
   depth: number;
@@ -66,16 +77,22 @@ function JsonNode({ keyName, value, depth, defaultCollapsed }: {
     return (
       <div style={{ display: 'flex', gap: '4px', paddingLeft: depth * 14 }}>
         {keyName !== undefined && (
-          <span style={{ color: 'var(--blue)', opacity: 0.85 }}>"{keyName}":</span>
+          <span style={{ color: 'var(--blue)', opacity: 0.85 }}>
+            "{keyName}":
+          </span>
         )}
-        <span style={{ color: colorizeValue(value) }}>{formatPrimitive(value)}</span>
+        <span style={{ color: colorizeValue(value) }}>
+          {formatPrimitive(value)}
+        </span>
       </div>
     );
   }
 
   const isArray = Array.isArray(value);
   const entries = isArray
-    ? (value as JsonValue[]).map((v, i) => [String(i), v] as [string, JsonValue])
+    ? (value as JsonValue[]).map(
+        (v, i) => [String(i), v] as [string, JsonValue]
+      )
     : Object.entries(value as Record<string, JsonValue>);
   const count = entries.length;
   const open = isArray ? '[' : '{';
@@ -85,9 +102,14 @@ function JsonNode({ keyName, value, depth, defaultCollapsed }: {
     return (
       <div style={{ display: 'flex', gap: '4px', paddingLeft: depth * 14 }}>
         {keyName !== undefined && (
-          <span style={{ color: 'var(--blue)', opacity: 0.85 }}>"{keyName}":</span>
+          <span style={{ color: 'var(--blue)', opacity: 0.85 }}>
+            "{keyName}":
+          </span>
         )}
-        <span style={{ color: 'var(--text-dim)' }}>{open}{close}</span>
+        <span style={{ color: 'var(--text-dim)' }}>
+          {open}
+          {close}
+        </span>
       </div>
     );
   }
@@ -96,18 +118,29 @@ function JsonNode({ keyName, value, depth, defaultCollapsed }: {
     <div style={{ paddingLeft: depth * 14 }}>
       <button
         className="btn-reset"
-        style={{ display: 'flex', alignItems: 'center', gap: '2px', userSelect: 'none' }}
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: '2px',
+          userSelect: 'none',
+        }}
         onClick={() => setExpanded(!expanded)}
       >
-        <NodeToggle expanded={expanded} onClick={() => setExpanded(!expanded)} />
+        <NodeToggle
+          expanded={expanded}
+          onClick={() => setExpanded(!expanded)}
+        />
         {keyName !== undefined && (
-          <span style={{ color: 'var(--blue)', opacity: 0.85 }}>"{keyName}":</span>
+          <span style={{ color: 'var(--blue)', opacity: 0.85 }}>
+            "{keyName}":
+          </span>
         )}
         <span style={{ color: 'var(--text-dim)' }}>
           {open}
           {!expanded && (
             <span style={{ color: 'var(--text-muted)', fontSize: '11px' }}>
-              {' '}{count} {isArray ? 'items' : 'keys'}{' '}
+              {' '}
+              {count} {isArray ? 'items' : 'keys'}{' '}
             </span>
           )}
           {!expanded && close}
@@ -126,14 +159,17 @@ function JsonNode({ keyName, value, depth, defaultCollapsed }: {
           ))}
         </div>
       )}
-      {expanded && (
-        <div style={{ color: 'var(--text-dim)' }}>{close}</div>
-      )}
+      {expanded && <div style={{ color: 'var(--text-dim)' }}>{close}</div>}
     </div>
   );
 }
 
-export function JsonViewer({ data, depth = 0, defaultCollapsed = true, label }: Props) {
+export function JsonViewer({
+  data,
+  depth = 0,
+  defaultCollapsed = true,
+  label,
+}: Props) {
   const [open, setOpen] = useState(!defaultCollapsed);
 
   if (data === null || data === undefined) {
@@ -141,12 +177,14 @@ export function JsonViewer({ data, depth = 0, defaultCollapsed = true, label }: 
   }
 
   return (
-    <div style={{
-      background: 'var(--bg)',
-      border: '1px solid var(--border)',
-      borderRadius: 6,
-      overflow: 'hidden',
-    }}>
+    <div
+      style={{
+        background: 'var(--bg)',
+        border: '1px solid var(--border)',
+        borderRadius: 6,
+        overflow: 'hidden',
+      }}
+    >
       {label && (
         <button
           className="btn-reset"
@@ -161,21 +199,32 @@ export function JsonViewer({ data, depth = 0, defaultCollapsed = true, label }: 
             userSelect: 'none',
           }}
         >
-          <span style={{ color: 'var(--accent)', fontSize: 10 }}>{open ? '▾' : '▸'}</span>
-          <span style={{ color: 'var(--text-dim)', fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+          <span style={{ color: 'var(--accent)', fontSize: 10 }}>
+            {open ? '▾' : '▸'}
+          </span>
+          <span
+            style={{
+              color: 'var(--text-dim)',
+              fontSize: 11,
+              textTransform: 'uppercase',
+              letterSpacing: '0.08em',
+            }}
+          >
             {label}
           </span>
         </button>
       )}
       {open && (
-        <div style={{
-          padding: '10px 12px',
-          overflowX: 'auto',
-          fontSize: 12,
-          lineHeight: 1.7,
-          maxHeight: 400,
-          overflowY: 'auto',
-        }}>
+        <div
+          style={{
+            padding: '10px 12px',
+            overflowX: 'auto',
+            fontSize: 12,
+            lineHeight: 1.7,
+            maxHeight: 400,
+            overflowY: 'auto',
+          }}
+        >
           <JsonNode
             value={data as JsonValue}
             depth={depth}

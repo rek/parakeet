@@ -1,5 +1,6 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react';
 import {
+  ActivityIndicator,
   Alert,
   Platform,
   ScrollView,
@@ -9,36 +10,42 @@ import {
   TextInput,
   TouchableOpacity,
   View,
-  ActivityIndicator,
-} from 'react-native'
-import { router, useLocalSearchParams } from 'expo-router'
-import DateTimePicker from '@react-native-community/datetimepicker'
+} from 'react-native';
 
-import { captureException } from '@platform/utils/captureException'
-import { submitMaxes } from '@modules/program'
-import { getProfile, updateProfile, isValidBirthYear, isValidBodyweight, birthYearToDobIso } from '@modules/profile'
-import { updateCycleConfig } from '@modules/cycle-tracking'
-import { useAuth } from '@modules/auth'
-import type { BiologicalSex } from '@modules/profile'
-import type { ColorScheme } from '../../../theme'
-import { useTheme } from '../../../theme/ThemeContext'
+import { useAuth } from '@modules/auth';
+import { updateCycleConfig } from '@modules/cycle-tracking';
+import {
+  birthYearToDobIso,
+  getProfile,
+  isValidBirthYear,
+  isValidBodyweight,
+  updateProfile,
+} from '@modules/profile';
+import type { BiologicalSex } from '@modules/profile';
+import { submitMaxes } from '@modules/program';
+import { captureException } from '@platform/utils/captureException';
+import DateTimePicker from '@react-native-community/datetimepicker';
+import { router, useLocalSearchParams } from 'expo-router';
+
+import type { ColorScheme } from '../../../theme';
+import { useTheme } from '../../../theme/ThemeContext';
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
-type TotalWeeks = 10 | 12 | 14
-type TrainingDays = 3 | 4
-type ProgramMode = 'scheduled' | 'unending'
+type TotalWeeks = 10 | 12 | 14;
+type TrainingDays = 3 | 4;
+type ProgramMode = 'scheduled' | 'unending';
 
 interface LiftInput {
-  type: '1rm' | '3rm'
-  weightKg: number
-  reps?: number
+  type: '1rm' | '3rm';
+  weightKg: number;
+  reps?: number;
 }
 
 interface LiftsPayload {
-  squat: LiftInput
-  bench: LiftInput
-  deadlift: LiftInput
+  squat: LiftInput;
+  bench: LiftInput;
+  deadlift: LiftInput;
 }
 
 // ── Styles ────────────────────────────────────────────────────────────────────
@@ -223,104 +230,119 @@ function buildStyles(colors: ColorScheme) {
       minWidth: 64,
       textAlign: 'center',
     },
-  })
+  });
 }
 
 // ── Screen ───────────────────────────────────────────────────────────────────
 
 export default function ProgramSettingsScreen() {
-  const { colors } = useTheme()
-  const styles = useMemo(() => buildStyles(colors), [colors])
-  const { user } = useAuth()
-  const params = useLocalSearchParams<{ lifts?: string; estimatedStart?: string }>()
-  const usingEstimatedStart = params.estimatedStart === '1'
+  const { colors } = useTheme();
+  const styles = useMemo(() => buildStyles(colors), [colors]);
+  const { user } = useAuth();
+  const params = useLocalSearchParams<{
+    lifts?: string;
+    estimatedStart?: string;
+  }>();
+  const usingEstimatedStart = params.estimatedStart === '1';
   const lifts = useMemo(() => {
-    if (!params.lifts) return null
+    if (!params.lifts) return null;
     try {
-      return JSON.parse(params.lifts) as LiftsPayload
+      return JSON.parse(params.lifts) as LiftsPayload;
     } catch {
-      return null
+      return null;
     }
-  }, [params.lifts])
+  }, [params.lifts]);
 
-  const [programMode, setProgramMode] = useState<ProgramMode>('scheduled')
-  const [totalWeeks, setTotalWeeks] = useState<TotalWeeks>(10)
-  const [trainingDaysPerWeek, setTrainingDaysPerWeek] = useState<TrainingDays>(3)
-  const [gender, setGender] = useState<BiologicalSex | null>(null)
-  const [birthYear, setBirthYear] = useState('')
+  const [programMode, setProgramMode] = useState<ProgramMode>('scheduled');
+  const [totalWeeks, setTotalWeeks] = useState<TotalWeeks>(10);
+  const [trainingDaysPerWeek, setTrainingDaysPerWeek] =
+    useState<TrainingDays>(3);
+  const [gender, setGender] = useState<BiologicalSex | null>(null);
+  const [birthYear, setBirthYear] = useState('');
   // Cycle tracking onboarding (female only)
-  const [cycleTrackingEnabled, setCycleTrackingEnabled] = useState(false)
-  const [cycleLength, setCycleLength] = useState(28)
-  const [lastPeriodStart, setLastPeriodStart] = useState<Date | null>(null)
-  const [showCyclePicker, setShowCyclePicker] = useState(false)
-  const [bodyweightKg, setBodyweightKg] = useState('')
-  const [loading, setLoading] = useState(false)
-  const [profileLoading, setProfileLoading] = useState(true)
-  const [hasProfileGender, setHasProfileGender] = useState(false)
-  const [hasProfileBirthYear, setHasProfileBirthYear] = useState(false)
-  const [hasProfileBodyweight, setHasProfileBodyweight] = useState(false)
-  const birthYearIsValid = isValidBirthYear(birthYear)
-  const bodyweightIsValid = isValidBodyweight(bodyweightKg)
+  const [cycleTrackingEnabled, setCycleTrackingEnabled] = useState(false);
+  const [cycleLength, setCycleLength] = useState(28);
+  const [lastPeriodStart, setLastPeriodStart] = useState<Date | null>(null);
+  const [showCyclePicker, setShowCyclePicker] = useState(false);
+  const [bodyweightKg, setBodyweightKg] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [profileLoading, setProfileLoading] = useState(true);
+  const [hasProfileGender, setHasProfileGender] = useState(false);
+  const [hasProfileBirthYear, setHasProfileBirthYear] = useState(false);
+  const [hasProfileBodyweight, setHasProfileBodyweight] = useState(false);
+  const birthYearIsValid = isValidBirthYear(birthYear);
+  const bodyweightIsValid = isValidBodyweight(bodyweightKg);
 
   useEffect(() => {
     getProfile()
       .then((profile) => {
         if (profile?.biological_sex) {
-          setGender(profile.biological_sex)
-          setHasProfileGender(true)
+          setGender(profile.biological_sex);
+          setHasProfileGender(true);
         }
         if (profile?.date_of_birth) {
-          setBirthYear(profile.date_of_birth.slice(0, 4))
-          setHasProfileBirthYear(true)
+          setBirthYear(profile.date_of_birth.slice(0, 4));
+          setHasProfileBirthYear(true);
         }
         if (profile?.bodyweight_kg) {
-          setBodyweightKg(String(profile.bodyweight_kg))
-          setHasProfileBodyweight(true)
+          setBodyweightKg(String(profile.bodyweight_kg));
+          setHasProfileBodyweight(true);
         }
       })
       .catch(() => {})
-      .finally(() => setProfileLoading(false))
-  }, [])
+      .finally(() => setProfileLoading(false));
+  }, []);
 
   async function handleGenerate() {
     if (!gender) {
-      Alert.alert('Missing info', 'Select a gender to generate your program.')
-      return
+      Alert.alert('Missing info', 'Select a gender to generate your program.');
+      return;
     }
     if (!birthYearIsValid) {
-      Alert.alert('Missing info', 'Enter your 4-digit birth year to generate your program.')
-      return
+      Alert.alert(
+        'Missing info',
+        'Enter your 4-digit birth year to generate your program.'
+      );
+      return;
     }
     try {
-      setLoading(true)
-      const dobIso = birthYearToDobIso(birthYear)
+      setLoading(true);
+      const dobIso = birthYearToDobIso(birthYear);
       if (!usingEstimatedStart && !lifts) {
-        throw new Error('Missing lift maxes input')
+        throw new Error('Missing lift maxes input');
       }
 
-      const updates: Promise<unknown>[] = []
+      const updates: Promise<unknown>[] = [];
 
       if (!hasProfileGender || !hasProfileBirthYear || !hasProfileBodyweight) {
-        updates.push(updateProfile({
-          ...(!hasProfileGender ? { biological_sex: gender } : {}),
-          ...(!hasProfileBirthYear ? { date_of_birth: dobIso } : {}),
-          ...(!hasProfileBodyweight ? { bodyweight_kg: parseFloat(bodyweightKg) } : {}),
-        }))
+        updates.push(
+          updateProfile({
+            ...(!hasProfileGender ? { biological_sex: gender } : {}),
+            ...(!hasProfileBirthYear ? { date_of_birth: dobIso } : {}),
+            ...(!hasProfileBodyweight
+              ? { bodyweight_kg: parseFloat(bodyweightKg) }
+              : {}),
+          })
+        );
       }
 
       if (!usingEstimatedStart && lifts) {
-        updates.push(submitMaxes(lifts))
+        updates.push(submitMaxes(lifts));
       }
 
       if (cycleTrackingEnabled) {
-        updates.push(updateCycleConfig(user!.id, {
-          is_enabled: true,
-          cycle_length_days: cycleLength,
-          last_period_start: lastPeriodStart ? lastPeriodStart.toISOString().split('T')[0] : null,
-        }))
+        updates.push(
+          updateCycleConfig(user!.id, {
+            is_enabled: true,
+            cycle_length_days: cycleLength,
+            last_period_start: lastPeriodStart
+              ? lastPeriodStart.toISOString().split('T')[0]
+              : null,
+          })
+        );
       }
 
-      await Promise.all(updates)
+      await Promise.all(updates);
       router.replace({
         pathname: '/(auth)/onboarding/review',
         params: {
@@ -328,22 +350,28 @@ export default function ProgramSettingsScreen() {
           trainingDaysPerWeek: String(trainingDaysPerWeek),
           programMode,
         },
-      })
+      });
     } catch (err: unknown) {
-      captureException(err)
+      captureException(err);
       const msg =
         err instanceof Error
           ? err.message
-          : (err as { message?: string })?.message ?? 'Failed to create program'
-      Alert.alert('Error', msg)
+          : ((err as { message?: string })?.message ??
+            'Failed to create program');
+      Alert.alert('Error', msg);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
   }
 
-  const WEEK_OPTIONS: TotalWeeks[] = [10, 12, 14]
-  const DAY_OPTIONS: TrainingDays[] = [3, 4]
-  const canGenerate = !loading && !profileLoading && !!gender && birthYearIsValid && (hasProfileBodyweight || bodyweightIsValid)
+  const WEEK_OPTIONS: TotalWeeks[] = [10, 12, 14];
+  const DAY_OPTIONS: TrainingDays[] = [3, 4];
+  const canGenerate =
+    !loading &&
+    !profileLoading &&
+    !!gender &&
+    birthYearIsValid &&
+    (hasProfileBodyweight || bodyweightIsValid);
 
   return (
     <ScrollView
@@ -352,19 +380,22 @@ export default function ProgramSettingsScreen() {
       keyboardShouldPersistTaps="handled"
     >
       <Text style={styles.title}>Program Settings</Text>
-      <Text style={styles.subtitle}>Customize your training block before we build your program.</Text>
+      <Text style={styles.subtitle}>
+        Customize your training block before we build your program.
+      </Text>
 
       {/* Program Style */}
       <Text style={styles.label}>Program Style</Text>
       <Text style={styles.fieldHint}>
-        Scheduled follows a fixed-length cycle. Unending generates each workout one at a time, indefinitely.
+        Scheduled follows a fixed-length cycle. Unending generates each workout
+        one at a time, indefinitely.
       </Text>
       <View style={[styles.toggle, styles.toggleMarginTop]}>
         {(['scheduled', 'unending'] as ProgramMode[]).map((mode, index) => {
-          const isFirst = index === 0
-          const isLast = index === 1
-          const isActive = programMode === mode
-          const label = mode === 'scheduled' ? 'Scheduled' : 'Unending'
+          const isFirst = index === 0;
+          const isLast = index === 1;
+          const isActive = programMode === mode;
+          const label = mode === 'scheduled' ? 'Scheduled' : 'Unending';
           return (
             <TouchableOpacity
               key={mode}
@@ -378,11 +409,16 @@ export default function ProgramSettingsScreen() {
               onPress={() => setProgramMode(mode)}
               activeOpacity={0.8}
             >
-              <Text style={[styles.toggleButtonText, isActive && styles.toggleButtonTextActive]}>
+              <Text
+                style={[
+                  styles.toggleButtonText,
+                  isActive && styles.toggleButtonTextActive,
+                ]}
+              >
                 {label}
               </Text>
             </TouchableOpacity>
-          )
+          );
         })}
       </View>
 
@@ -392,9 +428,9 @@ export default function ProgramSettingsScreen() {
           <Text style={styles.label}>Duration</Text>
           <View style={styles.toggle}>
             {WEEK_OPTIONS.map((weeks, index) => {
-              const isFirst = index === 0
-              const isLast = index === WEEK_OPTIONS.length - 1
-              const isActive = totalWeeks === weeks
+              const isFirst = index === 0;
+              const isLast = index === WEEK_OPTIONS.length - 1;
+              const isActive = totalWeeks === weeks;
               return (
                 <TouchableOpacity
                   key={weeks}
@@ -408,11 +444,16 @@ export default function ProgramSettingsScreen() {
                   onPress={() => setTotalWeeks(weeks)}
                   activeOpacity={0.8}
                 >
-                  <Text style={[styles.toggleButtonText, isActive && styles.toggleButtonTextActive]}>
+                  <Text
+                    style={[
+                      styles.toggleButtonText,
+                      isActive && styles.toggleButtonTextActive,
+                    ]}
+                  >
                     {weeks} weeks
                   </Text>
                 </TouchableOpacity>
-              )
+              );
             })}
           </View>
         </>
@@ -422,9 +463,9 @@ export default function ProgramSettingsScreen() {
       <Text style={styles.label}>Days / Week</Text>
       <View style={styles.toggle}>
         {DAY_OPTIONS.map((days, index) => {
-          const isFirst = index === 0
-          const isLast = index === DAY_OPTIONS.length - 1
-          const isActive = trainingDaysPerWeek === days
+          const isFirst = index === 0;
+          const isLast = index === DAY_OPTIONS.length - 1;
+          const isActive = trainingDaysPerWeek === days;
           return (
             <TouchableOpacity
               key={days}
@@ -438,11 +479,16 @@ export default function ProgramSettingsScreen() {
               onPress={() => setTrainingDaysPerWeek(days)}
               activeOpacity={0.8}
             >
-              <Text style={[styles.toggleButtonText, isActive && styles.toggleButtonTextActive]}>
+              <Text
+                style={[
+                  styles.toggleButtonText,
+                  isActive && styles.toggleButtonTextActive,
+                ]}
+              >
                 {days} days
               </Text>
             </TouchableOpacity>
-          )
+          );
         })}
       </View>
 
@@ -450,16 +496,18 @@ export default function ProgramSettingsScreen() {
       {!hasProfileGender && (
         <>
           <Text style={styles.label}>Gender</Text>
-          <Text style={styles.fieldHint}>Used for volume defaults calibrated to your physiology</Text>
+          <Text style={styles.fieldHint}>
+            Used for volume defaults calibrated to your physiology
+          </Text>
           <View style={[styles.toggle, styles.toggleMarginTop]}>
             {(['female', 'male'] as BiologicalSex[]).map((option, index) => {
               const labels: Record<BiologicalSex, string> = {
                 female: 'Female',
                 male: 'Male',
-              }
-              const isFirst = index === 0
-              const isLast = index === 1
-              const isActive = gender === option
+              };
+              const isFirst = index === 0;
+              const isLast = index === 1;
+              const isActive = gender === option;
               return (
                 <TouchableOpacity
                   key={option}
@@ -473,11 +521,16 @@ export default function ProgramSettingsScreen() {
                   onPress={() => setGender(option)}
                   activeOpacity={0.8}
                 >
-                  <Text style={[styles.toggleButtonText, isActive && styles.toggleButtonTextActive]}>
+                  <Text
+                    style={[
+                      styles.toggleButtonText,
+                      isActive && styles.toggleButtonTextActive,
+                    ]}
+                  >
                     {labels[option]}
                   </Text>
                 </TouchableOpacity>
-              )
+              );
             })}
           </View>
         </>
@@ -487,9 +540,17 @@ export default function ProgramSettingsScreen() {
       {!hasProfileBirthYear && (
         <>
           <Text style={styles.label}>Birth Year</Text>
-          <Text style={styles.fieldHint}>Required · used for age-appropriate coaching insights</Text>
+          <Text style={styles.fieldHint}>
+            Required · used for age-appropriate coaching insights
+          </Text>
           <TextInput
-            style={[styles.toggleMarginTop, styles.birthYearInput, birthYear.length > 0 && !birthYearIsValid && styles.birthYearInputError]}
+            style={[
+              styles.toggleMarginTop,
+              styles.birthYearInput,
+              birthYear.length > 0 &&
+                !birthYearIsValid &&
+                styles.birthYearInputError,
+            ]}
             placeholder="e.g. 1990"
             placeholderTextColor={colors.textTertiary}
             value={birthYear}
@@ -504,9 +565,17 @@ export default function ProgramSettingsScreen() {
       {!hasProfileBodyweight && (
         <>
           <Text style={styles.label}>Body Weight</Text>
-          <Text style={styles.fieldHint}>Required · used for Wilks score calculations</Text>
+          <Text style={styles.fieldHint}>
+            Required · used for Wilks score calculations
+          </Text>
           <TextInput
-            style={[styles.toggleMarginTop, styles.birthYearInput, bodyweightKg.length > 0 && !bodyweightIsValid && styles.birthYearInputError]}
+            style={[
+              styles.toggleMarginTop,
+              styles.birthYearInput,
+              bodyweightKg.length > 0 &&
+                !bodyweightIsValid &&
+                styles.birthYearInputError,
+            ]}
             placeholder="e.g. 80.5 kg"
             placeholderTextColor={colors.textTertiary}
             value={bodyweightKg}
@@ -521,7 +590,8 @@ export default function ProgramSettingsScreen() {
         <>
           <Text style={styles.label}>Cycle Tracking</Text>
           <Text style={styles.fieldHint}>
-            Track your menstrual cycle to add context to training patterns — no symptoms required. You can always change this in Settings.
+            Track your menstrual cycle to add context to training patterns — no
+            symptoms required. You can always change this in Settings.
           </Text>
           <View style={styles.cycleToggleRow}>
             <Text style={styles.cycleToggleLabel}>Enable cycle tracking</Text>
@@ -580,8 +650,8 @@ export default function ProgramSettingsScreen() {
                   display={Platform.OS === 'ios' ? 'inline' : 'default'}
                   maximumDate={new Date()}
                   onChange={(_e, d) => {
-                    if (Platform.OS === 'android') setShowCyclePicker(false)
-                    if (d) setLastPeriodStart(d)
+                    if (Platform.OS === 'android') setShowCyclePicker(false);
+                    if (d) setLastPeriodStart(d);
                   }}
                 />
               )}
@@ -592,7 +662,10 @@ export default function ProgramSettingsScreen() {
 
       {/* Generate button */}
       <TouchableOpacity
-        style={[styles.primaryButton, !canGenerate && styles.primaryButtonDisabled]}
+        style={[
+          styles.primaryButton,
+          !canGenerate && styles.primaryButtonDisabled,
+        ]}
         onPress={handleGenerate}
         disabled={!canGenerate}
         activeOpacity={0.8}
@@ -607,15 +680,20 @@ export default function ProgramSettingsScreen() {
         <Text style={styles.validationHint}>
           {[
             !gender && !hasProfileGender ? 'select gender' : null,
-            !birthYearIsValid && !hasProfileBirthYear ? 'enter birth year' : null,
-            !bodyweightIsValid && !hasProfileBodyweight ? 'enter body weight' : null,
+            !birthYearIsValid && !hasProfileBirthYear
+              ? 'enter birth year'
+              : null,
+            !bodyweightIsValid && !hasProfileBodyweight
+              ? 'enter body weight'
+              : null,
           ]
             .filter(Boolean)
             .join(', ')
             .replace(/,([^,]*)$/, ' and$1')
-            .replace(/^./, (c) => c.toUpperCase()) + ' to enable program generation.'}
+            .replace(/^./, (c) => c.toUpperCase()) +
+            ' to enable program generation.'}
         </Text>
       ) : null}
     </ScrollView>
-  )
+  );
 }

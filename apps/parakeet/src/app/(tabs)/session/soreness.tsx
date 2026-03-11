@@ -8,10 +8,9 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+
 import { useAuth } from '@modules/auth';
 import { getCurrentCycleContext } from '@modules/cycle-tracking';
-import { getCyclePhaseModifier } from '@parakeet/training-engine';
 import { runJITForSession } from '@modules/jit';
 import { getCurrentOneRmKg } from '@modules/program';
 import {
@@ -21,8 +20,14 @@ import {
   recordSorenessCheckin,
 } from '@modules/session';
 import type { Lift } from '@parakeet/shared-types';
-import type { CyclePhase, MuscleGroup, ReadinessLevel } from '@parakeet/training-engine';
+import { getCyclePhaseModifier } from '@parakeet/training-engine';
+import type {
+  CyclePhase,
+  MuscleGroup,
+  ReadinessLevel,
+} from '@parakeet/training-engine';
 import { captureException } from '@platform/utils/captureException';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import {
   LIFT_PRIMARY_SORENESS_MUSCLES,
   MUSCLE_GROUPS_ORDER,
@@ -32,6 +37,7 @@ import {
 import { capitalize, sessionLabel } from '@shared/utils/string';
 import { router, useLocalSearchParams } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
+
 import { BackLink } from '../../../components/navigation/BackLink';
 import type { ColorScheme } from '../../../theme';
 import { useTheme } from '../../../theme/ThemeContext';
@@ -260,7 +266,12 @@ interface MuscleRatingRowProps {
   styles: ReturnType<typeof buildStyles>;
 }
 
-function MuscleRatingRow({ muscle, rating, onChange, styles }: MuscleRatingRowProps) {
+function MuscleRatingRow({
+  muscle,
+  rating,
+  onChange,
+  styles,
+}: MuscleRatingRowProps) {
   const label =
     MUSCLE_LABELS_FULL[muscle] ?? capitalize(muscle.replace(/_/g, ' '));
 
@@ -277,7 +288,9 @@ function MuscleRatingRow({ muscle, rating, onChange, styles }: MuscleRatingRowPr
               onPress={() => onChange(muscle, level)}
               activeOpacity={0.7}
             >
-              <Text style={[styles.pillText, isActive && styles.pillTextActive]}>
+              <Text
+                style={[styles.pillText, isActive && styles.pillTextActive]}
+              >
                 {level}
               </Text>
             </TouchableOpacity>
@@ -298,7 +311,15 @@ interface ReadinessPillRowProps {
   colors: ColorScheme;
 }
 
-function ReadinessPillRow({ label, levels, labels, value, onChange, styles, colors }: ReadinessPillRowProps) {
+function ReadinessPillRow({
+  label,
+  levels,
+  labels,
+  value,
+  onChange,
+  styles,
+  colors,
+}: ReadinessPillRowProps) {
   const pillColors = getReadinessPillColors(colors);
 
   return (
@@ -312,13 +333,25 @@ function ReadinessPillRow({ label, levels, labels, value, onChange, styles, colo
               key={level}
               style={[
                 styles.readinessPill,
-                { backgroundColor: isActive ? pillColors.bg[level] : colors.bgMuted },
-                isActive && { borderColor: pillColors.text[level], borderWidth: 1.5 },
+                {
+                  backgroundColor: isActive
+                    ? pillColors.bg[level]
+                    : colors.bgMuted,
+                },
+                isActive && {
+                  borderColor: pillColors.text[level],
+                  borderWidth: 1.5,
+                },
               ]}
               onPress={() => onChange(level as ReadinessLevel)}
               activeOpacity={0.7}
             >
-              <Text style={[styles.readinessPillText, isActive && { color: pillColors.text[level] }]}>
+              <Text
+                style={[
+                  styles.readinessPillText,
+                  isActive && { color: pillColors.text[level] },
+                ]}
+              >
                 {labels[level]}
               </Text>
             </TouchableOpacity>
@@ -346,12 +379,16 @@ export default function SorenessScreen() {
 
   const [session, setSession] = useState<Session>(null);
   const [ratings, setRatings] = useState<Record<string, number>>({});
-  const [otherSoreness, setOtherSoreness] = useState<Record<string, number>>({});
+  const [otherSoreness, setOtherSoreness] = useState<Record<string, number>>(
+    {}
+  );
   const [musclesExpanded, setMusclesExpanded] = useState(false);
   const [sleepQuality, setSleepQuality] = useState<ReadinessLevel>(2);
   const [energyLevel, setEnergyLevel] = useState<ReadinessLevel>(2);
   const [cyclePhase, setCyclePhase] = useState<CyclePhase | null>(null);
-  const [cyclePhaseRationale, setCyclePhaseRationale] = useState<string | null>(null);
+  const [cyclePhaseRationale, setCyclePhaseRationale] = useState<string | null>(
+    null
+  );
   const [generating, setGenerating] = useState(false);
   const autoGenerateTriggered = useRef(false);
 
@@ -383,7 +420,8 @@ export default function SorenessScreen() {
           LIFT_PRIMARY_SORENESS_MUSCLES[data.primary_lift as Lift] ?? [];
         const initialRatings: Record<string, number> = {};
         for (const muscle of muscles) {
-          initialRatings[muscle] = (latest as Record<string, number>)?.[muscle] ?? 1;
+          initialRatings[muscle] =
+            (latest as Record<string, number>)?.[muscle] ?? 1;
         }
         setRatings(initialRatings);
       }
@@ -408,7 +446,8 @@ export default function SorenessScreen() {
   // ── Auto-generate ─────────────────────────────────────────────────────────
 
   useEffect(() => {
-    if (!isAutoGenerate || !session || !user || autoGenerateTriggered.current) return;
+    if (!isAutoGenerate || !session || !user || autoGenerateTriggered.current)
+      return;
     const expectedMuscles =
       LIFT_PRIMARY_SORENESS_MUSCLES[session.primary_lift as Lift] ?? [];
     if (expectedMuscles.length > 0 && Object.keys(ratings).length === 0) return;
@@ -457,9 +496,11 @@ export default function SorenessScreen() {
           ratingsToUse,
           sleepQuality,
           energyLevel,
-          cyclePhase ?? undefined,
+          cyclePhase ?? undefined
         ),
-        primaryLift ? getCurrentOneRmKg(user.id, primaryLift) : Promise.resolve(null),
+        primaryLift
+          ? getCurrentOneRmKg(user.id, primaryLift)
+          : Promise.resolve(null),
       ]);
       router.replace({
         pathname: '/session/[sessionId]',
@@ -494,7 +535,11 @@ export default function SorenessScreen() {
       await recordSorenessCheckin({
         sessionId,
         userId: user.id,
-        ratings: { ...allRatings, sleep_quality: sleepQuality, energy_level: energyLevel },
+        ratings: {
+          ...allRatings,
+          sleep_quality: sleepQuality,
+          energy_level: energyLevel,
+        },
         skipped: false,
       });
     } catch (err) {
@@ -571,17 +616,20 @@ export default function SorenessScreen() {
           activeOpacity={0.7}
         >
           <Text style={styles.expandHeaderText}>Other muscles</Text>
-          <Text style={styles.expandChevron}>{musclesExpanded ? '▲' : '▼'}</Text>
+          <Text style={styles.expandChevron}>
+            {musclesExpanded ? '▲' : '▼'}
+          </Text>
         </TouchableOpacity>
-        {musclesExpanded && otherMuscles.map((muscle) => (
-          <MuscleRatingRow
-            key={muscle}
-            muscle={muscle}
-            rating={otherSoreness[muscle] ?? 1}
-            onChange={handleOtherRatingChange}
-            styles={styles}
-          />
-        ))}
+        {musclesExpanded &&
+          otherMuscles.map((muscle) => (
+            <MuscleRatingRow
+              key={muscle}
+              muscle={muscle}
+              rating={otherSoreness[muscle] ?? 1}
+              onChange={handleOtherRatingChange}
+              styles={styles}
+            />
+          ))}
 
         {/* Rating legend */}
         <Text style={styles.legend}>
@@ -656,4 +704,3 @@ export default function SorenessScreen() {
     </SafeAreaView>
   );
 }
-

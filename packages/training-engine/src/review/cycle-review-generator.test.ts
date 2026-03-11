@@ -1,21 +1,22 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { generateText } from 'ai'
+import { CycleReviewSchema } from '@parakeet/shared-types';
+import type { CycleReview } from '@parakeet/shared-types';
+import { generateText } from 'ai';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+
+import type { CycleReport } from './assemble-cycle-report';
 import {
   assembleCycleReviewPrompt,
   buildLiftProgress,
   extractSummary,
   generateCycleReview,
-} from './cycle-review-generator'
-import type { PreviousCycleSummary } from './cycle-review-generator'
-import type { CycleReport } from './assemble-cycle-report'
-import { CycleReviewSchema } from '@parakeet/shared-types'
-import type { CycleReview } from '@parakeet/shared-types'
+} from './cycle-review-generator';
+import type { PreviousCycleSummary } from './cycle-review-generator';
 
 vi.mock('ai', () => ({
   generateText: vi.fn(),
   Output: { object: vi.fn().mockReturnValue({}) },
-}))
-const mockGenerateText = generateText as ReturnType<typeof vi.fn>
+}));
+const mockGenerateText = generateText as ReturnType<typeof vi.fn>;
 
 // ---------------------------------------------------------------------------
 // Fixtures
@@ -54,18 +55,42 @@ function makeReport(overrides: Partial<CycleReport> = {}): CycleReport {
     },
     weeklyVolume: [],
     auxiliaryCorrelations: [
-      { exercise: 'Pause Squat', lift: 'squat', precedingWeeks: 4, liftChangePct: 5.4 },
-      { exercise: 'Box Squat', lift: 'squat', precedingWeeks: 4, liftChangePct: 5.4 },
-      { exercise: 'Close Grip', lift: 'bench', precedingWeeks: 4, liftChangePct: 0 },
+      {
+        exercise: 'Pause Squat',
+        lift: 'squat',
+        precedingWeeks: 4,
+        liftChangePct: 5.4,
+      },
+      {
+        exercise: 'Box Squat',
+        lift: 'squat',
+        precedingWeeks: 4,
+        liftChangePct: 5.4,
+      },
+      {
+        exercise: 'Close Grip',
+        lift: 'bench',
+        precedingWeeks: 4,
+        liftChangePct: 0,
+      },
     ],
     disruptions: [
-      { type: 'illness', severity: 'minor', affectedLifts: null, reportedAt: '2026-02-01T00:00:00Z' },
+      {
+        type: 'illness',
+        severity: 'minor',
+        affectedLifts: null,
+        reportedAt: '2026-02-01T00:00:00Z',
+      },
     ],
     formulaChanges: [
-      { source: 'ai_suggestion', overrides: {}, createdAt: '2026-01-15T00:00:00Z' },
+      {
+        source: 'ai_suggestion',
+        overrides: {},
+        createdAt: '2026-01-15T00:00:00Z',
+      },
     ],
     ...overrides,
-  }
+  };
 }
 
 function makeReview(overrides: Partial<CycleReview> = {}): CycleReview {
@@ -78,10 +103,18 @@ function makeReview(overrides: Partial<CycleReview> = {}): CycleReview {
     },
     auxiliaryInsights: {
       mostCorrelated: [
-        { exercise: 'Pause Squat', lift: 'squat', explanation: 'Strong correlation.' },
+        {
+          exercise: 'Pause Squat',
+          lift: 'squat',
+          explanation: 'Strong correlation.',
+        },
       ],
       leastEffective: [
-        { exercise: 'Close Grip', lift: 'bench', explanation: 'No correlation.' },
+        {
+          exercise: 'Close Grip',
+          lift: 'bench',
+          explanation: 'No correlation.',
+        },
       ],
       recommendedChanges: { add: [], remove: ['Close Grip'], reorder: [] },
     },
@@ -95,7 +128,7 @@ function makeReview(overrides: Partial<CycleReview> = {}): CycleReview {
     nextCycleRecommendations: 'Increase squat frequency.',
     menstrualInsights: null,
     ...overrides,
-  }
+  };
 }
 
 // ---------------------------------------------------------------------------
@@ -104,27 +137,27 @@ function makeReview(overrides: Partial<CycleReview> = {}): CycleReview {
 
 describe('buildLiftProgress', () => {
   it('computes oneRmChangeKg correctly from liftSummary', () => {
-    const report = makeReport()
-    const progress = buildLiftProgress(report.lifts)
+    const report = makeReport();
+    const progress = buildLiftProgress(report.lifts);
 
-    expect(progress.squat?.oneRmStartKg).toBe(140)
-    expect(progress.squat?.oneRmEndKg).toBe(147.5)
-    expect(progress.squat?.oneRmChangeKg).toBeCloseTo(7.5, 5)
-    expect(progress.squat?.avgRpeVsTarget).toBe(0.3)
-    expect(progress.squat?.sessionCount).toBe(12)
-  })
+    expect(progress.squat?.oneRmStartKg).toBe(140);
+    expect(progress.squat?.oneRmEndKg).toBe(147.5);
+    expect(progress.squat?.oneRmChangeKg).toBeCloseTo(7.5, 5);
+    expect(progress.squat?.avgRpeVsTarget).toBe(0.3);
+    expect(progress.squat?.sessionCount).toBe(12);
+  });
 
   it('returns zero change when start equals end', () => {
-    const report = makeReport()
-    const progress = buildLiftProgress(report.lifts)
-    expect(progress.bench?.oneRmChangeKg).toBe(0)
-  })
+    const report = makeReport();
+    const progress = buildLiftProgress(report.lifts);
+    expect(progress.bench?.oneRmChangeKg).toBe(0);
+  });
 
   it('returns empty object when lifts is empty', () => {
-    const progress = buildLiftProgress({})
-    expect(Object.keys(progress)).toHaveLength(0)
-  })
-})
+    const progress = buildLiftProgress({});
+    expect(Object.keys(progress)).toHaveLength(0);
+  });
+});
 
 // ---------------------------------------------------------------------------
 // extractSummary
@@ -132,53 +165,59 @@ describe('buildLiftProgress', () => {
 
 describe('extractSummary', () => {
   it('correctly maps CycleReport + CycleReview to PreviousCycleSummary', () => {
-    const report = makeReport()
-    const review = makeReview()
+    const report = makeReport();
+    const review = makeReview();
 
-    const summary = extractSummary(report, review, 2, 80, 79.5, 420.5)
+    const summary = extractSummary(report, review, 2, 80, 79.5, 420.5);
 
-    expect(summary.cycleNumber).toBe(2)
-    expect(summary.programLengthWeeks).toBe(12)
-    expect(summary.completionPct).toBe(0.9)
-    expect(summary.formulaChangesCount).toBe(1)
-    expect(summary.disruptionCount).toBe(1)
-    expect(summary.bodyWeightStartKg).toBe(80)
-    expect(summary.bodyWeightEndKg).toBe(79.5)
-    expect(summary.wilksScore).toBe(420.5)
-  })
+    expect(summary.cycleNumber).toBe(2);
+    expect(summary.programLengthWeeks).toBe(12);
+    expect(summary.completionPct).toBe(0.9);
+    expect(summary.formulaChangesCount).toBe(1);
+    expect(summary.disruptionCount).toBe(1);
+    expect(summary.bodyWeightStartKg).toBe(80);
+    expect(summary.bodyWeightEndKg).toBe(79.5);
+    expect(summary.wilksScore).toBe(420.5);
+  });
 
   it('maps liftProgress fields', () => {
-    const report = makeReport()
-    const review = makeReview()
-    const summary = extractSummary(report, review, 1, 80, 80, 400)
+    const report = makeReport();
+    const review = makeReview();
+    const summary = extractSummary(report, review, 1, 80, 80, 400);
 
-    expect(summary.liftProgress.squat?.oneRmChangeKg).toBeCloseTo(7.5, 5)
-  })
+    expect(summary.liftProgress.squat?.oneRmChangeKg).toBeCloseTo(7.5, 5);
+  });
 
   it('classifies aux correlations using review insights', () => {
-    const report = makeReport()
-    const review = makeReview()
-    const summary = extractSummary(report, review, 1, 80, 80, 400)
+    const report = makeReport();
+    const review = makeReview();
+    const summary = extractSummary(report, review, 1, 80, 80, 400);
 
-    const pauseSquat = summary.topAuxCorrelations.find((c) => c.exercise === 'Pause Squat')
-    const closeGrip = summary.topAuxCorrelations.find((c) => c.exercise === 'Close Grip')
-    const boxSquat = summary.topAuxCorrelations.find((c) => c.exercise === 'Box Squat')
+    const pauseSquat = summary.topAuxCorrelations.find(
+      (c) => c.exercise === 'Pause Squat'
+    );
+    const closeGrip = summary.topAuxCorrelations.find(
+      (c) => c.exercise === 'Close Grip'
+    );
+    const boxSquat = summary.topAuxCorrelations.find(
+      (c) => c.exercise === 'Box Squat'
+    );
 
-    expect(pauseSquat?.correlationDirection).toBe('positive')
-    expect(closeGrip?.correlationDirection).toBe('negative')
-    expect(boxSquat?.correlationDirection).toBe('neutral')
-  })
+    expect(pauseSquat?.correlationDirection).toBe('positive');
+    expect(closeGrip?.correlationDirection).toBe('negative');
+    expect(boxSquat?.correlationDirection).toBe('neutral');
+  });
 
   it('builds volumeNotes from volumeInsights', () => {
-    const report = makeReport()
-    const review = makeReview()
-    const summary = extractSummary(report, review, 1, 80, 80, 400)
+    const report = makeReport();
+    const review = makeReview();
+    const summary = extractSummary(report, review, 1, 80, 80, 400);
 
-    expect(summary.volumeNotes.some((n) => n.includes('quads'))).toBe(true)
-    expect(summary.volumeNotes.some((n) => n.includes('triceps'))).toBe(true)
-    expect(summary.volumeNotes.some((n) => n.includes('4-day'))).toBe(true)
-  })
-})
+    expect(summary.volumeNotes.some((n) => n.includes('quads'))).toBe(true);
+    expect(summary.volumeNotes.some((n) => n.includes('triceps'))).toBe(true);
+    expect(summary.volumeNotes.some((n) => n.includes('4-day'))).toBe(true);
+  });
+});
 
 // ---------------------------------------------------------------------------
 // assembleCycleReviewPrompt
@@ -186,96 +225,96 @@ describe('extractSummary', () => {
 
 describe('assembleCycleReviewPrompt', () => {
   it('includes serialised previous summaries when provided', () => {
-    const report = makeReport()
-    const review = makeReview()
-    const summary = extractSummary(report, review, 1, 80, 80, 400)
+    const report = makeReport();
+    const review = makeReview();
+    const summary = extractSummary(report, review, 1, 80, 80, 400);
 
-    const prompt = assembleCycleReviewPrompt(report, [summary])
+    const prompt = assembleCycleReviewPrompt(report, [summary]);
 
-    expect(prompt).toContain('Previous 1 cycle(s) summary:')
-    expect(prompt).toContain('"cycleNumber": 1')
-    expect(prompt).toContain('Use this history to:')
-  })
+    expect(prompt).toContain('Previous 1 cycle(s) summary:');
+    expect(prompt).toContain('"cycleNumber": 1');
+    expect(prompt).toContain('Use this history to:');
+  });
 
   it('includes "first cycle" message when previousSummaries is empty', () => {
-    const report = makeReport()
-    const prompt = assembleCycleReviewPrompt(report, [])
+    const report = makeReport();
+    const prompt = assembleCycleReviewPrompt(report, []);
 
-    expect(prompt).toContain('first completed cycle')
-    expect(prompt).not.toContain('Previous')
-  })
+    expect(prompt).toContain('first completed cycle');
+    expect(prompt).not.toContain('Previous');
+  });
 
   it('includes cycleReport in all cases', () => {
-    const report = makeReport()
+    const report = makeReport();
 
-    const promptWithHistory = assembleCycleReviewPrompt(report, [])
-    const promptEmpty = assembleCycleReviewPrompt(report, [])
+    const promptWithHistory = assembleCycleReviewPrompt(report, []);
+    const promptEmpty = assembleCycleReviewPrompt(report, []);
 
-    expect(promptWithHistory).toContain('"programId": "prog-001"')
-    expect(promptEmpty).toContain('"programId": "prog-001"')
-  })
+    expect(promptWithHistory).toContain('"programId": "prog-001"');
+    expect(promptEmpty).toContain('"programId": "prog-001"');
+  });
 
   it('multi-cycle prompt contains instruction text', () => {
-    const report = makeReport()
-    const review = makeReview()
+    const report = makeReport();
+    const review = makeReview();
     const summaries: PreviousCycleSummary[] = [
       extractSummary(report, review, 1, 80, 80, 400),
       extractSummary(report, review, 2, 80, 79, 410),
-    ]
+    ];
 
-    const prompt = assembleCycleReviewPrompt(report, summaries)
-    expect(prompt).toContain('Previous 2 cycle(s) summary:')
-    expect(prompt).toContain('Identify trends across cycles')
-  })
-})
+    const prompt = assembleCycleReviewPrompt(report, summaries);
+    expect(prompt).toContain('Previous 2 cycle(s) summary:');
+    expect(prompt).toContain('Identify trends across cycles');
+  });
+});
 
 // ---------------------------------------------------------------------------
 // generateCycleReview
 // ---------------------------------------------------------------------------
 
 describe('generateCycleReview', () => {
-  beforeEach(() => vi.clearAllMocks())
+  beforeEach(() => vi.clearAllMocks());
 
   it('passes prompt with previous summaries to generateText', async () => {
-    const fakeReview = makeReview()
-    mockGenerateText.mockResolvedValueOnce({ output: fakeReview })
+    const fakeReview = makeReview();
+    mockGenerateText.mockResolvedValueOnce({ output: fakeReview });
 
-    const report = makeReport()
-    const prevSummary = extractSummary(report, makeReview(), 1, 80, 80, 400)
+    const report = makeReport();
+    const prevSummary = extractSummary(report, makeReview(), 1, 80, 80, 400);
 
-    await generateCycleReview(report, [prevSummary])
+    await generateCycleReview(report, [prevSummary]);
 
-    expect(mockGenerateText).toHaveBeenCalledOnce()
-    const call = mockGenerateText.mock.calls[0][0]
-    expect(call.prompt).toContain('Previous 1 cycle(s) summary:')
-  })
+    expect(mockGenerateText).toHaveBeenCalledOnce();
+    const call = mockGenerateText.mock.calls[0][0];
+    expect(call.prompt).toContain('Previous 1 cycle(s) summary:');
+  });
 
   it('passes "first cycle" message when no previous summaries', async () => {
-    mockGenerateText.mockResolvedValueOnce({ output: makeReview() })
+    mockGenerateText.mockResolvedValueOnce({ output: makeReview() });
 
-    await generateCycleReview(makeReport(), [])
+    await generateCycleReview(makeReport(), []);
 
-    const call = mockGenerateText.mock.calls[0][0]
-    expect(call.prompt).toContain('first completed cycle')
-  })
+    const call = mockGenerateText.mock.calls[0][0];
+    expect(call.prompt).toContain('first completed cycle');
+  });
 
   it('defaults to empty previousSummaries when not provided', async () => {
-    mockGenerateText.mockResolvedValueOnce({ output: makeReview() })
+    mockGenerateText.mockResolvedValueOnce({ output: makeReview() });
 
-    await generateCycleReview(makeReport())
+    await generateCycleReview(makeReport());
 
-    const call = mockGenerateText.mock.calls[0][0]
-    expect(call.prompt).toContain('first completed cycle')
-  })
+    const call = mockGenerateText.mock.calls[0][0];
+    expect(call.prompt).toContain('first completed cycle');
+  });
 
   it('returns the LLM CycleReview object', async () => {
-    const fakeReview = makeReview({ overallAssessment: 'Excellent cycle.' })
-    mockGenerateText.mockResolvedValueOnce({ output: fakeReview })
+    const fakeReview = makeReview({ overallAssessment: 'Excellent cycle.' });
+    mockGenerateText.mockResolvedValueOnce({ output: fakeReview });
 
-    const result = await generateCycleReview(makeReport())
-    expect(result.overallAssessment).toBe('Excellent cycle.')
-  })
-})
+    const result = await generateCycleReview(makeReport());
+    expect(result.overallAssessment).toBe('Excellent cycle.');
+  });
+});
 
 // ---------------------------------------------------------------------------
 // CycleReviewSchema — OpenAI structured output compatibility
@@ -283,8 +322,8 @@ describe('generateCycleReview', () => {
 
 describe('CycleReviewSchema', () => {
   it('requires all recommendedChanges fields (add/remove/reorder must be arrays)', () => {
-    const valid = makeReview()
-    expect(() => CycleReviewSchema.parse(valid)).not.toThrow()
+    const valid = makeReview();
+    expect(() => CycleReviewSchema.parse(valid)).not.toThrow();
 
     const missingAdd = {
       ...valid,
@@ -292,30 +331,37 @@ describe('CycleReviewSchema', () => {
         ...valid.auxiliaryInsights,
         recommendedChanges: { remove: [], reorder: [] },
       },
-    }
-    expect(() => CycleReviewSchema.parse(missingAdd)).toThrow()
-  })
+    };
+    expect(() => CycleReviewSchema.parse(missingAdd)).toThrow();
+  });
 
   it('requires frequencyRecommendation to be present (null allowed)', () => {
-    const valid = makeReview()
+    const valid = makeReview();
     expect(() =>
       CycleReviewSchema.parse({
         ...valid,
-        volumeInsights: { ...valid.volumeInsights, frequencyRecommendation: null },
-      }),
-    ).not.toThrow()
+        volumeInsights: {
+          ...valid.volumeInsights,
+          frequencyRecommendation: null,
+        },
+      })
+    ).not.toThrow();
 
     expect(() =>
       CycleReviewSchema.parse({
         ...valid,
         volumeInsights: { musclesUnderRecovered: [], musclesUndertrained: [] },
-      }),
-    ).toThrow()
-  })
+      })
+    ).toThrow();
+  });
 
   it('requires menstrualInsights to be present (null allowed)', () => {
-    const valid = makeReview()
-    expect(() => CycleReviewSchema.parse({ ...valid, menstrualInsights: null })).not.toThrow()
-    expect(() => CycleReviewSchema.parse({ ...valid, menstrualInsights: undefined })).toThrow()
-  })
-})
+    const valid = makeReview();
+    expect(() =>
+      CycleReviewSchema.parse({ ...valid, menstrualInsights: null })
+    ).not.toThrow();
+    expect(() =>
+      CycleReviewSchema.parse({ ...valid, menstrualInsights: undefined })
+    ).toThrow();
+  });
+});

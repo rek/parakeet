@@ -1,4 +1,4 @@
-import { z } from 'zod'
+import { z } from 'zod';
 
 export const ActualSetSchema = z
   .object({
@@ -11,9 +11,9 @@ export const ActualSetSchema = z
     notes: z.string().optional(),
     exercise_type: z.enum(['weighted', 'bodyweight', 'timed']).optional(),
   })
-  .strict()
+  .strict();
 
-export type ActualSet = z.infer<typeof ActualSetSchema>
+export type ActualSet = z.infer<typeof ActualSetSchema>;
 
 export const CompleteSessionSchema = z
   .object({
@@ -23,9 +23,9 @@ export const CompleteSessionSchema = z
     started_at: z.iso.datetime({ offset: true }).optional(),
     completed_at: z.iso.datetime({ offset: true }).optional(),
   })
-  .strict()
+  .strict();
 
-export type CompleteSession = z.infer<typeof CompleteSessionSchema>
+export type CompleteSession = z.infer<typeof CompleteSessionSchema>;
 
 export const SessionLogSchema = z
   .object({
@@ -35,8 +35,10 @@ export const SessionLogSchema = z
     actual_sets: z.array(ActualSetSchema),
     session_rpe: z.number().min(6).max(10).nullable(),
     completion_pct: z.number().min(0).max(100).nullable(),
-    performance_vs_plan: z.enum(['under', 'at', 'over', 'incomplete']).nullable(),
+    performance_vs_plan: z
+      .enum(['under', 'at', 'over', 'incomplete'])
+      .nullable(),
   })
-  .strict()
+  .strict();
 
-export type SessionLog = z.infer<typeof SessionLogSchema>
+export type SessionLog = z.infer<typeof SessionLogSchema>;

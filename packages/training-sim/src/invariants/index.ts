@@ -1,13 +1,13 @@
-import { InvariantViolation, SimulationLog } from '../types'
-import { checkVolumeSafety } from './volume-safety'
-import { checkIntensityCoherence } from './intensity-coherence'
-import { checkDisruptionResponse } from './disruption-response'
-import { checkCyclePhaseCompliance } from './cycle-phase'
-import { checkAuxiliaryBalance } from './auxiliary-balance'
-import { checkSessionSanity } from './session-sanity'
-import { checkRpeDrift } from './rpe-drift'
-import { checkMuscleCoverage } from './muscle-coverage'
-import { checkIntraSessionAdaptation } from './intra-session-adaptation'
+import { InvariantViolation, SimulationLog } from '../types';
+import { checkAuxiliaryBalance } from './auxiliary-balance';
+import { checkCyclePhaseCompliance } from './cycle-phase';
+import { checkDisruptionResponse } from './disruption-response';
+import { checkIntensityCoherence } from './intensity-coherence';
+import { checkIntraSessionAdaptation } from './intra-session-adaptation';
+import { checkMuscleCoverage } from './muscle-coverage';
+import { checkRpeDrift } from './rpe-drift';
+import { checkSessionSanity } from './session-sanity';
+import { checkVolumeSafety } from './volume-safety';
 
 export function checkAllInvariants(log: SimulationLog): InvariantViolation[] {
   return [
@@ -20,7 +20,7 @@ export function checkAllInvariants(log: SimulationLog): InvariantViolation[] {
     ...checkRpeDrift(log),
     ...checkMuscleCoverage(log),
     ...checkIntraSessionAdaptation(log),
-  ]
+  ];
 }
 
 export {
@@ -33,4 +33,4 @@ export {
   checkRpeDrift,
   checkMuscleCoverage,
   checkIntraSessionAdaptation,
-}
+};

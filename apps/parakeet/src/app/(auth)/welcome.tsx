@@ -1,11 +1,21 @@
+import { useEffect, useMemo, useState } from 'react';
+import {
+  ActivityIndicator,
+  Alert,
+  Platform,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from 'react-native';
+
+import { signInWithGoogleToken, signInWithMagicLink } from '@modules/auth';
+import { captureException } from '@platform/utils/captureException';
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
 import * as Linking from 'expo-linking';
-import { useEffect, useMemo, useState } from 'react';
-import { ActivityIndicator, Alert, Platform, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 
-import { captureException } from '@platform/utils/captureException'
-import { signInWithGoogleToken, signInWithMagicLink } from '@modules/auth';
-import { spacing, radii, typography } from '../../theme';
+import { radii, spacing, typography } from '../../theme';
 import type { ColorScheme } from '../../theme';
 import { useTheme } from '../../theme/ThemeContext';
 
@@ -104,7 +114,7 @@ function buildStyles(colors: ColorScheme) {
     spinner: {
       marginTop: spacing[6],
     },
-  })
+  });
 }
 
 export default function WelcomeScreen() {
@@ -115,7 +125,9 @@ export default function WelcomeScreen() {
 
   useEffect(() => {
     if (Platform.OS !== 'web') {
-      GoogleSignin.configure({ webClientId: process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID });
+      GoogleSignin.configure({
+        webClientId: process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID,
+      });
     }
   }, []);
 
@@ -130,8 +142,11 @@ export default function WelcomeScreen() {
 
       await signInWithGoogleToken(idToken);
     } catch (err: unknown) {
-      captureException(err)
-      Alert.alert('Sign-in failed', err instanceof Error ? err.message : 'Unknown error');
+      captureException(err);
+      Alert.alert(
+        'Sign-in failed',
+        err instanceof Error ? err.message : 'Unknown error'
+      );
     } finally {
       setLoading(false);
     }
@@ -141,12 +156,16 @@ export default function WelcomeScreen() {
     if (!email.trim()) return;
     try {
       setLoading(true);
-      const emailRedirectTo = Platform.OS === 'web' ? window.location.origin : Linking.createURL('/');
+      const emailRedirectTo =
+        Platform.OS === 'web' ? window.location.origin : Linking.createURL('/');
       await signInWithMagicLink(email.trim(), emailRedirectTo);
       Alert.alert('Check your email', `Magic link sent to ${email}`);
     } catch (err: unknown) {
-      captureException(err)
-      Alert.alert('Error', err instanceof Error ? err.message : 'Unknown error');
+      captureException(err);
+      Alert.alert(
+        'Error',
+        err instanceof Error ? err.message : 'Unknown error'
+      );
     } finally {
       setLoading(false);
     }
@@ -163,7 +182,11 @@ export default function WelcomeScreen() {
 
       {/* Auth form */}
       <View style={styles.formSection}>
-        <TouchableOpacity style={styles.googleButton} onPress={handleGoogleSignIn} disabled={loading}>
+        <TouchableOpacity
+          style={styles.googleButton}
+          onPress={handleGoogleSignIn}
+          disabled={loading}
+        >
           <Text style={styles.googleButtonText}>Continue with Google</Text>
         </TouchableOpacity>
 
@@ -185,7 +208,10 @@ export default function WelcomeScreen() {
           editable={!loading}
         />
         <TouchableOpacity
-          style={[styles.emailButton, (!email.trim() || loading) && styles.buttonDisabled]}
+          style={[
+            styles.emailButton,
+            (!email.trim() || loading) && styles.buttonDisabled,
+          ]}
           onPress={handleEmailOtp}
           disabled={loading || !email.trim()}
           activeOpacity={0.85}
@@ -194,8 +220,9 @@ export default function WelcomeScreen() {
         </TouchableOpacity>
       </View>
 
-      {loading && <ActivityIndicator style={styles.spinner} color={colors.primary} />}
+      {loading && (
+        <ActivityIndicator style={styles.spinner} color={colors.primary} />
+      )}
     </View>
   );
 }
-

@@ -1,7 +1,13 @@
 import { useMemo } from 'react';
 import type { DimensionValue } from 'react-native';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
-import { getVolumeStatusColor, isVolumeOverMrv, useWeeklyVolume, volumeFillPct } from '@modules/training-volume';
+
+import {
+  getVolumeStatusColor,
+  isVolumeOverMrv,
+  useWeeklyVolume,
+  volumeFillPct,
+} from '@modules/training-volume';
 import type { MuscleGroup, VolumeStatus } from '@parakeet/training-engine';
 import {
   MUSCLE_GROUPS_ORDER,
@@ -9,9 +15,10 @@ import {
 } from '@shared/constants/training';
 import { router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
+
 import { BackLink } from '../components/navigation/BackLink';
-import { useTheme } from '../theme/ThemeContext';
 import type { ColorScheme } from '../theme';
+import { useTheme } from '../theme/ThemeContext';
 
 interface MuscleBarProps {
   muscle: MuscleGroup;
@@ -23,7 +30,15 @@ interface MuscleBarProps {
   styles: ReturnType<typeof buildStyles>;
 }
 
-function MuscleBar({ muscle, sets, mrv, mev, status, colors, styles }: MuscleBarProps) {
+function MuscleBar({
+  muscle,
+  sets,
+  mrv,
+  mev,
+  status,
+  colors,
+  styles,
+}: MuscleBarProps) {
   const fillPct = volumeFillPct(sets, mrv);
   const mevPct = mrv > 0 ? (mev / mrv) * 100 : 0;
   const color = getVolumeStatusColor(status, colors);
@@ -243,7 +258,10 @@ export default function VolumeScreen() {
           ).map((s) => (
             <View key={s} style={styles.legendItem}>
               <View
-                style={[styles.legendDot, { backgroundColor: getVolumeStatusColor(s, colors) }]}
+                style={[
+                  styles.legendDot,
+                  { backgroundColor: getVolumeStatusColor(s, colors) },
+                ]}
               />
               <Text style={styles.legendText}>{s.replace(/_/g, ' ')}</Text>
             </View>

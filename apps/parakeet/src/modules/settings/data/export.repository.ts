@@ -12,13 +12,17 @@ export interface ExportSessionRow {
   }[];
 }
 
-export async function fetchCompletedSessionsForExport(userId: string): Promise<ExportSessionRow[]> {
+export async function fetchCompletedSessionsForExport(
+  userId: string
+): Promise<ExportSessionRow[]> {
   const { data, error } = await typedSupabase
     .from('sessions')
-    .select(`
+    .select(
+      `
       primary_lift, planned_date, completed_at, intensity_type,
       session_logs(actual_sets, auxiliary_sets, session_rpe)
-    `)
+    `
+    )
     .eq('user_id', userId)
     .eq('status', 'completed')
     .order('completed_at', { ascending: true });
@@ -27,6 +31,10 @@ export async function fetchCompletedSessionsForExport(userId: string): Promise<E
 
   return (data ?? []).map((row) => ({
     ...row,
-    session_logs: Array.isArray(row.session_logs) ? row.session_logs : [row.session_logs].filter(Boolean) as ExportSessionRow['session_logs'],
+    session_logs: Array.isArray(row.session_logs)
+      ? row.session_logs
+      : ([row.session_logs].filter(
+          Boolean
+        ) as ExportSessionRow['session_logs']),
   }));
 }

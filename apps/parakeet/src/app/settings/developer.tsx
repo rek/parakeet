@@ -8,6 +8,8 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+
+import { useAuth } from '@modules/auth';
 import {
   deleteAllUserData,
   getDeveloperSuggestions,
@@ -15,7 +17,6 @@ import {
   setJITStrategyOverride,
   updateSuggestionStatus,
 } from '@modules/settings';
-import { useAuth } from '@modules/auth';
 import type {
   DeveloperSuggestion,
   JITStrategyOverride,
@@ -23,6 +24,7 @@ import type {
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
+
 import { BackLink } from '../../components/navigation/BackLink';
 import type { ColorScheme } from '../../theme';
 import { useTheme } from '../../theme/ThemeContext';
@@ -259,7 +261,11 @@ function buildStyles(colors: ColorScheme) {
     },
 
     // Priority badge
-    priorityBadge: { borderRadius: 6, paddingHorizontal: 8, paddingVertical: 3 },
+    priorityBadge: {
+      borderRadius: 6,
+      paddingHorizontal: 8,
+      paddingVertical: 3,
+    },
     priorityBadgeText: { fontSize: 10, fontWeight: '700', letterSpacing: 0.5 },
 
     // History
@@ -361,7 +367,11 @@ function SuggestionCard({
   return (
     <View style={styles.suggestionCard}>
       <View style={styles.suggestionCardHeader}>
-        <PriorityBadge priority={suggestion.priority} styles={styles} colors={colors} />
+        <PriorityBadge
+          priority={suggestion.priority}
+          styles={styles}
+          colors={colors}
+        />
         <Text style={styles.suggestionDate}>
           {new Date(suggestion.created_at).toLocaleDateString()}
         </Text>
@@ -632,7 +642,11 @@ export default function DeveloperSettingsScreen() {
               reviewed.map((s) => (
                 <View key={s.id} style={styles.historyCard}>
                   <View style={styles.historyCardHeader}>
-                    <PriorityBadge priority={s.priority} styles={styles} colors={colors} />
+                    <PriorityBadge
+                      priority={s.priority}
+                      styles={styles}
+                      colors={colors}
+                    />
                     <Text style={styles.historyStatus}>{s.status}</Text>
                   </View>
                   <Text style={styles.historyDescription}>{s.description}</Text>

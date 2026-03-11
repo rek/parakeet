@@ -1,6 +1,7 @@
-import { Platform } from 'react-native'
-import AsyncStorage from '@react-native-async-storage/async-storage'
+import { Platform } from 'react-native';
 
-const storage = Platform.OS === 'web' ? undefined : AsyncStorage
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
-export default storage
+const storage = Platform.OS === 'web' ? undefined : AsyncStorage;
+
+export default storage;

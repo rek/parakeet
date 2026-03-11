@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+
 import { Badge } from '../components/Badge';
 import { useSupabase } from '../lib/SupabaseContext';
 import { theme } from '../lib/theme';
@@ -65,7 +66,9 @@ function CompletionBar({ pct }: { pct: number | null }) {
         ? theme.color.accent
         : theme.color.red;
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 6, minWidth: 100 }}>
+    <div
+      style={{ display: 'flex', alignItems: 'center', gap: 6, minWidth: 100 }}
+    >
       <div
         style={{
           flex: 1,
@@ -85,7 +88,13 @@ function CompletionBar({ pct }: { pct: number | null }) {
           }}
         />
       </div>
-      <span style={{ fontSize: 10, color: theme.color.textDim, fontFamily: theme.font.mono }}>
+      <span
+        style={{
+          fontSize: 10,
+          color: theme.color.textDim,
+          fontFamily: theme.font.mono,
+        }}
+      >
         {Math.round(value)}%
       </span>
     </div>
@@ -95,7 +104,8 @@ function CompletionBar({ pct }: { pct: number | null }) {
 function WorkoutRow({ row }: { row: WorkoutRow }) {
   const log = row.session_logs[0];
   const prs = row.personal_records;
-  const lift = row.primary_lift.charAt(0).toUpperCase() + row.primary_lift.slice(1);
+  const lift =
+    row.primary_lift.charAt(0).toUpperCase() + row.primary_lift.slice(1);
 
   return (
     <div
@@ -119,7 +129,9 @@ function WorkoutRow({ row }: { row: WorkoutRow }) {
       {/* Lift + intensity */}
       <div>
         <span style={{ fontWeight: 600 }}>{lift}</span>
-        <span style={{ color: theme.color.textMuted, marginLeft: 4, fontSize: 10 }}>
+        <span
+          style={{ color: theme.color.textMuted, marginLeft: 4, fontSize: 10 }}
+        >
           {row.intensity_type}
         </span>
       </div>
@@ -169,7 +181,7 @@ export function WorkoutSummaries() {
         `id, user_id, planned_date, completed_at, primary_lift,
          intensity_type, week_number, block_number, is_deload,
          session_logs(session_rpe, performance_vs_plan, completion_pct),
-         personal_records(lift, pr_type)`,
+         personal_records(lift, pr_type)`
       )
       .eq('status', 'completed')
       .order('completed_at', { ascending: false })
@@ -193,7 +205,7 @@ export function WorkoutSummaries() {
                 : row.personal_records
                   ? [row.personal_records]
                   : [],
-            })) as WorkoutRow[],
+            })) as WorkoutRow[]
           );
         }
         setLoading(false);
@@ -224,7 +236,9 @@ export function WorkoutSummaries() {
             marginBottom: 6,
           }}
         >
-          <span style={{ fontSize: 16, color: theme.color.green }}>&#9679;</span>
+          <span style={{ fontSize: 16, color: theme.color.green }}>
+            &#9679;
+          </span>
           <h2
             style={{
               fontSize: 18,
@@ -248,10 +262,19 @@ export function WorkoutSummaries() {
         </div>
 
         {/* Stats row */}
-        <div style={{ display: 'flex', gap: 16, fontSize: 11, fontFamily: theme.font.mono }}>
+        <div
+          style={{
+            display: 'flex',
+            gap: 16,
+            fontSize: 11,
+            fontFamily: theme.font.mono,
+          }}
+        >
           <div>
             <span style={{ color: theme.color.textMuted }}>Total PRs: </span>
-            <span style={{ color: theme.color.purple, fontWeight: 600 }}>{prCount}</span>
+            <span style={{ color: theme.color.purple, fontWeight: 600 }}>
+              {prCount}
+            </span>
           </div>
           <div>
             <span style={{ color: theme.color.textMuted }}>Avg RPE: </span>
@@ -263,11 +286,23 @@ export function WorkoutSummaries() {
       </div>
 
       {loading ? (
-        <div style={{ color: theme.color.textMuted, fontFamily: theme.font.mono, fontSize: 12 }}>
+        <div
+          style={{
+            color: theme.color.textMuted,
+            fontFamily: theme.font.mono,
+            fontSize: 12,
+          }}
+        >
           Loading...
         </div>
       ) : rows.length === 0 ? (
-        <div style={{ color: theme.color.textMuted, fontFamily: theme.font.mono, fontSize: 12 }}>
+        <div
+          style={{
+            color: theme.color.textMuted,
+            fontFamily: theme.font.mono,
+            fontSize: 12,
+          }}
+        >
           No completed sessions found.
         </div>
       ) : (

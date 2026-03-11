@@ -1,4 +1,5 @@
 import { TrainingDisruption } from '@parakeet/shared-types';
+
 import {
   DEFAULT_FORMULA_CONFIG_FEMALE,
   DEFAULT_FORMULA_CONFIG_MALE,
@@ -907,7 +908,11 @@ function atMevExcept(
 describe('generateJITSession — volume top-up (engine-027)', () => {
   // Pool covers hamstrings (Romanian Dumbbell Deadlift → hamstrings 1.0), quads (Leg Press → quads 1.0)
   // and Stiff-Leg Deadlift (hamstrings 1.0) as a fallback for the exclusion test.
-  const pool = ['Romanian Dumbbell Deadlift', 'Stiff-Leg Deadlift', 'Leg Press'];
+  const pool = [
+    'Romanian Dumbbell Deadlift',
+    'Stiff-Leg Deadlift',
+    'Leg Press',
+  ];
 
   it('no auxiliaryPool → no top-up exercises appended', () => {
     const out = generateJITSession(baseInput());
@@ -924,7 +929,10 @@ describe('generateJITSession — volume top-up (engine-027)', () => {
     const out = generateJITSession(
       baseInput({
         auxiliaryPool: pool,
-        weeklyVolumeToDate: { ...atMevExcept(DEFAULT_MRV_MEV_CONFIG_MALE), hamstrings: 5 },
+        weeklyVolumeToDate: {
+          ...atMevExcept(DEFAULT_MRV_MEV_CONFIG_MALE),
+          hamstrings: 5,
+        },
         mrvMevConfig: DEFAULT_MRV_MEV_CONFIG_MALE,
       })
     );
@@ -939,7 +947,10 @@ describe('generateJITSession — volume top-up (engine-027)', () => {
     const out = generateJITSession(
       baseInput({
         auxiliaryPool: pool,
-        weeklyVolumeToDate: atMevExcept(DEFAULT_MRV_MEV_CONFIG_MALE, 'hamstrings'),
+        weeklyVolumeToDate: atMevExcept(
+          DEFAULT_MRV_MEV_CONFIG_MALE,
+          'hamstrings'
+        ),
         mrvMevConfig: DEFAULT_MRV_MEV_CONFIG_MALE,
       })
     );
@@ -950,7 +961,10 @@ describe('generateJITSession — volume top-up (engine-027)', () => {
   });
 
   it('top-up sets capped at 3', () => {
-    const mrvMev = { ...DEFAULT_MRV_MEV_CONFIG_MALE, hamstrings: { mev: 20, mrv: 30 } };
+    const mrvMev = {
+      ...DEFAULT_MRV_MEV_CONFIG_MALE,
+      hamstrings: { mev: 20, mrv: 30 },
+    };
     const out = generateJITSession(
       baseInput({
         auxiliaryPool: pool,
@@ -993,13 +1007,18 @@ describe('generateJITSession — volume top-up (engine-027)', () => {
     const out = generateJITSession(
       baseInput({
         auxiliaryPool: pool,
-        weeklyVolumeToDate: atMevExcept(DEFAULT_MRV_MEV_CONFIG_MALE, 'hamstrings'),
+        weeklyVolumeToDate: atMevExcept(
+          DEFAULT_MRV_MEV_CONFIG_MALE,
+          'hamstrings'
+        ),
         activeAuxiliaries: ['Romanian Dumbbell Deadlift', 'Box Squat'],
         mrvMevConfig: DEFAULT_MRV_MEV_CONFIG_MALE,
       })
     );
     const topUps = out.auxiliaryWork.filter((a) => a.isTopUp);
-    expect(topUps.every((a) => a.exercise !== 'Romanian Dumbbell Deadlift')).toBe(true);
+    expect(
+      topUps.every((a) => a.exercise !== 'Romanian Dumbbell Deadlift')
+    ).toBe(true);
     // Stiff-Leg Deadlift should be used instead
     if (topUps.length > 0) {
       expect(topUps[0].exercise).toBe('Stiff-Leg Deadlift');
@@ -1012,7 +1031,10 @@ describe('generateJITSession — volume top-up (engine-027)', () => {
     const out = generateJITSession(
       baseInput({
         auxiliaryPool: noHamstringPool,
-        weeklyVolumeToDate: atMevExcept(DEFAULT_MRV_MEV_CONFIG_MALE, 'hamstrings'),
+        weeklyVolumeToDate: atMevExcept(
+          DEFAULT_MRV_MEV_CONFIG_MALE,
+          'hamstrings'
+        ),
         mrvMevConfig: DEFAULT_MRV_MEV_CONFIG_MALE,
       })
     );
@@ -1026,7 +1048,10 @@ describe('generateJITSession — volume top-up (engine-027)', () => {
     const out = generateJITSession(
       baseInput({
         auxiliaryPool: pool,
-        weeklyVolumeToDate: atMevExcept(DEFAULT_MRV_MEV_CONFIG_MALE, 'hamstrings'),
+        weeklyVolumeToDate: atMevExcept(
+          DEFAULT_MRV_MEV_CONFIG_MALE,
+          'hamstrings'
+        ),
         mrvMevConfig: DEFAULT_MRV_MEV_CONFIG_MALE,
       })
     );
@@ -1042,7 +1067,11 @@ describe('generateJITSession — volume top-up (engine-027)', () => {
 // ---------------------------------------------------------------------------
 
 describe('generateJITSession — volume top-up MEV pro-rating', () => {
-  const pool = ['Romanian Dumbbell Deadlift', 'Stiff-Leg Deadlift', 'Leg Press'];
+  const pool = [
+    'Romanian Dumbbell Deadlift',
+    'Stiff-Leg Deadlift',
+    'Leg Press',
+  ];
 
   it('session 1 of 3: moderate deficit does NOT trigger top-up', () => {
     // hamstrings MEV=6; effectiveMev = ceil(6*1/3) = 2
@@ -1052,7 +1081,10 @@ describe('generateJITSession — volume top-up MEV pro-rating', () => {
     const out = generateJITSession(
       baseInput({
         auxiliaryPool: pool,
-        weeklyVolumeToDate: { ...atMevExcept(DEFAULT_MRV_MEV_CONFIG_MALE), hamstrings: 1 },
+        weeklyVolumeToDate: {
+          ...atMevExcept(DEFAULT_MRV_MEV_CONFIG_MALE),
+          hamstrings: 1,
+        },
         mrvMevConfig: DEFAULT_MRV_MEV_CONFIG_MALE,
         sessionIndex: 1,
         totalSessionsThisWeek: 3,
@@ -1069,7 +1101,10 @@ describe('generateJITSession — volume top-up MEV pro-rating', () => {
     const out = generateJITSession(
       baseInput({
         auxiliaryPool: pool,
-        weeklyVolumeToDate: atMevExcept(DEFAULT_MRV_MEV_CONFIG_MALE, 'hamstrings'),
+        weeklyVolumeToDate: atMevExcept(
+          DEFAULT_MRV_MEV_CONFIG_MALE,
+          'hamstrings'
+        ),
         mrvMevConfig: DEFAULT_MRV_MEV_CONFIG_MALE,
         sessionIndex: 3,
         totalSessionsThisWeek: 3,
@@ -1086,7 +1121,10 @@ describe('generateJITSession — volume top-up MEV pro-rating', () => {
     const outNoTrigger = generateJITSession(
       baseInput({
         auxiliaryPool: pool,
-        weeklyVolumeToDate: { ...atMevExcept(DEFAULT_MRV_MEV_CONFIG_MALE), hamstrings: 3 },
+        weeklyVolumeToDate: {
+          ...atMevExcept(DEFAULT_MRV_MEV_CONFIG_MALE),
+          hamstrings: 3,
+        },
         mrvMevConfig: DEFAULT_MRV_MEV_CONFIG_MALE,
         sessionIndex: 2,
         totalSessionsThisWeek: 3,
@@ -1101,7 +1139,10 @@ describe('generateJITSession — volume top-up MEV pro-rating', () => {
     const outTrigger = generateJITSession(
       baseInput({
         auxiliaryPool: pool,
-        weeklyVolumeToDate: atMevExcept(DEFAULT_MRV_MEV_CONFIG_MALE, 'hamstrings'),
+        weeklyVolumeToDate: atMevExcept(
+          DEFAULT_MRV_MEV_CONFIG_MALE,
+          'hamstrings'
+        ),
         mrvMevConfig: DEFAULT_MRV_MEV_CONFIG_MALE,
         sessionIndex: 2,
         totalSessionsThisWeek: 3,
@@ -1118,7 +1159,10 @@ describe('generateJITSession — volume top-up MEV pro-rating', () => {
     const out = generateJITSession(
       baseInput({
         auxiliaryPool: pool,
-        weeklyVolumeToDate: atMevExcept(DEFAULT_MRV_MEV_CONFIG_MALE, 'hamstrings'),
+        weeklyVolumeToDate: atMevExcept(
+          DEFAULT_MRV_MEV_CONFIG_MALE,
+          'hamstrings'
+        ),
         mrvMevConfig: DEFAULT_MRV_MEV_CONFIG_MALE,
         // sessionIndex and totalSessionsThisWeek intentionally omitted
       })
@@ -1147,7 +1191,9 @@ describe('generateJITSession — volume top-up cross-lift 1RM', () => {
         mrvMevConfig: DEFAULT_MRV_MEV_CONFIG_MALE,
       })
     );
-    const topUp = out.auxiliaryWork.find((a) => a.isTopUp && a.exercise === 'Dumbbell Incline Bench Press');
+    const topUp = out.auxiliaryWork.find(
+      (a) => a.isTopUp && a.exercise === 'Dumbbell Incline Bench Press'
+    );
     expect(topUp).toBeDefined();
     // Weight must be based on bench 1RM (60), not squat 1RM (200)
     // default AUX_WEIGHT_PCT (0.675) → roundToNearest(60 * 0.675) ≈ 40 → well under 100
@@ -1167,7 +1213,9 @@ describe('generateJITSession — volume top-up cross-lift 1RM', () => {
         mrvMevConfig: DEFAULT_MRV_MEV_CONFIG_MALE,
       })
     );
-    const topUp = out.auxiliaryWork.find((a) => a.isTopUp && a.exercise === 'Dumbbell Incline Bench Press');
+    const topUp = out.auxiliaryWork.find(
+      (a) => a.isTopUp && a.exercise === 'Dumbbell Incline Bench Press'
+    );
     expect(topUp).toBeDefined();
     // Falls back to squat 1RM (200): AUX_WEIGHT_PCT=0.3 → roundToNearest(200×0.3)=60
     // With correct bench 1RM (60): roundToNearest(60×0.3)=18 — meaningfully different

@@ -8,12 +8,23 @@ import {
   useWindowDimensions,
   View,
 } from 'react-native';
+
 import { useAuth } from '@modules/auth';
-import { CYCLE_PHASE_BG, CYCLE_PHASE_LABELS, CYCLE_PHASE_TEXT, useCyclePhase } from '@modules/cycle-tracking';
-import { buildVolumeChartData, getPerformanceTrends, getWeeklySetsPerLift, getTrendConfig } from '@modules/history';
+import {
+  CYCLE_PHASE_BG,
+  CYCLE_PHASE_LABELS,
+  CYCLE_PHASE_TEXT,
+  useCyclePhase,
+} from '@modules/cycle-tracking';
+import {
+  buildVolumeChartData,
+  getPerformanceTrends,
+  getTrendConfig,
+  getWeeklySetsPerLift,
+} from '@modules/history';
 import type { PerformanceTrend } from '@modules/history';
 import { listPrograms } from '@modules/program';
-import { getCompletedSessions, formatSessionDisplay } from '@modules/session';
+import { formatSessionDisplay, getCompletedSessions } from '@modules/session';
 import type { Lift } from '@parakeet/shared-types';
 import type { CyclePhase } from '@parakeet/training-engine';
 import { LIFT_LABELS } from '@shared/constants';
@@ -22,6 +33,7 @@ import { useQuery } from '@tanstack/react-query';
 import { router } from 'expo-router';
 import { LineChart } from 'react-native-chart-kit';
 import { SafeAreaView } from 'react-native-safe-area-context';
+
 import { palette, radii, spacing, typography } from '../../theme';
 import { useTheme } from '../../theme/ThemeContext';
 
@@ -78,219 +90,234 @@ export default function HistoryScreen() {
     enabled: !!user?.id,
   });
 
-  const styles = useMemo(() => StyleSheet.create({
-    safeArea: { flex: 1, backgroundColor: colors.bg },
-    scrollView: { flex: 1 },
-    container: {
-      paddingHorizontal: spacing[6],
-      paddingTop: spacing[6],
-      paddingBottom: spacing[12],
-    },
-    centered: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-    screenTitle: {
-      fontSize: typography.sizes['2xl'],
-      fontWeight: typography.weights.black,
-      color: colors.text,
-      marginBottom: spacing[6],
-      letterSpacing: typography.letterSpacing.tight,
-    },
-    sectionHeader: {
-      fontSize: typography.sizes.xs,
-      fontWeight: typography.weights.bold,
-      color: colors.textTertiary,
-      textTransform: 'uppercase',
-      letterSpacing: typography.letterSpacing.widest,
-      marginBottom: spacing[3],
-      marginTop: spacing[2],
-    },
-    // Trend cards
-    trendRow: { flexDirection: 'row', marginBottom: spacing[8], gap: spacing[2] },
-    trendCard: {
-      flex: 1,
-      borderWidth: 1,
-      borderColor: colors.border,
-      borderRadius: radii.md,
-      padding: spacing[3],
-      backgroundColor: colors.bgSurface,
-    },
-    trendLiftName: {
-      fontSize: typography.sizes.xs,
-      fontWeight: typography.weights.bold,
-      color: colors.textTertiary,
-      textTransform: 'uppercase',
-      letterSpacing: typography.letterSpacing.wide,
-      marginBottom: spacing[1],
-    },
-    trendOneRm: {
-      fontSize: typography.sizes.md,
-      fontWeight: typography.weights.black,
-      color: colors.text,
-      marginBottom: spacing[0.5],
-    },
-    trendArrow: {
-      fontSize: typography.sizes.xl,
-      fontWeight: typography.weights.bold,
-      marginBottom: spacing[1.5],
-    },
-    trendMeta: {
-      fontSize: typography.sizes.xs,
-      color: colors.textTertiary,
-      lineHeight: 16,
-    },
-    trendDetails: { color: colors.primary, marginTop: spacing[1] },
-    // Volume chart
-    chartCard: {
-      backgroundColor: colors.bgSurface,
-      borderWidth: 1,
-      borderColor: colors.border,
-      borderRadius: radii.md,
-      padding: spacing[4],
-      marginBottom: spacing[8],
-    },
-    legendRow: {
-      flexDirection: 'row',
-      gap: spacing[4],
-      marginTop: spacing[3],
-      justifyContent: 'center',
-    },
-    legendItem: { flexDirection: 'row', alignItems: 'center', gap: spacing[1.5] },
-    legendDot: { width: 8, height: 8, borderRadius: 4 },
-    legendLabel: { fontSize: typography.sizes.xs, color: colors.textSecondary },
-    // Session filter chips
-    filterRow: {
-      flexDirection: 'row',
-      gap: spacing[2],
-      marginBottom: spacing[3],
-      flexWrap: 'wrap',
-    },
-    filterChip: {
-      borderWidth: 1,
-      borderColor: colors.border,
-      borderRadius: radii.sm,
-      paddingHorizontal: spacing[3],
-      paddingVertical: spacing[1.5],
-      backgroundColor: colors.bgSurface,
-    },
-    filterChipActive: {
-      borderColor: colors.primary,
-      backgroundColor: colors.primaryMuted,
-    },
-    filterChipText: {
-      fontSize: typography.sizes.sm,
-      fontWeight: typography.weights.medium,
-      color: colors.textSecondary,
-    },
-    filterChipTextActive: {
-      color: colors.primary,
-      fontWeight: typography.weights.bold,
-    },
-    // Session rows
-    sessionRow: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      paddingVertical: spacing[3],
-      borderBottomWidth: 1,
-      borderBottomColor: colors.borderMuted,
-    },
-    sessionRowLeft: { flex: 1, marginRight: spacing[3] },
-    sessionRowTitle: {
-      fontSize: typography.sizes.base,
-      fontWeight: typography.weights.medium,
-      color: colors.text,
-      marginBottom: spacing[0.5],
-    },
-    sessionRowDate: {
-      fontSize: typography.sizes.sm,
-      color: colors.textSecondary,
-    },
-    sessionRowMeta: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: spacing[2],
-      flexWrap: 'wrap',
-      marginTop: spacing[0.5],
-    },
-    phaseTag: {
-      borderRadius: radii.xs,
-      paddingHorizontal: spacing[1.5],
-      paddingVertical: 2,
-    },
-    phaseTagText: {
-      fontSize: typography.sizes.xs,
-      fontWeight: typography.weights.semibold,
-    },
-    sessionRowChevron: {
-      fontSize: typography.sizes.xl,
-      color: colors.textTertiary,
-      marginLeft: spacing[2],
-    },
-    emptyText: {
-      fontSize: typography.sizes.base,
-      color: colors.textTertiary,
-      marginBottom: spacing[8],
-    },
-    // Programs
-    programRow: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      paddingVertical: spacing[3],
-      borderBottomWidth: 1,
-      borderBottomColor: colors.borderMuted,
-    },
-    programRowLeft: { flex: 1, marginRight: spacing[3] },
-    programRowTitleRow: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: spacing[2],
-      marginBottom: spacing[0.5],
-    },
-    programRowTitle: {
-      fontSize: typography.sizes.base,
-      fontWeight: typography.weights.semibold,
-      color: colors.text,
-    },
-    programStatusBadge: {
-      borderRadius: radii.xs,
-      paddingHorizontal: spacing[1.5],
-      paddingVertical: 2,
-    },
-    programStatusCompleted: { backgroundColor: colors.successMuted },
-    programStatusAbandoned: { backgroundColor: colors.bgMuted },
-    programStatusText: {
-      fontSize: typography.sizes.xs,
-      fontWeight: typography.weights.semibold,
-    },
-    programStatusTextCompleted: { color: colors.success },
-    programStatusTextAbandoned: { color: colors.textSecondary },
-    reviewButton: {
-      backgroundColor: colors.primaryMuted,
-      borderRadius: radii.sm,
-      paddingHorizontal: spacing[3.5],
-      paddingVertical: spacing[2],
-      borderWidth: 1,
-      borderColor: colors.primary,
-    },
-    reviewButtonText: {
-      fontSize: typography.sizes.sm,
-      fontWeight: typography.weights.bold,
-      color: colors.primary,
-    },
-    cyclePatternButton: {
-      backgroundColor: palette.amber100,
-      borderRadius: radii.sm,
-      paddingHorizontal: spacing[4],
-      paddingVertical: spacing[3],
-      marginBottom: spacing[4],
-      alignSelf: 'flex-start',
-    },
-    cyclePatternButtonText: {
-      fontSize: typography.sizes.sm,
-      fontWeight: typography.weights.semibold,
-      color: palette.amber800,
-    },
-  }), [colors]);
+  const styles = useMemo(
+    () =>
+      StyleSheet.create({
+        safeArea: { flex: 1, backgroundColor: colors.bg },
+        scrollView: { flex: 1 },
+        container: {
+          paddingHorizontal: spacing[6],
+          paddingTop: spacing[6],
+          paddingBottom: spacing[12],
+        },
+        centered: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+        screenTitle: {
+          fontSize: typography.sizes['2xl'],
+          fontWeight: typography.weights.black,
+          color: colors.text,
+          marginBottom: spacing[6],
+          letterSpacing: typography.letterSpacing.tight,
+        },
+        sectionHeader: {
+          fontSize: typography.sizes.xs,
+          fontWeight: typography.weights.bold,
+          color: colors.textTertiary,
+          textTransform: 'uppercase',
+          letterSpacing: typography.letterSpacing.widest,
+          marginBottom: spacing[3],
+          marginTop: spacing[2],
+        },
+        // Trend cards
+        trendRow: {
+          flexDirection: 'row',
+          marginBottom: spacing[8],
+          gap: spacing[2],
+        },
+        trendCard: {
+          flex: 1,
+          borderWidth: 1,
+          borderColor: colors.border,
+          borderRadius: radii.md,
+          padding: spacing[3],
+          backgroundColor: colors.bgSurface,
+        },
+        trendLiftName: {
+          fontSize: typography.sizes.xs,
+          fontWeight: typography.weights.bold,
+          color: colors.textTertiary,
+          textTransform: 'uppercase',
+          letterSpacing: typography.letterSpacing.wide,
+          marginBottom: spacing[1],
+        },
+        trendOneRm: {
+          fontSize: typography.sizes.md,
+          fontWeight: typography.weights.black,
+          color: colors.text,
+          marginBottom: spacing[0.5],
+        },
+        trendArrow: {
+          fontSize: typography.sizes.xl,
+          fontWeight: typography.weights.bold,
+          marginBottom: spacing[1.5],
+        },
+        trendMeta: {
+          fontSize: typography.sizes.xs,
+          color: colors.textTertiary,
+          lineHeight: 16,
+        },
+        trendDetails: { color: colors.primary, marginTop: spacing[1] },
+        // Volume chart
+        chartCard: {
+          backgroundColor: colors.bgSurface,
+          borderWidth: 1,
+          borderColor: colors.border,
+          borderRadius: radii.md,
+          padding: spacing[4],
+          marginBottom: spacing[8],
+        },
+        legendRow: {
+          flexDirection: 'row',
+          gap: spacing[4],
+          marginTop: spacing[3],
+          justifyContent: 'center',
+        },
+        legendItem: {
+          flexDirection: 'row',
+          alignItems: 'center',
+          gap: spacing[1.5],
+        },
+        legendDot: { width: 8, height: 8, borderRadius: 4 },
+        legendLabel: {
+          fontSize: typography.sizes.xs,
+          color: colors.textSecondary,
+        },
+        // Session filter chips
+        filterRow: {
+          flexDirection: 'row',
+          gap: spacing[2],
+          marginBottom: spacing[3],
+          flexWrap: 'wrap',
+        },
+        filterChip: {
+          borderWidth: 1,
+          borderColor: colors.border,
+          borderRadius: radii.sm,
+          paddingHorizontal: spacing[3],
+          paddingVertical: spacing[1.5],
+          backgroundColor: colors.bgSurface,
+        },
+        filterChipActive: {
+          borderColor: colors.primary,
+          backgroundColor: colors.primaryMuted,
+        },
+        filterChipText: {
+          fontSize: typography.sizes.sm,
+          fontWeight: typography.weights.medium,
+          color: colors.textSecondary,
+        },
+        filterChipTextActive: {
+          color: colors.primary,
+          fontWeight: typography.weights.bold,
+        },
+        // Session rows
+        sessionRow: {
+          flexDirection: 'row',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          paddingVertical: spacing[3],
+          borderBottomWidth: 1,
+          borderBottomColor: colors.borderMuted,
+        },
+        sessionRowLeft: { flex: 1, marginRight: spacing[3] },
+        sessionRowTitle: {
+          fontSize: typography.sizes.base,
+          fontWeight: typography.weights.medium,
+          color: colors.text,
+          marginBottom: spacing[0.5],
+        },
+        sessionRowDate: {
+          fontSize: typography.sizes.sm,
+          color: colors.textSecondary,
+        },
+        sessionRowMeta: {
+          flexDirection: 'row',
+          alignItems: 'center',
+          gap: spacing[2],
+          flexWrap: 'wrap',
+          marginTop: spacing[0.5],
+        },
+        phaseTag: {
+          borderRadius: radii.xs,
+          paddingHorizontal: spacing[1.5],
+          paddingVertical: 2,
+        },
+        phaseTagText: {
+          fontSize: typography.sizes.xs,
+          fontWeight: typography.weights.semibold,
+        },
+        sessionRowChevron: {
+          fontSize: typography.sizes.xl,
+          color: colors.textTertiary,
+          marginLeft: spacing[2],
+        },
+        emptyText: {
+          fontSize: typography.sizes.base,
+          color: colors.textTertiary,
+          marginBottom: spacing[8],
+        },
+        // Programs
+        programRow: {
+          flexDirection: 'row',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          paddingVertical: spacing[3],
+          borderBottomWidth: 1,
+          borderBottomColor: colors.borderMuted,
+        },
+        programRowLeft: { flex: 1, marginRight: spacing[3] },
+        programRowTitleRow: {
+          flexDirection: 'row',
+          alignItems: 'center',
+          gap: spacing[2],
+          marginBottom: spacing[0.5],
+        },
+        programRowTitle: {
+          fontSize: typography.sizes.base,
+          fontWeight: typography.weights.semibold,
+          color: colors.text,
+        },
+        programStatusBadge: {
+          borderRadius: radii.xs,
+          paddingHorizontal: spacing[1.5],
+          paddingVertical: 2,
+        },
+        programStatusCompleted: { backgroundColor: colors.successMuted },
+        programStatusAbandoned: { backgroundColor: colors.bgMuted },
+        programStatusText: {
+          fontSize: typography.sizes.xs,
+          fontWeight: typography.weights.semibold,
+        },
+        programStatusTextCompleted: { color: colors.success },
+        programStatusTextAbandoned: { color: colors.textSecondary },
+        reviewButton: {
+          backgroundColor: colors.primaryMuted,
+          borderRadius: radii.sm,
+          paddingHorizontal: spacing[3.5],
+          paddingVertical: spacing[2],
+          borderWidth: 1,
+          borderColor: colors.primary,
+        },
+        reviewButtonText: {
+          fontSize: typography.sizes.sm,
+          fontWeight: typography.weights.bold,
+          color: colors.primary,
+        },
+        cyclePatternButton: {
+          backgroundColor: palette.amber100,
+          borderRadius: radii.sm,
+          paddingHorizontal: spacing[4],
+          paddingVertical: spacing[3],
+          marginBottom: spacing[4],
+          alignSelf: 'flex-start',
+        },
+        cyclePatternButtonText: {
+          fontSize: typography.sizes.sm,
+          fontWeight: typography.weights.semibold,
+          color: palette.amber800,
+        },
+      }),
+    [colors]
+  );
 
   if (trendsQuery.isLoading || sessionsQuery.isLoading) {
     return (
@@ -358,16 +385,23 @@ export default function HistoryScreen() {
               <View
                 style={[
                   styles.phaseTag,
-                  { backgroundColor: CYCLE_PHASE_BG[session.cycle_phase as CyclePhase] },
+                  {
+                    backgroundColor:
+                      CYCLE_PHASE_BG[session.cycle_phase as CyclePhase],
+                  },
                 ]}
               >
                 <Text
                   style={[
                     styles.phaseTagText,
-                    { color: CYCLE_PHASE_TEXT[session.cycle_phase as CyclePhase] },
+                    {
+                      color:
+                        CYCLE_PHASE_TEXT[session.cycle_phase as CyclePhase],
+                    },
                   ]}
                 >
-                  {CYCLE_PHASE_LABELS[session.cycle_phase as CyclePhase] ?? session.cycle_phase}
+                  {CYCLE_PHASE_LABELS[session.cycle_phase as CyclePhase] ??
+                    session.cycle_phase}
                 </Text>
               </View>
             )}
@@ -484,8 +518,10 @@ export default function HistoryScreen() {
                       </View>
                     </View>
                     <Text style={styles.sessionRowDate}>
-                      {program.total_weeks ? `${program.total_weeks} weeks` : 'Unending'} ·{' '}
-                      {program.training_days_per_week} days/week
+                      {program.total_weeks
+                        ? `${program.total_weeks} weeks`
+                        : 'Unending'}{' '}
+                      · {program.training_days_per_week} days/week
                       {program.start_date
                         ? ` · Started ${formatDate(program.start_date)}`
                         : ''}

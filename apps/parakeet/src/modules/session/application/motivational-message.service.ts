@@ -53,14 +53,11 @@ export async function fetchMotivationalContext(
   const logs = logsResult.data ?? [];
 
   // Take the highest RPE across all sessions logged today
-  const sessionRpe = logs.reduce<number | null>(
-    (max, row) => {
-      const rpe = row.session_rpe as number | null;
-      if (rpe == null) return max;
-      return max == null ? rpe : Math.max(max, rpe);
-    },
-    null
-  );
+  const sessionRpe = logs.reduce<number | null>((max, row) => {
+    const rpe = row.session_rpe as number | null;
+    if (rpe == null) return max;
+    return max == null ? rpe : Math.max(max, rpe);
+  }, null);
 
   const performanceVsPlan =
     (logs[0]?.performance_vs_plan as
@@ -76,7 +73,9 @@ export async function fetchMotivationalContext(
     .filter((v): v is number => v != null);
   const completionPct =
     completionPcts.length > 0
-      ? Math.round(completionPcts.reduce((a, b) => a + b, 0) / completionPcts.length)
+      ? Math.round(
+          completionPcts.reduce((a, b) => a + b, 0) / completionPcts.length
+        )
       : null;
 
   // Flatten all actual_sets across sessions to derive top weight and set count
@@ -100,8 +99,12 @@ export async function fetchMotivationalContext(
   }));
 
   return {
-    primaryLifts: sessions.map((s) => s.primary_lift).filter((v): v is string => v != null),
-    intensityTypes: sessions.map((s) => s.intensity_type).filter((v): v is string => v != null),
+    primaryLifts: sessions
+      .map((s) => s.primary_lift)
+      .filter((v): v is string => v != null),
+    intensityTypes: sessions
+      .map((s) => s.intensity_type)
+      .filter((v): v is string => v != null),
     weekNumber: sessions[0]?.week_number ?? 1,
     blockNumber: sessions[0]?.block_number ?? null,
     isDeload: sessions[0]?.is_deload ?? false,

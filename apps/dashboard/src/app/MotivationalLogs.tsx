@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+
 import { Badge } from '../components/Badge';
 import { JsonViewer } from '../components/JsonViewer';
 import { useSupabase } from '../lib/SupabaseContext';
@@ -25,7 +26,10 @@ function fmt(ts: string) {
 }
 
 function contextBadges(ctx: Record<string, unknown>) {
-  const badges: Array<{ label: string; variant: 'accent' | 'green' | 'red' | 'purple' | 'blue' | 'muted' }> = [];
+  const badges: Array<{
+    label: string;
+    variant: 'accent' | 'green' | 'red' | 'purple' | 'blue' | 'muted';
+  }> = [];
   const prs = ctx.newPRs as Array<{ lift: string; prType: string }> | undefined;
   if (prs && prs.length > 0) {
     for (const pr of prs) {
@@ -54,14 +58,19 @@ function contextBadges(ctx: Record<string, unknown>) {
     });
   }
   const topKg = ctx.topWeightKg as number | null;
-  if (topKg != null) badges.push({ label: `${topKg}kg top`, variant: 'accent' });
+  if (topKg != null)
+    badges.push({ label: `${topKg}kg top`, variant: 'accent' });
   const sets = ctx.totalSetsCompleted as number | undefined;
-  if (sets != null && sets > 0) badges.push({ label: `${sets} sets`, variant: 'muted' });
+  if (sets != null && sets > 0)
+    badges.push({ label: `${sets} sets`, variant: 'muted' });
   if (ctx.isDeload) badges.push({ label: 'Deload', variant: 'muted' });
   const streak = ctx.currentStreak as number | undefined;
-  if (streak && streak >= 5) badges.push({ label: `${streak}w streak`, variant: 'green' });
-  if (ctx.biologicalSex) badges.push({ label: ctx.biologicalSex as string, variant: 'muted' });
-  if (ctx.cyclePhase) badges.push({ label: ctx.cyclePhase as string, variant: 'blue' });
+  if (streak && streak >= 5)
+    badges.push({ label: `${streak}w streak`, variant: 'green' });
+  if (ctx.biologicalSex)
+    badges.push({ label: ctx.biologicalSex as string, variant: 'muted' });
+  if (ctx.cyclePhase)
+    badges.push({ label: ctx.cyclePhase as string, variant: 'blue' });
   return badges;
 }
 
@@ -97,12 +106,27 @@ function LogCard({ log }: { log: MotivationalLog }) {
       >
         <div style={{ flex: 1, minWidth: 0 }}>
           {/* Timestamp + lifts */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 8,
+              marginBottom: 6,
+            }}
+          >
             <span style={{ fontSize: 10, color: theme.color.textMuted }}>
               {fmt(log.created_at)}
             </span>
-            <span style={{ fontSize: 12, fontWeight: 600, color: theme.color.textBright }}>
-              {lifts.map((l) => l.charAt(0).toUpperCase() + l.slice(1)).join(', ')}
+            <span
+              style={{
+                fontSize: 12,
+                fontWeight: 600,
+                color: theme.color.textBright,
+              }}
+            >
+              {lifts
+                .map((l) => l.charAt(0).toUpperCase() + l.slice(1))
+                .join(', ')}
             </span>
           </div>
 
@@ -170,7 +194,13 @@ function LogCard({ log }: { log: MotivationalLog }) {
           >
             Session IDs
           </div>
-          <div style={{ fontSize: 11, color: theme.color.textDim, fontFamily: theme.font.mono }}>
+          <div
+            style={{
+              fontSize: 11,
+              color: theme.color.textDim,
+              fontFamily: theme.font.mono,
+            }}
+          >
             {log.session_ids.join(', ')}
           </div>
         </div>
@@ -212,7 +242,14 @@ export function MotivationalLogs() {
   return (
     <div>
       <div style={{ marginBottom: 24 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 10,
+            marginBottom: 6,
+          }}
+        >
           <span style={{ fontSize: 16, color: 'var(--accent)' }}>&#9679;</span>
           <h2
             style={{
@@ -235,18 +272,37 @@ export function MotivationalLogs() {
             Last {logs.length} messages
           </span>
         </div>
-        <div style={{ fontSize: 11, color: theme.color.textDim, fontFamily: theme.font.mono }}>
+        <div
+          style={{
+            fontSize: 11,
+            color: theme.color.textDim,
+            fontFamily: theme.font.mono,
+          }}
+        >
           LLM input context + generated message for each completed workout
         </div>
       </div>
 
       {loading ? (
-        <div style={{ color: theme.color.textMuted, fontFamily: theme.font.mono, fontSize: 12 }}>
+        <div
+          style={{
+            color: theme.color.textMuted,
+            fontFamily: theme.font.mono,
+            fontSize: 12,
+          }}
+        >
           Loading...
         </div>
       ) : logs.length === 0 ? (
-        <div style={{ color: theme.color.textMuted, fontFamily: theme.font.mono, fontSize: 12 }}>
-          No motivational message logs found. Complete a workout to generate one.
+        <div
+          style={{
+            color: theme.color.textMuted,
+            fontFamily: theme.font.mono,
+            fontSize: 12,
+          }}
+        >
+          No motivational message logs found. Complete a workout to generate
+          one.
         </div>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>

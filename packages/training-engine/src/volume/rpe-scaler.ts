@@ -14,10 +14,10 @@
  *   unrecorded → 1.0 (conservative: assume hard)
  */
 export function rpeSetMultiplier(rpeActual: number | undefined): number {
-  if (rpeActual === undefined) return 1.0
-  if (rpeActual < 6)  return 0.0
-  if (rpeActual < 7)  return 0.25
-  if (rpeActual < 8)  return 0.5
-  if (rpeActual < 9)  return 0.75
-  return 1.0
+  if (rpeActual === undefined) return 1.0;
+  if (rpeActual < 6) return 0.0;
+  if (rpeActual < 7) return 0.25;
+  if (rpeActual < 8) return 0.5;
+  if (rpeActual < 9) return 0.75;
+  return 1.0;
 }

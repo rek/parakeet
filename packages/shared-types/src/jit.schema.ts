@@ -1,7 +1,7 @@
-import { z } from 'zod'
+import { z } from 'zod';
 
 export const JITAdjustmentSchema = z.object({
-  intensityModifier: z.number().min(0.40).max(1.20),
+  intensityModifier: z.number().min(0.4).max(1.2),
   setModifier: z.number().int().min(-3).max(2),
   skipMainLift: z.boolean(),
   auxOverrides: z.record(z.string(), z.enum(['skip', 'reduce', 'normal'])),
@@ -12,6 +12,6 @@ export const JITAdjustmentSchema = z.object({
       mainLift: z.number().optional(), // delta seconds from formula default, [-60, +60] enforced post-parse
     })
     .optional(),
-})
+});
 
-export type JITAdjustment = z.infer<typeof JITAdjustmentSchema>
+export type JITAdjustment = z.infer<typeof JITAdjustmentSchema>;

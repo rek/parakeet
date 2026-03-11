@@ -1,21 +1,31 @@
-import { useMemo } from 'react'
-import { ActivityIndicator, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
-import { router } from 'expo-router'
-import { useQuery } from '@tanstack/react-query'
+import { useMemo } from 'react';
+import {
+  ActivityIndicator,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 
-import { getCycleBadges, getStreakData, getPRHistory } from '@modules/achievements'
-import type { HistoricalPRs } from '@modules/achievements'
-import { spacing, radii, typography } from '../../theme'
-import { useTheme } from '../../theme/ThemeContext'
-import type { ColorScheme } from '../../theme'
+import type { CycleBadge, HistoricalPRs } from '@modules/achievements';
+import type { StreakResult } from '@parakeet/training-engine';
+
+import { radii, spacing, typography } from '../../theme';
+import type { ColorScheme } from '../../theme';
+import { useTheme } from '../../theme/ThemeContext';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
 interface AchievementsSectionProps {
-  userId: string
+  badges: CycleBadge[];
+  streak: StreakResult | undefined;
+  prs: Record<string, HistoricalPRs | undefined>;
+  isLoading: boolean;
+  onBadgePress: (programId: string) => void;
+  onWilksPress: () => void;
 }
 
-type SectionStyles = ReturnType<typeof buildStyles>
+type SectionStyles = ReturnType<typeof buildStyles>;
 
 // ── Styles builder ────────────────────────────────────────────────────────────
 
@@ -141,27 +151,44 @@ function buildStyles(colors: ColorScheme) {
       color: colors.textSecondary,
       flex: 1,
     },
-  })
+  });
 }
 
 // ── Sub-components ────────────────────────────────────────────────────────────
 
-function SectionHeader({ label, styles }: { label: string; styles: SectionStyles }) {
-  return <Text style={styles.sectionHeader}>{label}</Text>
+function SectionHeader({
+  label,
+  styles,
+}: {
+  label: string;
+  styles: SectionStyles;
+}) {
+  return <Text style={styles.sectionHeader}>{label}</Text>;
 }
 
-function PRRow({ lift, prs, styles }: { lift: string; prs: HistoricalPRs; styles: SectionStyles }) {
-  const liftLabel = lift.charAt(0).toUpperCase() + lift.slice(1)
-  const best1rm = prs.best1rmKg > 0 ? `${prs.best1rmKg.toFixed(1)} kg est. 1RM` : null
+function PRRow({
+  lift,
+  prs,
+  styles,
+}: {
+  lift: string;
+  prs: HistoricalPRs;
+  styles: SectionStyles;
+}) {
+  const liftLabel = lift.charAt(0).toUpperCase() + lift.slice(1);
+  const best1rm =
+    prs.best1rmKg > 0 ? `${prs.best1rmKg.toFixed(1)} kg est. 1RM` : null;
 
-  const repPRWeights = Object.keys(prs.repPRs).map(Number).sort((a, b) => b - a)
-  const topRepWeight = repPRWeights[0]
-  const topRepCount = topRepWeight !== undefined ? prs.repPRs[topRepWeight] : null
-  const repLine = topRepCount != null
-    ? `${topRepCount} reps @ ${topRepWeight} kg`
-    : null
+  const repPRWeights = Object.keys(prs.repPRs)
+    .map(Number)
+    .sort((a, b) => b - a);
+  const topRepWeight = repPRWeights[0];
+  const topRepCount =
+    topRepWeight !== undefined ? prs.repPRs[topRepWeight] : null;
+  const repLine =
+    topRepCount != null ? `${topRepCount} reps @ ${topRepWeight} kg` : null;
 
-  if (!best1rm && !repLine) return null
+  if (!best1rm && !repLine) return null;
 
   return (
     <View style={styles.prBlock}>
@@ -169,79 +196,37 @@ function PRRow({ lift, prs, styles }: { lift: string; prs: HistoricalPRs; styles
       {best1rm && <Text style={styles.prLine}>{best1rm}</Text>}
       {repLine && <Text style={styles.prLine}>{repLine}</Text>}
     </View>
-  )
+  );
 }
 
 // ── Component ─────────────────────────────────────────────────────────────────
 
-export function AchievementsSection({ userId }: AchievementsSectionProps) {
-  const { colors } = useTheme()
+export function AchievementsSection({
+  badges,
+  streak,
+  prs,
+  isLoading,
+  onBadgePress,
+  onWilksPress,
+}: AchievementsSectionProps) {
+  const { colors } = useTheme();
 
-  const styles = useMemo(() => buildStyles(colors), [colors])
-
-  const badgesQuery = useQuery({
-    queryKey: ['achievements', 'badges', userId],
-    queryFn: () => getCycleBadges(userId),
-    enabled: !!userId,
-    staleTime: 5 * 60 * 1000,
-  })
-
-  const streakQuery = useQuery({
-    queryKey: ['achievements', 'streak', userId],
-    queryFn: () => getStreakData(userId),
-    enabled: !!userId,
-    staleTime: 5 * 60 * 1000,
-  })
-
-  const squatPRsQuery = useQuery({
-    queryKey: ['achievements', 'prs', userId, 'squat'],
-    queryFn: () => getPRHistory(userId, 'squat'),
-    enabled: !!userId,
-    staleTime: 5 * 60 * 1000,
-  })
-
-  const benchPRsQuery = useQuery({
-    queryKey: ['achievements', 'prs', userId, 'bench'],
-    queryFn: () => getPRHistory(userId, 'bench'),
-    enabled: !!userId,
-    staleTime: 5 * 60 * 1000,
-  })
-
-  const deadliftPRsQuery = useQuery({
-    queryKey: ['achievements', 'prs', userId, 'deadlift'],
-    queryFn: () => getPRHistory(userId, 'deadlift'),
-    enabled: !!userId,
-    staleTime: 5 * 60 * 1000,
-  })
-
-  const isLoading =
-    badgesQuery.isLoading ||
-    streakQuery.isLoading ||
-    squatPRsQuery.isLoading ||
-    benchPRsQuery.isLoading ||
-    deadliftPRsQuery.isLoading
+  const styles = useMemo(() => buildStyles(colors), [colors]);
 
   if (isLoading) {
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="small" color={colors.primary} />
       </View>
-    )
-  }
-
-  const badges = badgesQuery.data ?? []
-  const streak = streakQuery.data
-  const prs = {
-    squat: squatPRsQuery.data,
-    bench: benchPRsQuery.data,
-    deadlift: deadliftPRsQuery.data,
+    );
   }
 
   const hasPRs = Object.values(prs).some(
-    (p) => p && (p.best1rmKg > 0 || Object.keys(p.repPRs).length > 0),
-  )
-  const hasStreak = !!streak && (streak.currentStreak > 0 || streak.longestStreak > 0)
-  const hasAnyAchievements = badges.length > 0 || hasStreak || hasPRs
+    (p) => p && (p.best1rmKg > 0 || Object.keys(p.repPRs).length > 0)
+  );
+  const hasStreak =
+    !!streak && (streak.currentStreak > 0 || streak.longestStreak > 0);
+  const hasAnyAchievements = badges.length > 0 || hasStreak || hasPRs;
 
   return (
     <View>
@@ -249,7 +234,8 @@ export function AchievementsSection({ userId }: AchievementsSectionProps) {
         <View style={[styles.card, styles.emptyCard]}>
           <Text style={styles.emptyTitle}>No achievements yet</Text>
           <Text style={styles.emptyBody}>
-            Finish workouts consistently to unlock streaks, PRs, and cycle badges.
+            Finish workouts consistently to unlock streaks, PRs, and cycle
+            badges.
           </Text>
         </View>
       )}
@@ -257,19 +243,25 @@ export function AchievementsSection({ userId }: AchievementsSectionProps) {
       {/* Cycle badges */}
       {badges.length > 0 && (
         <>
-          <SectionHeader label={`Cycles Completed [ ${badges.length} badge${badges.length !== 1 ? 's' : ''} ]`} styles={styles} />
+          <SectionHeader
+            label={`Cycles Completed [ ${badges.length} badge${badges.length !== 1 ? 's' : ''} ]`}
+            styles={styles}
+          />
           <View style={styles.card}>
             {badges.map((badge) => (
               <TouchableOpacity
                 key={badge.programId}
                 style={styles.badgeRow}
-                onPress={() => router.push(`/history/cycle-review/${badge.programId}`)}
+                onPress={() => onBadgePress(badge.programId)}
                 activeOpacity={0.7}
               >
                 <View style={styles.badgeLeft}>
-                  <Text style={styles.badgeTitle}>Cycle {badge.cycleNumber}</Text>
+                  <Text style={styles.badgeTitle}>
+                    Cycle {badge.cycleNumber}
+                  </Text>
                   <Text style={styles.badgeMeta}>
-                    {badge.weekCount} wk · {Math.round(badge.completionPct * 100)}% completion
+                    {badge.weekCount} wk ·{' '}
+                    {Math.round(badge.completionPct * 100)}% completion
                   </Text>
                 </View>
                 <Text style={styles.chevron}>›</Text>
@@ -288,14 +280,18 @@ export function AchievementsSection({ userId }: AchievementsSectionProps) {
               <View style={styles.streakRow}>
                 <Text style={styles.streakEmoji}>🔥</Text>
                 <Text style={styles.streakLabel}>Current</Text>
-                <Text style={styles.streakValue}>{streak.currentStreak} weeks clean</Text>
+                <Text style={styles.streakValue}>
+                  {streak.currentStreak} weeks clean
+                </Text>
               </View>
             )}
             {streak.longestStreak > 0 && (
               <View style={styles.streakRow}>
-                <Text style={styles.streakEmoji}>  </Text>
+                <Text style={styles.streakEmoji}> </Text>
                 <Text style={styles.streakLabel}>Best</Text>
-                <Text style={styles.streakMeta}>{streak.longestStreak} weeks</Text>
+                <Text style={styles.streakMeta}>
+                  {streak.longestStreak} weeks
+                </Text>
               </View>
             )}
           </View>
@@ -308,10 +304,16 @@ export function AchievementsSection({ userId }: AchievementsSectionProps) {
           <SectionHeader label="Personal Records" styles={styles} />
           <View style={styles.card}>
             {(['squat', 'bench', 'deadlift'] as const).map((lift) => {
-              const liftPRs = prs[lift]
-              if (!liftPRs) return null
-              if (liftPRs.best1rmKg === 0 && Object.keys(liftPRs.repPRs).length === 0) return null
-              return <PRRow key={lift} lift={lift} prs={liftPRs} styles={styles} />
+              const liftPRs = prs[lift];
+              if (!liftPRs) return null;
+              if (
+                liftPRs.best1rmKg === 0 &&
+                Object.keys(liftPRs.repPRs).length === 0
+              )
+                return null;
+              return (
+                <PRRow key={lift} lift={lift} prs={liftPRs} styles={styles} />
+              );
             })}
           </View>
         </>
@@ -321,12 +323,12 @@ export function AchievementsSection({ userId }: AchievementsSectionProps) {
       <SectionHeader label="WILKS Score" styles={styles} />
       <TouchableOpacity
         style={[styles.card, styles.wilksRow]}
-        onPress={() => router.push('/profile/wilks')}
+        onPress={onWilksPress}
         activeOpacity={0.7}
       >
         <Text style={styles.wilksHint}>Tap to view full WILKS history</Text>
         <Text style={styles.chevron}>›</Text>
       </TouchableOpacity>
     </View>
-  )
+  );
 }

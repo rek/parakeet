@@ -5,36 +5,39 @@
  * Individual flag reads use useFeatureEnabled(id).
  */
 
-import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { qk } from '@platform/query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 
-import { qk } from '@platform/query'
-
-import { getFeatureFlags, setFeatureFlag, setFeatureFlags } from '../lib/feature-flags'
-import { DEFAULT_FLAGS } from '../model/features'
-import type { FeatureId } from '../model/features'
+import {
+  getFeatureFlags,
+  setFeatureFlag,
+  setFeatureFlags,
+} from '../lib/feature-flags';
+import { DEFAULT_FLAGS } from '../model/features';
+import type { FeatureId } from '../model/features';
 
 export function useFeatureFlags() {
-  const queryClient = useQueryClient()
+  const queryClient = useQueryClient();
 
   const { data: flags = DEFAULT_FLAGS } = useQuery({
     queryKey: qk.featureFlags.all(),
     queryFn: getFeatureFlags,
     staleTime: Infinity,
     placeholderData: DEFAULT_FLAGS,
-  })
+  });
 
   async function toggle({ id, enabled }: { id: FeatureId; enabled: boolean }) {
-    const next = { ...flags, [id]: enabled }
-    queryClient.setQueryData(qk.featureFlags.all(), next)
-    await setFeatureFlag({ id, enabled })
+    const next = { ...flags, [id]: enabled };
+    queryClient.setQueryData(qk.featureFlags.all(), next);
+    await setFeatureFlag({ id, enabled });
   }
 
   async function applyPreset(preset: Record<FeatureId, boolean>) {
-    queryClient.setQueryData(qk.featureFlags.all(), preset)
-    await setFeatureFlags(preset)
+    queryClient.setQueryData(qk.featureFlags.all(), preset);
+    await setFeatureFlags(preset);
   }
 
-  return { flags, toggle, applyPreset }
+  return { flags, toggle, applyPreset };
 }
 
 export function useFeatureEnabled(id: FeatureId) {
@@ -43,7 +46,7 @@ export function useFeatureEnabled(id: FeatureId) {
     queryFn: getFeatureFlags,
     staleTime: Infinity,
     placeholderData: DEFAULT_FLAGS,
-  })
+  });
 
-  return flags[id]
+  return flags[id];
 }

@@ -1,37 +1,37 @@
-import type { FormulaOverrides } from '@parakeet/shared-types'
+import type { FormulaOverrides } from '@parakeet/shared-types';
 import type {
   BlockIntensityConfig,
   FormulaConfig,
   RepIntensityConfig,
-} from '@parakeet/training-engine'
+} from '@parakeet/training-engine';
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
-export type BlockKey = 'block1' | 'block2' | 'block3' | 'deload'
+export type BlockKey = 'block1' | 'block2' | 'block3' | 'deload';
 
 export interface RowDraft {
-  pct: string
-  sets: string
-  reps: string
-  repsMax?: string
-  rpeTarget: string
-  setsMin?: string
-  setsMax?: string
-  repsMin?: string
+  pct: string;
+  sets: string;
+  reps: string;
+  repsMax?: string;
+  rpeTarget: string;
+  setsMin?: string;
+  setsMax?: string;
+  repsMin?: string;
 }
 
 export type DraftConfig = {
   [B in BlockKey]: {
-    heavy?: RowDraft
-    explosive?: RowDraft
-    rep?: RowDraft
-  }
-}
+    heavy?: RowDraft;
+    explosive?: RowDraft;
+    rep?: RowDraft;
+  };
+};
 
 // ── Conversions ──────────────────────────────────────────────────────────────
 
 export function toRowDraft(
-  config: BlockIntensityConfig | RepIntensityConfig,
+  config: BlockIntensityConfig | RepIntensityConfig
 ): RowDraft {
   if ('sets_min' in config) {
     return {
@@ -43,7 +43,7 @@ export function toRowDraft(
       setsMax: String(config.sets_max),
       repsMin: String(config.reps_min),
       repsMax: String(config.reps_max),
-    }
+    };
   }
   return {
     pct: String(Math.round(config.pct * 100)),
@@ -51,7 +51,7 @@ export function toRowDraft(
     reps: String(config.reps),
     repsMax: config.reps_max != null ? String(config.reps_max) : undefined,
     rpeTarget: String(config.rpe_target),
-  }
+  };
 }
 
 export function initDraft(config: FormulaConfig): DraftConfig {
@@ -74,12 +74,12 @@ export function initDraft(config: FormulaConfig): DraftConfig {
     deload: {
       heavy: toRowDraft(config.deload),
     },
-  }
+  };
 }
 
 export function draftToOverrides(draft: DraftConfig): FormulaOverrides {
-  const p = (s: string) => parseFloat(s) || 0
-  const i = (s: string) => parseInt(s, 10) || 0
+  const p = (s: string) => parseFloat(s) || 0;
+  const i = (s: string) => parseInt(s, 10) || 0;
 
   function blockRow(row: RowDraft): BlockIntensityConfig {
     return {
@@ -88,7 +88,7 @@ export function draftToOverrides(draft: DraftConfig): FormulaOverrides {
       reps: i(row.reps),
       rpe_target: p(row.rpeTarget),
       ...(row.repsMax ? { reps_max: i(row.repsMax) } : {}),
-    }
+    };
   }
 
   function repRow(row: RowDraft): RepIntensityConfig {
@@ -99,7 +99,7 @@ export function draftToOverrides(draft: DraftConfig): FormulaOverrides {
       reps_min: i(row.repsMin ?? row.reps),
       reps_max: i(row.repsMax ?? row.reps),
       rpe_target: p(row.rpeTarget),
-    }
+    };
   }
 
   return {
@@ -124,11 +124,11 @@ export function draftToOverrides(draft: DraftConfig): FormulaOverrides {
       reps: i(draft.deload.heavy!.reps),
       rpe_target: p(draft.deload.heavy!.rpeTarget),
     },
-  }
+  };
 }
 
 export function exampleWeight(pct: string, oneRmKg: number): string {
-  const p = parseFloat(pct)
-  if (!p || !oneRmKg) return '—'
-  return `${Math.round((p / 100) * oneRmKg * 2) / 2} kg`
+  const p = parseFloat(pct);
+  if (!p || !oneRmKg) return '—';
+  return `${Math.round((p / 100) * oneRmKg * 2) / 2} kg`;
 }

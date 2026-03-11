@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import { computeDismissResult } from './computeDismissResult';
+
 import type { PostRestState } from '../model/types';
+import { computeDismissResult } from './computeDismissResult';
 
 describe('computeDismissResult', () => {
   it('returns zeroed result for null state', () => {

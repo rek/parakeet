@@ -1,69 +1,81 @@
-import {
-  IntensityType,
-  Lift,
-  PlannedSet,
-} from '@parakeet/shared-types'
+import { IntensityType, Lift, PlannedSet } from '@parakeet/shared-types';
 import {
   AuxiliaryWork,
   JITOutput,
-  MuscleGroup,
   MrvMevConfig,
+  MuscleGroup,
   VolumeStatus,
   WarmupSet,
-} from '@parakeet/training-engine'
+} from '@parakeet/training-engine';
 
 // ---------------------------------------------------------------------------
 // Persona — a frozen athlete profile
 // ---------------------------------------------------------------------------
 
 export interface Persona {
-  name: string
-  biologicalSex: 'male' | 'female'
-  ageYears: number
-  bodyweightKg: number
-  squatMaxKg: number
-  benchMaxKg: number
-  deadliftMaxKg: number
-  trainingAge: 'beginner' | 'intermediate' | 'advanced'
+  name: string;
+  biologicalSex: 'male' | 'female';
+  ageYears: number;
+  bodyweightKg: number;
+  squatMaxKg: number;
+  benchMaxKg: number;
+  deadliftMaxKg: number;
+  trainingAge: 'beginner' | 'intermediate' | 'advanced';
   /** Override MRV/MEV (defaults to sex-based defaults) */
-  mrvMevOverrides?: Partial<MrvMevConfig>
+  mrvMevOverrides?: Partial<MrvMevConfig>;
   /** Bar weight in kg (default 20) */
-  barWeightKg?: number
+  barWeightKg?: number;
 }
 
 // ---------------------------------------------------------------------------
 // Life Script — day-by-day simulation events
 // ---------------------------------------------------------------------------
 
-export type SorenessLevel = 1 | 2 | 3 | 4 | 5
-export type ReadinessLevel = 1 | 2 | 3
-export type CyclePhase = 'menstrual' | 'follicular' | 'ovulatory' | 'luteal' | 'late_luteal'
-export type DisruptionType = 'injury' | 'illness' | 'travel' | 'fatigue' | 'equipment_unavailable' | 'other'
-export type Severity = 'minor' | 'moderate' | 'major'
+export type SorenessLevel = 1 | 2 | 3 | 4 | 5;
+export type ReadinessLevel = 1 | 2 | 3;
+export type CyclePhase =
+  | 'menstrual'
+  | 'follicular'
+  | 'ovulatory'
+  | 'luteal'
+  | 'late_luteal';
+export type DisruptionType =
+  | 'injury'
+  | 'illness'
+  | 'travel'
+  | 'fatigue'
+  | 'equipment_unavailable'
+  | 'other';
+export type Severity = 'minor' | 'moderate' | 'major';
 
 export interface SorenessInput {
-  ratings: Partial<Record<MuscleGroup, SorenessLevel>>
+  ratings: Partial<Record<MuscleGroup, SorenessLevel>>;
 }
 
 export interface DisruptionEvent {
-  type: DisruptionType
-  severity: Severity
-  affectedLifts?: Lift[]
-  durationDays: number
-  description?: string
+  type: DisruptionType;
+  severity: Severity;
+  affectedLifts?: Lift[];
+  durationDays: number;
+  description?: string;
 }
 
 export type DayEvent =
-  | { type: 'train'; soreness?: SorenessInput; sleep?: ReadinessLevel; energy?: ReadinessLevel }
+  | {
+      type: 'train';
+      soreness?: SorenessInput;
+      sleep?: ReadinessLevel;
+      energy?: ReadinessLevel;
+    }
   | { type: 'skip'; reason?: string }
   | { type: 'disrupt'; disruption: DisruptionEvent }
   | { type: 'period-start' }
-  | { type: 'rest' }
+  | { type: 'rest' };
 
 export interface LifeScript {
-  name: string
-  description?: string
-  events: DayEvent[]
+  name: string;
+  description?: string;
+  events: DayEvent[];
 }
 
 // ---------------------------------------------------------------------------
@@ -72,15 +84,15 @@ export interface LifeScript {
 
 export interface PerformanceModelConfig {
   /** 1RM gain per cycle (fraction, e.g. 0.01 = 1%) */
-  oneRmGainPerCycle: number
+  oneRmGainPerCycle: number;
   /** Base RPE offset from target (-1 = easier than expected, +1 = harder) */
-  rpeDeviation: number
+  rpeDeviation: number;
   /** How much RPE creeps up per week of a block (fatigue effect) */
-  rpeFatiguePerWeek: number
+  rpeFatiguePerWeek: number;
   /** Probability (0–1) that any given set is failed (default 0) */
-  setFailureRate?: number
+  setFailureRate?: number;
   /** How many reps short of target on a failed set (default 1) */
-  failureRepReduction?: number
+  failureRepReduction?: number;
 }
 
 // ---------------------------------------------------------------------------
@@ -88,65 +100,65 @@ export interface PerformanceModelConfig {
 // ---------------------------------------------------------------------------
 
 export interface SimulatedSession {
-  day: number
-  weekNumber: number
-  dayNumber: number
-  primaryLift: Lift
-  intensityType: IntensityType
-  blockNumber: 1 | 2 | 3 | null
-  isDeload: boolean
+  day: number;
+  weekNumber: number;
+  dayNumber: number;
+  primaryLift: Lift;
+  intensityType: IntensityType;
+  blockNumber: 1 | 2 | 3 | null;
+  isDeload: boolean;
 
   // JIT output
-  jitOutput: JITOutput
-  mainLiftSets: PlannedSet[]
-  warmupSets: WarmupSet[]
-  auxiliaryWork: AuxiliaryWork[]
+  jitOutput: JITOutput;
+  mainLiftSets: PlannedSet[];
+  warmupSets: WarmupSet[];
+  auxiliaryWork: AuxiliaryWork[];
 
   // Simulated athlete response
-  simulatedRpe: number
-  completedAllSets: boolean
+  simulatedRpe: number;
+  completedAllSets: boolean;
 
   // Context at time of session
-  sorenessRatings: Partial<Record<MuscleGroup, SorenessLevel>>
-  sleepQuality?: ReadinessLevel
-  energyLevel?: ReadinessLevel
-  cyclePhase?: CyclePhase
-  weeklyVolumeSnapshot: Partial<Record<MuscleGroup, number>>
-  volumeStatusSnapshot: Partial<Record<MuscleGroup, VolumeStatus>>
+  sorenessRatings: Partial<Record<MuscleGroup, SorenessLevel>>;
+  sleepQuality?: ReadinessLevel;
+  energyLevel?: ReadinessLevel;
+  cyclePhase?: CyclePhase;
+  weeklyVolumeSnapshot: Partial<Record<MuscleGroup, number>>;
+  volumeStatusSnapshot: Partial<Record<MuscleGroup, VolumeStatus>>;
 
   // Intra-session adaptations
   adaptationsApplied?: Array<{
-    afterSet: number
-    adaptationType: string
-    rationale: string
-  }>
+    afterSet: number;
+    adaptationType: string;
+    rationale: string;
+  }>;
 
   // Flags
-  skipped: boolean
-  skipReason?: string
+  skipped: boolean;
+  skipReason?: string;
 }
 
 export interface SimulationLog {
-  persona: Persona
-  script: LifeScript
-  totalDays: number
-  totalWeeks: number
-  sessions: SimulatedSession[]
-  skippedDays: number
+  persona: Persona;
+  script: LifeScript;
+  totalDays: number;
+  totalWeeks: number;
+  sessions: SimulatedSession[];
+  skippedDays: number;
   disruptions: Array<{
-    day: number
-    disruption: DisruptionEvent
-    resolvedDay: number
-  }>
+    day: number;
+    disruption: DisruptionEvent;
+    resolvedDay: number;
+  }>;
   /** 1RM at end of each week: weekNumber → lift → kg */
-  oneRmProgression: Array<{ weekNumber: number; maxes: Record<Lift, number> }>
+  oneRmProgression: Array<{ weekNumber: number; maxes: Record<Lift, number> }>;
 }
 
 // ---------------------------------------------------------------------------
 // Invariant Violations
 // ---------------------------------------------------------------------------
 
-export type InvariantSeverity = 'warning' | 'error'
+export type InvariantSeverity = 'warning' | 'error';
 
 export type InvariantCategory =
   | 'volume_safety'
@@ -155,20 +167,20 @@ export type InvariantCategory =
   | 'cycle_phase'
   | 'auxiliary_balance'
   | 'session_sanity'
-  | 'intra_session_adaptation'
+  | 'intra_session_adaptation';
 
 export interface InvariantViolation {
-  category: InvariantCategory
-  rule: string
-  severity: InvariantSeverity
-  message: string
+  category: InvariantCategory;
+  rule: string;
+  severity: InvariantSeverity;
+  message: string;
   /** Which week this violation occurred in */
-  weekNumber?: number
+  weekNumber?: number;
   /** Which session (day) this occurred in */
-  day?: number
+  day?: number;
   /** Expected vs actual values for debugging */
-  expected?: string
-  actual?: string
+  expected?: string;
+  actual?: string;
 }
 
 // ---------------------------------------------------------------------------
@@ -176,16 +188,16 @@ export interface InvariantViolation {
 // ---------------------------------------------------------------------------
 
 export interface SimulationReport {
-  persona: Persona
-  script: LifeScript
-  log: SimulationLog
-  violations: InvariantViolation[]
+  persona: Persona;
+  script: LifeScript;
+  log: SimulationLog;
+  violations: InvariantViolation[];
   summary: {
-    totalSessions: number
-    skippedSessions: number
-    totalViolations: number
-    errors: number
-    warnings: number
-    passed: boolean
-  }
+    totalSessions: number;
+    skippedSessions: number;
+    totalViolations: number;
+    errors: number;
+    warnings: number;
+    passed: boolean;
+  };
 }

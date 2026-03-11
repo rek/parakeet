@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
-import { useSupabase } from '../lib/SupabaseContext';
+
 import { isEnvAvailable } from '../lib/supabase';
+import { useSupabase } from '../lib/SupabaseContext';
 import { theme } from '../lib/theme';
 import { ComparisonLogs } from './ComparisonLogs';
 import { CycleReviews } from './CycleReviews';

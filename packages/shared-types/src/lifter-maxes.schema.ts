@@ -1,4 +1,4 @@
-import { z } from 'zod'
+import { z } from 'zod';
 
 export const LiftInputSchema = z.discriminatedUnion('type', [
   z
@@ -14,9 +14,9 @@ export const LiftInputSchema = z.discriminatedUnion('type', [
       reps: z.number().int().min(2).max(10),
     })
     .strict(),
-])
+]);
 
-export type LiftInput = z.infer<typeof LiftInputSchema>
+export type LiftInput = z.infer<typeof LiftInputSchema>;
 
 export const LifterMaxesInputSchema = z
   .object({
@@ -24,9 +24,9 @@ export const LifterMaxesInputSchema = z
     bench: LiftInputSchema,
     deadlift: LiftInputSchema,
   })
-  .strict()
+  .strict();
 
-export type LifterMaxesInput = z.infer<typeof LifterMaxesInputSchema>
+export type LifterMaxesInput = z.infer<typeof LifterMaxesInputSchema>;
 
 export const LifterMaxesResponseSchema = z
   .object({
@@ -39,6 +39,6 @@ export const LifterMaxesResponseSchema = z
     source: z.enum(['input_1rm', 'input_3rm', 'mixed', 'system_calculated']),
     recorded_at: z.iso.datetime({ offset: true }),
   })
-  .strict()
+  .strict();
 
-export type LifterMaxesResponse = z.infer<typeof LifterMaxesResponseSchema>
+export type LifterMaxesResponse = z.infer<typeof LifterMaxesResponseSchema>;

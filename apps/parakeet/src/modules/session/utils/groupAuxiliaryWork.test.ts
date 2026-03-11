@@ -1,19 +1,29 @@
-import { describe, expect, it } from 'vitest';
-import { groupAuxiliaryWork } from './groupAuxiliaryWork';
-import type { AuxiliaryWork } from '../model/types';
 import type { AuxiliaryActualSet } from '@platform/store/sessionStore';
+import { describe, expect, it } from 'vitest';
+
+import type { AuxiliaryWork } from '../model/types';
+import { groupAuxiliaryWork } from './groupAuxiliaryWork';
 
 const makePlannedSet = () => ({ weight_kg: 60, reps: 10 });
 
 describe('groupAuxiliaryWork', () => {
   it('returns empty groups for empty inputs', () => {
-    expect(groupAuxiliaryWork([], [])).toEqual({ regularAux: [], topUpAux: [] });
+    expect(groupAuxiliaryWork([], [])).toEqual({
+      regularAux: [],
+      topUpAux: [],
+    });
   });
 
   it('splits regular and top-up exercises into separate groups', () => {
     const auxiliaryWork: AuxiliaryWork[] = [
       { exercise: 'dumbbell_row', sets: [makePlannedSet()], skipped: false },
-      { exercise: 'face_pull', sets: [makePlannedSet()], skipped: false, isTopUp: true, topUpReason: 'below MEV' },
+      {
+        exercise: 'face_pull',
+        sets: [makePlannedSet()],
+        skipped: false,
+        isTopUp: true,
+        topUpReason: 'below MEV',
+      },
     ];
     const { regularAux, topUpAux } = groupAuxiliaryWork(auxiliaryWork, []);
     expect(regularAux).toHaveLength(1);
@@ -24,13 +34,35 @@ describe('groupAuxiliaryWork', () => {
 
   it('attaches matching actual sets to the correct exercise', () => {
     const auxiliaryWork: AuxiliaryWork[] = [
-      { exercise: 'lat_pulldown', sets: [makePlannedSet(), makePlannedSet()], skipped: false },
+      {
+        exercise: 'lat_pulldown',
+        sets: [makePlannedSet(), makePlannedSet()],
+        skipped: false,
+      },
       { exercise: 'tricep_pushdown', sets: [makePlannedSet()], skipped: false },
     ];
     const actualSets: AuxiliaryActualSet[] = [
-      { exercise: 'lat_pulldown', set_number: 1, weight_grams: 50000, reps_completed: 10, is_completed: true },
-      { exercise: 'lat_pulldown', set_number: 2, weight_grams: 50000, reps_completed: 8, is_completed: true },
-      { exercise: 'tricep_pushdown', set_number: 1, weight_grams: 30000, reps_completed: 12, is_completed: false },
+      {
+        exercise: 'lat_pulldown',
+        set_number: 1,
+        weight_grams: 50000,
+        reps_completed: 10,
+        is_completed: true,
+      },
+      {
+        exercise: 'lat_pulldown',
+        set_number: 2,
+        weight_grams: 50000,
+        reps_completed: 8,
+        is_completed: true,
+      },
+      {
+        exercise: 'tricep_pushdown',
+        set_number: 1,
+        weight_grams: 30000,
+        reps_completed: 12,
+        is_completed: false,
+      },
     ];
     const { regularAux } = groupAuxiliaryWork(auxiliaryWork, actualSets);
     const latPulldown = regularAux.find((e) => e.exercise === 'lat_pulldown')!;
@@ -42,7 +74,12 @@ describe('groupAuxiliaryWork', () => {
   it('preserves the origIndex of each entry', () => {
     const auxiliaryWork: AuxiliaryWork[] = [
       { exercise: 'curl', sets: [makePlannedSet()], skipped: false },
-      { exercise: 'press', sets: [makePlannedSet()], skipped: false, isTopUp: true },
+      {
+        exercise: 'press',
+        sets: [makePlannedSet()],
+        skipped: false,
+        isTopUp: true,
+      },
       { exercise: 'row', sets: [makePlannedSet()], skipped: false },
     ];
     const { regularAux, topUpAux } = groupAuxiliaryWork(auxiliaryWork, []);

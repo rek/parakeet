@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState } from 'react';
-import type { Session, User } from '@supabase/supabase-js';
+
 import * as Sentry from '@sentry/react-native';
+import type { Session, User } from '@supabase/supabase-js';
 import { router } from 'expo-router';
 
 import {
@@ -54,8 +55,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
       } else if (_event === 'INITIAL_SESSION' && s?.user) {
         router.replace('/(tabs)/today');
-        ensureSignedInUserProfile(s.user).catch((err) => Sentry.captureException(err));
-      } else if (_event === 'SIGNED_OUT' || (_event === 'TOKEN_REFRESHED' && !s)) {
+        ensureSignedInUserProfile(s.user).catch((err) =>
+          Sentry.captureException(err)
+        );
+      } else if (
+        _event === 'SIGNED_OUT' ||
+        (_event === 'TOKEN_REFRESHED' && !s)
+      ) {
         router.replace('/(auth)/welcome');
       }
     });

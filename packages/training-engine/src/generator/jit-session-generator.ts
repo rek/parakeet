@@ -4,6 +4,7 @@ import {
   PlannedSet,
   TrainingDisruption,
 } from '@parakeet/shared-types';
+
 import { getCyclePhaseModifier } from '../adjustments/cycle-phase-adjuster';
 import {
   getReadinessModifier,
@@ -17,10 +18,10 @@ import {
   SorenessModifier,
 } from '../adjustments/soreness-adjuster';
 import {
-  getLiftForExercise,
   getBodyweightPool,
-  getWeightPct,
+  getLiftForExercise,
   getRepTarget,
+  getWeightPct,
 } from '../auxiliary/exercise-catalog';
 import { ExerciseType, getExerciseType } from '../auxiliary/exercise-types';
 import { CyclePhase } from '../formulas/cycle-phase';
@@ -450,7 +451,7 @@ export function generateJITSession(input: JITInput): JITOutput {
       input.biologicalSex,
       input.sessionIndex,
       input.totalSessionsThisWeek,
-      input.allOneRmKg,
+      input.allOneRmKg
     );
     for (const tu of topUps) {
       auxiliaryWork.push(tu);
@@ -670,7 +671,7 @@ function buildVolumeTopUp(
   biologicalSex?: 'female' | 'male',
   sessionIndex?: number,
   totalSessionsThisWeek?: number,
-  allOneRmKg?: Partial<Record<Lift, number>>,
+  allOneRmKg?: Partial<Record<Lift, number>>
 ): AuxiliaryWork[] {
   // Build main lift muscle contributions to project post-session volume
   const liftMuscles = getMusclesForLift(primaryLift);

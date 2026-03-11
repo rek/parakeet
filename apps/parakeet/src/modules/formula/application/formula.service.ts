@@ -1,6 +1,10 @@
-import { getDefaultFormulaConfig, mergeFormulaConfig } from '@parakeet/training-engine';
+import {
+  getDefaultFormulaConfig,
+  mergeFormulaConfig,
+} from '@parakeet/training-engine';
 import type { FormulaConfig } from '@parakeet/training-engine';
 
+import { parseFormulaOverridesJson } from '../data/formula-codecs';
 import {
   activateFormulaConfigById,
   deactivateActiveFormulaConfigs,
@@ -11,17 +15,19 @@ import {
   listFormulaConfigs,
   listPendingAiFormulaSuggestions,
 } from '../data/formula.repository';
-import { parseFormulaOverridesJson } from '../data/formula-codecs';
 
 export async function getFormulaConfig(
   userId: string,
-  biologicalSex?: 'female' | 'male',
+  biologicalSex?: 'female' | 'male'
 ): Promise<FormulaConfig> {
   const activeConfig = await getActiveFormulaConfigRow(userId);
 
   const base = getDefaultFormulaConfig(biologicalSex);
   return activeConfig
-    ? mergeFormulaConfig(base, parseFormulaOverridesJson(activeConfig.overrides))
+    ? mergeFormulaConfig(
+        base,
+        parseFormulaOverridesJson(activeConfig.overrides)
+      )
     : base;
 }
 
@@ -31,7 +37,7 @@ export async function createFormulaOverride(
     overrides: unknown;
     source: 'user' | 'ai_suggestion';
     ai_rationale?: string;
-  },
+  }
 ): Promise<void> {
   await deactivateActiveFormulaConfigs(userId);
 
@@ -52,7 +58,10 @@ export async function getPendingAiFormulaSuggestions(userId: string) {
   return listPendingAiFormulaSuggestions(userId);
 }
 
-export async function deactivateFormulaConfig(configId: string, userId: string): Promise<void> {
+export async function deactivateFormulaConfig(
+  configId: string,
+  userId: string
+): Promise<void> {
   await deactivateFormulaConfigById(configId, userId);
 
   const previous = await getMostRecentInactiveFormulaConfig(userId);

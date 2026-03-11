@@ -1,21 +1,21 @@
-import { DayEvent, LifeScript } from '../types'
+import { DayEvent, LifeScript } from '../types';
 
 /** Generate N days of training following a 3-day/week schedule (Mon/Wed/Fri pattern) */
 function weekPattern(weeks: number): DayEvent[] {
-  const events: DayEvent[] = []
-  const trainingDaysInWeek = [0, 2, 4] // Mon, Wed, Fri
+  const events: DayEvent[] = [];
+  const trainingDaysInWeek = [0, 2, 4]; // Mon, Wed, Fri
 
   for (let week = 0; week < weeks; week++) {
     for (let dayInWeek = 0; dayInWeek < 7; dayInWeek++) {
       if (trainingDaysInWeek.includes(dayInWeek)) {
-        events.push({ type: 'train' })
+        events.push({ type: 'train' });
       } else {
-        events.push({ type: 'rest' })
+        events.push({ type: 'rest' });
       }
     }
   }
 
-  return events
+  return events;
 }
 
 /**
@@ -25,6 +25,7 @@ function weekPattern(weeks: number): DayEvent[] {
  */
 export const FAILED_SETS_SCRIPT: LifeScript = {
   name: 'failed-sets',
-  description: '12-week cycle, perfect attendance, set failures drive intra-session adaptations',
+  description:
+    '12-week cycle, perfect attendance, set failures drive intra-session adaptations',
   events: weekPattern(12),
-}
+};

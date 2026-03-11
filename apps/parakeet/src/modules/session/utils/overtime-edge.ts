@@ -1,3 +1,6 @@
-export function detectOvertimeEdge(prevOvertime: boolean, remaining: number): boolean {
-  return !prevOvertime && remaining <= 0
+export function detectOvertimeEdge(
+  prevOvertime: boolean,
+  remaining: number
+): boolean {
+  return !prevOvertime && remaining <= 0;
 }

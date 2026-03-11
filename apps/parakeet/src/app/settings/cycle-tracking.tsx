@@ -8,6 +8,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+
 import { useAuth } from '@modules/auth';
 import {
   addPeriodStart,
@@ -15,8 +16,8 @@ import {
   computeNextPeriodDate,
   CYCLE_PHASE_BG,
   CYCLE_PHASE_LABELS,
-  CYCLE_PHASES,
   CYCLE_PHASE_TEXT,
+  CYCLE_PHASES,
   deletePeriodStart,
   getCycleConfig,
   getPeriodStartHistory,
@@ -32,6 +33,7 @@ import { formatDate } from '@shared/utils/date';
 import { useQueryClient } from '@tanstack/react-query';
 import { router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
+
 import { BackLink } from '../../components/navigation/BackLink';
 import type { ColorScheme } from '../../theme';
 import { radii, spacing, typography } from '../../theme';

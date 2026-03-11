@@ -1,28 +1,28 @@
-import type { DisruptionType, Severity, Lift } from '@parakeet/shared-types'
-import { TRAINING_LIFTS } from '@shared/constants/training'
+import type { DisruptionType, Lift, Severity } from '@parakeet/shared-types';
+import { TRAINING_LIFTS } from '@shared/constants/training';
 
-export type SorenessLevel = 'none' | 'mild' | 'sore' | 'very_sore'
+export type SorenessLevel = 'none' | 'mild' | 'sore' | 'very_sore';
 
 export const SORENESS_NUMERIC: Record<SorenessLevel, number> = {
-  none:      1,
-  mild:      2,
-  sore:      3,
+  none: 1,
+  mild: 2,
+  sore: 3,
   very_sore: 4,
-}
+};
 
 export function inferEffectiveSeverity(
   type: DisruptionType,
-  selectedSeverity: Severity | null,
+  selectedSeverity: Severity | null
 ): Severity | null {
-  return type === 'unprogrammed_event' ? 'major' : selectedSeverity
+  return type === 'unprogrammed_event' ? 'major' : selectedSeverity;
 }
 
 export interface MenstrualSymptomsPreset {
-  type: DisruptionType
-  severity: Severity
-  allLifts: boolean
-  lifts: Set<Lift>
-  description: string
+  type: DisruptionType;
+  severity: Severity;
+  allLifts: boolean;
+  lifts: Set<Lift>;
+  description: string;
 }
 
 export function getMenstrualSymptomsPreset(): MenstrualSymptomsPreset {
@@ -32,5 +32,5 @@ export function getMenstrualSymptomsPreset(): MenstrualSymptomsPreset {
     allLifts: true,
     lifts: new Set(TRAINING_LIFTS),
     description: 'Menstrual symptoms',
-  }
+  };
 }

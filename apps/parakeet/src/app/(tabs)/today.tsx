@@ -1,5 +1,4 @@
 import { useCallback, useMemo, useState } from 'react';
-import { useFocusEffect } from 'expo-router';
 import {
   ActivityIndicator,
   RefreshControl,
@@ -9,30 +8,49 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+
 import { getStreakData } from '@modules/achievements';
 import { useAuth } from '@modules/auth';
+import {
+  CYCLE_PHASE_BG,
+  CYCLE_PHASE_LABELS,
+  CYCLE_PHASE_TEXT,
+  useCyclePhase,
+} from '@modules/cycle-tracking';
+import {
+  getActiveDisruptions,
+  resolveDisruption,
+  updateDisruptionEndDate,
+} from '@modules/disruptions';
 import { useFeatureEnabled } from '@modules/feature-flags';
-import { CYCLE_PHASE_BG, CYCLE_PHASE_LABELS, CYCLE_PHASE_TEXT, useCyclePhase } from '@modules/cycle-tracking';
-import { getActiveDisruptions } from '@modules/disruptions';
 import { useActiveProgram } from '@modules/program';
 import {
   fetchMotivationalContext,
   generateMotivationalMessage,
   partitionTodaySessions,
+  skipSession,
   useInProgressSession,
   useTodaySessions,
 } from '@modules/session';
 import type { CompletedSessionRef } from '@modules/session';
-import { getVolumeStatusColor, getMrvWarningMuscles, isVolumeOverMrv, useWeeklyVolume, volumeFillPct } from '@modules/training-volume';
+import {
+  getMrvWarningMuscles,
+  getVolumeStatusColor,
+  isVolumeOverMrv,
+  useWeeklyVolume,
+  volumeFillPct,
+} from '@modules/training-volume';
+import { getReadyCachedJitData } from '@platform/store/sessionStore';
+import { captureException } from '@platform/utils/captureException';
 import {
   COMPACT_VOLUME_MUSCLES,
   MUSCLE_LABELS_COMPACT,
 } from '@shared/constants/training';
-import { captureException } from '@platform/utils/captureException';
 import { capitalize } from '@shared/utils/string';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { router } from 'expo-router';
+import { router, useFocusEffect } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
+
 import { StreakPill } from '../../components/achievements/StreakPill';
 import { DisruptionChipsRow } from '../../components/disruption/DisruptionChipsRow';
 import { WorkoutCard } from '../../components/training/WorkoutCard';
@@ -393,10 +411,18 @@ function WorkoutDoneCard({
   const styles = useMemo(() => buildStyles(colors), [colors]);
   const sessionIds = sessions.map((s) => s.id);
 
-  const { data: message, isLoading, error } = useQuery({
+  const {
+    data: message,
+    isLoading,
+    error,
+  } = useQuery({
     queryKey: ['motivational-message', ...sessionIds],
     queryFn: async () => {
-      const ctx = await fetchMotivationalContext(sessions, currentStreak, cyclePhase);
+      const ctx = await fetchMotivationalContext(
+        sessions,
+        currentStreak,
+        cyclePhase
+      );
       return generateMotivationalMessage(ctx, sessionIds, userId);
     },
     staleTime: Infinity,
@@ -409,7 +435,9 @@ function WorkoutDoneCard({
     captureException(error);
   }
 
-  const lifts = sessions.map((s) => capitalize(s.primary_lift ?? '')).join(', ');
+  const lifts = sessions
+    .map((s) => capitalize(s.primary_lift ?? ''))
+    .join(', ');
 
   return (
     <View style={styles.workoutDoneCard}>
@@ -431,7 +459,11 @@ function WorkoutDoneCard({
 export default function TodayScreen() {
   const { colors } = useTheme();
   const { user } = useAuth();
-  const { data: sessions = [], isLoading: sessionLoading, isError: sessionError } = useTodaySessions();
+  const {
+    data: sessions = [],
+    isLoading: sessionLoading,
+    isError: sessionError,
+  } = useTodaySessions();
   const { data: activeSession } = useInProgressSession();
   const { data: program, isLoading: programLoading } = useActiveProgram();
   const { data: volumeData } = useWeeklyVolume();
@@ -485,7 +517,9 @@ export default function TodayScreen() {
   }
 
   const mrvWarningMuscles = volumeData
-    ? getMrvWarningMuscles(volumeData.status).map((m) => MUSCLE_LABELS_COMPACT[m])
+    ? getMrvWarningMuscles(volumeData.status).map(
+        (m) => MUSCLE_LABELS_COMPACT[m]
+      )
     : [];
 
   return (
@@ -559,7 +593,10 @@ export default function TodayScreen() {
             {showDisruptions && disruptions && disruptions.length > 0 && (
               <DisruptionChipsRow
                 disruptions={disruptions}
-                userId={user!.id}
+                onResolve={(id) => resolveDisruption(id, user!.id)}
+                onUpdateEndDate={(id, endDate) =>
+                  updateDisruptionEndDate(id, user!.id, endDate)
+                }
                 onResolved={() =>
                   queryClient.invalidateQueries({
                     queryKey: ['disruptions', 'active', user?.id],
@@ -588,50 +625,94 @@ export default function TodayScreen() {
               </View>
             ) : (
               (() => {
-                  const { completed: completedSessions, upcoming: otherSessions } =
-                    partitionTodaySessions(sessions);
-                  return (
-                    <>
-                      {completedSessions.length > 0 && (
-                        <WorkoutDoneCard
-                          sessions={completedSessions}
-                          currentStreak={streakData?.currentStreak ?? 0}
-                          cyclePhase={cycleContext?.phase ?? null}
-                          userId={user!.id}
-                          showMotivational={showMotivational}
-                        />
-                      )}
-                      {otherSessions.map((s) => {
-                        const isLocked =
-                          s.status === 'planned' &&
-                          !!activeSession &&
-                          activeSession.id !== s.id;
-                        return (
-                          <View key={s.id}>
-                            <WorkoutCard
-                              session={s}
-                              isLocked={isLocked}
-                              onSkipComplete={() =>
-                                queryClient.invalidateQueries({
-                                  queryKey: ['session', 'today'],
-                                })
+                const {
+                  completed: completedSessions,
+                  upcoming: otherSessions,
+                } = partitionTodaySessions(sessions);
+                return (
+                  <>
+                    {completedSessions.length > 0 && (
+                      <WorkoutDoneCard
+                        sessions={completedSessions}
+                        currentStreak={streakData?.currentStreak ?? 0}
+                        cyclePhase={cycleContext?.phase ?? null}
+                        userId={user!.id}
+                        showMotivational={showMotivational}
+                      />
+                    )}
+                    {otherSessions.map((s) => {
+                      const isLocked =
+                        s.status === 'planned' &&
+                        !!activeSession &&
+                        activeSession.id !== s.id;
+                      return (
+                        <View key={s.id}>
+                          <WorkoutCard
+                            session={s}
+                            isLocked={isLocked}
+                            onStart={(sessionId) => {
+                              const isFreeForm =
+                                s.program_id === null && !s.primary_lift;
+                              if (isFreeForm) {
+                                router.push({
+                                  pathname: '/session/[sessionId]',
+                                  params: { sessionId, freeForm: '1' },
+                                });
+                              } else {
+                                router.push({
+                                  pathname: '/session/soreness',
+                                  params: { sessionId },
+                                });
                               }
-                            />
-                            {showCycleTracking && cycleContext?.isOvulatoryWindow &&
-                              s.primary_lift === 'squat' && (
-                                <View style={styles.ovulatoryChip}>
-                                  <Text style={styles.ovulatoryChipText}>
-                                    ℹ Ovulatory phase — high-load squat day. Focus on
-                                    knee tracking and warm-up quality.
-                                  </Text>
-                                </View>
-                              )}
-                          </View>
-                        );
-                      })}
-                    </>
-                  );
-                })()
+                            }}
+                            onResume={async (sessionId) => {
+                              const isFreeForm =
+                                s.program_id === null && !s.primary_lift;
+                              if (isFreeForm) {
+                                router.push({
+                                  pathname: '/session/[sessionId]',
+                                  params: { sessionId, freeForm: '1' },
+                                });
+                                return;
+                              }
+                              const jit = await getReadyCachedJitData();
+                              if (!jit) {
+                                router.push({
+                                  pathname: '/session/soreness',
+                                  params: { sessionId },
+                                });
+                              } else {
+                                router.push({
+                                  pathname: '/session/[sessionId]',
+                                  params: { sessionId, jitData: jit },
+                                });
+                              }
+                            }}
+                            onSkip={async (sessionId, reason) => {
+                              await skipSession(sessionId, reason);
+                            }}
+                            onSkipComplete={() =>
+                              queryClient.invalidateQueries({
+                                queryKey: ['session', 'today'],
+                              })
+                            }
+                          />
+                          {showCycleTracking &&
+                            cycleContext?.isOvulatoryWindow &&
+                            s.primary_lift === 'squat' && (
+                              <View style={styles.ovulatoryChip}>
+                                <Text style={styles.ovulatoryChipText}>
+                                  ℹ Ovulatory phase — high-load squat day.
+                                  Focus on knee tracking and warm-up quality.
+                                </Text>
+                              </View>
+                            )}
+                        </View>
+                      );
+                    })}
+                  </>
+                );
+              })()
             )}
 
             {showAdHoc && (

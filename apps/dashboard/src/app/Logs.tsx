@@ -1,11 +1,18 @@
 import { useEffect, useState } from 'react';
-import { useSupabase } from '../lib/SupabaseContext';
+
 import { strategyBadge } from '../components/Badge';
+import { useSupabase } from '../lib/SupabaseContext';
 
 interface TimelineEvent {
   id: string;
   ts: string;
-  type: 'jit' | 'hybrid' | 'cycle_review' | 'formula_suggestion' | 'developer_suggestion' | 'motivational';
+  type:
+    | 'jit'
+    | 'hybrid'
+    | 'cycle_review'
+    | 'formula_suggestion'
+    | 'developer_suggestion'
+    | 'motivational';
   label: string;
   sub: string;
   meta?: Record<string, unknown>;
@@ -13,8 +20,11 @@ interface TimelineEvent {
 
 function fmt(ts: string) {
   return new Date(ts).toLocaleString('en-GB', {
-    day: '2-digit', month: 'short', year: 'numeric',
-    hour: '2-digit', minute: '2-digit',
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
   });
 }
 
@@ -66,20 +76,40 @@ interface Stats {
   motivational: number;
 }
 
-function StatCard({ label, value, color }: { label: string; value: number; color: string }) {
+function StatCard({
+  label,
+  value,
+  color,
+}: {
+  label: string;
+  value: number;
+  color: string;
+}) {
   return (
-    <div style={{
-      flex: 1,
-      minWidth: 100,
-      padding: '12px 16px',
-      background: 'var(--surface)',
-      border: '1px solid var(--border)',
-      borderRadius: 8,
-    }}>
-      <div style={{ fontSize: 10, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 6 }}>
+    <div
+      style={{
+        flex: 1,
+        minWidth: 100,
+        padding: '12px 16px',
+        background: 'var(--surface)',
+        border: '1px solid var(--border)',
+        borderRadius: 8,
+      }}
+    >
+      <div
+        style={{
+          fontSize: 10,
+          color: 'var(--text-muted)',
+          textTransform: 'uppercase',
+          letterSpacing: '0.06em',
+          marginBottom: 6,
+        }}
+      >
         {label}
       </div>
-      <div style={{ fontSize: 24, fontWeight: 700, color, lineHeight: 1 }}>{value}</div>
+      <div style={{ fontSize: 24, fontWeight: 700, color, lineHeight: 1 }}>
+        {value}
+      </div>
     </div>
   );
 }
@@ -87,47 +117,57 @@ function StatCard({ label, value, color }: { label: string; value: number; color
 export function Logs() {
   const { supabase } = useSupabase();
   const [events, setEvents] = useState<TimelineEvent[]>([]);
-  const [stats, setStats] = useState<Stats>({ jit: 0, hybrid: 0, cycleReviews: 0, formulaSuggestions: 0, devSuggestions: 0, motivational: 0 });
+  const [stats, setStats] = useState<Stats>({
+    jit: 0,
+    hybrid: 0,
+    cycleReviews: 0,
+    formulaSuggestions: 0,
+    devSuggestions: 0,
+    motivational: 0,
+  });
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function load() {
       setLoading(true);
 
-      const [jitRes, hybridRes, reviewRes, formulaRes, devRes, motivRes] = await Promise.all([
-        supabase
-          .from('sessions')
-          .select('id, jit_generated_at, jit_strategy, planned_date, week_number, block_number')
-          .not('jit_generated_at', 'is', null)
-          .order('jit_generated_at', { ascending: false })
-          .limit(30),
-        supabase
-          .from('jit_comparison_logs')
-          .select('id, created_at, strategy_used, divergence')
-          .order('created_at', { ascending: false })
-          .limit(20),
-        supabase
-          .from('cycle_reviews')
-          .select('id, generated_at, program_id')
-          .order('generated_at', { ascending: false })
-          .limit(10),
-        supabase
-          .from('formula_configs')
-          .select('id, created_at, source, is_active')
-          .eq('source', 'ai_suggestion')
-          .order('created_at', { ascending: false })
-          .limit(20),
-        supabase
-          .from('developer_suggestions')
-          .select('id, created_at, priority, status, description')
-          .order('created_at', { ascending: false })
-          .limit(20),
-        supabase
-          .from('motivational_message_logs')
-          .select('id, created_at, message, context')
-          .order('created_at', { ascending: false })
-          .limit(30),
-      ]);
+      const [jitRes, hybridRes, reviewRes, formulaRes, devRes, motivRes] =
+        await Promise.all([
+          supabase
+            .from('sessions')
+            .select(
+              'id, jit_generated_at, jit_strategy, planned_date, week_number, block_number'
+            )
+            .not('jit_generated_at', 'is', null)
+            .order('jit_generated_at', { ascending: false })
+            .limit(30),
+          supabase
+            .from('jit_comparison_logs')
+            .select('id, created_at, strategy_used, divergence')
+            .order('created_at', { ascending: false })
+            .limit(20),
+          supabase
+            .from('cycle_reviews')
+            .select('id, generated_at, program_id')
+            .order('generated_at', { ascending: false })
+            .limit(10),
+          supabase
+            .from('formula_configs')
+            .select('id, created_at, source, is_active')
+            .eq('source', 'ai_suggestion')
+            .order('created_at', { ascending: false })
+            .limit(20),
+          supabase
+            .from('developer_suggestions')
+            .select('id, created_at, priority, status, description')
+            .order('created_at', { ascending: false })
+            .limit(20),
+          supabase
+            .from('motivational_message_logs')
+            .select('id, created_at, message, context')
+            .order('created_at', { ascending: false })
+            .limit(30),
+        ]);
 
       const all: TimelineEvent[] = [];
 
@@ -179,14 +219,21 @@ export function Logs() {
           ts: s.created_at as string,
           type: 'developer_suggestion',
           label: `Dev Suggestion — ${s.priority ?? 'medium'} priority`,
-          sub: (s.description as string).slice(0, 80) + ((s.description as string).length > 80 ? '…' : ''),
+          sub:
+            (s.description as string).slice(0, 80) +
+            ((s.description as string).length > 80 ? '…' : ''),
         });
       });
 
       (motivRes.data ?? []).forEach((m: Record<string, unknown>) => {
         const ctx = m.context as Record<string, unknown> | null;
         const lifts = (ctx?.primaryLifts as string[] | undefined) ?? [];
-        const liftLabel = lifts.length > 0 ? lifts.map((l) => l.charAt(0).toUpperCase() + l.slice(1)).join(', ') : 'Workout';
+        const liftLabel =
+          lifts.length > 0
+            ? lifts
+                .map((l) => l.charAt(0).toUpperCase() + l.slice(1))
+                .join(', ')
+            : 'Workout';
         const msg = m.message as string;
         all.push({
           id: `motiv-${m.id}`,
@@ -217,91 +264,220 @@ export function Logs() {
   return (
     <div>
       <div style={{ marginBottom: 20 }}>
-        <h1 style={{ fontSize: 20, fontWeight: 700, color: 'var(--text-bright)', marginBottom: 4 }}>
+        <h1
+          style={{
+            fontSize: 20,
+            fontWeight: 700,
+            color: 'var(--text-bright)',
+            marginBottom: 4,
+          }}
+        >
           AI Interaction Timeline
         </h1>
         <p style={{ color: 'var(--text-dim)', fontSize: 12 }}>
-          Chronological feed of all AI events — JIT sessions, hybrid comparisons, cycle reviews, suggestions
+          Chronological feed of all AI events — JIT sessions, hybrid
+          comparisons, cycle reviews, suggestions
         </p>
       </div>
 
       {/* Stats */}
       {!loading && (
-        <div style={{ display: 'flex', gap: 8, marginBottom: 24, flexWrap: 'wrap' }} className="animate-fade-in">
-          <StatCard label="JIT Sessions" value={stats.jit} color="var(--accent)" />
-          <StatCard label="Hybrid Comparisons" value={stats.hybrid} color="var(--purple)" />
-          <StatCard label="Cycle Reviews" value={stats.cycleReviews} color="var(--green)" />
-          <StatCard label="Formula Suggestions" value={stats.formulaSuggestions} color="var(--blue)" />
-          <StatCard label="Dev Suggestions" value={stats.devSuggestions} color="var(--red)" />
-          <StatCard label="Motivational" value={stats.motivational} color="var(--accent)" />
+        <div
+          style={{
+            display: 'flex',
+            gap: 8,
+            marginBottom: 24,
+            flexWrap: 'wrap',
+          }}
+          className="animate-fade-in"
+        >
+          <StatCard
+            label="JIT Sessions"
+            value={stats.jit}
+            color="var(--accent)"
+          />
+          <StatCard
+            label="Hybrid Comparisons"
+            value={stats.hybrid}
+            color="var(--purple)"
+          />
+          <StatCard
+            label="Cycle Reviews"
+            value={stats.cycleReviews}
+            color="var(--green)"
+          />
+          <StatCard
+            label="Formula Suggestions"
+            value={stats.formulaSuggestions}
+            color="var(--blue)"
+          />
+          <StatCard
+            label="Dev Suggestions"
+            value={stats.devSuggestions}
+            color="var(--red)"
+          />
+          <StatCard
+            label="Motivational"
+            value={stats.motivational}
+            color="var(--accent)"
+          />
         </div>
       )}
 
       {loading && (
-        <div style={{ color: 'var(--text-dim)', display: 'flex', gap: 8, alignItems: 'center', marginBottom: 24 }}>
-          <span style={{ animation: 'pulse-dot 1s ease infinite', display: 'inline-block', width: 6, height: 6, borderRadius: '50%', background: 'var(--accent)' }} />
+        <div
+          style={{
+            color: 'var(--text-dim)',
+            display: 'flex',
+            gap: 8,
+            alignItems: 'center',
+            marginBottom: 24,
+          }}
+        >
+          <span
+            style={{
+              animation: 'pulse-dot 1s ease infinite',
+              display: 'inline-block',
+              width: 6,
+              height: 6,
+              borderRadius: '50%',
+              background: 'var(--accent)',
+            }}
+          />
           Loading timeline…
         </div>
       )}
 
       {!loading && events.length === 0 && (
-        <div style={{ color: 'var(--text-muted)', padding: '60px 0', textAlign: 'center', fontSize: 13 }}>
-          No AI interactions recorded yet. Complete a workout to generate JIT logs.
+        <div
+          style={{
+            color: 'var(--text-muted)',
+            padding: '60px 0',
+            textAlign: 'center',
+            fontSize: 13,
+          }}
+        >
+          No AI interactions recorded yet. Complete a workout to generate JIT
+          logs.
         </div>
       )}
 
       {/* Timeline */}
       <div style={{ position: 'relative' }}>
         {/* Vertical line */}
-        <div style={{
-          position: 'absolute',
-          left: 15,
-          top: 8,
-          bottom: 8,
-          width: 1,
-          background: 'var(--border)',
-        }} />
+        <div
+          style={{
+            position: 'absolute',
+            left: 15,
+            top: 8,
+            bottom: 8,
+            width: 1,
+            background: 'var(--border)',
+          }}
+        />
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }} className="animate-stagger">
-          {events.map(event => {
+        <div
+          style={{ display: 'flex', flexDirection: 'column', gap: 4 }}
+          className="animate-stagger"
+        >
+          {events.map((event) => {
             const cfg = typeConfig[event.type];
             return (
-              <div key={event.id} style={{ display: 'flex', gap: 16, alignItems: 'flex-start' }}>
+              <div
+                key={event.id}
+                style={{ display: 'flex', gap: 16, alignItems: 'flex-start' }}
+              >
                 {/* Dot */}
-                <div style={{
-                  width: 30, flexShrink: 0, display: 'flex', justifyContent: 'center', paddingTop: 12,
-                  position: 'relative', zIndex: 1,
-                }}>
-                  <div style={{
-                    width: 10, height: 10, borderRadius: '50%',
-                    background: cfg.color,
-                    boxShadow: `0 0 8px ${cfg.color}60`,
-                    border: `2px solid var(--bg)`,
-                  }} />
+                <div
+                  style={{
+                    width: 30,
+                    flexShrink: 0,
+                    display: 'flex',
+                    justifyContent: 'center',
+                    paddingTop: 12,
+                    position: 'relative',
+                    zIndex: 1,
+                  }}
+                >
+                  <div
+                    style={{
+                      width: 10,
+                      height: 10,
+                      borderRadius: '50%',
+                      background: cfg.color,
+                      boxShadow: `0 0 8px ${cfg.color}60`,
+                      border: `2px solid var(--bg)`,
+                    }}
+                  />
                 </div>
 
                 {/* Card */}
-                <div style={{
-                  flex: 1,
-                  padding: '10px 14px',
-                  background: 'var(--surface)',
-                  border: '1px solid var(--border)',
-                  borderRadius: 6,
-                  marginBottom: 2,
-                }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', marginBottom: 2 }}>
-                    <span style={{
-                      fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em',
-                      color: cfg.color, background: cfg.bg, padding: '2px 6px', borderRadius: 3,
-                    }}>
+                <div
+                  style={{
+                    flex: 1,
+                    padding: '10px 14px',
+                    background: 'var(--surface)',
+                    border: '1px solid var(--border)',
+                    borderRadius: 6,
+                    marginBottom: 2,
+                  }}
+                >
+                  <div
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 8,
+                      flexWrap: 'wrap',
+                      marginBottom: 2,
+                    }}
+                  >
+                    <span
+                      style={{
+                        fontSize: 9,
+                        fontWeight: 700,
+                        textTransform: 'uppercase',
+                        letterSpacing: '0.08em',
+                        color: cfg.color,
+                        background: cfg.bg,
+                        padding: '2px 6px',
+                        borderRadius: 3,
+                      }}
+                    >
                       {cfg.label}
                     </span>
-                    {event.type === 'jit' && typeof event.meta?.strategy === 'string' && strategyBadge(event.meta.strategy)}
-                    <span style={{ color: 'var(--text-bright)', fontWeight: 600, fontSize: 12 }}>{event.label}</span>
+                    {event.type === 'jit' &&
+                      typeof event.meta?.strategy === 'string' &&
+                      strategyBadge(event.meta.strategy)}
+                    <span
+                      style={{
+                        color: 'var(--text-bright)',
+                        fontWeight: 600,
+                        fontSize: 12,
+                      }}
+                    >
+                      {event.label}
+                    </span>
                   </div>
-                  <div style={{ display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap' }}>
-                    <span style={{ color: 'var(--text-dim)', fontSize: 11 }}>{event.sub}</span>
-                    <span style={{ color: 'var(--text-muted)', fontSize: 10, marginLeft: 'auto' }}>{fmt(event.ts)}</span>
+                  <div
+                    style={{
+                      display: 'flex',
+                      gap: 12,
+                      alignItems: 'center',
+                      flexWrap: 'wrap',
+                    }}
+                  >
+                    <span style={{ color: 'var(--text-dim)', fontSize: 11 }}>
+                      {event.sub}
+                    </span>
+                    <span
+                      style={{
+                        color: 'var(--text-muted)',
+                        fontSize: 10,
+                        marginLeft: 'auto',
+                      }}
+                    >
+                      {fmt(event.ts)}
+                    </span>
                   </div>
                 </div>
               </div>

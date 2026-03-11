@@ -1,9 +1,9 @@
-import { estimateOneRepMax_Epley } from '@parakeet/training-engine'
+import { estimateOneRepMax_Epley } from '@parakeet/training-engine';
 
 interface LiftState {
-  type: '1rm' | '3rm'
-  weightKg: string
-  reps: string
+  type: '1rm' | '3rm';
+  weightKg: string;
+  reps: string;
 }
 
 /**
@@ -11,21 +11,21 @@ interface LiftState {
  * Returns '—' when the input is invalid or estimation fails.
  */
 export function computeEstimated1RM(state: LiftState): string {
-  const weight = parseFloat(state.weightKg)
-  if (!weight || weight <= 0) return '—'
+  const weight = parseFloat(state.weightKg);
+  if (!weight || weight <= 0) return '—';
 
   if (state.type === '1rm') {
-    return weight.toFixed(1) + ' kg'
+    return weight.toFixed(1) + ' kg';
   }
 
-  const reps = parseInt(state.reps, 10)
-  if (!reps || reps < 2 || reps > 10) return '—'
+  const reps = parseInt(state.reps, 10);
+  if (!reps || reps < 2 || reps > 10) return '—';
 
   try {
-    const estimated = estimateOneRepMax_Epley(weight, reps)
-    return estimated.toFixed(1) + ' kg'
+    const estimated = estimateOneRepMax_Epley(weight, reps);
+    return estimated.toFixed(1) + ' kg';
   } catch {
-    return '—'
+    return '—';
   }
 }
 
@@ -33,11 +33,11 @@ export function computeEstimated1RM(state: LiftState): string {
  * Returns true when the lift state has sufficient valid input to proceed.
  */
 export function isLiftValid(state: LiftState): boolean {
-  const weight = parseFloat(state.weightKg)
-  if (!weight || weight <= 0) return false
+  const weight = parseFloat(state.weightKg);
+  if (!weight || weight <= 0) return false;
   if (state.type === '3rm') {
-    const reps = parseInt(state.reps, 10)
-    if (!reps || reps < 2 || reps > 10) return false
+    const reps = parseInt(state.reps, 10);
+    if (!reps || reps < 2 || reps > 10) return false;
   }
-  return true
+  return true;
 }

@@ -3,7 +3,9 @@ import {
   getUnreviewedDeveloperSuggestionsCount,
 } from '../data/settings.repository';
 
-export async function getPendingFormulaSuggestionCount(userId: string): Promise<number> {
+export async function getPendingFormulaSuggestionCount(
+  userId: string
+): Promise<number> {
   return getPendingFormulaSuggestionsCount(userId);
 }
 

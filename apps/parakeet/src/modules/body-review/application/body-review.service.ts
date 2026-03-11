@@ -2,7 +2,11 @@ import {
   computePredictedFatigue,
   detectMismatches,
 } from '@parakeet/training-engine';
-import type { FatigueLevel, MuscleGroup, MrvMevConfig } from '@parakeet/training-engine';
+import type {
+  FatigueLevel,
+  MrvMevConfig,
+  MuscleGroup,
+} from '@parakeet/training-engine';
 
 import {
   fetchLatestWeeklyReview,
@@ -24,8 +28,13 @@ export interface SaveReviewInput {
   notes?: string | null;
 }
 
-export async function saveWeeklyBodyReview(input: SaveReviewInput): Promise<WeeklyBodyReview> {
-  const predictedFatigue = computePredictedFatigue(input.weeklyVolume, input.mrvMevConfig);
+export async function saveWeeklyBodyReview(
+  input: SaveReviewInput
+): Promise<WeeklyBodyReview> {
+  const predictedFatigue = computePredictedFatigue(
+    input.weeklyVolume,
+    input.mrvMevConfig
+  );
   const mismatches = detectMismatches(input.feltSoreness, predictedFatigue);
 
   return insertWeeklyBodyReview({
@@ -41,7 +50,7 @@ export async function saveWeeklyBodyReview(input: SaveReviewInput): Promise<Week
 
 export async function getWeeklyBodyReviews(
   userId: string,
-  programId?: string,
+  programId?: string
 ): Promise<WeeklyBodyReview[]> {
   return fetchWeeklyBodyReviews(userId, programId);
 }
@@ -49,7 +58,7 @@ export async function getWeeklyBodyReviews(
 export async function getWeeklyVolumeForReview(
   userId: string,
   programId: string,
-  weekNumber: number,
+  weekNumber: number
 ): Promise<Record<MuscleGroup, number>> {
   return fetchWeeklyVolumeForReview(userId, programId, weekNumber);
 }
@@ -57,7 +66,7 @@ export async function getWeeklyVolumeForReview(
 export async function getLatestWeeklyReview(
   userId: string,
   programId: string,
-  weekNumber: number,
+  weekNumber: number
 ): Promise<WeeklyBodyReview | null> {
   return fetchLatestWeeklyReview(userId, programId, weekNumber);
 }

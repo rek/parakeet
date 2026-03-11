@@ -1,29 +1,34 @@
-import { InvariantViolation, SimulationLog } from '../types'
+import { InvariantViolation, SimulationLog } from '../types';
 
-export function checkAuxiliaryBalance(log: SimulationLog): InvariantViolation[] {
-  const violations: InvariantViolation[] = []
+export function checkAuxiliaryBalance(
+  log: SimulationLog
+): InvariantViolation[] {
+  const violations: InvariantViolation[] = [];
 
-  const trainedSessions = log.sessions.filter((s) => !s.skipped)
+  const trainedSessions = log.sessions.filter((s) => !s.skipped);
 
   // Rule: No single aux exercise appears more than 2x in a row
-  const auxSequence: string[] = []
+  const auxSequence: string[] = [];
   for (const session of trainedSessions) {
     for (const aux of session.auxiliaryWork) {
       if (!aux.skipped && !aux.isTopUp) {
-        auxSequence.push(aux.exercise)
+        auxSequence.push(aux.exercise);
       }
     }
   }
 
   for (let i = 2; i < auxSequence.length; i++) {
-    if (auxSequence[i] === auxSequence[i - 1] && auxSequence[i] === auxSequence[i - 2]) {
+    if (
+      auxSequence[i] === auxSequence[i - 1] &&
+      auxSequence[i] === auxSequence[i - 2]
+    ) {
       violations.push({
         category: 'auxiliary_balance',
         rule: 'aux_repeated_3x',
         severity: 'warning',
         message: `"${auxSequence[i]}" appeared 3+ times consecutively in aux rotation`,
-      })
-      break // report once per exercise
+      });
+      break; // report once per exercise
     }
   }
 
@@ -38,10 +43,10 @@ export function checkAuxiliaryBalance(log: SimulationLog): InvariantViolation[] 
           message: `Top-up exercise "${aux.exercise}" added without a reason on day ${session.day}`,
           day: session.day,
           weekNumber: session.weekNumber,
-        })
+        });
       }
     }
   }
 
-  return violations
+  return violations;
 }

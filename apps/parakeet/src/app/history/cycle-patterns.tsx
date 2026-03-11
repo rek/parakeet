@@ -1,10 +1,7 @@
-import { useMemo } from 'react'
-import { useQuery } from '@tanstack/react-query'
-import { ScrollView, StyleSheet, Text, View } from 'react-native'
-import { SafeAreaView } from 'react-native-safe-area-context'
-import { router } from 'expo-router'
+import { useMemo } from 'react';
+import { ScrollView, StyleSheet, Text, View } from 'react-native';
 
-import { useAuth } from '@modules/auth'
+import { useAuth } from '@modules/auth';
 import {
   computePhaseStats,
   CYCLE_PHASE_BG,
@@ -13,12 +10,16 @@ import {
   generateInsight,
   MIN_CYCLES_FOR_PATTERNS,
   PHASE_BAR_FILL,
-} from '@modules/cycle-tracking'
-import { getCompletedSessions } from '@modules/session'
-import { BackLink } from '../../components/navigation/BackLink'
-import { spacing, radii, typography } from '../../theme'
-import type { ColorScheme } from '../../theme'
-import { useTheme } from '../../theme/ThemeContext'
+} from '@modules/cycle-tracking';
+import { getCompletedSessions } from '@modules/session';
+import { useQuery } from '@tanstack/react-query';
+import { router } from 'expo-router';
+import { SafeAreaView } from 'react-native-safe-area-context';
+
+import { BackLink } from '../../components/navigation/BackLink';
+import { radii, spacing, typography } from '../../theme';
+import type { ColorScheme } from '../../theme';
+import { useTheme } from '../../theme/ThemeContext';
 
 function buildStyles(colors: ColorScheme) {
   return StyleSheet.create({
@@ -103,31 +104,33 @@ function buildStyles(colors: ColorScheme) {
       textAlign: 'center',
       lineHeight: 22,
     },
-  })
+  });
 }
 
 // ── Screen ────────────────────────────────────────────────────────────────────
 
 export default function CyclePatternsScreen() {
-  const { colors } = useTheme()
-  const styles = useMemo(() => buildStyles(colors), [colors])
-  const { user } = useAuth()
+  const { colors } = useTheme();
+  const styles = useMemo(() => buildStyles(colors), [colors]);
+  const { user } = useAuth();
 
   const { data: sessions, isLoading } = useQuery({
     queryKey: ['sessions', 'completed', user?.id, 'all'],
     queryFn: () => getCompletedSessions(user!.id, 0, 200),
     enabled: !!user?.id,
-  })
+  });
 
-  const phasedSessions = (sessions ?? []).filter((s) => s.cycle_phase)
-  const stats = computePhaseStats(phasedSessions)
+  const phasedSessions = (sessions ?? []).filter((s) => s.cycle_phase);
+  const stats = computePhaseStats(phasedSessions);
 
   // Estimate distinct cycles: rough heuristic — count sessions with cycle data
   // across phase transitions. Use simple count ÷ 4 phases as a proxy.
-  const uniquePhasesFilled = CYCLE_PHASES.filter((p) => stats[p].sessionCount > 0).length
-  const hasEnoughData = phasedSessions.length >= MIN_CYCLES_FOR_PATTERNS * 4
+  const uniquePhasesFilled = CYCLE_PHASES.filter(
+    (p) => stats[p].sessionCount > 0
+  ).length;
+  const hasEnoughData = phasedSessions.length >= MIN_CYCLES_FOR_PATTERNS * 4;
 
-  const insight = generateInsight(stats)
+  const insight = generateInsight(stats);
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -142,7 +145,8 @@ export default function CyclePatternsScreen() {
         {isLoading ? null : !hasEnoughData ? (
           <View style={styles.noticeCard}>
             <Text style={styles.noticeText}>
-              Keep tracking — patterns become visible after 2–3 cycles ({phasedSessions.length} phase-tagged sessions so far)
+              Keep tracking — patterns become visible after 2–3 cycles (
+              {phasedSessions.length} phase-tagged sessions so far)
             </Text>
           </View>
         ) : null}
@@ -150,12 +154,17 @@ export default function CyclePatternsScreen() {
         {/* RPE by phase */}
         <Text style={styles.sectionHeader}>Average RPE by Phase</Text>
         {CYCLE_PHASES.map((phase) => {
-          const stat = stats[phase]
-          const barPct = stat.avgRpe != null ? (stat.avgRpe / 10) * 100 : 0
+          const stat = stats[phase];
+          const barPct = stat.avgRpe != null ? (stat.avgRpe / 10) * 100 : 0;
           return (
             <View key={phase} style={styles.barRow}>
               <Text style={styles.barLabel}>{CYCLE_PHASE_LABELS[phase]}</Text>
-              <View style={[styles.barTrack, { backgroundColor: CYCLE_PHASE_BG[phase] }]}>
+              <View
+                style={[
+                  styles.barTrack,
+                  { backgroundColor: CYCLE_PHASE_BG[phase] },
+                ]}
+              >
                 <View
                   style={[
                     styles.barFill,
@@ -171,19 +180,29 @@ export default function CyclePatternsScreen() {
                 {stat.sessionCount > 0 ? ` (${stat.sessionCount})` : ''}
               </Text>
             </View>
-          )
+          );
         })}
 
         {/* Session count by phase */}
-        <Text style={[styles.sectionHeader, { marginTop: spacing[6] }]}>Sessions per Phase</Text>
+        <Text style={[styles.sectionHeader, { marginTop: spacing[6] }]}>
+          Sessions per Phase
+        </Text>
         {CYCLE_PHASES.map((phase) => {
-          const stat = stats[phase]
-          const maxCount = Math.max(...CYCLE_PHASES.map((p) => stats[p].sessionCount), 1)
-          const barPct = (stat.sessionCount / maxCount) * 100
+          const stat = stats[phase];
+          const maxCount = Math.max(
+            ...CYCLE_PHASES.map((p) => stats[p].sessionCount),
+            1
+          );
+          const barPct = (stat.sessionCount / maxCount) * 100;
           return (
             <View key={phase} style={styles.barRow}>
               <Text style={styles.barLabel}>{CYCLE_PHASE_LABELS[phase]}</Text>
-              <View style={[styles.barTrack, { backgroundColor: CYCLE_PHASE_BG[phase] }]}>
+              <View
+                style={[
+                  styles.barTrack,
+                  { backgroundColor: CYCLE_PHASE_BG[phase] },
+                ]}
+              >
                 <View
                   style={[
                     styles.barFill,
@@ -196,7 +215,7 @@ export default function CyclePatternsScreen() {
               </View>
               <Text style={styles.barValue}>{stat.sessionCount}</Text>
             </View>
-          )
+          );
         })}
 
         {/* Insight */}
@@ -207,10 +226,12 @@ export default function CyclePatternsScreen() {
         )}
 
         {uniquePhasesFilled === 0 && !isLoading && (
-          <Text style={styles.emptyText}>No cycle phase data yet. Complete sessions with cycle tracking enabled to see patterns.</Text>
+          <Text style={styles.emptyText}>
+            No cycle phase data yet. Complete sessions with cycle tracking
+            enabled to see patterns.
+          </Text>
         )}
       </ScrollView>
     </SafeAreaView>
-  )
+  );
 }
-

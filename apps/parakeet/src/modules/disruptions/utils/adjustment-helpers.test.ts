@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+
 import { describeAction, groupSuggestions } from './adjustment-helpers';
 
 // Minimal shape matching AdjustmentSuggestion fields used by these functions
@@ -11,55 +12,70 @@ const make = (fields: {
 
 describe('describeAction', () => {
   it('returns "Session skipped" for session_skipped', () => {
-    expect(describeAction(make({ action: 'session_skipped' }))).toBe('Session skipped');
+    expect(describeAction(make({ action: 'session_skipped' }))).toBe(
+      'Session skipped'
+    );
   });
 
   it('includes percentage when reduction_pct is present', () => {
-    expect(describeAction(make({ action: 'weight_reduced', reduction_pct: 10 }))).toBe(
-      'Weight reduced by 10%',
-    );
+    expect(
+      describeAction(make({ action: 'weight_reduced', reduction_pct: 10 }))
+    ).toBe('Weight reduced by 10%');
   });
 
   it('returns "Weight reduced" when reduction_pct is null', () => {
-    expect(describeAction(make({ action: 'weight_reduced', reduction_pct: null }))).toBe(
-      'Weight reduced',
-    );
+    expect(
+      describeAction(make({ action: 'weight_reduced', reduction_pct: null }))
+    ).toBe('Weight reduced');
   });
 
   it('returns "Weight reduced" when reduction_pct is absent', () => {
-    expect(describeAction(make({ action: 'weight_reduced' }))).toBe('Weight reduced');
+    expect(describeAction(make({ action: 'weight_reduced' }))).toBe(
+      'Weight reduced'
+    );
   });
 
   it('includes count when reps_reduction is present', () => {
-    expect(describeAction(make({ action: 'reps_reduced', reps_reduction: 2 }))).toBe(
-      'Reps reduced by 2',
-    );
+    expect(
+      describeAction(make({ action: 'reps_reduced', reps_reduction: 2 }))
+    ).toBe('Reps reduced by 2');
   });
 
   it('returns "Reps reduced" when reps_reduction is null', () => {
-    expect(describeAction(make({ action: 'reps_reduced', reps_reduction: null }))).toBe(
-      'Reps reduced',
-    );
+    expect(
+      describeAction(make({ action: 'reps_reduced', reps_reduction: null }))
+    ).toBe('Reps reduced');
   });
 
   it('returns "Reps reduced" when reps_reduction is absent', () => {
-    expect(describeAction(make({ action: 'reps_reduced' }))).toBe('Reps reduced');
+    expect(describeAction(make({ action: 'reps_reduced' }))).toBe(
+      'Reps reduced'
+    );
   });
 
   it('uses substitution_note when present', () => {
     expect(
-      describeAction(make({ action: 'exercise_substituted', substitution_note: 'Swapped to DB press' })),
+      describeAction(
+        make({
+          action: 'exercise_substituted',
+          substitution_note: 'Swapped to DB press',
+        })
+      )
     ).toBe('Swapped to DB press');
   });
 
   it('returns "Exercise substituted" when substitution_note is null', () => {
-    expect(describeAction(make({ action: 'exercise_substituted', substitution_note: null }))).toBe(
-      'Exercise substituted',
-    );
+    expect(
+      describeAction(
+        make({ action: 'exercise_substituted', substitution_note: null })
+      )
+    ).toBe('Exercise substituted');
   });
 
   it('returns "Exercise substituted" when substitution_note is absent', () => {
-    expect(describeAction(make({ action: 'exercise_substituted' }))).toBe('Exercise substituted');
+    expect(describeAction(make({ action: 'exercise_substituted' }))).toBe(
+      'Exercise substituted'
+    );
   });
 });
 

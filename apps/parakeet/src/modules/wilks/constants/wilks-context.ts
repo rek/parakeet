@@ -4,4 +4,4 @@ export const WILKS_CONTEXT = [
   { label: 'Advanced', range: '350–450' },
   { label: 'Intermediate', range: '250–350' },
   { label: 'Beginner', range: '<250' },
-] as const
+] as const;

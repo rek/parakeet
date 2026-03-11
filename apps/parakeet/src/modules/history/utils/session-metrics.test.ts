@@ -1,8 +1,9 @@
 import { describe, expect, it } from 'vitest';
+
 import {
-  estimateBestOneRm,
-  computeSessionVolume,
   computeHeaviestLift,
+  computeSessionVolume,
+  estimateBestOneRm,
   getSessionJoin,
 } from './session-metrics';
 

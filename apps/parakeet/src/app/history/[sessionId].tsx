@@ -1,24 +1,31 @@
-import { useMemo } from 'react'
+import { useMemo } from 'react';
 import {
   ActivityIndicator,
   ScrollView,
   StyleSheet,
   Text,
   View,
-} from 'react-native'
-import { router, useLocalSearchParams } from 'expo-router'
-import { useQuery } from '@tanstack/react-query'
-import { SafeAreaView } from 'react-native-safe-area-context'
-import { getSession, getSessionLog, PERFORMANCE_LABELS, getPerformanceColors } from '@modules/session'
-import { BackLink } from '../../components/navigation/BackLink'
-import { radii, spacing, typography } from '../../theme'
-import type { ColorScheme } from '../../theme'
-import { useTheme } from '../../theme/ThemeContext'
-import { LIFT_LABELS } from '@shared/constants'
-import { formatDate, formatTime } from '@shared/utils/date'
-import { capitalize } from '@shared/utils/string'
-import type { Lift } from '@parakeet/shared-types'
-import { gramsToKg } from '@parakeet/training-engine'
+} from 'react-native';
+
+import {
+  getPerformanceColors,
+  getSession,
+  getSessionLog,
+  PERFORMANCE_LABELS,
+} from '@modules/session';
+import type { Lift } from '@parakeet/shared-types';
+import { gramsToKg } from '@parakeet/training-engine';
+import { LIFT_LABELS } from '@shared/constants';
+import { formatDate, formatTime } from '@shared/utils/date';
+import { capitalize } from '@shared/utils/string';
+import { useQuery } from '@tanstack/react-query';
+import { router, useLocalSearchParams } from 'expo-router';
+import { SafeAreaView } from 'react-native-safe-area-context';
+
+import { BackLink } from '../../components/navigation/BackLink';
+import { radii, spacing, typography } from '../../theme';
+import type { ColorScheme } from '../../theme';
+import { useTheme } from '../../theme/ThemeContext';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -32,7 +39,11 @@ function buildStyles(colors: ColorScheme) {
       paddingTop: spacing[4],
       paddingBottom: spacing[12],
     },
-    loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+    loadingContainer: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
     title: {
       fontSize: typography.sizes['2xl'],
       fontWeight: typography.weights.black,
@@ -110,37 +121,44 @@ function buildStyles(colors: ColorScheme) {
     tableCellSet: { width: 36, color: colors.textSecondary },
     tableCellWeight: { flex: 1 },
     tableCellReps: { width: 48, textAlign: 'center' },
-    tableCellRpe: { width: 48, textAlign: 'right', color: colors.textSecondary },
+    tableCellRpe: {
+      width: 48,
+      textAlign: 'right',
+      color: colors.textSecondary,
+    },
     emptyText: {
       fontSize: typography.sizes.base,
       color: colors.textTertiary,
       textAlign: 'center',
       marginTop: spacing[8],
     },
-  })
+  });
 }
 
 // ── Screen ───────────────────────────────────────────────────────────────────
 
 export default function SessionDetailScreen() {
-  const { colors } = useTheme()
-  const styles = useMemo(() => buildStyles(colors), [colors])
-  const performanceColors = useMemo(() => getPerformanceColors(colors), [colors])
-  const { sessionId } = useLocalSearchParams<{ sessionId: string }>()
+  const { colors } = useTheme();
+  const styles = useMemo(() => buildStyles(colors), [colors]);
+  const performanceColors = useMemo(
+    () => getPerformanceColors(colors),
+    [colors]
+  );
+  const { sessionId } = useLocalSearchParams<{ sessionId: string }>();
 
   const { data: session, isLoading: sessionLoading } = useQuery({
     queryKey: ['session', 'detail', sessionId],
     queryFn: () => getSession(sessionId),
     enabled: !!sessionId,
-  })
+  });
 
   const { data: log, isLoading: logLoading } = useQuery({
     queryKey: ['session', 'log', sessionId],
     queryFn: () => getSessionLog(sessionId),
     enabled: !!sessionId,
-  })
+  });
 
-  const isLoading = sessionLoading || logLoading
+  const isLoading = sessionLoading || logLoading;
 
   if (isLoading) {
     return (
@@ -149,7 +167,7 @@ export default function SessionDetailScreen() {
           <ActivityIndicator size="large" color={colors.primary} />
         </View>
       </SafeAreaView>
-    )
+    );
   }
 
   if (!session) {
@@ -160,25 +178,30 @@ export default function SessionDetailScreen() {
           <Text style={styles.emptyText}>Session not found.</Text>
         </View>
       </SafeAreaView>
-    )
+    );
   }
 
-  const liftLabel = LIFT_LABELS[session.primary_lift as Lift] ?? capitalize(session.primary_lift ?? '')
-  const intensityLabel = capitalize(session.intensity_type ?? '')
-  const completedAt = session.completed_at ?? null
-  const dateLabel = formatDate(completedAt ?? session.planned_date)
-  const timeLabel = completedAt ? formatTime(completedAt) : ''
+  const liftLabel =
+    LIFT_LABELS[session.primary_lift as Lift] ??
+    capitalize(session.primary_lift ?? '');
+  const intensityLabel = capitalize(session.intensity_type ?? '');
+  const completedAt = session.completed_at ?? null;
+  const dateLabel = formatDate(completedAt ?? session.planned_date);
+  const timeLabel = completedAt ? formatTime(completedAt) : '';
 
-  const mainSets = log?.actual_sets ?? []
-  const auxSets = log?.auxiliary_sets ?? []
+  const mainSets = log?.actual_sets ?? [];
+  const auxSets = log?.auxiliary_sets ?? [];
 
   // Group auxiliary sets by exercise name
-  const auxByExercise = auxSets.reduce<Record<string, typeof auxSets>>((acc, set) => {
-    const name = set.exercise ?? 'Auxiliary'
-    if (!acc[name]) acc[name] = []
-    acc[name].push(set)
-    return acc
-  }, {})
+  const auxByExercise = auxSets.reduce<Record<string, typeof auxSets>>(
+    (acc, set) => {
+      const name = set.exercise ?? 'Auxiliary';
+      if (!acc[name]) acc[name] = [];
+      acc[name].push(set);
+      return acc;
+    },
+    {}
+  );
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -192,9 +215,15 @@ export default function SessionDetailScreen() {
         showsVerticalScrollIndicator={false}
       >
         {/* Title */}
-        <Text style={styles.title}>{liftLabel} — {intensityLabel}</Text>
+        <Text style={styles.title}>
+          {liftLabel} — {intensityLabel}
+        </Text>
         <Text style={styles.subtitle}>
-          Week {session.week_number}{session.block_number ? ` · Block ${session.block_number}` : ''} · {dateLabel}{timeLabel ? ` · ${timeLabel}` : ''}
+          Week {session.week_number}
+          {session.block_number
+            ? ` · Block ${session.block_number}`
+            : ''} · {dateLabel}
+          {timeLabel ? ` · ${timeLabel}` : ''}
         </Text>
 
         {/* Summary row */}
@@ -209,17 +238,26 @@ export default function SessionDetailScreen() {
             {log.completion_pct != null && (
               <View style={styles.summaryChip}>
                 <Text style={styles.summaryChipLabel}>Completion</Text>
-                <Text style={styles.summaryChipValue}>{Math.round(log.completion_pct)}%</Text>
+                <Text style={styles.summaryChipValue}>
+                  {Math.round(log.completion_pct)}%
+                </Text>
               </View>
             )}
             {log.performance_vs_plan && (
               <View style={styles.summaryChip}>
                 <Text style={styles.summaryChipLabel}>vs Plan</Text>
-                <Text style={[
-                  styles.summaryChipValue,
-                  { color: performanceColors[log.performance_vs_plan] ?? colors.text }
-                ]}>
-                  {PERFORMANCE_LABELS[log.performance_vs_plan] ?? log.performance_vs_plan}
+                <Text
+                  style={[
+                    styles.summaryChipValue,
+                    {
+                      color:
+                        performanceColors[log.performance_vs_plan] ??
+                        colors.text,
+                    },
+                  ]}
+                >
+                  {PERFORMANCE_LABELS[log.performance_vs_plan] ??
+                    log.performance_vs_plan}
                 </Text>
               </View>
             )}
@@ -233,15 +271,28 @@ export default function SessionDetailScreen() {
             <View style={styles.setsTable}>
               <View style={styles.tableHeader}>
                 <Text style={[styles.tableCell, styles.tableCellSet]}>Set</Text>
-                <Text style={[styles.tableCell, styles.tableCellWeight]}>Weight</Text>
-                <Text style={[styles.tableCell, styles.tableCellReps]}>Reps</Text>
+                <Text style={[styles.tableCell, styles.tableCellWeight]}>
+                  Weight
+                </Text>
+                <Text style={[styles.tableCell, styles.tableCellReps]}>
+                  Reps
+                </Text>
                 <Text style={[styles.tableCell, styles.tableCellRpe]}>RPE</Text>
               </View>
               {mainSets.map((set, i) => (
-                <View key={i} style={[styles.tableRow, i % 2 === 1 && styles.tableRowAlt]}>
-                  <Text style={[styles.tableCell, styles.tableCellSet]}>{set.set_number}</Text>
-                  <Text style={[styles.tableCell, styles.tableCellWeight]}>{gramsToKg(set.weight_grams).toFixed(1)} kg</Text>
-                  <Text style={[styles.tableCell, styles.tableCellReps]}>{set.reps_completed}</Text>
+                <View
+                  key={i}
+                  style={[styles.tableRow, i % 2 === 1 && styles.tableRowAlt]}
+                >
+                  <Text style={[styles.tableCell, styles.tableCellSet]}>
+                    {set.set_number}
+                  </Text>
+                  <Text style={[styles.tableCell, styles.tableCellWeight]}>
+                    {gramsToKg(set.weight_grams).toFixed(1)} kg
+                  </Text>
+                  <Text style={[styles.tableCell, styles.tableCellReps]}>
+                    {set.reps_completed}
+                  </Text>
                   <Text style={[styles.tableCell, styles.tableCellRpe]}>
                     {set.rpe_actual != null ? set.rpe_actual : '—'}
                   </Text>
@@ -254,19 +305,34 @@ export default function SessionDetailScreen() {
         {/* Auxiliary sets */}
         {Object.entries(auxByExercise).map(([exercise, sets]) => (
           <View key={exercise}>
-            <Text style={styles.sectionHeader}>{capitalize(exercise.replace(/_/g, ' '))}</Text>
+            <Text style={styles.sectionHeader}>
+              {capitalize(exercise.replace(/_/g, ' '))}
+            </Text>
             <View style={styles.setsTable}>
               <View style={styles.tableHeader}>
                 <Text style={[styles.tableCell, styles.tableCellSet]}>Set</Text>
-                <Text style={[styles.tableCell, styles.tableCellWeight]}>Weight</Text>
-                <Text style={[styles.tableCell, styles.tableCellReps]}>Reps</Text>
+                <Text style={[styles.tableCell, styles.tableCellWeight]}>
+                  Weight
+                </Text>
+                <Text style={[styles.tableCell, styles.tableCellReps]}>
+                  Reps
+                </Text>
                 <Text style={[styles.tableCell, styles.tableCellRpe]}>RPE</Text>
               </View>
               {sets.map((set, i) => (
-                <View key={i} style={[styles.tableRow, i % 2 === 1 && styles.tableRowAlt]}>
-                  <Text style={[styles.tableCell, styles.tableCellSet]}>{set.set_number}</Text>
-                  <Text style={[styles.tableCell, styles.tableCellWeight]}>{gramsToKg(set.weight_grams).toFixed(1)} kg</Text>
-                  <Text style={[styles.tableCell, styles.tableCellReps]}>{set.reps_completed}</Text>
+                <View
+                  key={i}
+                  style={[styles.tableRow, i % 2 === 1 && styles.tableRowAlt]}
+                >
+                  <Text style={[styles.tableCell, styles.tableCellSet]}>
+                    {set.set_number}
+                  </Text>
+                  <Text style={[styles.tableCell, styles.tableCellWeight]}>
+                    {gramsToKg(set.weight_grams).toFixed(1)} kg
+                  </Text>
+                  <Text style={[styles.tableCell, styles.tableCellReps]}>
+                    {set.reps_completed}
+                  </Text>
                   <Text style={[styles.tableCell, styles.tableCellRpe]}>
                     {set.rpe_actual != null ? set.rpe_actual : '—'}
                   </Text>
@@ -277,9 +343,11 @@ export default function SessionDetailScreen() {
         ))}
 
         {!log && (
-          <Text style={styles.emptyText}>No set data recorded for this session.</Text>
+          <Text style={styles.emptyText}>
+            No set data recorded for this session.
+          </Text>
         )}
       </ScrollView>
     </SafeAreaView>
-  )
+  );
 }

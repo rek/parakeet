@@ -6,7 +6,12 @@ type ProfileRow = DbRow<'profiles'>;
 export interface ProfileRecord
   extends Pick<
     ProfileRow,
-    'id' | 'display_name' | 'biological_sex' | 'date_of_birth' | 'bodyweight_kg' | 'created_at'
+    | 'id'
+    | 'display_name'
+    | 'biological_sex'
+    | 'date_of_birth'
+    | 'bodyweight_kg'
+    | 'created_at'
   > {}
 
 export type ProfileUpdateRecord = Pick<
@@ -21,10 +26,14 @@ export async function getAuthenticatedUserId(): Promise<string | null> {
   return user?.id ?? null;
 }
 
-export async function getProfileById(userId: string): Promise<ProfileRecord | null> {
+export async function getProfileById(
+  userId: string
+): Promise<ProfileRecord | null> {
   const { data, error } = await typedSupabase
     .from('profiles')
-    .select('id, display_name, biological_sex, date_of_birth, bodyweight_kg, created_at')
+    .select(
+      'id, display_name, biological_sex, date_of_birth, bodyweight_kg, created_at'
+    )
     .eq('id', userId)
     .maybeSingle();
 
@@ -34,7 +43,7 @@ export async function getProfileById(userId: string): Promise<ProfileRecord | nu
 
 export async function updateProfileById(
   userId: string,
-  update: ProfileUpdateRecord,
+  update: ProfileUpdateRecord
 ): Promise<void> {
   const { error } = await typedSupabase
     .from('profiles')

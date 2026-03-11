@@ -1,4 +1,4 @@
-import { useCallback, useMemo } from 'react'
+import { useCallback, useMemo } from 'react';
 import {
   ScrollView,
   StyleSheet,
@@ -6,25 +6,31 @@ import {
   Text,
   TouchableOpacity,
   View,
-} from 'react-native'
+} from 'react-native';
+
 import {
   FEATURE_CATEGORIES,
   FEATURE_REGISTRY,
   FULL_PRESET,
   SIMPLE_PRESET,
   useFeatureFlags,
-} from '@modules/feature-flags'
-import type { FeatureCategory, FeatureId } from '@modules/feature-flags'
-import { SafeAreaView } from 'react-native-safe-area-context'
-import { router } from 'expo-router'
+} from '@modules/feature-flags';
+import type { FeatureCategory, FeatureId } from '@modules/feature-flags';
+import { router } from 'expo-router';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { radii, spacing, typography } from '../../theme'
-import type { ColorScheme } from '../../theme'
-import { useTheme } from '../../theme/ThemeContext'
-import { BackLink } from '../../components/navigation/BackLink'
+import { BackLink } from '../../components/navigation/BackLink';
+import { radii, spacing, typography } from '../../theme';
+import type { ColorScheme } from '../../theme';
+import { useTheme } from '../../theme/ThemeContext';
 
-function isPresetMatch(flags: Record<FeatureId, boolean>, preset: Record<FeatureId, boolean>) {
-  return (Object.keys(preset) as FeatureId[]).every((id) => flags[id] === preset[id])
+function isPresetMatch(
+  flags: Record<FeatureId, boolean>,
+  preset: Record<FeatureId, boolean>
+) {
+  return (Object.keys(preset) as FeatureId[]).every(
+    (id) => flags[id] === preset[id]
+  );
 }
 
 function buildStyles(colors: ColorScheme) {
@@ -117,26 +123,26 @@ function buildStyles(colors: ColorScheme) {
       marginTop: 2,
       lineHeight: 16,
     },
-  })
+  });
 }
 
 export default function FeaturesScreen() {
-  const { colors } = useTheme()
-  const styles = useMemo(() => buildStyles(colors), [colors])
-  const { flags, toggle, applyPreset } = useFeatureFlags()
+  const { colors } = useTheme();
+  const styles = useMemo(() => buildStyles(colors), [colors]);
+  const { flags, toggle, applyPreset } = useFeatureFlags();
 
   const activePreset = isPresetMatch(flags, SIMPLE_PRESET)
     ? 'simple'
     : isPresetMatch(flags, FULL_PRESET)
       ? 'full'
-      : 'custom'
+      : 'custom';
 
   const handlePreset = useCallback(
     async (preset: 'simple' | 'full') => {
-      await applyPreset(preset === 'simple' ? SIMPLE_PRESET : FULL_PRESET)
+      await applyPreset(preset === 'simple' ? SIMPLE_PRESET : FULL_PRESET);
     },
-    [applyPreset],
-  )
+    [applyPreset]
+  );
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -186,8 +192,8 @@ export default function FeaturesScreen() {
         {/* Feature toggles by category */}
         {FEATURE_CATEGORIES.map((cat) => {
           const features = FEATURE_REGISTRY.filter(
-            (f) => f.category === (cat.id as FeatureCategory),
-          )
+            (f) => f.category === (cat.id as FeatureCategory)
+          );
           return (
             <View key={cat.id}>
               <Text style={styles.sectionHeader}>{cat.label}</Text>
@@ -195,7 +201,9 @@ export default function FeaturesScreen() {
                 <View key={feature.id} style={styles.featureRow}>
                   <View style={styles.featureInfo}>
                     <Text style={styles.featureLabel}>{feature.label}</Text>
-                    <Text style={styles.featureDesc}>{feature.description}</Text>
+                    <Text style={styles.featureDesc}>
+                      {feature.description}
+                    </Text>
                   </View>
                   <Switch
                     value={flags[feature.id]}
@@ -213,10 +221,9 @@ export default function FeaturesScreen() {
                 </View>
               ))}
             </View>
-          )
+          );
         })}
       </ScrollView>
     </SafeAreaView>
-  )
+  );
 }
-

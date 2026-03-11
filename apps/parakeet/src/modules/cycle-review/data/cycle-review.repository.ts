@@ -1,11 +1,11 @@
-import type { Json } from '@platform/supabase';
-import { typedSupabase, fromJson, toJson } from '@platform/supabase';
-import type { CycleReport, RawCycleData } from '@parakeet/training-engine';
 import type { CycleReview } from '@parakeet/shared-types';
+import type { CycleReport, RawCycleData } from '@parakeet/training-engine';
+import type { Json } from '@platform/supabase';
+import { fromJson, toJson, typedSupabase } from '@platform/supabase';
 
 export function subscribeToCycleReviewInserts(
   programId: string,
-  onInsert: () => void,
+  onInsert: () => void
 ): () => void {
   const channel = typedSupabase
     .channel(`cycle-review-${programId}`)
@@ -17,7 +17,7 @@ export function subscribeToCycleReviewInserts(
         table: 'cycle_reviews',
         filter: `program_id=eq.${programId}`,
       },
-      onInsert,
+      onInsert
     )
     .subscribe();
 
@@ -28,7 +28,7 @@ export function subscribeToCycleReviewInserts(
 
 export async function fetchCycleReviewByProgram(
   programId: string,
-  userId: string,
+  userId: string
 ): Promise<CycleReview | null> {
   const { data, error } = await typedSupabase
     .from('cycle_reviews')
@@ -43,45 +43,58 @@ export async function fetchCycleReviewByProgram(
 
 export async function fetchCycleReportSourceData(
   programId: string,
-  userId: string,
+  userId: string
 ): Promise<RawCycleData> {
-  const [programResult, sessionsResult, sorenessResult, maxesResult, disruptionsResult, auxResult, formulaHistoryResult] =
-    await Promise.all([
-      typedSupabase
-        .from('programs')
-        .select('id, total_weeks, start_date, status')
-        .eq('id', programId)
-        .eq('user_id', userId)
-        .single(),
-      typedSupabase
-        .from('sessions')
-        .select('id, week_number, block_number, primary_lift, intensity_type, status, planned_sets')
-        .eq('program_id', programId)
-        .eq('user_id', userId),
-      typedSupabase
-        .from('soreness_checkins')
-        .select('ratings, recorded_at')
-        .eq('user_id', userId),
-      typedSupabase
-        .from('lifter_maxes')
-        .select('squat_1rm_grams, bench_1rm_grams, deadlift_1rm_grams, recorded_at')
-        .eq('user_id', userId)
-        .order('recorded_at', { ascending: true }),
-      typedSupabase
-        .from('disruptions')
-        .select('id, disruption_type, severity, status, affected_lifts, reported_at')
-        .eq('user_id', userId),
-      typedSupabase
-        .from('auxiliary_assignments')
-        .select('lift, block_number, exercise_1, exercise_2')
-        .eq('user_id', userId)
-        .eq('program_id', programId),
-      typedSupabase
-        .from('formula_configs')
-        .select('id, created_at, source, overrides')
-        .eq('user_id', userId)
-        .order('created_at', { ascending: true }),
-    ]);
+  const [
+    programResult,
+    sessionsResult,
+    sorenessResult,
+    maxesResult,
+    disruptionsResult,
+    auxResult,
+    formulaHistoryResult,
+  ] = await Promise.all([
+    typedSupabase
+      .from('programs')
+      .select('id, total_weeks, start_date, status')
+      .eq('id', programId)
+      .eq('user_id', userId)
+      .single(),
+    typedSupabase
+      .from('sessions')
+      .select(
+        'id, week_number, block_number, primary_lift, intensity_type, status, planned_sets'
+      )
+      .eq('program_id', programId)
+      .eq('user_id', userId),
+    typedSupabase
+      .from('soreness_checkins')
+      .select('ratings, recorded_at')
+      .eq('user_id', userId),
+    typedSupabase
+      .from('lifter_maxes')
+      .select(
+        'squat_1rm_grams, bench_1rm_grams, deadlift_1rm_grams, recorded_at'
+      )
+      .eq('user_id', userId)
+      .order('recorded_at', { ascending: true }),
+    typedSupabase
+      .from('disruptions')
+      .select(
+        'id, disruption_type, severity, status, affected_lifts, reported_at'
+      )
+      .eq('user_id', userId),
+    typedSupabase
+      .from('auxiliary_assignments')
+      .select('lift, block_number, exercise_1, exercise_2')
+      .eq('user_id', userId)
+      .eq('program_id', programId),
+    typedSupabase
+      .from('formula_configs')
+      .select('id, created_at, source, overrides')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: true }),
+  ]);
 
   if (programResult.error) throw programResult.error;
   if (sessionsResult.error) throw sessionsResult.error;
@@ -120,7 +133,8 @@ export async function fetchCycleReportSourceData(
 
   const sorenessCheckins = (sorenessResult.data ?? []).flatMap((row) => {
     const ratings = row.ratings as Json;
-    if (!ratings || typeof ratings !== 'object' || Array.isArray(ratings)) return [];
+    if (!ratings || typeof ratings !== 'object' || Array.isArray(ratings))
+      return [];
     return Object.entries(ratings).flatMap(([muscle, level]) => {
       if (typeof level !== 'number') return [];
       return [
@@ -134,15 +148,29 @@ export async function fetchCycleReportSourceData(
   });
 
   const lifterMaxes = (maxesResult.data ?? []).flatMap((row) => [
-    { lift: 'squat', one_rm_grams: row.squat_1rm_grams, recorded_at: row.recorded_at },
-    { lift: 'bench', one_rm_grams: row.bench_1rm_grams, recorded_at: row.recorded_at },
-    { lift: 'deadlift', one_rm_grams: row.deadlift_1rm_grams, recorded_at: row.recorded_at },
+    {
+      lift: 'squat',
+      one_rm_grams: row.squat_1rm_grams,
+      recorded_at: row.recorded_at,
+    },
+    {
+      lift: 'bench',
+      one_rm_grams: row.bench_1rm_grams,
+      recorded_at: row.recorded_at,
+    },
+    {
+      lift: 'deadlift',
+      one_rm_grams: row.deadlift_1rm_grams,
+      recorded_at: row.recorded_at,
+    },
   ]);
 
   const auxiliaryAssignments = (auxResult.data ?? []).map((row) => ({
     lift: row.lift,
     block_number: row.block_number,
-    exercises: [row.exercise_1, row.exercise_2].filter((e) => typeof e === 'string' && e.length > 0),
+    exercises: [row.exercise_1, row.exercise_2].filter(
+      (e) => typeof e === 'string' && e.length > 0
+    ),
   }));
 
   return {
@@ -170,7 +198,9 @@ export async function fetchCycleReportSourceData(
       created_at: row.created_at,
       source: row.source,
       overrides:
-        row.overrides && typeof row.overrides === 'object' && !Array.isArray(row.overrides)
+        row.overrides &&
+        typeof row.overrides === 'object' &&
+        !Array.isArray(row.overrides)
           ? (row.overrides as Record<string, unknown>)
           : {},
     })),
@@ -180,8 +210,10 @@ export async function fetchCycleReportSourceData(
 export async function fetchPreviousCycleReviewRows(
   userId: string,
   beforeProgramId: string,
-  limit: number,
-): Promise<Array<{ program_id: string; llm_response: Json; compiled_report: Json }>> {
+  limit: number
+): Promise<
+  Array<{ program_id: string; llm_response: Json; compiled_report: Json }>
+> {
   const { data, error } = await typedSupabase
     .from('cycle_reviews')
     .select('program_id, llm_response, compiled_report, generated_at')
@@ -215,7 +247,7 @@ export async function insertCycleReviewRow(input: {
       compiled_report: toJson(input.compiledReport),
       llm_response: toJson(input.llmResponse),
     },
-    { onConflict: 'user_id,program_id', ignoreDuplicates: true },
+    { onConflict: 'user_id,program_id', ignoreDuplicates: true }
   );
   if (error) throw error;
 }

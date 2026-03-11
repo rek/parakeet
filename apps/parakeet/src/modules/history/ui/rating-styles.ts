@@ -19,10 +19,22 @@ export function getRatingStyles(
   colors: RatingColors
 ): Record<ProgressRating, { bg: string; text: string; label: string }> {
   return {
-    excellent:  { bg: colors.successMuted, text: colors.success,  label: 'Excellent'  },
-    good:       { bg: colors.infoMuted,    text: colors.info,     label: 'Good'       },
-    stalled:    { bg: colors.warningMuted, text: colors.warning,  label: 'Stalled'    },
-    concerning: { bg: colors.dangerMuted,  text: colors.danger,   label: 'Concerning' },
+    excellent: {
+      bg: colors.successMuted,
+      text: colors.success,
+      label: 'Excellent',
+    },
+    good: { bg: colors.infoMuted, text: colors.info, label: 'Good' },
+    stalled: {
+      bg: colors.warningMuted,
+      text: colors.warning,
+      label: 'Stalled',
+    },
+    concerning: {
+      bg: colors.dangerMuted,
+      text: colors.danger,
+      label: 'Concerning',
+    },
   };
 }
 
@@ -33,9 +45,9 @@ export function getVolumeLevelColors(colors: {
   bgMuted: string;
 }): Record<'exceeded' | 'approaching' | 'in_range' | 'below', string> {
   return {
-    exceeded:   colors.danger,
+    exceeded: colors.danger,
     approaching: colors.warning,
-    in_range:   colors.success,
-    below:      colors.bgMuted,
+    in_range: colors.success,
+    below: colors.bgMuted,
   };
 }

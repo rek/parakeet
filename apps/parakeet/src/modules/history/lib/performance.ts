@@ -1,56 +1,63 @@
-import { estimateOneRepMax_Epley, gramsToKg } from '@parakeet/training-engine'
-import type { Lift } from '@parakeet/shared-types'
-import { typedSupabase } from '@platform/supabase'
-import { processRecentHistory } from './performance-helpers'
+import type { Lift } from '@parakeet/shared-types';
+import { estimateOneRepMax_Epley, gramsToKg } from '@parakeet/training-engine';
+import { typedSupabase } from '@platform/supabase';
 
-export type { LiftHistory, LiftHistoryEntry } from './performance-helpers'
+import { processRecentHistory } from './performance-helpers';
+
+export type { LiftHistory, LiftHistoryEntry } from './performance-helpers';
 
 export interface PerformanceTrend {
-  lift: Lift
-  estimatedOneRmKg: number
-  trend: 'improving' | 'stable' | 'declining'
-  sessionsLogged: number
-  avgCompletionPct: number
+  lift: Lift;
+  estimatedOneRmKg: number;
+  trend: 'improving' | 'stable' | 'declining';
+  sessionsLogged: number;
+  avgCompletionPct: number;
 }
 
 export async function getPerformanceByLift(
   userId: string,
   lift: Lift,
-  fromDate?: Date,
+  fromDate?: Date
 ) {
   let query = typedSupabase
     .from('session_logs')
-    .select(`
+    .select(
+      `
       id, completed_at, completion_pct, session_rpe,
       actual_sets,
       sessions!inner(primary_lift, intensity_type, block_number, week_number)
-    `)
+    `
+    )
     .eq('user_id', userId)
     .eq('sessions.primary_lift', lift)
-    .order('completed_at', { ascending: false })
+    .order('completed_at', { ascending: false });
 
   if (fromDate) {
-    query = query.gte('completed_at', fromDate.toISOString())
+    query = query.gte('completed_at', fromDate.toISOString());
   }
 
-  const { data, error } = await query
-  if (error) throw error
-  return data ?? []
+  const { data, error } = await query;
+  if (error) throw error;
+  return data ?? [];
 }
 
-export async function getPerformanceTrends(userId: string): Promise<PerformanceTrend[]> {
+export async function getPerformanceTrends(
+  userId: string
+): Promise<PerformanceTrend[]> {
   const { data, error } = await typedSupabase
     .from('session_logs')
-    .select(`
+    .select(
+      `
       completion_pct, session_rpe, actual_sets,
       sessions!inner(primary_lift, intensity_type)
-    `)
+    `
+    )
     .eq('user_id', userId)
     .order('completed_at', { ascending: false })
-    .limit(30)
+    .limit(30);
 
-  if (error) throw error
-  return computeTrends(data ?? [])
+  if (error) throw error;
+  return computeTrends(data ?? []);
 }
 
 export async function getPendingAdjustmentSuggestions(userId: string) {
@@ -59,50 +66,58 @@ export async function getPendingAdjustmentSuggestions(userId: string) {
     .select('*')
     .eq('user_id', userId)
     .eq('reviewed', false)
-    .order('computed_at', { ascending: false })
-  if (error) throw error
-  return (data as Array<{ suggestions?: unknown[] }> | null)?.flatMap((r) => r.suggestions ?? []) ?? []
+    .order('computed_at', { ascending: false });
+  if (error) throw error;
+  return (
+    (data as Array<{ suggestions?: unknown[] }> | null)?.flatMap(
+      (r) => r.suggestions ?? []
+    ) ?? []
+  );
 }
 
 interface RawLogRow {
-  completion_pct: number | null
-  actual_sets: unknown
-  sessions: { primary_lift: string | null }[] | { primary_lift: string | null } | null
+  completion_pct: number | null;
+  actual_sets: unknown;
+  sessions:
+    | { primary_lift: string | null }[]
+    | { primary_lift: string | null }
+    | null;
 }
 
 function getSessions(row: RawLogRow): { primary_lift: string | null } | null {
-  if (!row.sessions) return null
-  return Array.isArray(row.sessions) ? (row.sessions[0] ?? null) : row.sessions
+  if (!row.sessions) return null;
+  return Array.isArray(row.sessions) ? (row.sessions[0] ?? null) : row.sessions;
 }
 
 function computeTrends(rows: RawLogRow[]): PerformanceTrend[] {
-  const byLift = new Map<string, RawLogRow[]>()
+  const byLift = new Map<string, RawLogRow[]>();
   for (const row of rows) {
-    const lift = getSessions(row)?.primary_lift
-    if (!lift) continue
-    if (!byLift.has(lift)) byLift.set(lift, [])
-    byLift.get(lift)!.push(row)
+    const lift = getSessions(row)?.primary_lift;
+    if (!lift) continue;
+    if (!byLift.has(lift)) byLift.set(lift, []);
+    byLift.get(lift)!.push(row);
   }
 
-  const trends: PerformanceTrend[] = []
+  const trends: PerformanceTrend[] = [];
 
   for (const [lift, liftRows] of byLift) {
-    const oneRmSeries = liftRows.map((r) => estimateHeaviestOneRm(r.actual_sets))
-    const latestOneRm = Math.max(0, ...oneRmSeries.slice(0, 10))
+    const oneRmSeries = liftRows.map((r) =>
+      estimateHeaviestOneRm(r.actual_sets)
+    );
+    const latestOneRm = Math.max(0, ...oneRmSeries.slice(0, 10));
 
-    const recent = average(oneRmSeries.slice(0, 5))
-    const older = average(oneRmSeries.slice(-5))
-    const delta = recent - older
+    const recent = average(oneRmSeries.slice(0, 5));
+    const older = average(oneRmSeries.slice(-5));
+    const delta = recent - older;
 
     const trend: PerformanceTrend['trend'] =
-      delta > 2.5 ? 'improving' : delta < -2.5 ? 'declining' : 'stable'
+      delta > 2.5 ? 'improving' : delta < -2.5 ? 'declining' : 'stable';
 
     const validCompletions = liftRows
       .map((r) => r.completion_pct)
-      .filter((v): v is number => v != null)
-    const avgCompletionPct = validCompletions.length > 0
-      ? average(validCompletions)
-      : 0
+      .filter((v): v is number => v != null);
+    const avgCompletionPct =
+      validCompletions.length > 0 ? average(validCompletions) : 0;
 
     trends.push({
       lift: lift as Lift,
@@ -110,36 +125,40 @@ function computeTrends(rows: RawLogRow[]): PerformanceTrend[] {
       trend,
       sessionsLogged: liftRows.length,
       avgCompletionPct,
-    })
+    });
   }
 
-  return trends
+  return trends;
 }
 
 function estimateHeaviestOneRm(actualSets: unknown): number {
-  if (!Array.isArray(actualSets) || actualSets.length === 0) return 0
+  if (!Array.isArray(actualSets) || actualSets.length === 0) return 0;
 
-  let bestOneRm = 0
-  for (const set of actualSets as { weight_grams?: number; reps_completed?: number }[]) {
-    if (!set.weight_grams || !set.reps_completed || set.reps_completed <= 0) continue
-    const weightKg = gramsToKg(set.weight_grams)
-    const oneRm = estimateOneRepMax_Epley(weightKg, set.reps_completed)
-    if (oneRm > bestOneRm) bestOneRm = oneRm
+  let bestOneRm = 0;
+  for (const set of actualSets as {
+    weight_grams?: number;
+    reps_completed?: number;
+  }[]) {
+    if (!set.weight_grams || !set.reps_completed || set.reps_completed <= 0)
+      continue;
+    const weightKg = gramsToKg(set.weight_grams);
+    const oneRm = estimateOneRepMax_Epley(weightKg, set.reps_completed);
+    if (oneRm > bestOneRm) bestOneRm = oneRm;
   }
-  return bestOneRm
+  return bestOneRm;
 }
 
 function average(nums: number[]): number {
-  if (nums.length === 0) return 0
-  return nums.reduce((a, b) => a + b, 0) / nums.length
+  if (nums.length === 0) return 0;
+  return nums.reduce((a, b) => a + b, 0) / nums.length;
 }
 
 export async function getWeeklySetsPerLift(
   userId: string,
-  weeks = 8,
+  weeks = 8
 ): Promise<{ weekStart: string; lift: Lift; setsCompleted: number }[]> {
-  const fromDate = new Date()
-  fromDate.setDate(fromDate.getDate() - weeks * 7)
+  const fromDate = new Date();
+  fromDate.setDate(fromDate.getDate() - weeks * 7);
 
   const { data, error } = await typedSupabase
     .from('session_logs')
@@ -147,52 +166,58 @@ export async function getWeeklySetsPerLift(
     .eq('user_id', userId)
     .eq('sessions.status', 'completed')
     .gte('completed_at', fromDate.toISOString())
-    .order('completed_at', { ascending: true })
+    .order('completed_at', { ascending: true });
 
-  if (error) throw error
-  if (!data) return []
+  if (error) throw error;
+  if (!data) return [];
 
-  const grouped = new Map<string, number>()
+  const grouped = new Map<string, number>();
 
   for (const row of data) {
-    const session = Array.isArray(row.sessions) ? row.sessions[0] : row.sessions
-    const lift = session?.primary_lift as Lift | undefined
-    if (!lift || !row.completed_at) continue
+    const session = Array.isArray(row.sessions)
+      ? row.sessions[0]
+      : row.sessions;
+    const lift = session?.primary_lift as Lift | undefined;
+    if (!lift || !row.completed_at) continue;
 
-    const weekStart = getIsoWeekStart(row.completed_at)
-    const key = `${weekStart}__${lift}`
-    const setCount = Array.isArray(row.actual_sets) ? row.actual_sets.length : 0
-    grouped.set(key, (grouped.get(key) ?? 0) + setCount)
+    const weekStart = getIsoWeekStart(row.completed_at);
+    const key = `${weekStart}__${lift}`;
+    const setCount = Array.isArray(row.actual_sets)
+      ? row.actual_sets.length
+      : 0;
+    grouped.set(key, (grouped.get(key) ?? 0) + setCount);
   }
 
   return Array.from(grouped.entries()).map(([key, setsCompleted]) => {
-    const [weekStart, lift] = key.split('__') as [string, Lift]
-    return { weekStart, lift, setsCompleted }
-  })
+    const [weekStart, lift] = key.split('__') as [string, Lift];
+    return { weekStart, lift, setsCompleted };
+  });
 }
 
 function getIsoWeekStart(dateStr: string): string {
-  const d = new Date(dateStr)
-  const day = d.getUTCDay()
-  const diff = day === 0 ? -6 : 1 - day
-  d.setUTCDate(d.getUTCDate() + diff)
-  return d.toISOString().slice(0, 10)
+  const d = new Date(dateStr);
+  const day = d.getUTCDay();
+  const diff = day === 0 ? -6 : 1 - day;
+  d.setUTCDate(d.getUTCDate() + diff);
+  return d.toISOString().slice(0, 10);
 }
 
 export async function getRecentLiftHistory(
   userId: string,
   lift: Lift,
-  limit = 5,
+  limit = 5
 ) {
   const { data, error } = await typedSupabase
     .from('session_logs')
-    .select('completed_at, completion_pct, session_rpe, actual_sets, sessions!inner(primary_lift)')
+    .select(
+      'completed_at, completion_pct, session_rpe, actual_sets, sessions!inner(primary_lift)'
+    )
     .eq('user_id', userId)
     .eq('sessions.primary_lift', lift)
     .order('completed_at', { ascending: false })
-    .limit(limit)
+    .limit(limit);
 
-  if (error) throw error
+  if (error) throw error;
   return processRecentHistory(
     (data ?? []).map((r) => ({
       completed_at: r.completed_at ?? '',
@@ -200,6 +225,6 @@ export async function getRecentLiftHistory(
       session_rpe: r.session_rpe ?? null,
       completion_pct: r.completion_pct ?? null,
       sessions: r.sessions,
-    })),
-  )
+    }))
+  );
 }

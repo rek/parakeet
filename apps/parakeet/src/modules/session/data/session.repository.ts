@@ -8,6 +8,7 @@ import type {
   ProgramSessionView,
   SessionStatus,
 } from '@shared/types/domain';
+
 import { parseActualSetsJson } from './session-codecs';
 
 type SessionRow = DbRow<'sessions'>;
@@ -99,16 +100,19 @@ export async function fetchTodaySession(
   if (inProgressError) throw inProgressError;
   if (inProgressData) return inProgressData;
 
-  const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
-  const { data: completedTodayData, error: completedTodayError } = await typedSupabase
-    .from('sessions')
-    .select('*')
-    .eq('user_id', userId)
-    .eq('status', 'completed')
-    .gte('completed_at', twentyFourHoursAgo)
-    .order('completed_at', { ascending: false })
-    .limit(1)
-    .maybeSingle();
+  const twentyFourHoursAgo = new Date(
+    Date.now() - 24 * 60 * 60 * 1000
+  ).toISOString();
+  const { data: completedTodayData, error: completedTodayError } =
+    await typedSupabase
+      .from('sessions')
+      .select('*')
+      .eq('user_id', userId)
+      .eq('status', 'completed')
+      .gte('completed_at', twentyFourHoursAgo)
+      .order('completed_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
   if (completedTodayError) throw completedTodayError;
   if (completedTodayData) return completedTodayData;
 
@@ -131,21 +135,21 @@ export async function fetchTodaySession(
 export async function fetchTodaySessions(
   userId: string
 ): Promise<SessionRow[]> {
-  const today = localDateString()
+  const today = localDateString();
   const { data, error } = await typedSupabase
     .from('sessions')
     .select('*')
     .eq('user_id', userId)
     .or(`planned_date.eq.${today},status.eq.in_progress`)
-    .order('planned_date', { ascending: true })
-  if (error) throw error
+    .order('planned_date', { ascending: true });
+  if (error) throw error;
   // Deduplicate: in_progress session may match both conditions
-  const seen = new Set<string>()
-  return (data ?? []).filter(row => {
-    if (seen.has(row.id)) return false
-    seen.add(row.id)
-    return true
-  })
+  const seen = new Set<string>();
+  return (data ?? []).filter((row) => {
+    if (seen.has(row.id)) return false;
+    seen.add(row.id);
+    return true;
+  });
 }
 
 export async function fetchSessionById(
@@ -161,9 +165,12 @@ export async function fetchSessionById(
   return data;
 }
 
-export async function fetchSessionCompletionContext(
-  sessionId: string
-): Promise<(Pick<SessionRow, 'primary_lift' | 'program_id'> & { program_mode: string | null }) | null> {
+export async function fetchSessionCompletionContext(sessionId: string): Promise<
+  | (Pick<SessionRow, 'primary_lift' | 'program_id'> & {
+      program_mode: string | null;
+    })
+  | null
+> {
   const { data, error } = await typedSupabase
     .from('sessions')
     .select('primary_lift, program_id, programs(program_mode)')
@@ -174,8 +181,13 @@ export async function fetchSessionCompletionContext(
   if (!data) return null;
   const programMode = Array.isArray(data.programs)
     ? (data.programs[0]?.program_mode ?? null)
-    : ((data.programs as { program_mode: string } | null)?.program_mode ?? null);
-  return { primary_lift: data.primary_lift, program_id: data.program_id, program_mode: programMode };
+    : ((data.programs as { program_mode: string } | null)?.program_mode ??
+      null);
+  return {
+    primary_lift: data.primary_lift,
+    program_id: data.program_id,
+    program_mode: programMode,
+  };
 }
 
 export async function fetchSessionsForWeek(
@@ -219,7 +231,9 @@ export async function fetchCompletedSessions(
     return {
       id: row.id,
       primary_lift: parseLiftNullable(row.primary_lift),
-      intensity_type: row.primary_lift ? parseIntensity(row.intensity_type) : null,
+      intensity_type: row.primary_lift
+        ? parseIntensity(row.intensity_type)
+        : null,
       activity_name: row.activity_name ?? null,
       planned_date: row.planned_date,
       completed_at: row.completed_at ?? null,
@@ -268,7 +282,7 @@ export async function insertSorenessCheckin(input: {
 // regardless of whether it was tied to a session. Used to pre-populate
 // the soreness screen after an unprogrammed event injection.
 export async function getLatestSorenessRatings(
-  userId: string,
+  userId: string
 ): Promise<Record<string, number> | null> {
   const { data, error } = await typedSupabase
     .from('soreness_checkins')
@@ -465,7 +479,9 @@ export async function fetchCurrentWeekLogs(
     return {
       actual_sets: parseActualSetsJson(row.actual_sets),
       auxiliary_sets: parseActualSetsJson(row.auxiliary_sets),
-      primary_lift: session?.primary_lift ? parseLift(session.primary_lift) : null,
+      primary_lift: session?.primary_lift
+        ? parseLift(session.primary_lift)
+        : null,
     };
   });
 }
@@ -485,7 +501,9 @@ export async function fetchOverdueScheduledSessions(
   // Exclude unending programs — their sessions are always planned for today and can't go overdue
   const { data, error } = await typedSupabase
     .from('sessions')
-    .select('id, planned_date, primary_lift, week_number, program_id, programs!inner(program_mode)')
+    .select(
+      'id, planned_date, primary_lift, week_number, program_id, programs!inner(program_mode)'
+    )
     .eq('user_id', userId)
     .eq('status', 'planned')
     .lt('planned_date', today)
@@ -596,7 +614,9 @@ export async function fetchSessionLogBySessionId(
 ): Promise<SessionLogDetail | null> {
   const { data, error } = await typedSupabase
     .from('session_logs')
-    .select('actual_sets, auxiliary_sets, session_rpe, completion_pct, performance_vs_plan, started_at, completed_at, session_notes')
+    .select(
+      'actual_sets, auxiliary_sets, session_rpe, completion_pct, performance_vs_plan, started_at, completed_at, session_notes'
+    )
     .eq('session_id', sessionId)
     .maybeSingle();
   if (error) throw error;
@@ -671,15 +691,20 @@ export async function fetchEndOfWeekContext(
 ): Promise<EndOfWeekContext | null> {
   const { data, error } = await typedSupabase
     .from('sessions')
-    .select('program_id, week_number, programs(program_mode, unending_session_counter)')
+    .select(
+      'program_id, week_number, programs(program_mode, unending_session_counter)'
+    )
     .eq('id', sessionId)
     .maybeSingle();
 
   if (error) throw error;
   if (!data) return null;
 
-  const programs = Array.isArray(data.programs) ? data.programs[0] : data.programs;
-  const programMode = programs?.program_mode as 'scheduled' | 'unending' | null ?? null;
+  const programs = Array.isArray(data.programs)
+    ? data.programs[0]
+    : data.programs;
+  const programMode =
+    (programs?.program_mode as 'scheduled' | 'unending' | null) ?? null;
   const counter = programs?.unending_session_counter ?? null;
 
   return {

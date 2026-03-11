@@ -1,11 +1,10 @@
+import { typedSupabase } from '@platform/supabase';
 import type {
   AuthChangeEvent,
   Session,
   Subscription,
   User,
 } from '@supabase/supabase-js';
-
-import { typedSupabase } from '@platform/supabase';
 
 export async function getCurrentSession(): Promise<Session | null> {
   const {
@@ -15,7 +14,10 @@ export async function getCurrentSession(): Promise<Session | null> {
 }
 
 export function subscribeToAuthStateChanges(
-  listener: (event: AuthChangeEvent, session: Session | null) => void | Promise<void>,
+  listener: (
+    event: AuthChangeEvent,
+    session: Session | null
+  ) => void | Promise<void>
 ): Subscription {
   const {
     data: { subscription },
@@ -35,7 +37,7 @@ export async function signInWithGoogleIdToken(token: string): Promise<void> {
 
 export async function signInWithOtpEmail(
   email: string,
-  emailRedirectTo: string,
+  emailRedirectTo: string
 ): Promise<void> {
   const { error } = await typedSupabase.auth.signInWithOtp({
     email,

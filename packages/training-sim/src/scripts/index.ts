@@ -1,25 +1,28 @@
-import { DayEvent, LifeScript } from '../types'
+import { DayEvent, LifeScript } from '../types';
 
 /** Generate N days of training following a 3-day/week schedule (Mon/Wed/Fri pattern) */
-function weekPattern(weeks: number, dayOverrides?: Partial<Record<number, DayEvent>>): DayEvent[] {
-  const events: DayEvent[] = []
+function weekPattern(
+  weeks: number,
+  dayOverrides?: Partial<Record<number, DayEvent>>
+): DayEvent[] {
+  const events: DayEvent[] = [];
   // 3 training days: day 0 (Mon), day 2 (Wed), day 4 (Fri), rest on other days
-  const trainingDaysInWeek = [0, 2, 4] // 0-indexed within a 7-day week
+  const trainingDaysInWeek = [0, 2, 4]; // 0-indexed within a 7-day week
 
   for (let week = 0; week < weeks; week++) {
     for (let dayInWeek = 0; dayInWeek < 7; dayInWeek++) {
-      const absoluteDay = week * 7 + dayInWeek
+      const absoluteDay = week * 7 + dayInWeek;
       if (dayOverrides?.[absoluteDay]) {
-        events.push(dayOverrides[absoluteDay])
+        events.push(dayOverrides[absoluteDay]);
       } else if (trainingDaysInWeek.includes(dayInWeek)) {
-        events.push({ type: 'train' })
+        events.push({ type: 'train' });
       } else {
-        events.push({ type: 'rest' })
+        events.push({ type: 'rest' });
       }
     }
   }
 
-  return events
+  return events;
 }
 
 /**
@@ -44,7 +47,7 @@ export const ADHERENT_MALE: LifeScript = {
     [7 * 7 + 2]: { type: 'skip', reason: 'travel' },
     [7 * 7 + 4]: { type: 'skip', reason: 'travel' },
   }),
-}
+};
 
 /**
  * Adherent female — 12 weeks with cycle tracking.
@@ -53,42 +56,47 @@ export const ADHERENT_MALE: LifeScript = {
  */
 export const ADHERENT_FEMALE: LifeScript = {
   name: 'adherent-female',
-  description: '12-week cycle with menstrual cycle tracking, period every 28 days',
+  description:
+    '12-week cycle with menstrual cycle tracking, period every 28 days',
   events: (() => {
-    const weeks = 12
-    const events: DayEvent[] = []
-    const trainingDaysInWeek = [0, 2, 4]
-    const cycleLength = 28
+    const weeks = 12;
+    const events: DayEvent[] = [];
+    const trainingDaysInWeek = [0, 2, 4];
+    const cycleLength = 28;
 
     for (let week = 0; week < weeks; week++) {
       for (let dayInWeek = 0; dayInWeek < 7; dayInWeek++) {
-        const absoluteDay = week * 7 + dayInWeek
-        const dayInCycle = absoluteDay % cycleLength
+        const absoluteDay = week * 7 + dayInWeek;
+        const dayInCycle = absoluteDay % cycleLength;
 
         if (absoluteDay % cycleLength === 0) {
           // Period start event
-          events.push({ type: 'period-start' })
+          events.push({ type: 'period-start' });
         } else if (trainingDaysInWeek.includes(dayInWeek)) {
           // Training day with cycle-phase-appropriate soreness
-          const sleep: 1 | 2 | 3 = dayInCycle < 5 ? 2 : 3 // slightly worse sleep during menstruation
-          const energy: 1 | 2 | 3 = dayInCycle < 5 ? 2 : dayInCycle > 21 ? 2 : 3
+          const sleep: 1 | 2 | 3 = dayInCycle < 5 ? 2 : 3; // slightly worse sleep during menstruation
+          const energy: 1 | 2 | 3 =
+            dayInCycle < 5 ? 2 : dayInCycle > 21 ? 2 : 3;
 
           events.push({
             type: 'train',
             sleep,
             energy,
-            soreness: dayInCycle > 21 ? {
-              ratings: { glutes: 2, hamstrings: 2, lower_back: 2 },
-            } : undefined,
-          })
+            soreness:
+              dayInCycle > 21
+                ? {
+                    ratings: { glutes: 2, hamstrings: 2, lower_back: 2 },
+                  }
+                : undefined,
+          });
         } else {
-          events.push({ type: 'rest' })
+          events.push({ type: 'rest' });
         }
       }
     }
-    return events
+    return events;
   })(),
-}
+};
 
 /**
  * Injured lifter — trains normally for 3 weeks, then gets a moderate knee injury.
@@ -126,7 +134,7 @@ export const INJURED_SCRIPT: LifeScript = {
       soreness: { ratings: { quads: 2 } },
     },
   }),
-}
+};
 
 /**
  * Busy lifter — misses ~30% of sessions randomly.
@@ -134,37 +142,41 @@ export const INJURED_SCRIPT: LifeScript = {
  */
 export const BUSY_SCRIPT: LifeScript = {
   name: 'busy-lifter',
-  description: '12-week program missing ~30% of sessions with poor sleep/energy',
+  description:
+    '12-week program missing ~30% of sessions with poor sleep/energy',
   events: (() => {
-    const weeks = 12
-    const events: DayEvent[] = []
-    const trainingDaysInWeek = [0, 2, 4]
+    const weeks = 12;
+    const events: DayEvent[] = [];
+    const trainingDaysInWeek = [0, 2, 4];
 
     // Deterministic "random" — skip specific sessions
     const skipDays = new Set([
       2, 7, 11, 16, 21, 25, 30, 35, 42, 49, 53, 60, 67, 74, 79,
-    ])
+    ]);
 
     for (let week = 0; week < weeks; week++) {
       for (let dayInWeek = 0; dayInWeek < 7; dayInWeek++) {
-        const absoluteDay = week * 7 + dayInWeek
+        const absoluteDay = week * 7 + dayInWeek;
 
-        if (skipDays.has(absoluteDay) && trainingDaysInWeek.includes(dayInWeek)) {
-          events.push({ type: 'skip', reason: 'busy' })
+        if (
+          skipDays.has(absoluteDay) &&
+          trainingDaysInWeek.includes(dayInWeek)
+        ) {
+          events.push({ type: 'skip', reason: 'busy' });
         } else if (trainingDaysInWeek.includes(dayInWeek)) {
           // Vary sleep/energy — roughly 1/3 poor, 1/3 ok, 1/3 great
-          const mod = absoluteDay % 3
-          const sleep: 1 | 2 | 3 = mod === 0 ? 1 : mod === 1 ? 2 : 3
-          const energy: 1 | 2 | 3 = mod === 0 ? 2 : mod === 1 ? 1 : 3
-          events.push({ type: 'train', sleep, energy })
+          const mod = absoluteDay % 3;
+          const sleep: 1 | 2 | 3 = mod === 0 ? 1 : mod === 1 ? 2 : 3;
+          const energy: 1 | 2 | 3 = mod === 0 ? 2 : mod === 1 ? 1 : 3;
+          events.push({ type: 'train', sleep, energy });
         } else {
-          events.push({ type: 'rest' })
+          events.push({ type: 'rest' });
         }
       }
     }
-    return events
+    return events;
   })(),
-}
+};
 
 /**
  * Stable female — 43yr advanced lifter, 12 weeks, consistent training.
@@ -172,40 +184,45 @@ export const BUSY_SCRIPT: LifeScript = {
  */
 export const STABLE_FEMALE: LifeScript = {
   name: 'stable-female',
-  description: '12-week cycle, advanced female, 30-day menstrual cycle, no disruptions',
+  description:
+    '12-week cycle, advanced female, 30-day menstrual cycle, no disruptions',
   events: (() => {
-    const weeks = 12
-    const events: DayEvent[] = []
-    const trainingDaysInWeek = [0, 2, 4]
-    const cycleLength = 30
+    const weeks = 12;
+    const events: DayEvent[] = [];
+    const trainingDaysInWeek = [0, 2, 4];
+    const cycleLength = 30;
 
     for (let week = 0; week < weeks; week++) {
       for (let dayInWeek = 0; dayInWeek < 7; dayInWeek++) {
-        const absoluteDay = week * 7 + dayInWeek
-        const dayInCycle = absoluteDay % cycleLength
+        const absoluteDay = week * 7 + dayInWeek;
+        const dayInCycle = absoluteDay % cycleLength;
 
         if (absoluteDay % cycleLength === 0) {
-          events.push({ type: 'period-start' })
+          events.push({ type: 'period-start' });
         } else if (trainingDaysInWeek.includes(dayInWeek)) {
-          const sleep: 1 | 2 | 3 = dayInCycle < 5 ? 2 : 3
-          const energy: 1 | 2 | 3 = dayInCycle < 5 ? 2 : dayInCycle > 23 ? 2 : 3
+          const sleep: 1 | 2 | 3 = dayInCycle < 5 ? 2 : 3;
+          const energy: 1 | 2 | 3 =
+            dayInCycle < 5 ? 2 : dayInCycle > 23 ? 2 : 3;
 
           events.push({
             type: 'train',
             sleep,
             energy,
-            soreness: dayInCycle > 23 ? {
-              ratings: { glutes: 2, lower_back: 2 },
-            } : undefined,
-          })
+            soreness:
+              dayInCycle > 23
+                ? {
+                    ratings: { glutes: 2, lower_back: 2 },
+                  }
+                : undefined,
+          });
         } else {
-          events.push({ type: 'rest' })
+          events.push({ type: 'rest' });
         }
       }
     }
-    return events
+    return events;
   })(),
-}
+};
 
 /**
  * Junior male — 12 weeks, eager and adherent, occasional poor sleep (young lifestyle).
@@ -215,27 +232,28 @@ export const JUNIOR_MALE: LifeScript = {
   name: 'junior-male',
   description: '12-week cycle, beginner, inconsistent sleep but full adherence',
   events: (() => {
-    const weeks = 12
-    const events: DayEvent[] = []
-    const trainingDaysInWeek = [0, 2, 4]
+    const weeks = 12;
+    const events: DayEvent[] = [];
+    const trainingDaysInWeek = [0, 2, 4];
 
     for (let week = 0; week < weeks; week++) {
       for (let dayInWeek = 0; dayInWeek < 7; dayInWeek++) {
-        const absoluteDay = week * 7 + dayInWeek
+        const absoluteDay = week * 7 + dayInWeek;
 
         if (trainingDaysInWeek.includes(dayInWeek)) {
           // Young lifter: inconsistent sleep, usually high energy
-          const sleep: 1 | 2 | 3 = absoluteDay % 4 === 0 ? 1 : absoluteDay % 3 === 0 ? 2 : 3
-          const energy: 1 | 2 | 3 = 3
-          events.push({ type: 'train', sleep, energy })
+          const sleep: 1 | 2 | 3 =
+            absoluteDay % 4 === 0 ? 1 : absoluteDay % 3 === 0 ? 2 : 3;
+          const energy: 1 | 2 | 3 = 3;
+          events.push({ type: 'train', sleep, energy });
         } else {
-          events.push({ type: 'rest' })
+          events.push({ type: 'rest' });
         }
       }
     }
-    return events
+    return events;
   })(),
-}
+};
 
 /**
  * Elite female — 12 weeks, highly consistent, period tracking, zero disruptions.
@@ -243,36 +261,42 @@ export const JUNIOR_MALE: LifeScript = {
  */
 export const ELITE_FEMALE: LifeScript = {
   name: 'elite-female',
-  description: '12-week cycle, advanced female, 26-day cycle, perfect adherence',
+  description:
+    '12-week cycle, advanced female, 26-day cycle, perfect adherence',
   events: (() => {
-    const weeks = 12
-    const events: DayEvent[] = []
-    const trainingDaysInWeek = [0, 2, 4]
-    const cycleLength = 26
+    const weeks = 12;
+    const events: DayEvent[] = [];
+    const trainingDaysInWeek = [0, 2, 4];
+    const cycleLength = 26;
 
     for (let week = 0; week < weeks; week++) {
       for (let dayInWeek = 0; dayInWeek < 7; dayInWeek++) {
-        const absoluteDay = week * 7 + dayInWeek
-        const dayInCycle = absoluteDay % cycleLength
+        const absoluteDay = week * 7 + dayInWeek;
+        const dayInCycle = absoluteDay % cycleLength;
 
         if (absoluteDay % cycleLength === 0) {
-          events.push({ type: 'period-start' })
+          events.push({ type: 'period-start' });
         } else if (trainingDaysInWeek.includes(dayInWeek)) {
-          const sleep: 1 | 2 | 3 = 3
-          const energy: 1 | 2 | 3 = dayInCycle < 4 ? 2 : dayInCycle > 20 ? 2 : 3
-          events.push({ type: 'train', sleep, energy })
+          const sleep: 1 | 2 | 3 = 3;
+          const energy: 1 | 2 | 3 =
+            dayInCycle < 4 ? 2 : dayInCycle > 20 ? 2 : 3;
+          events.push({ type: 'train', sleep, energy });
         } else {
-          events.push({ type: 'rest' })
+          events.push({ type: 'rest' });
         }
       }
     }
-    return events
+    return events;
   })(),
-}
+};
 
 // Re-export new scripts
-export { ILLNESS_SCRIPT, NO_EQUIPMENT_SCRIPT, FATIGUE_ACCUMULATION_SCRIPT } from './illness'
-export { FAILED_SETS_SCRIPT } from './failed-sets'
+export {
+  ILLNESS_SCRIPT,
+  NO_EQUIPMENT_SCRIPT,
+  FATIGUE_ACCUMULATION_SCRIPT,
+} from './illness';
+export { FAILED_SETS_SCRIPT } from './failed-sets';
 
 export const ALL_SCRIPTS: LifeScript[] = [
   ADHERENT_MALE,
@@ -280,4 +304,4 @@ export const ALL_SCRIPTS: LifeScript[] = [
   STABLE_FEMALE,
   INJURED_SCRIPT,
   BUSY_SCRIPT,
-]
+];

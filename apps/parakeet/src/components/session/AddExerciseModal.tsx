@@ -9,31 +9,35 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import { getAllExercises } from '@parakeet/training-engine';
-import type { ExerciseCatalogEntry } from '@parakeet/training-engine';
+
 import type { Lift } from '@parakeet/shared-types';
+import { getAllExercises } from '@parakeet/training-engine';
+import type {
+  ExerciseCatalogEntry,
+  MuscleGroup,
+} from '@parakeet/training-engine';
 import { MUSCLE_LABELS_COMPACT } from '@shared/constants/training';
-import type { MuscleGroup } from '@parakeet/training-engine';
-import { spacing, typography, radii } from '../../theme';
+
+import { radii, spacing, typography } from '../../theme';
 import type { ColorScheme } from '../../theme';
 import { useTheme } from '../../theme/ThemeContext';
 
-type SectionFilter = 'all' | Lift | 'general'
+type SectionFilter = 'all' | Lift | 'general';
 
 const SECTION_LABELS: Record<string, string> = {
-  squat:    'Squat',
-  bench:    'Bench',
+  squat: 'Squat',
+  bench: 'Bench',
   deadlift: 'Deadlift',
-  general:  'General',
-}
+  general: 'General',
+};
 
 const FILTER_OPTIONS: { key: SectionFilter; label: string }[] = [
-  { key: 'all',      label: 'All'      },
-  { key: 'squat',    label: 'Squat'    },
-  { key: 'bench',    label: 'Bench'    },
+  { key: 'all', label: 'All' },
+  { key: 'squat', label: 'Squat' },
+  { key: 'bench', label: 'Bench' },
   { key: 'deadlift', label: 'Deadlift' },
-  { key: 'general',  label: 'General'  },
-]
+  { key: 'general', label: 'General' },
+];
 
 interface Props {
   visible: boolean;
@@ -46,12 +50,12 @@ interface Props {
 }
 
 interface ListItem {
-  type: 'header' | 'exercise' | 'custom'
-  key: string
-  label?: string
-  entry?: ExerciseCatalogEntry
-  customName?: string
-  excluded?: boolean
+  type: 'header' | 'exercise' | 'custom';
+  key: string;
+  label?: string;
+  entry?: ExerciseCatalogEntry;
+  customName?: string;
+  excluded?: boolean;
 }
 
 function buildStyles(colors: ColorScheme) {
@@ -199,46 +203,64 @@ function buildStyles(colors: ColorScheme) {
   });
 }
 
-export function AddExerciseModal({ visible, onConfirm, onClose, defaultLift, excludeNames }: Props) {
+export function AddExerciseModal({
+  visible,
+  onConfirm,
+  onClose,
+  defaultLift,
+  excludeNames,
+}: Props) {
   const { colors } = useTheme();
   const [query, setQuery] = useState('');
-  const [liftFilter, setLiftFilter] = useState<SectionFilter>(defaultLift ?? 'all');
+  const [liftFilter, setLiftFilter] = useState<SectionFilter>(
+    defaultLift ?? 'all'
+  );
 
   const styles = useMemo(() => buildStyles(colors), [colors]);
-  const allExercises = useMemo(() => getAllExercises(), [])
+  const allExercises = useMemo(() => getAllExercises(), []);
 
   const listItems = useMemo((): ListItem[] => {
-    const q = query.trim().toLowerCase()
+    const q = query.trim().toLowerCase();
 
-    let filtered = allExercises
+    let filtered = allExercises;
     if (q) {
-      filtered = filtered.filter((e) => e.name.toLowerCase().includes(q))
+      filtered = filtered.filter((e) => e.name.toLowerCase().includes(q));
     }
     if (liftFilter !== 'all') {
       filtered = filtered.filter((e) =>
-        liftFilter === 'general' ? e.associatedLift === null : e.associatedLift === liftFilter
-      )
+        liftFilter === 'general'
+          ? e.associatedLift === null
+          : e.associatedLift === liftFilter
+      );
     }
 
     const byLift: Record<string, ExerciseCatalogEntry[]> = {
-      squat: [], bench: [], deadlift: [], general: [],
-    }
+      squat: [],
+      bench: [],
+      deadlift: [],
+      general: [],
+    };
     for (const entry of filtered) {
-      const key = entry.associatedLift ?? 'general'
-      byLift[key].push(entry)
+      const key = entry.associatedLift ?? 'general';
+      byLift[key].push(entry);
     }
 
-    const sections = liftFilter === 'all'
-      ? ['squat', 'bench', 'deadlift', 'general']
-      : [liftFilter]
+    const sections =
+      liftFilter === 'all'
+        ? ['squat', 'bench', 'deadlift', 'general']
+        : [liftFilter];
 
-    const items: ListItem[] = []
+    const items: ListItem[] = [];
     for (const lift of sections) {
-      const group = byLift[lift] ?? []
-      if (group.length === 0) continue
+      const group = byLift[lift] ?? [];
+      if (group.length === 0) continue;
       // Only show section headers when showing multiple sections
       if (liftFilter === 'all') {
-        items.push({ type: 'header', key: `header-${lift}`, label: SECTION_LABELS[lift] })
+        items.push({
+          type: 'header',
+          key: `header-${lift}`,
+          label: SECTION_LABELS[lift],
+        });
       }
       for (const entry of group) {
         items.push({
@@ -246,36 +268,36 @@ export function AddExerciseModal({ visible, onConfirm, onClose, defaultLift, exc
           key: entry.name,
           entry,
           excluded: excludeNames?.includes(entry.name) ?? false,
-        })
+        });
       }
     }
 
     // Custom fallback — only shown when query is non-empty and doesn't match any catalog name exactly
-    const trimmed = query.trim()
+    const trimmed = query.trim();
     const exactMatch = trimmed
       ? allExercises.some((e) => e.name.toLowerCase() === trimmed.toLowerCase())
-      : true
+      : true;
     if (trimmed && !exactMatch) {
-      items.push({ type: 'custom', key: 'custom', customName: trimmed })
+      items.push({ type: 'custom', key: 'custom', customName: trimmed });
     }
 
-    return items
-  }, [query, liftFilter, allExercises, excludeNames])
+    return items;
+  }, [query, liftFilter, allExercises, excludeNames]);
 
   function handleSelect(name: string) {
-    onConfirm(name)
-    setQuery('')
-    setLiftFilter(defaultLift ?? 'all')
+    onConfirm(name);
+    setQuery('');
+    setLiftFilter(defaultLift ?? 'all');
   }
 
   function handleClose() {
-    setQuery('')
-    setLiftFilter(defaultLift ?? 'all')
-    onClose()
+    setQuery('');
+    setLiftFilter(defaultLift ?? 'all');
+    onClose();
   }
 
   function renderExerciseChips(entry: ExerciseCatalogEntry) {
-    if (entry.primaryMuscles.length === 0) return null
+    if (entry.primaryMuscles.length === 0) return null;
     return (
       <View style={styles.chipRow}>
         {entry.primaryMuscles.map((m) => (
@@ -286,12 +308,12 @@ export function AddExerciseModal({ visible, onConfirm, onClose, defaultLift, exc
           </View>
         ))}
       </View>
-    )
+    );
   }
 
   function renderItem({ item }: { item: ListItem }) {
     if (item.type === 'header') {
-      return <Text style={styles.sectionHeader}>{item.label}</Text>
+      return <Text style={styles.sectionHeader}>{item.label}</Text>;
     }
     if (item.type === 'custom') {
       return (
@@ -302,19 +324,21 @@ export function AddExerciseModal({ visible, onConfirm, onClose, defaultLift, exc
         >
           <Text style={styles.customText}>Add "{item.customName}"</Text>
         </TouchableOpacity>
-      )
+      );
     }
-    const entry = item.entry!
+    const entry = item.entry!;
     if (item.excluded) {
       return (
         <View style={[styles.exerciseRow, styles.exerciseRowExcluded]}>
           <View style={styles.exerciseRowInner}>
-            <Text style={[styles.exerciseName, styles.exerciseNameExcluded]}>{entry.name}</Text>
+            <Text style={[styles.exerciseName, styles.exerciseNameExcluded]}>
+              {entry.name}
+            </Text>
             {renderExerciseChips(entry)}
           </View>
           <Text style={styles.addedLabel}>Added</Text>
         </View>
-      )
+      );
     }
     return (
       <TouchableOpacity
@@ -325,7 +349,7 @@ export function AddExerciseModal({ visible, onConfirm, onClose, defaultLift, exc
         <Text style={styles.exerciseName}>{entry.name}</Text>
         {renderExerciseChips(entry)}
       </TouchableOpacity>
-    )
+    );
   }
 
   return (
@@ -370,11 +394,19 @@ export function AddExerciseModal({ visible, onConfirm, onClose, defaultLift, exc
             {FILTER_OPTIONS.map((opt) => (
               <TouchableOpacity
                 key={opt.key}
-                style={[styles.filterPill, liftFilter === opt.key && styles.filterPillActive]}
+                style={[
+                  styles.filterPill,
+                  liftFilter === opt.key && styles.filterPillActive,
+                ]}
                 onPress={() => setLiftFilter(opt.key)}
                 activeOpacity={0.7}
               >
-                <Text style={[styles.filterPillText, liftFilter === opt.key && styles.filterPillTextActive]}>
+                <Text
+                  style={[
+                    styles.filterPillText,
+                    liftFilter === opt.key && styles.filterPillTextActive,
+                  ]}
+                >
                   {opt.label}
                 </Text>
               </TouchableOpacity>
@@ -392,5 +424,5 @@ export function AddExerciseModal({ visible, onConfirm, onClose, defaultLift, exc
         </View>
       </TouchableOpacity>
     </Modal>
-  )
+  );
 }

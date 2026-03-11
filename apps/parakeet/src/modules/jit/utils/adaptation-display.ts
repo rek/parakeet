@@ -1,21 +1,21 @@
 interface PlannedSet {
-  weight_kg: number
+  weight_kg: number;
 }
 
 interface ActualSet {
-  is_completed: boolean
-  weight_grams: number
-  set_number: number
+  is_completed: boolean;
+  weight_grams: number;
+  set_number: number;
 }
 
 interface Adaptation {
-  adaptationType: string
-  sets: Array<{ weight_kg: number }>
+  adaptationType: string;
+  sets: Array<{ weight_kg: number }>;
 }
 
 export interface DisplaySet {
-  displayWeightKg: number
-  originalIndex: number
+  displayWeightKg: number;
+  originalIndex: number;
 }
 
 /**
@@ -26,12 +26,12 @@ export interface DisplaySet {
 export function computeDisplayWeights(
   actualSets: ActualSet[],
   plannedSets: PlannedSet[],
-  currentAdaptation: Adaptation | null,
+  currentAdaptation: Adaptation | null
 ): DisplaySet[] {
-  let uncompletedIndex = 0
+  let uncompletedIndex = 0;
   return actualSets.map((actualSet, index) => {
-    const planned = plannedSets[index]
-    let displayWeightKg = planned?.weight_kg ?? actualSet.weight_grams / 1000
+    const planned = plannedSets[index];
+    let displayWeightKg = planned?.weight_kg ?? actualSet.weight_grams / 1000;
 
     if (
       !actualSet.is_completed &&
@@ -39,13 +39,13 @@ export function computeDisplayWeights(
       (currentAdaptation.adaptationType === 'weight_reduced' ||
         currentAdaptation.adaptationType === 'sets_capped')
     ) {
-      const adaptedSet = currentAdaptation.sets[uncompletedIndex]
+      const adaptedSet = currentAdaptation.sets[uncompletedIndex];
       if (adaptedSet != null) {
-        displayWeightKg = adaptedSet.weight_kg
+        displayWeightKg = adaptedSet.weight_kg;
       }
-      uncompletedIndex += 1
+      uncompletedIndex += 1;
     }
 
-    return { displayWeightKg, originalIndex: index }
-  })
+    return { displayWeightKg, originalIndex: index };
+  });
 }

@@ -1,82 +1,97 @@
-import { useMemo, useState } from 'react'
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native'
+import { useMemo, useState } from 'react';
+import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
-import { BlockBadge } from './BlockBadge'
-import { SessionSummary } from './SessionSummary'
-import { spacing, radii, typography } from '../../theme'
-import { useTheme } from '../../theme/ThemeContext'
-import type { ProgramSession } from '@modules/program'
+import type { ProgramSession } from '@modules/program';
+
+import { radii, spacing, typography } from '../../theme';
+import { useTheme } from '../../theme/ThemeContext';
+import { BlockBadge } from './BlockBadge';
+import { SessionSummary } from './SessionSummary';
 
 interface WeekRowProps {
-  weekNumber: number
-  sessions: ProgramSession[]
-  isCurrentWeek: boolean
+  weekNumber: number;
+  sessions: ProgramSession[];
+  isCurrentWeek: boolean;
+  activeSessionId?: string;
+  onSessionPress: (session: ProgramSession) => void;
 }
 
-export function WeekRow({ weekNumber, sessions, isCurrentWeek }: WeekRowProps) {
-  const { colors } = useTheme()
-  const [expanded, setExpanded] = useState(isCurrentWeek)
+export function WeekRow({
+  weekNumber,
+  sessions,
+  isCurrentWeek,
+  activeSessionId,
+  onSessionPress,
+}: WeekRowProps) {
+  const { colors } = useTheme();
+  const [expanded, setExpanded] = useState(isCurrentWeek);
 
-  const completedCount = sessions.filter((s) => s.status === 'completed').length
-  const totalCount = sessions.length
-  const firstBlockNumber = sessions[0]?.block_number ?? null
+  const completedCount = sessions.filter(
+    (s) => s.status === 'completed'
+  ).length;
+  const totalCount = sessions.length;
+  const firstBlockNumber = sessions[0]?.block_number ?? null;
 
-  const styles = useMemo(() => StyleSheet.create({
-    container: {
-      backgroundColor: colors.bgSurface,
-      borderRadius: radii.md,
-      borderWidth: 1,
-      borderColor: colors.border,
-      marginHorizontal: spacing[4],
-      marginBottom: spacing[3],
-      overflow: 'hidden',
-    },
-    containerCurrent: {
-      borderColor: colors.primary,
-    },
-    header: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      paddingHorizontal: spacing[4],
-      paddingVertical: spacing[3.5],
-    },
-    headerLeft: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: spacing[3],
-    },
-    headerRight: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: spacing[2.5],
-    },
-    weekLabel: {
-      fontSize: typography.sizes.base,
-      fontWeight: typography.weights.bold,
-      color: colors.text,
-    },
-    weekLabelCurrent: {
-      color: colors.primary,
-    },
-    currentBadge: {
-      fontSize: typography.sizes.sm,
-      fontWeight: typography.weights.medium,
-      color: colors.primary,
-    },
-    fraction: {
-      fontSize: typography.sizes.sm,
-      color: colors.textSecondary,
-    },
-    chevron: {
-      fontSize: 10,
-      color: colors.textTertiary,
-    },
-    sessionList: {
-      paddingHorizontal: spacing[4],
-      paddingBottom: spacing[1],
-    },
-  }), [colors])
+  const styles = useMemo(
+    () =>
+      StyleSheet.create({
+        container: {
+          backgroundColor: colors.bgSurface,
+          borderRadius: radii.md,
+          borderWidth: 1,
+          borderColor: colors.border,
+          marginHorizontal: spacing[4],
+          marginBottom: spacing[3],
+          overflow: 'hidden',
+        },
+        containerCurrent: {
+          borderColor: colors.primary,
+        },
+        header: {
+          flexDirection: 'row',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          paddingHorizontal: spacing[4],
+          paddingVertical: spacing[3.5],
+        },
+        headerLeft: {
+          flexDirection: 'row',
+          alignItems: 'center',
+          gap: spacing[3],
+        },
+        headerRight: {
+          flexDirection: 'row',
+          alignItems: 'center',
+          gap: spacing[2.5],
+        },
+        weekLabel: {
+          fontSize: typography.sizes.base,
+          fontWeight: typography.weights.bold,
+          color: colors.text,
+        },
+        weekLabelCurrent: {
+          color: colors.primary,
+        },
+        currentBadge: {
+          fontSize: typography.sizes.sm,
+          fontWeight: typography.weights.medium,
+          color: colors.primary,
+        },
+        fraction: {
+          fontSize: typography.sizes.sm,
+          color: colors.textSecondary,
+        },
+        chevron: {
+          fontSize: 10,
+          color: colors.textTertiary,
+        },
+        sessionList: {
+          paddingHorizontal: spacing[4],
+          paddingBottom: spacing[1],
+        },
+      }),
+    [colors]
+  );
 
   return (
     <View style={[styles.container, isCurrentWeek && styles.containerCurrent]}>
@@ -86,7 +101,9 @@ export function WeekRow({ weekNumber, sessions, isCurrentWeek }: WeekRowProps) {
         activeOpacity={0.7}
       >
         <View style={styles.headerLeft}>
-          <Text style={[styles.weekLabel, isCurrentWeek && styles.weekLabelCurrent]}>
+          <Text
+            style={[styles.weekLabel, isCurrentWeek && styles.weekLabelCurrent]}
+          >
             Week {weekNumber}
             {isCurrentWeek ? (
               <Text style={styles.currentBadge}> · Now</Text>
@@ -106,10 +123,15 @@ export function WeekRow({ weekNumber, sessions, isCurrentWeek }: WeekRowProps) {
       {expanded && (
         <View style={styles.sessionList}>
           {sessions.map((session) => (
-            <SessionSummary session={session} key={session.id} />
+            <SessionSummary
+              key={session.id}
+              session={session}
+              activeSessionId={activeSessionId}
+              onPress={onSessionPress}
+            />
           ))}
         </View>
       )}
     </View>
-  )
+  );
 }

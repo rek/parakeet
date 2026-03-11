@@ -10,7 +10,13 @@ export function estimateBestOneRm(actualSets: unknown): number {
   if (!Array.isArray(actualSets) || actualSets.length === 0) return 0;
   let best = 0;
   for (const s of actualSets as ActualSet[]) {
-    if (!s.weight_grams || !s.reps_completed || s.reps_completed <= 0 || s.reps_completed > 20) continue;
+    if (
+      !s.weight_grams ||
+      !s.reps_completed ||
+      s.reps_completed <= 0 ||
+      s.reps_completed > 20
+    )
+      continue;
     const est = estimateOneRepMax_Epley(
       gramsToKg(s.weight_grams),
       s.reps_completed
@@ -41,7 +47,9 @@ export function computeHeaviestLift(actualSets: unknown): number {
   return heaviest;
 }
 
-export function getSessionJoin(sessions: unknown): { intensity_type?: string } | null {
+export function getSessionJoin(
+  sessions: unknown
+): { intensity_type?: string } | null {
   if (!sessions) return null;
   return (Array.isArray(sessions) ? sessions[0] : sessions) as {
     intensity_type?: string;

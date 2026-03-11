@@ -1,4 +1,4 @@
-import { Stack } from 'expo-router'
+import { Stack } from 'expo-router';
 
 export default function ProfileLayout() {
   return (
@@ -7,5 +7,5 @@ export default function ProfileLayout() {
       <Stack.Screen name="achievements" />
       <Stack.Screen name="wilks" />
     </Stack>
-  )
+  );
 }

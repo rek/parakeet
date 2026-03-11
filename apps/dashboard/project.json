@@ -12,6 +12,13 @@
         "command": "oxlint src --deny-warnings --react-plugin",
         "cwd": "apps/dashboard"
       }
+    },
+    "format": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "npx prettier --write \"src/**/*.{ts,tsx}\"",
+        "cwd": "apps/dashboard"
+      }
     }
   }
 }

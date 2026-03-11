@@ -1,4 +1,4 @@
-import { z } from 'zod'
+import { z } from 'zod';
 
 export const UserSchema = z
   .object({
@@ -9,9 +9,9 @@ export const UserSchema = z
     date_of_birth: z.string().nullable().optional(),
     created_at: z.iso.datetime({ offset: true }),
   })
-  .strict()
+  .strict();
 
-export type User = z.infer<typeof UserSchema>
+export type User = z.infer<typeof UserSchema>;
 
 export const UpdateUserSchema = z
   .object({
@@ -19,6 +19,6 @@ export const UpdateUserSchema = z
     biological_sex: z.enum(['female', 'male']).optional(),
     date_of_birth: z.string().nullable().optional(),
   })
-  .strict()
+  .strict();
 
-export type UpdateUser = z.infer<typeof UpdateUserSchema>
+export type UpdateUser = z.infer<typeof UpdateUserSchema>;

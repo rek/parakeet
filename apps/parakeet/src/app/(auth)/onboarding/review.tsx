@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useState } from 'react';
 import {
   ActivityIndicator,
   ScrollView,
@@ -6,20 +6,25 @@ import {
   Text,
   TouchableOpacity,
   View,
-} from 'react-native'
-import { router, useLocalSearchParams } from 'expo-router'
-import { useQueryClient } from '@tanstack/react-query'
+} from 'react-native';
 
-import { createProgram } from '@modules/program'
-import { useAuth } from '@modules/auth'
-import { qk } from '@platform/query'
-import { generateProgram, nextDateForWeekday, DEFAULT_TRAINING_DAYS } from '@parakeet/training-engine'
-import { captureException } from '@platform/utils/captureException'
-import { DAY_LABELS, MONTH_SHORT } from '@shared/constants'
-import { capitalize } from '@shared/utils/string'
-import type { ColorScheme } from '../../../theme'
-import { spacing, typography, radii } from '../../../theme'
-import { useTheme } from '../../../theme/ThemeContext'
+import { useAuth } from '@modules/auth';
+import { createProgram } from '@modules/program';
+import {
+  DEFAULT_TRAINING_DAYS,
+  generateProgram,
+  nextDateForWeekday,
+} from '@parakeet/training-engine';
+import { qk } from '@platform/query';
+import { captureException } from '@platform/utils/captureException';
+import { DAY_LABELS, MONTH_SHORT } from '@shared/constants';
+import { capitalize } from '@shared/utils/string';
+import { useQueryClient } from '@tanstack/react-query';
+import { router, useLocalSearchParams } from 'expo-router';
+
+import type { ColorScheme } from '../../../theme';
+import { radii, spacing, typography } from '../../../theme';
+import { useTheme } from '../../../theme/ThemeContext';
 
 // ── Styles ────────────────────────────────────────────────────────────────────
 
@@ -190,91 +195,104 @@ function buildStyles(colors: ColorScheme) {
       color: colors.textSecondary,
       lineHeight: 19,
     },
-  })
+  });
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 function formatSessionDate(date: Date): string {
-  return `${DAY_LABELS[date.getDay()]} ${MONTH_SHORT[date.getMonth()]} ${date.getDate()}`
+  return `${DAY_LABELS[date.getDay()]} ${MONTH_SHORT[date.getMonth()]} ${date.getDate()}`;
 }
 
 // ── Screen ───────────────────────────────────────────────────────────────────
 
 export default function ReviewScreen() {
-  const { colors } = useTheme()
-  const styles = useMemo(() => buildStyles(colors), [colors])
-  const { user } = useAuth()
-  const queryClient = useQueryClient()
-  const { totalWeeks: tw, trainingDaysPerWeek: tdpw, programMode: pm } = useLocalSearchParams<{
-    totalWeeks: string
-    trainingDaysPerWeek: string
-    programMode?: string
-  }>()
+  const { colors } = useTheme();
+  const styles = useMemo(() => buildStyles(colors), [colors]);
+  const { user } = useAuth();
+  const queryClient = useQueryClient();
+  const {
+    totalWeeks: tw,
+    trainingDaysPerWeek: tdpw,
+    programMode: pm,
+  } = useLocalSearchParams<{
+    totalWeeks: string;
+    trainingDaysPerWeek: string;
+    programMode?: string;
+  }>();
 
-  const totalWeeks = Number(tw)
-  const trainingDaysPerWeek = Number(tdpw) as 3 | 4
-  const isUnending = pm === 'unending'
+  const totalWeeks = Number(tw);
+  const trainingDaysPerWeek = Number(tdpw) as 3 | 4;
+  const isUnending = pm === 'unending';
 
   const [selectedDays, setSelectedDays] = useState<number[]>(
-    () => DEFAULT_TRAINING_DAYS[trainingDaysPerWeek] ?? [1, 3, 5],
-  )
-  const [loading, setLoading] = useState(false)
+    () => DEFAULT_TRAINING_DAYS[trainingDaysPerWeek] ?? [1, 3, 5]
+  );
+  const [loading, setLoading] = useState(false);
 
   // startDate = next occurrence of the earliest selected day
   const startDate = useMemo(() => {
-    const sorted = [...selectedDays].sort((a, b) => a - b)
-    return nextDateForWeekday(sorted[0])
-  }, [selectedDays])
+    const sorted = [...selectedDays].sort((a, b) => a - b);
+    return nextDateForWeekday(sorted[0]);
+  }, [selectedDays]);
 
   // Compute week 1 preview locally — no DB call needed (scheduled only)
   const week1Sessions = useMemo(() => {
-    if (isUnending) return []
-    if (!totalWeeks || !trainingDaysPerWeek || selectedDays.length !== trainingDaysPerWeek) return []
+    if (isUnending) return [];
+    if (
+      !totalWeeks ||
+      !trainingDaysPerWeek ||
+      selectedDays.length !== trainingDaysPerWeek
+    )
+      return [];
     const result = generateProgram({
       totalWeeks,
       trainingDaysPerWeek,
       startDate,
       trainingDays: selectedDays,
-    })
+    });
     return result.sessions
       .filter((s) => s.weekNumber === 1)
-      .sort((a, b) => a.dayNumber - b.dayNumber)
-  }, [isUnending, selectedDays, startDate, totalWeeks, trainingDaysPerWeek])
+      .sort((a, b) => a.dayNumber - b.dayNumber);
+  }, [isUnending, selectedDays, startDate, totalWeeks, trainingDaysPerWeek]);
 
   function toggleDay(day: number) {
     setSelectedDays((prev) => {
       if (prev.includes(day)) {
-        return prev.filter((d) => d !== day)
+        return prev.filter((d) => d !== day);
       } else {
         // Don't allow exceeding required count
-        if (prev.length >= trainingDaysPerWeek) return prev
-        return [...prev, day]
+        if (prev.length >= trainingDaysPerWeek) return prev;
+        return [...prev, day];
       }
-    })
+    });
   }
 
   async function handleStart() {
-    setLoading(true)
+    setLoading(true);
     try {
       await createProgram({
-        totalWeeks: isUnending ? undefined : totalWeeks as 10 | 12 | 14,
+        totalWeeks: isUnending ? undefined : (totalWeeks as 10 | 12 | 14),
         trainingDaysPerWeek,
         startDate,
         trainingDays: selectedDays,
         programMode: isUnending ? 'unending' : 'scheduled',
-      })
-      await queryClient.invalidateQueries({ queryKey: qk.program.active(user?.id) })
-      await queryClient.invalidateQueries({ queryKey: qk.session.today(user?.id) })
-      router.replace('/(tabs)/today')
+      });
+      await queryClient.invalidateQueries({
+        queryKey: qk.program.active(user?.id),
+      });
+      await queryClient.invalidateQueries({
+        queryKey: qk.session.today(user?.id),
+      });
+      router.replace('/(tabs)/today');
     } catch (err) {
-      captureException(err)
+      captureException(err);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
   }
 
-  const daysSelected = selectedDays.length === trainingDaysPerWeek
+  const daysSelected = selectedDays.length === trainingDaysPerWeek;
 
   return (
     <View style={styles.container}>
@@ -297,7 +315,7 @@ export default function ReviewScreen() {
         <Text style={styles.sectionLabel}>Training Days</Text>
         <View style={styles.dayRow}>
           {DAY_LABELS.map((label, weekday) => {
-            const active = selectedDays.includes(weekday)
+            const active = selectedDays.includes(weekday);
             return (
               <TouchableOpacity
                 key={weekday}
@@ -305,11 +323,16 @@ export default function ReviewScreen() {
                 onPress={() => toggleDay(weekday)}
                 activeOpacity={0.7}
               >
-                <Text style={[styles.dayChipText, active && styles.dayChipTextActive]}>
+                <Text
+                  style={[
+                    styles.dayChipText,
+                    active && styles.dayChipTextActive,
+                  ]}
+                >
                   {label}
                 </Text>
               </TouchableOpacity>
-            )
+            );
           })}
         </View>
         {!daysSelected && (
@@ -323,9 +346,12 @@ export default function ReviewScreen() {
           <>
             <Text style={styles.sectionLabel}>First Session</Text>
             <View style={styles.unendingPreview}>
-              <Text style={styles.unendingPreviewTitle}>Squat · Heavy · Block 1</Text>
+              <Text style={styles.unendingPreviewTitle}>
+                Squat · Heavy · Block 1
+              </Text>
               <Text style={styles.unendingPreviewNote}>
-                Your first workout is ready to go. After each session, the next one is generated fresh from your results.
+                Your first workout is ready to go. After each session, the next
+                one is generated fresh from your results.
               </Text>
             </View>
           </>
@@ -343,10 +369,16 @@ export default function ReviewScreen() {
                   <Text style={styles.cardDay}>
                     {formatSessionDate(session.plannedDate)}
                   </Text>
-                  <Text style={styles.cardLift}>{capitalize(session.primaryLift)}</Text>
-                  <Text style={styles.cardIntensity}>{session.intensityType}</Text>
+                  <Text style={styles.cardLift}>
+                    {capitalize(session.primaryLift)}
+                  </Text>
+                  <Text style={styles.cardIntensity}>
+                    {session.intensityType}
+                  </Text>
                   <View style={styles.cardDivider} />
-                  <Text style={styles.cardNote}>Sets generated before workout</Text>
+                  <Text style={styles.cardNote}>
+                    Sets generated before workout
+                  </Text>
                 </View>
               ))}
             </ScrollView>
@@ -357,7 +389,10 @@ export default function ReviewScreen() {
       {/* Footer */}
       <View style={styles.footer}>
         <TouchableOpacity
-          style={[styles.primaryButton, (!daysSelected || loading) && styles.primaryButtonDisabled]}
+          style={[
+            styles.primaryButton,
+            (!daysSelected || loading) && styles.primaryButtonDisabled,
+          ]}
           onPress={handleStart}
           disabled={!daysSelected || loading}
           activeOpacity={0.8}
@@ -378,5 +413,5 @@ export default function ReviewScreen() {
         </TouchableOpacity>
       </View>
     </View>
-  )
+  );
 }

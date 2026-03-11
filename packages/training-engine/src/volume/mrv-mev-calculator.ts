@@ -1,99 +1,105 @@
 import {
   CompletedSetLog,
-  MUSCLE_GROUPS,
   MrvMevConfig,
+  MUSCLE_GROUPS,
   MuscleGroup,
   MuscleMapper,
   VolumeStatus,
-} from '../types'
-import { rpeSetMultiplier } from './rpe-scaler'
+} from '../types';
+import { rpeSetMultiplier } from './rpe-scaler';
 
 export const DEFAULT_MRV_MEV_CONFIG_MALE: MrvMevConfig = {
-  quads:      { mev: 8,  mrv: 20 },
-  hamstrings: { mev: 6,  mrv: 20 },
-  glutes:     { mev: 0,  mrv: 22 },
-  lower_back: { mev: 6,  mrv: 18 },
+  quads: { mev: 8, mrv: 20 },
+  hamstrings: { mev: 6, mrv: 20 },
+  glutes: { mev: 0, mrv: 22 },
+  lower_back: { mev: 6, mrv: 18 },
   upper_back: { mev: 10, mrv: 22 },
-  chest:      { mev: 8,  mrv: 22 },
-  triceps:    { mev: 6,  mrv: 20 },
-  shoulders:  { mev: 8,  mrv: 20 },
-  biceps:     { mev: 8,  mrv: 20 },
-}
+  chest: { mev: 8, mrv: 22 },
+  triceps: { mev: 6, mrv: 20 },
+  shoulders: { mev: 8, mrv: 20 },
+  biceps: { mev: 8, mrv: 20 },
+};
 
 // Female defaults are ~20–30% higher per RP Strength research (see sex-based-adaptations.md)
 export const DEFAULT_MRV_MEV_CONFIG_FEMALE: MrvMevConfig = {
-  quads:      { mev: 10, mrv: 26 },
-  hamstrings: { mev: 8,  mrv: 25 },
-  glutes:     { mev: 0,  mrv: 20 },
-  lower_back: { mev: 7,  mrv: 20 },
+  quads: { mev: 10, mrv: 26 },
+  hamstrings: { mev: 8, mrv: 25 },
+  glutes: { mev: 0, mrv: 20 },
+  lower_back: { mev: 7, mrv: 20 },
   upper_back: { mev: 12, mrv: 28 },
-  chest:      { mev: 10, mrv: 26 },
-  triceps:    { mev: 8,  mrv: 24 },
-  shoulders:  { mev: 10, mrv: 24 },
-  biceps:     { mev: 10, mrv: 24 },
-}
+  chest: { mev: 10, mrv: 26 },
+  triceps: { mev: 8, mrv: 24 },
+  shoulders: { mev: 10, mrv: 24 },
+  biceps: { mev: 10, mrv: 24 },
+};
 
 // Backward-compat alias — existing callers unaffected
-export const DEFAULT_MRV_MEV_CONFIG = DEFAULT_MRV_MEV_CONFIG_MALE
+export const DEFAULT_MRV_MEV_CONFIG = DEFAULT_MRV_MEV_CONFIG_MALE;
 
 function emptyVolumeMap(): Record<MuscleGroup, number> {
-  return Object.fromEntries(MUSCLE_GROUPS.map((m) => [m, 0])) as Record<MuscleGroup, number>
+  return Object.fromEntries(MUSCLE_GROUPS.map((m) => [m, 0])) as Record<
+    MuscleGroup,
+    number
+  >;
 }
 
 export function computeWeeklyVolume(
   sessionLogs: CompletedSetLog[],
-  muscleMapper: MuscleMapper,
+  muscleMapper: MuscleMapper
 ): Record<MuscleGroup, number> {
-  const raw = emptyVolumeMap()
+  const raw = emptyVolumeMap();
 
   for (const log of sessionLogs) {
-    const muscles = muscleMapper(log.lift, log.exercise)
+    const muscles = muscleMapper(log.lift, log.exercise);
     const effectiveSets: number = log.setRpes
       ? log.setRpes.reduce((sum: number, rpe) => sum + rpeSetMultiplier(rpe), 0)
-      : log.completedSets
+      : log.completedSets;
     for (const { muscle, contribution } of muscles) {
-      raw[muscle] += effectiveSets * contribution
+      raw[muscle] += effectiveSets * contribution;
     }
   }
 
   // Floor fractional contributions (secondary muscles accumulate in 0.5 increments)
   return Object.fromEntries(
-    MUSCLE_GROUPS.map((m) => [m, Math.round(raw[m])]),
-  ) as Record<MuscleGroup, number>
+    MUSCLE_GROUPS.map((m) => [m, Math.round(raw[m])])
+  ) as Record<MuscleGroup, number>;
 }
 
 export function classifyVolumeStatus(
   weeklyVolume: Record<MuscleGroup, number>,
-  config: MrvMevConfig,
+  config: MrvMevConfig
 ): Record<MuscleGroup, VolumeStatus> {
   return Object.fromEntries(
     MUSCLE_GROUPS.map((muscle) => {
-      const sets = weeklyVolume[muscle]
-      const { mev, mrv } = config[muscle]
+      const sets = weeklyVolume[muscle];
+      const { mev, mrv } = config[muscle];
 
-      let status: VolumeStatus
+      let status: VolumeStatus;
       if (sets > mrv) {
-        status = 'exceeded_mrv'
+        status = 'exceeded_mrv';
       } else if (sets === mrv) {
-        status = 'at_mrv'
+        status = 'at_mrv';
       } else if (mrv - sets <= 2) {
-        status = 'approaching_mrv'
+        status = 'approaching_mrv';
       } else if (sets >= mev) {
-        status = 'in_range'
+        status = 'in_range';
       } else {
-        status = 'below_mev'
+        status = 'below_mev';
       }
 
-      return [muscle, status]
-    }),
-  ) as Record<MuscleGroup, VolumeStatus>
+      return [muscle, status];
+    })
+  ) as Record<MuscleGroup, VolumeStatus>;
 }
 
 export function computeRemainingCapacity(
   weeklyVolume: Record<MuscleGroup, number>,
-  config: MrvMevConfig,
+  config: MrvMevConfig
 ): Record<MuscleGroup, number> {
   return Object.fromEntries(
-    MUSCLE_GROUPS.map((muscle) => [muscle, config[muscle].mrv - weeklyVolume[muscle]]),
-  ) as Record<MuscleGroup, number>
+    MUSCLE_GROUPS.map((muscle) => [
+      muscle,
+      config[muscle].mrv - weeklyVolume[muscle],
+    ])
+  ) as Record<MuscleGroup, number>;
 }

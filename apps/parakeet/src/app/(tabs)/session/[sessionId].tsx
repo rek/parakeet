@@ -1,6 +1,4 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Ionicons } from '@expo/vector-icons';
-import { useKeepAwake } from 'expo-keep-awake';
 import {
   Alert,
   ScrollView,
@@ -9,18 +7,22 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+
+import { Ionicons } from '@expo/vector-icons';
+import { useLiftHistory } from '@modules/history';
+import { computeDisplayWeights } from '@modules/jit';
+import { getProfile } from '@modules/profile';
 import {
   abandonSession,
-  getSession,
-  startSession,
-  useSetCompletionFlow,
-  formatExerciseName,
   buildBlockWeekLabel,
   buildIntensityLabel,
-  groupAuxiliaryWork,
   DEFAULT_MAIN_REST_SECONDS,
+  formatExerciseName,
+  getSession,
+  groupAuxiliaryWork,
+  startSession,
+  useSetCompletionFlow,
 } from '@modules/session';
-import { computeDisplayWeights } from '@modules/jit';
 import type {
   AuxiliaryWork,
   JitData,
@@ -28,16 +30,26 @@ import type {
   RestRecommendations,
   WarmupSet,
 } from '@modules/session';
-import { getRestTimerPrefs } from '@modules/settings';
+import {
+  getBarWeightKg,
+  getDisabledPlates,
+  getRestTimerPrefs,
+  setBarWeightKg,
+  setDisabledPlates,
+} from '@modules/settings';
 import type { RestTimerPrefs } from '@modules/settings';
+import type { PlateKg } from '@parakeet/training-engine';
 import { useNetworkStatus } from '@platform/network';
 import { useSessionStore } from '@platform/store/sessionStore';
+import { sessionLabel } from '@shared/utils/string';
 import { useQueryClient } from '@tanstack/react-query';
+import { useKeepAwake } from 'expo-keep-awake';
 import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import {
   SafeAreaView,
   useSafeAreaInsets,
 } from 'react-native-safe-area-context';
+
 import { AddExerciseModal } from '../../../components/session/AddExerciseModal';
 import { LiftHistorySheet } from '../../../components/session/LiftHistorySheet';
 import { PostRestOverlay } from '../../../components/training/PostRestOverlay';
@@ -45,7 +57,6 @@ import { RestTimer } from '../../../components/training/RestTimer';
 import { RpeQuickPicker } from '../../../components/training/RpeQuickPicker';
 import { SetRow } from '../../../components/training/SetRow';
 import { WarmupSection } from '../../../components/training/WarmupSection';
-import { sessionLabel } from '@shared/utils/string';
 import type { ColorScheme } from '../../../theme';
 import { useTheme } from '../../../theme/ThemeContext';
 
@@ -293,6 +304,10 @@ export default function SessionScreen() {
   const [warmupSetsState, setWarmupSetsState] = useState<WarmupSet[]>([]);
   const [auxiliaryWork, setAuxiliaryWork] = useState<AuxiliaryWork[]>([]);
   const [adHocExercises, setAdHocExercises] = useState<string[]>([]);
+  const [equipmentBarWeightKg, setEquipmentBarWeightKg] = useState<number>(20);
+  const [equipmentDisabledPlates, setEquipmentDisabledPlates] = useState<
+    PlateKg[]
+  >([]);
   const [addExerciseVisible, setAddExerciseVisible] = useState(false);
   const [historySheetVisible, setHistorySheetVisible] = useState(false);
   const insets = useSafeAreaInsets();
@@ -373,10 +388,28 @@ export default function SessionScreen() {
   // ── Bootstrap ─────────────────────────────────────────────────────────────
 
   useEffect(() => {
-    getRestTimerPrefs().then((p) => { restTimerPrefsRef.current = p; });
-    return () => { cleanupResetInterval(); };
+    getRestTimerPrefs().then((p) => {
+      restTimerPrefsRef.current = p;
+    });
+    getProfile()
+      .then((profile) => getBarWeightKg(profile?.biological_sex))
+      .then(setEquipmentBarWeightKg);
+    getDisabledPlates().then(setEquipmentDisabledPlates);
+    return () => {
+      cleanupResetInterval();
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  function handleBarWeightChange(kg: number) {
+    setEquipmentBarWeightKg(kg);
+    setBarWeightKg(kg as 20 | 15);
+  }
+
+  function handleDisabledPlatesChange(plates: PlateKg[]) {
+    setEquipmentDisabledPlates(plates);
+    setDisabledPlates(plates);
+  }
 
   useEffect(() => {
     if (!sessionId) {
@@ -532,12 +565,12 @@ export default function SessionScreen() {
 
   function handleRemoveAdHocSet(exercise: string, setNumber: number) {
     const remaining = auxiliarySets.filter(
-      (s) => s.exercise === exercise && !(s.set_number === setNumber),
-    )
+      (s) => s.exercise === exercise && !(s.set_number === setNumber)
+    );
     if (remaining.length === 0) {
-      setAdHocExercises((prev) => prev.filter((e) => e !== exercise))
+      setAdHocExercises((prev) => prev.filter((e) => e !== exercise));
     }
-    removeAdHocSet(exercise, setNumber)
+    removeAdHocSet(exercise, setNumber);
   }
 
   function handleAbandon() {
@@ -575,6 +608,12 @@ export default function SessionScreen() {
 
   const { isOffline } = useNetworkStatus();
 
+  const {
+    data: liftHistoryData,
+    isLoading: liftHistoryLoading,
+    isError: liftHistoryError,
+  } = useLiftHistory(sessionMeta?.primary_lift ?? '', historySheetVisible);
+
   // ── Derived state ─────────────────────────────────────────────────────────
 
   const hasCompletedSet =
@@ -591,7 +630,10 @@ export default function SessionScreen() {
       ? (llmRestSuggestion.current ?? undefined)
       : undefined;
 
-  const { regularAux, topUpAux } = groupAuxiliaryWork(auxiliaryWork, auxiliarySets);
+  const { regularAux, topUpAux } = groupAuxiliaryWork(
+    auxiliaryWork,
+    auxiliarySets
+  );
   const auxCount = regularAux.length + topUpAux.length;
 
   // ── Render ────────────────────────────────────────────────────────────────
@@ -633,6 +675,8 @@ export default function SessionScreen() {
           <WarmupSection
             sets={warmupSetsState}
             completedIndices={warmupCompleted}
+            barWeightKg={equipmentBarWeightKg}
+            disabledPlates={equipmentDisabledPlates}
             onToggle={(index, done) => {
               setWarmupDone(index, done);
               if (
@@ -659,30 +703,38 @@ export default function SessionScreen() {
             {currentAdaptation !== null &&
               (currentAdaptation.adaptationType === 'weight_reduced' ||
                 currentAdaptation.adaptationType === 'sets_capped') && (
-              <View style={styles.adaptationBanner}>
-                <Text style={styles.adaptationBannerText}>
-                  {currentAdaptation.rationale}
-                </Text>
-              </View>
-            )}
+                <View style={styles.adaptationBanner}>
+                  <Text style={styles.adaptationBannerText}>
+                    {currentAdaptation.rationale}
+                  </Text>
+                </View>
+              )}
 
-            {computeDisplayWeights(actualSets, plannedSets, currentAdaptation).map(
-              ({ displayWeightKg, originalIndex }) => {
-                const actualSet = actualSets[originalIndex];
-                const planned = plannedSets[originalIndex];
-                return (
-                  <SetRow
-                    key={actualSet.set_number}
-                    setNumber={actualSet.set_number}
-                    plannedWeightKg={displayWeightKg}
-                    plannedReps={planned?.reps ?? actualSet.reps_completed}
-                    rpeValue={actualSet.rpe_actual}
-                    onUpdate={(data) => handleSetUpdate(actualSet.set_number, data)}
-                    onRpePress={() => requestMainRpe(actualSet.set_number)}
-                  />
-                );
-              },
-            )}
+            {computeDisplayWeights(
+              actualSets,
+              plannedSets,
+              currentAdaptation
+            ).map(({ displayWeightKg, originalIndex }) => {
+              const actualSet = actualSets[originalIndex];
+              const planned = plannedSets[originalIndex];
+              return (
+                <SetRow
+                  key={actualSet.set_number}
+                  setNumber={actualSet.set_number}
+                  plannedWeightKg={displayWeightKg}
+                  plannedReps={planned?.reps ?? actualSet.reps_completed}
+                  rpeValue={actualSet.rpe_actual}
+                  onUpdate={(data) =>
+                    handleSetUpdate(actualSet.set_number, data)
+                  }
+                  onRpePress={() => requestMainRpe(actualSet.set_number)}
+                  barWeightKg={equipmentBarWeightKg}
+                  disabledPlates={equipmentDisabledPlates}
+                  onBarWeightChange={handleBarWeightChange}
+                  onDisabledPlatesChange={handleDisabledPlatesChange}
+                />
+              );
+            })}
           </>
         )}
 
@@ -728,6 +780,10 @@ export default function SessionScreen() {
                             data
                           )
                         }
+                        barWeightKg={equipmentBarWeightKg}
+                        disabledPlates={equipmentDisabledPlates}
+                        onBarWeightChange={handleBarWeightChange}
+                        onDisabledPlatesChange={handleDisabledPlatesChange}
                       />
                     );
                   })
@@ -760,9 +816,12 @@ export default function SessionScreen() {
                             key={`${aw.exercise}-${actualSet.set_number}`}
                             setNumber={actualSet.set_number}
                             plannedWeightKg={
-                              planned?.weight_kg ?? actualSet.weight_grams / 1000
+                              planned?.weight_kg ??
+                              actualSet.weight_grams / 1000
                             }
-                            plannedReps={planned?.reps ?? actualSet.reps_completed}
+                            plannedReps={
+                              planned?.reps ?? actualSet.reps_completed
+                            }
                             rpeValue={actualSet.rpe_actual}
                             exerciseType={aw.exerciseType}
                             onRpePress={() =>
@@ -777,6 +836,10 @@ export default function SessionScreen() {
                                 data
                               )
                             }
+                            barWeightKg={equipmentBarWeightKg}
+                            disabledPlates={equipmentDisabledPlates}
+                            onBarWeightChange={handleBarWeightChange}
+                            onDisabledPlatesChange={handleDisabledPlatesChange}
                           />
                         );
                       })
@@ -804,7 +867,10 @@ export default function SessionScreen() {
                     </TouchableOpacity>
                   </View>
                   {sets.map((actualSet) => (
-                    <View key={`${exercise}-${actualSet.set_number}`} style={styles.adHocSetRow}>
+                    <View
+                      key={`${exercise}-${actualSet.set_number}`}
+                      style={styles.adHocSetRow}
+                    >
                       <View style={styles.adHocSetRowContent}>
                         <SetRow
                           setNumber={actualSet.set_number}
@@ -823,17 +889,27 @@ export default function SessionScreen() {
                               data
                             )
                           }
+                          barWeightKg={equipmentBarWeightKg}
+                          disabledPlates={equipmentDisabledPlates}
+                          onBarWeightChange={handleBarWeightChange}
+                          onDisabledPlatesChange={handleDisabledPlatesChange}
                         />
                       </View>
                       {!actualSet.is_completed && (
                         <TouchableOpacity
                           style={styles.removeSetButton}
-                          onPress={() => handleRemoveAdHocSet(exercise, actualSet.set_number)}
+                          onPress={() =>
+                            handleRemoveAdHocSet(exercise, actualSet.set_number)
+                          }
                           hitSlop={{ top: 8, bottom: 8, left: 4, right: 8 }}
                           accessibilityLabel={`Remove set ${actualSet.set_number}`}
                           accessibilityRole="button"
                         >
-                          <Ionicons name="close-circle" size={18} color={colors.textTertiary} />
+                          <Ionicons
+                            name="close-circle"
+                            size={18}
+                            color={colors.textTertiary}
+                          />
                         </TouchableOpacity>
                       )}
                     </View>
@@ -882,6 +958,10 @@ export default function SessionScreen() {
         lift={sessionMeta?.primary_lift ?? ''}
         visible={historySheetVisible}
         onClose={() => setHistorySheetVisible(false)}
+        data={liftHistoryData}
+        isLoading={liftHistoryLoading}
+        isError={liftHistoryError}
+        isOffline={isOffline}
       />
 
       {/* Add exercise modal */}
@@ -892,7 +972,10 @@ export default function SessionScreen() {
       />
 
       {/* Rest timer + post-rest overlay + floating RPE picker */}
-      {(timerState?.visible || postRestState !== null || pendingRpeSetNumber !== null || pendingAuxRpe !== null) && (
+      {(timerState?.visible ||
+        postRestState !== null ||
+        pendingRpeSetNumber !== null ||
+        pendingAuxRpe !== null) && (
         <View
           pointerEvents="box-none"
           style={[styles.restTimerOverlay, { top: insets.top + 8 }]}
@@ -915,6 +998,8 @@ export default function SessionScreen() {
                   ? (currentAdaptation.restBonusSeconds ?? 0)
                   : 0
               }
+              audioAlert={restTimerPrefsRef.current.audioAlert}
+              hapticAlert={restTimerPrefsRef.current.hapticAlert}
             />
           )}
           {postRestState !== null && !timerState?.visible && (
@@ -927,7 +1012,13 @@ export default function SessionScreen() {
             />
           )}
           {(pendingRpeSetNumber !== null || pendingAuxRpe !== null) && (
-            <View style={(timerState?.visible || postRestState !== null) ? styles.rpePickerSpaced : undefined}>
+            <View
+              style={
+                timerState?.visible || postRestState !== null
+                  ? styles.rpePickerSpaced
+                  : undefined
+              }
+            >
               <RpeQuickPicker
                 onSelect={handleRpeQuickSelect}
                 onSkip={handleRpeQuickSkip}

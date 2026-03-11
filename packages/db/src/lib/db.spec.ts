@@ -1,8 +1,4 @@
-import {
-  parseJsonArray,
-  parseNullableJsonArray,
-  parseWithParser,
-} from './db';
+import { parseJsonArray, parseNullableJsonArray, parseWithParser } from './db';
 
 describe('db', () => {
   it('parseWithParser delegates parsing', () => {
@@ -22,6 +18,8 @@ describe('db', () => {
 
   it('parseJsonArray throws for non-array values', () => {
     const parser = (value: unknown) => Number(value);
-    expect(() => parseJsonArray('x', 'items', parser)).toThrow('items must be an array');
+    expect(() => parseJsonArray('x', 'items', parser)).toThrow(
+      'items must be an array'
+    );
   });
 });

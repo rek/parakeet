@@ -1,8 +1,9 @@
-import { createClient } from '@supabase/supabase-js';
 import { AppState, NativeModules, Platform } from 'react-native';
 
-import type { Database } from './database';
+import { createClient } from '@supabase/supabase-js';
+
 import storage from '../lib/storage';
+import type { Database } from './database';
 
 const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL!;
 const supabaseUrlAndroid = process.env.EXPO_PUBLIC_SUPABASE_URL_ANDROID;
@@ -12,17 +13,26 @@ const supabaseAnonKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY!;
 function isPrivateIpv4(host: string): boolean {
   if (!/^\d{1,3}(\.\d{1,3}){3}$/.test(host)) return false;
   const [a, b] = host.split('.').map(Number);
-  if ([a, b].some((part) => Number.isNaN(part) || part < 0 || part > 255)) return false;
-  return a === 10 || a === 127 || (a === 192 && b === 168) || (a === 172 && b >= 16 && b <= 31);
+  if ([a, b].some((part) => Number.isNaN(part) || part < 0 || part > 255))
+    return false;
+  return (
+    a === 10 ||
+    a === 127 ||
+    (a === 192 && b === 168) ||
+    (a === 172 && b >= 16 && b <= 31)
+  );
 }
 
 function resolveSupabaseUrl(rawUrl: string): string {
   try {
     const url = new URL(rawUrl);
-    const isLoopback = url.hostname === 'localhost' || url.hostname === '127.0.0.1';
+    const isLoopback =
+      url.hostname === 'localhost' || url.hostname === '127.0.0.1';
     if (!isLoopback || Platform.OS === 'web') return rawUrl;
 
-    const scriptUrl = NativeModules?.SourceCode?.scriptURL as string | undefined;
+    const scriptUrl = NativeModules?.SourceCode?.scriptURL as
+      | string
+      | undefined;
     const metroHost = scriptUrl ? new URL(scriptUrl).hostname : undefined;
     if (metroHost && isPrivateIpv4(metroHost) && metroHost !== '127.0.0.1') {
       url.hostname = metroHost;
@@ -58,14 +68,18 @@ if (__DEV__) {
   console.log('[supabase] URL:', resolvedSupabaseUrl);
 }
 
-export const typedSupabase = createClient<Database>(resolvedSupabaseUrl, supabaseAnonKey, {
-  auth: {
-    ...(storage ? { storage } : {}),
-    autoRefreshToken: true,
-    persistSession: true,
-    detectSessionInUrl: Platform.OS === 'web',
-  },
-});
+export const typedSupabase = createClient<Database>(
+  resolvedSupabaseUrl,
+  supabaseAnonKey,
+  {
+    auth: {
+      ...(storage ? { storage } : {}),
+      autoRefreshToken: true,
+      persistSession: true,
+      detectSessionInUrl: Platform.OS === 'web',
+    },
+  }
+);
 
 // Keep the free-tier Supabase DB from pausing (pings if > 5 days since last ping).
 const LAST_PING_KEY = 'supabase_last_ping';

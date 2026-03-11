@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useState } from 'react';
 import {
   ActivityIndicator,
   Platform,
@@ -8,12 +8,9 @@ import {
   TextInput,
   TouchableOpacity,
   View,
-} from 'react-native'
-import { SafeAreaView } from 'react-native-safe-area-context'
-import { router } from 'expo-router'
-import { useQuery, useQueryClient } from '@tanstack/react-query'
-import DateTimePicker, { type DateTimePickerEvent } from '@react-native-community/datetimepicker'
+} from 'react-native';
 
+import { useAuth } from '@modules/auth';
 import {
   applyDisruptionAdjustment,
   applyUnprogrammedEventSoreness,
@@ -25,32 +22,41 @@ import {
   reportDisruption,
   SORENESS_CHIPS,
   SORENESS_NUMERIC,
-} from '@modules/disruptions'
-import type { SorenessLevel } from '@modules/disruptions'
-import { captureException } from '@platform/utils/captureException'
-import { useAuth } from '@modules/auth'
-import { getProfile } from '@modules/profile'
+} from '@modules/disruptions';
+import type { SorenessLevel } from '@modules/disruptions';
+import { getProfile } from '@modules/profile';
 import type {
   DisruptionType,
-  Severity,
   DisruptionWithSuggestions,
   Lift,
-} from '@parakeet/shared-types'
-import type { ColorScheme } from '../../theme'
-import { useTheme } from '../../theme/ThemeContext'
-import { BackLink } from '../../components/navigation/BackLink'
-import { qk } from '@platform/query'
-import { SORENESS_MUSCLES_DEFAULT, TRAINING_LIFTS } from '@shared/constants/training'
-import { localDateIso } from '@shared/utils/date'
+  Severity,
+} from '@parakeet/shared-types';
+import { qk } from '@platform/query';
+import { captureException } from '@platform/utils/captureException';
+import DateTimePicker, {
+  type DateTimePickerEvent,
+} from '@react-native-community/datetimepicker';
+import {
+  SORENESS_MUSCLES_DEFAULT,
+  TRAINING_LIFTS,
+} from '@shared/constants/training';
+import { localDateIso } from '@shared/utils/date';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { router } from 'expo-router';
+import { SafeAreaView } from 'react-native-safe-area-context';
+
+import { BackLink } from '../../components/navigation/BackLink';
+import type { ColorScheme } from '../../theme';
+import { useTheme } from '../../theme/ThemeContext';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 function todayIso(): string {
-  return localDateIso(new Date())
+  return localDateIso(new Date());
 }
 
 function parseIso(s: string): Date {
-  return new Date(s + 'T00:00:00')
+  return new Date(s + 'T00:00:00');
 }
 
 function formatDisplayDate(iso: string): string {
@@ -58,7 +64,7 @@ function formatDisplayDate(iso: string): string {
     weekday: 'short',
     day: 'numeric',
     month: 'short',
-  })
+  });
 }
 
 // ── Styles ────────────────────────────────────────────────────────────────────
@@ -74,9 +80,19 @@ function buildStyles(colors: ColorScheme) {
       borderBottomColor: colors.bgMuted,
     },
     title: { fontSize: 24, fontWeight: '800', color: colors.text },
-    subtitle: { fontSize: 14, color: colors.textSecondary, marginTop: 4, lineHeight: 20 },
+    subtitle: {
+      fontSize: 14,
+      color: colors.textSecondary,
+      marginTop: 4,
+      lineHeight: 20,
+    },
     scroll: { flex: 1 },
-    content: { paddingHorizontal: 20, paddingTop: 20, paddingBottom: 40, gap: 8 },
+    content: {
+      paddingHorizontal: 20,
+      paddingTop: 20,
+      paddingBottom: 40,
+      gap: 8,
+    },
 
     sectionLabel: {
       fontSize: 15,
@@ -108,7 +124,11 @@ function buildStyles(colors: ColorScheme) {
       backgroundColor: colors.primaryMuted,
     },
     typeIcon: { fontSize: 20 },
-    typeLabel: { fontSize: 12, color: colors.textSecondary, textAlign: 'center' },
+    typeLabel: {
+      fontSize: 12,
+      color: colors.textSecondary,
+      textAlign: 'center',
+    },
     typeLabelSelected: { color: colors.primary, fontWeight: '600' },
 
     // Severity
@@ -120,12 +140,20 @@ function buildStyles(colors: ColorScheme) {
       paddingVertical: 14,
       alignItems: 'center',
     },
-    severityText: { fontSize: 14, fontWeight: '600', color: colors.textSecondary },
+    severityText: {
+      fontSize: 14,
+      fontWeight: '600',
+      color: colors.textSecondary,
+    },
 
     // Date
     dateRow: { flexDirection: 'row', gap: 12, marginBottom: 8 },
     dateField: { flex: 1 },
-    dateFieldLabel: { fontSize: 12, color: colors.textSecondary, marginBottom: 4 },
+    dateFieldLabel: {
+      fontSize: 12,
+      color: colors.textSecondary,
+      marginBottom: 4,
+    },
     datePill: {
       borderWidth: 1,
       borderColor: colors.border,
@@ -137,7 +165,12 @@ function buildStyles(colors: ColorScheme) {
       fontSize: 14,
       color: colors.text,
     },
-    ongoingToggle: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 8 },
+    ongoingToggle: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 8,
+      marginBottom: 8,
+    },
     checkbox: {
       width: 20,
       height: 20,
@@ -147,12 +180,20 @@ function buildStyles(colors: ColorScheme) {
       alignItems: 'center',
       justifyContent: 'center',
     },
-    checkboxChecked: { borderColor: colors.primary, backgroundColor: colors.primary },
+    checkboxChecked: {
+      borderColor: colors.primary,
+      backgroundColor: colors.primary,
+    },
     checkmark: { fontSize: 12, color: colors.textInverse, fontWeight: '700' },
     ongoingLabel: { fontSize: 14, color: colors.textSecondary },
 
     // Lifts
-    liftRow: { flexDirection: 'row', gap: 10, flexWrap: 'wrap', marginBottom: 8 },
+    liftRow: {
+      flexDirection: 'row',
+      gap: 10,
+      flexWrap: 'wrap',
+      marginBottom: 8,
+    },
     liftChip: {
       paddingHorizontal: 18,
       paddingVertical: 10,
@@ -161,8 +202,15 @@ function buildStyles(colors: ColorScheme) {
       borderColor: colors.border,
       backgroundColor: colors.bgSurface,
     },
-    liftChipSelected: { borderColor: colors.primary, backgroundColor: colors.primaryMuted },
-    liftChipText: { fontSize: 14, color: colors.textSecondary, fontWeight: '500' },
+    liftChipSelected: {
+      borderColor: colors.primary,
+      backgroundColor: colors.primaryMuted,
+    },
+    liftChipText: {
+      fontSize: 14,
+      color: colors.textSecondary,
+      fontWeight: '500',
+    },
     liftChipTextSelected: { color: colors.primary, fontWeight: '600' },
 
     // Description
@@ -187,7 +235,11 @@ function buildStyles(colors: ColorScheme) {
       alignItems: 'center',
       marginTop: 8,
     },
-    submitButtonText: { fontSize: 16, fontWeight: '600', color: colors.textInverse },
+    submitButtonText: {
+      fontSize: 16,
+      fontWeight: '600',
+      color: colors.textInverse,
+    },
     buttonDisabled: { opacity: 0.4 },
 
     // Review state
@@ -197,7 +249,12 @@ function buildStyles(colors: ColorScheme) {
       borderRadius: 12,
       marginBottom: 16,
     },
-    noAdjustmentsText: { fontSize: 15, color: colors.success, textAlign: 'center', lineHeight: 22 },
+    noAdjustmentsText: {
+      fontSize: 15,
+      color: colors.success,
+      textAlign: 'center',
+      lineHeight: 22,
+    },
     adjustmentSummaryHeader: {
       fontSize: 14,
       fontWeight: '600' as const,
@@ -226,8 +283,16 @@ function buildStyles(colors: ColorScheme) {
       paddingVertical: 4,
     },
     adjustmentBadgeSkip: { backgroundColor: colors.dangerMuted },
-    adjustmentBadgeText: { fontSize: 13, fontWeight: '600' as const, color: colors.textSecondary },
-    adjustmentRationale: { fontSize: 13, color: colors.textSecondary, lineHeight: 18 },
+    adjustmentBadgeText: {
+      fontSize: 13,
+      fontWeight: '600' as const,
+      color: colors.textSecondary,
+    },
+    adjustmentRationale: {
+      fontSize: 13,
+      color: colors.textSecondary,
+      lineHeight: 18,
+    },
     futureSessionsNote: {
       padding: 14,
       backgroundColor: colors.bgMuted,
@@ -235,14 +300,23 @@ function buildStyles(colors: ColorScheme) {
       marginTop: 4,
       marginBottom: 4,
     },
-    futureSessionsNoteText: { fontSize: 13, color: colors.textSecondary, lineHeight: 18 },
+    futureSessionsNoteText: {
+      fontSize: 13,
+      color: colors.textSecondary,
+      lineHeight: 18,
+    },
     autoAppliedNote: {
       padding: 16,
       backgroundColor: colors.successMuted,
       borderRadius: 12,
       alignItems: 'center',
     },
-    autoAppliedNoteText: { fontSize: 14, color: colors.success, fontWeight: '600', textAlign: 'center' },
+    autoAppliedNoteText: {
+      fontSize: 14,
+      color: colors.success,
+      fontWeight: '600',
+      textAlign: 'center',
+    },
     // Soreness
     sorenessRow: {
       flexDirection: 'row',
@@ -250,7 +324,11 @@ function buildStyles(colors: ColorScheme) {
       marginBottom: 10,
       gap: 8,
     },
-    sorenessMuscleLabel: { fontSize: 13, color: colors.textSecondary, width: 90 },
+    sorenessMuscleLabel: {
+      fontSize: 13,
+      color: colors.textSecondary,
+      width: 90,
+    },
     sorenessChips: { flexDirection: 'row', gap: 6, flex: 1 },
     sorenessChip: {
       flex: 1,
@@ -260,7 +338,10 @@ function buildStyles(colors: ColorScheme) {
       borderColor: colors.border,
       alignItems: 'center',
     },
-    sorenessChipSelected: { borderColor: colors.warning, backgroundColor: colors.warningMuted },
+    sorenessChipSelected: {
+      borderColor: colors.warning,
+      backgroundColor: colors.warningMuted,
+    },
     sorenessChipText: { fontSize: 11, color: colors.textTertiary },
     sorenessChipTextSelected: { color: colors.warning, fontWeight: '600' },
     reviewActions: { gap: 12, marginTop: 16 },
@@ -270,7 +351,11 @@ function buildStyles(colors: ColorScheme) {
       paddingVertical: 16,
       alignItems: 'center',
     },
-    applyButtonText: { fontSize: 16, fontWeight: '600', color: colors.textInverse },
+    applyButtonText: {
+      fontSize: 16,
+      fontWeight: '600',
+      color: colors.textInverse,
+    },
     skipButton: {
       borderWidth: 1,
       borderColor: colors.border,
@@ -278,168 +363,194 @@ function buildStyles(colors: ColorScheme) {
       paddingVertical: 16,
       alignItems: 'center',
     },
-    skipButtonText: { fontSize: 15, fontWeight: '500', color: colors.textSecondary },
-  })
+    skipButtonText: {
+      fontSize: 15,
+      fontWeight: '500',
+      color: colors.textSecondary,
+    },
+  });
 }
 
 // ── Main screen ───────────────────────────────────────────────────────────────
 
-type ScreenState = 'form' | 'review'
+type ScreenState = 'form' | 'review';
 
 export default function DisruptionReportScreen() {
-  const { colors } = useTheme()
-  const styles = useMemo(() => buildStyles(colors), [colors])
-  const { user } = useAuth()
-  const queryClient = useQueryClient()
+  const { colors } = useTheme();
+  const styles = useMemo(() => buildStyles(colors), [colors]);
+  const { user } = useAuth();
+  const queryClient = useQueryClient();
 
   const { data: profile } = useQuery({
     queryKey: qk.profile.current(),
     queryFn: getProfile,
     staleTime: 5 * 60 * 1000,
-  })
+  });
 
-  const isFemale = profile?.biological_sex === 'female'
+  const isFemale = profile?.biological_sex === 'female';
 
   // Screen state
-  const [screenState, setScreenState] = useState<ScreenState>('form')
-  const [disruption, setDisruption] = useState<DisruptionWithSuggestions | null>(null)
+  const [screenState, setScreenState] = useState<ScreenState>('form');
+  const [disruption, setDisruption] =
+    useState<DisruptionWithSuggestions | null>(null);
 
   // Form values
-  const [selectedType, setSelectedType]     = useState<DisruptionType | null>(null)
-  const [selectedSeverity, setSelectedSeverity] = useState<Severity | null>(null)
-  const [startDate, setStartDate]           = useState(todayIso())
-  const [isOngoing, setIsOngoing]           = useState(false)
-  const [endDate, setEndDate]               = useState(todayIso())
-  const [showStartPicker, setShowStartPicker] = useState(false)
-  const [showEndPicker, setShowEndPicker]     = useState(false)
-  const [selectedLifts, setSelectedLifts]   = useState<Set<Lift>>(new Set())
-  const [allLifts, setAllLifts]             = useState(false)
-  const [description, setDescription]       = useState('')
-  const [isMenstrualSymptoms, setIsMenstrualSymptoms] = useState(false)
-  const [eventName, setEventName] = useState('')
-  const [eventSoreness, setEventSoreness] = useState<Record<string, SorenessLevel>>({})
-  const [autoApplied, setAutoApplied] = useState(false)
+  const [selectedType, setSelectedType] = useState<DisruptionType | null>(null);
+  const [selectedSeverity, setSelectedSeverity] = useState<Severity | null>(
+    null
+  );
+  const [startDate, setStartDate] = useState(todayIso());
+  const [isOngoing, setIsOngoing] = useState(false);
+  const [endDate, setEndDate] = useState(todayIso());
+  const [showStartPicker, setShowStartPicker] = useState(false);
+  const [showEndPicker, setShowEndPicker] = useState(false);
+  const [selectedLifts, setSelectedLifts] = useState<Set<Lift>>(new Set());
+  const [allLifts, setAllLifts] = useState(false);
+  const [description, setDescription] = useState('');
+  const [isMenstrualSymptoms, setIsMenstrualSymptoms] = useState(false);
+  const [eventName, setEventName] = useState('');
+  const [eventSoreness, setEventSoreness] = useState<
+    Record<string, SorenessLevel>
+  >({});
+  const [autoApplied, setAutoApplied] = useState(false);
 
   // Loading states
-  const [isSubmitting, setIsSubmitting]   = useState(false)
-  const [isApplying, setIsApplying]       = useState(false)
-  const [submitError, setSubmitError]     = useState<string | null>(null)
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isApplying, setIsApplying] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
   // ── Handlers ────────────────────────────────────────────────────────────────
 
   function handleMenstrualSymptoms() {
     if (isMenstrualSymptoms) {
-      setIsMenstrualSymptoms(false)
-      setSelectedType(null)
-      setSelectedSeverity(null)
-      setAllLifts(false)
-      setSelectedLifts(new Set())
-      setDescription('')
+      setIsMenstrualSymptoms(false);
+      setSelectedType(null);
+      setSelectedSeverity(null);
+      setAllLifts(false);
+      setSelectedLifts(new Set());
+      setDescription('');
     } else {
-      const preset = getMenstrualSymptomsPreset()
-      setIsMenstrualSymptoms(true)
-      setSelectedType(preset.type)
-      setSelectedSeverity(preset.severity)
-      setAllLifts(preset.allLifts)
-      setSelectedLifts(preset.lifts)
-      setDescription(preset.description)
+      const preset = getMenstrualSymptomsPreset();
+      setIsMenstrualSymptoms(true);
+      setSelectedType(preset.type);
+      setSelectedSeverity(preset.severity);
+      setAllLifts(preset.allLifts);
+      setSelectedLifts(preset.lifts);
+      setDescription(preset.description);
     }
   }
 
   function toggleLift(lift: Lift) {
-    const next = new Set(selectedLifts)
+    const next = new Set(selectedLifts);
     if (next.has(lift)) {
-      next.delete(lift)
+      next.delete(lift);
     } else {
-      next.add(lift)
+      next.add(lift);
     }
-    setSelectedLifts(next)
-    setAllLifts(false)
+    setSelectedLifts(next);
+    setAllLifts(false);
   }
 
   function toggleAllLifts() {
     if (allLifts) {
-      setAllLifts(false)
-      setSelectedLifts(new Set())
+      setAllLifts(false);
+      setSelectedLifts(new Set());
     } else {
-      setAllLifts(true)
-      setSelectedLifts(new Set(TRAINING_LIFTS))
+      setAllLifts(true);
+      setSelectedLifts(new Set(TRAINING_LIFTS));
     }
   }
 
   async function handleSubmit() {
-    if (!selectedType || !user) return
-    const effectiveSeverity = inferEffectiveSeverity(selectedType, selectedSeverity)
-    if (!effectiveSeverity) return
-    setSubmitError(null)
-    setIsSubmitting(true)
+    if (!selectedType || !user) return;
+    const effectiveSeverity = inferEffectiveSeverity(
+      selectedType,
+      selectedSeverity
+    );
+    if (!effectiveSeverity) return;
+    setSubmitError(null);
+    setIsSubmitting(true);
     try {
       const effectiveDescription =
         selectedType === 'unprogrammed_event' && eventName.trim()
           ? `${eventName.trim()}${description.trim() ? ': ' + description.trim() : ''}`
-          : description.trim() || undefined
+          : description.trim() || undefined;
 
       const result = await reportDisruption(user.id, {
-        disruption_type:     selectedType,
-        severity:            effectiveSeverity,
+        disruption_type: selectedType,
+        severity: effectiveSeverity,
         affected_date_start: startDate,
-        affected_date_end:   isOngoing ? undefined : endDate,
-        affected_lifts:      allLifts ? undefined : (selectedLifts.size > 0 ? Array.from(selectedLifts) : undefined),
-        description:         effectiveDescription,
-      })
+        affected_date_end: isOngoing ? undefined : endDate,
+        affected_lifts: allLifts
+          ? undefined
+          : selectedLifts.size > 0
+            ? Array.from(selectedLifts)
+            : undefined,
+        description: effectiveDescription,
+      });
 
       if (effectiveSeverity === 'minor') {
-        await applyDisruptionAdjustment(result.id, user.id)
-        setAutoApplied(true)
+        await applyDisruptionAdjustment(result.id, user.id);
+        setAutoApplied(true);
       }
 
       if (selectedType === 'unprogrammed_event') {
         const numericSoreness = Object.fromEntries(
-          Object.entries(eventSoreness).map(([m, l]) => [m, SORENESS_NUMERIC[l]]),
-        )
-        await applyUnprogrammedEventSoreness(user.id, numericSoreness)
+          Object.entries(eventSoreness).map(([m, l]) => [
+            m,
+            SORENESS_NUMERIC[l],
+          ])
+        );
+        await applyUnprogrammedEventSoreness(user.id, numericSoreness);
       }
 
-      void queryClient.invalidateQueries({ queryKey: ['disruptions', 'active', user.id] })
-      setDisruption(result)
-      setScreenState('review')
+      void queryClient.invalidateQueries({
+        queryKey: ['disruptions', 'active', user.id],
+      });
+      setDisruption(result);
+      setScreenState('review');
     } catch (err) {
-      captureException(err)
-      setSubmitError('Failed to submit. Please try again.')
+      captureException(err);
+      setSubmitError('Failed to submit. Please try again.');
     } finally {
-      setIsSubmitting(false)
+      setIsSubmitting(false);
     }
   }
 
   async function handleApply() {
-    if (!disruption || !user) return
-    setIsApplying(true)
+    if (!disruption || !user) return;
+    setIsApplying(true);
     try {
-      await applyDisruptionAdjustment(disruption.id, user.id)
-      void queryClient.invalidateQueries({ queryKey: qk.program.active(user.id) })
-      void queryClient.invalidateQueries({ queryKey: qk.session.today(user.id) })
-      router.back()
+      await applyDisruptionAdjustment(disruption.id, user.id);
+      void queryClient.invalidateQueries({
+        queryKey: qk.program.active(user.id),
+      });
+      void queryClient.invalidateQueries({
+        queryKey: qk.session.today(user.id),
+      });
+      router.back();
     } finally {
-      setIsApplying(false)
+      setIsApplying(false);
     }
   }
 
-  const isUnprogrammedEvent = selectedType === 'unprogrammed_event'
+  const isUnprogrammedEvent = selectedType === 'unprogrammed_event';
 
   // ── Render: review state ─────────────────────────────────────────────────
 
   if (screenState === 'review' && disruption) {
-    const suggestions = disruption.suggested_adjustments ?? []
+    const suggestions = disruption.suggested_adjustments ?? [];
 
     // Group by action label for a compact summary
-    const groups = groupSuggestions(suggestions)
+    const groups = groupSuggestions(suggestions);
 
     return (
       <SafeAreaView style={styles.safeArea}>
         <View style={styles.header}>
           <Text style={styles.title}>Review Adjustments</Text>
           <Text style={styles.subtitle}>
-            Based on your {disruption.disruption_type.replace(/_/g, ' ')} ({disruption.severity}):
+            Based on your {disruption.disruption_type.replace(/_/g, ' ')} (
+            {disruption.severity}):
           </Text>
         </View>
 
@@ -461,14 +572,18 @@ export default function DisruptionReportScreen() {
               {suggestions.length > 0 && (
                 <>
                   <Text style={styles.adjustmentSummaryHeader}>
-                    {suggestions.length} session{suggestions.length !== 1 ? 's' : ''} affected
+                    {suggestions.length} session
+                    {suggestions.length !== 1 ? 's' : ''} affected
                   </Text>
                   {Array.from(groups.entries()).map(([label, { s, count }]) => (
                     <View key={label} style={styles.adjustmentCard}>
-                      <View style={[
-                        styles.adjustmentBadge,
-                        s.action === 'session_skipped' && styles.adjustmentBadgeSkip,
-                      ]}>
+                      <View
+                        style={[
+                          styles.adjustmentBadge,
+                          s.action === 'session_skipped' &&
+                            styles.adjustmentBadgeSkip,
+                        ]}
+                      >
                         <Text style={styles.adjustmentBadgeText}>{label}</Text>
                       </View>
                       <Text style={styles.adjustmentCount}>
@@ -481,7 +596,9 @@ export default function DisruptionReportScreen() {
               {(disruption.future_sessions_count ?? 0) > 0 && (
                 <View style={styles.futureSessionsNote}>
                   <Text style={styles.futureSessionsNoteText}>
-                    {disruption.future_sessions_count} future session{disruption.future_sessions_count !== 1 ? 's' : ''} will be adjusted when generated.
+                    {disruption.future_sessions_count} future session
+                    {disruption.future_sessions_count !== 1 ? 's' : ''} will be
+                    adjusted when generated.
                   </Text>
                 </View>
               )}
@@ -489,15 +606,16 @@ export default function DisruptionReportScreen() {
           )}
 
           <View style={styles.reviewActions}>
-            {autoApplied || disruption.disruption_type === 'unprogrammed_event' ? (
+            {autoApplied ||
+            disruption.disruption_type === 'unprogrammed_event' ? (
               <>
                 <View style={styles.autoAppliedNote}>
                   <Text style={styles.autoAppliedNoteText}>
                     {autoApplied && suggestions.length > 0
                       ? 'Adjustments auto-applied (minor severity)'
                       : autoApplied
-                      ? 'Disruption recorded — no weight changes needed at this level'
-                      : 'Soreness injected — no session changes required'}
+                        ? 'Disruption recorded — no weight changes needed at this level'
+                        : 'Soreness injected — no session changes required'}
                   </Text>
                 </View>
                 <TouchableOpacity
@@ -511,15 +629,23 @@ export default function DisruptionReportScreen() {
             ) : (
               <>
                 <TouchableOpacity
-                  style={[styles.applyButton, isApplying && styles.buttonDisabled]}
+                  style={[
+                    styles.applyButton,
+                    isApplying && styles.buttonDisabled,
+                  ]}
                   onPress={handleApply}
                   disabled={isApplying}
                   activeOpacity={0.8}
                 >
                   {isApplying ? (
-                    <ActivityIndicator color={colors.textInverse} size="small" />
+                    <ActivityIndicator
+                      color={colors.textInverse}
+                      size="small"
+                    />
                   ) : (
-                    <Text style={styles.applyButtonText}>Apply All Adjustments</Text>
+                    <Text style={styles.applyButtonText}>
+                      Apply All Adjustments
+                    </Text>
                   )}
                 </TouchableOpacity>
                 <TouchableOpacity
@@ -528,19 +654,24 @@ export default function DisruptionReportScreen() {
                   disabled={isApplying}
                   activeOpacity={0.8}
                 >
-                  <Text style={styles.skipButtonText}>Skip — Keep Original Plan</Text>
+                  <Text style={styles.skipButtonText}>
+                    Skip — Keep Original Plan
+                  </Text>
                 </TouchableOpacity>
               </>
             )}
           </View>
         </ScrollView>
       </SafeAreaView>
-    )
+    );
   }
 
   // ── Render: form state ───────────────────────────────────────────────────
 
-  const canSubmit = !!selectedType && (isUnprogrammedEvent || !!selectedSeverity) && !isSubmitting
+  const canSubmit =
+    !!selectedType &&
+    (isUnprogrammedEvent || !!selectedSeverity) &&
+    !isSubmitting;
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -561,27 +692,47 @@ export default function DisruptionReportScreen() {
           {DISRUPTION_TYPES.map((t) => (
             <TouchableOpacity
               key={t.value}
-              style={[styles.typeCard, selectedType === t.value && !isMenstrualSymptoms && styles.typeCardSelected]}
+              style={[
+                styles.typeCard,
+                selectedType === t.value &&
+                  !isMenstrualSymptoms &&
+                  styles.typeCardSelected,
+              ]}
               onPress={() => {
-                setIsMenstrualSymptoms(false)
-                setSelectedType(selectedType === t.value ? null : t.value)
+                setIsMenstrualSymptoms(false);
+                setSelectedType(selectedType === t.value ? null : t.value);
               }}
               activeOpacity={0.7}
             >
               <Text style={styles.typeIcon}>{t.icon}</Text>
-              <Text style={[styles.typeLabel, selectedType === t.value && !isMenstrualSymptoms && styles.typeLabelSelected]}>
+              <Text
+                style={[
+                  styles.typeLabel,
+                  selectedType === t.value &&
+                    !isMenstrualSymptoms &&
+                    styles.typeLabelSelected,
+                ]}
+              >
                 {t.label}
               </Text>
             </TouchableOpacity>
           ))}
           {isFemale && (
             <TouchableOpacity
-              style={[styles.typeCard, isMenstrualSymptoms && styles.typeCardSelected]}
+              style={[
+                styles.typeCard,
+                isMenstrualSymptoms && styles.typeCardSelected,
+              ]}
               onPress={handleMenstrualSymptoms}
               activeOpacity={0.7}
             >
               <Text style={styles.typeIcon}>🌸</Text>
-              <Text style={[styles.typeLabel, isMenstrualSymptoms && styles.typeLabelSelected]}>
+              <Text
+                style={[
+                  styles.typeLabel,
+                  isMenstrualSymptoms && styles.typeLabelSelected,
+                ]}
+              >
                 Menstrual symptoms
               </Text>
             </TouchableOpacity>
@@ -590,31 +741,39 @@ export default function DisruptionReportScreen() {
 
         {/* Step 2: Severity (hidden for unprogrammed events — fixed to major) */}
         {!isUnprogrammedEvent && (
-        <>
-        <Text style={styles.sectionLabel}>2. How severe?</Text>
-        <View style={styles.severityRow}>
-          {(['minor', 'moderate', 'major'] as Severity[]).map((s) => {
-            const severityPalette = getSeverityPalette(colors)
-            const c = severityPalette[s]
-            const selected = selectedSeverity === s
-            return (
-              <TouchableOpacity
-                key={s}
-                style={[
-                  styles.severityButton,
-                  { borderColor: selected ? c.border : colors.border, backgroundColor: selected ? c.bg : colors.bgSurface },
-                ]}
-                onPress={() => setSelectedSeverity(s)}
-                activeOpacity={0.7}
-              >
-                <Text style={[styles.severityText, selected && { color: c.text }]}>
-                  {s.charAt(0).toUpperCase() + s.slice(1)}
-                </Text>
-              </TouchableOpacity>
-            )
-          })}
-        </View>
-        </>
+          <>
+            <Text style={styles.sectionLabel}>2. How severe?</Text>
+            <View style={styles.severityRow}>
+              {(['minor', 'moderate', 'major'] as Severity[]).map((s) => {
+                const severityPalette = getSeverityPalette(colors);
+                const c = severityPalette[s];
+                const selected = selectedSeverity === s;
+                return (
+                  <TouchableOpacity
+                    key={s}
+                    style={[
+                      styles.severityButton,
+                      {
+                        borderColor: selected ? c.border : colors.border,
+                        backgroundColor: selected ? c.bg : colors.bgSurface,
+                      },
+                    ]}
+                    onPress={() => setSelectedSeverity(s)}
+                    activeOpacity={0.7}
+                  >
+                    <Text
+                      style={[
+                        styles.severityText,
+                        selected && { color: c.text },
+                      ]}
+                    >
+                      {s.charAt(0).toUpperCase() + s.slice(1)}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+          </>
         )}
 
         {/* Step 3: Date range */}
@@ -624,10 +783,15 @@ export default function DisruptionReportScreen() {
             <Text style={styles.dateFieldLabel}>Start</Text>
             <TouchableOpacity
               style={styles.datePill}
-              onPress={() => { setShowEndPicker(false); setShowStartPicker((v) => !v) }}
+              onPress={() => {
+                setShowEndPicker(false);
+                setShowStartPicker((v) => !v);
+              }}
               activeOpacity={0.7}
             >
-              <Text style={styles.datePillText}>{formatDisplayDate(startDate)}</Text>
+              <Text style={styles.datePillText}>
+                {formatDisplayDate(startDate)}
+              </Text>
             </TouchableOpacity>
             {showStartPicker && (
               <DateTimePicker
@@ -635,8 +799,8 @@ export default function DisruptionReportScreen() {
                 value={parseIso(startDate)}
                 maximumDate={new Date()}
                 onChange={(_e: DateTimePickerEvent, d?: Date) => {
-                  if (Platform.OS === 'android') setShowStartPicker(false)
-                  if (d) setStartDate(localDateIso(d))
+                  if (Platform.OS === 'android') setShowStartPicker(false);
+                  if (d) setStartDate(localDateIso(d));
                 }}
               />
             )}
@@ -646,10 +810,15 @@ export default function DisruptionReportScreen() {
               <Text style={styles.dateFieldLabel}>End</Text>
               <TouchableOpacity
                 style={styles.datePill}
-                onPress={() => { setShowStartPicker(false); setShowEndPicker((v) => !v) }}
+                onPress={() => {
+                  setShowStartPicker(false);
+                  setShowEndPicker((v) => !v);
+                }}
                 activeOpacity={0.7}
               >
-                <Text style={styles.datePillText}>{formatDisplayDate(endDate)}</Text>
+                <Text style={styles.datePillText}>
+                  {formatDisplayDate(endDate)}
+                </Text>
               </TouchableOpacity>
               {showEndPicker && (
                 <DateTimePicker
@@ -657,8 +826,8 @@ export default function DisruptionReportScreen() {
                   value={parseIso(endDate)}
                   minimumDate={parseIso(startDate)}
                   onChange={(_e: DateTimePickerEvent, d?: Date) => {
-                    if (Platform.OS === 'android') setShowEndPicker(false)
-                    if (d) setEndDate(localDateIso(d))
+                    if (Platform.OS === 'android') setShowEndPicker(false);
+                    if (d) setEndDate(localDateIso(d));
                   }}
                 />
               )}
@@ -667,7 +836,10 @@ export default function DisruptionReportScreen() {
         </View>
         <TouchableOpacity
           style={styles.ongoingToggle}
-          onPress={() => { setIsOngoing(!isOngoing); setShowEndPicker(false) }}
+          onPress={() => {
+            setIsOngoing(!isOngoing);
+            setShowEndPicker(false);
+          }}
           activeOpacity={0.7}
         >
           <View style={[styles.checkbox, isOngoing && styles.checkboxChecked]}>
@@ -682,11 +854,19 @@ export default function DisruptionReportScreen() {
           {TRAINING_LIFTS.map((lift) => (
             <TouchableOpacity
               key={lift}
-              style={[styles.liftChip, selectedLifts.has(lift) && styles.liftChipSelected]}
+              style={[
+                styles.liftChip,
+                selectedLifts.has(lift) && styles.liftChipSelected,
+              ]}
               onPress={() => toggleLift(lift)}
               activeOpacity={0.7}
             >
-              <Text style={[styles.liftChipText, selectedLifts.has(lift) && styles.liftChipTextSelected]}>
+              <Text
+                style={[
+                  styles.liftChipText,
+                  selectedLifts.has(lift) && styles.liftChipTextSelected,
+                ]}
+              >
                 {lift.charAt(0).toUpperCase() + lift.slice(1)}
               </Text>
             </TouchableOpacity>
@@ -696,7 +876,12 @@ export default function DisruptionReportScreen() {
             onPress={toggleAllLifts}
             activeOpacity={0.7}
           >
-            <Text style={[styles.liftChipText, allLifts && styles.liftChipTextSelected]}>
+            <Text
+              style={[
+                styles.liftChipText,
+                allLifts && styles.liftChipTextSelected,
+              ]}
+            >
               All
             </Text>
           </TouchableOpacity>
@@ -721,21 +906,33 @@ export default function DisruptionReportScreen() {
                 <Text style={styles.sorenessMuscleLabel}>{mg.label}</Text>
                 <View style={styles.sorenessChips}>
                   {SORENESS_CHIPS.map((chip) => {
-                    const selected = (eventSoreness[mg.value] ?? 'none') === chip.value
+                    const selected =
+                      (eventSoreness[mg.value] ?? 'none') === chip.value;
                     return (
                       <TouchableOpacity
                         key={chip.value}
-                        style={[styles.sorenessChip, selected && styles.sorenessChipSelected]}
+                        style={[
+                          styles.sorenessChip,
+                          selected && styles.sorenessChipSelected,
+                        ]}
                         onPress={() =>
-                          setEventSoreness((prev) => ({ ...prev, [mg.value]: chip.value }))
+                          setEventSoreness((prev) => ({
+                            ...prev,
+                            [mg.value]: chip.value,
+                          }))
                         }
                         activeOpacity={0.7}
                       >
-                        <Text style={[styles.sorenessChipText, selected && styles.sorenessChipTextSelected]}>
+                        <Text
+                          style={[
+                            styles.sorenessChipText,
+                            selected && styles.sorenessChipTextSelected,
+                          ]}
+                        >
                           {chip.label}
                         </Text>
                       </TouchableOpacity>
-                    )
+                    );
                   })}
                 </View>
               </View>
@@ -756,9 +953,7 @@ export default function DisruptionReportScreen() {
           textAlignVertical="top"
         />
 
-        {submitError && (
-          <Text style={styles.errorText}>{submitError}</Text>
-        )}
+        {submitError && <Text style={styles.errorText}>{submitError}</Text>}
 
         <TouchableOpacity
           style={[styles.submitButton, !canSubmit && styles.buttonDisabled]}
@@ -774,5 +969,5 @@ export default function DisruptionReportScreen() {
         </TouchableOpacity>
       </ScrollView>
     </SafeAreaView>
-  )
+  );
 }

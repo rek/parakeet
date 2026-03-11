@@ -41,7 +41,9 @@ describe('sessionStore persistence', () => {
     // merge should reconstruct it as a Date
     const merged = opts.merge(serialized, store.getState());
     expect(merged.startedAt).toBeInstanceOf(Date);
-    expect(merged.startedAt!.toISOString()).toBe(state.startedAt!.toISOString());
+    expect(merged.startedAt!.toISOString()).toBe(
+      state.startedAt!.toISOString()
+    );
   });
 
   it('merge handles missing startedAt gracefully', () => {

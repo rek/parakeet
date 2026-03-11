@@ -136,7 +136,10 @@ describe('getMusclesForLift — exercise name lookup', () => {
   });
 
   it('uses per-exercise map when exercise name is known', () => {
-    const muscles = getMusclesForLift('bench', 'Close-Grip Barbell Bench Press');
+    const muscles = getMusclesForLift(
+      'bench',
+      'Close-Grip Barbell Bench Press'
+    );
     expect(muscles.find((m) => m.muscle === 'triceps')?.contribution).toBe(1.0);
     expect(muscles.find((m) => m.muscle === 'chest')?.contribution).toBe(0.5);
   });

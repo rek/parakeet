@@ -1,8 +1,11 @@
-import type { PR } from '@parakeet/training-engine';
 import type { Lift } from '@parakeet/shared-types';
+import type { PR } from '@parakeet/training-engine';
 import { typedSupabase } from '@platform/supabase';
 
-export async function upsertPersonalRecords(userId: string, prs: PR[]): Promise<void> {
+export async function upsertPersonalRecords(
+  userId: string,
+  prs: PR[]
+): Promise<void> {
   if (prs.length === 0) return;
 
   const { error } = await typedSupabase.from('personal_records').upsert(
@@ -15,7 +18,7 @@ export async function upsertPersonalRecords(userId: string, prs: PR[]): Promise<
       session_id: pr.sessionId,
       achieved_at: pr.achievedAt,
     })),
-    { onConflict: 'user_id,lift,pr_type,weight_kg' },
+    { onConflict: 'user_id,lift,pr_type,weight_kg' }
   );
   if (error) throw error;
 }

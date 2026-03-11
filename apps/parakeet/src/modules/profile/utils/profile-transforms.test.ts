@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { birthYearToDobIso, formatBirthYear, formatBodyweight } from './profile-transforms';
+
+import {
+  birthYearToDobIso,
+  formatBirthYear,
+  formatBodyweight,
+} from './profile-transforms';
 
 describe('birthYearToDobIso', () => {
   it('converts a birth year string to ISO date string with Jan 1', () => {

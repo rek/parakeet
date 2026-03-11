@@ -35,6 +35,13 @@
         "tsConfig": "packages/training-engine/tsconfig.lib.json",
         "assets": ["packages/training-engine/*.md"]
       }
+    },
+    "format": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "npx prettier --write \"src/**/*.{ts,tsx}\"",
+        "cwd": "packages/training-engine"
+      }
     }
   }
 }

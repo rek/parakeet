@@ -7,10 +7,10 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import { getSession, skipSession } from '@modules/session';
-import { getReadyCachedJitData } from '@platform/store/sessionStore';
+
+import { getSession } from '@modules/session';
 import { formatDate } from '@shared/utils/date';
-import { router } from 'expo-router';
+
 import { radii, spacing, typography } from '../../theme';
 import type { ColorScheme } from '../../theme';
 import { useTheme } from '../../theme/ThemeContext';
@@ -21,6 +21,9 @@ type Session = Awaited<ReturnType<typeof getSession>>;
 
 interface WorkoutCardProps {
   session: NonNullable<Session>;
+  onStart: (sessionId: string) => void;
+  onResume: (sessionId: string) => void;
+  onSkip: (sessionId: string, reason?: string) => Promise<void>;
   onSkipComplete?: () => void;
   isLocked?: boolean;
 }
@@ -31,7 +34,12 @@ function getIntensityBadge(intensityType: string, colors: ColorScheme) {
     explosive: { bg: colors.primary, text: colors.textInverse },
     rep: { bg: colors.success, text: colors.textInverse },
   };
-  return map[intensityType.toLowerCase()] ?? { bg: colors.bgMuted, text: colors.textSecondary };
+  return (
+    map[intensityType.toLowerCase()] ?? {
+      bg: colors.bgMuted,
+      text: colors.textSecondary,
+    }
+  );
 }
 
 function buildStyles(colors: ColorScheme) {
@@ -190,7 +198,14 @@ function buildStyles(colors: ColorScheme) {
   });
 }
 
-export function WorkoutCard({ session, onSkipComplete, isLocked = false }: WorkoutCardProps) {
+export function WorkoutCard({
+  session,
+  onStart,
+  onResume,
+  onSkip,
+  onSkipComplete,
+  isLocked = false,
+}: WorkoutCardProps) {
   const { colors } = useTheme();
   const [skipModalVisible, setSkipModalVisible] = useState(false);
   const [skipReason, setSkipReason] = useState('');
@@ -202,42 +217,11 @@ export function WorkoutCard({ session, onSkipComplete, isLocked = false }: Worko
 
   function handleStartWorkout() {
     if (isLocked) return;
-    // Free-form ad-hoc: skip soreness/JIT, go straight to session screen
-    if (isFreeFormAdHoc) {
-      router.push({
-        pathname: '/session/[sessionId]',
-        params: { sessionId: session.id, freeForm: '1' },
-      });
-      return;
-    }
-    router.push({
-      pathname: '/session/soreness',
-      params: { sessionId: session.id },
-    });
+    onStart(session.id);
   }
 
-  async function handleResumeWorkout() {
-    // Free-form ad-hoc: no JIT data needed
-    if (isFreeFormAdHoc) {
-      router.push({
-        pathname: '/session/[sessionId]',
-        params: { sessionId: session.id, freeForm: '1' },
-      });
-      return;
-    }
-    const jit = await getReadyCachedJitData();
-    if (!jit) {
-      // Cached JIT data is gone — re-run through soreness/JIT flow to regenerate
-      router.push({
-        pathname: '/session/soreness',
-        params: { sessionId: session.id },
-      });
-      return;
-    }
-    router.push({
-      pathname: '/session/[sessionId]',
-      params: { sessionId: session.id, jitData: jit },
-    });
+  function handleResumeWorkout() {
+    onResume(session.id);
   }
 
   function handleSkipPress() {
@@ -249,7 +233,7 @@ export function WorkoutCard({ session, onSkipComplete, isLocked = false }: Worko
     if (isSkipping) return;
     setIsSkipping(true);
     try {
-      await skipSession(session.id, skipReason.trim() || undefined);
+      await onSkip(session.id, skipReason.trim() || undefined);
       setSkipModalVisible(false);
       onSkipComplete?.();
     } finally {
@@ -263,7 +247,9 @@ export function WorkoutCard({ session, onSkipComplete, isLocked = false }: Worko
   }
 
   const isFreeFormAdHoc = session.program_id === null && !session.primary_lift;
-  const badge = session.intensity_type ? getIntensityBadge(session.intensity_type, colors) : null;
+  const badge = session.intensity_type
+    ? getIntensityBadge(session.intensity_type, colors)
+    : null;
   const blockLabel = isFreeFormAdHoc
     ? 'Free-form workout'
     : session.program_id === null
@@ -281,11 +267,14 @@ export function WorkoutCard({ session, onSkipComplete, isLocked = false }: Worko
             {isFreeFormAdHoc
               ? (session.activity_name ?? 'Ad-Hoc Workout')
               : session.primary_lift
-                ? session.primary_lift.charAt(0).toUpperCase() + session.primary_lift.slice(1)
+                ? session.primary_lift.charAt(0).toUpperCase() +
+                  session.primary_lift.slice(1)
                 : 'Workout'}
           </Text>
           {badge && (
-            <View style={[styles.intensityBadge, { backgroundColor: badge.bg }]}>
+            <View
+              style={[styles.intensityBadge, { backgroundColor: badge.bg }]}
+            >
               <Text style={[styles.intensityBadgeText, { color: badge.text }]}>
                 {session.intensity_type!.charAt(0).toUpperCase() +
                   session.intensity_type!.slice(1)}
@@ -299,16 +288,17 @@ export function WorkoutCard({ session, onSkipComplete, isLocked = false }: Worko
 
         {/* Sets info */}
         {isFreeFormAdHoc ? (
-          <Text style={styles.noSetsText}>
-            Add exercises as you go
-          </Text>
+          <Text style={styles.noSetsText}>Add exercises as you go</Text>
         ) : session.planned_sets === null ? (
           <Text style={styles.noSetsText}>
             Workout generated when you start
           </Text>
         ) : (
           <Text style={styles.setsText}>
-            {Array.isArray(session.planned_sets) ? session.planned_sets.length : 0} sets
+            {Array.isArray(session.planned_sets)
+              ? session.planned_sets.length
+              : 0}{' '}
+            sets
           </Text>
         )}
 
@@ -318,12 +308,24 @@ export function WorkoutCard({ session, onSkipComplete, isLocked = false }: Worko
         {/* Action buttons */}
         <View style={styles.buttonRow}>
           <TouchableOpacity
-            style={[styles.button, isLocked ? styles.startButtonLocked : styles.startButton]}
+            style={[
+              styles.button,
+              isLocked ? styles.startButtonLocked : styles.startButton,
+            ]}
             onPress={isInProgress ? handleResumeWorkout : handleStartWorkout}
             activeOpacity={isLocked ? 1 : 0.85}
           >
-            <Text style={[styles.startButtonText, isLocked && styles.startButtonTextLocked]}>
-              {isInProgress ? 'Resume Workout' : isLocked ? 'Another session active' : 'Start Workout'}
+            <Text
+              style={[
+                styles.startButtonText,
+                isLocked && styles.startButtonTextLocked,
+              ]}
+            >
+              {isInProgress
+                ? 'Resume Workout'
+                : isLocked
+                  ? 'Another session active'
+                  : 'Start Workout'}
             </Text>
           </TouchableOpacity>
           {!isInProgress && !isFreeFormAdHoc && (

@@ -17,7 +17,7 @@ Rest adjustments:
 - The delta must be between -60 and +60. Omit restAdjustments entirely if the formula default is appropriate.
 - Only suggest a larger rest if RPE was very high (>=9.5) or disruption/soreness is significant.
 - Only suggest shorter rest if this is a deload or RPE was notably low (<=7.5).
-`
+`;
 
 export const CYCLE_REVIEW_SYSTEM_PROMPT = `
 You are an expert powerlifting coach reviewing a complete training cycle for a single athlete.
@@ -35,4 +35,4 @@ Your analysis should:
 6. Provide a plain-language summary of recommendations for the next cycle.
 
 Return a JSON object matching the CycleReview schema exactly.
-`
+`;

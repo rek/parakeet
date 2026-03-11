@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useState } from 'react';
 import {
   Alert,
   Modal,
@@ -8,50 +8,51 @@ import {
   Text,
   TouchableOpacity,
   View,
-} from 'react-native'
-import DateTimePicker, { type DateTimePickerEvent } from '@react-native-community/datetimepicker'
+} from 'react-native';
 
-import { resolveDisruption, updateDisruptionEndDate } from '@modules/disruptions'
-import { captureException } from '@platform/utils/captureException'
-import { formatDate, localDateIso } from '@shared/utils/date'
-import { palette, radii, spacing, typography } from '../../theme'
-import { useTheme } from '../../theme/ThemeContext'
-import type { ColorScheme } from '../../theme'
+import DateTimePicker, {
+  type DateTimePickerEvent,
+} from '@react-native-community/datetimepicker';
+import { formatDate, localDateIso } from '@shared/utils/date';
+
+import { palette, radii, spacing, typography } from '../../theme';
+import type { ColorScheme } from '../../theme';
+import { useTheme } from '../../theme/ThemeContext';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
 export interface ActiveDisruption {
-  id: string
-  disruption_type: string
-  severity: string
-  affected_lifts: string[] | null
-  description: string | null
-  affected_date_end: string | null
+  id: string;
+  disruption_type: string;
+  severity: string;
+  affected_lifts: string[] | null;
+  description: string | null;
+  affected_date_end: string | null;
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 function severityColor(severity: string, colors: ColorScheme): string {
-  if (severity === 'major') return colors.danger
-  if (severity === 'moderate') return palette.orange500
-  return colors.warning
+  if (severity === 'major') return colors.danger;
+  if (severity === 'moderate') return palette.orange500;
+  return colors.warning;
 }
 
 function chipBg(severity: string, colors: ColorScheme): string {
-  if (severity === 'major') return colors.dangerMuted
-  return colors.warningMuted
+  if (severity === 'major') return colors.dangerMuted;
+  return colors.warningMuted;
 }
 
 function chipLabel(disruption_type: string): string {
-  const word = disruption_type.split('_')[0]
-  return word.charAt(0).toUpperCase() + word.slice(1)
+  const word = disruption_type.split('_')[0];
+  return word.charAt(0).toUpperCase() + word.slice(1);
 }
 
 function typeLabel(disruption_type: string): string {
   return disruption_type
     .split('_')
     .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
-    .join(' ')
+    .join(' ');
 }
 
 function buildStyles(colors: ColorScheme) {
@@ -203,72 +204,76 @@ function buildStyles(colors: ColorScheme) {
       color: colors.textInverse,
       letterSpacing: typography.letterSpacing.wide,
     },
-  })
+  });
 }
 
 // ── Detail modal ──────────────────────────────────────────────────────────────
 
 function DisruptionDetailModal({
   disruption,
-  userId,
+  onResolve,
+  onUpdateEndDate,
   onClose,
   onResolved,
 }: {
-  disruption: ActiveDisruption | null
-  userId: string
-  onClose: () => void
-  onResolved: () => void
+  disruption: ActiveDisruption | null;
+  onResolve: (disruptionId: string) => Promise<void>;
+  onUpdateEndDate: (disruptionId: string, endDate: string) => Promise<void>;
+  onClose: () => void;
+  onResolved: () => void;
 }) {
-  const { colors } = useTheme()
-  const [showDatePicker, setShowDatePicker] = useState(false)
-  const [pendingEndDate, setPendingEndDate] = useState<string | null>(null)
-  const [saving, setSaving] = useState(false)
+  const { colors } = useTheme();
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [pendingEndDate, setPendingEndDate] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
 
-  const styles = useMemo(() => buildStyles(colors), [colors])
+  const styles = useMemo(() => buildStyles(colors), [colors]);
 
-  const displayEndDate = pendingEndDate ?? disruption?.affected_date_end ?? null
-  const hasUnsavedDate = pendingEndDate !== null && pendingEndDate !== disruption?.affected_date_end
+  const displayEndDate =
+    pendingEndDate ?? disruption?.affected_date_end ?? null;
+  const hasUnsavedDate =
+    pendingEndDate !== null && pendingEndDate !== disruption?.affected_date_end;
 
   async function handleSaveEndDate() {
-    if (!disruption || !pendingEndDate) return
-    setSaving(true)
+    if (!disruption || !pendingEndDate) return;
+    setSaving(true);
     try {
-      await updateDisruptionEndDate(disruption.id, userId, pendingEndDate)
-      onResolved()
-      setPendingEndDate(null)
-      setShowDatePicker(false)
-    } catch (err) {
-      captureException(err)
+      await onUpdateEndDate(disruption.id, pendingEndDate);
+      onResolved();
+      setPendingEndDate(null);
+      setShowDatePicker(false);
     } finally {
-      setSaving(false)
+      setSaving(false);
     }
   }
 
   async function handleResolve() {
-    if (!disruption) return
-    try {
-      await resolveDisruption(disruption.id, userId)
-      onResolved()
-      onClose()
-    } catch (err) {
-      captureException(err)
-    }
+    if (!disruption) return;
+    await onResolve(disruption.id);
+    onResolved();
+    onClose();
   }
 
   function confirmResolve() {
-    Alert.alert('Mark as Resolved?', 'This will clear the disruption and regenerate affected sessions.', [
-      { text: 'Cancel', style: 'cancel' },
-      { text: 'Resolve', onPress: handleResolve },
-    ])
+    Alert.alert(
+      'Mark as Resolved?',
+      'This will clear the disruption and regenerate affected sessions.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'Resolve', onPress: handleResolve },
+      ]
+    );
   }
 
   function handleClose() {
-    setPendingEndDate(null)
-    setShowDatePicker(false)
-    onClose()
+    setPendingEndDate(null);
+    setShowDatePicker(false);
+    onClose();
   }
 
-  const sevColor = disruption ? severityColor(disruption.severity, colors) : colors.warning
+  const sevColor = disruption
+    ? severityColor(disruption.severity, colors)
+    : colors.warning;
 
   return (
     <Modal
@@ -278,7 +283,11 @@ function DisruptionDetailModal({
       onRequestClose={handleClose}
     >
       <View style={styles.overlay}>
-        <TouchableOpacity style={styles.backdrop} activeOpacity={1} onPress={handleClose} />
+        <TouchableOpacity
+          style={styles.backdrop}
+          activeOpacity={1}
+          onPress={handleClose}
+        />
         <View style={styles.sheet}>
           <View style={styles.handle} />
 
@@ -293,7 +302,11 @@ function DisruptionDetailModal({
                 </Text>
               </View>
             </View>
-            <TouchableOpacity onPress={handleClose} hitSlop={12} activeOpacity={0.7}>
+            <TouchableOpacity
+              onPress={handleClose}
+              hitSlop={12}
+              activeOpacity={0.7}
+            >
               <Text style={styles.closeBtn}>✕</Text>
             </TouchableOpacity>
           </View>
@@ -303,7 +316,8 @@ function DisruptionDetailModal({
               <Text style={styles.description}>{disruption.description}</Text>
             ) : null}
 
-            {disruption?.affected_lifts && disruption.affected_lifts.length > 0 ? (
+            {disruption?.affected_lifts &&
+            disruption.affected_lifts.length > 0 ? (
               <View style={styles.detailRow}>
                 <Text style={styles.detailLabel}>Affects</Text>
                 <Text style={[styles.detailValue, styles.capitalize]}>
@@ -318,7 +332,12 @@ function DisruptionDetailModal({
               activeOpacity={0.7}
             >
               <Text style={styles.detailLabel}>Until</Text>
-              <Text style={[styles.detailValue, !displayEndDate && styles.detailValueMuted]}>
+              <Text
+                style={[
+                  styles.detailValue,
+                  !displayEndDate && styles.detailValueMuted,
+                ]}
+              >
                 {displayEndDate ? formatDate(displayEndDate) : 'Ongoing'}
               </Text>
               <Text style={styles.editHint}>Edit</Text>
@@ -327,13 +346,19 @@ function DisruptionDetailModal({
             {showDatePicker && (
               <DateTimePicker
                 mode="date"
-                value={displayEndDate ? new Date(displayEndDate + 'T00:00:00') : new Date()}
-                minimumDate={disruption?.affected_date_end
-                  ? new Date(disruption.affected_date_end + 'T00:00:00')
-                  : new Date()}
+                value={
+                  displayEndDate
+                    ? new Date(displayEndDate + 'T00:00:00')
+                    : new Date()
+                }
+                minimumDate={
+                  disruption?.affected_date_end
+                    ? new Date(disruption.affected_date_end + 'T00:00:00')
+                    : new Date()
+                }
                 onChange={(_e: DateTimePickerEvent, d?: Date) => {
-                  if (Platform.OS === 'android') setShowDatePicker(false)
-                  if (d) setPendingEndDate(localDateIso(d))
+                  if (Platform.OS === 'android') setShowDatePicker(false);
+                  if (d) setPendingEndDate(localDateIso(d));
                 }}
               />
             )}
@@ -352,30 +377,40 @@ function DisruptionDetailModal({
             )}
           </View>
 
-          <TouchableOpacity style={styles.resolveBtn} onPress={confirmResolve} activeOpacity={0.8}>
+          <TouchableOpacity
+            style={styles.resolveBtn}
+            onPress={confirmResolve}
+            activeOpacity={0.8}
+          >
             <Text style={styles.resolveBtnText}>Mark Resolved</Text>
           </TouchableOpacity>
         </View>
       </View>
     </Modal>
-  )
+  );
 }
 
 // ── Chips row ─────────────────────────────────────────────────────────────────
 
 interface Props {
-  disruptions: ActiveDisruption[]
-  userId: string
-  onResolved: () => void
+  disruptions: ActiveDisruption[];
+  onResolve: (disruptionId: string) => Promise<void>;
+  onUpdateEndDate: (disruptionId: string, endDate: string) => Promise<void>;
+  onResolved: () => void;
 }
 
-export function DisruptionChipsRow({ disruptions, userId, onResolved }: Props) {
-  const { colors } = useTheme()
-  const [selected, setSelected] = useState<ActiveDisruption | null>(null)
+export function DisruptionChipsRow({
+  disruptions,
+  onResolve,
+  onUpdateEndDate,
+  onResolved,
+}: Props) {
+  const { colors } = useTheme();
+  const [selected, setSelected] = useState<ActiveDisruption | null>(null);
 
-  const styles = useMemo(() => buildStyles(colors), [colors])
+  const styles = useMemo(() => buildStyles(colors), [colors]);
 
-  if (!disruptions.length) return null
+  if (!disruptions.length) return null;
 
   return (
     <View>
@@ -385,11 +420,17 @@ export function DisruptionChipsRow({ disruptions, userId, onResolved }: Props) {
         contentContainerStyle={styles.scrollContent}
       >
         {disruptions.map((d) => {
-          const sevColor = severityColor(d.severity, colors)
+          const sevColor = severityColor(d.severity, colors);
           return (
             <TouchableOpacity
               key={d.id}
-              style={[styles.chip, { borderColor: sevColor, backgroundColor: chipBg(d.severity, colors) }]}
+              style={[
+                styles.chip,
+                {
+                  borderColor: sevColor,
+                  backgroundColor: chipBg(d.severity, colors),
+                },
+              ]}
               onPress={() => setSelected(d)}
               activeOpacity={0.75}
             >
@@ -398,19 +439,20 @@ export function DisruptionChipsRow({ disruptions, userId, onResolved }: Props) {
                 ⚡ {chipLabel(d.disruption_type)}
               </Text>
             </TouchableOpacity>
-          )
+          );
         })}
       </ScrollView>
 
       <DisruptionDetailModal
         disruption={selected}
-        userId={userId}
+        onResolve={onResolve}
+        onUpdateEndDate={onUpdateEndDate}
         onClose={() => setSelected(null)}
         onResolved={() => {
-          setSelected(null)
-          onResolved()
+          setSelected(null);
+          onResolved();
         }}
       />
     </View>
-  )
+  );
 }

@@ -1,3 +1,8 @@
+import {
+  appendNextUnendingSession,
+  fetchActiveProgramMode,
+  type UnendingProgramRef,
+} from '@modules/program';
 import type { Lift } from '@parakeet/shared-types';
 import { LiftSchema } from '@parakeet/shared-types';
 import {
@@ -13,44 +18,44 @@ import type {
   SessionLogSummary,
   SessionRef,
 } from '@parakeet/training-engine';
-import {
-  fetchCompletedSessions,
-  fetchCurrentWeekLogs,
-  fetchInProgressSession,
-  fetchSessionLogBySessionId,
-  fetchTodaySessions,
-  fetchLastCompletedAtForLift,
-  fetchOverdueScheduledSessions,
-  fetchProfileSex,
-  fetchProgramSessionsForMakeup,
-  fetchProgramSessionStatuses,
-  fetchRecentLogsForLift,
-  fetchSessionById,
-  fetchSessionCompletionContext,
-  fetchSessionsForWeek,
-  fetchTodaySession,
-  fetchPlannedSessionForProgram,
-  fetchEndOfWeekContext,
-  fetchHasNextWeekSessions,
-  insertAdHocSession,
-  insertPerformanceMetric,
-  insertSessionLog,
-  getLatestSorenessRatings,
-  insertSorenessCheckin,
-  markSessionAsMissed,
-  updateSessionToCompleted,
-  updateSessionToInProgress,
-  updateSessionToPlanned,
-  updateSessionToSkipped,
-  deleteSession,
-} from '../data/session.repository';
-import { fetchActiveProgramMode, appendNextUnendingSession, type UnendingProgramRef } from '@modules/program';
 import { captureException } from '@platform/utils/captureException';
 import type {
   CompletedSessionListItem,
   CompleteSessionInput,
   SessionCompletionContext,
 } from '@shared/types/domain';
+
+import {
+  deleteSession,
+  fetchCompletedSessions,
+  fetchCurrentWeekLogs,
+  fetchEndOfWeekContext,
+  fetchHasNextWeekSessions,
+  fetchInProgressSession,
+  fetchLastCompletedAtForLift,
+  fetchOverdueScheduledSessions,
+  fetchPlannedSessionForProgram,
+  fetchProfileSex,
+  fetchProgramSessionsForMakeup,
+  fetchProgramSessionStatuses,
+  fetchRecentLogsForLift,
+  fetchSessionById,
+  fetchSessionCompletionContext,
+  fetchSessionLogBySessionId,
+  fetchSessionsForWeek,
+  fetchTodaySession,
+  fetchTodaySessions,
+  getLatestSorenessRatings,
+  insertAdHocSession,
+  insertPerformanceMetric,
+  insertSessionLog,
+  insertSorenessCheckin,
+  markSessionAsMissed,
+  updateSessionToCompleted,
+  updateSessionToInProgress,
+  updateSessionToPlanned,
+  updateSessionToSkipped,
+} from '../data/session.repository';
 
 export type {
   CompleteSessionInput,
@@ -69,7 +74,10 @@ export async function findTodaySession(userId: string) {
     if (!session || session.status === 'completed') {
       // Guard: if a planned session already exists, return it without generating another.
       // This prevents duplicate generation on each pull-to-refresh.
-      const existingPlanned = await fetchPlannedSessionForProgram(program.id, userId);
+      const existingPlanned = await fetchPlannedSessionForProgram(
+        program.id,
+        userId
+      );
       if (existingPlanned) return existingPlanned;
       return generateNextUnendingSession(program, userId);
     }
@@ -167,7 +175,7 @@ export async function recordSorenessCheckin(input: {
 }
 
 export async function getLatestSorenessCheckin(
-  userId: string,
+  userId: string
 ): Promise<Record<string, number> | null> {
   return getLatestSorenessRatings(userId);
 }
@@ -187,7 +195,7 @@ export async function createAdHocSession(
     lift?: 'squat' | 'bench' | 'deadlift';
     intensityType?: 'heavy' | 'explosive' | 'rep';
     activityName?: string;
-  },
+  }
 ): Promise<string> {
   return insertAdHocSession({
     userId,
@@ -229,7 +237,10 @@ export async function completeSession(
 ): Promise<void> {
   const { actualSets, auxiliarySets, sessionRpe, startedAt, completedAt } =
     input;
-  if (actualSets.length === 0 && (!auxiliarySets || auxiliarySets.length === 0)) {
+  if (
+    actualSets.length === 0 &&
+    (!auxiliarySets || auxiliarySets.length === 0)
+  ) {
     throw new Error('At least one set is required');
   }
 
@@ -347,7 +358,9 @@ export async function completeSession(
       const total = statuses.length;
       const completed = statuses.filter((s) => s.status === 'completed').length;
       if (total > 0 && completed / total >= 0.8) {
-        const { onCycleComplete } = await import('@modules/program/application/program.service');
+        const { onCycleComplete } = await import(
+          '@modules/program/application/program.service'
+        );
         onCycleComplete(session.program_id, userId);
       }
     }
@@ -385,7 +398,12 @@ export async function getCurrentWeekLogs(
       auxByExercise.get(name)!.push(s.rpe_actual ?? undefined);
     }
     for (const [exercise, rpes] of auxByExercise) {
-      entries.push({ lift: row.primary_lift, completedSets: rpes.length, exercise, setRpes: rpes });
+      entries.push({
+        lift: row.primary_lift,
+        completedSets: rpes.length,
+        exercise,
+        setRpes: rpes,
+      });
     }
     return entries;
   });
@@ -460,8 +478,12 @@ export async function getDaysSinceLastSession(
 
 // Generates and inserts the next session for an unending program,
 // then increments the program's session counter. Returns the new session row.
-async function generateNextUnendingSession(program: UnendingProgramRef, userId: string) {
-  const trainingDays = program.training_days ?? DEFAULT_TRAINING_DAYS[program.training_days_per_week] ?? [1, 3, 5];
+async function generateNextUnendingSession(
+  program: UnendingProgramRef,
+  userId: string
+) {
+  const trainingDays = program.training_days ??
+    DEFAULT_TRAINING_DAYS[program.training_days_per_week] ?? [1, 3, 5];
   const plannedDate = nextTrainingDate(trainingDays);
   await appendNextUnendingSession(program, userId, plannedDate);
   // Fetch by program_id+planned status so we get the newly created session,
@@ -515,7 +537,9 @@ export interface EndOfWeekResult {
  *  - Unending: prompt every 3rd completed session (counter % 3 === 0).
  *  - Ad-hoc: never prompt.
  */
-export async function checkEndOfWeek(sessionId: string): Promise<EndOfWeekResult> {
+export async function checkEndOfWeek(
+  sessionId: string
+): Promise<EndOfWeekResult> {
   const ctx = await fetchEndOfWeekContext(sessionId);
   if (!ctx || !ctx.programId || ctx.programMode === null) {
     return { shouldPrompt: false, programId: null, weekNumber: 0 };
@@ -531,7 +555,10 @@ export async function checkEndOfWeek(sessionId: string): Promise<EndOfWeekResult
   }
 
   if (ctx.programMode === 'scheduled') {
-    const hasNext = await fetchHasNextWeekSessions(ctx.programId, ctx.weekNumber);
+    const hasNext = await fetchHasNextWeekSessions(
+      ctx.programId,
+      ctx.weekNumber
+    );
     return {
       shouldPrompt: !hasNext,
       programId: ctx.programId,

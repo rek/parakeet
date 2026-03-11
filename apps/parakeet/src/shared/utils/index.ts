@@ -1,3 +1,3 @@
-export * from './date'
-export * from './duration'
-export * from './string'
+export * from './date';
+export * from './duration';
+export * from './string';

@@ -1,11 +1,16 @@
-import { generateText, Output } from 'ai'
-import { CycleReviewSchema } from '@parakeet/shared-types'
-import type { CycleReview, Lift } from '@parakeet/shared-types'
-import { CYCLE_REVIEW_MODEL } from '../ai/models'
-import { CYCLE_REVIEW_SYSTEM_PROMPT } from '../ai/prompts'
-import type { CycleReport, LiftSummary, AuxLiftCorrelation } from './assemble-cycle-report'
+import { CycleReviewSchema } from '@parakeet/shared-types';
+import type { CycleReview, Lift } from '@parakeet/shared-types';
+import { generateText, Output } from 'ai';
 
-export type { CycleReview }
+import { CYCLE_REVIEW_MODEL } from '../ai/models';
+import { CYCLE_REVIEW_SYSTEM_PROMPT } from '../ai/prompts';
+import type {
+  AuxLiftCorrelation,
+  CycleReport,
+  LiftSummary,
+} from './assemble-cycle-report';
+
+export type { CycleReview };
 
 // ---------------------------------------------------------------------------
 // PreviousCycleSummary — engine-025
@@ -13,31 +18,31 @@ export type { CycleReview }
 // ---------------------------------------------------------------------------
 
 export interface LiftProgressSummary {
-  oneRmStartKg: number
-  oneRmEndKg: number
-  oneRmChangeKg: number
-  avgRpeVsTarget: number
-  sessionCount: number
+  oneRmStartKg: number;
+  oneRmEndKg: number;
+  oneRmChangeKg: number;
+  avgRpeVsTarget: number;
+  sessionCount: number;
 }
 
 export interface AuxCorrelationSummary {
-  exercise: string
-  lift: Lift
-  correlationDirection: 'positive' | 'negative' | 'neutral'
+  exercise: string;
+  lift: Lift;
+  correlationDirection: 'positive' | 'negative' | 'neutral';
 }
 
 export interface PreviousCycleSummary {
-  cycleNumber: number
-  programLengthWeeks: number
-  completionPct: number
-  liftProgress: Partial<Record<Lift, LiftProgressSummary>>
-  topAuxCorrelations: AuxCorrelationSummary[]
-  volumeNotes: string[]
-  formulaChangesCount: number
-  disruptionCount: number
-  bodyWeightStartKg: number
-  bodyWeightEndKg: number
-  wilksScore: number
+  cycleNumber: number;
+  programLengthWeeks: number;
+  completionPct: number;
+  liftProgress: Partial<Record<Lift, LiftProgressSummary>>;
+  topAuxCorrelations: AuxCorrelationSummary[];
+  volumeNotes: string[];
+  formulaChangesCount: number;
+  disruptionCount: number;
+  bodyWeightStartKg: number;
+  bodyWeightEndKg: number;
+  wilksScore: number;
 }
 
 // ---------------------------------------------------------------------------
@@ -45,52 +50,65 @@ export interface PreviousCycleSummary {
 // ---------------------------------------------------------------------------
 
 export function buildLiftProgress(
-  lifts: CycleReport['lifts'],
+  lifts: CycleReport['lifts']
 ): Partial<Record<Lift, LiftProgressSummary>> {
-  const result: Partial<Record<Lift, LiftProgressSummary>> = {}
-  for (const [lift, summary] of Object.entries(lifts) as [Lift, LiftSummary][]) {
+  const result: Partial<Record<Lift, LiftProgressSummary>> = {};
+  for (const [lift, summary] of Object.entries(lifts) as [
+    Lift,
+    LiftSummary,
+  ][]) {
     result[lift] = {
       oneRmStartKg: summary.startOneRmKg,
       oneRmEndKg: summary.endOneRmKg,
       oneRmChangeKg: summary.endOneRmKg - summary.startOneRmKg,
       avgRpeVsTarget: summary.avgRpeVsTarget ?? 0,
       sessionCount: summary.sessionCount,
-    }
+    };
   }
-  return result
+  return result;
 }
 
 export function extractTopAuxCorrelations(
   auxiliaryInsights: CycleReview['auxiliaryInsights'],
-  rawCorrelations: AuxLiftCorrelation[],
+  rawCorrelations: AuxLiftCorrelation[]
 ): AuxCorrelationSummary[] {
-  const positiveSet = new Set(auxiliaryInsights.mostCorrelated.map((c) => c.exercise))
-  const negativeSet = new Set(auxiliaryInsights.leastEffective.map((c) => c.exercise))
+  const positiveSet = new Set(
+    auxiliaryInsights.mostCorrelated.map((c) => c.exercise)
+  );
+  const negativeSet = new Set(
+    auxiliaryInsights.leastEffective.map((c) => c.exercise)
+  );
 
   return rawCorrelations.slice(0, 5).map((c) => {
-    let dir: 'positive' | 'negative' | 'neutral' = 'neutral'
-    if (positiveSet.has(c.exercise)) dir = 'positive'
-    else if (negativeSet.has(c.exercise)) dir = 'negative'
+    let dir: 'positive' | 'negative' | 'neutral' = 'neutral';
+    if (positiveSet.has(c.exercise)) dir = 'positive';
+    else if (negativeSet.has(c.exercise)) dir = 'negative';
     return {
       exercise: c.exercise,
       lift: c.lift as Lift,
       correlationDirection: dir,
-    }
-  })
+    };
+  });
 }
 
-export function buildVolumeNotes(volumeInsights: CycleReview['volumeInsights']): string[] {
-  const notes: string[] = []
+export function buildVolumeNotes(
+  volumeInsights: CycleReview['volumeInsights']
+): string[] {
+  const notes: string[] = [];
   if (volumeInsights.musclesUnderRecovered.length > 0) {
-    notes.push(`Under-recovered: ${volumeInsights.musclesUnderRecovered.join(', ')}`)
+    notes.push(
+      `Under-recovered: ${volumeInsights.musclesUnderRecovered.join(', ')}`
+    );
   }
   if (volumeInsights.musclesUndertrained.length > 0) {
-    notes.push(`Undertrained: ${volumeInsights.musclesUndertrained.join(', ')}`)
+    notes.push(
+      `Undertrained: ${volumeInsights.musclesUndertrained.join(', ')}`
+    );
   }
   if (volumeInsights.frequencyRecommendation) {
-    notes.push(volumeInsights.frequencyRecommendation)
+    notes.push(volumeInsights.frequencyRecommendation);
   }
-  return notes
+  return notes;
 }
 
 export function extractSummary(
@@ -99,7 +117,7 @@ export function extractSummary(
   cycleNumber: number,
   bodyWeightStartKg: number,
   bodyWeightEndKg: number,
-  wilksScore: number,
+  wilksScore: number
 ): PreviousCycleSummary {
   return {
     cycleNumber,
@@ -108,7 +126,7 @@ export function extractSummary(
     liftProgress: buildLiftProgress(report.lifts),
     topAuxCorrelations: extractTopAuxCorrelations(
       review.auxiliaryInsights,
-      report.auxiliaryCorrelations,
+      report.auxiliaryCorrelations
     ),
     volumeNotes: buildVolumeNotes(review.volumeInsights),
     formulaChangesCount: report.formulaChanges.length,
@@ -116,7 +134,7 @@ export function extractSummary(
     bodyWeightStartKg,
     bodyWeightEndKg,
     wilksScore,
-  }
+  };
 }
 
 // ---------------------------------------------------------------------------
@@ -130,20 +148,20 @@ You have been given summaries of the previous N training cycles. Use this histor
 - Note whether formula changes from previous cycles improved outcomes
 - Avoid repeating suggestions that have already been implemented (check formulaChangesCount)
 Do not repeat information from previous cycles in your response — focus on what is NEW or CHANGED.
-`.trim()
+`.trim();
 
 export function assembleCycleReviewPrompt(
   cycleReport: CycleReport,
-  previousSummaries: PreviousCycleSummary[],
+  previousSummaries: PreviousCycleSummary[]
 ): string {
-  const currentCycleContext = JSON.stringify({ cycleReport }, null, 2)
+  const currentCycleContext = JSON.stringify({ cycleReport }, null, 2);
 
   const previousContext =
     previousSummaries.length > 0
       ? `\n\n${MULTI_CYCLE_INSTRUCTION}\n\nPrevious ${previousSummaries.length} cycle(s) summary:\n${JSON.stringify(previousSummaries, null, 2)}`
-      : '\n\nThis is the first completed cycle — no historical comparison available.'
+      : '\n\nThis is the first completed cycle — no historical comparison available.';
 
-  return currentCycleContext + previousContext
+  return currentCycleContext + previousContext;
 }
 
 // ---------------------------------------------------------------------------
@@ -152,15 +170,15 @@ export function assembleCycleReviewPrompt(
 
 export async function generateCycleReview(
   cycleReport: CycleReport,
-  previousSummaries: PreviousCycleSummary[] = [],
+  previousSummaries: PreviousCycleSummary[] = []
 ): Promise<CycleReview> {
-  const prompt = assembleCycleReviewPrompt(cycleReport, previousSummaries)
+  const prompt = assembleCycleReviewPrompt(cycleReport, previousSummaries);
 
   const { output } = await generateText({
     model: CYCLE_REVIEW_MODEL,
     output: Output.object({ schema: CycleReviewSchema }),
     system: CYCLE_REVIEW_SYSTEM_PROMPT,
     prompt,
-  })
-  return output
+  });
+  return output;
 }

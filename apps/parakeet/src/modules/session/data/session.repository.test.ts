@@ -1,9 +1,10 @@
 // session.repository.test.ts
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+
 import {
+  fetchInProgressSession,
   fetchTodaySession,
   fetchTodaySessions,
-  fetchInProgressSession,
 } from './session.repository';
 
 const fromMock = vi.hoisted(() => vi.fn());
@@ -41,7 +42,10 @@ describe('fetchTodaySession', () => {
   it('returns in_progress session immediately without checking further', async () => {
     const inProgress = { id: 'in-progress-1' };
     const inProgressChain = createQueryChain();
-    inProgressChain.maybeSingle.mockResolvedValue({ data: inProgress, error: null });
+    inProgressChain.maybeSingle.mockResolvedValue({
+      data: inProgress,
+      error: null,
+    });
     fromMock.mockReturnValueOnce(inProgressChain);
 
     const result = await fetchTodaySession('user-1');
@@ -50,8 +54,14 @@ describe('fetchTodaySession', () => {
     expect(fromMock).toHaveBeenCalledTimes(1);
     expect(inProgressChain.eq).toHaveBeenCalledWith('user_id', 'user-1');
     expect(inProgressChain.eq).toHaveBeenCalledWith('status', 'in_progress');
-    expect(inProgressChain.not).toHaveBeenCalledWith('planned_date', 'is', null);
-    expect(inProgressChain.order).toHaveBeenCalledWith('planned_date', { ascending: true });
+    expect(inProgressChain.not).toHaveBeenCalledWith(
+      'planned_date',
+      'is',
+      null
+    );
+    expect(inProgressChain.order).toHaveBeenCalledWith('planned_date', {
+      ascending: true,
+    });
     expect(inProgressChain.limit).toHaveBeenCalledWith(1);
   });
 
@@ -60,8 +70,13 @@ describe('fetchTodaySession', () => {
     const inProgressChain = createQueryChain();
     const completedTodayChain = createQueryChain();
     inProgressChain.maybeSingle.mockResolvedValue({ data: null, error: null });
-    completedTodayChain.maybeSingle.mockResolvedValue({ data: completedToday, error: null });
-    fromMock.mockReturnValueOnce(inProgressChain).mockReturnValueOnce(completedTodayChain);
+    completedTodayChain.maybeSingle.mockResolvedValue({
+      data: completedToday,
+      error: null,
+    });
+    fromMock
+      .mockReturnValueOnce(inProgressChain)
+      .mockReturnValueOnce(completedTodayChain);
 
     const result = await fetchTodaySession('user-1');
 
@@ -69,8 +84,13 @@ describe('fetchTodaySession', () => {
     expect(fromMock).toHaveBeenCalledTimes(2);
     expect(completedTodayChain.eq).toHaveBeenCalledWith('user_id', 'user-1');
     expect(completedTodayChain.eq).toHaveBeenCalledWith('status', 'completed');
-    expect(completedTodayChain.gte).toHaveBeenCalledWith('completed_at', expect.any(String));
-    expect(completedTodayChain.order).toHaveBeenCalledWith('completed_at', { ascending: false });
+    expect(completedTodayChain.gte).toHaveBeenCalledWith(
+      'completed_at',
+      expect.any(String)
+    );
+    expect(completedTodayChain.order).toHaveBeenCalledWith('completed_at', {
+      ascending: false,
+    });
     expect(completedTodayChain.limit).toHaveBeenCalledWith(1);
   });
 
@@ -80,7 +100,10 @@ describe('fetchTodaySession', () => {
     const completedTodayChain = createQueryChain();
     const plannedChain = createQueryChain();
     inProgressChain.maybeSingle.mockResolvedValue({ data: null, error: null });
-    completedTodayChain.maybeSingle.mockResolvedValue({ data: null, error: null });
+    completedTodayChain.maybeSingle.mockResolvedValue({
+      data: null,
+      error: null,
+    });
     plannedChain.maybeSingle.mockResolvedValue({ data: planned, error: null });
     fromMock
       .mockReturnValueOnce(inProgressChain)
@@ -94,7 +117,9 @@ describe('fetchTodaySession', () => {
     expect(plannedChain.eq).toHaveBeenCalledWith('user_id', 'user-1');
     expect(plannedChain.eq).toHaveBeenCalledWith('status', 'planned');
     expect(plannedChain.not).toHaveBeenCalledWith('planned_date', 'is', null);
-    expect(plannedChain.order).toHaveBeenCalledWith('planned_date', { ascending: true });
+    expect(plannedChain.order).toHaveBeenCalledWith('planned_date', {
+      ascending: true,
+    });
     expect(plannedChain.limit).toHaveBeenCalledWith(1);
   });
 
@@ -103,7 +128,10 @@ describe('fetchTodaySession', () => {
     const completedTodayChain = createQueryChain();
     const plannedChain = createQueryChain();
     inProgressChain.maybeSingle.mockResolvedValue({ data: null, error: null });
-    completedTodayChain.maybeSingle.mockResolvedValue({ data: null, error: null });
+    completedTodayChain.maybeSingle.mockResolvedValue({
+      data: null,
+      error: null,
+    });
     plannedChain.maybeSingle.mockResolvedValue({ data: null, error: null });
     fromMock
       .mockReturnValueOnce(inProgressChain)
@@ -122,7 +150,9 @@ describe('fetchTodaySession', () => {
     inProgressChain.maybeSingle.mockResolvedValue({ data: null, error });
     fromMock.mockReturnValueOnce(inProgressChain);
 
-    await expect(fetchTodaySession('user-1')).rejects.toThrow('in-progress query failed');
+    await expect(fetchTodaySession('user-1')).rejects.toThrow(
+      'in-progress query failed'
+    );
     expect(fromMock).toHaveBeenCalledTimes(1);
   });
 
@@ -132,9 +162,13 @@ describe('fetchTodaySession', () => {
     const completedTodayChain = createQueryChain();
     inProgressChain.maybeSingle.mockResolvedValue({ data: null, error: null });
     completedTodayChain.maybeSingle.mockResolvedValue({ data: null, error });
-    fromMock.mockReturnValueOnce(inProgressChain).mockReturnValueOnce(completedTodayChain);
+    fromMock
+      .mockReturnValueOnce(inProgressChain)
+      .mockReturnValueOnce(completedTodayChain);
 
-    await expect(fetchTodaySession('user-1')).rejects.toThrow('completed-today query failed');
+    await expect(fetchTodaySession('user-1')).rejects.toThrow(
+      'completed-today query failed'
+    );
     expect(fromMock).toHaveBeenCalledTimes(2);
   });
 
@@ -144,14 +178,19 @@ describe('fetchTodaySession', () => {
     const completedTodayChain = createQueryChain();
     const plannedChain = createQueryChain();
     inProgressChain.maybeSingle.mockResolvedValue({ data: null, error: null });
-    completedTodayChain.maybeSingle.mockResolvedValue({ data: null, error: null });
+    completedTodayChain.maybeSingle.mockResolvedValue({
+      data: null,
+      error: null,
+    });
     plannedChain.maybeSingle.mockResolvedValue({ data: null, error });
     fromMock
       .mockReturnValueOnce(inProgressChain)
       .mockReturnValueOnce(completedTodayChain)
       .mockReturnValueOnce(plannedChain);
 
-    await expect(fetchTodaySession('user-1')).rejects.toThrow('planned query failed');
+    await expect(fetchTodaySession('user-1')).rejects.toThrow(
+      'planned query failed'
+    );
     expect(fromMock).toHaveBeenCalledTimes(3);
   });
 });
@@ -188,7 +227,9 @@ describe('fetchTodaySessions', () => {
 
     expect(result).toEqual(sessions);
     expect(chain.eq).toHaveBeenCalledWith('user_id', 'user-1');
-    expect(chain.or).toHaveBeenCalledWith(expect.stringContaining('status.eq.in_progress'));
+    expect(chain.or).toHaveBeenCalledWith(
+      expect.stringContaining('status.eq.in_progress')
+    );
   });
 
   it('deduplicates sessions that match both conditions', async () => {
@@ -218,7 +259,10 @@ describe('fetchTodaySessions', () => {
 
   it('throws when query fails', async () => {
     const chain = createListChain();
-    chain.order.mockResolvedValue({ data: null, error: new Error('query failed') });
+    chain.order.mockResolvedValue({
+      data: null,
+      error: new Error('query failed'),
+    });
     fromMock.mockReturnValueOnce(chain);
 
     await expect(fetchTodaySessions('user-1')).rejects.toThrow('query failed');
@@ -265,9 +309,14 @@ describe('fetchInProgressSession', () => {
 
   it('throws when query fails', async () => {
     const chain = createQueryChain();
-    chain.maybeSingle.mockResolvedValue({ data: null, error: new Error('query failed') });
+    chain.maybeSingle.mockResolvedValue({
+      data: null,
+      error: new Error('query failed'),
+    });
     fromMock.mockReturnValueOnce(chain);
 
-    await expect(fetchInProgressSession('user-1')).rejects.toThrow('query failed');
+    await expect(fetchInProgressSession('user-1')).rejects.toThrow(
+      'query failed'
+    );
   });
 });

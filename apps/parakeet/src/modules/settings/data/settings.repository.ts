@@ -1,6 +1,8 @@
 import { typedSupabase } from '@platform/supabase';
 
-export async function getPendingFormulaSuggestionsCount(userId: string): Promise<number> {
+export async function getPendingFormulaSuggestionsCount(
+  userId: string
+): Promise<number> {
   const { count, error } = await typedSupabase
     .from('formula_configs')
     .select('id', { count: 'exact', head: true })

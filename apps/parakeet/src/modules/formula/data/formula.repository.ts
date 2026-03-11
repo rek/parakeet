@@ -2,11 +2,16 @@ import { typedSupabase } from '@platform/supabase';
 import type { DbInsert, DbRow, Json } from '@platform/supabase';
 
 export type FormulaConfigRow = DbRow<'formula_configs'>;
-export type FormulaConfigInsert = Omit<DbInsert<'formula_configs'>, 'overrides'> & {
+export type FormulaConfigInsert = Omit<
+  DbInsert<'formula_configs'>,
+  'overrides'
+> & {
   overrides: Json;
 };
 
-export async function getActiveFormulaConfigRow(userId: string): Promise<FormulaConfigRow | null> {
+export async function getActiveFormulaConfigRow(
+  userId: string
+): Promise<FormulaConfigRow | null> {
   const { data, error } = await typedSupabase
     .from('formula_configs')
     .select('*')
@@ -18,7 +23,9 @@ export async function getActiveFormulaConfigRow(userId: string): Promise<Formula
   return data ?? null;
 }
 
-export async function deactivateActiveFormulaConfigs(userId: string): Promise<void> {
+export async function deactivateActiveFormulaConfigs(
+  userId: string
+): Promise<void> {
   const { error } = await typedSupabase
     .from('formula_configs')
     .update({ is_active: false })
@@ -28,15 +35,17 @@ export async function deactivateActiveFormulaConfigs(userId: string): Promise<vo
   if (error) throw error;
 }
 
-export async function insertFormulaConfig(input: FormulaConfigInsert): Promise<void> {
-  const { error } = await typedSupabase
-    .from('formula_configs')
-    .insert(input);
+export async function insertFormulaConfig(
+  input: FormulaConfigInsert
+): Promise<void> {
+  const { error } = await typedSupabase.from('formula_configs').insert(input);
 
   if (error) throw error;
 }
 
-export async function listFormulaConfigs(userId: string): Promise<FormulaConfigRow[]> {
+export async function listFormulaConfigs(
+  userId: string
+): Promise<FormulaConfigRow[]> {
   const { data, error } = await typedSupabase
     .from('formula_configs')
     .select('*')
@@ -47,7 +56,9 @@ export async function listFormulaConfigs(userId: string): Promise<FormulaConfigR
   return data ?? [];
 }
 
-export async function listPendingAiFormulaSuggestions(userId: string): Promise<FormulaConfigRow[]> {
+export async function listPendingAiFormulaSuggestions(
+  userId: string
+): Promise<FormulaConfigRow[]> {
   const { data, error } = await typedSupabase
     .from('formula_configs')
     .select('*')
@@ -60,7 +71,10 @@ export async function listPendingAiFormulaSuggestions(userId: string): Promise<F
   return data ?? [];
 }
 
-export async function deactivateFormulaConfigById(configId: string, userId: string): Promise<void> {
+export async function deactivateFormulaConfigById(
+  configId: string,
+  userId: string
+): Promise<void> {
   const { error } = await typedSupabase
     .from('formula_configs')
     .update({ is_active: false })
@@ -71,7 +85,7 @@ export async function deactivateFormulaConfigById(configId: string, userId: stri
 }
 
 export async function getMostRecentInactiveFormulaConfig(
-  userId: string,
+  userId: string
 ): Promise<Pick<FormulaConfigRow, 'id'> | null> {
   const { data, error } = await typedSupabase
     .from('formula_configs')
@@ -86,7 +100,9 @@ export async function getMostRecentInactiveFormulaConfig(
   return data ?? null;
 }
 
-export async function activateFormulaConfigById(configId: string): Promise<void> {
+export async function activateFormulaConfigById(
+  configId: string
+): Promise<void> {
   const { error } = await typedSupabase
     .from('formula_configs')
     .update({ is_active: true })

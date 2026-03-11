@@ -8,25 +8,27 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '@modules/auth';
 import {
-  getCurrentBlock,
   getActiveProgram,
   getAllBlockAssignments,
   getAuxiliaryPools,
+  getCurrentBlock,
   saveBlockAssignment,
 } from '@modules/program';
 import type { SlotAssignment } from '@modules/program';
 import type { Lift } from '@parakeet/shared-types';
 import { getAuxiliariesForBlock } from '@parakeet/training-engine';
+import { qk } from '@platform/query';
+import { BLOCK_INTENSITY } from '@shared/constants/training';
 import { useQuery } from '@tanstack/react-query';
 import { router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
+
 import { BackLink } from '../../components/navigation/BackLink';
 import { SlotDropdown } from '../../components/settings/SlotDropdown';
-import { qk } from '@platform/query';
-import { BLOCK_INTENSITY } from '@shared/constants/training';
 import type { ColorScheme } from '../../theme';
 import { useTheme } from '../../theme/ThemeContext';
 
@@ -66,8 +68,17 @@ function buildStyles(colors: ColorScheme) {
       paddingHorizontal: 32,
       gap: 8,
     },
-    emptyStateText: { fontSize: 16, fontWeight: '600', color: colors.text, textAlign: 'center' },
-    emptyStateSubtext: { fontSize: 13, color: colors.textTertiary, textAlign: 'center' },
+    emptyStateText: {
+      fontSize: 16,
+      fontWeight: '600',
+      color: colors.text,
+      textAlign: 'center',
+    },
+    emptyStateSubtext: {
+      fontSize: 13,
+      color: colors.textTertiary,
+      textAlign: 'center',
+    },
 
     tabs: {
       flexDirection: 'row',
@@ -153,15 +164,25 @@ function SavedFlash({ visible, styles }: SavedFlashProps) {
   useEffect(() => {
     if (visible) {
       Animated.sequence([
-        Animated.timing(opacity, { toValue: 1, duration: 100, useNativeDriver: true }),
+        Animated.timing(opacity, {
+          toValue: 1,
+          duration: 100,
+          useNativeDriver: true,
+        }),
         Animated.delay(800),
-        Animated.timing(opacity, { toValue: 0, duration: 300, useNativeDriver: true }),
+        Animated.timing(opacity, {
+          toValue: 0,
+          duration: 300,
+          useNativeDriver: true,
+        }),
       ]).start();
     }
   }, [visible, opacity]);
 
   return (
-    <Animated.Text style={[styles.savedFlash, { opacity }]}>Saved</Animated.Text>
+    <Animated.Text style={[styles.savedFlash, { opacity }]}>
+      Saved
+    </Animated.Text>
   );
 }
 
@@ -204,7 +225,11 @@ function SlotRow({
         {saving ? (
           <ActivityIndicator size="small" color={primaryColor} />
         ) : (
-          <TouchableOpacity onPress={onLockToggle} activeOpacity={0.7} hitSlop={8}>
+          <TouchableOpacity
+            onPress={onLockToggle}
+            activeOpacity={0.7}
+            hitSlop={8}
+          >
             <Ionicons
               name={locked ? 'lock-closed' : 'lock-open-outline'}
               size={16}
@@ -258,9 +283,10 @@ function LiftCard({
   primaryColor,
   textTertiaryColor,
 }: LiftCardProps) {
-  const [auto1, auto2] = pool.length >= 2
-    ? getAuxiliariesForBlock(lift, blockNumber, pool)
-    : ['', ''];
+  const [auto1, auto2] =
+    pool.length >= 2
+      ? getAuxiliariesForBlock(lift, blockNumber, pool)
+      : ['', ''];
 
   return (
     <View style={styles.liftCard}>
@@ -303,7 +329,9 @@ function LiftCard({
 
 // ── Screen ─────────────────────────────────────────────────────────────────────
 
-type AllAssignments = Partial<Record<1 | 2 | 3, Partial<Record<Lift, SlotAssignment>>>>;
+type AllAssignments = Partial<
+  Record<1 | 2 | 3, Partial<Record<Lift, SlotAssignment>>>
+>;
 type SavingState = Partial<Record<string, boolean>>;
 type FlashState = Partial<Record<string, { slot1: boolean; slot2: boolean }>>;
 
@@ -355,19 +383,22 @@ export default function AuxBlockAssignmentsScreen() {
     }
 
     void init();
-    return () => { isMounted = false; };
+    return () => {
+      isMounted = false;
+    };
   }, [activeProgram, user?.id]);
 
   function getAssignmentForBlock(
     blockNumber: 1 | 2 | 3,
-    lift: Lift,
+    lift: Lift
   ): SlotAssignment {
     const stored = allAssignments[blockNumber]?.[lift];
     if (stored) return stored;
     const pool = pools?.[lift] ?? [];
-    const [ex1, ex2] = pool.length >= 2
-      ? getAuxiliariesForBlock(lift, blockNumber, pool)
-      : ['', ''];
+    const [ex1, ex2] =
+      pool.length >= 2
+        ? getAuxiliariesForBlock(lift, blockNumber, pool)
+        : ['', ''];
     return {
       exercise_1: ex1,
       exercise_1_locked: false,
@@ -381,14 +412,15 @@ export default function AuxBlockAssignmentsScreen() {
     lift: Lift,
     slot: 1 | 2,
     exercise: string,
-    locked: boolean,
+    locked: boolean
   ) {
     if (!user || !programId) return;
 
     const current = getAssignmentForBlock(blockNumber, lift);
-    const next: SlotAssignment = slot === 1
-      ? { ...current, exercise_1: exercise, exercise_1_locked: locked }
-      : { ...current, exercise_2: exercise, exercise_2_locked: locked };
+    const next: SlotAssignment =
+      slot === 1
+        ? { ...current, exercise_1: exercise, exercise_1_locked: locked }
+        : { ...current, exercise_2: exercise, exercise_2_locked: locked };
 
     // Optimistic update
     setAllAssignments((prev) => ({
@@ -410,15 +442,21 @@ export default function AuxBlockAssignmentsScreen() {
         next.exercise_1,
         next.exercise_1_locked,
         next.exercise_2,
-        next.exercise_2_locked,
+        next.exercise_2_locked
       );
       // Trigger flash
       setFlash((prev) => ({
         ...prev,
-        [key]: slot === 1 ? { slot1: true, slot2: false } : { slot1: false, slot2: true },
+        [key]:
+          slot === 1
+            ? { slot1: true, slot2: false }
+            : { slot1: false, slot2: true },
       }));
       setTimeout(() => {
-        setFlash((prev) => ({ ...prev, [key]: { slot1: false, slot2: false } }));
+        setFlash((prev) => ({
+          ...prev,
+          [key]: { slot1: false, slot2: false },
+        }));
       }, 1200);
     } finally {
       setSaving((prev) => ({ ...prev, [key]: false }));
@@ -440,7 +478,9 @@ export default function AuxBlockAssignmentsScreen() {
       {!activeProgram && !isLoading ? (
         <View style={styles.emptyState}>
           <Text style={styles.emptyStateText}>No active program.</Text>
-          <Text style={styles.emptyStateSubtext}>Start a program to configure block assignments.</Text>
+          <Text style={styles.emptyStateSubtext}>
+            Start a program to configure block assignments.
+          </Text>
         </View>
       ) : isLoading ? (
         <View style={styles.loading}>
@@ -461,7 +501,12 @@ export default function AuxBlockAssignmentsScreen() {
                   onPress={() => setActiveTab(bn)}
                   activeOpacity={0.7}
                 >
-                  <Text style={[styles.tabText, activeTab === bn && styles.tabTextActive]}>
+                  <Text
+                    style={[
+                      styles.tabText,
+                      activeTab === bn && styles.tabTextActive,
+                    ]}
+                  >
                     {label}
                   </Text>
                 </TouchableOpacity>
@@ -486,7 +531,13 @@ export default function AuxBlockAssignmentsScreen() {
                   saving={!!saving[key]}
                   savedFlash={flash[key] ?? { slot1: false, slot2: false }}
                   onSlotChange={(slot, exercise, locked) =>
-                    void handleSlotChange(activeTab, lift, slot, exercise, locked)
+                    void handleSlotChange(
+                      activeTab,
+                      lift,
+                      slot,
+                      exercise,
+                      locked
+                    )
                   }
                   styles={styles}
                   primaryColor={colors.primary}

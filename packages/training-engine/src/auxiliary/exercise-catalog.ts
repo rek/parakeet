@@ -1,4 +1,5 @@
 import { Lift } from '@parakeet/shared-types';
+
 import { MuscleContribution, MuscleGroup } from '../types';
 
 export type ExerciseType = 'weighted' | 'bodyweight' | 'timed';
@@ -868,9 +869,9 @@ export const DEFAULT_AUXILIARY_POOLS: Record<Lift, string[]> = {
   bench: EXERCISE_CATALOG.filter((e) => e.associatedLift === 'bench').map(
     (e) => e.name
   ),
-  deadlift: EXERCISE_CATALOG.filter(
-    (e) => e.associatedLift === 'deadlift'
-  ).map((e) => e.name),
+  deadlift: EXERCISE_CATALOG.filter((e) => e.associatedLift === 'deadlift').map(
+    (e) => e.name
+  ),
 };
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -901,7 +902,10 @@ export function getRepTarget(name: string, fallback: number): number {
 }
 
 /** Bodyweight exercise names for a given lift + sex (JIT no-equipment fallback). */
-export function getBodyweightPool(lift: Lift, sex: 'male' | 'female'): string[] {
+export function getBodyweightPool(
+  lift: Lift,
+  sex: 'male' | 'female'
+): string[] {
   return EXERCISE_CATALOG.filter(
     (e) =>
       e.bodyweightPools?.some((p) => p.lift === lift && p.sex === sex) ?? false

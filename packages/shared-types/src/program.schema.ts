@@ -1,16 +1,25 @@
-import { z } from 'zod'
+import { z } from 'zod';
 
-export const LiftSchema = z.enum(['squat', 'bench', 'deadlift'])
+export const LiftSchema = z.enum(['squat', 'bench', 'deadlift']);
 
-export type Lift = z.infer<typeof LiftSchema>
+export type Lift = z.infer<typeof LiftSchema>;
 
-export const IntensityTypeSchema = z.enum(['heavy', 'explosive', 'rep', 'deload'])
+export const IntensityTypeSchema = z.enum([
+  'heavy',
+  'explosive',
+  'rep',
+  'deload',
+]);
 
-export type IntensityType = z.infer<typeof IntensityTypeSchema>
+export type IntensityType = z.infer<typeof IntensityTypeSchema>;
 
-export const BlockNumberSchema = z.union([z.literal(1), z.literal(2), z.literal(3)])
+export const BlockNumberSchema = z.union([
+  z.literal(1),
+  z.literal(2),
+  z.literal(3),
+]);
 
-export type BlockNumber = z.infer<typeof BlockNumberSchema>
+export type BlockNumber = z.infer<typeof BlockNumberSchema>;
 
 // weight_kg must be a positive multiple of 2.5 kg
 const weightKgSchema = z
@@ -18,7 +27,7 @@ const weightKgSchema = z
   .positive()
   .refine((n) => Math.round(n * 10) % 25 === 0, {
     message: 'Weight must be a multiple of 2.5 kg',
-  })
+  });
 
 export const PlannedSetSchema = z
   .object({
@@ -26,11 +35,13 @@ export const PlannedSetSchema = z
     weight_kg: weightKgSchema,
     reps: z.number().int().positive(),
     rpe_target: z.number().min(6).max(10).optional(),
-    reps_range: z.tuple([z.number().int().positive(), z.number().int().positive()]).optional(),
+    reps_range: z
+      .tuple([z.number().int().positive(), z.number().int().positive()])
+      .optional(),
   })
-  .strict()
+  .strict();
 
-export type PlannedSet = z.infer<typeof PlannedSetSchema>
+export type PlannedSet = z.infer<typeof PlannedSetSchema>;
 
 export const SessionSchema = z
   .object({
@@ -43,12 +54,18 @@ export const SessionSchema = z
     block_number: z.number().int().min(1).max(3).nullable(),
     is_deload: z.boolean(),
     planned_sets: z.array(PlannedSetSchema).nullable(),
-    status: z.enum(['planned', 'in_progress', 'completed', 'skipped', 'missed']),
+    status: z.enum([
+      'planned',
+      'in_progress',
+      'completed',
+      'skipped',
+      'missed',
+    ]),
     planned_date: z.iso.date().nullable(),
   })
-  .strict()
+  .strict();
 
-export type Session = z.infer<typeof SessionSchema>
+export type Session = z.infer<typeof SessionSchema>;
 
 export const ProgramSchema = z
   .object({
@@ -63,15 +80,15 @@ export const ProgramSchema = z
     start_date: z.iso.date(),
     created_at: z.iso.datetime({ offset: true }),
   })
-  .strict()
+  .strict();
 
-export type Program = z.infer<typeof ProgramSchema>
+export type Program = z.infer<typeof ProgramSchema>;
 
 export const ProgramWithSessionsSchema = ProgramSchema.extend({
   sessions: z.array(SessionSchema),
-})
+});
 
-export type ProgramWithSessions = z.infer<typeof ProgramWithSessionsSchema>
+export type ProgramWithSessions = z.infer<typeof ProgramWithSessionsSchema>;
 
 export const CreateProgramSchema = z
   .object({
@@ -81,6 +98,6 @@ export const CreateProgramSchema = z
     training_days_per_week: z.number().int().min(1).max(7),
     start_date: z.iso.date(),
   })
-  .strict()
+  .strict();
 
-export type CreateProgram = z.infer<typeof CreateProgramSchema>
+export type CreateProgram = z.infer<typeof CreateProgramSchema>;

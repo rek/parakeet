@@ -8,8 +8,13 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+
 import { useAuth } from '@modules/auth';
-import { saveWeeklyBodyReview, getWeeklyVolumeForReview, MISMATCH_DIRECTION_LABELS } from '@modules/body-review';
+import {
+  getWeeklyVolumeForReview,
+  MISMATCH_DIRECTION_LABELS,
+  saveWeeklyBodyReview,
+} from '@modules/body-review';
 import { getMrvMevConfig, volumeBarColor } from '@modules/training-volume';
 import {
   computePredictedFatigue,
@@ -28,6 +33,7 @@ import { MUSCLE_LABELS_FULL } from '@shared/constants/training';
 import { capitalize } from '@shared/utils/string';
 import { router, useLocalSearchParams } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
+
 import { BackLink } from '../../../components/navigation/BackLink';
 import type { ColorScheme } from '../../../theme';
 import { useTheme } from '../../../theme/ThemeContext';
@@ -256,8 +262,16 @@ interface MuscleReviewRowProps {
   colors: ColorScheme;
 }
 
-function MuscleReviewRow({ muscle, rating, predicted, onChange, styles, colors }: MuscleReviewRowProps) {
-  const label = MUSCLE_LABELS_FULL[muscle] ?? capitalize(muscle.replace(/_/g, ' '));
+function MuscleReviewRow({
+  muscle,
+  rating,
+  predicted,
+  onChange,
+  styles,
+  colors,
+}: MuscleReviewRowProps) {
+  const label =
+    MUSCLE_LABELS_FULL[muscle] ?? capitalize(muscle.replace(/_/g, ' '));
   const barPct = Math.min(1, predicted.volumePct);
   const barColor = volumeBarColor(predicted.volumePct, colors);
   const FATIGUE_LEVELS: FatigueLevel[] = [1, 2, 3, 4, 5];
@@ -276,7 +290,9 @@ function MuscleReviewRow({ muscle, rating, predicted, onChange, styles, colors }
                 onPress={() => onChange(muscle, level)}
                 activeOpacity={0.7}
               >
-                <Text style={[styles.pillText, isActive && styles.pillTextActive]}>
+                <Text
+                  style={[styles.pillText, isActive && styles.pillTextActive]}
+                >
                   {level}
                 </Text>
               </TouchableOpacity>
@@ -286,11 +302,17 @@ function MuscleReviewRow({ muscle, rating, predicted, onChange, styles, colors }
       </View>
       {/* Volume bar */}
       <View style={styles.volumeBarTrack}>
-        <View style={[styles.volumeBarFill, { flex: barPct, backgroundColor: barColor }]} />
+        <View
+          style={[
+            styles.volumeBarFill,
+            { flex: barPct, backgroundColor: barColor },
+          ]}
+        />
         <View style={[styles.volumeBarEmpty, { flex: 1 - barPct }]} />
       </View>
       <Text style={styles.volumeBarLabel}>
-        {Math.round(predicted.volumePct * 100)}% of MRV • Predicted: {predicted.predicted}
+        {Math.round(predicted.volumePct * 100)}% of MRV • Predicted:{' '}
+        {predicted.predicted}
       </Text>
     </View>
   );
@@ -305,8 +327,15 @@ interface MismatchSummaryProps {
   colors: ColorScheme;
 }
 
-function MismatchSummary({ mismatches, onDone, styles, colors }: MismatchSummaryProps) {
-  const hasAccumulating = mismatches.some((m) => m.direction === 'accumulating_fatigue');
+function MismatchSummary({
+  mismatches,
+  onDone,
+  styles,
+  colors,
+}: MismatchSummaryProps) {
+  const hasAccumulating = mismatches.some(
+    (m) => m.direction === 'accumulating_fatigue'
+  );
 
   return (
     <View style={styles.mismatchContainer}>
@@ -314,12 +343,16 @@ function MismatchSummary({ mismatches, onDone, styles, colors }: MismatchSummary
       {mismatches.length > 0 ? (
         <>
           <Text style={styles.mismatchSubtitle}>
-            {mismatches.length} muscle{mismatches.length > 1 ? 's' : ''} differ from prediction by ≥2 levels
+            {mismatches.length} muscle{mismatches.length > 1 ? 's' : ''} differ
+            from prediction by ≥2 levels
           </Text>
           {mismatches.map((m) => {
             const label = MUSCLE_LABELS_FULL[m.muscle] ?? m.muscle;
             const dir = MISMATCH_DIRECTION_LABELS[m.direction] ?? m.direction;
-            const dirColor = m.direction === 'accumulating_fatigue' ? colors.warning : colors.success;
+            const dirColor =
+              m.direction === 'accumulating_fatigue'
+                ? colors.warning
+                : colors.success;
             return (
               <View key={m.muscle} style={styles.mismatchRow}>
                 <Text style={styles.mismatchMuscleName}>{label}</Text>
@@ -327,7 +360,9 @@ function MismatchSummary({ mismatches, onDone, styles, colors }: MismatchSummary
                   <Text style={styles.mismatchNumbers}>
                     Felt {m.felt} · Predicted {m.predicted}
                   </Text>
-                  <Text style={[styles.mismatchDirection, { color: dirColor }]}>{dir}</Text>
+                  <Text style={[styles.mismatchDirection, { color: dirColor }]}>
+                    {dir}
+                  </Text>
                 </View>
               </View>
             );
@@ -335,7 +370,8 @@ function MismatchSummary({ mismatches, onDone, styles, colors }: MismatchSummary
           {hasAccumulating && (
             <View style={styles.mismatchSuggestion}>
               <Text style={styles.mismatchSuggestionText}>
-                Consider reducing MRV for accumulating muscles in Settings → Volume Config
+                Consider reducing MRV for accumulating muscles in Settings →
+                Volume Config
               </Text>
             </View>
           )}
@@ -345,7 +381,11 @@ function MismatchSummary({ mismatches, onDone, styles, colors }: MismatchSummary
           Your body matches what the system predicted. Well calibrated!
         </Text>
       )}
-      <TouchableOpacity style={styles.doneButton} onPress={onDone} activeOpacity={0.8}>
+      <TouchableOpacity
+        style={styles.doneButton}
+        onPress={onDone}
+        activeOpacity={0.8}
+      >
         <Text style={styles.doneButtonText}>Done</Text>
       </TouchableOpacity>
     </View>
@@ -365,8 +405,14 @@ export default function WeeklyReviewScreen() {
   const { user } = useAuth();
 
   const [mrvMevConfig, setMrvMevConfig] = useState<MrvMevConfig | null>(null);
-  const [weeklyVolume, setWeeklyVolume] = useState<Record<MuscleGroup, number> | null>(null);
-  const [predicted, setPredicted] = useState<Record<MuscleGroup, PredictedFatigue> | null>(null);
+  const [weeklyVolume, setWeeklyVolume] = useState<Record<
+    MuscleGroup,
+    number
+  > | null>(null);
+  const [predicted, setPredicted] = useState<Record<
+    MuscleGroup,
+    PredictedFatigue
+  > | null>(null);
   const [ratings, setRatings] = useState<FatigueRatings>({});
   const [notes, setNotes] = useState('');
   const [saving, setSaving] = useState(false);
@@ -380,14 +426,24 @@ export default function WeeklyReviewScreen() {
       try {
         const [config, volume] = await Promise.all([
           getMrvMevConfig(user.id),
-          programId ? getWeeklyVolumeForReview(user.id, programId, weekNumber) : Promise.resolve(null),
+          programId
+            ? getWeeklyVolumeForReview(user.id, programId, weekNumber)
+            : Promise.resolve(null),
         ]);
 
         setMrvMevConfig(config);
-        const resolvedVolume = volume ?? Object.fromEntries(MUSCLE_GROUPS.map((m) => [m, 0])) as Record<MuscleGroup, number>;
+        const resolvedVolume =
+          volume ??
+          (Object.fromEntries(MUSCLE_GROUPS.map((m) => [m, 0])) as Record<
+            MuscleGroup,
+            number
+          >);
         setWeeklyVolume(resolvedVolume);
 
-        const predictedFatigue = computePredictedFatigue(resolvedVolume, config);
+        const predictedFatigue = computePredictedFatigue(
+          resolvedVolume,
+          config
+        );
         setPredicted(predictedFatigue);
         const initial: FatigueRatings = {};
         for (const muscle of MUSCLE_GROUPS) {
@@ -443,7 +499,8 @@ export default function WeeklyReviewScreen() {
     );
   }
 
-  const title = weekNumber > 0 ? `Week ${weekNumber} Body Review` : 'Body Review';
+  const title =
+    weekNumber > 0 ? `Week ${weekNumber} Body Review` : 'Body Review';
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -467,22 +524,26 @@ export default function WeeklyReviewScreen() {
         )}
 
         <Text style={styles.prompt}>
-          Rate how each muscle actually feels. The bars show the last 7 days of training volume vs MRV.
+          Rate how each muscle actually feels. The bars show the last 7 days of
+          training volume vs MRV.
         </Text>
 
-        {predicted && MUSCLE_GROUPS.map((muscle) => (
-          <MuscleReviewRow
-            key={muscle}
-            muscle={muscle}
-            rating={(ratings[muscle] ?? 1) as FatigueLevel}
-            predicted={predicted[muscle]}
-            onChange={handleRatingChange}
-            styles={styles}
-            colors={colors}
-          />
-        ))}
+        {predicted &&
+          MUSCLE_GROUPS.map((muscle) => (
+            <MuscleReviewRow
+              key={muscle}
+              muscle={muscle}
+              rating={(ratings[muscle] ?? 1) as FatigueLevel}
+              predicted={predicted[muscle]}
+              onChange={handleRatingChange}
+              styles={styles}
+              colors={colors}
+            />
+          ))}
 
-        <Text style={styles.legend}>1=Fresh 2=Mild 3=Moderate 4=High 5=Severe</Text>
+        <Text style={styles.legend}>
+          1=Fresh 2=Mild 3=Moderate 4=High 5=Severe
+        </Text>
 
         <Text style={styles.sectionLabel}>Notes (optional)</Text>
         <TextInput
@@ -510,4 +571,3 @@ export default function WeeklyReviewScreen() {
     </SafeAreaView>
   );
 }
-

@@ -4,5 +4,8 @@ export {
   getLatestWeeklyReview,
   getWeeklyVolumeForReview,
 } from './application/body-review.service';
-export type { WeeklyBodyReview, SaveReviewInput } from './application/body-review.service';
+export type {
+  WeeklyBodyReview,
+  SaveReviewInput,
+} from './application/body-review.service';
 export * from './ui/mismatch-direction-styles';

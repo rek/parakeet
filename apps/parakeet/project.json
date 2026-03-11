@@ -1,74 +1,74 @@
 {
-    "name": "parakeet",
-    "$schema": "../../node_modules/nx/schemas/project-schema.json",
-    "sourceRoot": "apps/parakeet/src",
-    "projectType": "application",
-    "tags": [
-        "scope:client",
-        "type:app"
-    ],
-    "// targets": "to see all targets run: nx show project parakeet --web",
-    "targets": {
-        "test": {
-            "executor": "nx:run-commands",
-            "options": {
-                "command": "npx vitest run",
-                "cwd": "apps/parakeet"
-            }
-        },
-        "typecheck": {
-            "executor": "nx:run-commands",
-            "options": {
-                "command": "tsc --noEmit -p tsconfig.typecheck.json",
-                "cwd": "apps/parakeet"
-            }
-        },
-        "build": {
-            "executor": "nx:run-commands",
-            "options": {
-                "commands": [
-                    {
-                        "command": "cd apps/parakeet/android && set -a && . ../../../.env.production && set +a && unset EXPO_PUBLIC_SUPABASE_URL_ANDROID && test -n \"$EXPO_PUBLIC_SUPABASE_URL\" && test -n \"$EXPO_PUBLIC_SUPABASE_ANON_KEY\" && EXPO_NO_DOTENV=1 NODE_ENV=production ./gradlew assembleRelease --warning-mode=all",
-                        "description": "Build release APK"
-                    },
-                    {
-                        "command": "mkdir -p dist/apps/parakeet",
-                        "description": "Create dist directory"
-                    },
-                    {
-                        "command": "cp apps/parakeet/android/app/build/outputs/apk/release/app-release.apk dist/apps/parakeet/parakeet-release.apk",
-                        "description": "Copy APK to dist"
-                    }
-                ],
-                "parallel": false
-            },
-            "outputs": [
-                "{workspaceRoot}/dist/apps/parakeet"
-            ]
-        },
-        "web-export": {
-            "executor": "nx:run-commands",
-            "outputs": [
-                "{workspaceRoot}/dist/web/parakeet"
-            ],
-            "options": {
-                "command": "npx expo export --platform web --output-dir ../../dist/web/parakeet",
-                "cwd": "apps/parakeet"
-            }
-        },
-        "uninstall": {
-            "executor": "nx:run-commands",
-            "options": {
-                "command": "adb uninstall com.adam.tombleson.parakeet",
-                "cwd": ""
-            }
-        },
-        "install": {
-            "executor": "nx:run-commands",
-            "options": {
-                "command": "adb install -r dist/apps/parakeet/parakeet-release.apk",
-                "cwd": ""
-            }
-        }
+  "name": "parakeet",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "apps/parakeet/src",
+  "projectType": "application",
+  "tags": ["scope:client", "type:app"],
+  "// targets": "to see all targets run: nx show project parakeet --web",
+  "targets": {
+    "test": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "npx vitest run",
+        "cwd": "apps/parakeet"
+      }
+    },
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "tsc --noEmit -p tsconfig.typecheck.json",
+        "cwd": "apps/parakeet"
+      }
+    },
+    "build": {
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": [
+          {
+            "command": "cd apps/parakeet/android && set -a && . ../../../.env.production && set +a && unset EXPO_PUBLIC_SUPABASE_URL_ANDROID && test -n \"$EXPO_PUBLIC_SUPABASE_URL\" && test -n \"$EXPO_PUBLIC_SUPABASE_ANON_KEY\" && EXPO_NO_DOTENV=1 NODE_ENV=production ./gradlew assembleRelease --warning-mode=all",
+            "description": "Build release APK"
+          },
+          {
+            "command": "mkdir -p dist/apps/parakeet",
+            "description": "Create dist directory"
+          },
+          {
+            "command": "cp apps/parakeet/android/app/build/outputs/apk/release/app-release.apk dist/apps/parakeet/parakeet-release.apk",
+            "description": "Copy APK to dist"
+          }
+        ],
+        "parallel": false
+      },
+      "outputs": ["{workspaceRoot}/dist/apps/parakeet"]
+    },
+    "web-export": {
+      "executor": "nx:run-commands",
+      "outputs": ["{workspaceRoot}/dist/web/parakeet"],
+      "options": {
+        "command": "npx expo export --platform web --output-dir ../../dist/web/parakeet",
+        "cwd": "apps/parakeet"
+      }
+    },
+    "uninstall": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "adb uninstall com.adam.tombleson.parakeet",
+        "cwd": ""
+      }
+    },
+    "install": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "adb install -r dist/apps/parakeet/parakeet-release.apk",
+        "cwd": ""
+      }
+    },
+    "format": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "npx prettier --write \"src/**/*.{ts,tsx}\"",
+        "cwd": "apps/parakeet"
+      }
     }
+  }
 }

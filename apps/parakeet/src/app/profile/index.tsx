@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
   ScrollView,
@@ -7,23 +7,29 @@ import {
   TextInput,
   TouchableOpacity,
   View,
-} from 'react-native'
-import { SafeAreaView } from 'react-native-safe-area-context'
-import { router } from 'expo-router'
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+} from 'react-native';
 
-import { FormFeedback } from '../../components/ui/FormFeedback'
-import { getProfile, updateProfile, isValidBirthYear, birthYearToDobIso } from '@modules/profile'
-import type { BiologicalSex } from '@modules/profile'
-import { spacing, radii, typography } from '../../theme'
-import type { ColorScheme } from '../../theme'
-import { useTheme } from '../../theme/ThemeContext'
-import { BackLink } from '../../components/navigation/BackLink'
+import {
+  birthYearToDobIso,
+  getProfile,
+  isValidBirthYear,
+  updateProfile,
+} from '@modules/profile';
+import type { BiologicalSex } from '@modules/profile';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { router } from 'expo-router';
+import { SafeAreaView } from 'react-native-safe-area-context';
+
+import { BackLink } from '../../components/navigation/BackLink';
+import { FormFeedback } from '../../components/ui/FormFeedback';
+import { radii, spacing, typography } from '../../theme';
+import type { ColorScheme } from '../../theme';
+import { useTheme } from '../../theme/ThemeContext';
 
 const GENDER_OPTIONS: { value: BiologicalSex; label: string }[] = [
   { value: 'female', label: 'Female' },
   { value: 'male', label: 'Male' },
-]
+];
 
 function buildStyles(colors: ColorScheme) {
   return StyleSheet.create({
@@ -117,108 +123,136 @@ function buildStyles(colors: ColorScheme) {
       fontWeight: typography.weights.bold,
       letterSpacing: typography.letterSpacing.wide,
     },
-  })
+  });
 }
 
-function FieldLabel({ label, styles }: { label: string; styles: ReturnType<typeof buildStyles> }) {
-  return <Text style={styles.fieldLabel}>{label}</Text>
+function FieldLabel({
+  label,
+  styles,
+}: {
+  label: string;
+  styles: ReturnType<typeof buildStyles>;
+}) {
+  return <Text style={styles.fieldLabel}>{label}</Text>;
 }
 
 export default function ProfileScreen() {
-  const { colors } = useTheme()
-  const styles = useMemo(() => buildStyles(colors), [colors])
-  const queryClient = useQueryClient()
+  const { colors } = useTheme();
+  const styles = useMemo(() => buildStyles(colors), [colors]);
+  const queryClient = useQueryClient();
 
   const { data: profile, isLoading } = useQuery({
     queryKey: ['profile'],
     queryFn: getProfile,
     staleTime: 5 * 60 * 1000,
-  })
+  });
 
-  const [displayName, setDisplayName] = useState('')
-  const [gender, setGender] = useState<BiologicalSex | null>(null)
-  const [birthYear, setBirthYear] = useState('')
-  const [bodyweightKg, setBodyweightKg] = useState('')
-  const [saveError, setSaveError] = useState<string | null>(null)
-  const [saveSuccess, setSaveSuccess] = useState(false)
+  const [displayName, setDisplayName] = useState('');
+  const [gender, setGender] = useState<BiologicalSex | null>(null);
+  const [birthYear, setBirthYear] = useState('');
+  const [bodyweightKg, setBodyweightKg] = useState('');
+  const [saveError, setSaveError] = useState<string | null>(null);
+  const [saveSuccess, setSaveSuccess] = useState(false);
 
   useEffect(() => {
-    if (!profile) return
-    setDisplayName(profile.display_name ?? '')
-    setGender(profile.biological_sex ?? null)
-    setBirthYear(profile.date_of_birth ? new Date(profile.date_of_birth).getFullYear().toString() : '')
-    setBodyweightKg(profile.bodyweight_kg != null ? profile.bodyweight_kg.toString() : '')
-  }, [profile])
+    if (!profile) return;
+    setDisplayName(profile.display_name ?? '');
+    setGender(profile.biological_sex ?? null);
+    setBirthYear(
+      profile.date_of_birth
+        ? new Date(profile.date_of_birth).getFullYear().toString()
+        : ''
+    );
+    setBodyweightKg(
+      profile.bodyweight_kg != null ? profile.bodyweight_kg.toString() : ''
+    );
+  }, [profile]);
 
-  const birthYearIsValid = isValidBirthYear(birthYear)
+  const birthYearIsValid = isValidBirthYear(birthYear);
 
   const isDirty = useMemo(() => {
-    const initialName = profile?.display_name ?? ''
-    const initialGender = profile?.biological_sex ?? null
+    const initialName = profile?.display_name ?? '';
+    const initialGender = profile?.biological_sex ?? null;
     const initialBirthYear = profile?.date_of_birth
       ? new Date(profile.date_of_birth).getFullYear().toString()
-      : ''
-    const initialBodyweight = profile?.bodyweight_kg != null ? profile.bodyweight_kg.toString() : ''
+      : '';
+    const initialBodyweight =
+      profile?.bodyweight_kg != null ? profile.bodyweight_kg.toString() : '';
 
     return (
       displayName !== initialName ||
       gender !== initialGender ||
       birthYear !== initialBirthYear ||
       bodyweightKg !== initialBodyweight
-    )
-  }, [profile, displayName, gender, birthYear, bodyweightKg])
+    );
+  }, [profile, displayName, gender, birthYear, bodyweightKg]);
 
   const saveMutation = useMutation({
     mutationFn: async () => {
-      const dobIso = birthYearToDobIso(birthYear)
+      const dobIso = birthYearToDobIso(birthYear);
 
-      const parsedBodyweight = bodyweightKg.trim() ? parseFloat(bodyweightKg) : null
+      const parsedBodyweight = bodyweightKg.trim()
+        ? parseFloat(bodyweightKg)
+        : null;
 
       await updateProfile({
         display_name: displayName.trim() ? displayName.trim() : null,
         biological_sex: gender,
         date_of_birth: dobIso,
-        bodyweight_kg: parsedBodyweight != null && !isNaN(parsedBodyweight) ? parsedBodyweight : null,
-      })
+        bodyweight_kg:
+          parsedBodyweight != null && !isNaN(parsedBodyweight)
+            ? parsedBodyweight
+            : null,
+      });
     },
     onSuccess: async () => {
-      setSaveSuccess(true)
-      setSaveError(null)
-      await queryClient.invalidateQueries({ queryKey: ['profile'] })
-      await queryClient.invalidateQueries({ queryKey: ['achievements', 'wilks-current'] })
-      await queryClient.invalidateQueries({ queryKey: ['achievements', 'wilks-history'] })
+      setSaveSuccess(true);
+      setSaveError(null);
+      await queryClient.invalidateQueries({ queryKey: ['profile'] });
+      await queryClient.invalidateQueries({
+        queryKey: ['achievements', 'wilks-current'],
+      });
+      await queryClient.invalidateQueries({
+        queryKey: ['achievements', 'wilks-history'],
+      });
     },
     onError: () => {
-      setSaveSuccess(false)
-      setSaveError('Failed to save profile. Please try again.')
+      setSaveSuccess(false);
+      setSaveError('Failed to save profile. Please try again.');
     },
-  })
+  });
 
   function handleSave() {
-    setSaveSuccess(false)
-    setSaveError(null)
+    setSaveSuccess(false);
+    setSaveError(null);
     if (!birthYearIsValid) {
-      setSaveError('Birth year is required and must be 4 digits.')
-      return
+      setSaveError('Birth year is required and must be 4 digits.');
+      return;
     }
     if (!gender) {
-      setSaveError('Please select a gender.')
-      return
+      setSaveError('Please select a gender.');
+      return;
     }
-    saveMutation.mutate()
+    saveMutation.mutate();
   }
 
   if (isLoading) {
     return (
       <SafeAreaView style={styles.container}>
-        <ActivityIndicator color={colors.primary} style={{ marginTop: spacing[10] }} />
+        <ActivityIndicator
+          color={colors.primary}
+          style={{ marginTop: spacing[10] }}
+        />
       </SafeAreaView>
-    )
+    );
   }
 
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        contentContainerStyle={styles.content}
+        showsVerticalScrollIndicator={false}
+      >
         <BackLink onPress={() => router.back()} />
 
         <Text style={styles.title}>Edit Profile</Text>
@@ -241,19 +275,27 @@ export default function ProfileScreen() {
             <FieldLabel label="Gender" styles={styles} />
             <View style={styles.sexRow}>
               {GENDER_OPTIONS.map((option) => {
-                const selected = gender === option.value
+                const selected = gender === option.value;
                 return (
                   <TouchableOpacity
                     key={option.value}
-                    style={[styles.sexOption, selected && styles.sexOptionSelected]}
+                    style={[
+                      styles.sexOption,
+                      selected && styles.sexOptionSelected,
+                    ]}
                     onPress={() => setGender(option.value)}
                     activeOpacity={0.8}
                   >
-                    <Text style={[styles.sexOptionText, selected && styles.sexOptionTextSelected]}>
+                    <Text
+                      style={[
+                        styles.sexOptionText,
+                        selected && styles.sexOptionTextSelected,
+                      ]}
+                    >
                       {option.label}
                     </Text>
                   </TouchableOpacity>
-                )
+                );
               })}
             </View>
           </View>
@@ -263,7 +305,9 @@ export default function ProfileScreen() {
             <TextInput
               style={[styles.input, !birthYearIsValid && styles.inputError]}
               value={birthYear}
-              onChangeText={(v) => setBirthYear(v.replace(/\D/g, '').slice(0, 4))}
+              onChangeText={(v) =>
+                setBirthYear(v.replace(/\D/g, '').slice(0, 4))
+              }
               placeholder="e.g. 1990"
               placeholderTextColor={colors.textTertiary}
               keyboardType="number-pad"
@@ -289,19 +333,25 @@ export default function ProfileScreen() {
         <TouchableOpacity
           style={[
             styles.saveButton,
-            (!isDirty || !birthYearIsValid || !gender || saveMutation.isPending) && styles.saveButtonDisabled,
+            (!isDirty ||
+              !birthYearIsValid ||
+              !gender ||
+              saveMutation.isPending) &&
+              styles.saveButtonDisabled,
           ]}
           onPress={handleSave}
-          disabled={!isDirty || !birthYearIsValid || !gender || saveMutation.isPending}
+          disabled={
+            !isDirty || !birthYearIsValid || !gender || saveMutation.isPending
+          }
           activeOpacity={0.8}
         >
-          {saveMutation.isPending
-            ? <ActivityIndicator color={colors.textInverse} />
-            : <Text style={styles.saveButtonText}>Save Changes</Text>
-          }
+          {saveMutation.isPending ? (
+            <ActivityIndicator color={colors.textInverse} />
+          ) : (
+            <Text style={styles.saveButtonText}>Save Changes</Text>
+          )}
         </TouchableOpacity>
       </ScrollView>
     </SafeAreaView>
-  )
+  );
 }
-

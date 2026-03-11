@@ -1,75 +1,89 @@
-import { ActivityIndicator, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
-import { SafeAreaView } from 'react-native-safe-area-context'
-import { router, useLocalSearchParams } from 'expo-router'
-import { useEffect, useMemo, useState } from 'react'
-import { useQueryClient } from '@tanstack/react-query'
+import { useEffect, useMemo, useState } from 'react';
+import {
+  ActivityIndicator,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 
-import { useCycleReview } from '@modules/cycle-review'
-import { createFormulaOverride, deactivateFormulaConfig } from '@modules/formula'
-import { useAuth } from '@modules/auth'
-import { classifyVolumeLevel } from '@modules/training-volume'
-import { getRatingStyles, getVolumeLevelColors } from '@modules/history'
-import type { FormulaConfig, MuscleGroup } from '@parakeet/training-engine'
-import type { ColorScheme } from '../../../theme'
-import { useTheme } from '../../../theme/ThemeContext'
-import { BackLink } from '../../../components/navigation/BackLink'
-import { MUSCLE_GROUPS_ORDER, MUSCLE_LABELS_ABBR } from '@shared/constants/training'
+import { useAuth } from '@modules/auth';
+import { useCycleReview } from '@modules/cycle-review';
+import {
+  createFormulaOverride,
+  deactivateFormulaConfig,
+} from '@modules/formula';
+import { getRatingStyles, getVolumeLevelColors } from '@modules/history';
+import { classifyVolumeLevel } from '@modules/training-volume';
+import type { FormulaConfig, MuscleGroup } from '@parakeet/training-engine';
+import {
+  MUSCLE_GROUPS_ORDER,
+  MUSCLE_LABELS_ABBR,
+} from '@shared/constants/training';
+import { useQueryClient } from '@tanstack/react-query';
+import { router, useLocalSearchParams } from 'expo-router';
+import { SafeAreaView } from 'react-native-safe-area-context';
+
+import { BackLink } from '../../../components/navigation/BackLink';
+import type { ColorScheme } from '../../../theme';
+import { useTheme } from '../../../theme/ThemeContext';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
-type ProgressRating = 'excellent' | 'good' | 'stalled' | 'concerning'
+type ProgressRating = 'excellent' | 'good' | 'stalled' | 'concerning';
 
 interface LiftProgress {
-  rating: ProgressRating
-  oneRmStart: number
-  oneRmEnd: number
-  narrative: string
+  rating: ProgressRating;
+  oneRmStart: number;
+  oneRmEnd: number;
+  narrative: string;
 }
 
 interface AuxInsight {
-  exercise: string
-  lift: string
-  explanation: string
+  exercise: string;
+  lift: string;
+  explanation: string;
 }
 
 interface FormulaSuggestion {
-  id: string
-  description: string
-  rationale: string
-  priority: 'high' | 'medium' | 'low'
-  overrides: Partial<FormulaConfig>
+  id: string;
+  description: string;
+  rationale: string;
+  priority: 'high' | 'medium' | 'low';
+  overrides: Partial<FormulaConfig>;
 }
 
 interface StructuralSuggestion {
-  description: string
-  developerNote?: string
+  description: string;
+  developerNote?: string;
 }
 
 interface CycleReviewData {
-  overallAssessment?: string
-  progressByLift?: Partial<Record<string, LiftProgress>>
+  overallAssessment?: string;
+  progressByLift?: Partial<Record<string, LiftProgress>>;
   auxiliaryInsights?: {
-    mostCorrelated?: AuxInsight[]
-    leastEffective?: AuxInsight[]
-    recommendedChanges?: string[]
-  }
-  weeklyVolume?: Record<string, Record<MuscleGroup, number>>
-  formulaSuggestions?: FormulaSuggestion[]
-  nextCycleRecommendations?: string
-  structuralSuggestions?: StructuralSuggestion[]
+    mostCorrelated?: AuxInsight[];
+    leastEffective?: AuxInsight[];
+    recommendedChanges?: string[];
+  };
+  weeklyVolume?: Record<string, Record<MuscleGroup, number>>;
+  formulaSuggestions?: FormulaSuggestion[];
+  nextCycleRecommendations?: string;
+  structuralSuggestions?: StructuralSuggestion[];
   meta?: {
-    completedSessions?: number
-    totalSessions?: number
-    cycleStart?: string
-    cycleEnd?: string
-    wilksStart?: number
-    wilksEnd?: number
-  }
+    completedSessions?: number;
+    totalSessions?: number;
+    cycleStart?: string;
+    cycleEnd?: string;
+    wilksStart?: number;
+    wilksEnd?: number;
+  };
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
-const MUSCLES = MUSCLE_GROUPS_ORDER
+const MUSCLES = MUSCLE_GROUPS_ORDER;
 
 function buildStyles(colors: ColorScheme) {
   return StyleSheet.create({
@@ -90,8 +104,18 @@ function buildStyles(colors: ColorScheme) {
       paddingHorizontal: 32,
       gap: 12,
     },
-    loadingTitle: { fontSize: 18, fontWeight: '700', color: colors.text, textAlign: 'center' },
-    loadingSubtitle: { fontSize: 14, color: colors.textSecondary, textAlign: 'center', lineHeight: 20 },
+    loadingTitle: {
+      fontSize: 18,
+      fontWeight: '700',
+      color: colors.text,
+      textAlign: 'center',
+    },
+    loadingSubtitle: {
+      fontSize: 14,
+      color: colors.textSecondary,
+      textAlign: 'center',
+      lineHeight: 20,
+    },
     retryButton: {
       marginTop: 16,
       backgroundColor: colors.primary,
@@ -144,18 +168,34 @@ function buildStyles(colors: ColorScheme) {
       padding: 14,
       gap: 4,
     },
-    liftCardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+    liftCardHeader: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+    },
     liftName: { fontSize: 16, fontWeight: '700', color: colors.text },
     ratingBadge: { borderRadius: 8, paddingHorizontal: 10, paddingVertical: 4 },
     ratingText: { fontSize: 12, fontWeight: '600' },
     liftDelta: { fontSize: 14, color: colors.textSecondary, fontWeight: '500' },
-    liftNarrative: { fontSize: 13, color: colors.textSecondary, lineHeight: 18 },
+    liftNarrative: {
+      fontSize: 13,
+      color: colors.textSecondary,
+      lineHeight: 18,
+    },
 
     // Auxiliary
-    auxSubtitle: { fontSize: 13, fontWeight: '600', color: colors.textSecondary },
+    auxSubtitle: {
+      fontSize: 13,
+      fontWeight: '600',
+      color: colors.textSecondary,
+    },
     auxItem: { paddingLeft: 8, gap: 2 },
     auxExercise: { fontSize: 14, fontWeight: '600', color: colors.text },
-    auxExplanation: { fontSize: 13, color: colors.textSecondary, lineHeight: 18 },
+    auxExplanation: {
+      fontSize: 13,
+      color: colors.textSecondary,
+      lineHeight: 18,
+    },
     auxChange: { fontSize: 14, color: colors.textSecondary, lineHeight: 20 },
 
     // Heatmap
@@ -170,7 +210,11 @@ function buildStyles(colors: ColorScheme) {
       borderWidth: 1,
       borderColor: colors.bgMuted,
     },
-    heatmapHeader: { fontSize: 9, fontWeight: '600', color: colors.textSecondary },
+    heatmapHeader: {
+      fontSize: 9,
+      fontWeight: '600',
+      color: colors.textSecondary,
+    },
     heatmapValue: { fontSize: 10, color: colors.textSecondary },
 
     // Formula suggestions
@@ -181,11 +225,33 @@ function buildStyles(colors: ColorScheme) {
       padding: 14,
       gap: 8,
     },
-    suggestionHeader: { flexDirection: 'row', alignItems: 'flex-start', gap: 8 },
-    suggestionDescription: { fontSize: 14, fontWeight: '600', color: colors.text, flex: 1 },
-    priorityBadge: { borderRadius: 6, paddingHorizontal: 8, paddingVertical: 2 },
-    priorityText: { fontSize: 11, fontWeight: '600', color: colors.textSecondary, textTransform: 'capitalize' },
-    suggestionRationale: { fontSize: 13, color: colors.textSecondary, lineHeight: 18 },
+    suggestionHeader: {
+      flexDirection: 'row',
+      alignItems: 'flex-start',
+      gap: 8,
+    },
+    suggestionDescription: {
+      fontSize: 14,
+      fontWeight: '600',
+      color: colors.text,
+      flex: 1,
+    },
+    priorityBadge: {
+      borderRadius: 6,
+      paddingHorizontal: 8,
+      paddingVertical: 2,
+    },
+    priorityText: {
+      fontSize: 11,
+      fontWeight: '600',
+      color: colors.textSecondary,
+      textTransform: 'capitalize',
+    },
+    suggestionRationale: {
+      fontSize: 13,
+      color: colors.textSecondary,
+      lineHeight: 18,
+    },
     suggestionActions: { flexDirection: 'row', gap: 10 },
     acceptButton: {
       flex: 1,
@@ -194,7 +260,11 @@ function buildStyles(colors: ColorScheme) {
       paddingVertical: 10,
       alignItems: 'center',
     },
-    acceptButtonText: { fontSize: 14, fontWeight: '600', color: colors.textInverse },
+    acceptButtonText: {
+      fontSize: 14,
+      fontWeight: '600',
+      color: colors.textInverse,
+    },
     dismissButton: {
       flex: 1,
       borderWidth: 1,
@@ -221,7 +291,11 @@ function buildStyles(colors: ColorScheme) {
       backgroundColor: colors.success,
       borderRadius: 10,
     },
-    startNextButtonText: { fontSize: 14, fontWeight: '600', color: colors.textInverse },
+    startNextButtonText: {
+      fontSize: 14,
+      fontWeight: '600',
+      color: colors.textInverse,
+    },
 
     // Dev section
     devSection: {
@@ -232,24 +306,31 @@ function buildStyles(colors: ColorScheme) {
       gap: 8,
       backgroundColor: colors.bgSurface,
     },
-    devSectionTitle: { fontSize: 14, fontWeight: '700', color: colors.textSecondary },
+    devSectionTitle: {
+      fontSize: 14,
+      fontWeight: '700',
+      color: colors.textSecondary,
+    },
     devNote: { fontSize: 12, color: colors.textTertiary, fontStyle: 'italic' },
     devItem: { paddingLeft: 8, gap: 2 },
     devItemText: { fontSize: 13, color: colors.textSecondary, lineHeight: 18 },
     devItemNote: { fontSize: 12, color: colors.textTertiary },
-  })
+  });
 }
 
 // ── Screen ────────────────────────────────────────────────────────────────────
 
 export default function CycleReviewScreen() {
-  const { colors } = useTheme()
-  const styles = useMemo(() => buildStyles(colors), [colors])
-  const ratingStyles = useMemo(() => getRatingStyles(colors), [colors])
-  const volumeLevelColors = useMemo(() => getVolumeLevelColors(colors), [colors])
-  const { programId } = useLocalSearchParams<{ programId: string }>()
-  const { user } = useAuth()
-  const queryClient = useQueryClient()
+  const { colors } = useTheme();
+  const styles = useMemo(() => buildStyles(colors), [colors]);
+  const ratingStyles = useMemo(() => getRatingStyles(colors), [colors]);
+  const volumeLevelColors = useMemo(
+    () => getVolumeLevelColors(colors),
+    [colors]
+  );
+  const { programId } = useLocalSearchParams<{ programId: string }>();
+  const { user } = useAuth();
+  const queryClient = useQueryClient();
   const {
     data: review,
     isLoading,
@@ -260,31 +341,31 @@ export default function CycleReviewScreen() {
     triggerReview,
     isTriggeringReview,
     triggerError,
-  } = useCycleReview(programId)
+  } = useCycleReview(programId);
 
-  const [showRetry, setShowRetry] = useState(false)
+  const [showRetry, setShowRetry] = useState(false);
 
   useEffect(() => {
-    if (review) return
-    const timer = setTimeout(() => setShowRetry(true), 60_000)
-    return () => clearTimeout(timer)
-  }, [review])
+    if (review) return;
+    const timer = setTimeout(() => setShowRetry(true), 60_000);
+    return () => clearTimeout(timer);
+  }, [review]);
 
-  const llmData: CycleReviewData = (review ?? {}) as CycleReviewData
+  const llmData: CycleReviewData = (review ?? {}) as CycleReviewData;
 
   async function handleAcceptSuggestion(s: FormulaSuggestion) {
-    if (!user) return
+    if (!user) return;
     await createFormulaOverride(user.id, {
       overrides: s.overrides,
       source: 'ai_suggestion',
       ai_rationale: s.rationale,
-    })
-    queryClient.invalidateQueries({ queryKey: ['formula'] })
+    });
+    queryClient.invalidateQueries({ queryKey: ['formula'] });
   }
 
   async function handleDismissSuggestion(id: string) {
-    if (!user) return
-    await deactivateFormulaConfig(id, user.id)
+    if (!user) return;
+    await deactivateFormulaConfig(id, user.id);
   }
 
   // ── Loading state ──────────────────────────────────────────────────────────
@@ -310,13 +391,15 @@ export default function CycleReviewScreen() {
               activeOpacity={0.8}
             >
               <Text style={styles.generateButtonText}>
-                {isTriggeringReview ? 'Generating…' : 'Review not ready — tap to retry'}
+                {isTriggeringReview
+                  ? 'Generating…'
+                  : 'Review not ready — tap to retry'}
               </Text>
             </TouchableOpacity>
           )}
         </View>
       </SafeAreaView>
-    )
+    );
   }
 
   if (isError) {
@@ -343,7 +426,7 @@ export default function CycleReviewScreen() {
           </TouchableOpacity>
         </View>
       </SafeAreaView>
-    )
+    );
   }
 
   if (!review) {
@@ -383,13 +466,13 @@ export default function CycleReviewScreen() {
           </TouchableOpacity>
         </View>
       </SafeAreaView>
-    )
+    );
   }
 
-  const progress = llmData.progressByLift ?? {}
-  const aux      = llmData.auxiliaryInsights ?? {}
-  const formulas = llmData.formulaSuggestions ?? []
-  const meta     = llmData.meta ?? {}
+  const progress = llmData.progressByLift ?? {};
+  const aux = llmData.auxiliaryInsights ?? {};
+  const formulas = llmData.formulaSuggestions ?? [];
+  const meta = llmData.meta ?? {};
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -409,16 +492,21 @@ export default function CycleReviewScreen() {
             <View style={styles.summaryMeta}>
               {meta.completedSessions != null && meta.totalSessions != null && (
                 <Text style={styles.summaryMetaText}>
-                  {meta.completedSessions}/{meta.totalSessions} sessions completed
+                  {meta.completedSessions}/{meta.totalSessions} sessions
+                  completed
                 </Text>
               )}
               {meta.wilksStart != null && meta.wilksEnd != null && (
                 <Text style={styles.summaryMetaText}>
-                  WILKS {meta.wilksStart} → {meta.wilksEnd} ({meta.wilksEnd > meta.wilksStart ? '+' : ''}{(meta.wilksEnd - meta.wilksStart).toFixed(1)})
+                  WILKS {meta.wilksStart} → {meta.wilksEnd} (
+                  {meta.wilksEnd > meta.wilksStart ? '+' : ''}
+                  {(meta.wilksEnd - meta.wilksStart).toFixed(1)})
                 </Text>
               )}
             </View>
-            <Text style={styles.overallAssessment}>{llmData.overallAssessment}</Text>
+            <Text style={styles.overallAssessment}>
+              {llmData.overallAssessment}
+            </Text>
           </View>
         )}
 
@@ -427,44 +515,56 @@ export default function CycleReviewScreen() {
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Lift Progress</Text>
             {(['squat', 'bench', 'deadlift'] as string[]).map((lift) => {
-              const lp = progress[lift]
-              if (!lp) return null
-              const rs = ratingStyles[lp.rating] ?? ratingStyles.good
-              const delta = lp.oneRmEnd - lp.oneRmStart
+              const lp = progress[lift];
+              if (!lp) return null;
+              const rs = ratingStyles[lp.rating] ?? ratingStyles.good;
+              const delta = lp.oneRmEnd - lp.oneRmStart;
               return (
                 <View key={lift} style={styles.liftCard}>
                   <View style={styles.liftCardHeader}>
                     <Text style={styles.liftName}>
                       {lift.charAt(0).toUpperCase() + lift.slice(1)}
                     </Text>
-                    <View style={[styles.ratingBadge, { backgroundColor: rs.bg }]}>
-                      <Text style={[styles.ratingText, { color: rs.text }]}>{rs.label}</Text>
+                    <View
+                      style={[styles.ratingBadge, { backgroundColor: rs.bg }]}
+                    >
+                      <Text style={[styles.ratingText, { color: rs.text }]}>
+                        {rs.label}
+                      </Text>
                     </View>
                   </View>
                   <Text style={styles.liftDelta}>
-                    {lp.oneRmStart} kg → {lp.oneRmEnd} kg ({delta >= 0 ? '+' : ''}{delta} kg)
+                    {lp.oneRmStart} kg → {lp.oneRmEnd} kg (
+                    {delta >= 0 ? '+' : ''}
+                    {delta} kg)
                   </Text>
                   {lp.narrative && (
                     <Text style={styles.liftNarrative}>{lp.narrative}</Text>
                   )}
                 </View>
-              )
+              );
             })}
           </View>
         )}
 
         {/* 3. Auxiliary insights */}
-        {(aux.mostCorrelated?.length || aux.leastEffective?.length || aux.recommendedChanges?.length) ? (
+        {aux.mostCorrelated?.length ||
+        aux.leastEffective?.length ||
+        aux.recommendedChanges?.length ? (
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Auxiliary Insights</Text>
 
             {aux.mostCorrelated?.length ? (
               <>
-                <Text style={styles.auxSubtitle}>Most correlated with progress:</Text>
+                <Text style={styles.auxSubtitle}>
+                  Most correlated with progress:
+                </Text>
                 {aux.mostCorrelated.map((item, i) => (
                   <View key={i} style={styles.auxItem}>
                     <Text style={styles.auxExercise}>{item.exercise}</Text>
-                    <Text style={styles.auxExplanation}>{item.explanation}</Text>
+                    <Text style={styles.auxExplanation}>
+                      {item.explanation}
+                    </Text>
                   </View>
                 ))}
               </>
@@ -472,11 +572,15 @@ export default function CycleReviewScreen() {
 
             {aux.leastEffective?.length ? (
               <>
-                <Text style={[styles.auxSubtitle, { marginTop: 12 }]}>Least effective:</Text>
+                <Text style={[styles.auxSubtitle, { marginTop: 12 }]}>
+                  Least effective:
+                </Text>
                 {aux.leastEffective.map((item, i) => (
                   <View key={i} style={styles.auxItem}>
                     <Text style={styles.auxExercise}>{item.exercise}</Text>
-                    <Text style={styles.auxExplanation}>{item.explanation}</Text>
+                    <Text style={styles.auxExplanation}>
+                      {item.explanation}
+                    </Text>
                   </View>
                 ))}
               </>
@@ -484,9 +588,13 @@ export default function CycleReviewScreen() {
 
             {aux.recommendedChanges?.length ? (
               <>
-                <Text style={[styles.auxSubtitle, { marginTop: 12 }]}>Recommendations:</Text>
+                <Text style={[styles.auxSubtitle, { marginTop: 12 }]}>
+                  Recommendations:
+                </Text>
                 {aux.recommendedChanges.map((change, i) => (
-                  <Text key={i} style={styles.auxChange}>• {change}</Text>
+                  <Text key={i} style={styles.auxChange}>
+                    • {change}
+                  </Text>
                 ))}
               </>
             ) : null}
@@ -494,60 +602,90 @@ export default function CycleReviewScreen() {
         ) : null}
 
         {/* 4. Volume heatmap */}
-        {llmData.weeklyVolume && Object.keys(llmData.weeklyVolume).length > 0 && (
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Volume Heatmap</Text>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-              <View>
-                {/* Header */}
-                <View style={styles.heatmapRow}>
-                  <View style={styles.heatmapWeekCell} />
-                  {MUSCLES.map((m) => (
-                    <View key={m} style={styles.heatmapCell}>
-                      <Text style={styles.heatmapHeader}>{MUSCLE_LABELS_ABBR[m]}</Text>
+        {llmData.weeklyVolume &&
+          Object.keys(llmData.weeklyVolume).length > 0 && (
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>Volume Heatmap</Text>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                <View>
+                  {/* Header */}
+                  <View style={styles.heatmapRow}>
+                    <View style={styles.heatmapWeekCell} />
+                    {MUSCLES.map((m) => (
+                      <View key={m} style={styles.heatmapCell}>
+                        <Text style={styles.heatmapHeader}>
+                          {MUSCLE_LABELS_ABBR[m]}
+                        </Text>
+                      </View>
+                    ))}
+                  </View>
+                  {/* Data rows */}
+                  {Object.entries(llmData.weeklyVolume).map(([week, vol]) => (
+                    <View key={week} style={styles.heatmapRow}>
+                      <View style={styles.heatmapWeekCell}>
+                        <Text style={styles.heatmapWeek}>W{week}</Text>
+                      </View>
+                      {MUSCLES.map((m) => {
+                        const sets =
+                          (vol as Record<MuscleGroup, number>)[m] ?? 0;
+                        return (
+                          <View
+                            key={m}
+                            style={[
+                              styles.heatmapCell,
+                              {
+                                backgroundColor:
+                                  volumeLevelColors[
+                                    classifyVolumeLevel(sets, 6, 20)
+                                  ],
+                              },
+                            ]}
+                          >
+                            <Text style={styles.heatmapValue}>
+                              {sets || ''}
+                            </Text>
+                          </View>
+                        );
+                      })}
                     </View>
                   ))}
                 </View>
-                {/* Data rows */}
-                {Object.entries(llmData.weeklyVolume).map(([week, vol]) => (
-                  <View key={week} style={styles.heatmapRow}>
-                    <View style={styles.heatmapWeekCell}>
-                      <Text style={styles.heatmapWeek}>W{week}</Text>
-                    </View>
-                    {MUSCLES.map((m) => {
-                      const sets = (vol as Record<MuscleGroup, number>)[m] ?? 0
-                      return (
-                        <View
-                          key={m}
-                          style={[styles.heatmapCell, { backgroundColor: volumeLevelColors[classifyVolumeLevel(sets, 6, 20)] }]}
-                        >
-                          <Text style={styles.heatmapValue}>{sets || ''}</Text>
-                        </View>
-                      )
-                    })}
-                  </View>
-                ))}
-              </View>
-            </ScrollView>
-          </View>
-        )}
+              </ScrollView>
+            </View>
+          )}
 
         {/* 5. Formula suggestions */}
         {formulas.length > 0 && (
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Formula Suggestions</Text>
             {formulas.map((s, i) => {
-              const priorityColors = { high: colors.dangerMuted, medium: colors.warningMuted, low: colors.bgMuted } as const
+              const priorityColors = {
+                high: colors.dangerMuted,
+                medium: colors.warningMuted,
+                low: colors.bgMuted,
+              } as const;
               return (
                 <View key={i} style={styles.suggestionCard}>
                   <View style={styles.suggestionHeader}>
-                    <Text style={styles.suggestionDescription}>{s.description}</Text>
-                    <View style={[styles.priorityBadge, { backgroundColor: priorityColors[s.priority] ?? colors.bgMuted }]}>
+                    <Text style={styles.suggestionDescription}>
+                      {s.description}
+                    </Text>
+                    <View
+                      style={[
+                        styles.priorityBadge,
+                        {
+                          backgroundColor:
+                            priorityColors[s.priority] ?? colors.bgMuted,
+                        },
+                      ]}
+                    >
                       <Text style={styles.priorityText}>{s.priority}</Text>
                     </View>
                   </View>
                   {s.rationale && (
-                    <Text style={styles.suggestionRationale}>{s.rationale}</Text>
+                    <Text style={styles.suggestionRationale}>
+                      {s.rationale}
+                    </Text>
                   )}
                   <View style={styles.suggestionActions}>
                     <TouchableOpacity
@@ -566,7 +704,7 @@ export default function CycleReviewScreen() {
                     </TouchableOpacity>
                   </View>
                 </View>
-              )
+              );
             })}
           </View>
         )}
@@ -575,7 +713,9 @@ export default function CycleReviewScreen() {
         {llmData.nextCycleRecommendations && (
           <View style={styles.nextCycleCard}>
             <Text style={styles.nextCycleTitle}>Next Cycle</Text>
-            <Text style={styles.nextCycleText}>{llmData.nextCycleRecommendations}</Text>
+            <Text style={styles.nextCycleText}>
+              {llmData.nextCycleRecommendations}
+            </Text>
             <TouchableOpacity
               style={styles.startNextButton}
               onPress={() => router.push('/(auth)/onboarding/program-settings')}
@@ -590,7 +730,9 @@ export default function CycleReviewScreen() {
         {__DEV__ && (llmData.structuralSuggestions?.length ?? 0) > 0 && (
           <View style={styles.devSection}>
             <Text style={styles.devSectionTitle}>Developer Suggestions</Text>
-            <Text style={styles.devNote}>These items require code changes — for developer review only</Text>
+            <Text style={styles.devNote}>
+              These items require code changes — for developer review only
+            </Text>
             {llmData.structuralSuggestions!.map((s, i) => (
               <View key={i} style={styles.devItem}>
                 <Text style={styles.devItemText}>{s.description}</Text>
@@ -603,5 +745,5 @@ export default function CycleReviewScreen() {
         )}
       </ScrollView>
     </SafeAreaView>
-  )
+  );
 }

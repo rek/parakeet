@@ -1,10 +1,19 @@
 import { useCallback, useRef, useState } from 'react';
+
+import type { RestTimerPrefs } from '@modules/settings';
 import type { Lift } from '@parakeet/shared-types';
 import { adaptRemainingPlan } from '@parakeet/training-engine';
-import type { RestTimerPrefs } from '@modules/settings';
 import { useSessionStore } from '@platform/store/sessionStore';
-import type { AuxiliaryWork, PostRestState, RestRecommendations } from '../model/types';
-import { DEFAULT_AUX_REST_SECONDS, DEFAULT_MAIN_REST_SECONDS } from '../model/types';
+
+import type {
+  AuxiliaryWork,
+  PostRestState,
+  RestRecommendations,
+} from '../model/types';
+import {
+  DEFAULT_AUX_REST_SECONDS,
+  DEFAULT_MAIN_REST_SECONDS,
+} from '../model/types';
 import { computeDismissResult } from '../utils/computeDismissResult';
 
 export function useSetCompletionFlow({
@@ -35,9 +44,13 @@ export function useSetCompletionFlow({
     setAdaptation,
   } = useSessionStore();
 
-  const [postRestState, setPostRestState] = useState<PostRestState | null>(null);
+  const [postRestState, setPostRestState] = useState<PostRestState | null>(
+    null
+  );
   const resetIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const [pendingRpeSetNumber, setPendingRpeSetNumber] = useState<number | null>(null);
+  const [pendingRpeSetNumber, setPendingRpeSetNumber] = useState<number | null>(
+    null
+  );
   const [pendingAuxRpe, setPendingAuxRpe] = useState<{
     exercise: string;
     setNumber: number;
@@ -214,8 +227,13 @@ export function useSetCompletionFlow({
   }
 
   function handleLiftComplete() {
-    const { totalRest, prevSetNumber, nextSetNumber, auxExercise, auxSetNumber } =
-      dismissPostRest();
+    const {
+      totalRest,
+      prevSetNumber,
+      nextSetNumber,
+      auxExercise,
+      auxSetNumber,
+    } = dismissPostRest();
 
     if (auxExercise !== null && auxSetNumber !== null) {
       // Auxiliary lift complete
@@ -317,7 +335,8 @@ export function useSetCompletionFlow({
         const completedSets = state.actualSets
           .filter((s) => s.is_completed)
           .map((s) => ({
-            planned_reps: state.plannedSets[s.set_number - 1]?.reps ?? s.reps_completed,
+            planned_reps:
+              state.plannedSets[s.set_number - 1]?.reps ?? s.reps_completed,
             actual_reps: s.reps_completed,
             weight_kg: s.weight_grams / 1000,
           }));
@@ -325,13 +344,19 @@ export function useSetCompletionFlow({
         const startIdx = prevSetNumber ?? 0;
         const remainingSets = state.plannedSets
           .slice(startIdx)
-          .reduce<{ set_number: number; weight_kg: number; reps: number }[]>((acc, s, idx) => {
+          .reduce<
+            { set_number: number; weight_kg: number; reps: number }[]
+          >((acc, s, idx) => {
             const setNumber = startIdx + idx + 1;
             const isCompleted = state.actualSets.some(
               (a) => a.set_number === setNumber && a.is_completed
             );
             if (!isCompleted) {
-              acc.push({ set_number: setNumber, weight_kg: s.weight_kg, reps: s.reps });
+              acc.push({
+                set_number: setNumber,
+                weight_kg: s.weight_kg,
+                reps: s.reps,
+              });
             }
             return acc;
           }, []);

@@ -1,16 +1,24 @@
-import { useMemo } from 'react'
-import { ActivityIndicator, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
-import { SafeAreaView } from 'react-native-safe-area-context'
-import { router } from 'expo-router'
-import { useQuery } from '@tanstack/react-query'
+import { useMemo } from 'react';
+import {
+  ActivityIndicator,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 
-import { useAuth } from '@modules/auth'
-import { getWilksHistory } from '@modules/achievements'
-import { getCurrentWilksSnapshot, WILKS_CONTEXT } from '@modules/wilks'
-import type { ColorScheme } from '../../theme'
-import { useTheme } from '../../theme/ThemeContext'
-import { BackLink } from '../../components/navigation/BackLink'
-import { formatDate } from '@shared/utils/date'
+import { getWilksHistory } from '@modules/achievements';
+import { useAuth } from '@modules/auth';
+import { getCurrentWilksSnapshot, WILKS_CONTEXT } from '@modules/wilks';
+import { formatDate } from '@shared/utils/date';
+import { useQuery } from '@tanstack/react-query';
+import { router } from 'expo-router';
+import { SafeAreaView } from 'react-native-safe-area-context';
+
+import { BackLink } from '../../components/navigation/BackLink';
+import type { ColorScheme } from '../../theme';
+import { useTheme } from '../../theme/ThemeContext';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -150,31 +158,31 @@ function buildStyles(colors: ColorScheme) {
       fontWeight: '600',
       color: colors.text,
     },
-  })
+  });
 }
 
 // ── Screen ────────────────────────────────────────────────────────────────────
 
 export default function WilksScreen() {
-  const { colors } = useTheme()
-  const styles = useMemo(() => buildStyles(colors), [colors])
-  const { user } = useAuth()
+  const { colors } = useTheme();
+  const styles = useMemo(() => buildStyles(colors), [colors]);
+  const { user } = useAuth();
 
   const historyQuery = useQuery({
     queryKey: ['achievements', 'wilks-history', user?.id],
     queryFn: () => getWilksHistory(user!.id),
     enabled: !!user?.id,
     staleTime: 10 * 60 * 1000,
-  })
+  });
 
   const currentQuery = useQuery({
     queryKey: ['achievements', 'wilks-current', user?.id],
     queryFn: () => getCurrentWilksSnapshot(user!.id),
     enabled: !!user?.id,
     staleTime: 5 * 60 * 1000,
-  })
+  });
 
-  const isLoading = historyQuery.isLoading || currentQuery.isLoading
+  const isLoading = historyQuery.isLoading || currentQuery.isLoading;
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -198,7 +206,9 @@ export default function WilksScreen() {
             {currentQuery.data && (
               <View style={styles.currentCard}>
                 <Text style={styles.currentScoreLabel}>Current Score</Text>
-                <Text style={styles.currentScore}>{currentQuery.data.wilks}</Text>
+                <Text style={styles.currentScore}>
+                  {currentQuery.data.wilks}
+                </Text>
                 <Text style={styles.currentMeta}>
                   Bodyweight: {currentQuery.data.bodyweightKg} kg
                 </Text>
@@ -223,7 +233,9 @@ export default function WilksScreen() {
                   ].map(({ lift, kg }) => (
                     <View key={lift} style={styles.liftRow}>
                       <Text style={styles.liftRowLabel}>{lift}</Text>
-                      <Text style={styles.liftRowValue}>{kg.toFixed(1)} kg est. 1RM</Text>
+                      <Text style={styles.liftRowValue}>
+                        {kg.toFixed(1)} kg est. 1RM
+                      </Text>
                     </View>
                   ))}
                 </View>
@@ -237,9 +249,15 @@ export default function WilksScreen() {
                 <View style={styles.card}>
                   {historyQuery.data!.map((point) => (
                     <View key={point.cycleNumber} style={styles.historyRow}>
-                      <Text style={styles.historyLabel}>Cycle {point.cycleNumber}</Text>
-                      <Text style={styles.historyDate}>{formatDate(point.date)}</Text>
-                      <Text style={styles.historyScore}>{point.wilksScore}</Text>
+                      <Text style={styles.historyLabel}>
+                        Cycle {point.cycleNumber}
+                      </Text>
+                      <Text style={styles.historyDate}>
+                        {formatDate(point.date)}
+                      </Text>
+                      <Text style={styles.historyScore}>
+                        {point.wilksScore}
+                      </Text>
                     </View>
                   ))}
                 </View>
@@ -260,5 +278,5 @@ export default function WilksScreen() {
         )}
       </ScrollView>
     </SafeAreaView>
-  )
+  );
 }

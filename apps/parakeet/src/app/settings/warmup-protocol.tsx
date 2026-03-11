@@ -8,20 +8,27 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+
 import { useAuth } from '@modules/auth';
 import { getProfile } from '@modules/profile';
 import { getCurrentOneRmKg } from '@modules/program';
-import { getAllWarmupConfigs, updateWarmupConfig, WARMUP_PRESETS } from '@modules/settings';
+import {
+  getAllWarmupConfigs,
+  updateWarmupConfig,
+  WARMUP_PRESETS,
+} from '@modules/settings';
 import type { Lift } from '@parakeet/shared-types';
-import { estimateWorkingWeight, generateWarmupSets, getPresetSteps } from '@parakeet/training-engine';
-import type {
-  WarmupProtocol,
-  WarmupStep,
+import {
+  estimateWorkingWeight,
+  generateWarmupSets,
+  getPresetSteps,
 } from '@parakeet/training-engine';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import type { WarmupProtocol, WarmupStep } from '@parakeet/training-engine';
 import { qk } from '@platform/query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
+
 import { BackLink } from '../../components/navigation/BackLink';
 import type { ColorScheme } from '../../theme';
 import { useTheme } from '../../theme/ThemeContext';
@@ -91,7 +98,11 @@ function buildStyles(colors: ColorScheme) {
       borderColor: colors.primary,
       backgroundColor: colors.primaryMuted,
     },
-    presetLabel: { fontSize: 14, fontWeight: '600', color: colors.textSecondary },
+    presetLabel: {
+      fontSize: 14,
+      fontWeight: '600',
+      color: colors.textSecondary,
+    },
     presetLabelSelected: { color: colors.primary },
     presetDescription: { fontSize: 12, color: colors.textTertiary },
 
@@ -145,7 +156,11 @@ function buildStyles(colors: ColorScheme) {
       borderRadius: 8,
       borderStyle: 'dashed',
     },
-    addStepText: { fontSize: 13, color: colors.textSecondary, fontWeight: '500' },
+    addStepText: {
+      fontSize: 13,
+      color: colors.textSecondary,
+      fontWeight: '500',
+    },
 
     // Preview
     preview: {
@@ -243,7 +258,12 @@ interface WarmupPreviewProps {
   styles: Styles;
 }
 
-function WarmupPreview({ protocol, oneRmKg, lift, styles }: WarmupPreviewProps) {
+function WarmupPreview({
+  protocol,
+  oneRmKg,
+  lift,
+  styles,
+}: WarmupPreviewProps) {
   if (!oneRmKg) return null;
   const workingWeight = estimateWorkingWeight(oneRmKg);
   const sets = generateWarmupSets(workingWeight, protocol);
@@ -367,7 +387,12 @@ function LiftSection({
       )}
 
       {/* Preview */}
-      <WarmupPreview protocol={protocol} oneRmKg={oneRmKg} lift={lift} styles={styles} />
+      <WarmupPreview
+        protocol={protocol}
+        oneRmKg={oneRmKg}
+        lift={lift}
+        styles={styles}
+      />
     </View>
   );
 }
@@ -393,7 +418,8 @@ export default function WarmupProtocolScreen() {
 
   const { data: warmupData, isLoading } = useQuery({
     queryKey: ['warmup', 'configs', user?.id],
-    queryFn: () => getAllWarmupConfigs(user!.id, profile?.biological_sex ?? undefined),
+    queryFn: () =>
+      getAllWarmupConfigs(user!.id, profile?.biological_sex ?? undefined),
     enabled: !!user?.id,
   });
 

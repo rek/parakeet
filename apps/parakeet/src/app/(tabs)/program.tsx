@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -7,6 +8,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+
 import { useAuth } from '@modules/auth';
 import { getFormulaConfig } from '@modules/formula';
 import { getRecentLiftHistory } from '@modules/history';
@@ -19,16 +21,17 @@ import {
   useActiveProgram,
 } from '@modules/program';
 import type { ProgramSession } from '@modules/program';
-import { useTodaySession } from '@modules/session';
-import { qk } from '@platform/query';
-import { calculateSets } from '@parakeet/training-engine';
+import { useInProgressSession, useTodaySession } from '@modules/session';
 import type { IntensityType, Lift } from '@parakeet/shared-types';
-import { useMemo } from 'react';
+import { calculateSets } from '@parakeet/training-engine';
+import { qk } from '@platform/query';
+import { useSessionStore } from '@platform/store/sessionStore';
+import { capitalize } from '@shared/utils/string';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
+
 import { WeekRow } from '../../components/program/WeekRow';
-import { capitalize } from '@shared/utils/string';
 import { spacing, typography } from '../../theme';
 import type { ColorScheme } from '../../theme';
 import { useTheme } from '../../theme/ThemeContext';
@@ -179,6 +182,7 @@ export default function ProgramScreen() {
   const styles = useMemo(() => buildStyles(colors), [colors]);
   const { data: program, isLoading } = useActiveProgram();
   const { data: todaySession } = useTodaySession();
+  const { data: activeSession } = useInProgressSession();
   const { user, loading: authLoading } = useAuth();
   const queryClient = useQueryClient();
 
@@ -216,6 +220,24 @@ export default function ProgramScreen() {
     onSuccess: () =>
       queryClient.invalidateQueries({ queryKey: qk.program.active(user?.id) }),
   });
+
+  function handleSessionPress(session: ProgramSession) {
+    if (session.status === 'in_progress') {
+      const jit = useSessionStore.getState().cachedJitData;
+      router.push({
+        pathname: '/session/[sessionId]',
+        params: {
+          sessionId: session.id,
+          ...(jit ? { jitData: jit } : {}),
+        },
+      });
+      return;
+    }
+    router.push({
+      pathname: '/session/soreness',
+      params: { sessionId: session.id },
+    });
+  }
 
   function confirmEndProgram() {
     if (!program) return;
@@ -263,12 +285,19 @@ export default function ProgramScreen() {
   if (isUnending) {
     const counter = program.unending_session_counter ?? 0;
 
-    const blockNum = ((todaySession?.block_number ?? 1) as 1 | 2 | 3);
-    const intensityType = (todaySession?.intensity_type ?? 'heavy') as IntensityType;
+    const blockNum = (todaySession?.block_number ?? 1) as 1 | 2 | 3;
+    const intensityType = (todaySession?.intensity_type ??
+      'heavy') as IntensityType;
     let estimatedSets = null;
     try {
       if (oneRmKg && formulaConfig && todaySession && nextLift) {
-        estimatedSets = calculateSets(nextLift, intensityType, blockNum, oneRmKg, formulaConfig);
+        estimatedSets = calculateSets(
+          nextLift,
+          intensityType,
+          blockNum,
+          oneRmKg,
+          formulaConfig
+        );
       }
     } catch {}
     const firstSet = estimatedSets?.[0] ?? null;
@@ -314,24 +343,30 @@ export default function ProgramScreen() {
                 </View>
                 {todaySession.block_number != null && (
                   <View style={[styles.badge, styles.badgeSecondary]}>
-                    <Text style={styles.badgeText}>Block {todaySession.block_number}</Text>
+                    <Text style={styles.badgeText}>
+                      Block {todaySession.block_number}
+                    </Text>
                   </View>
                 )}
               </View>
               {firstSet && (
                 <View style={styles.estimateRow}>
                   <Text style={styles.estimateText}>
-                    ~{firstSet.weight_kg}kg · {setCount}×{repsLabel}{rpeTarget != null ? ` · RPE ${rpeTarget}` : ''}
+                    ~{firstSet.weight_kg}kg · {setCount}×{repsLabel}
+                    {rpeTarget != null ? ` · RPE ${rpeTarget}` : ''}
                   </Text>
                   {lastSessionRpe != null && (
                     <Text style={styles.lastRpeText}>
-                      Last RPE: {lastSessionRpe.toFixed(1)}{rpeAdjustNote}
+                      Last RPE: {lastSessionRpe.toFixed(1)}
+                      {rpeAdjustNote}
                     </Text>
                   )}
                 </View>
               )}
               <Text style={styles.nextSessionNote}>
-                {firstSet ? 'Formula estimate · adjusted at session start' : 'Sets generated when you start'}
+                {firstSet
+                  ? 'Formula estimate · adjusted at session start'
+                  : 'Sets generated when you start'}
               </Text>
             </View>
           ) : (
@@ -383,6 +418,8 @@ export default function ProgramScreen() {
             weekNumber={weekNumber}
             sessions={weekSessions}
             isCurrentWeek={weekNumber === currentWeek}
+            activeSessionId={activeSession?.id}
+            onSessionPress={handleSessionPress}
           />
         ))}
       </ScrollView>

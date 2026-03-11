@@ -1,4 +1,4 @@
-import { typedSupabase } from '@platform/supabase'
+import { typedSupabase } from '@platform/supabase';
 
 export async function deleteAllUserData(userId: string): Promise<void> {
   // Delete in FK-safe order: children before parents
@@ -25,20 +25,20 @@ export async function deleteAllUserData(userId: string): Promise<void> {
     'auxiliary_exercises',
     'period_starts',
     'cycle_tracking',
-  ] as const
+  ] as const;
 
   for (const table of tables) {
     const { error } = await typedSupabase
       .from(table)
       .delete()
-      .eq('user_id', userId)
-    if (error) throw new Error(`Failed to delete ${table}: ${error.message}`)
+      .eq('user_id', userId);
+    if (error) throw new Error(`Failed to delete ${table}: ${error.message}`);
   }
 
   // profiles uses `id` (mirrors auth.users.id), not `user_id`
   const { error } = await typedSupabase
     .from('profiles')
     .delete()
-    .eq('id', userId)
-  if (error) throw new Error(`Failed to delete profiles: ${error.message}`)
+    .eq('id', userId);
+  if (error) throw new Error(`Failed to delete profiles: ${error.message}`);
 }

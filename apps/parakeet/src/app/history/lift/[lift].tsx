@@ -8,26 +8,28 @@ import {
   useWindowDimensions,
   View,
 } from 'react-native';
+
+import { useAuth } from '@modules/auth';
+import {
+  buildLiftChartData,
+  computeHeaviestLift,
+  computeSessionVolume,
+  estimateBestOneRm,
+  getPerformanceByLift,
+  getPerformanceTrends,
+  getSessionJoin,
+} from '@modules/history';
 import type { Lift } from '@parakeet/shared-types';
+import { INTENSITY_LABELS, LIFT_LABELS } from '@shared/constants';
+import { formatDate, formatTime } from '@shared/utils/date';
 import { useQuery } from '@tanstack/react-query';
 import { router, useLocalSearchParams } from 'expo-router';
 import { LineChart } from 'react-native-chart-kit';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useAuth } from '@modules/auth';
-import {
-  getPerformanceByLift,
-  getPerformanceTrends,
-  estimateBestOneRm,
-  computeSessionVolume,
-  computeHeaviestLift,
-  getSessionJoin,
-  buildLiftChartData,
-} from '@modules/history';
+
 import { palette, radii, spacing, typography } from '../../../theme';
 import type { ColorScheme } from '../../../theme';
 import { useTheme } from '../../../theme/ThemeContext';
-import { INTENSITY_LABELS, LIFT_LABELS } from '@shared/constants';
-import { formatDate, formatTime } from '@shared/utils/date';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -284,7 +286,9 @@ export default function LiftHistoryScreen() {
 
   const chartEntries = chartSourceRows
     .map((row) => ({ date: row.completed_at, value: getChartValue(row) }))
-    .filter((e): e is { date: string; value: number } => !!e.date && e.value > 0);
+    .filter(
+      (e): e is { date: string; value: number } => !!e.date && e.value > 0
+    );
 
   const activeChartDef = CHART_TYPES.find((c) => c.key === chartType)!;
 
@@ -374,9 +378,7 @@ export default function LiftHistoryScreen() {
               }}
               style={{ borderRadius: radii.sm }}
               formatYLabel={(v) =>
-                chartType === 'volume'
-                  ? `${Math.round(Number(v))}`
-                  : `${v}`
+                chartType === 'volume' ? `${Math.round(Number(v))}` : `${v}`
               }
               yAxisSuffix={activeChartDef.suffix}
             />
@@ -386,8 +388,8 @@ export default function LiftHistoryScreen() {
             {rows.length === 0
               ? 'No sessions logged yet.'
               : filteredRows.length === 0
-              ? 'No sessions match this filter.'
-              : 'Not enough data to plot.'}
+                ? 'No sessions match this filter.'
+                : 'Not enough data to plot.'}
           </Text>
         )}
 

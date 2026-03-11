@@ -1,28 +1,33 @@
 import {
-  detectSessionPRs,
-  checkCycleCompletion,
-  estimateOneRepMax_Epley,
-} from '@parakeet/training-engine'
-import type { PR } from '@parakeet/training-engine'
-import type { Lift } from '@parakeet/shared-types'
-import {
-  getSessionCompletionContext,
   getProgramCompletionCounts,
-} from '@modules/session/application/session.service'
-import { getPRHistory, getStreakData, storePersonalRecords } from '../application/achievement.service'
+  getSessionCompletionContext,
+} from '@modules/session/application/session.service';
+import type { Lift } from '@parakeet/shared-types';
+import {
+  checkCycleCompletion,
+  detectSessionPRs,
+  estimateOneRepMax_Epley,
+} from '@parakeet/training-engine';
+import type { PR } from '@parakeet/training-engine';
+
+import {
+  getPRHistory,
+  getStreakData,
+  storePersonalRecords,
+} from '../application/achievement.service';
 
 export interface ActualSet {
-  weight_grams: number
-  reps_completed: number
-  rpe_actual?: number
-  is_completed: boolean
+  weight_grams: number;
+  reps_completed: number;
+  rpe_actual?: number;
+  is_completed: boolean;
 }
 
 export interface AchievementResult {
-  earnedPRs: PR[]
-  streakWeeks: number | null
-  streakReset: boolean
-  cycleBadgeEarned: boolean
+  earnedPRs: PR[];
+  streakWeeks: number | null;
+  streakReset: boolean;
+  cycleBadgeEarned: boolean;
 }
 
 /**
@@ -32,67 +37,70 @@ export interface AchievementResult {
 export async function detectAchievements(
   sessionId: string,
   userId: string,
-  actualSets: ActualSet[],
+  actualSets: ActualSet[]
 ): Promise<AchievementResult> {
   const result: AchievementResult = {
     earnedPRs: [],
     streakWeeks: null,
     streakReset: false,
     cycleBadgeEarned: false,
-  }
+  };
 
-  const sessionContext = await getSessionCompletionContext(sessionId)
-  const lift = (sessionContext.primaryLift as Lift | null) ?? null
+  const sessionContext = await getSessionCompletionContext(sessionId);
+  const lift = (sessionContext.primaryLift as Lift | null) ?? null;
 
   if (lift) {
-    const historicalPRs = await getPRHistory(userId, lift)
+    const historicalPRs = await getPRHistory(userId, lift);
     const completedSetsForPR = actualSets
       .filter((s) => s.reps_completed > 0)
       .map((s) => ({
-        weightKg:       s.weight_grams / 1000,
-        reps:           s.reps_completed,
-        rpe:            s.rpe_actual,
-        estimated1rmKg: s.rpe_actual !== undefined && s.rpe_actual >= 8.5
-          && s.reps_completed >= 1 && s.reps_completed <= 20
-          ? estimateOneRepMax_Epley(s.weight_grams / 1000, s.reps_completed)
-          : undefined,
-      }))
+        weightKg: s.weight_grams / 1000,
+        reps: s.reps_completed,
+        rpe: s.rpe_actual,
+        estimated1rmKg:
+          s.rpe_actual !== undefined &&
+          s.rpe_actual >= 8.5 &&
+          s.reps_completed >= 1 &&
+          s.reps_completed <= 20
+            ? estimateOneRepMax_Epley(s.weight_grams / 1000, s.reps_completed)
+            : undefined,
+      }));
 
     const prs = detectSessionPRs({
       sessionId,
       lift,
       completedSets: completedSetsForPR,
       historicalPRs,
-    })
+    });
 
     if (prs.length > 0) {
-      await storePersonalRecords(userId, prs)
-      result.earnedPRs = prs
+      await storePersonalRecords(userId, prs);
+      result.earnedPRs = prs;
     }
   }
 
-  const streakResult = await getStreakData(userId)
+  const streakResult = await getStreakData(userId);
   if (streakResult.currentStreak > 0) {
-    result.streakWeeks = streakResult.currentStreak
+    result.streakWeeks = streakResult.currentStreak;
   } else {
-    result.streakReset = true
+    result.streakReset = true;
   }
 
   // Unending programs have no fixed session count — cycle badge is not applicable.
   if (sessionContext.programId && sessionContext.programMode !== 'unending') {
     const { total, completed, skipped } = await getProgramCompletionCounts(
       sessionContext.programId,
-      userId,
-    )
+      userId
+    );
     const cycleResult = checkCycleCompletion({
       totalScheduledSessions: total,
-      completedSessions:      completed,
-      skippedWithDisruption:  skipped,
-    })
+      completedSessions: completed,
+      skippedWithDisruption: skipped,
+    });
     if (cycleResult.qualifiesForBadge) {
-      result.cycleBadgeEarned = true
+      result.cycleBadgeEarned = true;
     }
   }
 
-  return result
+  return result;
 }

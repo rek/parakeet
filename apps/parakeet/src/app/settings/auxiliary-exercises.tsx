@@ -7,9 +7,11 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+
 import { useAuth } from '@modules/auth';
 import {
   getAuxiliaryPools,
+  getPrimaryMuscles,
   reorderAuxiliaryPool,
 } from '@modules/program';
 import type { Lift } from '@parakeet/shared-types';
@@ -17,6 +19,7 @@ import { getExerciseType } from '@parakeet/training-engine';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
+
 import { BackLink } from '../../components/navigation/BackLink';
 import { AddExerciseModal } from '../../components/session/AddExerciseModal';
 import { MuscleChips } from '../../components/settings/MuscleChips';
@@ -85,7 +88,11 @@ function buildStyles(colors: ColorScheme) {
       borderColor: colors.primary,
     },
     saveBtnDisabled: { opacity: 0.4 },
-    saveBtnText: { fontSize: 13, fontWeight: '600', color: colors.textSecondary },
+    saveBtnText: {
+      fontSize: 13,
+      fontWeight: '600',
+      color: colors.textSecondary,
+    },
     saveBtnTextDirty: { color: colors.textInverse },
 
     poolList: { gap: 4 },
@@ -123,7 +130,11 @@ function buildStyles(colors: ColorScheme) {
       paddingHorizontal: 5,
       paddingVertical: 1,
     },
-    bwBadgeText: { fontSize: 10, color: colors.textSecondary, fontWeight: '600' },
+    bwBadgeText: {
+      fontSize: 10,
+      color: colors.textSecondary,
+      fontWeight: '600',
+    },
     poolActions: { flexDirection: 'row', gap: 4, paddingTop: 2 },
     reorderBtn: {
       width: 28,
@@ -170,9 +181,13 @@ function buildStyles(colors: ColorScheme) {
       borderWidth: 1,
       borderColor: colors.border,
     },
-    blockAssignmentsLinkText: { fontSize: 15, fontWeight: '600', color: colors.text },
+    blockAssignmentsLinkText: {
+      fontSize: 15,
+      fontWeight: '600',
+      color: colors.text,
+    },
     blockAssignmentsChevron: { fontSize: 20, color: colors.textSecondary },
-  })
+  });
 }
 
 // ── Pool list ─────────────────────────────────────────────────────────────────
@@ -205,7 +220,9 @@ function PoolList({ pool, onReorder, onRemove, styles }: PoolListProps) {
   if (pool.length === 0) {
     return (
       <View style={styles.emptyPool}>
-        <Text style={styles.emptyPoolText}>No exercises in pool — add one below.</Text>
+        <Text style={styles.emptyPoolText}>
+          No exercises in pool — add one below.
+        </Text>
       </View>
     );
   }
@@ -228,11 +245,14 @@ function PoolList({ pool, onReorder, onRemove, styles }: PoolListProps) {
                   </View>
                 )}
               </View>
-              <MuscleChips exerciseName={ex} />
+              <MuscleChips muscles={getPrimaryMuscles(ex)} />
             </View>
             <View style={styles.poolActions}>
               <TouchableOpacity
-                style={[styles.reorderBtn, i === 0 && styles.reorderBtnDisabled]}
+                style={[
+                  styles.reorderBtn,
+                  i === 0 && styles.reorderBtnDisabled,
+                ]}
                 onPress={() => moveUp(i)}
                 disabled={i === 0}
                 activeOpacity={0.7}
@@ -316,7 +336,12 @@ function LiftSection({
           {isSavingPool ? (
             <ActivityIndicator color={primaryColor} size="small" />
           ) : (
-            <Text style={[styles.saveBtnText, isDirtyPool && styles.saveBtnTextDirty]}>
+            <Text
+              style={[
+                styles.saveBtnText,
+                isDirtyPool && styles.saveBtnTextDirty,
+              ]}
+            >
               {isDirtyPool ? 'Save Pool ·' : 'Save Pool'}
             </Text>
           )}
@@ -341,7 +366,10 @@ function LiftSection({
       </TouchableOpacity>
       <AddExerciseModal
         visible={pickerVisible}
-        onConfirm={(name) => { addExercise(name); setPickerVisible(false); }}
+        onConfirm={(name) => {
+          addExercise(name);
+          setPickerVisible(false);
+        }}
         onClose={() => setPickerVisible(false)}
         defaultLift={lift}
         excludeNames={pool}
@@ -360,8 +388,12 @@ export default function AuxiliaryExercisesScreen() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const [pools, setPools] = useState<Pools | null>(null);
-  const [savingPool, setSavingPool] = useState<Partial<Record<Lift, boolean>>>({});
-  const [dirtyPools, setDirtyPools] = useState<Partial<Record<Lift, boolean>>>({});
+  const [savingPool, setSavingPool] = useState<Partial<Record<Lift, boolean>>>(
+    {}
+  );
+  const [dirtyPools, setDirtyPools] = useState<Partial<Record<Lift, boolean>>>(
+    {}
+  );
 
   const { data: poolData, isLoading } = useQuery({
     queryKey: ['auxiliary', 'pools', user?.id],
@@ -413,7 +445,9 @@ export default function AuxiliaryExercisesScreen() {
             onPress={() => router.push('/settings/aux-block-assignments')}
             activeOpacity={0.7}
           >
-            <Text style={styles.blockAssignmentsLinkText}>Block Assignments</Text>
+            <Text style={styles.blockAssignmentsLinkText}>
+              Block Assignments
+            </Text>
             <Text style={styles.blockAssignmentsChevron}>›</Text>
           </TouchableOpacity>
 
@@ -438,4 +472,3 @@ export default function AuxiliaryExercisesScreen() {
     </SafeAreaView>
   );
 }
-

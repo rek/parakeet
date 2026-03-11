@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+
+import { shouldFirePrepareWarning } from '@modules/session';
 import { createAudioPlayer } from 'expo-audio';
 import * as Haptics from 'expo-haptics';
-import { getRestTimerPrefs } from '../../modules/settings';
-import { shouldFirePrepareWarning } from '@modules/session';
+
 import { formatMMSS } from '../../shared/utils';
 import { radii, spacing, typography } from '../../theme';
 import { useTheme } from '../../theme/ThemeContext';
@@ -48,6 +49,10 @@ export interface RestTimerProps {
   autoHideOnExpiry?: boolean;
   /** Extra seconds added to the timer duration from an intra-session adaptation */
   bonusSeconds?: number;
+  /** Whether to play audio on timer expiry */
+  audioAlert?: boolean;
+  /** Whether to trigger haptic on timer expiry */
+  hapticAlert?: boolean;
 }
 
 // ── Internal hook (used only by AuxiliaryPill) ────────────────────────────────
@@ -99,40 +104,44 @@ function AuxiliaryPill({
   const { colors } = useTheme();
   const { elapsed, remaining, overtime, stop } = useRestTimer(durationSeconds);
 
-  const pillStyles = useMemo(() => StyleSheet.create({
-    container: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      alignSelf: 'flex-start',
-      backgroundColor: colors.bgMuted,
-      borderRadius: radii.full,
-      borderWidth: 1,
-      borderColor: colors.border,
-      paddingVertical: spacing[1.5],
-      paddingHorizontal: spacing[3],
-      marginTop: spacing[1.5],
-      gap: spacing[2.5],
-    },
-    time: {
-      fontSize: typography.sizes.sm,
-      fontWeight: typography.weights.semibold,
-      color: colors.textSecondary,
-    },
-    timeOvertime: {
-      color: colors.danger,
-    },
-    doneButton: {
-      backgroundColor: colors.primary,
-      borderRadius: radii.sm,
-      paddingVertical: spacing[1],
-      paddingHorizontal: spacing[2.5],
-    },
-    doneText: {
-      fontSize: typography.sizes.xs,
-      fontWeight: typography.weights.bold,
-      color: colors.textInverse,
-    },
-  }), [colors]);
+  const pillStyles = useMemo(
+    () =>
+      StyleSheet.create({
+        container: {
+          flexDirection: 'row',
+          alignItems: 'center',
+          alignSelf: 'flex-start',
+          backgroundColor: colors.bgMuted,
+          borderRadius: radii.full,
+          borderWidth: 1,
+          borderColor: colors.border,
+          paddingVertical: spacing[1.5],
+          paddingHorizontal: spacing[3],
+          marginTop: spacing[1.5],
+          gap: spacing[2.5],
+        },
+        time: {
+          fontSize: typography.sizes.sm,
+          fontWeight: typography.weights.semibold,
+          color: colors.textSecondary,
+        },
+        timeOvertime: {
+          color: colors.danger,
+        },
+        doneButton: {
+          backgroundColor: colors.primary,
+          borderRadius: radii.sm,
+          paddingVertical: spacing[1],
+          paddingHorizontal: spacing[2.5],
+        },
+        doneText: {
+          fontSize: typography.sizes.xs,
+          fontWeight: typography.weights.bold,
+          color: colors.textInverse,
+        },
+      }),
+    [colors]
+  );
 
   function handleDone() {
     stop();
@@ -171,6 +180,8 @@ function FullTimer({
   intensityLabel,
   autoHideOnExpiry = false,
   bonusSeconds = 0,
+  audioAlert,
+  hapticAlert,
 }: Omit<RestTimerProps, 'isAuxiliary'>) {
   const { colors } = useTheme();
   const totalDuration = durationSeconds + bonusSeconds;
@@ -178,109 +189,113 @@ function FullTimer({
   const remaining = Math.max(0, effectiveDuration - elapsed);
   const overtime = elapsed > effectiveDuration;
 
-  const fullStyles = useMemo(() => StyleSheet.create({
-    container: {
-      backgroundColor: colors.bgElevated,
-      borderRadius: radii.xl,
-      borderWidth: 1,
-      borderColor: colors.border,
-      paddingHorizontal: spacing[5],
-      paddingBottom: spacing[5],
-      paddingTop: spacing[4],
-      alignItems: 'center',
-      width: '100%',
-      maxWidth: 560,
-    },
-    intensityLabel: {
-      fontSize: typography.sizes.sm,
-      fontWeight: typography.weights.medium,
-      color: colors.textSecondary,
-      textTransform: 'uppercase',
-      letterSpacing: typography.letterSpacing.wider,
-      marginBottom: spacing[4],
-    },
-    countdown: {
-      fontSize: 72,
-      fontWeight: typography.weights.black,
-      color: colors.text,
-      letterSpacing: -3,
-      marginBottom: spacing[4],
-      fontVariant: ['tabular-nums'],
-    },
-    countdownOvertime: {
-      color: colors.danger,
-    },
-    aiChip: {
-      backgroundColor: colors.primaryMuted,
-      borderRadius: radii.full,
-      borderWidth: 1,
-      borderColor: colors.primary,
-      paddingVertical: spacing[1.5],
-      paddingHorizontal: spacing[3.5],
-      marginBottom: spacing[6],
-    },
-    aiChipText: {
-      fontSize: typography.sizes.sm,
-      fontWeight: typography.weights.medium,
-      color: colors.primary,
-    },
-    bonusChip: {
-      backgroundColor: colors.warningMuted,
-      borderRadius: radii.full,
-      borderWidth: 1,
-      borderColor: colors.warning,
-      paddingVertical: spacing[1.5],
-      paddingHorizontal: spacing[3.5],
-      marginBottom: spacing[3],
-    },
-    bonusChipText: {
-      fontSize: typography.sizes.sm,
-      fontWeight: typography.weights.medium,
-      color: colors.warning,
-    },
-    controlRow: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: spacing[3],
-      marginTop: spacing[2],
-    },
-    adjustButton: {
-      paddingVertical: spacing[2.5],
-      paddingHorizontal: spacing[4],
-      borderRadius: radii.md,
-      backgroundColor: colors.bgMuted,
-      borderWidth: 1,
-      borderColor: colors.border,
-    },
-    adjustButtonText: {
-      fontSize: typography.sizes.base,
-      fontWeight: typography.weights.semibold,
-      color: colors.textSecondary,
-    },
-    doneButton: {
-      flex: 1,
-      backgroundColor: colors.primary,
-      borderRadius: radii.md,
-      paddingVertical: spacing[3.5],
-      alignItems: 'center',
-    },
-    doneButtonText: {
-      fontSize: typography.sizes.base,
-      fontWeight: typography.weights.bold,
-      color: colors.textInverse,
-      letterSpacing: typography.letterSpacing.wide,
-    },
-  }), [colors]);
+  const fullStyles = useMemo(
+    () =>
+      StyleSheet.create({
+        container: {
+          backgroundColor: colors.bgElevated,
+          borderRadius: radii.xl,
+          borderWidth: 1,
+          borderColor: colors.border,
+          paddingHorizontal: spacing[5],
+          paddingBottom: spacing[5],
+          paddingTop: spacing[4],
+          alignItems: 'center',
+          width: '100%',
+          maxWidth: 560,
+        },
+        intensityLabel: {
+          fontSize: typography.sizes.sm,
+          fontWeight: typography.weights.medium,
+          color: colors.textSecondary,
+          textTransform: 'uppercase',
+          letterSpacing: typography.letterSpacing.wider,
+          marginBottom: spacing[4],
+        },
+        countdown: {
+          fontSize: 72,
+          fontWeight: typography.weights.black,
+          color: colors.text,
+          letterSpacing: -3,
+          marginBottom: spacing[4],
+          fontVariant: ['tabular-nums'],
+        },
+        countdownOvertime: {
+          color: colors.danger,
+        },
+        aiChip: {
+          backgroundColor: colors.primaryMuted,
+          borderRadius: radii.full,
+          borderWidth: 1,
+          borderColor: colors.primary,
+          paddingVertical: spacing[1.5],
+          paddingHorizontal: spacing[3.5],
+          marginBottom: spacing[6],
+        },
+        aiChipText: {
+          fontSize: typography.sizes.sm,
+          fontWeight: typography.weights.medium,
+          color: colors.primary,
+        },
+        bonusChip: {
+          backgroundColor: colors.warningMuted,
+          borderRadius: radii.full,
+          borderWidth: 1,
+          borderColor: colors.warning,
+          paddingVertical: spacing[1.5],
+          paddingHorizontal: spacing[3.5],
+          marginBottom: spacing[3],
+        },
+        bonusChipText: {
+          fontSize: typography.sizes.sm,
+          fontWeight: typography.weights.medium,
+          color: colors.warning,
+        },
+        controlRow: {
+          flexDirection: 'row',
+          alignItems: 'center',
+          gap: spacing[3],
+          marginTop: spacing[2],
+        },
+        adjustButton: {
+          paddingVertical: spacing[2.5],
+          paddingHorizontal: spacing[4],
+          borderRadius: radii.md,
+          backgroundColor: colors.bgMuted,
+          borderWidth: 1,
+          borderColor: colors.border,
+        },
+        adjustButtonText: {
+          fontSize: typography.sizes.base,
+          fontWeight: typography.weights.semibold,
+          color: colors.textSecondary,
+        },
+        doneButton: {
+          flex: 1,
+          backgroundColor: colors.primary,
+          borderRadius: radii.md,
+          paddingVertical: spacing[3.5],
+          alignItems: 'center',
+        },
+        doneButtonText: {
+          fontSize: typography.sizes.base,
+          fontWeight: typography.weights.bold,
+          color: colors.textInverse,
+          letterSpacing: typography.letterSpacing.wide,
+        },
+      }),
+    [colors]
+  );
 
   const prevOvertimeRef = useRef(false);
-  const audioAlertRef = useRef(true);
-  const hapticAlertRef = useRef(true);
+  const audioAlertRef = useRef(audioAlert ?? true);
+  const hapticAlertRef = useRef(hapticAlert ?? true);
   useEffect(() => {
-    getRestTimerPrefs().then((p) => {
-      audioAlertRef.current = p.audioAlert;
-      hapticAlertRef.current = p.hapticAlert;
-    });
-  }, []);
+    audioAlertRef.current = audioAlert ?? true;
+  }, [audioAlert]);
+  useEffect(() => {
+    hapticAlertRef.current = hapticAlert ?? true;
+  }, [hapticAlert]);
   useEffect(() => {
     prevOvertimeRef.current = false;
   }, [totalDuration, offset]);
@@ -295,7 +310,9 @@ function FullTimer({
 
   // 15-second prepare warning (fires once per timer session)
   const warnFiredRef = useRef(false);
-  useEffect(() => { warnFiredRef.current = false; }, [totalDuration]);
+  useEffect(() => {
+    warnFiredRef.current = false;
+  }, [totalDuration]);
   useEffect(() => {
     if (shouldFirePrepareWarning(remaining, overtime, warnFiredRef.current)) {
       warnFiredRef.current = true;
@@ -307,13 +324,15 @@ function FullTimer({
 
   // Auto-hide: call onDone ~1.5s after hitting 0:00 (sound plays first)
   const autoHideFiredRef = useRef(false);
-  useEffect(() => { autoHideFiredRef.current = false; }, [totalDuration]);
+  useEffect(() => {
+    autoHideFiredRef.current = false;
+  }, [totalDuration]);
   useEffect(() => {
     if (!autoHideOnExpiry || !overtime || autoHideFiredRef.current) return;
     autoHideFiredRef.current = true;
     const t = setTimeout(() => onDone(elapsed), 1500);
     return () => clearTimeout(t);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [overtime, autoHideOnExpiry]);
 
   const showAiChip =
@@ -340,7 +359,9 @@ function FullTimer({
 
       {bonusSeconds > 0 && (
         <View style={fullStyles.bonusChip}>
-          <Text style={fullStyles.bonusChipText}>+{bonusSeconds}s bonus rest</Text>
+          <Text style={fullStyles.bonusChipText}>
+            +{bonusSeconds}s bonus rest
+          </Text>
         </View>
       )}
 
@@ -394,6 +415,8 @@ export function RestTimer({
   isAuxiliary = false,
   autoHideOnExpiry = false,
   bonusSeconds = 0,
+  audioAlert,
+  hapticAlert,
 }: RestTimerProps) {
   if (isAuxiliary) {
     return <AuxiliaryPill durationSeconds={durationSeconds} onDone={onDone} />;
@@ -410,6 +433,8 @@ export function RestTimer({
       intensityLabel={intensityLabel}
       autoHideOnExpiry={autoHideOnExpiry}
       bonusSeconds={bonusSeconds}
+      audioAlert={audioAlert}
+      hapticAlert={hapticAlert}
     />
   );
 }

@@ -7,8 +7,10 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+
 import { computeEstimated1RM, isLiftValid } from '@modules/onboarding';
 import { router } from 'expo-router';
+
 import type { ColorScheme } from '../../../theme';
 import { useTheme } from '../../../theme/ThemeContext';
 
@@ -192,7 +194,13 @@ interface LiftSectionProps {
   textTertiaryColor: string;
 }
 
-function LiftSection({ liftKey, state, onChange, styles, textTertiaryColor }: LiftSectionProps) {
+function LiftSection({
+  liftKey,
+  state,
+  onChange,
+  styles,
+  textTertiaryColor,
+}: LiftSectionProps) {
   const estimated = computeEstimated1RM(state);
 
   return (

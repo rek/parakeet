@@ -2,7 +2,9 @@ export function birthYearToDobIso(birthYear: string): string {
   return `${parseInt(birthYear, 10)}-01-01`;
 }
 
-export function formatBirthYear(dateOfBirth: string | null | undefined): string {
+export function formatBirthYear(
+  dateOfBirth: string | null | undefined
+): string {
   return dateOfBirth ? new Date(dateOfBirth).getFullYear().toString() : '—';
 }
 

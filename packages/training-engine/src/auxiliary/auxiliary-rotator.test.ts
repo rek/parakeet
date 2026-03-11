@@ -31,7 +31,10 @@ describe('getAuxiliariesForBlock — default squat pool', () => {
 
   it('wraps correctly: 5-item pool with startOffset=6 (second program, block 1 → 1+2)', () => {
     const smallPool = ['A', 'B', 'C', 'D', 'E'];
-    expect(getAuxiliariesForBlock('squat', 1, smallPool, 6)).toEqual(['B', 'C']);
+    expect(getAuxiliariesForBlock('squat', 1, smallPool, 6)).toEqual([
+      'B',
+      'C',
+    ]);
   });
 });
 

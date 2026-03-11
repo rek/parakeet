@@ -1,27 +1,29 @@
-import { useEffect, useMemo, useState } from 'react'
-import { Modal, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
-import AsyncStorage from '@react-native-async-storage/async-storage'
-import { calculatePlates, PLATE_COLORS } from '@parakeet/training-engine'
-import type { PlateKg } from '@parakeet/training-engine'
-import { getDisabledPlates, setDisabledPlates } from '@modules/settings'
-import { spacing, typography } from '../../theme'
-import type { ColorScheme } from '../../theme'
-import { useTheme } from '../../theme/ThemeContext'
+import { useMemo } from 'react';
+import { Modal, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+
+import { calculatePlates, PLATE_COLORS } from '@parakeet/training-engine';
+import type { PlateKg } from '@parakeet/training-engine';
+
+import { spacing, typography } from '../../theme';
+import type { ColorScheme } from '../../theme';
+import { useTheme } from '../../theme/ThemeContext';
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
-const STORAGE_KEY = 'bar_weight_kg'
-const BAR_OPTIONS = [20, 15] as const
-type BarKg = (typeof BAR_OPTIONS)[number]
+const BAR_OPTIONS = [20, 15] as const;
 
-const TOGGLEABLE_PLATES: PlateKg[] = [25, 20, 15, 10, 5, 2.5, 1.25]
+const TOGGLEABLE_PLATES: PlateKg[] = [25, 20, 15, 10, 5, 2.5, 1.25];
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
 interface Props {
-  visible: boolean
-  onClose: () => void
-  targetKg: number
+  visible: boolean;
+  onClose: () => void;
+  targetKg: number;
+  barWeightKg: number;
+  disabledPlates: PlateKg[];
+  onBarWeightChange: (kg: number) => void;
+  onDisabledPlatesChange: (plates: PlateKg[]) => void;
 }
 
 function buildStyles(colors: ColorScheme) {
@@ -203,42 +205,43 @@ function buildStyles(colors: ColorScheme) {
       color: colors.textSecondary,
       textAlign: 'center',
     },
-  })
+  });
 }
 
 // ── Component ─────────────────────────────────────────────────────────────────
 
-export function PlateCalculatorSheet({ visible, onClose, targetKg }: Props) {
-  const { colors } = useTheme()
-  const [barKg, setBarKg] = useState<BarKg>(20)
-  const [disabledPlates, setDisabledPlatesState] = useState<PlateKg[]>([])
+export function PlateCalculatorSheet({
+  visible,
+  onClose,
+  targetKg,
+  barWeightKg,
+  disabledPlates,
+  onBarWeightChange,
+  onDisabledPlatesChange,
+}: Props) {
+  const { colors } = useTheme();
 
-  const styles = useMemo(() => buildStyles(colors), [colors])
+  const styles = useMemo(() => buildStyles(colors), [colors]);
 
-  useEffect(() => {
-    AsyncStorage.getItem(STORAGE_KEY).then((stored) => {
-      if (stored === '15') setBarKg(15)
-    })
-    getDisabledPlates().then(setDisabledPlatesState)
-  }, [])
+  const availablePlates = TOGGLEABLE_PLATES.filter(
+    (p) => !disabledPlates.includes(p)
+  );
 
-  const availablePlates = TOGGLEABLE_PLATES.filter((p) => !disabledPlates.includes(p))
-
-  async function handlePlateToggle(plate: PlateKg) {
+  function handlePlateToggle(plate: PlateKg) {
     const next = disabledPlates.includes(plate)
       ? disabledPlates.filter((p) => p !== plate)
-      : [...disabledPlates, plate]
-    setDisabledPlatesState(next)
-    await setDisabledPlates(next)
+      : [...disabledPlates, plate];
+    onDisabledPlatesChange(next);
   }
 
-  function handleBarToggle(kg: BarKg) {
-    setBarKg(kg)
-    AsyncStorage.setItem(STORAGE_KEY, String(kg))
+  function handleBarToggle(kg: number) {
+    onBarWeightChange(kg);
   }
 
-  const isBarOnly = targetKg <= barKg
-  const result = isBarOnly ? null : calculatePlates(targetKg, barKg, availablePlates)
+  const isBarOnly = targetKg <= barWeightKg;
+  const result = isBarOnly
+    ? null
+    : calculatePlates(targetKg, barWeightKg, availablePlates);
 
   function renderContent() {
     if (isBarOnly) {
@@ -246,7 +249,7 @@ export function PlateCalculatorSheet({ visible, onClose, targetKg }: Props) {
         <View style={styles.center}>
           <Text style={styles.emptyText}>Bar only — no plates needed</Text>
         </View>
-      )
+      );
     }
 
     return (
@@ -258,7 +261,7 @@ export function PlateCalculatorSheet({ visible, onClose, targetKg }: Props) {
         </View>
         <View style={[styles.summaryRow, styles.summaryRowLast]}>
           <Text style={styles.summaryLabel}>Bar</Text>
-          <Text style={styles.summaryValue}>{barKg} kg</Text>
+          <Text style={styles.summaryValue}>{barWeightKg} kg</Text>
         </View>
 
         {/* Plates per side */}
@@ -274,16 +277,22 @@ export function PlateCalculatorSheet({ visible, onClose, targetKg }: Props) {
         {result!.remainder > 0 && (
           <View style={styles.remainderBox}>
             <Text style={styles.remainderText}>
-              Nearest achievable: {targetKg - result!.remainder * 2} kg — {result!.remainder * 2} kg short
+              Nearest achievable: {targetKg - result!.remainder * 2} kg —{' '}
+              {result!.remainder * 2} kg short
             </Text>
           </View>
         )}
       </>
-    )
+    );
   }
 
   return (
-    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
+    <Modal
+      visible={visible}
+      transparent
+      animationType="slide"
+      onRequestClose={onClose}
+    >
       <View style={styles.overlay}>
         <View style={styles.sheet}>
           {/* Handle */}
@@ -292,7 +301,11 @@ export function PlateCalculatorSheet({ visible, onClose, targetKg }: Props) {
           {/* Header */}
           <View style={styles.header}>
             <Text style={styles.title}>Plate Calculator</Text>
-            <TouchableOpacity onPress={onClose} hitSlop={12} activeOpacity={0.7}>
+            <TouchableOpacity
+              onPress={onClose}
+              hitSlop={12}
+              activeOpacity={0.7}
+            >
               <Text style={styles.closeBtn}>✕</Text>
             </TouchableOpacity>
           </View>
@@ -304,11 +317,19 @@ export function PlateCalculatorSheet({ visible, onClose, targetKg }: Props) {
               {BAR_OPTIONS.map((kg) => (
                 <TouchableOpacity
                   key={kg}
-                  style={[styles.toggleBtn, barKg === kg && styles.toggleBtnActive]}
+                  style={[
+                    styles.toggleBtn,
+                    barWeightKg === kg && styles.toggleBtnActive,
+                  ]}
                   onPress={() => handleBarToggle(kg)}
                   activeOpacity={0.7}
                 >
-                  <Text style={[styles.toggleBtnText, barKg === kg && styles.toggleBtnTextActive]}>
+                  <Text
+                    style={[
+                      styles.toggleBtnText,
+                      barWeightKg === kg && styles.toggleBtnTextActive,
+                    ]}
+                  >
                     {kg} kg
                   </Text>
                 </TouchableOpacity>
@@ -321,28 +342,35 @@ export function PlateCalculatorSheet({ visible, onClose, targetKg }: Props) {
             <Text style={styles.plateToggleLabel}>Available plates</Text>
             <View style={styles.plateToggleRow}>
               {TOGGLEABLE_PLATES.map((kg) => {
-                const enabled = !disabledPlates.includes(kg)
+                const enabled = !disabledPlates.includes(kg);
                 return (
                   <TouchableOpacity
                     key={kg}
-                    style={[styles.plateDot, { borderColor: PLATE_COLORS[kg] }, enabled && { backgroundColor: PLATE_COLORS[kg] }]}
+                    style={[
+                      styles.plateDot,
+                      { borderColor: PLATE_COLORS[kg] },
+                      enabled && { backgroundColor: PLATE_COLORS[kg] },
+                    ]}
                     onPress={() => handlePlateToggle(kg)}
                     activeOpacity={0.7}
                   >
-                    <Text style={[styles.plateDotLabel, enabled && styles.plateDotLabelEnabled]}>
+                    <Text
+                      style={[
+                        styles.plateDotLabel,
+                        enabled && styles.plateDotLabelEnabled,
+                      ]}
+                    >
                       {kg}
                     </Text>
                   </TouchableOpacity>
-                )
+                );
               })}
             </View>
           </View>
 
-          <View style={styles.content}>
-            {renderContent()}
-          </View>
+          <View style={styles.content}>{renderContent()}</View>
         </View>
       </View>
     </Modal>
-  )
+  );
 }

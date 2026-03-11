@@ -1,18 +1,18 @@
-import { useEffect, useMemo, useState } from 'react'
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native'
-import { calculatePlates, PLATE_COLORS } from '@parakeet/training-engine'
-import type { PlateKg } from '@parakeet/training-engine'
-import { getProfile } from '@modules/profile'
-import { getBarWeightKg, getDisabledPlates } from '@modules/settings'
-import { spacing, radii, typography } from '../../theme'
-import { useTheme } from '../../theme/ThemeContext'
+import { useMemo, useState } from 'react';
+import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+
+import { calculatePlates, PLATE_COLORS } from '@parakeet/training-engine';
+import type { PlateKg } from '@parakeet/training-engine';
+
+import { radii, spacing, typography } from '../../theme';
+import { useTheme } from '../../theme/ThemeContext';
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
 interface WarmupSet {
-  weightKg: number
-  reps: number
-  label?: string
+  weightKg: number;
+  reps: number;
+  label?: string;
 }
 
 // ── plateStyles are static (no color tokens) ─────────────────────────────────
@@ -29,16 +29,26 @@ const plateStyles = StyleSheet.create({
     height: 9,
     borderRadius: radii.full,
   },
-})
+});
 
 // ── PlateDisplay sub-component ────────────────────────────────────────────────
 
-function PlateDisplay({ weightKg, barWeightKg, disabledPlates }: { weightKg: number; barWeightKg: number; disabledPlates?: PlateKg[] }) {
-  if (weightKg <= barWeightKg) return null
+function PlateDisplay({
+  weightKg,
+  barWeightKg,
+  disabledPlates,
+}: {
+  weightKg: number;
+  barWeightKg: number;
+  disabledPlates?: PlateKg[];
+}) {
+  if (weightKg <= barWeightKg) return null;
   const available = disabledPlates?.length
-    ? ([25, 20, 15, 10, 5, 2.5, 1.25] as PlateKg[]).filter((p) => !disabledPlates.includes(p))
-    : undefined
-  const { platesPerSide } = calculatePlates(weightKg, barWeightKg, available)
+    ? ([25, 20, 15, 10, 5, 2.5, 1.25] as PlateKg[]).filter(
+        (p) => !disabledPlates.includes(p)
+      )
+    : undefined;
+  const { platesPerSide } = calculatePlates(weightKg, barWeightKg, available);
 
   return (
     <View style={plateStyles.row}>
@@ -51,35 +61,45 @@ function PlateDisplay({ weightKg, barWeightKg, disabledPlates }: { weightKg: num
         ))
       )}
     </View>
-  )
+  );
 }
 
 export interface WarmupSectionProps {
-  sets: WarmupSet[]
-  completedIndices: number[]
-  onToggle: (index: number, done: boolean) => void
+  sets: WarmupSet[];
+  completedIndices: number[];
+  onToggle: (index: number, done: boolean) => void;
+  barWeightKg?: number;
+  disabledPlates?: PlateKg[];
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 function formatWeight(weightKg: number, barWeightKg: number): string {
-  if (weightKg <= barWeightKg) return `Bar (${barWeightKg} kg)`
-  return `${weightKg} kg`
+  if (weightKg <= barWeightKg) return `Bar (${barWeightKg} kg)`;
+  return `${weightKg} kg`;
 }
 
 // ── Sub-component: single warmup set row ─────────────────────────────────────
 
 interface WarmupSetRowProps {
-  index: number
-  set: WarmupSet
-  isDone: boolean
-  onToggle: (index: number, done: boolean) => void
-  barWeightKg: number
-  disabledPlates?: PlateKg[]
-  styles: ReturnType<typeof buildStyles>
+  index: number;
+  set: WarmupSet;
+  isDone: boolean;
+  onToggle: (index: number, done: boolean) => void;
+  barWeightKg: number;
+  disabledPlates?: PlateKg[];
+  styles: ReturnType<typeof buildStyles>;
 }
 
-function WarmupSetRow({ index, set, isDone, onToggle, barWeightKg, disabledPlates, styles }: WarmupSetRowProps) {
+function WarmupSetRow({
+  index,
+  set,
+  isDone,
+  onToggle,
+  barWeightKg,
+  disabledPlates,
+  styles,
+}: WarmupSetRowProps) {
   return (
     <TouchableOpacity
       style={[styles.setRow, isDone && styles.setRowDone]}
@@ -90,29 +110,48 @@ function WarmupSetRow({ index, set, isDone, onToggle, barWeightKg, disabledPlate
         {index + 1}
       </Text>
       <View style={styles.setMiddle}>
-        <Text style={[styles.weightText, isDone && styles.textFaded, isDone && styles.weightStrike]}>
+        <Text
+          style={[
+            styles.weightText,
+            isDone && styles.textFaded,
+            isDone && styles.weightStrike,
+          ]}
+        >
           {formatWeight(set.weightKg, barWeightKg)}
         </Text>
         <Text style={[styles.repsText, isDone && styles.textFaded]}>
-          {' '}× {set.reps}
+          {' '}
+          × {set.reps}
         </Text>
         {set.label ? (
           <Text style={[styles.setLabel, isDone && styles.textFaded]}>
-            {' · '}{set.label}
+            {' · '}
+            {set.label}
           </Text>
         ) : null}
-        <PlateDisplay weightKg={set.weightKg} barWeightKg={barWeightKg} disabledPlates={disabledPlates} />
+        <PlateDisplay
+          weightKg={set.weightKg}
+          barWeightKg={barWeightKg}
+          disabledPlates={disabledPlates}
+        />
       </View>
       <View style={[styles.checkbox, isDone && styles.checkboxDone]}>
         {isDone && <Text style={styles.checkmark}>✓</Text>}
       </View>
     </TouchableOpacity>
-  )
+  );
 }
 
 // ── Styles builder ────────────────────────────────────────────────────────────
 
-function buildStyles(colors: { text: string; textSecondary: string; textTertiary: string; textInverse: string; border: string; primary: string }) {
+function buildStyles(colors: {
+  text: string;
+  textSecondary: string;
+  textTertiary: string;
+  textInverse: string;
+  border: string;
+  primary: string;
+}) {
   return StyleSheet.create({
     container: {
       marginBottom: spacing[2],
@@ -209,29 +248,28 @@ function buildStyles(colors: { text: string; textSecondary: string; textTertiary
       marginHorizontal: spacing[4],
       marginTop: spacing[1],
     },
-  })
+  });
 }
 
 // ── Main component ────────────────────────────────────────────────────────────
 
-export function WarmupSection({ sets, completedIndices, onToggle }: WarmupSectionProps) {
-  const { colors } = useTheme()
-  const [collapsed, setCollapsed] = useState(false)
-  const [barWeightKg, setBarWeightKg] = useState(20)
-  const [disabledPlates, setDisabledPlates] = useState<PlateKg[]>([])
+export function WarmupSection({
+  sets,
+  completedIndices,
+  onToggle,
+  barWeightKg,
+  disabledPlates,
+}: WarmupSectionProps) {
+  const { colors } = useTheme();
+  const [collapsed, setCollapsed] = useState(false);
 
-  const styles = useMemo(() => buildStyles(colors), [colors])
+  const effectiveBarWeight = barWeightKg ?? 20;
+  const effectiveDisabledPlates = disabledPlates ?? [];
 
-  useEffect(() => {
-    getProfile()
-      .then((profile) => getBarWeightKg(profile?.biological_sex))
-      .then(setBarWeightKg)
-    getDisabledPlates().then(setDisabledPlates)
-  }, [])
+  const styles = useMemo(() => buildStyles(colors), [colors]);
 
-  const maxWeight = sets.length > 0
-    ? Math.max(...sets.map((s) => s.weightKg))
-    : 0
+  const maxWeight =
+    sets.length > 0 ? Math.max(...sets.map((s) => s.weightKg)) : 0;
 
   return (
     <View style={styles.container}>
@@ -260,8 +298,8 @@ export function WarmupSection({ sets, completedIndices, onToggle }: WarmupSectio
               set={set}
               isDone={completedIndices.includes(index)}
               onToggle={onToggle}
-              barWeightKg={barWeightKg}
-              disabledPlates={disabledPlates}
+              barWeightKg={effectiveBarWeight}
+              disabledPlates={effectiveDisabledPlates}
               styles={styles}
             />
           ))}
@@ -270,5 +308,5 @@ export function WarmupSection({ sets, completedIndices, onToggle }: WarmupSectio
 
       <View style={styles.divider} />
     </View>
-  )
+  );
 }

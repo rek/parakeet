@@ -10,6 +10,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+
 import { useAuth } from '@modules/auth';
 import {
   createFormulaOverride,
@@ -26,6 +27,7 @@ import { getActiveProgram, getCurrentOneRmKg } from '@modules/program';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
+
 import { BackLink } from '../../components/navigation/BackLink';
 import type { ColorScheme } from '../../theme';
 import { useTheme } from '../../theme/ThemeContext';
@@ -77,7 +79,11 @@ function buildStyles(colors: ColorScheme) {
       alignItems: 'center',
     },
     topTabActive: { borderBottomWidth: 2, borderBottomColor: colors.primary },
-    topTabText: { fontSize: 14, color: colors.textSecondary, fontWeight: '500' },
+    topTabText: {
+      fontSize: 14,
+      color: colors.textSecondary,
+      fontWeight: '500',
+    },
     topTabTextActive: { color: colors.primary, fontWeight: '600' },
     badge: { color: colors.danger },
 
@@ -270,7 +276,11 @@ function buildStyles(colors: ColorScheme) {
       gap: 12,
     },
     sheetTitle: { fontSize: 18, fontWeight: '700', color: colors.text },
-    sheetSubtitle: { fontSize: 14, color: colors.textSecondary, lineHeight: 20 },
+    sheetSubtitle: {
+      fontSize: 14,
+      color: colors.textSecondary,
+      lineHeight: 20,
+    },
     sheetToggleRow: {
       flexDirection: 'row',
       alignItems: 'center',
@@ -311,7 +321,7 @@ function buildStyles(colors: ColorScheme) {
       color: colors.textSecondary,
     },
     buttonDisabled: { opacity: 0.4 },
-  })
+  });
 }
 
 // ── Editable row ──────────────────────────────────────────────────────────────
@@ -877,4 +887,3 @@ export default function FormulaEditorScreen() {
     </SafeAreaView>
   );
 }
-

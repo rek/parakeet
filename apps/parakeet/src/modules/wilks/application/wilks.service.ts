@@ -1,7 +1,7 @@
+import { getCurrentMaxes } from '@modules/program/lib/lifter-maxes';
 import { computeWilks2020 } from '@parakeet/training-engine';
 
 import { getProfileById } from '../data/profile.repository';
-import { getCurrentMaxes } from '@modules/program/lib/lifter-maxes';
 
 export interface CurrentWilksSnapshot {
   wilks: number;
@@ -13,7 +13,9 @@ export interface CurrentWilksSnapshot {
   recordedAt: string;
 }
 
-export async function getCurrentWilksSnapshot(userId: string): Promise<CurrentWilksSnapshot | null> {
+export async function getCurrentWilksSnapshot(
+  userId: string
+): Promise<CurrentWilksSnapshot | null> {
   const [maxes, profile] = await Promise.all([
     getCurrentMaxes(userId),
     getProfileById(userId),

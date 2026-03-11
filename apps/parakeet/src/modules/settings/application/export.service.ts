@@ -1,6 +1,7 @@
 import { gramsToKg } from '@parakeet/training-engine';
 import { File, Paths } from 'expo-file-system';
 import * as Sharing from 'expo-sharing';
+
 import { fetchCompletedSessionsForExport } from '../data/export.repository';
 
 interface ExportSet {
@@ -53,9 +54,11 @@ export async function exportTrainingData(userId: string): Promise<void> {
         completed_at: row.completed_at ?? '',
         ...(log.session_rpe != null ? { session_rpe: log.session_rpe } : {}),
         sets,
-        ...(log.auxiliary_sets != null ? { auxiliary_sets: log.auxiliary_sets } : {}),
+        ...(log.auxiliary_sets != null
+          ? { auxiliary_sets: log.auxiliary_sets }
+          : {}),
       };
-    }),
+    })
   );
 
   const payload: ExportPayload = {

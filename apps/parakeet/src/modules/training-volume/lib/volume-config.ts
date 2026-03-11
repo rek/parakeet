@@ -1,50 +1,50 @@
+import type { BiologicalSex } from '@modules/profile/application/profile.service';
 import {
   DEFAULT_MRV_MEV_CONFIG_FEMALE,
   DEFAULT_MRV_MEV_CONFIG_MALE,
   MUSCLE_GROUPS,
-} from '@parakeet/training-engine'
-import type { MrvMevConfig, MuscleGroup } from '@parakeet/training-engine'
-import type { BiologicalSex } from '@modules/profile/application/profile.service'
-import { typedSupabase } from '@platform/supabase'
+} from '@parakeet/training-engine';
+import type { MrvMevConfig, MuscleGroup } from '@parakeet/training-engine';
+import { typedSupabase } from '@platform/supabase';
 
 function isMuscleGroup(v: string): v is MuscleGroup {
-  return (MUSCLE_GROUPS as readonly string[]).includes(v)
+  return (MUSCLE_GROUPS as readonly string[]).includes(v);
 }
 
 export async function getMrvMevConfig(
   userId: string,
-  biologicalSex?: BiologicalSex | null,
+  biologicalSex?: BiologicalSex | null
 ): Promise<MrvMevConfig> {
   const { data, error } = await typedSupabase
     .from('muscle_volume_config')
     .select('muscle_group, mev_sets_per_week, mrv_sets_per_week')
-    .eq('user_id', userId)
+    .eq('user_id', userId);
 
-  if (error) throw error
+  if (error) throw error;
   const defaults =
     biologicalSex === 'female'
       ? DEFAULT_MRV_MEV_CONFIG_FEMALE
-      : DEFAULT_MRV_MEV_CONFIG_MALE
+      : DEFAULT_MRV_MEV_CONFIG_MALE;
 
-  const config = { ...defaults }
+  const config = { ...defaults };
   for (const row of data ?? []) {
     if (isMuscleGroup(row.muscle_group)) {
       config[row.muscle_group] = {
         mev: row.mev_sets_per_week,
         mrv: row.mrv_sets_per_week,
-      }
+      };
     }
   }
-  return config
+  return config;
 }
 
 export async function updateMuscleConfig(
   userId: string,
   muscle: MuscleGroup,
-  update: { mev?: number; mrv?: number },
+  update: { mev?: number; mrv?: number }
 ): Promise<void> {
-  const existing = await getMrvMevConfig(userId)
-  const current = existing[muscle]
+  const existing = await getMrvMevConfig(userId);
+  const current = existing[muscle];
   await typedSupabase.from('muscle_volume_config').upsert(
     {
       user_id: userId,
@@ -53,17 +53,17 @@ export async function updateMuscleConfig(
       mrv_sets_per_week: update.mrv ?? current.mrv,
       updated_at: new Date().toISOString(),
     },
-    { onConflict: 'user_id,muscle_group' },
-  )
+    { onConflict: 'user_id,muscle_group' }
+  );
 }
 
 export async function resetMuscleToDefault(
   userId: string,
-  muscle: MuscleGroup,
+  muscle: MuscleGroup
 ): Promise<void> {
   await typedSupabase
     .from('muscle_volume_config')
     .delete()
     .eq('user_id', userId)
-    .eq('muscle_group', muscle)
+    .eq('muscle_group', muscle);
 }

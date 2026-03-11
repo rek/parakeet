@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+
 import { buildLiftChartData } from './chart-builders';
 
 describe('buildLiftChartData', () => {
@@ -35,7 +36,7 @@ describe('buildLiftChartData', () => {
     }));
     const result = buildLiftChartData(entries, '#00ff00');
     expect(result!.labels[0]).toBe('1/1');
-    expect(result!.labels[1]).toBe('');   // 1 % 2 !== 0
+    expect(result!.labels[1]).toBe(''); // 1 % 2 !== 0
     expect(result!.labels[2]).toBe('1/3');
     expect(result!.labels[3]).toBe('');
     expect(result!.labels).toHaveLength(12);

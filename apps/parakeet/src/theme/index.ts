@@ -30,10 +30,10 @@ export const palette = {
   amber950: '#3A1F00',
 
   // Red / danger
-  red400:  '#F87171',
-  red500:  '#EF4444',
-  red600:  '#DC2626',
-  red950:  '#2A0808',
+  red400: '#F87171',
+  red500: '#EF4444',
+  red600: '#DC2626',
+  red950: '#2A0808',
 
   // Green / success
   green400: '#4ADE80',
@@ -62,7 +62,7 @@ export const palette = {
   amber800: '#92400E',
 
   // Zinc / neutrals
-  zinc50:  '#FAFAFA',
+  zinc50: '#FAFAFA',
   zinc100: '#F4F4F5',
   zinc200: '#E4E4E7',
   zinc300: '#D4D4D8',
@@ -76,60 +76,60 @@ export const palette = {
 
   white: '#FFFFFF',
   black: '#000000',
-} as const
+} as const;
 
 // ── Semantic color tokens ─────────────────────────────────────────────────────
 
 export const colors = {
   // ── Backgrounds ──────────────────────────────────────────────────────────────
-  bg:         '#080808',   // deepest screen background
-  bgSurface:  '#111111',   // cards, panels
-  bgElevated: '#1A1A1A',   // modals, popovers
-  bgMuted:    '#1F1F1F',   // subtle sections
-  bgPress:    '#252525',   // pressed/active state
+  bg: '#080808', // deepest screen background
+  bgSurface: '#111111', // cards, panels
+  bgElevated: '#1A1A1A', // modals, popovers
+  bgMuted: '#1F1F1F', // subtle sections
+  bgPress: '#252525', // pressed/active state
 
   // ── Borders ───────────────────────────────────────────────────────────────────
-  border:       '#242424',
-  borderMuted:  '#181818',
-  borderFocus:  palette.lime400,
+  border: '#242424',
+  borderMuted: '#181818',
+  borderFocus: palette.lime400,
   borderAccent: palette.orange500,
 
   // ── Text ──────────────────────────────────────────────────────────────────────
-  text:          palette.zinc50,    // #FAFAFA — primary
-  textSecondary: palette.zinc400,   // #A1A1AA
-  textTertiary:  palette.zinc600,   // #52525B
-  textInverse:   '#080808',         // dark text on bright buttons
-  textDisabled:  palette.zinc700,
+  text: palette.zinc50, // #FAFAFA — primary
+  textSecondary: palette.zinc400, // #A1A1AA
+  textTertiary: palette.zinc600, // #52525B
+  textInverse: '#080808', // dark text on bright buttons
+  textDisabled: palette.zinc700,
 
   // ── Accents ───────────────────────────────────────────────────────────────────
-  primary:       palette.lime400,    // #A3E635 — parrot green
-  primaryDim:    palette.lime500,
-  primaryMuted:  '#1E2E08',          // dark lime bg — for tinted surfaces
+  primary: palette.lime400, // #A3E635 — parrot green
+  primaryDim: palette.lime500,
+  primaryMuted: '#1E2E08', // dark lime bg — for tinted surfaces
   primarySubtle: '#111A04',
 
-  secondary:       palette.orange500, // #F97316 — lightning orange
-  secondaryDim:    palette.orange600,
-  secondaryMuted:  '#2A1205',
+  secondary: palette.orange500, // #F97316 — lightning orange
+  secondaryDim: palette.orange600,
+  secondaryMuted: '#2A1205',
   secondarySubtle: '#1A0C03',
 
   // ── Status ────────────────────────────────────────────────────────────────────
-  danger:       palette.red500,
-  dangerDim:    palette.red600,
-  dangerMuted:  '#1F0A0A',
+  danger: palette.red500,
+  dangerDim: palette.red600,
+  dangerMuted: '#1F0A0A',
 
-  warning:       palette.amber500,
-  warningMuted:  '#221500',
+  warning: palette.amber500,
+  warningMuted: '#221500',
 
-  success:       palette.green500,
-  successMuted:  '#061A0E',
+  success: palette.green500,
+  successMuted: '#061A0E',
 
-  info:          palette.teal400,
-  infoMuted:     '#041A18',
+  info: palette.teal400,
+  infoMuted: '#041A18',
 
   // ── Overlay ───────────────────────────────────────────────────────────────────
-  overlay:      'rgba(0, 0, 0, 0.80)',
+  overlay: 'rgba(0, 0, 0, 0.80)',
   overlayLight: 'rgba(0, 0, 0, 0.55)',
-} as const
+} as const;
 
 // ── Typography ────────────────────────────────────────────────────────────────
 
@@ -140,17 +140,17 @@ export const typography = {
    */
   families: {
     display: 'System',
-    body:    'System',
-    mono:    'monospace' as const,
+    body: 'System',
+    mono: 'monospace' as const,
   },
 
   sizes: {
-    xs:   11,
-    sm:   13,
+    xs: 11,
+    sm: 13,
     base: 15,
-    md:   17,
-    lg:   20,
-    xl:   24,
+    md: 17,
+    lg: 20,
+    xl: 24,
     '2xl': 28,
     '3xl': 34,
     '4xl': 40,
@@ -158,58 +158,58 @@ export const typography = {
   },
 
   weights: {
-    regular:   '400' as const,
-    medium:    '500' as const,
-    semibold:  '600' as const,
-    bold:      '700' as const,
+    regular: '400' as const,
+    medium: '500' as const,
+    semibold: '600' as const,
+    bold: '700' as const,
     extrabold: '800' as const,
-    black:     '900' as const,
+    black: '900' as const,
   },
 
   letterSpacing: {
-    tight:  -0.5,
-    normal:  0,
-    wide:    0.5,
-    wider:   1.0,
-    widest:  2.0,
+    tight: -0.5,
+    normal: 0,
+    wide: 0.5,
+    wider: 1.0,
+    widest: 2.0,
   },
-} as const
+} as const;
 
 // ── Spacing ───────────────────────────────────────────────────────────────────
 
 export const spacing = {
-  0:    0,
-  0.5:  2,
-  1:    4,
-  1.5:  6,
-  2:    8,
+  0: 0,
+  0.5: 2,
+  1: 4,
+  1.5: 6,
+  2: 8,
   2.5: 10,
-  3:   12,
+  3: 12,
   3.5: 14,
-  4:   16,
-  5:   20,
-  6:   24,
-  7:   28,
-  8:   32,
-  9:   36,
-  10:  40,
-  12:  48,
-  14:  56,
-  16:  64,
-} as const
+  4: 16,
+  5: 20,
+  6: 24,
+  7: 28,
+  8: 32,
+  9: 36,
+  10: 40,
+  12: 48,
+  14: 56,
+  16: 64,
+} as const;
 
 // ── Border radii ──────────────────────────────────────────────────────────────
 
 export const radii = {
-  none:  0,
-  xs:    4,
-  sm:    8,
-  md:   12,
-  lg:   16,
-  xl:   20,
+  none: 0,
+  xs: 4,
+  sm: 8,
+  md: 12,
+  lg: 16,
+  xl: 20,
   '2xl': 24,
   full: 9999,
-} as const
+} as const;
 
 // ── Shadows ───────────────────────────────────────────────────────────────────
 
@@ -264,30 +264,37 @@ export const shadows = {
     shadowRadius: 14,
     elevation: 8,
   },
-} as const
+} as const;
 
 // ── Valkyrie color scheme ─────────────────────────────────────────────────────
 
 export const valkyrieColors = {
   ...colors,
-  primary:       '#EC4899',
-  primaryDim:    '#DB2777',
-  primaryMuted:  '#1A0812',
+  primary: '#EC4899',
+  primaryDim: '#DB2777',
+  primaryMuted: '#1A0812',
   primarySubtle: '#110509',
-  borderFocus:   '#EC4899',
-} as const
+  borderFocus: '#EC4899',
+} as const;
 
 // ── Multi-theme exports ───────────────────────────────────────────────────────
 
-export type ColorScheme = { readonly [K in keyof typeof colors]: string }
-export type ThemeName = 'default' | 'valkyrie'
+export type ColorScheme = { readonly [K in keyof typeof colors]: string };
+export type ThemeName = 'default' | 'valkyrie';
 
 export const COLOR_SCHEMES: Record<ThemeName, ColorScheme> = {
-  'default':  colors,
-  'valkyrie': valkyrieColors,
-}
+  default: colors,
+  valkyrie: valkyrieColors,
+};
 
 // ── Convenience re-export ─────────────────────────────────────────────────────
 
-export const theme = { colors, palette, typography, spacing, radii, shadows } as const
-export type Theme = typeof theme
+export const theme = {
+  colors,
+  palette,
+  typography,
+  spacing,
+  radii,
+  shadows,
+} as const;
+export type Theme = typeof theme;

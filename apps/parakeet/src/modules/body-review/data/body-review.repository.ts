@@ -1,9 +1,19 @@
 import type { Lift } from '@parakeet/shared-types';
 import { LiftSchema } from '@parakeet/shared-types';
+import type {
+  FatigueLevel,
+  FatigueMismatch,
+  MuscleGroup,
+  PredictedFatigue,
+} from '@parakeet/training-engine';
+import {
+  getMusclesForExercise,
+  getMusclesForLift,
+  MUSCLE_GROUPS,
+  rpeSetMultiplier,
+} from '@parakeet/training-engine';
 import type { DbRow } from '@platform/supabase';
-import { typedSupabase, fromJson, toJson } from '@platform/supabase';
-import type { FatigueMismatch, FatigueLevel, MuscleGroup, PredictedFatigue } from '@parakeet/training-engine';
-import { getMusclesForLift, getMusclesForExercise, rpeSetMultiplier, MUSCLE_GROUPS } from '@parakeet/training-engine';
+import { fromJson, toJson, typedSupabase } from '@platform/supabase';
 
 type WeeklyBodyReviewRow = DbRow<'weekly_body_reviews'>;
 
@@ -35,8 +45,12 @@ function toWeeklyBodyReview(row: WeeklyBodyReviewRow): WeeklyBodyReview {
     userId: row.user_id,
     programId: row.program_id,
     weekNumber: row.week_number,
-    feltSoreness: fromJson<Partial<Record<MuscleGroup, FatigueLevel>>>(row.felt_soreness),
-    predictedFatigue: fromJson<Record<MuscleGroup, PredictedFatigue>>(row.predicted_fatigue),
+    feltSoreness: fromJson<Partial<Record<MuscleGroup, FatigueLevel>>>(
+      row.felt_soreness
+    ),
+    predictedFatigue: fromJson<Record<MuscleGroup, PredictedFatigue>>(
+      row.predicted_fatigue
+    ),
     mismatches: fromJson<FatigueMismatch[]>(row.mismatches ?? []),
     notes: row.notes,
     createdAt: row.created_at,
@@ -44,7 +58,7 @@ function toWeeklyBodyReview(row: WeeklyBodyReviewRow): WeeklyBodyReview {
 }
 
 export async function insertWeeklyBodyReview(
-  input: SaveWeeklyBodyReviewInput,
+  input: SaveWeeklyBodyReviewInput
 ): Promise<WeeklyBodyReview> {
   const { data, error } = await typedSupabase
     .from('weekly_body_reviews')
@@ -66,7 +80,7 @@ export async function insertWeeklyBodyReview(
 
 export async function fetchWeeklyBodyReviews(
   userId: string,
-  programId?: string,
+  programId?: string
 ): Promise<WeeklyBodyReview[]> {
   let query = typedSupabase
     .from('weekly_body_reviews')
@@ -86,7 +100,7 @@ export async function fetchWeeklyBodyReviews(
 export async function fetchLatestWeeklyReview(
   userId: string,
   programId: string,
-  weekNumber: number,
+  weekNumber: number
 ): Promise<WeeklyBodyReview | null> {
   const { data, error } = await typedSupabase
     .from('weekly_body_reviews')
@@ -107,15 +121,18 @@ export async function fetchLatestWeeklyReview(
 export async function fetchWeeklyVolumeForReview(
   userId: string,
   programId: string,
-  weekNumber: number,
+  weekNumber: number
 ): Promise<Record<MuscleGroup, number>> {
-  const volume = Object.fromEntries(
-    MUSCLE_GROUPS.map((m) => [m, 0])
-  ) as Record<MuscleGroup, number>;
+  const volume = Object.fromEntries(MUSCLE_GROUPS.map((m) => [m, 0])) as Record<
+    MuscleGroup,
+    number
+  >;
 
   const { data, error } = await typedSupabase
     .from('session_logs')
-    .select('actual_sets, auxiliary_sets, sessions!inner(primary_lift, week_number, program_id)')
+    .select(
+      'actual_sets, auxiliary_sets, sessions!inner(primary_lift, week_number, program_id)'
+    )
     .eq('user_id', userId)
     .eq('sessions.program_id', programId)
     .eq('sessions.week_number', weekNumber);
@@ -123,14 +140,21 @@ export async function fetchWeeklyVolumeForReview(
   if (error) throw error;
 
   for (const row of data ?? []) {
-    const sessions = Array.isArray(row.sessions) ? row.sessions[0] : row.sessions;
+    const sessions = Array.isArray(row.sessions)
+      ? row.sessions[0]
+      : row.sessions;
     const rawLift = (sessions as { primary_lift: string } | null)?.primary_lift;
     const lift = LiftSchema.safeParse(rawLift).data as Lift | undefined;
     if (!lift) continue;
 
     type SetWithRpe = { rpe_actual?: number };
-    const mainSets = Array.isArray(row.actual_sets) ? (row.actual_sets as SetWithRpe[]) : [];
-    const mainEffective = mainSets.reduce((sum, s) => sum + rpeSetMultiplier(s.rpe_actual), 0);
+    const mainSets = Array.isArray(row.actual_sets)
+      ? (row.actual_sets as SetWithRpe[])
+      : [];
+    const mainEffective = mainSets.reduce(
+      (sum, s) => sum + rpeSetMultiplier(s.rpe_actual),
+      0
+    );
     for (const { muscle, contribution } of getMusclesForLift(lift)) {
       volume[muscle] += Math.floor(mainEffective * contribution);
     }
@@ -141,12 +165,16 @@ export async function fetchWeeklyVolumeForReview(
     const auxByExercise = new Map<string, number>();
     for (const s of auxSets) {
       if (s.exercise) {
-        auxByExercise.set(s.exercise, (auxByExercise.get(s.exercise) ?? 0) + rpeSetMultiplier(s.rpe_actual));
+        auxByExercise.set(
+          s.exercise,
+          (auxByExercise.get(s.exercise) ?? 0) + rpeSetMultiplier(s.rpe_actual)
+        );
       }
     }
     for (const [exercise, effective] of auxByExercise) {
       const auxMuscles = getMusclesForExercise(exercise);
-      const muscles = auxMuscles.length > 0 ? auxMuscles : getMusclesForLift(lift);
+      const muscles =
+        auxMuscles.length > 0 ? auxMuscles : getMusclesForLift(lift);
       for (const { muscle, contribution } of muscles) {
         volume[muscle] += Math.floor(effective * contribution);
       }

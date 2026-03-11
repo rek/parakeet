@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+
 import { useAuth } from '@modules/auth';
 import { getProfile } from '@modules/profile';
 import {
@@ -26,6 +27,7 @@ import {
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
+
 import { BackLink } from '../../components/navigation/BackLink';
 import type { ColorScheme } from '../../theme';
 import { useTheme } from '../../theme/ThemeContext';
@@ -70,7 +72,12 @@ function buildStyles(colors: ColorScheme) {
     },
     loading: { flex: 1, justifyContent: 'center', alignItems: 'center' },
     scroll: { flex: 1 },
-    content: { paddingHorizontal: 20, paddingTop: 16, paddingBottom: 48, gap: 2 },
+    content: {
+      paddingHorizontal: 20,
+      paddingTop: 16,
+      paddingBottom: 48,
+      gap: 2,
+    },
 
     muscleRow: {
       paddingVertical: 14,
@@ -79,7 +86,12 @@ function buildStyles(colors: ColorScheme) {
       gap: 8,
     },
     muscleRowHeader: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-    muscleLabel: { fontSize: 15, fontWeight: '600', color: colors.text, flex: 1 },
+    muscleLabel: {
+      fontSize: 15,
+      fontWeight: '600',
+      color: colors.text,
+      flex: 1,
+    },
     customBadge: {
       backgroundColor: colors.primaryMuted,
       borderRadius: 6,

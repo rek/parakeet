@@ -7,7 +7,7 @@
 export function shouldFirePrepareWarning(
   remaining: number,
   overtime: boolean,
-  warnFired: boolean,
+  warnFired: boolean
 ): boolean {
   return remaining <= 15 && remaining > 0 && !overtime && !warnFired;
 }

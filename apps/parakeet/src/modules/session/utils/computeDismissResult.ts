@@ -1,8 +1,12 @@
 import type { PostRestState } from '../model/types';
 
-export function computeDismissResult(postRestState: PostRestState | null, now: number) {
+export function computeDismissResult(
+  postRestState: PostRestState | null,
+  now: number
+) {
   const totalRest = postRestState
-    ? postRestState.actualRestSeconds + Math.round((now - postRestState.liftStartedAt) / 1000)
+    ? postRestState.actualRestSeconds +
+      Math.round((now - postRestState.liftStartedAt) / 1000)
     : 0;
   const prevSetNumber = postRestState?.pendingMainSetNumber ?? null;
   const nextSetNumber = prevSetNumber != null ? prevSetNumber + 1 : null;

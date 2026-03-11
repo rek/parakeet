@@ -8,11 +8,13 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+
 import { useAuth } from '@modules/auth';
 import { createAdHocSession, startSession } from '@modules/session';
 import { captureException } from '@platform/utils/captureException';
 import { router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
+
 import { BackLink } from '../../../components/navigation/BackLink';
 import { radii, spacing, typography } from '../../../theme';
 import type { ColorScheme } from '../../../theme';
@@ -158,4 +160,3 @@ export default function AdHocScreen() {
     </SafeAreaView>
   );
 }
-

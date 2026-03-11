@@ -1,36 +1,38 @@
-import { typedSupabase } from '@platform/supabase'
+import { typedSupabase } from '@platform/supabase';
 
 export interface DeveloperSuggestion {
-  id: string
-  user_id: string
-  program_id: string
-  created_at: string
-  description: string
-  rationale: string
-  developer_note: string
-  priority: 'high' | 'medium' | 'low'
-  status: 'unreviewed' | 'acknowledged' | 'implemented' | 'dismissed'
-  reviewed_at: string | null
+  id: string;
+  user_id: string;
+  program_id: string;
+  created_at: string;
+  description: string;
+  rationale: string;
+  developer_note: string;
+  priority: 'high' | 'medium' | 'low';
+  status: 'unreviewed' | 'acknowledged' | 'implemented' | 'dismissed';
+  reviewed_at: string | null;
 }
 
-export async function getDeveloperSuggestions(): Promise<DeveloperSuggestion[]> {
+export async function getDeveloperSuggestions(): Promise<
+  DeveloperSuggestion[]
+> {
   const { data, error } = await typedSupabase
     .from('developer_suggestions')
     .select('*')
-    .order('created_at', { ascending: false })
+    .order('created_at', { ascending: false });
 
-  if (error) throw error
-  return (data ?? []) as DeveloperSuggestion[]
+  if (error) throw error;
+  return (data ?? []) as DeveloperSuggestion[];
 }
 
 export async function updateSuggestionStatus(
   id: string,
-  status: 'acknowledged' | 'implemented' | 'dismissed',
+  status: 'acknowledged' | 'implemented' | 'dismissed'
 ): Promise<void> {
   const { error } = await typedSupabase
     .from('developer_suggestions')
     .update({ status, reviewed_at: new Date().toISOString() })
-    .eq('id', id)
+    .eq('id', id);
 
-  if (error) throw error
+  if (error) throw error;
 }

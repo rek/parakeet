@@ -1,4 +1,4 @@
-import { z } from 'zod'
+import { z } from 'zod';
 
 export const DisruptionTypeSchema = z.enum([
   'injury',
@@ -8,13 +8,13 @@ export const DisruptionTypeSchema = z.enum([
   'equipment_unavailable',
   'unprogrammed_event',
   'other',
-])
+]);
 
-export type DisruptionType = z.infer<typeof DisruptionTypeSchema>
+export type DisruptionType = z.infer<typeof DisruptionTypeSchema>;
 
-export const SeveritySchema = z.enum(['minor', 'moderate', 'major'])
+export const SeveritySchema = z.enum(['minor', 'moderate', 'major']);
 
-export type Severity = z.infer<typeof SeveritySchema>
+export type Severity = z.infer<typeof SeveritySchema>;
 
 export const CreateDisruptionSchema = z
   .object({
@@ -26,9 +26,9 @@ export const CreateDisruptionSchema = z
     description: z.string().optional(),
     session_ids_affected: z.array(z.uuid()).optional(),
   })
-  .strict()
+  .strict();
 
-export type CreateDisruption = z.infer<typeof CreateDisruptionSchema>
+export type CreateDisruption = z.infer<typeof CreateDisruptionSchema>;
 
 export const AdjustmentSuggestionSchema = z
   .object({
@@ -44,9 +44,9 @@ export const AdjustmentSuggestionSchema = z
     rationale: z.string(),
     substitution_note: z.string().optional(),
   })
-  .strict()
+  .strict();
 
-export type AdjustmentSuggestion = z.infer<typeof AdjustmentSuggestionSchema>
+export type AdjustmentSuggestion = z.infer<typeof AdjustmentSuggestionSchema>;
 
 export const DisruptionSchema = z
   .object({
@@ -65,14 +65,16 @@ export const DisruptionSchema = z
     resolved_at: z.iso.datetime({ offset: true }).nullable(),
     status: z.enum(['active', 'resolved', 'monitoring']),
   })
-  .strict()
+  .strict();
 
-export type TrainingDisruption = z.infer<typeof DisruptionSchema>
+export type TrainingDisruption = z.infer<typeof DisruptionSchema>;
 
 export const DisruptionWithSuggestionsSchema = DisruptionSchema.extend({
   suggested_adjustments: z.array(AdjustmentSuggestionSchema),
   // Sessions with null planned_sets that will be adjusted at JIT time
   future_sessions_count: z.number().int().nonnegative().optional(),
-})
+});
 
-export type DisruptionWithSuggestions = z.infer<typeof DisruptionWithSuggestionsSchema>
+export type DisruptionWithSuggestions = z.infer<
+  typeof DisruptionWithSuggestionsSchema
+>;

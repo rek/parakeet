@@ -1,9 +1,6 @@
-import {
-  computeStreak,
-  computeWilks2020,
-} from '@parakeet/training-engine';
-import type { PR, WeekStatus, StreakResult } from '@parakeet/training-engine';
 import type { Lift } from '@parakeet/shared-types';
+import { computeStreak, computeWilks2020 } from '@parakeet/training-engine';
+import type { PR, StreakResult, WeekStatus } from '@parakeet/training-engine';
 
 import {
   fetchDisruptionsForStreak,
@@ -37,7 +34,10 @@ export interface WilksPoint {
   date: string;
 }
 
-export async function storePersonalRecords(userId: string, prs: PR[]): Promise<void> {
+export async function storePersonalRecords(
+  userId: string,
+  prs: PR[]
+): Promise<void> {
   await upsertPersonalRecords(userId, prs);
 }
 
@@ -48,7 +48,7 @@ export async function storePersonalRecords(userId: string, prs: PR[]): Promise<v
  */
 export async function getPRHistory(
   userId: string,
-  lift: Lift,
+  lift: Lift
 ): Promise<HistoricalPRs> {
   const rows = await fetchPersonalRecords(userId, lift);
 
@@ -138,7 +138,8 @@ export async function getStreakData(userId: string): Promise<StreakResult> {
         completed++;
       } else if (
         status === 'skipped' &&
-        (disruptionSessionIds.has(s.id as string) || isDateCoveredByDisruption(dateStr))
+        (disruptionSessionIds.has(s.id as string) ||
+          isDateCoveredByDisruption(dateStr))
       ) {
         skippedWithDisruption++;
       } else if (weekIsComplete) {
@@ -172,15 +173,18 @@ export async function getCycleBadges(userId: string): Promise<CycleBadge[]> {
   for (const program of programs) {
     if (!program.total_weeks) continue;
 
-    const allSessions = await fetchProgramSessionStatuses(program.id as string, userId);
+    const allSessions = await fetchProgramSessionStatuses(
+      program.id as string,
+      userId
+    );
     const total = allSessions.length;
     if (total === 0) continue;
 
     const completedCount = allSessions.filter(
-      (s: { status: string }) => s.status === 'completed',
+      (s: { status: string }) => s.status === 'completed'
     ).length;
     const skippedDisruption = allSessions.filter(
-      (s: { status: string }) => s.status === 'skipped',
+      (s: { status: string }) => s.status === 'skipped'
     ).length;
 
     const completionPct = (completedCount + skippedDisruption) / total;
@@ -213,16 +217,18 @@ export async function getWilksHistory(userId: string): Promise<WilksPoint[]> {
 
   const sex: 'male' | 'female' =
     profile?.biological_sex === 'female' ? 'female' : 'male';
-  const bodyweightKg = (profile as { bodyweight_kg?: number } | null)?.bodyweight_kg ?? 85;
+  const bodyweightKg =
+    (profile as { bodyweight_kg?: number } | null)?.bodyweight_kg ?? 85;
 
   const points: WilksPoint[] = [];
 
   for (const program of programs) {
     const startDate = program.start_date as string;
     const relevant = maxes.filter(
-      (m) => (m.recorded_at as string).split('T')[0] <= startDate,
+      (m) => (m.recorded_at as string).split('T')[0] <= startDate
     );
-    const maxRow = relevant.length > 0 ? relevant[relevant.length - 1] : maxes[0];
+    const maxRow =
+      relevant.length > 0 ? relevant[relevant.length - 1] : maxes[0];
 
     const squatKg = (maxRow.squat_1rm_grams as number) / 1000;
     const benchKg = (maxRow.bench_1rm_grams as number) / 1000;

@@ -1,15 +1,23 @@
 import 'expo/fetch';
+
 import { useEffect } from 'react';
 import { View } from 'react-native';
+
 import { AuthProvider, useAuthContext } from '@modules/auth';
-import { useMissedSessionReconciliation, useRestNotifications, useSyncQueue } from '@modules/session';
+import {
+  useMissedSessionReconciliation,
+  useRestNotifications,
+  useSyncQueue,
+} from '@modules/session';
 import { queryClient } from '@platform/query';
 import * as Sentry from '@sentry/react-native';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
+
 // import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import '@platform/supabase/bootstrap';
+
 // import { ReturnToSessionBanner } from '../components/session/ReturnToSessionBanner';
 import { ErrorBoundary } from '../components/ui/ErrorBoundary';
 import { ThemeProvider } from '../theme/ThemeContext';

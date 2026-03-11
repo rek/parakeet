@@ -8,10 +8,17 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+
 import { detectAchievements } from '@modules/achievements';
 import { useAuth } from '@modules/auth';
 import { stampCyclePhaseOnSession } from '@modules/cycle-tracking';
-import { checkEndOfWeek, completeSession, computeSessionStats, isNetworkError, RPE_OPTIONS } from '@modules/session';
+import {
+  checkEndOfWeek,
+  completeSession,
+  computeSessionStats,
+  isNetworkError,
+  RPE_OPTIONS,
+} from '@modules/session';
 import type { PR } from '@parakeet/training-engine';
 import { useNetworkStatus } from '@platform/network';
 import { qk } from '@platform/query';
@@ -21,6 +28,7 @@ import { captureException } from '@platform/utils/captureException';
 import { useQueryClient } from '@tanstack/react-query';
 import { router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
+
 import { StarCard } from '../../../components/achievements/StarCard';
 import type { ColorScheme } from '../../../theme';
 import { useTheme } from '../../../theme/ThemeContext';
@@ -279,7 +287,10 @@ export default function CompleteScreen() {
   // ── Derived stats ─────────────────────────────────────────────────────────
 
   // For free-form ad-hoc (no main lift sets), use auxiliary sets for stats
-  const { totalSets, completedSets, completionPct } = computeSessionStats(actualSets, auxiliarySets);
+  const { totalSets, completedSets, completionPct } = computeSessionStats(
+    actualSets,
+    auxiliarySets
+  );
 
   // ── Handlers ──────────────────────────────────────────────────────────────
 

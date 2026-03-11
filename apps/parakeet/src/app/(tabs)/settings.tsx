@@ -1,3 +1,4 @@
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   ScrollView,
   StyleSheet,
@@ -6,9 +7,14 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+
 import { useAuth } from '@modules/auth';
-import { getProfile, formatBirthYear, formatBodyweight } from '@modules/profile';
 import { useFeatureEnabled } from '@modules/feature-flags';
+import {
+  formatBirthYear,
+  formatBodyweight,
+  getProfile,
+} from '@modules/profile';
 import {
   exportTrainingData,
   getBarWeightKg,
@@ -18,15 +24,15 @@ import {
 } from '@modules/settings';
 import type { BarWeightKg } from '@modules/settings';
 import { qk } from '@platform/query';
+import { SEX_LABELS, THEME_OPTIONS } from '@shared/constants';
 import { useQuery } from '@tanstack/react-query';
-import { router } from 'expo-router';
 import Constants from 'expo-constants';
-import { useEffect, useState, useCallback, useMemo } from 'react';
+import { router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
+
 import { radii, spacing, typography } from '../../theme';
 import type { ColorScheme } from '../../theme';
 import { useTheme } from '../../theme/ThemeContext';
-import { SEX_LABELS, THEME_OPTIONS } from '@shared/constants';
 
 // ── Sub-components ────────────────────────────────────────────────────────────
 
@@ -392,11 +398,19 @@ export default function SettingsScreen() {
               {([15, 20] as BarWeightKg[]).map((kg) => (
                 <TouchableOpacity
                   key={kg}
-                  style={[styles.toggleBtn, barWeightKg === kg && styles.toggleBtnActive]}
+                  style={[
+                    styles.toggleBtn,
+                    barWeightKg === kg && styles.toggleBtnActive,
+                  ]}
                   onPress={() => handleBarWeightChange(kg)}
                   activeOpacity={0.7}
                 >
-                  <Text style={[styles.toggleBtnText, barWeightKg === kg && styles.toggleBtnTextActive]}>
+                  <Text
+                    style={[
+                      styles.toggleBtnText,
+                      barWeightKg === kg && styles.toggleBtnTextActive,
+                    ]}
+                  >
                     {kg} kg
                   </Text>
                 </TouchableOpacity>
@@ -410,13 +424,19 @@ export default function SettingsScreen() {
           styles={styles}
           right={
             <View style={styles.rowRight}>
-              {showFormulaSuggestions && hasSuggestions && <View style={styles.suggestionDot} />}
+              {showFormulaSuggestions && hasSuggestions && (
+                <View style={styles.suggestionDot} />
+              )}
               <Text style={styles.chevron}>›</Text>
             </View>
           }
         />
         {showVolume && (
-          <Row label="Volume & Recovery" onPress={() => router.push('/volume')} styles={styles} />
+          <Row
+            label="Volume & Recovery"
+            onPress={() => router.push('/volume')}
+            styles={styles}
+          />
         )}
 
         <View style={styles.divider} />
@@ -489,11 +509,19 @@ export default function SettingsScreen() {
               {THEME_OPTIONS.map((opt) => (
                 <TouchableOpacity
                   key={opt.key}
-                  style={[styles.toggleBtn, themeName === opt.key && styles.toggleBtnActive]}
+                  style={[
+                    styles.toggleBtn,
+                    themeName === opt.key && styles.toggleBtnActive,
+                  ]}
                   onPress={() => setTheme(opt.key)}
                   activeOpacity={0.7}
                 >
-                  <Text style={[styles.toggleBtnText, themeName === opt.key && styles.toggleBtnTextActive]}>
+                  <Text
+                    style={[
+                      styles.toggleBtnText,
+                      themeName === opt.key && styles.toggleBtnTextActive,
+                    ]}
+                  >
                     {opt.label}
                   </Text>
                 </TouchableOpacity>
@@ -532,7 +560,9 @@ export default function SettingsScreen() {
               {__DEV__ && <Text style={styles.devBadge}>DEV</Text>}
               <Text style={styles.buildDate}>
                 {Constants.expoConfig?.extra?.buildDate
-                  ? new Date(Constants.expoConfig.extra.buildDate as string).toLocaleDateString('en-GB', {
+                  ? new Date(
+                      Constants.expoConfig.extra.buildDate as string
+                    ).toLocaleDateString('en-GB', {
                       day: 'numeric',
                       month: 'short',
                       year: 'numeric',

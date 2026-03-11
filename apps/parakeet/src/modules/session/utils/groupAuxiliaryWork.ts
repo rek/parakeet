@@ -1,7 +1,11 @@
-import type { AuxiliaryWork } from '../model/types';
 import type { AuxiliaryActualSet } from '@platform/store/sessionStore';
 
-export function groupAuxiliaryWork(auxiliaryWork: AuxiliaryWork[], auxiliarySets: AuxiliaryActualSet[]) {
+import type { AuxiliaryWork } from '../model/types';
+
+export function groupAuxiliaryWork(
+  auxiliaryWork: AuxiliaryWork[],
+  auxiliarySets: AuxiliaryActualSet[]
+) {
   const auxByExercise = auxiliaryWork.map((aw, origIndex) => ({
     ...aw,
     origIndex,
