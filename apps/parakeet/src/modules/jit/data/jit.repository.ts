@@ -123,9 +123,9 @@ export interface JitDisruptionRow {
 
 export interface ChallengeReviewRow {
   score: number;
-  verdict: string;
-  concerns: unknown;
-  suggested_overrides: unknown;
+  verdict: 'accept' | 'flag';
+  concerns: string[];
+  suggested_overrides: Record<string, unknown> | null;
 }
 
 export async function fetchChallengeReview(
@@ -137,7 +137,13 @@ export async function fetchChallengeReview(
     .eq('session_id', sessionId)
     .limit(1)
     .single();
-  return data as ChallengeReviewRow | null;
+  if (!data) return null;
+  return {
+    score: data.score,
+    verdict: data.verdict as 'accept' | 'flag',
+    concerns: Array.isArray(data.concerns) ? (data.concerns as string[]) : [],
+    suggested_overrides: data.suggested_overrides as Record<string, unknown> | null,
+  };
 }
 
 export async function fetchActiveDisruptions(

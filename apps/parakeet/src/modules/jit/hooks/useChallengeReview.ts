@@ -11,6 +11,7 @@ export function useChallengeReview(
     queryFn: () => fetchChallengeReview(sessionId),
     enabled,
     refetchInterval: (query) => (query.state.data ? false : 3000),
+    retry: 10,
     staleTime: Infinity,
   });
 }

@@ -675,13 +675,10 @@ export default function SessionScreen() {
     sessionId,
     !isFreeForm && !challengeDismissed
   );
-  const challengeConcerns = Array.isArray(challengeReview?.concerns)
-    ? (challengeReview.concerns as string[])
-    : [];
   const showChallengeBanner =
     !challengeDismissed &&
     challengeReview?.verdict === 'flag' &&
-    challengeConcerns.length > 0;
+    (challengeReview?.concerns.length ?? 0) > 0;
 
   // ── Render ────────────────────────────────────────────────────────────────
 
@@ -726,7 +723,7 @@ export default function SessionScreen() {
           >
             <View style={styles.challengeBannerRow}>
               <Text style={styles.challengeBannerText}>
-                {challengeConcerns[0]}
+                {challengeReview?.concerns[0]}
               </Text>
               <TouchableOpacity
                 onPress={() => setChallengeDismissed(true)}
@@ -736,7 +733,7 @@ export default function SessionScreen() {
               </TouchableOpacity>
             </View>
             {challengeExpanded &&
-              challengeConcerns.slice(1).map((concern, i) => (
+              challengeReview?.concerns.slice(1).map((concern, i) => (
                 <Text key={i} style={styles.challengeDetail}>
                   {concern}
                 </Text>
