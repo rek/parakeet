@@ -24,6 +24,11 @@
           "client_id": "54630589514-nsdq3lb1vlfurgsq0230otpcj0qsq3p9.apps.googleusercontent.com",
           "client_type": 3
         }
+      ],
+      "api_key": [
+        {
+          "current_key": ""
+        }
       ]
     },
     {
@@ -37,6 +42,11 @@
         {
           "client_id": "54630589514-nsdq3lb1vlfurgsq0230otpcj0qsq3p9.apps.googleusercontent.com",
           "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": ""
         }
       ]
     }
