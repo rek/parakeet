@@ -26,7 +26,7 @@ import {
 import { ExerciseType, getExerciseType } from '../auxiliary/exercise-types';
 import { CyclePhase } from '../formulas/cycle-phase';
 import { roundToNearest } from '../formulas/weight-rounding';
-import { FormulaConfig, MrvMevConfig, MuscleGroup } from '../types';
+import { FormulaConfig, MrvMevConfig, MuscleGroup, PUSH_MUSCLES } from '../types';
 import {
   getMusclesForExercise,
   getMusclesForLift,
@@ -692,12 +692,18 @@ function buildVolumeTopUp(
     const { mev } = mrvMevConfig[muscle];
     if (mev <= 0) continue;
     const weeklyVol = weeklyVolumeToDate[muscle] ?? 0;
-    const contrib = mainContrib.get(muscle) ?? 0;
-    const projected = weeklyVol + Math.floor(mainLiftSetCount * contrib);
+    const primaryLiftContrib = mainContrib.get(muscle) ?? 0;
+    const projected = weeklyVol + Math.floor(mainLiftSetCount * primaryLiftContrib);
+    // Push muscles that receive zero direct contribution from today's primary lift
+    // use the full MEV target rather than the pro-rated threshold. This front-loads
+    // push coverage on squat/deadlift days, preventing zero-volume weeks when no
+    // bench session occurs or bench is skipped.
     const effectiveMev =
-      sessionIndex && totalSessionsThisWeek && totalSessionsThisWeek > 0
-        ? Math.ceil((mev * sessionIndex) / totalSessionsThisWeek)
-        : mev;
+      PUSH_MUSCLES.has(muscle) && primaryLiftContrib === 0
+        ? mev
+        : sessionIndex && totalSessionsThisWeek && totalSessionsThisWeek > 0
+          ? Math.ceil((mev * sessionIndex) / totalSessionsThisWeek)
+          : mev;
     const deficit = effectiveMev - projected;
     if (deficit > 0) candidates.push({ muscle, deficit });
   }

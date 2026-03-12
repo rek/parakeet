@@ -1,39 +1,20 @@
 import type { Lift } from '@parakeet/shared-types';
-import { MUSCLE_GROUPS } from '@parakeet/training-engine';
+import { MUSCLE_CATALOG, MUSCLE_GROUPS } from '@parakeet/training-engine';
 import type { MuscleGroup } from '@parakeet/training-engine';
 
 export const MUSCLE_GROUPS_ORDER: readonly MuscleGroup[] = MUSCLE_GROUPS;
 
-export const MUSCLE_LABELS_FULL: Record<MuscleGroup, string> = {
-  quads: 'Quads',
-  hamstrings: 'Hamstrings',
-  glutes: 'Glutes',
-  lower_back: 'Lower Back',
-  upper_back: 'Upper Back',
-  chest: 'Chest',
-  triceps: 'Triceps',
-  shoulders: 'Shoulders',
-  biceps: 'Biceps',
-  core: 'Core',
-};
+export const MUSCLE_LABELS_FULL = Object.fromEntries(
+  MUSCLE_CATALOG.map(m => [m.id, m.label])
+) as Record<MuscleGroup, string>;
 
-export const MUSCLE_LABELS_COMPACT: Record<MuscleGroup, string> = {
-  ...MUSCLE_LABELS_FULL,
-  hamstrings: 'Hams',
-};
+export const MUSCLE_LABELS_COMPACT = Object.fromEntries(
+  MUSCLE_CATALOG.map(m => [m.id, m.labelCompact])
+) as Record<MuscleGroup, string>;
 
-export const MUSCLE_LABELS_ABBR: Record<MuscleGroup, string> = {
-  quads: 'Q',
-  hamstrings: 'H',
-  glutes: 'G',
-  lower_back: 'LB',
-  upper_back: 'UB',
-  chest: 'Ch',
-  triceps: 'Tr',
-  shoulders: 'Sh',
-  biceps: 'Bi',
-  core: 'Co',
-};
+export const MUSCLE_LABELS_ABBR = Object.fromEntries(
+  MUSCLE_CATALOG.map(m => [m.id, m.abbr])
+) as Record<MuscleGroup, string>;
 
 export const COMPACT_VOLUME_MUSCLES: readonly MuscleGroup[] = [
   'quads',

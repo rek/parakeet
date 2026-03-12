@@ -177,10 +177,16 @@ function buildStyles(colors: ColorScheme) {
       fontWeight: typography.weights.semibold,
       color: colors.text,
     },
+    funBadgeDescription: {
+      fontSize: typography.sizes.xs,
+      color: colors.textSecondary,
+      marginTop: 1,
+    },
     funBadgeFlavor: {
       fontSize: typography.sizes.xs,
       color: colors.textTertiary,
       marginTop: 1,
+      fontStyle: 'italic',
     },
   });
 }
@@ -319,6 +325,7 @@ export function AchievementsSection({
                 </View>
                 <View style={styles.funBadgeContent}>
                   <Text style={styles.funBadgeName}>{badge.name}</Text>
+                  <Text style={styles.funBadgeDescription}>{badge.description}</Text>
                   <Text style={styles.funBadgeFlavor}>{badge.flavor}</Text>
                 </View>
               </View>

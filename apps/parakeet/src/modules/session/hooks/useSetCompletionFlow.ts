@@ -101,21 +101,21 @@ export function useSetCompletionFlow({
       if (data.isCompleted) {
         if (!wasCompleted) {
           setPendingRpeSetNumber(setNumber);
+
+          // No rest timer after the last set
+          if (setNumber >= plannedSetsLengthRef.current) return;
+
+          if (!restTimerPrefsRef.current.mainSetsEnabled) return;
+
+          const duration =
+            restRecommendations.current?.mainLift[setNumber - 1] ??
+            DEFAULT_MAIN_REST_SECONDS;
+
+          openTimer({
+            durationSeconds: duration,
+            pendingMainSetNumber: setNumber,
+          });
         }
-
-        // No rest timer after the last set
-        if (setNumber >= plannedSetsLengthRef.current) return;
-
-        if (!restTimerPrefsRef.current.mainSetsEnabled) return;
-
-        const duration =
-          restRecommendations.current?.mainLift[setNumber - 1] ??
-          DEFAULT_MAIN_REST_SECONDS;
-
-        openTimer({
-          durationSeconds: duration,
-          pendingMainSetNumber: setNumber,
-        });
       } else {
         setPendingRpeSetNumber((prev) => (prev === setNumber ? null : prev));
       }
@@ -154,22 +154,22 @@ export function useSetCompletionFlow({
       if (data.isCompleted) {
         if (!wasAuxCompleted) {
           setPendingAuxRpe({ exercise, setNumber });
+
+          // No rest timer after the last set of this exercise
+          if (setNumber >= setsInExercise) return;
+
+          if (!restTimerPrefsRef.current.auxSetsEnabled) return;
+
+          const duration =
+            restRecommendations.current?.auxiliary[exerciseIndex] ??
+            DEFAULT_AUX_REST_SECONDS;
+
+          openTimer({
+            durationSeconds: duration,
+            pendingAuxExercise: exercise,
+            pendingAuxSetNumber: setNumber,
+          });
         }
-
-        // No rest timer after the last set of this exercise
-        if (setNumber >= setsInExercise) return;
-
-        if (!restTimerPrefsRef.current.auxSetsEnabled) return;
-
-        const duration =
-          restRecommendations.current?.auxiliary[exerciseIndex] ??
-          DEFAULT_AUX_REST_SECONDS;
-
-        openTimer({
-          durationSeconds: duration,
-          pendingAuxExercise: exercise,
-          pendingAuxSetNumber: setNumber,
-        });
       } else {
         setPendingAuxRpe((prev) =>
           prev?.exercise === exercise && prev?.setNumber === setNumber

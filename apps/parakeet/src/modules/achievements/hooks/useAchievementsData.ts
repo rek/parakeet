@@ -18,6 +18,7 @@ import { fetchUserBadges } from '../data/badge.repository';
 export interface FunBadgeRow {
   id: BadgeId;
   name: string;
+  description: string;
   emoji: string;
   flavor: string;
   earnedAt: string;
@@ -82,6 +83,7 @@ export function useAchievementsData(
           return {
             id: row.badge_id as BadgeId,
             name: def.name,
+            description: def.description,
             emoji: def.emoji,
             flavor: def.flavor,
             earnedAt: row.earned_at,

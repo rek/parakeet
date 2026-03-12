@@ -52,6 +52,26 @@ export function getCurrentBlock(program: {
   return currentBlockNumber(program.start_date!, program.total_weeks ?? 9);
 }
 
+/**
+ * Returns the ordered block numbers to display as tabs for a program.
+ * Unending programs always cycle through blocks 1–3; scheduled programs
+ * derive block count from total_weeks.
+ */
+export function getProgramBlockTabs(program: {
+  program_mode?: string | null;
+  total_weeks?: number | null;
+}): number[] {
+  if (program.program_mode === 'unending') return [1, 2, 3];
+  const totalWeeks = program.total_weeks ?? 9;
+  const blockCount = Math.ceil(totalWeeks / 3);
+  return Array.from({ length: blockCount }, (_, i) => i + 1);
+}
+
+/** Maps a raw block number to a cycled 1–3 block index (for unending programs). */
+export function cycleBlockNumber(blockNumber: number): 1 | 2 | 3 {
+  return (((blockNumber - 1) % 3) + 1) as 1 | 2 | 3;
+}
+
 export function determineCurrentWeek(sessions: ProgramSession[]): number {
   const activeSession = sessions.find(
     (s) => s.status === 'planned' || s.status === 'in_progress'

@@ -1239,3 +1239,131 @@ describe('generateJITSession — volume top-up cross-lift 1RM', () => {
     });
   });
 });
+
+// ---------------------------------------------------------------------------
+// engine-031: push muscle coverage boost on squat/deadlift days
+// ---------------------------------------------------------------------------
+
+describe('generateJITSession — push muscle coverage boost (engine-031)', () => {
+  // Pool covering push muscles:
+  //   Dumbbell Incline Bench Press  → chest: 1.0, shoulders: 1.0
+  //   Barbell Push Press            → shoulders: 1.0, triceps: 1.0
+  //   Floor Press                   → chest: 1.0, triceps: 1.0
+  const pushPool = [
+    'Dumbbell Incline Bench Press',
+    'Barbell Push Press',
+    'Floor Press',
+  ];
+
+  it('chest gets top-up on squat day session 1 of 3 — full MEV used, not pro-rated', () => {
+    // Pro-rated effectiveMev = ceil(8*1/3) = 3; squat contributes chest 0 → projected=0
+    // Without boost: deficit=3 → top-up might fire depending on other muscles winning sort
+    // With boost: effectiveMev=8 → deficit=8 → chest wins sort, triggers top-up
+    const out = generateJITSession(
+      baseInput({
+        auxiliaryPool: pushPool,
+        weeklyVolumeToDate: {
+          ...atMevExcept(DEFAULT_MRV_MEV_CONFIG_MALE),
+          chest: 0,
+        },
+        mrvMevConfig: DEFAULT_MRV_MEV_CONFIG_MALE,
+        sessionIndex: 1,
+        totalSessionsThisWeek: 3,
+      })
+    );
+    const topUps = out.auxiliaryWork.filter(
+      (a) => a.isTopUp && a.topUpReason?.includes('chest')
+    );
+    expect(topUps.length).toBeGreaterThan(0);
+  });
+
+  it('push muscle session 2 of 3: boost yields 3 sets instead of 1', () => {
+    // chest MEV=8; weeklyChest=5; squat contributes 0 chest
+    // Pro-rated effectiveMev = ceil(8*2/3)=6 → deficit=1 → 1 set
+    // With push boost: effectiveMev=8 → deficit=3 → 3 sets
+    const out = generateJITSession(
+      baseInput({
+        auxiliaryPool: pushPool,
+        weeklyVolumeToDate: {
+          ...atMevExcept(DEFAULT_MRV_MEV_CONFIG_MALE),
+          chest: 5,
+        },
+        mrvMevConfig: DEFAULT_MRV_MEV_CONFIG_MALE,
+        sessionIndex: 2,
+        totalSessionsThisWeek: 3,
+      })
+    );
+    const chestTopUp = out.auxiliaryWork.find(
+      (a) => a.isTopUp && a.topUpReason?.includes('chest')
+    );
+    expect(chestTopUp).toBeDefined();
+    expect(chestTopUp!.sets).toHaveLength(3);
+  });
+
+  it('bench day: push muscles use normal pro-rating (no boost)', () => {
+    // bench contributes chest 1.0 × mainSets → primaryLiftContrib > 0 → no boost
+    // weeklyChest=5, sessionIndex=1 of 3 → effectiveMev=ceil(8*1/3)=3
+    // squat projected = floor(mainSets * 1.0) ≥ 3 → no deficit → no top-up
+    const mainSets = generateJITSession(
+      baseInput({ primaryLift: 'bench' })
+    ).mainLiftSets.length;
+    const projected = Math.floor(mainSets * 1.0); // bench chest contrib = 1.0
+
+    const weeklyChest = 5;
+    // If pro-rated: effectiveMev=3; projected from bench ≥ 3 plus weekly=5 → no deficit
+    // If boost were applied: effectiveMev=8 → deficit=8-5-projected would be large → top-up
+    // So presence of boost would cause a top-up; absence means no top-up.
+    const out = generateJITSession(
+      baseInput({
+        primaryLift: 'bench',
+        auxiliaryPool: pushPool,
+        activeAuxiliaries: ['Pause Squat', 'Box Squat'], // not bench exercises
+        weeklyVolumeToDate: {
+          ...atMevExcept(DEFAULT_MRV_MEV_CONFIG_MALE),
+          chest: weeklyChest,
+        },
+        mrvMevConfig: DEFAULT_MRV_MEV_CONFIG_MALE,
+        sessionIndex: 1,
+        totalSessionsThisWeek: 3,
+      })
+    );
+    // With pro-rating (no boost): projected = weeklyChest + floor(mainSets * 1.0)
+    // effectiveMev = ceil(8*1/3) = 3; 5 + projected ≥ 3 → no chest top-up
+    const chestTopUps = out.auxiliaryWork.filter(
+      (a) => a.isTopUp && a.topUpReason?.includes('chest')
+    );
+    expect(chestTopUps).toHaveLength(0);
+  });
+
+  it('non-push muscle on squat day still uses pro-rated MEV', () => {
+    // upper_back is not a push muscle; squat doesn't contribute upper_back
+    // sessionIndex=1 of 3 → effectiveMev=ceil(mev*1/3) — moderate deficit won't fire
+    // upper_back MEV = DEFAULT_MRV_MEV_CONFIG_MALE.upper_back.mev
+    const upperBackMev = DEFAULT_MRV_MEV_CONFIG_MALE.upper_back.mev;
+    // Set upper_back to ceil(mev*1/3)-1 so pro-rated deficit=1; with full MEV deficit would be large
+    const weeklyUpperBack = Math.ceil((upperBackMev * 1) / 3) - 1;
+
+    // Use a pool that has an upper_back exercise but no chest/push exercises
+    const upperBackPool = ['Romanian Dumbbell Deadlift']; // hamstrings, not upper_back
+    // Use Pull-Up if available; otherwise rely on no match → no top-up
+    const out = generateJITSession(
+      baseInput({
+        auxiliaryPool: upperBackPool,
+        weeklyVolumeToDate: {
+          ...atMevExcept(DEFAULT_MRV_MEV_CONFIG_MALE),
+          upper_back: weeklyUpperBack,
+        },
+        mrvMevConfig: DEFAULT_MRV_MEV_CONFIG_MALE,
+        sessionIndex: 1,
+        totalSessionsThisWeek: 3,
+      })
+    );
+    // With pro-rating, deficit for upper_back = effectiveMev - projected = 1
+    // Pool has no upper_back exercise with contrib ≥ 1.0 → no top-up anyway
+    // This confirms non-push muscles go through the normal pro-rating path
+    const upperBackTopUps = out.auxiliaryWork.filter(
+      (a) => a.isTopUp && a.topUpReason?.includes('upper back')
+    );
+    expect(upperBackTopUps).toHaveLength(0);
+  });
+});

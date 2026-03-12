@@ -72,7 +72,7 @@ function buildStyles(colors: ColorScheme) {
       flex: 1,
     },
     container: {
-      paddingBottom: 16,
+      paddingBottom: 0,
     },
     sessionHeader: {
       paddingHorizontal: 16,
@@ -196,17 +196,10 @@ function buildStyles(colors: ColorScheme) {
       fontWeight: '600',
       color: colors.textSecondary,
     },
-    bottomSpacer: {
-      height: 100,
-    },
-    stickyFooter: {
-      paddingHorizontal: 16,
-      paddingVertical: 12,
-      borderTopWidth: 1,
-      borderTopColor: colors.border,
-      backgroundColor: colors.bgSurface,
-    },
     completeButton: {
+      marginHorizontal: 16,
+      marginTop: 16,
+      marginBottom: 32,
       backgroundColor: colors.primary,
       borderRadius: 12,
       paddingVertical: 16,
@@ -1004,12 +997,7 @@ export default function SessionScreen() {
           <Text style={styles.addExerciseButtonText}>+ Add Exercise</Text>
         </TouchableOpacity>
 
-        {/* Bottom padding for sticky button */}
-        <View style={styles.bottomSpacer} />
-      </ScrollView>
-
-      {/* Sticky footer: complete */}
-      <View style={styles.stickyFooter}>
+        {/* Complete workout button — inline, must scroll to reach */}
         <TouchableOpacity
           style={[
             styles.completeButton,
@@ -1024,7 +1012,7 @@ export default function SessionScreen() {
         >
           <Text style={styles.completeButtonText}>Complete Workout</Text>
         </TouchableOpacity>
-      </View>
+      </ScrollView>
 
       {/* Mini lift history sheet */}
       <LiftHistorySheet
