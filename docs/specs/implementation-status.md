@@ -40,6 +40,7 @@ For details on any item, see the linked spec file.
 - [x] engine-028: Readiness adjuster — `getReadinessModifier(sleep, energy)` in `adjustments/readiness-adjuster.ts`; applied at JIT Step 2b; 9 tests
 - [x] engine-029: Fatigue predictor — `computePredictedFatigue`, `detectMismatches` in `volume/fatigue-predictor.ts`; mismatch threshold ≥2 levels; sorted by delta; 9 tests
 - [x] engine-030: Cycle phase JIT adjuster — `getCyclePhaseModifier(phase)` in `adjustments/cycle-phase-adjuster.ts`; applied at JIT Step 2c; McNulty 2020 phase lookup; 6 tests
+- [x] engine-031: Push muscle coverage boost — `buildVolumeTopUp()` bypasses MEV pro-rating for chest/triceps/shoulders when `primaryLiftContrib === 0`; ensures push volume fires on squat/deadlift days; bench day unaffected (`contrib > 0`); 4 tests
 - [x] engine-bug-001: Exercise type system — `auxiliary/exercise-types.ts`; `ExerciseType` (`weighted`/`bodyweight`/`timed`); `AuxiliaryWork.exerciseType`; timed exercises skip MRV; bodyweight sets `weight_kg: 0`
 - [x] engine-bug-002: No-equipment session exercise cap — `MAX_AUX_EXERCISES = 5` guard before pushing top-ups in `generateJITSession`; prevents no-equipment + volume top-up from combining to 6+ aux exercises; 1 regression test added
 - [x] engine-bug-003: Auxiliary rotator block 4+ gap — `generateAuxiliaryAssignments` now generates assignments for all blocks (not just 1–3); `blockNumber` widened to `number` throughout; `getIntensityTypeForWeek` cycles correctly for block 4+ via mod-3 arithmetic
@@ -162,6 +163,7 @@ Module/platform/shared architecture is the canonical app structure. Legacy top-l
 - [x] data-002 extension: Exercise catalog — `EXERCISE_CATALOG` in `exercise-catalog.ts` as single source of truth; `DEFAULT_AUXILIARY_POOLS` derived from catalog; `getAllExercises()`, `getPrimaryMusclesForExercise()`, `getLiftForExercise()` exported; 53 entries (6 squat, 9 bench, 11 deadlift, 27 general/bodyweight); pool cull removed inappropriate exercises (Olympic complexes, conditioning work, arm isolation in wrong pool)
 - [x] data-002 extension: Add Exercise Modal context — `defaultLift` pre-filters to relevant lift section; `excludeNames` greys out already-pooled exercises; horizontal filter pills (All/Squat/Bench/Deadlift/General); settings screen passes `lift` + `pool` to the modal
 - [x] data-002 bugfix: Settings screen — dirty indicator on Save Pool button; empty pool state; BW badge for bodyweight exercises; stale assignment validation when exercise is removed from pool; `activeProgram` query key canonicalized to `qk.program.active`
+- [x] data-002 bugfix: Block assignment tabs — `blockTabs` derived from `Math.ceil(total_weeks / 3)`; unending always `[1,2,3]`; block 4+ label uses cycled index for intensity label
 
 ---
 

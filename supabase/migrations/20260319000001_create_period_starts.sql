@@ -13,7 +13,7 @@ ALTER TABLE "public"."period_starts" OWNER TO "postgres";
 DO $$ BEGIN
   ALTER TABLE ONLY "public"."period_starts"
       ADD CONSTRAINT "period_starts_pkey" PRIMARY KEY ("id");
-EXCEPTION WHEN duplicate_object THEN NULL;
+EXCEPTION WHEN duplicate_object OR invalid_table_definition THEN NULL;
 END $$;
 
 CREATE UNIQUE INDEX IF NOT EXISTS "period_starts_user_date_uniq"

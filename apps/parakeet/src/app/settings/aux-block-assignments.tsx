@@ -12,10 +12,12 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '@modules/auth';
 import {
+  cycleBlockNumber,
   getActiveProgram,
   getAllBlockAssignments,
   getAuxiliaryPools,
   getCurrentBlock,
+  getProgramBlockTabs,
   saveBlockAssignment,
 } from '@modules/program';
 import type { SlotAssignment } from '@modules/program';
@@ -463,6 +465,11 @@ export default function AuxBlockAssignmentsScreen() {
 
   const isLoading = poolsLoading || !initialized;
 
+  const blockTabs = useMemo(
+    () => (activeProgram ? getProgramBlockTabs(activeProgram) : [1, 2, 3]),
+    [activeProgram]
+  );
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.header}>
@@ -488,9 +495,9 @@ export default function AuxBlockAssignmentsScreen() {
         <>
           {/* Block tabs */}
           <View style={styles.tabs}>
-            {([1, 2, 3] as const).map((bn) => {
+            {blockTabs.map((bn) => {
               const label = isUnending
-                ? `Block ${bn} (${BLOCK_INTENSITY[bn]})`
+                ? `Block ${bn} (${BLOCK_INTENSITY[cycleBlockNumber(bn)]})`
                 : `Block ${bn}`;
               return (
                 <TouchableOpacity

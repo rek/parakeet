@@ -14,6 +14,7 @@ export const MUSCLE_LABELS_FULL: Record<MuscleGroup, string> = {
   triceps: 'Triceps',
   shoulders: 'Shoulders',
   biceps: 'Biceps',
+  core: 'Core',
 };
 
 export const MUSCLE_LABELS_COMPACT: Record<MuscleGroup, string> = {
@@ -31,6 +32,7 @@ export const MUSCLE_LABELS_ABBR: Record<MuscleGroup, string> = {
   triceps: 'Tr',
   shoulders: 'Sh',
   biceps: 'Bi',
+  core: 'Co',
 };
 
 export const COMPACT_VOLUME_MUSCLES: readonly MuscleGroup[] = [

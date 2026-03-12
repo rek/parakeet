@@ -852,6 +852,49 @@ export const EXERCISE_CATALOG: ExerciseCatalogEntry[] = [
     primaryMuscles: ['quads', 'glutes'],
     type: 'bodyweight',
   },
+  // ── Cardio / Core ─────────────────────────────────────────────────────────
+  {
+    name: 'Row Machine',
+    associatedLift: null,
+    primaryMuscles: ['upper_back', 'biceps'],
+    type: 'timed',
+    repTarget: 1,
+  },
+  {
+    name: 'Ski Erg',
+    associatedLift: null,
+    primaryMuscles: ['upper_back', 'shoulders', 'triceps'],
+    type: 'timed',
+    repTarget: 1,
+  },
+  {
+    name: 'Run - Treadmill',
+    associatedLift: null,
+    primaryMuscles: ['quads', 'hamstrings'],
+    type: 'timed',
+    repTarget: 1,
+  },
+  {
+    name: 'Run - Outside',
+    associatedLift: null,
+    primaryMuscles: ['quads', 'hamstrings'],
+    type: 'timed',
+    repTarget: 1,
+  },
+  {
+    name: 'Toes to Bar',
+    associatedLift: null,
+    primaryMuscles: ['core'],
+    type: 'bodyweight',
+    repTarget: 10,
+  },
+  {
+    name: 'Plank',
+    associatedLift: null,
+    primaryMuscles: ['core'],
+    type: 'timed',
+    repTarget: 1,
+  },
 ];
 
 // ── Fast lookup ───────────────────────────────────────────────────────────────
@@ -876,9 +919,9 @@ export const DEFAULT_AUXILIARY_POOLS: Record<Lift, string[]> = {
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
-/** Full catalog — use for manual add pickers. Excludes timed exercises. */
+/** Full catalog — use for manual add pickers. */
 export function getAllExercises(): ExerciseCatalogEntry[] {
-  return EXERCISE_CATALOG.filter((e) => e.type !== 'timed');
+  return EXERCISE_CATALOG;
 }
 
 /** Primary muscles (contribution >= 1.0) for an exercise. Empty array if unknown. */

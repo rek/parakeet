@@ -18,6 +18,7 @@ export const DEFAULT_MRV_MEV_CONFIG_MALE: MrvMevConfig = {
   triceps: { mev: 6, mrv: 20 },
   shoulders: { mev: 8, mrv: 20 },
   biceps: { mev: 8, mrv: 20 },
+  core: { mev: 8, mrv: 20 },
 };
 
 // Female defaults are ~20–30% higher per RP Strength research (see sex-based-adaptations.md)
@@ -31,6 +32,7 @@ export const DEFAULT_MRV_MEV_CONFIG_FEMALE: MrvMevConfig = {
   triceps: { mev: 8, mrv: 24 },
   shoulders: { mev: 10, mrv: 24 },
   biceps: { mev: 10, mrv: 24 },
+  core: { mev: 10, mrv: 24 },
 };
 
 // Backward-compat alias — existing callers unaffected

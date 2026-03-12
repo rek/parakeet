@@ -26,14 +26,6 @@ sometmes i do these as topup, so they do add to mrv, so need to have them logged
 
 4-day programs with overhead press as a first-class primary lift. See [design doc](design/four-day-ohp.md) and [implementation status](specs/implementation-status.md#planned--future). ~30 files, 8 specs.
 
-## 10 (bug)
-
-**Block assignment UI hardcoded to 3 tabs.** `aux-block-assignments.tsx` renders exactly 3 block tabs (`[1, 2, 3]`). For scheduled programs > 9 weeks (4+ blocks), block 4+ is unreachable from the UI. The tab list should derive its range from the program's `total_weeks` (using `Math.ceil((total_weeks - 1) / 3)`). Unending programs always cycle 1→2→3 and are unaffected.
-
-## 12
-
-**Zero-volume muscle coverage in early blocks.** Chest/triceps/shoulders can receive zero direct volume in blocks where squat and deadlift days dominate (before volume top-up kicks in). Consider front-loading a small amount of push work or adjusting top-up trigger sensitivity.
-
 ## 13
 
 **Training-age-scaled MRV/MEV.** RP Strength research shows beginners tolerate less volume and advanced lifters handle more. `Persona.trainingAge` exists but isn't used for volume calculations. Add a training-age multiplier to MRV/MEV defaults (e.g., beginner ×0.8, intermediate ×1.0, advanced ×1.2). Validate with simulation.
