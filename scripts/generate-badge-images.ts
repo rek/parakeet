@@ -121,7 +121,7 @@ const BADGE_SUBJECTS: Record<string, string> = {
   night_owl:
     'a fierce owl perched atop a loaded barbell, dim gym lights and shadows, moonlight through warehouse windows',
   iron_monk:
-    'a hooded figure gripping a barbell with chalked hands, rows of iron plates behind them, disciplined stillness',
+    'a single unbroken chain forged from weight plates, each link pristine and unmarked, stretching across a dark gym floor, thirty links total',
   sunday_scaries_cure:
     'a heavy barbell resting on a squat rack, calendar pages scattered on the gym floor, Sunday light streaming in',
   year_365:

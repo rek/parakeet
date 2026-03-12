@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
-import { shouldFirePrepareWarning } from '@modules/session';
+import { shouldFirePrepareWarning } from '../utils/prepare-warning';
 import { createAudioPlayer } from 'expo-audio';
 import * as Haptics from 'expo-haptics';
 

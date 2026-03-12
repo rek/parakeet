@@ -1076,6 +1076,8 @@ export default function SessionScreen() {
           {postRestState !== null && !timerState?.visible && (
             <PostRestOverlay
               plannedReps={postRestState.plannedReps}
+              plannedWeightKg={postRestState.plannedWeightKg}
+              nextSetNumber={postRestState.nextSetNumber}
               onLiftComplete={handleLiftComplete}
               onLiftFailed={handleLiftFailed}
               onReset15s={handlePostRestReset}

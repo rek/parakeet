@@ -190,6 +190,10 @@ export function useSetCompletionFlow({
 
     const elapsedSeconds = closeTimer();
 
+    // Clear any pending RPE so PostRestOverlay never appears alongside the RPE picker
+    setPendingRpeSetNumber(null);
+    setPendingAuxRpe(null);
+
     if (pendingMain !== null) {
       updateSet(pendingMain, { actual_rest_seconds: elapsedSeconds });
     } else if (pendingAuxExercise !== null && pendingAuxSet !== null) {
@@ -200,27 +204,35 @@ export function useSetCompletionFlow({
 
     // Show PostRestOverlay for main sets and auxiliary sets
     if (pendingMain !== null) {
+      // pendingMain is the set whose rest just ended (1-indexed).
+      // The next set to lift is pendingMain+1, which is plannedSets[pendingMain] (0-indexed).
+      const nextSet = plannedSets[pendingMain];
       setPostRestState({
         pendingMainSetNumber: pendingMain,
         pendingAuxExercise: null,
         pendingAuxSetNumber: null,
         actualRestSeconds: elapsedSeconds,
         liftStartedAt: Date.now(),
-        plannedReps: plannedSets[pendingMain - 1]?.reps ?? 0,
+        plannedReps: nextSet?.reps ?? 0,
+        plannedWeightKg: nextSet?.weight_kg ?? null,
+        nextSetNumber: pendingMain + 1,
         resetSecondsRemaining: null,
       });
     } else if (pendingAuxExercise !== null && pendingAuxSet !== null) {
       const auxWork = auxiliaryWork.find(
         (aw) => aw.exercise === pendingAuxExercise
       );
-      const auxPlannedReps = auxWork?.sets[pendingAuxSet - 1]?.reps ?? 0;
+      // pendingAuxSet is the set whose rest just ended; next set is pendingAuxSet+1 (1-indexed)
+      const nextAuxSet = auxWork?.sets[pendingAuxSet]; // 0-indexed → pendingAuxSet
       setPostRestState({
         pendingMainSetNumber: null,
         pendingAuxExercise,
         pendingAuxSetNumber: pendingAuxSet,
         actualRestSeconds: elapsedSeconds,
         liftStartedAt: Date.now(),
-        plannedReps: auxPlannedReps,
+        plannedReps: nextAuxSet?.reps ?? 0,
+        plannedWeightKg: nextAuxSet?.weight_kg ?? null,
+        nextSetNumber: pendingAuxSet + 1,
         resetSecondsRemaining: null,
       });
     }

@@ -38,6 +38,8 @@ export interface PostRestState {
   actualRestSeconds: number;
   liftStartedAt: number;
   plannedReps: number;
+  plannedWeightKg: number | null;
+  nextSetNumber: number | null;
   resetSecondsRemaining: number | null;
 }
 

@@ -6,6 +6,8 @@ import { useTheme } from '../../../theme/ThemeContext';
 
 interface PostRestOverlayProps {
   plannedReps: number;
+  plannedWeightKg?: number | null;
+  nextSetNumber?: number | null;
   onLiftComplete: () => void;
   onLiftFailed: () => void;
   onReset15s: () => void;
@@ -14,6 +16,8 @@ interface PostRestOverlayProps {
 
 export function PostRestOverlay({
   plannedReps,
+  plannedWeightKg,
+  nextSetNumber,
   onLiftComplete,
   onLiftFailed,
   onReset15s,
@@ -90,6 +94,11 @@ export function PostRestOverlay({
           fontWeight: typography.weights.semibold,
           color: colors.textSecondary,
         },
+        contextText: {
+          fontSize: typography.sizes.base,
+          fontWeight: typography.weights.semibold,
+          color: colors.text,
+        },
         hintText: {
           fontSize: typography.sizes.xs,
           color: colors.textTertiary,
@@ -101,8 +110,17 @@ export function PostRestOverlay({
   const resetLabel =
     resetCountdown !== null ? `${resetCountdown}s…` : 'Reset 15s';
 
+  const hasContext =
+    nextSetNumber != null && plannedWeightKg != null && plannedReps > 0;
+  const contextLabel = hasContext
+    ? `Set ${nextSetNumber} — ${plannedWeightKg}kg × ${plannedReps}`
+    : null;
+
   return (
     <View style={styles.container}>
+      {contextLabel != null && (
+        <Text style={styles.contextText}>{contextLabel}</Text>
+      )}
       <Text style={styles.label}>Go lift!</Text>
 
       <View style={styles.buttonRow}>

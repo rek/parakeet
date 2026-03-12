@@ -23,6 +23,8 @@ describe('computeDismissResult', () => {
       actualRestSeconds: 120,
       liftStartedAt: now - 5000,
       plannedReps: 5,
+      plannedWeightKg: 100,
+      nextSetNumber: 4,
       resetSecondsRemaining: null,
     };
     const result = computeDismissResult(state, now);
@@ -42,6 +44,8 @@ describe('computeDismissResult', () => {
       actualRestSeconds: 60,
       liftStartedAt: now,
       plannedReps: 10,
+      plannedWeightKg: null,
+      nextSetNumber: 3,
       resetSecondsRemaining: null,
     };
     const result = computeDismissResult(state, now);

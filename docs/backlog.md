@@ -14,12 +14,6 @@ At the end: update design doc status → Implemented, update specs to match what
 
 im on unending plan, i just completed squat, now it has a new planned squat workout for me planned? you need to review my exact data in local supabase to see what is happening
 
-## 3
-
-there seems to be a logic flow issue with 'done lifting' the rest timer, the rpe popup and the 'tick' button that triggers this flow.
-
-you need to think through all this, tracing the code path of a real use case for a full workout. take note of which popups appear and when and if they make sense
-
 ## 4
 
 when we get: 'completed' / 'failed' options after a lift. in the failed screen, we should also get in the nice popup the inputs to modify the reps we hit. and after entering that it ticks the set.

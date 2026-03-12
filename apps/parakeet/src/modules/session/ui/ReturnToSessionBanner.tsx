@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { StyleSheet, Text, TouchableOpacity } from 'react-native';
 
-import { detectOvertimeEdge } from '@modules/session';
+import { detectOvertimeEdge } from '../utils/overtime-edge';
 import { getRestTimerPrefs } from '@modules/settings';
 import { useSessionStore } from '@platform/store/sessionStore';
 import { sessionLabel } from '@shared/utils/string';
