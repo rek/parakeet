@@ -135,6 +135,7 @@ export default function AdHocScreen() {
           onChangeText={setActivityName}
           placeholder="e.g. Kettlebell swings, Burpees"
           placeholderTextColor={colors.textTertiary}
+          // eslint-disable-next-line jsx-a11y/no-autofocus
           autoFocus
           returnKeyType="done"
           onSubmitEditing={handleStart}

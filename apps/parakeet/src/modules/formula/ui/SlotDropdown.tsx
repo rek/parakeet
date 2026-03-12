@@ -138,6 +138,7 @@ export function SlotDropdown({
               placeholderTextColor={colors.textTertiary}
               value={query}
               onChangeText={setQuery}
+              // eslint-disable-next-line jsx-a11y/no-autofocus
               autoFocus
             />
             <FlatList

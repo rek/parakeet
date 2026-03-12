@@ -6,7 +6,7 @@ const BAR_WEIGHT_KEY = 'bar_weight_kg';
 export type BarWeightKg = 15 | 20;
 
 export async function getBarWeightKg(
-  biologicalSex?: string | null
+  _biologicalSex?: string | null
 ): Promise<BarWeightKg> {
   const defaultWeight: BarWeightKg = 20;
   try {

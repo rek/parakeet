@@ -7,8 +7,7 @@ import {
   View,
 } from 'react-native';
 
-import type { CycleBadge, HistoricalPRs } from '@modules/achievements';
-import type { FunBadgeRow } from '@modules/achievements';
+import type { CycleBadge, FunBadgeRow, HistoricalPRs } from '@modules/achievements';
 import type { StreakResult } from '@parakeet/training-engine';
 
 import { radii, spacing, typography } from '../../../theme';
