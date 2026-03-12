@@ -10,21 +10,9 @@ At the end: update design doc status → Implemented, update specs to match what
 
 ---
 
-## 6
+## 5
 
-there has to be some more funny badges we can give users. lets brainstorm 20 kinds. feel free to make some of them wild
-
-## 7
-
-review time. are components in apps/parakeet/src/components pure (enough)? understand what type of things should go in there, and review the ones that exist
-
-## 8
-
-refactor time. lets review all our tsx files in this folder: apps/parakeet/src/app
-
-which ones break the rules and contain business logic?
-
-use arch-code-review agent
+apps/parakeet/src/components has stuff that could just live in its own 'modules/\*/ui' folder. no point having it here right?
 
 ## 9
 
@@ -49,7 +37,3 @@ use arch-code-review agent
 ## 14
 
 **Simulation CI improvements.** The `training-sim:validate` target runs in CI. Future work: add threshold tracking (warn if violations increase between PRs), generate JSON artifacts for trend analysis, add more life scripts (e.g., peaking, competition prep, return-from-layoff).
-
-## 15
-
-**LLM Challenge Mode.** Use LLMs to validate/challenge formula engine decisions — post-hoc review, retrospective scoring, constraint audits, consensus voting, or adaptive thresholds. See [design doc](design/llm-challenge-mode.md). Pick an approach, then implement.

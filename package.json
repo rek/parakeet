@@ -10,11 +10,9 @@
     "typecheck": "nx affected --target=typecheck",
     "lint": "nx affected --target=lint",
     "test": "nx affected --target=test",
-    "parakeet:start": "nx start parakeet",
-    "parakeet:android": "node tools/scripts/set-android-supabase-ip.mjs && APP_ENV=development nx run-android parakeet",
     "start": "nx start parakeet",
+    "android": "node tools/scripts/set-android-supabase-ip.mjs && APP_ENV=development nx run-android parakeet",
     "bridge": "adb reverse tcp:54321 tcp:54321 && adb reverse tcp:8081 tcp:8081",
-    "android": "APP_ENV=development nx run-android parakeet",
     "check:supabase-import-boundary": "node tools/scripts/check-supabase-import-boundary.mjs",
     "check:supabase-ui-boundary": "node tools/scripts/check-supabase-ui-boundary.mjs",
     "check:module-boundary": "node tools/scripts/check-module-boundary.mjs",
@@ -22,8 +20,7 @@
     "db:stop": "npx supabase stop",
     "db:reset": "npx supabase db reset",
     "db:push": "npx supabase db push",
-    "db:types": "npx supabase gen types typescript --local > supabase/types.ts",
-    "ios": "expo run:ios"
+    "db:types": "npx supabase gen types typescript --local > supabase/types.ts"
   },
   "dependencies": {
     "@expo/metro-config": "~54.0.9",

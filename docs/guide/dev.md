@@ -69,29 +69,23 @@ nx install parakeet
 ### Local development
 
 ```bash
-# Start Expo dev server (Android/Web)
-nx run parakeet:start
-nx android parakeet
+# Start Expo dev server
+npm start
 
-# Then in the Expo CLI menu:
-#   Press a  → Android emulator
-#   Press w  → Web browser (Metro web)
+# Build & run on Android (auto-detects LAN IP for Supabase)
+npm run android
 
 # Or start directly in web mode:
 nx run parakeet:serve
 ```
 
-If you want Wi-Fi IP mode instead of USB reverse, auto-update Android Supabase URL with:
+`npm run android` sets `APP_ENV=development` (→ `.dev` package name) and auto-updates `EXPO_PUBLIC_SUPABASE_URL_ANDROID` with your LAN IP before launching.
+
+For USB workflow, prefer `adb reverse` with `localhost` Supabase:
 
 ```bash
-npm run parakeet:android:ip
-# optional explicit IP:
-# npm run parakeet:android:ip -- --ip=192.168.1.42
-```
+npm run bridge   # adb reverse for ports 54321 + 8081
 
-For stable local auth/dev on a physical Android phone, prefer USB + `adb reverse` with `localhost` Supabase:
-
-```bash
 # .env.local
 EXPO_PUBLIC_SUPABASE_URL=http://localhost:54321
 # leave EXPO_PUBLIC_SUPABASE_URL_ANDROID unset for USB workflow

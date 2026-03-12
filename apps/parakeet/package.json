@@ -5,10 +5,9 @@
   "main": "expo-router/entry",
   "scripts": {
     "eas-build-post-install": "cd ../../ && node tools/scripts/eas-build-post-install.mjs . apps/parakeet",
-    "android": "APP_ENV=development expo run:android",
     "logcat": "adb logcat *:S ReactNativeJS:V ReactNative:V unknown:ReactHost:V",
-    "ios": "expo run:ios",
-    "lint": "oxlint src --deny-warnings --react-plugin"
+    "lint": "oxlint src --deny-warnings --react-plugin",
+    "android": "expo run:android"
   },
   "dependencies": {
     "@ai-sdk/anthropic": "^3.0.47",

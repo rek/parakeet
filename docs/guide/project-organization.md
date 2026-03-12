@@ -15,7 +15,7 @@ Canonical architecture reference for this repo.
 - `modules/` - Feature duck modules (domain/business behavior)
 - `platform/` - Technical infrastructure (supabase/query/network/storage/runtime)
 - `shared/` - Cross-feature app utilities/types/constants/ui
-- `components/` - Transitional UI components (migrating toward `modules/*/ui` or `shared/ui`)
+- `components/` - Cross-cutting UI (ErrorBoundary, BackLink); feature-scoped components belong in `modules/*/ui/`
 - `theme/` - Design tokens/style primitives
 
 ## Module Shape
@@ -27,7 +27,7 @@ Canonical architecture reference for this repo.
 - `hooks/` - feature hooks
 - `lib/` - module public utilities/contracts
 - `model/` - feature-local model/types
-- `ui/` - feature-scoped presentation constants and styles
+- `ui/` - feature-scoped React components, presentation constants, and styles
 - `utils/` - pure functions extracted from components (testable, no React deps)
 - `index.ts` - module public API
 

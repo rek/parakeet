@@ -10,6 +10,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     package: isDev
       ? 'com.adam.tombleson.parakeet.dev'
       : 'com.adam.tombleson.parakeet',
+    googleServicesFile: './google-services.json',
   },
   extra: {
     ...config.extra,

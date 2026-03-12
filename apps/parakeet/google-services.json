@@ -1,0 +1,45 @@
+{
+  "project_info": {
+    "project_number": "54630589514",
+    "project_id": "parakeet-488304"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:54630589514:android:dev",
+        "android_client_info": {
+          "package_name": "com.adam.tombleson.parakeet.dev"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "54630589514-nrnrif9rf49t04c20559m2o84vd9uk4c.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.adam.tombleson.parakeet.dev",
+            "certificate_hash": "a2c94ee6e0e1a52caae207a83529e63bbf30730d"
+          }
+        },
+        {
+          "client_id": "54630589514-nsdq3lb1vlfurgsq0230otpcj0qsq3p9.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ]
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:54630589514:android:prod",
+        "android_client_info": {
+          "package_name": "com.adam.tombleson.parakeet"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "54630589514-nsdq3lb1vlfurgsq0230otpcj0qsq3p9.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ]
+    }
+  ],
+  "configuration_version": "1"
+}
