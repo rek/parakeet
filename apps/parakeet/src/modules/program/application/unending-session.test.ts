@@ -53,17 +53,4 @@ describe('appendNextUnendingSession', () => {
     expect(updateUnendingSessionCounter).toHaveBeenCalledWith('prog-1', 6);
   });
 
-  it('skips counter increment when skipCounterIncrement is true', async () => {
-    const program = {
-      id: 'prog-1',
-      training_days_per_week: 3,
-      unending_session_counter: 0,
-      training_days: null,
-    };
-    await appendNextUnendingSession(program, 'user-1', '2026-03-07', {
-      skipCounterIncrement: true,
-    });
-
-    expect(updateUnendingSessionCounter).not.toHaveBeenCalled();
-  });
 });

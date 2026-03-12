@@ -12,14 +12,11 @@ export interface UnendingProgramRef {
   training_days: number[] | null;
 }
 
-// Builds and inserts the next session row for an unending program.
-// Pass skipCounterIncrement: true when called at program creation — the program row
-// is already inserted with unending_session_counter: 0, so it must not be bumped again.
+// Builds and inserts the next session row for an unending program and advances the counter.
 export async function appendNextUnendingSession(
   program: UnendingProgramRef,
   userId: string,
-  plannedDate: string,
-  options?: { skipCounterIncrement?: boolean }
+  plannedDate: string
 ): Promise<void> {
   const next = nextUnendingSession({
     sessionCounter: program.unending_session_counter,
@@ -43,10 +40,8 @@ export async function appendNextUnendingSession(
     },
   ]);
 
-  if (!options?.skipCounterIncrement) {
-    await updateUnendingSessionCounter(
-      program.id,
-      program.unending_session_counter + 1
-    );
-  }
+  await updateUnendingSessionCounter(
+    program.id,
+    program.unending_session_counter + 1
+  );
 }

@@ -120,7 +120,6 @@ async function buildProgram(
       },
       userId,
       firstDate,
-      { skipCounterIncrement: true }
     );
   } else {
     const scaffold = generateProgram({
