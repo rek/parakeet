@@ -4,7 +4,8 @@
       "package": "com.adam.tombleson.parakeet"
     },
     "plugins": [
-      "@sentry/react-native"
+      "@sentry/react-native",
+      "./apps/parakeet/plugins/with-debug-keystore"
     ]
   }
 }
