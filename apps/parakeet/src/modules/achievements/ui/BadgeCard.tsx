@@ -5,6 +5,7 @@ import type { EarnedBadge } from '@parakeet/training-engine';
 
 import { radii, spacing, typography } from '../../../theme';
 import { useTheme } from '../../../theme/ThemeContext';
+import { BadgeIcon } from './BadgeIcon';
 
 interface BadgeCardProps {
   badge: EarnedBadge;
@@ -48,9 +49,12 @@ export function BadgeCard({ badge, delay = 0 }: BadgeCardProps) {
           paddingVertical: spacing[3.5],
           marginBottom: spacing[2.5],
         },
-        emoji: {
-          fontSize: 22,
+        iconContainer: {
+          width: 36,
+          height: 36,
           marginRight: spacing[3],
+          alignItems: 'center' as const,
+          justifyContent: 'center' as const,
         },
         textContainer: {
           flex: 1,
@@ -73,7 +77,9 @@ export function BadgeCard({ badge, delay = 0 }: BadgeCardProps) {
     <Animated.View
       style={[styles.card, { opacity, transform: [{ translateY }] }]}
     >
-      <Text style={styles.emoji}>{badge.emoji}</Text>
+      <View style={styles.iconContainer}>
+        <BadgeIcon badgeId={badge.id} emoji={badge.emoji} size={36} />
+      </View>
       <View style={styles.textContainer}>
         <Text style={styles.name}>{badge.name}</Text>
         <Text style={styles.flavor}>{badge.flavor}</Text>

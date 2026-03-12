@@ -14,6 +14,7 @@ import type { StreakResult } from '@parakeet/training-engine';
 import { radii, spacing, typography } from '../../../theme';
 import type { ColorScheme } from '../../../theme';
 import { useTheme } from '../../../theme/ThemeContext';
+import { BadgeIcon } from './BadgeIcon';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -161,11 +162,12 @@ function buildStyles(colors: ColorScheme) {
       borderBottomWidth: 1,
       borderBottomColor: colors.borderMuted,
     },
-    funBadgeEmoji: {
-      fontSize: 20,
+    funBadgeIcon: {
       marginRight: spacing[3],
       width: 28,
-      textAlign: 'center',
+      height: 28,
+      alignItems: 'center' as const,
+      justifyContent: 'center' as const,
     },
     funBadgeContent: {
       flex: 1,
@@ -312,7 +314,9 @@ export function AchievementsSection({
           <View style={styles.card}>
             {funBadges.map((badge) => (
               <View key={badge.id} style={styles.funBadgeRow}>
-                <Text style={styles.funBadgeEmoji}>{badge.emoji}</Text>
+                <View style={styles.funBadgeIcon}>
+                  <BadgeIcon badgeId={badge.id} emoji={badge.emoji} size={28} />
+                </View>
                 <View style={styles.funBadgeContent}>
                   <Text style={styles.funBadgeName}>{badge.name}</Text>
                   <Text style={styles.funBadgeFlavor}>{badge.flavor}</Text>

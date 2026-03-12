@@ -5,5 +5,7 @@ export * from './hooks/useAchievementsData';
 export * from './lib/achievements';
 export { AchievementsSection } from './ui/AchievementsSection';
 export { BadgeCard } from './ui/BadgeCard';
+export { BadgeIcon } from './ui/BadgeIcon';
+export { BADGE_IMAGES } from './ui/badge-images';
 export { StarCard } from './ui/StarCard';
 export { StreakPill } from './ui/StreakPill';
