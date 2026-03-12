@@ -228,6 +228,23 @@ Module/platform/shared architecture is the canonical app structure. Legacy top-l
 
 - [x] ai-002: Challenge mode — `JudgeReviewSchema`/`DecisionReplaySchema` in shared-types; `JUDGE_REVIEW_SYSTEM_PROMPT`/`DECISION_REPLAY_SYSTEM_PROMPT` in prompts.ts; `reviewJITDecision` + `scoreDecisionReplay` engine functions; `challenge_reviews` + `decision_replay_logs` DB tables; judge fires from `runJITForSession()` (fire-and-forget); replay fires from `completeSession()` (fire-and-forget); challenge banner on session screen; dashboard pages for both; `jit_input_snapshot` expanded to full JITInput; ai-overview.md updated with §10/§11
 
+### Fun Badges — [design doc](../design/fun-badges.md)
+
+- [x] Badge catalog — 46 badge definitions in `training-engine/src/badges/badge-catalog.ts`
+- [x] Badge types — `BadgeId`, `BadgeDef`, `EarnedBadge`, `BadgeCheckContext` in `badge-types.ts`
+- [x] Pure checkers — 10 checker files in `training-engine/src/badges/checkers/` (performance, situational, RPE, volume, milestones, wild-rare, lift-identity, rest-pacing, consistency, program-loyalty)
+- [x] `user_badges` table — migration `20260322000000_add_user_badges.sql` with RLS
+- [x] Badge repository — `badge.repository.ts` (fetchUserBadgeIds, insertBadges, fetchUserBadges)
+- [x] Badge detection service — `badge-detection.service.ts` orchestrator; wired into `detectAchievements()`
+- [x] BadgeCard component — animated slide-up card (mirrors StarCard)
+- [x] Completion screen — renders BadgeCards after star cards
+- [x] Achievements screen — "Badges" section in AchievementsSection
+- [ ] Consistency badges data fetchers — Dawn Patrol, Night Owl, Sunday Scaries, Iron Monk, 365, Perfect Week, Leg Day Loyalist
+- [ ] Contextual badges — Didn't Want To Be Here (needs sleep/energy persistence migration), Bad Day Survivor, Volume Goblin
+- [ ] Program loyalty badges — Old Faithful, Shiny Object Syndrome, Deload Denier
+- [ ] Streak Breaker — needs streak history tracking
+- [ ] Power Couple — deferred (needs partner linking)
+
 ### Other
 
 - [ ] Sleep data integration (wearables → JIT context)

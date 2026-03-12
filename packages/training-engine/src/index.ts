@@ -12,6 +12,7 @@ export * from './modules/volume';
 export * from './modules/auxiliary';
 export * from './modules/review';
 export * from './modules/achievements';
+export * from './badges';
 export { JIT_MODEL } from './ai/models';
 export { localDateString } from './utils/date';
 export { isMakeupWindowExpired } from './sessions/makeup-window';
