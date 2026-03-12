@@ -10,7 +10,7 @@ import {
 
 import { Ionicons } from '@expo/vector-icons';
 import { useLiftHistory } from '@modules/history';
-import { computeDisplayWeights } from '@modules/jit';
+import { computeDisplayWeights, useChallengeReview } from '@modules/jit';
 import { getProfile } from '@modules/profile';
 import {
   abandonSession,
@@ -40,10 +40,9 @@ import {
 import type { RestTimerPrefs } from '@modules/settings';
 import type { PlateKg } from '@parakeet/training-engine';
 import { useNetworkStatus } from '@platform/network';
-import { typedSupabase } from '@platform/supabase';
 import { useSessionStore } from '@platform/store/sessionStore';
 import { sessionLabel } from '@shared/utils/string';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQueryClient } from '@tanstack/react-query';
 import { useKeepAwake } from 'expo-keep-awake';
 import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import {
@@ -672,26 +671,17 @@ export default function SessionScreen() {
   // ── Challenge review banner ─────────────────────────────────────────────
   const [challengeDismissed, setChallengeDismissed] = useState(false);
   const [challengeExpanded, setChallengeExpanded] = useState(false);
-  const { data: challengeReview } = useQuery({
-    queryKey: ['challenge_review', sessionId],
-    queryFn: async () => {
-      const { data } = await typedSupabase
-        .from('challenge_reviews')
-        .select('score, verdict, concerns, suggested_overrides')
-        .eq('session_id', sessionId)
-        .limit(1)
-        .single();
-      return data;
-    },
-    enabled: !isFreeForm && !challengeDismissed,
-    refetchInterval: (query) => (query.state.data ? false : 3000),
-    staleTime: Infinity,
-  });
+  const { data: challengeReview } = useChallengeReview(
+    sessionId,
+    !isFreeForm && !challengeDismissed
+  );
+  const challengeConcerns = Array.isArray(challengeReview?.concerns)
+    ? (challengeReview.concerns as string[])
+    : [];
   const showChallengeBanner =
     !challengeDismissed &&
     challengeReview?.verdict === 'flag' &&
-    Array.isArray(challengeReview.concerns) &&
-    challengeReview.concerns.length > 0;
+    challengeConcerns.length > 0;
 
   // ── Render ────────────────────────────────────────────────────────────────
 
@@ -736,7 +726,7 @@ export default function SessionScreen() {
           >
             <View style={styles.challengeBannerRow}>
               <Text style={styles.challengeBannerText}>
-                {String((challengeReview.concerns as string[])[0])}
+                {challengeConcerns[0]}
               </Text>
               <TouchableOpacity
                 onPress={() => setChallengeDismissed(true)}
@@ -746,13 +736,11 @@ export default function SessionScreen() {
               </TouchableOpacity>
             </View>
             {challengeExpanded &&
-              (challengeReview.concerns as string[])
-                .slice(1)
-                .map((concern, i) => (
-                  <Text key={i} style={styles.challengeDetail}>
-                    {String(concern)}
-                  </Text>
-                ))}
+              challengeConcerns.slice(1).map((concern, i) => (
+                <Text key={i} style={styles.challengeDetail}>
+                  {concern}
+                </Text>
+              ))}
           </TouchableOpacity>
         )}
 

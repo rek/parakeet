@@ -336,7 +336,7 @@ export async function runJITForSession(
   const generator = getJITGenerator(strategyOverride, true, comparisonLogger);
   const jitOutput = await generator.generate(jitInput);
 
-  await typedSupabase
+  const { error: updateError } = await typedSupabase
     .from('sessions')
     .update({
       planned_sets: jitOutput.mainLiftSets,
@@ -345,6 +345,7 @@ export async function runJITForSession(
       jit_input_snapshot: toJson(jitInput),
     })
     .eq('id', session.id);
+  if (updateError) throw updateError;
 
   // Fire-and-forget: async judge review (runs during warmup)
   reviewJITDecision(jitInput, jitOutput)

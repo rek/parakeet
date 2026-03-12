@@ -4,14 +4,16 @@ import { generateText, Output } from 'ai';
 
 import { JIT_MODEL } from '../ai/models';
 import { DECISION_REPLAY_SYSTEM_PROMPT } from '../ai/prompts';
+import type { JITInput } from '../generator/jit-session-generator';
 
 export type { DecisionReplay };
 
 export interface DecisionReplayContext {
-  jitInputSnapshot: unknown;
-  plannedSets: unknown;
-  actualSets: unknown;
-  auxiliarySets: unknown;
+  /** Full JITInput snapshot stored on the session row */
+  jitInputSnapshot: JITInput;
+  plannedSets: Array<Record<string, unknown>>;
+  actualSets: Array<Record<string, unknown>>;
+  auxiliarySets: Array<Record<string, unknown>>;
   sessionRpe: number | null;
   lift: string;
   intensityType: string;
@@ -43,5 +45,6 @@ export async function scoreDecisionReplay(
     }),
     abortSignal: AbortSignal.timeout(10000),
   });
+  if (!replay) throw new Error('Decision replay returned no structured output');
   return replay;
 }

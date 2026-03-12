@@ -13,7 +13,7 @@ interface ChallengeReview {
   score: number;
   verdict: string;
   concerns: string[];
-  suggested_overrides: Record<string, unknown>;
+  suggested_overrides: Record<string, unknown> | null;
 }
 
 function fmt(ts: string) {
@@ -138,18 +138,22 @@ function LogCard({ review }: { review: ChallengeReview }) {
             padding: '10px 14px',
           }}
         >
-          <div
-            style={{
-              fontSize: 9,
-              color: theme.color.textMuted,
-              textTransform: 'uppercase',
-              letterSpacing: '0.08em',
-              marginBottom: 6,
-            }}
-          >
-            Suggested Overrides
-          </div>
-          <JsonViewer data={review.suggested_overrides} defaultCollapsed={false} />
+          {review.suggested_overrides && (
+            <>
+              <div
+                style={{
+                  fontSize: 9,
+                  color: theme.color.textMuted,
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.08em',
+                  marginBottom: 6,
+                }}
+              >
+                Suggested Overrides
+              </div>
+              <JsonViewer data={review.suggested_overrides} defaultCollapsed={false} />
+            </>
+          )}
           <div
             style={{
               fontSize: 9,

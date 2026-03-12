@@ -8,7 +8,7 @@ import type { JITInput, JITOutput } from '../generator/jit-session-generator';
 
 export type { JudgeReview };
 
-const SILENT_PASS: JudgeReview = {
+export const SILENT_PASS: JudgeReview = {
   score: 100,
   verdict: 'accept',
   concerns: [],
@@ -26,7 +26,7 @@ export async function reviewJITDecision(
       prompt: JSON.stringify({ input, output }),
       abortSignal: AbortSignal.timeout(8000),
     });
-    return review;
+    return review ?? SILENT_PASS;
   } catch {
     return SILENT_PASS;
   }

@@ -1,6 +1,6 @@
 import { scoreDecisionReplay } from '@parakeet/training-engine';
-import { typedSupabase } from '@platform/supabase';
-import type { Json } from '@platform/supabase';
+import type { JITInput } from '@parakeet/training-engine';
+import { toJson, typedSupabase } from '@platform/supabase';
 
 import {
   fetchSessionById,
@@ -18,10 +18,10 @@ export async function scoreDecisionReplayAsync(
   if (!sessionLog) return;
 
   const replay = await scoreDecisionReplay({
-    jitInputSnapshot: session.jit_input_snapshot,
-    plannedSets: session.planned_sets,
-    actualSets: sessionLog.actual_sets,
-    auxiliarySets: sessionLog.auxiliary_sets,
+    jitInputSnapshot: session.jit_input_snapshot as unknown as JITInput,
+    plannedSets: session.planned_sets as Array<Record<string, unknown>>,
+    actualSets: sessionLog.actual_sets as Array<Record<string, unknown>>,
+    auxiliarySets: sessionLog.auxiliary_sets as Array<Record<string, unknown>>,
     sessionRpe: sessionLog.session_rpe as number | null,
     lift: session.primary_lift ?? '',
     intensityType: session.intensity_type ?? '',
@@ -37,7 +37,7 @@ export async function scoreDecisionReplayAsync(
         prescription_score: replay.prescriptionScore,
         rpe_accuracy: replay.rpeAccuracy,
         volume_appropriateness: replay.volumeAppropriateness,
-        insights: replay.insights as unknown as Json,
+        insights: toJson(replay.insights),
       },
     ]);
 

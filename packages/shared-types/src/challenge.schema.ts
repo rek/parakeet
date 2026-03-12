@@ -6,8 +6,8 @@ export const JudgeReviewSchema = z.object({
   concerns: z.array(z.string().max(200)).max(3),
   suggestedOverrides: z
     .object({
-      intensityModifier: z.number().optional(),
-      setModifier: z.number().optional(),
+      intensityModifier: z.number().min(0.4).max(1.2).optional(),
+      setModifier: z.number().int().min(-3).max(2).optional(),
       auxOverrides: z
         .record(z.string(), z.enum(['skip', 'reduce', 'normal']))
         .optional(),

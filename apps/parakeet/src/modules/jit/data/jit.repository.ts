@@ -121,6 +121,25 @@ export interface JitDisruptionRow {
   status: string;
 }
 
+export interface ChallengeReviewRow {
+  score: number;
+  verdict: string;
+  concerns: unknown;
+  suggested_overrides: unknown;
+}
+
+export async function fetchChallengeReview(
+  sessionId: string
+): Promise<ChallengeReviewRow | null> {
+  const { data } = await typedSupabase
+    .from('challenge_reviews')
+    .select('score, verdict, concerns, suggested_overrides')
+    .eq('session_id', sessionId)
+    .limit(1)
+    .single();
+  return data as ChallengeReviewRow | null;
+}
+
 export async function fetchActiveDisruptions(
   userId: string
 ): Promise<JitDisruptionRow[]> {
