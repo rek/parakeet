@@ -3,8 +3,8 @@ import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 import type { ProgramSession } from '@modules/program';
 
-import { radii, spacing, typography } from '../../theme';
-import { useTheme } from '../../theme/ThemeContext';
+import { radii, spacing, typography } from '../../../theme';
+import { useTheme } from '../../../theme/ThemeContext';
 import { BlockBadge } from './BlockBadge';
 import { SessionSummary } from './SessionSummary';
 

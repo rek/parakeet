@@ -5,8 +5,8 @@ import type { ProgramSession } from '@modules/program';
 import { formatDate } from '@shared/utils/date';
 import { capitalize } from '@shared/utils/string';
 
-import { radii, spacing, typography } from '../../theme';
-import { useTheme } from '../../theme/ThemeContext';
+import { radii, spacing, typography } from '../../../theme';
+import { useTheme } from '../../../theme/ThemeContext';
 import { BlockBadge } from './BlockBadge';
 
 interface SessionSummaryProps {

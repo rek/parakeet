@@ -4,8 +4,8 @@ import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { calculatePlates, PLATE_COLORS } from '@parakeet/training-engine';
 import type { PlateKg } from '@parakeet/training-engine';
 
-import { radii, spacing, typography } from '../../theme';
-import { useTheme } from '../../theme/ThemeContext';
+import { radii, spacing, typography } from '../../../theme';
+import { useTheme } from '../../../theme/ThemeContext';
 
 // ── Types ────────────────────────────────────────────────────────────────────
 

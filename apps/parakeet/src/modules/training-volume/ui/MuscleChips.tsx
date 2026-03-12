@@ -4,7 +4,7 @@ import { StyleSheet, Text, View } from 'react-native';
 import type { MuscleGroup } from '@parakeet/training-engine';
 import { MUSCLE_LABELS_COMPACT } from '@shared/constants/training';
 
-import { useTheme } from '../../theme/ThemeContext';
+import { useTheme } from '../../../theme/ThemeContext';
 
 interface MuscleChipsProps {
   muscles: string[];

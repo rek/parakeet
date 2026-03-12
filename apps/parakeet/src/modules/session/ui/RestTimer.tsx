@@ -5,9 +5,9 @@ import { shouldFirePrepareWarning } from '@modules/session';
 import { createAudioPlayer } from 'expo-audio';
 import * as Haptics from 'expo-haptics';
 
-import { formatMMSS } from '../../shared/utils';
-import { radii, spacing, typography } from '../../theme';
-import { useTheme } from '../../theme/ThemeContext';
+import { formatMMSS } from '../../../shared/utils';
+import { radii, spacing, typography } from '../../../theme';
+import { useTheme } from '../../../theme/ThemeContext';
 
 function playDing() {
   try {
@@ -17,7 +17,7 @@ function playDing() {
         try {
           // eslint-disable-next-line @typescript-eslint/no-require-imports
           const player = createAudioPlayer(
-            require('../../../assets/sounds/pickupCoin.wav')
+            require('../../../../assets/sounds/pickupCoin.wav')
           );
           player.play();
           setTimeout(() => player.remove(), 3000);

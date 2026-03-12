@@ -7,8 +7,8 @@ import {
   View,
 } from 'react-native';
 
-import { radii, spacing, typography } from '../../theme';
-import { useTheme } from '../../theme/ThemeContext';
+import { radii, spacing, typography } from '../../../theme';
+import { useTheme } from '../../../theme/ThemeContext';
 
 const RPE_OPTIONS = [6, 6.5, 7, 7.5, 8, 8.5, 9, 9.5, 10];
 

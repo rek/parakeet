@@ -1,12 +1,10 @@
 import { useMemo } from 'react';
 import { ScrollView, StyleSheet, Text } from 'react-native';
 
-import { useAchievementsData } from '@modules/achievements';
+import { AchievementsSection, useAchievementsData } from '@modules/achievements';
 import { useAuth } from '@modules/auth';
 import { router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
-
-import { AchievementsSection } from '../../components/achievements/AchievementsSection';
 import { BackLink } from '../../components/navigation/BackLink';
 import type { ColorScheme } from '../../theme';
 import { useTheme } from '../../theme/ThemeContext';
@@ -41,7 +39,9 @@ export default function AchievementsScreen() {
   const styles = useMemo(() => buildStyles(colors), [colors]);
   const { user } = useAuth();
 
-  const { badges, streak, prs, isLoading } = useAchievementsData(user?.id);
+  const { badges, streak, prs, funBadges, isLoading } = useAchievementsData(
+    user?.id
+  );
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -59,6 +59,7 @@ export default function AchievementsScreen() {
           badges={badges}
           streak={streak}
           prs={prs}
+          funBadges={funBadges}
           isLoading={isLoading}
           onBadgePress={(programId) =>
             router.push(`/history/cycle-review/${programId}`)

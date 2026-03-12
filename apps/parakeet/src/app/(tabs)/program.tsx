@@ -19,6 +19,7 @@ import {
   groupByWeek,
   updateProgramStatus,
   useActiveProgram,
+  WeekRow,
 } from '@modules/program';
 import type { ProgramSession } from '@modules/program';
 import { useInProgressSession, useTodaySession } from '@modules/session';
@@ -31,7 +32,6 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { WeekRow } from '../../components/program/WeekRow';
 import { spacing, typography } from '../../theme';
 import type { ColorScheme } from '../../theme';
 import { useTheme } from '../../theme/ThemeContext';

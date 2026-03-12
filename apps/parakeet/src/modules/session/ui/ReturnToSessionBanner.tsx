@@ -8,9 +8,9 @@ import { sessionLabel } from '@shared/utils/string';
 import * as Haptics from 'expo-haptics';
 import { router, usePathname } from 'expo-router';
 
-import { formatMMSS } from '../../shared/utils';
-import { radii, spacing, typography } from '../../theme';
-import { useTheme } from '../../theme/ThemeContext';
+import { formatMMSS } from '../../../shared/utils';
+import { radii, spacing, typography } from '../../../theme';
+import { useTheme } from '../../../theme/ThemeContext';
 
 export function ReturnToSessionBanner() {
   const { colors } = useTheme();

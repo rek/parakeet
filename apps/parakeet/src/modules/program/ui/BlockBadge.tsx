@@ -1,9 +1,9 @@
 import { useMemo } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
-import { radii, spacing, typography } from '../../theme';
-import type { ColorScheme } from '../../theme';
-import { useTheme } from '../../theme/ThemeContext';
+import { radii, spacing, typography } from '../../../theme';
+import type { ColorScheme } from '../../../theme';
+import { useTheme } from '../../../theme/ThemeContext';
 
 interface BlockBadgeProps {
   block: number | null;

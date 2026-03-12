@@ -10,9 +10,9 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import type { PlateKg } from '@parakeet/training-engine';
 
-import { radii, spacing, typography } from '../../theme';
-import { useTheme } from '../../theme/ThemeContext';
-import { PlateCalculatorSheet } from '../session/PlateCalculatorSheet';
+import { radii, spacing, typography } from '../../../theme';
+import { useTheme } from '../../../theme/ThemeContext';
+import { PlateCalculatorSheet } from './PlateCalculatorSheet';
 import { parseWeightInput } from './weight-input';
 
 // ── Types ────────────────────────────────────────────────────────────────────

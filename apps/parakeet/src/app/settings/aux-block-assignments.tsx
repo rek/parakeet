@@ -28,7 +28,7 @@ import { router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { BackLink } from '../../components/navigation/BackLink';
-import { SlotDropdown } from '../../components/settings/SlotDropdown';
+import { SlotDropdown } from '@modules/formula';
 import type { ColorScheme } from '../../theme';
 import { useTheme } from '../../theme/ThemeContext';
 

@@ -8,13 +8,14 @@ import {
   detectSessionPRs,
   estimateOneRepMax_Epley,
 } from '@parakeet/training-engine';
-import type { PR } from '@parakeet/training-engine';
+import type { EarnedBadge, PR } from '@parakeet/training-engine';
 
 import {
   getPRHistory,
   getStreakData,
   storePersonalRecords,
 } from '../application/achievement.service';
+import { detectBadges } from '../application/badge-detection.service';
 
 export interface ActualSet {
   weight_grams: number;
@@ -28,6 +29,7 @@ export interface AchievementResult {
   streakWeeks: number | null;
   streakReset: boolean;
   cycleBadgeEarned: boolean;
+  newBadges: EarnedBadge[];
 }
 
 /**
@@ -44,6 +46,7 @@ export async function detectAchievements(
     streakWeeks: null,
     streakReset: false,
     cycleBadgeEarned: false,
+    newBadges: [],
   };
 
   const sessionContext = await getSessionCompletionContext(sessionId);
@@ -101,6 +104,23 @@ export async function detectAchievements(
       result.cycleBadgeEarned = true;
     }
   }
+
+  // Fun badges detection
+  result.newBadges = await detectBadges({
+    sessionId,
+    userId,
+    actualSets,
+    earnedPRs: result.earnedPRs.map((pr) => ({
+      type: pr.type,
+      lift: pr.lift,
+      value: pr.value,
+      weightKg: pr.weightKg,
+    })),
+    streakWeeks: result.streakWeeks ?? 0,
+    cycleBadgeEarned: result.cycleBadgeEarned,
+    primaryLift: lift,
+    programId: sessionContext.programId,
+  });
 
   return result;
 }

@@ -11,9 +11,9 @@ import {
 import { getSession } from '@modules/session';
 import { formatDate } from '@shared/utils/date';
 
-import { radii, spacing, typography } from '../../theme';
-import type { ColorScheme } from '../../theme';
-import { useTheme } from '../../theme/ThemeContext';
+import { radii, spacing, typography } from '../../../theme';
+import type { ColorScheme } from '../../../theme';
+import { useTheme } from '../../../theme/ThemeContext';
 
 // ── Types ────────────────────────────────────────────────────────────────────
 

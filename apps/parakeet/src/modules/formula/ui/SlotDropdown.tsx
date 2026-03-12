@@ -10,9 +10,9 @@ import {
 } from 'react-native';
 
 import { getPrimaryMuscles } from '@modules/program';
+import { MuscleChips } from '@modules/training-volume';
 
-import { useTheme } from '../../theme/ThemeContext';
-import { MuscleChips } from './MuscleChips';
+import { useTheme } from '../../../theme/ThemeContext';
 
 interface SlotDropdownProps {
   label: string;

@@ -1,4 +1,5 @@
-import type { StreakResult } from '@parakeet/training-engine';
+import type { BadgeId, StreakResult } from '@parakeet/training-engine';
+import { BADGE_CATALOG } from '@parakeet/training-engine';
 import { useQuery } from '@tanstack/react-query';
 
 import {
@@ -10,13 +11,23 @@ import type {
   CycleBadge,
   HistoricalPRs,
 } from '../application/achievement.service';
+import { fetchUserBadges } from '../data/badge.repository';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
+
+export interface FunBadgeRow {
+  id: BadgeId;
+  name: string;
+  emoji: string;
+  flavor: string;
+  earnedAt: string;
+}
 
 export interface AchievementsData {
   badges: CycleBadge[];
   streak: StreakResult | undefined;
   prs: Record<string, HistoricalPRs | undefined>;
+  funBadges: FunBadgeRow[];
   isLoading: boolean;
 }
 
@@ -60,12 +71,35 @@ export function useAchievementsData(
     staleTime: 5 * 60 * 1000,
   });
 
+  const funBadgesQuery = useQuery({
+    queryKey: ['achievements', 'funBadges', userId],
+    queryFn: async () => {
+      const rows = await fetchUserBadges(userId!);
+      return rows
+        .map((row) => {
+          const def = BADGE_CATALOG[row.badge_id as BadgeId];
+          if (!def) return null;
+          return {
+            id: row.badge_id as BadgeId,
+            name: def.name,
+            emoji: def.emoji,
+            flavor: def.flavor,
+            earnedAt: row.earned_at,
+          };
+        })
+        .filter((b): b is FunBadgeRow => b !== null);
+    },
+    enabled: !!userId,
+    staleTime: 5 * 60 * 1000,
+  });
+
   const isLoading =
     badgesQuery.isLoading ||
     streakQuery.isLoading ||
     squatPRsQuery.isLoading ||
     benchPRsQuery.isLoading ||
-    deadliftPRsQuery.isLoading;
+    deadliftPRsQuery.isLoading ||
+    funBadgesQuery.isLoading;
 
   return {
     badges: badgesQuery.data ?? [],
@@ -75,6 +109,7 @@ export function useAchievementsData(
       bench: benchPRsQuery.data,
       deadlift: deadliftPRsQuery.data,
     },
+    funBadges: funBadgesQuery.data ?? [],
     isLoading,
   };
 }

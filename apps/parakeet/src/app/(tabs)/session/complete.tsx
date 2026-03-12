@@ -9,7 +9,7 @@ import {
   View,
 } from 'react-native';
 
-import { detectAchievements } from '@modules/achievements';
+import { BadgeCard, detectAchievements, StarCard } from '@modules/achievements';
 import { useAuth } from '@modules/auth';
 import { stampCyclePhaseOnSession } from '@modules/cycle-tracking';
 import {
@@ -19,7 +19,7 @@ import {
   isNetworkError,
   RPE_OPTIONS,
 } from '@modules/session';
-import type { PR } from '@parakeet/training-engine';
+import type { EarnedBadge, PR } from '@parakeet/training-engine';
 import { useNetworkStatus } from '@platform/network';
 import { qk } from '@platform/query';
 import { useSessionStore } from '@platform/store/sessionStore';
@@ -28,8 +28,6 @@ import { captureException } from '@platform/utils/captureException';
 import { useQueryClient } from '@tanstack/react-query';
 import { router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
-
-import { StarCard } from '../../../components/achievements/StarCard';
 import type { ColorScheme } from '../../../theme';
 import { useTheme } from '../../../theme/ThemeContext';
 
@@ -277,6 +275,7 @@ export default function CompleteScreen() {
   const [streakWeeks, setStreakWeeks] = useState<number | null>(null);
   const [streakReset, setStreakReset] = useState(false);
   const [cycleBadgeEarned, setCycleBadgeEarned] = useState(false);
+  const [newBadges, setNewBadges] = useState<EarnedBadge[]>([]);
   const [saved, setSaved] = useState(false);
 
   // End-of-week body review prompt
@@ -382,6 +381,8 @@ export default function CompleteScreen() {
           setStreakWeeks(achievements.streakWeeks);
         setStreakReset(achievements.streakReset);
         if (achievements.cycleBadgeEarned) setCycleBadgeEarned(true);
+        if (achievements.newBadges.length > 0)
+          setNewBadges(achievements.newBadges);
       } catch (achievementErr) {
         captureException(achievementErr);
       }
@@ -530,6 +531,19 @@ export default function CompleteScreen() {
                     key={`${pr.type}-${pr.lift}-${i}`}
                     pr={pr}
                     delay={i * 200}
+                  />
+                ))}
+              </View>
+            )}
+
+            {/* Fun badges */}
+            {newBadges.length > 0 && (
+              <View style={styles.starsSection}>
+                {newBadges.map((badge, i) => (
+                  <BadgeCard
+                    key={badge.id}
+                    badge={badge}
+                    delay={earnedPRs.length * 200 + i * 200}
                   />
                 ))}
               </View>

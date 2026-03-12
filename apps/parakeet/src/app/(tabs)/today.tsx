@@ -9,7 +9,7 @@ import {
   View,
 } from 'react-native';
 
-import { getStreakData } from '@modules/achievements';
+import { getStreakData, StreakPill } from '@modules/achievements';
 import { useAuth } from '@modules/auth';
 import {
   CYCLE_PHASE_BG,
@@ -18,6 +18,7 @@ import {
   useCyclePhase,
 } from '@modules/cycle-tracking';
 import {
+  DisruptionChipsRow,
   getActiveDisruptions,
   resolveDisruption,
   updateDisruptionEndDate,
@@ -31,6 +32,7 @@ import {
   skipSession,
   useInProgressSession,
   useTodaySessions,
+  WorkoutCard,
 } from '@modules/session';
 import type { CompletedSessionRef } from '@modules/session';
 import {
@@ -51,9 +53,6 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { router, useFocusEffect } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { StreakPill } from '../../components/achievements/StreakPill';
-import { DisruptionChipsRow } from '../../components/disruption/DisruptionChipsRow';
-import { WorkoutCard } from '../../components/training/WorkoutCard';
 import { palette, radii, spacing, typography } from '../../theme';
 import type { ColorScheme } from '../../theme';
 import { useTheme } from '../../theme/ThemeContext';

@@ -5,3 +5,6 @@ export * from './lib/auxiliary-config';
 export * from './lib/lifter-maxes';
 export * from './utils/program-utils';
 export * from './utils/auxiliary-muscles';
+export { BlockBadge } from './ui/BlockBadge';
+export { SessionSummary } from './ui/SessionSummary';
+export { WeekRow } from './ui/WeekRow';

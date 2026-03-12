@@ -8,11 +8,12 @@ import {
 } from 'react-native';
 
 import type { CycleBadge, HistoricalPRs } from '@modules/achievements';
+import type { FunBadgeRow } from '@modules/achievements';
 import type { StreakResult } from '@parakeet/training-engine';
 
-import { radii, spacing, typography } from '../../theme';
-import type { ColorScheme } from '../../theme';
-import { useTheme } from '../../theme/ThemeContext';
+import { radii, spacing, typography } from '../../../theme';
+import type { ColorScheme } from '../../../theme';
+import { useTheme } from '../../../theme/ThemeContext';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -20,6 +21,7 @@ interface AchievementsSectionProps {
   badges: CycleBadge[];
   streak: StreakResult | undefined;
   prs: Record<string, HistoricalPRs | undefined>;
+  funBadges: FunBadgeRow[];
   isLoading: boolean;
   onBadgePress: (programId: string) => void;
   onWilksPress: () => void;
@@ -151,6 +153,33 @@ function buildStyles(colors: ColorScheme) {
       color: colors.textSecondary,
       flex: 1,
     },
+    funBadgeRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingHorizontal: spacing[4],
+      paddingVertical: spacing[2.5],
+      borderBottomWidth: 1,
+      borderBottomColor: colors.borderMuted,
+    },
+    funBadgeEmoji: {
+      fontSize: 20,
+      marginRight: spacing[3],
+      width: 28,
+      textAlign: 'center',
+    },
+    funBadgeContent: {
+      flex: 1,
+    },
+    funBadgeName: {
+      fontSize: typography.sizes.sm,
+      fontWeight: typography.weights.semibold,
+      color: colors.text,
+    },
+    funBadgeFlavor: {
+      fontSize: typography.sizes.xs,
+      color: colors.textTertiary,
+      marginTop: 1,
+    },
   });
 }
 
@@ -205,6 +234,7 @@ export function AchievementsSection({
   badges,
   streak,
   prs,
+  funBadges,
   isLoading,
   onBadgePress,
   onWilksPress,
@@ -226,7 +256,8 @@ export function AchievementsSection({
   );
   const hasStreak =
     !!streak && (streak.currentStreak > 0 || streak.longestStreak > 0);
-  const hasAnyAchievements = badges.length > 0 || hasStreak || hasPRs;
+  const hasAnyAchievements =
+    badges.length > 0 || hasStreak || hasPRs || funBadges.length > 0;
 
   return (
     <View>
@@ -266,6 +297,27 @@ export function AchievementsSection({
                 </View>
                 <Text style={styles.chevron}>›</Text>
               </TouchableOpacity>
+            ))}
+          </View>
+        </>
+      )}
+
+      {/* Fun badges */}
+      {funBadges.length > 0 && (
+        <>
+          <SectionHeader
+            label={`Badges [ ${funBadges.length} ]`}
+            styles={styles}
+          />
+          <View style={styles.card}>
+            {funBadges.map((badge) => (
+              <View key={badge.id} style={styles.funBadgeRow}>
+                <Text style={styles.funBadgeEmoji}>{badge.emoji}</Text>
+                <View style={styles.funBadgeContent}>
+                  <Text style={styles.funBadgeName}>{badge.name}</Text>
+                  <Text style={styles.funBadgeFlavor}>{badge.flavor}</Text>
+                </View>
+              </View>
             ))}
           </View>
         </>

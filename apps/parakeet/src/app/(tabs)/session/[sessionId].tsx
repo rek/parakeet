@@ -14,14 +14,21 @@ import { computeDisplayWeights, useChallengeReview } from '@modules/jit';
 import { getProfile } from '@modules/profile';
 import {
   abandonSession,
+  AddExerciseModal,
   buildBlockWeekLabel,
   buildIntensityLabel,
   DEFAULT_MAIN_REST_SECONDS,
   formatExerciseName,
   getSession,
   groupAuxiliaryWork,
+  LiftHistorySheet,
+  PostRestOverlay,
+  RestTimer,
+  RpeQuickPicker,
+  SetRow,
   startSession,
   useSetCompletionFlow,
+  WarmupSection,
 } from '@modules/session';
 import type {
   AuxiliaryWork,
@@ -50,13 +57,6 @@ import {
   useSafeAreaInsets,
 } from 'react-native-safe-area-context';
 
-import { AddExerciseModal } from '../../../components/session/AddExerciseModal';
-import { LiftHistorySheet } from '../../../components/session/LiftHistorySheet';
-import { PostRestOverlay } from '../../../components/training/PostRestOverlay';
-import { RestTimer } from '../../../components/training/RestTimer';
-import { RpeQuickPicker } from '../../../components/training/RpeQuickPicker';
-import { SetRow } from '../../../components/training/SetRow';
-import { WarmupSection } from '../../../components/training/WarmupSection';
 import type { ColorScheme } from '../../../theme';
 import { useTheme } from '../../../theme/ThemeContext';
 

@@ -4,9 +4,9 @@ import { Modal, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { calculatePlates, PLATE_COLORS } from '@parakeet/training-engine';
 import type { PlateKg } from '@parakeet/training-engine';
 
-import { spacing, typography } from '../../theme';
-import type { ColorScheme } from '../../theme';
-import { useTheme } from '../../theme/ThemeContext';
+import { spacing, typography } from '../../../theme';
+import type { ColorScheme } from '../../../theme';
+import { useTheme } from '../../../theme/ThemeContext';
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 

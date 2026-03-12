@@ -18,7 +18,7 @@ import * as SplashScreen from 'expo-splash-screen';
 // import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import '@platform/supabase/bootstrap';
 
-// import { ReturnToSessionBanner } from '../components/session/ReturnToSessionBanner';
+// import { ReturnToSessionBanner } from '@modules/session';
 import { ErrorBoundary } from '../components/ui/ErrorBoundary';
 import { ThemeProvider } from '../theme/ThemeContext';
 

@@ -18,9 +18,9 @@ import type {
 } from '@parakeet/training-engine';
 import { MUSCLE_LABELS_COMPACT } from '@shared/constants/training';
 
-import { radii, spacing, typography } from '../../theme';
-import type { ColorScheme } from '../../theme';
-import { useTheme } from '../../theme/ThemeContext';
+import { radii, spacing, typography } from '../../../theme';
+import type { ColorScheme } from '../../../theme';
+import { useTheme } from '../../../theme/ThemeContext';
 
 type SectionFilter = 'all' | Lift | 'general';
 

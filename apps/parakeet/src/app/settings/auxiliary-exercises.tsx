@@ -20,9 +20,10 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { AddExerciseModal } from '@modules/session';
+import { MuscleChips } from '@modules/training-volume';
+
 import { BackLink } from '../../components/navigation/BackLink';
-import { AddExerciseModal } from '../../components/session/AddExerciseModal';
-import { MuscleChips } from '../../components/settings/MuscleChips';
 import type { ColorScheme } from '../../theme';
 import { useTheme } from '../../theme/ThemeContext';
 

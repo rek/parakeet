@@ -14,8 +14,8 @@ import type { LiftHistory, TrendDirection } from '@modules/history';
 import { formatDate } from '@shared/utils/date';
 import { capitalize } from '@shared/utils/string';
 
-import { spacing, typography } from '../../theme';
-import { useTheme } from '../../theme/ThemeContext';
+import { spacing, typography } from '../../../theme';
+import { useTheme } from '../../../theme/ThemeContext';
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
