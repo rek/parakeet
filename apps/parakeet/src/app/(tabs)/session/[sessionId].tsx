@@ -795,6 +795,7 @@ export default function SessionScreen() {
                   plannedWeightKg={displayWeightKg}
                   plannedReps={planned?.reps ?? actualSet.reps_completed}
                   rpeValue={actualSet.rpe_actual}
+                  isCompleted={actualSet.is_completed}
                   onUpdate={(data) =>
                     handleSetUpdate(actualSet.set_number, data)
                   }
@@ -838,6 +839,7 @@ export default function SessionScreen() {
                         }
                         plannedReps={planned?.reps ?? actualSet.reps_completed}
                         rpeValue={actualSet.rpe_actual}
+                        isCompleted={actualSet.is_completed}
                         exerciseType={aw.exerciseType}
                         onRpePress={() =>
                           requestAuxRpe(aw.exercise, actualSet.set_number)

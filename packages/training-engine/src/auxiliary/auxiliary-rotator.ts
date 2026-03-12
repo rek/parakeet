@@ -10,7 +10,7 @@ export interface ProgramRecord {
 
 export interface AuxiliaryAssignmentRecord {
   programId: string;
-  blockNumber: 1 | 2 | 3;
+  blockNumber: number;
   lift: Lift;
   exercise1: string;
   exercise2: string;
@@ -22,7 +22,7 @@ export interface AuxiliaryAssignmentRecord {
  */
 export function getAuxiliariesForBlock(
   _lift: Lift,
-  blockNumber: 1 | 2 | 3,
+  blockNumber: number,
   pool: string[],
   startOffset = 0
 ): [string, string] {
@@ -46,32 +46,29 @@ export function computeBlockOffset(programHistory: ProgramRecord[]): number {
 }
 
 /**
- * Generates 9 AuxiliaryAssignmentRecords (3 lifts × 3 blocks) for a new program.
+ * Generates AuxiliaryAssignmentRecords (3 lifts × N blocks) for a new program.
+ * The last week is always a deload, so totalBlocks = ceil((totalWeeks - 1) / 3).
  * Pass startOffset from computeBlockOffset to continue pool rotation across programs.
  */
 export function generateAuxiliaryAssignments(
   programId: string,
-  _totalWeeks: number,
+  totalWeeks: number,
   pool: AuxiliaryPool,
   startOffset = 0
 ): AuxiliaryAssignmentRecord[] {
   const assignments: AuxiliaryAssignmentRecord[] = [];
   const lifts: Lift[] = ['squat', 'bench', 'deadlift'];
+  const totalBlocks = Math.ceil((totalWeeks - 1) / 3);
 
-  for (let blockNumber = 1; blockNumber <= 3; blockNumber++) {
+  for (let blockNumber = 1; blockNumber <= totalBlocks; blockNumber++) {
     for (const lift of lifts) {
       const liftPool = pool[lift];
       if (!liftPool || liftPool.length < 2) continue;
 
-      const [ex1, ex2] = getAuxiliariesForBlock(
-        lift,
-        blockNumber as 1 | 2 | 3,
-        liftPool,
-        startOffset
-      );
+      const [ex1, ex2] = getAuxiliariesForBlock(lift, blockNumber, liftPool, startOffset);
       assignments.push({
         programId,
-        blockNumber: blockNumber as 1 | 2 | 3,
+        blockNumber,
         lift,
         exercise1: ex1,
         exercise2: ex2,

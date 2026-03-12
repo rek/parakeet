@@ -21,7 +21,8 @@ import { generateWarmupSets } from './warmup-calculator';
 function formulaRestForMain(input: JITInput): number {
   const { formulaConfig, blockNumber, intensityType } = input;
   if (intensityType === 'deload') return formulaConfig.rest_seconds.deload;
-  const blockKey = `block${blockNumber}` as 'block1' | 'block2' | 'block3';
+  const cycledBlock = ((blockNumber - 1) % 3) + 1;
+  const blockKey = `block${cycledBlock}` as 'block1' | 'block2' | 'block3';
   return formulaConfig.rest_seconds[blockKey][
     intensityType as 'heavy' | 'explosive' | 'rep'
   ];

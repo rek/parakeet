@@ -18,21 +18,21 @@ const MS_PER_WEEK = 7 * 24 * 60 * 60 * 1000;
 export function currentBlockNumber(
   startDate: string,
   totalWeeks: number
-): 1 | 2 | 3 {
+): number {
   const weeksPassed = Math.floor(
     (Date.now() - new Date(startDate).getTime()) / MS_PER_WEEK
   );
-  const weeksPerBlock = Math.floor(totalWeeks / 3);
-  const block = Math.min(3, Math.floor(weeksPassed / weeksPerBlock) + 1);
-  return block as 1 | 2 | 3;
+  const totalBlocks = Math.ceil((totalWeeks - 1) / 3);
+  const block = Math.min(totalBlocks, Math.floor(weeksPassed / 3) + 1);
+  return Math.max(1, block);
 }
 
 export function unendingBlockNumber(
   sessionCounter: number,
   daysPerWeek: number
-): 1 | 2 | 3 {
+): number {
   const weekNumber = Math.floor(sessionCounter / daysPerWeek) + 1;
-  return ((Math.floor((weekNumber - 1) / 3) % 3) + 1) as 1 | 2 | 3;
+  return ((Math.floor((weekNumber - 1) / 3) % 3) + 1);
 }
 
 /** Get the current block number for any program mode. */
@@ -42,7 +42,7 @@ export function getCurrentBlock(program: {
   training_days_per_week?: number | null;
   start_date?: string | null;
   total_weeks?: number | null;
-}): 1 | 2 | 3 {
+}): number {
   if (program.program_mode === 'unending') {
     return unendingBlockNumber(
       program.unending_session_counter ?? 0,

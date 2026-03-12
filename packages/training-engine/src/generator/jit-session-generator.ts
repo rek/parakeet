@@ -50,7 +50,7 @@ export interface RecentSessionSummary {
 export interface JITInput {
   sessionId: string;
   weekNumber: number;
-  blockNumber: 1 | 2 | 3;
+  blockNumber: number;
   primaryLift: Lift;
   intensityType: IntensityType;
   oneRmKg: number;
@@ -169,15 +169,16 @@ export function createAdHocJITOutput(): JITOutput {
 
 type BlockKey = 'block1' | 'block2' | 'block3';
 
-function blockKey(blockNumber: 1 | 2 | 3): BlockKey {
-  return `block${blockNumber}` as BlockKey;
+function blockKey(blockNumber: number): BlockKey {
+  const cycled = ((blockNumber - 1) % 3) + 1;
+  return `block${cycled}` as BlockKey;
 }
 
 /** Look up rest seconds for a main working set from formula config.
  *  Deload sessions use the flat `deload` value; other sessions index by block + intensity. */
 function resolveMainLiftRest(
   formulaConfig: FormulaConfig,
-  block: 1 | 2 | 3,
+  block: number,
   intensityType: IntensityType
 ): number {
   if (intensityType === 'deload') {
@@ -439,6 +440,8 @@ export function generateJITSession(input: JITInput): JITOutput {
   );
 
   // Step 6b — Volume top-up (engine-027): append exercises for under-MEV muscles
+  // Cap at MAX_AUX_EXERCISES to keep total session exercises ≤ 6 (5 aux + 1 main lift)
+  const MAX_AUX_EXERCISES = 5;
   if (input.auxiliaryPool && input.auxiliaryPool.length > 0) {
     const topUps = buildVolumeTopUp(
       input.auxiliaryPool,
@@ -454,6 +457,8 @@ export function generateJITSession(input: JITInput): JITOutput {
       input.allOneRmKg
     );
     for (const tu of topUps) {
+      const activeCount = auxiliaryWork.filter((a) => !a.skipped).length;
+      if (activeCount >= MAX_AUX_EXERCISES) break;
       auxiliaryWork.push(tu);
       rationale.push(`Added ${tu.exercise}: ${tu.topUpReason}`);
     }
@@ -613,10 +618,11 @@ function buildAuxiliaryWork(
   }) as AuxiliaryWork[];
 
   // No-equipment disruption: append bodyweight compensation exercises
-  // Cap total exercises at 5 to keep session length manageable
+  // The global MAX_AUX_EXERCISES=5 cap in generateJITSession prevents the combined
+  // total (bodyweight + volume top-ups) from exceeding 5 non-skipped aux exercises.
   if (hasNoEquipment && primaryLift && worstSoreness < 5) {
     const activeExerciseCount = result.filter((a) => !a.skipped).length;
-    const maxTotalExercises = 5; // main lift counts as 1 if present
+    const maxTotalExercises = 5;
     const slotsAvailable = Math.max(0, maxTotalExercises - activeExerciseCount);
 
     if (slotsAvailable > 0) {

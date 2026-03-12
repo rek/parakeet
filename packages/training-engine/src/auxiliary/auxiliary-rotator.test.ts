@@ -69,30 +69,47 @@ describe('generateAuxiliaryAssignments', () => {
     deadlift: DEFAULT_AUXILIARY_POOLS.deadlift,
   };
 
-  it('produces 9 records (3 lifts × 3 blocks)', () => {
-    const result = generateAuxiliaryAssignments('prog-1', 10, pool);
+  it('produces 9 records for a 9-week program (3 lifts × 3 blocks)', () => {
+    const result = generateAuxiliaryAssignments('prog-1', 9, pool);
     expect(result).toHaveLength(9);
   });
 
+  it('produces 12 records for a 12-week program (3 lifts × 4 blocks)', () => {
+    const result = generateAuxiliaryAssignments('prog-1', 12, pool);
+    expect(result).toHaveLength(12);
+    const blockNums = [...new Set(result.map((r) => r.blockNumber))].sort();
+    expect(blockNums).toEqual([1, 2, 3, 4]);
+  });
+
   it('all records carry the programId', () => {
-    const result = generateAuxiliaryAssignments('prog-abc', 10, pool);
+    const result = generateAuxiliaryAssignments('prog-abc', 9, pool);
     result.forEach((r) => expect(r.programId).toBe('prog-abc'));
   });
 
   it('applies startOffset across programs', () => {
     const sqPool = pool.squat;
     const n = sqPool.length;
-    const result = generateAuxiliaryAssignments('prog-2', 10, pool, 6);
+    const result = generateAuxiliaryAssignments('prog-2', 9, pool, 6);
     const sqB1 = result.find((r) => r.lift === 'squat' && r.blockNumber === 1);
     expect(sqB1?.exercise1).toBe(sqPool[6 % n]);
     expect(sqB1?.exercise2).toBe(sqPool[7 % n]);
   });
 
   it('skips lifts missing from pool', () => {
-    const result = generateAuxiliaryAssignments('prog-x', 10, {
+    const result = generateAuxiliaryAssignments('prog-x', 9, {
       squat: pool.squat,
     });
     expect(result.every((r) => r.lift === 'squat')).toBe(true);
     expect(result).toHaveLength(3); // 3 blocks × 1 lift
+  });
+
+  it('block 4 exercises use correct pool positions', () => {
+    const sqPool = pool.squat;
+    const n = sqPool.length;
+    const result = generateAuxiliaryAssignments('prog-1', 12, pool);
+    const sqB4 = result.find((r) => r.lift === 'squat' && r.blockNumber === 4);
+    // blockIndex=3, pos1=(6 % n), pos2=(7 % n)
+    expect(sqB4?.exercise1).toBe(sqPool[6 % n]);
+    expect(sqB4?.exercise2).toBe(sqPool[7 % n]);
   });
 });

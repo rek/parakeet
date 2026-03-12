@@ -10,13 +10,17 @@ At the end: update design doc status → Implemented, update specs to match what
 
 ---
 
-## 2
+## 1
 
-im on unending plan, i just completed squat, now it has a new planned squat workout for me planned? you need to review my exact data in local supabase to see what is happening
+add more cardio and core things to aux list, so i can log them sometimes:
 
-## 4
+row machine
+ski erg
+5 minute run
+toes to bar
+1 minute plank
 
-when we get: 'completed' / 'failed' options after a lift. in the failed screen, we should also get in the nice popup the inputs to modify the reps we hit. and after entering that it ticks the set.
+sometmes i do these as topup, so they do add to mrv, so need to have them logged
 
 ## 9
 
@@ -24,11 +28,7 @@ when we get: 'completed' / 'failed' options after a lift. in the failed screen, 
 
 ## 10 (bug)
 
-**Auxiliary rotator block 4+ gap.** `generateAuxiliaryAssignments` in `auxiliary-rotator.ts` hardcodes `blockNumber <= 3` and ignores `_totalWeeks`. Programs longer than 9 weeks (4+ blocks) get no aux assignments for later blocks — the app falls back to hardcoded defaults. The simulator works around this with mod-3 wrapping, but the engine function should generate assignments for all blocks derived from `totalWeeks`.
-
-## 11 (bug)
-
-**No-equipment session exercise cap.** During no-equipment disruptions, bodyweight compensation can push sessions to 7+ exercises (vs recommended max 6). The existing cap logic in `jit-session-generator.ts` doesn't fully prevent this. Tighten the cap or reduce bodyweight exercise count.
+**Block assignment UI hardcoded to 3 tabs.** `aux-block-assignments.tsx` renders exactly 3 block tabs (`[1, 2, 3]`). For scheduled programs > 9 weeks (4+ blocks), block 4+ is unreachable from the UI. The tab list should derive its range from the program's `total_weeks` (using `Math.ceil((total_weeks - 1) / 3)`). Unending programs always cycle 1→2→3 and are unaffected.
 
 ## 12
 

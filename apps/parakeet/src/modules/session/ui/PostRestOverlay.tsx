@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 import { radii, spacing, typography } from '../../../theme';
@@ -9,7 +9,7 @@ interface PostRestOverlayProps {
   plannedWeightKg?: number | null;
   nextSetNumber?: number | null;
   onLiftComplete: () => void;
-  onLiftFailed: () => void;
+  onLiftFailed: (reps: number) => void;
   onReset15s: () => void;
   resetCountdown: number | null;
 }
@@ -24,6 +24,7 @@ export function PostRestOverlay({
   resetCountdown,
 }: PostRestOverlayProps) {
   const { colors } = useTheme();
+  const [failedReps, setFailedReps] = useState<number | null>(null);
 
   const styles = useMemo(
     () =>
@@ -103,6 +104,57 @@ export function PostRestOverlay({
           fontSize: typography.sizes.xs,
           color: colors.textTertiary,
         },
+        // Failed-mode styles
+        stepperRow: {
+          flexDirection: 'row',
+          alignItems: 'center',
+          gap: spacing[4],
+        },
+        stepBtn: {
+          width: 40,
+          height: 40,
+          borderRadius: radii.md,
+          borderWidth: 1,
+          borderColor: colors.border,
+          backgroundColor: colors.bgMuted,
+          alignItems: 'center',
+          justifyContent: 'center',
+        },
+        stepBtnDisabled: {
+          opacity: 0.35,
+        },
+        stepBtnText: {
+          fontSize: typography.sizes.lg,
+          fontWeight: typography.weights.semibold,
+          color: colors.text,
+        },
+        stepperValue: {
+          fontSize: typography.sizes['2xl'],
+          fontWeight: typography.weights.bold,
+          color: colors.text,
+          minWidth: 36,
+          textAlign: 'center',
+        },
+        confirmButton: {
+          width: '100%',
+          backgroundColor: colors.primary,
+          borderRadius: radii.md,
+          paddingVertical: spacing[3.5],
+          alignItems: 'center',
+        },
+        confirmButtonText: {
+          fontSize: typography.sizes.base,
+          fontWeight: typography.weights.bold,
+          color: colors.textInverse,
+          letterSpacing: typography.letterSpacing.wide,
+        },
+        backButton: {
+          paddingVertical: spacing[1],
+        },
+        backButtonText: {
+          fontSize: typography.sizes.sm,
+          color: colors.textTertiary,
+        },
       }),
     [colors]
   );
@@ -115,6 +167,58 @@ export function PostRestOverlay({
   const contextLabel = hasContext
     ? `Set ${nextSetNumber} — ${plannedWeightKg}kg × ${plannedReps}`
     : null;
+
+  if (failedReps !== null) {
+    return (
+      <View style={styles.container}>
+        <Text style={styles.label}>How many reps?</Text>
+
+        <View style={styles.stepperRow}>
+          <TouchableOpacity
+            style={[styles.stepBtn, failedReps <= 0 && styles.stepBtnDisabled]}
+            onPress={() => setFailedReps((r) => Math.max(0, (r ?? 0) - 1))}
+            disabled={failedReps <= 0}
+            activeOpacity={0.7}
+          >
+            <Text style={styles.stepBtnText}>−</Text>
+          </TouchableOpacity>
+          <Text style={styles.stepperValue}>{failedReps}</Text>
+          <TouchableOpacity
+            style={[
+              styles.stepBtn,
+              failedReps >= plannedReps && styles.stepBtnDisabled,
+            ]}
+            onPress={() =>
+              setFailedReps((r) => Math.min(plannedReps, (r ?? 0) + 1))
+            }
+            disabled={failedReps >= plannedReps}
+            activeOpacity={0.7}
+          >
+            <Text style={styles.stepBtnText}>+</Text>
+          </TouchableOpacity>
+        </View>
+
+        <TouchableOpacity
+          style={styles.confirmButton}
+          onPress={() => {
+            onLiftFailed(failedReps);
+            setFailedReps(null);
+          }}
+          activeOpacity={0.8}
+        >
+          <Text style={styles.confirmButtonText}>Confirm</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={styles.backButton}
+          onPress={() => setFailedReps(null)}
+          activeOpacity={0.7}
+        >
+          <Text style={styles.backButtonText}>Back</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
@@ -133,7 +237,7 @@ export function PostRestOverlay({
         </TouchableOpacity>
         <TouchableOpacity
           style={styles.failedButton}
-          onPress={onLiftFailed}
+          onPress={() => setFailedReps(plannedReps)}
           activeOpacity={0.7}
         >
           <Text style={styles.failedButtonText}>Failed</Text>

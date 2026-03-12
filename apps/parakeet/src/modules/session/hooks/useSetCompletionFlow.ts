@@ -318,8 +318,8 @@ export function useSetCompletionFlow({
     }
   }
 
-  function handleLiftFailed() {
-    const { totalRest, prevSetNumber, auxExercise, auxSetNumber } =
+  function handleLiftFailed(actualReps: number) {
+    const { totalRest, prevSetNumber, nextSetNumber, auxExercise, auxSetNumber } =
       dismissPostRest();
 
     if (auxExercise !== null && auxSetNumber !== null) {
@@ -328,9 +328,20 @@ export function useSetCompletionFlow({
         actual_rest_seconds: totalRest,
       });
     } else {
-      // Main lift failure
+      // Main lift failure — log the failed set with actual reps hit
       if (prevSetNumber !== null) {
         updateSet(prevSetNumber, { actual_rest_seconds: totalRest });
+      }
+      if (nextSetNumber !== null && nextSetNumber <= plannedSets.length) {
+        updateSet(nextSetNumber, {
+          weight_grams: Math.round(
+            (plannedSets[nextSetNumber - 1]?.weight_kg ?? 0) * 1000
+          ),
+          reps_completed: actualReps,
+          is_completed: true,
+          rpe_actual: 10, // failed set = max effort by definition
+        });
+        // No RPE picker — RPE is definitionally 10 for a failed set
       }
 
       recordSetFailure();

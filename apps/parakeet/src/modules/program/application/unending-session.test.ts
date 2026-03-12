@@ -41,7 +41,7 @@ describe('appendNextUnendingSession', () => {
     expect(typeof row.is_deload).toBe('boolean');
   });
 
-  it('increments the session counter by default', async () => {
+  it('advances the session counter after insert', async () => {
     const program = {
       id: 'prog-1',
       training_days_per_week: 3,

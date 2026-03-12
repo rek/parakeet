@@ -13,11 +13,7 @@ export const IntensityTypeSchema = z.enum([
 
 export type IntensityType = z.infer<typeof IntensityTypeSchema>;
 
-export const BlockNumberSchema = z.union([
-  z.literal(1),
-  z.literal(2),
-  z.literal(3),
-]);
+export const BlockNumberSchema = z.number().int().min(1);
 
 export type BlockNumber = z.infer<typeof BlockNumberSchema>;
 
@@ -51,7 +47,7 @@ export const SessionSchema = z
     day_number: z.number().int().min(1).max(7),
     primary_lift: LiftSchema,
     intensity_type: IntensityTypeSchema,
-    block_number: z.number().int().min(1).max(3).nullable(),
+    block_number: z.number().int().min(1).nullable(),
     is_deload: z.boolean(),
     planned_sets: z.array(PlannedSetSchema).nullable(),
     status: z.enum([

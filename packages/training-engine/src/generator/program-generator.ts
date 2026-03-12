@@ -21,7 +21,7 @@ const LIFT_ORDER: Lift[] = ['squat', 'bench', 'deadlift'];
 
 export function generateWeekSessions(
   weekNumber: number,
-  blockNumber: 1 | 2 | 3,
+  blockNumber: number,
   _weekInBlock: number,
   dayOffsets: number[],
   startDate: Date
@@ -89,7 +89,7 @@ export function generateProgram(
         ...generateDeloadWeek(week, totalWeeks, dayOffsets, startDate)
       );
     } else {
-      const blockNumber = getBlockNumber(week) as 1 | 2 | 3;
+      const blockNumber = getBlockNumber(week);
       const weekInBlock = getWeekInBlock(week);
       sessions.push(
         ...generateWeekSessions(
@@ -116,7 +116,7 @@ export interface NextUnendingSessionResult {
   dayNumber: number; // 1..trainingDaysPerWeek
   primaryLift: Lift;
   intensityType: IntensityType;
-  blockNumber: 1 | 2 | 3;
+  blockNumber: number;
   isDeload: boolean;
 }
 
@@ -133,7 +133,7 @@ export function nextUnendingSession(
   const lift = LIFT_ORDER[(sessionCounter % daysPerWeek) % LIFT_ORDER.length];
 
   // Blocks cycle 1→2→3→1… every 3 training weeks (same as scheduled)
-  const blockNumber = ((Math.floor((weekNumber - 1) / 3) % 3) + 1) as 1 | 2 | 3;
+  const blockNumber = ((Math.floor((weekNumber - 1) / 3) % 3) + 1);
 
   // Deload every 4th week equivalent (week 4, 8, 12, …)
   const isDeload = weekNumber % 4 === 0;
@@ -153,13 +153,14 @@ export function nextUnendingSession(
 }
 
 export function generateAuxiliaryAssignments(
-  _totalWeeks: number,
+  totalWeeks: number,
   auxiliaryPool: AuxiliaryPool
 ): AuxiliaryAssignment[] {
   const assignments: AuxiliaryAssignment[] = [];
   const lifts: Lift[] = ['squat', 'bench', 'deadlift'];
+  const totalBlocks = Math.ceil((totalWeeks - 1) / 3);
 
-  for (let blockNumber = 1; blockNumber <= 3; blockNumber++) {
+  for (let blockNumber = 1; blockNumber <= totalBlocks; blockNumber++) {
     for (const lift of lifts) {
       const pool = auxiliaryPool[lift];
       if (!pool || pool.length < 2) continue;
@@ -170,7 +171,7 @@ export function generateAuxiliaryAssignments(
       const pos2 = (blockIndex * 2 + 1) % poolSize;
 
       assignments.push({
-        blockNumber: blockNumber as 1 | 2 | 3,
+        blockNumber,
         lift,
         exercise1: pool[pos1],
         exercise2: pool[pos2],

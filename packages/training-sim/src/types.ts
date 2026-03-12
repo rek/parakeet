@@ -105,7 +105,7 @@ export interface SimulatedSession {
   dayNumber: number;
   primaryLift: Lift;
   intensityType: IntensityType;
-  blockNumber: 1 | 2 | 3 | null;
+  blockNumber: number | null;
   isDeload: boolean;
 
   // JIT output

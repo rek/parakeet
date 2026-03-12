@@ -118,7 +118,7 @@ export interface SessionScaffold {
   dayNumber: number;
   primaryLift: Lift;
   intensityType: IntensityType;
-  blockNumber: 1 | 2 | 3 | null; // null for deload week
+  blockNumber: number | null; // null for deload week
   isDeload: boolean;
   plannedDate: Date;
   plannedSets: null; // always null; populated by JIT generator
@@ -139,7 +139,7 @@ export interface GeneratedProgramStructure {
 export type AuxiliaryPool = Partial<Record<Lift, string[]>>;
 
 export interface AuxiliaryAssignment {
-  blockNumber: 1 | 2 | 3;
+  blockNumber: number;
   lift: Lift;
   exercise1: string;
   exercise2: string;

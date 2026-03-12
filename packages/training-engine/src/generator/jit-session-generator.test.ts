@@ -882,6 +882,21 @@ describe('generateJITSession — equipment_unavailable disruption', () => {
     expect(out.auxiliaryWork).toHaveLength(2);
     expect(out.auxiliaryWork.every((ex) => ex.skipped)).toBe(true);
   });
+
+  it('exercise cap: no-equipment + auxiliaryPool combined does not exceed 5 non-skipped aux exercises', () => {
+    // 2 original + 2 bodyweight = 4 non-skipped; top-ups from pool should be capped to 1 (not 2)
+    const pool = ['Romanian Dumbbell Deadlift', 'Stiff-Leg Deadlift', 'Leg Press'];
+    const out = generateJITSession(
+      baseInput({
+        activeDisruptions: [makeEquipmentDisruption()],
+        auxiliaryPool: pool,
+        weeklyVolumeToDate: {},
+        mrvMevConfig: DEFAULT_MRV_MEV_CONFIG_MALE,
+      })
+    );
+    const activeCount = out.auxiliaryWork.filter((a) => !a.skipped).length;
+    expect(activeCount).toBeLessThanOrEqual(5);
+  });
 });
 
 // ---------------------------------------------------------------------------

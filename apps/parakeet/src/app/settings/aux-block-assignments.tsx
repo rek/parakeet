@@ -262,7 +262,7 @@ interface LiftCardProps {
   lift: Lift;
   assignment: SlotAssignment;
   pool: string[];
-  blockNumber: 1 | 2 | 3;
+  blockNumber: number;
   saving: boolean;
   savedFlash: { slot1: boolean; slot2: boolean };
   onSlotChange: (slot: 1 | 2, exercise: string, locked: boolean) => void;
@@ -329,13 +329,11 @@ function LiftCard({
 
 // ── Screen ─────────────────────────────────────────────────────────────────────
 
-type AllAssignments = Partial<
-  Record<1 | 2 | 3, Partial<Record<Lift, SlotAssignment>>>
->;
+type AllAssignments = Record<number, Partial<Record<Lift, SlotAssignment>>>;
 type SavingState = Partial<Record<string, boolean>>;
 type FlashState = Partial<Record<string, { slot1: boolean; slot2: boolean }>>;
 
-function flashKey(blockNumber: 1 | 2 | 3, lift: Lift) {
+function flashKey(blockNumber: number, lift: Lift) {
   return `${blockNumber}-${lift}`;
 }
 
@@ -343,7 +341,7 @@ export default function AuxBlockAssignmentsScreen() {
   const { colors } = useTheme();
   const styles = useMemo(() => buildStyles(colors), [colors]);
   const { user } = useAuth();
-  const [activeTab, setActiveTab] = useState<1 | 2 | 3>(1);
+  const [activeTab, setActiveTab] = useState<number>(1);
   const [programId, setProgramId] = useState<string | null>(null);
   const [isUnending, setIsUnending] = useState(false);
   const [allAssignments, setAllAssignments] = useState<AllAssignments>({});
@@ -389,7 +387,7 @@ export default function AuxBlockAssignmentsScreen() {
   }, [activeProgram, user?.id]);
 
   function getAssignmentForBlock(
-    blockNumber: 1 | 2 | 3,
+    blockNumber: number,
     lift: Lift
   ): SlotAssignment {
     const stored = allAssignments[blockNumber]?.[lift];
@@ -408,7 +406,7 @@ export default function AuxBlockAssignmentsScreen() {
   }
 
   async function handleSlotChange(
-    blockNumber: 1 | 2 | 3,
+    blockNumber: number,
     lift: Lift,
     slot: 1 | 2,
     exercise: string,

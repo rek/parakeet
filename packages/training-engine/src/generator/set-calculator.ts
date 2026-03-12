@@ -12,7 +12,7 @@ import {
 export function calculateSets(
   _lift: Lift,
   intensityType: IntensityType,
-  blockNumber: 1 | 2 | 3,
+  blockNumber: number,
   oneRmKg: number,
   formulaConfig: FormulaConfig
 ): PlannedSet[] {
@@ -29,7 +29,9 @@ export function calculateSets(
     }));
   }
 
-  const block = formulaConfig[`block${blockNumber}`] as BlockConfig;
+  // Formula config has 3 block configs; cycle for programs with 4+ blocks
+  const cycledBlock = (((blockNumber - 1) % 3) + 1) as 1 | 2 | 3;
+  const block = formulaConfig[`block${cycledBlock}`];
 
   if (intensityType === 'heavy' || intensityType === 'explosive') {
     const config = block[intensityType];

@@ -29,6 +29,7 @@ export interface SetRowProps {
   plannedWeightKg: number;
   plannedReps: number;
   rpeValue?: number;
+  isCompleted?: boolean;
   exerciseType?: 'weighted' | 'bodyweight' | 'timed';
   onUpdate: (data: SetUpdateData) => void;
   onRpePress?: () => void;
@@ -45,6 +46,7 @@ export function SetRow({
   plannedWeightKg,
   plannedReps,
   rpeValue,
+  isCompleted: isCompletedProp = false,
   exerciseType = 'weighted',
   onUpdate,
   onRpePress,
@@ -213,6 +215,11 @@ export function SetRow({
   useEffect(() => {
     setRpe(rpeValue);
   }, [rpeValue]);
+
+  // Sync external completion (e.g. auto-completed via PostRestOverlay) — one-way only
+  useEffect(() => {
+    if (isCompletedProp) setIsCompleted(true);
+  }, [isCompletedProp]);
 
   function handleWeightChange(text: string) {
     setWeightText(text);

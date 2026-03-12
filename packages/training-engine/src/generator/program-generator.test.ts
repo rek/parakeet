@@ -119,9 +119,10 @@ describe('generateAuxiliaryAssignments', () => {
     ],
   };
 
-  const assignments = generateAuxiliaryAssignments(10, pool);
+  // 9 weeks → ceil(8/3) = 3 blocks → 9 assignments
+  const assignments = generateAuxiliaryAssignments(9, pool);
 
-  it('produces 9 assignments (3 blocks × 3 lifts)', () => {
+  it('produces 9 assignments for a 9-week program (3 blocks × 3 lifts)', () => {
     expect(assignments).toHaveLength(9);
   });
 
@@ -151,15 +152,22 @@ describe('generateAuxiliaryAssignments', () => {
 
   it('wraps around when pool is smaller than 6', () => {
     const smallPool = { squat: ['A', 'B', 'C'] };
-    const result = generateAuxiliaryAssignments(10, smallPool);
+    const result = generateAuxiliaryAssignments(9, smallPool);
     const b3 = result.find((x) => x.blockNumber === 3 && x.lift === 'squat');
     // blockIndex=2, pos1=(4%3)=1, pos2=(5%3)=2 → B, C
     expect(b3?.exercise1).toBe('B');
     expect(b3?.exercise2).toBe('C');
   });
 
+  it('produces 12 assignments for a 12-week program (4 blocks × 3 lifts)', () => {
+    const result = generateAuxiliaryAssignments(12, pool);
+    expect(result).toHaveLength(12);
+    const blockNums = [...new Set(result.map((r) => r.blockNumber))].sort();
+    expect(blockNums).toEqual([1, 2, 3, 4]);
+  });
+
   it('skips lifts with fewer than 2 exercises in pool', () => {
-    const result = generateAuxiliaryAssignments(10, { squat: ['only one'] });
+    const result = generateAuxiliaryAssignments(9, { squat: ['only one'] });
     expect(result).toHaveLength(0);
   });
 });

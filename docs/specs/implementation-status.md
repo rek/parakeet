@@ -8,7 +8,7 @@ For details on any item, see the linked spec file.
 
 ## Training Engine (`packages/training-engine`)
 
-455 tests passing (Vitest). All specs implemented.
+675 tests passing (Vitest). All specs implemented. Bug fix: `generateAuxiliaryAssignments` now generates assignments for all blocks (not just 1–3); `blockNumber` widened to `number` throughout; `getIntensityTypeForWeek` now cycles correctly for block 4+.
 
 - [x] engine-001: 1RM formulas — Epley, grams↔kg helpers
 - [x] engine-002: Cube method scheduler — blocks.ts
@@ -41,6 +41,8 @@ For details on any item, see the linked spec file.
 - [x] engine-029: Fatigue predictor — `computePredictedFatigue`, `detectMismatches` in `volume/fatigue-predictor.ts`; mismatch threshold ≥2 levels; sorted by delta; 9 tests
 - [x] engine-030: Cycle phase JIT adjuster — `getCyclePhaseModifier(phase)` in `adjustments/cycle-phase-adjuster.ts`; applied at JIT Step 2c; McNulty 2020 phase lookup; 6 tests
 - [x] engine-bug-001: Exercise type system — `auxiliary/exercise-types.ts`; `ExerciseType` (`weighted`/`bodyweight`/`timed`); `AuxiliaryWork.exerciseType`; timed exercises skip MRV; bodyweight sets `weight_kg: 0`
+- [x] engine-bug-002: No-equipment session exercise cap — `MAX_AUX_EXERCISES = 5` guard before pushing top-ups in `generateJITSession`; prevents no-equipment + volume top-up from combining to 6+ aux exercises; 1 regression test added
+- [x] engine-bug-003: Auxiliary rotator block 4+ gap — `generateAuxiliaryAssignments` now generates assignments for all blocks (not just 1–3); `blockNumber` widened to `number` throughout; `getIntensityTypeForWeek` cycles correctly for block 4+ via mod-3 arithmetic
 
 ---
 
@@ -141,6 +143,7 @@ Module/platform/shared architecture is the canonical app structure. Legacy top-l
 - [x] mobile-035: Enhanced readiness check-in — expanded soreness.tsx with "Other muscles" collapsible (all 9), sleep/energy pills, cycle phase informational chip; sleep/energy passed to JIT; ratings stored in `soreness_checkins.ratings` JSONB
 - [x] mobile-036: Weekly body review — `session/weekly-review.tsx`; triggered on end-of-week (scheduled) or every 3rd session (unending); mismatch summary with direction arrows and MRV suggestion
 - [x] mobile-033: Feature flags — `modules/feature-flags/` module with registry, AsyncStorage persistence, `useFeatureEnabled` hook. Settings › Features screen with Simple/Full presets and per-feature toggles. 16 toggleable features across 5 categories. Gates applied to Today screen and Settings screen.
+- [x] mobile-037: Rest timer auto-dismiss — PostRestOverlay with Complete/Failed/Reset 15s; set context label (set number, weight, reps); RPE cleared on timer→overlay transition; failed-reps-input mode (stepper, Confirm/Back); failed set marked complete with actual reps; RPE queued after failure
 
 ---
 
@@ -220,8 +223,8 @@ Module/platform/shared architecture is the canonical app structure. Legacy top-l
 - [ ] engine-032: OHP formula config defaults
 - [ ] engine-033: OHP auxiliary exercise catalog
 - [ ] engine-034: OHP muscle mapping for primary lift volume
-- [ ] mobile-037: Conditional OHP max collection in onboarding
-- [ ] mobile-038: 3/4-day program creation selector
+- [ ] mobile-039: Conditional OHP max collection in onboarding
+- [ ] mobile-040: 3/4-day program creation selector
 - [ ] data-008: OHP lifter maxes schema
 
 ### LLM Challenge Mode — [design doc](../design/llm-challenge-mode.md) | [spec](10-ai/ai-002-challenge-mode.md)

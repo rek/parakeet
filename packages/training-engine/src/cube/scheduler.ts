@@ -32,8 +32,8 @@ export function nextDateForWeekday(weekday: number): Date {
   return d;
 }
 
-export function getBlockNumber(weekNumber: number): 1 | 2 | 3 {
-  return (Math.floor((weekNumber - 1) / 3) + 1) as 1 | 2 | 3;
+export function getBlockNumber(weekNumber: number): number {
+  return Math.floor((weekNumber - 1) / 3) + 1;
 }
 
 export function getWeekInBlock(weekNumber: number): 1 | 2 | 3 {
@@ -48,8 +48,6 @@ export function getIntensityTypeForWeek(
   weekNumber: number,
   lift: Lift
 ): IntensityType {
-  // Weeks beyond the 3-block structure (week 10+) are deload
-  if (getBlockNumber(weekNumber) > 3) return 'deload';
   const weekInBlock = getWeekInBlock(weekNumber);
   return CUBE_ROTATION[weekInBlock][lift];
 }

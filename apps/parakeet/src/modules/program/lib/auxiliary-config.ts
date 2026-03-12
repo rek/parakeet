@@ -61,7 +61,7 @@ export type SlotAssignment = {
 export async function getActiveAssignments(
   userId: string,
   programId: string,
-  blockNumber: 1 | 2 | 3
+  blockNumber: number
 ): Promise<Partial<Record<Lift, SlotAssignment>>> {
   const { data, error } = await typedSupabase
     .from('auxiliary_assignments')
@@ -89,7 +89,7 @@ export async function getActiveAssignments(
 export async function getAllBlockAssignments(
   userId: string,
   programId: string
-): Promise<Partial<Record<1 | 2 | 3, Partial<Record<Lift, SlotAssignment>>>>> {
+): Promise<Record<number, Partial<Record<Lift, SlotAssignment>>>> {
   const { data, error } = await typedSupabase
     .from('auxiliary_assignments')
     .select(
@@ -100,11 +100,9 @@ export async function getAllBlockAssignments(
 
   if (error) throw error;
 
-  const result: Partial<
-    Record<1 | 2 | 3, Partial<Record<Lift, SlotAssignment>>>
-  > = {};
+  const result: Record<number, Partial<Record<Lift, SlotAssignment>>> = {};
   for (const row of data ?? []) {
-    const bn = row.block_number as 1 | 2 | 3;
+    const bn = row.block_number as number;
     if (!result[bn]) result[bn] = {};
     result[bn]![row.lift as Lift] = {
       exercise_1: row.exercise_1,
@@ -120,7 +118,7 @@ export async function saveBlockAssignment(
   userId: string,
   programId: string,
   lift: Lift,
-  blockNumber: 1 | 2 | 3,
+  blockNumber: number,
   exercise1: string,
   exercise1Locked: boolean,
   exercise2: string,

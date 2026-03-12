@@ -23,6 +23,9 @@ describe('getBlockNumber', () => {
     [7, 3],
     [8, 3],
     [9, 3],
+    [10, 4],
+    [11, 4],
+    [12, 4],
   ])('week %i → block %i', (week, block) => {
     expect(getBlockNumber(week)).toBe(block);
   });
@@ -83,13 +86,14 @@ describe('getIntensityTypeForWeek — all 9 week/lift combinations', () => {
     expect(getIntensityTypeForWeek(week, lift)).toBe(expected);
   });
 
-  // Week 10 → deload for all lifts
-  it.each(['squat', 'bench', 'deadlift'] as const)(
-    'week 10 %s → deload',
-    (lift) => {
-      expect(getIntensityTypeForWeek(10, lift)).toBe('deload');
-    }
-  );
+  // Block 4 (weeks 10-12) cycles back to block-1 rotation (week-in-block = 1)
+  it.each([
+    [10, 'squat', 'heavy'],
+    [10, 'bench', 'rep'],
+    [10, 'deadlift', 'explosive'],
+  ] as const)('block 4: week %i %s → %s', (week, lift, expected) => {
+    expect(getIntensityTypeForWeek(week, lift)).toBe(expected);
+  });
 });
 
 describe('DEFAULT_TRAINING_DAYS', () => {

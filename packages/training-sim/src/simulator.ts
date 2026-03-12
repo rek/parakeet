@@ -219,12 +219,11 @@ export function runSimulation(options: SimulatorOptions): SimulationLog {
     const sorenessRatings: Partial<Record<MuscleGroup, SorenessLevel>> =
       event.soreness?.ratings ?? {};
 
-    // Look up aux assignments for this block+lift (wrap to 1-3 since rotator generates 3 blocks)
+    // Look up aux assignments for this block+lift
     const blockNum = scaffold.blockNumber ?? 1;
-    const wrappedBlock = ((blockNum - 1) % 3) + 1;
     const auxForSession = auxAssignments.find(
       (a: { blockNumber: number; lift: string }) =>
-        a.blockNumber === wrappedBlock && a.lift === scaffold.primaryLift
+        a.blockNumber === blockNum && a.lift === scaffold.primaryLift
     );
     const activeAux: [string, string] = auxForSession
       ? [auxForSession.exercise1, auxForSession.exercise2]
@@ -240,7 +239,7 @@ export function runSimulation(options: SimulatorOptions): SimulationLog {
     const jitInput: JITInput = {
       sessionId: `sim-${day}`,
       weekNumber: scaffold.weekNumber,
-      blockNumber: blockNum as 1 | 2 | 3,
+      blockNumber: blockNum,
       primaryLift: scaffold.primaryLift,
       intensityType: scaffold.intensityType,
       oneRmKg: currentMaxes[scaffold.primaryLift],
