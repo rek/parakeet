@@ -169,7 +169,7 @@ Module/platform/shared architecture is the canonical app structure. Legacy top-l
 
 ## Program Modes
 
-- [x] programs-005: Unending program mode — `program_mode`, `unending_session_counter`, lazy session generation, cycle review on "End Program"; orchestration in `program/application/unending-session.ts`; multiple-workouts-per-day fix; cycle badge suppression for unending
+- [x] programs-005: Unending program mode — `program_mode`, `unending_session_counter`, lazy session generation, cycle review on "End Program"; orchestration in `program/application/unending-session.ts`; multiple-workouts-per-day fix; cycle badge suppression for unending; history-based lift rotation (last completed lift → next in squat→bench→deadlift cycle, counter-based fallback for first session)
 
 ---
 

@@ -154,10 +154,17 @@ describe('partitionTodaySessions', () => {
     expect(upcoming).toHaveLength(0);
   });
 
-  it('excludes skipped and missed ad-hoc sessions from upcoming', () => {
-    const skipped = { status: 'skipped', program_id: null, primary_lift: null };
-    const missed = { status: 'missed', program_id: null, primary_lift: null };
-    const { upcoming } = partitionTodaySessions([skipped, missed]);
+  it('excludes skipped and missed sessions from upcoming (any session type)', () => {
+    const skippedAdHoc = { status: 'skipped', program_id: null, primary_lift: null };
+    const missedAdHoc = { status: 'missed', program_id: null, primary_lift: null };
+    const skippedProgram = { status: 'skipped', program_id: 'prog-1', primary_lift: 'bench' };
+    const missedProgram = { status: 'missed', program_id: 'prog-1', primary_lift: 'deadlift' };
+    const { upcoming } = partitionTodaySessions([
+      skippedAdHoc,
+      missedAdHoc,
+      skippedProgram,
+      missedProgram,
+    ]);
     expect(upcoming).toHaveLength(0);
   });
 

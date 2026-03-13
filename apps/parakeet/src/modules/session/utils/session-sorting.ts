@@ -51,11 +51,12 @@ export function partitionTodaySessions<
   return {
     // Exclude completed ad-hoc — they don't need a "done" card
     completed: sorted.filter((s) => s.status === 'completed' && !isAdHoc(s)),
-    // Exclude finished/abandoned ad-hoc from the upcoming list
+    // Exclude completed, skipped, and missed — these are done
     upcoming: sorted.filter(
       (s) =>
         s.status !== 'completed' &&
-        !(isAdHoc(s) && (s.status === 'skipped' || s.status === 'missed'))
+        s.status !== 'skipped' &&
+        s.status !== 'missed'
     ),
   };
 }
