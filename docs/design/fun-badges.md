@@ -1,6 +1,6 @@
 # Feature: Fun Badges
 
-**Status**: Implemented (Slices 1-3; detection foundation + pure-computation badges + UI)
+**Status**: Implemented (all badge categories wired with data fetchers; only Power Couple deferred)
 
 **Date**: 12-Mar-2026
 

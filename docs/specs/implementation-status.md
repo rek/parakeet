@@ -8,7 +8,7 @@ For details on any item, see the linked spec file.
 
 ## Training Engine (`packages/training-engine`)
 
-675 tests passing (Vitest). All specs implemented. Bug fix: `generateAuxiliaryAssignments` now generates assignments for all blocks (not just 1–3); `blockNumber` widened to `number` throughout; `getIntensityTypeForWeek` now cycles correctly for block 4+.
+705 tests passing (Vitest). All specs implemented. Bug fix: `generateAuxiliaryAssignments` now generates assignments for all blocks (not just 1–3); `blockNumber` widened to `number` throughout; `getIntensityTypeForWeek` now cycles correctly for block 4+.
 
 - [x] engine-001: 1RM formulas — Epley, grams↔kg helpers
 - [x] engine-002: Cube method scheduler — blocks.ts
@@ -44,6 +44,7 @@ For details on any item, see the linked spec file.
 - [x] engine-bug-001: Exercise type system — `auxiliary/exercise-types.ts`; `ExerciseType` (`weighted`/`bodyweight`/`timed`); `AuxiliaryWork.exerciseType`; timed exercises skip MRV; bodyweight sets `weight_kg: 0`
 - [x] engine-bug-002: No-equipment session exercise cap — `MAX_AUX_EXERCISES = 5` guard before pushing top-ups in `generateJITSession`; prevents no-equipment + volume top-up from combining to 6+ aux exercises; 1 regression test added
 - [x] engine-bug-003: Auxiliary rotator block 4+ gap — `generateAuxiliaryAssignments` now generates assignments for all blocks (not just 1–3); `blockNumber` widened to `number` throughout; `getIntensityTypeForWeek` cycles correctly for block 4+ via mod-3 arithmetic
+- [x] engine-bug-004: Dumbbell/kettlebell weight scaling (GH#84) — `computeAuxWeight()` in `exercise-catalog.ts`; sqrt scaling for exercises starting with "Dumbbell"/"Kettlebell" replaces linear `1RM × weightPct`; sex-aware `SQRT_REFERENCE_1RM` per lift (squat 120/70, bench 80/50, deadlift 140/80); corrected `weightPct` for DB Incline (0.30→0.28), DB Snatch (0.30→0.21), KB Swing (0.15→0.20), KB Deadlift (0.15→0.20); 3 call sites updated (formula, LLM, volume top-up); 6 new tests
 
 ---
 
@@ -145,6 +146,7 @@ Module/platform/shared architecture is the canonical app structure. Legacy top-l
 - [x] mobile-036: Weekly body review — `session/weekly-review.tsx`; triggered on end-of-week (scheduled) or every 3rd session (unending); mismatch summary with direction arrows and MRV suggestion
 - [x] mobile-033: Feature flags — `modules/feature-flags/` module with registry, AsyncStorage persistence, `useFeatureEnabled` hook. Settings › Features screen with Simple/Full presets and per-feature toggles. 16 toggleable features across 5 categories. Gates applied to Today screen and Settings screen.
 - [x] mobile-037: Rest timer auto-dismiss — PostRestOverlay with Complete/Failed/Reset 15s; set context label (set number, weight, reps); RPE cleared on timer→overlay transition; failed-reps-input mode (stepper, Confirm/Back); failed set marked complete with actual reps; RPE queued after failure
+- [x] mobile-038: Context-aware aux suggestions (GH #82) — `AddExerciseModal` gets a "Suggested" section at top (hidden during search) with up to 5 exercises filtered to session's primary lift, sorted by uncovered muscles; `addAdHocSet` accepts `initialWeightGrams`; first set pre-filled with `1RM × catalog.weightPct` rounded to 500g; 0 for bodyweight/timed; modal auto-selects lift filter tab. Pure utils: `computeSuggestedAux`, `computeSuggestedWeight` in `modules/session/utils/aux-suggestions.ts`; 13 tests.
 
 ---
 
@@ -213,6 +215,8 @@ Module/platform/shared architecture is the canonical app structure. Legacy top-l
 
 - [x] Disruption skip — skipped/missed sessions in program grid now show "Skipped"/"Missed" pill badges (previously only a red dot, no text label) — `SessionSummary.tsx`
 - [x] Disruption skip — `handleApply()` now invalidates `program.active` + `session.today` queries so the program grid refreshes immediately after adjustment is applied — `report.tsx`
+- [x] Timed exercise logging UX (GH#81) — `SetRow.tsx` timed branch redesigned: "Round N" + duration input (min) instead of "Complete / as prescribed"; RPE picker and rest timer suppressed for timed exercises in `useSetCompletionFlow.handleAuxSetUpdate`; all 5 exercises (Row Machine, Ski Erg, Run - Treadmill/Outside, Toes to Bar, Plank) already existed in catalog — users add them via Settings › Auxiliary Exercises → General filter
+- [x] Weekly review timing (GH#85) — removed immediate post-session review card from `complete.tsx`; `checkEndOfWeek` result now writes `pending_weekly_review` to AsyncStorage + schedules Saturday 10am push notification; `today.tsx` checks AsyncStorage on every focus and shows a "Weekly body check-in ready" nudge card when pending and not already submitted; "Review" clears AsyncStorage + navigates; "Later" hides for session but re-shows on next focus
 
 ---
 
@@ -244,10 +248,11 @@ Module/platform/shared architecture is the canonical app structure. Legacy top-l
 - [x] BadgeCard component — animated slide-up card (mirrors StarCard)
 - [x] Completion screen — renders BadgeCards after star cards
 - [x] Achievements screen — "Badges" section in AchievementsSection
-- [ ] Consistency badges data fetchers — Dawn Patrol, Night Owl, Sunday Scaries, Iron Monk, 365, Perfect Week, Leg Day Loyalist
-- [ ] Contextual badges — Didn't Want To Be Here (needs sleep/energy persistence migration), Bad Day Survivor, Volume Goblin
-- [ ] Program loyalty badges — Old Faithful, Shiny Object Syndrome, Deload Denier
-- [ ] Streak Breaker — needs streak history tracking
+- [x] Consistency badges data fetchers — Dawn Patrol, Night Owl, Sunday Scaries, Iron Monk, 365, Perfect Week, Leg Day Loyalist; `fetchConsistencyData` in badge-detection.service.ts
+- [x] Contextual badges data wiring — sleep/energy from `soreness_checkins.ratings` JSONB; disruption context from `disruptions` table; Volume Goblin via `fetchPrTypeCounts`; `actual_rest_seconds` wired from `session_logs.actual_sets` JSONB
+- [x] Program loyalty badges data fetchers — Old Faithful, Shiny Object Syndrome, Deload Denier; `fetchProgramLoyaltyData` queries programs + formula_configs + deload sessions
+- [x] Remaining badge checks wired — Volume Goblin (situational), Jack of All Lifts (volume-rep, `fetchUniqueAuxExercisesInCycle`), Zen Master (rest-pacing, `fetchConsecutiveFullRestSessions`), Streak Breaker (wild-rare, `detectStreakBreakAndRebuild` pure function + `fetchStreakBreakAndRebuild` service)
+- [x] Previous e1RM for "Technically a PR" — pre-upsert values captured in `detectAchievements` and passed via `previousE1Rm` field
 - [ ] Power Couple — deferred (needs partner linking)
 
 ### Other

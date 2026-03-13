@@ -14,17 +14,9 @@ At the end: update design doc status → Implemented, update specs to match what
 
 Fixed: unending lift rotation now uses history-based selection (last completed lift → next in rotation) instead of counter-based derivation. See [design doc](design/unending-programs.md#lift-rotation--history-based-updated-13-mar-2026).
 
-## 1
+## ~~1~~ (Done — 13 Mar 2026)
 
-add more cardio and core things to aux list, so i can log them sometimes:
-
-row machine
-ski erg
-5 minute run
-toes to bar
-1 minute plank
-
-sometmes i do these as topup, so they do add to mrv, so need to have them logged
+All exercises already existed in the catalog (Row Machine, Ski Erg, Run - Treadmill, Run - Outside, Toes to Bar, Plank). Fixed timed exercise logging UX: "Round N + duration (min)" input instead of "Complete / as prescribed"; RPE picker and rest timer suppressed for timed exercises. Users can add any of these via Settings › Auxiliary Exercises → General filter.
 
 ## 9
 
