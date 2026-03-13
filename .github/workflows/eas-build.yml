@@ -38,12 +38,18 @@ jobs:
           npm version patch --no-git-tag-version
           VERSION=$(node -p "require('./package.json').version")
           echo "VERSION=$VERSION" >> "$GITHUB_ENV"
+          node -e "
+            const fs = require('fs');
+            const app = JSON.parse(fs.readFileSync('app.json', 'utf-8'));
+            app.expo.version = '$VERSION';
+            fs.writeFileSync('app.json', JSON.stringify(app, null, 2) + '\n');
+          "
 
       - name: Commit version bump
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add apps/parakeet/package.json
+          git add apps/parakeet/package.json apps/parakeet/app.json
           git commit -m "chore: bump version to $VERSION"
           git push
 
