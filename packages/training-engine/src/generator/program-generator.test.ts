@@ -1,6 +1,7 @@
 import {
   generateAuxiliaryAssignments,
   generateProgram,
+  nextUnendingSession,
 } from './program-generator';
 
 const START_DATE = new Date('2026-01-05'); // Monday
@@ -169,5 +170,63 @@ describe('generateAuxiliaryAssignments', () => {
   it('skips lifts with fewer than 2 exercises in pool', () => {
     const result = generateAuxiliaryAssignments(9, { squat: ['only one'] });
     expect(result).toHaveLength(0);
+  });
+});
+
+describe('nextUnendingSession — history-based lift rotation', () => {
+  const base = { sessionCounter: 5, trainingDaysPerWeek: 3 };
+
+  it('after squat → bench', () => {
+    const result = nextUnendingSession({ ...base, lastCompletedLift: 'squat' });
+    expect(result.primaryLift).toBe('bench');
+  });
+
+  it('after bench → deadlift', () => {
+    const result = nextUnendingSession({ ...base, lastCompletedLift: 'bench' });
+    expect(result.primaryLift).toBe('deadlift');
+  });
+
+  it('after deadlift → squat', () => {
+    const result = nextUnendingSession({
+      ...base,
+      lastCompletedLift: 'deadlift',
+    });
+    expect(result.primaryLift).toBe('squat');
+  });
+
+  it('null lastCompletedLift falls back to counter-based', () => {
+    // counter=5, 5%3=2, LIFT_ORDER[2]='deadlift'
+    const result = nextUnendingSession({ ...base, lastCompletedLift: null });
+    expect(result.primaryLift).toBe('deadlift');
+  });
+
+  it('undefined lastCompletedLift falls back to counter-based', () => {
+    const result = nextUnendingSession({ sessionCounter: 0, trainingDaysPerWeek: 3 });
+    expect(result.primaryLift).toBe('squat');
+  });
+
+  it('intensity type uses history-derived lift, not counter-derived', () => {
+    // counter=0 would give squat (counter-based), but lastCompletedLift=squat → bench
+    // Week 1 bench intensity from CUBE_ROTATION: 'rep'
+    const result = nextUnendingSession({
+      sessionCounter: 0,
+      trainingDaysPerWeek: 3,
+      lastCompletedLift: 'squat',
+    });
+    expect(result.primaryLift).toBe('bench');
+    expect(result.intensityType).toBe('rep'); // week 1 bench = rep
+  });
+
+  it('counter still drives weekNumber/blockNumber/isDeload', () => {
+    // counter=9, 3 days/week → week 4 (deload)
+    const result = nextUnendingSession({
+      sessionCounter: 9,
+      trainingDaysPerWeek: 3,
+      lastCompletedLift: 'bench',
+    });
+    expect(result.weekNumber).toBe(4);
+    expect(result.isDeload).toBe(true);
+    expect(result.intensityType).toBe('deload');
+    expect(result.primaryLift).toBe('deadlift');
   });
 });

@@ -28,6 +28,7 @@ import { SEX_LABELS, THEME_OPTIONS } from '@shared/constants';
 import { useQuery } from '@tanstack/react-query';
 import Constants from 'expo-constants';
 import { router } from 'expo-router';
+import * as Updates from 'expo-updates';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { radii, spacing, typography } from '../../theme';
@@ -552,7 +553,7 @@ export default function SettingsScreen() {
         {/* App section */}
         <SectionHeader label="App" styles={styles} />
         <Row
-          label={`Version ${Constants.expoConfig?.version ?? '—'}`}
+          label={`Version ${Constants.expoConfig?.version ?? '—'}${Updates.updateId ? `  ·  Update ${Updates.updateId.slice(0, 8)}` : ''}`}
           labelStyle={styles.versionLabel}
           styles={styles}
           right={

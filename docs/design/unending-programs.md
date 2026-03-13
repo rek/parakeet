@@ -80,6 +80,14 @@ Unending programs have no future-dated sessions — the next session is always c
 
 **Manual cycle reviews on demand**: When the lifter decides to end the program (before a meet, a training break, or just a reset), a full cycle review is generated covering the entire unending program — the same review report as a completed scheduled cycle.
 
+## Lift Rotation — History-Based (updated 13 Mar 2026)
+
+The original implementation derived the next lift purely from `sessionCounter % 3` → `LIFT_ORDER[idx]`. This was fragile: if the counter drifted (session skipped, duplicate generation, app crash mid-creation), lifts could repeat or skip with no self-correction.
+
+**Current approach:** The next lift is derived from the last *completed* lift in the program, advancing one position in the squat→bench→deadlift rotation. The counter continues to drive periodization (week number, block number, intensity type, deload cycle). When no completed session exists yet (first session), the counter-based fallback is used.
+
+This is self-correcting: if sessions are skipped, abandoned, or deleted, the next lift is always correct based on what was actually trained. The `nextUnendingSession()` pure function accepts an optional `lastCompletedLift` parameter; the app layer fetches the last completed lift from the DB and passes it through.
+
 ## Open Questions
 
 None.

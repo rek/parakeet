@@ -678,6 +678,26 @@ export async function fetchPlannedSessionForProgram(
   return data;
 }
 
+// Fetch the primary lift of the most recently completed session in a program.
+// Used by unending mode to determine which lift comes next in the rotation.
+export async function fetchLastCompletedLiftForProgram(
+  programId: string,
+  userId: string
+): Promise<Lift | null> {
+  const { data, error } = await typedSupabase
+    .from('sessions')
+    .select('primary_lift')
+    .eq('program_id', programId)
+    .eq('user_id', userId)
+    .eq('status', 'completed')
+    .order('completed_at', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  if (error) throw error;
+  if (!data?.primary_lift) return null;
+  return LiftSchema.parse(data.primary_lift);
+}
+
 export interface EndOfWeekContext {
   programId: string | null;
   programMode: 'scheduled' | 'unending' | null;

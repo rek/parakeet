@@ -10,6 +10,10 @@ At the end: update design doc status → Implemented, update specs to match what
 
 ---
 
+## ~~2~~ (Done — 13 Mar 2026)
+
+Fixed: unending lift rotation now uses history-based selection (last completed lift → next in rotation) instead of counter-based derivation. See [design doc](design/unending-programs.md#lift-rotation--history-based-updated-13-mar-2026).
+
 ## 1
 
 add more cardio and core things to aux list, so i can log them sometimes:

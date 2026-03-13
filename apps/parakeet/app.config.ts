@@ -1,10 +1,12 @@
 import type { ConfigContext, ExpoConfig } from 'expo/config';
+import pkg from './package.json';
 
 const isDev = process.env.APP_ENV === 'development';
 
 export default ({ config }: ConfigContext): ExpoConfig => ({
   ...config,
   name: isDev ? 'Parakeet (Dev)' : 'Parakeet',
+  version: pkg.version,
   android: {
     ...config.android,
     package: isDev

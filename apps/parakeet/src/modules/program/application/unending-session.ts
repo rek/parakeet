@@ -1,3 +1,4 @@
+import type { Lift } from '@parakeet/shared-types';
 import { nextUnendingSession } from '@parakeet/training-engine';
 
 import {
@@ -13,14 +14,17 @@ export interface UnendingProgramRef {
 }
 
 // Builds and inserts the next session row for an unending program and advances the counter.
+// lastCompletedLift drives history-based rotation (squat→bench→deadlift→squat).
 export async function appendNextUnendingSession(
   program: UnendingProgramRef,
   userId: string,
-  plannedDate: string
+  plannedDate: string,
+  lastCompletedLift?: Lift | null
 ): Promise<void> {
   const next = nextUnendingSession({
     sessionCounter: program.unending_session_counter,
     trainingDaysPerWeek: program.training_days_per_week,
+    lastCompletedLift,
   });
 
   await insertSessionRows([

@@ -33,6 +33,7 @@ import {
   fetchHasNextWeekSessions,
   fetchInProgressSession,
   fetchLastCompletedAtForLift,
+  fetchLastCompletedLiftForProgram,
   fetchOverdueScheduledSessions,
   fetchPlannedSessionForProgram,
   fetchProfileSex,
@@ -492,7 +493,11 @@ async function generateNextUnendingSession(
   const trainingDays = program.training_days ??
     DEFAULT_TRAINING_DAYS[program.training_days_per_week] ?? [1, 3, 5];
   const plannedDate = nextTrainingDate(trainingDays);
-  await appendNextUnendingSession(program, userId, plannedDate);
+  const lastCompletedLift = await fetchLastCompletedLiftForProgram(
+    program.id,
+    userId
+  );
+  await appendNextUnendingSession(program, userId, plannedDate, lastCompletedLift);
   // Fetch by program_id+planned status so we get the newly created session,
   // not the completed session that fetchTodaySession would return first.
   return fetchPlannedSessionForProgram(program.id, userId);

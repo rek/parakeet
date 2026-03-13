@@ -109,6 +109,7 @@ export function generateProgram(
 export interface NextUnendingSessionInput {
   sessionCounter: number; // program.unending_session_counter (0-based)
   trainingDaysPerWeek: number;
+  lastCompletedLift?: Lift | null; // history-based: rotate past this lift
 }
 
 export interface NextUnendingSessionResult {
@@ -122,15 +123,25 @@ export interface NextUnendingSessionResult {
 
 // Computes the metadata for the next session in an unending program.
 // All values are derived arithmetically from the session counter — no DB access needed.
+// Advance one position in the squat→bench→deadlift rotation.
+function nextLiftAfter(lastLift: Lift): Lift {
+  const idx = LIFT_ORDER.indexOf(lastLift);
+  return LIFT_ORDER[(idx + 1) % LIFT_ORDER.length];
+}
+
 export function nextUnendingSession(
   input: NextUnendingSessionInput
 ): NextUnendingSessionResult {
-  const { sessionCounter, trainingDaysPerWeek } = input;
+  const { sessionCounter, trainingDaysPerWeek, lastCompletedLift } = input;
   const daysPerWeek = Math.max(1, trainingDaysPerWeek);
 
   const weekNumber = Math.floor(sessionCounter / daysPerWeek) + 1;
   const dayNumber = (sessionCounter % daysPerWeek) + 1;
-  const lift = LIFT_ORDER[(sessionCounter % daysPerWeek) % LIFT_ORDER.length];
+  // History-based lift selection: rotate past last completed lift.
+  // Falls back to counter-based derivation when no history exists (first session).
+  const lift = lastCompletedLift
+    ? nextLiftAfter(lastCompletedLift)
+    : LIFT_ORDER[(sessionCounter % daysPerWeek) % LIFT_ORDER.length];
 
   // Blocks cycle 1→2→3→1… every 3 training weeks (same as scheduled)
   const blockNumber = ((Math.floor((weekNumber - 1) / 3) % 3) + 1);
