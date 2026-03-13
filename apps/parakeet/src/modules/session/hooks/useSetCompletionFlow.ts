@@ -153,10 +153,17 @@ export function useSetCompletionFlow({
 
       if (data.isCompleted) {
         if (!wasAuxCompleted) {
-          setPendingAuxRpe({ exercise, setNumber });
+          const exerciseType = auxiliaryWork.find(
+            (aw) => aw.exercise === exercise
+          )?.exerciseType;
+          const isTimed = exerciseType === 'timed';
+
+          if (!isTimed) setPendingAuxRpe({ exercise, setNumber });
 
           // No rest timer after the last set of this exercise
           if (setNumber >= setsInExercise) return;
+
+          if (isTimed) return;
 
           if (!restTimerPrefsRef.current.auxSetsEnabled) return;
 

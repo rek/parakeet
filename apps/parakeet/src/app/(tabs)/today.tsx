@@ -9,7 +9,10 @@ import {
   View,
 } from 'react-native';
 
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
 import { getStreakData, StreakPill } from '@modules/achievements';
+import { getLatestWeeklyReview } from '@modules/body-review';
 import { useAuth } from '@modules/auth';
 import {
   CYCLE_PHASE_BG,
@@ -297,6 +300,55 @@ function buildStyles(colors: ColorScheme) {
       color: colors.warning,
       lineHeight: 18,
     },
+    // Weekly review nudge card
+    weeklyReviewCard: {
+      backgroundColor: colors.bgSurface,
+      borderRadius: radii.md,
+      borderWidth: 1,
+      borderColor: colors.border,
+      paddingHorizontal: spacing[4],
+      paddingVertical: spacing[3],
+      marginHorizontal: spacing[4],
+    },
+    weeklyReviewTitle: {
+      fontSize: typography.sizes.sm,
+      fontWeight: typography.weights.bold,
+      color: colors.text,
+      marginBottom: spacing[0.5],
+    },
+    weeklyReviewSubtext: {
+      fontSize: typography.sizes.xs,
+      color: colors.textSecondary,
+      marginBottom: spacing[3],
+    },
+    weeklyReviewButtons: {
+      flexDirection: 'row' as const,
+      gap: spacing[2],
+    },
+    weeklyReviewButton: {
+      flex: 1,
+      backgroundColor: colors.primary,
+      borderRadius: radii.sm,
+      paddingVertical: spacing[2],
+      alignItems: 'center' as const,
+    },
+    weeklyReviewButtonText: {
+      fontSize: typography.sizes.sm,
+      fontWeight: typography.weights.semibold,
+      color: colors.textInverse,
+    },
+    weeklyReviewLaterButton: {
+      flex: 1,
+      backgroundColor: colors.bgMuted,
+      borderRadius: radii.sm,
+      paddingVertical: spacing[2],
+      alignItems: 'center' as const,
+    },
+    weeklyReviewLaterButtonText: {
+      fontSize: typography.sizes.sm,
+      fontWeight: typography.weights.semibold,
+      color: colors.textSecondary,
+    },
     adHocButton: {
       borderWidth: 1,
       borderColor: colors.primary,
@@ -469,6 +521,10 @@ export default function TodayScreen() {
   const { data: cycleContext } = useCyclePhase();
   const queryClient = useQueryClient();
   const [refreshing, setRefreshing] = useState(false);
+  const [pendingReview, setPendingReview] = useState<{
+    programId: string | null;
+    weekNumber: number;
+  } | null>(null);
 
   const styles = useMemo(() => buildStyles(colors), [colors]);
 
@@ -492,6 +548,37 @@ export default function TodayScreen() {
     useCallback(() => {
       void queryClient.invalidateQueries({ queryKey: ['session'] });
     }, [queryClient])
+  );
+
+  // Check for a pending weekly body review (stored after end-of-week session)
+  useFocusEffect(
+    useCallback(() => {
+      if (!user?.id) return;
+      AsyncStorage.getItem('pending_weekly_review')
+        .then((raw) => {
+          if (!raw) {
+            setPendingReview(null);
+            return;
+          }
+          const data = JSON.parse(raw) as {
+            programId: string | null;
+            weekNumber: number;
+          };
+          return getLatestWeeklyReview(
+            user.id,
+            data.programId ?? '',
+            data.weekNumber
+          ).then((existing) => {
+            if (existing) {
+              void AsyncStorage.removeItem('pending_weekly_review');
+              setPendingReview(null);
+            } else {
+              setPendingReview(data);
+            }
+          });
+        })
+        .catch(() => {});
+    }, [user?.id])
   );
 
   const { data: disruptions } = useQuery({
@@ -602,6 +689,47 @@ export default function TodayScreen() {
                   })
                 }
               />
+            )}
+
+            {/* Weekly body review nudge */}
+            {pendingReview && (
+              <View style={styles.weeklyReviewCard}>
+                <Text style={styles.weeklyReviewTitle}>
+                  Weekly body check-in ready
+                </Text>
+                <Text style={styles.weeklyReviewSubtext}>
+                  How did your body hold up this week?
+                </Text>
+                <View style={styles.weeklyReviewButtons}>
+                  <TouchableOpacity
+                    style={styles.weeklyReviewButton}
+                    onPress={() => {
+                      void AsyncStorage.removeItem('pending_weekly_review');
+                      setPendingReview(null);
+                      router.push({
+                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                        pathname: '/session/weekly-review' as any,
+                        params: {
+                          programId: pendingReview.programId ?? '',
+                          weekNumber: String(pendingReview.weekNumber),
+                        },
+                      });
+                    }}
+                    activeOpacity={0.8}
+                  >
+                    <Text style={styles.weeklyReviewButtonText}>Review</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={styles.weeklyReviewLaterButton}
+                    onPress={() => setPendingReview(null)}
+                    activeOpacity={0.7}
+                  >
+                    <Text style={styles.weeklyReviewLaterButtonText}>
+                      Later
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
             )}
 
             {sessionError && sessions.length === 0 ? (

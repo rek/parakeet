@@ -38,3 +38,35 @@ export async function cancelRestNotification(notifId: string): Promise<void> {
     // notification may have fired or already been cleared
   }
 }
+
+export async function scheduleWeeklyReviewNotification(): Promise<string | null> {
+  try {
+    const Notifications = await import('expo-notifications');
+    const { status } = await Notifications.requestPermissionsAsync();
+    if (status !== 'granted') return null;
+
+    const now = new Date();
+    const day = now.getDay(); // 0=Sun, 6=Sat
+
+    // Next Saturday (or Sunday if today is Saturday)
+    const daysUntil = day === 6 ? 1 : (6 - day) || 7;
+    const target = new Date(now);
+    target.setDate(now.getDate() + daysUntil);
+    target.setHours(10, 0, 0, 0);
+
+    const id = await Notifications.scheduleNotificationAsync({
+      content: {
+        title: 'Weekly body check-in',
+        body: 'How did your body hold up this week?',
+        data: { type: 'weekly_review' },
+      },
+      trigger: {
+        type: Notifications.SchedulableTriggerInputTypes.DATE,
+        date: target,
+      },
+    });
+    return id;
+  } catch {
+    return null;
+  }
+}

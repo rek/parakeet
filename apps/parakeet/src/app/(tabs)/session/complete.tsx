@@ -25,6 +25,8 @@ import { qk } from '@platform/query';
 import { useSessionStore } from '@platform/store/sessionStore';
 import { useSyncStore } from '@platform/store/syncStore';
 import { captureException } from '@platform/utils/captureException';
+import { scheduleWeeklyReviewNotification } from '@platform/lib/rest-notifications';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useQueryClient } from '@tanstack/react-query';
 import { router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -193,55 +195,6 @@ function buildStyles(colors: ColorScheme) {
       color: colors.primary,
       textAlign: 'center',
     },
-    reviewPromptCard: {
-      backgroundColor: colors.bgSurface,
-      borderWidth: 1,
-      borderColor: colors.border,
-      borderRadius: 16,
-      paddingHorizontal: 20,
-      paddingVertical: 18,
-      marginBottom: 20,
-    },
-    reviewPromptTitle: {
-      fontSize: 16,
-      fontWeight: '700',
-      color: colors.text,
-      marginBottom: 6,
-    },
-    reviewPromptSubtext: {
-      fontSize: 13,
-      color: colors.textSecondary,
-      marginBottom: 16,
-      lineHeight: 18,
-    },
-    reviewPromptButtons: {
-      flexDirection: 'row',
-      gap: 10,
-    },
-    reviewButton: {
-      flex: 1,
-      backgroundColor: colors.primary,
-      borderRadius: 10,
-      paddingVertical: 12,
-      alignItems: 'center',
-    },
-    reviewButtonText: {
-      fontSize: 15,
-      fontWeight: '600',
-      color: colors.textInverse,
-    },
-    reviewSkipButton: {
-      flex: 1,
-      backgroundColor: colors.bgMuted,
-      borderRadius: 10,
-      paddingVertical: 12,
-      alignItems: 'center',
-    },
-    reviewSkipButtonText: {
-      fontSize: 15,
-      fontWeight: '600',
-      color: colors.textSecondary,
-    },
   });
 }
 
@@ -277,11 +230,6 @@ export default function CompleteScreen() {
   const [cycleBadgeEarned, setCycleBadgeEarned] = useState(false);
   const [newBadges, setNewBadges] = useState<EarnedBadge[]>([]);
   const [saved, setSaved] = useState(false);
-
-  // End-of-week body review prompt
-  const [showReviewPrompt, setShowReviewPrompt] = useState(false);
-  const [reviewProgramId, setReviewProgramId] = useState<string | null>(null);
-  const [reviewWeekNumber, setReviewWeekNumber] = useState(0);
 
   // ── Derived stats ─────────────────────────────────────────────────────────
 
@@ -387,13 +335,15 @@ export default function CompleteScreen() {
         captureException(achievementErr);
       }
 
-      // ── End-of-week body review prompt (best-effort) ──────────────────────
+      // ── End-of-week: store pending review for weekend nudge ───────────────
       try {
         const eow = await checkEndOfWeek(sessionId);
         if (eow.shouldPrompt) {
-          setReviewProgramId(eow.programId);
-          setReviewWeekNumber(eow.weekNumber);
-          setShowReviewPrompt(true);
+          await AsyncStorage.setItem(
+            'pending_weekly_review',
+            JSON.stringify({ programId: eow.programId, weekNumber: eow.weekNumber })
+          );
+          void scheduleWeeklyReviewNotification();
         }
       } catch (eowErr) {
         captureException(eowErr);
@@ -569,44 +519,6 @@ export default function CompleteScreen() {
             {cycleBadgeEarned && (
               <View style={styles.cycleBadgeLine}>
                 <Text style={styles.cycleBadgeText}>Cycle complete! 🏆</Text>
-              </View>
-            )}
-
-            {/* End-of-week body review prompt */}
-            {showReviewPrompt && (
-              <View style={styles.reviewPromptCard}>
-                <Text style={styles.reviewPromptTitle}>
-                  End of week — how does your body feel?
-                </Text>
-                <Text style={styles.reviewPromptSubtext}>
-                  Compare how you feel vs what the system predicted
-                </Text>
-                <View style={styles.reviewPromptButtons}>
-                  <TouchableOpacity
-                    style={styles.reviewButton}
-                    onPress={() => {
-                      setShowReviewPrompt(false);
-                      router.push({
-                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                        pathname: '/session/weekly-review' as any,
-                        params: {
-                          programId: reviewProgramId ?? '',
-                          weekNumber: String(reviewWeekNumber),
-                        },
-                      });
-                    }}
-                    activeOpacity={0.8}
-                  >
-                    <Text style={styles.reviewButtonText}>Review</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    style={styles.reviewSkipButton}
-                    onPress={() => setShowReviewPrompt(false)}
-                    activeOpacity={0.7}
-                  >
-                    <Text style={styles.reviewSkipButtonText}>Skip</Text>
-                  </TouchableOpacity>
-                </View>
               </View>
             )}
 

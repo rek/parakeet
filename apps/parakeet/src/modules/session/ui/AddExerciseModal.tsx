@@ -47,6 +47,8 @@ interface Props {
   defaultLift?: Lift;
   /** Exercises already in the user's pool — shown greyed out, not tappable. */
   excludeNames?: string[];
+  /** Exercises to show in a "Suggested" section at the top of the list. */
+  suggestedNames?: string[];
 }
 
 interface ListItem {
@@ -209,6 +211,7 @@ export function AddExerciseModal({
   onClose,
   defaultLift,
   excludeNames,
+  suggestedNames,
 }: Props) {
   const { colors } = useTheme();
   const [query, setQuery] = useState('');
@@ -251,6 +254,25 @@ export function AddExerciseModal({
         : [liftFilter];
 
     const items: ListItem[] = [];
+
+    // Suggested section — shown at top when no search query is active
+    if (!q && suggestedNames && suggestedNames.length > 0) {
+      const suggestedEntries = suggestedNames
+        .map((name) => allExercises.find((e) => e.name === name))
+        .filter((e): e is ExerciseCatalogEntry => e != null);
+      if (suggestedEntries.length > 0) {
+        items.push({ type: 'header', key: 'header-suggested', label: 'Suggested' });
+        for (const entry of suggestedEntries) {
+          items.push({
+            type: 'exercise',
+            key: `suggested-${entry.name}`,
+            entry,
+            excluded: excludeNames?.includes(entry.name) ?? false,
+          });
+        }
+      }
+    }
+
     for (const lift of sections) {
       const group = byLift[lift] ?? [];
       if (group.length === 0) continue;
@@ -282,7 +304,7 @@ export function AddExerciseModal({
     }
 
     return items;
-  }, [query, liftFilter, allExercises, excludeNames]);
+  }, [query, liftFilter, allExercises, excludeNames, suggestedNames]);
 
   function handleSelect(name: string) {
     onConfirm(name);

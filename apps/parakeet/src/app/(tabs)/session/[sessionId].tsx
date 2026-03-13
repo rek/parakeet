@@ -17,6 +17,8 @@ import {
   AddExerciseModal,
   buildBlockWeekLabel,
   buildIntensityLabel,
+  computeSuggestedAux,
+  computeSuggestedWeight,
   DEFAULT_MAIN_REST_SECONDS,
   formatExerciseName,
   getSession,
@@ -45,7 +47,9 @@ import {
   setDisabledPlates,
 } from '@modules/settings';
 import type { RestTimerPrefs } from '@modules/settings';
+import { getAllExercises } from '@parakeet/training-engine';
 import type { PlateKg } from '@parakeet/training-engine';
+import type { Lift } from '@parakeet/shared-types';
 import { useNetworkStatus } from '@platform/network';
 import { useSessionStore } from '@platform/store/sessionStore';
 import { sessionLabel } from '@shared/utils/string';
@@ -574,12 +578,42 @@ export default function SessionScreen() {
     }, [timerState?.visible, timerState?.timerStartedAt])
   );
 
+  // ── Exercise suggestions ──────────────────────────────────────────────────
+
+  const exerciseCatalog = useMemo(() => getAllExercises(), []);
+
+  const alreadyInSession = useMemo(
+    () => [
+      ...auxiliaryWork.map((aw) => aw.exercise),
+      ...adHocExercises,
+    ],
+    [auxiliaryWork, adHocExercises],
+  );
+
+  const suggestedExerciseNames = useMemo(
+    () =>
+      computeSuggestedAux(
+        (sessionMeta?.primary_lift as Lift | null) ?? null,
+        alreadyInSession,
+        exerciseCatalog,
+      ),
+    [alreadyInSession, sessionMeta?.primary_lift, exerciseCatalog],
+  );
+
   // ── Screen-local handlers ─────────────────────────────────────────────────
 
   function handleConfirmAddExercise(name: string) {
     if (!adHocExercises.includes(name)) {
       setAdHocExercises((prev) => [...prev, name]);
-      addAdHocSet(name);
+      const oneRmGrams =
+        oneRmKgRef.current != null
+          ? Math.round(oneRmKgRef.current * 1000)
+          : 0;
+      const suggestedWeight =
+        oneRmGrams > 0
+          ? computeSuggestedWeight(name, oneRmGrams, exerciseCatalog)
+          : 0;
+      addAdHocSet(name, suggestedWeight);
     }
     setAddExerciseVisible(false);
   }
@@ -1030,6 +1064,9 @@ export default function SessionScreen() {
         visible={addExerciseVisible}
         onConfirm={handleConfirmAddExercise}
         onClose={() => setAddExerciseVisible(false)}
+        defaultLift={sessionMeta?.primary_lift as Lift | undefined}
+        suggestedNames={suggestedExerciseNames}
+        excludeNames={alreadyInSession}
       />
 
       {/* Rest timer + post-rest overlay + floating RPE picker */}

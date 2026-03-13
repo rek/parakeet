@@ -21,6 +21,7 @@ export {
   cancelPlannedSessionsForProgram,
 } from './data/session.repository';
 export * from './utils/session-stats';
+export * from './utils/aux-suggestions';
 export * from './ui/readiness-styles';
 export * from './ui/performance-styles';
 export * from './ui/rpe-options';

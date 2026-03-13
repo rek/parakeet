@@ -59,7 +59,7 @@ export interface SessionState {
     setNumber: number,
     data: Partial<AuxiliaryActualSet>
   ) => void;
-  addAdHocSet: (exercise: string) => void;
+  addAdHocSet: (exercise: string, initialWeightGrams?: number) => void;
   removeAdHocSet: (exercise: string, setNumber: number) => void;
   setWarmupDone: (index: number, done: boolean) => void;
   setSessionRpe: (rpe: number) => void;
@@ -149,19 +149,24 @@ export const useSessionStore = create<SessionState>()(
           ),
         })),
 
-      addAdHocSet: (exercise) =>
+      addAdHocSet: (exercise, initialWeightGrams) =>
         set((state) => {
           const existing = state.auxiliarySets.filter(
             (s) => s.exercise === exercise
           );
           const last = existing[existing.length - 1];
+          const weight_grams =
+            last?.weight_grams ??
+            (initialWeightGrams != null && initialWeightGrams > 0
+              ? initialWeightGrams
+              : 0);
           return {
             auxiliarySets: [
               ...state.auxiliarySets,
               {
                 exercise,
                 set_number: existing.length + 1,
-                weight_grams: last?.weight_grams ?? 0,
+                weight_grams,
                 reps_completed: last?.reps_completed ?? 5,
                 is_completed: false,
               },

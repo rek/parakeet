@@ -52,8 +52,15 @@ export async function detectAchievements(
   const sessionContext = await getSessionCompletionContext(sessionId);
   const lift = (sessionContext.primaryLift as Lift | null) ?? null;
 
+  // Capture pre-upsert e1RM for "Technically a PR" badge
+  const previousE1Rm: Record<string, number> = {};
+
   if (lift) {
     const historicalPRs = await getPRHistory(userId, lift);
+    if (historicalPRs.best1rmKg > 0) {
+      previousE1Rm[lift] = historicalPRs.best1rmKg;
+    }
+
     const completedSetsForPR = actualSets
       .filter((s) => s.reps_completed > 0)
       .map((s) => ({
@@ -120,6 +127,7 @@ export async function detectAchievements(
     cycleBadgeEarned: result.cycleBadgeEarned,
     primaryLift: lift,
     programId: sessionContext.programId,
+    previousE1Rm,
   });
 
   return result;

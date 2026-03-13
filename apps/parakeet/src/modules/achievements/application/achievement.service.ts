@@ -1,6 +1,8 @@
 import type { Lift } from '@parakeet/shared-types';
 import { computeStreak, computeWilks2020 } from '@parakeet/training-engine';
-import type { PR, StreakResult, WeekStatus } from '@parakeet/training-engine';
+import type { PR, StreakResult } from '@parakeet/training-engine';
+
+import { buildWeekStatuses } from '../utils/week-status-builder';
 
 import {
   fetchDisruptionsForStreak,
@@ -77,87 +79,14 @@ export async function getPRHistory(
  * Build WeekStatus[] from sessions + disruptions, then call computeStreak().
  */
 export async function getStreakData(userId: string): Promise<StreakResult> {
-  const now = new Date();
-  const todayStr = now.toISOString().split('T')[0];
+  const todayStr = new Date().toISOString().split('T')[0];
 
   const [sessions, disruptions] = await Promise.all([
     fetchSessionsForStreak(userId),
     fetchDisruptionsForStreak(userId),
   ]);
 
-  const disruptionSessionIds = new Set<string>();
-  for (const d of disruptions) {
-    const ids = d.session_ids_affected as string[] | null;
-    if (ids) {
-      for (const id of ids) disruptionSessionIds.add(id);
-    }
-  }
-
-  function isDateCoveredByDisruption(dateStr: string): boolean {
-    for (const d of disruptions) {
-      const start = d.affected_date_start as string;
-      const end = (d.affected_date_end as string | null) ?? start;
-      if (dateStr >= start && dateStr <= end) return true;
-    }
-    return false;
-  }
-
-  const byWeek = new Map<string, typeof sessions>();
-  for (const s of sessions) {
-    const d = new Date(s.planned_date as string);
-    const day = d.getDay();
-    const offset = day === 0 ? -6 : 1 - day;
-    const monday = new Date(d);
-    monday.setDate(d.getDate() + offset);
-    const weekKey = monday.toISOString().split('T')[0];
-    const existing = byWeek.get(weekKey) ?? [];
-    existing.push(s);
-    byWeek.set(weekKey, existing);
-  }
-
-  const weekStatuses: WeekStatus[] = [];
-
-  for (const [weekStartDate, weekSessions] of [...byWeek.entries()].sort()) {
-    const weekEnd = new Date(weekStartDate);
-    weekEnd.setDate(weekEnd.getDate() + 6);
-    const weekEndStr = weekEnd.toISOString().split('T')[0];
-    const weekIsComplete = weekEndStr < todayStr;
-
-    let scheduled = 0;
-    let completed = 0;
-    let skippedWithDisruption = 0;
-    let unaccountedMisses = 0;
-
-    for (const s of weekSessions) {
-      const status = s.status as string;
-      const dateStr = s.planned_date as string;
-      if (dateStr > todayStr && status === 'planned') continue;
-
-      scheduled++;
-      if (status === 'completed') {
-        completed++;
-      } else if (
-        status === 'skipped' &&
-        (disruptionSessionIds.has(s.id as string) ||
-          isDateCoveredByDisruption(dateStr))
-      ) {
-        skippedWithDisruption++;
-      } else if (weekIsComplete) {
-        unaccountedMisses++;
-      }
-    }
-
-    if (scheduled > 0) {
-      weekStatuses.push({
-        weekStartDate,
-        scheduled,
-        completed,
-        skippedWithDisruption,
-        unaccountedMisses,
-      });
-    }
-  }
-
+  const weekStatuses = buildWeekStatuses(sessions, disruptions, todayStr);
   return computeStreak(weekStatuses);
 }
 

@@ -248,13 +248,25 @@ export function SetRow({
     });
   }
 
-  // Timed exercises: just a "mark complete" button — no inputs
+  // Timed exercises: round label + duration input (minutes) + mark complete
   if (exerciseType === 'timed') {
     return (
       <View style={[styles.wrapper, isCompleted && styles.wrapperCompleted]}>
         <View style={styles.row}>
-          <Text style={styles.setLabel}>Complete</Text>
-          <Text style={styles.timedLabel}>as prescribed</Text>
+          <Text style={styles.setLabel}>Round {setNumber}</Text>
+          <TextInput
+            style={[styles.repsInput, isCompleted && styles.inputLocked]}
+            value={reps === 0 ? '' : String(reps)}
+            onChangeText={handleRepsChange}
+            keyboardType="number-pad"
+            returnKeyType="done"
+            selectTextOnFocus
+            placeholder={String(plannedReps)}
+            placeholderTextColor={colors.textTertiary}
+            textAlign="center"
+            editable={!isCompleted}
+          />
+          <Text style={styles.unitText}>min</Text>
           <TouchableOpacity
             style={[styles.checkButton, isCompleted && styles.checkButtonDone]}
             onPress={handleToggleComplete}
