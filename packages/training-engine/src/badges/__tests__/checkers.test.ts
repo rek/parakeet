@@ -68,6 +68,11 @@ function makeCtx(overrides: Partial<BadgeCheckContext> = {}): BadgeCheckContext 
     completedAtHour: null,
     previousSessionWasDeload: false,
     previousE1Rm: {},
+    volumePrCount: 0,
+    oneRmPrCount: 0,
+    uniqueAuxExercisesInCycle: 0,
+    consecutiveFullRestSessions: 0,
+    hadStreakBreakAndRebuild: false,
     ...overrides,
   };
 }
@@ -1386,5 +1391,118 @@ describe('checkProgramLoyaltyBadges', () => {
     const badges = checkProgramLoyaltyBadges(data);
     expect(badges).toContain('old_faithful');
     expect(badges).toContain('shiny_object_syndrome');
+  });
+});
+
+// ── Volume Goblin (situational) ─────────────────────────────────────────────
+
+describe('volume_goblin — 5+ non-1RM PRs with zero 1RM PRs', () => {
+  it('earns badge with 5 volume PRs and 0 1RM PRs', () => {
+    const ctx = makeCtx({ volumePrCount: 5, oneRmPrCount: 0 });
+    expect(checkSituationalBadges(ctx)).toContain('volume_goblin');
+  });
+
+  it('does not earn badge when 1RM PRs exist', () => {
+    const ctx = makeCtx({ volumePrCount: 5, oneRmPrCount: 1 });
+    expect(checkSituationalBadges(ctx)).not.toContain('volume_goblin');
+  });
+
+  it('does not earn badge with only 4 volume PRs', () => {
+    const ctx = makeCtx({ volumePrCount: 4, oneRmPrCount: 0 });
+    expect(checkSituationalBadges(ctx)).not.toContain('volume_goblin');
+  });
+});
+
+// ── Jack of All Lifts (volume-rep) ──────────────────────────────────────────
+
+describe('jack_of_all_lifts — 10+ unique aux exercises in cycle', () => {
+  it('earns badge at exactly 10 unique aux exercises', () => {
+    const ctx = makeCtx({ uniqueAuxExercisesInCycle: 10 });
+    expect(checkVolumeRepBadges(ctx)).toContain('jack_of_all_lifts');
+  });
+
+  it('does not earn badge with 9 unique aux exercises', () => {
+    const ctx = makeCtx({ uniqueAuxExercisesInCycle: 9 });
+    expect(checkVolumeRepBadges(ctx)).not.toContain('jack_of_all_lifts');
+  });
+});
+
+// ── Zen Master (rest-pacing) ────────────────────────────────────────────────
+
+describe('zen_master — 5 consecutive full-rest sessions', () => {
+  it('earns badge at exactly 5 consecutive full-rest sessions', () => {
+    const ctx = makeCtx({ consecutiveFullRestSessions: 5 });
+    expect(checkRestPacingBadges(ctx)).toContain('zen_master');
+  });
+
+  it('does not earn badge with 4 consecutive full-rest sessions', () => {
+    const ctx = makeCtx({ consecutiveFullRestSessions: 4 });
+    expect(checkRestPacingBadges(ctx)).not.toContain('zen_master');
+  });
+});
+
+// ── Streak Breaker (wild-rare) ──────────────────────────────────────────────
+
+describe('the_streak_breaker — broke 8+ streak then rebuilt to 8+', () => {
+  it('earns badge when hadStreakBreakAndRebuild is true', () => {
+    const ctx = makeCtx({ hadStreakBreakAndRebuild: true });
+    expect(checkWildRareBadges(ctx)).toContain('the_streak_breaker');
+  });
+
+  it('does not earn badge when hadStreakBreakAndRebuild is false', () => {
+    const ctx = makeCtx({ hadStreakBreakAndRebuild: false });
+    expect(checkWildRareBadges(ctx)).not.toContain('the_streak_breaker');
+  });
+});
+
+// ── detectStreakBreakAndRebuild (pure function) ─────────────────────────────
+
+import { detectStreakBreakAndRebuild } from '../../achievements/pr-detection';
+import type { WeekStatus } from '../../achievements/pr-detection';
+
+function makeWeek(overrides: Partial<WeekStatus> = {}): WeekStatus {
+  return {
+    weekStartDate: '2025-01-06',
+    scheduled: 3,
+    completed: 3,
+    skippedWithDisruption: 0,
+    unaccountedMisses: 0,
+    ...overrides,
+  };
+}
+
+describe('detectStreakBreakAndRebuild', () => {
+  it('returns true when 8-week streak broken then rebuilt to 8+', () => {
+    const weeks: WeekStatus[] = [
+      // 8 clean weeks
+      ...Array.from({ length: 8 }, () => makeWeek()),
+      // break
+      makeWeek({ unaccountedMisses: 1 }),
+      // 8 more clean weeks
+      ...Array.from({ length: 8 }, () => makeWeek()),
+    ];
+    expect(detectStreakBreakAndRebuild(weeks)).toBe(true);
+  });
+
+  it('returns false when streak never reached 8 weeks', () => {
+    const weeks: WeekStatus[] = [
+      ...Array.from({ length: 7 }, () => makeWeek()),
+      makeWeek({ unaccountedMisses: 1 }),
+      ...Array.from({ length: 10 }, () => makeWeek()),
+    ];
+    expect(detectStreakBreakAndRebuild(weeks)).toBe(false);
+  });
+
+  it('returns false when rebuild is only 7 weeks', () => {
+    const weeks: WeekStatus[] = [
+      ...Array.from({ length: 8 }, () => makeWeek()),
+      makeWeek({ unaccountedMisses: 1 }),
+      ...Array.from({ length: 7 }, () => makeWeek()),
+    ];
+    expect(detectStreakBreakAndRebuild(weeks)).toBe(false);
+  });
+
+  it('returns false with empty history', () => {
+    expect(detectStreakBreakAndRebuild([])).toBe(false);
   });
 });

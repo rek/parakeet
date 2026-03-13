@@ -200,6 +200,38 @@ export function computeStreak(weekHistory: WeekStatus[]): StreakResult {
   return { currentStreak, longestStreak, lastCleanWeekDate };
 }
 
+/**
+ * Detects whether the user ever broke a streak of 8+ weeks and then
+ * rebuilt it back to 8+ weeks. Walks the full week history forward.
+ */
+export function detectStreakBreakAndRebuild(
+  weekHistory: WeekStatus[]
+): boolean {
+  const isClean = (w: WeekStatus) =>
+    w.scheduled > 0 && w.unaccountedMisses === 0;
+  const hasScheduled = (w: WeekStatus) => w.scheduled > 0;
+
+  let run = 0;
+  let hadLongStreak = false;
+  let brokeIt = false;
+
+  for (const week of weekHistory) {
+    if (!hasScheduled(week)) continue;
+    if (isClean(week)) {
+      run++;
+      if (hadLongStreak && brokeIt && run >= 8) return true;
+    } else {
+      if (run >= 8) {
+        hadLongStreak = true;
+        brokeIt = true;
+      }
+      run = 0;
+    }
+  }
+
+  return false;
+}
+
 // ---------------------------------------------------------------------------
 // Cycle Completion Detection (engine-022)
 // ---------------------------------------------------------------------------

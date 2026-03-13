@@ -232,7 +232,7 @@ export const EXERCISE_CATALOG: ExerciseCatalogEntry[] = [
       { muscle: 'shoulders', contribution: 1.0 },
       { muscle: 'triceps', contribution: 0.5 },
     ],
-    weightPct: 0.3,
+    weightPct: 0.28,
     repTarget: 10,
   },
   {
@@ -511,7 +511,7 @@ export const EXERCISE_CATALOG: ExerciseCatalogEntry[] = [
     associatedLift: 'deadlift',
     primaryMuscles: ['hamstrings', 'glutes'],
     type: 'weighted',
-    weightPct: 0.15,
+    weightPct: 0.20,
     repTarget: 12,
   },
   {
@@ -598,7 +598,7 @@ export const EXERCISE_CATALOG: ExerciseCatalogEntry[] = [
     associatedLift: 'deadlift',
     primaryMuscles: ['hamstrings', 'glutes'],
     type: 'weighted',
-    weightPct: 0.15,
+    weightPct: 0.20,
     repTarget: 8,
   },
   {
@@ -663,7 +663,7 @@ export const EXERCISE_CATALOG: ExerciseCatalogEntry[] = [
       { muscle: 'upper_back', contribution: 1.0 },
       { muscle: 'glutes', contribution: 0.5 },
     ],
-    weightPct: 0.3,
+    weightPct: 0.21,
     repTarget: 5,
   },
   {
@@ -953,4 +953,50 @@ export function getBodyweightPool(
     (e) =>
       e.bodyweightPools?.some((p) => p.lift === lift && p.sex === sex) ?? false
   ).map((e) => e.name);
+}
+
+// ---------------------------------------------------------------------------
+// Sqrt-scaled weight computation for unstable implements (engine-GH#84)
+// ---------------------------------------------------------------------------
+
+/**
+ * Reference 1RMs at which the linear weightPct values were calibrated.
+ * Used as the midpoint for sqrt scaling of dumbbell/kettlebell exercises.
+ * At this exact 1RM, sqrt output equals linear output.
+ */
+const SQRT_REFERENCE_1RM: Record<Lift, { male: number; female: number }> = {
+  squat:    { male: 120, female: 70 },
+  bench:    { male: 80,  female: 50 },
+  deadlift: { male: 140, female: 80 },
+};
+
+/**
+ * Compute auxiliary exercise working weight, applying sqrt scaling for
+ * dumbbell/kettlebell exercises to correct for non-linear stabilization penalty.
+ *
+ * For barbell/machine/cable exercises: weight = oneRmKg × weightPct (linear, as before)
+ * For dumbbell/kettlebell exercises: weight = weightPct × sqrt(referenceRm × oneRmKg)
+ *   — At the reference 1RM, output equals the linear formula.
+ *   — Above it, weight grows slower (stronger lifters get proportionally lighter DBs).
+ */
+export function computeAuxWeight({
+  exercise,
+  oneRmKg,
+  lift,
+  biologicalSex,
+}: {
+  exercise: string;
+  oneRmKg: number;
+  lift: Lift;
+  biologicalSex?: 'female' | 'male';
+}) {
+  const pct = getWeightPct(exercise);
+  const isUnstable =
+    exercise.startsWith('Dumbbell') || exercise.startsWith('Kettlebell');
+
+  if (!isUnstable) return oneRmKg * pct;
+
+  const sex = biologicalSex ?? 'male';
+  const ref = SQRT_REFERENCE_1RM[lift]?.[sex] ?? SQRT_REFERENCE_1RM[lift]?.male ?? 100;
+  return pct * Math.sqrt(ref * oneRmKg);
 }

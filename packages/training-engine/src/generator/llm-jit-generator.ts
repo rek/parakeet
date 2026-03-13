@@ -4,7 +4,7 @@ import { generateText, Output } from 'ai';
 
 import { JIT_MODEL } from '../ai/models';
 import { JIT_SYSTEM_PROMPT } from '../ai/prompts';
-import { getWeightPct } from '../auxiliary/exercise-catalog';
+import { computeAuxWeight } from '../auxiliary/exercise-catalog';
 import { roundToNearest } from '../formulas/weight-rounding';
 import { FormulaJITGenerator } from './formula-jit-generator';
 import { enforceHardConstraints } from './jit-constraints';
@@ -114,7 +114,7 @@ export function applyAdjustment(
         };
       }
       const baseAuxWeight = roundToNearest(
-        input.oneRmKg * getWeightPct(exercise)
+        computeAuxWeight({ exercise, oneRmKg: input.oneRmKg, lift: input.primaryLift, biologicalSex: input.biologicalSex })
       );
       const auxWeight =
         override === 'reduce'

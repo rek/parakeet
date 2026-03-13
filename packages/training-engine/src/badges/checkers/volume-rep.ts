@@ -3,8 +3,11 @@ import type { BadgeCheckContext, BadgeId } from '../badge-types';
 /** Check volume & rep range badges. */
 export function checkVolumeRepBadges(ctx: BadgeCheckContext): BadgeId[] {
   const earned: BadgeId[] = [];
-  const completed = ctx.actualSets.filter((s) => s.is_completed);
 
+  // #38 Jack of All Lifts — 10+ unique aux exercises in a cycle (no sets needed)
+  if (ctx.uniqueAuxExercisesInCycle >= 10) earned.push('jack_of_all_lifts');
+
+  const completed = ctx.actualSets.filter((s) => s.is_completed);
   if (completed.length === 0) return earned;
 
   // #36 Rep Machine — 50+ reps of a single primary lift

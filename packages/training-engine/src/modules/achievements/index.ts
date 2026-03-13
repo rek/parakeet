@@ -1,6 +1,7 @@
 export {
   detectSessionPRs,
   computeStreak,
+  detectStreakBreakAndRebuild,
   checkCycleCompletion,
 } from '../../achievements/pr-detection';
 export type {

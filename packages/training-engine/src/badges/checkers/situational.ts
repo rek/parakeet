@@ -67,6 +67,11 @@ export function checkSituationalBadges(ctx: BadgeCheckContext): BadgeId[] {
     }
   }
 
+  // #17 Volume Goblin — 5+ non-1RM PRs with 0 1RM PRs
+  if (ctx.volumePrCount >= 5 && ctx.oneRmPrCount === 0) {
+    earned.push('volume_goblin');
+  }
+
   // #22 The Grinder — RPE 9.5+ on 3+ sets
   const highRpeSets = ctx.actualSets.filter(
     (s) => s.is_completed && s.rpe_actual != null && s.rpe_actual >= 9.5

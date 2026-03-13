@@ -14,8 +14,8 @@ export function checkWildRareBadges(ctx: BadgeCheckContext): BadgeId[] {
     earned.push('marathon_lifter');
   }
 
-  // #45 The Streak Breaker — tracked via separate logic (needs streak history)
-  // Deferred to Slice 7
+  // #45 The Streak Breaker — broke 8+ week streak then rebuilt to 8+
+  if (ctx.hadStreakBreakAndRebuild) earned.push('the_streak_breaker');
 
   return earned;
 }

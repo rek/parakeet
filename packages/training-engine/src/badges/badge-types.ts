@@ -156,4 +156,17 @@ export interface BadgeCheckContext {
   // Previous session context
   previousSessionWasDeload: boolean;
   previousE1Rm: Record<string, number>; // lift → previous best e1RM
+
+  // PR history (for Volume Goblin)
+  volumePrCount: number; // total non-1RM PR records (volume + rep_at_weight)
+  oneRmPrCount: number; // total estimated_1rm PR records
+
+  // Cycle-scoped data (for Jack of All Lifts)
+  uniqueAuxExercisesInCycle: number;
+
+  // Multi-session rest data (for Zen Master)
+  consecutiveFullRestSessions: number;
+
+  // Streak history (for Streak Breaker)
+  hadStreakBreakAndRebuild: boolean;
 }

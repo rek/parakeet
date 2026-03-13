@@ -18,10 +18,10 @@ import {
   SorenessModifier,
 } from '../adjustments/soreness-adjuster';
 import {
+  computeAuxWeight,
   getBodyweightPool,
   getLiftForExercise,
   getRepTarget,
-  getWeightPct,
 } from '../auxiliary/exercise-catalog';
 import { ExerciseType, getExerciseType } from '../auxiliary/exercise-types';
 import { CyclePhase } from '../formulas/cycle-phase';
@@ -604,7 +604,9 @@ function buildAuxiliaryWork(
       exerciseType === 'bodyweight'
         ? 0
         : roundToNearest(
-            roundToNearest(oneRmKg * getWeightPct(exercise)) * intensityMult
+            roundToNearest(
+              computeAuxWeight({ exercise, oneRmKg, lift: primaryLift ?? 'squat', biologicalSex })
+            ) * intensityMult
           );
 
     const sets: PlannedSet[] = Array.from({ length: setCount }, (_, i) => ({
@@ -744,7 +746,9 @@ function buildVolumeTopUp(
     const finalWeight =
       exerciseType === 'bodyweight'
         ? 0
-        : roundToNearest(effectiveOneRmKg * getWeightPct(exercise));
+        : roundToNearest(
+            computeAuxWeight({ exercise, oneRmKg: effectiveOneRmKg, lift: exerciseLift ?? primaryLift, biologicalSex })
+          );
 
     const sets: PlannedSet[] = Array.from({ length: setCount }, (_, i) => ({
       set_number: i + 1,

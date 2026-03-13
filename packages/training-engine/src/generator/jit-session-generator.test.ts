@@ -128,7 +128,8 @@ describe('generateJITSession — per-exercise rep targets', () => {
   });
 
   it('biceps aux (Barbell Curl) → 10 reps, weight at 20% of 1RM not 67.5%', () => {
-    // bench 1RM 140kg → Barbell Curl should be 140*0.20=28→27.5kg, not 140*0.675=94.5kg
+    // bench 1RM 140kg → Barbell Curl (barbell, linear): 140*0.20=28→27.5kg
+    // Dumbbell Curl (dumbbell, sqrt): 0.15×sqrt(80×140)=0.15×105.83=15.87→15
     const out = generateJITSession(
       baseInput({
         primaryLift: 'bench',
@@ -139,7 +140,7 @@ describe('generateJITSession — per-exercise rep targets', () => {
     expect(out.auxiliaryWork[0].sets[0].reps).toBe(10);
     expect(out.auxiliaryWork[0].sets[0].weight_kg).toBe(27.5); // 140 * 0.20 = 28 → 27.5
     expect(out.auxiliaryWork[1].sets[0].reps).toBe(12);
-    expect(out.auxiliaryWork[1].sets[0].weight_kg).toBe(20); // 140 * 0.15 = 21 → 20
+    expect(out.auxiliaryWork[1].sets[0].weight_kg).toBe(15); // sqrt-scaled: 0.15×sqrt(80×140)=15.87→15
   });
 });
 
@@ -148,7 +149,7 @@ describe('generateJITSession — per-exercise rep targets', () => {
 // ---------------------------------------------------------------------------
 
 describe('generateJITSession — catalog exercise weight percentages', () => {
-  it('Dumbbell Step Up uses 15% of squat 1RM, not default 67.5%', () => {
+  it('Dumbbell Step Up uses sqrt-scaled 15% of squat 1RM, not default 67.5%', () => {
     const out = generateJITSession(
       baseInput({
         primaryLift: 'squat',
@@ -156,13 +157,13 @@ describe('generateJITSession — catalog exercise weight percentages', () => {
         activeAuxiliaries: ['Dumbbell Step Up', 'Barbell Front Squat'],
       })
     );
-    // 180 * 0.15 = 27 → 27.5
-    expect(out.auxiliaryWork[0].sets[0].weight_kg).toBe(27.5);
-    // 180 * 0.65 = 117 → 117.5
+    // 0.15 × sqrt(120 × 180) = 0.15 × 146.97 = 22.04 → 22.5
+    expect(out.auxiliaryWork[0].sets[0].weight_kg).toBe(22.5);
+    // Barbell: 180 * 0.65 = 117 → 117.5 (linear, unaffected)
     expect(out.auxiliaryWork[1].sets[0].weight_kg).toBe(117.5);
   });
 
-  it('Kettlebell Swing uses 15% of deadlift 1RM', () => {
+  it('Kettlebell Swing uses sqrt-scaled 20% of deadlift 1RM', () => {
     const out = generateJITSession(
       baseInput({
         primaryLift: 'deadlift',
@@ -170,13 +171,13 @@ describe('generateJITSession — catalog exercise weight percentages', () => {
         activeAuxiliaries: ['Kettlebell Swing', 'Barbell Row'],
       })
     );
-    // 220 * 0.15 = 33 → 32.5
-    expect(out.auxiliaryWork[0].sets[0].weight_kg).toBe(32.5);
-    // 220 * 0.40 = 88 → 87.5
+    // 0.20 × sqrt(140 × 220) = 0.20 × 175.50 = 35.10 → 35
+    expect(out.auxiliaryWork[0].sets[0].weight_kg).toBe(35);
+    // Barbell: 220 * 0.40 = 88 → 87.5 (linear, unaffected)
     expect(out.auxiliaryWork[1].sets[0].weight_kg).toBe(87.5);
   });
 
-  it('Dumbbell Fly uses 12% of bench 1RM', () => {
+  it('Dumbbell Fly uses sqrt-scaled 12% of bench 1RM', () => {
     const out = generateJITSession(
       baseInput({
         primaryLift: 'bench',
@@ -184,13 +185,13 @@ describe('generateJITSession — catalog exercise weight percentages', () => {
         activeAuxiliaries: ['Dumbbell Fly', 'Close-Grip Barbell Bench Press'],
       })
     );
-    // 120 * 0.12 = 14.4 → 15 (rounded to nearest 2.5)
-    expect(out.auxiliaryWork[0].sets[0].weight_kg).toBe(15);
-    // 120 * 0.75 = 90
+    // 0.12 × sqrt(80 × 120) = 0.12 × 97.98 = 11.76 → 12.5
+    expect(out.auxiliaryWork[0].sets[0].weight_kg).toBe(12.5);
+    // Barbell: 120 * 0.75 = 90 (linear, unaffected)
     expect(out.auxiliaryWork[1].sets[0].weight_kg).toBe(90);
   });
 
-  it('Dumbbell Row uses 20% of deadlift 1RM', () => {
+  it('Dumbbell Row uses sqrt-scaled 20% of deadlift 1RM', () => {
     const out = generateJITSession(
       baseInput({
         primaryLift: 'deadlift',
@@ -198,9 +199,9 @@ describe('generateJITSession — catalog exercise weight percentages', () => {
         activeAuxiliaries: ['Dumbbell Row', 'Rack Pull'],
       })
     );
-    // 220 * 0.20 = 44 → 45 (rounded to nearest 2.5)
-    expect(out.auxiliaryWork[0].sets[0].weight_kg).toBe(45);
-    // 220 * 0.80 = 176 → 175 (rounded to nearest 2.5)
+    // 0.20 × sqrt(140 × 220) = 0.20 × 175.50 = 35.10 → 35
+    expect(out.auxiliaryWork[0].sets[0].weight_kg).toBe(35);
+    // Barbell: 220 * 0.80 = 176 → 175 (rounded to nearest 2.5, linear, unaffected)
     expect(out.auxiliaryWork[1].sets[0].weight_kg).toBe(175);
   });
 
@@ -1232,10 +1233,11 @@ describe('generateJITSession — volume top-up cross-lift 1RM', () => {
       (a) => a.isTopUp && a.exercise === 'Dumbbell Incline Bench Press'
     );
     expect(topUp).toBeDefined();
-    // Falls back to squat 1RM (200): AUX_WEIGHT_PCT=0.3 → roundToNearest(200×0.3)=60
-    // With correct bench 1RM (60): roundToNearest(60×0.3)=18 — meaningfully different
+    // Falls back to squat 1RM (200) as oneRmKg, but exerciseLift='bench' so sqrt ref=80
+    // 0.28 × sqrt(80 × 200) = 0.28 × 126.49 = 35.4 → 35
+    // With correct bench 1RM (60): 0.28 × sqrt(80 × 60) = 0.28 × 69.28 = 19.4 → 20 — meaningfully different
     topUp!.sets.forEach((s) => {
-      expect(s.weight_kg).toBe(60);
+      expect(s.weight_kg).toBe(35);
     });
   });
 });
@@ -1365,5 +1367,103 @@ describe('generateJITSession — push muscle coverage boost (engine-031)', () =>
       (a) => a.isTopUp && a.topUpReason?.includes('upper back')
     );
     expect(upperBackTopUps).toHaveLength(0);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// GH#84: sqrt-based weight scaling for dumbbell/kettlebell exercises
+// ---------------------------------------------------------------------------
+
+describe('generateJITSession — dumbbell sqrt scaling', () => {
+  it('DB Incline uses sqrt scaling — 27.5kg at 116kg bench, not 35kg linear', () => {
+    // Linear would give: 116 × 0.28 = 32.48 → 32.5
+    // Sqrt: 0.28 × sqrt(80 × 116) = 0.28 × sqrt(9280) = 0.28 × 96.34 = 26.97 → 27.5
+    const out = generateJITSession(
+      baseInput({
+        primaryLift: 'bench',
+        oneRmKg: 116,
+        activeAuxiliaries: ['Dumbbell Incline Bench Press', 'Barbell Pause Bench Press'],
+      })
+    );
+    expect(out.auxiliaryWork[0].sets[0].weight_kg).toBe(27.5);
+    // Barbell remains linear: 116 × 0.75 = 87 → 87.5
+    expect(out.auxiliaryWork[1].sets[0].weight_kg).toBe(87.5);
+  });
+
+  it('DB exercises at reference 1RM match linear output', () => {
+    // At the reference 1RM, sqrt and linear should give the same result
+    // bench ref (male) = 80 → 0.12 × sqrt(80 × 80) = 0.12 × 80 = 9.6 → 10
+    // Linear: 80 × 0.12 = 9.6 → 10
+    const out = generateJITSession(
+      baseInput({
+        primaryLift: 'bench',
+        oneRmKg: 80,
+        biologicalSex: 'male',
+        activeAuxiliaries: ['Dumbbell Fly', 'Barbell Pause Bench Press'],
+      })
+    );
+    expect(out.auxiliaryWork[0].sets[0].weight_kg).toBe(10);
+  });
+
+  it('female reference points produce different weights than male', () => {
+    // bench ref (female) = 50 → 0.12 × sqrt(50 × 80) = 0.12 × sqrt(4000) = 0.12 × 63.25 = 7.59 → 7.5
+    const out = generateJITSession(
+      baseInput({
+        primaryLift: 'bench',
+        oneRmKg: 80,
+        biologicalSex: 'female',
+        activeAuxiliaries: ['Dumbbell Fly', 'Barbell Pause Bench Press'],
+      })
+    );
+    expect(out.auxiliaryWork[0].sets[0].weight_kg).toBe(7.5);
+  });
+
+  it('barbell exercises are not affected by sqrt scaling (regression guard)', () => {
+    // Close-Grip Barbell Bench Press: linear 140 × 0.75 = 105 → 105
+    const out = generateJITSession(
+      baseInput({
+        primaryLift: 'bench',
+        oneRmKg: 140,
+        activeAuxiliaries: ['Close-Grip Barbell Bench Press', 'Barbell Pause Bench Press'],
+      })
+    );
+    expect(out.auxiliaryWork[0].sets[0].weight_kg).toBe(105);
+    expect(out.auxiliaryWork[1].sets[0].weight_kg).toBe(105);
+  });
+
+  it('DB Snatch corrected to 0.21 — gives 35kg at 190kg DL', () => {
+    // 0.21 × sqrt(140 × 190) = 0.21 × sqrt(26600) = 0.21 × 163.07 = 34.24 → 35
+    const out = generateJITSession(
+      baseInput({
+        primaryLift: 'deadlift',
+        oneRmKg: 190,
+        activeAuxiliaries: ['Dumbbell Snatch', 'Rack Pull'],
+      })
+    );
+    expect(out.auxiliaryWork[0].sets[0].weight_kg).toBe(35);
+  });
+
+  it('volume top-up uses sqrt scaling for dumbbell exercises', () => {
+    // squat session, chest deficit → Dumbbell Incline Bench Press is added as top-up
+    // bench ref (male) = 80, bench 1RM = 80 via allOneRmKg
+    // 0.28 × sqrt(80 × 80) = 0.28 × 80 = 22.4 → 22.5
+    const out = generateJITSession(
+      baseInput({
+        primaryLift: 'squat',
+        oneRmKg: 120,
+        allOneRmKg: { squat: 120, bench: 80, deadlift: 140 },
+        auxiliaryPool: ['Dumbbell Incline Bench Press'],
+        weeklyVolumeToDate: atMevExcept(DEFAULT_MRV_MEV_CONFIG_MALE, 'chest'),
+        mrvMevConfig: DEFAULT_MRV_MEV_CONFIG_MALE,
+      })
+    );
+    const topUp = out.auxiliaryWork.find(
+      (a) => a.isTopUp && a.exercise === 'Dumbbell Incline Bench Press'
+    );
+    expect(topUp).toBeDefined();
+    // At the bench reference 1RM (80), output equals linear: 0.28 × 80 = 22.4 → 22.5
+    topUp!.sets.forEach((s) => {
+      expect(s.weight_kg).toBe(22.5);
+    });
   });
 });
