@@ -2,6 +2,8 @@ import { Lift } from '@parakeet/shared-types';
 
 import { MuscleContribution, MuscleGroup } from '../types';
 
+export const LIFTS: readonly Lift[] = ['squat', 'bench', 'deadlift'] as const;
+
 export type ExerciseType = 'weighted' | 'bodyweight' | 'timed';
 
 export interface BodyweightPoolEntry {

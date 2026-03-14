@@ -11,9 +11,10 @@ import {
   getPerformanceColors,
   getSession,
   getSessionLog,
+  parsePlannedSetsJson,
   PERFORMANCE_LABELS,
 } from '@modules/session';
-import type { Lift } from '@parakeet/shared-types';
+import type { ActualSet, Lift, PlannedSet } from '@parakeet/shared-types';
 import { gramsToKg } from '@parakeet/training-engine';
 import { LIFT_LABELS } from '@shared/constants';
 import { formatDate, formatTime } from '@shared/utils/date';
@@ -28,6 +29,28 @@ import type { ColorScheme } from '../../theme';
 import { useTheme } from '../../theme/ThemeContext';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
+
+function fmtKg(kg: number): string {
+  return kg % 1 === 0 ? `${kg}` : kg.toFixed(1);
+}
+
+function getActualColor(
+  actual: ActualSet,
+  planned: PlannedSet | undefined,
+  colors: ColorScheme,
+): string {
+  if (!planned) return colors.text;
+  const actualKg = gramsToKg(actual.weight_grams);
+  const weightOver = actualKg > planned.weight_kg + 0.1;
+  const weightUnder = actualKg < planned.weight_kg - 0.1;
+  const repsOver = actual.reps_completed > planned.reps;
+  const repsUnder = actual.reps_completed < planned.reps;
+  // Mixed (heavier but fewer reps, or lighter but more) → neutral
+  if ((weightOver && repsUnder) || (weightUnder && repsOver)) return colors.text;
+  if (weightUnder || repsUnder) return colors.warning; // amber — matches summary chip
+  if (weightOver || repsOver) return colors.success;
+  return colors.text;
+}
 
 function buildStyles(colors: ColorScheme) {
   return StyleSheet.create({
@@ -121,6 +144,8 @@ function buildStyles(colors: ColorScheme) {
     tableCellSet: { width: 36, color: colors.textSecondary },
     tableCellWeight: { flex: 1 },
     tableCellReps: { width: 48, textAlign: 'center' },
+    tableCellPlan: { flex: 1, color: colors.textSecondary },
+    tableCellActual: { flex: 1 },
     tableCellRpe: {
       width: 48,
       textAlign: 'right',
@@ -191,6 +216,10 @@ export default function SessionDetailScreen() {
 
   const mainSets = log?.actual_sets ?? [];
   const auxSets = log?.auxiliary_sets ?? [];
+
+  const plannedSets: PlannedSet[] = parsePlannedSetsJson(session.planned_sets);
+  const plannedBySet = new Map(plannedSets.map((ps) => [ps.set_number, ps]));
+  const hasPlan = plannedSets.length > 0;
 
   // Group auxiliary sets by exercise name
   const auxByExercise = auxSets.reduce<Record<string, typeof auxSets>>(
@@ -271,33 +300,73 @@ export default function SessionDetailScreen() {
             <View style={styles.setsTable}>
               <View style={styles.tableHeader}>
                 <Text style={[styles.tableCell, styles.tableCellSet]}>Set</Text>
-                <Text style={[styles.tableCell, styles.tableCellWeight]}>
-                  Weight
-                </Text>
-                <Text style={[styles.tableCell, styles.tableCellReps]}>
-                  Reps
-                </Text>
+                {hasPlan ? (
+                  <>
+                    <Text style={[styles.tableCell, styles.tableCellPlan]}>
+                      Plan
+                    </Text>
+                    <Text style={[styles.tableCell, styles.tableCellActual]}>
+                      Actual
+                    </Text>
+                  </>
+                ) : (
+                  <>
+                    <Text style={[styles.tableCell, styles.tableCellWeight]}>
+                      Weight
+                    </Text>
+                    <Text style={[styles.tableCell, styles.tableCellReps]}>
+                      Reps
+                    </Text>
+                  </>
+                )}
                 <Text style={[styles.tableCell, styles.tableCellRpe]}>RPE</Text>
               </View>
-              {mainSets.map((set, i) => (
-                <View
-                  key={i}
-                  style={[styles.tableRow, i % 2 === 1 && styles.tableRowAlt]}
-                >
-                  <Text style={[styles.tableCell, styles.tableCellSet]}>
-                    {set.set_number}
-                  </Text>
-                  <Text style={[styles.tableCell, styles.tableCellWeight]}>
-                    {gramsToKg(set.weight_grams).toFixed(1)} kg
-                  </Text>
-                  <Text style={[styles.tableCell, styles.tableCellReps]}>
-                    {set.reps_completed}
-                  </Text>
-                  <Text style={[styles.tableCell, styles.tableCellRpe]}>
-                    {set.rpe_actual != null ? set.rpe_actual : '—'}
-                  </Text>
-                </View>
-              ))}
+              {mainSets.map((set, i) => {
+                const planned = hasPlan
+                  ? plannedBySet.get(set.set_number)
+                  : undefined;
+                const actualColor = getActualColor(set, planned, colors);
+                return (
+                  <View
+                    key={i}
+                    style={[styles.tableRow, i % 2 === 1 && styles.tableRowAlt]}
+                  >
+                    <Text style={[styles.tableCell, styles.tableCellSet]}>
+                      {set.set_number}
+                    </Text>
+                    {hasPlan ? (
+                      <>
+                        <Text style={[styles.tableCell, styles.tableCellPlan]}>
+                          {planned
+                            ? `${fmtKg(planned.weight_kg)}×${planned.reps}`
+                            : '—'}
+                        </Text>
+                        <Text
+                          style={[
+                            styles.tableCell,
+                            styles.tableCellActual,
+                            { color: actualColor },
+                          ]}
+                        >
+                          {`${fmtKg(gramsToKg(set.weight_grams))}×${set.reps_completed}`}
+                        </Text>
+                      </>
+                    ) : (
+                      <>
+                        <Text style={[styles.tableCell, styles.tableCellWeight]}>
+                          {gramsToKg(set.weight_grams).toFixed(1)} kg
+                        </Text>
+                        <Text style={[styles.tableCell, styles.tableCellReps]}>
+                          {set.reps_completed}
+                        </Text>
+                      </>
+                    )}
+                    <Text style={[styles.tableCell, styles.tableCellRpe]}>
+                      {set.rpe_actual != null ? set.rpe_actual : '—'}
+                    </Text>
+                  </View>
+                );
+              })}
             </View>
           </>
         )}

@@ -335,7 +335,11 @@ export default function HistoryScreen() {
       : (sessionsQuery.data ?? []).filter((s) => s.primary_lift === liftFilter);
 
   const volumeChartData = volumeQuery.data
-    ? buildVolumeChartData(volumeQuery.data, LIFT_COLORS)
+    ? buildVolumeChartData(
+        volumeQuery.data,
+        LIFT_COLORS,
+        liftFilter === 'all' ? undefined : liftFilter
+      )
     : null;
 
   function renderTrendCard(trend: PerformanceTrend) {
@@ -435,6 +439,30 @@ export default function HistoryScreen() {
           <Text style={styles.emptyText}>No performance data yet.</Text>
         )}
 
+        {/* Lift filter */}
+        <View style={styles.filterRow}>
+          {(['all', 'squat', 'bench', 'deadlift'] as LiftFilter[]).map((f) => (
+            <TouchableOpacity
+              key={f}
+              style={[
+                styles.filterChip,
+                liftFilter === f && styles.filterChipActive,
+              ]}
+              onPress={() => setLiftFilter(f)}
+              activeOpacity={0.7}
+            >
+              <Text
+                style={[
+                  styles.filterChipText,
+                  liftFilter === f && styles.filterChipTextActive,
+                ]}
+              >
+                {f === 'all' ? 'All' : LIFT_LABELS[f]}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+
         {/* Weekly volume chart */}
         <Text style={styles.sectionHeader}>Weekly Volume</Text>
         {volumeChartData ? (
@@ -464,7 +492,7 @@ export default function HistoryScreen() {
               style={{ borderRadius: radii.sm }}
             />
             <View style={styles.legendRow}>
-              {(['squat', 'bench', 'deadlift'] as Lift[]).map((lift) => (
+              {volumeChartData.lifts.map((lift) => (
                 <View key={lift} style={styles.legendItem}>
                   <View
                     style={[
@@ -560,28 +588,6 @@ export default function HistoryScreen() {
 
         {/* Recent sessions */}
         <Text style={styles.sectionHeader}>Recent Sessions</Text>
-        <View style={styles.filterRow}>
-          {(['all', 'squat', 'bench', 'deadlift'] as LiftFilter[]).map((f) => (
-            <TouchableOpacity
-              key={f}
-              style={[
-                styles.filterChip,
-                liftFilter === f && styles.filterChipActive,
-              ]}
-              onPress={() => setLiftFilter(f)}
-              activeOpacity={0.7}
-            >
-              <Text
-                style={[
-                  styles.filterChipText,
-                  liftFilter === f && styles.filterChipTextActive,
-                ]}
-              >
-                {f === 'all' ? 'All' : LIFT_LABELS[f]}
-              </Text>
-            </TouchableOpacity>
-          ))}
-        </View>
 
         {filteredSessions.length > 0 ? (
           <View>

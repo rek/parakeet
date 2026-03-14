@@ -24,7 +24,7 @@ import type { SlotAssignment } from '@modules/program';
 import type { Lift } from '@parakeet/shared-types';
 import { getAuxiliariesForBlock } from '@parakeet/training-engine';
 import { qk } from '@platform/query';
-import { BLOCK_INTENSITY } from '@shared/constants/training';
+import { BLOCK_INTENSITY, TRAINING_LIFTS } from '@shared/constants/training';
 import { useQuery } from '@tanstack/react-query';
 import { router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -36,7 +36,7 @@ import { useTheme } from '../../theme/ThemeContext';
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
-const LIFTS: Lift[] = ['squat', 'bench', 'deadlift'];
+const LIFTS = TRAINING_LIFTS;
 
 const LIFT_LABELS: Record<Lift, string> = {
   squat: 'Squat',

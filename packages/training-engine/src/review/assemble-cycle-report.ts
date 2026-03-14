@@ -1,5 +1,7 @@
 import type { Lift } from '@parakeet/shared-types';
 
+import { LIFTS } from '../auxiliary/exercise-catalog';
+
 // ---------------------------------------------------------------------------
 // Raw data shapes (Supabase rows passed in from the app layer)
 // ---------------------------------------------------------------------------
@@ -135,7 +137,7 @@ export function assembleCycleReport(raw: RawCycleData): CycleReport {
 
   // Per-lift summaries
   const lifts: Partial<Record<Lift, LiftSummary>> = {};
-  for (const liftName of ['squat', 'bench', 'deadlift'] as Lift[]) {
+  for (const liftName of LIFTS) {
     const liftSessions = raw.sessions.filter(
       (s) => s.primary_lift === liftName
     );

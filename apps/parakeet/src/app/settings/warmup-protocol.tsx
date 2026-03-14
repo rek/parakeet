@@ -25,6 +25,7 @@ import {
 } from '@parakeet/training-engine';
 import type { WarmupProtocol, WarmupStep } from '@parakeet/training-engine';
 import { qk } from '@platform/query';
+import { TRAINING_LIFTS } from '@shared/constants/training';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -35,7 +36,7 @@ import { useTheme } from '../../theme/ThemeContext';
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
-const LIFTS: Lift[] = ['squat', 'bench', 'deadlift'];
+const LIFTS = TRAINING_LIFTS;
 
 const LIFT_LABELS: Record<Lift, string> = {
   squat: 'Squat',

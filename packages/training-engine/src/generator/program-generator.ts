@@ -16,8 +16,7 @@ import {
   GenerateProgramInput,
   SessionScaffold,
 } from '../types';
-
-const LIFT_ORDER: Lift[] = ['squat', 'bench', 'deadlift'];
+import { LIFTS } from '../auxiliary/exercise-catalog';
 
 export function generateWeekSessions(
   weekNumber: number,
@@ -27,7 +26,7 @@ export function generateWeekSessions(
   startDate: Date
 ): SessionScaffold[] {
   return Array.from({ length: dayOffsets.length }, (_, dayIndex) => {
-    const lift = LIFT_ORDER[dayIndex % LIFT_ORDER.length];
+    const lift = LIFTS[dayIndex % LIFTS.length];
     return {
       weekNumber,
       dayNumber: dayIndex + 1,
@@ -54,7 +53,7 @@ export function generateDeloadWeek(
   startDate: Date
 ): SessionScaffold[] {
   return Array.from({ length: dayOffsets.length }, (_, dayIndex) => {
-    const lift = LIFT_ORDER[dayIndex % LIFT_ORDER.length];
+    const lift = LIFTS[dayIndex % LIFTS.length];
     return {
       weekNumber,
       dayNumber: dayIndex + 1,
@@ -125,8 +124,8 @@ export interface NextUnendingSessionResult {
 // All values are derived arithmetically from the session counter — no DB access needed.
 // Advance one position in the squat→bench→deadlift rotation.
 function nextLiftAfter(lastLift: Lift): Lift {
-  const idx = LIFT_ORDER.indexOf(lastLift);
-  return LIFT_ORDER[(idx + 1) % LIFT_ORDER.length];
+  const idx = LIFTS.indexOf(lastLift);
+  return LIFTS[(idx + 1) % LIFTS.length];
 }
 
 export function nextUnendingSession(
@@ -141,7 +140,7 @@ export function nextUnendingSession(
   // Falls back to counter-based derivation when no history exists (first session).
   const lift = lastCompletedLift
     ? nextLiftAfter(lastCompletedLift)
-    : LIFT_ORDER[(sessionCounter % daysPerWeek) % LIFT_ORDER.length];
+    : LIFTS[(sessionCounter % daysPerWeek) % LIFTS.length];
 
   // Blocks cycle 1→2→3→1… every 3 training weeks (same as scheduled)
   const blockNumber = ((Math.floor((weekNumber - 1) / 3) % 3) + 1);

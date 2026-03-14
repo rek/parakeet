@@ -8,7 +8,8 @@ export type WeeklyVolRow = {
 
 export function buildVolumeChartData(
   weeklyData: WeeklyVolRow[],
-  liftColors: Record<Lift, string>
+  liftColors: Record<Lift, string>,
+  liftFilter?: Lift
 ) {
   let weeks = [...new Set(weeklyData.map((d) => d.weekStart))].sort();
   if (weeks.length < 1) return null;
@@ -25,7 +26,9 @@ export function buildVolumeChartData(
     return `${d.getUTCMonth() + 1}/${d.getUTCDate()}`;
   });
 
-  const datasets = (['squat', 'bench', 'deadlift'] as Lift[]).map((lift) => {
+  const lifts = liftFilter ? [liftFilter] : (['squat', 'bench', 'deadlift'] as Lift[]);
+
+  const datasets = lifts.map((lift) => {
     const hex = liftColors[lift];
     return {
       data: weeks.map((week) => {
@@ -43,5 +46,5 @@ export function buildVolumeChartData(
     };
   });
 
-  return { labels, datasets };
+  return { labels, datasets, lifts };
 }

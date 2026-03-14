@@ -22,6 +22,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { AddExerciseModal } from '@modules/session';
 import { MuscleChips } from '@modules/training-volume';
+import { TRAINING_LIFTS } from '@shared/constants/training';
 
 import { BackLink } from '../../components/navigation/BackLink';
 import type { ColorScheme } from '../../theme';
@@ -29,7 +30,7 @@ import { useTheme } from '../../theme/ThemeContext';
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
-const LIFTS: Lift[] = ['squat', 'bench', 'deadlift'];
+const LIFTS = TRAINING_LIFTS;
 
 const LIFT_LABELS: Record<Lift, string> = {
   squat: 'Squat',

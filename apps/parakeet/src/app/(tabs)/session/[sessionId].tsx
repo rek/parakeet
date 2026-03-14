@@ -47,7 +47,7 @@ import {
   setDisabledPlates,
 } from '@modules/settings';
 import type { RestTimerPrefs } from '@modules/settings';
-import { getAllExercises } from '@parakeet/training-engine';
+import { getAllExercises, getExerciseType } from '@parakeet/training-engine';
 import type { PlateKg } from '@parakeet/training-engine';
 import type { Lift } from '@parakeet/shared-types';
 import { useNetworkStatus } from '@platform/network';
@@ -977,6 +977,7 @@ export default function SessionScreen() {
                           plannedWeightKg={actualSet.weight_grams / 1000}
                           plannedReps={actualSet.reps_completed}
                           rpeValue={actualSet.rpe_actual}
+                          exerciseType={getExerciseType(exercise)}
                           onRpePress={() =>
                             requestAuxRpe(exercise, actualSet.set_number)
                           }

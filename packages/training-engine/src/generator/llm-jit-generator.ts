@@ -5,6 +5,7 @@ import { generateText, Output } from 'ai';
 import { JIT_MODEL } from '../ai/models';
 import { JIT_SYSTEM_PROMPT } from '../ai/prompts';
 import { computeAuxWeight } from '../auxiliary/exercise-catalog';
+import { getExerciseType } from '../auxiliary/exercise-types';
 import { roundToNearest } from '../formulas/weight-rounding';
 import { FormulaJITGenerator } from './formula-jit-generator';
 import { enforceHardConstraints } from './jit-constraints';
@@ -102,17 +103,29 @@ export function applyAdjustment(
   // Apply aux overrides
   const auxiliaryWork: AuxiliaryWork[] = input.activeAuxiliaries.map(
     (exercise) => {
+      const exerciseType = getExerciseType(exercise);
       const override: 'skip' | 'reduce' | 'normal' | undefined =
         adj.auxOverrides[exercise];
       if (override === 'skip') {
         return {
           exercise,
-          exerciseType: 'weighted' as const,
+          exerciseType,
           sets: [],
           skipped: true,
           skipReason: 'LLM: skip override',
         };
       }
+
+      // Timed exercises: single set, weight 0, reps 0 — UI renders as time input
+      if (exerciseType === 'timed') {
+        return {
+          exercise,
+          exerciseType,
+          sets: [{ set_number: 1, weight_kg: 0, reps: 0, rpe_target: 7.0 }],
+          skipped: false,
+        };
+      }
+
       const baseAuxWeight = roundToNearest(
         computeAuxWeight({ exercise, oneRmKg: input.oneRmKg, lift: input.primaryLift, biologicalSex: input.biologicalSex })
       );
@@ -123,7 +136,7 @@ export function applyAdjustment(
       const setCount = override === 'reduce' ? 2 : 3;
       return {
         exercise,
-        exerciseType: 'weighted' as const,
+        exerciseType,
         sets: Array.from({ length: setCount }, (_, i) => ({
           set_number: i + 1,
           weight_kg: auxWeight,

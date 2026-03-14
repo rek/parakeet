@@ -1,6 +1,7 @@
 import { Lift } from '@parakeet/shared-types';
 
 import { AuxiliaryPool } from '../types';
+import { LIFTS } from './exercise-catalog';
 
 export { DEFAULT_AUXILIARY_POOLS } from './exercise-catalog';
 
@@ -57,7 +58,7 @@ export function generateAuxiliaryAssignments(
   startOffset = 0
 ): AuxiliaryAssignmentRecord[] {
   const assignments: AuxiliaryAssignmentRecord[] = [];
-  const lifts: Lift[] = ['squat', 'bench', 'deadlift'];
+  const lifts = LIFTS;
   const totalBlocks = Math.ceil((totalWeeks - 1) / 3);
 
   for (let blockNumber = 1; blockNumber <= totalBlocks; blockNumber++) {

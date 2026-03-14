@@ -20,6 +20,7 @@ export {
   fetchProfileSex,
   cancelPlannedSessionsForProgram,
 } from './data/session.repository';
+export { parsePlannedSetsJson } from './data/session-codecs';
 export * from './utils/session-stats';
 export * from './utils/aux-suggestions';
 export * from './ui/readiness-styles';

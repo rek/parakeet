@@ -66,6 +66,10 @@ The History tab shows estimated 1RM as a single number with a direction arrow (�
 
 Single phase — spec: [mobile-026-history-tab-upgrade.md](../specs/09-mobile/mobile-026-history-tab-upgrade.md)
 
+## Additional Enhancements (2026-03-14)
+
+- **Planned vs actual in session detail (GH #86)**: `history/[sessionId].tsx` now shows "Plan" and "Actual" columns when `sessions.planned_sets` is present. Plan shows `{kg}×{reps}` from JIT. Actual values are color-coded: green = over plan, red = under plan, default = at plan. Falls back to the original "Weight / Reps" layout for sessions without a JIT plan (ad-hoc, imported, pre-JIT). New `parsePlannedSetsJson` exported from `@modules/session` to keep JSON parsing out of the app layer.
+
 ## Additional Enhancements (2026-03-07)
 
 - **Completion time shown**: all three history surfaces (session list, session detail, lift detail) now display `HH:MM` completion time alongside the date (e.g. "7 Mar · 09:30")

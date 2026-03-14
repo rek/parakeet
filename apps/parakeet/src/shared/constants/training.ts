@@ -1,5 +1,5 @@
 import type { Lift } from '@parakeet/shared-types';
-import { MUSCLE_CATALOG, MUSCLE_GROUPS } from '@parakeet/training-engine';
+import { LIFTS, MUSCLE_CATALOG, MUSCLE_GROUPS } from '@parakeet/training-engine';
 import type { MuscleGroup } from '@parakeet/training-engine';
 
 export const MUSCLE_GROUPS_ORDER: readonly MuscleGroup[] = MUSCLE_GROUPS;
@@ -24,7 +24,7 @@ export const COMPACT_VOLUME_MUSCLES: readonly MuscleGroup[] = [
   'lower_back',
 ];
 
-export const TRAINING_LIFTS: readonly Lift[] = ['squat', 'bench', 'deadlift'];
+export const TRAINING_LIFTS = LIFTS;
 
 export const SEX_LABELS: Record<string, string> = {
   female: 'Female',
