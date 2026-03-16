@@ -15,6 +15,10 @@ import {
   DEFAULT_MAIN_REST_SECONDS,
 } from '../model/types';
 import { computeDismissResult } from '../utils/computeDismissResult';
+import {
+  resolveNextAuxSetWeight,
+  resolveNextSetWeight,
+} from '../utils/set-weight-resolver';
 
 export function useSetCompletionFlow({
   restTimerPrefsRef,
@@ -267,19 +271,12 @@ export function useSetCompletionFlow({
 
       if (nextAuxSet <= totalAuxSets) {
         const planned = auxWork!.sets[nextAuxSet - 1];
-        // Carry forward actual weight from last completed set of this exercise
-        const lastCompletedAux = useSessionStore
-          .getState()
-          .auxiliarySets.filter(
-            (s) =>
-              s.exercise === auxExercise &&
-              s.is_completed &&
-              s.set_number < nextAuxSet
-          )
-          .sort((a, b) => b.set_number - a.set_number)[0];
-        const auxWeightGrams =
-          lastCompletedAux?.weight_grams ??
-          Math.round(planned.weight_kg * 1000);
+        const auxWeightGrams = resolveNextAuxSetWeight({
+          auxiliarySets: useSessionStore.getState().auxiliarySets,
+          exercise: auxExercise,
+          nextSetNumber: nextAuxSet,
+          plannedWeightKg: planned.weight_kg,
+        });
         updateAuxiliarySet(auxExercise, nextAuxSet, {
           weight_grams: auxWeightGrams,
           reps_completed: planned.reps,
@@ -315,16 +312,11 @@ export function useSetCompletionFlow({
 
       if (nextSetNumber !== null && nextSetNumber <= plannedSets.length) {
         const planned = plannedSets[nextSetNumber - 1];
-        // Carry forward actual weight from last completed set (user may have adjusted)
-        const lastCompletedMain = useSessionStore
-          .getState()
-          .actualSets.filter(
-            (s) => s.is_completed && s.set_number < nextSetNumber
-          )
-          .sort((a, b) => b.set_number - a.set_number)[0];
-        const weightGrams =
-          lastCompletedMain?.weight_grams ??
-          Math.round(planned.weight_kg * 1000);
+        const weightGrams = resolveNextSetWeight({
+          completedSets: useSessionStore.getState().actualSets,
+          nextSetNumber,
+          plannedWeightKg: planned.weight_kg,
+        });
         updateSet(nextSetNumber, {
           weight_grams: weightGrams,
           reps_completed: planned.reps,
@@ -363,18 +355,11 @@ export function useSetCompletionFlow({
         updateSet(prevSetNumber, { actual_rest_seconds: totalRest });
       }
       if (nextSetNumber !== null && nextSetNumber <= plannedSets.length) {
-        // Carry forward actual weight from last completed set (consistent with handleLiftComplete)
-        const lastCompletedForFail = useSessionStore
-          .getState()
-          .actualSets.filter(
-            (s) => s.is_completed && s.set_number < nextSetNumber
-          )
-          .sort((a, b) => b.set_number - a.set_number)[0];
-        const failedWeightGrams =
-          lastCompletedForFail?.weight_grams ??
-          Math.round(
-            (plannedSets[nextSetNumber - 1]?.weight_kg ?? 0) * 1000
-          );
+        const failedWeightGrams = resolveNextSetWeight({
+          completedSets: useSessionStore.getState().actualSets,
+          nextSetNumber,
+          plannedWeightKg: plannedSets[nextSetNumber - 1]?.weight_kg ?? 0,
+        });
         updateSet(nextSetNumber, {
           weight_grams: failedWeightGrams,
           reps_completed: actualReps,
