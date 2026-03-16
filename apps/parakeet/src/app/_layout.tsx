@@ -9,6 +9,7 @@ import {
   useRestNotifications,
   useSyncQueue,
 } from '@modules/session';
+import { useOtaUpdates } from '@modules/updates';
 import { queryClient } from '@platform/query';
 import * as Sentry from '@sentry/react-native';
 import { QueryClientProvider } from '@tanstack/react-query';
@@ -49,6 +50,7 @@ function RootLayoutNav() {
   useSyncQueue();
   useMissedSessionReconciliation();
   useRestNotifications();
+  useOtaUpdates();
 
   useEffect(() => {
     if (!loading) {

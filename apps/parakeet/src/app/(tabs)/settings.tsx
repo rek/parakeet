@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
+  Linking,
   ScrollView,
   StyleSheet,
   Text,
@@ -572,6 +573,13 @@ export default function SettingsScreen() {
               </Text>
             </View>
           }
+        />
+        <Row
+          label="Log New Issue"
+          onPress={() =>
+            Linking.openURL('https://github.com/rek/parakeet/issues/new')
+          }
+          styles={styles}
         />
       </ScrollView>
     </SafeAreaView>

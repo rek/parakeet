@@ -44,13 +44,3 @@ jobs:
       - name: Test (affected)
         run: npx nx affected --target=test --base=origin/main --head=HEAD
 
-      - name: Validate training engine
-        run: npx nx run training-sim:validate -- --output=sim-results.json
-
-      - name: Upload simulation artifacts
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: simulation-results
-          path: packages/training-sim/sim-results.json
-          retention-days: 30

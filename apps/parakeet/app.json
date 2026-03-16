@@ -5,7 +5,9 @@
     "version": "1.0.1",
     "orientation": "portrait",
     "updates": {
-      "url": "https://u.expo.dev/b18331dc-0e4d-4562-9bdd-62a6e89f12a7"
+      "url": "https://u.expo.dev/b18331dc-0e4d-4562-9bdd-62a6e89f12a7",
+      "checkOnLaunch": "ALWAYS",
+      "fallbackToCacheTimeout": 3000
     },
     "runtimeVersion": {
       "policy": "appVersion"
@@ -43,7 +45,8 @@
           "backgroundColor": "#100a11"
         }
       ],
-      "expo-audio"
+      "expo-audio",
+      "expo-updates"
     ],
     "extra": {
       "eas": {
