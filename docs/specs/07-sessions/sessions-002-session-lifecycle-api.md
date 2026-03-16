@@ -30,6 +30,11 @@ The `.eq('status', ...)` guards silently no-op on invalid transitions. The UI pr
   - `SessionSummary`: planned rows dim to 45% opacity + 🔒 icon; tap is disabled
 - No `Alert.alert()` dialogs are used; the locked state is entirely visual
 
+**Stale session auto-abandon:**
+- `abandonStaleInProgressSessions(userId)` runs on app foreground (alongside `markMissedSessions`)
+- An `in_progress` session whose `planned_date` is more than 48 hours ago is automatically skipped
+- Prevents the user from being locked out of new workouts after an interrupted session (e.g., phone dies mid-workout)
+
 **Soreness check-in gate:**
 - [x] Before `startSession()` is called, the app routes through `session/soreness.tsx` **only for `planned` sessions**
   - The soreness check-in writes to `soreness_checkins` and triggers JIT generation

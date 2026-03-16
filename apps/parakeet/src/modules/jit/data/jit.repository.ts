@@ -28,11 +28,13 @@ export async function fetchRecentSessionLogsForLift(
   lift: Lift,
   limit: number
 ): Promise<JitRecentSessionLogRow[]> {
+  const sixtyDaysAgo = new Date(Date.now() - 60 * 24 * 60 * 60 * 1000).toISOString();
   const { data, error } = await typedSupabase
     .from('session_logs')
     .select('session_rpe, sessions!inner(primary_lift)')
     .eq('user_id', userId)
     .eq('sessions.primary_lift', lift)
+    .gte('completed_at', sixtyDaysAgo)
     .order('completed_at', { ascending: false })
     .limit(limit);
 
@@ -155,7 +157,8 @@ export async function fetchActiveDisruptions(
       'id, user_id, program_id, session_ids_affected, reported_at, disruption_type, severity, affected_date_start, affected_date_end, affected_lifts, description, adjustment_applied, resolved_at, status'
     )
     .eq('user_id', userId)
-    .neq('status', 'resolved');
+    .neq('status', 'resolved')
+    .or(`affected_date_end.is.null,affected_date_end.gte.${new Date().toISOString().slice(0, 10)}`);
 
   if (error) throw error;
   return (data ?? []) as JitDisruptionRow[];

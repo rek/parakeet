@@ -63,7 +63,7 @@ Life constantly interrupts training. Without a structured way to log and respond
 
 > **Fatigue type note:** For the Fatigue disruption type, the engine always applies `weight_reduced` (not `reps_reduced`), regardless of severity. Minor fatigue = 10% weight reduction (lighter than the generic 20% minor rule); moderate/major follow the standard table above.
 
-8. Active disruption appears as a chip in the Today screen chip row until resolved
+8. Active disruption appears as a chip in the Today screen chip row until resolved or until `affected_date_end` passes (whichever comes first). Ongoing disruptions (no end date) remain until manually resolved.
 
 **Unprogrammed Event Flow** *(partially implemented — spec disruptions-005)*:
 
@@ -95,7 +95,7 @@ Reporting a disruption from within an active session (e.g., to immediately reduc
 2. Bottom sheet modal shows type, severity, description, affected lifts, and "Until" row
 3. User taps the "Until" row → inline date picker opens
 4. User selects a new end date → "Save End Date" button appears
-5. On save: `affected_date_end` is updated; chip remains active until resolved
+5. On save: `affected_date_end` is updated. The chip will disappear automatically once this date passes, or when the user taps "Mark Resolved" — whichever comes first.
 
 This flow is useful for ongoing disruptions that have a known recovery date, or to shorten the affected range when recovering earlier than expected.
 

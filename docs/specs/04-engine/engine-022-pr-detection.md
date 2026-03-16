@@ -46,7 +46,7 @@ interface PRCheckInput {
   - **Estimated 1RM PR**: if any set's `estimated1rmKg` > `historicalPRs.best1rmKg` → return PR. Only sets with RPE ≥ 8.5 and no active Major disruption are eligible (same gate as engine-001 high-confidence estimation).
   - **Volume PR**: compute `sum(weightKg × reps)` across all completed sets for this session. If > `historicalPRs.bestVolumeKgCubed` → return PR.
   - **Rep PR at Weight**: for each set, check if `reps > historicalPRs.repPRs[weightKg]`. Round weight to nearest 2.5kg before lookup. Return PR for each new rep-at-weight. Cap at 3 rep-at-weight PRs per session (suppress lower-significance ones if many are detected).
-  - Sessions with an active **Major** disruption: skip all PR detection. Minor/Moderate disruptions: PRs count.
+  - Sessions with an active **Major** disruption: skip all PR detection. Minor/Moderate disruptions: PRs count. "Active" uses the same definition as `disruptions-003`: `status != 'resolved'` AND (`affected_date_end` is null OR `affected_date_end >= today`). The caller (`useAchievementDetection.ts`) must pass `activeDisruptions` from `getActiveDisruptions()`.
 
 **Unit tests (`packages/training-engine/src/achievements/pr-detection.test.ts`):**
 - [x] New 1RM (RPE 9.0, 3×140kg) → 1rm PR returned

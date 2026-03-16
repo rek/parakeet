@@ -187,6 +187,25 @@ export async function getInProgressSession(
   return fetchInProgressSession(userId);
 }
 
+const STALE_SESSION_HOURS = 48;
+
+// Auto-abandon in-progress sessions older than 48 hours.
+// Called on app foreground alongside markMissedSessions.
+export async function abandonStaleInProgressSessions(
+  userId: string
+): Promise<void> {
+  const session = await fetchInProgressSession(userId);
+  if (!session?.planned_date) return;
+
+  const plannedDate = new Date(session.planned_date);
+  const hoursSince =
+    (Date.now() - plannedDate.getTime()) / (1000 * 60 * 60);
+
+  if (hoursSince > STALE_SESSION_HOURS) {
+    await updateSessionToSkipped(session.id);
+  }
+}
+
 // Create a standalone ad-hoc session (no program context) and return its ID.
 // Free-form: omit lift/intensityType, optionally provide activityName.
 // Lift-specific: provide lift + intensityType for a traditional ad-hoc session.

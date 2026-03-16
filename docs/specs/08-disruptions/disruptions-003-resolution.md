@@ -11,7 +11,7 @@ How active disruptions are resolved when the user recovers — marking them done
 
 `resolveDisruption(disruptionId, userId, resolvedAt?)` sets the disruption status to `resolved` and stamps `resolved_at` (defaults to now if not provided). It then clears `planned_sets` and `jit_generated_at` on all `planned` sessions listed in `session_ids_affected`, so JIT regenerates them at normal loading on next open.
 
-`getActiveDisruptions(userId)` returns all disruptions where status is not `resolved`, ordered newest-first. Used by the Today screen chip row.
+`getActiveDisruptions(userId)` returns disruptions that are still in effect, ordered newest-first. A disruption is **active** if `status != 'resolved'` AND (`affected_date_end` is null OR `affected_date_end >= today`). Disruptions whose end date has passed are excluded even if not explicitly resolved — they expire automatically. Used by the Today screen chip row and the JIT pipeline (`fetchActiveDisruptions` in `jit.repository.ts` uses the same filter).
 
 `getDisruptionHistory(userId, { page, pageSize })` returns paginated full history for a future history view.
 

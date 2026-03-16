@@ -275,6 +275,7 @@ export async function getActiveDisruptions(userId: string) {
     )
     .eq('user_id', userId)
     .neq('status', 'resolved')
+    .or(`affected_date_end.is.null,affected_date_end.gte.${new Date().toISOString().slice(0, 10)}`)
     .order('reported_at', { ascending: false });
   if (error) throw error;
   return data ?? [];

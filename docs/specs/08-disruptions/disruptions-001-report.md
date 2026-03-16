@@ -81,7 +81,7 @@ export async function reportDisruption(
 - `disruption_type`: 'injury' | 'illness' | 'travel' | 'fatigue' | 'equipment_unavailable' | 'unprogrammed_event' | 'other'
 - `severity`: 'minor' | 'moderate' | 'major'
 - `affected_date_start`: date string
-- `affected_date_end?`: date string (null = ongoing)
+- `affected_date_end?`: date string (null = ongoing). When set, the disruption auto-expires after this date — it will no longer appear as active or affect JIT generation.
 - `affected_lifts?`: string[] (null = all lifts)
 - `description?`: free text
 - `session_ids_affected?`: UUID[] of specific sessions

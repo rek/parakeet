@@ -1,3 +1,4 @@
+import { getActiveDisruptions } from '@modules/disruptions';
 import {
   getProgramCompletionCounts,
   getSessionCompletionContext,
@@ -49,7 +50,10 @@ export async function detectAchievements(
     newBadges: [],
   };
 
-  const sessionContext = await getSessionCompletionContext(sessionId);
+  const [sessionContext, activeDisruptionRows] = await Promise.all([
+    getSessionCompletionContext(sessionId),
+    getActiveDisruptions(userId),
+  ]);
   const lift = (sessionContext.primaryLift as Lift | null) ?? null;
 
   // Capture pre-upsert e1RM for "Technically a PR" badge
@@ -81,6 +85,9 @@ export async function detectAchievements(
       lift,
       completedSets: completedSetsForPR,
       historicalPRs,
+      activeDisruptions: activeDisruptionRows.map((d) => ({
+        severity: d.severity as 'minor' | 'moderate' | 'major',
+      })),
     });
 
     if (prs.length > 0) {

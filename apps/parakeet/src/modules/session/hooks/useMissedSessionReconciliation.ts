@@ -7,7 +7,10 @@ import { qk } from '@platform/query';
 import { captureException } from '@platform/utils/captureException';
 import { useQueryClient } from '@tanstack/react-query';
 
-import { markMissedSessions } from '../application/session.service';
+import {
+  abandonStaleInProgressSessions,
+  markMissedSessions,
+} from '../application/session.service';
 
 export function useMissedSessionReconciliation() {
   const { user } = useAuth();
@@ -19,6 +22,7 @@ export function useMissedSessionReconciliation() {
     inFlightRef.current = true;
 
     try {
+      await abandonStaleInProgressSessions(user.id);
       await markMissedSessions(user.id);
       await queryClient.invalidateQueries({ queryKey: ['session'] });
       await queryClient.invalidateQueries({

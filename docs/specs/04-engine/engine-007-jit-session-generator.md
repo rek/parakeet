@@ -38,7 +38,7 @@ interface JITInput {
   // Auxiliary exercises active this block (from auxiliary_assignments)
   activeAuxiliaries: [string, string]
 
-  // Recent performance history for same lift (last 3 sessions)
+  // Recent performance history for same lift (last 6 sessions within 60 days)
   recentLogs: RecentSessionSummary[]
 
   // Active disruptions

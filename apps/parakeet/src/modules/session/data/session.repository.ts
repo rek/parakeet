@@ -100,23 +100,20 @@ export async function fetchTodaySession(
   if (inProgressError) throw inProgressError;
   if (inProgressData) return inProgressData;
 
-  const twentyFourHoursAgo = new Date(
-    Date.now() - 24 * 60 * 60 * 1000
-  ).toISOString();
+  const today = localDateString();
   const { data: completedTodayData, error: completedTodayError } =
     await typedSupabase
       .from('sessions')
       .select('*')
       .eq('user_id', userId)
       .eq('status', 'completed')
-      .gte('completed_at', twentyFourHoursAgo)
+      .eq('planned_date', today)
       .order('completed_at', { ascending: false })
       .limit(1)
       .maybeSingle();
   if (completedTodayError) throw completedTodayError;
   if (completedTodayData) return completedTodayData;
 
-  const today = localDateString();
   const { data: plannedData, error: plannedError } = await typedSupabase
     .from('sessions')
     .select('*')
@@ -635,10 +632,10 @@ export async function fetchSessionLogBySessionId(
 
 export async function fetchInProgressSession(
   userId: string
-): Promise<{ id: string } | null> {
+): Promise<{ id: string; planned_date: string | null } | null> {
   const { data, error } = await typedSupabase
     .from('sessions')
-    .select('id')
+    .select('id, planned_date')
     .eq('user_id', userId)
     .eq('status', 'in_progress')
     .maybeSingle();
