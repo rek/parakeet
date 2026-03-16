@@ -1,6 +1,8 @@
 import { cancelPlannedSessionsForProgram } from '@modules/session/data/session.repository';
 import {
+  calculateSessionDate,
   computeBlockOffset,
+  computeDayOffsets,
   DEFAULT_TRAINING_DAYS,
   generateAuxiliaryAssignments,
   generateProgram,
@@ -12,8 +14,10 @@ import type { ProgramListItem } from '@shared/types/domain';
 import { getAuthenticatedUserId } from '../data/profile.repository';
 import {
   archiveActivePrograms,
+  bulkUpdateSessionDates,
   fetchActiveProgramMode,
   fetchActiveProgramWithSessions,
+  fetchPlannedSessionsForProgram,
   fetchLatestProgramVersion,
   fetchProgramsList,
   fetchProgramWithSessions,
@@ -22,6 +26,7 @@ import {
   insertSessionRows,
   listArchivedProgramBlocks,
   updateProgramStatusIfActive,
+  updateProgramTrainingDays,
   updateUnendingSessionCounter,
 } from '../data/program.repository';
 import { getAuxiliaryPools } from '../lib/auxiliary-config';
@@ -180,6 +185,45 @@ export async function updateProgramStatus(
   if (options?.triggerCycleReview && options.userId) {
     onCycleComplete(programId, options.userId);
   }
+}
+
+export async function updateTrainingDays(
+  programId: string,
+  newDays: number[],
+  program: {
+    program_mode: string;
+    start_date: string;
+  }
+) {
+  await updateProgramTrainingDays(programId, newDays);
+
+  if (program.program_mode === 'scheduled') {
+    const futureSessions = await fetchPlannedSessionsForProgram(programId);
+    const dayOffsets = computeDayOffsets(newDays);
+    const startDate = new Date(program.start_date + 'T00:00:00');
+
+    const updates = futureSessions.map((session) => ({
+      id: session.id,
+      planned_date: localDateString(
+        calculateSessionDate(
+          startDate,
+          session.week_number,
+          session.day_number - 1, // day_number is 1-based, dayIndex is 0-based
+          dayOffsets
+        )
+      ),
+    }));
+
+    await bulkUpdateSessionDates(updates);
+    return { updatedSessionCount: updates.length };
+  }
+
+  return { updatedSessionCount: 0 };
+}
+
+export async function countFuturePlannedSessions(programId: string) {
+  const sessions = await fetchPlannedSessionsForProgram(programId);
+  return sessions.length;
 }
 
 export {

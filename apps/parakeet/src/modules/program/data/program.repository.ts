@@ -155,6 +155,51 @@ export async function updateUnendingSessionCounter(
   if (error) throw error;
 }
 
+export async function updateProgramTrainingDays(
+  programId: string,
+  trainingDays: number[]
+): Promise<void> {
+  const { error } = await typedSupabase
+    .from('programs')
+    .update({ training_days: trainingDays })
+    .eq('id', programId);
+  if (error) throw error;
+}
+
+export interface FuturePlannedSession {
+  id: string;
+  week_number: number;
+  day_number: number;
+}
+
+export async function fetchPlannedSessionsForProgram(
+  programId: string
+): Promise<FuturePlannedSession[]> {
+  const { data, error } = await typedSupabase
+    .from('sessions')
+    .select('id, week_number, day_number')
+    .eq('program_id', programId)
+    .eq('status', 'planned')
+    .order('week_number', { ascending: true })
+    .order('day_number', { ascending: true });
+  if (error) throw error;
+  return data ?? [];
+}
+
+export async function bulkUpdateSessionDates(
+  updates: Array<{ id: string; planned_date: string }>
+): Promise<void> {
+  await Promise.all(
+    updates.map(async ({ id, planned_date }) => {
+      const { error } = await typedSupabase
+        .from('sessions')
+        .update({ planned_date })
+        .eq('id', id);
+      if (error) throw error;
+    })
+  );
+}
+
 export async function fetchActiveProgramMode(userId: string): Promise<{
   id: string;
   program_mode: string;

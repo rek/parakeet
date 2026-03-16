@@ -421,6 +421,11 @@ export default function SettingsScreen() {
           }
         />
         <Row
+          label="Training Days"
+          onPress={() => router.push('/settings/training-days')}
+          styles={styles}
+        />
+        <Row
           label="Manage Formulas"
           onPress={() => router.push('/formula/editor')}
           styles={styles}

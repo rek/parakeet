@@ -25,7 +25,7 @@ import { qk } from '@platform/query';
 import { useSessionStore } from '@platform/store/sessionStore';
 import { useSyncStore } from '@platform/store/syncStore';
 import { captureException } from '@platform/utils/captureException';
-import { scheduleWeeklyReviewNotification } from '@platform/lib/rest-notifications';
+import { scheduleWeeklyReviewNotification } from '@platform/utils/notifications';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useQueryClient } from '@tanstack/react-query';
 import { router } from 'expo-router';
