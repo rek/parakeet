@@ -24,7 +24,7 @@
     "expo": "*",
     "expo-application": "~7.0.8",
     "expo-audio": "~1.1.1",
-    "expo-file-system": "19.0.21",
+    "expo-file-system": "^19.0.21",
     "expo-haptics": "~15.0.8",
     "expo-keep-awake": "~15.0.8",
     "expo-linking": "*",

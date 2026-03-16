@@ -64,4 +64,4 @@ jobs:
 
       - name: Build
         working-directory: apps/parakeet
-        run: eas build --platform android --profile ${{ github.event.inputs.profile }} --non-interactive
+        run: eas build --platform android --profile ${{ github.event.inputs.profile }} --non-interactive --no-wait
