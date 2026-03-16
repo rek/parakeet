@@ -1,20 +1,10 @@
-import { PlannedSet } from '@parakeet/shared-types';
-
 import {
   applySorenessToSets,
   getPrimaryMusclesForSession,
   getSorenessModifier,
   getWorstSoreness,
 } from './soreness-adjuster';
-
-function makeSets(count: number, weightKg: number, reps = 5): PlannedSet[] {
-  return Array.from({ length: count }, (_, i) => ({
-    set_number: i + 1,
-    weight_kg: weightKg,
-    reps,
-    rpe_target: 8,
-  }));
-}
+import { makeSets } from '../__test-helpers__/fixtures';
 
 describe('getSorenessModifier — female sex', () => {
   it('level 4 female → reduce 1 set, 3% intensity drop', () => {

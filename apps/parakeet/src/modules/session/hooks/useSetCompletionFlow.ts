@@ -363,10 +363,20 @@ export function useSetCompletionFlow({
         updateSet(prevSetNumber, { actual_rest_seconds: totalRest });
       }
       if (nextSetNumber !== null && nextSetNumber <= plannedSets.length) {
-        updateSet(nextSetNumber, {
-          weight_grams: Math.round(
+        // Carry forward actual weight from last completed set (consistent with handleLiftComplete)
+        const lastCompletedForFail = useSessionStore
+          .getState()
+          .actualSets.filter(
+            (s) => s.is_completed && s.set_number < nextSetNumber
+          )
+          .sort((a, b) => b.set_number - a.set_number)[0];
+        const failedWeightGrams =
+          lastCompletedForFail?.weight_grams ??
+          Math.round(
             (plannedSets[nextSetNumber - 1]?.weight_kg ?? 0) * 1000
-          ),
+          );
+        updateSet(nextSetNumber, {
+          weight_grams: failedWeightGrams,
           reps_completed: actualReps,
           is_completed: true,
           rpe_actual: 10, // failed set = max effort by definition

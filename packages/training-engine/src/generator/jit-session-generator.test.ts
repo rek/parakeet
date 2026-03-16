@@ -6,29 +6,9 @@ import {
   DEFAULT_REST_SECONDS_FEMALE,
   DEFAULT_REST_SECONDS_MALE,
 } from '../cube/blocks';
-import { MrvMevConfig, MuscleGroup } from '../types';
 import { DEFAULT_MRV_MEV_CONFIG_MALE } from '../volume/mrv-mev-calculator';
-import { generateJITSession, JITInput } from './jit-session-generator';
-
-function baseInput(overrides: Partial<JITInput> = {}): JITInput {
-  return {
-    sessionId: 'sess-001',
-    weekNumber: 1,
-    blockNumber: 1,
-    primaryLift: 'squat',
-    intensityType: 'heavy',
-    oneRmKg: 140,
-    formulaConfig: DEFAULT_FORMULA_CONFIG_MALE,
-    sorenessRatings: {},
-    weeklyVolumeToDate: {},
-    mrvMevConfig: DEFAULT_MRV_MEV_CONFIG_MALE,
-    activeAuxiliaries: ['Pause Squat', 'Box Squat'],
-    recentLogs: [],
-    activeDisruptions: [],
-    warmupConfig: { type: 'preset', name: 'standard' },
-    ...overrides,
-  };
-}
+import { baseInput, makeDisruption, atMevExcept } from '../__test-helpers__/fixtures';
+import { generateJITSession } from './jit-session-generator';
 
 // ---------------------------------------------------------------------------
 // Integration test 1: clean squat Block 1 Heavy
@@ -157,9 +137,9 @@ describe('generateJITSession — catalog exercise weight percentages', () => {
         activeAuxiliaries: ['Dumbbell Step Up', 'Barbell Front Squat'],
       })
     );
-    // 0.15 × sqrt(120 × 180) = 0.15 × 146.97 = 22.04 → 22.5
+    // Dumbbell exercises use sqrt scaling to avoid unrealistic weights for strong lifters
     expect(out.auxiliaryWork[0].sets[0].weight_kg).toBe(22.5);
-    // Barbell: 180 * 0.65 = 117 → 117.5 (linear, unaffected)
+    // Barbell exercises use linear scaling (unaffected by sqrt)
     expect(out.auxiliaryWork[1].sets[0].weight_kg).toBe(117.5);
   });
 
@@ -171,9 +151,9 @@ describe('generateJITSession — catalog exercise weight percentages', () => {
         activeAuxiliaries: ['Kettlebell Swing', 'Barbell Row'],
       })
     );
-    // 0.20 × sqrt(140 × 220) = 0.20 × 175.50 = 35.10 → 35
+    // Kettlebell uses sqrt scaling — moderate weight even at high 1RM
     expect(out.auxiliaryWork[0].sets[0].weight_kg).toBe(35);
-    // Barbell: 220 * 0.40 = 88 → 87.5 (linear, unaffected)
+    // Barbell uses linear scaling
     expect(out.auxiliaryWork[1].sets[0].weight_kg).toBe(87.5);
   });
 
@@ -185,9 +165,9 @@ describe('generateJITSession — catalog exercise weight percentages', () => {
         activeAuxiliaries: ['Dumbbell Fly', 'Close-Grip Barbell Bench Press'],
       })
     );
-    // 0.12 × sqrt(80 × 120) = 0.12 × 97.98 = 11.76 → 12.5
+    // Dumbbell Fly uses sqrt scaling — light weight for isolation
     expect(out.auxiliaryWork[0].sets[0].weight_kg).toBe(12.5);
-    // Barbell: 120 * 0.75 = 90 (linear, unaffected)
+    // Barbell uses linear scaling
     expect(out.auxiliaryWork[1].sets[0].weight_kg).toBe(90);
   });
 
@@ -199,9 +179,9 @@ describe('generateJITSession — catalog exercise weight percentages', () => {
         activeAuxiliaries: ['Dumbbell Row', 'Rack Pull'],
       })
     );
-    // 0.20 × sqrt(140 × 220) = 0.20 × 175.50 = 35.10 → 35
+    // Dumbbell Row uses sqrt scaling — moderate weight at high 1RM
     expect(out.auxiliaryWork[0].sets[0].weight_kg).toBe(35);
-    // Barbell: 220 * 0.80 = 176 → 175 (rounded to nearest 2.5, linear, unaffected)
+    // Barbell uses linear scaling
     expect(out.auxiliaryWork[1].sets[0].weight_kg).toBe(175);
   });
 
@@ -212,7 +192,7 @@ describe('generateJITSession — catalog exercise weight percentages', () => {
         activeAuxiliaries: ['Custom User Exercise', 'Another Custom'],
       })
     );
-    // 140 * 0.675 = 94.5 → 95
+    // Unknown exercises fall back to 67.5% linear scaling
     expect(out.auxiliaryWork[0].sets[0].weight_kg).toBe(95);
   });
 });
@@ -343,7 +323,7 @@ describe('generateJITSession — RPE history', () => {
         ],
       })
     );
-    // 112.5 × 0.975 = 109.6875 → roundToNearest(2.5) = 110
+    // RPE adjustment reduces intensity by 2.5%
     expect(out.mainLiftSets[0].weight_kg).toBe(110);
     expect(out.rationale.some((r) => /RPE above target/i.test(r))).toBe(true);
   });
@@ -376,28 +356,6 @@ describe('generateJITSession — RPE history', () => {
 // Integration test 6: disruption override
 // ---------------------------------------------------------------------------
 
-function makeDisruption(
-  severity: 'minor' | 'moderate' | 'major',
-  lift = 'squat'
-): TrainingDisruption {
-  return {
-    id: 'dis-001',
-    user_id: 'user-001',
-    program_id: null,
-    session_ids_affected: null,
-    reported_at: new Date().toISOString(),
-    disruption_type: 'injury',
-    severity,
-    affected_date_start: '2026-02-01',
-    affected_date_end: null,
-    affected_lifts: [lift],
-    description: 'Knee injury',
-    adjustment_applied: null,
-    resolved_at: null,
-    status: 'active',
-  };
-}
-
 describe('generateJITSession — disruption adjustment', () => {
   it('moderate disruption + high soreness compounds — takes more conservative per dimension', () => {
     const out = generateJITSession(
@@ -409,7 +367,7 @@ describe('generateJITSession — disruption adjustment', () => {
     // min(1 from soreness, 1 from disruption) = 1 set
     expect(out.mainLiftSets).toHaveLength(1);
     // min(0.95 from soreness, 0.90 from disruption) = 0.90
-    // 112.5 × 0.90 = 101.25 → roundToNearest(2.5) = 102.5
+    // min(soreness ×0.95, disruption ×0.90) = ×0.90
     expect(out.mainLiftSets[0].weight_kg).toBe(102.5);
     expect(out.rationale.some((r) => /knee injury/i.test(r))).toBe(true);
     expect(out.rationale.some((r) => /soreness/i.test(r))).toBe(true);
@@ -438,9 +396,23 @@ describe('generateJITSession — disruption adjustment', () => {
     // minor disruption only adds rationale, doesn't reduce
     // soreness is the limiting factor: 1 set at ×0.95
     expect(out.mainLiftSets).toHaveLength(1);
-    // 112.5 × 0.95 = 106.875 → roundToNearest(2.5) = 107.5
+    // Soreness alone is the limiting factor (×0.95)
     expect(out.mainLiftSets[0].weight_kg).toBe(107.5);
     expect(out.rationale.some((r) => /soreness/i.test(r))).toBe(true);
+  });
+
+  it('recovery mode (soreness 5) is not overridden by moderate disruption', () => {
+    const out = generateJITSession(
+      baseInput({
+        sorenessRatings: { quads: 5 }, // recovery mode: 3×5 at 40%
+        activeDisruptions: [makeDisruption('moderate')],
+      })
+    );
+    // Recovery mode takes precedence — disruption should not interfere
+    expect(out.mainLiftSets).toHaveLength(3);
+    // Recovery mode: 40% of base weight
+    expect(out.mainLiftSets[0].weight_kg).toBe(45);
+    expect(out.mainLiftSets[0].rpe_target).toBe(5.0);
   });
 
   it('major disruption → skipped main lift', () => {
@@ -933,23 +905,6 @@ describe('generateJITSession — equipment_unavailable disruption', () => {
 // ---------------------------------------------------------------------------
 // engine-027: volume top-up
 // ---------------------------------------------------------------------------
-
-// Helper: set all muscles at their MEV except the specified ones, so only
-// those muscles appear as top-up candidates. This prevents other high-deficit
-// muscles from winning the top-2 sort.
-function atMevExcept(
-  config: MrvMevConfig,
-  ...except: MuscleGroup[]
-): Partial<Record<MuscleGroup, number>> {
-  const result: Partial<Record<MuscleGroup, number>> = {};
-  for (const [muscle, { mev }] of Object.entries(config) as [
-    MuscleGroup,
-    { mev: number; mrv: number },
-  ][]) {
-    if (!except.includes(muscle)) result[muscle] = mev;
-  }
-  return result;
-}
 
 describe('generateJITSession — volume top-up (engine-027)', () => {
   // Pool covers hamstrings (Romanian Dumbbell Deadlift → hamstrings 1.0), quads (Leg Press → quads 1.0)

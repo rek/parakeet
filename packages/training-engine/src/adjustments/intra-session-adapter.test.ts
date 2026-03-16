@@ -1,4 +1,3 @@
-import type { PlannedSet } from '@parakeet/shared-types';
 import { describe, expect, it } from 'vitest';
 
 import {
@@ -7,19 +6,7 @@ import {
   roundToNearest2_5,
   type IntraSessionContext,
 } from './intra-session-adapter';
-
-// ---------------------------------------------------------------------------
-// Fixtures
-// ---------------------------------------------------------------------------
-
-function makeSets(count: number, weight_kg: number, reps = 5): PlannedSet[] {
-  return Array.from({ length: count }, (_, i) => ({
-    set_number: i + 1,
-    weight_kg,
-    reps,
-    rpe_target: 8,
-  }));
-}
+import { makeSets } from '../__test-helpers__/fixtures';
 
 const BASE_CTX: Omit<
   IntraSessionContext,

@@ -8,7 +8,7 @@ For details on any item, see the linked spec file.
 
 ## Training Engine (`packages/training-engine`)
 
-710 tests passing (Vitest). All specs implemented. Bug fix: `generateAuxiliaryAssignments` now generates assignments for all blocks (not just 1–3); `blockNumber` widened to `number` throughout; `getIntensityTypeForWeek` now cycles correctly for block 4+.
+1013 tests passing (Vitest). All specs implemented. Bug fix: `generateAuxiliaryAssignments` now generates assignments for all blocks (not just 1–3); `blockNumber` widened to `number` throughout; `getIntensityTypeForWeek` now cycles correctly for block 4+.
 
 - [x] engine-001: 1RM formulas — Epley, grams↔kg helpers
 - [x] engine-002: Cube method scheduler — blocks.ts

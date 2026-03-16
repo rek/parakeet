@@ -424,14 +424,19 @@ export default function SorenessScreen() {
     if (!sessionId || !user) return;
 
     void (async () => {
-      const [data, latest, expanded] = await Promise.all([
+      const [data, latest, expanded, disruptions] = await Promise.all([
         getSession(sessionId),
         getLatestSorenessCheckin(user.id),
         AsyncStorage.getItem(MUSCLES_EXPANDED_KEY),
+        getActiveDisruptions(user.id),
       ]);
 
       setSession(data);
       if (expanded === 'true') setMusclesExpanded(true);
+      const descs = disruptions
+        .filter((d) => d.description)
+        .map((d) => d.description as string);
+      setActiveDisruptionDescs(descs);
 
       if (data?.primary_lift) {
         const muscles =
@@ -445,21 +450,6 @@ export default function SorenessScreen() {
       }
     })();
   }, [sessionId, user]);
-
-  // Fetch active disruptions
-  useEffect(() => {
-    if (!user) return;
-    void getActiveDisruptions(user.id)
-      .then((disruptions) => {
-        const descs = disruptions
-          .filter((d) => d.description)
-          .map((d) => d.description as string);
-        setActiveDisruptionDescs(descs);
-      })
-      .catch(() => {
-        // non-fatal
-      });
-  }, [user]);
 
   // Fetch cycle context for female users
   useEffect(() => {

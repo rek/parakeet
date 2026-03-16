@@ -6,6 +6,7 @@ import {
 } from './one-rep-max';
 import { gramsToKg, kgToGrams, roundToNearest } from './weight-rounding';
 
+// Epley formula (1985): 1RM = weight × (1 + reps/30)
 describe('estimateOneRepMax_Epley', () => {
   it('calculates 1RM from a 3-rep set', () => {
     expect(estimateOneRepMax_Epley(130, 3)).toBeCloseTo(143, 1);
@@ -32,6 +33,7 @@ describe('estimateOneRepMax_Epley', () => {
   });
 });
 
+// Brzycki formula (1993): 1RM = weight / (1.0278 − 0.0278 × reps)
 describe('estimateOneRepMax_Brzycki', () => {
   it('calculates 1RM from a 5-rep set', () => {
     // 100 / (1.0278 - 0.0278*5) = 100 / 0.8888 ≈ 112.5

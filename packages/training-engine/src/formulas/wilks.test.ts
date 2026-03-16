@@ -6,12 +6,14 @@ describe('computeWilks2020', () => {
     expect(computeWilks2020(-10, 75, 'female')).toBe(0);
   });
 
+  // Reference: IPF Wilks-2020 coefficient table (worldpowerlifting.com)
   it('female 60kg BW, 400kg total → ~535 (tolerance ±2)', () => {
     const score = computeWilks2020(400, 60, 'female');
     expect(score).toBeGreaterThan(533);
     expect(score).toBeLessThan(537);
   });
 
+  // Reference: IPF Wilks-2020 coefficient table
   it('male 83kg BW, 600kg total → ~481 (tolerance ±2)', () => {
     const score = computeWilks2020(600, 83, 'male');
     expect(score).toBeGreaterThan(479);
