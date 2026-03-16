@@ -54,5 +54,6 @@ parakeet-release.keystore
 
 # artifacts
 build-*.aab
+build-*.apk
 **/images/backup/*
 vite.config.*.timestamp*
