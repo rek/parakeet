@@ -398,19 +398,49 @@ function makeDisruption(
   };
 }
 
-describe('generateJITSession — disruption override', () => {
-  it('moderate disruption overrides soreness adjustment — sets from base, reduced', () => {
+describe('generateJITSession — disruption adjustment', () => {
+  it('moderate disruption + high soreness compounds — takes more conservative per dimension', () => {
     const out = generateJITSession(
       baseInput({
-        sorenessRatings: { quads: 4 }, // soreness would reduce to 1 set
-        activeDisruptions: [makeDisruption('moderate')],
+        sorenessRatings: { quads: 4 }, // soreness: -2 sets (2→0, clamped to 1), ×0.95
+        activeDisruptions: [makeDisruption('moderate')], // disruption: ceil(2/2)=1 set, ×0.90
       })
     );
-    // disruption resets to base (2 sets), then halves → 1 set at 90% intensity
+    // min(1 from soreness, 1 from disruption) = 1 set
     expect(out.mainLiftSets).toHaveLength(1);
-    // 112.5 × 0.90 = 101.25 → roundToNearest(2.5) = 101.25 → rounds to 102.5
+    // min(0.95 from soreness, 0.90 from disruption) = 0.90
+    // 112.5 × 0.90 = 101.25 → roundToNearest(2.5) = 102.5
     expect(out.mainLiftSets[0].weight_kg).toBe(102.5);
     expect(out.rationale.some((r) => /knee injury/i.test(r))).toBe(true);
+    expect(out.rationale.some((r) => /soreness/i.test(r))).toBe(true);
+  });
+
+  it('moderate disruption is limiting factor when soreness is low', () => {
+    const out = generateJITSession(
+      baseInput({
+        sorenessRatings: { quads: 2 }, // soreness: no reduction (×1.0)
+        activeDisruptions: [makeDisruption('moderate')], // disruption: ceil(2/2)=1 set, ×0.90
+      })
+    );
+    // soreness doesn't reduce (2 sets, ×1.0), disruption gives 1 set at ×0.90
+    // min(2, 1) = 1 set; min(1.0, 0.90) = 0.90
+    expect(out.mainLiftSets).toHaveLength(1);
+    expect(out.mainLiftSets[0].weight_kg).toBe(102.5);
+  });
+
+  it('soreness is limiting factor when disruption is minor', () => {
+    const out = generateJITSession(
+      baseInput({
+        sorenessRatings: { quads: 4 }, // soreness: -2 sets → 1 set, ×0.95
+        activeDisruptions: [makeDisruption('minor')], // minor: no set/intensity change
+      })
+    );
+    // minor disruption only adds rationale, doesn't reduce
+    // soreness is the limiting factor: 1 set at ×0.95
+    expect(out.mainLiftSets).toHaveLength(1);
+    // 112.5 × 0.95 = 106.875 → roundToNearest(2.5) = 107.5
+    expect(out.mainLiftSets[0].weight_kg).toBe(107.5);
+    expect(out.rationale.some((r) => /soreness/i.test(r))).toBe(true);
   });
 
   it('major disruption → skipped main lift', () => {

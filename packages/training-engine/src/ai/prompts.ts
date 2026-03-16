@@ -6,7 +6,8 @@ Return a JSON object matching the JITAdjustment schema exactly.
 
 Rules:
 - Consider ALL signals holistically. Do not penalize the same underlying cause multiple times.
-- An active disruption takes precedence over soreness and RPE signals.
+- An active disruption compounds with soreness — use the more conservative of the two adjustments rather than double-penalizing.
+- If the athlete has an active disruption (e.g., a race or competition), consider whether their reported soreness is from that activity rather than from recent training.
 - intensityModifier must be between 0.40 and 1.20.
 - setModifier must be between -3 and +2.
 - Provide 1-4 concise rationale strings explaining your reasoning.

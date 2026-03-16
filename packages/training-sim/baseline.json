@@ -1,0 +1,61 @@
+{
+  "timestamp": "2026-03-16T05:23:44.012Z",
+  "scenarios": {
+    "Adam × adherent-male": {
+      "errors": 0,
+      "warnings": 0
+    },
+    "Lisa × adherent-female": {
+      "errors": 0,
+      "warnings": 0
+    },
+    "Injured Ivan × injured-lifter": {
+      "errors": 0,
+      "warnings": 0
+    },
+    "Busy Bee × busy-lifter": {
+      "errors": 0,
+      "warnings": 0
+    },
+    "Sarah × stable-female": {
+      "errors": 0,
+      "warnings": 0
+    },
+    "Junior Jake × junior-male": {
+      "errors": 0,
+      "warnings": 0
+    },
+    "Elite Eva × elite-female": {
+      "errors": 0,
+      "warnings": 0
+    },
+    "Adam × illness-recovery": {
+      "errors": 0,
+      "warnings": 0
+    },
+    "Lisa × no-equipment": {
+      "errors": 0,
+      "warnings": 1
+    },
+    "Adam × fatigue-accumulation": {
+      "errors": 0,
+      "warnings": 0
+    },
+    "Adam × failed-sets": {
+      "errors": 0,
+      "warnings": 0
+    },
+    "Adam × peaking": {
+      "errors": 0,
+      "warnings": 1
+    },
+    "Sarah × competition-prep": {
+      "errors": 0,
+      "warnings": 1
+    },
+    "Injured Ivan × return-from-layoff": {
+      "errors": 0,
+      "warnings": 0
+    }
+  }
+}

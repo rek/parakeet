@@ -38,6 +38,36 @@ export const DEFAULT_MRV_MEV_CONFIG_FEMALE: MrvMevConfig = {
 // Backward-compat alias — existing callers unaffected
 export const DEFAULT_MRV_MEV_CONFIG = DEFAULT_MRV_MEV_CONFIG_MALE;
 
+export type TrainingAge = 'beginner' | 'intermediate' | 'advanced';
+
+// Beginner: lower MRV ceiling (80%), same MEV (still need minimum stimulus)
+// Intermediate: baseline (1.0/1.0)
+// Advanced: higher MRV tolerance (120%) and slightly higher MEV (110%) for adaptation
+export const TRAINING_AGE_MULTIPLIERS = {
+  beginner:     { mev: 1.0, mrv: 0.8 },
+  intermediate: { mev: 1.0, mrv: 1.0 },
+  advanced:     { mev: 1.1, mrv: 1.2 },
+} as const;
+
+export function applyTrainingAgeMultiplier({
+  config,
+  trainingAge,
+}: {
+  config: MrvMevConfig;
+  trainingAge: TrainingAge;
+}) {
+  const mult = TRAINING_AGE_MULTIPLIERS[trainingAge];
+  return Object.fromEntries(
+    MUSCLE_GROUPS.map((muscle) => [
+      muscle,
+      {
+        mev: Math.round(config[muscle].mev * mult.mev),
+        mrv: Math.round(config[muscle].mrv * mult.mrv),
+      },
+    ])
+  ) as MrvMevConfig;
+}
+
 function emptyVolumeMap(): Record<MuscleGroup, number> {
   return Object.fromEntries(MUSCLE_GROUPS.map((m) => [m, 0])) as Record<
     MuscleGroup,

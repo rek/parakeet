@@ -357,15 +357,11 @@ export function generateJITSession(input: JITInput): JITOutput {
     }
   }
 
-  // Step 5 — Disruption override (takes full precedence over steps 2–4)
+  // Step 5 — Disruption adjustment (compounds with steps 2–4, takes more conservative)
   const relevantDisruptions = activeDisruptions.filter(
     (d) => d.affected_lifts === null || d.affected_lifts.includes(primaryLift)
   );
   if (relevantDisruptions.length > 0 && !inRecoveryMode) {
-    intensityMultiplier = 1.0;
-    plannedCount = baseSets.length;
-    skippedMainLift = false;
-
     const severityOrder = { minor: 1, moderate: 2, major: 3 } as const;
     const worst = relevantDisruptions.reduce((w, d) =>
       severityOrder[d.severity] > severityOrder[w.severity] ? d : w
@@ -377,8 +373,10 @@ export function generateJITSession(input: JITInput): JITOutput {
       plannedCount = 0;
       rationale.push(`${desc} — main lift skipped`);
     } else if (worst.severity === 'moderate') {
-      plannedCount = Math.max(1, Math.ceil(baseSets.length / 2));
-      intensityMultiplier = 0.9;
+      // Take the more conservative of soreness-adjusted vs disruption-adjusted
+      const disruptionSets = Math.max(1, Math.ceil(baseSets.length / 2));
+      plannedCount = Math.min(plannedCount, disruptionSets);
+      intensityMultiplier = Math.min(intensityMultiplier, 0.9);
       rationale.push(`${desc} — volume and intensity reduced`);
     } else {
       rationale.push(desc);

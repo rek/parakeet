@@ -9,7 +9,7 @@ Use this as the single entry point for project documentation.
 1. [guide/project-organization.md](./guide/project-organization.md)
    Canonical repo/app structure and import boundaries (`modules`, `platform`, `shared`).
 2. [guide/dev.md](./guide/dev.md)
-   Day-to-day commands (typecheck, tests, db workflows).
+   Day-to-day commands (typecheck, tests, db workflows, local APK builds).
 3. [guide/code-style.md](./guide/code-style.md)
    TypeScript and React Native conventions. Starts with a Quick Reference.
 4. [guide/ai-workflow.md](./guide/ai-workflow.md)

@@ -11,6 +11,7 @@ import {
 
 import { useAuth } from '@modules/auth';
 import { getCurrentCycleContext } from '@modules/cycle-tracking';
+import { getActiveDisruptions } from '@modules/disruptions';
 import { runJITForSession } from '@modules/jit';
 import { getCurrentOneRmKg } from '@modules/program';
 import {
@@ -207,6 +208,20 @@ function buildStyles(colors: ColorScheme) {
       color: colors.primary,
       fontWeight: '500',
     },
+    infoCard: {
+      backgroundColor: colors.primaryMuted,
+      borderWidth: 1,
+      borderColor: colors.primary,
+      borderRadius: 12,
+      paddingVertical: 14,
+      paddingHorizontal: 16,
+      marginBottom: 20,
+    },
+    infoText: {
+      fontSize: 14,
+      color: colors.primary,
+      lineHeight: 20,
+    },
     warningCard: {
       backgroundColor: colors.warningMuted,
       borderWidth: 1,
@@ -390,6 +405,9 @@ export default function SorenessScreen() {
     null
   );
   const [generating, setGenerating] = useState(false);
+  const [activeDisruptionDescs, setActiveDisruptionDescs] = useState<string[]>(
+    []
+  );
   const autoGenerateTriggered = useRef(false);
 
   const primaryMuscles: readonly MuscleGroup[] = session
@@ -427,6 +445,21 @@ export default function SorenessScreen() {
       }
     })();
   }, [sessionId, user]);
+
+  // Fetch active disruptions
+  useEffect(() => {
+    if (!user) return;
+    void getActiveDisruptions(user.id)
+      .then((disruptions) => {
+        const descs = disruptions
+          .filter((d) => d.description)
+          .map((d) => d.description as string);
+        setActiveDisruptionDescs(descs);
+      })
+      .catch(() => {
+        // non-fatal
+      });
+  }, [user]);
 
   // Fetch cycle context for female users
   useEffect(() => {
@@ -597,6 +630,16 @@ export default function SorenessScreen() {
         keyboardShouldPersistTaps="handled"
       >
         <Text style={styles.prompt}>How are these muscles feeling today?</Text>
+
+        {/* Active disruption context banner */}
+        {activeDisruptionDescs.length > 0 && (
+          <View style={styles.infoCard}>
+            <Text style={styles.infoText}>
+              You reported: {activeDisruptionDescs[0]}. Your soreness may be
+              from this activity.
+            </Text>
+          </View>
+        )}
 
         {/* Primary muscle rating rows */}
         {primaryMuscles.map((muscle) => (

@@ -1,8 +1,11 @@
 import {
+  applyTrainingAgeMultiplier,
   classifyVolumeStatus,
   computeRemainingCapacity,
   computeWeeklyVolume,
   DEFAULT_MRV_MEV_CONFIG,
+  DEFAULT_MRV_MEV_CONFIG_FEMALE,
+  DEFAULT_MRV_MEV_CONFIG_MALE,
 } from './mrv-mev-calculator';
 import { getMusclesForExercise, getMusclesForLift } from './muscle-mapper';
 import { rpeSetMultiplier } from './rpe-scaler';
@@ -379,6 +382,56 @@ describe('classifyVolumeStatus', () => {
       DEFAULT_MRV_MEV_CONFIG
     );
     expect(status.quads).toBe('below_mev');
+  });
+});
+
+describe('applyTrainingAgeMultiplier', () => {
+  it('beginner scales MRV down by 0.8, keeps MEV at 1.0', () => {
+    const result = applyTrainingAgeMultiplier({
+      config: DEFAULT_MRV_MEV_CONFIG_MALE,
+      trainingAge: 'beginner',
+    });
+    expect(result.quads.mev).toBe(8);   // 8 * 1.0 = 8
+    expect(result.quads.mrv).toBe(16);  // 20 * 0.8 = 16
+  });
+
+  it('intermediate leaves config unchanged', () => {
+    const result = applyTrainingAgeMultiplier({
+      config: DEFAULT_MRV_MEV_CONFIG_MALE,
+      trainingAge: 'intermediate',
+    });
+    expect(result.quads.mev).toBe(8);
+    expect(result.quads.mrv).toBe(20);
+  });
+
+  it('advanced scales MRV up by 1.2, MEV up by 1.1', () => {
+    const result = applyTrainingAgeMultiplier({
+      config: DEFAULT_MRV_MEV_CONFIG_MALE,
+      trainingAge: 'advanced',
+    });
+    expect(result.quads.mev).toBe(9);   // 8 * 1.1 = 8.8 → 9
+    expect(result.quads.mrv).toBe(24);  // 20 * 1.2 = 24
+  });
+
+  it('works with female defaults', () => {
+    const result = applyTrainingAgeMultiplier({
+      config: DEFAULT_MRV_MEV_CONFIG_FEMALE,
+      trainingAge: 'beginner',
+    });
+    expect(result.quads.mev).toBe(10);  // 10 * 1.0 = 10
+    expect(result.quads.mrv).toBe(21);  // 26 * 0.8 = 20.8 → 21
+  });
+
+  it('rounds values to integers', () => {
+    const result = applyTrainingAgeMultiplier({
+      config: DEFAULT_MRV_MEV_CONFIG_MALE,
+      trainingAge: 'advanced',
+    });
+    for (const muscle of Object.keys(result)) {
+      const { mev, mrv } = result[muscle as keyof typeof result];
+      expect(Number.isInteger(mev)).toBe(true);
+      expect(Number.isInteger(mrv)).toBe(true);
+    }
   });
 });
 

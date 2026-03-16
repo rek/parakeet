@@ -297,6 +297,11 @@ export {
   FATIGUE_ACCUMULATION_SCRIPT,
 } from './illness';
 export { FAILED_SETS_SCRIPT } from './failed-sets';
+export {
+  PEAKING_SCRIPT,
+  COMPETITION_PREP_SCRIPT,
+  RETURN_FROM_LAYOFF_SCRIPT,
+} from './competition';
 
 export const ALL_SCRIPTS: LifeScript[] = [
   ADHERENT_MALE,

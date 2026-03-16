@@ -22,10 +22,10 @@ All exercises already existed in the catalog (Row Machine, Ski Erg, Run - Treadm
 
 4-day programs with overhead press as a first-class primary lift. See [design doc](design/four-day-ohp.md) and [implementation status](specs/implementation-status.md#planned--future). ~30 files, 8 specs.
 
-## 13
+## ~~13~~ (Done — 16 Mar 2026)
 
-**Training-age-scaled MRV/MEV.** RP Strength research shows beginners tolerate less volume and advanced lifters handle more. `Persona.trainingAge` exists but isn't used for volume calculations. Add a training-age multiplier to MRV/MEV defaults (e.g., beginner ×0.8, intermediate ×1.0, advanced ×1.2). Validate with simulation.
+Training-age-scaled MRV/MEV: `applyTrainingAgeMultiplier` in training-engine scales MRV/MEV by training age (beginner ×0.8 MRV, advanced ×1.2 MRV / ×1.1 MEV). Wired into simulator; all 14 scenarios pass. See [design doc](design/training-age-volume.md) and [spec](specs/04-engine/engine-035-training-age-volume-scaling.md).
 
-## 14
+## ~~14~~ (Done — 16 Mar 2026)
 
-**Simulation CI improvements.** The `training-sim:validate` target runs in CI. Future work: add threshold tracking (warn if violations increase between PRs), generate JSON artifacts for trend analysis, add more life scripts (e.g., peaking, competition prep, return-from-layoff).
+Simulation CI improvements: 3 new life scripts (peaking, competition-prep, return-from-layoff → 14 total scenarios), `--output` flag for JSON artifacts uploaded to GitHub Actions, threshold tracking with `baseline.json` that warns on regressions. See [design doc](design/simulation-ci-improvements.md) and [spec](specs/01-infra/infra-006-simulation-ci-improvements.md).

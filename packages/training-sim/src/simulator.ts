@@ -1,6 +1,7 @@
 import { Lift, TrainingDisruption } from '@parakeet/shared-types';
 import {
   adaptRemainingPlan,
+  applyTrainingAgeMultiplier,
   classifyVolumeStatus,
   CompletedSetLog,
   DEFAULT_AUXILIARY_POOLS,
@@ -88,7 +89,12 @@ export function runSimulation(options: SimulatorOptions): SimulationLog {
     persona.biologicalSex === 'female'
       ? DEFAULT_MRV_MEV_CONFIG_FEMALE
       : DEFAULT_MRV_MEV_CONFIG_MALE;
-  const mrvMevConfig: MrvMevConfig = { ...baseMrvMev };
+  // Apply training-age multiplier before persona overrides (overrides take precedence)
+  const scaledMrvMev = applyTrainingAgeMultiplier({
+    config: baseMrvMev,
+    trainingAge: persona.trainingAge,
+  });
+  const mrvMevConfig: MrvMevConfig = { ...scaledMrvMev };
   if (persona.mrvMevOverrides) {
     for (const [muscle, overrides] of Object.entries(persona.mrvMevOverrides)) {
       if (overrides) {

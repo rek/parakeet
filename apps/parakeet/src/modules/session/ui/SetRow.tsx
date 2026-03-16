@@ -110,8 +110,8 @@ export function SetRow({
           color: colors.textSecondary,
         },
         plateButton: {
-          width: 28,
-          height: 28,
+          width: 36,
+          height: 36,
           alignItems: 'center',
           justifyContent: 'center',
         },
@@ -316,7 +316,7 @@ export function SetRow({
               >
                 <Ionicons
                   name="barbell-outline"
-                  size={16}
+                  size={20}
                   color={colors.textSecondary}
                 />
               </TouchableOpacity>

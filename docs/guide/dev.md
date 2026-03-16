@@ -40,7 +40,28 @@ Profiles:
 - `preview` — APK, internal distribution (sideload-ready)
 - `production` — APK, production
 
-### Build production APK (local)
+### Build APK locally (EAS Local — recommended)
+
+Builds on your machine using EAS CLI. No native project checkout needed — EAS handles it.
+
+```bash
+# Preview APK (sideload-ready)
+npm run build
+
+# Production APK
+npm run build:prod
+
+# Development client
+npm run build:dev
+```
+
+The `--local` flag runs the build on your machine instead of EAS servers.
+The `--platform android` flag restricts to Android only (iOS is not used).
+Output APK lands in the current directory.
+
+Env vars are pulled from `eas.json` + EAS secrets (managed on expo.dev).
+
+### Build APK locally (Nx — alternative)
 
 Requires the native Android project to exist (`apps/parakeet/android/`). If it doesn't, run prebuild first:
 

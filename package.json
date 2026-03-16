@@ -22,7 +22,10 @@
     "db:reset": "npx supabase db reset",
     "db:push": "npx supabase db push",
     "db:types": "npx supabase gen types typescript --local > supabase/types.ts",
-    "ios": "expo run:ios"
+    "ios": "expo run:ios",
+    "build": "cd apps/parakeet && eas build --profile preview --platform android --local",
+    "build:prod": "cd apps/parakeet && eas build --profile production --platform android --local",
+    "build:dev": "cd apps/parakeet && eas build --profile development --platform android --local"
   },
   "dependencies": {
     "@expo/metro-config": "~54.0.9",

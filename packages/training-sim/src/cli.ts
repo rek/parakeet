@@ -1,3 +1,5 @@
+import { writeFileSync } from 'node:fs';
+import path from 'node:path';
 import {
   ADAM,
   BUSY_BEE,
@@ -29,8 +31,14 @@ import {
   ILLNESS_SCRIPT,
   NO_EQUIPMENT_SCRIPT,
 } from './scripts/illness';
+import {
+  COMPETITION_PREP_SCRIPT,
+  PEAKING_SCRIPT,
+  RETURN_FROM_LAYOFF_SCRIPT,
+} from './scripts/competition';
 import { runSimulation } from './simulator';
 import { SimulationReport } from './types';
+import { compareWithBaseline, generateBaseline } from './threshold';
 
 const jsonOutput = process.argv.includes('--json');
 
@@ -49,6 +57,10 @@ const scenarios = [
   { persona: ADAM, script: FATIGUE_ACCUMULATION_SCRIPT, model: FATIGUED_MODEL },
   // Set failure scenarios
   { persona: ADAM, script: FAILED_SETS_SCRIPT, model: STRUGGLING_MODEL },
+  // Competition scenarios
+  { persona: ADAM, script: PEAKING_SCRIPT, model: ADHERENT_MODEL },
+  { persona: SARAH, script: COMPETITION_PREP_SCRIPT, model: ADHERENT_MODEL },
+  { persona: INJURED_IVAN, script: RETURN_FROM_LAYOFF_SCRIPT, model: FATIGUED_MODEL },
 ];
 
 const reports: SimulationReport[] = [];
@@ -97,8 +109,55 @@ if (jsonOutput) {
     console.log('ALL SIMULATIONS PASSED');
   } else {
     console.log('SOME SIMULATIONS FAILED');
-    process.exit(1);
   }
+}
+
+// JSON artifact output
+const outputPath = process.argv
+  .find((a) => a.startsWith('--output='))
+  ?.split('=')[1];
+if (outputPath) {
+  const jsonReports = reports.map((r) => JSON.parse(formatReportJson(r)));
+  const output = JSON.stringify(
+    {
+      timestamp: new Date().toISOString(),
+      totalScenarios: scenarios.length,
+      passed: allPassed,
+      reports: jsonReports,
+    },
+    null,
+    2
+  );
+  writeFileSync(outputPath, output);
+  console.log(`JSON artifact written to ${outputPath}`);
+}
+
+// Threshold comparison
+const baselinePath = path.join(__dirname, '..', 'baseline.json');
+const currentThresholds = reports.map((r, i) => ({
+  scenarioKey: `${scenarios[i].persona.name} × ${scenarios[i].script.name}`,
+  errors: r.summary.errors,
+  warnings: r.summary.warnings,
+}));
+
+const { regressions, baselineExists } = compareWithBaseline({
+  baselinePath,
+  currentReports: currentThresholds,
+});
+
+if (baselineExists && regressions.length > 0) {
+  console.log('\n⚠️  THRESHOLD REGRESSIONS:');
+  for (const r of regressions) {
+    console.log(
+      `  ${r.scenario}: ${r.metric} increased from ${r.baseline} to ${r.current}`
+    );
+  }
+}
+
+if (process.argv.includes('--update-baseline')) {
+  const baseline = generateBaseline({ reports: currentThresholds });
+  writeFileSync(baselinePath, JSON.stringify(baseline, null, 2));
+  console.log('Baseline updated.');
 }
 
 if (!allPassed && !jsonOutput) {

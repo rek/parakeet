@@ -8,7 +8,7 @@ For details on any item, see the linked spec file.
 
 ## Training Engine (`packages/training-engine`)
 
-705 tests passing (Vitest). All specs implemented. Bug fix: `generateAuxiliaryAssignments` now generates assignments for all blocks (not just 1–3); `blockNumber` widened to `number` throughout; `getIntensityTypeForWeek` now cycles correctly for block 4+.
+710 tests passing (Vitest). All specs implemented. Bug fix: `generateAuxiliaryAssignments` now generates assignments for all blocks (not just 1–3); `blockNumber` widened to `number` throughout; `getIntensityTypeForWeek` now cycles correctly for block 4+.
 
 - [x] engine-001: 1RM formulas — Epley, grams↔kg helpers
 - [x] engine-002: Cube method scheduler — blocks.ts
@@ -45,6 +45,7 @@ For details on any item, see the linked spec file.
 - [x] engine-bug-002: No-equipment session exercise cap — `MAX_AUX_EXERCISES = 5` guard before pushing top-ups in `generateJITSession`; prevents no-equipment + volume top-up from combining to 6+ aux exercises; 1 regression test added
 - [x] engine-bug-003: Auxiliary rotator block 4+ gap — `generateAuxiliaryAssignments` now generates assignments for all blocks (not just 1–3); `blockNumber` widened to `number` throughout; `getIntensityTypeForWeek` cycles correctly for block 4+ via mod-3 arithmetic
 - [x] engine-bug-004: Dumbbell/kettlebell weight scaling (GH#84) — `computeAuxWeight()` in `exercise-catalog.ts`; sqrt scaling for exercises starting with "Dumbbell"/"Kettlebell" replaces linear `1RM × weightPct`; sex-aware `SQRT_REFERENCE_1RM` per lift (squat 120/70, bench 80/50, deadlift 140/80); corrected `weightPct` for DB Incline (0.30→0.28), DB Snatch (0.30→0.21), KB Swing (0.15→0.20), KB Deadlift (0.15→0.20); 3 call sites updated (formula, LLM, volume top-up); 6 new tests
+- [x] engine-035: Training-age-scaled MRV/MEV — `TrainingAge` type, `TRAINING_AGE_MULTIPLIERS` constant, `applyTrainingAgeMultiplier({ config, trainingAge })` in `mrv-mev-calculator.ts`; beginner ×0.8 MRV, intermediate ×1.0, advanced ×1.2 MRV / ×1.1 MEV; wired into simulator; 5 tests
 
 ---
 
@@ -65,6 +66,7 @@ For details on any item, see the linked spec file.
 - [x] infra-003: Supabase client — `platform/supabase/supabase-client.ts`
 - [x] infra-004: EAS + GitHub Actions CI/CD
 - [x] infra-005: Initial DB schema migration
+- [x] infra-006: Simulation CI improvements — 3 new life scripts (peaking, competition-prep, return-from-layoff; 14 total scenarios), `--output` flag for JSON artifacts, threshold tracking with `baseline.json`, CI uploads artifacts via `actions/upload-artifact@v4`
 - [x] ai-001: Vercel AI SDK — `training-engine/src/ai/` (models, prompts, constraints)
 
 ---
@@ -219,6 +221,9 @@ Module/platform/shared architecture is the canonical app structure. Legacy top-l
 - [x] Timed exercise logging UX (GH#81) — `SetRow.tsx` timed branch redesigned: "Round N" + duration input (min) instead of "Complete / as prescribed"; RPE picker and rest timer suppressed for timed exercises in `useSetCompletionFlow.handleAuxSetUpdate`; all 5 exercises (Row Machine, Ski Erg, Run - Treadmill/Outside, Toes to Bar, Plank) already existed in catalog — users add them via Settings › Auxiliary Exercises → General filter
 - [x] History lift filter scope (GH#87) — lift filter chips moved above volume chart; `buildVolumeChartData` accepts optional `liftFilter` to show single-lift line; legend filters to active lift(s); filter still controls Recent Sessions list
 - [x] Weekly review timing (GH#85) — removed immediate post-session review card from `complete.tsx`; `checkEndOfWeek` result now writes `pending_weekly_review` to AsyncStorage + schedules Saturday 10am push notification; `today.tsx` checks AsyncStorage on every focus and shows a "Weekly body check-in ready" nudge card when pending and not already submitted; "Review" clears AsyncStorage + navigates; "Later" hides for session but re-shows on next focus
+- [x] Disruption-soreness compounding — JIT Step 5 no longer resets soreness/readiness adjustments when a disruption is active; takes `min()` per dimension (sets, intensity) so both signals compound conservatively; major disruptions still skip entirely; 2 new tests + 1 updated; soreness screen shows active disruption context banner; LLM prompt updated to reason about disruption-sourced soreness
+- [x] Weight carry-forward — PostRestOverlay "Complete" pre-fills next set with the user's actual weight from the last completed set (not the planned weight); applies to both main and auxiliary sets; `useSetCompletionFlow.ts`
+- [x] Plate calculator discoverability — icon size 16→20, touch target 28×28→36×36 in `SetRow.tsx`
 
 ---
 
