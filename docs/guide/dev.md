@@ -84,7 +84,7 @@ Note: app runtime only honors `EXPO_PUBLIC_SUPABASE_URL_ANDROID` in `__DEV__`; p
 ### Sideload to device
 
 ```bash
-nx install parakeet
+npm run install:apk    # Installs the most recent APK from dist/ onto connected device
 ```
 
 ### Local development
