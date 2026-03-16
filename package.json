@@ -26,7 +26,7 @@
     "build": "cd apps/parakeet && eas build --profile preview --platform android --local && mv -f build-*.{apk,aab} ../../dist/ 2>/dev/null; true",
     "build:prod": "cd apps/parakeet && eas build --profile production --platform android --local && mv -f build-*.{apk,aab} ../../dist/ 2>/dev/null; true",
     "build:dev": "cd apps/parakeet && eas build --profile development --platform android --local && mv -f build-*.{apk,aab} ../../dist/ 2>/dev/null; true",
-    "install": "bash tools/scripts/install-latest-apk.sh"
+    "install:apk": "bash tools/scripts/install-latest-apk.sh"
   },
   "dependencies": {
     "@expo/metro-config": "~54.0.9",
