@@ -9,8 +9,14 @@ export function computeDismissResult(
       Math.round((now - postRestState.liftStartedAt) / 1000)
     : 0;
   const prevSetNumber = postRestState?.pendingMainSetNumber ?? null;
-  const nextSetNumber = prevSetNumber != null ? prevSetNumber + 1 : null;
   const auxExercise = postRestState?.pendingAuxExercise ?? null;
   const auxSetNumber = postRestState?.pendingAuxSetNumber ?? null;
+  // Post-warmup overlay: no pending main set and no aux — use stored nextSetNumber
+  const nextSetNumber =
+    prevSetNumber != null
+      ? prevSetNumber + 1
+      : auxExercise == null
+        ? (postRestState?.nextSetNumber ?? null)
+        : null;
   return { totalRest, prevSetNumber, nextSetNumber, auxExercise, auxSetNumber };
 }

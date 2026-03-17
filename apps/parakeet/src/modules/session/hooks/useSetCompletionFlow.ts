@@ -19,6 +19,7 @@ import {
   resolveNextAuxSetWeight,
   resolveNextSetWeight,
 } from '../utils/set-weight-resolver';
+import { checkVolumeRecovery } from '../utils/volume-recovery-check';
 
 export function useSetCompletionFlow({
   restTimerPrefsRef,
@@ -246,6 +247,20 @@ export function useSetCompletionFlow({
         nextSetNumber: pendingAuxSet + 1,
         resetSecondsRemaining: null,
       });
+    } else if (plannedSets.length > 0) {
+      // Post-warmup timer — show overlay for first working set
+      const firstSet = plannedSets[0];
+      setPostRestState({
+        pendingMainSetNumber: null,
+        pendingAuxExercise: null,
+        pendingAuxSetNumber: null,
+        actualRestSeconds: elapsedSeconds,
+        liftStartedAt: Date.now(),
+        plannedReps: firstSet.reps,
+        plannedWeightKg: firstSet.weight_kg,
+        nextSetNumber: 1,
+        resetSecondsRemaining: null,
+      });
     }
   }
 
@@ -467,6 +482,8 @@ export function useSetCompletionFlow({
     if (pendingRpeSetNumber !== null) {
       updateSet(pendingRpeSetNumber, { rpe_actual: rpe });
       setPendingRpeSetNumber(null);
+      // Check for volume recovery eligibility after main lift RPE
+      checkVolumeRecovery();
     } else if (pendingAuxRpe !== null) {
       updateAuxiliarySet(pendingAuxRpe.exercise, pendingAuxRpe.setNumber, {
         rpe_actual: rpe,

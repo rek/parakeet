@@ -35,6 +35,27 @@ describe('computeDismissResult', () => {
     expect(result.auxSetNumber).toBeNull();
   });
 
+  it('returns nextSetNumber from state when pendingMainSetNumber is null (post-warmup)', () => {
+    const now = Date.now();
+    const state: PostRestState = {
+      pendingMainSetNumber: null,
+      pendingAuxExercise: null,
+      pendingAuxSetNumber: null,
+      actualRestSeconds: 90,
+      liftStartedAt: now - 3000,
+      plannedReps: 5,
+      plannedWeightKg: 100,
+      nextSetNumber: 1,
+      resetSecondsRemaining: null,
+    };
+    const result = computeDismissResult(state, now);
+    expect(result.totalRest).toBe(93);
+    expect(result.prevSetNumber).toBeNull();
+    expect(result.nextSetNumber).toBe(1);
+    expect(result.auxExercise).toBeNull();
+    expect(result.auxSetNumber).toBeNull();
+  });
+
   it('surfaces aux exercise and set number, with no main set advancement', () => {
     const now = Date.now();
     const state: PostRestState = {
