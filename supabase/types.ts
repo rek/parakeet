@@ -670,6 +670,38 @@ export type Database = {
           },
         ]
       }
+      bodyweight_entries: {
+        Row: {
+          id: string
+          user_id: string
+          recorded_date: string
+          weight_kg: number
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          recorded_date: string
+          weight_kg: number
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          recorded_date?: string
+          weight_kg?: number
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bodyweight_entries_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       period_starts: {
         Row: {
           id: string

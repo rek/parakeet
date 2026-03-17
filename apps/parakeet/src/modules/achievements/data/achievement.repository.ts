@@ -26,7 +26,7 @@ export async function upsertPersonalRecords(
 export async function fetchPersonalRecords(userId: string, lift: Lift) {
   const { data, error } = await typedSupabase
     .from('personal_records')
-    .select('pr_type, value, weight_kg')
+    .select('pr_type, value, weight_kg, session_id, achieved_at')
     .eq('user_id', userId)
     .eq('lift', lift);
 
@@ -64,6 +64,16 @@ export async function fetchProgramsForCycleBadges(userId: string) {
     .in('status', ['completed', 'archived'])
     .order('version', { ascending: true });
 
+  if (error) throw error;
+  return data ?? [];
+}
+
+export async function fetchBodyweightEntriesForWilks(userId: string) {
+  const { data, error } = await typedSupabase
+    .from('bodyweight_entries')
+    .select('recorded_date, weight_kg')
+    .eq('user_id', userId)
+    .order('recorded_date', { ascending: true });
   if (error) throw error;
   return data ?? [];
 }

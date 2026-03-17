@@ -5,6 +5,7 @@ import type { PR, StreakResult } from '@parakeet/training-engine';
 import { buildWeekStatuses } from '../utils/week-status-builder';
 
 import {
+  fetchBodyweightEntriesForWilks,
   fetchDisruptionsForStreak,
   fetchMaxesForWilks,
   fetchPersonalRecords,
@@ -18,8 +19,10 @@ import { fetchProgramSessionStatuses } from '../data/session.repository';
 
 export interface HistoricalPRs {
   best1rmKg: number;
+  best1rmSessionId: string | null;
   bestVolumeKgCubed: number;
   repPRs: Record<number, number>; // weight (kg, rounded to 2.5) → best reps
+  repPRSessionIds: Record<number, string | null>; // weight → session that set the PR
 }
 
 export interface CycleBadge {
@@ -55,12 +58,17 @@ export async function getPRHistory(
   const rows = await fetchPersonalRecords(userId, lift);
 
   let best1rmKg = 0;
+  let best1rmSessionId: string | null = null;
   let bestVolumeKgCubed = 0;
   const repPRs: Record<number, number> = {};
+  const repPRSessionIds: Record<number, string | null> = {};
 
   for (const row of rows) {
     if (row.pr_type === 'estimated_1rm') {
-      if ((row.value as number) > best1rmKg) best1rmKg = row.value as number;
+      if ((row.value as number) > best1rmKg) {
+        best1rmKg = row.value as number;
+        best1rmSessionId = (row.session_id as string) ?? null;
+      }
     } else if (row.pr_type === 'volume') {
       if ((row.value as number) > bestVolumeKgCubed) {
         bestVolumeKgCubed = row.value as number;
@@ -68,11 +76,14 @@ export async function getPRHistory(
     } else if (row.pr_type === 'rep_at_weight' && row.weight_kg != null) {
       const wt = row.weight_kg as number;
       const reps = row.value as number;
-      if ((repPRs[wt] ?? 0) < reps) repPRs[wt] = reps;
+      if ((repPRs[wt] ?? 0) < reps) {
+        repPRs[wt] = reps;
+        repPRSessionIds[wt] = (row.session_id as string) ?? null;
+      }
     }
   }
 
-  return { best1rmKg, bestVolumeKgCubed, repPRs };
+  return { best1rmKg, best1rmSessionId, bestVolumeKgCubed, repPRs, repPRSessionIds };
 }
 
 /**
@@ -136,17 +147,18 @@ export async function getCycleBadges(userId: string): Promise<CycleBadge[]> {
  * Returns one WILKS score per completed cycle.
  */
 export async function getWilksHistory(userId: string): Promise<WilksPoint[]> {
-  const [profile, maxes, programs] = await Promise.all([
+  const [profile, maxes, programs, bwEntries] = await Promise.all([
     fetchProfileForWilks(userId),
     fetchMaxesForWilks(userId),
     fetchProgramsForWilks(userId),
+    fetchBodyweightEntriesForWilks(userId),
   ]);
 
   if (maxes.length === 0 || programs.length === 0) return [];
 
   const sex: 'male' | 'female' =
     profile?.biological_sex === 'female' ? 'female' : 'male';
-  const bodyweightKg =
+  const fallbackBw =
     (profile as { bodyweight_kg?: number } | null)?.bodyweight_kg ?? 85;
 
   const points: WilksPoint[] = [];
@@ -158,6 +170,14 @@ export async function getWilksHistory(userId: string): Promise<WilksPoint[]> {
     );
     const maxRow =
       relevant.length > 0 ? relevant[relevant.length - 1] : maxes[0];
+
+    // Use bodyweight closest to (but not after) the program start date
+    const relevantBw = bwEntries.filter(
+      (e) => e.recorded_date <= startDate
+    );
+    const bodyweightKg = relevantBw.length > 0
+      ? relevantBw[relevantBw.length - 1].weight_kg
+      : (bwEntries[0]?.weight_kg ?? fallbackBw);
 
     const squatKg = (maxRow.squat_1rm_grams as number) / 1000;
     const benchKg = (maxRow.bench_1rm_grams as number) / 1000;

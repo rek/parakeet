@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
+  Alert,
   ScrollView,
   StyleSheet,
   Text,
@@ -10,12 +11,18 @@ import {
 } from 'react-native';
 
 import {
+  addBodyweightEntry,
   birthYearToDobIso,
+  deleteBodyweightEntry,
+  getBodyweightHistory,
   getProfile,
   isValidBirthYear,
   updateProfile,
 } from '@modules/profile';
-import type { BiologicalSex } from '@modules/profile';
+import type { BiologicalSex, BodyweightEntry } from '@modules/profile';
+import { qk } from '@platform/query';
+import { captureException } from '@platform/utils/captureException';
+import { useAuth } from '@modules/auth';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -30,6 +37,20 @@ const GENDER_OPTIONS: { value: BiologicalSex; label: string }[] = [
   { value: 'female', label: 'Female' },
   { value: 'male', label: 'Male' },
 ];
+
+function formatDate(iso: string) {
+  const d = new Date(iso + 'T00:00:00');
+  return d.toLocaleDateString('en-GB', {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+  });
+}
+
+function todayIso() {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
 
 function buildStyles(colors: ColorScheme) {
   return StyleSheet.create({
@@ -123,6 +144,50 @@ function buildStyles(colors: ColorScheme) {
       fontWeight: typography.weights.bold,
       letterSpacing: typography.letterSpacing.wide,
     },
+    historyCard: {
+      marginTop: spacing[6],
+      backgroundColor: colors.bgSurface,
+      borderRadius: radii.lg,
+      borderWidth: 1,
+      borderColor: colors.border,
+      padding: spacing[4],
+    },
+    historyTitle: {
+      fontSize: typography.sizes.sm,
+      fontWeight: typography.weights.bold,
+      color: colors.textSecondary,
+      textTransform: 'uppercase',
+      letterSpacing: typography.letterSpacing.wide,
+      marginBottom: spacing[3],
+    },
+    historyRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingVertical: spacing[2.5],
+      borderBottomWidth: 1,
+      borderBottomColor: colors.borderMuted,
+    },
+    historyDate: {
+      flex: 1,
+      fontSize: typography.sizes.sm,
+      color: colors.textSecondary,
+    },
+    historyWeight: {
+      fontSize: typography.sizes.sm,
+      fontWeight: typography.weights.semibold,
+      color: colors.text,
+      marginRight: spacing[3],
+    },
+    historyDelete: {
+      fontSize: typography.sizes.xs,
+      color: colors.danger,
+      fontWeight: typography.weights.medium,
+    },
+    historyEmpty: {
+      fontSize: typography.sizes.sm,
+      color: colors.textTertiary,
+      fontStyle: 'italic',
+    },
   });
 }
 
@@ -140,11 +205,19 @@ export default function ProfileScreen() {
   const { colors } = useTheme();
   const styles = useMemo(() => buildStyles(colors), [colors]);
   const queryClient = useQueryClient();
+  const { user } = useAuth();
 
   const { data: profile, isLoading } = useQuery({
     queryKey: ['profile'],
     queryFn: getProfile,
     staleTime: 5 * 60 * 1000,
+  });
+
+  const { data: bwHistory } = useQuery({
+    queryKey: qk.bodyweight.history(user?.id),
+    queryFn: getBodyweightHistory,
+    enabled: !!user?.id,
+    staleTime: 60 * 1000,
   });
 
   const [displayName, setDisplayName] = useState('');
@@ -195,20 +268,33 @@ export default function ProfileScreen() {
         ? parseFloat(bodyweightKg)
         : null;
 
+      const validBodyweight =
+        parsedBodyweight != null && !isNaN(parsedBodyweight)
+          ? parsedBodyweight
+          : null;
+
       await updateProfile({
         display_name: displayName.trim() ? displayName.trim() : null,
         biological_sex: gender,
         date_of_birth: dobIso,
-        bodyweight_kg:
-          parsedBodyweight != null && !isNaN(parsedBodyweight)
-            ? parsedBodyweight
-            : null,
+        bodyweight_kg: validBodyweight,
       });
+
+      // Record bodyweight history entry when value is present
+      if (validBodyweight != null) {
+        await addBodyweightEntry({
+          recordedDate: todayIso(),
+          weightKg: validBodyweight,
+        });
+      }
     },
     onSuccess: async () => {
       setSaveSuccess(true);
       setSaveError(null);
       await queryClient.invalidateQueries({ queryKey: ['profile'] });
+      await queryClient.invalidateQueries({
+        queryKey: qk.bodyweight.history(user?.id),
+      });
       await queryClient.invalidateQueries({
         queryKey: ['achievements', 'wilks-current'],
       });
@@ -234,6 +320,37 @@ export default function ProfileScreen() {
       return;
     }
     saveMutation.mutate();
+  }
+
+  async function handleDeleteEntry(entry: BodyweightEntry) {
+    Alert.alert(
+      'Delete Entry',
+      `Remove ${entry.weight_kg} kg from ${formatDate(entry.recorded_date)}?`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await deleteBodyweightEntry(entry.id);
+              await queryClient.invalidateQueries({
+                queryKey: qk.bodyweight.history(user?.id),
+              });
+              await queryClient.invalidateQueries({ queryKey: ['profile'] });
+              await queryClient.invalidateQueries({
+                queryKey: ['achievements', 'wilks-current'],
+              });
+              await queryClient.invalidateQueries({
+                queryKey: ['achievements', 'wilks-history'],
+              });
+            } catch (err) {
+              captureException(err);
+            }
+          },
+        },
+      ]
+    );
   }
 
   if (isLoading) {
@@ -351,6 +468,31 @@ export default function ProfileScreen() {
             <Text style={styles.saveButtonText}>Save Changes</Text>
           )}
         </TouchableOpacity>
+
+        {/* Bodyweight History */}
+        <View style={styles.historyCard}>
+          <Text style={styles.historyTitle}>Bodyweight History</Text>
+          {!bwHistory || bwHistory.length === 0 ? (
+            <Text style={styles.historyEmpty}>No entries yet.</Text>
+          ) : (
+            bwHistory.map((entry) => (
+              <View key={entry.id} style={styles.historyRow}>
+                <Text style={styles.historyDate}>
+                  {formatDate(entry.recorded_date)}
+                </Text>
+                <Text style={styles.historyWeight}>
+                  {entry.weight_kg} kg
+                </Text>
+                <TouchableOpacity
+                  onPress={() => handleDeleteEntry(entry)}
+                  activeOpacity={0.7}
+                >
+                  <Text style={styles.historyDelete}>Remove</Text>
+                </TouchableOpacity>
+              </View>
+            ))
+          )}
+        </View>
       </ScrollView>
     </SafeAreaView>
   );

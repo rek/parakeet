@@ -15,6 +15,7 @@ import {
   MISMATCH_DIRECTION_LABELS,
   saveWeeklyBodyReview,
 } from '@modules/body-review';
+import { addBodyweightEntry, getProfile } from '@modules/profile';
 import { getMrvMevConfig, volumeBarColor } from '@modules/training-volume';
 import {
   computePredictedFatigue,
@@ -158,6 +159,27 @@ function buildStyles(colors: ColorScheme) {
       minHeight: 80,
       marginBottom: 24,
       backgroundColor: colors.bgSurface,
+    },
+    bwRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      marginBottom: 24,
+    },
+    bwInput: {
+      borderWidth: 1,
+      borderColor: colors.border,
+      borderRadius: 12,
+      paddingHorizontal: 16,
+      paddingVertical: 12,
+      fontSize: 15,
+      color: colors.text,
+      backgroundColor: colors.bgSurface,
+      flex: 1,
+    },
+    bwUnit: {
+      fontSize: 14,
+      color: colors.textSecondary,
+      marginLeft: 8,
     },
     warningCard: {
       backgroundColor: colors.warningMuted,
@@ -415,6 +437,7 @@ export default function WeeklyReviewScreen() {
   > | null>(null);
   const [ratings, setRatings] = useState<FatigueRatings>({});
   const [notes, setNotes] = useState('');
+  const [bodyweightKg, setBodyweightKg] = useState('');
   const [saving, setSaving] = useState(false);
   const [mismatches, setMismatches] = useState<FatigueMismatch[] | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -424,12 +447,17 @@ export default function WeeklyReviewScreen() {
 
     void (async () => {
       try {
-        const [config, volume] = await Promise.all([
+        const [config, volume, profile] = await Promise.all([
           getMrvMevConfig(user.id),
           programId
             ? getWeeklyVolumeForReview(user.id, programId, weekNumber)
             : Promise.resolve(null),
+          getProfile(),
         ]);
+
+        if (profile?.bodyweight_kg != null) {
+          setBodyweightKg(profile.bodyweight_kg.toString());
+        }
 
         setMrvMevConfig(config);
         const resolvedVolume =
@@ -475,6 +503,14 @@ export default function WeeklyReviewScreen() {
         mrvMevConfig,
         notes: notes.trim() || null,
       });
+      // Record bodyweight if entered
+      const parsedBw = bodyweightKg.trim() ? parseFloat(bodyweightKg) : null;
+      if (parsedBw != null && !isNaN(parsedBw) && parsedBw > 0) {
+        const now = new Date();
+        const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+        await addBodyweightEntry({ recordedDate: today, weightKg: parsedBw });
+      }
+
       setMismatches(detected);
     } catch (err) {
       captureException(err);
@@ -556,6 +592,19 @@ export default function WeeklyReviewScreen() {
           numberOfLines={3}
           textAlignVertical="top"
         />
+
+        <Text style={styles.sectionLabel}>Bodyweight (optional)</Text>
+        <View style={styles.bwRow}>
+          <TextInput
+            style={styles.bwInput}
+            placeholder="e.g. 82.5"
+            placeholderTextColor={colors.textTertiary}
+            value={bodyweightKg}
+            onChangeText={setBodyweightKg}
+            keyboardType="decimal-pad"
+          />
+          <Text style={styles.bwUnit}>kg</Text>
+        </View>
 
         <TouchableOpacity
           style={[styles.saveButton, saving && styles.saveButtonDisabled]}
