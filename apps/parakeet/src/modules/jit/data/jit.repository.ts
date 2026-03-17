@@ -148,6 +148,24 @@ export async function fetchChallengeReview(
   };
 }
 
+export async function fetchUpcomingSessionLifts(
+  programId: string,
+  weekNumber: number,
+  currentDayNumber: number
+): Promise<string[]> {
+  const { data, error } = await typedSupabase
+    .from('sessions')
+    .select('primary_lift')
+    .eq('program_id', programId)
+    .eq('week_number', weekNumber)
+    .gt('day_number', currentDayNumber)
+    .neq('status', 'completed')
+    .not('primary_lift', 'is', null);
+
+  if (error) throw error;
+  return (data ?? []).map((r) => r.primary_lift!).filter(Boolean);
+}
+
 export async function fetchActiveDisruptions(
   userId: string
 ): Promise<JitDisruptionRow[]> {

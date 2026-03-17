@@ -24,6 +24,7 @@ import {
   IntensityTypeSchema,
   LiftSchema,
 } from '@parakeet/shared-types';
+import type { Lift } from '@parakeet/shared-types';
 import {
   createAdHocJITOutput,
   DEFAULT_AUXILIARY_POOLS,
@@ -51,6 +52,7 @@ import {
   fetchJitProfile,
   fetchProgramWeekInfo,
   fetchRecentSessionLogsForLift,
+  fetchUpcomingSessionLifts,
   fetchWeeklySessionLogs,
   fetchWeekSessionCounts,
 } from '../data/jit.repository';
@@ -196,12 +198,18 @@ export async function runJITForSession(
   let sessionIndex: number | undefined;
   let totalSessionsThisWeek: number | undefined;
 
+  let upcomingLifts: Lift[] | undefined;
+
   if (!isAdHoc) {
-    const [weekLogs, weekCounts, weekInfo] = await Promise.all([
+    const [weekLogs, weekCounts, weekInfo, rawUpcomingLifts] = await Promise.all([
       fetchWeeklySessionLogs(userId, session.program_id!, session.week_number),
       fetchWeekSessionCounts(session.program_id!, session.week_number),
       fetchProgramWeekInfo(session.program_id!),
+      fetchUpcomingSessionLifts(session.program_id!, session.week_number, session.day_number),
     ]);
+    upcomingLifts = rawUpcomingLifts
+      .map((l) => LiftSchema.safeParse(l).data)
+      .filter((l): l is Lift => l !== undefined);
 
     for (const log of weekLogs) {
       const joinedSession = Array.isArray(log.sessions)
@@ -305,6 +313,7 @@ export async function runJITForSession(
     cyclePhase,
     sessionIndex,
     totalSessionsThisWeek,
+    upcomingLifts,
   };
 
   const strategyOverride = await getJITStrategyOverride();

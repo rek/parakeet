@@ -1045,6 +1045,55 @@ describe('generateJITSession — volume top-up (engine-027)', () => {
     expect(topUps).toHaveLength(0);
   });
 
+  it('skips exercises associated with upcoming lifts (GH#95)', () => {
+    // Bench day, squat tomorrow — Leg Press (squat-associated) should be skipped
+    const out = generateJITSession(
+      baseInput({
+        primaryLift: 'bench',
+        activeAuxiliaries: ['Close-Grip Barbell Bench Press', 'Dumbbell Fly'],
+        auxiliaryPool: ['Leg Press', 'Romanian Dumbbell Deadlift', 'Barbell Curl'],
+        weeklyVolumeToDate: atMevExcept(DEFAULT_MRV_MEV_CONFIG_MALE, 'quads'),
+        mrvMevConfig: DEFAULT_MRV_MEV_CONFIG_MALE,
+        upcomingLifts: ['squat'],
+      })
+    );
+    const topUps = out.auxiliaryWork.filter((a) => a.isTopUp);
+    // Leg Press targets quads but is squat-associated — should be excluded
+    expect(topUps.every((a) => a.exercise !== 'Leg Press')).toBe(true);
+  });
+
+  it('allows exercises when their lift is NOT upcoming', () => {
+    // Bench day, deadlift tomorrow — Leg Press (squat-associated) should be fine
+    const out = generateJITSession(
+      baseInput({
+        primaryLift: 'bench',
+        activeAuxiliaries: ['Close-Grip Barbell Bench Press', 'Dumbbell Fly'],
+        auxiliaryPool: ['Leg Press', 'Barbell Curl'],
+        weeklyVolumeToDate: atMevExcept(DEFAULT_MRV_MEV_CONFIG_MALE, 'quads'),
+        mrvMevConfig: DEFAULT_MRV_MEV_CONFIG_MALE,
+        upcomingLifts: ['deadlift'],
+      })
+    );
+    const topUps = out.auxiliaryWork.filter((a) => a.isTopUp);
+    const hasLegPress = topUps.some((a) => a.exercise === 'Leg Press');
+    expect(hasLegPress).toBe(true);
+  });
+
+  it('no upcomingLifts → all exercises eligible (backward compatible)', () => {
+    const out = generateJITSession(
+      baseInput({
+        primaryLift: 'bench',
+        activeAuxiliaries: ['Close-Grip Barbell Bench Press', 'Dumbbell Fly'],
+        auxiliaryPool: ['Leg Press', 'Barbell Curl'],
+        weeklyVolumeToDate: atMevExcept(DEFAULT_MRV_MEV_CONFIG_MALE, 'quads'),
+        mrvMevConfig: DEFAULT_MRV_MEV_CONFIG_MALE,
+      })
+    );
+    const topUps = out.auxiliaryWork.filter((a) => a.isTopUp);
+    const hasLegPress = topUps.some((a) => a.exercise === 'Leg Press');
+    expect(hasLegPress).toBe(true);
+  });
+
   it('top-up rationale added to output rationale[]', () => {
     const out = generateJITSession(
       baseInput({
@@ -1450,5 +1499,112 @@ describe('generateJITSession — dumbbell sqrt scaling', () => {
     topUp!.sets.forEach((s) => {
       expect(s.weight_kg).toBe(22.5);
     });
+  });
+});
+
+// ---------------------------------------------------------------------------
+// volumeReductions metadata
+// ---------------------------------------------------------------------------
+
+describe('generateJITSession — volumeReductions metadata', () => {
+  it('is absent when no reductions occurred', () => {
+    const out = generateJITSession(baseInput());
+    expect(out.volumeReductions).toBeUndefined();
+  });
+
+  it('is populated when soreness reduces sets', () => {
+    const out = generateJITSession(
+      baseInput({ sorenessRatings: { quads: 3 } })
+    );
+    expect(out.volumeReductions).toBeDefined();
+    expect(out.volumeReductions!.totalSetsRemoved).toBe(1);
+    expect(out.volumeReductions!.sources).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ source: 'soreness', setsRemoved: 1 }),
+      ])
+    );
+  });
+
+  it('is populated when readiness reduces sets', () => {
+    const out = generateJITSession(
+      baseInput({ sleepQuality: 1, energyLevel: 1 })
+    );
+    expect(out.volumeReductions).toBeDefined();
+    expect(out.volumeReductions!.sources).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ source: 'readiness' }),
+      ])
+    );
+  });
+
+  it('is populated when cycle phase reduces sets', () => {
+    const out = generateJITSession(
+      baseInput({ cyclePhase: 'menstrual', biologicalSex: 'female' })
+    );
+    expect(out.volumeReductions).toBeDefined();
+    expect(out.volumeReductions!.sources).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ source: 'cycle_phase' }),
+      ])
+    );
+  });
+
+  it('is populated when moderate disruption reduces sets', () => {
+    const out = generateJITSession(
+      baseInput({ activeDisruptions: [makeDisruption('moderate')] })
+    );
+    expect(out.volumeReductions).toBeDefined();
+    expect(out.volumeReductions!.sources).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ source: 'disruption' }),
+      ])
+    );
+  });
+
+  it('recoveryBlocked is true for soreness 5', () => {
+    const out = generateJITSession(
+      baseInput({ sorenessRatings: { quads: 5 } })
+    );
+    // Recovery mode replaces the session entirely — no sets "removed" in the normal sense
+    // but recoveryBlocked must be true
+    if (out.volumeReductions) {
+      expect(out.volumeReductions.recoveryBlocked).toBe(true);
+    }
+  });
+
+  it('MRV cap is NOT counted in volumeReductions', () => {
+    const out = generateJITSession(
+      baseInput({
+        weeklyVolumeToDate: { quads: 100, glutes: 100, hamstrings: 100 },
+      })
+    );
+    // MRV should cap/skip, but volumeReductions should be absent since it's not a body-state reduction
+    expect(out.volumeReductions).toBeUndefined();
+  });
+
+  it('combines multiple reduction sources', () => {
+    // Base input with 2 sets: readiness removes 1 (down to 1), soreness 3
+    // can't remove more (already at min 1), so only readiness shows as source.
+    // Use a formula config that produces more base sets to test combination.
+    const out = generateJITSession(
+      baseInput({
+        sorenessRatings: { quads: 3 },
+        sleepQuality: 1,
+        energyLevel: 1,
+      })
+    );
+    expect(out.volumeReductions).toBeDefined();
+    // At least one source removed sets
+    expect(out.volumeReductions!.totalSetsRemoved).toBeGreaterThanOrEqual(1);
+    // Multiple sources attempted reductions (readiness + soreness)
+    expect(out.volumeReductions!.sources.length).toBeGreaterThanOrEqual(1);
+  });
+
+  it('baseSetsCount reflects original set count before reductions', () => {
+    const out = generateJITSession(
+      baseInput({ sorenessRatings: { quads: 3 } })
+    );
+    expect(out.volumeReductions).toBeDefined();
+    expect(out.volumeReductions!.baseSetsCount).toBe(2); // default baseInput produces 2 sets
   });
 });

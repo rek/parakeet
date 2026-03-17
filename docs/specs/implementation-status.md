@@ -225,6 +225,7 @@ Module/platform/shared architecture is the canonical app structure. Legacy top-l
 - [x] Weight carry-forward — PostRestOverlay "Complete" pre-fills next set with the user's actual weight from the last completed set (not the planned weight); applies to both main and auxiliary sets; `useSetCompletionFlow.ts`
 - [x] Plate calculator discoverability — icon size 16→20, touch target 28×28→36×36 in `SetRow.tsx`
 - [x] Plate availability persistence (GH#91) — `handleDisabledPlatesChange` and `handleBarWeightChange` in `[sessionId].tsx` now `await` AsyncStorage writes with `captureException` error handling; previously fire-and-forget
+- [x] Volume top-up schedule awareness (GH#95) — `buildVolumeTopUp` now accepts `upcomingLifts` and skips exercises associated with lifts scheduled later in the week; `JITInput.upcomingLifts` populated via `fetchUpcomingSessionLifts` in jit.repository.ts; prevents back-to-back muscle group loading (e.g., leg press on bench day before squat day); 3 new tests
 
 ---
 

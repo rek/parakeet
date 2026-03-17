@@ -88,6 +88,9 @@ export interface JITInput {
   // Week progress for pro-rated MEV threshold in volume top-up (engine-027 fix)
   sessionIndex?: number; // 1-based position within the training week
   totalSessionsThisWeek?: number; // total planned sessions for this week
+  // Primary lifts scheduled for remaining sessions this week — top-up skips exercises
+  // associated with these lifts to avoid back-to-back muscle group loading (GH#95)
+  upcomingLifts?: Lift[];
 }
 
 export interface AuxiliaryWork {
@@ -143,6 +146,14 @@ export interface JITOutput {
     formulaOutput: JITOutput;
     /** True when divergence exceeds display threshold (>15% weight or setDelta !== 0) */
     shouldSurfaceToUser: boolean;
+  };
+  /** Present when JIT reduced volume. Used by intra-session volume recovery to offer sets back. */
+  volumeReductions?: {
+    totalSetsRemoved: number;
+    baseSetsCount: number;
+    sources: Array<{ source: 'soreness' | 'readiness' | 'cycle_phase' | 'disruption'; setsRemoved: number }>;
+    /** True only for soreness-5 recovery mode — blocks volume recovery offer */
+    recoveryBlocked: boolean;
   };
 }
 
@@ -262,6 +273,7 @@ export function generateJITSession(input: JITInput): JITOutput {
 
   let intensityMultiplier = 1.0;
   let plannedCount = baseSets.length;
+  const baseSetsCount = baseSets.length;
   let inRecoveryMode = false;
   let skippedMainLift = false;
 
@@ -287,6 +299,7 @@ export function generateJITSession(input: JITInput): JITOutput {
   }
 
   // Step 2b — Readiness adjustment (sleep quality + energy level)
+  const preReadinessCount = plannedCount;
   const readinessModifier = getReadinessModifier(
     input.sleepQuality,
     input.energyLevel
@@ -300,8 +313,10 @@ export function generateJITSession(input: JITInput): JITOutput {
     if (readinessModifier.rationale)
       rationale.push(readinessModifier.rationale);
   }
+  const readinessSetsRemoved = preReadinessCount - plannedCount;
 
   // Step 2c — Cycle phase adjustment
+  const preCyclePhaseCount = plannedCount;
   const cyclePhaseModifier = getCyclePhaseModifier(input.cyclePhase);
   if (
     cyclePhaseModifier.volumeModifier !== 0 ||
@@ -315,8 +330,10 @@ export function generateJITSession(input: JITInput): JITOutput {
     if (cyclePhaseModifier.rationale)
       rationale.push(cyclePhaseModifier.rationale);
   }
+  const cyclePhaseSetsRemoved = preCyclePhaseCount - plannedCount;
 
   // Step 3 — Soreness adjustment
+  const preSorenessCount = plannedCount;
   const primaryMuscles = getPrimaryMusclesForSession(primaryLift);
   const worstSoreness = getWorstSoreness(primaryMuscles, sorenessRatings);
   const sorenessModifier = getSorenessModifier(
@@ -332,6 +349,7 @@ export function generateJITSession(input: JITInput): JITOutput {
     intensityMultiplier *= sorenessModifier.intensityMultiplier;
     if (sorenessModifier.warning) rationale.push(sorenessModifier.warning);
   }
+  const sorenessSetsRemoved = inRecoveryMode ? 0 : (preSorenessCount - plannedCount);
 
   // Step 4 — MRV check (skipped in recovery mode)
   if (!inRecoveryMode) {
@@ -358,6 +376,7 @@ export function generateJITSession(input: JITInput): JITOutput {
   }
 
   // Step 5 — Disruption adjustment (compounds with steps 2–4, takes more conservative)
+  const preDisruptionCount = plannedCount;
   const relevantDisruptions = activeDisruptions.filter(
     (d) => d.affected_lifts === null || d.affected_lifts.includes(primaryLift)
   );
@@ -382,6 +401,7 @@ export function generateJITSession(input: JITInput): JITOutput {
       rationale.push(desc);
     }
   }
+  const disruptionSetsRemoved = preDisruptionCount - plannedCount;
 
   // Note no-equipment disruption in rationale (aux boost handled in buildAuxiliaryWork)
   const hasNoEquipmentDisruption = activeDisruptions.some(
@@ -452,7 +472,8 @@ export function generateJITSession(input: JITInput): JITOutput {
       input.biologicalSex,
       input.sessionIndex,
       input.totalSessionsThisWeek,
-      input.allOneRmKg
+      input.allOneRmKg,
+      input.upcomingLifts
     );
     for (const tu of topUps) {
       const activeCount = auxiliaryWork.filter((a) => !a.skipped).length;
@@ -498,6 +519,14 @@ export function generateJITSession(input: JITInput): JITOutput {
     auxiliary: auxiliaryWork.map(() => formulaConfig.rest_seconds.auxiliary),
   };
 
+  // Build volume reduction metadata for intra-session recovery
+  const reductionSources: Array<{ source: 'soreness' | 'readiness' | 'cycle_phase' | 'disruption'; setsRemoved: number }> = [];
+  if (readinessSetsRemoved > 0) reductionSources.push({ source: 'readiness', setsRemoved: readinessSetsRemoved });
+  if (cyclePhaseSetsRemoved > 0) reductionSources.push({ source: 'cycle_phase', setsRemoved: cyclePhaseSetsRemoved });
+  if (sorenessSetsRemoved > 0) reductionSources.push({ source: 'soreness', setsRemoved: sorenessSetsRemoved });
+  if (disruptionSetsRemoved > 0) reductionSources.push({ source: 'disruption', setsRemoved: disruptionSetsRemoved });
+  const totalSetsRemoved = readinessSetsRemoved + cyclePhaseSetsRemoved + sorenessSetsRemoved + disruptionSetsRemoved;
+
   return {
     sessionId,
     generatedAt: new Date(),
@@ -510,6 +539,14 @@ export function generateJITSession(input: JITInput): JITOutput {
     warnings,
     skippedMainLift,
     restRecommendations,
+    ...(totalSetsRemoved > 0 && {
+      volumeReductions: {
+        totalSetsRemoved,
+        baseSetsCount,
+        sources: reductionSources,
+        recoveryBlocked: inRecoveryMode,
+      },
+    }),
   };
 }
 
@@ -677,7 +714,8 @@ function buildVolumeTopUp(
   biologicalSex?: 'female' | 'male',
   sessionIndex?: number,
   totalSessionsThisWeek?: number,
-  allOneRmKg?: Partial<Record<Lift, number>>
+  allOneRmKg?: Partial<Record<Lift, number>>,
+  upcomingLifts?: Lift[]
 ): AuxiliaryWork[] {
   // Build main lift muscle contributions to project post-session volume
   const liftMuscles = getMusclesForLift(primaryLift);
@@ -716,10 +754,18 @@ function buildVolumeTopUp(
   const usedExercises = new Set<string>(activeAuxiliaries);
 
   for (const { muscle, deficit } of topCandidates) {
-    // Find a qualifying exercise from the pool
+    // Find a qualifying exercise from the pool, excluding exercises associated
+    // with lifts scheduled later this week to avoid back-to-back muscle loading
+    const upcomingLiftSet = upcomingLifts?.length
+      ? new Set(upcomingLifts)
+      : undefined;
     const qualifying = auxiliaryPool.filter((exercise) => {
       if (usedExercises.has(exercise)) return false;
       if (getExerciseType(exercise) === 'timed') return false;
+      if (upcomingLiftSet) {
+        const exerciseLift = getLiftForExercise(exercise);
+        if (exerciseLift && upcomingLiftSet.has(exerciseLift)) return false;
+      }
       return getMusclesForExercise(exercise).some(
         (m) => m.muscle === muscle && m.contribution >= 1.0
       );
