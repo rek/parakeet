@@ -13,12 +13,14 @@ import { BadgeCard, detectAchievements, StarCard } from '@modules/achievements';
 import { useAuth } from '@modules/auth';
 import { stampCyclePhaseOnSession } from '@modules/cycle-tracking';
 import {
+  AdjustmentsCard,
   checkEndOfWeek,
   completeSession,
   computeSessionStats,
   isNetworkError,
   RPE_OPTIONS,
 } from '@modules/session';
+import type { JitData } from '@modules/session';
 import type { EarnedBadge, PR } from '@parakeet/training-engine';
 import { useNetworkStatus } from '@platform/network';
 import { qk } from '@platform/query';
@@ -217,6 +219,7 @@ export default function CompleteScreen() {
     plannedSets,
     setSessionRpe,
     reset,
+    cachedJitData,
   } = useSessionStore();
 
   const [notes, setNotes] = useState('');
@@ -234,10 +237,20 @@ export default function CompleteScreen() {
   // ── Derived stats ─────────────────────────────────────────────────────────
 
   // For free-form ad-hoc (no main lift sets), use auxiliary sets for stats
-  const { totalSets, completedSets, completionPct } = computeSessionStats(
+  const { totalSets, completedSets } = computeSessionStats(
     actualSets,
     auxiliarySets
   );
+
+  // Parse cached JIT data for adjustment context
+  const jitData = useMemo(() => {
+    if (!cachedJitData) return null;
+    try {
+      return JSON.parse(cachedJitData) as JitData;
+    } catch {
+      return null;
+    }
+  }, [cachedJitData]);
 
   // ── Handlers ──────────────────────────────────────────────────────────────
 
@@ -397,26 +410,20 @@ export default function CompleteScreen() {
         {/* Stats card */}
         <View style={styles.statsCard}>
           <View style={styles.statRow}>
-            <Text style={styles.statLabel}>Completion</Text>
-            <Text style={styles.statValue}>{completionPct}%</Text>
-          </View>
-          <View style={styles.statDivider} />
-          <View style={styles.statRow}>
             <Text style={styles.statLabel}>Sets completed</Text>
             <Text style={styles.statValue}>
               {completedSets}/{totalSets}
             </Text>
           </View>
-          {plannedSets.length > 0 && (
-            <>
-              <View style={styles.statDivider} />
-              <View style={styles.statRow}>
-                <Text style={styles.statLabel}>Sets planned</Text>
-                <Text style={styles.statValue}>{plannedSets.length}</Text>
-              </View>
-            </>
-          )}
         </View>
+
+        {/* Adjustment context — shown when JIT reduced volume or intensity */}
+        <AdjustmentsCard
+          volumeReductions={jitData?.volumeReductions}
+          intensityModifier={jitData?.intensityModifier}
+          rationale={jitData?.rationale}
+          colors={colors}
+        />
 
         {!saved ? (
           <>

@@ -13,6 +13,7 @@ import {
   getSessionLog,
   parsePlannedSetsJson,
   PERFORMANCE_LABELS,
+  SessionContextCard,
 } from '@modules/session';
 import type { ActualSet, Lift, PlannedSet } from '@parakeet/shared-types';
 import { gramsToKg } from '@parakeet/training-engine';
@@ -221,6 +222,21 @@ export default function SessionDetailScreen() {
   const plannedBySet = new Map(plannedSets.map((ps) => [ps.set_number, ps]));
   const hasPlan = plannedSets.length > 0;
 
+  // Parse JIT input snapshot for session context
+  const jitSnapshot = useMemo(() => {
+    const raw = session.jit_input_snapshot;
+    if (!raw || typeof raw !== 'object') return null;
+    const snap = raw as Record<string, unknown>;
+    return {
+      sorenessRatings: snap.sorenessRatings as Record<string, number> | undefined,
+      sleepQuality: snap.sleepQuality as number | undefined,
+      energyLevel: snap.energyLevel as number | undefined,
+      activeDisruptions: snap.activeDisruptions as
+        | Array<{ disruption_type: string; severity: string }>
+        | undefined,
+    };
+  }, [session.jit_input_snapshot]);
+
   // Group auxiliary sets by exercise name
   const auxByExercise = auxSets.reduce<Record<string, typeof auxSets>>(
     (acc, set) => {
@@ -274,7 +290,7 @@ export default function SessionDetailScreen() {
             )}
             {log.performance_vs_plan && (
               <View style={styles.summaryChip}>
-                <Text style={styles.summaryChipLabel}>vs Plan</Text>
+                <Text style={styles.summaryChipLabel}>Performance</Text>
                 <Text
                   style={[
                     styles.summaryChipValue,
@@ -291,6 +307,17 @@ export default function SessionDetailScreen() {
               </View>
             )}
           </View>
+        )}
+
+        {/* Session context — soreness, readiness, disruptions at session time */}
+        {jitSnapshot && (
+          <SessionContextCard
+            sorenessRatings={jitSnapshot.sorenessRatings}
+            sleepQuality={jitSnapshot.sleepQuality}
+            energyLevel={jitSnapshot.energyLevel}
+            activeDisruptions={jitSnapshot.activeDisruptions}
+            colors={colors}
+          />
         )}
 
         {/* Main lift sets */}

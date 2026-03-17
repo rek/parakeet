@@ -67,3 +67,7 @@ Reusable patterns discovered during implementation. Read on-demand when debuggin
 **Scenario tests are the ultimate intent tests** — "beginner female, menstrual phase, first heavy squat" exercises the full pipeline with realistic inputs.
 
 **Shared test fixtures reduce copy-drift** — extract `baseInput()`, `makeDisruption()`, `makeSets()` to `__test-helpers__/fixtures.ts`.
+
+### UX & Information Display
+
+**"vs plan" is meaningless when the plan is always personalized** — JIT generates a plan adjusted for soreness, disruptions, readiness, and cycle phase. Comparing actual vs adjusted always yields ~100%. Users interpret "on plan" as "on the original schedule" not "on the adjusted plan." Fix: show adjustment context (what changed and why) instead of a misleading percentage. Surface `JITOutput.volumeReductions` and `rationale` alongside completion stats.

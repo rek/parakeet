@@ -537,6 +537,8 @@ export default function SorenessScreen() {
             llmRestSuggestion: jitOutput.llmRestSuggestion ?? null,
             oneRmKg: fetchedOneRmKg ?? undefined,
             volumeReductions: jitOutput.volumeReductions,
+            rationale: jitOutput.rationale,
+            intensityModifier: jitOutput.intensityModifier,
           }),
         },
       });

@@ -60,6 +60,10 @@ export interface JitData {
   oneRmKg?: number;
   /** Present when JIT reduced volume — enables intra-session recovery offer */
   volumeReductions?: VolumeReductions;
+  /** Human-readable reasons for adjustments applied by JIT */
+  rationale?: string[];
+  /** Intensity scaling factor (e.g. 0.95 = intensity reduced 5%) */
+  intensityModifier?: number;
 }
 
 export const DEFAULT_MAIN_REST_SECONDS = 180;

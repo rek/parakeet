@@ -36,3 +36,5 @@ export { SetRow } from './ui/SetRow';
 export { VolumeRecoveryBanner } from './ui/VolumeRecoveryBanner';
 export { WarmupSection } from './ui/WarmupSection';
 export { WorkoutCard } from './ui/WorkoutCard';
+export { AdjustmentsCard } from './ui/AdjustmentsCard';
+export { SessionContextCard } from './ui/SessionContextCard';
