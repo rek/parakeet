@@ -25,6 +25,8 @@ interface AchievementsSectionProps {
   isLoading: boolean;
   onBadgePress: (programId: string) => void;
   onWilksPress: () => void;
+  onPRPress?: (sessionId: string) => void;
+  onFunBadgePress?: (sessionId: string) => void;
 }
 
 type SectionStyles = ReturnType<typeof buildStyles>;
@@ -129,6 +131,13 @@ function buildStyles(colors: ColorScheme) {
       borderBottomWidth: 1,
       borderBottomColor: colors.borderMuted,
     },
+    prBlockTappable: {
+      flexDirection: 'row',
+      alignItems: 'center',
+    },
+    prContent: {
+      flex: 1,
+    },
     prLiftName: {
       fontSize: typography.sizes.sm,
       fontWeight: typography.weights.bold,
@@ -206,10 +215,12 @@ function PRRow({
   lift,
   prs,
   styles,
+  onPress,
 }: {
   lift: string;
   prs: HistoricalPRs;
   styles: SectionStyles;
+  onPress?: (sessionId: string) => void;
 }) {
   const liftLabel = lift.charAt(0).toUpperCase() + lift.slice(1);
   const best1rm =
@@ -226,11 +237,38 @@ function PRRow({
 
   if (!best1rm && !repLine) return null;
 
+  const sessionId = prs.best1rmSessionId;
+  const isTappable = !!sessionId && !!onPress;
+
+  const content = (
+    <>
+      <View style={styles.prContent}>
+        <Text style={styles.prLiftName}>{liftLabel}</Text>
+        {best1rm && <Text style={styles.prLine}>{best1rm}</Text>}
+        {repLine && <Text style={styles.prLine}>{repLine}</Text>}
+      </View>
+      {isTappable && <Text style={styles.chevron}>›</Text>}
+    </>
+  );
+
+  if (isTappable) {
+    return (
+      <TouchableOpacity
+        style={[styles.prBlock, styles.prBlockTappable]}
+        onPress={() => onPress(sessionId)}
+        activeOpacity={0.7}
+        accessible
+        accessibilityRole="button"
+        accessibilityLabel={`View ${liftLabel} PR session`}
+      >
+        {content}
+      </TouchableOpacity>
+    );
+  }
+
   return (
     <View style={styles.prBlock}>
-      <Text style={styles.prLiftName}>{liftLabel}</Text>
-      {best1rm && <Text style={styles.prLine}>{best1rm}</Text>}
-      {repLine && <Text style={styles.prLine}>{repLine}</Text>}
+      {content}
     </View>
   );
 }
@@ -245,6 +283,8 @@ export function AchievementsSection({
   isLoading,
   onBadgePress,
   onWilksPress,
+  onPRPress,
+  onFunBadgePress,
 }: AchievementsSectionProps) {
   const { colors } = useTheme();
 
@@ -317,18 +357,45 @@ export function AchievementsSection({
             styles={styles}
           />
           <View style={styles.card}>
-            {funBadges.map((badge) => (
-              <View key={badge.id} style={styles.funBadgeRow}>
-                <View style={styles.funBadgeIcon}>
-                  <BadgeIcon badgeId={badge.id} emoji={badge.emoji} size={28} />
+            {funBadges.map((badge) => {
+              const sessionId = badge.sessionId;
+              const badgeTappable = !!sessionId && !!onFunBadgePress;
+              const badgeContent = (
+                <>
+                  <View style={styles.funBadgeIcon}>
+                    <BadgeIcon badgeId={badge.id} emoji={badge.emoji} size={28} />
+                  </View>
+                  <View style={styles.funBadgeContent}>
+                    <Text style={styles.funBadgeName}>{badge.name}</Text>
+                    <Text style={styles.funBadgeDescription}>{badge.description}</Text>
+                    <Text style={styles.funBadgeFlavor}>{badge.flavor}</Text>
+                  </View>
+                  {badgeTappable && <Text style={styles.chevron}>›</Text>}
+                </>
+              );
+
+              if (badgeTappable) {
+                return (
+                  <TouchableOpacity
+                    key={badge.id}
+                    style={styles.funBadgeRow}
+                    onPress={() => onFunBadgePress(sessionId)}
+                    activeOpacity={0.7}
+                    accessible
+                    accessibilityRole="button"
+                    accessibilityLabel={`View session for ${badge.name} badge`}
+                  >
+                    {badgeContent}
+                  </TouchableOpacity>
+                );
+              }
+
+              return (
+                <View key={badge.id} style={styles.funBadgeRow}>
+                  {badgeContent}
                 </View>
-                <View style={styles.funBadgeContent}>
-                  <Text style={styles.funBadgeName}>{badge.name}</Text>
-                  <Text style={styles.funBadgeDescription}>{badge.description}</Text>
-                  <Text style={styles.funBadgeFlavor}>{badge.flavor}</Text>
-                </View>
-              </View>
-            ))}
+              );
+            })}
           </View>
         </>
       )}
@@ -374,7 +441,7 @@ export function AchievementsSection({
               )
                 return null;
               return (
-                <PRRow key={lift} lift={lift} prs={liftPRs} styles={styles} />
+                <PRRow key={lift} lift={lift} prs={liftPRs} styles={styles} onPress={onPRPress} />
               );
             })}
           </View>

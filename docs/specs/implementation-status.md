@@ -130,7 +130,7 @@ Module/platform/shared architecture is the canonical app structure. Legacy top-l
 - [x] mobile-016: Cycle phase UI — Today pill, history phase tag, cycle patterns screen
 - [x] mobile-017: Rest timer — `RestTimer` component + modal in session screen
 - [x] mobile-018: Rest timer settings — `settings/rest-timer.tsx`
-- [x] mobile-019: Achievements screen — star cards, streak pill, Wilks score
+- [x] mobile-019: Achievements screen — star cards, streak pill, Wilks score; PR rows and fun badge rows link to triggering session via `/history/[sessionId]` (GH#88)
 - [x] mobile-020: History screen — trends + sessions + archived programs
 - [x] mobile-021: In-session history — `LiftHistorySheet` opened via route param
 - [x] mobile-022: In-session mini history sheet spec

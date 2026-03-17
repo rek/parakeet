@@ -65,6 +65,8 @@ export default function AchievementsScreen() {
             router.push(`/history/cycle-review/${programId}`)
           }
           onWilksPress={() => router.push('/profile/wilks')}
+          onPRPress={(sessionId) => router.push(`/history/${sessionId}`)}
+          onFunBadgePress={(sessionId) => router.push(`/history/${sessionId}`)}
         />
       </ScrollView>
     </SafeAreaView>

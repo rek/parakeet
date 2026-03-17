@@ -9,7 +9,7 @@ import {
   useRestNotifications,
   useSyncQueue,
 } from '@modules/session';
-import { useOtaUpdates } from '@modules/updates';
+import { OtaUpdatesProvider } from '@modules/updates';
 import { queryClient } from '@platform/query';
 import * as Sentry from '@sentry/react-native';
 import { QueryClientProvider } from '@tanstack/react-query';
@@ -50,8 +50,6 @@ function RootLayoutNav() {
   useSyncQueue();
   useMissedSessionReconciliation();
   useRestNotifications();
-  useOtaUpdates();
-
   useEffect(() => {
     if (!loading) {
       SplashScreen.hideAsync();
@@ -89,7 +87,9 @@ function RootLayout() {
       <ThemeProvider>
         <QueryClientProvider client={queryClient}>
           <AuthProvider>
-            <RootLayoutNav />
+            <OtaUpdatesProvider>
+              <RootLayoutNav />
+            </OtaUpdatesProvider>
           </AuthProvider>
         </QueryClientProvider>
       </ThemeProvider>

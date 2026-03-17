@@ -22,6 +22,7 @@ export interface FunBadgeRow {
   emoji: string;
   flavor: string;
   earnedAt: string;
+  sessionId: string | null;
 }
 
 export interface AchievementsData {
@@ -87,6 +88,7 @@ export function useAchievementsData(
             emoji: def.emoji,
             flavor: def.flavor,
             earnedAt: row.earned_at,
+            sessionId: (row.session_id as string | null) ?? null,
           };
         })
         .filter((b): b is FunBadgeRow => b !== null);

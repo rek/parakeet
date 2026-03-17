@@ -24,17 +24,35 @@ import {
   setBarWeightKg,
 } from '@modules/settings';
 import type { BarWeightKg } from '@modules/settings';
+import { useOtaUpdateStatus } from '@modules/updates';
+import type { OtaStatus } from '@modules/updates';
 import { qk } from '@platform/query';
 import { SEX_LABELS, THEME_OPTIONS } from '@shared/constants';
 import { useQuery } from '@tanstack/react-query';
 import Constants from 'expo-constants';
 import { router } from 'expo-router';
-import * as Updates from 'expo-updates';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { radii, spacing, typography } from '../../theme';
 import type { ColorScheme } from '../../theme';
 import { useTheme } from '../../theme/ThemeContext';
+
+function otaStatusLabel(status: OtaStatus, error: string | null): string {
+  switch (status) {
+    case 'checking':
+      return 'Checking for updates…';
+    case 'downloading':
+      return 'Downloading update…';
+    case 'restarting':
+      return 'Restarting…';
+    case 'error':
+      return `Update error: ${error}`;
+    case 'up-to-date':
+      return 'Up to date';
+    default:
+      return 'Check for updates';
+  }
+}
 
 // ── Sub-components ────────────────────────────────────────────────────────────
 
@@ -252,6 +270,13 @@ export default function SettingsScreen() {
   const styles = useMemo(() => buildStyles(colors), [colors]);
 
   const [barWeightKg, setBarWeightKgState] = useState<BarWeightKg>(20);
+
+  const {
+    status: otaStatus,
+    error: otaError,
+    meta: otaMeta,
+    checkForUpdate,
+  } = useOtaUpdateStatus();
 
   const [isExporting, setIsExporting] = useState(false);
 
@@ -559,7 +584,7 @@ export default function SettingsScreen() {
         {/* App section */}
         <SectionHeader label="App" styles={styles} />
         <Row
-          label={`Version ${Constants.expoConfig?.version ?? '—'}  ·  ${Updates.updateId ? Updates.updateId.slice(0, 8) : (Constants.expoConfig?.extra?.commitHash as string) ?? '—'}`}
+          label={`Version ${Constants.expoConfig?.version ?? '—'}  ·  ${otaMeta.updateId ? otaMeta.updateId.slice(0, 8) : (Constants.expoConfig?.extra?.commitHash as string) ?? '—'}`}
           labelStyle={styles.versionLabel}
           styles={styles}
           right={
@@ -578,6 +603,27 @@ export default function SettingsScreen() {
               </Text>
             </View>
           }
+        />
+        <Row
+          label={`Channel: ${otaMeta.channel ?? '—'}  ·  Runtime: ${otaMeta.runtimeVersion ?? '—'}`}
+          labelStyle={styles.versionLabel}
+          styles={styles}
+        />
+        <Row
+          label={otaStatusLabel(otaStatus, otaError)}
+          labelStyle={
+            otaStatus === 'error'
+              ? styles.signOutLabel
+              : otaStatus === 'up-to-date'
+                ? styles.versionLabel
+                : undefined
+          }
+          onPress={
+            otaStatus === 'checking' || otaStatus === 'downloading'
+              ? undefined
+              : checkForUpdate
+          }
+          styles={styles}
         />
         <Row
           label="Log New Issue"
