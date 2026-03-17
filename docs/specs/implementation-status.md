@@ -224,6 +224,7 @@ Module/platform/shared architecture is the canonical app structure. Legacy top-l
 - [x] Disruption-soreness compounding — JIT Step 5 no longer resets soreness/readiness adjustments when a disruption is active; takes `min()` per dimension (sets, intensity) so both signals compound conservatively; major disruptions still skip entirely; 2 new tests + 1 updated; soreness screen shows active disruption context banner; LLM prompt updated to reason about disruption-sourced soreness
 - [x] Weight carry-forward — PostRestOverlay "Complete" pre-fills next set with the user's actual weight from the last completed set (not the planned weight); applies to both main and auxiliary sets; `useSetCompletionFlow.ts`
 - [x] Plate calculator discoverability — icon size 16→20, touch target 28×28→36×36 in `SetRow.tsx`
+- [x] Plate availability persistence (GH#91) — `handleDisabledPlatesChange` and `handleBarWeightChange` in `[sessionId].tsx` now `await` AsyncStorage writes with `captureException` error handling; previously fire-and-forget
 
 ---
 
@@ -231,14 +232,14 @@ Module/platform/shared architecture is the canonical app structure. Legacy top-l
 
 ### 4-Day Programs with Overhead Press — [design doc](../design/four-day-ohp.md)
 
-- [ ] types-002: Add `overhead_press` to Lift enum
-- [ ] engine-031: 4-lift cube rotation
-- [ ] engine-032: OHP formula config defaults
-- [ ] engine-033: OHP auxiliary exercise catalog
-- [ ] engine-034: OHP muscle mapping for primary lift volume
-- [ ] mobile-039: Conditional OHP max collection in onboarding
-- [ ] mobile-040: 3/4-day program creation selector
-- [ ] data-008: OHP lifter maxes schema
+- [ ] types-003: Add `overhead_press` to Lift enum — [spec](../specs/03-types/types-003-ohp-lift-enum.md)
+- [ ] engine-036: 4-lift cube rotation — [spec](../specs/04-engine/engine-036-four-lift-cube-rotation.md)
+- [ ] engine-037: OHP formula config defaults — [spec](../specs/04-engine/engine-037-ohp-formula-config.md)
+- [ ] engine-038: OHP auxiliary exercise catalog — [spec](../specs/04-engine/engine-038-ohp-auxiliary-catalog.md)
+- [ ] engine-039: OHP muscle mapping for primary lift volume — [spec](../specs/04-engine/engine-039-ohp-muscle-mapping.md)
+- [ ] mobile-043: OHP onboarding + app services — [spec](../specs/09-mobile/mobile-043-ohp-onboarding.md)
+- [ ] mobile-044: OHP UI across screens — [spec](../specs/09-mobile/mobile-044-ohp-ui-screens.md)
+- [ ] data-009: OHP lifter maxes schema + migration — [spec](../specs/05-data/data-009-ohp-lifter-maxes.md)
 
 ### LLM Challenge Mode — [design doc](../design/llm-challenge-mode.md) | [spec](10-ai/ai-002-challenge-mode.md)
 

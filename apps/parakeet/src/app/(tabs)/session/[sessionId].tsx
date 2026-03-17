@@ -52,6 +52,7 @@ import type { PlateKg } from '@parakeet/training-engine';
 import type { Lift } from '@parakeet/shared-types';
 import { useNetworkStatus } from '@platform/network';
 import { useSessionStore } from '@platform/store/sessionStore';
+import { captureException } from '@platform/utils/captureException';
 import { sessionLabel } from '@shared/utils/string';
 import { useQueryClient } from '@tanstack/react-query';
 import { useKeepAwake } from 'expo-keep-awake';
@@ -430,14 +431,22 @@ export default function SessionScreen() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  function handleBarWeightChange(kg: number) {
+  async function handleBarWeightChange(kg: number) {
     setEquipmentBarWeightKg(kg);
-    setBarWeightKg(kg as 20 | 15);
+    try {
+      await setBarWeightKg(kg as 20 | 15);
+    } catch (err) {
+      captureException(err);
+    }
   }
 
-  function handleDisabledPlatesChange(plates: PlateKg[]) {
+  async function handleDisabledPlatesChange(plates: PlateKg[]) {
     setEquipmentDisabledPlates(plates);
-    setDisabledPlates(plates);
+    try {
+      await setDisabledPlates(plates);
+    } catch (err) {
+      captureException(err);
+    }
   }
 
   useEffect(() => {
