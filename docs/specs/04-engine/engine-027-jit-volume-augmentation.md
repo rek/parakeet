@@ -84,7 +84,7 @@ hamstrings below MEV
 - **Pool source**: full merged pool across all 3 lifts (widest selection)
 - **Max top-ups**: 1 exercise per deficient muscle, max 2 muscles per session
 - **Set count**: max 3, clamped by remaining MRV capacity
-- **Disable toggle**: not needed (2-user app); can add later if wanted
+- **Disable toggle**: not needed for now; can add via feature flags later
 
 ## Dependencies
 

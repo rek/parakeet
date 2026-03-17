@@ -75,7 +75,7 @@ export function useTodaySession() {
 ```typescript
 // apps/parakeet/hooks/useSessionSync.ts
 // Subscribes to changes on the sessions table for the current user
-// Useful for cross-device sync (e.g., wife's phone updates show on husband's)
+// Cross-device sync — changes on one device appear on all user's devices
 export function useSessionSync(programId: string) {
   const queryClient = useQueryClient()
 

@@ -112,7 +112,7 @@ Design doc: [llm-challenge-mode.md](../../design/llm-challenge-mode.md)
 
 - [ ] Change `jit_input_snapshot` from minimal `{ sessionId, lift, blockNumber, intensityType }` to full `toJson(jitInput)`
   - Column is already JSONB — no migration needed
-  - ~2KB per session, acceptable for 2-user app
+  - ~2KB per session, acceptable storage cost
 
 ---
 

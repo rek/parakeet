@@ -144,7 +144,7 @@ Some badges are common (First Blood, Parakeet OG), some are rare (Triple Threat,
 
 **Bodyweight required (2 badges):** Gravity Meet Your Match and Sir Isaac's Worst Nightmare need current bodyweight from the user's profile.
 
-**Partner linking required (1 badge, deferred):** Power Couple needs a way to identify linked accounts. Trivial for this 2-user app (hardcode), but deferred until needed.
+**Partner linking required (1 badge, deferred):** Power Couple needs a way to identify linked accounts. Deferred until a partner-linking feature is built.
 
 **All other badges** can be derived from existing session_logs, personal_records, disruptions, soreness check-in data, and program metadata.
 

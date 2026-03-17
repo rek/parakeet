@@ -6,7 +6,7 @@
 
 Users coming from other tracking apps have years of historical lifting data they'd like to bring into Parakeet. Without a migration path, adoption requires starting from scratch — losing PR history, volume trends, and continuity.
 
-Parakeet has two users. This is a one-time migration, not an ongoing feature. Building mobile screens for it would be engineering waste. A CLI script is the right tool: runs once locally, talks directly to Supabase, done.
+This is a one-time migration, not an ongoing feature. Building mobile screens for it would be engineering waste. A CLI script is the right tool: runs once locally, talks directly to Supabase, done.
 
 ## Approach: CLI Script
 

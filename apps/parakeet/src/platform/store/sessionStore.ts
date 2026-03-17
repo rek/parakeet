@@ -1,4 +1,4 @@
-import type { AdaptedPlan } from '@parakeet/training-engine';
+import type { AdaptedPlan, VolumeRecoveryOffer } from '@parakeet/training-engine';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
@@ -10,6 +10,7 @@ export interface ActualSet {
   rpe_actual?: number;
   is_completed: boolean;
   actual_rest_seconds?: number;
+  is_recovered?: boolean;
 }
 
 export interface AuxiliaryActualSet {
@@ -52,6 +53,8 @@ export interface SessionState {
   timerState: TimerState | null;
   consecutiveMainLiftFailures: number;
   currentAdaptation: AdaptedPlan | null;
+  recoveryOffer: VolumeRecoveryOffer | null;
+  recoveryDismissed: boolean;
 
   updateSet: (setNumber: number, data: Partial<ActualSet>) => void;
   updateAuxiliarySet: (
@@ -76,6 +79,9 @@ export interface SessionState {
   recordSetSuccess: () => void;
   setAdaptation: (plan: AdaptedPlan) => void;
   resetAdaptation: () => void;
+  setRecoveryOffer: (offer: VolumeRecoveryOffer) => void;
+  acceptRecovery: () => void;
+  dismissRecovery: () => void;
   openTimer: (opts: {
     durationSeconds: number;
     pendingMainSetNumber?: number;
@@ -103,6 +109,8 @@ export const useSessionStore = create<SessionState>()(
       timerState: null,
       consecutiveMainLiftFailures: 0,
       currentAdaptation: null,
+      recoveryOffer: null,
+      recoveryDismissed: false,
 
       initSession: (sessionId, plannedSets) =>
         set({
@@ -118,6 +126,8 @@ export const useSessionStore = create<SessionState>()(
           warmupCompleted: [],
           sessionRpe: undefined,
           timerState: null,
+          recoveryOffer: null,
+          recoveryDismissed: false,
         }),
 
       initAuxiliary: (work) =>
@@ -224,6 +234,40 @@ export const useSessionStore = create<SessionState>()(
           currentAdaptation: null,
         }),
 
+      setRecoveryOffer: (offer) => set({ recoveryOffer: offer }),
+
+      acceptRecovery: () =>
+        set((state) => {
+          const offer = state.recoveryOffer;
+          if (!offer) return {};
+          const currentCount = state.plannedSets.length;
+          const newPlanned = [
+            ...state.plannedSets,
+            ...offer.recoveredSets.map((s) => ({
+              weight_kg: s.weight_kg,
+              reps: s.reps,
+            })),
+          ];
+          const newActual = [
+            ...state.actualSets,
+            ...offer.recoveredSets.map((s, i) => ({
+              set_number: currentCount + i + 1,
+              weight_grams: Math.round(s.weight_kg * 1000),
+              reps_completed: s.reps,
+              is_completed: false,
+              is_recovered: true,
+            })),
+          ];
+          return {
+            plannedSets: newPlanned,
+            actualSets: newActual,
+            recoveryOffer: null,
+          };
+        }),
+
+      dismissRecovery: () =>
+        set({ recoveryOffer: null, recoveryDismissed: true }),
+
       openTimer: ({
         durationSeconds,
         pendingMainSetNumber,
@@ -283,6 +327,8 @@ export const useSessionStore = create<SessionState>()(
           timerState: null,
           consecutiveMainLiftFailures: 0,
           currentAdaptation: null,
+          recoveryOffer: null,
+          recoveryDismissed: false,
         }),
     }),
     {
@@ -299,6 +345,7 @@ export const useSessionStore = create<SessionState>()(
         cachedJitData: state.cachedJitData,
         timerState: state.timerState,
         startedAt: state.startedAt,
+        recoveryDismissed: state.recoveryDismissed,
       }),
       merge: (persisted, current) => {
         const raw = persisted as Partial<Record<string, unknown>> | undefined;

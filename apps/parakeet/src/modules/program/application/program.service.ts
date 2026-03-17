@@ -193,20 +193,30 @@ export async function updateTrainingDays(
   program: {
     program_mode: string;
     start_date: string;
+    training_days: number[] | null;
   }
 ) {
-  await updateProgramTrainingDays(programId, newDays);
+  // Shift the original start_date by the weekday delta to preserve week alignment.
+  // start_date always falls on the earliest training day of the schedule.
+  const oldDays = program.training_days ?? newDays;
+  const oldFirst = [...oldDays].sort((a, b) => a - b)[0];
+  const newFirst = [...newDays].sort((a, b) => a - b)[0];
+  const dayShift = ((newFirst - oldFirst) + 7) % 7;
+  const originalStart = new Date(program.start_date + 'T00:00:00');
+  const newStartDate = new Date(originalStart);
+  newStartDate.setDate(newStartDate.getDate() + dayShift);
+
+  await updateProgramTrainingDays(programId, newDays, newStartDate);
 
   if (program.program_mode === 'scheduled') {
     const futureSessions = await fetchPlannedSessionsForProgram(programId);
     const dayOffsets = computeDayOffsets(newDays);
-    const startDate = new Date(program.start_date + 'T00:00:00');
 
     const updates = futureSessions.map((session) => ({
       id: session.id,
       planned_date: localDateString(
         calculateSessionDate(
-          startDate,
+          newStartDate,
           session.week_number,
           session.day_number - 1, // day_number is 1-based, dayIndex is 0-based
           dayOffsets

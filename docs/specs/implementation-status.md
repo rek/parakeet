@@ -226,6 +226,7 @@ Module/platform/shared architecture is the canonical app structure. Legacy top-l
 - [x] Plate calculator discoverability — icon size 16→20, touch target 28×28→36×36 in `SetRow.tsx`
 - [x] Plate availability persistence (GH#91) — `handleDisabledPlatesChange` and `handleBarWeightChange` in `[sessionId].tsx` now `await` AsyncStorage writes with `captureException` error handling; previously fire-and-forget
 - [x] Volume top-up schedule awareness (GH#95) — `buildVolumeTopUp` now accepts `upcomingLifts` and skips exercises associated with lifts scheduled later in the week; `JITInput.upcomingLifts` populated via `fetchUpcomingSessionLifts` in jit.repository.ts; prevents back-to-back muscle group loading (e.g., leg press on bench day before squat day); 3 new tests
+- [x] Intra-session volume recovery (GH#92) — `evaluateVolumeRecovery()` in `training-engine/src/adjustments/volume-recovery.ts`; when JIT reduces sets (soreness/readiness/cycle-phase/disruption) but actual RPE is ≥1.5 below target, `VolumeRecoveryBanner` offers to add removed sets back; `checkVolumeRecovery()` fires after each main lift RPE entry; `sessionStore.acceptRecovery()` appends recovered sets with `is_recovered: true`; recovery blocked during soreness-5 recovery mode; 14 tests
 
 ---
 

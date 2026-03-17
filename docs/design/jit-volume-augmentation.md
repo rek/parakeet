@@ -72,7 +72,7 @@ This feature requires:
 
 - [x] **Pool source**: full merged pool across all 3 lifts (widest selection)
 - [x] **Max top-ups**: max 3 sets per exercise, 1 exercise per deficient muscle, max 2 muscles per session
-- [x] **Disable toggle**: not needed (2-user app)
+- [x] **Disable toggle**: not needed for now; can add via feature flags if wanted
 - [x] **Early-week aggression**: MEV threshold is pro-rated by week progress (`effectiveMev = ceil(mev × sessionIndex / totalSessionsThisWeek)`), so session 1 of 3 uses ~33% of MEV and top-ups only trigger for severe deficits. Full MEV applies on the last session of the week.
 
 ## References

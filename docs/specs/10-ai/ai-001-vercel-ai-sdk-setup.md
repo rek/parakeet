@@ -27,7 +27,7 @@ EXPO_PUBLIC_ANTHROPIC_API_KEY=sk-ant-...
 eas secret:create --scope project --name EXPO_PUBLIC_ANTHROPIC_API_KEY --value sk-ant-...
 ```
 
-The `EXPO_PUBLIC_` prefix makes the key accessible in Expo's environment. For a 2-user personal app this is acceptable; the key is technically extractable from the bundle but usage is trivially auditable.
+The `EXPO_PUBLIC_` prefix makes the key accessible in Expo's environment. The key is technically extractable from the bundle but usage is auditable via the OpenAI dashboard. If broader distribution is needed, move to a Supabase Edge Function proxy.
 
 ### Expo Fetch Polyfill
 

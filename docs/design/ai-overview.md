@@ -16,7 +16,7 @@ Map of every place AI interacts with Parakeet. Two types of AI: **LLM** (LLM via
 - SDK: `@ai-sdk/openai` via Vercel AI SDK (`generateText()` / `Output.object()`)
 - Config: `packages/training-engine/src/ai/models.ts`
 - Polyfill: `apps/parakeet/src/app/_layout.tsx` → `import 'expo/fetch'`
-- API key: `EXPO_PUBLIC_OPENAI_API_KEY` (bundled; ok for 2-user app)
+- API key: `EXPO_PUBLIC_OPENAI_API_KEY` (bundled; usage auditable via OpenAI dashboard)
 
 ---
 

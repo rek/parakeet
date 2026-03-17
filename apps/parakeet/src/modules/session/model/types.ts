@@ -43,6 +43,13 @@ export interface PostRestState {
   resetSecondsRemaining: number | null;
 }
 
+export interface VolumeReductions {
+  totalSetsRemoved: number;
+  baseSetsCount: number;
+  sources: Array<{ source: 'soreness' | 'readiness' | 'cycle_phase' | 'disruption'; setsRemoved: number }>;
+  recoveryBlocked: boolean;
+}
+
 export interface JitData {
   mainLiftSets: PlannedSet[];
   warmupSets: WarmupSet[];
@@ -51,6 +58,8 @@ export interface JitData {
   llmRestSuggestion?: LlmRestSuggestion | null;
   /** The lifter's 1RM in kg for the primary lift — used for intra-session adaptation */
   oneRmKg?: number;
+  /** Present when JIT reduced volume — enables intra-session recovery offer */
+  volumeReductions?: VolumeReductions;
 }
 
 export const DEFAULT_MAIN_REST_SECONDS = 180;

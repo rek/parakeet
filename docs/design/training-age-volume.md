@@ -32,7 +32,7 @@ When training age is eventually collected from users (onboarding or profile sett
 
 ## What We Chose NOT To Do
 
-- **No per-muscle multiplier tuning** — a single multiplier per training age keeps it simple and matches RP's general guidance. Per-muscle tuning is over-engineering for 2 users.
+- **No per-muscle multiplier tuning** — a single multiplier per training age keeps it simple and matches RP's general guidance. Per-muscle tuning adds complexity without clear benefit at this stage.
 - **No gradual scaling** (e.g., years of training → continuous multiplier) — the three-tier model is sufficient and matches how RP Strength presents the research.
 - **No app UI** — this item is engine + simulation only. App collection of training age is a separate backlog item.
 

@@ -28,7 +28,7 @@ This feature targets developers (CI pipeline consumers):
 
 - **No dashboard for sim results** — artifacts are raw JSON, analyzed ad-hoc. A visualization layer is future work.
 - **No automatic baseline updates** — the baseline file is committed manually after reviewing changes. This prevents silent drift.
-- **No PR comment bot** — GitHub Actions annotations are sufficient for a 2-user app.
+- **No PR comment bot** — GitHub Actions annotations are sufficient for now.
 
 ## References
 

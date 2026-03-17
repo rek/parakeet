@@ -5,7 +5,7 @@
 
 ## Context
 
-This app will be used by exactly 2 people (user and wife). So Cloud scale like GCP is not required
+Cloud-scale infrastructure like GCP is not required. The app needs auth, a database, and cross-device sync — not container orchestration.
 
 ## Decision
 
@@ -23,10 +23,10 @@ Stack:
 
 ### Pros
 
-- Free tier handles 2 users with headroom to spare (500MB DB, unlimited Realtime, 50K auth users)
+- Free tier is sufficient (500MB DB, unlimited Realtime, 50K auth users)
 - Zero operational burden — no VMs, containers, or servers to manage
 - Training engine runs on-device: works fully offline, zero network latency for JIT generation
-- Supabase Row Level Security (RLS) handles data isolation between the 2 users
+- Supabase Row Level Security (RLS) handles data isolation between users
 - Supabase CLI manages migrations locally, same workflow as any Postgres setup
 - Eliminates 3 ADRs worth of infrastructure decisions (Cloud Run, Cloud SQL, CI/CD deployment)
 - Supabase SDK (`@supabase/supabase-js`) has first-class Expo/React Native support
@@ -34,7 +34,7 @@ Stack:
 
 ### Cons
 
-- Training engine logic lives in the client app (violates the original "no logic on frontend" rule — acceptable for a personal app with 2 trusted users)
+- Training engine logic lives in the client app (violates the original "no logic on frontend" rule — acceptable since the engine is pure domain logic with no secrets)
 - If the app ever expands to more users, Supabase Pro ($25/month) or migration to a custom backend would be needed
 - Supabase free tier pauses after 1 week of inactivity — need to either upgrade or use `supabase-js` keepalive ping
 
@@ -43,12 +43,12 @@ Stack:
 ### Alternative 1: Keep GCP (simplified)
 
 - Drop scaling features (Cloud Armor, Pub/Sub, read replicas) but keep Cloud Run + Cloud SQL
-- **Why not chosen:** Still requires managing containers, a server, and CI/CD deployment for 2 users. ~€10-20/month cost. Supabase is free and requires zero server management.
+- **Why not chosen:** Still requires managing containers, a server, and CI/CD deployment. ~€10-20/month cost. Supabase is free and requires zero server management.
 
 ### Alternative 2: Fully local (SQLite, no sync)
 
 - No backend, data stays on device only
-- **Why not chosen:** User and wife use separate phones. Without any backend, they can't access their own data on multiple devices. Supabase provides the needed cross-device sync with minimal overhead.
+- **Why not chosen:** Users need cross-device access to their data. Without any backend, data is locked to one device. Supabase provides cross-device sync with minimal overhead.
 
 ### Alternative 3: Firebase (Firestore + Firebase Auth)
 
@@ -64,13 +64,13 @@ Stack:
 - `packages/db` eliminated — Supabase handles migrations via its CLI
 - CI/CD simplified: only EAS Build (parakeet) and Supabase migrations, no container registry or deployment pipeline
 - Training engine moves to the app: JIT generation runs instantly with no network round-trip
-- Cost: $0/month indefinitely for 2 users
+- Cost: $0/month on free tier
 
 ### Negative
 
 - Supabase free tier pauses DB after 7 days inactivity — mitigate with `supabase-js` keepalive or upgrade to Pro when used regularly
 - Cannot add backend-only logic without introducing a Supabase Edge Function (Deno-based) or upgrading
-- Client-side engine means formula logic is visible in the app bundle (acceptable for personal use)
+- Client-side engine means formula logic is visible in the app bundle (acceptable — no proprietary secrets in the training logic)
 
 ### Neutral
 

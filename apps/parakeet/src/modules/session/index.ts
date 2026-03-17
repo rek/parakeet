@@ -33,5 +33,6 @@ export { RestTimer } from './ui/RestTimer';
 export { ReturnToSessionBanner } from './ui/ReturnToSessionBanner';
 export { RpeQuickPicker } from './ui/RpeQuickPicker';
 export { SetRow } from './ui/SetRow';
+export { VolumeRecoveryBanner } from './ui/VolumeRecoveryBanner';
 export { WarmupSection } from './ui/WarmupSection';
 export { WorkoutCard } from './ui/WorkoutCard';

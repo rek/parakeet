@@ -17,7 +17,7 @@ User profile management using Supabase SDK directly from the parakeet app. No cu
 - [x] Display: email (from `supabase.auth.getUser()`), display_name (from `profiles`)
 - [x] Edit: display_name field with save button → calls `updateProfile()`
 - [x] Sign out button → calls `supabase.auth.signOut()`
-- [x] Delete account: note that this requires a Supabase Edge Function (admin API not callable from client); for a personal 2-user app, manual deletion via Supabase dashboard is acceptable
+- [x] Delete account: note that this requires a Supabase Edge Function (admin API not callable from client); manual deletion via Supabase dashboard is acceptable for now
 
 **RLS handles all access control automatically** — no need for server-side user ID validation. The `auth.uid()` in RLS policies ensures each user only accesses their own data.
 

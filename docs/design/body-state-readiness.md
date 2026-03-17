@@ -87,7 +87,7 @@ The system currently tracks body-state signals — soreness, training volume, cy
 
 ## What We Chose NOT To Do
 
-- **No HRV integration**: Hardware-dependent, adds complexity, and the two-user scale doesn't justify it.
+- **No HRV integration**: Hardware-dependent, adds complexity, and the subjective signals (sleep, energy, soreness) already capture the same information with less friction.
 - **No automatic MRV adjustment from mismatches**: Suggestions only. The lifter decides whether to change their MRV config based on the mismatch data. Auto-adjusting MRV based on subjective ratings risks chasing noise.
 - **No RPE prediction model**: We don't attempt to predict what RPE will feel like based on readiness signals. We adjust load/volume and let the lifter report actual RPE during the session.
 - **No boost above programmed values**: Even during follicular/ovulatory phases, we don't increase intensity or volume above what the formula prescribes. Over-programming is riskier than slight under-programming.

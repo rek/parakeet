@@ -2,7 +2,7 @@
 
 ## What Parakeet Is
 
-A personal powerlifting training system. Not a social app, not a marketplace. Maximum fidelity.
+A powerlifting training system. Not a social app, not a marketplace. Maximum fidelity.
 
 ## Core Goal
 
@@ -43,7 +43,6 @@ The training engine package (`packages/training-engine/`) has no React, no Supab
 
 ## Constraints
 
-- **2-user app** — no multi-tenancy, no scaling concerns, no user management complexity
 - **No backend API server** — Supabase SDK called directly from the app
 - **KG only** — all weights in kilograms; database stores integer grams (140kg = 140000g)
 - **Offline-capable** — formula JIT works without network; LLM features degrade gracefully with timeouts and fallbacks

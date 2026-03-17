@@ -30,6 +30,7 @@ import {
   SetRow,
   startSession,
   useSetCompletionFlow,
+  VolumeRecoveryBanner,
   WarmupSection,
 } from '@modules/session';
 import type {
@@ -314,6 +315,9 @@ export default function SessionScreen() {
     sessionMeta,
     timerState,
     currentAdaptation,
+    recoveryOffer,
+    acceptRecovery,
+    dismissRecovery,
     initSession,
     initAuxiliary,
     addAdHocSet,
@@ -844,6 +848,20 @@ export default function SessionScreen() {
               );
             })}
           </>
+        )}
+
+        {/* Volume recovery banner */}
+        {recoveryOffer !== null && (
+          <VolumeRecoveryBanner
+            offer={recoveryOffer}
+            colors={colors}
+            onAccept={() => {
+              acceptRecovery();
+              plannedSetsLengthRef.current =
+                useSessionStore.getState().plannedSets.length;
+            }}
+            onDismiss={dismissRecovery}
+          />
         )}
 
         {/* Auxiliary work section */}

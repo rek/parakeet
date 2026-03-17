@@ -82,7 +82,7 @@ This approach:
 
 ## What We Chose NOT To Do
 
-- **No arbitrary lift selection**: Users pick 3 or 4 days. 4 days always means S/B/D/OHP. We don't support "pick any 3 of 4" or custom lift combinations — that's over-engineering for 2 users.
+- **No arbitrary lift selection**: Users pick 3 or 4 days. 4 days always means S/B/D/OHP. We don't support "pick any 3 of 4" or custom lift combinations — that level of configurability adds complexity without improving training outcomes.
 - **No 5-day programs yet**: Although `DEFAULT_TRAINING_DAYS[5]` exists, 5-day programming introduces questions about lift frequency and recovery that aren't needed now.
 - **No OHP-specific deload logic**: OHP uses the same deload rules as the other lifts.
 - **No feature flag**: Ships as a single batch when all pieces are ready.
@@ -139,14 +139,14 @@ This approach:
 
 | Spec ID | Title | Layer |
 |---------|-------|-------|
-| types-002 | Add `overhead_press` to Lift enum | shared-types |
-| engine-031 | 4-lift cube rotation | training-engine |
-| engine-032 | OHP formula config defaults (training max increase: 1.25–2.5 kg) | training-engine |
-| engine-033 | OHP auxiliary exercise catalog | training-engine |
-| engine-034 | OHP muscle mapping for primary lift volume | training-engine |
-| mobile-037 | Conditional OHP max collection in onboarding | mobile |
-| mobile-038 | 3/4-day program creation selector | mobile |
-| data-008 | OHP lifter maxes schema (optional field) | data |
+| types-003 | Add `overhead_press` to Lift enum | shared-types |
+| engine-036 | 4-lift cube rotation | training-engine |
+| engine-037 | OHP formula config defaults (training max increase: 1.25–2.5 kg) | training-engine |
+| engine-038 | OHP auxiliary exercise catalog | training-engine |
+| engine-039 | OHP muscle mapping for primary lift volume | training-engine |
+| mobile-043 | OHP onboarding + app services | mobile |
+| mobile-044 | OHP UI across screens | mobile |
+| data-009 | OHP lifter maxes schema + migration | data |
 
 ## Open Questions
 

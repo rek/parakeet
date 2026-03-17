@@ -175,7 +175,7 @@ Type-safe theming library with `Box`, `Text` etc. primitives backed by a theme o
 **Why not chosen:**
 - Requires replacing React Native primitives (`View`, `Text`, `TouchableOpacity`) with Restyle wrappers — invasive migration
 - Opinionated component model doesn't fit the existing screen architecture
-- Heavier than needed for a 2-user personal app
+- Heavier than needed for the current scope
 
 ### Alternative 3: react-native-unistyles
 

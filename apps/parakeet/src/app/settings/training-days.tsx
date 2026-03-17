@@ -195,6 +195,7 @@ export default function TrainingDaysScreen() {
       await updateTrainingDays(program.id, selectedDays, {
         program_mode: program.program_mode,
         start_date: program.start_date,
+        training_days: program.training_days,
       });
       await queryClient.invalidateQueries({
         queryKey: qk.program.active(user?.id),

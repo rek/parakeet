@@ -1,3 +1,4 @@
+import { localDateString } from '@parakeet/training-engine';
 import type { DbInsert, DbRow } from '@platform/supabase';
 import { typedSupabase } from '@platform/supabase';
 import type { ProgramListItem, ProgramSessionView } from '@shared/types/domain';
@@ -157,11 +158,16 @@ export async function updateUnendingSessionCounter(
 
 export async function updateProgramTrainingDays(
   programId: string,
-  trainingDays: number[]
+  trainingDays: number[],
+  newStartDate?: Date
 ): Promise<void> {
+  const payload: Partial<DbInsert<'programs'>> = { training_days: trainingDays };
+  if (newStartDate) {
+    payload.start_date = localDateString(newStartDate);
+  }
   const { error } = await typedSupabase
     .from('programs')
-    .update({ training_days: trainingDays })
+    .update(payload)
     .eq('id', programId);
   if (error) throw error;
 }

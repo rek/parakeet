@@ -92,7 +92,7 @@ Features are grouped into categories for the settings UI:
 
 ## Open Questions
 
-- [x] Should feature flags sync across devices via Supabase? → No, AsyncStorage is fine for 2 users
+- [x] Should feature flags sync across devices via Supabase? → No, AsyncStorage is fine for now; can migrate to Supabase later if needed
 - [x] Should disabling "AI features" also force JIT strategy to "formula"? → Yes, for consistency
 - [ ] Any features the user considers "core" that I've categorized as optional?
 

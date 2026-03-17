@@ -32,12 +32,12 @@ Use the **Vercel AI SDK** (`ai` core package + `@ai-sdk/anthropic` provider) cal
 - Swapping Claude Haiku → Sonnet → GPT-4o → future models is a one-constant change; no architectural refactoring needed — directly satisfies the "improves as models improve" goal
 - Official Expo 52+ support documented in Vercel AI SDK; Expo 54 (this project) is supported
 - `ai` core package has no browser dependencies — works in any JS runtime including React Native
-- Two users → trivial API cost (~$2–5/month at most)
+- Low API cost (~$2–5/month at current usage)
 - Zod output validation catches LLM hallucinations at parse time; hard constraint layer in engine catches anything that slips through
 
 ### Cons
 
-- API key shipped in app bundle (mitigated: personal app with 2 trusted users; EAS Secrets for builds)
+- API key shipped in app bundle (mitigated: EAS Secrets for builds; usage is auditable via OpenAI dashboard)
 - Requires network for LLM features; `LLMJITGenerator` must fall back to `FormulaJITGenerator` on timeout
 
 ## Alternatives Considered
@@ -55,13 +55,13 @@ Use the **Vercel AI SDK** (`ai` core package + `@ai-sdk/anthropic` provider) cal
 
 ### Direct `fetch` to Anthropic API
 
-- Viable and simple for a 2-user app
+- Viable and simple
 - **Why not chosen:** `generateObject()` provides Zod schema validation, automatic retry on parse error, streaming support, and multi-provider compatibility for free. Reimplementing this is unnecessary.
 
 ### Supabase Edge Functions as proxy
 
 - API key stays server-side; no bundle exposure
-- **Why not chosen:** Adds latency (extra hop) and operational overhead. Training engine already runs on-device; LLM calls from on-device is architecturally consistent. Acceptable for 2 users.
+- **Why not chosen:** Adds latency (extra hop) and operational overhead. Training engine already runs on-device; LLM calls from on-device is architecturally consistent.
 
 ## Consequences
 
@@ -75,7 +75,7 @@ Use the **Vercel AI SDK** (`ai` core package + `@ai-sdk/anthropic` provider) cal
 ### Negative
 
 - LLM features require network; formula fallback must always be available
-- API key in bundle is visible to anyone who extracts the app (acceptable for personal use)
+- API key in bundle is visible to anyone who extracts the app (mitigated by EAS Secrets and usage monitoring)
 
 ### Neutral
 

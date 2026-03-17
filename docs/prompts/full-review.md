@@ -4,7 +4,7 @@ Use this prompt to kick off a comprehensive review session. Feed it alongside th
 
 ---
 
-You are reviewing **Parakeet** — a personal powerlifting training app for two users (owner + wife). It is an Expo SDK 54 / React Native / TypeScript / Nx monorepo. All business logic runs locally; Supabase is the only backend. There is no server-side API.
+You are reviewing **Parakeet** — a powerlifting training app. Expo SDK 54 / React Native / TypeScript / Nx monorepo. All business logic runs locally; Supabase is the only backend. There is no server-side API.
 
 Your job is a **real-world, use-case-driven review** — not a style check. Think like a lifter who actually uses this app daily. Find things that are broken, nonsensical, incomplete, or dangerous.
 
@@ -61,7 +61,7 @@ Simulate these exact scenarios and trace what actually happens in the code:
 - Does the LLM call succeed? What happens if it times out or fails?
 - Is the cycle review visible in the history screen?
 
-#### F. Wife's account (female athlete)
+#### F. Female athlete account
 
 - `biological_sex = female`. Does JIT pick up `DEFAULT_MRV_MEV_CONFIG_FEMALE`?
 - Are `DEFAULT_THRESHOLDS_FEMALE` used for performance adjustments?
