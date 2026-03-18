@@ -20,7 +20,13 @@ export {
   fetchProfileSex,
   cancelPlannedSessionsForProgram,
 } from './data/session.repository';
-export { parseActualSetsJson, parsePlannedSetsJson } from './data/session-codecs';
+export {
+  parseActualSetsJson,
+  parseJitInputSnapshot,
+  parsePlannedSetsJson,
+  parsePrescriptionTrace,
+} from './data/session-codecs';
+export { getActualVsPlannedColor } from './utils/getActualVsPlannedColor';
 export * from './utils/session-stats';
 export * from './utils/aux-suggestions';
 export * from './ui/readiness-styles';

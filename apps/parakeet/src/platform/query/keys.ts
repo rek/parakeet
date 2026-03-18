@@ -7,6 +7,8 @@ export const qk = {
   },
   session: {
     today: (userId?: string) => ['session', 'today', userId] as const,
+    detail: (sessionId: string) => ['session', 'detail', sessionId] as const,
+    log: (sessionId: string) => ['session', 'log', sessionId] as const,
   },
   cycleReview: {
     byProgramPrefix: (programId: string) =>

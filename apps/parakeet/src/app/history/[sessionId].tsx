@@ -7,26 +7,29 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import { useQuery } from '@tanstack/react-query';
+import { router, useLocalSearchParams } from 'expo-router';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { useFeatureEnabled } from '@modules/feature-flags';
 import {
+  getActualVsPlannedColor,
   getPerformanceColors,
   getSession,
   getSessionLog,
+  parseJitInputSnapshot,
   parsePlannedSetsJson,
+  parsePrescriptionTrace,
   PERFORMANCE_LABELS,
   PrescriptionSheet,
   SessionContextCard,
 } from '@modules/session';
-import type { ActualSet, Lift, PlannedSet } from '@parakeet/shared-types';
+import type { Lift } from '@parakeet/shared-types';
 import { gramsToKg } from '@parakeet/training-engine';
-import type { PrescriptionTrace } from '@parakeet/training-engine';
+import { qk } from '@platform/query';
 import { LIFT_LABELS } from '@shared/constants';
 import { formatDate, formatTime } from '@shared/utils/date';
 import { capitalize } from '@shared/utils/string';
-import { useQuery } from '@tanstack/react-query';
-import { router, useLocalSearchParams } from 'expo-router';
-import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { BackLink } from '../../components/navigation/BackLink';
 import { radii, spacing, typography } from '../../theme';
@@ -39,23 +42,11 @@ function fmtKg(kg: number): string {
   return kg % 1 === 0 ? `${kg}` : kg.toFixed(1);
 }
 
-function getActualColor(
-  actual: ActualSet,
-  planned: PlannedSet | undefined,
-  colors: ColorScheme,
-): string {
-  if (!planned) return colors.text;
-  const actualKg = gramsToKg(actual.weight_grams);
-  const weightOver = actualKg > planned.weight_kg + 0.1;
-  const weightUnder = actualKg < planned.weight_kg - 0.1;
-  const repsOver = actual.reps_completed > planned.reps;
-  const repsUnder = actual.reps_completed < planned.reps;
-  // Mixed (heavier but fewer reps, or lighter but more) → neutral
-  if ((weightOver && repsUnder) || (weightUnder && repsOver)) return colors.text;
-  if (weightUnder || repsUnder) return colors.warning; // amber — matches summary chip
-  if (weightOver || repsOver) return colors.success;
-  return colors.text;
-}
+const ACTUAL_VS_PLANNED_COLORS = {
+  neutral: 'text',
+  under: 'warning',
+  over: 'success',
+} as const;
 
 function buildStyles(colors: ColorScheme) {
   return StyleSheet.create({
@@ -194,41 +185,28 @@ export default function SessionDetailScreen() {
   const traceEnabled = useFeatureEnabled('prescriptionTrace');
 
   const { data: session, isLoading: sessionLoading } = useQuery({
-    queryKey: ['session', 'detail', sessionId],
+    queryKey: qk.session.detail(sessionId),
     queryFn: () => getSession(sessionId),
     enabled: !!sessionId,
   });
 
   const { data: log, isLoading: logLoading } = useQuery({
-    queryKey: ['session', 'log', sessionId],
+    queryKey: qk.session.log(sessionId),
     queryFn: () => getSessionLog(sessionId),
     enabled: !!sessionId,
   });
 
   const isLoading = sessionLoading || logLoading;
 
-  // Parse JIT input snapshot for session context
-  const jitSnapshot = useMemo(() => {
-    const raw = session?.jit_input_snapshot;
-    if (!raw || typeof raw !== 'object') return null;
-    const snap = raw as Record<string, unknown>;
-    return {
-      sorenessRatings: snap.sorenessRatings as Record<string, number> | undefined,
-      sleepQuality: snap.sleepQuality as number | undefined,
-      energyLevel: snap.energyLevel as number | undefined,
-      activeDisruptions: snap.activeDisruptions as
-        | Array<{ disruption_type: string; severity: string }>
-        | undefined,
-    };
-  }, [session?.jit_input_snapshot]);
+  const jitSnapshot = useMemo(
+    () => parseJitInputSnapshot(session?.jit_input_snapshot),
+    [session?.jit_input_snapshot]
+  );
 
-  const prescriptionTrace = useMemo(() => {
-    const raw = session?.jit_output_trace;
-    if (raw && typeof raw === 'object' && 'mainLift' in raw && 'rest' in raw) {
-      return raw as unknown as PrescriptionTrace;
-    }
-    return null;
-  }, [session?.jit_output_trace]);
+  const prescriptionTrace = useMemo(
+    () => parsePrescriptionTrace(session?.jit_output_trace),
+    [session?.jit_output_trace]
+  );
 
   if (isLoading) {
     return (
@@ -262,7 +240,7 @@ export default function SessionDetailScreen() {
   const mainSets = log?.actual_sets ?? [];
   const auxSets = log?.auxiliary_sets ?? [];
 
-  const plannedSets: PlannedSet[] = parsePlannedSetsJson(session.planned_sets);
+  const plannedSets = parsePlannedSetsJson(session.planned_sets);
   const plannedBySet = new Map(plannedSets.map((ps) => [ps.set_number, ps]));
   const hasPlan = plannedSets.length > 0;
 
@@ -381,7 +359,8 @@ export default function SessionDetailScreen() {
                 const planned = hasPlan
                   ? plannedBySet.get(set.set_number)
                   : undefined;
-                const actualColor = getActualColor(set, planned, colors);
+                const result = getActualVsPlannedColor({ actual: set, planned });
+                const actualColor = colors[ACTUAL_VS_PLANNED_COLORS[result]];
                 return (
                   <View
                     key={i}
