@@ -3,6 +3,12 @@
 
 export interface WeightDerivation {
   oneRmKg: number;
+  /** Original 1RM from lifter_maxes (before working 1RM substitution). */
+  storedOneRmKg?: number;
+  /** Working 1RM computed from recent actual session weights. */
+  workingOneRmKg?: number;
+  /** Which 1RM source was used for this session. */
+  oneRmSource?: 'stored' | 'working';
   blockPct: number;
   baseWeightKg: number;
   modifiers: Array<{
@@ -117,6 +123,9 @@ export class PrescriptionTraceBuilder {
   private oneRmKg = 0;
 
   private _weightOneRmKg = 0;
+  private _storedOneRmKg?: number;
+  private _workingOneRmKg?: number;
+  private _oneRmSource?: 'stored' | 'working';
   private _blockPct = 0;
   private _baseWeightKg = 0;
   private _modifiers: WeightDerivation['modifiers'] = [];
@@ -148,12 +157,18 @@ export class PrescriptionTraceBuilder {
     return this;
   }
 
-  setBaseWeight({ oneRmKg, blockPct, baseWeightKg }: {
+  setBaseWeight({ oneRmKg, blockPct, baseWeightKg, storedOneRmKg, workingOneRmKg, oneRmSource }: {
     oneRmKg: number;
     blockPct: number;
     baseWeightKg: number;
+    storedOneRmKg?: number;
+    workingOneRmKg?: number;
+    oneRmSource?: 'stored' | 'working';
   }) {
     this._weightOneRmKg = oneRmKg;
+    this._storedOneRmKg = storedOneRmKg;
+    this._workingOneRmKg = workingOneRmKg;
+    this._oneRmSource = oneRmSource;
     this._blockPct = blockPct;
     this._baseWeightKg = baseWeightKg;
     return this;
@@ -210,6 +225,9 @@ export class PrescriptionTraceBuilder {
     const weightDerivation: WeightDerivation | null = hasWeightData
       ? {
           oneRmKg: this._weightOneRmKg,
+          ...(this._storedOneRmKg !== undefined && { storedOneRmKg: this._storedOneRmKg }),
+          ...(this._workingOneRmKg !== undefined && { workingOneRmKg: this._workingOneRmKg }),
+          ...(this._oneRmSource !== undefined && { oneRmSource: this._oneRmSource }),
           blockPct: this._blockPct,
           baseWeightKg: this._baseWeightKg,
           modifiers: this._modifiers,

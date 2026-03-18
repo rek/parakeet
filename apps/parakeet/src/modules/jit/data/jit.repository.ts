@@ -21,6 +21,8 @@ export async function fetchJitProfile(
 
 export interface JitRecentSessionLogRow {
   session_rpe: number | null;
+  actual_sets: unknown;
+  planned_sets: unknown;
 }
 
 export async function fetchRecentSessionLogsForLift(
@@ -31,7 +33,7 @@ export async function fetchRecentSessionLogsForLift(
   const sixtyDaysAgo = new Date(Date.now() - 60 * 24 * 60 * 60 * 1000).toISOString();
   const { data, error } = await typedSupabase
     .from('session_logs')
-    .select('session_rpe, sessions!inner(primary_lift)')
+    .select('session_rpe, actual_sets, sessions!inner(primary_lift, planned_sets)')
     .eq('user_id', userId)
     .eq('sessions.primary_lift', lift)
     .gte('completed_at', sixtyDaysAgo)
@@ -39,7 +41,14 @@ export async function fetchRecentSessionLogsForLift(
     .limit(limit);
 
   if (error) throw error;
-  return (data ?? []).map((r) => ({ session_rpe: r.session_rpe ?? null }));
+  return (data ?? []).map((r) => {
+    const session = Array.isArray(r.sessions) ? r.sessions[0] : r.sessions;
+    return {
+      session_rpe: r.session_rpe ?? null,
+      actual_sets: r.actual_sets,
+      planned_sets: session?.planned_sets ?? null,
+    };
+  });
 }
 
 export interface JitWeeklyLogRow {

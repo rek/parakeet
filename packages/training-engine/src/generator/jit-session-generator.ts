@@ -48,6 +48,11 @@ import {
 export interface RecentSessionSummary {
   actual_rpe: number | null;
   target_rpe: number;
+  // Weight context from past sessions (optional — backward compatible)
+  plannedWeightKg?: number;
+  actualMaxWeightKg?: number;
+  deviationKg?: number;
+  estimatedOneRmKg?: number;
 }
 
 export interface JITInput {
@@ -97,6 +102,10 @@ export interface JITInput {
   // Per-athlete modifier calibration adjustments (engine-041). Signed deltas applied
   // on top of default modifier multipliers. Positive = less aggressive, negative = more aggressive.
   modifierCalibrations?: Partial<Record<'rpe_history' | 'readiness' | 'cycle_phase' | 'soreness' | 'disruption', number>>;
+  // Working 1RM context (GH#98). When present, oneRmKg is the working value;
+  // storedOneRmKg is the original from lifter_maxes.
+  storedOneRmKg?: number;
+  oneRmSource?: 'stored' | 'working';
 }
 
 export interface AuxiliaryWork {
@@ -283,7 +292,14 @@ export function generateJITSession(input: JITInput, traceBuilder?: PrescriptionT
   // Record base weight derivation in trace
   if (traceBuilder && baseSets.length > 0) {
     const blockPct = baseWeight / oneRmKg;
-    traceBuilder.setBaseWeight({ oneRmKg, blockPct, baseWeightKg: baseWeight });
+    traceBuilder.setBaseWeight({
+      oneRmKg,
+      blockPct,
+      baseWeightKg: baseWeight,
+      storedOneRmKg: input.storedOneRmKg,
+      workingOneRmKg: input.oneRmSource === 'working' ? oneRmKg : undefined,
+      oneRmSource: input.oneRmSource,
+    });
   }
 
   let intensityMultiplier = 1.0;

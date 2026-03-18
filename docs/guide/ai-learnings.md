@@ -30,6 +30,8 @@ Reusable patterns discovered during implementation. Read on-demand when debuggin
 
 **Domain semantics can eliminate UI steps** — "failed set = RPE 10 by definition" removes the RPE picker for failed sets. Before adding UI for user input, ask: does the domain already determine this value?
 
+**Distinguish base value errors from modifier errors** — when a computed result is wrong, the fix depends on which layer is incorrect. If the base input is stale (e.g., stored 1RM hasn't updated), fix the base — don't add a compensating modifier on top of other modifiers. Modifiers handle daily conditions (soreness, readiness); a stale baseline is a different class of error. Adding `weight_history` as a modifier would compound with existing modifiers and double-count the correction. Instead, compute a "working value" that replaces the base when confidence is sufficient, and record both stored and working values in the trace for observability.
+
 **Auto-selection from cross-lift pools must be schedule-aware** — `buildVolumeTopUp` selects exercises purely by MEV deficit, ignoring upcoming lifts. This causes back-to-back muscle group loading (e.g., leg press on bench day before squat day). Fix: pass `upcomingLifts` and filter out exercises whose associated lift is scheduled later this week. Pattern: any auto-selection system drawing from a cross-lift pool must consider the training schedule, not just the deficit.
 
 ## Architecture & Workflow

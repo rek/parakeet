@@ -10,6 +10,7 @@ import {
   getDaysSinceLastSession,
   getSession,
 } from '@modules/session/application/session.service';
+import { parseActualSetsJson, parsePlannedSetsJson as parsePlannedSets } from '@modules/session';
 import { fetchProfileSex } from '@modules/session/data/session.repository';
 import { getUserRestOverrides } from '@modules/settings/lib/rest-config';
 import {
@@ -26,6 +27,8 @@ import {
 } from '@parakeet/shared-types';
 import type { Lift } from '@parakeet/shared-types';
 import {
+  computeWeightDeviation,
+  computeWorkingOneRm,
   createAdHocJITOutput,
   createEmptyTrace,
   DEFAULT_AUXILIARY_POOLS,
@@ -192,10 +195,35 @@ export async function runJITForSession(
 
   const recentData = await fetchRecentSessionLogsForLift(userId, lift, 6);
 
-  const recentLogs: RecentSessionSummary[] = recentData.map((r) => ({
-    actual_rpe: r.session_rpe ?? null,
-    target_rpe: 8.5,
-  }));
+  const recentLogs: RecentSessionSummary[] = recentData.map((r) => {
+    let deviation: ReturnType<typeof computeWeightDeviation> = null;
+    try {
+      const planned = parsePlannedSets(r.planned_sets);
+      const actual = parseActualSetsJson(r.actual_sets);
+      if (planned.length > 0 && actual.length > 0) {
+        deviation = computeWeightDeviation({
+          plannedWeightKg: planned[0].weight_kg,
+          actualSets: actual.map((s) => ({
+            weightKg: s.weight_grams / 1000,
+            reps: s.reps_completed,
+            rpe: s.rpe_actual,
+          })),
+        });
+      }
+    } catch {
+      // Non-fatal: older sessions may lack planned_sets or have malformed JSONB
+    }
+    return {
+      actual_rpe: r.session_rpe ?? null,
+      target_rpe: 8.5,
+      ...(deviation && {
+        plannedWeightKg: deviation.plannedWeightKg,
+        actualMaxWeightKg: deviation.actualMaxWeightKg,
+        deviationKg: deviation.deviationKg,
+        estimatedOneRmKg: deviation.estimatedOneRmKg ?? undefined,
+      }),
+    };
+  });
 
   // For ad-hoc sessions, skip program-week volume — no cycle context.
   const weeklyVolumeToDate: Partial<Record<MuscleGroup, number>> = {};
@@ -289,13 +317,21 @@ export async function runJITForSession(
   // Per-athlete modifier calibrations (engine-041)
   const modifierCalibrations = await fetchModifierCalibrations(userId);
 
+  // Compute working 1RM from recent actual session weights (GH#98)
+  const { workingOneRmKg, source: oneRmSource } = computeWorkingOneRm({
+    recentEstimates: recentLogs.map((l) => ({
+      estimatedOneRmKg: l.estimatedOneRmKg ?? null,
+    })),
+    storedOneRmKg: resolvedOneRmKg,
+  });
+
   const jitInput: JITInput = {
     sessionId: session.id,
     weekNumber: session.week_number,
     blockNumber,
     primaryLift: lift,
     intensityType,
-    oneRmKg: resolvedOneRmKg,
+    oneRmKg: workingOneRmKg,
     formulaConfig,
     sorenessRatings,
     weeklyVolumeToDate,
@@ -322,6 +358,8 @@ export async function runJITForSession(
     totalSessionsThisWeek,
     upcomingLifts,
     modifierCalibrations: Object.keys(modifierCalibrations).length > 0 ? modifierCalibrations : undefined,
+    storedOneRmKg: oneRmSource === 'working' ? resolvedOneRmKg : undefined,
+    oneRmSource,
   };
 
   const strategyOverride = await getJITStrategyOverride();
