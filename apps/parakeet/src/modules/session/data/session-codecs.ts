@@ -1,18 +1,25 @@
-import { parseJsonArray, parseNullableJsonArray } from '@parakeet/db';
+import { safeParseJsonArray, safeParseNullableJsonArray } from '@parakeet/db';
 import { ActualSetSchema, PlannedSetSchema } from '@parakeet/shared-types';
 import type { ActualSet, PlannedSet } from '@parakeet/shared-types';
 import type { PrescriptionTrace } from '@parakeet/training-engine';
+import { captureException } from '@platform/utils/captureException';
 
 export function parseActualSetsJson(value: unknown): ActualSet[] {
-  return parseJsonArray(value, 'actual_sets', (item) =>
-    ActualSetSchema.parse(item)
+  return safeParseJsonArray(
+    value,
+    'actual_sets',
+    (item) => ActualSetSchema.parse(item),
+    captureException
   );
 }
 
 export function parsePlannedSetsJson(value: unknown): PlannedSet[] {
   return (
-    parseNullableJsonArray(value, 'planned_sets', (item) =>
-      PlannedSetSchema.parse(item)
+    safeParseNullableJsonArray(
+      value,
+      'planned_sets',
+      (item) => PlannedSetSchema.parse(item),
+      captureException
     ) ?? []
   );
 }

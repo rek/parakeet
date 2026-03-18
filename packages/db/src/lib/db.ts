@@ -26,3 +26,47 @@ export function parseNullableJsonArray<T>(
   if (value === null || value === undefined) return null;
   return parseJsonArray(value, fieldName, itemParser);
 }
+
+// ── Safe variants — return fallback instead of throwing ──────────────────────
+
+export function safeParseJsonArray<T>(
+  value: unknown,
+  fieldName: string,
+  itemParser: UnknownParser<T>,
+  onError?: (err: unknown) => void
+): T[] {
+  try {
+    return parseJsonArray(value, fieldName, itemParser);
+  } catch (err) {
+    onError?.(err);
+    return [];
+  }
+}
+
+export function safeParseNullableJsonArray<T>(
+  value: unknown,
+  fieldName: string,
+  itemParser: UnknownParser<T>,
+  onError?: (err: unknown) => void
+): T[] | null {
+  try {
+    return parseNullableJsonArray(value, fieldName, itemParser);
+  } catch (err) {
+    onError?.(err);
+    return null;
+  }
+}
+
+export function safeParseWithParser<T>(
+  value: unknown,
+  parser: UnknownParser<T>,
+  fallback: T,
+  onError?: (err: unknown) => void
+): T {
+  try {
+    return parseWithParser(value, parser);
+  } catch (err) {
+    onError?.(err);
+    return fallback;
+  }
+}

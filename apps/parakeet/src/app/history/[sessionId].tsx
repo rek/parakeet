@@ -267,12 +267,7 @@ export default function SessionDetailScreen() {
   const mainSets = log?.actual_sets ?? [];
   const auxSets = log?.auxiliary_sets ?? [];
 
-  let plannedSets: ReturnType<typeof parsePlannedSetsJson> = [];
-  try {
-    plannedSets = parsePlannedSetsJson(session.planned_sets);
-  } catch (err) {
-    captureException(err);
-  }
+  const plannedSets = parsePlannedSetsJson(session.planned_sets);
   const plannedBySet = new Map(plannedSets.map((ps) => [ps.set_number, ps]));
   const hasPlan = plannedSets.length > 0;
 
