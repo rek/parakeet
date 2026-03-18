@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 
 import type { PrescriptionTrace } from '@parakeet/training-engine';
 
@@ -143,8 +143,11 @@ const STRATEGY_LABELS: Record<PrescriptionTrace['strategy'], string> = {
 
 export function PrescriptionSheet({ visible, onClose, trace, focusExercise }: Props) {
   const { colors } = useTheme();
+  const { height: windowHeight } = useWindowDimensions();
 
   const styles = useMemo(() => buildStyles(colors), [colors]);
+  // Sheet header ~80px + safe area; leave room so content scrolls within the sheet
+  const scrollMaxHeight = windowHeight * 0.45;
 
   const strategyLabel = STRATEGY_LABELS[trace.strategy] ?? trace.strategy;
   const contextLabel = `${capitalize(trace.primaryLift)} · ${capitalize(trace.intensityType)} · Block ${trace.blockNumber}`;
@@ -168,7 +171,7 @@ export function PrescriptionSheet({ visible, onClose, trace, focusExercise }: Pr
       position="bottom"
     >
       <ScrollView
-        style={styles.scroll}
+        style={[styles.scroll, { maxHeight: scrollMaxHeight }]}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
