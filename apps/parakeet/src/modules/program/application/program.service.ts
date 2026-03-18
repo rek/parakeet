@@ -201,7 +201,11 @@ export async function updateTrainingDays(
   const oldDays = program.training_days ?? newDays;
   const oldFirst = [...oldDays].sort((a, b) => a - b)[0];
   const newFirst = [...newDays].sort((a, b) => a - b)[0];
-  const dayShift = ((newFirst - oldFirst) + 7) % 7;
+  // Use closest rotation direction so sessions don't jump a full week
+  // (e.g. Tue→Mon = -1, not +6)
+  let dayShift = newFirst - oldFirst;
+  if (dayShift > 3) dayShift -= 7;
+  if (dayShift < -3) dayShift += 7;
   const originalStart = new Date(program.start_date + 'T00:00:00');
   const newStartDate = new Date(originalStart);
   newStartDate.setDate(newStartDate.getDate() + dayShift);
@@ -228,6 +232,9 @@ export async function updateTrainingDays(
     return { updatedSessionCount: updates.length };
   }
 
+  // Cancel the stale planned session so findTodaySession regenerates
+  // it with the correct date based on the new training days.
+  await cancelPlannedSessionsForProgram(programId);
   return { updatedSessionCount: 0 };
 }
 
