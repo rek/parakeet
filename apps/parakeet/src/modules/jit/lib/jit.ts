@@ -50,6 +50,7 @@ import type {
 import { toJson, typedSupabase } from '@platform/supabase';
 import { captureException } from '@platform/utils/captureException';
 
+import { fetchModifierCalibrations } from '../data/calibration.repository';
 import {
   fetchActiveDisruptions,
   fetchJitProfile,
@@ -285,6 +286,9 @@ export async function runJITForSession(
     ? [...allPools.squat, ...allPools.bench, ...allPools.deadlift]
     : [];
 
+  // Per-athlete modifier calibrations (engine-041)
+  const modifierCalibrations = await fetchModifierCalibrations(userId);
+
   const jitInput: JITInput = {
     sessionId: session.id,
     weekNumber: session.week_number,
@@ -317,6 +321,7 @@ export async function runJITForSession(
     sessionIndex,
     totalSessionsThisWeek,
     upcomingLifts,
+    modifierCalibrations: Object.keys(modifierCalibrations).length > 0 ? modifierCalibrations : undefined,
   };
 
   const strategyOverride = await getJITStrategyOverride();

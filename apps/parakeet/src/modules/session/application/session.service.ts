@@ -373,6 +373,13 @@ export async function completeSession(
     )
     .catch(captureException);
 
+  // Fire-and-forget: modifier calibration update from trace + actual RPE
+  import('@modules/jit/application/calibration-update.service')
+    .then(({ updateModifierCalibrations }) =>
+      updateModifierCalibrations({ sessionId, userId })
+    )
+    .catch(captureException);
+
   // Check if program has reached ≥80% completion → trigger async cycle review.
   // Unending programs have no fixed session count; cycle review is triggered manually via End Program.
   if (session?.program_id) {

@@ -31,6 +31,7 @@ import {
   getMusclesForExercise,
   getMusclesForLift,
 } from '../volume/muscle-mapper';
+import { applyCalibrationAdjustment } from '../analysis/modifier-effectiveness';
 import { PrescriptionTraceBuilder } from './prescription-trace';
 import type { PrescriptionTrace, AuxExerciseTrace } from './prescription-trace';
 import { calculateSets } from './set-calculator';
@@ -93,6 +94,9 @@ export interface JITInput {
   // Primary lifts scheduled for remaining sessions this week — top-up skips exercises
   // associated with these lifts to avoid back-to-back muscle group loading (GH#95)
   upcomingLifts?: Lift[];
+  // Per-athlete modifier calibration adjustments (engine-041). Signed deltas applied
+  // on top of default modifier multipliers. Positive = less aggressive, negative = more aggressive.
+  modifierCalibrations?: Partial<Record<'rpe_history' | 'readiness' | 'cycle_phase' | 'soreness' | 'disruption', number>>;
 }
 
 export interface AuxiliaryWork {
@@ -317,6 +321,13 @@ export function generateJITSession(input: JITInput, traceBuilder?: PrescriptionT
     input.sleepQuality,
     input.energyLevel
   );
+  // Apply per-athlete calibration to readiness modifier
+  if (readinessModifier.intensityMultiplier !== 1.0 && input.modifierCalibrations?.readiness) {
+    readinessModifier.intensityMultiplier = applyCalibrationAdjustment({
+      defaultMultiplier: readinessModifier.intensityMultiplier,
+      adjustment: input.modifierCalibrations.readiness,
+    });
+  }
   if (
     readinessModifier.setReduction > 0 ||
     readinessModifier.intensityMultiplier !== 1.0
@@ -337,6 +348,13 @@ export function generateJITSession(input: JITInput, traceBuilder?: PrescriptionT
   // Step 2c — Cycle phase adjustment
   const preCyclePhaseCount = plannedCount;
   const cyclePhaseModifier = getCyclePhaseModifier(input.cyclePhase);
+  // Apply per-athlete calibration to cycle phase modifier
+  if (cyclePhaseModifier.intensityMultiplier !== 1.0 && input.modifierCalibrations?.cycle_phase) {
+    cyclePhaseModifier.intensityMultiplier = applyCalibrationAdjustment({
+      defaultMultiplier: cyclePhaseModifier.intensityMultiplier,
+      adjustment: input.modifierCalibrations.cycle_phase,
+    });
+  }
   if (
     cyclePhaseModifier.volumeModifier !== 0 ||
     cyclePhaseModifier.intensityMultiplier !== 1.0
@@ -365,6 +383,13 @@ export function generateJITSession(input: JITInput, traceBuilder?: PrescriptionT
     worstSoreness,
     input.biologicalSex
   );
+  // Apply per-athlete calibration to soreness modifier (skip for recovery mode — soreness 5)
+  if (!sorenessModifier.recoveryMode && sorenessModifier.intensityMultiplier !== 1.0 && input.modifierCalibrations?.soreness) {
+    sorenessModifier.intensityMultiplier = applyCalibrationAdjustment({
+      defaultMultiplier: sorenessModifier.intensityMultiplier,
+      adjustment: input.modifierCalibrations.soreness,
+    });
+  }
 
   if (sorenessModifier.recoveryMode) {
     inRecoveryMode = true;

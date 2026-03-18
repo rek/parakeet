@@ -441,6 +441,45 @@ export type Database = {
         }
         Relationships: []
       }
+      modifier_calibrations: {
+        Row: {
+          id: string
+          user_id: string
+          modifier_source: string
+          adjustment: number
+          confidence: string
+          sample_count: number
+          mean_bias: number | null
+          calibrated_at: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          modifier_source: string
+          adjustment?: number
+          confidence?: string
+          sample_count?: number
+          mean_bias?: number | null
+          calibrated_at?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          modifier_source?: string
+          adjustment?: number
+          confidence?: string
+          sample_count?: number
+          mean_bias?: number | null
+          calibrated_at?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       motivational_message_logs: {
         Row: {
           id: string
