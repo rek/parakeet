@@ -43,8 +43,12 @@ export async function updateModifierCalibrations({ sessionId, userId }: {
     const rpeActual = log.session_rpe;
 
     // Extract samples from trace modifiers
+    // Only calibrate sources where the JIT pipeline applies calibration adjustments
+    const CALIBRATED_SOURCES = new Set<ModifierSource>(['readiness', 'cycle_phase', 'soreness']);
     const samples = extractModifierSamples({
-      modifiers: trace.mainLift.weightDerivation.modifiers,
+      modifiers: trace.mainLift.weightDerivation.modifiers.filter(
+        (m) => CALIBRATED_SOURCES.has(m.source)
+      ),
       rpeTarget,
       rpeActual,
     });

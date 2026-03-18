@@ -321,6 +321,10 @@ export function generateJITSession(input: JITInput, traceBuilder?: PrescriptionT
     input.sleepQuality,
     input.energyLevel
   );
+  // Record DEFAULT multiplier in trace BEFORE calibration (feedback loop correctness)
+  if (readinessModifier.intensityMultiplier !== 1.0) {
+    traceBuilder?.recordModifier({ source: 'readiness', multiplier: readinessModifier.intensityMultiplier, reason: readinessModifier.rationale ?? 'Readiness adjustment' });
+  }
   // Apply per-athlete calibration to readiness modifier
   if (readinessModifier.intensityMultiplier !== 1.0 && input.modifierCalibrations?.readiness) {
     readinessModifier.intensityMultiplier = applyCalibrationAdjustment({
@@ -336,9 +340,6 @@ export function generateJITSession(input: JITInput, traceBuilder?: PrescriptionT
     intensityMultiplier *= readinessModifier.intensityMultiplier;
     if (readinessModifier.rationale)
       rationale.push(readinessModifier.rationale);
-    if (readinessModifier.intensityMultiplier !== 1.0) {
-      traceBuilder?.recordModifier({ source: 'readiness', multiplier: readinessModifier.intensityMultiplier, reason: readinessModifier.rationale ?? 'Readiness adjustment' });
-    }
   }
   const readinessSetsRemoved = preReadinessCount - plannedCount;
   if (readinessSetsRemoved > 0) {
@@ -348,6 +349,10 @@ export function generateJITSession(input: JITInput, traceBuilder?: PrescriptionT
   // Step 2c — Cycle phase adjustment
   const preCyclePhaseCount = plannedCount;
   const cyclePhaseModifier = getCyclePhaseModifier(input.cyclePhase);
+  // Record DEFAULT multiplier in trace BEFORE calibration (feedback loop correctness)
+  if (cyclePhaseModifier.intensityMultiplier !== 1.0) {
+    traceBuilder?.recordModifier({ source: 'cycle_phase', multiplier: cyclePhaseModifier.intensityMultiplier, reason: cyclePhaseModifier.rationale ?? 'Cycle phase adjustment' });
+  }
   // Apply per-athlete calibration to cycle phase modifier
   if (cyclePhaseModifier.intensityMultiplier !== 1.0 && input.modifierCalibrations?.cycle_phase) {
     cyclePhaseModifier.intensityMultiplier = applyCalibrationAdjustment({
@@ -366,9 +371,6 @@ export function generateJITSession(input: JITInput, traceBuilder?: PrescriptionT
     intensityMultiplier *= cyclePhaseModifier.intensityMultiplier;
     if (cyclePhaseModifier.rationale)
       rationale.push(cyclePhaseModifier.rationale);
-    if (cyclePhaseModifier.intensityMultiplier !== 1.0) {
-      traceBuilder?.recordModifier({ source: 'cycle_phase', multiplier: cyclePhaseModifier.intensityMultiplier, reason: cyclePhaseModifier.rationale ?? 'Cycle phase adjustment' });
-    }
   }
   const cyclePhaseSetsRemoved = preCyclePhaseCount - plannedCount;
   if (cyclePhaseSetsRemoved > 0) {
@@ -383,6 +385,10 @@ export function generateJITSession(input: JITInput, traceBuilder?: PrescriptionT
     worstSoreness,
     input.biologicalSex
   );
+  // Record DEFAULT multiplier in trace BEFORE calibration (feedback loop correctness)
+  if (!sorenessModifier.recoveryMode && sorenessModifier.intensityMultiplier !== 1.0) {
+    traceBuilder?.recordModifier({ source: 'soreness', multiplier: sorenessModifier.intensityMultiplier, reason: sorenessModifier.warning ?? 'Soreness intensity adjustment' });
+  }
   // Apply per-athlete calibration to soreness modifier (skip for recovery mode — soreness 5)
   if (!sorenessModifier.recoveryMode && sorenessModifier.intensityMultiplier !== 1.0 && input.modifierCalibrations?.soreness) {
     sorenessModifier.intensityMultiplier = applyCalibrationAdjustment({
@@ -399,9 +405,6 @@ export function generateJITSession(input: JITInput, traceBuilder?: PrescriptionT
     plannedCount = Math.max(1, plannedCount - sorenessModifier.setReduction);
     intensityMultiplier *= sorenessModifier.intensityMultiplier;
     if (sorenessModifier.warning) rationale.push(sorenessModifier.warning);
-    if (sorenessModifier.intensityMultiplier !== 1.0) {
-      traceBuilder?.recordModifier({ source: 'soreness', multiplier: sorenessModifier.intensityMultiplier, reason: sorenessModifier.warning ?? 'Soreness intensity adjustment' });
-    }
   }
   const sorenessSetsRemoved = inRecoveryMode ? 0 : (preSorenessCount - plannedCount);
   if (sorenessSetsRemoved > 0) {
