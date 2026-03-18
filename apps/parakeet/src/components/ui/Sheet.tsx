@@ -28,7 +28,7 @@ export function Sheet({
   onClose,
   title,
   subtitle,
-  position = 'top',
+  position = 'bottom',
   maxHeight = '65%',
   children,
 }: SheetProps) {
