@@ -1,4 +1,4 @@
-import { cancelPlannedSessionsForProgram } from '@modules/session/data/session.repository';
+import { cancelPlannedSessionsForProgram } from '@modules/session';
 import {
   calculateSessionDate,
   computeBlockOffset,
@@ -12,6 +12,7 @@ import {
 import type { ProgramListItem } from '@shared/types/domain';
 
 import { getAuthenticatedUserId } from '../data/profile.repository';
+import { computeMinimalDayShift } from '../utils/computeMinimalDayShift';
 import {
   archiveActivePrograms,
   bulkUpdateSessionDates,
@@ -201,11 +202,7 @@ export async function updateTrainingDays(
   const oldDays = program.training_days ?? newDays;
   const oldFirst = [...oldDays].sort((a, b) => a - b)[0];
   const newFirst = [...newDays].sort((a, b) => a - b)[0];
-  // Use closest rotation direction so sessions don't jump a full week
-  // (e.g. Tue→Mon = -1, not +6)
-  let dayShift = newFirst - oldFirst;
-  if (dayShift > 3) dayShift -= 7;
-  if (dayShift < -3) dayShift += 7;
+  const dayShift = computeMinimalDayShift({ oldFirst, newFirst });
   const originalStart = new Date(program.start_date + 'T00:00:00');
   const newStartDate = new Date(originalStart);
   newStartDate.setDate(newStartDate.getDate() + dayShift);
