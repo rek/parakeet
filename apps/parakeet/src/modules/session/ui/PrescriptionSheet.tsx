@@ -29,7 +29,8 @@ interface Props {
 function buildStyles(colors: ColorScheme) {
   return StyleSheet.create({
     scroll: {
-      flex: 1,
+      flexGrow: 1,
+      flexShrink: 1,
     },
     scrollContent: {
       paddingHorizontal: spacing[4],
