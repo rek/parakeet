@@ -46,7 +46,7 @@ function otaStatusLabel(status: OtaStatus, error: string | null): string {
     case 'restarting':
       return 'Restarting…';
     case 'error':
-      return `Update error: ${error}`;
+      return 'Update check failed — tap to retry';
     case 'up-to-date':
       return 'Up to date';
     default:
