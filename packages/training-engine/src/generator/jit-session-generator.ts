@@ -31,6 +31,8 @@ import {
   getMusclesForExercise,
   getMusclesForLift,
 } from '../volume/muscle-mapper';
+import { PrescriptionTraceBuilder } from './prescription-trace';
+import type { PrescriptionTrace, AuxExerciseTrace } from './prescription-trace';
 import { calculateSets } from './set-calculator';
 import {
   generateWarmupSets,
@@ -239,7 +241,7 @@ function applyRestOverride(
 // Main function
 // ---------------------------------------------------------------------------
 
-export function generateJITSession(input: JITInput): JITOutput {
+export function generateJITSession(input: JITInput, traceBuilder?: PrescriptionTraceBuilder): JITOutput {
   const {
     sessionId,
     primaryLift,
@@ -261,6 +263,9 @@ export function generateJITSession(input: JITInput): JITOutput {
   const rationale: string[] = [];
   const warnings: string[] = [];
 
+  // Trace context
+  traceBuilder?.setSessionContext({ sessionId, primaryLift, intensityType, blockNumber, oneRmKg });
+
   // Step 1 — Base sets from formula
   const baseSets = calculateSets(
     primaryLift,
@@ -270,6 +275,12 @@ export function generateJITSession(input: JITInput): JITOutput {
     formulaConfig
   );
   const baseWeight = baseSets[0]?.weight_kg ?? 0;
+
+  // Record base weight derivation in trace
+  if (traceBuilder && baseSets.length > 0) {
+    const blockPct = baseWeight / oneRmKg;
+    traceBuilder.setBaseWeight({ oneRmKg, blockPct, baseWeightKg: baseWeight });
+  }
 
   let intensityMultiplier = 1.0;
   let plannedCount = baseSets.length;
@@ -292,9 +303,11 @@ export function generateJITSession(input: JITInput): JITOutput {
     if (avgDev >= 1.0) {
       intensityMultiplier *= 0.975;
       rationale.push('Recent RPE above target — reduced intensity 2.5%');
+      traceBuilder?.recordModifier({ source: 'rpe_history', multiplier: 0.975, reason: 'Recent RPE above target — intensity x0.975' });
     } else if (avgDev <= -1.0) {
       intensityMultiplier *= 1.025;
       rationale.push('Recent RPE below target — increased intensity 2.5%');
+      traceBuilder?.recordModifier({ source: 'rpe_history', multiplier: 1.025, reason: 'Recent RPE below target — intensity x1.025' });
     }
   }
 
@@ -312,8 +325,14 @@ export function generateJITSession(input: JITInput): JITOutput {
     intensityMultiplier *= readinessModifier.intensityMultiplier;
     if (readinessModifier.rationale)
       rationale.push(readinessModifier.rationale);
+    if (readinessModifier.intensityMultiplier !== 1.0) {
+      traceBuilder?.recordModifier({ source: 'readiness', multiplier: readinessModifier.intensityMultiplier, reason: readinessModifier.rationale ?? 'Readiness adjustment' });
+    }
   }
   const readinessSetsRemoved = preReadinessCount - plannedCount;
+  if (readinessSetsRemoved > 0) {
+    traceBuilder?.recordVolumeChange({ source: 'readiness', setsBefore: preReadinessCount, setsAfter: plannedCount, reason: readinessModifier.rationale ?? 'Readiness set reduction' });
+  }
 
   // Step 2c — Cycle phase adjustment
   const preCyclePhaseCount = plannedCount;
@@ -329,8 +348,14 @@ export function generateJITSession(input: JITInput): JITOutput {
     intensityMultiplier *= cyclePhaseModifier.intensityMultiplier;
     if (cyclePhaseModifier.rationale)
       rationale.push(cyclePhaseModifier.rationale);
+    if (cyclePhaseModifier.intensityMultiplier !== 1.0) {
+      traceBuilder?.recordModifier({ source: 'cycle_phase', multiplier: cyclePhaseModifier.intensityMultiplier, reason: cyclePhaseModifier.rationale ?? 'Cycle phase adjustment' });
+    }
   }
   const cyclePhaseSetsRemoved = preCyclePhaseCount - plannedCount;
+  if (cyclePhaseSetsRemoved > 0) {
+    traceBuilder?.recordVolumeChange({ source: 'cycle_phase', setsBefore: preCyclePhaseCount, setsAfter: plannedCount, reason: cyclePhaseModifier.rationale ?? 'Cycle phase set reduction' });
+  }
 
   // Step 3 — Soreness adjustment
   const preSorenessCount = plannedCount;
@@ -344,12 +369,19 @@ export function generateJITSession(input: JITInput): JITOutput {
   if (sorenessModifier.recoveryMode) {
     inRecoveryMode = true;
     rationale.push('Severe soreness — recovery session');
+    traceBuilder?.setRecoveryMode(true);
   } else {
     plannedCount = Math.max(1, plannedCount - sorenessModifier.setReduction);
     intensityMultiplier *= sorenessModifier.intensityMultiplier;
     if (sorenessModifier.warning) rationale.push(sorenessModifier.warning);
+    if (sorenessModifier.intensityMultiplier !== 1.0) {
+      traceBuilder?.recordModifier({ source: 'soreness', multiplier: sorenessModifier.intensityMultiplier, reason: sorenessModifier.warning ?? 'Soreness intensity adjustment' });
+    }
   }
   const sorenessSetsRemoved = inRecoveryMode ? 0 : (preSorenessCount - plannedCount);
+  if (sorenessSetsRemoved > 0) {
+    traceBuilder?.recordVolumeChange({ source: 'soreness', setsBefore: preSorenessCount, setsAfter: plannedCount, reason: sorenessModifier.warning ?? 'Soreness set reduction' });
+  }
 
   // Step 4 — MRV check (skipped in recovery mode)
   if (!inRecoveryMode) {
@@ -361,16 +393,21 @@ export function generateJITSession(input: JITInput): JITOutput {
       const remainingCapacity = mrv - weeklyVol;
       if (remainingCapacity <= 0) {
         skippedMainLift = true;
+        const prevCount = plannedCount;
         plannedCount = 0;
         warnings.push(`MRV exceeded for ${muscle} — main lift skipped`);
+        traceBuilder?.setSkipped(true);
+        traceBuilder?.recordVolumeChange({ source: 'mrv_cap', setsBefore: prevCount, setsAfter: 0, reason: `MRV exceeded for ${muscle}` });
         break;
       }
       const remainingSets = Math.floor(remainingCapacity / contribution);
       if (plannedCount > remainingSets) {
+        const prevCount = plannedCount;
         warnings.push(
           `Approaching MRV for ${muscle} — sets capped at ${remainingSets}`
         );
         plannedCount = remainingSets;
+        traceBuilder?.recordVolumeChange({ source: 'mrv_cap', setsBefore: prevCount, setsAfter: remainingSets, reason: `MRV cap for ${muscle}` });
       }
     }
   }
@@ -391,17 +428,23 @@ export function generateJITSession(input: JITInput): JITOutput {
       skippedMainLift = true;
       plannedCount = 0;
       rationale.push(`${desc} — main lift skipped`);
+      traceBuilder?.setSkipped(true);
+      traceBuilder?.recordVolumeChange({ source: 'disruption', setsBefore: preDisruptionCount, setsAfter: 0, reason: `${desc} — major disruption` });
     } else if (worst.severity === 'moderate') {
       // Take the more conservative of soreness-adjusted vs disruption-adjusted
       const disruptionSets = Math.max(1, Math.ceil(baseSets.length / 2));
       plannedCount = Math.min(plannedCount, disruptionSets);
       intensityMultiplier = Math.min(intensityMultiplier, 0.9);
       rationale.push(`${desc} — volume and intensity reduced`);
+      traceBuilder?.recordModifier({ source: 'disruption', multiplier: 0.9, reason: `${desc} — moderate disruption` });
     } else {
       rationale.push(desc);
     }
   }
   const disruptionSetsRemoved = preDisruptionCount - plannedCount;
+  if (disruptionSetsRemoved > 0 && !skippedMainLift) {
+    traceBuilder?.recordVolumeChange({ source: 'disruption', setsBefore: preDisruptionCount, setsAfter: plannedCount, reason: 'Moderate disruption set reduction' });
+  }
 
   // Note no-equipment disruption in rationale (aux boost handled in buildAuxiliaryWork)
   const hasNoEquipmentDisruption = activeDisruptions.some(
@@ -427,6 +470,10 @@ export function generateJITSession(input: JITInput): JITOutput {
       reps: 5,
       rpe_target: 5.0,
     }));
+    traceBuilder?.setFinalWeight(recoveryWeight);
+    traceBuilder?.recordSets(mainLiftSets.map((s) => ({
+      setNumber: s.set_number, weightKg: s.weight_kg, reps: s.reps, rpeTarget: s.rpe_target ?? 0, repSource: 'recovery mode (3x5 @ RPE 5)',
+    })));
   } else if (skippedMainLift || plannedCount === 0) {
     mainLiftSets = [];
   } else {
@@ -436,6 +483,11 @@ export function generateJITSession(input: JITInput): JITOutput {
       set_number: i + 1,
       weight_kg: finalWeight,
     }));
+    traceBuilder?.setFinalWeight(finalWeight);
+    traceBuilder?.recordSets(mainLiftSets.map((s) => ({
+      setNumber: s.set_number, weightKg: s.weight_kg, reps: s.reps, rpeTarget: s.rpe_target ?? 0,
+      repSource: `block${((blockNumber - 1) % 3) + 1}.${intensityType} config`,
+    })));
   }
 
   const volumeModifier =
@@ -483,6 +535,35 @@ export function generateJITSession(input: JITInput): JITOutput {
     }
   }
 
+  // Trace auxiliary exercises (assigned + top-ups)
+  if (traceBuilder) {
+    for (const aux of auxiliaryWork) {
+      traceBuilder.recordAuxiliary({
+        exercise: aux.exercise,
+        selectionReason: aux.isTopUp
+          ? (aux.topUpReason ?? 'volume top-up')
+          : aux.skipped
+            ? (aux.skipReason ?? 'skipped')
+            : 'assigned auxiliary',
+        weightTrace: (!aux.skipped && aux.sets[0]?.weight_kg > 0)
+          ? {
+              oneRmKg,
+              catalogPct: oneRmKg > 0 ? aux.sets[0].weight_kg / oneRmKg : 0,
+              scalingMethod: aux.exercise.startsWith('Dumbbell') || aux.exercise.startsWith('Kettlebell') ? 'sqrt' : 'linear',
+              rawWeightKg: aux.sets[0].weight_kg,
+              sorenessMultiplier: 1,
+              finalWeightKg: aux.sets[0].weight_kg,
+            }
+          : null,
+        reps: aux.sets[0]?.reps ?? 0,
+        repSource: aux.isTopUp ? 'volume top-up default' : 'exercise catalog',
+        sets: aux.sets.length,
+        skipped: aux.skipped,
+        skipReason: aux.skipReason,
+      });
+    }
+  }
+
   // Step 8 — Warmup
   let warmupSets: WarmupSet[] = [];
   if (mainLiftSets.length > 0 && !skippedMainLift) {
@@ -496,6 +577,11 @@ export function generateJITSession(input: JITInput): JITOutput {
       effectiveProtocol,
       barWeightKg
     );
+    traceBuilder?.recordWarmup({
+      workingWeightKg: workingWeight,
+      protocolName: effectiveProtocol.type === 'preset' ? effectiveProtocol.name : 'custom',
+      steps: warmupSets.map((s) => ({ pct: workingWeight > 0 ? s.weightKg / workingWeight : 0, weightKg: s.weightKg, reps: s.reps })),
+    });
   }
 
   // Step 9 — Rest recommendations
@@ -518,6 +604,16 @@ export function generateJITSession(input: JITInput): JITOutput {
     mainLift: mainLiftSets.map(() => mainLiftRest),
     auxiliary: auxiliaryWork.map(() => formulaConfig.rest_seconds.auxiliary),
   };
+
+  traceBuilder?.recordRest({
+    mainLift: {
+      formulaBaseSeconds: formulaMainRest,
+      userOverrideSeconds: mainLiftRest !== formulaMainRest ? mainLiftRest : null,
+      llmDeltaSeconds: null,
+      finalSeconds: mainLiftRest,
+    },
+    auxiliarySeconds: formulaConfig.rest_seconds.auxiliary,
+  });
 
   // Build volume reduction metadata for intra-session recovery
   const reductionSources: Array<{ source: 'soreness' | 'readiness' | 'cycle_phase' | 'disruption'; setsRemoved: number }> = [];
@@ -548,6 +644,14 @@ export function generateJITSession(input: JITInput): JITOutput {
       },
     }),
   };
+}
+
+/** Runs generateJITSession with trace instrumentation. Returns both the standard output and the trace. */
+export function generateJITSessionWithTrace(input: JITInput) {
+  const traceBuilder = new PrescriptionTraceBuilder();
+  const output = generateJITSession(input, traceBuilder);
+  const trace = traceBuilder.build({ rationale: output.rationale, warnings: output.warnings });
+  return { output, trace };
 }
 
 // ---------------------------------------------------------------------------

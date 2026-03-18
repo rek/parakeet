@@ -1,4 +1,5 @@
 export * from '../../generator/jit-session-generator';
+export * from '../../generator/prescription-trace';
 export * from '../../generator/jit-strategy';
 export * from '../../generator/formula-jit-generator';
 export * from '../../generator/llm-jit-generator';
