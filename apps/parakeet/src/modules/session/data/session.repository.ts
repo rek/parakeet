@@ -620,7 +620,9 @@ export async function fetchSessionLogBySessionId(
   if (!data) return null;
   return {
     actual_sets: parseActualSetsJson(data.actual_sets),
-    auxiliary_sets: parseActualSetsJson(data.auxiliary_sets),
+    auxiliary_sets: data.auxiliary_sets
+      ? parseActualSetsJson(data.auxiliary_sets)
+      : [],
     session_rpe: data.session_rpe ?? null,
     completion_pct: data.completion_pct ?? null,
     performance_vs_plan: data.performance_vs_plan ?? null,

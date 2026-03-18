@@ -27,6 +27,7 @@ import {
 import type { Lift } from '@parakeet/shared-types';
 import { gramsToKg } from '@parakeet/training-engine';
 import { qk } from '@platform/query';
+import { captureException } from '@platform/utils/captureException';
 import { LIFT_LABELS } from '@shared/constants';
 import { formatDate, formatTime } from '@shared/utils/date';
 import { capitalize } from '@shared/utils/string';
@@ -184,19 +185,30 @@ export default function SessionDetailScreen() {
   const [traceSheetVisible, setTraceSheetVisible] = useState(false);
   const traceEnabled = useFeatureEnabled('prescriptionTrace');
 
-  const { data: session, isLoading: sessionLoading } = useQuery({
+  const {
+    data: session,
+    isLoading: sessionLoading,
+    error: sessionError,
+  } = useQuery({
     queryKey: qk.session.detail(sessionId),
     queryFn: () => getSession(sessionId),
     enabled: !!sessionId,
   });
 
-  const { data: log, isLoading: logLoading } = useQuery({
+  const {
+    data: log,
+    isLoading: logLoading,
+    error: logError,
+  } = useQuery({
     queryKey: qk.session.log(sessionId),
     queryFn: () => getSessionLog(sessionId),
     enabled: !!sessionId,
   });
 
   const isLoading = sessionLoading || logLoading;
+
+  if (sessionError) captureException(sessionError);
+  if (logError) captureException(logError);
 
   const jitSnapshot = useMemo(
     () => parseJitInputSnapshot(session?.jit_input_snapshot),
@@ -218,10 +230,25 @@ export default function SessionDetailScreen() {
     );
   }
 
+  if (sessionError) {
+    return (
+      <SafeAreaView style={styles.safeArea}>
+        <View style={styles.header}>
+          <BackLink onPress={() => router.back()} />
+        </View>
+        <View style={styles.loadingContainer}>
+          <Text style={styles.emptyText}>Failed to load session.</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
   if (!session) {
     return (
       <SafeAreaView style={styles.safeArea}>
-        <BackLink onPress={() => router.back()} />
+        <View style={styles.header}>
+          <BackLink onPress={() => router.back()} />
+        </View>
         <View style={styles.loadingContainer}>
           <Text style={styles.emptyText}>Session not found.</Text>
         </View>
@@ -240,7 +267,12 @@ export default function SessionDetailScreen() {
   const mainSets = log?.actual_sets ?? [];
   const auxSets = log?.auxiliary_sets ?? [];
 
-  const plannedSets = parsePlannedSetsJson(session.planned_sets);
+  let plannedSets: ReturnType<typeof parsePlannedSetsJson> = [];
+  try {
+    plannedSets = parsePlannedSetsJson(session.planned_sets);
+  } catch (err) {
+    captureException(err);
+  }
   const plannedBySet = new Map(plannedSets.map((ps) => [ps.set_number, ps]));
   const hasPlan = plannedSets.length > 0;
 
