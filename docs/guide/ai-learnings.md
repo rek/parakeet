@@ -12,6 +12,10 @@ Reusable patterns discovered during implementation. Read on-demand when debuggin
 
 **Strip-then-insert patterns silently discard data** — when a field is stripped before a DB insert, make sure the filter happens _before_ the strip.
 
+**Supabase nested selects have no guaranteed order** — `.select('*, sessions(...)')` returns joined rows in heap/UUID order, not by any column. Any code that uses `[0]`, `.find()`, or `.at(0)` on nested results is order-dependent and will produce random results. Either add `.order()` to the nested relation or sort in the consumer. Grep for `sessions[0]`, `sessions!inner`, and `.find(` on query results when reviewing.
+
+**Relative shifts on DB values compound errors** — if code shifts a value relative to its current state (`startDate += delta`), prior bugs or multi-step operations can cause drift that's invisible to the current call. Always compute shifts from ground truth (e.g., `originalStart.getDay()`) rather than assuming the DB value is in the expected state.
+
 ## UI & Components
 
 **Extract components at component boundaries** — the signal is "does this have its own `useState`?", not "is the file getting long?".
@@ -19,6 +23,8 @@ Reusable patterns discovered during implementation. Read on-demand when debuggin
 **Shared modals need context props, not duplication** — when the same modal is used in two contexts, the correct fix is props (`defaultLift`, `excludeNames`), not duplicating the component.
 
 **Status indicators need both a dot and a text label** — if a user would need to remember a colour legend, add a label.
+
+**Repeated style tokens drift — extract a shared component** — when 15+ screens each define the same title style inline, some will use raw values (24px/800) while newer ones use theme tokens (2xl/black). The fix is a shared component (`ScreenTitle`) that owns the canonical style, not find-and-replace on raw values. The component prevents future drift because new screens import it instead of copying a style object.
 
 ## Engine & Domain Logic
 
@@ -43,6 +49,8 @@ Reusable patterns discovered during implementation. Read on-demand when debuggin
 **Audit all mode-unaware code paths when adding a new program mode** — grep for every place that makes a completion-percentage or session-count decision. Achievement detection, notification logic, and "show completed session" queries are all candidates.
 
 **Update docs after, to match reality** — the plan captures intent; the spec captures what was actually built. Always re-read the actual code before writing the final spec.
+
+**Main/aux symmetry in session flow** — `handleLiftComplete` and `handleLiftFailed` each have a main-lift branch and an aux branch. When modifying one branch (e.g., fleshing out main-lift failure handling), always check the parallel branch in the same function AND the equivalent function. The intra-session adaptation commit added full failure handling for main lifts but left the aux failure branch as a rest-only stub — the same pattern that `handleLiftComplete` already handled correctly for aux. Review checklist: if you touch `handleLiftComplete` main → check `handleLiftComplete` aux, `handleLiftFailed` main, `handleLiftFailed` aux.
 
 ## Agent Patterns
 
