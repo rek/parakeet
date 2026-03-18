@@ -207,6 +207,29 @@ export default function SessionDetailScreen() {
 
   const isLoading = sessionLoading || logLoading;
 
+  // Parse JIT input snapshot for session context
+  const jitSnapshot = useMemo(() => {
+    const raw = session?.jit_input_snapshot;
+    if (!raw || typeof raw !== 'object') return null;
+    const snap = raw as Record<string, unknown>;
+    return {
+      sorenessRatings: snap.sorenessRatings as Record<string, number> | undefined,
+      sleepQuality: snap.sleepQuality as number | undefined,
+      energyLevel: snap.energyLevel as number | undefined,
+      activeDisruptions: snap.activeDisruptions as
+        | Array<{ disruption_type: string; severity: string }>
+        | undefined,
+    };
+  }, [session?.jit_input_snapshot]);
+
+  const prescriptionTrace = useMemo(() => {
+    const raw = session?.jit_output_trace;
+    if (raw && typeof raw === 'object' && 'mainLift' in raw && 'rest' in raw) {
+      return raw as unknown as PrescriptionTrace;
+    }
+    return null;
+  }, [session?.jit_output_trace]);
+
   if (isLoading) {
     return (
       <SafeAreaView style={styles.safeArea}>
@@ -242,29 +265,6 @@ export default function SessionDetailScreen() {
   const plannedSets: PlannedSet[] = parsePlannedSetsJson(session.planned_sets);
   const plannedBySet = new Map(plannedSets.map((ps) => [ps.set_number, ps]));
   const hasPlan = plannedSets.length > 0;
-
-  // Parse JIT input snapshot for session context
-  const jitSnapshot = useMemo(() => {
-    const raw = session.jit_input_snapshot;
-    if (!raw || typeof raw !== 'object') return null;
-    const snap = raw as Record<string, unknown>;
-    return {
-      sorenessRatings: snap.sorenessRatings as Record<string, number> | undefined,
-      sleepQuality: snap.sleepQuality as number | undefined,
-      energyLevel: snap.energyLevel as number | undefined,
-      activeDisruptions: snap.activeDisruptions as
-        | Array<{ disruption_type: string; severity: string }>
-        | undefined,
-    };
-  }, [session.jit_input_snapshot]);
-
-  const prescriptionTrace = useMemo(() => {
-    const raw = session.jit_output_trace;
-    if (raw && typeof raw === 'object' && 'mainLift' in raw && 'rest' in raw) {
-      return raw as unknown as PrescriptionTrace;
-    }
-    return null;
-  }, [session.jit_output_trace]);
 
   // Group auxiliary sets by exercise name
   const auxByExercise = auxSets.reduce<Record<string, typeof auxSets>>(
