@@ -1,22 +1,26 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import {
   ActivityIndicator,
   ScrollView,
   StyleSheet,
   Text,
+  TouchableOpacity,
   View,
 } from 'react-native';
 
+import { useFeatureEnabled } from '@modules/feature-flags';
 import {
   getPerformanceColors,
   getSession,
   getSessionLog,
   parsePlannedSetsJson,
   PERFORMANCE_LABELS,
+  PrescriptionSheet,
   SessionContextCard,
 } from '@modules/session';
 import type { ActualSet, Lift, PlannedSet } from '@parakeet/shared-types';
 import { gramsToKg } from '@parakeet/training-engine';
+import type { PrescriptionTrace } from '@parakeet/training-engine';
 import { LIFT_LABELS } from '@shared/constants';
 import { formatDate, formatTime } from '@shared/utils/date';
 import { capitalize } from '@shared/utils/string';
@@ -158,6 +162,21 @@ function buildStyles(colors: ColorScheme) {
       textAlign: 'center',
       marginTop: spacing[8],
     },
+    traceButton: {
+      marginTop: spacing[4],
+      paddingVertical: spacing[3],
+      paddingHorizontal: spacing[4],
+      borderRadius: radii.md,
+      borderWidth: 1,
+      borderColor: colors.border,
+      backgroundColor: colors.bgMuted,
+      alignItems: 'center',
+    },
+    traceButtonText: {
+      fontSize: typography.sizes.sm,
+      fontWeight: typography.weights.medium,
+      color: colors.textSecondary,
+    },
   });
 }
 
@@ -171,6 +190,8 @@ export default function SessionDetailScreen() {
     [colors]
   );
   const { sessionId } = useLocalSearchParams<{ sessionId: string }>();
+  const [traceSheetVisible, setTraceSheetVisible] = useState(false);
+  const traceEnabled = useFeatureEnabled('prescriptionTrace');
 
   const { data: session, isLoading: sessionLoading } = useQuery({
     queryKey: ['session', 'detail', sessionId],
@@ -236,6 +257,14 @@ export default function SessionDetailScreen() {
         | undefined,
     };
   }, [session.jit_input_snapshot]);
+
+  const prescriptionTrace = useMemo(() => {
+    const raw = session.jit_output_trace;
+    if (raw && typeof raw === 'object' && 'mainLift' in raw && 'rest' in raw) {
+      return raw as unknown as PrescriptionTrace;
+    }
+    return null;
+  }, [session.jit_output_trace]);
 
   // Group auxiliary sets by exercise name
   const auxByExercise = auxSets.reduce<Record<string, typeof auxSets>>(
@@ -443,7 +472,25 @@ export default function SessionDetailScreen() {
             No set data recorded for this session.
           </Text>
         )}
+
+        {prescriptionTrace && traceEnabled && (
+          <TouchableOpacity
+            style={styles.traceButton}
+            onPress={() => setTraceSheetVisible(true)}
+            activeOpacity={0.7}
+          >
+            <Text style={styles.traceButtonText}>Workout Reasoning</Text>
+          </TouchableOpacity>
+        )}
       </ScrollView>
+
+      {prescriptionTrace && traceEnabled && (
+        <PrescriptionSheet
+          visible={traceSheetVisible}
+          onClose={() => setTraceSheetVisible(false)}
+          trace={prescriptionTrace}
+        />
+      )}
     </SafeAreaView>
   );
 }

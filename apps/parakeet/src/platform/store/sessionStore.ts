@@ -50,6 +50,7 @@ export interface SessionState {
     activity_name?: string | null;
   } | null;
   cachedJitData: string | null;
+  cachedPrescriptionTrace: string | null;
   timerState: TimerState | null;
   consecutiveMainLiftFailures: number;
   currentAdaptation: AdaptedPlan | null;
@@ -75,6 +76,7 @@ export interface SessionState {
   ) => void;
   setSessionMeta: (meta: SessionState['sessionMeta']) => void;
   setCachedJitData: (raw: string) => void;
+  setCachedPrescriptionTrace: (raw: string) => void;
   recordSetFailure: () => void;
   recordSetSuccess: () => void;
   setAdaptation: (plan: AdaptedPlan) => void;
@@ -106,6 +108,7 @@ export const useSessionStore = create<SessionState>()(
       startedAt: undefined,
       sessionMeta: null,
       cachedJitData: null,
+      cachedPrescriptionTrace: null,
       timerState: null,
       consecutiveMainLiftFailures: 0,
       currentAdaptation: null,
@@ -214,6 +217,8 @@ export const useSessionStore = create<SessionState>()(
       setSessionMeta: (meta) => set({ sessionMeta: meta }),
 
       setCachedJitData: (raw) => set({ cachedJitData: raw }),
+
+      setCachedPrescriptionTrace: (raw) => set({ cachedPrescriptionTrace: raw }),
 
       recordSetFailure: () =>
         set((state) => ({
@@ -324,6 +329,7 @@ export const useSessionStore = create<SessionState>()(
           startedAt: undefined,
           sessionMeta: null,
           cachedJitData: null,
+          cachedPrescriptionTrace: null,
           timerState: null,
           consecutiveMainLiftFailures: 0,
           currentAdaptation: null,
@@ -343,6 +349,7 @@ export const useSessionStore = create<SessionState>()(
         sessionRpe: state.sessionRpe,
         sessionMeta: state.sessionMeta,
         cachedJitData: state.cachedJitData,
+        cachedPrescriptionTrace: state.cachedPrescriptionTrace,
         timerState: state.timerState,
         startedAt: state.startedAt,
         recoveryDismissed: state.recoveryDismissed,

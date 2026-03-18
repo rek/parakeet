@@ -14,6 +14,7 @@ import { getCurrentCycleContext } from '@modules/cycle-tracking';
 import { getActiveDisruptions } from '@modules/disruptions';
 import { runJITForSession } from '@modules/jit';
 import { getCurrentOneRmKg } from '@modules/program';
+import { useSessionStore } from '@platform/store/sessionStore';
 import {
   getLatestSorenessCheckin,
   getReadinessPillColors,
@@ -512,7 +513,7 @@ export default function SorenessScreen() {
     setGenerating(true);
     try {
       const primaryLift = session.primary_lift as Lift | null;
-      const [jitOutput, fetchedOneRmKg] = await Promise.all([
+      const [jitResult, fetchedOneRmKg] = await Promise.all([
         runJITForSession(
           session,
           user.id,
@@ -525,6 +526,9 @@ export default function SorenessScreen() {
           ? getCurrentOneRmKg(user.id, primaryLift)
           : Promise.resolve(null),
       ]);
+      const jitOutput = jitResult.output;
+      // Store prescription trace in Zustand (too large for route params)
+      useSessionStore.getState().setCachedPrescriptionTrace(JSON.stringify(jitResult.trace));
       router.replace({
         pathname: '/session/[sessionId]',
         params: {

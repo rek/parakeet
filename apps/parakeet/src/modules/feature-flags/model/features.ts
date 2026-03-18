@@ -137,6 +137,13 @@ export const FEATURE_REGISTRY = [
     category: 'advanced' as const,
     defaultEnabled: false,
   },
+  {
+    id: 'prescriptionTrace',
+    label: 'Workout Reasoning',
+    description: 'Tap weights to see JIT reasoning chain',
+    category: 'advanced' as const,
+    defaultEnabled: false,
+  },
 ] as const;
 
 export type FeatureId = (typeof FEATURE_REGISTRY)[number]['id'];

@@ -27,6 +27,7 @@ import {
   PostRestOverlay,
   RestTimer,
   RpeQuickPicker,
+  PrescriptionSheet,
   SetRow,
   startSession,
   useSetCompletionFlow,
@@ -48,8 +49,9 @@ import {
   setDisabledPlates,
 } from '@modules/settings';
 import type { RestTimerPrefs } from '@modules/settings';
+import { useFeatureEnabled } from '@modules/feature-flags';
 import { getAllExercises, getExerciseType } from '@parakeet/training-engine';
-import type { PlateKg } from '@parakeet/training-engine';
+import type { PlateKg, PrescriptionTrace } from '@parakeet/training-engine';
 import type { Lift } from '@parakeet/shared-types';
 import { useNetworkStatus } from '@platform/network';
 import { useSessionStore } from '@platform/store/sessionStore';
@@ -344,7 +346,19 @@ export default function SessionScreen() {
   >([]);
   const [addExerciseVisible, setAddExerciseVisible] = useState(false);
   const [historySheetVisible, setHistorySheetVisible] = useState(false);
+  const [traceSheetVisible, setTraceSheetVisible] = useState(false);
+  const [traceFocusExercise, setTraceFocusExercise] = useState<string | undefined>();
   const insets = useSafeAreaInsets();
+  const traceEnabled = useFeatureEnabled('prescriptionTrace');
+  const cachedTrace = useSessionStore((s) => s.cachedPrescriptionTrace);
+  const prescriptionTrace = useMemo(() => {
+    if (!cachedTrace) return null;
+    try {
+      return JSON.parse(cachedTrace) as PrescriptionTrace;
+    } catch {
+      return null;
+    }
+  }, [cachedTrace]);
 
   // Auto-open history sheet when banner navigates back with openHistory param
   useEffect(() => {
@@ -844,6 +858,7 @@ export default function SessionScreen() {
                   disabledPlates={equipmentDisabledPlates}
                   onBarWeightChange={handleBarWeightChange}
                   onDisabledPlatesChange={handleDisabledPlatesChange}
+                  onWeightInfoPress={prescriptionTrace && traceEnabled ? () => setTraceSheetVisible(true) : undefined}
                 />
               );
             })}
@@ -1086,6 +1101,16 @@ export default function SessionScreen() {
         isError={liftHistoryError}
         isOffline={isOffline}
       />
+
+      {/* Prescription trace sheet */}
+      {prescriptionTrace && traceEnabled && (
+        <PrescriptionSheet
+          visible={traceSheetVisible}
+          onClose={() => { setTraceSheetVisible(false); setTraceFocusExercise(undefined); }}
+          trace={prescriptionTrace}
+          focusExercise={traceFocusExercise}
+        />
+      )}
 
       {/* Add exercise modal */}
       <AddExerciseModal

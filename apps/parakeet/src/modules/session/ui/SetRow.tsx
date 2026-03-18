@@ -37,6 +37,7 @@ export interface SetRowProps {
   disabledPlates: PlateKg[];
   onBarWeightChange: (kg: number) => void;
   onDisabledPlatesChange: (plates: PlateKg[]) => void;
+  onWeightInfoPress?: () => void;
 }
 
 // ── Component ─────────────────────────────────────────────────────────────────
@@ -54,6 +55,7 @@ export function SetRow({
   disabledPlates,
   onBarWeightChange,
   onDisabledPlatesChange,
+  onWeightInfoPress,
 }: SetRowProps) {
   const { colors } = useTheme();
   const [weightKg, setWeightKg] = useState(plannedWeightKg);
@@ -318,6 +320,20 @@ export function SetRow({
                   name="barbell-outline"
                   size={20}
                   color={colors.textSecondary}
+                />
+              </TouchableOpacity>
+            )}
+
+            {onWeightInfoPress && (
+              <TouchableOpacity
+                onPress={onWeightInfoPress}
+                activeOpacity={0.7}
+                hitSlop={12}
+              >
+                <Ionicons
+                  name="information-circle-outline"
+                  size={18}
+                  color={colors.textTertiary}
                 />
               </TouchableOpacity>
             )}

@@ -27,7 +27,9 @@ import {
 import type { Lift } from '@parakeet/shared-types';
 import {
   createAdHocJITOutput,
+  createEmptyTrace,
   DEFAULT_AUXILIARY_POOLS,
+  generateJITSessionWithTrace,
   getAuxiliariesForBlock,
   getJITGenerator,
   getMusclesForExercise,
@@ -40,6 +42,7 @@ import type {
   JITInput,
   JITOutput,
   MuscleGroup,
+  PrescriptionTrace,
   ReadinessLevel,
   RecentSessionSummary,
   SorenessLevel,
@@ -69,10 +72,10 @@ export async function runJITForSession(
   /** Optional: pass cycle phase from the UI layer to avoid a double-fetch.
    *  If not provided, jit.ts will fetch it internally for female users. */
   cyclePhaseOverride?: CyclePhase
-): Promise<JITOutput> {
+): Promise<{ output: JITOutput; trace: PrescriptionTrace }> {
   // Free-form ad-hoc sessions have no primary lift — return empty JIT output
   if (!session.primary_lift) {
-    return createAdHocJITOutput();
+    return { output: createAdHocJITOutput(), trace: createEmptyTrace() };
   }
 
   const lift = LiftSchema.parse(session.primary_lift);
@@ -345,6 +348,12 @@ export async function runJITForSession(
   const generator = getJITGenerator(strategyOverride, true, comparisonLogger);
   const jitOutput = await generator.generate(jitInput);
 
+  // Generate prescription trace from the same inputs. This re-runs the formula
+  // path regardless of which strategy produced jitOutput — intentional: the trace
+  // explains the deterministic formula reasoning, while LLM/hybrid rationale is
+  // already in jitOutput.rationale. Cost: one extra formula pass (~1ms).
+  const { trace } = generateJITSessionWithTrace(jitInput);
+
   const { error: updateError } = await typedSupabase
     .from('sessions')
     .update({
@@ -352,6 +361,7 @@ export async function runJITForSession(
       jit_generated_at: jitOutput.generatedAt.toISOString(),
       jit_strategy: jitOutput.jit_strategy ?? generator.name,
       jit_input_snapshot: toJson(jitInput),
+      jit_output_trace: toJson(trace),
     })
     .eq('id', session.id);
   if (updateError) throw updateError;
@@ -379,5 +389,5 @@ export async function runJITForSession(
     })
     .catch(captureException);
 
-  return jitOutput;
+  return { output: jitOutput, trace };
 }

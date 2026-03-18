@@ -90,6 +90,24 @@ export interface PrescriptionTrace {
   rest: RestTrace;
 }
 
+/** Empty trace for sessions that skip JIT (free-form ad-hoc, no primary lift). */
+export function createEmptyTrace(): PrescriptionTrace {
+  return {
+    sessionId: '',
+    strategy: 'formula',
+    primaryLift: '',
+    intensityType: '',
+    blockNumber: 0,
+    oneRmKg: 0,
+    rationale: [],
+    warnings: [],
+    mainLift: { weightDerivation: null, volumeChanges: [], sets: [], isRecoveryMode: false, isSkipped: true },
+    auxiliaries: [],
+    warmup: null,
+    rest: { mainLift: { formulaBaseSeconds: 0, userOverrideSeconds: null, llmDeltaSeconds: null, finalSeconds: 0 }, auxiliarySeconds: 0 },
+  };
+}
+
 export class PrescriptionTraceBuilder {
   private sessionId = '';
   private strategy: PrescriptionTrace['strategy'] = 'formula';

@@ -1013,6 +1013,7 @@ export type Database = {
           is_deload: boolean
           jit_generated_at: string | null
           jit_input_snapshot: Json | null
+          jit_output_trace: Json | null
           jit_strategy: string | null
           planned_date: string | null
           planned_sets: Json | null
@@ -1034,6 +1035,7 @@ export type Database = {
           is_deload?: boolean
           jit_generated_at?: string | null
           jit_input_snapshot?: Json | null
+          jit_output_trace?: Json | null
           jit_strategy?: string | null
           planned_date?: string | null
           planned_sets?: Json | null
@@ -1055,6 +1057,7 @@ export type Database = {
           is_deload?: boolean
           jit_generated_at?: string | null
           jit_input_snapshot?: Json | null
+          jit_output_trace?: Json | null
           jit_strategy?: string | null
           planned_date?: string | null
           planned_sets?: Json | null
