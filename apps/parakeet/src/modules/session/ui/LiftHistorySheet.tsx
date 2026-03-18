@@ -1,11 +1,9 @@
 import { useMemo } from 'react';
 import {
   ActivityIndicator,
-  Modal,
   ScrollView,
   StyleSheet,
   Text,
-  TouchableOpacity,
   View,
 } from 'react-native';
 
@@ -14,6 +12,7 @@ import type { LiftHistory, TrendDirection } from '@modules/history';
 import { formatDate } from '@shared/utils/date';
 import { capitalize } from '@shared/utils/string';
 
+import { Sheet } from '../../../components/ui/Sheet';
 import { spacing, typography } from '../../../theme';
 import { useTheme } from '../../../theme/ThemeContext';
 
@@ -30,7 +29,7 @@ interface Props {
 }
 
 function formatOneRm(kg: number): string {
-  if (kg <= 0) return '—';
+  if (kg <= 0) return '\u2014';
   return `${Math.round(kg)} kg`;
 }
 
@@ -60,46 +59,6 @@ export function LiftHistorySheet({
   const styles = useMemo(
     () =>
       StyleSheet.create({
-        overlay: {
-          flex: 1,
-          justifyContent: 'flex-end',
-          backgroundColor: colors.overlayLight,
-        },
-        sheet: {
-          backgroundColor: colors.bgSurface,
-          borderTopLeftRadius: 20,
-          borderTopRightRadius: 20,
-          paddingBottom: 40,
-          maxHeight: '65%',
-        },
-        handle: {
-          width: 36,
-          height: 4,
-          borderRadius: 2,
-          backgroundColor: colors.border,
-          alignSelf: 'center',
-          marginTop: spacing[2],
-          marginBottom: spacing[1],
-        },
-        header: {
-          flexDirection: 'row',
-          alignItems: 'center',
-          paddingHorizontal: spacing[4],
-          paddingVertical: spacing[3],
-          borderBottomWidth: 1,
-          borderBottomColor: colors.border,
-        },
-        title: {
-          flex: 1,
-          fontSize: typography.sizes.base,
-          fontWeight: typography.weights.bold,
-          color: colors.text,
-        },
-        closeBtn: {
-          fontSize: 16,
-          color: colors.textSecondary,
-          fontWeight: typography.weights.bold,
-        },
         scroll: {
           flex: 1,
         },
@@ -227,12 +186,12 @@ export function LiftHistorySheet({
               {formatOneRm(entry.estimatedOneRmKg)}
             </Text>
             <Text style={[styles.cell, styles.colRpe]}>
-              {entry.sessionRpe != null ? entry.sessionRpe.toFixed(1) : '—'}
+              {entry.sessionRpe != null ? entry.sessionRpe.toFixed(1) : '\u2014'}
             </Text>
             <Text style={[styles.cell, styles.colCompletion]}>
               {entry.completionPct != null
                 ? `${Math.round(entry.completionPct)}%`
-                : '—'}
+                : '\u2014'}
             </Text>
           </View>
         ))}
@@ -241,38 +200,19 @@ export function LiftHistorySheet({
   }
 
   return (
-    <Modal
+    <Sheet
       visible={visible}
-      transparent
-      animationType="slide"
-      onRequestClose={onClose}
+      onClose={onClose}
+      title={title}
+      position="bottom"
     >
-      <View style={styles.overlay}>
-        <View style={styles.sheet}>
-          {/* Handle */}
-          <View style={styles.handle} />
-
-          {/* Header */}
-          <View style={styles.header}>
-            <Text style={styles.title}>{title}</Text>
-            <TouchableOpacity
-              onPress={onClose}
-              hitSlop={12}
-              activeOpacity={0.7}
-            >
-              <Text style={styles.closeBtn}>✕</Text>
-            </TouchableOpacity>
-          </View>
-
-          <ScrollView
-            style={styles.scroll}
-            contentContainerStyle={styles.scrollContent}
-            showsVerticalScrollIndicator={false}
-          >
-            {renderContent()}
-          </ScrollView>
-        </View>
-      </View>
-    </Modal>
+      <ScrollView
+        style={styles.scroll}
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
+        {renderContent()}
+      </ScrollView>
+    </Sheet>
   );
 }

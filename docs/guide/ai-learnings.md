@@ -52,6 +52,8 @@ Reusable patterns discovered during implementation. Read on-demand when debuggin
 
 **Main/aux symmetry in session flow** — `handleLiftComplete` and `handleLiftFailed` each have a main-lift branch and an aux branch. When modifying one branch (e.g., fleshing out main-lift failure handling), always check the parallel branch in the same function AND the equivalent function. The intra-session adaptation commit added full failure handling for main lifts but left the aux failure branch as a rest-only stub — the same pattern that `handleLiftComplete` already handled correctly for aux. Review checklist: if you touch `handleLiftComplete` main → check `handleLiftComplete` aux, `handleLiftFailed` main, `handleLiftFailed` aux.
 
+**Stubs ship as bugs** — a stub that "just logs rest" or returns a default is invisible at review time but breaks the feature for users. If a code path can be reached by a user action, implement it fully or throw an error so it's caught immediately. The aux failure branch in `handleLiftFailed` was left as a rest-only stub with a comment ("just log rest, no main-lift adaptation") — it silently ate user input for months. If you can't implement a path yet, make it fail loudly (`throw new Error('not yet implemented')`) so it surfaces in testing rather than shipping as silent data loss.
+
 ## Agent Patterns
 
 **Feature requests often surface latent data bugs** — trace display problems back to the write path before adding view-layer filters.

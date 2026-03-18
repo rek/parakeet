@@ -1,9 +1,10 @@
 import { useMemo } from 'react';
-import { Modal, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 import { calculatePlates, PLATE_COLORS } from '@parakeet/training-engine';
 import type { PlateKg } from '@parakeet/training-engine';
 
+import { Sheet } from '../../../components/ui/Sheet';
 import { spacing, typography } from '../../../theme';
 import type { ColorScheme } from '../../../theme';
 import { useTheme } from '../../../theme/ThemeContext';
@@ -28,46 +29,6 @@ interface Props {
 
 function buildStyles(colors: ColorScheme) {
   return StyleSheet.create({
-    overlay: {
-      flex: 1,
-      justifyContent: 'flex-end',
-      backgroundColor: colors.overlayLight,
-    },
-    sheet: {
-      backgroundColor: colors.bgSurface,
-      borderTopLeftRadius: 20,
-      borderTopRightRadius: 20,
-      paddingBottom: 40,
-      maxHeight: '65%',
-    },
-    handle: {
-      width: 36,
-      height: 4,
-      borderRadius: 2,
-      backgroundColor: colors.border,
-      alignSelf: 'center',
-      marginTop: spacing[2],
-      marginBottom: spacing[1],
-    },
-    header: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      paddingHorizontal: spacing[4],
-      paddingVertical: spacing[3],
-      borderBottomWidth: 1,
-      borderBottomColor: colors.border,
-    },
-    title: {
-      flex: 1,
-      fontSize: typography.sizes.base,
-      fontWeight: typography.weights.bold,
-      color: colors.text,
-    },
-    closeBtn: {
-      fontSize: 16,
-      color: colors.textSecondary,
-      fontWeight: typography.weights.bold,
-    },
     toggleRow: {
       flexDirection: 'row',
       alignItems: 'center',
@@ -269,7 +230,7 @@ export function PlateCalculatorSheet({
         {result!.platesPerSide.map((plate) => (
           <View key={plate.kg} style={styles.plateRow}>
             <Text style={styles.plateKg}>{plate.kg} kg</Text>
-            <Text style={styles.plateCount}>× {plate.count}</Text>
+            <Text style={styles.plateCount}>{'\u00D7'} {plate.count}</Text>
           </View>
         ))}
 
@@ -287,90 +248,71 @@ export function PlateCalculatorSheet({
   }
 
   return (
-    <Modal
+    <Sheet
       visible={visible}
-      transparent
-      animationType="slide"
-      onRequestClose={onClose}
+      onClose={onClose}
+      title="Plate Calculator"
+      position="bottom"
     >
-      <View style={styles.overlay}>
-        <View style={styles.sheet}>
-          {/* Handle */}
-          <View style={styles.handle} />
-
-          {/* Header */}
-          <View style={styles.header}>
-            <Text style={styles.title}>Plate Calculator</Text>
+      {/* Bar toggle */}
+      <View style={styles.toggleRow}>
+        <Text style={styles.toggleLabel}>Bar weight</Text>
+        <View style={styles.toggleGroup}>
+          {BAR_OPTIONS.map((kg) => (
             <TouchableOpacity
-              onPress={onClose}
-              hitSlop={12}
+              key={kg}
+              style={[
+                styles.toggleBtn,
+                barWeightKg === kg && styles.toggleBtnActive,
+              ]}
+              onPress={() => handleBarToggle(kg)}
               activeOpacity={0.7}
             >
-              <Text style={styles.closeBtn}>✕</Text>
+              <Text
+                style={[
+                  styles.toggleBtnText,
+                  barWeightKg === kg && styles.toggleBtnTextActive,
+                ]}
+              >
+                {kg} kg
+              </Text>
             </TouchableOpacity>
-          </View>
-
-          {/* Bar toggle */}
-          <View style={styles.toggleRow}>
-            <Text style={styles.toggleLabel}>Bar weight</Text>
-            <View style={styles.toggleGroup}>
-              {BAR_OPTIONS.map((kg) => (
-                <TouchableOpacity
-                  key={kg}
-                  style={[
-                    styles.toggleBtn,
-                    barWeightKg === kg && styles.toggleBtnActive,
-                  ]}
-                  onPress={() => handleBarToggle(kg)}
-                  activeOpacity={0.7}
-                >
-                  <Text
-                    style={[
-                      styles.toggleBtnText,
-                      barWeightKg === kg && styles.toggleBtnTextActive,
-                    ]}
-                  >
-                    {kg} kg
-                  </Text>
-                </TouchableOpacity>
-              ))}
-            </View>
-          </View>
-
-          {/* Plate availability toggles */}
-          <View style={styles.plateToggleSection}>
-            <Text style={styles.plateToggleLabel}>Available plates</Text>
-            <View style={styles.plateToggleRow}>
-              {TOGGLEABLE_PLATES.map((kg) => {
-                const enabled = !disabledPlates.includes(kg);
-                return (
-                  <TouchableOpacity
-                    key={kg}
-                    style={[
-                      styles.plateDot,
-                      { borderColor: PLATE_COLORS[kg] },
-                      enabled && { backgroundColor: PLATE_COLORS[kg] },
-                    ]}
-                    onPress={() => handlePlateToggle(kg)}
-                    activeOpacity={0.7}
-                  >
-                    <Text
-                      style={[
-                        styles.plateDotLabel,
-                        enabled && styles.plateDotLabelEnabled,
-                      ]}
-                    >
-                      {kg}
-                    </Text>
-                  </TouchableOpacity>
-                );
-              })}
-            </View>
-          </View>
-
-          <View style={styles.content}>{renderContent()}</View>
+          ))}
         </View>
       </View>
-    </Modal>
+
+      {/* Plate availability toggles */}
+      <View style={styles.plateToggleSection}>
+        <Text style={styles.plateToggleLabel}>Available plates</Text>
+        <View style={styles.plateToggleRow}>
+          {TOGGLEABLE_PLATES.map((kg) => {
+            const enabled = !disabledPlates.includes(kg);
+            return (
+              <TouchableOpacity
+                key={kg}
+                style={[
+                  styles.plateDot,
+                  { borderColor: PLATE_COLORS[kg] },
+                  enabled && { backgroundColor: PLATE_COLORS[kg] },
+                ]}
+                onPress={() => handlePlateToggle(kg)}
+                activeOpacity={0.7}
+              >
+                <Text
+                  style={[
+                    styles.plateDotLabel,
+                    enabled && styles.plateDotLabelEnabled,
+                  ]}
+                >
+                  {kg}
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
+        </View>
+      </View>
+
+      <View style={styles.content}>{renderContent()}</View>
+    </Sheet>
   );
 }

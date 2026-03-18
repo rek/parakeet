@@ -1,16 +1,9 @@
 import { useMemo } from 'react';
-import {
-  Modal,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
-} from 'react-native';
+import { ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import type { PrescriptionTrace } from '@parakeet/training-engine';
 
+import { Sheet } from '../../../components/ui/Sheet';
 import { spacing, typography } from '../../../theme';
 import type { ColorScheme } from '../../../theme';
 import { useTheme } from '../../../theme/ThemeContext';
@@ -35,53 +28,6 @@ interface Props {
 
 function buildStyles(colors: ColorScheme) {
   return StyleSheet.create({
-    overlay: {
-      flex: 1,
-      justifyContent: 'flex-end',
-      backgroundColor: colors.overlayLight,
-    },
-    sheet: {
-      backgroundColor: colors.bgSurface,
-      borderTopLeftRadius: 20,
-      borderTopRightRadius: 20,
-      paddingBottom: 40,
-      maxHeight: '65%',
-    },
-    handle: {
-      width: 36,
-      height: 4,
-      borderRadius: 2,
-      backgroundColor: colors.border,
-      alignSelf: 'center',
-      marginTop: spacing[2],
-      marginBottom: spacing[1],
-    },
-    header: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      paddingHorizontal: spacing[4],
-      paddingVertical: spacing[3],
-      borderBottomWidth: 1,
-      borderBottomColor: colors.border,
-    },
-    headerLeft: {
-      flex: 1,
-      gap: spacing[1],
-    },
-    title: {
-      fontSize: typography.sizes.base,
-      fontWeight: typography.weights.bold,
-      color: colors.text,
-    },
-    contextLine: {
-      fontSize: typography.sizes.xs,
-      color: colors.textTertiary,
-    },
-    closeBtn: {
-      fontSize: 16,
-      color: colors.textSecondary,
-      fontWeight: typography.weights.bold,
-    },
     scroll: {
       flex: 1,
     },
@@ -214,140 +160,123 @@ export function PrescriptionSheet({ visible, onClose, trace, focusExercise }: Pr
   const restLines = formatRestTrace({ rest: trace.rest });
 
   return (
-    <Modal
+    <Sheet
       visible={visible}
-      transparent
-      animationType="slide"
-      onRequestClose={onClose}
+      onClose={onClose}
+      title="Prescription Trace"
+      subtitle={contextLabel}
+      position="top"
     >
-      <Pressable style={styles.overlay} onPress={onClose}>
-        <Pressable style={styles.sheet}>
-          {/* Handle */}
-          <View style={styles.handle} />
-
-          {/* Header */}
-          <View style={styles.header}>
-            <View style={styles.headerLeft}>
-              <Text style={styles.title}>Prescription Trace</Text>
-              <Text style={styles.contextLine}>{contextLabel}</Text>
-            </View>
-            <TouchableOpacity onPress={onClose} hitSlop={12} activeOpacity={0.7}>
-              <Text style={styles.closeBtn}>✕</Text>
-            </TouchableOpacity>
+      <ScrollView
+        style={styles.scroll}
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* Strategy badge */}
+        <View style={styles.strategyRow}>
+          <View style={styles.strategyBadge}>
+            <Text style={styles.strategyBadgeText}>{strategyLabel}</Text>
           </View>
+          <Text style={styles.sessionContext}>{contextLabel}</Text>
+        </View>
 
-          <ScrollView
-            style={styles.scroll}
-            contentContainerStyle={styles.scrollContent}
-            showsVerticalScrollIndicator={false}
-          >
-            {/* Strategy badge */}
-            <View style={styles.strategyRow}>
-              <View style={styles.strategyBadge}>
-                <Text style={styles.strategyBadgeText}>{strategyLabel}</Text>
+        {/* Rationale */}
+        {trace.rationale.length > 0 && (
+          <View style={styles.section}>
+            <Text style={styles.sectionHeader}>Rationale</Text>
+            {trace.rationale.map((line, i) => (
+              <View key={i} style={styles.bulletRow}>
+                <Text style={styles.bulletMark}>•</Text>
+                <Text style={styles.bulletText}>{line}</Text>
               </View>
-              <Text style={styles.sessionContext}>{contextLabel}</Text>
-            </View>
+            ))}
+          </View>
+        )}
 
-            {/* Rationale */}
-            {trace.rationale.length > 0 && (
-              <View style={styles.section}>
-                <Text style={styles.sectionHeader}>Rationale</Text>
-                {trace.rationale.map((line, i) => (
-                  <View key={i} style={styles.bulletRow}>
-                    <Text style={styles.bulletMark}>•</Text>
-                    <Text style={styles.bulletText}>{line}</Text>
-                  </View>
-                ))}
+        {/* Warnings */}
+        {trace.warnings.length > 0 && (
+          <View style={styles.warningBox}>
+            {trace.warnings.map((w, i) => (
+              <Text key={i} style={styles.warningText}>
+                {w}
+              </Text>
+            ))}
+          </View>
+        )}
+
+        {/* Weight Derivation */}
+        {weightLines !== null && (
+          <View style={styles.section}>
+            <Text style={styles.sectionHeader}>Weight Derivation</Text>
+            {weightLines.map((line, i) => (
+              <Text
+                key={i}
+                style={
+                  i === weightLines.length - 1
+                    ? styles.derivationFinal
+                    : styles.derivationLine
+                }
+              >
+                {line}
+              </Text>
+            ))}
+          </View>
+        )}
+
+        {/* Volume Adjustments */}
+        {volumeLines.length > 0 && (
+          <View style={styles.section}>
+            <Text style={styles.sectionHeader}>Volume Adjustments</Text>
+            {volumeLines.map((line, i) => (
+              <View key={i} style={styles.bulletRow}>
+                <Text style={styles.bulletMark}>•</Text>
+                <Text style={styles.bulletText}>{line}</Text>
               </View>
-            )}
+            ))}
+          </View>
+        )}
 
-            {/* Warnings */}
-            {trace.warnings.length > 0 && (
-              <View style={styles.warningBox}>
-                {trace.warnings.map((w, i) => (
-                  <Text key={i} style={styles.warningText}>
-                    {w}
+        {/* Auxiliary Exercises */}
+        {trace.auxiliaries.length > 0 && (
+          <View style={styles.section}>
+            <Text style={styles.sectionHeader}>Auxiliary Exercises</Text>
+            {trace.auxiliaries.map((aux, i) => {
+              const isFocused =
+                focusExercise !== undefined && aux.exercise === focusExercise;
+              const auxLines = formatAuxTrace({ aux });
+              return (
+                <View key={i} style={styles.auxBlock}>
+                  <Text style={[styles.auxName, isFocused && styles.auxNameFocused]}>
+                    {capitalize(aux.exercise.replace(/_/g, ' '))}
                   </Text>
-                ))}
-              </View>
-            )}
+                  {auxLines.map((line, j) => (
+                    <Text key={j} style={styles.auxLine}>
+                      {line}
+                    </Text>
+                  ))}
+                </View>
+              );
+            })}
+          </View>
+        )}
 
-            {/* Weight Derivation */}
-            {weightLines !== null && (
-              <View style={styles.section}>
-                <Text style={styles.sectionHeader}>Weight Derivation</Text>
-                {weightLines.map((line, i) => (
-                  <Text
-                    key={i}
-                    style={
-                      i === weightLines.length - 1
-                        ? styles.derivationFinal
-                        : styles.derivationLine
-                    }
-                  >
-                    {line}
-                  </Text>
-                ))}
-              </View>
-            )}
-
-            {/* Volume Adjustments */}
-            {volumeLines.length > 0 && (
-              <View style={styles.section}>
-                <Text style={styles.sectionHeader}>Volume Adjustments</Text>
-                {volumeLines.map((line, i) => (
-                  <View key={i} style={styles.bulletRow}>
-                    <Text style={styles.bulletMark}>•</Text>
-                    <Text style={styles.bulletText}>{line}</Text>
-                  </View>
-                ))}
-              </View>
-            )}
-
-            {/* Auxiliary Exercises */}
-            {trace.auxiliaries.length > 0 && (
-              <View style={styles.section}>
-                <Text style={styles.sectionHeader}>Auxiliary Exercises</Text>
-                {trace.auxiliaries.map((aux, i) => {
-                  const isFocused =
-                    focusExercise !== undefined && aux.exercise === focusExercise;
-                  const auxLines = formatAuxTrace({ aux });
-                  return (
-                    <View key={i} style={styles.auxBlock}>
-                      <Text style={[styles.auxName, isFocused && styles.auxNameFocused]}>
-                        {capitalize(aux.exercise.replace(/_/g, ' '))}
-                      </Text>
-                      {auxLines.map((line, j) => (
-                        <Text key={j} style={styles.auxLine}>
-                          {line}
-                        </Text>
-                      ))}
-                    </View>
-                  );
-                })}
-              </View>
-            )}
-
-            {/* Rest */}
-            <View style={styles.section}>
-              <Text style={styles.sectionHeader}>Rest</Text>
-              {restLines.map((line, i) => (
-                <Text
-                  key={i}
-                  style={
-                    line.startsWith('Final:')
-                      ? styles.restLineFinal
-                      : styles.restLine
-                  }
-                >
-                  {line}
-                </Text>
-              ))}
-            </View>
-          </ScrollView>
-        </Pressable>
-      </Pressable>
-    </Modal>
+        {/* Rest */}
+        <View style={styles.section}>
+          <Text style={styles.sectionHeader}>Rest</Text>
+          {restLines.map((line, i) => (
+            <Text
+              key={i}
+              style={
+                line.startsWith('Final:')
+                  ? styles.restLineFinal
+                  : styles.restLine
+              }
+            >
+              {line}
+            </Text>
+          ))}
+        </View>
+      </ScrollView>
+    </Sheet>
   );
 }
