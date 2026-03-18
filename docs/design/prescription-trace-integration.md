@@ -6,181 +6,152 @@
 
 ## Overview
 
-`PrescriptionTrace` is generated and stored (`sessions.jit_output_trace` JSONB) for every JIT session. It captures the full decision chain: weight derivation (1RM x blockPct x modifiers), volume changes per adjuster, auxiliary selection reasoning, warmup steps, and rest derivation. Currently consumed only by the PrescriptionSheet UI (feature-flag gated).
+`PrescriptionTrace` is generated and stored (`sessions.jit_output_trace` JSONB) for every JIT session. It captures the full decision chain: weight derivation (1RM x blockPct x modifiers), volume changes per adjuster, auxiliary selection reasoning, warmup steps, and rest derivation.
 
-This doc maps every system touchpoint where trace data adds value, prioritized by impact and feasibility.
+The trace is currently an audit trail. This doc defines how it becomes a **closed feedback loop** — the system learns from trace + outcome data to improve future prescriptions automatically.
 
 ## Problem Statement
 
-The system makes dozens of decisions per session but most consumers (LLM reviewers, cycle reports, dashboard, badges) only see inputs and outputs — not the reasoning between them. This creates blind spots:
+Per intent.md: "More signals = better sessions. Every data point makes the next workout more accurate."
 
-- **Judge Reviewer** flags divergence but can't validate *why* the formula made its choices
-- **Cycle Review** sees volume trends but can't explain *which adjusters* drove shortfalls
-- **Decision Replay** scores prescription accuracy but can't attribute blame (bad formula vs. bad execution)
-- **Dashboard** shows raw numbers without modifier context
-- **Weekly Body Review** shows "75% of MEV" without explaining the cause
+The trace + session outcome is a signal pair that isn't being used. If the system prescribed ×0.85 intensity for soreness and the athlete easily hit RPE 6 (target 8), that's evidence the modifier was too aggressive for *this athlete*. The system should learn from that — not repeat the same miscalibration next session.
 
-The trace is the missing link between input context and prescription output.
+Current blind spots:
+- Modifier thresholds are hardcoded defaults — soreness level 3 always gives the same reduction regardless of athlete history
+- No feedback loop: the system doesn't know whether its adjustments were appropriate
+- The LLM reviewers (judge, replay, cycle review) see inputs and outputs but not the reasoning between them
 
-## Integration Map
+## Architecture: Auto-Calibration → LLM Review → User Confirmation
 
-### Tier 1 — Low effort, high impact
+### Layer 1: Auto-Calibration Engine (automatic, silent)
 
-#### 1. Dashboard: JIT Logs — trace breakdown
+After every session completion, compare trace predictions vs actual outcomes:
 
-**What:** Add weight derivation chain, modifier list, and volume change sources to each JIT log entry.
+**Input:** `PrescriptionTrace.mainLift.weightDerivation.modifiers[]` + `session_logs.session_rpe` + `session_logs.actual_sets[].rpe_actual`
 
-**Why:** Currently shows opaque rationale strings. Trace shows the actual math: `1RM × blockPct × modifier1 × modifier2 = weight`.
+**Per-modifier tracking:**
+```
+For each modifier source (soreness, readiness, cycle_phase, disruption):
+  - What multiplier was applied? (e.g., ×0.85)
+  - What was the predicted RPE? (target from planned sets)
+  - What was the actual RPE?
+  - Delta: actual - target (negative = too easy, positive = too hard)
+```
 
-**How:** Query already fetches `sessions.*`. Parse `jit_output_trace`, render modifier badges and derivation table in expanded row.
+**Accumulate over sessions into a calibration profile per user:**
+```
+modifier_calibration:
+  soreness:
+    samples: [{ level: 3, multiplier: 0.85, rpe_delta: -2.0 }, ...]
+    current_bias: -1.2  (consistently too easy → modifier too aggressive)
+    suggested_adjustment: +0.07  (use ×0.92 instead of ×0.85)
+    confidence: 'medium' (12 samples)
+  readiness:
+    samples: [...]
+    current_bias: +0.3  (slightly too hard → modifier about right)
+    suggested_adjustment: 0
+    confidence: 'high' (20 samples)
+```
 
-**File:** `apps/dashboard/src/app/JITLogs.tsx`
+**Confidence thresholds:**
+- < 5 samples: `exploring` — no adjustment proposed
+- 5-10 samples: `low` — propose but don't apply
+- 10-20 samples: `medium` — propose, apply if small (< 5% change)
+- 20+ samples: `high` — apply automatically for small adjustments
 
-#### 2. Dashboard: Workout Summaries — modifier badges
+**Storage:** `modifier_calibrations` table (user_id, modifier_source, soreness_level, sample_count, current_bias, suggested_adjustment, confidence, last_updated)
 
-**What:** Color-code sessions by modifier load (green = clean formula, amber = 1 modifier, red = 2+ modifiers). Expandable row shows modifier details.
+**When applied:** At JIT time (Step 2b/2c/3/5), the modifier functions check the calibration table. If a per-athlete adjustment exists with sufficient confidence, apply it on top of the default modifier.
 
-**Why:** At a glance: "which sessions were adjusted and why?" Currently all rows look the same.
+### Layer 2: LLM-Mediated Review (for significant or low-confidence changes)
 
-**How:** Parse trace modifiers, count, apply conditional styling.
+When the auto-calibration system proposes a **significant adjustment** (>5% change) or has **low confidence**, route through an LLM review before applying:
 
-**File:** `apps/dashboard/src/app/WorkoutSummaries.tsx`
+**Trigger conditions:**
+- Suggested adjustment > ±5% from default
+- Bias direction flipped (was too easy, now too hard)
+- Insufficient samples for the adjustment magnitude
+- Multiple modifier sources shifting simultaneously
 
-#### 3. Judge Reviewer — trace context in prompt
+**LLM review receives:** Calibration data + recent trace summaries. Returns `{ apply, confidence, askUser, reason }`.
 
-**What:** Pass `PrescriptionTrace` as third arg to `reviewJITDecision(input, output, trace)`. LLM judge can validate: "Formula cut 2 sets for soreness — is that proportional to soreness level 3?"
+If `askUser: true`, the system queues a prompt for the athlete.
 
-**Why:** Judge currently sees input + output but not *why* the formula made its choices. With trace, it can detect double-penalties, missed interactions, over-aggressive modifiers.
+### Layer 3: User Confirmation (for big changes or low LLM confidence)
 
-**How:** Add optional param, extend `JUDGE_REVIEW_SYSTEM_PROMPT` with trace summary section.
+When the LLM flags `askUser: true`, the system surfaces a card on the Today screen:
 
-**File:** `packages/training-engine/src/review/judge-reviewer.ts`
+> "We've noticed your soreness adjustments have been too conservative — you consistently perform better than expected when sore. We'd like to reduce the soreness intensity cut from 15% to 8%. This is based on 15 sessions where you averaged RPE 6.5 (target 8) when this adjustment was active."
+>
+> **[Sounds right]** **[Not sure — let's discuss]** **[Keep current]**
 
-#### 4. Decision Replay — trace-aware scoring
+**"Not sure — let's discuss"** opens a brief LLM conversation where the athlete can add context: "I've been sleeping more recently" or "I switched to a softer bar" — factors the system can't observe. The conversation output feeds back into the calibration decision.
 
-**What:** Pass trace to `scoreDecisionReplay`. Scorer can attribute deviations: "formula over-reduced (soreness modifier too aggressive)" vs "prescription was correct, execution was off."
+## Implementation Phases
 
-**Why:** Currently scores prescription vs actual without knowing *why* the prescription was shaped that way. Can't distinguish bad formula from bad day.
+### Phase A: Modifier Effectiveness Tracker (engine, pure TS)
 
-**How:** Add optional param, enrich replay prompt.
+New file: `packages/training-engine/src/analysis/modifier-effectiveness.ts`
 
-**File:** `packages/training-engine/src/review/decision-replay.ts`
+- `recordModifierOutcome({ modifierSource, multiplier, rpeTarget, rpeActual, sorenessLevel? })` — accumulates a sample
+- `computeCalibrationBias({ samples })` — returns `{ bias, suggestedAdjustment, confidence }`
+- `shouldTriggerReview({ adjustment, confidence })` — returns `boolean`
 
----
+### Phase B: Calibration Storage + JIT Integration
 
-### Tier 2 — Medium effort, high impact
+- Migration: `modifier_calibrations` table
+- Wire into session completion: extract trace modifiers + actual RPE, update calibration
+- Wire into JIT: each modifier step checks calibration table for per-athlete adjustment
 
-#### 5. Cycle Review — modifier frequency analysis
+### Phase C: LLM Review Gate
 
-**What:** Aggregate traces across a training cycle to produce modifier patterns:
-- Frequency: "Soreness active on 8/12 squat sessions"
-- Magnitude: "Readiness averaged ×0.92 when active"
-- Interactions: "Sessions with both soreness AND disruption: 3"
+New file: `packages/training-engine/src/review/calibration-reviewer.ts`
 
-**Why:** The cycle review LLM currently sees volume/RPE trends but can't explain *which adjusters* drove those trends. With modifier patterns, it can say: "Volume was throttled by soreness in weeks 3-4; consider earlier deload."
+LLM reviews proposed adjustments above the auto-apply threshold.
 
-**How:**
-- `assemble-cycle-report.ts` — fetch `jit_output_trace` from sessions, aggregate modifiers into new `CycleReport.modifierPatterns` field
-- `prompts.ts` — add modifier pattern section to cycle review prompt
-- New engine function: `aggregateTraceModifiers({ traces: PrescriptionTrace[] })`
+### Phase D: User Confirmation UI
 
-**Files:**
-- `packages/training-engine/src/review/assemble-cycle-report.ts`
-- `packages/training-engine/src/ai/prompts.ts`
+Today screen card for significant proposals. Three actions: Accept / Discuss / Reject.
 
-#### 6. Weekly Body Review — volume shortfall breakdown
+## How This Fulfills Intent.md
 
-**What:** When a muscle is below MEV, break down *why* using trace data across that week's sessions:
-- "3 sessions planned, 2 had -1 set (soreness), 1 had aux skipped (MRV cap)"
+| Intent Principle | How This Delivers |
+|-----------------|-------------------|
+| "More signals = better sessions" | Trace + RPE outcome = new signal that improves modifier accuracy |
+| "Synchronize with the real human" | User confirmation catches factors the system can't observe |
+| "Leverage improving LLMs" | LLM reviews calibration proposals; better models = better review |
+| "JIT over pre-generated" | Calibration adjustments apply at JIT time, not pre-computed |
+| "Engine is pure domain logic" | All calibration logic in training-engine, no React deps |
 
-**Why:** Currently shows "Chest: 75% of MEV" with no explanation. The trace knows exactly which adjusters removed which sets.
+## Data Requirements
 
-**How:** Join `sessions.jit_output_trace` with session logs for the week. Extract `volumeChanges` per session, group by source.
-
-**Files:**
-- `apps/parakeet/src/modules/body-review/`
-- `apps/parakeet/src/app/(tabs)/session/weekly-review.tsx`
-
-#### 7. Motivational Message — trace-aware context
-
-**What:** Include modifier context in the post-workout LLM prompt: "You trained through a soreness adjustment today (×0.9) and still hit RPE 8."
-
-**Why:** Generic encouragement vs specific recognition of what the athlete overcame. Trace provides the modifier context the LLM needs.
-
-**How:** Read trace from Zustand store (already cached), extract active modifiers, add to motivational prompt.
-
-**File:** `apps/parakeet/src/modules/session/application/motivational-message.service.ts`
-
----
-
-### Tier 3 — Higher effort, compound value
-
-#### 8. Modifier Effectiveness Tracking
-
-**What:** For each modifier source, track calibration: "When readiness ×0.95 was applied, did the athlete hit target RPE?"
-
-**Output:** Calibration scores per modifier: "Readiness: well-calibrated (82% hit target). Soreness: over-aggressive (45% hit target, 40% under — prescription too conservative)."
-
-**Why:** Self-improving formula. The trace records what the formula did; session completion records the outcome. Connecting them reveals calibration drift.
-
-**How:**
-- New: `packages/training-engine/src/analysis/modifier-effectiveness.ts`
-- Consumed by: cycle review prompt, developer suggestions
-- Query: sessions with `jit_output_trace` + `session_logs.session_rpe`
-
-#### 9. Trace-Based Badges
-
-**Concepts:**
-- **"Clean Sheet"**: 10 consecutive sessions with zero modifiers active
-- **"Resilient"**: 5+ sessions with active modifiers where RPE still hit target
-- **"Recovery Wisdom"**: Deload week traces show reduced intensity, next week RPE normalizes
-- **"Adaptive"**: Completed sessions through 3+ different modifier types in one cycle
-
-**How:** Follows existing badge checker pattern. New checkers query `jit_output_trace`.
-
-**Files:**
-- `packages/training-engine/src/badges/badge-catalog.ts`
-- New checker files in `badges/checkers/`
-
-#### 10. Automated Anomaly Detection
-
-**What:** At session completion, scan trace for patterns suggesting formula miscalibration:
-- "Prescribed ×0.85 for soreness 2, but athlete hit RPE 6 → soreness threshold too aggressive"
-- "Top-up fired 3 sessions in a row for same muscle → MEV threshold may be too high"
-- "Recovery mode triggered but athlete RPE was 7 → false positive"
-
-**How:**
-- New: `packages/training-engine/src/analysis/trace-anomaly-detector.ts`
-- Wire into `completeSession` flow
-- Output: `developer_suggestions` entries with trace-sourced evidence
+- Minimum 5 sessions with a given modifier active before any proposal
+- Minimum 10 for auto-apply of small adjustments
+- Minimum 20 for high-confidence assessment
+- Typical user: ~3 sessions/week → 5 samples in ~2 weeks, 20 in ~7 weeks
 
 ---
 
-## What Trace Answers That Nothing Else Can
+## Other Trace Consumers (lower priority, independently shippable)
 
-| Question | Before Trace | With Trace |
-|----------|-------------|-----------|
-| Why was my weight lower today? | "Intensity modifier 0.92" | "1RM 140 × 85.7% = 120 → ×0.975 (sleep) → ×0.95 (soreness) = 112.5kg" |
-| Is soreness adjustment too aggressive? | Can't tell | "45% of soreness-adjusted sessions had RPE below target" |
-| Why was this muscle below MEV? | Volume number only | "2 sessions had -1 set (soreness), 1 had aux skipped (MRV cap)" |
-| Did the disruption adjustment help? | Session RPE | "×0.9 applied → RPE 7.5 (target 8) → well-calibrated" |
-| Which LLM decisions diverged from formula? | Divergence % | "Formula ×0.95 for cycle phase; LLM ignored it entirely" |
+These items add value but don't close the feedback loop:
 
-## Recommended Implementation Order
+### Dashboard visibility
+- JIT Logs: weight derivation chain + modifier list per session
+- Workout Summaries: color-coded modifier badges (green/amber/red)
 
-1. Dashboard JIT Logs + Workout Summaries (Tier 1, #1-2)
-2. Judge Reviewer + Decision Replay (Tier 1, #3-4)
-3. Cycle Review modifier aggregation (Tier 2, #5)
-4. Motivational message context (Tier 2, #7)
-5. Weekly body review breakdown (Tier 2, #6)
-6. Modifier effectiveness tracking (Tier 3, #8)
-7. Trace-based badges (Tier 3, #9)
-8. Anomaly detection (Tier 3, #10)
+### LLM prompt enrichment
+- Judge Reviewer: pass trace for modifier validation
+- Decision Replay: trace-aware scoring (bad formula vs bad execution)
+- Cycle Review: modifier frequency aggregation across cycle
+- Motivational Message: "You trained through ×0.9 soreness and hit RPE 8"
 
-Each item is independently shippable. Items 1-4 are highest value for lowest effort.
+### Athlete-facing insights
+- Weekly Body Review: volume shortfall breakdown by modifier source
+- Trace-based badges: "Clean Sheet" (10 sessions, no modifiers), "Resilient" (modifiers active, RPE on target)
 
 ## References
 
-- Design: [prescription-reasoning.md](./prescription-reasoning.md) — original trace system design
+- Design: [prescription-reasoning.md](./prescription-reasoning.md) — trace system design (Phases 1-4)
 - Spec: [engine-040-prescription-trace.md](../specs/04-engine/engine-040-prescription-trace.md) — engine implementation
 - AI overview: [ai-overview.md](./ai-overview.md) — LLM consumer architecture
