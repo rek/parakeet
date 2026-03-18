@@ -6,6 +6,7 @@ import {
   reviewCalibrationAdjustment,
 } from '@parakeet/training-engine';
 import type { ModifierSource, PrescriptionTrace } from '@parakeet/training-engine';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { typedSupabase } from '@platform/supabase';
 import { captureException } from '@platform/utils/captureException';
 
@@ -109,15 +110,26 @@ export async function updateModifierCalibrations({ sessionId, userId }: {
       } else if (shouldTriggerReview({ calibration, previousAdjustment: currentAdjustment })) {
         // Large adjustment or low confidence → LLM review before applying
         const review = await reviewCalibrationAdjustment({ calibration, currentAdjustment });
+        const adjustmentToStore = review.apply ? calibration.suggestedAdjustment : currentAdjustment;
         await upsertModifierCalibration({
           userId,
           modifierSource: source,
-          adjustment: review.apply ? calibration.suggestedAdjustment : currentAdjustment,
+          adjustment: adjustmentToStore,
           confidence: calibration.confidence,
           sampleCount: totalCount,
           meanBias: combinedMeanBias,
         });
-        // Phase D: if review.askUser, queue a prompt for the athlete (not yet implemented)
+        // Queue user prompt for significant changes the LLM wants confirmed
+        if (review.askUser) {
+          await AsyncStorage.setItem('pending_calibration_prompt', JSON.stringify({
+            modifierSource: source,
+            currentDefault: currentAdjustment,
+            proposed: calibration.suggestedAdjustment,
+            sampleCount: totalCount,
+            meanBias: combinedMeanBias,
+            reason: review.reason,
+          }));
+        }
       } else {
         // Not enough data to propose anything — store stats only
         await upsertModifierCalibration({

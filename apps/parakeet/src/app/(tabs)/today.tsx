@@ -525,6 +525,14 @@ export default function TodayScreen() {
     programId: string | null;
     weekNumber: number;
   } | null>(null);
+  const [pendingCalibration, setPendingCalibration] = useState<{
+    modifierSource: string;
+    currentDefault: number;
+    proposed: number;
+    sampleCount: number;
+    meanBias: number;
+    reason: string;
+  } | null>(null);
 
   const styles = useMemo(() => buildStyles(colors), [colors]);
 
@@ -579,6 +587,21 @@ export default function TodayScreen() {
         })
         .catch(() => {});
     }, [user?.id])
+  );
+
+  // Check for a pending calibration prompt (stored after LLM review flags askUser)
+  useFocusEffect(
+    useCallback(() => {
+      AsyncStorage.getItem('pending_calibration_prompt')
+        .then((raw) => {
+          if (!raw) {
+            setPendingCalibration(null);
+            return;
+          }
+          setPendingCalibration(JSON.parse(raw));
+        })
+        .catch(() => {});
+    }, [])
   );
 
   const { data: disruptions } = useQuery({
@@ -689,6 +712,43 @@ export default function TodayScreen() {
                   })
                 }
               />
+            )}
+
+            {/* Calibration adjustment prompt */}
+            {pendingCalibration && (
+              <View style={styles.weeklyReviewCard}>
+                <Text style={styles.weeklyReviewTitle}>
+                  Training Adjustment
+                </Text>
+                <Text style={styles.weeklyReviewSubtext}>
+                  {pendingCalibration.reason} Based on {pendingCalibration.sampleCount} sessions.
+                </Text>
+                <View style={styles.weeklyReviewButtons}>
+                  <TouchableOpacity
+                    style={styles.weeklyReviewButton}
+                    onPress={() => {
+                      void AsyncStorage.removeItem('pending_calibration_prompt');
+                      setPendingCalibration(null);
+                      // Adjustment was already applied by the calibration service
+                    }}
+                    activeOpacity={0.8}
+                  >
+                    <Text style={styles.weeklyReviewButtonText}>Sounds right</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={styles.weeklyReviewLaterButton}
+                    onPress={() => {
+                      void AsyncStorage.removeItem('pending_calibration_prompt');
+                      setPendingCalibration(null);
+                    }}
+                    activeOpacity={0.7}
+                  >
+                    <Text style={styles.weeklyReviewLaterButtonText}>
+                      Keep current
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
             )}
 
             {/* Weekly body review nudge */}
