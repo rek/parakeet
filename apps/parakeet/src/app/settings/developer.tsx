@@ -29,6 +29,8 @@ import { BackLink } from '../../components/navigation/BackLink';
 import type { ColorScheme } from '../../theme';
 import { useTheme } from '../../theme/ThemeContext';
 
+import { ScreenTitle } from '../../components/ui/ScreenTitle';
+
 // ── Constants ─────────────────────────────────────────────────────────────────
 
 interface StrategyOption {
@@ -77,12 +79,6 @@ function buildStyles(colors: ColorScheme) {
       paddingBottom: 48,
     },
     header: {
-      marginBottom: 8,
-    },
-    screenTitle: {
-      fontSize: 28,
-      fontWeight: '800',
-      color: colors.text,
       marginBottom: 8,
     },
     screenSubtitle: {
@@ -543,7 +539,7 @@ export default function DeveloperSettingsScreen() {
           <BackLink label="Settings" onPress={() => router.back()} />
         </View>
 
-        <Text style={styles.screenTitle}>Developer</Text>
+        <ScreenTitle marginBottom={8}>Developer</ScreenTitle>
         <Text style={styles.screenSubtitle}>
           Options for testing and debugging the training engine.
         </Text>

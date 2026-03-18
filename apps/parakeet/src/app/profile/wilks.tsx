@@ -20,6 +20,8 @@ import { BackLink } from '../../components/navigation/BackLink';
 import type { ColorScheme } from '../../theme';
 import { useTheme } from '../../theme/ThemeContext';
 
+import { ScreenTitle } from '../../components/ui/ScreenTitle';
+
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 function buildStyles(colors: ColorScheme) {
@@ -39,12 +41,6 @@ function buildStyles(colors: ColorScheme) {
     centered: {
       paddingTop: 64,
       alignItems: 'center',
-    },
-    screenTitle: {
-      fontSize: 28,
-      fontWeight: '800',
-      color: colors.text,
-      marginBottom: 24,
     },
     // Current score card
     currentCard: {
@@ -194,7 +190,7 @@ export default function WilksScreen() {
         {/* Header */}
         <BackLink onPress={() => router.back()} />
 
-        <Text style={styles.screenTitle}>WILKS Score</Text>
+        <ScreenTitle marginBottom={24}>WILKS Score</ScreenTitle>
 
         {isLoading ? (
           <View style={styles.centered}>

@@ -9,6 +9,8 @@ import { BackLink } from '../../components/navigation/BackLink';
 import type { ColorScheme } from '../../theme';
 import { useTheme } from '../../theme/ThemeContext';
 
+import { ScreenTitle } from '../../components/ui/ScreenTitle';
+
 // ── Screen ────────────────────────────────────────────────────────────────────
 
 function buildStyles(colors: ColorScheme) {
@@ -24,12 +26,6 @@ function buildStyles(colors: ColorScheme) {
       paddingHorizontal: 24,
       paddingTop: 16,
       paddingBottom: 48,
-    },
-    screenTitle: {
-      fontSize: 28,
-      fontWeight: '800',
-      color: colors.text,
-      marginBottom: 8,
     },
   });
 }
@@ -53,7 +49,7 @@ export default function AchievementsScreen() {
         {/* Header */}
         <BackLink label="Settings" onPress={() => router.back()} />
 
-        <Text style={styles.screenTitle}>Achievements</Text>
+        <ScreenTitle marginBottom={8}>Achievements</ScreenTitle>
 
         <AchievementsSection
           badges={badges}

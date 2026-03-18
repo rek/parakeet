@@ -34,6 +34,8 @@ import { BackLink } from '../../components/navigation/BackLink';
 import type { ColorScheme } from '../../theme';
 import { useTheme } from '../../theme/ThemeContext';
 
+import { ScreenTitle } from '../../components/ui/ScreenTitle';
+
 // ── Constants ─────────────────────────────────────────────────────────────────
 
 const LIFTS = TRAINING_LIFTS;
@@ -56,7 +58,6 @@ function buildStyles(colors: ColorScheme) {
       borderBottomWidth: 1,
       borderBottomColor: colors.bgMuted,
     },
-    title: { fontSize: 24, fontWeight: '800', color: colors.text },
     loading: { flex: 1, justifyContent: 'center', alignItems: 'center' },
     scroll: { flex: 1 },
     content: { paddingBottom: 48 },
@@ -458,7 +459,7 @@ export default function WarmupProtocolScreen() {
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.header}>
         <BackLink onPress={() => router.back()} />
-        <Text style={styles.title}>Warmup Protocol</Text>
+        <ScreenTitle>Warmup Protocol</ScreenTitle>
       </View>
 
       {isLoading || !protocols ? (

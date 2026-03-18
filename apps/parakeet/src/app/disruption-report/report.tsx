@@ -49,6 +49,8 @@ import { BackLink } from '../../components/navigation/BackLink';
 import type { ColorScheme } from '../../theme';
 import { useTheme } from '../../theme/ThemeContext';
 
+import { ScreenTitle } from '../../components/ui/ScreenTitle';
+
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 function todayIso(): string {
@@ -79,7 +81,6 @@ function buildStyles(colors: ColorScheme) {
       borderBottomWidth: 1,
       borderBottomColor: colors.bgMuted,
     },
-    title: { fontSize: 24, fontWeight: '800', color: colors.text },
     subtitle: {
       fontSize: 14,
       color: colors.textSecondary,
@@ -547,7 +548,7 @@ export default function DisruptionReportScreen() {
     return (
       <SafeAreaView style={styles.safeArea}>
         <View style={styles.header}>
-          <Text style={styles.title}>Review Adjustments</Text>
+          <ScreenTitle>Review Adjustments</ScreenTitle>
           <Text style={styles.subtitle}>
             Based on your {disruption.disruption_type.replace(/_/g, ' ')} (
             {disruption.severity}):
@@ -677,7 +678,7 @@ export default function DisruptionReportScreen() {
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.header}>
         <BackLink onPress={() => router.back()} />
-        <Text style={styles.title}>Report Issue</Text>
+        <ScreenTitle>Report Issue</ScreenTitle>
       </View>
 
       <ScrollView

@@ -32,6 +32,8 @@ import { BackLink } from '../../components/navigation/BackLink';
 import type { ColorScheme } from '../../theme';
 import { useTheme } from '../../theme/ThemeContext';
 
+import { ScreenTitle } from '../../components/ui/ScreenTitle';
+
 // ── Constants ─────────────────────────────────────────────────────────────────
 
 const MUSCLES = MUSCLE_GROUPS_ORDER;
@@ -56,7 +58,6 @@ function buildStyles(colors: ColorScheme) {
       alignItems: 'center',
       justifyContent: 'space-between',
     },
-    title: { fontSize: 24, fontWeight: '800', color: colors.text },
     subtitle: { fontSize: 12, color: colors.textTertiary, lineHeight: 16 },
     saveButton: {
       backgroundColor: colors.primary,
@@ -338,7 +339,7 @@ export default function VolumeConfigScreen() {
       <View style={styles.header}>
         <BackLink onPress={() => router.back()} />
         <View style={styles.headerRow}>
-          <Text style={styles.title}>Volume Config</Text>
+          <ScreenTitle>Volume Config</ScreenTitle>
           <TouchableOpacity
             style={[
               styles.saveButton,

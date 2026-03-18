@@ -184,6 +184,7 @@ Module/platform/shared architecture is the canonical app structure. Legacy top-l
 ## Refactors
 
 - [x] refactor-001: Extract business logic from React components — domain logic moved to training-engine and module utils; presentation constants consolidated. See below for details.
+- [x] refactor-002: Screen title consistency (GH#103) — extracted `ScreenTitle` component (`components/ui/ScreenTitle.tsx`); replaced inconsistent inline title styles across 15 screens (mix of 24px/800, 28px/700, 28px/800) with canonical theme tokens (2xl/black/tight) via shared component
   - `getPhaseForDay` → `training-engine/formulas/cycle-phase.ts` (removed duplicate from settings/cycle-tracking)
   - `estimateWorkingWeight` → `training-engine/formulas/weight-rounding.ts` (removed `WORKING_PCT` from settings/warmup-protocol)
   - `currentBlockNumber`, `unendingBlockNumber` → `modules/program/utils/program-utils.ts`

@@ -32,6 +32,8 @@ import { BackLink } from '../../components/navigation/BackLink';
 import type { ColorScheme } from '../../theme';
 import { useTheme } from '../../theme/ThemeContext';
 
+import { ScreenTitle } from '../../components/ui/ScreenTitle';
+
 // ── Types ─────────────────────────────────────────────────────────────────────
 
 type TopTab = 'editor' | 'history' | 'suggestions';
@@ -54,7 +56,6 @@ function buildStyles(colors: ColorScheme) {
       alignItems: 'center',
       justifyContent: 'space-between',
     },
-    title: { fontSize: 24, fontWeight: '800', color: colors.text },
     saveButton: {
       backgroundColor: colors.primary,
       borderRadius: 8,
@@ -631,7 +632,7 @@ export default function FormulaEditorScreen() {
       <View style={styles.header}>
         <BackLink onPress={() => router.back()} />
         <View style={styles.headerRow}>
-          <Text style={styles.title}>Formulas</Text>
+          <ScreenTitle>Formulas</ScreenTitle>
           {topTab === 'editor' && (
             <TouchableOpacity
               style={styles.saveButton}

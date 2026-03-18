@@ -30,6 +30,8 @@ import { router, useLocalSearchParams } from 'expo-router';
 import type { ColorScheme } from '../../../theme';
 import { useTheme } from '../../../theme/ThemeContext';
 
+import { ScreenTitle } from '../../../components/ui/ScreenTitle';
+
 // ── Types ────────────────────────────────────────────────────────────────────
 
 type TotalWeeks = 10 | 12 | 14;
@@ -60,12 +62,6 @@ function buildStyles(colors: ColorScheme) {
       paddingHorizontal: 24,
       paddingTop: 64,
       paddingBottom: 48,
-    },
-    title: {
-      fontSize: 28,
-      fontWeight: '700',
-      color: colors.text,
-      marginBottom: 8,
     },
     subtitle: {
       fontSize: 15,
@@ -379,7 +375,7 @@ export default function ProgramSettingsScreen() {
       contentContainerStyle={styles.container}
       keyboardShouldPersistTaps="handled"
     >
-      <Text style={styles.title}>Program Settings</Text>
+      <ScreenTitle marginBottom={8}>Program Settings</ScreenTitle>
       <Text style={styles.subtitle}>
         Customize your training block before we build your program.
       </Text>

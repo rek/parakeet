@@ -29,6 +29,8 @@ import { BackLink } from '../../../components/navigation/BackLink';
 import type { ColorScheme } from '../../../theme';
 import { useTheme } from '../../../theme/ThemeContext';
 
+import { ScreenTitle } from '../../../components/ui/ScreenTitle';
+
 // ── Types ─────────────────────────────────────────────────────────────────────
 
 type ProgressRating = 'excellent' | 'good' | 'stalled' | 'concerning';
@@ -95,8 +97,6 @@ function buildStyles(colors: ColorScheme) {
       borderBottomWidth: 1,
       borderBottomColor: colors.bgMuted,
     },
-    title: { fontSize: 24, fontWeight: '800', color: colors.text },
-
     loadingContainer: {
       flex: 1,
       justifyContent: 'center',
@@ -375,7 +375,7 @@ export default function CycleReviewScreen() {
       <SafeAreaView style={styles.safeArea}>
         <View style={styles.header}>
           <BackLink onPress={() => router.back()} />
-          <Text style={styles.title}>Cycle Review</Text>
+          <ScreenTitle>Cycle Review</ScreenTitle>
         </View>
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color={colors.primary} />
@@ -407,7 +407,7 @@ export default function CycleReviewScreen() {
       <SafeAreaView style={styles.safeArea}>
         <View style={styles.header}>
           <BackLink onPress={() => router.back()} />
-          <Text style={styles.title}>Cycle Review</Text>
+          <ScreenTitle>Cycle Review</ScreenTitle>
         </View>
         <View style={styles.loadingContainer}>
           <Text style={styles.loadingTitle}>Could not load cycle review</Text>
@@ -434,7 +434,7 @@ export default function CycleReviewScreen() {
       <SafeAreaView style={styles.safeArea}>
         <View style={styles.header}>
           <BackLink onPress={() => router.back()} />
-          <Text style={styles.title}>Cycle Review</Text>
+          <ScreenTitle>Cycle Review</ScreenTitle>
         </View>
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color={colors.primary} />
@@ -478,7 +478,7 @@ export default function CycleReviewScreen() {
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.header}>
         <BackLink onPress={() => router.back()} />
-        <Text style={styles.title}>Cycle Review</Text>
+        <ScreenTitle>Cycle Review</ScreenTitle>
       </View>
 
       <ScrollView

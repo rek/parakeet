@@ -14,6 +14,8 @@ import { router } from 'expo-router';
 import type { ColorScheme } from '../../../theme';
 import { useTheme } from '../../../theme/ThemeContext';
 
+import { ScreenTitle } from '../../../components/ui/ScreenTitle';
+
 // ── Types ────────────────────────────────────────────────────────────────────
 
 interface LiftState {
@@ -56,12 +58,6 @@ function buildStyles(colors: ColorScheme) {
       paddingHorizontal: 24,
       paddingTop: 64,
       paddingBottom: 48,
-    },
-    title: {
-      fontSize: 28,
-      fontWeight: '700',
-      color: colors.text,
-      marginBottom: 8,
     },
     subtitle: {
       fontSize: 15,
@@ -324,7 +320,7 @@ export default function LiftMaxesScreen() {
       contentContainerStyle={styles.container}
       keyboardShouldPersistTaps="handled"
     >
-      <Text style={styles.title}>Enter Your Maxes</Text>
+      <ScreenTitle marginBottom={8}>Enter Your Maxes</ScreenTitle>
       <Text style={styles.subtitle}>
         We'll use these to build your first training program.
       </Text>
