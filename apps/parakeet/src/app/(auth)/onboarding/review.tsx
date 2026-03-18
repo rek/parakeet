@@ -26,6 +26,8 @@ import type { ColorScheme } from '../../../theme';
 import { radii, spacing, typography } from '../../../theme';
 import { useTheme } from '../../../theme/ThemeContext';
 
+import { ScreenTitle } from '../../../components/ui/ScreenTitle';
+
 // ── Styles ────────────────────────────────────────────────────────────────────
 
 function buildStyles(colors: ColorScheme) {
@@ -44,12 +46,6 @@ function buildStyles(colors: ColorScheme) {
       paddingHorizontal: 24,
       paddingTop: 64,
       paddingBottom: 24,
-    },
-    title: {
-      fontSize: 28,
-      fontWeight: '700',
-      color: colors.text,
-      marginBottom: 6,
     },
     subtitle: {
       fontSize: 15,
@@ -303,7 +299,7 @@ export default function ReviewScreen() {
       >
         {/* Header */}
         <View style={styles.header}>
-          <Text style={styles.title}>Your Schedule</Text>
+          <ScreenTitle marginBottom={6}>Your Schedule</ScreenTitle>
           <Text style={styles.subtitle}>
             {isUnending
               ? `Unending program · pick your ${trainingDaysPerWeek} training days`

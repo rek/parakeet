@@ -20,6 +20,8 @@ import { BackLink } from '../components/navigation/BackLink';
 import type { ColorScheme } from '../theme';
 import { useTheme } from '../theme/ThemeContext';
 
+import { ScreenTitle } from '../components/ui/ScreenTitle';
+
 interface MuscleBarProps {
   muscle: MuscleGroup;
   sets: number;
@@ -89,11 +91,6 @@ function buildStyles(colors: ColorScheme) {
       paddingBottom: 16,
       borderBottomWidth: 1,
       borderBottomColor: colors.bgMuted,
-    },
-    title: {
-      fontSize: 24,
-      fontWeight: '800',
-      color: colors.text,
     },
     scroll: {
       flex: 1,
@@ -235,7 +232,7 @@ export default function VolumeScreen() {
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.header}>
         <BackLink onPress={() => router.back()} />
-        <Text style={styles.title}>Weekly Volume</Text>
+        <ScreenTitle>Weekly Volume</ScreenTitle>
       </View>
 
       <ScrollView

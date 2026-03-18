@@ -28,6 +28,8 @@ import { BackLink } from '../../components/navigation/BackLink';
 import type { ColorScheme } from '../../theme';
 import { useTheme } from '../../theme/ThemeContext';
 
+import { ScreenTitle } from '../../components/ui/ScreenTitle';
+
 // ── Constants ─────────────────────────────────────────────────────────────────
 
 const LIFTS = TRAINING_LIFTS;
@@ -51,7 +53,6 @@ function buildStyles(colors: ColorScheme) {
       borderBottomColor: colors.bgMuted,
       gap: 2,
     },
-    title: { fontSize: 24, fontWeight: '800', color: colors.text },
     subtitle: { fontSize: 12, color: colors.textTertiary, lineHeight: 16 },
     loading: { flex: 1, justifyContent: 'center', alignItems: 'center' },
     scroll: { flex: 1 },
@@ -425,7 +426,7 @@ export default function AuxiliaryExercisesScreen() {
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.header}>
         <BackLink onPress={() => router.back()} />
-        <Text style={styles.title}>Auxiliary Exercises</Text>
+        <ScreenTitle>Auxiliary Exercises</ScreenTitle>
         <Text style={styles.subtitle}>
           Reorder to influence future rotation · add custom exercises
         </Text>

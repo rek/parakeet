@@ -25,6 +25,8 @@ import { BackLink } from '../../components/navigation/BackLink';
 import type { ColorScheme } from '../../theme';
 import { useTheme } from '../../theme/ThemeContext';
 
+import { ScreenTitle } from '../../components/ui/ScreenTitle';
+
 // ── Constants ─────────────────────────────────────────────────────────────────
 
 // Intensity-type duration rows in display order
@@ -74,7 +76,6 @@ function buildStyles(colors: ColorScheme) {
       borderBottomWidth: 1,
       borderBottomColor: colors.bgMuted,
     },
-    title: { fontSize: 24, fontWeight: '800', color: colors.text },
     loading: { flex: 1, justifyContent: 'center', alignItems: 'center' },
     scroll: { flex: 1 },
     content: { paddingHorizontal: 20, paddingBottom: 48, paddingTop: 20 },
@@ -598,7 +599,7 @@ export default function RestTimerSettingsScreen() {
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.header}>
         <BackLink onPress={() => router.back()} />
-        <Text style={styles.title}>Rest Timer</Text>
+        <ScreenTitle>Rest Timer</ScreenTitle>
       </View>
 
       {isLoading ? (
