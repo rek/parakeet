@@ -1,3 +1,6 @@
+# MCP config
+.mcp.json
+
 #
 Dependencies
 node_modules/
