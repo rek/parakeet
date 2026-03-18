@@ -360,10 +360,30 @@ export function useSetCompletionFlow({
       dismissPostRest();
 
     if (auxExercise !== null && auxSetNumber !== null) {
-      // Auxiliary failure — just log rest, no main-lift adaptation
+      // Log rest on the set whose rest just ended
       updateAuxiliarySet(auxExercise, auxSetNumber, {
         actual_rest_seconds: totalRest,
       });
+
+      // Mark the failed set (next after rest) as completed with actual reps
+      const failedSetNumber = auxSetNumber + 1;
+      const auxWork = auxiliaryWork.find((aw) => aw.exercise === auxExercise);
+      const totalAuxSets = auxWork?.sets.length ?? 0;
+
+      if (failedSetNumber <= totalAuxSets) {
+        const auxWeightGrams = resolveNextAuxSetWeight({
+          auxiliarySets: useSessionStore.getState().auxiliarySets,
+          exercise: auxExercise,
+          nextSetNumber: failedSetNumber,
+          plannedWeightKg: auxWork!.sets[failedSetNumber - 1]?.weight_kg ?? 0,
+        });
+        updateAuxiliarySet(auxExercise, failedSetNumber, {
+          weight_grams: auxWeightGrams,
+          reps_completed: actualReps,
+          is_completed: true,
+          rpe_actual: 10, // failed = max effort by definition
+        });
+      }
     } else {
       // Main lift failure — log the failed set with actual reps hit
       if (prevSetNumber !== null) {
