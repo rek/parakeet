@@ -29,18 +29,29 @@ const plateStyles = StyleSheet.create({
     height: 9,
     borderRadius: radii.full,
   },
+  numbersText: {
+    fontSize: typography.sizes.xs,
+    color: '#9CA3AF',
+    fontWeight: typography.weights.medium,
+  },
 });
 
 // ── PlateDisplay sub-component ────────────────────────────────────────────────
+
+function formatPlateKg(kg: number): string {
+  return kg % 1 === 0 ? `${kg}` : `${kg}`;
+}
 
 function PlateDisplay({
   weightKg,
   barWeightKg,
   disabledPlates,
+  mode = 'numbers',
 }: {
   weightKg: number;
   barWeightKg: number;
   disabledPlates?: PlateKg[];
+  mode?: 'numbers' | 'colors';
 }) {
   if (weightKg <= barWeightKg) return null;
   const available = disabledPlates?.length
@@ -50,16 +61,30 @@ function PlateDisplay({
     : undefined;
   const { platesPerSide } = calculatePlates(weightKg, barWeightKg, available);
 
+  if (mode === 'colors') {
+    return (
+      <View style={plateStyles.row}>
+        {platesPerSide.flatMap(({ kg, count }) =>
+          Array.from({ length: count }, (_, i) => (
+            <View
+              key={`${kg}-${i}`}
+              style={[plateStyles.dot, { backgroundColor: PLATE_COLORS[kg] }]}
+            />
+          ))
+        )}
+      </View>
+    );
+  }
+
+  const label = platesPerSide
+    .map(({ kg, count }) =>
+      count > 1 ? `${formatPlateKg(kg)}x${count}` : formatPlateKg(kg)
+    )
+    .join(' + ');
+
   return (
     <View style={plateStyles.row}>
-      {platesPerSide.flatMap(({ kg, count }) =>
-        Array.from({ length: count }, (_, i) => (
-          <View
-            key={`${kg}-${i}`}
-            style={[plateStyles.dot, { backgroundColor: PLATE_COLORS[kg] }]}
-          />
-        ))
-      )}
+      <Text style={plateStyles.numbersText}>{label}</Text>
     </View>
   );
 }
@@ -70,6 +95,7 @@ export interface WarmupSectionProps {
   onToggle: (index: number, done: boolean) => void;
   barWeightKg?: number;
   disabledPlates?: PlateKg[];
+  plateDisplay?: 'numbers' | 'colors';
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -88,6 +114,7 @@ interface WarmupSetRowProps {
   onToggle: (index: number, done: boolean) => void;
   barWeightKg: number;
   disabledPlates?: PlateKg[];
+  plateDisplay: 'numbers' | 'colors';
   styles: ReturnType<typeof buildStyles>;
 }
 
@@ -98,6 +125,7 @@ function WarmupSetRow({
   onToggle,
   barWeightKg,
   disabledPlates,
+  plateDisplay,
   styles,
 }: WarmupSetRowProps) {
   return (
@@ -133,6 +161,7 @@ function WarmupSetRow({
           weightKg={set.weightKg}
           barWeightKg={barWeightKg}
           disabledPlates={disabledPlates}
+          mode={plateDisplay}
         />
       </View>
       <View style={[styles.checkbox, isDone && styles.checkboxDone]}>
@@ -259,6 +288,7 @@ export function WarmupSection({
   onToggle,
   barWeightKg,
   disabledPlates,
+  plateDisplay = 'numbers',
 }: WarmupSectionProps) {
   const { colors } = useTheme();
   const [collapsed, setCollapsed] = useState(false);
@@ -300,6 +330,7 @@ export function WarmupSection({
               onToggle={onToggle}
               barWeightKg={effectiveBarWeight}
               disabledPlates={effectiveDisabledPlates}
+              plateDisplay={plateDisplay}
               styles={styles}
             />
           ))}

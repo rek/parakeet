@@ -45,9 +45,11 @@ import {
   getBarWeightKg,
   getDisabledPlates,
   getRestTimerPrefs,
+  getWarmupPlateDisplay,
   setBarWeightKg,
   setDisabledPlates,
 } from '@modules/settings';
+import type { WarmupPlateDisplay } from '@modules/settings';
 import type { RestTimerPrefs } from '@modules/settings';
 import { useFeatureEnabled } from '@modules/feature-flags';
 import { getAllExercises, getExerciseType } from '@parakeet/training-engine';
@@ -344,6 +346,8 @@ export default function SessionScreen() {
   const [equipmentDisabledPlates, setEquipmentDisabledPlates] = useState<
     PlateKg[]
   >([]);
+  const [warmupPlateDisplay, setWarmupPlateDisplay] =
+    useState<WarmupPlateDisplay>('numbers');
   const [addExerciseVisible, setAddExerciseVisible] = useState(false);
   const [historySheetVisible, setHistorySheetVisible] = useState(false);
   const [traceSheetVisible, setTraceSheetVisible] = useState(false);
@@ -443,6 +447,7 @@ export default function SessionScreen() {
       .then((profile) => getBarWeightKg(profile?.biological_sex))
       .then(setEquipmentBarWeightKg);
     getDisabledPlates().then(setEquipmentDisabledPlates);
+    getWarmupPlateDisplay().then(setWarmupPlateDisplay);
     return () => {
       cleanupResetInterval();
     };
@@ -802,6 +807,7 @@ export default function SessionScreen() {
             completedIndices={warmupCompleted}
             barWeightKg={equipmentBarWeightKg}
             disabledPlates={equipmentDisabledPlates}
+            plateDisplay={warmupPlateDisplay}
             onToggle={(index, done) => {
               setWarmupDone(index, done);
               if (

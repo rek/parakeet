@@ -60,6 +60,26 @@ export async function setDisabledPlates(disabled: PlateKg[]): Promise<void> {
   await AsyncStorage.setItem(DISABLED_PLATES_KEY, JSON.stringify(disabled));
 }
 
+const WARMUP_PLATE_DISPLAY_KEY = 'warmup_plate_display';
+
+export type WarmupPlateDisplay = 'numbers' | 'colors';
+
+export async function getWarmupPlateDisplay(): Promise<WarmupPlateDisplay> {
+  try {
+    const raw = await AsyncStorage.getItem(WARMUP_PLATE_DISPLAY_KEY);
+    if (raw === 'numbers' || raw === 'colors') return raw;
+    return 'numbers';
+  } catch {
+    return 'numbers';
+  }
+}
+
+export async function setWarmupPlateDisplay(
+  mode: WarmupPlateDisplay
+): Promise<void> {
+  await AsyncStorage.setItem(WARMUP_PLATE_DISPLAY_KEY, mode);
+}
+
 const REST_TIMER_PREFS_KEY = 'rest_timer_prefs';
 
 export interface RestTimerPrefs {
