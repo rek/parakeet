@@ -2,6 +2,8 @@ import {
   computeCalibrationBias,
   extractModifierSamples,
   canAutoApply,
+  shouldTriggerReview,
+  reviewCalibrationAdjustment,
 } from '@parakeet/training-engine';
 import type { ModifierSource, PrescriptionTrace } from '@parakeet/training-engine';
 import { typedSupabase } from '@platform/supabase';
@@ -92,10 +94,10 @@ export async function updateModifierCalibrations({ sessionId, userId }: {
       }));
 
       const calibration = computeCalibrationBias({ samples: syntheticSamples });
+      const currentAdjustment = existing?.adjustment ?? 0;
 
-      // Only persist if we can auto-apply (medium+ confidence, small adjustment)
-      // Large adjustments will be handled by Phase C (LLM review gate)
       if (canAutoApply({ calibration })) {
+        // Small adjustment with sufficient confidence → auto-apply
         await upsertModifierCalibration({
           userId,
           modifierSource: source,
@@ -104,12 +106,24 @@ export async function updateModifierCalibrations({ sessionId, userId }: {
           sampleCount: totalCount,
           meanBias: combinedMeanBias,
         });
-      } else {
-        // Still store the stats even if not auto-applying the adjustment
+      } else if (shouldTriggerReview({ calibration, previousAdjustment: currentAdjustment })) {
+        // Large adjustment or low confidence → LLM review before applying
+        const review = await reviewCalibrationAdjustment({ calibration, currentAdjustment });
         await upsertModifierCalibration({
           userId,
           modifierSource: source,
-          adjustment: existing?.adjustment ?? 0,
+          adjustment: review.apply ? calibration.suggestedAdjustment : currentAdjustment,
+          confidence: calibration.confidence,
+          sampleCount: totalCount,
+          meanBias: combinedMeanBias,
+        });
+        // Phase D: if review.askUser, queue a prompt for the athlete (not yet implemented)
+      } else {
+        // Not enough data to propose anything — store stats only
+        await upsertModifierCalibration({
+          userId,
+          modifierSource: source,
+          adjustment: currentAdjustment,
           confidence: calibration.confidence,
           sampleCount: totalCount,
           meanBias: combinedMeanBias,
