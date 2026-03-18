@@ -21,9 +21,11 @@ import {
   getBarWeightKg,
   getPendingFormulaSuggestionCount,
   getUnreviewedDeveloperSuggestionCount,
+  getWarmupPlateDisplay,
   setBarWeightKg,
+  setWarmupPlateDisplay,
 } from '@modules/settings';
-import type { BarWeightKg } from '@modules/settings';
+import type { BarWeightKg, WarmupPlateDisplay } from '@modules/settings';
 import { useOtaUpdateStatus } from '@modules/updates';
 import type { OtaStatus } from '@modules/updates';
 import { qk } from '@platform/query';
@@ -33,6 +35,7 @@ import Constants from 'expo-constants';
 import { router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { ScreenHeader } from '../../components/ui/ScreenHeader';
 import { ScreenTitle } from '../../components/ui/ScreenTitle';
 import { radii, spacing, typography } from '../../theme';
 import type { ColorScheme } from '../../theme';
@@ -105,8 +108,7 @@ function buildStyles(colors: ColorScheme) {
       flex: 1,
     },
     container: {
-      paddingHorizontal: spacing[6],
-      paddingTop: spacing[6],
+      paddingHorizontal: spacing[5],
       paddingBottom: spacing[12],
     },
     profileInlineHeader: {
@@ -264,6 +266,8 @@ export default function SettingsScreen() {
   const styles = useMemo(() => buildStyles(colors), [colors]);
 
   const [barWeightKg, setBarWeightKgState] = useState<BarWeightKg>(20);
+  const [plateDisplay, setPlateDisplayState] =
+    useState<WarmupPlateDisplay>('numbers');
 
   const {
     status: otaStatus,
@@ -310,6 +314,7 @@ export default function SettingsScreen() {
 
   useEffect(() => {
     getBarWeightKg(profile?.biological_sex).then(setBarWeightKgState);
+    getWarmupPlateDisplay().then(setPlateDisplayState);
   }, [profile?.biological_sex]);
 
   const showAchievements = useFeatureEnabled('achievements');
@@ -337,12 +342,14 @@ export default function SettingsScreen() {
 
   return (
     <SafeAreaView style={styles.safeArea}>
+      <ScreenHeader>
+        <ScreenTitle>Settings</ScreenTitle>
+      </ScreenHeader>
       <ScrollView
         style={styles.scrollView}
         contentContainerStyle={styles.container}
         showsVerticalScrollIndicator={false}
       >
-        <ScreenTitle marginBottom={spacing[6]}>Settings</ScreenTitle>
 
         <View style={styles.profileInlineHeader}>
           <View style={styles.profileInlineHeaderTextWrap}>
@@ -433,6 +440,37 @@ export default function SettingsScreen() {
                     ]}
                   >
                     {kg} kg
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          }
+        />
+        <Row
+          label="Plate Indicator"
+          styles={styles}
+          right={
+            <View style={styles.toggleGroup}>
+              {(['numbers', 'colors'] as const).map((mode) => (
+                <TouchableOpacity
+                  key={mode}
+                  style={[
+                    styles.toggleBtn,
+                    plateDisplay === mode && styles.toggleBtnActive,
+                  ]}
+                  onPress={() => {
+                    setPlateDisplayState(mode);
+                    setWarmupPlateDisplay(mode);
+                  }}
+                  activeOpacity={0.7}
+                >
+                  <Text
+                    style={[
+                      styles.toggleBtnText,
+                      plateDisplay === mode && styles.toggleBtnTextActive,
+                    ]}
+                  >
+                    {mode === 'numbers' ? 'Numbers' : 'Colors'}
                   </Text>
                 </TouchableOpacity>
               ))}

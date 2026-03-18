@@ -16,10 +16,7 @@ import {
   getAllWarmupConfigs,
   updateWarmupConfig,
   WARMUP_PRESETS,
-  getWarmupPlateDisplay,
-  setWarmupPlateDisplay,
 } from '@modules/settings';
-import type { WarmupPlateDisplay } from '@modules/settings';
 import type { Lift } from '@parakeet/shared-types';
 import {
   estimateWorkingWeight,
@@ -64,42 +61,6 @@ function buildStyles(colors: ColorScheme) {
     loading: { flex: 1, justifyContent: 'center', alignItems: 'center' },
     scroll: { flex: 1 },
     content: { paddingBottom: 48 },
-    plateToggleRow: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      paddingHorizontal: 20,
-      paddingVertical: 14,
-      borderBottomWidth: 1,
-      borderBottomColor: colors.bgMuted,
-    },
-    plateToggleLabel: {
-      fontSize: 14,
-      fontWeight: '600',
-      color: colors.text,
-    },
-    plateToggleGroup: {
-      flexDirection: 'row',
-      borderRadius: 8,
-      borderWidth: 1,
-      borderColor: colors.border,
-      overflow: 'hidden',
-    },
-    plateToggleBtn: {
-      paddingHorizontal: 14,
-      paddingVertical: 6,
-    },
-    plateToggleBtnActive: {
-      backgroundColor: colors.primary,
-    },
-    plateToggleBtnText: {
-      fontSize: 13,
-      fontWeight: '600',
-      color: colors.textSecondary,
-    },
-    plateToggleBtnTextActive: {
-      color: colors.textInverse,
-    },
 
     liftSection: {
       paddingHorizontal: 20,
@@ -450,11 +411,6 @@ export default function WarmupProtocolScreen() {
     WarmupProtocol
   > | null>(null);
   const [saving, setSaving] = useState<Partial<Record<Lift, boolean>>>({});
-  const [plateDisplay, setPlateDisplay] = useState<WarmupPlateDisplay>('numbers');
-
-  useEffect(() => {
-    getWarmupPlateDisplay().then(setPlateDisplay);
-  }, []);
 
   const { data: profile } = useQuery({
     queryKey: qk.profile.current(),
@@ -517,35 +473,6 @@ export default function WarmupProtocolScreen() {
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         >
-          <View style={styles.plateToggleRow}>
-            <Text style={styles.plateToggleLabel}>Plate indicator</Text>
-            <View style={styles.plateToggleGroup}>
-              {(['numbers', 'colors'] as const).map((mode) => (
-                <TouchableOpacity
-                  key={mode}
-                  style={[
-                    styles.plateToggleBtn,
-                    plateDisplay === mode && styles.plateToggleBtnActive,
-                  ]}
-                  onPress={() => {
-                    setPlateDisplay(mode);
-                    setWarmupPlateDisplay(mode);
-                  }}
-                  activeOpacity={0.7}
-                >
-                  <Text
-                    style={[
-                      styles.plateToggleBtnText,
-                      plateDisplay === mode && styles.plateToggleBtnTextActive,
-                    ]}
-                  >
-                    {mode === 'numbers' ? 'Numbers' : 'Colors'}
-                  </Text>
-                </TouchableOpacity>
-              ))}
-            </View>
-          </View>
-
           {LIFTS.map((lift) => (
             <LiftSection
               key={lift}
