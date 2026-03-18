@@ -1,14 +1,15 @@
 import { useMemo } from 'react';
 import type { ReactNode } from 'react';
 import {
-  type DimensionValue,
   Modal,
   Pressable,
   StyleSheet,
   Text,
   TouchableOpacity,
+  useWindowDimensions,
   View,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { spacing, typography } from '../../theme';
 import { useTheme } from '../../theme/ThemeContext';
@@ -19,7 +20,8 @@ interface SheetProps {
   title: string;
   subtitle?: string;
   position?: 'top' | 'bottom';
-  maxHeight?: DimensionValue;
+  /** Fraction of available screen height (0–1). Default 0.65. */
+  maxHeightFraction?: number;
   children: ReactNode;
 }
 
@@ -29,10 +31,17 @@ export function Sheet({
   title,
   subtitle,
   position = 'bottom',
-  maxHeight = '65%',
+  maxHeightFraction = 0.65,
   children,
 }: SheetProps) {
   const { colors } = useTheme();
+  const { height: windowHeight } = useWindowDimensions();
+  const insets = useSafeAreaInsets();
+
+  const sheetMaxHeight = useMemo(() => {
+    const safeHeight = windowHeight - insets.top - insets.bottom;
+    return safeHeight * maxHeightFraction;
+  }, [windowHeight, insets.top, insets.bottom, maxHeightFraction]);
 
   const styles = useMemo(
     () =>
@@ -44,18 +53,18 @@ export function Sheet({
         },
         sheet: {
           backgroundColor: colors.bgSurface,
-          maxHeight,
+          maxHeight: sheetMaxHeight,
           ...(position === 'top'
             ? {
                 borderBottomLeftRadius: 20,
                 borderBottomRightRadius: 20,
-                paddingTop: 40,
+                paddingTop: insets.top + 12,
                 paddingBottom: 20,
               }
             : {
                 borderTopLeftRadius: 20,
                 borderTopRightRadius: 20,
-                paddingBottom: 40,
+                paddingBottom: insets.bottom + 20,
               }),
         },
         handle: {
@@ -94,7 +103,7 @@ export function Sheet({
           fontWeight: typography.weights.bold,
         },
       }),
-    [colors, position, maxHeight]
+    [colors, position, sheetMaxHeight, insets.top, insets.bottom]
   );
 
   return (
