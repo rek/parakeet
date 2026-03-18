@@ -128,21 +128,21 @@ export const FEATURE_REGISTRY = [
     label: 'WILKS Score',
     description: 'Bodyweight-relative strength metric',
     category: 'advanced' as const,
-    defaultEnabled: false,
+    defaultEnabled: true,
   },
   {
     id: 'developer',
     label: 'Developer Tools',
     description: 'JIT strategy selector and cycle feedback',
     category: 'advanced' as const,
-    defaultEnabled: false,
+    defaultEnabled: true,
   },
   {
     id: 'prescriptionTrace',
     label: 'Workout Reasoning',
     description: 'Tap weights to see JIT reasoning chain',
     category: 'advanced' as const,
-    defaultEnabled: false,
+    defaultEnabled: true,
   },
 ] as const;
 
