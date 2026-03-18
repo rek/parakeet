@@ -104,6 +104,26 @@ function AuxiliaryPill({
   const { colors } = useTheme();
   const { elapsed, remaining, overtime, stop } = useRestTimer(durationSeconds);
 
+  // Haptic + audio on expiry (matches FullTimer behavior)
+  const prevOvertimeRef = useRef(false);
+  useEffect(() => {
+    if (overtime && !prevOvertimeRef.current) {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy).catch(() => {});
+      playDing();
+    }
+    prevOvertimeRef.current = overtime;
+  }, [overtime]);
+
+  // 15-second prepare warning
+  const warnFiredRef = useRef(false);
+  useEffect(() => {
+    if (shouldFirePrepareWarning(remaining, overtime, warnFiredRef.current)) {
+      warnFiredRef.current = true;
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => {});
+      playDing();
+    }
+  }, [remaining, overtime]);
+
   const pillStyles = useMemo(
     () =>
       StyleSheet.create({

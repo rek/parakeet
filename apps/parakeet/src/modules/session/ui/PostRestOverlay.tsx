@@ -160,7 +160,7 @@ export function PostRestOverlay({
   );
 
   const resetLabel =
-    resetCountdown !== null ? `${resetCountdown}s…` : 'Reset 15s';
+    resetCountdown !== null ? `+15s (${resetCountdown}s)` : '+15s rest';
 
   const hasContext =
     nextSetNumber != null && plannedWeightKg != null && plannedReps > 0;
