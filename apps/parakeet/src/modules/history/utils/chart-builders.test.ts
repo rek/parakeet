@@ -60,21 +60,23 @@ describe('buildLiftChartData', () => {
     const colorFn = result!.datasets[0].color;
     // opacity=1 → Math.round(1*255)=255 → 'ff'
     expect(colorFn(1)).toBe('#a3e635ff');
-    // opacity=0 → Math.round(0*255)=0 → '00'
-    expect(colorFn(0)).toBe('#a3e63500');
+    // opacity=0.9 → above MIN_CHART_OPACITY, used as-is
+    expect(colorFn(0.9)).toBe('#a3e635e6');
+  });
+
+  it('color function clamps low opacity to MIN_CHART_OPACITY', () => {
+    const entries = [{ date: '2026-01-01', value: 80 }];
+    const result = buildLiftChartData(entries, '#a3e635');
+    const colorFn = result!.datasets[0].color;
+    // react-native-chart-kit passes 0.2 for line strokes — should clamp to 0.8
+    expect(colorFn(0.2)).toBe(colorFn(0.8));
+    // opacity=0 also clamps to 0.8 → Math.round(0.8*255)=204 → 'cc'
+    expect(colorFn(0)).toBe('#a3e635cc');
   });
 
   it('color function defaults opacity to 1 when called with no argument', () => {
     const entries = [{ date: '2026-01-01', value: 80 }];
     const result = buildLiftChartData(entries, '#123456');
     expect(result!.datasets[0].color()).toBe('#123456ff');
-  });
-
-  it('color function pads single-digit hex values', () => {
-    const entries = [{ date: '2026-01-01', value: 80 }];
-    const result = buildLiftChartData(entries, '#000000');
-    const colorFn = result!.datasets[0].color;
-    // opacity=0.02 → Math.round(0.02*255)=5 → '05'
-    expect(colorFn(0.02)).toBe('#00000005');
   });
 });

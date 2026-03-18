@@ -1,5 +1,9 @@
 import type { Lift } from '@parakeet/shared-types';
 
+// react-native-chart-kit passes opacity=0.2 to dataset color functions for
+// line strokes, making lines nearly invisible. Clamp to this minimum.
+export const MIN_CHART_OPACITY = 0.8;
+
 export type WeeklyVolRow = {
   weekStart: string;
   lift: Lift;
@@ -39,7 +43,7 @@ export function buildVolumeChartData(
       }),
       color: (opacity = 1) =>
         hex +
-        Math.round(Math.max(opacity, 0.8) * 255)
+        Math.round(Math.max(opacity, MIN_CHART_OPACITY) * 255)
           .toString(16)
           .padStart(2, '0'),
       strokeWidth: 2,

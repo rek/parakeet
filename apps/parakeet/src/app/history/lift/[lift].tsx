@@ -18,6 +18,7 @@ import {
   getPerformanceByLift,
   getPerformanceTrends,
   getSessionJoin,
+  MIN_CHART_OPACITY,
 } from '@modules/history';
 import type { Lift } from '@parakeet/shared-types';
 import { INTENSITY_LABELS, LIFT_LABELS } from '@shared/constants';
@@ -365,7 +366,7 @@ export default function LiftHistoryScreen() {
                 backgroundGradientTo: colors.bgSurface,
                 color: (opacity = 1) =>
                   liftColor +
-                  Math.round(Math.max(opacity, 0.8) * 255)
+                  Math.round(Math.max(opacity, MIN_CHART_OPACITY) * 255)
                     .toString(16)
                     .padStart(2, '0'),
                 labelColor: () => colors.textTertiary,

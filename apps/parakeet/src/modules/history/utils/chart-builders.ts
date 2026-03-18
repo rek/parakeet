@@ -1,3 +1,5 @@
+import { MIN_CHART_OPACITY } from './chart-helpers';
+
 // ── Types ─────────────────────────────────────────────────────────────────────
 
 interface ChartEntry {
@@ -44,7 +46,7 @@ export function buildLiftChartData(
         data: chartEntries.map((e) => parseFloat(e.value.toFixed(1))),
         color: (opacity = 1) =>
           liftColor +
-          Math.round(Math.max(opacity, 0.8) * 255)
+          Math.round(Math.max(opacity, MIN_CHART_OPACITY) * 255)
             .toString(16)
             .padStart(2, '0'),
         strokeWidth: 2,

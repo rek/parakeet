@@ -21,6 +21,7 @@ import {
   getPerformanceTrends,
   getTrendConfig,
   getWeeklySetsPerLift,
+  MIN_CHART_OPACITY,
 } from '@modules/history';
 import type { PerformanceTrend } from '@modules/history';
 import { listPrograms } from '@modules/program';
@@ -479,7 +480,7 @@ export default function HistoryScreen() {
                 backgroundGradientFrom: colors.bgSurface,
                 backgroundGradientTo: colors.bgSurface,
                 color: (opacity = 1) =>
-                  `${palette.lime400}${Math.round(Math.max(opacity, 0.8) * 255)
+                  `${palette.lime400}${Math.round(Math.max(opacity, MIN_CHART_OPACITY) * 255)
                     .toString(16)
                     .padStart(2, '0')}`,
                 labelColor: () => colors.textTertiary,
