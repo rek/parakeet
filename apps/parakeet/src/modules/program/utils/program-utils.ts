@@ -73,8 +73,11 @@ export function cycleBlockNumber(blockNumber: number): 1 | 2 | 3 {
 }
 
 export function determineCurrentWeek(sessions: ProgramSession[]): number {
-  const activeSession = sessions.find(
-    (s) => s.status === 'planned' || s.status === 'in_progress'
-  );
-  return activeSession?.week_number ?? 1;
+  let minWeek = Infinity;
+  for (const s of sessions) {
+    if (s.status === 'planned' || s.status === 'in_progress') {
+      if (s.week_number < minWeek) minWeek = s.week_number;
+    }
+  }
+  return minWeek === Infinity ? 1 : minWeek;
 }
