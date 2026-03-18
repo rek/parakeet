@@ -197,13 +197,13 @@ export async function updateTrainingDays(
     training_days: number[] | null;
   }
 ) {
-  // Shift the original start_date by the weekday delta to preserve week alignment.
-  // start_date always falls on the earliest training day of the schedule.
-  const oldDays = program.training_days ?? newDays;
-  const oldFirst = [...oldDays].sort((a, b) => a - b)[0];
+  // Shift start_date so it falls on the new first training day's weekday.
+  // Use the actual weekday of start_date (not the old training_days) so that
+  // prior misalignment from bugs or multiple changes doesn't compound.
   const newFirst = [...newDays].sort((a, b) => a - b)[0];
-  const dayShift = computeMinimalDayShift({ oldFirst, newFirst });
   const originalStart = new Date(program.start_date + 'T00:00:00');
+  const startDow = originalStart.getDay();
+  const dayShift = computeMinimalDayShift({ oldFirst: startDow, newFirst });
   const newStartDate = new Date(originalStart);
   newStartDate.setDate(newStartDate.getDate() + dayShift);
 
