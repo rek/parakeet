@@ -5,6 +5,31 @@ import type {
   WeightDerivation,
 } from '@parakeet/training-engine';
 
+// ── Helpers ──────────────────────────────────────────────────────────────────
+
+function fmtSeconds(s: number): string {
+  if (s < 60) return `${s}s`;
+  const min = Math.floor(s / 60);
+  const sec = s % 60;
+  return sec > 0 ? `${min}m ${sec}s` : `${min}m`;
+}
+
+function fmtPct(decimal: number): string {
+  return `${(decimal * 100).toFixed(1)}%`;
+}
+
+const REP_SOURCE_LABELS: Record<string, string> = {
+  'exercise catalog': 'catalog default',
+  'volume top-up default': 'top-up default',
+};
+
+function readableRepSource(raw: string): string {
+  // "block1.heavy config" → "block 1 heavy"
+  const blockMatch = raw.match(/^block(\d+)\.(\w+)\s+config$/);
+  if (blockMatch) return `block ${blockMatch[1]} ${blockMatch[2]}`;
+  return REP_SOURCE_LABELS[raw] ?? raw;
+}
+
 // ── Weight derivation ─────────────────────────────────────────────────────────
 
 export function formatWeightDerivation({
@@ -14,12 +39,23 @@ export function formatWeightDerivation({
 }): string[] {
   const lines: string[] = [];
 
-  const pctDisplay = (derivation.blockPct * 100).toFixed(1);
-  lines.push(`1RM: ${derivation.oneRmKg} kg`);
-  lines.push(`× ${pctDisplay}% = ${derivation.baseWeightKg} kg`);
+  const sourceLabel = derivation.oneRmSource === 'working'
+    ? ' (working)'
+    : derivation.oneRmSource === 'stored'
+      ? ' (stored)'
+      : '';
+  lines.push(`1RM: ${derivation.oneRmKg} kg${sourceLabel}`);
+
+  if (derivation.storedOneRmKg != null && derivation.oneRmSource === 'working') {
+    lines.push(`  stored 1RM: ${derivation.storedOneRmKg} kg`);
+  }
+
+  lines.push(`Block target: ${fmtPct(derivation.blockPct)} → ${derivation.baseWeightKg} kg`);
 
   for (const mod of derivation.modifiers) {
-    lines.push(`× ${mod.multiplier} (${mod.reason})`);
+    const pctChange = ((mod.multiplier - 1) * 100).toFixed(1);
+    const sign = mod.multiplier >= 1 ? '+' : '';
+    lines.push(`${mod.reason}: ${sign}${pctChange}%`);
   }
 
   lines.push(`= ${derivation.finalWeightKg} kg`);
@@ -45,8 +81,9 @@ export function formatVolumeChanges({
 }): string[] {
   return changes.map((change) => {
     const label = VOLUME_SOURCE_LABELS[change.source] ?? change.source;
-    const direction = change.setsAfter < change.setsBefore ? 'reduced' : 'increased';
-    return `${label}: ${change.setsBefore} → ${change.setsAfter} sets (${change.reason} — ${direction})`;
+    const delta = change.setsAfter - change.setsBefore;
+    const sign = delta >= 0 ? '+' : '';
+    return `${label}: ${change.setsBefore} → ${change.setsAfter} sets (${sign}${delta})`;
   });
 }
 
@@ -62,16 +99,15 @@ export function formatAuxTrace({ aux }: { aux: AuxExerciseTrace }): string[] {
     return lines;
   }
 
-  lines.push(`${aux.sets} × ${aux.reps} reps (${aux.repSource})`);
+  lines.push(`${aux.sets} × ${aux.reps} reps (${readableRepSource(aux.repSource)})`);
 
   if (aux.weightTrace) {
     const wt = aux.weightTrace;
-    const methodLabel = wt.scalingMethod === 'sqrt' ? 'sqrt' : 'linear';
-    lines.push(
-      `Weight: ${wt.finalWeightKg} kg (${methodLabel}: ${wt.oneRmKg} × ${wt.catalogPct.toFixed(3)})`
-    );
+    const scalingLabel = wt.scalingMethod === 'sqrt' ? 'sqrt scaling' : 'linear scaling';
+    lines.push(`${wt.finalWeightKg} kg (${fmtPct(wt.catalogPct)} of 1RM, ${scalingLabel})`);
     if (wt.sorenessMultiplier !== 1) {
-      lines.push(`Soreness modifier: × ${wt.sorenessMultiplier}`);
+      const pctChange = ((wt.sorenessMultiplier - 1) * 100).toFixed(0);
+      lines.push(`Soreness: ${pctChange}% weight`);
     }
   }
 
@@ -84,21 +120,21 @@ export function formatRestTrace({ rest }: { rest: RestTrace }): string[] {
   const lines: string[] = [];
   const { mainLift } = rest;
 
-  lines.push(`Formula base: ${mainLift.formulaBaseSeconds}s`);
+  lines.push(`Base: ${fmtSeconds(mainLift.formulaBaseSeconds)}`);
 
   if (mainLift.userOverrideSeconds !== null) {
-    lines.push(`User override: ${mainLift.userOverrideSeconds}s`);
+    lines.push(`Your override: ${fmtSeconds(mainLift.userOverrideSeconds)}`);
   }
 
   if (mainLift.llmDeltaSeconds !== null) {
     const sign = mainLift.llmDeltaSeconds >= 0 ? '+' : '';
-    lines.push(`LLM delta: ${sign}${mainLift.llmDeltaSeconds}s`);
+    lines.push(`AI adjustment: ${sign}${mainLift.llmDeltaSeconds}s`);
   }
 
-  lines.push(`Final: ${mainLift.finalSeconds}s`);
+  lines.push(`Final: ${fmtSeconds(mainLift.finalSeconds)}`);
 
   if (rest.auxiliarySeconds !== mainLift.finalSeconds) {
-    lines.push(`Auxiliary: ${rest.auxiliarySeconds}s`);
+    lines.push(`Auxiliary: ${fmtSeconds(rest.auxiliarySeconds)}`);
   }
 
   return lines;
