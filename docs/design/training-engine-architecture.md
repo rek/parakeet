@@ -184,6 +184,8 @@ The formula engine handles all adjustment reasoning through explicit rules. The 
 
 **Characteristics:** Fully offline. Deterministic. Same inputs always produce same output. Easy to unit-test. Best used as the offline fallback and v1 default.
 
+**Prescription Trace:** The formula pipeline now generates a `PrescriptionTrace` alongside `JITOutput` via `generateJITSessionWithTrace()`. The trace records every modifier applied (source, multiplier, reason), volume changes per adjuster, auxiliary selection reasoning, warmup steps, and rest derivation. This enables post-session calibration: comparing trace predictions vs actual RPE outcomes to learn per-athlete modifier effectiveness. See [prescription-trace-integration.md](./prescription-trace-integration.md).
+
 ### Strategy 2: LLM (LLMJITGenerator)
 
 The LLM handles all adjustment reasoning holistically. It receives the full `JITInput` as structured JSON context and returns a `JITAdjustment` struct. The formula engine applies the adjustment to the base calculation and enforces hard constraints.

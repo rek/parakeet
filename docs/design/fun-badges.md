@@ -154,7 +154,18 @@ Some badges are common (First Blood, Parakeet OG), some are rare (Triple Threat,
 - [ ] Should there be a shareable badge card (image export) in a future phase?
 - [ ] Do `session_logs` already have start/end timestamps, or does the schema need extending?
 
+## Future: Trace-Based Badges
+
+The [prescription trace](./prescription-trace-integration.md) system enables a new category of badges based on the JIT decision chain:
+
+- **"Clean Sheet"**: 10 consecutive sessions with zero modifiers active (the formula predicted perfectly — or you got very lucky)
+- **"Resilient"**: 5+ sessions with active modifiers (soreness/readiness/disruption) where RPE still hit target (adjusted and still crushed it)
+- **"Recovery Wisdom"**: Deload week traces show reduced intensity, next week RPE normalizes (deload discipline pays off)
+- **"Adaptive"**: Completed sessions through 3+ different modifier types in one cycle (the system adapted, and so did you)
+
+These require `jit_output_trace` data from the sessions table.
+
 ## References
 
-- Related Design Docs: [achievements.md](./achievements.md)
+- Related Design Docs: [achievements.md](./achievements.md), [prescription-trace-integration.md](./prescription-trace-integration.md)
 - Existing specs: [engine-022-pr-detection.md](../specs/04-engine/engine-022-pr-detection.md), [mobile-019-achievements-screen.md](../specs/09-mobile/mobile-019-achievements-screen.md)

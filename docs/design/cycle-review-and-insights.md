@@ -183,9 +183,10 @@ Developer suggestions are stored in a `developer_suggestions` table and viewable
 **Long-term:**
 - Automatic aux exercise pool curation: based on 3+ cycles of correlation data, the system suggests specific exercises to add to or remove from the pool rather than just reordering
 - Federated insights: with user consent, anonymised cycle data from multiple users informs better population-level defaults (opt-in only)
+- **Modifier frequency analysis**: Aggregate [prescription trace](./prescription-trace-integration.md) data across a cycle to reveal per-session modifier patterns — frequency, magnitude, and interactions between adjustment sources (soreness, readiness, cycle phase, disruption). The cycle review LLM receives this as structured context: "Soreness active on 8/12 squat sessions, averaging ×0.92. Readiness never triggered. Consider whether soreness threshold is too sensitive."
 
 ## References
 
-- Related Design Docs: [training-engine-architecture.md](./training-engine-architecture.md), [formula-management.md](./formula-management.md), [program-generation.md](./program-generation.md), [achievements.md](./achievements.md), [sex-based-adaptations.md](./sex-based-adaptations.md)
+- Related Design Docs: [training-engine-architecture.md](./training-engine-architecture.md), [formula-management.md](./formula-management.md), [program-generation.md](./program-generation.md), [achievements.md](./achievements.md), [sex-based-adaptations.md](./sex-based-adaptations.md), [prescription-trace-integration.md](./prescription-trace-integration.md)
 - Specs: [engine-005-performance-adjuster.md](../specs/04-engine/engine-005-performance-adjuster.md), [engine-012-cycle-review-generator.md](../specs/04-engine/engine-012-cycle-review-generator.md), [engine-024-developer-suggestions.md](../specs/04-engine/engine-024-developer-suggestions.md), [engine-025-multi-cycle-context.md](../specs/04-engine/engine-025-multi-cycle-context.md), [mobile-014-cycle-review-screen.md](../specs/09-mobile/mobile-014-cycle-review-screen.md)
 

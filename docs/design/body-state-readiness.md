@@ -102,6 +102,7 @@ The system currently tracks body-state signals — soreness, training volume, cy
 - **Mismatch-driven MRV auto-calibration**: If a muscle shows 3+ consecutive weeks of accumulating fatigue mismatches, automatically lower its MRV by 1 set (with notification to user).
 - **Readiness trend visualization**: A chart showing sleep/energy/soreness trends over time, correlated with training performance.
 - **Cycle phase performance correlation**: After enough data, show the lifter how their performance (RPE, completion %) varies by cycle phase — validating or challenging the adjustment values.
+- **Per-athlete modifier calibration**: The static adjustment values (−5% menstrual, −2.5% luteal, readiness modifiers) are population-level defaults. The [prescription trace integration](./prescription-trace-integration.md) system will track modifier effectiveness per athlete (trace prediction vs actual RPE outcome) and auto-calibrate these defaults over time. A female athlete whose late-luteal phase doesn't match the −5% default will have the modifier learned from her data.
 
 ## References
 

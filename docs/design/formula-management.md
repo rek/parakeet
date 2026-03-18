@@ -37,6 +37,8 @@ Similarly, **JIT session generation is entirely deterministic math** — Cube Me
 
 The word "AI" in earlier versions of these docs was used loosely to mean "generated automatically by the system." It is avoided here to prevent confusion with language models.
 
+**Note on auto-calibration:** The [prescription trace integration](./prescription-trace-integration.md) system introduces a separate calibration layer that adjusts *modifier thresholds* (soreness, readiness, cycle phase) per athlete based on trace + RPE outcomes. This is distinct from formula suggestion generation — formula suggestions change block percentages and set counts; modifier calibration changes how aggressively the system adjusts for body-state signals. Significant calibration changes (>5% shift) are reviewed by an LLM before application. This LLM involvement is scoped to calibration review, not formula suggestion generation.
+
 ## Design Principles
 
 **The system adjusts automatically.** Formula parameters are not expected to be manually tuned by the user. The user does not have enough training science context to know whether Block 2 Heavy should be 82.5% vs 85% — the pattern detector does. The user's role is approval, not authorship.

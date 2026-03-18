@@ -135,8 +135,16 @@ Session Start                              Session End
 - Neither blocks the user or adds perceived latency
 - #2's data over time validates whether #1's flags are actually useful
 
+## Future Enhancement: Trace-Enriched Review
+
+Both the Judge and Replay currently receive `JITInput` + `JITOutput` but not the *reasoning chain* between them. The [prescription trace](./prescription-reasoning.md) system now generates a `PrescriptionTrace` alongside every JIT output, recording every modifier applied and why.
+
+**Judge enhancement:** Trace context lets the judge validate modifier proportionality ("soreness ×0.85 for level 3 — is that right for this athlete?") and detect double-penalties more precisely.
+
+**Replay enhancement:** Trace enables attribution — "athlete under-performed because the modifier was too aggressive" vs "prescription was correct, athlete had a bad day." This is the foundation for [auto-calibration](./prescription-trace-integration.md).
+
 ## References
 
 - Spec: [ai-002-challenge-mode.md](../specs/10-ai/ai-002-challenge-mode.md)
-- Related Design Docs: [ai-overview.md](./ai-overview.md), [training-engine-architecture.md](./training-engine-architecture.md)
+- Related Design Docs: [ai-overview.md](./ai-overview.md), [training-engine-architecture.md](./training-engine-architecture.md), [prescription-trace-integration.md](./prescription-trace-integration.md)
 - Existing infrastructure: hybrid JIT generator, `jit_comparison_logs` table, JIT input snapshot storage

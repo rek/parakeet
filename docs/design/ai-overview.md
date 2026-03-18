@@ -297,6 +297,27 @@ Map of every place AI interacts with Parakeet. Two types of AI: **LLM** (LLM via
 
 ---
 
+### 12. Prescription Trace (enrichment layer for all LLM consumers)
+
+**What:** Every JIT-generated session produces a `PrescriptionTrace` — a structured record of the formula's decision chain: weight derivation (1RM x blockPct x modifiers), volume changes per adjuster, auxiliary selection reasoning, warmup steps, rest derivation.
+
+**Stored:** `sessions.jit_output_trace` JSONB column.
+
+**How it enriches AI consumers:**
+- **Judge Reviewer (§10)**: Trace provides the *reasoning* behind the formula's output, not just the output itself. Judge can validate: "soreness modifier ×0.85 was applied for soreness level 3 — is that proportional?"
+- **Decision Replay (§11)**: Trace enables attribution — "athlete under-performed because the formula over-reduced (modifier too aggressive)" vs "prescription was correct, execution was off"
+- **Cycle Review (§4)**: Aggregated modifier patterns across a cycle reveal systematic trends: "soreness active on 8/12 squat sessions, averaging ×0.92 — consider calibration"
+- **Motivational Message (§7)**: Trace provides specific modifier context: "You trained through a ×0.9 soreness adjustment and still hit RPE 8"
+
+**Auto-calibration:** Trace + session outcome data feeds into a per-athlete modifier calibration system that learns whether each modifier is well-calibrated, too aggressive, or too conservative. See [prescription-trace-integration.md](./prescription-trace-integration.md).
+
+**Key files:**
+- `packages/training-engine/src/generator/prescription-trace.ts` — types + builder
+- `packages/training-engine/src/generator/jit-session-generator.ts` — `generateJITSessionWithTrace()`
+- `apps/parakeet/src/modules/session/ui/PrescriptionSheet.tsx` — user-facing trace display
+
+---
+
 ## Prompts & Constraints
 
 **`packages/training-engine/src/ai/prompts.ts`**
