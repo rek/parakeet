@@ -110,13 +110,13 @@ export interface JitDisruptionRow {
   id: string;
   user_id: string;
   program_id: string | null;
-  session_ids_affected: unknown;
+  session_ids_affected: string[] | null;
   reported_at: string;
   disruption_type: string;
   severity: string;
   affected_date_start: string | null;
   affected_date_end: string | null;
-  affected_lifts: unknown;
+  affected_lifts: string[] | null;
   description: string | null;
   adjustment_applied: unknown;
   resolved_at: string | null;

@@ -1,15 +1,15 @@
 import type { WeekStatus } from '@parakeet/training-engine';
 
 interface SessionRow {
-  id: unknown;
-  planned_date: unknown;
-  status: unknown;
+  id: string;
+  planned_date: string | null;
+  status: string;
 }
 
 interface DisruptionRow {
-  affected_date_start: unknown;
-  affected_date_end: unknown;
-  session_ids_affected: unknown;
+  affected_date_start: string | null;
+  affected_date_end: string | null;
+  session_ids_affected: string[] | null;
 }
 
 /**
@@ -23,14 +23,15 @@ export function buildWeekStatuses(
 ): WeekStatus[] {
   const disruptionSessionIds = new Set<string>();
   for (const d of disruptions) {
-    const ids = d.session_ids_affected as string[] | null;
+    const ids = d.session_ids_affected;
     if (ids) for (const id of ids) disruptionSessionIds.add(id);
   }
 
   function isDateCoveredByDisruption(dateStr: string): boolean {
     for (const d of disruptions) {
-      const start = d.affected_date_start as string;
-      const end = (d.affected_date_end as string | null) ?? start;
+      const start = d.affected_date_start;
+      if (!start) continue;
+      const end = d.affected_date_end ?? start;
       if (dateStr >= start && dateStr <= end) return true;
     }
     return false;
@@ -38,7 +39,8 @@ export function buildWeekStatuses(
 
   const byWeek = new Map<string, SessionRow[]>();
   for (const s of sessions) {
-    const d = new Date(s.planned_date as string);
+    if (!s.planned_date) continue;
+    const d = new Date(s.planned_date);
     const day = d.getDay();
     const offset = day === 0 ? -6 : 1 - day;
     const monday = new Date(d);
@@ -62,8 +64,9 @@ export function buildWeekStatuses(
     let unaccountedMisses = 0;
 
     for (const s of weekSessions) {
-      const status = s.status as string;
-      const dateStr = s.planned_date as string;
+      const status = s.status;
+      const dateStr = s.planned_date;
+      if (!dateStr) continue;
       if (dateStr > todayStr && status === 'planned') continue;
 
       scheduled++;
@@ -71,7 +74,7 @@ export function buildWeekStatuses(
         completed++;
       } else if (
         status === 'skipped' &&
-        (disruptionSessionIds.has(s.id as string) ||
+        (disruptionSessionIds.has(s.id) ||
           isDateCoveredByDisruption(dateStr))
       ) {
         skippedWithDisruption++;
