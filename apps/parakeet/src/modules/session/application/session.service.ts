@@ -64,6 +64,11 @@ export type {
   SessionCompletionContext,
 } from '@shared/types/domain';
 
+// Mutex: prevents concurrent unending session generation from racing.
+// Multiple React Query refetches can overlap; without this, each passes the
+// "no planned session" guard before any insert lands, creating duplicates.
+let generatingSession: Promise<unknown> | null = null;
+
 // Today's session: active in-progress session first, else nearest planned session.
 // For unending programs, generates the next session lazily if none exists.
 export async function findTodaySession(userId: string) {
@@ -80,7 +85,19 @@ export async function findTodaySession(userId: string) {
         userId
       );
       if (existingPlanned) return existingPlanned;
-      return generateNextUnendingSession(program, userId);
+
+      // Serialize concurrent generation attempts so only the first insert wins.
+      if (generatingSession) {
+        await generatingSession;
+        return fetchPlannedSessionForProgram(program.id, userId);
+      }
+      generatingSession = generateNextUnendingSession(program, userId);
+      try {
+        await generatingSession;
+      } finally {
+        generatingSession = null;
+      }
+      return fetchPlannedSessionForProgram(program.id, userId);
     }
   }
 
@@ -523,7 +540,16 @@ async function generateNextUnendingSession(
     program.id,
     userId
   );
-  await appendNextUnendingSession(program, userId, plannedDate, lastCompletedLift);
+  try {
+    await appendNextUnendingSession(program, userId, plannedDate, lastCompletedLift);
+  } catch (err: unknown) {
+    // Unique constraint violation (23505) means another call already inserted —
+    // safe to ignore and return the existing planned session.
+    if (err && typeof err === 'object' && 'code' in err && err.code === '23505') {
+      return fetchPlannedSessionForProgram(program.id, userId);
+    }
+    throw err;
+  }
   // Fetch by program_id+planned status so we get the newly created session,
   // not the completed session that fetchTodaySession would return first.
   return fetchPlannedSessionForProgram(program.id, userId);

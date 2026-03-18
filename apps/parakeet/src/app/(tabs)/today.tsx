@@ -726,19 +726,39 @@ export default function TodayScreen() {
                 <View style={styles.weeklyReviewButtons}>
                   <TouchableOpacity
                     style={styles.weeklyReviewButton}
-                    onPress={() => {
-                      void AsyncStorage.removeItem('pending_calibration_prompt');
+                    onPress={async () => {
+                      try {
+                        await AsyncStorage.removeItem('pending_calibration_prompt');
+                      } catch (err) {
+                        captureException(err);
+                      }
                       setPendingCalibration(null);
-                      // Adjustment was already applied by the calibration service
                     }}
                     activeOpacity={0.8}
                   >
                     <Text style={styles.weeklyReviewButtonText}>Sounds right</Text>
                   </TouchableOpacity>
+                  {/* TODO: "Not sure — let's discuss" button opens LLM conversation */}
                   <TouchableOpacity
                     style={styles.weeklyReviewLaterButton}
-                    onPress={() => {
-                      void AsyncStorage.removeItem('pending_calibration_prompt');
+                    onPress={async () => {
+                      try {
+                        // Revert the adjustment to the previous value
+                        const { upsertModifierCalibration } = await import(
+                          '@modules/jit/data/calibration.repository'
+                        );
+                        await upsertModifierCalibration({
+                          userId: user!.id,
+                          modifierSource: pendingCalibration.modifierSource as 'readiness' | 'cycle_phase' | 'soreness',
+                          adjustment: pendingCalibration.currentDefault,
+                          confidence: 'medium',
+                          sampleCount: pendingCalibration.sampleCount,
+                          meanBias: pendingCalibration.meanBias,
+                        });
+                        await AsyncStorage.removeItem('pending_calibration_prompt');
+                      } catch (err) {
+                        captureException(err);
+                      }
                       setPendingCalibration(null);
                     }}
                     activeOpacity={0.7}

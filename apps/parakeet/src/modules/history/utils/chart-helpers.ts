@@ -39,7 +39,7 @@ export function buildVolumeChartData(
       }),
       color: (opacity = 1) =>
         hex +
-        Math.round(opacity * 255)
+        Math.round(Math.max(opacity, 0.8) * 255)
           .toString(16)
           .padStart(2, '0'),
       strokeWidth: 2,

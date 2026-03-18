@@ -365,9 +365,9 @@ export default function LiftHistoryScreen() {
                 backgroundGradientTo: colors.bgSurface,
                 color: (opacity = 1) =>
                   liftColor +
-                  Math.round(opacity * 255)
+                  Math.round(Math.max(opacity, 0.8) * 255)
                     .toString(16)
-                    .padStart(2, '00'),
+                    .padStart(2, '0'),
                 labelColor: () => colors.textTertiary,
                 strokeWidth: 2,
                 propsForDots: { r: '3', fill: liftColor, stroke: liftColor },
