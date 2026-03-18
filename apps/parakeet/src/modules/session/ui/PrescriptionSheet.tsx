@@ -36,12 +36,8 @@ function buildStyles(colors: ColorScheme) {
       paddingVertical: spacing[3],
       gap: spacing[4],
     },
-    strategyRow: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: spacing[2],
-    },
     strategyBadge: {
+      alignSelf: 'flex-start',
       paddingHorizontal: spacing[2],
       paddingVertical: spacing[0.5],
       borderRadius: 4,
@@ -54,9 +50,10 @@ function buildStyles(colors: ColorScheme) {
       textTransform: 'uppercase',
       letterSpacing: 0.5,
     },
-    sessionContext: {
+    noAdjustments: {
       fontSize: typography.sizes.sm,
-      color: colors.textSecondary,
+      color: colors.textTertiary,
+      fontStyle: 'italic',
     },
     section: {
       gap: spacing[2],
@@ -159,13 +156,14 @@ export function PrescriptionSheet({ visible, onClose, trace, focusExercise }: Pr
 
   const restLines = formatRestTrace({ rest: trace.rest });
 
+  const hasAdjustments = trace.rationale.length > 0 || volumeLines.length > 0;
+
   return (
     <Sheet
       visible={visible}
       onClose={onClose}
-      title="Prescription Trace"
+      title="Workout Reasoning"
       subtitle={contextLabel}
-      position="top"
     >
       <ScrollView
         style={styles.scroll}
@@ -173,11 +171,8 @@ export function PrescriptionSheet({ visible, onClose, trace, focusExercise }: Pr
         showsVerticalScrollIndicator={false}
       >
         {/* Strategy badge */}
-        <View style={styles.strategyRow}>
-          <View style={styles.strategyBadge}>
-            <Text style={styles.strategyBadgeText}>{strategyLabel}</Text>
-          </View>
-          <Text style={styles.sessionContext}>{contextLabel}</Text>
+        <View style={styles.strategyBadge}>
+          <Text style={styles.strategyBadgeText}>{strategyLabel}</Text>
         </View>
 
         {/* Rationale */}
@@ -234,6 +229,13 @@ export function PrescriptionSheet({ visible, onClose, trace, focusExercise }: Pr
               </View>
             ))}
           </View>
+        )}
+
+        {/* No adjustments hint */}
+        {!hasAdjustments && (
+          <Text style={styles.noAdjustments}>
+            No adjustments — standard prescription
+          </Text>
         )}
 
         {/* Auxiliary Exercises */}

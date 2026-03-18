@@ -391,11 +391,13 @@ export async function runJITForSession(
   const generator = getJITGenerator(strategyOverride, true, comparisonLogger);
   const jitOutput = await generator.generate(jitInput);
 
-  // Generate prescription trace from the same inputs. This re-runs the formula
-  // path regardless of which strategy produced jitOutput — intentional: the trace
-  // explains the deterministic formula reasoning, while LLM/hybrid rationale is
-  // already in jitOutput.rationale. Cost: one extra formula pass (~1ms).
+  // Generate prescription trace from the same inputs. Re-runs the formula path
+  // regardless of which strategy produced jitOutput — the trace explains the
+  // deterministic formula reasoning. Cost: one extra formula pass (~1ms).
   const { trace } = generateJITSessionWithTrace(jitInput);
+  if (jitOutput.jit_strategy) {
+    trace.strategy = jitOutput.jit_strategy;
+  }
 
   const { error: updateError } = await typedSupabase
     .from('sessions')
