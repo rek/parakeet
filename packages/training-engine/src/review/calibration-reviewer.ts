@@ -1,20 +1,18 @@
-import { generateText } from 'ai';
+import { CalibrationReviewSchema } from '@parakeet/shared-types';
+import type { CalibrationReview } from '@parakeet/shared-types';
+import { generateText, Output } from 'ai';
 
 import { JIT_MODEL } from '../ai/models';
-import type { CalibrationResult, ModifierSource } from '../analysis/modifier-effectiveness';
+import type { CalibrationResult } from '../analysis/modifier-effectiveness';
 
-export interface CalibrationReviewResult {
-  apply: boolean;
-  confidence: 'high' | 'medium' | 'low';
-  askUser: boolean;
-  reason: string;
-}
+export type { CalibrationReview };
 
-const DEFAULT_PASS: CalibrationReviewResult = {
-  apply: true,
-  confidence: 'high',
+// On LLM failure, reject the adjustment (don't auto-apply uncertain changes)
+const DEFAULT_REJECT: CalibrationReview = {
+  apply: false,
+  confidence: 'low',
   askUser: false,
-  reason: 'Adjustment within safe range',
+  reason: 'LLM review unavailable — keeping current adjustment',
 };
 
 const CALIBRATION_REVIEW_PROMPT = `You are a sports science expert reviewing a proposed calibration adjustment to a powerlifting training system.
@@ -27,13 +25,10 @@ You are reviewing a proposed adjustment. Consider:
 3. Is the adjustment direction reasonable (e.g., reducing soreness penalty makes sense if the athlete consistently outperforms when sore)?
 4. Should the athlete be asked for input before applying?
 
-Respond with JSON: { "apply": boolean, "confidence": "high"|"medium"|"low", "askUser": boolean, "reason": string }
-
 Only set askUser=true for large adjustments (>5%) or when you suspect confounding factors the athlete could clarify.`;
 
 export async function reviewCalibrationAdjustment({ calibration, currentAdjustment }: {
   calibration: CalibrationResult;
-  /** The currently applied adjustment (if any). */
   currentAdjustment: number;
 }) {
   try {
@@ -46,17 +41,16 @@ export async function reviewCalibrationAdjustment({ calibration, currentAdjustme
       confidence: calibration.confidence,
     });
 
-    const { text } = await generateText({
+    const { output: review } = await generateText({
       model: JIT_MODEL,
+      output: Output.object({ schema: CalibrationReviewSchema }),
       system: CALIBRATION_REVIEW_PROMPT,
       prompt,
       abortSignal: AbortSignal.timeout(8000),
     });
 
-    const parsed = JSON.parse(text) as CalibrationReviewResult;
-    return parsed;
+    return review ?? DEFAULT_REJECT;
   } catch {
-    // On error, default to safe pass (don't block calibration on LLM failure)
-    return DEFAULT_PASS;
+    return DEFAULT_REJECT;
   }
 }

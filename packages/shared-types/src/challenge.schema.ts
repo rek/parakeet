@@ -25,3 +25,12 @@ export const DecisionReplaySchema = z.object({
 });
 
 export type DecisionReplay = z.infer<typeof DecisionReplaySchema>;
+
+export const CalibrationReviewSchema = z.object({
+  apply: z.boolean(),
+  confidence: z.enum(['high', 'medium', 'low']),
+  askUser: z.boolean(),
+  reason: z.string().max(300),
+});
+
+export type CalibrationReview = z.infer<typeof CalibrationReviewSchema>;
