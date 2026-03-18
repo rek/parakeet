@@ -16,10 +16,7 @@ export * from './utils/buildIntensityLabel';
 export * from './utils/groupAuxiliaryWork';
 export * from './utils/computeDismissResult';
 export * from './utils/prepare-warning';
-export {
-  fetchProfileSex,
-  cancelPlannedSessionsForProgram,
-} from './data/session.repository';
+export { fetchProfileSex } from './data/session.repository';
 export {
   parseActualSetsJson,
   parseJitInputSnapshot,

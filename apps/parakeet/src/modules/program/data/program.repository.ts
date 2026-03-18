@@ -224,3 +224,14 @@ export async function fetchActiveProgramMode(userId: string): Promise<{
   if (error) throw error;
   return data;
 }
+
+export async function cancelPlannedSessionsForProgram(
+  programId: string
+): Promise<void> {
+  const { error } = await typedSupabase
+    .from('sessions')
+    .update({ status: 'skipped' })
+    .eq('program_id', programId)
+    .eq('status', 'planned');
+  if (error) throw error;
+}

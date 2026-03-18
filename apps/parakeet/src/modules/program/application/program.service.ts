@@ -1,4 +1,3 @@
-import { cancelPlannedSessionsForProgram } from '@modules/session';
 import {
   calculateSessionDate,
   computeBlockOffset,
@@ -16,6 +15,7 @@ import { computeMinimalDayShift } from '../utils/computeMinimalDayShift';
 import {
   archiveActivePrograms,
   bulkUpdateSessionDates,
+  cancelPlannedSessionsForProgram,
   fetchActiveProgramMode,
   fetchActiveProgramWithSessions,
   fetchPlannedSessionsForProgram,
