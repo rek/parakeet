@@ -29,6 +29,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { BackLink } from '../../components/navigation/BackLink';
 import { FormFeedback } from '../../components/ui/FormFeedback';
+import { ScreenTitle } from '../../components/ui/ScreenTitle';
 import { radii, spacing, typography } from '../../theme';
 import type { ColorScheme } from '../../theme';
 import { useTheme } from '../../theme/ThemeContext';
@@ -62,13 +63,6 @@ function buildStyles(colors: ColorScheme) {
       paddingHorizontal: spacing[5],
       paddingTop: spacing[5],
       paddingBottom: spacing[12],
-    },
-    title: {
-      fontSize: typography.sizes['2xl'],
-      fontWeight: typography.weights.black,
-      color: colors.text,
-      letterSpacing: typography.letterSpacing.tight,
-      marginBottom: spacing[6],
     },
     card: {
       backgroundColor: colors.bgSurface,
@@ -372,7 +366,7 @@ export default function ProfileScreen() {
       >
         <BackLink onPress={() => router.back()} />
 
-        <Text style={styles.title}>Edit Profile</Text>
+        <ScreenTitle marginBottom={spacing[6]}>Edit Profile</ScreenTitle>
 
         <View style={styles.card}>
           <View style={styles.fieldBlock}>

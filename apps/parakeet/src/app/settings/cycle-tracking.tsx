@@ -35,6 +35,7 @@ import { router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { BackLink } from '../../components/navigation/BackLink';
+import { ScreenTitle } from '../../components/ui/ScreenTitle';
 import type { ColorScheme } from '../../theme';
 import { radii, spacing, typography } from '../../theme';
 import { useTheme } from '../../theme/ThemeContext';
@@ -53,13 +54,6 @@ function buildStyles(colors: ColorScheme) {
     },
     headerRow: {
       marginBottom: spacing[2],
-    },
-    title: {
-      fontSize: typography.sizes['2xl'],
-      fontWeight: typography.weights.black,
-      color: colors.text,
-      marginTop: spacing[2],
-      letterSpacing: typography.letterSpacing.tight,
     },
     card: {
       backgroundColor: colors.bgSurface,
@@ -338,7 +332,7 @@ export default function CycleTrackingScreen() {
       >
         <View style={styles.headerRow}>
           <BackLink onPress={() => router.back()} />
-          <Text style={styles.title}>Cycle Tracking</Text>
+          <ScreenTitle>Cycle Tracking</ScreenTitle>
         </View>
 
         {loading ? null : (

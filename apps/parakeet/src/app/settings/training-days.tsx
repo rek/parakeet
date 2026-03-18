@@ -27,6 +27,7 @@ import type { ColorScheme } from '../../theme';
 import { radii, spacing, typography } from '../../theme';
 import { useTheme } from '../../theme/ThemeContext';
 import { BackLink } from '../../components/navigation/BackLink';
+import { ScreenTitle } from '../../components/ui/ScreenTitle';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -56,13 +57,6 @@ function buildStyles(colors: ColorScheme) {
     titleWrap: {
       paddingHorizontal: spacing[6],
       paddingBottom: spacing[6],
-    },
-    title: {
-      fontSize: typography.sizes['2xl'],
-      fontWeight: typography.weights.black,
-      color: colors.text,
-      letterSpacing: typography.letterSpacing.tight,
-      marginBottom: spacing[1],
     },
     subtitle: {
       fontSize: typography.sizes.sm,
@@ -280,7 +274,7 @@ export default function TrainingDaysScreen() {
 
       <ScrollView showsVerticalScrollIndicator={false}>
         <View style={styles.titleWrap}>
-          <Text style={styles.title}>Training Days</Text>
+          <ScreenTitle marginBottom={spacing[1]}>Training Days</ScreenTitle>
           <Text style={styles.subtitle}>
             Choose which days of the week you train
           </Text>

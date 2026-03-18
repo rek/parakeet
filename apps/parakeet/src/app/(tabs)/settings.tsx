@@ -33,6 +33,7 @@ import Constants from 'expo-constants';
 import { router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { ScreenTitle } from '../../components/ui/ScreenTitle';
 import { radii, spacing, typography } from '../../theme';
 import type { ColorScheme } from '../../theme';
 import { useTheme } from '../../theme/ThemeContext';
@@ -107,13 +108,6 @@ function buildStyles(colors: ColorScheme) {
       paddingHorizontal: spacing[6],
       paddingTop: spacing[6],
       paddingBottom: spacing[12],
-    },
-    screenTitle: {
-      fontSize: typography.sizes['2xl'],
-      fontWeight: typography.weights.black,
-      color: colors.text,
-      marginBottom: spacing[6],
-      letterSpacing: typography.letterSpacing.tight,
     },
     profileInlineHeader: {
       flexDirection: 'row',
@@ -348,7 +342,7 @@ export default function SettingsScreen() {
         contentContainerStyle={styles.container}
         showsVerticalScrollIndicator={false}
       >
-        <Text style={styles.screenTitle}>Settings</Text>
+        <ScreenTitle marginBottom={spacing[6]}>Settings</ScreenTitle>
 
         <View style={styles.profileInlineHeader}>
           <View style={styles.profileInlineHeaderTextWrap}>

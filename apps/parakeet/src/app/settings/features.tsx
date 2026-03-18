@@ -20,6 +20,7 @@ import { router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { BackLink } from '../../components/navigation/BackLink';
+import { ScreenTitle } from '../../components/ui/ScreenTitle';
 import { radii, spacing, typography } from '../../theme';
 import type { ColorScheme } from '../../theme';
 import { useTheme } from '../../theme/ThemeContext';
@@ -46,13 +47,6 @@ function buildStyles(colors: ColorScheme) {
       paddingHorizontal: spacing[6],
       paddingTop: spacing[4],
       paddingBottom: spacing[12],
-    },
-    screenTitle: {
-      fontSize: typography.sizes['2xl'],
-      fontWeight: typography.weights.black,
-      color: colors.text,
-      marginBottom: spacing[1],
-      letterSpacing: typography.letterSpacing.tight,
     },
     subtitle: {
       fontSize: typography.sizes.sm,
@@ -153,7 +147,7 @@ export default function FeaturesScreen() {
       >
         <BackLink label="Settings" onPress={() => router.back()} />
 
-        <Text style={styles.screenTitle}>Features</Text>
+        <ScreenTitle marginBottom={spacing[1]}>Features</ScreenTitle>
         <Text style={styles.subtitle}>
           Toggle features to keep your app simple or unlock everything.
         </Text>

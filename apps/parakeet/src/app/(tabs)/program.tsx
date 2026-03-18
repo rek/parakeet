@@ -36,6 +36,8 @@ import { spacing, typography } from '../../theme';
 import type { ColorScheme } from '../../theme';
 import { useTheme } from '../../theme/ThemeContext';
 
+import { ScreenTitle } from '../../components/ui/ScreenTitle';
+
 function buildStyles(colors: ColorScheme) {
   return StyleSheet.create({
     loadingContainer: {
@@ -52,13 +54,6 @@ function buildStyles(colors: ColorScheme) {
       paddingHorizontal: spacing[5],
       paddingTop: spacing[2],
       paddingBottom: spacing[5],
-    },
-    title: {
-      fontSize: typography.sizes['2xl'],
-      fontWeight: typography.weights.black,
-      color: colors.text,
-      marginBottom: spacing[1],
-      letterSpacing: typography.letterSpacing.tight,
     },
     subtitle: {
       fontSize: typography.sizes.sm,
@@ -266,7 +261,7 @@ export default function ProgramScreen() {
     return (
       <SafeAreaView style={styles.container}>
         <View style={styles.header}>
-          <Text style={styles.title}>My Program</Text>
+          <ScreenTitle marginBottom={spacing[1]}>My Program</ScreenTitle>
         </View>
         <View style={styles.emptyState}>
           <Text style={styles.emptyTitle}>No active program</Text>
@@ -317,7 +312,7 @@ export default function ProgramScreen() {
       <SafeAreaView style={styles.container}>
         <View style={styles.header}>
           <View style={styles.headerRow}>
-            <Text style={styles.title}>My Program</Text>
+            <ScreenTitle marginBottom={spacing[1]}>My Program</ScreenTitle>
             <TouchableOpacity
               onPress={confirmEndProgram}
               disabled={endProgram.isPending}
@@ -393,7 +388,7 @@ export default function ProgramScreen() {
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
         <View style={styles.headerRow}>
-          <Text style={styles.title}>My Program</Text>
+          <ScreenTitle marginBottom={spacing[1]}>My Program</ScreenTitle>
           <TouchableOpacity
             onPress={confirmEndProgram}
             disabled={endProgram.isPending}

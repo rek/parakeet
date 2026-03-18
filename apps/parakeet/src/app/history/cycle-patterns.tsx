@@ -17,6 +17,7 @@ import { router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { BackLink } from '../../components/navigation/BackLink';
+import { ScreenTitle } from '../../components/ui/ScreenTitle';
 import { radii, spacing, typography } from '../../theme';
 import type { ColorScheme } from '../../theme';
 import { useTheme } from '../../theme/ThemeContext';
@@ -29,14 +30,6 @@ function buildStyles(colors: ColorScheme) {
       paddingHorizontal: spacing[5],
       paddingTop: spacing[4],
       paddingBottom: spacing[12],
-    },
-    title: {
-      fontSize: typography.sizes['2xl'],
-      fontWeight: typography.weights.black,
-      color: colors.text,
-      marginBottom: spacing[5],
-      marginTop: spacing[2],
-      letterSpacing: typography.letterSpacing.tight,
     },
     noticeCard: {
       backgroundColor: colors.warningMuted,
@@ -140,7 +133,7 @@ export default function CyclePatternsScreen() {
         showsVerticalScrollIndicator={false}
       >
         <BackLink onPress={() => router.back()} />
-        <Text style={styles.title}>Cycle Patterns</Text>
+        <ScreenTitle marginBottom={spacing[5]}>Cycle Patterns</ScreenTitle>
 
         {isLoading ? null : !hasEnoughData ? (
           <View style={styles.noticeCard}>

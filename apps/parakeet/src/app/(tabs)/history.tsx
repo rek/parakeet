@@ -35,6 +35,7 @@ import { router } from 'expo-router';
 import { LineChart } from 'react-native-chart-kit';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { ScreenTitle } from '../../components/ui/ScreenTitle';
 import { palette, radii, spacing, typography } from '../../theme';
 import { useTheme } from '../../theme/ThemeContext';
 
@@ -102,13 +103,6 @@ export default function HistoryScreen() {
           paddingBottom: spacing[12],
         },
         centered: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-        screenTitle: {
-          fontSize: typography.sizes['2xl'],
-          fontWeight: typography.weights.black,
-          color: colors.text,
-          marginBottom: spacing[6],
-          letterSpacing: typography.letterSpacing.tight,
-        },
         sectionHeader: {
           fontSize: typography.sizes.xs,
           fontWeight: typography.weights.bold,
@@ -424,7 +418,7 @@ export default function HistoryScreen() {
         contentContainerStyle={styles.container}
         showsVerticalScrollIndicator={false}
       >
-        <Text style={styles.screenTitle}>History</Text>
+        <ScreenTitle marginBottom={spacing[6]}>History</ScreenTitle>
 
         {/* 1RM trend cards */}
         <Text style={styles.sectionHeader}>Estimated 1RM</Text>
