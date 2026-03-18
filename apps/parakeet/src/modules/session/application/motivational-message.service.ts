@@ -2,6 +2,7 @@ import { getProfile } from '@modules/profile/application/profile.service';
 import { JIT_MODEL } from '@parakeet/training-engine';
 import type { Json } from '@platform/supabase';
 import { typedSupabase } from '@platform/supabase';
+import { captureException } from '@platform/utils/captureException';
 import { generateText } from 'ai';
 
 export interface MotivationalContext {
@@ -142,11 +143,44 @@ Style rules:
 - Exclamation points or emojis are fine.
 - Max 2 sentences. Be specific to the data provided — reference the actual lift names, weight, or block number if relevant.`;
 
+async function fetchExistingMessage({
+  userId,
+  sessionIds,
+}: {
+  userId: string;
+  sessionIds: string[];
+}) {
+  try {
+    const sorted = [...sessionIds].sort();
+    const { data } = await typedSupabase
+      .from('motivational_message_logs')
+      .select('message, session_ids')
+      .eq('user_id', userId)
+      .contains('session_ids', sorted)
+      .order('created_at', { ascending: false })
+      .limit(5);
+    // contains is a superset check — verify exact length match
+    const match = (data ?? []).find(
+      (row) => (row.session_ids as string[]).length === sorted.length
+    );
+    return match?.message ?? null;
+  } catch (err) {
+    captureException(err);
+    return null;
+  }
+}
+
 export async function generateMotivationalMessage(
   ctx: MotivationalContext,
   sessionIds?: string[],
   userId?: string
 ): Promise<string> {
+  // Return persisted message if one already exists for these sessions
+  if (userId && sessionIds?.length) {
+    const existing = await fetchExistingMessage({ userId, sessionIds });
+    if (existing) return existing;
+  }
+
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), 8000);
   const result = await generateText({
