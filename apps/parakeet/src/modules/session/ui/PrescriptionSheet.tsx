@@ -14,6 +14,7 @@ import {
   formatVolumeChanges,
   formatWeightDerivation,
 } from '../utils/format-trace';
+import type { TraceLine } from '../utils/format-trace';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -91,6 +92,9 @@ function buildStyles(colors: ColorScheme) {
       fontSize: typography.sizes.sm,
       color: colors.warning,
     },
+    traceLineBlock: {
+      gap: spacing[0.5],
+    },
     derivationLine: {
       fontSize: typography.sizes.sm,
       color: colors.textSecondary,
@@ -101,6 +105,11 @@ function buildStyles(colors: ColorScheme) {
       color: colors.text,
       fontWeight: typography.weights.semibold,
       fontFamily: typography.families.mono,
+    },
+    subtitle: {
+      fontSize: typography.sizes.xs,
+      color: colors.textTertiary,
+      paddingLeft: spacing[1],
     },
     auxBlock: {
       gap: spacing[1],
@@ -116,6 +125,11 @@ function buildStyles(colors: ColorScheme) {
     auxLine: {
       fontSize: typography.sizes.sm,
       color: colors.textSecondary,
+      paddingLeft: spacing[2],
+    },
+    auxSubtitle: {
+      fontSize: typography.sizes.xs,
+      color: colors.textTertiary,
       paddingLeft: spacing[2],
     },
     restLine: {
@@ -138,6 +152,23 @@ const STRATEGY_LABELS: Record<PrescriptionTrace['strategy'], string> = {
   hybrid: 'Hybrid',
   formula_fallback: 'Fallback',
 };
+
+function renderTraceLine(
+  line: TraceLine,
+  textStyle: object,
+  subtitleStyle: object,
+  key: number | string,
+) {
+  if (!line.subtitle) {
+    return <Text key={key} style={textStyle}>{line.text}</Text>;
+  }
+  return (
+    <View key={key} style={{ gap: 2 }}>
+      <Text style={textStyle}>{line.text}</Text>
+      <Text style={subtitleStyle}>{line.subtitle}</Text>
+    </View>
+  );
+}
 
 // ── Component ─────────────────────────────────────────────────────────────────
 
@@ -205,18 +236,16 @@ export function PrescriptionSheet({ visible, onClose, trace, focusExercise }: Pr
         {weightLines !== null && (
           <View style={styles.section}>
             <Text style={styles.sectionHeader}>Weight Derivation</Text>
-            {weightLines.map((line, i) => (
-              <Text
-                key={i}
-                style={
-                  i === weightLines.length - 1
-                    ? styles.derivationFinal
-                    : styles.derivationLine
-                }
-              >
-                {line}
-              </Text>
-            ))}
+            {weightLines.map((line, i) =>
+              renderTraceLine(
+                line,
+                i === weightLines.length - 1
+                  ? styles.derivationFinal
+                  : styles.derivationLine,
+                styles.subtitle,
+                i,
+              )
+            )}
           </View>
         )}
 
@@ -225,9 +254,16 @@ export function PrescriptionSheet({ visible, onClose, trace, focusExercise }: Pr
           <View style={styles.section}>
             <Text style={styles.sectionHeader}>Volume Adjustments</Text>
             {volumeLines.map((line, i) => (
-              <View key={i} style={styles.bulletRow}>
-                <Text style={styles.bulletMark}>•</Text>
-                <Text style={styles.bulletText}>{line}</Text>
+              <View key={i}>
+                <View style={styles.bulletRow}>
+                  <Text style={styles.bulletMark}>•</Text>
+                  <Text style={styles.bulletText}>{line.text}</Text>
+                </View>
+                {line.subtitle && (
+                  <Text style={[styles.subtitle, { paddingLeft: spacing[4] }]}>
+                    {line.subtitle}
+                  </Text>
+                )}
               </View>
             ))}
           </View>
@@ -254,9 +290,12 @@ export function PrescriptionSheet({ visible, onClose, trace, focusExercise }: Pr
                     {capitalize(aux.exercise.replace(/_/g, ' '))}
                   </Text>
                   {auxLines.map((line, j) => (
-                    <Text key={j} style={styles.auxLine}>
-                      {line}
-                    </Text>
+                    <View key={j}>
+                      <Text style={styles.auxLine}>{line.text}</Text>
+                      {line.subtitle && (
+                        <Text style={styles.auxSubtitle}>{line.subtitle}</Text>
+                      )}
+                    </View>
                   ))}
                 </View>
               );
@@ -267,18 +306,16 @@ export function PrescriptionSheet({ visible, onClose, trace, focusExercise }: Pr
         {/* Rest */}
         <View style={styles.section}>
           <Text style={styles.sectionHeader}>Rest</Text>
-          {restLines.map((line, i) => (
-            <Text
-              key={i}
-              style={
-                line.startsWith('Final:')
-                  ? styles.restLineFinal
-                  : styles.restLine
-              }
-            >
-              {line}
-            </Text>
-          ))}
+          {restLines.map((line, i) =>
+            renderTraceLine(
+              line,
+              line.text.startsWith('Final:')
+                ? styles.restLineFinal
+                : styles.restLine,
+              styles.subtitle,
+              i,
+            )
+          )}
         </View>
       </ScrollView>
     </Sheet>

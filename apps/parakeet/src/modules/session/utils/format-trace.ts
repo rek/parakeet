@@ -5,6 +5,13 @@ import type {
   WeightDerivation,
 } from '@parakeet/training-engine';
 
+// ── Types ────────────────────────────────────────────────────────────────────
+
+export interface TraceLine {
+  text: string;
+  subtitle?: string;
+}
+
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
 function fmtSeconds(s: number): string {
@@ -14,56 +21,54 @@ function fmtSeconds(s: number): string {
   return sec > 0 ? `${min}m ${sec}s` : `${min}m`;
 }
 
-function fmtPct(decimal: number): string {
-  return `${(decimal * 100).toFixed(1)}%`;
-}
-
-const REP_SOURCE_LABELS: Record<string, string> = {
-  'exercise catalog': 'catalog default',
-  'volume top-up default': 'top-up default',
-};
-
-function readableRepSource(raw: string): string {
-  // "block1.heavy config" → "block 1 heavy"
-  const blockMatch = raw.match(/^block(\d+)\.(\w+)\s+config$/);
-  if (blockMatch) return `block ${blockMatch[1]} ${blockMatch[2]}`;
-  return REP_SOURCE_LABELS[raw] ?? raw;
-}
-
 // ── Weight derivation ─────────────────────────────────────────────────────────
 
 export function formatWeightDerivation({
   derivation,
 }: {
   derivation: WeightDerivation;
-}): string[] {
-  const lines: string[] = [];
+}): TraceLine[] {
+  const lines: TraceLine[] = [];
 
-  const sourceLabel = derivation.oneRmSource === 'working'
-    ? ' (working)'
-    : derivation.oneRmSource === 'stored'
-      ? ' (stored)'
-      : '';
-  lines.push(`1RM: ${derivation.oneRmKg} kg${sourceLabel}`);
+  const pctDisplay = (derivation.blockPct * 100).toFixed(1);
 
-  if (derivation.storedOneRmKg != null && derivation.oneRmSource === 'working') {
-    lines.push(`  stored 1RM: ${derivation.storedOneRmKg} kg`);
-  }
+  lines.push({
+    text: `1RM: ${derivation.oneRmKg} kg`,
+    subtitle: derivation.oneRmSource === 'working'
+      ? `Computed from recent sessions (stored: ${derivation.storedOneRmKg ?? '?'} kg)`
+      : 'Your one-rep max from lifter maxes',
+  });
 
-  lines.push(`Block target: ${fmtPct(derivation.blockPct)} → ${derivation.baseWeightKg} kg`);
+  lines.push({
+    text: `× ${pctDisplay}% = ${derivation.baseWeightKg} kg`,
+    subtitle: 'Block intensity — percentage of 1RM for this training block',
+  });
 
   for (const mod of derivation.modifiers) {
-    const pctChange = ((mod.multiplier - 1) * 100).toFixed(1);
-    const sign = mod.multiplier >= 1 ? '+' : '';
-    lines.push(`${mod.reason}: ${sign}${pctChange}%`);
+    lines.push({
+      text: `× ${mod.multiplier}`,
+      subtitle: mod.reason,
+    });
   }
 
-  lines.push(`= ${derivation.finalWeightKg} kg`);
+  lines.push({
+    text: `= ${derivation.finalWeightKg} kg`,
+    subtitle: 'Final prescribed weight after all modifiers',
+  });
 
   return lines;
 }
 
 // ── Volume changes ────────────────────────────────────────────────────────────
+
+const VOLUME_SUBTITLES: Record<VolumeTrace['source'], string> = {
+  rpe_history: 'Adjusted based on recent session difficulty ratings',
+  readiness: 'Adjusted for sleep quality and energy level',
+  cycle_phase: 'Adjusted for menstrual cycle phase',
+  soreness: 'Reduced due to muscle soreness',
+  disruption: 'Reduced due to active training disruption',
+  mrv_cap: 'Capped at maximum recoverable volume for this muscle',
+};
 
 const VOLUME_SOURCE_LABELS: Record<VolumeTrace['source'], string> = {
   rpe_history: 'RPE history',
@@ -78,36 +83,51 @@ export function formatVolumeChanges({
   changes,
 }: {
   changes: VolumeTrace[];
-}): string[] {
+}): TraceLine[] {
   return changes.map((change) => {
     const label = VOLUME_SOURCE_LABELS[change.source] ?? change.source;
-    const delta = change.setsAfter - change.setsBefore;
-    const sign = delta >= 0 ? '+' : '';
-    return `${label}: ${change.setsBefore} → ${change.setsAfter} sets (${sign}${delta})`;
+    return {
+      text: `${label}: ${change.setsBefore} → ${change.setsAfter} sets`,
+      subtitle: VOLUME_SUBTITLES[change.source] ?? change.reason,
+    };
   });
 }
 
 // ── Auxiliary exercise trace ──────────────────────────────────────────────────
 
-export function formatAuxTrace({ aux }: { aux: AuxExerciseTrace }): string[] {
-  const lines: string[] = [];
+const SCALING_SUBTITLES: Record<string, string> = {
+  linear: 'Weight scales linearly with primary lift 1RM',
+  sqrt: 'Weight scales with square root — for lighter isolation exercises',
+};
 
-  lines.push(aux.selectionReason);
+export function formatAuxTrace({ aux }: { aux: AuxExerciseTrace }): TraceLine[] {
+  const lines: TraceLine[] = [];
+
+  lines.push({ text: aux.selectionReason });
 
   if (aux.skipped) {
-    lines.push(`Skipped${aux.skipReason ? `: ${aux.skipReason}` : ''}`);
+    lines.push({
+      text: `Skipped${aux.skipReason ? `: ${aux.skipReason}` : ''}`,
+    });
     return lines;
   }
 
-  lines.push(`${aux.sets} × ${aux.reps} reps (${readableRepSource(aux.repSource)})`);
+  lines.push({
+    text: `${aux.sets} × ${aux.reps} reps`,
+    subtitle: `Rep source: ${aux.repSource}`,
+  });
 
   if (aux.weightTrace) {
     const wt = aux.weightTrace;
-    const scalingLabel = wt.scalingMethod === 'sqrt' ? 'sqrt scaling' : 'linear scaling';
-    lines.push(`${wt.finalWeightKg} kg (${fmtPct(wt.catalogPct)} of 1RM, ${scalingLabel})`);
+    lines.push({
+      text: `${wt.finalWeightKg} kg (${wt.oneRmKg} × ${wt.catalogPct.toFixed(3)})`,
+      subtitle: `Catalog percentage of 1RM · ${SCALING_SUBTITLES[wt.scalingMethod] ?? wt.scalingMethod}`,
+    });
     if (wt.sorenessMultiplier !== 1) {
-      const pctChange = ((wt.sorenessMultiplier - 1) * 100).toFixed(0);
-      lines.push(`Soreness: ${pctChange}% weight`);
+      lines.push({
+        text: `× ${wt.sorenessMultiplier} soreness`,
+        subtitle: 'Weight reduced due to muscle soreness',
+      });
     }
   }
 
@@ -116,25 +136,40 @@ export function formatAuxTrace({ aux }: { aux: AuxExerciseTrace }): string[] {
 
 // ── Rest trace ────────────────────────────────────────────────────────────────
 
-export function formatRestTrace({ rest }: { rest: RestTrace }): string[] {
-  const lines: string[] = [];
+export function formatRestTrace({ rest }: { rest: RestTrace }): TraceLine[] {
+  const lines: TraceLine[] = [];
   const { mainLift } = rest;
 
-  lines.push(`Base: ${fmtSeconds(mainLift.formulaBaseSeconds)}`);
+  lines.push({
+    text: `Formula base: ${fmtSeconds(mainLift.formulaBaseSeconds)}`,
+    subtitle: 'Default rest period for this intensity type',
+  });
 
   if (mainLift.userOverrideSeconds !== null) {
-    lines.push(`Your override: ${fmtSeconds(mainLift.userOverrideSeconds)}`);
+    lines.push({
+      text: `User override: ${fmtSeconds(mainLift.userOverrideSeconds)}`,
+      subtitle: 'Your custom rest setting',
+    });
   }
 
   if (mainLift.llmDeltaSeconds !== null) {
     const sign = mainLift.llmDeltaSeconds >= 0 ? '+' : '';
-    lines.push(`AI adjustment: ${sign}${mainLift.llmDeltaSeconds}s`);
+    lines.push({
+      text: `AI delta: ${sign}${mainLift.llmDeltaSeconds}s`,
+      subtitle: 'AI-suggested adjustment based on session context',
+    });
   }
 
-  lines.push(`Final: ${fmtSeconds(mainLift.finalSeconds)}`);
+  lines.push({
+    text: `Final: ${fmtSeconds(mainLift.finalSeconds)}`,
+    subtitle: 'Prescribed rest between working sets',
+  });
 
   if (rest.auxiliarySeconds !== mainLift.finalSeconds) {
-    lines.push(`Auxiliary: ${fmtSeconds(rest.auxiliarySeconds)}`);
+    lines.push({
+      text: `Auxiliary: ${fmtSeconds(rest.auxiliarySeconds)}`,
+      subtitle: 'Rest between auxiliary exercise sets',
+    });
   }
 
   return lines;
