@@ -58,6 +58,31 @@ function otaStatusLabel(status: OtaStatus, error: string | null): string {
   }
 }
 
+function formatTimeAgo(epochMs: number | null) {
+  if (epochMs == null) return null;
+  const seconds = Math.floor((Date.now() - epochMs) / 1000);
+  if (seconds < 60) return 'just now';
+  const minutes = Math.floor(seconds / 60);
+  if (minutes < 60) return `${minutes}m ago`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours}h ago`;
+  return `${Math.floor(hours / 24)}d ago`;
+}
+
+function formatBuildDate(otaCreatedAt: Date | null) {
+  const source = otaCreatedAt ?? (
+    Constants.expoConfig?.extra?.buildDate
+      ? new Date(Constants.expoConfig.extra.buildDate as string)
+      : null
+  );
+  if (!source) return __DEV__ ? 'dev' : '—';
+  return source.toLocaleDateString('en-GB', {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+  });
+}
+
 // ── Sub-components ────────────────────────────────────────────────────────────
 
 interface SectionHeaderProps {
@@ -273,6 +298,7 @@ export default function SettingsScreen() {
     status: otaStatus,
     error: otaError,
     meta: otaMeta,
+    lastCheckedAt: otaLastCheckedAt,
     checkForUpdate,
   } = useOtaUpdateStatus();
 
@@ -622,22 +648,11 @@ export default function SettingsScreen() {
           right={
             <View style={styles.rowRight}>
               {__DEV__ && <Text style={styles.devBadge}>DEV</Text>}
-              <Text style={styles.buildDate}>
-                {Constants.expoConfig?.extra?.buildDate
-                  ? new Date(
-                      Constants.expoConfig.extra.buildDate as string
-                    ).toLocaleDateString('en-GB', {
-                      day: 'numeric',
-                      month: 'short',
-                      year: 'numeric',
-                    })
-                  : 'dev'}
-              </Text>
             </View>
           }
         />
         <Row
-          label={`Channel: ${otaMeta.channel ?? '—'}  ·  Runtime: ${otaMeta.runtimeVersion ?? '—'}`}
+          label={`Running build from ${formatBuildDate(otaMeta.createdAt)}`}
           labelStyle={styles.versionLabel}
           styles={styles}
         />
@@ -656,6 +671,13 @@ export default function SettingsScreen() {
               : checkForUpdate
           }
           styles={styles}
+          right={
+            otaLastCheckedAt ? (
+              <Text style={styles.buildDate}>
+                {formatTimeAgo(otaLastCheckedAt)}
+              </Text>
+            ) : null
+          }
         />
         <Row
           label="Log New Issue"

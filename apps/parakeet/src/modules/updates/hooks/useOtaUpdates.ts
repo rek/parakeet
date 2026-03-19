@@ -17,12 +17,16 @@ export interface OtaUpdateMeta {
   channel: string | null;
   runtimeVersion: string | null;
   updateId: string | null;
+  /** Creation date of the currently running update (OTA or embedded). */
+  createdAt: Date | null;
 }
 
 export interface OtaUpdateState {
   status: OtaStatus;
   error: string | null;
   meta: OtaUpdateMeta;
+  /** Timestamp of the last successful check (epoch ms), or null if never checked. */
+  lastCheckedAt: number | null;
   checkForUpdate: () => void;
 }
 
@@ -33,6 +37,7 @@ function getUpdateMeta(): OtaUpdateMeta {
     channel: Updates.channel ?? null,
     runtimeVersion: Updates.runtimeVersion ?? null,
     updateId: Updates.updateId ?? null,
+    createdAt: Updates.createdAt ?? null,
   };
 }
 
@@ -40,20 +45,22 @@ const NOOP_STATE: OtaUpdateState = {
   status: 'idle',
   error: null,
   meta: getUpdateMeta(),
+  lastCheckedAt: null,
   checkForUpdate: () => {},
 };
 
 export function useOtaUpdates(): OtaUpdateState {
   const [status, setStatus] = useState<OtaStatus>('idle');
   const [error, setError] = useState<string | null>(null);
-  const lastCheckedAt = useRef<number>(0);
+  const [checkedAt, setCheckedAt] = useState<number | null>(null);
+  const lastCheckedRef = useRef<number>(0);
 
   const checkAndApply = useCallback(async (force = false) => {
     if (__DEV__) return;
 
     const now = Date.now();
-    if (!force && now - lastCheckedAt.current < DEBOUNCE_MS) return;
-    lastCheckedAt.current = now;
+    if (!force && now - lastCheckedRef.current < DEBOUNCE_MS) return;
+    lastCheckedRef.current = now;
 
     try {
       setError(null);
@@ -66,6 +73,7 @@ export function useOtaUpdates(): OtaUpdateState {
         setStatus('restarting');
         await Updates.reloadAsync();
       } else {
+        setCheckedAt(Date.now());
         setStatus('up-to-date');
       }
     } catch (err) {
@@ -97,7 +105,7 @@ export function useOtaUpdates(): OtaUpdateState {
     return () => sub.remove();
   }, [checkAndApply]);
 
-  return { status, error, meta: getUpdateMeta(), checkForUpdate };
+  return { status, error, meta: getUpdateMeta(), lastCheckedAt: checkedAt, checkForUpdate };
 }
 
 export { NOOP_STATE };
