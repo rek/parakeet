@@ -105,7 +105,7 @@ export function Sheet({
       onRequestClose={onClose}
     >
       <Pressable style={styles.overlay} onPress={onClose}>
-        <Pressable style={styles.sheet}>
+        <View style={styles.sheet} onStartShouldSetResponder={() => true}>
           <View style={styles.handle} />
 
           <View style={styles.header}>
@@ -121,7 +121,7 @@ export function Sheet({
           </View>
 
           {children}
-        </Pressable>
+        </View>
       </Pressable>
     </Modal>
   );
