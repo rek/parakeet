@@ -1,3 +1,5 @@
+import { weightGramsToKg } from '@shared/utils/weight';
+
 interface PlannedSet {
   weight_kg: number;
 }
@@ -31,7 +33,7 @@ export function computeDisplayWeights(
   let uncompletedIndex = 0;
   return actualSets.map((actualSet, index) => {
     const planned = plannedSets[index];
-    let displayWeightKg = planned?.weight_kg ?? actualSet.weight_grams / 1000;
+    let displayWeightKg = planned?.weight_kg ?? weightGramsToKg(actualSet.weight_grams);
 
     if (
       !actualSet.is_completed &&

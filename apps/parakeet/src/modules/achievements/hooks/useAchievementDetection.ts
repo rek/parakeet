@@ -10,6 +10,7 @@ import {
   estimateOneRepMax_Epley,
 } from '@parakeet/training-engine';
 import type { EarnedBadge, PR } from '@parakeet/training-engine';
+import { weightGramsToKg } from '@shared/utils/weight';
 
 import {
   getPRHistory,
@@ -68,7 +69,7 @@ export async function detectAchievements(
     const completedSetsForPR = actualSets
       .filter((s) => s.reps_completed > 0)
       .map((s) => ({
-        weightKg: s.weight_grams / 1000,
+        weightKg: weightGramsToKg(s.weight_grams),
         reps: s.reps_completed,
         rpe: s.rpe_actual,
         estimated1rmKg:
@@ -76,7 +77,7 @@ export async function detectAchievements(
           s.rpe_actual >= 8.5 &&
           s.reps_completed >= 1 &&
           s.reps_completed <= 20
-            ? estimateOneRepMax_Epley(s.weight_grams / 1000, s.reps_completed)
+            ? estimateOneRepMax_Epley(weightGramsToKg(s.weight_grams), s.reps_completed)
             : undefined,
       }));
 

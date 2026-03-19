@@ -25,6 +25,8 @@ import type {
   SessionCompletionContext,
 } from '@shared/types/domain';
 
+import { validateSet } from '../utils/validateSet';
+
 import {
   deleteSession,
   fetchCompletedSessions,
@@ -281,46 +283,8 @@ export async function completeSession(
     throw new Error('At least one set is required');
   }
 
-  const normalizedSets = actualSets.map((set) => {
-    if (!Number.isInteger(set.set_number) || set.set_number <= 0) {
-      throw new Error('Invalid set number');
-    }
-    if (!Number.isFinite(set.weight_grams) || set.weight_grams < 0) {
-      throw new Error('Invalid set weight');
-    }
-    if (!Number.isInteger(set.reps_completed) || set.reps_completed < 0) {
-      throw new Error('Invalid reps completed');
-    }
-    if (
-      set.rpe_actual !== undefined &&
-      (!Number.isFinite(set.rpe_actual) ||
-        set.rpe_actual < 1 ||
-        set.rpe_actual > 10)
-    ) {
-      throw new Error('Invalid RPE value');
-    }
-    return { ...set, is_completed: set.is_completed === true };
-  });
-  const normalizedAuxiliarySets = auxiliarySets?.map((set) => {
-    if (!Number.isInteger(set.set_number) || set.set_number <= 0) {
-      throw new Error('Invalid auxiliary set number');
-    }
-    if (!Number.isFinite(set.weight_grams) || set.weight_grams < 0) {
-      throw new Error('Invalid auxiliary set weight');
-    }
-    if (!Number.isInteger(set.reps_completed) || set.reps_completed < 0) {
-      throw new Error('Invalid auxiliary reps completed');
-    }
-    if (
-      set.rpe_actual !== undefined &&
-      (!Number.isFinite(set.rpe_actual) ||
-        set.rpe_actual < 1 ||
-        set.rpe_actual > 10)
-    ) {
-      throw new Error('Invalid auxiliary RPE value');
-    }
-    return { ...set, is_completed: set.is_completed === true };
-  });
+  const normalizedSets = actualSets.map((set) => validateSet(set, 'set'));
+  const normalizedAuxiliarySets = auxiliarySets?.map((set) => validateSet(set, 'auxiliary set'));
 
   const session = await getSession(sessionId);
   const plannedCountRaw =

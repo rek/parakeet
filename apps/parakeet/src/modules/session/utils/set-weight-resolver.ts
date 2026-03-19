@@ -1,3 +1,5 @@
+import { weightKgToGrams } from '@shared/utils/weight';
+
 /**
  * Resolves the weight for the next main lift set.
  *
@@ -21,7 +23,7 @@ export function resolveNextSetWeight({
   const lastCompleted = completedSets
     .filter((s) => s.is_completed && s.set_number < nextSetNumber)
     .sort((a, b) => b.set_number - a.set_number)[0];
-  return lastCompleted?.weight_grams ?? Math.round(plannedWeightKg * 1000);
+  return lastCompleted?.weight_grams ?? weightKgToGrams(plannedWeightKg);
 }
 
 /**
@@ -54,5 +56,5 @@ export function resolveNextAuxSetWeight({
         s.set_number < nextSetNumber
     )
     .sort((a, b) => b.set_number - a.set_number)[0];
-  return lastCompleted?.weight_grams ?? Math.round(plannedWeightKg * 1000);
+  return lastCompleted?.weight_grams ?? weightKgToGrams(plannedWeightKg);
 }

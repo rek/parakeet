@@ -1,5 +1,6 @@
 import type { AdaptedPlan, VolumeRecoveryOffer } from '@parakeet/training-engine';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { weightKgToGrams } from '@shared/utils/weight';
 import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
 
@@ -122,7 +123,7 @@ export const useSessionStore = create<SessionState>()(
           plannedSets,
           actualSets: plannedSets.map((s, i) => ({
             set_number: i + 1,
-            weight_grams: Math.round(s.weight_kg * 1000),
+            weight_grams: weightKgToGrams(s.weight_kg),
             reps_completed: s.reps,
             is_completed: false,
           })),
@@ -139,7 +140,7 @@ export const useSessionStore = create<SessionState>()(
             sets.map((s, i) => ({
               exercise,
               set_number: i + 1,
-              weight_grams: Math.round(s.weight_kg * 1000),
+              weight_grams: weightKgToGrams(s.weight_kg),
               reps_completed: s.reps,
               is_completed: false,
             }))
@@ -257,7 +258,7 @@ export const useSessionStore = create<SessionState>()(
             ...state.actualSets,
             ...offer.recoveredSets.map((s, i) => ({
               set_number: currentCount + i + 1,
-              weight_grams: Math.round(s.weight_kg * 1000),
+              weight_grams: weightKgToGrams(s.weight_kg),
               reps_completed: s.reps,
               is_completed: false,
               is_recovered: true,

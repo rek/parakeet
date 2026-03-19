@@ -1,5 +1,6 @@
 import { getCurrentMaxes } from '@modules/program/lib/lifter-maxes';
 import { computeWilks2020 } from '@parakeet/training-engine';
+import { weightGramsToKg } from '@shared/utils/weight';
 
 import { getProfileById } from '../data/profile.repository';
 
@@ -26,9 +27,9 @@ export async function getCurrentWilksSnapshot(
     profile.biological_sex === 'female' ? 'female' : 'male';
   const bodyweightKg = profile.bodyweight_kg;
 
-  const squatKg = maxes.squat_1rm_grams / 1000;
-  const benchKg = maxes.bench_1rm_grams / 1000;
-  const deadliftKg = maxes.deadlift_1rm_grams / 1000;
+  const squatKg = weightGramsToKg(maxes.squat_1rm_grams);
+  const benchKg = weightGramsToKg(maxes.bench_1rm_grams);
+  const deadliftKg = weightGramsToKg(maxes.deadlift_1rm_grams);
   const totalKg = squatKg + benchKg + deadliftKg;
   const wilks = computeWilks2020(totalKg, bodyweightKg, sex);
 

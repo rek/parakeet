@@ -1,6 +1,7 @@
 import type { Lift } from '@parakeet/shared-types';
 import { computeStreak, computeWilks2020 } from '@parakeet/training-engine';
 import type { PR, StreakResult } from '@parakeet/training-engine';
+import { weightGramsToKg } from '@shared/utils/weight';
 
 import { buildWeekStatuses } from '../utils/week-status-builder';
 
@@ -179,9 +180,9 @@ export async function getWilksHistory(userId: string): Promise<WilksPoint[]> {
       ? relevantBw[relevantBw.length - 1].weight_kg
       : (bwEntries[0]?.weight_kg ?? fallbackBw);
 
-    const squatKg = (maxRow.squat_1rm_grams as number) / 1000;
-    const benchKg = (maxRow.bench_1rm_grams as number) / 1000;
-    const deadliftKg = (maxRow.deadlift_1rm_grams as number) / 1000;
+    const squatKg = weightGramsToKg(maxRow.squat_1rm_grams as number);
+    const benchKg = weightGramsToKg(maxRow.bench_1rm_grams as number);
+    const deadliftKg = weightGramsToKg(maxRow.deadlift_1rm_grams as number);
     const totalKg = squatKg + benchKg + deadliftKg;
     const wilksScore = computeWilks2020(totalKg, bodyweightKg, sex);
 

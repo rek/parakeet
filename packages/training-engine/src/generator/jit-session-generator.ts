@@ -5,15 +5,10 @@ import {
   TrainingDisruption,
 } from '@parakeet/shared-types';
 
-import { getCyclePhaseModifier } from '../adjustments/cycle-phase-adjuster';
 import {
-  getReadinessModifier,
   ReadinessLevel,
 } from '../adjustments/readiness-adjuster';
 import {
-  getPrimaryMusclesForSession,
-  getSorenessModifier,
-  getWorstSoreness,
   SorenessLevel,
   SorenessModifier,
 } from '../adjustments/soreness-adjuster';
@@ -31,15 +26,23 @@ import {
   getMusclesForExercise,
   getMusclesForLift,
 } from '../volume/muscle-mapper';
-import { applyCalibrationAdjustment } from '../analysis/modifier-effectiveness';
 import { PrescriptionTraceBuilder } from './prescription-trace';
 import type { PrescriptionTrace, AuxExerciseTrace } from './prescription-trace';
-import { calculateSets } from './set-calculator';
 import {
   generateWarmupSets,
   WarmupProtocol,
   WarmupSet,
 } from './warmup-calculator';
+
+import { initPipeline } from './steps/initPipeline';
+import { applyRpeAdjustment } from './steps/applyRpeAdjustment';
+import { applyReadinessAdjustment } from './steps/applyReadinessAdjustment';
+import { applyCyclePhaseAdjustment } from './steps/applyCyclePhaseAdjustment';
+import { applySorenessAdjustment } from './steps/applySorenessAdjustment';
+import { applyMrvCap } from './steps/applyMrvCap';
+import { applyDisruptionAdjustment } from './steps/applyDisruptionAdjustment';
+import { buildFinalMainSets } from './steps/buildFinalMainSets';
+import { processAuxExercise } from './steps/processAuxExercise';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -262,294 +265,42 @@ export function generateJITSession(input: JITInput, traceBuilder?: PrescriptionT
     blockNumber,
     oneRmKg,
     formulaConfig,
-    sorenessRatings,
-    weeklyVolumeToDate,
-    mrvMevConfig,
     activeAuxiliaries,
-    recentLogs,
-    activeDisruptions,
     warmupConfig,
     userRestOverrides,
     barWeightKg = 20,
   } = input;
 
-  const rationale: string[] = [];
-  const warnings: string[] = [];
+  // Step 1 — Initialize pipeline context (base sets, primary muscles, soreness)
+  const ctx = initPipeline(input, traceBuilder);
 
-  // Trace context
-  traceBuilder?.setSessionContext({ sessionId, primaryLift, intensityType, blockNumber, oneRmKg });
-
-  // Step 1 — Base sets from formula
-  const baseSets = calculateSets(
-    primaryLift,
-    intensityType,
-    blockNumber,
-    oneRmKg,
-    formulaConfig
-  );
-  const baseWeight = baseSets[0]?.weight_kg ?? 0;
-
-  // Record base weight derivation in trace
-  if (traceBuilder && baseSets.length > 0) {
-    const blockPct = baseWeight / oneRmKg;
-    traceBuilder.setBaseWeight({
-      oneRmKg,
-      blockPct,
-      baseWeightKg: baseWeight,
-      storedOneRmKg: input.storedOneRmKg,
-      workingOneRmKg: input.oneRmSource === 'working' ? oneRmKg : undefined,
-      oneRmSource: input.oneRmSource,
-    });
-  }
-
-  let intensityMultiplier = 1.0;
-  let plannedCount = baseSets.length;
-  const baseSetsCount = baseSets.length;
-  let inRecoveryMode = false;
-  let skippedMainLift = false;
-
-  // Step 2 — Performance adjustment (RPE history)
-  const rpeHistory = recentLogs
-    .filter(
-      (l): l is RecentSessionSummary & { actual_rpe: number } =>
-        l.actual_rpe !== null
-    )
-    .slice(0, 2);
-
-  if (rpeHistory.length >= 2) {
-    const avgDev =
-      rpeHistory.reduce((s, l) => s + (l.actual_rpe - l.target_rpe), 0) /
-      rpeHistory.length;
-    if (avgDev >= 1.0) {
-      intensityMultiplier *= 0.975;
-      rationale.push('Recent RPE above target — reduced intensity 2.5%');
-      traceBuilder?.recordModifier({ source: 'rpe_history', multiplier: 0.975, reason: 'Recent RPE above target — intensity x0.975' });
-    } else if (avgDev <= -1.0) {
-      intensityMultiplier *= 1.025;
-      rationale.push('Recent RPE below target — increased intensity 2.5%');
-      traceBuilder?.recordModifier({ source: 'rpe_history', multiplier: 1.025, reason: 'Recent RPE below target — intensity x1.025' });
-    }
-  }
-
-  // Step 2b — Readiness adjustment (sleep quality + energy level)
-  const preReadinessCount = plannedCount;
-  const readinessModifier = getReadinessModifier(
-    input.sleepQuality,
-    input.energyLevel
-  );
-  // Record DEFAULT multiplier in trace BEFORE calibration (feedback loop correctness)
-  if (readinessModifier.intensityMultiplier !== 1.0) {
-    traceBuilder?.recordModifier({ source: 'readiness', multiplier: readinessModifier.intensityMultiplier, reason: readinessModifier.rationale ?? 'Readiness adjustment' });
-  }
-  // Apply per-athlete calibration to readiness modifier
-  if (readinessModifier.intensityMultiplier !== 1.0 && input.modifierCalibrations?.readiness) {
-    readinessModifier.intensityMultiplier = applyCalibrationAdjustment({
-      defaultMultiplier: readinessModifier.intensityMultiplier,
-      adjustment: input.modifierCalibrations.readiness,
-    });
-  }
-  if (
-    readinessModifier.setReduction > 0 ||
-    readinessModifier.intensityMultiplier !== 1.0
-  ) {
-    plannedCount = Math.max(1, plannedCount - readinessModifier.setReduction);
-    intensityMultiplier *= readinessModifier.intensityMultiplier;
-    if (readinessModifier.rationale)
-      rationale.push(readinessModifier.rationale);
-  }
-  const readinessSetsRemoved = preReadinessCount - plannedCount;
-  if (readinessSetsRemoved > 0) {
-    traceBuilder?.recordVolumeChange({ source: 'readiness', setsBefore: preReadinessCount, setsAfter: plannedCount, reason: readinessModifier.rationale ?? 'Readiness set reduction' });
-  }
-
-  // Step 2c — Cycle phase adjustment
-  const preCyclePhaseCount = plannedCount;
-  const cyclePhaseModifier = getCyclePhaseModifier(input.cyclePhase);
-  // Record DEFAULT multiplier in trace BEFORE calibration (feedback loop correctness)
-  if (cyclePhaseModifier.intensityMultiplier !== 1.0) {
-    traceBuilder?.recordModifier({ source: 'cycle_phase', multiplier: cyclePhaseModifier.intensityMultiplier, reason: cyclePhaseModifier.rationale ?? 'Cycle phase adjustment' });
-  }
-  // Apply per-athlete calibration to cycle phase modifier
-  if (cyclePhaseModifier.intensityMultiplier !== 1.0 && input.modifierCalibrations?.cycle_phase) {
-    cyclePhaseModifier.intensityMultiplier = applyCalibrationAdjustment({
-      defaultMultiplier: cyclePhaseModifier.intensityMultiplier,
-      adjustment: input.modifierCalibrations.cycle_phase,
-    });
-  }
-  if (
-    cyclePhaseModifier.volumeModifier !== 0 ||
-    cyclePhaseModifier.intensityMultiplier !== 1.0
-  ) {
-    plannedCount = Math.max(
-      1,
-      plannedCount + cyclePhaseModifier.volumeModifier
-    );
-    intensityMultiplier *= cyclePhaseModifier.intensityMultiplier;
-    if (cyclePhaseModifier.rationale)
-      rationale.push(cyclePhaseModifier.rationale);
-  }
-  const cyclePhaseSetsRemoved = preCyclePhaseCount - plannedCount;
-  if (cyclePhaseSetsRemoved > 0) {
-    traceBuilder?.recordVolumeChange({ source: 'cycle_phase', setsBefore: preCyclePhaseCount, setsAfter: plannedCount, reason: cyclePhaseModifier.rationale ?? 'Cycle phase set reduction' });
-  }
-
-  // Step 3 — Soreness adjustment
-  const preSorenessCount = plannedCount;
-  const primaryMuscles = getPrimaryMusclesForSession(primaryLift);
-  const worstSoreness = getWorstSoreness(primaryMuscles, sorenessRatings);
-  const sorenessModifier = getSorenessModifier(
-    worstSoreness,
-    input.biologicalSex
-  );
-  // Record DEFAULT multiplier in trace BEFORE calibration (feedback loop correctness)
-  if (!sorenessModifier.recoveryMode && sorenessModifier.intensityMultiplier !== 1.0) {
-    traceBuilder?.recordModifier({ source: 'soreness', multiplier: sorenessModifier.intensityMultiplier, reason: sorenessModifier.warning ?? 'Soreness intensity adjustment' });
-  }
-  // Apply per-athlete calibration to soreness modifier (skip for recovery mode — soreness 5)
-  if (!sorenessModifier.recoveryMode && sorenessModifier.intensityMultiplier !== 1.0 && input.modifierCalibrations?.soreness) {
-    sorenessModifier.intensityMultiplier = applyCalibrationAdjustment({
-      defaultMultiplier: sorenessModifier.intensityMultiplier,
-      adjustment: input.modifierCalibrations.soreness,
-    });
-  }
-
-  if (sorenessModifier.recoveryMode) {
-    inRecoveryMode = true;
-    rationale.push('Severe soreness — recovery session');
-    traceBuilder?.setRecoveryMode(true);
-  } else {
-    plannedCount = Math.max(1, plannedCount - sorenessModifier.setReduction);
-    intensityMultiplier *= sorenessModifier.intensityMultiplier;
-    if (sorenessModifier.warning) rationale.push(sorenessModifier.warning);
-  }
-  const sorenessSetsRemoved = inRecoveryMode ? 0 : (preSorenessCount - plannedCount);
-  if (sorenessSetsRemoved > 0) {
-    traceBuilder?.recordVolumeChange({ source: 'soreness', setsBefore: preSorenessCount, setsAfter: plannedCount, reason: sorenessModifier.warning ?? 'Soreness set reduction' });
-  }
-
-  // Step 4 — MRV check (skipped in recovery mode)
-  if (!inRecoveryMode) {
-    const liftMuscles = getMusclesForLift(primaryLift);
-    for (const { muscle, contribution } of liftMuscles) {
-      if (!primaryMuscles.includes(muscle)) continue;
-      const weeklyVol = weeklyVolumeToDate[muscle] ?? 0;
-      const { mrv } = mrvMevConfig[muscle];
-      const remainingCapacity = mrv - weeklyVol;
-      if (remainingCapacity <= 0) {
-        skippedMainLift = true;
-        const prevCount = plannedCount;
-        plannedCount = 0;
-        warnings.push(`MRV exceeded for ${muscle} — main lift skipped`);
-        traceBuilder?.setSkipped(true);
-        traceBuilder?.recordVolumeChange({ source: 'mrv_cap', setsBefore: prevCount, setsAfter: 0, reason: `MRV exceeded for ${muscle}` });
-        break;
-      }
-      const remainingSets = Math.floor(remainingCapacity / contribution);
-      if (plannedCount > remainingSets) {
-        const prevCount = plannedCount;
-        warnings.push(
-          `Approaching MRV for ${muscle} — sets capped at ${remainingSets}`
-        );
-        plannedCount = remainingSets;
-        traceBuilder?.recordVolumeChange({ source: 'mrv_cap', setsBefore: prevCount, setsAfter: remainingSets, reason: `MRV cap for ${muscle}` });
-      }
-    }
-  }
-
-  // Step 5 — Disruption adjustment (compounds with steps 2–4, takes more conservative)
-  const preDisruptionCount = plannedCount;
-  const relevantDisruptions = activeDisruptions.filter(
-    (d) => d.affected_lifts === null || d.affected_lifts.includes(primaryLift)
-  );
-  if (relevantDisruptions.length > 0 && !inRecoveryMode) {
-    const severityOrder = { minor: 1, moderate: 2, major: 3 } as const;
-    const worst = relevantDisruptions.reduce((w, d) =>
-      severityOrder[d.severity] > severityOrder[w.severity] ? d : w
-    );
-    const desc = worst.description ?? 'Training disruption adjustment';
-
-    if (worst.severity === 'major') {
-      skippedMainLift = true;
-      plannedCount = 0;
-      rationale.push(`${desc} — main lift skipped`);
-      traceBuilder?.setSkipped(true);
-      traceBuilder?.recordVolumeChange({ source: 'disruption', setsBefore: preDisruptionCount, setsAfter: 0, reason: `${desc} — major disruption` });
-    } else if (worst.severity === 'moderate') {
-      // Take the more conservative of soreness-adjusted vs disruption-adjusted
-      const disruptionSets = Math.max(1, Math.ceil(baseSets.length / 2));
-      plannedCount = Math.min(plannedCount, disruptionSets);
-      intensityMultiplier = Math.min(intensityMultiplier, 0.9);
-      rationale.push(`${desc} — volume and intensity reduced`);
-      traceBuilder?.recordModifier({ source: 'disruption', multiplier: 0.9, reason: `${desc} — moderate disruption` });
-    } else {
-      rationale.push(desc);
-    }
-  }
-  const disruptionSetsRemoved = preDisruptionCount - plannedCount;
-  if (disruptionSetsRemoved > 0 && !skippedMainLift) {
-    traceBuilder?.recordVolumeChange({ source: 'disruption', setsBefore: preDisruptionCount, setsAfter: plannedCount, reason: 'Moderate disruption set reduction' });
-  }
-
-  // Note no-equipment disruption in rationale (aux boost handled in buildAuxiliaryWork)
-  const hasNoEquipmentDisruption = activeDisruptions.some(
-    (d) => d.disruption_type === 'equipment_unavailable'
-  );
-  if (hasNoEquipmentDisruption) {
-    rationale.push(
-      'No equipment available — auxiliary volume increased with bodyweight compensation exercises'
-    );
-  }
+  // Steps 2–5 — Modifier pipeline (each step mutates ctx)
+  applyRpeAdjustment(ctx, input, traceBuilder);
+  applyReadinessAdjustment(ctx, input, traceBuilder);
+  applyCyclePhaseAdjustment(ctx, input, traceBuilder);
+  applySorenessAdjustment(ctx, input, traceBuilder);
+  applyMrvCap(ctx, input, traceBuilder);
+  applyDisruptionAdjustment(ctx, input, traceBuilder);
 
   // Step 7 — Final main lift sets
-  let mainLiftSets: PlannedSet[];
-
-  if (inRecoveryMode) {
-    const recoveryWeight = Math.max(
-      barWeightKg,
-      roundToNearest(baseWeight * 0.4)
-    );
-    mainLiftSets = Array.from({ length: 3 }, (_, i) => ({
-      set_number: i + 1,
-      weight_kg: recoveryWeight,
-      reps: 5,
-      rpe_target: 5.0,
-    }));
-    traceBuilder?.setFinalWeight(recoveryWeight);
-    traceBuilder?.recordSets(mainLiftSets.map((s) => ({
-      setNumber: s.set_number, weightKg: s.weight_kg, reps: s.reps, rpeTarget: s.rpe_target ?? 0, repSource: 'recovery mode (3x5 @ RPE 5)',
-    })));
-  } else if (skippedMainLift || plannedCount === 0) {
-    mainLiftSets = [];
-  } else {
-    const finalWeight = roundToNearest(baseWeight * intensityMultiplier);
-    mainLiftSets = baseSets.slice(0, plannedCount).map((s, i) => ({
-      ...s,
-      set_number: i + 1,
-      weight_kg: finalWeight,
-    }));
-    traceBuilder?.setFinalWeight(finalWeight);
-    traceBuilder?.recordSets(mainLiftSets.map((s) => ({
-      setNumber: s.set_number, weightKg: s.weight_kg, reps: s.reps, rpeTarget: s.rpe_target ?? 0,
-      repSource: `block${((blockNumber - 1) % 3) + 1}.${intensityType} config`,
-    })));
-  }
+  const mainLiftSets = buildFinalMainSets(ctx, input, traceBuilder);
 
   const volumeModifier =
-    baseSets.length > 0 ? mainLiftSets.length / baseSets.length : 1.0;
-  const intensityModifier = inRecoveryMode ? 0.4 : intensityMultiplier;
+    ctx.baseSets.length > 0 ? mainLiftSets.length / ctx.baseSets.length : 1.0;
+  const intensityModifier = ctx.inRecoveryMode ? 0.4 : ctx.intensityMultiplier;
 
   // Step 6 — Auxiliary work
   const auxiliaryWork = buildAuxiliaryWork(
     activeAuxiliaries,
     oneRmKg,
     mainLiftSets.length,
-    weeklyVolumeToDate,
-    mrvMevConfig,
-    primaryMuscles,
-    worstSoreness,
-    warnings,
+    input.weeklyVolumeToDate,
+    input.mrvMevConfig,
+    ctx.primaryMuscles,
+    ctx.worstSoreness,
+    ctx.warnings,
     input.biologicalSex,
-    activeDisruptions,
+    input.activeDisruptions,
     primaryLift
   );
 
@@ -562,8 +313,8 @@ export function generateJITSession(input: JITInput, traceBuilder?: PrescriptionT
       primaryLift,
       oneRmKg,
       mainLiftSets.length,
-      weeklyVolumeToDate,
-      mrvMevConfig,
+      input.weeklyVolumeToDate,
+      input.mrvMevConfig,
       activeAuxiliaries,
       input.biologicalSex,
       input.sessionIndex,
@@ -575,7 +326,7 @@ export function generateJITSession(input: JITInput, traceBuilder?: PrescriptionT
       const activeCount = auxiliaryWork.filter((a) => !a.skipped).length;
       if (activeCount >= MAX_AUX_EXERCISES) break;
       auxiliaryWork.push(tu);
-      rationale.push(`Added ${tu.exercise}: ${tu.topUpReason}`);
+      ctx.rationale.push(`Added ${tu.exercise}: ${tu.topUpReason}`);
     }
   }
 
@@ -610,10 +361,10 @@ export function generateJITSession(input: JITInput, traceBuilder?: PrescriptionT
 
   // Step 8 — Warmup
   let warmupSets: WarmupSet[] = [];
-  if (mainLiftSets.length > 0 && !skippedMainLift) {
+  if (mainLiftSets.length > 0 && !ctx.skippedMainLift) {
     const workingWeight = mainLiftSets[0].weight_kg;
     const effectiveProtocol =
-      inRecoveryMode || workingWeight < 40
+      ctx.inRecoveryMode || workingWeight < 40
         ? { type: 'preset' as const, name: 'minimal' as const }
         : warmupConfig;
     warmupSets = generateWarmupSets(
@@ -661,11 +412,11 @@ export function generateJITSession(input: JITInput, traceBuilder?: PrescriptionT
 
   // Build volume reduction metadata for intra-session recovery
   const reductionSources: Array<{ source: 'soreness' | 'readiness' | 'cycle_phase' | 'disruption'; setsRemoved: number }> = [];
-  if (readinessSetsRemoved > 0) reductionSources.push({ source: 'readiness', setsRemoved: readinessSetsRemoved });
-  if (cyclePhaseSetsRemoved > 0) reductionSources.push({ source: 'cycle_phase', setsRemoved: cyclePhaseSetsRemoved });
-  if (sorenessSetsRemoved > 0) reductionSources.push({ source: 'soreness', setsRemoved: sorenessSetsRemoved });
-  if (disruptionSetsRemoved > 0) reductionSources.push({ source: 'disruption', setsRemoved: disruptionSetsRemoved });
-  const totalSetsRemoved = readinessSetsRemoved + cyclePhaseSetsRemoved + sorenessSetsRemoved + disruptionSetsRemoved;
+  if (ctx.readinessSetsRemoved > 0) reductionSources.push({ source: 'readiness', setsRemoved: ctx.readinessSetsRemoved });
+  if (ctx.cyclePhaseSetsRemoved > 0) reductionSources.push({ source: 'cycle_phase', setsRemoved: ctx.cyclePhaseSetsRemoved });
+  if (ctx.sorenessSetsRemoved > 0) reductionSources.push({ source: 'soreness', setsRemoved: ctx.sorenessSetsRemoved });
+  if (ctx.disruptionSetsRemoved > 0) reductionSources.push({ source: 'disruption', setsRemoved: ctx.disruptionSetsRemoved });
+  const totalSetsRemoved = ctx.readinessSetsRemoved + ctx.cyclePhaseSetsRemoved + ctx.sorenessSetsRemoved + ctx.disruptionSetsRemoved;
 
   return {
     sessionId,
@@ -675,16 +426,16 @@ export function generateJITSession(input: JITInput, traceBuilder?: PrescriptionT
     auxiliaryWork,
     volumeModifier,
     intensityModifier,
-    rationale,
-    warnings,
-    skippedMainLift,
+    rationale: ctx.rationale,
+    warnings: ctx.warnings,
+    skippedMainLift: ctx.skippedMainLift,
     restRecommendations,
     ...(totalSetsRemoved > 0 && {
       volumeReductions: {
         totalSetsRemoved,
-        baseSetsCount,
+        baseSetsCount: ctx.baseSetsCount,
         sources: reductionSources,
-        recoveryBlocked: inRecoveryMode,
+        recoveryBlocked: ctx.inRecoveryMode,
       },
     }),
   };
@@ -720,87 +471,21 @@ function buildAuxiliaryWork(
       (d) => d.disruption_type === 'equipment_unavailable'
     ) ?? false;
 
-  const result = exercises.map((exercise) => {
-    const exerciseType = getExerciseType(exercise);
-
-    // Soreness 5: skip entirely
-    if (worstSoreness >= 5) {
-      return {
-        exercise,
-        exerciseType,
-        sets: [],
-        skipped: true,
-        skipReason: 'Severe soreness — auxiliary exercise skipped',
-      };
-    }
-
-    // Timed exercises are not load-bearing — skip MRV check
-    if (exerciseType !== 'timed') {
-      // MRV check: insufficient remaining capacity after main lift
-      for (const muscle of primaryMuscles) {
-        const weeklyVol = weeklyVolumeToDate[muscle] ?? 0;
-        const { mrv } = mrvMevConfig[muscle];
-        const remaining = mrv - weeklyVol - mainLiftSetCount;
-        if (remaining < 1) {
-          warnings.push(`Approaching MRV for ${muscle} — ${exercise} skipped`);
-          return {
-            exercise,
-            exerciseType,
-            sets: [],
-            skipped: true,
-            skipReason: `MRV approaching for ${muscle}`,
-          };
-        }
-      }
-    }
-
-    // Timed exercises: single "set" with weight 0, reps 0 — UI renders as mark-complete
-    if (exerciseType === 'timed') {
-      return {
-        exercise,
-        exerciseType,
-        sets: [{ set_number: 1, weight_kg: 0, reps: 0, rpe_target: 7.0 }],
-        skipped: false,
-      };
-    }
-
-    // Base: per-exercise rep target (falls back to 10 male / 12 female)
-    const baseReps = biologicalSex === 'female' ? 12 : 10;
-    const reps = getRepTarget(exercise, baseReps);
-    let setCount = 3;
-    let intensityMult = 1.0;
-
-    if (worstSoreness === 4) {
-      setCount = Math.max(1, setCount - 1);
-      intensityMult = 0.95;
-    } else if (worstSoreness === 3) {
-      setCount = Math.max(1, setCount - 1);
-    }
-
-    // No-equipment disruption: add an extra set to compensate for reduced barbell work
-    if (hasNoEquipment) {
-      setCount += 1;
-    }
-
-    // Bodyweight: no load — weight 0, reps only
-    const finalWeight =
-      exerciseType === 'bodyweight'
-        ? 0
-        : roundToNearest(
-            roundToNearest(
-              computeAuxWeight({ exercise, oneRmKg, lift: primaryLift ?? 'squat', biologicalSex })
-            ) * intensityMult
-          );
-
-    const sets: PlannedSet[] = Array.from({ length: setCount }, (_, i) => ({
-      set_number: i + 1,
-      weight_kg: finalWeight,
-      reps,
-      rpe_target: 7.5,
-    }));
-
-    return { exercise, exerciseType, sets, skipped: false };
-  }) as AuxiliaryWork[];
+  const result = exercises.map((exercise) =>
+    processAuxExercise({
+      exercise,
+      worstSoreness,
+      primaryMuscles,
+      weeklyVolumeToDate,
+      mrvMevConfig,
+      mainLiftSetCount,
+      oneRmKg,
+      biologicalSex,
+      hasNoEquipment,
+      warnings,
+      primaryLift: primaryLift ?? 'squat',
+    })
+  );
 
   // No-equipment disruption: append bodyweight compensation exercises
   // The global MAX_AUX_EXERCISES=5 cap in generateJITSession prevents the combined

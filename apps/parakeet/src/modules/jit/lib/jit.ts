@@ -13,6 +13,7 @@ import {
 import { parseActualSetsJson, parsePlannedSetsJson as parsePlannedSets } from '@modules/session';
 import { fetchProfileSex } from '@modules/session/data/session.repository';
 import { getUserRestOverrides } from '@modules/settings/lib/rest-config';
+import { weightGramsToKg } from '@shared/utils/weight';
 import {
   getBarWeightKg,
   getJITStrategyOverride,
@@ -204,7 +205,7 @@ export async function runJITForSession(
         deviation = computeWeightDeviation({
           plannedWeightKg: planned[0].weight_kg,
           actualSets: actual.map((s) => ({
-            weightKg: s.weight_grams / 1000,
+            weightKg: weightGramsToKg(s.weight_grams),
             reps: s.reps_completed,
             rpe: s.rpe_actual,
           })),
