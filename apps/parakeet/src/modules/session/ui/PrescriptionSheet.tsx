@@ -165,7 +165,7 @@ export function PrescriptionSheet({ visible, onClose, trace, focusExercise }: Pr
       onClose={onClose}
       title="Workout Reasoning"
       subtitle={contextLabel}
-      position="bottom"
+      position="top"
     >
       <ScrollView
         style={styles.scroll}
