@@ -35,6 +35,7 @@ import { router } from 'expo-router';
 import { LineChart } from 'react-native-chart-kit';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { ScreenHeader } from '../../components/ui/ScreenHeader';
 import { ScreenTitle } from '../../components/ui/ScreenTitle';
 import { palette, radii, spacing, typography } from '../../theme';
 import { useTheme } from '../../theme/ThemeContext';
@@ -98,8 +99,7 @@ export default function HistoryScreen() {
         safeArea: { flex: 1, backgroundColor: colors.bg },
         scrollView: { flex: 1 },
         container: {
-          paddingHorizontal: spacing[6],
-          paddingTop: spacing[6],
+          paddingHorizontal: spacing[5],
           paddingBottom: spacing[12],
         },
         centered: { flex: 1, justifyContent: 'center', alignItems: 'center' },
@@ -413,12 +413,14 @@ export default function HistoryScreen() {
 
   return (
     <SafeAreaView style={styles.safeArea}>
+      <ScreenHeader>
+        <ScreenTitle>History</ScreenTitle>
+      </ScreenHeader>
       <ScrollView
         style={styles.scrollView}
         contentContainerStyle={styles.container}
         showsVerticalScrollIndicator={false}
       >
-        <ScreenTitle marginBottom={spacing[6]}>History</ScreenTitle>
 
         {/* 1RM trend cards */}
         <Text style={styles.sectionHeader}>Estimated 1RM</Text>

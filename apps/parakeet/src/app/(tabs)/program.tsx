@@ -32,11 +32,11 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { ScreenHeader } from '../../components/ui/ScreenHeader';
+import { ScreenTitle } from '../../components/ui/ScreenTitle';
 import { spacing, typography } from '../../theme';
 import type { ColorScheme } from '../../theme';
 import { useTheme } from '../../theme/ThemeContext';
-
-import { ScreenTitle } from '../../components/ui/ScreenTitle';
 
 function buildStyles(colors: ColorScheme) {
   return StyleSheet.create({
@@ -50,10 +50,11 @@ function buildStyles(colors: ColorScheme) {
       flex: 1,
       backgroundColor: colors.bg,
     },
-    header: {
-      paddingHorizontal: spacing[5],
-      paddingTop: spacing[2],
-      paddingBottom: spacing[5],
+    headerRow: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      marginBottom: spacing[1],
     },
     subtitle: {
       fontSize: typography.sizes.sm,
@@ -64,12 +65,6 @@ function buildStyles(colors: ColorScheme) {
     },
     scrollContent: {
       paddingBottom: spacing[8],
-    },
-    headerRow: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      alignItems: 'center',
-      marginBottom: spacing[1],
     },
     endProgramText: {
       fontSize: typography.sizes.sm,
@@ -260,9 +255,9 @@ export default function ProgramScreen() {
   if (!program) {
     return (
       <SafeAreaView style={styles.container}>
-        <View style={styles.header}>
-          <ScreenTitle marginBottom={spacing[1]}>My Program</ScreenTitle>
-        </View>
+        <ScreenHeader>
+          <ScreenTitle>My Program</ScreenTitle>
+        </ScreenHeader>
         <View style={styles.emptyState}>
           <Text style={styles.emptyTitle}>No active program</Text>
           <TouchableOpacity
@@ -310,9 +305,9 @@ export default function ProgramScreen() {
 
     return (
       <SafeAreaView style={styles.container}>
-        <View style={styles.header}>
+        <ScreenHeader>
           <View style={styles.headerRow}>
-            <ScreenTitle marginBottom={spacing[1]}>My Program</ScreenTitle>
+            <ScreenTitle>My Program</ScreenTitle>
             <TouchableOpacity
               onPress={confirmEndProgram}
               disabled={endProgram.isPending}
@@ -321,7 +316,7 @@ export default function ProgramScreen() {
             </TouchableOpacity>
           </View>
           <Text style={styles.subtitle}>Unending · Session {counter}</Text>
-        </View>
+        </ScreenHeader>
 
         <View style={styles.unendingBody}>
           {todaySession ? (
@@ -386,9 +381,9 @@ export default function ProgramScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
+      <ScreenHeader>
         <View style={styles.headerRow}>
-          <ScreenTitle marginBottom={spacing[1]}>My Program</ScreenTitle>
+          <ScreenTitle>My Program</ScreenTitle>
           <TouchableOpacity
             onPress={confirmEndProgram}
             disabled={endProgram.isPending}
@@ -400,7 +395,7 @@ export default function ProgramScreen() {
           Block {currentBlock} of 3 · Week {currentWeek} of{' '}
           {program.total_weeks}
         </Text>
-      </View>
+      </ScreenHeader>
 
       <ScrollView
         style={styles.scrollView}

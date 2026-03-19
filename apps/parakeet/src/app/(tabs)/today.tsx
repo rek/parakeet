@@ -56,6 +56,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { router, useFocusEffect } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { ScreenHeader } from '../../components/ui/ScreenHeader';
 import { palette, radii, spacing, typography } from '../../theme';
 import type { ColorScheme } from '../../theme';
 import { useTheme } from '../../theme/ThemeContext';
@@ -74,13 +75,10 @@ function buildStyles(colors: ColorScheme) {
       flex: 1,
       backgroundColor: colors.bg,
     },
-    header: {
+    headerRow: {
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'space-between',
-      paddingHorizontal: spacing[5],
-      paddingTop: spacing[2],
-      paddingBottom: spacing[5],
     },
     title: {
       fontSize: typography.sizes['2xl'],
@@ -633,15 +631,17 @@ export default function TodayScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.title}>PARAKEET</Text>
-        {showStreaks && (streakData?.currentStreak ?? 0) >= 1 && (
-          <StreakPill
-            currentStreak={streakData!.currentStreak}
-            onPress={() => router.push('/profile/achievements')}
-          />
-        )}
-      </View>
+      <ScreenHeader>
+        <View style={styles.headerRow}>
+          <Text style={styles.title}>PARAKEET</Text>
+          {showStreaks && (streakData?.currentStreak ?? 0) >= 1 && (
+            <StreakPill
+              currentStreak={streakData!.currentStreak}
+              onPress={() => router.push('/profile/achievements')}
+            />
+          )}
+        </View>
+      </ScreenHeader>
 
       <ScrollView
         style={styles.scroll}
