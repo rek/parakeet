@@ -23,9 +23,9 @@
     "db:push": "npx supabase db push",
     "db:types": "npx supabase gen types typescript --local > supabase/types.ts",
     "ios": "expo run:ios",
-    "build": "cd apps/parakeet && eas build --profile production --platform android --local && mv -f build-*.{apk,aab} ../../dist/ 2>/dev/null; true",
-    "build:preview": "cd apps/parakeet && eas build --profile preview --platform android --local && mv -f build-*.{apk,aab} ../../dist/ 2>/dev/null; true",
-    "build:dev": "cd apps/parakeet && eas build --profile development --platform android --local && mv -f build-*.{apk,aab} ../../dist/ 2>/dev/null; true",
+    "build": "cd apps/parakeet && eas build --profile production --platform android --local && bash -c 'mv -f {build,application}-*.{apk,aab} ../../dist/ 2>/dev/null; true'",
+    "build:preview": "cd apps/parakeet && eas build --profile preview --platform android --local && bash -c 'mv -f {build,application}-*.{apk,aab} ../../dist/ 2>/dev/null; true'",
+    "build:dev": "cd apps/parakeet && eas build --profile development --platform android --local && bash -c 'mv -f {build,application}-*.{apk,aab} ../../dist/ 2>/dev/null; true'",
     "install:apk": "bash tools/scripts/install-latest-apk.sh"
   },
   "dependencies": {
