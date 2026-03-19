@@ -40,6 +40,14 @@ Reusable patterns discovered during implementation. Read on-demand when debuggin
 
 **Auto-selection from cross-lift pools must be schedule-aware** — `buildVolumeTopUp` selects exercises purely by MEV deficit, ignoring upcoming lifts. This causes back-to-back muscle group loading (e.g., leg press on bench day before squat day). Fix: pass `upcomingLifts` and filter out exercises whose associated lift is scheduled later this week. Pattern: any auto-selection system drawing from a cross-lift pool must consider the training schedule, not just the deficit.
 
+## Refactoring
+
+**Pipeline extraction preserves behavior when mutable context is threaded** — a 400-line function with 9 sequential steps sharing mutable local variables (`intensityMultiplier`, `plannedCount`, `skippedMainLift`) can be safely extracted by creating a `PipelineContext` interface that captures all shared state. Each step function mutates the context in place, matching the original code's mutation pattern. The main function becomes a clean pipeline of named steps. Key: run the full test suite after each step extraction to catch subtle ordering or reference bugs.
+
+**Inline conversions drift — extract named helpers** — `Math.round(kg * 1000)` appeared in 7+ files for kg→grams conversion. Each site is a copy-paste that can independently get the rounding wrong. A single `weightKgToGrams(kg)` helper is safer and communicates intent. Same for the reverse direction. The mechanical find-and-replace is low risk when the helper's implementation exactly matches the original expression.
+
+**Split aux/main branches before adding behavior** — `handleLiftComplete` and `handleLiftFailed` each contain parallel aux/main code paths behind an if/else. When the two paths share no state except the dismiss result, extracting `handleMainLiftComplete` and `handleAuxLiftComplete` as separate functions makes the dispatch obvious and prevents changes to one path from accidentally affecting the other. This also makes the "symmetry check" from the ai-learnings stubs-ship-as-bugs entry trivially visible — each function is self-contained.
+
 ## Architecture & Workflow
 
 **Design ceremony proportional to scope** — new architectural concepts warrant design doc > spec > implement. Simple UI additions can go straight to implement > spec after. One-time admin operations are CLI scripts, not mobile screens.

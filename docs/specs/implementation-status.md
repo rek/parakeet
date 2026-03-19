@@ -8,7 +8,7 @@ For details on any item, see the linked spec file.
 
 ## Training Engine (`packages/training-engine`)
 
-1013 tests passing (Vitest). All specs implemented. Bug fix: `generateAuxiliaryAssignments` now generates assignments for all blocks (not just 1–3); `blockNumber` widened to `number` throughout; `getIntensityTypeForWeek` now cycles correctly for block 4+.
+1105 tests passing (Vitest). All specs implemented. Bug fix: `generateAuxiliaryAssignments` now generates assignments for all blocks (not just 1–3); `blockNumber` widened to `number` throughout; `getIntensityTypeForWeek` now cycles correctly for block 4+.
 
 - [x] engine-001: 1RM formulas — Epley, grams↔kg helpers
 - [x] engine-002: Cube method scheduler — blocks.ts
@@ -16,7 +16,7 @@ For details on any item, see the linked spec file.
 - [x] engine-004: Program generator — structural scaffold (no planned_sets)
 - [x] engine-005: Performance adjuster — `suggestProgramAdjustments`, `DEFAULT_THRESHOLDS`
 - [x] engine-006: MRV/MEV calculator
-- [x] engine-007: JIT session generator — 8-step pipeline; `JITInput`/`JITOutput` types
+- [x] engine-007: JIT session generator — 9-step pipeline extracted to `generator/steps/`; `PipelineContext` threads state; `JITInput`/`JITOutput` types
 - [x] engine-008: Auxiliary exercise rotator — `generateAuxiliaryAssignments`
 - [x] engine-009: Soreness adjuster
 - [x] engine-010: Warmup calculator
