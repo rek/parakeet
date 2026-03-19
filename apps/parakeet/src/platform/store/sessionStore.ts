@@ -1,8 +1,9 @@
 import type { AdaptedPlan, VolumeRecoveryOffer } from '@parakeet/training-engine';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { weightKgToGrams } from '@shared/utils/weight';
 import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
+
+import { weightKgToGrams } from '@shared/utils/weight';
 
 export interface ActualSet {
   set_number: number;

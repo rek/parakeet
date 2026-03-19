@@ -27,7 +27,6 @@ import {
   getMusclesForLift,
 } from '../volume/muscle-mapper';
 import { PrescriptionTraceBuilder } from './prescription-trace';
-import type { PrescriptionTrace, AuxExerciseTrace } from './prescription-trace';
 import {
   generateWarmupSets,
   WarmupProtocol,

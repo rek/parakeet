@@ -3,8 +3,8 @@ import { useCallback, useRef, useState } from 'react';
 import type { RestTimerPrefs } from '@modules/settings';
 import type { Lift } from '@parakeet/shared-types';
 import { adaptRemainingPlan } from '@parakeet/training-engine';
-import { weightGramsToKg, weightKgToGrams } from '@shared/utils/weight';
 import { useSessionStore } from '@platform/store/sessionStore';
+import { weightGramsToKg, weightKgToGrams } from '@shared/utils/weight';
 
 import type {
   AuxiliaryWork,
