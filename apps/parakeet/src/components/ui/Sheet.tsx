@@ -104,8 +104,12 @@ export function Sheet({
       animationType="slide"
       onRequestClose={onClose}
     >
-      <Pressable style={styles.overlay} onPress={onClose}>
-        <View style={styles.sheet} onStartShouldSetResponder={() => true}>
+      <View style={styles.overlay}>
+        {/* Tap-to-close background — behind the sheet */}
+        <Pressable style={StyleSheet.absoluteFill} onPress={onClose} />
+
+        {/* Sheet content — on top, no touch interference */}
+        <View style={styles.sheet}>
           <View style={styles.handle} />
 
           <View style={styles.header}>
@@ -122,7 +126,7 @@ export function Sheet({
 
           {children}
         </View>
-      </Pressable>
+      </View>
     </Modal>
   );
 }
