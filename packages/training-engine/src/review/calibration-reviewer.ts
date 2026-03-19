@@ -2,6 +2,7 @@ import { CalibrationReviewSchema } from '@parakeet/shared-types';
 import type { CalibrationReview } from '@parakeet/shared-types';
 import { generateText, Output } from 'ai';
 
+import { abortAfter } from '../ai/abort-timeout';
 import { JIT_MODEL } from '../ai/models';
 import type { CalibrationResult } from '../analysis/modifier-effectiveness';
 
@@ -46,7 +47,7 @@ export async function reviewCalibrationAdjustment({ calibration, currentAdjustme
       output: Output.object({ schema: CalibrationReviewSchema }),
       system: CALIBRATION_REVIEW_PROMPT,
       prompt,
-      abortSignal: AbortSignal.timeout(8000),
+      abortSignal: abortAfter(8000),
     });
 
     return review ?? DEFAULT_REJECT;

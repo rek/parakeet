@@ -2,6 +2,7 @@ import { JITAdjustmentSchema } from '@parakeet/shared-types';
 import type { JITAdjustment } from '@parakeet/shared-types';
 import { generateText, Output } from 'ai';
 
+import { abortAfter } from '../ai/abort-timeout';
 import { JIT_MODEL } from '../ai/models';
 import { JIT_SYSTEM_PROMPT } from '../ai/prompts';
 import { computeAuxWeight } from '../auxiliary/exercise-catalog';
@@ -40,7 +41,7 @@ export class LLMJITGenerator implements JITGeneratorStrategy {
         output: Output.object({ schema: JITAdjustmentSchema }),
         system: JIT_SYSTEM_PROMPT,
         prompt: JSON.stringify(buildJITContext(input)),
-        abortSignal: AbortSignal.timeout(5000),
+        abortSignal: abortAfter(5000),
       });
       const output = applyAdjustment(adj, input);
       return { ...enforceHardConstraints(output, input), jit_strategy: 'llm' };

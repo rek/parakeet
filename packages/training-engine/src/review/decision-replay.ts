@@ -2,6 +2,7 @@ import { DecisionReplaySchema } from '@parakeet/shared-types';
 import type { DecisionReplay } from '@parakeet/shared-types';
 import { generateText, Output } from 'ai';
 
+import { abortAfter } from '../ai/abort-timeout';
 import { JIT_MODEL } from '../ai/models';
 import { DECISION_REPLAY_SYSTEM_PROMPT } from '../ai/prompts';
 import type { JITInput } from '../generator/jit-session-generator';
@@ -43,7 +44,7 @@ export async function scoreDecisionReplay(
         blockNumber: context.blockNumber,
       },
     }),
-    abortSignal: AbortSignal.timeout(10000),
+    abortSignal: abortAfter(10000),
   });
   if (!replay) throw new Error('Decision replay returned no structured output');
   return replay;
