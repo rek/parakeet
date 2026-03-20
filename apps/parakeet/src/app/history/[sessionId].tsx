@@ -434,44 +434,69 @@ export default function SessionDetailScreen() {
         )}
 
         {/* Auxiliary sets */}
-        {Object.entries(auxByExercise).map(([exercise, sets]) => (
-          <View key={exercise}>
-            <Text style={styles.sectionHeader}>
-              {capitalize(exercise.replace(/_/g, ' '))}
-            </Text>
-            <View style={styles.setsTable}>
-              <View style={styles.tableHeader}>
-                <Text style={[styles.tableCell, styles.tableCellSet]}>Set</Text>
-                <Text style={[styles.tableCell, styles.tableCellWeight]}>
-                  Weight
-                </Text>
-                <Text style={[styles.tableCell, styles.tableCellReps]}>
-                  Reps
-                </Text>
-                <Text style={[styles.tableCell, styles.tableCellRpe]}>RPE</Text>
-              </View>
-              {sets.map((set, i) => (
-                <View
-                  key={i}
-                  style={[styles.tableRow, i % 2 === 1 && styles.tableRowAlt]}
-                >
+        {Object.entries(auxByExercise).map(([exercise, sets]) => {
+          const isTimed = sets[0]?.exercise_type === 'timed';
+          return (
+            <View key={exercise}>
+              <Text style={styles.sectionHeader}>
+                {capitalize(exercise.replace(/_/g, ' '))}
+              </Text>
+              <View style={styles.setsTable}>
+                <View style={styles.tableHeader}>
                   <Text style={[styles.tableCell, styles.tableCellSet]}>
-                    {set.set_number}
+                    {isTimed ? 'Round' : 'Set'}
                   </Text>
-                  <Text style={[styles.tableCell, styles.tableCellWeight]}>
-                    {gramsToKg(set.weight_grams).toFixed(1)} kg
-                  </Text>
-                  <Text style={[styles.tableCell, styles.tableCellReps]}>
-                    {set.reps_completed}
-                  </Text>
-                  <Text style={[styles.tableCell, styles.tableCellRpe]}>
-                    {set.rpe_actual != null ? set.rpe_actual : '—'}
-                  </Text>
+                  {isTimed ? (
+                    <Text style={[styles.tableCell, styles.tableCellWeight]}>
+                      Duration
+                    </Text>
+                  ) : (
+                    <>
+                      <Text style={[styles.tableCell, styles.tableCellWeight]}>
+                        Weight
+                      </Text>
+                      <Text style={[styles.tableCell, styles.tableCellReps]}>
+                        Reps
+                      </Text>
+                      <Text style={[styles.tableCell, styles.tableCellRpe]}>
+                        RPE
+                      </Text>
+                    </>
+                  )}
                 </View>
-              ))}
+                {sets.map((set, i) => (
+                  <View
+                    key={i}
+                    style={[styles.tableRow, i % 2 === 1 && styles.tableRowAlt]}
+                  >
+                    <Text style={[styles.tableCell, styles.tableCellSet]}>
+                      {set.set_number}
+                    </Text>
+                    {isTimed ? (
+                      <Text style={[styles.tableCell, styles.tableCellWeight]}>
+                        {set.reps_completed} min
+                      </Text>
+                    ) : (
+                      <>
+                        <Text
+                          style={[styles.tableCell, styles.tableCellWeight]}
+                        >
+                          {gramsToKg(set.weight_grams).toFixed(1)} kg
+                        </Text>
+                        <Text style={[styles.tableCell, styles.tableCellReps]}>
+                          {set.reps_completed}
+                        </Text>
+                        <Text style={[styles.tableCell, styles.tableCellRpe]}>
+                          {set.rpe_actual != null ? set.rpe_actual : '—'}
+                        </Text>
+                      </>
+                    )}
+                  </View>
+                ))}
+              </View>
             </View>
-          </View>
-        ))}
+          );
+        })}
 
         {!log && (
           <Text style={styles.emptyText}>
