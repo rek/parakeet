@@ -2,6 +2,7 @@ import { AppState, NativeModules, Platform } from 'react-native';
 
 import { createClient } from '@supabase/supabase-js';
 
+import { secureStorageAdapter } from '../lib/secure-storage';
 import storage from '../lib/storage';
 import type { Database } from './database';
 
@@ -73,7 +74,8 @@ export const typedSupabase = createClient<Database>(
   supabaseAnonKey,
   {
     auth: {
-      ...(storage ? { storage } : {}),
+      storage:
+        Platform.OS === 'web' ? undefined : secureStorageAdapter,
       autoRefreshToken: true,
       persistSession: true,
       detectSessionInUrl: Platform.OS === 'web',

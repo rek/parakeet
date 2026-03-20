@@ -9,6 +9,12 @@ import {
 
 const fromMock = vi.hoisted(() => vi.fn());
 
+// @sentry/react-native transitively imports react-native which uses Flow syntax
+// that Rollup cannot parse. Mock it to prevent the parse failure.
+vi.mock('@sentry/react-native', () => ({
+  captureException: vi.fn(),
+}));
+
 vi.mock('@platform/supabase', () => ({
   typedSupabase: {
     from: fromMock,
@@ -84,8 +90,8 @@ describe('fetchTodaySession', () => {
     expect(fromMock).toHaveBeenCalledTimes(2);
     expect(completedTodayChain.eq).toHaveBeenCalledWith('user_id', 'user-1');
     expect(completedTodayChain.eq).toHaveBeenCalledWith('status', 'completed');
-    expect(completedTodayChain.gte).toHaveBeenCalledWith(
-      'completed_at',
+    expect(completedTodayChain.eq).toHaveBeenCalledWith(
+      'planned_date',
       expect.any(String)
     );
     expect(completedTodayChain.order).toHaveBeenCalledWith('completed_at', {

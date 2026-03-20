@@ -80,7 +80,7 @@ export function useSyncQueue() {
             dequeue(op.id);
             Alert.alert(
               'Sync Failed',
-              `Workout could not be saved: ${err instanceof Error ? err.message : 'Unknown error'}`
+              'Your workout could not be saved. The error has been reported.'
             );
           }
         }

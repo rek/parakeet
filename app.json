@@ -5,7 +5,8 @@
     },
     "plugins": [
       "@sentry/react-native",
-      "./apps/parakeet/plugins/with-debug-keystore"
+      "./apps/parakeet/plugins/with-debug-keystore",
+      "expo-secure-store"
     ]
   }
 }

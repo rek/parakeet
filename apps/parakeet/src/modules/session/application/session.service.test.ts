@@ -20,11 +20,14 @@ const mockNextTrainingDate = vi.hoisted(() =>
   vi.fn((_days: number[]) => '2026-03-09')
 );
 
+const mockFetchLastCompletedLiftForProgram = vi.hoisted(() => vi.fn());
+
 vi.mock('../data/session.repository', () => ({
   fetchTodaySession: mockFetchTodaySession,
   fetchTodaySessions: mockFetchTodaySessions,
   fetchInProgressSession: mockFetchInProgressSession,
   fetchPlannedSessionForProgram: mockFetchPlannedSessionForProgram,
+  fetchLastCompletedLiftForProgram: mockFetchLastCompletedLiftForProgram,
 }));
 
 vi.mock('@modules/program', () => ({
@@ -91,7 +94,8 @@ describe('findTodaySession', () => {
     });
     mockFetchPlannedSessionForProgram
       .mockResolvedValueOnce(null) // guard check
-      .mockResolvedValueOnce(generated); // after generation
+      .mockResolvedValueOnce(generated) // inside generateNextUnendingSession
+      .mockResolvedValueOnce(generated); // final return after generation
 
     const result = await findTodaySession('user-1');
 
@@ -110,6 +114,7 @@ describe('findTodaySession', () => {
     });
     mockFetchPlannedSessionForProgram
       .mockResolvedValueOnce(null)
+      .mockResolvedValueOnce(generated)
       .mockResolvedValueOnce(generated);
 
     await findTodaySession('user-1');
@@ -135,6 +140,7 @@ describe('findTodaySession', () => {
     });
     mockFetchPlannedSessionForProgram
       .mockResolvedValueOnce(null)
+      .mockResolvedValueOnce(generated)
       .mockResolvedValueOnce(generated);
 
     await findTodaySession('user-1');
@@ -237,7 +243,8 @@ describe('findTodaySessions', () => {
     mockFetchTodaySession.mockResolvedValue(null);
     mockFetchPlannedSessionForProgram
       .mockResolvedValueOnce(null) // guard check
-      .mockResolvedValueOnce(futureSession); // after generation
+      .mockResolvedValueOnce(futureSession) // inside generateNextUnendingSession
+      .mockResolvedValueOnce(futureSession); // final return after generation
     // fetchTodaySessions returns empty — session is for a future date
     mockFetchTodaySessions.mockResolvedValue([]);
 
