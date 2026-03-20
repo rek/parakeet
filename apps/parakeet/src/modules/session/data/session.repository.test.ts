@@ -2,6 +2,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import {
+  fetchCompletedSessions,
   fetchInProgressSession,
   fetchTodaySession,
   fetchTodaySessions,
@@ -322,6 +323,50 @@ describe('fetchInProgressSession', () => {
     fromMock.mockReturnValueOnce(chain);
 
     await expect(fetchInProgressSession('user-1')).rejects.toThrow(
+      'query failed'
+    );
+  });
+});
+
+describe('fetchCompletedSessions', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  function createListChain() {
+    const chain = {
+      select: vi.fn(),
+      eq: vi.fn(),
+      order: vi.fn(),
+      range: vi.fn(),
+    };
+    chain.select.mockReturnValue(chain);
+    chain.eq.mockReturnValue(chain);
+    chain.order.mockReturnValue(chain);
+    return chain;
+  }
+
+  it('orders by completed_at descending so most-recent sessions appear first', async () => {
+    const chain = createListChain();
+    chain.range.mockResolvedValue({ data: [], error: null });
+    fromMock.mockReturnValueOnce(chain);
+
+    await fetchCompletedSessions('user-1', 0, 20);
+
+    expect(chain.order).toHaveBeenCalledWith('completed_at', {
+      ascending: false,
+    });
+  });
+
+  it('throws when query fails', async () => {
+    const chain = createListChain();
+    chain.range.mockResolvedValue({
+      data: null,
+      error: new Error('query failed'),
+    });
+    fromMock.mockReturnValueOnce(chain);
+
+    await expect(fetchCompletedSessions('user-1', 0, 20)).rejects.toThrow(
       'query failed'
     );
   });
