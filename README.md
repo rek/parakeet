@@ -4,7 +4,7 @@ Personal powerlifting training system. Track, train, improve.
 
 ## What It Is
 
-A Cube Method program generator and session tracker for two athletes. The training engine runs locally in the app (no backend). Supabase handles auth, data storage, and cross-device sync. An LLM layer augments the rule-based engine for session adjustment and end-of-cycle coaching — the system improves automatically as models improve.
+A Cube Method program generator and session tracker. The training engine runs locally in the app (no backend). Supabase handles auth, data storage, and cross-device sync. An LLM layer augments the rule-based engine for session adjustment and end-of-cycle coaching — the system improves automatically as models improve.
 
 ## Tech Stack
 
