@@ -7,7 +7,6 @@ import {
   View,
 } from 'react-native';
 
-import { Ionicons } from '@expo/vector-icons';
 import type { PlateKg } from '@parakeet/training-engine';
 
 import { radii, spacing, typography } from '../../../theme';
@@ -15,6 +14,7 @@ import { useTheme } from '../../../theme/ThemeContext';
 import type { PrescriptionTrace } from '@parakeet/training-engine';
 
 import { PlateCalculatorSheet } from './PlateCalculatorSheet';
+import { PlateDisplay } from './PlateDisplay';
 import { resolveSetRowDisplay } from './resolveSetRowDisplay';
 import { TraceLink } from './TraceLink';
 import { parseWeightInput } from './weight-input';
@@ -114,12 +114,6 @@ export function SetRow({
         unitText: {
           fontSize: typography.sizes.sm,
           color: colors.textSecondary,
-        },
-        plateButton: {
-          width: 36,
-          height: 36,
-          alignItems: 'center',
-          justifyContent: 'center',
         },
         multiplyText: {
           fontSize: typography.sizes.base,
@@ -398,14 +392,13 @@ export function SetRow({
               </TouchableOpacity>
               {displayWeightKg > 0 && (
                 <TouchableOpacity
-                  style={styles.plateButton}
                   onPress={() => setPlateSheetVisible(true)}
                   activeOpacity={0.7}
                 >
-                  <Ionicons
-                    name="barbell-outline"
-                    size={20}
-                    color={colors.textSecondary}
+                  <PlateDisplay
+                    weightKg={displayWeightKg}
+                    barWeightKg={barWeightKg}
+                    disabledPlates={disabledPlates}
                   />
                 </TouchableOpacity>
               )}
