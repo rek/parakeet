@@ -552,8 +552,19 @@ export default function SessionScreen() {
       oneRmKgRef.current = parsed.oneRmKg;
     }
 
-    // Only re-initialize if this is a different session (guard against re-mount via banner)
-    if (currentStoreSessionId !== sessionId) {
+    // Re-initialize if this is a different session OR if JIT data changed for the
+    // same session (e.g. user re-ran soreness check-in → new weights from JIT).
+    // Compare first planned weight to detect stale store data.
+    const storeWeight = storeState.actualSets[0]?.weight_grams;
+    const jitWeight = mainLiftSets[0]
+      ? Math.round(mainLiftSets[0].weight_kg * 1000)
+      : undefined;
+    const jitDataChanged =
+      currentStoreSessionId === sessionId &&
+      jitWeight !== undefined &&
+      storeWeight !== jitWeight;
+
+    if (currentStoreSessionId !== sessionId || jitDataChanged) {
       initSession(sessionId, mainLiftSets);
 
       const activeAux = (aux ?? []).filter((a) => !a.skipped);
