@@ -50,13 +50,9 @@ export function TraceLink({
 
 const styles = StyleSheet.create({
   row: {
-    flexDirection: 'row',
     alignItems: 'center',
-    gap: spacing[1],
-    marginTop: spacing[1],
-    marginLeft: 4,
-  },
-  text: {
-    fontSize: typography.sizes.xs,
+    justifyContent: 'center',
+    width: 36,
+    height: 36,
   },
 });

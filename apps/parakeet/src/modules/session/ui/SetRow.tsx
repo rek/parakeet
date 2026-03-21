@@ -377,40 +377,43 @@ export function SetRow({
         </TouchableOpacity>
       </View>
 
-      {prescriptionTrace && <TraceLink trace={prescriptionTrace} />}
-
-      {/* Quick-increment buttons — weighted only */}
-      {!displayCompleted && exerciseType === 'weighted' && (
+      {/* Second row: adjust buttons + plate calc + trace info */}
+      {(!displayCompleted && exerciseType === 'weighted') || prescriptionTrace ? (
         <View style={styles.adjustRow}>
-          <TouchableOpacity
-            style={styles.adjustButton}
-            onPress={() => handleWeightAdjust(-2.5)}
-            activeOpacity={0.7}
-          >
-            <Text style={styles.adjustButtonText}>−2.5</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={styles.adjustButton}
-            onPress={() => handleWeightAdjust(2.5)}
-            activeOpacity={0.7}
-          >
-            <Text style={styles.adjustButtonText}>+2.5</Text>
-          </TouchableOpacity>
-          {displayWeightKg > 0 && (
-            <TouchableOpacity
-              style={styles.plateButton}
-              onPress={() => setPlateSheetVisible(true)}
-              activeOpacity={0.7}
-            >
-              <Ionicons
-                name="barbell-outline"
-                size={20}
-                color={colors.textSecondary}
-              />
-            </TouchableOpacity>
+          {!displayCompleted && exerciseType === 'weighted' && (
+            <>
+              <TouchableOpacity
+                style={styles.adjustButton}
+                onPress={() => handleWeightAdjust(-2.5)}
+                activeOpacity={0.7}
+              >
+                <Text style={styles.adjustButtonText}>−2.5</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.adjustButton}
+                onPress={() => handleWeightAdjust(2.5)}
+                activeOpacity={0.7}
+              >
+                <Text style={styles.adjustButtonText}>+2.5</Text>
+              </TouchableOpacity>
+              {displayWeightKg > 0 && (
+                <TouchableOpacity
+                  style={styles.plateButton}
+                  onPress={() => setPlateSheetVisible(true)}
+                  activeOpacity={0.7}
+                >
+                  <Ionicons
+                    name="barbell-outline"
+                    size={20}
+                    color={colors.textSecondary}
+                  />
+                </TouchableOpacity>
+              )}
+            </>
           )}
+          {prescriptionTrace && <TraceLink trace={prescriptionTrace} />}
         </View>
-      )}
+      ) : null}
 
       <PlateCalculatorSheet
         visible={plateSheetVisible}
