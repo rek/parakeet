@@ -48,6 +48,9 @@ For details on any item, see the linked spec file.
 - [x] engine-041: Modifier effectiveness tracker + auto-calibration wiring — `computeCalibrationBias`, `shouldTriggerReview`, `canAutoApply`, `extractModifierSamples`, `applyCalibrationAdjustment` in `analysis/modifier-effectiveness.ts`; confidence thresholds (exploring/low/medium/high); auto-apply for small adjustments, LLM review gate for large ones; 25 tests
 - [x] engine-040: Prescription trace — `PrescriptionTrace` type + `PrescriptionTraceBuilder` class; `generateJITSessionWithTrace(input)` wrapper; traces weight derivation (1RM × blockPct × modifiers), volume changes per adjuster, set details, auxiliaries, warmup, rest; 16 tests. App plumbing: trace generated in `jit.ts`, persisted to `sessions.jit_output_trace` JSONB, cached in Zustand store. UI: `PrescriptionSheet` bottom sheet, ⓘ icon on SetRow, "Workout Reasoning" button on history detail; `prescriptionTrace` feature flag (advanced, default off)
 - [x] engine-035: Training-age-scaled MRV/MEV — `TrainingAge` type, `TRAINING_AGE_MULTIPLIERS` constant, `applyTrainingAgeMultiplier({ config, trainingAge })` in `mrv-mev-calculator.ts`; beginner ×0.8 MRV, intermediate ×1.0, advanced ×1.2 MRV / ×1.1 MEV; wired into simulator; 5 tests
+- [x] engine-bug-005: Machine/cable aux weightPct 2× too high — prod data analysis showed Lat Pulldown, Seated Machine Row prescribed at 55% of DL 1RM but users load ~28%; Leg Press at 90% (was unrealistic for machine); Hack Squat at 70%. Corrected: Lat Pulldown 0.28, Seated Row 0.28, Leg Press 0.50, Hack Squat 0.40 in `exercise-catalog.ts`
+- [x] engine-bug-006: Compound aux post-main-lift fatigue — `POST_MAIN_FATIGUE_FACTOR = 0.85` in `processAuxExercise.ts`; applies 15% weight discount when aux exercise shares muscles (≥0.5 contribution) with primary lift; uses `getMusclesForLift()`/`getMusclesForExercise()` overlap check; stacks with soreness discount; 8 test expectations updated
+- [x] engine-bug-007: `failed` flag in actual_sets JSONB — `failed: z.boolean().optional()` added to `ActualSetSchema` in shared-types; `failed?: boolean` on `ActualSet` and `AuxiliaryActualSet` in sessionStore; set to `true` in `handleMainLiftFailed` and `handleAuxLiftFailed` in `useSetCompletionFlow.ts`; no migration needed (JSONB flexible)
 - [x] engine-042: Working 1RM from actual session weights (GH#98) — `computeWeightDeviation`, `computeWorkingOneRm` in `analysis/weight-deviation.ts`; `RecentSessionSummary` extended with optional weight fields; `fetchRecentSessionLogsForLift` fetches `actual_sets` + `planned_sets`; JIT orchestrator computes working 1RM (median Epley from 3+ qualifying sessions, capped 110%/floored 85% of stored, rounded 2.5kg) and substitutes it for stored `oneRmKg`; `WeightDerivation` trace extended with `storedOneRmKg`/`workingOneRmKg`/`oneRmSource`; LLM JIT gets weight context for free; no new DB migration; 24 tests
 
 ---
@@ -215,6 +218,7 @@ Module/platform/shared architecture is the canonical app structure. Legacy top-l
 ## Scripts (`scripts/`)
 
 - [x] `scripts/import-csv.ts` — historical CSV import CLI; auto-detects NextSet and Strong formats; interactive exercise mapping; inserts sessions with `program_id=null` and `intensity_type='import'`
+- [x] `scripts/review-session-data.ts` — session prescription accuracy diagnostic CLI; 5 sections: main lift calibration, aux exercise health (RPE/failure rates), session fatigue cascade, weight prescription accuracy (prescribed vs actual), auto-recommendations; flags exercises with avg RPE > 9.0 or >20% failure rate
 
 ---
 

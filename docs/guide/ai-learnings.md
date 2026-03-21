@@ -88,6 +88,14 @@ Reusable patterns discovered during implementation. Read on-demand when debuggin
 
 **Shared test fixtures reduce copy-drift** — extract `baseInput()`, `makeDisruption()`, `makeSets()` to `__test-helpers__/fixtures.ts`.
 
+**Auxiliary weight prescriptions need prod data validation** — catalog `weightPct` values set from theory (percentage of associated lift 1RM) were ~2× too high for machine/cable exercises (Lat Pulldown, Seated Row). Machine movements eliminate stabilizer recruitment, so strength doesn't transfer 1:1 from barbell lifts. Fix: halved machine `weightPct` values based on actual user loading data. Pattern: any new `weightPct` should be validated against real session data within the first training cycle.
+
+**Compound aux after heavy main needs a fatigue discount** — `processAuxExercise` treated each aux exercise as if the main lift never happened. Prod data showed RPE 9.5-10 cascades on compound auxiliaries sharing muscles with the primary lift (e.g., CGBP after bench). A 15% fatigue discount (`POST_MAIN_FATIGUE_FACTOR = 0.85`) for muscle-overlapping aux exercises aligns with observed outcomes. The discount stacks multiplicatively with soreness modifiers.
+
+**Session RPE exceeding main lift RPE signals aux overexertion** — when `session_rpe - avg_main_lift_rpe > 1.0`, the auxiliary work is the primary overexertion driver, not the main lift. This gap is a reliable diagnostic for aux prescription accuracy and should be monitored.
+
+**Store explicit failure flags, not just RPE 10** — inferring failures from RPE 10 + low reps loses the explicit user signal. Adding `failed: true` to the JSONB when the user taps "Failed" enables direct failure-rate analysis without heuristics.
+
 ### UX & Information Display
 
 **"vs plan" is meaningless when the plan is always personalized** — JIT generates a plan adjusted for soreness, disruptions, readiness, and cycle phase. Comparing actual vs adjusted always yields ~100%. Users interpret "on plan" as "on the original schedule" not "on the adjusted plan." Fix: show adjustment context (what changed and why) instead of a misleading percentage. Surface `JITOutput.volumeReductions` and `rationale` alongside completion stats.

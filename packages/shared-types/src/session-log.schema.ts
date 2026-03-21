@@ -10,6 +10,8 @@ export const ActualSetSchema = z
     actual_rest_seconds: z.number().int().nonnegative().optional(),
     notes: z.string().optional(),
     exercise_type: z.enum(['weighted', 'bodyweight', 'timed']).optional(),
+    /** True when the lifter pressed "Failed" on the PostRestOverlay. */
+    failed: z.boolean().optional(),
   })
   .strict();
 

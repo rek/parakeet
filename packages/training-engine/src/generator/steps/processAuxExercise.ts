@@ -8,7 +8,14 @@ import { ExerciseType, getExerciseType } from '../../auxiliary/exercise-types';
 import { roundToNearest } from '../../formulas/weight-rounding';
 import type { SorenessLevel } from '../../adjustments/soreness-adjuster';
 import type { MuscleGroup, MrvMevConfig } from '../../types';
+import { getMusclesForExercise } from '../../volume/muscle-mapper';
+import { getMusclesForLift } from '../../volume/muscle-mapper';
 import type { AuxiliaryWork } from '../jit-session-generator';
+
+/** Fraction of weight retained when aux shares muscles with the session's main lift.
+ *  Prod data: compound aux after heavy main (e.g. CGBP after bench) shows RPE 9.5-10
+ *  with the standard weight; 15% discount aligns with observed fatigue effect. */
+const POST_MAIN_FATIGUE_FACTOR = 0.85;
 
 export function processAuxExercise({
   exercise,
@@ -83,9 +90,23 @@ export function processAuxExercise({
   let setCount = 3;
   let intensityMult = 1.0;
 
+  // Post-main-lift fatigue discount: if the aux exercise shares muscles with the
+  // primary lift (at ≥0.5 contribution), the lifter is pre-fatigued from main work.
+  // Prod data shows RPE 9.5-10 on compound aux (e.g. CGBP after bench) without this.
+  if (mainLiftSetCount > 0) {
+    const mainLiftMuscles = new Set(getMusclesForLift(primaryLift).map(m => m.muscle));
+    const auxMuscles = getMusclesForExercise(exercise);
+    const hasOverlap = auxMuscles.some(
+      m => m.contribution >= 0.5 && mainLiftMuscles.has(m.muscle)
+    );
+    if (hasOverlap) {
+      intensityMult *= POST_MAIN_FATIGUE_FACTOR;
+    }
+  }
+
   if (worstSoreness === 4) {
     setCount = Math.max(1, setCount - 1);
-    intensityMult = 0.95;
+    intensityMult *= 0.95;
   } else if (worstSoreness === 3) {
     setCount = Math.max(1, setCount - 1);
   }

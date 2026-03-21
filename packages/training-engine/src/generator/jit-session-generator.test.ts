@@ -137,10 +137,10 @@ describe('generateJITSession — catalog exercise weight percentages', () => {
         activeAuxiliaries: ['Dumbbell Step Up', 'Barbell Front Squat'],
       })
     );
-    // Dumbbell exercises use sqrt scaling to avoid unrealistic weights for strong lifters
-    expect(out.auxiliaryWork[0].sets[0].weight_kg).toBe(22.5);
-    // Barbell exercises use linear scaling (unaffected by sqrt)
-    expect(out.auxiliaryWork[1].sets[0].weight_kg).toBe(117.5);
+    // Dumbbell: sqrt scaling + 0.85× fatigue discount (quads overlap squat)
+    expect(out.auxiliaryWork[0].sets[0].weight_kg).toBe(20);
+    // Barbell: linear + 0.85× fatigue discount (quads overlap squat)
+    expect(out.auxiliaryWork[1].sets[0].weight_kg).toBe(100);
   });
 
   it('Kettlebell Swing uses sqrt-scaled 20% of deadlift 1RM', () => {
@@ -151,10 +151,10 @@ describe('generateJITSession — catalog exercise weight percentages', () => {
         activeAuxiliaries: ['Kettlebell Swing', 'Barbell Row'],
       })
     );
-    // Kettlebell uses sqrt scaling — moderate weight even at high 1RM
-    expect(out.auxiliaryWork[0].sets[0].weight_kg).toBe(35);
-    // Barbell uses linear scaling
-    expect(out.auxiliaryWork[1].sets[0].weight_kg).toBe(87.5);
+    // Kettlebell: sqrt + 0.85× fatigue (hamstrings overlap deadlift)
+    expect(out.auxiliaryWork[0].sets[0].weight_kg).toBe(30);
+    // Barbell Row: linear + 0.85× fatigue (upper_back overlap deadlift)
+    expect(out.auxiliaryWork[1].sets[0].weight_kg).toBe(75);
   });
 
   it('Dumbbell Fly uses sqrt-scaled 12% of bench 1RM', () => {
@@ -165,10 +165,10 @@ describe('generateJITSession — catalog exercise weight percentages', () => {
         activeAuxiliaries: ['Dumbbell Fly', 'Close-Grip Barbell Bench Press'],
       })
     );
-    // Dumbbell Fly uses sqrt scaling — light weight for isolation
-    expect(out.auxiliaryWork[0].sets[0].weight_kg).toBe(12.5);
-    // Barbell uses linear scaling
-    expect(out.auxiliaryWork[1].sets[0].weight_kg).toBe(90);
+    // Dumbbell Fly: sqrt + 0.85× fatigue (chest overlap bench)
+    expect(out.auxiliaryWork[0].sets[0].weight_kg).toBe(10);
+    // CGBP: linear + 0.85× fatigue (triceps overlap bench)
+    expect(out.auxiliaryWork[1].sets[0].weight_kg).toBe(77.5);
   });
 
   it('Dumbbell Row uses sqrt-scaled 20% of deadlift 1RM', () => {
@@ -179,10 +179,10 @@ describe('generateJITSession — catalog exercise weight percentages', () => {
         activeAuxiliaries: ['Dumbbell Row', 'Rack Pull'],
       })
     );
-    // Dumbbell Row uses sqrt scaling — moderate weight at high 1RM
-    expect(out.auxiliaryWork[0].sets[0].weight_kg).toBe(35);
-    // Barbell uses linear scaling
-    expect(out.auxiliaryWork[1].sets[0].weight_kg).toBe(175);
+    // Dumbbell Row: sqrt + 0.85× fatigue (upper_back overlap deadlift)
+    expect(out.auxiliaryWork[0].sets[0].weight_kg).toBe(30);
+    // Rack Pull: linear + 0.85× fatigue (upper_back+lower_back overlap deadlift)
+    expect(out.auxiliaryWork[1].sets[0].weight_kg).toBe(150);
   });
 
   it('unknown custom exercise falls back to 67.5% default', () => {
@@ -1409,9 +1409,8 @@ describe('generateJITSession — push muscle coverage boost (engine-031)', () =>
 // ---------------------------------------------------------------------------
 
 describe('generateJITSession — dumbbell sqrt scaling', () => {
-  it('DB Incline uses sqrt scaling — 27.5kg at 116kg bench, not 35kg linear', () => {
-    // Linear would give: 116 × 0.28 = 32.48 → 32.5
-    // Sqrt: 0.28 × sqrt(80 × 116) = 0.28 × sqrt(9280) = 0.28 × 96.34 = 26.97 → 27.5
+  it('DB Incline uses sqrt scaling — 22.5kg at 116kg bench (with fatigue discount)', () => {
+    // Sqrt: 0.28 × sqrt(80 × 116) = 26.97 → 27.5 → × 0.85 fatigue = 23.375 → 22.5
     const out = generateJITSession(
       baseInput({
         primaryLift: 'bench',
@@ -1419,15 +1418,13 @@ describe('generateJITSession — dumbbell sqrt scaling', () => {
         activeAuxiliaries: ['Dumbbell Incline Bench Press', 'Barbell Pause Bench Press'],
       })
     );
-    expect(out.auxiliaryWork[0].sets[0].weight_kg).toBe(27.5);
-    // Barbell remains linear: 116 × 0.75 = 87 → 87.5
-    expect(out.auxiliaryWork[1].sets[0].weight_kg).toBe(87.5);
+    expect(out.auxiliaryWork[0].sets[0].weight_kg).toBe(22.5);
+    // Barbell: 116 × 0.75 = 87 → 87.5 → × 0.85 fatigue = 74.375 → 75
+    expect(out.auxiliaryWork[1].sets[0].weight_kg).toBe(75);
   });
 
-  it('DB exercises at reference 1RM match linear output', () => {
-    // At the reference 1RM, sqrt and linear should give the same result
-    // bench ref (male) = 80 → 0.12 × sqrt(80 × 80) = 0.12 × 80 = 9.6 → 10
-    // Linear: 80 × 0.12 = 9.6 → 10
+  it('DB exercises at reference 1RM with fatigue discount', () => {
+    // bench ref (male) = 80 → 0.12 × sqrt(80 × 80) = 9.6 → 10 → × 0.85 = 8.5 → 7.5
     const out = generateJITSession(
       baseInput({
         primaryLift: 'bench',
@@ -1436,7 +1433,7 @@ describe('generateJITSession — dumbbell sqrt scaling', () => {
         activeAuxiliaries: ['Dumbbell Fly', 'Barbell Pause Bench Press'],
       })
     );
-    expect(out.auxiliaryWork[0].sets[0].weight_kg).toBe(10);
+    expect(out.auxiliaryWork[0].sets[0].weight_kg).toBe(7.5);
   });
 
   it('female reference points produce different weights than male', () => {
@@ -1452,8 +1449,8 @@ describe('generateJITSession — dumbbell sqrt scaling', () => {
     expect(out.auxiliaryWork[0].sets[0].weight_kg).toBe(7.5);
   });
 
-  it('barbell exercises are not affected by sqrt scaling (regression guard)', () => {
-    // Close-Grip Barbell Bench Press: linear 140 × 0.75 = 105 → 105
+  it('barbell exercises are not affected by sqrt scaling (with fatigue discount)', () => {
+    // CGBP: linear 140 × 0.75 = 105 → × 0.85 fatigue = 89.25 → 90
     const out = generateJITSession(
       baseInput({
         primaryLift: 'bench',
@@ -1461,12 +1458,12 @@ describe('generateJITSession — dumbbell sqrt scaling', () => {
         activeAuxiliaries: ['Close-Grip Barbell Bench Press', 'Barbell Pause Bench Press'],
       })
     );
-    expect(out.auxiliaryWork[0].sets[0].weight_kg).toBe(105);
-    expect(out.auxiliaryWork[1].sets[0].weight_kg).toBe(105);
+    expect(out.auxiliaryWork[0].sets[0].weight_kg).toBe(90);
+    expect(out.auxiliaryWork[1].sets[0].weight_kg).toBe(90);
   });
 
-  it('DB Snatch corrected to 0.21 — gives 35kg at 190kg DL', () => {
-    // 0.21 × sqrt(140 × 190) = 0.21 × sqrt(26600) = 0.21 × 163.07 = 34.24 → 35
+  it('DB Snatch corrected to 0.21 — gives 30kg at 190kg DL (with fatigue discount)', () => {
+    // 0.21 × sqrt(140 × 190) = 34.24 → 35 → × 0.85 fatigue = 29.75 → 30
     const out = generateJITSession(
       baseInput({
         primaryLift: 'deadlift',
@@ -1474,7 +1471,7 @@ describe('generateJITSession — dumbbell sqrt scaling', () => {
         activeAuxiliaries: ['Dumbbell Snatch', 'Rack Pull'],
       })
     );
-    expect(out.auxiliaryWork[0].sets[0].weight_kg).toBe(35);
+    expect(out.auxiliaryWork[0].sets[0].weight_kg).toBe(30);
   });
 
   it('volume top-up uses sqrt scaling for dumbbell exercises', () => {

@@ -411,6 +411,7 @@ export function useSetCompletionFlow({
         reps_completed: actualReps,
         is_completed: true,
         rpe_actual: 10, // failed = max effort by definition
+        failed: true,
       });
     }
   }
@@ -430,6 +431,7 @@ export function useSetCompletionFlow({
         reps_completed: actualReps,
         is_completed: true,
         rpe_actual: 10, // failed set = max effort by definition
+        failed: true,
       });
     }
 

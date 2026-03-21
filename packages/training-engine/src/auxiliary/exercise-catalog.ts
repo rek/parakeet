@@ -180,7 +180,8 @@ export const EXERCISE_CATALOG: ExerciseCatalogEntry[] = [
       { muscle: 'quads', contribution: 1.0 },
       { muscle: 'glutes', contribution: 0.5 },
     ],
-    weightPct: 0.9,
+    // Machine — no stabilizer recruitment; 0.9 was unrealistically high
+    weightPct: 0.5,
     repTarget: 12,
   },
   {
@@ -192,7 +193,8 @@ export const EXERCISE_CATALOG: ExerciseCatalogEntry[] = [
       { muscle: 'quads', contribution: 1.0 },
       { muscle: 'glutes', contribution: 0.5 },
     ],
-    weightPct: 0.7,
+    // Machine — no stabilizer recruitment; reduced from 0.7
+    weightPct: 0.4,
     repTarget: 10,
   },
 
@@ -485,7 +487,8 @@ export const EXERCISE_CATALOG: ExerciseCatalogEntry[] = [
     associatedLift: 'deadlift',
     primaryMuscles: ['upper_back'],
     type: 'weighted',
-    weightPct: 0.55,
+    // Prod data: users load ~28% of DL 1RM on cable machines (was 0.55 — 2x too high)
+    weightPct: 0.28,
     repTarget: 10,
   },
   {
@@ -493,7 +496,8 @@ export const EXERCISE_CATALOG: ExerciseCatalogEntry[] = [
     associatedLift: 'deadlift',
     primaryMuscles: ['upper_back'],
     type: 'weighted',
-    weightPct: 0.55,
+    // Prod data: users load ~28% of DL 1RM on machines (was 0.55 — 2x too high)
+    weightPct: 0.28,
     repTarget: 10,
   },
   {

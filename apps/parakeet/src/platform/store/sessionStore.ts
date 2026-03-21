@@ -13,6 +13,8 @@ export interface ActualSet {
   is_completed: boolean;
   actual_rest_seconds?: number;
   is_recovered?: boolean;
+  /** True when the lifter pressed "Failed" on the PostRestOverlay. */
+  failed?: boolean;
 }
 
 export interface AuxiliaryActualSet {
@@ -23,6 +25,8 @@ export interface AuxiliaryActualSet {
   rpe_actual?: number;
   is_completed: boolean;
   actual_rest_seconds?: number;
+  /** True when the lifter pressed "Failed" on the PostRestOverlay. */
+  failed?: boolean;
 }
 
 interface TimerState {
