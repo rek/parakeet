@@ -59,4 +59,5 @@ parakeet-release.keystore
 build-*.aab
 build-*.apk
 **/images/backup/*
+backup_*.sql
 vite.config.*.timestamp*
