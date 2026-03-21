@@ -27,7 +27,6 @@ import {
   PostRestOverlay,
   RestTimer,
   RpeQuickPicker,
-  PrescriptionSheet,
   SetRow,
   startSession,
   useSetCompletionFlow,
@@ -52,7 +51,11 @@ import {
 import type { WarmupPlateDisplay } from '@modules/settings';
 import type { RestTimerPrefs } from '@modules/settings';
 import { useFeatureEnabled } from '@modules/feature-flags';
-import { getAllExercises, getExerciseType } from '@parakeet/training-engine';
+import {
+  getAllExercises,
+  getExerciseType,
+  gramsToKg,
+} from '@parakeet/training-engine';
 import type { PlateKg, PrescriptionTrace } from '@parakeet/training-engine';
 import type { Lift } from '@parakeet/shared-types';
 import { useNetworkStatus } from '@platform/network';
@@ -350,8 +353,6 @@ export default function SessionScreen() {
     useState<WarmupPlateDisplay>('numbers');
   const [addExerciseVisible, setAddExerciseVisible] = useState(false);
   const [historySheetVisible, setHistorySheetVisible] = useState(false);
-  const [traceSheetVisible, setTraceSheetVisible] = useState(false);
-  const [traceFocusExercise, setTraceFocusExercise] = useState<string | undefined>();
   const insets = useSafeAreaInsets();
   const traceEnabled = useFeatureEnabled('prescriptionTrace');
   const cachedTrace = useSessionStore((s) => s.cachedPrescriptionTrace);
@@ -852,8 +853,16 @@ export default function SessionScreen() {
                 <SetRow
                   key={actualSet.set_number}
                   setNumber={actualSet.set_number}
-                  plannedWeightKg={displayWeightKg}
-                  plannedReps={planned?.reps ?? actualSet.reps_completed}
+                  plannedWeightKg={
+                    actualSet.is_completed
+                      ? gramsToKg(actualSet.weight_grams)
+                      : displayWeightKg
+                  }
+                  plannedReps={
+                    actualSet.is_completed
+                      ? actualSet.reps_completed
+                      : (planned?.reps ?? actualSet.reps_completed)
+                  }
                   rpeValue={actualSet.rpe_actual}
                   isCompleted={actualSet.is_completed}
                   onUpdate={(data) =>
@@ -864,7 +873,7 @@ export default function SessionScreen() {
                   disabledPlates={equipmentDisabledPlates}
                   onBarWeightChange={handleBarWeightChange}
                   onDisabledPlatesChange={handleDisabledPlatesChange}
-                  onWeightInfoPress={prescriptionTrace && traceEnabled ? () => setTraceSheetVisible(true) : undefined}
+                  prescriptionTrace={traceEnabled ? prescriptionTrace : undefined}
                 />
               );
             })}
@@ -910,9 +919,15 @@ export default function SessionScreen() {
                         key={`${aw.exercise}-${actualSet.set_number}`}
                         setNumber={actualSet.set_number}
                         plannedWeightKg={
-                          planned?.weight_kg ?? actualSet.weight_grams / 1000
+                          actualSet.is_completed
+                            ? gramsToKg(actualSet.weight_grams)
+                            : (planned?.weight_kg ?? actualSet.weight_grams / 1000)
                         }
-                        plannedReps={planned?.reps ?? actualSet.reps_completed}
+                        plannedReps={
+                          actualSet.is_completed
+                            ? actualSet.reps_completed
+                            : (planned?.reps ?? actualSet.reps_completed)
+                        }
                         rpeValue={actualSet.rpe_actual}
                         isCompleted={actualSet.is_completed}
                         exerciseType={aw.exerciseType}
@@ -964,11 +979,14 @@ export default function SessionScreen() {
                             key={`${aw.exercise}-${actualSet.set_number}`}
                             setNumber={actualSet.set_number}
                             plannedWeightKg={
-                              planned?.weight_kg ??
-                              actualSet.weight_grams / 1000
+                              actualSet.is_completed
+                                ? gramsToKg(actualSet.weight_grams)
+                                : (planned?.weight_kg ?? actualSet.weight_grams / 1000)
                             }
                             plannedReps={
-                              planned?.reps ?? actualSet.reps_completed
+                              actualSet.is_completed
+                                ? actualSet.reps_completed
+                                : (planned?.reps ?? actualSet.reps_completed)
                             }
                             rpeValue={actualSet.rpe_actual}
                             exerciseType={aw.exerciseType}
@@ -1107,16 +1125,6 @@ export default function SessionScreen() {
         isError={liftHistoryError}
         isOffline={isOffline}
       />
-
-      {/* Prescription trace sheet */}
-      {prescriptionTrace && traceEnabled && (
-        <PrescriptionSheet
-          visible={traceSheetVisible}
-          onClose={() => { setTraceSheetVisible(false); setTraceFocusExercise(undefined); }}
-          trace={prescriptionTrace}
-          focusExercise={traceFocusExercise}
-        />
-      )}
 
       {/* Add exercise modal */}
       <AddExerciseModal
