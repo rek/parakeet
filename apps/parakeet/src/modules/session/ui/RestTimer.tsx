@@ -233,7 +233,13 @@ function FullTimer({
           color: colors.textSecondary,
           textTransform: 'uppercase',
           letterSpacing: typography.letterSpacing.wider,
-          marginBottom: spacing[4],
+          marginBottom: spacing[1],
+        },
+        nextLiftLabelStyle: {
+          fontSize: typography.sizes.sm,
+          fontWeight: typography.weights.medium,
+          color: colors.textSecondary,
+          marginBottom: spacing[3],
         },
         countdown: {
           fontSize: 72,
@@ -273,12 +279,6 @@ function FullTimer({
           fontSize: typography.sizes.sm,
           fontWeight: typography.weights.medium,
           color: colors.warning,
-        },
-        nextLiftLabelStyle: {
-          fontSize: typography.sizes.sm,
-          fontWeight: typography.weights.medium,
-          color: colors.textSecondary,
-          marginBottom: spacing[4],
         },
         controlRow: {
           flexDirection: 'row',
@@ -379,6 +379,9 @@ function FullTimer({
   return (
     <View style={fullStyles.container}>
       <Text style={fullStyles.intensityLabel}>{intensityLabel}</Text>
+      {nextLiftLabel && (
+        <Text style={fullStyles.nextLiftLabelStyle}>{nextLiftLabel}</Text>
+      )}
 
       <Text
         style={[fullStyles.countdown, overtime && fullStyles.countdownOvertime]}
@@ -400,10 +403,6 @@ function FullTimer({
             AI: {formatMMSS(aiSuggestedSeconds)} suggested
           </Text>
         </View>
-      )}
-
-      {nextLiftLabel && (
-        <Text style={fullStyles.nextLiftLabelStyle}>{nextLiftLabel}</Text>
       )}
 
       <View style={fullStyles.controlRow}>

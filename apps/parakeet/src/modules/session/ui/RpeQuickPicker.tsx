@@ -69,8 +69,8 @@ export function RpeQuickPicker({
         },
         context: {
           fontSize: typography.sizes.base,
-          fontWeight: typography.weights.bold,
-          color: colors.text,
+          fontWeight: typography.weights.medium,
+          color: colors.textSecondary,
           letterSpacing: typography.letterSpacing.tight,
         },
         skip: {

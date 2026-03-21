@@ -17,6 +17,8 @@ import {
   AddExerciseModal,
   buildBlockWeekLabel,
   buildIntensityLabel,
+  buildNextLiftLabel,
+  buildRpeContextLabel,
   computeSuggestedAux,
   computeSuggestedWeight,
   DEFAULT_MAIN_REST_SECONDS,
@@ -52,11 +54,7 @@ import {
 import type { WarmupPlateDisplay } from '@modules/settings';
 import type { RestTimerPrefs } from '@modules/settings';
 import { useFeatureEnabled } from '@modules/feature-flags';
-import {
-  getAllExercises,
-  getExerciseType,
-  gramsToKg,
-} from '@parakeet/training-engine';
+import { getAllExercises, getExerciseType } from '@parakeet/training-engine';
 import type { PlateKg, PrescriptionTrace } from '@parakeet/training-engine';
 import type { Lift } from '@parakeet/shared-types';
 import { useNetworkStatus } from '@platform/network';
@@ -235,7 +233,7 @@ function buildStyles(colors: ColorScheme) {
       paddingHorizontal: 8,
       gap: 8,
     },
-    rpePickerSpaced: {
+    overlaySpaced: {
       width: '100%',
       maxWidth: 560,
     },
@@ -1145,40 +1143,21 @@ export default function SessionScreen() {
             <RpeQuickPicker
               onSelect={handleRpeQuickSelect}
               onSkip={handleRpeQuickSkip}
-              contextLabel={(() => {
-                if (pendingRpeSetNumber !== null) {
-                  const set = actualSets[pendingRpeSetNumber - 1];
-                  if (!set) return undefined;
-                  const total = plannedSets.length;
-                  const kg = gramsToKg(set.weight_grams);
-                  const w = kg % 1 === 0 ? `${kg}` : kg.toFixed(1);
-                  return `Set ${pendingRpeSetNumber}/${total} — ${w}kg × ${set.reps_completed}`;
-                }
-                if (pendingAuxRpe !== null) {
-                  const auxSet = auxiliarySets.find(
-                    (s) =>
-                      s.exercise === pendingAuxRpe.exercise &&
-                      s.set_number === pendingAuxRpe.setNumber
-                  );
-                  const aw = auxiliaryWork.find(
-                    (a) => a.exercise === pendingAuxRpe.exercise
-                  );
-                  const total = aw?.sets.length ?? 0;
-                  const name = formatExerciseName(pendingAuxRpe.exercise);
-                  if (!auxSet) return `${name} Set ${pendingAuxRpe.setNumber}/${total}`;
-                  const kg = gramsToKg(auxSet.weight_grams);
-                  const w = kg % 1 === 0 ? `${kg}` : kg.toFixed(1);
-                  return `${name} Set ${pendingAuxRpe.setNumber}/${total} — ${w}kg × ${auxSet.reps_completed}`;
-                }
-                return undefined;
-              })()}
+              contextLabel={buildRpeContextLabel({
+                pendingRpeSetNumber,
+                pendingAuxRpe,
+                actualSets,
+                auxiliarySets,
+                auxiliaryWork,
+                plannedSetsCount: plannedSets.length,
+              })}
             />
           )}
           {timerState?.visible && (
             <View
               style={
                 pendingRpeSetNumber !== null || pendingAuxRpe !== null
-                  ? styles.rpePickerSpaced
+                  ? styles.overlaySpaced
                   : undefined
               }
             >
@@ -1201,38 +1180,20 @@ export default function SessionScreen() {
                 }
                 audioAlert={restTimerPrefsRef.current.audioAlert}
                 hapticAlert={restTimerPrefsRef.current.hapticAlert}
-                nextLiftLabel={(() => {
-                  if (timerState?.pendingMainSetNumber !== null) {
-                    const nextPlanned =
-                      plannedSets[timerState.pendingMainSetNumber];
-                    if (!nextPlanned) return undefined;
-                    const w =
-                      nextPlanned.weight_kg % 1 === 0
-                        ? `${nextPlanned.weight_kg}`
-                        : nextPlanned.weight_kg.toFixed(1);
-                    return `Next: Set ${timerState.pendingMainSetNumber + 1} — ${w}kg × ${nextPlanned.reps}`;
-                  }
-                  if (
-                    timerState?.pendingAuxExercise !== null &&
-                    timerState?.pendingAuxSetNumber !== null
-                  ) {
-                    const aw = auxiliaryWork.find(
-                      (a) => a.exercise === timerState.pendingAuxExercise
-                    );
-                    const nextAuxSet =
-                      aw?.sets[timerState.pendingAuxSetNumber];
-                    if (!nextAuxSet) return undefined;
-                    const name = formatExerciseName(
-                      timerState.pendingAuxExercise!
-                    );
-                    const w =
-                      nextAuxSet.weight_kg % 1 === 0
-                        ? `${nextAuxSet.weight_kg}`
-                        : nextAuxSet.weight_kg.toFixed(1);
-                    return `Next: ${name} — ${w}kg × ${nextAuxSet.reps}`;
-                  }
-                  return undefined;
-                })()}
+                nextLiftLabel={
+                  pendingRpeSetNumber !== null || pendingAuxRpe !== null
+                    ? undefined
+                    : buildNextLiftLabel({
+                        pendingMainSetNumber:
+                          timerState?.pendingMainSetNumber ?? null,
+                        plannedSets,
+                        pendingAuxExercise:
+                          timerState?.pendingAuxExercise ?? null,
+                        pendingAuxSetNumber:
+                          timerState?.pendingAuxSetNumber ?? null,
+                        auxiliaryWork,
+                      })
+                }
               />
             </View>
           )}
