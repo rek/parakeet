@@ -25,6 +25,7 @@
     "expo-audio": "~1.1.1",
     "expo-file-system": "^19.0.21",
     "expo-haptics": "~15.0.8",
+    "expo-secure-store": "~15.0.8",
     "expo-keep-awake": "~15.0.8",
     "expo-linking": "*",
     "expo-notifications": "~0.32.16",

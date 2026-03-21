@@ -50,6 +50,8 @@ Reusable patterns discovered during implementation. Read on-demand when debuggin
 
 ## Architecture & Workflow
 
+**Native Expo packages must be in the app's `package.json`, not just the root** — in an Nx monorepo, `expo-modules-autolinking` scans `apps/parakeet/package.json` dependencies to decide which native modules to link. A package installed only in the root `package.json` will be resolvable by Node (hoisted `node_modules/`) and pass TypeScript checks, but autolinking won't see it — the native module won't be included in the build, causing a runtime crash (`Cannot find native module 'Expo...'`). Always add native Expo packages to both the root (for hoisting) and `apps/parakeet/package.json` (for autolinking).
+
 **Design ceremony proportional to scope** — new architectural concepts warrant design doc > spec > implement. Simple UI additions can go straight to implement > spec after. One-time admin operations are CLI scripts, not mobile screens.
 
 **Lazy generation pattern for unending modes** — check for an existing record first, then generate only if missing. Never generate unconditionally.
@@ -61,6 +63,8 @@ Reusable patterns discovered during implementation. Read on-demand when debuggin
 **Main/aux symmetry in session flow** — `handleLiftComplete` and `handleLiftFailed` each have a main-lift branch and an aux branch. When modifying one branch (e.g., fleshing out main-lift failure handling), always check the parallel branch in the same function AND the equivalent function. The intra-session adaptation commit added full failure handling for main lifts but left the aux failure branch as a rest-only stub — the same pattern that `handleLiftComplete` already handled correctly for aux. Review checklist: if you touch `handleLiftComplete` main → check `handleLiftComplete` aux, `handleLiftFailed` main, `handleLiftFailed` aux.
 
 **Stubs ship as bugs** — a stub that "just logs rest" or returns a default is invisible at review time but breaks the feature for users. If a code path can be reached by a user action, implement it fully or throw an error so it's caught immediately. The aux failure branch in `handleLiftFailed` was left as a rest-only stub with a comment ("just log rest, no main-lift adaptation") — it silently ate user input for months. If you can't implement a path yet, make it fail loudly (`throw new Error('not yet implemented')`) so it surfaces in testing rather than shipping as silent data loss.
+
+**Don't overload state that downstream handlers interpret with arithmetic** — `PostRestState.pendingAuxSetNumber` means "the set just completed" and downstream handlers do `+1` to get the next set. Reusing this state for a "confirmation of the current set" would cause an off-by-one where set 2 gets completed/failed instead of set 1. When existing dispatch handlers assume positional semantics (prev → next), introduce a dedicated state for a fundamentally different flow (confirm → then proceed) rather than adding boolean flags to reinterpret the same fields.
 
 ## Agent Patterns
 
