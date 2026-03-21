@@ -90,4 +90,10 @@ Reusable patterns discovered during implementation. Read on-demand when debuggin
 
 ### UX & Information Display
 
+**Stacked overlays need information density budgeting** — when two overlay cards (RPE picker + rest timer) are visible simultaneously, the combined height can consume ~77% of an iPhone SE screen. Suppress secondary context (e.g., "next lift" label in the timer) while the primary action (RPE entry) is pending. Only show lookahead information after the immediate action is resolved.
+
+**Context labels should support, not compete with, action buttons** — when adding informational labels near interactive elements, use a lower visual weight (medium/textSecondary) so the label provides context without competing for attention. The action buttons should always be the most visually prominent elements.
+
+**Zero-weight edge case in display labels** — bodyweight exercises store `weight_grams: 0`. Any label that formats `${kg}kg × ${reps}` must handle the 0kg case — omit the weight portion entirely rather than showing "0kg". Check `exerciseType` or `weight_grams === 0` before formatting.
+
 **"vs plan" is meaningless when the plan is always personalized** — JIT generates a plan adjusted for soreness, disruptions, readiness, and cycle phase. Comparing actual vs adjusted always yields ~100%. Users interpret "on plan" as "on the original schedule" not "on the adjusted plan." Fix: show adjustment context (what changed and why) instead of a misleading percentage. Surface `JITOutput.volumeReductions` and `rationale` alongside completion stats.
