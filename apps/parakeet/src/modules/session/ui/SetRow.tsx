@@ -13,6 +13,7 @@ import type { PlateKg } from '@parakeet/training-engine';
 import { radii, spacing, typography } from '../../../theme';
 import { useTheme } from '../../../theme/ThemeContext';
 import { PlateCalculatorSheet } from './PlateCalculatorSheet';
+import { resolveSetRowDisplay } from './resolveSetRowDisplay';
 import { parseWeightInput } from './weight-input';
 
 // ── Types ────────────────────────────────────────────────────────────────────
@@ -208,25 +209,30 @@ export function SetRow({
     [colors]
   );
 
+  const {
+    displayReps,
+    displayWeightKg,
+    displayWeightText,
+    displayCompleted,
+  } = resolveSetRowDisplay({
+    plannedWeightKg,
+    plannedReps,
+    localWeightKg: weightKg,
+    localWeightText: weightText,
+    localReps: reps,
+    localIsCompleted: isCompleted,
+    isCompletedExternal: isCompletedProp,
+  });
+
   useEffect(() => {
-    onUpdate({ weightKg, reps, rpe, isCompleted });
+    onUpdate({ weightKg: displayWeightKg, reps: displayReps, rpe, isCompleted: displayCompleted });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [weightKg, reps, rpe, isCompleted]);
+  }, [displayWeightKg, displayReps, rpe, displayCompleted]);
 
   // Sync external RPE (e.g. from floating quick-picker) into local state
   useEffect(() => {
     setRpe(rpeValue);
   }, [rpeValue]);
-
-  // Sync external completion (e.g. auto-completed via PostRestOverlay) — one-way only
-  useEffect(() => {
-    if (isCompletedProp) {
-      setIsCompleted(true);
-      setReps(plannedReps);
-      setWeightKg(plannedWeightKg);
-      setWeightText(plannedWeightKg === 0 ? '' : String(plannedWeightKg));
-    }
-  }, [isCompletedProp, plannedReps, plannedWeightKg]);
 
   function handleWeightChange(text: string) {
     setWeightText(text);
@@ -258,12 +264,12 @@ export function SetRow({
   // Timed exercises: round label + duration input (minutes) + mark complete
   if (exerciseType === 'timed') {
     return (
-      <View style={[styles.wrapper, isCompleted && styles.wrapperCompleted]}>
+      <View style={[styles.wrapper, displayCompleted && styles.wrapperCompleted]}>
         <View style={styles.row}>
           <Text style={styles.setLabel}>Round {setNumber}</Text>
           <TextInput
-            style={[styles.repsInput, isCompleted && styles.inputLocked]}
-            value={reps === 0 ? '' : String(reps)}
+            style={[styles.repsInput, displayCompleted && styles.inputLocked]}
+            value={displayReps === 0 ? '' : String(displayReps)}
             onChangeText={handleRepsChange}
             keyboardType="number-pad"
             returnKeyType="done"
@@ -271,18 +277,18 @@ export function SetRow({
             placeholder={String(plannedReps)}
             placeholderTextColor={colors.textTertiary}
             textAlign="center"
-            editable={!isCompleted}
+            editable={!displayCompleted}
           />
           <Text style={styles.unitText}>min</Text>
           <TouchableOpacity
-            style={[styles.checkButton, isCompleted && styles.checkButtonDone]}
+            style={[styles.checkButton, displayCompleted && styles.checkButtonDone]}
             onPress={handleToggleComplete}
             activeOpacity={0.7}
           >
             <Text
               style={[
                 styles.checkButtonText,
-                isCompleted && styles.checkButtonTextDone,
+                displayCompleted && styles.checkButtonTextDone,
               ]}
             >
               ✓
@@ -294,7 +300,7 @@ export function SetRow({
   }
 
   return (
-    <View style={[styles.wrapper, isCompleted && styles.wrapperCompleted]}>
+    <View style={[styles.wrapper, displayCompleted && styles.wrapperCompleted]}>
       {/* Main input row */}
       <View style={styles.row}>
         <Text style={styles.setLabel}>Set {setNumber}</Text>
@@ -302,8 +308,8 @@ export function SetRow({
         {exerciseType !== 'bodyweight' && (
           <>
             <TextInput
-              style={[styles.weightInput, isCompleted && styles.inputLocked]}
-              value={weightText}
+              style={[styles.weightInput, displayCompleted && styles.inputLocked]}
+              value={displayWeightText}
               onChangeText={handleWeightChange}
               keyboardType="decimal-pad"
               returnKeyType="done"
@@ -311,11 +317,11 @@ export function SetRow({
               placeholder={String(plannedWeightKg)}
               placeholderTextColor={colors.textTertiary}
               textAlign="center"
-              editable={!isCompleted}
+              editable={!displayCompleted}
             />
             <Text style={styles.unitText}>kg</Text>
 
-            {weightKg > 0 && !isCompleted && (
+            {displayWeightKg > 0 && !displayCompleted && (
               <TouchableOpacity
                 style={styles.plateButton}
                 onPress={() => setPlateSheetVisible(true)}
@@ -348,8 +354,8 @@ export function SetRow({
         )}
 
         <TextInput
-          style={[styles.repsInput, isCompleted && styles.inputLocked]}
-          value={reps === 0 ? '' : String(reps)}
+          style={[styles.repsInput, displayCompleted && styles.inputLocked]}
+          value={displayReps === 0 ? '' : String(displayReps)}
           onChangeText={handleRepsChange}
           keyboardType="number-pad"
           returnKeyType="done"
@@ -357,16 +363,16 @@ export function SetRow({
           placeholder={String(plannedReps)}
           placeholderTextColor={colors.textTertiary}
           textAlign="center"
-          editable={!isCompleted}
+          editable={!displayCompleted}
         />
 
         <TouchableOpacity
           style={[
             styles.rpeChip,
             rpe !== undefined && styles.rpeChipFilled,
-            !isCompleted && styles.rpeChipDisabled,
+            !displayCompleted && styles.rpeChipDisabled,
           ]}
-          onPress={isCompleted ? onRpePress : undefined}
+          onPress={displayCompleted ? onRpePress : undefined}
           activeOpacity={0.7}
         >
           <Text
@@ -380,14 +386,14 @@ export function SetRow({
         </TouchableOpacity>
 
         <TouchableOpacity
-          style={[styles.checkButton, isCompleted && styles.checkButtonDone]}
+          style={[styles.checkButton, displayCompleted && styles.checkButtonDone]}
           onPress={handleToggleComplete}
           activeOpacity={0.7}
         >
           <Text
             style={[
               styles.checkButtonText,
-              isCompleted && styles.checkButtonTextDone,
+              displayCompleted && styles.checkButtonTextDone,
             ]}
           >
             ✓
@@ -396,7 +402,7 @@ export function SetRow({
       </View>
 
       {/* Quick-increment buttons — weighted only */}
-      {!isCompleted && exerciseType === 'weighted' && (
+      {!displayCompleted && exerciseType === 'weighted' && (
         <View style={styles.adjustRow}>
           <TouchableOpacity
             style={styles.adjustButton}
@@ -418,7 +424,7 @@ export function SetRow({
       <PlateCalculatorSheet
         visible={plateSheetVisible}
         onClose={() => setPlateSheetVisible(false)}
-        targetKg={weightKg}
+        targetKg={displayWeightKg}
         barWeightKg={barWeightKg}
         disabledPlates={disabledPlates}
         onBarWeightChange={onBarWeightChange}
