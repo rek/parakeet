@@ -18,6 +18,10 @@ Reusable patterns discovered during implementation. Read on-demand when debuggin
 
 ## UI & Components
 
+**Prop→state sync effects cause render cascades — use derived values instead** — when a component initializes local state from props (`useState(prop)`) and then syncs changes via `useEffect`, external updates create a cascade: prop changes → effect fires → sets state → `onUpdate` effect fires → parent re-renders. The fix is a pure function that resolves display values from both local state and props: when externally controlled (e.g., `isCompletedProp`), bypass local state entirely and return prop values. No sync effects needed, no cascading updates. See `resolveSetRowDisplay`.
+
+**Data already in the DB is often already fetched but unused in the UI** — before adding new queries or columns for a feature, check if the data is already selected in existing queries. PR dates (`achieved_at`) were already fetched from `personal_records` but never threaded through to the display layer. The fix was 3 lines in the service and 5 in the component.
+
 **Extract components at component boundaries** — the signal is "does this have its own `useState`?", not "is the file getting long?".
 
 **Shared modals need context props, not duplication** — when the same modal is used in two contexts, the correct fix is props (`defaultLift`, `excludeNames`), not duplicating the component.
