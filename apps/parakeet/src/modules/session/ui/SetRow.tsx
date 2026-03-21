@@ -185,13 +185,13 @@ export function SetRow({
         },
         adjustRow: {
           flexDirection: 'row',
+          alignItems: 'center',
           gap: spacing[2],
           marginTop: spacing[1.5],
-          marginLeft: 54,
         },
         adjustButton: {
           paddingHorizontal: spacing[3],
-          paddingVertical: spacing[1],
+          paddingVertical: spacing[0.5],
           borderRadius: radii.sm,
           backgroundColor: colors.bgMuted,
           borderWidth: 1,
@@ -374,6 +374,7 @@ export function SetRow({
       {/* Second row: adjust buttons + plate calc + trace info */}
       {(!displayCompleted && exerciseType === 'weighted') || prescriptionTrace ? (
         <View style={styles.adjustRow}>
+          {prescriptionTrace && <TraceLink trace={prescriptionTrace} />}
           {!displayCompleted && exerciseType === 'weighted' && (
             <>
               <TouchableOpacity
@@ -404,7 +405,6 @@ export function SetRow({
               )}
             </>
           )}
-          {prescriptionTrace && <TraceLink trace={prescriptionTrace} />}
         </View>
       ) : null}
 
