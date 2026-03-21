@@ -1,11 +1,11 @@
 import { useMemo, useState } from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
-import { calculatePlates, PLATE_COLORS } from '@parakeet/training-engine';
 import type { PlateKg } from '@parakeet/training-engine';
 
 import { radii, spacing, typography } from '../../../theme';
 import { useTheme } from '../../../theme/ThemeContext';
+import { PlateDisplay } from './PlateDisplay';
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -13,80 +13,6 @@ interface WarmupSet {
   weightKg: number;
   reps: number;
   label?: string;
-}
-
-// ── plateStyles are static (no color tokens) ─────────────────────────────────
-
-const plateStyles = StyleSheet.create({
-  row: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 3,
-    marginLeft: spacing[2],
-  },
-  dot: {
-    width: 9,
-    height: 9,
-    borderRadius: radii.full,
-  },
-  numbersText: {
-    fontSize: typography.sizes.xs,
-    color: '#9CA3AF',
-    fontWeight: typography.weights.medium,
-  },
-});
-
-// ── PlateDisplay sub-component ────────────────────────────────────────────────
-
-function formatPlateKg(kg: number): string {
-  return kg % 1 === 0 ? `${kg}` : `${kg}`;
-}
-
-function PlateDisplay({
-  weightKg,
-  barWeightKg,
-  disabledPlates,
-  mode = 'numbers',
-}: {
-  weightKg: number;
-  barWeightKg: number;
-  disabledPlates?: PlateKg[];
-  mode?: 'numbers' | 'colors';
-}) {
-  if (weightKg <= barWeightKg) return null;
-  const available = disabledPlates?.length
-    ? ([25, 20, 15, 10, 5, 2.5, 1.25] as PlateKg[]).filter(
-        (p) => !disabledPlates.includes(p)
-      )
-    : undefined;
-  const { platesPerSide } = calculatePlates(weightKg, barWeightKg, available);
-
-  if (mode === 'colors') {
-    return (
-      <View style={plateStyles.row}>
-        {platesPerSide.flatMap(({ kg, count }) =>
-          Array.from({ length: count }, (_, i) => (
-            <View
-              key={`${kg}-${i}`}
-              style={[plateStyles.dot, { backgroundColor: PLATE_COLORS[kg] }]}
-            />
-          ))
-        )}
-      </View>
-    );
-  }
-
-  const label = platesPerSide
-    .map(({ kg, count }) =>
-      count > 1 ? `${formatPlateKg(kg)}x${count}` : formatPlateKg(kg)
-    )
-    .join(' + ');
-
-  return (
-    <View style={plateStyles.row}>
-      <Text style={plateStyles.numbersText}>{label}</Text>
-    </View>
-  );
 }
 
 export interface WarmupSectionProps {

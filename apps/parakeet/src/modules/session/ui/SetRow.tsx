@@ -7,12 +7,16 @@ import {
   View,
 } from 'react-native';
 
-import { Ionicons } from '@expo/vector-icons';
 import type { PlateKg } from '@parakeet/training-engine';
 
 import { radii, spacing, typography } from '../../../theme';
 import { useTheme } from '../../../theme/ThemeContext';
+import type { PrescriptionTrace } from '@parakeet/training-engine';
+
 import { PlateCalculatorSheet } from './PlateCalculatorSheet';
+import { PlateDisplay } from './PlateDisplay';
+import { resolveSetRowDisplay } from './resolveSetRowDisplay';
+import { TraceLink } from './TraceLink';
 import { parseWeightInput } from './weight-input';
 
 // ── Types ────────────────────────────────────────────────────────────────────
@@ -37,7 +41,7 @@ export interface SetRowProps {
   disabledPlates: PlateKg[];
   onBarWeightChange: (kg: number) => void;
   onDisabledPlatesChange: (plates: PlateKg[]) => void;
-  onWeightInfoPress?: () => void;
+  prescriptionTrace?: PrescriptionTrace | null;
 }
 
 // ── Component ─────────────────────────────────────────────────────────────────
@@ -55,7 +59,7 @@ export function SetRow({
   disabledPlates,
   onBarWeightChange,
   onDisabledPlatesChange,
-  onWeightInfoPress,
+  prescriptionTrace,
 }: SetRowProps) {
   const { colors } = useTheme();
   const [weightKg, setWeightKg] = useState(plannedWeightKg);
@@ -110,12 +114,6 @@ export function SetRow({
         unitText: {
           fontSize: typography.sizes.sm,
           color: colors.textSecondary,
-        },
-        plateButton: {
-          width: 36,
-          height: 36,
-          alignItems: 'center',
-          justifyContent: 'center',
         },
         multiplyText: {
           fontSize: typography.sizes.base,
@@ -187,13 +185,13 @@ export function SetRow({
         },
         adjustRow: {
           flexDirection: 'row',
+          alignItems: 'center',
           gap: spacing[2],
           marginTop: spacing[1.5],
-          marginLeft: 54,
         },
         adjustButton: {
           paddingHorizontal: spacing[3],
-          paddingVertical: spacing[1],
+          paddingVertical: spacing[0.5],
           borderRadius: radii.sm,
           backgroundColor: colors.bgMuted,
           borderWidth: 1,
@@ -208,20 +206,32 @@ export function SetRow({
     [colors]
   );
 
+  const {
+    displayReps,
+    displayWeightKg,
+    displayWeightText,
+    displayCompleted,
+  } = resolveSetRowDisplay({
+    plannedWeightKg,
+    plannedReps,
+    localWeightKg: weightKg,
+    localWeightText: weightText,
+    localReps: reps,
+    localIsCompleted: isCompleted,
+    isCompletedExternal: isCompletedProp,
+  });
+
+  // Report local edits to parent — skip when externally completed (parent already has the data)
   useEffect(() => {
-    onUpdate({ weightKg, reps, rpe, isCompleted });
+    if (isCompletedProp) return;
+    onUpdate({ weightKg: displayWeightKg, reps: displayReps, rpe, isCompleted: displayCompleted });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [weightKg, reps, rpe, isCompleted]);
+  }, [displayWeightKg, displayReps, rpe, displayCompleted, isCompletedProp]);
 
   // Sync external RPE (e.g. from floating quick-picker) into local state
   useEffect(() => {
     setRpe(rpeValue);
   }, [rpeValue]);
-
-  // Sync external completion (e.g. auto-completed via PostRestOverlay) — one-way only
-  useEffect(() => {
-    if (isCompletedProp) setIsCompleted(true);
-  }, [isCompletedProp]);
 
   function handleWeightChange(text: string) {
     setWeightText(text);
@@ -253,12 +263,12 @@ export function SetRow({
   // Timed exercises: round label + duration input (minutes) + mark complete
   if (exerciseType === 'timed') {
     return (
-      <View style={[styles.wrapper, isCompleted && styles.wrapperCompleted]}>
+      <View style={[styles.wrapper, displayCompleted && styles.wrapperCompleted]}>
         <View style={styles.row}>
           <Text style={styles.setLabel}>Round {setNumber}</Text>
           <TextInput
-            style={[styles.repsInput, isCompleted && styles.inputLocked]}
-            value={reps === 0 ? '' : String(reps)}
+            style={[styles.repsInput, displayCompleted && styles.inputLocked]}
+            value={displayReps === 0 ? '' : String(displayReps)}
             onChangeText={handleRepsChange}
             keyboardType="number-pad"
             returnKeyType="done"
@@ -266,18 +276,18 @@ export function SetRow({
             placeholder={String(plannedReps)}
             placeholderTextColor={colors.textTertiary}
             textAlign="center"
-            editable={!isCompleted}
+            editable={!displayCompleted}
           />
           <Text style={styles.unitText}>min</Text>
           <TouchableOpacity
-            style={[styles.checkButton, isCompleted && styles.checkButtonDone]}
+            style={[styles.checkButton, displayCompleted && styles.checkButtonDone]}
             onPress={handleToggleComplete}
             activeOpacity={0.7}
           >
             <Text
               style={[
                 styles.checkButtonText,
-                isCompleted && styles.checkButtonTextDone,
+                displayCompleted && styles.checkButtonTextDone,
               ]}
             >
               ✓
@@ -289,7 +299,7 @@ export function SetRow({
   }
 
   return (
-    <View style={[styles.wrapper, isCompleted && styles.wrapperCompleted]}>
+    <View style={[styles.wrapper, displayCompleted && styles.wrapperCompleted]}>
       {/* Main input row */}
       <View style={styles.row}>
         <Text style={styles.setLabel}>Set {setNumber}</Text>
@@ -297,8 +307,8 @@ export function SetRow({
         {exerciseType !== 'bodyweight' && (
           <>
             <TextInput
-              style={[styles.weightInput, isCompleted && styles.inputLocked]}
-              value={weightText}
+              style={[styles.weightInput, displayCompleted && styles.inputLocked]}
+              value={displayWeightText}
               onChangeText={handleWeightChange}
               keyboardType="decimal-pad"
               returnKeyType="done"
@@ -306,45 +316,16 @@ export function SetRow({
               placeholder={String(plannedWeightKg)}
               placeholderTextColor={colors.textTertiary}
               textAlign="center"
-              editable={!isCompleted}
+              editable={!displayCompleted}
             />
             <Text style={styles.unitText}>kg</Text>
-
-            {weightKg > 0 && !isCompleted && (
-              <TouchableOpacity
-                style={styles.plateButton}
-                onPress={() => setPlateSheetVisible(true)}
-                activeOpacity={0.7}
-              >
-                <Ionicons
-                  name="barbell-outline"
-                  size={20}
-                  color={colors.textSecondary}
-                />
-              </TouchableOpacity>
-            )}
-
-            {onWeightInfoPress && (
-              <TouchableOpacity
-                onPress={onWeightInfoPress}
-                activeOpacity={0.7}
-                hitSlop={12}
-              >
-                <Ionicons
-                  name="information-circle-outline"
-                  size={18}
-                  color={colors.textTertiary}
-                />
-              </TouchableOpacity>
-            )}
-
             <Text style={styles.multiplyText}>×</Text>
           </>
         )}
 
         <TextInput
-          style={[styles.repsInput, isCompleted && styles.inputLocked]}
-          value={reps === 0 ? '' : String(reps)}
+          style={[styles.repsInput, displayCompleted && styles.inputLocked]}
+          value={displayReps === 0 ? '' : String(displayReps)}
           onChangeText={handleRepsChange}
           keyboardType="number-pad"
           returnKeyType="done"
@@ -352,16 +333,16 @@ export function SetRow({
           placeholder={String(plannedReps)}
           placeholderTextColor={colors.textTertiary}
           textAlign="center"
-          editable={!isCompleted}
+          editable={!displayCompleted}
         />
 
         <TouchableOpacity
           style={[
             styles.rpeChip,
             rpe !== undefined && styles.rpeChipFilled,
-            !isCompleted && styles.rpeChipDisabled,
+            !displayCompleted && styles.rpeChipDisabled,
           ]}
-          onPress={isCompleted ? onRpePress : undefined}
+          onPress={displayCompleted ? onRpePress : undefined}
           activeOpacity={0.7}
         >
           <Text
@@ -375,14 +356,14 @@ export function SetRow({
         </TouchableOpacity>
 
         <TouchableOpacity
-          style={[styles.checkButton, isCompleted && styles.checkButtonDone]}
+          style={[styles.checkButton, displayCompleted && styles.checkButtonDone]}
           onPress={handleToggleComplete}
           activeOpacity={0.7}
         >
           <Text
             style={[
               styles.checkButtonText,
-              isCompleted && styles.checkButtonTextDone,
+              displayCompleted && styles.checkButtonTextDone,
             ]}
           >
             ✓
@@ -390,30 +371,47 @@ export function SetRow({
         </TouchableOpacity>
       </View>
 
-      {/* Quick-increment buttons — weighted only */}
-      {!isCompleted && exerciseType === 'weighted' && (
+      {/* Second row: adjust buttons + plate calc + trace info */}
+      {(!displayCompleted && exerciseType === 'weighted') || prescriptionTrace ? (
         <View style={styles.adjustRow}>
-          <TouchableOpacity
-            style={styles.adjustButton}
-            onPress={() => handleWeightAdjust(-2.5)}
-            activeOpacity={0.7}
-          >
-            <Text style={styles.adjustButtonText}>−2.5</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={styles.adjustButton}
-            onPress={() => handleWeightAdjust(2.5)}
-            activeOpacity={0.7}
-          >
-            <Text style={styles.adjustButtonText}>+2.5</Text>
-          </TouchableOpacity>
+          {prescriptionTrace && <TraceLink trace={prescriptionTrace} />}
+          {!displayCompleted && exerciseType === 'weighted' && (
+            <>
+              <TouchableOpacity
+                style={styles.adjustButton}
+                onPress={() => handleWeightAdjust(-2.5)}
+                activeOpacity={0.7}
+              >
+                <Text style={styles.adjustButtonText}>−2.5</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.adjustButton}
+                onPress={() => handleWeightAdjust(2.5)}
+                activeOpacity={0.7}
+              >
+                <Text style={styles.adjustButtonText}>+2.5</Text>
+              </TouchableOpacity>
+              {displayWeightKg > 0 && (
+                <TouchableOpacity
+                  onPress={() => setPlateSheetVisible(true)}
+                  activeOpacity={0.7}
+                >
+                  <PlateDisplay
+                    weightKg={displayWeightKg}
+                    barWeightKg={barWeightKg}
+                    disabledPlates={disabledPlates}
+                  />
+                </TouchableOpacity>
+              )}
+            </>
+          )}
         </View>
-      )}
+      ) : null}
 
       <PlateCalculatorSheet
         visible={plateSheetVisible}
         onClose={() => setPlateSheetVisible(false)}
-        targetKg={weightKg}
+        targetKg={displayWeightKg}
         barWeightKg={barWeightKg}
         disabledPlates={disabledPlates}
         onBarWeightChange={onBarWeightChange}
