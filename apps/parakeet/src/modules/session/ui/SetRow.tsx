@@ -224,10 +224,12 @@ export function SetRow({
     isCompletedExternal: isCompletedProp,
   });
 
+  // Report local edits to parent — skip when externally completed (parent already has the data)
   useEffect(() => {
+    if (isCompletedProp) return;
     onUpdate({ weightKg: displayWeightKg, reps: displayReps, rpe, isCompleted: displayCompleted });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [displayWeightKg, displayReps, rpe, displayCompleted]);
+  }, [displayWeightKg, displayReps, rpe, displayCompleted, isCompletedProp]);
 
   // Sync external RPE (e.g. from floating quick-picker) into local state
   useEffect(() => {
