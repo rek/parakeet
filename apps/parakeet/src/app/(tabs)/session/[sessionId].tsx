@@ -27,7 +27,6 @@ import {
   PostRestOverlay,
   RestTimer,
   RpeQuickPicker,
-  PrescriptionSheet,
   SetRow,
   startSession,
   useSetCompletionFlow,
@@ -354,8 +353,6 @@ export default function SessionScreen() {
     useState<WarmupPlateDisplay>('numbers');
   const [addExerciseVisible, setAddExerciseVisible] = useState(false);
   const [historySheetVisible, setHistorySheetVisible] = useState(false);
-  const [traceSheetVisible, setTraceSheetVisible] = useState(false);
-  const [traceFocusExercise, setTraceFocusExercise] = useState<string | undefined>();
   const insets = useSafeAreaInsets();
   const traceEnabled = useFeatureEnabled('prescriptionTrace');
   const cachedTrace = useSessionStore((s) => s.cachedPrescriptionTrace);
@@ -876,7 +873,7 @@ export default function SessionScreen() {
                   disabledPlates={equipmentDisabledPlates}
                   onBarWeightChange={handleBarWeightChange}
                   onDisabledPlatesChange={handleDisabledPlatesChange}
-                  onWeightInfoPress={prescriptionTrace && traceEnabled ? () => setTraceSheetVisible(true) : undefined}
+                  prescriptionTrace={traceEnabled ? prescriptionTrace : undefined}
                 />
               );
             })}
@@ -1128,16 +1125,6 @@ export default function SessionScreen() {
         isError={liftHistoryError}
         isOffline={isOffline}
       />
-
-      {/* Prescription trace sheet */}
-      {prescriptionTrace && traceEnabled && (
-        <PrescriptionSheet
-          visible={traceSheetVisible}
-          onClose={() => { setTraceSheetVisible(false); setTraceFocusExercise(undefined); }}
-          trace={prescriptionTrace}
-          focusExercise={traceFocusExercise}
-        />
-      )}
 
       {/* Add exercise modal */}
       <AddExerciseModal

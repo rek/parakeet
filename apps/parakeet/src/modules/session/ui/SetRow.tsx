@@ -12,8 +12,11 @@ import type { PlateKg } from '@parakeet/training-engine';
 
 import { radii, spacing, typography } from '../../../theme';
 import { useTheme } from '../../../theme/ThemeContext';
+import type { PrescriptionTrace } from '@parakeet/training-engine';
+
 import { PlateCalculatorSheet } from './PlateCalculatorSheet';
 import { resolveSetRowDisplay } from './resolveSetRowDisplay';
+import { TraceLink } from './TraceLink';
 import { parseWeightInput } from './weight-input';
 
 // ── Types ────────────────────────────────────────────────────────────────────
@@ -38,7 +41,7 @@ export interface SetRowProps {
   disabledPlates: PlateKg[];
   onBarWeightChange: (kg: number) => void;
   onDisabledPlatesChange: (plates: PlateKg[]) => void;
-  onWeightInfoPress?: () => void;
+  prescriptionTrace?: PrescriptionTrace | null;
 }
 
 // ── Component ─────────────────────────────────────────────────────────────────
@@ -56,7 +59,7 @@ export function SetRow({
   disabledPlates,
   onBarWeightChange,
   onDisabledPlatesChange,
-  onWeightInfoPress,
+  prescriptionTrace,
 }: SetRowProps) {
   const { colors } = useTheme();
   const [weightKg, setWeightKg] = useState(plannedWeightKg);
@@ -337,20 +340,6 @@ export function SetRow({
               </TouchableOpacity>
             )}
 
-            {onWeightInfoPress && (
-              <TouchableOpacity
-                onPress={onWeightInfoPress}
-                activeOpacity={0.7}
-                hitSlop={12}
-              >
-                <Ionicons
-                  name="information-circle-outline"
-                  size={18}
-                  color={colors.textTertiary}
-                />
-              </TouchableOpacity>
-            )}
-
             <Text style={styles.multiplyText}>×</Text>
           </>
         )}
@@ -402,6 +391,8 @@ export function SetRow({
           </Text>
         </TouchableOpacity>
       </View>
+
+      {prescriptionTrace && <TraceLink trace={prescriptionTrace} />}
 
       {/* Quick-increment buttons — weighted only */}
       {!displayCompleted && exerciseType === 'weighted' && (

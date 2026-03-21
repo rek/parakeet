@@ -48,3 +48,4 @@ export { AuxResultsTable } from './ui/AuxResultsTable';
 export { TraceButton } from './ui/TraceButton';
 export { useSessionDetail } from './hooks/useSessionDetail';
 export { groupAuxSetsByExercise } from './utils/groupAuxSetsByExercise';
+export { TraceLink } from './ui/TraceLink';
