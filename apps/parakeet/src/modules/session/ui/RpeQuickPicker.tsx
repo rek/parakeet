@@ -76,6 +76,7 @@ export function RpeQuickPicker({ onSelect, onSkip }: RpeQuickPickerProps) {
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
+        nestedScrollEnabled
         contentContainerStyle={styles.buttons}
       >
         {RPE_OPTIONS.map((rpe) => (
