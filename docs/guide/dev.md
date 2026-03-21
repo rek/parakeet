@@ -67,9 +67,10 @@ Requires the native Android project to exist (`apps/parakeet/android/`). If it d
 
 ```bash
 # One-time: generate native Android project (re-run if you add/remove native packages)
-cd apps/parakeet
-npx expo prebuild --platform android --clean
+npm run prebuild
 ```
+
+**Adding native Expo packages:** Add to **both** the root `package.json` and `apps/parakeet/package.json`, then `npm install && npm run prebuild`. Autolinking only scans the app's `package.json` — a package in the root alone will pass TypeScript but crash at runtime.
 
 Then build:
 

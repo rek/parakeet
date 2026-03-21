@@ -15,9 +15,14 @@ const RPE_OPTIONS = [6, 6.5, 7, 7.5, 8, 8.5, 9, 9.5, 10];
 interface RpeQuickPickerProps {
   onSelect: (rpe: number) => void;
   onSkip: () => void;
+  contextLabel?: string;
 }
 
-export function RpeQuickPicker({ onSelect, onSkip }: RpeQuickPickerProps) {
+export function RpeQuickPicker({
+  onSelect,
+  onSkip,
+  contextLabel,
+}: RpeQuickPickerProps) {
   const { colors } = useTheme();
 
   const styles = useMemo(
@@ -62,6 +67,12 @@ export function RpeQuickPicker({ onSelect, onSkip }: RpeQuickPickerProps) {
           fontWeight: typography.weights.semibold,
           color: colors.text,
         },
+        context: {
+          fontSize: typography.sizes.base,
+          fontWeight: typography.weights.medium,
+          color: colors.textSecondary,
+          letterSpacing: typography.letterSpacing.tight,
+        },
         skip: {
           fontSize: typography.sizes.sm,
           color: colors.textTertiary,
@@ -72,6 +83,7 @@ export function RpeQuickPicker({ onSelect, onSkip }: RpeQuickPickerProps) {
 
   return (
     <View style={styles.container}>
+      {contextLabel && <Text style={styles.context}>{contextLabel}</Text>}
       <Text style={styles.label}>How'd that feel?</Text>
       <ScrollView
         horizontal

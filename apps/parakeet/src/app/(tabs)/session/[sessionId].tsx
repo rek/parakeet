@@ -17,6 +17,8 @@ import {
   AddExerciseModal,
   buildBlockWeekLabel,
   buildIntensityLabel,
+  buildNextLiftLabel,
+  buildRpeContextLabel,
   computeSuggestedAux,
   computeSuggestedWeight,
   DEFAULT_MAIN_REST_SECONDS,
@@ -234,7 +236,7 @@ function buildStyles(colors: ColorScheme) {
       paddingHorizontal: 8,
       gap: 8,
     },
-    rpePickerSpaced: {
+    overlaySpaced: {
       width: '100%',
       maxWidth: 560,
     },
@@ -1139,7 +1141,7 @@ export default function SessionScreen() {
         excludeNames={alreadyInSession}
       />
 
-      {/* Rest timer + post-rest overlay + floating RPE picker */}
+      {/* RPE picker (primary) + rest timer + post-rest overlay */}
       {(timerState?.visible ||
         postRestState !== null ||
         pendingRpeSetNumber !== null ||
@@ -1161,27 +1163,63 @@ export default function SessionScreen() {
               isConfirmation
             />
           )}
-          {timerState?.visible && (
-            <RestTimer
-              durationSeconds={
-                timerState?.durationSeconds ?? DEFAULT_MAIN_REST_SECONDS
-              }
-              elapsed={timerState?.elapsed ?? 0}
-              offset={timerState?.offset ?? 0}
-              onAdjust={adjustTimer}
-              llmSuggestion={activeLlmSuggestion}
-              onDone={handleTimerDone}
-              intensityLabel={intensity}
-              autoHideOnExpiry
-              bonusSeconds={
-                timerState?.pendingMainSetNumber !== null &&
-                currentAdaptation?.adaptationType === 'extended_rest'
-                  ? (currentAdaptation.restBonusSeconds ?? 0)
-                  : 0
-              }
-              audioAlert={restTimerPrefsRef.current.audioAlert}
-              hapticAlert={restTimerPrefsRef.current.hapticAlert}
+          {(pendingRpeSetNumber !== null || pendingAuxRpe !== null) && (
+            <RpeQuickPicker
+              onSelect={handleRpeQuickSelect}
+              onSkip={handleRpeQuickSkip}
+              contextLabel={buildRpeContextLabel({
+                pendingRpeSetNumber,
+                pendingAuxRpe,
+                actualSets,
+                auxiliarySets,
+                auxiliaryWork,
+                plannedSetsCount: plannedSets.length,
+              })}
             />
+          )}
+          {timerState?.visible && (
+            <View
+              style={
+                pendingRpeSetNumber !== null || pendingAuxRpe !== null
+                  ? styles.overlaySpaced
+                  : undefined
+              }
+            >
+              <RestTimer
+                durationSeconds={
+                  timerState?.durationSeconds ?? DEFAULT_MAIN_REST_SECONDS
+                }
+                elapsed={timerState?.elapsed ?? 0}
+                offset={timerState?.offset ?? 0}
+                onAdjust={adjustTimer}
+                llmSuggestion={activeLlmSuggestion}
+                onDone={handleTimerDone}
+                intensityLabel={intensity}
+                autoHideOnExpiry
+                bonusSeconds={
+                  timerState?.pendingMainSetNumber !== null &&
+                  currentAdaptation?.adaptationType === 'extended_rest'
+                    ? (currentAdaptation.restBonusSeconds ?? 0)
+                    : 0
+                }
+                audioAlert={restTimerPrefsRef.current.audioAlert}
+                hapticAlert={restTimerPrefsRef.current.hapticAlert}
+                nextLiftLabel={
+                  pendingRpeSetNumber !== null || pendingAuxRpe !== null
+                    ? undefined
+                    : buildNextLiftLabel({
+                        pendingMainSetNumber:
+                          timerState?.pendingMainSetNumber ?? null,
+                        plannedSets,
+                        pendingAuxExercise:
+                          timerState?.pendingAuxExercise ?? null,
+                        pendingAuxSetNumber:
+                          timerState?.pendingAuxSetNumber ?? null,
+                        auxiliaryWork,
+                      })
+                }
+              />
+            </View>
           )}
           {postRestState !== null && !timerState?.visible && (
             <PostRestOverlay
@@ -1193,20 +1231,6 @@ export default function SessionScreen() {
               onReset15s={handlePostRestReset}
               resetCountdown={postRestState.resetSecondsRemaining}
             />
-          )}
-          {(pendingRpeSetNumber !== null || pendingAuxRpe !== null) && (
-            <View
-              style={
-                timerState?.visible || postRestState !== null
-                  ? styles.rpePickerSpaced
-                  : undefined
-              }
-            >
-              <RpeQuickPicker
-                onSelect={handleRpeQuickSelect}
-                onSkip={handleRpeQuickSkip}
-              />
-            </View>
           )}
         </View>
       )}

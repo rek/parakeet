@@ -5,6 +5,7 @@ import { gramsToKg } from '@parakeet/training-engine';
 
 import { radii, spacing, typography } from '../../../theme';
 import type { ColorScheme } from '../../../theme';
+import { fmtKg } from '../utils/fmtKg';
 import { getActualVsPlannedColor } from '../utils/getActualVsPlannedColor';
 
 const ACTUAL_VS_PLANNED_COLORS = {
@@ -12,10 +13,6 @@ const ACTUAL_VS_PLANNED_COLORS = {
   under: 'warning',
   over: 'success',
 } as const;
-
-function fmtKg(kg: number) {
-  return kg % 1 === 0 ? `${kg}` : kg.toFixed(1);
-}
 
 export function MainLiftResultsTable({
   mainSets,

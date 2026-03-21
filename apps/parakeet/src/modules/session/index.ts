@@ -48,4 +48,7 @@ export { AuxResultsTable } from './ui/AuxResultsTable';
 export { TraceButton } from './ui/TraceButton';
 export { useSessionDetail } from './hooks/useSessionDetail';
 export { groupAuxSetsByExercise } from './utils/groupAuxSetsByExercise';
+export { fmtKg } from './utils/fmtKg';
+export { buildRpeContextLabel } from './utils/buildRpeContextLabel';
+export { buildNextLiftLabel } from './utils/buildNextLiftLabel';
 export { TraceLink } from './ui/TraceLink';
