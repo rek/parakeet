@@ -21,9 +21,11 @@ import { fetchProgramSessionStatuses } from '../data/session.repository';
 export interface HistoricalPRs {
   best1rmKg: number;
   best1rmSessionId: string | null;
+  best1rmDate: string | null;
   bestVolumeKgCubed: number;
   repPRs: Record<number, number>; // weight (kg, rounded to 2.5) → best reps
   repPRSessionIds: Record<number, string | null>; // weight → session that set the PR
+  repPRDates: Record<number, string | null>; // weight → date PR was achieved
 }
 
 export interface CycleBadge {
@@ -60,15 +62,18 @@ export async function getPRHistory(
 
   let best1rmKg = 0;
   let best1rmSessionId: string | null = null;
+  let best1rmDate: string | null = null;
   let bestVolumeKgCubed = 0;
   const repPRs: Record<number, number> = {};
   const repPRSessionIds: Record<number, string | null> = {};
+  const repPRDates: Record<number, string | null> = {};
 
   for (const row of rows) {
     if (row.pr_type === 'estimated_1rm') {
       if ((row.value as number) > best1rmKg) {
         best1rmKg = row.value as number;
         best1rmSessionId = (row.session_id as string) ?? null;
+        best1rmDate = (row.achieved_at as string) ?? null;
       }
     } else if (row.pr_type === 'volume') {
       if ((row.value as number) > bestVolumeKgCubed) {
@@ -80,11 +85,12 @@ export async function getPRHistory(
       if ((repPRs[wt] ?? 0) < reps) {
         repPRs[wt] = reps;
         repPRSessionIds[wt] = (row.session_id as string) ?? null;
+        repPRDates[wt] = (row.achieved_at as string) ?? null;
       }
     }
   }
 
-  return { best1rmKg, best1rmSessionId, bestVolumeKgCubed, repPRs, repPRSessionIds };
+  return { best1rmKg, best1rmSessionId, best1rmDate, bestVolumeKgCubed, repPRs, repPRSessionIds, repPRDates };
 }
 
 /**

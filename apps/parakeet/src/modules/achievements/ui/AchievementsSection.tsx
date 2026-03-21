@@ -9,6 +9,7 @@ import {
 
 import type { CycleBadge, FunBadgeRow, HistoricalPRs } from '@modules/achievements';
 import type { StreakResult } from '@parakeet/training-engine';
+import { formatDate } from '@shared/utils/date';
 
 import { radii, spacing, typography } from '../../../theme';
 import type { ColorScheme } from '../../../theme';
@@ -151,6 +152,10 @@ function buildStyles(colors: ColorScheme) {
       color: colors.textSecondary,
       marginBottom: spacing[0.5],
     },
+    prDate: {
+      fontSize: typography.sizes.xs,
+      color: colors.textTertiary,
+    },
     wilksRow: {
       flexDirection: 'row',
       alignItems: 'center',
@@ -225,6 +230,7 @@ function PRRow({
   const liftLabel = lift.charAt(0).toUpperCase() + lift.slice(1);
   const best1rm =
     prs.best1rmKg > 0 ? `${prs.best1rmKg.toFixed(1)} kg est. 1RM` : null;
+  const best1rmDate = prs.best1rmDate ? formatDate(prs.best1rmDate) : null;
 
   const repPRWeights = Object.keys(prs.repPRs)
     .map(Number)
@@ -234,6 +240,10 @@ function PRRow({
     topRepWeight !== undefined ? prs.repPRs[topRepWeight] : null;
   const repLine =
     topRepCount != null ? `${topRepCount} reps @ ${topRepWeight} kg` : null;
+  const repDate =
+    topRepWeight !== undefined && prs.repPRDates?.[topRepWeight]
+      ? formatDate(prs.repPRDates[topRepWeight]!)
+      : null;
 
   if (!best1rm && !repLine) return null;
 
@@ -244,8 +254,18 @@ function PRRow({
     <>
       <View style={styles.prContent}>
         <Text style={styles.prLiftName}>{liftLabel}</Text>
-        {best1rm && <Text style={styles.prLine}>{best1rm}</Text>}
-        {repLine && <Text style={styles.prLine}>{repLine}</Text>}
+        {best1rm && (
+          <Text style={styles.prLine}>
+            {best1rm}
+            {best1rmDate && <Text style={styles.prDate}> · {best1rmDate}</Text>}
+          </Text>
+        )}
+        {repLine && (
+          <Text style={styles.prLine}>
+            {repLine}
+            {repDate && <Text style={styles.prDate}> · {repDate}</Text>}
+          </Text>
+        )}
       </View>
       {isTappable && <Text style={styles.chevron}>›</Text>}
     </>
