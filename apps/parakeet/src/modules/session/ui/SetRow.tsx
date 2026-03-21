@@ -220,8 +220,13 @@ export function SetRow({
 
   // Sync external completion (e.g. auto-completed via PostRestOverlay) — one-way only
   useEffect(() => {
-    if (isCompletedProp) setIsCompleted(true);
-  }, [isCompletedProp]);
+    if (isCompletedProp) {
+      setIsCompleted(true);
+      setReps(plannedReps);
+      setWeightKg(plannedWeightKg);
+      setWeightText(plannedWeightKg === 0 ? '' : String(plannedWeightKg));
+    }
+  }, [isCompletedProp, plannedReps, plannedWeightKg]);
 
   function handleWeightChange(text: string) {
     setWeightText(text);
