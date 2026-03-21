@@ -53,6 +53,8 @@ export interface RestTimerProps {
   audioAlert?: boolean;
   /** Whether to trigger haptic on timer expiry */
   hapticAlert?: boolean;
+  /** Label showing what lift comes next, e.g. "Next: Set 3 — 52.5kg × 5" */
+  nextLiftLabel?: string;
 }
 
 // ── Internal hook (used only by AuxiliaryPill) ────────────────────────────────
@@ -202,6 +204,7 @@ function FullTimer({
   bonusSeconds = 0,
   audioAlert,
   hapticAlert,
+  nextLiftLabel,
 }: Omit<RestTimerProps, 'isAuxiliary'>) {
   const { colors } = useTheme();
   const totalDuration = durationSeconds + bonusSeconds;
@@ -270,6 +273,12 @@ function FullTimer({
           fontSize: typography.sizes.sm,
           fontWeight: typography.weights.medium,
           color: colors.warning,
+        },
+        nextLiftLabelStyle: {
+          fontSize: typography.sizes.sm,
+          fontWeight: typography.weights.medium,
+          color: colors.textSecondary,
+          marginBottom: spacing[4],
         },
         controlRow: {
           flexDirection: 'row',
@@ -393,6 +402,10 @@ function FullTimer({
         </View>
       )}
 
+      {nextLiftLabel && (
+        <Text style={fullStyles.nextLiftLabelStyle}>{nextLiftLabel}</Text>
+      )}
+
       <View style={fullStyles.controlRow}>
         <TouchableOpacity
           style={fullStyles.adjustButton}
@@ -437,6 +450,7 @@ export function RestTimer({
   bonusSeconds = 0,
   audioAlert,
   hapticAlert,
+  nextLiftLabel,
 }: RestTimerProps) {
   if (isAuxiliary) {
     return <AuxiliaryPill durationSeconds={durationSeconds} onDone={onDone} />;
@@ -455,6 +469,7 @@ export function RestTimer({
       bonusSeconds={bonusSeconds}
       audioAlert={audioAlert}
       hapticAlert={hapticAlert}
+      nextLiftLabel={nextLiftLabel}
     />
   );
 }

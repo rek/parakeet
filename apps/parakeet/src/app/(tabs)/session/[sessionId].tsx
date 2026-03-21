@@ -52,7 +52,11 @@ import {
 import type { WarmupPlateDisplay } from '@modules/settings';
 import type { RestTimerPrefs } from '@modules/settings';
 import { useFeatureEnabled } from '@modules/feature-flags';
-import { getAllExercises, getExerciseType } from '@parakeet/training-engine';
+import {
+  getAllExercises,
+  getExerciseType,
+  gramsToKg,
+} from '@parakeet/training-engine';
 import type { PlateKg, PrescriptionTrace } from '@parakeet/training-engine';
 import type { Lift } from '@parakeet/shared-types';
 import { useNetworkStatus } from '@platform/network';
@@ -1128,7 +1132,7 @@ export default function SessionScreen() {
         excludeNames={alreadyInSession}
       />
 
-      {/* Rest timer + post-rest overlay + floating RPE picker */}
+      {/* RPE picker (primary) + rest timer + post-rest overlay */}
       {(timerState?.visible ||
         postRestState !== null ||
         pendingRpeSetNumber !== null ||
@@ -1137,27 +1141,100 @@ export default function SessionScreen() {
           pointerEvents="box-none"
           style={[styles.restTimerOverlay, { top: insets.top + 8 }]}
         >
-          {timerState?.visible && (
-            <RestTimer
-              durationSeconds={
-                timerState?.durationSeconds ?? DEFAULT_MAIN_REST_SECONDS
-              }
-              elapsed={timerState?.elapsed ?? 0}
-              offset={timerState?.offset ?? 0}
-              onAdjust={adjustTimer}
-              llmSuggestion={activeLlmSuggestion}
-              onDone={handleTimerDone}
-              intensityLabel={intensity}
-              autoHideOnExpiry
-              bonusSeconds={
-                timerState?.pendingMainSetNumber !== null &&
-                currentAdaptation?.adaptationType === 'extended_rest'
-                  ? (currentAdaptation.restBonusSeconds ?? 0)
-                  : 0
-              }
-              audioAlert={restTimerPrefsRef.current.audioAlert}
-              hapticAlert={restTimerPrefsRef.current.hapticAlert}
+          {(pendingRpeSetNumber !== null || pendingAuxRpe !== null) && (
+            <RpeQuickPicker
+              onSelect={handleRpeQuickSelect}
+              onSkip={handleRpeQuickSkip}
+              contextLabel={(() => {
+                if (pendingRpeSetNumber !== null) {
+                  const set = actualSets[pendingRpeSetNumber - 1];
+                  if (!set) return undefined;
+                  const total = plannedSets.length;
+                  const kg = gramsToKg(set.weight_grams);
+                  const w = kg % 1 === 0 ? `${kg}` : kg.toFixed(1);
+                  return `Set ${pendingRpeSetNumber}/${total} — ${w}kg × ${set.reps_completed}`;
+                }
+                if (pendingAuxRpe !== null) {
+                  const auxSet = auxiliarySets.find(
+                    (s) =>
+                      s.exercise === pendingAuxRpe.exercise &&
+                      s.set_number === pendingAuxRpe.setNumber
+                  );
+                  const aw = auxiliaryWork.find(
+                    (a) => a.exercise === pendingAuxRpe.exercise
+                  );
+                  const total = aw?.sets.length ?? 0;
+                  const name = formatExerciseName(pendingAuxRpe.exercise);
+                  if (!auxSet) return `${name} Set ${pendingAuxRpe.setNumber}/${total}`;
+                  const kg = gramsToKg(auxSet.weight_grams);
+                  const w = kg % 1 === 0 ? `${kg}` : kg.toFixed(1);
+                  return `${name} Set ${pendingAuxRpe.setNumber}/${total} — ${w}kg × ${auxSet.reps_completed}`;
+                }
+                return undefined;
+              })()}
             />
+          )}
+          {timerState?.visible && (
+            <View
+              style={
+                pendingRpeSetNumber !== null || pendingAuxRpe !== null
+                  ? styles.rpePickerSpaced
+                  : undefined
+              }
+            >
+              <RestTimer
+                durationSeconds={
+                  timerState?.durationSeconds ?? DEFAULT_MAIN_REST_SECONDS
+                }
+                elapsed={timerState?.elapsed ?? 0}
+                offset={timerState?.offset ?? 0}
+                onAdjust={adjustTimer}
+                llmSuggestion={activeLlmSuggestion}
+                onDone={handleTimerDone}
+                intensityLabel={intensity}
+                autoHideOnExpiry
+                bonusSeconds={
+                  timerState?.pendingMainSetNumber !== null &&
+                  currentAdaptation?.adaptationType === 'extended_rest'
+                    ? (currentAdaptation.restBonusSeconds ?? 0)
+                    : 0
+                }
+                audioAlert={restTimerPrefsRef.current.audioAlert}
+                hapticAlert={restTimerPrefsRef.current.hapticAlert}
+                nextLiftLabel={(() => {
+                  if (timerState?.pendingMainSetNumber !== null) {
+                    const nextPlanned =
+                      plannedSets[timerState.pendingMainSetNumber];
+                    if (!nextPlanned) return undefined;
+                    const w =
+                      nextPlanned.weight_kg % 1 === 0
+                        ? `${nextPlanned.weight_kg}`
+                        : nextPlanned.weight_kg.toFixed(1);
+                    return `Next: Set ${timerState.pendingMainSetNumber + 1} — ${w}kg × ${nextPlanned.reps}`;
+                  }
+                  if (
+                    timerState?.pendingAuxExercise !== null &&
+                    timerState?.pendingAuxSetNumber !== null
+                  ) {
+                    const aw = auxiliaryWork.find(
+                      (a) => a.exercise === timerState.pendingAuxExercise
+                    );
+                    const nextAuxSet =
+                      aw?.sets[timerState.pendingAuxSetNumber];
+                    if (!nextAuxSet) return undefined;
+                    const name = formatExerciseName(
+                      timerState.pendingAuxExercise!
+                    );
+                    const w =
+                      nextAuxSet.weight_kg % 1 === 0
+                        ? `${nextAuxSet.weight_kg}`
+                        : nextAuxSet.weight_kg.toFixed(1);
+                    return `Next: ${name} — ${w}kg × ${nextAuxSet.reps}`;
+                  }
+                  return undefined;
+                })()}
+              />
+            </View>
           )}
           {postRestState !== null && !timerState?.visible && (
             <PostRestOverlay
@@ -1169,20 +1246,6 @@ export default function SessionScreen() {
               onReset15s={handlePostRestReset}
               resetCountdown={postRestState.resetSecondsRemaining}
             />
-          )}
-          {(pendingRpeSetNumber !== null || pendingAuxRpe !== null) && (
-            <View
-              style={
-                timerState?.visible || postRestState !== null
-                  ? styles.rpePickerSpaced
-                  : undefined
-              }
-            >
-              <RpeQuickPicker
-                onSelect={handleRpeQuickSelect}
-                onSkip={handleRpeQuickSkip}
-              />
-            </View>
           )}
         </View>
       )}
