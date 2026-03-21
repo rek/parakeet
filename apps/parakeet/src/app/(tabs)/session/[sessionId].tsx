@@ -417,6 +417,7 @@ export default function SessionScreen() {
     postRestState,
     pendingRpeSetNumber,
     pendingAuxRpe,
+    pendingAuxConfirmation,
     handleSetUpdate,
     handleAuxSetUpdate,
     handleTimerDone,
@@ -425,6 +426,8 @@ export default function SessionScreen() {
     handlePostRestReset,
     handleRpeQuickSelect,
     handleRpeQuickSkip,
+    handleAuxConfirmComplete,
+    handleAuxConfirmFailed,
     requestMainRpe,
     requestAuxRpe,
     cleanupResetInterval,
@@ -1140,11 +1143,24 @@ export default function SessionScreen() {
       {(timerState?.visible ||
         postRestState !== null ||
         pendingRpeSetNumber !== null ||
-        pendingAuxRpe !== null) && (
+        pendingAuxRpe !== null ||
+        pendingAuxConfirmation !== null) && (
         <View
           pointerEvents="box-none"
           style={[styles.restTimerOverlay, { top: insets.top + 8 }]}
         >
+          {pendingAuxConfirmation !== null && (
+            <PostRestOverlay
+              plannedReps={pendingAuxConfirmation.reps}
+              plannedWeightKg={gramsToKg(pendingAuxConfirmation.weightGrams)}
+              nextSetNumber={pendingAuxConfirmation.setNumber}
+              onLiftComplete={handleAuxConfirmComplete}
+              onLiftFailed={handleAuxConfirmFailed}
+              onReset15s={() => {}}
+              resetCountdown={null}
+              isConfirmation
+            />
+          )}
           {timerState?.visible && (
             <RestTimer
               durationSeconds={

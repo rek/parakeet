@@ -12,6 +12,8 @@ interface PostRestOverlayProps {
   onLiftFailed: (reps: number) => void;
   onReset15s: () => void;
   resetCountdown: number | null;
+  /** When true, hides rest controls ("+15s", "Go lift!", estimated time) — used for first-set confirmation */
+  isConfirmation?: boolean;
 }
 
 export function PostRestOverlay({
@@ -22,6 +24,7 @@ export function PostRestOverlay({
   onLiftFailed,
   onReset15s,
   resetCountdown,
+  isConfirmation = false,
 }: PostRestOverlayProps) {
   const { colors } = useTheme();
   const [failedReps, setFailedReps] = useState<number | null>(null);
@@ -225,7 +228,7 @@ export function PostRestOverlay({
       {contextLabel != null && (
         <Text style={styles.contextText}>{contextLabel}</Text>
       )}
-      <Text style={styles.label}>Go lift!</Text>
+      {!isConfirmation && <Text style={styles.label}>Go lift!</Text>}
 
       <View style={styles.buttonRow}>
         <TouchableOpacity
@@ -244,18 +247,22 @@ export function PostRestOverlay({
         </TouchableOpacity>
       </View>
 
-      <TouchableOpacity
-        style={styles.resetButton}
-        onPress={onReset15s}
-        activeOpacity={0.7}
-      >
-        <Text style={styles.resetButtonText}>{resetLabel}</Text>
-      </TouchableOpacity>
+      {!isConfirmation && (
+        <>
+          <TouchableOpacity
+            style={styles.resetButton}
+            onPress={onReset15s}
+            activeOpacity={0.7}
+          >
+            <Text style={styles.resetButtonText}>{resetLabel}</Text>
+          </TouchableOpacity>
 
-      {plannedReps > 0 && (
-        <Text style={styles.hintText}>
-          ~{2 * plannedReps}s estimated lift time
-        </Text>
+          {plannedReps > 0 && (
+            <Text style={styles.hintText}>
+              ~{2 * plannedReps}s estimated lift time
+            </Text>
+          )}
+        </>
       )}
     </View>
   );

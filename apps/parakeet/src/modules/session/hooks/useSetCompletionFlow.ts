@@ -62,6 +62,16 @@ export function useSetCompletionFlow({
     setNumber: number;
   } | null>(null);
 
+  // First aux set confirmation — shows Complete/Failed before any rest timer
+  const [pendingAuxConfirmation, setPendingAuxConfirmation] = useState<{
+    exerciseIndex: number;
+    exercise: string;
+    setNumber: number;
+    setsInExercise: number;
+    weightGrams: number;
+    reps: number;
+  } | null>(null);
+
   function cleanupResetInterval() {
     if (resetIntervalRef.current !== null) {
       clearInterval(resetIntervalRef.current);
@@ -143,12 +153,35 @@ export function useSetCompletionFlow({
         isCompleted: boolean;
       }
     ) => {
+      const storeState = useSessionStore.getState();
       const wasAuxCompleted =
-        useSessionStore
-          .getState()
-          .auxiliarySets.find(
-            (s) => s.exercise === exercise && s.set_number === setNumber
-          )?.is_completed ?? false;
+        storeState.auxiliarySets.find(
+          (s) => s.exercise === exercise && s.set_number === setNumber
+        )?.is_completed ?? false;
+
+      // First non-timed aux set: show confirmation overlay instead of auto-completing
+      const exerciseType = auxiliaryWork.find(
+        (aw) => aw.exercise === exercise
+      )?.exerciseType;
+      const isTimed = exerciseType === 'timed';
+      const isFirstCompletion = data.isCompleted && !wasAuxCompleted;
+      const noPriorRestForThisSet =
+        !storeState.auxiliarySets.some(
+          (s) => s.exercise === exercise && s.is_completed
+        );
+
+      if (isFirstCompletion && !isTimed && noPriorRestForThisSet) {
+        // Don't write to store yet — show confirmation overlay
+        setPendingAuxConfirmation({
+          exerciseIndex,
+          exercise,
+          setNumber,
+          setsInExercise,
+          weightGrams: weightKgToGrams(data.weightKg),
+          reps: data.reps,
+        });
+        return;
+      }
 
       updateAuxiliarySet(exercise, setNumber, {
         weight_grams: weightKgToGrams(data.weightKg),
@@ -159,11 +192,6 @@ export function useSetCompletionFlow({
 
       if (data.isCompleted) {
         if (!wasAuxCompleted) {
-          const exerciseType = auxiliaryWork.find(
-            (aw) => aw.exercise === exercise
-          )?.exerciseType;
-          const isTimed = exerciseType === 'timed';
-
           if (!isTimed) setPendingAuxRpe({ exercise, setNumber });
 
           // No rest timer after the last set of this exercise
@@ -533,10 +561,70 @@ export function useSetCompletionFlow({
     setPendingAuxRpe({ exercise, setNumber });
   }
 
+  // --- First aux set confirmation handlers ---
+
+  function handleAuxConfirmComplete() {
+    const conf = pendingAuxConfirmation;
+    if (!conf) return;
+    setPendingAuxConfirmation(null);
+
+    // Write the completion to the store
+    updateAuxiliarySet(conf.exercise, conf.setNumber, {
+      weight_grams: conf.weightGrams,
+      reps_completed: conf.reps,
+      is_completed: true,
+    });
+
+    setPendingAuxRpe({ exercise: conf.exercise, setNumber: conf.setNumber });
+
+    // Open rest timer if not last set and aux timer enabled
+    if (conf.setNumber >= conf.setsInExercise) return;
+    if (!restTimerPrefsRef.current.auxSetsEnabled) return;
+
+    const duration =
+      restRecommendations.current?.auxiliary[conf.exerciseIndex] ??
+      DEFAULT_AUX_REST_SECONDS;
+
+    openTimer({
+      durationSeconds: duration,
+      pendingAuxExercise: conf.exercise,
+      pendingAuxSetNumber: conf.setNumber,
+    });
+  }
+
+  function handleAuxConfirmFailed(actualReps: number) {
+    const conf = pendingAuxConfirmation;
+    if (!conf) return;
+    setPendingAuxConfirmation(null);
+
+    // Write failure to the store
+    updateAuxiliarySet(conf.exercise, conf.setNumber, {
+      weight_grams: conf.weightGrams,
+      reps_completed: actualReps,
+      is_completed: true,
+      rpe_actual: 10,
+    });
+
+    // Open rest timer if not last set and aux timer enabled
+    if (conf.setNumber >= conf.setsInExercise) return;
+    if (!restTimerPrefsRef.current.auxSetsEnabled) return;
+
+    const duration =
+      restRecommendations.current?.auxiliary[conf.exerciseIndex] ??
+      DEFAULT_AUX_REST_SECONDS;
+
+    openTimer({
+      durationSeconds: duration,
+      pendingAuxExercise: conf.exercise,
+      pendingAuxSetNumber: conf.setNumber,
+    });
+  }
+
   return {
     postRestState,
     pendingRpeSetNumber,
     pendingAuxRpe,
+    pendingAuxConfirmation,
     handleSetUpdate,
     handleAuxSetUpdate,
     handleTimerDone,
@@ -545,6 +633,8 @@ export function useSetCompletionFlow({
     handlePostRestReset,
     handleRpeQuickSelect,
     handleRpeQuickSkip,
+    handleAuxConfirmComplete,
+    handleAuxConfirmFailed,
     requestMainRpe,
     requestAuxRpe,
     cleanupResetInterval,
