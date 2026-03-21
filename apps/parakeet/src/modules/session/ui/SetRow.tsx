@@ -325,21 +325,6 @@ export function SetRow({
               editable={!displayCompleted}
             />
             <Text style={styles.unitText}>kg</Text>
-
-            {displayWeightKg > 0 && !displayCompleted && (
-              <TouchableOpacity
-                style={styles.plateButton}
-                onPress={() => setPlateSheetVisible(true)}
-                activeOpacity={0.7}
-              >
-                <Ionicons
-                  name="barbell-outline"
-                  size={20}
-                  color={colors.textSecondary}
-                />
-              </TouchableOpacity>
-            )}
-
             <Text style={styles.multiplyText}>×</Text>
           </>
         )}
@@ -411,6 +396,19 @@ export function SetRow({
           >
             <Text style={styles.adjustButtonText}>+2.5</Text>
           </TouchableOpacity>
+          {displayWeightKg > 0 && (
+            <TouchableOpacity
+              style={styles.plateButton}
+              onPress={() => setPlateSheetVisible(true)}
+              activeOpacity={0.7}
+            >
+              <Ionicons
+                name="barbell-outline"
+                size={20}
+                color={colors.textSecondary}
+              />
+            </TouchableOpacity>
+          )}
         </View>
       )}
 

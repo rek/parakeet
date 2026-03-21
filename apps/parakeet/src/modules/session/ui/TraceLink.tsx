@@ -37,9 +37,6 @@ export function TraceLink({
           size={14}
           color={colors.textTertiary}
         />
-        <Text style={[styles.text, { color: colors.textTertiary }]}>
-          Reasoning
-        </Text>
       </TouchableOpacity>
       <PrescriptionSheet
         visible={visible}
