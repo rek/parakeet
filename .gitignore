@@ -60,4 +60,6 @@ build-*.aab
 build-*.apk
 **/images/backup/*
 backup_*.sql
+backups
+backups/*
 vite.config.*.timestamp*
