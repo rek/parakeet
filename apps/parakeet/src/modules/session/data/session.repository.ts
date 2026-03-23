@@ -660,6 +660,9 @@ export async function cancelPlannedSessionsForProgram(
 
 // Fetch the earliest planned session for a given program. Used by unending mode
 // to detect whether a next session was already generated before creating another.
+// Matches both 'planned' and 'in_progress' to close a TOCTOU race: if the user
+// starts a session (planned → in_progress) between fetchTodaySession and this
+// guard, the guard would otherwise miss it and generate a duplicate.
 export async function fetchPlannedSessionForProgram(
   programId: string,
   userId: string
@@ -669,7 +672,7 @@ export async function fetchPlannedSessionForProgram(
     .select('*')
     .eq('program_id', programId)
     .eq('user_id', userId)
-    .eq('status', 'planned')
+    .in('status', ['planned', 'in_progress'])
     .order('planned_date', { ascending: true })
     .limit(1)
     .maybeSingle();
