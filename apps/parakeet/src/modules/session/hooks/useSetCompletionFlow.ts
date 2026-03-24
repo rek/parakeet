@@ -2,7 +2,7 @@ import { useCallback, useRef, useState } from 'react';
 
 import type { RestTimerPrefs } from '@modules/settings';
 import type { Lift } from '@parakeet/shared-types';
-import { adaptRemainingPlan } from '@parakeet/training-engine';
+import { adaptRemainingPlan, getExerciseType } from '@parakeet/training-engine';
 import { useSessionStore } from '@platform/store/sessionStore';
 import { weightGramsToKg, weightKgToGrams } from '@shared/utils/weight';
 
@@ -160,9 +160,10 @@ export function useSetCompletionFlow({
         )?.is_completed ?? false;
 
       // First non-timed aux set: show confirmation overlay instead of auto-completing
-      const exerciseType = auxiliaryWork.find(
-        (aw) => aw.exercise === exercise
-      )?.exerciseType;
+      // Fall back to catalog lookup so ad-hoc timed exercises are detected correctly
+      const exerciseType =
+        auxiliaryWork.find((aw) => aw.exercise === exercise)?.exerciseType ??
+        getExerciseType(exercise);
       const isTimed = exerciseType === 'timed';
       const isFirstCompletion = data.isCompleted && !wasAuxCompleted;
       const noPriorRestForThisSet =
