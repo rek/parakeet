@@ -91,7 +91,11 @@ All prescribed weights are rounded to the nearest **2.5 kg**.
 
 ---
 
-## Rest Seconds (Male)
+## Rest Seconds
+
+Research basis: Schoenfeld 2016 (RCT) — 3-min rest > 1-min for both strength and hypertrophy in trained men. Grgic 2017 (systematic review) — longer rest advantageous for trained individuals. Azevedo 2024 (Bayesian meta-analysis) — for strength at high intensity, 3-5 minutes is well-supported. Our B3 Heavy rest (300s/270s) aligns with this; B1 values (120-180s) reflect lower relative intensity. See [references.md](references.md).
+
+### Male
 
 | Block | Intensity | Rest (s) |
 |-------|-----------|----------|
@@ -111,9 +115,9 @@ All prescribed weights are rounded to the nearest **2.5 kg**.
 
 ---
 
-## Rest Seconds (Female)
+### Female
 
-All non-deload and non-auxiliary values are 30 s less than male equivalents. Deload and auxiliary remain 90 s.
+All non-deload and non-auxiliary values are 30s less than male. Rationale: women recover faster between sets (Hicks 2018; Nuckols 2025). Deload and auxiliary remain 90s.
 
 | Block | Intensity | Rest (s) |
 |-------|-----------|----------|

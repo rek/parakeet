@@ -6,7 +6,9 @@ A powerlifting training system. Not a social app, not a marketplace. Maximum fid
 
 ## Core Goal
 
-Accept many different data points about the human body over time, and produce a plan for optimizing a goal. Currently that goal is pure powerlifting strength (squat, bench, deadlift). The architecture supports future goal types (e.g. Hyrox).
+Accept many different data points about the human body over time, and produce a plan for optimizing a goal. Currently that goal is **pure powerlifting strength** (squat, bench, deadlift). The architecture supports future goal types (e.g. Hyrox).
+
+**Strength, not bodybuilding.** Every training science decision — volume thresholds, RPE scaling, rest periods, exercise selection — must be evaluated through a strength/powerlifting lens. Most published volume research is hypertrophy-focused; where hypertrophy and strength evidence diverge (rest periods, proximity to failure, rep ranges), favor strength-specific findings. Muscle size is a welcome side effect, not the optimization target.
 
 The system must find touch points to synchronize with the real-world state of the human user. The more accurately it knows how the body feels right now, the better the next session will be.
 

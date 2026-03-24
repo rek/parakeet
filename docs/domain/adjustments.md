@@ -59,7 +59,7 @@ Sleep and energy are each rated 1-3 (1=poor, 2=normal, 3=great). `undefined` is 
 
 ## Cycle Phase Modifiers
 
-Based on McNulty et al. 2020 meta-analysis of menstrual cycle and exercise performance.
+Based on McNulty et al. 2020 meta-analysis (78 studies) of menstrual cycle and exercise performance.
 
 | Phase       | Days (28-day) | Intensity Multiplier | Volume Modifier |
 |-------------|---------------|----------------------|-----------------|
@@ -68,6 +68,8 @@ Based on McNulty et al. 2020 meta-analysis of menstrual cycle and exercise perfo
 | Ovulatory   | 12-16         | 1.0                  | 0               |
 | Luteal      | 17-23         | 0.975                | 0               |
 | Late Luteal | 24-end        | 0.95                 | -1 set          |
+
+**Research context:** McNulty 2020 found only a trivial overall effect (ES = -0.06, 95% CrI: -0.16 to 0.04) — early follicular vs late follicular was the largest differential (ES = -0.14). Hayashida et al. 2024 meta-analysis (22 studies) found medium effect for isometric strength in late follicular (peak) but small/negligible effects for dynamic strength. Colenso-Semple et al. 2023 umbrella review concluded it is "premature to conclude that short-term fluctuations in reproductive hormones appreciably influence acute exercise performance." Our modifiers are conservative — they accommodate individual variation without over-correcting based on group-level effects that are statistically trivial. See [references.md](references.md).
 
 ### Phase Calculation
 
