@@ -22,6 +22,7 @@ import {
   computeSuggestedAux,
   computeSuggestedWeight,
   DEFAULT_MAIN_REST_SECONDS,
+  fetchRecentAuxExerciseNames,
   formatExerciseName,
   getSession,
   groupAuxiliaryWork,
@@ -630,6 +631,10 @@ export default function SessionScreen() {
   // ── Exercise suggestions ──────────────────────────────────────────────────
 
   const exerciseCatalog = useMemo(() => getAllExercises(), []);
+  const [recentAuxNames, setRecentAuxNames] = useState<string[]>([]);
+  useEffect(() => {
+    fetchRecentAuxExerciseNames().then(setRecentAuxNames).catch(captureException);
+  }, []);
 
   const alreadyInSession = useMemo(
     () => [
@@ -1149,6 +1154,7 @@ export default function SessionScreen() {
         onClose={() => setAddExerciseVisible(false)}
         defaultLift={sessionMeta?.primary_lift as Lift | undefined}
         suggestedNames={suggestedExerciseNames}
+        recentNames={recentAuxNames}
         excludeNames={alreadyInSession}
       />
 

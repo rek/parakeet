@@ -737,6 +737,34 @@ export async function fetchEndOfWeekContext(
   };
 }
 
+/** Unique aux exercise names from recent sessions, most-recent-first.
+ *  Relies on RLS for user scoping — no userId parameter needed. */
+export async function fetchRecentAuxExerciseNames() {
+  const { data, error } = await typedSupabase
+    .from('session_logs')
+    .select('auxiliary_sets')
+    .not('auxiliary_sets', 'is', null)
+    .order('completed_at', { ascending: false })
+    .limit(30);
+
+  if (error) throw error;
+
+  const seen = new Set<string>();
+  const names: string[] = [];
+  for (const row of data ?? []) {
+    const sets = row.auxiliary_sets as unknown[];
+    if (!Array.isArray(sets)) continue;
+    for (const s of sets) {
+      const exercise = (s as { exercise?: string }).exercise;
+      if (exercise && !seen.has(exercise)) {
+        seen.add(exercise);
+        names.push(exercise);
+      }
+    }
+  }
+  return names;
+}
+
 /** Returns true when no sessions with a higher week_number exist in the same program.
  *  Used to detect end-of-week for scheduled programs. */
 export async function fetchHasNextWeekSessions(

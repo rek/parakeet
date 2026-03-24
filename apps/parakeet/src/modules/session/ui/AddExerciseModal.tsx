@@ -49,6 +49,8 @@ interface Props {
   excludeNames?: string[];
   /** Exercises to show in a "Suggested" section at the top of the list. */
   suggestedNames?: string[];
+  /** Recently-used exercises shown in a "Recent" section (below Suggested). */
+  recentNames?: string[];
 }
 
 interface ListItem {
@@ -212,6 +214,7 @@ export function AddExerciseModal({
   defaultLift,
   excludeNames,
   suggestedNames,
+  recentNames,
 }: Props) {
   const { colors } = useTheme();
   const [query, setQuery] = useState('');
@@ -273,6 +276,26 @@ export function AddExerciseModal({
       }
     }
 
+    // Recent section — shown below Suggested when no search query
+    if (!q && recentNames && recentNames.length > 0) {
+      const suggestedSet = new Set(suggestedNames ?? []);
+      const recentEntries = recentNames
+        .filter((name) => !suggestedSet.has(name))
+        .map((name) => allExercises.find((e) => e.name === name))
+        .filter((e): e is ExerciseCatalogEntry => e != null);
+      if (recentEntries.length > 0) {
+        items.push({ type: 'header', key: 'header-recent', label: 'Recent' });
+        for (const entry of recentEntries) {
+          items.push({
+            type: 'exercise',
+            key: `recent-${entry.name}`,
+            entry,
+            excluded: excludeNames?.includes(entry.name) ?? false,
+          });
+        }
+      }
+    }
+
     for (const lift of sections) {
       const group = byLift[lift] ?? [];
       if (group.length === 0) continue;
@@ -304,7 +327,7 @@ export function AddExerciseModal({
     }
 
     return items;
-  }, [query, liftFilter, allExercises, excludeNames, suggestedNames]);
+  }, [query, liftFilter, allExercises, excludeNames, suggestedNames, recentNames]);
 
   function handleSelect(name: string) {
     onConfirm(name);
