@@ -33,13 +33,7 @@ interface SorenessModifier {
 }
 ```
 
-| Soreness | Set Reduction | Intensity Multiplier | Recovery Mode | Warning |
-|----------|---------------|---------------------|---------------|---------|
-| 1        | 0             | 1.00                | false         | null |
-| 2        | 0             | 1.00                | false         | null |
-| 3        | 1             | 1.00                | false         | "Moderate soreness — reduced 1 set" |
-| 4        | 2             | 0.95                | false         | "High soreness — reduced volume and intensity 5%" |
-| 5        | 0             | 0.00                | true          | "Severe soreness — recovery session only (40% × 3×5)" |
+See [domain/adjustments.md](../../domain/adjustments.md) for the soreness modifier table (levels 1–5: set reduction, intensity multiplier, recovery mode, warning text).
 
 - [x] `applySorenessToSets(plannedSets: PlannedSet[], modifier: SorenessModifier, minSets?: number): PlannedSet[]`
   - If `recoveryMode: true`: replace all sets with 3 sets at 40% of the original weight, 5 reps, RPE 5.0
@@ -63,3 +57,7 @@ interface SorenessModifier {
 
 - [engine-006-mrv-mev-calculator.md](./engine-006-mrv-mev-calculator.md)
 - [engine-003-loading-percentage-calculator.md](./engine-003-loading-percentage-calculator.md)
+
+## Domain References
+
+- [domain/adjustments.md](../../domain/adjustments.md) — soreness modifier table (set reduction, intensity multiplier, recovery mode by level)

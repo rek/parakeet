@@ -24,13 +24,7 @@ Source: RP Strength volume landmark research; Dr. Mike Israetel's work on MEV/MR
 
 The menstrual cycle introduces cyclical hormonal variation that has real physiological effects on training:
 
-| Phase                 | Days (typical 28-day cycle) | Key hormones                | Physiological effects                                                                                               |
-| --------------------- | --------------------------- | --------------------------- | ------------------------------------------------------------------------------------------------------------------- |
-| **Menstrual**         | 1–5                         | Estrogen + progesterone low | Cramping, fatigue; training is fine if manageable                                                                   |
-| **Follicular**        | 6–13                        | Estrogen rising             | Best neuromuscular coordination, moderate evidence for slight strength peak                                         |
-| **Ovulatory**         | 12–16                       | Estrogen peaks, LH surge    | Peak strength potential; **highest injury risk** (ligament laxity)                                                  |
-| **Luteal**            | 17–28                       | Progesterone dominant       | Higher RPE for same load, elevated core temperature, more fatigue; train normally but RPE signals are less reliable |
-| **Late luteal / PMS** | 24–28                       | Both hormones dropping      | Often hardest phase; treat like a mild disruption if symptoms are significant                                       |
+See [domain/sex-differences.md](../domain/sex-differences.md) for the cycle phase reference table (days, key hormones, physiological effects per phase).
 
 **What the science says about cycle-based periodization:**
 
@@ -60,19 +54,7 @@ This is **biological sex** (not gender identity) because it determines physiolog
 
 ### 2. Sex-Differentiated MEV/MRV Defaults
 
-The default volume landmark table in `volume-management` is replaced with sex-specific values. Female defaults are approximately 20–30% higher:
-
-| Muscle     | Male MEV | Male MRV | Female MEV | Female MRV |
-| ---------- | -------- | -------- | ---------- | ---------- |
-| Quads      | 8        | 20       | 10         | 26         |
-| Hamstrings | 6        | 20       | 8          | 25         |
-| Glutes     | 0        | 16       | 0          | 20         |
-| Lower Back | 6        | 12       | 7          | 15         |
-| Upper Back | 10       | 22       | 12         | 28         |
-| Chest      | 8        | 22       | 10         | 26         |
-| Triceps    | 6        | 20       | 8          | 24         |
-| Shoulders  | 8        | 20       | 10         | 24         |
-| Biceps     | 8        | 20       | 10         | 24         |
+The default volume landmark table in `volume-management` is replaced with sex-specific values. Female defaults are approximately 20–30% higher. See [domain/volume-landmarks.md](../domain/volume-landmarks.md) for the full male and female MEV/MRV table per muscle group.
 
 These are starting defaults — users can override any value in Settings → Volume Config as before.
 
@@ -206,6 +188,12 @@ Female lifters' higher MEV/MRV and faster inter-set recovery mean they can produ
 **Long-term:**
 
 - If the scientific evidence for cycle-based strength periodization becomes robust, incorporate phase-specific loading modulation — this is explicitly not done now because the evidence doesn't yet support it
+
+## Domain References
+
+- [domain/volume-landmarks.md](../domain/volume-landmarks.md) — male and female MEV/MRV defaults per muscle group
+- [domain/sex-differences.md](../domain/sex-differences.md) — cycle phase reference table (days, hormones, physiological effects)
+- [domain/adjustments.md](../domain/adjustments.md) — sex-differentiated soreness modifier values (level 4 female override)
 
 ## References
 

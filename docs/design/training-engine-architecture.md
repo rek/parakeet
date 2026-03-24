@@ -20,10 +20,7 @@ Linear load progression works for novices but fails for intermediate lifters wit
 
 ### 2. Volume (Sets × Reps)
 
-Volume has a dose-response relationship with adaptation: more weekly sets per muscle group produce greater strength and hypertrophy gains up to the point of overreaching (Schoenfeld et al., 2017 — *J Strength Cond Res* meta-analysis). This creates two hard bounds:
-
-- **MEV (Minimum Effective Volume):** Below this threshold, training stimulates no meaningful adaptation. Weeks below MEV are wasted training time.
-- **MRV (Maximum Recoverable Volume):** Above this threshold, fatigue accumulates faster than adaptation. The lifter is digging a hole, not building fitness.
+Volume has a dose-response relationship with adaptation: more weekly sets per muscle group produce greater strength and hypertrophy gains up to the point of overreaching (Schoenfeld et al., 2017 — *J Strength Cond Res* meta-analysis). See [domain/volume-landmarks.md](../domain/volume-landmarks.md) for MEV/MRV defaults per muscle group.
 
 **Engine assumption:** Volume should build progressively across a block from near-MEV toward MRV, then drop sharply in a deload to clear accumulated fatigue before repeating. MEV/MRV caps in JIT generation are non-negotiable hard gates, not soft hints — violating them undermines the overload model rather than extending it.
 
@@ -281,6 +278,10 @@ The `jit_comparison_logs` table in Supabase stores full inputs and outputs from 
 - Add `sleepHours`, `sleepQuality` to `JITInput` (data collection spec required)
 - `jit_comparison_logs` table + 90-day retention
 - LLM strategy benefits from sleep data automatically; Formula strategy updated separately
+
+## Domain References
+
+- [domain/volume-landmarks.md](../domain/volume-landmarks.md) — MEV/MRV defaults per muscle group
 
 ## References
 

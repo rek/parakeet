@@ -28,15 +28,7 @@ Before writing any code, research and document the correct contribution weights 
 
 ### What to record per exercise
 
-For each exercise in `EXERCISE_MUSCLES`, find the mean % MVC (maximum voluntary contraction) or normalised EMG for each involved muscle. Then map to contribution weights using:
-
-| EMG activation            | Contribution weight |
-| ------------------------- | ------------------- |
-| >70% MVC (primary mover)  | 1.0                 |
-| 40–70% MVC                | 0.75                |
-| 20–40% MVC                | 0.5                 |
-| <20% MVC                  | 0.25                |
-| Negligible / not measured | 0.0 (omit from map) |
+For each exercise in `EXERCISE_MUSCLES`, find the mean % MVC (maximum voluntary contraction) or normalised EMG for each involved muscle. Map activation percentages to contribution weights using the EMG → weight scale in [domain/muscle-mapping.md](../../domain/muscle-mapping.md).
 
 Document the source (paper title, author, year) next to each updated value in the code comment or in this spec.
 
@@ -169,3 +161,7 @@ Also update `LIFT_MUSCLES` for the main three lifts if research suggests current
 1. `npx nx run training-engine:test` — all tests pass
 2. `tsc --noEmit -p apps/parakeet/tsconfig.typecheck.json` — clean
 3. Review: manually check that a squat week with Leg Press aux does not over-report glute volume
+
+## Domain References
+
+- [domain/muscle-mapping.md](../../domain/muscle-mapping.md) — EMG activation → contribution weight scale; canonical lift and exercise muscle maps

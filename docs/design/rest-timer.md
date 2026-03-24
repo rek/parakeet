@@ -20,15 +20,7 @@ Rest period length directly affects training quality. Too short → performance 
 
 ### 1. Formula Defaults by Intensity Type
 
-A `DEFAULT_REST_SECONDS` table (part of `FormulaConfig`) provides per-intensity-type defaults for each block. These are used when no user preference is set.
-
-| Block | Heavy | Explosive | Rep | Deload |
-|-------|-------|-----------|-----|--------|
-| 1     | 180s (3 min) | 120s | 120s | 90s |
-| 2     | 210s (3.5 min) | 150s | 120s | 90s |
-| 3     | 300s (5 min) | 180s | 150s | 90s |
-
-Female defaults: subtract 30s from all non-deload values. Deload unchanged.
+A `DEFAULT_REST_SECONDS` table (part of `FormulaConfig`) provides per-intensity-type defaults for each block. These are used when no user preference is set. See [domain/periodization.md](../domain/periodization.md) for the full male and female rest seconds tables. Female defaults subtract 30s from all non-deload values; deload is unchanged.
 
 These are embedded in `FormulaConfig.rest_seconds` — same structure as the set/rep tables, so user formula overrides can adjust them.
 
@@ -103,6 +95,10 @@ The design defaults to option 2, with option 1 as a potential future toggle in S
 - Does not sync timer state across devices (timer is local/ephemeral)
 - Does not prescribe different rest for warmup sets (warmup rest is user-paced)
 - Does not expose rest duration analytics yet (data is captured but UI is Phase 2)
+
+## Domain References
+
+- [domain/periodization.md](../domain/periodization.md) — default rest seconds by block, intensity type, and sex
 
 ## References
 

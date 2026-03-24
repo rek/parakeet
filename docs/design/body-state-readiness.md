@@ -54,10 +54,12 @@ The system currently tracks body-state signals — soreness, training volume, cy
 
 **Flow C — Cycle Phase–Aware Workout Generation (automatic, no user action):**
 
+See [domain/adjustments.md](../domain/adjustments.md) for cycle phase modifier values and [domain/athlete-signals.md](../domain/athlete-signals.md) for sleep/energy modifier defaults.
+
 1. If cycle tracking is enabled, the system computes the current cycle phase before generating each workout
-2. During menstrual and late luteal phases: intensity is automatically reduced ~5% and 1 set is removed. A small informational chip appears on the soreness screen: "Late Luteal — intensity reduced 5%"
+2. During menstrual and late luteal phases: intensity and set count are automatically reduced per the cycle phase modifiers. A small informational chip appears on the soreness screen (e.g., "Late Luteal — intensity reduced, −1 set").
 3. During follicular and ovulatory phases: no adjustment (neutral — these are peak performance windows, but we don't boost above programmed values)
-4. During luteal phase: a subtle ~2.5% intensity reduction
+4. During luteal phase: a subtle intensity reduction is applied per the cycle phase modifiers.
 5. The user does not need to take any action. The cycle phase chip is informational only.
 6. Adjustments stack with soreness and readiness modifiers (e.g., late luteal + poor sleep = larger reduction)
 
@@ -73,7 +75,7 @@ The system currently tracks body-state signals — soreness, training volume, cy
 - **Sleep/energy pills**: Two horizontal rows of 3 pills each, using the same pill styling as soreness ratings. Color-coded: Poor/Low = amber, OK/Normal = neutral, Great/High = green.
 - **Weekly review muscle rows**: Each row has the muscle name, a 1–5 pill selector, and a thin horizontal volume bar below it showing sets/MRV percentage. The bar uses the same color coding as the volume dashboard (blue/green/yellow/red).
 - **Mismatch highlights**: Muscles with ≥2-level mismatch are highlighted with a border glow and a small directional arrow (↑ accumulating fatigue, ↓ recovering well).
-- **Cycle phase chip**: Small rounded pill on the soreness screen, same style as the Today screen cycle phase pill but with the adjustment note appended (e.g., "Menstrual — −5% intensity, −1 set").
+- **Cycle phase chip**: Small rounded pill on the soreness screen, same style as the Today screen cycle phase pill but with the adjustment note appended (e.g., "Menstrual — intensity reduced, −1 set"). Exact modifier values come from [domain/adjustments.md](../domain/adjustments.md).
 
 ## User Benefits
 
@@ -103,6 +105,11 @@ The system currently tracks body-state signals — soreness, training volume, cy
 - **Readiness trend visualization**: A chart showing sleep/energy/soreness trends over time, correlated with training performance.
 - **Cycle phase performance correlation**: After enough data, show the lifter how their performance (RPE, completion %) varies by cycle phase — validating or challenging the adjustment values.
 - **Per-athlete modifier calibration**: The static adjustment values (−5% menstrual, −2.5% luteal, readiness modifiers) are population-level defaults. The [prescription trace integration](./prescription-trace-integration.md) system will track modifier effectiveness per athlete (trace prediction vs actual RPE outcome) and auto-calibrate these defaults over time. A female athlete whose late-luteal phase doesn't match the −5% default will have the modifier learned from her data.
+
+## Domain References
+
+- [domain/adjustments.md](../domain/adjustments.md) — cycle phase modifier values (intensity reduction %, set reduction per phase)
+- [domain/athlete-signals.md](../domain/athlete-signals.md) — sleep quality and energy level modifier defaults
 
 ## References
 

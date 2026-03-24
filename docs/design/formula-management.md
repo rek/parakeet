@@ -23,13 +23,7 @@ Most training apps treat their programming logic as a black box. Advanced lifter
 
 It is important to be precise about what "automatic" means here. **There is no language model or external AI service involved.** All suggestion generation is deterministic, rule-based pattern detection that runs locally in the app after each session completion.
 
-The rules (from `engine-005-performance-adjuster`):
-
-| Pattern detected | Suggestion |
-|-----------------|------------|
-| Actual RPE > target RPE by 1.0+ for 2 consecutive sessions on the same lift | Reduce that block's intensity percentage by 2.5% |
-| Actual RPE < target RPE by 1.0+ for 2 consecutive sessions on the same lift | Increase intensity percentage by 2.5% |
-| Session completion < 80% | Flag for review (no formula change) |
+The rules (from `engine-005-performance-adjuster`): if actual RPE exceeds target by 1.0+ for 2 consecutive sessions, reduce that block's intensity percentage by 2.5%; if below target by 1.0+, increase by 2.5%; if session completion < 80%, flag for review with no formula change. See [domain/periodization.md](../domain/periodization.md) for block structure and intensity percentage defaults.
 
 The rationale text written into each suggestion is generated from a template (e.g., "Squat Heavy RPE has averaged 9.6 vs. target 9.0 over the last 3 sessions") — not from an LLM. The system is called "auto-suggestion" in the codebase, not "AI".
 
@@ -116,6 +110,10 @@ The word "AI" in earlier versions of these docs was used loosely to mean "genera
 
 **Long-term:**
 - If an LLM integration is added in future (e.g., to generate natural-language training insights or suggest more nuanced formula changes), it would slot into this same suggestion/approval flow — the user-facing pattern stays the same regardless of what generates the suggestion
+
+## Domain References
+
+- [domain/periodization.md](../domain/periodization.md) — block structure, intensity percentage defaults, and Cube Method loading parameters
 
 ## References
 

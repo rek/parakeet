@@ -30,27 +30,7 @@ Add to `FormulaConfig`:
 rest_seconds: FormulaRestSeconds
 ```
 
-**Default constants:**
-
-```typescript
-export const DEFAULT_REST_SECONDS_MALE: FormulaRestSeconds = {
-  block1: { heavy: 180, explosive: 120, rep: 120 },
-  block2: { heavy: 210, explosive: 150, rep: 120 },
-  block3: { heavy: 300, explosive: 180, rep: 150 },
-  deload:  90,
-  auxiliary: 90,
-}
-
-export const DEFAULT_REST_SECONDS_FEMALE: FormulaRestSeconds = {
-  block1: { heavy: 150, explosive: 90,  rep: 90  },
-  block2: { heavy: 180, explosive: 120, rep: 90  },
-  block3: { heavy: 270, explosive: 150, rep: 120 },
-  deload:  90,
-  auxiliary: 90,
-}
-```
-
-Female values = male values − 30s on all non-deload entries (faster inter-set recovery; see [sex-based-adaptations.md](../../design/sex-based-adaptations.md)). Deload and auxiliary unchanged.
+See [domain/periodization.md](../../domain/periodization.md) for `DEFAULT_REST_SECONDS_MALE` and `DEFAULT_REST_SECONDS_FEMALE` tables (rest seconds by block and intensity type). Female values are male values minus 30s on all non-deload entries (faster inter-set recovery; see [sex-based-adaptations.md](../../design/sex-based-adaptations.md)). Deload and auxiliary unchanged.
 
 `DEFAULT_FORMULA_CONFIG_MALE` and `DEFAULT_FORMULA_CONFIG_FEMALE` each gain `rest_seconds` using their respective constant. `getDefaultFormulaConfig(biologicalSex?)` returns the correct config (already handles sex selection — just add the field).
 
@@ -102,3 +82,7 @@ userRestOverrides?: Array<{
 - [engine-007-jit-session-generator.md](./engine-007-jit-session-generator.md) — JITInput/JITOutput types
 - [engine-015-sex-formula-config.md](./engine-015-sex-formula-config.md) — sex-differentiated FormulaConfig pattern
 - [data-006-rest-config.md](../05-data/data-006-rest-config.md) — user overrides sourced here
+
+## Domain References
+
+- [domain/periodization.md](../../domain/periodization.md) — default rest seconds by block, intensity type, and sex

@@ -11,14 +11,7 @@ The default formula configuration (system defaults in kg) and the `calculateSets
 
 **File: `packages/training-engine/src/cube/blocks.ts`**
 
-- [x] Export `DEFAULT_FORMULA_CONFIG: FormulaConfig` constant with all Cube Method defaults (kg system):
-  - Block 1: Heavy=80%/2×5/RPE8.5, Explosive=65%/3×8/RPE7.0, Rep=70%/2-3×8-12/RPE8.0
-  - Block 2: Heavy=85%/2×3/RPE9.0, Explosive=70%/2×6/RPE7.5, Rep=80%/2-3×4-8/RPE8.0
-  - Block 3: Heavy=90%/4×1-2/RPE9.5, Explosive=75%/2×2/RPE8.0, Rep=85%/2-3×3-5/RPE8.5
-  - Deload: 40%/3×5/RPE5.0
-  - `progressive_overload.heavy_pct_increment_per_block: 0.05`
-  - Training max increase (kg): `{ bench_min: 2.5, bench_max: 5, squat_min: 5, squat_max: 10, deadlift_min: 5, deadlift_max: 10 }`
-  - `rounding_increment_kg: 2.5`
+- [x] Export `DEFAULT_FORMULA_CONFIG: FormulaConfig` constant with all Cube Method defaults (kg system). See [domain/periodization.md](../../domain/periodization.md) for block loading tables (percentages, sets, reps, RPE, progressive overload increments).
 
 **File: `packages/training-engine/src/generator/set-calculator.ts`**
 
@@ -41,3 +34,7 @@ The default formula configuration (system defaults in kg) and the `calculateSets
 ## Dependencies
 
 - [engine-002-cube-method-scheduler.md](./engine-002-cube-method-scheduler.md)
+
+## Domain References
+
+- [domain/periodization.md](../../domain/periodization.md) — block loading tables (percentages, sets, reps, RPE, progressive overload, rounding increments)

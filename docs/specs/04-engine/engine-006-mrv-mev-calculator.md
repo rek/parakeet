@@ -34,48 +34,14 @@ interface MrvMevConfig {
 }
 ```
 
-**Default values (Dr. Mike Israetel's research-backed landmarks):**
-```typescript
-export const DEFAULT_MRV_MEV_CONFIG: MrvMevConfig = {
-  quads:      { mev: 8,  mrv: 20 },
-  hamstrings: { mev: 6,  mrv: 20 },
-  glutes:     { mev: 0,  mrv: 16 },
-  lower_back: { mev: 6,  mrv: 12 },
-  upper_back: { mev: 10, mrv: 22 },
-  chest:      { mev: 8,  mrv: 22 },
-  triceps:    { mev: 6,  mrv: 20 },
-  shoulders:  { mev: 8,  mrv: 20 },
-  biceps:     { mev: 8,  mrv: 20 },
-}
-```
+See [domain/volume-landmarks.md](../../domain/volume-landmarks.md) for `DEFAULT_MRV_MEV_CONFIG` values (male and female MEV/MRV per muscle group).
 
 **File: `packages/training-engine/src/volume/muscle-mapper.ts`**
 
 - [x] `getMusclesForLift(lift: Lift, exercise?: string): MuscleContribution[]`
   - Returns muscle contributions with `primary: true/false` and `contribution: number` (1.0 or 0.5)
 
-```typescript
-// Lift → muscle group mapping
-const LIFT_MUSCLES: Record<string, MuscleContribution[]> = {
-  squat: [
-    { muscle: 'quads',      contribution: 1.0 },
-    { muscle: 'glutes',     contribution: 1.0 },
-    { muscle: 'hamstrings', contribution: 0.5 },
-    { muscle: 'lower_back', contribution: 0.5 },
-  ],
-  bench: [
-    { muscle: 'chest',      contribution: 1.0 },
-    { muscle: 'triceps',    contribution: 0.5 },
-    { muscle: 'shoulders',  contribution: 0.5 },
-  ],
-  deadlift: [
-    { muscle: 'hamstrings', contribution: 1.0 },
-    { muscle: 'glutes',     contribution: 1.0 },
-    { muscle: 'lower_back', contribution: 1.0 },
-    { muscle: 'upper_back', contribution: 0.5 },
-  ],
-}
-```
+See [domain/muscle-mapping.md](../../domain/muscle-mapping.md) for the `LIFT_MUSCLES` contribution table (primary and secondary contributions per lift).
 
 **Unit tests (`packages/training-engine/__tests__/mrv-mev-calculator.test.ts`):**
 - [x] 3 squat sessions × 5 sets = 15 quad sets → quads: 15 (approaching_mrv at MRV=20)
@@ -89,3 +55,8 @@ const LIFT_MUSCLES: Record<string, MuscleContribution[]> = {
 
 - [engine-002-cube-method-scheduler.md](./engine-002-cube-method-scheduler.md)
 - [data-001-muscle-volume-config.md](../05-data/data-001-muscle-volume-config.md)
+
+## Domain References
+
+- [domain/volume-landmarks.md](../../domain/volume-landmarks.md) — MEV/MRV defaults per muscle group, male and female
+- [domain/muscle-mapping.md](../../domain/muscle-mapping.md) — lift-to-muscle contribution table

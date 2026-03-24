@@ -17,17 +17,7 @@ Only **hard sets** count toward MRV — defined as sets taken within **0-3 reps 
 
 ## Muscle Group Attribution
 
-### Primary Lifts
-
-Each main lift contributes to multiple muscle groups at full (1.0) or fractional (0.5) weight:
-
-| Lift | Muscles |
-|---|---|
-| Squat | quads 1.0, glutes 1.0, hamstrings 0.5, lower_back 0.5 |
-| Bench | chest 1.0, triceps 0.5, shoulders 0.5 |
-| Deadlift | hamstrings 1.0, glutes 1.0, lower_back 1.0, upper_back 0.5 |
-
-The 0.5 factor for secondary muscles follows RP's guidance that compound lifts count for multiple groups but at reduced weight for non-primary movers. Example: 12 bench sets → chest 12, triceps 6, shoulders 6 effective sets.
+See [domain/muscle-mapping.md](../domain/muscle-mapping.md) for the canonical lift-to-muscle contribution tables (primary and secondary factors for Squat, Bench, and Deadlift).
 
 ### Auxiliary Exercises
 
@@ -78,6 +68,11 @@ Key research sources to consult when refining:
 - NSCA exercise science literature
 
 Contribution values live in `EXERCISE_MUSCLES` in `packages/training-engine/src/volume/muscle-mapper.ts`.
+
+## Domain References
+
+- [domain/muscle-mapping.md](../domain/muscle-mapping.md) — canonical lift-to-muscle contribution weights (primary and secondary factors)
+- [domain/volume-landmarks.md](../domain/volume-landmarks.md) — MEV/MRV defaults per muscle group
 
 ## Sources
 
