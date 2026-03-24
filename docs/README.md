@@ -39,6 +39,10 @@ Use this to find code without searching.
 **Shared (cross-feature):** `@shared/types`, `@shared/utils`, `@shared/constants`
 **Engine (pure domain):** `@parakeet/training-engine` — no Supabase, no React
 
+## Domain Knowledge
+
+- [domain/](./domain/) — centralized training science reference: every constant, formula, and threshold with source and rationale
+
 ## Architecture
 
 - [design/training-engine-architecture.md](./design/training-engine-architecture.md)
