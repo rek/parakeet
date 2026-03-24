@@ -70,6 +70,8 @@ Reusable patterns discovered during implementation. Read on-demand when debuggin
 
 **Don't overload state that downstream handlers interpret with arithmetic** — `PostRestState.pendingAuxSetNumber` means "the set just completed" and downstream handlers do `+1` to get the next set. Reusing this state for a "confirmation of the current set" would cause an off-by-one where set 2 gets completed/failed instead of set 1. When existing dispatch handlers assume positional semantics (prev → next), introduce a dedicated state for a fundamentally different flow (confirm → then proceed) rather than adding boolean flags to reinterpret the same fields.
 
+**Ad-hoc items bypass the planned-data array** — `handleAuxSetUpdate` looked up `exerciseType` only from JIT-generated `auxiliaryWork`. Ad-hoc exercises aren't in that array, so the lookup returned `undefined` and timed exercises got the weighted treatment. Pattern: any handler that derives behavior from a planned-data array must fall back to a canonical source (e.g., `getExerciseType()` from the catalog) for user-added items.
+
 ## Agent Patterns
 
 **Feature requests often surface latent data bugs** — trace display problems back to the write path before adding view-layer filters.

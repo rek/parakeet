@@ -238,6 +238,7 @@ Module/platform/shared architecture is the canonical app structure. Legacy top-l
 - [x] Session detail refactor (GH#111) — `[sessionId].tsx` 527→184 lines; extracted `useSessionDetail` (discriminated union), `MainLiftResultsTable`, `AuxResultsTable`, `SummaryChipsRow`, `TraceButton`, `groupAuxSetsByExercise` to `@modules/session`; timed exercise display support in aux tables
 - [x] Session sort fix (GH#112) — `fetchCompletedSessions` sorted by `completed_at` instead of `planned_date`
 - [x] Intra-session volume recovery (GH#92) — `evaluateVolumeRecovery()` in `training-engine/src/adjustments/volume-recovery.ts`; when JIT reduces sets (soreness/readiness/cycle-phase/disruption) but actual RPE is ≥1.5 below target, `VolumeRecoveryBanner` offers to add removed sets back; `checkVolumeRecovery()` fires after each main lift RPE entry; `sessionStore.acceptRecovery()` appends recovered sets with `is_recovered: true`; recovery blocked during soreness-5 recovery mode; 14 tests
+- [x] Ad-hoc timed aux PostRestOverlay (GH#119) — `handleAuxSetUpdate` exercise type lookup falls back to `getExerciseType()` from training-engine when exercise is not in JIT `auxiliaryWork`; fixes confirmation overlay, RPE picker, and rest timer appearing for ad-hoc timed exercises (e.g. Plank)
 
 ---
 
