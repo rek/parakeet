@@ -32,6 +32,22 @@ Next session's volume calibration (loop closes)
 
 Volume calibration adjusts the base set count **before** the reduction pipeline runs. The reductions then apply on top of the calibrated base. MRV cap is always the final hard constraint.
 
+## When Adaptations Fire
+
+Adaptations are always **one step behind** — the system observes session N and adjusts session N+1. It never changes the prescription mid-workout (except volume recovery, which is reactive). The lifter always sees the adapted prescription before their first set.
+
+| When | What happens | Feeds into |
+|------|-------------|------------|
+| **Check-in** (before workout) | Lifter rates soreness, sleep, energy | Today's JIT Steps 0, 3, 5 |
+| **JIT generation** (tap "Start Workout") | Volume calibration runs using signals from previous sessions + today's check-in | Today's prescription |
+| **During workout** | RPE logged per set. Volume recovery may offer to add sets back if RPE is 1.5+ below target. | Today's session (reactive). Next session's RPE trend. |
+| **Completion** | Lifter answers "Could you have done more?" | Next session's capacity trend (Step 0) |
+| **End of week** | Body review: felt fatigue vs predicted | Next week's mismatch direction (Step 0) |
+| **Across block** (weeks 1-3) | If RPE stays favorable, progressive volume increases within the block. Deload resets. | Current block's Step 0 progressive boost |
+| **Over time** (10+ sessions) | Modifier calibration builds confidence. System learns if it over-reduces for this athlete. | All future Step 0 calibration bias |
+
+**Latency by design.** The system requires 2+ sessions of consistent signal before adjusting volume. This prevents chasing noise from a single bad night's sleep or one unexpectedly easy session. New users get standard prescriptions while the system observes; after 2-3 weeks it starts adapting.
+
 ## Signal Collection
 
 The system collects signals at four time scales:
