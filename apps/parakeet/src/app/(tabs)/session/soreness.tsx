@@ -102,16 +102,12 @@ function buildStyles(colors: ColorScheme) {
       marginBottom: 24,
     },
     muscleRow: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'space-between',
       marginBottom: 16,
     },
     muscleLabel: {
       fontSize: 15,
       color: colors.text,
-      flex: 1,
-      marginRight: 12,
+      marginBottom: 6,
     },
     ratingPills: {
       flexDirection: 'row',
@@ -598,7 +594,7 @@ export default function SorenessScreen() {
 
   // ── Derived state ─────────────────────────────────────────────────────────
 
-  const hasSevereSoreness = Object.values(ratings).some((r) => r === 5);
+  const hasSevereSoreness = Object.values(ratings).some((r) => r >= 9);
   const liftLabel = session ? sessionLabel(session) : 'Loading...';
 
   // ── Render ────────────────────────────────────────────────────────────────
@@ -674,7 +670,7 @@ export default function SorenessScreen() {
 
         {/* Rating legend */}
         <Text style={styles.legend}>
-          1=Fresh 2=Mild 3=Moderate 4=High 5=Severe
+          1–4 Fresh · 5–6 Moderate · 7–8 High · 9–10 Severe
         </Text>
 
         {/* Sleep + Energy readiness */}
