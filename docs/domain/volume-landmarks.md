@@ -23,11 +23,11 @@ Units: sets per week.
 | triceps     | 6   | 20  | 6-8                  | 18-20                | Mid range. Gets indirect work from bench. |
 | shoulders   | 8   | 20  | 8-12                 | 18-22                | Mid range. Gets indirect work from bench + overhead movements. |
 | biceps      | 8   | 20  | 6-10                 | 18-22                | Mid range. Gets indirect work from rows/pulling. |
-| core        | 8   | 20  | 0-8                  | 15-20                | Top of MEV range. See known issue below. |
+| core        | 4   | 20  | 0-8                  | 15-20                | Low MEV — powerlifters get substantial indirect core work from squats/deadlifts. |
 
 Research basis: RP Strength volume landmarks (practitioner framework, not a meta-analysis). Schoenfeld 2017 meta-analysis found optimal hypertrophy at 10+ sets/week; Baz-Valle 2022 recommends 12-20 for trained men. For strength specifically, Pelland 2025 found diminishing returns are steeper than for hypertrophy.
 
-> **Known issue:** Core MEV=8 is at the top of the research range. For powerlifters, core gets substantial isometric work from squats and deadlifts — MEV of 0-4 may be more appropriate. See [#126](https://github.com/rek/parakeet/issues/126).
+
 
 **Source:** `packages/training-engine/src/volume/mrv-mev-calculator.ts`
 
@@ -41,18 +41,17 @@ Female values are approximately 20-30% higher across most muscle groups.
 |-------------|-----|-----|---------------|-------|
 | quads       | 10  | 26  | +30%          | |
 | hamstrings  | 8   | 25  | +25%          | |
-| glutes      | 0   | 20  | **-9%**       | **Inverted — see known issue** |
+| glutes      | 0   | 28  | +27%          | Corrected — was 20, inverted vs male. |
 | lower_back  | 7   | 20  | +11%          | Lower uplift than other groups |
 | upper_back  | 12  | 28  | +27%          | |
 | chest       | 10  | 26  | +18%          | |
 | triceps     | 8   | 24  | +20%          | |
 | shoulders   | 10  | 24  | +20%          | |
 | biceps      | 10  | 24  | +20%          | |
-| core        | 10  | 24  | +20%          | |
+| core        | 6   | 24  | +20%          | Lowered MEV — indirect core work from compounds. |
 
 Research basis: Women demonstrate faster inter-set recovery and higher relative fatigue resistance (Roberts et al. 2020 meta-analysis; Hicks et al. 2018). However, no large-scale meta-analysis directly quantifies the female volume tolerance multiplier. The 20-30% uplift is derived from RP coaching data and individual studies, not meta-analyzed.
 
-> **Known issue:** Female glute MRV (20) is lower than male (22). This contradicts the general female-higher pattern and all available evidence on female glute training tolerance. Should be 26-28. See [#122](https://github.com/rek/parakeet/issues/122).
 
 **Source:** `packages/training-engine/src/volume/mrv-mev-calculator.ts`
 
@@ -70,7 +69,6 @@ Applied to MEV and MRV before use.
 
 Pelland 2025 meta-regression: dose-response follows a square root model — beginners get more per-set return, supporting lower MRV ceiling.
 
-> **Known issue:** Beginner MEV multiplier of 1.0 is likely too high. Beginners respond to very low volumes (as few as 4 sets/week per Krieger 2010). MEV x0.8 would better reflect their lower stimulus threshold. See [#127](https://github.com/rek/parakeet/issues/127).
 
 **Source:** `packages/training-engine/src/volume/mrv-mev-calculator.ts`
 

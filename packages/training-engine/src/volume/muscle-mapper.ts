@@ -3,12 +3,12 @@ import { CATALOG_BY_NAME } from '../auxiliary/exercise-catalog';
 import { MuscleContribution } from '../types';
 
 // Primary lift → muscle contributions
-// 1.0 = primary mover, 0.5 = significant secondary
-// Calibrated to RP Strength volume landmark values (see docs/design/volume-mrv-methodology.md)
+// Calibrated against EMG systematic reviews — see docs/domain/muscle-mapping.md
+// for research ranges and design rationale per factor
 const LIFT_MUSCLES: Record<string, MuscleContribution[]> = {
   squat: [
     { muscle: 'quads', contribution: 1.0 },
-    { muscle: 'glutes', contribution: 0.75 },
+    { muscle: 'glutes', contribution: 0.55 },
     { muscle: 'hamstrings', contribution: 0.5 },
     { muscle: 'lower_back', contribution: 0.5 },
   ],
@@ -21,7 +21,7 @@ const LIFT_MUSCLES: Record<string, MuscleContribution[]> = {
     { muscle: 'hamstrings', contribution: 1.0 },
     { muscle: 'glutes', contribution: 0.75 },
     { muscle: 'lower_back', contribution: 1.0 },
-    { muscle: 'upper_back', contribution: 0.5 },
+    { muscle: 'upper_back', contribution: 0.7 },
   ],
 };
 

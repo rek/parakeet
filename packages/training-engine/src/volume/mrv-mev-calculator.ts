@@ -8,6 +8,7 @@ import {
 } from '../types';
 import { rpeSetMultiplier } from './rpe-scaler';
 
+// See docs/domain/volume-landmarks.md for research ranges and design rationale
 export const DEFAULT_MRV_MEV_CONFIG_MALE: MrvMevConfig = {
   quads: { mev: 8, mrv: 20 },
   hamstrings: { mev: 6, mrv: 20 },
@@ -18,21 +19,22 @@ export const DEFAULT_MRV_MEV_CONFIG_MALE: MrvMevConfig = {
   triceps: { mev: 6, mrv: 20 },
   shoulders: { mev: 8, mrv: 20 },
   biceps: { mev: 8, mrv: 20 },
-  core: { mev: 8, mrv: 20 },
+  core: { mev: 4, mrv: 20 },
 };
 
-// Female defaults are ~20–30% higher per RP Strength research (see sex-based-adaptations.md)
+// Female defaults are ~20–30% higher per RP Strength research
+// See docs/domain/volume-landmarks.md for research ranges and design rationale
 export const DEFAULT_MRV_MEV_CONFIG_FEMALE: MrvMevConfig = {
   quads: { mev: 10, mrv: 26 },
   hamstrings: { mev: 8, mrv: 25 },
-  glutes: { mev: 0, mrv: 20 },
+  glutes: { mev: 0, mrv: 28 },
   lower_back: { mev: 7, mrv: 20 },
   upper_back: { mev: 12, mrv: 28 },
   chest: { mev: 10, mrv: 26 },
   triceps: { mev: 8, mrv: 24 },
   shoulders: { mev: 10, mrv: 24 },
   biceps: { mev: 10, mrv: 24 },
-  core: { mev: 10, mrv: 24 },
+  core: { mev: 6, mrv: 24 },
 };
 
 // Backward-compat alias — existing callers unaffected
@@ -40,11 +42,12 @@ export const DEFAULT_MRV_MEV_CONFIG = DEFAULT_MRV_MEV_CONFIG_MALE;
 
 export type TrainingAge = 'beginner' | 'intermediate' | 'advanced';
 
-// Beginner: lower MRV ceiling (80%), same MEV (still need minimum stimulus)
+// Beginner: lower MRV ceiling (80%) and lower MEV (80%) — beginners respond to less stimulus
 // Intermediate: baseline (1.0/1.0)
 // Advanced: higher MRV tolerance (120%) and slightly higher MEV (110%) for adaptation
+// See docs/domain/volume-landmarks.md for research basis
 export const TRAINING_AGE_MULTIPLIERS = {
-  beginner:     { mev: 1.0, mrv: 0.8 },
+  beginner:     { mev: 0.8, mrv: 0.8 },
   intermediate: { mev: 1.0, mrv: 1.0 },
   advanced:     { mev: 1.1, mrv: 1.2 },
 } as const;

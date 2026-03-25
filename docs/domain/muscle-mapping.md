@@ -15,13 +15,11 @@ Contribution factors represent the fractional set weight applied per completed s
 | Muscle     | Our Factor | EMG research range (%MVIC) | Design choice |
 |------------|------------|---------------------------|---------------|
 | quads      | 1.0        | 21-68% (highest of all muscles) | Primary mover — uncontested. |
-| glutes     | 0.75       | 28-60% (depth-dependent) | High end of defensible range. See known issue. |
+| glutes     | 0.55       | 28-60% (depth-dependent) | Mid-range. Back squat glute EMG 28-60% MVIC vs quads 21-68%. |
 | hamstrings | 0.5        | 4-12% (minimal) | Consistent with "twofold lower" than quads finding. |
 | lower_back | 0.5        | Moderate-high (isometric) | Erectors stabilize; isometric not well captured by EMG. |
 
 EMG sources: Kompf & Arandjelovic 2024 (biomechanical review); Neto et al. 2020 (glute systematic review, 23 studies). See [references.md](references.md).
-
-> **Known issue:** Glute factor 0.75 is at the high end. EMG studies show back squat glute activation at 28-60% MVIC vs quads at 21-68%. A factor of 0.5-0.6 better matches the data, especially for parallel-depth squats. See [#124](https://github.com/rek/parakeet/issues/124).
 
 ### Bench
 
@@ -40,11 +38,9 @@ EMG sources: Lauver et al. 2020 (5 inclinations); Stastny et al. 2017 (bench sys
 | hamstrings | 1.0        | High (semitendinosus > biceps femoris) | Primary hip extensor. |
 | glutes     | 0.75       | ~65% MVIC conventional | Significant hip extension role, especially lockout. |
 | lower_back | 1.0        | Highest overall activation | Erectors are the most activated muscle in conventional DL. |
-| upper_back | 0.5        | Significant isometric demand | See known issue. |
+| upper_back | 0.7        | Significant isometric demand | Traps, rhomboids, lats work hard isometrically during heavy pulls. |
 
 EMG source: Martins-Costa et al. 2020 (deadlift systematic review, 20 studies). See [references.md](references.md).
-
-> **Known issue:** Upper back factor 0.5 likely underestimates isometric demand on traps, rhomboids, and lats during heavy deadlifts. A factor of 0.65-0.75 would better reflect the load, especially for competitive powerlifters. See [#125](https://github.com/rek/parakeet/issues/125).
 
 **Source:** `packages/training-engine/src/volume/muscle-mapper.ts`
 
@@ -57,9 +53,9 @@ Only sets with sufficient proximity to failure count toward weekly volume.
 | RPE       | RIR | Our Multiplier | Research basis |
 |-----------|-----|----------------|----------------|
 | < 6       | 5+  | 0.0            | Sub-threshold for meaningful stimulus. Refalo 2023: sets far from failure produce minimal effect. |
-| 6         | 4   | 0.25           | Boundary of effective range. Generous for strength — serves technical practice role. |
-| 7         | 3   | 0.5            | Within effective zone per Refalo. See known issue. |
-| 8         | 2   | 0.75           | Squarely in high-stimulus zone. See known issue. |
+| 6         | 4   | 0.15           | Boundary of effective range. Minimal contribution — mainly technical practice. |
+| 7         | 3   | 0.65           | Within effective zone. Research: ~80-90% of failure-level stimulus at 3 RIR. |
+| 8         | 2   | 0.85           | High-stimulus zone. Very close to a full set per Refalo 2024 meta-regression. |
 | 9-10      | 0-1 | 1.0            | Full hard set. Consensus. |
 | undefined | --  | 1.0            | Conservative default — assume hard. |
 
@@ -67,7 +63,6 @@ Research basis: Refalo et al. 2023 meta-analysis (15 studies): training to failu
 
 **Strength implication:** For powerlifting, RPE 7-8 work is likely more valuable than the 0.5/0.75 multipliers suggest, since strength gains are relatively insensitive to proximity to failure. The conservative curve undervalues moderate-effort sets that are common in periodized powerlifting programs.
 
-> **Known issue:** The curve is linear (0.25 increments). Research suggests a concave curve where RPE 8→10 difference is small but RPE 6→8 difference is large. A curve like {6: 0.15, 7: 0.65, 8: 0.85, 9: 1.0, 10: 1.0} would better match. See [#123](https://github.com/rek/parakeet/issues/123).
 
 **Source:** `packages/training-engine/src/volume/rpe-scaler.ts`
 

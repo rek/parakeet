@@ -18,7 +18,7 @@ describe('computeWeeklyVolume', () => {
     }));
     const volume = computeWeeklyVolume(logs, getMusclesForLift);
     expect(volume.quads).toBe(15);
-    expect(volume.glutes).toBe(11); // round(15 × 0.75)
+    expect(volume.glutes).toBe(8); // round(15 × 0.55)
     expect(volume.hamstrings).toBe(8); // round(15 × 0.5)
     expect(volume.lower_back).toBe(8);
   });
@@ -43,14 +43,14 @@ describe('computeWeeklyVolume', () => {
       { lift: 'deadlift' as const, completedSets: 3 },
     ];
     const volume = computeWeeklyVolume(logs, getMusclesForLift);
-    // glutes: squat 4×0.75 + deadlift 3×0.75 = 3 + 2 = 5 (floor)
-    expect(volume.glutes).toBe(5);
+    // glutes: squat 4×0.55 + deadlift 3×0.75 = 2.2 + 2.25 = 4.45 → round = 4
+    expect(volume.glutes).toBe(4);
     // hamstrings: squat 4×0.5 + deadlift 3×1.0 = 2 + 3 = 5
     expect(volume.hamstrings).toBe(5);
   });
 
-  it('setRpes scales effective sets — RPE 7 = 0.5 per set', () => {
-    // 4 sets all at RPE 7 → effectiveSets = 4 × 0.5 = 2.0
+  it('setRpes scales effective sets — RPE 7 = 0.65 per set', () => {
+    // 4 sets all at RPE 7 → effectiveSets = 4 × 0.65 = 2.6
     const logs = [
       {
         lift: 'squat' as const,
@@ -59,8 +59,8 @@ describe('computeWeeklyVolume', () => {
       },
     ];
     const volume = computeWeeklyVolume(logs, getMusclesForLift);
-    expect(volume.quads).toBe(2); // floor(2.0 × 1.0)
-    expect(volume.hamstrings).toBe(1); // floor(2.0 × 0.5)
+    expect(volume.quads).toBe(3); // round(2.6 × 1.0)
+    expect(volume.hamstrings).toBe(1); // round(2.6 × 0.5)
   });
 
   it('setRpes with mixed RPEs — RPE 5 sets dont count', () => {
@@ -112,10 +112,10 @@ describe('computeWeeklyVolume', () => {
     const volume = computeWeeklyVolume(logs, getMusclesForLift);
     expect(volume.quads).toBe(4); // squat primary
     expect(volume.chest).toBe(4); // bench primary
-    expect(volume.glutes).toBe(6); // squat 4×0.75 + deadlift 4×0.75 = 3 + 3
+    expect(volume.glutes).toBe(5); // squat 4×0.55 + deadlift 4×0.75 = 2.2 + 3 = 5.2 → 5
     expect(volume.hamstrings).toBe(6); // squat 4×0.5 + deadlift 4×1.0 = 2 + 4
     expect(volume.lower_back).toBe(6); // squat 4×0.5 + deadlift 4×1.0 = 2 + 4
-    expect(volume.upper_back).toBe(2); // deadlift 4×0.5
+    expect(volume.upper_back).toBe(3); // deadlift 4×0.7 = 2.8 → 3
     expect(volume.biceps).toBe(0); // not mapped to any main lift
   });
 });
@@ -124,9 +124,9 @@ describe('rpeSetMultiplier', () => {
   it('undefined → 1.0 (conservative)', () =>
     expect(rpeSetMultiplier(undefined)).toBe(1.0));
   it('5 → 0.0 (not a hard set)', () => expect(rpeSetMultiplier(5)).toBe(0.0));
-  it('6 → 0.25', () => expect(rpeSetMultiplier(6)).toBe(0.25));
-  it('7 → 0.5', () => expect(rpeSetMultiplier(7)).toBe(0.5));
-  it('8 → 0.75', () => expect(rpeSetMultiplier(8)).toBe(0.75));
+  it('6 → 0.15', () => expect(rpeSetMultiplier(6)).toBe(0.15));
+  it('7 → 0.65', () => expect(rpeSetMultiplier(7)).toBe(0.65));
+  it('8 → 0.85', () => expect(rpeSetMultiplier(8)).toBe(0.85));
   it('9 → 1.0', () => expect(rpeSetMultiplier(9)).toBe(1.0));
   it('10 → 1.0', () => expect(rpeSetMultiplier(10)).toBe(1.0));
 });
@@ -386,12 +386,12 @@ describe('classifyVolumeStatus', () => {
 });
 
 describe('applyTrainingAgeMultiplier', () => {
-  it('beginner scales MRV down by 0.8, keeps MEV at 1.0', () => {
+  it('beginner scales MRV down by 0.8, MEV down by 0.8', () => {
     const result = applyTrainingAgeMultiplier({
       config: DEFAULT_MRV_MEV_CONFIG_MALE,
       trainingAge: 'beginner',
     });
-    expect(result.quads.mev).toBe(8);   // 8 * 1.0 = 8
+    expect(result.quads.mev).toBe(6);   // 8 * 0.8 = 6.4 → 6
     expect(result.quads.mrv).toBe(16);  // 20 * 0.8 = 16
   });
 
@@ -418,7 +418,7 @@ describe('applyTrainingAgeMultiplier', () => {
       config: DEFAULT_MRV_MEV_CONFIG_FEMALE,
       trainingAge: 'beginner',
     });
-    expect(result.quads.mev).toBe(10);  // 10 * 1.0 = 10
+    expect(result.quads.mev).toBe(8);   // 10 * 0.8 = 8
     expect(result.quads.mrv).toBe(21);  // 26 * 0.8 = 20.8 → 21
   });
 

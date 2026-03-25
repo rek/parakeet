@@ -110,9 +110,9 @@ describe('computeVolumeBreakdown', () => {
     const breakdown = computeVolumeBreakdown({ sessionLogs: logs, muscleMapper: testMapper });
     const quads = breakdown.quads.contributions[0];
 
-    // RPE 10=1.0, 8=0.75, 7=0.5, 5=0.0 → effective = 2.25
-    expect(quads.effectiveSets).toBe(2.25);
-    expect(quads.volumeAdded).toBe(2.25); // × 1.0 contribution
+    // RPE 10=1.0, 8=0.85, 7=0.65, 5=0.0 → effective = 2.5
+    expect(quads.effectiveSets).toBe(2.5);
+    expect(quads.volumeAdded).toBe(2.5); // × 1.0 contribution
   });
 
   describe('RPE edge cases', () => {
@@ -121,8 +121,8 @@ describe('computeVolumeBreakdown', () => {
         { lift: 'squat', completedSets: 3, setRpes: [9, undefined, 7] },
       ];
       const breakdown = computeVolumeBreakdown({ sessionLogs: logs, muscleMapper: testMapper });
-      // RPE 9=1.0, undefined=1.0, 7=0.5 → 2.5
-      expect(breakdown.quads.contributions[0].effectiveSets).toBe(2.5);
+      // RPE 9=1.0, undefined=1.0, 7=0.65 → 2.65
+      expect(breakdown.quads.contributions[0].effectiveSets).toBe(2.65);
     });
 
     it('handles empty setRpes array', () => {
