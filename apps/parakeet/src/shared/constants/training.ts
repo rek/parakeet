@@ -60,8 +60,8 @@ export const INTENSITY_LABELS: Record<string, string> = {
 };
 
 export const READINESS_LABELS = {
-  sleep: { 1: 'Poor', 2: 'OK', 3: 'Great' } as const,
-  energy: { 1: 'Low', 2: 'Normal', 3: 'High' } as const,
+  sleep: { 1: 'Terrible', 2: 'Poor', 3: 'OK', 4: 'Good', 5: 'Great' } as const,
+  energy: { 1: 'Drained', 2: 'Low', 3: 'OK', 4: 'Good', 5: 'High' } as const,
 } as const;
 
 export const SORENESS_MUSCLES_DEFAULT: ReadonlyArray<{

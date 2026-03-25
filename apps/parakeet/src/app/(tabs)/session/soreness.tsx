@@ -46,8 +46,8 @@ import { useTheme } from '../../../theme/ThemeContext';
 
 // ── Constants ────────────────────────────────────────────────────────────────
 
-const RATING_LEVELS = [1, 2, 3, 4, 5] as const;
-const READINESS_LEVELS = [1, 2, 3] as const;
+const RATING_LEVELS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10] as const;
+const READINESS_LEVELS = [1, 2, 3, 4, 5] as const;
 const MUSCLES_EXPANDED_KEY = 'readiness_muscles_expanded';
 
 // ── Styles builder ────────────────────────────────────────────────────────────
@@ -115,12 +115,12 @@ function buildStyles(colors: ColorScheme) {
     },
     ratingPills: {
       flexDirection: 'row',
-      gap: 6,
+      gap: 3,
     },
     pill: {
-      width: 44,
-      height: 44,
-      borderRadius: 22,
+      width: 30,
+      height: 30,
+      borderRadius: 15,
       backgroundColor: colors.bgMuted,
       alignItems: 'center',
       justifyContent: 'center',
@@ -129,7 +129,7 @@ function buildStyles(colors: ColorScheme) {
       backgroundColor: colors.primary,
     },
     pillText: {
-      fontSize: 15,
+      fontSize: 12,
       fontWeight: '600',
       color: colors.textSecondary,
     },
@@ -181,10 +181,11 @@ function buildStyles(colors: ColorScheme) {
     },
     readinessPills: {
       flexDirection: 'row',
-      gap: 6,
+      gap: 4,
+      flexWrap: 'wrap',
     },
     readinessPill: {
-      paddingHorizontal: 12,
+      paddingHorizontal: 10,
       height: 36,
       borderRadius: 18,
       alignItems: 'center',
