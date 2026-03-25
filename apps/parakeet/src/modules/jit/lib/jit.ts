@@ -38,6 +38,7 @@ import {
   getJITGenerator,
   getMusclesForExercise,
   getMusclesForLift,
+  LIFTS,
   reviewJITDecision,
   rpeSetMultiplier,
 } from '@parakeet/training-engine';
@@ -299,6 +300,21 @@ export async function runJITForSession(
       totalSessionsThisWeek = weekInfo.trainingDaysPerWeek;
       sessionIndex =
         (weekInfo.unendingSessionCounter % weekInfo.trainingDaysPerWeek) + 1;
+
+      // Unending programs generate sessions lazily — future sessions don't exist
+      // in the DB, so fetchUpcomingSessionLifts returns []. Derive upcoming lifts
+      // from the deterministic S→B→D rotation instead.
+      if (upcomingLifts.length === 0 && lift) {
+        const currentIdx = LIFTS.indexOf(lift);
+        if (currentIdx >= 0) {
+          const remainingInWeek = totalSessionsThisWeek - sessionIndex;
+          const derived: Lift[] = [];
+          for (let i = 1; i <= remainingInWeek; i++) {
+            derived.push(LIFTS[(currentIdx + i) % LIFTS.length]);
+          }
+          upcomingLifts = derived;
+        }
+      }
     } else {
       totalSessionsThisWeek = weekCounts.total;
       sessionIndex = weekCounts.completed + 1;
