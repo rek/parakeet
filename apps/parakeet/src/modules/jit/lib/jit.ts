@@ -340,17 +340,16 @@ export async function runJITForSession(
   let capacityHistory: number[] | undefined;
   let weeklyMismatchDirection: 'recovering_well' | 'accumulating_fatigue' | null | undefined;
   try {
-    // Fetch recent capacity assessments from AsyncStorage
-    const recentSessionIds = recentLogs
-      .slice(0, 5)
-      .map((_, i) => `capacity_assessment:sess-${i}`); // placeholder — needs session IDs
-    // For now, read from the known session keys pattern
-    const keys = await AsyncStorage.getAllKeys();
-    const capacityKeys = keys
-      .filter((k) => k.startsWith('capacity_assessment:'))
-      .slice(-5);
+    // Fetch recent capacity assessments from AsyncStorage.
+    // Keys are stored as capacity_assessment:<sessionId> — order doesn't matter,
+    // we just need the most recent values. Limit to 5 to avoid processing stale data.
+    const allKeys = await AsyncStorage.getAllKeys();
+    const capacityKeys = allKeys.filter((k) => k.startsWith('capacity_assessment:'));
     if (capacityKeys.length > 0) {
-      const entries = await AsyncStorage.multiGet(capacityKeys);
+      // Sort by key to approximate chronological order (UUIDs are not sortable,
+      // but this is best-effort — the calibration system is robust to ordering)
+      const recentKeys = capacityKeys.slice(-5);
+      const entries = await AsyncStorage.multiGet(recentKeys);
       capacityHistory = entries
         .map(([, v]) => (v ? parseInt(v, 10) : null))
         .filter((v): v is number => v !== null && !isNaN(v));

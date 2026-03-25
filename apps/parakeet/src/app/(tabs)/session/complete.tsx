@@ -317,6 +317,14 @@ export default function CompleteScreen() {
       startedAt: startedAt?.toISOString(),
     };
 
+    // Store capacity assessment for volume calibration (works offline too)
+    if (capacityAssessment !== null) {
+      AsyncStorage.setItem(
+        `capacity_assessment:${sessionId}`,
+        String(capacityAssessment)
+      ).catch(captureException);
+    }
+
     // Offline: queue and show optimistic success
     if (!isOnline) {
       enqueue({ operation: 'complete_session', payload: completionPayload });
@@ -339,14 +347,6 @@ export default function CompleteScreen() {
       stampCyclePhaseOnSession(user.id, sessionId).catch((err) =>
         captureException(err)
       );
-
-      // Store capacity assessment for volume calibration (Phase 2)
-      if (capacityAssessment !== null) {
-        AsyncStorage.setItem(
-          `capacity_assessment:${sessionId}`,
-          String(capacityAssessment)
-        ).catch(captureException);
-      }
 
       // Data is committed — show the saved state regardless of what follows
       setSaved(true);
