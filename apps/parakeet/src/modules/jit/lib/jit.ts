@@ -14,6 +14,7 @@ import { parseActualSetsJson, parsePlannedSetsJson as parsePlannedSets } from '@
 import { fetchProfileSex } from '@modules/session/data/session.repository';
 import { getUserRestOverrides } from '@modules/settings/lib/rest-config';
 import { weightGramsToKg } from '@shared/utils/weight';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import {
   getBarWeightKg,
   getJITStrategyOverride,
@@ -334,6 +335,29 @@ export async function runJITForSession(
   // Per-athlete modifier calibrations (engine-041)
   const modifierCalibrations = await fetchModifierCalibrations(userId);
 
+  // Adaptive volume calibration signals (engine-043 Phase 2)
+  let capacityHistory: number[] | undefined;
+  let weeklyMismatchDirection: 'recovering_well' | 'accumulating_fatigue' | null | undefined;
+  try {
+    // Fetch recent capacity assessments from AsyncStorage
+    const recentSessionIds = recentLogs
+      .slice(0, 5)
+      .map((_, i) => `capacity_assessment:sess-${i}`); // placeholder — needs session IDs
+    // For now, read from the known session keys pattern
+    const keys = await AsyncStorage.getAllKeys();
+    const capacityKeys = keys
+      .filter((k) => k.startsWith('capacity_assessment:'))
+      .slice(-5);
+    if (capacityKeys.length > 0) {
+      const entries = await AsyncStorage.multiGet(capacityKeys);
+      capacityHistory = entries
+        .map(([, v]) => (v ? parseInt(v, 10) : null))
+        .filter((v): v is number => v !== null && !isNaN(v));
+    }
+  } catch {
+    // Non-critical — volume calibration degrades gracefully without capacity data
+  }
+
   // Compute working 1RM from recent actual session weights (GH#98)
   const { workingOneRmKg, source: oneRmSource } = computeWorkingOneRm({
     recentEstimates: recentLogs.map((l) => ({
@@ -377,6 +401,8 @@ export async function runJITForSession(
     modifierCalibrations: Object.keys(modifierCalibrations).length > 0 ? modifierCalibrations : undefined,
     storedOneRmKg: oneRmSource === 'working' ? resolvedOneRmKg : undefined,
     oneRmSource,
+    capacityHistory: capacityHistory?.length ? capacityHistory : undefined,
+    weeklyMismatchDirection: weeklyMismatchDirection ?? undefined,
   };
 
   const strategyOverride = await getJITStrategyOverride();
