@@ -35,7 +35,7 @@ See `docs/design/training-engine-architecture.md` for the full architecture and 
   - Calls `generateObject()` with 5000ms `AbortSignal.timeout`
   - On success: applies adjustment via `applyAdjustment()` then `enforceHardConstraints()`
   - On any error (timeout, network, Zod parse): falls back to `FormulaJITGenerator`, returns `jit_strategy: 'formula_fallback'`
-- [x] `buildJITContext(input: JITInput)` — omits `warmupConfig` from context sent to LLM
+- [x] `buildJITContext(input: JITInput)` — omits `warmupConfig` from context sent to LLM (warmup is always formula-generated via `resolveEffectiveWarmupProtocol()`, never LLM-adjusted; same override logic as formula path)
 
 ### Integration with JITGeneratorRegistry
 

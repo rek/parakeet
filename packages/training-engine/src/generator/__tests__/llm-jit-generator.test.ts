@@ -208,4 +208,28 @@ describe('enforceHardConstraints', () => {
       true
     );
   });
+
+  it('applies minimal warmup override in recovery mode (severe soreness)', () => {
+    const input = baseInput({ sorenessRatings: { quads: 10 } });
+
+    const fakeOutput = {
+      sessionId: 'sess-001',
+      generatedAt: new Date(),
+      mainLiftSets: [
+        { set_number: 1, weight_kg: 112.5, reps: 5, rpe_target: 8.5 },
+      ],
+      warmupSets: [],
+      auxiliaryWork: [],
+      volumeModifier: 1.0,
+      intensityModifier: 1.0,
+      rationale: [],
+      warnings: [],
+      skippedMainLift: false,
+      restRecommendations: { mainLift: [180], auxiliary: [] },
+    };
+
+    const constrained = enforceHardConstraints(fakeOutput, input);
+    // minimal protocol = 2 warmup sets
+    expect(constrained.warmupSets).toHaveLength(2);
+  });
 });

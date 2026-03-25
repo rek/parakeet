@@ -59,6 +59,10 @@ interface WarmupSet {
   - Returns the step array for a named preset
 - [x] `resolveProtocol(protocol: WarmupProtocol): WarmupStep[]`
   - Resolves both preset and custom protocols to a flat `WarmupStep[]`
+- [x] `resolveEffectiveWarmupProtocol(opts)` — determines the actual protocol to use, applying automatic overrides
+  - If `warmupConfigExplicit === true`: always returns the user's configured protocol unchanged
+  - If `warmupConfigExplicit` is false/undefined: derives recovery mode from soreness ratings via `getWorstSoreness` + `getSorenessModifier`, and overrides to `minimal` when in recovery mode or `workingWeightKg < 40`
+  - Used by all three JIT paths (formula, LLM, constraint enforcement)
 
 **Unit tests (`packages/training-engine/__tests__/warmup-calculator.test.ts`):**
 - [x] Working weight 112.5kg, `standard` → [45kg×5, 67.5kg×3, 85kg×2, 102.5kg×1]

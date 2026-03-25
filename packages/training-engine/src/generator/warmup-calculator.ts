@@ -76,6 +76,9 @@ export function resolveProtocol(protocol: WarmupProtocol): WarmupStep[] {
   return getPresetSteps(protocol.name);
 }
 
+/** Working weight below this threshold triggers minimal warmup (kg). */
+const LOW_WEIGHT_WARMUP_THRESHOLD_KG = 40;
+
 /**
  * Resolve the effective warmup protocol, applying the minimal override when
  * the user hasn't explicitly configured a protocol and either the session is
@@ -95,7 +98,7 @@ export function resolveEffectiveWarmupProtocol(opts: {
   const worstSoreness = getWorstSoreness(primaryMuscles, opts.sorenessRatings);
   const isRecoveryMode = getSorenessModifier(worstSoreness, opts.biologicalSex).recoveryMode;
 
-  if (isRecoveryMode || opts.workingWeightKg < 40) {
+  if (isRecoveryMode || opts.workingWeightKg < LOW_WEIGHT_WARMUP_THRESHOLD_KG) {
     return { type: 'preset', name: 'minimal' };
   }
   return opts.warmupConfig;

@@ -104,7 +104,7 @@ interface AuxiliaryWork {
   - Apply intensityMultiplier to all weight_kg values → round to nearest 2.5kg
   - Compute volumeModifier and intensityModifier
 - [x] **Step 8 — Warmup generation**
-  - If mainLiftSets non-empty and not skippedMainLift: generate warmup from `mainLiftSets[0].weight_kg`
+  - If mainLiftSets non-empty and not skippedMainLift: resolve effective warmup protocol via `resolveEffectiveWarmupProtocol()` (respects recovery mode, weight < 40kg override, and explicit user config), then generate warmup from `mainLiftSets[0].weight_kg`
 
 ### Supabase integration (called from app after soreness check-in)
 

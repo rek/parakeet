@@ -1,6 +1,7 @@
 import {
   generateWarmupSets,
   getPresetSteps,
+  resolveEffectiveWarmupProtocol,
   resolveProtocol,
 } from './warmup-calculator';
 
@@ -156,5 +157,78 @@ describe('displayWeight formatting', () => {
     sets.forEach((s) => {
       expect(s.displayWeight).toBe(`${s.weightKg} kg`);
     });
+  });
+});
+
+describe('resolveEffectiveWarmupProtocol', () => {
+  const extended: Parameters<typeof resolveEffectiveWarmupProtocol>[0]['warmupConfig'] =
+    { type: 'preset', name: 'extended' };
+  const base = {
+    warmupConfig: extended,
+    primaryLift: 'squat' as const,
+    sorenessRatings: {},
+    biologicalSex: undefined,
+  };
+
+  it('explicit config always passes through regardless of recovery or low weight', () => {
+    const result = resolveEffectiveWarmupProtocol({
+      ...base,
+      workingWeightKg: 30,
+      sorenessRatings: { quads: 10 },
+      warmupConfigExplicit: true,
+    });
+    expect(result).toEqual(extended);
+  });
+
+  it('recovery mode (soreness >= 9) without explicit config → minimal', () => {
+    const result = resolveEffectiveWarmupProtocol({
+      ...base,
+      workingWeightKg: 100,
+      sorenessRatings: { quads: 9 },
+    });
+    expect(result).toEqual({ type: 'preset', name: 'minimal' });
+  });
+
+  it('low weight (< 40kg) without explicit config → minimal', () => {
+    const result = resolveEffectiveWarmupProtocol({
+      ...base,
+      workingWeightKg: 35,
+    });
+    expect(result).toEqual({ type: 'preset', name: 'minimal' });
+  });
+
+  it('weight exactly 40kg does not trigger minimal', () => {
+    const result = resolveEffectiveWarmupProtocol({
+      ...base,
+      workingWeightKg: 40,
+    });
+    expect(result).toEqual(extended);
+  });
+
+  it('normal weight + no soreness → passes through config', () => {
+    const result = resolveEffectiveWarmupProtocol({
+      ...base,
+      workingWeightKg: 100,
+    });
+    expect(result).toEqual(extended);
+  });
+
+  it('female high soreness (8) is not recovery mode → passes through', () => {
+    const result = resolveEffectiveWarmupProtocol({
+      ...base,
+      workingWeightKg: 100,
+      sorenessRatings: { quads: 8 },
+      biologicalSex: 'female',
+    });
+    expect(result).toEqual(extended);
+  });
+
+  it('empty soreness ratings → passes through (worst = 1 = fresh)', () => {
+    const result = resolveEffectiveWarmupProtocol({
+      ...base,
+      workingWeightKg: 100,
+      sorenessRatings: {},
+    });
+    expect(result).toEqual(extended);
   });
 });
