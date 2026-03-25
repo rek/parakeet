@@ -19,13 +19,15 @@ Depends on:
 - [x] Added `isTopUp?: boolean` and `topUpReason?: string` to `AuxiliaryWork` interface
 - [x] Added Step 6b "Volume Top-Up" in the pipeline — runs after `buildAuxiliaryWork` (Step 6), before warmup (Step 8)
 - [x] New function `buildVolumeTopUp()` in same file
+- [x] Exercise scoring: `rankExercises()` replaces `qualifying[0]` — 7-factor weighted scorer in `exercise-scorer.ts`; `sorenessRatings`, `sleepQuality`, `energyLevel` threaded from `JITInput`; movement patterns tracked across iterations for diversity
+- [x] Catalog metadata: `MovementPattern`, `Equipment`, `ComplexityTier`, `isCompound` on `ExerciseCatalogEntry`; auto-deriving resolvers (`resolveMovementPattern`, `resolveEquipment`, `resolveIsCompound`, `resolveComplexityTier`); 31 entries with explicit overrides
 
 **`buildVolumeTopUp()` actual algorithm:**
 1. Build main lift muscle contributions map (from `getMusclesForLift`)
 2. For each muscle where `mev > 0`: `projected = weeklyVol + floor(mainLiftSetCount × contrib)`; pro-rate MEV by week progress: `effectiveMev = ceil(mev × sessionIndex / totalSessionsThisWeek)` (falls back to full `mev` when params are absent); `deficit = effectiveMev - projected`; collect where `deficit > 0`
 3. Sort by deficit descending, take top 2
 4. For each: filter `auxiliaryPool` for exercises where `getMusclesForExercise(ex)` has contribution ≥ 1.0 for that muscle, not `timed`, not already in `usedExercises` (starts from `activeAuxiliaries`, grows as top-ups are picked)
-5. If no match: skip. Otherwise pick first, add to `usedExercises`
+5. If no match: skip. Otherwise rank qualifying exercises via `rankExercises()` (exercise scorer) and pick highest-scored candidate. Scorer considers: muscle deficit coverage (0.30), soreness avoidance (0.25), movement pattern diversity (0.15), fatigue appropriateness (0.10), upcoming lift protection (0.10), main lift specificity (0.05), compound/isolation balance (0.05). Track selected movement patterns across iterations for diversity scoring.
 6. `setCount = max(1, min(3, deficit, remainingMrv))`; weight uses `getLiftForExercise(exercise)` to look up the correct 1RM from `allOneRmKg` (falls back to primary lift `oneRmKg` when absent or exercise has no catalog lift); reps from `AUX_REP_TARGETS`
 7. Append `AuxiliaryWork` with `isTopUp: true`, `topUpReason: "<muscle> below MEV"` (underscores replaced with spaces)
 8. Per top-up: push `"Added <exercise>: <topUpReason>"` into `rationale[]`

@@ -139,3 +139,52 @@ Per-exercise overrides in the catalog take precedence (e.g., Barbell Box Squat =
 - Ad-hoc exercises added mid-session are not part of the pool rotation
 
 **Source:** `packages/training-engine/src/auxiliary/auxiliary-rotator.ts`
+
+---
+
+## Exercise Metadata
+
+Each catalog entry carries optional metadata used by the exercise scorer for context-aware selection. Resolver functions auto-derive sensible defaults when fields are omitted — only override when the derivation would be wrong.
+
+### Fields
+
+| Field             | Type                                                         | Auto-derivation rule                                                                                     |
+|-------------------|--------------------------------------------------------------|----------------------------------------------------------------------------------------------------------|
+| `movementPattern` | `squat` · `hinge` · `push` · `pull` · `carry` · `core`     | `associatedLift`: squat→squat, bench→push, deadlift→hinge. Null: infer from primaryMuscles (quads→squat, hams/glutes/lower_back→hinge, upper_back/biceps→pull, chest/triceps/shoulders→push, core→core). |
+| `equipment`       | `barbell` · `dumbbell` · `kettlebell` · `machine` · `cable` · `bodyweight` · `none` | Name prefix (Dumbbell, Kettlebell, Cable), type (bodyweight, timed→none), default barbell.               |
+| `isCompound`      | `boolean`                                                    | `muscleContributions` with ≥2 entries at contribution ≥0.5, or `primaryMuscles.length ≥ 2`.             |
+| `complexityTier`  | `simple` · `moderate` · `complex`                            | Default `moderate`. Olympic lifts annotated `complex`. Machines/isolation annotated `simple`.             |
+
+### Exercises with explicit overrides
+
+Curls (`movementPattern: 'pull'`), rows/pulldowns (`movementPattern: 'pull'`), machines (`equipment: 'machine'`, `complexityTier: 'simple'`), olympic lifts (`complexityTier: 'complex'`).
+
+**Source:** `packages/training-engine/src/auxiliary/exercise-catalog.ts` — types, resolvers, and per-entry annotations
+
+---
+
+## Exercise Scoring (Volume Top-Up Selection)
+
+When volume top-up needs to select an exercise from the qualifying pool, a multi-signal scorer ranks candidates instead of picking the first match. The scorer produces a weighted sum of 7 factors, each in [0, 1].
+
+### Scoring Factors
+
+| Factor                        | Weight | What it measures                                                                  |
+|-------------------------------|--------|-----------------------------------------------------------------------------------|
+| Muscle deficit coverage       | 0.30   | Bonus for secondary muscles that also have volume deficits.                      |
+| Soreness avoidance            | 0.25   | Penalty for touching sore muscles, scaled by contribution × soreness level.      |
+| Movement pattern diversity    | 0.15   | 1.0 for novel patterns, 0.3 for patterns already selected this session.         |
+| Fatigue appropriateness       | 0.10   | Matches exercise complexity tier to readiness (sleep + energy).                  |
+| Upcoming lift protection      | 0.10   | Penalizes exercises that fatigue muscles needed for lifts later this week.       |
+| Main lift specificity         | 0.05   | Prefers exercises associated with today's primary lift.                          |
+| Compound/isolation balance    | 0.05   | If mostly compound already selected, prefer isolation, and vice versa.           |
+
+### Design rationale
+
+Deficit coverage and soreness avoidance dominate because the primary purpose of top-up is filling volume gaps safely. Movement diversity prevents redundant programming. The remaining factors are tiebreakers.
+
+### Context signals used
+
+`sorenessRatings`, `sleepQuality`, `energyLevel` (threaded from `JITInput`), `muscleDeficits`, `upcomingLifts`, `primaryLift`, `alreadySelectedPatterns`, `alreadySelectedExercises`, `biologicalSex`.
+
+**Source:** `packages/training-engine/src/auxiliary/exercise-scorer.ts`

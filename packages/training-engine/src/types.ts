@@ -101,6 +101,9 @@ export const MUSCLE_CATALOG_BY_ID = new Map(
 export const PUSH_MUSCLES = new Set<MuscleGroup>(
   MUSCLE_CATALOG.filter(m => m.category === 'push').map(m => m.id)
 );
+export const PULL_MUSCLES = new Set<MuscleGroup>(
+  MUSCLE_CATALOG.filter(m => m.category === 'pull').map(m => m.id)
+);
 
 export type VolumeStatus =
   | 'below_mev'

@@ -1,10 +1,18 @@
 import { Lift } from '@parakeet/shared-types';
 
-import { MuscleContribution, MuscleGroup } from '../types';
+import { MuscleContribution, MuscleGroup, PULL_MUSCLES, PUSH_MUSCLES } from '../types';
 
 export const LIFTS: readonly Lift[] = ['squat', 'bench', 'deadlift'] as const;
 
 export type ExerciseType = 'weighted' | 'bodyweight' | 'timed';
+
+// ---------------------------------------------------------------------------
+// Exercise metadata types (used by exercise scorer for smart selection)
+// ---------------------------------------------------------------------------
+
+export type MovementPattern = 'squat' | 'hinge' | 'push' | 'pull' | 'carry' | 'core';
+export type Equipment = 'barbell' | 'dumbbell' | 'kettlebell' | 'machine' | 'cable' | 'bodyweight' | 'none';
+export type ComplexityTier = 'simple' | 'moderate' | 'complex';
 
 export interface BodyweightPoolEntry {
   lift: Lift;
@@ -27,6 +35,14 @@ export interface ExerciseCatalogEntry {
   /** Bodyweight pool membership. Specifies which lift+sex JIT bodyweight pools include
    *  this exercise (used for no-equipment disruption fallback). */
   bodyweightPools?: BodyweightPoolEntry[];
+  /** Movement pattern classification for scoring diversity. Auto-derived from associatedLift/muscles if omitted. */
+  movementPattern?: MovementPattern;
+  /** Equipment required. Auto-derived from exercise name prefix if omitted. */
+  equipment?: Equipment;
+  /** Multi-joint movement. Auto-derived from primaryMuscles count if omitted. */
+  isCompound?: boolean;
+  /** CNS demand tier. Default: 'moderate'. */
+  complexityTier?: ComplexityTier;
 }
 
 /**
@@ -183,6 +199,8 @@ export const EXERCISE_CATALOG: ExerciseCatalogEntry[] = [
     // Machine — no stabilizer recruitment; 0.9 was unrealistically high
     weightPct: 0.5,
     repTarget: 12,
+    equipment: 'machine',
+    complexityTier: 'simple',
   },
   {
     name: 'Hack Squat',
@@ -196,6 +214,8 @@ export const EXERCISE_CATALOG: ExerciseCatalogEntry[] = [
     // Machine — no stabilizer recruitment; reduced from 0.7
     weightPct: 0.4,
     repTarget: 10,
+    equipment: 'machine',
+    complexityTier: 'simple',
   },
 
   {
@@ -210,6 +230,7 @@ export const EXERCISE_CATALOG: ExerciseCatalogEntry[] = [
     ],
     weightPct: 0.5,
     repTarget: 6,
+    complexityTier: 'complex',
   },
 
   // ── Bench auxiliaries ─────────────────────────────────────────────────────
@@ -270,6 +291,8 @@ export const EXERCISE_CATALOG: ExerciseCatalogEntry[] = [
     type: 'weighted',
     weightPct: 0.12,
     repTarget: 12,
+    isCompound: false,
+    complexityTier: 'simple',
   },
   {
     name: 'Floor Press',
@@ -344,6 +367,7 @@ export const EXERCISE_CATALOG: ExerciseCatalogEntry[] = [
     ],
     weightPct: 0.7,
     repTarget: 5,
+    complexityTier: 'complex',
   },
   {
     name: 'JM Press',
@@ -365,6 +389,8 @@ export const EXERCISE_CATALOG: ExerciseCatalogEntry[] = [
     muscleContributions: [{ muscle: 'biceps', contribution: 1.0 }],
     weightPct: 0.2,
     repTarget: 10,
+    movementPattern: 'pull',
+    complexityTier: 'simple',
   },
   {
     name: 'Dumbbell Curl',
@@ -374,6 +400,8 @@ export const EXERCISE_CATALOG: ExerciseCatalogEntry[] = [
     muscleContributions: [{ muscle: 'biceps', contribution: 1.0 }],
     weightPct: 0.15,
     repTarget: 12,
+    movementPattern: 'pull',
+    complexityTier: 'simple',
   },
   {
     name: 'Cable Curl',
@@ -383,6 +411,8 @@ export const EXERCISE_CATALOG: ExerciseCatalogEntry[] = [
     muscleContributions: [{ muscle: 'biceps', contribution: 1.0 }],
     weightPct: 0.15,
     repTarget: 12,
+    movementPattern: 'pull',
+    complexityTier: 'simple',
   },
   {
     name: 'EZ-Bar Curl',
@@ -392,6 +422,9 @@ export const EXERCISE_CATALOG: ExerciseCatalogEntry[] = [
     muscleContributions: [{ muscle: 'biceps', contribution: 1.0 }],
     weightPct: 0.2,
     repTarget: 10,
+    movementPattern: 'pull',
+    equipment: 'barbell',
+    complexityTier: 'simple',
   },
   {
     name: 'Decline Push-ups',
@@ -456,6 +489,7 @@ export const EXERCISE_CATALOG: ExerciseCatalogEntry[] = [
     ],
     weightPct: 0.5,
     repTarget: 3,
+    complexityTier: 'complex',
   },
   {
     name: 'Clean and Jerk',
@@ -469,6 +503,7 @@ export const EXERCISE_CATALOG: ExerciseCatalogEntry[] = [
     ],
     weightPct: 0.55,
     repTarget: 3,
+    complexityTier: 'complex',
   },
   {
     name: 'Power Clean',
@@ -481,6 +516,7 @@ export const EXERCISE_CATALOG: ExerciseCatalogEntry[] = [
     ],
     weightPct: 0.5,
     repTarget: 3,
+    complexityTier: 'complex',
   },
   {
     name: 'Lat Pulldown',
@@ -490,6 +526,10 @@ export const EXERCISE_CATALOG: ExerciseCatalogEntry[] = [
     // Prod data: users load ~28% of DL 1RM on cable machines (was 0.55 — 2x too high)
     weightPct: 0.28,
     repTarget: 10,
+    movementPattern: 'pull',
+    equipment: 'machine',
+    isCompound: true,
+    complexityTier: 'simple',
   },
   {
     name: 'Seated machine row',
@@ -499,6 +539,10 @@ export const EXERCISE_CATALOG: ExerciseCatalogEntry[] = [
     // Prod data: users load ~28% of DL 1RM on machines (was 0.55 — 2x too high)
     weightPct: 0.28,
     repTarget: 10,
+    movementPattern: 'pull',
+    equipment: 'machine',
+    isCompound: true,
+    complexityTier: 'simple',
   },
   {
     name: 'Rack Pull',
@@ -527,6 +571,8 @@ export const EXERCISE_CATALOG: ExerciseCatalogEntry[] = [
     type: 'weighted',
     weightPct: 0.35,
     repTarget: 8,
+    movementPattern: 'pull',
+    isCompound: true,
   },
   {
     name: 'Barbell Row',
@@ -535,6 +581,8 @@ export const EXERCISE_CATALOG: ExerciseCatalogEntry[] = [
     type: 'weighted',
     weightPct: 0.4,
     repTarget: 8,
+    movementPattern: 'pull',
+    isCompound: true,
   },
   {
     name: 'Romanian Dumbbell Deadlift',
@@ -572,6 +620,8 @@ export const EXERCISE_CATALOG: ExerciseCatalogEntry[] = [
     type: 'weighted',
     weightPct: 0.2,
     repTarget: 10,
+    movementPattern: 'pull',
+    complexityTier: 'simple',
   },
   {
     name: 'Sumo Deadlift',
@@ -659,6 +709,7 @@ export const EXERCISE_CATALOG: ExerciseCatalogEntry[] = [
     ],
     weightPct: 0.45,
     repTarget: 3,
+    complexityTier: 'complex',
   },
   {
     name: 'Dumbbell Snatch',
@@ -671,6 +722,7 @@ export const EXERCISE_CATALOG: ExerciseCatalogEntry[] = [
     ],
     weightPct: 0.21,
     repTarget: 5,
+    complexityTier: 'complex',
   },
   {
     name: 'Deadhang',
@@ -681,6 +733,8 @@ export const EXERCISE_CATALOG: ExerciseCatalogEntry[] = [
       { muscle: 'upper_back', contribution: 1.0 },
       { muscle: 'shoulders', contribution: 0.5 },
     ],
+    movementPattern: 'pull',
+    complexityTier: 'simple',
   },
 
   // ── General — no single-lift affinity ─────────────────────────────────────
@@ -708,6 +762,8 @@ export const EXERCISE_CATALOG: ExerciseCatalogEntry[] = [
     ],
     weightPct: 0.2,
     repTarget: 8,
+    equipment: 'bodyweight',
+    isCompound: true,
   },
   {
     name: 'Jump Squat',
@@ -753,6 +809,7 @@ export const EXERCISE_CATALOG: ExerciseCatalogEntry[] = [
       { lift: 'squat', sex: 'female' },
       { lift: 'deadlift', sex: 'female' },
     ],
+    complexityTier: 'simple',
   },
   {
     name: 'Glute Bridge',
@@ -760,6 +817,7 @@ export const EXERCISE_CATALOG: ExerciseCatalogEntry[] = [
     primaryMuscles: ['glutes'],
     type: 'bodyweight',
     bodyweightPools: [{ lift: 'squat', sex: 'female' }],
+    complexityTier: 'simple',
   },
   {
     name: 'Nordic Hamstring Curl',
@@ -767,6 +825,7 @@ export const EXERCISE_CATALOG: ExerciseCatalogEntry[] = [
     primaryMuscles: ['hamstrings'],
     type: 'bodyweight',
     bodyweightPools: [{ lift: 'deadlift', sex: 'male' }],
+    complexityTier: 'simple',
   },
   {
     name: 'Single-Leg RDL',
@@ -781,6 +840,7 @@ export const EXERCISE_CATALOG: ExerciseCatalogEntry[] = [
     primaryMuscles: ['hamstrings', 'lower_back'],
     type: 'bodyweight',
     bodyweightPools: [{ lift: 'deadlift', sex: 'male' }],
+    complexityTier: 'simple',
   },
   {
     name: 'Hyperextension',
@@ -794,6 +854,7 @@ export const EXERCISE_CATALOG: ExerciseCatalogEntry[] = [
     ],
     repTarget: 15,
     bodyweightPools: [{ lift: 'deadlift', sex: 'male' }],
+    complexityTier: 'simple',
   },
   {
     name: 'Single-Leg Glute Bridge',
@@ -801,6 +862,7 @@ export const EXERCISE_CATALOG: ExerciseCatalogEntry[] = [
     primaryMuscles: ['glutes'],
     type: 'bodyweight',
     bodyweightPools: [{ lift: 'deadlift', sex: 'female' }],
+    complexityTier: 'simple',
   },
   {
     name: 'Donkey Kick',
@@ -808,6 +870,7 @@ export const EXERCISE_CATALOG: ExerciseCatalogEntry[] = [
     primaryMuscles: ['glutes'],
     type: 'bodyweight',
     bodyweightPools: [{ lift: 'deadlift', sex: 'female' }],
+    complexityTier: 'simple',
   },
   {
     name: 'Glute Kickback',
@@ -815,12 +878,14 @@ export const EXERCISE_CATALOG: ExerciseCatalogEntry[] = [
     primaryMuscles: ['glutes'],
     type: 'bodyweight',
     bodyweightPools: [{ lift: 'deadlift', sex: 'female' }],
+    complexityTier: 'simple',
   },
   {
     name: 'Pull-ups',
     associatedLift: null,
     primaryMuscles: ['upper_back'],
     type: 'bodyweight',
+    isCompound: true,
   },
   {
     name: 'Chin-ups',
@@ -959,6 +1024,53 @@ export function getBodyweightPool(
     (e) =>
       e.bodyweightPools?.some((p) => p.lift === lift && p.sex === sex) ?? false
   ).map((e) => e.name);
+}
+
+// ---------------------------------------------------------------------------
+// Metadata resolvers — derive defaults from existing catalog data
+// ---------------------------------------------------------------------------
+
+// Re-use canonical sets from types.ts (avoid duplication)
+const PUSH_MUSCLE_IDS = PUSH_MUSCLES;
+const PULL_MUSCLE_IDS = PULL_MUSCLES;
+
+export function resolveEquipment(entry: ExerciseCatalogEntry): Equipment {
+  if (entry.equipment) return entry.equipment;
+  if (entry.type === 'bodyweight') return 'bodyweight';
+  if (entry.type === 'timed') return 'none';
+  if (entry.name.startsWith('Dumbbell')) return 'dumbbell';
+  if (entry.name.startsWith('Kettlebell')) return 'kettlebell';
+  if (entry.name.startsWith('Cable')) return 'cable';
+  return 'barbell';
+}
+
+export function resolveMovementPattern(entry: ExerciseCatalogEntry): MovementPattern {
+  if (entry.movementPattern) return entry.movementPattern;
+  if (entry.associatedLift === 'squat') return 'squat';
+  if (entry.associatedLift === 'bench') return 'push';
+  if (entry.associatedLift === 'deadlift') return 'hinge';
+  // General exercises: infer from primary muscles
+  const muscles = entry.primaryMuscles;
+  if (muscles.includes('core')) return 'core';
+  if (muscles.includes('quads')) return 'squat';
+  if (muscles.includes('hamstrings') || muscles.includes('lower_back') || (muscles.includes('glutes') && !muscles.includes('quads')))
+    return 'hinge';
+  if (muscles.some(m => PULL_MUSCLE_IDS.has(m))) return 'pull';
+  if (muscles.some(m => PUSH_MUSCLE_IDS.has(m))) return 'push';
+  return 'push';
+}
+
+export function resolveIsCompound(entry: ExerciseCatalogEntry): boolean {
+  if (entry.isCompound != null) return entry.isCompound;
+  if (entry.muscleContributions) {
+    return entry.muscleContributions.filter(m => m.contribution >= 0.5).length >= 2;
+  }
+  return entry.primaryMuscles.length >= 2;
+}
+
+export function resolveComplexityTier(entry: ExerciseCatalogEntry): ComplexityTier {
+  if (entry.complexityTier) return entry.complexityTier;
+  return 'moderate';
 }
 
 // ---------------------------------------------------------------------------
