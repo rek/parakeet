@@ -133,8 +133,22 @@ External research cited across the domain knowledge base. Prioritizes meta-analy
 **Selye 1950** — General Adaptation Syndrome (GAS). Foundational theory: stress -> adaptation -> supercompensation.
 - Used in: [periodization.md](periodization.md)
 
-**Cube Method (Brandon Lilly)** — Concurrent periodization: Heavy/Explosive/Rep rotation across primary lifts.
+**Cube Method (Brandon Lilly, 2013)** — Concurrent periodization: Heavy/Explosive/Rep rotation across primary lifts. Known limitation: 1x/week frequency per lift.
 - Used in: [periodization.md](periodization.md)
+- Detailed breakdown: https://physiqz.com/workout-routines/powerlifting-programs/cube-method-brandon-lillys-program-just-got-even-better/
+- Criticism (frequency): https://www.powerliftingtowin.com/the-cube-method/
+
+---
+
+## Strength-Specific Volume
+
+**Ralston et al. 2017** — "Weekly Training Frequency Effects on Strength Gain: A Meta-Analysis." *Sports Medicine*. **Meta-analysis**. High weekly sets (10+) significantly better than low (<=5) for multi-joint strength (ES=0.18, p=0.04). Recommends 5+ sets/exercise/week for trained lifters.
+- Used in: [periodization.md](periodization.md)
+- https://pmc.ncbi.nlm.nih.gov/articles/PMC5684266/
+
+**Androulakis-Korakakis et al. 2021** — "Minimum Effective Training Dose for Strength in Powerlifters." *Frontiers in Sports and Active Living*. **Bayesian analysis**. 3-6 working sets/week at 1-5 reps, RPE 7.5-9.5 produces meaningful gains. Back-off sets significantly more effective than single top sets (99.6% probability).
+- Used in: [periodization.md](periodization.md)
+- https://pmc.ncbi.nlm.nih.gov/articles/PMC8435792/
 
 ---
 

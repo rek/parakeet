@@ -4,6 +4,27 @@ Domain constants and logic for the Cube Method periodization scheme.
 
 ## Cube Method
 
+Concurrent periodization (Brandon Lilly, 2013). Each lift gets a different stimulus each week (Heavy/Explosive/Rep) rather than the entire program being in one phase. This allows simultaneous development of maximal strength, speed, and work capacity.
+
+### Known Limitation: Low Competition Lift Frequency
+
+Each lift is trained **once per week** in the standard Cube rotation. This means weekly working sets per competition lift are only 2-3 (one session's worth). Research suggests 5+ weekly sets per exercise for trained lifters (Ralston et al. 2017 meta-analysis) and at least 3-6 sets/week at RPE 7.5-9.5 for meaningful powerlifting strength gains (Androulakis-Korakakis et al. 2021). The Cube compensates with auxiliary work (6 sets/session from 2 exercises) contributing to the same muscle groups, but this is less specific than competition lift volume.
+
+Most modern powerlifting programs (Sheiko, GZCL, nSuns, Barbell Medicine) train each lift 2-3x/week. The Cube Method's 1x/week frequency is a known tradeoff: lower specificity but higher variation and recovery between heavy sessions.
+
+**Comparison to established programs:**
+
+| Program | Working sets/session (main lift) | Frequency/week | Weekly main lift volume |
+|---------|--------------------------------|----------------|----------------------|
+| Cube Method | 2-4 (varies by type) | 1x | 2-4 sets |
+| 5/3/1 | 3 + supplemental (5x10 BBB) | 1x | 3-8 sets |
+| Texas Method | 5 (volume) / 1 (intensity) | 2x | 6 sets |
+| Sheiko | 6-10+ (sub-maximal) | 2-3x | 12-30 sets |
+| GZCL | 3-5 (T1) + T2/T3 | 1-2x | 3-10 sets |
+| Conjugate/Westside | 1 (ME max) + 8-12x2-3 (DE) | 2x | 9-13 sets |
+
+Research basis: Ralston et al. 2017 meta-analysis — 5+ weekly sets significantly better than <=5 for multi-joint strength (ES=0.18). Androulakis-Korakakis et al. 2021 — back-off sets significantly more effective than single top sets (99.6% probability of meaningful gains). Pelland 2025 — per-session diminishing returns beyond ~2 direct sets for strength, but assumes adequate weekly frequency. See [references.md](references.md).
+
 ### Rotation
 
 3-week blocks with a fixed exercise-to-intensity-type rotation:
