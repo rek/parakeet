@@ -90,6 +90,10 @@ Reusable patterns discovered during implementation. Read on-demand when debuggin
 
 **Backwards-compatible scale expansion: normalise at the boundary** — when widening a scale (1-5 → 1-10), add a `normalise()` function that maps old values to new-scale equivalents (old 4 → new 8). All existing callers and tests pass unchanged. New UI code passes new-scale values directly. The normalisation function is the single point of truth for the mapping.
 
+**Automatic overrides must check for explicit user config first** — a `workingWeight < 40 → minimal warmup` heuristic silently discarded an explicit `empty_bar` choice for bench. When adding automatic overrides to any user-configurable value, always thread an `explicit` flag from the data layer (where DB row presence is known) and skip the override when the user has actively chosen a setting. The heuristic should only apply to defaults.
+
+**Cross-strategy behavior must live in shared helpers, not inline in one path** — the formula JIT path had warmup override logic (recovery mode, low weight) that the LLM and constraint-enforcement paths lacked entirely. Any behavior that should apply "regardless of JIT strategy" must be extracted into a shared pure function and called from all code paths. Pattern: when adding logic to the formula path, grep for the equivalent code in `llm-jit-generator.ts` and `jit-constraints.ts`.
+
 **Adaptive systems need both proactive and reactive mechanisms** — the JIT pipeline originally had 7 reduction mechanisms but zero proactive volume increase. Volume recovery (reactive, intra-session) isn't enough — the system also needs volume calibration (proactive, pre-session, based on accumulated evidence). When designing modifier systems, always ask: "can this signal increase the prescription, not just decrease it?"
 
 **Mirrored domain functions must share a consistency test** — when a new function (`computeVolumeBreakdown`) mirrors an existing one (`computeWeeklyVolume`) but with richer output, add an invariant test asserting their totals match for all inputs. This catches drift if either function's logic changes independently.
