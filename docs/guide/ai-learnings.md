@@ -88,6 +88,10 @@ Reusable patterns discovered during implementation. Read on-demand when debuggin
 
 **Lazy-generated data defeats DB queries for future state** — `fetchUpcomingSessionLifts` queried the DB for future sessions, but unending programs generate sessions lazily (only the current session exists). The query returned `[]`, so the upcoming lift protection was silently bypassed. Fix: derive future state from deterministic logic (the S→B→D rotation) instead of assuming the DB has it. Pattern: any feature that queries for "planned but not yet created" data must have a fallback for lazy-generation modes.
 
+**Backwards-compatible scale expansion: normalise at the boundary** — when widening a scale (1-5 → 1-10), add a `normalise()` function that maps old values to new-scale equivalents (old 4 → new 8). All existing callers and tests pass unchanged. New UI code passes new-scale values directly. The normalisation function is the single point of truth for the mapping.
+
+**Adaptive systems need both proactive and reactive mechanisms** — the JIT pipeline originally had 7 reduction mechanisms but zero proactive volume increase. Volume recovery (reactive, intra-session) isn't enough — the system also needs volume calibration (proactive, pre-session, based on accumulated evidence). When designing modifier systems, always ask: "can this signal increase the prescription, not just decrease it?"
+
 **Mirrored domain functions must share a consistency test** — when a new function (`computeVolumeBreakdown`) mirrors an existing one (`computeWeeklyVolume`) but with richer output, add an invariant test asserting their totals match for all inputs. This catches drift if either function's logic changes independently.
 
 ## Testing

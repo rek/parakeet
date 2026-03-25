@@ -1,6 +1,6 @@
 # Spec: Adaptive Volume Calibration
 
-**Status**: Planned
+**Status**: Implemented
 **Domain**: Training Engine | Mobile App
 
 ## What This Covers
@@ -101,7 +101,7 @@ Design doc: [adaptive-volume.md](../../design/adaptive-volume.md)
 
 - [x] Fetch recent capacity assessments from AsyncStorage
 - [x] Populate `capacityHistory` in JITInput
-- [ ] Populate `weeklyMismatchDirection` from body review data (Phase 3)
+- [x] Populate `weeklyMismatchDirection` from body review data via `getLatestMismatchDirection()`
 
 ### Tests
 
@@ -118,28 +118,28 @@ Design doc: [adaptive-volume.md](../../design/adaptive-volume.md)
 
 **File: `packages/training-engine/src/generator/jit-session-generator.ts`**
 
-- [ ] When `modifierCalibrations` is present with sufficient confidence:
-  - Apply learned bias corrections to volume calibration base
+- [x] When `modifierCalibrations` is present with sufficient confidence:
+  - Apply learned bias corrections to volume calibration base (totalAdjustment >= 0.08 → +1)
   - Record applied calibrations in trace
 
 ### Weekly review → next-week baseline
 
 **File: `apps/parakeet/src/modules/body-review/`**
 
-- [ ] When weekly review shows "recovering well" mismatches:
-  - Store `volumeCalibrationBaseline` per muscle in AsyncStorage or DB
-  - Next session's Step 0 reads this as starting bias
+- [x] When weekly review shows "recovering well" mismatches:
+  - `getLatestMismatchDirection()` reads mismatches for primary muscles
+  - Passed to JIT as `weeklyMismatchDirection`, consumed by Step 0
 
 ### Progressive volume within blocks
 
 **File: `packages/training-engine/src/generator/steps/applyVolumeCalibration.ts`**
 
-- [ ] Track volume calibration over the current block (3 weeks)
-- [ ] If RPE signals remain stable/low across weeks: allow progressive increase
+- [x] Track volume calibration over the current block (3 weeks)
+- [x] If RPE signals remain stable/low across weeks: allow progressive increase
   - Week 1: standard calibration
   - Week 2: +1 if week 1 calibration was positive and RPE stayed low
   - Week 3: +1 more if pattern continues
-- [ ] Reset on deload week
+- [x] Reset on deload week
 
 ### Tests
 

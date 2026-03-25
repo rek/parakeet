@@ -8,7 +8,7 @@ For details on any item, see the linked spec file.
 
 ## Training Engine (`packages/training-engine`)
 
-1145 tests passing (Vitest). All specs implemented. Bug fix: `generateAuxiliaryAssignments` now generates assignments for all blocks (not just 1–3); `blockNumber` widened to `number` throughout; `getIntensityTypeForWeek` now cycles correctly for block 4+.
+1169 tests passing (Vitest). All specs implemented. Bug fix: `generateAuxiliaryAssignments` now generates assignments for all blocks (not just 1–3); `blockNumber` widened to `number` throughout; `getIntensityTypeForWeek` now cycles correctly for block 4+.
 
 - [x] engine-001: 1RM formulas — Epley, grams↔kg helpers
 - [x] engine-002: Cube method scheduler — blocks.ts
@@ -52,6 +52,8 @@ For details on any item, see the linked spec file.
 - [x] engine-bug-006: Compound aux post-main-lift fatigue — `POST_MAIN_FATIGUE_FACTOR = 0.85` in `processAuxExercise.ts`; applies 15% weight discount when aux exercise shares muscles (≥0.5 contribution) with primary lift; uses `getMusclesForLift()`/`getMusclesForExercise()` overlap check; stacks with soreness discount; 8 test expectations updated
 - [x] engine-bug-007: `failed` flag in actual_sets JSONB — `failed: z.boolean().optional()` added to `ActualSetSchema` in shared-types; `failed?: boolean` on `ActualSet` and `AuxiliaryActualSet` in sessionStore; set to `true` in `handleMainLiftFailed` and `handleAuxLiftFailed` in `useSetCompletionFlow.ts`; no migration needed (JSONB flexible)
 - [x] engine-042: Working 1RM from actual session weights (GH#98) — `computeWeightDeviation`, `computeWorkingOneRm` in `analysis/weight-deviation.ts`; `RecentSessionSummary` extended with optional weight fields; `fetchRecentSessionLogsForLift` fetches `actual_sets` + `planned_sets`; JIT orchestrator computes working 1RM (median Epley from 3+ qualifying sessions, capped 110%/floored 85% of stored, rounded 2.5kg) and substitutes it for stored `oneRmKg`; `WeightDerivation` trace extended with `storedOneRmKg`/`workingOneRmKg`/`oneRmSource`; LLM JIT gets weight context for free; no new DB migration; 24 tests
+
+- [x] engine-043: Adaptive volume calibration (GH#117) — JIT Step 0 `applyVolumeCalibration` adjusts base set count -2 to +3 from 7 signals: RPE trend, readiness, soreness, capacity assessment, weekly mismatch, modifier calibration, progressive volume within blocks. Phase 1: soreness 1-10, readiness 1-5, post-session capacity assessment. Phase 2: volume calibration step wired into JIT pipeline. Phase 3: modifier calibration learning, weekly review → JIT, progressive volume. 20 tests. See [spec](04-engine/engine-043-adaptive-volume-calibration.md) and [design](../design/adaptive-volume.md).
 
 ---
 
