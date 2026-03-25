@@ -86,6 +86,8 @@ Reusable patterns discovered during implementation. Read on-demand when debuggin
 
 **Weekly thresholds need pro-rating when checked per-session** — a weekly target compared against volume-to-date on session 1 of 3 will always show a deficit. Pro-rate: `ceil(target * sessionIndex / totalSessions)`.
 
+**Lazy-generated data defeats DB queries for future state** — `fetchUpcomingSessionLifts` queried the DB for future sessions, but unending programs generate sessions lazily (only the current session exists). The query returned `[]`, so the upcoming lift protection was silently bypassed. Fix: derive future state from deterministic logic (the S→B→D rotation) instead of assuming the DB has it. Pattern: any feature that queries for "planned but not yet created" data must have a fallback for lazy-generation modes.
+
 **Mirrored domain functions must share a consistency test** — when a new function (`computeVolumeBreakdown`) mirrors an existing one (`computeWeeklyVolume`) but with richer output, add an invariant test asserting their totals match for all inputs. This catches drift if either function's logic changes independently.
 
 ## Testing

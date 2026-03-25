@@ -8,7 +8,7 @@ For details on any item, see the linked spec file.
 
 ## Training Engine (`packages/training-engine`)
 
-1124 tests passing (Vitest). All specs implemented. Bug fix: `generateAuxiliaryAssignments` now generates assignments for all blocks (not just 1–3); `blockNumber` widened to `number` throughout; `getIntensityTypeForWeek` now cycles correctly for block 4+.
+1145 tests passing (Vitest). All specs implemented. Bug fix: `generateAuxiliaryAssignments` now generates assignments for all blocks (not just 1–3); `blockNumber` widened to `number` throughout; `getIntensityTypeForWeek` now cycles correctly for block 4+.
 
 - [x] engine-001: 1RM formulas — Epley, grams↔kg helpers
 - [x] engine-002: Cube method scheduler — blocks.ts
@@ -36,7 +36,7 @@ For details on any item, see the linked spec file.
 - [x] engine-024: Developer suggestions — `cycle-review.ts` extended; `developer_suggestions` table
 - [x] engine-025: Multi-cycle context — `PreviousCycleSummary`, `getPreviousCycleSummaries`
 - [x] engine-026: Unending session generator — `nextUnendingSession()` pure function; lift rotation, block cycling, deload cadence
-- [x] engine-027: JIT volume augmentation — `buildVolumeTopUp()` in `jit-session-generator.ts`; `JITInput.auxiliaryPool`/`allOneRmKg`; `AuxiliaryWork.isTopUp`/`.topUpReason`; app caller merges all 3 lift pools + passes all 3 lift 1RMs; cross-lift top-up uses correct 1RM via `getLiftForExercise()`; UI shows "Volume top-up" divider + reason subtitle; MEV pro-rated by week progress; 24 tests
+- [x] engine-027: JIT volume augmentation — `buildVolumeTopUp()` in `jit-session-generator.ts`; `JITInput.auxiliaryPool`/`allOneRmKg`; `AuxiliaryWork.isTopUp`/`.topUpReason`; app caller merges all 3 lift pools + passes all 3 lift 1RMs; cross-lift top-up uses correct 1RM via `getLiftForExercise()`; UI shows "Volume top-up" divider + reason subtitle; MEV pro-rated by week progress; context-aware exercise scoring via `rankExercises()` in `exercise-scorer.ts` (7-factor weighted scorer: deficit coverage, soreness avoidance, movement pattern diversity, fatigue appropriateness, upcoming lift protection, specificity, compound/isolation balance); catalog metadata (`MovementPattern`, `Equipment`, `ComplexityTier`, `isCompound`) with auto-deriving resolvers; 24 + 21 tests
 - [x] engine-028: Readiness adjuster — `getReadinessModifier(sleep, energy)` in `adjustments/readiness-adjuster.ts`; applied at JIT Step 2b; 9 tests
 - [x] engine-029: Fatigue predictor — `computePredictedFatigue`, `detectMismatches` in `volume/fatigue-predictor.ts`; mismatch threshold ≥2 levels; sorted by delta; 9 tests
 - [x] engine-030: Cycle phase JIT adjuster — `getCyclePhaseModifier(phase)` in `adjustments/cycle-phase-adjuster.ts`; applied at JIT Step 2c; McNulty 2020 phase lookup; 6 tests
@@ -241,6 +241,8 @@ Module/platform/shared architecture is the canonical app structure. Legacy top-l
 - [x] Session sort fix (GH#112) — `fetchCompletedSessions` sorted by `completed_at` instead of `planned_date`
 - [x] Intra-session volume recovery (GH#92) — `evaluateVolumeRecovery()` in `training-engine/src/adjustments/volume-recovery.ts`; when JIT reduces sets (soreness/readiness/cycle-phase/disruption) but actual RPE is ≥1.5 below target, `VolumeRecoveryBanner` offers to add removed sets back; `checkVolumeRecovery()` fires after each main lift RPE entry; `sessionStore.acceptRecovery()` appends recovered sets with `is_recovered: true`; recovery blocked during soreness-5 recovery mode; 14 tests
 - [x] Ad-hoc timed aux PostRestOverlay (GH#119) — `handleAuxSetUpdate` exercise type lookup falls back to `getExerciseType()` from training-engine when exercise is not in JIT `auxiliaryWork`; fixes confirmation overlay, RPE picker, and rest timer appearing for ad-hoc timed exercises (e.g. Plank)
+
+- [x] Unending upcoming lift protection (GH#118) — `jit.ts` now derives `upcomingLifts` from the deterministic S→B→D rotation for unending programs when `fetchUpcomingSessionLifts` returns empty (future sessions don't exist in DB for lazy-generated programs); prevents bench-associated aux exercises from being prescribed the day before bench day
 
 ---
 
