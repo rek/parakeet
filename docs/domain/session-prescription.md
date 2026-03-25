@@ -6,21 +6,22 @@ Related docs: [periodization.md](periodization.md) for block loading tables, [vo
 
 ---
 
-## JIT Pipeline (9 Steps)
+## JIT Pipeline (10 Steps)
 
-Steps execute in order. Each step may modify `sets`, `intensity`, or `reps` fields on the prescription.
+Steps execute in order. Each step may modify `sets`, `intensity`, or `reps` fields on the prescription. Step 0 is the only step that can **increase** volume; steps 1-9 can only reduce or leave unchanged.
 
-| Step | Name                       | What it does                                                                                       |
-|------|----------------------------|----------------------------------------------------------------------------------------------------|
-| 1    | `initPipeline`             | Sets base sets, reps, %1RM, and RPE from formula config (block × intensity type).                 |
-| 2    | `applyRpeAdjustment`       | Looks at last 2 sessions' avg RPE deviation. ≥ 1.0 over → multiply intensity × 0.975. ≤ −1.0 under → multiply intensity × 1.025. |
-| 3    | `applyReadinessAdjustment` | Applies sleep and energy modifiers. See [adjustments.md](adjustments.md).                         |
-| 4    | `applyCyclePhaseAdjustment`| Applies menstrual phase modifiers. See [adjustments.md](adjustments.md).                          |
-| 5    | `applySorenessAdjustment`  | Uses worst soreness score across primary muscles for the prescribed lift. See [adjustments.md](adjustments.md). |
-| 6    | `applyMrvCap`              | If any primary muscle is at or over MRV, skips or caps sets. See MRV Cap section below.           |
-| 7    | `applyDisruptionAdjustment`| Major disruption → skip. Moderate → reduce sets. Minor → log only.                               |
-| 8    | `buildFinalMainSets`       | Applies all multipliers, rounds weight to nearest 2.5 kg.                                         |
-| 9    | `processAuxExercise`       | Selects 2 aux exercises and runs volume top-up logic.                                              |
+| Step | Name                        | What it does                                                                                       |
+|------|-----------------------------|----------------------------------------------------------------------------------------------------|
+| 0    | `applyVolumeCalibration`    | Adjusts base set count up or down (-2 to +3) based on RPE trends, capacity signals, and modifier learning. See [adaptive-volume.md](../design/adaptive-volume.md). **(Planned)** |
+| 1    | `initPipeline`              | Sets base sets, reps, %1RM, and RPE from formula config (block × intensity type).                 |
+| 2    | `applyRpeAdjustment`        | Looks at last 2 sessions' avg RPE deviation. ≥ 1.0 over → multiply intensity × 0.975. ≤ −1.0 under → multiply intensity × 1.025. |
+| 3    | `applyReadinessAdjustment`  | Applies sleep and energy modifiers. See [adjustments.md](adjustments.md).                         |
+| 4    | `applyCyclePhaseAdjustment` | Applies menstrual phase modifiers. See [adjustments.md](adjustments.md).                          |
+| 5    | `applySorenessAdjustment`   | Uses worst soreness score across primary muscles for the prescribed lift. See [adjustments.md](adjustments.md). |
+| 6    | `applyMrvCap`               | If any primary muscle is at or over MRV, skips or caps sets. See MRV Cap section below.           |
+| 7    | `applyDisruptionAdjustment` | Major disruption → skip. Moderate → reduce sets. Minor → log only.                               |
+| 8    | `buildFinalMainSets`        | Applies all multipliers, rounds weight to nearest 2.5 kg.                                         |
+| 9    | `processAuxExercise`        | Selects 2 aux exercises and runs volume top-up logic.                                              |
 
 **Source:** `packages/training-engine/src/generator/jit-session-generator.ts`, `packages/training-engine/src/generator/steps/`
 
@@ -147,4 +148,8 @@ Push muscles (chest, triceps, shoulders, biceps) that have zero contribution fro
 | RPE target              | 7.5                                                      |
 | Total aux cap           | `MAX_AUX_EXERCISES = 5` (includes regular aux + top-up) |
 
-**Source:** `packages/training-engine/src/generator/jit-session-generator.ts`, `packages/training-engine/src/generator/steps/`
+### Exercise Ranking
+
+After filtering to eligible exercises, candidates are ranked by a multi-signal scorer (not first-match). The scorer uses soreness ratings, readiness (sleep + energy), movement pattern diversity, upcoming lift protection, main lift specificity, and compound/isolation balance. See [exercise-catalog.md](exercise-catalog.md#exercise-scoring-volume-top-up-selection) for factor weights and details.
+
+**Source:** `packages/training-engine/src/generator/jit-session-generator.ts`, `packages/training-engine/src/auxiliary/exercise-scorer.ts`

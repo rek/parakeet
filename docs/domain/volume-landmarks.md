@@ -1,6 +1,10 @@
 # Volume Landmarks
 
-MEV (Minimum Effective Volume) and MRV (Maximum Recoverable Volume) defaults used for auxiliary selection and MRV capping.
+MEV (Minimum Effective Volume) and MRV (Maximum Recoverable Volume) are **guardrails**, not targets. The program template provides a starting volume; the adaptive volume calibration system adjusts it within the MEV-MRV range based on individual response. See [adaptive-volume design](../design/adaptive-volume.md).
+
+- **MEV** = floor: below this, the muscle isn't getting enough stimulus. Volume top-up fires when a muscle is below MEV.
+- **MRV** = ceiling: above this, fatigue accumulates faster than recovery. The MRV cap prevents volume calibration from pushing too high.
+- **Between MEV and MRV** = the adaptive range. The system learns where each lifter belongs within this range.
 
 See [muscle-mapping.md](muscle-mapping.md) for how sets are attributed to muscles, and [session-prescription.md](session-prescription.md) for how these values gate the JIT pipeline.
 

@@ -140,6 +140,22 @@ Female thresholds are more conservative because RPE fluctuates across the menstr
 
 ---
 
+## Volume Increase Triggers (Planned)
+
+The system currently only reduces volume. The adaptive volume calibration step (JIT Step 0, planned) adds the ability to increase volume based on capacity signals. See [adaptive-volume design](../design/adaptive-volume.md).
+
+| Signal | Condition | Effect | Confidence needed |
+|--------|-----------|--------|-------------------|
+| RPE trend | Avg gap >= 1.0 below target over 3+ sessions | +1 set | Medium |
+| RPE trend | Avg gap >= 1.5 below target over 3+ sessions AND low soreness + high readiness | +2 sets | Medium |
+| Post-session capacity | Consistently "had more in me" (3/4) or "way too easy" (4/4) | +1 set | Low (direct signal) |
+| Weekly mismatch | "Recovering well" for primary muscles | +1 set next week | Medium |
+| Modifier calibration | System consistently over-reduces for this athlete | Reduce future reductions | High |
+
+**Guardrails:** Volume calibration cannot push total sets above MRV. Soreness >= 7/10 or major disruption overrides any calibration increase. Minimum confidence thresholds prevent premature adaptation for new users.
+
+---
+
 ## Compounding Rules
 
 When multiple adjustments are active simultaneously:
@@ -152,6 +168,7 @@ When multiple adjustments are active simultaneously:
 | RPE + soreness <= 3 | Both apply independently |
 | Readiness | Always applies (independent) |
 | Cycle phase | Always applies (independent) |
-| MRV cap | Always last -- hard constraint after all modifiers |
+| Volume calibration (Step 0) | Runs first. Reductions apply on top of calibrated base. |
+| MRV cap | Always last -- hard constraint after all modifiers, including calibration |
 
 **Source:** `packages/training-engine/src/generator/jit-session-generator.ts`

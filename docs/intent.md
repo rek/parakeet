@@ -18,8 +18,9 @@ The system must find touch points to synchronize with the real-world state of th
 
 Training apps fail when they lose touch with how the lifter actually feels. Parakeet gates every workout on current body state. Touch points that capture reality:
 
-- **Pre-session soreness check-in** — muscle-specific 1–5 ratings, fed into JIT volume/intensity modifiers
-- **Session RPE logging** — actual difficulty vs prescribed, drives performance adjustment suggestions
+- **Pre-session check-in** — muscle-specific soreness ratings, sleep quality, energy level — fed into JIT volume/intensity modifiers. Granularity matters: finer scales enable finer adaptation.
+- **Session RPE logging** — actual difficulty vs prescribed, drives both intra-session volume recovery and cross-session volume calibration
+- **Post-session capacity assessment** — "could you have done more?" — direct signal for volume calibration
 - **Disruption reporting** — injury, illness, travel, fatigue, menstrual symptoms — modulates upcoming sessions
 - **Cycle phase tracking** — optional period start logging estimates current menstrual phase for context
 
@@ -39,7 +40,13 @@ External LLMs improve over time. The system routes complex multi-variable reason
 
 Training weights are never pre-calculated. The JIT generator runs at workout time using ~43 current-state inputs (soreness, disruptions, cycle phase, recent performance, volume history). The app never shows stale plans — every session reflects how the lifter feels right now.
 
-### 5. Engine is pure domain logic
+### 5. Adaptive, not prescriptive
+
+Volume is not fixed by the program template. A program says "2 heavy sets" as a starting point, but the system adjusts that number — both up and down — based on how the individual lifter responds. If RPE is consistently low, soreness is minimal, and the lifter reports capacity after sessions, the system prescribes more work. If fatigue accumulates, it prescribes less.
+
+The adaptation loop: check-in → JIT prescription → workout → RPE and capacity evaluation → next-session adjustment. Over time, the system learns each lifter's effective volume range and prescribes within it. A beginner who thrives on 2 sets gets 2 sets. An advanced lifter who needs 5 gets 5. The same lifter under stress gets fewer. The system responds to the human, not the template.
+
+### 6. Engine is pure domain logic
 
 The training engine package (`packages/training-engine/`) has no React, no Supabase, no side effects. It is testable, portable, and could power a different frontend. All state persistence flows through the app layer.
 
