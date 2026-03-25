@@ -3,7 +3,7 @@ import { roundToNearest } from '../formulas/weight-rounding';
 import { getMusclesForLift } from '../volume/muscle-mapper';
 import type { JITInput, JITOutput } from './jit-session-generator';
 import { calculateSets } from './set-calculator';
-import { generateWarmupSets } from './warmup-calculator';
+import { generateWarmupSets, resolveEffectiveWarmupProtocol } from './warmup-calculator';
 
 export function enforceHardConstraints(
   output: JITOutput,
@@ -72,10 +72,15 @@ export function enforceHardConstraints(
   // Warmup — always formula-generated from working weight
   let { warmupSets } = output;
   if (mainLiftSets.length > 0 && !skippedMainLift) {
-    warmupSets = generateWarmupSets(
-      mainLiftSets[0].weight_kg,
-      input.warmupConfig
-    );
+    const effectiveProtocol = resolveEffectiveWarmupProtocol({
+      workingWeightKg: mainLiftSets[0].weight_kg,
+      warmupConfig: input.warmupConfig,
+      warmupConfigExplicit: input.warmupConfigExplicit,
+      primaryLift: input.primaryLift,
+      sorenessRatings: input.sorenessRatings,
+      biologicalSex: input.biologicalSex,
+    });
+    warmupSets = generateWarmupSets(mainLiftSets[0].weight_kg, effectiveProtocol);
   } else {
     warmupSets = [];
   }

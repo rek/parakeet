@@ -1,3 +1,11 @@
+import type { Lift } from '@parakeet/shared-types';
+import {
+  getPrimaryMusclesForSession,
+  getSorenessModifier,
+  getWorstSoreness,
+  type SorenessLevel,
+} from '../adjustments/soreness-adjuster';
+import type { MuscleGroup } from '../types';
 import { roundToNearest } from '../formulas/weight-rounding';
 
 export type WarmupPresetName =
@@ -66,6 +74,31 @@ export function getPresetSteps(name: WarmupPresetName): WarmupStep[] {
 export function resolveProtocol(protocol: WarmupProtocol): WarmupStep[] {
   if (protocol.type === 'custom') return protocol.steps;
   return getPresetSteps(protocol.name);
+}
+
+/**
+ * Resolve the effective warmup protocol, applying the minimal override when
+ * the user hasn't explicitly configured a protocol and either the session is
+ * in recovery mode or the working weight is very light.
+ */
+export function resolveEffectiveWarmupProtocol(opts: {
+  workingWeightKg: number;
+  warmupConfig: WarmupProtocol;
+  warmupConfigExplicit?: boolean;
+  primaryLift: Lift;
+  sorenessRatings: Partial<Record<MuscleGroup, SorenessLevel>>;
+  biologicalSex?: 'female' | 'male';
+}): WarmupProtocol {
+  if (opts.warmupConfigExplicit) return opts.warmupConfig;
+
+  const primaryMuscles = getPrimaryMusclesForSession(opts.primaryLift);
+  const worstSoreness = getWorstSoreness(primaryMuscles, opts.sorenessRatings);
+  const isRecoveryMode = getSorenessModifier(worstSoreness, opts.biologicalSex).recoveryMode;
+
+  if (isRecoveryMode || opts.workingWeightKg < 40) {
+    return { type: 'preset', name: 'minimal' };
+  }
+  return opts.warmupConfig;
 }
 
 export function generateWarmupSets(

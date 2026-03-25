@@ -17,7 +17,7 @@ import type {
 } from './jit-session-generator';
 import type { JITGeneratorStrategy } from './jit-strategy';
 import { calculateSets } from './set-calculator';
-import { generateWarmupSets } from './warmup-calculator';
+import { generateWarmupSets, resolveEffectiveWarmupProtocol } from './warmup-calculator';
 
 // helper: derive formula-based rest for LLM path (engine-021 will override later)
 function formulaRestForMain(input: JITInput): number {
@@ -151,7 +151,17 @@ export function applyAdjustment(
 
   const warmupSets =
     mainLiftSets.length > 0 && !skippedMainLift
-      ? generateWarmupSets(mainLiftSets[0].weight_kg, input.warmupConfig)
+      ? generateWarmupSets(
+          mainLiftSets[0].weight_kg,
+          resolveEffectiveWarmupProtocol({
+            workingWeightKg: mainLiftSets[0].weight_kg,
+            warmupConfig: input.warmupConfig,
+            warmupConfigExplicit: input.warmupConfigExplicit,
+            primaryLift: input.primaryLift,
+            sorenessRatings: input.sorenessRatings,
+            biologicalSex: input.biologicalSex,
+          })
+        )
       : [];
 
   const volumeModifier =

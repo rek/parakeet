@@ -33,6 +33,7 @@ import {
 import { PrescriptionTraceBuilder } from './prescription-trace';
 import {
   generateWarmupSets,
+  resolveEffectiveWarmupProtocol,
   WarmupProtocol,
   WarmupSet,
 } from './warmup-calculator';
@@ -380,10 +381,14 @@ export function generateJITSession(input: JITInput, traceBuilder?: PrescriptionT
   let warmupSets: WarmupSet[] = [];
   if (mainLiftSets.length > 0 && !ctx.skippedMainLift) {
     const workingWeight = mainLiftSets[0].weight_kg;
-    const effectiveProtocol =
-      !input.warmupConfigExplicit && (ctx.inRecoveryMode || workingWeight < 40)
-        ? { type: 'preset' as const, name: 'minimal' as const }
-        : warmupConfig;
+    const effectiveProtocol = resolveEffectiveWarmupProtocol({
+      workingWeightKg: workingWeight,
+      warmupConfig,
+      warmupConfigExplicit: input.warmupConfigExplicit,
+      primaryLift: input.primaryLift,
+      sorenessRatings: input.sorenessRatings,
+      biologicalSex: input.biologicalSex,
+    });
     warmupSets = generateWarmupSets(
       workingWeight,
       effectiveProtocol,
