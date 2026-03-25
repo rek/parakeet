@@ -29,7 +29,7 @@ export interface SetTrace {
 }
 
 export interface VolumeTrace {
-  source: 'rpe_history' | 'readiness' | 'cycle_phase' | 'soreness' | 'disruption' | 'mrv_cap';
+  source: 'volume_calibration' | 'rpe_history' | 'readiness' | 'cycle_phase' | 'soreness' | 'disruption' | 'mrv_cap';
   setsBefore: number;
   setsAfter: number;
   reason: string;

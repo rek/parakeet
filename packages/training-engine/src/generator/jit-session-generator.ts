@@ -13,11 +13,15 @@ import {
   SorenessModifier,
 } from '../adjustments/soreness-adjuster';
 import {
+  CATALOG_BY_NAME,
   computeAuxWeight,
   getBodyweightPool,
   getLiftForExercise,
   getRepTarget,
+  resolveMovementPattern,
+  MovementPattern,
 } from '../auxiliary/exercise-catalog';
+import { rankExercises } from '../auxiliary/exercise-scorer';
 import { ExerciseType, getExerciseType } from '../auxiliary/exercise-types';
 import { CyclePhase } from '../formulas/cycle-phase';
 import { roundToNearest } from '../formulas/weight-rounding';
@@ -34,6 +38,7 @@ import {
 } from './warmup-calculator';
 
 import { initPipeline } from './steps/initPipeline';
+import { applyVolumeCalibration } from './steps/applyVolumeCalibration';
 import { applyRpeAdjustment } from './steps/applyRpeAdjustment';
 import { applyReadinessAdjustment } from './steps/applyReadinessAdjustment';
 import { applyCyclePhaseAdjustment } from './steps/applyCyclePhaseAdjustment';
@@ -108,6 +113,11 @@ export interface JITInput {
   // storedOneRmKg is the original from lifter_maxes.
   storedOneRmKg?: number;
   oneRmSource?: 'stored' | 'working';
+  // Adaptive volume calibration (engine-043 Phase 2).
+  // Recent post-session capacity assessments: 1=barely survived, 2=about right, 3=had more, 4=way too easy.
+  capacityHistory?: number[];
+  // Weekly body review mismatch direction for primary muscles: 'recovering_well' | 'accumulating_fatigue' | null.
+  weeklyMismatchDirection?: 'recovering_well' | 'accumulating_fatigue' | null;
 }
 
 export interface AuxiliaryWork {
@@ -273,7 +283,10 @@ export function generateJITSession(input: JITInput, traceBuilder?: PrescriptionT
   // Step 1 — Initialize pipeline context (base sets, primary muscles, soreness)
   const ctx = initPipeline(input, traceBuilder);
 
-  // Steps 2–5 — Modifier pipeline (each step mutates ctx)
+  // Step 0 — Adaptive volume calibration (can increase or decrease base set count)
+  applyVolumeCalibration(ctx, input, traceBuilder);
+
+  // Steps 2–7 — Modifier pipeline (each step mutates ctx, can only reduce)
   applyRpeAdjustment(ctx, input, traceBuilder);
   applyReadinessAdjustment(ctx, input, traceBuilder);
   applyCyclePhaseAdjustment(ctx, input, traceBuilder);
@@ -319,7 +332,10 @@ export function generateJITSession(input: JITInput, traceBuilder?: PrescriptionT
       input.sessionIndex,
       input.totalSessionsThisWeek,
       input.allOneRmKg,
-      input.upcomingLifts
+      input.upcomingLifts,
+      input.sorenessRatings,
+      input.sleepQuality,
+      input.energyLevel,
     );
     for (const tu of topUps) {
       const activeCount = auxiliaryWork.filter((a) => !a.skipped).length;
@@ -547,7 +563,10 @@ function buildVolumeTopUp(
   sessionIndex?: number,
   totalSessionsThisWeek?: number,
   allOneRmKg?: Partial<Record<Lift, number>>,
-  upcomingLifts?: Lift[]
+  upcomingLifts?: Lift[],
+  sorenessRatings?: Partial<Record<MuscleGroup, SorenessLevel>>,
+  sleepQuality?: ReadinessLevel,
+  energyLevel?: ReadinessLevel,
 ): AuxiliaryWork[] {
   // Build main lift muscle contributions to project post-session volume
   const liftMuscles = getMusclesForLift(primaryLift);
@@ -584,6 +603,10 @@ function buildVolumeTopUp(
 
   const result: AuxiliaryWork[] = [];
   const usedExercises = new Set<string>(activeAuxiliaries);
+  const patternsUsed: MovementPattern[] = [];
+  const muscleDeficits: Partial<Record<MuscleGroup, number>> = Object.fromEntries(
+    candidates.map(c => [c.muscle, c.deficit])
+  );
 
   for (const { muscle, deficit } of topCandidates) {
     // Find a qualifying exercise from the pool, excluding exercises associated
@@ -604,8 +627,24 @@ function buildVolumeTopUp(
     });
     if (qualifying.length === 0) continue;
 
-    const exercise = qualifying[0];
+    // Rank qualifying exercises by context-aware scoring
+    const ranked = rankExercises(qualifying, {
+      targetMuscle: muscle,
+      muscleDeficits,
+      sorenessRatings: sorenessRatings ?? {},
+      sleepQuality,
+      energyLevel,
+      primaryLift,
+      mainLiftSetCount,
+      upcomingLifts,
+      alreadySelectedPatterns: patternsUsed,
+      alreadySelectedExercises: [...usedExercises],
+      biologicalSex,
+    });
+    const exercise = ranked[0].exercise;
     usedExercises.add(exercise);
+    const entry = CATALOG_BY_NAME.get(exercise);
+    if (entry) patternsUsed.push(resolveMovementPattern(entry));
 
     const exerciseType = getExerciseType(exercise);
     const remainingMrv =

@@ -62,6 +62,7 @@ export function formatWeightDerivation({
 // ── Volume changes ────────────────────────────────────────────────────────────
 
 const VOLUME_SUBTITLES: Record<VolumeTrace['source'], string> = {
+  volume_calibration: 'Adapted based on RPE trends, capacity, and readiness',
   rpe_history: 'Adjusted based on recent session difficulty ratings',
   readiness: 'Adjusted for sleep quality and energy level',
   cycle_phase: 'Adjusted for menstrual cycle phase',
@@ -71,6 +72,7 @@ const VOLUME_SUBTITLES: Record<VolumeTrace['source'], string> = {
 };
 
 const VOLUME_SOURCE_LABELS: Record<VolumeTrace['source'], string> = {
+  volume_calibration: 'Volume calibration',
   rpe_history: 'RPE history',
   readiness: 'Readiness',
   cycle_phase: 'Cycle phase',
