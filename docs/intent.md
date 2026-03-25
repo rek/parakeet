@@ -44,7 +44,9 @@ Training weights are never pre-calculated. The JIT generator runs at workout tim
 
 Volume is not fixed by the program template. A program says "2 heavy sets" as a starting point, but the system adjusts that number — both up and down — based on how the individual lifter responds. If RPE is consistently low, soreness is minimal, and the lifter reports capacity after sessions, the system prescribes more work. If fatigue accumulates, it prescribes less.
 
-The adaptation loop: check-in → JIT prescription → workout → RPE and capacity evaluation → next-session adjustment. Over time, the system learns each lifter's effective volume range and prescribes within it. A beginner who thrives on 2 sets gets 2 sets. An advanced lifter who needs 5 gets 5. The same lifter under stress gets fewer. The system responds to the human, not the template.
+The adaptation loop: check-in → JIT prescription → workout → RPE and capacity evaluation → next-session adjustment. Adaptations are always one step behind — the system observes session N and adjusts session N+1. It never reacts to a single data point; it requires consistent signal across 2-3 sessions before changing volume. This prevents chasing noise from one bad night's sleep or one unexpectedly easy set.
+
+Over time, the system learns each lifter's effective volume range and prescribes within it. A beginner who thrives on 2 sets gets 2 sets. An advanced lifter who needs 5 gets 5. The same lifter under stress gets fewer. The system responds to the human, not the template.
 
 ### 6. Engine is pure domain logic
 
