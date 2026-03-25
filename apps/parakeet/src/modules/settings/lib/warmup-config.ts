@@ -27,7 +27,7 @@ export async function getWarmupConfig(
   userId: string,
   lift: Lift,
   biologicalSex?: 'female' | 'male'
-): Promise<WarmupProtocol> {
+): Promise<{ protocol: WarmupProtocol; explicit: boolean }> {
   const { data, error } = await typedSupabase
     .from('warmup_configs')
     .select('protocol, custom_steps')
@@ -38,10 +38,10 @@ export async function getWarmupConfig(
   if (error) throw error;
   const defaultPreset: WarmupPresetName =
     biologicalSex === 'female' ? 'standard_female' : 'standard';
-  if (!data) return { type: 'preset', name: defaultPreset };
+  if (!data) return { protocol: { type: 'preset', name: defaultPreset }, explicit: false };
   if (data.protocol === 'custom')
-    return { type: 'custom', steps: parseCustomSteps(data.custom_steps) };
-  return { type: 'preset', name: data.protocol as WarmupPresetName };
+    return { protocol: { type: 'custom', steps: parseCustomSteps(data.custom_steps) }, explicit: true };
+  return { protocol: { type: 'preset', name: data.protocol as WarmupPresetName }, explicit: true };
 }
 
 export async function getAllWarmupConfigs(

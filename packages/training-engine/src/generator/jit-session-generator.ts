@@ -77,6 +77,8 @@ export interface JITInput {
   recentLogs: RecentSessionSummary[];
   activeDisruptions: TrainingDisruption[];
   warmupConfig: WarmupProtocol;
+  /** True when the user explicitly chose this warmup protocol (not a default). */
+  warmupConfigExplicit?: boolean;
   // Recency signal: days since the last completed session for this lift.
   // null = no history (first session ever). > 7 days triggers conservative modifier.
   daysSinceLastSession?: number | null;
@@ -379,7 +381,7 @@ export function generateJITSession(input: JITInput, traceBuilder?: PrescriptionT
   if (mainLiftSets.length > 0 && !ctx.skippedMainLift) {
     const workingWeight = mainLiftSets[0].weight_kg;
     const effectiveProtocol =
-      ctx.inRecoveryMode || workingWeight < 40
+      !input.warmupConfigExplicit && (ctx.inRecoveryMode || workingWeight < 40)
         ? { type: 'preset' as const, name: 'minimal' as const }
         : warmupConfig;
     warmupSets = generateWarmupSets(
