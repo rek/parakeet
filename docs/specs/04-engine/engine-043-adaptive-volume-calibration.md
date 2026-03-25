@@ -17,42 +17,42 @@ Design doc: [adaptive-volume.md](../../design/adaptive-volume.md)
 
 **File: `packages/training-engine/src/adjustments/soreness-adjuster.ts`**
 
-- [ ] Expand `SORENESS_TABLE` to map 10 levels instead of 5
+- [x] Expand `SORENESS_TABLE` to map 10 levels instead of 5
   - 1-2: no change (fresh)
   - 3-4: no change (mild)
   - 5-6: -1 set (moderate)
   - 7-8: -2 sets (male) / -1 set (female), intensity reduction (high)
   - 9-10: recovery mode (severe)
-- [ ] Backwards-compatible: if input is 1-5, multiply by 2 for legacy callers
+- [x] Backwards-compatible: if input is 1-5, multiply by 2 for legacy callers
 
 **File: `apps/parakeet/src/app/(tabs)/session/soreness.tsx`**
 
-- [ ] Update soreness input UI from 5 buttons to a slider or 10-segment control
+- [x] Update soreness input UI from 5 buttons to 10 compact pills (30px)
 - [ ] Descriptive labels at key points: 1="Fresh", 3="Slight", 5="Moderate", 7="Sore", 9="Very sore", 10="Can't train"
 
 ### Expand sleep/energy to 1-5
 
 **File: `packages/training-engine/src/adjustments/readiness-adjuster.ts`**
 
-- [ ] Expand lookup table for 5-point sleep × 5-point energy combinations
+- [x] Expand lookup table for 5-point sleep × 5-point energy combinations
   - 4-5 sleep/energy: enable volume boost (new — currently only neutral or reduce)
   - 1-2: reduce (existing behavior with finer thresholds)
   - 3: neutral
 
 **File: `apps/parakeet/src/app/(tabs)/session/soreness.tsx`**
 
-- [ ] Update sleep/energy pills from 3 to 5 options
+- [x] Update sleep/energy pills from 3 to 5 options
 
 ### Add post-session capacity assessment
 
 **File: `apps/parakeet/src/app/(tabs)/session/complete.tsx`**
 
-- [ ] Add capacity question after session completion: "How do you feel?"
+- [x] Add capacity question after session completion: "How do you feel?"
   - 1 = Barely survived
   - 2 = About right
   - 3 = Had more in me
   - 4 = Way too easy
-- [ ] Store in `session_logs` (new JSONB field or column)
+- [x] Store in AsyncStorage keyed by session ID (migration to DB column deferred)
 
 **File: `packages/training-engine/src/types.ts`**
 

@@ -10,16 +10,16 @@ The system uses signals at four time scales: pre-session, in-session, post-sessi
 
 Collected on the check-in screen before each workout.
 
-| Signal        | Current Scale | Target Scale | Values                           | Used In         |
-|---------------|---------------|--------------|----------------------------------|-----------------|
-| Soreness      | 1-5           | 1-10         | Per muscle group (9 muscles)     | JIT Steps 0, 5  |
-| Sleep quality | 1-3           | 1-5          | terrible → great                 | JIT Steps 0, 3  |
-| Energy level  | 1-3           | 1-5          | terrible → great                 | JIT Steps 0, 3  |
-| Cycle phase   | auto          | auto         | Calculated from last period start | JIT Step 4     |
+| Signal        | Scale | Values                           | Used In         |
+|---------------|-------|----------------------------------|-----------------|
+| Soreness      | 1-10  | Per muscle group (9 muscles). Legacy 1-5 auto-doubled. | JIT Steps 0, 5  |
+| Sleep quality | 1-5   | Terrible/Poor/OK/Good/Great. Legacy 1-3 mapped (1→1, 2→3, 3→5). | JIT Steps 0, 3  |
+| Energy level  | 1-5   | Drained/Low/OK/Good/High. Legacy 1-3 mapped (1→1, 2→3, 3→5). | JIT Steps 0, 3  |
+| Cycle phase   | auto  | Calculated from last period start | JIT Step 4     |
 
 Soreness is checked for the session's primary lift muscles only. Sleep and energy are optional — `undefined` = normal.
 
-Expanded scales (planned) enable asymmetric responses: high readiness can trigger volume boost in Step 0 (volume calibration), not just neutral. Current scales only distinguish "bad" from "normal" — expanded scales also distinguish "good" from "great."
+Expanded scales enable asymmetric responses: high readiness (4-5) can trigger volume boost in Step 0 (volume calibration), not just neutral. Low soreness (1-4 on 10-point scale) signals capacity for more work.
 
 **Source:** `apps/parakeet/src/app/(tabs)/session/soreness.tsx`
 

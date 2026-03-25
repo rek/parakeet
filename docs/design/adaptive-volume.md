@@ -1,6 +1,6 @@
 # Adaptive Volume Prescription
 
-**Status**: Phase 1 planned
+**Status**: Phase 1 implemented, Phase 2-3 planned
 
 ## Problem
 
