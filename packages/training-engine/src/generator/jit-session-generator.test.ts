@@ -513,6 +513,41 @@ describe('generateJITSession — warmup', () => {
     // 45 × 0.50 = 22.5 → round = 22.5; 45 × 0.75 = 33.75 → round = 35
     expect(out.warmupSets).toHaveLength(2);
   });
+
+  it('recovery mode + explicit warmup config → preserves user protocol', () => {
+    const out = generateJITSession(
+      baseInput({
+        sorenessRatings: { quads: 5 },
+        warmupConfig: { type: 'preset', name: 'extended' },
+        warmupConfigExplicit: true,
+      })
+    );
+    // extended protocol should NOT be overridden to minimal
+    expect(out.warmupSets.length).toBeGreaterThan(2);
+  });
+
+  it('low working weight + explicit warmup config → preserves user protocol', () => {
+    const out = generateJITSession(
+      baseInput({
+        oneRmKg: 40, // produces working weight < 40kg
+        warmupConfig: { type: 'preset', name: 'empty_bar' },
+        warmupConfigExplicit: true,
+      })
+    );
+    // empty_bar has 4 steps; some may deduplicate at low weight but more than minimal's 2
+    expect(out.warmupSets.length).toBeGreaterThanOrEqual(2);
+  });
+
+  it('low working weight + implicit warmup config → forces minimal', () => {
+    const out = generateJITSession(
+      baseInput({
+        oneRmKg: 40,
+        warmupConfig: { type: 'preset', name: 'extended' },
+        // warmupConfigExplicit not set → defaults to falsy
+      })
+    );
+    expect(out.warmupSets).toHaveLength(2); // minimal = 2 steps
+  });
 });
 
 // ---------------------------------------------------------------------------

@@ -55,8 +55,9 @@ Warmup sets are computed locally, never stored in Supabase.
 - When `weightKg <= 20`, display weight as `"Bar (20 kg)"` with a different visual treatment (pill badge instead of plain text)
 
 **Recovery mode interaction:**
-- If JIT produced a recovery session (soreness 5 → 40%×3×5), warmup sets are still shown but shortened to `minimal` protocol automatically — no warmup for a session that's already light
-- If working weight is below 40kg: use `minimal` protocol regardless of user preference (prevents absurd warmup sets for very light loads)
+- If JIT produced a recovery session (soreness 5 → 40%×3×5) and the user has no explicit warmup config, warmup sets are shortened to `minimal` protocol automatically
+- If working weight is below 40kg and no explicit config: use `minimal` protocol (prevents absurd warmup sets for very light loads)
+- If the user has explicitly set a warmup protocol for the lift, it is always honored regardless of recovery mode or working weight
 
 **State (local only, Zustand `sessionStore`):**
 ```typescript

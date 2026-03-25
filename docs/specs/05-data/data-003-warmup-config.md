@@ -28,7 +28,7 @@ CREATE POLICY "users_own_warmup_config" ON warmup_configs
 ```
 
 **`apps/parakeet/lib/warmup-config.ts`:**
-- [x] `getWarmupConfig(userId: string, lift: Lift, biologicalSex?): Promise<WarmupProtocol>` — fetch protocol for a lift, falling back to `standard_female` (female) or `standard` (male/unset) if no row
+- [x] `getWarmupConfig(userId: string, lift: Lift, biologicalSex?): Promise<{ protocol: WarmupProtocol; explicit: boolean }>` — fetch protocol for a lift, falling back to `standard_female` (female) or `standard` (male/unset) if no row. `explicit` is `true` when a user-configured row exists.
 - [x] `getAllWarmupConfigs(userId: string, biologicalSex?): Promise<Record<Lift, WarmupProtocol>>` — fetch all 3 lifts in one call, applying sex-appropriate defaults where rows are missing
 - [x] `updateWarmupConfig(userId: string, lift: Lift, protocol: WarmupProtocol): Promise<void>` — upsert protocol for a lift
 - [x] `resetWarmupConfig(userId: string, lift: Lift): Promise<void>` — delete override row, reverting to standard default

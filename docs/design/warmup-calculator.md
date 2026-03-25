@@ -28,9 +28,11 @@ See [domain/session-prescription.md](../domain/session-prescription.md#warmup-pr
 
 All weights are rounded to the nearest 2.5kg with a minimum of 20kg (the empty bar). If two consecutive steps would produce the same rounded weight, the duplicate step is automatically skipped.
 
-**Automatic protocol switching:** The system overrides the user's protocol with Minimal in two situations:
+**Automatic protocol switching:** When the user has **not** explicitly configured a warmup protocol for the lift, the system overrides the default with Minimal in two situations:
 - The session is classified as a recovery session
 - The working weight is below 40kg (a full ramp-up isn't meaningful at very light loads)
+
+If the user has explicitly chosen a protocol (e.g. `empty_bar` for bench), it is always honored regardless of working weight or recovery mode.
 
 ## User Experience
 
