@@ -121,6 +121,32 @@ function buildStyles(colors: ColorScheme) {
     rpePillTextActive: {
       color: colors.textInverse,
     },
+    capacityRow: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: 8,
+      marginBottom: 32,
+    },
+    capacityPill: {
+      paddingHorizontal: 14,
+      paddingVertical: 10,
+      borderRadius: 10,
+      backgroundColor: colors.bgMuted,
+      borderWidth: 1,
+      borderColor: colors.border,
+    },
+    capacityPillActive: {
+      backgroundColor: colors.primary,
+      borderColor: colors.primary,
+    },
+    capacityPillText: {
+      fontSize: 13,
+      fontWeight: '600',
+      color: colors.textSecondary,
+    },
+    capacityPillTextActive: {
+      color: colors.textInverse,
+    },
     notesInput: {
       borderWidth: 1,
       borderColor: colors.border,
@@ -223,6 +249,7 @@ export default function CompleteScreen() {
   } = useSessionStore();
 
   const [notes, setNotes] = useState('');
+  const [capacityAssessment, setCapacityAssessment] = useState<1 | 2 | 3 | 4 | null>(null);
   const [saving, setSaving] = useState(false);
   const [pendingSync, setPendingSync] = useState(false);
 
@@ -312,6 +339,14 @@ export default function CompleteScreen() {
       stampCyclePhaseOnSession(user.id, sessionId).catch((err) =>
         captureException(err)
       );
+
+      // Store capacity assessment for volume calibration (Phase 2)
+      if (capacityAssessment !== null) {
+        AsyncStorage.setItem(
+          `capacity_assessment:${sessionId}`,
+          String(capacityAssessment)
+        ).catch(captureException);
+      }
 
       // Data is committed — show the saved state regardless of what follows
       setSaved(true);
@@ -446,6 +481,39 @@ export default function CompleteScreen() {
                       ]}
                     >
                       {level}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+
+            {/* Capacity assessment */}
+            <Text style={styles.sectionLabel}>Could you have done more?</Text>
+            <View style={styles.capacityRow}>
+              {([
+                [1, 'Barely survived'],
+                [2, 'About right'],
+                [3, 'Had more in me'],
+                [4, 'Way too easy'],
+              ] as const).map(([level, label]) => {
+                const isActive = capacityAssessment === level;
+                return (
+                  <TouchableOpacity
+                    key={level}
+                    style={[
+                      styles.capacityPill,
+                      isActive && styles.capacityPillActive,
+                    ]}
+                    onPress={() => setCapacityAssessment(level)}
+                    activeOpacity={0.7}
+                  >
+                    <Text
+                      style={[
+                        styles.capacityPillText,
+                        isActive && styles.capacityPillTextActive,
+                      ]}
+                    >
+                      {label}
                     </Text>
                   </TouchableOpacity>
                 );
