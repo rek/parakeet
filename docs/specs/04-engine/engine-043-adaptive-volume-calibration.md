@@ -71,7 +71,7 @@ Design doc: [adaptive-volume.md](../../design/adaptive-volume.md)
 
 **File: `packages/training-engine/src/generator/steps/applyVolumeCalibration.ts`** (new)
 
-- [ ] `applyVolumeCalibration({ ctx, input })` — adjusts `ctx.plannedCount` by -2 to +3 before other steps run
+- [x] `applyVolumeCalibration({ ctx, input })` — adjusts `ctx.plannedCount` by -2 to +3 before other steps run
   - Consumes: `recentLogs` (RPE trends), `sorenessRatings`, `sleepQuality`, `energyLevel`, `capacityHistory`, `modifierCalibrations`
   - Computes RPE trend: avg(actual - target) over last 3-5 sessions for this lift
   - Computes readiness score: combined sleep + energy signal
@@ -89,18 +89,19 @@ Design doc: [adaptive-volume.md](../../design/adaptive-volume.md)
 | RPE avg gap >= 1.0 above target | -1 |
 | Cap: MRV constraint after calibration | clamp to remaining MRV capacity |
 
-- [ ] Modifiers are additive but capped: max +3, min -2
-- [ ] Record calibration decision in prescription trace
+- [x] Modifiers are additive but capped: max +3, min -2
+- [x] Record calibration decision in prescription trace
 
 **File: `packages/training-engine/src/generator/jit-session-generator.ts`**
 
-- [ ] Insert `applyVolumeCalibration` as Step 0, before `initPipeline`
-- [ ] Extend `JITInput` with `capacityHistory`, `weeklyMismatchDirection`
+- [x] Insert `applyVolumeCalibration` as Step 0, after `initPipeline`
+- [x] Extend `JITInput` with `capacityHistory`, `weeklyMismatchDirection`
 
 **File: `apps/parakeet/src/modules/jit/lib/jit.ts`**
 
-- [ ] Fetch recent capacity assessments and weekly mismatch data
-- [ ] Populate new `JITInput` fields
+- [x] Fetch recent capacity assessments from AsyncStorage
+- [x] Populate `capacityHistory` in JITInput
+- [ ] Populate `weeklyMismatchDirection` from body review data (Phase 3)
 
 ### Tests
 
