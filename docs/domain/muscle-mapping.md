@@ -48,21 +48,34 @@ EMG source: Martins-Costa et al. 2020 (deadlift systematic review, 20 studies). 
 
 ## RPE-to-Effective-Sets Curve
 
-Only sets with sufficient proximity to failure count toward weekly volume.
+Only sets with sufficient proximity to failure count toward weekly volume. The curve uses piecewise linear interpolation between anchor points — half-point RPEs are valued proportionally, not floored to the bracket below.
 
-| RPE       | RIR | Our Multiplier | Research basis |
-|-----------|-----|----------------|----------------|
-| < 6       | 5+  | 0.0            | Sub-threshold for meaningful stimulus. Refalo 2023: sets far from failure produce minimal effect. |
-| 6         | 4   | 0.15           | Boundary of effective range. Minimal contribution — mainly technical practice. |
-| 7         | 3   | 0.65           | Within effective zone. Research: ~80-90% of failure-level stimulus at 3 RIR. |
-| 8         | 2   | 0.85           | High-stimulus zone. Very close to a full set per Refalo 2024 meta-regression. |
-| 9-10      | 0-1 | 1.0            | Full hard set. Consensus. |
-| undefined | --  | 1.0            | Conservative default — assume hard. |
+### Anchor Points
+
+| RPE       | RIR | Multiplier | Research basis |
+|-----------|-----|------------|----------------|
+| < 6       | 5+  | 0.0        | Sub-threshold for meaningful stimulus. Refalo 2023: sets far from failure produce minimal effect. |
+| 6         | 4   | 0.15       | Boundary of effective range. Minimal contribution — mainly technical practice. |
+| 6.5       | 3.5 | 0.30       | Conservative — still far from failure but beginning to accumulate meaningful stimulus. |
+| 7         | 3   | 0.65       | Within effective zone. Research: ~80-90% of failure-level stimulus at 3 RIR. |
+| 8         | 2   | 0.85       | High-stimulus zone. Very close to a full set per Refalo 2024 meta-regression. |
+| 9-10      | 0-1 | 1.0        | Full hard set. Consensus. |
+| undefined | --  | 1.0        | Conservative default — assume hard. |
+
+### Interpolated Examples
+
+| RPE  | Multiplier |
+|------|------------|
+| 6.25 | 0.225      |
+| 6.75 | 0.475      |
+| 7.5  | 0.75       |
+| 8.5  | 0.925      |
+
+Values between anchor points are linearly interpolated. This eliminates the step-function cliff that previously existed (e.g., RPE 6.9 → 0.15, RPE 7.0 → 0.65 was a 4.3x jump).
 
 Research basis: Refalo et al. 2023 meta-analysis (15 studies): training to failure vs near-failure showed trivial ES = 0.12 (not significant). Robinson/Refalo 2024 meta-regression: hypertrophy increases closer to failure but relationship is nonlinear with diminishing returns. For strength specifically, confidence intervals for RIR slopes contained zero — negligible relationship between proximity to failure and strength gains.
 
-**Strength implication:** For powerlifting, RPE 7-8 work is likely more valuable than the 0.5/0.75 multipliers suggest, since strength gains are relatively insensitive to proximity to failure. The conservative curve undervalues moderate-effort sets that are common in periodized powerlifting programs.
-
+**Strength implication:** For powerlifting, RPE 7-8 work is more valuable than a steep cliff at RPE 7.0 suggests, since strength gains are relatively insensitive to proximity to failure. The interpolated curve better reflects the continuous nature of RPE and the nonlinear stimulus relationship.
 
 **Source:** `packages/training-engine/src/volume/rpe-scaler.ts`
 

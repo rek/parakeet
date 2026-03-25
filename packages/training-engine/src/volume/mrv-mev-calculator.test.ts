@@ -140,19 +140,35 @@ describe('computeWeeklyVolume', () => {
 });
 
 describe('rpeSetMultiplier', () => {
-  // These test the exact chosen curve values — update when the curve is retuned
+  // Anchor points — these are exact values at defined anchor RPEs
   it('undefined → 1.0 (conservative)', () =>
     expect(rpeSetMultiplier(undefined)).toBe(1.0));
   it('5 → 0.0 (not a hard set)', () => expect(rpeSetMultiplier(5)).toBe(0.0));
   it('6 → 0.15', () => expect(rpeSetMultiplier(6)).toBe(0.15));
+  it('6.5 → 0.30', () => expect(rpeSetMultiplier(6.5)).toBe(0.30));
   it('7 → 0.65', () => expect(rpeSetMultiplier(7)).toBe(0.65));
   it('8 → 0.85', () => expect(rpeSetMultiplier(8)).toBe(0.85));
   it('9 → 1.0', () => expect(rpeSetMultiplier(9)).toBe(1.0));
   it('10 → 1.0', () => expect(rpeSetMultiplier(10)).toBe(1.0));
 
+  // Interpolated half-point values
+  it('7.5 → 0.75', () => expect(rpeSetMultiplier(7.5)).toBe(0.75));
+  it('8.5 → 0.925', () => expect(rpeSetMultiplier(8.5)).toBeCloseTo(0.925));
+
+  // Quarter-point interpolation
+  it('6.25 → 0.225 (between 6.0 and 6.5)', () =>
+    expect(rpeSetMultiplier(6.25)).toBeCloseTo(0.225));
+  it('6.75 → 0.475 (between 6.5 and 7.0)', () =>
+    expect(rpeSetMultiplier(6.75)).toBeCloseTo(0.475));
+
+  // Boundary: just below 6.0
+  it('5.9 → 0.0', () => expect(rpeSetMultiplier(5.9)).toBe(0.0));
+  it('9.5 → 1.0', () => expect(rpeSetMultiplier(9.5)).toBe(1.0));
+
   // Invariants that hold regardless of specific curve values
-  it('monotonically non-decreasing: RPE 6 ≤ 7 ≤ 8 ≤ 9 ≤ 10', () => {
-    const values = [6, 7, 8, 9, 10].map(rpeSetMultiplier);
+  it('monotonically non-decreasing across full range', () => {
+    const rpes = [5, 6, 6.25, 6.5, 6.75, 7, 7.5, 8, 8.5, 9, 9.5, 10];
+    const values = rpes.map(rpeSetMultiplier);
     for (let i = 1; i < values.length; i++) {
       expect(values[i]).toBeGreaterThanOrEqual(values[i - 1]);
     }
