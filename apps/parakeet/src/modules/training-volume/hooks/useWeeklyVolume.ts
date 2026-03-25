@@ -4,9 +4,11 @@ import { getCurrentWeekLogs } from '@modules/session/application/session.service
 import {
   classifyVolumeStatus,
   computeRemainingCapacity,
+  computeVolumeBreakdown,
   computeWeeklyVolume,
   getMusclesForLift,
 } from '@parakeet/training-engine';
+import { qk } from '@platform/query';
 import { useQuery } from '@tanstack/react-query';
 
 import { getMrvMevConfig } from '../lib/volume-config';
@@ -20,7 +22,7 @@ function rollingWindowStart(): string {
 export function useWeeklyVolume() {
   const { user } = useAuth();
   return useQuery({
-    queryKey: ['volume', 'weekly', user?.id, rollingWindowStart()],
+    queryKey: qk.volume.weekly(user?.id, rollingWindowStart()),
     queryFn: async () => {
       const [logs, profile] = await Promise.all([
         getCurrentWeekLogs(user!.id),
@@ -28,9 +30,11 @@ export function useWeeklyVolume() {
       ]);
       const config = await getMrvMevConfig(user!.id, profile?.biological_sex);
       const weekly = computeWeeklyVolume(logs, getMusclesForLift);
+      const breakdown = computeVolumeBreakdown({ sessionLogs: logs, muscleMapper: getMusclesForLift });
       const status = classifyVolumeStatus(weekly, config);
       const remaining = computeRemainingCapacity(weekly, config);
-      return { weekly, status, remaining, config };
+      const biologicalSex = profile?.biological_sex ?? null;
+      return { weekly, status, remaining, config, breakdown, biologicalSex };
     },
     enabled: !!user?.id,
     staleTime: 60 * 1000,

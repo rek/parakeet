@@ -1,6 +1,12 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import type { DimensionValue } from 'react-native';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import {
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 
 import {
   getVolumeStatusColor,
@@ -9,6 +15,7 @@ import {
   volumeFillPct,
 } from '@modules/training-volume';
 import type { MuscleGroup, VolumeStatus } from '@parakeet/training-engine';
+import { classifyConfigSource } from '@parakeet/training-engine';
 import {
   MUSCLE_GROUPS_ORDER,
   MUSCLE_LABELS_FULL,
@@ -22,12 +29,19 @@ import { useTheme } from '../theme/ThemeContext';
 
 import { ScreenTitle } from '../components/ui/ScreenTitle';
 
+type Breakdown = Awaited<ReturnType<typeof useWeeklyVolume>['data']>;
+type MuscleBreakdown = NonNullable<Breakdown>['breakdown'][MuscleGroup];
+
 interface MuscleBarProps {
   muscle: MuscleGroup;
   sets: number;
   mrv: number;
   mev: number;
   status: VolumeStatus;
+  expanded: boolean;
+  breakdown: MuscleBreakdown;
+  biologicalSex: 'male' | 'female' | null;
+  onToggle: () => void;
   colors: ColorScheme;
   styles: ReturnType<typeof buildStyles>;
 }
@@ -38,6 +52,10 @@ function MuscleBar({
   mrv,
   mev,
   status,
+  expanded,
+  breakdown,
+  biologicalSex,
+  onToggle,
   colors,
   styles,
 }: MuscleBarProps) {
@@ -46,9 +64,26 @@ function MuscleBar({
   const color = getVolumeStatusColor(status, colors);
   const isOver = isVolumeOverMrv(status);
 
+  const configSource = classifyConfigSource({
+    config: { [muscle]: { mev, mrv } } as Parameters<typeof classifyConfigSource>[0]['config'],
+    muscle,
+    biologicalSex,
+  });
+
   return (
     <View style={styles.barRow}>
-      <Text style={styles.barLabel}>{MUSCLE_LABELS_FULL[muscle]}</Text>
+      <TouchableOpacity
+        onPress={onToggle}
+        activeOpacity={0.7}
+        accessible
+        accessibilityRole="button"
+        accessibilityLabel={`${MUSCLE_LABELS_FULL[muscle]} volume details`}
+      >
+        <View style={styles.barLabelRow}>
+          <Text style={styles.barLabel}>{MUSCLE_LABELS_FULL[muscle]}</Text>
+          <Text style={styles.chevron}>{expanded ? '\u25BE' : '\u25B8'}</Text>
+        </View>
+      </TouchableOpacity>
       <View style={styles.barContainer}>
         <View style={styles.barTrack}>
           <View
@@ -75,6 +110,41 @@ function MuscleBar({
           <Text style={styles.barMrv}>/{mrv}</Text>
         </View>
       </View>
+
+      {expanded && (
+        <View style={styles.detailContainer}>
+          {breakdown.contributions.length === 0 ? (
+            <Text style={styles.detailEmpty}>No volume this week</Text>
+          ) : (
+            breakdown.contributions.map((c) => {
+              const hasRpeScaling = c.rawSets !== c.effectiveSets;
+              const setsLabel = hasRpeScaling
+                ? `${c.rawSets}s (eff. ${c.effectiveSets})`
+                : `${c.rawSets}s`;
+              return (
+                <View key={c.source} style={styles.detailRow}>
+                  <Text style={styles.detailSource} numberOfLines={1}>
+                    {c.source}
+                  </Text>
+                  <Text style={styles.detailFormula}>
+                    {setsLabel} x {c.contribution}
+                  </Text>
+                  <Text style={styles.detailValue}>
+                    {c.volumeAdded.toFixed(1)}
+                  </Text>
+                </View>
+              );
+            })
+          )}
+          <Text style={styles.reasoningText}>
+            MRV {mrv} · MEV {mev}
+            {'  '}
+            {configSource.isCustom
+              ? `Custom (default: ${configSource.defaultMrv} / ${configSource.defaultMev})`
+              : `Research defaults (${biologicalSex ?? 'male'})`}
+          </Text>
+        </View>
+      )}
     </View>
   );
 }
@@ -162,10 +232,19 @@ function buildStyles(colors: ColorScheme) {
     barRow: {
       gap: 6,
     },
+    barLabelRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 6,
+    },
     barLabel: {
       fontSize: 14,
       fontWeight: '600',
       color: colors.textSecondary,
+    },
+    chevron: {
+      fontSize: 12,
+      color: colors.textTertiary,
     },
     barContainer: {
       flexDirection: 'row',
@@ -219,12 +298,50 @@ function buildStyles(colors: ColorScheme) {
     barSetsOver: {
       color: colors.danger,
     },
+    detailContainer: {
+      paddingLeft: 4,
+      paddingBottom: 4,
+      gap: 3,
+    },
+    detailRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+    },
+    detailSource: {
+      flex: 1,
+      fontSize: 12,
+      color: colors.text,
+    },
+    detailFormula: {
+      fontSize: 11,
+      color: colors.textSecondary,
+      width: 110,
+      textAlign: 'right',
+    },
+    detailValue: {
+      fontSize: 12,
+      fontWeight: '600',
+      color: colors.text,
+      width: 36,
+      textAlign: 'right',
+    },
+    detailEmpty: {
+      fontSize: 12,
+      color: colors.textTertiary,
+      fontStyle: 'italic',
+    },
+    reasoningText: {
+      fontSize: 11,
+      color: colors.textTertiary,
+      marginTop: 4,
+    },
   });
 }
 
 export default function VolumeScreen() {
   const { colors } = useTheme();
   const { data, isLoading } = useWeeklyVolume();
+  const [expandedMuscle, setExpandedMuscle] = useState<MuscleGroup | null>(null);
 
   const styles = useMemo(() => buildStyles(colors), [colors]);
 
@@ -241,7 +358,7 @@ export default function VolumeScreen() {
         showsVerticalScrollIndicator={false}
       >
         <Text style={styles.subtitle}>
-          Sets completed in the last 7 days · numbers show sets / MRV target
+          Sets completed in the last 7 days · tap a muscle for breakdown
         </Text>
 
         <View style={styles.legend}>
@@ -288,6 +405,14 @@ export default function VolumeScreen() {
                 mrv={data.config[muscle].mrv}
                 mev={data.config[muscle].mev}
                 status={data.status[muscle]}
+                expanded={expandedMuscle === muscle}
+                breakdown={data.breakdown[muscle]}
+                biologicalSex={data.biologicalSex}
+                onToggle={() =>
+                  setExpandedMuscle((prev) =>
+                    prev === muscle ? null : muscle
+                  )
+                }
                 colors={colors}
                 styles={styles}
               />

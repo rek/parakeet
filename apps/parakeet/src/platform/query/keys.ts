@@ -31,6 +31,10 @@ export const qk = {
   bodyweight: {
     history: (userId?: string) => ['bodyweight', 'history', userId] as const,
   },
+  volume: {
+    weekly: (userId?: string, windowStart?: string) =>
+      ['volume', 'weekly', userId, windowStart] as const,
+  },
   featureFlags: {
     all: () => ['feature-flags'] as const,
   },
