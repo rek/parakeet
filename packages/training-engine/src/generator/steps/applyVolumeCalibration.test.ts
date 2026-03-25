@@ -149,6 +149,101 @@ describe('applyVolumeCalibration', () => {
     expect(ctx.plannedCount).toBe(before);
   });
 
+  // --- Phase 3: Calibration learning ---
+
+  it('modifier calibration: system over-reducing → +1 set', () => {
+    const input = baseInput({
+      modifierCalibrations: {
+        soreness: 0.05,
+        readiness: 0.04,
+      },
+    });
+    const ctx = initPipeline(input);
+    const before = ctx.plannedCount;
+    applyVolumeCalibration(ctx, input);
+    // Total adjustment = 0.09 >= 0.08 threshold → +1
+    expect(ctx.plannedCount).toBe(before + 1);
+  });
+
+  it('modifier calibration below threshold → no change', () => {
+    const input = baseInput({
+      modifierCalibrations: {
+        soreness: 0.03,
+        readiness: 0.02,
+      },
+    });
+    const ctx = initPipeline(input);
+    const before = ctx.plannedCount;
+    applyVolumeCalibration(ctx, input);
+    // Total = 0.05 < 0.08 threshold
+    expect(ctx.plannedCount).toBe(before);
+  });
+
+  // --- Phase 3: Progressive volume within blocks ---
+
+  it('week 2 of block with favorable RPE → +1 progressive', () => {
+    const input = baseInput({
+      weekNumber: 2,
+      recentLogs: makeRecentLogs(3, 0.8),
+    });
+    const ctx = initPipeline(input);
+    const before = ctx.plannedCount;
+    applyVolumeCalibration(ctx, input);
+    expect(ctx.plannedCount).toBe(before + 1);
+  });
+
+  it('week 3 of block with favorable RPE → +2 progressive', () => {
+    const input = baseInput({
+      weekNumber: 3,
+      recentLogs: makeRecentLogs(3, 0.8),
+    });
+    const ctx = initPipeline(input);
+    const before = ctx.plannedCount;
+    applyVolumeCalibration(ctx, input);
+    expect(ctx.plannedCount).toBe(before + 2);
+  });
+
+  it('deload week skips progressive volume', () => {
+    const input = baseInput({
+      weekNumber: 3,
+      intensityType: 'deload',
+      recentLogs: makeRecentLogs(3, 1.0),
+    });
+    const ctx = initPipeline(input);
+    const before = ctx.plannedCount;
+    applyVolumeCalibration(ctx, input);
+    // Deload — no progressive boost (RPE may still trigger +1 from signal 1)
+    // But we check progressive specifically didn't add
+    expect(ctx.plannedCount).toBeLessThanOrEqual(before + 1);
+  });
+
+  it('week 1 of block → no progressive boost', () => {
+    const input = baseInput({
+      weekNumber: 1,
+      recentLogs: makeRecentLogs(3, 0.8),
+    });
+    const ctx = initPipeline(input);
+    const before = ctx.plannedCount;
+    applyVolumeCalibration(ctx, input);
+    // Week 1 = no progressive. RPE gap 0.8 < 1.0 so no RPE signal either.
+    expect(ctx.plannedCount).toBe(before);
+  });
+
+  it('high soreness blocks progressive volume', () => {
+    const input = baseInput({
+      weekNumber: 3,
+      recentLogs: makeRecentLogs(3, 0.8),
+      sorenessRatings: { quads: 8 as 8 }, // 8/10 = high on new scale
+    });
+    const ctx = initPipeline(input);
+    const before = ctx.plannedCount;
+    applyVolumeCalibration(ctx, input);
+    // Soreness high (8/10) blocks progressive boost
+    expect(ctx.plannedCount).toBeLessThanOrEqual(before);
+  });
+
+  // --- Integration ---
+
   it('integration: calibration +1 then soreness reduces net effect', () => {
     // This tests the pipeline order, not the step in isolation
     const input = baseInput({

@@ -63,6 +63,34 @@ export async function getWeeklyVolumeForReview(
   return fetchWeeklyVolumeForReview(userId, programId, weekNumber);
 }
 
+/**
+ * Returns the dominant mismatch direction from the most recent weekly body review.
+ * Looks at mismatches for the given primary muscles. If more muscles are
+ * "recovering well" than "accumulating fatigue", returns 'recovering_well'.
+ * Returns null if no review exists or no mismatches for primary muscles.
+ */
+export async function getLatestMismatchDirection(
+  userId: string,
+  programId: string | null,
+  weekNumber: number,
+  primaryMuscles: MuscleGroup[]
+): Promise<'recovering_well' | 'accumulating_fatigue' | null> {
+  if (!programId) return null;
+  const review = await fetchLatestWeeklyReview(userId, programId, weekNumber);
+  if (!review || review.mismatches.length === 0) return null;
+
+  const primaryMismatch = review.mismatches.filter((m) =>
+    primaryMuscles.includes(m.muscle)
+  );
+  if (primaryMismatch.length === 0) return null;
+
+  const recovering = primaryMismatch.filter((m) => m.direction === 'recovering_well').length;
+  const accumulating = primaryMismatch.filter((m) => m.direction === 'accumulating_fatigue').length;
+  if (recovering > accumulating) return 'recovering_well';
+  if (accumulating > recovering) return 'accumulating_fatigue';
+  return null;
+}
+
 export async function getLatestWeeklyReview(
   userId: string,
   programId: string,

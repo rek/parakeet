@@ -1,15 +1,14 @@
 import type { PrescriptionTraceBuilder } from '../prescription-trace';
 import type { JITInput } from '../jit-session-generator';
 import type { PipelineContext } from './pipeline-context';
-import type { SorenessLevel } from '../../adjustments/soreness-adjuster';
-import type { ReadinessLevel } from '../../adjustments/readiness-adjuster';
 
 /**
  * Step 0: Adaptive volume calibration.
  *
  * Adjusts ctx.plannedCount up or down (-2 to +3) based on accumulated
  * evidence: RPE trends, soreness state, readiness signals, post-session
- * capacity assessment, and weekly mismatch direction.
+ * capacity assessment, weekly mismatch direction, modifier calibration
+ * learning, and progressive volume within the training block.
  *
  * This is the only pipeline step that can INCREASE volume.
  * All subsequent steps (2-7) can only reduce or leave unchanged.
@@ -58,7 +57,39 @@ export function applyVolumeCalibration(
   // --- Signal 5: Weekly mismatch direction ---
   const recoveringWell = input.weeklyMismatchDirection === 'recovering_well';
 
-  // --- Compute modifier ---
+  // --- Signal 6: Modifier calibration learning (Phase 3) ---
+  // If the system has learned that its modifiers are too aggressive for this
+  // athlete (negative RPE bias = too easy after reductions), compensate by
+  // adding volume. Sum of calibration adjustments acts as a bias correction.
+  let calibrationBoost = 0;
+  if (input.modifierCalibrations) {
+    const cals = input.modifierCalibrations;
+    // Positive adjustment = modifier was too aggressive (made it too easy)
+    // → lifter can handle more volume
+    const totalAdjustment = Object.values(cals).reduce(
+      (sum, v) => sum + (v ?? 0),
+      0
+    );
+    // Each +0.05 adjustment roughly corresponds to +1 set capacity
+    if (totalAdjustment >= 0.08) {
+      calibrationBoost = 1;
+      reasons.push(`Modifier calibration: system over-reduced for this athlete — +1 set`);
+    }
+  }
+
+  // --- Signal 7: Progressive volume within block ---
+  // If we're in week 2-3 of a block and RPE has been consistently low,
+  // progressively increase. Deload weeks (blockNumber cycling) reset.
+  let progressiveBoost = 0;
+  const weekInBlock = input.weekNumber > 0 ? ((input.weekNumber - 1) % 3) + 1 : 1;
+  const isDeload = input.intensityType === 'deload';
+
+  if (!isDeload && weekInBlock >= 2 && avgRpeGap >= 0.5 && !sorenessHigh) {
+    progressiveBoost = weekInBlock >= 3 ? 2 : 1;
+    reasons.push(`Week ${weekInBlock} of block, RPE trend favorable — +${progressiveBoost} progressive`);
+  }
+
+  // --- Compute total modifier ---
 
   // Strong positive signal: RPE consistently easy + body is fresh + readiness high
   if (avgRpeGap >= 1.5 && sorenessLow && readinessHigh) {
@@ -82,6 +113,10 @@ export function applyVolumeCalibration(
     modifier += 1;
     reasons.push('Weekly review: recovering well — +1 set');
   }
+
+  // Add calibration and progressive boosts
+  modifier += calibrationBoost;
+  modifier += progressiveBoost;
 
   // Negative signal: RPE consistently above target
   if (avgRpeGap <= -1.0) {

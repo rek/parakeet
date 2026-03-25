@@ -2,6 +2,7 @@ export {
   saveWeeklyBodyReview,
   getWeeklyBodyReviews,
   getLatestWeeklyReview,
+  getLatestMismatchDirection,
   getWeeklyVolumeForReview,
 } from './application/body-review.service';
 export type {

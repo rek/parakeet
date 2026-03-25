@@ -1,3 +1,4 @@
+import { getLatestMismatchDirection } from '@modules/body-review';
 import { getCurrentCycleContext } from '@modules/cycle-tracking';
 import { getFormulaConfig } from '@modules/formula/application/formula.service';
 import {
@@ -356,6 +357,23 @@ export async function runJITForSession(
     }
   } catch {
     // Non-critical — volume calibration degrades gracefully without capacity data
+  }
+
+  // Weekly body review mismatch direction for primary muscles (engine-043 Phase 3)
+  try {
+    const primaryMuscles = lift === 'squat'
+      ? (['quads', 'glutes', 'lower_back'] as const)
+      : lift === 'bench'
+        ? (['chest', 'triceps', 'shoulders'] as const)
+        : (['hamstrings', 'glutes', 'lower_back', 'upper_back'] as const);
+    weeklyMismatchDirection = await getLatestMismatchDirection(
+      userId,
+      session.program_id,
+      session.week_number > 1 ? session.week_number - 1 : session.week_number,
+      [...primaryMuscles]
+    );
+  } catch {
+    // Non-critical
   }
 
   // Compute working 1RM from recent actual session weights (GH#98)
