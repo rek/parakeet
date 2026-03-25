@@ -86,6 +86,8 @@ Reusable patterns discovered during implementation. Read on-demand when debuggin
 
 **Weekly thresholds need pro-rating when checked per-session** — a weekly target compared against volume-to-date on session 1 of 3 will always show a deficit. Pro-rate: `ceil(target * sessionIndex / totalSessions)`.
 
+**Mirrored domain functions must share a consistency test** — when a new function (`computeVolumeBreakdown`) mirrors an existing one (`computeWeeklyVolume`) but with richer output, add an invariant test asserting their totals match for all inputs. This catches drift if either function's logic changes independently.
+
 ## Testing
 
 **Tautological tests catch nothing** — `expect(CONSTANT.field).toBe(3)` tests that a constant equals itself. Replace with behavioral tests.

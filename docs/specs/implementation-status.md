@@ -8,7 +8,7 @@ For details on any item, see the linked spec file.
 
 ## Training Engine (`packages/training-engine`)
 
-1105 tests passing (Vitest). All specs implemented. Bug fix: `generateAuxiliaryAssignments` now generates assignments for all blocks (not just 1–3); `blockNumber` widened to `number` throughout; `getIntensityTypeForWeek` now cycles correctly for block 4+.
+1124 tests passing (Vitest). All specs implemented. Bug fix: `generateAuxiliaryAssignments` now generates assignments for all blocks (not just 1–3); `blockNumber` widened to `number` throughout; `getIntensityTypeForWeek` now cycles correctly for block 4+.
 
 - [x] engine-001: 1RM formulas — Epley, grams↔kg helpers
 - [x] engine-002: Cube method scheduler — blocks.ts
@@ -157,6 +157,7 @@ Module/platform/shared architecture is the canonical app structure. Legacy top-l
 - [x] mobile-038: Context-aware aux suggestions (GH #82) — `AddExerciseModal` gets a "Suggested" section at top (hidden during search) with up to 5 exercises filtered to session's primary lift, sorted by uncovered muscles; `addAdHocSet` accepts `initialWeightGrams`; first set pre-filled with `1RM × catalog.weightPct` rounded to 500g; 0 for bodyweight/timed; modal auto-selects lift filter tab. Pure utils: `computeSuggestedAux`, `computeSuggestedWeight` in `modules/session/utils/aux-suggestions.ts`; 13 tests.
 - [x] mobile-041: Planned vs actual in session detail (GH #86) — `history/[sessionId].tsx` shows "Plan" vs "Actual" columns (format: `kg×reps`) when `sessions.planned_sets` is present; actual values color-coded (green = over, red = under, default = at plan); falls back to original layout when no plan. `parsePlannedSetsJson` added to `modules/session/data/session-codecs.ts`, exported from `@modules/session`. No new queries.
 - [x] mobile-038 extension: Recently-used aux exercises (GH#120) — `AddExerciseModal` accepts `recentNames` prop; renders "Recent" section below Suggested (deduped against suggested); `fetchRecentAuxExerciseNames` queries last 30 `session_logs.auxiliary_sets` JSONB, extracts unique exercise names most-recent-first; RLS-scoped, no userId param; exercises remain in catalog sections (kept in list)
+- [x] mobile-045: Weekly volume reasoning (GH#121) — expandable muscle bars in `volume.tsx` showing per-exercise volume breakdown (source, rawSets, effectiveSets x contribution = volumeAdded) and MRV/MEV config source (research defaults vs custom). `computeVolumeBreakdown` in training-engine mirrors `computeWeeklyVolume` with per-exercise detail; `classifyConfigSource` compares config against sex defaults; 25 tests. `useWeeklyVolume` extended with breakdown + biologicalSex. `qk.volume.weekly` added (fixes pre-existing qk violation). See [spec](../specs/09-mobile/mobile-045-volume-reasoning.md).
 
 ---
 
