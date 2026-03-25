@@ -42,6 +42,11 @@
 - `generateJITSession` is the only production caller of `getSorenessModifier`; `biologicalSex` is already in `JITInput`
 - `applySorenessToSets` (used in tests and potentially in future standalone callers) is unaffected — it accepts the already-resolved modifier
 
+## Domain References
+
+- [domain/adjustments.md](../../domain/adjustments.md) — soreness modifier tables (male and female)
+- [domain/sex-differences.md](../../domain/sex-differences.md) — sex-differentiated soreness thresholds
+
 ## Dependencies
 
 - [engine-007-jit-session-generator.md](./engine-007-jit-session-generator.md) — JIT pipeline

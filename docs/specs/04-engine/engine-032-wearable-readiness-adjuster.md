@@ -187,3 +187,8 @@ A pure function that converts objective wearable recovery signals (HRV, resting 
 
 - [engine-028-readiness-adjuster.md](./engine-028-readiness-adjuster.md) — extends with wearable alternative; reuses `ReadinessModifier` interface
 - [types-002-biometric-schemas.md](../03-types/types-002-biometric-schemas.md) — `WearableReadinessInput` fields align with `RecoverySnapshotSchema`
+
+## Domain References
+
+- [domain/adjustments.md](../../domain/adjustments.md) — readiness modifier framework
+- [domain/athlete-signals.md](../../domain/athlete-signals.md) — wearable signal definitions

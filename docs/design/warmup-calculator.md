@@ -24,13 +24,7 @@ Every experienced lifter knows they need to warm up before heavy sets. But calcu
 
 Four built-in protocols cover the most common warmup approaches. Users can also define a fully custom protocol per lift.
 
-| Protocol | Steps | Best suited for |
-|----------|-------|-----------------|
-| **Standard** | 40%×5, 60%×3, 75%×2, 90%×1 | Most sessions — the default |
-| **Minimal** | 50%×5, 75%×2 | Recovery sessions, lighter days, time-constrained workouts |
-| **Extended** | 30%×10, 50%×5, 65%×3, 80%×2, 90%×1, 95%×1 | Heavy days and near-maximal singles — thorough CNS prep |
-| **Empty Bar** | 20kg×10, 50%×5, 70%×3, 85%×1 | Technique focus, beginners, sessions where bar speed matters |
-| **Custom** | User-defined steps | Any protocol the user prefers — full control over percentage and reps per step |
+See [domain/session-prescription.md](../domain/session-prescription.md#warmup-protocols) for warmup protocol definitions and loading percentages.
 
 All weights are rounded to the nearest 2.5kg with a minimum of 20kg (the empty bar). If two consecutive steps would produce the same rounded weight, the duplicate step is automatically skipped.
 
@@ -93,3 +87,7 @@ All weights are rounded to the nearest 2.5kg with a minimum of 20kg (the empty b
 
 - Related Design Docs: [program-generation.md](./program-generation.md), [performance-logging.md](./performance-logging.md)
 - Specs: [engine-010-warmup-calculator.md](../specs/04-engine/engine-010-warmup-calculator.md), [data-003-warmup-config.md](../specs/05-data/data-003-warmup-config.md), [parakeet-013-warmup-display.md](../specs/09-parakeet/parakeet-013-warmup-display.md)
+
+## Domain References
+
+- [domain/session-prescription.md](../domain/session-prescription.md) — warmup protocol tables

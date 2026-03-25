@@ -55,11 +55,7 @@ Life constantly interrupts training. Without a structured way to log and respond
 
 **Adjustment rules by severity:**
 
-| Severity | Action |
-|----------|--------|
-| Minor | Weight reduced 20%, maintain movement pattern — applied automatically |
-| Moderate | Weight reduced 40%, consider substitution — requires user confirmation |
-| Major | Session skipped, note added to program — requires user confirmation |
+See [domain/adjustments.md](../domain/adjustments.md#disruption-modifiers) for the complete disruption type x severity modifier table.
 
 > **Fatigue type note:** For the Fatigue disruption type, the engine always applies `weight_reduced` (not `reps_reduced`), regardless of severity. Minor fatigue = 10% weight reduction (lighter than the generic 20% minor rule); moderate/major follow the standard table above.
 
@@ -145,4 +141,9 @@ This flow is useful for ongoing disruptions that have a known recovery date, or 
 - Spec: [disruptions-003-resolution.md](../specs/08-disruptions/disruptions-003-resolution.md)
 - Spec: [disruptions-004-adjuster-engine.md](../specs/08-disruptions/disruptions-004-adjuster-engine.md)
 - Spec: [disruptions-005-unprogrammed-event.md](../specs/08-disruptions/disruptions-005-unprogrammed-event.md)
+
+## Domain References
+
+- [domain/adjustments.md](../domain/adjustments.md) — disruption modifier table (type x severity)
+- [domain/athlete-signals.md](../domain/athlete-signals.md) — disruption signal definitions
 

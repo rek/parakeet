@@ -80,3 +80,8 @@ Test cases:
 - Good sleep + high energy → intensity 1.025
 - Normal sleep + normal energy → neutral
 - One poor, one great → the poor signal dominates (0.975)
+
+## Domain References
+
+- [domain/adjustments.md](../../domain/adjustments.md) — readiness modifier table (sleep x energy combinations)
+- [domain/athlete-signals.md](../../domain/athlete-signals.md) — sleep and energy signal definitions

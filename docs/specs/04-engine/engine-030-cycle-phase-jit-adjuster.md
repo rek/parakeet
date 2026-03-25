@@ -76,3 +76,8 @@ Test cases:
 - ovulatory → neutral
 - luteal → intensity 0.975, volume 0, rationale present
 - late_luteal → intensity 0.95, volume -1, rationale present
+
+## Domain References
+
+- [domain/adjustments.md](../../domain/adjustments.md) — cycle phase modifier table and research basis (McNulty 2020)
+- [domain/sex-differences.md](../../domain/sex-differences.md) — menstrual cycle phase definitions

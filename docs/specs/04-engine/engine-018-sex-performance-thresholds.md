@@ -44,6 +44,11 @@ Adds `DEFAULT_THRESHOLDS_FEMALE` alongside the renamed `DEFAULT_THRESHOLDS_MALE`
 
 - When cycle tracking is enabled (future — engine-014), thresholds for female lifters in the luteal phase may be further relaxed; this is a future enhancement and not part of this spec
 
+## Domain References
+
+- [domain/adjustments.md](../../domain/adjustments.md) — performance adjuster thresholds
+- [domain/sex-differences.md](../../domain/sex-differences.md) — sex-differentiated RPE deviation and consecutive session thresholds
+
 ## Dependencies
 
 - [engine-005-performance-adjuster.md](./engine-005-performance-adjuster.md) — current adjuster

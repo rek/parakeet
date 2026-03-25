@@ -27,6 +27,10 @@ Adds a training-age multiplier to MRV/MEV volume defaults so beginners get lower
 - [x] Import `applyTrainingAgeMultiplier` from `@parakeet/training-engine`
 - [x] Apply between sex-based defaults and persona overrides (overrides take precedence)
 
+## Domain References
+
+- [domain/volume-landmarks.md](../../domain/volume-landmarks.md) — training age multiplier table and research basis
+
 ## Dependencies
 
 - None — extends existing MRV/MEV calculator

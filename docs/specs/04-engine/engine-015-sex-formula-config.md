@@ -47,6 +47,11 @@ Sex-specific default `FormulaConfig` objects for the Cube Method scheduler. Fema
 
 - Program creation (`apps/parakeet/src/modules/program/application/program.service.ts`): call `getDefaultFormulaConfig(profile.biological_sex)` when no user formula override exists, instead of hardcoding `DEFAULT_FORMULA_CONFIG`
 
+## Domain References
+
+- [domain/periodization.md](../../domain/periodization.md) — block loading tables (male and female)
+- [domain/sex-differences.md](../../domain/sex-differences.md) — all sex-differentiated constants
+
 ## Dependencies
 
 - [data-004-athlete-profile.md](../05-data/data-004-athlete-profile.md) — `biological_sex` field

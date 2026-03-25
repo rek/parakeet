@@ -80,3 +80,8 @@ This feature requires:
 - Related Design Docs: [volume-management.md](./volume-management.md), [auxiliary-exercise-types.md](./auxiliary-exercise-types.md)
 - Backlog: [docs/backlog.md](../backlog.md) — Item 1
 - Engine: `packages/training-engine/src/auxiliary/auxiliary-rotator.ts`, `packages/training-engine/src/generator/jit-session-generator.ts`
+
+## Domain References
+
+- [domain/session-prescription.md](../domain/session-prescription.md) — volume top-up rules, MEV pro-rating formula
+- [domain/volume-landmarks.md](../domain/volume-landmarks.md) — MEV/MRV defaults and volume status classification

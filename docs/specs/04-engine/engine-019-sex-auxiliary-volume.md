@@ -33,16 +33,7 @@
 
 Default weight is `67.5%` of the primary lift 1RM — appropriate for compound variations close to the main lift pattern. Exercises that diverge from this pattern use per-exercise overrides:
 
-| Exercise | % of 1RM | Reason |
-|---|---|---|
-| Bulgarian Split Squat | 40% | Unilateral — absolute load per side is much lower |
-| Good Mornings | 35% | Spinal-loading technique lift — kept light for safety |
-| Overhead Press | 58% | Vertical press; bench 1RM doesn't transfer well |
-| JM Press | 50% | Tricep isolation; bench 1RM doesn't transfer |
-| Barbell Curl | 35% | Isolation; primary lift 1RM is irrelevant |
-| Dumbbell Curl | 30% | Isolation |
-| Cable Curl | 30% | Isolation |
-| EZ-Bar Curl | 33% | Isolation |
+See [domain/exercise-catalog.md](../../domain/exercise-catalog.md#weight-percentages-key-exercises) for per-exercise weight percentages.
 
 All other exercises default to `67.5%`.
 
@@ -50,11 +41,7 @@ All other exercises default to `67.5%`.
 
 Default is `10` (male) / `12` (female). Per-exercise overrides:
 
-| Category | Examples | Reps |
-|---|---|---|
-| Strength variations | Pause Squat, Box Squat, Block Pulls, Board Press | 4–6 |
-| Hypertrophy compounds | Romanian DL, Bulgarian Split Squat, Incline DB Press | 8–10 |
-| High-rep / isolation | Hyperextensions, Leg Press, curls | 10–15 |
+See [domain/exercise-catalog.md](../../domain/exercise-catalog.md#rep-targets) for rep target ranges by exercise category.
 
 ## Usage Context
 
@@ -68,3 +55,8 @@ Default is `10` (male) / `12` (female). Per-exercise overrides:
 - [engine-008-auxiliary-exercise-rotation.md](./engine-008-auxiliary-exercise-rotation.md) — auxiliary pool
 - [engine-017-sex-soreness-adjuster.md](./engine-017-sex-soreness-adjuster.md) — soreness rules applied before rep count selection
 - [data-004-athlete-profile.md](../05-data/data-004-athlete-profile.md) — `biological_sex` field
+
+## Domain References
+
+- [domain/exercise-catalog.md](../../domain/exercise-catalog.md) — exercise weight percentages and rep targets
+- [domain/sex-differences.md](../../domain/sex-differences.md) — sex-differentiated auxiliary rep defaults
