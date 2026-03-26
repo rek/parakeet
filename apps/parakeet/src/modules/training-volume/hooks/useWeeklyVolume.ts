@@ -1,5 +1,6 @@
 import { useAuth } from '@modules/auth/hooks/useAuth';
 import { getProfile } from '@modules/profile/application/profile.service';
+import { fetchActiveProgramMode } from '@modules/program';
 import { getCurrentWeekLogs } from '@modules/session/application/session.service';
 import {
   classifyVolumeStatus,
@@ -24,9 +25,10 @@ export function useWeeklyVolume() {
   return useQuery({
     queryKey: qk.volume.weekly(user?.id, rollingWindowStart()),
     queryFn: async () => {
-      const [logs, profile] = await Promise.all([
+      const [logs, profile, program] = await Promise.all([
         getCurrentWeekLogs(user!.id),
         getProfile(),
+        fetchActiveProgramMode(user!.id),
       ]);
       const config = await getMrvMevConfig(user!.id, profile?.biological_sex);
       const weekly = computeWeeklyVolume(logs, getMusclesForLift);
@@ -34,7 +36,15 @@ export function useWeeklyVolume() {
       const status = classifyVolumeStatus(weekly, config);
       const remaining = computeRemainingCapacity(weekly, config);
       const biologicalSex = profile?.biological_sex ?? null;
-      return { weekly, status, remaining, config, breakdown, biologicalSex };
+
+      // Count completed sessions: one main lift entry per session (exercise undefined)
+      const completedSessions = logs.filter((l) => !l.exercise).length;
+      const totalSessionsPerWeek = program?.training_days_per_week ?? 3;
+
+      return {
+        weekly, status, remaining, config, breakdown, biologicalSex,
+        completedSessions, totalSessionsPerWeek,
+      };
     },
     enabled: !!user?.id,
     staleTime: 60 * 1000,

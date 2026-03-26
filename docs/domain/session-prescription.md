@@ -12,9 +12,9 @@ Steps execute in order. Each step may modify `sets`, `intensity`, or `reps` fiel
 
 | Step | Name                        | What it does                                                                                       |
 |------|-----------------------------|----------------------------------------------------------------------------------------------------|
-| 0    | `applyVolumeCalibration`    | Adjusts base set count up or down (-2 to +3) based on RPE trends, capacity signals, and modifier learning. See [adaptive-volume.md](../design/adaptive-volume.md). **(Planned)** |
+| 0    | `applyVolumeCalibration`    | Adjusts base set count up or down (-2 to +3) based on RPE trends, capacity signals, and modifier learning. See [adaptive-volume.md](../design/adaptive-volume.md). |
 | 1    | `initPipeline`              | Sets base sets, reps, %1RM, and RPE from formula config (block × intensity type).                 |
-| 2    | `applyRpeAdjustment`        | Looks at last 2 sessions' avg RPE deviation. ≥ 1.0 over → multiply intensity × 0.975. ≤ −1.0 under → multiply intensity × 1.025. |
+| 2    | `applyRpeAdjustment`        | Looks at last 2 sessions' avg RPE deviation. Tiered: ≥ 0.75 over → ×0.975 (small) or ×0.95 (large, ≥ 1.25). ≤ −0.75 under → ×1.025 (small) or ×1.05 (large, ≤ −1.25). |
 | 3    | `applyReadinessAdjustment`  | Applies sleep and energy modifiers. See [adjustments.md](adjustments.md).                         |
 | 4    | `applyCyclePhaseAdjustment` | Applies menstrual phase modifiers. See [adjustments.md](adjustments.md).                          |
 | 5    | `applySorenessAdjustment`   | Uses worst soreness score across primary muscles for the prescribed lift. See [adjustments.md](adjustments.md). |
@@ -35,7 +35,7 @@ When multiple adjustments apply simultaneously:
 |---------------------------------------|------------------------------------------------------------------------|
 | Soreness + disruption both active     | Take `min()` per dimension (sets, intensity) — not additive.          |
 | Major disruption                      | Overrides all prior adjustments; session is skipped or replaced.      |
-| Soreness = 5                          | Recovery session: 40% × 3 sets × 5 reps @ RPE 5.0. Overrides everything. |
+| Soreness >= 9                         | Recovery session: 40% × 3 sets × 5 reps @ RPE 5.0. Overrides everything. |
 
 **Source:** `packages/training-engine/src/generator/steps/`
 
@@ -153,3 +153,18 @@ Push muscles (chest, triceps, shoulders, biceps) that have zero contribution fro
 After filtering to eligible exercises, candidates are ranked by a multi-signal scorer (not first-match). The scorer uses soreness ratings, readiness (sleep + energy), movement pattern diversity, upcoming lift protection, main lift specificity, and compound/isolation balance. See [exercise-catalog.md](exercise-catalog.md#exercise-scoring-volume-top-up-selection) for factor weights and details.
 
 **Source:** `packages/training-engine/src/generator/jit-session-generator.ts`, `packages/training-engine/src/auxiliary/exercise-scorer.ts`
+
+---
+
+## Intra-Session Mechanisms
+
+These fire during the workout, after the JIT prescription is generated.
+
+| Mechanism | Trigger | Effect |
+|-----------|---------|--------|
+| Weight autoregulation | RPE gap ≥ 1.0 below target after a main lift set | Suggests weight increase for next set (+2.5/+5 kg bench, +5/+10 kg squat/DL) |
+| Volume recovery | Avg RPE gap ≥ 1.5 below target, sets were removed by modifiers | Offers to add removed sets back |
+| Failure adaptation (main) | Failed set (reps < planned) | Tier 1: +60s rest → Tier 2: -5%/-10% weight → Tier 3: optional sets |
+| Failure adaptation (aux) | Failed aux set | Immediate -10% weight on remaining sets of that exercise |
+
+**Source:** `packages/training-engine/src/adjustments/weight-autoregulation.ts`, `volume-recovery.ts`, `intra-session-adapter.ts`

@@ -37,6 +37,8 @@ interface MuscleBarProps {
   sets: number;
   mrv: number;
   mev: number;
+  proRatedMev: number;
+  isPartialWeek: boolean;
   status: VolumeStatus;
   expanded: boolean;
   breakdown: MuscleBreakdown;
@@ -51,6 +53,8 @@ function MuscleBar({
   sets,
   mrv,
   mev,
+  proRatedMev,
+  isPartialWeek,
   status,
   expanded,
   breakdown,
@@ -138,6 +142,9 @@ function MuscleBar({
           )}
           <Text style={styles.reasoningText}>
             MRV {mrv} · MEV {mev}
+            {isPartialWeek && proRatedMev < mev
+              ? ` (on track: ${proRatedMev})`
+              : ''}
             {'  '}
             {configSource.isCustom
               ? `Custom (default: ${configSource.defaultMrv} / ${configSource.defaultMev})`
@@ -397,13 +404,23 @@ export default function VolumeScreen() {
           <Text style={styles.loadingText}>Loading…</Text>
         ) : (
           <View style={styles.bars}>
-            {MUSCLE_GROUPS_ORDER.map((muscle) => (
+            {MUSCLE_GROUPS_ORDER.map((muscle) => {
+              const mev = data.config[muscle].mev;
+              const total = data.totalSessionsPerWeek;
+              const done = data.completedSessions;
+              const isPartialWeek = done < total;
+              const proRatedMev = isPartialWeek
+                ? Math.ceil((mev * done) / total)
+                : mev;
+              return (
               <MuscleBar
                 key={muscle}
                 muscle={muscle}
                 sets={data.weekly[muscle]}
                 mrv={data.config[muscle].mrv}
-                mev={data.config[muscle].mev}
+                mev={mev}
+                proRatedMev={proRatedMev}
+                isPartialWeek={isPartialWeek}
                 status={data.status[muscle]}
                 expanded={expandedMuscle === muscle}
                 breakdown={data.breakdown[muscle]}
@@ -416,7 +433,8 @@ export default function VolumeScreen() {
                 colors={colors}
                 styles={styles}
               />
-            ))}
+              );
+            })}
           </View>
         )}
       </ScrollView>

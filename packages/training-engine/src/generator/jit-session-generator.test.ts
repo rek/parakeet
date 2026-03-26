@@ -225,24 +225,24 @@ describe('generateJITSession — catalog exercise rep targets', () => {
 // ---------------------------------------------------------------------------
 
 describe('generateJITSession — soreness adjustments', () => {
-  it('soreness=4 on quads → 1 set (clamped) at 107.5kg', () => {
+  it('soreness=8 on quads → 1 set (clamped) at 107.5kg', () => {
     const out = generateJITSession(
-      baseInput({ sorenessRatings: { quads: 4 } })
+      baseInput({ sorenessRatings: { quads: 8 } })
     );
     expect(out.mainLiftSets).toHaveLength(1);
     expect(out.mainLiftSets[0].weight_kg).toBe(107.5);
   });
 
-  it('soreness=4 adds a warning to rationale', () => {
+  it('soreness=8 adds a warning to rationale', () => {
     const out = generateJITSession(
-      baseInput({ sorenessRatings: { quads: 4 } })
+      baseInput({ sorenessRatings: { quads: 8 } })
     );
     expect(out.rationale.some((r) => /soreness/i.test(r))).toBe(true);
   });
 
-  it('soreness=5 → recovery mode: 3 sets × 5 reps at 45kg (40% of 112.5→45)', () => {
+  it('soreness=10 → recovery mode: 3 sets × 5 reps at 45kg (40% of 112.5→45)', () => {
     const out = generateJITSession(
-      baseInput({ sorenessRatings: { quads: 5 } })
+      baseInput({ sorenessRatings: { quads: 10 } })
     );
     expect(out.mainLiftSets).toHaveLength(3);
     out.mainLiftSets.forEach((s) => {
@@ -254,21 +254,21 @@ describe('generateJITSession — soreness adjustments', () => {
     expect(out.rationale.some((r) => /recovery/i.test(r))).toBe(true);
   });
 
-  it('soreness=5 → all auxiliaries skipped', () => {
+  it('soreness=10 → all auxiliaries skipped', () => {
     const out = generateJITSession(
-      baseInput({ sorenessRatings: { quads: 5 } })
+      baseInput({ sorenessRatings: { quads: 10 } })
     );
     out.auxiliaryWork.forEach((a) => {
       expect(a.skipped).toBe(true);
     });
   });
 
-  it('soreness=3 on quads → 1 set (2-1=1)', () => {
+  it('soreness=6 on quads → 1 set (2-1=1)', () => {
     const out = generateJITSession(
-      baseInput({ sorenessRatings: { quads: 3 } })
+      baseInput({ sorenessRatings: { quads: 6 } })
     );
     expect(out.mainLiftSets).toHaveLength(1);
-    // intensity unchanged for soreness=3
+    // intensity unchanged for soreness=6
     expect(out.mainLiftSets[0].weight_kg).toBe(112.5);
   });
 });
@@ -337,7 +337,7 @@ describe('generateJITSession — RPE history', () => {
     expect(out.mainLiftSets[0].weight_kg).toBe(112.5);
   });
 
-  it('2 sessions low RPE (7.0 vs target 8.5) → weight increased to 115kg (112.5 × 1.025)', () => {
+  it('2 sessions low RPE (7.0 vs target 8.5) → weight increased to 117.5kg (112.5 × 1.05, large gap)', () => {
     const out = generateJITSession(
       baseInput({
         recentLogs: [
@@ -346,9 +346,34 @@ describe('generateJITSession — RPE history', () => {
         ],
       })
     );
-    // 112.5 × 1.025 = 115.3125 → roundToNearest(2.5) = 115
-    expect(out.mainLiftSets[0].weight_kg).toBe(115);
+    // avg gap = -1.5 (large, >= 1.25) → 5% boost: 112.5 × 1.05 = 118.125 → 117.5
+    expect(out.mainLiftSets[0].weight_kg).toBe(117.5);
     expect(out.rationale.some((r) => /RPE below target/i.test(r))).toBe(true);
+  });
+
+  it('2 sessions moderately low RPE (7.5 vs target 8.5) → small boost (112.5 × 1.025)', () => {
+    const out = generateJITSession(
+      baseInput({
+        recentLogs: [
+          { actual_rpe: 7.5, target_rpe: 8.5 },
+          { actual_rpe: 7.5, target_rpe: 8.5 },
+        ],
+      })
+    );
+    // avg gap = -1.0 (small, 0.75-1.25) → 2.5% boost: 112.5 × 1.025 = 115.3 → 115
+    expect(out.mainLiftSets[0].weight_kg).toBe(115);
+  });
+
+  it('2 sessions RPE only slightly below target (8.0 vs 8.5) → no adjustment (gap 0.5 < 0.75)', () => {
+    const out = generateJITSession(
+      baseInput({
+        recentLogs: [
+          { actual_rpe: 8.0, target_rpe: 8.5 },
+          { actual_rpe: 8.0, target_rpe: 8.5 },
+        ],
+      })
+    );
+    expect(out.mainLiftSets[0].weight_kg).toBe(112.5);
   });
 });
 
@@ -360,7 +385,7 @@ describe('generateJITSession — disruption adjustment', () => {
   it('moderate disruption + high soreness compounds — takes more conservative per dimension', () => {
     const out = generateJITSession(
       baseInput({
-        sorenessRatings: { quads: 4 }, // soreness: -2 sets (2→0, clamped to 1), ×0.95
+        sorenessRatings: { quads: 8 }, // soreness: -2 sets (2→0, clamped to 1), ×0.95
         activeDisruptions: [makeDisruption('moderate')], // disruption: ceil(2/2)=1 set, ×0.90
       })
     );
@@ -389,7 +414,7 @@ describe('generateJITSession — disruption adjustment', () => {
   it('soreness is limiting factor when disruption is minor', () => {
     const out = generateJITSession(
       baseInput({
-        sorenessRatings: { quads: 4 }, // soreness: -2 sets → 1 set, ×0.95
+        sorenessRatings: { quads: 8 }, // soreness: -2 sets → 1 set, ×0.95
         activeDisruptions: [makeDisruption('minor')], // minor: no set/intensity change
       })
     );
@@ -401,10 +426,10 @@ describe('generateJITSession — disruption adjustment', () => {
     expect(out.rationale.some((r) => /soreness/i.test(r))).toBe(true);
   });
 
-  it('recovery mode (soreness 5) is not overridden by moderate disruption', () => {
+  it('recovery mode (soreness 10) is not overridden by moderate disruption', () => {
     const out = generateJITSession(
       baseInput({
-        sorenessRatings: { quads: 5 }, // recovery mode: 3×5 at 40%
+        sorenessRatings: { quads: 10 }, // recovery mode: 3×5 at 40%
         activeDisruptions: [makeDisruption('moderate')],
       })
     );
@@ -447,14 +472,14 @@ describe('generateJITSession — disruption adjustment', () => {
 // ---------------------------------------------------------------------------
 
 describe('generateJITSession — auxiliary soreness on bench day', () => {
-  it('soreness=5 on chest during bench day → auxiliary Dips skipped', () => {
+  it('soreness=10 on chest during bench day → auxiliary Dips skipped', () => {
     const out = generateJITSession(
       baseInput({
         primaryLift: 'bench',
         intensityType: 'heavy',
         blockNumber: 1,
         oneRmKg: 100,
-        sorenessRatings: { chest: 5 },
+        sorenessRatings: { chest: 10 },
         activeAuxiliaries: ['Close-Grip Barbell Bench Press', 'Dips'],
       })
     );
@@ -463,9 +488,9 @@ describe('generateJITSession — auxiliary soreness on bench day', () => {
     });
   });
 
-  it('soreness=3 on quads → auxiliary sets reduced by 1 (3→2)', () => {
+  it('soreness=6 on quads → auxiliary sets reduced by 1 (3→2)', () => {
     const out = generateJITSession(
-      baseInput({ sorenessRatings: { quads: 3 } })
+      baseInput({ sorenessRatings: { quads: 6 } })
     );
     out.auxiliaryWork.forEach((a) => {
       expect(a.skipped).toBe(false);
@@ -473,10 +498,10 @@ describe('generateJITSession — auxiliary soreness on bench day', () => {
     });
   });
 
-  it('soreness=4 on quads → auxiliary 1 set at 95% intensity', () => {
+  it('soreness=8 on quads → auxiliary 1 set at 95% intensity', () => {
     const out = generateJITSession(
       baseInput({
-        sorenessRatings: { quads: 4 },
+        sorenessRatings: { quads: 8 },
         // Use unknown exercises so they fall back to 0.675 default weightPct
         activeAuxiliaries: ['Unknown Aux A', 'Unknown Aux B'],
       })
@@ -507,7 +532,7 @@ describe('generateJITSession — warmup', () => {
 
   it('recovery mode → minimal warmup protocol', () => {
     const out = generateJITSession(
-      baseInput({ sorenessRatings: { quads: 5 } })
+      baseInput({ sorenessRatings: { quads: 10 } })
     );
     // minimal = 2 steps (50%×5 + 75%×2), working weight = 45kg
     // 45 × 0.50 = 22.5 → round = 22.5; 45 × 0.75 = 33.75 → round = 35
@@ -517,7 +542,7 @@ describe('generateJITSession — warmup', () => {
   it('recovery mode + explicit warmup config → preserves user protocol', () => {
     const out = generateJITSession(
       baseInput({
-        sorenessRatings: { quads: 5 },
+        sorenessRatings: { quads: 10 },
         warmupConfig: { type: 'preset', name: 'extended' },
         warmupConfigExplicit: true,
       })
@@ -594,11 +619,11 @@ describe('generateJITSession — biologicalSex auxiliary reps', () => {
       });
   });
 
-  it('female at soreness 3 → 2 sets × 12 reps', () => {
+  it('female at soreness 6 → 2 sets × 12 reps', () => {
     const out = generateJITSession(
       baseInput({
         biologicalSex: 'female',
-        sorenessRatings: { quads: 3 },
+        sorenessRatings: { quads: 6 },
         activeAuxiliaries: UNKNOWN_AUX,
       })
     );
@@ -611,19 +636,19 @@ describe('generateJITSession — biologicalSex auxiliary reps', () => {
   });
 });
 
-describe('generateJITSession — biologicalSex soreness (female level 4)', () => {
-  it('female soreness 4 → main lift −1 set (not −2)', () => {
-    // Block 1 heavy: 2 base sets; female level-4 soreness: −1 = 1 set
+describe('generateJITSession — biologicalSex soreness (female level 8)', () => {
+  it('female soreness 8 → main lift −1 set (not −2)', () => {
+    // Block 1 heavy: 2 base sets; female level-8 soreness: −1 = 1 set
     const out = generateJITSession(
-      baseInput({ biologicalSex: 'female', sorenessRatings: { quads: 4 } })
+      baseInput({ biologicalSex: 'female', sorenessRatings: { quads: 8 } })
     );
     expect(out.mainLiftSets).toHaveLength(1);
   });
 
-  it('male soreness 4 → main lift −2 sets (clamped to 1)', () => {
-    // Block 1 heavy: 2 base sets; male level-4: −2 → clamped to 1
+  it('male soreness 8 → main lift −2 sets (clamped to 1)', () => {
+    // Block 1 heavy: 2 base sets; male level-8: −2 → clamped to 1
     const out = generateJITSession(
-      baseInput({ biologicalSex: 'male', sorenessRatings: { quads: 4 } })
+      baseInput({ biologicalSex: 'male', sorenessRatings: { quads: 8 } })
     );
     expect(out.mainLiftSets).toHaveLength(1);
   });
@@ -909,11 +934,11 @@ describe('generateJITSession — equipment_unavailable disruption', () => {
     );
   });
 
-  it('no bodyweight exercises added when soreness >= 5', () => {
+  it('no bodyweight exercises added when soreness >= 9', () => {
     const out = generateJITSession(
       baseInput({
         activeDisruptions: [makeEquipmentDisruption()],
-        sorenessRatings: { quads: 5 },
+        sorenessRatings: { quads: 10 },
       })
     );
     // All aux exercises should be skipped; no bodyweight appended
@@ -1546,7 +1571,7 @@ describe('generateJITSession — volumeReductions metadata', () => {
 
   it('is populated when soreness reduces sets', () => {
     const out = generateJITSession(
-      baseInput({ sorenessRatings: { quads: 3 } })
+      baseInput({ sorenessRatings: { quads: 6 } })
     );
     expect(out.volumeReductions).toBeDefined();
     expect(out.volumeReductions!.totalSetsRemoved).toBe(1);
@@ -1593,9 +1618,9 @@ describe('generateJITSession — volumeReductions metadata', () => {
     );
   });
 
-  it('recoveryBlocked is true for soreness 5', () => {
+  it('recoveryBlocked is true for soreness 10', () => {
     const out = generateJITSession(
-      baseInput({ sorenessRatings: { quads: 5 } })
+      baseInput({ sorenessRatings: { quads: 10 } })
     );
     // Recovery mode replaces the session entirely — no sets "removed" in the normal sense
     // but recoveryBlocked must be true
@@ -1615,12 +1640,12 @@ describe('generateJITSession — volumeReductions metadata', () => {
   });
 
   it('combines multiple reduction sources', () => {
-    // Base input with 2 sets: readiness removes 1 (down to 1), soreness 3
+    // Base input with 2 sets: readiness removes 1 (down to 1), soreness 6
     // can't remove more (already at min 1), so only readiness shows as source.
     // Use a formula config that produces more base sets to test combination.
     const out = generateJITSession(
       baseInput({
-        sorenessRatings: { quads: 3 },
+        sorenessRatings: { quads: 6 },
         sleepQuality: 1,
         energyLevel: 1,
       })
@@ -1634,7 +1659,7 @@ describe('generateJITSession — volumeReductions metadata', () => {
 
   it('baseSetsCount reflects original set count before reductions', () => {
     const out = generateJITSession(
-      baseInput({ sorenessRatings: { quads: 3 } })
+      baseInput({ sorenessRatings: { quads: 6 } })
     );
     expect(out.volumeReductions).toBeDefined();
     expect(out.volumeReductions!.baseSetsCount).toBe(2); // default baseInput produces 2 sets
