@@ -461,7 +461,7 @@ export default function HistoryScreen() {
         </View>
 
         {/* Weekly volume chart */}
-        <Text style={styles.sectionHeader}>Weekly Volume</Text>
+        <Text style={styles.sectionHeader}>Weekly Volume (sets)</Text>
         {volumeChartData ? (
           <View style={styles.chartCard}>
             <LineChart
@@ -486,6 +486,7 @@ export default function HistoryScreen() {
                   strokeDasharray: '',
                 },
               }}
+              formatYLabel={(v) => `${Math.round(Number(v))}`}
               style={{ borderRadius: radii.sm }}
             />
             <View style={styles.legendRow}>
