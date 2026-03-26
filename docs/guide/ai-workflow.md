@@ -64,6 +64,8 @@ For app refactors, run:
 
 - `tsc --noEmit -p apps/parakeet/tsconfig.typecheck.json`
 - `npm run check:module-boundary`
+- `npx nx lint parakeet` — oxlint (unused vars, imports, a11y)
+- `npx nx format parakeet` — Prettier (import ordering, code style)
 
 For the dashboard app:
 

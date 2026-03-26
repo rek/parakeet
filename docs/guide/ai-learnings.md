@@ -58,6 +58,8 @@ Reusable patterns discovered during implementation. Read on-demand when debuggin
 
 **Re-exports don't create local bindings** — `export { MuscleGroup } from '@parakeet/shared-types'` makes `MuscleGroup` available to importers of the file, but NOT usable within the same file. If the file also uses `MuscleGroup` locally (e.g., `Record<MuscleGroup, ...>`), you need a separate `import type { MuscleGroup } from '@parakeet/shared-types'` alongside the re-export. The engine's own `tsc` may pass (if it resolves the import differently) while the app's `tsc` fails — so always validate from the app's tsconfig after moving types across packages.
 
+**Run format and lint after every change** — `npx nx lint parakeet` (oxlint) catches unused vars/imports; `npx nx format parakeet` (Prettier with `@ianvs/prettier-plugin-sort-imports`) fixes import ordering. These are separate tools: lint detects problems, format fixes style. Import ordering is Prettier's job, not oxlint's. Run both after modifying imports or refactoring.
+
 ## Architecture & Workflow
 
 **Native Expo packages must be in the app's `package.json`, not just the root** — in an Nx monorepo, `expo-modules-autolinking` scans `apps/parakeet/package.json` dependencies to decide which native modules to link. A package installed only in the root `package.json` will be resolvable by Node (hoisted `node_modules/`) and pass TypeScript checks, but autolinking won't see it — the native module won't be included in the build, causing a runtime crash (`Cannot find native module 'Expo...'`). Always add native Expo packages to both the root (for hoisting) and `apps/parakeet/package.json` (for autolinking).

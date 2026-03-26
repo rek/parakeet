@@ -113,12 +113,13 @@ EXPO_PUBLIC_SUPABASE_URL=http://localhost:54321
 # leave EXPO_PUBLIC_SUPABASE_URL_ANDROID unset for USB workflow
 ```
 
-### Linting and type checking
+### Linting, formatting, and type checking
 
 ```bash
-nx run parakeet:lint
-npx tsc -p apps/parakeet/tsconfig.app.json --noEmit
-tsc --noEmit -p apps/parakeet/tsconfig.typecheck.json
+npx nx lint parakeet                                    # oxlint — unused vars, imports, a11y
+npx nx format parakeet                                  # Prettier — import ordering, code style
+tsc --noEmit -p apps/parakeet/tsconfig.typecheck.json   # type check
+npx nx run-many -t lint format                          # all projects at once
 ```
 
 ### Testing
