@@ -57,6 +57,8 @@ For details on any item, see the linked spec file.
 
 - [x] engine-044: RPE scaler linear interpolation (GH#130) — replaced step function in `rpe-scaler.ts` with piecewise linear interpolation between anchor points (6.0→0.15, 6.5→0.30, 7.0→0.65, 8.0→0.85, 9.0→1.0). Eliminates 4.3× cliff at RPE 7.0; half-point RPEs valued proportionally (e.g., 6.5→0.30 was 0.15, 7.5→0.75 was 0.65). Integer anchor values unchanged. See [spec](04-engine/engine-044-rpe-scaler-interpolation.md).
 
+- [x] engine-045: Intra-set weight autoregulation (GH#130) — `evaluateWeightAutoregulation()` in `adjustments/weight-autoregulation.ts`; suggests weight increase when RPE gap ≥ 1.0 below target (bench +2.5/+5 kg, squat/DL +5/+10 kg); guards for deload, recovery mode, one-per-session; app wiring: `checkWeightAutoregulation()` called after RPE logged in `useSetCompletionFlow`; store `weightSuggestion` + accept/dismiss; `WeightSuggestionBanner` UI; 14 tests. See [spec](04-engine/engine-045-weight-autoregulation.md) and [design](../design/intra-session-adaptation.md).
+
 ---
 
 ## Shared Types (`packages/shared-types`)

@@ -35,6 +35,7 @@ import {
   useSetCompletionFlow,
   VolumeRecoveryBanner,
   WarmupSection,
+  WeightSuggestionBanner,
 } from '@modules/session';
 import type {
   AuxiliaryWork,
@@ -325,9 +326,13 @@ export default function SessionScreen() {
     sessionMeta,
     timerState,
     currentAdaptation,
+    auxAdaptations,
     recoveryOffer,
     acceptRecovery,
     dismissRecovery,
+    weightSuggestion,
+    acceptWeightSuggestion,
+    dismissWeightSuggestion,
     initSession,
     initAuxiliary,
     addAdHocSet,
@@ -915,6 +920,16 @@ export default function SessionScreen() {
           />
         )}
 
+        {/* Weight autoregulation suggestion */}
+        {weightSuggestion !== null && (
+          <WeightSuggestionBanner
+            suggestion={weightSuggestion}
+            colors={colors}
+            onAccept={acceptWeightSuggestion}
+            onDismiss={dismissWeightSuggestion}
+          />
+        )}
+
         {/* Auxiliary work section */}
         {(auxiliaryWork.length > 0 || adHocExercises.length > 0) && (
           <View style={styles.auxSection}>
@@ -922,11 +937,21 @@ export default function SessionScreen() {
               <Text style={styles.workingSetsTitle}>Auxiliary Work</Text>
             </View>
 
-            {regularAux.map((aw) => (
+            {regularAux.map((aw) => {
+              const auxAdapt = auxAdaptations[aw.exercise];
+              return (
               <View key={aw.exercise} style={styles.auxExercise}>
                 <Text style={styles.auxExerciseName}>
                   {formatExerciseName(aw.exercise)}
                 </Text>
+
+                {auxAdapt?.adaptationType === 'weight_reduced' && (
+                  <View style={styles.adaptationBanner}>
+                    <Text style={styles.adaptationBannerText}>
+                      {auxAdapt.rationale}
+                    </Text>
+                  </View>
+                )}
 
                 {aw.skipped ? (
                   <Text style={styles.auxSkippedText}>
@@ -935,6 +960,9 @@ export default function SessionScreen() {
                 ) : (
                   aw.actualSets.map((actualSet) => {
                     const planned = aw.sets[actualSet.set_number - 1];
+                    const adaptedSet = auxAdapt?.sets.find(
+                      (s) => s.set_number === actualSet.set_number
+                    );
                     return (
                       <SetRow
                         key={`${aw.exercise}-${actualSet.set_number}`}
@@ -942,7 +970,7 @@ export default function SessionScreen() {
                         plannedWeightKg={
                           actualSet.is_completed
                             ? gramsToKg(actualSet.weight_grams)
-                            : (planned?.weight_kg ?? actualSet.weight_grams / 1000)
+                            : (adaptedSet?.weight_kg ?? planned?.weight_kg ?? actualSet.weight_grams / 1000)
                         }
                         plannedReps={
                           actualSet.is_completed
@@ -973,20 +1001,30 @@ export default function SessionScreen() {
                   })
                 )}
               </View>
-            ))}
+              );
+            })}
 
             {topUpAux.length > 0 && (
               <>
                 <View style={styles.topUpDivider}>
                   <Text style={styles.topUpDividerText}>Volume top-up</Text>
                 </View>
-                {topUpAux.map((aw) => (
+                {topUpAux.map((aw) => {
+                  const auxAdapt = auxAdaptations[aw.exercise];
+                  return (
                   <View key={aw.exercise} style={styles.auxExercise}>
                     <Text style={styles.auxExerciseName}>
                       {formatExerciseName(aw.exercise)}
                     </Text>
                     {aw.topUpReason && (
                       <Text style={styles.topUpReason}>{aw.topUpReason}</Text>
+                    )}
+                    {auxAdapt?.adaptationType === 'weight_reduced' && (
+                      <View style={styles.adaptationBanner}>
+                        <Text style={styles.adaptationBannerText}>
+                          {auxAdapt.rationale}
+                        </Text>
+                      </View>
                     )}
                     {aw.skipped ? (
                       <Text style={styles.auxSkippedText}>
@@ -995,6 +1033,9 @@ export default function SessionScreen() {
                     ) : (
                       aw.actualSets.map((actualSet) => {
                         const planned = aw.sets[actualSet.set_number - 1];
+                        const adaptedSet = auxAdapt?.sets.find(
+                          (s) => s.set_number === actualSet.set_number
+                        );
                         return (
                           <SetRow
                             key={`${aw.exercise}-${actualSet.set_number}`}
@@ -1002,7 +1043,7 @@ export default function SessionScreen() {
                             plannedWeightKg={
                               actualSet.is_completed
                                 ? gramsToKg(actualSet.weight_grams)
-                                : (planned?.weight_kg ?? actualSet.weight_grams / 1000)
+                                : (adaptedSet?.weight_kg ?? planned?.weight_kg ?? actualSet.weight_grams / 1000)
                             }
                             plannedReps={
                               actualSet.is_completed
@@ -1032,7 +1073,8 @@ export default function SessionScreen() {
                       })
                     )}
                   </View>
-                ))}
+                  );
+                })}
               </>
             )}
 

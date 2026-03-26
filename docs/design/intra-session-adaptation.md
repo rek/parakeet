@@ -1,8 +1,8 @@
 # Feature: Intra-Session Adaptation
 
-**Status**: Draft
+**Status**: Partially Implemented (upward autoregulation + RPE scaler fix shipped; downward tiers planned)
 
-**Date**: 11 Mar 2026 (revised 25 Mar 2026)
+**Date**: 11 Mar 2026 (revised 26 Mar 2026)
 
 > **Design Doc Philosophy**: This document describes WHAT the feature does and WHY, from a user perspective. Technical implementation details (HOW) are tracked in specs for granular task management. Keep this doc user-focused, concise, and free of code/implementation specifics.
 
@@ -108,44 +108,13 @@ These increments match available plate combinations. Rounded to nearest 2.5 kg a
 - All rationale strings are plain language, not jargon — the lifter should immediately understand what the system did and why
 - Adaptations are visible in session history after completion, showing the original plan alongside what actually happened
 
-## RPE-to-Effective-Sets Curve Fix
+## RPE-to-Effective-Sets Curve Fix (Implemented — engine-044)
 
-The current RPE scaler uses a step function that creates a 4.3× cliff at RPE 7.0:
+The RPE scaler previously used a step function that created a 4.3× cliff at RPE 7.0 (6.9 → 0.15, 7.0 → 0.65). This was replaced with piecewise linear interpolation between anchor points in engine-044.
 
-| RPE | Current multiplier | Problem |
-|-----|--------------------|---------|
-| 6.0 | 0.15 | |
-| 6.5 | 0.15 | Same as 6.0 — half-points ignored |
-| 6.9 | 0.15 | |
-| 7.0 | 0.65 | 4.3× jump from 6.9 |
-| 7.5 | 0.65 | Same as 7.0 — half-points ignored |
-| 8.0 | 0.85 | |
+Current anchor points: 6.0 → 0.15, 6.5 → 0.30, 7.0 → 0.65, 8.0 → 0.85, 9.0 → 1.0. Below 6.0 → 0.0. Above 9.0 → 1.0. Values between anchors are linearly interpolated (e.g., RPE 7.5 → 0.75, RPE 8.5 → 0.925).
 
-This step function means an entire explosive session at RPE 6.5 produces 0.15 per set, while the same session at RPE 7.0 would produce 0.65 per set — a 4.3× difference for half an RPE point. RPE is a subjective, continuous scale; the volume accounting should reflect that.
-
-**Fix: linear interpolation between anchor points.**
-
-Anchor points (unchanged): 6.0 → 0.15, 7.0 → 0.65, 8.0 → 0.85, 9.0 → 1.0. Below 6.0 → 0.0. Above 9.0 → 1.0.
-
-| RPE | Current | Interpolated | Change |
-|-----|---------|-------------|--------|
-| 6.0 | 0.15 | 0.15 | — |
-| 6.5 | 0.15 | 0.40 | +167% |
-| 7.0 | 0.65 | 0.65 | — |
-| 7.5 | 0.65 | 0.75 | +15% |
-| 8.0 | 0.85 | 0.85 | — |
-| 8.5 | 0.85 | 0.925 | +9% |
-| 9.0 | 1.0 | 1.0 | — |
-
-With interpolation, today's bench session would produce:
-- 2 bench sets × 0.40 (RPE 6.5) × 1.0 contribution = **0.80** (was 0.30)
-- 2 CGBP sets × 0.40 (RPE 6.5) × 1.0 = **0.80** (was 0.30)
-- 2 DB Incline sets × 0.15 (RPE 6.0) × 1.0 = **0.30** (unchanged)
-- Total: **1.90** effective chest sets (was 0.90) — still not great, but 2× better and accurately reflects the continuous nature of RPE
-
-The interpolated curve is also more consistent with the strength research cited in the domain docs: Robinson/Refalo 2024 meta-regression found the relationship between proximity to failure and strength gains is nonlinear with confidence intervals containing zero — moderate-effort sets are more valuable for strength than the step function suggests.
-
-**This fix is independent of intra-session adaptation** and should ship first as a smaller, self-contained change.
+See [domain/muscle-mapping.md](../domain/muscle-mapping.md#rpe-to-effective-sets-curve) for the full anchor table and research basis.
 
 ## Interaction with Existing Systems
 

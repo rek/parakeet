@@ -16,11 +16,13 @@ import {
   DEFAULT_MAIN_REST_SECONDS,
 } from '../model/types';
 import { computeDismissResult } from '../utils/computeDismissResult';
+import { writeAuxFailureAndAdapt } from '../utils/set-outcome-helpers';
 import {
   resolveNextAuxSetWeight,
   resolveNextSetWeight,
 } from '../utils/set-weight-resolver';
 import { checkVolumeRecovery } from '../utils/volume-recovery-check';
+import { checkWeightAutoregulation } from '../utils/weight-autoregulation-check';
 
 export function useSetCompletionFlow({
   restTimerPrefsRef,
@@ -407,13 +409,7 @@ export function useSetCompletionFlow({
         nextSetNumber: failedSetNumber,
         plannedWeightKg: auxWork!.sets[failedSetNumber - 1]?.weight_kg ?? 0,
       });
-      updateAuxiliarySet(auxExercise, failedSetNumber, {
-        weight_grams: auxWeightGrams,
-        reps_completed: actualReps,
-        is_completed: true,
-        rpe_actual: 10, // failed = max effort by definition
-        failed: true,
-      });
+      writeAuxFailureAndAdapt(auxExercise, failedSetNumber, auxWeightGrams, actualReps, auxiliaryWork);
     }
   }
 
@@ -541,8 +537,9 @@ export function useSetCompletionFlow({
     if (pendingRpeSetNumber !== null) {
       updateSet(pendingRpeSetNumber, { rpe_actual: rpe });
       setPendingRpeSetNumber(null);
-      // Check for volume recovery eligibility after main lift RPE
+      // Check for volume recovery and weight autoregulation after main lift RPE
       checkVolumeRecovery();
+      checkWeightAutoregulation();
     } else if (pendingAuxRpe !== null) {
       updateAuxiliarySet(pendingAuxRpe.exercise, pendingAuxRpe.setNumber, {
         rpe_actual: rpe,
@@ -600,13 +597,8 @@ export function useSetCompletionFlow({
     if (!conf) return;
     setPendingAuxConfirmation(null);
 
-    // Write failure to the store
-    updateAuxiliarySet(conf.exercise, conf.setNumber, {
-      weight_grams: conf.weightGrams,
-      reps_completed: actualReps,
-      is_completed: true,
-      rpe_actual: 10,
-    });
+    // Write failure + adapt remaining sets via shared helper
+    writeAuxFailureAndAdapt(conf.exercise, conf.setNumber, conf.weightGrams, actualReps, auxiliaryWork);
 
     // Open rest timer if not last set and aux timer enabled
     if (conf.setNumber >= conf.setsInExercise) return;

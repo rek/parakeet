@@ -1,4 +1,4 @@
-import type { AdaptedPlan, VolumeRecoveryOffer } from '@parakeet/training-engine';
+import type { AdaptedPlan, AuxAdaptedPlan, VolumeRecoveryOffer, WeightSuggestion } from '@parakeet/training-engine';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
@@ -60,8 +60,12 @@ export interface SessionState {
   timerState: TimerState | null;
   consecutiveMainLiftFailures: number;
   currentAdaptation: AdaptedPlan | null;
+  /** Per-exercise aux adaptations keyed by exercise name */
+  auxAdaptations: Record<string, AuxAdaptedPlan>;
   recoveryOffer: VolumeRecoveryOffer | null;
   recoveryDismissed: boolean;
+  weightSuggestion: WeightSuggestion | null;
+  hasAcceptedWeightSuggestion: boolean;
 
   updateSet: (setNumber: number, data: Partial<ActualSet>) => void;
   updateAuxiliarySet: (
@@ -86,10 +90,14 @@ export interface SessionState {
   recordSetFailure: () => void;
   recordSetSuccess: () => void;
   setAdaptation: (plan: AdaptedPlan) => void;
+  setAuxAdaptation: (exercise: string, plan: AuxAdaptedPlan) => void;
   resetAdaptation: () => void;
   setRecoveryOffer: (offer: VolumeRecoveryOffer) => void;
   acceptRecovery: () => void;
   dismissRecovery: () => void;
+  setWeightSuggestion: (suggestion: WeightSuggestion | null) => void;
+  acceptWeightSuggestion: () => void;
+  dismissWeightSuggestion: () => void;
   openTimer: (opts: {
     durationSeconds: number;
     pendingMainSetNumber?: number;
@@ -118,8 +126,11 @@ export const useSessionStore = create<SessionState>()(
       timerState: null,
       consecutiveMainLiftFailures: 0,
       currentAdaptation: null,
+      auxAdaptations: {},
       recoveryOffer: null,
       recoveryDismissed: false,
+      weightSuggestion: null,
+      hasAcceptedWeightSuggestion: false,
 
       initSession: (sessionId, plannedSets) =>
         set({
@@ -137,6 +148,8 @@ export const useSessionStore = create<SessionState>()(
           timerState: null,
           recoveryOffer: null,
           recoveryDismissed: false,
+          weightSuggestion: null,
+          hasAcceptedWeightSuggestion: false,
         }),
 
       initAuxiliary: (work) =>
@@ -239,10 +252,16 @@ export const useSessionStore = create<SessionState>()(
 
       setAdaptation: (plan) => set({ currentAdaptation: plan }),
 
+      setAuxAdaptation: (exercise, plan) =>
+        set((state) => ({
+          auxAdaptations: { ...state.auxAdaptations, [exercise]: plan },
+        })),
+
       resetAdaptation: () =>
         set({
           consecutiveMainLiftFailures: 0,
           currentAdaptation: null,
+          auxAdaptations: {},
         }),
 
       setRecoveryOffer: (offer) => set({ recoveryOffer: offer }),
@@ -278,6 +297,29 @@ export const useSessionStore = create<SessionState>()(
 
       dismissRecovery: () =>
         set({ recoveryOffer: null, recoveryDismissed: true }),
+
+      setWeightSuggestion: (suggestion) => set({ weightSuggestion: suggestion }),
+
+      acceptWeightSuggestion: () =>
+        set((state) => {
+          const suggestion = state.weightSuggestion;
+          if (!suggestion) return {};
+          // Find the next incomplete main set and update its weight
+          const nextSet = state.actualSets.find((s) => !s.is_completed);
+          if (!nextSet) return { weightSuggestion: null };
+          const updatedActual = state.actualSets.map((s) =>
+            s.set_number === nextSet.set_number
+              ? { ...s, weight_grams: weightKgToGrams(suggestion.suggestedWeightKg) }
+              : s,
+          );
+          return {
+            actualSets: updatedActual,
+            weightSuggestion: null,
+            hasAcceptedWeightSuggestion: true,
+          };
+        }),
+
+      dismissWeightSuggestion: () => set({ weightSuggestion: null }),
 
       openTimer: ({
         durationSeconds,
@@ -339,8 +381,11 @@ export const useSessionStore = create<SessionState>()(
           timerState: null,
           consecutiveMainLiftFailures: 0,
           currentAdaptation: null,
+          auxAdaptations: {},
           recoveryOffer: null,
           recoveryDismissed: false,
+          weightSuggestion: null,
+          hasAcceptedWeightSuggestion: false,
         }),
     }),
     {
