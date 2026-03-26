@@ -116,7 +116,7 @@ Trace the 8-step JIT pipeline in `jit-session-generator.ts`:
 
 - Does soreness input from `soreness_checkins` correctly cap volume per muscle group?
 - Are active disruptions (`activeDisruptions`) correctly wired from `getActiveDisruptions()` into `JITInput`?
-- Is the RPE threshold (`>= 1.0`) consistently applied across formula and LLM generators?
+- Is the Step 2 RPE correction threshold (`>= 0.75`, tiered: small 0.75–1.25, large >= 1.25) applied consistently? Note: the performance adjuster uses separate thresholds (1.0 male / 1.5 female).
 - `HybridJITGenerator` — does it fall back gracefully if the LLM call fails?
 - `jit_comparison_logs` — is this actually written? What happens if the insert fails?
 - Warmup sets: are they generated for all three main lifts? What if `warmupConfig` is null?

@@ -142,7 +142,7 @@ function MuscleBar({
           )}
           <Text style={styles.reasoningText}>
             MRV {mrv} · MEV {mev}
-            {isPartialWeek && proRatedMev < mev
+            {isPartialWeek && proRatedMev > 0 && proRatedMev < mev
               ? ` (on track: ${proRatedMev})`
               : ''}
             {'  '}
