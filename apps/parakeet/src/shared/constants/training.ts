@@ -5,15 +5,15 @@ import { LIFTS } from '@parakeet/training-engine';
 export const MUSCLE_GROUPS_ORDER: readonly MuscleGroup[] = MUSCLE_GROUPS;
 
 export const MUSCLE_LABELS_FULL = Object.fromEntries(
-  MUSCLE_CATALOG.map(m => [m.id, m.label])
+  MUSCLE_CATALOG.map((m) => [m.id, m.label])
 ) as Record<MuscleGroup, string>;
 
 export const MUSCLE_LABELS_COMPACT = Object.fromEntries(
-  MUSCLE_CATALOG.map(m => [m.id, m.labelCompact])
+  MUSCLE_CATALOG.map((m) => [m.id, m.labelCompact])
 ) as Record<MuscleGroup, string>;
 
 export const MUSCLE_LABELS_ABBR = Object.fromEntries(
-  MUSCLE_CATALOG.map(m => [m.id, m.abbr])
+  MUSCLE_CATALOG.map((m) => [m.id, m.abbr])
 ) as Record<MuscleGroup, string>;
 
 export const COMPACT_VOLUME_MUSCLES: readonly MuscleGroup[] = [
@@ -58,6 +58,15 @@ export const INTENSITY_LABELS: Record<string, string> = {
   rep: 'Rep',
   deload: 'Deload',
 };
+
+/**
+ * Fallback RPE target when JIT data is missing or incomplete.
+ * Used across session completion, volume recovery, and weight autoregulation.
+ */
+export const DEFAULT_RPE_TARGET = 8.5;
+
+/** Muscle contribution threshold for identifying primary muscles (vs secondary). */
+export const PRIMARY_CONTRIBUTION_THRESHOLD = 1.0;
 
 export const READINESS_LABELS = {
   sleep: { 1: 'Terrible', 2: 'Poor', 3: 'OK', 4: 'Good', 5: 'Great' } as const,

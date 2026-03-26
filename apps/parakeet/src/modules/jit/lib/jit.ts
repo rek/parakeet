@@ -8,20 +8,22 @@ import {
 } from '@modules/program/lib/auxiliary-config';
 import { getCurrentOneRmKg } from '@modules/program/lib/lifter-maxes';
 import {
+  parseActualSetsJson,
+  parsePlannedSetsJson as parsePlannedSets,
+} from '@modules/session';
+import {
   getDaysSinceLastSession,
   getSession,
 } from '@modules/session/application/session.service';
-import { parseActualSetsJson, parsePlannedSetsJson as parsePlannedSets } from '@modules/session';
 import { fetchProfileSex } from '@modules/session/data/session.repository';
 import { getUserRestOverrides } from '@modules/settings/lib/rest-config';
-import { weightGramsToKg } from '@shared/utils/weight';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import {
   getBarWeightKg,
   getJITStrategyOverride,
 } from '@modules/settings/lib/settings';
 import { getWarmupConfig } from '@modules/settings/lib/warmup-config';
 import { getMrvMevConfig } from '@modules/training-volume/lib/volume-config';
+import { DEFAULT_RPE_TARGET } from '@shared/constants/training';
 import {
   BlockNumberSchema,
   DisruptionSchema,
@@ -56,6 +58,8 @@ import type {
 } from '@parakeet/training-engine';
 import { toJson, typedSupabase } from '@platform/supabase';
 import { captureException } from '@platform/utils/captureException';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { weightGramsToKg } from '@shared/utils/weight';
 
 import { fetchModifierCalibrations } from '../data/calibration.repository';
 import {
@@ -219,7 +223,7 @@ export async function runJITForSession(
     }
     return {
       actual_rpe: r.session_rpe ?? null,
-      target_rpe: 8.5,
+      target_rpe: DEFAULT_RPE_TARGET,
       ...(deviation && {
         plannedWeightKg: deviation.plannedWeightKg,
         actualMaxWeightKg: deviation.actualMaxWeightKg,
@@ -237,12 +241,21 @@ export async function runJITForSession(
   let upcomingLifts: Lift[] | undefined;
 
   if (!isAdHoc) {
-    const [weekLogs, weekCounts, weekInfo, rawUpcomingLifts] = await Promise.all([
-      fetchWeeklySessionLogs(userId, session.program_id!, session.week_number),
-      fetchWeekSessionCounts(session.program_id!, session.week_number),
-      fetchProgramWeekInfo(session.program_id!),
-      fetchUpcomingSessionLifts(session.program_id!, session.week_number, session.day_number),
-    ]);
+    const [weekLogs, weekCounts, weekInfo, rawUpcomingLifts] =
+      await Promise.all([
+        fetchWeeklySessionLogs(
+          userId,
+          session.program_id!,
+          session.week_number
+        ),
+        fetchWeekSessionCounts(session.program_id!, session.week_number),
+        fetchProgramWeekInfo(session.program_id!),
+        fetchUpcomingSessionLifts(
+          session.program_id!,
+          session.week_number,
+          session.day_number
+        ),
+      ]);
     upcomingLifts = rawUpcomingLifts
       .map((l) => LiftSchema.safeParse(l).data)
       .filter((l): l is Lift => l !== undefined);
@@ -338,13 +351,19 @@ export async function runJITForSession(
 
   // Adaptive volume calibration signals (engine-043 Phase 2)
   let capacityHistory: number[] | undefined;
-  let weeklyMismatchDirection: 'recovering_well' | 'accumulating_fatigue' | null | undefined;
+  let weeklyMismatchDirection:
+    | 'recovering_well'
+    | 'accumulating_fatigue'
+    | null
+    | undefined;
   try {
     // Fetch recent capacity assessments from AsyncStorage.
     // Keys are stored as capacity_assessment:<sessionId> — order doesn't matter,
     // we just need the most recent values. Limit to 5 to avoid processing stale data.
     const allKeys = await AsyncStorage.getAllKeys();
-    const capacityKeys = allKeys.filter((k) => k.startsWith('capacity_assessment:'));
+    const capacityKeys = allKeys.filter((k) =>
+      k.startsWith('capacity_assessment:')
+    );
     if (capacityKeys.length > 0) {
       // Sort by key to approximate chronological order (UUIDs are not sortable,
       // but this is best-effort — the calibration system is robust to ordering)
@@ -360,11 +379,12 @@ export async function runJITForSession(
 
   // Weekly body review mismatch direction for primary muscles (engine-043 Phase 3)
   try {
-    const primaryMuscles = lift === 'squat'
-      ? (['quads', 'glutes', 'lower_back'] as const)
-      : lift === 'bench'
-        ? (['chest', 'triceps', 'shoulders'] as const)
-        : (['hamstrings', 'glutes', 'lower_back', 'upper_back'] as const);
+    const primaryMuscles =
+      lift === 'squat'
+        ? (['quads', 'glutes', 'lower_back'] as const)
+        : lift === 'bench'
+          ? (['chest', 'triceps', 'shoulders'] as const)
+          : (['hamstrings', 'glutes', 'lower_back', 'upper_back'] as const);
     weeklyMismatchDirection = await getLatestMismatchDirection(
       userId,
       session.program_id,
@@ -416,7 +436,10 @@ export async function runJITForSession(
     sessionIndex,
     totalSessionsThisWeek,
     upcomingLifts,
-    modifierCalibrations: Object.keys(modifierCalibrations).length > 0 ? modifierCalibrations : undefined,
+    modifierCalibrations:
+      Object.keys(modifierCalibrations).length > 0
+        ? modifierCalibrations
+        : undefined,
     storedOneRmKg: oneRmSource === 'working' ? resolvedOneRmKg : undefined,
     oneRmSource,
     capacityHistory: capacityHistory?.length ? capacityHistory : undefined,

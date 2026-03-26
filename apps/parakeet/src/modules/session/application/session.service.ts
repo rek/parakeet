@@ -4,6 +4,7 @@ import {
   type UnendingProgramRef,
 } from '@modules/program';
 import type { Lift } from '@parakeet/shared-types';
+import { DEFAULT_RPE_TARGET } from '@shared/constants/training';
 import { LiftSchema } from '@parakeet/shared-types';
 import {
   DEFAULT_TRAINING_DAYS,
@@ -24,8 +25,6 @@ import type {
   CompleteSessionInput,
   SessionCompletionContext,
 } from '@shared/types/domain';
-
-import { validateSet } from '../utils/validateSet';
 
 import {
   deleteSession,
@@ -59,6 +58,7 @@ import {
   updateSessionToPlanned,
   updateSessionToSkipped,
 } from '../data/session.repository';
+import { validateSet } from '../utils/validateSet';
 
 export type {
   CompleteSessionInput,
@@ -217,8 +217,7 @@ export async function abandonStaleInProgressSessions(
   if (!session?.planned_date) return;
 
   const plannedDate = new Date(session.planned_date);
-  const hoursSince =
-    (Date.now() - plannedDate.getTime()) / (1000 * 60 * 60);
+  const hoursSince = (Date.now() - plannedDate.getTime()) / (1000 * 60 * 60);
 
   if (hoursSince > STALE_SESSION_HOURS) {
     await updateSessionToSkipped(session.id);
@@ -284,7 +283,9 @@ export async function completeSession(
   }
 
   const normalizedSets = actualSets.map((set) => validateSet(set, 'set'));
-  const normalizedAuxiliarySets = auxiliarySets?.map((set) => validateSet(set, 'auxiliary set'));
+  const normalizedAuxiliarySets = auxiliarySets?.map((set) =>
+    validateSet(set, 'auxiliary set')
+  );
 
   const session = await getSession(sessionId);
   const plannedCountRaw =
@@ -505,11 +506,21 @@ async function generateNextUnendingSession(
     userId
   );
   try {
-    await appendNextUnendingSession(program, userId, plannedDate, lastCompletedLift);
+    await appendNextUnendingSession(
+      program,
+      userId,
+      plannedDate,
+      lastCompletedLift
+    );
   } catch (err: unknown) {
     // Unique constraint violation (23505) means another call already inserted —
     // safe to ignore and return the existing planned session.
-    if (err && typeof err === 'object' && 'code' in err && err.code === '23505') {
+    if (
+      err &&
+      typeof err === 'object' &&
+      'code' in err &&
+      err.code === '23505'
+    ) {
       return fetchPlannedSessionForProgram(program.id, userId);
     }
     throw err;
@@ -547,7 +558,7 @@ async function getRecentLogsForLift(
       lift: row.lift ?? lift,
       intensity_type: row.intensity_type,
       actual_rpe: row.actual_rpe ?? null,
-      target_rpe: 8.5,
+      target_rpe: DEFAULT_RPE_TARGET,
       completion_pct: row.completion_pct ?? null,
     };
   });

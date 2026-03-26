@@ -6,13 +6,15 @@ import type {
   TrainingDisruption,
 } from '@parakeet/shared-types';
 import { suggestDisruptionAdjustment } from '@parakeet/training-engine';
-import { roundToNearest } from '@shared/utils/weight';
 import type { DbRow } from '@platform/supabase';
 import { typedSupabase } from '@platform/supabase';
+import { roundToNearest } from '@shared/utils/weight';
+
 import {
   parseAdjustmentSuggestionsJson,
   parsePlannedSetsJson,
 } from '../data/disruption-codecs';
+import { SORENESS_NUMERIC } from './disruption-presets';
 
 type SessionRow = Pick<
   DbRow<'sessions'>,
@@ -273,7 +275,9 @@ export async function getActiveDisruptions(userId: string) {
     )
     .eq('user_id', userId)
     .neq('status', 'resolved')
-    .or(`affected_date_end.is.null,affected_date_end.gte.${new Date().toISOString().slice(0, 10)}`)
+    .or(
+      `affected_date_end.is.null,affected_date_end.gte.${new Date().toISOString().slice(0, 10)}`
+    )
     .order('reported_at', { ascending: false });
   if (error) throw error;
   return data ?? [];
@@ -313,7 +317,7 @@ export async function applyUnprogrammedEventSoreness(
   soreness: Record<string, number>
 ): Promise<void> {
   const ratings = Object.fromEntries(
-    Object.entries(soreness).filter(([, level]) => level > 1)
+    Object.entries(soreness).filter(([, level]) => level > SORENESS_NUMERIC.none)
   );
   if (Object.keys(ratings).length === 0) return;
 

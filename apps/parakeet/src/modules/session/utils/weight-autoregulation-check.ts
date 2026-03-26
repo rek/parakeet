@@ -1,6 +1,7 @@
-import { evaluateWeightAutoregulation } from '@parakeet/training-engine';
 import { Lift } from '@parakeet/shared-types';
+import { evaluateWeightAutoregulation } from '@parakeet/training-engine';
 import { useSessionStore } from '@platform/store/sessionStore';
+import { DEFAULT_RPE_TARGET } from '@shared/constants/training';
 import { weightGramsToKg } from '@shared/utils/weight';
 
 import type { JitData } from '../model/types';
@@ -38,10 +39,15 @@ export function checkWeightAutoregulation(): void {
 
   // RPE target from JIT data
   const jitSets = jitData.mainLiftSets;
-  const rpeTarget = jitSets[lastSet.set_number - 1]?.rpe_target ?? jitSets[0]?.rpe_target ?? 8.5;
+  const rpeTarget =
+    jitSets[lastSet.set_number - 1]?.rpe_target ??
+    jitSets[0]?.rpe_target ??
+    DEFAULT_RPE_TARGET;
 
   // Count remaining incomplete main sets
-  const remainingSetCount = state.actualSets.filter((s) => !s.is_completed).length;
+  const remainingSetCount = state.actualSets.filter(
+    (s) => !s.is_completed
+  ).length;
 
   // Session context
   const primaryLift = (state.sessionMeta?.primary_lift ?? 'bench') as Lift;

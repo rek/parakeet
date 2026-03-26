@@ -1,5 +1,6 @@
 import { evaluateVolumeRecovery } from '@parakeet/training-engine';
 import { useSessionStore } from '@platform/store/sessionStore';
+import { DEFAULT_RPE_TARGET } from '@shared/constants/training';
 
 import type { JitData } from '../model/types';
 
@@ -28,7 +29,7 @@ export function checkVolumeRecovery(): void {
 
   // rpe_target lives on the JIT mainLiftSets, not the store's plannedSets
   const jitSets = jitData.mainLiftSets;
-  const defaultRpeTarget = jitSets[0]?.rpe_target ?? 8.5;
+  const defaultRpeTarget = jitSets[0]?.rpe_target ?? DEFAULT_RPE_TARGET;
 
   // Build completed sets with RPE context from the store
   const completedSets = state.actualSets
