@@ -6,10 +6,10 @@ import type {
   MuscleGroup,
   PredictedFatigue,
 } from '@parakeet/training-engine';
+import { MUSCLE_GROUPS } from '@parakeet/shared-types';
 import {
   getMusclesForExercise,
   getMusclesForLift,
-  MUSCLE_GROUPS,
   rpeSetMultiplier,
 } from '@parakeet/training-engine';
 import type { DbRow } from '@platform/supabase';

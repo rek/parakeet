@@ -17,16 +17,16 @@ import {
 } from '@modules/body-review';
 import { addBodyweightEntry, getProfile } from '@modules/profile';
 import { getMrvMevConfig, volumeBarColor } from '@modules/training-volume';
+import type { MuscleGroup } from '@parakeet/shared-types';
+import { MUSCLE_GROUPS } from '@parakeet/shared-types';
 import {
   computePredictedFatigue,
   detectMismatches,
-  MUSCLE_GROUPS,
 } from '@parakeet/training-engine';
 import type {
   FatigueLevel,
   FatigueMismatch,
   MrvMevConfig,
-  MuscleGroup,
   PredictedFatigue,
 } from '@parakeet/training-engine';
 import { captureException } from '@platform/utils/captureException';

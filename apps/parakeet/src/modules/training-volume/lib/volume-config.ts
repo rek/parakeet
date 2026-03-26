@@ -1,10 +1,10 @@
 import type { BiologicalSex } from '@modules/profile/application/profile.service';
+import type { MuscleGroup } from '@parakeet/shared-types';
+import { MUSCLE_GROUPS } from '@parakeet/shared-types';
 import {
   DEFAULT_MRV_MEV_CONFIG_FEMALE,
   DEFAULT_MRV_MEV_CONFIG_MALE,
-  MUSCLE_GROUPS,
 } from '@parakeet/training-engine';
-import type { MuscleGroup } from '@parakeet/shared-types';
 import type { MrvMevConfig } from '@parakeet/training-engine';
 import { typedSupabase } from '@platform/supabase';
 
