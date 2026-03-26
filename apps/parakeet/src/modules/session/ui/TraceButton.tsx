@@ -1,18 +1,18 @@
 import { useState } from 'react';
 import { StyleSheet, Text, TouchableOpacity } from 'react-native';
 
-import type { PrescriptionTrace } from '@parakeet/training-engine';
+import { useFeatureEnabled } from '@modules/feature-flags';
 
 import { radii, spacing, typography } from '../../../theme';
 import type { ColorScheme } from '../../../theme';
-import { useFeatureEnabled } from '@modules/feature-flags';
+import type { FormattedTrace } from '../utils/format-trace';
 import { PrescriptionSheet } from './PrescriptionSheet';
 
 export function TraceButton({
   prescriptionTrace,
   colors,
 }: {
-  prescriptionTrace: PrescriptionTrace;
+  prescriptionTrace: FormattedTrace;
   colors: ColorScheme;
 }) {
   const [visible, setVisible] = useState(false);

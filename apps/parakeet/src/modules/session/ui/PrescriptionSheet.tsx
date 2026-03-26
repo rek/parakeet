@@ -1,27 +1,18 @@
 import { useMemo } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 
-import type { PrescriptionTrace } from '@parakeet/training-engine';
-
 import { Sheet } from '../../../components/ui/Sheet';
 import { spacing, typography } from '../../../theme';
 import type { ColorScheme } from '../../../theme';
 import { useTheme } from '../../../theme/ThemeContext';
-import { capitalize } from '@shared/utils/string';
-import {
-  formatAuxTrace,
-  formatRestTrace,
-  formatVolumeChanges,
-  formatWeightDerivation,
-} from '../utils/format-trace';
-import type { TraceLine } from '../utils/format-trace';
+import type { FormattedTrace, TraceLine } from '../utils/format-trace';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
 interface Props {
   visible: boolean;
   onClose: () => void;
-  trace: PrescriptionTrace;
+  trace: FormattedTrace;
   focusExercise?: string;
 }
 
@@ -146,21 +137,18 @@ function buildStyles(colors: ColorScheme) {
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
-const STRATEGY_LABELS: Record<PrescriptionTrace['strategy'], string> = {
-  formula: 'Formula',
-  llm: 'LLM',
-  hybrid: 'Hybrid',
-  formula_fallback: 'Fallback',
-};
-
 function renderTraceLine(
   line: TraceLine,
   textStyle: object,
   subtitleStyle: object,
-  key: number | string,
+  key: number | string
 ) {
   if (!line.subtitle) {
-    return <Text key={key} style={textStyle}>{line.text}</Text>;
+    return (
+      <Text key={key} style={textStyle}>
+        {line.text}
+      </Text>
+    );
   }
   return (
     <View key={key} style={{ gap: 2 }}>
@@ -172,23 +160,28 @@ function renderTraceLine(
 
 // ── Component ─────────────────────────────────────────────────────────────────
 
-export function PrescriptionSheet({ visible, onClose, trace, focusExercise }: Props) {
+export function PrescriptionSheet({
+  visible,
+  onClose,
+  trace,
+  focusExercise,
+}: Props) {
   const { colors } = useTheme();
 
   const styles = useMemo(() => buildStyles(colors), [colors]);
 
-  const strategyLabel = STRATEGY_LABELS[trace.strategy] ?? trace.strategy;
-  const contextLabel = `${capitalize(trace.primaryLift)} · ${capitalize(trace.intensityType)} · Block ${trace.blockNumber}`;
+  const {
+    strategyLabel,
+    contextLabel,
+    rationale,
+    warnings,
+    weightLines,
+    volumeLines,
+    auxSections,
+    restLines,
+  } = trace;
 
-  const weightLines = trace.mainLift.weightDerivation
-    ? formatWeightDerivation({ derivation: trace.mainLift.weightDerivation })
-    : null;
-
-  const volumeLines = formatVolumeChanges({ changes: trace.mainLift.volumeChanges });
-
-  const restLines = formatRestTrace({ rest: trace.rest });
-
-  const hasAdjustments = trace.rationale.length > 0 || volumeLines.length > 0;
+  const hasAdjustments = rationale.length > 0 || volumeLines.length > 0;
 
   return (
     <Sheet
@@ -209,10 +202,10 @@ export function PrescriptionSheet({ visible, onClose, trace, focusExercise }: Pr
         </View>
 
         {/* Rationale */}
-        {trace.rationale.length > 0 && (
+        {rationale.length > 0 && (
           <View style={styles.section}>
             <Text style={styles.sectionHeader}>Rationale</Text>
-            {trace.rationale.map((line, i) => (
+            {rationale.map((line, i) => (
               <View key={i} style={styles.bulletRow}>
                 <Text style={styles.bulletMark}>•</Text>
                 <Text style={styles.bulletText}>{line}</Text>
@@ -222,9 +215,9 @@ export function PrescriptionSheet({ visible, onClose, trace, focusExercise }: Pr
         )}
 
         {/* Warnings */}
-        {trace.warnings.length > 0 && (
+        {warnings.length > 0 && (
           <View style={styles.warningBox}>
-            {trace.warnings.map((w, i) => (
+            {warnings.map((w, i) => (
               <Text key={i} style={styles.warningText}>
                 {w}
               </Text>
@@ -243,7 +236,7 @@ export function PrescriptionSheet({ visible, onClose, trace, focusExercise }: Pr
                   ? styles.derivationFinal
                   : styles.derivationLine,
                 styles.subtitle,
-                i,
+                i
               )
             )}
           </View>
@@ -277,19 +270,20 @@ export function PrescriptionSheet({ visible, onClose, trace, focusExercise }: Pr
         )}
 
         {/* Auxiliary Exercises */}
-        {trace.auxiliaries.length > 0 && (
+        {auxSections.length > 0 && (
           <View style={styles.section}>
             <Text style={styles.sectionHeader}>Auxiliary Exercises</Text>
-            {trace.auxiliaries.map((aux, i) => {
+            {auxSections.map((section, i) => {
               const isFocused =
-                focusExercise !== undefined && aux.exercise === focusExercise;
-              const auxLines = formatAuxTrace({ aux });
+                focusExercise !== undefined && section.exerciseId === focusExercise;
               return (
                 <View key={i} style={styles.auxBlock}>
-                  <Text style={[styles.auxName, isFocused && styles.auxNameFocused]}>
-                    {capitalize(aux.exercise.replace(/_/g, ' '))}
+                  <Text
+                    style={[styles.auxName, isFocused && styles.auxNameFocused]}
+                  >
+                    {section.name}
                   </Text>
-                  {auxLines.map((line, j) => (
+                  {section.lines.map((line, j) => (
                     <View key={j}>
                       <Text style={styles.auxLine}>{line.text}</Text>
                       {line.subtitle && (
@@ -313,7 +307,7 @@ export function PrescriptionSheet({ visible, onClose, trace, focusExercise }: Pr
                 ? styles.restLineFinal
                 : styles.restLine,
               styles.subtitle,
-              i,
+              i
             )
           )}
         </View>

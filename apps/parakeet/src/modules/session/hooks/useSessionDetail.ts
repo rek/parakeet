@@ -1,12 +1,16 @@
 import { useEffect, useMemo } from 'react';
-import { useQuery } from '@tanstack/react-query';
 
-import type { PrescriptionTrace } from '@parakeet/training-engine';
 import { qk } from '@platform/query';
 import { captureException } from '@platform/utils/captureException';
+import { useQuery } from '@tanstack/react-query';
 
 import { getSession, getSessionLog } from '../application/session.service';
-import { parseJitInputSnapshot, parsePrescriptionTrace } from '../data/session-codecs';
+import {
+  parseJitInputSnapshot,
+  parsePrescriptionTrace,
+} from '../data/session-codecs';
+import { formatPrescriptionTrace } from '../utils/format-trace';
+import type { FormattedTrace } from '../utils/format-trace';
 
 type JitSnapshot = ReturnType<typeof parseJitInputSnapshot>;
 
@@ -19,10 +23,14 @@ type SessionDetailResult =
       session: NonNullable<Awaited<ReturnType<typeof getSession>>>;
       log: Awaited<ReturnType<typeof getSessionLog>>;
       jitSnapshot: JitSnapshot;
-      prescriptionTrace: PrescriptionTrace | null;
+      prescriptionTrace: FormattedTrace | null;
     };
 
-export function useSessionDetail({ sessionId }: { sessionId: string }): SessionDetailResult {
+export function useSessionDetail({
+  sessionId,
+}: {
+  sessionId: string;
+}): SessionDetailResult {
   const {
     data: session,
     isLoading: sessionLoading,
@@ -56,14 +64,20 @@ export function useSessionDetail({ sessionId }: { sessionId: string }): SessionD
     [session?.jit_input_snapshot]
   );
 
-  const prescriptionTrace = useMemo(
-    () => parsePrescriptionTrace(session?.jit_output_trace),
-    [session?.jit_output_trace]
-  );
+  const prescriptionTrace = useMemo(() => {
+    const raw = parsePrescriptionTrace(session?.jit_output_trace);
+    return raw ? formatPrescriptionTrace(raw) : null;
+  }, [session?.jit_output_trace]);
 
   if (sessionLoading || logLoading) return { status: 'loading' };
   if (sessionError) return { status: 'error', error: sessionError };
   if (!session) return { status: 'not-found' };
 
-  return { status: 'ready', session, log: log ?? null, jitSnapshot, prescriptionTrace };
+  return {
+    status: 'ready',
+    session,
+    log: log ?? null,
+    jitSnapshot,
+    prescriptionTrace,
+  };
 }

@@ -1,15 +1,35 @@
 import type {
   AuxExerciseTrace,
+  PrescriptionTrace,
   RestTrace,
   VolumeTrace,
   WeightDerivation,
 } from '@parakeet/training-engine';
+import { capitalize } from '@shared/utils/string';
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
 export interface TraceLine {
   text: string;
   subtitle?: string;
+}
+
+export interface FormattedAuxSection {
+  name: string;
+  exerciseId: string;
+  lines: TraceLine[];
+}
+
+/** App-owned, engine-free representation of a prescription trace for UI display. */
+export interface FormattedTrace {
+  strategyLabel: string;
+  contextLabel: string;
+  rationale: string[];
+  warnings: string[];
+  weightLines: TraceLine[] | null;
+  volumeLines: TraceLine[];
+  auxSections: FormattedAuxSection[];
+  restLines: TraceLine[];
 }
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
@@ -34,9 +54,10 @@ export function formatWeightDerivation({
 
   lines.push({
     text: `1RM: ${derivation.oneRmKg} kg`,
-    subtitle: derivation.oneRmSource === 'working'
-      ? `Computed from recent sessions (stored: ${derivation.storedOneRmKg ?? '?'} kg)`
-      : 'Your one-rep max from lifter maxes',
+    subtitle:
+      derivation.oneRmSource === 'working'
+        ? `Computed from recent sessions (stored: ${derivation.storedOneRmKg ?? '?'} kg)`
+        : 'Your one-rep max from lifter maxes',
   });
 
   lines.push({
@@ -102,7 +123,11 @@ const SCALING_SUBTITLES: Record<string, string> = {
   sqrt: 'Weight scales with square root — for lighter isolation exercises',
 };
 
-export function formatAuxTrace({ aux }: { aux: AuxExerciseTrace }): TraceLine[] {
+export function formatAuxTrace({
+  aux,
+}: {
+  aux: AuxExerciseTrace;
+}): TraceLine[] {
   const lines: TraceLine[] = [];
 
   lines.push({ text: aux.selectionReason });
@@ -175,4 +200,32 @@ export function formatRestTrace({ rest }: { rest: RestTrace }): TraceLine[] {
   }
 
   return lines;
+}
+
+// ── Top-level formatter ──────────────────────────────────────────────────────
+
+const STRATEGY_LABELS: Record<string, string> = {
+  formula: 'Formula',
+  llm: 'LLM',
+  hybrid: 'Hybrid',
+  formula_fallback: 'Fallback',
+};
+
+export function formatPrescriptionTrace(trace: PrescriptionTrace): FormattedTrace {
+  return {
+    strategyLabel: STRATEGY_LABELS[trace.strategy] ?? trace.strategy,
+    contextLabel: `${capitalize(trace.primaryLift)} · ${capitalize(trace.intensityType)} · Block ${trace.blockNumber}`,
+    rationale: trace.rationale,
+    warnings: trace.warnings,
+    weightLines: trace.mainLift.weightDerivation
+      ? formatWeightDerivation({ derivation: trace.mainLift.weightDerivation })
+      : null,
+    volumeLines: formatVolumeChanges({ changes: trace.mainLift.volumeChanges }),
+    auxSections: trace.auxiliaries.map((aux) => ({
+      name: capitalize(aux.exercise.replace(/_/g, ' ')),
+      exerciseId: aux.exercise,
+      lines: formatAuxTrace({ aux }),
+    })),
+    restLines: formatRestTrace({ rest: trace.rest }),
+  };
 }

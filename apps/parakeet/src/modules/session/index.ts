@@ -56,3 +56,5 @@ export { fmtKg } from './utils/fmtKg';
 export { buildRpeContextLabel } from './utils/buildRpeContextLabel';
 export { buildNextLiftLabel } from './utils/buildNextLiftLabel';
 export { TraceLink } from './ui/TraceLink';
+export { formatPrescriptionTrace } from './utils/format-trace';
+export type { FormattedTrace } from './utils/format-trace';

@@ -2,9 +2,9 @@ import { useState } from 'react';
 import { StyleSheet, TouchableOpacity } from 'react-native';
 
 import { Ionicons } from '@expo/vector-icons';
-import type { PrescriptionTrace } from '@parakeet/training-engine';
 
 import { useTheme } from '../../../theme/ThemeContext';
+import type { FormattedTrace } from '../utils/format-trace';
 import { PrescriptionSheet } from './PrescriptionSheet';
 
 /**
@@ -17,7 +17,7 @@ export function TraceLink({
   trace,
   focusExercise,
 }: {
-  trace: PrescriptionTrace;
+  trace: FormattedTrace;
   focusExercise?: string;
 }) {
   const { colors } = useTheme();

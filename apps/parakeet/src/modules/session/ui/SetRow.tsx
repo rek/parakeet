@@ -10,9 +10,8 @@ import {
 import type { PlateKg } from '@shared/constants/plates';
 
 import { radii, spacing, typography } from '../../../theme';
+import type { FormattedTrace } from '../utils/format-trace';
 import { useTheme } from '../../../theme/ThemeContext';
-import type { PrescriptionTrace } from '@parakeet/training-engine';
-
 import { PlateCalculatorSheet } from './PlateCalculatorSheet';
 import { PlateDisplay } from './PlateDisplay';
 import { resolveSetRowDisplay } from './resolveSetRowDisplay';
@@ -41,7 +40,7 @@ export interface SetRowProps {
   disabledPlates: PlateKg[];
   onBarWeightChange: (kg: number) => void;
   onDisabledPlatesChange: (plates: PlateKg[]) => void;
-  prescriptionTrace?: PrescriptionTrace | null;
+  prescriptionTrace?: FormattedTrace | null;
 }
 
 // ── Component ─────────────────────────────────────────────────────────────────
@@ -206,25 +205,26 @@ export function SetRow({
     [colors]
   );
 
-  const {
-    displayReps,
-    displayWeightKg,
-    displayWeightText,
-    displayCompleted,
-  } = resolveSetRowDisplay({
-    plannedWeightKg,
-    plannedReps,
-    localWeightKg: weightKg,
-    localWeightText: weightText,
-    localReps: reps,
-    localIsCompleted: isCompleted,
-    isCompletedExternal: isCompletedProp,
-  });
+  const { displayReps, displayWeightKg, displayWeightText, displayCompleted } =
+    resolveSetRowDisplay({
+      plannedWeightKg,
+      plannedReps,
+      localWeightKg: weightKg,
+      localWeightText: weightText,
+      localReps: reps,
+      localIsCompleted: isCompleted,
+      isCompletedExternal: isCompletedProp,
+    });
 
   // Report local edits to parent — skip when externally completed (parent already has the data)
   useEffect(() => {
     if (isCompletedProp) return;
-    onUpdate({ weightKg: displayWeightKg, reps: displayReps, rpe, isCompleted: displayCompleted });
+    onUpdate({
+      weightKg: displayWeightKg,
+      reps: displayReps,
+      rpe,
+      isCompleted: displayCompleted,
+    });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [displayWeightKg, displayReps, rpe, displayCompleted, isCompletedProp]);
 
@@ -263,7 +263,9 @@ export function SetRow({
   // Timed exercises: round label + duration input (minutes) + mark complete
   if (exerciseType === 'timed') {
     return (
-      <View style={[styles.wrapper, displayCompleted && styles.wrapperCompleted]}>
+      <View
+        style={[styles.wrapper, displayCompleted && styles.wrapperCompleted]}
+      >
         <View style={styles.row}>
           <Text style={styles.setLabel}>Round {setNumber}</Text>
           <TextInput
@@ -280,7 +282,10 @@ export function SetRow({
           />
           <Text style={styles.unitText}>min</Text>
           <TouchableOpacity
-            style={[styles.checkButton, displayCompleted && styles.checkButtonDone]}
+            style={[
+              styles.checkButton,
+              displayCompleted && styles.checkButtonDone,
+            ]}
             onPress={handleToggleComplete}
             activeOpacity={0.7}
           >
@@ -307,7 +312,10 @@ export function SetRow({
         {exerciseType !== 'bodyweight' && (
           <>
             <TextInput
-              style={[styles.weightInput, displayCompleted && styles.inputLocked]}
+              style={[
+                styles.weightInput,
+                displayCompleted && styles.inputLocked,
+              ]}
               value={displayWeightText}
               onChangeText={handleWeightChange}
               keyboardType="decimal-pad"
@@ -356,7 +364,10 @@ export function SetRow({
         </TouchableOpacity>
 
         <TouchableOpacity
-          style={[styles.checkButton, displayCompleted && styles.checkButtonDone]}
+          style={[
+            styles.checkButton,
+            displayCompleted && styles.checkButtonDone,
+          ]}
           onPress={handleToggleComplete}
           activeOpacity={0.7}
         >
@@ -372,7 +383,8 @@ export function SetRow({
       </View>
 
       {/* Second row: adjust buttons + plate calc + trace info */}
-      {(!displayCompleted && exerciseType === 'weighted') || prescriptionTrace ? (
+      {(!displayCompleted && exerciseType === 'weighted') ||
+      prescriptionTrace ? (
         <View style={styles.adjustRow}>
           {prescriptionTrace && <TraceLink trace={prescriptionTrace} />}
           {!displayCompleted && exerciseType === 'weighted' && (

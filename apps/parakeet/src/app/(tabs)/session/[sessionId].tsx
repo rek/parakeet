@@ -37,6 +37,7 @@ import {
   VolumeRecoveryBanner,
   WarmupSection,
   WeightSuggestionBanner,
+  formatPrescriptionTrace,
 } from '@modules/session';
 import type {
   AuxiliaryWork,
@@ -361,10 +362,11 @@ export default function SessionScreen() {
   const insets = useSafeAreaInsets();
   const traceEnabled = useFeatureEnabled('prescriptionTrace');
   const cachedTrace = useSessionStore((s) => s.cachedPrescriptionTrace);
-  const prescriptionTrace = useMemo(() => {
+  const formattedTrace = useMemo(() => {
     if (!cachedTrace) return null;
     try {
-      return JSON.parse(cachedTrace) as PrescriptionTrace;
+      const raw = JSON.parse(cachedTrace) as PrescriptionTrace;
+      return formatPrescriptionTrace(raw);
     } catch {
       return null;
     }
@@ -894,7 +896,7 @@ export default function SessionScreen() {
                   onBarWeightChange={handleBarWeightChange}
                   onDisabledPlatesChange={handleDisabledPlatesChange}
                   prescriptionTrace={
-                    traceEnabled ? prescriptionTrace : undefined
+                    traceEnabled ? formattedTrace : undefined
                   }
                 />
               );
