@@ -38,6 +38,7 @@ import {
   WarmupSection,
   WeightSuggestionBanner,
   formatPrescriptionTrace,
+  parsePrescriptionTrace,
 } from '@modules/session';
 import type {
   AuxiliaryWork,
@@ -56,7 +57,6 @@ import {
 } from '@modules/settings';
 import type { RestTimerPrefs, WarmupPlateDisplay } from '@modules/settings';
 import type { Lift } from '@parakeet/shared-types';
-import type { PrescriptionTrace } from '@parakeet/training-engine';
 import { useNetworkStatus } from '@platform/network';
 import { useSessionStore } from '@platform/store/sessionStore';
 import { captureException } from '@platform/utils/captureException';
@@ -365,8 +365,8 @@ export default function SessionScreen() {
   const formattedTrace = useMemo(() => {
     if (!cachedTrace) return null;
     try {
-      const raw = JSON.parse(cachedTrace) as PrescriptionTrace;
-      return formatPrescriptionTrace(raw);
+      const raw = parsePrescriptionTrace(JSON.parse(cachedTrace));
+      return raw ? formatPrescriptionTrace(raw) : null;
     } catch {
       return null;
     }
