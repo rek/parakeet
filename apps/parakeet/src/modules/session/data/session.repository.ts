@@ -1,6 +1,6 @@
 import type { ActualSet, IntensityType, Lift } from '@parakeet/shared-types';
 import { IntensityTypeSchema, LiftSchema } from '@parakeet/shared-types';
-import { localDateString } from '@parakeet/training-engine';
+import { localDateString } from '@shared/utils/localDateString';
 import type { DbInsert, DbRow } from '@platform/supabase';
 import { typedSupabase } from '@platform/supabase';
 import type {

@@ -1,7 +1,7 @@
 import { StyleSheet, Text, View } from 'react-native';
 
 import type { ActualSet, PlannedSet } from '@parakeet/shared-types';
-import { gramsToKg } from '@parakeet/training-engine';
+import { weightGramsToKg } from '@shared/utils/weight';
 
 import { radii, spacing, typography } from '../../../theme';
 import type { ColorScheme } from '../../../theme';
@@ -80,13 +80,13 @@ export function MainLiftResultsTable({
                       { color: actualColor },
                     ]}
                   >
-                    {`${fmtKg(gramsToKg(set.weight_grams))}×${set.reps_completed}`}
+                    {`${fmtKg(weightGramsToKg(set.weight_grams))}×${set.reps_completed}`}
                   </Text>
                 </>
               ) : (
                 <>
                   <Text style={[styles.tableCell, styles.tableCellWeight]}>
-                    {gramsToKg(set.weight_grams).toFixed(1)} kg
+                    {weightGramsToKg(set.weight_grams).toFixed(1)} kg
                   </Text>
                   <Text style={[styles.tableCell, styles.tableCellReps]}>
                     {set.reps_completed}

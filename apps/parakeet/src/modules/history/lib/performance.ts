@@ -1,5 +1,6 @@
 import type { Lift } from '@parakeet/shared-types';
-import { estimateOneRepMax_Epley, gramsToKg } from '@parakeet/training-engine';
+import { estimateOneRepMax_Epley } from '@parakeet/training-engine';
+import { weightGramsToKg } from '@shared/utils/weight';
 import { typedSupabase } from '@platform/supabase';
 
 import { processRecentHistory } from './performance-helpers';
@@ -141,7 +142,7 @@ function estimateHeaviestOneRm(actualSets: unknown): number {
   }[]) {
     if (!set.weight_grams || !set.reps_completed || set.reps_completed <= 0)
       continue;
-    const weightKg = gramsToKg(set.weight_grams);
+    const weightKg = weightGramsToKg(set.weight_grams);
     const oneRm = estimateOneRepMax_Epley(weightKg, set.reps_completed);
     if (oneRm > bestOneRm) bestOneRm = oneRm;
   }

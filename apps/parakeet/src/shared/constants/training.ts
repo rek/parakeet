@@ -1,6 +1,6 @@
-import type { Lift } from '@parakeet/shared-types';
-import { LIFTS, MUSCLE_CATALOG, MUSCLE_GROUPS } from '@parakeet/training-engine';
-import type { MuscleGroup } from '@parakeet/training-engine';
+import type { Lift, MuscleGroup } from '@parakeet/shared-types';
+import { MUSCLE_CATALOG, MUSCLE_GROUPS } from '@parakeet/shared-types';
+import { LIFTS } from '@parakeet/training-engine';
 
 export const MUSCLE_GROUPS_ORDER: readonly MuscleGroup[] = MUSCLE_GROUPS;
 

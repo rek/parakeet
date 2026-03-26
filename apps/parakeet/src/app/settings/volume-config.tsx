@@ -19,7 +19,8 @@ import {
   DEFAULT_MRV_MEV_CONFIG_FEMALE,
   DEFAULT_MRV_MEV_CONFIG_MALE,
 } from '@parakeet/training-engine';
-import type { MrvMevConfig, MuscleGroup } from '@parakeet/training-engine';
+import type { MuscleGroup } from '@parakeet/shared-types';
+import type { MrvMevConfig } from '@parakeet/training-engine';
 import {
   MUSCLE_GROUPS_ORDER,
   MUSCLE_LABELS_FULL,

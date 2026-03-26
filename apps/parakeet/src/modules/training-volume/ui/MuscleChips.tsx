@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
-import type { MuscleGroup } from '@parakeet/training-engine';
+import type { MuscleGroup } from '@parakeet/shared-types';
 import { MUSCLE_LABELS_COMPACT } from '@shared/constants/training';
 
 import { useTheme } from '../../../theme/ThemeContext';

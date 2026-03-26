@@ -1,10 +1,7 @@
 import { LifterMaxesInputSchema } from '@parakeet/shared-types';
 import type { Lift } from '@parakeet/shared-types';
-import {
-  estimateOneRepMax_Epley,
-  gramsToKg,
-  kgToGrams,
-} from '@parakeet/training-engine';
+import { estimateOneRepMax_Epley } from '@parakeet/training-engine';
+import { weightGramsToKg, weightKgToGrams } from '@shared/utils/weight';
 import { typedSupabase } from '@platform/supabase';
 
 interface LiftInput {
@@ -67,16 +64,16 @@ export async function submitMaxes(input: LifterMaxesInput) {
     .from('lifter_maxes')
     .insert({
       user_id: userId,
-      squat_1rm_grams: kgToGrams(resolve1Rm(input.squat)),
-      bench_1rm_grams: kgToGrams(resolve1Rm(input.bench)),
-      deadlift_1rm_grams: kgToGrams(resolve1Rm(input.deadlift)),
-      squat_input_grams: kgToGrams(input.squat.weightKg),
+      squat_1rm_grams: weightKgToGrams(resolve1Rm(input.squat)),
+      bench_1rm_grams: weightKgToGrams(resolve1Rm(input.bench)),
+      deadlift_1rm_grams: weightKgToGrams(resolve1Rm(input.deadlift)),
+      squat_input_grams: weightKgToGrams(input.squat.weightKg),
       squat_input_reps:
         input.squat.type === '3rm' ? (input.squat.reps ?? null) : null,
-      bench_input_grams: kgToGrams(input.bench.weightKg),
+      bench_input_grams: weightKgToGrams(input.bench.weightKg),
       bench_input_reps:
         input.bench.type === '3rm' ? (input.bench.reps ?? null) : null,
-      deadlift_input_grams: kgToGrams(input.deadlift.weightKg),
+      deadlift_input_grams: weightKgToGrams(input.deadlift.weightKg),
       deadlift_input_reps:
         input.deadlift.type === '3rm' ? (input.deadlift.reps ?? null) : null,
       source: inferSource(input),
@@ -108,5 +105,5 @@ export async function getCurrentOneRmKg(
   const maxes = await getCurrentMaxes(userId);
   if (!maxes) return null;
   const grams = maxes[`${lift}_1rm_grams`] as number | undefined;
-  return grams != null ? gramsToKg(grams) : null;
+  return grams != null ? weightGramsToKg(grams) : null;
 }

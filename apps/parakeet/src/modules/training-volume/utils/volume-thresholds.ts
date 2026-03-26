@@ -1,4 +1,5 @@
-import type { MuscleGroup, VolumeStatus } from '@parakeet/training-engine';
+import type { MuscleGroup } from '@parakeet/shared-types';
+import type { VolumeStatus } from '@parakeet/training-engine';
 
 export type VolumeLevel = 'exceeded' | 'approaching' | 'in_range' | 'below';
 

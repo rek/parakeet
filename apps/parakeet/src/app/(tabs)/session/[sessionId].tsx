@@ -58,10 +58,11 @@ import { useFeatureEnabled } from '@modules/feature-flags';
 import {
   getAllExercises,
   getExerciseType,
-  gramsToKg,
 } from '@parakeet/training-engine';
-import type { PlateKg, PrescriptionTrace } from '@parakeet/training-engine';
+import type { PrescriptionTrace } from '@parakeet/training-engine';
 import type { Lift } from '@parakeet/shared-types';
+import type { PlateKg } from '@shared/constants/plates';
+import { weightGramsToKg } from '@shared/utils/weight';
 import { useNetworkStatus } from '@platform/network';
 import { useSessionStore } from '@platform/store/sessionStore';
 import { captureException } from '@platform/utils/captureException';
@@ -881,7 +882,7 @@ export default function SessionScreen() {
                   setNumber={actualSet.set_number}
                   plannedWeightKg={
                     actualSet.is_completed
-                      ? gramsToKg(actualSet.weight_grams)
+                      ? weightGramsToKg(actualSet.weight_grams)
                       : displayWeightKg
                   }
                   plannedReps={
@@ -969,7 +970,7 @@ export default function SessionScreen() {
                         setNumber={actualSet.set_number}
                         plannedWeightKg={
                           actualSet.is_completed
-                            ? gramsToKg(actualSet.weight_grams)
+                            ? weightGramsToKg(actualSet.weight_grams)
                             : (adaptedSet?.weight_kg ?? planned?.weight_kg ?? actualSet.weight_grams / 1000)
                         }
                         plannedReps={
@@ -1042,7 +1043,7 @@ export default function SessionScreen() {
                             setNumber={actualSet.set_number}
                             plannedWeightKg={
                               actualSet.is_completed
-                                ? gramsToKg(actualSet.weight_grams)
+                                ? weightGramsToKg(actualSet.weight_grams)
                                 : (adaptedSet?.weight_kg ?? planned?.weight_kg ?? actualSet.weight_grams / 1000)
                             }
                             plannedReps={
@@ -1213,7 +1214,7 @@ export default function SessionScreen() {
           {pendingAuxConfirmation !== null && (
             <PostRestOverlay
               plannedReps={pendingAuxConfirmation.reps}
-              plannedWeightKg={gramsToKg(pendingAuxConfirmation.weightGrams)}
+              plannedWeightKg={weightGramsToKg(pendingAuxConfirmation.weightGrams)}
               nextSetNumber={pendingAuxConfirmation.setNumber}
               onLiftComplete={handleAuxConfirmComplete}
               onLiftFailed={handleAuxConfirmFailed}

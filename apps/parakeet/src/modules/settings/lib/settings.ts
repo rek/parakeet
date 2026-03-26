@@ -1,4 +1,4 @@
-import type { PlateKg } from '@parakeet/training-engine';
+import type { PlateKg } from '@shared/constants/plates';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const BAR_WEIGHT_KEY = 'bar_weight_kg';

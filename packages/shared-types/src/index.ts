@@ -7,3 +7,4 @@ export * from './modules/program';
 export * from './modules/session';
 export * from './modules/user';
 export * from './modules/challenge';
+export * from './modules/muscle';

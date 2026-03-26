@@ -1,4 +1,5 @@
-import { estimateOneRepMax_Epley, gramsToKg } from '@parakeet/training-engine';
+import { estimateOneRepMax_Epley } from '@parakeet/training-engine';
+import { weightGramsToKg } from '@shared/utils/weight';
 
 export interface LiftHistoryEntry {
   completedAt: string;
@@ -42,7 +43,7 @@ function estimateHeaviestOneRm(actualSets: unknown): number {
   }[]) {
     if (!s.weight_grams || !s.reps_completed || s.reps_completed <= 0) continue;
     const est = estimateOneRepMax_Epley(
-      gramsToKg(s.weight_grams),
+      weightGramsToKg(s.weight_grams),
       s.reps_completed
     );
     if (est > best) best = est;

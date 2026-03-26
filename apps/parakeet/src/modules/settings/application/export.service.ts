@@ -1,4 +1,4 @@
-import { gramsToKg } from '@parakeet/training-engine';
+import { weightGramsToKg } from '@shared/utils/weight';
 import { File, Paths } from 'expo-file-system';
 import * as Sharing from 'expo-sharing';
 
@@ -42,7 +42,7 @@ export async function exportTrainingData(userId: string): Promise<void> {
       const rawSets = (log.actual_sets as RawSet[] | null) ?? [];
       const sets: ExportSet[] = rawSets.map((s) => ({
         set_number: s.set_number,
-        weight_kg: gramsToKg(s.weight_grams),
+        weight_kg: weightGramsToKg(s.weight_grams),
         reps: s.reps_completed,
         ...(s.rpe_actual != null ? { rpe: s.rpe_actual } : {}),
       }));

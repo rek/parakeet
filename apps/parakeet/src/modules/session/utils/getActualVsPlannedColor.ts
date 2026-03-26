@@ -1,5 +1,5 @@
 import type { ActualSet, PlannedSet } from '@parakeet/shared-types';
-import { gramsToKg } from '@parakeet/training-engine';
+import { weightGramsToKg } from '@shared/utils/weight';
 
 const WEIGHT_MATCH_TOLERANCE_KG = 0.1;
 
@@ -16,7 +16,7 @@ export function getActualVsPlannedColor({
   planned: PlannedSet | undefined;
 }): 'neutral' | 'under' | 'over' {
   if (!planned) return 'neutral';
-  const actualKg = gramsToKg(actual.weight_grams);
+  const actualKg = weightGramsToKg(actual.weight_grams);
   const weightOver = actualKg > planned.weight_kg + WEIGHT_MATCH_TOLERANCE_KG;
   const weightUnder = actualKg < planned.weight_kg - WEIGHT_MATCH_TOLERANCE_KG;
   const repsOver = actual.reps_completed > planned.reps;

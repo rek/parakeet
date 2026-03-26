@@ -7,7 +7,7 @@ import {
   View,
 } from 'react-native';
 
-import type { PlateKg } from '@parakeet/training-engine';
+import type { PlateKg } from '@shared/constants/plates';
 
 import { radii, spacing, typography } from '../../../theme';
 import { useTheme } from '../../../theme/ThemeContext';

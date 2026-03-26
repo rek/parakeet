@@ -1,4 +1,5 @@
-import { estimateOneRepMax_Epley, gramsToKg } from '@parakeet/training-engine';
+import { estimateOneRepMax_Epley } from '@parakeet/training-engine';
+import { weightGramsToKg } from '@shared/utils/weight';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -18,7 +19,7 @@ export function estimateBestOneRm(actualSets: unknown): number {
     )
       continue;
     const est = estimateOneRepMax_Epley(
-      gramsToKg(s.weight_grams),
+      weightGramsToKg(s.weight_grams),
       s.reps_completed
     );
     if (est > best) best = est;
@@ -31,7 +32,7 @@ export function computeSessionVolume(actualSets: unknown): number {
   let total = 0;
   for (const s of actualSets as ActualSet[]) {
     if (!s.weight_grams || !s.reps_completed || s.reps_completed <= 0) continue;
-    total += gramsToKg(s.weight_grams) * s.reps_completed;
+    total += weightGramsToKg(s.weight_grams) * s.reps_completed;
   }
   return total;
 }
@@ -41,7 +42,7 @@ export function computeHeaviestLift(actualSets: unknown): number {
   let heaviest = 0;
   for (const s of actualSets as ActualSet[]) {
     if (!s.weight_grams) continue;
-    const kg = gramsToKg(s.weight_grams);
+    const kg = weightGramsToKg(s.weight_grams);
     if (kg > heaviest) heaviest = kg;
   }
   return heaviest;

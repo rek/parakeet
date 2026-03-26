@@ -5,10 +5,8 @@ import type {
   Lift,
   TrainingDisruption,
 } from '@parakeet/shared-types';
-import {
-  roundToNearest,
-  suggestDisruptionAdjustment,
-} from '@parakeet/training-engine';
+import { suggestDisruptionAdjustment } from '@parakeet/training-engine';
+import { roundToNearest } from '@shared/utils/weight';
 import type { DbRow } from '@platform/supabase';
 import { typedSupabase } from '@platform/supabase';
 import {

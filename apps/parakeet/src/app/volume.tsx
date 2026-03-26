@@ -14,7 +14,8 @@ import {
   useWeeklyVolume,
   volumeFillPct,
 } from '@modules/training-volume';
-import type { MuscleGroup, VolumeStatus } from '@parakeet/training-engine';
+import type { MuscleGroup } from '@parakeet/shared-types';
+import type { VolumeStatus } from '@parakeet/training-engine';
 import { classifyConfigSource } from '@parakeet/training-engine';
 import {
   MUSCLE_GROUPS_ORDER,

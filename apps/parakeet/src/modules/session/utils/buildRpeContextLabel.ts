@@ -1,4 +1,4 @@
-import { gramsToKg } from '@parakeet/training-engine';
+import { weightGramsToKg } from '@shared/utils/weight';
 
 import type { AuxiliaryActualSet } from '@platform/store/sessionStore';
 
@@ -31,7 +31,7 @@ export function buildRpeContextLabel({
   if (pendingRpeSetNumber !== null) {
     const set = actualSets[pendingRpeSetNumber - 1];
     if (!set) return undefined;
-    const kg = gramsToKg(set.weight_grams);
+    const kg = weightGramsToKg(set.weight_grams);
     if (kg === 0) return `Set ${pendingRpeSetNumber}/${plannedSetsCount} × ${set.reps_completed}`;
     return `Set ${pendingRpeSetNumber}/${plannedSetsCount} — ${fmtKg(kg)}kg × ${set.reps_completed}`;
   }
@@ -50,7 +50,7 @@ export function buildRpeContextLabel({
 
     if (!auxSet) return `${name} Set ${pendingAuxRpe.setNumber}/${total}`;
 
-    const kg = gramsToKg(auxSet.weight_grams);
+    const kg = weightGramsToKg(auxSet.weight_grams);
     if (kg === 0) return `${name} Set ${pendingAuxRpe.setNumber}/${total} × ${auxSet.reps_completed}`;
     return `${name} Set ${pendingAuxRpe.setNumber}/${total} — ${fmtKg(kg)}kg × ${auxSet.reps_completed}`;
   }

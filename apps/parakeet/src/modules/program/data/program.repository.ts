@@ -1,4 +1,4 @@
-import { localDateString } from '@parakeet/training-engine';
+import { localDateString } from '@shared/utils/localDateString';
 import type { DbInsert, DbRow } from '@platform/supabase';
 import { typedSupabase } from '@platform/supabase';
 import type { ProgramListItem, ProgramSessionView } from '@shared/types/domain';

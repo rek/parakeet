@@ -16,7 +16,8 @@ import {
 } from '@modules/formula';
 import { getRatingStyles, getVolumeLevelColors } from '@modules/history';
 import { classifyVolumeLevel } from '@modules/training-volume';
-import type { FormulaConfig, MuscleGroup } from '@parakeet/training-engine';
+import type { MuscleGroup } from '@parakeet/shared-types';
+import type { FormulaConfig } from '@parakeet/training-engine';
 import {
   MUSCLE_GROUPS_ORDER,
   MUSCLE_LABELS_ABBR,

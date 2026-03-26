@@ -1,8 +1,9 @@
 import { useMemo } from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
-import { calculatePlates, PLATE_COLORS } from '@parakeet/training-engine';
-import type { PlateKg } from '@parakeet/training-engine';
+import { calculatePlates } from '@parakeet/training-engine';
+import type { PlateKg } from '@shared/constants/plates';
+import { PLATE_COLORS } from '@shared/constants/plates';
 
 import { Sheet } from '../../../components/ui/Sheet';
 import { spacing, typography } from '../../../theme';
