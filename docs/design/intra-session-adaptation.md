@@ -1,6 +1,6 @@
 # Feature: Intra-Session Adaptation
 
-**Status**: Partially Implemented (upward autoregulation + RPE scaler fix shipped; downward tiers planned)
+**Status**: Partially Implemented (upward autoregulation + RPE scaler fix + aux failure adaptation shipped; main lift downward tiers implemented; Tier 3 optional-set UX planned)
 
 **Date**: 11 Mar 2026 (revised 26 Mar 2026)
 
@@ -19,7 +19,7 @@ Production data (GH#130) shows a bench explosive session where every set — mai
 The system had every signal it needed after set 1 (RPE 6.5, target 7.0) to suggest +5kg for set 2. Instead it prescribed the same weight again. The lifter logged another RPE 6.5 set and moved on to auxiliaries that were also too light.
 
 Existing correction mechanisms fail here:
-- **Step 2 RPE adjustment**: only fires when the average gap across the last 2 sessions is ≥ 1.0; this user's average is -0.875 — just under threshold. Even when it fires, +2.5% intensity adds ~2kg. Not enough.
+- **Step 2 RPE adjustment**: threshold was ≥ 1.0 (now lowered to ≥ 0.75 with tiered 2.5%/5% boost). The user's -0.875 average now triggers the small boost, but cross-session correction is inherently delayed — it can't fix today's session.
 - **Adaptive volume calibration (#117)**: adds sets, not weight. More sets at RPE 6.5 = more sets at 0.15 multiplier = still negligible.
 - **Working 1RM**: computing e1RM from sub-target-RPE sets yields a *lower* 1RM than stored, making future sessions lighter (perverse outcome).
 - **Volume recovery**: adds sets back when RPE is below target, but only sets that were previously removed by modifiers. Does not adjust weight.
@@ -73,7 +73,7 @@ These increments match available plate combinations. Rounded to nearest 2.5 kg a
 
 ### Downward Autoregulation — Failed Sets
 
-**Primary Flow — progressive fallback after a failed set:**
+**Primary Flow — progressive fallback after a failed main lift set:**
 
 1. Lifter logs fewer reps than planned for a set (e.g., plans 5, hits 4)
 2. The system recognises this as a failure and enters Tier 1
@@ -86,11 +86,26 @@ These increments match available plate combinations. Rounded to nearest 2.5 kg a
 9. If the lifter accumulates 3 or more consecutive failures across the session: the system moves to Tier 3
 10. **Tier 3 — Set capping**: Remaining sets are marked optional. A rationale appears ("Remaining sets optional — continuing risks more fatigue than benefit"). The lifter can choose to stop the main lift and move to auxiliary work
 
+**Auxiliary exercise failures (GH#131):**
+
+Auxiliary exercises use a simpler, immediate adaptation — no tiered escalation:
+
+1. Lifter fails an aux set (logs fewer reps than planned)
+2. The set is marked as failed with RPE 10 and the actual reps completed
+3. All remaining sets of that exercise are immediately reduced by 10% (rounded to 2.5 kg, floor at 50% of the failed set weight)
+4. A rationale banner appears below the exercise name: "Weight reduced 10% — adapting after failed set"
+5. The adapted weights are written to the store and displayed on uncompleted set rows
+
+This is more aggressive than main lift Tier 2 (10% vs 5%) because auxiliary exercises are lighter and the lifter shouldn't grind through them. There is no extended-rest tier — aux rest periods are already short.
+
+Both aux failure paths (post-rest overlay and first-set confirmation) use the same shared helper (`writeAuxFailureAndAdapt`) to ensure the `failed` flag, RPE 10, and adaptation are always applied consistently.
+
 **Alternative Flows:**
 
 - Lifter fails only one set and recovers after extended rest: session continues at original plan; Tier 1 is the full response; no permanent changes to the session
 - Lifter opts out of an optional set (Tier 3): the set is logged as skipped with an adaptation note; it is not counted as a failure in future performance analysis
 - Multiple lifts in the same session: each main lift tracks its own failure state independently; a failure on squat does not trigger Tier 2 on bench press
+- Auxiliary failures are scoped per exercise: failing Close-Grip Bench does not affect DB Incline Bench sets
 
 ### Visual Design Notes
 

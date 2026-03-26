@@ -145,18 +145,18 @@ Female lifters' faster neuromuscular recovery means their peak output requires m
 
 ### 7. Soreness Response
 
-Current: fixed table (`soreness 3 → −1 set`, `soreness 4 → −2 sets + 5% intensity cut`, `soreness 5 → recovery session`). Sex-agnostic.
+Current: fixed table on 1–10 scale (`5–6 → −1 set`, `7–8 → −2 sets + 5% intensity cut`, `9–10 → recovery session`). Sex-differentiated at the high tier.
 
-Research shows female lifters experience less acute muscle damage per training stimulus at equivalent relative intensities. The same soreness rating may encode less physiological damage in a female lifter than a male lifter, meaning the current table may over-adjust for females at level 4. Proposed:
+Research shows female lifters experience less acute muscle damage per training stimulus at equivalent relative intensities. The same soreness rating may encode less physiological damage in a female lifter than a male lifter, meaning the default table over-adjusts for females at high soreness. Implemented:
 
-- Soreness 4 (female): −1 set (not −2), intensity multiplier 0.97 (not 0.95)
-- Soreness 5 (female): remains recovery session — this is a hard biological ceiling regardless of sex
-- Soreness 3 (female): unchanged (−1 set is already a light touch)
-- `getSorenessModifier(level, biologicalSex?)` gains an optional sex parameter; female-specific rows override the default table only at level 4
+- Soreness 7–8 (female): −1 set (not −2), intensity multiplier 0.97 (not 0.95)
+- Soreness 9–10 (female): remains recovery session — this is a hard biological ceiling regardless of sex
+- Soreness 5–6 (female): unchanged (−1 set is already a light touch)
+- `getSorenessModifier(level, biologicalSex?)` has an optional sex parameter; female-specific rows override the default table at the high tier (7–8)
 
 ### 8. Performance Adjuster Thresholds
 
-Current: `DEFAULT_THRESHOLDS` — RPE deviation ≥ 1.0 across 2 consecutive sessions triggers a ±2.5% intensity suggestion. Sex-agnostic.
+Current: Step 2 RPE adjustment fires at ≥ 0.75 deviation with tiered boost (±2.5% small, ±5% large ≥ 1.25). The performance adjuster (longer-term formula suggestions) uses separate thresholds: 1.0 male / 1.5 female.
 
 Female lifters' RPE naturally fluctuates across the menstrual cycle (particularly in the late luteal phase, where perceived effort rises at identical absolute loads). Without cycle tracking enabled, a 1.0 RPE deviation threshold will generate false-positive adjustment suggestions. Proposed:
 

@@ -84,8 +84,8 @@ interface AuxiliaryWork {
   base = calculateSets(lift, intensityType, blockNumber, oneRmKg, formulaConfig)
   ```
 - [x] **Step 2 — Performance adjustment (RPE history)**
-  - If avg_rpe_deviation > 1.0 over last 2 sessions: `intensityMultiplier *= 0.975`
-  - If avg_rpe_deviation < -1.0: `intensityMultiplier *= 1.025`
+  - If avg_rpe_deviation ≥ 0.75 over last 2 sessions: `intensityMultiplier *= 0.975` (small) or `*= 0.95` (large, ≥ 1.25)
+  - If avg_rpe_deviation ≤ -0.75: `intensityMultiplier *= 1.025` (small) or `*= 1.05` (large, ≤ -1.25)
 - [x] **Step 3 — Soreness adjustment**
   - If `sorenessModifier.recoveryMode`: replace base sets with recovery sets (40% × 3×5)
   - Otherwise: apply setReduction and intensityMultiplier from soreness modifier
@@ -134,11 +134,11 @@ async function generateAndSaveSession(sessionId: string): Promise<JITOutput> {
 ### Integration tests
 
 - [x] Squat 140kg, Block 1 Heavy, all soreness=1, no disruptions → `[{weight_kg: 112.5, reps: 5}, {weight_kg: 112.5, reps: 5}]`
-- [x] Soreness=4 on quads → 0 planned sets clamped to 1 set at 107.5kg, warning added
+- [x] Soreness=8 on quads → 0 planned sets clamped to 1 set at 107.5kg, warning added
 - [x] 18 weekly quad sets (MRV=20) → main lift capped at 2 sets
 - [x] 21 weekly quad sets (MRV=20) → `skippedMainLift: true`, warning added
 - [x] 2 consecutive sessions RPE 9.5 (target 8.5) → weight reduced to 110kg (112.5 × 0.975 rounded)
-- [x] Auxiliary: soreness=5 on chest during bench day → auxiliary Dips skipped
+- [x] Auxiliary: soreness=10 on chest during bench day → auxiliary Dips skipped
 - [x] Disruption (knee injury) → overrides soreness adjustment with injury-specific reduction
 
 ## Dependencies
