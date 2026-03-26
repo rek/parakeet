@@ -26,7 +26,6 @@ import {
   fetchSessionsForStreak,
 } from '../data/achievement.repository';
 import { fetchUserBadgeIds, insertBadges } from '../data/badge.repository';
-
 import type { ActualSet } from '../hooks/useAchievementDetection';
 import { buildWeekStatuses } from '../utils/week-status-builder';
 
@@ -328,7 +327,11 @@ async function fetchDisruptionContext(userId: string): Promise<{
 
   if (error) throw error;
   if (!data || data.length === 0) {
-    return { hasActiveMajor: false, daysSinceLast: null, lastDurationDays: null };
+    return {
+      hasActiveMajor: false,
+      daysSinceLast: null,
+      lastDurationDays: null,
+    };
   }
 
   const now = new Date();
@@ -357,9 +360,7 @@ async function fetchDisruptionContext(userId: string): Promise<{
     const end = new Date(endDate);
     lastDurationDays = Math.max(
       1,
-      Math.floor(
-        (end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)
-      ) + 1
+      Math.floor((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)) + 1
     );
   }
 
@@ -486,7 +487,7 @@ async function checkPerfectWeek(userId: string): Promise<boolean> {
 
 async function fetchConsecutivePerfectSessions(
   userId: string,
-  currentSessionId: string
+  _currentSessionId: string
 ): Promise<number> {
   // Get recent session_logs with actual_sets and planned_sets (via sessions join)
   const { data: recentLogs, error } = await typedSupabase
@@ -657,7 +658,7 @@ const MIN_FULL_REST_SECONDS = 90; // threshold for "waited for full timer"
 
 async function fetchConsecutiveFullRestSessions(
   userId: string,
-  currentSessionId: string
+  _currentSessionId: string
 ): Promise<number> {
   const { data, error } = await typedSupabase
     .from('session_logs')

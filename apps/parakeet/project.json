@@ -63,6 +63,13 @@
         "cwd": ""
       }
     },
+    "lint": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "oxlint src --deny-warnings --react-plugin",
+        "cwd": "apps/parakeet"
+      }
+    },
     "format": {
       "executor": "nx:run-commands",
       "options": {

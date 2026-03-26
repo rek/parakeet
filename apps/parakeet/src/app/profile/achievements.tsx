@@ -1,15 +1,18 @@
 import { useMemo } from 'react';
-import { ScrollView, StyleSheet, Text } from 'react-native';
+import { ScrollView, StyleSheet } from 'react-native';
 
-import { AchievementsSection, useAchievementsData } from '@modules/achievements';
+import {
+  AchievementsSection,
+  useAchievementsData,
+} from '@modules/achievements';
 import { useAuth } from '@modules/auth';
 import { router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
+
 import { BackLink } from '../../components/navigation/BackLink';
+import { ScreenTitle } from '../../components/ui/ScreenTitle';
 import type { ColorScheme } from '../../theme';
 import { useTheme } from '../../theme/ThemeContext';
-
-import { ScreenTitle } from '../../components/ui/ScreenTitle';
 
 // ── Screen ────────────────────────────────────────────────────────────────────
 

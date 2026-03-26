@@ -41,7 +41,7 @@ import { radii, spacing, typography } from '../../theme';
 import type { ColorScheme } from '../../theme';
 import { useTheme } from '../../theme/ThemeContext';
 
-function otaStatusLabel(status: OtaStatus, error: string | null): string {
+function otaStatusLabel(status: OtaStatus, _error: string | null): string {
   switch (status) {
     case 'checking':
       return 'Checking for updates…';
@@ -70,11 +70,11 @@ function formatTimeAgo(epochMs: number | null) {
 }
 
 function formatBuildDate(otaCreatedAt: Date | null) {
-  const source = otaCreatedAt ?? (
-    Constants.expoConfig?.extra?.buildDate
+  const source =
+    otaCreatedAt ??
+    (Constants.expoConfig?.extra?.buildDate
       ? new Date(Constants.expoConfig.extra.buildDate as string)
-      : null
-  );
+      : null);
   if (!source) return __DEV__ ? 'dev' : '—';
   return source.toLocaleDateString('en-GB', {
     day: 'numeric',
@@ -376,7 +376,6 @@ export default function SettingsScreen() {
         contentContainerStyle={styles.container}
         showsVerticalScrollIndicator={false}
       >
-
         <View style={styles.profileInlineHeader}>
           <View style={styles.profileInlineHeaderTextWrap}>
             <Text style={styles.profileInlineTitle}>Profile</Text>
@@ -642,7 +641,7 @@ export default function SettingsScreen() {
         {/* App section */}
         <SectionHeader label="App" styles={styles} />
         <Row
-          label={`Version ${Constants.expoConfig?.version ?? '—'}  ·  ${otaMeta.updateId ? otaMeta.updateId.slice(0, 8) : (Constants.expoConfig?.extra?.commitHash as string) ?? '—'}`}
+          label={`Version ${Constants.expoConfig?.version ?? '—'}  ·  ${otaMeta.updateId ? otaMeta.updateId.slice(0, 8) : ((Constants.expoConfig?.extra?.commitHash as string) ?? '—')}`}
           labelStyle={styles.versionLabel}
           styles={styles}
           right={

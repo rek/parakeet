@@ -1,10 +1,9 @@
 import { useState } from 'react';
-import { StyleSheet, Text, TouchableOpacity } from 'react-native';
+import { StyleSheet, TouchableOpacity } from 'react-native';
 
 import { Ionicons } from '@expo/vector-icons';
 import type { PrescriptionTrace } from '@parakeet/training-engine';
 
-import { spacing, typography } from '../../../theme';
 import { useTheme } from '../../../theme/ThemeContext';
 import { PrescriptionSheet } from './PrescriptionSheet';
 

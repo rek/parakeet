@@ -32,6 +32,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useQueryClient } from '@tanstack/react-query';
 import { router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
+
 import type { ColorScheme } from '../../../theme';
 import { useTheme } from '../../../theme/ThemeContext';
 
@@ -242,14 +243,15 @@ export default function CompleteScreen() {
     auxiliarySets,
     sessionRpe,
     startedAt,
-    plannedSets,
     setSessionRpe,
     reset,
     cachedJitData,
   } = useSessionStore();
 
   const [notes, setNotes] = useState('');
-  const [capacityAssessment, setCapacityAssessment] = useState<1 | 2 | 3 | 4 | null>(null);
+  const [capacityAssessment, setCapacityAssessment] = useState<
+    1 | 2 | 3 | 4 | null
+  >(null);
   const [saving, setSaving] = useState(false);
   const [pendingSync, setPendingSync] = useState(false);
 
@@ -389,7 +391,10 @@ export default function CompleteScreen() {
         if (eow.shouldPrompt) {
           await AsyncStorage.setItem(
             'pending_weekly_review',
-            JSON.stringify({ programId: eow.programId, weekNumber: eow.weekNumber })
+            JSON.stringify({
+              programId: eow.programId,
+              weekNumber: eow.weekNumber,
+            })
           );
           void scheduleWeeklyReviewNotification();
         }
@@ -490,12 +495,14 @@ export default function CompleteScreen() {
             {/* Capacity assessment */}
             <Text style={styles.sectionLabel}>Could you have done more?</Text>
             <View style={styles.capacityRow}>
-              {([
-                [1, 'Barely survived'],
-                [2, 'About right'],
-                [3, 'Had more in me'],
-                [4, 'Way too easy'],
-              ] as const).map(([level, label]) => {
+              {(
+                [
+                  [1, 'Barely survived'],
+                  [2, 'About right'],
+                  [3, 'Had more in me'],
+                  [4, 'Way too easy'],
+                ] as const
+              ).map(([level, label]) => {
                 const isActive = capacityAssessment === level;
                 return (
                   <TouchableOpacity
