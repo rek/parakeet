@@ -9,6 +9,7 @@ import {
 } from 'react-native';
 
 import { Ionicons } from '@expo/vector-icons';
+import { useFeatureEnabled } from '@modules/feature-flags';
 import { useLiftHistory } from '@modules/history';
 import { computeDisplayWeights, useChallengeReview } from '@modules/jit';
 import { getProfile } from '@modules/profile';
@@ -36,6 +37,8 @@ import {
   VolumeRecoveryBanner,
   WarmupSection,
   WeightSuggestionBanner,
+  getAllExercises,
+  getExerciseType,
 } from '@modules/session';
 import type {
   AuxiliaryWork,
@@ -52,21 +55,15 @@ import {
   setBarWeightKg,
   setDisabledPlates,
 } from '@modules/settings';
-import type { WarmupPlateDisplay } from '@modules/settings';
-import type { RestTimerPrefs } from '@modules/settings';
-import { useFeatureEnabled } from '@modules/feature-flags';
-import {
-  getAllExercises,
-  getExerciseType,
-} from '@parakeet/training-engine';
-import type { PrescriptionTrace } from '@parakeet/training-engine';
+import type { RestTimerPrefs, WarmupPlateDisplay } from '@modules/settings';
 import type { Lift } from '@parakeet/shared-types';
-import type { PlateKg } from '@shared/constants/plates';
-import { weightGramsToKg } from '@shared/utils/weight';
+import type { PrescriptionTrace } from '@parakeet/training-engine';
 import { useNetworkStatus } from '@platform/network';
 import { useSessionStore } from '@platform/store/sessionStore';
 import { captureException } from '@platform/utils/captureException';
+import type { PlateKg } from '@shared/constants/plates';
 import { sessionLabel } from '@shared/utils/string';
+import { weightGramsToKg } from '@shared/utils/weight';
 import { useQueryClient } from '@tanstack/react-query';
 import { useKeepAwake } from 'expo-keep-awake';
 import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
@@ -639,15 +636,14 @@ export default function SessionScreen() {
   const exerciseCatalog = useMemo(() => getAllExercises(), []);
   const [recentAuxNames, setRecentAuxNames] = useState<string[]>([]);
   useEffect(() => {
-    fetchRecentAuxExerciseNames().then(setRecentAuxNames).catch(captureException);
+    fetchRecentAuxExerciseNames()
+      .then(setRecentAuxNames)
+      .catch(captureException);
   }, []);
 
   const alreadyInSession = useMemo(
-    () => [
-      ...auxiliaryWork.map((aw) => aw.exercise),
-      ...adHocExercises,
-    ],
-    [auxiliaryWork, adHocExercises],
+    () => [...auxiliaryWork.map((aw) => aw.exercise), ...adHocExercises],
+    [auxiliaryWork, adHocExercises]
   );
 
   const suggestedExerciseNames = useMemo(
@@ -655,9 +651,9 @@ export default function SessionScreen() {
       computeSuggestedAux(
         (sessionMeta?.primary_lift as Lift | null) ?? null,
         alreadyInSession,
-        exerciseCatalog,
+        exerciseCatalog
       ),
-    [alreadyInSession, sessionMeta?.primary_lift, exerciseCatalog],
+    [alreadyInSession, sessionMeta?.primary_lift, exerciseCatalog]
   );
 
   // ── Screen-local handlers ─────────────────────────────────────────────────
@@ -666,9 +662,7 @@ export default function SessionScreen() {
     if (!adHocExercises.includes(name)) {
       setAdHocExercises((prev) => [...prev, name]);
       const oneRmGrams =
-        oneRmKgRef.current != null
-          ? Math.round(oneRmKgRef.current * 1000)
-          : 0;
+        oneRmKgRef.current != null ? Math.round(oneRmKgRef.current * 1000) : 0;
       const suggestedWeight =
         oneRmGrams > 0
           ? computeSuggestedWeight(name, oneRmGrams, exerciseCatalog)
@@ -900,7 +894,9 @@ export default function SessionScreen() {
                   disabledPlates={equipmentDisabledPlates}
                   onBarWeightChange={handleBarWeightChange}
                   onDisabledPlatesChange={handleDisabledPlatesChange}
-                  prescriptionTrace={traceEnabled ? prescriptionTrace : undefined}
+                  prescriptionTrace={
+                    traceEnabled ? prescriptionTrace : undefined
+                  }
                 />
               );
             })}
@@ -941,67 +937,69 @@ export default function SessionScreen() {
             {regularAux.map((aw) => {
               const auxAdapt = auxAdaptations[aw.exercise];
               return (
-              <View key={aw.exercise} style={styles.auxExercise}>
-                <Text style={styles.auxExerciseName}>
-                  {formatExerciseName(aw.exercise)}
-                </Text>
-
-                {auxAdapt?.adaptationType === 'weight_reduced' && (
-                  <View style={styles.adaptationBanner}>
-                    <Text style={styles.adaptationBannerText}>
-                      {auxAdapt.rationale}
-                    </Text>
-                  </View>
-                )}
-
-                {aw.skipped ? (
-                  <Text style={styles.auxSkippedText}>
-                    Skipped{aw.skipReason ? ` — ${aw.skipReason}` : ''}
+                <View key={aw.exercise} style={styles.auxExercise}>
+                  <Text style={styles.auxExerciseName}>
+                    {formatExerciseName(aw.exercise)}
                   </Text>
-                ) : (
-                  aw.actualSets.map((actualSet) => {
-                    const planned = aw.sets[actualSet.set_number - 1];
-                    const adaptedSet = auxAdapt?.sets.find(
-                      (s) => s.set_number === actualSet.set_number
-                    );
-                    return (
-                      <SetRow
-                        key={`${aw.exercise}-${actualSet.set_number}`}
-                        setNumber={actualSet.set_number}
-                        plannedWeightKg={
-                          actualSet.is_completed
-                            ? weightGramsToKg(actualSet.weight_grams)
-                            : (adaptedSet?.weight_kg ?? planned?.weight_kg ?? actualSet.weight_grams / 1000)
-                        }
-                        plannedReps={
-                          actualSet.is_completed
-                            ? actualSet.reps_completed
-                            : (planned?.reps ?? actualSet.reps_completed)
-                        }
-                        rpeValue={actualSet.rpe_actual}
-                        isCompleted={actualSet.is_completed}
-                        exerciseType={aw.exerciseType}
-                        onRpePress={() =>
-                          requestAuxRpe(aw.exercise, actualSet.set_number)
-                        }
-                        onUpdate={(data) =>
-                          handleAuxSetUpdate(
-                            aw.origIndex,
-                            aw.exercise,
-                            actualSet.set_number,
-                            aw.sets.length,
-                            data
-                          )
-                        }
-                        barWeightKg={equipmentBarWeightKg}
-                        disabledPlates={equipmentDisabledPlates}
-                        onBarWeightChange={handleBarWeightChange}
-                        onDisabledPlatesChange={handleDisabledPlatesChange}
-                      />
-                    );
-                  })
-                )}
-              </View>
+
+                  {auxAdapt?.adaptationType === 'weight_reduced' && (
+                    <View style={styles.adaptationBanner}>
+                      <Text style={styles.adaptationBannerText}>
+                        {auxAdapt.rationale}
+                      </Text>
+                    </View>
+                  )}
+
+                  {aw.skipped ? (
+                    <Text style={styles.auxSkippedText}>
+                      Skipped{aw.skipReason ? ` — ${aw.skipReason}` : ''}
+                    </Text>
+                  ) : (
+                    aw.actualSets.map((actualSet) => {
+                      const planned = aw.sets[actualSet.set_number - 1];
+                      const adaptedSet = auxAdapt?.sets.find(
+                        (s) => s.set_number === actualSet.set_number
+                      );
+                      return (
+                        <SetRow
+                          key={`${aw.exercise}-${actualSet.set_number}`}
+                          setNumber={actualSet.set_number}
+                          plannedWeightKg={
+                            actualSet.is_completed
+                              ? weightGramsToKg(actualSet.weight_grams)
+                              : (adaptedSet?.weight_kg ??
+                                planned?.weight_kg ??
+                                actualSet.weight_grams / 1000)
+                          }
+                          plannedReps={
+                            actualSet.is_completed
+                              ? actualSet.reps_completed
+                              : (planned?.reps ?? actualSet.reps_completed)
+                          }
+                          rpeValue={actualSet.rpe_actual}
+                          isCompleted={actualSet.is_completed}
+                          exerciseType={aw.exerciseType}
+                          onRpePress={() =>
+                            requestAuxRpe(aw.exercise, actualSet.set_number)
+                          }
+                          onUpdate={(data) =>
+                            handleAuxSetUpdate(
+                              aw.origIndex,
+                              aw.exercise,
+                              actualSet.set_number,
+                              aw.sets.length,
+                              data
+                            )
+                          }
+                          barWeightKg={equipmentBarWeightKg}
+                          disabledPlates={equipmentDisabledPlates}
+                          onBarWeightChange={handleBarWeightChange}
+                          onDisabledPlatesChange={handleDisabledPlatesChange}
+                        />
+                      );
+                    })
+                  )}
+                </View>
               );
             })}
 
@@ -1013,67 +1011,71 @@ export default function SessionScreen() {
                 {topUpAux.map((aw) => {
                   const auxAdapt = auxAdaptations[aw.exercise];
                   return (
-                  <View key={aw.exercise} style={styles.auxExercise}>
-                    <Text style={styles.auxExerciseName}>
-                      {formatExerciseName(aw.exercise)}
-                    </Text>
-                    {aw.topUpReason && (
-                      <Text style={styles.topUpReason}>{aw.topUpReason}</Text>
-                    )}
-                    {auxAdapt?.adaptationType === 'weight_reduced' && (
-                      <View style={styles.adaptationBanner}>
-                        <Text style={styles.adaptationBannerText}>
-                          {auxAdapt.rationale}
-                        </Text>
-                      </View>
-                    )}
-                    {aw.skipped ? (
-                      <Text style={styles.auxSkippedText}>
-                        Skipped{aw.skipReason ? ` — ${aw.skipReason}` : ''}
+                    <View key={aw.exercise} style={styles.auxExercise}>
+                      <Text style={styles.auxExerciseName}>
+                        {formatExerciseName(aw.exercise)}
                       </Text>
-                    ) : (
-                      aw.actualSets.map((actualSet) => {
-                        const planned = aw.sets[actualSet.set_number - 1];
-                        const adaptedSet = auxAdapt?.sets.find(
-                          (s) => s.set_number === actualSet.set_number
-                        );
-                        return (
-                          <SetRow
-                            key={`${aw.exercise}-${actualSet.set_number}`}
-                            setNumber={actualSet.set_number}
-                            plannedWeightKg={
-                              actualSet.is_completed
-                                ? weightGramsToKg(actualSet.weight_grams)
-                                : (adaptedSet?.weight_kg ?? planned?.weight_kg ?? actualSet.weight_grams / 1000)
-                            }
-                            plannedReps={
-                              actualSet.is_completed
-                                ? actualSet.reps_completed
-                                : (planned?.reps ?? actualSet.reps_completed)
-                            }
-                            rpeValue={actualSet.rpe_actual}
-                            exerciseType={aw.exerciseType}
-                            onRpePress={() =>
-                              requestAuxRpe(aw.exercise, actualSet.set_number)
-                            }
-                            onUpdate={(data) =>
-                              handleAuxSetUpdate(
-                                aw.origIndex,
-                                aw.exercise,
-                                actualSet.set_number,
-                                aw.sets.length,
-                                data
-                              )
-                            }
-                            barWeightKg={equipmentBarWeightKg}
-                            disabledPlates={equipmentDisabledPlates}
-                            onBarWeightChange={handleBarWeightChange}
-                            onDisabledPlatesChange={handleDisabledPlatesChange}
-                          />
-                        );
-                      })
-                    )}
-                  </View>
+                      {aw.topUpReason && (
+                        <Text style={styles.topUpReason}>{aw.topUpReason}</Text>
+                      )}
+                      {auxAdapt?.adaptationType === 'weight_reduced' && (
+                        <View style={styles.adaptationBanner}>
+                          <Text style={styles.adaptationBannerText}>
+                            {auxAdapt.rationale}
+                          </Text>
+                        </View>
+                      )}
+                      {aw.skipped ? (
+                        <Text style={styles.auxSkippedText}>
+                          Skipped{aw.skipReason ? ` — ${aw.skipReason}` : ''}
+                        </Text>
+                      ) : (
+                        aw.actualSets.map((actualSet) => {
+                          const planned = aw.sets[actualSet.set_number - 1];
+                          const adaptedSet = auxAdapt?.sets.find(
+                            (s) => s.set_number === actualSet.set_number
+                          );
+                          return (
+                            <SetRow
+                              key={`${aw.exercise}-${actualSet.set_number}`}
+                              setNumber={actualSet.set_number}
+                              plannedWeightKg={
+                                actualSet.is_completed
+                                  ? weightGramsToKg(actualSet.weight_grams)
+                                  : (adaptedSet?.weight_kg ??
+                                    planned?.weight_kg ??
+                                    actualSet.weight_grams / 1000)
+                              }
+                              plannedReps={
+                                actualSet.is_completed
+                                  ? actualSet.reps_completed
+                                  : (planned?.reps ?? actualSet.reps_completed)
+                              }
+                              rpeValue={actualSet.rpe_actual}
+                              exerciseType={aw.exerciseType}
+                              onRpePress={() =>
+                                requestAuxRpe(aw.exercise, actualSet.set_number)
+                              }
+                              onUpdate={(data) =>
+                                handleAuxSetUpdate(
+                                  aw.origIndex,
+                                  aw.exercise,
+                                  actualSet.set_number,
+                                  aw.sets.length,
+                                  data
+                                )
+                              }
+                              barWeightKg={equipmentBarWeightKg}
+                              disabledPlates={equipmentDisabledPlates}
+                              onBarWeightChange={handleBarWeightChange}
+                              onDisabledPlatesChange={
+                                handleDisabledPlatesChange
+                              }
+                            />
+                          );
+                        })
+                      )}
+                    </View>
                   );
                 })}
               </>
@@ -1214,7 +1216,9 @@ export default function SessionScreen() {
           {pendingAuxConfirmation !== null && (
             <PostRestOverlay
               plannedReps={pendingAuxConfirmation.reps}
-              plannedWeightKg={weightGramsToKg(pendingAuxConfirmation.weightGrams)}
+              plannedWeightKg={weightGramsToKg(
+                pendingAuxConfirmation.weightGrams
+              )}
               nextSetNumber={pendingAuxConfirmation.setNumber}
               onLiftComplete={handleAuxConfirmComplete}
               onLiftFailed={handleAuxConfirmFailed}

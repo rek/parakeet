@@ -1,8 +1,7 @@
 import { StyleSheet, Text, View } from 'react-native';
 
-import { calculatePlates } from '@parakeet/training-engine';
+import { calculatePlates, PLATE_COLORS } from '@shared/constants/plates';
 import type { PlateKg } from '@shared/constants/plates';
-import { PLATE_COLORS } from '@shared/constants/plates';
 
 import { radii, spacing, typography } from '../../../theme';
 

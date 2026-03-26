@@ -16,7 +16,10 @@ export * from './utils/buildIntensityLabel';
 export * from './utils/groupAuxiliaryWork';
 export * from './utils/computeDismissResult';
 export * from './utils/prepare-warning';
-export { fetchProfileSex, fetchRecentAuxExerciseNames } from './data/session.repository';
+export {
+  fetchProfileSex,
+  fetchRecentAuxExerciseNames,
+} from './data/session.repository';
 export {
   parseActualSetsJson,
   parseJitInputSnapshot,
@@ -53,3 +56,8 @@ export { fmtKg } from './utils/fmtKg';
 export { buildRpeContextLabel } from './utils/buildRpeContextLabel';
 export { buildNextLiftLabel } from './utils/buildNextLiftLabel';
 export { TraceLink } from './ui/TraceLink';
+export {
+  getAllExercises,
+  getExerciseType,
+  getMusclesForExercise,
+} from './lib/exercise-lookup';

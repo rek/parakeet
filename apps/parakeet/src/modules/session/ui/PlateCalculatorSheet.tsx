@@ -1,9 +1,8 @@
 import { useMemo } from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
-import { calculatePlates } from '@parakeet/training-engine';
+import { calculatePlates, PLATE_COLORS } from '@shared/constants/plates';
 import type { PlateKg } from '@shared/constants/plates';
-import { PLATE_COLORS } from '@shared/constants/plates';
 
 import { Sheet } from '../../../components/ui/Sheet';
 import { spacing, typography } from '../../../theme';
@@ -231,7 +230,9 @@ export function PlateCalculatorSheet({
         {result!.platesPerSide.map((plate) => (
           <View key={plate.kg} style={styles.plateRow}>
             <Text style={styles.plateKg}>{plate.kg} kg</Text>
-            <Text style={styles.plateCount}>{'\u00D7'} {plate.count}</Text>
+            <Text style={styles.plateCount}>
+              {'\u00D7'} {plate.count}
+            </Text>
           </View>
         ))}
 

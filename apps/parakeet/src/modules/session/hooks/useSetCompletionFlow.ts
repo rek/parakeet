@@ -2,7 +2,9 @@ import { useCallback, useRef, useState } from 'react';
 
 import type { RestTimerPrefs } from '@modules/settings';
 import type { Lift } from '@parakeet/shared-types';
-import { adaptRemainingPlan, getExerciseType } from '@parakeet/training-engine';
+import { adaptRemainingPlan } from '@parakeet/training-engine';
+
+import { getExerciseType } from '../lib/exercise-lookup';
 import { useSessionStore } from '@platform/store/sessionStore';
 import { weightGramsToKg, weightKgToGrams } from '@shared/utils/weight';
 
@@ -168,10 +170,9 @@ export function useSetCompletionFlow({
         getExerciseType(exercise);
       const isTimed = exerciseType === 'timed';
       const isFirstCompletion = data.isCompleted && !wasAuxCompleted;
-      const noPriorRestForThisSet =
-        !storeState.auxiliarySets.some(
-          (s) => s.exercise === exercise && s.is_completed
-        );
+      const noPriorRestForThisSet = !storeState.auxiliarySets.some(
+        (s) => s.exercise === exercise && s.is_completed
+      );
 
       if (isFirstCompletion && !isTimed && noPriorRestForThisSet) {
         // Don't write to store yet — show confirmation overlay
@@ -243,7 +244,11 @@ export function useSetCompletionFlow({
     });
   }
 
-  function showAuxPostRest(pendingAuxExercise: string, pendingAuxSet: number, elapsedSeconds: number) {
+  function showAuxPostRest(
+    pendingAuxExercise: string,
+    pendingAuxSet: number,
+    elapsedSeconds: number
+  ) {
     const auxWork = auxiliaryWork.find(
       (aw) => aw.exercise === pendingAuxExercise
     );
@@ -301,7 +306,11 @@ export function useSetCompletionFlow({
 
   // --- Lift complete: dispatch to main/aux handler ---
 
-  function handleAuxLiftComplete(auxExercise: string, auxSetNumber: number, totalRest: number) {
+  function handleAuxLiftComplete(
+    auxExercise: string,
+    auxSetNumber: number,
+    totalRest: number
+  ) {
     updateAuxiliarySet(auxExercise, auxSetNumber, {
       actual_rest_seconds: totalRest,
     });
@@ -344,7 +353,11 @@ export function useSetCompletionFlow({
     }
   }
 
-  function handleMainLiftComplete(prevSetNumber: number | null, nextSetNumber: number | null, totalRest: number) {
+  function handleMainLiftComplete(
+    prevSetNumber: number | null,
+    nextSetNumber: number | null,
+    totalRest: number
+  ) {
     recordSetSuccess();
 
     if (prevSetNumber !== null) {
@@ -381,8 +394,13 @@ export function useSetCompletionFlow({
   }
 
   function handleLiftComplete() {
-    const { totalRest, prevSetNumber, nextSetNumber, auxExercise, auxSetNumber } =
-      dismissPostRest();
+    const {
+      totalRest,
+      prevSetNumber,
+      nextSetNumber,
+      auxExercise,
+      auxSetNumber,
+    } = dismissPostRest();
 
     if (auxExercise !== null && auxSetNumber !== null) {
       handleAuxLiftComplete(auxExercise, auxSetNumber, totalRest);
@@ -393,7 +411,12 @@ export function useSetCompletionFlow({
 
   // --- Lift failed: dispatch to main/aux handler ---
 
-  function handleAuxLiftFailed(auxExercise: string, auxSetNumber: number, totalRest: number, actualReps: number) {
+  function handleAuxLiftFailed(
+    auxExercise: string,
+    auxSetNumber: number,
+    totalRest: number,
+    actualReps: number
+  ) {
     updateAuxiliarySet(auxExercise, auxSetNumber, {
       actual_rest_seconds: totalRest,
     });
@@ -409,11 +432,22 @@ export function useSetCompletionFlow({
         nextSetNumber: failedSetNumber,
         plannedWeightKg: auxWork!.sets[failedSetNumber - 1]?.weight_kg ?? 0,
       });
-      writeAuxFailureAndAdapt(auxExercise, failedSetNumber, auxWeightGrams, actualReps, auxiliaryWork);
+      writeAuxFailureAndAdapt(
+        auxExercise,
+        failedSetNumber,
+        auxWeightGrams,
+        actualReps,
+        auxiliaryWork
+      );
     }
   }
 
-  function handleMainLiftFailed(prevSetNumber: number | null, nextSetNumber: number | null, totalRest: number, actualReps: number) {
+  function handleMainLiftFailed(
+    prevSetNumber: number | null,
+    nextSetNumber: number | null,
+    totalRest: number,
+    actualReps: number
+  ) {
     if (prevSetNumber !== null) {
       updateSet(prevSetNumber, { actual_rest_seconds: totalRest });
     }
@@ -485,8 +519,13 @@ export function useSetCompletionFlow({
   }
 
   function handleLiftFailed(actualReps: number) {
-    const { totalRest, prevSetNumber, nextSetNumber, auxExercise, auxSetNumber } =
-      dismissPostRest();
+    const {
+      totalRest,
+      prevSetNumber,
+      nextSetNumber,
+      auxExercise,
+      auxSetNumber,
+    } = dismissPostRest();
 
     if (auxExercise !== null && auxSetNumber !== null) {
       handleAuxLiftFailed(auxExercise, auxSetNumber, totalRest, actualReps);
@@ -598,7 +637,13 @@ export function useSetCompletionFlow({
     setPendingAuxConfirmation(null);
 
     // Write failure + adapt remaining sets via shared helper
-    writeAuxFailureAndAdapt(conf.exercise, conf.setNumber, conf.weightGrams, actualReps, auxiliaryWork);
+    writeAuxFailureAndAdapt(
+      conf.exercise,
+      conf.setNumber,
+      conf.weightGrams,
+      actualReps,
+      auxiliaryWork
+    );
 
     // Open rest timer if not last set and aux timer enabled
     if (conf.setNumber >= conf.setsInExercise) return;

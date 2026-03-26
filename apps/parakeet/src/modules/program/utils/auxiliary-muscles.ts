@@ -1,4 +1,4 @@
-import { getMusclesForExercise } from '@parakeet/training-engine';
+import { getMusclesForExercise } from '@modules/session';
 
 /** Returns primary muscle names (contribution >= 1.0) for a given exercise. Returns [] for unknown exercises. */
 export function getPrimaryMuscles(exerciseName: string): string[] {

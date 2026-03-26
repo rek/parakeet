@@ -14,21 +14,19 @@ import {
   getPrimaryMuscles,
   reorderAuxiliaryPool,
 } from '@modules/program';
+import { AddExerciseModal } from '@modules/session';
+import { MuscleChips } from '@modules/training-volume';
 import type { Lift } from '@parakeet/shared-types';
-import { getExerciseType } from '@parakeet/training-engine';
+import { getExerciseType } from '@modules/session';
+import { TRAINING_LIFTS } from '@shared/constants/training';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { AddExerciseModal } from '@modules/session';
-import { MuscleChips } from '@modules/training-volume';
-import { TRAINING_LIFTS } from '@shared/constants/training';
-
 import { BackLink } from '../../components/navigation/BackLink';
+import { ScreenTitle } from '../../components/ui/ScreenTitle';
 import type { ColorScheme } from '../../theme';
 import { useTheme } from '../../theme/ThemeContext';
-
-import { ScreenTitle } from '../../components/ui/ScreenTitle';
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 

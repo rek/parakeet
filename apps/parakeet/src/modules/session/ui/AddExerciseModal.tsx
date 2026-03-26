@@ -11,7 +11,7 @@ import {
 } from 'react-native';
 
 import type { Lift } from '@parakeet/shared-types';
-import { getAllExercises } from '@parakeet/training-engine';
+import { getAllExercises } from '../lib/exercise-lookup';
 import type {
   ExerciseCatalogEntry,
   MuscleGroup,
@@ -264,7 +264,11 @@ export function AddExerciseModal({
         .map((name) => allExercises.find((e) => e.name === name))
         .filter((e): e is ExerciseCatalogEntry => e != null);
       if (suggestedEntries.length > 0) {
-        items.push({ type: 'header', key: 'header-suggested', label: 'Suggested' });
+        items.push({
+          type: 'header',
+          key: 'header-suggested',
+          label: 'Suggested',
+        });
         for (const entry of suggestedEntries) {
           items.push({
             type: 'exercise',
@@ -327,7 +331,14 @@ export function AddExerciseModal({
     }
 
     return items;
-  }, [query, liftFilter, allExercises, excludeNames, suggestedNames, recentNames]);
+  }, [
+    query,
+    liftFilter,
+    allExercises,
+    excludeNames,
+    suggestedNames,
+    recentNames,
+  ]);
 
   function handleSelect(name: string) {
     onConfirm(name);
