@@ -37,8 +37,6 @@ import {
   VolumeRecoveryBanner,
   WarmupSection,
   WeightSuggestionBanner,
-  getAllExercises,
-  getExerciseType,
 } from '@modules/session';
 import type {
   AuxiliaryWork,
@@ -62,6 +60,7 @@ import { useNetworkStatus } from '@platform/network';
 import { useSessionStore } from '@platform/store/sessionStore';
 import { captureException } from '@platform/utils/captureException';
 import type { PlateKg } from '@shared/constants/plates';
+import { getAllExercises, getExerciseType } from '@shared/utils/exercise-lookup';
 import { sessionLabel } from '@shared/utils/string';
 import { weightGramsToKg } from '@shared/utils/weight';
 import { useQueryClient } from '@tanstack/react-query';

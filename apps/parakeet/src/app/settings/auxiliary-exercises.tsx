@@ -17,7 +17,7 @@ import {
 import { AddExerciseModal } from '@modules/session';
 import { MuscleChips } from '@modules/training-volume';
 import type { Lift } from '@parakeet/shared-types';
-import { getExerciseType } from '@modules/session';
+import { getExerciseType } from '@shared/utils/exercise-lookup';
 import { TRAINING_LIFTS } from '@shared/constants/training';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { router } from 'expo-router';

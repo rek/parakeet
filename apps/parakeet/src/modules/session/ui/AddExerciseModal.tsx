@@ -11,7 +11,7 @@ import {
 } from 'react-native';
 
 import type { Lift } from '@parakeet/shared-types';
-import { getAllExercises } from '../lib/exercise-lookup';
+import { getAllExercises } from '@shared/utils/exercise-lookup';
 import type {
   ExerciseCatalogEntry,
   MuscleGroup,

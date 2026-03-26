@@ -1,4 +1,4 @@
-import { getMusclesForExercise } from '@modules/session';
+import { getMusclesForExercise } from '@shared/utils/exercise-lookup';
 
 /** Returns primary muscle names (contribution >= 1.0) for a given exercise. Returns [] for unknown exercises. */
 export function getPrimaryMuscles(exerciseName: string): string[] {
