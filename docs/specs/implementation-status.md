@@ -195,6 +195,7 @@ Module/platform/shared architecture is the canonical app structure. Legacy top-l
 ## Refactors
 
 - [x] refactor-001: Extract business logic from React components — domain logic moved to training-engine and module utils; presentation constants consolidated. See below for details.
+- [ ] refactor-003: UI-engine decoupling (GH#132) — Phase 0+1 complete: weight utils (`gramsToKg`/`kgToGrams`/`roundToNearest`/`localDateString`) moved to `@shared/utils/`; muscle domain types (`MuscleGroup`, `MUSCLE_CATALOG`, etc.) promoted to `@parakeet/shared-types`; `PlateKg`/`PLATE_COLORS` moved to `@shared/constants/plates`. 90→76 engine import files. Phases 2-7 remaining.
 - [x] refactor-002: Screen title consistency (GH#103) — extracted `ScreenTitle` component (`components/ui/ScreenTitle.tsx`); replaced inconsistent inline title styles across 15 screens (mix of 24px/800, 28px/700, 28px/800) with canonical theme tokens (2xl/black/tight) via shared component
   - `getPhaseForDay` → `training-engine/formulas/cycle-phase.ts` (removed duplicate from settings/cycle-tracking)
   - `estimateWorkingWeight` → `training-engine/formulas/weight-rounding.ts` (removed `WORKING_PCT` from settings/warmup-protocol)
@@ -248,7 +249,8 @@ Module/platform/shared architecture is the canonical app structure. Legacy top-l
 - [x] Intra-session volume recovery (GH#92) — `evaluateVolumeRecovery()` in `training-engine/src/adjustments/volume-recovery.ts`; when JIT reduces sets (soreness/readiness/cycle-phase/disruption) but actual RPE is ≥1.5 below target, `VolumeRecoveryBanner` offers to add removed sets back; `checkVolumeRecovery()` fires after each main lift RPE entry; `sessionStore.acceptRecovery()` appends recovered sets with `is_recovered: true`; recovery blocked during severe soreness (9-10) recovery mode; 14 tests
 - [x] Ad-hoc timed aux PostRestOverlay (GH#119) — `handleAuxSetUpdate` exercise type lookup falls back to `getExerciseType()` from training-engine when exercise is not in JIT `auxiliaryWork`; fixes confirmation overlay, RPE picker, and rest timer appearing for ad-hoc timed exercises (e.g. Plank)
 
-- [x] Unending upcoming lift protection (GH#118) — `jit.ts` now derives `upcomingLifts` from the deterministic S→B→D rotation for unending programs when `fetchUpcomingSessionLifts` returns empty (future sessions don't exist in DB for lazy-generated programs); prevents bench-associated aux exercises from being prescribed the day before bench day
+- [x] Unending upcoming lift protection (GH#118)
+- [x] Aux failure adaptation (GH#131) — `handleAuxConfirmFailed` missing `failed: true` fixed; `adaptAuxRemainingPlan` in `intra-session-adapter.ts` (10% weight reduction, 50% floor, 2.5kg rounding); shared `writeAuxFailureAndAdapt` helper consolidates both aux failure paths; `auxAdaptations` per-exercise state in session store; adapted weights displayed in UI with banner; 5 new tests — `jit.ts` now derives `upcomingLifts` from the deterministic S→B→D rotation for unending programs when `fetchUpcomingSessionLifts` returns empty (future sessions don't exist in DB for lazy-generated programs); prevents bench-associated aux exercises from being prescribed the day before bench day
 
 ---
 
