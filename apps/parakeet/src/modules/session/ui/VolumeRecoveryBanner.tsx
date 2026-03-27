@@ -1,11 +1,10 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
-import type { VolumeRecoveryOffer } from '@parakeet/training-engine';
-
 import type { ColorScheme } from '../../../theme';
+import type { RecoveryOffer } from '../model/types';
 
 interface Props {
-  offer: VolumeRecoveryOffer;
+  offer: RecoveryOffer;
   colors: ColorScheme;
   onAccept: () => void;
   onDismiss: () => void;

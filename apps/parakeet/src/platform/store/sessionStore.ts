@@ -1,9 +1,13 @@
-import type { AdaptedPlan, AuxAdaptedPlan, VolumeRecoveryOffer, WeightSuggestion } from '@parakeet/training-engine';
+import type {
+  AuxSessionAdaptation,
+  RecoveryOffer,
+  SessionAdaptation,
+  WeightSuggestionOffer,
+} from '@modules/session/model/types';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { weightKgToGrams } from '@shared/utils/weight';
 import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
-
-import { weightKgToGrams } from '@shared/utils/weight';
 
 export interface ActualSet {
   set_number: number;
@@ -59,12 +63,12 @@ export interface SessionState {
   cachedPrescriptionTrace: string | null;
   timerState: TimerState | null;
   consecutiveMainLiftFailures: number;
-  currentAdaptation: AdaptedPlan | null;
+  currentAdaptation: SessionAdaptation | null;
   /** Per-exercise aux adaptations keyed by exercise name */
-  auxAdaptations: Record<string, AuxAdaptedPlan>;
-  recoveryOffer: VolumeRecoveryOffer | null;
+  auxAdaptations: Record<string, AuxSessionAdaptation>;
+  recoveryOffer: RecoveryOffer | null;
   recoveryDismissed: boolean;
-  weightSuggestion: WeightSuggestion | null;
+  weightSuggestion: WeightSuggestionOffer | null;
   hasAcceptedWeightSuggestion: boolean;
 
   updateSet: (setNumber: number, data: Partial<ActualSet>) => void;
@@ -89,13 +93,13 @@ export interface SessionState {
   setCachedPrescriptionTrace: (raw: string) => void;
   recordSetFailure: () => void;
   recordSetSuccess: () => void;
-  setAdaptation: (plan: AdaptedPlan) => void;
-  setAuxAdaptation: (exercise: string, plan: AuxAdaptedPlan) => void;
+  setAdaptation: (plan: SessionAdaptation) => void;
+  setAuxAdaptation: (exercise: string, plan: AuxSessionAdaptation) => void;
   resetAdaptation: () => void;
-  setRecoveryOffer: (offer: VolumeRecoveryOffer) => void;
+  setRecoveryOffer: (offer: RecoveryOffer) => void;
   acceptRecovery: () => void;
   dismissRecovery: () => void;
-  setWeightSuggestion: (suggestion: WeightSuggestion | null) => void;
+  setWeightSuggestion: (suggestion: WeightSuggestionOffer | null) => void;
   acceptWeightSuggestion: () => void;
   dismissWeightSuggestion: () => void;
   openTimer: (opts: {
@@ -237,7 +241,8 @@ export const useSessionStore = create<SessionState>()(
 
       setCachedJitData: (raw) => set({ cachedJitData: raw }),
 
-      setCachedPrescriptionTrace: (raw) => set({ cachedPrescriptionTrace: raw }),
+      setCachedPrescriptionTrace: (raw) =>
+        set({ cachedPrescriptionTrace: raw }),
 
       recordSetFailure: () =>
         set((state) => ({
@@ -298,7 +303,8 @@ export const useSessionStore = create<SessionState>()(
       dismissRecovery: () =>
         set({ recoveryOffer: null, recoveryDismissed: true }),
 
-      setWeightSuggestion: (suggestion) => set({ weightSuggestion: suggestion }),
+      setWeightSuggestion: (suggestion) =>
+        set({ weightSuggestion: suggestion }),
 
       acceptWeightSuggestion: () =>
         set((state) => {
@@ -309,8 +315,11 @@ export const useSessionStore = create<SessionState>()(
           if (!nextSet) return { weightSuggestion: null };
           const updatedActual = state.actualSets.map((s) =>
             s.set_number === nextSet.set_number
-              ? { ...s, weight_grams: weightKgToGrams(suggestion.suggestedWeightKg) }
-              : s,
+              ? {
+                  ...s,
+                  weight_grams: weightKgToGrams(suggestion.suggestedWeightKg),
+                }
+              : s
           );
           return {
             actualSets: updatedActual,

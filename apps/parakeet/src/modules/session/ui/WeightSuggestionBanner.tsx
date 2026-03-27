@@ -1,11 +1,10 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
-import type { WeightSuggestion } from '@parakeet/training-engine';
-
 import type { ColorScheme } from '../../../theme';
+import type { WeightSuggestionOffer } from '../model/types';
 
 interface Props {
-  suggestion: WeightSuggestion;
+  suggestion: WeightSuggestionOffer;
   colors: ColorScheme;
   onAccept: () => void;
   onDismiss: () => void;
@@ -30,9 +29,7 @@ export function WeightSuggestionBanner({
       </View>
       <Text style={styles.rationale}>{suggestion.rationale}</Text>
       <Pressable style={styles.acceptButton} onPress={onAccept}>
-        <Text style={styles.acceptButtonText}>
-          +{suggestion.deltaKg} kg
-        </Text>
+        <Text style={styles.acceptButtonText}>+{suggestion.deltaKg} kg</Text>
       </Pressable>
     </View>
   );

@@ -1,3 +1,5 @@
+import type { PlannedSet as NumberedPlannedSet } from '@parakeet/shared-types';
+
 export interface PlannedSet {
   weight_kg: number;
   reps: number;
@@ -46,7 +48,10 @@ export interface PostRestState {
 export interface VolumeReductions {
   totalSetsRemoved: number;
   baseSetsCount: number;
-  sources: Array<{ source: 'soreness' | 'readiness' | 'cycle_phase' | 'disruption'; setsRemoved: number }>;
+  sources: Array<{
+    source: 'soreness' | 'readiness' | 'cycle_phase' | 'disruption';
+    setsRemoved: number;
+  }>;
   recoveryBlocked: boolean;
 }
 
@@ -64,6 +69,41 @@ export interface JitData {
   rationale?: string[];
   /** Intensity scaling factor (e.g. 0.95 = intensity reduced 5%) */
   intensityModifier?: number;
+}
+
+// ── Intra-session adaptation types (app-owned mirrors of engine types) ────────
+// These use shared-types PlannedSet (with set_number) — matches engine output.
+
+export type AdaptationType =
+  | 'none'
+  | 'extended_rest'
+  | 'weight_reduced'
+  | 'sets_capped';
+
+export interface SessionAdaptation {
+  sets: NumberedPlannedSet[];
+  restBonusSeconds: number;
+  adaptationType: AdaptationType;
+  rationale: string;
+}
+
+export interface AuxSessionAdaptation {
+  exercise: string;
+  sets: NumberedPlannedSet[];
+  adaptationType: 'none' | 'weight_reduced';
+  rationale: string;
+}
+
+export interface RecoveryOffer {
+  setsAvailable: number;
+  recoveredSets: NumberedPlannedSet[];
+  rationale: string;
+}
+
+export interface WeightSuggestionOffer {
+  suggestedWeightKg: number;
+  deltaKg: number;
+  rationale: string;
 }
 
 export const DEFAULT_MAIN_REST_SECONDS = 180;
