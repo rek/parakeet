@@ -12,7 +12,7 @@
     "test": "nx affected --target=test",
     "start": "nx start parakeet",
     "prebuild": "APP_ENV=development npx expo prebuild --platform android --clean",
-    "android": "node tools/scripts/set-android-supabase-ip.mjs && APP_ENV=development nx run-android parakeet",
+    "android": "APP_ENV=development nx run-android parakeet",
     "bridge": "adb reverse tcp:54321 tcp:54321 && adb reverse tcp:8081 tcp:8081",
     "check:supabase-import-boundary": "node tools/scripts/check-supabase-import-boundary.mjs",
     "check:supabase-ui-boundary": "node tools/scripts/check-supabase-ui-boundary.mjs",
