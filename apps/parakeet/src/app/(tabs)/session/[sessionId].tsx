@@ -576,7 +576,11 @@ export default function SessionScreen() {
       setAuxiliaryWork(aux ?? []);
       if (activeAux.length > 0) {
         initAuxiliary(
-          activeAux.map((a) => ({ exercise: a.exercise, sets: a.sets }))
+          activeAux.map((a) => ({
+            exercise: a.exercise,
+            sets: a.sets,
+            exerciseType: a.exerciseType,
+          }))
         );
       }
 
@@ -668,13 +672,13 @@ export default function SessionScreen() {
         oneRmGrams > 0
           ? computeSuggestedWeight(name, oneRmGrams, exerciseCatalog)
           : 0;
-      addAdHocSet(name, suggestedWeight);
+      addAdHocSet(name, suggestedWeight, getExerciseType(name));
     }
     setAddExerciseVisible(false);
   }
 
   function handleAddAdHocSet(exercise: string) {
-    addAdHocSet(exercise);
+    addAdHocSet(exercise, undefined, getExerciseType(exercise));
   }
 
   function handleRemoveAdHocSet(exercise: string, setNumber: number) {

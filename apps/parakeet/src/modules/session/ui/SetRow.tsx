@@ -344,24 +344,26 @@ export function SetRow({
           editable={!displayCompleted}
         />
 
-        <TouchableOpacity
-          style={[
-            styles.rpeChip,
-            rpe !== undefined && styles.rpeChipFilled,
-            !displayCompleted && styles.rpeChipDisabled,
-          ]}
-          onPress={displayCompleted ? onRpePress : undefined}
-          activeOpacity={0.7}
-        >
-          <Text
+        {exerciseType !== 'bodyweight' && (
+          <TouchableOpacity
             style={[
-              styles.rpeChipText,
-              rpe === undefined && styles.rpeChipPlaceholder,
+              styles.rpeChip,
+              rpe !== undefined && styles.rpeChipFilled,
+              !displayCompleted && styles.rpeChipDisabled,
             ]}
+            onPress={displayCompleted ? onRpePress : undefined}
+            activeOpacity={0.7}
           >
-            {rpe !== undefined ? String(rpe) : 'RPE'}
-          </Text>
-        </TouchableOpacity>
+            <Text
+              style={[
+                styles.rpeChipText,
+                rpe === undefined && styles.rpeChipPlaceholder,
+              ]}
+            >
+              {rpe !== undefined ? String(rpe) : 'RPE'}
+            </Text>
+          </TouchableOpacity>
+        )}
 
         <TouchableOpacity
           style={[

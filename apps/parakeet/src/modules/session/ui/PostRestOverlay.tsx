@@ -165,10 +165,11 @@ export function PostRestOverlay({
   const resetLabel =
     resetCountdown !== null ? `+15s (${resetCountdown}s)` : '+15s rest';
 
-  const hasContext =
-    nextSetNumber != null && plannedWeightKg != null && plannedReps > 0;
+  const hasContext = nextSetNumber != null && plannedReps > 0;
   const contextLabel = hasContext
-    ? `Set ${nextSetNumber} — ${plannedWeightKg}kg × ${plannedReps}`
+    ? plannedWeightKg
+      ? `Set ${nextSetNumber} — ${plannedWeightKg}kg × ${plannedReps}`
+      : `Set ${nextSetNumber} × ${plannedReps}`
     : null;
 
   if (failedReps !== null) {

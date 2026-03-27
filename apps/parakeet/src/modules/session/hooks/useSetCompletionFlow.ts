@@ -169,6 +169,7 @@ export function useSetCompletionFlow({
         auxiliaryWork.find((aw) => aw.exercise === exercise)?.exerciseType ??
         getExerciseType(exercise);
       const isTimed = exerciseType === 'timed';
+      const isBodyweight = exerciseType === 'bodyweight';
       const isFirstCompletion = data.isCompleted && !wasAuxCompleted;
       const noPriorRestForThisSet = !storeState.auxiliarySets.some(
         (s) => s.exercise === exercise && s.is_completed
@@ -196,12 +197,13 @@ export function useSetCompletionFlow({
 
       if (data.isCompleted) {
         if (!wasAuxCompleted) {
-          if (!isTimed) setPendingAuxRpe({ exercise, setNumber });
+          if (!isTimed && !isBodyweight)
+            setPendingAuxRpe({ exercise, setNumber });
 
           // No rest timer after the last set of this exercise
           if (setNumber >= setsInExercise) return;
 
-          if (isTimed) return;
+          if (isTimed || isBodyweight) return;
 
           if (!restTimerPrefsRef.current.auxSetsEnabled) return;
 
@@ -332,10 +334,15 @@ export function useSetCompletionFlow({
         reps_completed: planned.reps,
         is_completed: true,
       });
-      setPendingAuxRpe({ exercise: auxExercise, setNumber: nextAuxSet });
+      const auxType =
+        auxWork?.exerciseType ?? getExerciseType(auxExercise);
+      if (auxType !== 'timed' && auxType !== 'bodyweight')
+        setPendingAuxRpe({ exercise: auxExercise, setNumber: nextAuxSet });
 
       if (
         nextAuxSet < totalAuxSets &&
+        auxType !== 'timed' &&
+        auxType !== 'bodyweight' &&
         restTimerPrefsRef.current.auxSetsEnabled
       ) {
         const exerciseIndex = auxiliaryWork.findIndex(
@@ -614,10 +621,15 @@ export function useSetCompletionFlow({
       is_completed: true,
     });
 
-    setPendingAuxRpe({ exercise: conf.exercise, setNumber: conf.setNumber });
+    const confType =
+      auxiliaryWork.find((aw) => aw.exercise === conf.exercise)?.exerciseType ??
+      getExerciseType(conf.exercise);
+    if (confType !== 'timed' && confType !== 'bodyweight')
+      setPendingAuxRpe({ exercise: conf.exercise, setNumber: conf.setNumber });
 
     // Open rest timer if not last set and aux timer enabled
     if (conf.setNumber >= conf.setsInExercise) return;
+    if (confType === 'timed' || confType === 'bodyweight') return;
     if (!restTimerPrefsRef.current.auxSetsEnabled) return;
 
     const duration =
@@ -636,6 +648,10 @@ export function useSetCompletionFlow({
     if (!conf) return;
     setPendingAuxConfirmation(null);
 
+    const failedType =
+      auxiliaryWork.find((aw) => aw.exercise === conf.exercise)?.exerciseType ??
+      getExerciseType(conf.exercise);
+
     // Write failure + adapt remaining sets via shared helper
     writeAuxFailureAndAdapt(
       conf.exercise,
@@ -647,6 +663,7 @@ export function useSetCompletionFlow({
 
     // Open rest timer if not last set and aux timer enabled
     if (conf.setNumber >= conf.setsInExercise) return;
+    if (failedType === 'timed' || failedType === 'bodyweight') return;
     if (!restTimerPrefsRef.current.auxSetsEnabled) return;
 
     const duration =
