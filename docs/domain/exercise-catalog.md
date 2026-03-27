@@ -66,6 +66,9 @@ At the reference 1RM, output equals the linear formula. Above it, weight grows s
 | Good Mornings          | deadlift        | 0.40      | weighted |
 | Lat Pulldown           | deadlift        | 0.28      | weighted |
 | Seated Machine Row     | deadlift        | 0.28      | weighted |
+| Power Clean            | deadlift        | 0.55      | weighted |
+| Barbell Hang Clean     | deadlift        | 0.50      | weighted |
+| Clean and Jerk         | deadlift        | 0.45      | weighted |
 
 Default fallback: 0.675
 

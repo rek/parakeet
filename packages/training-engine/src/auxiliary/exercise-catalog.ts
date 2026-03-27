@@ -519,7 +519,8 @@ export const EXERCISE_CATALOG: ExerciseCatalogEntry[] = [
       { muscle: 'glutes', contribution: 0.5 },
       { muscle: 'shoulders', contribution: 0.5 },
     ],
-    weightPct: 0.55,
+    // Jerk is the limiting factor — lighter than hang clean or power clean
+    weightPct: 0.45,
     repTarget: 3,
     complexityTier: 'complex',
   },
@@ -532,7 +533,8 @@ export const EXERCISE_CATALOG: ExerciseCatalogEntry[] = [
       { muscle: 'upper_back', contribution: 1.0 },
       { muscle: 'glutes', contribution: 0.5 },
     ],
-    weightPct: 0.5,
+    // Full pull from floor — heaviest of the three clean variants
+    weightPct: 0.55,
     repTarget: 3,
     complexityTier: 'complex',
   },
