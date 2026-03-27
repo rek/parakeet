@@ -45,14 +45,14 @@ Profiles:
 Builds on your machine using EAS CLI. No native project checkout needed — EAS handles it.
 
 ```bash
-# Preview APK (sideload-ready)
-npm run build
-
 # Production APK
-npm run build:prod
+nx eas-build parakeet
+
+# Preview APK (sideload-ready)
+nx eas-build:preview parakeet
 
 # Development client
-npm run build:dev
+nx eas-build:dev parakeet
 ```
 
 The `--local` flag runs the build on your machine instead of EAS servers.
@@ -67,7 +67,7 @@ Requires the native Android project to exist (`apps/parakeet/android/`). If it d
 
 ```bash
 # One-time: generate native Android project (re-run if you add/remove native packages)
-npm run prebuild
+nx prebuild parakeet
 ```
 
 **Adding native Expo packages:** Add to **both** the root `package.json` and `apps/parakeet/package.json`, then `npm install && npm run prebuild`. Autolinking only scans the app's `package.json` — a package in the root alone will pass TypeScript but crash at runtime.
@@ -85,28 +85,28 @@ Note: app runtime only honors `EXPO_PUBLIC_SUPABASE_URL_ANDROID` in `__DEV__`; p
 ### Sideload to device
 
 ```bash
-npm run install:apk    # Installs the most recent APK from dist/ onto connected device
+nx install-apk parakeet    # Installs the most recent APK from dist/ onto connected device
 ```
 
 ### Local development
 
 ```bash
 # Start Expo dev server
-npm start
+nx start parakeet
 
 # Build & run on Android (auto-detects LAN IP for Supabase)
-npm run android
+nx run-android parakeet
 
 # Or start directly in web mode:
-nx run parakeet:serve
+nx serve parakeet
 ```
 
-`npm run android` sets `APP_ENV=development` (→ `.dev` package name) and auto-updates `EXPO_PUBLIC_SUPABASE_URL_ANDROID` with your LAN IP before launching.
+`nx run-android parakeet` auto-updates `EXPO_PUBLIC_SUPABASE_URL_ANDROID` with your LAN IP before launching.
 
 For USB workflow, prefer `adb reverse` with `localhost` Supabase:
 
 ```bash
-npm run bridge   # adb reverse for ports 54321 + 8081
+nx bridge parakeet   # adb reverse for ports 54321 + 8081
 
 # .env.local
 EXPO_PUBLIC_SUPABASE_URL=http://localhost:54321
