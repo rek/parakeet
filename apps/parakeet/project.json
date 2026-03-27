@@ -80,6 +80,46 @@
         "parallel": false
       }
     },
+    "prebuild": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "APP_ENV=development npx expo prebuild --platform android --clean",
+        "cwd": "apps/parakeet"
+      }
+    },
+    "bridge": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "adb reverse tcp:54321 tcp:54321 && adb reverse tcp:8081 tcp:8081"
+      }
+    },
+    "eas-build": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "eas build --profile production --platform android --local && bash -c 'mv -f {build,application}-*.{apk,aab} ../../dist/ 2>/dev/null; true'",
+        "cwd": "apps/parakeet"
+      }
+    },
+    "eas-build:preview": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "eas build --profile preview --platform android --local && bash -c 'mv -f {build,application}-*.{apk,aab} ../../dist/ 2>/dev/null; true'",
+        "cwd": "apps/parakeet"
+      }
+    },
+    "eas-build:dev": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "eas build --profile development --platform android --local && bash -c 'mv -f {build,application}-*.{apk,aab} ../../dist/ 2>/dev/null; true'",
+        "cwd": "apps/parakeet"
+      }
+    },
+    "install-apk": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "bash tools/scripts/install-latest-apk.sh"
+      }
+    },
     "lint": {
       "executor": "nx:run-commands",
       "options": {

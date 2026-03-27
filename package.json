@@ -10,10 +10,6 @@
     "typecheck": "nx affected --target=typecheck",
     "lint": "nx affected --target=lint",
     "test": "nx affected --target=test",
-    "start": "nx start parakeet",
-    "prebuild": "APP_ENV=development npx expo prebuild --platform android --clean",
-    "android": "APP_ENV=development nx run-android parakeet",
-    "bridge": "adb reverse tcp:54321 tcp:54321 && adb reverse tcp:8081 tcp:8081",
     "check:supabase-import-boundary": "node tools/scripts/check-supabase-import-boundary.mjs",
     "check:supabase-ui-boundary": "node tools/scripts/check-supabase-ui-boundary.mjs",
     "check:module-boundary": "node tools/scripts/check-module-boundary.mjs",
@@ -21,12 +17,7 @@
     "db:stop": "npx supabase stop",
     "db:reset": "npx supabase db reset",
     "db:push": "npx supabase db push",
-    "db:types": "npx supabase gen types typescript --local > supabase/types.ts",
-    "ios": "expo run:ios",
-    "build": "cd apps/parakeet && eas build --profile production --platform android --local && bash -c 'mv -f {build,application}-*.{apk,aab} ../../dist/ 2>/dev/null; true'",
-    "build:preview": "cd apps/parakeet && eas build --profile preview --platform android --local && bash -c 'mv -f {build,application}-*.{apk,aab} ../../dist/ 2>/dev/null; true'",
-    "build:dev": "cd apps/parakeet && eas build --profile development --platform android --local && bash -c 'mv -f {build,application}-*.{apk,aab} ../../dist/ 2>/dev/null; true'",
-    "install:apk": "bash tools/scripts/install-latest-apk.sh"
+    "db:types": "npx supabase gen types typescript --local > supabase/types.ts"
   },
   "dependencies": {
     "@expo/metro-runtime": "~6.1.2",
