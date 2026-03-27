@@ -700,6 +700,33 @@ export async function fetchLastCompletedLiftForProgram(
   return LiftSchema.parse(data.primary_lift);
 }
 
+// True if any session in this program was completed during today (local time).
+// Used to avoid scheduling the next session on the same day (GH#136).
+export async function fetchHasCompletedSessionToday(
+  programId: string,
+  userId: string
+): Promise<boolean> {
+  const now = new Date();
+  const startOfDay = new Date(
+    now.getFullYear(),
+    now.getMonth(),
+    now.getDate()
+  );
+  const endOfDay = new Date(startOfDay);
+  endOfDay.setDate(endOfDay.getDate() + 1);
+
+  const { count, error } = await typedSupabase
+    .from('sessions')
+    .select('id', { count: 'exact', head: true })
+    .eq('program_id', programId)
+    .eq('user_id', userId)
+    .eq('status', 'completed')
+    .gte('completed_at', startOfDay.toISOString())
+    .lt('completed_at', endOfDay.toISOString());
+  if (error) throw error;
+  return (count ?? 0) > 0;
+}
+
 export interface EndOfWeekContext {
   programId: string | null;
   programMode: 'scheduled' | 'unending' | null;

@@ -31,6 +31,7 @@ import {
   fetchCompletedSessions,
   fetchCurrentWeekLogs,
   fetchEndOfWeekContext,
+  fetchHasCompletedSessionToday,
   fetchHasNextWeekSessions,
   fetchInProgressSession,
   fetchLastCompletedAtForLift,
@@ -500,7 +501,19 @@ async function generateNextUnendingSession(
 ) {
   const trainingDays = program.training_days ??
     DEFAULT_TRAINING_DAYS[program.training_days_per_week] ?? [1, 3, 5];
-  const plannedDate = nextTrainingDate(trainingDays);
+
+  // If a session was already completed today, schedule for the next training
+  // day after today — prevents double-scheduling on the same day (GH#136).
+  const completedToday = await fetchHasCompletedSessionToday(
+    program.id,
+    userId
+  );
+  let referenceDate: Date | undefined;
+  if (completedToday) {
+    referenceDate = new Date();
+    referenceDate.setDate(referenceDate.getDate() + 1);
+  }
+  const plannedDate = nextTrainingDate(trainingDays, referenceDate);
   const lastCompletedLift = await fetchLastCompletedLiftForProgram(
     program.id,
     userId
