@@ -11,15 +11,14 @@ import {
 import type { ProgramListItem } from '@shared/types/domain';
 
 import { getAuthenticatedUserId } from '../data/profile.repository';
-import { computeMinimalDayShift } from '../utils/computeMinimalDayShift';
 import {
   archiveActivePrograms,
   bulkUpdateSessionDates,
   cancelPlannedSessionsForProgram,
   fetchActiveProgramMode,
   fetchActiveProgramWithSessions,
-  fetchPlannedSessionsForProgram,
   fetchLatestProgramVersion,
+  fetchPlannedSessionsForProgram,
   fetchProgramsList,
   fetchProgramWithSessions,
   insertAuxiliaryAssignmentRows,
@@ -33,6 +32,7 @@ import {
 import { getAuxiliaryPools } from '../lib/auxiliary-config';
 import { getCurrentMaxes } from '../lib/lifter-maxes';
 import { captureException } from '../utils/captureException';
+import { computeMinimalDayShift } from '../utils/computeMinimalDayShift';
 import { appendNextUnendingSession } from './unending-session';
 
 export type { ProgramListItem } from '@shared/types/domain';
@@ -125,7 +125,7 @@ async function buildProgram(
         training_days: input.trainingDays ?? null,
       },
       userId,
-      firstDate,
+      firstDate
     );
   } else {
     const scaffold = generateProgram({

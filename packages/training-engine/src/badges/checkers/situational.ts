@@ -26,7 +26,11 @@ export function checkSituationalBadges(ctx: BadgeCheckContext): BadgeId[] {
 
   // #18 One More Rep — actual reps > planned reps on 3+ sets
   let extraRepSets = 0;
-  for (let i = 0; i < ctx.actualSets.length && i < ctx.plannedSets.length; i++) {
+  for (
+    let i = 0;
+    i < ctx.actualSets.length && i < ctx.plannedSets.length;
+    i++
+  ) {
     if (
       ctx.actualSets[i].is_completed &&
       ctx.actualSets[i].reps_completed > ctx.plannedSets[i].reps

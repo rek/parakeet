@@ -29,9 +29,7 @@ describe('resolveSetRowDisplay', () => {
     });
 
     it('displays locally edited reps', () => {
-      const result = resolveSetRowDisplay(
-        makeArgs({ localReps: 3 })
-      );
+      const result = resolveSetRowDisplay(makeArgs({ localReps: 3 }));
 
       expect(result.displayReps).toBe(3);
     });
@@ -46,9 +44,7 @@ describe('resolveSetRowDisplay', () => {
     });
 
     it('reflects local completion toggle', () => {
-      const result = resolveSetRowDisplay(
-        makeArgs({ localIsCompleted: true })
-      );
+      const result = resolveSetRowDisplay(makeArgs({ localIsCompleted: true }));
 
       expect(result.displayCompleted).toBe(true);
     });

@@ -1,4 +1,9 @@
 import {
+  atMevExcept,
+  baseInput,
+  makeDisruption,
+} from '../__test-helpers__/fixtures';
+import {
   DEFAULT_FORMULA_CONFIG_FEMALE,
   DEFAULT_FORMULA_CONFIG_MALE,
 } from '../cube/blocks';
@@ -7,7 +12,6 @@ import {
   DEFAULT_MRV_MEV_CONFIG_MALE,
 } from '../volume/mrv-mev-calculator';
 import { generateJITSession } from './jit-session-generator';
-import { baseInput, makeDisruption, atMevExcept } from '../__test-helpers__/fixtures';
 
 describe('JIT scenarios — real training days', () => {
   it('beginner female, menstrual phase, first heavy squat of the week', () => {
@@ -45,10 +49,10 @@ describe('JIT scenarios — real training days', () => {
         blockNumber: 3,
         oneRmKg: 200,
         biologicalSex: 'male',
-        sorenessRatings: { quads: 4 },
+        sorenessRatings: { quads: 8 },
       })
     );
-    // Male soreness 4: -2 sets, ×0.95
+    // Male soreness 8: -2 sets, ×0.95
     // Block 3 heavy male = 4 sets at 90% → 4-2 = 2 sets
     expect(out.mainLiftSets.length).toBe(2);
     // Weight: 200 × 0.90 = 180 → rounded to 180 × 0.95 = 171 → rounds to 170
@@ -111,7 +115,7 @@ describe('JIT scenarios — real training days', () => {
         primaryLift: 'squat',
         intensityType: 'heavy',
         oneRmKg: 170,
-        sorenessRatings: { quads: 4, glutes: 3, lower_back: 3 },
+        sorenessRatings: { quads: 8, glutes: 6, lower_back: 6 },
         activeDisruptions: [
           {
             ...makeDisruption('moderate'),

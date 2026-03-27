@@ -1,5 +1,5 @@
-import type { PrescriptionTraceBuilder } from '../prescription-trace';
 import type { JITInput, RecentSessionSummary } from '../jit-session-generator';
+import type { PrescriptionTraceBuilder } from '../prescription-trace';
 import type { PipelineContext } from './pipeline-context';
 
 // ---------------------------------------------------------------------------
@@ -22,7 +22,11 @@ const LARGE_GAP = 1.25;
 // Step 2: RPE adjustment
 // ---------------------------------------------------------------------------
 
-export function applyRpeAdjustment(ctx: PipelineContext, input: JITInput, traceBuilder?: PrescriptionTraceBuilder) {
+export function applyRpeAdjustment(
+  ctx: PipelineContext,
+  input: JITInput,
+  traceBuilder?: PrescriptionTraceBuilder
+) {
   const rpeHistory = input.recentLogs
     .filter(
       (l): l is RecentSessionSummary & { actual_rpe: number } =>
@@ -42,13 +46,23 @@ export function applyRpeAdjustment(ctx: PipelineContext, input: JITInput, traceB
     const pct = isLarge ? '5' : '2.5';
     ctx.intensityMultiplier *= multiplier;
     ctx.rationale.push(`Recent RPE above target — reduced intensity ${pct}%`);
-    traceBuilder?.recordModifier({ source: 'rpe_history', multiplier, reason: `Recent RPE above target — intensity x${multiplier}` });
+    traceBuilder?.recordModifier({
+      source: 'rpe_history',
+      multiplier,
+      reason: `Recent RPE above target — intensity x${multiplier}`,
+    });
   } else if (avgDev <= UNDER_THRESHOLD) {
     const isLarge = avgDev <= -LARGE_GAP;
-    const multiplier = isLarge ? LARGE_UNDER_MULTIPLIER : SMALL_UNDER_MULTIPLIER;
+    const multiplier = isLarge
+      ? LARGE_UNDER_MULTIPLIER
+      : SMALL_UNDER_MULTIPLIER;
     const pct = isLarge ? '5' : '2.5';
     ctx.intensityMultiplier *= multiplier;
     ctx.rationale.push(`Recent RPE below target — increased intensity ${pct}%`);
-    traceBuilder?.recordModifier({ source: 'rpe_history', multiplier, reason: `Recent RPE below target — intensity x${multiplier}` });
+    traceBuilder?.recordModifier({
+      source: 'rpe_history',
+      multiplier,
+      reason: `Recent RPE below target — intensity x${multiplier}`,
+    });
   }
 }

@@ -49,8 +49,7 @@ export function SummaryChipsRow({
             style={[
               styles.summaryChipValue,
               {
-                color:
-                  performanceColors[performanceVsPlan] ?? colors.text,
+                color: performanceColors[performanceVsPlan] ?? colors.text,
               },
             ]}
           >

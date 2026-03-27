@@ -1,5 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Tabs } from 'expo-router';
+
 import { useTheme } from '../../theme/ThemeContext';
 
 type IoniconsName = React.ComponentProps<typeof Ionicons>['name'];

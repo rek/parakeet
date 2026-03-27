@@ -1,14 +1,17 @@
 import {
+  canAutoApply,
   computeCalibrationBias,
   extractModifierSamples,
-  canAutoApply,
-  shouldTriggerReview,
   reviewCalibrationAdjustment,
+  shouldTriggerReview,
 } from '@parakeet/training-engine';
-import type { ModifierSource, PrescriptionTrace } from '@parakeet/training-engine';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import type {
+  ModifierSource,
+  PrescriptionTrace,
+} from '@parakeet/training-engine';
 import { typedSupabase } from '@platform/supabase';
 import { captureException } from '@platform/utils/captureException';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import { upsertModifierCalibration } from '../data/calibration.repository';
 
@@ -16,7 +19,10 @@ import { upsertModifierCalibration } from '../data/calibration.repository';
  * After session completion, extract trace modifiers + actual RPE and update
  * per-athlete modifier calibration. Fire-and-forget from completeSession.
  */
-export async function updateModifierCalibrations({ sessionId, userId }: {
+export async function updateModifierCalibrations({
+  sessionId,
+  userId,
+}: {
   sessionId: string;
   userId: string;
 }) {
@@ -47,10 +53,14 @@ export async function updateModifierCalibrations({ sessionId, userId }: {
 
     // Extract samples from trace modifiers
     // Only calibrate sources where the JIT pipeline applies calibration adjustments
-    const CALIBRATED_SOURCES = new Set<ModifierSource>(['readiness', 'cycle_phase', 'soreness']);
+    const CALIBRATED_SOURCES = new Set<ModifierSource>([
+      'readiness',
+      'cycle_phase',
+      'soreness',
+    ]);
     const samples = extractModifierSamples({
-      modifiers: trace.mainLift.weightDerivation.modifiers.filter(
-        (m) => CALIBRATED_SOURCES.has(m.source)
+      modifiers: trace.mainLift.weightDerivation.modifiers.filter((m) =>
+        CALIBRATED_SOURCES.has(m.source)
       ),
       rpeTarget,
       rpeActual,
@@ -81,9 +91,12 @@ export async function updateModifierCalibrations({ sessionId, userId }: {
       // Running mean = (oldMean * oldCount + newBias * newCount) / (oldCount + newCount)
       const oldCount = existing?.sample_count ?? 0;
       const oldMeanBias = existing?.mean_bias ?? 0;
-      const newBias = newSamples.reduce((sum, s) => sum + (s.rpeActual - s.rpeTarget), 0) / newSamples.length;
+      const newBias =
+        newSamples.reduce((sum, s) => sum + (s.rpeActual - s.rpeTarget), 0) /
+        newSamples.length;
       const totalCount = oldCount + newSamples.length;
-      const combinedMeanBias = (oldMeanBias * oldCount + newBias * newSamples.length) / totalCount;
+      const combinedMeanBias =
+        (oldMeanBias * oldCount + newBias * newSamples.length) / totalCount;
 
       // Compute calibration from the combined stats
       // Create synthetic samples array with the combined mean
@@ -107,10 +120,20 @@ export async function updateModifierCalibrations({ sessionId, userId }: {
           sampleCount: totalCount,
           meanBias: combinedMeanBias,
         });
-      } else if (shouldTriggerReview({ calibration, previousAdjustment: currentAdjustment })) {
+      } else if (
+        shouldTriggerReview({
+          calibration,
+          previousAdjustment: currentAdjustment,
+        })
+      ) {
         // Large adjustment or low confidence → LLM review before applying
-        const review = await reviewCalibrationAdjustment({ calibration, currentAdjustment });
-        const adjustmentToStore = review.apply ? calibration.suggestedAdjustment : currentAdjustment;
+        const review = await reviewCalibrationAdjustment({
+          calibration,
+          currentAdjustment,
+        });
+        const adjustmentToStore = review.apply
+          ? calibration.suggestedAdjustment
+          : currentAdjustment;
         await upsertModifierCalibration({
           userId,
           modifierSource: source,
@@ -121,14 +144,17 @@ export async function updateModifierCalibrations({ sessionId, userId }: {
         });
         // Queue user prompt for significant changes the LLM wants confirmed
         if (review.askUser) {
-          await AsyncStorage.setItem('pending_calibration_prompt', JSON.stringify({
-            modifierSource: source,
-            currentDefault: currentAdjustment,
-            proposed: calibration.suggestedAdjustment,
-            sampleCount: totalCount,
-            meanBias: combinedMeanBias,
-            reason: review.reason,
-          }));
+          await AsyncStorage.setItem(
+            'pending_calibration_prompt',
+            JSON.stringify({
+              modifierSource: source,
+              currentDefault: currentAdjustment,
+              proposed: calibration.suggestedAdjustment,
+              sampleCount: totalCount,
+              meanBias: combinedMeanBias,
+              reason: review.reason,
+            })
+          );
         }
       } else {
         // Not enough data to propose anything — store stats only

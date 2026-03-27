@@ -30,7 +30,9 @@ export function buildVolumeChartData(
     return `${d.getUTCMonth() + 1}/${d.getUTCDate()}`;
   });
 
-  const lifts = liftFilter ? [liftFilter] : (['squat', 'bench', 'deadlift'] as Lift[]);
+  const lifts = liftFilter
+    ? [liftFilter]
+    : (['squat', 'bench', 'deadlift'] as Lift[]);
 
   const datasets = lifts.map((lift) => {
     const hex = liftColors[lift];

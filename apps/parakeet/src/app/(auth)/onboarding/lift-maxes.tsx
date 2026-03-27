@@ -11,10 +11,9 @@ import {
 import { computeEstimated1RM, isLiftValid } from '@modules/onboarding';
 import { router } from 'expo-router';
 
+import { ScreenTitle } from '../../../components/ui/ScreenTitle';
 import type { ColorScheme } from '../../../theme';
 import { useTheme } from '../../../theme/ThemeContext';
-
-import { ScreenTitle } from '../../../components/ui/ScreenTitle';
 
 // ── Types ────────────────────────────────────────────────────────────────────
 

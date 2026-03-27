@@ -10,12 +10,12 @@ The system uses signals at four time scales: pre-session, in-session, post-sessi
 
 Collected on the check-in screen before each workout.
 
-| Signal        | Scale | Values                           | Used In         |
-|---------------|-------|----------------------------------|-----------------|
-| Soreness      | 1-10  | Per muscle group (9 muscles). Legacy 1-5 auto-doubled. | JIT Steps 0, 5  |
-| Sleep quality | 1-5   | Terrible/Poor/OK/Good/Great. Legacy 1-3 mapped (1→1, 2→3, 3→5). | JIT Steps 0, 3  |
-| Energy level  | 1-5   | Drained/Low/OK/Good/High. Legacy 1-3 mapped (1→1, 2→3, 3→5). | JIT Steps 0, 3  |
-| Cycle phase   | auto  | Calculated from last period start | JIT Step 4     |
+| Signal        | Scale | Values                                                                        | Used In        |
+| ------------- | ----- | ----------------------------------------------------------------------------- | -------------- |
+| Soreness      | 1-10  | Per muscle group (9 muscles). 1–4 fresh, 5–6 moderate, 7–8 high, 9–10 severe. | JIT Steps 0, 5 |
+| Sleep quality | 1-5   | Terrible/Poor/OK/Good/Great. Legacy 1-3 mapped (1→1, 2→3, 3→5).               | JIT Steps 0, 3 |
+| Energy level  | 1-5   | Drained/Low/OK/Good/High. Legacy 1-3 mapped (1→1, 2→3, 3→5).                  | JIT Steps 0, 3 |
+| Cycle phase   | auto  | Calculated from last period start                                             | JIT Step 4     |
 
 Soreness is checked for the session's primary lift muscles only. Sleep and energy are optional — `undefined` = normal.
 
@@ -29,13 +29,13 @@ Expanded scales enable asymmetric responses: high readiness (4-5) can trigger vo
 
 Captured per set during the workout.
 
-| Signal         | Scale  | Capture Point                    | Purpose                    |
-|----------------|--------|----------------------------------|----------------------------|
-| RPE            | 6-10   | After each set via quick picker  | Volume attribution, trend  |
-| Failed set     | bool   | "Failed" button on overlay       | Sets `failed: true`, RPE=10 |
-| Rest time      | seconds| Automatic from rest timer        | Badge detection, analysis  |
-| Actual weight  | grams  | Pre-filled, user adjustable      | Weight deviation tracking  |
-| Actual reps    | count  | Pre-filled, user adjustable      | Rep PR detection           |
+| Signal        | Scale   | Capture Point                   | Purpose                     |
+| ------------- | ------- | ------------------------------- | --------------------------- |
+| RPE           | 6-10    | After each set via quick picker | Volume attribution, trend   |
+| Failed set    | bool    | "Failed" button on overlay      | Sets `failed: true`, RPE=10 |
+| Rest time     | seconds | Automatic from rest timer       | Badge detection, analysis   |
+| Actual weight | grams   | Pre-filled, user adjustable     | Weight deviation tracking   |
+| Actual reps   | count   | Pre-filled, user adjustable     | Rep PR detection            |
 
 RPE interpretation: 6 = 4 RIR, 7 = 3 RIR, 8 = 2 RIR, 9 = 1 RIR, 10 = failure.
 
@@ -47,13 +47,13 @@ RPE interpretation: 6 = 4 RIR, 7 = 3 RIR, 8 = 2 RIR, 9 = 1 RIR, 10 = failure.
 
 Captured on the completion screen.
 
-| Signal              | Type     | Purpose                           | Used In |
-|---------------------|----------|-----------------------------------|---------|
-| Capacity assessment | 1-4      | "Could you have done more?" (planned) | Volume calibration (Step 0) |
-| Session RPE         | 1-10     | Overall difficulty (optional)     | Cross-session trend |
-| Completion %        | derived  | Completed sets / planned sets     | Performance adjuster |
-| Performance vs plan | enum     | over / at / under / incomplete    | Performance adjuster |
-| Session notes       | text     | Free-form (optional)              | — |
+| Signal              | Type    | Purpose                               | Used In                     |
+| ------------------- | ------- | ------------------------------------- | --------------------------- |
+| Capacity assessment | 1-4     | "Could you have done more?" (planned) | Volume calibration (Step 0) |
+| Session RPE         | 1-10    | Overall difficulty (optional)         | Cross-session trend         |
+| Completion %        | derived | Completed sets / planned sets         | Performance adjuster        |
+| Performance vs plan | enum    | over / at / under / incomplete        | Performance adjuster        |
+| Session notes       | text    | Free-form (optional)                  | —                           |
 
 **Capacity assessment** (planned): the most direct signal for volume calibration. Scale: 1 = barely survived, 2 = about right, 3 = had more in me, 4 = way too easy. Feeds directly into next-session volume calibration.
 
@@ -67,12 +67,12 @@ Completion below 80% is flagged for the performance adjuster.
 
 Reported via multi-step disruption form. Active disruptions feed into JIT Step 7.
 
-| Field    | Values                                                         |
-|----------|----------------------------------------------------------------|
-| Type     | injury, illness, travel, fatigue, equipment\_unavailable, unprogrammed\_event |
-| Severity | minor, moderate, major                                         |
-| Duration | Start date, optional end date                                  |
-| Notes    | Free-form description                                          |
+| Field    | Values                                                                      |
+| -------- | --------------------------------------------------------------------------- |
+| Type     | injury, illness, travel, fatigue, equipment_unavailable, unprogrammed_event |
+| Severity | minor, moderate, major                                                      |
+| Duration | Start date, optional end date                                               |
+| Notes    | Free-form description                                                       |
 
 Full modifier table: [adjustments.md](adjustments.md)
 
@@ -82,12 +82,12 @@ Full modifier table: [adjustments.md](adjustments.md)
 
 ## Weekly / Cross-Session
 
-| Signal                 | Frequency      | Content                                   | Used In |
-|------------------------|----------------|-------------------------------------------|---------|
-| Body review            | End of week    | Felt fatigue per muscle (1-5) vs predicted | Volume calibration, MRV adjustment |
-| Bodyweight             | Periodic       | Used for Wilks score                       | — |
-| RPE trend              | Cross-session  | Avg RPE deviation over last 3-5 sessions per lift | Volume calibration (Step 0) |
-| Modifier calibration   | Cross-session  | Per-athlete learned corrections to default modifiers | Volume calibration (Step 0, planned) |
+| Signal               | Frequency     | Content                                              | Used In                              |
+| -------------------- | ------------- | ---------------------------------------------------- | ------------------------------------ |
+| Body review          | End of week   | Felt fatigue per muscle (1-5) vs predicted           | Volume calibration, MRV adjustment   |
+| Bodyweight           | Periodic      | Used for Wilks score                                 | —                                    |
+| RPE trend            | Cross-session | Avg RPE deviation over last 3-5 sessions per lift    | Volume calibration (Step 0)          |
+| Modifier calibration | Cross-session | Per-athlete learned corrections to default modifiers | Volume calibration (Step 0, planned) |
 
 Body review mismatch threshold: |felt - predicted| >= 2 fatigue levels. "Recovering well" mismatches feed into next-week volume calibration increase. "Accumulating fatigue" mismatches feed into decrease.
 

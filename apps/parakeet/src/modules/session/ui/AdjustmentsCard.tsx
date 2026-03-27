@@ -23,8 +23,7 @@ export function AdjustmentsCard({
 }) {
   const hasVolumeChange =
     volumeReductions != null && volumeReductions.totalSetsRemoved > 0;
-  const hasIntensityChange =
-    intensityModifier != null && intensityModifier < 1;
+  const hasIntensityChange = intensityModifier != null && intensityModifier < 1;
   const hasRationale = rationale != null && rationale.length > 0;
 
   if (!hasVolumeChange && !hasIntensityChange) return null;

@@ -39,7 +39,9 @@ export async function cancelRestNotification(notifId: string): Promise<void> {
   }
 }
 
-export async function scheduleWeeklyReviewNotification(): Promise<string | null> {
+export async function scheduleWeeklyReviewNotification(): Promise<
+  string | null
+> {
   try {
     const Notifications = await import('expo-notifications');
     const { status } = await Notifications.requestPermissionsAsync();
@@ -49,7 +51,7 @@ export async function scheduleWeeklyReviewNotification(): Promise<string | null>
     const day = now.getDay(); // 0=Sun, 6=Sat
 
     // Next Saturday (or Sunday if today is Saturday)
-    const daysUntil = day === 6 ? 1 : (6 - day) || 7;
+    const daysUntil = day === 6 ? 1 : 6 - day || 7;
     const target = new Date(now);
     target.setDate(now.getDate() + daysUntil);
     target.setHours(10, 0, 0, 0);

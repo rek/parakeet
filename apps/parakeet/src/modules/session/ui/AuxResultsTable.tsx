@@ -1,11 +1,11 @@
 import { StyleSheet, Text, View } from 'react-native';
 
 import type { ActualSet } from '@parakeet/shared-types';
+import { capitalize } from '@shared/utils/string';
 import { weightGramsToKg } from '@shared/utils/weight';
 
 import { radii, spacing, typography } from '../../../theme';
 import type { ColorScheme } from '../../../theme';
-import { capitalize } from '@shared/utils/string';
 import { groupAuxSetsByExercise } from '../utils/groupAuxSetsByExercise';
 
 export function AuxResultsTable({

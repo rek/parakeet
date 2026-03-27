@@ -1,15 +1,17 @@
 import type { Lift, PlannedSet } from '@parakeet/shared-types';
 
+import type { SorenessLevel } from '../../adjustments/soreness-adjuster';
 import {
   computeAuxWeight,
   getRepTarget,
 } from '../../auxiliary/exercise-catalog';
 import { ExerciseType, getExerciseType } from '../../auxiliary/exercise-types';
 import { roundToNearest } from '../../formulas/weight-rounding';
-import type { SorenessLevel } from '../../adjustments/soreness-adjuster';
-import type { MuscleGroup, MrvMevConfig } from '../../types';
-import { getMusclesForExercise } from '../../volume/muscle-mapper';
-import { getMusclesForLift } from '../../volume/muscle-mapper';
+import type { MrvMevConfig, MuscleGroup } from '../../types';
+import {
+  getMusclesForExercise,
+  getMusclesForLift,
+} from '../../volume/muscle-mapper';
 import type { AuxiliaryWork } from '../jit-session-generator';
 
 /** Fraction of weight retained when aux shares muscles with the session's main lift.
@@ -44,8 +46,8 @@ export function processAuxExercise({
 }): AuxiliaryWork {
   const exerciseType = getExerciseType(exercise);
 
-  // Soreness 5: skip entirely
-  if (worstSoreness >= 5) {
+  // Soreness 9-10 (severe): skip entirely
+  if (worstSoreness >= 9) {
     return {
       exercise,
       exerciseType,
@@ -94,20 +96,24 @@ export function processAuxExercise({
   // primary lift (at ≥0.5 contribution), the lifter is pre-fatigued from main work.
   // Prod data shows RPE 9.5-10 on compound aux (e.g. CGBP after bench) without this.
   if (mainLiftSetCount > 0) {
-    const mainLiftMuscles = new Set(getMusclesForLift(primaryLift).map(m => m.muscle));
+    const mainLiftMuscles = new Set(
+      getMusclesForLift(primaryLift).map((m) => m.muscle)
+    );
     const auxMuscles = getMusclesForExercise(exercise);
     const hasOverlap = auxMuscles.some(
-      m => m.contribution >= 0.5 && mainLiftMuscles.has(m.muscle)
+      (m) => m.contribution >= 0.5 && mainLiftMuscles.has(m.muscle)
     );
     if (hasOverlap) {
       intensityMult *= POST_MAIN_FATIGUE_FACTOR;
     }
   }
 
-  if (worstSoreness === 4) {
+  if (worstSoreness >= 7) {
+    // High soreness (7-8): reduce sets and intensity
     setCount = Math.max(1, setCount - 1);
     intensityMult *= 0.95;
-  } else if (worstSoreness === 3) {
+  } else if (worstSoreness >= 5) {
+    // Moderate soreness (5-6): reduce sets only
     setCount = Math.max(1, setCount - 1);
   }
 
@@ -122,7 +128,12 @@ export function processAuxExercise({
       ? 0
       : roundToNearest(
           roundToNearest(
-            computeAuxWeight({ exercise, oneRmKg, lift: primaryLift, biologicalSex })
+            computeAuxWeight({
+              exercise,
+              oneRmKg,
+              lift: primaryLift,
+              biologicalSex,
+            })
           ) * intensityMult
         );
 

@@ -1,6 +1,5 @@
 import type { ActualSet, IntensityType, Lift } from '@parakeet/shared-types';
 import { IntensityTypeSchema, LiftSchema } from '@parakeet/shared-types';
-import { localDateString } from '@shared/utils/localDateString';
 import type { DbInsert, DbRow } from '@platform/supabase';
 import { typedSupabase } from '@platform/supabase';
 import type {
@@ -8,6 +7,7 @@ import type {
   ProgramSessionView,
   SessionStatus,
 } from '@shared/types/domain';
+import { localDateString } from '@shared/utils/localDateString';
 
 import { parseActualSetsJson } from './session-codecs';
 

@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+
 import {
   insertSessionRows,
   updateUnendingSessionCounter,
@@ -52,5 +53,4 @@ describe('appendNextUnendingSession', () => {
 
     expect(updateUnendingSessionCounter).toHaveBeenCalledWith('prog-1', 6);
   });
-
 });

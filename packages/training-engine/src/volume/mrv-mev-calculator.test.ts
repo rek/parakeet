@@ -145,7 +145,7 @@ describe('rpeSetMultiplier', () => {
     expect(rpeSetMultiplier(undefined)).toBe(1.0));
   it('5 → 0.0 (not a hard set)', () => expect(rpeSetMultiplier(5)).toBe(0.0));
   it('6 → 0.15', () => expect(rpeSetMultiplier(6)).toBe(0.15));
-  it('6.5 → 0.30', () => expect(rpeSetMultiplier(6.5)).toBe(0.30));
+  it('6.5 → 0.30', () => expect(rpeSetMultiplier(6.5)).toBe(0.3));
   it('7 → 0.65', () => expect(rpeSetMultiplier(7)).toBe(0.65));
   it('8 → 0.85', () => expect(rpeSetMultiplier(8)).toBe(0.85));
   it('9 → 1.0', () => expect(rpeSetMultiplier(9)).toBe(1.0));
@@ -485,7 +485,9 @@ describe('applyTrainingAgeMultiplier', () => {
       config: DEFAULT_MRV_MEV_CONFIG_FEMALE,
       trainingAge: 'beginner',
     });
-    expect(beginner.quads.mrv).toBeLessThan(DEFAULT_MRV_MEV_CONFIG_FEMALE.quads.mrv);
+    expect(beginner.quads.mrv).toBeLessThan(
+      DEFAULT_MRV_MEV_CONFIG_FEMALE.quads.mrv
+    );
   });
 
   it('rounds values to integers', () => {
@@ -501,9 +503,18 @@ describe('applyTrainingAgeMultiplier', () => {
   });
 
   it('ordering holds for all muscles: beginner ≤ intermediate ≤ advanced MRV', () => {
-    const b = applyTrainingAgeMultiplier({ config: DEFAULT_MRV_MEV_CONFIG_MALE, trainingAge: 'beginner' });
-    const i = applyTrainingAgeMultiplier({ config: DEFAULT_MRV_MEV_CONFIG_MALE, trainingAge: 'intermediate' });
-    const a = applyTrainingAgeMultiplier({ config: DEFAULT_MRV_MEV_CONFIG_MALE, trainingAge: 'advanced' });
+    const b = applyTrainingAgeMultiplier({
+      config: DEFAULT_MRV_MEV_CONFIG_MALE,
+      trainingAge: 'beginner',
+    });
+    const i = applyTrainingAgeMultiplier({
+      config: DEFAULT_MRV_MEV_CONFIG_MALE,
+      trainingAge: 'intermediate',
+    });
+    const a = applyTrainingAgeMultiplier({
+      config: DEFAULT_MRV_MEV_CONFIG_MALE,
+      trainingAge: 'advanced',
+    });
     for (const muscle of Object.keys(b)) {
       const m = muscle as keyof typeof b;
       expect(b[m].mrv).toBeLessThanOrEqual(i[m].mrv);

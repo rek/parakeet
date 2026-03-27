@@ -30,10 +30,14 @@ export async function fetchRecentSessionLogsForLift(
   lift: Lift,
   limit: number
 ): Promise<JitRecentSessionLogRow[]> {
-  const sixtyDaysAgo = new Date(Date.now() - 60 * 24 * 60 * 60 * 1000).toISOString();
+  const sixtyDaysAgo = new Date(
+    Date.now() - 60 * 24 * 60 * 60 * 1000
+  ).toISOString();
   const { data, error } = await typedSupabase
     .from('session_logs')
-    .select('session_rpe, actual_sets, sessions!inner(primary_lift, planned_sets)')
+    .select(
+      'session_rpe, actual_sets, sessions!inner(primary_lift, planned_sets)'
+    )
     .eq('user_id', userId)
     .eq('sessions.primary_lift', lift)
     .gte('completed_at', sixtyDaysAgo)
@@ -153,7 +157,10 @@ export async function fetchChallengeReview(
     score: data.score,
     verdict: data.verdict as 'accept' | 'flag',
     concerns: Array.isArray(data.concerns) ? (data.concerns as string[]) : [],
-    suggested_overrides: data.suggested_overrides as Record<string, unknown> | null,
+    suggested_overrides: data.suggested_overrides as Record<
+      string,
+      unknown
+    > | null,
   };
 }
 
@@ -185,7 +192,9 @@ export async function fetchActiveDisruptions(
     )
     .eq('user_id', userId)
     .neq('status', 'resolved')
-    .or(`affected_date_end.is.null,affected_date_end.gte.${new Date().toISOString().slice(0, 10)}`);
+    .or(
+      `affected_date_end.is.null,affected_date_end.gte.${new Date().toISOString().slice(0, 10)}`
+    );
 
   if (error) throw error;
   return (data ?? []) as JitDisruptionRow[];

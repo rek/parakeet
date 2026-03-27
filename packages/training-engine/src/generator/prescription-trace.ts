@@ -12,7 +12,12 @@ export interface WeightDerivation {
   blockPct: number;
   baseWeightKg: number;
   modifiers: Array<{
-    source: 'rpe_history' | 'readiness' | 'cycle_phase' | 'soreness' | 'disruption';
+    source:
+      | 'rpe_history'
+      | 'readiness'
+      | 'cycle_phase'
+      | 'soreness'
+      | 'disruption';
     multiplier: number;
     reason: string;
   }>;
@@ -29,7 +34,14 @@ export interface SetTrace {
 }
 
 export interface VolumeTrace {
-  source: 'volume_calibration' | 'rpe_history' | 'readiness' | 'cycle_phase' | 'soreness' | 'disruption' | 'mrv_cap';
+  source:
+    | 'volume_calibration'
+    | 'rpe_history'
+    | 'readiness'
+    | 'cycle_phase'
+    | 'soreness'
+    | 'disruption'
+    | 'mrv_cap';
   setsBefore: number;
   setsAfter: number;
   reason: string;
@@ -107,10 +119,24 @@ export function createEmptyTrace(): PrescriptionTrace {
     oneRmKg: 0,
     rationale: [],
     warnings: [],
-    mainLift: { weightDerivation: null, volumeChanges: [], sets: [], isRecoveryMode: false, isSkipped: true },
+    mainLift: {
+      weightDerivation: null,
+      volumeChanges: [],
+      sets: [],
+      isRecoveryMode: false,
+      isSkipped: true,
+    },
     auxiliaries: [],
     warmup: null,
-    rest: { mainLift: { formulaBaseSeconds: 0, userOverrideSeconds: null, llmDeltaSeconds: null, finalSeconds: 0 }, auxiliarySeconds: 0 },
+    rest: {
+      mainLift: {
+        formulaBaseSeconds: 0,
+        userOverrideSeconds: null,
+        llmDeltaSeconds: null,
+        finalSeconds: 0,
+      },
+      auxiliarySeconds: 0,
+    },
   };
 }
 
@@ -138,11 +164,22 @@ export class PrescriptionTraceBuilder {
   private _auxiliaries: AuxExerciseTrace[] = [];
   private _warmup: WarmupTrace | null = null;
   private _rest: RestTrace = {
-    mainLift: { formulaBaseSeconds: 0, userOverrideSeconds: null, llmDeltaSeconds: null, finalSeconds: 0 },
+    mainLift: {
+      formulaBaseSeconds: 0,
+      userOverrideSeconds: null,
+      llmDeltaSeconds: null,
+      finalSeconds: 0,
+    },
     auxiliarySeconds: 0,
   };
 
-  setSessionContext({ sessionId, primaryLift, intensityType, blockNumber, oneRmKg }: {
+  setSessionContext({
+    sessionId,
+    primaryLift,
+    intensityType,
+    blockNumber,
+    oneRmKg,
+  }: {
     sessionId: string;
     primaryLift: string;
     intensityType: string;
@@ -157,7 +194,14 @@ export class PrescriptionTraceBuilder {
     return this;
   }
 
-  setBaseWeight({ oneRmKg, blockPct, baseWeightKg, storedOneRmKg, workingOneRmKg, oneRmSource }: {
+  setBaseWeight({
+    oneRmKg,
+    blockPct,
+    baseWeightKg,
+    storedOneRmKg,
+    workingOneRmKg,
+    oneRmSource,
+  }: {
     oneRmKg: number;
     blockPct: number;
     baseWeightKg: number;
@@ -174,7 +218,11 @@ export class PrescriptionTraceBuilder {
     return this;
   }
 
-  recordModifier({ source, multiplier, reason }: WeightDerivation['modifiers'][number]) {
+  recordModifier({
+    source,
+    multiplier,
+    reason,
+  }: WeightDerivation['modifiers'][number]) {
     this._modifiers.push({ source, multiplier, reason });
     return this;
   }
@@ -219,19 +267,34 @@ export class PrescriptionTraceBuilder {
     return this;
   }
 
-  build({ rationale, warnings }: { rationale: string[]; warnings: string[] }): PrescriptionTrace {
+  build({
+    rationale,
+    warnings,
+  }: {
+    rationale: string[];
+    warnings: string[];
+  }): PrescriptionTrace {
     const hasWeightData = this._weightOneRmKg > 0 || this._blockPct > 0;
 
     const weightDerivation: WeightDerivation | null = hasWeightData
       ? {
           oneRmKg: this._weightOneRmKg,
-          ...(this._storedOneRmKg !== undefined && { storedOneRmKg: this._storedOneRmKg }),
-          ...(this._workingOneRmKg !== undefined && { workingOneRmKg: this._workingOneRmKg }),
-          ...(this._oneRmSource !== undefined && { oneRmSource: this._oneRmSource }),
+          ...(this._storedOneRmKg !== undefined && {
+            storedOneRmKg: this._storedOneRmKg,
+          }),
+          ...(this._workingOneRmKg !== undefined && {
+            workingOneRmKg: this._workingOneRmKg,
+          }),
+          ...(this._oneRmSource !== undefined && {
+            oneRmSource: this._oneRmSource,
+          }),
           blockPct: this._blockPct,
           baseWeightKg: this._baseWeightKg,
           modifiers: this._modifiers,
-          finalMultiplier: this._modifiers.reduce((acc, m) => acc * m.multiplier, 1),
+          finalMultiplier: this._modifiers.reduce(
+            (acc, m) => acc * m.multiplier,
+            1
+          ),
           finalWeightKg: this._finalWeightKg,
         }
       : null;

@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+
 import { shouldFirePrepareWarning } from './prepare-warning';
 
 describe('shouldFirePrepareWarning', () => {

@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'vitest';
 
+import { classifyConfigSource } from './classify-config-source';
 import {
   DEFAULT_MRV_MEV_CONFIG_FEMALE,
   DEFAULT_MRV_MEV_CONFIG_MALE,
 } from './mrv-mev-calculator';
-import { classifyConfigSource } from './classify-config-source';
 
 describe('classifyConfigSource', () => {
   it('returns isCustom: false for default male config', () => {
@@ -34,7 +34,11 @@ describe('classifyConfigSource', () => {
       ...DEFAULT_MRV_MEV_CONFIG_MALE,
       quads: { mev: 12, mrv: 20 },
     };
-    const result = classifyConfigSource({ config, muscle: 'quads', biologicalSex: 'male' });
+    const result = classifyConfigSource({
+      config,
+      muscle: 'quads',
+      biologicalSex: 'male',
+    });
     expect(result.isCustom).toBe(true);
     expect(result.defaultMev).toBe(8);
   });
@@ -44,7 +48,11 @@ describe('classifyConfigSource', () => {
       ...DEFAULT_MRV_MEV_CONFIG_MALE,
       chest: { mev: 8, mrv: 18 },
     };
-    const result = classifyConfigSource({ config, muscle: 'chest', biologicalSex: 'male' });
+    const result = classifyConfigSource({
+      config,
+      muscle: 'chest',
+      biologicalSex: 'male',
+    });
     expect(result.isCustom).toBe(true);
     expect(result.defaultMrv).toBe(22);
   });

@@ -6,8 +6,6 @@ import {
   Text,
   View,
 } from 'react-native';
-import { router, useLocalSearchParams } from 'expo-router';
-import { SafeAreaView } from 'react-native-safe-area-context';
 
 import {
   AuxResultsTable,
@@ -22,6 +20,8 @@ import type { Lift } from '@parakeet/shared-types';
 import { LIFT_LABELS } from '@shared/constants';
 import { formatDate, formatTime } from '@shared/utils/date';
 import { capitalize } from '@shared/utils/string';
+import { router, useLocalSearchParams } from 'expo-router';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { BackLink } from '../../components/navigation/BackLink';
 import { spacing, typography } from '../../theme';

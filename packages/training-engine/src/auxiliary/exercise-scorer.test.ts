@@ -12,7 +12,9 @@ import {
 // Helpers
 // ---------------------------------------------------------------------------
 
-function baseCtx(overrides?: Partial<ExerciseScoringContext>): ExerciseScoringContext {
+function baseCtx(
+  overrides?: Partial<ExerciseScoringContext>
+): ExerciseScoringContext {
   return {
     targetMuscle: 'quads',
     muscleDeficits: { quads: 4 },
@@ -154,7 +156,9 @@ describe('exercise-scorer / specificity', () => {
     const general = scoreExercise('Overhead Press', ctx); // associatedLift: null
     const cross = scoreExercise('Close-Grip Barbell Bench Press', ctx); // associatedLift: bench
     expect(same.breakdown.specific).toBeGreaterThan(general.breakdown.specific);
-    expect(general.breakdown.specific).toBeGreaterThan(cross.breakdown.specific);
+    expect(general.breakdown.specific).toBeGreaterThan(
+      cross.breakdown.specific
+    );
   });
 });
 
@@ -164,13 +168,18 @@ describe('exercise-scorer / compound-isolation balance', () => {
       targetMuscle: 'chest',
       muscleDeficits: { chest: 4 },
       primaryLift: 'bench',
-      alreadySelectedExercises: ['Close-Grip Barbell Bench Press', 'Barbell Pause Bench Press'],
+      alreadySelectedExercises: [
+        'Close-Grip Barbell Bench Press',
+        'Barbell Pause Bench Press',
+      ],
     });
     // Dumbbell Fly: isCompound=false (explicit)
     const isolation = scoreExercise('Dumbbell Fly', ctx);
     // Floor Press: compound (2 muscles at 1.0)
     const compound = scoreExercise('Floor Press', ctx);
-    expect(isolation.breakdown.balance).toBeGreaterThan(compound.breakdown.balance);
+    expect(isolation.breakdown.balance).toBeGreaterThan(
+      compound.breakdown.balance
+    );
   });
 
   it('prefers compound when already-selected are isolation', () => {
@@ -182,7 +191,9 @@ describe('exercise-scorer / compound-isolation balance', () => {
     });
     const compound = scoreExercise('Floor Press', ctx);
     const isolation = scoreExercise('Dumbbell Fly', ctx);
-    expect(compound.breakdown.balance).toBeGreaterThan(isolation.breakdown.balance);
+    expect(compound.breakdown.balance).toBeGreaterThan(
+      isolation.breakdown.balance
+    );
   });
 });
 
@@ -209,7 +220,9 @@ describe('exercise-scorer / edge cases', () => {
 // ---------------------------------------------------------------------------
 
 describe('exercise-scorer / invariants', () => {
-  const allWeighted = EXERCISE_CATALOG.filter(e => e.type === 'weighted').map(e => e.name);
+  const allWeighted = EXERCISE_CATALOG.filter((e) => e.type === 'weighted').map(
+    (e) => e.name
+  );
 
   it('score is always in [0, 1]', () => {
     for (const name of allWeighted) {
@@ -234,7 +247,9 @@ describe('exercise-scorer / invariants', () => {
       targetMuscle: 'quads',
       muscleDeficits: { quads: 4, glutes: 3 },
     });
-    const squat = EXERCISE_CATALOG.filter(e => e.associatedLift === 'squat').map(e => e.name);
+    const squat = EXERCISE_CATALOG.filter(
+      (e) => e.associatedLift === 'squat'
+    ).map((e) => e.name);
     const ranked = rankExercises(squat, ctx);
     for (let i = 1; i < ranked.length; i++) {
       expect(ranked[i - 1].score).toBeGreaterThanOrEqual(ranked[i].score);
@@ -243,8 +258,13 @@ describe('exercise-scorer / invariants', () => {
 
   it('breakdown sub-scores × weights ≈ total score', () => {
     const weights: Record<string, number> = {
-      deficit: 0.30, soreness: 0.25, diversity: 0.15,
-      fatigue: 0.10, upcoming: 0.10, specific: 0.05, balance: 0.05,
+      deficit: 0.3,
+      soreness: 0.25,
+      diversity: 0.15,
+      fatigue: 0.1,
+      upcoming: 0.1,
+      specific: 0.05,
+      balance: 0.05,
     };
     for (const name of allWeighted.slice(0, 20)) {
       const ctx = baseCtx({

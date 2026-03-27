@@ -73,7 +73,7 @@ const DEFAULT_LARGE_INCREMENT = 5;
  * evaluateVolumeRecovery() which adds sets; this adjusts weight.
  */
 export function evaluateWeightAutoregulation(
-  ctx: WeightAutoregulationContext,
+  ctx: WeightAutoregulationContext
 ): WeightSuggestion | null {
   const {
     rpeActual,

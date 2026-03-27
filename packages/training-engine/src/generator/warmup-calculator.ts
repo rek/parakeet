@@ -1,12 +1,13 @@
 import type { Lift } from '@parakeet/shared-types';
+
 import {
   getPrimaryMusclesForSession,
   getSorenessModifier,
   getWorstSoreness,
   type SorenessLevel,
 } from '../adjustments/soreness-adjuster';
-import type { MuscleGroup } from '../types';
 import { roundToNearest } from '../formulas/weight-rounding';
+import type { MuscleGroup } from '../types';
 
 export type WarmupPresetName =
   | 'standard'
@@ -96,7 +97,10 @@ export function resolveEffectiveWarmupProtocol(opts: {
 
   const primaryMuscles = getPrimaryMusclesForSession(opts.primaryLift);
   const worstSoreness = getWorstSoreness(primaryMuscles, opts.sorenessRatings);
-  const isRecoveryMode = getSorenessModifier(worstSoreness, opts.biologicalSex).recoveryMode;
+  const isRecoveryMode = getSorenessModifier(
+    worstSoreness,
+    opts.biologicalSex
+  ).recoveryMode;
 
   if (isRecoveryMode || opts.workingWeightKg < LOW_WEIGHT_WARMUP_THRESHOLD_KG) {
     return { type: 'preset', name: 'minimal' };

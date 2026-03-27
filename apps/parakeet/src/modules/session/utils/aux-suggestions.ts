@@ -17,7 +17,7 @@ export function computeSuggestedAux(
   primaryLift: Lift | null,
   existingExercises: string[],
   catalog: ExerciseCatalogEntry[],
-  maxResults = 5,
+  maxResults = 5
 ): string[] {
   const existingSet = new Set(existingExercises);
 
@@ -41,12 +41,16 @@ export function computeSuggestedAux(
 
   // Score: number of uncovered muscles this exercise adds
   const scored = candidates.map((e) => {
-    const uncovered = e.primaryMuscles.filter((m) => !coveredMuscles.has(m)).length;
+    const uncovered = e.primaryMuscles.filter(
+      (m) => !coveredMuscles.has(m)
+    ).length;
     return { name: e.name, uncovered };
   });
 
   // Sort descending by uncovered muscle count, then alphabetically for stability
-  scored.sort((a, b) => b.uncovered - a.uncovered || a.name.localeCompare(b.name));
+  scored.sort(
+    (a, b) => b.uncovered - a.uncovered || a.name.localeCompare(b.name)
+  );
 
   return scored.slice(0, maxResults).map((s) => s.name);
 }
@@ -59,7 +63,7 @@ export function computeSuggestedAux(
 export function computeSuggestedWeight(
   exerciseName: string,
   oneRmGrams: number,
-  catalog: ExerciseCatalogEntry[],
+  catalog: ExerciseCatalogEntry[]
 ): number {
   const entry = catalog.find((e) => e.name === exerciseName);
   if (!entry || entry.type === 'bodyweight' || entry.type === 'timed') return 0;

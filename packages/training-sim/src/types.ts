@@ -31,7 +31,7 @@ export interface Persona {
 // Life Script — day-by-day simulation events
 // ---------------------------------------------------------------------------
 
-export type SorenessLevel = 1 | 2 | 3 | 4 | 5;
+export type SorenessLevel = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10;
 export type ReadinessLevel = 1 | 2 | 3;
 export type CyclePhase =
   | 'menstrual'

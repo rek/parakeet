@@ -8,7 +8,8 @@ import { DayEvent, LifeScript } from '../types';
  */
 export const PEAKING_SCRIPT: LifeScript = {
   name: 'peaking',
-  description: '12-week program with peaking block weeks 9-11 and competition week 12',
+  description:
+    '12-week program with peaking block weeks 9-11 and competition week 12',
   events: (() => {
     const weeks = 12;
     const events: DayEvent[] = [];
@@ -30,7 +31,7 @@ export const PEAKING_SCRIPT: LifeScript = {
               type: 'train',
               sleep: 2,
               energy: 2,
-              soreness: { ratings: { quads: 2, hamstrings: 2 } },
+              soreness: { ratings: { quads: 3, hamstrings: 3 } },
             });
           } else {
             events.push({ type: 'rest' });
@@ -42,7 +43,7 @@ export const PEAKING_SCRIPT: LifeScript = {
               type: 'train',
               sleep: 2,
               energy: 2,
-              soreness: { ratings: { quads: 3, hamstrings: 3, lower_back: 2 } },
+              soreness: { ratings: { quads: 6, hamstrings: 6, lower_back: 3 } },
             });
           } else {
             events.push({ type: 'rest' });
@@ -55,7 +56,7 @@ export const PEAKING_SCRIPT: LifeScript = {
               sleep: 2,
               energy: 1,
               soreness: {
-                ratings: { quads: 3, hamstrings: 3, lower_back: 3, chest: 2 },
+                ratings: { quads: 6, hamstrings: 6, lower_back: 6, chest: 3 },
               },
             });
           } else {
@@ -86,7 +87,8 @@ export const PEAKING_SCRIPT: LifeScript = {
  */
 export const COMPETITION_PREP_SCRIPT: LifeScript = {
   name: 'competition-prep',
-  description: '9-week final prep with deload (week 8) and competition day (week 9 Monday)',
+  description:
+    '9-week final prep with deload (week 8) and competition day (week 9 Monday)',
   events: (() => {
     const weeks = 9;
     const events: DayEvent[] = [];
@@ -168,11 +170,11 @@ export const RETURN_FROM_LAYOFF_SCRIPT: LifeScript = {
               energy: 1,
               soreness: {
                 ratings: {
-                  quads: 4,
-                  hamstrings: 3,
-                  lower_back: 3,
-                  chest: 3,
-                  upper_back: 3,
+                  quads: 8,
+                  hamstrings: 6,
+                  lower_back: 6,
+                  chest: 6,
+                  upper_back: 6,
                 },
               },
             });
@@ -187,7 +189,7 @@ export const RETURN_FROM_LAYOFF_SCRIPT: LifeScript = {
               sleep: 2,
               energy: 2,
               soreness: {
-                ratings: { quads: 3, hamstrings: 2, lower_back: 2 },
+                ratings: { quads: 6, hamstrings: 3, lower_back: 3 },
               },
             });
           } else {
@@ -201,7 +203,7 @@ export const RETURN_FROM_LAYOFF_SCRIPT: LifeScript = {
               sleep: 3,
               energy: 2,
               soreness: {
-                ratings: { quads: 2, hamstrings: 2 },
+                ratings: { quads: 3, hamstrings: 3 },
               },
             });
           } else {

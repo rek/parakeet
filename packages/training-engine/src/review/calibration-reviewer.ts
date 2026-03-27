@@ -28,7 +28,10 @@ You are reviewing a proposed adjustment. Consider:
 
 Only set askUser=true for large adjustments (>5%) or when you suspect confounding factors the athlete could clarify.`;
 
-export async function reviewCalibrationAdjustment({ calibration, currentAdjustment }: {
+export async function reviewCalibrationAdjustment({
+  calibration,
+  currentAdjustment,
+}: {
   calibration: CalibrationResult;
   currentAdjustment: number;
 }) {

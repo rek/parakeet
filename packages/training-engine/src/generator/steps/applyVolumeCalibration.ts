@@ -1,5 +1,5 @@
-import type { PrescriptionTraceBuilder } from '../prescription-trace';
 import type { JITInput } from '../jit-session-generator';
+import type { PrescriptionTraceBuilder } from '../prescription-trace';
 import type { PipelineContext } from './pipeline-context';
 
 /**
@@ -73,7 +73,9 @@ export function applyVolumeCalibration(
     // Each +0.05 adjustment roughly corresponds to +1 set capacity
     if (totalAdjustment >= 0.08) {
       calibrationBoost = 1;
-      reasons.push(`Modifier calibration: system over-reduced for this athlete — +1 set`);
+      reasons.push(
+        `Modifier calibration: system over-reduced for this athlete — +1 set`
+      );
     }
   }
 
@@ -81,12 +83,15 @@ export function applyVolumeCalibration(
   // If we're in week 2-3 of a block and RPE has been consistently low,
   // progressively increase. Deload weeks (blockNumber cycling) reset.
   let progressiveBoost = 0;
-  const weekInBlock = input.weekNumber > 0 ? ((input.weekNumber - 1) % 3) + 1 : 1;
+  const weekInBlock =
+    input.weekNumber > 0 ? ((input.weekNumber - 1) % 3) + 1 : 1;
   const isDeload = input.intensityType === 'deload';
 
   if (!isDeload && weekInBlock >= 2 && avgRpeGap >= 0.5 && !sorenessHigh) {
     progressiveBoost = weekInBlock >= 3 ? 2 : 1;
-    reasons.push(`Week ${weekInBlock} of block, RPE trend favorable — +${progressiveBoost} progressive`);
+    reasons.push(
+      `Week ${weekInBlock} of block, RPE trend favorable — +${progressiveBoost} progressive`
+    );
   }
 
   // --- Compute total modifier ---
@@ -94,7 +99,9 @@ export function applyVolumeCalibration(
   // Strong positive signal: RPE consistently easy + body is fresh + readiness high
   if (avgRpeGap >= 1.5 && sorenessLow && readinessHigh) {
     modifier += 2;
-    reasons.push(`RPE ${avgRpeGap.toFixed(1)} below target, fresh and ready — +2 sets`);
+    reasons.push(
+      `RPE ${avgRpeGap.toFixed(1)} below target, fresh and ready — +2 sets`
+    );
   }
   // Moderate positive: RPE easy, no negative signals
   else if (avgRpeGap >= 1.0 && !sorenessHigh && !readinessLow) {
@@ -105,7 +112,9 @@ export function applyVolumeCalibration(
   // Capacity trend: lifter consistently reports having more in them
   if (avgCapacity >= 3.0) {
     modifier += 1;
-    reasons.push(`Capacity assessment avg ${avgCapacity.toFixed(1)} (had more in me) — +1 set`);
+    reasons.push(
+      `Capacity assessment avg ${avgCapacity.toFixed(1)} (had more in me) — +1 set`
+    );
   }
 
   // Weekly mismatch: recovering faster than predicted

@@ -9,11 +9,9 @@ import {
   View,
 } from 'react-native';
 
-import AsyncStorage from '@react-native-async-storage/async-storage';
-
 import { getStreakData, StreakPill } from '@modules/achievements';
-import { getLatestWeeklyReview } from '@modules/body-review';
 import { useAuth } from '@modules/auth';
+import { getLatestWeeklyReview } from '@modules/body-review';
 import {
   CYCLE_PHASE_BG,
   CYCLE_PHASE_LABELS,
@@ -47,6 +45,7 @@ import {
 } from '@modules/training-volume';
 import { getReadyCachedJitData } from '@platform/store/sessionStore';
 import { captureException } from '@platform/utils/captureException';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import {
   COMPACT_VOLUME_MUSCLES,
   MUSCLE_LABELS_COMPACT,
@@ -721,14 +720,17 @@ export default function TodayScreen() {
                   Training Adjustment
                 </Text>
                 <Text style={styles.weeklyReviewSubtext}>
-                  {pendingCalibration.reason} Based on {pendingCalibration.sampleCount} sessions.
+                  {pendingCalibration.reason} Based on{' '}
+                  {pendingCalibration.sampleCount} sessions.
                 </Text>
                 <View style={styles.weeklyReviewButtons}>
                   <TouchableOpacity
                     style={styles.weeklyReviewButton}
                     onPress={async () => {
                       try {
-                        await AsyncStorage.removeItem('pending_calibration_prompt');
+                        await AsyncStorage.removeItem(
+                          'pending_calibration_prompt'
+                        );
                       } catch (err) {
                         captureException(err);
                       }
@@ -736,7 +738,9 @@ export default function TodayScreen() {
                     }}
                     activeOpacity={0.8}
                   >
-                    <Text style={styles.weeklyReviewButtonText}>Sounds right</Text>
+                    <Text style={styles.weeklyReviewButtonText}>
+                      Sounds right
+                    </Text>
                   </TouchableOpacity>
                   {/* TODO: "Not sure — let's discuss" button opens LLM conversation */}
                   <TouchableOpacity
@@ -749,13 +753,18 @@ export default function TodayScreen() {
                         );
                         await upsertModifierCalibration({
                           userId: user!.id,
-                          modifierSource: pendingCalibration.modifierSource as 'readiness' | 'cycle_phase' | 'soreness',
+                          modifierSource: pendingCalibration.modifierSource as
+                            | 'readiness'
+                            | 'cycle_phase'
+                            | 'soreness',
                           adjustment: pendingCalibration.currentDefault,
                           confidence: 'medium',
                           sampleCount: pendingCalibration.sampleCount,
                           meanBias: pendingCalibration.meanBias,
                         });
-                        await AsyncStorage.removeItem('pending_calibration_prompt');
+                        await AsyncStorage.removeItem(
+                          'pending_calibration_prompt'
+                        );
                       } catch (err) {
                         captureException(err);
                       }

@@ -1,6 +1,9 @@
-import { describe, it, expect } from 'vitest';
+import { describe, expect, it } from 'vitest';
 
-import { computeWeightDeviation, computeWorkingOneRm } from './weight-deviation';
+import {
+  computeWeightDeviation,
+  computeWorkingOneRm,
+} from './weight-deviation';
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -16,26 +19,43 @@ function makeEstimate(estimatedOneRmKg: number | null) {
 
 describe('computeWeightDeviation', () => {
   it('returns null when plannedWeightKg <= 0', () => {
-    expect(computeWeightDeviation({ plannedWeightKg: 0, actualSets: [{ weightKg: 100, reps: 5 }] })).toBeNull();
-    expect(computeWeightDeviation({ plannedWeightKg: -10, actualSets: [{ weightKg: 100, reps: 5 }] })).toBeNull();
+    expect(
+      computeWeightDeviation({
+        plannedWeightKg: 0,
+        actualSets: [{ weightKg: 100, reps: 5 }],
+      })
+    ).toBeNull();
+    expect(
+      computeWeightDeviation({
+        plannedWeightKg: -10,
+        actualSets: [{ weightKg: 100, reps: 5 }],
+      })
+    ).toBeNull();
   });
 
   it('returns null when actualSets is empty', () => {
-    expect(computeWeightDeviation({ plannedWeightKg: 100, actualSets: [] })).toBeNull();
+    expect(
+      computeWeightDeviation({ plannedWeightKg: 100, actualSets: [] })
+    ).toBeNull();
   });
 
   it('returns null when all sets have 0 weight or 0 reps', () => {
-    expect(computeWeightDeviation({
-      plannedWeightKg: 100,
-      actualSets: [
-        { weightKg: 0, reps: 5 },
-        { weightKg: 100, reps: 0 },
-      ],
-    })).toBeNull();
+    expect(
+      computeWeightDeviation({
+        plannedWeightKg: 100,
+        actualSets: [
+          { weightKg: 0, reps: 5 },
+          { weightKg: 100, reps: 0 },
+        ],
+      })
+    ).toBeNull();
   });
 
   it('returns zero deviation when planned and actual match exactly', () => {
-    const result = computeWeightDeviation({ plannedWeightKg: 100, actualSets: [{ weightKg: 100, reps: 5 }] });
+    const result = computeWeightDeviation({
+      plannedWeightKg: 100,
+      actualSets: [{ weightKg: 100, reps: 5 }],
+    });
     expect(result).not.toBeNull();
     expect(result!.deviationKg).toBe(0);
     expect(result!.deviationPct).toBe(0);
@@ -61,7 +81,10 @@ describe('computeWeightDeviation', () => {
 
   it('returns negative deviation when user drops weight', () => {
     // planned 100, actual 97.5 → deviation -2.5
-    const result = computeWeightDeviation({ plannedWeightKg: 100, actualSets: [{ weightKg: 97.5, reps: 5 }] });
+    const result = computeWeightDeviation({
+      plannedWeightKg: 100,
+      actualSets: [{ weightKg: 97.5, reps: 5 }],
+    });
     expect(result).not.toBeNull();
     expect(result!.deviationKg).toBeCloseTo(-2.5);
   });
@@ -168,7 +191,10 @@ describe('computeWorkingOneRm', () => {
   });
 
   it('returns stored 1RM with low confidence when summaries array is empty', () => {
-    const result = computeWorkingOneRm({ recentEstimates: [], storedOneRmKg: 130 });
+    const result = computeWorkingOneRm({
+      recentEstimates: [],
+      storedOneRmKg: 130,
+    });
     expect(result.workingOneRmKg).toBe(130);
     expect(result.confidence).toBe('low');
     expect(result.source).toBe('stored');
@@ -178,7 +204,11 @@ describe('computeWorkingOneRm', () => {
     // estimates [110, 120, 130] → median 120; stored 100 → capped 110
     // roundToNearest(110) = 110 → working
     const result = computeWorkingOneRm({
-      recentEstimates: [makeEstimate(110), makeEstimate(120), makeEstimate(130)],
+      recentEstimates: [
+        makeEstimate(110),
+        makeEstimate(120),
+        makeEstimate(130),
+      ],
       storedOneRmKg: 100,
     });
     expect(result.confidence).toBe('medium');
@@ -187,14 +217,21 @@ describe('computeWorkingOneRm', () => {
 
   it('returns high confidence for 5 or more qualifying sessions', () => {
     const summaries = [110, 112, 115, 113, 114].map(makeEstimate);
-    const result = computeWorkingOneRm({ recentEstimates: summaries, storedOneRmKg: 110 });
+    const result = computeWorkingOneRm({
+      recentEstimates: summaries,
+      storedOneRmKg: 110,
+    });
     expect(result.confidence).toBe('high');
   });
 
   it('caps working 1RM at 110% of stored', () => {
     // estimates [130, 135, 140] → median 135; stored 100 → cap = 110
     const result = computeWorkingOneRm({
-      recentEstimates: [makeEstimate(130), makeEstimate(135), makeEstimate(140)],
+      recentEstimates: [
+        makeEstimate(130),
+        makeEstimate(135),
+        makeEstimate(140),
+      ],
       storedOneRmKg: 100,
     });
     expect(result.workingOneRmKg).toBe(110);
@@ -213,7 +250,11 @@ describe('computeWorkingOneRm', () => {
     // estimates [101, 102, 101] → median 101; stored 100 → raw 101
     // roundToNearest(101) = 100
     const result = computeWorkingOneRm({
-      recentEstimates: [makeEstimate(101), makeEstimate(102), makeEstimate(101)],
+      recentEstimates: [
+        makeEstimate(101),
+        makeEstimate(102),
+        makeEstimate(101),
+      ],
       storedOneRmKg: 100,
     });
     expect(result.workingOneRmKg % 2.5).toBe(0);
@@ -222,7 +263,11 @@ describe('computeWorkingOneRm', () => {
   it('reports source as stored when rounded result equals storedOneRmKg', () => {
     // estimates all exactly 100 → median 100; stored 100 → working == stored → source 'stored'
     const result = computeWorkingOneRm({
-      recentEstimates: [makeEstimate(100), makeEstimate(100), makeEstimate(100)],
+      recentEstimates: [
+        makeEstimate(100),
+        makeEstimate(100),
+        makeEstimate(100),
+      ],
       storedOneRmKg: 100,
     });
     expect(result.workingOneRmKg).toBe(100);
@@ -248,7 +293,10 @@ describe('computeWorkingOneRm', () => {
       makeEstimate(null),
       makeEstimate(null),
     ];
-    const result = computeWorkingOneRm({ recentEstimates: summaries, storedOneRmKg: 130 });
+    const result = computeWorkingOneRm({
+      recentEstimates: summaries,
+      storedOneRmKg: 130,
+    });
     expect(result.workingOneRmKg).toBe(130);
     expect(result.confidence).toBe('low');
     expect(result.source).toBe('stored');

@@ -1,7 +1,7 @@
 import type { Lift } from '@parakeet/shared-types';
 import { estimateOneRepMax_Epley } from '@parakeet/training-engine';
-import { weightGramsToKg } from '@shared/utils/weight';
 import { typedSupabase } from '@platform/supabase';
+import { weightGramsToKg } from '@shared/utils/weight';
 
 import { processRecentHistory } from './performance-helpers';
 

@@ -36,15 +36,15 @@ Volume calibration adjusts the base set count **before** the reduction pipeline 
 
 Adaptations are always **one step behind** — the system observes session N and adjusts session N+1. It never changes the prescription mid-workout (except volume recovery, which is reactive). The lifter always sees the adapted prescription before their first set.
 
-| When | What happens | Feeds into |
-|------|-------------|------------|
-| **Check-in** (before workout) | Lifter rates soreness, sleep, energy | Today's JIT Steps 0, 3, 5 |
-| **JIT generation** (tap "Start Workout") | Volume calibration runs using signals from previous sessions + today's check-in | Today's prescription |
-| **During workout** | RPE logged per set. Volume recovery may offer to add sets back if RPE is 1.5+ below target. | Today's session (reactive). Next session's RPE trend. |
-| **Completion** | Lifter answers "Could you have done more?" | Next session's capacity trend (Step 0) |
-| **End of week** | Body review: felt fatigue vs predicted | Next week's mismatch direction (Step 0) |
-| **Across block** (weeks 1-3) | If RPE stays favorable, progressive volume increases within the block. Deload resets. | Current block's Step 0 progressive boost |
-| **Over time** (10+ sessions) | Modifier calibration builds confidence. System learns if it over-reduces for this athlete. | All future Step 0 calibration bias |
+| When                                     | What happens                                                                                | Feeds into                                            |
+| ---------------------------------------- | ------------------------------------------------------------------------------------------- | ----------------------------------------------------- |
+| **Check-in** (before workout)            | Lifter rates soreness, sleep, energy                                                        | Today's JIT Steps 0, 3, 5                             |
+| **JIT generation** (tap "Start Workout") | Volume calibration runs using signals from previous sessions + today's check-in             | Today's prescription                                  |
+| **During workout**                       | RPE logged per set. Volume recovery may offer to add sets back if RPE is 1.5+ below target. | Today's session (reactive). Next session's RPE trend. |
+| **Completion**                           | Lifter answers "Could you have done more?"                                                  | Next session's capacity trend (Step 0)                |
+| **End of week**                          | Body review: felt fatigue vs predicted                                                      | Next week's mismatch direction (Step 0)               |
+| **Across block** (weeks 1-3)             | If RPE stays favorable, progressive volume increases within the block. Deload resets.       | Current block's Step 0 progressive boost              |
+| **Over time** (10+ sessions)             | Modifier calibration builds confidence. System learns if it over-reduces for this athlete.  | All future Step 0 calibration bias                    |
 
 **Latency by design.** The system requires 2+ sessions of consistent signal before adjusting volume. This prevents chasing noise from a single bad night's sleep or one unexpectedly easy session. New users get standard prescriptions while the system observes; after 2-3 weeks it starts adapting.
 
@@ -53,20 +53,24 @@ Adaptations are always **one step behind** — the system observes session N and
 The system collects signals at four time scales:
 
 ### Pre-session (every workout)
+
 - **Soreness** per muscle group — granular scale (1-10) to distinguish "slightly fatigued" from "fresh and ready for more"
 - **Sleep quality** — 5-point scale (terrible → great) for asymmetric responses: good sleep enables volume boost, poor sleep triggers reduction
 - **Energy level** — 5-point scale, same asymmetry
 - **Cycle phase** — auto-calculated from period tracking, modulates intensity and volume
 
 ### In-session (per set)
+
 - **RPE** — rate of perceived exertion, 6-10 scale. The most direct measure of actual difficulty vs prescribed difficulty.
 - **Failed set flag** — explicit signal that the lifter hit their limit
 - **Actual weight and reps** — deviation from prescription reveals calibration drift
 
 ### Post-session (every workout)
+
 - **Capacity assessment** — "How do you feel? Could you have done more?" — 4-point scale from "barely survived" to "way too easy." The most direct signal for volume calibration.
 
 ### Weekly / cross-session
+
 - **Body review** — per-muscle fatigue rating vs system prediction. Mismatches reveal where the system's model diverges from reality.
 - **RPE trend analysis** — consistent RPE below target across 3+ sessions means the lifter has untapped capacity.
 - **Modifier calibration** — per-athlete learned corrections to the default modifiers. When the system consistently over- or under-adjusts, the calibration narrows the error.
@@ -78,6 +82,7 @@ The system collects signals at four time scales:
 Volume calibration runs as Step 0 of the JIT pipeline, before all reduction steps. It produces an additive modifier to the base set count: -2 to +3 sets.
 
 **Signals that increase volume:**
+
 - RPE consistently below target (avg gap >= 1.0 over last 3 sessions for this lift)
 - Post-session capacity assessment: "had more in me" or "way too easy"
 - Low pre-session soreness for primary muscles (fresh and recovered)
@@ -85,14 +90,16 @@ Volume calibration runs as Step 0 of the JIT pipeline, before all reduction step
 - Weekly review: "recovering well" mismatch for primary muscles
 
 **Signals that decrease volume:**
+
 - RPE consistently above target (struggling with current prescription)
 - Post-session: "barely survived"
 - High soreness, poor readiness (existing reduction pipeline handles the acute case; calibration handles the trend)
 
 **Guardrails:**
+
 - MRV cap: never calibrate above maximum recoverable volume
 - Minimum: never calibrate below 1 working set
-- Soreness 5 (severe): recovery mode overrides everything, including calibration
+- Soreness 9-10 (severe): recovery mode overrides everything, including calibration
 - Major disruption: skip overrides everything
 
 ### Confidence and learning
@@ -105,24 +112,27 @@ The modifier calibration system tracks prediction accuracy over time. With few d
 
 ## Interaction with Existing Systems
 
-| Existing system | How it interacts with calibration |
-|-----------------|----------------------------------|
-| Soreness adjuster | Runs after calibration. A calibrated +2 sets that then gets -1 from soreness = net +1. |
-| Readiness adjuster | Runs after calibration. Boost from good readiness stacks with calibration boost. |
-| MRV cap | Always last. Calibration cannot push volume above MRV. |
-| Volume top-up | Runs independently for auxiliary work. Calibration affects main lift only. |
-| Volume recovery | Intra-session reactive offer. Calibration is proactive, pre-session. Both can fire: calibration adds sets up front, recovery adds more if RPE proves easy. |
-| Performance adjuster | Currently post-hoc manual. Calibration replaces the need for manual intervention by applying similar logic automatically in the JIT pipeline. |
+| Existing system      | How it interacts with calibration                                                                                                                          |
+| -------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Soreness adjuster    | Runs after calibration. A calibrated +2 sets that then gets -1 from soreness = net +1.                                                                     |
+| Readiness adjuster   | Runs after calibration. Boost from good readiness stacks with calibration boost.                                                                           |
+| MRV cap              | Always last. Calibration cannot push volume above MRV.                                                                                                     |
+| Volume top-up        | Runs independently for auxiliary work. Calibration affects main lift only.                                                                                 |
+| Volume recovery      | Intra-session reactive offer. Calibration is proactive, pre-session. Both can fire: calibration adds sets up front, recovery adds more if RPE proves easy. |
+| Performance adjuster | Currently post-hoc manual. Calibration replaces the need for manual intervention by applying similar logic automatically in the JIT pipeline.              |
 
 ## Implementation Phases
 
 ### Phase 1: Enhanced signal collection
+
 Expand soreness to 1-10, sleep/energy to 1-5, add post-session capacity assessment. Ships independently — more signal is always better regardless of whether volume calibration is active.
 
 ### Phase 2: Volume calibration step
+
 Add Step 0 to JIT pipeline. Consumes signals from Phase 1 plus existing RPE history, weekly review data, and modifier calibration. Produces set count adjustment.
 
 ### Phase 3: Closed-loop learning
+
 Wire modifier calibration into JIT automatically. Feed weekly review mismatches back into next-week baseline. Progressive volume within blocks: the system learns the right volume for this lifter in this training phase.
 
 ## Domain References

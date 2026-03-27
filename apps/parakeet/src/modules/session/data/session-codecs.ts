@@ -37,8 +37,15 @@ export function parseJitInputSnapshot(value: unknown) {
   };
 }
 
-export function parsePrescriptionTrace(value: unknown): PrescriptionTrace | null {
-  if (value && typeof value === 'object' && 'mainLift' in value && 'rest' in value) {
+export function parsePrescriptionTrace(
+  value: unknown
+): PrescriptionTrace | null {
+  if (
+    value &&
+    typeof value === 'object' &&
+    'mainLift' in value &&
+    'rest' in value
+  ) {
     const trace = value as unknown as PrescriptionTrace;
     // Reject empty traces (ad-hoc sessions with no primary lift)
     if (!trace.primaryLift) return null;

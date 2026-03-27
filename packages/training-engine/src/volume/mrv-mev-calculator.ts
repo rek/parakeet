@@ -47,9 +47,9 @@ export type TrainingAge = 'beginner' | 'intermediate' | 'advanced';
 // Advanced: higher MRV tolerance (120%) and slightly higher MEV (110%) for adaptation
 // See docs/domain/volume-landmarks.md for research basis
 export const TRAINING_AGE_MULTIPLIERS = {
-  beginner:     { mev: 0.8, mrv: 0.8 },
+  beginner: { mev: 0.8, mrv: 0.8 },
   intermediate: { mev: 1.0, mrv: 1.0 },
-  advanced:     { mev: 1.1, mrv: 1.2 },
+  advanced: { mev: 1.1, mrv: 1.2 },
 } as const;
 
 export function applyTrainingAgeMultiplier({

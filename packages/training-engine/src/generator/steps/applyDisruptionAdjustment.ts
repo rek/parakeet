@@ -1,11 +1,16 @@
-import type { PrescriptionTraceBuilder } from '../prescription-trace';
 import type { JITInput } from '../jit-session-generator';
+import type { PrescriptionTraceBuilder } from '../prescription-trace';
 import type { PipelineContext } from './pipeline-context';
 
-export function applyDisruptionAdjustment(ctx: PipelineContext, input: JITInput, traceBuilder?: PrescriptionTraceBuilder) {
+export function applyDisruptionAdjustment(
+  ctx: PipelineContext,
+  input: JITInput,
+  traceBuilder?: PrescriptionTraceBuilder
+) {
   const preCount = ctx.plannedCount;
   const relevantDisruptions = input.activeDisruptions.filter(
-    (d) => d.affected_lifts === null || d.affected_lifts.includes(input.primaryLift)
+    (d) =>
+      d.affected_lifts === null || d.affected_lifts.includes(input.primaryLift)
   );
 
   if (relevantDisruptions.length > 0 && !ctx.inRecoveryMode) {
@@ -20,13 +25,22 @@ export function applyDisruptionAdjustment(ctx: PipelineContext, input: JITInput,
       ctx.plannedCount = 0;
       ctx.rationale.push(`${desc} — main lift skipped`);
       traceBuilder?.setSkipped(true);
-      traceBuilder?.recordVolumeChange({ source: 'disruption', setsBefore: preCount, setsAfter: 0, reason: `${desc} — major disruption` });
+      traceBuilder?.recordVolumeChange({
+        source: 'disruption',
+        setsBefore: preCount,
+        setsAfter: 0,
+        reason: `${desc} — major disruption`,
+      });
     } else if (worst.severity === 'moderate') {
       const disruptionSets = Math.max(1, Math.ceil(ctx.baseSets.length / 2));
       ctx.plannedCount = Math.min(ctx.plannedCount, disruptionSets);
       ctx.intensityMultiplier = Math.min(ctx.intensityMultiplier, 0.9);
       ctx.rationale.push(`${desc} — volume and intensity reduced`);
-      traceBuilder?.recordModifier({ source: 'disruption', multiplier: 0.9, reason: `${desc} — moderate disruption` });
+      traceBuilder?.recordModifier({
+        source: 'disruption',
+        multiplier: 0.9,
+        reason: `${desc} — moderate disruption`,
+      });
     } else {
       ctx.rationale.push(desc);
     }
@@ -34,7 +48,12 @@ export function applyDisruptionAdjustment(ctx: PipelineContext, input: JITInput,
 
   ctx.disruptionSetsRemoved = preCount - ctx.plannedCount;
   if (ctx.disruptionSetsRemoved > 0 && !ctx.skippedMainLift) {
-    traceBuilder?.recordVolumeChange({ source: 'disruption', setsBefore: preCount, setsAfter: ctx.plannedCount, reason: 'Moderate disruption set reduction' });
+    traceBuilder?.recordVolumeChange({
+      source: 'disruption',
+      setsBefore: preCount,
+      setsAfter: ctx.plannedCount,
+      reason: 'Moderate disruption set reduction',
+    });
   }
 
   // Note no-equipment disruption in rationale (aux boost handled in buildAuxiliaryWork)

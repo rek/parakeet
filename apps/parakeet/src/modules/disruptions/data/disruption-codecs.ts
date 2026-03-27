@@ -1,7 +1,4 @@
-import {
-  safeParseJsonArray,
-  safeParseNullableJsonArray,
-} from '@parakeet/db';
+import { safeParseJsonArray, safeParseNullableJsonArray } from '@parakeet/db';
 import {
   AdjustmentSuggestionSchema,
   PlannedSetSchema,

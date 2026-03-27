@@ -5,9 +5,7 @@ import {
   TrainingDisruption,
 } from '@parakeet/shared-types';
 
-import {
-  ReadinessLevel,
-} from '../adjustments/readiness-adjuster';
+import { ReadinessLevel } from '../adjustments/readiness-adjuster';
 import {
   SorenessLevel,
   SorenessModifier,
@@ -18,36 +16,40 @@ import {
   getBodyweightPool,
   getLiftForExercise,
   getRepTarget,
-  resolveMovementPattern,
   MovementPattern,
+  resolveMovementPattern,
 } from '../auxiliary/exercise-catalog';
 import { rankExercises } from '../auxiliary/exercise-scorer';
 import { ExerciseType, getExerciseType } from '../auxiliary/exercise-types';
 import { CyclePhase } from '../formulas/cycle-phase';
 import { roundToNearest } from '../formulas/weight-rounding';
-import { FormulaConfig, MrvMevConfig, MuscleGroup, PUSH_MUSCLES } from '../types';
+import {
+  FormulaConfig,
+  MrvMevConfig,
+  MuscleGroup,
+  PUSH_MUSCLES,
+} from '../types';
 import {
   getMusclesForExercise,
   getMusclesForLift,
 } from '../volume/muscle-mapper';
 import { PrescriptionTraceBuilder } from './prescription-trace';
+import { applyCyclePhaseAdjustment } from './steps/applyCyclePhaseAdjustment';
+import { applyDisruptionAdjustment } from './steps/applyDisruptionAdjustment';
+import { applyMrvCap } from './steps/applyMrvCap';
+import { applyReadinessAdjustment } from './steps/applyReadinessAdjustment';
+import { applyRpeAdjustment } from './steps/applyRpeAdjustment';
+import { applySorenessAdjustment } from './steps/applySorenessAdjustment';
+import { applyVolumeCalibration } from './steps/applyVolumeCalibration';
+import { buildFinalMainSets } from './steps/buildFinalMainSets';
+import { initPipeline } from './steps/initPipeline';
+import { processAuxExercise } from './steps/processAuxExercise';
 import {
   generateWarmupSets,
   resolveEffectiveWarmupProtocol,
   WarmupProtocol,
   WarmupSet,
 } from './warmup-calculator';
-
-import { initPipeline } from './steps/initPipeline';
-import { applyVolumeCalibration } from './steps/applyVolumeCalibration';
-import { applyRpeAdjustment } from './steps/applyRpeAdjustment';
-import { applyReadinessAdjustment } from './steps/applyReadinessAdjustment';
-import { applyCyclePhaseAdjustment } from './steps/applyCyclePhaseAdjustment';
-import { applySorenessAdjustment } from './steps/applySorenessAdjustment';
-import { applyMrvCap } from './steps/applyMrvCap';
-import { applyDisruptionAdjustment } from './steps/applyDisruptionAdjustment';
-import { buildFinalMainSets } from './steps/buildFinalMainSets';
-import { processAuxExercise } from './steps/processAuxExercise';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -111,7 +113,12 @@ export interface JITInput {
   upcomingLifts?: Lift[];
   // Per-athlete modifier calibration adjustments (engine-041). Signed deltas applied
   // on top of default modifier multipliers. Positive = less aggressive, negative = more aggressive.
-  modifierCalibrations?: Partial<Record<'rpe_history' | 'readiness' | 'cycle_phase' | 'soreness' | 'disruption', number>>;
+  modifierCalibrations?: Partial<
+    Record<
+      'rpe_history' | 'readiness' | 'cycle_phase' | 'soreness' | 'disruption',
+      number
+    >
+  >;
   // Working 1RM context (GH#98). When present, oneRmKg is the working value;
   // storedOneRmKg is the original from lifter_maxes.
   storedOneRmKg?: number;
@@ -181,8 +188,11 @@ export interface JITOutput {
   volumeReductions?: {
     totalSetsRemoved: number;
     baseSetsCount: number;
-    sources: Array<{ source: 'soreness' | 'readiness' | 'cycle_phase' | 'disruption'; setsRemoved: number }>;
-    /** True only for soreness-5 recovery mode — blocks volume recovery offer */
+    sources: Array<{
+      source: 'soreness' | 'readiness' | 'cycle_phase' | 'disruption';
+      setsRemoved: number;
+    }>;
+    /** True only for severe soreness (9-10) recovery mode — blocks volume recovery offer */
     recoveryBlocked: boolean;
   };
 }
@@ -269,7 +279,10 @@ function applyRestOverride(
 // Main function
 // ---------------------------------------------------------------------------
 
-export function generateJITSession(input: JITInput, traceBuilder?: PrescriptionTraceBuilder): JITOutput {
+export function generateJITSession(
+  input: JITInput,
+  traceBuilder?: PrescriptionTraceBuilder
+): JITOutput {
   const {
     sessionId,
     primaryLift,
@@ -338,7 +351,7 @@ export function generateJITSession(input: JITInput, traceBuilder?: PrescriptionT
       input.upcomingLifts,
       input.sorenessRatings,
       input.sleepQuality,
-      input.energyLevel,
+      input.energyLevel
     );
     for (const tu of topUps) {
       const activeCount = auxiliaryWork.filter((a) => !a.skipped).length;
@@ -358,16 +371,21 @@ export function generateJITSession(input: JITInput, traceBuilder?: PrescriptionT
           : aux.skipped
             ? (aux.skipReason ?? 'skipped')
             : 'assigned auxiliary',
-        weightTrace: (!aux.skipped && aux.sets[0]?.weight_kg > 0)
-          ? {
-              oneRmKg,
-              catalogPct: oneRmKg > 0 ? aux.sets[0].weight_kg / oneRmKg : 0,
-              scalingMethod: aux.exercise.startsWith('Dumbbell') || aux.exercise.startsWith('Kettlebell') ? 'sqrt' : 'linear',
-              rawWeightKg: aux.sets[0].weight_kg,
-              sorenessMultiplier: 1,
-              finalWeightKg: aux.sets[0].weight_kg,
-            }
-          : null,
+        weightTrace:
+          !aux.skipped && aux.sets[0]?.weight_kg > 0
+            ? {
+                oneRmKg,
+                catalogPct: oneRmKg > 0 ? aux.sets[0].weight_kg / oneRmKg : 0,
+                scalingMethod:
+                  aux.exercise.startsWith('Dumbbell') ||
+                  aux.exercise.startsWith('Kettlebell')
+                    ? 'sqrt'
+                    : 'linear',
+                rawWeightKg: aux.sets[0].weight_kg,
+                sorenessMultiplier: 1,
+                finalWeightKg: aux.sets[0].weight_kg,
+              }
+            : null,
         reps: aux.sets[0]?.reps ?? 0,
         repSource: aux.isTopUp ? 'volume top-up default' : 'exercise catalog',
         sets: aux.sets.length,
@@ -396,8 +414,13 @@ export function generateJITSession(input: JITInput, traceBuilder?: PrescriptionT
     );
     traceBuilder?.recordWarmup({
       workingWeightKg: workingWeight,
-      protocolName: effectiveProtocol.type === 'preset' ? effectiveProtocol.name : 'custom',
-      steps: warmupSets.map((s) => ({ pct: workingWeight > 0 ? s.weightKg / workingWeight : 0, weightKg: s.weightKg, reps: s.reps })),
+      protocolName:
+        effectiveProtocol.type === 'preset' ? effectiveProtocol.name : 'custom',
+      steps: warmupSets.map((s) => ({
+        pct: workingWeight > 0 ? s.weightKg / workingWeight : 0,
+        weightKg: s.weightKg,
+        reps: s.reps,
+      })),
     });
   }
 
@@ -425,7 +448,8 @@ export function generateJITSession(input: JITInput, traceBuilder?: PrescriptionT
   traceBuilder?.recordRest({
     mainLift: {
       formulaBaseSeconds: formulaMainRest,
-      userOverrideSeconds: mainLiftRest !== formulaMainRest ? mainLiftRest : null,
+      userOverrideSeconds:
+        mainLiftRest !== formulaMainRest ? mainLiftRest : null,
       llmDeltaSeconds: null,
       finalSeconds: mainLiftRest,
     },
@@ -433,12 +457,35 @@ export function generateJITSession(input: JITInput, traceBuilder?: PrescriptionT
   });
 
   // Build volume reduction metadata for intra-session recovery
-  const reductionSources: Array<{ source: 'soreness' | 'readiness' | 'cycle_phase' | 'disruption'; setsRemoved: number }> = [];
-  if (ctx.readinessSetsRemoved > 0) reductionSources.push({ source: 'readiness', setsRemoved: ctx.readinessSetsRemoved });
-  if (ctx.cyclePhaseSetsRemoved > 0) reductionSources.push({ source: 'cycle_phase', setsRemoved: ctx.cyclePhaseSetsRemoved });
-  if (ctx.sorenessSetsRemoved > 0) reductionSources.push({ source: 'soreness', setsRemoved: ctx.sorenessSetsRemoved });
-  if (ctx.disruptionSetsRemoved > 0) reductionSources.push({ source: 'disruption', setsRemoved: ctx.disruptionSetsRemoved });
-  const totalSetsRemoved = ctx.readinessSetsRemoved + ctx.cyclePhaseSetsRemoved + ctx.sorenessSetsRemoved + ctx.disruptionSetsRemoved;
+  const reductionSources: Array<{
+    source: 'soreness' | 'readiness' | 'cycle_phase' | 'disruption';
+    setsRemoved: number;
+  }> = [];
+  if (ctx.readinessSetsRemoved > 0)
+    reductionSources.push({
+      source: 'readiness',
+      setsRemoved: ctx.readinessSetsRemoved,
+    });
+  if (ctx.cyclePhaseSetsRemoved > 0)
+    reductionSources.push({
+      source: 'cycle_phase',
+      setsRemoved: ctx.cyclePhaseSetsRemoved,
+    });
+  if (ctx.sorenessSetsRemoved > 0)
+    reductionSources.push({
+      source: 'soreness',
+      setsRemoved: ctx.sorenessSetsRemoved,
+    });
+  if (ctx.disruptionSetsRemoved > 0)
+    reductionSources.push({
+      source: 'disruption',
+      setsRemoved: ctx.disruptionSetsRemoved,
+    });
+  const totalSetsRemoved =
+    ctx.readinessSetsRemoved +
+    ctx.cyclePhaseSetsRemoved +
+    ctx.sorenessSetsRemoved +
+    ctx.disruptionSetsRemoved;
 
   return {
     sessionId,
@@ -467,7 +514,10 @@ export function generateJITSession(input: JITInput, traceBuilder?: PrescriptionT
 export function generateJITSessionWithTrace(input: JITInput) {
   const traceBuilder = new PrescriptionTraceBuilder();
   const output = generateJITSession(input, traceBuilder);
-  const trace = traceBuilder.build({ rationale: output.rationale, warnings: output.warnings });
+  const trace = traceBuilder.build({
+    rationale: output.rationale,
+    warnings: output.warnings,
+  });
   return { output, trace };
 }
 
@@ -512,7 +562,7 @@ function buildAuxiliaryWork(
   // No-equipment disruption: append bodyweight compensation exercises
   // The global MAX_AUX_EXERCISES=5 cap in generateJITSession prevents the combined
   // total (bodyweight + volume top-ups) from exceeding 5 non-skipped aux exercises.
-  if (hasNoEquipment && primaryLift && worstSoreness < 5) {
+  if (hasNoEquipment && primaryLift && worstSoreness < 9) {
     const activeExerciseCount = result.filter((a) => !a.skipped).length;
     const maxTotalExercises = 5;
     const slotsAvailable = Math.max(0, maxTotalExercises - activeExerciseCount);
@@ -573,7 +623,7 @@ function buildVolumeTopUp(
   upcomingLifts?: Lift[],
   sorenessRatings?: Partial<Record<MuscleGroup, SorenessLevel>>,
   sleepQuality?: ReadinessLevel,
-  energyLevel?: ReadinessLevel,
+  energyLevel?: ReadinessLevel
 ): AuxiliaryWork[] {
   // Build main lift muscle contributions to project post-session volume
   const liftMuscles = getMusclesForLift(primaryLift);
@@ -589,7 +639,8 @@ function buildVolumeTopUp(
     if (mev <= 0) continue;
     const weeklyVol = weeklyVolumeToDate[muscle] ?? 0;
     const primaryLiftContrib = mainContrib.get(muscle) ?? 0;
-    const projected = weeklyVol + Math.floor(mainLiftSetCount * primaryLiftContrib);
+    const projected =
+      weeklyVol + Math.floor(mainLiftSetCount * primaryLiftContrib);
     // Push muscles that receive zero direct contribution from today's primary lift
     // use the full MEV target rather than the pro-rated threshold. This front-loads
     // push coverage on squat/deadlift days, preventing zero-volume weeks when no
@@ -611,9 +662,8 @@ function buildVolumeTopUp(
   const result: AuxiliaryWork[] = [];
   const usedExercises = new Set<string>(activeAuxiliaries);
   const patternsUsed: MovementPattern[] = [];
-  const muscleDeficits: Partial<Record<MuscleGroup, number>> = Object.fromEntries(
-    candidates.map(c => [c.muscle, c.deficit])
-  );
+  const muscleDeficits: Partial<Record<MuscleGroup, number>> =
+    Object.fromEntries(candidates.map((c) => [c.muscle, c.deficit]));
 
   for (const { muscle, deficit } of topCandidates) {
     // Find a qualifying exercise from the pool, excluding exercises associated
@@ -669,7 +719,12 @@ function buildVolumeTopUp(
       exerciseType === 'bodyweight'
         ? 0
         : roundToNearest(
-            computeAuxWeight({ exercise, oneRmKg: effectiveOneRmKg, lift: exerciseLift ?? primaryLift, biologicalSex })
+            computeAuxWeight({
+              exercise,
+              oneRmKg: effectiveOneRmKg,
+              lift: exerciseLift ?? primaryLift,
+              biologicalSex,
+            })
           );
 
     const sets: PlannedSet[] = Array.from({ length: setCount }, (_, i) => ({

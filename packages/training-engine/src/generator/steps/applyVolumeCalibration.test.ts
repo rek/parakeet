@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
 
 import { baseInput } from '../../__test-helpers__/fixtures';
-import { initPipeline } from './initPipeline';
 import { applyVolumeCalibration } from './applyVolumeCalibration';
+import { initPipeline } from './initPipeline';
 
 function makeRecentLogs(count: number, rpeGap: number) {
   return Array.from({ length: count }, () => ({
@@ -248,14 +248,14 @@ describe('applyVolumeCalibration', () => {
     // This tests the pipeline order, not the step in isolation
     const input = baseInput({
       recentLogs: makeRecentLogs(3, 1.5),
-      sorenessRatings: { quads: 3 as 3 },
+      sorenessRatings: { quads: 6 as 6 },
     });
     const ctx = initPipeline(input);
     const baseSets = ctx.plannedCount;
     // Calibration should add +1
     applyVolumeCalibration(ctx, input);
     expect(ctx.plannedCount).toBe(baseSets + 1);
-    // Soreness of 3 (old scale, normalised to 6 = moderate) reduces -1
+    // Soreness 6 (moderate) will reduce -1 in the soreness step
     // Net effect: +1 - 1 = 0 (back to base)
   });
 });

@@ -5,20 +5,20 @@
 
 ## What This Covers
 
-Translates pre-workout muscle soreness ratings (1–5) into concrete volume and intensity modifications for the JIT session generator. Soreness is the first gate — it runs before MRV/MEV checks.
+Translates pre-workout muscle soreness ratings (1–10) into concrete volume and intensity modifications for the JIT session generator. Soreness is the first gate — it runs before MRV/MEV checks.
 
 ## Tasks
 
 **File: `packages/training-engine/src/adjustments/soreness-adjuster.ts`**
 
 **Type: `SorenessLevel`**
+
 ```typescript
-type SorenessLevel = 1 | 2 | 3 | 4 | 5
-// 1: Fresh       — no soreness
-// 2: Mild        — slight tightness, no impact
-// 3: Moderate    — noticeable, some movement restriction
-// 4: High        — significant discomfort or limited range
-// 5: Severe      — should not train this muscle
+type SorenessLevel = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10;
+// 1–4: Fresh     — no soreness, no adjustment
+// 5–6: Moderate  — noticeable, -1 set
+// 7–8: High      — significant discomfort, -2 sets + 5% intensity (male) / -1 set + 3% (female)
+// 9–10: Severe   — recovery mode (3×5 at 40%)
 ```
 
 - [x] `getSorenessModifier(sorenessLevel: SorenessLevel): SorenessModifier`
@@ -26,14 +26,14 @@ type SorenessLevel = 1 | 2 | 3 | 4 | 5
 
 ```typescript
 interface SorenessModifier {
-  setReduction: number       // sets to subtract from planned (0, 1, or 2)
-  intensityMultiplier: number // multiplier on %1RM (1.0, 0.95, 0.85, or recovery mode)
-  recoveryMode: boolean      // true → override entire session with 40% × 3×5
-  warning: string | null     // displayed to user
+  setReduction: number; // sets to subtract from planned (0, 1, or 2)
+  intensityMultiplier: number; // multiplier on %1RM (1.0, 0.95, 0.85, or recovery mode)
+  recoveryMode: boolean; // true → override entire session with 40% × 3×5
+  warning: string | null; // displayed to user
 }
 ```
 
-See [domain/adjustments.md](../../domain/adjustments.md) for the soreness modifier table (levels 1–5: set reduction, intensity multiplier, recovery mode, warning text).
+See [domain/adjustments.md](../../domain/adjustments.md) for the soreness modifier table (levels 1–10: set reduction, intensity multiplier, recovery mode, warning text).
 
 - [x] `applySorenessToSets(plannedSets: PlannedSet[], modifier: SorenessModifier, minSets?: number): PlannedSet[]`
   - If `recoveryMode: true`: replace all sets with 3 sets at 40% of the original weight, 5 reps, RPE 5.0
@@ -46,11 +46,12 @@ See [domain/adjustments.md](../../domain/adjustments.md) for the soreness modifi
   - Returns the maximum soreness rating across the primary muscles for this session
 
 **Unit tests (`packages/training-engine/__tests__/soreness-adjuster.test.ts`):**
+
 - [x] Soreness 1 → modifier: `{ setReduction: 0, intensityMultiplier: 1.0, recoveryMode: false }`
-- [x] Soreness 3 → planned 2 sets → returns 1 set
-- [x] Soreness 4 → planned 2 sets at 112.5kg → returns 0 sets (2 - 2 = 0 → clamped to min 1 set) at 107.5kg (112.5 × 0.95 = 106.875 → round to 107.5)
-- [x] Soreness 5 → returns 3 × 5 at 40% of original weight regardless of original plan
-- [x] `getWorstSoreness({ quads: 2, glutes: 4, lower_back: 1 })` → 4
+- [x] Soreness 6 (moderate) → planned 2 sets → returns 1 set
+- [x] Soreness 8 (high) → planned 2 sets at 112.5kg → returns 0 sets (2 - 2 = 0 → clamped to min 1 set) at 107.5kg (112.5 × 0.95 = 106.875 → round to 107.5)
+- [x] Soreness 10 (severe) → returns 3 × 5 at 40% of original weight regardless of original plan
+- [x] `getWorstSoreness({ quads: 3, glutes: 7, lower_back: 1 })` → 7
 - [x] `getPrimaryMusclesForSession('bench')` → `['chest', 'triceps', 'shoulders']`
 
 ## Dependencies

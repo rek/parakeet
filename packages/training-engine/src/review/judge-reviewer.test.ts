@@ -16,8 +16,14 @@ const mockGenerateText = generateText as ReturnType<typeof vi.fn>;
 // Fixtures
 // ---------------------------------------------------------------------------
 
-const stubInput = { sessionId: 's-1', primaryLift: 'squat' } as unknown as JITInput;
-const stubOutput = { mainLiftSets: [], generatedAt: new Date() } as unknown as JITOutput;
+const stubInput = {
+  sessionId: 's-1',
+  primaryLift: 'squat',
+} as unknown as JITInput;
+const stubOutput = {
+  mainLiftSets: [],
+  generatedAt: new Date(),
+} as unknown as JITOutput;
 
 function makeReview(overrides: Partial<JudgeReview> = {}): JudgeReview {
   return {
@@ -36,7 +42,11 @@ describe('reviewJITDecision', () => {
   beforeEach(() => vi.clearAllMocks());
 
   it('returns the LLM review on success', async () => {
-    const fakeReview = makeReview({ score: 72, verdict: 'flag', concerns: ['High soreness ignored'] });
+    const fakeReview = makeReview({
+      score: 72,
+      verdict: 'flag',
+      concerns: ['High soreness ignored'],
+    });
     mockGenerateText.mockResolvedValueOnce({ output: fakeReview });
 
     const result = await reviewJITDecision(stubInput, stubOutput);
@@ -101,7 +111,10 @@ describe('JudgeReviewSchema', () => {
     const valid = makeReview({
       score: 55,
       verdict: 'flag',
-      concerns: ['Aux conflict with sore hamstrings', 'Rest too short for RPE 9.5'],
+      concerns: [
+        'Aux conflict with sore hamstrings',
+        'Rest too short for RPE 9.5',
+      ],
       suggestedOverrides: {
         intensityModifier: 0.9,
         setModifier: -1,

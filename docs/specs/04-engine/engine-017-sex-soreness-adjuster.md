@@ -16,7 +16,7 @@
   const SORENESS_TABLE_FEMALE: Record<SorenessLevel, SorenessModifier> = {
     ...SORENESS_TABLE,
     4: { setReduction: 1, intensityMultiplier: 0.97, recoveryMode: false, warning: 'High soreness — reduced 1 set and intensity 3%' },
-  }
+  };
   ```
 - [ ] Update `getSorenessModifier` signature: `getSorenessModifier(sorenessLevel: SorenessLevel, biologicalSex?: 'female' | 'male'): SorenessModifier`
   - `'female'` → look up in `SORENESS_TABLE_FEMALE`
@@ -29,13 +29,14 @@
 - [ ] No other changes to JIT pipeline
 
 **Unit tests (`packages/training-engine/src/__tests__/soreness-adjuster.test.ts`):**
-- [ ] `getSorenessModifier(4, 'female').setReduction` === 1
-- [ ] `getSorenessModifier(4, 'female').intensityMultiplier` === 0.97
-- [ ] `getSorenessModifier(4, 'male').setReduction` === 2
-- [ ] `getSorenessModifier(4, 'male').intensityMultiplier` === 0.95
-- [ ] `getSorenessModifier(4)` (no sex) === same as male
-- [ ] `getSorenessModifier(5, 'female').recoveryMode` === true (unchanged from male)
-- [ ] `getSorenessModifier(3, 'female').setReduction` === 1 (unchanged from male)
+
+- [x] `getSorenessModifier(8, 'female').setReduction` === 1
+- [x] `getSorenessModifier(8, 'female').intensityMultiplier` === 0.97
+- [x] `getSorenessModifier(8, 'male').setReduction` === 2
+- [x] `getSorenessModifier(8, 'male').intensityMultiplier` === 0.95
+- [x] `getSorenessModifier(8)` (no sex) === same as male
+- [x] `getSorenessModifier(9, 'female').recoveryMode` === true (unchanged from male)
+- [x] `getSorenessModifier(6, 'female').setReduction` === 1 (unchanged from male)
 
 ## Usage Context
 

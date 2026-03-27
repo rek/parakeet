@@ -187,7 +187,9 @@ export function LiftHistorySheet({
               {formatOneRm(entry.estimatedOneRmKg)}
             </Text>
             <Text style={[styles.cell, styles.colRpe]}>
-              {entry.sessionRpe != null ? entry.sessionRpe.toFixed(1) : '\u2014'}
+              {entry.sessionRpe != null
+                ? entry.sessionRpe.toFixed(1)
+                : '\u2014'}
             </Text>
             <Text style={[styles.cell, styles.colCompletion]}>
               {entry.completionPct != null
@@ -201,12 +203,7 @@ export function LiftHistorySheet({
   }
 
   return (
-    <Sheet
-      visible={visible}
-      onClose={onClose}
-      title={title}
-      position="bottom"
-    >
+    <Sheet visible={visible} onClose={onClose} title={title} position="bottom">
       <ScrollView
         style={styles.scroll}
         contentContainerStyle={styles.scrollContent}

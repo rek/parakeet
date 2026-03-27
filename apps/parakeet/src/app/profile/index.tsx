@@ -10,6 +10,7 @@ import {
   View,
 } from 'react-native';
 
+import { useAuth } from '@modules/auth';
 import {
   addBodyweightEntry,
   birthYearToDobIso,
@@ -22,7 +23,6 @@ import {
 import type { BiologicalSex, BodyweightEntry } from '@modules/profile';
 import { qk } from '@platform/query';
 import { captureException } from '@platform/utils/captureException';
-import { useAuth } from '@modules/auth';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -474,9 +474,7 @@ export default function ProfileScreen() {
                 <Text style={styles.historyDate}>
                   {formatDate(entry.recorded_date)}
                 </Text>
-                <Text style={styles.historyWeight}>
-                  {entry.weight_kg} kg
-                </Text>
+                <Text style={styles.historyWeight}>{entry.weight_kg} kg</Text>
                 <TouchableOpacity
                   onPress={() => handleDeleteEntry(entry)}
                   activeOpacity={0.7}

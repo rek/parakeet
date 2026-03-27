@@ -1,8 +1,14 @@
-import { describe, it, expect } from 'vitest';
+import { describe, expect, it } from 'vitest';
 
-import { evaluateVolumeRecovery, VolumeRecoveryContext, VolumeReductions } from './volume-recovery';
+import {
+  evaluateVolumeRecovery,
+  VolumeRecoveryContext,
+  VolumeReductions,
+} from './volume-recovery';
 
-function makeReductions(overrides?: Partial<VolumeReductions>): VolumeReductions {
+function makeReductions(
+  overrides?: Partial<VolumeReductions>
+): VolumeReductions {
   return {
     totalSetsRemoved: 2,
     baseSetsCount: 5,
@@ -12,11 +18,11 @@ function makeReductions(overrides?: Partial<VolumeReductions>): VolumeReductions
   };
 }
 
-function makeContext(overrides?: Partial<VolumeRecoveryContext>): VolumeRecoveryContext {
+function makeContext(
+  overrides?: Partial<VolumeRecoveryContext>
+): VolumeRecoveryContext {
   return {
-    completedSets: [
-      { rpe_actual: 6.5, rpe_target: 8.5 },
-    ],
+    completedSets: [{ rpe_actual: 6.5, rpe_target: 8.5 }],
     volumeReductions: makeReductions(),
     currentWeightKg: 100,
     currentReps: 5,
@@ -28,7 +34,9 @@ function makeContext(overrides?: Partial<VolumeRecoveryContext>): VolumeRecovery
 describe('evaluateVolumeRecovery', () => {
   it('returns null when recoveryBlocked is true', () => {
     const result = evaluateVolumeRecovery(
-      makeContext({ volumeReductions: makeReductions({ recoveryBlocked: true }) })
+      makeContext({
+        volumeReductions: makeReductions({ recoveryBlocked: true }),
+      })
     );
     expect(result).toBeNull();
   });
@@ -42,7 +50,9 @@ describe('evaluateVolumeRecovery', () => {
 
   it('returns null when no completed sets have RPE', () => {
     const result = evaluateVolumeRecovery(
-      makeContext({ completedSets: [{ rpe_actual: undefined, rpe_target: 8.5 }] })
+      makeContext({
+        completedSets: [{ rpe_actual: undefined, rpe_target: 8.5 }],
+      })
     );
     expect(result).toBeNull();
   });

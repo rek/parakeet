@@ -27,10 +27,9 @@ import { captureException } from '@platform/utils/captureException';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { router, useLocalSearchParams } from 'expo-router';
 
+import { ScreenTitle } from '../../../components/ui/ScreenTitle';
 import type { ColorScheme } from '../../../theme';
 import { useTheme } from '../../../theme/ThemeContext';
-
-import { ScreenTitle } from '../../../components/ui/ScreenTitle';
 
 // ── Types ────────────────────────────────────────────────────────────────────
 

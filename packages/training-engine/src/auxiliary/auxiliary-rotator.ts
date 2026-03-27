@@ -66,7 +66,12 @@ export function generateAuxiliaryAssignments(
       const liftPool = pool[lift];
       if (!liftPool || liftPool.length < 2) continue;
 
-      const [ex1, ex2] = getAuxiliariesForBlock(lift, blockNumber, liftPool, startOffset);
+      const [ex1, ex2] = getAuxiliariesForBlock(
+        lift,
+        blockNumber,
+        liftPool,
+        startOffset
+      );
       assignments.push({
         programId,
         blockNumber,

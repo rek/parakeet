@@ -6,7 +6,11 @@ import { roundToNearest } from '../formulas/weight-rounding';
 // Types
 // ---------------------------------------------------------------------------
 
-export type VolumeReductionSource = 'soreness' | 'readiness' | 'cycle_phase' | 'disruption';
+export type VolumeReductionSource =
+  | 'soreness'
+  | 'readiness'
+  | 'cycle_phase'
+  | 'disruption';
 
 export interface VolumeReductions {
   totalSetsRemoved: number;
@@ -53,9 +57,15 @@ export interface VolumeRecoveryOffer {
 export function evaluateVolumeRecovery(
   ctx: VolumeRecoveryContext
 ): VolumeRecoveryOffer | null {
-  const { completedSets, volumeReductions, currentWeightKg, currentReps, rpeTarget } = ctx;
+  const {
+    completedSets,
+    volumeReductions,
+    currentWeightKg,
+    currentReps,
+    rpeTarget,
+  } = ctx;
 
-  // Recovery mode (soreness 5) — session is fundamentally different, no recovery
+  // Recovery mode (soreness 9-10) — session is fundamentally different, no recovery
   if (volumeReductions.recoveryBlocked) return null;
 
   // Nothing to recover

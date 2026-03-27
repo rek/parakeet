@@ -30,7 +30,14 @@ export async function fetchModifierCalibrations(userId: string) {
 }
 
 /** Upsert a calibration result for a specific modifier source. */
-export async function upsertModifierCalibration({ userId, modifierSource, adjustment, confidence, sampleCount, meanBias }: {
+export async function upsertModifierCalibration({
+  userId,
+  modifierSource,
+  adjustment,
+  confidence,
+  sampleCount,
+  meanBias,
+}: {
   userId: string;
   modifierSource: ModifierSource;
   adjustment: number;
@@ -38,21 +45,19 @@ export async function upsertModifierCalibration({ userId, modifierSource, adjust
   sampleCount: number;
   meanBias: number;
 }) {
-  const { error } = await typedSupabase
-    .from('modifier_calibrations')
-    .upsert(
-      {
-        user_id: userId,
-        modifier_source: modifierSource,
-        adjustment,
-        confidence,
-        sample_count: sampleCount,
-        mean_bias: meanBias,
-        calibrated_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      },
-      { onConflict: 'user_id,modifier_source' }
-    );
+  const { error } = await typedSupabase.from('modifier_calibrations').upsert(
+    {
+      user_id: userId,
+      modifier_source: modifierSource,
+      adjustment,
+      confidence,
+      sample_count: sampleCount,
+      mean_bias: meanBias,
+      calibrated_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    },
+    { onConflict: 'user_id,modifier_source' }
+  );
 
   if (error) throw error;
 }

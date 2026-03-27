@@ -1,7 +1,7 @@
-import { localDateString } from '@shared/utils/localDateString';
 import type { DbInsert, DbRow } from '@platform/supabase';
 import { typedSupabase } from '@platform/supabase';
 import type { ProgramListItem, ProgramSessionView } from '@shared/types/domain';
+import { localDateString } from '@shared/utils/localDateString';
 
 function parseProgramStatus(status: string): ProgramListItem['status'] {
   if (status === 'active' || status === 'completed' || status === 'archived')
@@ -161,7 +161,9 @@ export async function updateProgramTrainingDays(
   trainingDays: number[],
   newStartDate?: Date
 ): Promise<void> {
-  const payload: Partial<DbInsert<'programs'>> = { training_days: trainingDays };
+  const payload: Partial<DbInsert<'programs'>> = {
+    training_days: trainingDays,
+  };
   if (newStartDate) {
     payload.start_date = localDateString(newStartDate);
   }

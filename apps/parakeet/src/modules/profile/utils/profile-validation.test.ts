@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+
 import { isValidBirthYear, isValidBodyweight } from './profile-validation';
 
 describe('isValidBirthYear', () => {

@@ -1,7 +1,6 @@
 import { createContext, useContext } from 'react';
 
 import { NOOP_STATE, useOtaUpdates } from './hooks/useOtaUpdates';
-
 import type { OtaUpdateState } from './hooks/useOtaUpdates';
 
 const OtaUpdatesContext = createContext<OtaUpdateState>(NOOP_STATE);

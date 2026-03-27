@@ -17,10 +17,9 @@ import { router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { BackLink } from '../../components/navigation/BackLink';
+import { ScreenTitle } from '../../components/ui/ScreenTitle';
 import type { ColorScheme } from '../../theme';
 import { useTheme } from '../../theme/ThemeContext';
-
-import { ScreenTitle } from '../../components/ui/ScreenTitle';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 

@@ -33,9 +33,7 @@ function scoreColor(score: number) {
   return theme.color.red;
 }
 
-function volumeBadgeVariant(
-  v: string,
-): 'green' | 'red' | 'accent' | 'muted' {
+function volumeBadgeVariant(v: string): 'green' | 'red' | 'accent' | 'muted' {
   if (v === 'right') return 'green';
   if (v === 'too_much') return 'red';
   if (v === 'too_little') return 'accent';
@@ -260,7 +258,7 @@ export function DecisionReplay() {
     supabase
       .from('decision_replay_logs')
       .select(
-        'id, user_id, session_id, created_at, prescription_score, rpe_accuracy, volume_appropriateness, insights',
+        'id, user_id, session_id, created_at, prescription_score, rpe_accuracy, volume_appropriateness, insights'
       )
       .order('created_at', { ascending: false })
       .limit(50)
@@ -286,17 +284,13 @@ export function DecisionReplay() {
       ? avg(logs.map((l) => l.prescription_score)).toFixed(1)
       : '—';
   const avgRpe =
-    logs.length > 0
-      ? avg(logs.map((l) => l.rpe_accuracy)).toFixed(1)
-      : '—';
+    logs.length > 0 ? avg(logs.map((l) => l.rpe_accuracy)).toFixed(1) : '—';
   const tooMuch = logs.filter(
-    (l) => l.volume_appropriateness === 'too_much',
+    (l) => l.volume_appropriateness === 'too_much'
   ).length;
-  const right = logs.filter(
-    (l) => l.volume_appropriateness === 'right',
-  ).length;
+  const right = logs.filter((l) => l.volume_appropriateness === 'right').length;
   const tooLittle = logs.filter(
-    (l) => l.volume_appropriateness === 'too_little',
+    (l) => l.volume_appropriateness === 'too_little'
   ).length;
 
   return (

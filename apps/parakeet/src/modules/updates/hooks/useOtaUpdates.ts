@@ -1,9 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { AppState } from 'react-native';
 
-import * as Updates from 'expo-updates';
-
 import { captureException } from '@platform/utils/captureException';
+import * as Updates from 'expo-updates';
 
 export type OtaStatus =
   | 'idle'
@@ -105,7 +104,13 @@ export function useOtaUpdates(): OtaUpdateState {
     return () => sub.remove();
   }, [checkAndApply]);
 
-  return { status, error, meta: getUpdateMeta(), lastCheckedAt: checkedAt, checkForUpdate };
+  return {
+    status,
+    error,
+    meta: getUpdateMeta(),
+    lastCheckedAt: checkedAt,
+    checkForUpdate,
+  };
 }
 
 export { NOOP_STATE };

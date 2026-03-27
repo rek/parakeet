@@ -3,7 +3,7 @@ import { Lift, PlannedSet } from '@parakeet/shared-types';
 import { roundToNearest } from '../formulas/weight-rounding';
 import { MuscleGroup } from '../types';
 
-/** 1-10 scale. Legacy 1-5 values are accepted and mapped to the same thresholds. */
+/** 1-10 scale. */
 export type SorenessLevel = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10;
 
 export interface SorenessModifier {
@@ -13,10 +13,8 @@ export interface SorenessModifier {
   warning: string | null;
 }
 
-// Thresholds on the 1-10 scale.
-// Legacy 1-5 inputs are doubled before lookup, so old behavior is preserved:
-//   old 1 → 2 (fresh), old 2 → 4 (mild), old 3 → 6 (moderate),
-//   old 4 → 8 (high), old 5 → 10 (severe)
+// Thresholds on the 1-10 scale:
+//   1-4: fresh/mild, 5-6: moderate, 7-8: high, 9-10: severe
 const FRESH: SorenessModifier = {
   setReduction: 0,
   intensityMultiplier: 1.0,
@@ -52,22 +50,17 @@ const SEVERE: SorenessModifier = {
   warning: 'Severe soreness — recovery session only (40% × 3×5)',
 };
 
-/** Normalise legacy 1-5 input to the 1-10 scale. Values > 5 are already on the new scale. */
-function normalise(level: number): number {
-  return level <= 5 ? level * 2 : level;
-}
-
 function lookupMale(level10: number): SorenessModifier {
-  if (level10 <= 4) return FRESH;        // 1-4: fresh / mild
+  if (level10 <= 4) return FRESH; // 1-4: fresh / mild
   if (level10 <= 6) return MODERATE_MALE; // 5-6: moderate
-  if (level10 <= 8) return HIGH_MALE;     // 7-8: high
-  return SEVERE;                           // 9-10: severe
+  if (level10 <= 8) return HIGH_MALE; // 7-8: high
+  return SEVERE; // 9-10: severe
 }
 
 function lookupFemale(level10: number): SorenessModifier {
   if (level10 <= 4) return FRESH;
   if (level10 <= 6) return MODERATE_MALE; // same as male at moderate
-  if (level10 <= 8) return HIGH_FEMALE;   // female-specific at high
+  if (level10 <= 8) return HIGH_FEMALE; // female-specific at high
   return SEVERE;
 }
 
@@ -75,8 +68,9 @@ export function getSorenessModifier(
   sorenessLevel: SorenessLevel,
   biologicalSex?: 'female' | 'male'
 ): SorenessModifier {
-  const level10 = normalise(sorenessLevel);
-  return biologicalSex === 'female' ? lookupFemale(level10) : lookupMale(level10);
+  return biologicalSex === 'female'
+    ? lookupFemale(sorenessLevel)
+    : lookupMale(sorenessLevel);
 }
 
 export function applySorenessToSets(

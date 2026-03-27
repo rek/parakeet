@@ -1,9 +1,9 @@
-import { TrainingDisruption, PlannedSet } from '@parakeet/shared-types';
+import { PlannedSet, TrainingDisruption } from '@parakeet/shared-types';
 
 import { DEFAULT_FORMULA_CONFIG_MALE } from '../cube/blocks';
+import { JITInput } from '../generator/jit-session-generator';
 import { MrvMevConfig, MuscleGroup } from '../types';
 import { DEFAULT_MRV_MEV_CONFIG_MALE } from '../volume/mrv-mev-calculator';
-import { JITInput } from '../generator/jit-session-generator';
 
 export function baseInput(overrides?: Partial<JITInput>): JITInput {
   return {
@@ -47,7 +47,11 @@ export function makeDisruption(
   };
 }
 
-export function makeSets(count: number, weightKg: number, reps = 5): PlannedSet[] {
+export function makeSets(
+  count: number,
+  weightKg: number,
+  reps = 5
+): PlannedSet[] {
   return Array.from({ length: count }, (_, i) => ({
     set_number: i + 1,
     weight_kg: weightKg,

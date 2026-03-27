@@ -14,10 +14,11 @@ The trace is currently an audit trail. This doc defines how it becomes a **close
 
 Per intent.md: "More signals = better sessions. Every data point makes the next workout more accurate."
 
-The trace + session outcome is a signal pair that isn't being used. If the system prescribed ×0.85 intensity for soreness and the athlete easily hit RPE 6 (target 8), that's evidence the modifier was too aggressive for *this athlete*. The system should learn from that — not repeat the same miscalibration next session.
+The trace + session outcome is a signal pair that isn't being used. If the system prescribed ×0.85 intensity for soreness and the athlete easily hit RPE 6 (target 8), that's evidence the modifier was too aggressive for _this athlete_. The system should learn from that — not repeat the same miscalibration next session.
 
 Current blind spots:
-- Modifier thresholds are hardcoded defaults — soreness level 3 always gives the same reduction regardless of athlete history
+
+- Modifier thresholds are hardcoded defaults — soreness level 5–6 always gives the same reduction regardless of athlete history
 - No feedback loop: the system doesn't know whether its adjustments were appropriate
 - The LLM reviewers (judge, replay, cycle review) see inputs and outputs but not the reasoning between them
 
@@ -30,6 +31,7 @@ After every session completion, compare trace predictions vs actual outcomes:
 **Input:** `PrescriptionTrace.mainLift.weightDerivation.modifiers[]` + `session_logs.session_rpe` + `session_logs.actual_sets[].rpe_actual`
 
 **Per-modifier tracking:**
+
 ```
 For each modifier source (soreness, readiness, cycle_phase, disruption):
   - What multiplier was applied? (e.g., ×0.85)
@@ -39,6 +41,7 @@ For each modifier source (soreness, readiness, cycle_phase, disruption):
 ```
 
 **Accumulate over sessions into a calibration profile per user:**
+
 ```
 modifier_calibration:
   soreness:
@@ -54,6 +57,7 @@ modifier_calibration:
 ```
 
 **Confidence thresholds:**
+
 - < 5 samples: `exploring` — no adjustment proposed
 - 5-10 samples: `low` — propose but don't apply
 - 10-20 samples: `medium` — propose, apply if small (< 5% change)
@@ -68,6 +72,7 @@ modifier_calibration:
 When the auto-calibration system proposes a **significant adjustment** (>5% change) or has **low confidence**, route through an LLM review before applying:
 
 **Trigger conditions:**
+
 - Suggested adjustment > ±5% from default
 - Bias direction flipped (was too easy, now too hard)
 - Insufficient samples for the adjustment magnitude
@@ -115,13 +120,13 @@ Today screen card for significant proposals. Three actions: Accept / Discuss / R
 
 ## How This Fulfills Intent.md
 
-| Intent Principle | How This Delivers |
-|-----------------|-------------------|
-| "More signals = better sessions" | Trace + RPE outcome = new signal that improves modifier accuracy |
-| "Synchronize with the real human" | User confirmation catches factors the system can't observe |
-| "Leverage improving LLMs" | LLM reviews calibration proposals; better models = better review |
-| "JIT over pre-generated" | Calibration adjustments apply at JIT time, not pre-computed |
-| "Engine is pure domain logic" | All calibration logic in training-engine, no React deps |
+| Intent Principle                  | How This Delivers                                                |
+| --------------------------------- | ---------------------------------------------------------------- |
+| "More signals = better sessions"  | Trace + RPE outcome = new signal that improves modifier accuracy |
+| "Synchronize with the real human" | User confirmation catches factors the system can't observe       |
+| "Leverage improving LLMs"         | LLM reviews calibration proposals; better models = better review |
+| "JIT over pre-generated"          | Calibration adjustments apply at JIT time, not pre-computed      |
+| "Engine is pure domain logic"     | All calibration logic in training-engine, no React deps          |
 
 ## Data Requirements
 
@@ -137,16 +142,19 @@ Today screen card for significant proposals. Three actions: Accept / Discuss / R
 These items add value but don't close the feedback loop:
 
 ### Dashboard visibility
+
 - JIT Logs: weight derivation chain + modifier list per session
 - Workout Summaries: color-coded modifier badges (green/amber/red)
 
 ### LLM prompt enrichment
+
 - Judge Reviewer: pass trace for modifier validation
 - Decision Replay: trace-aware scoring (bad formula vs bad execution)
 - Cycle Review: modifier frequency aggregation across cycle
 - Motivational Message: "You trained through ×0.9 soreness and hit RPE 8"
 
 ### Athlete-facing insights
+
 - Weekly Body Review: volume shortfall breakdown by modifier source
 - Trace-based badges: "Clean Sheet" (10 sessions, no modifiers), "Resilient" (modifiers active, RPE on target)
 

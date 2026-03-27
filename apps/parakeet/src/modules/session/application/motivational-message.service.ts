@@ -93,7 +93,8 @@ export async function fetchMotivationalContext(
     if (g == null) return max;
     return max == null ? g : Math.max(max, g);
   }, null);
-  const topWeightKg = maxGrams != null ? Math.round(weightGramsToKg(maxGrams)) : null;
+  const topWeightKg =
+    maxGrams != null ? Math.round(weightGramsToKg(maxGrams)) : null;
 
   const newPRs = (prsResult.data ?? []).map((row) => ({
     lift: row.lift as string,

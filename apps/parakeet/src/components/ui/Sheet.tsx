@@ -1,13 +1,13 @@
 import { useMemo } from 'react';
 import type { ReactNode } from 'react';
 import {
-  type DimensionValue,
   Modal,
   Pressable,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
+  type DimensionValue,
 } from 'react-native';
 
 import { spacing, typography } from '../../theme';
@@ -119,7 +119,11 @@ export function Sheet({
                 <Text style={styles.subtitle}>{subtitle}</Text>
               )}
             </View>
-            <TouchableOpacity onPress={onClose} hitSlop={12} activeOpacity={0.7}>
+            <TouchableOpacity
+              onPress={onClose}
+              hitSlop={12}
+              activeOpacity={0.7}
+            >
               <Text style={styles.closeBtn}>{'\u2715'}</Text>
             </TouchableOpacity>
           </View>

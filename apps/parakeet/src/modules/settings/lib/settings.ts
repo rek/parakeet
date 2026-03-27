@@ -1,5 +1,5 @@
-import type { PlateKg } from '@shared/constants/plates';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import type { PlateKg } from '@shared/constants/plates';
 
 const BAR_WEIGHT_KEY = 'bar_weight_kg';
 

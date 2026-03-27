@@ -151,7 +151,10 @@ function LogCard({ review }: { review: ChallengeReview }) {
               >
                 Suggested Overrides
               </div>
-              <JsonViewer data={review.suggested_overrides} defaultCollapsed={false} />
+              <JsonViewer
+                data={review.suggested_overrides}
+                defaultCollapsed={false}
+              />
             </>
           )}
           <div
@@ -192,7 +195,9 @@ export function ChallengeReviews() {
 
     supabase
       .from('challenge_reviews')
-      .select('id, user_id, session_id, created_at, score, verdict, concerns, suggested_overrides')
+      .select(
+        'id, user_id, session_id, created_at, score, verdict, concerns, suggested_overrides'
+      )
       .order('created_at', { ascending: false })
       .limit(50)
       .then(({ data, error }) => {
@@ -213,7 +218,9 @@ export function ChallengeReviews() {
 
   const avgScore =
     reviews.length > 0
-      ? Math.round(reviews.reduce((sum, r) => sum + r.score, 0) / reviews.length)
+      ? Math.round(
+          reviews.reduce((sum, r) => sum + r.score, 0) / reviews.length
+        )
       : null;
 
   const flagCount = reviews.filter((r) => r.verdict === 'flag').length;
@@ -280,35 +287,63 @@ export function ChallengeReviews() {
           }}
         >
           <div>
-            <div style={{ fontSize: 9, color: theme.color.textMuted, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 2 }}>
+            <div
+              style={{
+                fontSize: 9,
+                color: theme.color.textMuted,
+                textTransform: 'uppercase',
+                letterSpacing: '0.08em',
+                marginBottom: 2,
+              }}
+            >
               Avg Score
             </div>
             <div
               style={{
                 fontSize: 20,
                 fontWeight: 700,
-                color: avgScore != null ? scoreColor(avgScore) : theme.color.textDim,
+                color:
+                  avgScore != null ? scoreColor(avgScore) : theme.color.textDim,
               }}
             >
               {avgScore ?? '—'}
             </div>
           </div>
           <div>
-            <div style={{ fontSize: 9, color: theme.color.textMuted, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 2 }}>
+            <div
+              style={{
+                fontSize: 9,
+                color: theme.color.textMuted,
+                textTransform: 'uppercase',
+                letterSpacing: '0.08em',
+                marginBottom: 2,
+              }}
+            >
               Flag Rate
             </div>
             <div
               style={{
                 fontSize: 20,
                 fontWeight: 700,
-                color: flagRate != null && flagRate > 0 ? theme.color.accent : theme.color.green,
+                color:
+                  flagRate != null && flagRate > 0
+                    ? theme.color.accent
+                    : theme.color.green,
               }}
             >
               {flagRate != null ? `${flagRate}%` : '—'}
             </div>
           </div>
           <div>
-            <div style={{ fontSize: 9, color: theme.color.textMuted, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 2 }}>
+            <div
+              style={{
+                fontSize: 9,
+                color: theme.color.textMuted,
+                textTransform: 'uppercase',
+                letterSpacing: '0.08em',
+                marginBottom: 2,
+              }}
+            >
               Total
             </div>
             <div
@@ -343,7 +378,8 @@ export function ChallengeReviews() {
             fontSize: 12,
           }}
         >
-          No challenge reviews found. Run a session using the hybrid or LLM strategy to generate one.
+          No challenge reviews found. Run a session using the hybrid or LLM
+          strategy to generate one.
         </div>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>

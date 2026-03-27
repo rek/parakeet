@@ -95,14 +95,21 @@ export function suggestProgramAdjustments(
           pct_adjustment: -0.025,
           rationale: `${lift} ${intensityType} RPE consistently exceeded target by ${roundedDev} — reduce percentage.`,
         });
-        rpeSuggestionsPerLift.set(lift, (rpeSuggestionsPerLift.get(lift) ?? 0) + 1);
+        rpeSuggestionsPerLift.set(
+          lift,
+          (rpeSuggestionsPerLift.get(lift) ?? 0) + 1
+        );
         emittedHigh = true;
         break;
       }
     }
 
     if (emittedHigh) continue;
-    if ((rpeSuggestionsPerLift.get(lift) ?? 0) >= thresholds.max_suggestions_per_lift) continue;
+    if (
+      (rpeSuggestionsPerLift.get(lift) ?? 0) >=
+      thresholds.max_suggestions_per_lift
+    )
+      continue;
 
     // Rule 2: consecutive low RPE → increase_pct
     let lowRun = 0;
@@ -128,7 +135,10 @@ export function suggestProgramAdjustments(
           pct_adjustment: 0.025,
           rationale: `${lift} ${intensityType} RPE consistently below intended stimulus by ${roundedDev} — increase percentage.`,
         });
-        rpeSuggestionsPerLift.set(lift, (rpeSuggestionsPerLift.get(lift) ?? 0) + 1);
+        rpeSuggestionsPerLift.set(
+          lift,
+          (rpeSuggestionsPerLift.get(lift) ?? 0) + 1
+        );
         break;
       }
     }

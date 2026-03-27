@@ -1,5 +1,6 @@
 import { writeFileSync } from 'node:fs';
 import path from 'node:path';
+
 import {
   ADAM,
   BUSY_BEE,
@@ -25,20 +26,20 @@ import {
   JUNIOR_MALE,
   STABLE_FEMALE,
 } from './scripts';
+import {
+  COMPETITION_PREP_SCRIPT,
+  PEAKING_SCRIPT,
+  RETURN_FROM_LAYOFF_SCRIPT,
+} from './scripts/competition';
 import { FAILED_SETS_SCRIPT } from './scripts/failed-sets';
 import {
   FATIGUE_ACCUMULATION_SCRIPT,
   ILLNESS_SCRIPT,
   NO_EQUIPMENT_SCRIPT,
 } from './scripts/illness';
-import {
-  COMPETITION_PREP_SCRIPT,
-  PEAKING_SCRIPT,
-  RETURN_FROM_LAYOFF_SCRIPT,
-} from './scripts/competition';
 import { runSimulation } from './simulator';
-import { SimulationReport } from './types';
 import { compareWithBaseline, generateBaseline } from './threshold';
+import { SimulationReport } from './types';
 
 const jsonOutput = process.argv.includes('--json');
 
@@ -60,7 +61,11 @@ const scenarios = [
   // Competition scenarios
   { persona: ADAM, script: PEAKING_SCRIPT, model: ADHERENT_MODEL },
   { persona: SARAH, script: COMPETITION_PREP_SCRIPT, model: ADHERENT_MODEL },
-  { persona: INJURED_IVAN, script: RETURN_FROM_LAYOFF_SCRIPT, model: FATIGUED_MODEL },
+  {
+    persona: INJURED_IVAN,
+    script: RETURN_FROM_LAYOFF_SCRIPT,
+    model: FATIGUED_MODEL,
+  },
 ];
 
 const reports: SimulationReport[] = [];

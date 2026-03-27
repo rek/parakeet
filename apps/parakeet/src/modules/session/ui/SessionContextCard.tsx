@@ -25,7 +25,10 @@ export function SessionContextCard({
   sorenessRatings?: Record<string, number> | null;
   sleepQuality?: number | null;
   energyLevel?: number | null;
-  activeDisruptions?: Array<{ disruption_type: string; severity: string }> | null;
+  activeDisruptions?: Array<{
+    disruption_type: string;
+    severity: string;
+  }> | null;
   colors: ColorScheme;
 }) {
   const soreMuscles = sorenessRatings
@@ -35,7 +38,8 @@ export function SessionContextCard({
   const hasReadiness =
     (sleepQuality != null && sleepQuality !== 2) ||
     (energyLevel != null && energyLevel !== 2);
-  const hasDisruptions = activeDisruptions != null && activeDisruptions.length > 0;
+  const hasDisruptions =
+    activeDisruptions != null && activeDisruptions.length > 0;
 
   if (!hasSoreness && !hasReadiness && !hasDisruptions) return null;
 

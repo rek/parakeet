@@ -1,6 +1,6 @@
 import type { AuxiliaryWork } from '../model/types';
-import { formatExerciseName } from './formatExerciseName';
 import { fmtKg } from './fmtKg';
+import { formatExerciseName } from './formatExerciseName';
 
 /**
  * Builds a "next lift" label for the rest timer showing what comes after rest.
@@ -25,7 +25,8 @@ export function buildNextLiftLabel({
   if (pendingMainSetNumber !== null) {
     const nextPlanned = plannedSets[pendingMainSetNumber];
     if (!nextPlanned) return undefined;
-    if (nextPlanned.weight_kg === 0) return `Next: Set ${pendingMainSetNumber + 1} × ${nextPlanned.reps}`;
+    if (nextPlanned.weight_kg === 0)
+      return `Next: Set ${pendingMainSetNumber + 1} × ${nextPlanned.reps}`;
     return `Next: Set ${pendingMainSetNumber + 1} — ${fmtKg(nextPlanned.weight_kg)}kg × ${nextPlanned.reps}`;
   }
 

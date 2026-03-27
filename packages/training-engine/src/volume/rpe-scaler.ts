@@ -27,7 +27,7 @@
 // Anchor points: [rpe, multiplier] — must be sorted by rpe ascending
 const ANCHORS: ReadonlyArray<readonly [number, number]> = [
   [6.0, 0.15],
-  [6.5, 0.30],
+  [6.5, 0.3],
   [7.0, 0.65],
   [8.0, 0.85],
   [9.0, 1.0],

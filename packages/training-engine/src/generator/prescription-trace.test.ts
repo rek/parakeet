@@ -1,6 +1,10 @@
-import { describe, it, expect } from 'vitest';
+import { describe, expect, it } from 'vitest';
 
-import { atMevExcept, baseInput, makeDisruption } from '../__test-helpers__/fixtures';
+import {
+  atMevExcept,
+  baseInput,
+  makeDisruption,
+} from '../__test-helpers__/fixtures';
 import { DEFAULT_MRV_MEV_CONFIG_MALE } from '../volume/mrv-mev-calculator';
 import { generateJITSessionWithTrace } from './jit-session-generator';
 
@@ -60,7 +64,7 @@ describe('generateJITSessionWithTrace', () => {
 
   it('records soreness volume change', () => {
     const { trace } = generateJITSessionWithTrace(
-      baseInput({ sorenessRatings: { quads: 4 } })
+      baseInput({ sorenessRatings: { quads: 8 } })
     );
 
     const sorenessVol = trace.mainLift.volumeChanges.find(
@@ -70,9 +74,9 @@ describe('generateJITSessionWithTrace', () => {
     expect(sorenessVol!.setsAfter).toBeLessThan(sorenessVol!.setsBefore);
   });
 
-  it('records recovery mode for soreness 5', () => {
+  it('records recovery mode for soreness 10', () => {
     const { trace } = generateJITSessionWithTrace(
-      baseInput({ sorenessRatings: { quads: 5 } })
+      baseInput({ sorenessRatings: { quads: 10 } })
     );
 
     expect(trace.mainLift.isRecoveryMode).toBe(true);
@@ -85,11 +89,20 @@ describe('generateJITSessionWithTrace', () => {
       baseInput({
         activeDisruptions: [
           {
-            id: 'd1', user_id: 'u1', program_id: null, session_ids_affected: null,
-            reported_at: new Date().toISOString(), disruption_type: 'injury',
-            severity: 'major', affected_date_start: null, affected_date_end: null,
-            affected_lifts: ['squat'], description: 'ACL tear',
-            adjustment_applied: null, resolved_at: null, status: 'active',
+            id: 'd1',
+            user_id: 'u1',
+            program_id: null,
+            session_ids_affected: null,
+            reported_at: new Date().toISOString(),
+            disruption_type: 'injury',
+            severity: 'major',
+            affected_date_start: null,
+            affected_date_end: null,
+            affected_lifts: ['squat'],
+            description: 'ACL tear',
+            adjustment_applied: null,
+            resolved_at: null,
+            status: 'active',
           },
         ],
       })
@@ -104,11 +117,20 @@ describe('generateJITSessionWithTrace', () => {
       baseInput({
         activeDisruptions: [
           {
-            id: 'd1', user_id: 'u1', program_id: null, session_ids_affected: null,
-            reported_at: new Date().toISOString(), disruption_type: 'injury',
-            severity: 'major', affected_date_start: null, affected_date_end: null,
-            affected_lifts: ['squat'], description: 'ACL tear',
-            adjustment_applied: null, resolved_at: null, status: 'active',
+            id: 'd1',
+            user_id: 'u1',
+            program_id: null,
+            session_ids_affected: null,
+            reported_at: new Date().toISOString(),
+            disruption_type: 'injury',
+            severity: 'major',
+            affected_date_start: null,
+            affected_date_end: null,
+            affected_lifts: ['squat'],
+            description: 'ACL tear',
+            adjustment_applied: null,
+            resolved_at: null,
+            status: 'active',
           },
         ],
       })
@@ -123,7 +145,9 @@ describe('generateJITSessionWithTrace', () => {
     const { trace } = generateJITSessionWithTrace(baseInput());
 
     expect(trace.rest.mainLift.formulaBaseSeconds).toBeGreaterThan(0);
-    expect(trace.rest.mainLift.finalSeconds).toBe(trace.rest.mainLift.formulaBaseSeconds);
+    expect(trace.rest.mainLift.finalSeconds).toBe(
+      trace.rest.mainLift.formulaBaseSeconds
+    );
     expect(trace.rest.mainLift.userOverrideSeconds).toBeNull();
     expect(trace.rest.mainLift.llmDeltaSeconds).toBeNull();
   });
@@ -131,7 +155,9 @@ describe('generateJITSessionWithTrace', () => {
   it('records rest override when user override is present', () => {
     const { trace } = generateJITSessionWithTrace(
       baseInput({
-        userRestOverrides: [{ lift: 'squat', intensityType: 'heavy', restSeconds: 240 }],
+        userRestOverrides: [
+          { lift: 'squat', intensityType: 'heavy', restSeconds: 240 },
+        ],
       })
     );
 
@@ -180,14 +206,16 @@ describe('generateJITSessionWithTrace', () => {
     const { trace } = generateJITSessionWithTrace(baseInput());
 
     expect(trace.auxiliaries.length).toBeGreaterThan(0);
-    const assigned = trace.auxiliaries.filter((a) => a.selectionReason === 'assigned auxiliary');
+    const assigned = trace.auxiliaries.filter(
+      (a) => a.selectionReason === 'assigned auxiliary'
+    );
     expect(assigned.length).toBeGreaterThan(0);
     expect(assigned[0].exercise).toBeTruthy();
   });
 
   it('traces skipped auxiliary exercises', () => {
     const { trace } = generateJITSessionWithTrace(
-      baseInput({ sorenessRatings: { quads: 5 } })
+      baseInput({ sorenessRatings: { quads: 10 } })
     );
 
     const skipped = trace.auxiliaries.filter((a) => a.skipped);
@@ -199,12 +227,17 @@ describe('generateJITSessionWithTrace', () => {
     const { trace } = generateJITSessionWithTrace(
       baseInput({
         auxiliaryPool: ['Romanian Dumbbell Deadlift', 'Leg Press'],
-        weeklyVolumeToDate: atMevExcept(DEFAULT_MRV_MEV_CONFIG_MALE, 'hamstrings'),
+        weeklyVolumeToDate: atMevExcept(
+          DEFAULT_MRV_MEV_CONFIG_MALE,
+          'hamstrings'
+        ),
         mrvMevConfig: DEFAULT_MRV_MEV_CONFIG_MALE,
       })
     );
 
-    const topUps = trace.auxiliaries.filter((a) => a.selectionReason.includes('below MEV'));
+    const topUps = trace.auxiliaries.filter((a) =>
+      a.selectionReason.includes('below MEV')
+    );
     expect(topUps.length).toBeGreaterThan(0);
   });
 
@@ -213,9 +246,13 @@ describe('generateJITSessionWithTrace', () => {
 
     expect(trace.mainLift.sets.length).toBe(output.mainLiftSets.length);
     for (let i = 0; i < output.mainLiftSets.length; i++) {
-      expect(trace.mainLift.sets[i].weightKg).toBe(output.mainLiftSets[i].weight_kg);
+      expect(trace.mainLift.sets[i].weightKg).toBe(
+        output.mainLiftSets[i].weight_kg
+      );
       expect(trace.mainLift.sets[i].reps).toBe(output.mainLiftSets[i].reps);
-      expect(trace.mainLift.sets[i].rpeTarget).toBe(output.mainLiftSets[i].rpe_target);
+      expect(trace.mainLift.sets[i].rpeTarget).toBe(
+        output.mainLiftSets[i].rpe_target
+      );
     }
   });
 });

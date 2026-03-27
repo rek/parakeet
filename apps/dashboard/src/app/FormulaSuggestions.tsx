@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react';
+
 import type { DbRow } from '@platform/supabase';
+
 import { Badge } from '../components/Badge';
 import { JsonViewer } from '../components/JsonViewer';
 import { useSupabase } from '../lib/SupabaseContext';

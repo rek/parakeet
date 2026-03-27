@@ -201,7 +201,10 @@ describe('nextUnendingSession — history-based lift rotation', () => {
   });
 
   it('undefined lastCompletedLift falls back to counter-based', () => {
-    const result = nextUnendingSession({ sessionCounter: 0, trainingDaysPerWeek: 3 });
+    const result = nextUnendingSession({
+      sessionCounter: 0,
+      trainingDaysPerWeek: 3,
+    });
     expect(result.primaryLift).toBe('squat');
   });
 

@@ -1,4 +1,5 @@
 import { Lift } from '@parakeet/shared-types';
+
 import { CATALOG_BY_NAME } from '../auxiliary/exercise-catalog';
 import { MuscleContribution } from '../types';
 

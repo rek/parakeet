@@ -40,7 +40,7 @@ export const ILLNESS_SCRIPT: LifeScript = {
               sleep: 2,
               energy: 1,
               soreness: {
-                ratings: { upper_back: 2, lower_back: 2 },
+                ratings: { upper_back: 3, lower_back: 3 },
               },
             });
           } else {
@@ -124,11 +124,11 @@ export const FATIGUE_ACCUMULATION_SCRIPT: LifeScript = {
               energy: 1,
               soreness: {
                 ratings: {
-                  quads: 3,
-                  hamstrings: 3,
-                  lower_back: 3,
-                  chest: 2,
-                  upper_back: 2,
+                  quads: 6,
+                  hamstrings: 6,
+                  lower_back: 6,
+                  chest: 3,
+                  upper_back: 3,
                 },
               },
             });
@@ -140,9 +140,9 @@ export const FATIGUE_ACCUMULATION_SCRIPT: LifeScript = {
               energy: 2,
               soreness: {
                 ratings: {
-                  quads: 2,
-                  hamstrings: 2,
-                  lower_back: 2,
+                  quads: 3,
+                  hamstrings: 3,
+                  lower_back: 3,
                 },
               },
             });

@@ -1,18 +1,41 @@
-import type { PrescriptionTraceBuilder } from '../prescription-trace';
-import { calculateSets } from '../set-calculator';
 import {
   getPrimaryMusclesForSession,
   getWorstSoreness,
 } from '../../adjustments/soreness-adjuster';
 import type { JITInput } from '../jit-session-generator';
+import type { PrescriptionTraceBuilder } from '../prescription-trace';
+import { calculateSets } from '../set-calculator';
 import type { PipelineContext } from './pipeline-context';
 
-export function initPipeline(input: JITInput, traceBuilder?: PrescriptionTraceBuilder): PipelineContext {
-  const { primaryLift, intensityType, blockNumber, oneRmKg, formulaConfig, sorenessRatings, sessionId } = input;
+export function initPipeline(
+  input: JITInput,
+  traceBuilder?: PrescriptionTraceBuilder
+): PipelineContext {
+  const {
+    primaryLift,
+    intensityType,
+    blockNumber,
+    oneRmKg,
+    formulaConfig,
+    sorenessRatings,
+    sessionId,
+  } = input;
 
-  traceBuilder?.setSessionContext({ sessionId, primaryLift, intensityType, blockNumber, oneRmKg });
+  traceBuilder?.setSessionContext({
+    sessionId,
+    primaryLift,
+    intensityType,
+    blockNumber,
+    oneRmKg,
+  });
 
-  const baseSets = calculateSets(primaryLift, intensityType, blockNumber, oneRmKg, formulaConfig);
+  const baseSets = calculateSets(
+    primaryLift,
+    intensityType,
+    blockNumber,
+    oneRmKg,
+    formulaConfig
+  );
   const baseWeight = baseSets[0]?.weight_kg ?? 0;
 
   if (traceBuilder && baseSets.length > 0) {

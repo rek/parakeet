@@ -1,8 +1,8 @@
 import { LifterMaxesInputSchema } from '@parakeet/shared-types';
 import type { Lift } from '@parakeet/shared-types';
 import { estimateOneRepMax_Epley } from '@parakeet/training-engine';
-import { weightGramsToKg, weightKgToGrams } from '@shared/utils/weight';
 import { typedSupabase } from '@platform/supabase';
+import { weightGramsToKg, weightKgToGrams } from '@shared/utils/weight';
 
 interface LiftInput {
   type: '1rm' | '3rm';

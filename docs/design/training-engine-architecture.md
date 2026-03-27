@@ -14,23 +14,23 @@ The engine operationalises three dimensions of progressive overload. All three m
 
 ### 1. Load (Weight)
 
-Linear load progression works for novices but fails for intermediate lifters within 4–6 weeks. The body habituates to a fixed stimulus faster than connective tissue tolerance can increase (Selye, 1950 — General Adaptation Syndrome; Bompa & Haff, 2009 — *Periodization*). Concurrent periodization (the Cube Method's Heavy/Explosive/Rep rotation) solves this by ensuring the primary lift experiences maximal, sub-maximal, and volume stimuli within every weekly rotation — continued adaptation without strict linear load increase.
+Linear load progression works for novices but fails for intermediate lifters within 4–6 weeks. The body habituates to a fixed stimulus faster than connective tissue tolerance can increase (Selye, 1950 — General Adaptation Syndrome; Bompa & Haff, 2009 — _Periodization_). Concurrent periodization (the Cube Method's Heavy/Explosive/Rep rotation) solves this by ensuring the primary lift experiences maximal, sub-maximal, and volume stimuli within every weekly rotation — continued adaptation without strict linear load increase.
 
-**RPE as load autoregulation:** If actual RPE consistently exceeds the session target, the prescribed load exceeds the lifter's current capacity. The JIT generator uses this signal to adjust intensity. This is consistent with validated autoregulation methods (Helms et al., 2016; Zourdos et al., 2016 — RIR-based RPE scale in *J Strength Cond Res*).
+**RPE as load autoregulation:** If actual RPE consistently exceeds the session target, the prescribed load exceeds the lifter's current capacity. The JIT generator uses this signal to adjust intensity. This is consistent with validated autoregulation methods (Helms et al., 2016; Zourdos et al., 2016 — RIR-based RPE scale in _J Strength Cond Res_).
 
 ### 2. Volume (Sets × Reps)
 
-Volume has a dose-response relationship with adaptation: more weekly sets per muscle group produce greater strength and hypertrophy gains up to the point of overreaching (Schoenfeld et al., 2017 — *J Strength Cond Res* meta-analysis). See [domain/volume-landmarks.md](../domain/volume-landmarks.md) for MEV/MRV defaults per muscle group.
+Volume has a dose-response relationship with adaptation: more weekly sets per muscle group produce greater strength and hypertrophy gains up to the point of overreaching (Schoenfeld et al., 2017 — _J Strength Cond Res_ meta-analysis). See [domain/volume-landmarks.md](../domain/volume-landmarks.md) for MEV/MRV defaults per muscle group.
 
 **Engine assumption:** Volume should build progressively across a block from near-MEV toward MRV, then drop sharply in a deload to clear accumulated fatigue before repeating. MEV/MRV caps in JIT generation are non-negotiable hard gates, not soft hints — violating them undermines the overload model rather than extending it.
 
 ### 3. Time Between Work (Recovery Density)
 
-The most underweighted dimension: *when* a session occurs relative to the previous stimulus determines whether new work hits a muscle during supercompensation or re-accumulates fatigue. Two time signals drive the engine:
+The most underweighted dimension: _when_ a session occurs relative to the previous stimulus determines whether new work hits a muscle during supercompensation or re-accumulates fatigue. Two time signals drive the engine:
 
-**Between sessions:** Skeletal muscle requires 48–72 hours minimum to complete the primary acute recovery response after a demanding session (Kraemer & Ratamess, 2004 — *Med Sci Sports Exerc*; ACSM Position Stand, 2009). Sessions arriving too late (> 7 days since last session of a lift) trigger a conservative intensity modifier — the supercompensation window has passed and the lifter is closer to baseline than to a primed state.
+**Between sessions:** Skeletal muscle requires 48–72 hours minimum to complete the primary acute recovery response after a demanding session (Kraemer & Ratamess, 2004 — _Med Sci Sports Exerc_; ACSM Position Stand, 2009). Sessions arriving too late (> 7 days since last session of a lift) trigger a conservative intensity modifier — the supercompensation window has passed and the lifter is closer to baseline than to a primed state.
 
-**Within sessions (rest intervals):** Rest periods > 2 minutes between sets produce significantly greater strength gains than shorter rest in trained populations (Grgic et al., 2018 — *Sports Med* systematic review). This informs the default rest timer targets (2–3 min for main compound lifts).
+**Within sessions (rest intervals):** Rest periods > 2 minutes between sets produce significantly greater strength gains than shorter rest in trained populations (Grgic et al., 2018 — _Sports Med_ systematic review). This informs the default rest timer targets (2–3 min for main compound lifts).
 
 ### Supercompensation — The Unifying Model
 
@@ -98,37 +98,45 @@ The architecture described here addresses this by separating **what to compute**
 These are all inputs that should inform session generation. The `JITInput` struct carries all of them. New signals are added as optional fields — existing strategies continue working; LLM strategy automatically benefits from new context.
 
 **Session structure (deterministic — drives the Cube Method base calc):**
+
 - `primaryLift` — Squat / Bench / Deadlift
 - `blockNumber` — 1, 2, or 3
 - `intensityType` — Heavy / Explosive / Rep / Deload
 - `weekNumber`
 
 **Current maxes:**
+
 - `oneRmKg` — most recent estimated 1RM for this lift
 
 **Formula config:**
+
 - `formulaConfig` — block × intensity type parameters (Formula strategy uses directly; LLM gets as context)
 
 **Recovery signals:**
-- `sorenessRatings` — per muscle group, 1–5 scale (3 primary muscles per session)
+
+- `sorenessRatings` — per muscle group, 1–10 scale (3 primary muscles per session)
 - `auxiliarySorenessRatings` — per muscle group for aux exercise selection
 - `rpeHistory` — last 6 sessions for this lift (short + medium trend)
 - `daysSinceLastSession` — recency signal; handles missed workout impact
 - `menstrualPhase` — follicular / ovulatory / luteal / late_luteal / menstrual (female users, optional)
 
 **Volume context (9 muscle groups × 3 values each):**
+
 - `weeklyVolumeToDate` — sets accumulated this week per muscle
 - `mrvMevConfig` — thresholds per muscle (sex-differentiated defaults)
 
 **External disruptions:**
+
 - `activeDisruptions` — type, severity, affected lifts, duration
 
 **Configuration:**
+
 - `warmupConfig` — warmup protocol for this lift
 - `activeAuxiliaries` — 2 exercises assigned for this block
 - `biologicalSex` — male / female / unknown (drives MRV/MEV defaults)
 
 **Future signals (optional fields, already in the struct):**
+
 - `sleepHours`, `sleepQuality` — Phase 2
 - `hrvScore` — Long-term
 - `bodyWeightKg` — already collected at cycle start
@@ -139,9 +147,9 @@ Total: ~43 meaningful input values today, extensible without breaking existing s
 
 ```typescript
 interface JITGeneratorStrategy {
-  readonly name: 'formula' | 'llm' | 'hybrid'
-  readonly description: string
-  generate(input: JITInput): Promise<JITOutput>
+  readonly name: 'formula' | 'llm' | 'hybrid';
+  readonly description: string;
+  generate(input: JITInput): Promise<JITOutput>;
 }
 ```
 
@@ -151,13 +159,13 @@ A `JITGeneratorRegistry` reads the active strategy from app settings and calls `
 
 These apply regardless of which strategy runs. They are enforced by a validation layer after the strategy returns its output:
 
-| Constraint | Rule |
-|---|---|
-| MRV cap | If weekly volume ≥ MRV for any primary muscle, skip main lift. Non-negotiable. |
-| Weight floor | Generated weight cannot be < 40% of the formula base weight. Guards against LLM hallucination. |
-| Minimum sets | If main lift is not skipped, minimum 1 working set. |
-| Weight rounding | All weights rounded to nearest 2.5kg. |
-| Warmup | Always formula-generated from working weight. No strategy overrides warmup. |
+| Constraint      | Rule                                                                                           |
+| --------------- | ---------------------------------------------------------------------------------------------- |
+| MRV cap         | If weekly volume ≥ MRV for any primary muscle, skip main lift. Non-negotiable.                 |
+| Weight floor    | Generated weight cannot be < 40% of the formula base weight. Guards against LLM hallucination. |
+| Minimum sets    | If main lift is not skipped, minimum 1 working set.                                            |
+| Weight rounding | All weights rounded to nearest 2.5kg.                                                          |
+| Warmup          | Always formula-generated from working weight. No strategy overrides warmup.                    |
 
 ## Three Strategy Implementations
 
@@ -166,6 +174,7 @@ These apply regardless of which strategy runs. They are enforced by a validation
 The formula engine handles all adjustment reasoning through explicit rules. The current pipeline is corrected to eliminate stacking:
 
 **Precedence rules (applied in priority order, not multiplicatively):**
+
 1. If active disruption: apply disruption protocol. Stop. Do not apply RPE or soreness modifiers on top.
 2. If soreness ≥ 5 (severe): recovery session (40% × 3×5). Stop.
 3. If soreness = 4: apply soreness reduction. Skip RPE modifier (soreness may be causing the RPE pattern).
@@ -173,6 +182,7 @@ The formula engine handles all adjustment reasoning through explicit rules. The 
 5. MRV cap applied last (hard constraint layer).
 
 **Additional inputs handled:**
+
 - `daysSinceLastSession > 7` → apply conservative recency modifier (treat like mild disruption for volume, not intensity)
 - `menstrualPhase === 'late_luteal'` → raise effective soreness tier by 1 for primary muscles (late luteal is physiologically equivalent to mild additional fatigue)
 - Per-muscle `auxiliarySoreness` → selectively skip or reduce aux exercises for high-soreness muscles while keeping others at full volume
@@ -188,18 +198,20 @@ The formula engine handles all adjustment reasoning through explicit rules. The 
 The LLM handles all adjustment reasoning holistically. It receives the full `JITInput` as structured JSON context and returns a `JITAdjustment` struct. The formula engine applies the adjustment to the base calculation and enforces hard constraints.
 
 **What the LLM owns:**
+
 ```typescript
 interface JITAdjustment {
-  intensityModifier: number           // e.g. 0.88 — multiplied against base %
-  setModifier: number                 // e.g. -1 — delta on base set count
-  skipMainLift: boolean
-  auxOverrides: Record<string, 'skip' | 'reduce' | 'normal'>
-  rationale: string[]                 // plain-language, shown to user
-  confidence: 'high' | 'medium' | 'low'
+  intensityModifier: number; // e.g. 0.88 — multiplied against base %
+  setModifier: number; // e.g. -1 — delta on base set count
+  skipMainLift: boolean;
+  auxOverrides: Record<string, 'skip' | 'reduce' | 'normal'>;
+  rationale: string[]; // plain-language, shown to user
+  confidence: 'high' | 'medium' | 'low';
 }
 ```
 
 **What the formula engine always owns (LLM cannot override):**
+
 - Base weight calculation: `Cube % × 1RM`
 - MRV cap (hard constraint validation)
 - Weight rounding
@@ -208,15 +220,23 @@ interface JITAdjustment {
 **Prompt design:** Structured JSON context, not free-form prose. Small payload. System prompt instructs the LLM to output only valid JSON. Output is parsed and validated; parsing failure falls back to Formula strategy.
 
 **Example LLM context:**
+
 ```json
 {
-  "lift": "squat", "block": 2, "intensityType": "Heavy",
-  "oneRmKg": 140, "baseWeightKg": 119, "baseSets": 2, "baseReps": 3,
+  "lift": "squat",
+  "block": 2,
+  "intensityType": "Heavy",
+  "oneRmKg": 140,
+  "baseWeightKg": 119,
+  "baseSets": 2,
+  "baseReps": 3,
   "soreness": { "quads": 3, "glutes": 2, "lower_back": 4 },
-  "rpeLastTwoSessions": [9.6, 9.4], "rpeTarget": 9.0,
+  "rpeLastTwoSessions": [9.6, 9.4],
+  "rpeTarget": 9.0,
   "daysSinceLastSquat": 11,
   "menstrualPhase": "late_luteal",
-  "weeklyQuadSets": 16, "mrvQuads": 20,
+  "weeklyQuadSets": 16,
+  "mrvQuads": 20,
   "activeDisruption": { "type": "injury", "severity": "minor", "lift": "squat" },
   "sleepHours": 5.5,
   "biologicalSex": "female"
@@ -236,6 +256,7 @@ The LLM can reason: "Minor knee injury + high lower back soreness + late luteal 
 Runs both strategies and produces a comparison. Primary use is during the development and tuning phase to empirically discover where the strategies agree and disagree.
 
 **Behaviour:**
+
 1. Formula strategy runs first (fast, local baseline)
 2. LLM strategy runs concurrently
 3. If outputs agree within 10% on intensity and ±0 on set count: use LLM output (better rationale)
@@ -243,6 +264,7 @@ Runs both strategies and produces a comparison. Primary use is during the develo
 5. Both outputs are logged to `jit_comparison_logs` for review
 
 **Divergence example surfaced to user:**
+
 > "Formula suggests 2 sets × 107.5kg (applied soreness + disruption adjustments)
 > LLM suggests 1 set × 95kg (treating injury + luteal phase + sleep deficit as compound signal)
 > Using LLM suggestion. [Switch to formula]"
@@ -252,6 +274,7 @@ Runs both strategies and produces a comparison. Primary use is during the develo
 ## Developer Mode
 
 Settings → Developer → JIT Strategy:
+
 - `auto` (default) — always attempts LLM; uses 5-second timeout + fallback to detect offline rather than proactive network check. `jit_strategy` on the session row records `formula_fallback` when this occurs.
 - `formula` — always Formula
 - `llm` — always LLM
@@ -262,18 +285,21 @@ The `jit_comparison_logs` table in Supabase stores full inputs and outputs from 
 ## Staged Rollout
 
 **v1 — Formula Strategy only**
+
 - Implement `JITGeneratorStrategy` interface and `JITGeneratorRegistry`
 - `FormulaJITGenerator` with stacking fixes, recency factor, per-muscle aux soreness, menstrual phase input
 - Add `jit_strategy` column to `sessions` table
 - All data collection infrastructure built to populate the full `JITInput` struct (even fields not yet used)
 
 **v1.5 — LLM Strategy**
+
 - `LLMJITGenerator` with structured prompt, `JITAdjustment` output, timeout + fallback
 - Default strategy: `auto`
 - Replace rule-based performance adjuster with LLM for post-session suggestions
 - Developer mode with strategy selector
 
 **v2 — Hybrid + Extended Signals**
+
 - `HybridJITGenerator` with comparison UI
 - Add `sleepHours`, `sleepQuality` to `JITInput` (data collection spec required)
 - `jit_comparison_logs` table + 90-day retention
@@ -287,12 +313,11 @@ The `jit_comparison_logs` table in Supabase stores full inputs and outputs from 
 
 - Related Design Docs: [program-generation.md](./program-generation.md), [performance-logging.md](./performance-logging.md), [sex-based-adaptations.md](./sex-based-adaptations.md), [disruption-management.md](./disruption-management.md), [volume-management.md](./volume-management.md), [cycle-review-and-insights.md](./cycle-review-and-insights.md)
 - Specs: [engine-007-jit-session-generator.md](../specs/04-engine/engine-007-jit-session-generator.md), [engine-005-performance-adjuster.md](../specs/04-engine/engine-005-performance-adjuster.md), [engine-011-llm-jit-generator.md](../specs/04-engine/engine-011-llm-jit-generator.md), [engine-023-hybrid-jit-generator.md](../specs/04-engine/engine-023-hybrid-jit-generator.md)
-- Selye, H. (1950) — "Stress and the General Adaptation Syndrome" *BMJ* — supercompensation model
-- Bompa, T. & Haff, G. (2009) — *Periodization: Theory and Methodology of Training* — concurrent periodization, stimulus habituation
-- Kraemer, W.J. & Ratamess, N.A. (2004) — "Fundamentals of Resistance Training" *Med Sci Sports Exerc* — recovery windows, frequency
-- ACSM (2009) — "Position Stand: Progression models in resistance training for healthy adults" *Med Sci Sports Exerc*
-- Schoenfeld, B.J. et al. (2017) — "Dose-response relationship between weekly resistance training volume and increases in muscle mass" *J Strength Cond Res*
-- Helms, E.R. et al. (2016) — "Application of the RIR-Based RPE Scale for Resistance Training" *Strength Cond J*
-- Zourdos, M.C. et al. (2016) — "Novel Resistance Training-Specific RPE Scale Measuring Repetitions in Reserve" *J Strength Cond Res*
-- Grgic, J. et al. (2018) — "Effects of Rest Interval Duration in Resistance Training on Measures of Muscular Strength" *Sports Med*
-
+- Selye, H. (1950) — "Stress and the General Adaptation Syndrome" _BMJ_ — supercompensation model
+- Bompa, T. & Haff, G. (2009) — _Periodization: Theory and Methodology of Training_ — concurrent periodization, stimulus habituation
+- Kraemer, W.J. & Ratamess, N.A. (2004) — "Fundamentals of Resistance Training" _Med Sci Sports Exerc_ — recovery windows, frequency
+- ACSM (2009) — "Position Stand: Progression models in resistance training for healthy adults" _Med Sci Sports Exerc_
+- Schoenfeld, B.J. et al. (2017) — "Dose-response relationship between weekly resistance training volume and increases in muscle mass" _J Strength Cond Res_
+- Helms, E.R. et al. (2016) — "Application of the RIR-Based RPE Scale for Resistance Training" _Strength Cond J_
+- Zourdos, M.C. et al. (2016) — "Novel Resistance Training-Specific RPE Scale Measuring Repetitions in Reserve" _J Strength Cond Res_
+- Grgic, J. et al. (2018) — "Effects of Rest Interval Duration in Resistance Training on Measures of Muscular Strength" _Sports Med_

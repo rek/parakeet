@@ -38,7 +38,13 @@ export function computeVolumeBreakdown({
   muscleMapper: MuscleMapper;
 }) {
   // Map<muscle, Map<source, {rawSets, effectiveSets, contribution}>>
-  const byMuscle = new Map<string, Map<string, { rawSets: number; effectiveSets: number; contribution: number }>>();
+  const byMuscle = new Map<
+    string,
+    Map<
+      string,
+      { rawSets: number; effectiveSets: number; contribution: number }
+    >
+  >();
 
   for (const log of sessionLogs) {
     const muscles = muscleMapper(log.lift, log.exercise);
@@ -46,7 +52,8 @@ export function computeVolumeBreakdown({
       ? log.setRpes.reduce((sum: number, rpe) => sum + rpeSetMultiplier(rpe), 0)
       : log.completedSets;
 
-    const source = log.exercise ?? (log.lift ? capitalize(log.lift) : 'Unknown');
+    const source =
+      log.exercise ?? (log.lift ? capitalize(log.lift) : 'Unknown');
 
     for (const { muscle, contribution } of muscles) {
       let muscleMap = byMuscle.get(muscle);
@@ -73,7 +80,10 @@ export function computeVolumeBreakdown({
     MUSCLE_GROUPS.map((muscle) => {
       const muscleMap = byMuscle.get(muscle);
       if (!muscleMap || muscleMap.size === 0) {
-        return [muscle, { totalVolume: 0, contributions: [] } as MuscleVolumeBreakdown];
+        return [
+          muscle,
+          { totalVolume: 0, contributions: [] } as MuscleVolumeBreakdown,
+        ];
       }
 
       const contributions: ExerciseVolumeContribution[] = [];
@@ -93,7 +103,13 @@ export function computeVolumeBreakdown({
 
       contributions.sort((a, b) => b.volumeAdded - a.volumeAdded);
 
-      return [muscle, { totalVolume: Math.round(rawTotal), contributions } as MuscleVolumeBreakdown];
+      return [
+        muscle,
+        {
+          totalVolume: Math.round(rawTotal),
+          contributions,
+        } as MuscleVolumeBreakdown,
+      ];
     })
   ) as Record<MuscleGroup, MuscleVolumeBreakdown>;
 }

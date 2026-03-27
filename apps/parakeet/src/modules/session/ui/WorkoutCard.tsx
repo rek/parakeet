@@ -8,12 +8,12 @@ import {
   View,
 } from 'react-native';
 
-import { getSession } from '../application/session.service';
 import { formatDate } from '@shared/utils/date';
 
 import { radii, spacing, typography } from '../../../theme';
 import type { ColorScheme } from '../../../theme';
 import { useTheme } from '../../../theme/ThemeContext';
+import { getSession } from '../application/session.service';
 
 // ── Types ────────────────────────────────────────────────────────────────────
 

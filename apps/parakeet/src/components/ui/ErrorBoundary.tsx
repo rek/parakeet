@@ -1,5 +1,6 @@
 import { Component, type ReactNode } from 'react';
 import { ScrollView, Text } from 'react-native';
+
 import { colors as defaultColors } from '../../theme';
 
 export class ErrorBoundary extends Component<

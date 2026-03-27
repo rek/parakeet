@@ -3,15 +3,15 @@ import { useEffect, useState } from 'react';
 import { isEnvAvailable } from '../lib/supabase';
 import { useSupabase } from '../lib/SupabaseContext';
 import { theme } from '../lib/theme';
+import { ChallengeReviews } from './ChallengeReviews';
 import { ComparisonLogs } from './ComparisonLogs';
 import { CycleReviews } from './CycleReviews';
+import { DecisionReplay } from './DecisionReplay';
 import { DeveloperSuggestions } from './DeveloperSuggestions';
 import { FormulaSuggestions } from './FormulaSuggestions';
 import { JITLogs } from './JITLogs';
 import { Logs } from './Logs';
 import { MotivationalLogs } from './MotivationalLogs';
-import { ChallengeReviews } from './ChallengeReviews';
-import { DecisionReplay } from './DecisionReplay';
 import { WorkoutSummaries } from './WorkoutSummaries';
 
 type ThemeId = 'default' | 'hot-pink';

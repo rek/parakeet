@@ -85,7 +85,7 @@ export const ADHERENT_FEMALE: LifeScript = {
             soreness:
               dayInCycle > 21
                 ? {
-                    ratings: { glutes: 2, hamstrings: 2, lower_back: 2 },
+                    ratings: { glutes: 3, hamstrings: 3, lower_back: 3 },
                   }
                 : undefined,
           });
@@ -123,15 +123,15 @@ export const INJURED_SCRIPT: LifeScript = {
     // Week 5: still disrupted but training through it
     [4 * 7]: {
       type: 'train',
-      soreness: { ratings: { quads: 3, glutes: 2 } },
+      soreness: { ratings: { quads: 6, glutes: 3 } },
     },
     [4 * 7 + 2]: {
       type: 'train',
-      soreness: { ratings: { quads: 3 } },
+      soreness: { ratings: { quads: 6 } },
     },
     [4 * 7 + 4]: {
       type: 'train',
-      soreness: { ratings: { quads: 2 } },
+      soreness: { ratings: { quads: 3 } },
     },
   }),
 };
@@ -211,7 +211,7 @@ export const STABLE_FEMALE: LifeScript = {
             soreness:
               dayInCycle > 23
                 ? {
-                    ratings: { glutes: 2, lower_back: 2 },
+                    ratings: { glutes: 3, lower_back: 3 },
                   }
                 : undefined,
           });

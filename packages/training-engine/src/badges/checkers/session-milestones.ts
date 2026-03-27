@@ -1,9 +1,7 @@
 import type { BadgeCheckContext, BadgeId } from '../badge-types';
 
 /** Check session milestone badges. */
-export function checkSessionMilestoneBadges(
-  ctx: BadgeCheckContext
-): BadgeId[] {
+export function checkSessionMilestoneBadges(ctx: BadgeCheckContext): BadgeId[] {
   const earned: BadgeId[] = [];
 
   // #39 First Blood — very first session

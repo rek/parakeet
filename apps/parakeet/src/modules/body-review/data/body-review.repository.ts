@@ -1,12 +1,11 @@
 import type { Lift } from '@parakeet/shared-types';
-import { LiftSchema } from '@parakeet/shared-types';
+import { LiftSchema, MUSCLE_GROUPS } from '@parakeet/shared-types';
 import type {
   FatigueLevel,
   FatigueMismatch,
   MuscleGroup,
   PredictedFatigue,
 } from '@parakeet/training-engine';
-import { MUSCLE_GROUPS } from '@parakeet/shared-types';
 import {
   getMusclesForExercise,
   getMusclesForLift,

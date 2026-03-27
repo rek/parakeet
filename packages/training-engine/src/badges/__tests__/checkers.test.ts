@@ -1,5 +1,9 @@
 import { describe, expect, it } from 'vitest';
 
+// ── detectStreakBreakAndRebuild (pure function) ─────────────────────────────
+
+import { detectStreakBreakAndRebuild } from '../../achievements/pr-detection';
+import type { WeekStatus } from '../../achievements/pr-detection';
 import type {
   BadgeActualSet,
   BadgeCheckContext,
@@ -43,7 +47,9 @@ function makePlannedSet(
   };
 }
 
-function makeCtx(overrides: Partial<BadgeCheckContext> = {}): BadgeCheckContext {
+function makeCtx(
+  overrides: Partial<BadgeCheckContext> = {}
+): BadgeCheckContext {
   return {
     sessionId: 'session-001',
     actualSets: [],
@@ -110,7 +116,11 @@ describe('checkPerformanceBadges', () => {
     it('earns badge when volume is exactly 10,000 kg', () => {
       // 10 sets × 200 kg × 5 reps = 10,000 kg
       const sets = Array.from({ length: 10 }, (_, i) =>
-        makeActualSet({ set_number: i + 1, weight_grams: 200_000, reps_completed: 5 })
+        makeActualSet({
+          set_number: i + 1,
+          weight_grams: 200_000,
+          reps_completed: 5,
+        })
       );
       const ctx = makeCtx({ actualSets: sets });
       expect(checkPerformanceBadges(ctx)).toContain('the_tonne');
@@ -119,7 +129,11 @@ describe('checkPerformanceBadges', () => {
     it('earns badge when volume exceeds 10,000 kg', () => {
       // 5 sets × 300 kg × 8 reps = 12,000 kg
       const sets = Array.from({ length: 5 }, (_, i) =>
-        makeActualSet({ set_number: i + 1, weight_grams: 300_000, reps_completed: 8 })
+        makeActualSet({
+          set_number: i + 1,
+          weight_grams: 300_000,
+          reps_completed: 8,
+        })
       );
       const ctx = makeCtx({ actualSets: sets });
       expect(checkPerformanceBadges(ctx)).toContain('the_tonne');
@@ -128,7 +142,11 @@ describe('checkPerformanceBadges', () => {
     it('does not earn badge when volume is just under 10,000 kg', () => {
       // 9 sets × 200 kg × 5 reps = 9,000 kg
       const sets = Array.from({ length: 9 }, (_, i) =>
-        makeActualSet({ set_number: i + 1, weight_grams: 200_000, reps_completed: 5 })
+        makeActualSet({
+          set_number: i + 1,
+          weight_grams: 200_000,
+          reps_completed: 5,
+        })
       );
       const ctx = makeCtx({ actualSets: sets });
       expect(checkPerformanceBadges(ctx)).not.toContain('the_tonne');
@@ -198,7 +216,9 @@ describe('checkPerformanceBadges', () => {
         bodyweightKg: 100,
         allLiftE1RMs: { squat: 80, bench: 60, deadlift: 95 },
       });
-      expect(checkPerformanceBadges(ctx)).not.toContain('gravity_meet_your_match');
+      expect(checkPerformanceBadges(ctx)).not.toContain(
+        'gravity_meet_your_match'
+      );
     });
 
     it('does not earn badge when bodyweightKg is null', () => {
@@ -206,7 +226,9 @@ describe('checkPerformanceBadges', () => {
         bodyweightKg: null,
         allLiftE1RMs: { squat: 200 },
       });
-      expect(checkPerformanceBadges(ctx)).not.toContain('gravity_meet_your_match');
+      expect(checkPerformanceBadges(ctx)).not.toContain(
+        'gravity_meet_your_match'
+      );
     });
   });
 
@@ -216,7 +238,9 @@ describe('checkPerformanceBadges', () => {
         bodyweightKg: 80,
         allLiftE1RMs: { deadlift: 165 },
       });
-      expect(checkPerformanceBadges(ctx)).toContain('sir_isaacs_worst_nightmare');
+      expect(checkPerformanceBadges(ctx)).toContain(
+        'sir_isaacs_worst_nightmare'
+      );
     });
 
     it('does not earn when e1RM is exactly 2× bodyweight (not strictly greater)', () => {
@@ -224,7 +248,9 @@ describe('checkPerformanceBadges', () => {
         bodyweightKg: 80,
         allLiftE1RMs: { deadlift: 160 },
       });
-      expect(checkPerformanceBadges(ctx)).not.toContain('sir_isaacs_worst_nightmare');
+      expect(checkPerformanceBadges(ctx)).not.toContain(
+        'sir_isaacs_worst_nightmare'
+      );
     });
 
     it('does not earn when best lift is 1.9× bodyweight', () => {
@@ -232,7 +258,9 @@ describe('checkPerformanceBadges', () => {
         bodyweightKg: 100,
         allLiftE1RMs: { squat: 190 },
       });
-      expect(checkPerformanceBadges(ctx)).not.toContain('sir_isaacs_worst_nightmare');
+      expect(checkPerformanceBadges(ctx)).not.toContain(
+        'sir_isaacs_worst_nightmare'
+      );
     });
   });
 
@@ -388,7 +416,10 @@ describe('checkSituationalBadges', () => {
 
   describe('didnt_want_to_be_here — poor sleep + low energy + 100% completion', () => {
     it('earns badge with sleep=1, energy=1, and all sets completed', () => {
-      const planned = [makePlannedSet({ set_number: 1 }), makePlannedSet({ set_number: 2 })];
+      const planned = [
+        makePlannedSet({ set_number: 1 }),
+        makePlannedSet({ set_number: 2 }),
+      ];
       const actual = [
         makeActualSet({ set_number: 1, is_completed: true }),
         makeActualSet({ set_number: 2, is_completed: true }),
@@ -409,7 +440,9 @@ describe('checkSituationalBadges', () => {
         plannedSets: [makePlannedSet()],
         actualSets: [makeActualSet()],
       });
-      expect(checkSituationalBadges(ctx)).not.toContain('didnt_want_to_be_here');
+      expect(checkSituationalBadges(ctx)).not.toContain(
+        'didnt_want_to_be_here'
+      );
     });
 
     it('does not earn badge when energy is 2', () => {
@@ -419,11 +452,16 @@ describe('checkSituationalBadges', () => {
         plannedSets: [makePlannedSet()],
         actualSets: [makeActualSet()],
       });
-      expect(checkSituationalBadges(ctx)).not.toContain('didnt_want_to_be_here');
+      expect(checkSituationalBadges(ctx)).not.toContain(
+        'didnt_want_to_be_here'
+      );
     });
 
     it('does not earn badge when some sets are incomplete', () => {
-      const planned = [makePlannedSet({ set_number: 1 }), makePlannedSet({ set_number: 2 })];
+      const planned = [
+        makePlannedSet({ set_number: 1 }),
+        makePlannedSet({ set_number: 2 }),
+      ];
       const actual = [
         makeActualSet({ set_number: 1, is_completed: true }),
         makeActualSet({ set_number: 2, is_completed: false }),
@@ -434,7 +472,9 @@ describe('checkSituationalBadges', () => {
         plannedSets: planned,
         actualSets: actual,
       });
-      expect(checkSituationalBadges(ctx)).not.toContain('didnt_want_to_be_here');
+      expect(checkSituationalBadges(ctx)).not.toContain(
+        'didnt_want_to_be_here'
+      );
     });
 
     it('does not earn badge when plannedSets is empty', () => {
@@ -444,7 +484,9 @@ describe('checkSituationalBadges', () => {
         plannedSets: [],
         actualSets: [makeActualSet()],
       });
-      expect(checkSituationalBadges(ctx)).not.toContain('didnt_want_to_be_here');
+      expect(checkSituationalBadges(ctx)).not.toContain(
+        'didnt_want_to_be_here'
+      );
     });
   });
 
@@ -486,9 +528,21 @@ describe('checkSituationalBadges', () => {
         makePlannedSet({ set_number: 3, reps: 5 }),
       ];
       const actual = [
-        makeActualSet({ set_number: 1, reps_completed: 8, is_completed: false }),
-        makeActualSet({ set_number: 2, reps_completed: 8, is_completed: false }),
-        makeActualSet({ set_number: 3, reps_completed: 8, is_completed: false }),
+        makeActualSet({
+          set_number: 1,
+          reps_completed: 8,
+          is_completed: false,
+        }),
+        makeActualSet({
+          set_number: 2,
+          reps_completed: 8,
+          is_completed: false,
+        }),
+        makeActualSet({
+          set_number: 3,
+          reps_completed: 8,
+          is_completed: false,
+        }),
       ];
       const ctx = makeCtx({ actualSets: actual, plannedSets: planned });
       expect(checkSituationalBadges(ctx)).not.toContain('one_more_rep');
@@ -533,7 +587,9 @@ describe('checkSituationalBadges', () => {
       ];
       const ctx = makeCtx({
         actualSets: sets,
-        earnedPRs: [{ type: 'rep_at_weight', lift: 'squat', value: 8, weightKg: 140 }],
+        earnedPRs: [
+          { type: 'rep_at_weight', lift: 'squat', value: 8, weightKg: 140 },
+        ],
       });
       expect(checkSituationalBadges(ctx)).toContain('sandbagger');
     });
@@ -545,7 +601,9 @@ describe('checkSituationalBadges', () => {
       ];
       const ctx = makeCtx({
         actualSets: sets,
-        earnedPRs: [{ type: 'rep_at_weight', lift: 'squat', value: 8, weightKg: 140 }],
+        earnedPRs: [
+          { type: 'rep_at_weight', lift: 'squat', value: 8, weightKg: 140 },
+        ],
       });
       expect(checkSituationalBadges(ctx)).not.toContain('sandbagger');
     });
@@ -553,11 +611,17 @@ describe('checkSituationalBadges', () => {
     it('does not earn badge when final set is incomplete', () => {
       const sets = [
         makeActualSet({ set_number: 1, weight_grams: 100_000 }),
-        makeActualSet({ set_number: 2, weight_grams: 140_000, is_completed: false }),
+        makeActualSet({
+          set_number: 2,
+          weight_grams: 140_000,
+          is_completed: false,
+        }),
       ];
       const ctx = makeCtx({
         actualSets: sets,
-        earnedPRs: [{ type: 'rep_at_weight', lift: 'squat', value: 8, weightKg: 140 }],
+        earnedPRs: [
+          { type: 'rep_at_weight', lift: 'squat', value: 8, weightKg: 140 },
+        ],
       });
       expect(checkSituationalBadges(ctx)).not.toContain('sandbagger');
     });
@@ -565,7 +629,9 @@ describe('checkSituationalBadges', () => {
 
   describe('bad_day_survivor — 50%+ completion with active major disruption', () => {
     it('earns badge when disruption is active and 50% sets completed', () => {
-      const planned = Array.from({ length: 4 }, (_, i) => makePlannedSet({ set_number: i + 1 }));
+      const planned = Array.from({ length: 4 }, (_, i) =>
+        makePlannedSet({ set_number: i + 1 })
+      );
       const actual = [
         makeActualSet({ set_number: 1, is_completed: true }),
         makeActualSet({ set_number: 2, is_completed: true }),
@@ -581,7 +647,9 @@ describe('checkSituationalBadges', () => {
     });
 
     it('does not earn badge when completion is below 50%', () => {
-      const planned = Array.from({ length: 4 }, (_, i) => makePlannedSet({ set_number: i + 1 }));
+      const planned = Array.from({ length: 4 }, (_, i) =>
+        makePlannedSet({ set_number: i + 1 })
+      );
       const actual = [
         makeActualSet({ set_number: 1, is_completed: true }),
         makeActualSet({ set_number: 2, is_completed: false }),
@@ -833,7 +901,11 @@ describe('checkVolumeRepBadges', () => {
 
     it('returns empty when no sets are completed', () => {
       const sets = Array.from({ length: 5 }, (_, i) =>
-        makeActualSet({ set_number: i + 1, reps_completed: 20, is_completed: false })
+        makeActualSet({
+          set_number: i + 1,
+          reps_completed: 20,
+          is_completed: false,
+        })
       );
       const ctx = makeCtx({ actualSets: sets, primaryLift: 'squat' });
       expect(checkVolumeRepBadges(ctx)).toEqual([]);
@@ -936,7 +1008,9 @@ describe('checkSessionMilestoneBadges', () => {
 
     it('does not earn badge at 499 sessions', () => {
       const ctx = makeCtx({ totalCompletedSessions: 499 });
-      expect(checkSessionMilestoneBadges(ctx)).not.toContain('five_hundred_club');
+      expect(checkSessionMilestoneBadges(ctx)).not.toContain(
+        'five_hundred_club'
+      );
     });
 
     it('earns both century_club and five_hundred_club at 500', () => {
@@ -1091,7 +1165,9 @@ describe('checkLiftIdentityBadges', () => {
       const ctx = makeCtx({
         allLiftE1RMs: { squat: 105, bench: 100, deadlift: 110 },
       });
-      expect(checkLiftIdentityBadges(ctx)).toContain('equal_opportunity_lifter');
+      expect(checkLiftIdentityBadges(ctx)).toContain(
+        'equal_opportunity_lifter'
+      );
     });
 
     it('earns badge at exactly 15% spread', () => {
@@ -1099,7 +1175,9 @@ describe('checkLiftIdentityBadges', () => {
       const ctx = makeCtx({
         allLiftE1RMs: { squat: 107, bench: 100, deadlift: 115 },
       });
-      expect(checkLiftIdentityBadges(ctx)).toContain('equal_opportunity_lifter');
+      expect(checkLiftIdentityBadges(ctx)).toContain(
+        'equal_opportunity_lifter'
+      );
     });
 
     it('does not earn badge when spread exceeds 15%', () => {
@@ -1107,7 +1185,9 @@ describe('checkLiftIdentityBadges', () => {
       const ctx = makeCtx({
         allLiftE1RMs: { squat: 110, bench: 100, deadlift: 120 },
       });
-      expect(checkLiftIdentityBadges(ctx)).not.toContain('equal_opportunity_lifter');
+      expect(checkLiftIdentityBadges(ctx)).not.toContain(
+        'equal_opportunity_lifter'
+      );
     });
   });
 
@@ -1346,33 +1426,45 @@ describe('checkProgramLoyaltyBadges', () => {
   describe('shiny_object_syndrome — 3+ formula changes in one cycle', () => {
     it('earns badge with exactly 3 formula changes', () => {
       const data = makeProgramLoyaltyData({ formulaChangesThisCycle: 3 });
-      expect(checkProgramLoyaltyBadges(data)).toContain('shiny_object_syndrome');
+      expect(checkProgramLoyaltyBadges(data)).toContain(
+        'shiny_object_syndrome'
+      );
     });
 
     it('earns badge with more than 3 formula changes', () => {
       const data = makeProgramLoyaltyData({ formulaChangesThisCycle: 5 });
-      expect(checkProgramLoyaltyBadges(data)).toContain('shiny_object_syndrome');
+      expect(checkProgramLoyaltyBadges(data)).toContain(
+        'shiny_object_syndrome'
+      );
     });
 
     it('does not earn badge with 2 formula changes', () => {
       const data = makeProgramLoyaltyData({ formulaChangesThisCycle: 2 });
-      expect(checkProgramLoyaltyBadges(data)).not.toContain('shiny_object_syndrome');
+      expect(checkProgramLoyaltyBadges(data)).not.toContain(
+        'shiny_object_syndrome'
+      );
     });
   });
 
   describe('deload_denier — 3 consecutive cycles without deload', () => {
     it('earns badge at exactly 3 cycles without deload', () => {
-      const data = makeProgramLoyaltyData({ consecutiveCyclesWithoutDeload: 3 });
+      const data = makeProgramLoyaltyData({
+        consecutiveCyclesWithoutDeload: 3,
+      });
       expect(checkProgramLoyaltyBadges(data)).toContain('deload_denier');
     });
 
     it('earns badge above 3 cycles without deload', () => {
-      const data = makeProgramLoyaltyData({ consecutiveCyclesWithoutDeload: 6 });
+      const data = makeProgramLoyaltyData({
+        consecutiveCyclesWithoutDeload: 6,
+      });
       expect(checkProgramLoyaltyBadges(data)).toContain('deload_denier');
     });
 
     it('does not earn badge at 2 cycles without deload', () => {
-      const data = makeProgramLoyaltyData({ consecutiveCyclesWithoutDeload: 2 });
+      const data = makeProgramLoyaltyData({
+        consecutiveCyclesWithoutDeload: 2,
+      });
       expect(checkProgramLoyaltyBadges(data)).not.toContain('deload_denier');
     });
   });
@@ -1454,11 +1546,6 @@ describe('the_streak_breaker — broke 8+ streak then rebuilt to 8+', () => {
     expect(checkWildRareBadges(ctx)).not.toContain('the_streak_breaker');
   });
 });
-
-// ── detectStreakBreakAndRebuild (pure function) ─────────────────────────────
-
-import { detectStreakBreakAndRebuild } from '../../achievements/pr-detection';
-import type { WeekStatus } from '../../achievements/pr-detection';
 
 function makeWeek(overrides: Partial<WeekStatus> = {}): WeekStatus {
   return {

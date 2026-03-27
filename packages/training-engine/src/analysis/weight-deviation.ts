@@ -7,7 +7,7 @@ import { roundToNearest } from '../formulas/weight-rounding';
 const MIN_RPE = 7;
 const MIN_REPS = 1;
 const MAX_REPS = 20;
-const MAX_CAP_PCT = 1.10;
+const MAX_CAP_PCT = 1.1;
 const MIN_FLOOR_PCT = 0.85;
 const MIN_SESSIONS_MEDIUM = 3;
 const MIN_SESSIONS_HIGH = 5;
@@ -21,9 +21,9 @@ export interface ActualSetKg {
 
 export interface WeightDeviationSummary {
   plannedWeightKg: number;
-  actualMaxWeightKg: number;      // heaviest completed set (with reps > 0)
-  deviationKg: number;            // actual - planned (signed)
-  deviationPct: number;           // deviationKg / plannedWeightKg
+  actualMaxWeightKg: number; // heaviest completed set (with reps > 0)
+  deviationKg: number; // actual - planned (signed)
+  deviationPct: number; // deviationKg / plannedWeightKg
   estimatedOneRmKg: number | null; // Epley from best qualifying set
 }
 
@@ -66,7 +66,9 @@ export function computeWeightDeviation({
 
   let estimatedOneRmKg: number | null = null;
   if (qualifyingSets.length > 0) {
-    const estimates = qualifyingSets.map((s) => estimateOneRepMax_Epley(s.weightKg, s.reps));
+    const estimates = qualifyingSets.map((s) =>
+      estimateOneRepMax_Epley(s.weightKg, s.reps)
+    );
     estimatedOneRmKg = Math.max(...estimates);
   }
 
@@ -109,8 +111,14 @@ export function computeWorkingOneRm({
   const floored = Math.max(capped, storedOneRmKg * MIN_FLOOR_PCT);
   const workingOneRmKg = roundToNearest(floored);
 
-  const confidence = qualifying.length >= MIN_SESSIONS_HIGH ? 'high' as const : 'medium' as const;
-  const source = workingOneRmKg !== storedOneRmKg ? 'working' as const : 'stored' as const;
+  const confidence =
+    qualifying.length >= MIN_SESSIONS_HIGH
+      ? ('high' as const)
+      : ('medium' as const);
+  const source =
+    workingOneRmKg !== storedOneRmKg
+      ? ('working' as const)
+      : ('stored' as const);
 
   return { workingOneRmKg, confidence, source };
 }

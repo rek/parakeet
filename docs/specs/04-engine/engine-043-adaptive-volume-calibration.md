@@ -18,12 +18,11 @@ Design doc: [adaptive-volume.md](../../design/adaptive-volume.md)
 **File: `packages/training-engine/src/adjustments/soreness-adjuster.ts`**
 
 - [x] Expand `SORENESS_TABLE` to map 10 levels instead of 5
-  - 1-2: no change (fresh)
-  - 3-4: no change (mild)
+  - 1-4: no change (fresh)
   - 5-6: -1 set (moderate)
   - 7-8: -2 sets (male) / -1 set (female), intensity reduction (high)
   - 9-10: recovery mode (severe)
-- [x] Backwards-compatible: if input is 1-5, multiply by 2 for legacy callers
+- [x] Direct 1-10 scale (no legacy normalisation — `normalise()` removed)
 
 **File: `apps/parakeet/src/app/(tabs)/session/soreness.tsx`**
 
@@ -60,8 +59,8 @@ Design doc: [adaptive-volume.md](../../design/adaptive-volume.md)
 
 ### Tests
 
-- [ ] Soreness adjuster: 10-level mapping produces correct modifiers at each level
-- [ ] Soreness adjuster: legacy 1-5 input backwards-compatible
+- [x] Soreness adjuster: 10-level mapping produces correct modifiers at each level
+- [x] Soreness adjuster: monotonicity invariant (higher levels never produce less adjustment)
 - [ ] Readiness adjuster: 5×5 matrix with boost at (4,4), (4,5), (5,4), (5,5)
 - [ ] Capacity assessment: stored and retrievable from session logs
 
@@ -80,14 +79,14 @@ Design doc: [adaptive-volume.md](../../design/adaptive-volume.md)
 
 **Decision logic** (see [domain/adjustments.md](../../domain/adjustments.md#volume-increase-triggers)):
 
-| Condition | Modifier |
-|-----------|----------|
-| RPE avg gap >= 1.5 below AND soreness low AND readiness high | +2 |
-| RPE avg gap >= 1.0 below AND no negative signals | +1 |
-| Capacity trend >= 3.0 ("had more in me" avg) | +1 |
-| Weekly mismatch: "recovering well" for primary muscles | +1 |
-| RPE avg gap >= 1.0 above target | -1 |
-| Cap: MRV constraint after calibration | clamp to remaining MRV capacity |
+| Condition                                                    | Modifier                        |
+| ------------------------------------------------------------ | ------------------------------- |
+| RPE avg gap >= 1.5 below AND soreness low AND readiness high | +2                              |
+| RPE avg gap >= 1.0 below AND no negative signals             | +1                              |
+| Capacity trend >= 3.0 ("had more in me" avg)                 | +1                              |
+| Weekly mismatch: "recovering well" for primary muscles       | +1                              |
+| RPE avg gap >= 1.0 above target                              | -1                              |
+| Cap: MRV constraint after calibration                        | clamp to remaining MRV capacity |
 
 - [x] Modifiers are additive but capped: max +3, min -2
 - [x] Record calibration decision in prescription trace

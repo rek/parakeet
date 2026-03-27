@@ -67,7 +67,50 @@ function reduceWeight(
 }
 
 // ---------------------------------------------------------------------------
-// Core function
+// Auxiliary adaptation
+// ---------------------------------------------------------------------------
+
+export interface AuxAdaptedPlan {
+  exercise: string;
+  sets: PlannedSet[];
+  adaptationType: 'none' | 'weight_reduced';
+  rationale: string;
+}
+
+/**
+ * Adapts remaining auxiliary sets after a failure. Simpler than main lift
+ * adaptation: immediate 10% weight reduction (no extended-rest tier, no 1RM
+ * floor — aux exercises don't have a tracked 1RM). Floor is 50% of the failed
+ * set weight to prevent absurdly light prescriptions.
+ */
+export function adaptAuxRemainingPlan(ctx: {
+  exercise: string;
+  failedWeightKg: number;
+  remainingSets: PlannedSet[];
+}): AuxAdaptedPlan {
+  if (ctx.remainingSets.length === 0) {
+    return {
+      exercise: ctx.exercise,
+      sets: [],
+      adaptationType: 'none',
+      rationale: '',
+    };
+  }
+
+  const floor = roundToNearest2_5(ctx.failedWeightKg * 0.5);
+  return {
+    exercise: ctx.exercise,
+    sets: ctx.remainingSets.map((s) => {
+      const reduced = roundToNearest2_5(s.weight_kg * 0.9);
+      return { ...s, weight_kg: Math.max(reduced, floor) };
+    }),
+    adaptationType: 'weight_reduced',
+    rationale: 'Weight reduced 10% — adapting after failed set',
+  };
+}
+
+// ---------------------------------------------------------------------------
+// Main lift adaptation
 // ---------------------------------------------------------------------------
 
 /**

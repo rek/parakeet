@@ -28,18 +28,16 @@ export async function scoreDecisionReplayAsync(
     blockNumber: session.block_number ?? null,
   });
 
-  const { error } = await typedSupabase
-    .from('decision_replay_logs')
-    .insert([
-      {
-        user_id: userId,
-        session_id: sessionId,
-        prescription_score: replay.prescriptionScore,
-        rpe_accuracy: replay.rpeAccuracy,
-        volume_appropriateness: replay.volumeAppropriateness,
-        insights: toJson(replay.insights),
-      },
-    ]);
+  const { error } = await typedSupabase.from('decision_replay_logs').insert([
+    {
+      user_id: userId,
+      session_id: sessionId,
+      prescription_score: replay.prescriptionScore,
+      rpe_accuracy: replay.rpeAccuracy,
+      volume_appropriateness: replay.volumeAppropriateness,
+      insights: toJson(replay.insights),
+    },
+  ]);
 
   if (error) throw error;
 }

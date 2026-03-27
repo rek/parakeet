@@ -220,8 +220,7 @@ export const BADGE_CATALOG: Record<BadgeId, BadgeDef> = {
     name: 'The Specialist',
     description:
       "One lift's estimated 1RM is 40%+ higher than your weakest lift's 1RM",
-    flavor:
-      'You found your calling. The other lifts found your weakness.',
+    flavor: 'You found your calling. The other lifts found your weakness.',
     emoji: '🔬',
     category: 'lift_identity',
   },
@@ -278,16 +277,14 @@ export const BADGE_CATALOG: Record<BadgeId, BadgeDef> = {
     id: 'sandbag_detected',
     name: 'Sandbag Detected',
     description: 'Log RPE 6 or below on every set of a session',
-    flavor:
-      "Either you're sandbagging or this was a deload. We're watching.",
+    flavor: "Either you're sandbagging or this was a deload. We're watching.",
     emoji: '🏖️',
     category: 'rpe_effort',
   },
   send_it: {
     id: 'send_it',
     name: 'Send It',
-    description:
-      "Log RPE 10 on any set that wasn't the last set of the day",
+    description: "Log RPE 10 on any set that wasn't the last set of the day",
     flavor:
       "You went there. And you still had sets left. Brave or reckless — we'll never tell.",
     emoji: '🚀',
@@ -307,16 +304,14 @@ export const BADGE_CATALOG: Record<BadgeId, BadgeDef> = {
     id: 'shiny_object_syndrome',
     name: 'Shiny Object Syndrome',
     description: 'Change program formula 3+ times within a single cycle',
-    flavor:
-      'The best program is the one you actually finish. Just saying.',
+    flavor: 'The best program is the one you actually finish. Just saying.',
     emoji: '✨',
     category: 'program_loyalty',
   },
   deload_denier: {
     id: 'deload_denier',
     name: 'Deload Denier',
-    description:
-      'Complete 3 consecutive cycles without a single deload week',
+    description: 'Complete 3 consecutive cycles without a single deload week',
     flavor: 'Rest is for the weak. (Please deload.)',
     emoji: '🙅',
     category: 'program_loyalty',
@@ -399,8 +394,7 @@ export const BADGE_CATALOG: Record<BadgeId, BadgeDef> = {
   marathon_lifter: {
     id: 'marathon_lifter',
     name: 'Marathon Lifter',
-    description:
-      'A session lasts longer than 2 hours (first set to last set)',
+    description: 'A session lasts longer than 2 hours (first set to last set)',
     flavor: 'You live here now',
     emoji: '🏕️',
     category: 'wild_rare',
@@ -408,8 +402,7 @@ export const BADGE_CATALOG: Record<BadgeId, BadgeDef> = {
   the_streak_breaker: {
     id: 'the_streak_breaker',
     name: 'The Streak Breaker',
-    description:
-      'Break a streak of 8+ weeks, then rebuild it back to 8+ weeks',
+    description: 'Break a streak of 8+ weeks, then rebuild it back to 8+ weeks',
     flavor: "Proof that falling off the wagon isn't the end",
     emoji: '🔗',
     category: 'wild_rare',

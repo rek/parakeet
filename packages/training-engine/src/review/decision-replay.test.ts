@@ -16,11 +16,20 @@ const mockGenerateText = generateText as ReturnType<typeof vi.fn>;
 // Fixtures
 // ---------------------------------------------------------------------------
 
-function makeContext(overrides: Partial<DecisionReplayContext> = {}): DecisionReplayContext {
+function makeContext(
+  overrides: Partial<DecisionReplayContext> = {}
+): DecisionReplayContext {
   return {
     jitInputSnapshot: { sessionId: 's-1', primaryLift: 'squat' } as never,
     plannedSets: [{ set_number: 1, weight_grams: 120000, reps: 5 }],
-    actualSets: [{ set_number: 1, weight_grams: 120000, reps_completed: 5, rpe_actual: 8.5 }],
+    actualSets: [
+      {
+        set_number: 1,
+        weight_grams: 120000,
+        reps_completed: 5,
+        rpe_actual: 8.5,
+      },
+    ],
     auxiliarySets: [],
     sessionRpe: 8.5,
     lift: 'squat',
@@ -48,7 +57,10 @@ describe('scoreDecisionReplay', () => {
   beforeEach(() => vi.clearAllMocks());
 
   it('returns the LLM replay result on success', async () => {
-    const fakeReplay = makeReplay({ prescriptionScore: 75, volumeAppropriateness: 'too_much' });
+    const fakeReplay = makeReplay({
+      prescriptionScore: 75,
+      volumeAppropriateness: 'too_much',
+    });
     mockGenerateText.mockResolvedValueOnce({ output: fakeReplay });
 
     const result = await scoreDecisionReplay(makeContext());
@@ -105,18 +117,29 @@ describe('DecisionReplaySchema', () => {
   });
 
   it('rejects prescriptionScore outside 0-100', () => {
-    expect(() => DecisionReplaySchema.parse(makeReplay({ prescriptionScore: -1 }))).toThrow();
-    expect(() => DecisionReplaySchema.parse(makeReplay({ prescriptionScore: 101 }))).toThrow();
+    expect(() =>
+      DecisionReplaySchema.parse(makeReplay({ prescriptionScore: -1 }))
+    ).toThrow();
+    expect(() =>
+      DecisionReplaySchema.parse(makeReplay({ prescriptionScore: 101 }))
+    ).toThrow();
   });
 
   it('rejects rpeAccuracy outside 0-100', () => {
-    expect(() => DecisionReplaySchema.parse(makeReplay({ rpeAccuracy: -5 }))).toThrow();
-    expect(() => DecisionReplaySchema.parse(makeReplay({ rpeAccuracy: 150 }))).toThrow();
+    expect(() =>
+      DecisionReplaySchema.parse(makeReplay({ rpeAccuracy: -5 }))
+    ).toThrow();
+    expect(() =>
+      DecisionReplaySchema.parse(makeReplay({ rpeAccuracy: 150 }))
+    ).toThrow();
   });
 
   it('rejects invalid volumeAppropriateness', () => {
     expect(() =>
-      DecisionReplaySchema.parse({ ...makeReplay(), volumeAppropriateness: 'perfect' })
+      DecisionReplaySchema.parse({
+        ...makeReplay(),
+        volumeAppropriateness: 'perfect',
+      })
     ).toThrow();
   });
 
@@ -130,7 +153,9 @@ describe('DecisionReplaySchema', () => {
 
   it('rejects more than 5 insights', () => {
     expect(() =>
-      DecisionReplaySchema.parse(makeReplay({ insights: ['a', 'b', 'c', 'd', 'e', 'f'] }))
+      DecisionReplaySchema.parse(
+        makeReplay({ insights: ['a', 'b', 'c', 'd', 'e', 'f'] })
+      )
     ).toThrow();
   });
 

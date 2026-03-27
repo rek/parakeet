@@ -11,9 +11,7 @@ export interface ProgramLoyaltyData {
 }
 
 /** Check program & cycle loyalty badges. */
-export function checkProgramLoyaltyBadges(
-  data: ProgramLoyaltyData
-): BadgeId[] {
+export function checkProgramLoyaltyBadges(data: ProgramLoyaltyData): BadgeId[] {
   const earned: BadgeId[] = [];
 
   // #33 Old Faithful — same formula for 3+ consecutive cycles

@@ -3,7 +3,10 @@ import { Lift } from '@parakeet/shared-types';
 import { ReadinessLevel } from '../adjustments/readiness-adjuster';
 import { SorenessLevel } from '../adjustments/soreness-adjuster';
 import { MuscleGroup } from '../types';
-import { getMusclesForExercise, getMusclesForLift } from '../volume/muscle-mapper';
+import {
+  getMusclesForExercise,
+  getMusclesForLift,
+} from '../volume/muscle-mapper';
 import {
   CATALOG_BY_NAME,
   ComplexityTier,
@@ -23,7 +26,7 @@ export interface ExerciseScoringContext {
   /** All muscle deficits (muscle → sets below MEV). */
   muscleDeficits: Partial<Record<MuscleGroup, number>>;
 
-  /** Per-muscle soreness (1–5). */
+  /** Per-muscle soreness (1–10). */
   sorenessRatings: Partial<Record<MuscleGroup, SorenessLevel>>;
   /** Sleep quality (1=poor, 2=ok, 3=great). */
   sleepQuality?: ReadinessLevel;
@@ -54,13 +57,13 @@ export interface ScoredExercise {
 // Weights — sum to 1.0
 // ---------------------------------------------------------------------------
 
-const W_DEFICIT   = 0.30;
-const W_SORENESS  = 0.25;
+const W_DEFICIT = 0.3;
+const W_SORENESS = 0.25;
 const W_DIVERSITY = 0.15;
-const W_FATIGUE   = 0.10;
-const W_UPCOMING  = 0.10;
-const W_SPECIFIC  = 0.05;
-const W_BALANCE   = 0.05;
+const W_FATIGUE = 0.1;
+const W_UPCOMING = 0.1;
+const W_SPECIFIC = 0.05;
+const W_BALANCE = 0.05;
 
 // ---------------------------------------------------------------------------
 // Scoring factors (each returns [0, 1])
@@ -70,10 +73,16 @@ const W_BALANCE   = 0.05;
  * Muscle deficit coverage: base 0.5 (exercise qualifies for target muscle),
  * plus bonus for secondary muscles that also have deficits.
  */
-function scoreDeficitCoverage(exercise: string, ctx: ExerciseScoringContext): number {
+function scoreDeficitCoverage(
+  exercise: string,
+  ctx: ExerciseScoringContext
+): number {
   const muscles = getMusclesForExercise(exercise);
   const deficits = ctx.muscleDeficits;
-  const maxDeficit = Math.max(1, ...Object.values(deficits).filter((d): d is number => d != null && d > 0));
+  const maxDeficit = Math.max(
+    1,
+    ...Object.values(deficits).filter((d): d is number => d != null && d > 0)
+  );
 
   let bonus = 0;
   let secondaryCount = 0;
@@ -86,21 +95,25 @@ function scoreDeficitCoverage(exercise: string, ctx: ExerciseScoringContext): nu
     }
   }
   // Normalize bonus: cap at 1.0
-  const normalizedBonus = secondaryCount > 0 ? Math.min(bonus / secondaryCount, 1.0) : 0;
+  const normalizedBonus =
+    secondaryCount > 0 ? Math.min(bonus / secondaryCount, 1.0) : 0;
   return 0.5 + 0.5 * normalizedBonus;
 }
 
 /**
  * Soreness avoidance: penalize exercises that touch sore muscles.
- * Each muscle contribution × (sorenessLevel / 5) is accumulated as penalty.
+ * Each muscle contribution × (sorenessLevel / 10) is accumulated as penalty.
  */
-function scoreSorenessAvoidance(exercise: string, ctx: ExerciseScoringContext): number {
+function scoreSorenessAvoidance(
+  exercise: string,
+  ctx: ExerciseScoringContext
+): number {
   const muscles = getMusclesForExercise(exercise);
   let penalty = 0;
   for (const { muscle, contribution } of muscles) {
     const soreness = ctx.sorenessRatings[muscle];
     if (soreness != null && soreness > 1) {
-      penalty += contribution * (soreness / 5);
+      penalty += contribution * (soreness / 10);
     }
   }
   return Math.max(0, 1.0 - penalty);
@@ -109,7 +122,10 @@ function scoreSorenessAvoidance(exercise: string, ctx: ExerciseScoringContext): 
 /**
  * Movement pattern diversity: 1.0 if novel pattern, 0.3 if already used.
  */
-function scorePatternDiversity(exercise: string, ctx: ExerciseScoringContext): number {
+function scorePatternDiversity(
+  exercise: string,
+  ctx: ExerciseScoringContext
+): number {
   const entry = CATALOG_BY_NAME.get(exercise);
   if (!entry) return 0.5;
   const pattern = resolveMovementPattern(entry);
@@ -120,7 +136,10 @@ function scorePatternDiversity(exercise: string, ctx: ExerciseScoringContext): n
  * Fatigue appropriateness: match exercise complexity to readiness.
  * Poor readiness → prefer simple. Great readiness → slight compound preference.
  */
-function scoreFatigueAppropriate(exercise: string, ctx: ExerciseScoringContext): number {
+function scoreFatigueAppropriate(
+  exercise: string,
+  ctx: ExerciseScoringContext
+): number {
   const entry = CATALOG_BY_NAME.get(exercise);
   if (!entry) return 0.5;
   const tier = resolveComplexityTier(entry);
@@ -132,7 +151,10 @@ function scoreFatigueAppropriate(exercise: string, ctx: ExerciseScoringContext):
   return complexityReadinessScore(tier, readiness);
 }
 
-function complexityReadinessScore(tier: ComplexityTier, readiness: number): number {
+function complexityReadinessScore(
+  tier: ComplexityTier,
+  readiness: number
+): number {
   // readiness 1 (poor): simple=1.0, moderate=0.5, complex=0.2
   // readiness 2 (ok):   simple=0.7, moderate=0.7, complex=0.7
   // readiness 3 (great): simple=0.6, moderate=0.8, complex=1.0
@@ -149,7 +171,10 @@ function complexityReadinessScore(tier: ComplexityTier, readiness: number): numb
  * Upcoming lift protection: penalize exercises that fatigue muscles
  * needed for lifts later this week.
  */
-function scoreUpcomingProtection(exercise: string, ctx: ExerciseScoringContext): number {
+function scoreUpcomingProtection(
+  exercise: string,
+  ctx: ExerciseScoringContext
+): number {
   if (!ctx.upcomingLifts?.length) return 1.0;
   const exerciseMuscles = getMusclesForExercise(exercise);
   const upcomingMuscles = new Set<MuscleGroup>();
@@ -170,7 +195,10 @@ function scoreUpcomingProtection(exercise: string, ctx: ExerciseScoringContext):
 /**
  * Main lift specificity: prefer exercises associated with the same lift.
  */
-function scoreSpecificity(exercise: string, ctx: ExerciseScoringContext): number {
+function scoreSpecificity(
+  exercise: string,
+  ctx: ExerciseScoringContext
+): number {
   const entry = CATALOG_BY_NAME.get(exercise);
   if (!entry) return 0.5;
   if (entry.associatedLift === ctx.primaryLift) return 1.0;
@@ -182,7 +210,10 @@ function scoreSpecificity(exercise: string, ctx: ExerciseScoringContext): number
  * Compound/isolation balance: if already-selected exercises lean one way,
  * prefer the other.
  */
-function scoreCompoundBalance(exercise: string, ctx: ExerciseScoringContext): number {
+function scoreCompoundBalance(
+  exercise: string,
+  ctx: ExerciseScoringContext
+): number {
   const entry = CATALOG_BY_NAME.get(exercise);
   if (!entry) return 0.5;
   const isCompound = resolveIsCompound(entry);
@@ -209,32 +240,46 @@ function scoreCompoundBalance(exercise: string, ctx: ExerciseScoringContext): nu
 // Public API
 // ---------------------------------------------------------------------------
 
-export function scoreExercise(exercise: string, ctx: ExerciseScoringContext): ScoredExercise {
-  const deficit   = scoreDeficitCoverage(exercise, ctx);
-  const soreness  = scoreSorenessAvoidance(exercise, ctx);
+export function scoreExercise(
+  exercise: string,
+  ctx: ExerciseScoringContext
+): ScoredExercise {
+  const deficit = scoreDeficitCoverage(exercise, ctx);
+  const soreness = scoreSorenessAvoidance(exercise, ctx);
   const diversity = scorePatternDiversity(exercise, ctx);
-  const fatigue   = scoreFatigueAppropriate(exercise, ctx);
-  const upcoming  = scoreUpcomingProtection(exercise, ctx);
-  const specific  = scoreSpecificity(exercise, ctx);
-  const balance   = scoreCompoundBalance(exercise, ctx);
+  const fatigue = scoreFatigueAppropriate(exercise, ctx);
+  const upcoming = scoreUpcomingProtection(exercise, ctx);
+  const specific = scoreSpecificity(exercise, ctx);
+  const balance = scoreCompoundBalance(exercise, ctx);
 
   const score =
-    W_DEFICIT   * deficit +
-    W_SORENESS  * soreness +
+    W_DEFICIT * deficit +
+    W_SORENESS * soreness +
     W_DIVERSITY * diversity +
-    W_FATIGUE   * fatigue +
-    W_UPCOMING  * upcoming +
-    W_SPECIFIC  * specific +
-    W_BALANCE   * balance;
+    W_FATIGUE * fatigue +
+    W_UPCOMING * upcoming +
+    W_SPECIFIC * specific +
+    W_BALANCE * balance;
 
   return {
     exercise,
     score,
-    breakdown: { deficit, soreness, diversity, fatigue, upcoming, specific, balance },
+    breakdown: {
+      deficit,
+      soreness,
+      diversity,
+      fatigue,
+      upcoming,
+      specific,
+      balance,
+    },
   };
 }
 
-export function rankExercises(candidates: string[], ctx: ExerciseScoringContext): ScoredExercise[] {
+export function rankExercises(
+  candidates: string[],
+  ctx: ExerciseScoringContext
+): ScoredExercise[] {
   return candidates
     .map((exercise) => scoreExercise(exercise, ctx))
     .sort((a, b) => b.score - a.score);

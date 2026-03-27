@@ -73,8 +73,7 @@ export const typedSupabase = createClient<Database>(
   supabaseAnonKey,
   {
     auth: {
-      storage:
-        Platform.OS === 'web' ? undefined : storage,
+      storage: Platform.OS === 'web' ? undefined : storage,
       autoRefreshToken: true,
       persistSession: true,
       detectSessionInUrl: Platform.OS === 'web',

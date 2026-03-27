@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react';
+
 import type { DbRow } from '@platform/supabase';
+
 import { priorityBadge, statusBadge } from '../components/Badge';
 import { useSupabase } from '../lib/SupabaseContext';
 import { theme } from '../lib/theme';

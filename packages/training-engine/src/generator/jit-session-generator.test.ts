@@ -1,13 +1,17 @@
 import { TrainingDisruption } from '@parakeet/shared-types';
 
 import {
+  atMevExcept,
+  baseInput,
+  makeDisruption,
+} from '../__test-helpers__/fixtures';
+import {
   DEFAULT_FORMULA_CONFIG_FEMALE,
   DEFAULT_FORMULA_CONFIG_MALE,
   DEFAULT_REST_SECONDS_FEMALE,
   DEFAULT_REST_SECONDS_MALE,
 } from '../cube/blocks';
 import { DEFAULT_MRV_MEV_CONFIG_MALE } from '../volume/mrv-mev-calculator';
-import { baseInput, makeDisruption, atMevExcept } from '../__test-helpers__/fixtures';
 import { generateJITSession } from './jit-session-generator';
 
 // ---------------------------------------------------------------------------
@@ -948,7 +952,11 @@ describe('generateJITSession — equipment_unavailable disruption', () => {
 
   it('exercise cap: no-equipment + auxiliaryPool combined does not exceed 5 non-skipped aux exercises', () => {
     // 2 original + 2 bodyweight = 4 non-skipped; top-ups from pool should be capped to 1 (not 2)
-    const pool = ['Romanian Dumbbell Deadlift', 'Stiff-Leg Deadlift', 'Leg Press'];
+    const pool = [
+      'Romanian Dumbbell Deadlift',
+      'Stiff-Leg Deadlift',
+      'Leg Press',
+    ];
     const out = generateJITSession(
       baseInput({
         activeDisruptions: [makeEquipmentDisruption()],
@@ -1111,7 +1119,11 @@ describe('generateJITSession — volume top-up (engine-027)', () => {
       baseInput({
         primaryLift: 'bench',
         activeAuxiliaries: ['Close-Grip Barbell Bench Press', 'Dumbbell Fly'],
-        auxiliaryPool: ['Leg Press', 'Romanian Dumbbell Deadlift', 'Barbell Curl'],
+        auxiliaryPool: [
+          'Leg Press',
+          'Romanian Dumbbell Deadlift',
+          'Barbell Curl',
+        ],
         weeklyVolumeToDate: atMevExcept(DEFAULT_MRV_MEV_CONFIG_MALE, 'quads'),
         mrvMevConfig: DEFAULT_MRV_MEV_CONFIG_MALE,
         upcomingLifts: ['squat'],
@@ -1400,9 +1412,8 @@ describe('generateJITSession — push muscle coverage boost (engine-031)', () =>
     // bench contributes chest 1.0 × mainSets → primaryLiftContrib > 0 → no boost
     // weeklyChest=5, sessionIndex=1 of 3 → effectiveMev=ceil(8*1/3)=3
     // squat projected = floor(mainSets * 1.0) ≥ 3 → no deficit → no top-up
-    const mainSets = generateJITSession(
-      baseInput({ primaryLift: 'bench' })
-    ).mainLiftSets.length;
+    const mainSets = generateJITSession(baseInput({ primaryLift: 'bench' }))
+      .mainLiftSets.length;
     const projected = Math.floor(mainSets * 1.0); // bench chest contrib = 1.0
 
     const weeklyChest = 5;
@@ -1475,7 +1486,10 @@ describe('generateJITSession — dumbbell sqrt scaling', () => {
       baseInput({
         primaryLift: 'bench',
         oneRmKg: 116,
-        activeAuxiliaries: ['Dumbbell Incline Bench Press', 'Barbell Pause Bench Press'],
+        activeAuxiliaries: [
+          'Dumbbell Incline Bench Press',
+          'Barbell Pause Bench Press',
+        ],
       })
     );
     expect(out.auxiliaryWork[0].sets[0].weight_kg).toBe(22.5);
@@ -1515,7 +1529,10 @@ describe('generateJITSession — dumbbell sqrt scaling', () => {
       baseInput({
         primaryLift: 'bench',
         oneRmKg: 140,
-        activeAuxiliaries: ['Close-Grip Barbell Bench Press', 'Barbell Pause Bench Press'],
+        activeAuxiliaries: [
+          'Close-Grip Barbell Bench Press',
+          'Barbell Pause Bench Press',
+        ],
       })
     );
     expect(out.auxiliaryWork[0].sets[0].weight_kg).toBe(90);
@@ -1588,9 +1605,7 @@ describe('generateJITSession — volumeReductions metadata', () => {
     );
     expect(out.volumeReductions).toBeDefined();
     expect(out.volumeReductions!.sources).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({ source: 'readiness' }),
-      ])
+      expect.arrayContaining([expect.objectContaining({ source: 'readiness' })])
     );
   });
 

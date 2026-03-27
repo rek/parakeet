@@ -1,5 +1,6 @@
 import { IntensityType, Lift } from '@parakeet/shared-types';
 
+import { LIFTS } from '../auxiliary/exercise-catalog';
 import {
   calculateSessionDate,
   computeDayOffsets,
@@ -16,7 +17,6 @@ import {
   GenerateProgramInput,
   SessionScaffold,
 } from '../types';
-import { LIFTS } from '../auxiliary/exercise-catalog';
 
 export function generateWeekSessions(
   weekNumber: number,
@@ -143,7 +143,7 @@ export function nextUnendingSession(
     : LIFTS[(sessionCounter % daysPerWeek) % LIFTS.length];
 
   // Blocks cycle 1→2→3→1… every 3 training weeks (same as scheduled)
-  const blockNumber = ((Math.floor((weekNumber - 1) / 3) % 3) + 1);
+  const blockNumber = (Math.floor((weekNumber - 1) / 3) % 3) + 1;
 
   // Deload every 4th week equivalent (week 4, 8, 12, …)
   const isDeload = weekNumber % 4 === 0;

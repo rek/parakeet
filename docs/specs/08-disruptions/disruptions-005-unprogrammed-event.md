@@ -23,7 +23,7 @@ Standard disruptions (injury, illness, etc.) adjust session weights directly. An
 UI chips map to numeric soreness levels before storage:
 
 | Chip      | Stored value |
-|-----------|--------------|
+| --------- | ------------ |
 | None      | 1            |
 | Mild      | 2            |
 | Sore      | 3            |
@@ -45,7 +45,7 @@ When `selectedType === 'unprogrammed_event'`:
 ## Engine
 
 - [x] `suggestDisruptionAdjustment` for `unprogrammed_event` returns `[]` — leave as-is. The soreness injection IS the adjustment. JIT automatically scales affected sessions based on the injected soreness check-in.
-- JIT receives `sorenessRatings: Partial<Record<MuscleGroup, SorenessLevel>>` (where `SorenessLevel = 1 | 2 | 3 | 4 | 5`) as part of `JITInput`
+- JIT receives `sorenessRatings: Partial<Record<MuscleGroup, SorenessLevel>>` (where `SorenessLevel = 1 | 2 | ... | 10`) as part of `JITInput`
 
 ## How soreness feeds into JIT
 
@@ -56,8 +56,8 @@ Implemented via `getLatestSorenessCheckin(userId)` (`data/session.repository.ts`
 ## State additions (report.tsx)
 
 ```typescript
-const [eventName, setEventName] = useState('')
-const [eventSoreness, setEventSoreness] = useState<Record<string, SorenessLevel>>({})
+const [eventName, setEventName] = useState('');
+const [eventSoreness, setEventSoreness] = useState<Record<string, SorenessLevel>>({});
 ```
 
 `eventSoreness` holds the string chip values (`'none' | 'mild' | 'sore' | 'very_sore'`); these are mapped to numeric via `SORENESS_NUMERIC` at submit time.

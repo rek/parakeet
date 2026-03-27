@@ -1,12 +1,13 @@
 import { describe, expect, it } from 'vitest';
 
+import { makeSets } from '../__test-helpers__/fixtures';
 import {
+  adaptAuxRemainingPlan,
   adaptRemainingPlan,
   detectSetFailure,
   roundToNearest2_5,
   type IntraSessionContext,
 } from './intra-session-adapter';
-import { makeSets } from '../__test-helpers__/fixtures';
 
 const BASE_CTX: Omit<
   IntraSessionContext,
@@ -259,5 +260,73 @@ describe('adaptRemainingPlan — reset scenario', () => {
     expect(result.adaptationType).toBe('none');
     expect(result.sets).toEqual(sets);
     expect(result.restBonusSeconds).toBe(0);
+  });
+});
+
+// ===========================================================================
+// adaptAuxRemainingPlan
+// ===========================================================================
+
+describe('adaptAuxRemainingPlan — empty remaining sets', () => {
+  it('returns type "none" with empty sets', () => {
+    const result = adaptAuxRemainingPlan({
+      exercise: 'Close-Grip Bench Press',
+      failedWeightKg: 60,
+      remainingSets: [],
+    });
+    expect(result.adaptationType).toBe('none');
+    expect(result.sets).toHaveLength(0);
+    expect(result.exercise).toBe('Close-Grip Bench Press');
+  });
+});
+
+describe('adaptAuxRemainingPlan — reduces weight by 10%', () => {
+  it('reduces 60 kg by 10% to 55 kg (rounded to 2.5)', () => {
+    const sets = makeSets(2, 60);
+    const result = adaptAuxRemainingPlan({
+      exercise: 'DB Incline Bench',
+      failedWeightKg: 60,
+      remainingSets: sets,
+    });
+    expect(result.adaptationType).toBe('weight_reduced');
+    expect(result.exercise).toBe('DB Incline Bench');
+    // 60 × 0.9 = 54 → rounds to 55
+    result.sets.forEach((s) => expect(s.weight_kg).toBe(55));
+    expect(result.rationale).toMatch(/10%/i);
+  });
+
+  it('rounds reduced weight to nearest 2.5 kg', () => {
+    // 47 × 0.9 = 42.3 → rounds to 42.5
+    const sets = makeSets(1, 47);
+    const result = adaptAuxRemainingPlan({
+      exercise: 'Barbell Curl',
+      failedWeightKg: 47,
+      remainingSets: sets,
+    });
+    expect(result.sets[0].weight_kg).toBe(42.5);
+  });
+});
+
+describe('adaptAuxRemainingPlan — weight floor at 50% of failed weight', () => {
+  it('clamps reduction when result would breach 50% of failed weight', () => {
+    // failedWeightKg=30, floor=50%×30=15; set weight=16 kg × 0.9 = 14.4 → 15 (floor)
+    const sets = makeSets(1, 16);
+    const result = adaptAuxRemainingPlan({
+      exercise: 'Lateral Raise',
+      failedWeightKg: 30,
+      remainingSets: sets,
+    });
+    expect(result.sets[0].weight_kg).toBe(15);
+  });
+
+  it('does not clamp when reduction stays above floor', () => {
+    // failedWeightKg=60, floor=30; 60 × 0.9 = 54 → 55 > 30 → no clamp
+    const sets = makeSets(1, 60);
+    const result = adaptAuxRemainingPlan({
+      exercise: 'Close-Grip Bench Press',
+      failedWeightKg: 60,
+      remainingSets: sets,
+    });
+    expect(result.sets[0].weight_kg).toBe(55);
   });
 });

@@ -155,10 +155,26 @@ describe('partitionTodaySessions', () => {
   });
 
   it('excludes skipped and missed sessions from upcoming (any session type)', () => {
-    const skippedAdHoc = { status: 'skipped', program_id: null, primary_lift: null };
-    const missedAdHoc = { status: 'missed', program_id: null, primary_lift: null };
-    const skippedProgram = { status: 'skipped', program_id: 'prog-1', primary_lift: 'bench' };
-    const missedProgram = { status: 'missed', program_id: 'prog-1', primary_lift: 'deadlift' };
+    const skippedAdHoc = {
+      status: 'skipped',
+      program_id: null,
+      primary_lift: null,
+    };
+    const missedAdHoc = {
+      status: 'missed',
+      program_id: null,
+      primary_lift: null,
+    };
+    const skippedProgram = {
+      status: 'skipped',
+      program_id: 'prog-1',
+      primary_lift: 'bench',
+    };
+    const missedProgram = {
+      status: 'missed',
+      program_id: 'prog-1',
+      primary_lift: 'deadlift',
+    };
     const { upcoming } = partitionTodaySessions([
       skippedAdHoc,
       missedAdHoc,

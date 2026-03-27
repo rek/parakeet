@@ -32,7 +32,7 @@ export function unendingBlockNumber(
   daysPerWeek: number
 ): number {
   const weekNumber = Math.floor(sessionCounter / daysPerWeek) + 1;
-  return ((Math.floor((weekNumber - 1) / 3) % 3) + 1);
+  return (Math.floor((weekNumber - 1) / 3) % 3) + 1;
 }
 
 /** Get the current block number for any program mode. */

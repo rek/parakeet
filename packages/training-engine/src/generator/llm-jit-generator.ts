@@ -17,7 +17,10 @@ import type {
 } from './jit-session-generator';
 import type { JITGeneratorStrategy } from './jit-strategy';
 import { calculateSets } from './set-calculator';
-import { generateWarmupSets, resolveEffectiveWarmupProtocol } from './warmup-calculator';
+import {
+  generateWarmupSets,
+  resolveEffectiveWarmupProtocol,
+} from './warmup-calculator';
 
 // helper: derive formula-based rest for LLM path (engine-021 will override later)
 function formulaRestForMain(input: JITInput): number {
@@ -128,7 +131,12 @@ export function applyAdjustment(
       }
 
       const baseAuxWeight = roundToNearest(
-        computeAuxWeight({ exercise, oneRmKg: input.oneRmKg, lift: input.primaryLift, biologicalSex: input.biologicalSex })
+        computeAuxWeight({
+          exercise,
+          oneRmKg: input.oneRmKg,
+          lift: input.primaryLift,
+          biologicalSex: input.biologicalSex,
+        })
       );
       const auxWeight =
         override === 'reduce'

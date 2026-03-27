@@ -1,6 +1,11 @@
 import { Lift } from '@parakeet/shared-types';
 
-import { MuscleContribution, MuscleGroup, PULL_MUSCLES, PUSH_MUSCLES } from '../types';
+import {
+  MuscleContribution,
+  MuscleGroup,
+  PULL_MUSCLES,
+  PUSH_MUSCLES,
+} from '../types';
 
 export const LIFTS: readonly Lift[] = ['squat', 'bench', 'deadlift'] as const;
 
@@ -10,8 +15,21 @@ export type ExerciseType = 'weighted' | 'bodyweight' | 'timed';
 // Exercise metadata types (used by exercise scorer for smart selection)
 // ---------------------------------------------------------------------------
 
-export type MovementPattern = 'squat' | 'hinge' | 'push' | 'pull' | 'carry' | 'core';
-export type Equipment = 'barbell' | 'dumbbell' | 'kettlebell' | 'machine' | 'cable' | 'bodyweight' | 'none';
+export type MovementPattern =
+  | 'squat'
+  | 'hinge'
+  | 'push'
+  | 'pull'
+  | 'carry'
+  | 'core';
+export type Equipment =
+  | 'barbell'
+  | 'dumbbell'
+  | 'kettlebell'
+  | 'machine'
+  | 'cable'
+  | 'bodyweight'
+  | 'none';
 export type ComplexityTier = 'simple' | 'moderate' | 'complex';
 
 export interface BodyweightPoolEntry {
@@ -561,7 +579,7 @@ export const EXERCISE_CATALOG: ExerciseCatalogEntry[] = [
     associatedLift: 'deadlift',
     primaryMuscles: ['hamstrings', 'glutes'],
     type: 'weighted',
-    weightPct: 0.20,
+    weightPct: 0.2,
     repTarget: 12,
   },
   {
@@ -654,7 +672,7 @@ export const EXERCISE_CATALOG: ExerciseCatalogEntry[] = [
     associatedLift: 'deadlift',
     primaryMuscles: ['hamstrings', 'glutes'],
     type: 'weighted',
-    weightPct: 0.20,
+    weightPct: 0.2,
     repTarget: 8,
   },
   {
@@ -1044,7 +1062,9 @@ export function resolveEquipment(entry: ExerciseCatalogEntry): Equipment {
   return 'barbell';
 }
 
-export function resolveMovementPattern(entry: ExerciseCatalogEntry): MovementPattern {
+export function resolveMovementPattern(
+  entry: ExerciseCatalogEntry
+): MovementPattern {
   if (entry.movementPattern) return entry.movementPattern;
   if (entry.associatedLift === 'squat') return 'squat';
   if (entry.associatedLift === 'bench') return 'push';
@@ -1053,22 +1073,30 @@ export function resolveMovementPattern(entry: ExerciseCatalogEntry): MovementPat
   const muscles = entry.primaryMuscles;
   if (muscles.includes('core')) return 'core';
   if (muscles.includes('quads')) return 'squat';
-  if (muscles.includes('hamstrings') || muscles.includes('lower_back') || (muscles.includes('glutes') && !muscles.includes('quads')))
+  if (
+    muscles.includes('hamstrings') ||
+    muscles.includes('lower_back') ||
+    (muscles.includes('glutes') && !muscles.includes('quads'))
+  )
     return 'hinge';
-  if (muscles.some(m => PULL_MUSCLE_IDS.has(m))) return 'pull';
-  if (muscles.some(m => PUSH_MUSCLE_IDS.has(m))) return 'push';
+  if (muscles.some((m) => PULL_MUSCLE_IDS.has(m))) return 'pull';
+  if (muscles.some((m) => PUSH_MUSCLE_IDS.has(m))) return 'push';
   return 'push';
 }
 
 export function resolveIsCompound(entry: ExerciseCatalogEntry): boolean {
   if (entry.isCompound != null) return entry.isCompound;
   if (entry.muscleContributions) {
-    return entry.muscleContributions.filter(m => m.contribution >= 0.5).length >= 2;
+    return (
+      entry.muscleContributions.filter((m) => m.contribution >= 0.5).length >= 2
+    );
   }
   return entry.primaryMuscles.length >= 2;
 }
 
-export function resolveComplexityTier(entry: ExerciseCatalogEntry): ComplexityTier {
+export function resolveComplexityTier(
+  entry: ExerciseCatalogEntry
+): ComplexityTier {
   if (entry.complexityTier) return entry.complexityTier;
   return 'moderate';
 }
@@ -1083,8 +1111,8 @@ export function resolveComplexityTier(entry: ExerciseCatalogEntry): ComplexityTi
  * At this exact 1RM, sqrt output equals linear output.
  */
 const SQRT_REFERENCE_1RM: Record<Lift, { male: number; female: number }> = {
-  squat:    { male: 120, female: 70 },
-  bench:    { male: 80,  female: 50 },
+  squat: { male: 120, female: 70 },
+  bench: { male: 80, female: 50 },
   deadlift: { male: 140, female: 80 },
 };
 
@@ -1115,6 +1143,7 @@ export function computeAuxWeight({
   if (!isUnstable) return oneRmKg * pct;
 
   const sex = biologicalSex ?? 'male';
-  const ref = SQRT_REFERENCE_1RM[lift]?.[sex] ?? SQRT_REFERENCE_1RM[lift]?.male ?? 100;
+  const ref =
+    SQRT_REFERENCE_1RM[lift]?.[sex] ?? SQRT_REFERENCE_1RM[lift]?.male ?? 100;
   return pct * Math.sqrt(ref * oneRmKg);
 }

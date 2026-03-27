@@ -1,4 +1,4 @@
-import { Lift, IntensityType } from '@parakeet/shared-types';
+import { IntensityType, Lift } from '@parakeet/shared-types';
 
 import { baseInput } from '../__test-helpers__/fixtures';
 import { generateJITSession } from './jit-session-generator';
@@ -117,22 +117,25 @@ describe('JIT output invariants — structural', () => {
 });
 
 describe('JIT output invariants — recovery mode', () => {
-  it.each(LIFTS)('soreness 5 on %s → exactly 3 sets at RPE 5.0', (lift) => {
-    const primaryMuscles: Record<Lift, string> = {
-      squat: 'quads',
-      bench: 'chest',
-      deadlift: 'hamstrings',
-    };
-    const out = generateJITSession(
-      baseInput({
-        primaryLift: lift,
-        sorenessRatings: { [primaryMuscles[lift]]: 5 } as any,
-      })
-    );
-    expect(out.mainLiftSets).toHaveLength(3);
-    for (const s of out.mainLiftSets) {
-      expect(s.rpe_target).toBe(5.0);
-      expect(s.weight_kg).toBeGreaterThanOrEqual(20); // bar weight floor
+  it.each(LIFTS)(
+    'severe soreness on %s → exactly 3 sets at RPE 5.0',
+    (lift) => {
+      const primaryMuscles: Record<Lift, string> = {
+        squat: 'quads',
+        bench: 'chest',
+        deadlift: 'hamstrings',
+      };
+      const out = generateJITSession(
+        baseInput({
+          primaryLift: lift,
+          sorenessRatings: { [primaryMuscles[lift]]: 10 } as any,
+        })
+      );
+      expect(out.mainLiftSets).toHaveLength(3);
+      for (const s of out.mainLiftSets) {
+        expect(s.rpe_target).toBe(5.0);
+        expect(s.weight_kg).toBeGreaterThanOrEqual(20); // bar weight floor
+      }
     }
-  });
+  );
 });

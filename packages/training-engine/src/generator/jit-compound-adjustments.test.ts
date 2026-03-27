@@ -1,7 +1,7 @@
+import { baseInput, makeDisruption } from '../__test-helpers__/fixtures';
 import { DEFAULT_FORMULA_CONFIG_FEMALE } from '../cube/blocks';
 import { DEFAULT_MRV_MEV_CONFIG_MALE } from '../volume/mrv-mev-calculator';
 import { generateJITSession } from './jit-session-generator';
-import { baseInput, makeDisruption } from '../__test-helpers__/fixtures';
 
 describe('JIT compound adjustments — multiple adjusters active', () => {
   it('worst realistic day: RPE high + poor readiness + menstrual + moderate soreness', () => {
@@ -20,7 +20,7 @@ describe('JIT compound adjustments — multiple adjusters active', () => {
         // Menstrual phase
         cyclePhase: 'menstrual',
         // Moderate quad soreness
-        sorenessRatings: { quads: 3 },
+        sorenessRatings: { quads: 6 },
       })
     );
     // Multiple reductions should compound — at least 2 rationale entries
@@ -53,9 +53,7 @@ describe('JIT compound adjustments — multiple adjusters active', () => {
     );
     // Within one rounding step (2.5kg)
     expect(
-      Math.abs(
-        out.mainLiftSets[0].weight_kg - clean.mainLiftSets[0].weight_kg
-      )
+      Math.abs(out.mainLiftSets[0].weight_kg - clean.mainLiftSets[0].weight_kg)
     ).toBeLessThanOrEqual(2.5);
   });
 
@@ -71,7 +69,7 @@ describe('JIT compound adjustments — multiple adjusters active', () => {
         sleepQuality: 1,
         energyLevel: 1,
         cyclePhase: 'menstrual',
-        sorenessRatings: { quads: 5 }, // triggers recovery mode
+        sorenessRatings: { quads: 10 }, // triggers recovery mode
         activeDisruptions: [makeDisruption('moderate')],
       })
     );
@@ -92,7 +90,7 @@ describe('JIT compound adjustments — multiple adjusters active', () => {
 
     const out = generateJITSession(
       baseInput({
-        sorenessRatings: { quads: 3 }, // -1 set
+        sorenessRatings: { quads: 6 }, // -1 set
         weeklyVolumeToDate: { quads: 2 }, // already at 2, MRV is 3 → only 1 set of capacity
         mrvMevConfig: mrvConfig,
       })
@@ -104,7 +102,7 @@ describe('JIT compound adjustments — multiple adjusters active', () => {
   it('disruption + soreness compound conservatively via min()', () => {
     const out = generateJITSession(
       baseInput({
-        sorenessRatings: { quads: 4 }, // -2 sets, ×0.95
+        sorenessRatings: { quads: 8 }, // -2 sets, ×0.95
         activeDisruptions: [
           {
             ...makeDisruption('moderate'),

@@ -14,19 +14,20 @@
 - [ ] Update `buildAuxiliaryWork` signature to accept `biologicalSex?: 'female' | 'male'` as final parameter
 - [ ] Replace hardcoded `reps: 10` with:
   ```typescript
-  const baseReps = biologicalSex === 'female' ? 12 : 10
+  const baseReps = biologicalSex === 'female' ? 12 : 10;
   ```
   Used in the `PlannedSet` array construction
 - [ ] Update the `buildAuxiliaryWork(...)` call site inside `generateJITSession` to pass `input.biologicalSex`
 - [ ] Soreness-reduced sets retain the sex-specific base rep count (e.g., female at soreness 3: 2 sets × 12 reps, not 2 × 10)
 
 **Unit tests (`packages/training-engine/src/__tests__/jit-session-generator.test.ts`):**
+
 - [ ] Female input (no soreness): auxiliary sets have `reps: 12`
 - [ ] Male input (no soreness): auxiliary sets have `reps: 10`
 - [ ] `biologicalSex: undefined`: defaults to `reps: 10`
-- [ ] Female input at soreness 3 (−1 set): 2 sets remain, each with `reps: 12`
-- [ ] Female input at soreness 4: 2 sets remain (female soreness-4 rule from engine-017), each with `reps: 12`
-- [ ] Female input at soreness 5: auxiliary skipped (unchanged)
+- [x] Female input at soreness 6 (moderate, −1 set): 2 sets remain, each with `reps: 12`
+- [x] Female input at soreness 8 (high): 2 sets remain (female high-soreness rule from engine-017), each with `reps: 12`
+- [x] Female input at soreness 10 (severe): auxiliary skipped (unchanged)
 - [ ] MRV cap logic still skips auxiliary regardless of sex
 
 ## Auxiliary Weight Calibration (`AUX_WEIGHT_PCT`)

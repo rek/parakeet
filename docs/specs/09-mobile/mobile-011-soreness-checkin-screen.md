@@ -14,6 +14,7 @@ The pre-workout soreness rating screen that gates JIT session generation. Shown 
 **Route params:** `{ sessionId: string }`
 
 **Muscles shown per session type:**
+
 - Squat session → Quads, Glutes, Lower Back
 - Bench session → Chest, Triceps, Shoulders
 - Deadlift session → Hamstrings/Glutes, Lower Back, Upper Back
@@ -21,34 +22,41 @@ The pre-workout soreness rating screen that gates JIT session generation. Shown 
 The screen reads the session's `primary_lift` to determine which muscles to show.
 
 **UI layout:**
+
 ```
 [Back]          Today's Workout — Squat        [Skip → straight to session]
 
   How are these muscles feeling today?
 
-  ┌─────────────────────────────────────────────────┐
-  │  Quads           [1] [2] [3] [4] [5]            │
-  │  Glutes          [1] [2] [3] [4] [5]            │
-  │  Lower Back      [1] [2] [3] [4] [5]            │
-  └─────────────────────────────────────────────────┘
+  ┌──────────────────────────────────────────────────────────┐
+  │  Quads                                                  │
+  │  [1] [2] [3] [4] [5] [6] [7] [8] [9] [10]              │
+  │                                                         │
+  │  Glutes                                                 │
+  │  [1] [2] [3] [4] [5] [6] [7] [8] [9] [10]              │
+  │                                                         │
+  │  Lower Back                                             │
+  │  [1] [2] [3] [4] [5] [6] [7] [8] [9] [10]              │
+  └──────────────────────────────────────────────────────────┘
 
-  1 = Fresh   2 = Mild   3 = Moderate   4 = High   5 = Severe
+  1–4 Fresh · 5–6 Moderate · 7–8 High · 9–10 Severe
 
   [Generate Today's Workout →]
 ```
 
-**Rating scale labels:**
-- 1: Fresh — no soreness
-- 2: Mild — slight tightness, no impact
-- 3: Moderate — noticeable, some movement restriction
-- 4: High — significant discomfort or limited range
-- 5: Severe — should not train this muscle
+**Rating scale tiers:**
 
-**Soreness = 5 banner:** If any muscle is rated 5, show a warning card: "Severe soreness detected — today's workout will be a recovery session (light work at 40% intensity). You can still continue."
+- 1–4: Fresh — no soreness, no adjustment
+- 5–6: Moderate — noticeable, reduces 1 set
+- 7–8: High — significant discomfort, reduces 2 sets + 5% intensity (males); 1 set + 3% (females)
+- 9–10: Severe — should not train this muscle, triggers recovery mode
+
+**Severe soreness banner:** If any muscle is rated >= 9, show a warning card: "Severe soreness detected — today's workout will be a recovery session (light work at 40% intensity). You can still continue."
 
 **"Skip" option:** If user skips soreness check-in, default all muscles to rating 1 (no adjustment). Log `skipped: true` in `soreness_checkins`.
 
 **On "Generate Today's Workout" tap:**
+
 1. Write soreness ratings to `soreness_checkins` table
 2. Call JIT generator with full input (fetches all required data)
 3. Show loading indicator: "Generating your workout..."
@@ -56,14 +64,15 @@ The screen reads the session's `primary_lift` to determine which muscles to show
 5. Navigate to `session/[sessionId]` (the live workout screen)
 
 **Supabase write:**
+
 ```typescript
 await supabase.from('soreness_checkins').insert({
   session_id: sessionId,
   user_id: userId,
-  ratings: { quads: 2, glutes: 1, lower_back: 3 },  // JSONB
+  ratings: { quads: 2, glutes: 1, lower_back: 3 }, // JSONB
   skipped: false,
   recorded_at: new Date().toISOString(),
-})
+});
 ```
 
 **State:** Local Zustand `sorenessStore` holds current ratings during the screen session. Cleared after JIT generation completes.

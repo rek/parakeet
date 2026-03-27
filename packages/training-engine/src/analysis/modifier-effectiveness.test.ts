@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, expect, it } from 'vitest';
 
 import {
   applyCalibrationAdjustment,
@@ -9,7 +9,11 @@ import {
 } from './modifier-effectiveness';
 import type { ModifierSample } from './modifier-effectiveness';
 
-function makeSamples(count: number, rpeTarget: number, rpeActual: number): ModifierSample[] {
+function makeSamples(
+  count: number,
+  rpeTarget: number,
+  rpeActual: number
+): ModifierSample[] {
   return Array.from({ length: count }, () => ({
     modifierSource: 'soreness' as const,
     multiplier: 0.85,
@@ -83,35 +87,65 @@ describe('computeCalibrationBias', () => {
 describe('shouldTriggerReview', () => {
   it('returns false for exploring confidence (not enough data)', () => {
     const result = shouldTriggerReview({
-      calibration: { modifierSource: 'soreness', sampleCount: 3, meanBias: -2, suggestedAdjustment: 0.1, confidence: 'exploring' },
+      calibration: {
+        modifierSource: 'soreness',
+        sampleCount: 3,
+        meanBias: -2,
+        suggestedAdjustment: 0.1,
+        confidence: 'exploring',
+      },
     });
     expect(result).toBe(false);
   });
 
   it('returns true for low confidence', () => {
     const result = shouldTriggerReview({
-      calibration: { modifierSource: 'soreness', sampleCount: 7, meanBias: -1, suggestedAdjustment: 0.03, confidence: 'low' },
+      calibration: {
+        modifierSource: 'soreness',
+        sampleCount: 7,
+        meanBias: -1,
+        suggestedAdjustment: 0.03,
+        confidence: 'low',
+      },
     });
     expect(result).toBe(true);
   });
 
   it('returns true for large adjustment (> 5%)', () => {
     const result = shouldTriggerReview({
-      calibration: { modifierSource: 'soreness', sampleCount: 15, meanBias: -2, suggestedAdjustment: 0.10, confidence: 'medium' },
+      calibration: {
+        modifierSource: 'soreness',
+        sampleCount: 15,
+        meanBias: -2,
+        suggestedAdjustment: 0.1,
+        confidence: 'medium',
+      },
     });
     expect(result).toBe(true);
   });
 
   it('returns false for small adjustment with medium confidence', () => {
     const result = shouldTriggerReview({
-      calibration: { modifierSource: 'readiness', sampleCount: 15, meanBias: -0.3, suggestedAdjustment: 0.015, confidence: 'medium' },
+      calibration: {
+        modifierSource: 'readiness',
+        sampleCount: 15,
+        meanBias: -0.3,
+        suggestedAdjustment: 0.015,
+        confidence: 'medium',
+      },
     });
     expect(result).toBe(false);
   });
 
   it('returns true when direction flips from previous adjustment', () => {
     const result = shouldTriggerReview({
-      calibration: { modifierSource: 'soreness', sampleCount: 15, meanBias: 0.5, suggestedAdjustment: -0.025, confidence: 'medium' },
+      calibration: {
+        modifierSource: 'soreness',
+        sampleCount: 15,
+        meanBias: 0.5,
+        suggestedAdjustment: -0.025,
+        confidence: 'medium',
+      },
       previousAdjustment: 0.03, // was positive, now negative → flip
     });
     expect(result).toBe(true);
@@ -120,33 +154,73 @@ describe('shouldTriggerReview', () => {
 
 describe('canAutoApply', () => {
   it('returns false for exploring confidence', () => {
-    expect(canAutoApply({
-      calibration: { modifierSource: 'soreness', sampleCount: 3, meanBias: -1, suggestedAdjustment: 0.02, confidence: 'exploring' },
-    })).toBe(false);
+    expect(
+      canAutoApply({
+        calibration: {
+          modifierSource: 'soreness',
+          sampleCount: 3,
+          meanBias: -1,
+          suggestedAdjustment: 0.02,
+          confidence: 'exploring',
+        },
+      })
+    ).toBe(false);
   });
 
   it('returns false for low confidence', () => {
-    expect(canAutoApply({
-      calibration: { modifierSource: 'soreness', sampleCount: 7, meanBias: -1, suggestedAdjustment: 0.02, confidence: 'low' },
-    })).toBe(false);
+    expect(
+      canAutoApply({
+        calibration: {
+          modifierSource: 'soreness',
+          sampleCount: 7,
+          meanBias: -1,
+          suggestedAdjustment: 0.02,
+          confidence: 'low',
+        },
+      })
+    ).toBe(false);
   });
 
   it('returns false for large adjustment', () => {
-    expect(canAutoApply({
-      calibration: { modifierSource: 'soreness', sampleCount: 15, meanBias: -2, suggestedAdjustment: 0.10, confidence: 'medium' },
-    })).toBe(false);
+    expect(
+      canAutoApply({
+        calibration: {
+          modifierSource: 'soreness',
+          sampleCount: 15,
+          meanBias: -2,
+          suggestedAdjustment: 0.1,
+          confidence: 'medium',
+        },
+      })
+    ).toBe(false);
   });
 
   it('returns true for small adjustment with medium confidence', () => {
-    expect(canAutoApply({
-      calibration: { modifierSource: 'readiness', sampleCount: 15, meanBias: -0.3, suggestedAdjustment: 0.015, confidence: 'medium' },
-    })).toBe(true);
+    expect(
+      canAutoApply({
+        calibration: {
+          modifierSource: 'readiness',
+          sampleCount: 15,
+          meanBias: -0.3,
+          suggestedAdjustment: 0.015,
+          confidence: 'medium',
+        },
+      })
+    ).toBe(true);
   });
 
   it('returns true for small adjustment with high confidence', () => {
-    expect(canAutoApply({
-      calibration: { modifierSource: 'readiness', sampleCount: 25, meanBias: -0.2, suggestedAdjustment: 0.01, confidence: 'high' },
-    })).toBe(true);
+    expect(
+      canAutoApply({
+        calibration: {
+          modifierSource: 'readiness',
+          sampleCount: 25,
+          meanBias: -0.2,
+          suggestedAdjustment: 0.01,
+          confidence: 'high',
+        },
+      })
+    ).toBe(true);
   });
 });
 
@@ -182,28 +256,43 @@ describe('extractModifierSamples', () => {
 describe('applyCalibrationAdjustment', () => {
   it('makes modifier less aggressive (positive adjustment)', () => {
     // Default ×0.85, adjustment +0.07 → ×0.92
-    const result = applyCalibrationAdjustment({ defaultMultiplier: 0.85, adjustment: 0.07 });
+    const result = applyCalibrationAdjustment({
+      defaultMultiplier: 0.85,
+      adjustment: 0.07,
+    });
     expect(result).toBeCloseTo(0.92);
   });
 
   it('makes modifier more aggressive (negative adjustment)', () => {
     // Default ×0.95, adjustment -0.05 → ×0.90
-    const result = applyCalibrationAdjustment({ defaultMultiplier: 0.95, adjustment: -0.05 });
-    expect(result).toBeCloseTo(0.90);
+    const result = applyCalibrationAdjustment({
+      defaultMultiplier: 0.95,
+      adjustment: -0.05,
+    });
+    expect(result).toBeCloseTo(0.9);
   });
 
   it('clamps to minimum 0.5', () => {
-    const result = applyCalibrationAdjustment({ defaultMultiplier: 0.5, adjustment: -0.1 });
+    const result = applyCalibrationAdjustment({
+      defaultMultiplier: 0.5,
+      adjustment: -0.1,
+    });
     expect(result).toBe(0.5);
   });
 
   it('clamps to maximum 1.2', () => {
-    const result = applyCalibrationAdjustment({ defaultMultiplier: 1.1, adjustment: 0.15 });
+    const result = applyCalibrationAdjustment({
+      defaultMultiplier: 1.1,
+      adjustment: 0.15,
+    });
     expect(result).toBe(1.2);
   });
 
   it('no adjustment returns default', () => {
-    const result = applyCalibrationAdjustment({ defaultMultiplier: 0.90, adjustment: 0 });
-    expect(result).toBe(0.90);
+    const result = applyCalibrationAdjustment({
+      defaultMultiplier: 0.9,
+      adjustment: 0,
+    });
+    expect(result).toBe(0.9);
   });
 });

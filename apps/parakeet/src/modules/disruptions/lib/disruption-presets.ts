@@ -5,9 +5,9 @@ export type SorenessLevel = 'none' | 'mild' | 'sore' | 'very_sore';
 
 export const SORENESS_NUMERIC: Record<SorenessLevel, number> = {
   none: 1,
-  mild: 2,
-  sore: 3,
-  very_sore: 4,
+  mild: 3,
+  sore: 6,
+  very_sore: 8,
 };
 
 export function inferEffectiveSeverity(

@@ -1,9 +1,9 @@
-import { getAuthenticatedUserId } from '../data/profile.repository';
 import {
   deleteBodyweightEntry as deleteEntry,
   fetchBodyweightHistory,
   upsertBodyweightEntry,
 } from '../data/bodyweight.repository';
+import { getAuthenticatedUserId } from '../data/profile.repository';
 
 export type { BodyweightEntry } from '../data/bodyweight.repository';
 

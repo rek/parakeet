@@ -161,8 +161,9 @@ describe('displayWeight formatting', () => {
 });
 
 describe('resolveEffectiveWarmupProtocol', () => {
-  const extended: Parameters<typeof resolveEffectiveWarmupProtocol>[0]['warmupConfig'] =
-    { type: 'preset', name: 'extended' };
+  const extended: Parameters<
+    typeof resolveEffectiveWarmupProtocol
+  >[0]['warmupConfig'] = { type: 'preset', name: 'extended' };
   const base = {
     warmupConfig: extended,
     primaryLift: 'squat' as const,
