@@ -195,7 +195,7 @@ Module/platform/shared architecture is the canonical app structure. Legacy top-l
 ## Refactors
 
 - [x] refactor-001: Extract business logic from React components — domain logic moved to training-engine and module utils; presentation constants consolidated. See below for details.
-- [ ] refactor-003: UI-engine decoupling (GH#132) — Phases 0-2, 4, 7 complete: weight utils → `@shared/utils/`; muscle types → `@parakeet/shared-types`; plates/calculatePlates → `@shared/constants/plates`; exercise-lookup → `@shared/utils/exercise-lookup`; `FormattedTrace` app-owned type replaces `PrescriptionTrace` in all UI; domain constants consolidated. 90→70 engine import files. Phases 3, 5, 6 remaining.
+- [x] refactor-003: UI-engine decoupling (GH#132) — All phases complete. Zero engine imports in `app/` screens, `modules/*/ui/`, and `platform/store/`. Engine imports confined to `modules/*/lib|application|data/` and `shared/`. Weight utils, muscle types, plates, exercise-lookup, `FormattedTrace`, session adaptation types, per-module adapters, domain constants all decoupled. 90→40 engine import files.
 - [x] refactor-002: Screen title consistency (GH#103) — extracted `ScreenTitle` component (`components/ui/ScreenTitle.tsx`); replaced inconsistent inline title styles across 15 screens (mix of 24px/800, 28px/700, 28px/800) with canonical theme tokens (2xl/black/tight) via shared component
   - `getPhaseForDay` → `training-engine/formulas/cycle-phase.ts` (removed duplicate from settings/cycle-tracking)
   - `estimateWorkingWeight` → `training-engine/formulas/weight-rounding.ts` (removed `WORKING_PCT` from settings/warmup-protocol)
