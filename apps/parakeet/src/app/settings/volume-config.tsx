@@ -11,16 +11,14 @@ import {
 import { useAuth } from '@modules/auth';
 import { getProfile } from '@modules/profile';
 import {
+  DEFAULT_MRV_MEV_CONFIG_FEMALE,
+  DEFAULT_MRV_MEV_CONFIG_MALE,
   getMrvMevConfig,
   resetMuscleToDefault,
   updateMuscleConfig,
 } from '@modules/training-volume';
-import {
-  DEFAULT_MRV_MEV_CONFIG_FEMALE,
-  DEFAULT_MRV_MEV_CONFIG_MALE,
-} from '@parakeet/training-engine';
+import type { MrvMevConfig } from '@modules/training-volume';
 import type { MuscleGroup } from '@parakeet/shared-types';
-import type { MrvMevConfig } from '@parakeet/training-engine';
 import {
   MUSCLE_GROUPS_ORDER,
   MUSCLE_LABELS_FULL,
@@ -30,10 +28,9 @@ import { router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { BackLink } from '../../components/navigation/BackLink';
+import { ScreenTitle } from '../../components/ui/ScreenTitle';
 import type { ColorScheme } from '../../theme';
 import { useTheme } from '../../theme/ThemeContext';
-
-import { ScreenTitle } from '../../components/ui/ScreenTitle';
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 

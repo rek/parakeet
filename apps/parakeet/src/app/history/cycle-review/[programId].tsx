@@ -14,10 +14,10 @@ import {
   createFormulaOverride,
   deactivateFormulaConfig,
 } from '@modules/formula';
+import type { FormulaConfig } from '@modules/formula';
 import { getRatingStyles, getVolumeLevelColors } from '@modules/history';
 import { classifyVolumeLevel } from '@modules/training-volume';
 import type { MuscleGroup } from '@parakeet/shared-types';
-import type { FormulaConfig } from '@parakeet/training-engine';
 import {
   MUSCLE_GROUPS_ORDER,
   MUSCLE_LABELS_ABBR,
@@ -27,10 +27,9 @@ import { router, useLocalSearchParams } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { BackLink } from '../../../components/navigation/BackLink';
+import { ScreenTitle } from '../../../components/ui/ScreenTitle';
 import type { ColorScheme } from '../../../theme';
 import { useTheme } from '../../../theme/ThemeContext';
-
-import { ScreenTitle } from '../../../components/ui/ScreenTitle';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 

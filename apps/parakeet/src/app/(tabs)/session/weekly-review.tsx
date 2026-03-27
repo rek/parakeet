@@ -11,24 +11,22 @@ import {
 
 import { useAuth } from '@modules/auth';
 import {
+  computePredictedFatigue,
+  detectMismatches,
   getWeeklyVolumeForReview,
   MISMATCH_DIRECTION_LABELS,
   saveWeeklyBodyReview,
 } from '@modules/body-review';
-import { addBodyweightEntry, getProfile } from '@modules/profile';
-import { getMrvMevConfig, volumeBarColor } from '@modules/training-volume';
-import type { MuscleGroup } from '@parakeet/shared-types';
-import { MUSCLE_GROUPS } from '@parakeet/shared-types';
-import {
-  computePredictedFatigue,
-  detectMismatches,
-} from '@parakeet/training-engine';
 import type {
   FatigueLevel,
   FatigueMismatch,
   MrvMevConfig,
   PredictedFatigue,
-} from '@parakeet/training-engine';
+} from '@modules/body-review';
+import { addBodyweightEntry, getProfile } from '@modules/profile';
+import { getMrvMevConfig, volumeBarColor } from '@modules/training-volume';
+import type { MuscleGroup } from '@parakeet/shared-types';
+import { MUSCLE_GROUPS } from '@parakeet/shared-types';
 import { captureException } from '@platform/utils/captureException';
 import { MUSCLE_LABELS_FULL } from '@shared/constants/training';
 import { capitalize } from '@shared/utils/string';

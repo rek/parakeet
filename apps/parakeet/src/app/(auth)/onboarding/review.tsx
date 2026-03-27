@@ -9,12 +9,12 @@ import {
 } from 'react-native';
 
 import { useAuth } from '@modules/auth';
-import { createProgram } from '@modules/program';
 import {
+  createProgram,
   DEFAULT_TRAINING_DAYS,
   generateProgram,
   nextDateForWeekday,
-} from '@parakeet/training-engine';
+} from '@modules/program';
 import { qk } from '@platform/query';
 import { captureException } from '@platform/utils/captureException';
 import { DAY_LABELS, MONTH_SHORT } from '@shared/constants';
@@ -22,11 +22,10 @@ import { capitalize } from '@shared/utils/string';
 import { useQueryClient } from '@tanstack/react-query';
 import { router, useLocalSearchParams } from 'expo-router';
 
+import { ScreenTitle } from '../../../components/ui/ScreenTitle';
 import type { ColorScheme } from '../../../theme';
 import { radii, spacing, typography } from '../../../theme';
 import { useTheme } from '../../../theme/ThemeContext';
-
-import { ScreenTitle } from '../../../components/ui/ScreenTitle';
 
 // ── Styles ────────────────────────────────────────────────────────────────────
 

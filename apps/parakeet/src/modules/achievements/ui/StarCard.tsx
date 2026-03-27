@@ -1,11 +1,11 @@
 import { useEffect, useMemo, useRef } from 'react';
 import { Animated, StyleSheet, Text, View } from 'react-native';
 
-import type { PR } from '@parakeet/training-engine';
 import { capitalize } from '@shared/utils/string';
 
 import { radii, spacing, typography } from '../../../theme';
 import { useTheme } from '../../../theme/ThemeContext';
+import type { PR } from '../lib/engine-adapter';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 

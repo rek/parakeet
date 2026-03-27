@@ -1,9 +1,20 @@
 import type { Lift } from '@parakeet/shared-types';
+import {
+  estimateWorkingWeight,
+  generateWarmupSets,
+  getPresetSteps,
+} from '@parakeet/training-engine';
 import type {
   WarmupPresetName,
   WarmupProtocol,
+  WarmupStep,
 } from '@parakeet/training-engine';
 import { toJson, typedSupabase } from '@platform/supabase';
+
+// Re-export warmup types and functions so screens import from @modules/settings
+// instead of directly from @parakeet/training-engine.
+export { estimateWorkingWeight, generateWarmupSets, getPresetSteps };
+export type { WarmupPresetName, WarmupProtocol, WarmupStep };
 
 function parseCustomSteps(
   value: unknown
@@ -38,10 +49,20 @@ export async function getWarmupConfig(
   if (error) throw error;
   const defaultPreset: WarmupPresetName =
     biologicalSex === 'female' ? 'standard_female' : 'standard';
-  if (!data) return { protocol: { type: 'preset', name: defaultPreset }, explicit: false };
+  if (!data)
+    return {
+      protocol: { type: 'preset', name: defaultPreset },
+      explicit: false,
+    };
   if (data.protocol === 'custom')
-    return { protocol: { type: 'custom', steps: parseCustomSteps(data.custom_steps) }, explicit: true };
-  return { protocol: { type: 'preset', name: data.protocol as WarmupPresetName }, explicit: true };
+    return {
+      protocol: { type: 'custom', steps: parseCustomSteps(data.custom_steps) },
+      explicit: true,
+    };
+  return {
+    protocol: { type: 'preset', name: data.protocol as WarmupPresetName },
+    explicit: true,
+  };
 }
 
 export async function getAllWarmupConfigs(

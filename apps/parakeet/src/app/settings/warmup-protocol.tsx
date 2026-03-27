@@ -13,17 +13,15 @@ import { useAuth } from '@modules/auth';
 import { getProfile } from '@modules/profile';
 import { getCurrentOneRmKg } from '@modules/program';
 import {
+  estimateWorkingWeight,
+  generateWarmupSets,
   getAllWarmupConfigs,
+  getPresetSteps,
   updateWarmupConfig,
   WARMUP_PRESETS,
 } from '@modules/settings';
+import type { WarmupProtocol, WarmupStep } from '@modules/settings';
 import type { Lift } from '@parakeet/shared-types';
-import {
-  estimateWorkingWeight,
-  generateWarmupSets,
-  getPresetSteps,
-} from '@parakeet/training-engine';
-import type { WarmupProtocol, WarmupStep } from '@parakeet/training-engine';
 import { qk } from '@platform/query';
 import { TRAINING_LIFTS } from '@shared/constants/training';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
@@ -31,10 +29,9 @@ import { router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { BackLink } from '../../components/navigation/BackLink';
+import { ScreenTitle } from '../../components/ui/ScreenTitle';
 import type { ColorScheme } from '../../theme';
 import { useTheme } from '../../theme/ThemeContext';
-
-import { ScreenTitle } from '../../components/ui/ScreenTitle';
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 

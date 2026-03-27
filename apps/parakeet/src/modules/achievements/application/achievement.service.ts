@@ -1,9 +1,5 @@
 import type { Lift } from '@parakeet/shared-types';
-import { computeStreak, computeWilks2020 } from '@parakeet/training-engine';
-import type { PR, StreakResult } from '@parakeet/training-engine';
 import { weightGramsToKg } from '@shared/utils/weight';
-
-import { buildWeekStatuses } from '../utils/week-status-builder';
 
 import {
   fetchBodyweightEntriesForWilks,
@@ -17,6 +13,13 @@ import {
   upsertPersonalRecords,
 } from '../data/achievement.repository';
 import { fetchProgramSessionStatuses } from '../data/session.repository';
+import {
+  computeStreak,
+  computeWilks2020,
+  type PR,
+  type StreakResult,
+} from '../lib/engine-adapter';
+import { buildWeekStatuses } from '../utils/week-status-builder';
 
 export interface HistoricalPRs {
   best1rmKg: number;
@@ -90,7 +93,15 @@ export async function getPRHistory(
     }
   }
 
-  return { best1rmKg, best1rmSessionId, best1rmDate, bestVolumeKgCubed, repPRs, repPRSessionIds, repPRDates };
+  return {
+    best1rmKg,
+    best1rmSessionId,
+    best1rmDate,
+    bestVolumeKgCubed,
+    repPRs,
+    repPRSessionIds,
+    repPRDates,
+  };
 }
 
 /**
@@ -179,12 +190,11 @@ export async function getWilksHistory(userId: string): Promise<WilksPoint[]> {
       relevant.length > 0 ? relevant[relevant.length - 1] : maxes[0];
 
     // Use bodyweight closest to (but not after) the program start date
-    const relevantBw = bwEntries.filter(
-      (e) => e.recorded_date <= startDate
-    );
-    const bodyweightKg = relevantBw.length > 0
-      ? relevantBw[relevantBw.length - 1].weight_kg
-      : (bwEntries[0]?.weight_kg ?? fallbackBw);
+    const relevantBw = bwEntries.filter((e) => e.recorded_date <= startDate);
+    const bodyweightKg =
+      relevantBw.length > 0
+        ? relevantBw[relevantBw.length - 1].weight_kg
+        : (bwEntries[0]?.weight_kg ?? fallbackBw);
 
     const squatKg = weightGramsToKg(maxRow.squat_1rm_grams as number);
     const benchKg = weightGramsToKg(maxRow.bench_1rm_grams as number);

@@ -7,13 +7,17 @@ import {
   View,
 } from 'react-native';
 
-import type { CycleBadge, FunBadgeRow, HistoricalPRs } from '@modules/achievements';
-import type { StreakResult } from '@parakeet/training-engine';
+import type {
+  CycleBadge,
+  FunBadgeRow,
+  HistoricalPRs,
+} from '@modules/achievements';
 import { formatDate } from '@shared/utils/date';
 
 import { radii, spacing, typography } from '../../../theme';
 import type { ColorScheme } from '../../../theme';
 import { useTheme } from '../../../theme/ThemeContext';
+import type { StreakResult } from '../lib/engine-adapter';
 import { BadgeIcon } from './BadgeIcon';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -286,11 +290,7 @@ function PRRow({
     );
   }
 
-  return (
-    <View style={styles.prBlock}>
-      {content}
-    </View>
-  );
+  return <View style={styles.prBlock}>{content}</View>;
 }
 
 // ── Component ─────────────────────────────────────────────────────────────────
@@ -383,11 +383,17 @@ export function AchievementsSection({
               const badgeContent = (
                 <>
                   <View style={styles.funBadgeIcon}>
-                    <BadgeIcon badgeId={badge.id} emoji={badge.emoji} size={28} />
+                    <BadgeIcon
+                      badgeId={badge.id}
+                      emoji={badge.emoji}
+                      size={28}
+                    />
                   </View>
                   <View style={styles.funBadgeContent}>
                     <Text style={styles.funBadgeName}>{badge.name}</Text>
-                    <Text style={styles.funBadgeDescription}>{badge.description}</Text>
+                    <Text style={styles.funBadgeDescription}>
+                      {badge.description}
+                    </Text>
                     <Text style={styles.funBadgeFlavor}>{badge.flavor}</Text>
                   </View>
                   {badgeTappable && <Text style={styles.chevron}>›</Text>}
@@ -461,7 +467,13 @@ export function AchievementsSection({
               )
                 return null;
               return (
-                <PRRow key={lift} lift={lift} prs={liftPRs} styles={styles} onPress={onPRPress} />
+                <PRRow
+                  key={lift}
+                  lift={lift}
+                  prs={liftPRs}
+                  styles={styles}
+                  onPress={onPRPress}
+                />
               );
             })}
           </View>

@@ -1,4 +1,4 @@
-import type { WeekStatus } from '@parakeet/training-engine';
+import type { WeekStatus } from '../lib/engine-adapter';
 
 interface SessionRow {
   id: string;
@@ -74,8 +74,7 @@ export function buildWeekStatuses(
         completed++;
       } else if (
         status === 'skipped' &&
-        (disruptionSessionIds.has(s.id) ||
-          isDateCoveredByDisruption(dateStr))
+        (disruptionSessionIds.has(s.id) || isDateCoveredByDisruption(dateStr))
       ) {
         skippedWithDisruption++;
       } else if (weekIsComplete) {

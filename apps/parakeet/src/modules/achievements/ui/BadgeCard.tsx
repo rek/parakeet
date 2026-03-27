@@ -1,10 +1,9 @@
 import { useEffect, useMemo, useRef } from 'react';
 import { Animated, StyleSheet, Text, View } from 'react-native';
 
-import type { EarnedBadge } from '@parakeet/training-engine';
-
 import { radii, spacing, typography } from '../../../theme';
 import { useTheme } from '../../../theme/ThemeContext';
+import type { EarnedBadge } from '../lib/engine-adapter';
 import { BadgeIcon } from './BadgeIcon';
 
 interface BadgeCardProps {

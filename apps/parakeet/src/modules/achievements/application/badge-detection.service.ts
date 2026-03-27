@@ -1,12 +1,9 @@
 import type {
   BadgeCheckContext,
-  BadgeId,
   ConsistencyData,
-  EarnedBadge,
   ProgramLoyaltyData,
 } from '@parakeet/training-engine';
 import {
-  BADGE_CATALOG,
   checkConsistencyBadges,
   checkLiftIdentityBadges,
   checkPerformanceBadges,
@@ -27,6 +24,11 @@ import {
 } from '../data/achievement.repository';
 import { fetchUserBadgeIds, insertBadges } from '../data/badge.repository';
 import type { ActualSet } from '../hooks/useAchievementDetection';
+import {
+  BADGE_CATALOG,
+  type BadgeId,
+  type EarnedBadge,
+} from '../lib/engine-adapter';
 import { buildWeekStatuses } from '../utils/week-status-builder';
 
 // ── Types ────────────────────────────────────────────────────────────────────

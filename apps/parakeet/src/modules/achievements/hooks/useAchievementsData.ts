@@ -1,5 +1,3 @@
-import type { BadgeId, StreakResult } from '@parakeet/training-engine';
-import { BADGE_CATALOG } from '@parakeet/training-engine';
 import { useQuery } from '@tanstack/react-query';
 
 import {
@@ -12,6 +10,11 @@ import type {
   HistoricalPRs,
 } from '../application/achievement.service';
 import { fetchUserBadges } from '../data/badge.repository';
+import {
+  BADGE_CATALOG,
+  type BadgeId,
+  type StreakResult,
+} from '../lib/engine-adapter';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 

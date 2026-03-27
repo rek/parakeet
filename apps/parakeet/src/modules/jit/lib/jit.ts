@@ -23,7 +23,6 @@ import {
 } from '@modules/settings/lib/settings';
 import { getWarmupConfig } from '@modules/settings/lib/warmup-config';
 import { getMrvMevConfig } from '@modules/training-volume/lib/volume-config';
-import { DEFAULT_RPE_TARGET } from '@shared/constants/training';
 import {
   BlockNumberSchema,
   DisruptionSchema,
@@ -59,6 +58,7 @@ import type {
 import { toJson, typedSupabase } from '@platform/supabase';
 import { captureException } from '@platform/utils/captureException';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { DEFAULT_RPE_TARGET } from '@shared/constants/training';
 import { weightGramsToKg } from '@shared/utils/weight';
 
 import { fetchModifierCalibrations } from '../data/calibration.repository';
@@ -72,6 +72,9 @@ import {
   fetchWeekSessionCounts,
 } from '../data/jit.repository';
 import { estimateOneRmKgFromProfile } from './max-estimation';
+
+// Re-export so screens import ReadinessLevel from @modules/jit.
+export type { ReadinessLevel };
 
 type Session = Awaited<ReturnType<typeof getSession>>;
 

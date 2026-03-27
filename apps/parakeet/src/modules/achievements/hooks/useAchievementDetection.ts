@@ -6,10 +6,8 @@ import {
 import type { Lift } from '@parakeet/shared-types';
 import {
   checkCycleCompletion,
-  detectSessionPRs,
   estimateOneRepMax_Epley,
 } from '@parakeet/training-engine';
-import type { EarnedBadge, PR } from '@parakeet/training-engine';
 import { weightGramsToKg } from '@shared/utils/weight';
 
 import {
@@ -18,6 +16,11 @@ import {
   storePersonalRecords,
 } from '../application/achievement.service';
 import { detectBadges } from '../application/badge-detection.service';
+import {
+  detectSessionPRs,
+  type EarnedBadge,
+  type PR,
+} from '../lib/engine-adapter';
 
 export interface ActualSet {
   weight_grams: number;
@@ -77,7 +80,10 @@ export async function detectAchievements(
           s.rpe_actual >= 8.5 &&
           s.reps_completed >= 1 &&
           s.reps_completed <= 20
-            ? estimateOneRepMax_Epley(weightGramsToKg(s.weight_grams), s.reps_completed)
+            ? estimateOneRepMax_Epley(
+                weightGramsToKg(s.weight_grams),
+                s.reps_completed
+              )
             : undefined,
       }));
 

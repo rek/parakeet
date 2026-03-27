@@ -1,7 +1,6 @@
 import { Image, Text } from 'react-native';
 
-import type { BadgeId } from '@parakeet/training-engine';
-
+import type { BadgeId } from '../lib/engine-adapter';
 import { BADGE_IMAGES } from './badge-images';
 
 interface BadgeIconProps {

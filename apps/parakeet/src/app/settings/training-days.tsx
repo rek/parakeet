@@ -12,10 +12,10 @@ import {
 import { useAuth } from '@modules/auth';
 import {
   countFuturePlannedSessions,
+  DEFAULT_TRAINING_DAYS,
   updateTrainingDays,
   useActiveProgram,
 } from '@modules/program';
-import { DEFAULT_TRAINING_DAYS } from '@parakeet/training-engine';
 import { qk } from '@platform/query';
 import { captureException } from '@platform/utils/captureException';
 import { DAY_LABELS } from '@shared/constants';
@@ -23,11 +23,11 @@ import { useQueryClient } from '@tanstack/react-query';
 import { router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { BackLink } from '../../components/navigation/BackLink';
+import { ScreenTitle } from '../../components/ui/ScreenTitle';
 import type { ColorScheme } from '../../theme';
 import { radii, spacing, typography } from '../../theme';
 import { useTheme } from '../../theme/ThemeContext';
-import { BackLink } from '../../components/navigation/BackLink';
-import { ScreenTitle } from '../../components/ui/ScreenTitle';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -222,7 +222,10 @@ export default function TrainingDaysScreen() {
         );
       } catch (err) {
         captureException(err);
-        Alert.alert('Error', 'Could not check upcoming sessions. Please try again.');
+        Alert.alert(
+          'Error',
+          'Could not check upcoming sessions. Please try again.'
+        );
       }
     } else {
       doSave();

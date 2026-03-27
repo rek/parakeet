@@ -1,6 +1,13 @@
-import { computeCyclePhase } from '@parakeet/training-engine';
-import type { CycleContext } from '@parakeet/training-engine';
+import {
+  computeCyclePhase,
+  getCyclePhaseModifier,
+  getPhaseForDay,
+} from '@parakeet/training-engine';
+import type { CycleContext, CyclePhase } from '@parakeet/training-engine';
 import { typedSupabase } from '@platform/supabase';
+
+export { computeCyclePhase, getCyclePhaseModifier, getPhaseForDay };
+export type { CycleContext, CyclePhase };
 
 export interface CycleConfig {
   is_enabled: boolean;

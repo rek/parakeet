@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 
 import { BadgeCard, detectAchievements, StarCard } from '@modules/achievements';
+import type { EarnedBadge, PR } from '@modules/achievements';
 import { useAuth } from '@modules/auth';
 import { stampCyclePhaseOnSession } from '@modules/cycle-tracking';
 import {
@@ -21,7 +22,6 @@ import {
   RPE_OPTIONS,
 } from '@modules/session';
 import type { JitData } from '@modules/session';
-import type { EarnedBadge, PR } from '@parakeet/training-engine';
 import { useNetworkStatus } from '@platform/network';
 import { qk } from '@platform/query';
 import { useSessionStore } from '@platform/store/sessionStore';

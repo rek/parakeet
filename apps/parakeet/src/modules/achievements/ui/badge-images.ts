@@ -1,5 +1,6 @@
-import type { BadgeId } from '@parakeet/training-engine';
 import type { ImageSourcePropType } from 'react-native';
+
+import type { BadgeId } from '../lib/engine-adapter';
 
 /**
  * Static require map for badge images.

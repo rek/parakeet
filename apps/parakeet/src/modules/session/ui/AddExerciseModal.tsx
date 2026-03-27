@@ -10,12 +10,9 @@ import {
   View,
 } from 'react-native';
 
-import type { Lift } from '@parakeet/shared-types';
+import type { Lift, MuscleGroup } from '@parakeet/shared-types';
+import type { ExerciseCatalogEntry } from '@shared/utils/exercise-lookup';
 import { getAllExercises } from '@shared/utils/exercise-lookup';
-import type {
-  ExerciseCatalogEntry,
-  MuscleGroup,
-} from '@parakeet/training-engine';
 import { MUSCLE_LABELS_COMPACT } from '@shared/constants/training';
 
 import { radii, spacing, typography } from '../../../theme';

@@ -14,6 +14,7 @@ import { getFormulaConfig } from '@modules/formula';
 import { getRecentLiftHistory } from '@modules/history';
 import { computeRpeAdjustmentNote } from '@modules/jit';
 import {
+  calculateSets,
   determineCurrentWeek,
   getCurrentOneRmKg,
   groupByWeek,
@@ -24,7 +25,6 @@ import {
 import type { ProgramSession } from '@modules/program';
 import { useInProgressSession, useTodaySession } from '@modules/session';
 import type { IntensityType, Lift } from '@parakeet/shared-types';
-import { calculateSets } from '@parakeet/training-engine';
 import { qk } from '@platform/query';
 import { useSessionStore } from '@platform/store/sessionStore';
 import { capitalize } from '@shared/utils/string';

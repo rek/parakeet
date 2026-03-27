@@ -16,6 +16,9 @@ import {
   listPendingAiFormulaSuggestions,
 } from '../data/formula.repository';
 
+// Re-export so screens import FormulaConfig from @modules/formula.
+export type { FormulaConfig };
+
 export async function getFormulaConfig(
   userId: string,
   biologicalSex?: 'female' | 'male'

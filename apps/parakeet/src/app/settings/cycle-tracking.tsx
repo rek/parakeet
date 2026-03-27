@@ -13,6 +13,7 @@ import { useAuth } from '@modules/auth';
 import {
   addPeriodStart,
   clampCycleLength,
+  computeCyclePhase,
   computeNextPeriodDate,
   CYCLE_PHASE_BG,
   CYCLE_PHASE_LABELS,
@@ -21,10 +22,10 @@ import {
   deletePeriodStart,
   getCycleConfig,
   getPeriodStartHistory,
+  getPhaseForDay,
   updateCycleConfig,
 } from '@modules/cycle-tracking';
 import type { PeriodStartEntry } from '@modules/cycle-tracking';
-import { computeCyclePhase, getPhaseForDay } from '@parakeet/training-engine';
 import { qk } from '@platform/query';
 import DateTimePicker, {
   DateTimePickerEvent,

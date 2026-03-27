@@ -1,11 +1,10 @@
-import type { BadgeId } from '@parakeet/training-engine';
 import type { Json } from '@platform/supabase';
 import { typedSupabase } from '@platform/supabase';
 
+import type { BadgeId } from '../lib/engine-adapter';
+
 /** Fetch the set of badge IDs already earned by a user. */
-export async function fetchUserBadgeIds(
-  userId: string
-): Promise<Set<BadgeId>> {
+export async function fetchUserBadgeIds(userId: string): Promise<Set<BadgeId>> {
   const { data, error } = await typedSupabase
     .from('user_badges')
     .select('badge_id')

@@ -8,3 +8,4 @@ export {
   getExerciseType,
   getMusclesForExercise,
 } from '@parakeet/training-engine';
+export type { ExerciseCatalogEntry } from '@parakeet/training-engine';

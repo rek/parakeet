@@ -11,10 +11,12 @@ import {
 
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '@modules/auth';
+import { SlotDropdown } from '@modules/formula';
 import {
   cycleBlockNumber,
   getActiveProgram,
   getAllBlockAssignments,
+  getAuxiliariesForBlock,
   getAuxiliaryPools,
   getCurrentBlock,
   getProgramBlockTabs,
@@ -22,7 +24,6 @@ import {
 } from '@modules/program';
 import type { SlotAssignment } from '@modules/program';
 import type { Lift } from '@parakeet/shared-types';
-import { getAuxiliariesForBlock } from '@parakeet/training-engine';
 import { qk } from '@platform/query';
 import { BLOCK_INTENSITY, TRAINING_LIFTS } from '@shared/constants/training';
 import { useQuery } from '@tanstack/react-query';
@@ -30,11 +31,9 @@ import { router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { BackLink } from '../../components/navigation/BackLink';
-import { SlotDropdown } from '@modules/formula';
+import { ScreenTitle } from '../../components/ui/ScreenTitle';
 import type { ColorScheme } from '../../theme';
 import { useTheme } from '../../theme/ThemeContext';
-
-import { ScreenTitle } from '../../components/ui/ScreenTitle';
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 

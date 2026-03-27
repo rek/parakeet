@@ -1,4 +1,4 @@
-import type { VolumeStatus } from '@parakeet/training-engine';
+import type { VolumeStatus } from '../lib/engine-adapter';
 
 /** Map VolumeStatus to a theme color key. Consumers call with their ColorScheme. */
 export function getVolumeStatusColor(

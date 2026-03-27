@@ -1,6 +1,5 @@
-import type { CyclePhase } from '@parakeet/training-engine';
-
 import { palette } from '../../../theme';
+import type { CyclePhase } from '../lib/cycle-tracking';
 
 export const CYCLE_PHASES: readonly CyclePhase[] = [
   'menstrual',

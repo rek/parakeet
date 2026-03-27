@@ -1,4 +1,4 @@
-import type { WarmupPresetName } from '@parakeet/training-engine';
+import type { WarmupPresetName } from '@modules/settings/lib/warmup-config';
 
 export const WARMUP_PRESETS: {
   name: WarmupPresetName;

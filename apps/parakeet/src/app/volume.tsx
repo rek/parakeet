@@ -9,14 +9,14 @@ import {
 } from 'react-native';
 
 import {
+  classifyConfigSource,
   getVolumeStatusColor,
   isVolumeOverMrv,
   useWeeklyVolume,
   volumeFillPct,
 } from '@modules/training-volume';
+import type { VolumeStatus } from '@modules/training-volume';
 import type { MuscleGroup } from '@parakeet/shared-types';
-import type { VolumeStatus } from '@parakeet/training-engine';
-import { classifyConfigSource } from '@parakeet/training-engine';
 import {
   MUSCLE_GROUPS_ORDER,
   MUSCLE_LABELS_FULL,
@@ -25,10 +25,9 @@ import { router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { BackLink } from '../components/navigation/BackLink';
+import { ScreenTitle } from '../components/ui/ScreenTitle';
 import type { ColorScheme } from '../theme';
 import { useTheme } from '../theme/ThemeContext';
-
-import { ScreenTitle } from '../components/ui/ScreenTitle';
 
 type Breakdown = Awaited<ReturnType<typeof useWeeklyVolume>['data']>;
 type MuscleBreakdown = NonNullable<Breakdown>['breakdown'][MuscleGroup];
@@ -70,7 +69,9 @@ function MuscleBar({
   const isOver = isVolumeOverMrv(status);
 
   const configSource = classifyConfigSource({
-    config: { [muscle]: { mev, mrv } } as Parameters<typeof classifyConfigSource>[0]['config'],
+    config: { [muscle]: { mev, mrv } } as Parameters<
+      typeof classifyConfigSource
+    >[0]['config'],
     muscle,
     biologicalSex,
   });
@@ -349,7 +350,9 @@ function buildStyles(colors: ColorScheme) {
 export default function VolumeScreen() {
   const { colors } = useTheme();
   const { data, isLoading } = useWeeklyVolume();
-  const [expandedMuscle, setExpandedMuscle] = useState<MuscleGroup | null>(null);
+  const [expandedMuscle, setExpandedMuscle] = useState<MuscleGroup | null>(
+    null
+  );
 
   const styles = useMemo(() => buildStyles(colors), [colors]);
 
@@ -414,26 +417,26 @@ export default function VolumeScreen() {
                 ? Math.ceil((mev * done) / total)
                 : mev;
               return (
-              <MuscleBar
-                key={muscle}
-                muscle={muscle}
-                sets={data.weekly[muscle]}
-                mrv={data.config[muscle].mrv}
-                mev={mev}
-                proRatedMev={proRatedMev}
-                isPartialWeek={isPartialWeek}
-                status={data.status[muscle]}
-                expanded={expandedMuscle === muscle}
-                breakdown={data.breakdown[muscle]}
-                biologicalSex={data.biologicalSex}
-                onToggle={() =>
-                  setExpandedMuscle((prev) =>
-                    prev === muscle ? null : muscle
-                  )
-                }
-                colors={colors}
-                styles={styles}
-              />
+                <MuscleBar
+                  key={muscle}
+                  muscle={muscle}
+                  sets={data.weekly[muscle]}
+                  mrv={data.config[muscle].mrv}
+                  mev={mev}
+                  proRatedMev={proRatedMev}
+                  isPartialWeek={isPartialWeek}
+                  status={data.status[muscle]}
+                  expanded={expandedMuscle === muscle}
+                  breakdown={data.breakdown[muscle]}
+                  biologicalSex={data.biologicalSex}
+                  onToggle={() =>
+                    setExpandedMuscle((prev) =>
+                      prev === muscle ? null : muscle
+                    )
+                  }
+                  colors={colors}
+                  styles={styles}
+                />
               );
             })}
           </View>

@@ -3,6 +3,7 @@ export * from './application/unending-session';
 export * from './hooks/useActiveProgram';
 export * from './lib/auxiliary-config';
 export * from './lib/lifter-maxes';
+export * from './lib/engine-adapter';
 export * from './utils/program-utils';
 export * from './utils/auxiliary-muscles';
 export { BlockBadge } from './ui/BlockBadge';

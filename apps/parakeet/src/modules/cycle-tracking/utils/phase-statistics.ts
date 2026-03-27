@@ -1,5 +1,4 @@
-import type { CyclePhase } from '@parakeet/training-engine';
-
+import type { CyclePhase } from '../lib/cycle-tracking';
 import { CYCLE_PHASE_LABELS, CYCLE_PHASES } from '../ui/cycle-phase-styles';
 
 export interface PhaseStats {

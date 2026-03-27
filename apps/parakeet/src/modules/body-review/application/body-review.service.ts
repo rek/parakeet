@@ -4,8 +4,10 @@ import {
 } from '@parakeet/training-engine';
 import type {
   FatigueLevel,
+  FatigueMismatch,
   MrvMevConfig,
   MuscleGroup,
+  PredictedFatigue,
 } from '@parakeet/training-engine';
 
 import {
@@ -16,7 +18,14 @@ import {
 } from '../data/body-review.repository';
 import type { WeeklyBodyReview } from '../data/body-review.repository';
 
-export type { WeeklyBodyReview };
+export { computePredictedFatigue, detectMismatches };
+export type {
+  FatigueLevel,
+  FatigueMismatch,
+  MrvMevConfig,
+  PredictedFatigue,
+  WeeklyBodyReview,
+};
 
 export interface SaveReviewInput {
   userId: string;
@@ -84,8 +93,12 @@ export async function getLatestMismatchDirection(
   );
   if (primaryMismatch.length === 0) return null;
 
-  const recovering = primaryMismatch.filter((m) => m.direction === 'recovering_well').length;
-  const accumulating = primaryMismatch.filter((m) => m.direction === 'accumulating_fatigue').length;
+  const recovering = primaryMismatch.filter(
+    (m) => m.direction === 'recovering_well'
+  ).length;
+  const accumulating = primaryMismatch.filter(
+    (m) => m.direction === 'accumulating_fatigue'
+  ).length;
   if (recovering > accumulating) return 'recovering_well';
   if (accumulating > recovering) return 'accumulating_fatigue';
   return null;

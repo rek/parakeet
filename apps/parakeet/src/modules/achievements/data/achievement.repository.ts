@@ -1,6 +1,7 @@
 import type { Lift } from '@parakeet/shared-types';
-import type { PR } from '@parakeet/training-engine';
 import { typedSupabase } from '@platform/supabase';
+
+import type { PR } from '../lib/engine-adapter';
 
 export async function upsertPersonalRecords(
   userId: string,

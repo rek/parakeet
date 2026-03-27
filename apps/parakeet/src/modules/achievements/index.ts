@@ -3,6 +3,7 @@ export * from './application/badge-detection.service';
 export * from './hooks/useAchievementDetection';
 export * from './hooks/useAchievementsData';
 export * from './lib/achievements';
+export * from './lib/engine-adapter';
 export { AchievementsSection } from './ui/AchievementsSection';
 export { BadgeCard } from './ui/BadgeCard';
 export { BadgeIcon } from './ui/BadgeIcon';

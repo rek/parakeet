@@ -32,7 +32,10 @@ export function useWeeklyVolume() {
       ]);
       const config = await getMrvMevConfig(user!.id, profile?.biological_sex);
       const weekly = computeWeeklyVolume(logs, getMusclesForLift);
-      const breakdown = computeVolumeBreakdown({ sessionLogs: logs, muscleMapper: getMusclesForLift });
+      const breakdown = computeVolumeBreakdown({
+        sessionLogs: logs,
+        muscleMapper: getMusclesForLift,
+      });
       const status = classifyVolumeStatus(weekly, config);
       const remaining = computeRemainingCapacity(weekly, config);
       const biologicalSex = profile?.biological_sex ?? null;
@@ -42,8 +45,14 @@ export function useWeeklyVolume() {
       const totalSessionsPerWeek = program?.training_days_per_week ?? 3;
 
       return {
-        weekly, status, remaining, config, breakdown, biologicalSex,
-        completedSessions, totalSessionsPerWeek,
+        weekly,
+        status,
+        remaining,
+        config,
+        breakdown,
+        biologicalSex,
+        completedSessions,
+        totalSessionsPerWeek,
       };
     },
     enabled: !!user?.id,

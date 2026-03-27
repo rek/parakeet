@@ -1,12 +1,13 @@
 import type { BiologicalSex } from '@modules/profile/application/profile.service';
 import type { MuscleGroup } from '@parakeet/shared-types';
 import { MUSCLE_GROUPS } from '@parakeet/shared-types';
+import { typedSupabase } from '@platform/supabase';
+
 import {
   DEFAULT_MRV_MEV_CONFIG_FEMALE,
   DEFAULT_MRV_MEV_CONFIG_MALE,
-} from '@parakeet/training-engine';
-import type { MrvMevConfig } from '@parakeet/training-engine';
-import { typedSupabase } from '@platform/supabase';
+} from './engine-adapter';
+import type { MrvMevConfig } from './engine-adapter';
 
 function isMuscleGroup(v: string): v is MuscleGroup {
   return (MUSCLE_GROUPS as readonly string[]).includes(v);

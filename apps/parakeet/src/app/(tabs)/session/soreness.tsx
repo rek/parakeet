@@ -10,24 +10,23 @@ import {
 } from 'react-native';
 
 import { useAuth } from '@modules/auth';
-import { getCurrentCycleContext } from '@modules/cycle-tracking';
+import {
+  getCurrentCycleContext,
+  getCyclePhaseModifier,
+} from '@modules/cycle-tracking';
+import type { CyclePhase } from '@modules/cycle-tracking';
 import { getActiveDisruptions } from '@modules/disruptions';
 import { runJITForSession } from '@modules/jit';
+import type { ReadinessLevel } from '@modules/jit';
 import { getCurrentOneRmKg } from '@modules/program';
-import { useSessionStore } from '@platform/store/sessionStore';
 import {
   getLatestSorenessCheckin,
   getReadinessPillColors,
   getSession,
   recordSorenessCheckin,
 } from '@modules/session';
-import type { Lift } from '@parakeet/shared-types';
-import { getCyclePhaseModifier } from '@parakeet/training-engine';
-import type {
-  CyclePhase,
-  MuscleGroup,
-  ReadinessLevel,
-} from '@parakeet/training-engine';
+import type { Lift, MuscleGroup } from '@parakeet/shared-types';
+import { useSessionStore } from '@platform/store/sessionStore';
 import { captureException } from '@platform/utils/captureException';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {
@@ -525,7 +524,9 @@ export default function SorenessScreen() {
       ]);
       const jitOutput = jitResult.output;
       // Store prescription trace in Zustand (too large for route params)
-      useSessionStore.getState().setCachedPrescriptionTrace(JSON.stringify(jitResult.trace));
+      useSessionStore
+        .getState()
+        .setCachedPrescriptionTrace(JSON.stringify(jitResult.trace));
       router.replace({
         pathname: '/session/[sessionId]',
         params: {
