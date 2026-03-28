@@ -26,6 +26,12 @@ export function AuxResultsTable({
     <>
       {entries.map(([exercise, sets]) => {
         const isTimed = sets[0]?.exercise_type === 'timed';
+        // Detect bodyweight: explicit type or legacy fallback (weight_grams === 0 + not timed)
+        const isBodyweight =
+          sets[0]?.exercise_type === 'bodyweight' ||
+          (!isTimed &&
+            !sets[0]?.exercise_type &&
+            sets.every((s) => s.weight_grams === 0));
         return (
           <View key={exercise}>
             <Text style={styles.sectionHeader}>
@@ -39,6 +45,10 @@ export function AuxResultsTable({
                 {isTimed ? (
                   <Text style={[styles.tableCell, styles.tableCellWeight]}>
                     Duration
+                  </Text>
+                ) : isBodyweight ? (
+                  <Text style={[styles.tableCell, styles.tableCellWeight]}>
+                    Reps
                   </Text>
                 ) : (
                   <>
@@ -65,6 +75,10 @@ export function AuxResultsTable({
                   {isTimed ? (
                     <Text style={[styles.tableCell, styles.tableCellWeight]}>
                       {set.reps_completed} min
+                    </Text>
+                  ) : isBodyweight ? (
+                    <Text style={[styles.tableCell, styles.tableCellWeight]}>
+                      {set.reps_completed}
                     </Text>
                   ) : (
                     <>

@@ -313,6 +313,7 @@ export default function CompleteScreen() {
               is_completed: s.is_completed,
               rpe_actual: s.rpe_actual,
               actual_rest_seconds: s.actual_rest_seconds,
+              exercise_type: s.exercise_type,
             }))
           : undefined,
       sessionRpe,

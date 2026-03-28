@@ -29,6 +29,7 @@ export interface AuxiliaryActualSet {
   rpe_actual?: number;
   is_completed: boolean;
   actual_rest_seconds?: number;
+  exercise_type?: 'weighted' | 'bodyweight' | 'timed';
   /** True when the lifter pressed "Failed" on the PostRestOverlay. */
   failed?: boolean;
 }
@@ -77,7 +78,11 @@ export interface SessionState {
     setNumber: number,
     data: Partial<AuxiliaryActualSet>
   ) => void;
-  addAdHocSet: (exercise: string, initialWeightGrams?: number) => void;
+  addAdHocSet: (
+    exercise: string,
+    initialWeightGrams?: number,
+    exerciseType?: 'weighted' | 'bodyweight' | 'timed'
+  ) => void;
   removeAdHocSet: (exercise: string, setNumber: number) => void;
   setWarmupDone: (index: number, done: boolean) => void;
   setSessionRpe: (rpe: number) => void;
@@ -86,7 +91,11 @@ export interface SessionState {
     plannedSets: { weight_kg: number; reps: number }[]
   ) => void;
   initAuxiliary: (
-    work: { exercise: string; sets: { weight_kg: number; reps: number }[] }[]
+    work: {
+      exercise: string;
+      sets: { weight_kg: number; reps: number }[];
+      exerciseType?: 'weighted' | 'bodyweight' | 'timed';
+    }[]
   ) => void;
   setSessionMeta: (meta: SessionState['sessionMeta']) => void;
   setCachedJitData: (raw: string) => void;
@@ -158,13 +167,14 @@ export const useSessionStore = create<SessionState>()(
 
       initAuxiliary: (work) =>
         set({
-          auxiliarySets: work.flatMap(({ exercise, sets }) =>
+          auxiliarySets: work.flatMap(({ exercise, sets, exerciseType }) =>
             sets.map((s, i) => ({
               exercise,
               set_number: i + 1,
               weight_grams: weightKgToGrams(s.weight_kg),
               reps_completed: s.reps,
               is_completed: false,
+              exercise_type: exerciseType,
             }))
           ),
         }),
@@ -185,7 +195,7 @@ export const useSessionStore = create<SessionState>()(
           ),
         })),
 
-      addAdHocSet: (exercise, initialWeightGrams) =>
+      addAdHocSet: (exercise, initialWeightGrams, exerciseType) =>
         set((state) => {
           const existing = state.auxiliarySets.filter(
             (s) => s.exercise === exercise
@@ -205,6 +215,8 @@ export const useSessionStore = create<SessionState>()(
                 weight_grams,
                 reps_completed: last?.reps_completed ?? 5,
                 is_completed: false,
+                exercise_type:
+                  exerciseType ?? last?.exercise_type,
               },
             ],
           };

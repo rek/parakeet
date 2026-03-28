@@ -9,7 +9,7 @@ Exercise types, weight scaling, rep targets, and auxiliary processing rules.
 | Type       | Weight        | Reps            | RPE/Rest          |
 |------------|---------------|-----------------|-------------------|
 | weighted   | Calculated    | From config     | Normal            |
-| bodyweight | 0 (omitted)   | From config     | Normal            |
+| bodyweight | 0 (omitted)   | From config     | RPE/rest suppressed |
 | timed      | 0             | 0 (duration)    | RPE/rest suppressed |
 
 Type resolution: catalog lookup first, then fallback map (Pull-ups, Chin-ups, Push-ups, Step-ups = bodyweight), then default = weighted.
