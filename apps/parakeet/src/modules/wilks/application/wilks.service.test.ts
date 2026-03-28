@@ -9,7 +9,7 @@ const mockGetProfileById = vi.hoisted(() => vi.fn());
 const mockComputeWilks2020 = vi.hoisted(() => vi.fn());
 const mockWeightGramsToKg = vi.hoisted(() => vi.fn());
 
-vi.mock('@modules/program/lib/lifter-maxes', () => ({
+vi.mock('@modules/program', () => ({
   getCurrentMaxes: mockGetCurrentMaxes,
 }));
 

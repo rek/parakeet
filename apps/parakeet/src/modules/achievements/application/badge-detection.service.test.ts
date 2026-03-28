@@ -10,16 +10,16 @@ const mockFetchSessionsForStreak = vi.hoisted(() => vi.fn());
 const mockFetchDisruptionsForStreak = vi.hoisted(() => vi.fn());
 
 // badge checkers — each returns an array of badge IDs
-const mockCheckPerformanceBadges = vi.hoisted(() => vi.fn(() => []));
-const mockCheckSituationalBadges = vi.hoisted(() => vi.fn(() => []));
-const mockCheckRpeEffortBadges = vi.hoisted(() => vi.fn(() => []));
-const mockCheckVolumeRepBadges = vi.hoisted(() => vi.fn(() => []));
-const mockCheckSessionMilestoneBadges = vi.hoisted(() => vi.fn(() => []));
-const mockCheckWildRareBadges = vi.hoisted(() => vi.fn(() => []));
-const mockCheckLiftIdentityBadges = vi.hoisted(() => vi.fn(() => []));
-const mockCheckRestPacingBadges = vi.hoisted(() => vi.fn(() => []));
-const mockCheckConsistencyBadges = vi.hoisted(() => vi.fn(() => []));
-const mockCheckProgramLoyaltyBadges = vi.hoisted(() => vi.fn(() => []));
+const mockCheckPerformanceBadges = vi.hoisted(() => vi.fn((): string[] => []));
+const mockCheckSituationalBadges = vi.hoisted(() => vi.fn((): string[] => []));
+const mockCheckRpeEffortBadges = vi.hoisted(() => vi.fn((): string[] => []));
+const mockCheckVolumeRepBadges = vi.hoisted(() => vi.fn((): string[] => []));
+const mockCheckSessionMilestoneBadges = vi.hoisted(() => vi.fn((): string[] => []));
+const mockCheckWildRareBadges = vi.hoisted(() => vi.fn((): string[] => []));
+const mockCheckLiftIdentityBadges = vi.hoisted(() => vi.fn((): string[] => []));
+const mockCheckRestPacingBadges = vi.hoisted(() => vi.fn((): string[] => []));
+const mockCheckConsistencyBadges = vi.hoisted(() => vi.fn((): string[] => []));
+const mockCheckProgramLoyaltyBadges = vi.hoisted(() => vi.fn((): string[] => []));
 const mockDetectStreakBreakAndRebuild = vi.hoisted(() => vi.fn(() => false));
 const mockBuildWeekStatuses = vi.hoisted(() => vi.fn(() => []));
 
@@ -70,27 +70,6 @@ vi.mock('@parakeet/training-engine', () => ({
     },
   },
 }));
-
-// typedSupabase is called by many internal fetchers — mock with chainable builder
-const makeQueryBuilder = (resolvedValue: unknown) => {
-  const builder: Record<string, unknown> = {};
-  const chain = () => builder;
-  builder.from = chain;
-  builder.select = chain;
-  builder.eq = chain;
-  builder.neq = chain;
-  builder.in = chain;
-  builder.not = chain;
-  builder.gte = chain;
-  builder.lte = chain;
-  builder.order = chain;
-  builder.limit = chain;
-  builder.maybeSingle = () => Promise.resolve(resolvedValue);
-  builder.single = () => Promise.resolve(resolvedValue);
-  // count queries
-  builder.head = chain;
-  return builder;
-};
 
 const mockSupabaseFrom = vi.hoisted(() => vi.fn());
 
@@ -333,7 +312,7 @@ describe('detectBadges', () => {
 
       // Each checker should have been called exactly once
       expect(mockCheckPerformanceBadges).toHaveBeenCalledOnce();
-      const [ctx] = mockCheckPerformanceBadges.mock.calls[0] as [
+      const [ctx] = mockCheckPerformanceBadges.mock.calls[0] as unknown as [
         { previousE1Rm: Record<string, number> },
       ];
       expect(ctx.previousE1Rm).toEqual({ squat: 150 });
@@ -344,7 +323,7 @@ describe('detectBadges', () => {
 
       await detectBadges(input);
 
-      const [ctx] = mockCheckPerformanceBadges.mock.calls[0] as [
+      const [ctx] = mockCheckPerformanceBadges.mock.calls[0] as unknown as [
         { completedCycles: number },
       ];
       expect(ctx.completedCycles).toBe(1);
@@ -353,7 +332,7 @@ describe('detectBadges', () => {
     it('passes cycleBadgeEarned=false as completedCycles=0 to context', async () => {
       await detectBadges(BASE_INPUT);
 
-      const [ctx] = mockCheckPerformanceBadges.mock.calls[0] as [
+      const [ctx] = mockCheckPerformanceBadges.mock.calls[0] as unknown as [
         { completedCycles: number },
       ];
       expect(ctx.completedCycles).toBe(0);
@@ -364,7 +343,7 @@ describe('detectBadges', () => {
 
       await detectBadges(input);
 
-      const [ctx] = mockCheckConsistencyBadges.mock.calls[0] as [
+      const [ctx] = mockCheckConsistencyBadges.mock.calls[0] as unknown as [
         { streakWeeks: number },
       ];
       expect(ctx.streakWeeks).toBe(12);
@@ -425,7 +404,7 @@ describe('detectBadges', () => {
 
       await detectBadges(input);
 
-      const [ctx] = mockCheckPerformanceBadges.mock.calls[0] as [
+      const [ctx] = mockCheckPerformanceBadges.mock.calls[0] as unknown as [
         { actualSets: Array<{ weight_grams: number }> },
       ];
       expect(ctx.actualSets).toHaveLength(2);

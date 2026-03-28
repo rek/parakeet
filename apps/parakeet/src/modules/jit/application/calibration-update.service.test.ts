@@ -436,7 +436,7 @@ describe('updateModifierCalibrations', () => {
     await updateModifierCalibrations({ sessionId: SESSION_ID, userId: USER_ID });
 
     // extractModifierSamples must only receive the readiness modifier (not bodyweight)
-    const [{ modifiers }] = mockExtractModifierSamples.mock.calls[0] as [{ modifiers: Array<{ source: string }> }][];
+    const [{ modifiers }] = mockExtractModifierSamples.mock.calls[0] as [{ modifiers: Array<{ source: string }> }];
     expect(modifiers.every((m) => ['readiness', 'cycle_phase', 'soreness'].includes(m.source))).toBe(true);
   });
 

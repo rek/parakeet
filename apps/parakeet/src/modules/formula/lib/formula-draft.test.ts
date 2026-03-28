@@ -1,6 +1,10 @@
 import { describe, expect, it } from 'vitest';
 
-import type { BlockIntensityConfig, RepIntensityConfig } from '@parakeet/training-engine';
+import type {
+  BlockIntensityConfig,
+  FormulaConfig,
+  RepIntensityConfig,
+} from '@parakeet/training-engine';
 
 import {
   draftToOverrides,
@@ -36,13 +40,13 @@ const REP_ROW: RepIntensityConfig = {
   rpe_target: 7,
 };
 
-function makeFormulaConfig() {
+function makeFormulaConfig(): FormulaConfig {
   return {
     block1: { heavy: BLOCK_ROW, explosive: BLOCK_ROW, rep: REP_ROW },
     block2: { heavy: BLOCK_ROW, explosive: BLOCK_ROW, rep: REP_ROW },
     block3: { heavy: BLOCK_ROW, explosive: BLOCK_ROW, rep: REP_ROW },
     deload: BLOCK_ROW,
-  };
+  } as FormulaConfig;
 }
 
 // ── toRowDraft ─────────────────────────────────────────────────────────────────
@@ -196,38 +200,41 @@ function makeDraft(): DraftConfig {
   };
 }
 
+// draftToOverrides returns FormulaOverrides (Zod-inferred, all optional) but
+// the tests always call makeDraft() which populates all blocks. Cast the block
+// intensity to the engine type which includes reps_max.
+function heavy(overrides: ReturnType<typeof draftToOverrides>): BlockIntensityConfig {
+  return overrides.block1!.heavy as unknown as BlockIntensityConfig;
+}
+
 describe('draftToOverrides', () => {
   it('converts pct string to decimal fraction', () => {
-    const overrides = draftToOverrides(makeDraft());
-    expect(overrides.block1.heavy.pct).toBeCloseTo(0.8);
+    expect(heavy(draftToOverrides(makeDraft())).pct).toBeCloseTo(0.8);
   });
 
   it('converts block sets and reps to integers', () => {
-    const overrides = draftToOverrides(makeDraft());
-    expect(overrides.block1.heavy.sets).toBe(3);
-    expect(overrides.block1.heavy.reps).toBe(5);
+    const h = heavy(draftToOverrides(makeDraft()));
+    expect(h.sets).toBe(3);
+    expect(h.reps).toBe(5);
   });
 
   it('converts rpe_target to number', () => {
-    const overrides = draftToOverrides(makeDraft());
-    expect(overrides.block1.heavy.rpe_target).toBe(8);
+    expect(heavy(draftToOverrides(makeDraft())).rpe_target).toBe(8);
   });
 
   it('omits reps_max on block row when repsMax is absent', () => {
-    const overrides = draftToOverrides(makeDraft());
-    expect(overrides.block1.heavy.reps_max).toBeUndefined();
+    expect(heavy(draftToOverrides(makeDraft())).reps_max).toBeUndefined();
   });
 
   it('includes reps_max on block row when repsMax is present', () => {
     const draft = makeDraft();
     draft.block1.heavy!.repsMax = '6';
-    const overrides = draftToOverrides(draft);
-    expect(overrides.block1.heavy.reps_max).toBe(6);
+    expect(heavy(draftToOverrides(draft)).reps_max).toBe(6);
   });
 
   it('converts rep row to RepIntensityConfig with min/max fields', () => {
     const overrides = draftToOverrides(makeDraft());
-    const rep = overrides.block1.rep;
+    const rep = overrides.block1!.rep!;
     expect(rep.sets_min).toBe(2);
     expect(rep.sets_max).toBe(4);
     expect(rep.reps_min).toBe(8);
@@ -240,8 +247,8 @@ describe('draftToOverrides', () => {
     delete draft.block1.rep!.setsMax;
     const overrides = draftToOverrides(draft);
     // sets field is '2', so both should be 2
-    expect(overrides.block1.rep.sets_min).toBe(2);
-    expect(overrides.block1.rep.sets_max).toBe(2);
+    expect(overrides.block1!.rep!.sets_min).toBe(2);
+    expect(overrides.block1!.rep!.sets_max).toBe(2);
   });
 
   it('rep row falls back to reps when repsMin/repsMax absent', () => {
@@ -249,36 +256,36 @@ describe('draftToOverrides', () => {
     delete draft.block1.rep!.repsMin;
     delete draft.block1.rep!.repsMax;
     const overrides = draftToOverrides(draft);
-    expect(overrides.block1.rep.reps_min).toBe(8);
-    expect(overrides.block1.rep.reps_max).toBe(8);
+    expect(overrides.block1!.rep!.reps_min).toBe(8);
+    expect(overrides.block1!.rep!.reps_max).toBe(8);
   });
 
   it('converts deload row correctly', () => {
     const overrides = draftToOverrides(makeDraft());
-    expect(overrides.deload.pct).toBeCloseTo(0.5);
-    expect(overrides.deload.sets).toBe(3);
-    expect(overrides.deload.reps).toBe(5);
-    expect(overrides.deload.rpe_target).toBe(6);
+    expect(overrides.deload!.pct).toBeCloseTo(0.5);
+    expect(overrides.deload!.sets).toBe(3);
+    expect(overrides.deload!.reps).toBe(5);
+    expect(overrides.deload!.rpe_target).toBe(6);
   });
 
   it('treats empty/invalid pct strings as 0', () => {
     const draft = makeDraft();
     draft.block1.heavy!.pct = '';
     const overrides = draftToOverrides(draft);
-    expect(overrides.block1.heavy.pct).toBe(0);
+    expect(overrides.block1!.heavy!.pct).toBe(0);
   });
 
   it('treats empty/invalid sets strings as 0', () => {
     const draft = makeDraft();
     draft.block1.heavy!.sets = 'abc';
     const overrides = draftToOverrides(draft);
-    expect(overrides.block1.heavy.sets).toBe(0);
+    expect(overrides.block1!.heavy!.sets).toBe(0);
   });
 
   it('produces output for all three blocks', () => {
     const overrides = draftToOverrides(makeDraft());
-    expect(overrides.block2.heavy.pct).toBeCloseTo(0.8);
-    expect(overrides.block3.explosive.sets).toBe(5);
+    expect(overrides.block2!.heavy!.pct).toBeCloseTo(0.8);
+    expect(overrides.block3!.explosive!.sets).toBe(5);
   });
 });
 

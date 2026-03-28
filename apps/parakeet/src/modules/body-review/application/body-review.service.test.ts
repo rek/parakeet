@@ -5,6 +5,7 @@ import {
   getLatestWeeklyReview,
   getWeeklyBodyReviews,
   saveWeeklyBodyReview,
+  type SaveReviewInput,
 } from './body-review.service';
 
 // ── Mocks ────────────────────────────────────────────────────────────────────
@@ -44,14 +45,14 @@ const STORED_REVIEW = {
   userId: USER_ID,
   programId: PROGRAM_ID,
   weekNumber: WEEK_NUMBER,
-  feltSoreness: { quads: 'high' as const },
+  feltSoreness: { quads: 4 as const },
   predictedFatigue: PREDICTED_FATIGUE,
   mismatches: [
     {
       muscle: 'quads' as const,
       direction: 'accumulating_fatigue' as const,
-      felt: 'high' as const,
-      predicted: 'moderate' as const,
+      felt: 4 as const,
+      predicted: 3 as const,
     },
   ],
   notes: null,
@@ -62,11 +63,11 @@ const BASE_SAVE_INPUT = {
   userId: USER_ID,
   programId: PROGRAM_ID,
   weekNumber: WEEK_NUMBER,
-  feltSoreness: { quads: 'high' as const },
+  feltSoreness: { quads: 4 as const },
   weeklyVolume: { quads: 10 } as Record<string, number>,
   mrvMevConfig: {
-    quads: { mrv: 20, mev: 6, mav: 14 },
-  } as Record<string, { mrv: number; mev: number; mav: number }>,
+    quads: { mrv: 20, mev: 6 },
+  } as unknown as SaveReviewInput['mrvMevConfig'],
   notes: null,
 };
 
@@ -109,8 +110,9 @@ describe('saveWeeklyBodyReview', () => {
       {
         muscle: 'quads' as const,
         direction: 'recovering_well' as const,
-        felt: 'low' as const,
-        predicted: 'high' as const,
+        felt: 2 as const,
+        predicted: 4 as const,
+        delta: -2,
       },
     ];
     mockDetectMismatches.mockReturnValue(mismatches);
