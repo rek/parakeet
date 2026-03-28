@@ -1,4 +1,5 @@
 import type { Lift } from '@parakeet/shared-types';
+import type { Json } from '@platform/supabase';
 import { typedSupabase } from '@platform/supabase';
 
 export interface JitProfileRow {
@@ -198,4 +199,46 @@ export async function fetchActiveDisruptions(
 
   if (error) throw error;
   return (data ?? []) as JitDisruptionRow[];
+}
+
+export async function insertComparisonLog(row: {
+  user_id: string;
+  session_id: string;
+  jit_input: Json;
+  formula_output: Json;
+  llm_output: Json;
+  divergence: Json;
+  strategy_used: string;
+}): Promise<void> {
+  const { error } = await typedSupabase.from('jit_comparison_logs').insert([row]);
+  if (error) throw error;
+}
+
+export async function updateSessionJitOutput(
+  sessionId: string,
+  update: {
+    planned_sets: Json;
+    jit_generated_at: string;
+    jit_strategy: string;
+    jit_input_snapshot: Json;
+    jit_output_trace: Json;
+  }
+): Promise<void> {
+  const { error } = await typedSupabase
+    .from('sessions')
+    .update(update)
+    .eq('id', sessionId);
+  if (error) throw error;
+}
+
+export async function insertChallengeReview(row: {
+  user_id: string;
+  session_id: string;
+  score: number;
+  verdict: string;
+  concerns: Json;
+  suggested_overrides: Json | null;
+}): Promise<void> {
+  const { error } = await typedSupabase.from('challenge_reviews').insert([row]);
+  if (error) throw error;
 }

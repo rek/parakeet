@@ -1,28 +1,26 @@
 import { getLatestMismatchDirection } from '@modules/body-review';
 import { getCurrentCycleContext } from '@modules/cycle-tracking';
-import { getFormulaConfig } from '@modules/formula/application/formula.service';
+import { getFormulaConfig } from '@modules/formula';
 import {
   getActiveAssignments,
   getAuxiliaryPool,
   getAuxiliaryPools,
-} from '@modules/program/lib/auxiliary-config';
-import { getCurrentOneRmKg } from '@modules/program/lib/lifter-maxes';
+  getCurrentOneRmKg,
+} from '@modules/program';
 import {
+  getDaysSinceLastSession,
+  getProfileSex,
+  getSession,
   parseActualSetsJson,
   parsePlannedSetsJson as parsePlannedSets,
 } from '@modules/session';
 import {
-  getDaysSinceLastSession,
-  getSession,
-} from '@modules/session/application/session.service';
-import { fetchProfileSex } from '@modules/session/data/session.repository';
-import { getUserRestOverrides } from '@modules/settings/lib/rest-config';
-import {
   getBarWeightKg,
   getJITStrategyOverride,
-} from '@modules/settings/lib/settings';
-import { getWarmupConfig } from '@modules/settings/lib/warmup-config';
-import { getMrvMevConfig } from '@modules/training-volume/lib/volume-config';
+  getUserRestOverrides,
+  getWarmupConfig,
+} from '@modules/settings';
+import { getMrvMevConfig } from '@modules/training-volume';
 import {
   BlockNumberSchema,
   DisruptionSchema,
@@ -55,7 +53,7 @@ import type {
   RecentSessionSummary,
   SorenessLevel,
 } from '@parakeet/training-engine';
-import { toJson, typedSupabase } from '@platform/supabase';
+import { toJson } from '@platform/supabase';
 import { captureException } from '@platform/utils/captureException';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { DEFAULT_RPE_TARGET } from '@shared/constants/training';
@@ -70,6 +68,9 @@ import {
   fetchUpcomingSessionLifts,
   fetchWeeklySessionLogs,
   fetchWeekSessionCounts,
+  insertChallengeReview,
+  insertComparisonLog,
+  updateSessionJitOutput,
 } from '../data/jit.repository';
 import { estimateOneRmKgFromProfile } from './max-estimation';
 
@@ -106,7 +107,7 @@ export async function runJITForSession(
         : 3
     : BlockNumberSchema.parse(session.block_number);
 
-  const biologicalSex = await fetchProfileSex(userId);
+  const biologicalSex = await getProfileSex(userId);
 
   const [
     oneRmKg,
@@ -457,22 +458,15 @@ export async function runJITForSession(
     llmOutput: JITOutput,
     divergence: unknown
   ) => {
-    void typedSupabase
-      .from('jit_comparison_logs')
-      .insert([
-        {
-          user_id: userId,
-          session_id: session.id,
-          jit_input: toJson(input),
-          formula_output: toJson(formulaOutput),
-          llm_output: toJson(llmOutput),
-          divergence: toJson(divergence),
-          strategy_used: 'llm',
-        },
-      ])
-      .then(({ error }) => {
-        if (error) captureException(error);
-      });
+    void insertComparisonLog({
+      user_id: userId,
+      session_id: session.id,
+      jit_input: toJson(input),
+      formula_output: toJson(formulaOutput),
+      llm_output: toJson(llmOutput),
+      divergence: toJson(divergence),
+      strategy_used: 'llm',
+    }).catch(captureException);
   };
 
   const generator = getJITGenerator(strategyOverride, true, comparisonLogger);
@@ -486,39 +480,28 @@ export async function runJITForSession(
     trace.strategy = jitOutput.jit_strategy;
   }
 
-  const { error: updateError } = await typedSupabase
-    .from('sessions')
-    .update({
-      planned_sets: jitOutput.mainLiftSets,
-      jit_generated_at: jitOutput.generatedAt.toISOString(),
-      jit_strategy: jitOutput.jit_strategy ?? generator.name,
-      jit_input_snapshot: toJson(jitInput),
-      jit_output_trace: toJson(trace),
-    })
-    .eq('id', session.id);
-  if (updateError) throw updateError;
+  await updateSessionJitOutput(session.id, {
+    planned_sets: toJson(jitOutput.mainLiftSets),
+    jit_generated_at: jitOutput.generatedAt.toISOString(),
+    jit_strategy: jitOutput.jit_strategy ?? generator.name,
+    jit_input_snapshot: toJson(jitInput),
+    jit_output_trace: toJson(trace),
+  });
 
   // Fire-and-forget: async judge review (runs during warmup)
   reviewJITDecision(jitInput, jitOutput)
-    .then((review) => {
-      void typedSupabase
-        .from('challenge_reviews')
-        .insert([
-          {
-            user_id: userId,
-            session_id: session.id,
-            score: review.score,
-            verdict: review.verdict,
-            concerns: toJson(review.concerns),
-            suggested_overrides: review.suggestedOverrides
-              ? toJson(review.suggestedOverrides)
-              : null,
-          },
-        ])
-        .then(({ error }) => {
-          if (error) captureException(error);
-        });
-    })
+    .then((review) =>
+      insertChallengeReview({
+        user_id: userId,
+        session_id: session.id,
+        score: review.score,
+        verdict: review.verdict,
+        concerns: toJson(review.concerns),
+        suggested_overrides: review.suggestedOverrides
+          ? toJson(review.suggestedOverrides)
+          : null,
+      })
+    )
     .catch(captureException);
 
   return { output: jitOutput, trace };

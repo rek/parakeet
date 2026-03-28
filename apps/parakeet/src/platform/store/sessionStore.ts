@@ -3,7 +3,7 @@ import type {
   RecoveryOffer,
   SessionAdaptation,
   WeightSuggestionOffer,
-} from '@modules/session/model/types';
+} from '@modules/session';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { weightKgToGrams } from '@shared/utils/weight';
 import { create } from 'zustand';
