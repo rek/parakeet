@@ -23,7 +23,7 @@ import {
   computeSuggestedAux,
   computeSuggestedWeight,
   DEFAULT_MAIN_REST_SECONDS,
-  fetchRecentAuxExerciseNames,
+  getRecentAuxExerciseNames,
   formatExerciseName,
   getSession,
   groupAuxiliaryWork,
@@ -641,7 +641,7 @@ export default function SessionScreen() {
   const exerciseCatalog = useMemo(() => getAllExercises(), []);
   const [recentAuxNames, setRecentAuxNames] = useState<string[]>([]);
   useEffect(() => {
-    fetchRecentAuxExerciseNames()
+    getRecentAuxExerciseNames()
       .then(setRecentAuxNames)
       .catch(captureException);
   }, []);

@@ -39,6 +39,7 @@ import {
   fetchOverdueScheduledSessions,
   fetchPlannedSessionForProgram,
   fetchProfileSex,
+  fetchRecentAuxExerciseNames,
   fetchProgramSessionsForMakeup,
   fetchProgramSessionStatuses,
   fetchRecentLogsForLift,
@@ -619,4 +620,14 @@ export async function checkEndOfWeek(
   }
 
   return { shouldPrompt: false, programId: null, weekNumber: 0 };
+}
+
+export async function getProfileSex(
+  userId: string
+): Promise<'female' | 'male' | undefined> {
+  return fetchProfileSex(userId);
+}
+
+export async function getRecentAuxExerciseNames(): Promise<string[]> {
+  return fetchRecentAuxExerciseNames();
 }

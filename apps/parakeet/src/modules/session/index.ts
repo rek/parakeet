@@ -16,10 +16,7 @@ export * from './utils/buildIntensityLabel';
 export * from './utils/groupAuxiliaryWork';
 export * from './utils/computeDismissResult';
 export * from './utils/prepare-warning';
-export {
-  fetchProfileSex,
-  fetchRecentAuxExerciseNames,
-} from './data/session.repository';
+export { getProfileSex, getRecentAuxExerciseNames } from './application/session.service';
 export {
   parseActualSetsJson,
   parseJitInputSnapshot,

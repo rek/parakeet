@@ -15,6 +15,15 @@ export function applyDisruptionAdjustment(
       d.affected_lifts.includes(input.primaryLift)
   );
 
+  // Deload sessions are already at recovery-level loading — disruptions
+  // should not further reduce or skip them (design/disruption-management.md).
+  if (input.intensityType === 'deload') {
+    if (relevantDisruptions.length > 0) {
+      ctx.rationale.push('Active disruption noted — deload session proceeds unchanged');
+    }
+    return;
+  }
+
   if (relevantDisruptions.length > 0 && !ctx.inRecoveryMode) {
     const severityOrder = { minor: 1, moderate: 2, major: 3 } as const;
     const worst = relevantDisruptions.reduce((w, d) =>
