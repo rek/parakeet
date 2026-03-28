@@ -215,7 +215,7 @@ describe('HybridJITGenerator', () => {
     expect(typeof logDivergence.weightPct).toBe('number');
   });
 
-  it('does not call logger when LLM fails', async () => {
+  it('calls logger with fallback reason when LLM fails', async () => {
     const logger = vi.fn();
     const llmGen = new LLMJITGenerator();
     vi.spyOn(llmGen, 'generate').mockRejectedValueOnce(new Error('timeout'));
@@ -227,7 +227,10 @@ describe('HybridJITGenerator', () => {
     );
     await gen.generate(baseInput());
 
-    expect(logger).not.toHaveBeenCalled();
+    expect(logger).toHaveBeenCalledOnce();
+    const divergence = logger.mock.calls[0][3];
+    expect(divergence.rpeContextSummary).toContain('LLM_FALLBACK');
+    expect(divergence.rpeContextSummary).toContain('timeout');
   });
 
   it('does not call logger when no logger provided (no error)', async () => {

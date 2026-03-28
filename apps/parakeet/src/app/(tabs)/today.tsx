@@ -582,7 +582,7 @@ export default function TodayScreen() {
             }
           });
         })
-        .catch(() => {});
+        .catch(captureException);
     }, [user?.id])
   );
 
@@ -597,7 +597,7 @@ export default function TodayScreen() {
           }
           setPendingCalibration(JSON.parse(raw));
         })
-        .catch(() => {});
+        .catch(captureException);
     }, [])
   );
 

@@ -74,8 +74,20 @@ export class HybridJITGenerator implements JITGeneratorStrategy {
       throw (formulaResult as PromiseRejectedResult).reason;
     }
 
-    // LLM failed → fall back to formula output
+    // LLM failed → fall back to formula output; surface reason for app-layer logging
     if (!llmOutput) {
+      const llmError = (llmResult as PromiseRejectedResult).reason;
+      if (this.logger) {
+        try {
+          this.logger(input, formulaOutput, formulaOutput, {
+            weightPct: 0,
+            setDelta: 0,
+            rpeContextSummary: `LLM_FALLBACK: ${llmError instanceof Error ? llmError.message : String(llmError)}`,
+          });
+        } catch {
+          // logging errors are silently swallowed
+        }
+      }
       return { ...formulaOutput, jit_strategy: 'formula_fallback' };
     }
 

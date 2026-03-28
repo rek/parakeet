@@ -1,6 +1,6 @@
 # Feature: Rest Timer
 
-**Status**: Designed (not implemented)
+**Status**: Implemented
 **Date**: 2026-02-25
 
 ## Overview

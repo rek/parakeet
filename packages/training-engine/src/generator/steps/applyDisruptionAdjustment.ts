@@ -10,7 +10,9 @@ export function applyDisruptionAdjustment(
   const preCount = ctx.plannedCount;
   const relevantDisruptions = input.activeDisruptions.filter(
     (d) =>
-      d.affected_lifts === null || d.affected_lifts.includes(input.primaryLift)
+      d.affected_lifts === null ||
+      d.affected_lifts.length === 0 ||
+      d.affected_lifts.includes(input.primaryLift)
   );
 
   if (relevantDisruptions.length > 0 && !ctx.inRecoveryMode) {
