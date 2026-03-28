@@ -16,7 +16,7 @@ export * from './utils/buildIntensityLabel';
 export * from './utils/groupAuxiliaryWork';
 export * from './utils/computeDismissResult';
 export * from './utils/prepare-warning';
-export { getProfileSex, getRecentAuxExerciseNames } from './application/session.service';
+
 export {
   parseActualSetsJson,
   parseJitInputSnapshot,

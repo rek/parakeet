@@ -21,6 +21,15 @@ export function applyDisruptionAdjustment(
     if (relevantDisruptions.length > 0) {
       ctx.rationale.push('Active disruption noted — deload session proceeds unchanged');
     }
+    // Still note equipment disruption for aux boost rationale (buildAuxiliaryWork acts on it independently)
+    const hasNoEquipmentDisruption = input.activeDisruptions.some(
+      (d) => d.disruption_type === 'equipment_unavailable'
+    );
+    if (hasNoEquipmentDisruption) {
+      ctx.rationale.push(
+        'No equipment available — auxiliary volume increased with bodyweight compensation exercises'
+      );
+    }
     return;
   }
 
