@@ -110,11 +110,20 @@ function buildStyles(colors: ColorScheme) {
       lineHeight: 22,
       paddingLeft: 8,
     },
+    liftTitleRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 8,
+    },
     liftTitle: {
       fontSize: 22,
       fontWeight: '700',
       color: colors.text,
       marginBottom: 4,
+    },
+    cameraIcon: {
+      fontSize: 18,
+      lineHeight: 22,
     },
     blockWeekText: {
       fontSize: 14,
@@ -361,6 +370,7 @@ export default function SessionScreen() {
   const [historySheetVisible, setHistorySheetVisible] = useState(false);
   const insets = useSafeAreaInsets();
   const traceEnabled = useFeatureEnabled('prescriptionTrace');
+  const videoAnalysisEnabled = useFeatureEnabled('videoAnalysis');
   const cachedTrace = useSessionStore((s) => s.cachedPrescriptionTrace);
   const formattedTrace = useMemo(() => {
     if (!cachedTrace) return null;
@@ -786,7 +796,28 @@ export default function SessionScreen() {
         <View style={styles.sessionHeader}>
           <View style={styles.sessionHeaderRow}>
             <View style={styles.sessionHeaderText}>
-              <Text style={styles.liftTitle}>{liftHeader}</Text>
+              <View style={styles.liftTitleRow}>
+                <Text style={styles.liftTitle}>{liftHeader}</Text>
+                {videoAnalysisEnabled && sessionMeta?.primary_lift && (
+                  <TouchableOpacity
+                    onPress={() =>
+                      router.push({
+                        pathname: '/session/video-analysis' as never,
+                        params: {
+                          sessionId,
+                          lift: sessionMeta.primary_lift,
+                        },
+                      })
+                    }
+                    hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+                    accessible={true}
+                    accessibilityLabel="Record form video"
+                    accessibilityRole="button"
+                  >
+                    <Text style={styles.cameraIcon}>📹</Text>
+                  </TouchableOpacity>
+                )}
+              </View>
               <Text style={styles.blockWeekText}>{blockWeek}</Text>
             </View>
             <TouchableOpacity

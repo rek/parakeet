@@ -4,9 +4,11 @@ import {
   ScrollView,
   StyleSheet,
   Text,
+  TouchableOpacity,
   View,
 } from 'react-native';
 
+import { useFeatureEnabled } from '@modules/feature-flags';
 import {
   AuxResultsTable,
   MainLiftResultsTable,
@@ -24,7 +26,7 @@ import { router, useLocalSearchParams } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { BackLink } from '../../components/navigation/BackLink';
-import { spacing, typography } from '../../theme';
+import { radii, spacing, typography } from '../../theme';
 import type { ColorScheme } from '../../theme';
 import { useTheme } from '../../theme/ThemeContext';
 
@@ -33,6 +35,7 @@ export default function SessionDetailScreen() {
   const styles = useMemo(() => buildStyles(colors), [colors]);
   const { sessionId } = useLocalSearchParams<{ sessionId: string }>();
   const result = useSessionDetail({ sessionId: sessionId ?? '' });
+  const videoAnalysisEnabled = useFeatureEnabled('videoAnalysis');
 
   if (result.status === 'loading') {
     return (
@@ -106,6 +109,27 @@ export default function SessionDetailScreen() {
           {timeLabel ? ` · ${timeLabel}` : ''}
         </Text>
 
+        {videoAnalysisEnabled && session.primary_lift && (
+          <TouchableOpacity
+            style={styles.videoLink}
+            onPress={() =>
+              router.push({
+                pathname: '/session/video-analysis' as never,
+                params: {
+                  sessionId: session.id,
+                  lift: session.primary_lift,
+                },
+              })
+            }
+            activeOpacity={0.7}
+            accessible={true}
+            accessibilityLabel="View or add form video"
+            accessibilityRole="button"
+          >
+            <Text style={styles.videoLinkText}>📹 Add Video / View Analysis</Text>
+          </TouchableOpacity>
+        )}
+
         {log && (
           <SummaryChipsRow
             sessionRpe={log.session_rpe}
@@ -173,6 +197,21 @@ function buildStyles(colors: ColorScheme) {
       fontSize: typography.sizes.sm,
       color: colors.textSecondary,
       marginBottom: spacing[5],
+    },
+    videoLink: {
+      alignSelf: 'flex-start',
+      marginBottom: spacing[4],
+      paddingHorizontal: spacing[3],
+      paddingVertical: spacing[2],
+      borderRadius: radii.sm,
+      borderWidth: 1,
+      borderColor: colors.border,
+      backgroundColor: colors.bgSurface,
+    },
+    videoLinkText: {
+      fontSize: typography.sizes.sm,
+      fontWeight: typography.weights.medium,
+      color: colors.textSecondary,
     },
     emptyText: {
       fontSize: typography.sizes.base,
