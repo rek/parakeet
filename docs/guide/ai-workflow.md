@@ -33,59 +33,106 @@ Before any design or implementation:
 - Check [domain/](../domain/) if the work involves training constants or formulas.
 - Check `apps/parakeet/src/modules/<feature>/index.ts` for the current public API before adding new exports.
 
-## 1) Design
+## 1) Research (big features only)
 
-Only for new architectural concepts (new program mode, new data model, new AI strategy):
+When the work touches a new technology, library, or domain the codebase hasn't used before:
+
+- Investigate feasibility: what libraries exist, what's proven, what's experimental.
+- Read documentation, check React Native / Expo compatibility, find prior art.
+- Document findings in the design doc under a **Research** section.
+- Identify hard constraints early (e.g., "MediaPipe only works via native module, not Expo Go").
+
+Skip for features that extend familiar technology.
+
+## 2) Discuss (grill)
+
+Walk down each branch of the decision tree **one question at a time**. For each question, provide a recommended answer with reasoning. If the codebase can answer a question, read the code instead of asking.
+
+**Do not move to Design until every branch is resolved.**
+
+The goal is to surface every gray area, ambiguity, and tradeoff before committing to a design. Decisions accumulate in the design doc under a **Decisions** section.
+
+Examples of what to resolve:
+- Architecture: on-device vs server? New module vs extend existing?
+- Scope: what's Phase 1 vs Phase 2? What's explicitly out of scope?
+- Data: what's stored, where, what format? What happens to old data?
+- UX: what does the user see, when, how do they trigger it?
+- Dependencies: new libraries? Native modules? Expo compatibility?
+- Edge cases: what happens when X fails? What about slow devices?
+
+For small features (bug fixes, value changes, <5 files), skip to Plan.
+
+## 3) Design
+
+Only for new architectural concepts (new program mode, new data model, new AI strategy, new technology integration):
 
 - Create a design doc in `docs/design/`.
 - Use `docs/design/_TEMPLATE.md`.
+- Include **Research** findings and **Decisions** from the Discuss step.
 - Focus on problem, constraints, architecture impact, rollout.
 - Link to `docs/domain/` for any training science values — do not restate them.
 
 For smaller features, skip to Plan.
 
-## 2) Plan
+## 4) Plan (phased for big features)
 
 - Create/update implementation tasks in `docs/specs/`.
 - Keep tasks small and ordered.
-- Note unresolved questions explicitly.
 - Reference `docs/domain/` for constants — specs describe *where* values are used, not *what* they are.
 
-## 3) Implement
+For big features, break the spec into **numbered phases**. Each phase should be independently shippable and verifiable. Structure:
 
+```
+Phase 1: <name> — <what it delivers>
+  - [ ] Task 1.1
+  - [ ] Task 1.2
+
+Phase 2: <name> — <what it delivers>
+  - [ ] Task 2.1
+  ...
+```
+
+Phases execute sequentially. Tasks within a phase can run in parallel if independent.
+
+## 5) Execute (per phase)
+
+For each phase:
+
+- **Fresh context**: Start each phase with a clean agent/session. Provide only the phase's tasks, relevant files, and decisions — not the entire conversation history. This prevents context degradation on big features.
 - Follow boundaries in `project-organization.md`.
 - Prefer module public APIs (`@modules/<feature>`).
 - Keep infra in `@platform/*`; cross-feature code in `@shared/*`.
-- Avoid introducing legacy top-level folders.
+- Commit after each task or logical unit. One concern per commit.
 
-## 4) Validate
+## 6) Verify (per phase)
 
-For app refactors, run:
+After each phase, verify before moving to the next:
 
+**Automated checks:**
 - `tsc --noEmit -p apps/parakeet/tsconfig.typecheck.json`
 - `npm run check:module-boundary`
+- `npx nx affected -t test`
 - `npx nx lint parakeet` — oxlint (unused vars, imports, a11y)
-- `npx nx format parakeet` — Prettier (import ordering, code style)
+
+**Manual checks:**
+- Walk through the user-facing flow on device/simulator.
+- Test edge cases identified during Discuss.
+- Confirm the phase delivers what was planned.
+
+If verification fails, fix before advancing. Do not accumulate debt across phases.
 
 For the dashboard app:
-
 - `tsc --noEmit -p apps/dashboard/tsconfig.app.json`
 - `npx nx lint dashboard`
 
-For tests, see [dev.md](./dev.md#testing). Always: `npx nx affected -t test`.
-
-Add targeted tests when moving logic or changing behavior.
-
-## Dashboard-specific conventions
-
-- Lint: `npx nx lint dashboard` — uses oxlint (same as `apps/parakeet`)
+Dashboard conventions:
 - Theme: all colours/borders must use `src/lib/theme.ts` constants or CSS vars from `src/styles.css`; no raw `rgba()`/hex in component files
 - Interactive divs: use `<button className="btn-reset">` not `<div onClick>`
 - Env switching: `SupabaseContext` — all components get `supabase` via `useSupabase()`, add to `useEffect` deps
 
-## 5) Wrap Up
+## 7) Wrap Up
 
-After implementation:
+After all phases complete:
 
 1. Update `docs/domain/` if any training constants were added or changed.
 2. Update spec files to match what was actually built (not what was originally planned).
@@ -93,7 +140,19 @@ After implementation:
 4. Update design doc status from **Draft** → **Implemented** (if one exists for this work).
 5. Update `supabase/types.ts` if you added migrations without running `npm run db:types` (see dev.md).
 6. Review [ai-learnings.md](./ai-learnings.md) for any new patterns worth capturing.
-7. Close any associated Github Issues or remove items from backlog.md
+7. Close any associated GitHub Issues or remove items from backlog.md.
+
+## Flow Summary
+
+**Small features** (bug fixes, <5 files, familiar tech):
+```
+Orient → Plan → Execute → Verify → Wrap Up
+```
+
+**Big features** (new architecture, new tech, multi-phase):
+```
+Orient → Research → Discuss (grill) → Design → Plan (phased) → [per phase: Execute → Verify] → Wrap Up
+```
 
 ## Prompt Starter
 
