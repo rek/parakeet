@@ -26,6 +26,7 @@ import type { ProgramSession } from '@modules/program';
 import { useInProgressSession, useTodaySession } from '@modules/session';
 import type { IntensityType, Lift } from '@parakeet/shared-types';
 import { qk } from '@platform/query';
+import { captureException } from '@platform/utils/captureException';
 import { useSessionStore } from '@platform/store/sessionStore';
 import { capitalize } from '@shared/utils/string';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -289,7 +290,9 @@ export default function ProgramScreen() {
           formulaConfig
         );
       }
-    } catch {}
+    } catch (err) {
+      captureException(err);
+    }
     const firstSet = estimatedSets?.[0] ?? null;
     const setCount = estimatedSets?.length ?? null;
     const lastSessionRpe = liftHistory?.entries?.[0]?.sessionRpe ?? null;
