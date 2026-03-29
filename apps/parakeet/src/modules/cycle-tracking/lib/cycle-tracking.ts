@@ -4,7 +4,16 @@ import {
   getPhaseForDay,
 } from '@parakeet/training-engine';
 import type { CycleContext, CyclePhase } from '@parakeet/training-engine';
-import { typedSupabase } from '@platform/supabase';
+
+import {
+  deletePeriodStartById,
+  fetchCycleConfig,
+  fetchPeriodStartHistory,
+  insertDefaultCycleConfig,
+  updateSessionCyclePhase,
+  upsertCycleConfig,
+  upsertPeriodStart,
+} from '../data/cycle-tracking.repository';
 
 export { computeCyclePhase, getCyclePhaseModifier, getPhaseForDay };
 export type { CycleContext, CyclePhase };
@@ -16,13 +25,7 @@ export interface CycleConfig {
 }
 
 export async function getCycleConfig(userId: string): Promise<CycleConfig> {
-  const { data, error } = await typedSupabase
-    .from('cycle_tracking')
-    .select('is_enabled, cycle_length_days, last_period_start')
-    .eq('user_id', userId)
-    .maybeSingle();
-
-  if (error) throw error;
+  const data = await fetchCycleConfig(userId);
 
   if (!data) {
     const defaults: CycleConfig = {
@@ -30,18 +33,11 @@ export async function getCycleConfig(userId: string): Promise<CycleConfig> {
       cycle_length_days: 28,
       last_period_start: null,
     };
-    const { error: insertError } = await typedSupabase
-      .from('cycle_tracking')
-      .insert({ user_id: userId, ...defaults });
-    if (insertError) throw insertError;
+    await insertDefaultCycleConfig(userId, defaults);
     return defaults;
   }
 
-  return {
-    is_enabled: data.is_enabled,
-    cycle_length_days: data.cycle_length_days,
-    last_period_start: data.last_period_start ?? null,
-  };
+  return data;
 }
 
 export async function updateCycleConfig(
@@ -50,13 +46,7 @@ export async function updateCycleConfig(
     Pick<CycleConfig, 'is_enabled' | 'cycle_length_days' | 'last_period_start'>
   >
 ): Promise<void> {
-  const { error } = await typedSupabase
-    .from('cycle_tracking')
-    .upsert(
-      { user_id: userId, ...update, updated_at: new Date().toISOString() },
-      { onConflict: 'user_id' }
-    );
-  if (error) throw error;
+  await upsertCycleConfig(userId, update);
 }
 
 export async function getCurrentCycleContext(
@@ -80,26 +70,14 @@ export interface PeriodStartEntry {
 export async function getPeriodStartHistory(
   userId: string
 ): Promise<PeriodStartEntry[]> {
-  const { data, error } = await typedSupabase
-    .from('period_starts')
-    .select('id, start_date')
-    .eq('user_id', userId)
-    .order('start_date', { ascending: false });
-  if (error) throw error;
-  return data ?? [];
+  return fetchPeriodStartHistory(userId);
 }
 
 export async function addPeriodStart(
   userId: string,
   startDate: string
 ): Promise<PeriodStartEntry[]> {
-  const { error: insertError } = await typedSupabase
-    .from('period_starts')
-    .upsert(
-      { user_id: userId, start_date: startDate },
-      { onConflict: 'user_id,start_date' }
-    );
-  if (insertError) throw insertError;
+  await upsertPeriodStart(userId, startDate);
 
   const history = await getPeriodStartHistory(userId);
   const mostRecent = history[0]?.start_date ?? null;
@@ -111,12 +89,7 @@ export async function deletePeriodStart(
   userId: string,
   entryId: string
 ): Promise<PeriodStartEntry[]> {
-  const { error } = await typedSupabase
-    .from('period_starts')
-    .delete()
-    .eq('id', entryId)
-    .eq('user_id', userId);
-  if (error) throw error;
+  await deletePeriodStartById(userId, entryId);
 
   const history = await getPeriodStartHistory(userId);
   const mostRecent = history[0]?.start_date ?? null;
@@ -131,10 +104,5 @@ export async function stampCyclePhaseOnSession(
   // No-ops when cycle tracking is disabled or no period start date is recorded.
   const context = await getCurrentCycleContext(userId);
   if (!context) return;
-  const { error } = await typedSupabase
-    .from('session_logs')
-    .update({ cycle_phase: context.phase })
-    .eq('session_id', sessionId)
-    .eq('user_id', userId);
-  if (error) throw error;
+  await updateSessionCyclePhase(userId, sessionId, context.phase);
 }

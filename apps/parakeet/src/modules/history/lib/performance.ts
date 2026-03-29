@@ -1,8 +1,14 @@
 import type { Lift } from '@parakeet/shared-types';
 import { estimateOneRepMax_Epley } from '@parakeet/training-engine';
-import { typedSupabase } from '@platform/supabase';
 import { weightGramsToKg } from '@shared/utils/weight';
 
+import {
+  fetchPendingPerformanceMetrics,
+  fetchPerformanceByLift,
+  fetchRecentLiftHistory,
+  fetchRecentSessionLogsForTrends,
+  fetchWeeklySessionLogs,
+} from '../data/performance.repository';
 import { processRecentHistory } from './performance-helpers';
 
 export type { LiftHistory, LiftHistoryEntry } from './performance-helpers';
@@ -20,57 +26,20 @@ export async function getPerformanceByLift(
   lift: Lift,
   fromDate?: Date
 ) {
-  let query = typedSupabase
-    .from('session_logs')
-    .select(
-      `
-      id, completed_at, completion_pct, session_rpe,
-      actual_sets,
-      sessions!inner(primary_lift, intensity_type, block_number, week_number)
-    `
-    )
-    .eq('user_id', userId)
-    .eq('sessions.primary_lift', lift)
-    .order('completed_at', { ascending: false });
-
-  if (fromDate) {
-    query = query.gte('completed_at', fromDate.toISOString());
-  }
-
-  const { data, error } = await query;
-  if (error) throw error;
-  return data ?? [];
+  return fetchPerformanceByLift(userId, lift, fromDate);
 }
 
 export async function getPerformanceTrends(
   userId: string
 ): Promise<PerformanceTrend[]> {
-  const { data, error } = await typedSupabase
-    .from('session_logs')
-    .select(
-      `
-      completion_pct, session_rpe, actual_sets,
-      sessions!inner(primary_lift, intensity_type)
-    `
-    )
-    .eq('user_id', userId)
-    .order('completed_at', { ascending: false })
-    .limit(30);
-
-  if (error) throw error;
-  return computeTrends(data ?? []);
+  const data = await fetchRecentSessionLogsForTrends(userId);
+  return computeTrends(data);
 }
 
 export async function getPendingAdjustmentSuggestions(userId: string) {
-  const { data, error } = await typedSupabase
-    .from('performance_metrics')
-    .select('*')
-    .eq('user_id', userId)
-    .eq('reviewed', false)
-    .order('computed_at', { ascending: false });
-  if (error) throw error;
+  const data = await fetchPendingPerformanceMetrics(userId);
   return (
-    (data as Array<{ suggestions?: unknown[] }> | null)?.flatMap(
+    (data as Array<{ suggestions?: unknown[] }>).flatMap(
       (r) => r.suggestions ?? []
     ) ?? []
   );
@@ -161,16 +130,7 @@ export async function getWeeklySetsPerLift(
   const fromDate = new Date();
   fromDate.setDate(fromDate.getDate() - weeks * 7);
 
-  const { data, error } = await typedSupabase
-    .from('session_logs')
-    .select('completed_at, actual_sets, sessions!inner(primary_lift, status)')
-    .eq('user_id', userId)
-    .eq('sessions.status', 'completed')
-    .gte('completed_at', fromDate.toISOString())
-    .order('completed_at', { ascending: true });
-
-  if (error) throw error;
-  if (!data) return [];
+  const data = await fetchWeeklySessionLogs(userId, fromDate);
 
   const grouped = new Map<string, number>();
 
@@ -208,19 +168,9 @@ export async function getRecentLiftHistory(
   lift: Lift,
   limit = 5
 ) {
-  const { data, error } = await typedSupabase
-    .from('session_logs')
-    .select(
-      'completed_at, completion_pct, session_rpe, actual_sets, sessions!inner(primary_lift)'
-    )
-    .eq('user_id', userId)
-    .eq('sessions.primary_lift', lift)
-    .order('completed_at', { ascending: false })
-    .limit(limit);
-
-  if (error) throw error;
+  const data = await fetchRecentLiftHistory(userId, lift, limit);
   return processRecentHistory(
-    (data ?? []).map((r) => ({
+    data.map((r) => ({
       completed_at: r.completed_at ?? '',
       actual_sets: r.actual_sets,
       session_rpe: r.session_rpe ?? null,

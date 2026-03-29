@@ -1,8 +1,12 @@
 import type { BiologicalSex } from '@modules/profile';
 import type { MuscleGroup } from '@parakeet/shared-types';
 import { MUSCLE_GROUPS } from '@parakeet/shared-types';
-import { typedSupabase } from '@platform/supabase';
 
+import {
+  deleteMuscleVolumeConfig,
+  fetchMuscleVolumeConfig,
+  upsertMuscleVolumeConfig,
+} from '../data/volume-config.repository';
 import {
   DEFAULT_MRV_MEV_CONFIG_FEMALE,
   DEFAULT_MRV_MEV_CONFIG_MALE,
@@ -17,19 +21,15 @@ export async function getMrvMevConfig(
   userId: string,
   biologicalSex?: BiologicalSex | null
 ): Promise<MrvMevConfig> {
-  const { data, error } = await typedSupabase
-    .from('muscle_volume_config')
-    .select('muscle_group, mev_sets_per_week, mrv_sets_per_week')
-    .eq('user_id', userId);
+  const data = await fetchMuscleVolumeConfig(userId);
 
-  if (error) throw error;
   const defaults =
     biologicalSex === 'female'
       ? DEFAULT_MRV_MEV_CONFIG_FEMALE
       : DEFAULT_MRV_MEV_CONFIG_MALE;
 
   const config = { ...defaults };
-  for (const row of data ?? []) {
+  for (const row of data) {
     if (isMuscleGroup(row.muscle_group)) {
       config[row.muscle_group] = {
         mev: row.mev_sets_per_week,
@@ -47,15 +47,11 @@ export async function updateMuscleConfig(
 ): Promise<void> {
   const existing = await getMrvMevConfig(userId);
   const current = existing[muscle];
-  await typedSupabase.from('muscle_volume_config').upsert(
-    {
-      user_id: userId,
-      muscle_group: muscle,
-      mev_sets_per_week: update.mev ?? current.mev,
-      mrv_sets_per_week: update.mrv ?? current.mrv,
-      updated_at: new Date().toISOString(),
-    },
-    { onConflict: 'user_id,muscle_group' }
+  await upsertMuscleVolumeConfig(
+    userId,
+    muscle,
+    update.mev ?? current.mev,
+    update.mrv ?? current.mrv
   );
 }
 
@@ -63,9 +59,5 @@ export async function resetMuscleToDefault(
   userId: string,
   muscle: MuscleGroup
 ): Promise<void> {
-  await typedSupabase
-    .from('muscle_volume_config')
-    .delete()
-    .eq('user_id', userId)
-    .eq('muscle_group', muscle);
+  await deleteMuscleVolumeConfig(userId, muscle);
 }

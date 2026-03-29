@@ -1,4 +1,7 @@
-import { typedSupabase } from '@platform/supabase';
+import {
+  fetchDeveloperSuggestions,
+  updateSuggestionStatusById,
+} from '../data/developer-suggestions.repository';
 
 export interface DeveloperSuggestion {
   id: string;
@@ -16,23 +19,13 @@ export interface DeveloperSuggestion {
 export async function getDeveloperSuggestions(): Promise<
   DeveloperSuggestion[]
 > {
-  const { data, error } = await typedSupabase
-    .from('developer_suggestions')
-    .select('*')
-    .order('created_at', { ascending: false });
-
-  if (error) throw error;
-  return (data ?? []) as DeveloperSuggestion[];
+  const data = await fetchDeveloperSuggestions();
+  return data as DeveloperSuggestion[];
 }
 
 export async function updateSuggestionStatus(
   id: string,
   status: 'acknowledged' | 'implemented' | 'dismissed'
 ): Promise<void> {
-  const { error } = await typedSupabase
-    .from('developer_suggestions')
-    .update({ status, reviewed_at: new Date().toISOString() })
-    .eq('id', id);
-
-  if (error) throw error;
+  await updateSuggestionStatusById(id, status, new Date().toISOString());
 }
