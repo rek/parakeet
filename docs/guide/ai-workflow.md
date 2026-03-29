@@ -115,15 +115,29 @@ When a phase adds native dependencies (MediaPipe, vision-camera, etc.):
 - **Add to both package.json files** — `apps/parakeet/package.json` (for autolinking) and root `package.json` (for hoisting). Missing either causes subtle failures.
 - **Update Zod schemas in the same commit as computed fields** — `satisfies` doesn't catch excess properties from `.map()` chains. If the assembler produces a field, the schema must include it, or it's silently dropped on typed reads.
 
+### Zero tolerance for type hacking
+
+**`as any`, `as unknown as X`, and hand-written DB row types are never acceptable — not even temporarily.** They are symptoms of skipped steps, not solutions.
+
+When you hit a type error:
+1. **Stop.** Don't cast around it.
+2. **Fix the source.** If Supabase types are missing, run `npm run db:types` now. If the migration hasn't been pushed, push it now. If the LLM parameter type is wrong, fix the type definition now.
+3. **If you can't fix the source in this step**, you are working in the wrong order. Back up, fix the prerequisite, then continue.
+
+A cast makes the compiler trust you. If you're wrong, the runtime breaks silently. A cast that gets copied across 3 files becomes systemic type blindness. Maximum fidelity means the type system is an ally, not an obstacle to route around.
+
+**After every migration:** Run `npm run db:types` immediately. Not as a follow-up. Not in wrap-up. Immediately. Then verify the generated types match your expectations before writing repository code.
+
 ### Inline quality checks during execution
 
 Don't defer all quality checks to a post-hoc arch review. Check these during implementation:
 
 - **Dead parameters**: if a function parameter isn't used in the body, remove it.
 - **Theme compliance**: no raw hex colors — use `colors.*` from `ColorScheme`.
-- **Unsafe casts**: avoid `as unknown as X` double casts. Fix the type at the source.
+- **Unsafe casts**: if you write `as any` or `as unknown as X`, stop and fix the root cause. No exceptions.
 - **Error surfacing**: every async error path needs `captureException` + `Alert` (per project convention).
 - **Schema alignment**: when a pure function produces fields, verify they exist in the Zod schema that validates the output.
+- **DB types**: after pushing a migration, regenerate types before writing queries. Never hand-write DB row interfaces.
 
 ## 6) Verify (per phase)
 
