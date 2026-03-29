@@ -30,6 +30,10 @@ export interface FormCoachingContext {
   averageBarDriftCm: number | null;
   averageDepthCm: number | null;
   averageForwardLeanDeg: number | null;
+
+  // Competition readiness context
+  competitionPassRate: number | null;
+  failedCriteria: string[];
 }
 
 /**
@@ -90,6 +94,24 @@ export function assembleCoachingContext({
     ? leanReps.reduce((sum, r) => sum + r.forwardLeanDeg!, 0) / leanReps.length
     : null;
 
+  // Competition readiness from current analysis verdicts
+  const currentVerdicts = analysis.reps.filter((r) => r.verdict);
+  const passedCount = currentVerdicts.filter((r) => r.verdict?.verdict === 'white_light').length;
+  const competitionPassRate = currentVerdicts.length > 0
+    ? passedCount / currentVerdicts.length
+    : null;
+
+  // Collect unique failed criteria names
+  const failedCriteria = [
+    ...new Set(
+      currentVerdicts.flatMap((r) =>
+        (r.verdict?.criteria ?? [])
+          .filter((c) => c.verdict === 'fail')
+          .map((c) => c.name),
+      ),
+    ),
+  ];
+
   return {
     analysis,
     lift,
@@ -107,5 +129,7 @@ export function assembleCoachingContext({
     averageBarDriftCm,
     averageDepthCm,
     averageForwardLeanDeg,
+    competitionPassRate,
+    failedCriteria,
   } satisfies FormCoachingContext;
 }

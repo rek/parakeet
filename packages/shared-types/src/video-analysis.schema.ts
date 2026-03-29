@@ -18,6 +18,24 @@ export const FormFaultSchema = z.object({
 
 export type FormFault = z.infer<typeof FormFaultSchema>;
 
+export const CriterionResultSchema = z.object({
+  name: z.string(),
+  verdict: z.enum(['pass', 'borderline', 'fail']),
+  measured: z.number(),
+  threshold: z.number(),
+  unit: z.string(),
+  message: z.string(),
+});
+
+export type CriterionResult = z.infer<typeof CriterionResultSchema>;
+
+export const RepVerdictSchema = z.object({
+  verdict: z.enum(['white_light', 'red_light', 'borderline']),
+  criteria: z.array(CriterionResultSchema),
+});
+
+export type RepVerdict = z.infer<typeof RepVerdictSchema>;
+
 export const RepAnalysisSchema = z.object({
   repNumber: z.number().int(),
   startFrame: z.number().int(),
@@ -30,6 +48,7 @@ export const RepAnalysisSchema = z.object({
   kneeAngleDeg: z.number().optional(),
   hipAngleAtLockoutDeg: z.number().optional(),
   faults: z.array(FormFaultSchema),
+  verdict: RepVerdictSchema.optional(),
 });
 
 export type RepAnalysis = z.infer<typeof RepAnalysisSchema>;

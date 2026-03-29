@@ -22,6 +22,12 @@ export { CameraAnglePicker } from './ui/CameraAnglePicker';
 export { BaselineDeviationBadge } from './ui/BaselineDeviationBadge';
 export { LongitudinalComparison } from './ui/LongitudinalComparison';
 export { detectCameraAngle } from './lib/detect-camera-angle';
+export { gradeRep } from './lib/competition-grader';
+export type { RepVerdict, CriterionResult } from './lib/competition-grader';
+export { computeReadinessFromVerdicts } from './lib/readiness-score';
+export type { ReadinessScore } from './lib/readiness-score';
+export { VerdictBadge } from './ui/VerdictBadge';
+export { ReadinessCard } from './ui/ReadinessCard';
 export {
   computePersonalBaseline,
   detectBaselineDeviations,

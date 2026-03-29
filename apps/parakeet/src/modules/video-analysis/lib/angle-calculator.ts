@@ -1,3 +1,5 @@
+import type { BarPathPoint } from '@parakeet/shared-types';
+
 import { LANDMARK, type PoseLandmark, type PoseFrame } from './pose-types';
 
 /**
@@ -121,4 +123,50 @@ export function computeKneeValgus({ frame }: { frame: PoseFrame }) {
     rightIsValgus: rightIsMedial && rightAngle < 170,
     avgAngleDeg: (leftAngle + rightAngle) / 2,
   };
+}
+
+/**
+ * Compute elbow angle: vertex at elbow, rays toward shoulder and wrist.
+ *
+ * Averages left and right sides. Full extension = ~180°.
+ * Used for bench press lockout detection (IPF requires full elbow extension).
+ */
+export function computeElbowAngle({ frame }: { frame: PoseFrame }) {
+  const ls = frame[LANDMARK.LEFT_SHOULDER];
+  const rs = frame[LANDMARK.RIGHT_SHOULDER];
+  const le = frame[LANDMARK.LEFT_ELBOW];
+  const re = frame[LANDMARK.RIGHT_ELBOW];
+  const lw = frame[LANDMARK.LEFT_WRIST];
+  const rw = frame[LANDMARK.RIGHT_WRIST];
+
+  const leftAngle = computeAngle({ a: ls, b: le, c: lw });
+  const rightAngle = computeAngle({ a: rs, b: re, c: rw });
+
+  return (leftAngle + rightAngle) / 2;
+}
+
+/** Approx cm per normalized unit (170cm person filling 70% of frame height). */
+const CM_PER_UNIT = 243;
+
+/**
+ * Compute frame-to-frame bar Y velocity from a bar path.
+ *
+ * Returns velocity in cm/s for each frame transition. Positive = bar moving
+ * down (Y increases in MediaPipe), negative = bar moving up.
+ * Used for bench pause detection (velocity ≈ 0 at chest).
+ */
+export function computeBarVelocity({
+  barPath,
+  fps,
+}: {
+  barPath: BarPathPoint[];
+  fps: number;
+}) {
+  if (barPath.length < 2) return [];
+
+  const dt = 1 / fps;
+  return barPath.slice(1).map((point, i) => {
+    const dy = (point.y - barPath[i].y) * CM_PER_UNIT;
+    return dy / dt;
+  });
 }

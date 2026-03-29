@@ -16,12 +16,15 @@ import {
   usePreviousVideos,
   computePersonalBaseline,
   detectBaselineDeviations,
+  computeReadinessFromVerdicts,
   BarPathOverlay,
   CameraAnglePicker,
   RepMetricsCard,
   FormCoachingCard,
   LongitudinalComparison,
   BaselineDeviationBadge,
+  VerdictBadge,
+  ReadinessCard,
 } from '@modules/video-analysis';
 import { VideoPlayerCard } from '@modules/video-analysis/ui/VideoPlayerCard';
 import { RecordVideoSheet } from '@modules/video-analysis/ui/RecordVideoSheet';
@@ -117,6 +120,18 @@ export default function VideoAnalysisScreen() {
   }, [coachingError]);
 
   const analysis = result?.analysis ?? null;
+
+  // Compute competition readiness from all video verdicts (current + previous)
+  const readinessScore = useMemo(() => {
+    const allAnalyses = [
+      ...(analysis ? [analysis] : []),
+      ...previousVideos.filter((v) => v.analysis).map((v) => v.analysis!),
+    ];
+    const allVerdicts = allAnalyses.flatMap((a) =>
+      a.reps.filter((r) => r.verdict).map((r) => r.verdict!),
+    );
+    return computeReadinessFromVerdicts({ verdicts: allVerdicts });
+  }, [analysis, previousVideos]);
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -236,7 +251,7 @@ export default function VideoAnalysisScreen() {
               ) : null
             )}
 
-            {/* Rep metrics cards + baseline deviations */}
+            {/* Rep metrics cards + verdict badges + baseline deviations */}
             {analysis.reps.map((rep) => (
               <View key={rep.repNumber}>
                 <RepMetricsCard
@@ -244,6 +259,9 @@ export default function VideoAnalysisScreen() {
                   lift={lift ?? ''}
                   colors={colors}
                 />
+                {rep.verdict && (
+                  <VerdictBadge verdict={rep.verdict} colors={colors} />
+                )}
                 {baseline &&
                   detectBaselineDeviations({
                     rep,
@@ -258,6 +276,15 @@ export default function VideoAnalysisScreen() {
                   ))}
               </View>
             ))}
+
+            {/* Competition readiness */}
+            {readinessScore && (
+              <ReadinessCard
+                score={readinessScore}
+                lift={lift ?? ''}
+                colors={colors}
+              />
+            )}
 
             {/* Longitudinal comparison */}
             <LongitudinalComparison

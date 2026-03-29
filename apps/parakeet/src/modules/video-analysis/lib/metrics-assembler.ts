@@ -3,6 +3,7 @@ import type { VideoAnalysisResult } from '@parakeet/shared-types';
 import { extractBarPath, smoothBarPath, computeBarDrift, sliceBarPath } from './bar-path';
 import { detectReps } from './rep-detector';
 import { computeForwardLean, computeHipAngle, computeKneeAngle } from './angle-calculator';
+import { gradeRep } from './competition-grader';
 import { detectSquatDepth } from './depth-detector';
 import { detectFaults, findBottomFrame } from './fault-detector';
 import type { PoseFrame } from './pose-types';
@@ -81,7 +82,7 @@ export function assembleAnalysis({
       repContext: { repPath, barDrift: barDriftNormalized, bottomFrame },
     });
 
-    return {
+    const repAnalysis = {
       repNumber: index + 1,
       startFrame: safeStart,
       endFrame: safeEnd,
@@ -90,11 +91,15 @@ export function assembleAnalysis({
       forwardLeanDeg,
       barDriftCm,
       romCm,
-      // Expose computed angles for downstream use / LLM coaching (Phase 2)
       kneeAngleDeg: kneeAngleAtMid,
       hipAngleAtLockoutDeg: hipAngleAtEnd,
       faults,
     };
+
+    // Auto-grade every rep against IPF competition standards
+    const verdict = gradeRep({ rep: repAnalysis, frames, fps, lift });
+
+    return { ...repAnalysis, verdict };
   });
 
   return {

@@ -25,6 +25,8 @@ export interface FormCoachingInput {
   averageBarDriftCm: number | null;
   averageDepthCm: number | null;
   averageForwardLeanDeg: number | null;
+  competitionPassRate: number | null;
+  failedCriteria: string[];
 }
 
 /**

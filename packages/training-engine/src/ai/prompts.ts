@@ -93,6 +93,12 @@ Powerlifting-specific rules:
 - Form degradation across reps is expected — flag it only when it's severe (>15% angle change) or dangerous.
 - Distinguish competition-relevant faults (depth, lockout) from training faults (slight drift, minor lean).
 
+Competition readiness:
+- If "competitionPassRate" is provided, reference it. Below 90% means the lifter has reps that would fail in competition.
+- If "failedCriteria" lists IPF rule violations (e.g., "depth", "lockout", "pause", "downward_motion"), reference them by name and explain what to fix.
+- Prioritize competition faults (would cause a red light) over training faults (form optimization).
+- If pass rate is 100%, acknowledge it — "all reps would pass IPF judging" is meaningful.
+
 Return a JSON object matching the FormCoachingResult schema exactly.
 `;
 
