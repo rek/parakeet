@@ -53,12 +53,17 @@ export function useVideoAnalysis({
       //   const analysis = analyzeVideoFrames({ frames, fps, lift: lift as 'squat' | 'bench' | 'deadlift' });
       setProgress(0.5);
 
-      // 3. Compress video to reduce storage footprint (720p, 2 Mbps)
-      const compressedUri = await Video.compress(asset.uri, {
-        compressionMethod: 'manual',
-        maxSize: 720,
-        bitrate: 2_000_000,
-      });
+      // 3. Compress video to reduce storage footprint
+      let compressedUri: string;
+      try {
+        compressedUri = await Video.compress(asset.uri, {
+          compressionMethod: 'auto',
+        });
+      } catch {
+        // Fallback: some devices fail hardware codec configuration.
+        // Use the original URI — larger file but still functional.
+        compressedUri = asset.uri;
+      }
       setProgress(0.7);
 
       // 4. Move to app documents directory for persistence across app launches
