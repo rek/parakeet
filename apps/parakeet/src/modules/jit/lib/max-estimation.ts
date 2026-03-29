@@ -1,4 +1,4 @@
-import type { BiologicalSex } from '@modules/profile/application/profile.service';
+import type { BiologicalSex } from '@modules/profile';
 import type { Lift } from '@parakeet/shared-types';
 import { roundToNearest } from '@shared/utils/weight';
 

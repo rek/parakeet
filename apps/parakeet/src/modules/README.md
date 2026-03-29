@@ -61,6 +61,4 @@ When adding or refactoring features:
 1. Prefer module public APIs (`@modules/<feature>`).
 2. Keep infra/runtime code in `@platform/*`.
 3. Keep reusable cross-feature code in `@shared/*`.
-4. Keep typecheck and boundaries green:
-   - `tsc --noEmit -p apps/parakeet/tsconfig.typecheck.json`
-   - `npm run check:module-boundary`
+4. Keep typecheck and boundaries green — run `/verify`.

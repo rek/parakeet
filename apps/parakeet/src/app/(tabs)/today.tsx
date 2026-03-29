@@ -749,7 +749,7 @@ export default function TodayScreen() {
                       try {
                         // Revert the adjustment to the previous value
                         const { upsertModifierCalibration } = await import(
-                          '@modules/jit/data/calibration.repository'
+                          '@modules/jit'
                         );
                         await upsertModifierCalibration({
                           userId: user!.id,

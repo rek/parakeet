@@ -8,19 +8,9 @@ You are refactoring an existing Parakeet codebase file or subsystem. Your goal i
 4. **Fix in order**: errors first > warnings > style/consistency
 5. **Validate after each file** — run typecheck and lint before moving on
 
-## Validation commands (main app)
+## Validation
 
-```bash
-tsc --noEmit -p apps/parakeet/tsconfig.typecheck.json
-npm run check:module-boundary
-```
-
-## Validation commands (dashboard)
-
-```bash
-npx tsc --noEmit -p apps/dashboard/tsconfig.app.json
-npx nx lint dashboard
-```
+Run `/verify` after each file.
 
 ## Dashboard-specific rules
 

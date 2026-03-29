@@ -2,7 +2,7 @@ import { getActiveDisruptions } from '@modules/disruptions';
 import {
   getProgramCompletionCounts,
   getSessionCompletionContext,
-} from '@modules/session/application/session.service';
+} from '@modules/session';
 import type { Lift } from '@parakeet/shared-types';
 import {
   checkCycleCompletion,

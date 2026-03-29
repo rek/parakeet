@@ -16,7 +16,7 @@ The 16 rules that matter most — read this, then consult the full guide only as
 9. **File naming** — `PascalCase.tsx` for components, `camelCase.ts` for everything else, `use*.ts` for hooks
 10. **Test with Vitest** — not Jest; run with `nx run <package>:test`
 11. **No new legacy folders** — no new `lib/`, `services/`, `hooks/`, `utils/` at top-level in `src/`
-12. **Module boundary** — validate with `npm run check:module-boundary` after structural changes
+12. **Module boundary** — validate with `npm run check:boundaries` after structural changes
 13. **Prefer `modules/<feature>/` for new business code** — infra goes in `platform/`, cross-feature in `shared/`
 14. **`FlatList` over `ScrollView`** for lists; use `keyExtractor` + `getItemLayout`
 15. **Accessibility** — add `accessible`, `accessibilityLabel`, `accessibilityRole` to interactive elements

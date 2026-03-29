@@ -31,13 +31,7 @@ Update all stale references to match the current implementation.
 
 ### 4. Validation
 
-Run the validation baseline to confirm everything passes:
-
-```bash
-npx tsc --noEmit -p apps/parakeet/tsconfig.typecheck.json
-npm run check:module-boundary
-npx nx test training-engine
-```
+Run `/verify` to confirm everything passes.
 
 ### 5. Key Learnings
 

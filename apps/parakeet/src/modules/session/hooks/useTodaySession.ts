@@ -1,4 +1,4 @@
-import { useAuth } from '@modules/auth/hooks/useAuth';
+import { useAuth } from '@modules/auth';
 import { qk } from '@platform/query';
 import { useQuery } from '@tanstack/react-query';
 

@@ -1,7 +1,7 @@
-import { useAuth } from '@modules/auth/hooks/useAuth';
-import { getProfile } from '@modules/profile/application/profile.service';
+import { useAuth } from '@modules/auth';
+import { getProfile } from '@modules/profile';
 import { fetchActiveProgramMode } from '@modules/program';
-import { getCurrentWeekLogs } from '@modules/session/application/session.service';
+import { getCurrentWeekLogs } from '@modules/session';
 import {
   classifyVolumeStatus,
   computeRemainingCapacity,

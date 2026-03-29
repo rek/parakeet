@@ -25,8 +25,4 @@ Each module: `application/` | `data/` | `hooks/` | `lib/` | `model/` | `ui/` | `
 
 ## Validation
 
-```bash
-tsc --noEmit -p apps/parakeet/tsconfig.typecheck.json
-npm run check:module-boundary
-npx nx test parakeet
-```
+Run `/verify` — it checks typecheck, boundaries, and tests.

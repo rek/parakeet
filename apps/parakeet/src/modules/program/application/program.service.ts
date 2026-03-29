@@ -248,7 +248,7 @@ export {
 // Triggered after each session completion when program reaches ≥80% done.
 // Fire-and-forget: errors are logged but do not block the caller.
 export function onCycleComplete(programId: string, userId: string): void {
-  import('@modules/cycle-review/lib/cycle-review')
+  import('@modules/cycle-review')
     .then(
       ({ compileCycleReport, getPreviousCycleSummaries, storeCycleReview }) =>
         import('@parakeet/training-engine').then(({ generateCycleReview }) =>

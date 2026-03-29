@@ -2,7 +2,7 @@
 import { useCallback, useEffect, useRef } from 'react';
 import { AppState, type AppStateStatus } from 'react-native';
 
-import { useAuth } from '@modules/auth/hooks/useAuth';
+import { useAuth } from '@modules/auth';
 import { qk } from '@platform/query';
 import { captureException } from '@platform/utils/captureException';
 import { useQueryClient } from '@tanstack/react-query';

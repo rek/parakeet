@@ -39,6 +39,9 @@ jobs:
           restore-keys: |
             nx-${{ hashFiles('**/package-lock.json') }}-
 
+      - name: Check boundaries
+        run: npm run check:boundaries
+
       - name: Typecheck (affected)
         run: npx nx affected --target=typecheck --base=origin/main --head=HEAD
 

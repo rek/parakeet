@@ -1,4 +1,4 @@
-import type { BiologicalSex } from '@modules/profile/application/profile.service';
+import type { BiologicalSex } from '@modules/profile';
 import type { MuscleGroup } from '@parakeet/shared-types';
 import { MUSCLE_GROUPS } from '@parakeet/shared-types';
 import { typedSupabase } from '@platform/supabase';
