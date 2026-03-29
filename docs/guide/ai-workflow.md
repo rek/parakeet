@@ -79,6 +79,8 @@ For smaller features, skip to Plan.
 - Create/update implementation tasks in `docs/specs/`.
 - Keep tasks small and ordered.
 - Reference `docs/domain/` for constants — specs describe *where* values are used, not *what* they are.
+- **Confirm scope before building** — if a task involves external systems (cloud upload, third-party APIs, new permissions), confirm with the user that the scope is wanted before implementing. Building then reverting wastes effort.
+- **Prioritize by architectural value, not by ease** — never say "lowest-hanging fruit" or "easiest win." Order tasks by what delivers the most complete, well-structured system.
 
 For big features, break the spec into **numbered phases**. Each phase should be independently shippable and verifiable. Structure:
 
@@ -103,6 +105,25 @@ For each phase:
 - Prefer module public APIs (`@modules/<feature>`).
 - Keep infra in `@platform/*`; cross-feature code in `@shared/*`.
 - Commit after each task or logical unit. One concern per commit.
+
+### Native module phases
+
+When a phase adds native dependencies (MediaPipe, vision-camera, etc.):
+
+- **Install deps first, then detail the plan** — install packages, inspect the actual type definitions, then write the implementation plan. Documented APIs often differ from reality; having the real `.d.ts` files locally avoids wasted design time.
+- **State the prebuild requirement in the plan** — native deps require `npx expo prebuild` + a new dev client build before they work on device. Include this as an explicit step so the user knows when to trigger a build.
+- **Add to both package.json files** — `apps/parakeet/package.json` (for autolinking) and root `package.json` (for hoisting). Missing either causes subtle failures.
+- **Update Zod schemas in the same commit as computed fields** — `satisfies` doesn't catch excess properties from `.map()` chains. If the assembler produces a field, the schema must include it, or it's silently dropped on typed reads.
+
+### Inline quality checks during execution
+
+Don't defer all quality checks to a post-hoc arch review. Check these during implementation:
+
+- **Dead parameters**: if a function parameter isn't used in the body, remove it.
+- **Theme compliance**: no raw hex colors — use `colors.*` from `ColorScheme`.
+- **Unsafe casts**: avoid `as unknown as X` double casts. Fix the type at the source.
+- **Error surfacing**: every async error path needs `captureException` + `Alert` (per project convention).
+- **Schema alignment**: when a pure function produces fields, verify they exist in the Zod schema that validates the output.
 
 ## 6) Verify (per phase)
 

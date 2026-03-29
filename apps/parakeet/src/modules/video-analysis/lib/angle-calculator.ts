@@ -83,3 +83,42 @@ export function computeKneeAngle({ frame }: { frame: PoseFrame }) {
 
   return (leftAngle + rightAngle) / 2;
 }
+
+/**
+ * Detect knee valgus (cave) from a front-view frame.
+ *
+ * Measures the angle at the knee in the frontal plane (hip-knee-ankle).
+ * In a front view, X-axis position reveals medial/lateral knee displacement.
+ * Returns the valgus angle for each side — positive values indicate the
+ * knee is medial to the hip-ankle line (caving in).
+ *
+ * Threshold from coaching literature: >10° valgus is a concern under load.
+ */
+export function computeKneeValgus({ frame }: { frame: PoseFrame }) {
+  const lh = frame[LANDMARK.LEFT_HIP];
+  const rh = frame[LANDMARK.RIGHT_HIP];
+  const lk = frame[LANDMARK.LEFT_KNEE];
+  const rk = frame[LANDMARK.RIGHT_KNEE];
+  const la = frame[LANDMARK.LEFT_ANKLE];
+  const ra = frame[LANDMARK.RIGHT_ANKLE];
+
+  // Front-view knee angle (hip-knee-ankle in frontal plane)
+  const leftAngle = computeAngle({ a: lh, b: lk, c: la });
+  const rightAngle = computeAngle({ a: rh, b: rk, c: ra });
+
+  // Left side: knee caves inward when knee X is medial to hip-ankle midpoint
+  const leftMidX = (lh.x + la.x) / 2;
+  const leftIsMedial = lk.x > leftMidX;
+
+  // Right side: mirror logic
+  const rightMidX = (rh.x + ra.x) / 2;
+  const rightIsMedial = rk.x < rightMidX;
+
+  return {
+    leftAngleDeg: leftAngle,
+    rightAngleDeg: rightAngle,
+    leftIsValgus: leftIsMedial && leftAngle < 170,
+    rightIsValgus: rightIsMedial && rightAngle < 170,
+    avgAngleDeg: (leftAngle + rightAngle) / 2,
+  };
+}

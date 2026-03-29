@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -9,8 +9,22 @@ import {
   View,
 } from 'react-native';
 
-import { useVideoAnalysis } from '@modules/video-analysis';
-import { BarPathOverlay, RepMetricsCard } from '@modules/video-analysis';
+
+import {
+  useVideoAnalysis,
+  useFormCoaching,
+  usePreviousVideos,
+  computePersonalBaseline,
+  detectBaselineDeviations,
+  BarPathOverlay,
+  CameraAnglePicker,
+  RepMetricsCard,
+  FormCoachingCard,
+  LongitudinalComparison,
+  BaselineDeviationBadge,
+} from '@modules/video-analysis';
+import { VideoPlayerCard } from '@modules/video-analysis/ui/VideoPlayerCard';
+import { RecordVideoSheet } from '@modules/video-analysis/ui/RecordVideoSheet';
 import type { Lift } from '@parakeet/shared-types';
 import { LIFT_LABELS } from '@shared/constants';
 import { capitalize } from '@shared/utils/string';
@@ -25,13 +39,9 @@ import { useTheme } from '../../../theme/ThemeContext';
 /**
  * Video form analysis screen.
  *
- * Phase 1: Pick a video from the camera roll, show a placeholder player card
- * with the video URI, and display per-rep metrics if analysis exists.
- * MediaPipe frame extraction is not yet integrated — analysis is shown when
- * the analysis field is populated on the session_videos record.
- *
- * Phase 2: Replace the placeholder card with <VideoView> (expo-video) and
- * overlay BarPathOverlay directly on top of the video.
+ * Pick a video from the camera roll → MediaPipe extracts pose landmarks →
+ * analysis pipeline computes bar path, rep detection, form faults →
+ * display video playback with per-rep metrics and bar path overlays.
  */
 export default function VideoAnalysisScreen() {
   const { colors } = useTheme();
@@ -45,12 +55,38 @@ export default function VideoAnalysisScreen() {
   const liftLabel =
     LIFT_LABELS[lift as Lift] ?? capitalize(lift ?? 'Lift');
 
+  const [cameraAngle, setCameraAngle] = useState<'side' | 'front'>('side');
+  const [isRecording, setIsRecording] = useState(false);
+
   const { pickAndAnalyze, loadExisting, isProcessing, progress, error, result } =
     useVideoAnalysis({
       sessionId: sessionId ?? '',
       lift: lift ?? '',
-      userId: '',
+      cameraAngle,
     });
+
+  const {
+    generateCoaching,
+    isGenerating: isCoachingGenerating,
+    error: coachingError,
+    coaching,
+    setCoaching,
+  } = useFormCoaching({
+    sessionId: sessionId ?? '',
+    lift: lift ?? '',
+  });
+
+  const { previousVideos } = usePreviousVideos({
+    lift: lift ?? '',
+    currentVideoId: result?.id ?? null,
+  });
+
+  const baseline = useMemo(() => {
+    const previousAnalyses = previousVideos
+      .filter((v) => v.analysis != null)
+      .map((v) => v.analysis!);
+    return computePersonalBaseline({ analyses: previousAnalyses });
+  }, [previousVideos]);
 
   // Load any existing video for this session+lift on mount
   useEffect(() => {
@@ -60,12 +96,25 @@ export default function VideoAnalysisScreen() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sessionId, lift]);
 
+  // Initialize coaching state from existing video
+  useEffect(() => {
+    if (result?.coachingResponse) {
+      setCoaching(result.coachingResponse);
+    }
+  }, [result?.coachingResponse, setCoaching]);
+
   // Surface errors via Alert so they're not silently dropped
   useEffect(() => {
     if (error) {
       Alert.alert('Video Error', error);
     }
   }, [error]);
+
+  useEffect(() => {
+    if (coachingError) {
+      Alert.alert('Coaching Error', coachingError);
+    }
+  }, [coachingError]);
 
   const analysis = result?.analysis ?? null;
 
@@ -85,46 +134,55 @@ export default function VideoAnalysisScreen() {
         {/* Video section */}
         <Text style={styles.sectionHeader}>Video</Text>
 
+        {!result && (
+          <CameraAnglePicker
+            selected={cameraAngle}
+            onChange={setCameraAngle}
+            colors={colors}
+          />
+        )}
+
         {!result ? (
-          // No video yet — show pick button
-          <TouchableOpacity
-            style={styles.selectVideoButton}
-            onPress={pickAndAnalyze}
-            disabled={isProcessing}
-            activeOpacity={0.75}
-            accessible={true}
-            accessibilityLabel="Select a video from your camera roll"
-            accessibilityRole="button"
-          >
-            <Text style={styles.selectVideoIcon}>📹</Text>
-            <Text style={styles.selectVideoText}>Select Video</Text>
-            <Text style={styles.selectVideoHint}>
-              Pick a side-view video from your camera roll
-            </Text>
-          </TouchableOpacity>
-        ) : (
-          // Video exists — show placeholder card
-          // TODO: Replace with <VideoView> when expo-video is added
-          <View style={styles.videoPlaceholder}>
-            <Text style={styles.videoPlaceholderIcon}>🎞</Text>
-            <Text style={styles.videoUri} numberOfLines={2}>
-              {result.localUri}
-            </Text>
-            <Text style={styles.videoDuration}>
-              Duration: {result.durationSec}s
-            </Text>
+          // No video yet — show pick and record buttons
+          <>
             <TouchableOpacity
-              style={styles.replaceButton}
+              style={styles.selectVideoButton}
               onPress={pickAndAnalyze}
               disabled={isProcessing}
               activeOpacity={0.75}
               accessible={true}
-              accessibilityLabel="Replace video"
+              accessibilityLabel="Select a video from your camera roll"
               accessibilityRole="button"
             >
-              <Text style={styles.replaceButtonText}>Replace Video</Text>
+              <Text style={styles.selectVideoIcon}>📹</Text>
+              <Text style={styles.selectVideoText}>Select Video</Text>
+              <Text style={styles.selectVideoHint}>
+                {cameraAngle === 'front'
+                  ? 'Pick a front-view video from your camera roll'
+                  : 'Pick a side-view video from your camera roll'}
+              </Text>
             </TouchableOpacity>
-          </View>
+
+            <TouchableOpacity
+              style={styles.recordVideoButton}
+              onPress={() => setIsRecording(true)}
+              disabled={isProcessing}
+              activeOpacity={0.75}
+              accessible={true}
+              accessibilityLabel="Record a new video"
+              accessibilityRole="button"
+            >
+              <Text style={styles.recordVideoText}>Record Video</Text>
+            </TouchableOpacity>
+          </>
+        ) : (
+          <VideoPlayerCard
+            localUri={result.localUri}
+            durationSec={result.durationSec}
+            onReplace={pickAndAnalyze}
+            isProcessing={isProcessing}
+            colors={colors}
+          />
         )}
 
         {/* Processing progress */}
@@ -154,9 +212,8 @@ export default function VideoAnalysisScreen() {
         {!analysis ? (
           <View style={styles.analysisPlaceholder}>
             <Text style={styles.analysisPlaceholderText}>
-              Analysis will be available when MediaPipe processing is
-              integrated. Select a video above to save it — results will appear
-              here once processing is complete.
+              Select a video above to analyze your form. Pose estimation
+              runs on-device — results appear automatically after processing.
             </Text>
           </View>
         ) : (
@@ -164,7 +221,7 @@ export default function VideoAnalysisScreen() {
             <Text style={styles.analysisMetaText}>
               {analysis.reps.length} rep
               {analysis.reps.length !== 1 ? 's' : ''} detected · {analysis.fps}{' '}
-              fps · {analysis.cameraAngle} view
+              fps · {result?.cameraAngle ?? analysis.cameraAngle} view
             </Text>
 
             {/* Bar path overlays — one per rep */}
@@ -179,18 +236,61 @@ export default function VideoAnalysisScreen() {
               ) : null
             )}
 
-            {/* Rep metrics cards */}
+            {/* Rep metrics cards + baseline deviations */}
             {analysis.reps.map((rep) => (
-              <RepMetricsCard
-                key={rep.repNumber}
-                rep={rep}
-                lift={lift ?? ''}
-                colors={colors}
-              />
+              <View key={rep.repNumber}>
+                <RepMetricsCard
+                  rep={rep}
+                  lift={lift ?? ''}
+                  colors={colors}
+                />
+                {baseline &&
+                  detectBaselineDeviations({
+                    rep,
+                    baseline,
+                    lift: (lift ?? 'squat') as 'squat' | 'bench' | 'deadlift',
+                  }).map((d) => (
+                    <BaselineDeviationBadge
+                      key={d.metric}
+                      deviation={d}
+                      colors={colors}
+                    />
+                  ))}
+              </View>
             ))}
+
+            {/* Longitudinal comparison */}
+            <LongitudinalComparison
+              currentAnalysis={analysis}
+              previousVideos={previousVideos}
+              colors={colors}
+            />
+
+            {/* AI coaching */}
+            <FormCoachingCard
+              coaching={coaching}
+              isGenerating={isCoachingGenerating}
+              error={coachingError}
+              onGenerate={() => result && generateCoaching({ video: result })}
+              colors={colors}
+            />
           </>
         )}
       </ScrollView>
+
+      {isRecording && (
+        <View style={styles.recordingOverlay}>
+          <RecordVideoSheet
+            cameraAngle={cameraAngle}
+            onRecorded={(_videoUri) => {
+              // TODO: feed recorded URI into analysis pipeline (follow-up)
+              setIsRecording(false);
+            }}
+            onCancel={() => setIsRecording(false)}
+            colors={colors}
+          />
+        </View>
+      )}
     </SafeAreaView>
   );
 }
@@ -249,43 +349,23 @@ function buildStyles(colors: ColorScheme) {
       textAlign: 'center',
       paddingHorizontal: spacing[6],
     },
-    // Video placeholder card (replaces <VideoView> until expo-video is added)
-    videoPlaceholder: {
+    recordVideoButton: {
       backgroundColor: colors.bgSurface,
       borderRadius: radii.md,
       borderWidth: 1,
       borderColor: colors.border,
-      padding: spacing[4],
-      marginBottom: spacing[4],
+      paddingVertical: spacing[3],
       alignItems: 'center',
-      gap: spacing[2],
+      marginBottom: spacing[4],
     },
-    videoPlaceholderIcon: {
-      fontSize: 32,
-    },
-    videoUri: {
-      fontSize: typography.sizes.xs,
-      color: colors.textTertiary,
-      fontFamily: typography.families.mono,
-      textAlign: 'center',
-    },
-    videoDuration: {
-      fontSize: typography.sizes.sm,
+    recordVideoText: {
+      fontSize: typography.sizes.md,
+      fontWeight: typography.weights.semibold,
       color: colors.textSecondary,
     },
-    replaceButton: {
-      marginTop: spacing[2],
-      paddingHorizontal: spacing[4],
-      paddingVertical: spacing[2],
-      borderRadius: radii.sm,
-      borderWidth: 1,
-      borderColor: colors.border,
-      backgroundColor: colors.bgMuted,
-    },
-    replaceButtonText: {
-      fontSize: typography.sizes.sm,
-      fontWeight: typography.weights.medium,
-      color: colors.textSecondary,
+    recordingOverlay: {
+      ...StyleSheet.absoluteFillObject,
+      zIndex: 10,
     },
     // Processing state
     processingRow: {

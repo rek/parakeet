@@ -5,11 +5,11 @@ import type { RepAnalysis } from '@parakeet/shared-types';
 import { radii, spacing, typography } from '../../../theme';
 import type { ColorScheme } from '../../../theme';
 
-const SEVERITY_COLORS: Record<'info' | 'warning' | 'critical', string> = {
-  info: '#14B8A6',
-  warning: '#F59E0B',
-  critical: '#EF4444',
-};
+function severityColor(severity: 'info' | 'warning' | 'critical', colors: ColorScheme) {
+  if (severity === 'info') return colors.info;
+  if (severity === 'warning') return colors.warning;
+  return colors.danger;
+}
 
 /**
  * Displays per-rep metrics and form faults for a single rep of a lift.
@@ -89,7 +89,7 @@ export function RepMetricsCard({
                   styles.faultDot,
                   {
                     backgroundColor:
-                      SEVERITY_COLORS[fault.severity] ?? colors.textTertiary,
+                      severityColor(fault.severity, colors),
                   },
                 ]}
               />
