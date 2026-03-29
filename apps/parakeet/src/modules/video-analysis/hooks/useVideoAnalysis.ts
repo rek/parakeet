@@ -69,7 +69,9 @@ export function useVideoAnalysis({
       // 4. Move to app documents directory for persistence across app launches
       const filename = `video_${sessionId}_${lift}_${Date.now()}.mp4`;
       const videosDir = new Directory(Paths.document, 'videos');
-      videosDir.create({ intermediates: true });
+      if (!videosDir.exists) {
+        videosDir.create({ intermediates: true });
+      }
       const destFile = new File(videosDir, filename);
       const sourceFile = new File(compressedUri);
       sourceFile.move(destFile);
