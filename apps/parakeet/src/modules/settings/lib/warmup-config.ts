@@ -9,7 +9,12 @@ import type {
   WarmupProtocol,
   WarmupStep,
 } from '@parakeet/training-engine';
-import { toJson, typedSupabase } from '@platform/supabase';
+import {
+  deleteWarmupConfig,
+  fetchAllWarmupConfigs,
+  fetchWarmupConfig,
+  upsertWarmupConfig,
+} from '../data/warmup-config.repository';
 
 // Re-export warmup types and functions so screens import from @modules/settings
 // instead of directly from @parakeet/training-engine.
@@ -39,14 +44,8 @@ export async function getWarmupConfig(
   lift: Lift,
   biologicalSex?: 'female' | 'male'
 ): Promise<{ protocol: WarmupProtocol; explicit: boolean }> {
-  const { data, error } = await typedSupabase
-    .from('warmup_configs')
-    .select('protocol, custom_steps')
-    .eq('user_id', userId)
-    .eq('lift', lift)
-    .maybeSingle();
+  const data = await fetchWarmupConfig(userId, lift);
 
-  if (error) throw error;
   const defaultPreset: WarmupPresetName =
     biologicalSex === 'female' ? 'standard_female' : 'standard';
   if (!data)
@@ -69,12 +68,8 @@ export async function getAllWarmupConfigs(
   userId: string,
   biologicalSex?: 'female' | 'male'
 ): Promise<Record<Lift, WarmupProtocol>> {
-  const { data, error } = await typedSupabase
-    .from('warmup_configs')
-    .select('lift, protocol, custom_steps')
-    .eq('user_id', userId);
+  const rows = await fetchAllWarmupConfigs(userId);
 
-  if (error) throw error;
   const defaultPreset: WarmupPresetName =
     biologicalSex === 'female' ? 'standard_female' : 'standard';
   const defaults: Record<Lift, WarmupProtocol> = {
@@ -82,7 +77,7 @@ export async function getAllWarmupConfigs(
     bench: { type: 'preset', name: defaultPreset },
     deadlift: { type: 'preset', name: defaultPreset },
   };
-  for (const row of data ?? []) {
+  for (const row of rows) {
     defaults[row.lift as Lift] =
       row.protocol === 'custom'
         ? { type: 'custom', steps: parseCustomSteps(row.custom_steps) }
@@ -96,25 +91,16 @@ export async function updateWarmupConfig(
   lift: Lift,
   protocol: WarmupProtocol
 ): Promise<void> {
-  await typedSupabase.from('warmup_configs').upsert(
-    {
-      user_id: userId,
-      lift,
-      protocol: protocol.type === 'custom' ? 'custom' : protocol.name,
-      custom_steps: protocol.type === 'custom' ? toJson(protocol.steps) : null,
-      updated_at: new Date().toISOString(),
-    },
-    { onConflict: 'user_id,lift' }
-  );
+  await upsertWarmupConfig(userId, lift, {
+    protocol: protocol.type === 'custom' ? 'custom' : protocol.name,
+    custom_steps: protocol.type === 'custom' ? protocol.steps : null,
+    updated_at: new Date().toISOString(),
+  });
 }
 
 export async function resetWarmupConfig(
   userId: string,
   lift: Lift
 ): Promise<void> {
-  await typedSupabase
-    .from('warmup_configs')
-    .delete()
-    .eq('user_id', userId)
-    .eq('lift', lift);
+  await deleteWarmupConfig(userId, lift);
 }

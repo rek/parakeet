@@ -1,22 +1,22 @@
 import type { Lift } from '@parakeet/shared-types';
 import { DEFAULT_AUXILIARY_POOLS } from '@parakeet/training-engine';
-import { typedSupabase } from '@platform/supabase';
 
+import {
+  deleteAuxiliaryExercises,
+  fetchActiveAssignments,
+  fetchAllBlockAssignments,
+  fetchAuxiliaryExercises,
+  insertAuxiliaryExercises,
+  upsertBlockAssignment,
+} from '../data/auxiliary-config.repository';
 import { getPrimaryMuscles } from '../utils/auxiliary-muscles';
 
 export async function getAuxiliaryPool(
   userId: string,
   lift: Lift
 ): Promise<string[]> {
-  const { data, error } = await typedSupabase
-    .from('auxiliary_exercises')
-    .select('exercise_name')
-    .eq('user_id', userId)
-    .eq('lift', lift)
-    .order('pool_position');
-
-  if (error) throw error;
-  if (!data || data.length === 0) return DEFAULT_AUXILIARY_POOLS[lift];
+  const data = await fetchAuxiliaryExercises(userId, lift);
+  if (data.length === 0) return DEFAULT_AUXILIARY_POOLS[lift];
   return data.map((r) => r.exercise_name);
 }
 
@@ -35,11 +35,7 @@ export async function reorderAuxiliaryPool(
   lift: Lift,
   orderedExercises: string[]
 ): Promise<void> {
-  await typedSupabase
-    .from('auxiliary_exercises')
-    .delete()
-    .eq('user_id', userId)
-    .eq('lift', lift);
+  await deleteAuxiliaryExercises(userId, lift);
 
   const rows = orderedExercises.map((name, i) => ({
     user_id: userId,
@@ -48,7 +44,7 @@ export async function reorderAuxiliaryPool(
     pool_position: i,
     primary_muscles: getPrimaryMuscles(name),
   }));
-  await typedSupabase.from('auxiliary_exercises').insert(rows);
+  await insertAuxiliaryExercises(rows);
 }
 
 export type SlotAssignment = {
@@ -63,18 +59,9 @@ export async function getActiveAssignments(
   programId: string,
   blockNumber: number
 ): Promise<Partial<Record<Lift, SlotAssignment>>> {
-  const { data, error } = await typedSupabase
-    .from('auxiliary_assignments')
-    .select(
-      'lift, exercise_1, exercise_1_locked, exercise_2, exercise_2_locked'
-    )
-    .eq('user_id', userId)
-    .eq('program_id', programId)
-    .eq('block_number', blockNumber);
-
-  if (error) throw error;
+  const data = await fetchActiveAssignments(userId, programId, blockNumber);
   return Object.fromEntries(
-    (data ?? []).map((r) => [
+    data.map((r) => [
       r.lift,
       {
         exercise_1: r.exercise_1,
@@ -90,18 +77,10 @@ export async function getAllBlockAssignments(
   userId: string,
   programId: string
 ): Promise<Record<number, Partial<Record<Lift, SlotAssignment>>>> {
-  const { data, error } = await typedSupabase
-    .from('auxiliary_assignments')
-    .select(
-      'block_number, lift, exercise_1, exercise_1_locked, exercise_2, exercise_2_locked'
-    )
-    .eq('user_id', userId)
-    .eq('program_id', programId);
-
-  if (error) throw error;
+  const data = await fetchAllBlockAssignments(userId, programId);
 
   const result: Record<number, Partial<Record<Lift, SlotAssignment>>> = {};
-  for (const row of data ?? []) {
+  for (const row of data) {
     const bn = row.block_number as number;
     if (!result[bn]) result[bn] = {};
     result[bn]![row.lift as Lift] = {
@@ -124,18 +103,14 @@ export async function saveBlockAssignment(
   exercise2: string,
   exercise2Locked: boolean
 ): Promise<void> {
-  const { error } = await typedSupabase.from('auxiliary_assignments').upsert(
-    {
-      user_id: userId,
-      program_id: programId,
-      lift,
-      block_number: blockNumber,
-      exercise_1: exercise1,
-      exercise_1_locked: exercise1Locked,
-      exercise_2: exercise2,
-      exercise_2_locked: exercise2Locked,
-    },
-    { onConflict: 'user_id,program_id,lift,block_number' }
-  );
-  if (error) throw error;
+  await upsertBlockAssignment({
+    user_id: userId,
+    program_id: programId,
+    lift,
+    block_number: blockNumber,
+    exercise_1: exercise1,
+    exercise_1_locked: exercise1Locked,
+    exercise_2: exercise2,
+    exercise_2_locked: exercise2Locked,
+  });
 }

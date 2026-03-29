@@ -1,8 +1,13 @@
 import { LifterMaxesInputSchema } from '@parakeet/shared-types';
 import type { Lift } from '@parakeet/shared-types';
 import { estimateOneRepMax_Epley } from '@parakeet/training-engine';
-import { typedSupabase } from '@platform/supabase';
 import { weightGramsToKg, weightKgToGrams } from '@shared/utils/weight';
+
+import {
+  fetchLatestLifterMaxes,
+  getCurrentAuthUser,
+  insertLifterMaxes,
+} from '../data/lifter-maxes.repository';
 
 interface LiftInput {
   type: '1rm' | '3rm';
@@ -54,48 +59,31 @@ export async function submitMaxes(input: LifterMaxesInput) {
     throw new Error(parsed.error.issues[0]?.message ?? 'Invalid max input');
   }
 
-  const {
-    data: { user },
-  } = await typedSupabase.auth.getUser();
+  const user = await getCurrentAuthUser();
   if (!user) throw new Error('Not authenticated');
   const userId = user.id;
 
-  const { data, error } = await typedSupabase
-    .from('lifter_maxes')
-    .insert({
-      user_id: userId,
-      squat_1rm_grams: weightKgToGrams(resolve1Rm(input.squat)),
-      bench_1rm_grams: weightKgToGrams(resolve1Rm(input.bench)),
-      deadlift_1rm_grams: weightKgToGrams(resolve1Rm(input.deadlift)),
-      squat_input_grams: weightKgToGrams(input.squat.weightKg),
-      squat_input_reps:
-        input.squat.type === '3rm' ? (input.squat.reps ?? null) : null,
-      bench_input_grams: weightKgToGrams(input.bench.weightKg),
-      bench_input_reps:
-        input.bench.type === '3rm' ? (input.bench.reps ?? null) : null,
-      deadlift_input_grams: weightKgToGrams(input.deadlift.weightKg),
-      deadlift_input_reps:
-        input.deadlift.type === '3rm' ? (input.deadlift.reps ?? null) : null,
-      source: inferSource(input),
-      recorded_at: new Date().toISOString(),
-    })
-    .select()
-    .single();
-
-  if (error) throw error;
-  return data;
+  return insertLifterMaxes({
+    user_id: userId,
+    squat_1rm_grams: weightKgToGrams(resolve1Rm(input.squat)),
+    bench_1rm_grams: weightKgToGrams(resolve1Rm(input.bench)),
+    deadlift_1rm_grams: weightKgToGrams(resolve1Rm(input.deadlift)),
+    squat_input_grams: weightKgToGrams(input.squat.weightKg),
+    squat_input_reps:
+      input.squat.type === '3rm' ? (input.squat.reps ?? null) : null,
+    bench_input_grams: weightKgToGrams(input.bench.weightKg),
+    bench_input_reps:
+      input.bench.type === '3rm' ? (input.bench.reps ?? null) : null,
+    deadlift_input_grams: weightKgToGrams(input.deadlift.weightKg),
+    deadlift_input_reps:
+      input.deadlift.type === '3rm' ? (input.deadlift.reps ?? null) : null,
+    source: inferSource(input),
+    recorded_at: new Date().toISOString(),
+  });
 }
 
 export async function getCurrentMaxes(userId: string) {
-  const { data, error } = await typedSupabase
-    .from('lifter_maxes')
-    .select('*')
-    .eq('user_id', userId)
-    .order('recorded_at', { ascending: false })
-    .limit(1)
-    .maybeSingle();
-  if (error) throw error;
-  return data;
+  return fetchLatestLifterMaxes(userId);
 }
 
 export async function getCurrentOneRmKg(

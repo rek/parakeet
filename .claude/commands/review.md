@@ -143,6 +143,7 @@ For each screen, check: does it handle loading, error, and empty states?
 - Do any `app/` route files contain business logic instead of composing module APIs?
 - Do any `modules/*/ui/` files import repository code directly instead of going through application services?
 - Are Supabase calls happening outside of `modules/*/data/*` repositories?
+- **`lib/` vs `data/` boundary**: Grep for `typedSupabase` in `modules/*/lib/*.ts`. Any hit is a violation — `lib/` files must contain only business logic and orchestration; all DB calls belong in `data/*.repository.ts`. This was the single biggest architecture debt in the codebase and was cleaned up in the lib-to-data extraction (2026-03). Check for regressions.
 - Is any business logic duplicated between `packages/training-engine` and app-layer code?
 - Does `packages/shared-types` import from `packages/training-engine` (wrong direction)?
 - Do any modules import from other modules' internal paths instead of their public API (`index.ts`)?

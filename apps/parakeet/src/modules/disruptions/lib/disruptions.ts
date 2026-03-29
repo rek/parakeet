@@ -6,20 +6,36 @@ import type {
   TrainingDisruption,
 } from '@parakeet/shared-types';
 import { suggestDisruptionAdjustment } from '@parakeet/training-engine';
-import type { DbRow } from '@platform/supabase';
-import { typedSupabase } from '@platform/supabase';
 import { roundToNearest } from '@shared/utils/weight';
 
 import {
   parseAdjustmentSuggestionsJson,
   parsePlannedSetsJson,
 } from '../data/disruption-codecs';
+import {
+  clearSessionJit,
+  fetchActiveDisruptionById,
+  fetchActiveDisruptions,
+  fetchDisruptionById,
+  fetchDisruptionHistory,
+  fetchDisruptionSessionIds,
+  fetchInProgressSessionId,
+  fetchSessionsByDateRange,
+  fetchSessionsByIds,
+  fetchSessionsByIdsUnfiltered,
+  insertDisruption,
+  insertSorenessCheckin,
+  updateDisruptionAdjustmentApplied,
+  updateDisruptionEndDate as repoUpdateDisruptionEndDate,
+  updateDisruptionResolved,
+  updateDisruptionSessionIds,
+  updateSessionPlannedSets,
+  updateSessionStatus,
+} from '../data/disruptions.repository';
+import type { SessionPartialRow } from '../data/disruptions.repository';
 import { SORENESS_NUMERIC } from './disruption-presets';
 
-type SessionRow = Pick<
-  DbRow<'sessions'>,
-  'id' | 'primary_lift' | 'planned_sets' | 'status'
->;
+type SessionRow = SessionPartialRow;
 type SuggestedSession = { id: string; primary_lift: Lift; status: string };
 
 function toSuggestedSessions(rows: SessionRow[]): SuggestedSession[] {
@@ -34,46 +50,28 @@ export async function reportDisruption(
   userId: string,
   input: CreateDisruption
 ): Promise<DisruptionWithSuggestions> {
-  const { data: disruption, error } = await typedSupabase
-    .from('disruptions')
-    .insert({
-      user_id: userId,
-      disruption_type: input.disruption_type,
-      severity: input.severity,
-      affected_date_start: input.affected_date_start,
-      affected_date_end: input.affected_date_end ?? null,
-      affected_lifts: input.affected_lifts ?? null,
-      description: input.description ?? null,
-      session_ids_affected: input.session_ids_affected ?? null,
-      status: 'active',
-    })
-    .select()
-    .single();
-
-  if (error) throw error;
+  const disruption = await insertDisruption({
+    user_id: userId,
+    disruption_type: input.disruption_type,
+    severity: input.severity,
+    affected_date_start: input.affected_date_start,
+    affected_date_end: input.affected_date_end ?? null,
+    affected_lifts: input.affected_lifts ?? null,
+    description: input.description ?? null,
+    session_ids_affected: input.session_ids_affected ?? null,
+    status: 'active',
+  });
 
   let affectedSessions: SessionRow[] = [];
   const explicitIds = input.session_ids_affected ?? [];
   if (explicitIds.length > 0) {
-    affectedSessions =
-      (
-        await typedSupabase
-          .from('sessions')
-          .select('id, primary_lift, planned_sets, status')
-          .in('id', explicitIds)
-          .in('status', ['planned', 'in_progress'])
-      ).data ?? [];
+    affectedSessions = await fetchSessionsByIds(explicitIds);
   } else {
-    let query = typedSupabase
-      .from('sessions')
-      .select('id, primary_lift, planned_sets, status')
-      .eq('user_id', userId)
-      .in('status', ['planned', 'in_progress'])
-      .gte('planned_date', input.affected_date_start);
-    if (input.affected_date_end) {
-      query = query.lte('planned_date', input.affected_date_end);
-    }
-    const rows = (await query).data ?? [];
+    const rows = await fetchSessionsByDateRange(
+      userId,
+      input.affected_date_start,
+      input.affected_date_end
+    );
     affectedSessions =
       input.affected_lifts && input.affected_lifts.length > 0
         ? rows.filter((s) => {
@@ -85,10 +83,7 @@ export async function reportDisruption(
         : rows;
     const discoveredIds = affectedSessions.map((s) => s.id);
     if (discoveredIds.length > 0) {
-      await typedSupabase
-        .from('disruptions')
-        .update({ session_ids_affected: discoveredIds })
-        .eq('id', disruption.id);
+      await updateDisruptionSessionIds(disruption.id, discoveredIds);
     }
   }
 
@@ -113,39 +108,20 @@ export async function applyDisruptionAdjustment(
   disruptionId: string,
   userId: string
 ): Promise<void> {
-  const { data: disruption, error: disruptionError } = await typedSupabase
-    .from('disruptions')
-    .select('*')
-    .eq('id', disruptionId)
-    .eq('user_id', userId)
-    .eq('status', 'active')
-    .is('adjustment_applied', null)
-    .maybeSingle();
+  const disruption = await fetchActiveDisruptionById(disruptionId, userId);
 
-  if (disruptionError) throw disruptionError;
   if (!disruption) throw new Error('Disruption not found or already applied');
 
   const sessionIds = disruption.session_ids_affected ?? [];
   let affectedSessions: SessionRow[] = [];
   if (sessionIds.length > 0) {
-    affectedSessions =
-      (
-        await typedSupabase
-          .from('sessions')
-          .select('id, primary_lift, planned_sets, status')
-          .in('id', sessionIds)
-      ).data ?? [];
+    affectedSessions = await fetchSessionsByIdsUnfiltered(sessionIds);
   } else if (disruption.affected_date_start) {
-    let query = typedSupabase
-      .from('sessions')
-      .select('id, primary_lift, planned_sets, status')
-      .eq('user_id', userId)
-      .in('status', ['planned', 'in_progress'])
-      .gte('planned_date', disruption.affected_date_start);
-    if (disruption.affected_date_end) {
-      query = query.lte('planned_date', disruption.affected_date_end);
-    }
-    const rows = (await query).data ?? [];
+    const rows = await fetchSessionsByDateRange(
+      userId,
+      disruption.affected_date_start,
+      disruption.affected_date_end
+    );
     affectedSessions =
       disruption.affected_lifts && disruption.affected_lifts.length > 0
         ? rows.filter((s) => {
@@ -184,17 +160,11 @@ export async function applyDisruptionAdjustment(
         ),
       }));
 
-      await typedSupabase
-        .from('sessions')
-        .update({ planned_sets: adjustedSets })
-        .eq('id', suggestion.session_id);
+      await updateSessionPlannedSets(suggestion.session_id, adjustedSets);
     }
 
     if (suggestion.action === 'session_skipped') {
-      await typedSupabase
-        .from('sessions')
-        .update({ status: 'skipped' })
-        .eq('id', suggestion.session_id);
+      await updateSessionStatus(suggestion.session_id, 'skipped');
     }
 
     if (
@@ -212,17 +182,11 @@ export async function applyDisruptionAdjustment(
         reps: Math.max(1, set.reps - suggestion.reps_reduction!),
       }));
 
-      await typedSupabase
-        .from('sessions')
-        .update({ planned_sets: adjustedSets })
-        .eq('id', suggestion.session_id);
+      await updateSessionPlannedSets(suggestion.session_id, adjustedSets);
     }
   }
 
-  await typedSupabase
-    .from('disruptions')
-    .update({ adjustment_applied: suggestions })
-    .eq('id', disruptionId);
+  await updateDisruptionAdjustmentApplied(disruptionId, suggestions);
 }
 
 export async function updateDisruptionEndDate(
@@ -230,12 +194,7 @@ export async function updateDisruptionEndDate(
   userId: string,
   endDate: string
 ): Promise<void> {
-  const { error } = await typedSupabase
-    .from('disruptions')
-    .update({ affected_date_end: endDate })
-    .eq('id', disruptionId)
-    .eq('user_id', userId);
-  if (error) throw error;
+  await repoUpdateDisruptionEndDate(disruptionId, userId, endDate);
 }
 
 export async function resolveDisruption(
@@ -245,42 +204,16 @@ export async function resolveDisruption(
 ): Promise<void> {
   const resolvedDate = resolvedAt ?? new Date().toISOString();
 
-  await typedSupabase
-    .from('disruptions')
-    .update({ status: 'resolved', resolved_at: resolvedDate })
-    .eq('id', disruptionId)
-    .eq('user_id', userId);
+  await updateDisruptionResolved(disruptionId, userId, resolvedDate);
 
-  const { data: disruption } = await typedSupabase
-    .from('disruptions')
-    .select('session_ids_affected')
-    .eq('id', disruptionId)
-    .single();
-
-  const sessionIds = disruption?.session_ids_affected ?? [];
+  const sessionIds = await fetchDisruptionSessionIds(disruptionId);
   if (sessionIds.length > 0) {
-    await typedSupabase
-      .from('sessions')
-      .update({ planned_sets: null, jit_generated_at: null })
-      .in('id', sessionIds)
-      .in('status', ['planned']);
+    await clearSessionJit(sessionIds);
   }
 }
 
 export async function getActiveDisruptions(userId: string) {
-  const { data, error } = await typedSupabase
-    .from('disruptions')
-    .select(
-      'id, disruption_type, severity, affected_lifts, description, affected_date_end'
-    )
-    .eq('user_id', userId)
-    .neq('status', 'resolved')
-    .or(
-      `affected_date_end.is.null,affected_date_end.gte.${new Date().toISOString().slice(0, 10)}`
-    )
-    .order('reported_at', { ascending: false });
-  if (error) throw error;
-  return data ?? [];
+  return fetchActiveDisruptions(userId);
 }
 
 export async function getDisruptionHistory(
@@ -289,27 +222,11 @@ export async function getDisruptionHistory(
 ) {
   const from = pagination.page * pagination.pageSize;
   const to = from + pagination.pageSize - 1;
-
-  const { data, count, error } = await typedSupabase
-    .from('disruptions')
-    .select('*', { count: 'exact' })
-    .eq('user_id', userId)
-    .order('reported_at', { ascending: false })
-    .range(from, to);
-
-  if (error) throw error;
-  return { items: data ?? [], total: count ?? 0 };
+  return fetchDisruptionHistory(userId, from, to);
 }
 
 export async function getDisruption(disruptionId: string, userId: string) {
-  const { data, error } = await typedSupabase
-    .from('disruptions')
-    .select('*')
-    .eq('id', disruptionId)
-    .eq('user_id', userId)
-    .maybeSingle();
-  if (error) throw error;
-  return data;
+  return fetchDisruptionById(disruptionId, userId);
 }
 
 export async function applyUnprogrammedEventSoreness(
@@ -321,16 +238,11 @@ export async function applyUnprogrammedEventSoreness(
   );
   if (Object.keys(ratings).length === 0) return;
 
-  const { data: inProgressSession } = await typedSupabase
-    .from('sessions')
-    .select('id')
-    .eq('user_id', userId)
-    .eq('status', 'in_progress')
-    .maybeSingle();
+  const inProgressSession = await fetchInProgressSessionId(userId);
 
-  await typedSupabase.from('soreness_checkins').insert({
-    user_id: userId,
-    session_id: inProgressSession?.id ?? null,
+  await insertSorenessCheckin({
+    userId,
+    sessionId: inProgressSession?.id ?? null,
     ratings,
     skipped: false,
   });
