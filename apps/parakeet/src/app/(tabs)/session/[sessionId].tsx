@@ -11,6 +11,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { useFeatureEnabled } from '@modules/feature-flags';
 import { useLiftHistory } from '@modules/history';
+import { VideoEntryButton } from '@modules/video-analysis';
 import { computeDisplayWeights, useChallengeReview } from '@modules/jit';
 import { getProfile } from '@modules/profile';
 import {
@@ -120,10 +121,6 @@ function buildStyles(colors: ColorScheme) {
       fontWeight: '700',
       color: colors.text,
       marginBottom: 4,
-    },
-    cameraIcon: {
-      fontSize: 18,
-      lineHeight: 22,
     },
     blockWeekText: {
       fontSize: 14,
@@ -370,7 +367,6 @@ export default function SessionScreen() {
   const [historySheetVisible, setHistorySheetVisible] = useState(false);
   const insets = useSafeAreaInsets();
   const traceEnabled = useFeatureEnabled('prescriptionTrace');
-  const videoAnalysisEnabled = useFeatureEnabled('videoAnalysis');
   const cachedTrace = useSessionStore((s) => s.cachedPrescriptionTrace);
   const formattedTrace = useMemo(() => {
     if (!cachedTrace) return null;
@@ -798,25 +794,7 @@ export default function SessionScreen() {
             <View style={styles.sessionHeaderText}>
               <View style={styles.liftTitleRow}>
                 <Text style={styles.liftTitle}>{liftHeader}</Text>
-                {videoAnalysisEnabled && sessionMeta?.primary_lift && (
-                  <TouchableOpacity
-                    onPress={() =>
-                      router.push({
-                        pathname: '/session/video-analysis' as never,
-                        params: {
-                          sessionId,
-                          lift: sessionMeta.primary_lift,
-                        },
-                      })
-                    }
-                    hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
-                    accessible={true}
-                    accessibilityLabel="Record form video"
-                    accessibilityRole="button"
-                  >
-                    <Text style={styles.cameraIcon}>📹</Text>
-                  </TouchableOpacity>
-                )}
+                <VideoEntryButton sessionId={sessionId} lift={sessionMeta?.primary_lift ?? null} />
               </View>
               <Text style={styles.blockWeekText}>{blockWeek}</Text>
             </View>

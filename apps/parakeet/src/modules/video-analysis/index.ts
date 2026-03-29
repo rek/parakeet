@@ -9,3 +9,4 @@ export { analyzeVideoFrames } from './application/analyze-video';
 export { useVideoAnalysis } from './hooks/useVideoAnalysis';
 export { RepMetricsCard } from './ui/RepMetricsCard';
 export { BarPathOverlay } from './ui/BarPathOverlay';
+export { VideoEntryButton } from './ui/VideoEntryButton';
