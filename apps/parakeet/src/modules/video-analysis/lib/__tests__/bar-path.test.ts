@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { computeBarDrift, extractBarPath, smoothBarPath } from '../bar-path';
+import { computeBarDrift, extractBarPath, sliceBarPath, smoothBarPath } from '../bar-path';
 import { LANDMARK } from '../pose-types';
 import { buildFrame } from './fixtures';
 
@@ -95,6 +95,28 @@ describe('smoothBarPath', () => {
     expect(s3[3].x).toBeCloseTo(0.3, 5);
     expect(s7[3].x).toBeCloseTo(0.3, 5);
   });
+
+  it('computes fps-relative window when fps is provided', () => {
+    // At 15fps, ~167ms ≈ 3 frames. At 30fps → 5 frames.
+    const path = Array.from({ length: 11 }, (_, i) => ({
+      x: 0.5 + (i % 2 === 0 ? 0.05 : -0.05),
+      y: 0.5,
+      frame: i,
+    }));
+    const at15 = smoothBarPath({ path, fps: 15 });
+    const at30 = smoothBarPath({ path, fps: 30 });
+    // Both should smooth, but 30fps uses a wider window → smoother result
+    const mid15 = Math.abs(at15[5].x - 0.5);
+    const mid30 = Math.abs(at30[5].x - 0.5);
+    expect(mid30).toBeLessThanOrEqual(mid15 + 0.001);
+  });
+
+  it('explicit windowSize overrides fps', () => {
+    const path = Array.from({ length: 7 }, (_, i) => ({ x: i * 0.1, y: 0.5, frame: i }));
+    const withFps = smoothBarPath({ path, fps: 60, windowSize: 3 });
+    const withoutFps = smoothBarPath({ path, windowSize: 3 });
+    expect(withFps[3].x).toBeCloseTo(withoutFps[3].x);
+  });
 });
 
 describe('computeBarDrift', () => {
@@ -140,5 +162,58 @@ describe('computeBarDrift', () => {
       { x: 0.5, y: 0.2, frame: 2 }, // drift 0.2 from start
     ];
     expect(computeBarDrift({ path })).toBeCloseTo(0.2);
+  });
+});
+
+describe('sliceBarPath', () => {
+  const contiguousPath = Array.from({ length: 10 }, (_, i) => ({
+    x: 0.5,
+    y: i * 0.05,
+    frame: i,
+  }));
+
+  it('slices contiguous frames correctly', () => {
+    const sliced = sliceBarPath({ barPath: contiguousPath, startFrame: 3, endFrame: 7 });
+    expect(sliced).toHaveLength(5);
+    expect(sliced[0].frame).toBe(3);
+    expect(sliced[sliced.length - 1].frame).toBe(7);
+  });
+
+  it('returns empty array for empty input', () => {
+    expect(sliceBarPath({ barPath: [], startFrame: 0, endFrame: 5 })).toEqual([]);
+  });
+
+  it('clamps when startFrame is before first frame', () => {
+    const sliced = sliceBarPath({ barPath: contiguousPath, startFrame: -5, endFrame: 2 });
+    expect(sliced[0].frame).toBe(0);
+    expect(sliced).toHaveLength(3);
+  });
+
+  it('clamps when endFrame is beyond last frame', () => {
+    const sliced = sliceBarPath({ barPath: contiguousPath, startFrame: 8, endFrame: 20 });
+    expect(sliced).toHaveLength(2);
+    expect(sliced[sliced.length - 1].frame).toBe(9);
+  });
+
+  it('returns empty when range is entirely outside path', () => {
+    expect(sliceBarPath({ barPath: contiguousPath, startFrame: 15, endFrame: 20 })).toEqual([]);
+  });
+
+  it('handles non-contiguous (subsampled) frame indices', () => {
+    // Frames at indices 0, 2, 4, 6, 8 (every other frame)
+    const subsampled = Array.from({ length: 5 }, (_, i) => ({
+      x: 0.5,
+      y: i * 0.05,
+      frame: i * 2,
+    }));
+    const sliced = sliceBarPath({ barPath: subsampled, startFrame: 2, endFrame: 6 });
+    expect(sliced).toHaveLength(3);
+    expect(sliced.map((p) => p.frame)).toEqual([2, 4, 6]);
+  });
+
+  it('returns single element when start equals end', () => {
+    const sliced = sliceBarPath({ barPath: contiguousPath, startFrame: 5, endFrame: 5 });
+    expect(sliced).toHaveLength(1);
+    expect(sliced[0].frame).toBe(5);
   });
 });

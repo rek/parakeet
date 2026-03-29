@@ -1,8 +1,9 @@
 import { LANDMARK, type PoseFrame } from './pose-types';
 
-const SMOOTH_WINDOW = 7;
-// At 30fps, 15 frames = 0.5s — prevents double-detection on a single rep peak.
-const MIN_PEAK_DISTANCE = 15;
+/** Minimum time between peaks — prevents double-detection on a single rep. */
+const MIN_PEAK_TIME_SEC = 0.5;
+/** Smoothing window target time — matches the ~233ms used at 30fps (7/30). */
+const SMOOTH_TIME_SEC = 7 / 30;
 
 /** Extract the Y-coordinate signal used for rep detection based on lift type. */
 function extractSignal({
@@ -72,19 +73,27 @@ function findPeaks({ signal, minDistance }: { signal: number[]; minDistance: num
  *
  * Each rep is bounded by the midpoints between consecutive bottom-of-rep peaks.
  * Single-rep videos are bounded by the start and end of the signal.
+ *
+ * Pass `fps` so peak distance and smoothing scale to the actual frame rate.
+ * Defaults to 30fps for backward compatibility.
  */
 export function detectReps({
   frames,
   lift,
+  fps = 30,
 }: {
   frames: PoseFrame[];
   lift: 'squat' | 'bench' | 'deadlift';
+  fps?: number;
 }) {
-  if (frames.length < MIN_PEAK_DISTANCE * 2) return [];
+  const minPeakDistance = Math.max(3, Math.round(fps * MIN_PEAK_TIME_SEC));
+  const smoothWindow = Math.max(3, Math.round(fps * SMOOTH_TIME_SEC));
+
+  if (frames.length < minPeakDistance * 2) return [];
 
   const raw = extractSignal({ frames, lift });
-  const smoothed = smoothSignal({ signal: raw, windowSize: SMOOTH_WINDOW });
-  const peaks = findPeaks({ signal: smoothed, minDistance: MIN_PEAK_DISTANCE });
+  const smoothed = smoothSignal({ signal: raw, windowSize: smoothWindow });
+  const peaks = findPeaks({ signal: smoothed, minDistance: minPeakDistance });
 
   if (peaks.length === 0) return [];
 

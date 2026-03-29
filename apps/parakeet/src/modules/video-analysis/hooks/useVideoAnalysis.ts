@@ -41,13 +41,27 @@ export function useVideoAnalysis({
       const asset = picked.assets[0];
       setProgress(0.1);
 
-      // 2. Compress video to reduce storage footprint
-      const compressedUri = await Video.compress(asset.uri, {
-        compressionMethod: 'auto',
-      });
-      setProgress(0.3);
+      // 2. TODO: Extract frames with MediaPipe and run analysis on raw video.
+      // Analyze BEFORE compression so MediaPipe reads the uncompressed source
+      // (avoids a decode cycle on the compressed output).
+      // When ready:
+      //   const { frames, fps } = await extractFramesFromVideo({
+      //     videoUri: asset.uri,
+      //     targetFps: 15,
+      //     onProgress: (p) => setProgress(0.1 + p * 0.4),
+      //   });
+      //   const analysis = analyzeVideoFrames({ frames, fps, lift: lift as 'squat' | 'bench' | 'deadlift' });
+      setProgress(0.5);
 
-      // 3. Move to app documents directory for persistence across app launches
+      // 3. Compress video to reduce storage footprint (720p, 2 Mbps)
+      const compressedUri = await Video.compress(asset.uri, {
+        compressionMethod: 'manual',
+        maxSize: 720,
+        bitrate: 2_000_000,
+      });
+      setProgress(0.7);
+
+      // 4. Move to app documents directory for persistence across app launches
       const filename = `video_${sessionId}_${lift}_${Date.now()}.mp4`;
       const videosDir = new Directory(Paths.document, 'videos');
       videosDir.create({ intermediates: true });
@@ -55,21 +69,10 @@ export function useVideoAnalysis({
       const sourceFile = new File(compressedUri);
       sourceFile.move(destFile);
       const destUri = destFile.uri;
-      setProgress(0.5);
+      setProgress(0.85);
 
-      // 4. Get video duration from picker metadata (ms → s)
+      // 5. Get video duration from picker metadata (ms → s)
       const durationSec = Math.round((asset.duration ?? 0) / 1000);
-
-      // 5. TODO: Extract frames with MediaPipe and run analysis.
-      // For now, save the video without analysis — analysis will be
-      // available once the MediaPipe native module is integrated.
-      // When ready:
-      //   const { frames, fps } = await extractFramesFromVideo({
-      //     videoUri: destUri,
-      //     onProgress: (p) => setProgress(0.5 + p * 0.4),
-      //   });
-      //   const analysis = analyzeVideoFrames({ frames, fps, lift: lift as 'squat' | 'bench' | 'deadlift' });
-      setProgress(0.9);
 
       // 6. Save to database
       const saved = await insertSessionVideo({

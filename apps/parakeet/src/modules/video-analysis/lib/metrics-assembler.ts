@@ -1,10 +1,10 @@
 import type { VideoAnalysisResult } from '@parakeet/shared-types';
 
-import { extractBarPath, smoothBarPath, computeBarDrift } from './bar-path';
+import { extractBarPath, smoothBarPath, computeBarDrift, sliceBarPath } from './bar-path';
 import { detectReps } from './rep-detector';
 import { computeForwardLean, computeHipAngle, computeKneeAngle } from './angle-calculator';
 import { detectSquatDepth } from './depth-detector';
-import { detectFaults } from './fault-detector';
+import { detectFaults, findBottomFrame } from './fault-detector';
 import type { PoseFrame } from './pose-types';
 
 const ANALYSIS_VERSION = 1;
@@ -17,7 +17,7 @@ const CM_PER_UNIT = 243;
  * Steps:
  * 1. Extract and smooth the bar path from wrist landmarks
  * 2. Detect rep boundaries from hip/wrist Y periodicity
- * 3. For each rep: compute key angles, depth (squat), bar metrics, and faults
+ * 3. For each rep: compute shared context once, then angles, depth, faults
  * 4. Return a VideoAnalysisResult ready for storage in the analysis JSONB column
  */
 export function assembleAnalysis({
@@ -30,17 +30,22 @@ export function assembleAnalysis({
   lift: 'squat' | 'bench' | 'deadlift';
 }) {
   const rawPath = extractBarPath({ frames });
-  const barPath = smoothBarPath({ path: rawPath });
-  const repBoundsList = detectReps({ frames, lift });
+  const barPath = smoothBarPath({ path: rawPath, fps });
+  const repBoundsList = detectReps({ frames, lift, fps });
 
   const reps = repBoundsList.map(({ startFrame, endFrame }, index) => {
     // Clamp to valid frame indices
     const safeStart = Math.max(0, Math.min(startFrame, frames.length - 1));
     const safeEnd = Math.max(safeStart, Math.min(endFrame, frames.length - 1));
 
-    // Bar path segment for this rep
-    const repPath = barPath.filter((p) => p.frame >= safeStart && p.frame <= safeEnd);
+    // --- Shared per-rep context (computed once, reused by fault detector) ---
+    const repPath = sliceBarPath({ barPath, startFrame: safeStart, endFrame: safeEnd });
     const barDriftNormalized = computeBarDrift({ path: repPath });
+    const bottomFrame =
+      lift === 'squat'
+        ? findBottomFrame({ frames, startFrame: safeStart, endFrame: safeEnd })
+        : safeStart;
+
     const barDriftCm = barDriftNormalized * CM_PER_UNIT;
 
     // Midpoint frame for representative angle measurements
@@ -58,17 +63,6 @@ export function assembleAnalysis({
     // Squat-specific: depth at bottom frame
     let maxDepthCm: number | undefined;
     if (lift === 'squat') {
-      // Find bottom frame = frame with highest average hip Y in rep window
-      let maxHipY = -Infinity;
-      let bottomFrame = safeStart;
-      for (let i = safeStart; i <= safeEnd; i++) {
-        const f = frames[i];
-        const hipY = (f[23].y + f[24].y) / 2;
-        if (hipY > maxHipY) {
-          maxHipY = hipY;
-          bottomFrame = i;
-        }
-      }
       const { depthCm } = detectSquatDepth({ frame: frames[bottomFrame] });
       maxDepthCm = depthCm;
     }
@@ -84,6 +78,7 @@ export function assembleAnalysis({
       repBounds: { startFrame: safeStart, endFrame: safeEnd },
       barPath,
       lift,
+      repContext: { repPath, barDrift: barDriftNormalized, bottomFrame },
     });
 
     return {

@@ -1,6 +1,6 @@
 import type { BarPathPoint, FormFault } from '@parakeet/shared-types';
 
-import { computeBarDrift } from './bar-path';
+import { computeBarDrift, sliceBarPath } from './bar-path';
 import { computeForwardLean, computeHipAngle } from './angle-calculator';
 import { detectSquatDepth } from './depth-detector';
 import { LANDMARK, type PoseFrame } from './pose-types';
@@ -22,21 +22,18 @@ const THRESHOLDS = {
   },
 } as const;
 
-/** Slice a bar path array to the frames covered by a single rep. */
-function sliceRepPath({
-  barPath,
-  startFrame,
-  endFrame,
-}: {
-  barPath: BarPathPoint[];
-  startFrame: number;
-  endFrame: number;
-}) {
-  return barPath.filter((p) => p.frame >= startFrame && p.frame <= endFrame);
+/**
+ * Pre-computed per-rep data shared between the metrics assembler and fault
+ * detector. Avoids recomputing bar path slicing, drift, and bottom frame.
+ */
+export interface RepContext {
+  repPath: BarPathPoint[];
+  barDrift: number;
+  bottomFrame: number;
 }
 
 /** Find the frame index within [startFrame, endFrame] at which hip Y is highest. */
-function findBottomFrame({
+export function findBottomFrame({
   frames,
   startFrame,
   endFrame,
@@ -65,16 +62,19 @@ function detectSquatFaults({
   frames,
   repBounds,
   barPath,
+  repContext,
 }: {
   frames: PoseFrame[];
   repBounds: { startFrame: number; endFrame: number };
   barPath: BarPathPoint[];
+  repContext?: RepContext;
 }) {
   const faults: FormFault[] = [];
   const { startFrame, endFrame } = repBounds;
 
   // Depth check — evaluate at the frame where hip is lowest
-  const bottomFrame = findBottomFrame({ frames, startFrame, endFrame });
+  const bottomFrame =
+    repContext?.bottomFrame ?? findBottomFrame({ frames, startFrame, endFrame });
   const { belowParallel } = detectSquatDepth({ frame: frames[bottomFrame] });
   if (!belowParallel) {
     faults.push({
@@ -101,8 +101,11 @@ function detectSquatFaults({
   }
 
   // Bar drift
-  const repPath = sliceRepPath({ barPath, startFrame, endFrame });
-  const drift = computeBarDrift({ path: repPath });
+  const drift =
+    repContext?.barDrift ??
+    computeBarDrift({
+      path: sliceBarPath({ barPath, startFrame, endFrame }),
+    });
   if (drift > THRESHOLDS.squat.barDriftNormalized) {
     faults.push({
       type: 'bar_drift',
@@ -120,17 +123,22 @@ function detectDeadliftFaults({
   frames,
   repBounds,
   barPath,
+  repContext,
 }: {
   frames: PoseFrame[];
   repBounds: { startFrame: number; endFrame: number };
   barPath: BarPathPoint[];
+  repContext?: RepContext;
 }) {
   const faults: FormFault[] = [];
   const { startFrame, endFrame } = repBounds;
 
   // Bar drift
-  const repPath = sliceRepPath({ barPath, startFrame, endFrame });
-  const drift = computeBarDrift({ path: repPath });
+  const drift =
+    repContext?.barDrift ??
+    computeBarDrift({
+      path: sliceBarPath({ barPath, startFrame, endFrame }),
+    });
   if (drift > THRESHOLDS.deadlift.barDriftNormalized) {
     faults.push({
       type: 'bar_drift',
@@ -176,17 +184,22 @@ function detectDeadliftFaults({
 function detectBenchFaults({
   barPath,
   repBounds,
+  repContext,
 }: {
   frames: PoseFrame[];
   repBounds: { startFrame: number; endFrame: number };
   barPath: BarPathPoint[];
+  repContext?: RepContext;
 }) {
   const faults: FormFault[] = [];
   const { startFrame, endFrame } = repBounds;
 
   // Bar drift
-  const repPath = sliceRepPath({ barPath, startFrame, endFrame });
-  const drift = computeBarDrift({ path: repPath });
+  const drift =
+    repContext?.barDrift ??
+    computeBarDrift({
+      path: sliceBarPath({ barPath, startFrame, endFrame }),
+    });
   if (drift > THRESHOLDS.bench.barDriftNormalized) {
     faults.push({
       type: 'bar_drift',
@@ -205,25 +218,30 @@ function detectBenchFaults({
  *
  * Each fault includes a type, severity, human-readable message, and optional
  * measured value + threshold to support UI display and future LLM coaching.
+ *
+ * When `repContext` is provided (from the metrics assembler), pre-computed
+ * bar path slice, drift, and bottom frame are reused instead of recomputed.
  */
 export function detectFaults({
   frames,
   repBounds,
   barPath,
   lift,
+  repContext,
 }: {
   frames: PoseFrame[];
   repBounds: { startFrame: number; endFrame: number };
   barPath: BarPathPoint[];
   lift: 'squat' | 'bench' | 'deadlift';
+  repContext?: RepContext;
 }) {
   if (lift === 'squat') {
-    return detectSquatFaults({ frames, repBounds, barPath });
+    return detectSquatFaults({ frames, repBounds, barPath, repContext });
   }
   if (lift === 'deadlift') {
-    return detectDeadliftFaults({ frames, repBounds, barPath });
+    return detectDeadliftFaults({ frames, repBounds, barPath, repContext });
   }
-  return detectBenchFaults({ frames, repBounds, barPath });
+  return detectBenchFaults({ frames, repBounds, barPath, repContext });
 }
 
 /**
@@ -245,7 +263,7 @@ export function computeTouchPointVariance({
 
   // Find the bar X at the bottom of each rep (highest wrist Y = bar at chest)
   const touchXValues = repBoundsList.map(({ startFrame, endFrame }) => {
-    const repPath = sliceRepPath({ barPath, startFrame, endFrame });
+    const repPath = sliceBarPath({ barPath, startFrame, endFrame });
     if (repPath.length === 0) return 0;
 
     // Bottom = point with highest Y in path

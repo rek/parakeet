@@ -127,4 +127,34 @@ describe('detectReps', () => {
       expect(reps).toHaveLength(2);
     });
   });
+
+  describe('fps-relative scaling', () => {
+    it('detects reps at 15fps with half the frames per rep', () => {
+      // 15fps → 30 frames per 2-second rep (instead of 60 at 30fps)
+      const frames = generateSquatFrames({ reps: 3, framesPerRep: 30 });
+      const reps = detectReps({ frames, lift: 'squat', fps: 15 });
+      expect(reps).toHaveLength(3);
+    });
+
+    it('detects reps at 10fps', () => {
+      // 10fps → 20 frames per 2-second rep
+      const frames = generateSquatFrames({ reps: 3, framesPerRep: 20 });
+      const reps = detectReps({ frames, lift: 'squat', fps: 10 });
+      expect(reps).toHaveLength(3);
+    });
+
+    it('defaults to 30fps when fps is omitted', () => {
+      const frames = generateSquatFrames({ reps: 3, framesPerRep: 60 });
+      const repsDefault = detectReps({ frames, lift: 'squat' });
+      const repsExplicit = detectReps({ frames, lift: 'squat', fps: 30 });
+      expect(repsDefault).toEqual(repsExplicit);
+    });
+
+    it('still rejects too-short videos at low fps', () => {
+      // At 10fps, minPeakDistance = round(10*0.5) = 5, need 2*5=10 frames
+      const frames = generateSquatFrames({ reps: 1, framesPerRep: 6 });
+      const reps = detectReps({ frames, lift: 'squat', fps: 10 });
+      expect(reps).toEqual([]);
+    });
+  });
 });
