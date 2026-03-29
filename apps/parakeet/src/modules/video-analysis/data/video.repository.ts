@@ -1,15 +1,10 @@
 import type { VideoAnalysisResult, FormCoachingResult } from '@parakeet/shared-types';
-import { typedSupabase } from '@platform/supabase';
+import { typedSupabase, toJson } from '@platform/supabase';
 import { captureException } from '@platform/utils/captureException';
 
 import type { SessionVideo } from '../model/types';
 
-// session_videos table is not yet in the generated types — this cast will be
-// removed once migration mobile-046 step 1.2 lands and types are regenerated.
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const db = typedSupabase as any;
-
-interface SessionVideoRow {
+type SessionVideoRow = {
   id: string;
   session_id: string;
   lift: string;
@@ -20,7 +15,7 @@ interface SessionVideoRow {
   analysis: unknown;
   coaching_response: unknown;
   created_at: string;
-}
+};
 
 function toSessionVideo(row: SessionVideoRow): SessionVideo {
   return {
@@ -52,27 +47,20 @@ export async function insertSessionVideo({
   remoteUri?: string | null;
   durationSec: number;
 }) {
-  const { data: { user } } = await db.auth.getUser();
+  const { data: { user } } = await typedSupabase.auth.getUser();
   if (!user) throw new Error('Not authenticated');
 
-  const row: Record<string, unknown> = {
-    user_id: user.id,
-    session_id: sessionId,
-    lift,
-    local_uri: localUri,
-    remote_uri: remoteUri ?? null,
-    duration_sec: durationSec,
-    analysis: null,
-  };
-  // camera_angle column added in migration 20260329000002 — only include
-  // if explicitly set to avoid PGRST204 on databases without the migration.
-  if (cameraAngle !== 'side') {
-    row.camera_angle = cameraAngle;
-  }
-
-  const { data, error } = await db
+  const { data, error } = await typedSupabase
     .from('session_videos')
-    .insert(row)
+    .insert({
+      user_id: user.id,
+      session_id: sessionId,
+      lift,
+      camera_angle: cameraAngle,
+      local_uri: localUri,
+      remote_uri: remoteUri ?? null,
+      duration_sec: durationSec,
+    })
     .select('*')
     .single();
 
@@ -91,7 +79,7 @@ export async function getVideoForSessionLift({
   sessionId: string;
   lift: string;
 }) {
-  const { data, error } = await db
+  const { data, error } = await typedSupabase
     .from('session_videos')
     .select('*')
     .eq('session_id', sessionId)
@@ -109,7 +97,7 @@ export async function getVideoForSessionLift({
 }
 
 export async function getVideosForLift({ lift }: { lift: string }) {
-  const { data, error } = await db
+  const { data, error } = await typedSupabase
     .from('session_videos')
     .select('*')
     .eq('lift', lift)
@@ -130,9 +118,9 @@ export async function updateSessionVideoAnalysis({
   id: string;
   analysis: VideoAnalysisResult;
 }) {
-  const { data, error } = await db
+  const { data, error } = await typedSupabase
     .from('session_videos')
-    .update({ analysis })
+    .update({ analysis: toJson(analysis) })
     .eq('id', id)
     .select('*')
     .single();
@@ -152,9 +140,9 @@ export async function updateSessionVideoCoaching({
   id: string;
   coachingResponse: FormCoachingResult;
 }) {
-  const { data, error } = await db
+  const { data, error } = await typedSupabase
     .from('session_videos')
-    .update({ coaching_response: coachingResponse })
+    .update({ coaching_response: toJson(coachingResponse) })
     .eq('id', id)
     .select('*')
     .single();
@@ -168,7 +156,7 @@ export async function updateSessionVideoCoaching({
 }
 
 export async function deleteSessionVideo({ id }: { id: string }) {
-  const { error } = await db.from('session_videos').delete().eq('id', id);
+  const { error } = await typedSupabase.from('session_videos').delete().eq('id', id);
 
   if (error) {
     captureException(error);

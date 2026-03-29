@@ -3,9 +3,6 @@ import { File } from 'expo-file-system';
 import { typedSupabase } from '@platform/supabase';
 import { captureException } from '@platform/utils/captureException';
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const db = typedSupabase as any;
-
 const BUCKET = 'session-videos';
 
 /**
@@ -27,7 +24,7 @@ export async function uploadVideoToStorage({
   localUri: string;
 }) {
   try {
-    const { data: { user } } = await db.auth.getUser();
+    const { data: { user } } = await typedSupabase.auth.getUser();
     if (!user) return null;
 
     const storagePath = `${user.id}/${videoId}.mp4`;
@@ -35,7 +32,7 @@ export async function uploadVideoToStorage({
     // File implements Blob in expo-file-system — pass directly to Supabase
     const file = new File(localUri);
 
-    const { error: uploadError } = await db.storage
+    const { error: uploadError } = await typedSupabase.storage
       .from(BUCKET)
       .upload(storagePath, file, {
         contentType: 'video/mp4',
@@ -48,7 +45,7 @@ export async function uploadVideoToStorage({
     }
 
     // Get the download URL
-    const { data: urlData } = db.storage
+    const { data: urlData } = typedSupabase.storage
       .from(BUCKET)
       .getPublicUrl(storagePath);
 
@@ -56,7 +53,7 @@ export async function uploadVideoToStorage({
 
     // Update the DB row with the remote URI
     if (remoteUri) {
-      const { error: updateError } = await db
+      const { error: updateError } = await typedSupabase
         .from('session_videos')
         .update({ remote_uri: remoteUri })
         .eq('id', videoId);

@@ -34,88 +34,6 @@ export type Database = {
   }
   public: {
     Tables: {
-      challenge_reviews: {
-        Row: {
-          id: string
-          user_id: string
-          session_id: string
-          created_at: string
-          score: number
-          verdict: string
-          concerns: Json
-          suggested_overrides: Json | null
-        }
-        Insert: {
-          id?: string
-          user_id: string
-          session_id: string
-          created_at?: string
-          score: number
-          verdict: string
-          concerns?: Json
-          suggested_overrides?: Json | null
-        }
-        Update: {
-          id?: string
-          user_id?: string
-          session_id?: string
-          created_at?: string
-          score?: number
-          verdict?: string
-          concerns?: Json
-          suggested_overrides?: Json | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "challenge_reviews_session_id_fkey"
-            columns: ["session_id"]
-            isOneToOne: false
-            referencedRelation: "sessions"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      decision_replay_logs: {
-        Row: {
-          id: string
-          user_id: string
-          session_id: string
-          created_at: string
-          prescription_score: number
-          rpe_accuracy: number
-          volume_appropriateness: string
-          insights: Json
-        }
-        Insert: {
-          id?: string
-          user_id: string
-          session_id: string
-          created_at?: string
-          prescription_score: number
-          rpe_accuracy: number
-          volume_appropriateness: string
-          insights?: Json
-        }
-        Update: {
-          id?: string
-          user_id?: string
-          session_id?: string
-          created_at?: string
-          prescription_score?: number
-          rpe_accuracy?: number
-          volume_appropriateness?: string
-          insights?: Json
-        }
-        Relationships: [
-          {
-            foreignKeyName: "decision_replay_logs_session_id_fkey"
-            columns: ["session_id"]
-            isOneToOne: false
-            referencedRelation: "sessions"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       auxiliary_assignments: {
         Row: {
           block_number: number
@@ -193,6 +111,86 @@ export type Database = {
         }
         Relationships: []
       }
+      bodyweight_entries: {
+        Row: {
+          created_at: string
+          id: string
+          recorded_date: string
+          user_id: string
+          weight_kg: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          recorded_date: string
+          user_id: string
+          weight_kg: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          recorded_date?: string
+          user_id?: string
+          weight_kg?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bodyweight_entries_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      challenge_reviews: {
+        Row: {
+          concerns: Json
+          created_at: string
+          id: string
+          score: number
+          session_id: string
+          suggested_overrides: Json | null
+          user_id: string
+          verdict: string
+        }
+        Insert: {
+          concerns?: Json
+          created_at?: string
+          id?: string
+          score: number
+          session_id: string
+          suggested_overrides?: Json | null
+          user_id: string
+          verdict: string
+        }
+        Update: {
+          concerns?: Json
+          created_at?: string
+          id?: string
+          score?: number
+          session_id?: string
+          suggested_overrides?: Json | null
+          user_id?: string
+          verdict?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "challenge_reviews_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "sessions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "challenge_reviews_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       cycle_reviews: {
         Row: {
           compiled_report: Json
@@ -255,6 +253,54 @@ export type Database = {
         }
         Relationships: []
       }
+      decision_replay_logs: {
+        Row: {
+          created_at: string
+          id: string
+          insights: Json
+          prescription_score: number
+          rpe_accuracy: number
+          session_id: string
+          user_id: string
+          volume_appropriateness: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          insights?: Json
+          prescription_score: number
+          rpe_accuracy: number
+          session_id: string
+          user_id: string
+          volume_appropriateness: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          insights?: Json
+          prescription_score?: number
+          rpe_accuracy?: number
+          session_id?: string
+          user_id?: string
+          volume_appropriateness?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "decision_replay_logs_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "sessions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "decision_replay_logs_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       developer_suggestions: {
         Row: {
           created_at: string
@@ -298,50 +344,6 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "developer_suggestions_program_id_fkey"
-            columns: ["program_id"]
-            isOneToOne: false
-            referencedRelation: "programs"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      weekly_body_reviews: {
-        Row: {
-          id: string
-          user_id: string
-          program_id: string | null
-          week_number: number
-          felt_soreness: Json
-          predicted_fatigue: Json
-          mismatches: Json
-          notes: string | null
-          created_at: string
-        }
-        Insert: {
-          id?: string
-          user_id: string
-          program_id?: string | null
-          week_number: number
-          felt_soreness: Json
-          predicted_fatigue: Json
-          mismatches?: Json
-          notes?: string | null
-          created_at?: string
-        }
-        Update: {
-          id?: string
-          user_id?: string
-          program_id?: string | null
-          week_number?: number
-          felt_soreness?: Json
-          predicted_fatigue?: Json
-          mismatches?: Json
-          notes?: string | null
-          created_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "weekly_body_reviews_program_id_fkey"
             columns: ["program_id"]
             isOneToOne: false
             referencedRelation: "programs"
@@ -440,80 +442,6 @@ export type Database = {
           version?: number
         }
         Relationships: []
-      }
-      modifier_calibrations: {
-        Row: {
-          id: string
-          user_id: string
-          modifier_source: string
-          adjustment: number
-          confidence: string
-          sample_count: number
-          mean_bias: number | null
-          calibrated_at: string | null
-          created_at: string
-          updated_at: string
-        }
-        Insert: {
-          id?: string
-          user_id: string
-          modifier_source: string
-          adjustment?: number
-          confidence?: string
-          sample_count?: number
-          mean_bias?: number | null
-          calibrated_at?: string | null
-          created_at?: string
-          updated_at?: string
-        }
-        Update: {
-          id?: string
-          user_id?: string
-          modifier_source?: string
-          adjustment?: number
-          confidence?: string
-          sample_count?: number
-          mean_bias?: number | null
-          calibrated_at?: string | null
-          created_at?: string
-          updated_at?: string
-        }
-        Relationships: []
-      }
-      motivational_message_logs: {
-        Row: {
-          id: string
-          user_id: string
-          session_ids: string[]
-          context: Json
-          message: string
-          created_at: string
-        }
-        Insert: {
-          id?: string
-          user_id: string
-          session_ids: string[]
-          context: Json
-          message: string
-          created_at?: string
-        }
-        Update: {
-          id?: string
-          user_id?: string
-          session_ids?: string[]
-          context?: Json
-          message?: string
-          created_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "motivational_message_logs_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
       }
       jit_comparison_logs: {
         Row: {
@@ -614,6 +542,72 @@ export type Database = {
         }
         Relationships: []
       }
+      modifier_calibrations: {
+        Row: {
+          adjustment: number
+          calibrated_at: string | null
+          confidence: string
+          created_at: string | null
+          id: string
+          mean_bias: number | null
+          modifier_source: string
+          sample_count: number
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          adjustment?: number
+          calibrated_at?: string | null
+          confidence?: string
+          created_at?: string | null
+          id?: string
+          mean_bias?: number | null
+          modifier_source: string
+          sample_count?: number
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          adjustment?: number
+          calibrated_at?: string | null
+          confidence?: string
+          created_at?: string | null
+          id?: string
+          mean_bias?: number | null
+          modifier_source?: string
+          sample_count?: number
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      motivational_message_logs: {
+        Row: {
+          context: Json
+          created_at: string
+          id: string
+          message: string
+          session_ids: string[]
+          user_id: string
+        }
+        Insert: {
+          context: Json
+          created_at?: string
+          id?: string
+          message: string
+          session_ids: string[]
+          user_id: string
+        }
+        Update: {
+          context?: Json
+          created_at?: string
+          id?: string
+          message?: string
+          session_ids?: string[]
+          user_id?: string
+        }
+        Relationships: []
+      }
       muscle_volume_config: {
         Row: {
           id: string
@@ -709,58 +703,34 @@ export type Database = {
           },
         ]
       }
-      bodyweight_entries: {
+      period_starts: {
         Row: {
-          id: string
-          user_id: string
-          recorded_date: string
-          weight_kg: number
           created_at: string
+          id: string
+          start_date: string
+          user_id: string
         }
         Insert: {
-          id?: string
-          user_id: string
-          recorded_date: string
-          weight_kg: number
           created_at?: string
+          id?: string
+          start_date: string
+          user_id: string
         }
         Update: {
-          id?: string
-          user_id?: string
-          recorded_date?: string
-          weight_kg?: number
           created_at?: string
+          id?: string
+          start_date?: string
+          user_id?: string
         }
         Relationships: [
           {
-            foreignKeyName: "bodyweight_entries_user_id_fkey"
+            foreignKeyName: "period_starts_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
-      }
-      period_starts: {
-        Row: {
-          id: string
-          user_id: string
-          start_date: string
-          created_at: string
-        }
-        Insert: {
-          id?: string
-          user_id: string
-          start_date: string
-          created_at?: string
-        }
-        Update: {
-          id?: string
-          user_id?: string
-          start_date?: string
-          created_at?: string
-        }
-        Relationships: []
       }
       personal_records: {
         Row: {
@@ -1040,14 +1010,71 @@ export type Database = {
           },
         ]
       }
+      session_videos: {
+        Row: {
+          analysis: Json | null
+          camera_angle: string
+          coaching_response: Json | null
+          created_at: string
+          duration_sec: number
+          id: string
+          lift: string
+          local_uri: string
+          remote_uri: string | null
+          session_id: string
+          user_id: string
+        }
+        Insert: {
+          analysis?: Json | null
+          camera_angle?: string
+          coaching_response?: Json | null
+          created_at?: string
+          duration_sec: number
+          id?: string
+          lift: string
+          local_uri: string
+          remote_uri?: string | null
+          session_id: string
+          user_id: string
+        }
+        Update: {
+          analysis?: Json | null
+          camera_angle?: string
+          coaching_response?: Json | null
+          created_at?: string
+          duration_sec?: number
+          id?: string
+          lift?: string
+          local_uri?: string
+          remote_uri?: string | null
+          session_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "session_videos_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "sessions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "session_videos_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       sessions: {
         Row: {
+          activity_name: string | null
           block_number: number | null
           completed_at: string | null
           created_at: string
           day_number: number
           id: string
-          activity_name: string | null
           intensity_type: string | null
           is_deload: boolean
           jit_generated_at: string | null
@@ -1064,12 +1091,12 @@ export type Database = {
           week_number: number
         }
         Insert: {
+          activity_name?: string | null
           block_number?: number | null
           completed_at?: string | null
           created_at?: string
           day_number: number
           id?: string
-          activity_name?: string | null
           intensity_type?: string | null
           is_deload?: boolean
           jit_generated_at?: string | null
@@ -1086,12 +1113,12 @@ export type Database = {
           week_number: number
         }
         Update: {
+          activity_name?: string | null
           block_number?: number | null
           completed_at?: string | null
           created_at?: string
           day_number?: number
           id?: string
-          activity_name?: string | null
           intensity_type?: string | null
           is_deload?: boolean
           jit_generated_at?: string | null
@@ -1138,7 +1165,7 @@ export type Database = {
           id?: string
           ratings?: Json
           recorded_at?: string
-          session_id?: string
+          session_id?: string | null
           skipped?: boolean
           user_id?: string
         }
@@ -1154,28 +1181,28 @@ export type Database = {
       }
       user_badges: {
         Row: {
-          id: string
-          user_id: string
           badge_id: string
           earned_at: string
-          session_id: string | null
+          id: string
           metadata: Json | null
+          session_id: string | null
+          user_id: string
         }
         Insert: {
-          id?: string
-          user_id: string
           badge_id: string
           earned_at?: string
-          session_id?: string | null
+          id?: string
           metadata?: Json | null
+          session_id?: string | null
+          user_id: string
         }
         Update: {
-          id?: string
-          user_id?: string
           badge_id?: string
           earned_at?: string
-          session_id?: string | null
+          id?: string
           metadata?: Json | null
+          session_id?: string | null
+          user_id?: string
         }
         Relationships: [
           {
@@ -1213,6 +1240,50 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      weekly_body_reviews: {
+        Row: {
+          created_at: string
+          felt_soreness: Json
+          id: string
+          mismatches: Json
+          notes: string | null
+          predicted_fatigue: Json
+          program_id: string | null
+          user_id: string
+          week_number: number
+        }
+        Insert: {
+          created_at?: string
+          felt_soreness: Json
+          id?: string
+          mismatches?: Json
+          notes?: string | null
+          predicted_fatigue: Json
+          program_id?: string | null
+          user_id: string
+          week_number: number
+        }
+        Update: {
+          created_at?: string
+          felt_soreness?: Json
+          id?: string
+          mismatches?: Json
+          notes?: string | null
+          predicted_fatigue?: Json
+          program_id?: string | null
+          user_id?: string
+          week_number?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "weekly_body_reviews_program_id_fkey"
+            columns: ["program_id"]
+            isOneToOne: false
+            referencedRelation: "programs"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {
