@@ -6,7 +6,10 @@
     "plugins": [
       "@sentry/react-native",
       "./apps/parakeet/plugins/with-debug-keystore",
-      "expo-secure-store"
+      "expo-secure-store",
+      "@react-native-community/datetimepicker",
+      "expo-router",
+      "expo-sqlite"
     ]
   }
 }
