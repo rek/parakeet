@@ -58,7 +58,7 @@ export default function VideoAnalysisScreen() {
   const [cameraAngle, setCameraAngle] = useState<'side' | 'front'>('side');
   const [isRecording, setIsRecording] = useState(false);
 
-  const { pickAndAnalyze, loadExisting, isProcessing, progress, error, result } =
+  const { pickAndAnalyze, processRecordedVideo, loadExisting, isProcessing, progress, error, result } =
     useVideoAnalysis({
       sessionId: sessionId ?? '',
       lift: lift ?? '',
@@ -282,9 +282,9 @@ export default function VideoAnalysisScreen() {
         <View style={styles.recordingOverlay}>
           <RecordVideoSheet
             cameraAngle={cameraAngle}
-            onRecorded={(_videoUri) => {
-              // TODO: feed recorded URI into analysis pipeline (follow-up)
+            onRecorded={(videoUri) => {
               setIsRecording(false);
+              processRecordedVideo({ videoUri, durationSec: 30 });
             }}
             onCancel={() => setIsRecording(false)}
             colors={colors}

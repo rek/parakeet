@@ -220,6 +220,29 @@ describe('detectBaselineDeviations', () => {
     expect(depthDev!.direction).toBe('worse');
   });
 
+  it('flags squat depth better when deeper than baseline', () => {
+    const rep: RepAnalysis = {
+      repNumber: 1,
+      startFrame: 0,
+      endFrame: 30,
+      barPath: [],
+      barDriftCm: 3,
+      forwardLeanDeg: 42,
+      romCm: 52,
+      maxDepthCm: -8, // much deeper than baseline (-4)
+      faults: [],
+    };
+
+    const deviations = detectBaselineDeviations({
+      rep,
+      baseline,
+      lift: 'squat',
+    });
+    const depthDev = deviations.find((d) => d.metric === 'maxDepthCm');
+    expect(depthDev).toBeDefined();
+    expect(depthDev!.direction).toBe('better');
+  });
+
   it('does not flag depth for non-squat lifts', () => {
     const rep: RepAnalysis = {
       repNumber: 1,
