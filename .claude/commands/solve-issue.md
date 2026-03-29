@@ -13,20 +13,7 @@ Read GitHub issue $ARGUMENTS using `gh issue view $ARGUMENTS`.
 
 ## Validate
 
-Run all checks before committing:
-
-```bash
-tsc --noEmit -p apps/parakeet/tsconfig.typecheck.json
-npm run check:module-boundary
-npx nx affected -t test
-```
-
-If dashboard files changed:
-
-```bash
-npx tsc --noEmit -p apps/dashboard/tsconfig.app.json
-npx nx lint dashboard
-```
+Run `/verify` before committing.
 
 ## Finish
 

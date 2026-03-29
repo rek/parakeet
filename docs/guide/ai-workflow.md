@@ -108,11 +108,7 @@ For each phase:
 
 After each phase, verify before moving to the next:
 
-**Automated checks:**
-- `tsc --noEmit -p apps/parakeet/tsconfig.typecheck.json`
-- `npm run check:module-boundary`
-- `npx nx affected -t test`
-- `npx nx lint parakeet` — oxlint (unused vars, imports, a11y)
+**Automated checks:** Run `/verify` (typecheck, boundaries, tests, lint).
 
 **Manual checks:**
 - Walk through the user-facing flow on device/simulator.

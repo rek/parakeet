@@ -160,7 +160,7 @@ Rendered as a single line in muted/tertiary text below the breakdown rows.
 npx nx test training-engine -- src/volume/compute-volume-breakdown.test.ts
 npx nx test training-engine -- src/volume/classify-config-source.test.ts
 npx tsc --noEmit -p apps/parakeet/tsconfig.typecheck.json
-npm run check:module-boundary
+npm run check:boundaries
 npx nx affected -t test
 ```
 

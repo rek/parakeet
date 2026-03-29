@@ -358,7 +358,7 @@ export async function completeSession(
     .catch(captureException);
 
   // Fire-and-forget: modifier calibration update from trace + actual RPE
-  import('@modules/jit/application/calibration-update.service')
+  import('@modules/jit')
     .then(({ updateModifierCalibrations }) =>
       updateModifierCalibrations({ sessionId, userId })
     )
@@ -377,7 +377,7 @@ export async function completeSession(
       const completed = statuses.filter((s) => s.status === 'completed').length;
       if (total > 0 && completed / total >= 0.8) {
         const { onCycleComplete } = await import(
-          '@modules/program/application/program.service'
+          '@modules/program'
         );
         onCycleComplete(session.program_id, userId);
       }

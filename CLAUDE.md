@@ -57,7 +57,4 @@ Training science constants, formulas, and thresholds live in [docs/domain/](./do
 
 ## Validation Baseline
 
-Before handoff for app refactors:
-
-- `tsc --noEmit -p apps/parakeet/tsconfig.typecheck.json`
-- `npm run check:module-boundary`
+Run `/verify` before handoff. It checks typecheck, boundaries, and tests.
