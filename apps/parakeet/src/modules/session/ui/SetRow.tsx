@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import {
   StyleSheet,
   Text,
@@ -66,9 +66,11 @@ export function SetRow({
     plannedWeightKg === 0 ? '' : String(plannedWeightKg)
   );
   const [reps, setReps] = useState(plannedReps);
-  const [rpe, setRpe] = useState<number | undefined>(rpeValue);
   const [isCompleted, setIsCompleted] = useState(false);
   const [plateSheetVisible, setPlateSheetVisible] = useState(false);
+
+  // RPE is owned by parent (set via floating quick-picker) — derive, don't sync
+  const rpe = rpeValue;
 
   const styles = useMemo(
     () =>
@@ -216,48 +218,54 @@ export function SetRow({
       isCompletedExternal: isCompletedProp,
     });
 
-  // Report local edits to parent — skip when externally completed (parent already has the data)
-  useEffect(() => {
-    if (isCompletedProp) return;
-    onUpdate({
-      weightKg: displayWeightKg,
-      reps: displayReps,
-      rpe,
-      isCompleted: displayCompleted,
-    });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [displayWeightKg, displayReps, rpe, displayCompleted, isCompletedProp]);
+  // Stable ref for onUpdate so handlers don't need it as a dependency
+  const onUpdateRef = useRef(onUpdate);
+  onUpdateRef.current = onUpdate;
 
-  // Sync external RPE (e.g. from floating quick-picker) into local state
-  useEffect(() => {
-    setRpe(rpeValue);
-  }, [rpeValue]);
+  // Notify parent directly from event handlers — no effect needed
+  // (per https://react.dev/learn/you-might-not-need-an-effect)
+  function notifyParent(patch: Partial<SetUpdateData>) {
+    if (isCompletedProp) return;
+    onUpdateRef.current({
+      weightKg: patch.weightKg ?? weightKg,
+      reps: patch.reps ?? reps,
+      rpe,
+      isCompleted: patch.isCompleted ?? isCompleted,
+    });
+  }
 
   function handleWeightChange(text: string) {
     setWeightText(text);
     const kg = parseWeightInput(text);
     setWeightKg(kg);
+    notifyParent({ weightKg: kg });
   }
 
   function handleRepsChange(text: string) {
     const parsed = parseInt(text, 10);
+    let nextReps: number;
     if (!isNaN(parsed) && parsed >= 0) {
-      setReps(parsed);
+      nextReps = parsed;
     } else if (text === '') {
-      setReps(0);
+      nextReps = 0;
+    } else {
+      return;
     }
+    setReps(nextReps);
+    notifyParent({ reps: nextReps });
   }
 
   function handleToggleComplete() {
-    setIsCompleted((prev) => !prev);
+    const next = !isCompleted;
+    setIsCompleted(next);
+    notifyParent({ isCompleted: next });
   }
 
   function handleWeightAdjust(delta: number) {
-    setWeightKg((prev) => {
-      const next = Math.max(0, Math.round((prev + delta) * 10) / 10);
-      setWeightText(next === 0 ? '' : String(next));
-      return next;
-    });
+    const next = Math.max(0, Math.round((weightKg + delta) * 10) / 10);
+    setWeightKg(next);
+    setWeightText(next === 0 ? '' : String(next));
+    notifyParent({ weightKg: next });
   }
 
   // Timed exercises: round label + duration input (minutes) + mark complete
