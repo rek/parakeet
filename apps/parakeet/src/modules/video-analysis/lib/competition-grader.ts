@@ -1,24 +1,12 @@
-import type { RepAnalysis, BarPathPoint } from '@parakeet/shared-types';
+import type { RepAnalysis, CriterionResult, RepVerdict } from '@parakeet/shared-types';
 
 import { computeElbowAngle, computeHipAngle, computeKneeAngle, computeBarVelocity } from './angle-calculator';
 import { LANDMARK, type PoseFrame } from './pose-types';
 
+export type { CriterionResult, RepVerdict };
+
 // Approx cm per normalized unit (170cm person filling 70% of frame height)
 const CM_PER_UNIT = 243;
-
-export interface CriterionResult {
-  name: string;
-  verdict: 'pass' | 'borderline' | 'fail';
-  measured: number;
-  threshold: number;
-  unit: string;
-  message: string;
-}
-
-export interface RepVerdict {
-  verdict: 'white_light' | 'red_light' | 'borderline';
-  criteria: CriterionResult[];
-}
 
 // --- Squat ---
 

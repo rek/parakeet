@@ -130,7 +130,8 @@ export default function VideoAnalysisScreen() {
     const allVerdicts = allAnalyses.flatMap((a) =>
       a.reps.filter((r) => r.verdict).map((r) => r.verdict!),
     );
-    return computeReadinessFromVerdicts({ verdicts: allVerdicts });
+    const videoCount = (analysis ? 1 : 0) + previousVideos.filter((v) => v.analysis).length;
+    return computeReadinessFromVerdicts({ verdicts: allVerdicts, window: videoCount });
   }, [analysis, previousVideos]);
 
   return (
