@@ -2,9 +2,10 @@
 
 ## Quick Reference
 
-The 15 rules that matter most — read this, then consult the full guide only as needed.
+The 16 rules that matter most — read this, then consult the full guide only as needed.
 
-1. **Single-arg objects** — `function foo({ a, b }: { a: string; b: number })`, not multiple args
+1. **Zero feature knowledge in screens** — `app/` screens must never contain feature-specific logic, styles, routing, or flag checks for optional features. Export a self-contained component from the module (e.g., `<VideoEntryButton>`) that handles its own feature flag gate, routing, and styles. The screen renders it with props (IDs, data) and nothing else. Removing a feature = delete the module + remove 1 import and 1 render line per screen.
+2. **Single-arg objects** — `function foo({ a, b }: { a: string; b: number })`, not multiple args
 2. **No explicit return types** — let TypeScript infer; never write `: Promise<Foo>`
 3. **Derive types from implementations** — `Awaited<ReturnType<typeof fn>>`, `ComponentProps<typeof Comp>`
 4. **No `any`** — use `unknown`, or narrow the type
