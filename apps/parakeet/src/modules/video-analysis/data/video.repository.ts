@@ -46,9 +46,13 @@ export async function insertSessionVideo({
   remoteUri?: string | null;
   durationSec: number;
 }) {
+  const { data: { user } } = await db.auth.getUser();
+  if (!user) throw new Error('Not authenticated');
+
   const { data, error } = await db
     .from('session_videos')
     .insert({
+      user_id: user.id,
       session_id: sessionId,
       lift,
       local_uri: localUri,
