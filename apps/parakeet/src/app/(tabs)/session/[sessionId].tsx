@@ -11,6 +11,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { useFeatureEnabled } from '@modules/feature-flags';
 import { useLiftHistory } from '@modules/history';
+import { VideoEntryButton } from '@modules/video-analysis';
 import { computeDisplayWeights, useChallengeReview } from '@modules/jit';
 import { getProfile } from '@modules/profile';
 import {
@@ -109,6 +110,11 @@ function buildStyles(colors: ColorScheme) {
       color: colors.textTertiary,
       lineHeight: 22,
       paddingLeft: 8,
+    },
+    liftTitleRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 8,
     },
     liftTitle: {
       fontSize: 22,
@@ -786,7 +792,10 @@ export default function SessionScreen() {
         <View style={styles.sessionHeader}>
           <View style={styles.sessionHeaderRow}>
             <View style={styles.sessionHeaderText}>
-              <Text style={styles.liftTitle}>{liftHeader}</Text>
+              <View style={styles.liftTitleRow}>
+                <Text style={styles.liftTitle}>{liftHeader}</Text>
+                <VideoEntryButton sessionId={sessionId} lift={sessionMeta?.primary_lift ?? null} />
+              </View>
               <Text style={styles.blockWeekText}>{blockWeek}</Text>
             </View>
             <TouchableOpacity

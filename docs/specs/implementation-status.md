@@ -255,6 +255,24 @@ Module/platform/shared architecture is the canonical app structure. Legacy top-l
 
 ---
 
+## In Progress
+
+### Video Form Analysis — [design doc](../design/video-form-analysis.md) | [spec](09-mobile/mobile-046-video-form-analysis.md)
+
+Phase 1 foundation complete (GH#148, PR#153). 68 tests, `videoAnalysis` feature flag (Advanced, default off).
+
+- [x] mobile-046 1.1: Native deps — `expo-image-picker`, `react-native-compressor`, app.json plugin config
+- [x] mobile-046 1.2: `session_videos` migration + `VideoAnalysisResult`/`RepAnalysis`/`FormFault`/`BarPathPoint` Zod schemas in shared-types
+- [x] mobile-046 1.3: `modules/video-analysis/` scaffold + `videoAnalysis` feature flag + `video.repository.ts`
+- [x] mobile-046 1.4: Pure analysis pipeline — bar path (wrist landmarks), rep detection (peak detection), angle calculator, depth detector, fault detector, metrics assembler; 68 tests
+- [x] mobile-046 1.5: `analyzeVideoFrames()` orchestrator + `extractFramesFromVideo()` placeholder
+- [x] mobile-046 1.6: `useVideoAnalysis` hook — pick → compress → save to local + DB
+- [x] mobile-046 1.7: `VideoEntryButton` (self-contained, feature-flagged) on session + history screens
+- [x] mobile-046 1.8: `video-analysis.tsx` screen + `RepMetricsCard` + `BarPathOverlay` (SVG)
+- [ ] mobile-046 Phase 2: MediaPipe native integration, video playback, LLM coaching, personal baselines, longitudinal comparison
+
+---
+
 ## Planned / Future
 
 ### 4-Day Programs with Overhead Press — [design doc](../design/four-day-ohp.md)

@@ -8,3 +8,4 @@ export * from './modules/session';
 export * from './modules/user';
 export * from './modules/challenge';
 export * from './modules/muscle';
+export * from './modules/video-analysis';

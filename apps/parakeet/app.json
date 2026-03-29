@@ -44,7 +44,14 @@
         }
       ],
       "expo-audio",
-      "expo-updates"
+      "expo-updates",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Allow access to select lift videos for form analysis",
+          "cameraPermission": "Allow camera to record lifting form"
+        }
+      ]
     ],
     "extra": {
       "eas": {

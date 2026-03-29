@@ -144,6 +144,14 @@ export const FEATURE_REGISTRY = [
     category: 'advanced' as const,
     defaultEnabled: true,
   },
+  {
+    id: 'videoAnalysis',
+    label: 'Video Form Analysis',
+    description:
+      'Record or import lift videos for bar path tracking and form analysis',
+    category: 'advanced' as const,
+    defaultEnabled: false,
+  },
 ] as const;
 
 export type FeatureId = (typeof FEATURE_REGISTRY)[number]['id'];
