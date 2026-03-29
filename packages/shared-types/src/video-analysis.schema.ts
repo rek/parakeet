@@ -27,6 +27,8 @@ export const RepAnalysisSchema = z.object({
   forwardLeanDeg: z.number().optional(),
   barDriftCm: z.number().optional(),
   romCm: z.number().optional(),
+  kneeAngleDeg: z.number().optional(),
+  hipAngleAtLockoutDeg: z.number().optional(),
   faults: z.array(FormFaultSchema),
 });
 
@@ -40,3 +42,29 @@ export const VideoAnalysisResultSchema = z.object({
 });
 
 export type VideoAnalysisResult = z.infer<typeof VideoAnalysisResultSchema>;
+
+// --- Form Coaching (LLM output) ---
+
+export const FormCueSchema = z.object({
+  repRange: z.string(),
+  observation: z.string(),
+  cue: z.string(),
+  priority: z.enum(['high', 'medium', 'low']),
+});
+
+export type FormCue = z.infer<typeof FormCueSchema>;
+
+export const FormCoachingResultSchema = z.object({
+  summary: z.string(),
+  repByRepBreakdown: z.array(z.object({
+    repNumber: z.number().int(),
+    assessment: z.string(),
+    formGrade: z.enum(['good', 'acceptable', 'needs_work']),
+  })),
+  cues: z.array(FormCueSchema),
+  fatigueCorrelation: z.string().nullable(),
+  comparedToBaseline: z.string().nullable(),
+  nextSessionSuggestion: z.string(),
+});
+
+export type FormCoachingResult = z.infer<typeof FormCoachingResultSchema>;

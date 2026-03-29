@@ -1,4 +1,4 @@
-import type { VideoAnalysisResult } from '@parakeet/shared-types';
+import type { VideoAnalysisResult, FormCoachingResult } from '@parakeet/shared-types';
 import { typedSupabase } from '@platform/supabase';
 import { captureException } from '@platform/utils/captureException';
 
@@ -13,10 +13,12 @@ interface SessionVideoRow {
   id: string;
   session_id: string;
   lift: string;
+  camera_angle: string;
   local_uri: string;
   remote_uri: string | null;
   duration_sec: number;
   analysis: unknown;
+  coaching_response: unknown;
   created_at: string;
 }
 
@@ -25,10 +27,12 @@ function toSessionVideo(row: SessionVideoRow): SessionVideo {
     id: row.id,
     sessionId: row.session_id,
     lift: row.lift,
+    cameraAngle: (row.camera_angle === 'front' ? 'front' : 'side') as 'side' | 'front',
     localUri: row.local_uri,
     remoteUri: row.remote_uri,
     durationSec: row.duration_sec,
     analysis: (row.analysis as VideoAnalysisResult) ?? null,
+    coachingResponse: (row.coaching_response as FormCoachingResult) ?? null,
     createdAt: row.created_at,
   };
 }
@@ -36,12 +40,14 @@ function toSessionVideo(row: SessionVideoRow): SessionVideo {
 export async function insertSessionVideo({
   sessionId,
   lift,
+  cameraAngle = 'side',
   localUri,
   remoteUri,
   durationSec,
 }: {
   sessionId: string;
   lift: string;
+  cameraAngle?: 'side' | 'front';
   localUri: string;
   remoteUri?: string | null;
   durationSec: number;
@@ -49,17 +55,24 @@ export async function insertSessionVideo({
   const { data: { user } } = await db.auth.getUser();
   if (!user) throw new Error('Not authenticated');
 
+  const row: Record<string, unknown> = {
+    user_id: user.id,
+    session_id: sessionId,
+    lift,
+    local_uri: localUri,
+    remote_uri: remoteUri ?? null,
+    duration_sec: durationSec,
+    analysis: null,
+  };
+  // camera_angle column added in migration 20260329000002 — only include
+  // if explicitly set to avoid PGRST204 on databases without the migration.
+  if (cameraAngle !== 'side') {
+    row.camera_angle = cameraAngle;
+  }
+
   const { data, error } = await db
     .from('session_videos')
-    .insert({
-      user_id: user.id,
-      session_id: sessionId,
-      lift,
-      local_uri: localUri,
-      remote_uri: remoteUri ?? null,
-      duration_sec: durationSec,
-      analysis: null,
-    })
+    .insert(row)
     .select('*')
     .single();
 
@@ -108,6 +121,50 @@ export async function getVideosForLift({ lift }: { lift: string }) {
   }
 
   return (data as SessionVideoRow[]).map(toSessionVideo);
+}
+
+export async function updateSessionVideoAnalysis({
+  id,
+  analysis,
+}: {
+  id: string;
+  analysis: VideoAnalysisResult;
+}) {
+  const { data, error } = await db
+    .from('session_videos')
+    .update({ analysis })
+    .eq('id', id)
+    .select('*')
+    .single();
+
+  if (error) {
+    captureException(error);
+    throw error;
+  }
+
+  return toSessionVideo(data as SessionVideoRow);
+}
+
+export async function updateSessionVideoCoaching({
+  id,
+  coachingResponse,
+}: {
+  id: string;
+  coachingResponse: FormCoachingResult;
+}) {
+  const { data, error } = await db
+    .from('session_videos')
+    .update({ coaching_response: coachingResponse })
+    .eq('id', id)
+    .select('*')
+    .single();
+
+  if (error) {
+    captureException(error);
+    throw error;
+  }
+
+  return toSessionVideo(data as SessionVideoRow);
 }
 
 export async function deleteSessionVideo({ id }: { id: string }) {

@@ -259,17 +259,19 @@ Module/platform/shared architecture is the canonical app structure. Legacy top-l
 
 ### Video Form Analysis — [design doc](../design/video-form-analysis.md) | [spec](09-mobile/mobile-046-video-form-analysis.md)
 
-Phase 1 foundation complete (GH#148, PR#153). 68 tests, `videoAnalysis` feature flag (Advanced, default off).
+Phase 1 + 2 + 3 complete (GH#148). 92 tests, `videoAnalysis` feature flag (Advanced, default off).
 
-- [x] mobile-046 1.1: Native deps — `expo-image-picker`, `react-native-compressor`, app.json plugin config
-- [x] mobile-046 1.2: `session_videos` migration + `VideoAnalysisResult`/`RepAnalysis`/`FormFault`/`BarPathPoint` Zod schemas in shared-types
-- [x] mobile-046 1.3: `modules/video-analysis/` scaffold + `videoAnalysis` feature flag + `video.repository.ts`
-- [x] mobile-046 1.4: Pure analysis pipeline — bar path (wrist landmarks), rep detection (peak detection), angle calculator, depth detector, fault detector, metrics assembler; 68 tests
-- [x] mobile-046 1.5: `analyzeVideoFrames()` orchestrator + `extractFramesFromVideo()` placeholder
-- [x] mobile-046 1.6: `useVideoAnalysis` hook — pick → compress → save to local + DB
-- [x] mobile-046 1.7: `VideoEntryButton` (self-contained, feature-flagged) on session + history screens
-- [x] mobile-046 1.8: `video-analysis.tsx` screen + `RepMetricsCard` + `BarPathOverlay` (SVG)
-- [ ] mobile-046 Phase 2: MediaPipe native integration, video playback, LLM coaching, personal baselines, longitudinal comparison
+- [x] mobile-046 1.1–1.8: Phase 1 foundation — video pick/compress/save, pure analysis pipeline, UI, feature flag
+- [x] mobile-046 2.1–2.5: Phase 2 MediaPipe — native deps, model bundling, frame extraction, pose detection, video playback
+- [x] mobile-046 3.1: Session context bridge — `assembleCoachingContext()` for LLM coaching
+- [x] mobile-046 3.2: LLM coaching engine — `FormCoachingResultSchema`, `FORM_COACHING_SYSTEM_PROMPT`, `generateFormCoaching()` (gpt-5)
+- [x] mobile-046 3.3: Coaching hook + UI — `useFormCoaching`, `FormCoachingCard`, `coaching_response` JSONB column
+- [x] mobile-046 3.4: Personal baselines — `computePersonalBaseline()` (mean + SD), `detectBaselineDeviations()` (z-score), `BaselineDeviationBadge`; 11 tests
+- [x] mobile-046 3.5: Longitudinal comparison — `LongitudinalComparison` (overlaid SVG bar paths + trend table), `usePreviousVideos`
+- [x] mobile-046 3.6: Cloud backup scaffolded — Supabase Storage bucket + `uploadVideoToStorage()` (auto-upload wiring deferred)
+- [x] mobile-046 3.7: Front view — `camera_angle` column, `computeKneeValgus()`, repository accepts camera angle
+- [x] mobile-046 3.8: In-app recording — `RecordVideoSheet` with vision-camera + guide overlay
+- [x] mobile-046 3.9: Real-time overlay — `useLivePoseOverlay` (LIVE_STREAM 15fps), `LiveSkeletonOverlay` (SVG skeleton)
 
 ---
 
