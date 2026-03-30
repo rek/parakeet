@@ -1,4 +1,5 @@
 export * from './application/program.service';
+export { programQueries } from './data/program.queries';
 export * from './application/unending-session';
 export * from './hooks/useActiveProgram';
 export * from './lib/auxiliary-config';

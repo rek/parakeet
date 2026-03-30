@@ -14,21 +14,19 @@ import { useFeatureEnabled } from '@modules/feature-flags';
 import {
   formatBirthYear,
   formatBodyweight,
-  getProfile,
+  profileQueries,
 } from '@modules/profile';
 import {
   exportTrainingData,
   getBarWeightKg,
-  getPendingFormulaSuggestionCount,
-  getUnreviewedDeveloperSuggestionCount,
   getWarmupPlateDisplay,
   setBarWeightKg,
   setWarmupPlateDisplay,
+  settingsQueries,
 } from '@modules/settings';
 import type { BarWeightKg, WarmupPlateDisplay } from '@modules/settings';
 import { useOtaUpdateStatus } from '@modules/updates';
 import type { OtaStatus } from '@modules/updates';
-import { qk } from '@platform/query';
 import { SEX_LABELS, THEME_OPTIONS } from '@shared/constants';
 import { useQuery } from '@tanstack/react-query';
 import Constants from 'expo-constants';
@@ -319,22 +317,16 @@ export default function SettingsScreen() {
     await setBarWeightKg(kg);
   }
 
-  const { data: pendingSuggestions } = useQuery({
-    queryKey: qk.formula.suggestionsCount(user?.id),
-    queryFn: () => getPendingFormulaSuggestionCount(user!.id),
-    enabled: !!user?.id,
-    staleTime: 60 * 1000,
-  });
+  const { data: pendingSuggestions } = useQuery(
+    settingsQueries.formula.suggestionsCount(user?.id)
+  );
 
-  const { data: unreviewedDevCount } = useQuery({
-    queryKey: qk.developer.suggestionsCount(),
-    queryFn: getUnreviewedDeveloperSuggestionCount,
-    staleTime: 60 * 1000,
-  });
+  const { data: unreviewedDevCount } = useQuery(
+    settingsQueries.developer.suggestionsCount()
+  );
 
   const { data: profile, isLoading: isProfileLoading } = useQuery({
-    queryKey: qk.profile.current(),
-    queryFn: getProfile,
+    ...profileQueries.current(),
     staleTime: 5 * 60 * 1000,
   });
 

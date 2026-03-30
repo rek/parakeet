@@ -5,9 +5,9 @@
  * Individual flag reads use useFeatureEnabled(id).
  */
 
-import { qk } from '@platform/query';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 
+import { featureFlagQueries } from '../data/feature-flags.queries';
 import {
   getFeatureFlags,
   setFeatureFlag,
@@ -20,7 +20,7 @@ export function useFeatureFlags() {
   const queryClient = useQueryClient();
 
   const { data: flags = DEFAULT_FLAGS } = useQuery({
-    queryKey: qk.featureFlags.all(),
+    queryKey: featureFlagQueries.all(),
     queryFn: getFeatureFlags,
     staleTime: Infinity,
     placeholderData: DEFAULT_FLAGS,
@@ -28,12 +28,12 @@ export function useFeatureFlags() {
 
   async function toggle({ id, enabled }: { id: FeatureId; enabled: boolean }) {
     const next = { ...flags, [id]: enabled };
-    queryClient.setQueryData(qk.featureFlags.all(), next);
+    queryClient.setQueryData(featureFlagQueries.all(), next);
     await setFeatureFlag({ id, enabled });
   }
 
   async function applyPreset(preset: Record<FeatureId, boolean>) {
-    queryClient.setQueryData(qk.featureFlags.all(), preset);
+    queryClient.setQueryData(featureFlagQueries.all(), preset);
     await setFeatureFlags(preset);
   }
 
@@ -42,7 +42,7 @@ export function useFeatureFlags() {
 
 export function useFeatureEnabled(id: FeatureId) {
   const { data: flags = DEFAULT_FLAGS } = useQuery({
-    queryKey: qk.featureFlags.all(),
+    queryKey: featureFlagQueries.all(),
     queryFn: getFeatureFlags,
     staleTime: Infinity,
     placeholderData: DEFAULT_FLAGS,

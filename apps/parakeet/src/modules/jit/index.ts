@@ -1,3 +1,4 @@
+export * from './data/jit.queries';
 export * from './lib/jit';
 export * from './data/calibration.repository';
 export * from './application/calibration-update.service';

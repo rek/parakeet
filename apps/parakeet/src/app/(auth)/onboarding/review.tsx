@@ -14,8 +14,9 @@ import {
   DEFAULT_TRAINING_DAYS,
   generateProgram,
   nextDateForWeekday,
+  programQueries,
 } from '@modules/program';
-import { qk } from '@platform/query';
+import { sessionQueries } from '@modules/session';
 import { captureException } from '@platform/utils/captureException';
 import { DAY_LABELS, MONTH_SHORT } from '@shared/constants';
 import { capitalize } from '@shared/utils/string';
@@ -274,10 +275,10 @@ export default function ReviewScreen() {
         programMode: isUnending ? 'unending' : 'scheduled',
       });
       await queryClient.invalidateQueries({
-        queryKey: qk.program.active(user?.id),
+        queryKey: programQueries.active(user?.id).queryKey,
       });
       await queryClient.invalidateQueries({
-        queryKey: qk.session.today(user?.id),
+        queryKey: sessionQueries.all(),
       });
       router.replace('/(tabs)/today');
     } catch (err) {

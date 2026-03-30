@@ -16,6 +16,7 @@ import {
   resetRestOverrides,
   setRestOverride,
   setRestTimerPrefs,
+  settingsQueries,
 } from '@modules/settings';
 import type { RestTimerPrefs } from '@modules/settings';
 import type { IntensityType } from '@parakeet/shared-types';
@@ -508,8 +509,7 @@ export default function RestTimerSettingsScreen() {
 
   // Load existing overrides from Supabase
   const { data: overridesData, isLoading } = useQuery({
-    queryKey: ['rest', 'overrides', user?.id],
-    queryFn: () => getUserRestOverrides(user!.id),
+    ...settingsQueries.rest.overrides(user?.id),
     enabled: !!user?.id,
   });
 
@@ -557,7 +557,7 @@ export default function RestTimerSettingsScreen() {
         await setRestOverride(user.id, seconds, undefined, key);
       }
       setDurations((prev) => ({ ...prev, [key]: seconds }));
-      queryClient.invalidateQueries({ queryKey: ['rest', 'overrides'] });
+      queryClient.invalidateQueries({ queryKey: settingsQueries.rest.all() });
     } finally {
       setSaving((prev) => ({ ...prev, [key]: false }));
     }
@@ -569,7 +569,7 @@ export default function RestTimerSettingsScreen() {
     try {
       await resetRestOverrides(user.id);
       setDurations({});
-      queryClient.invalidateQueries({ queryKey: ['rest', 'overrides'] });
+      queryClient.invalidateQueries({ queryKey: settingsQueries.rest.all() });
     } finally {
       setResetting(false);
     }

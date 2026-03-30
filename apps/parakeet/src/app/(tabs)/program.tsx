@@ -10,7 +10,7 @@ import {
 } from 'react-native';
 
 import { useAuth } from '@modules/auth';
-import { getFormulaConfig } from '@modules/formula';
+import { formulaQueries } from '@modules/formula';
 import { getRecentLiftHistory } from '@modules/history';
 import { computeRpeAdjustmentNote } from '@modules/jit';
 import {
@@ -20,12 +20,12 @@ import {
   groupByWeek,
   updateProgramStatus,
   useActiveProgram,
+  programQueries,
   WeekRow,
 } from '@modules/program';
 import type { ProgramSession } from '@modules/program';
 import { useInProgressSession, useTodaySession } from '@modules/session';
 import type { IntensityType, Lift } from '@parakeet/shared-types';
-import { qk } from '@platform/query';
 import { captureException } from '@platform/utils/captureException';
 import { useSessionStore } from '@platform/store/sessionStore';
 import { capitalize } from '@shared/utils/string';
@@ -189,8 +189,7 @@ export default function ProgramScreen() {
   });
 
   const { data: formulaConfig } = useQuery({
-    queryKey: ['formula', 'config', user?.id],
-    queryFn: () => getFormulaConfig(user!.id),
+    ...formulaQueries.config(user?.id),
     enabled: isUnending && !!user?.id,
     staleTime: 60_000,
   });
@@ -209,7 +208,7 @@ export default function ProgramScreen() {
         userId: user?.id,
       }),
     onSuccess: () =>
-      queryClient.invalidateQueries({ queryKey: qk.program.active(user?.id) }),
+      queryClient.invalidateQueries({ queryKey: programQueries.active(user?.id).queryKey }),
   });
 
   function handleSessionPress(session: ProgramSession) {

@@ -1,4 +1,5 @@
 export * from './application/session.service';
+export { sessionQueries } from './data/session.queries';
 export * from './application/motivational-message.service';
 export * from './hooks/useTodaySession';
 export * from './hooks/useInProgressSession';

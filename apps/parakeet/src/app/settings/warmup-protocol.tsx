@@ -10,19 +10,19 @@ import {
 } from 'react-native';
 
 import { useAuth } from '@modules/auth';
-import { getProfile } from '@modules/profile';
+import { profileQueries } from '@modules/profile';
 import { getCurrentOneRmKg } from '@modules/program';
 import {
   estimateWorkingWeight,
   generateWarmupSets,
   getAllWarmupConfigs,
   getPresetSteps,
+  settingsQueries,
   updateWarmupConfig,
   WARMUP_PRESETS,
 } from '@modules/settings';
 import type { WarmupProtocol, WarmupStep } from '@modules/settings';
 import type { Lift } from '@parakeet/shared-types';
-import { qk } from '@platform/query';
 import { TRAINING_LIFTS } from '@shared/constants/training';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { router } from 'expo-router';
@@ -410,13 +410,12 @@ export default function WarmupProtocolScreen() {
   const [saving, setSaving] = useState<Partial<Record<Lift, boolean>>>({});
 
   const { data: profile } = useQuery({
-    queryKey: qk.profile.current(),
-    queryFn: getProfile,
+    ...profileQueries.current(),
     staleTime: 5 * 60 * 1000,
   });
 
   const { data: warmupData, isLoading } = useQuery({
-    queryKey: ['warmup', 'configs', user?.id],
+    ...settingsQueries.warmup.configs(user?.id),
     queryFn: () =>
       getAllWarmupConfigs(user!.id, profile?.biological_sex ?? undefined),
     enabled: !!user?.id,
@@ -446,7 +445,7 @@ export default function WarmupProtocolScreen() {
     setSaving((prev) => ({ ...prev, [lift]: true }));
     try {
       await updateWarmupConfig(user.id, lift, protocols[lift]);
-      queryClient.invalidateQueries({ queryKey: ['warmup'] });
+      queryClient.invalidateQueries({ queryKey: settingsQueries.warmup.all() });
     } finally {
       setSaving((prev) => ({ ...prev, [lift]: false }));
     }

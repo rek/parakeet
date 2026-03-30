@@ -1,3 +1,4 @@
+export * from './data/body-review.queries';
 export {
   computePredictedFatigue,
   detectMismatches,

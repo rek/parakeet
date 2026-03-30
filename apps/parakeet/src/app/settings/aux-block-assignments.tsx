@@ -21,10 +21,11 @@ import {
   getCurrentBlock,
   getProgramBlockTabs,
   saveBlockAssignment,
+  programQueries,
 } from '@modules/program';
+import { settingsQueries } from '@modules/settings';
 import type { SlotAssignment } from '@modules/program';
 import type { Lift } from '@parakeet/shared-types';
-import { qk } from '@platform/query';
 import { BLOCK_INTENSITY, TRAINING_LIFTS } from '@shared/constants/training';
 import { useQuery } from '@tanstack/react-query';
 import { router } from 'expo-router';
@@ -352,13 +353,11 @@ export default function AuxBlockAssignmentsScreen() {
   const [initialized, setInitialized] = useState(false);
 
   const { data: activeProgram } = useQuery({
-    queryKey: qk.program.active(user?.id),
-    queryFn: () => getActiveProgram(user!.id),
-    enabled: !!user?.id,
+    ...programQueries.active(user?.id),
   });
 
   const { data: pools, isLoading: poolsLoading } = useQuery({
-    queryKey: ['auxiliary', 'pools', user?.id],
+    queryKey: settingsQueries.auxiliary.pools(user?.id),
     queryFn: () => getAuxiliaryPools(user!.id),
     enabled: !!user?.id,
   });

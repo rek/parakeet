@@ -9,10 +9,10 @@ import {
   computeWeeklyVolume,
   getMusclesForLift,
 } from '@parakeet/training-engine';
-import { qk } from '@platform/query';
 import { useQuery } from '@tanstack/react-query';
 
 import { getMrvMevConfig } from '../lib/volume-config';
+import { volumeQueries } from '../data/volume.queries';
 
 function rollingWindowStart(): string {
   const start = new Date();
@@ -23,7 +23,7 @@ function rollingWindowStart(): string {
 export function useWeeklyVolume() {
   const { user } = useAuth();
   return useQuery({
-    queryKey: qk.volume.weekly(user?.id, rollingWindowStart()),
+    queryKey: volumeQueries.weekly(user?.id, rollingWindowStart()),
     queryFn: async () => {
       const [logs, profile, program] = await Promise.all([
         getCurrentWeekLogs(user!.id),

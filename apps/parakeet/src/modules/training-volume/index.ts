@@ -1,3 +1,4 @@
+export * from './data/volume.queries';
 export * from './hooks/useWeeklyVolume';
 export * from './lib/engine-adapter';
 export * from './lib/volume-config';

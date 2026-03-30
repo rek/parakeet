@@ -10,18 +10,17 @@ import {
   View,
 } from 'react-native';
 
+import { achievementQueries } from '@modules/achievements';
 import { useAuth } from '@modules/auth';
 import {
   addBodyweightEntry,
   birthYearToDobIso,
   deleteBodyweightEntry,
-  getBodyweightHistory,
-  getProfile,
   isValidBirthYear,
+  profileQueries,
   updateProfile,
 } from '@modules/profile';
 import type { BiologicalSex, BodyweightEntry } from '@modules/profile';
-import { qk } from '@platform/query';
 import { captureException } from '@platform/utils/captureException';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { router } from 'expo-router';
@@ -202,15 +201,12 @@ export default function ProfileScreen() {
   const { user } = useAuth();
 
   const { data: profile, isLoading } = useQuery({
-    queryKey: ['profile'],
-    queryFn: getProfile,
+    ...profileQueries.current(),
     staleTime: 5 * 60 * 1000,
   });
 
   const { data: bwHistory } = useQuery({
-    queryKey: qk.bodyweight.history(user?.id),
-    queryFn: getBodyweightHistory,
-    enabled: !!user?.id,
+    ...profileQueries.bodyweightHistory(user?.id),
     staleTime: 60 * 1000,
   });
 
@@ -285,15 +281,17 @@ export default function ProfileScreen() {
     onSuccess: async () => {
       setSaveSuccess(true);
       setSaveError(null);
-      await queryClient.invalidateQueries({ queryKey: ['profile'] });
       await queryClient.invalidateQueries({
-        queryKey: qk.bodyweight.history(user?.id),
+        queryKey: profileQueries.current().queryKey,
       });
       await queryClient.invalidateQueries({
-        queryKey: ['achievements', 'wilks-current'],
+        queryKey: profileQueries.bodyweightHistory(user?.id).queryKey,
       });
       await queryClient.invalidateQueries({
-        queryKey: ['achievements', 'wilks-history'],
+        queryKey: achievementQueries.wilksCurrent(user?.id).queryKey,
+      });
+      await queryClient.invalidateQueries({
+        queryKey: achievementQueries.wilksHistory(user?.id).queryKey,
       });
     },
     onError: () => {
@@ -329,14 +327,16 @@ export default function ProfileScreen() {
             try {
               await deleteBodyweightEntry(entry.id);
               await queryClient.invalidateQueries({
-                queryKey: qk.bodyweight.history(user?.id),
-              });
-              await queryClient.invalidateQueries({ queryKey: ['profile'] });
-              await queryClient.invalidateQueries({
-                queryKey: ['achievements', 'wilks-current'],
+                queryKey: profileQueries.bodyweightHistory(user?.id).queryKey,
               });
               await queryClient.invalidateQueries({
-                queryKey: ['achievements', 'wilks-history'],
+                queryKey: profileQueries.current().queryKey,
+              });
+              await queryClient.invalidateQueries({
+                queryKey: achievementQueries.wilksCurrent(user?.id).queryKey,
+              });
+              await queryClient.invalidateQueries({
+                queryKey: achievementQueries.wilksHistory(user?.id).queryKey,
               });
             } catch (err) {
               captureException(err);

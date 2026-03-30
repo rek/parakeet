@@ -13,6 +13,7 @@ import { useCycleReview } from '@modules/cycle-review';
 import {
   createFormulaOverride,
   deactivateFormulaConfig,
+  formulaQueries,
 } from '@modules/formula';
 import type { FormulaConfig } from '@modules/formula';
 import { getRatingStyles, getVolumeLevelColors } from '@modules/history';
@@ -360,7 +361,7 @@ export default function CycleReviewScreen() {
       source: 'ai_suggestion',
       ai_rationale: s.rationale,
     });
-    queryClient.invalidateQueries({ queryKey: ['formula'] });
+    queryClient.invalidateQueries({ queryKey: formulaQueries.all() });
   }
 
   async function handleDismissSuggestion(id: string) {

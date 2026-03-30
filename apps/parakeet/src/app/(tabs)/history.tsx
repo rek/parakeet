@@ -22,6 +22,7 @@ import {
   getPerformanceTrends,
   getTrendConfig,
   getWeeklySetsPerLift,
+  historyQueries,
   MIN_CHART_OPACITY,
 } from '@modules/history';
 import type { PerformanceTrend } from '@modules/history';
@@ -67,19 +68,18 @@ export default function HistoryScreen() {
   const trendConfig = getTrendConfig(colors);
 
   const trendsQuery = useQuery({
-    queryKey: ['performance', 'trends', user?.id],
-    queryFn: () => getPerformanceTrends(user!.id),
+    ...historyQueries.trends(user?.id),
     enabled: !!user?.id,
   });
 
   const sessionsQuery = useQuery({
-    queryKey: ['sessions', 'completed', user?.id],
+    queryKey: ['sessions', 'completed', user?.id] as const,
     queryFn: () => getCompletedSessions(user!.id, 0, 20),
     enabled: !!user?.id,
   });
 
   const programsQuery = useQuery({
-    queryKey: ['programs', 'previous', user?.id],
+    queryKey: ['programs', 'previous', user?.id] as const,
     queryFn: async () => {
       const all = await listPrograms(user!.id);
       return (all ?? []).filter((p) => p.status !== 'active');
@@ -88,7 +88,7 @@ export default function HistoryScreen() {
   });
 
   const volumeQuery = useQuery({
-    queryKey: ['volume', 'weekly', user?.id],
+    queryKey: ['volume', 'weekly', user?.id] as const,
     queryFn: () => getWeeklySetsPerLift(user!.id, 8),
     enabled: !!user?.id,
   });

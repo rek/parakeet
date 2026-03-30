@@ -9,10 +9,18 @@ import {
   View,
 } from 'react-native';
 
-import { BadgeCard, detectAchievements, StarCard } from '@modules/achievements';
+import {
+  achievementQueries,
+  BadgeCard,
+  detectAchievements,
+  StarCard,
+} from '@modules/achievements';
 import type { EarnedBadge, PR } from '@modules/achievements';
 import { useAuth } from '@modules/auth';
 import { stampCyclePhaseOnSession } from '@modules/cycle-tracking';
+import { historyQueries } from '@modules/history';
+import { programQueries } from '@modules/program';
+import { volumeQueries } from '@modules/training-volume';
 import {
   AdjustmentsCard,
   checkEndOfWeek,
@@ -20,10 +28,10 @@ import {
   computeSessionStats,
   isNetworkError,
   RPE_OPTIONS,
+  sessionQueries,
 } from '@modules/session';
 import type { JitData } from '@modules/session';
 import { useNetworkStatus } from '@platform/network';
-import { qk } from '@platform/query';
 import { useSessionStore } from '@platform/store/sessionStore';
 import { useSyncStore } from '@platform/store/syncStore';
 import { captureException } from '@platform/utils/captureException';
@@ -354,17 +362,20 @@ export default function CompleteScreen() {
       // Data is committed — show the saved state regardless of what follows
       setSaved(true);
 
-      void queryClient.invalidateQueries({ queryKey: ['session'] });
       void queryClient.invalidateQueries({
-        queryKey: ['sessions', 'completed'],
+        queryKey: sessionQueries.all(),
       });
       void queryClient.invalidateQueries({
-        queryKey: ['performance', 'trends'],
+        queryKey: historyQueries.all(),
       });
-      void queryClient.invalidateQueries({ queryKey: ['achievements'] });
-      void queryClient.invalidateQueries({ queryKey: ['volume', 'weekly'] });
       void queryClient.invalidateQueries({
-        queryKey: qk.program.active(user?.id),
+        queryKey: achievementQueries.all(),
+      });
+      void queryClient.invalidateQueries({
+        queryKey: volumeQueries.all(),
+      });
+      void queryClient.invalidateQueries({
+        queryKey: programQueries.all(),
       });
 
       // ── Achievement detection (best-effort) ───────────────────────────────

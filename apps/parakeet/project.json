@@ -93,6 +93,23 @@
         "command": "adb reverse tcp:54321 tcp:54321 && adb reverse tcp:8081 tcp:8081"
       }
     },
+    "dev": {
+      "continuous": true,
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": [
+          {
+            "command": "adb reverse tcp:54321 tcp:54321 && adb reverse tcp:8081 tcp:8081",
+            "description": "Bridge USB ports"
+          },
+          {
+            "command": "cd apps/parakeet && npx expo start --port 8081",
+            "description": "Start Metro on port 8081"
+          }
+        ],
+        "parallel": false
+      }
+    },
     "eas-build": {
       "executor": "nx:run-commands",
       "options": {

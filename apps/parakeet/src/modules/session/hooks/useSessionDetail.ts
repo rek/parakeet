@@ -1,7 +1,5 @@
-import { useEffect, useMemo } from 'react';
+import { useMemo } from 'react';
 
-import { qk } from '@platform/query';
-import { captureException } from '@platform/utils/captureException';
 import { useQuery } from '@tanstack/react-query';
 
 import { getSession, getSessionLog } from '../application/session.service';
@@ -9,6 +7,7 @@ import {
   parseJitInputSnapshot,
   parsePrescriptionTrace,
 } from '../data/session-codecs';
+import { sessionQueries } from '../data/session.queries';
 import { formatPrescriptionTrace } from '../utils/format-trace';
 import type { FormattedTrace } from '../utils/format-trace';
 
@@ -36,28 +35,17 @@ export function useSessionDetail({
     isLoading: sessionLoading,
     error: sessionError,
   } = useQuery({
-    queryKey: qk.session.detail(sessionId),
-    queryFn: () => getSession(sessionId),
+    ...sessionQueries.detail(sessionId),
     enabled: !!sessionId,
   });
 
   const {
     data: log,
     isLoading: logLoading,
-    error: logError,
   } = useQuery({
-    queryKey: qk.session.log(sessionId),
-    queryFn: () => getSessionLog(sessionId),
+    ...sessionQueries.log(sessionId),
     enabled: !!sessionId,
   });
-
-  useEffect(() => {
-    if (sessionError) captureException(sessionError);
-  }, [sessionError]);
-
-  useEffect(() => {
-    if (logError) captureException(logError);
-  }, [logError]);
 
   const jitSnapshot = useMemo(
     () => parseJitInputSnapshot(session?.jit_input_snapshot),

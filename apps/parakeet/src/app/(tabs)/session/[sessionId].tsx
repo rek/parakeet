@@ -40,6 +40,7 @@ import {
   WeightSuggestionBanner,
   formatPrescriptionTrace,
   parsePrescriptionTrace,
+  sessionQueries,
 } from '@modules/session';
 import type {
   AuxiliaryWork,
@@ -517,7 +518,7 @@ export default function SessionScreen() {
             week_number: session.week_number,
             activity_name: session.activity_name,
           });
-          void queryClient.invalidateQueries({ queryKey: ['session'] });
+          void queryClient.invalidateQueries({ queryKey: sessionQueries.all() });
         });
       } else {
         // Resuming free-form: restore ad-hoc exercises from store
@@ -602,7 +603,7 @@ export default function SessionScreen() {
           week_number: session.week_number,
         });
         startSession(sessionId).then(() => {
-          void queryClient.invalidateQueries({ queryKey: ['session'] });
+          void queryClient.invalidateQueries({ queryKey: sessionQueries.all() });
         });
       });
     } else {
@@ -712,7 +713,7 @@ export default function SessionScreen() {
             clearPostRestState();
             await abandonSession(sessionId);
             reset();
-            void queryClient.invalidateQueries({ queryKey: ['session'] });
+            void queryClient.invalidateQueries({ queryKey: sessionQueries.all() });
             router.replace('/(tabs)/today');
           },
         },

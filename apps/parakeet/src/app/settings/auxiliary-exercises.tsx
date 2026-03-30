@@ -15,6 +15,7 @@ import {
   reorderAuxiliaryPool,
 } from '@modules/program';
 import { AddExerciseModal } from '@modules/session';
+import { settingsQueries } from '@modules/settings';
 import { MuscleChips } from '@modules/training-volume';
 import type { Lift } from '@parakeet/shared-types';
 import { getExerciseType } from '@shared/utils/exercise-lookup';
@@ -397,7 +398,7 @@ export default function AuxiliaryExercisesScreen() {
   );
 
   const { data: poolData, isLoading } = useQuery({
-    queryKey: ['auxiliary', 'pools', user?.id],
+    queryKey: settingsQueries.auxiliary.pools(user?.id),
     queryFn: () => getAuxiliaryPools(user!.id),
     enabled: !!user?.id,
   });
@@ -413,7 +414,7 @@ export default function AuxiliaryExercisesScreen() {
     setSavingPool((prev) => ({ ...prev, [lift]: true }));
     try {
       await reorderAuxiliaryPool(user.id, lift, pools[lift]);
-      queryClient.invalidateQueries({ queryKey: ['auxiliary'] });
+      queryClient.invalidateQueries({ queryKey: settingsQueries.auxiliary.all() });
       setDirtyPools((prev) => ({ ...prev, [lift]: false }));
     } finally {
       setSavingPool((prev) => ({ ...prev, [lift]: false }));

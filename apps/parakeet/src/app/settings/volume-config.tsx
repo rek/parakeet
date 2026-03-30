@@ -16,6 +16,7 @@ import {
   getMrvMevConfig,
   resetMuscleToDefault,
   updateMuscleConfig,
+  volumeQueries,
 } from '@modules/training-volume';
 import type { MrvMevConfig } from '@modules/training-volume';
 import type { MuscleGroup } from '@parakeet/shared-types';
@@ -256,7 +257,7 @@ export default function VolumeConfigScreen() {
   const [isResetting, setIsResetting] = useState(false);
 
   const { data: volumeConfigData, isLoading } = useQuery({
-    queryKey: ['volume', 'config', user?.id],
+    queryKey: volumeQueries.config(user?.id),
     queryFn: async () => {
       const profile = await getProfile();
       const data = await getMrvMevConfig(user!.id, profile?.biological_sex);
@@ -305,7 +306,7 @@ export default function VolumeConfigScreen() {
       await Promise.all(
         MUSCLES.map((m) => updateMuscleConfig(user.id, m, draft[m]))
       );
-      queryClient.invalidateQueries({ queryKey: ['volume'] });
+      queryClient.invalidateQueries({ queryKey: volumeQueries.all() });
       router.back();
     } finally {
       setIsSaving(false);
@@ -322,7 +323,7 @@ export default function VolumeConfigScreen() {
           MUSCLES.map((m) => [m, { ...sexDefaults[m] }])
         ) as Draft
       );
-      queryClient.invalidateQueries({ queryKey: ['volume'] });
+      queryClient.invalidateQueries({ queryKey: volumeQueries.all() });
     } finally {
       setIsResetting(false);
     }

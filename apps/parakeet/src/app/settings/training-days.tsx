@@ -15,8 +15,9 @@ import {
   DEFAULT_TRAINING_DAYS,
   updateTrainingDays,
   useActiveProgram,
+  programQueries,
 } from '@modules/program';
-import { qk } from '@platform/query';
+import { sessionQueries } from '@modules/session';
 import { captureException } from '@platform/utils/captureException';
 import { DAY_LABELS } from '@shared/constants';
 import { useQueryClient } from '@tanstack/react-query';
@@ -192,10 +193,10 @@ export default function TrainingDaysScreen() {
         training_days: program.training_days,
       });
       await queryClient.invalidateQueries({
-        queryKey: qk.program.active(user?.id),
+        queryKey: programQueries.active(user?.id).queryKey,
       });
       await queryClient.invalidateQueries({
-        queryKey: qk.session.today(user?.id),
+        queryKey: sessionQueries.all(),
       });
       router.back();
     } catch (err) {

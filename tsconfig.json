@@ -13,6 +13,9 @@
     },
     {
       "path": "./packages/shared-types"
+    },
+    {
+      "path": "./packages/training-sim"
     }
   ]
 }

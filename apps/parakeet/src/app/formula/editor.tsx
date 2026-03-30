@@ -17,13 +17,11 @@ import {
   deactivateFormulaConfig,
   draftToOverrides,
   exampleWeight,
-  getFormulaConfig,
-  getFormulaHistory,
-  getPendingAiFormulaSuggestions,
+  formulaQueries,
   initDraft,
 } from '@modules/formula';
 import type { BlockKey, DraftConfig, RowDraft } from '@modules/formula';
-import { getActiveProgram, getCurrentOneRmKg } from '@modules/program';
+import { getActiveProgram, getCurrentOneRmKg, programQueries } from '@modules/program';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -466,20 +464,17 @@ export default function FormulaEditorScreen() {
   const [isSaving, setIsSaving] = useState(false);
 
   const { data: config, isLoading: configLoading } = useQuery({
-    queryKey: ['formula', 'config', user?.id],
-    queryFn: () => getFormulaConfig(user!.id),
+    ...formulaQueries.config(user?.id),
     enabled: !!user?.id,
   });
 
   const { data: history } = useQuery({
-    queryKey: ['formula', 'history', user?.id],
-    queryFn: () => getFormulaHistory(user!.id),
+    ...formulaQueries.history(user?.id),
     enabled: !!user?.id && topTab === 'history',
   });
 
   const { data: aiSuggestions } = useQuery({
-    queryKey: ['formula', 'suggestions', user?.id],
-    queryFn: () => getPendingAiFormulaSuggestions(user!.id),
+    ...formulaQueries.suggestions(user?.id),
     enabled: !!user?.id && topTab === 'suggestions',
   });
 
@@ -491,8 +486,7 @@ export default function FormulaEditorScreen() {
   });
 
   const { data: activeProgram } = useQuery({
-    queryKey: ['program', 'active', user?.id],
-    queryFn: () => getActiveProgram(user!.id),
+    ...programQueries.active(user?.id),
     enabled: !!user?.id,
   });
 
@@ -525,7 +519,7 @@ export default function FormulaEditorScreen() {
           startDate: new Date(),
         });
       }
-      queryClient.invalidateQueries({ queryKey: ['formula'] });
+      queryClient.invalidateQueries({ queryKey: formulaQueries.all() });
       setShowSaveSheet(false);
       router.back();
     } finally {
@@ -542,13 +536,13 @@ export default function FormulaEditorScreen() {
       overrides,
       source: 'ai_suggestion',
     });
-    queryClient.invalidateQueries({ queryKey: ['formula'] });
+    queryClient.invalidateQueries({ queryKey: formulaQueries.all() });
   }
 
   async function handleDismissSuggestion(suggestionId: string) {
     if (!user) return;
     await deactivateFormulaConfig(suggestionId, user.id);
-    queryClient.invalidateQueries({ queryKey: ['formula', 'suggestions'] });
+    queryClient.invalidateQueries({ queryKey: formulaQueries.suggestions(user?.id).queryKey });
   }
 
   async function handleReactivate(configId: string, overrides: unknown) {
@@ -557,7 +551,7 @@ export default function FormulaEditorScreen() {
       overrides,
       source: 'user',
     });
-    queryClient.invalidateQueries({ queryKey: ['formula'] });
+    queryClient.invalidateQueries({ queryKey: formulaQueries.all() });
   }
 
   // ── Block tab content ──────────────────────────────────────────────────────

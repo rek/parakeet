@@ -3,7 +3,6 @@ import { useCallback, useEffect, useRef } from 'react';
 import { AppState, type AppStateStatus } from 'react-native';
 
 import { useAuth } from '@modules/auth';
-import { qk } from '@platform/query';
 import { captureException } from '@platform/utils/captureException';
 import { useQueryClient } from '@tanstack/react-query';
 
@@ -11,6 +10,7 @@ import {
   abandonStaleInProgressSessions,
   markMissedSessions,
 } from '../application/session.service';
+import { sessionQueries } from '../data/session.queries';
 
 export function useMissedSessionReconciliation() {
   const { user } = useAuth();
@@ -24,9 +24,8 @@ export function useMissedSessionReconciliation() {
     try {
       await abandonStaleInProgressSessions(user.id);
       await markMissedSessions(user.id);
-      await queryClient.invalidateQueries({ queryKey: ['session'] });
       await queryClient.invalidateQueries({
-        queryKey: qk.session.today(user.id),
+        queryKey: sessionQueries.all(),
       });
     } catch (err) {
       captureException(err);

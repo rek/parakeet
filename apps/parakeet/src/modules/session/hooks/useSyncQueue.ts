@@ -7,6 +7,7 @@ import { captureException } from '@platform/utils/captureException';
 import { useQueryClient } from '@tanstack/react-query';
 
 import { completeSession } from '../application/session.service';
+import { sessionQueries } from '../data/session.queries';
 import { isNetworkError } from '../utils/isNetworkError';
 
 export { isNetworkError };
@@ -63,14 +64,17 @@ export function useSyncQueue() {
             dequeue(op.id);
             syncedCount++;
 
-            await queryClient.invalidateQueries({ queryKey: ['session'] });
             await queryClient.invalidateQueries({
-              queryKey: ['sessions', 'completed'],
+              queryKey: sessionQueries.all(),
+            });
+            // Use prefix keys matching historyQueries.all() and achievementQueries.all()
+            // (direct imports would create circular deps: session ← achievements ← session)
+            await queryClient.invalidateQueries({
+              queryKey: ['performance'] as const,
             });
             await queryClient.invalidateQueries({
-              queryKey: ['performance', 'trends'],
+              queryKey: ['achievements'] as const,
             });
-            await queryClient.invalidateQueries({ queryKey: ['achievements'] });
           }
         } catch (err) {
           if (isNetworkError(err)) {

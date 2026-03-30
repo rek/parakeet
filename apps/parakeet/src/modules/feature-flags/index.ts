@@ -1,3 +1,4 @@
+export * from './data/feature-flags.queries';
 export { useFeatureFlags, useFeatureEnabled } from './hooks/useFeatureFlags';
 export {
   getFeatureFlags,

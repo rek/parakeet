@@ -12,9 +12,9 @@ import {
 import { useAuth } from '@modules/auth';
 import {
   deleteAllUserData,
-  getDeveloperSuggestions,
   getJITStrategyOverride,
   setJITStrategyOverride,
+  settingsQueries,
   updateSuggestionStatus,
 } from '@modules/settings';
 import type {
@@ -472,8 +472,7 @@ export default function DeveloperSettingsScreen() {
   );
 
   const { data: suggestions = [] } = useQuery({
-    queryKey: ['developer', 'suggestions'],
-    queryFn: getDeveloperSuggestions,
+    ...settingsQueries.developer.suggestions(),
     staleTime: 30 * 1000,
   });
 
@@ -496,7 +495,7 @@ export default function DeveloperSettingsScreen() {
     setUpdatingId(id);
     try {
       await updateSuggestionStatus(id, status);
-      queryClient.invalidateQueries({ queryKey: ['developer', 'suggestions'] });
+      queryClient.invalidateQueries({ queryKey: settingsQueries.developer.all() });
     } finally {
       setUpdatingId(null);
     }

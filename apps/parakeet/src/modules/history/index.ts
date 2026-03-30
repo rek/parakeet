@@ -1,3 +1,4 @@
+export * from './data/history.queries';
 export * from './lib/performance';
 export * from './ui/trend-styles';
 export * from './ui/rating-styles';

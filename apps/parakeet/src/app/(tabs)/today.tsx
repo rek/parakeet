@@ -9,7 +9,7 @@ import {
   View,
 } from 'react-native';
 
-import { getStreakData, StreakPill } from '@modules/achievements';
+import { achievementQueries, StreakPill } from '@modules/achievements';
 import { useAuth } from '@modules/auth';
 import { getLatestWeeklyReview } from '@modules/body-review';
 import {
@@ -20,7 +20,7 @@ import {
 } from '@modules/cycle-tracking';
 import {
   DisruptionChipsRow,
-  getActiveDisruptions,
+  disruptionQueries,
   resolveDisruption,
   updateDisruptionEndDate,
 } from '@modules/disruptions';
@@ -33,6 +33,7 @@ import {
   skipSession,
   useInProgressSession,
   useTodaySessions,
+  sessionQueries,
   WorkoutCard,
 } from '@modules/session';
 import type { CompletedSessionRef } from '@modules/session';
@@ -551,7 +552,7 @@ export default function TodayScreen() {
   // Native without a global focusManager, so this handles tab switches.
   useFocusEffect(
     useCallback(() => {
-      void queryClient.invalidateQueries({ queryKey: ['session'] });
+      void queryClient.invalidateQueries({ queryKey: sessionQueries.all() });
     }, [queryClient])
   );
 
@@ -601,18 +602,9 @@ export default function TodayScreen() {
     }, [])
   );
 
-  const { data: disruptions } = useQuery({
-    queryKey: ['disruptions', 'active', user?.id],
-    queryFn: () => getActiveDisruptions(user!.id),
-    enabled: !!user?.id,
-  });
+  const { data: disruptions } = useQuery(disruptionQueries.active(user?.id));
 
-  const { data: streakData } = useQuery({
-    queryKey: ['achievements', 'streak', user?.id],
-    queryFn: () => getStreakData(user!.id),
-    enabled: !!user?.id,
-    staleTime: 5 * 60 * 1000,
-  });
+  const { data: streakData } = useQuery(achievementQueries.streak(user?.id));
 
   if (sessionLoading || programLoading) {
     return (
@@ -707,7 +699,7 @@ export default function TodayScreen() {
                 }
                 onResolved={() =>
                   queryClient.invalidateQueries({
-                    queryKey: ['disruptions', 'active', user?.id],
+                    queryKey: disruptionQueries.active(user?.id).queryKey,
                   })
                 }
               />
@@ -909,7 +901,7 @@ export default function TodayScreen() {
                             }}
                             onSkipComplete={() =>
                               queryClient.invalidateQueries({
-                                queryKey: ['session', 'today'],
+                                queryKey: sessionQueries.all(),
                               })
                             }
                           />

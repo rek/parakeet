@@ -19,6 +19,7 @@ import {
   CYCLE_PHASE_LABELS,
   CYCLE_PHASE_TEXT,
   CYCLE_PHASES,
+  cycleTrackingQueries,
   deletePeriodStart,
   getCycleConfig,
   getPeriodStartHistory,
@@ -26,7 +27,6 @@ import {
   updateCycleConfig,
 } from '@modules/cycle-tracking';
 import type { PeriodStartEntry } from '@modules/cycle-tracking';
-import { qk } from '@platform/query';
 import DateTimePicker, {
   DateTimePickerEvent,
 } from '@react-native-community/datetimepicker';
@@ -270,8 +270,8 @@ export default function CycleTrackingScreen() {
   async function save(update: Parameters<typeof updateCycleConfig>[1]) {
     if (!user?.id) return;
     await updateCycleConfig(user.id, update);
-    await queryClient.invalidateQueries({ queryKey: qk.cycle.phase(user.id) });
-    await queryClient.invalidateQueries({ queryKey: qk.cycle.config(user.id) });
+    await queryClient.invalidateQueries({ queryKey: cycleTrackingQueries.phase(user.id).queryKey });
+    await queryClient.invalidateQueries({ queryKey: cycleTrackingQueries.config(user.id).queryKey });
   }
 
   async function handleToggle(value: boolean) {
@@ -298,8 +298,8 @@ export default function CycleTrackingScreen() {
     const updated = await addPeriodStart(user.id, iso);
     setHistory(updated);
     setLastPeriodStart(updated[0]?.start_date ?? null);
-    await queryClient.invalidateQueries({ queryKey: qk.cycle.phase(user.id) });
-    await queryClient.invalidateQueries({ queryKey: qk.cycle.config(user.id) });
+    await queryClient.invalidateQueries({ queryKey: cycleTrackingQueries.phase(user.id).queryKey });
+    await queryClient.invalidateQueries({ queryKey: cycleTrackingQueries.config(user.id).queryKey });
   }
 
   async function handleDeleteEntry(entryId: string) {
@@ -307,8 +307,8 @@ export default function CycleTrackingScreen() {
     const updated = await deletePeriodStart(user.id, entryId);
     setHistory(updated);
     setLastPeriodStart(updated[0]?.start_date ?? null);
-    await queryClient.invalidateQueries({ queryKey: qk.cycle.phase(user.id) });
-    await queryClient.invalidateQueries({ queryKey: qk.cycle.config(user.id) });
+    await queryClient.invalidateQueries({ queryKey: cycleTrackingQueries.phase(user.id).queryKey });
+    await queryClient.invalidateQueries({ queryKey: cycleTrackingQueries.config(user.id).queryKey });
   }
 
   // ── Derived ────────────────────────────────────────────────────────────────

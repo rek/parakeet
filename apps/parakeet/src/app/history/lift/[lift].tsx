@@ -15,9 +15,8 @@ import {
   computeHeaviestLift,
   computeSessionVolume,
   estimateBestOneRm,
-  getPerformanceByLift,
-  getPerformanceTrends,
   getSessionJoin,
+  historyQueries,
   MIN_CHART_OPACITY,
 } from '@modules/history';
 import type { Lift } from '@parakeet/shared-types';
@@ -244,16 +243,10 @@ export default function LiftHistoryScreen() {
     useState<IntensityFilter>('all');
   const [chartType, setChartType] = useState<ChartType>('1rm');
 
-  const historyQuery = useQuery({
-    queryKey: ['performance', 'lift', lift, user?.id],
-    queryFn: () => getPerformanceByLift(user!.id, lift as Lift),
-    enabled: !!user?.id && !!lift,
-  });
+  const historyQuery = useQuery(historyQueries.liftDetail(user?.id, lift));
 
   const trendsQuery = useQuery({
-    queryKey: ['performance', 'trends', user?.id],
-    queryFn: () => getPerformanceTrends(user!.id),
-    enabled: !!user?.id,
+    ...historyQueries.trends(user?.id),
     staleTime: 60_000,
   });
 

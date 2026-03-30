@@ -22,16 +22,18 @@ import {
   reportDisruption,
   SORENESS_CHIPS,
   SORENESS_NUMERIC,
+  disruptionQueries,
 } from '@modules/disruptions';
 import type { SorenessLevel } from '@modules/disruptions';
-import { getProfile } from '@modules/profile';
+import { profileQueries } from '@modules/profile';
 import type {
   DisruptionType,
   DisruptionWithSuggestions,
   Lift,
   Severity,
 } from '@parakeet/shared-types';
-import { qk } from '@platform/query';
+import { programQueries } from '@modules/program';
+import { sessionQueries } from '@modules/session';
 import { captureException } from '@platform/utils/captureException';
 import DateTimePicker, {
   type DateTimePickerEvent,
@@ -382,8 +384,7 @@ export default function DisruptionReportScreen() {
   const queryClient = useQueryClient();
 
   const { data: profile } = useQuery({
-    queryKey: qk.profile.current(),
-    queryFn: getProfile,
+    ...profileQueries.current(),
     staleTime: 5 * 60 * 1000,
   });
 
@@ -505,7 +506,7 @@ export default function DisruptionReportScreen() {
       }
 
       void queryClient.invalidateQueries({
-        queryKey: ['disruptions', 'active', user.id],
+        queryKey: disruptionQueries.active(user.id).queryKey,
       });
       setDisruption(result);
       setScreenState('review');
@@ -523,10 +524,10 @@ export default function DisruptionReportScreen() {
     try {
       await applyDisruptionAdjustment(disruption.id, user.id);
       void queryClient.invalidateQueries({
-        queryKey: qk.program.active(user.id),
+        queryKey: programQueries.active(user.id).queryKey,
       });
       void queryClient.invalidateQueries({
-        queryKey: qk.session.today(user.id),
+        queryKey: sessionQueries.all(),
       });
       router.back();
     } finally {

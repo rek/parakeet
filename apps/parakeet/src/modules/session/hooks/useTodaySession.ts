@@ -1,18 +1,12 @@
 import { useAuth } from '@modules/auth';
-import { qk } from '@platform/query';
 import { useQuery } from '@tanstack/react-query';
 
-import {
-  findTodaySession,
-  findTodaySessions,
-} from '../application/session.service';
+import { sessionQueries } from '../data/session.queries';
 
 export function useTodaySession() {
   const { user } = useAuth();
   return useQuery({
-    queryKey: qk.session.today(user?.id),
-    queryFn: () => findTodaySession(user!.id),
-    enabled: !!user?.id,
+    ...sessionQueries.today(user?.id),
     staleTime: 30 * 1000,
     refetchOnWindowFocus: true,
   });
@@ -21,9 +15,7 @@ export function useTodaySession() {
 export function useTodaySessions() {
   const { user } = useAuth();
   return useQuery({
-    queryKey: [...qk.session.today(user?.id), 'all'],
-    queryFn: () => findTodaySessions(user!.id),
-    enabled: !!user?.id,
+    ...sessionQueries.todayAll(user?.id),
     staleTime: 30 * 1000,
     refetchOnWindowFocus: true,
   });

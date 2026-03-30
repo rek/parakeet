@@ -8,9 +8,9 @@ import {
   View,
 } from 'react-native';
 
-import { getWilksHistory } from '@modules/achievements';
+import { achievementQueries } from '@modules/achievements';
 import { useAuth } from '@modules/auth';
-import { getCurrentWilksSnapshot, WILKS_CONTEXT } from '@modules/wilks';
+import { WILKS_CONTEXT } from '@modules/wilks';
 import { formatDate } from '@shared/utils/date';
 import { useQuery } from '@tanstack/react-query';
 import { router } from 'expo-router';
@@ -163,19 +163,9 @@ export default function WilksScreen() {
   const styles = useMemo(() => buildStyles(colors), [colors]);
   const { user } = useAuth();
 
-  const historyQuery = useQuery({
-    queryKey: ['achievements', 'wilks-history', user?.id],
-    queryFn: () => getWilksHistory(user!.id),
-    enabled: !!user?.id,
-    staleTime: 10 * 60 * 1000,
-  });
+  const historyQuery = useQuery(achievementQueries.wilksHistory(user?.id));
 
-  const currentQuery = useQuery({
-    queryKey: ['achievements', 'wilks-current', user?.id],
-    queryFn: () => getCurrentWilksSnapshot(user!.id),
-    enabled: !!user?.id,
-    staleTime: 5 * 60 * 1000,
-  });
+  const currentQuery = useQuery(achievementQueries.wilksCurrent(user?.id));
 
   const isLoading = historyQuery.isLoading || currentQuery.isLoading;
 

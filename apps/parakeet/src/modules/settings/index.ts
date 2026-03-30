@@ -6,3 +6,4 @@ export * from './lib/rest-config';
 export * from './lib/developer-suggestions';
 export * from './lib/warmup-config';
 export * from './lib/reset';
+export { settingsQueries } from './data/settings.queries';

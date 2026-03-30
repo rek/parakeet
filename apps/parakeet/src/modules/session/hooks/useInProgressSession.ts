@@ -1,14 +1,12 @@
 import { useAuth } from '@modules/auth';
 import { useQuery } from '@tanstack/react-query';
 
-import { getInProgressSession } from '../application/session.service';
+import { sessionQueries } from '../data/session.queries';
 
 export function useInProgressSession() {
   const { user } = useAuth();
   return useQuery({
-    queryKey: ['session', 'in-progress', user?.id],
-    queryFn: () => getInProgressSession(user!.id),
-    enabled: !!user?.id,
+    ...sessionQueries.inProgress(user?.id),
     staleTime: 10 * 1000,
     refetchOnWindowFocus: true,
   });
