@@ -51,6 +51,19 @@ create policy "Either side can remove"
   )
   with check (status = 'removed');
 
+-- Auto-update updated_at on any row change
+create or replace function update_gym_partners_updated_at()
+returns trigger as $$
+begin
+  new.updated_at = now();
+  return new;
+end;
+$$ language plpgsql;
+
+create trigger trg_gym_partners_updated_at
+  before update on gym_partners
+  for each row execute function update_gym_partners_updated_at();
+
 -- ============================================================
 -- QR invite tokens: short-lived (5 min), single-use claim
 -- ============================================================
@@ -58,7 +71,7 @@ create policy "Either side can remove"
 create table gym_partner_invites (
   id uuid primary key default gen_random_uuid(),
   inviter_id uuid references profiles(id) not null,
-  token text not null unique,
+  token text not null unique default gen_random_uuid()::text,
   expires_at timestamptz not null,
   claimed_by uuid references profiles(id),
   created_at timestamptz default now() not null
@@ -81,6 +94,13 @@ create policy "Authenticated users can claim unclaimed invites"
   on gym_partner_invites for update to authenticated
   using (claimed_by is null and expires_at > now())
   with check (claimed_by = auth.uid());
+
+-- Claimer can unclaim their own invite (rollback on failed partnership insert
+-- or self-claim detection). Setting claimed_by back to NULL re-enables the token.
+create policy "Claimer can unclaim own invite"
+  on gym_partner_invites for update to authenticated
+  using (claimed_by = auth.uid())
+  with check (claimed_by is null);
 
 create policy "Inviter can delete own invites"
   on gym_partner_invites for delete

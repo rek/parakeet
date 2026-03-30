@@ -15,12 +15,14 @@ export function VideoPlayerCard({
   onReplace,
   isProcessing,
   colors,
+  recordedByName,
 }: {
   localUri: string;
   durationSec: number;
   onReplace: () => void;
   isProcessing: boolean;
   colors: ColorScheme;
+  recordedByName?: string | null;
 }) {
   const styles = useMemo(() => buildStyles(colors), [colors]);
 
@@ -40,9 +42,16 @@ export function VideoPlayerCard({
       </View>
 
       <View style={styles.footer}>
-        <Text style={styles.durationText}>
-          Duration: {durationSec}s
-        </Text>
+        <View>
+          <Text style={styles.durationText}>
+            Duration: {durationSec}s
+          </Text>
+          {recordedByName != null && (
+            <Text style={styles.attributionText}>
+              Recorded by {recordedByName}
+            </Text>
+          )}
+        </View>
         <TouchableOpacity
           style={styles.replaceButton}
           onPress={onReplace}
@@ -87,6 +96,11 @@ function buildStyles(colors: ColorScheme) {
     durationText: {
       fontSize: typography.sizes.sm,
       color: colors.textSecondary,
+    },
+    attributionText: {
+      fontSize: 13,
+      color: colors.textSecondary,
+      marginTop: 2,
     },
     replaceButton: {
       paddingHorizontal: spacing[3],

@@ -1,6 +1,6 @@
 # social-005: Received Video Integration
 
-**Status**: Planned
+**Status**: Done
 
 **Design**: [gym-partner-filming.md](../../design/gym-partner-filming.md)
 

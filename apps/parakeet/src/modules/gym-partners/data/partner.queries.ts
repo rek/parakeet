@@ -2,7 +2,9 @@ import { queryOptions } from '@tanstack/react-query';
 
 import {
   fetchAcceptedPartners,
+  fetchPartnerActiveSession,
   fetchPendingIncomingRequests,
+  fetchUnseenPartnerVideoCount,
 } from './partner.repository';
 
 export const partnerQueries = {
@@ -18,5 +20,18 @@ export const partnerQueries = {
     queryOptions({
       queryKey: [...partnerQueries.all(), 'pending'] as const,
       queryFn: fetchPendingIncomingRequests,
+    }),
+
+  partnerSession: (partnerId: string) =>
+    queryOptions({
+      queryKey: [...partnerQueries.all(), 'session', partnerId] as const,
+      queryFn: () => fetchPartnerActiveSession({ partnerId }),
+      refetchInterval: false,
+    }),
+
+  unseenVideoCount: (sinceTimestamp: string | null) =>
+    queryOptions({
+      queryKey: [...partnerQueries.all(), 'unseen-videos', sinceTimestamp] as const,
+      queryFn: () => fetchUnseenPartnerVideoCount({ sinceTimestamp }),
     }),
 };

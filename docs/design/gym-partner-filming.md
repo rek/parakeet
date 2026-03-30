@@ -41,6 +41,8 @@ Persistent gym partner relationships. Pair once via QR code scan. When your part
 | 15 | Feature flag | `gymPartner`, default off, Advanced category | First social feature. Opt-in until stable. |
 | 16 | Partner cap | Maximum 5 accepted partners | Prevents resource pressure from Realtime subscriptions and per-partner queries. Enforced as app-level guard in pairing service. |
 | 17 | Display name required | Must have display_name before pairing | Partners need a name to show in the UI. Pairing service rejects if either user has null display_name. Fallback: "Partner" in edge cases where name was cleared after pairing. |
+| 18 | Invite token generation | Postgres `gen_random_uuid()` default | `crypto.randomUUID()` is not available in React Native / Hermes. Token generated server-side via column DEFAULT. |
+| 19 | Claim atomicity | Rollback on partial failure | `claimInvite` does UPDATE (claim) then INSERT (partnership). If INSERT fails, the claim is rolled back (`claimed_by = NULL`) so the token remains usable. Prevents dead-end state. |
 
 ## User Flows
 

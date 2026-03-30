@@ -319,10 +319,10 @@ Phase 1 complete. Per-set video association (main lifts only).
 ### Gym Partner Filming — [design doc](../design/gym-partner-filming.md)
 
 - [x] social-001: Database foundation — [spec](11-social/social-001-gym-partner-db-foundation.md)
-- [ ] social-002: QR pairing flow — [spec](11-social/social-002-qr-pairing-flow.md)
-- [ ] social-003: Partner session visibility — [spec](11-social/social-003-partner-session-visibility.md)
-- [ ] social-004: Film-for-partner flow — [spec](11-social/social-004-film-for-partner.md)
-- [ ] social-005: Received video integration — [spec](11-social/social-005-received-video-integration.md)
+- [x] social-002: QR pairing flow — [spec](11-social/social-002-qr-pairing-flow.md); pairing service with display_name + MAX_PARTNERS guards; QR generate/scan sheets (react-native-qrcode-svg + vision-camera code scanner); partner management screen; settings route; feature-flag gated
+- [x] social-003: Partner session visibility — [spec](11-social/social-003-partner-session-visibility.md); Realtime subscription (single channel for all partners), PartnerSection (self-gated by feature flag), PartnerCard with active session status, usePartnerSessions + useQueries, program.tsx integration (both branches)
+- [x] social-004: Film-for-partner flow — [spec](11-social/social-004-film-for-partner.md); insertPartnerSessionVideo (user_id=lifter, recorded_by=recorder); uploadPartnerVideo (lifter's storage folder); filmForPartner pipeline (extract→detect→analyze→compress→insert→upload); usePartnerFilming hook; PartnerSetPicker + PartnerFilmingSheet; Film button wired in PartnerSection
+- [x] social-005: Received video integration — [spec](11-social/social-005-received-video-integration.md); AsyncStorage badge tracking, fetchUnseenPartnerVideoCount, usePartnerVideoBadge with Realtime, red badge on PartnerSection; SessionVideo.recordedBy/recordedByName, profile join on video queries, VideoPlayerCard attribution label, getVideoForSessionLift returns array (multi-recorder)
 
 ### Other
 

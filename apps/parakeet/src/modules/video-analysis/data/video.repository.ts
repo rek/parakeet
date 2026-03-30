@@ -27,7 +27,11 @@ function parseCoaching(raw: unknown): FormCoachingResult | null {
   return null;
 }
 
-function toSessionVideo(row: SessionVideoRow): SessionVideo {
+type VideoRowWithProfile = SessionVideoRow & {
+  recorded_by_profile?: { display_name: string | null } | null;
+};
+
+function toSessionVideo(row: VideoRowWithProfile): SessionVideo {
   return {
     id: row.id,
     sessionId: row.session_id,
@@ -39,9 +43,16 @@ function toSessionVideo(row: SessionVideoRow): SessionVideo {
     durationSec: row.duration_sec,
     analysis: parseAnalysis(row.analysis),
     coachingResponse: parseCoaching(row.coaching_response),
+    recordedBy: row.recorded_by ?? null,
+    recordedByName: row.recorded_by
+      ? (row.recorded_by_profile?.display_name ?? 'Partner')
+      : null,
     createdAt: row.created_at,
   };
 }
+
+const SELECT_WITH_PROFILE =
+  '*, recorded_by_profile:profiles!session_videos_recorded_by_fkey(display_name)' as const;
 
 export async function insertSessionVideo({
   sessionId,
@@ -97,20 +108,18 @@ export async function getVideoForSessionLift({
 }) {
   const { data, error } = await typedSupabase
     .from('session_videos')
-    .select('*')
+    .select(SELECT_WITH_PROFILE)
     .eq('session_id', sessionId)
     .eq('lift', lift)
     .eq('set_number', setNumber)
-    .order('created_at', { ascending: false })
-    .limit(1)
-    .maybeSingle();
+    .order('created_at', { ascending: false });
 
   if (error) {
     captureException(error);
     throw error;
   }
 
-  return data ? toSessionVideo(data) : null;
+  return (data ?? []).map((row) => toSessionVideo(row as VideoRowWithProfile));
 }
 
 export async function getVideosForLift({
@@ -122,7 +131,7 @@ export async function getVideosForLift({
 }) {
   let query = typedSupabase
     .from('session_videos')
-    .select('*')
+    .select(SELECT_WITH_PROFILE)
     .eq('lift', lift)
     .order('created_at', { ascending: false });
 
@@ -137,7 +146,7 @@ export async function getVideosForLift({
     throw error;
   }
 
-  return (data ?? []).map(toSessionVideo);
+  return (data ?? []).map((row) => toSessionVideo(row as VideoRowWithProfile));
 }
 
 export async function updateSessionVideoAnalysis({

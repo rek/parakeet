@@ -1,6 +1,6 @@
 # social-003: Partner Session Visibility
 
-**Status**: Planned
+**Status**: Done
 
 **Design**: [gym-partner-filming.md](../../design/gym-partner-filming.md)
 

@@ -47,6 +47,7 @@
     "react-native-mediapipe": "*",
     "react-native-vision-camera": "*",
     "react-native-worklets-core": "*",
+    "react-native-qrcode-svg": "*",
     "react-native-safe-area-context": "*",
     "react-native-screens": "*",
     "react-native-svg": "*",

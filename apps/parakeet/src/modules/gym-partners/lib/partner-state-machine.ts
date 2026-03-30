@@ -1,6 +1,6 @@
 import type { PartnerStatus } from '../model/types';
 
-type PartnerRole = 'requester' | 'responder';
+export type PartnerRole = 'requester' | 'responder';
 
 interface Transition {
   to: PartnerStatus;

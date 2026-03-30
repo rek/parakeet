@@ -21,6 +21,7 @@ import {
   WeekRow,
 } from '@modules/program';
 import type { ProgramSession } from '@modules/program';
+import { PartnerSection } from '@modules/gym-partners';
 import { useInProgressSession, useTodaySession } from '@modules/session';
 import type { IntensityType, Lift } from '@parakeet/shared-types';
 import { captureException } from '@platform/utils/captureException';
@@ -338,6 +339,7 @@ export default function ProgramScreen() {
               <Text style={styles.nextSessionNote}>Loading next session…</Text>
             </View>
           )}
+          <PartnerSection />
         </View>
       </SafeAreaView>
     );
@@ -386,6 +388,7 @@ export default function ProgramScreen() {
             onSessionPress={handleSessionPress}
           />
         ))}
+        <PartnerSection />
       </ScrollView>
     </SafeAreaView>
   );

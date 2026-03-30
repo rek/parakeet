@@ -16,8 +16,9 @@ import { programQueries } from '../data/program.queries';
 
 const EMPTY_OVERRIDES: FormulaOverrides = {} as FormulaOverrides;
 
-// Inline formula config query to avoid circular dependency on @modules/formula.
-// Mirrors formulaQueries.config() — same key so they share cache.
+// SYNC: Inline formula config query to avoid circular dependency on @modules/formula.
+// Mirrors formulaQueries.config() in @modules/formula/data/formula.queries.ts.
+// Same key ['formula', 'config', userId] so they share the React Query cache.
 const formulaConfigQuery = (userId: string | undefined) =>
   queryOptions({
     queryKey: ['formula', 'config', userId] as const,

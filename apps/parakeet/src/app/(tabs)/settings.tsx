@@ -329,6 +329,7 @@ export default function SettingsScreen() {
   const showCycleTracking = useFeatureEnabled('cycleTracking');
   const showDeveloper = useFeatureEnabled('developer');
   const showFormulaSuggestions = useFeatureEnabled('formulaSuggestions');
+  const showGymPartner = useFeatureEnabled('gymPartner');
 
   const hasSuggestions = (pendingSuggestions ?? 0) > 0;
   const hasDevSuggestions = (unreviewedDevCount ?? 0) > 0;
@@ -546,6 +547,13 @@ export default function SettingsScreen() {
           <Row
             label="Cycle Tracking"
             onPress={() => router.push('/settings/cycle-tracking')}
+            styles={styles}
+          />
+        )}
+        {showGymPartner && (
+          <Row
+            label="Gym Partners"
+            onPress={() => router.push('/settings/gym-partners')}
             styles={styles}
           />
         )}

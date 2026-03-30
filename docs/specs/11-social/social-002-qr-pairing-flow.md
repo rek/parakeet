@@ -1,6 +1,6 @@
 # social-002: QR Pairing Flow
 
-**Status**: Planned
+**Status**: Done
 
 **Design**: [gym-partner-filming.md](../../design/gym-partner-filming.md)
 
@@ -28,13 +28,14 @@ QR code generation, QR scanning, invite claiming, approval/decline flow, and par
 
 - [ ] `createInvite(): Promise<{ token: string; expiresAt: string }>` — calls `partner.repository.createInvite()`, returns token for QR display
   - Guard: reject if current user has no `display_name` set (Decision 17 — inviter also needs a name so the scanner sees who they're pairing with)
+  - Guard: reject if current user already has `MAX_PARTNERS` accepted partnerships (no point generating a QR at cap)
 - [ ] `claimInvite(token: string): Promise<{ inviterName: string }>` — calls `partner.repository.claimInvite(token)` (atomic UPDATE...RETURNING). On success, creates `gym_partners` row with `status: 'pending'`. Returns inviter's display_name for confirmation.
   - Error cases: expired/already-claimed token (0 rows affected), self-pairing, already paired, invalid token
   - Guard: reject if current user has no `display_name` set (Decision 17)
   - Guard: reject if current user already has `MAX_PARTNERS` accepted partnerships
-- [ ] `acceptPartner(partnershipId: string): Promise<void>` — validates transition via state machine, updates status to 'accepted'
-- [ ] `declinePartner(partnershipId: string): Promise<void>` — updates status to 'declined'
-- [ ] `removePartner(partnershipId: string): Promise<void>` — updates status to 'removed'
+- [ ] `acceptPartner(partnershipId: string): Promise<void>` — calls `updatePartnerStatus(id, 'accepted')`. State machine validation is handled in the repository layer.
+- [ ] `declinePartner(partnershipId: string): Promise<void>` — calls `updatePartnerStatus(id, 'declined')`
+- [ ] `removePartner(partnershipId: string): Promise<void>` — calls `updatePartnerStatus(id, 'removed')`
 
 ### React Query hooks
 

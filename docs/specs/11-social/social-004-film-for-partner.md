@@ -1,6 +1,6 @@
 # social-004: Film-for-Partner Flow
 
-**Status**: Planned
+**Status**: Done
 
 **Design**: [gym-partner-filming.md](../../design/gym-partner-filming.md)
 

@@ -458,7 +458,7 @@ export type Database = {
           expires_at: string
           id?: string
           inviter_id: string
-          token: string
+          token?: string
         }
         Update: {
           claimed_by?: string | null

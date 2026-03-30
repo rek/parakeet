@@ -181,8 +181,8 @@ export function useVideoAnalysis({
 
   const loadExisting = useCallback(async () => {
     try {
-      const video = await getVideoForSessionLift({ sessionId, lift, setNumber });
-      if (video) setResult(video);
+      const videos = await getVideoForSessionLift({ sessionId, lift, setNumber });
+      if (videos.length > 0) setResult(videos[0]);
     } catch (err) {
       captureException(err);
       const message = err instanceof Error ? err.message : 'Failed to load video';

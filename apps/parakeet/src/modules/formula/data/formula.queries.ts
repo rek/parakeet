@@ -9,6 +9,8 @@ import {
 export const formulaQueries = {
   all: () => ['formula'] as const,
 
+  // SYNC: query key duplicated in @modules/program/hooks/useNextSessionPreview.ts
+  // to break a require cycle. Keep keys identical so they share the React Query cache.
   config: (userId: string | undefined) =>
     queryOptions({
       queryKey: [...formulaQueries.all(), 'config', userId] as const,
