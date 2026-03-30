@@ -168,6 +168,21 @@ export function FormCoachingCard({
         </View>
       )}
 
+      {/* Competition readiness */}
+      {coaching.competitionReadiness && (
+        <View style={styles.section}>
+          <Text style={styles.subsectionLabel}>Competition Readiness</Text>
+          <Text style={styles.insightText}>
+            {Math.round(coaching.competitionReadiness.passRate * 100)}% pass rate — {coaching.competitionReadiness.assessment}
+          </Text>
+          {coaching.competitionReadiness.topConcern && (
+            <Text style={[styles.insightText, { color: colors.danger, marginTop: 4 }]}>
+              Top concern: {coaching.competitionReadiness.topConcern}
+            </Text>
+          )}
+        </View>
+      )}
+
       {/* Next session suggestion */}
       <View style={[styles.section, styles.suggestionSection]}>
         <Text style={styles.subsectionLabel}>Next Session</Text>

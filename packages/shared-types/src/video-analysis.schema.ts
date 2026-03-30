@@ -65,25 +65,35 @@ export type VideoAnalysisResult = z.infer<typeof VideoAnalysisResultSchema>;
 // --- Form Coaching (LLM output) ---
 
 export const FormCueSchema = z.object({
-  repRange: z.string(),
-  observation: z.string(),
-  cue: z.string(),
+  repRange: z.string().max(20),
+  observation: z.string().max(200),
+  cue: z.string().max(200),
   priority: z.enum(['high', 'medium', 'low']),
 });
 
 export type FormCue = z.infer<typeof FormCueSchema>;
 
+export const CompetitionReadinessAssessmentSchema = z.object({
+  passRate: z.number().min(0).max(1),
+  assessment: z.string().max(300),
+  topConcern: z.string().max(200).nullable(),
+});
+
+export type CompetitionReadinessAssessment = z.infer<typeof CompetitionReadinessAssessmentSchema>;
+
 export const FormCoachingResultSchema = z.object({
-  summary: z.string(),
+  summary: z.string().max(500),
   repByRepBreakdown: z.array(z.object({
     repNumber: z.number().int(),
-    assessment: z.string(),
+    assessment: z.string().max(300),
     formGrade: z.enum(['good', 'acceptable', 'needs_work']),
-  })),
-  cues: z.array(FormCueSchema),
-  fatigueCorrelation: z.string().nullable(),
-  comparedToBaseline: z.string().nullable(),
-  nextSessionSuggestion: z.string(),
+    competitionVerdict: z.enum(['white_light', 'red_light', 'borderline']).nullable(),
+  })).max(10),
+  cues: z.array(FormCueSchema).max(5),
+  fatigueCorrelation: z.string().max(300).nullable(),
+  comparedToBaseline: z.string().max(300).nullable(),
+  competitionReadiness: CompetitionReadinessAssessmentSchema.nullable(),
+  nextSessionSuggestion: z.string().max(300),
 });
 
 export type FormCoachingResult = z.infer<typeof FormCoachingResultSchema>;

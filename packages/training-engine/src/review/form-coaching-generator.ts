@@ -1,5 +1,5 @@
 import { FormCoachingResultSchema } from '@parakeet/shared-types';
-import type { FormCoachingResult } from '@parakeet/shared-types';
+import type { FormCoachingResult, VideoAnalysisResult } from '@parakeet/shared-types';
 import { generateText, Output } from 'ai';
 
 import { abortAfter } from '../ai/abort-timeout';
@@ -8,12 +8,15 @@ import { FORM_COACHING_SYSTEM_PROMPT } from '../ai/prompts';
 
 export type { FormCoachingResult };
 
-/** Subset of coaching context fields serialized to the LLM prompt. */
+/** Context fields serialized to JSON for the LLM prompt. */
 export interface FormCoachingInput {
-  analysis: unknown;
+  analysis: VideoAnalysisResult;
   lift: string;
+  cameraAngle: 'side' | 'front';
   weightKg: number | null;
+  oneRmKg: number | null;
   sessionRpe: number | null;
+  biologicalSex: 'male' | 'female' | null;
   blockNumber: number | null;
   weekNumber: number | null;
   intensityType: string | null;

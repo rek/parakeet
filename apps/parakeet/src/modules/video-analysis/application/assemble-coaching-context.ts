@@ -10,10 +10,13 @@ export interface FormCoachingContext {
   // Video analysis metrics
   analysis: VideoAnalysisResult;
   lift: 'squat' | 'bench' | 'deadlift';
+  cameraAngle: 'side' | 'front';
 
   // Session context
   weightKg: number | null;
+  oneRmKg: number | null;
   sessionRpe: number | null;
+  biologicalSex: 'male' | 'female' | null;
   blockNumber: number | null;
   weekNumber: number | null;
   intensityType: string | null;
@@ -45,6 +48,9 @@ export interface FormCoachingContext {
 export function assembleCoachingContext({
   analysis,
   lift,
+  cameraAngle = 'side',
+  oneRmKg = null,
+  biologicalSex = null,
   session,
   log,
   jitSnapshot,
@@ -52,6 +58,9 @@ export function assembleCoachingContext({
 }: {
   analysis: VideoAnalysisResult;
   lift: 'squat' | 'bench' | 'deadlift';
+  cameraAngle?: 'side' | 'front';
+  oneRmKg?: number | null;
+  biologicalSex?: 'male' | 'female' | null;
   session: {
     block_number: number | null;
     week_number: number | null;
@@ -115,8 +124,11 @@ export function assembleCoachingContext({
   return {
     analysis,
     lift,
+    cameraAngle,
     weightKg,
+    oneRmKg,
     sessionRpe: log?.session_rpe ?? null,
+    biologicalSex,
     blockNumber: session?.block_number ?? null,
     weekNumber: session?.week_number ?? null,
     intensityType: session?.intensity_type ?? null,
