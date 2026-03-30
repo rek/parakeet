@@ -314,7 +314,7 @@ Phase 1 complete. Per-set video association (main lifts only).
 - [x] Program loyalty badges data fetchers — Old Faithful, Shiny Object Syndrome, Deload Denier; `fetchProgramLoyaltyData` queries programs + formula_configs + deload sessions
 - [x] Remaining badge checks wired — Volume Goblin (situational), Jack of All Lifts (volume-rep, `fetchUniqueAuxExercisesInCycle`), Zen Master (rest-pacing, `fetchConsecutiveFullRestSessions`), Streak Breaker (wild-rare, `detectStreakBreakAndRebuild` pure function + `fetchStreakBreakAndRebuild` service)
 - [x] Previous e1RM for "Technically a PR" — pre-upsert values captured in `detectAchievements` and passed via `previousE1Rm` field
-- [ ] Power Couple — deferred (needs partner linking → unblocked by social-001)
+- [x] Power Couple — `checkCouplesBadges` in `checkers/couples.ts`; `BadgeCheckContext.partnerCompletedToday`; `fetchPartnerCompletedToday` queries accepted partners' completed sessions today; 2 tests
 
 ### Gym Partner Filming — [design doc](../design/gym-partner-filming.md)
 

@@ -20,6 +20,7 @@ import { checkRpeEffortBadges } from '../checkers/rpe-effort';
 import { checkSessionMilestoneBadges } from '../checkers/session-milestones';
 import { checkSituationalBadges } from '../checkers/situational';
 import { checkVolumeRepBadges } from '../checkers/volume-rep';
+import { checkCouplesBadges } from '../checkers/couples';
 import { checkWildRareBadges } from '../checkers/wild-rare';
 
 // ── Helpers ─────────────────────────────────────────────────────────────────
@@ -79,6 +80,7 @@ function makeCtx(
     uniqueAuxExercisesInCycle: 0,
     consecutiveFullRestSessions: 0,
     hadStreakBreakAndRebuild: false,
+    partnerCompletedToday: false,
     ...overrides,
   };
 }
@@ -1591,5 +1593,19 @@ describe('detectStreakBreakAndRebuild', () => {
 
   it('returns false with empty history', () => {
     expect(detectStreakBreakAndRebuild([])).toBe(false);
+  });
+});
+
+// ── Couples Badges ─────────────────────────────────────────────────────────
+
+describe('checkCouplesBadges', () => {
+  it('awards power_couple when partner completed today', () => {
+    const ctx = makeCtx({ partnerCompletedToday: true });
+    expect(checkCouplesBadges(ctx)).toContain('power_couple');
+  });
+
+  it('does not award power_couple when no partner completed today', () => {
+    const ctx = makeCtx({ partnerCompletedToday: false });
+    expect(checkCouplesBadges(ctx)).not.toContain('power_couple');
   });
 });

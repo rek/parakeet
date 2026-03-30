@@ -169,4 +169,7 @@ export interface BadgeCheckContext {
 
   // Streak history (for Streak Breaker)
   hadStreakBreakAndRebuild: boolean;
+
+  // Partner data (for Power Couple)
+  partnerCompletedToday: boolean;
 }

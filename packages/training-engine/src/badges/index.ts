@@ -26,3 +26,4 @@ export {
   checkProgramLoyaltyBadges,
   type ProgramLoyaltyData,
 } from './checkers/program-loyalty';
+export { checkCouplesBadges } from './checkers/couples';

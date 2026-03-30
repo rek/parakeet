@@ -5,6 +5,7 @@ import type {
 } from '@parakeet/training-engine';
 import {
   checkConsistencyBadges,
+  checkCouplesBadges,
   checkLiftIdentityBadges,
   checkPerformanceBadges,
   checkProgramLoyaltyBadges,
@@ -83,6 +84,7 @@ export async function detectBadges(
     uniqueAuxCount,
     consecutiveFullRest,
     streakBreakRebuild,
+    partnerCompletedToday,
   ] = await Promise.all([
     fetchUserBadgeIds(userId),
     fetchSessionLog(sessionId),
@@ -98,6 +100,7 @@ export async function detectBadges(
     fetchUniqueAuxExercisesInCycle(userId, programId),
     fetchConsecutiveFullRestSessions(userId, sessionId),
     fetchStreakBreakAndRebuild(userId),
+    fetchPartnerCompletedToday(userId),
   ]);
 
   // 2. Build actual sets with rest seconds from JSONB
@@ -157,6 +160,7 @@ export async function detectBadges(
     uniqueAuxExercisesInCycle: uniqueAuxCount,
     consecutiveFullRestSessions: consecutiveFullRest,
     hadStreakBreakAndRebuild: streakBreakRebuild,
+    partnerCompletedToday,
   };
 
   // 4. Run all checkers
@@ -171,6 +175,7 @@ export async function detectBadges(
     ...checkRestPacingBadges(ctx),
     ...checkConsistencyBadges(consistencyData),
     ...checkProgramLoyaltyBadges(programLoyaltyData),
+    ...checkCouplesBadges(ctx),
   ];
 
   // 5. Filter already earned
@@ -695,6 +700,36 @@ async function fetchConsecutiveFullRestSessions(
   }
 
   return consecutive;
+}
+
+// ── Partner Completed Today (Power Couple) ─────────────────────────────────
+
+async function fetchPartnerCompletedToday(userId: string): Promise<boolean> {
+  // Get accepted partner IDs
+  const { data: partners, error: partnerError } = await typedSupabase
+    .from('gym_partners')
+    .select('requester_id, responder_id')
+    .or(`requester_id.eq.${userId},responder_id.eq.${userId}`)
+    .eq('status', 'accepted');
+
+  if (partnerError || !partners || partners.length === 0) return false;
+
+  const partnerIds = partners.map((p) =>
+    p.requester_id === userId ? p.responder_id : p.requester_id,
+  );
+
+  // Check if any partner completed a session today
+  const todayStr = new Date().toISOString().split('T')[0];
+  const { count, error: sessionError } = await typedSupabase
+    .from('sessions')
+    .select('id', { count: 'exact', head: true })
+    .in('user_id', partnerIds)
+    .eq('status', 'completed')
+    .gte('completed_at', `${todayStr}T00:00:00`)
+    .lt('completed_at', `${todayStr}T23:59:59.999`);
+
+  if (sessionError) return false;
+  return (count ?? 0) > 0;
 }
 
 // ── Streak Break & Rebuild ──────────────────────────────────────────────────
