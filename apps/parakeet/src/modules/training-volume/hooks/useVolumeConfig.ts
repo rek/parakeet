@@ -1,7 +1,7 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 
 import { useAuth } from '@modules/auth';
-import { getProfile } from '@modules/profile';
+import { typedSupabase } from '@platform/supabase';
 import type { MuscleGroup } from '@parakeet/shared-types';
 
 import {
@@ -18,8 +18,14 @@ export function useVolumeConfig() {
   const { data: volumeConfigData, isLoading } = useQuery({
     queryKey: volumeQueries.config(user?.id),
     queryFn: async () => {
-      const profile = await getProfile();
-      const data = await getMrvMevConfig(user!.id, profile?.biological_sex);
+      // Inline profile fetch to avoid circular dependency on @modules/profile
+      const { data: profile } = await typedSupabase
+        .from('profiles')
+        .select('biological_sex')
+        .eq('id', user!.id)
+        .single();
+      const sex = profile?.biological_sex as 'female' | 'male' | null;
+      const data = await getMrvMevConfig(user!.id, sex);
       return { data, profile };
     },
     enabled: !!user?.id,

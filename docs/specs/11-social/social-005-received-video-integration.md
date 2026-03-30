@@ -16,7 +16,7 @@ In-app badge for new partner-recorded videos, attribution label on video display
 
 - [ ] `getLastSeenPartnerVideoTimestamp(): Promise<string | null>` — reads from AsyncStorage
 - [ ] `setLastSeenPartnerVideoTimestamp(timestamp: string): Promise<void>` — writes to AsyncStorage
-  - Key: `@parakeet/lastSeenPartnerVideo`
+  - Key: `LAST_SEEN_PARTNER_VIDEO_KEY` constant (value: `@parakeet/lastSeenPartnerVideo`) — extract to named constant, not magic string
   - Timestamp is ISO string of the most recent partner video `created_at` the user has seen
 - [ ] Unit tests with AsyncStorage mock
 
@@ -75,6 +75,17 @@ In-app badge for new partner-recorded videos, attribution label on video display
 - [ ] When `recordedByName` is set, show attribution label below the video:
   - "Recorded by Jake" in secondary/muted text (13px, theme.colors.textSecondary)
   - Only shown when `recordedByName` is not null
+
+### Multi-recorder video query handling
+
+**`apps/parakeet/src/modules/video-analysis/data/video.repository.ts`:**
+
+- [ ] Update `getVideoForSessionLift` to handle multi-recorder case:
+  - Current: `LIMIT 1` returns only the most recent video for a session/lift/set — this would shadow one of two videos when both lifter and partner record the same set
+  - Change: return all videos for the session/lift/set (remove `LIMIT 1`, remove `maybeSingle()`, return array)
+  - Alternatively: add a new query `getVideosForSessionLiftSet` that returns all videos, and update callers to handle multiple
+  - UI should show both videos with "Recorded by" attribution (self-recorded shows no label, partner-recorded shows partner name)
+- [ ] Update `getVideosForLift` — already returns arrays, no change needed. Partner videos are included via `user_id` filter (lifter's ID).
 
 ### Coaching verification
 

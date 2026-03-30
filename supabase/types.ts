@@ -443,6 +443,90 @@ export type Database = {
         }
         Relationships: []
       }
+      gym_partner_invites: {
+        Row: {
+          claimed_by: string | null
+          created_at: string
+          expires_at: string
+          id: string
+          inviter_id: string
+          token: string
+        }
+        Insert: {
+          claimed_by?: string | null
+          created_at?: string
+          expires_at: string
+          id?: string
+          inviter_id: string
+          token: string
+        }
+        Update: {
+          claimed_by?: string | null
+          created_at?: string
+          expires_at?: string
+          id?: string
+          inviter_id?: string
+          token?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gym_partner_invites_claimed_by_fkey"
+            columns: ["claimed_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "gym_partner_invites_inviter_id_fkey"
+            columns: ["inviter_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      gym_partners: {
+        Row: {
+          created_at: string
+          id: string
+          requester_id: string
+          responder_id: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          requester_id: string
+          responder_id: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          requester_id?: string
+          responder_id?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gym_partners_requester_id_fkey"
+            columns: ["requester_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "gym_partners_responder_id_fkey"
+            columns: ["responder_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       jit_comparison_logs: {
         Row: {
           created_at: string
@@ -1020,6 +1104,7 @@ export type Database = {
           id: string
           lift: string
           local_uri: string
+          recorded_by: string | null
           remote_uri: string | null
           session_id: string
           set_number: number
@@ -1034,6 +1119,7 @@ export type Database = {
           id?: string
           lift: string
           local_uri: string
+          recorded_by?: string | null
           remote_uri?: string | null
           session_id: string
           set_number?: number
@@ -1048,12 +1134,20 @@ export type Database = {
           id?: string
           lift?: string
           local_uri?: string
+          recorded_by?: string | null
           remote_uri?: string | null
           session_id?: string
           set_number?: number
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "session_videos_recorded_by_fkey"
+            columns: ["recorded_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "session_videos_session_id_fkey"
             columns: ["session_id"]

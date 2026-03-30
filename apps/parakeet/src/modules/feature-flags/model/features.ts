@@ -152,6 +152,13 @@ export const FEATURE_REGISTRY = [
     category: 'advanced' as const,
     defaultEnabled: false,
   },
+  {
+    id: 'gymPartner',
+    label: 'Gym Partner Filming',
+    description: "Pair with gym partners to film each other's lifts",
+    category: 'advanced' as const,
+    defaultEnabled: false,
+  },
 ] as const;
 
 export type FeatureId = (typeof FEATURE_REGISTRY)[number]['id'];

@@ -9,7 +9,7 @@ import {
   View,
 } from 'react-native';
 
-import { getPrimaryMuscles } from '@modules/program';
+import { getPrimaryMuscles } from '@shared/utils/getPrimaryMuscles';
 import { MuscleChips } from '@modules/training-volume';
 
 import { useTheme } from '../../../theme/ThemeContext';

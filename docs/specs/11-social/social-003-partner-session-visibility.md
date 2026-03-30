@@ -67,7 +67,7 @@ Partner section on the Program screen showing each partner's active session stat
   - If pending requests exist: badge count on header (e.g., "1 pending")
 - [ ] Renders `PartnerCard` for each partner
 - [ ] Empty state: "Add a gym partner to film each other's lifts" with add button
-- [ ] Gated by `gymPartner` feature flag (caller responsibility — program screen checks flag)
+- [ ] **Self-gated by `gymPartner` feature flag** — `PartnerSection` internally calls `useFeatureEnabled('gymPartner')` and returns `null` when off. This keeps feature flag logic out of `program.tsx` (code style rule #1: zero feature knowledge in screens).
 
 **`apps/parakeet/src/modules/gym-partners/ui/PartnerCard.tsx`:**
 
@@ -83,16 +83,15 @@ Partner section on the Program screen showing each partner's active session stat
 **`apps/parakeet/src/app/(tabs)/program.tsx`:**
 
 - [ ] Import `PartnerSection` from `@modules/gym-partners`
-- [ ] Import `useFeatureEnabled` from `@modules/feature-flags`
-- [ ] Render `<PartnerSection />` at the bottom of the ScrollView content, after week rows / unending card
-- [ ] Conditionally rendered: `useFeatureEnabled('gymPartner')`
-- [ ] All hooks must be called before any conditional returns (React rules of hooks)
+- [ ] Render `<PartnerSection />` unconditionally at the bottom of the ScrollView content, after week rows / unending card
+  - No feature flag import in `program.tsx` — `PartnerSection` is self-gated (returns null when flag is off)
 
 ### Barrel exports
 
 **`apps/parakeet/src/modules/gym-partners/index.ts`:**
 
-- [ ] Export: `usePartnerSessions`, `PartnerSection`, `PartnerCard`
+- [ ] Export: `usePartnerSessions`, `PartnerSection`
+- [ ] Do NOT export `PartnerCard` — internal UI detail, only used by `PartnerSection`
 
 ## Dependencies
 

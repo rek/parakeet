@@ -45,17 +45,6 @@ export async function fetchRecentSessionLogsForTrends(userId: string) {
   return data ?? [];
 }
 
-export async function fetchPendingPerformanceMetrics(userId: string) {
-  const { data, error } = await typedSupabase
-    .from('performance_metrics')
-    .select('*')
-    .eq('user_id', userId)
-    .eq('reviewed', false)
-    .order('computed_at', { ascending: false });
-  if (error) throw error;
-  return data ?? [];
-}
-
 export async function fetchWeeklySessionLogs(
   userId: string,
   fromDate: Date

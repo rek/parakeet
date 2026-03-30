@@ -27,6 +27,7 @@ QR code generation, QR scanning, invite claiming, approval/decline flow, and par
 **`apps/parakeet/src/modules/gym-partners/application/pairing.service.ts`:**
 
 - [ ] `createInvite(): Promise<{ token: string; expiresAt: string }>` — calls `partner.repository.createInvite()`, returns token for QR display
+  - Guard: reject if current user has no `display_name` set (Decision 17 — inviter also needs a name so the scanner sees who they're pairing with)
 - [ ] `claimInvite(token: string): Promise<{ inviterName: string }>` — calls `partner.repository.claimInvite(token)` (atomic UPDATE...RETURNING). On success, creates `gym_partners` row with `status: 'pending'`. Returns inviter's display_name for confirmation.
   - Error cases: expired/already-claimed token (0 rows affected), self-pairing, already paired, invalid token
   - Guard: reject if current user has no `display_name` set (Decision 17)

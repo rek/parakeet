@@ -3,7 +3,6 @@ import { estimateOneRepMax_Epley } from '@parakeet/training-engine';
 import { weightGramsToKg } from '@shared/utils/weight';
 
 import {
-  fetchPendingPerformanceMetrics,
   fetchPerformanceByLift,
   fetchRecentLiftHistory,
   fetchRecentSessionLogsForTrends,
@@ -34,15 +33,6 @@ export async function getPerformanceTrends(
 ): Promise<PerformanceTrend[]> {
   const data = await fetchRecentSessionLogsForTrends(userId);
   return computeTrends(data);
-}
-
-export async function getPendingAdjustmentSuggestions(userId: string) {
-  const data = await fetchPendingPerformanceMetrics(userId);
-  return (
-    (data as Array<{ suggestions?: unknown[] }>).flatMap(
-      (r) => r.suggestions ?? []
-    ) ?? []
-  );
 }
 
 interface RawLogRow {

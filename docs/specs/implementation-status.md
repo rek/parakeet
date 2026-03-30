@@ -314,7 +314,15 @@ Phase 1 complete. Per-set video association (main lifts only).
 - [x] Program loyalty badges data fetchers — Old Faithful, Shiny Object Syndrome, Deload Denier; `fetchProgramLoyaltyData` queries programs + formula_configs + deload sessions
 - [x] Remaining badge checks wired — Volume Goblin (situational), Jack of All Lifts (volume-rep, `fetchUniqueAuxExercisesInCycle`), Zen Master (rest-pacing, `fetchConsecutiveFullRestSessions`), Streak Breaker (wild-rare, `detectStreakBreakAndRebuild` pure function + `fetchStreakBreakAndRebuild` service)
 - [x] Previous e1RM for "Technically a PR" — pre-upsert values captured in `detectAchievements` and passed via `previousE1Rm` field
-- [ ] Power Couple — deferred (needs partner linking)
+- [ ] Power Couple — deferred (needs partner linking → unblocked by social-001)
+
+### Gym Partner Filming — [design doc](../design/gym-partner-filming.md)
+
+- [x] social-001: Database foundation — [spec](11-social/social-001-gym-partner-db-foundation.md)
+- [ ] social-002: QR pairing flow — [spec](11-social/social-002-qr-pairing-flow.md)
+- [ ] social-003: Partner session visibility — [spec](11-social/social-003-partner-session-visibility.md)
+- [ ] social-004: Film-for-partner flow — [spec](11-social/social-004-film-for-partner.md)
+- [ ] social-005: Received video integration — [spec](11-social/social-005-received-video-integration.md)
 
 ### Other
 

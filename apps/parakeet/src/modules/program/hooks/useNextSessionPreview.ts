@@ -1,10 +1,46 @@
 import { useAuth } from '@modules/auth';
-import { formulaQueries } from '@modules/formula';
 import { historyQueries } from '@modules/history';
+import { safeParseWithParser } from '@parakeet/db';
 import type { Lift } from '@parakeet/shared-types';
-import { useQuery } from '@tanstack/react-query';
+import { FormulaOverridesSchema } from '@parakeet/shared-types';
+import type { FormulaOverrides } from '@parakeet/shared-types';
+import {
+  getDefaultFormulaConfig,
+  mergeFormulaConfig,
+} from '@parakeet/training-engine';
+import { typedSupabase } from '@platform/supabase';
+import { captureException } from '@platform/utils/captureException';
+import { queryOptions, skipToken, useQuery } from '@tanstack/react-query';
 
 import { programQueries } from '../data/program.queries';
+
+const EMPTY_OVERRIDES: FormulaOverrides = {} as FormulaOverrides;
+
+// Inline formula config query to avoid circular dependency on @modules/formula.
+// Mirrors formulaQueries.config() — same key so they share cache.
+const formulaConfigQuery = (userId: string | undefined) =>
+  queryOptions({
+    queryKey: ['formula', 'config', userId] as const,
+    queryFn: userId
+      ? async () => {
+          const { data } = await typedSupabase
+            .from('formula_configs')
+            .select('*')
+            .eq('user_id', userId)
+            .eq('is_active', true)
+            .maybeSingle();
+          const base = getDefaultFormulaConfig();
+          if (!data) return base;
+          const overrides = safeParseWithParser(
+            data.overrides,
+            (v) => FormulaOverridesSchema.parse(v),
+            EMPTY_OVERRIDES,
+            captureException,
+          );
+          return mergeFormulaConfig(base, overrides);
+        }
+      : skipToken,
+  });
 
 export function useNextSessionPreview({
   enabled,
@@ -22,7 +58,7 @@ export function useNextSessionPreview({
   });
 
   const { data: formulaConfig } = useQuery({
-    ...formulaQueries.config(user?.id),
+    ...formulaConfigQuery(user?.id),
     enabled: enabled && !!user?.id,
     staleTime: 60_000,
   });

@@ -31,7 +31,7 @@ Persistent gym partner relationships. Pair once via QR code scan. When your part
 | 5 | Upload path | Direct to lifter's Supabase storage | No transfer step. Recorder never "owns" the video. Clean ownership model. |
 | 6 | Session linking | Recorder picks from lifter's active session | Recorder sees lift name and active status. Set picker derives total sets from session's `planned_sets` JSONB — no `session_logs` access needed. |
 | 7 | Analysis split | Recorder does CV only; lifter triggers coaching | CV is context-free (just video frames). Coaching needs training data. Clean privacy boundary — no training data leaves the lifter's account. |
-| 8 | Data visibility | Lift name + active status only | Minimal exposure enforced at RLS level. Recorder sees partner's `sessions` rows (lift, status, planned_date) but NOT `session_logs` (which contain weights, RPE, actual sets). Set count derived from `planned_sets` on the session row. |
+| 8 | Data visibility | Session row (not session_logs) | Recorder can read partner's `sessions` rows via RLS — this includes `planned_sets` JSONB (lift, prescribed set count, target weight/reps/RPE). This is prescribed/structural data, not actual performance. `session_logs` (actual weights, actual RPE, failed flags) are NOT exposed. Accepted trade-off: prescribed weights leak approximate 1RM, but the recorder needs set counts for the filming picker and the data is structural, not performance. |
 | 9 | Notifications | In-app badge | Badge on partner section when new videos arrive. No push notifications — you're in the gym, you'll see it. |
 | 10 | Unlink behavior | Videos stay with lifter | Once uploaded, videos belong to the lifter permanently. Removing a partner only stops future filming. |
 | 11 | Recorder copy | Fire and forget | Video uploaded to lifter's account, local temp file cleaned up. Recorder's phone is just a camera. |
@@ -103,7 +103,7 @@ GYM PARTNERS                           [+]
 
 **Zero friction for the recorder**: Tap Film, pick the set, record. Analysis runs automatically. Fire and forget.
 
-**Privacy-respecting**: Recorder sees minimal data (lift name + active status). Training details (weights, RPE, program) stay with the lifter — enforced at RLS level, not just query level.
+**Privacy-respecting**: Recorder sees session structure (lift, set count, prescribed targets) but NOT actual performance data (logged weights, actual RPE, failed sets). Enforced at RLS level — `session_logs` is never exposed to partners.
 
 ## Open Questions
 

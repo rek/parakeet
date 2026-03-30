@@ -1,6 +1,6 @@
 # social-001: Gym Partner Database Foundation
 
-**Status**: Planned
+**Status**: Done
 
 **Design**: [gym-partner-filming.md](../../design/gym-partner-filming.md)
 
@@ -27,9 +27,9 @@ Database tables, RLS policies, storage policies, and module skeleton for the gym
     ```sql
     CREATE UNIQUE INDEX idx_gym_partners_pair
       ON gym_partners (LEAST(requester_id, responder_id), GREATEST(requester_id, responder_id))
-      WHERE status != 'removed';
+      WHERE status IN ('pending', 'accepted');
     ```
-    This means `(A→B)` and `(B→A)` are treated as the same pair. The `WHERE status != 'removed'` allows re-pairing after removal.
+    This means `(A→B)` and `(B→A)` are treated as the same pair. The `WHERE status IN ('pending', 'accepted')` allows re-pairing after both removal and decline.
 - [ ] Enable RLS on `gym_partners`
 - [ ] RLS SELECT: `auth.uid() = requester_id OR auth.uid() = responder_id`
 - [ ] RLS INSERT: `auth.uid() = requester_id`
@@ -49,7 +49,14 @@ Database tables, RLS policies, storage policies, and module skeleton for the gym
 - [ ] Enable RLS on `gym_partner_invites`
 - [ ] RLS SELECT: `auth.uid() = inviter_id OR auth.uid() = claimed_by`
 - [ ] RLS INSERT: `auth.uid() = inviter_id`
-- [ ] RLS UPDATE: any authenticated user can claim (set `claimed_by`) an unclaimed, unexpired invite
+- [ ] RLS UPDATE: restrict claiming to valid conditions only:
+    ```sql
+    CREATE POLICY "Authenticated users can claim unclaimed invites"
+      ON gym_partner_invites FOR UPDATE TO authenticated
+      USING (claimed_by IS NULL AND expires_at > now())
+      WITH CHECK (claimed_by = auth.uid());
+    ```
+    `USING` restricts which rows can be updated (unclaimed + unexpired). `WITH CHECK` ensures `claimed_by` can only be set to the caller's own ID. Prevents abuse (extending expiry, overwriting claims).
 - [ ] RLS DELETE: `auth.uid() = inviter_id` (inviter can clean up their own expired invites)
 - [ ] Auto-cleanup trigger: on INSERT into `gym_partner_invites`, delete rows for same `inviter_id` where `expires_at < now()` (prevents unbounded accumulation of 5-minute TTL invites)
 - [ ] Enable Supabase Realtime on tables needed by downstream specs:
@@ -73,8 +80,22 @@ Database tables, RLS policies, storage policies, and module skeleton for the gym
 **`supabase/migrations/YYYYMMDD_cross_user_rls_policies.sql`:**
 
 - [ ] New SELECT policy on `sessions`: partners can read partner's sessions
-  - Policy: `auth.uid() = user_id OR EXISTS (SELECT 1 FROM gym_partners WHERE status = 'accepted' AND ((requester_id = auth.uid() AND responder_id = sessions.user_id) OR (responder_id = auth.uid() AND requester_id = sessions.user_id)))`
-  - Note: add as a second SELECT policy — Postgres OR's multiple policies of the same type
+  - **CRITICAL: must use `FOR SELECT`** — the existing `users_own_data` policy has no `FOR` clause (covers all operations). A new policy without `FOR SELECT` would also grant partners INSERT/UPDATE/DELETE on sessions.
+    ```sql
+    CREATE POLICY "Partners can read partner sessions"
+      ON sessions FOR SELECT
+      USING (
+        EXISTS (
+          SELECT 1 FROM gym_partners
+          WHERE status = 'accepted'
+          AND (
+            (requester_id = auth.uid() AND responder_id = sessions.user_id)
+            OR (responder_id = auth.uid() AND requester_id = sessions.user_id)
+          )
+        )
+      );
+    ```
+  - Note: Postgres OR's multiple SELECT policies, so this extends access beyond the existing `users_own_data` policy for SELECT only
   - Partners see full session rows (including `planned_sets` JSONB for set picker) — this is acceptable because `planned_sets` contains structural info (lift, set count, reps) but not actual performance data
 - [ ] **No cross-user policy on `session_logs`** — `session_logs` contains `actual_sets` JSONB with weights, RPE, and failed flags. Exposing this via RLS would violate Decision 8 (minimal data visibility). Set counts for the filming set picker are derived from `sessions.planned_sets` instead.
 - [ ] New INSERT policy on `session_videos`: partners can insert videos for the lifter
@@ -92,9 +113,14 @@ Database tables, RLS policies, storage policies, and module skeleton for the gym
             OR (responder_id = auth.uid() AND requester_id = session_videos.user_id)
           )
         )
+        AND EXISTS (
+          SELECT 1 FROM sessions
+          WHERE id = session_videos.session_id
+          AND user_id = session_videos.user_id
+        )
       );
     ```
-  - This ensures: (a) recorder sets themselves as `recorded_by`, (b) the `user_id` being inserted is their accepted partner
+  - This ensures: (a) recorder sets themselves as `recorded_by`, (b) the `user_id` being inserted is their accepted partner, (c) the `session_id` actually belongs to that `user_id` (defense-in-depth against forged session references)
   - Existing INSERT policy (`auth.uid() = user_id`) remains unchanged for self-recording
 - [ ] New storage INSERT policy on `session-videos` bucket: partners can upload to `{lifterUserId}/*`
   - Add as a **separate** storage policy (keeps existing self-upload policy clean):
@@ -118,7 +144,7 @@ Database tables, RLS policies, storage policies, and module skeleton for the gym
 
 **`apps/parakeet/src/modules/gym-partners/model/types.ts`:**
 
-- [ ] `PartnerStatus` type: `'pending' | 'accepted' | 'declined' | 'removed'`
+- [ ] `PARTNER_STATUSES = ['pending', 'accepted', 'declined', 'removed'] as const` and `PartnerStatus = (typeof PARTNER_STATUSES)[number]` — derive union from const array (project convention)
 - [ ] `GymPartner` interface: `id`, `partnerId`, `partnerName`, `status`, `createdAt`
   - `partnerId` is the other user's profile ID (resolved from requester/responder based on current user)
   - `partnerName` from joined `profiles.display_name`, fallback to `'Partner'` when null
