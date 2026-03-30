@@ -9,18 +9,14 @@ import {
   View,
 } from 'react-native';
 
-import { useAuth } from '@modules/auth';
 import {
   countFuturePlannedSessions,
   DEFAULT_TRAINING_DAYS,
-  updateTrainingDays,
   useActiveProgram,
-  programQueries,
+  useUpdateTrainingDays,
 } from '@modules/program';
-import { sessionQueries } from '@modules/session';
 import { captureException } from '@platform/utils/captureException';
 import { DAY_LABELS } from '@shared/constants';
-import { useQueryClient } from '@tanstack/react-query';
 import { router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -152,8 +148,7 @@ function buildStyles(colors: ColorScheme) {
 export default function TrainingDaysScreen() {
   const { colors } = useTheme();
   const styles = useMemo(() => buildStyles(colors), [colors]);
-  const { user } = useAuth();
-  const queryClient = useQueryClient();
+  const { updateDays } = useUpdateTrainingDays();
   const { data: program, isLoading } = useActiveProgram();
 
   const trainingDaysPerWeek = program?.training_days_per_week ?? 3;
@@ -187,16 +182,14 @@ export default function TrainingDaysScreen() {
     if (!program) return;
     setIsSaving(true);
     try {
-      await updateTrainingDays(program.id, selectedDays, {
-        program_mode: program.program_mode,
-        start_date: program.start_date,
-        training_days: program.training_days,
-      });
-      await queryClient.invalidateQueries({
-        queryKey: programQueries.active(user?.id).queryKey,
-      });
-      await queryClient.invalidateQueries({
-        queryKey: sessionQueries.all(),
+      await updateDays({
+        programId: program.id,
+        newDays: selectedDays,
+        program: {
+          program_mode: program.program_mode,
+          start_date: program.start_date,
+          training_days: program.training_days,
+        },
       });
       router.back();
     } catch (err) {

@@ -1,7 +1,6 @@
 import { useMemo } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 
-import { useAuth } from '@modules/auth';
 import {
   computePhaseStats,
   CYCLE_PHASE_BG,
@@ -11,8 +10,7 @@ import {
   MIN_CYCLES_FOR_PATTERNS,
   PHASE_BAR_FILL,
 } from '@modules/cycle-tracking';
-import { sessionQueries } from '@modules/session';
-import { useQuery } from '@tanstack/react-query';
+import { useCompletedSessions } from '@modules/session';
 import { router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -105,11 +103,8 @@ function buildStyles(colors: ColorScheme) {
 export default function CyclePatternsScreen() {
   const { colors } = useTheme();
   const styles = useMemo(() => buildStyles(colors), [colors]);
-  const { user } = useAuth();
 
-  const { data: sessions, isLoading } = useQuery({
-    ...sessionQueries.completed(user?.id, 0, 200),
-  });
+  const { sessions, isLoading } = useCompletedSessions(0, 200);
 
   const phasedSessions = (sessions ?? []).filter((s) => s.cycle_phase);
   const stats = computePhaseStats(phasedSessions);

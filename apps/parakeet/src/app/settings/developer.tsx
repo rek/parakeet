@@ -14,14 +14,12 @@ import {
   deleteAllUserData,
   getJITStrategyOverride,
   setJITStrategyOverride,
-  settingsQueries,
-  updateSuggestionStatus,
+  useDeveloperSuggestions,
 } from '@modules/settings';
 import type {
   DeveloperSuggestion,
   JITStrategyOverride,
 } from '@modules/settings';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -449,7 +447,8 @@ export default function DeveloperSettingsScreen() {
   const [updatingId, setUpdatingId] = useState<string | null>(null);
   const [showHistory, setShowHistory] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
-  const queryClient = useQueryClient();
+
+  const { suggestions, updateStatus } = useDeveloperSuggestions();
 
   useEffect(() => {
     getJITStrategyOverride()
@@ -471,11 +470,6 @@ export default function DeveloperSettingsScreen() {
     [saving, strategy]
   );
 
-  const { data: suggestions = [] } = useQuery({
-    ...settingsQueries.developer.suggestions(),
-    staleTime: 30 * 1000,
-  });
-
   const unreviewed = suggestions.filter((s) => s.status === 'unreviewed');
   const reviewed = suggestions.filter((s) => s.status !== 'unreviewed');
   const acknowledgedCount = reviewed.filter(
@@ -494,8 +488,7 @@ export default function DeveloperSettingsScreen() {
   ) {
     setUpdatingId(id);
     try {
-      await updateSuggestionStatus(id, status);
-      queryClient.invalidateQueries({ queryKey: settingsQueries.developer.all() });
+      await updateStatus(id, status);
     } finally {
       setUpdatingId(null);
     }

@@ -10,16 +10,14 @@ import {
 } from 'react-native';
 
 import { useAuth } from '@modules/auth';
-import { formulaQueries } from '@modules/formula';
-import { historyQueries } from '@modules/history';
 import { computeRpeAdjustmentNote } from '@modules/jit';
 import {
   calculateSets,
   determineCurrentWeek,
   groupByWeek,
-  updateProgramStatus,
   useActiveProgram,
-  programQueries,
+  useEndProgram,
+  useNextSessionPreview,
   WeekRow,
 } from '@modules/program';
 import type { ProgramSession } from '@modules/program';
@@ -28,7 +26,6 @@ import type { IntensityType, Lift } from '@parakeet/shared-types';
 import { captureException } from '@platform/utils/captureException';
 import { useSessionStore } from '@platform/store/sessionStore';
 import { capitalize } from '@shared/utils/string';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -173,40 +170,18 @@ export default function ProgramScreen() {
   const { data: program, isLoading } = useActiveProgram();
   const { data: todaySession } = useTodaySession();
   const { data: activeSession } = useInProgressSession();
-  const { user, loading: authLoading } = useAuth();
-  const queryClient = useQueryClient();
+  const { loading: authLoading } = useAuth();
 
   const isUnending = program?.program_mode === 'unending';
 
   const nextLift = todaySession?.primary_lift as Lift | undefined;
 
-  const { data: oneRmKg } = useQuery({
-    ...programQueries.maxes.byLift(user?.id, nextLift),
-    enabled: isUnending && !!user?.id && !!nextLift,
-    staleTime: 60_000,
+  const { oneRmKg, formulaConfig, liftHistory } = useNextSessionPreview({
+    enabled: isUnending,
+    nextLift,
   });
 
-  const { data: formulaConfig } = useQuery({
-    ...formulaQueries.config(user?.id),
-    enabled: isUnending && !!user?.id,
-    staleTime: 60_000,
-  });
-
-  const { data: liftHistory } = useQuery({
-    ...historyQueries.liftHistoryPreview(user?.id, nextLift),
-    enabled: isUnending && !!user?.id && !!nextLift,
-    staleTime: 60_000,
-  });
-
-  const endProgram = useMutation({
-    mutationFn: (programId: string) =>
-      updateProgramStatus(programId, 'archived', {
-        triggerCycleReview: isUnending,
-        userId: user?.id,
-      }),
-    onSuccess: () =>
-      queryClient.invalidateQueries({ queryKey: programQueries.active(user?.id).queryKey }),
-  });
+  const { endProgram, isPending: isEndingProgram } = useEndProgram({ isUnending });
 
   function handleSessionPress(session: ProgramSession) {
     if (session.status === 'in_progress') {
@@ -236,7 +211,7 @@ export default function ProgramScreen() {
       {
         text: 'End Program',
         style: 'destructive',
-        onPress: () => endProgram.mutate(program.id),
+        onPress: () => endProgram(program.id),
       },
     ]);
   }
@@ -309,7 +284,7 @@ export default function ProgramScreen() {
             <ScreenTitle>My Program</ScreenTitle>
             <TouchableOpacity
               onPress={confirmEndProgram}
-              disabled={endProgram.isPending}
+              disabled={isEndingProgram}
             >
               <Text style={styles.endProgramText}>End Program</Text>
             </TouchableOpacity>
@@ -385,7 +360,7 @@ export default function ProgramScreen() {
           <ScreenTitle>My Program</ScreenTitle>
           <TouchableOpacity
             onPress={confirmEndProgram}
-            disabled={endProgram.isPending}
+            disabled={isEndingProgram}
           >
             <Text style={styles.endProgramText}>End Program</Text>
           </TouchableOpacity>

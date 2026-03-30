@@ -22,18 +22,16 @@ import {
   reportDisruption,
   SORENESS_CHIPS,
   SORENESS_NUMERIC,
-  disruptionQueries,
+  useDisruptionActions,
 } from '@modules/disruptions';
 import type { SorenessLevel } from '@modules/disruptions';
-import { profileQueries } from '@modules/profile';
+import { useProfile } from '@modules/profile';
 import type {
   DisruptionType,
   DisruptionWithSuggestions,
   Lift,
   Severity,
 } from '@parakeet/shared-types';
-import { programQueries } from '@modules/program';
-import { sessionQueries } from '@modules/session';
 import { captureException } from '@platform/utils/captureException';
 import DateTimePicker, {
   type DateTimePickerEvent,
@@ -43,7 +41,6 @@ import {
   TRAINING_LIFTS,
 } from '@shared/constants/training';
 import { localDateIso } from '@shared/utils/date';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -381,12 +378,10 @@ export default function DisruptionReportScreen() {
   const { colors } = useTheme();
   const styles = useMemo(() => buildStyles(colors), [colors]);
   const { user } = useAuth();
-  const queryClient = useQueryClient();
 
-  const { data: profile } = useQuery({
-    ...profileQueries.current(),
-    staleTime: 5 * 60 * 1000,
-  });
+  const { data: profile } = useProfile();
+  const { invalidateAfterReport, invalidateAfterAdjustment } =
+    useDisruptionActions();
 
   const isFemale = profile?.biological_sex === 'female';
 
@@ -505,9 +500,7 @@ export default function DisruptionReportScreen() {
         await applyUnprogrammedEventSoreness(user.id, numericSoreness);
       }
 
-      void queryClient.invalidateQueries({
-        queryKey: disruptionQueries.active(user.id).queryKey,
-      });
+      invalidateAfterReport();
       setDisruption(result);
       setScreenState('review');
     } catch (err) {
@@ -523,12 +516,7 @@ export default function DisruptionReportScreen() {
     setIsApplying(true);
     try {
       await applyDisruptionAdjustment(disruption.id, user.id);
-      void queryClient.invalidateQueries({
-        queryKey: programQueries.active(user.id).queryKey,
-      });
-      void queryClient.invalidateQueries({
-        queryKey: sessionQueries.all(),
-      });
+      invalidateAfterAdjustment();
       router.back();
     } finally {
       setIsApplying(false);

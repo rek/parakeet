@@ -13,7 +13,7 @@ import { useCycleReview } from '@modules/cycle-review';
 import {
   createFormulaOverride,
   deactivateFormulaConfig,
-  formulaQueries,
+  useInvalidateFormulas,
 } from '@modules/formula';
 import type { FormulaConfig } from '@modules/formula';
 import { getRatingStyles, getVolumeLevelColors } from '@modules/history';
@@ -23,7 +23,6 @@ import {
   MUSCLE_GROUPS_ORDER,
   MUSCLE_LABELS_ABBR,
 } from '@shared/constants/training';
-import { useQueryClient } from '@tanstack/react-query';
 import { router, useLocalSearchParams } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -331,7 +330,7 @@ export default function CycleReviewScreen() {
   );
   const { programId } = useLocalSearchParams<{ programId: string }>();
   const { user } = useAuth();
-  const queryClient = useQueryClient();
+  const invalidateFormulas = useInvalidateFormulas();
   const {
     data: review,
     isLoading,
@@ -361,7 +360,7 @@ export default function CycleReviewScreen() {
       source: 'ai_suggestion',
       ai_rationale: s.rationale,
     });
-    queryClient.invalidateQueries({ queryKey: formulaQueries.all() });
+    invalidateFormulas();
   }
 
   async function handleDismissSuggestion(id: string) {

@@ -9,7 +9,6 @@ import {
   View,
 } from 'react-native';
 
-import { useAuth } from '@modules/auth';
 import {
   CYCLE_PHASE_BG,
   CYCLE_PHASE_LABELS,
@@ -19,22 +18,18 @@ import {
 import type { CyclePhase } from '@modules/cycle-tracking';
 import {
   buildVolumeChartData,
-  getPerformanceTrends,
   getTrendConfig,
-  historyQueries,
   MIN_CHART_OPACITY,
+  useHistoryScreen,
 } from '@modules/history';
 import type { PerformanceTrend } from '@modules/history';
-import { programQueries } from '@modules/program';
 import {
   formatSessionDisplay,
   getCompletedSessions,
-  sessionQueries,
 } from '@modules/session';
 import type { Lift } from '@parakeet/shared-types';
 import { LIFT_LABELS } from '@shared/constants';
 import { formatDate, formatTime } from '@shared/utils/date';
-import { useQuery } from '@tanstack/react-query';
 import { router } from 'expo-router';
 import { LineChart } from 'react-native-chart-kit';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -61,7 +56,6 @@ const LIFT_COLORS: Record<Lift, string> = {
 
 export default function HistoryScreen() {
   const { colors } = useTheme();
-  const { user } = useAuth();
   const { data: cycleContext } = useCyclePhase();
   const { width } = useWindowDimensions();
   const chartInnerWidth = width - spacing[6] * 2 - spacing[4] * 2;
@@ -70,22 +64,8 @@ export default function HistoryScreen() {
 
   const trendConfig = getTrendConfig(colors);
 
-  const trendsQuery = useQuery({
-    ...historyQueries.trends(user?.id),
-    enabled: !!user?.id,
-  });
-
-  const sessionsQuery = useQuery({
-    ...sessionQueries.completed(user?.id, 0, 20),
-  });
-
-  const programsQuery = useQuery({
-    ...programQueries.inactive(user?.id),
-  });
-
-  const volumeQuery = useQuery({
-    ...historyQueries.weeklySetsPerLift(user?.id, 8),
-  });
+  const { trends, sessions, programs, volume, volumeLoading, isLoading } =
+    useHistoryScreen();
 
   const styles = useMemo(
     () =>
@@ -308,7 +288,7 @@ export default function HistoryScreen() {
     [colors]
   );
 
-  if (trendsQuery.isLoading || sessionsQuery.isLoading) {
+  if (isLoading) {
     return (
       <SafeAreaView style={styles.safeArea}>
         <View style={styles.centered}>
@@ -320,12 +300,12 @@ export default function HistoryScreen() {
 
   const filteredSessions =
     liftFilter === 'all'
-      ? (sessionsQuery.data ?? [])
-      : (sessionsQuery.data ?? []).filter((s) => s.primary_lift === liftFilter);
+      ? (sessions ?? [])
+      : (sessions ?? []).filter((s) => s.primary_lift === liftFilter);
 
-  const volumeChartData = volumeQuery.data
+  const volumeChartData = volume
     ? buildVolumeChartData(
-        volumeQuery.data,
+        volume,
         LIFT_COLORS,
         liftFilter === 'all' ? undefined : liftFilter
       )
@@ -417,10 +397,10 @@ export default function HistoryScreen() {
       >
         {/* 1RM trend cards */}
         <Text style={styles.sectionHeader}>Estimated 1RM</Text>
-        {trendsQuery.data && trendsQuery.data.length > 0 ? (
+        {trends && trends.length > 0 ? (
           <View style={styles.trendRow}>
             {(['squat', 'bench', 'deadlift'] as Lift[]).map((lift) => {
-              const trend = trendsQuery.data.find((t) => t.lift === lift);
+              const trend = trends.find((t) => t.lift === lift);
               if (!trend) return null;
               return renderTrendCard(trend);
             })}
@@ -500,16 +480,16 @@ export default function HistoryScreen() {
           </View>
         ) : (
           <Text style={[styles.emptyText, { marginBottom: spacing[8] }]}>
-            {volumeQuery.isLoading ? 'Loading…' : 'No volume data yet.'}
+            {volumeLoading ? 'Loading…' : 'No volume data yet.'}
           </Text>
         )}
 
         {/* Previous programs */}
-        {(programsQuery.data?.length ?? 0) > 0 && (
+        {(programs?.length ?? 0) > 0 && (
           <>
             <Text style={styles.sectionHeader}>Previous Programs</Text>
             <View style={{ marginBottom: spacing[6] }}>
-              {programsQuery.data!.map((program) => (
+              {programs!.map((program) => (
                 <View key={program.id} style={styles.programRow}>
                   <View style={styles.programRowLeft}>
                     <View style={styles.programRowTitleRow}>
@@ -564,7 +544,7 @@ export default function HistoryScreen() {
         )}
 
         {/* Cycle patterns */}
-        {cycleContext && sessionsQuery.data?.some((s) => s.cycle_phase) && (
+        {cycleContext && sessions?.some((s) => s.cycle_phase) && (
           <>
             <Text style={styles.sectionHeader}>Cycle</Text>
             <TouchableOpacity

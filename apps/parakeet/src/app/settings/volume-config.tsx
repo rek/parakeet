@@ -8,15 +8,10 @@ import {
   View,
 } from 'react-native';
 
-import { useAuth } from '@modules/auth';
-import { getProfile } from '@modules/profile';
 import {
   DEFAULT_MRV_MEV_CONFIG_FEMALE,
   DEFAULT_MRV_MEV_CONFIG_MALE,
-  getMrvMevConfig,
-  resetMuscleToDefault,
-  updateMuscleConfig,
-  volumeQueries,
+  useVolumeConfig,
 } from '@modules/training-volume';
 import type { MrvMevConfig } from '@modules/training-volume';
 import type { MuscleGroup } from '@parakeet/shared-types';
@@ -24,7 +19,6 @@ import {
   MUSCLE_GROUPS_ORDER,
   MUSCLE_LABELS_FULL,
 } from '@shared/constants/training';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -247,24 +241,14 @@ type Draft = Record<MuscleGroup, { mev: number; mrv: number }>;
 export default function VolumeConfigScreen() {
   const { colors } = useTheme();
   const styles = useMemo(() => buildStyles(colors), [colors]);
-  const { user } = useAuth();
-  const queryClient = useQueryClient();
+  const { volumeConfigData, isLoading, saveMuscleConfigs, resetAllMuscles } =
+    useVolumeConfig();
   const [draft, setDraft] = useState<Draft | null>(null);
   const [sexDefaults, setSexDefaults] = useState<MrvMevConfig>(
     DEFAULT_MRV_MEV_CONFIG_MALE
   );
   const [isSaving, setIsSaving] = useState(false);
   const [isResetting, setIsResetting] = useState(false);
-
-  const { data: volumeConfigData, isLoading } = useQuery({
-    queryKey: volumeQueries.config(user?.id),
-    queryFn: async () => {
-      const profile = await getProfile();
-      const data = await getMrvMevConfig(user!.id, profile?.biological_sex);
-      return { data, profile };
-    },
-    enabled: !!user?.id,
-  });
 
   useEffect(() => {
     if (!volumeConfigData) return;
@@ -300,13 +284,10 @@ export default function VolumeConfigScreen() {
   }
 
   async function handleSave() {
-    if (!draft || !user) return;
+    if (!draft) return;
     setIsSaving(true);
     try {
-      await Promise.all(
-        MUSCLES.map((m) => updateMuscleConfig(user.id, m, draft[m]))
-      );
-      queryClient.invalidateQueries({ queryKey: volumeQueries.all() });
+      await saveMuscleConfigs(draft);
       router.back();
     } finally {
       setIsSaving(false);
@@ -314,16 +295,14 @@ export default function VolumeConfigScreen() {
   }
 
   async function handleResetAll() {
-    if (!user) return;
     setIsResetting(true);
     try {
-      await Promise.all(MUSCLES.map((m) => resetMuscleToDefault(user.id, m)));
+      await resetAllMuscles(MUSCLES);
       setDraft(
         Object.fromEntries(
           MUSCLES.map((m) => [m, { ...sexDefaults[m] }])
         ) as Draft
       );
-      queryClient.invalidateQueries({ queryKey: volumeQueries.all() });
     } finally {
       setIsResetting(false);
     }

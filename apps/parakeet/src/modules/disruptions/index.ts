@@ -6,3 +6,5 @@ export * from './ui/disruption-styles';
 export { DisruptionChipsRow } from './ui/DisruptionChipsRow';
 export type { ActiveDisruption } from './ui/DisruptionChipsRow';
 export * from './utils/adjustment-helpers';
+export { useActiveDisruptions } from './hooks/useActiveDisruptions';
+export { useDisruptionActions } from './hooks/useDisruptionActions';

@@ -9,22 +9,16 @@ import {
   View,
 } from 'react-native';
 
-import { useAuth } from '@modules/auth';
-import { profileQueries } from '@modules/profile';
-import { programQueries } from '@modules/program';
 import {
   estimateWorkingWeight,
   generateWarmupSets,
-  getAllWarmupConfigs,
   getPresetSteps,
-  settingsQueries,
-  updateWarmupConfig,
+  useWarmupProtocol,
   WARMUP_PRESETS,
 } from '@modules/settings';
 import type { WarmupProtocol, WarmupStep } from '@modules/settings';
 import type { Lift } from '@parakeet/shared-types';
 import { TRAINING_LIFTS } from '@shared/constants/training';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -401,25 +395,14 @@ function LiftSection({
 export default function WarmupProtocolScreen() {
   const { colors } = useTheme();
   const styles = useMemo(() => buildStyles(colors), [colors]);
-  const { user } = useAuth();
-  const queryClient = useQueryClient();
   const [protocols, setProtocols] = useState<Record<
     Lift,
     WarmupProtocol
   > | null>(null);
   const [saving, setSaving] = useState<Partial<Record<Lift, boolean>>>({});
 
-  const { data: profile } = useQuery({
-    ...profileQueries.current(),
-    staleTime: 5 * 60 * 1000,
-  });
-
-  const { data: warmupData, isLoading } = useQuery({
-    ...settingsQueries.warmup.configs(user?.id),
-    queryFn: () =>
-      getAllWarmupConfigs(user!.id, profile?.biological_sex ?? undefined),
-    enabled: !!user?.id,
-  });
+  const { warmupData, isLoading, maxes, saveWarmupConfig } =
+    useWarmupProtocol();
 
   useEffect(() => {
     if (warmupData && !protocols) {
@@ -427,16 +410,11 @@ export default function WarmupProtocolScreen() {
     }
   }, [protocols, warmupData]);
 
-  const { data: maxes } = useQuery({
-    ...programQueries.maxes.combined(user?.id),
-  });
-
   async function handleSaveLift(lift: Lift) {
-    if (!protocols || !user) return;
+    if (!protocols) return;
     setSaving((prev) => ({ ...prev, [lift]: true }));
     try {
-      await updateWarmupConfig(user.id, lift, protocols[lift]);
-      queryClient.invalidateQueries({ queryKey: settingsQueries.warmup.all() });
+      await saveWarmupConfig(lift, protocols[lift]);
     } finally {
       setSaving((prev) => ({ ...prev, [lift]: false }));
     }

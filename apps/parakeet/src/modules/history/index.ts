@@ -6,3 +6,5 @@ export * from './utils/chart-helpers';
 export * from './utils/session-metrics';
 export * from './utils/chart-builders';
 export * from './hooks/useLiftHistory';
+export { useHistoryScreen } from './hooks/useHistoryScreen';
+export { useLiftDetail } from './hooks/useLiftDetail';

@@ -11,24 +11,19 @@ import {
 
 import { useAuth } from '@modules/auth';
 import { useFeatureEnabled } from '@modules/feature-flags';
-import {
-  formatBirthYear,
-  formatBodyweight,
-  profileQueries,
-} from '@modules/profile';
+import { formatBirthYear, formatBodyweight } from '@modules/profile';
 import {
   exportTrainingData,
   getBarWeightKg,
   getWarmupPlateDisplay,
   setBarWeightKg,
   setWarmupPlateDisplay,
-  settingsQueries,
+  useSettingsBadges,
 } from '@modules/settings';
 import type { BarWeightKg, WarmupPlateDisplay } from '@modules/settings';
 import { useOtaUpdateStatus } from '@modules/updates';
 import type { OtaStatus } from '@modules/updates';
 import { SEX_LABELS, THEME_OPTIONS } from '@shared/constants';
-import { useQuery } from '@tanstack/react-query';
 import Constants from 'expo-constants';
 import { router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -317,18 +312,8 @@ export default function SettingsScreen() {
     await setBarWeightKg(kg);
   }
 
-  const { data: pendingSuggestions } = useQuery(
-    settingsQueries.formula.suggestionsCount(user?.id)
-  );
-
-  const { data: unreviewedDevCount } = useQuery(
-    settingsQueries.developer.suggestionsCount()
-  );
-
-  const { data: profile, isLoading: isProfileLoading } = useQuery({
-    ...profileQueries.current(),
-    staleTime: 5 * 60 * 1000,
-  });
+  const { pendingSuggestions, unreviewedDevCount, profile, isProfileLoading } =
+    useSettingsBadges();
 
   useEffect(() => {
     getBarWeightKg(profile?.biological_sex).then(setBarWeightKgState);

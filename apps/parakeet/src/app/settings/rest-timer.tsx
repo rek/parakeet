@@ -12,15 +12,11 @@ import {
 import { useAuth } from '@modules/auth';
 import {
   getRestTimerPrefs,
-  getUserRestOverrides,
-  resetRestOverrides,
-  setRestOverride,
   setRestTimerPrefs,
-  settingsQueries,
+  useRestTimerSettings,
 } from '@modules/settings';
 import type { RestTimerPrefs } from '@modules/settings';
 import type { IntensityType } from '@parakeet/shared-types';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -478,7 +474,9 @@ export default function RestTimerSettingsScreen() {
   const { colors } = useTheme();
   const styles = useMemo(() => buildStyles(colors), [colors]);
   const { user } = useAuth();
-  const queryClient = useQueryClient();
+
+  const { overridesData, isLoading, saveRestOverride, resetOverrides } =
+    useRestTimerSettings();
 
   // Map intensityType → seconds (null = use default)
   const [durations, setDurations] = useState<
@@ -506,12 +504,6 @@ export default function RestTimerSettingsScreen() {
   const [postWarmupOpen, setPostWarmupOpen] = useState(false);
   const [postWarmupSaving, setPostWarmupSaving] = useState(false);
   const [resetting, setResetting] = useState(false);
-
-  // Load existing overrides from Supabase
-  const { data: overridesData, isLoading } = useQuery({
-    ...settingsQueries.rest.overrides(user?.id),
-    enabled: !!user?.id,
-  });
 
   useEffect(() => {
     if (!overridesData) return;
@@ -546,30 +538,21 @@ export default function RestTimerSettingsScreen() {
     key: IntensityType | 'auxiliary',
     seconds: number
   ) {
-    if (!user) return;
     setSaving((prev) => ({ ...prev, [key]: true }));
     setOpenRow(null);
     try {
-      if (key === 'auxiliary') {
-        // catch-all row: no lift, no intensityType
-        await setRestOverride(user.id, seconds, undefined, undefined);
-      } else {
-        await setRestOverride(user.id, seconds, undefined, key);
-      }
+      await saveRestOverride(key, seconds);
       setDurations((prev) => ({ ...prev, [key]: seconds }));
-      queryClient.invalidateQueries({ queryKey: settingsQueries.rest.all() });
     } finally {
       setSaving((prev) => ({ ...prev, [key]: false }));
     }
   }
 
   async function handleReset() {
-    if (!user) return;
     setResetting(true);
     try {
-      await resetRestOverrides(user.id);
+      await resetOverrides();
       setDurations({});
-      queryClient.invalidateQueries({ queryKey: settingsQueries.rest.all() });
     } finally {
       setResetting(false);
     }

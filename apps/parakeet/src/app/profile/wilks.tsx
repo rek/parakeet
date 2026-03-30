@@ -8,11 +8,10 @@ import {
   View,
 } from 'react-native';
 
-import { achievementQueries } from '@modules/achievements';
+import { useWilksProfile } from '@modules/achievements';
 import { useAuth } from '@modules/auth';
 import { WILKS_CONTEXT } from '@modules/wilks';
 import { formatDate } from '@shared/utils/date';
-import { useQuery } from '@tanstack/react-query';
 import { router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -163,11 +162,8 @@ export default function WilksScreen() {
   const styles = useMemo(() => buildStyles(colors), [colors]);
   const { user } = useAuth();
 
-  const historyQuery = useQuery(achievementQueries.wilksHistory(user?.id));
-
-  const currentQuery = useQuery(achievementQueries.wilksCurrent(user?.id));
-
-  const isLoading = historyQuery.isLoading || currentQuery.isLoading;
+  const { history: wilksHistory, current: wilksCurrent, isLoading } =
+    useWilksProfile({ userId: user?.id });
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -188,14 +184,14 @@ export default function WilksScreen() {
         ) : (
           <>
             {/* Current score */}
-            {currentQuery.data && (
+            {wilksCurrent && (
               <View style={styles.currentCard}>
                 <Text style={styles.currentScoreLabel}>Current Score</Text>
                 <Text style={styles.currentScore}>
-                  {currentQuery.data.wilks}
+                  {wilksCurrent.wilks}
                 </Text>
                 <Text style={styles.currentMeta}>
-                  Bodyweight: {currentQuery.data.bodyweightKg} kg
+                  Bodyweight: {wilksCurrent.bodyweightKg} kg
                 </Text>
                 <TouchableOpacity
                   onPress={() => router.push('/settings')}
@@ -207,14 +203,14 @@ export default function WilksScreen() {
             )}
 
             {/* Current maxes table */}
-            {currentQuery.data && (
+            {wilksCurrent && (
               <>
                 <Text style={styles.sectionHeader}>Lifts Used</Text>
                 <View style={styles.card}>
                   {[
-                    { lift: 'Squat', kg: currentQuery.data.squatKg },
-                    { lift: 'Bench', kg: currentQuery.data.benchKg },
-                    { lift: 'Deadlift', kg: currentQuery.data.deadliftKg },
+                    { lift: 'Squat', kg: wilksCurrent.squatKg },
+                    { lift: 'Bench', kg: wilksCurrent.benchKg },
+                    { lift: 'Deadlift', kg: wilksCurrent.deadliftKg },
                   ].map(({ lift, kg }) => (
                     <View key={lift} style={styles.liftRow}>
                       <Text style={styles.liftRowLabel}>{lift}</Text>
@@ -228,11 +224,11 @@ export default function WilksScreen() {
             )}
 
             {/* Per-cycle history */}
-            {(historyQuery.data?.length ?? 0) > 0 && (
+            {(wilksHistory?.length ?? 0) > 0 && (
               <>
                 <Text style={styles.sectionHeader}>Cycle History</Text>
                 <View style={styles.card}>
-                  {historyQuery.data!.map((point) => (
+                  {wilksHistory!.map((point) => (
                     <View key={point.cycleNumber} style={styles.historyRow}>
                       <Text style={styles.historyLabel}>
                         Cycle {point.cycleNumber}

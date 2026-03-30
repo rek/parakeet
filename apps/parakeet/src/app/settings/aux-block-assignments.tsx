@@ -14,20 +14,16 @@ import { useAuth } from '@modules/auth';
 import { SlotDropdown } from '@modules/formula';
 import {
   cycleBlockNumber,
-  getActiveProgram,
   getAllBlockAssignments,
   getAuxiliariesForBlock,
-  getAuxiliaryPools,
   getCurrentBlock,
   getProgramBlockTabs,
   saveBlockAssignment,
-  programQueries,
 } from '@modules/program';
-import { settingsQueries } from '@modules/settings';
+import { useAuxBlockAssignments } from '@modules/settings';
 import type { SlotAssignment } from '@modules/program';
 import type { Lift } from '@parakeet/shared-types';
 import { BLOCK_INTENSITY, TRAINING_LIFTS } from '@shared/constants/training';
-import { useQuery } from '@tanstack/react-query';
 import { router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -352,15 +348,7 @@ export default function AuxBlockAssignmentsScreen() {
   const [flash, setFlash] = useState<FlashState>({});
   const [initialized, setInitialized] = useState(false);
 
-  const { data: activeProgram } = useQuery({
-    ...programQueries.active(user?.id),
-  });
-
-  const { data: pools, isLoading: poolsLoading } = useQuery({
-    queryKey: settingsQueries.auxiliary.pools(user?.id),
-    queryFn: () => getAuxiliaryPools(user!.id),
-    enabled: !!user?.id,
-  });
+  const { activeProgram, pools, poolsLoading } = useAuxBlockAssignments();
 
   useEffect(() => {
     let isMounted = true;

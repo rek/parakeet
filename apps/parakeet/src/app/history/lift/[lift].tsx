@@ -9,20 +9,18 @@ import {
   View,
 } from 'react-native';
 
-import { useAuth } from '@modules/auth';
 import {
   buildLiftChartData,
   computeHeaviestLift,
   computeSessionVolume,
   estimateBestOneRm,
   getSessionJoin,
-  historyQueries,
   MIN_CHART_OPACITY,
+  useLiftDetail,
 } from '@modules/history';
 import type { Lift } from '@parakeet/shared-types';
 import { INTENSITY_LABELS, LIFT_LABELS } from '@shared/constants';
 import { formatDate, formatTime } from '@shared/utils/date';
-import { useQuery } from '@tanstack/react-query';
 import { router, useLocalSearchParams } from 'expo-router';
 import { LineChart } from 'react-native-chart-kit';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -235,7 +233,6 @@ export default function LiftHistoryScreen() {
   const { colors } = useTheme();
   const styles = useMemo(() => buildStyles(colors), [colors]);
   const { lift } = useLocalSearchParams<{ lift: string }>();
-  const { user } = useAuth();
   const { width } = useWindowDimensions();
   const chartWidth = width - spacing[6] * 2 - spacing[4] * 2;
 
@@ -243,21 +240,16 @@ export default function LiftHistoryScreen() {
     useState<IntensityFilter>('all');
   const [chartType, setChartType] = useState<ChartType>('1rm');
 
-  const historyQuery = useQuery(historyQueries.liftDetail(user?.id, lift));
-
-  const trendsQuery = useQuery({
-    ...historyQueries.trends(user?.id),
-    staleTime: 60_000,
-  });
+  const { liftData, trends, isLoading: historyLoading } = useLiftDetail({ lift: lift ?? '' });
 
   const liftLabel = LIFT_LABELS[lift as Lift] ?? lift;
   const liftColor = LIFT_COLORS[lift as Lift] ?? palette.lime400;
 
-  const currentOneRm = trendsQuery.data?.find(
+  const currentOneRm = trends?.find(
     (t) => t.lift === lift
   )?.estimatedOneRmKg;
 
-  const rows = historyQuery.data ?? [];
+  const rows = liftData ?? [];
 
   // Session list filtered by intensity
   const filteredRows =
@@ -340,7 +332,7 @@ export default function LiftHistoryScreen() {
         </View>
 
         {/* Chart */}
-        {historyQuery.isLoading ? (
+        {historyLoading ? (
           <View style={styles.chartPlaceholder}>
             <ActivityIndicator color={colors.primary} />
           </View>

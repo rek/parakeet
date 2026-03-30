@@ -1,5 +1,6 @@
 export * from './data/volume.queries';
 export * from './hooks/useWeeklyVolume';
+export { useVolumeConfig } from './hooks/useVolumeConfig';
 export * from './lib/engine-adapter';
 export * from './lib/volume-config';
 export * from './utils/volume-thresholds';

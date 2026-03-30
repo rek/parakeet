@@ -11,7 +11,6 @@ import {
 
 import { useAuth } from '@modules/auth';
 import {
-  addPeriodStart,
   clampCycleLength,
   computeCyclePhase,
   computeNextPeriodDate,
@@ -19,19 +18,16 @@ import {
   CYCLE_PHASE_LABELS,
   CYCLE_PHASE_TEXT,
   CYCLE_PHASES,
-  cycleTrackingQueries,
-  deletePeriodStart,
   getCycleConfig,
   getPeriodStartHistory,
   getPhaseForDay,
-  updateCycleConfig,
+  useCycleTrackingSettings,
 } from '@modules/cycle-tracking';
 import type { PeriodStartEntry } from '@modules/cycle-tracking';
 import DateTimePicker, {
   DateTimePickerEvent,
 } from '@react-native-community/datetimepicker';
 import { formatDate } from '@shared/utils/date';
-import { useQueryClient } from '@tanstack/react-query';
 import { router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -243,7 +239,7 @@ export default function CycleTrackingScreen() {
   const { colors } = useTheme();
   const styles = useMemo(() => buildStyles(colors), [colors]);
   const { user } = useAuth();
-  const queryClient = useQueryClient();
+  const { saveConfig, addPeriod, deletePeriod } = useCycleTrackingSettings();
 
   const [isEnabled, setIsEnabled] = useState(false);
   const [cycleLength, setCycleLength] = useState(28);
@@ -267,25 +263,18 @@ export default function CycleTrackingScreen() {
       .catch(() => {});
   }, [user?.id]);
 
-  async function save(update: Parameters<typeof updateCycleConfig>[1]) {
-    if (!user?.id) return;
-    await updateCycleConfig(user.id, update);
-    await queryClient.invalidateQueries({ queryKey: cycleTrackingQueries.phase(user.id).queryKey });
-    await queryClient.invalidateQueries({ queryKey: cycleTrackingQueries.config(user.id).queryKey });
-  }
-
   async function handleToggle(value: boolean) {
     setIsEnabled(value);
     if (value && !lastPeriodStart) {
       setShowDatePicker(true);
     }
-    await save({ is_enabled: value });
+    await saveConfig({ is_enabled: value });
   }
 
   async function handleCycleLengthChange(delta: number) {
     const next = clampCycleLength(cycleLength + delta);
     setCycleLength(next);
-    await save({ cycle_length_days: next });
+    await saveConfig({ cycle_length_days: next });
   }
 
   async function handleDateChange(
@@ -293,22 +282,21 @@ export default function CycleTrackingScreen() {
     selected?: Date
   ) {
     if (Platform.OS === 'android') setShowDatePicker(false);
-    if (!selected || !user?.id) return;
+    if (!selected) return;
     const iso = selected.toISOString().split('T')[0];
-    const updated = await addPeriodStart(user.id, iso);
-    setHistory(updated);
-    setLastPeriodStart(updated[0]?.start_date ?? null);
-    await queryClient.invalidateQueries({ queryKey: cycleTrackingQueries.phase(user.id).queryKey });
-    await queryClient.invalidateQueries({ queryKey: cycleTrackingQueries.config(user.id).queryKey });
+    const updated = await addPeriod(iso);
+    if (updated) {
+      setHistory(updated);
+      setLastPeriodStart(updated[0]?.start_date ?? null);
+    }
   }
 
   async function handleDeleteEntry(entryId: string) {
-    if (!user?.id) return;
-    const updated = await deletePeriodStart(user.id, entryId);
-    setHistory(updated);
-    setLastPeriodStart(updated[0]?.start_date ?? null);
-    await queryClient.invalidateQueries({ queryKey: cycleTrackingQueries.phase(user.id).queryKey });
-    await queryClient.invalidateQueries({ queryKey: cycleTrackingQueries.config(user.id).queryKey });
+    const updated = await deletePeriod(entryId);
+    if (updated) {
+      setHistory(updated);
+      setLastPeriodStart(updated[0]?.start_date ?? null);
+    }
   }
 
   // ── Derived ────────────────────────────────────────────────────────────────

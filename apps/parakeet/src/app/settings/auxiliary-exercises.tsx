@@ -8,19 +8,13 @@ import {
   View,
 } from 'react-native';
 
-import { useAuth } from '@modules/auth';
-import {
-  getAuxiliaryPools,
-  getPrimaryMuscles,
-  reorderAuxiliaryPool,
-} from '@modules/program';
+import { getPrimaryMuscles } from '@modules/program';
 import { AddExerciseModal } from '@modules/session';
-import { settingsQueries } from '@modules/settings';
+import { useAuxiliaryPools } from '@modules/settings';
 import { MuscleChips } from '@modules/training-volume';
 import type { Lift } from '@parakeet/shared-types';
 import { getExerciseType } from '@shared/utils/exercise-lookup';
 import { TRAINING_LIFTS } from '@shared/constants/training';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -387,8 +381,6 @@ type Pools = Record<Lift, string[]>;
 export default function AuxiliaryExercisesScreen() {
   const { colors } = useTheme();
   const styles = useMemo(() => buildStyles(colors), [colors]);
-  const { user } = useAuth();
-  const queryClient = useQueryClient();
   const [pools, setPools] = useState<Pools | null>(null);
   const [savingPool, setSavingPool] = useState<Partial<Record<Lift, boolean>>>(
     {}
@@ -397,11 +389,7 @@ export default function AuxiliaryExercisesScreen() {
     {}
   );
 
-  const { data: poolData, isLoading } = useQuery({
-    queryKey: settingsQueries.auxiliary.pools(user?.id),
-    queryFn: () => getAuxiliaryPools(user!.id),
-    enabled: !!user?.id,
-  });
+  const { poolData, isLoading, saveAuxiliaryPool } = useAuxiliaryPools();
 
   useEffect(() => {
     if (poolData && !pools) {
@@ -410,11 +398,10 @@ export default function AuxiliaryExercisesScreen() {
   }, [poolData, pools]);
 
   async function handleSavePool(lift: Lift) {
-    if (!pools || !user) return;
+    if (!pools) return;
     setSavingPool((prev) => ({ ...prev, [lift]: true }));
     try {
-      await reorderAuxiliaryPool(user.id, lift, pools[lift]);
-      queryClient.invalidateQueries({ queryKey: settingsQueries.auxiliary.all() });
+      await saveAuxiliaryPool(lift, pools[lift]);
       setDirtyPools((prev) => ({ ...prev, [lift]: false }));
     } finally {
       setSavingPool((prev) => ({ ...prev, [lift]: false }));

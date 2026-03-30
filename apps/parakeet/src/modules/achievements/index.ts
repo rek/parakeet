@@ -11,3 +11,5 @@ export { BadgeIcon } from './ui/BadgeIcon';
 export { BADGE_IMAGES } from './ui/badge-images';
 export { StarCard } from './ui/StarCard';
 export { StreakPill } from './ui/StreakPill';
+export { useWilksProfile } from './hooks/useWilksProfile';
+export { useStreak } from './hooks/useStreak';

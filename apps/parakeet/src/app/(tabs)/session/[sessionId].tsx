@@ -40,7 +40,7 @@ import {
   WeightSuggestionBanner,
   formatPrescriptionTrace,
   parsePrescriptionTrace,
-  sessionQueries,
+  useSessionLifecycle,
 } from '@modules/session';
 import type {
   AuxiliaryWork,
@@ -66,7 +66,6 @@ import type { PlateKg } from '@shared/constants/plates';
 import { getAllExercises, getExerciseType } from '@shared/utils/exercise-lookup';
 import { sessionLabel } from '@shared/utils/string';
 import { weightGramsToKg } from '@shared/utils/weight';
-import { useQueryClient } from '@tanstack/react-query';
 import { useKeepAwake } from 'expo-keep-awake';
 import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import {
@@ -353,7 +352,7 @@ export default function SessionScreen() {
     reset,
   } = useSessionStore();
 
-  const queryClient = useQueryClient();
+  const { invalidateSessionCache } = useSessionLifecycle();
 
   const [warmupSetsState, setWarmupSetsState] = useState<WarmupSet[]>([]);
   const [auxiliaryWork, setAuxiliaryWork] = useState<AuxiliaryWork[]>([]);
@@ -518,7 +517,7 @@ export default function SessionScreen() {
             week_number: session.week_number,
             activity_name: session.activity_name,
           });
-          void queryClient.invalidateQueries({ queryKey: sessionQueries.all() });
+          invalidateSessionCache();
         });
       } else {
         // Resuming free-form: restore ad-hoc exercises from store
@@ -603,7 +602,7 @@ export default function SessionScreen() {
           week_number: session.week_number,
         });
         startSession(sessionId).then(() => {
-          void queryClient.invalidateQueries({ queryKey: sessionQueries.all() });
+          invalidateSessionCache();
         });
       });
     } else {
@@ -713,7 +712,7 @@ export default function SessionScreen() {
             clearPostRestState();
             await abandonSession(sessionId);
             reset();
-            void queryClient.invalidateQueries({ queryKey: sessionQueries.all() });
+            invalidateSessionCache();
             router.replace('/(tabs)/today');
           },
         },

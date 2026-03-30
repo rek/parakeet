@@ -10,19 +10,14 @@ import {
   View,
 } from 'react-native';
 
-import { achievementQueries } from '@modules/achievements';
-import { useAuth } from '@modules/auth';
 import {
-  addBodyweightEntry,
-  birthYearToDobIso,
-  deleteBodyweightEntry,
   isValidBirthYear,
-  profileQueries,
-  updateProfile,
+  useDeleteBodyweight,
+  useProfileEditor,
+  useSaveProfile,
 } from '@modules/profile';
 import type { BiologicalSex, BodyweightEntry } from '@modules/profile';
 import { captureException } from '@platform/utils/captureException';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -45,11 +40,6 @@ function formatDate(iso: string) {
     month: 'short',
     year: 'numeric',
   });
-}
-
-function todayIso() {
-  const d = new Date();
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 }
 
 function buildStyles(colors: ColorScheme) {
@@ -197,18 +187,10 @@ function FieldLabel({
 export default function ProfileScreen() {
   const { colors } = useTheme();
   const styles = useMemo(() => buildStyles(colors), [colors]);
-  const queryClient = useQueryClient();
-  const { user } = useAuth();
-
-  const { data: profile, isLoading } = useQuery({
-    ...profileQueries.current(),
-    staleTime: 5 * 60 * 1000,
-  });
-
-  const { data: bwHistory } = useQuery({
-    ...profileQueries.bodyweightHistory(user?.id),
-    staleTime: 60 * 1000,
-  });
+  const { profile, bwHistory, isLoading } = useProfileEditor();
+  const { saveProfile, isPending: isSavePending, isError: isSaveError } =
+    useSaveProfile();
+  const { deleteEntry } = useDeleteBodyweight();
 
   const [displayName, setDisplayName] = useState('');
   const [gender, setGender] = useState<BiologicalSex | null>(null);
@@ -250,56 +232,6 @@ export default function ProfileScreen() {
     );
   }, [profile, displayName, gender, birthYear, bodyweightKg]);
 
-  const saveMutation = useMutation({
-    mutationFn: async () => {
-      const dobIso = birthYearToDobIso(birthYear);
-
-      const parsedBodyweight = bodyweightKg.trim()
-        ? parseFloat(bodyweightKg)
-        : null;
-
-      const validBodyweight =
-        parsedBodyweight != null && !isNaN(parsedBodyweight)
-          ? parsedBodyweight
-          : null;
-
-      await updateProfile({
-        display_name: displayName.trim() ? displayName.trim() : null,
-        biological_sex: gender,
-        date_of_birth: dobIso,
-        bodyweight_kg: validBodyweight,
-      });
-
-      // Record bodyweight history entry when value is present
-      if (validBodyweight != null) {
-        await addBodyweightEntry({
-          recordedDate: todayIso(),
-          weightKg: validBodyweight,
-        });
-      }
-    },
-    onSuccess: async () => {
-      setSaveSuccess(true);
-      setSaveError(null);
-      await queryClient.invalidateQueries({
-        queryKey: profileQueries.current().queryKey,
-      });
-      await queryClient.invalidateQueries({
-        queryKey: profileQueries.bodyweightHistory(user?.id).queryKey,
-      });
-      await queryClient.invalidateQueries({
-        queryKey: achievementQueries.wilksCurrent(user?.id).queryKey,
-      });
-      await queryClient.invalidateQueries({
-        queryKey: achievementQueries.wilksHistory(user?.id).queryKey,
-      });
-    },
-    onError: () => {
-      setSaveSuccess(false);
-      setSaveError('Failed to save profile. Please try again.');
-    },
-  });
-
   function handleSave() {
     setSaveSuccess(false);
     setSaveError(null);
@@ -311,10 +243,22 @@ export default function ProfileScreen() {
       setSaveError('Please select a gender.');
       return;
     }
-    saveMutation.mutate();
+    saveProfile(
+      { displayName, gender, birthYear, bodyweightKg },
+      {
+        onSuccess: () => {
+          setSaveSuccess(true);
+          setSaveError(null);
+        },
+        onError: () => {
+          setSaveSuccess(false);
+          setSaveError('Failed to save profile. Please try again.');
+        },
+      }
+    );
   }
 
-  async function handleDeleteEntry(entry: BodyweightEntry) {
+  function handleDeleteEntry(entry: BodyweightEntry) {
     Alert.alert(
       'Delete Entry',
       `Remove ${entry.weight_kg} kg from ${formatDate(entry.recorded_date)}?`,
@@ -323,21 +267,9 @@ export default function ProfileScreen() {
         {
           text: 'Delete',
           style: 'destructive',
-          onPress: async () => {
+          onPress: () => {
             try {
-              await deleteBodyweightEntry(entry.id);
-              await queryClient.invalidateQueries({
-                queryKey: profileQueries.bodyweightHistory(user?.id).queryKey,
-              });
-              await queryClient.invalidateQueries({
-                queryKey: profileQueries.current().queryKey,
-              });
-              await queryClient.invalidateQueries({
-                queryKey: achievementQueries.wilksCurrent(user?.id).queryKey,
-              });
-              await queryClient.invalidateQueries({
-                queryKey: achievementQueries.wilksHistory(user?.id).queryKey,
-              });
+              deleteEntry({ id: entry.id });
             } catch (err) {
               captureException(err);
             }
@@ -447,16 +379,16 @@ export default function ProfileScreen() {
             (!isDirty ||
               !birthYearIsValid ||
               !gender ||
-              saveMutation.isPending) &&
+              isSavePending) &&
               styles.saveButtonDisabled,
           ]}
           onPress={handleSave}
           disabled={
-            !isDirty || !birthYearIsValid || !gender || saveMutation.isPending
+            !isDirty || !birthYearIsValid || !gender || isSavePending
           }
           activeOpacity={0.8}
         >
-          {saveMutation.isPending ? (
+          {isSavePending ? (
             <ActivityIndicator color={colors.textInverse} />
           ) : (
             <Text style={styles.saveButtonText}>Save Changes</Text>

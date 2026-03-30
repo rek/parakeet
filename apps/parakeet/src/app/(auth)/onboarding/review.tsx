@@ -8,19 +8,15 @@ import {
   View,
 } from 'react-native';
 
-import { useAuth } from '@modules/auth';
 import {
-  createProgram,
   DEFAULT_TRAINING_DAYS,
   generateProgram,
   nextDateForWeekday,
-  programQueries,
+  useCreateProgram,
 } from '@modules/program';
-import { sessionQueries } from '@modules/session';
 import { captureException } from '@platform/utils/captureException';
 import { DAY_LABELS, MONTH_SHORT } from '@shared/constants';
 import { capitalize } from '@shared/utils/string';
-import { useQueryClient } from '@tanstack/react-query';
 import { router, useLocalSearchParams } from 'expo-router';
 
 import { ScreenTitle } from '../../../components/ui/ScreenTitle';
@@ -205,8 +201,7 @@ function formatSessionDate(date: Date): string {
 export default function ReviewScreen() {
   const { colors } = useTheme();
   const styles = useMemo(() => buildStyles(colors), [colors]);
-  const { user } = useAuth();
-  const queryClient = useQueryClient();
+  const { startProgram } = useCreateProgram();
   const {
     totalWeeks: tw,
     trainingDaysPerWeek: tdpw,
@@ -267,18 +262,12 @@ export default function ReviewScreen() {
   async function handleStart() {
     setLoading(true);
     try {
-      await createProgram({
+      await startProgram({
         totalWeeks: isUnending ? undefined : (totalWeeks as 10 | 12 | 14),
         trainingDaysPerWeek,
         startDate,
         trainingDays: selectedDays,
         programMode: isUnending ? 'unending' : 'scheduled',
-      });
-      await queryClient.invalidateQueries({
-        queryKey: programQueries.active(user?.id).queryKey,
-      });
-      await queryClient.invalidateQueries({
-        queryKey: sessionQueries.all(),
       });
       router.replace('/(tabs)/today');
     } catch (err) {

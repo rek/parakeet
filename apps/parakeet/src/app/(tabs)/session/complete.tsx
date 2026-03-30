@@ -9,18 +9,10 @@ import {
   View,
 } from 'react-native';
 
-import {
-  achievementQueries,
-  BadgeCard,
-  detectAchievements,
-  StarCard,
-} from '@modules/achievements';
+import { BadgeCard, detectAchievements, StarCard } from '@modules/achievements';
 import type { EarnedBadge, PR } from '@modules/achievements';
 import { useAuth } from '@modules/auth';
 import { stampCyclePhaseOnSession } from '@modules/cycle-tracking';
-import { historyQueries } from '@modules/history';
-import { programQueries } from '@modules/program';
-import { volumeQueries } from '@modules/training-volume';
 import {
   AdjustmentsCard,
   checkEndOfWeek,
@@ -28,7 +20,7 @@ import {
   computeSessionStats,
   isNetworkError,
   RPE_OPTIONS,
-  sessionQueries,
+  useSessionCacheInvalidation,
 } from '@modules/session';
 import type { JitData } from '@modules/session';
 import { useNetworkStatus } from '@platform/network';
@@ -37,7 +29,6 @@ import { useSyncStore } from '@platform/store/syncStore';
 import { captureException } from '@platform/utils/captureException';
 import { scheduleWeeklyReviewNotification } from '@platform/utils/notifications';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useQueryClient } from '@tanstack/react-query';
 import { router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -241,7 +232,7 @@ export default function CompleteScreen() {
   const { colors } = useTheme();
   const styles = useMemo(() => buildStyles(colors), [colors]);
   const { user } = useAuth();
-  const queryClient = useQueryClient();
+  const { invalidateAfterCompletion } = useSessionCacheInvalidation();
   const { isOnline } = useNetworkStatus();
   const { enqueue } = useSyncStore();
 
@@ -362,21 +353,7 @@ export default function CompleteScreen() {
       // Data is committed — show the saved state regardless of what follows
       setSaved(true);
 
-      void queryClient.invalidateQueries({
-        queryKey: sessionQueries.all(),
-      });
-      void queryClient.invalidateQueries({
-        queryKey: historyQueries.all(),
-      });
-      void queryClient.invalidateQueries({
-        queryKey: achievementQueries.all(),
-      });
-      void queryClient.invalidateQueries({
-        queryKey: volumeQueries.all(),
-      });
-      void queryClient.invalidateQueries({
-        queryKey: programQueries.all(),
-      });
+      invalidateAfterCompletion();
 
       // ── Achievement detection (best-effort) ───────────────────────────────
       try {

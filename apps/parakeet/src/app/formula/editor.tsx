@@ -13,16 +13,12 @@ import {
 
 import { useAuth } from '@modules/auth';
 import {
-  createFormulaOverride,
-  deactivateFormulaConfig,
   draftToOverrides,
   exampleWeight,
-  formulaQueries,
   initDraft,
+  useFormulaEditor,
 } from '@modules/formula';
 import type { BlockKey, DraftConfig, RowDraft } from '@modules/formula';
-import { programQueries } from '@modules/program';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -453,7 +449,6 @@ export default function FormulaEditorScreen() {
   const { colors } = useTheme();
   const styles = useMemo(() => buildStyles(colors), [colors]);
   const { user } = useAuth();
-  const queryClient = useQueryClient();
 
   const [topTab, setTopTab] = useState<TopTab>('editor');
   const [activeBlock, setActiveBlock] = useState<BlockKey>('block1');
@@ -463,30 +458,18 @@ export default function FormulaEditorScreen() {
   const [regenerate, setRegenerate] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
 
-  const { data: config, isLoading: configLoading } = useQuery({
-    ...formulaQueries.config(user?.id),
-    enabled: !!user?.id,
-  });
-
-  const { data: history } = useQuery({
-    ...formulaQueries.history(user?.id),
-    enabled: !!user?.id && topTab === 'history',
-  });
-
-  const { data: aiSuggestions } = useQuery({
-    ...formulaQueries.suggestions(user?.id),
-    enabled: !!user?.id && topTab === 'suggestions',
-  });
-
-  const { data: oneRmKg = 0 } = useQuery({
-    ...programQueries.maxes.byLift(user?.id, 'squat'),
-    select: (v) => v ?? 0,
-  });
-
-  const { data: activeProgram } = useQuery({
-    ...programQueries.active(user?.id),
-    enabled: !!user?.id,
-  });
+  const {
+    config,
+    configLoading,
+    history,
+    aiSuggestions,
+    oneRmKg,
+    activeProgram,
+    saveOverride,
+    acceptSuggestion,
+    dismissSuggestion,
+    reactivate,
+  } = useFormulaEditor({ topTab });
 
   useEffect(() => {
     if (config && !draft) {
@@ -508,7 +491,7 @@ export default function FormulaEditorScreen() {
     setIsSaving(true);
     try {
       const overrides = draftToOverrides(draft);
-      await createFormulaOverride(user.id, { overrides, source: 'user' });
+      await saveOverride({ overrides, source: 'user' });
       if (regenerate && activeProgram && activeProgram.total_weeks) {
         const { regenerateProgram } = await import('@modules/program');
         await regenerateProgram({
@@ -517,7 +500,6 @@ export default function FormulaEditorScreen() {
           startDate: new Date(),
         });
       }
-      queryClient.invalidateQueries({ queryKey: formulaQueries.all() });
       setShowSaveSheet(false);
       router.back();
     } finally {
@@ -526,30 +508,18 @@ export default function FormulaEditorScreen() {
   }
 
   async function handleAcceptSuggestion(
-    suggestionId: string,
+    _suggestionId: string,
     overrides: unknown
   ) {
-    if (!user) return;
-    await createFormulaOverride(user.id, {
-      overrides,
-      source: 'ai_suggestion',
-    });
-    queryClient.invalidateQueries({ queryKey: formulaQueries.all() });
+    await acceptSuggestion({ overrides });
   }
 
   async function handleDismissSuggestion(suggestionId: string) {
-    if (!user) return;
-    await deactivateFormulaConfig(suggestionId, user.id);
-    queryClient.invalidateQueries({ queryKey: formulaQueries.suggestions(user?.id).queryKey });
+    await dismissSuggestion({ suggestionId });
   }
 
-  async function handleReactivate(configId: string, overrides: unknown) {
-    if (!user) return;
-    await createFormulaOverride(user.id, {
-      overrides,
-      source: 'user',
-    });
-    queryClient.invalidateQueries({ queryKey: formulaQueries.all() });
+  async function handleReactivate(_configId: string, overrides: unknown) {
+    await reactivate({ overrides });
   }
 
   // ── Block tab content ──────────────────────────────────────────────────────

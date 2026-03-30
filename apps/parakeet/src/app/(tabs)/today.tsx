@@ -9,7 +9,7 @@ import {
   View,
 } from 'react-native';
 
-import { achievementQueries, StreakPill } from '@modules/achievements';
+import { StreakPill, useStreak } from '@modules/achievements';
 import { useAuth } from '@modules/auth';
 import { getLatestWeeklyReview } from '@modules/body-review';
 import {
@@ -20,20 +20,20 @@ import {
 } from '@modules/cycle-tracking';
 import {
   DisruptionChipsRow,
-  disruptionQueries,
   resolveDisruption,
   updateDisruptionEndDate,
+  useActiveDisruptions,
 } from '@modules/disruptions';
 import { useFeatureEnabled } from '@modules/feature-flags';
 import { useActiveProgram } from '@modules/program';
 import {
-  fetchMotivationalContext,
-  generateMotivationalMessage,
   partitionTodaySessions,
   skipSession,
   useInProgressSession,
+  useMotivationalMessage,
+  useSessionLifecycle,
+  useRefreshAll,
   useTodaySessions,
-  sessionQueries,
   WorkoutCard,
 } from '@modules/session';
 import type { CompletedSessionRef } from '@modules/session';
@@ -52,7 +52,6 @@ import {
   MUSCLE_LABELS_COMPACT,
 } from '@shared/constants/training';
 import { capitalize } from '@shared/utils/string';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { router, useFocusEffect } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -458,24 +457,16 @@ function WorkoutDoneCard({
 }) {
   const { colors } = useTheme();
   const styles = useMemo(() => buildStyles(colors), [colors]);
-  const sessionIds = sessions.map((s) => s.id);
 
   const {
     data: message,
     isLoading,
     error,
-  } = useQuery({
-    queryKey: sessionQueries.motivationalMessage(sessionIds),
-    queryFn: async () => {
-      const ctx = await fetchMotivationalContext(
-        sessions,
-        currentStreak,
-        cyclePhase
-      );
-      return generateMotivationalMessage(ctx, sessionIds, userId);
-    },
-    staleTime: Infinity,
-    retry: false,
+  } = useMotivationalMessage({
+    sessions,
+    currentStreak,
+    cyclePhase,
+    userId,
     enabled: showMotivational,
   });
 
@@ -517,7 +508,8 @@ export default function TodayScreen() {
   const { data: program, isLoading: programLoading } = useActiveProgram();
   const { data: volumeData } = useWeeklyVolume();
   const { data: cycleContext } = useCyclePhase();
-  const queryClient = useQueryClient();
+  const { invalidateSessionCache } = useSessionLifecycle();
+  const { refreshAll } = useRefreshAll();
   const [refreshing, setRefreshing] = useState(false);
   const [pendingReview, setPendingReview] = useState<{
     programId: string | null;
@@ -543,17 +535,18 @@ export default function TodayScreen() {
 
   const handleRefresh = useCallback(async () => {
     setRefreshing(true);
-    await queryClient.invalidateQueries();
+    await refreshAll();
     setRefreshing(false);
-  }, [queryClient]);
+  }, [refreshAll]);
 
   // Invalidate session queries when this tab gains focus (e.g. returning from
   // the ad-hoc or session screens). refetchOnWindowFocus is inert in React
   // Native without a global focusManager, so this handles tab switches.
   useFocusEffect(
     useCallback(() => {
-      void queryClient.invalidateQueries({ queryKey: sessionQueries.all() });
-    }, [queryClient])
+      invalidateSessionCache();
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [])
   );
 
   // Check for a pending weekly body review (stored after end-of-week session)
@@ -602,9 +595,9 @@ export default function TodayScreen() {
     }, [])
   );
 
-  const { data: disruptions } = useQuery(disruptionQueries.active(user?.id));
+  const { data: disruptions, invalidateDisruptions } = useActiveDisruptions();
 
-  const { data: streakData } = useQuery(achievementQueries.streak(user?.id));
+  const { data: streakData } = useStreak();
 
   if (sessionLoading || programLoading) {
     return (
@@ -697,11 +690,7 @@ export default function TodayScreen() {
                 onUpdateEndDate={(id, endDate) =>
                   updateDisruptionEndDate(id, user!.id, endDate)
                 }
-                onResolved={() =>
-                  queryClient.invalidateQueries({
-                    queryKey: disruptionQueries.active(user?.id).queryKey,
-                  })
-                }
+                onResolved={() => invalidateDisruptions()}
               />
             )}
 
@@ -899,11 +888,7 @@ export default function TodayScreen() {
                             onSkip={async (sessionId, reason) => {
                               await skipSession(sessionId, reason);
                             }}
-                            onSkipComplete={() =>
-                              queryClient.invalidateQueries({
-                                queryKey: sessionQueries.all(),
-                              })
-                            }
+                            onSkipComplete={() => invalidateSessionCache()}
                           />
                           {showCycleTracking &&
                             cycleContext?.isOvulatoryWindow &&
