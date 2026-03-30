@@ -13,7 +13,7 @@ export default function GymPartnersSettingsRoute() {
   const { colors } = useTheme();
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: colors.bg }}>
+    <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.bg }]}>
       <BackLink onPress={() => router.back()} />
       <ScrollView
         contentContainerStyle={styles.container}
@@ -27,6 +27,9 @@ export default function GymPartnersSettingsRoute() {
 }
 
 const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+  },
   container: {
     paddingHorizontal: spacing[5],
     paddingBottom: spacing[12],

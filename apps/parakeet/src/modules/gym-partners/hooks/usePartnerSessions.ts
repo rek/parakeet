@@ -2,9 +2,8 @@ import { useCallback, useEffect, useMemo, useRef } from 'react';
 import { useQueries, useQueryClient } from '@tanstack/react-query';
 
 import { partnerQueries } from '../data/partner.queries';
-import type { PartnerActiveSession } from '../data/partner.repository';
-import { subscribeToPartnerSessions } from '../data/partner.repository';
-import type { GymPartner } from '../model/types';
+import { subscribeToPartnerSessions } from '../data/partner-session.repository';
+import type { GymPartner, PartnerActiveSession } from '../model/types';
 
 import { usePartners } from './usePartners';
 
@@ -12,12 +11,12 @@ export interface PartnerWithSession extends GymPartner {
   activeSession: {
     id: string;
     primaryLift: string | null;
-    plannedSets: unknown;
+    plannedSets: readonly unknown[];
   } | null;
 }
 
 export function usePartnerSessions() {
-  const { partners, isLoading: isLoadingPartners } = usePartners();
+  const { partners, pendingRequests, isLoading: isLoadingPartners } = usePartners();
   const queryClient = useQueryClient();
 
   const partnerIds = useMemo(
@@ -64,10 +63,7 @@ export function usePartnerSessions() {
   const partnersWithSessions: PartnerWithSession[] = useMemo(
     () =>
       partners.map((partner, i) => {
-        const session = sessionResults[i]?.data as
-          | PartnerActiveSession
-          | null
-          | undefined;
+        const session = sessionResults[i]?.data;
         return {
           ...partner,
           activeSession: session
@@ -84,6 +80,7 @@ export function usePartnerSessions() {
 
   return {
     partners: partnersWithSessions,
+    pendingRequests,
     isLoading: isLoadingPartners,
   };
 }

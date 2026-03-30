@@ -124,6 +124,34 @@ create trigger trg_cleanup_expired_invites
   for each row execute function cleanup_expired_invites();
 
 -- ============================================================
+-- Storage: partner upload policies for session-videos bucket
+-- ============================================================
+
+-- Helper: check whether two users have an accepted partnership
+create or replace function is_accepted_partner(p_user_id uuid, p_partner_id uuid)
+returns boolean as $$
+begin
+  return exists (
+    select 1 from gym_partners
+    where status = 'accepted'
+      and (
+        (requester_id = p_user_id and responder_id = p_partner_id)
+        or (requester_id = p_partner_id and responder_id = p_user_id)
+      )
+  );
+end;
+$$ language plpgsql security definer;
+
+-- Accepted partners can upload videos to a user's storage folder.
+-- Path convention: {lifterUserId}/{videoId}.mp4
+create policy "Partners can upload videos"
+  on storage.objects for insert to authenticated
+  with check (
+    bucket_id = 'session-videos'
+    and is_accepted_partner(auth.uid(), (storage.foldername(name))[1]::uuid)
+  );
+
+-- ============================================================
 -- Realtime: publish tables needed by downstream specs
 -- ============================================================
 

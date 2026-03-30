@@ -20,6 +20,7 @@ const mockCheckLiftIdentityBadges = vi.hoisted(() => vi.fn((): string[] => []));
 const mockCheckRestPacingBadges = vi.hoisted(() => vi.fn((): string[] => []));
 const mockCheckConsistencyBadges = vi.hoisted(() => vi.fn((): string[] => []));
 const mockCheckProgramLoyaltyBadges = vi.hoisted(() => vi.fn((): string[] => []));
+const mockCheckCouplesBadges = vi.hoisted(() => vi.fn((): string[] => []));
 const mockDetectStreakBreakAndRebuild = vi.hoisted(() => vi.fn(() => false));
 const mockBuildWeekStatuses = vi.hoisted(() => vi.fn(() => []));
 
@@ -48,6 +49,7 @@ vi.mock('@parakeet/training-engine', () => ({
   checkRestPacingBadges: mockCheckRestPacingBadges,
   checkConsistencyBadges: mockCheckConsistencyBadges,
   checkProgramLoyaltyBadges: mockCheckProgramLoyaltyBadges,
+  checkCouplesBadges: mockCheckCouplesBadges,
   detectStreakBreakAndRebuild: mockDetectStreakBreakAndRebuild,
   BADGE_CATALOG: {
     first_blood: {
@@ -98,6 +100,9 @@ function makeChainableQuery({
   q.neq = self;
   q.in = self;
   q.not = self;
+  q.or = self;
+  q.lt = self;
+  q.gt = self;
   q.gte = self;
   q.lte = self;
   q.order = self;

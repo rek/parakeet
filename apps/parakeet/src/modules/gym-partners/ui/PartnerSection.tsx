@@ -7,7 +7,6 @@ import { router } from 'expo-router';
 import type { ColorScheme } from '../../../theme';
 import { spacing, typography } from '../../../theme';
 import { useTheme } from '../../../theme/ThemeContext';
-import { usePartners } from '../hooks/usePartners';
 import { usePartnerVideoBadge } from '../hooks/usePartnerVideoBadge';
 import type { PartnerWithSession } from '../hooks/usePartnerSessions';
 import { usePartnerSessions } from '../hooks/usePartnerSessions';
@@ -20,8 +19,7 @@ export function PartnerSection() {
   const enabled = useFeatureEnabled('gymPartner');
   const { colors } = useTheme();
   const styles = useMemo(() => buildStyles(colors), [colors]);
-  const { pendingRequests } = usePartners();
-  const { partners, isLoading } = usePartnerSessions();
+  const { partners, pendingRequests, isLoading } = usePartnerSessions();
   const { count: unseenVideoCount, markAsSeen } = usePartnerVideoBadge();
   const [showQr, setShowQr] = useState(false);
   const [filmTarget, setFilmTarget] = useState<PartnerWithSession | null>(null);
@@ -105,7 +103,7 @@ export function PartnerSection() {
           partnerName={filmTarget.partnerName}
           sessionId={filmTarget.activeSession.id}
           lift={filmTarget.activeSession.primaryLift ?? ''}
-          plannedSets={filmTarget.activeSession.plannedSets}
+          plannedSets={filmTarget.activeSession.plannedSets ?? []}
         />
       )}
     </View>
@@ -160,10 +158,10 @@ function buildStyles(colors: ColorScheme) {
       color: colors.textInverse,
     },
     addButton: {
-      fontSize: 24,
+      fontSize: typography.sizes.xl,
       color: colors.primary,
       fontWeight: typography.weights.bold,
-      lineHeight: 28,
+      lineHeight: typography.sizes['2xl'],
     },
     cards: {
       gap: spacing[2],

@@ -1,11 +1,20 @@
-import type { DbRow, Json } from '@platform/supabase';
+import type { DbRow } from '@platform/supabase';
 import { typedSupabase } from '@platform/supabase';
 import { captureException } from '@platform/utils/captureException';
 
 import { canTransition } from '../lib/partner-state-machine';
 import type { GymPartner, PartnerInvite, PartnerStatus } from '../model/types';
+import { PARTNER_STATUSES } from '../model/types';
 
 type GymPartnerRow = DbRow<'gym_partners'>;
+
+function toPartnerStatus(raw: string): PartnerStatus {
+  if ((PARTNER_STATUSES as readonly string[]).includes(raw)) {
+    return raw as PartnerStatus;
+  }
+  captureException(new Error(`Unknown partner status: ${raw}`));
+  return 'removed';
+}
 
 function toGymPartner({
   row,
@@ -21,7 +30,7 @@ function toGymPartner({
     id: row.id,
     partnerId: isRequester ? row.responder_id : row.requester_id,
     partnerName: partnerDisplayName ?? 'Partner',
-    status: row.status as PartnerStatus,
+    status: toPartnerStatus(row.status),
     createdAt: row.created_at,
   };
 }
@@ -108,7 +117,7 @@ export async function updatePartnerStatus({
   }
 
   const role = row.requester_id === user.id ? 'requester' : 'responder';
-  const currentStatus = row.status as PartnerStatus;
+  const currentStatus = toPartnerStatus(row.status);
 
   if (!canTransition({ currentStatus, targetStatus: status, role })) {
     throw new Error(
@@ -261,187 +270,5 @@ export async function claimInvite({ token }: { token: string }) {
   return {
     inviterId: data.inviter_id,
     inviterName: data.inviter?.display_name ?? null,
-  };
-}
-
-// ── Partner video insert ─────────────────────────────────────────────────────
-
-export async function insertPartnerSessionVideo({
-  targetUserId,
-  sessionId,
-  lift,
-  setNumber,
-  cameraAngle = 'side',
-  localUri,
-  durationSec,
-  analysis,
-}: {
-  targetUserId: string;
-  sessionId: string;
-  lift: string;
-  setNumber: number;
-  cameraAngle?: 'side' | 'front';
-  localUri: string;
-  durationSec: number;
-  analysis?: Json;
-}) {
-  const {
-    data: { user },
-  } = await typedSupabase.auth.getUser();
-  if (!user) throw new Error('Not authenticated');
-
-  const { data, error } = await typedSupabase
-    .from('session_videos')
-    .insert({
-      user_id: targetUserId,
-      recorded_by: user.id,
-      session_id: sessionId,
-      lift,
-      set_number: setNumber,
-      camera_angle: cameraAngle,
-      local_uri: localUri,
-      duration_sec: durationSec,
-      ...(analysis != null ? { analysis } : {}),
-    })
-    .select('id')
-    .single();
-
-  if (error) {
-    captureException(error);
-    throw error;
-  }
-
-  return { videoId: data.id };
-}
-
-// ── Partner session visibility ───────────────────────────────────────────────
-
-export interface PartnerActiveSession {
-  id: string;
-  status: string;
-  primaryLift: string | null;
-  plannedSets: unknown;
-}
-
-export async function fetchPartnerActiveSession({
-  partnerId,
-}: {
-  partnerId: string;
-}) {
-  const { data, error } = await typedSupabase
-    .from('sessions')
-    .select('id, status, primary_lift, planned_sets')
-    .eq('user_id', partnerId)
-    .eq('status', 'in_progress')
-    .order('created_at', { ascending: false })
-    .maybeSingle();
-
-  if (error) {
-    captureException(error);
-    throw error;
-  }
-
-  if (!data) return null;
-
-  return {
-    id: data.id,
-    status: data.status,
-    primaryLift: data.primary_lift,
-    plannedSets: data.planned_sets,
-  } satisfies PartnerActiveSession;
-}
-
-export function subscribeToPartnerSessions({
-  partnerIds,
-  onUpdate,
-}: {
-  partnerIds: string[];
-  onUpdate: (partnerId: string) => void;
-}) {
-  if (partnerIds.length === 0) return () => {};
-
-  const channel = typedSupabase
-    .channel('partner-sessions')
-    .on(
-      'postgres_changes',
-      {
-        event: '*',
-        schema: 'public',
-        table: 'sessions',
-        filter: `user_id=in.(${partnerIds.join(',')})`,
-      },
-      (payload) => {
-        const userId =
-          (payload.new as Record<string, unknown>)?.user_id as
-            | string
-            | undefined;
-        if (userId) onUpdate(userId);
-      },
-    )
-    .subscribe();
-
-  return () => {
-    typedSupabase.removeChannel(channel);
-  };
-}
-
-// ── Partner video badge ──────────────────────────────────────────────────────
-
-export async function fetchUnseenPartnerVideoCount({
-  sinceTimestamp,
-}: {
-  sinceTimestamp: string | null;
-}) {
-  const {
-    data: { user },
-  } = await typedSupabase.auth.getUser();
-  if (!user) throw new Error('Not authenticated');
-
-  let query = typedSupabase
-    .from('session_videos')
-    .select('id', { count: 'exact', head: true })
-    .eq('user_id', user.id)
-    .not('recorded_by', 'is', null);
-
-  if (sinceTimestamp) {
-    query = query.gt('created_at', sinceTimestamp);
-  }
-
-  const { count, error } = await query;
-
-  if (error) {
-    captureException(error);
-    throw error;
-  }
-
-  return count ?? 0;
-}
-
-export function subscribeToPartnerVideoInserts({
-  onInsert,
-}: {
-  onInsert: () => void;
-}) {
-  const channel = typedSupabase
-    .channel('partner-video-inserts')
-    .on(
-      'postgres_changes',
-      {
-        event: 'INSERT',
-        schema: 'public',
-        table: 'session_videos',
-      },
-      (payload) => {
-        const recordedBy = (payload.new as Record<string, unknown>)
-          ?.recorded_by;
-        if (recordedBy != null) {
-          onInsert();
-        }
-      },
-    )
-    .subscribe();
-
-  return () => {
-    typedSupabase.removeChannel(channel);
   };
 }

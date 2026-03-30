@@ -98,7 +98,7 @@ function buildStyles(colors: ColorScheme) {
       color: colors.textSecondary,
     },
     attributionText: {
-      fontSize: 13,
+      fontSize: typography.sizes.sm,
       color: colors.textSecondary,
       marginTop: 2,
     },

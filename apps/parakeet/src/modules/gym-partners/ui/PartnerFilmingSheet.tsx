@@ -40,7 +40,7 @@ export function PartnerFilmingSheet({
   partnerName: string;
   sessionId: string;
   lift: string;
-  plannedSets: unknown;
+  plannedSets: readonly unknown[];
 }) {
   const { colors } = useTheme();
   const styles = useMemo(() => buildStyles(colors), [colors]);
@@ -258,8 +258,8 @@ function buildStyles(colors: ColorScheme) {
     recordLabel: {
       fontSize: typography.sizes.sm,
       fontWeight: typography.weights.semibold,
-      color: '#fff',
-      backgroundColor: 'rgba(0,0,0,0.5)',
+      color: colors.text,
+      backgroundColor: colors.overlayLight,
       paddingHorizontal: spacing[3],
       paddingVertical: spacing[1],
       borderRadius: radii.sm,
@@ -270,7 +270,7 @@ function buildStyles(colors: ColorScheme) {
       height: 72,
       borderRadius: 36,
       borderWidth: 4,
-      borderColor: '#fff',
+      borderColor: colors.text,
       alignItems: 'center',
       justifyContent: 'center',
     },
@@ -305,7 +305,7 @@ function buildStyles(colors: ColorScheme) {
       fontVariant: ['tabular-nums'],
     },
     doneIcon: {
-      fontSize: 48,
+      fontSize: typography.sizes['5xl'],
       color: colors.success,
     },
     doneText: {

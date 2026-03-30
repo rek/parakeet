@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   StyleSheet,
@@ -44,6 +44,13 @@ export function QrScanSheet({
   const [state, setState] = useState<ScanState>({ type: 'scanning' });
   const processingRef = useRef(false);
 
+  // Auto-close after success
+  useEffect(() => {
+    if (state.type !== 'success') return;
+    const timer = setTimeout(onClose, 2000);
+    return () => clearTimeout(timer);
+  }, [state.type, onClose]);
+
   const handleCodeScanned = useCallback(
     async (codes: Code[]) => {
       if (processingRef.current) return;
@@ -62,8 +69,6 @@ export function QrScanSheet({
           type: 'success',
           inviterName: result.inviterName,
         });
-        // Auto-close after short delay
-        setTimeout(onClose, 2000);
       } catch (err) {
         const message =
           err instanceof Error ? err.message : 'Failed to claim invite';
@@ -71,7 +76,7 @@ export function QrScanSheet({
         setState({ type: 'error', message });
       }
     },
-    [claimInvite, onClose],
+    [claimInvite],
   );
 
   const resetScanner = useCallback(() => {
@@ -203,7 +208,7 @@ function buildStyles(colors: ReturnType<typeof useTheme>['colors']) {
       textAlign: 'center',
     },
     successIcon: {
-      fontSize: 48,
+      fontSize: typography.sizes['5xl'],
       color: colors.success,
     },
     successText: {

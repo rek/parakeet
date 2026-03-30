@@ -1,8 +1,10 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 
+import { captureException } from '@platform/utils/captureException';
+
 import { partnerQueries } from '../data/partner.queries';
-import { subscribeToPartnerVideoInserts } from '../data/partner.repository';
+import { subscribeToPartnerVideoInserts } from '../data/partner-video.repository';
 import {
   getLastSeenPartnerVideoTimestamp,
   setLastSeenPartnerVideoTimestamp,
@@ -15,10 +17,15 @@ export function usePartnerVideoBadge() {
 
   // Load last-seen timestamp from AsyncStorage on mount
   useEffect(() => {
-    getLastSeenPartnerVideoTimestamp().then((ts) => {
-      setLastSeen(ts);
-      setLoaded(true);
-    });
+    getLastSeenPartnerVideoTimestamp()
+      .then((ts) => {
+        setLastSeen(ts);
+        setLoaded(true);
+      })
+      .catch((err) => {
+        captureException(err);
+        setLoaded(true);
+      });
   }, []);
 
   const { data: count } = useQuery({

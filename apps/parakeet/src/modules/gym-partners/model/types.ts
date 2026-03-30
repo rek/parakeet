@@ -21,5 +21,12 @@ export interface PartnerInvite {
   expiresAt: string;
 }
 
+export interface PartnerActiveSession {
+  id: string;
+  status: string;
+  primaryLift: string | null;
+  plannedSets: readonly unknown[];
+}
+
 /** App-level cap on accepted partnerships per user */
 export const MAX_PARTNERS = 5;

@@ -13,24 +13,19 @@ export interface SetSelection {
   cameraAngle: 'side' | 'front';
 }
 
-function deriveSetCount({ plannedSets }: { plannedSets: unknown }) {
-  if (!Array.isArray(plannedSets)) return 0;
-  return plannedSets.length;
-}
-
 export function PartnerSetPicker({
   lift,
   plannedSets,
   onSelect,
 }: {
   lift: string;
-  plannedSets: unknown;
+  plannedSets: readonly unknown[];
   onSelect: (selection: SetSelection) => void;
 }) {
   const { colors } = useTheme();
   const styles = useMemo(() => buildStyles(colors), [colors]);
 
-  const totalSets = deriveSetCount({ plannedSets });
+  const totalSets = plannedSets.length;
   const [selectedSet, setSelectedSet] = useState(1);
   const [angle, setAngle] = useState<'side' | 'front'>('side');
 

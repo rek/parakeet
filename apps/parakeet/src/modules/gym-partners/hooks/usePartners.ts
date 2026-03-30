@@ -50,6 +50,7 @@ export function useClaimInvite() {
         queryKey: partnerQueries.all(),
       });
     },
+    onError: (err: Error) => captureException(err),
   });
 
   return {
@@ -71,6 +72,7 @@ export function useAcceptPartner() {
         queryKey: partnerQueries.all(),
       });
     },
+    onError: (err: Error) => captureException(err),
   });
 
   return { acceptPartner: mutation.mutate, isPending: mutation.isPending };
@@ -87,6 +89,7 @@ export function useDeclinePartner() {
         queryKey: partnerQueries.all(),
       });
     },
+    onError: (err: Error) => captureException(err),
   });
 
   return { declinePartner: mutation.mutate, isPending: mutation.isPending };
@@ -103,6 +106,7 @@ export function useRemovePartner() {
         queryKey: partnerQueries.all(),
       });
     },
+    onError: (err: Error) => captureException(err),
   });
 
   return { removePartner: mutation.mutate, isPending: mutation.isPending };

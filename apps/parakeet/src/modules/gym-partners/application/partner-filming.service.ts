@@ -6,7 +6,7 @@ import {
 import { toJson } from '@platform/supabase';
 import { Video } from 'react-native-compressor';
 
-import { insertPartnerSessionVideo } from '../data/partner.repository';
+import { insertPartnerSessionVideo } from '../data/partner-video.repository';
 
 import { uploadPartnerVideo } from './partner-upload.service';
 

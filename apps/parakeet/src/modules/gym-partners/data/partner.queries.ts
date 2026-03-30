@@ -2,10 +2,10 @@ import { queryOptions } from '@tanstack/react-query';
 
 import {
   fetchAcceptedPartners,
-  fetchPartnerActiveSession,
   fetchPendingIncomingRequests,
-  fetchUnseenPartnerVideoCount,
 } from './partner.repository';
+import { fetchPartnerActiveSession } from './partner-session.repository';
+import { fetchUnseenPartnerVideoCount } from './partner-video.repository';
 
 export const partnerQueries = {
   all: () => ['gym-partners'] as const,

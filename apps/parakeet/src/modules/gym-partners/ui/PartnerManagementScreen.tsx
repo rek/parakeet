@@ -238,10 +238,10 @@ function buildStyles(colors: ColorScheme) {
       letterSpacing: 0.5,
     },
     addButton: {
-      fontSize: 24,
+      fontSize: typography.sizes.xl,
       color: colors.primary,
       fontWeight: typography.weights.bold,
-      lineHeight: 28,
+      lineHeight: typography.sizes['2xl'],
     },
     partnerRow: {
       flexDirection: 'row',

@@ -1,5 +1,10 @@
 // --- Types ---
-export type { GymPartner, PartnerInvite, PartnerStatus } from './model/types';
+export type {
+  GymPartner,
+  PartnerActiveSession,
+  PartnerInvite,
+  PartnerStatus,
+} from './model/types';
 export { PARTNER_STATUSES, MAX_PARTNERS } from './model/types';
 
 // --- State machine ---
