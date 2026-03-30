@@ -91,23 +91,30 @@ nx install-apk parakeet    # Installs the most recent APK from dist/ onto connec
 ### Local development
 
 ```bash
-# Start Expo dev server
-nx start parakeet
+# Recommended: persistent Metro + bridge (stays alive)
+npx nx dev parakeet
 
-# Build & run on Android (auto-detects LAN IP for Supabase)
-nx run-android parakeet
-
-# Or start directly in web mode:
-nx serve parakeet
+# Then in a second terminal, build + install when native deps change:
+npx nx run-android parakeet
 ```
 
-`nx run-android parakeet` auto-updates `EXPO_PUBLIC_SUPABASE_URL_ANDROID` with your LAN IP before launching.
+`nx dev parakeet` bridges USB ports (54321 + 8081) then starts Metro on port 8081. It stays alive — reload the app on the device to reconnect after code changes.
 
-For USB workflow, prefer `adb reverse` with `localhost` Supabase:
+`nx run-android parakeet` builds the native APK, installs it, and starts its own Metro. Use it once after adding native deps or running prebuild, then switch back to `nx dev`.
+
+For Wi-Fi workflow (no USB):
 
 ```bash
-nx bridge parakeet   # adb reverse for ports 54321 + 8081
+# Start Expo dev server (uses LAN IP)
+npx nx start parakeet
 
+# Build & run on Android (auto-detects LAN IP for Supabase)
+npx nx run-android parakeet
+```
+
+For USB workflow with `adb reverse`:
+
+```bash
 # .env.local
 EXPO_PUBLIC_SUPABASE_URL=http://localhost:54321
 # leave EXPO_PUBLIC_SUPABASE_URL_ANDROID unset for USB workflow
