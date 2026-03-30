@@ -44,11 +44,11 @@ export function RepMetricsCard({
             <MetricRow
               label="Depth"
               value={
-                rep.maxDepthCm < 0
-                  ? `${Math.abs(rep.maxDepthCm).toFixed(1)} cm below parallel ✓`
-                  : `${rep.maxDepthCm.toFixed(1)} cm above parallel`
+                rep.maxDepthCm > 0
+                  ? `${rep.maxDepthCm.toFixed(1)} cm below parallel ✓`
+                  : `${Math.abs(rep.maxDepthCm).toFixed(1)} cm above parallel`
               }
-              isGood={rep.maxDepthCm < 0}
+              isGood={rep.maxDepthCm > 0}
               colors={colors}
             />
           )}

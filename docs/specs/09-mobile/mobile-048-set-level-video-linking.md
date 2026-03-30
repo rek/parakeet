@@ -1,42 +1,57 @@
 # mobile-048: Set-Level Video Linking
 
-**Status:** Planned
+**Status:** Phase 1 complete
 **Design:** [set-level-video-linking.md](../../design/set-level-video-linking.md)
 **Depends on:** mobile-046 (video form analysis, all phases)
 **Enables:** mobile-047 (competition readiness — needs per-set weight/RPE)
 
 ## What This Covers
 
-Extend `session_videos` to associate videos with a specific set number. Maintain backward compat — existing videos with `set_number = null` work as "whole lift" videos. Update session screen, analysis screen, coaching context, and comparison to be set-aware.
+Extend `session_videos` to associate videos with a specific set number. `set_number` is required (default 1) — existing rows backfill to 1. Update repository, hook, and screen to be set-aware. Longitudinal queries support both "all videos for lift" and "filter by set number".
 
-## Phase 1 — Data model + repository
+## Phase 1 — Data model + repository + hook wiring
 
-### 1.1 — Migration: add set columns
+### 1.1 — Migration: add set_number
 
-- [ ] `ALTER TABLE session_videos ADD COLUMN set_number integer;` (nullable)
-- [ ] `ALTER TABLE session_videos ADD COLUMN set_weight_grams integer;` (snapshot)
-- [ ] `ALTER TABLE session_videos ADD COLUMN set_reps integer;`
-- [ ] `ALTER TABLE session_videos ADD COLUMN set_rpe numeric(3,1);`
-- [ ] Index: `idx_session_videos_session_lift_set ON session_videos(session_id, lift, set_number)`
-- [ ] Constraint: `chk_set_number_positive CHECK (set_number IS NULL OR set_number > 0)`
+- [x] `ALTER TABLE session_videos ADD COLUMN set_number integer NOT NULL DEFAULT 1`
+- [x] `CHECK (set_number > 0)`
+- [x] Index: `idx_session_videos_session_lift_set_angle ON session_videos(session_id, lift, set_number, camera_angle)`
+- [x] Drop old `idx_session_videos_session_lift_angle`
 
-### 1.2 — Update SessionVideo model type
+### 1.2 — Update supabase/types.ts
 
-- [ ] Add `setNumber: number | null`, `setWeightGrams: number | null`, `setReps: number | null`, `setRpe: number | null`
+- [x] Add `set_number: number` to Row, `set_number?: number` to Insert/Update
 
-### 1.3 — Update video.repository.ts
+### 1.3 — Update SessionVideo model type
 
-- [ ] Update `SessionVideoRow` + `toSessionVideo()` mapper
-- [ ] Update `insertSessionVideo()` — accept optional set fields, include only when non-null
-- [ ] Add `getVideoForSet({ sessionId, lift, setNumber, cameraAngle })` — single video query
-- [ ] Add `getVideosForSessionLift({ sessionId, lift })` — returns all videos ordered by `set_number ASC NULLS FIRST, created_at DESC`
+- [x] Add `setNumber: number`
+
+### 1.4 — Update video.repository.ts
+
+- [x] Use `DbRow<'session_videos'>` instead of hand-written row type
+- [x] Use `fromJson`/`toJson` helpers instead of raw casts
+- [x] `insertSessionVideo()` — accept required `setNumber`, include in insert
+- [x] `getVideoForSessionLift()` — accept required `setNumber`, filter by it
+- [x] `getVideosForLift()` — accept optional `setNumber`, conditionally filter
+
+### 1.5 — Update useVideoAnalysis hook
+
+- [x] Accept `setNumber: number` param
+- [x] Pass to `insertSessionVideo` and `getVideoForSessionLift`
+- [x] Include set number in saved filename
+- [x] Add `setNumber` to dependency arrays
+
+### 1.6 — Update video-analysis screen
+
+- [x] Parse `setNumber` from search params (default 1)
+- [x] Pass to `useVideoAnalysis`
 
 ## Phase 2 — UI: per-set entry on session screen
 
 ### 2.1 — SetVideoIcon component
 
 - [ ] `modules/video-analysis/ui/SetVideoIcon.tsx` — small camera icon, feature-flag gated
-- [ ] Props: sessionId, lift, setNumber, setWeightGrams, setReps, setRpe, isCompleted
+- [ ] Props: sessionId, lift, setNumber, isCompleted
 - [ ] Only renders when isCompleted = true
 - [ ] Navigates to `/session/video-analysis` with set params
 - [ ] Shows filled indicator when video exists for this set
@@ -50,21 +65,19 @@ Extend `session_videos` to associate videos with a specific set number. Maintain
 
 - [ ] `app/(tabs)/session/[sessionId].tsx` — pass `sessionId`, `lift`, `showVideoIcon={true}` to main lift SetRows
 
-## Phase 3 — Analysis screen: set-aware context
+## Phase 3 — Set-level context enrichment
 
-### 3.1 — Parse set params
+### 3.1 — Snapshot set context columns
 
-- [ ] Read `setNumber`, `setWeightGrams`, `setReps`, `setRpe` from search params
-- [ ] Update title: "Squat — Set 3 @ 140kg x 3 (RPE 8)" when set context present
+- [ ] Migration: `set_weight_grams integer`, `set_reps integer`, `set_rpe numeric(3,1)` on session_videos
+- [ ] Update types and repository
 
-### 3.2 — Update useVideoAnalysis
+### 3.2 — Set-aware analysis screen title
 
-- [ ] Accept optional set params, pass through to `insertSessionVideo()`
-- [ ] `loadExisting`: if `setNumber` provided, call `getVideoForSet()` instead
+- [ ] "Squat — Set 3 @ 140kg x 3 (RPE 8)" when set context present
 
 ### 3.3 — Update assembleCoachingContext
 
-- [ ] Add set fields to `FormCoachingContext`
 - [ ] Use `setWeightGrams / 1000` as `weightKg` when present (instead of max-weight heuristic)
 - [ ] Use `setRpe` instead of `sessionRpe` when present
 
@@ -84,21 +97,13 @@ Extend `session_videos` to associate videos with a specific set number. Maintain
 
 ### 4.3 — useSessionVideos hook
 
-- [ ] Fetches all videos for session+lift via `getVideosForSessionLift()`
-
-## Phase 5 — Backward compat + tests
-
-- [ ] Existing videos (set_number = null) display as "General"
-- [ ] `getVideoForSessionLift()` prefers null set_number via `NULLS FIRST`
-- [ ] Coaching context falls back to max-weight heuristic when setNumber is null
-- [ ] Repository tests: insert with set fields, getVideoForSet, ordering
-- [ ] assembleCoachingContext test: set-level weight overrides max-weight heuristic
+- [ ] Fetches all videos for session+lift
 
 ## Sequencing
 
 ```
-Phase 1 (data) → Phase 2 (per-set UI) ──┐
-                 Phase 3 (set-aware)  ───┤→ Phase 4 (comparison) → Phase 5 (tests)
+Phase 1 (data + wiring) ✅ → Phase 2 (per-set UI) ──┐
+                              Phase 3 (set context) ──┤→ Phase 4 (comparison)
 ```
 
 Phases 2 and 3 are independent and can run in parallel.

@@ -22,7 +22,7 @@ function makeAnalysis(reps: Array<{ barDriftCm?: number; forwardLeanDeg?: number
 
 describe('assembleCoachingContext', () => {
   const baseAnalysis = makeAnalysis([
-    { barDriftCm: 3, forwardLeanDeg: 42, maxDepthCm: -4 },
+    { barDriftCm: 3, forwardLeanDeg: 42, maxDepthCm: 4 },
   ]);
 
   it('extracts weight from actual_sets weight_grams', () => {

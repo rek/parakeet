@@ -133,18 +133,19 @@ export function detectBaselineDeviations({
     }
   }
 
-  // Depth — more negative is better (squat only)
+  // Depth — more positive is better (deeper below parallel, squat only)
+  // depth-detector convention: positive depthCm = below parallel
   if (lift === 'squat' && rep.maxDepthCm != null && baseline.avgDepthCm != null) {
     const diff = rep.maxDepthCm - baseline.avgDepthCm;
-    // Negative diff = deeper than usual = better
+    // Positive diff = deeper than usual = better
     if (Math.abs(diff) > 2) {
       deviations.push({
         metric: 'maxDepthCm',
         label: 'Depth',
         currentValue: rep.maxDepthCm,
         baselineValue: baseline.avgDepthCm,
-        zScore: diff, // raw cm diff, not z-score (no SD for depth)
-        direction: diff < 0 ? 'better' : 'worse',
+        zScore: diff,
+        direction: diff > 0 ? 'better' : 'worse',
       });
     }
   }

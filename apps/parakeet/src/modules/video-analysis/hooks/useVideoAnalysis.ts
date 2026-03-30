@@ -19,10 +19,12 @@ const SUPPORTED_LIFTS = ['squat', 'bench', 'deadlift'] as const;
 export function useVideoAnalysis({
   sessionId,
   lift,
+  setNumber,
   cameraAngle = 'side',
 }: {
   sessionId: string;
   lift: string;
+  setNumber: number;
   cameraAngle?: 'side' | 'front';
 }) {
   const [isProcessing, setIsProcessing] = useState(false);
@@ -89,7 +91,7 @@ export function useVideoAnalysis({
     setProgress(0.75);
 
     // 3. Move to app documents directory for persistence across app launches
-    const filename = `video_${sessionId}_${lift}_${Date.now()}.mp4`;
+    const filename = `video_${sessionId}_${lift}_set${setNumber}_${Date.now()}.mp4`;
     const videosDir = new Directory(Paths.document, 'videos');
     if (!videosDir.exists) {
       videosDir.create({ intermediates: true });
@@ -104,6 +106,7 @@ export function useVideoAnalysis({
     const saved = await insertSessionVideo({
       sessionId,
       lift,
+      setNumber,
       cameraAngle: detectedAngle,
       localUri: destUri,
       durationSec,
@@ -121,7 +124,7 @@ export function useVideoAnalysis({
     }
 
     setProgress(1);
-  }, [sessionId, lift, cameraAngle]);
+  }, [sessionId, lift, setNumber, cameraAngle]);
 
   /** Pick video from camera roll → process. */
   const pickAndAnalyze = useCallback(async () => {
@@ -178,14 +181,14 @@ export function useVideoAnalysis({
 
   const loadExisting = useCallback(async () => {
     try {
-      const video = await getVideoForSessionLift({ sessionId, lift });
+      const video = await getVideoForSessionLift({ sessionId, lift, setNumber });
       if (video) setResult(video);
     } catch (err) {
       captureException(err);
       const message = err instanceof Error ? err.message : 'Failed to load video';
       setError(message);
     }
-  }, [sessionId, lift]);
+  }, [sessionId, lift, setNumber]);
 
   return {
     pickAndAnalyze,

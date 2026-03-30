@@ -1022,6 +1022,7 @@ export type Database = {
           local_uri: string
           remote_uri: string | null
           session_id: string
+          set_number: number
           user_id: string
         }
         Insert: {
@@ -1035,6 +1036,7 @@ export type Database = {
           local_uri: string
           remote_uri?: string | null
           session_id: string
+          set_number?: number
           user_id: string
         }
         Update: {
@@ -1048,6 +1050,7 @@ export type Database = {
           local_uri?: string
           remote_uri?: string | null
           session_id?: string
+          set_number?: number
           user_id?: string
         }
         Relationships: [

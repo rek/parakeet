@@ -58,7 +58,7 @@ function makeFrames(count: number, endFrame = standingFrame) {
 
 describe('gradeSquatRep', () => {
   it('passes depth when well below parallel', () => {
-    const rep = makeRep({ maxDepthCm: -5 });
+    const rep = makeRep({ maxDepthCm: 5 });
     const frames = makeFrames(30);
     const verdict = gradeSquatRep({ rep, frames });
     const depth = verdict.criteria.find((c) => c.name === 'depth');
@@ -66,7 +66,7 @@ describe('gradeSquatRep', () => {
   });
 
   it('borderline depth when just at parallel', () => {
-    const rep = makeRep({ maxDepthCm: -1 });
+    const rep = makeRep({ maxDepthCm: 1 });
     const frames = makeFrames(30);
     const verdict = gradeSquatRep({ rep, frames });
     const depth = verdict.criteria.find((c) => c.name === 'depth');
@@ -74,7 +74,7 @@ describe('gradeSquatRep', () => {
   });
 
   it('fails depth when above parallel', () => {
-    const rep = makeRep({ maxDepthCm: 2 });
+    const rep = makeRep({ maxDepthCm: -2 });
     const frames = makeFrames(30);
     const verdict = gradeSquatRep({ rep, frames });
     const depth = verdict.criteria.find((c) => c.name === 'depth');
@@ -98,14 +98,14 @@ describe('gradeSquatRep', () => {
   });
 
   it('overall verdict is red_light when any criterion fails', () => {
-    const rep = makeRep({ maxDepthCm: 3 }); // depth fail
+    const rep = makeRep({ maxDepthCm: -3 }); // above parallel = fail
     const frames = makeFrames(30);
     const verdict = gradeSquatRep({ rep, frames });
     expect(verdict.verdict).toBe('red_light');
   });
 
   it('overall verdict is white_light when all pass', () => {
-    const rep = makeRep({ maxDepthCm: -5 });
+    const rep = makeRep({ maxDepthCm: 5 });
     const frames = makeFrames(30, standingFrame);
     const verdict = gradeSquatRep({ rep, frames });
     expect(verdict.verdict).toBe('white_light');
@@ -201,7 +201,7 @@ describe('gradeBenchRep', () => {
 
 describe('gradeRep dispatcher', () => {
   it('dispatches to squat grader', () => {
-    const rep = makeRep({ maxDepthCm: -5 });
+    const rep = makeRep({ maxDepthCm: 5 });
     const frames = makeFrames(30, standingFrame);
     const verdict = gradeRep({ rep, frames, fps: 30, lift: 'squat' });
     expect(verdict.criteria.some((c) => c.name === 'depth')).toBe(true);
@@ -224,7 +224,7 @@ describe('gradeRep dispatcher', () => {
   it('invariant: every rep gets exactly one verdict', () => {
     const lifts = ['squat', 'bench', 'deadlift'] as const;
     for (const lift of lifts) {
-      const rep = makeRep({ maxDepthCm: -3 });
+      const rep = makeRep({ maxDepthCm: 3 });
       const frames = makeFrames(30, standingFrame);
       const verdict = gradeRep({ rep, frames, fps: 30, lift });
       expect(['white_light', 'red_light', 'borderline']).toContain(verdict.verdict);

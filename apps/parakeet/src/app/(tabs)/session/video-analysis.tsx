@@ -50,10 +50,13 @@ export default function VideoAnalysisScreen() {
   const { colors } = useTheme();
   const styles = useMemo(() => buildStyles(colors), [colors]);
 
-  const { sessionId, lift } = useLocalSearchParams<{
+  const { sessionId, lift, setNumber: setNumberParam } = useLocalSearchParams<{
     sessionId: string;
     lift: string;
+    setNumber: string;
   }>();
+
+  const parsedSetNumber = parseInt(setNumberParam ?? '1', 10) || 1;
 
   const liftLabel =
     LIFT_LABELS[lift as Lift] ?? capitalize(lift ?? 'Lift');
@@ -65,6 +68,7 @@ export default function VideoAnalysisScreen() {
     useVideoAnalysis({
       sessionId: sessionId ?? '',
       lift: lift ?? '',
+      setNumber: parsedSetNumber,
       cameraAngle,
     });
 

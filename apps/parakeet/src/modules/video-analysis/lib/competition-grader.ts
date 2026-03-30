@@ -12,10 +12,11 @@ const CM_PER_UNIT = 243;
 
 function gradeSquatDepth({ rep }: { rep: RepAnalysis }) {
   const depth = rep.maxDepthCm ?? 0;
-  // Negative = below parallel (pass), positive = above (fail)
+  // Positive = below parallel (pass), negative = above (fail)
+  // Matches depth-detector.ts: hipY > kneeY → positive depthCm
   let verdict: CriterionResult['verdict'];
-  if (depth <= -2) verdict = 'pass';
-  else if (depth <= 0) verdict = 'borderline';
+  if (depth >= 2) verdict = 'pass';
+  else if (depth >= 0) verdict = 'borderline';
   else verdict = 'fail';
 
   return {
@@ -25,10 +26,10 @@ function gradeSquatDepth({ rep }: { rep: RepAnalysis }) {
     threshold: 0,
     unit: 'cm',
     message: verdict === 'pass'
-      ? `${Math.abs(depth).toFixed(1)}cm below parallel`
+      ? `${depth.toFixed(1)}cm below parallel`
       : verdict === 'borderline'
-        ? `Borderline depth (${Math.abs(depth).toFixed(1)}cm)`
-        : `${depth.toFixed(1)}cm above parallel — would not pass`,
+        ? `Borderline depth (${depth.toFixed(1)}cm)`
+        : `${Math.abs(depth).toFixed(1)}cm above parallel — would not pass`,
   } satisfies CriterionResult;
 }
 

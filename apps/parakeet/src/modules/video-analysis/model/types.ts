@@ -4,6 +4,7 @@ export interface SessionVideo {
   id: string;
   sessionId: string;
   lift: string;
+  setNumber: number;
   cameraAngle: 'side' | 'front';
   localUri: string;
   remoteUri: string | null;

@@ -273,6 +273,12 @@ Phase 1 + 2 + 3 complete (GH#148). 92 tests, `videoAnalysis` feature flag (Advan
 - [x] mobile-046 3.8: In-app recording — `RecordVideoSheet` with vision-camera + guide overlay
 - [x] mobile-046 3.9: Real-time overlay — `useLivePoseOverlay` (LIVE_STREAM 15fps), `LiveSkeletonOverlay` (SVG skeleton)
 
+### Set-Level Video Linking — [design doc](../design/set-level-video-linking.md) | [spec](09-mobile/mobile-048-set-level-video-linking.md)
+
+Phase 1 complete. Per-set video association (main lifts only).
+
+- [x] mobile-048 1.1–1.6: Phase 1 data + wiring — `set_number integer NOT NULL DEFAULT 1` on `session_videos`; `DbRow<'session_videos'>` proper typing (removed hand-written casts); repository, hook, screen accept `setNumber`; longitudinal queries support optional set filter
+
 ---
 
 ## Planned / Future

@@ -61,14 +61,14 @@ describe('computePersonalBaseline', () => {
             barDriftCm: 2,
             forwardLeanDeg: 40,
             romCm: 50,
-            maxDepthCm: -3 - i,
+            maxDepthCm: 3 + i,
           },
         ],
       }),
     );
 
     const baseline = computePersonalBaseline({ analyses });
-    expect(baseline!.avgDepthCm).toBeCloseTo(-5, 1);
+    expect(baseline!.avgDepthCm).toBeCloseTo(5, 1);
   });
 
   it('returns null depth when no reps have maxDepthCm', () => {
@@ -102,7 +102,7 @@ describe('detectBaselineDeviations', () => {
     avgBarDriftCm: 3,
     avgForwardLeanDeg: 42,
     avgRomCm: 52,
-    avgDepthCm: -4,
+    avgDepthCm: 4,
     avgKneeAngleDeg: null,
     avgHipAngleAtLockoutDeg: null,
     sdBarDriftCm: 1,
@@ -206,7 +206,7 @@ describe('detectBaselineDeviations', () => {
       barDriftCm: 3,
       forwardLeanDeg: 42,
       romCm: 52,
-      maxDepthCm: 1, // above parallel, baseline was -4
+      maxDepthCm: -1, // above parallel (negative), baseline was +4
       faults: [],
     };
 
@@ -229,7 +229,7 @@ describe('detectBaselineDeviations', () => {
       barDriftCm: 3,
       forwardLeanDeg: 42,
       romCm: 52,
-      maxDepthCm: -8, // much deeper than baseline (-4)
+      maxDepthCm: 8, // much deeper than baseline (+4)
       faults: [],
     };
 
@@ -252,7 +252,7 @@ describe('detectBaselineDeviations', () => {
       barDriftCm: 3,
       forwardLeanDeg: 42,
       romCm: 52,
-      maxDepthCm: 10,
+      maxDepthCm: -10,
       faults: [],
     };
 
