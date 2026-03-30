@@ -24,6 +24,7 @@ See [guide/ai-workflow.md](./guide/ai-workflow.md) for the full workflow and whe
 3. [guide/code-style.md](./guide/code-style.md) — TypeScript and React Native conventions
 4. [guide/dev.md](./guide/dev.md) — day-to-day commands
 5. [guide/ai-workflow.md](./guide/ai-workflow.md) — design, plan, implement, validate, wrap up
+6. [guide/react-query-patterns.md](./guide/react-query-patterns.md) — data layer patterns and anti-patterns
 
 ## Feature Navigator
 

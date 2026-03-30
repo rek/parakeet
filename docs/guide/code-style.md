@@ -20,6 +20,7 @@ The 16 rules that matter most — read this, then consult the full guide only as
 13. **Prefer `modules/<feature>/` for new business code** — infra goes in `platform/`, cross-feature in `shared/`
 14. **`FlatList` over `ScrollView`** for lists; use `keyExtractor` + `getItemLayout`
 15. **Accessibility** — add `accessible`, `accessibilityLabel`, `accessibilityRole` to interactive elements
+16. **Barrel exports = public API** — a module's `index.ts` exports only what external consumers need: hooks, UI components, pure functions, and types. Never export raw repository functions (`insertX`, `getX`, `deleteX`) — those are internal implementation details consumed by the module's own hooks. If an external consumer needs data, it uses a hook.
 
 ---
 
@@ -181,48 +182,57 @@ const styles = StyleSheet.create({
 
 ## Hooks
 
-### Custom Hook Pattern
+### Data Fetching Hooks
+
+Server state is managed by React Query, not manual `useState`/`useEffect`. See [react-query-patterns.md](./react-query-patterns.md) for the full reference.
+
+**Query definitions** live in `modules/*/data/*.queries.ts` using `queryOptions`:
 
 ```typescript
-// useFeature.ts
-import { useEffect, useState } from 'react';
+// modules/program/data/program.queries.ts
+import { queryOptions, skipToken } from '@tanstack/react-query'
+import { getActiveProgram } from '../application/program.service'
 
-export const useFeature = (
-  id: string
-): {
-  data: Data | null;
-  loading: boolean;
-  error: Error | null;
-  refetch: () => void;
-} => {
-  const [data, setData] = useState<Data | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<Error | null>(null);
-
-  const fetchData = async () => {
-    try {
-      setLoading(true);
-      const result = await api.fetch(id);
-      setData(result);
-    } catch (err) {
-      setError(err as Error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchData();
-  }, [id]);
-
-  return {
-    data,
-    loading,
-    error,
-    refetch: fetchData,
-  };
-};
+export const programQueries = {
+  all:    () => ['program'] as const,
+  active: (userId: string | undefined) => queryOptions({
+    queryKey: [...programQueries.all(), 'active', userId] as const,
+    queryFn:  userId ? () => getActiveProgram(userId) : skipToken,
+  }),
+}
 ```
+
+**Hooks** wrap `queryOptions` only when they add real logic (auth, aggregation, config):
+
+```typescript
+// modules/program/hooks/useActiveProgram.ts
+import { useQuery } from '@tanstack/react-query'
+import { useAuth } from '@modules/auth'
+import { programQueries } from '../data/program.queries'
+
+export function useActiveProgram() {
+  const { user } = useAuth()
+  return useQuery(programQueries.active(user?.id))
+}
+```
+
+**Mutations** use `useMutation` with invalidation:
+
+```typescript
+import { useMutation, useQueryClient } from '@tanstack/react-query'
+
+export function useUpdateProfile() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: updateProfile,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: profileQueries.all() })
+    },
+  })
+}
+```
+
+**When to skip the hook**: if it would just be `useQuery(someQueries.detail(id))` with no extras, call `queryOptions` directly from the component.
 
 ---
 
@@ -362,39 +372,21 @@ apps/parakeet/src/modules/program/
 
 ## Async Operations
 
-### Promise Handling
+### Server State (data fetching)
+
+Use React Query — not manual `useState`/`useEffect`. Loading, error, and data states come from `useQuery`/`useMutation`. See [react-query-patterns.md](./react-query-patterns.md).
+
+### Client-Side Async (non-server)
+
+For operations that aren't server state (e.g., AsyncStorage writes, local file I/O), use try/catch with `captureException`:
 
 ```typescript
-// ✅ Good - with proper error handling
-const fetchUser = async (id: string): Promise<User> => {
+const handleExport = async () => {
   try {
-    const response = await api.get(`/users/${id}`);
-    return response.data;
-  } catch (error) {
-    if (error instanceof ApiError) {
-      throw new Error(`Failed to fetch user: ${error.message}`);
-    }
-    throw error;
-  }
-};
-```
-
-### Loading States
-
-```typescript
-const [loading, setLoading] = useState(false);
-const [error, setError] = useState<Error | null>(null);
-
-const handleSubmit = async () => {
-  setLoading(true);
-  setError(null);
-
-  try {
-    await submitData();
+    await storage.setItem(KEY, JSON.stringify(data));
   } catch (err) {
-    setError(err as Error);
-  } finally {
-    setLoading(false);
+    captureException(err);
+    Alert.alert('Export failed');
   }
 };
 ```

@@ -23,13 +23,71 @@ Canonical architecture reference for this repo.
 `modules/<feature>/`
 
 - `application/` - orchestration/use-cases
-- `data/` - repositories/persistence boundaries
+- `data/` - repositories (`*.repository.ts`) and query definitions (`*.queries.ts`)
 - `hooks/` - feature hooks
 - `lib/` - module public utilities/contracts
 - `model/` - feature-local model/types
 - `ui/` - feature-scoped React components, presentation constants, and styles
 - `utils/` - pure functions extracted from components (testable, no React deps)
 - `index.ts` - module public API
+
+## Data Layer
+
+Data flows through four layers. Each has a single responsibility.
+
+```
+Component / Screen
+  └→ Hook (useQuery / useMutation + auth/aggregation glue)
+       └→ Service (orchestration, business rules, cross-module calls)
+            └→ Repository (Supabase queries, normalization)
+                 └→ Supabase Client
+```
+
+### Where things live
+
+| File | Location | Responsibility |
+|------|----------|---------------|
+| `*.repository.ts` | `modules/*/data/` | Supabase queries, row normalization, type parsing. **Private** to the module — never exported via `index.ts`. |
+| `*.queries.ts` | `modules/*/data/` | `queryOptions` factories (key + queryFn co-located). Exported via module `index.ts`. |
+| `*.service.ts` | `modules/*/application/` | Orchestration: coordinates repositories, applies business rules, calls other module services. |
+| `use*.ts` | `modules/*/hooks/` | Thin React Query wrappers. Only exists when it adds logic beyond the `queryOptions` — e.g. `useAuth()`, multi-query aggregation, `select`, `refetchInterval`. |
+
+### Query definitions (`*.queries.ts`)
+
+Each module owns its query keys and functions via `queryOptions` factories:
+
+```ts
+// modules/program/data/program.queries.ts
+import { queryOptions } from '@tanstack/react-query'
+import { getActiveProgram } from '../application/program.service'
+
+export const programQueries = {
+  all:    () => ['program'] as const,
+  active: (userId: string) => queryOptions({
+    queryKey: [...programQueries.all(), 'active', userId] as const,
+    queryFn:  () => getActiveProgram(userId),
+  }),
+}
+```
+
+These replace the centralized `qk` key registry in `platform/query/keys.ts` (legacy — still used in existing code, but new code should define queries in the module's `data/` folder).
+
+### When a hook earns its existence
+
+A hook is justified when it adds **real logic** beyond what `queryOptions` provides:
+
+- Resolves auth context (`useAuth()` → userId)
+- Aggregates multiple queries into one return shape
+- Adds per-use-case config (`select`, `refetchInterval`, `placeholderData`)
+- Wraps `useMutation` with invalidation + error handling
+
+If a hook is just `useQuery(someQueryOptions)` with no extras, call `queryOptions` directly from the component instead.
+
+### Platform query infrastructure
+
+`platform/query/` owns the `QueryClient`, default options (`staleTime`, `gcTime`, `retry`), and the legacy `qk` key registry. It must not contain feature-specific query definitions.
+
+See [react-query-patterns.md](./react-query-patterns.md) for the full patterns reference.
 
 ## Import Boundaries
 

@@ -15,10 +15,18 @@ Each module: `application/` | `data/` | `hooks/` | `lib/` | `model/` | `ui/` | `
 - If a `useMemo` does non-trivial domain logic, extract to a named pure function.
 - If a component has its own `useState`, it's a component boundary — extract it.
 
+## Data Layer
+
+Server state is managed by React Query. See [docs/guide/react-query-patterns.md](../../docs/guide/react-query-patterns.md) and [docs/guide/project-organization.md](../../docs/guide/project-organization.md#data-layer) for full reference.
+
+- **New code**: define `queryOptions` factories in `modules/*/data/*.queries.ts` — key and queryFn co-located.
+- **Existing code**: uses centralized `qk` helper from `@platform/query/keys.ts` (legacy, migrate when touched).
+- No raw query key arrays — use `queryOptions` factories or `qk` helper.
+- Every mutation must `invalidateQueries` for affected query keys.
+- Hooks exist only when they add auth, aggregation, or config beyond `queryOptions`.
+
 ## Critical Invariants
 
-- Query keys must use the canonical `qk` helper from `@platform/query` — no raw arrays.
-- Every mutation must `invalidateQueries` for affected query keys.
 - JSON parsing belongs in `modules/*/data/` codecs, not in screens.
 - AsyncStorage writes in event handlers must be `await`ed with try/catch + `captureException`.
 - `@ai-sdk/openai` version mismatch: app has v1.x, engine has v3.x. Import `JIT_MODEL` from `@parakeet/training-engine`.
