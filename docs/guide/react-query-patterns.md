@@ -266,4 +266,4 @@ Rule of thumb: `initialData` for seeding from other queries, `placeholderData` f
 | Use `onError` on individual queries for toasts | Use global `QueryCache.onError` |
 | Disable `refetchOnWindowFocus` | Embrace it — it's the stale-while-revalidate UX |
 | Optimize renders before profiling | Fix slow renders before reducing re-renders |
-| Wrap every `useQuery` in a custom hook | Use `queryOptions` directly unless the hook adds real logic |
+| Import `@tanstack/react-query` in screens | Always wrap in a module hook — screens are composition only |

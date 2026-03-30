@@ -23,7 +23,8 @@ Server state is managed by React Query. See [docs/guide/react-query-patterns.md]
 - **Existing code**: uses centralized `qk` helper from `@platform/query/keys.ts` (legacy, migrate when touched).
 - No raw query key arrays — use `queryOptions` factories or `qk` helper.
 - Every mutation must `invalidateQueries` for affected query keys.
-- Hooks exist only when they add auth, aggregation, or config beyond `queryOptions`.
+- Screens (`app/`) must never import `@tanstack/react-query` — all `useQuery`/`useMutation`/`useQueryClient` lives in module hooks.
+- Every query and mutation needs a module hook, even trivial wrappers — the boundary matters more than the boilerplate.
 
 ## Critical Invariants
 

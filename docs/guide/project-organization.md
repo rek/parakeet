@@ -81,7 +81,7 @@ A hook is justified when it adds **real logic** beyond what `queryOptions` provi
 - Adds per-use-case config (`select`, `refetchInterval`, `placeholderData`)
 - Wraps `useMutation` with invalidation + error handling
 
-If a hook is just `useQuery(someQueryOptions)` with no extras, call `queryOptions` directly from the component instead.
+If a hook is just `useQuery(someQueryOptions)` with no extras, it still earns its existence — screens must never import from `@tanstack/react-query` directly. Even trivial wrappers enforce the boundary that all data fetching lives in modules.
 
 ### Platform query infrastructure
 

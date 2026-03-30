@@ -232,7 +232,7 @@ export function useUpdateProfile() {
 }
 ```
 
-**When to skip the hook**: if it would just be `useQuery(someQueries.detail(id))` with no extras, call `queryOptions` directly from the component.
+**Screen boundary**: screens (`app/`) must never import `@tanstack/react-query`. Even a trivial `useQuery` wrapper earns its existence as a module hook — it enforces that all data fetching lives in `modules/`.
 
 ---
 
