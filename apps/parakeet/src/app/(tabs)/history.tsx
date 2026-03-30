@@ -21,13 +21,16 @@ import {
   buildVolumeChartData,
   getPerformanceTrends,
   getTrendConfig,
-  getWeeklySetsPerLift,
   historyQueries,
   MIN_CHART_OPACITY,
 } from '@modules/history';
 import type { PerformanceTrend } from '@modules/history';
-import { listPrograms } from '@modules/program';
-import { formatSessionDisplay, getCompletedSessions } from '@modules/session';
+import { programQueries } from '@modules/program';
+import {
+  formatSessionDisplay,
+  getCompletedSessions,
+  sessionQueries,
+} from '@modules/session';
 import type { Lift } from '@parakeet/shared-types';
 import { LIFT_LABELS } from '@shared/constants';
 import { formatDate, formatTime } from '@shared/utils/date';
@@ -73,24 +76,15 @@ export default function HistoryScreen() {
   });
 
   const sessionsQuery = useQuery({
-    queryKey: ['sessions', 'completed', user?.id] as const,
-    queryFn: () => getCompletedSessions(user!.id, 0, 20),
-    enabled: !!user?.id,
+    ...sessionQueries.completed(user?.id, 0, 20),
   });
 
   const programsQuery = useQuery({
-    queryKey: ['programs', 'previous', user?.id] as const,
-    queryFn: async () => {
-      const all = await listPrograms(user!.id);
-      return (all ?? []).filter((p) => p.status !== 'active');
-    },
-    enabled: !!user?.id,
+    ...programQueries.inactive(user?.id),
   });
 
   const volumeQuery = useQuery({
-    queryKey: ['volume', 'weekly', user?.id] as const,
-    queryFn: () => getWeeklySetsPerLift(user!.id, 8),
-    enabled: !!user?.id,
+    ...historyQueries.weeklySetsPerLift(user?.id, 8),
   });
 
   const styles = useMemo(

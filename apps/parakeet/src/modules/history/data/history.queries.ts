@@ -5,6 +5,7 @@ import {
   getPerformanceByLift,
   getPerformanceTrends,
   getRecentLiftHistory,
+  getWeeklySetsPerLift,
 } from '../lib/performance';
 
 export const historyQueries = {
@@ -32,5 +33,22 @@ export const historyQueries = {
         userId && lift
           ? () => getPerformanceByLift(userId, lift as Lift)
           : skipToken,
+    }),
+
+  liftHistoryPreview: (userId: string | undefined, lift: string | undefined) =>
+    queryOptions({
+      queryKey: ['liftHistory', userId, lift, 'preview'] as const,
+      queryFn:
+        userId && lift
+          ? () => getRecentLiftHistory(userId, lift as Lift, 1)
+          : skipToken,
+    }),
+
+  weeklySetsPerLift: (userId: string | undefined, weeks: number) =>
+    queryOptions({
+      queryKey: ['volume', 'weekly', userId, weeks] as const,
+      queryFn: userId
+        ? () => getWeeklySetsPerLift(userId, weeks)
+        : skipToken,
     }),
 };

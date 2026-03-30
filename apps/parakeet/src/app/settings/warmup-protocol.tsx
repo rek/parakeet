@@ -11,7 +11,7 @@ import {
 
 import { useAuth } from '@modules/auth';
 import { profileQueries } from '@modules/profile';
-import { getCurrentOneRmKg } from '@modules/program';
+import { programQueries } from '@modules/program';
 import {
   estimateWorkingWeight,
   generateWarmupSets,
@@ -428,16 +428,7 @@ export default function WarmupProtocolScreen() {
   }, [protocols, warmupData]);
 
   const { data: maxes } = useQuery({
-    queryKey: ['maxes', 'all', user?.id],
-    queryFn: async () => {
-      const [squat, bench, deadlift] = await Promise.all([
-        getCurrentOneRmKg(user!.id, 'squat'),
-        getCurrentOneRmKg(user!.id, 'bench'),
-        getCurrentOneRmKg(user!.id, 'deadlift'),
-      ]);
-      return { squat: squat ?? 0, bench: bench ?? 0, deadlift: deadlift ?? 0 };
-    },
-    enabled: !!user?.id,
+    ...programQueries.maxes.combined(user?.id),
   });
 
   async function handleSaveLift(lift: Lift) {

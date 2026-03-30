@@ -11,12 +11,11 @@ import {
 
 import { useAuth } from '@modules/auth';
 import { formulaQueries } from '@modules/formula';
-import { getRecentLiftHistory } from '@modules/history';
+import { historyQueries } from '@modules/history';
 import { computeRpeAdjustmentNote } from '@modules/jit';
 import {
   calculateSets,
   determineCurrentWeek,
-  getCurrentOneRmKg,
   groupByWeek,
   updateProgramStatus,
   useActiveProgram,
@@ -182,8 +181,7 @@ export default function ProgramScreen() {
   const nextLift = todaySession?.primary_lift as Lift | undefined;
 
   const { data: oneRmKg } = useQuery({
-    queryKey: ['maxes', user?.id, nextLift, '1rm'],
-    queryFn: () => getCurrentOneRmKg(user!.id, nextLift!),
+    ...programQueries.maxes.byLift(user?.id, nextLift),
     enabled: isUnending && !!user?.id && !!nextLift,
     staleTime: 60_000,
   });
@@ -195,8 +193,7 @@ export default function ProgramScreen() {
   });
 
   const { data: liftHistory } = useQuery({
-    queryKey: ['liftHistory', user?.id, nextLift, 'preview'],
-    queryFn: () => getRecentLiftHistory(user!.id, nextLift!, 1),
+    ...historyQueries.liftHistoryPreview(user?.id, nextLift),
     enabled: isUnending && !!user?.id && !!nextLift,
     staleTime: 60_000,
   });

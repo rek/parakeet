@@ -3,6 +3,7 @@ import { queryOptions, skipToken } from '@tanstack/react-query';
 import {
   findTodaySession,
   findTodaySessions,
+  getCompletedSessions,
   getInProgressSession,
   getSession,
   getSessionLog,
@@ -40,4 +41,21 @@ export const sessionQueries = {
       queryKey: [...sessionQueries.all(), 'in-progress', userId] as const,
       queryFn: userId ? () => getInProgressSession(userId) : skipToken,
     }),
+
+  completed: (userId: string | undefined, offset: number, limit: number) =>
+    queryOptions({
+      queryKey: [
+        ...sessionQueries.all(),
+        'completed',
+        userId,
+        offset,
+        limit,
+      ] as const,
+      queryFn: userId
+        ? () => getCompletedSessions(userId, offset, limit)
+        : skipToken,
+    }),
+
+  motivationalMessage: (sessionIds: string[]) =>
+    [...sessionQueries.all(), 'motivational-message', ...sessionIds] as const,
 };

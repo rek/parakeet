@@ -21,7 +21,7 @@ import {
   initDraft,
 } from '@modules/formula';
 import type { BlockKey, DraftConfig, RowDraft } from '@modules/formula';
-import { getActiveProgram, getCurrentOneRmKg, programQueries } from '@modules/program';
+import { programQueries } from '@modules/program';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -479,9 +479,7 @@ export default function FormulaEditorScreen() {
   });
 
   const { data: oneRmKg = 0 } = useQuery({
-    queryKey: ['maxes', 'squat-1rm', user?.id],
-    queryFn: () => getCurrentOneRmKg(user!.id, 'squat'),
-    enabled: !!user?.id,
+    ...programQueries.maxes.byLift(user?.id, 'squat'),
     select: (v) => v ?? 0,
   });
 

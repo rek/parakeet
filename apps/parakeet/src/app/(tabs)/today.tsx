@@ -465,7 +465,7 @@ function WorkoutDoneCard({
     isLoading,
     error,
   } = useQuery({
-    queryKey: ['motivational-message', ...sessionIds],
+    queryKey: sessionQueries.motivationalMessage(sessionIds),
     queryFn: async () => {
       const ctx = await fetchMotivationalContext(
         sessions,

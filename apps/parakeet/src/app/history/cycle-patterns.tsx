@@ -11,7 +11,7 @@ import {
   MIN_CYCLES_FOR_PATTERNS,
   PHASE_BAR_FILL,
 } from '@modules/cycle-tracking';
-import { getCompletedSessions } from '@modules/session';
+import { sessionQueries } from '@modules/session';
 import { useQuery } from '@tanstack/react-query';
 import { router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -108,9 +108,7 @@ export default function CyclePatternsScreen() {
   const { user } = useAuth();
 
   const { data: sessions, isLoading } = useQuery({
-    queryKey: ['sessions', 'completed', user?.id, 'all'],
-    queryFn: () => getCompletedSessions(user!.id, 0, 200),
-    enabled: !!user?.id,
+    ...sessionQueries.completed(user?.id, 0, 200),
   });
 
   const phasedSessions = (sessions ?? []).filter((s) => s.cycle_phase);

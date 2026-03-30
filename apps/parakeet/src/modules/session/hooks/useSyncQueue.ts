@@ -67,13 +67,12 @@ export function useSyncQueue() {
             await queryClient.invalidateQueries({
               queryKey: sessionQueries.all(),
             });
-            // Use prefix keys matching historyQueries.all() and achievementQueries.all()
-            // (direct imports would create circular deps: session ← achievements ← session)
+            // Prefix keys — can't import module queries (circular: session → achievements → session)
             await queryClient.invalidateQueries({
-              queryKey: ['performance'] as const,
+              queryKey: ['performance'],
             });
             await queryClient.invalidateQueries({
-              queryKey: ['achievements'] as const,
+              queryKey: ['achievements'],
             });
           }
         } catch (err) {
