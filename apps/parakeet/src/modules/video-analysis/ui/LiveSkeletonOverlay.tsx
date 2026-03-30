@@ -1,6 +1,7 @@
 import { StyleSheet } from 'react-native';
 import Svg, { Circle, Line } from 'react-native-svg';
 
+import type { ColorScheme } from '../../../theme';
 import type { LiveLandmark } from '../hooks/useLivePoseOverlay';
 import { SKELETON_CONNECTIONS } from '../hooks/useLivePoseOverlay';
 
@@ -16,10 +17,12 @@ export function LiveSkeletonOverlay({
   landmarks,
   width,
   height,
+  colors,
 }: {
   landmarks: LiveLandmark[];
   width: number;
   height: number;
+  colors: ColorScheme;
 }) {
   if (width === 0 || height === 0) return null;
 
@@ -30,7 +33,6 @@ export function LiveSkeletonOverlay({
       style={StyleSheet.absoluteFill}
       pointerEvents="none"
     >
-      {/* Skeleton lines */}
       {SKELETON_CONNECTIONS.map(([a, b], i) => {
         const la = landmarks[a];
         const lb = landmarks[b];
@@ -48,14 +50,13 @@ export function LiveSkeletonOverlay({
             y1={la.y * height}
             x2={lb.x * width}
             y2={lb.y * height}
-            stroke="#14B8A6"
+            stroke={colors.info}
             strokeWidth={2}
             opacity={0.8}
           />
         );
       })}
 
-      {/* Landmark dots — only key joints */}
       {landmarks.map((lm, i) => {
         if (lm.visibility < MIN_VISIBILITY) return null;
         return (
@@ -64,7 +65,7 @@ export function LiveSkeletonOverlay({
             cx={lm.x * width}
             cy={lm.y * height}
             r={LANDMARK_RADIUS}
-            fill="#14B8A6"
+            fill={colors.info}
             opacity={0.9}
           />
         );

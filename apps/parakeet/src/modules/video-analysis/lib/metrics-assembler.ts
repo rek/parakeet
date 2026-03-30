@@ -6,11 +6,9 @@ import { computeForwardLean, computeHipAngle, computeKneeAngle } from './angle-c
 import { gradeRep } from './competition-grader';
 import { detectSquatDepth } from './depth-detector';
 import { detectFaults, findBottomFrame } from './fault-detector';
-import type { PoseFrame } from './pose-types';
+import { CM_PER_UNIT, type PoseFrame } from './pose-types';
 
 const ANALYSIS_VERSION = 1;
-// Approx cm per normalized unit (170cm person filling 70% of frame height)
-const CM_PER_UNIT = 243;
 
 /**
  * Run the full video analysis pipeline on a sequence of pose frames.

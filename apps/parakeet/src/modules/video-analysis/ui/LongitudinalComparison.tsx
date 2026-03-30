@@ -8,8 +8,8 @@ import { radii, spacing, typography } from '../../../theme';
 import type { ColorScheme } from '../../../theme';
 import type { SessionVideo } from '../model/types';
 
-/** Colors for overlaid paths — most recent is brightest. */
-const PATH_COLORS = ['#8B5CF6', '#6D28D9', '#5B21B6', '#4C1D95', '#3B0764'];
+/** Opacity levels for overlaid historical paths — most recent is brightest. */
+const PATH_OPACITIES = [0.7, 0.55, 0.4, 0.3, 0.2];
 
 /**
  * Overlays bar paths from multiple sessions on a single SVG canvas for
@@ -60,7 +60,7 @@ export function LongitudinalComparison({
 
   // Collect all bar paths — each video's rep 1 path for comparison
   const historicalPaths = videosWithAnalysis
-    .slice(0, PATH_COLORS.length)
+    .slice(0, PATH_OPACITIES.length)
     .map((v) => ({
       date: v.createdAt.slice(0, 10),
       path: v.analysis!.reps[0]?.barPath ?? [],
@@ -85,9 +85,9 @@ export function LongitudinalComparison({
                 key={hp.date}
                 points={hp.path.map((p) => `${p.x},${p.y}`).join(' ')}
                 fill="none"
-                stroke={PATH_COLORS[i] ?? PATH_COLORS[PATH_COLORS.length - 1]}
+                stroke={colors.primary}
                 strokeWidth={0.004}
-                opacity={0.5}
+                opacity={PATH_OPACITIES[i] ?? 0.2}
               />
             ) : null,
           )}
@@ -115,7 +115,7 @@ export function LongitudinalComparison({
               <View
                 style={[
                   styles.legendDot,
-                  { backgroundColor: PATH_COLORS[0], opacity: 0.5 },
+                  { backgroundColor: colors.primary, opacity: 0.5 },
                 ]}
               />
               <Text style={styles.legendText}>Previous</Text>

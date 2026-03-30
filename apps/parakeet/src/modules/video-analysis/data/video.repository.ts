@@ -1,11 +1,31 @@
+import {
+  VideoAnalysisResultSchema,
+  FormCoachingResultSchema,
+} from '@parakeet/shared-types';
 import type { VideoAnalysisResult, FormCoachingResult } from '@parakeet/shared-types';
 import type { DbRow } from '@platform/supabase';
-import { fromJson, toJson, typedSupabase } from '@platform/supabase';
+import { toJson, typedSupabase } from '@platform/supabase';
 import { captureException } from '@platform/utils/captureException';
 
 import type { SessionVideo } from '../model/types';
 
 type SessionVideoRow = DbRow<'session_videos'>;
+
+function parseAnalysis(raw: unknown): VideoAnalysisResult | null {
+  if (raw == null) return null;
+  const result = VideoAnalysisResultSchema.safeParse(raw);
+  if (result.success) return result.data;
+  captureException(new Error(`Invalid analysis JSON: ${result.error.message}`));
+  return null;
+}
+
+function parseCoaching(raw: unknown): FormCoachingResult | null {
+  if (raw == null) return null;
+  const result = FormCoachingResultSchema.safeParse(raw);
+  if (result.success) return result.data;
+  captureException(new Error(`Invalid coaching JSON: ${result.error.message}`));
+  return null;
+}
 
 function toSessionVideo(row: SessionVideoRow): SessionVideo {
   return {
@@ -17,8 +37,8 @@ function toSessionVideo(row: SessionVideoRow): SessionVideo {
     localUri: row.local_uri,
     remoteUri: row.remote_uri,
     durationSec: row.duration_sec,
-    analysis: fromJson<VideoAnalysisResult | null>(row.analysis),
-    coachingResponse: fromJson<FormCoachingResult | null>(row.coaching_response),
+    analysis: parseAnalysis(row.analysis),
+    coachingResponse: parseCoaching(row.coaching_response),
     createdAt: row.created_at,
   };
 }

@@ -2,6 +2,7 @@ import { FormCoachingResultSchema } from '@parakeet/shared-types';
 import type { FormCoachingResult } from '@parakeet/shared-types';
 import { generateText, Output } from 'ai';
 
+import { abortAfter } from '../ai/abort-timeout';
 import { CYCLE_REVIEW_MODEL } from '../ai/models';
 import { FORM_COACHING_SYSTEM_PROMPT } from '../ai/prompts';
 
@@ -49,6 +50,7 @@ export async function generateFormCoaching({
     output: Output.object({ schema: FormCoachingResultSchema }),
     system: FORM_COACHING_SYSTEM_PROMPT,
     prompt: JSON.stringify(context),
+    abortSignal: abortAfter(30000),
   });
 
   if (!output) throw new Error('LLM did not return valid form coaching');

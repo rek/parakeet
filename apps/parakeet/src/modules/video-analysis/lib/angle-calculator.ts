@@ -1,6 +1,6 @@
 import type { BarPathPoint } from '@parakeet/shared-types';
 
-import { LANDMARK, type PoseLandmark, type PoseFrame } from './pose-types';
+import { CM_PER_UNIT, LANDMARK, type PoseLandmark, type PoseFrame } from './pose-types';
 
 /**
  * Compute the angle at vertex `b` formed by the ray b→a and the ray b→c.
@@ -144,9 +144,6 @@ export function computeElbowAngle({ frame }: { frame: PoseFrame }) {
 
   return (leftAngle + rightAngle) / 2;
 }
-
-/** Approx cm per normalized unit (170cm person filling 70% of frame height). */
-const CM_PER_UNIT = 243;
 
 /**
  * Compute frame-to-frame bar Y velocity from a bar path.

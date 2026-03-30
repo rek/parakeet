@@ -245,7 +245,7 @@ function buildStyles(colors: ColorScheme) {
     permissionButtonText: {
       fontSize: typography.sizes.md,
       fontWeight: typography.weights.semibold,
-      color: '#FFFFFF',
+      color: colors.textInverse,
     },
   });
 }

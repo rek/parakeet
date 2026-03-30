@@ -1,13 +1,4 @@
-import { LANDMARK, type PoseFrame } from './pose-types';
-
-/**
- * Approximate cm-per-normalized-unit conversion factor.
- *
- * Assumes a ~170cm person fills roughly 70% of frame height:
- *   170cm / 0.7 ≈ 243cm per normalized unit.
- * This is a Phase 1 approximation — sufficient for pass/fail depth coaching.
- */
-const CM_PER_NORMALIZED_UNIT = 243;
+import { CM_PER_UNIT, LANDMARK, type PoseFrame } from './pose-types';
 
 /**
  * Detect squat depth by comparing hip Y to knee Y.
@@ -29,7 +20,7 @@ export function detectSquatDepth({ frame }: { frame: PoseFrame }) {
 
   const belowParallel = hipY > kneeY;
   // hipY - kneeY is positive when hip is lower than knee (below parallel)
-  const depthCm = (hipY - kneeY) * CM_PER_NORMALIZED_UNIT;
+  const depthCm = (hipY - kneeY) * CM_PER_UNIT;
 
   return { belowParallel, depthCm };
 }

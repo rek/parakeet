@@ -24,3 +24,10 @@ export const LANDMARK = {
   LEFT_ANKLE: 27,
   RIGHT_ANKLE: 28,
 } as const;
+
+/**
+ * Approximate cm per normalized MediaPipe coordinate unit.
+ * Assumes ~170cm person filling 70% of frame height: 170 / 0.7 ≈ 243.
+ * Phase 1 approximation — sufficient for form coaching thresholds.
+ */
+export const CM_PER_UNIT = 243;
