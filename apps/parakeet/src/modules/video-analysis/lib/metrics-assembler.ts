@@ -7,10 +7,12 @@ import {
   type StrategyName,
 } from './analysis-strategy';
 import { computeForwardLean, computeHipAngle, computeKneeAngle } from './angle-calculator';
+import { computeConcentricVelocity, computeVelocityLoss, estimateRirFromVelocityLoss } from './bar-velocity';
 import { detectSquatDepth } from './depth-detector';
 import { CM_PER_UNIT, type PoseFrame } from './pose-types';
+import { computeRepTempo } from './rep-tempo';
 
-const ANALYSIS_VERSION = 1;
+const ANALYSIS_VERSION = 2;
 
 /**
  * Run the full video analysis pipeline on a sequence of pose frames.
@@ -95,6 +97,12 @@ export function assembleAnalysis({
       repContext: { repPath, barDrift: barDriftNormalized, bottomFrame },
     });
 
+    // Bar velocity: mean concentric velocity from wrist Y displacement
+    const meanConcentricVelocityCmS = computeConcentricVelocity({ repPath, fps }) ?? undefined;
+
+    // Tempo: eccentric/concentric phase durations
+    const tempo = computeRepTempo({ repPath, fps });
+
     const repAnalysis = {
       repNumber: index + 1,
       startFrame: safeStart,
@@ -106,6 +114,10 @@ export function assembleAnalysis({
       romCm,
       kneeAngleDeg: kneeAngleAtMid,
       hipAngleAtLockoutDeg: hipAngleAtEnd,
+      meanConcentricVelocityCmS,
+      concentricDurationSec: tempo?.concentricDurationSec,
+      eccentricDurationSec: tempo?.eccentricDurationSec,
+      tempoRatio: tempo?.tempoRatio,
       faults,
     };
 
@@ -115,8 +127,22 @@ export function assembleAnalysis({
     return { ...repAnalysis, verdict };
   });
 
+  // Compute velocity loss % and estimated RiR across all reps
+  const velocities = reps.map((r) => r.meanConcentricVelocityCmS ?? null);
+  const velocityLosses = computeVelocityLoss({ velocities });
+
+  const repsWithVelocity = reps.map((r, i) => ({
+    ...r,
+    velocityLossPct: velocityLosses[i] != null
+      ? Math.round(velocityLosses[i]! * 10) / 10
+      : undefined,
+    estimatedRir: estimateRirFromVelocityLoss({
+      velocityLossPct: velocityLosses[i],
+    }) ?? undefined,
+  }));
+
   return {
-    reps,
+    reps: repsWithVelocity,
     fps,
     cameraAngle: 'side' as const,
     analysisVersion: ANALYSIS_VERSION,

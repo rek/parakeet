@@ -47,6 +47,14 @@ export const RepAnalysisSchema = z.object({
   romCm: z.number().optional(),
   kneeAngleDeg: z.number().optional(),
   hipAngleAtLockoutDeg: z.number().optional(),
+  // Bar velocity (from wrist landmark Y displacement per frame)
+  meanConcentricVelocityCmS: z.number().optional(),
+  velocityLossPct: z.number().optional(),
+  estimatedRir: z.number().optional(),
+  // Tempo (concentric/eccentric phase durations)
+  concentricDurationSec: z.number().optional(),
+  eccentricDurationSec: z.number().optional(),
+  tempoRatio: z.number().optional(),
   faults: z.array(FormFaultSchema),
   verdict: RepVerdictSchema.optional(),
 });
