@@ -1,9 +1,61 @@
 # Video Analysis: Future Directions
 
 **Status:** Research
-**Date:** 30 Mar 2026
+**Date:** 31 Mar 2026
 
-arXiv literature review (2022–2025). Research opportunities organized by how they could improve Parakeet's video form analysis and gym partner filming systems.
+arXiv literature review (2022–2026) + biomechanical metric catalog. Research opportunities organized by how they could improve Parakeet's video form analysis and gym partner filming systems.
+
+## 0. Additional Metrics from Existing Landmarks
+
+We already extract 33 MediaPipe landmarks per frame. Many high-value metrics can be computed from landmark relationships we don't currently use — pure math, zero new dependencies.
+
+### Easy (pure math on existing landmarks, 5-30 lines each)
+
+| Metric | Lift | View | Lines | Description |
+|--------|------|------|-------|-------------|
+| **Fatigue signatures** | All | Side | ~30 | Cross-rep trends: forward lean drift, bar drift increase, ROM compression, descent speed change, lockout degradation. Feeds coaching + JIT. |
+| **Stance width** | All | Front | ~5 | `\|leftAnkle.x - rightAnkle.x\| × CM_PER_UNIT`. Coaching: too wide/narrow affects hip drive. |
+| **Knee tracking over toes** | Squat | Front/Side | ~10 | `knee.x - ankle.x` per side at bottom. Mobility indicator. |
+| **Hip shift / lateral lean** | Squat/DL | Front | ~10 | `leftHip.y - rightHip.y`. Strength imbalance indicator. |
+| **Bar path symmetry (full rep)** | Bench | Front | ~10 | `\|leftWrist.y - rightWrist.y\|` across entire rep, not just lockout. |
+| **Lockout stability** | All | Side | ~10 | Hip angle variance in last 10% of rep frames. Wobbly = weak lockout. |
+| **Descent speed consistency** | Squat | Side | ~10 | CV of eccentric durations across reps. Fatigue = loss of eccentric control. |
+| **Pause quality (sink detection)** | Bench | Side | ~15 | Differentiate "settled pause" (stable wrist Y) from "sinking" (Y still increasing). |
+
+### Medium (new landmark relationships, 15-25 lines each)
+
+| Metric | Lift | View | Lines | Description |
+|--------|------|------|-------|-------------|
+| **Butt wink (PPT)** | Squat | Side | ~20 | Hip angle rate-of-change at bottom. Sharp negative delta (>10° in <200ms) = posterior pelvic tilt. Most asked-about squat fault. |
+| **Elbow flare angle** | Bench | Side/Front | ~15 | Shoulder-elbow vs shoulder-hip angle at bottom. Ideal: 45-75°. Most asked-about bench fault. |
+| **Hip hinge timing** | Deadlift | Side | ~25 | Knee vs hip angular velocity ratio across the pull. Early frames knee-dominant, late hip-dominant. "Hips shooting up" = crossover too early. |
+| **Knee cave timing** | Squat | Front | ~15 | Track valgus at 25/50/75% of concentric. Cave only during concentric = strength deficit vs mobility issue. |
+| **Bar-to-shin distance** | Deadlift | Side | ~15 | Wrist avg X vs knee X during first third of pull. Bar drifting from shins increases moment arm. |
+| **Touch point position** | Bench | Side | ~15 | Bottom bar Y relative to shoulder/hip. Positions touch point on torso (nipple line, sternum, etc). |
+| **Arch height / stability** | Bench | Side | ~10 | Shoulder Y vs hip Y in bench position. Arch collapsing under fatigue is common failure. |
+
+### Hard (needs model training or multi-view)
+
+| Metric | Lift | Description |
+|--------|------|-------------|
+| Thoracic vs lumbar rounding | DL | No spine landmarks between shoulders/hips. Would need back contour segmentation model. |
+| True 3D valgus angle | Squat | MediaPipe Z unreliable. Needs dual-phone 3D (see §1). |
+| Muscle activation estimation | All | Needs sEMG or trained kinematic→activation model. |
+
+### Implementation priority (next batch)
+
+1. **Fatigue signatures** — aggregates metrics we already compute. Highest coaching value.
+2. **Butt wink** — most requested squat fault. Pure hip angle rate-of-change.
+3. **Elbow flare** — most requested bench fault. Shoulder-elbow angle.
+4. **Hip hinge timing** — most important deadlift cue. Angular velocity ratio.
+5. **Stance width** — trivial, useful context for all coaching.
+
+Research sources:
+- [Real-Time Biomechanical Posture Analysis (IJACSA 2025)](https://thesai.org/Downloads/Volume16No9/Paper_52)
+- [ALEX-GYM-1 Dataset (2025)](https://www.scitepress.org/Papers/2025/136694/136694.pdf)
+- [Exercise Quantification from Markerless 3D (Heliyon 2024)](https://www.sciencedirect.com/science/article/pii/S2405844024036272)
+- [Automated Deadlift Assessment via Deep Learning (MDPI 2025)](https://www.mdpi.com/2673-2688/6/7/148)
+- [Posterior Pelvic Tilt During Squat (MDPI 2025)](https://www.mdpi.com/2076-3417/15/23/12526)
 
 ## 1. Dual-Phone 3D Pose Reconstruction
 
