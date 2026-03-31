@@ -183,8 +183,8 @@ export async function runJITForSession(
     try {
       const cycleContext = await getCurrentCycleContext(userId);
       cyclePhase = cycleContext?.phase;
-    } catch {
-      // non-fatal — cycle phase adjustment is best-effort
+    } catch (err) {
+      captureException(err);
     }
   }
 
@@ -222,8 +222,8 @@ export async function runJITForSession(
           })),
         });
       }
-    } catch {
-      // Non-fatal: older sessions may lack planned_sets or have malformed JSONB
+    } catch (err) {
+      captureException(err);
     }
     return {
       actual_rpe: r.session_rpe ?? null,
@@ -377,8 +377,8 @@ export async function runJITForSession(
         .map(([, v]) => (v ? parseInt(v, 10) : null))
         .filter((v): v is number => v !== null && !isNaN(v));
     }
-  } catch {
-    // Non-critical — volume calibration degrades gracefully without capacity data
+  } catch (err) {
+    captureException(err);
   }
 
   // Weekly body review mismatch direction for primary muscles (engine-043 Phase 3)
@@ -395,8 +395,8 @@ export async function runJITForSession(
       session.week_number > 1 ? session.week_number - 1 : session.week_number,
       [...primaryMuscles]
     );
-  } catch {
-    // Non-critical
+  } catch (err) {
+    captureException(err);
   }
 
   // Compute working 1RM from recent actual session weights (GH#98)

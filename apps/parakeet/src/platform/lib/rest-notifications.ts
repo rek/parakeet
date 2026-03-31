@@ -1,3 +1,5 @@
+import { captureException } from '@platform/utils/captureException';
+
 import { buildRestNotificationContent } from './rest-notification-helpers';
 
 export { buildRestNotificationContent } from './rest-notification-helpers';
@@ -25,7 +27,8 @@ export async function scheduleRestNotification(
       },
     });
     return id;
-  } catch {
+  } catch (err) {
+    captureException(err);
     return null;
   }
 }
@@ -68,7 +71,8 @@ export async function scheduleWeeklyReviewNotification(): Promise<
       },
     });
     return id;
-  } catch {
+  } catch (err) {
+    captureException(err);
     return null;
   }
 }

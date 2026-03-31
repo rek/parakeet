@@ -11,6 +11,7 @@ import {
   insertSessionVideo,
   getVideoForSessionLift,
   updateSessionVideoAnalysis,
+  updateSessionVideoDebugLandmarks,
 } from '../data/video.repository';
 import type { SessionVideo } from '../model/types';
 
@@ -53,6 +54,8 @@ export function useVideoAnalysis({
     // 1. Extract pose frames from uncompressed source (better quality for CV)
     let analysis = null;
     let detectedAngle: 'side' | 'front' = cameraAngle;
+    let extractedFrames: unknown[] | null = null;
+    let extractedFps = 0;
 
     if (durationSec > 0) {
       try {
@@ -63,6 +66,9 @@ export function useVideoAnalysis({
           durationSec,
           onProgress: (p) => setProgress(0.05 + p * 0.55),
         });
+
+        extractedFrames = frames;
+        extractedFps = fps;
 
         // Auto-detect camera angle from pose landmark separation
         if (frames.length > 0) {
@@ -94,7 +100,8 @@ export function useVideoAnalysis({
       compressedUri = await Video.compress(videoUri, {
         compressionMethod: 'auto',
       });
-    } catch {
+    } catch (err) {
+      captureException(err);
       compressedUri = videoUri;
     }
     setProgress(0.75);
@@ -133,6 +140,16 @@ export function useVideoAnalysis({
       setResult(updated);
     } else {
       setResult(saved);
+    }
+
+    // 6. In dev builds, store raw landmarks for calibration test harness.
+    // Non-blocking — fire and forget so it doesn't slow down the UI.
+    if (typeof __DEV__ !== 'undefined' && __DEV__ && extractedFrames) {
+      updateSessionVideoDebugLandmarks({
+        id: saved.id,
+        frames: extractedFrames,
+        fps: extractedFps,
+      });
     }
 
     setProgress(1);

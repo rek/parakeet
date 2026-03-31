@@ -129,9 +129,12 @@ export async function extractFramesFromVideo({
   onProgress?: (pct: number) => void;
 }) {
   // Lazy imports — native modules crash if loaded before the binary is built.
+  // captureException is also lazy to keep this module importable in Vitest
+  // (static import pulls in Sentry → react-native → Rollup parse failure).
   const { getThumbnailAsync } = require('expo-video-thumbnails') as typeof import('expo-video-thumbnails');
   const { PoseDetectionOnImage, Delegate } = require('react-native-mediapipe') as typeof import('react-native-mediapipe');
   const { File } = require('expo-file-system/next') as typeof import('expo-file-system/next');
+  const { captureException } = require('@platform/utils/captureException') as typeof import('@platform/utils/captureException');
 
   const intervalMs = 1000 / targetFps;
   const totalDurationMs = durationSec * 1000;
@@ -178,7 +181,8 @@ export async function extractFramesFromVideo({
       } else {
         frames.push(EMPTY_FRAME);
       }
-    } catch {
+    } catch (err) {
+      captureException(err);
       frames.push(EMPTY_FRAME);
     }
 

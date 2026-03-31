@@ -458,9 +458,7 @@ export default function SorenessScreen() {
         const modifier = getCyclePhaseModifier(ctx.phase);
         setCyclePhaseRationale(modifier.rationale);
       })
-      .catch(() => {
-        // non-fatal
-      });
+      .catch((err) => captureException(err));
   }, [user]);
 
   // ── Auto-generate ─────────────────────────────────────────────────────────

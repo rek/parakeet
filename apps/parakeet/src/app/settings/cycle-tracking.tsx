@@ -9,6 +9,8 @@ import {
   View,
 } from 'react-native';
 
+import { captureException } from '@platform/utils/captureException';
+
 import { useAuth } from '@modules/auth';
 import {
   clampCycleLength,
@@ -256,11 +258,11 @@ export default function CycleTrackingScreen() {
         setCycleLength(cfg.cycle_length_days);
         setLastPeriodStart(cfg.last_period_start);
       })
-      .catch(() => {})
+      .catch((err) => captureException(err))
       .finally(() => setLoading(false));
     getPeriodStartHistory(user.id)
       .then(setHistory)
-      .catch(() => {});
+      .catch((err) => captureException(err));
   }, [user?.id]);
 
   async function handleToggle(value: boolean) {

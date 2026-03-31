@@ -8,6 +8,8 @@ import {
 } from 'react-native';
 import QRCode from 'react-native-qrcode-svg';
 
+import { captureException } from '@platform/utils/captureException';
+
 import { spacing, typography } from '../../../theme';
 import { useTheme } from '../../../theme/ThemeContext';
 import { useCreateInvite } from '../hooks/usePartners';
@@ -47,8 +49,8 @@ export function QrGenerateSheet({
           ),
         ),
       );
-    } catch {
-      // error state handled via hook
+    } catch (err) {
+      captureException(err);
     }
   }, [createInvite, reset]);
 

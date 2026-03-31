@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { AppState } from 'react-native';
 
+import { captureException } from '@platform/utils/captureException';
 import { getRestTimerPrefs } from '@modules/settings';
 import {
   cancelRestNotification,
@@ -53,7 +54,7 @@ export function useRestNotifications(): void {
           .then((id) => {
             pendingNotifIdRef.current = id;
           })
-          .catch(() => {});
+          .catch((err) => captureException(err));
       } else if (nextState === 'active') {
         if (pendingNotifIdRef.current) {
           cancelRestNotification(pendingNotifIdRef.current);

@@ -3,6 +3,7 @@ import {
   detectCameraAngle,
   extractFramesFromVideo,
 } from '@modules/video-analysis';
+import { captureException } from '@platform/utils/captureException';
 import { toJson } from '@platform/supabase';
 import { Video } from 'react-native-compressor';
 
@@ -65,7 +66,8 @@ export async function filmForPartner({
     compressedUri = await Video.compress(videoUri, {
       compressionMethod: 'auto',
     });
-  } catch {
+  } catch (err) {
+    captureException(err);
     compressedUri = videoUri;
   }
 

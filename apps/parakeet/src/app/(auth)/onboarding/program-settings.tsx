@@ -284,7 +284,7 @@ export default function ProgramSettingsScreen() {
           setHasProfileBodyweight(true);
         }
       })
-      .catch(() => {})
+      .catch((err) => captureException(err))
       .finally(() => setProfileLoading(false));
   }, []);
 
