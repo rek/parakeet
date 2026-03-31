@@ -1,17 +1,22 @@
 import type { VideoAnalysisResult } from '@parakeet/shared-types';
 
-import { extractBarPath, smoothBarPath, computeBarDrift, sliceBarPath } from './bar-path';
-import { detectReps } from './rep-detector';
+import {
+  DEFAULT_STRATEGY,
+  STRATEGIES,
+  type AnalysisStrategy,
+  type StrategyName,
+} from './analysis-strategy';
 import { computeForwardLean, computeHipAngle, computeKneeAngle } from './angle-calculator';
-import { gradeRep } from './competition-grader';
 import { detectSquatDepth } from './depth-detector';
-import { detectFaults, findBottomFrame } from './fault-detector';
 import { CM_PER_UNIT, type PoseFrame } from './pose-types';
 
 const ANALYSIS_VERSION = 1;
 
 /**
  * Run the full video analysis pipeline on a sequence of pose frames.
+ *
+ * Pass `strategy` to swap algorithms (rep detection, bar path, faults, grading).
+ * Default: 'v1_mediapipe'. For A/B comparison, call twice with different strategies.
  *
  * Steps:
  * 1. Extract and smooth the bar path from wrist landmarks
@@ -23,15 +28,19 @@ export function assembleAnalysis({
   frames,
   fps,
   lift,
+  strategy: strategyName = DEFAULT_STRATEGY,
 }: {
   frames: PoseFrame[];
   fps: number;
   lift: 'squat' | 'bench' | 'deadlift';
+  strategy?: StrategyName;
 }) {
-  console.log(`[analysis] assembleAnalysis: ${frames.length} frames, ${fps}fps, lift=${lift}`);
-  const rawPath = extractBarPath({ frames });
-  const barPath = smoothBarPath({ path: rawPath, fps });
-  const repBoundsList = detectReps({ frames, lift, fps });
+  const strategy: AnalysisStrategy = STRATEGIES[strategyName];
+  console.log(`[analysis] assembleAnalysis: ${frames.length} frames, ${fps}fps, lift=${lift}, strategy=${strategy.name}`);
+
+  const rawPath = strategy.barPath.extractBarPath({ frames });
+  const barPath = strategy.barPath.smoothBarPath({ path: rawPath, fps });
+  const repBoundsList = strategy.repDetector.detectReps({ frames, lift, fps });
   console.log(`[analysis] detected ${repBoundsList.length} reps`);
 
   const reps = repBoundsList.map(({ startFrame, endFrame }, index) => {
@@ -40,11 +49,11 @@ export function assembleAnalysis({
     const safeEnd = Math.max(safeStart, Math.min(endFrame, frames.length - 1));
 
     // --- Shared per-rep context (computed once, reused by fault detector) ---
-    const repPath = sliceBarPath({ barPath, startFrame: safeStart, endFrame: safeEnd });
-    const barDriftNormalized = computeBarDrift({ path: repPath });
+    const repPath = strategy.barPath.sliceBarPath({ barPath, startFrame: safeStart, endFrame: safeEnd });
+    const barDriftNormalized = strategy.barPath.computeBarDrift({ path: repPath });
     const bottomFrame =
       lift === 'squat'
-        ? findBottomFrame({ frames, startFrame: safeStart, endFrame: safeEnd })
+        ? strategy.faults.findBottomFrame({ frames, startFrame: safeStart, endFrame: safeEnd })
         : safeStart;
 
     const barDriftCm = barDriftNormalized * CM_PER_UNIT;
@@ -74,7 +83,7 @@ export function assembleAnalysis({
       pathYValues.length > 1 ? Math.max(...pathYValues) - Math.min(...pathYValues) : 0;
     const romCm = romNormalized * CM_PER_UNIT;
 
-    const faults = detectFaults({
+    const faults = strategy.faults.detectFaults({
       frames,
       repBounds: { startFrame: safeStart, endFrame: safeEnd },
       barPath,
@@ -97,7 +106,7 @@ export function assembleAnalysis({
     };
 
     // Auto-grade every rep against IPF competition standards
-    const verdict = gradeRep({ rep: repAnalysis, frames, fps, lift });
+    const verdict = strategy.grader.gradeRep({ rep: repAnalysis, frames, fps, lift });
 
     return { ...repAnalysis, verdict };
   });

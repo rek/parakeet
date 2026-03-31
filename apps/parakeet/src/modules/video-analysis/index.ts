@@ -4,6 +4,8 @@ export type { FormCoachingContext } from './application/assemble-coaching-contex
 export type { RepVerdict, CriterionResult } from './lib/competition-grader';
 export type { ReadinessScore } from './lib/readiness-score';
 export type { PersonalBaseline, BaselineDeviation } from './lib/personal-baseline';
+export type { AnalysisStrategy, StrategyName } from './lib/analysis-strategy';
+export { STRATEGIES, DEFAULT_STRATEGY } from './lib/analysis-strategy';
 
 // --- Hooks (primary external API) ---
 export { useVideoAnalysis } from './hooks/useVideoAnalysis';
