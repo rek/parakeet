@@ -50,20 +50,20 @@ Extend `session_videos` to associate videos with a specific set number. `set_num
 
 ### 2.1 — SetVideoIcon component
 
-- [ ] `modules/video-analysis/ui/SetVideoIcon.tsx` — small camera icon, feature-flag gated
-- [ ] Props: sessionId, lift, setNumber, isCompleted
-- [ ] Only renders when isCompleted = true
-- [ ] Navigates to `/session/video-analysis` with set params
-- [ ] Shows filled indicator when video exists for this set
+- [x] `modules/video-analysis/ui/SetVideoIcon.tsx` — small camera icon, feature-flag gated internally via `useFeatureEnabled('videoAnalysis')`
+- [x] Props: sessionId, lift, setNumber, isCompleted
+- [x] Only renders when isCompleted = true (all hooks before early returns)
+- [x] Navigates to `/session/video-analysis` with set params
+- [x] Shows filled indicator (📹) when video exists, empty (📷) when not; uses `useSetVideo` hook + `video.queries.ts` factory
 
 ### 2.2 — Integrate into SetRow
 
-- [ ] `modules/session/ui/SetRow.tsx` — accept optional `sessionId`, `lift`, `showVideoIcon`
-- [ ] Render `<SetVideoIcon>` on completed main lift sets
+- [x] `modules/session/ui/SetRow.tsx` — accepts `videoIconSlot?: ReactNode` (slot pattern avoids session→video-analysis circular dependency)
+- [x] Rendered after the check button on completed sets
 
 ### 2.3 — Pass from session screen
 
-- [ ] `app/(tabs)/session/[sessionId].tsx` — pass `sessionId`, `lift`, `showVideoIcon={true}` to main lift SetRows
+- [x] `app/(tabs)/session/[sessionId].tsx` — passes `videoIconSlot={<SetVideoIcon .../>}` to main lift SetRows. Cross-module composition happens at the app/ layer.
 
 ## Phase 3 — Set-level context enrichment
 
