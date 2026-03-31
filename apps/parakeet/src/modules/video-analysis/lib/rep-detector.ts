@@ -112,26 +112,19 @@ export function detectReps({
   const signalMax = Math.max(...smoothed);
   const signalRange = signalMax - signalMin;
 
-  // Setup/walkout filter: drop the first peak if it's in the initial 20% of
-  // the video AND much smaller than the median peak height. Setup dips
-  // (positioning under the bar, unracking) look like shallow peaks.
-  let peaks = allPeaks;
-  if (allPeaks.length >= 3 && allPeaks[0] < smoothed.length * 0.20) {
-    const peakValues = allPeaks.map((idx) => smoothed[idx]);
-    const sorted = [...peakValues].sort((a, b) => a - b);
-    const median = sorted[Math.floor(sorted.length / 2)];
-    const firstRelative = peakValues[0] - signalMin;
-    const medianRelative = median - signalMin;
-    if (medianRelative > 0 && firstRelative / medianRelative < 0.5) {
-      peaks = allPeaks.slice(1);
-    }
-  }
+  // No peak filtering — every detected peak counts as a rep. It's better to
+  // over-count (include a walkout dip) than under-count (miss a real rep).
+  // Walkout reps will have low ROM/depth metrics, which the UI can flag.
+  const peaks = allPeaks;
 
   // Log for debugging
   const preview = smoothed.slice(0, 20).map((v) => v.toFixed(3)).join(', ');
-  console.log(`[reps] signal range: ${signalMin.toFixed(4)}–${signalMax.toFixed(4)} (delta=${signalRange.toFixed(4)}), raw peaks: ${allPeaks.length}, after walkout filter: ${peaks.length}`);
-  console.log(`[reps] peak indices: [${allPeaks.join(', ')}], peak values: [${allPeaks.map((p) => smoothed[p].toFixed(3)).join(', ')}]`);
-  console.log(`[reps] FULL SIGNAL: [${smoothed.map((v) => v.toFixed(4)).join(',')}]`);
+  // Also find peaks in the raw signal to compare
+  const rawPeaks = findPeaks({ signal: raw, minDistance: minPeakDistance });
+  console.log(`[reps] signal range: ${signalMin.toFixed(4)}–${signalMax.toFixed(4)} (delta=${signalRange.toFixed(4)}), smoothed peaks: ${allPeaks.length}, raw peaks: ${rawPeaks.length}, after filter: ${peaks.length}`);
+  console.log(`[reps] smoothed peak indices: [${allPeaks.join(', ')}], values: [${allPeaks.map((p) => smoothed[p].toFixed(3)).join(', ')}]`);
+  console.log(`[reps] raw peak indices: [${rawPeaks.join(', ')}], values: [${rawPeaks.map((p) => raw[p].toFixed(3)).join(', ')}]`);
+  console.log(`[reps] RAW SIGNAL: [${raw.map((v) => v.toFixed(4)).join(',')}]`);
 
   if (peaks.length === 0) return [];
 

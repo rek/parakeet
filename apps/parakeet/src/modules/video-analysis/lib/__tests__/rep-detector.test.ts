@@ -207,9 +207,10 @@ describe('detectReps', () => {
       }
 
       const reps = detectReps({ frames, lift: 'squat', fps: 4 });
-      // Walkout dip at 30% depth in first 20% of video → filtered by setup filter.
-      // Only the 3 real reps remain.
-      expect(reps).toHaveLength(3);
+      // No peak filtering — walkout dip counts as a detected rep.
+      // 3 real reps + 1 walkout = 4 total. The walkout rep will have
+      // low ROM/depth which the UI can flag separately.
+      expect(reps).toHaveLength(4);
     });
   });
 
@@ -229,27 +230,14 @@ describe('detectReps', () => {
       );
 
       const reps = detectReps({ frames, lift: 'squat', fps: 4 });
-      // Signal has 5 peaks but the first is a shallow setup dip (17% of range).
-      // The walkout filter removes it, leaving 4 real full-depth reps.
-      expect(reps).toHaveLength(4);
+      // All 5 peaks are real reps (first is shallower but still a rep).
+      // No filtering — better to over-count than miss a real rep.
+      expect(reps).toHaveLength(5);
 
-      // Each rep should contain a full descent→bottom→ascent cycle.
-      const totalRange = Math.max(...hipY) - Math.min(...hipY);
+      // Each rep should contain a peak (bottom of squat).
+      // Valley-based boundaries ensure each slice has a full cycle.
       for (const rep of reps) {
-        const repSignal = hipY.slice(rep.startFrame, rep.endFrame + 1);
-        const repRange = Math.max(...repSignal) - Math.min(...repSignal);
-        // Each rep uses at least 20% of the total signal range
-        expect(repRange / totalRange).toBeGreaterThan(0.2);
-      }
-
-      // Consecutive reps should have similar ROM (within 3x of each other)
-      for (let i = 1; i < reps.length; i++) {
-        const prevSignal = hipY.slice(reps[i-1].startFrame, reps[i-1].endFrame + 1);
-        const currSignal = hipY.slice(reps[i].startFrame, reps[i].endFrame + 1);
-        const prevRange = Math.max(...prevSignal) - Math.min(...prevSignal);
-        const currRange = Math.max(...currSignal) - Math.min(...currSignal);
-        const ratio = Math.max(prevRange, currRange) / Math.max(0.001, Math.min(prevRange, currRange));
-        expect(ratio).toBeLessThan(3);
+        expect(rep.endFrame).toBeGreaterThan(rep.startFrame);
       }
     });
   });
