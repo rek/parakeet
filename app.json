@@ -10,6 +10,9 @@
       "@react-native-community/datetimepicker",
       "expo-router",
       "expo-sqlite"
-    ]
+    ],
+    "ios": {
+      "bundleIdentifier": "com.adam.tombleson.parakeet"
+    }
   }
 }

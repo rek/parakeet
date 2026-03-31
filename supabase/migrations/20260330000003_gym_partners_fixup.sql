@@ -15,9 +15,16 @@ begin
 end;
 $$ language plpgsql;
 
-create trigger if not exists trg_gym_partners_updated_at
-  before update on gym_partners
-  for each row execute function update_gym_partners_updated_at();
+do $$
+begin
+  if not exists (
+    select 1 from pg_trigger where tgname = 'trg_gym_partners_updated_at'
+  ) then
+    create trigger trg_gym_partners_updated_at
+      before update on gym_partners
+      for each row execute function update_gym_partners_updated_at();
+  end if;
+end $$;
 
 -- 3. Unclaim policy — allows rollback on failed partnership insert or self-claim
 do $$
