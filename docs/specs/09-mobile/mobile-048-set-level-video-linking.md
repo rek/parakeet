@@ -1,6 +1,6 @@
 # mobile-048: Set-Level Video Linking
 
-**Status:** Phase 1 complete
+**Status:** Done
 **Design:** [set-level-video-linking.md](../../design/set-level-video-linking.md)
 **Depends on:** mobile-046 (video form analysis, all phases)
 **Enables:** mobile-047 (competition readiness — needs per-set weight/RPE)
