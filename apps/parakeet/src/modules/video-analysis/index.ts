@@ -12,6 +12,7 @@ export { useVideoAnalysis } from './hooks/useVideoAnalysis';
 export { useFormCoaching } from './hooks/useFormCoaching';
 export { usePreviousVideos } from './hooks/usePreviousVideos';
 export { useSetVideo } from './hooks/useSetVideo';
+export { useSessionVideos } from './hooks/useSessionVideos';
 
 // --- Pure functions (used by screens for computation, not data access) ---
 export { analyzeVideoFrames, extractFramesFromVideo } from './application/analyze-video';
@@ -34,6 +35,7 @@ export { BarPathOverlay } from './ui/BarPathOverlay';
 export { FormCoachingCard } from './ui/FormCoachingCard';
 export { BaselineDeviationBadge } from './ui/BaselineDeviationBadge';
 export { LongitudinalComparison } from './ui/LongitudinalComparison';
+export { IntraSessionComparison } from './ui/IntraSessionComparison';
 export { VerdictBadge } from './ui/VerdictBadge';
 export { ReadinessCard } from './ui/ReadinessCard';
 

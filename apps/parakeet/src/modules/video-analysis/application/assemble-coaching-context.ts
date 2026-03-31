@@ -137,6 +137,9 @@ export function assembleCoachingContext({
     cameraAngle,
     weightKg,
     oneRmKg,
+    // Prefer set-level RPE when available (more precise for this video's context).
+    // Falls back to session-level RPE. The LLM prompt treats this as "the RPE
+    // for the work shown in the video" — set RPE is more accurate for that.
     sessionRpe: setContext?.rpe ?? log?.session_rpe ?? null,
     biologicalSex,
     blockNumber: session?.block_number ?? null,

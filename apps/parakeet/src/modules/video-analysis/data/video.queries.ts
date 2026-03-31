@@ -1,6 +1,9 @@
 import { queryOptions } from '@tanstack/react-query';
 
-import { getVideoForSessionLift } from './video.repository';
+import {
+  getVideoForSessionLift,
+  getVideosForSessionLift,
+} from './video.repository';
 
 export const videoQueries = {
   all: () => ['video-analysis'] as const,
@@ -25,5 +28,24 @@ export const videoQueries = {
         setNumber,
       ] as const,
       queryFn: () => getVideoForSessionLift({ sessionId, lift, setNumber }),
+    }),
+
+  forSessionLift: ({
+    sessionId,
+    lift,
+  }: {
+    sessionId: string;
+    lift: string;
+  }) =>
+    queryOptions({
+      queryKey: [
+        ...videoQueries.all(),
+        'session',
+        sessionId,
+        'lift',
+        lift,
+        'all',
+      ] as const,
+      queryFn: () => getVideosForSessionLift({ sessionId, lift }),
     }),
 };

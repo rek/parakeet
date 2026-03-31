@@ -136,7 +136,7 @@ export function useVideoAnalysis({
     }
 
     setProgress(1);
-  }, [sessionId, lift, setNumber, cameraAngle]);
+  }, [sessionId, lift, setNumber, cameraAngle, setContext?.weightGrams, setContext?.reps, setContext?.rpe]);
 
   /** Pick video from camera roll → process. */
   const pickAndAnalyze = useCallback(async () => {

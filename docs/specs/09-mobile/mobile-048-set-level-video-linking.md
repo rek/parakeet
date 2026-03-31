@@ -92,19 +92,21 @@ Extend `session_videos` to associate videos with a specific set number. `set_num
 
 ### 4.1 — Session videos list
 
-- [ ] List all videos for session+lift below the current single-video view
-- [ ] Tapping switches the displayed video
+- [x] "OTHER SETS" section on video analysis screen when multiple videos exist for session+lift
+- [x] Chip per set with weight context; tapping switches via `router.replace` with full set context params
 
 ### 4.2 — IntraSessionComparison component
 
-- [ ] `modules/video-analysis/ui/IntraSessionComparison.tsx`
-- [ ] Overlaid bar paths colored by set number
-- [ ] Drift/lean/depth trend across set numbers
-- [ ] Fatigue narrative when drift increases monotonically
+- [x] `modules/video-analysis/ui/IntraSessionComparison.tsx` — renders null when <2 videos
+- [x] Overlaid bar paths colored by set number (5 distinct colorblind-friendly colors)
+- [x] Drift/lean/depth trend table per set
+- [x] Fatigue narrative when bar drift increases monotonically across 3+ sets
 
 ### 4.3 — useSessionVideos hook
 
-- [ ] Fetches all videos for session+lift
+- [x] `getVideosForSessionLift` repository function (ordered by set_number)
+- [x] `videoQueries.forSessionLift` query factory
+- [x] `useSessionVideos` hook exported from module index
 
 ## Sequencing
 

@@ -14,6 +14,7 @@ import {
   useVideoAnalysis,
   useFormCoaching,
   usePreviousVideos,
+  useSessionVideos,
   computePersonalBaseline,
   detectBaselineDeviations,
   computeReadinessFromVerdicts,
@@ -22,6 +23,7 @@ import {
   RepMetricsCard,
   FormCoachingCard,
   LongitudinalComparison,
+  IntraSessionComparison,
   BaselineDeviationBadge,
   ReadinessCard,
 } from '@modules/video-analysis';
@@ -101,6 +103,11 @@ export default function VideoAnalysisScreen() {
     coaching,
     setCoaching,
   } = useFormCoaching({
+    sessionId: sessionId ?? '',
+    lift: lift ?? '',
+  });
+
+  const { videos: sessionVideos } = useSessionVideos({
     sessionId: sessionId ?? '',
     lift: lift ?? '',
   });
@@ -311,7 +318,54 @@ export default function VideoAnalysisScreen() {
               />
             )}
 
-            {/* Longitudinal comparison */}
+            {/* Other set videos for this session+lift */}
+            {sessionVideos.length > 1 && (
+              <View style={styles.sessionVideosSection}>
+                <Text style={styles.sectionLabel}>OTHER SETS</Text>
+                <View style={styles.setVideoList}>
+                  {sessionVideos
+                    .filter((v) => v.id !== result?.id)
+                    .map((v) => (
+                      <TouchableOpacity
+                        key={v.id}
+                        style={styles.setVideoChip}
+                        onPress={() =>
+                          router.replace({
+                            pathname: '/session/video-analysis' as never,
+                            params: {
+                              sessionId: sessionId ?? '',
+                              lift: lift ?? '',
+                              setNumber: String(v.setNumber),
+                              ...(v.setWeightGrams != null
+                                ? { weightGrams: String(v.setWeightGrams) }
+                                : {}),
+                              ...(v.setReps != null
+                                ? { reps: String(v.setReps) }
+                                : {}),
+                              ...(v.setRpe != null
+                                ? { rpe: String(v.setRpe) }
+                                : {}),
+                            },
+                          })
+                        }
+                        activeOpacity={0.7}
+                      >
+                        <Text style={styles.setVideoChipText}>
+                          Set {v.setNumber}
+                          {v.setWeightGrams
+                            ? ` · ${v.setWeightGrams / 1000}kg`
+                            : ''}
+                        </Text>
+                      </TouchableOpacity>
+                    ))}
+                </View>
+              </View>
+            )}
+
+            {/* Intra-session comparison (set-to-set bar path overlay) */}
+            <IntraSessionComparison videos={sessionVideos} />
+
+            {/* Longitudinal comparison (cross-session) */}
             <LongitudinalComparison
               currentAnalysis={analysis}
               previousVideos={previousVideos}
@@ -459,6 +513,36 @@ function buildStyles(colors: ColorScheme) {
       fontSize: typography.sizes.sm,
       color: colors.textSecondary,
       marginBottom: spacing[4],
+    },
+    // Phase 4: session video list
+    sectionLabel: {
+      fontSize: typography.sizes.xs,
+      fontWeight: typography.weights.bold,
+      color: colors.textTertiary,
+      textTransform: 'uppercase',
+      letterSpacing: 0.5,
+      marginBottom: spacing[2],
+    },
+    sessionVideosSection: {
+      marginTop: spacing[4],
+      gap: spacing[2],
+    },
+    setVideoList: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: spacing[2],
+    },
+    setVideoChip: {
+      paddingHorizontal: spacing[3],
+      paddingVertical: spacing[1.5],
+      borderRadius: radii.md,
+      borderWidth: 1,
+      borderColor: colors.border,
+      backgroundColor: colors.bgSurface,
+    },
+    setVideoChipText: {
+      fontSize: typography.sizes.sm,
+      color: colors.text,
     },
   });
 }

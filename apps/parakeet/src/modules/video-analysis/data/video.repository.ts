@@ -134,6 +134,28 @@ export async function getVideoForSessionLift({
   return (data ?? []).map((row) => toSessionVideo(row as VideoRowWithProfile));
 }
 
+export async function getVideosForSessionLift({
+  sessionId,
+  lift,
+}: {
+  sessionId: string;
+  lift: string;
+}) {
+  const { data, error } = await typedSupabase
+    .from('session_videos')
+    .select(SELECT_WITH_PROFILE)
+    .eq('session_id', sessionId)
+    .eq('lift', lift)
+    .order('set_number', { ascending: true });
+
+  if (error) {
+    captureException(error);
+    throw error;
+  }
+
+  return (data ?? []).map((row) => toSessionVideo(row as VideoRowWithProfile));
+}
+
 export async function getVideosForLift({
   lift,
   setNumber,

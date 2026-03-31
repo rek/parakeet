@@ -280,6 +280,7 @@ Phase 1 + 2 complete. Per-set video association + per-set UI on session screen.
 - [x] mobile-048 1.1–1.6: Phase 1 data + wiring — `set_number integer NOT NULL DEFAULT 1` on `session_videos`; `DbRow<'session_videos'>` proper typing (removed hand-written casts); repository, hook, screen accept `setNumber`; longitudinal queries support optional set filter
 - [x] mobile-048 2.1–2.3: Phase 2 per-set UI — `SetVideoIcon` (feature-flag gated, filled/empty indicator via `useSetVideo`); `SetRow` accepts `videoIconSlot` (slot pattern); session screen composes `SetVideoIcon` into main lift rows
 - [x] mobile-048 3.1–3.3: Phase 3 set context — `set_weight_grams`, `set_reps`, `set_rpe` columns; `assembleCoachingContext` uses set-level weight/RPE over max-weight heuristic; rich screen title "Squat — Set 3 @ 140kg × 3 (RPE 8)"; set context flows from session store → SetVideoIcon → nav params → video-analysis screen → useVideoAnalysis → insertSessionVideo → useFormCoaching → LLM prompt
+- [x] mobile-048 4.1–4.3: Phase 4 multi-video + comparison — `getVideosForSessionLift` repository, `useSessionVideos` hook, "Other Sets" chip list with set switching, `IntraSessionComparison` (overlaid SVG bar paths per set, drift/lean/depth trend table, fatigue narrative)
 
 ---
 
