@@ -1,6 +1,9 @@
 # MCP config
 .mcp.json
 
+# Test video binaries (manifest.json is tracked separately)
+test-videos/*.mp4
+
 #
 Dependencies
 node_modules/

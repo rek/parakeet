@@ -1,0 +1,200 @@
+{
+  "$schema": "./manifest.schema.json",
+  "description": "Video calibration test suite for the video-analysis pipeline. All videos are royalty-free from Pexels. Run the pipeline against each video, compare outputs to expected ranges, then update 'calibrated' and 'actual' fields.",
+  "thresholds": {
+    "barDriftNormalized": 0.03,
+    "excessiveForwardLeanDeg": 55,
+    "backRoundingDeviationDeg": 15,
+    "incompleteLockoutHipDeg": 170,
+    "inconsistentTouchVarianceNormalized": 0.02,
+    "buttWinkDeg": 10,
+    "elbowFlareMaxDeg": 80,
+    "elbowFlareMinDeg": 30,
+    "earlyHipShootCrossoverPct": 30,
+    "barToShinDistanceCm": 5,
+    "lockoutStabilityCvPct": 5
+  },
+  "videos": [
+    {
+      "id": "squat-side-clean",
+      "file": "squat-side-clean.mp4",
+      "source": "https://www.pexels.com/video/side-view-of-a-man-doing-barbell-squats-5319759/",
+      "license": "Pexels (royalty-free, no attribution required)",
+      "resolution": "2560x1440",
+      "duration_sec": 20.5,
+      "fps": 25,
+      "orientation": "landscape",
+      "lift": "squat",
+      "description": "Side view of a man doing barbell back squats in a gym. Clear side angle, full body visible.",
+      "calibrated": false,
+      "expected": {
+        "camera_angle": "side",
+        "rep_count": { "min": 2, "max": 8, "notes": "Count depends on video content; update after first run" },
+        "faults_to_test": ["above_parallel", "excessive_lean", "bar_drift", "butt_wink", "unstable_lockout"],
+        "metrics_present": ["forwardLeanDeg", "maxDepthCm", "barDriftCm", "kneeAngleDeg", "hipAngleAtLockoutDeg", "romCm", "meanConcentricVelocityCmS", "buttWinkDeg", "stanceWidthCm", "hipShiftCm", "hipShiftDirection", "lockoutStabilityCv"],
+        "fatigue_signatures": true,
+        "notes": "Primary calibration video for squat pipeline. Side view should produce clean bar path from wrist landmarks. Squat-specific: butt wink, stance width, hip shift. Cross-rep: fatigue signatures."
+      },
+      "actual": null
+    },
+    {
+      "id": "squat-front-angle",
+      "file": "squat-front-angle.mp4",
+      "source": "https://www.pexels.com/video/man-doing-barbell-squats-5319755/",
+      "license": "Pexels (royalty-free, no attribution required)",
+      "resolution": "2560x1440",
+      "duration_sec": 28.3,
+      "fps": 25,
+      "orientation": "landscape",
+      "lift": "squat",
+      "description": "Man doing barbell squats — different camera angle than side-clean. May be front/diagonal view.",
+      "calibrated": false,
+      "expected": {
+        "camera_angle": "front",
+        "camera_angle_notes": "Verify — may be front or diagonal. Tests camera angle auto-detection (shoulder X-separation > 0.15 = front).",
+        "rep_count": { "min": 2, "max": 10 },
+        "faults_to_test": ["above_parallel", "excessive_lean", "butt_wink", "unstable_lockout"],
+        "metrics_present": ["forwardLeanDeg", "maxDepthCm", "barDriftCm", "stanceWidthCm", "hipShiftCm", "hipShiftDirection", "lockoutStabilityCv"],
+        "fatigue_signatures": true,
+        "notes": "Tests camera angle detection. If front view, knee valgus + hip shift should be computable. If diagonal, expect degraded bar path accuracy."
+      },
+      "actual": null
+    },
+    {
+      "id": "squat-portrait",
+      "file": "squat-gym-workout.mp4",
+      "source": "https://www.pexels.com/video/a-man-working-out-inside-the-gym-5319856/",
+      "license": "Pexels (royalty-free, no attribution required)",
+      "resolution": "1440x2560",
+      "duration_sec": 27.4,
+      "fps": 25,
+      "orientation": "portrait",
+      "lift": "squat",
+      "description": "Man working out in a gym — portrait mode phone-style recording. Tests realistic phone capture conditions.",
+      "calibrated": false,
+      "expected": {
+        "camera_angle": "side",
+        "camera_angle_notes": "Portrait orientation — verify pose detection handles tall-narrow frames correctly.",
+        "rep_count": { "min": 2, "max": 10 },
+        "faults_to_test": ["above_parallel", "excessive_lean", "bar_drift", "butt_wink", "unstable_lockout"],
+        "metrics_present": ["forwardLeanDeg", "maxDepthCm", "barDriftCm", "romCm", "buttWinkDeg", "stanceWidthCm", "hipShiftCm", "hipShiftDirection", "lockoutStabilityCv"],
+        "fatigue_signatures": true,
+        "notes": "Portrait mode stress test. Most phone recordings will be portrait. Verify landmark extraction is not degraded by aspect ratio."
+      },
+      "actual": null
+    },
+    {
+      "id": "deadlift-side",
+      "file": "deadlift-barbell.mp4",
+      "source": "https://www.pexels.com/video/man-lifting-a-barbell-5319754/",
+      "license": "Pexels (royalty-free, no attribution required)",
+      "resolution": "1440x2560",
+      "duration_sec": 15.4,
+      "fps": 25,
+      "orientation": "portrait",
+      "lift": "deadlift",
+      "description": "Man lifting a barbell — portrait mode. Likely conventional deadlift.",
+      "calibrated": false,
+      "expected": {
+        "camera_angle": "side",
+        "rep_count": { "min": 1, "max": 6 },
+        "faults_to_test": ["bar_drift", "back_rounding", "incomplete_lockout", "early_hip_shoot", "bar_away_from_shins", "unstable_lockout"],
+        "metrics_present": ["barDriftCm", "hipAngleAtLockoutDeg", "romCm", "meanConcentricVelocityCmS", "hipHingeCrossoverPct", "barToShinDistanceCm", "lockoutStabilityCv"],
+        "fatigue_signatures": true,
+        "notes": "Primary deadlift calibration. Check back_rounding, lockout, hip hinge timing (crossover < 30% = early hip shoot), bar-to-shin distance (>5cm = drifting forward)."
+      },
+      "actual": null
+    },
+    {
+      "id": "deadlift-back",
+      "file": "deadlift-back-workout.mp4",
+      "source": "https://www.pexels.com/video/deadlift-back-workout-14180867/",
+      "license": "Pexels (royalty-free, no attribution required)",
+      "resolution": "2732x1366",
+      "duration_sec": 13.6,
+      "fps": 23.976,
+      "orientation": "landscape",
+      "lift": "deadlift",
+      "description": "Deadlift back workout — landscape, different gym. May show heavier weight or different form.",
+      "calibrated": false,
+      "expected": {
+        "camera_angle": "side",
+        "rep_count": { "min": 1, "max": 5 },
+        "faults_to_test": ["bar_drift", "back_rounding", "incomplete_lockout", "early_hip_shoot", "bar_away_from_shins", "unstable_lockout"],
+        "metrics_present": ["barDriftCm", "hipAngleAtLockoutDeg", "romCm", "meanConcentricVelocityCmS", "hipHingeCrossoverPct", "barToShinDistanceCm", "lockoutStabilityCv"],
+        "fatigue_signatures": true,
+        "notes": "Second deadlift video for cross-validation. Compare fault detection results with deadlift-side to assess consistency across different filming conditions."
+      },
+      "actual": null
+    },
+    {
+      "id": "bench-press",
+      "file": "bench-press.mp4",
+      "source": "https://www.pexels.com/video/a-person-doing-bench-press-workout-5320007/",
+      "license": "Pexels (royalty-free, no attribution required)",
+      "resolution": "2560x1440",
+      "duration_sec": 15.7,
+      "fps": 25,
+      "orientation": "landscape",
+      "lift": "bench",
+      "description": "Person doing bench press workout in a gym. Side/diagonal view.",
+      "calibrated": false,
+      "expected": {
+        "camera_angle": "side",
+        "rep_count": { "min": 2, "max": 8 },
+        "faults_to_test": ["bar_drift", "elbow_flare", "unstable_lockout"],
+        "metrics_present": ["barDriftCm", "romCm", "meanConcentricVelocityCmS", "elbowFlareDeg", "pauseDurationSec", "isSinking", "lockoutStabilityCv"],
+        "fatigue_signatures": true,
+        "notes": "Only bench press video. Bar path should track wrist Y (lockout y≈0.3 → chest y≈0.55). Check elbow flare (45-75° ideal), pause quality, touch point variance if 2+ reps."
+      },
+      "actual": null
+    }
+  ],
+  "calibration_workflow": {
+    "steps": [
+      "1. Run pipeline on each video: extract frames at 4fps → MediaPipe pose → metrics assembler",
+      "2. Inspect rep detection: verify rep count matches visual count",
+      "3. Inspect camera angle: verify auto-detection matches actual angle",
+      "4. Inspect fault detection: verify faults fire when form is genuinely bad, don't fire when form is clean",
+      "5. Record actual values in the 'actual' field for each video",
+      "6. Set 'calibrated: true' once actual values are verified visually",
+      "7. Use calibrated values as regression targets for future algorithm changes"
+    ],
+    "actual_schema": {
+      "camera_angle": "side | front",
+      "rep_count": "number",
+      "analysis_version": "number",
+      "faults": [{ "rep": "number", "type": "string", "value": "number | null" }],
+      "fatigue_signatures": {
+        "forwardLeanDriftDeg": "number | null",
+        "barDriftIncreaseCm": "number | null",
+        "romCompressionCm": "number | null",
+        "descentSpeedChange": "number | null",
+        "lockoutDegradationDeg": "number | null",
+        "velocityLossTrend": "'increasing' | 'stable' | 'decreasing' | null"
+      },
+      "metrics_sample": {
+        "rep1": {
+          "forwardLeanDeg": "number | null",
+          "maxDepthCm": "number | null",
+          "barDriftCm": "number | null",
+          "kneeAngleDeg": "number | null",
+          "hipAngleAtLockoutDeg": "number | null",
+          "romCm": "number | null",
+          "meanConcentricVelocityCmS": "number | null",
+          "velocityLossPct": "number | null",
+          "buttWinkDeg": "number | null (squat only)",
+          "stanceWidthCm": "number | null (squat only)",
+          "hipShiftCm": "number | null (squat only)",
+          "hipShiftDirection": "'left' | 'right' | 'none' | null (squat only)",
+          "elbowFlareDeg": "number | null (bench only)",
+          "pauseDurationSec": "number | null (bench only)",
+          "isSinking": "boolean | null (bench only)",
+          "hipHingeCrossoverPct": "number | null (deadlift only)",
+          "barToShinDistanceCm": "number | null (deadlift only)",
+          "lockoutStabilityCv": "number | null (all lifts)"
+        }
+      }
+    }
+  }
+}
