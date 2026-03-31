@@ -105,14 +105,42 @@ export function detectReps({
   const smoothed = smoothSignal({ signal: raw, windowSize: smoothWindow });
   const allPeaks = findPeaks({ signal: smoothed, minDistance: minPeakDistance });
 
-  const signalMin = Math.min(...smoothed);
-  const signalMax = Math.max(...smoothed);
+  // Compute signal range from non-zero values only — empty/interpolated frames
+  // have Y=0 which inflates the range and makes the prominence threshold too high.
+  const nonZero = smoothed.filter((v) => v > 0.01);
+  const signalMin = nonZero.length > 0 ? Math.min(...nonZero) : 0;
+  const signalMax = nonZero.length > 0 ? Math.max(...nonZero) : 0;
   const signalRange = signalMax - signalMin;
 
-  // No peak filtering — every detected peak counts as a rep. It's better to
-  // over-count (include a walkout dip) than under-count (miss a real rep).
-  // Walkout reps will have low ROM/depth metrics, which the UI can flag.
-  const peaks = allPeaks;
+  // Filter peaks by minimum prominence: a peak must rise at least 20% of the
+  // valid signal range above its deepest flanking valley to count as a real rep.
+  // This eliminates walkout dips, between-rep shuffles, and noise from real video
+  // landmarks that the synthetic tests didn't expose.
+  const MIN_PROMINENCE_RATIO = 0.20;
+  const minProminence = signalRange * MIN_PROMINENCE_RATIO;
+
+  const peaks = allPeaks.filter((peakIdx) => {
+    if (signalRange < 0.005) return false; // flat signal — no real reps
+
+    // Search for the deepest valley on each side of this peak across the
+    // full signal (not just to the next raw peak). This handles noisy signals
+    // where many raw peaks exist between true rep bottoms.
+    let leftValley = smoothed[peakIdx];
+    for (let j = peakIdx - 1; j >= 0; j--) {
+      if (smoothed[j] < leftValley) leftValley = smoothed[j];
+      // Stop at a deeper peak — we've crossed into another rep's territory
+      if (smoothed[j] > smoothed[peakIdx]) break;
+    }
+    let rightValley = smoothed[peakIdx];
+    for (let j = peakIdx + 1; j < smoothed.length; j++) {
+      if (smoothed[j] < rightValley) rightValley = smoothed[j];
+      if (smoothed[j] > smoothed[peakIdx]) break;
+    }
+
+    // Prominence = peak height above the higher of the two flanking valleys
+    const prominence = smoothed[peakIdx] - Math.max(leftValley, rightValley);
+    return prominence >= minProminence;
+  });
 
   if (typeof __DEV__ !== 'undefined' && __DEV__) {
     console.log(`[reps] ${peaks.length} peaks from ${frames.length} frames (range=${signalRange.toFixed(3)})`);

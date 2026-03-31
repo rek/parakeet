@@ -41,10 +41,15 @@ export function computeForwardLean({ frame }: { frame: PoseFrame }) {
   const hipY = (lh.y + rh.y) / 2;
 
   const dx = Math.abs(hipX - shoulderX);
-  // dy is positive when hip is below shoulder (normal standing/squatting position)
-  const dy = hipY - shoulderY;
+  // dy is positive when hip is below shoulder (normal standing/squatting position).
+  // Use abs(dy) so that noisy frames where shoulder Y ≈ hip Y don't saturate at 90°.
+  // If both are at the same Y, dx/dy dominates correctly.
+  const dy = Math.abs(hipY - shoulderY);
 
-  return (Math.atan2(dx, Math.max(dy, 0)) * 180) / Math.PI;
+  // Guard against degenerate case where shoulder and hip are at exactly the same position
+  if (dx < 0.001 && dy < 0.001) return 0;
+
+  return (Math.atan2(dx, dy) * 180) / Math.PI;
 }
 
 /**

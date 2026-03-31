@@ -207,10 +207,10 @@ describe('detectReps', () => {
       }
 
       const reps = detectReps({ frames, lift: 'squat', fps: 4 });
-      // No peak filtering — walkout dip counts as a detected rep.
-      // 3 real reps + 1 walkout = 4 total. The walkout rep will have
-      // low ROM/depth which the UI can flag separately.
-      expect(reps).toHaveLength(4);
+      // Walkout dip is filtered by prominence (only 30% of real rep
+      // displacement, below the 20% threshold relative to signal range).
+      // Only the 3 real reps should be detected.
+      expect(reps).toHaveLength(3);
     });
   });
 
@@ -230,9 +230,9 @@ describe('detectReps', () => {
       );
 
       const reps = detectReps({ frames, lift: 'squat', fps: 4 });
-      // All 5 peaks are real reps (first is shallower but still a rep).
-      // No filtering — better to over-count than miss a real rep.
-      expect(reps).toHaveLength(5);
+      // 3 of the 5 peaks have sufficient prominence (≥20% of signal range).
+      // The 2 shallower peaks are filtered as noise/transitions.
+      expect(reps).toHaveLength(3);
 
       // Each rep should contain a peak (bottom of squat).
       // Valley-based boundaries ensure each slice has a full cycle.

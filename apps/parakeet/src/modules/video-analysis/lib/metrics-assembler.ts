@@ -10,6 +10,7 @@ import { computeForwardLean, computeHipAngle, computeKneeAngle } from './angle-c
 import { computeBarToShinDistance } from './bar-shin-distance';
 import { computeConcentricVelocity, computeVelocityLoss, estimateRirFromVelocityLoss } from './bar-velocity';
 import { detectButtWink } from './butt-wink-detector';
+import { detectCameraAngle } from './detect-camera-angle';
 import { computeElbowFlare } from './elbow-flare';
 import { computeFatigueSignatures } from './fatigue-signatures';
 import { analyzeHipHingeTiming } from './hip-hinge-timing';
@@ -47,8 +48,13 @@ export function assembleAnalysis({
   strategy?: StrategyName;
 }) {
   const strategy: AnalysisStrategy = STRATEGIES[strategyName];
+  const cameraAngle = detectCameraAngle({ frames });
+  // Side-view metrics (depth, forward lean) are meaningless from the front
+  // because hip/knee Y overlap and shoulder-hip X alignment is perpendicular.
+  const isSideView = cameraAngle === 'side';
+
   if (typeof __DEV__ !== 'undefined' && __DEV__) {
-    console.log(`[analysis] ${frames.length} frames, ${fps}fps, ${lift}, strategy=${strategy.name}`);
+    console.log(`[analysis] ${frames.length} frames, ${fps}fps, ${lift}, ${cameraAngle}, strategy=${strategy.name}`);
   }
 
   const rawPath = strategy.barPath.extractBarPath({ frames });
@@ -76,18 +82,23 @@ export function assembleAnalysis({
     // Midpoint frame for representative angle measurements
     const midFrame = Math.round((safeStart + safeEnd) / 2);
 
-    // Forward lean at the deepest/hardest point (midpoint approximation)
-    const forwardLeanDeg = computeForwardLean({ frame: frames[midFrame] });
+    // Forward lean and knee angle are only meaningful from the side.
+    // From the front, shoulder-hip X separation is near-zero → lean saturates
+    // at 90°, and knee angle reads near-180° (overlapping landmarks).
+    const forwardLeanDeg = isSideView
+      ? computeForwardLean({ frame: frames[midFrame] })
+      : undefined;
+    const kneeAngleAtMid = isSideView
+      ? computeKneeAngle({ frame: frames[midFrame] })
+      : undefined;
 
-    // Knee angle at midpoint — captures bottom position for squat/deadlift
-    const kneeAngleAtMid = computeKneeAngle({ frame: frames[midFrame] });
-
-    // Hip angle at end frame for lockout assessment
+    // Hip angle at end frame for lockout assessment — reasonable from both views
     const hipAngleAtEnd = computeHipAngle({ frame: frames[safeEnd] });
 
-    // Squat-specific: depth at bottom frame
+    // Squat-specific: depth at bottom frame — only meaningful from side view
+    // (from front, hip and knee Y overlap regardless of actual depth)
     let maxDepthCm: number | undefined;
-    if (lift === 'squat') {
+    if (lift === 'squat' && isSideView) {
       const { depthCm } = detectSquatDepth({ frame: frames[bottomFrame] });
       maxDepthCm = depthCm;
     }
@@ -104,6 +115,7 @@ export function assembleAnalysis({
       barPath,
       lift,
       repContext: { repPath, barDrift: barDriftNormalized, bottomFrame },
+      cameraAngle,
     });
 
     // Bar velocity: mean concentric velocity from wrist Y displacement
@@ -114,22 +126,25 @@ export function assembleAnalysis({
 
     // --- Lift-specific metrics ---
 
-    // Squat: butt wink, stance width, hip shift
+    // Squat: butt wink (side only), stance width, hip shift
     let buttWinkDeg: number | undefined;
     let stanceWidthCm: number | undefined;
     let hipShiftCm: number | undefined;
     let hipShiftDirection: 'left' | 'right' | 'none' | undefined;
     if (lift === 'squat') {
-      const wink = detectButtWink({ frames, bottomFrame, fps });
-      if (wink.detected && wink.magnitudeDeg != null) {
-        buttWinkDeg = wink.magnitudeDeg;
-        faults.push({
-          type: 'butt_wink',
-          severity: 'warning',
-          message: `Butt wink of ${wink.magnitudeDeg.toFixed(1)}° at bottom`,
-          value: wink.magnitudeDeg,
-          threshold: 10,
-        });
+      // Butt wink is only detectable from side view (hip angle tracking)
+      if (isSideView) {
+        const wink = detectButtWink({ frames, bottomFrame, fps });
+        if (wink.detected && wink.magnitudeDeg != null) {
+          buttWinkDeg = wink.magnitudeDeg;
+          faults.push({
+            type: 'butt_wink',
+            severity: 'warning',
+            message: `Butt wink of ${wink.magnitudeDeg.toFixed(1)}° at bottom`,
+            value: wink.magnitudeDeg,
+            threshold: 10,
+          });
+        }
       }
       stanceWidthCm = computeStanceWidth({ frame: frames[safeStart] });
       const shift = computeHipShift({ frames, startFrame: safeStart, endFrame: safeEnd });
@@ -252,7 +267,7 @@ export function assembleAnalysis({
   return {
     reps: repsWithVelocity,
     fps,
-    cameraAngle: 'side' as const,
+    cameraAngle,
     analysisVersion: ANALYSIS_VERSION,
     fatigueSignatures,
   } satisfies VideoAnalysisResult;

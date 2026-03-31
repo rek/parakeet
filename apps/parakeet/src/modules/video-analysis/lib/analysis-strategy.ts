@@ -66,6 +66,7 @@ export interface FaultDetector {
       barDrift: number;
       bottomFrame: number;
     };
+    cameraAngle?: 'side' | 'front';
   }): FormFault[];
   findBottomFrame(params: {
     frames: PoseFrame[];

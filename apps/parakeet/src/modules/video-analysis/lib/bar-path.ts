@@ -2,8 +2,11 @@ import type { BarPathPoint } from '@parakeet/shared-types';
 
 import { LANDMARK, type PoseFrame } from './pose-types';
 
-/** Target ~167ms smoothing regardless of FPS (5 frames at 30fps). */
-const SMOOTH_TIME_MS = 167;
+/** Target ~500ms smoothing regardless of FPS (15 frames at 30fps, 2 at 4fps).
+ * Increased from 167ms — real landmark data has significantly more jitter than
+ * synthetic sine-wave fixtures. At 4fps, 167ms yields only 1 frame of smoothing
+ * (effectively none). 500ms gives 2-frame smoothing at 4fps and 15 at 30fps. */
+const SMOOTH_TIME_MS = 500;
 
 /**
  * Extract bar position from wrist landmark averages per frame.
@@ -66,7 +69,12 @@ export function smoothBarPath({
 }
 
 /**
- * Compute maximum horizontal deviation from the starting bar position.
+ * Compute maximum horizontal deviation from the mean bar X position.
+ *
+ * Uses the mean X of the rep path as the reference rather than the first
+ * point. This is more robust to start-position variance — if the lifter
+ * repositions or the camera angle causes apparent X drift as the bar moves
+ * vertically, the mean-centered metric captures true lateral deviation.
  *
  * Returns the worst-case lateral drift in normalized coordinates.
  * The caller converts to physical units (1 normalized unit ≈ 243cm for a
@@ -75,11 +83,11 @@ export function smoothBarPath({
 export function computeBarDrift({ path }: { path: BarPathPoint[] }) {
   if (path.length === 0) return 0;
 
-  const startX = path[0].x;
+  const meanX = path.reduce((sum, p) => sum + p.x, 0) / path.length;
   let maxDrift = 0;
 
   for (const point of path) {
-    const drift = Math.abs(point.x - startX);
+    const drift = Math.abs(point.x - meanX);
     if (drift > maxDrift) maxDrift = drift;
   }
 

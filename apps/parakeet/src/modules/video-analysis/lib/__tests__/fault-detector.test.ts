@@ -14,8 +14,11 @@ function straightPath(startFrame: number, endFrame: number) {
   }));
 }
 
-/** Build a bar path with significant horizontal drift from startFrame. */
-function driftingPath(startFrame: number, endFrame: number, maxDrift = 0.06) {
+/** Build a bar path with significant horizontal drift from startFrame.
+ * Mean-centered drift: with a linear ramp from 0.5 to 0.5+maxDrift,
+ * the max deviation from mean is maxDrift/2. Use maxDrift=0.12 to get
+ * 0.06 mean-centered drift, well above the 0.03 threshold. */
+function driftingPath(startFrame: number, endFrame: number, maxDrift = 0.12) {
   const count = endFrame - startFrame + 1;
   return Array.from({ length: count }, (_, i) => ({
     x: 0.5 + (i / count) * maxDrift,
@@ -116,7 +119,7 @@ describe('detectFaults', () => {
     it('detects bar drift fault when drift exceeds 0.03 normalized', () => {
       const frames = buildCleanSquatFrames();
       const repBounds = { startFrame: 0, endFrame: frames.length - 1 };
-      const barPath = driftingPath(0, frames.length - 1, 0.06); // 0.06 > threshold 0.03
+      const barPath = driftingPath(0, frames.length - 1); // mean-centered drift ~0.06, well above 0.03 threshold
 
       const faults = detectFaults({ frames, repBounds, barPath, lift: 'squat' });
       const driftFault = faults.find((f) => f.type === 'bar_drift');
@@ -166,7 +169,7 @@ describe('detectFaults', () => {
     it('detects bar drift in deadlift', () => {
       const frames = generateDeadliftFrames({ reps: 1, framesPerRep: 60 });
       const repBounds = { startFrame: 0, endFrame: frames.length - 1 };
-      const barPath = driftingPath(0, frames.length - 1, 0.06);
+      const barPath = driftingPath(0, frames.length - 1);
 
       const faults = detectFaults({ frames, repBounds, barPath, lift: 'deadlift' });
       expect(faults.some((f) => f.type === 'bar_drift')).toBe(true);
@@ -189,7 +192,7 @@ describe('detectFaults', () => {
     it('detects bar drift in bench press', () => {
       const frames = Array.from({ length: 60 }, () => buildFrame());
       const repBounds = { startFrame: 0, endFrame: 59 };
-      const barPath = driftingPath(0, 59, 0.06);
+      const barPath = driftingPath(0, 59);
 
       const faults = detectFaults({ frames, repBounds, barPath, lift: 'bench' });
       expect(faults.some((f) => f.type === 'bar_drift')).toBe(true);
@@ -220,7 +223,7 @@ describe('detectFaults', () => {
     it('all returned faults have a valid severity', () => {
       const frames = buildAboveParallelSquatFrames();
       const repBounds = { startFrame: 0, endFrame: frames.length - 1 };
-      const barPath = driftingPath(0, frames.length - 1, 0.06);
+      const barPath = driftingPath(0, frames.length - 1);
 
       const faults = detectFaults({ frames, repBounds, barPath, lift: 'squat' });
       const validSeverities = new Set(['info', 'warning', 'critical']);

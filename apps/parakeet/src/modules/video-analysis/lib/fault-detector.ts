@@ -63,41 +63,48 @@ function detectSquatFaults({
   repBounds,
   barPath,
   repContext,
+  cameraAngle = 'side',
 }: {
   frames: PoseFrame[];
   repBounds: { startFrame: number; endFrame: number };
   barPath: BarPathPoint[];
   repContext?: RepContext;
+  cameraAngle?: 'side' | 'front';
 }) {
   const faults: FormFault[] = [];
   const { startFrame, endFrame } = repBounds;
+  const isSideView = cameraAngle === 'side';
 
-  // Depth check — evaluate at the frame where hip is lowest
-  const bottomFrame =
-    repContext?.bottomFrame ?? findBottomFrame({ frames, startFrame, endFrame });
-  const { belowParallel } = detectSquatDepth({ frame: frames[bottomFrame] });
-  if (!belowParallel) {
-    faults.push({
-      type: 'above_parallel',
-      severity: 'critical',
-      message: 'Hip crease did not reach parallel',
-    });
+  // Depth check — only meaningful from side view (from front, hip/knee Y overlap)
+  if (isSideView) {
+    const bottomFrame =
+      repContext?.bottomFrame ?? findBottomFrame({ frames, startFrame, endFrame });
+    const { belowParallel } = detectSquatDepth({ frame: frames[bottomFrame] });
+    if (!belowParallel) {
+      faults.push({
+        type: 'above_parallel',
+        severity: 'critical',
+        message: 'Hip crease did not reach parallel',
+      });
+    }
   }
 
-  // Forward lean — peak lean across the rep
-  let maxLean = 0;
-  for (let i = startFrame; i <= Math.min(endFrame, frames.length - 1); i++) {
-    const lean = computeForwardLean({ frame: frames[i] });
-    if (lean > maxLean) maxLean = lean;
-  }
-  if (maxLean > THRESHOLDS.squat.excessiveForwardLeanDeg) {
-    faults.push({
-      type: 'excessive_lean',
-      severity: 'warning',
-      message: `Forward lean reached ${maxLean.toFixed(1)}°`,
-      value: maxLean,
-      threshold: THRESHOLDS.squat.excessiveForwardLeanDeg,
-    });
+  // Forward lean — only meaningful from side view (from front, lean saturates at 90°)
+  if (isSideView) {
+    let maxLean = 0;
+    for (let i = startFrame; i <= Math.min(endFrame, frames.length - 1); i++) {
+      const lean = computeForwardLean({ frame: frames[i] });
+      if (lean > maxLean) maxLean = lean;
+    }
+    if (maxLean > THRESHOLDS.squat.excessiveForwardLeanDeg) {
+      faults.push({
+        type: 'excessive_lean',
+        severity: 'warning',
+        message: `Forward lean reached ${maxLean.toFixed(1)}°`,
+        value: maxLean,
+        threshold: THRESHOLDS.squat.excessiveForwardLeanDeg,
+      });
+    }
   }
 
   // Bar drift
@@ -228,15 +235,17 @@ export function detectFaults({
   barPath,
   lift,
   repContext,
+  cameraAngle = 'side',
 }: {
   frames: PoseFrame[];
   repBounds: { startFrame: number; endFrame: number };
   barPath: BarPathPoint[];
   lift: 'squat' | 'bench' | 'deadlift';
   repContext?: RepContext;
+  cameraAngle?: 'side' | 'front';
 }) {
   if (lift === 'squat') {
-    return detectSquatFaults({ frames, repBounds, barPath, repContext });
+    return detectSquatFaults({ frames, repBounds, barPath, repContext, cameraAngle });
   }
   if (lift === 'deadlift') {
     return detectDeadliftFaults({ frames, repBounds, barPath, repContext });

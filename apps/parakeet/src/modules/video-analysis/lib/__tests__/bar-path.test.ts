@@ -129,22 +129,25 @@ describe('computeBarDrift', () => {
     expect(computeBarDrift({ path })).toBe(0);
   });
 
-  it('returns maximum absolute deviation from start x', () => {
+  it('returns maximum absolute deviation from mean x', () => {
     const path = [
       { x: 0.5, y: 0.0, frame: 0 },
       { x: 0.52, y: 0.1, frame: 1 },
-      { x: 0.54, y: 0.2, frame: 2 }, // max drift = 0.04
+      { x: 0.54, y: 0.2, frame: 2 },
       { x: 0.51, y: 0.3, frame: 3 },
     ];
-    expect(computeBarDrift({ path })).toBeCloseTo(0.04);
+    // mean x = (0.5 + 0.52 + 0.54 + 0.51) / 4 = 0.5175
+    // max deviation = |0.54 - 0.5175| = 0.0225
+    expect(computeBarDrift({ path })).toBeCloseTo(0.0225);
   });
 
   it('handles drift in the negative direction', () => {
     const path = [
       { x: 0.5, y: 0.0, frame: 0 },
-      { x: 0.46, y: 0.1, frame: 1 }, // drift = 0.04
+      { x: 0.46, y: 0.1, frame: 1 },
     ];
-    expect(computeBarDrift({ path })).toBeCloseTo(0.04);
+    // mean x = 0.48, max deviation = |0.5 - 0.48| = 0.02
+    expect(computeBarDrift({ path })).toBeCloseTo(0.02);
   });
 
   it('returns absolute value (always non-negative)', () => {
@@ -155,13 +158,15 @@ describe('computeBarDrift', () => {
     expect(computeBarDrift({ path })).toBeGreaterThanOrEqual(0);
   });
 
-  it('uses the first point as the reference for drift measurement', () => {
+  it('uses mean x as the reference for drift measurement', () => {
     const path = [
-      { x: 0.3, y: 0, frame: 0 }, // start at 0.3
-      { x: 0.35, y: 0.1, frame: 1 }, // drift 0.05 from start
-      { x: 0.5, y: 0.2, frame: 2 }, // drift 0.2 from start
+      { x: 0.3, y: 0, frame: 0 },
+      { x: 0.35, y: 0.1, frame: 1 },
+      { x: 0.5, y: 0.2, frame: 2 },
     ];
-    expect(computeBarDrift({ path })).toBeCloseTo(0.2);
+    // mean x = (0.3 + 0.35 + 0.5) / 3 ≈ 0.3833
+    // max deviation = |0.5 - 0.3833| ≈ 0.1167
+    expect(computeBarDrift({ path })).toBeCloseTo(0.1167, 3);
   });
 });
 
