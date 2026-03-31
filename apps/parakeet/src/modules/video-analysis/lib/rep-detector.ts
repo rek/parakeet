@@ -112,7 +112,20 @@ export function detectReps({
   const signalMax = Math.max(...smoothed);
   const signalRange = signalMax - signalMin;
 
-  const peaks = allPeaks;
+  // Setup/walkout filter: drop the first peak if it's in the initial 20% of
+  // the video AND much smaller than the median peak height. Setup dips
+  // (positioning under the bar, unracking) look like shallow peaks.
+  let peaks = allPeaks;
+  if (allPeaks.length >= 3 && allPeaks[0] < smoothed.length * 0.20) {
+    const peakValues = allPeaks.map((idx) => smoothed[idx]);
+    const sorted = [...peakValues].sort((a, b) => a - b);
+    const median = sorted[Math.floor(sorted.length / 2)];
+    const firstRelative = peakValues[0] - signalMin;
+    const medianRelative = median - signalMin;
+    if (medianRelative > 0 && firstRelative / medianRelative < 0.5) {
+      peaks = allPeaks.slice(1);
+    }
+  }
 
   // Log for debugging
   const preview = smoothed.slice(0, 20).map((v) => v.toFixed(3)).join(', ');
@@ -130,10 +143,21 @@ export function detectReps({
     return reps;
   }
 
-  // Build midpoints between consecutive peaks as rep boundaries
+  // Find valleys (local minima = standing positions) between consecutive peaks.
+  // These are the natural rep boundaries — the point where the lifter is most
+  // upright between two squat bottoms. Using valleys instead of midpoints
+  // ensures each rep slice contains one complete descent→bottom→ascent cycle.
   const boundaries: number[] = [0];
   for (let i = 1; i < peaks.length; i++) {
-    boundaries.push(Math.round((peaks[i - 1] + peaks[i]) / 2));
+    let valleyIdx = peaks[i - 1];
+    let valleyVal = smoothed[valleyIdx];
+    for (let j = peaks[i - 1] + 1; j < peaks[i]; j++) {
+      if (smoothed[j] < valleyVal) {
+        valleyVal = smoothed[j];
+        valleyIdx = j;
+      }
+    }
+    boundaries.push(valleyIdx);
   }
   boundaries.push(lastFrame);
 
