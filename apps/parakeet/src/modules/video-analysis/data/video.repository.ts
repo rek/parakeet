@@ -227,6 +227,31 @@ export async function updateSessionVideoCoaching({
   return toSessionVideo(data);
 }
 
+/**
+ * Store raw PoseFrame[] landmarks for calibration debugging.
+ * Only called in __DEV__ — the column is nullable and ignored in production.
+ */
+export async function updateSessionVideoDebugLandmarks({
+  id,
+  frames,
+  fps,
+}: {
+  id: string;
+  frames: unknown[];
+  fps: number;
+}) {
+  const payload = { frames, fps, extractedAt: new Date().toISOString() };
+  const { error } = await typedSupabase
+    .from('session_videos')
+    .update({ debug_landmarks: toJson(payload) })
+    .eq('id', id);
+
+  if (error) {
+    captureException(error);
+    // Non-fatal — debug data loss is acceptable
+  }
+}
+
 export async function deleteSessionVideo({ id }: { id: string }) {
   const { error } = await typedSupabase.from('session_videos').delete().eq('id', id);
 

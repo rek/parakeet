@@ -15,7 +15,9 @@
     "db:stop": "npx supabase stop",
     "db:reset": "npx supabase db reset",
     "db:push": "npx supabase db push",
-    "db:types": "npx supabase gen types typescript --local > supabase/types.ts"
+    "db:types": "npx supabase gen types typescript --local > supabase/types.ts",
+    "extract:landmarks": "python3 scripts/extract-landmarks.py",
+    "pull:device-analysis": "npx tsx scripts/pull-device-analysis.ts"
   },
   "dependencies": {
     "@expo/metro-runtime": "~55.0.7",

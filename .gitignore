@@ -1,8 +1,11 @@
 # MCP config
 .mcp.json
 
-# Test video binaries (manifest.json is tracked separately)
+# Test video binaries (manifest.json + landmarks/*.json are tracked)
 test-videos/*.mp4
+test-videos/landmarks/.model/
+test-videos/landmarks/device-*.landmarks.json
+test-videos/device-results/
 
 #
 Dependencies

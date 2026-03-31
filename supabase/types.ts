@@ -1100,6 +1100,7 @@ export type Database = {
           camera_angle: string
           coaching_response: Json | null
           created_at: string
+          debug_landmarks: Json | null
           duration_sec: number
           id: string
           lift: string
@@ -1118,6 +1119,7 @@ export type Database = {
           camera_angle?: string
           coaching_response?: Json | null
           created_at?: string
+          debug_landmarks?: Json | null
           duration_sec: number
           id?: string
           lift: string
@@ -1136,6 +1138,7 @@ export type Database = {
           camera_angle?: string
           coaching_response?: Json | null
           created_at?: string
+          debug_landmarks?: Json | null
           duration_sec?: number
           id?: string
           lift?: string
@@ -1396,7 +1399,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      is_accepted_partner: {
+        Args: { p_partner_id: string; p_user_id: string }
+        Returns: boolean
+      }
     }
     Enums: {
       [_ in never]: never
