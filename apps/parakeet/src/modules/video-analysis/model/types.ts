@@ -11,6 +11,9 @@ export interface SessionVideo {
   durationSec: number;
   analysis: VideoAnalysisResult | null;
   coachingResponse: FormCoachingResult | null;
+  setWeightGrams: number | null;
+  setReps: number | null;
+  setRpe: number | null;
   recordedBy: string | null;
   recordedByName: string | null;
   createdAt: string;

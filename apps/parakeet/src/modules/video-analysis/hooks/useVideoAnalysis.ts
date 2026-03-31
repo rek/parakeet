@@ -16,16 +16,24 @@ import type { SessionVideo } from '../model/types';
 
 const SUPPORTED_LIFTS = ['squat', 'bench', 'deadlift'] as const;
 
+export interface SetContext {
+  weightGrams: number;
+  reps: number;
+  rpe?: number;
+}
+
 export function useVideoAnalysis({
   sessionId,
   lift,
   setNumber,
   cameraAngle = 'side',
+  setContext,
 }: {
   sessionId: string;
   lift: string;
   setNumber: number;
   cameraAngle?: 'side' | 'front';
+  setContext?: SetContext | null;
 }) {
   const [isProcessing, setIsProcessing] = useState(false);
   const [progress, setProgress] = useState(0);
@@ -111,6 +119,9 @@ export function useVideoAnalysis({
       cameraAngle: detectedAngle,
       localUri: destUri,
       durationSec,
+      setWeightGrams: setContext?.weightGrams,
+      setReps: setContext?.reps,
+      setRpe: setContext?.rpe,
     });
 
     // 5. If analysis succeeded, update the DB row with results

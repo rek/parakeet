@@ -1108,6 +1108,9 @@ export type Database = {
           remote_uri: string | null
           session_id: string
           set_number: number
+          set_reps: number | null
+          set_rpe: number | null
+          set_weight_grams: number | null
           user_id: string
         }
         Insert: {
@@ -1123,6 +1126,9 @@ export type Database = {
           remote_uri?: string | null
           session_id: string
           set_number?: number
+          set_reps?: number | null
+          set_rpe?: number | null
+          set_weight_grams?: number | null
           user_id: string
         }
         Update: {
@@ -1138,6 +1144,9 @@ export type Database = {
           remote_uri?: string | null
           session_id?: string
           set_number?: number
+          set_reps?: number | null
+          set_rpe?: number | null
+          set_weight_grams?: number | null
           user_id?: string
         }
         Relationships: [

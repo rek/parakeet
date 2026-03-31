@@ -55,6 +55,7 @@ export function assembleCoachingContext({
   log,
   jitSnapshot,
   previousAnalyses,
+  setContext,
 }: {
   analysis: VideoAnalysisResult;
   lift: 'squat' | 'bench' | 'deadlift';
@@ -78,12 +79,21 @@ export function assembleCoachingContext({
     activeDisruptions?: Array<{ disruption_type: string; severity: string }>;
   } | null;
   previousAnalyses: VideoAnalysisResult[];
+  /** Set-level context captured at video recording time (Phase 3). */
+  setContext?: {
+    weightGrams: number | null;
+    reps: number | null;
+    rpe: number | null;
+  } | null;
 }) {
-  // Extract heaviest weight from actual sets
+  // Prefer set-level weight if captured; fall back to max-weight heuristic
+  const setWeightKg = setContext?.weightGrams
+    ? setContext.weightGrams / 1000
+    : null;
   const maxWeightGrams = log?.actual_sets
     .map((s) => s.weight_grams ?? (s.weight_kg ?? 0) * 1000)
     .reduce((max, w) => Math.max(max, w), 0);
-  const weightKg = maxWeightGrams ? maxWeightGrams / 1000 : null;
+  const weightKg = setWeightKg ?? (maxWeightGrams ? maxWeightGrams / 1000 : null);
 
   // Compute longitudinal averages from previous analyses
   const prevWithReps = previousAnalyses.filter((a) => a.reps.length > 0);
@@ -127,7 +137,7 @@ export function assembleCoachingContext({
     cameraAngle,
     weightKg,
     oneRmKg,
-    sessionRpe: log?.session_rpe ?? null,
+    sessionRpe: setContext?.rpe ?? log?.session_rpe ?? null,
     biologicalSex,
     blockNumber: session?.block_number ?? null,
     weekNumber: session?.week_number ?? null,

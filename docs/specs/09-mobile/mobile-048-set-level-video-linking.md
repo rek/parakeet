@@ -69,17 +69,24 @@ Extend `session_videos` to associate videos with a specific set number. `set_num
 
 ### 3.1 — Snapshot set context columns
 
-- [ ] Migration: `set_weight_grams integer`, `set_reps integer`, `set_rpe numeric(3,1)` on session_videos
-- [ ] Update types and repository
+- [x] Migration `20260331000000`: `set_weight_grams integer`, `set_reps integer`, `set_rpe numeric(3,1)` on session_videos (all nullable, backward compatible)
+- [x] `supabase/types.ts` updated with Row/Insert/Update fields
+- [x] `SessionVideo` model type updated with `setWeightGrams`, `setReps`, `setRpe`
+- [x] `video.repository.ts` — `toSessionVideo` maps new columns, `insertSessionVideo` accepts them
 
 ### 3.2 — Set-aware analysis screen title
 
-- [ ] "Squat — Set 3 @ 140kg x 3 (RPE 8)" when set context present
+- [x] "Squat — Set 3 @ 140kg × 3 (RPE 8)" when set context present via query params
+- [x] Falls back to "{liftLabel} Form Analysis" when no set context
 
 ### 3.3 — Update assembleCoachingContext
 
-- [ ] Use `setWeightGrams / 1000` as `weightKg` when present (instead of max-weight heuristic)
-- [ ] Use `setRpe` instead of `sessionRpe` when present
+- [x] Accepts `setContext` param with `weightGrams`, `reps`, `rpe`
+- [x] Uses `setWeightGrams / 1000` as `weightKg` when present (falls back to max-weight heuristic)
+- [x] Uses `setRpe` as `sessionRpe` when present (falls back to `log.session_rpe`)
+- [x] `useFormCoaching` passes video's set context through
+- [x] `useVideoAnalysis` accepts `setContext` param, passes to `insertSessionVideo`
+- [x] `SetVideoIcon` passes `weightGrams`, `reps`, `rpe` as nav params from session screen
 
 ## Phase 4 — Multi-video browsing + set comparison
 

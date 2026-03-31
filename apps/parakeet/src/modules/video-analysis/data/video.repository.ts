@@ -43,6 +43,9 @@ function toSessionVideo(row: VideoRowWithProfile): SessionVideo {
     durationSec: row.duration_sec,
     analysis: parseAnalysis(row.analysis),
     coachingResponse: parseCoaching(row.coaching_response),
+    setWeightGrams: row.set_weight_grams ?? null,
+    setReps: row.set_reps ?? null,
+    setRpe: row.set_rpe != null ? Number(row.set_rpe) : null,
     recordedBy: row.recorded_by ?? null,
     recordedByName: row.recorded_by
       ? (row.recorded_by_profile?.display_name ?? 'Partner')
@@ -62,6 +65,9 @@ export async function insertSessionVideo({
   localUri,
   remoteUri,
   durationSec,
+  setWeightGrams,
+  setReps,
+  setRpe,
 }: {
   sessionId: string;
   lift: string;
@@ -70,6 +76,9 @@ export async function insertSessionVideo({
   localUri: string;
   remoteUri?: string | null;
   durationSec: number;
+  setWeightGrams?: number | null;
+  setReps?: number | null;
+  setRpe?: number | null;
 }) {
   const { data: { user } } = await typedSupabase.auth.getUser();
   if (!user) throw new Error('Not authenticated');
@@ -85,6 +94,9 @@ export async function insertSessionVideo({
       local_uri: localUri,
       remote_uri: remoteUri ?? null,
       duration_sec: durationSec,
+      set_weight_grams: setWeightGrams ?? null,
+      set_reps: setReps ?? null,
+      set_rpe: setRpe ?? null,
     })
     .select('*')
     .single();

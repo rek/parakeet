@@ -17,11 +17,17 @@ export function SetVideoIcon({
   lift,
   setNumber,
   isCompleted,
+  weightGrams,
+  reps,
+  rpe,
 }: {
   sessionId: string;
   lift: string;
   setNumber: number;
   isCompleted: boolean;
+  weightGrams?: number;
+  reps?: number;
+  rpe?: number;
 }) {
   const enabled = useFeatureEnabled('videoAnalysis');
   const router = useRouter();
@@ -32,7 +38,14 @@ export function SetVideoIcon({
   function handlePress() {
     router.push({
       pathname: '/session/video-analysis' as never,
-      params: { sessionId, lift, setNumber: String(setNumber) },
+      params: {
+        sessionId,
+        lift,
+        setNumber: String(setNumber),
+        ...(weightGrams != null ? { weightGrams: String(weightGrams) } : {}),
+        ...(reps != null ? { reps: String(reps) } : {}),
+        ...(rpe != null ? { rpe: String(rpe) } : {}),
+      },
     });
   }
 

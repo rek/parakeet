@@ -75,6 +75,11 @@ export function useFormCoaching({
         } | null,
         jitSnapshot,
         previousAnalyses,
+        setContext: {
+          weightGrams: video.setWeightGrams,
+          reps: video.setReps,
+          rpe: video.setRpe,
+        },
       });
 
       // 4. Generate coaching via LLM

@@ -917,6 +917,9 @@ export default function SessionScreen() {
                       lift={sessionMeta?.primary_lift ?? ''}
                       setNumber={actualSet.set_number}
                       isCompleted={actualSet.is_completed}
+                      weightGrams={actualSet.weight_grams}
+                      reps={actualSet.reps_completed}
+                      rpe={actualSet.rpe_actual}
                     />
                   }
                 />

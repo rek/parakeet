@@ -49,16 +49,38 @@ export default function VideoAnalysisScreen() {
   const { colors } = useTheme();
   const styles = useMemo(() => buildStyles(colors), [colors]);
 
-  const { sessionId, lift, setNumber: setNumberParam } = useLocalSearchParams<{
+  const {
+    sessionId,
+    lift,
+    setNumber: setNumberParam,
+    weightGrams: weightGramsParam,
+    reps: repsParam,
+    rpe: rpeParam,
+  } = useLocalSearchParams<{
     sessionId: string;
     lift: string;
     setNumber: string;
+    weightGrams: string;
+    reps: string;
+    rpe: string;
   }>();
 
   const parsedSetNumber = parseInt(setNumberParam ?? '1', 10) || 1;
+  const parsedWeightGrams = weightGramsParam ? parseInt(weightGramsParam, 10) : null;
+  const parsedReps = repsParam ? parseInt(repsParam, 10) : null;
+  const parsedRpe = rpeParam ? parseFloat(rpeParam) : null;
+
+  const setContext = parsedWeightGrams != null
+    ? { weightGrams: parsedWeightGrams, reps: parsedReps ?? 0, rpe: parsedRpe ?? undefined }
+    : null;
 
   const liftLabel =
     LIFT_LABELS[lift as Lift] ?? capitalize(lift ?? 'Lift');
+
+  // Rich title with set context when available
+  const screenTitle = parsedWeightGrams
+    ? `${liftLabel} — Set ${parsedSetNumber} @ ${parsedWeightGrams / 1000}kg × ${parsedReps ?? '?'}${parsedRpe ? ` (RPE ${parsedRpe})` : ''}`
+    : `${liftLabel} Form Analysis`;
 
   const [cameraAngle, setCameraAngle] = useState<'side' | 'front'>('side');
   const [isRecording, setIsRecording] = useState(false);
@@ -69,6 +91,7 @@ export default function VideoAnalysisScreen() {
       lift: lift ?? '',
       setNumber: parsedSetNumber,
       cameraAngle,
+      setContext,
     });
 
   const {
@@ -148,7 +171,7 @@ export default function VideoAnalysisScreen() {
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
       >
-        <Text style={styles.title}>{liftLabel} Form Analysis</Text>
+        <Text style={styles.title}>{screenTitle}</Text>
 
         {/* Video section */}
         <Text style={styles.sectionHeader}>Video</Text>
