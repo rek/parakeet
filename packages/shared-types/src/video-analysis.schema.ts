@@ -55,17 +55,43 @@ export const RepAnalysisSchema = z.object({
   concentricDurationSec: z.number().optional(),
   eccentricDurationSec: z.number().optional(),
   tempoRatio: z.number().optional(),
+  // Squat-specific
+  buttWinkDeg: z.number().optional(),
+  stanceWidthCm: z.number().optional(),
+  hipShiftCm: z.number().optional(),
+  hipShiftDirection: z.enum(['left', 'right', 'none']).optional(),
+  // Bench-specific
+  elbowFlareDeg: z.number().optional(),
+  pauseDurationSec: z.number().optional(),
+  isSinking: z.boolean().optional(),
+  // Deadlift-specific
+  hipHingeCrossoverPct: z.number().optional(),
+  barToShinDistanceCm: z.number().optional(),
+  // All lifts
+  lockoutStabilityCv: z.number().optional(),
   faults: z.array(FormFaultSchema),
   verdict: RepVerdictSchema.optional(),
 });
 
 export type RepAnalysis = z.infer<typeof RepAnalysisSchema>;
 
+export const FatigueSignaturesSchema = z.object({
+  forwardLeanDriftDeg: z.number().nullable(),
+  barDriftIncreaseCm: z.number().nullable(),
+  romCompressionCm: z.number().nullable(),
+  descentSpeedChange: z.number().nullable(),
+  lockoutDegradationDeg: z.number().nullable(),
+  velocityLossTrend: z.enum(['increasing', 'stable', 'decreasing']).nullable(),
+});
+
+export type FatigueSignatures = z.infer<typeof FatigueSignaturesSchema>;
+
 export const VideoAnalysisResultSchema = z.object({
   reps: z.array(RepAnalysisSchema),
   fps: z.number(),
   cameraAngle: z.enum(['side', 'front']),
   analysisVersion: z.number().int(),
+  fatigueSignatures: FatigueSignaturesSchema.optional(),
 });
 
 export type VideoAnalysisResult = z.infer<typeof VideoAnalysisResultSchema>;

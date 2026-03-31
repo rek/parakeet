@@ -6,6 +6,16 @@ export type { ReadinessScore } from './lib/readiness-score';
 export type { PersonalBaseline, BaselineDeviation } from './lib/personal-baseline';
 export type { AnalysisStrategy, StrategyName } from './lib/analysis-strategy';
 export { STRATEGIES, DEFAULT_STRATEGY } from './lib/analysis-strategy';
+export type { FatigueSignatures } from './lib/fatigue-signatures';
+export { computeFatigueSignatures } from './lib/fatigue-signatures';
+export { detectButtWink } from './lib/butt-wink-detector';
+export { computeStanceWidth } from './lib/stance-width';
+export { computeHipShift } from './lib/hip-shift';
+export { computeElbowFlare } from './lib/elbow-flare';
+export { assessPauseQuality } from './lib/pause-quality';
+export { analyzeHipHingeTiming } from './lib/hip-hinge-timing';
+export { computeBarToShinDistance } from './lib/bar-shin-distance';
+export { computeLockoutStability } from './lib/lockout-stability';
 
 // --- Hooks (primary external API) ---
 export { useVideoAnalysis } from './hooks/useVideoAnalysis';

@@ -7,12 +7,21 @@ import {
   type StrategyName,
 } from './analysis-strategy';
 import { computeForwardLean, computeHipAngle, computeKneeAngle } from './angle-calculator';
+import { computeBarToShinDistance } from './bar-shin-distance';
 import { computeConcentricVelocity, computeVelocityLoss, estimateRirFromVelocityLoss } from './bar-velocity';
+import { detectButtWink } from './butt-wink-detector';
+import { computeElbowFlare } from './elbow-flare';
+import { computeFatigueSignatures } from './fatigue-signatures';
+import { analyzeHipHingeTiming } from './hip-hinge-timing';
+import { computeHipShift } from './hip-shift';
+import { computeLockoutStability } from './lockout-stability';
+import { assessPauseQuality } from './pause-quality';
 import { detectSquatDepth } from './depth-detector';
 import { CM_PER_UNIT, type PoseFrame } from './pose-types';
 import { computeRepTempo } from './rep-tempo';
+import { computeStanceWidth } from './stance-width';
 
-const ANALYSIS_VERSION = 2;
+const ANALYSIS_VERSION = 3;
 
 /**
  * Run the full video analysis pipeline on a sequence of pose frames.
@@ -103,6 +112,92 @@ export function assembleAnalysis({
     // Tempo: eccentric/concentric phase durations
     const tempo = computeRepTempo({ repPath, fps });
 
+    // --- Lift-specific metrics ---
+
+    // Squat: butt wink, stance width, hip shift
+    let buttWinkDeg: number | undefined;
+    let stanceWidthCm: number | undefined;
+    let hipShiftCm: number | undefined;
+    let hipShiftDirection: 'left' | 'right' | 'none' | undefined;
+    if (lift === 'squat') {
+      const wink = detectButtWink({ frames, bottomFrame, fps });
+      if (wink.detected && wink.magnitudeDeg != null) {
+        buttWinkDeg = wink.magnitudeDeg;
+        faults.push({
+          type: 'butt_wink',
+          severity: 'warning',
+          message: `Butt wink of ${wink.magnitudeDeg.toFixed(1)}° at bottom`,
+          value: wink.magnitudeDeg,
+          threshold: 10,
+        });
+      }
+      stanceWidthCm = computeStanceWidth({ frame: frames[safeStart] });
+      const shift = computeHipShift({ frames, startFrame: safeStart, endFrame: safeEnd });
+      hipShiftCm = shift.maxShiftCm;
+      hipShiftDirection = shift.direction;
+    }
+
+    // Bench: elbow flare, pause quality
+    let elbowFlareDeg: number | undefined;
+    let pauseDurationSec: number | undefined;
+    let isSinking: boolean | undefined;
+    if (lift === 'bench') {
+      elbowFlareDeg = computeElbowFlare({ frame: frames[midFrame] });
+      if (elbowFlareDeg > 80 || elbowFlareDeg < 30) {
+        faults.push({
+          type: 'elbow_flare',
+          severity: 'warning',
+          message: elbowFlareDeg > 80
+            ? `Excessive elbow flare: ${elbowFlareDeg.toFixed(1)}°`
+            : `Elbows overtucked: ${elbowFlareDeg.toFixed(1)}°`,
+          value: elbowFlareDeg,
+          threshold: elbowFlareDeg > 80 ? 80 : 30,
+        });
+      }
+      const pause = assessPauseQuality({ repPath, fps });
+      pauseDurationSec = pause.pauseDurationSec;
+      isSinking = pause.isSinking;
+    }
+
+    // Deadlift: hip hinge timing, bar-to-shin distance
+    let hipHingeCrossoverPct: number | undefined;
+    let barToShinDistanceCm: number | undefined;
+    if (lift === 'deadlift') {
+      const hinge = analyzeHipHingeTiming({ frames, startFrame: safeStart, endFrame: safeEnd, fps });
+      hipHingeCrossoverPct = hinge.crossoverPct;
+      if (hinge.isEarlyHipShoot) {
+        faults.push({
+          type: 'early_hip_shoot',
+          severity: 'warning',
+          message: `Hips shot up at ${hinge.crossoverPct.toFixed(0)}% of pull`,
+          value: hinge.crossoverPct,
+          threshold: 30,
+        });
+      }
+      barToShinDistanceCm = computeBarToShinDistance({ frames, startFrame: safeStart, endFrame: safeEnd });
+      if (barToShinDistanceCm > 5) {
+        faults.push({
+          type: 'bar_away_from_shins',
+          severity: 'warning',
+          message: `Bar ${barToShinDistanceCm.toFixed(1)}cm away from shins`,
+          value: barToShinDistanceCm,
+          threshold: 5,
+        });
+      }
+    }
+
+    // All lifts: lockout stability
+    const lockoutStabilityCv = computeLockoutStability({ frames, startFrame: safeStart, endFrame: safeEnd });
+    if (lockoutStabilityCv > 5) {
+      faults.push({
+        type: 'unstable_lockout',
+        severity: 'warning',
+        message: `Unstable lockout (CV ${lockoutStabilityCv.toFixed(1)}%)`,
+        value: lockoutStabilityCv,
+        threshold: 5,
+      });
+    }
+
     const repAnalysis = {
       repNumber: index + 1,
       startFrame: safeStart,
@@ -118,6 +213,16 @@ export function assembleAnalysis({
       concentricDurationSec: tempo?.concentricDurationSec,
       eccentricDurationSec: tempo?.eccentricDurationSec,
       tempoRatio: tempo?.tempoRatio,
+      buttWinkDeg,
+      stanceWidthCm,
+      hipShiftCm,
+      hipShiftDirection,
+      elbowFlareDeg,
+      pauseDurationSec,
+      isSinking,
+      hipHingeCrossoverPct,
+      barToShinDistanceCm,
+      lockoutStabilityCv,
       faults,
     };
 
@@ -141,10 +246,14 @@ export function assembleAnalysis({
     }) ?? undefined,
   }));
 
+  // Cross-rep fatigue analysis (needs ≥2 reps with metrics)
+  const fatigueSignatures = computeFatigueSignatures({ reps: repsWithVelocity }) ?? undefined;
+
   return {
     reps: repsWithVelocity,
     fps,
     cameraAngle: 'side' as const,
     analysisVersion: ANALYSIS_VERSION,
+    fatigueSignatures,
   } satisfies VideoAnalysisResult;
 }

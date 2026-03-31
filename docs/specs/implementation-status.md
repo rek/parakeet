@@ -282,6 +282,16 @@ All 4 phases complete. Per-set video association, per-set UI, set context enrich
 - [x] mobile-048 3.1–3.3: Phase 3 set context — `set_weight_grams`, `set_reps`, `set_rpe` columns; `assembleCoachingContext` uses set-level weight/RPE over max-weight heuristic; rich screen title "Squat — Set 3 @ 140kg × 3 (RPE 8)"; set context flows from session store → SetVideoIcon → nav params → video-analysis screen → useVideoAnalysis → insertSessionVideo → useFormCoaching → LLM prompt
 - [x] mobile-048 4.1–4.3: Phase 4 multi-video + comparison — `getVideosForSessionLift` repository, `useSessionVideos` hook, "Other Sets" chip list with set switching, `IntraSessionComparison` (overlaid SVG bar paths per set, drift/lean/depth trend table, fatigue narrative)
 
+### Additional Video Metrics — [design doc](../design/video-analysis-future-directions.md) | [spec](09-mobile/mobile-049-additional-video-metrics.md)
+
+All 5 phases complete. 30 new tests (786 total). `analysisVersion` bumped to 3.
+
+- [x] mobile-049 Phase 1: Fatigue signatures — `computeFatigueSignatures()` (cross-rep deltas: lean drift, bar drift, ROM compression, descent speed, lockout degradation, velocity loss trend); `FatigueSignaturesSchema` in shared-types; wired into `assembleAnalysis`; 7 tests
+- [x] mobile-049 Phase 2: Squat metrics — `detectButtWink()` (>10° hip angle drop in <200ms), `computeStanceWidth()` (ankle-to-ankle × CM_PER_UNIT), `computeHipShift()` (left/right asymmetry); faults: `butt_wink`; schema: `buttWinkDeg`, `stanceWidthCm`, `hipShiftCm`, `hipShiftDirection`
+- [x] mobile-049 Phase 3: Bench metrics — `computeElbowFlare()` (shoulder→elbow vs shoulder→hip angle), `assessPauseQuality()` (pause duration + sink detection); faults: `elbow_flare`; schema: `elbowFlareDeg`, `pauseDurationSec`, `isSinking`
+- [x] mobile-049 Phase 4: Deadlift metrics — `analyzeHipHingeTiming()` (knee vs hip velocity crossover), `computeBarToShinDistance()` (wrist-knee horizontal distance in first third); faults: `early_hip_shoot`, `bar_away_from_shins`; schema: `hipHingeCrossoverPct`, `barToShinDistanceCm`
+- [x] mobile-049 Phase 5: Lockout stability — `computeLockoutStability()` (hip angle CV in last 10% of rep); fault: `unstable_lockout`; schema: `lockoutStabilityCv`
+
 ---
 
 ## Planned / Future
