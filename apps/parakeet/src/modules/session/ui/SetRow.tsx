@@ -1,4 +1,5 @@
 import { useMemo, useRef, useState } from 'react';
+import type { ReactNode } from 'react';
 import {
   StyleSheet,
   Text,
@@ -41,6 +42,12 @@ export interface SetRowProps {
   onBarWeightChange: (kg: number) => void;
   onDisabledPlatesChange: (plates: PlateKg[]) => void;
   prescriptionTrace?: FormattedTrace | null;
+  /**
+   * Optional slot rendered on the trailing edge of completed set rows.
+   * Use to inject feature-specific icons (e.g. SetVideoIcon) without
+   * coupling this module to video-analysis.
+   */
+  videoIconSlot?: ReactNode;
 }
 
 // ── Component ─────────────────────────────────────────────────────────────────
@@ -59,6 +66,7 @@ export function SetRow({
   onBarWeightChange,
   onDisabledPlatesChange,
   prescriptionTrace,
+  videoIconSlot,
 }: SetRowProps) {
   const { colors } = useTheme();
   const [weightKg, setWeightKg] = useState(plannedWeightKg);
@@ -390,6 +398,8 @@ export function SetRow({
             ✓
           </Text>
         </TouchableOpacity>
+
+        {videoIconSlot}
       </View>
 
       {/* Second row: adjust buttons + plate calc + trace info */}

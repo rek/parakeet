@@ -1,9 +1,11 @@
 import { StyleSheet, Text, View } from 'react-native';
 
-import type { RepAnalysis } from '@parakeet/shared-types';
+import type { RepAnalysis, RepVerdict } from '@parakeet/shared-types';
 
 import { radii, spacing, typography } from '../../../theme';
 import type { ColorScheme } from '../../../theme';
+
+import { VerdictBadge } from './VerdictBadge';
 
 function severityColor(severity: 'info' | 'warning' | 'critical', colors: ColorScheme) {
   if (severity === 'info') return colors.info;
@@ -21,10 +23,12 @@ export function RepMetricsCard({
   rep,
   lift,
   colors,
+  verdict,
 }: {
   rep: RepAnalysis;
   lift: string;
   colors: ColorScheme;
+  verdict?: RepVerdict | null;
 }) {
   const styles = buildStyles(colors);
 
@@ -36,7 +40,10 @@ export function RepMetricsCard({
 
   return (
     <View style={styles.card}>
-      <Text style={styles.repLabel}>Rep {rep.repNumber}</Text>
+      <View style={styles.cardHeader}>
+        <Text style={styles.repLabel}>Rep {rep.repNumber}</Text>
+        {verdict && <VerdictBadge verdict={verdict} colors={colors} inline />}
+      </View>
 
       {hasMetrics && (
         <View style={styles.metricsBlock}>
@@ -140,13 +147,18 @@ function buildStyles(colors: ColorScheme) {
       padding: spacing[4],
       marginBottom: spacing[3],
     },
+    cardHeader: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      marginBottom: spacing[3],
+    },
     repLabel: {
       fontSize: typography.sizes.sm,
       fontWeight: typography.weights.bold,
       color: colors.textSecondary,
       textTransform: 'uppercase',
       letterSpacing: typography.letterSpacing.wider,
-      marginBottom: spacing[3],
     },
     metricsBlock: {
       marginBottom: spacing[3],

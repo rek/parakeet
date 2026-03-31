@@ -75,7 +75,7 @@ export function PartnerSection() {
           activeOpacity={0.7}
         >
           <Text style={styles.emptyText}>
-            Add a gym partner to film each other's lifts
+            Add a gym partner to{'\n'}film each other's lifts
           </Text>
         </TouchableOpacity>
       ) : (
@@ -114,6 +114,7 @@ function buildStyles(colors: ColorScheme) {
   return StyleSheet.create({
     container: {
       gap: spacing[3],
+      marginTop: spacing[6],
     },
     header: {
       flexDirection: 'row',

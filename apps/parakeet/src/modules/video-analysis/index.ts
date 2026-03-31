@@ -9,6 +9,7 @@ export type { PersonalBaseline, BaselineDeviation } from './lib/personal-baselin
 export { useVideoAnalysis } from './hooks/useVideoAnalysis';
 export { useFormCoaching } from './hooks/useFormCoaching';
 export { usePreviousVideos } from './hooks/usePreviousVideos';
+export { useSetVideo } from './hooks/useSetVideo';
 
 // --- Pure functions (used by screens for computation, not data access) ---
 export { analyzeVideoFrames, extractFramesFromVideo } from './application/analyze-video';
@@ -24,6 +25,7 @@ export {
 
 // --- UI components ---
 export { VideoEntryButton } from './ui/VideoEntryButton';
+export { SetVideoIcon } from './ui/SetVideoIcon';
 export { CameraAnglePicker } from './ui/CameraAnglePicker';
 export { RepMetricsCard } from './ui/RepMetricsCard';
 export { BarPathOverlay } from './ui/BarPathOverlay';

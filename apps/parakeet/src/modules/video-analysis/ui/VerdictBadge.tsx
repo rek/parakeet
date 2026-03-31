@@ -25,16 +25,18 @@ function verdictColor(verdict: RepVerdict['verdict'], colors: ColorScheme) {
 export function VerdictBadge({
   verdict,
   colors,
+  inline,
 }: {
   verdict: RepVerdict;
   colors: ColorScheme;
+  inline?: boolean;
 }) {
   const [expanded, setExpanded] = useState(false);
   const config = VERDICT_CONFIG[verdict.verdict];
   const color = verdictColor(verdict.verdict, colors);
 
   return (
-    <View style={styles.container}>
+    <View style={inline ? undefined : styles.container}>
       <TouchableOpacity
         style={[styles.badge, { borderColor: color + '40', backgroundColor: color + '10' }]}
         onPress={() => setExpanded(!expanded)}

@@ -23,7 +23,6 @@ import {
   FormCoachingCard,
   LongitudinalComparison,
   BaselineDeviationBadge,
-  VerdictBadge,
   ReadinessCard,
 } from '@modules/video-analysis';
 import { VideoPlayerCard } from '@modules/video-analysis/ui/VideoPlayerCard';
@@ -263,10 +262,8 @@ export default function VideoAnalysisScreen() {
                   rep={rep}
                   lift={lift ?? ''}
                   colors={colors}
+                  verdict={rep.verdict}
                 />
-                {rep.verdict && (
-                  <VerdictBadge verdict={rep.verdict} colors={colors} />
-                )}
                 {baseline &&
                   detectBaselineDeviations({
                     rep,

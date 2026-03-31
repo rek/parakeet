@@ -15,7 +15,7 @@ import {
 
 import { captureException } from '@platform/utils/captureException';
 
-import { spacing, typography } from '../../../theme';
+import { radii, spacing, typography } from '../../../theme';
 import { useTheme } from '../../../theme/ThemeContext';
 import { useClaimInvite } from '../hooks/usePartners';
 import { decodeQrPayload } from '../lib/qr-payload';
@@ -170,6 +170,7 @@ function buildStyles(colors: ReturnType<typeof useTheme>['colors']) {
   return StyleSheet.create({
     content: {
       minHeight: 350,
+      paddingTop: spacing[4],
     },
     center: {
       alignItems: 'center',
@@ -180,8 +181,10 @@ function buildStyles(colors: ReturnType<typeof useTheme>['colors']) {
     },
     cameraContainer: {
       height: 300,
-      position: 'relative',
+      marginHorizontal: spacing[4],
+      borderRadius: radii.lg,
       overflow: 'hidden',
+      position: 'relative',
     },
     overlay: {
       ...StyleSheet.absoluteFillObject,
@@ -193,7 +196,7 @@ function buildStyles(colors: ReturnType<typeof useTheme>['colors']) {
       height: 200,
       borderWidth: 2,
       borderColor: colors.primary,
-      borderRadius: 16,
+      borderRadius: radii.lg,
     },
     scanHint: {
       textAlign: 'center',

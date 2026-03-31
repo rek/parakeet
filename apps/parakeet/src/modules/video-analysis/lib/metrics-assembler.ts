@@ -28,9 +28,11 @@ export function assembleAnalysis({
   fps: number;
   lift: 'squat' | 'bench' | 'deadlift';
 }) {
+  console.log(`[analysis] assembleAnalysis: ${frames.length} frames, ${fps}fps, lift=${lift}`);
   const rawPath = extractBarPath({ frames });
   const barPath = smoothBarPath({ path: rawPath, fps });
   const repBoundsList = detectReps({ frames, lift, fps });
+  console.log(`[analysis] detected ${repBoundsList.length} reps`);
 
   const reps = repBoundsList.map(({ startFrame, endFrame }, index) => {
     // Clamp to valid frame indices

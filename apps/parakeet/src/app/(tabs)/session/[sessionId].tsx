@@ -11,7 +11,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { useFeatureEnabled } from '@modules/feature-flags';
 import { useLiftHistory } from '@modules/history';
-import { VideoEntryButton } from '@modules/video-analysis';
+import { SetVideoIcon, VideoEntryButton } from '@modules/video-analysis';
 import { computeDisplayWeights, useChallengeReview } from '@modules/jit';
 import { getProfile } from '@modules/profile';
 import {
@@ -910,6 +910,14 @@ export default function SessionScreen() {
                   onDisabledPlatesChange={handleDisabledPlatesChange}
                   prescriptionTrace={
                     traceEnabled ? formattedTrace : undefined
+                  }
+                  videoIconSlot={
+                    <SetVideoIcon
+                      sessionId={sessionId}
+                      lift={sessionMeta?.primary_lift ?? ''}
+                      setNumber={actualSet.set_number}
+                      isCompleted={actualSet.is_completed}
+                    />
                   }
                 />
               );

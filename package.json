@@ -36,6 +36,7 @@
     "expo-updates": "~55.0.16",
     "expo-video": "~55.0.11",
     "expo-video-thumbnails": "~55.0.11",
+    "ffmpeg-expo": "^0.0.1",
     "hermes-compiler": "^250829098.0.2",
     "react": "19.2.0",
     "react-dom": "19.2.0",

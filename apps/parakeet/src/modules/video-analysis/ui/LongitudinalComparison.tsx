@@ -82,7 +82,7 @@ export function LongitudinalComparison({
           {historicalPaths.map((hp, i) =>
             hp.path.length > 1 ? (
               <Polyline
-                key={hp.date}
+                key={`${hp.date}-${i}`}
                 points={hp.path.map((p) => `${p.x},${p.y}`).join(' ')}
                 fill="none"
                 stroke={colors.primary}
@@ -110,8 +110,8 @@ export function LongitudinalComparison({
             <View style={[styles.legendDot, { backgroundColor: colors.primary }]} />
             <Text style={styles.legendText}>Current</Text>
           </View>
-          {historicalPaths.slice(-1).map((hp) => (
-            <View key={hp.date} style={styles.legendItem}>
+          {historicalPaths.slice(-1).map((hp, idx) => (
+            <View key={`legend-${hp.date}-${idx}`} style={styles.legendItem}>
               <View
                 style={[
                   styles.legendDot,
@@ -133,8 +133,8 @@ export function LongitudinalComparison({
             <Text style={[styles.trendCell, styles.trendHeaderCell]}>Lean</Text>
             <Text style={[styles.trendCell, styles.trendHeaderCell]}>ROM</Text>
           </View>
-          {trendData.slice(-5).map((row) => (
-            <View key={row.date} style={styles.trendRow}>
+          {trendData.slice(-5).map((row, i) => (
+            <View key={`${row.date}-${i}`} style={styles.trendRow}>
               <Text style={[styles.trendCell, styles.trendDateCell]}>
                 {row.date.slice(5)}
               </Text>

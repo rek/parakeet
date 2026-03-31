@@ -128,6 +128,111 @@ describe('detectReps', () => {
     });
   });
 
+  describe('real-world low-fps scenarios', () => {
+    it('detects 5 squat reps at 4fps with walkout setup', () => {
+      // Simulate a real squat video at 4fps: ~3 frames of walkout, then 5 reps
+      // Hip Y: low (standing) → high (bottom of squat) → low (standing)
+      // In MediaPipe: Y increases downward, so bottom of squat = max Y
+      const standingY = 0.33;
+      const bottomY = 0.60;
+      const walkoutY = 0.38; // slight dip during walkout (NOT a rep)
+      const framesPerRep = 10; // ~2.5s per rep at 4fps
+
+      const frames: ReturnType<typeof buildFrame>[] = [];
+
+      // Walkout (3 frames): small dip then back to standing
+      frames.push(buildFrame({ [LANDMARK.LEFT_HIP]: { x: 0.47, y: standingY, z: 0, visibility: 1 }, [LANDMARK.RIGHT_HIP]: { x: 0.53, y: standingY, z: 0, visibility: 1 } }));
+      frames.push(buildFrame({ [LANDMARK.LEFT_HIP]: { x: 0.47, y: walkoutY, z: 0, visibility: 1 }, [LANDMARK.RIGHT_HIP]: { x: 0.53, y: walkoutY, z: 0, visibility: 1 } }));
+      frames.push(buildFrame({ [LANDMARK.LEFT_HIP]: { x: 0.47, y: standingY, z: 0, visibility: 1 }, [LANDMARK.RIGHT_HIP]: { x: 0.53, y: standingY, z: 0, visibility: 1 } }));
+
+      // 5 reps: sine wave from standing to bottom and back
+      for (let rep = 0; rep < 5; rep++) {
+        for (let f = 0; f < framesPerRep; f++) {
+          const phase = f / framesPerRep;
+          const t = Math.sin(phase * Math.PI);
+          const hipY = standingY + (bottomY - standingY) * t;
+          frames.push(buildFrame({
+            [LANDMARK.LEFT_HIP]: { x: 0.47, y: hipY, z: 0, visibility: 1 },
+            [LANDMARK.RIGHT_HIP]: { x: 0.53, y: hipY, z: 0, visibility: 1 },
+          }));
+        }
+      }
+
+      // 2 trailing frames (standing)
+      frames.push(buildFrame({ [LANDMARK.LEFT_HIP]: { x: 0.47, y: standingY, z: 0, visibility: 1 }, [LANDMARK.RIGHT_HIP]: { x: 0.53, y: standingY, z: 0, visibility: 1 } }));
+      frames.push(buildFrame({ [LANDMARK.LEFT_HIP]: { x: 0.47, y: standingY, z: 0, visibility: 1 }, [LANDMARK.RIGHT_HIP]: { x: 0.53, y: standingY, z: 0, visibility: 1 } }));
+
+      const reps = detectReps({ frames, lift: 'squat', fps: 4 });
+      expect(reps).toHaveLength(5);
+    });
+
+    it('detects 3 squat reps at 3fps', () => {
+      const frames = generateSquatFrames({ reps: 3, framesPerRep: 9 });
+      const reps = detectReps({ frames, lift: 'squat', fps: 3 });
+      expect(reps).toHaveLength(3);
+    });
+
+    it('counts walkout dip as a rep when present (handled by caller)', () => {
+      // A walkout dip close to the first rep will be merged by minPeakDistance.
+      // A walkout far from the first rep counts as a peak — the caller can
+      // trim it based on rep quality metrics (ROM, depth) if needed.
+      const standingY = 0.33;
+      const bottomY = 0.60;
+      const walkoutY = standingY + (bottomY - standingY) * 0.30;
+
+      const frames: ReturnType<typeof buildFrame>[] = [];
+
+      // Walkout dip (6 frames at 4fps = 1.5s — far enough to be a separate peak)
+      for (let f = 0; f < 6; f++) {
+        const phase = f / 6;
+        const t = Math.sin(phase * Math.PI);
+        const hipY = standingY + (walkoutY - standingY) * t;
+        frames.push(buildFrame({
+          [LANDMARK.LEFT_HIP]: { x: 0.47, y: hipY, z: 0, visibility: 1 },
+          [LANDMARK.RIGHT_HIP]: { x: 0.53, y: hipY, z: 0, visibility: 1 },
+        }));
+      }
+
+      // 3 real reps
+      for (let rep = 0; rep < 3; rep++) {
+        for (let f = 0; f < 10; f++) {
+          const phase = f / 10;
+          const t = Math.sin(phase * Math.PI);
+          const hipY = standingY + (bottomY - standingY) * t;
+          frames.push(buildFrame({
+            [LANDMARK.LEFT_HIP]: { x: 0.47, y: hipY, z: 0, visibility: 1 },
+            [LANDMARK.RIGHT_HIP]: { x: 0.53, y: hipY, z: 0, visibility: 1 },
+          }));
+        }
+      }
+
+      const reps = detectReps({ frames, lift: 'squat', fps: 4 });
+      // 3 real reps + 1 walkout dip = 4 peaks detected
+      expect(reps).toHaveLength(4);
+    });
+  });
+
+  describe('real captured signal', () => {
+    it('detects correct reps from actual squat video signal', () => {
+      // Real hip Y signal from a 5-rep squat video at 4fps (60 frames).
+      // Peaks alternate: squat bottom (0.59) and lockout (0.44).
+      // Only the bottom-of-squat peaks should count as reps.
+      const hipY = [0.3336,0.3352,0.3367,0.3382,0.3382,0.3514,0.3646,0.3777,0.3777,0.3744,0.3677,0.3577,0.3477,0.3376,0.3309,0.3276,0.3276,0.4150,0.5023,0.5896,0.5896,0.5221,0.4545,0.3869,0.3869,0.4066,0.4263,0.4459,0.4459,0.4404,0.4349,0.4294,0.4294,0.3984,0.3675,0.3365,0.3365,0.4244,0.5124,0.6003,0.6003,0.5314,0.4626,0.3938,0.3938,0.4004,0.4070,0.4137,0.4137,0.4246,0.4356,0.4465,0.4465,0.4153,0.3840,0.3527,0.3527,0.3527,0.3527,0.3527];
+
+      // Build frames with this hip Y signal
+      const frames = hipY.map((y) =>
+        buildFrame({
+          [LANDMARK.LEFT_HIP]: { x: 0.47, y, z: 0, visibility: 1 },
+          [LANDMARK.RIGHT_HIP]: { x: 0.53, y, z: 0, visibility: 1 },
+        }),
+      );
+
+      const reps = detectReps({ frames, lift: 'squat', fps: 4 });
+      // Video has 5 actual squat reps — should detect all 5
+      expect(reps).toHaveLength(5);
+    });
+  });
+
   describe('fps-relative scaling', () => {
     it('detects reps at 15fps with half the frames per rep', () => {
       // 15fps → 30 frames per 2-second rep (instead of 60 at 30fps)

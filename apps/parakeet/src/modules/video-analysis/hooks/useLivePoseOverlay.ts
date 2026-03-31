@@ -8,7 +8,7 @@ import {
 import type { PoseDetectionResultBundle } from 'react-native-mediapipe';
 
 /** MediaPipe pose landmarker model bundled in android assets. */
-const POSE_MODEL = 'pose_landmarker_full.task';
+const POSE_MODEL = 'pose_landmarker_lite.task';
 
 /** Landmarks to draw as skeleton lines (pairs of landmark indices). */
 export const SKELETON_CONNECTIONS = [
@@ -72,12 +72,16 @@ export function useLivePoseOverlay() {
     setLandmarks(null);
   }, []);
 
+  // Use CPU delegate — GPU delegate causes native SIGSEGV crashes in
+  // MediaPipe's GL runner thread on some devices (null pointer dereference
+  // in mediapipe_gl_ru). CPU is slightly slower but stable.
+  // extractFramesFromVideo also uses CPU-only for the same reason.
   const solution = usePoseDetection(
     { onResults, onError },
     RunningMode.LIVE_STREAM,
     POSE_MODEL,
     {
-      delegate: Delegate.GPU,
+      delegate: Delegate.CPU,
       numPoses: 1,
       minPoseDetectionConfidence: 0.5,
       minPosePresenceConfidence: 0.5,

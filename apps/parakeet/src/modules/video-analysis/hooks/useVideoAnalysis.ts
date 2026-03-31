@@ -48,10 +48,11 @@ export function useVideoAnalysis({
 
     if (durationSec > 0) {
       try {
+        // Uses DEFAULT_TARGET_FPS (3fps) — sufficient for form analysis,
+        // and stays within device memory limits.
         const { frames, fps } = await extractFramesFromVideo({
           videoUri,
           durationSec,
-          targetFps: 15,
           onProgress: (p) => setProgress(0.05 + p * 0.55),
         });
 

@@ -1,7 +1,7 @@
 import { LANDMARK, type PoseFrame } from './pose-types';
 
 /** Minimum time between peaks — prevents double-detection on a single rep. */
-const MIN_PEAK_TIME_SEC = 0.5;
+const MIN_PEAK_TIME_SEC = 0.8;
 /** Smoothing window target time — matches the ~233ms used at 30fps (7/30). */
 const SMOOTH_TIME_SEC = 7 / 30;
 
@@ -54,7 +54,15 @@ function findPeaks({ signal, minDistance }: { signal: number[]; minDistance: num
   const peaks: number[] = [];
 
   for (let i = 1; i < signal.length - 1; i++) {
-    if (signal[i] > signal[i - 1] && signal[i] > signal[i + 1]) {
+    // Detect peaks including plateaus: value drops after AND rose at some
+    // point within the last minDistance frames. Handles 2-3+ frame plateaus
+    // where consecutive smoothed values are equal (common at low fps).
+    if (signal[i] >= signal[i - 1] && signal[i] > signal[i + 1]) {
+      let rose = false;
+      for (let k = i - 1; k >= Math.max(0, i - minDistance); k--) {
+        if (signal[i] > signal[k]) { rose = true; break; }
+      }
+      if (!rose) continue;
       // Enforce minimum distance from last accepted peak
       if (peaks.length === 0 || i - peaks[peaks.length - 1] >= minDistance) {
         peaks.push(i);
@@ -89,11 +97,28 @@ export function detectReps({
   const minPeakDistance = Math.max(3, Math.round(fps * MIN_PEAK_TIME_SEC));
   const smoothWindow = Math.max(3, Math.round(fps * SMOOTH_TIME_SEC));
 
-  if (frames.length < minPeakDistance * 2) return [];
+  console.log(`[reps] detectReps: ${frames.length} frames, fps=${fps}, lift=${lift}, minPeakDist=${minPeakDistance}, smoothWin=${smoothWindow}`);
+
+  if (frames.length < minPeakDistance * 2) {
+    console.log(`[reps] too few frames (${frames.length} < ${minPeakDistance * 2}), returning 0 reps`);
+    return [];
+  }
 
   const raw = extractSignal({ frames, lift });
   const smoothed = smoothSignal({ signal: raw, windowSize: smoothWindow });
-  const peaks = findPeaks({ signal: smoothed, minDistance: minPeakDistance });
+  const allPeaks = findPeaks({ signal: smoothed, minDistance: minPeakDistance });
+
+  const signalMin = Math.min(...smoothed);
+  const signalMax = Math.max(...smoothed);
+  const signalRange = signalMax - signalMin;
+
+  const peaks = allPeaks;
+
+  // Log for debugging
+  const preview = smoothed.slice(0, 20).map((v) => v.toFixed(3)).join(', ');
+  console.log(`[reps] signal range: ${signalMin.toFixed(4)}–${signalMax.toFixed(4)} (delta=${signalRange.toFixed(4)}), raw peaks: ${allPeaks.length}, after walkout filter: ${peaks.length}`);
+  console.log(`[reps] peak indices: [${allPeaks.join(', ')}], peak values: [${allPeaks.map((p) => smoothed[p].toFixed(3)).join(', ')}]`);
+  console.log(`[reps] FULL SIGNAL: [${smoothed.map((v) => v.toFixed(4)).join(',')}]`);
 
   if (peaks.length === 0) return [];
 

@@ -179,7 +179,7 @@ export function PartnerManagementScreen() {
         {partners.length === 0 ? (
           <View style={styles.emptyState}>
             <Text style={styles.emptyText}>
-              No gym partners yet. Add one to start filming each other's lifts.
+              No gym partners yet.{'\n'}Add one to start filming each other's lifts.
             </Text>
             <TouchableOpacity
               onPress={handleAddPartner}
@@ -216,6 +216,7 @@ function buildStyles(colors: ColorScheme) {
     container: {
       flex: 1,
       gap: spacing[4],
+      marginTop: spacing[4],
     },
     center: {
       flex: 1,
