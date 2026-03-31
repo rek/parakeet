@@ -36,12 +36,16 @@ export function assembleAnalysis({
   strategy?: StrategyName;
 }) {
   const strategy: AnalysisStrategy = STRATEGIES[strategyName];
-  console.log(`[analysis] assembleAnalysis: ${frames.length} frames, ${fps}fps, lift=${lift}, strategy=${strategy.name}`);
+  if (typeof __DEV__ !== 'undefined' && __DEV__) {
+    console.log(`[analysis] ${frames.length} frames, ${fps}fps, ${lift}, strategy=${strategy.name}`);
+  }
 
   const rawPath = strategy.barPath.extractBarPath({ frames });
   const barPath = strategy.barPath.smoothBarPath({ path: rawPath, fps });
   const repBoundsList = strategy.repDetector.detectReps({ frames, lift, fps });
-  console.log(`[analysis] detected ${repBoundsList.length} reps`);
+  if (typeof __DEV__ !== 'undefined' && __DEV__) {
+    console.log(`[analysis] ${repBoundsList.length} reps detected`);
+  }
 
   const reps = repBoundsList.map(({ startFrame, endFrame }, index) => {
     // Clamp to valid frame indices

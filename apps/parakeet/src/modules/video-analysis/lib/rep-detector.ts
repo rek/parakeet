@@ -97,10 +97,7 @@ export function detectReps({
   const minPeakDistance = Math.max(3, Math.round(fps * MIN_PEAK_TIME_SEC));
   const smoothWindow = Math.max(3, Math.round(fps * SMOOTH_TIME_SEC));
 
-  console.log(`[reps] detectReps: ${frames.length} frames, fps=${fps}, lift=${lift}, minPeakDist=${minPeakDistance}, smoothWin=${smoothWindow}`);
-
   if (frames.length < minPeakDistance * 2) {
-    console.log(`[reps] too few frames (${frames.length} < ${minPeakDistance * 2}), returning 0 reps`);
     return [];
   }
 
@@ -117,14 +114,9 @@ export function detectReps({
   // Walkout reps will have low ROM/depth metrics, which the UI can flag.
   const peaks = allPeaks;
 
-  // Log for debugging
-  const preview = smoothed.slice(0, 20).map((v) => v.toFixed(3)).join(', ');
-  // Also find peaks in the raw signal to compare
-  const rawPeaks = findPeaks({ signal: raw, minDistance: minPeakDistance });
-  console.log(`[reps] signal range: ${signalMin.toFixed(4)}–${signalMax.toFixed(4)} (delta=${signalRange.toFixed(4)}), smoothed peaks: ${allPeaks.length}, raw peaks: ${rawPeaks.length}, after filter: ${peaks.length}`);
-  console.log(`[reps] smoothed peak indices: [${allPeaks.join(', ')}], values: [${allPeaks.map((p) => smoothed[p].toFixed(3)).join(', ')}]`);
-  console.log(`[reps] raw peak indices: [${rawPeaks.join(', ')}], values: [${rawPeaks.map((p) => raw[p].toFixed(3)).join(', ')}]`);
-  console.log(`[reps] RAW SIGNAL: [${raw.map((v) => v.toFixed(4)).join(',')}]`);
+  if (typeof __DEV__ !== 'undefined' && __DEV__) {
+    console.log(`[reps] ${peaks.length} peaks from ${frames.length} frames (range=${signalRange.toFixed(3)})`);
+  }
 
   if (peaks.length === 0) return [];
 

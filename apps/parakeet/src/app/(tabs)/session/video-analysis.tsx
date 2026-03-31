@@ -68,9 +68,12 @@ export default function VideoAnalysisScreen() {
   }>();
 
   const parsedSetNumber = parseInt(setNumberParam ?? '1', 10) || 1;
-  const parsedWeightGrams = weightGramsParam ? parseInt(weightGramsParam, 10) : null;
-  const parsedReps = repsParam ? parseInt(repsParam, 10) : null;
-  const parsedRpe = rpeParam ? parseFloat(rpeParam) : null;
+  const rawWeight = weightGramsParam ? parseInt(weightGramsParam, 10) : null;
+  const rawReps = repsParam ? parseInt(repsParam, 10) : null;
+  const rawRpe = rpeParam ? parseFloat(rpeParam) : null;
+  const parsedWeightGrams = Number.isFinite(rawWeight) ? rawWeight : null;
+  const parsedReps = Number.isFinite(rawReps) ? rawReps : null;
+  const parsedRpe = Number.isFinite(rawRpe) ? rawRpe : null;
 
   const setContext = parsedWeightGrams != null
     ? { weightGrams: parsedWeightGrams, reps: parsedReps ?? 0, rpe: parsedRpe ?? undefined }

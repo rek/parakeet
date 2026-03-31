@@ -94,9 +94,9 @@ export function analyzeVideoFrames({
     ? fps * (valid.length / frames.length)
     : fps;
 
-  console.log(
-    `[analysis] ${valid.length}/${frames.length} usable frames (effectiveFps=${effectiveFps.toFixed(1)})`,
-  );
+  if (typeof __DEV__ !== 'undefined' && __DEV__) {
+    console.log(`[analysis] ${valid.length}/${frames.length} usable frames (fps=${effectiveFps.toFixed(1)})`);
+  }
   return assembleAnalysis({ frames: valid, fps: effectiveFps, lift });
 }
 
@@ -151,12 +151,10 @@ export async function extractFramesFromVideo({
   const delegate = Delegate.CPU;
 
   for (let i = 0; i < totalFrames; i++) {
-    console.log(`[pose] frame ${i + 1}/${totalFrames} — thumbnail at ${frameTimes[i]}ms`);
     const thumbnail = await getThumbnailAsync(videoUri, {
       time: frameTimes[i],
       quality: 0.8,
     });
-    console.log(`[pose] frame ${i + 1}/${totalFrames} — running MediaPipe`);
 
     try {
       const result = await PoseDetectionOnImage(thumbnail.uri, POSE_MODEL, {
@@ -168,9 +166,6 @@ export async function extractFramesFromVideo({
       });
 
       const poseLandmarks = result.results[0]?.landmarks[0];
-      if (i < 3) {
-        console.log(`[pose] frame ${i + 1} landmarks=${poseLandmarks?.length ?? 'none'}`);
-      }
 
       if (poseLandmarks && poseLandmarks.length >= 33) {
         const poseFrame: PoseFrame = poseLandmarks.map((lm) => ({
@@ -183,10 +178,7 @@ export async function extractFramesFromVideo({
       } else {
         frames.push(EMPTY_FRAME);
       }
-    } catch (err) {
-      if (i < 3) {
-        console.log(`[pose] frame ${i + 1} ERROR: ${err instanceof Error ? err.message : String(err)}`);
-      }
+    } catch {
       frames.push(EMPTY_FRAME);
     }
 
@@ -199,10 +191,10 @@ export async function extractFramesFromVideo({
     onProgress?.((i + 1) / totalFrames);
   }
 
-  const validCount = frames.filter((f) => !isEmptyFrame(f)).length;
-  console.log(
-    `[pose] extraction complete: ${validCount}/${totalFrames} valid frames (${Math.round((validCount / totalFrames) * 100)}%)`,
-  );
+  if (typeof __DEV__ !== 'undefined' && __DEV__) {
+    const validCount = frames.filter((f) => !isEmptyFrame(f)).length;
+    console.log(`[pose] ${validCount}/${totalFrames} valid frames (${Math.round((validCount / totalFrames) * 100)}%)`);
+  }
 
   return { frames, fps: targetFps };
 }
