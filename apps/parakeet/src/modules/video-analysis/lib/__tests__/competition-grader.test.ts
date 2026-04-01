@@ -50,10 +50,8 @@ function bentKneeFrame() {
   });
 }
 
-function makeFrames(count: number, endFrame = standingFrame) {
-  return Array.from({ length: count }, (_, i) =>
-    i === count - 1 ? endFrame() : buildFrame(),
-  );
+function makeFrames(count: number, frameFn = standingFrame) {
+  return Array.from({ length: count }, () => frameFn());
 }
 
 describe('gradeSquatRep', () => {
@@ -122,14 +120,15 @@ describe('gradeDeadliftRep', () => {
   });
 
   it('fails hip lockout when hips not through', () => {
-    // Hips still hinged forward — shoulder-hip-knee angle well below 170°
+    // Hips hinged forward at ~90° — shoulders far forward of hips, knees below.
+    // shoulder-hip-knee angle should compute well below 165°.
     const frames = makeFrames(30, () => buildFrame({
-      [LANDMARK.LEFT_HIP]: { x: 0.47, y: 0.60, z: 0, visibility: 1 },
-      [LANDMARK.RIGHT_HIP]: { x: 0.53, y: 0.60, z: 0, visibility: 1 },
-      [LANDMARK.LEFT_SHOULDER]: { x: 0.35, y: 0.30, z: 0, visibility: 1 },
-      [LANDMARK.RIGHT_SHOULDER]: { x: 0.41, y: 0.30, z: 0, visibility: 1 },
-      [LANDMARK.LEFT_KNEE]: { x: 0.46, y: 0.80, z: 0, visibility: 1 },
-      [LANDMARK.RIGHT_KNEE]: { x: 0.54, y: 0.80, z: 0, visibility: 1 },
+      [LANDMARK.LEFT_HIP]: { x: 0.50, y: 0.55, z: 0, visibility: 1 },
+      [LANDMARK.RIGHT_HIP]: { x: 0.50, y: 0.55, z: 0, visibility: 1 },
+      [LANDMARK.LEFT_SHOULDER]: { x: 0.30, y: 0.55, z: 0, visibility: 1 },
+      [LANDMARK.RIGHT_SHOULDER]: { x: 0.30, y: 0.55, z: 0, visibility: 1 },
+      [LANDMARK.LEFT_KNEE]: { x: 0.50, y: 0.80, z: 0, visibility: 1 },
+      [LANDMARK.RIGHT_KNEE]: { x: 0.50, y: 0.80, z: 0, visibility: 1 },
     }));
     const rep = makeRep({ endFrame: 29 });
     const verdict = gradeDeadliftRep({ rep, frames });
@@ -150,10 +149,10 @@ describe('gradeDeadliftRep', () => {
   });
 
   it('fails downward motion when bar dips during pull', () => {
-    // Bar goes up then dips 3cm then continues
+    // Bar goes up then dips ~12cm (obvious hitch) then continues
     const path: BarPathPoint[] = Array.from({ length: 30 }, (_, i) => {
       let y = 0.8 - i * 0.01;
-      if (i >= 15 && i <= 18) y += 0.015; // ~3.6cm dip
+      if (i >= 15 && i <= 18) y += 0.05; // ~12cm dip — obvious hitch
       return { x: 0.5, y, frame: i };
     });
     const rep = makeRep({ barPath: path });

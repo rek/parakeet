@@ -239,20 +239,42 @@ export function gradeBenchRep({ rep, frames, fps }: { rep: RepAnalysis; frames: 
 
 // --- Deadlift ---
 
-function gradeDeadliftHipLockout({ frames, rep }: { frames: PoseFrame[]; rep: RepAnalysis }) {
+/**
+ * Find the best lockout frame — the frame with the lowest hip Y (most upright)
+ * in the second half of the rep. The end frame may land during descent if the
+ * rep boundary includes the lowering phase.
+ */
+function findLockoutFrame({ frames, rep }: { frames: PoseFrame[]; rep: RepAnalysis }) {
+  const midIdx = Math.floor((rep.startFrame + rep.endFrame) / 2);
   const endIdx = Math.min(rep.endFrame, frames.length - 1);
-  const hipAngle = computeHipAngle({ frame: frames[endIdx] });
+  let bestIdx = endIdx;
+  let lowestHipY = Infinity;
+  for (let i = midIdx; i <= endIdx; i++) {
+    const lh = frames[i][LANDMARK.LEFT_HIP];
+    const rh = frames[i][LANDMARK.RIGHT_HIP];
+    const hipY = (lh.y + rh.y) / 2;
+    if (hipY < lowestHipY) {
+      lowestHipY = hipY;
+      bestIdx = i;
+    }
+  }
+  return bestIdx;
+}
+
+function gradeDeadliftHipLockout({ frames, rep }: { frames: PoseFrame[]; rep: RepAnalysis }) {
+  const lockoutIdx = findLockoutFrame({ frames, rep });
+  const hipAngle = computeHipAngle({ frame: frames[lockoutIdx] });
 
   let verdict: CriterionResult['verdict'];
-  if (hipAngle >= 175) verdict = 'pass';
-  else if (hipAngle >= 170) verdict = 'borderline';
+  if (hipAngle >= 170) verdict = 'pass';
+  else if (hipAngle >= 165) verdict = 'borderline';
   else verdict = 'fail';
 
   return {
     name: 'hip_lockout',
     verdict,
     measured: hipAngle,
-    threshold: 175,
+    threshold: 170,
     unit: '°',
     message: verdict === 'pass'
       ? `Hips fully through (${hipAngle.toFixed(0)}°)`
@@ -263,19 +285,19 @@ function gradeDeadliftHipLockout({ frames, rep }: { frames: PoseFrame[]; rep: Re
 }
 
 function gradeDeadliftKneeLockout({ frames, rep }: { frames: PoseFrame[]; rep: RepAnalysis }) {
-  const endIdx = Math.min(rep.endFrame, frames.length - 1);
-  const kneeAngle = computeKneeAngle({ frame: frames[endIdx] });
+  const lockoutIdx = findLockoutFrame({ frames, rep });
+  const kneeAngle = computeKneeAngle({ frame: frames[lockoutIdx] });
 
   let verdict: CriterionResult['verdict'];
-  if (kneeAngle >= 175) verdict = 'pass';
-  else if (kneeAngle >= 170) verdict = 'borderline';
+  if (kneeAngle >= 170) verdict = 'pass';
+  else if (kneeAngle >= 165) verdict = 'borderline';
   else verdict = 'fail';
 
   return {
     name: 'knee_lockout',
     verdict,
     measured: kneeAngle,
-    threshold: 175,
+    threshold: 170,
     unit: '°',
     message: verdict === 'pass'
       ? `Knees fully locked (${kneeAngle.toFixed(0)}°)`
@@ -286,10 +308,11 @@ function gradeDeadliftKneeLockout({ frames, rep }: { frames: PoseFrame[]; rep: R
 function gradeDeadliftDownwardMotion({ rep }: { rep: RepAnalysis }) {
   const path = rep.barPath;
   if (path.length < 5) {
-    return { name: 'downward_motion', verdict: 'pass' as const, measured: 0, threshold: 1, unit: 'cm', message: 'Insufficient data' };
+    return { name: 'downward_motion', verdict: 'pass' as const, measured: 0, threshold: 3, unit: 'cm', message: 'Insufficient data' };
   }
 
-  // Find the concentric phase: from bottom (max Y) to end
+  // Find the concentric phase: from bottom (max Y) to the lockout point
+  // (min Y after bottom). Don't include the descent/lowering phase.
   let bottomIdx = 0;
   let maxY = -Infinity;
   for (let i = 0; i < path.length; i++) {
@@ -299,17 +322,29 @@ function gradeDeadliftDownwardMotion({ rep }: { rep: RepAnalysis }) {
     }
   }
 
-  // Check for downward motion (increasing Y) during concentric phase
-  const concentric = path.slice(bottomIdx);
+  // Find the lockout point (lowest Y after bottom = highest bar position)
+  let lockoutIdx = bottomIdx;
+  let minYAfterBottom = Infinity;
+  for (let i = bottomIdx; i < path.length; i++) {
+    if (path[i].y < minYAfterBottom) {
+      minYAfterBottom = path[i].y;
+      lockoutIdx = i;
+    }
+  }
+
+  // Check for downward motion (increasing Y) during concentric phase only
+  const concentric = path.slice(bottomIdx, lockoutIdx + 1);
   let maxDip = 0;
   for (let i = 1; i < concentric.length; i++) {
     const dip = (concentric[i].y - concentric[i - 1].y) * CM_PER_UNIT;
     if (dip > maxDip) maxDip = dip;
   }
 
+  // At 4fps, frame-to-frame landmark jitter of 1-2cm is normal.
+  // Threshold of 3cm filters noise while catching genuine hitching.
   let verdict: CriterionResult['verdict'];
-  if (maxDip <= 0) verdict = 'pass';
-  else if (maxDip <= 1) verdict = 'borderline';
+  if (maxDip <= 3) verdict = 'pass';
+  else if (maxDip <= 5) verdict = 'borderline';
   else verdict = 'fail';
 
   return {
