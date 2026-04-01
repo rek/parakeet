@@ -144,12 +144,14 @@ export function gradeSquatRep({ rep, frames }: { rep: RepAnalysis; frames: PoseF
 function gradeBenchPause({ rep, fps }: { rep: RepAnalysis; fps: number }) {
   const path = rep.barPath;
   if (path.length < 3) {
-    return { name: 'pause', verdict: 'pass' as const, measured: 0, threshold: 0.3, unit: 's', message: 'Insufficient data' };
+    return { name: 'pause', verdict: 'pass' as const, measured: 0, threshold: 0.2, unit: 's', message: 'Insufficient data' };
   }
 
   const velocities = computeBarVelocity({ barPath: path, fps });
-  // Find the longest consecutive run where velocity is near zero (<5 cm/s)
-  const STALL_THRESHOLD = 5;
+  // At low fps (4fps), velocity between frames is noisy. Use a higher stall
+  // threshold and count even single frames as a pause — a 250ms pause is
+  // exactly 1 frame at 4fps.
+  const STALL_THRESHOLD = fps <= 8 ? 15 : 5; // cm/s — more tolerant at low fps
   let maxStallFrames = 0;
   let currentStall = 0;
   for (const v of velocities) {
@@ -163,15 +165,15 @@ function gradeBenchPause({ rep, fps }: { rep: RepAnalysis; fps: number }) {
   const stallSeconds = maxStallFrames / fps;
 
   let verdict: CriterionResult['verdict'];
-  if (stallSeconds >= 0.3) verdict = 'pass';
-  else if (stallSeconds >= 0.15) verdict = 'borderline';
+  if (stallSeconds >= 0.2) verdict = 'pass';
+  else if (stallSeconds >= 0.1) verdict = 'borderline';
   else verdict = 'fail';
 
   return {
     name: 'pause',
     verdict,
     measured: stallSeconds,
-    threshold: 0.3,
+    threshold: 0.2,
     unit: 's',
     message: verdict === 'pass'
       ? `Clear pause (${stallSeconds.toFixed(2)}s)`
@@ -182,19 +184,29 @@ function gradeBenchPause({ rep, fps }: { rep: RepAnalysis; fps: number }) {
 }
 
 function gradeBenchLockout({ frames, rep }: { frames: PoseFrame[]; rep: RepAnalysis }) {
+  // Find the lockout frame: lowest wrist Y (bar at highest point)
+  const startIdx = Math.max(rep.startFrame, 0);
   const endIdx = Math.min(rep.endFrame, frames.length - 1);
-  const elbowAngle = computeElbowAngle({ frame: frames[endIdx] });
+  let lockoutIdx = endIdx;
+  let lowestWristY = Infinity;
+  for (let i = startIdx; i <= endIdx; i++) {
+    const wristY = (frames[i][LANDMARK.LEFT_WRIST].y + frames[i][LANDMARK.RIGHT_WRIST].y) / 2;
+    if (wristY < lowestWristY) { lowestWristY = wristY; lockoutIdx = i; }
+  }
 
+  const elbowAngle = computeElbowAngle({ frame: frames[lockoutIdx] });
+
+  // MediaPipe elbow landmark reads ~10° below anatomical angle.
   let verdict: CriterionResult['verdict'];
-  if (elbowAngle >= 170) verdict = 'pass';
-  else if (elbowAngle >= 165) verdict = 'borderline';
+  if (elbowAngle >= 155) verdict = 'pass';
+  else if (elbowAngle >= 145) verdict = 'borderline';
   else verdict = 'fail';
 
   return {
     name: 'lockout',
     verdict,
     measured: elbowAngle,
-    threshold: 170,
+    threshold: 155,
     unit: '°',
     message: verdict === 'pass'
       ? `Elbows fully locked (${elbowAngle.toFixed(0)}°)`
@@ -205,7 +217,22 @@ function gradeBenchLockout({ frames, rep }: { frames: PoseFrame[]; rep: RepAnaly
 }
 
 function gradeBenchEvenPress({ frames, rep }: { frames: PoseFrame[]; rep: RepAnalysis }) {
+  // Even press is only meaningful from front view — from the side, perspective
+  // makes one wrist appear higher than the other even when the bar is level.
   const endIdx = Math.min(rep.endFrame, frames.length - 1);
+  const ls = frames[endIdx][LANDMARK.LEFT_SHOULDER];
+  const rs = frames[endIdx][LANDMARK.RIGHT_SHOULDER];
+  if (Math.abs(ls.x - rs.x) < 0.15) {
+    return {
+      name: 'even_press',
+      verdict: 'pass' as const,
+      measured: 0,
+      threshold: 2,
+      unit: 'cm',
+      message: 'Even press not assessable from this camera angle',
+    } satisfies CriterionResult;
+  }
+
   const frame = frames[endIdx];
   const lw = frame[LANDMARK.LEFT_WRIST];
   const rw = frame[LANDMARK.RIGHT_WRIST];
@@ -364,23 +391,25 @@ function gradeDeadliftDownwardMotion({ rep }: { rep: RepAnalysis }) {
 }
 
 function gradeDeadliftShoulders({ frames, rep }: { frames: PoseFrame[]; rep: RepAnalysis }) {
-  const endIdx = Math.min(rep.endFrame, frames.length - 1);
-  const frame = frames[endIdx];
+  const lockoutIdx = findLockoutFrame({ frames, rep });
+  const frame = frames[lockoutIdx];
   const shoulderX = (frame[LANDMARK.LEFT_SHOULDER].x + frame[LANDMARK.RIGHT_SHOULDER].x) / 2;
   const hipX = (frame[LANDMARK.LEFT_HIP].x + frame[LANDMARK.RIGHT_HIP].x) / 2;
   const deltaCm = (shoulderX - hipX) * CM_PER_UNIT;
-  // Negative = shoulders behind hips (good), positive = forward
+  // Negative = shoulders behind hips (good), positive = forward.
+  // Camera angle and landmark noise create ~5cm apparent forward lean
+  // even when shoulders are anatomically behind the hips.
 
   let verdict: CriterionResult['verdict'];
-  if (deltaCm <= 0) verdict = 'pass';
-  else if (deltaCm <= 1) verdict = 'borderline';
+  if (deltaCm <= 5) verdict = 'pass';
+  else if (deltaCm <= 8) verdict = 'borderline';
   else verdict = 'fail';
 
   return {
     name: 'shoulders_back',
     verdict,
     measured: deltaCm,
-    threshold: 0,
+    threshold: 5,
     unit: 'cm',
     message: verdict === 'pass'
       ? 'Shoulders behind hips at lockout'
