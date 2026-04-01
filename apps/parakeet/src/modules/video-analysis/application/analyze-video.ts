@@ -187,7 +187,7 @@ export async function extractFramesFromVideo({
     }
 
     // Delete thumbnail file immediately — prevents native bitmap accumulation
-    try { new File(thumbnail.uri).delete(); } catch {}
+    try { new File(thumbnail.uri).delete(); } catch (err) { captureException(err); }
 
     // Yield to event loop — gives native GC a chance to reclaim memory
     await yieldToGc();

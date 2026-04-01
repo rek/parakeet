@@ -4,7 +4,7 @@
     "barDriftNormalized": 0.03,
     "excessiveForwardLeanDeg": 55,
     "backRoundingDeviationDeg": 15,
-    "incompleteLockoutHipDeg": 170
+    "incompleteLockoutHipDeg": 160
   },
   "videos": [
     {
@@ -84,7 +84,7 @@
       "file": "deadlift-front-2reps.mp4",
       "lift": "deadlift",
       "calibrated": false,
-      "expected": { "camera_angle": "side", "rep_count": { "min": 1, "max": 4 }, "faults_to_test": ["bar_drift", "back_rounding", "incomplete_lockout"], "metrics_present": ["barDriftCm", "hipAngleAtLockoutDeg", "romCm"], "fatigue_signatures": true },
+      "expected": { "camera_angle": "side", "camera_angle_notes": "Named 'front' but filmed at ~45° diagonal. Shoulder separation < 0.15 threshold so detector classifies as side. Side-view metrics are partially meaningful at this angle.", "rep_count": { "min": 1, "max": 4 }, "faults_to_test": ["bar_drift", "back_rounding", "incomplete_lockout"], "metrics_present": ["barDriftCm", "hipAngleAtLockoutDeg", "romCm"], "fatigue_signatures": true },
       "actual": null
     },
     {
