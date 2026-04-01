@@ -27,18 +27,31 @@ export function analyzeHipHingeTiming({
     return { crossoverPct: 50, isEarlyHipShoot: false };
   }
 
-  // Scan consecutive frame pairs across the concentric phase
-  for (let i = startFrame; i < endFrame; i++) {
-    const hipVelocity = (computeHipAngle({ frame: frames[i + 1] }) - computeHipAngle({ frame: frames[i] })) * fps;
-    const kneeVelocity = (computeKneeAngle({ frame: frames[i + 1] }) - computeKneeAngle({ frame: frames[i] })) * fps;
+  // Count frames where hips extend faster than knees in the first third.
+  // A single noisy frame shouldn't trigger — only flag when hips dominate
+  // the majority of the initial pull phase.
+  const firstThirdEnd = Math.min(
+    startFrame + Math.max(3, Math.ceil(repLength / 3)),
+    endFrame,
+  );
+  let hipDominantFrames = 0;
+  let totalComparisons = 0;
 
-    if (hipVelocity > kneeVelocity) {
-      const crossoverPct = ((i - startFrame) / repLength) * 100;
-      const isEarlyHipShoot = crossoverPct < 30;
-      return { crossoverPct, isEarlyHipShoot };
-    }
+  for (let i = startFrame; i < firstThirdEnd && i + 1 < frames.length; i++) {
+    const hipDelta = computeHipAngle({ frame: frames[i + 1] }) - computeHipAngle({ frame: frames[i] });
+    const kneeDelta = computeKneeAngle({ frame: frames[i + 1] }) - computeKneeAngle({ frame: frames[i] });
+    totalComparisons++;
+    if (hipDelta > kneeDelta) hipDominantFrames++;
   }
 
-  // Knee velocity never fell behind hip velocity — clean mechanics
-  return { crossoverPct: 100, isEarlyHipShoot: false };
+  if (totalComparisons === 0) {
+    return { crossoverPct: 50, isEarlyHipShoot: false };
+  }
+
+  // Hip shoot = hips faster than knees on >60% of initial frames
+  const hipDominantRatio = hipDominantFrames / totalComparisons;
+  const crossoverPct = Math.round((1 - hipDominantRatio) * 100);
+  const isEarlyHipShoot = hipDominantRatio > 0.6;
+
+  return { crossoverPct, isEarlyHipShoot };
 }

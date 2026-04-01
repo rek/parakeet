@@ -240,21 +240,22 @@ export function gradeBenchRep({ rep, frames, fps }: { rep: RepAnalysis; frames: 
 // --- Deadlift ---
 
 /**
- * Find the best lockout frame — the frame with the lowest hip Y (most upright)
- * in the second half of the rep. The end frame may land during descent if the
- * rep boundary includes the lowering phase.
+ * Find the lockout frame — where the bar (wrist Y) is at its highest point
+ * (lowest Y value) during the rep. This corresponds to the top of the pull
+ * regardless of how upright the lifter stands. Using hip Y fails for lifters
+ * who stay bent over at lockout — the bar still reaches its peak.
  */
 function findLockoutFrame({ frames, rep }: { frames: PoseFrame[]; rep: RepAnalysis }) {
-  const midIdx = Math.floor((rep.startFrame + rep.endFrame) / 2);
+  const startIdx = Math.max(rep.startFrame, 0);
   const endIdx = Math.min(rep.endFrame, frames.length - 1);
   let bestIdx = endIdx;
-  let lowestHipY = Infinity;
-  for (let i = midIdx; i <= endIdx; i++) {
-    const lh = frames[i][LANDMARK.LEFT_HIP];
-    const rh = frames[i][LANDMARK.RIGHT_HIP];
-    const hipY = (lh.y + rh.y) / 2;
-    if (hipY < lowestHipY) {
-      lowestHipY = hipY;
+  let lowestWristY = Infinity;
+  for (let i = startIdx; i <= endIdx; i++) {
+    const lw = frames[i][LANDMARK.LEFT_WRIST];
+    const rw = frames[i][LANDMARK.RIGHT_WRIST];
+    const wristY = (lw.y + rw.y) / 2;
+    if (wristY < lowestWristY) {
+      lowestWristY = wristY;
       bestIdx = i;
     }
   }
@@ -265,16 +266,19 @@ function gradeDeadliftHipLockout({ frames, rep }: { frames: PoseFrame[]; rep: Re
   const lockoutIdx = findLockoutFrame({ frames, rep });
   const hipAngle = computeHipAngle({ frame: frames[lockoutIdx] });
 
+  // MediaPipe hip landmark is at the ASIS (surface), not the hip joint center.
+  // This causes a systematic 10-15° underread vs anatomical angles. A 160°
+  // reading from MediaPipe corresponds to ~175° true hip extension.
   let verdict: CriterionResult['verdict'];
-  if (hipAngle >= 170) verdict = 'pass';
-  else if (hipAngle >= 165) verdict = 'borderline';
+  if (hipAngle >= 160) verdict = 'pass';
+  else if (hipAngle >= 155) verdict = 'borderline';
   else verdict = 'fail';
 
   return {
     name: 'hip_lockout',
     verdict,
     measured: hipAngle,
-    threshold: 170,
+    threshold: 160,
     unit: '°',
     message: verdict === 'pass'
       ? `Hips fully through (${hipAngle.toFixed(0)}°)`
@@ -289,15 +293,15 @@ function gradeDeadliftKneeLockout({ frames, rep }: { frames: PoseFrame[]; rep: R
   const kneeAngle = computeKneeAngle({ frame: frames[lockoutIdx] });
 
   let verdict: CriterionResult['verdict'];
-  if (kneeAngle >= 170) verdict = 'pass';
-  else if (kneeAngle >= 165) verdict = 'borderline';
+  if (kneeAngle >= 160) verdict = 'pass';
+  else if (kneeAngle >= 155) verdict = 'borderline';
   else verdict = 'fail';
 
   return {
     name: 'knee_lockout',
     verdict,
     measured: kneeAngle,
-    threshold: 170,
+    threshold: 160,
     unit: '°',
     message: verdict === 'pass'
       ? `Knees fully locked (${kneeAngle.toFixed(0)}°)`

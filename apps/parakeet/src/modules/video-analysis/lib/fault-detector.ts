@@ -14,7 +14,9 @@ const THRESHOLDS = {
   deadlift: {
     barDriftNormalized: 0.03,
     backRoundingDeviationDeg: 15,
-    incompleteLockoutHipDeg: 170,
+    // MediaPipe ASIS landmark reads 10-15° below anatomical hip angle.
+    // 160° here corresponds to ~175° true extension.
+    incompleteLockoutHipDeg: 160,
   },
   bench: {
     barDriftNormalized: 0.03,
@@ -156,18 +158,30 @@ function detectDeadliftFaults({
     });
   }
 
-  // Back rounding — compare shoulder-hip-knee angle at mid-pull vs start
+  // Back rounding — detect if the torso angle gets WORSE (more flexed) during
+  // the pull. Normal deadlift: hip angle increases (hips extend). Rounding:
+  // hip angle decreases at some point (upper back caves while hips shoot up).
+  // Compare the minimum hip angle in the first third of the pull to the
+  // starting angle. A decrease means the back rounded under load.
   const startIdx = Math.min(startFrame, frames.length - 1);
-  const midIdx = Math.min(Math.round((startFrame + endFrame) / 2), frames.length - 1);
+  const thirdIdx = Math.min(
+    Math.round(startFrame + (endFrame - startFrame) / 3),
+    frames.length - 1,
+  );
   const startHipAngle = computeHipAngle({ frame: frames[startIdx] });
-  const midHipAngle = computeHipAngle({ frame: frames[midIdx] });
-  const angularDeviation = Math.abs(midHipAngle - startHipAngle);
-  if (angularDeviation > THRESHOLDS.deadlift.backRoundingDeviationDeg) {
+  let minHipAngle = startHipAngle;
+  for (let i = startIdx + 1; i <= thirdIdx; i++) {
+    const angle = computeHipAngle({ frame: frames[i] });
+    if (angle < minHipAngle) minHipAngle = angle;
+  }
+  // Only flag if the angle DECREASED (back rounded), not if it increased (normal extension)
+  const roundingDeg = startHipAngle - minHipAngle;
+  if (roundingDeg > THRESHOLDS.deadlift.backRoundingDeviationDeg) {
     faults.push({
       type: 'back_rounding',
       severity: 'warning',
-      message: `Hip angle deviated ${angularDeviation.toFixed(1)}° from starting position`,
-      value: angularDeviation,
+      message: `Back rounded ${roundingDeg.toFixed(1)}° during initial pull`,
+      value: roundingDeg,
       threshold: THRESHOLDS.deadlift.backRoundingDeviationDeg,
     });
   }
