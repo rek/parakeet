@@ -14,14 +14,13 @@ function straightPath(startFrame: number, endFrame: number) {
   }));
 }
 
-/** Build a bar path with significant horizontal drift from startFrame.
- * Mean-centered drift: with a linear ramp from 0.5 to 0.5+maxDrift,
- * the max deviation from mean is maxDrift/2. Use maxDrift=0.12 to get
- * 0.06 mean-centered drift, well above the 0.03 threshold. */
-function driftingPath(startFrame: number, endFrame: number, maxDrift = 0.12) {
+/** Build a bar path that curves away from the travel axis.
+ * Uses a sine bulge so the path deviates perpendicularly from the
+ * start→end line. Peak deviation = maxDrift, well above 0.03 threshold. */
+function driftingPath(startFrame: number, endFrame: number, maxDrift = 0.06) {
   const count = endFrame - startFrame + 1;
   return Array.from({ length: count }, (_, i) => ({
-    x: 0.5 + (i / count) * maxDrift,
+    x: 0.5 + Math.sin((i / (count - 1)) * Math.PI) * maxDrift,
     y: 0.3 + i * 0.01,
     frame: startFrame + i,
   }));

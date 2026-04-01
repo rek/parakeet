@@ -124,30 +124,49 @@ describe('computeBarDrift', () => {
     expect(computeBarDrift({ path: [] })).toBe(0);
   });
 
-  it('returns 0 for a perfectly straight path', () => {
+  it('returns 0 for a single point', () => {
+    expect(computeBarDrift({ path: [{ x: 0.5, y: 0.3, frame: 0 }] })).toBe(0);
+  });
+
+  it('returns 0 for a perfectly straight vertical path', () => {
     const path = Array.from({ length: 10 }, (_, i) => ({ x: 0.5, y: i * 0.05, frame: i }));
     expect(computeBarDrift({ path })).toBe(0);
   });
 
-  it('returns maximum absolute deviation from mean x', () => {
-    const path = [
-      { x: 0.5, y: 0.0, frame: 0 },
-      { x: 0.52, y: 0.1, frame: 1 },
-      { x: 0.54, y: 0.2, frame: 2 },
-      { x: 0.51, y: 0.3, frame: 3 },
-    ];
-    // mean x = (0.5 + 0.52 + 0.54 + 0.51) / 4 = 0.5175
-    // max deviation = |0.54 - 0.5175| = 0.0225
-    expect(computeBarDrift({ path })).toBeCloseTo(0.0225);
+  it('returns 0 for a straight diagonal path (camera parallax)', () => {
+    // Bar travels diagonally due to camera angle — no real drift
+    const path = Array.from({ length: 10 }, (_, i) => ({
+      x: 0.5 + i * 0.01, // apparent X shift from perspective
+      y: i * 0.05,
+      frame: i,
+    }));
+    expect(computeBarDrift({ path })).toBeCloseTo(0, 5);
   });
 
-  it('handles drift in the negative direction', () => {
+  it('detects perpendicular deviation from travel axis', () => {
+    // Bar travels from (0.5, 0) to (0.5, 0.3) but bulges right at midpoint
     const path = [
       { x: 0.5, y: 0.0, frame: 0 },
-      { x: 0.46, y: 0.1, frame: 1 },
+      { x: 0.54, y: 0.1, frame: 1 }, // 0.04 perpendicular drift
+      { x: 0.5, y: 0.2, frame: 2 },
+      { x: 0.5, y: 0.3, frame: 3 },
     ];
-    // mean x = 0.48, max deviation = |0.5 - 0.48| = 0.02
-    expect(computeBarDrift({ path })).toBeCloseTo(0.02);
+    expect(computeBarDrift({ path })).toBeCloseTo(0.04);
+  });
+
+  it('handles drift on a diagonal travel axis', () => {
+    // Bar travels diagonally (camera angle) but curves at midpoint
+    const path = [
+      { x: 0.50, y: 0.0, frame: 0 },
+      { x: 0.55, y: 0.1, frame: 1 }, // on axis
+      { x: 0.64, y: 0.2, frame: 2 }, // drifts right of axis
+      { x: 0.65, y: 0.3, frame: 3 }, // on axis
+    ];
+    // Travel axis is (0.50,0) → (0.65,0.3), slope = 0.3/0.15
+    // Point (0.64, 0.2) should have some perpendicular deviation
+    const drift = computeBarDrift({ path });
+    expect(drift).toBeGreaterThan(0.01);
+    expect(drift).toBeLessThan(0.05);
   });
 
   it('returns absolute value (always non-negative)', () => {
@@ -158,15 +177,16 @@ describe('computeBarDrift', () => {
     expect(computeBarDrift({ path })).toBeGreaterThanOrEqual(0);
   });
 
-  it('uses mean x as the reference for drift measurement', () => {
+  it('falls back to mean-centered X when start ≈ end', () => {
+    // Squat: bar starts and ends at roughly the same position
     const path = [
-      { x: 0.3, y: 0, frame: 0 },
-      { x: 0.35, y: 0.1, frame: 1 },
-      { x: 0.5, y: 0.2, frame: 2 },
+      { x: 0.50, y: 0.3, frame: 0 },
+      { x: 0.54, y: 0.5, frame: 1 }, // drifts
+      { x: 0.50, y: 0.3, frame: 2 }, // returns
     ];
-    // mean x = (0.3 + 0.35 + 0.5) / 3 ≈ 0.3833
-    // max deviation = |0.5 - 0.3833| ≈ 0.1167
-    expect(computeBarDrift({ path })).toBeCloseTo(0.1167, 3);
+    // start ≈ end, so falls back to mean-centered: mean=0.5133, max dev≈0.027
+    const drift = computeBarDrift({ path });
+    expect(drift).toBeGreaterThan(0);
   });
 });
 

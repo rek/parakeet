@@ -69,26 +69,63 @@ export function smoothBarPath({
 }
 
 /**
- * Compute maximum horizontal deviation from the mean bar X position.
+ * Compute maximum perpendicular deviation from the bar's travel axis.
  *
- * Uses the mean X of the rep path as the reference rather than the first
- * point. This is more robust to start-position variance — if the lifter
- * repositions or the camera angle causes apparent X drift as the bar moves
- * vertically, the mean-centered metric captures true lateral deviation.
+ * Strategy depends on whether the bar path is a one-way trip (deadlift,
+ * bench concentric) or a loop (squat — bar goes down then comes back up):
  *
- * Returns the worst-case lateral drift in normalized coordinates.
- * The caller converts to physical units (1 normalized unit ≈ 243cm for a
- * 170cm person filling 70% of frame height).
+ * - **One-way path** (start and end Y differ significantly): draws a line
+ *   from first to last point and measures perpendicular deviation. This is
+ *   camera-angle-invariant — a straight diagonal bar path from a non-
+ *   perpendicular camera reads as zero drift.
+ *
+ * - **Loop path** (start ≈ end, e.g. full squat rep): measures deviation
+ *   from a vertical line through the mean X. Camera parallax shifts the
+ *   mean X but doesn't increase deviation from it.
+ *
+ * Returns the worst-case drift in normalized coordinates.
+ * The caller converts to physical units (1 normalized unit ≈ 243cm).
  */
 export function computeBarDrift({ path }: { path: BarPathPoint[] }) {
-  if (path.length === 0) return 0;
+  if (path.length < 2) return 0;
 
-  const meanX = path.reduce((sum, p) => sum + p.x, 0) / path.length;
+  const start = path[0];
+  const end = path[path.length - 1];
+
+  // Direction vector of the travel axis
+  const dx = end.x - start.x;
+  const dy = end.y - start.y;
+  const len = Math.sqrt(dx * dx + dy * dy);
+
+  // Detect loop vs one-way: if the Y-range is large but start→end distance
+  // is small relative to Y-range, the bar went down and came back up (loop).
+  const yMin = Math.min(...path.map((p) => p.y));
+  const yMax = Math.max(...path.map((p) => p.y));
+  const yRange = yMax - yMin;
+  const isLoop = yRange > 0.02 && len < yRange * 0.5;
+
+  if (isLoop) {
+    // Loop path: deviation from vertical line through mean X
+    const meanX = path.reduce((sum, p) => sum + p.x, 0) / path.length;
+    let maxDrift = 0;
+    for (const point of path) {
+      const drift = Math.abs(point.x - meanX);
+      if (drift > maxDrift) maxDrift = drift;
+    }
+    return maxDrift;
+  }
+
+  // One-way path: perpendicular deviation from start→end line
+  // Unit normal to the travel axis
+  const nx = -dy / len;
+  const ny = dx / len;
+
   let maxDrift = 0;
-
   for (const point of path) {
-    const drift = Math.abs(point.x - meanX);
-    if (drift > maxDrift) maxDrift = drift;
+    const projX = point.x - start.x;
+    const projY = point.y - start.y;
+    const perpDist = Math.abs(projX * nx + projY * ny);
+    if (perpDist > maxDrift) maxDrift = perpDist;
   }
 
   return maxDrift;
