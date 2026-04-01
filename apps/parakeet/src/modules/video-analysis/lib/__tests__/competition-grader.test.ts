@@ -38,15 +38,15 @@ function standingFrame() {
   });
 }
 
-// Bent-knee frame (incomplete lockout)
+// Bent-knee frame (incomplete lockout — ~140° knee angle)
 function bentKneeFrame() {
   return buildFrame({
-    [LANDMARK.LEFT_KNEE]: { x: 0.44, y: 0.72, z: 0, visibility: 1 },
-    [LANDMARK.RIGHT_KNEE]: { x: 0.56, y: 0.72, z: 0, visibility: 1 },
+    [LANDMARK.LEFT_KNEE]: { x: 0.42, y: 0.72, z: 0, visibility: 1 },
+    [LANDMARK.RIGHT_KNEE]: { x: 0.58, y: 0.72, z: 0, visibility: 1 },
     [LANDMARK.LEFT_ANKLE]: { x: 0.46, y: 0.95, z: 0, visibility: 1 },
     [LANDMARK.RIGHT_ANKLE]: { x: 0.54, y: 0.95, z: 0, visibility: 1 },
-    [LANDMARK.LEFT_HIP]: { x: 0.47, y: 0.60, z: 0, visibility: 1 },
-    [LANDMARK.RIGHT_HIP]: { x: 0.53, y: 0.60, z: 0, visibility: 1 },
+    [LANDMARK.LEFT_HIP]: { x: 0.47, y: 0.50, z: 0, visibility: 1 },
+    [LANDMARK.RIGHT_HIP]: { x: 0.53, y: 0.50, z: 0, visibility: 1 },
   });
 }
 
@@ -91,7 +91,7 @@ describe('gradeSquatRep', () => {
 
   it('fails lockout with bent knees', () => {
     const frames = makeFrames(30, bentKneeFrame);
-    const rep = makeRep({ maxDepthCm: -5, endFrame: 29 });
+    const rep = makeRep({ maxDepthCm: -5, kneeAngleDeg: 140, endFrame: 29 });
     const verdict = gradeSquatRep({ rep, frames });
     const lockout = verdict.criteria.find((c) => c.name === 'lockout');
     expect(lockout?.verdict).toBe('fail');

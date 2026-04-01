@@ -8,9 +8,21 @@ export type { CriterionResult, RepVerdict };
 // --- Squat ---
 
 function gradeSquatDepth({ rep }: { rep: RepAnalysis }) {
-  const depth = rep.maxDepthCm ?? 0;
+  // Depth is only measured from side view — undefined means front/diagonal
+  // camera where depth can't be assessed. Skip the criterion entirely.
+  if (rep.maxDepthCm == null) {
+    return {
+      name: 'depth',
+      verdict: 'pass' as const,
+      measured: 0,
+      threshold: 0,
+      unit: 'cm',
+      message: 'Depth not assessable from this camera angle',
+    } satisfies CriterionResult;
+  }
+
+  const depth = rep.maxDepthCm;
   // Positive = below parallel (pass), negative = above (fail)
-  // Matches depth-detector.ts: hipY > kneeY → positive depthCm
   let verdict: CriterionResult['verdict'];
   if (depth >= 2) verdict = 'pass';
   else if (depth >= 0) verdict = 'borderline';
@@ -31,19 +43,33 @@ function gradeSquatDepth({ rep }: { rep: RepAnalysis }) {
 }
 
 function gradeSquatLockout({ frames, rep }: { frames: PoseFrame[]; rep: RepAnalysis }) {
+  // Knee angle is only meaningful from side view
+  if (rep.kneeAngleDeg == null) {
+    return {
+      name: 'lockout',
+      verdict: 'pass' as const,
+      measured: 0,
+      threshold: 170,
+      unit: '°',
+      message: 'Lockout not assessable from this camera angle',
+    } satisfies CriterionResult;
+  }
+
   const endIdx = Math.min(rep.endFrame, frames.length - 1);
   const kneeAngle = computeKneeAngle({ frame: frames[endIdx] });
 
+  // IPF requires knees locked. 170° is functionally locked — MediaPipe
+  // landmark jitter means true lockout rarely reads exactly 180°.
   let verdict: CriterionResult['verdict'];
-  if (kneeAngle >= 175) verdict = 'pass';
-  else if (kneeAngle >= 170) verdict = 'borderline';
+  if (kneeAngle >= 170) verdict = 'pass';
+  else if (kneeAngle >= 165) verdict = 'borderline';
   else verdict = 'fail';
 
   return {
     name: 'lockout',
     verdict,
     measured: kneeAngle,
-    threshold: 175,
+    threshold: 170,
     unit: '°',
     message: verdict === 'pass'
       ? `Knees fully locked (${kneeAngle.toFixed(0)}°)`
@@ -54,36 +80,53 @@ function gradeSquatLockout({ frames, rep }: { frames: PoseFrame[]; rep: RepAnaly
 }
 
 function gradeSquatForwardMotion({ rep }: { rep: RepAnalysis }) {
-  // Check bar X drift in the final 20% of the rep
+  // Check bar path deviation during the final 20% of the rep (ascent to lockout).
+  // Uses perpendicular deviation from the ascending path's travel axis, which
+  // is camera-angle-invariant — a straight ascent from any camera position
+  // reads as zero drift.
   const path = rep.barPath;
   if (path.length < 5) {
-    return { name: 'forward_motion', verdict: 'pass' as const, measured: 0, threshold: 2, unit: 'cm', message: 'Insufficient data' };
+    return { name: 'forward_motion', verdict: 'pass' as const, measured: 0, threshold: 3, unit: 'cm', message: 'Insufficient data' };
   }
 
   const cutoff = Math.floor(path.length * 0.8);
   const topPath = path.slice(cutoff);
-  const startX = topPath[0].x;
-  let maxForwardDrift = 0;
-  for (const p of topPath) {
-    const drift = (p.x - startX) * CM_PER_UNIT;
-    if (Math.abs(drift) > Math.abs(maxForwardDrift)) maxForwardDrift = drift;
+  if (topPath.length < 2) {
+    return { name: 'forward_motion', verdict: 'pass' as const, measured: 0, threshold: 3, unit: 'cm', message: 'Insufficient data' };
   }
 
-  const absDrift = Math.abs(maxForwardDrift);
+  // Travel axis of the ascending phase
+  const start = topPath[0];
+  const end = topPath[topPath.length - 1];
+  const dx = end.x - start.x;
+  const dy = end.y - start.y;
+  const len = Math.sqrt(dx * dx + dy * dy);
+
+  let maxDrift = 0;
+  if (len > 0.001) {
+    const nx = -dy / len;
+    const ny = dx / len;
+    for (const p of topPath) {
+      const perpDist = Math.abs((p.x - start.x) * nx + (p.y - start.y) * ny);
+      if (perpDist > maxDrift) maxDrift = perpDist;
+    }
+  }
+
+  const driftCm = maxDrift * CM_PER_UNIT;
   let verdict: CriterionResult['verdict'];
-  if (absDrift < 2) verdict = 'pass';
-  else if (absDrift < 4) verdict = 'borderline';
+  if (driftCm < 3) verdict = 'pass';
+  else if (driftCm < 6) verdict = 'borderline';
   else verdict = 'fail';
 
   return {
     name: 'forward_motion',
     verdict,
-    measured: absDrift,
-    threshold: 2,
+    measured: driftCm,
+    threshold: 3,
     unit: 'cm',
     message: verdict === 'pass'
       ? 'Clean lockout path'
-      : `${absDrift.toFixed(1)}cm forward drift at top`,
+      : `${driftCm.toFixed(1)}cm path deviation at top`,
   } satisfies CriterionResult;
 }
 
