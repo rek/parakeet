@@ -65,7 +65,13 @@ export function RecordVideoSheet({
         >
           <Text style={styles.permissionButtonText}>Grant Permission</Text>
         </TouchableOpacity>
-        <TouchableOpacity onPress={onCancel} style={styles.cancelButton}>
+        <TouchableOpacity
+          onPress={onCancel}
+          style={styles.cancelButton}
+          accessible
+          accessibilityLabel="Cancel"
+          accessibilityRole="button"
+        >
           <Text style={styles.cancelText}>Cancel</Text>
         </TouchableOpacity>
       </View>
@@ -76,7 +82,13 @@ export function RecordVideoSheet({
     return (
       <View style={styles.container}>
         <Text style={styles.permissionText}>No camera device found</Text>
-        <TouchableOpacity onPress={onCancel} style={styles.cancelButton}>
+        <TouchableOpacity
+          onPress={onCancel}
+          style={styles.cancelButton}
+          accessible
+          accessibilityLabel="Cancel"
+          accessibilityRole="button"
+        >
           <Text style={styles.cancelText}>Cancel</Text>
         </TouchableOpacity>
       </View>

@@ -125,9 +125,15 @@ export async function getVideoForSessionLift({
   lift: string;
   setNumber: number;
 }) {
+  const {
+    data: { user },
+  } = await typedSupabase.auth.getUser();
+  if (!user) throw new Error('Not authenticated');
+
   const { data, error } = await typedSupabase
     .from('session_videos')
     .select(SELECT_WITH_PROFILE)
+    .eq('user_id', user.id)
     .eq('session_id', sessionId)
     .eq('lift', lift)
     .eq('set_number', setNumber)
@@ -148,9 +154,15 @@ export async function getVideosForSessionLift({
   sessionId: string;
   lift: string;
 }) {
+  const {
+    data: { user },
+  } = await typedSupabase.auth.getUser();
+  if (!user) throw new Error('Not authenticated');
+
   const { data, error } = await typedSupabase
     .from('session_videos')
     .select(SELECT_WITH_PROFILE)
+    .eq('user_id', user.id)
     .eq('session_id', sessionId)
     .eq('lift', lift)
     .order('set_number', { ascending: true });
@@ -170,9 +182,15 @@ export async function getVideosForLift({
   lift: string;
   setNumber?: number;
 }) {
+  const {
+    data: { user },
+  } = await typedSupabase.auth.getUser();
+  if (!user) throw new Error('Not authenticated');
+
   let query = typedSupabase
     .from('session_videos')
     .select(SELECT_WITH_PROFILE)
+    .eq('user_id', user.id)
     .eq('lift', lift)
     .order('created_at', { ascending: false });
 
@@ -260,13 +278,61 @@ export async function updateSessionVideoDebugLandmarks({
 }
 
 export async function deleteSessionVideo({ id }: { id: string }) {
+  const {
+    data: { user },
+  } = await typedSupabase.auth.getUser();
+  if (!user) throw new Error('Not authenticated');
+
+  // Fetch the row first to get file URIs for cleanup
+  const { data: row, error: fetchError } = await typedSupabase
+    .from('session_videos')
+    .select('local_uri, remote_uri')
+    .eq('id', id)
+    .eq('user_id', user.id)
+    .single();
+
+  if (fetchError) {
+    captureException(fetchError);
+    throw fetchError;
+  }
+
+  // Delete DB row
   const { error } = await typedSupabase
     .from('session_videos')
     .delete()
-    .eq('id', id);
+    .eq('id', id)
+    .eq('user_id', user.id);
 
   if (error) {
     captureException(error);
     throw error;
+  }
+
+  // Best-effort local file cleanup
+  if (row?.local_uri) {
+    try {
+      const { File } = await import('expo-file-system');
+      const file = new File(row.local_uri);
+      if (file.exists) {
+        file.delete();
+      }
+    } catch (err) {
+      captureException(err);
+    }
+  }
+
+  // Best-effort remote storage cleanup
+  if (row?.remote_uri) {
+    try {
+      const storagePath = `${user.id}/${id}.mp4`;
+      const { error: storageError } = await typedSupabase.storage
+        .from('session-videos')
+        .remove([storagePath]);
+      if (storageError) {
+        captureException(storageError);
+      }
+    } catch (err) {
+      captureException(err);
+    }
   }
 }

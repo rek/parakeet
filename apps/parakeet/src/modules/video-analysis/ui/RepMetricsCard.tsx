@@ -58,7 +58,7 @@ export function RepMetricsCard({
                   : `${Math.abs(rep.maxDepthCm).toFixed(1)} cm above parallel`
               }
               isGood={rep.maxDepthCm > 0}
-              colors={colors}
+              styles={styles}
             />
           )}
           {rep.forwardLeanDeg != null && (
@@ -66,7 +66,7 @@ export function RepMetricsCard({
               label="Forward lean"
               value={`${rep.forwardLeanDeg.toFixed(0)}°`}
               isGood={rep.forwardLeanDeg <= 55}
-              colors={colors}
+              styles={styles}
             />
           )}
           {rep.barDriftCm != null && (
@@ -74,14 +74,14 @@ export function RepMetricsCard({
               label="Bar drift"
               value={`${rep.barDriftCm.toFixed(1)} cm`}
               isGood={rep.barDriftCm <= 5}
-              colors={colors}
+              styles={styles}
             />
           )}
           {rep.romCm != null && (
             <MetricRow
               label="ROM"
               value={`${rep.romCm.toFixed(0)} cm`}
-              colors={colors}
+              styles={styles}
             />
           )}
         </View>
@@ -114,14 +114,13 @@ function MetricRow({
   label,
   value,
   isGood,
-  colors,
+  styles,
 }: {
   label: string;
   value: string;
   isGood?: boolean;
-  colors: ColorScheme;
+  styles: ReturnType<typeof buildStyles>;
 }) {
-  const styles = buildStyles(colors);
   return (
     <View style={styles.metricRow}>
       <Text style={styles.metricLabel}>{label}</Text>

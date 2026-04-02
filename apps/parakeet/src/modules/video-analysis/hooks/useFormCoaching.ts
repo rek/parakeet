@@ -7,7 +7,6 @@ import {
 } from '@modules/session';
 import type { FormCoachingResult } from '@parakeet/shared-types';
 import { generateFormCoaching } from '@parakeet/training-engine';
-import type { FormCoachingInput } from '@parakeet/training-engine';
 import { captureException } from '@platform/utils/captureException';
 
 import { assembleCoachingContext } from '../application/assemble-coaching-context';
@@ -16,6 +15,13 @@ import {
   updateSessionVideoCoaching,
 } from '../data/video.repository';
 import type { SessionVideo } from '../model/types';
+
+const VALID_LIFTS = ['squat', 'bench', 'deadlift'] as const;
+type CoachingLift = (typeof VALID_LIFTS)[number];
+
+function isCoachingLift(value: string): value is CoachingLift {
+  return (VALID_LIFTS as readonly string[]).includes(value);
+}
 
 /**
  * Hook that orchestrates LLM form coaching for a video analysis.
@@ -38,6 +44,7 @@ export function useFormCoaching({
   const generateCoaching = useCallback(
     async ({ video }: { video: SessionVideo }) => {
       if (!video.analysis) return;
+      if (!isCoachingLift(lift)) return;
 
       try {
         setError(null);
@@ -50,9 +57,7 @@ export function useFormCoaching({
         ]);
 
         const jitSnapshot = session
-          ? parseJitInputSnapshot(
-              (session as Record<string, unknown>).jit_input_snapshot
-            )
+          ? parseJitInputSnapshot(session.jit_input_snapshot)
           : null;
 
         // 2. Fetch previous videos for longitudinal context
@@ -64,17 +69,9 @@ export function useFormCoaching({
         // 3. Assemble coaching context
         const context = assembleCoachingContext({
           analysis: video.analysis,
-          lift: lift as 'squat' | 'bench' | 'deadlift',
-          session: session as {
-            block_number: number | null;
-            week_number: number | null;
-            intensity_type: string | null;
-            is_deload: boolean | null;
-          } | null,
-          log: log as {
-            session_rpe: number | null;
-            actual_sets: Array<{ weight_grams?: number; weight_kg?: number }>;
-          } | null,
+          lift,
+          session,
+          log,
           jitSnapshot,
           previousAnalyses,
           setContext: {
@@ -85,9 +82,7 @@ export function useFormCoaching({
         });
 
         // 4. Generate coaching via LLM
-        const result = await generateFormCoaching({
-          context: context as FormCoachingInput,
-        });
+        const result = await generateFormCoaching({ context });
 
         // 5. Persist to DB
         await updateSessionVideoCoaching({

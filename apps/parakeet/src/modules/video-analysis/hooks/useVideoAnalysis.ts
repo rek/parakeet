@@ -9,6 +9,7 @@ import {
   analyzeVideoFrames,
   extractFramesFromVideo,
 } from '../application/analyze-video';
+import { uploadVideoToStorage } from '../application/video-upload';
 import {
   getVideoForSessionLift,
   insertSessionVideo,
@@ -146,7 +147,12 @@ export function useVideoAnalysis({
         setResult(saved);
       }
 
-      // 6. In dev builds, store raw landmarks for calibration test harness.
+      // 6. Upload to Supabase Storage (non-blocking, best-effort)
+      uploadVideoToStorage({ videoId: saved.id, localUri: destUri }).catch(
+        captureException
+      );
+
+      // 7. In dev builds, store raw landmarks for calibration test harness.
       // Non-blocking — fire and forget so it doesn't slow down the UI.
       if (typeof __DEV__ !== 'undefined' && __DEV__ && extractedFrames) {
         updateSessionVideoDebugLandmarks({
