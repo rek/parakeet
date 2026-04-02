@@ -1,14 +1,12 @@
+import type { BarPathPoint, RepAnalysis } from '@parakeet/shared-types';
 import { describe, expect, it } from 'vitest';
 
-import type { RepAnalysis, BarPathPoint } from '@parakeet/shared-types';
-
 import {
-  gradeSquatRep,
   gradeBenchRep,
   gradeDeadliftRep,
   gradeRep,
+  gradeSquatRep,
 } from '../competition-grader';
-import type { RepVerdict } from '../competition-grader';
 import { LANDMARK } from '../pose-types';
 import { buildFrame } from './fixtures';
 
@@ -18,7 +16,11 @@ function makeRep(overrides: Partial<RepAnalysis> = {}): RepAnalysis {
     repNumber: 1,
     startFrame: 0,
     endFrame: 29,
-    barPath: Array.from({ length: 30 }, (_, i) => ({ x: 0.5, y: 0.4 + Math.sin(i / 30 * Math.PI) * 0.15, frame: i })),
+    barPath: Array.from({ length: 30 }, (_, i) => ({
+      x: 0.5,
+      y: 0.4 + Math.sin((i / 30) * Math.PI) * 0.15,
+      frame: i,
+    })),
     faults: [],
     ...overrides,
   };
@@ -31,8 +33,8 @@ function standingFrame() {
     [LANDMARK.RIGHT_KNEE]: { x: 0.54, y: 0.75, z: 0, visibility: 1 },
     [LANDMARK.LEFT_ANKLE]: { x: 0.46, y: 0.95, z: 0, visibility: 1 },
     [LANDMARK.RIGHT_ANKLE]: { x: 0.54, y: 0.95, z: 0, visibility: 1 },
-    [LANDMARK.LEFT_HIP]: { x: 0.47, y: 0.50, z: 0, visibility: 1 },
-    [LANDMARK.RIGHT_HIP]: { x: 0.53, y: 0.50, z: 0, visibility: 1 },
+    [LANDMARK.LEFT_HIP]: { x: 0.47, y: 0.5, z: 0, visibility: 1 },
+    [LANDMARK.RIGHT_HIP]: { x: 0.53, y: 0.5, z: 0, visibility: 1 },
     [LANDMARK.LEFT_SHOULDER]: { x: 0.46, y: 0.25, z: 0, visibility: 1 },
     [LANDMARK.RIGHT_SHOULDER]: { x: 0.54, y: 0.25, z: 0, visibility: 1 },
   });
@@ -45,8 +47,8 @@ function bentKneeFrame() {
     [LANDMARK.RIGHT_KNEE]: { x: 0.58, y: 0.72, z: 0, visibility: 1 },
     [LANDMARK.LEFT_ANKLE]: { x: 0.46, y: 0.95, z: 0, visibility: 1 },
     [LANDMARK.RIGHT_ANKLE]: { x: 0.54, y: 0.95, z: 0, visibility: 1 },
-    [LANDMARK.LEFT_HIP]: { x: 0.47, y: 0.50, z: 0, visibility: 1 },
-    [LANDMARK.RIGHT_HIP]: { x: 0.53, y: 0.50, z: 0, visibility: 1 },
+    [LANDMARK.LEFT_HIP]: { x: 0.47, y: 0.5, z: 0, visibility: 1 },
+    [LANDMARK.RIGHT_HIP]: { x: 0.53, y: 0.5, z: 0, visibility: 1 },
   });
 }
 
@@ -115,24 +117,32 @@ describe('gradeDeadliftRep', () => {
     const frames = makeFrames(30, standingFrame);
     const rep = makeRep({ endFrame: 29 });
     const verdict = gradeDeadliftRep({ rep, frames });
-    expect(verdict.criteria.find((c) => c.name === 'hip_lockout')?.verdict).toBe('pass');
-    expect(verdict.criteria.find((c) => c.name === 'knee_lockout')?.verdict).toBe('pass');
+    expect(
+      verdict.criteria.find((c) => c.name === 'hip_lockout')?.verdict
+    ).toBe('pass');
+    expect(
+      verdict.criteria.find((c) => c.name === 'knee_lockout')?.verdict
+    ).toBe('pass');
   });
 
   it('fails hip lockout when hips not through', () => {
     // Hips hinged forward at ~90° — shoulders far forward of hips, knees below.
     // shoulder-hip-knee angle should compute well below 165°.
-    const frames = makeFrames(30, () => buildFrame({
-      [LANDMARK.LEFT_HIP]: { x: 0.50, y: 0.55, z: 0, visibility: 1 },
-      [LANDMARK.RIGHT_HIP]: { x: 0.50, y: 0.55, z: 0, visibility: 1 },
-      [LANDMARK.LEFT_SHOULDER]: { x: 0.30, y: 0.55, z: 0, visibility: 1 },
-      [LANDMARK.RIGHT_SHOULDER]: { x: 0.30, y: 0.55, z: 0, visibility: 1 },
-      [LANDMARK.LEFT_KNEE]: { x: 0.50, y: 0.80, z: 0, visibility: 1 },
-      [LANDMARK.RIGHT_KNEE]: { x: 0.50, y: 0.80, z: 0, visibility: 1 },
-    }));
+    const frames = makeFrames(30, () =>
+      buildFrame({
+        [LANDMARK.LEFT_HIP]: { x: 0.5, y: 0.55, z: 0, visibility: 1 },
+        [LANDMARK.RIGHT_HIP]: { x: 0.5, y: 0.55, z: 0, visibility: 1 },
+        [LANDMARK.LEFT_SHOULDER]: { x: 0.3, y: 0.55, z: 0, visibility: 1 },
+        [LANDMARK.RIGHT_SHOULDER]: { x: 0.3, y: 0.55, z: 0, visibility: 1 },
+        [LANDMARK.LEFT_KNEE]: { x: 0.5, y: 0.8, z: 0, visibility: 1 },
+        [LANDMARK.RIGHT_KNEE]: { x: 0.5, y: 0.8, z: 0, visibility: 1 },
+      })
+    );
     const rep = makeRep({ endFrame: 29 });
     const verdict = gradeDeadliftRep({ rep, frames });
-    expect(verdict.criteria.find((c) => c.name === 'hip_lockout')?.verdict).toBe('fail');
+    expect(
+      verdict.criteria.find((c) => c.name === 'hip_lockout')?.verdict
+    ).toBe('fail');
   });
 
   it('passes downward motion when bar path is monotonic', () => {
@@ -145,7 +155,9 @@ describe('gradeDeadliftRep', () => {
     const rep = makeRep({ barPath: path });
     const frames = makeFrames(30, standingFrame);
     const verdict = gradeDeadliftRep({ rep, frames });
-    expect(verdict.criteria.find((c) => c.name === 'downward_motion')?.verdict).toBe('pass');
+    expect(
+      verdict.criteria.find((c) => c.name === 'downward_motion')?.verdict
+    ).toBe('pass');
   });
 
   it('fails downward motion when bar dips during pull', () => {
@@ -158,7 +170,9 @@ describe('gradeDeadliftRep', () => {
     const rep = makeRep({ barPath: path });
     const frames = makeFrames(30, standingFrame);
     const verdict = gradeDeadliftRep({ rep, frames });
-    expect(verdict.criteria.find((c) => c.name === 'downward_motion')?.verdict).toBe('fail');
+    expect(
+      verdict.criteria.find((c) => c.name === 'downward_motion')?.verdict
+    ).toBe('fail');
   });
 });
 
@@ -168,19 +182,25 @@ describe('gradeBenchRep', () => {
     const fps = 30;
     const path: BarPathPoint[] = [];
     for (let i = 0; i < 30; i++) {
-      if (i < 10) path.push({ x: 0.5, y: 0.3 + i * 0.025, frame: i }); // descend
-      else if (i < 22) path.push({ x: 0.5, y: 0.55, frame: i }); // stall (12 frames = 0.4s)
+      if (i < 10)
+        path.push({ x: 0.5, y: 0.3 + i * 0.025, frame: i }); // descend
+      else if (i < 22)
+        path.push({ x: 0.5, y: 0.55, frame: i }); // stall (12 frames = 0.4s)
       else path.push({ x: 0.5, y: 0.55 - (i - 22) * 0.03, frame: i }); // ascend
     }
     const rep = makeRep({ barPath: path, endFrame: 29 });
-    const frames = makeFrames(30, () => buildFrame({
-      [LANDMARK.LEFT_ELBOW]: { x: 0.4, y: 0.3, z: 0, visibility: 1 },
-      [LANDMARK.RIGHT_ELBOW]: { x: 0.6, y: 0.3, z: 0, visibility: 1 },
-      [LANDMARK.LEFT_WRIST]: { x: 0.38, y: 0.25, z: 0, visibility: 1 },
-      [LANDMARK.RIGHT_WRIST]: { x: 0.62, y: 0.25, z: 0, visibility: 1 },
-    }));
+    const frames = makeFrames(30, () =>
+      buildFrame({
+        [LANDMARK.LEFT_ELBOW]: { x: 0.4, y: 0.3, z: 0, visibility: 1 },
+        [LANDMARK.RIGHT_ELBOW]: { x: 0.6, y: 0.3, z: 0, visibility: 1 },
+        [LANDMARK.LEFT_WRIST]: { x: 0.38, y: 0.25, z: 0, visibility: 1 },
+        [LANDMARK.RIGHT_WRIST]: { x: 0.62, y: 0.25, z: 0, visibility: 1 },
+      })
+    );
     const verdict = gradeBenchRep({ rep, frames, fps });
-    expect(verdict.criteria.find((c) => c.name === 'pause')?.verdict).toBe('pass');
+    expect(verdict.criteria.find((c) => c.name === 'pause')?.verdict).toBe(
+      'pass'
+    );
   });
 
   it('fails pause when bar bounces off chest', () => {
@@ -194,7 +214,9 @@ describe('gradeBenchRep', () => {
     const rep = makeRep({ barPath: path, endFrame: 29 });
     const frames = makeFrames(30);
     const verdict = gradeBenchRep({ rep, frames, fps });
-    expect(verdict.criteria.find((c) => c.name === 'pause')?.verdict).toBe('fail');
+    expect(verdict.criteria.find((c) => c.name === 'pause')?.verdict).toBe(
+      'fail'
+    );
   });
 });
 
@@ -226,7 +248,9 @@ describe('gradeRep dispatcher', () => {
       const rep = makeRep({ maxDepthCm: 3 });
       const frames = makeFrames(30, standingFrame);
       const verdict = gradeRep({ rep, frames, fps: 30, lift });
-      expect(['white_light', 'red_light', 'borderline']).toContain(verdict.verdict);
+      expect(['white_light', 'red_light', 'borderline']).toContain(
+        verdict.verdict
+      );
       expect(verdict.criteria.length).toBeGreaterThan(0);
     }
   });

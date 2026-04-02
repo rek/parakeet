@@ -1,8 +1,7 @@
+import type { Lift } from '@parakeet/shared-types';
 import type { DbInsert } from '@platform/supabase';
 import { typedSupabase } from '@platform/supabase';
-import type { Lift } from '@parakeet/shared-types';
 
-import type { SlotAssignment } from '../lib/auxiliary-config';
 
 export async function fetchAuxiliaryExercises(
   userId: string,

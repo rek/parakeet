@@ -1,10 +1,10 @@
 import { useCallback, useEffect, useMemo, useRef } from 'react';
+
 import { useQueries, useQueryClient } from '@tanstack/react-query';
 
-import { partnerQueries } from '../data/partner.queries';
 import { subscribeToPartnerSessions } from '../data/partner-session.repository';
-import type { GymPartner, PartnerActiveSession } from '../model/types';
-
+import { partnerQueries } from '../data/partner.queries';
+import type { GymPartner } from '../model/types';
 import { usePartners } from './usePartners';
 
 export interface PartnerWithSession extends GymPartner {
@@ -16,12 +16,16 @@ export interface PartnerWithSession extends GymPartner {
 }
 
 export function usePartnerSessions() {
-  const { partners, pendingRequests, isLoading: isLoadingPartners } = usePartners();
+  const {
+    partners,
+    pendingRequests,
+    isLoading: isLoadingPartners,
+  } = usePartners();
   const queryClient = useQueryClient();
 
   const partnerIds = useMemo(
     () => partners.map((p) => p.partnerId),
-    [partners],
+    [partners]
   );
 
   // Realtime subscription — one channel for all partner IDs
@@ -33,7 +37,7 @@ export function usePartnerSessions() {
         queryKey: partnerQueries.partnerSession(partnerId).queryKey,
       });
     },
-    [queryClient],
+    [queryClient]
   );
 
   useEffect(() => {
@@ -75,7 +79,7 @@ export function usePartnerSessions() {
             : null,
         };
       }),
-    [partners, sessionResults],
+    [partners, sessionResults]
   );
 
   return {

@@ -1,14 +1,9 @@
-import { useQuery, useQueryClient } from '@tanstack/react-query';
-
 import { useAuth } from '@modules/auth';
 import type { IntensityType } from '@parakeet/shared-types';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 
-import {
-  getUserRestOverrides,
-  resetRestOverrides,
-  setRestOverride,
-} from '../lib/rest-config';
 import { settingsQueries } from '../data/settings.queries';
+import { resetRestOverrides, setRestOverride } from '../lib/rest-config';
 
 export function useRestTimerSettings() {
   const { user } = useAuth();

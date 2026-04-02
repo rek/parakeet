@@ -29,7 +29,7 @@ function trendColor(trend: ReadinessScore['trend'], colors: ColorScheme) {
  */
 export function ReadinessCard({
   score,
-  lift,
+  lift: _lift,
   colors,
 }: {
   score: ReadinessScore;
@@ -53,8 +53,12 @@ export function ReadinessCard({
             {score.passedReps}/{score.totalReps} reps pass IPF standards
           </Text>
           <View style={styles.trendRow}>
-            <Text style={[styles.trendSymbol, { color: tc }]}>{trend.symbol}</Text>
-            <Text style={[styles.trendLabel, { color: tc }]}>{trend.label}</Text>
+            <Text style={[styles.trendSymbol, { color: tc }]}>
+              {trend.symbol}
+            </Text>
+            <Text style={[styles.trendLabel, { color: tc }]}>
+              {trend.label}
+            </Text>
           </View>
           <Text style={styles.windowLabel}>
             Based on last {score.window} session{score.window !== 1 ? 's' : ''}

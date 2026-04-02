@@ -13,7 +13,7 @@ export function analyzeHipHingeTiming({
   frames,
   startFrame,
   endFrame,
-  fps,
+  fps: _fps,
 }: {
   frames: PoseFrame[];
   startFrame: number;
@@ -32,14 +32,18 @@ export function analyzeHipHingeTiming({
   // the majority of the initial pull phase.
   const firstThirdEnd = Math.min(
     startFrame + Math.max(3, Math.ceil(repLength / 3)),
-    endFrame,
+    endFrame
   );
   let hipDominantFrames = 0;
   let totalComparisons = 0;
 
   for (let i = startFrame; i < firstThirdEnd && i + 1 < frames.length; i++) {
-    const hipDelta = computeHipAngle({ frame: frames[i + 1] }) - computeHipAngle({ frame: frames[i] });
-    const kneeDelta = computeKneeAngle({ frame: frames[i + 1] }) - computeKneeAngle({ frame: frames[i] });
+    const hipDelta =
+      computeHipAngle({ frame: frames[i + 1] }) -
+      computeHipAngle({ frame: frames[i] });
+    const kneeDelta =
+      computeKneeAngle({ frame: frames[i + 1] }) -
+      computeKneeAngle({ frame: frames[i] });
     totalComparisons++;
     if (hipDelta > kneeDelta) hipDominantFrames++;
   }

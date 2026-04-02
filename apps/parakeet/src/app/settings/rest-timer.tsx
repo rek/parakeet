@@ -9,7 +9,6 @@ import {
   View,
 } from 'react-native';
 
-import { useAuth } from '@modules/auth';
 import {
   getRestTimerPrefs,
   setRestTimerPrefs,
@@ -473,8 +472,6 @@ function PreviewCard({ heavySeconds, styles }: PreviewCardProps) {
 export default function RestTimerSettingsScreen() {
   const { colors } = useTheme();
   const styles = useMemo(() => buildStyles(colors), [colors]);
-  const { user } = useAuth();
-
   const { overridesData, isLoading, saveRestOverride, resetOverrides } =
     useRestTimerSettings();
 

@@ -188,8 +188,10 @@ export default function ProfileScreen() {
   const { colors } = useTheme();
   const styles = useMemo(() => buildStyles(colors), [colors]);
   const { profile, bwHistory, isLoading } = useProfileEditor();
-  const { saveProfile, isPending: isSavePending, isError: isSaveError } =
-    useSaveProfile();
+  const {
+    saveProfile,
+    isPending: isSavePending,
+  } = useSaveProfile();
   const { deleteEntry } = useDeleteBodyweight();
 
   const [displayName, setDisplayName] = useState('');
@@ -376,16 +378,11 @@ export default function ProfileScreen() {
         <TouchableOpacity
           style={[
             styles.saveButton,
-            (!isDirty ||
-              !birthYearIsValid ||
-              !gender ||
-              isSavePending) &&
+            (!isDirty || !birthYearIsValid || !gender || isSavePending) &&
               styles.saveButtonDisabled,
           ]}
           onPress={handleSave}
-          disabled={
-            !isDirty || !birthYearIsValid || !gender || isSavePending
-          }
+          disabled={!isDirty || !birthYearIsValid || !gender || isSavePending}
           activeOpacity={0.8}
         >
           {isSavePending ? (
