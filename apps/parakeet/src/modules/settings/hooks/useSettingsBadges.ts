@@ -1,7 +1,6 @@
-import { useQuery } from '@tanstack/react-query';
-
 import { useAuth } from '@modules/auth';
 import { profileQueries } from '@modules/profile';
+import { useQuery } from '@tanstack/react-query';
 
 import { settingsQueries } from '../data/settings.queries';
 

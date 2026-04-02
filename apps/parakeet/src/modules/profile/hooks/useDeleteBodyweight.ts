@@ -1,7 +1,6 @@
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-
-import { useAuth } from '@modules/auth';
 import { achievementQueries } from '@modules/achievements';
+import { useAuth } from '@modules/auth';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 import { deleteBodyweightEntry } from '../application/bodyweight.service';
 import { profileQueries } from '../data/profile.queries';

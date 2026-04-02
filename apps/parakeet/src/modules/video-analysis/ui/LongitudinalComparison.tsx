@@ -1,8 +1,8 @@
 import { useMemo } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
-import Svg, { Polyline } from 'react-native-svg';
 
 import type { VideoAnalysisResult } from '@parakeet/shared-types';
+import Svg, { Polyline } from 'react-native-svg';
 
 import { radii, spacing, typography } from '../../../theme';
 import type { ColorScheme } from '../../../theme';
@@ -31,8 +31,9 @@ export function LongitudinalComparison({
 
   // Memoize filtered list so downstream useMemo dependencies are stable
   const videosWithAnalysis = useMemo(
-    () => previousVideos.filter((v) => v.analysis && v.analysis.reps.length > 0),
-    [previousVideos],
+    () =>
+      previousVideos.filter((v) => v.analysis && v.analysis.reps.length > 0),
+    [previousVideos]
   );
 
   // Compute trend data across sessions — must be before any early return (hooks rules)
@@ -77,7 +78,12 @@ export function LongitudinalComparison({
 
       {/* Overlaid bar paths */}
       <View style={styles.svgContainer}>
-        <Svg width="100%" height={200} viewBox="0 0 1 1" preserveAspectRatio="none">
+        <Svg
+          width="100%"
+          height={200}
+          viewBox="0 0 1 1"
+          preserveAspectRatio="none"
+        >
           {/* Historical paths (dimmer, underneath) */}
           {historicalPaths.map((hp, i) =>
             hp.path.length > 1 ? (
@@ -89,7 +95,7 @@ export function LongitudinalComparison({
                 strokeWidth={0.004}
                 opacity={PATH_OPACITIES[i] ?? 0.2}
               />
-            ) : null,
+            ) : null
           )}
 
           {/* Current path (bright, on top) */}
@@ -107,7 +113,9 @@ export function LongitudinalComparison({
         {/* Legend */}
         <View style={styles.legend}>
           <View style={styles.legendItem}>
-            <View style={[styles.legendDot, { backgroundColor: colors.primary }]} />
+            <View
+              style={[styles.legendDot, { backgroundColor: colors.primary }]}
+            />
             <Text style={styles.legendText}>Current</Text>
           </View>
           {historicalPaths.slice(-1).map((hp, idx) => (
@@ -129,7 +137,9 @@ export function LongitudinalComparison({
         <View style={styles.trendTable}>
           <View style={styles.trendHeaderRow}>
             <Text style={[styles.trendCell, styles.trendHeaderCell]}>Date</Text>
-            <Text style={[styles.trendCell, styles.trendHeaderCell]}>Drift</Text>
+            <Text style={[styles.trendCell, styles.trendHeaderCell]}>
+              Drift
+            </Text>
             <Text style={[styles.trendCell, styles.trendHeaderCell]}>Lean</Text>
             <Text style={[styles.trendCell, styles.trendHeaderCell]}>ROM</Text>
           </View>
@@ -138,15 +148,9 @@ export function LongitudinalComparison({
               <Text style={[styles.trendCell, styles.trendDateCell]}>
                 {row.date.slice(5)}
               </Text>
-              <Text style={styles.trendCell}>
-                {row.avgDrift.toFixed(1)}cm
-              </Text>
-              <Text style={styles.trendCell}>
-                {row.avgLean.toFixed(0)}°
-              </Text>
-              <Text style={styles.trendCell}>
-                {row.avgRom.toFixed(0)}cm
-              </Text>
+              <Text style={styles.trendCell}>{row.avgDrift.toFixed(1)}cm</Text>
+              <Text style={styles.trendCell}>{row.avgLean.toFixed(0)}°</Text>
+              <Text style={styles.trendCell}>{row.avgRom.toFixed(0)}cm</Text>
             </View>
           ))}
         </View>

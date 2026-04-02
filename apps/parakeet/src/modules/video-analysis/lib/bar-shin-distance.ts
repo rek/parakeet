@@ -29,8 +29,10 @@ export function computeBarToShinDistance({
 
   for (let i = startFrame; i <= thirdEnd; i++) {
     const frame = frames[i];
-    const wristMidX = (frame[LANDMARK.LEFT_WRIST].x + frame[LANDMARK.RIGHT_WRIST].x) / 2;
-    const kneeMidX = (frame[LANDMARK.LEFT_KNEE].x + frame[LANDMARK.RIGHT_KNEE].x) / 2;
+    const wristMidX =
+      (frame[LANDMARK.LEFT_WRIST].x + frame[LANDMARK.RIGHT_WRIST].x) / 2;
+    const kneeMidX =
+      (frame[LANDMARK.LEFT_KNEE].x + frame[LANDMARK.RIGHT_KNEE].x) / 2;
     total += (wristMidX - kneeMidX) * CM_PER_UNIT;
     count++;
   }

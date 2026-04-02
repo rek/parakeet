@@ -1,7 +1,6 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-
 import { useAuth } from '@modules/auth';
 import { programQueries } from '@modules/program';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import {
   createFormulaOverride,
@@ -54,7 +53,11 @@ export function useFormulaEditor({ topTab }: { topTab: TopTab }) {
       ai_rationale?: string;
     }) => {
       if (!user) throw new Error('Not authenticated');
-      return createFormulaOverride(user.id, { overrides, source, ai_rationale });
+      return createFormulaOverride(user.id, {
+        overrides,
+        source,
+        ai_rationale,
+      });
     },
     onSuccess: invalidateFormulas,
   });

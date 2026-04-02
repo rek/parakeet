@@ -46,10 +46,7 @@ export function PartnerCard({
           accessibilityRole="button"
         >
           <Text
-            style={[
-              styles.filmText,
-              !hasSession && styles.filmTextDisabled,
-            ]}
+            style={[styles.filmText, !hasSession && styles.filmTextDisabled]}
           >
             Film
           </Text>

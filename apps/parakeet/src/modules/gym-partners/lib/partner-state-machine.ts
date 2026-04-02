@@ -21,9 +21,7 @@ export const VALID_TRANSITIONS: Record<string, readonly Transition[]> = {
     { to: 'declined', allowedRoles: ['responder'] },
     { to: 'removed', allowedRoles: ['requester', 'responder'] },
   ],
-  accepted: [
-    { to: 'removed', allowedRoles: ['requester', 'responder'] },
-  ],
+  accepted: [{ to: 'removed', allowedRoles: ['requester', 'responder'] }],
 };
 
 export function canTransition({
@@ -39,6 +37,6 @@ export function canTransition({
   if (!transitions) return false;
 
   return transitions.some(
-    (t) => t.to === targetStatus && t.allowedRoles.includes(role),
+    (t) => t.to === targetStatus && t.allowedRoles.includes(role)
   );
 }

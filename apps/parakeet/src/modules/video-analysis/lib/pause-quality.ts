@@ -42,7 +42,8 @@ export function assessPauseQuality({
   // Walk backward from bottom while absolute Y velocity is below threshold
   let pauseStart = bottomIdx;
   while (pauseStart > 0) {
-    const dy = Math.abs(repPath[pauseStart].y - repPath[pauseStart - 1].y) * CM_PER_UNIT;
+    const dy =
+      Math.abs(repPath[pauseStart].y - repPath[pauseStart - 1].y) * CM_PER_UNIT;
     const velocity = dy / dt;
     if (velocity >= PAUSE_VELOCITY_THRESHOLD) break;
     pauseStart--;
@@ -51,7 +52,8 @@ export function assessPauseQuality({
   // Walk forward from bottom while absolute Y velocity is below threshold
   let pauseEnd = bottomIdx;
   while (pauseEnd < repPath.length - 1) {
-    const dy = Math.abs(repPath[pauseEnd + 1].y - repPath[pauseEnd].y) * CM_PER_UNIT;
+    const dy =
+      Math.abs(repPath[pauseEnd + 1].y - repPath[pauseEnd].y) * CM_PER_UNIT;
     const velocity = dy / dt;
     if (velocity >= PAUSE_VELOCITY_THRESHOLD) break;
     pauseEnd++;
@@ -64,7 +66,8 @@ export function assessPauseQuality({
   // pauseStart is the entry to the pause window; if Y keeps rising past that point the
   // lifter has not truly settled (chest/arch continuing to compress under the bar).
   const isSinking =
-    pauseStart + 2 < repPath.length && repPath[pauseStart + 2].y > repPath[pauseStart].y;
+    pauseStart + 2 < repPath.length &&
+    repPath[pauseStart + 2].y > repPath[pauseStart].y;
 
   return { pauseDurationSec, isSinking };
 }

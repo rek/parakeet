@@ -1,13 +1,12 @@
+import { useAuth } from '@modules/auth';
 import { useQueryClient } from '@tanstack/react-query';
 
-import { useAuth } from '@modules/auth';
-
+import { cycleTrackingQueries } from '../data/cycle-tracking.queries';
 import {
   addPeriodStart,
   deletePeriodStart,
   updateCycleConfig,
 } from '../lib/cycle-tracking';
-import { cycleTrackingQueries } from '../data/cycle-tracking.queries';
 
 export function useCycleTrackingSettings() {
   const { user } = useAuth();

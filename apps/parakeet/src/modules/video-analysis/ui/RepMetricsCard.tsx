@@ -4,10 +4,12 @@ import type { RepAnalysis, RepVerdict } from '@parakeet/shared-types';
 
 import { radii, spacing, typography } from '../../../theme';
 import type { ColorScheme } from '../../../theme';
-
 import { VerdictBadge } from './VerdictBadge';
 
-function severityColor(severity: 'info' | 'warning' | 'critical', colors: ColorScheme) {
+function severityColor(
+  severity: 'info' | 'warning' | 'critical',
+  colors: ColorScheme
+) {
   if (severity === 'info') return colors.info;
   if (severity === 'warning') return colors.warning;
   return colors.danger;
@@ -95,8 +97,7 @@ export function RepMetricsCard({
                 style={[
                   styles.faultDot,
                   {
-                    backgroundColor:
-                      severityColor(fault.severity, colors),
+                    backgroundColor: severityColor(fault.severity, colors),
                   },
                 ]}
               />

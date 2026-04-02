@@ -9,8 +9,6 @@ import {
   View,
 } from 'react-native';
 
-import { captureException } from '@platform/utils/captureException';
-
 import { useAuth } from '@modules/auth';
 import {
   clampCycleLength,
@@ -26,6 +24,7 @@ import {
   useCycleTrackingSettings,
 } from '@modules/cycle-tracking';
 import type { PeriodStartEntry } from '@modules/cycle-tracking';
+import { captureException } from '@platform/utils/captureException';
 import DateTimePicker, {
   DateTimePickerEvent,
 } from '@react-native-community/datetimepicker';

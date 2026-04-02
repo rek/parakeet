@@ -18,7 +18,8 @@ export function computeLockoutStability({
   startFrame: number;
   endFrame: number;
 }) {
-  const lockoutStart = endFrame - Math.max(1, Math.floor((endFrame - startFrame) * 0.1));
+  const lockoutStart =
+    endFrame - Math.max(1, Math.floor((endFrame - startFrame) * 0.1));
 
   const angles: number[] = [];
   for (let i = lockoutStart; i <= endFrame; i++) {
@@ -37,7 +38,8 @@ export function computeLockoutStability({
     return 0;
   }
 
-  const variance = angles.reduce((sum, a) => sum + (a - mean) ** 2, 0) / angles.length;
+  const variance =
+    angles.reduce((sum, a) => sum + (a - mean) ** 2, 0) / angles.length;
   const stdDev = Math.sqrt(variance);
 
   return (stdDev / mean) * 100;

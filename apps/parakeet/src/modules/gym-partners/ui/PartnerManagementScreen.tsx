@@ -20,7 +20,6 @@ import {
 } from '../hooks/usePartners';
 import type { GymPartner } from '../model/types';
 import { MAX_PARTNERS } from '../model/types';
-
 import { QrGenerateSheet } from './QrGenerateSheet';
 import { QrScanSheet } from './QrScanSheet';
 
@@ -41,7 +40,7 @@ export function PartnerManagementScreen() {
     if (atCap) {
       Alert.alert(
         'Partner Limit',
-        `You already have the maximum of ${MAX_PARTNERS} partners.`,
+        `You already have the maximum of ${MAX_PARTNERS} partners.`
       );
       return;
     }
@@ -62,27 +61,26 @@ export function PartnerManagementScreen() {
           {
             text: 'Remove',
             style: 'destructive',
-            onPress: () =>
-              removePartner({ partnershipId: partner.id }),
+            onPress: () => removePartner({ partnershipId: partner.id }),
           },
-        ],
+        ]
       );
     },
-    [removePartner],
+    [removePartner]
   );
 
   const handleAccept = useCallback(
     (partner: GymPartner) => {
       acceptPartner({ partnershipId: partner.id });
     },
-    [acceptPartner],
+    [acceptPartner]
   );
 
   const handleDecline = useCallback(
     (partner: GymPartner) => {
       declinePartner({ partnershipId: partner.id });
     },
-    [declinePartner],
+    [declinePartner]
   );
 
   const renderPartner = useCallback(
@@ -107,7 +105,7 @@ export function PartnerManagementScreen() {
         </TouchableOpacity>
       </TouchableOpacity>
     ),
-    [styles, handleRemove],
+    [styles, handleRemove]
   );
 
   const renderPending = useCallback(
@@ -138,7 +136,7 @@ export function PartnerManagementScreen() {
         </View>
       </View>
     ),
-    [styles, handleAccept, handleDecline],
+    [styles, handleAccept, handleDecline]
   );
 
   if (isLoading) {
@@ -179,7 +177,8 @@ export function PartnerManagementScreen() {
         {partners.length === 0 ? (
           <View style={styles.emptyState}>
             <Text style={styles.emptyText}>
-              No gym partners yet.{'\n'}Add one to start filming each other's lifts.
+              No gym partners yet.{'\n'}Add one to start filming each other's
+              lifts.
             </Text>
             <TouchableOpacity
               onPress={handleAddPartner}
@@ -203,10 +202,7 @@ export function PartnerManagementScreen() {
         visible={showQrGenerate}
         onClose={() => setShowQrGenerate(false)}
       />
-      <QrScanSheet
-        visible={showQrScan}
-        onClose={() => setShowQrScan(false)}
-      />
+      <QrScanSheet visible={showQrScan} onClose={() => setShowQrScan(false)} />
     </View>
   );
 }

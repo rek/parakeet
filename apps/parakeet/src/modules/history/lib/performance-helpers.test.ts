@@ -1,12 +1,19 @@
 import { describe, expect, it } from 'vitest';
 
-import { processRecentHistory, type RawHistoryRow } from './performance-helpers';
+import {
+  processRecentHistory,
+  type RawHistoryRow,
+} from './performance-helpers';
 
 // Build a minimal valid row. The `sessions` field is unused by the pure logic
 // in performance-helpers but is required by the RawHistoryRow interface.
 function makeRow(
   sets: { weight_grams: number; reps_completed: number }[],
-  opts: { session_rpe?: number | null; completion_pct?: number | null; completed_at?: string } = {}
+  opts: {
+    session_rpe?: number | null;
+    completion_pct?: number | null;
+    completed_at?: string;
+  } = {}
 ): RawHistoryRow {
   return {
     completed_at: opts.completed_at ?? '2026-01-01T00:00:00Z',
@@ -26,7 +33,9 @@ describe('processRecentHistory', () => {
     });
 
     it('returns null trend for a single row (not enough data points)', () => {
-      const { trend } = processRecentHistory([makeRow([{ weight_grams: 100_000, reps_completed: 5 }])]);
+      const { trend } = processRecentHistory([
+        makeRow([{ weight_grams: 100_000, reps_completed: 5 }]),
+      ]);
       expect(trend).toBeNull();
     });
 
@@ -93,29 +102,39 @@ describe('processRecentHistory', () => {
 
   describe('RPE and completion passthrough', () => {
     it('passes through non-null session RPE', () => {
-      const { entries } = processRecentHistory([makeRow([], { session_rpe: 8.5 })]);
+      const { entries } = processRecentHistory([
+        makeRow([], { session_rpe: 8.5 }),
+      ]);
       expect(entries[0].sessionRpe).toBe(8.5);
     });
 
     it('passes through null session RPE as null', () => {
-      const { entries } = processRecentHistory([makeRow([], { session_rpe: null })]);
+      const { entries } = processRecentHistory([
+        makeRow([], { session_rpe: null }),
+      ]);
       expect(entries[0].sessionRpe).toBeNull();
     });
 
     it('passes through non-null completion pct', () => {
-      const { entries } = processRecentHistory([makeRow([], { completion_pct: 85 })]);
+      const { entries } = processRecentHistory([
+        makeRow([], { completion_pct: 85 }),
+      ]);
       expect(entries[0].completionPct).toBe(85);
     });
 
     it('passes through null completion pct as null', () => {
-      const { entries } = processRecentHistory([makeRow([], { completion_pct: null })]);
+      const { entries } = processRecentHistory([
+        makeRow([], { completion_pct: null }),
+      ]);
       expect(entries[0].completionPct).toBeNull();
     });
   });
 
   describe('trend computation', () => {
     it('returns null trend with exactly one row', () => {
-      const { trend } = processRecentHistory([makeRow([{ weight_grams: 100_000, reps_completed: 1 }])]);
+      const { trend } = processRecentHistory([
+        makeRow([{ weight_grams: 100_000, reps_completed: 1 }]),
+      ]);
       expect(trend).toBeNull();
     });
 

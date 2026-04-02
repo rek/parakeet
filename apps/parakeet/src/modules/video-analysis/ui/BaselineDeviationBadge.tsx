@@ -22,11 +22,12 @@ export function BaselineDeviationBadge({
   colors: ColorScheme;
 }) {
   const config = DIRECTION_CONFIG[deviation.direction];
-  const badgeColor = deviation.direction === 'better'
-    ? colors.success
-    : deviation.direction === 'worse'
-      ? colors.danger
-      : colors.warning;
+  const badgeColor =
+    deviation.direction === 'better'
+      ? colors.success
+      : deviation.direction === 'worse'
+        ? colors.danger
+        : colors.warning;
 
   return (
     <View style={[styles.badge, { borderColor: badgeColor + '40' }]}>

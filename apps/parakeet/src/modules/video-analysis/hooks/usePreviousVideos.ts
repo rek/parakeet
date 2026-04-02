@@ -23,9 +23,7 @@ export function usePreviousVideos({
     try {
       const videos = await getVideosForLift({ lift });
       setPreviousVideos(
-        currentVideoId
-          ? videos.filter((v) => v.id !== currentVideoId)
-          : videos,
+        currentVideoId ? videos.filter((v) => v.id !== currentVideoId) : videos
       );
     } catch (err) {
       captureException(err);

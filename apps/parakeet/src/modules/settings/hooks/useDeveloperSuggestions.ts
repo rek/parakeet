@@ -1,7 +1,7 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 
-import { updateSuggestionStatus } from '../lib/developer-suggestions';
 import { settingsQueries } from '../data/settings.queries';
+import { updateSuggestionStatus } from '../lib/developer-suggestions';
 
 export function useDeveloperSuggestions() {
   const queryClient = useQueryClient();

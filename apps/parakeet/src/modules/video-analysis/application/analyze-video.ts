@@ -41,11 +41,17 @@ function interpolateEmptyFrames({ frames }: { frames: PoseFrame[] }) {
     // Find nearest valid frame before and after
     let prevIdx = -1;
     for (let j = i - 1; j >= 0; j--) {
-      if (!isEmptyFrame(result[j])) { prevIdx = j; break; }
+      if (!isEmptyFrame(result[j])) {
+        prevIdx = j;
+        break;
+      }
     }
     let nextIdx = -1;
     for (let j = i + 1; j < len; j++) {
-      if (!isEmptyFrame(frames[j])) { nextIdx = j; break; }
+      if (!isEmptyFrame(frames[j])) {
+        nextIdx = j;
+        break;
+      }
     }
 
     if (prevIdx >= 0 && nextIdx >= 0) {
@@ -90,12 +96,13 @@ export function analyzeVideoFrames({
   // Filter out any remaining empty frames (from long gaps with no neighbors)
   // and adjust effective fps proportionally.
   const valid = interpolated.filter((f) => !isEmptyFrame(f));
-  const effectiveFps = valid.length > 0
-    ? fps * (valid.length / frames.length)
-    : fps;
+  const effectiveFps =
+    valid.length > 0 ? fps * (valid.length / frames.length) : fps;
 
   if (typeof __DEV__ !== 'undefined' && __DEV__) {
-    console.log(`[analysis] ${valid.length}/${frames.length} usable frames (fps=${effectiveFps.toFixed(1)})`);
+    console.log(
+      `[analysis] ${valid.length}/${frames.length} usable frames (fps=${effectiveFps.toFixed(1)})`
+    );
   }
   return assembleAnalysis({ frames: valid, fps: effectiveFps, lift });
 }
@@ -131,10 +138,14 @@ export async function extractFramesFromVideo({
   // Lazy imports — native modules crash if loaded before the binary is built.
   // captureException is also lazy to keep this module importable in Vitest
   // (static import pulls in Sentry → react-native → Rollup parse failure).
-  const { getThumbnailAsync } = require('expo-video-thumbnails') as typeof import('expo-video-thumbnails');
-  const { PoseDetectionOnImage, Delegate } = require('react-native-mediapipe') as typeof import('react-native-mediapipe');
-  const { File } = require('expo-file-system/next') as typeof import('expo-file-system/next');
-  const { captureException } = require('@platform/utils/captureException') as typeof import('@platform/utils/captureException');
+  const { getThumbnailAsync } =
+    require('expo-video-thumbnails') as typeof import('expo-video-thumbnails');
+  const { PoseDetectionOnImage, Delegate } =
+    require('react-native-mediapipe') as typeof import('react-native-mediapipe');
+  const { File } =
+    require('expo-file-system/next') as typeof import('expo-file-system/next');
+  const { captureException } =
+    require('@platform/utils/captureException') as typeof import('@platform/utils/captureException');
 
   const intervalMs = 1000 / targetFps;
   const totalDurationMs = durationSec * 1000;
@@ -187,7 +198,11 @@ export async function extractFramesFromVideo({
     }
 
     // Delete thumbnail file immediately — prevents native bitmap accumulation
-    try { new File(thumbnail.uri).delete(); } catch (err) { captureException(err); }
+    try {
+      new File(thumbnail.uri).delete();
+    } catch (err) {
+      captureException(err);
+    }
 
     // Yield to event loop — gives native GC a chance to reclaim memory
     await yieldToGc();
@@ -197,7 +212,9 @@ export async function extractFramesFromVideo({
 
   if (typeof __DEV__ !== 'undefined' && __DEV__) {
     const validCount = frames.filter((f) => !isEmptyFrame(f)).length;
-    console.log(`[pose] ${validCount}/${totalFrames} valid frames (${Math.round((validCount / totalFrames) * 100)}%)`);
+    console.log(
+      `[pose] ${validCount}/${totalFrames} valid frames (${Math.round((validCount / totalFrames) * 100)}%)`
+    );
   }
 
   return { frames, fps: targetFps };

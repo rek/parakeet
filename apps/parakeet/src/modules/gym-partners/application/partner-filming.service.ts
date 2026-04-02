@@ -3,12 +3,11 @@ import {
   detectCameraAngle,
   extractFramesFromVideo,
 } from '@modules/video-analysis';
-import { captureException } from '@platform/utils/captureException';
 import { toJson } from '@platform/supabase';
+import { captureException } from '@platform/utils/captureException';
 import { Video } from 'react-native-compressor';
 
 import { insertPartnerSessionVideo } from '../data/partner-video.repository';
-
 import { uploadPartnerVideo } from './partner-upload.service';
 
 /**

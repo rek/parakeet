@@ -7,8 +7,8 @@ import {
   computeKneeAngle,
 } from '../angle-calculator';
 import { LANDMARK } from '../pose-types';
-import { buildFrame } from './fixtures';
 import type { PoseLandmark } from '../pose-types';
+import { buildFrame } from './fixtures';
 
 function lm(x: number, y: number): PoseLandmark {
   return { x, y, z: 0, visibility: 1 };

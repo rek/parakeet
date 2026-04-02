@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import { detectButtWink } from '../butt-wink-detector';
 import { computeHipShift } from '../hip-shift';
-import { LANDMARK, type PoseLandmark, type PoseFrame } from '../pose-types';
+import { LANDMARK, type PoseFrame, type PoseLandmark } from '../pose-types';
 import { computeStanceWidth } from '../stance-width';
 
 // ---------------------------------------------------------------------------
@@ -14,7 +14,9 @@ function makeLandmark(x: number, y: number): PoseLandmark {
 }
 
 function makeFrame(overrides: Record<number, PoseLandmark>): PoseFrame {
-  const frame: PoseFrame = Array.from({ length: 33 }, () => makeLandmark(0.5, 0.5));
+  const frame: PoseFrame = Array.from({ length: 33 }, () =>
+    makeLandmark(0.5, 0.5)
+  );
   for (const [idx, lm] of Object.entries(overrides)) {
     frame[Number(idx)] = lm;
   }
@@ -106,7 +108,11 @@ describe('detectButtWink', () => {
       endHipAngle: 145,
     });
 
-    const result = detectButtWink({ frames: descentFrames, bottomFrame: 20, fps });
+    const result = detectButtWink({
+      frames: descentFrames,
+      bottomFrame: 20,
+      fps,
+    });
 
     expect(result.detected).toBe(false);
     expect(result.magnitudeDeg).toBeNull();
@@ -124,15 +130,27 @@ describe('detectButtWink', () => {
     const frames: PoseFrame[] = [];
 
     // Frames 0..24: gradual descent, angle decreasing from 175° to 150°
-    const earlyFrames = makeAngleFrames({ frameCount: 25, startHipAngle: 175, endHipAngle: 150 });
+    const earlyFrames = makeAngleFrames({
+      frameCount: 25,
+      startHipAngle: 175,
+      endHipAngle: 150,
+    });
     frames.push(...earlyFrames);
 
     // Frames 25..27: slight hip opening as lifter reaches depth control (150° → 165°)
-    const riseFrames = makeAngleFrames({ frameCount: 3, startHipAngle: 150, endHipAngle: 165 });
+    const riseFrames = makeAngleFrames({
+      frameCount: 3,
+      startHipAngle: 150,
+      endHipAngle: 165,
+    });
     frames.push(...riseFrames);
 
     // Frames 28..30: sharp pelvic tuck — 37° drop in 3 frames
-    const winkFrames = makeAngleFrames({ frameCount: 3, startHipAngle: 165, endHipAngle: 128 });
+    const winkFrames = makeAngleFrames({
+      frameCount: 3,
+      startHipAngle: 165,
+      endHipAngle: 128,
+    });
     frames.push(...winkFrames);
 
     const result = detectButtWink({ frames, bottomFrame: 30, fps });
@@ -146,7 +164,11 @@ describe('detectButtWink', () => {
     // bottomFrame=20, window=14..20. Angle drops 20° across all 7 frames of the window.
     // Max is at frame 14, framesFromMaxToBottom=6. 6 is NOT < 6 → detected=false,
     // even though 20° > 10°. Slow progressive flexion is not butt wink.
-    const frames = makeAngleFrames({ frameCount: 21, startHipAngle: 165, endHipAngle: 130 });
+    const frames = makeAngleFrames({
+      frameCount: 21,
+      startHipAngle: 165,
+      endHipAngle: 130,
+    });
 
     const result = detectButtWink({ frames, bottomFrame: 20, fps });
 
@@ -269,7 +291,7 @@ describe('computeHipShift', () => {
     const frames = [
       makeFrame({
         [LANDMARK.LEFT_HIP]: makeLandmark(0.47, 0.603),
-        [LANDMARK.RIGHT_HIP]: makeLandmark(0.53, 0.600),
+        [LANDMARK.RIGHT_HIP]: makeLandmark(0.53, 0.6),
       }),
     ];
 
@@ -283,17 +305,17 @@ describe('computeHipShift', () => {
       // Frame 0: small shift
       makeFrame({
         [LANDMARK.LEFT_HIP]: makeLandmark(0.47, 0.61),
-        [LANDMARK.RIGHT_HIP]: makeLandmark(0.53, 0.60),
+        [LANDMARK.RIGHT_HIP]: makeLandmark(0.53, 0.6),
       }),
       // Frame 1: large shift
       makeFrame({
-        [LANDMARK.LEFT_HIP]: makeLandmark(0.47, 0.70),
-        [LANDMARK.RIGHT_HIP]: makeLandmark(0.53, 0.60),
+        [LANDMARK.LEFT_HIP]: makeLandmark(0.47, 0.7),
+        [LANDMARK.RIGHT_HIP]: makeLandmark(0.53, 0.6),
       }),
       // Frame 2: medium shift
       makeFrame({
         [LANDMARK.LEFT_HIP]: makeLandmark(0.47, 0.65),
-        [LANDMARK.RIGHT_HIP]: makeLandmark(0.53, 0.60),
+        [LANDMARK.RIGHT_HIP]: makeLandmark(0.53, 0.6),
       }),
     ];
 

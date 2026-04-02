@@ -1,9 +1,10 @@
 import { useCallback, useState } from 'react';
+
 import {
-  usePoseDetection,
-  RunningMode,
   Delegate,
   KnownPoseLandmarks,
+  RunningMode,
+  usePoseDetection,
 } from 'react-native-mediapipe';
 import type { PoseDetectionResultBundle } from 'react-native-mediapipe';
 
@@ -50,21 +51,18 @@ export interface LiveLandmark {
 export function useLivePoseOverlay() {
   const [landmarks, setLandmarks] = useState<LiveLandmark[] | null>(null);
 
-  const onResults = useCallback(
-    (result: PoseDetectionResultBundle) => {
-      const poseLandmarks = result.results[0]?.landmarks[0];
-      if (poseLandmarks && poseLandmarks.length >= 33) {
-        setLandmarks(
-          poseLandmarks.map((lm) => ({
-            x: lm.x,
-            y: lm.y,
-            visibility: lm.visibility ?? 0,
-          })),
-        );
-      }
-    },
-    [],
-  );
+  const onResults = useCallback((result: PoseDetectionResultBundle) => {
+    const poseLandmarks = result.results[0]?.landmarks[0];
+    if (poseLandmarks && poseLandmarks.length >= 33) {
+      setLandmarks(
+        poseLandmarks.map((lm) => ({
+          x: lm.x,
+          y: lm.y,
+          visibility: lm.visibility ?? 0,
+        }))
+      );
+    }
+  }, []);
 
   const onError = useCallback(() => {
     // Silently handle detection errors during live preview —
@@ -87,7 +85,7 @@ export function useLivePoseOverlay() {
       minPosePresenceConfidence: 0.5,
       minTrackingConfidence: 0.5,
       fpsMode: 15,
-    },
+    }
   );
 
   return {

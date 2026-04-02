@@ -26,6 +26,8 @@ export const formulaQueries = {
   suggestions: (userId: string | undefined) =>
     queryOptions({
       queryKey: [...formulaQueries.all(), 'suggestions', userId] as const,
-      queryFn: userId ? () => getPendingAiFormulaSuggestions(userId) : skipToken,
+      queryFn: userId
+        ? () => getPendingAiFormulaSuggestions(userId)
+        : skipToken,
     }),
 };

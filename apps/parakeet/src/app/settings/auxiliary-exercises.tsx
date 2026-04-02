@@ -13,8 +13,8 @@ import { AddExerciseModal } from '@modules/session';
 import { useAuxiliaryPools } from '@modules/settings';
 import { MuscleChips } from '@modules/training-volume';
 import type { Lift } from '@parakeet/shared-types';
-import { getExerciseType } from '@shared/utils/exercise-lookup';
 import { TRAINING_LIFTS } from '@shared/constants/training';
+import { getExerciseType } from '@shared/utils/exercise-lookup';
 import { router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 

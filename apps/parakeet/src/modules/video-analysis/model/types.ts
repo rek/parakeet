@@ -1,4 +1,7 @@
-import type { VideoAnalysisResult, FormCoachingResult } from '@parakeet/shared-types';
+import type {
+  FormCoachingResult,
+  VideoAnalysisResult,
+} from '@parakeet/shared-types';
 
 export interface SessionVideo {
   id: string;

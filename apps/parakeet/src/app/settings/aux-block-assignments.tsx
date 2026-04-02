@@ -20,8 +20,8 @@ import {
   getProgramBlockTabs,
   saveBlockAssignment,
 } from '@modules/program';
-import { useAuxBlockAssignments } from '@modules/settings';
 import type { SlotAssignment } from '@modules/program';
+import { useAuxBlockAssignments } from '@modules/settings';
 import type { Lift } from '@parakeet/shared-types';
 import { BLOCK_INTENSITY, TRAINING_LIFTS } from '@shared/constants/training';
 import { router } from 'expo-router';

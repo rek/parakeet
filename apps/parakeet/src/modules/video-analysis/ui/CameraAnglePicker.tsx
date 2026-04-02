@@ -24,10 +24,7 @@ export function CameraAnglePicker({
   colors: ColorScheme;
 }) {
   return (
-    <View
-      style={styles.row}
-      accessible={false}
-    >
+    <View style={styles.row} accessible={false}>
       {ANGLE_OPTIONS.map((option) => {
         const isActive = option.value === selected;
         return (
@@ -58,7 +55,11 @@ export function CameraAnglePicker({
             <Text
               style={[
                 styles.hint,
-                { color: isActive ? colors.textInverse + 'bb' : colors.textTertiary },
+                {
+                  color: isActive
+                    ? colors.textInverse + 'bb'
+                    : colors.textTertiary,
+                },
               ]}
             >
               {option.hint}

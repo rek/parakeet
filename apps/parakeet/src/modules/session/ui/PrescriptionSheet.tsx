@@ -275,7 +275,8 @@ export function PrescriptionSheet({
             <Text style={styles.sectionHeader}>Auxiliary Exercises</Text>
             {auxSections.map((section, i) => {
               const isFocused =
-                focusExercise !== undefined && section.exerciseId === focusExercise;
+                focusExercise !== undefined &&
+                section.exerciseId === focusExercise;
               return (
                 <View key={i} style={styles.auxBlock}>
                   <Text

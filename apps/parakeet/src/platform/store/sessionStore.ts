@@ -215,8 +215,7 @@ export const useSessionStore = create<SessionState>()(
                 weight_grams,
                 reps_completed: last?.reps_completed ?? 5,
                 is_completed: false,
-                exercise_type:
-                  exerciseType ?? last?.exercise_type,
+                exercise_type: exerciseType ?? last?.exercise_type,
               },
             ],
           };

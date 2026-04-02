@@ -210,7 +210,9 @@ export async function insertComparisonLog(row: {
   divergence: Json;
   strategy_used: string;
 }): Promise<void> {
-  const { error } = await typedSupabase.from('jit_comparison_logs').insert([row]);
+  const { error } = await typedSupabase
+    .from('jit_comparison_logs')
+    .insert([row]);
   if (error) throw error;
 }
 

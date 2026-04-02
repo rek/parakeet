@@ -16,11 +16,11 @@ import {
   TraceButton,
   useSessionDetail,
 } from '@modules/session';
+import { VideoEntryButton } from '@modules/video-analysis';
 import type { Lift } from '@parakeet/shared-types';
 import { LIFT_LABELS } from '@shared/constants';
 import { formatDate, formatTime } from '@shared/utils/date';
 import { capitalize } from '@shared/utils/string';
-import { VideoEntryButton } from '@modules/video-analysis';
 import { router, useLocalSearchParams } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -107,7 +107,11 @@ export default function SessionDetailScreen() {
           {timeLabel ? ` · ${timeLabel}` : ''}
         </Text>
 
-        <VideoEntryButton sessionId={session.id} lift={session.primary_lift} variant="link" />
+        <VideoEntryButton
+          sessionId={session.id}
+          lift={session.primary_lift}
+          variant="link"
+        />
 
         {log && (
           <SummaryChipsRow

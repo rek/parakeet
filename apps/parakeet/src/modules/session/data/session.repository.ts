@@ -707,11 +707,7 @@ export async function fetchHasCompletedSessionToday(
   userId: string
 ): Promise<boolean> {
   const now = new Date();
-  const startOfDay = new Date(
-    now.getFullYear(),
-    now.getMonth(),
-    now.getDate()
-  );
+  const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
   const endOfDay = new Date(startOfDay);
   endOfDay.setDate(endOfDay.getDate() + 1);
 

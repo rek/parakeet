@@ -44,7 +44,7 @@ export async function fetchAcceptedPartners() {
   const { data, error } = await typedSupabase
     .from('gym_partners')
     .select(
-      '*, requester:profiles!gym_partners_requester_id_fkey(display_name), responder:profiles!gym_partners_responder_id_fkey(display_name)',
+      '*, requester:profiles!gym_partners_requester_id_fkey(display_name), responder:profiles!gym_partners_responder_id_fkey(display_name)'
     )
     .or(`requester_id.eq.${user.id},responder_id.eq.${user.id}`)
     .eq('status', 'accepted')
@@ -59,7 +59,11 @@ export async function fetchAcceptedPartners() {
     const isRequester = row.requester_id === user.id;
     const partnerProfile = isRequester ? row.responder : row.requester;
     const displayName = partnerProfile?.display_name ?? null;
-    return toGymPartner({ row, currentUserId: user.id, partnerDisplayName: displayName });
+    return toGymPartner({
+      row,
+      currentUserId: user.id,
+      partnerDisplayName: displayName,
+    });
   });
 }
 
@@ -72,7 +76,7 @@ export async function fetchPendingIncomingRequests() {
   const { data, error } = await typedSupabase
     .from('gym_partners')
     .select(
-      '*, requester:profiles!gym_partners_requester_id_fkey(display_name)',
+      '*, requester:profiles!gym_partners_requester_id_fkey(display_name)'
     )
     .eq('responder_id', user.id)
     .eq('status', 'pending')
@@ -88,7 +92,7 @@ export async function fetchPendingIncomingRequests() {
       row,
       currentUserId: user.id,
       partnerDisplayName: row.requester?.display_name ?? null,
-    }),
+    })
   );
 }
 
@@ -121,7 +125,7 @@ export async function updatePartnerStatus({
 
   if (!canTransition({ currentStatus, targetStatus: status, role })) {
     throw new Error(
-      `Invalid transition: ${currentStatus} → ${status} as ${role}`,
+      `Invalid transition: ${currentStatus} → ${status} as ${role}`
     );
   }
 
@@ -220,7 +224,9 @@ export async function claimInvite({ token }: { token: string }) {
     .eq('token', token)
     .is('claimed_by', null)
     .gt('expires_at', new Date().toISOString())
-    .select('inviter_id, inviter:profiles!gym_partner_invites_inviter_id_fkey(display_name)')
+    .select(
+      'inviter_id, inviter:profiles!gym_partner_invites_inviter_id_fkey(display_name)'
+    )
     .maybeSingle();
 
   if (error) {

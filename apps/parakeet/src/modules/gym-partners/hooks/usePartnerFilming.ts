@@ -50,8 +50,7 @@ export function usePartnerFilming({
           lift,
           setNumber,
           cameraAngle,
-          onProgress: (pct) =>
-            setState({ type: 'analyzing', progress: pct }),
+          onProgress: (pct) => setState({ type: 'analyzing', progress: pct }),
         });
         setState({ type: 'done' });
         return true;
@@ -67,7 +66,7 @@ export function usePartnerFilming({
         return false;
       }
     },
-    [partnerId, sessionId],
+    [partnerId, sessionId]
   );
 
   const reset = useCallback(() => {

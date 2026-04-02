@@ -1,8 +1,8 @@
 import {
-  claimInvite as repoClaimInvite,
-  createInvite as repoCreateInvite,
   fetchAcceptedPartnerCount,
   fetchCurrentUserDisplayName,
+  claimInvite as repoClaimInvite,
+  createInvite as repoCreateInvite,
   updatePartnerStatus,
 } from '../data/partner.repository';
 import { MAX_PARTNERS } from '../model/types';
@@ -11,7 +11,7 @@ async function guardDisplayName() {
   const name = await fetchCurrentUserDisplayName();
   if (!name) {
     throw new Error(
-      'Set a display name in your profile before pairing with a partner',
+      'Set a display name in your profile before pairing with a partner'
     );
   }
 }

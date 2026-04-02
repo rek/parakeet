@@ -1,6 +1,11 @@
 import type { BarPathPoint } from '@parakeet/shared-types';
 
-import { CM_PER_UNIT, LANDMARK, type PoseLandmark, type PoseFrame } from './pose-types';
+import {
+  CM_PER_UNIT,
+  LANDMARK,
+  type PoseFrame,
+  type PoseLandmark,
+} from './pose-types';
 
 /**
  * Compute the angle at vertex `b` formed by the ray b→a and the ray b→c.
@@ -9,7 +14,15 @@ import { CM_PER_UNIT, LANDMARK, type PoseLandmark, type PoseFrame } from './pose
  * near 0° and 180° and to handle degenerate (zero-length) vectors gracefully.
  * Returns degrees in [0, 180].
  */
-export function computeAngle({ a, b, c }: { a: PoseLandmark; b: PoseLandmark; c: PoseLandmark }) {
+export function computeAngle({
+  a,
+  b,
+  c,
+}: {
+  a: PoseLandmark;
+  b: PoseLandmark;
+  c: PoseLandmark;
+}) {
   const ax = a.x - b.x;
   const ay = a.y - b.y;
   const cx = c.x - b.x;

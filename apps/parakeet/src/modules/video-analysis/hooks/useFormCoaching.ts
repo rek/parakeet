@@ -1,10 +1,13 @@
 import { useCallback, useState } from 'react';
 
+import {
+  getSession,
+  getSessionLog,
+  parseJitInputSnapshot,
+} from '@modules/session';
+import type { FormCoachingResult } from '@parakeet/shared-types';
 import { generateFormCoaching } from '@parakeet/training-engine';
 import type { FormCoachingInput } from '@parakeet/training-engine';
-import type { FormCoachingResult } from '@parakeet/shared-types';
-import { getSession, getSessionLog } from '@modules/session';
-import { parseJitInputSnapshot } from '@modules/session';
 import { captureException } from '@platform/utils/captureException';
 
 import { assembleCoachingContext } from '../application/assemble-coaching-context';
@@ -32,76 +35,78 @@ export function useFormCoaching({
   const [error, setError] = useState<string | null>(null);
   const [coaching, setCoaching] = useState<FormCoachingResult | null>(null);
 
-  const generateCoaching = useCallback(async ({
-    video,
-  }: {
-    video: SessionVideo;
-  }) => {
-    if (!video.analysis) return;
+  const generateCoaching = useCallback(
+    async ({ video }: { video: SessionVideo }) => {
+      if (!video.analysis) return;
 
-    try {
-      setError(null);
-      setIsGenerating(true);
+      try {
+        setError(null);
+        setIsGenerating(true);
 
-      // 1. Fetch session context
-      const [session, log] = await Promise.all([
-        getSession(sessionId),
-        getSessionLog(sessionId),
-      ]);
+        // 1. Fetch session context
+        const [session, log] = await Promise.all([
+          getSession(sessionId),
+          getSessionLog(sessionId),
+        ]);
 
-      const jitSnapshot = session
-        ? parseJitInputSnapshot((session as Record<string, unknown>).jit_input_snapshot)
-        : null;
+        const jitSnapshot = session
+          ? parseJitInputSnapshot(
+              (session as Record<string, unknown>).jit_input_snapshot
+            )
+          : null;
 
-      // 2. Fetch previous videos for longitudinal context
-      const previousVideos = await getVideosForLift({ lift });
-      const previousAnalyses = previousVideos
-        .filter((v) => v.id !== video.id && v.analysis != null)
-        .map((v) => v.analysis!);
+        // 2. Fetch previous videos for longitudinal context
+        const previousVideos = await getVideosForLift({ lift });
+        const previousAnalyses = previousVideos
+          .filter((v) => v.id !== video.id && v.analysis != null)
+          .map((v) => v.analysis!);
 
-      // 3. Assemble coaching context
-      const context = assembleCoachingContext({
-        analysis: video.analysis,
-        lift: lift as 'squat' | 'bench' | 'deadlift',
-        session: session as {
-          block_number: number | null;
-          week_number: number | null;
-          intensity_type: string | null;
-          is_deload: boolean | null;
-        } | null,
-        log: log as {
-          session_rpe: number | null;
-          actual_sets: Array<{ weight_grams?: number; weight_kg?: number }>;
-        } | null,
-        jitSnapshot,
-        previousAnalyses,
-        setContext: {
-          weightGrams: video.setWeightGrams,
-          reps: video.setReps,
-          rpe: video.setRpe,
-        },
-      });
+        // 3. Assemble coaching context
+        const context = assembleCoachingContext({
+          analysis: video.analysis,
+          lift: lift as 'squat' | 'bench' | 'deadlift',
+          session: session as {
+            block_number: number | null;
+            week_number: number | null;
+            intensity_type: string | null;
+            is_deload: boolean | null;
+          } | null,
+          log: log as {
+            session_rpe: number | null;
+            actual_sets: Array<{ weight_grams?: number; weight_kg?: number }>;
+          } | null,
+          jitSnapshot,
+          previousAnalyses,
+          setContext: {
+            weightGrams: video.setWeightGrams,
+            reps: video.setReps,
+            rpe: video.setRpe,
+          },
+        });
 
-      // 4. Generate coaching via LLM
-      const result = await generateFormCoaching({
-        context: context as FormCoachingInput,
-      });
+        // 4. Generate coaching via LLM
+        const result = await generateFormCoaching({
+          context: context as FormCoachingInput,
+        });
 
-      // 5. Persist to DB
-      await updateSessionVideoCoaching({
-        id: video.id,
-        coachingResponse: result,
-      });
+        // 5. Persist to DB
+        await updateSessionVideoCoaching({
+          id: video.id,
+          coachingResponse: result,
+        });
 
-      setCoaching(result);
-    } catch (err) {
-      captureException(err);
-      const message = err instanceof Error ? err.message : 'Failed to generate coaching';
-      setError(message);
-    } finally {
-      setIsGenerating(false);
-    }
-  }, [sessionId, lift]);
+        setCoaching(result);
+      } catch (err) {
+        captureException(err);
+        const message =
+          err instanceof Error ? err.message : 'Failed to generate coaching';
+        setError(message);
+      } finally {
+        setIsGenerating(false);
+      }
+    },
+    [sessionId, lift]
+  );
 
   return {
     generateCoaching,

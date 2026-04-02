@@ -1,4 +1,5 @@
 import type { IntensityType, Lift } from '@parakeet/shared-types';
+
 import {
   deleteRestConfigs,
   fetchRestConfigs,

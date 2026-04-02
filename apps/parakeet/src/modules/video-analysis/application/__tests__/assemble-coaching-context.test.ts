@@ -1,10 +1,15 @@
-import { describe, expect, it } from 'vitest';
-
 import type { VideoAnalysisResult } from '@parakeet/shared-types';
+import { describe, expect, it } from 'vitest';
 
 import { assembleCoachingContext } from '../assemble-coaching-context';
 
-function makeAnalysis(reps: Array<{ barDriftCm?: number; forwardLeanDeg?: number; maxDepthCm?: number }>): VideoAnalysisResult {
+function makeAnalysis(
+  reps: Array<{
+    barDriftCm?: number;
+    forwardLeanDeg?: number;
+    maxDepthCm?: number;
+  }>
+): VideoAnalysisResult {
   return {
     fps: 15,
     cameraAngle: 'side',

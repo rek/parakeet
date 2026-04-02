@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
+
 import Svg, { Polyline } from 'react-native-svg';
 
 import type { ColorScheme } from '../../../theme';
@@ -38,7 +39,9 @@ function extractSetPaths({ videos }: { videos: SessionVideo[] }) {
 function detectFatigueTrend({ sets }: { sets: SetBarPath[] }) {
   if (sets.length < 3) return null;
 
-  const drifts = sets.map((s) => s.driftCm).filter((d): d is number => d != null);
+  const drifts = sets
+    .map((s) => s.driftCm)
+    .filter((d): d is number => d != null);
   if (drifts.length < 3) return null;
 
   // Check if drift increases monotonically (fatigue signature)
@@ -62,11 +65,7 @@ function detectFatigueTrend({ sets }: { sets: SetBarPath[] }) {
  * Shows how form changes across sets (fatigue detection).
  * Each set has a distinct color. Includes drift/lean/depth trend table.
  */
-export function IntraSessionComparison({
-  videos,
-}: {
-  videos: SessionVideo[];
-}) {
+export function IntraSessionComparison({ videos }: { videos: SessionVideo[] }) {
   const { colors } = useTheme();
   const styles = useMemo(() => buildStyles(colors), [colors]);
 
@@ -98,7 +97,7 @@ export function IntraSessionComparison({
                 strokeWidth={0.005}
                 opacity={0.8}
               />
-            ) : null,
+            ) : null
           )}
         </Svg>
 

@@ -27,12 +27,14 @@ vi.mock('@shared/utils/weight', () => ({
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
-function makeMaxes(overrides: Partial<{
-  squat_1rm_grams: number;
-  bench_1rm_grams: number;
-  deadlift_1rm_grams: number;
-  recorded_at: string;
-}> = {}) {
+function makeMaxes(
+  overrides: Partial<{
+    squat_1rm_grams: number;
+    bench_1rm_grams: number;
+    deadlift_1rm_grams: number;
+    recorded_at: string;
+  }> = {}
+) {
   return {
     squat_1rm_grams: 200000,
     bench_1rm_grams: 140000,
@@ -42,10 +44,12 @@ function makeMaxes(overrides: Partial<{
   };
 }
 
-function makeProfile(overrides: Partial<{
-  bodyweight_kg: number;
-  biological_sex: string;
-}> = {}) {
+function makeProfile(
+  overrides: Partial<{
+    bodyweight_kg: number;
+    biological_sex: string;
+  }> = {}
+) {
   return {
     id: 'user-1',
     display_name: 'Test User',
@@ -101,7 +105,9 @@ describe('getCurrentWilksSnapshot', () => {
       recorded_at: '2026-03-01T00:00:00Z',
     });
     mockGetCurrentMaxes.mockResolvedValue(maxes);
-    mockGetProfileById.mockResolvedValue(makeProfile({ biological_sex: 'male', bodyweight_kg: 90 }));
+    mockGetProfileById.mockResolvedValue(
+      makeProfile({ biological_sex: 'male', bodyweight_kg: 90 })
+    );
     mockComputeWilks2020.mockReturnValue(412.75);
 
     const result = await getCurrentWilksSnapshot('user-1');
@@ -125,7 +131,9 @@ describe('getCurrentWilksSnapshot', () => {
       recorded_at: '2026-02-15T00:00:00Z',
     });
     mockGetCurrentMaxes.mockResolvedValue(maxes);
-    mockGetProfileById.mockResolvedValue(makeProfile({ biological_sex: 'female', bodyweight_kg: 65 }));
+    mockGetProfileById.mockResolvedValue(
+      makeProfile({ biological_sex: 'female', bodyweight_kg: 65 })
+    );
     mockComputeWilks2020.mockReturnValue(389.2);
 
     const result = await getCurrentWilksSnapshot('user-1');
@@ -143,13 +151,19 @@ describe('getCurrentWilksSnapshot', () => {
   it('defaults to male sex when biological_sex is not "female"', async () => {
     mockGetCurrentMaxes.mockResolvedValue(makeMaxes());
     // biological_sex missing / null-like value
-    mockGetProfileById.mockResolvedValue(makeProfile({ biological_sex: 'other' }));
+    mockGetProfileById.mockResolvedValue(
+      makeProfile({ biological_sex: 'other' })
+    );
     mockComputeWilks2020.mockReturnValue(300);
 
     const result = await getCurrentWilksSnapshot('user-1');
 
     expect(result!.sex).toBe('male');
-    expect(mockComputeWilks2020).toHaveBeenCalledWith(expect.any(Number), 90, 'male');
+    expect(mockComputeWilks2020).toHaveBeenCalledWith(
+      expect.any(Number),
+      90,
+      'male'
+    );
   });
 
   it('rounds wilks to the nearest integer', async () => {

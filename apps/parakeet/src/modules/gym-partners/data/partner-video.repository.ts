@@ -100,7 +100,7 @@ export function subscribeToPartnerVideoInserts({
         if (recordedBy != null) {
           onInsert();
         }
-      },
+      }
     )
     .subscribe();
 

@@ -11,6 +11,7 @@ import type {
 } from '../badge-types';
 import { checkConsistencyBadges } from '../checkers/consistency';
 import type { ConsistencyData } from '../checkers/consistency';
+import { checkCouplesBadges } from '../checkers/couples';
 import { checkLiftIdentityBadges } from '../checkers/lift-identity';
 import { checkPerformanceBadges } from '../checkers/performance';
 import { checkProgramLoyaltyBadges } from '../checkers/program-loyalty';
@@ -20,7 +21,6 @@ import { checkRpeEffortBadges } from '../checkers/rpe-effort';
 import { checkSessionMilestoneBadges } from '../checkers/session-milestones';
 import { checkSituationalBadges } from '../checkers/situational';
 import { checkVolumeRepBadges } from '../checkers/volume-rep';
-import { checkCouplesBadges } from '../checkers/couples';
 import { checkWildRareBadges } from '../checkers/wild-rare';
 
 // ── Helpers ─────────────────────────────────────────────────────────────────

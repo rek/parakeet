@@ -15,6 +15,5 @@ export const bodyReviewQueries = {
     userId: string | undefined,
     programId: string | undefined,
     weekNumber: number | undefined
-  ) =>
-    ['weekly-body-review', userId, programId, weekNumber] as const,
+  ) => ['weekly-body-review', userId, programId, weekNumber] as const,
 };

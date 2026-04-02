@@ -39,10 +39,7 @@ export function useSessionDetail({
     enabled: !!sessionId,
   });
 
-  const {
-    data: log,
-    isLoading: logLoading,
-  } = useQuery({
+  const { data: log, isLoading: logLoading } = useQuery({
     ...sessionQueries.log(sessionId),
     enabled: !!sessionId,
   });

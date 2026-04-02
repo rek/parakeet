@@ -47,7 +47,8 @@ export function smoothBarPath({
   if (path.length === 0) return [];
 
   const effectiveWindow =
-    windowSize ?? Math.max(3, Math.round((fps ?? 30) * (SMOOTH_TIME_MS / 1000)));
+    windowSize ??
+    Math.max(3, Math.round((fps ?? 30) * (SMOOTH_TIME_MS / 1000)));
   const half = Math.floor(effectiveWindow / 2);
   return path.map((point, i) => {
     const start = Math.max(0, i - half);

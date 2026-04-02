@@ -133,7 +133,10 @@ describe('saveWeeklyBodyReview', () => {
   });
 
   it('passes notes through to the repository', async () => {
-    const inputWithNotes = { ...BASE_SAVE_INPUT, notes: 'Felt great this week' };
+    const inputWithNotes = {
+      ...BASE_SAVE_INPUT,
+      notes: 'Felt great this week',
+    };
 
     await saveWeeklyBodyReview(inputWithNotes);
 
@@ -179,7 +182,10 @@ describe('getWeeklyBodyReviews', () => {
 
     const result = await getWeeklyBodyReviews(USER_ID, PROGRAM_ID);
 
-    expect(mockFetchWeeklyBodyReviews).toHaveBeenCalledWith(USER_ID, PROGRAM_ID);
+    expect(mockFetchWeeklyBodyReviews).toHaveBeenCalledWith(
+      USER_ID,
+      PROGRAM_ID
+    );
     expect(result).toEqual([STORED_REVIEW]);
   });
 
@@ -206,7 +212,11 @@ describe('getLatestWeeklyReview', () => {
   it('returns the latest review', async () => {
     mockFetchLatestWeeklyReview.mockResolvedValue(STORED_REVIEW);
 
-    const result = await getLatestWeeklyReview(USER_ID, PROGRAM_ID, WEEK_NUMBER);
+    const result = await getLatestWeeklyReview(
+      USER_ID,
+      PROGRAM_ID,
+      WEEK_NUMBER
+    );
 
     expect(result).toEqual(STORED_REVIEW);
     expect(mockFetchLatestWeeklyReview).toHaveBeenCalledWith(
@@ -219,7 +229,11 @@ describe('getLatestWeeklyReview', () => {
   it('returns null when no review exists', async () => {
     mockFetchLatestWeeklyReview.mockResolvedValue(null);
 
-    const result = await getLatestWeeklyReview(USER_ID, PROGRAM_ID, WEEK_NUMBER);
+    const result = await getLatestWeeklyReview(
+      USER_ID,
+      PROGRAM_ID,
+      WEEK_NUMBER
+    );
 
     expect(result).toBeNull();
   });
@@ -298,9 +312,24 @@ describe('getLatestMismatchDirection', () => {
     mockFetchLatestWeeklyReview.mockResolvedValue({
       ...STORED_REVIEW,
       mismatches: [
-        { muscle: 'quads', direction: 'accumulating_fatigue', felt: 'high', predicted: 'moderate' },
-        { muscle: 'hamstrings', direction: 'accumulating_fatigue', felt: 'high', predicted: 'low' },
-        { muscle: 'glutes', direction: 'recovering_well', felt: 'low', predicted: 'high' },
+        {
+          muscle: 'quads',
+          direction: 'accumulating_fatigue',
+          felt: 'high',
+          predicted: 'moderate',
+        },
+        {
+          muscle: 'hamstrings',
+          direction: 'accumulating_fatigue',
+          felt: 'high',
+          predicted: 'low',
+        },
+        {
+          muscle: 'glutes',
+          direction: 'recovering_well',
+          felt: 'low',
+          predicted: 'high',
+        },
       ],
     });
 
@@ -318,9 +347,24 @@ describe('getLatestMismatchDirection', () => {
     mockFetchLatestWeeklyReview.mockResolvedValue({
       ...STORED_REVIEW,
       mismatches: [
-        { muscle: 'quads', direction: 'recovering_well', felt: 'low', predicted: 'moderate' },
-        { muscle: 'hamstrings', direction: 'recovering_well', felt: 'low', predicted: 'moderate' },
-        { muscle: 'glutes', direction: 'accumulating_fatigue', felt: 'high', predicted: 'low' },
+        {
+          muscle: 'quads',
+          direction: 'recovering_well',
+          felt: 'low',
+          predicted: 'moderate',
+        },
+        {
+          muscle: 'hamstrings',
+          direction: 'recovering_well',
+          felt: 'low',
+          predicted: 'moderate',
+        },
+        {
+          muscle: 'glutes',
+          direction: 'accumulating_fatigue',
+          felt: 'high',
+          predicted: 'low',
+        },
       ],
     });
 
@@ -338,8 +382,18 @@ describe('getLatestMismatchDirection', () => {
     mockFetchLatestWeeklyReview.mockResolvedValue({
       ...STORED_REVIEW,
       mismatches: [
-        { muscle: 'quads', direction: 'recovering_well', felt: 'low', predicted: 'high' },
-        { muscle: 'hamstrings', direction: 'accumulating_fatigue', felt: 'high', predicted: 'low' },
+        {
+          muscle: 'quads',
+          direction: 'recovering_well',
+          felt: 'low',
+          predicted: 'high',
+        },
+        {
+          muscle: 'hamstrings',
+          direction: 'accumulating_fatigue',
+          felt: 'high',
+          predicted: 'low',
+        },
       ],
     });
 
@@ -358,9 +412,24 @@ describe('getLatestMismatchDirection', () => {
     mockFetchLatestWeeklyReview.mockResolvedValue({
       ...STORED_REVIEW,
       mismatches: [
-        { muscle: 'quads', direction: 'recovering_well', felt: 'low', predicted: 'high' },
-        { muscle: 'hamstrings', direction: 'accumulating_fatigue', felt: 'high', predicted: 'low' },
-        { muscle: 'hamstrings', direction: 'accumulating_fatigue', felt: 'high', predicted: 'low' },
+        {
+          muscle: 'quads',
+          direction: 'recovering_well',
+          felt: 'low',
+          predicted: 'high',
+        },
+        {
+          muscle: 'hamstrings',
+          direction: 'accumulating_fatigue',
+          felt: 'high',
+          predicted: 'low',
+        },
+        {
+          muscle: 'hamstrings',
+          direction: 'accumulating_fatigue',
+          felt: 'high',
+          predicted: 'low',
+        },
       ],
     });
 
@@ -379,6 +448,10 @@ describe('getLatestMismatchDirection', () => {
 
     await getLatestMismatchDirection(USER_ID, PROGRAM_ID, 5, ['quads']);
 
-    expect(mockFetchLatestWeeklyReview).toHaveBeenCalledWith(USER_ID, PROGRAM_ID, 5);
+    expect(mockFetchLatestWeeklyReview).toHaveBeenCalledWith(
+      USER_ID,
+      PROGRAM_ID,
+      5
+    );
   });
 });

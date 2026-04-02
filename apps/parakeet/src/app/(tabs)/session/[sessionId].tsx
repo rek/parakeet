@@ -11,7 +11,6 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { useFeatureEnabled } from '@modules/feature-flags';
 import { useLiftHistory } from '@modules/history';
-import { SetVideoIcon, VideoEntryButton } from '@modules/video-analysis';
 import { computeDisplayWeights, useChallengeReview } from '@modules/jit';
 import { getProfile } from '@modules/profile';
 import {
@@ -24,23 +23,23 @@ import {
   computeSuggestedAux,
   computeSuggestedWeight,
   DEFAULT_MAIN_REST_SECONDS,
-  getRecentAuxExerciseNames,
   formatExerciseName,
+  formatPrescriptionTrace,
+  getRecentAuxExerciseNames,
   getSession,
   groupAuxiliaryWork,
   LiftHistorySheet,
+  parsePrescriptionTrace,
   PostRestOverlay,
   RestTimer,
   RpeQuickPicker,
   SetRow,
   startSession,
+  useSessionLifecycle,
   useSetCompletionFlow,
   VolumeRecoveryBanner,
   WarmupSection,
   WeightSuggestionBanner,
-  formatPrescriptionTrace,
-  parsePrescriptionTrace,
-  useSessionLifecycle,
 } from '@modules/session';
 import type {
   AuxiliaryWork,
@@ -58,12 +57,16 @@ import {
   setDisabledPlates,
 } from '@modules/settings';
 import type { RestTimerPrefs, WarmupPlateDisplay } from '@modules/settings';
+import { SetVideoIcon, VideoEntryButton } from '@modules/video-analysis';
 import type { Lift } from '@parakeet/shared-types';
 import { useNetworkStatus } from '@platform/network';
 import { useSessionStore } from '@platform/store/sessionStore';
 import { captureException } from '@platform/utils/captureException';
 import type { PlateKg } from '@shared/constants/plates';
-import { getAllExercises, getExerciseType } from '@shared/utils/exercise-lookup';
+import {
+  getAllExercises,
+  getExerciseType,
+} from '@shared/utils/exercise-lookup';
 import { sessionLabel } from '@shared/utils/string';
 import { weightGramsToKg } from '@shared/utils/weight';
 import { useKeepAwake } from 'expo-keep-awake';
@@ -647,9 +650,7 @@ export default function SessionScreen() {
   const exerciseCatalog = useMemo(() => getAllExercises(), []);
   const [recentAuxNames, setRecentAuxNames] = useState<string[]>([]);
   useEffect(() => {
-    getRecentAuxExerciseNames()
-      .then(setRecentAuxNames)
-      .catch(captureException);
+    getRecentAuxExerciseNames().then(setRecentAuxNames).catch(captureException);
   }, []);
 
   const alreadyInSession = useMemo(
@@ -794,7 +795,10 @@ export default function SessionScreen() {
             <View style={styles.sessionHeaderText}>
               <View style={styles.liftTitleRow}>
                 <Text style={styles.liftTitle}>{liftHeader}</Text>
-                <VideoEntryButton sessionId={sessionId} lift={sessionMeta?.primary_lift ?? null} />
+                <VideoEntryButton
+                  sessionId={sessionId}
+                  lift={sessionMeta?.primary_lift ?? null}
+                />
               </View>
               <Text style={styles.blockWeekText}>{blockWeek}</Text>
             </View>
@@ -908,9 +912,7 @@ export default function SessionScreen() {
                   disabledPlates={equipmentDisabledPlates}
                   onBarWeightChange={handleBarWeightChange}
                   onDisabledPlatesChange={handleDisabledPlatesChange}
-                  prescriptionTrace={
-                    traceEnabled ? formattedTrace : undefined
-                  }
+                  prescriptionTrace={traceEnabled ? formattedTrace : undefined}
                   videoIconSlot={
                     <SetVideoIcon
                       sessionId={sessionId}

@@ -240,14 +240,16 @@ export default function LiftHistoryScreen() {
     useState<IntensityFilter>('all');
   const [chartType, setChartType] = useState<ChartType>('1rm');
 
-  const { liftData, trends, isLoading: historyLoading } = useLiftDetail({ lift: lift ?? '' });
+  const {
+    liftData,
+    trends,
+    isLoading: historyLoading,
+  } = useLiftDetail({ lift: lift ?? '' });
 
   const liftLabel = LIFT_LABELS[lift as Lift] ?? lift;
   const liftColor = LIFT_COLORS[lift as Lift] ?? palette.lime400;
 
-  const currentOneRm = trends?.find(
-    (t) => t.lift === lift
-  )?.estimatedOneRmKg;
+  const currentOneRm = trends?.find((t) => t.lift === lift)?.estimatedOneRmKg;
 
   const rows = liftData ?? [];
 

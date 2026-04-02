@@ -19,7 +19,9 @@ export function applyDisruptionAdjustment(
   // should not further reduce or skip them (design/disruption-management.md).
   if (input.intensityType === 'deload') {
     if (relevantDisruptions.length > 0) {
-      ctx.rationale.push('Active disruption noted — deload session proceeds unchanged');
+      ctx.rationale.push(
+        'Active disruption noted — deload session proceeds unchanged'
+      );
     }
     // Still note equipment disruption for aux boost rationale (buildAuxiliaryWork acts on it independently)
     const hasNoEquipmentDisruption = input.activeDisruptions.some(

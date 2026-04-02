@@ -1,12 +1,11 @@
-import { useQuery, useQueryClient } from '@tanstack/react-query';
-
 import { useAuth } from '@modules/auth';
 import { profileQueries } from '@modules/profile';
 import { programQueries } from '@modules/program';
 import type { Lift } from '@parakeet/shared-types';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 
-import { getAllWarmupConfigs, updateWarmupConfig } from '../lib/warmup-config';
 import { settingsQueries } from '../data/settings.queries';
+import { getAllWarmupConfigs, updateWarmupConfig } from '../lib/warmup-config';
 import type { WarmupProtocol } from '../lib/warmup-config';
 
 export function useWarmupProtocol() {

@@ -11,5 +11,6 @@ import { formulaQueries } from '../data/formula.queries';
  */
 export function useInvalidateFormulas() {
   const queryClient = useQueryClient();
-  return () => queryClient.invalidateQueries({ queryKey: formulaQueries.all() });
+  return () =>
+    queryClient.invalidateQueries({ queryKey: formulaQueries.all() });
 }

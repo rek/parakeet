@@ -1,5 +1,5 @@
-import { LANDMARK, type PoseFrame } from './pose-types';
 import { computeAngle } from './angle-calculator';
+import { LANDMARK, type PoseFrame } from './pose-types';
 
 /**
  * Compute elbow flare angle at a given frame.

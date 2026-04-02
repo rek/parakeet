@@ -137,9 +137,9 @@ describe('updateProfile', () => {
   it('throws when not authenticated', async () => {
     mockGetAuthenticatedUserId.mockResolvedValue(null);
 
-    await expect(
-      updateProfile({ display_name: 'Test' })
-    ).rejects.toThrow('Not authenticated');
+    await expect(updateProfile({ display_name: 'Test' })).rejects.toThrow(
+      'Not authenticated'
+    );
 
     expect(mockUpdateProfileById).not.toHaveBeenCalled();
   });
@@ -148,18 +148,16 @@ describe('updateProfile', () => {
     mockGetAuthenticatedUserId.mockResolvedValue('user-1');
     mockUpdateProfileById.mockRejectedValue(new Error('Update failed'));
 
-    await expect(
-      updateProfile({ display_name: 'Test' })
-    ).rejects.toThrow('Update failed');
+    await expect(updateProfile({ display_name: 'Test' })).rejects.toThrow(
+      'Update failed'
+    );
   });
 
   it('accepts partial update with only bodyweight_kg', async () => {
     mockGetAuthenticatedUserId.mockResolvedValue('user-1');
     mockUpdateProfileById.mockResolvedValue(undefined);
 
-    await expect(
-      updateProfile({ bodyweight_kg: 95 })
-    ).resolves.toBeUndefined();
+    await expect(updateProfile({ bodyweight_kg: 95 })).resolves.toBeUndefined();
 
     expect(mockUpdateProfileById).toHaveBeenCalledWith('user-1', {
       bodyweight_kg: 95,

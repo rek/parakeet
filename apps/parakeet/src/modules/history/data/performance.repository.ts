@@ -1,5 +1,5 @@
-import { typedSupabase } from '@platform/supabase';
 import type { Lift } from '@parakeet/shared-types';
+import { typedSupabase } from '@platform/supabase';
 
 export async function fetchPerformanceByLift(
   userId: string,
@@ -45,10 +45,7 @@ export async function fetchRecentSessionLogsForTrends(userId: string) {
   return data ?? [];
 }
 
-export async function fetchWeeklySessionLogs(
-  userId: string,
-  fromDate: Date
-) {
+export async function fetchWeeklySessionLogs(userId: string, fromDate: Date) {
   const { data, error } = await typedSupabase
     .from('session_logs')
     .select('completed_at, actual_sets, sessions!inner(primary_lift, status)')

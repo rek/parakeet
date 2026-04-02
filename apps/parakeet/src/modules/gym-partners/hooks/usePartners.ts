@@ -1,6 +1,5 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-
 import { captureException } from '@platform/utils/captureException';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import {
   acceptPartner,
@@ -13,10 +12,10 @@ import { partnerQueries } from '../data/partner.queries';
 
 export function usePartners() {
   const { data: partners, isLoading: isLoadingPartners } = useQuery(
-    partnerQueries.list(),
+    partnerQueries.list()
   );
   const { data: pendingRequests, isLoading: isLoadingPending } = useQuery(
-    partnerQueries.pendingRequests(),
+    partnerQueries.pendingRequests()
   );
 
   return {

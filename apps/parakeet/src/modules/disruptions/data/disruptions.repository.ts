@@ -98,10 +98,7 @@ export async function updateSessionStatus(
   sessionId: string,
   status: string
 ): Promise<void> {
-  await typedSupabase
-    .from('sessions')
-    .update({ status })
-    .eq('id', sessionId);
+  await typedSupabase.from('sessions').update({ status }).eq('id', sessionId);
 }
 
 export async function updateDisruptionAdjustmentApplied(

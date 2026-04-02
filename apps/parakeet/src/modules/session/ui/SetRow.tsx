@@ -11,8 +11,8 @@ import {
 import type { PlateKg } from '@shared/constants/plates';
 
 import { radii, spacing, typography } from '../../../theme';
-import type { FormattedTrace } from '../utils/format-trace';
 import { useTheme } from '../../../theme/ThemeContext';
+import type { FormattedTrace } from '../utils/format-trace';
 import { PlateCalculatorSheet } from './PlateCalculatorSheet';
 import { PlateDisplay } from './PlateDisplay';
 import { resolveSetRowDisplay } from './resolveSetRowDisplay';

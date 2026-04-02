@@ -1,4 +1,4 @@
-import type { VideoAnalysisResult, RepAnalysis } from '@parakeet/shared-types';
+import type { RepAnalysis, VideoAnalysisResult } from '@parakeet/shared-types';
 
 /** Minimum videos required to establish a meaningful baseline. */
 export const MIN_VIDEOS_FOR_BASELINE = 5;
@@ -105,7 +105,9 @@ export function detectBaselineDeviations({
 
   // Forward lean — lower is better
   if (rep.forwardLeanDeg != null && baseline.sdForwardLeanDeg > 0) {
-    const z = (rep.forwardLeanDeg - baseline.avgForwardLeanDeg) / baseline.sdForwardLeanDeg;
+    const z =
+      (rep.forwardLeanDeg - baseline.avgForwardLeanDeg) /
+      baseline.sdForwardLeanDeg;
     if (Math.abs(z) >= Z_THRESHOLD) {
       deviations.push({
         metric: 'forwardLeanDeg',
@@ -135,7 +137,11 @@ export function detectBaselineDeviations({
 
   // Depth — more positive is better (deeper below parallel, squat only)
   // depth-detector convention: positive depthCm = below parallel
-  if (lift === 'squat' && rep.maxDepthCm != null && baseline.avgDepthCm != null) {
+  if (
+    lift === 'squat' &&
+    rep.maxDepthCm != null &&
+    baseline.avgDepthCm != null
+  ) {
     const diff = rep.maxDepthCm - baseline.avgDepthCm;
     // Positive diff = deeper than usual = better
     if (Math.abs(diff) > 2) {
@@ -165,6 +171,7 @@ function mean(values: number[]) {
 function sd(values: number[]) {
   if (values.length < 2) return 0;
   const m = mean(values);
-  const variance = values.reduce((sum, v) => sum + (v - m) ** 2, 0) / (values.length - 1);
+  const variance =
+    values.reduce((sum, v) => sum + (v - m) ** 2, 0) / (values.length - 1);
   return Math.sqrt(variance);
 }

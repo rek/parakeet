@@ -7,10 +7,9 @@ import { router } from 'expo-router';
 import type { ColorScheme } from '../../../theme';
 import { spacing, typography } from '../../../theme';
 import { useTheme } from '../../../theme/ThemeContext';
-import { usePartnerVideoBadge } from '../hooks/usePartnerVideoBadge';
 import type { PartnerWithSession } from '../hooks/usePartnerSessions';
 import { usePartnerSessions } from '../hooks/usePartnerSessions';
-
+import { usePartnerVideoBadge } from '../hooks/usePartnerVideoBadge';
 import { PartnerCard } from './PartnerCard';
 import { PartnerFilmingSheet } from './PartnerFilmingSheet';
 import { QrGenerateSheet } from './QrGenerateSheet';
@@ -44,16 +43,12 @@ export function PartnerSection() {
             <Text style={styles.headerTitle}>GYM PARTNERS</Text>
             {pendingCount > 0 && (
               <View style={styles.badge}>
-                <Text style={styles.badgeText}>
-                  {pendingCount} pending
-                </Text>
+                <Text style={styles.badgeText}>{pendingCount} pending</Text>
               </View>
             )}
             {unseenVideoCount > 0 && (
               <View style={styles.videoBadge}>
-                <Text style={styles.videoBadgeText}>
-                  {unseenVideoCount}
-                </Text>
+                <Text style={styles.videoBadgeText}>{unseenVideoCount}</Text>
               </View>
             )}
           </View>
@@ -90,10 +85,7 @@ export function PartnerSection() {
         </View>
       )}
 
-      <QrGenerateSheet
-        visible={showQr}
-        onClose={() => setShowQr(false)}
-      />
+      <QrGenerateSheet visible={showQr} onClose={() => setShowQr(false)} />
 
       {filmTarget?.activeSession && (
         <PartnerFilmingSheet

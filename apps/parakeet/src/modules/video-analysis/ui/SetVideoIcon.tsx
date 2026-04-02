@@ -1,7 +1,7 @@
 import { StyleSheet, Text, TouchableOpacity } from 'react-native';
-import { useRouter } from 'expo-router';
 
 import { useFeatureEnabled } from '@modules/feature-flags';
+import { useRouter } from 'expo-router';
 
 import { spacing } from '../../../theme';
 import { useSetVideo } from '../hooks/useSetVideo';

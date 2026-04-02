@@ -181,7 +181,10 @@ describe('estimateOneRmKgFromProfile', () => {
       };
       const squat = estimateOneRmKgFromProfile({ lift: 'squat', ...shared });
       const bench = estimateOneRmKgFromProfile({ lift: 'bench', ...shared });
-      const deadlift = estimateOneRmKgFromProfile({ lift: 'deadlift', ...shared });
+      const deadlift = estimateOneRmKgFromProfile({
+        lift: 'deadlift',
+        ...shared,
+      });
 
       expect(squat).not.toBe(bench);
       expect(bench).not.toBe(deadlift);
@@ -196,7 +199,10 @@ describe('estimateOneRmKgFromProfile', () => {
       };
       const squat = estimateOneRmKgFromProfile({ lift: 'squat', ...shared });
       const bench = estimateOneRmKgFromProfile({ lift: 'bench', ...shared });
-      const deadlift = estimateOneRmKgFromProfile({ lift: 'deadlift', ...shared });
+      const deadlift = estimateOneRmKgFromProfile({
+        lift: 'deadlift',
+        ...shared,
+      });
 
       expect(deadlift).toBeGreaterThan(squat);
       expect(squat).toBeGreaterThan(bench);

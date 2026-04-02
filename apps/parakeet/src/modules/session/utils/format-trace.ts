@@ -211,7 +211,9 @@ const STRATEGY_LABELS: Record<string, string> = {
   formula_fallback: 'Fallback',
 };
 
-export function formatPrescriptionTrace(trace: PrescriptionTrace): FormattedTrace {
+export function formatPrescriptionTrace(
+  trace: PrescriptionTrace
+): FormattedTrace {
   return {
     strategyLabel: STRATEGY_LABELS[trace.strategy] ?? trace.strategy,
     contextLabel: `${capitalize(trace.primaryLift)} · ${capitalize(trace.intensityType)} · Block ${trace.blockNumber}`,

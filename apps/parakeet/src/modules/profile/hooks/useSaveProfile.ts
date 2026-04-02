@@ -1,7 +1,6 @@
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-
-import { useAuth } from '@modules/auth';
 import { achievementQueries } from '@modules/achievements';
+import { useAuth } from '@modules/auth';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 import { addBodyweightEntry } from '../application/bodyweight.service';
 import { updateProfile } from '../application/profile.service';
@@ -27,12 +26,21 @@ export function useSaveProfile() {
   const queryClient = useQueryClient();
 
   const mutation = useMutation({
-    mutationFn: async ({ displayName, gender, birthYear, bodyweightKg }: SaveProfileArgs) => {
+    mutationFn: async ({
+      displayName,
+      gender,
+      birthYear,
+      bodyweightKg,
+    }: SaveProfileArgs) => {
       const dobIso = birthYearToDobIso(birthYear);
 
-      const parsedBodyweight = bodyweightKg.trim() ? parseFloat(bodyweightKg) : null;
+      const parsedBodyweight = bodyweightKg.trim()
+        ? parseFloat(bodyweightKg)
+        : null;
       const validBodyweight =
-        parsedBodyweight != null && !isNaN(parsedBodyweight) ? parsedBodyweight : null;
+        parsedBodyweight != null && !isNaN(parsedBodyweight)
+          ? parsedBodyweight
+          : null;
 
       await updateProfile({
         display_name: displayName.trim() ? displayName.trim() : null,
@@ -63,5 +71,9 @@ export function useSaveProfile() {
     },
   });
 
-  return { saveProfile: mutation.mutate, isPending: mutation.isPending, isError: mutation.isError };
+  return {
+    saveProfile: mutation.mutate,
+    isPending: mutation.isPending,
+    isError: mutation.isError,
+  };
 }

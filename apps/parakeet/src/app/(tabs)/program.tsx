@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 
 import { useAuth } from '@modules/auth';
+import { PartnerSection } from '@modules/gym-partners';
 import { computeRpeAdjustmentNote } from '@modules/jit';
 import {
   calculateSets,
@@ -21,11 +22,10 @@ import {
   WeekRow,
 } from '@modules/program';
 import type { ProgramSession } from '@modules/program';
-import { PartnerSection } from '@modules/gym-partners';
 import { useInProgressSession, useTodaySession } from '@modules/session';
 import type { IntensityType, Lift } from '@parakeet/shared-types';
-import { captureException } from '@platform/utils/captureException';
 import { useSessionStore } from '@platform/store/sessionStore';
+import { captureException } from '@platform/utils/captureException';
 import { capitalize } from '@shared/utils/string';
 import { router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -182,7 +182,9 @@ export default function ProgramScreen() {
     nextLift,
   });
 
-  const { endProgram, isPending: isEndingProgram } = useEndProgram({ isUnending });
+  const { endProgram, isPending: isEndingProgram } = useEndProgram({
+    isUnending,
+  });
 
   function handleSessionPress(session: ProgramSession) {
     if (session.status === 'in_progress') {

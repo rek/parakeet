@@ -1,15 +1,14 @@
+import { useAuth } from '@modules/auth';
+import type { MuscleGroup } from '@parakeet/shared-types';
+import { typedSupabase } from '@platform/supabase';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 
-import { useAuth } from '@modules/auth';
-import { typedSupabase } from '@platform/supabase';
-import type { MuscleGroup } from '@parakeet/shared-types';
-
+import { volumeQueries } from '../data/volume.queries';
 import {
   getMrvMevConfig,
   resetMuscleToDefault,
   updateMuscleConfig,
 } from '../lib/volume-config';
-import { volumeQueries } from '../data/volume.queries';
 
 export function useVolumeConfig() {
   const { user } = useAuth();
@@ -36,7 +35,9 @@ export function useVolumeConfig() {
   ) {
     if (!user) return;
     const muscles = Object.keys(drafts) as MuscleGroup[];
-    await Promise.all(muscles.map((m) => updateMuscleConfig(user.id, m, drafts[m])));
+    await Promise.all(
+      muscles.map((m) => updateMuscleConfig(user.id, m, drafts[m]))
+    );
     queryClient.invalidateQueries({ queryKey: volumeQueries.all() });
   }
 

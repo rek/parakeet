@@ -30,13 +30,7 @@ export const videoQueries = {
       queryFn: () => getVideoForSessionLift({ sessionId, lift, setNumber }),
     }),
 
-  forSessionLift: ({
-    sessionId,
-    lift,
-  }: {
-    sessionId: string;
-    lift: string;
-  }) =>
+  forSessionLift: ({ sessionId, lift }: { sessionId: string; lift: string }) =>
     queryOptions({
       queryKey: [
         ...videoQueries.all(),

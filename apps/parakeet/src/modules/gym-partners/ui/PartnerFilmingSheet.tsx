@@ -6,20 +6,19 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+
+import { captureException } from '@platform/utils/captureException';
 import {
   Camera,
   useCameraDevice,
   useCameraPermission,
 } from 'react-native-vision-camera';
 
-import { captureException } from '@platform/utils/captureException';
-
+import { Sheet } from '../../../components/ui/Sheet';
 import type { ColorScheme } from '../../../theme';
 import { radii, spacing, typography } from '../../../theme';
 import { useTheme } from '../../../theme/ThemeContext';
 import { usePartnerFilming } from '../hooks/usePartnerFilming';
-
-import { Sheet } from '../../../components/ui/Sheet';
 import type { SetSelection } from './PartnerSetPicker';
 import { PartnerSetPicker } from './PartnerSetPicker';
 
@@ -163,13 +162,13 @@ export function PartnerFilmingSheet({
                     isRecording ? handleStopRecording : handleStartRecording
                   }
                   activeOpacity={0.7}
-                  accessibilityLabel={isRecording ? 'Stop recording' : 'Start recording'}
+                  accessibilityLabel={
+                    isRecording ? 'Stop recording' : 'Start recording'
+                  }
                   accessibilityRole="button"
                 >
                   <View
-                    style={
-                      isRecording ? styles.stopIcon : styles.recordIcon
-                    }
+                    style={isRecording ? styles.stopIcon : styles.recordIcon}
                   />
                 </TouchableOpacity>
               </View>
@@ -188,18 +187,14 @@ export function PartnerFilmingSheet({
                 ? 'Compressing...'
                 : 'Uploading...'}
           </Text>
-          <Text style={styles.progressPct}>
-            {Math.round(progress * 100)}%
-          </Text>
+          <Text style={styles.progressPct}>{Math.round(progress * 100)}%</Text>
         </View>
       )}
 
       {step === 'done' && (
         <View style={styles.center}>
           <Text style={styles.doneIcon}>{'✓'}</Text>
-          <Text style={styles.doneText}>
-            Video uploaded to {partnerName}
-          </Text>
+          <Text style={styles.doneText}>Video uploaded to {partnerName}</Text>
           <TouchableOpacity
             onPress={handleClose}
             style={styles.actionButton}

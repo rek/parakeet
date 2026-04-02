@@ -11,11 +11,7 @@ import { LANDMARK, type PoseFrame } from './pose-types';
  * Threshold: if separation > 0.15 normalized units, it's a front view.
  * This corresponds to ~36cm at standard calibration — clearly separated.
  */
-export function detectCameraAngle({
-  frames,
-}: {
-  frames: PoseFrame[];
-}) {
+export function detectCameraAngle({ frames }: { frames: PoseFrame[] }) {
   const THRESHOLD = 0.15;
   const SAMPLE_COUNT = Math.min(frames.length, 10);
 

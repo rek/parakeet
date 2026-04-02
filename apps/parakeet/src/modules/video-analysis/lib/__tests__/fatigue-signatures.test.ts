@@ -1,11 +1,12 @@
-import { describe, expect, it } from 'vitest';
-
 import type { RepAnalysis } from '@parakeet/shared-types';
+import { describe, expect, it } from 'vitest';
 
 import { computeFatigueSignatures } from '../fatigue-signatures';
 
 /** Helper to build a minimal RepAnalysis with only the fields fatigue cares about. */
-function makeRep(overrides: Partial<RepAnalysis> & { repNumber: number }): RepAnalysis {
+function makeRep(
+  overrides: Partial<RepAnalysis> & { repNumber: number }
+): RepAnalysis {
   return {
     startFrame: 0,
     endFrame: 10,
@@ -18,7 +19,9 @@ function makeRep(overrides: Partial<RepAnalysis> & { repNumber: number }): RepAn
 describe('computeFatigueSignatures', () => {
   it('returns null for fewer than 2 reps', () => {
     expect(computeFatigueSignatures({ reps: [] })).toBeNull();
-    expect(computeFatigueSignatures({ reps: [makeRep({ repNumber: 1 })] })).toBeNull();
+    expect(
+      computeFatigueSignatures({ reps: [makeRep({ repNumber: 1 })] })
+    ).toBeNull();
   });
 
   it('computes correct deltas for a flat set (no fatigue)', () => {
@@ -222,7 +225,7 @@ describe('computeFatigueSignatures', () => {
     ];
 
     const result = computeFatigueSignatures({ reps })!;
-    expect(result.forwardLeanDriftDeg).toBe(4);   // 14 - 10, not affected by middle
-    expect(result.romCompressionCm).toBe(5);       // 55 - 50, not affected by middle
+    expect(result.forwardLeanDriftDeg).toBe(4); // 14 - 10, not affected by middle
+    expect(result.romCompressionCm).toBe(5); // 55 - 50, not affected by middle
   });
 });

@@ -1,8 +1,7 @@
-import { useQuery } from '@tanstack/react-query';
-
 import { useAuth } from '@modules/auth';
 import { programQueries } from '@modules/program';
 import { sessionQueries } from '@modules/session';
+import { useQuery } from '@tanstack/react-query';
 
 import { historyQueries } from '../data/history.queries';
 

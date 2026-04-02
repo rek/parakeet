@@ -1,7 +1,6 @@
-import { File } from 'expo-file-system';
-
 import { typedSupabase } from '@platform/supabase';
 import { captureException } from '@platform/utils/captureException';
+import { File } from 'expo-file-system';
 
 const BUCKET = 'session-videos';
 

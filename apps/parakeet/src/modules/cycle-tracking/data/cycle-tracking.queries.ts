@@ -1,6 +1,6 @@
 import { queryOptions, skipToken } from '@tanstack/react-query';
 
-import { getCycleConfig, getCurrentCycleContext } from '../lib/cycle-tracking';
+import { getCurrentCycleContext, getCycleConfig } from '../lib/cycle-tracking';
 
 export const cycleTrackingQueries = {
   all: () => ['cycle'] as const,

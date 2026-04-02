@@ -1,5 +1,5 @@
-import { queryOptions, skipToken } from '@tanstack/react-query';
 import type { Lift } from '@parakeet/shared-types';
+import { queryOptions, skipToken } from '@tanstack/react-query';
 
 import {
   getPerformanceByLift,
@@ -47,8 +47,6 @@ export const historyQueries = {
   weeklySetsPerLift: (userId: string | undefined, weeks: number) =>
     queryOptions({
       queryKey: ['volume', 'weekly', userId, weeks] as const,
-      queryFn: userId
-        ? () => getWeeklySetsPerLift(userId, weeks)
-        : skipToken,
+      queryFn: userId ? () => getWeeklySetsPerLift(userId, weeks) : skipToken,
     }),
 };

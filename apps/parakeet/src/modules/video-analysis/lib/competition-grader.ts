@@ -1,6 +1,15 @@
-import type { RepAnalysis, CriterionResult, RepVerdict } from '@parakeet/shared-types';
+import type {
+  CriterionResult,
+  RepAnalysis,
+  RepVerdict,
+} from '@parakeet/shared-types';
 
-import { computeElbowAngle, computeHipAngle, computeKneeAngle, computeBarVelocity } from './angle-calculator';
+import {
+  computeBarVelocity,
+  computeElbowAngle,
+  computeHipAngle,
+  computeKneeAngle,
+} from './angle-calculator';
 import { CM_PER_UNIT, LANDMARK, type PoseFrame } from './pose-types';
 
 export type { CriterionResult, RepVerdict };
@@ -34,15 +43,22 @@ function gradeSquatDepth({ rep }: { rep: RepAnalysis }) {
     measured: depth,
     threshold: 0,
     unit: 'cm',
-    message: verdict === 'pass'
-      ? `${depth.toFixed(1)}cm below parallel`
-      : verdict === 'borderline'
-        ? `Borderline depth (${depth.toFixed(1)}cm)`
-        : `${Math.abs(depth).toFixed(1)}cm above parallel — would not pass`,
+    message:
+      verdict === 'pass'
+        ? `${depth.toFixed(1)}cm below parallel`
+        : verdict === 'borderline'
+          ? `Borderline depth (${depth.toFixed(1)}cm)`
+          : `${Math.abs(depth).toFixed(1)}cm above parallel — would not pass`,
   } satisfies CriterionResult;
 }
 
-function gradeSquatLockout({ frames, rep }: { frames: PoseFrame[]; rep: RepAnalysis }) {
+function gradeSquatLockout({
+  frames,
+  rep,
+}: {
+  frames: PoseFrame[];
+  rep: RepAnalysis;
+}) {
   // Knee angle is only meaningful from side view
   if (rep.kneeAngleDeg == null) {
     return {
@@ -71,11 +87,12 @@ function gradeSquatLockout({ frames, rep }: { frames: PoseFrame[]; rep: RepAnaly
     measured: kneeAngle,
     threshold: 170,
     unit: '°',
-    message: verdict === 'pass'
-      ? `Knees fully locked (${kneeAngle.toFixed(0)}°)`
-      : verdict === 'borderline'
-        ? `Knees nearly locked (${kneeAngle.toFixed(0)}°)`
-        : `Incomplete lockout (${kneeAngle.toFixed(0)}°) — would not pass`,
+    message:
+      verdict === 'pass'
+        ? `Knees fully locked (${kneeAngle.toFixed(0)}°)`
+        : verdict === 'borderline'
+          ? `Knees nearly locked (${kneeAngle.toFixed(0)}°)`
+          : `Incomplete lockout (${kneeAngle.toFixed(0)}°) — would not pass`,
   } satisfies CriterionResult;
 }
 
@@ -86,13 +103,27 @@ function gradeSquatForwardMotion({ rep }: { rep: RepAnalysis }) {
   // reads as zero drift.
   const path = rep.barPath;
   if (path.length < 5) {
-    return { name: 'forward_motion', verdict: 'pass' as const, measured: 0, threshold: 3, unit: 'cm', message: 'Insufficient data' };
+    return {
+      name: 'forward_motion',
+      verdict: 'pass' as const,
+      measured: 0,
+      threshold: 3,
+      unit: 'cm',
+      message: 'Insufficient data',
+    };
   }
 
   const cutoff = Math.floor(path.length * 0.8);
   const topPath = path.slice(cutoff);
   if (topPath.length < 2) {
-    return { name: 'forward_motion', verdict: 'pass' as const, measured: 0, threshold: 3, unit: 'cm', message: 'Insufficient data' };
+    return {
+      name: 'forward_motion',
+      verdict: 'pass' as const,
+      measured: 0,
+      threshold: 3,
+      unit: 'cm',
+      message: 'Insufficient data',
+    };
   }
 
   // Travel axis of the ascending phase
@@ -124,13 +155,20 @@ function gradeSquatForwardMotion({ rep }: { rep: RepAnalysis }) {
     measured: driftCm,
     threshold: 3,
     unit: 'cm',
-    message: verdict === 'pass'
-      ? 'Clean lockout path'
-      : `${driftCm.toFixed(1)}cm path deviation at top`,
+    message:
+      verdict === 'pass'
+        ? 'Clean lockout path'
+        : `${driftCm.toFixed(1)}cm path deviation at top`,
   } satisfies CriterionResult;
 }
 
-export function gradeSquatRep({ rep, frames }: { rep: RepAnalysis; frames: PoseFrame[] }) {
+export function gradeSquatRep({
+  rep,
+  frames,
+}: {
+  rep: RepAnalysis;
+  frames: PoseFrame[];
+}) {
   const criteria = [
     gradeSquatDepth({ rep }),
     gradeSquatLockout({ frames, rep }),
@@ -144,7 +182,14 @@ export function gradeSquatRep({ rep, frames }: { rep: RepAnalysis; frames: PoseF
 function gradeBenchPause({ rep, fps }: { rep: RepAnalysis; fps: number }) {
   const path = rep.barPath;
   if (path.length < 3) {
-    return { name: 'pause', verdict: 'pass' as const, measured: 0, threshold: 0.2, unit: 's', message: 'Insufficient data' };
+    return {
+      name: 'pause',
+      verdict: 'pass' as const,
+      measured: 0,
+      threshold: 0.2,
+      unit: 's',
+      message: 'Insufficient data',
+    };
   }
 
   const velocities = computeBarVelocity({ barPath: path, fps });
@@ -175,23 +220,35 @@ function gradeBenchPause({ rep, fps }: { rep: RepAnalysis; fps: number }) {
     measured: stallSeconds,
     threshold: 0.2,
     unit: 's',
-    message: verdict === 'pass'
-      ? `Clear pause (${stallSeconds.toFixed(2)}s)`
-      : verdict === 'borderline'
-        ? `Short pause (${stallSeconds.toFixed(2)}s) — may not be called`
-        : 'No visible pause at chest',
+    message:
+      verdict === 'pass'
+        ? `Clear pause (${stallSeconds.toFixed(2)}s)`
+        : verdict === 'borderline'
+          ? `Short pause (${stallSeconds.toFixed(2)}s) — may not be called`
+          : 'No visible pause at chest',
   } satisfies CriterionResult;
 }
 
-function gradeBenchLockout({ frames, rep }: { frames: PoseFrame[]; rep: RepAnalysis }) {
+function gradeBenchLockout({
+  frames,
+  rep,
+}: {
+  frames: PoseFrame[];
+  rep: RepAnalysis;
+}) {
   // Find the lockout frame: lowest wrist Y (bar at highest point)
   const startIdx = Math.max(rep.startFrame, 0);
   const endIdx = Math.min(rep.endFrame, frames.length - 1);
   let lockoutIdx = endIdx;
   let lowestWristY = Infinity;
   for (let i = startIdx; i <= endIdx; i++) {
-    const wristY = (frames[i][LANDMARK.LEFT_WRIST].y + frames[i][LANDMARK.RIGHT_WRIST].y) / 2;
-    if (wristY < lowestWristY) { lowestWristY = wristY; lockoutIdx = i; }
+    const wristY =
+      (frames[i][LANDMARK.LEFT_WRIST].y + frames[i][LANDMARK.RIGHT_WRIST].y) /
+      2;
+    if (wristY < lowestWristY) {
+      lowestWristY = wristY;
+      lockoutIdx = i;
+    }
   }
 
   const elbowAngle = computeElbowAngle({ frame: frames[lockoutIdx] });
@@ -208,15 +265,22 @@ function gradeBenchLockout({ frames, rep }: { frames: PoseFrame[]; rep: RepAnaly
     measured: elbowAngle,
     threshold: 155,
     unit: '°',
-    message: verdict === 'pass'
-      ? `Elbows fully locked (${elbowAngle.toFixed(0)}°)`
-      : verdict === 'borderline'
-        ? `Elbows nearly locked (${elbowAngle.toFixed(0)}°)`
-        : `Incomplete lockout (${elbowAngle.toFixed(0)}°) — would not pass`,
+    message:
+      verdict === 'pass'
+        ? `Elbows fully locked (${elbowAngle.toFixed(0)}°)`
+        : verdict === 'borderline'
+          ? `Elbows nearly locked (${elbowAngle.toFixed(0)}°)`
+          : `Incomplete lockout (${elbowAngle.toFixed(0)}°) — would not pass`,
   } satisfies CriterionResult;
 }
 
-function gradeBenchEvenPress({ frames, rep }: { frames: PoseFrame[]; rep: RepAnalysis }) {
+function gradeBenchEvenPress({
+  frames,
+  rep,
+}: {
+  frames: PoseFrame[];
+  rep: RepAnalysis;
+}) {
   // Even press is only meaningful from front view — from the side, perspective
   // makes one wrist appear higher than the other even when the bar is level.
   const endIdx = Math.min(rep.endFrame, frames.length - 1);
@@ -249,13 +313,22 @@ function gradeBenchEvenPress({ frames, rep }: { frames: PoseFrame[]; rep: RepAna
     measured: delta,
     threshold: 2,
     unit: 'cm',
-    message: verdict === 'pass'
-      ? 'Even press'
-      : `${delta.toFixed(1)}cm wrist height difference at lockout`,
+    message:
+      verdict === 'pass'
+        ? 'Even press'
+        : `${delta.toFixed(1)}cm wrist height difference at lockout`,
   } satisfies CriterionResult;
 }
 
-export function gradeBenchRep({ rep, frames, fps }: { rep: RepAnalysis; frames: PoseFrame[]; fps: number }) {
+export function gradeBenchRep({
+  rep,
+  frames,
+  fps,
+}: {
+  rep: RepAnalysis;
+  frames: PoseFrame[];
+  fps: number;
+}) {
   const criteria = [
     gradeBenchPause({ rep, fps }),
     gradeBenchLockout({ frames, rep }),
@@ -272,7 +345,13 @@ export function gradeBenchRep({ rep, frames, fps }: { rep: RepAnalysis; frames: 
  * regardless of how upright the lifter stands. Using hip Y fails for lifters
  * who stay bent over at lockout — the bar still reaches its peak.
  */
-function findLockoutFrame({ frames, rep }: { frames: PoseFrame[]; rep: RepAnalysis }) {
+function findLockoutFrame({
+  frames,
+  rep,
+}: {
+  frames: PoseFrame[];
+  rep: RepAnalysis;
+}) {
   const startIdx = Math.max(rep.startFrame, 0);
   const endIdx = Math.min(rep.endFrame, frames.length - 1);
   let bestIdx = endIdx;
@@ -289,7 +368,13 @@ function findLockoutFrame({ frames, rep }: { frames: PoseFrame[]; rep: RepAnalys
   return bestIdx;
 }
 
-function gradeDeadliftHipLockout({ frames, rep }: { frames: PoseFrame[]; rep: RepAnalysis }) {
+function gradeDeadliftHipLockout({
+  frames,
+  rep,
+}: {
+  frames: PoseFrame[];
+  rep: RepAnalysis;
+}) {
   const lockoutIdx = findLockoutFrame({ frames, rep });
   const hipAngle = computeHipAngle({ frame: frames[lockoutIdx] });
 
@@ -307,15 +392,22 @@ function gradeDeadliftHipLockout({ frames, rep }: { frames: PoseFrame[]; rep: Re
     measured: hipAngle,
     threshold: 160,
     unit: '°',
-    message: verdict === 'pass'
-      ? `Hips fully through (${hipAngle.toFixed(0)}°)`
-      : verdict === 'borderline'
-        ? `Hips nearly locked (${hipAngle.toFixed(0)}°)`
-        : `Incomplete hip lockout (${hipAngle.toFixed(0)}°) — would not pass`,
+    message:
+      verdict === 'pass'
+        ? `Hips fully through (${hipAngle.toFixed(0)}°)`
+        : verdict === 'borderline'
+          ? `Hips nearly locked (${hipAngle.toFixed(0)}°)`
+          : `Incomplete hip lockout (${hipAngle.toFixed(0)}°) — would not pass`,
   } satisfies CriterionResult;
 }
 
-function gradeDeadliftKneeLockout({ frames, rep }: { frames: PoseFrame[]; rep: RepAnalysis }) {
+function gradeDeadliftKneeLockout({
+  frames,
+  rep,
+}: {
+  frames: PoseFrame[];
+  rep: RepAnalysis;
+}) {
   const lockoutIdx = findLockoutFrame({ frames, rep });
   const kneeAngle = computeKneeAngle({ frame: frames[lockoutIdx] });
 
@@ -330,16 +422,24 @@ function gradeDeadliftKneeLockout({ frames, rep }: { frames: PoseFrame[]; rep: R
     measured: kneeAngle,
     threshold: 160,
     unit: '°',
-    message: verdict === 'pass'
-      ? `Knees fully locked (${kneeAngle.toFixed(0)}°)`
-      : `Knee angle ${kneeAngle.toFixed(0)}° at lockout`,
+    message:
+      verdict === 'pass'
+        ? `Knees fully locked (${kneeAngle.toFixed(0)}°)`
+        : `Knee angle ${kneeAngle.toFixed(0)}° at lockout`,
   } satisfies CriterionResult;
 }
 
 function gradeDeadliftDownwardMotion({ rep }: { rep: RepAnalysis }) {
   const path = rep.barPath;
   if (path.length < 5) {
-    return { name: 'downward_motion', verdict: 'pass' as const, measured: 0, threshold: 3, unit: 'cm', message: 'Insufficient data' };
+    return {
+      name: 'downward_motion',
+      verdict: 'pass' as const,
+      measured: 0,
+      threshold: 3,
+      unit: 'cm',
+      message: 'Insufficient data',
+    };
   }
 
   // Find the concentric phase: from bottom (max Y) to the lockout point
@@ -384,16 +484,24 @@ function gradeDeadliftDownwardMotion({ rep }: { rep: RepAnalysis }) {
     measured: maxDip,
     threshold: 1,
     unit: 'cm',
-    message: verdict === 'pass'
-      ? 'Smooth pull — no downward motion'
-      : `${maxDip.toFixed(1)}cm downward motion during pull`,
+    message:
+      verdict === 'pass'
+        ? 'Smooth pull — no downward motion'
+        : `${maxDip.toFixed(1)}cm downward motion during pull`,
   } satisfies CriterionResult;
 }
 
-function gradeDeadliftShoulders({ frames, rep }: { frames: PoseFrame[]; rep: RepAnalysis }) {
+function gradeDeadliftShoulders({
+  frames,
+  rep,
+}: {
+  frames: PoseFrame[];
+  rep: RepAnalysis;
+}) {
   const lockoutIdx = findLockoutFrame({ frames, rep });
   const frame = frames[lockoutIdx];
-  const shoulderX = (frame[LANDMARK.LEFT_SHOULDER].x + frame[LANDMARK.RIGHT_SHOULDER].x) / 2;
+  const shoulderX =
+    (frame[LANDMARK.LEFT_SHOULDER].x + frame[LANDMARK.RIGHT_SHOULDER].x) / 2;
   const hipX = (frame[LANDMARK.LEFT_HIP].x + frame[LANDMARK.RIGHT_HIP].x) / 2;
   const deltaCm = (shoulderX - hipX) * CM_PER_UNIT;
   // Negative = shoulders behind hips (good), positive = forward.
@@ -411,13 +519,20 @@ function gradeDeadliftShoulders({ frames, rep }: { frames: PoseFrame[]; rep: Rep
     measured: deltaCm,
     threshold: 5,
     unit: 'cm',
-    message: verdict === 'pass'
-      ? 'Shoulders behind hips at lockout'
-      : `Shoulders ${deltaCm.toFixed(1)}cm forward of hips`,
+    message:
+      verdict === 'pass'
+        ? 'Shoulders behind hips at lockout'
+        : `Shoulders ${deltaCm.toFixed(1)}cm forward of hips`,
   } satisfies CriterionResult;
 }
 
-export function gradeDeadliftRep({ rep, frames }: { rep: RepAnalysis; frames: PoseFrame[] }) {
+export function gradeDeadliftRep({
+  rep,
+  frames,
+}: {
+  rep: RepAnalysis;
+  frames: PoseFrame[];
+}) {
   const criteria = [
     gradeDeadliftHipLockout({ frames, rep }),
     gradeDeadliftKneeLockout({ frames, rep }),

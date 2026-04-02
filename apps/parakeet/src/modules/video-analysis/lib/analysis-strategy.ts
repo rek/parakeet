@@ -5,7 +5,21 @@ import type {
   RepVerdict,
 } from '@parakeet/shared-types';
 
+import {
+  computeBarDrift,
+  extractBarPath,
+  sliceBarPath,
+  smoothBarPath,
+} from './bar-path';
+import { gradeRep } from './competition-grader';
+import { detectFaults, findBottomFrame } from './fault-detector';
 import type { PoseFrame } from './pose-types';
+// ── Built-in Strategies ──────────────────────────────────────────────────────
+
+// Lazy-loaded to avoid circular imports — each strategy file imports from
+// the specific lib module it wraps.
+
+import { detectReps } from './rep-detector';
 
 /**
  * Analysis strategy interface — defines the pluggable algorithms used
@@ -95,21 +109,6 @@ export interface AnalysisStrategy {
   faults: FaultDetector;
   grader: RepGrader;
 }
-
-// ── Built-in Strategies ──────────────────────────────────────────────────────
-
-// Lazy-loaded to avoid circular imports — each strategy file imports from
-// the specific lib module it wraps.
-
-import { detectReps } from './rep-detector';
-import {
-  extractBarPath,
-  smoothBarPath,
-  computeBarDrift,
-  sliceBarPath,
-} from './bar-path';
-import { detectFaults, findBottomFrame } from './fault-detector';
-import { gradeRep } from './competition-grader';
 
 const v1MediaPipe: AnalysisStrategy = {
   name: 'v1_mediapipe',

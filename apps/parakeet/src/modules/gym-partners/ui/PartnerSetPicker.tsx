@@ -29,8 +29,7 @@ export function PartnerSetPicker({
   const [selectedSet, setSelectedSet] = useState(1);
   const [angle, setAngle] = useState<'side' | 'front'>('side');
 
-  const liftLabel =
-    LIFT_LABELS[lift as keyof typeof LIFT_LABELS] ?? lift;
+  const liftLabel = LIFT_LABELS[lift as keyof typeof LIFT_LABELS] ?? lift;
 
   return (
     <View style={styles.container}>
@@ -41,7 +40,10 @@ export function PartnerSetPicker({
         {Array.from({ length: totalSets }, (_, i) => i + 1).map((num) => (
           <TouchableOpacity
             key={num}
-            style={[styles.setChip, selectedSet === num && styles.setChipActive]}
+            style={[
+              styles.setChip,
+              selectedSet === num && styles.setChipActive,
+            ]}
             onPress={() => setSelectedSet(num)}
             activeOpacity={0.7}
           >

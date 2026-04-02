@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+
 import { computeAuxWeight, getWeightPct } from './exercise-catalog';
 
 describe('clean variant weight ordering', () => {

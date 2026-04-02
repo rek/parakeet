@@ -3,7 +3,10 @@ export type { SessionVideo } from './model/types';
 export type { FormCoachingContext } from './application/assemble-coaching-context';
 export type { RepVerdict, CriterionResult } from './lib/competition-grader';
 export type { ReadinessScore } from './lib/readiness-score';
-export type { PersonalBaseline, BaselineDeviation } from './lib/personal-baseline';
+export type {
+  PersonalBaseline,
+  BaselineDeviation,
+} from './lib/personal-baseline';
 export type { AnalysisStrategy, StrategyName } from './lib/analysis-strategy';
 export { STRATEGIES, DEFAULT_STRATEGY } from './lib/analysis-strategy';
 export type { FatigueSignatures } from './lib/fatigue-signatures';
@@ -25,7 +28,10 @@ export { useSetVideo } from './hooks/useSetVideo';
 export { useSessionVideos } from './hooks/useSessionVideos';
 
 // --- Pure functions (used by screens for computation, not data access) ---
-export { analyzeVideoFrames, extractFramesFromVideo } from './application/analyze-video';
+export {
+  analyzeVideoFrames,
+  extractFramesFromVideo,
+} from './application/analyze-video';
 export { assembleCoachingContext } from './application/assemble-coaching-context';
 export { detectCameraAngle } from './lib/detect-camera-angle';
 export { gradeRep } from './lib/competition-grader';

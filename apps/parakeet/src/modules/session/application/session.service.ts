@@ -4,7 +4,6 @@ import {
   type UnendingProgramRef,
 } from '@modules/program';
 import type { Lift } from '@parakeet/shared-types';
-import { DEFAULT_RPE_TARGET } from '@shared/constants/training';
 import { LiftSchema } from '@parakeet/shared-types';
 import {
   DEFAULT_TRAINING_DAYS,
@@ -20,6 +19,7 @@ import type {
   SessionRef,
 } from '@parakeet/training-engine';
 import { captureException } from '@platform/utils/captureException';
+import { DEFAULT_RPE_TARGET } from '@shared/constants/training';
 import type {
   CompletedSessionListItem,
   CompleteSessionInput,
@@ -39,9 +39,9 @@ import {
   fetchOverdueScheduledSessions,
   fetchPlannedSessionForProgram,
   fetchProfileSex,
-  fetchRecentAuxExerciseNames,
   fetchProgramSessionsForMakeup,
   fetchProgramSessionStatuses,
+  fetchRecentAuxExerciseNames,
   fetchRecentLogsForLift,
   fetchSessionById,
   fetchSessionCompletionContext,
@@ -376,9 +376,7 @@ export async function completeSession(
       const total = statuses.length;
       const completed = statuses.filter((s) => s.status === 'completed').length;
       if (total > 0 && completed / total >= 0.8) {
-        const { onCycleComplete } = await import(
-          '@modules/program'
-        );
+        const { onCycleComplete } = await import('@modules/program');
         onCycleComplete(session.program_id, userId);
       }
     }

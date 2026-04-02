@@ -1,5 +1,14 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
+// Import after mocks are registered
+import { DEFAULT_FLAGS, FEATURE_REGISTRY } from '../model/features';
+import type { FeatureId } from '../model/features';
+import {
+  getFeatureFlags,
+  setFeatureFlag,
+  setFeatureFlags,
+} from './feature-flags';
+
 const { mockGetItem, mockSetItem } = vi.hoisted(() => ({
   mockGetItem: vi.fn(),
   mockSetItem: vi.fn(),
@@ -11,11 +20,6 @@ vi.mock('@react-native-async-storage/async-storage', () => ({
     setItem: mockSetItem,
   },
 }));
-
-// Import after mocks are registered
-import { DEFAULT_FLAGS, FEATURE_REGISTRY } from '../model/features';
-import type { FeatureId } from '../model/features';
-import { getFeatureFlags, setFeatureFlag, setFeatureFlags } from './feature-flags';
 
 beforeEach(() => {
   vi.clearAllMocks();
@@ -122,10 +126,9 @@ describe('setFeatureFlag', () => {
 
     await setFeatureFlag({ id: 'warmups', enabled: false });
 
-    const written = JSON.parse(mockSetItem.mock.calls[0][1] as string) as Record<
-      FeatureId,
-      boolean
-    >;
+    const written = JSON.parse(
+      mockSetItem.mock.calls[0][1] as string
+    ) as Record<FeatureId, boolean>;
     expect(written.warmups).toBe(false);
     // All other flags should match their defaults
     for (const feature of FEATURE_REGISTRY) {
@@ -136,15 +139,16 @@ describe('setFeatureFlag', () => {
   });
 
   it('enables a flag that was previously disabled', async () => {
-    mockGetItem.mockResolvedValue(JSON.stringify({ ...DEFAULT_FLAGS, aiJit: false }));
+    mockGetItem.mockResolvedValue(
+      JSON.stringify({ ...DEFAULT_FLAGS, aiJit: false })
+    );
     mockSetItem.mockResolvedValue(undefined);
 
     await setFeatureFlag({ id: 'aiJit', enabled: true });
 
-    const written = JSON.parse(mockSetItem.mock.calls[0][1] as string) as Record<
-      FeatureId,
-      boolean
-    >;
+    const written = JSON.parse(
+      mockSetItem.mock.calls[0][1] as string
+    ) as Record<FeatureId, boolean>;
     expect(written.aiJit).toBe(true);
   });
 
@@ -159,16 +163,17 @@ describe('setFeatureFlag', () => {
 
   it('preserves previously-stored overrides for unrelated flags', async () => {
     // Existing state: warmups disabled
-    mockGetItem.mockResolvedValue(JSON.stringify({ ...DEFAULT_FLAGS, warmups: false }));
+    mockGetItem.mockResolvedValue(
+      JSON.stringify({ ...DEFAULT_FLAGS, warmups: false })
+    );
     mockSetItem.mockResolvedValue(undefined);
 
     // Toggle a different flag
     await setFeatureFlag({ id: 'streaks', enabled: false });
 
-    const written = JSON.parse(mockSetItem.mock.calls[0][1] as string) as Record<
-      FeatureId,
-      boolean
-    >;
+    const written = JSON.parse(
+      mockSetItem.mock.calls[0][1] as string
+    ) as Record<FeatureId, boolean>;
     expect(written.warmups).toBe(false); // original override preserved
     expect(written.streaks).toBe(false); // new override applied
   });

@@ -1,7 +1,7 @@
 import { StyleSheet, Text, View } from 'react-native';
-import Svg, { Circle, Polyline } from 'react-native-svg';
 
 import type { BarPathPoint } from '@parakeet/shared-types';
+import Svg, { Circle, Polyline } from 'react-native-svg';
 
 import { radii, spacing, typography } from '../../../theme';
 import type { ColorScheme } from '../../../theme';

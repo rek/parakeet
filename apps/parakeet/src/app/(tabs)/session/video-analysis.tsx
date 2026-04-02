@@ -9,26 +9,25 @@ import {
   View,
 } from 'react-native';
 
-
 import {
-  useVideoAnalysis,
+  BarPathOverlay,
+  BaselineDeviationBadge,
+  CameraAnglePicker,
+  computePersonalBaseline,
+  computeReadinessFromVerdicts,
+  detectBaselineDeviations,
+  FormCoachingCard,
+  IntraSessionComparison,
+  LongitudinalComparison,
+  ReadinessCard,
+  RepMetricsCard,
   useFormCoaching,
   usePreviousVideos,
   useSessionVideos,
-  computePersonalBaseline,
-  detectBaselineDeviations,
-  computeReadinessFromVerdicts,
-  BarPathOverlay,
-  CameraAnglePicker,
-  RepMetricsCard,
-  FormCoachingCard,
-  LongitudinalComparison,
-  IntraSessionComparison,
-  BaselineDeviationBadge,
-  ReadinessCard,
+  useVideoAnalysis,
 } from '@modules/video-analysis';
-import { VideoPlayerCard } from '@modules/video-analysis/ui/VideoPlayerCard';
 import { RecordVideoSheet } from '@modules/video-analysis/ui/RecordVideoSheet';
+import { VideoPlayerCard } from '@modules/video-analysis/ui/VideoPlayerCard';
 import type { Lift } from '@parakeet/shared-types';
 import { LIFT_LABELS } from '@shared/constants';
 import { capitalize } from '@shared/utils/string';
@@ -75,12 +74,16 @@ export default function VideoAnalysisScreen() {
   const parsedReps = Number.isFinite(rawReps) ? rawReps : null;
   const parsedRpe = Number.isFinite(rawRpe) ? rawRpe : null;
 
-  const setContext = parsedWeightGrams != null
-    ? { weightGrams: parsedWeightGrams, reps: parsedReps ?? 0, rpe: parsedRpe ?? undefined }
-    : null;
+  const setContext =
+    parsedWeightGrams != null
+      ? {
+          weightGrams: parsedWeightGrams,
+          reps: parsedReps ?? 0,
+          rpe: parsedRpe ?? undefined,
+        }
+      : null;
 
-  const liftLabel =
-    LIFT_LABELS[lift as Lift] ?? capitalize(lift ?? 'Lift');
+  const liftLabel = LIFT_LABELS[lift as Lift] ?? capitalize(lift ?? 'Lift');
 
   // Rich title with set context when available
   const screenTitle = parsedWeightGrams
@@ -90,14 +93,21 @@ export default function VideoAnalysisScreen() {
   const [cameraAngle, setCameraAngle] = useState<'side' | 'front'>('side');
   const [isRecording, setIsRecording] = useState(false);
 
-  const { pickAndAnalyze, processRecordedVideo, loadExisting, isProcessing, progress, error, result } =
-    useVideoAnalysis({
-      sessionId: sessionId ?? '',
-      lift: lift ?? '',
-      setNumber: parsedSetNumber,
-      cameraAngle,
-      setContext,
-    });
+  const {
+    pickAndAnalyze,
+    processRecordedVideo,
+    loadExisting,
+    isProcessing,
+    progress,
+    error,
+    result,
+  } = useVideoAnalysis({
+    sessionId: sessionId ?? '',
+    lift: lift ?? '',
+    setNumber: parsedSetNumber,
+    cameraAngle,
+    setContext,
+  });
 
   const {
     generateCoaching,
@@ -164,10 +174,14 @@ export default function VideoAnalysisScreen() {
       ...previousVideos.filter((v) => v.analysis).map((v) => v.analysis!),
     ];
     const allVerdicts = allAnalyses.flatMap((a) =>
-      a.reps.filter((r) => r.verdict).map((r) => r.verdict!),
+      a.reps.filter((r) => r.verdict).map((r) => r.verdict!)
     );
-    const videoCount = (analysis ? 1 : 0) + previousVideos.filter((v) => v.analysis).length;
-    return computeReadinessFromVerdicts({ verdicts: allVerdicts, window: videoCount });
+    const videoCount =
+      (analysis ? 1 : 0) + previousVideos.filter((v) => v.analysis).length;
+    return computeReadinessFromVerdicts({
+      verdicts: allVerdicts,
+      window: videoCount,
+    });
   }, [analysis, previousVideos]);
 
   return (
@@ -251,7 +265,10 @@ export default function VideoAnalysisScreen() {
         {isProcessing && (
           <View style={styles.progressBarTrack}>
             <View
-              style={[styles.progressBarFill, { width: `${Math.round(progress * 100)}%` }]}
+              style={[
+                styles.progressBarFill,
+                { width: `${Math.round(progress * 100)}%` },
+              ]}
             />
           </View>
         )}
@@ -264,8 +281,8 @@ export default function VideoAnalysisScreen() {
         {!analysis ? (
           <View style={styles.analysisPlaceholder}>
             <Text style={styles.analysisPlaceholderText}>
-              Select a video above to analyze your form. Pose estimation
-              runs on-device — results appear automatically after processing.
+              Select a video above to analyze your form. Pose estimation runs
+              on-device — results appear automatically after processing.
             </Text>
           </View>
         ) : (

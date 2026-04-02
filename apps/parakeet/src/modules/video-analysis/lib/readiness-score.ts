@@ -29,14 +29,20 @@ export function computeReadinessFromVerdicts({
   if (verdicts.length === 0) return null;
 
   const passedReps = verdicts.filter((v) => v.verdict === 'white_light').length;
-  const borderlineReps = verdicts.filter((v) => v.verdict === 'borderline').length;
+  const borderlineReps = verdicts.filter(
+    (v) => v.verdict === 'borderline'
+  ).length;
   const failedReps = verdicts.filter((v) => v.verdict === 'red_light').length;
   const totalReps = verdicts.length;
 
   // Trend: compare first half vs second half pass rates
   const mid = Math.floor(verdicts.length / 2);
-  const firstPassRate = verdicts.slice(0, mid).filter((v) => v.verdict === 'white_light').length / Math.max(mid, 1);
-  const secondPassRate = verdicts.slice(mid).filter((v) => v.verdict === 'white_light').length / Math.max(verdicts.length - mid, 1);
+  const firstPassRate =
+    verdicts.slice(0, mid).filter((v) => v.verdict === 'white_light').length /
+    Math.max(mid, 1);
+  const secondPassRate =
+    verdicts.slice(mid).filter((v) => v.verdict === 'white_light').length /
+    Math.max(verdicts.length - mid, 1);
   const delta = secondPassRate - firstPassRate;
 
   let trend: ReadinessScore['trend'];
@@ -56,7 +62,10 @@ export function computeReadinessFromVerdicts({
   let mostCommonFailure: string | null = null;
   let maxCount = 0;
   for (const [name, count] of failureCounts) {
-    if (count > maxCount) { maxCount = count; mostCommonFailure = name; }
+    if (count > maxCount) {
+      maxCount = count;
+      mostCommonFailure = name;
+    }
   }
 
   return {

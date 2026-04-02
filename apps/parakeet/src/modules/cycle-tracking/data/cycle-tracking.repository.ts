@@ -33,7 +33,9 @@ export async function insertDefaultCycleConfig(
 
 export async function upsertCycleConfig(
   userId: string,
-  update: Partial<Pick<CycleConfig, 'is_enabled' | 'cycle_length_days' | 'last_period_start'>>
+  update: Partial<
+    Pick<CycleConfig, 'is_enabled' | 'cycle_length_days' | 'last_period_start'>
+  >
 ): Promise<void> {
   const { error } = await typedSupabase
     .from('cycle_tracking')

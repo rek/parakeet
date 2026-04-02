@@ -3,8 +3,8 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   addPeriodStart,
   deletePeriodStart,
-  getCycleConfig,
   getCurrentCycleContext,
+  getCycleConfig,
   getPeriodStartHistory,
   stampCyclePhaseOnSession,
   updateCycleConfig,
@@ -112,7 +112,11 @@ describe('getCycleConfig', () => {
   });
 
   it('normalises null last_period_start to null', async () => {
-    const dbRow = { is_enabled: false, cycle_length_days: 28, last_period_start: null };
+    const dbRow = {
+      is_enabled: false,
+      cycle_length_days: 28,
+      last_period_start: null,
+    };
     fromMock.mockReturnValueOnce(makeSingleChain({ data: dbRow, error: null }));
 
     const result = await getCycleConfig(USER_ID);
@@ -125,9 +129,7 @@ describe('getCycleConfig', () => {
     const selectChain = makeSingleChain({ data: null, error: null });
     // Second call: insert
     const insertChain = makeUpsertChain({ error: null });
-    fromMock
-      .mockReturnValueOnce(selectChain)
-      .mockReturnValueOnce(insertChain);
+    fromMock.mockReturnValueOnce(selectChain).mockReturnValueOnce(insertChain);
 
     const result = await getCycleConfig(USER_ID);
 
@@ -140,7 +142,9 @@ describe('getCycleConfig', () => {
   });
 
   it('throws when the select query fails', async () => {
-    fromMock.mockReturnValueOnce(makeSingleChain({ data: null, error: new Error('db error') }));
+    fromMock.mockReturnValueOnce(
+      makeSingleChain({ data: null, error: new Error('db error') })
+    );
 
     await expect(getCycleConfig(USER_ID)).rejects.toThrow('db error');
   });
@@ -148,9 +152,7 @@ describe('getCycleConfig', () => {
   it('throws when the insert fails on first-time setup', async () => {
     const selectChain = makeSingleChain({ data: null, error: null });
     const insertChain = makeUpsertChain({ error: new Error('insert failed') });
-    fromMock
-      .mockReturnValueOnce(selectChain)
-      .mockReturnValueOnce(insertChain);
+    fromMock.mockReturnValueOnce(selectChain).mockReturnValueOnce(insertChain);
 
     await expect(getCycleConfig(USER_ID)).rejects.toThrow('insert failed');
   });
@@ -167,10 +169,17 @@ describe('updateCycleConfig', () => {
     const chain = makeUpsertChain({ error: null });
     fromMock.mockReturnValueOnce(chain);
 
-    await updateCycleConfig(USER_ID, { is_enabled: true, cycle_length_days: 30 });
+    await updateCycleConfig(USER_ID, {
+      is_enabled: true,
+      cycle_length_days: 30,
+    });
 
     expect(chain.upsert).toHaveBeenCalledWith(
-      expect.objectContaining({ user_id: USER_ID, is_enabled: true, cycle_length_days: 30 }),
+      expect.objectContaining({
+        user_id: USER_ID,
+        is_enabled: true,
+        cycle_length_days: 30,
+      }),
       { onConflict: 'user_id' }
     );
   });
@@ -179,7 +188,9 @@ describe('updateCycleConfig', () => {
     const chain = makeUpsertChain({ error: new Error('upsert error') });
     fromMock.mockReturnValueOnce(chain);
 
-    await expect(updateCycleConfig(USER_ID, { is_enabled: false })).rejects.toThrow('upsert error');
+    await expect(
+      updateCycleConfig(USER_ID, { is_enabled: false })
+    ).rejects.toThrow('upsert error');
   });
 });
 
@@ -192,7 +203,14 @@ describe('getCurrentCycleContext', () => {
 
   it('returns null when cycle tracking is disabled', async () => {
     fromMock.mockReturnValueOnce(
-      makeSingleChain({ data: { is_enabled: false, cycle_length_days: 28, last_period_start: '2026-03-01' }, error: null })
+      makeSingleChain({
+        data: {
+          is_enabled: false,
+          cycle_length_days: 28,
+          last_period_start: '2026-03-01',
+        },
+        error: null,
+      })
     );
 
     const result = await getCurrentCycleContext(USER_ID);
@@ -203,7 +221,14 @@ describe('getCurrentCycleContext', () => {
 
   it('returns null when last_period_start is null', async () => {
     fromMock.mockReturnValueOnce(
-      makeSingleChain({ data: { is_enabled: true, cycle_length_days: 28, last_period_start: null }, error: null })
+      makeSingleChain({
+        data: {
+          is_enabled: true,
+          cycle_length_days: 28,
+          last_period_start: null,
+        },
+        error: null,
+      })
     );
 
     const result = await getCurrentCycleContext(USER_ID);
@@ -215,7 +240,11 @@ describe('getCurrentCycleContext', () => {
   it('computes and returns cycle context when enabled with a period start', async () => {
     fromMock.mockReturnValueOnce(
       makeSingleChain({
-        data: { is_enabled: true, cycle_length_days: 28, last_period_start: '2026-03-01' },
+        data: {
+          is_enabled: true,
+          cycle_length_days: 28,
+          last_period_start: '2026-03-01',
+        },
         error: null,
       })
     );
@@ -266,9 +295,13 @@ describe('getPeriodStartHistory', () => {
   });
 
   it('throws when query fails', async () => {
-    fromMock.mockReturnValueOnce(makeListChain({ data: null, error: new Error('query failed') }));
+    fromMock.mockReturnValueOnce(
+      makeListChain({ data: null, error: new Error('query failed') })
+    );
 
-    await expect(getPeriodStartHistory(USER_ID)).rejects.toThrow('query failed');
+    await expect(getPeriodStartHistory(USER_ID)).rejects.toThrow(
+      'query failed'
+    );
   });
 });
 
@@ -330,7 +363,9 @@ describe('addPeriodStart', () => {
     const upsertChain = makeUpsertChain({ error: new Error('upsert failed') });
     fromMock.mockReturnValueOnce(upsertChain);
 
-    await expect(addPeriodStart(USER_ID, '2026-03-15')).rejects.toThrow('upsert failed');
+    await expect(addPeriodStart(USER_ID, '2026-03-15')).rejects.toThrow(
+      'upsert failed'
+    );
   });
 });
 
@@ -382,7 +417,9 @@ describe('deletePeriodStart', () => {
     });
     fromMock.mockReturnValueOnce(deleteChain);
 
-    await expect(deletePeriodStart(USER_ID, 'e1')).rejects.toThrow('delete failed');
+    await expect(deletePeriodStart(USER_ID, 'e1')).rejects.toThrow(
+      'delete failed'
+    );
   });
 });
 
@@ -396,7 +433,14 @@ describe('stampCyclePhaseOnSession', () => {
   it('no-ops when cycle tracking is disabled', async () => {
     // getCycleConfig returns disabled config
     fromMock.mockReturnValueOnce(
-      makeSingleChain({ data: { is_enabled: false, cycle_length_days: 28, last_period_start: '2026-03-01' }, error: null })
+      makeSingleChain({
+        data: {
+          is_enabled: false,
+          cycle_length_days: 28,
+          last_period_start: '2026-03-01',
+        },
+        error: null,
+      })
     );
 
     await stampCyclePhaseOnSession(USER_ID, 'session-1');
@@ -407,7 +451,14 @@ describe('stampCyclePhaseOnSession', () => {
 
   it('no-ops when last_period_start is null', async () => {
     fromMock.mockReturnValueOnce(
-      makeSingleChain({ data: { is_enabled: true, cycle_length_days: 28, last_period_start: null }, error: null })
+      makeSingleChain({
+        data: {
+          is_enabled: true,
+          cycle_length_days: 28,
+          last_period_start: null,
+        },
+        error: null,
+      })
     );
 
     await stampCyclePhaseOnSession(USER_ID, 'session-1');
@@ -419,7 +470,11 @@ describe('stampCyclePhaseOnSession', () => {
     // getCycleConfig
     fromMock.mockReturnValueOnce(
       makeSingleChain({
-        data: { is_enabled: true, cycle_length_days: 28, last_period_start: '2026-03-01' },
+        data: {
+          is_enabled: true,
+          cycle_length_days: 28,
+          last_period_start: '2026-03-01',
+        },
         error: null,
       })
     );
@@ -440,7 +495,9 @@ describe('stampCyclePhaseOnSession', () => {
     updateChain.update.mockReturnValue(updateChain);
     updateChain.eq.mockReturnValue(updateChain);
     // Final .eq() resolves
-    updateChain.eq.mockResolvedValueOnce({ error: null }).mockResolvedValueOnce({ error: null });
+    updateChain.eq
+      .mockResolvedValueOnce({ error: null })
+      .mockResolvedValueOnce({ error: null });
 
     // Re-mock final resolution properly: chain returns self until the last eq
     const sessionLogsChain = {
@@ -462,14 +519,20 @@ describe('stampCyclePhaseOnSession', () => {
 
     await stampCyclePhaseOnSession(USER_ID, 'session-1');
 
-    expect(sessionLogsChain.update).toHaveBeenCalledWith({ cycle_phase: 'luteal' });
+    expect(sessionLogsChain.update).toHaveBeenCalledWith({
+      cycle_phase: 'luteal',
+    });
     expect(fromMock).toHaveBeenCalledTimes(2);
   });
 
   it('throws when session_logs update fails', async () => {
     fromMock.mockReturnValueOnce(
       makeSingleChain({
-        data: { is_enabled: true, cycle_length_days: 28, last_period_start: '2026-03-01' },
+        data: {
+          is_enabled: true,
+          cycle_length_days: 28,
+          last_period_start: '2026-03-01',
+        },
         error: null,
       })
     );
@@ -497,6 +560,8 @@ describe('stampCyclePhaseOnSession', () => {
 
     fromMock.mockReturnValueOnce(sessionLogsChain);
 
-    await expect(stampCyclePhaseOnSession(USER_ID, 'session-1')).rejects.toThrow('update failed');
+    await expect(
+      stampCyclePhaseOnSession(USER_ID, 'session-1')
+    ).rejects.toThrow('update failed');
   });
 });

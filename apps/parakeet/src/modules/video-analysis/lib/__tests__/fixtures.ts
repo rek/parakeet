@@ -1,4 +1,4 @@
-import type { PoseLandmark, PoseFrame } from '../pose-types';
+import type { PoseFrame, PoseLandmark } from '../pose-types';
 import { LANDMARK } from '../pose-types';
 
 /**
@@ -84,8 +84,18 @@ export function generateSquatFrames({
 
     frames.push(
       buildFrame({
-        [LANDMARK.LEFT_SHOULDER]: { x: shoulderX - 0.05, y: 0.28, z: 0, visibility: 1 },
-        [LANDMARK.RIGHT_SHOULDER]: { x: shoulderX + 0.05, y: 0.28, z: 0, visibility: 1 },
+        [LANDMARK.LEFT_SHOULDER]: {
+          x: shoulderX - 0.05,
+          y: 0.28,
+          z: 0,
+          visibility: 1,
+        },
+        [LANDMARK.RIGHT_SHOULDER]: {
+          x: shoulderX + 0.05,
+          y: 0.28,
+          z: 0,
+          visibility: 1,
+        },
         [LANDMARK.LEFT_HIP]: { x: 0.47, y: hipY, z: 0, visibility: 1 },
         [LANDMARK.RIGHT_HIP]: { x: 0.53, y: hipY, z: 0, visibility: 1 },
         [LANDMARK.LEFT_KNEE]: { x: 0.44, y: kneeY, z: 0, visibility: 1 },
@@ -154,17 +164,37 @@ export function generateDeadliftFrames({
     const repPhase = (i % framesPerRep) / framesPerRep;
     const t = Math.sin(repPhase * Math.PI);
 
-    const hipY = lerp(0.50, 0.72, t); // standing → floor position
+    const hipY = lerp(0.5, 0.72, t); // standing → floor position
     const shoulderX = lerp(0.5, 0.44, t); // forward hinge at floor
 
     frames.push(
       buildFrame({
-        [LANDMARK.LEFT_SHOULDER]: { x: shoulderX - 0.05, y: 0.28, z: 0, visibility: 1 },
-        [LANDMARK.RIGHT_SHOULDER]: { x: shoulderX + 0.05, y: 0.28, z: 0, visibility: 1 },
+        [LANDMARK.LEFT_SHOULDER]: {
+          x: shoulderX - 0.05,
+          y: 0.28,
+          z: 0,
+          visibility: 1,
+        },
+        [LANDMARK.RIGHT_SHOULDER]: {
+          x: shoulderX + 0.05,
+          y: 0.28,
+          z: 0,
+          visibility: 1,
+        },
         [LANDMARK.LEFT_HIP]: { x: 0.47, y: hipY, z: 0, visibility: 1 },
         [LANDMARK.RIGHT_HIP]: { x: 0.53, y: hipY, z: 0, visibility: 1 },
-        [LANDMARK.LEFT_WRIST]: { x: 0.5, y: lerp(0.7, 0.88, t), z: 0, visibility: 1 },
-        [LANDMARK.RIGHT_WRIST]: { x: 0.5, y: lerp(0.7, 0.88, t), z: 0, visibility: 1 },
+        [LANDMARK.LEFT_WRIST]: {
+          x: 0.5,
+          y: lerp(0.7, 0.88, t),
+          z: 0,
+          visibility: 1,
+        },
+        [LANDMARK.RIGHT_WRIST]: {
+          x: 0.5,
+          y: lerp(0.7, 0.88, t),
+          z: 0,
+          visibility: 1,
+        },
       })
     );
   }

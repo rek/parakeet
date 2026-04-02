@@ -1,7 +1,6 @@
-import { File } from 'expo-file-system';
-
 import { typedSupabase } from '@platform/supabase';
 import { captureException } from '@platform/utils/captureException';
+import { File } from 'expo-file-system';
 
 const BUCKET = 'session-videos';
 
@@ -24,7 +23,9 @@ export async function uploadVideoToStorage({
   localUri: string;
 }) {
   try {
-    const { data: { user } } = await typedSupabase.auth.getUser();
+    const {
+      data: { user },
+    } = await typedSupabase.auth.getUser();
     if (!user) return null;
 
     const storagePath = `${user.id}/${videoId}.mp4`;

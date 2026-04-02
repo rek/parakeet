@@ -1,17 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-const { mockGetItem, mockSetItem } = vi.hoisted(() => ({
-  mockGetItem: vi.fn(),
-  mockSetItem: vi.fn(),
-}));
-
-vi.mock('@react-native-async-storage/async-storage', () => ({
-  default: {
-    getItem: mockGetItem,
-    setItem: mockSetItem,
-  },
-}));
-
 // Import after mocks are registered
 import {
   getBarWeightKg,
@@ -25,6 +13,18 @@ import {
   setRestTimerPrefs,
   setWarmupPlateDisplay,
 } from './settings';
+
+const { mockGetItem, mockSetItem } = vi.hoisted(() => ({
+  mockGetItem: vi.fn(),
+  mockSetItem: vi.fn(),
+}));
+
+vi.mock('@react-native-async-storage/async-storage', () => ({
+  default: {
+    getItem: mockGetItem,
+    setItem: mockSetItem,
+  },
+}));
 
 beforeEach(() => {
   vi.clearAllMocks();

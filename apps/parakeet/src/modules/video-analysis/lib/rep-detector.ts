@@ -27,7 +27,13 @@ function extractSignal({
 }
 
 /** Moving-average smooth of a 1-D signal. */
-function smoothSignal({ signal, windowSize }: { signal: number[]; windowSize: number }) {
+function smoothSignal({
+  signal,
+  windowSize,
+}: {
+  signal: number[];
+  windowSize: number;
+}) {
   const half = Math.floor(windowSize / 2);
   return signal.map((_, i) => {
     const start = Math.max(0, i - half);
@@ -50,7 +56,13 @@ function smoothSignal({ signal, windowSize }: { signal: number[]; windowSize: nu
  * chest is highest Y for the wrists. Local maxima therefore correspond to
  * the bottom / touch-point of each rep.
  */
-function findPeaks({ signal, minDistance }: { signal: number[]; minDistance: number }) {
+function findPeaks({
+  signal,
+  minDistance,
+}: {
+  signal: number[];
+  minDistance: number;
+}) {
   const peaks: number[] = [];
 
   for (let i = 1; i < signal.length - 1; i++) {
@@ -60,7 +72,10 @@ function findPeaks({ signal, minDistance }: { signal: number[]; minDistance: num
     if (signal[i] >= signal[i - 1] && signal[i] > signal[i + 1]) {
       let rose = false;
       for (let k = i - 1; k >= Math.max(0, i - minDistance); k--) {
-        if (signal[i] > signal[k]) { rose = true; break; }
+        if (signal[i] > signal[k]) {
+          rose = true;
+          break;
+        }
       }
       if (!rose) continue;
       // Enforce minimum distance from last accepted peak
@@ -103,7 +118,10 @@ export function detectReps({
 
   const raw = extractSignal({ frames, lift });
   const smoothed = smoothSignal({ signal: raw, windowSize: smoothWindow });
-  const allPeaks = findPeaks({ signal: smoothed, minDistance: minPeakDistance });
+  const allPeaks = findPeaks({
+    signal: smoothed,
+    minDistance: minPeakDistance,
+  });
 
   // Compute signal range from non-zero values only — empty/interpolated frames
   // have Y=0 which inflates the range and makes the prominence threshold too high.
@@ -116,7 +134,7 @@ export function detectReps({
   // valid signal range above its deepest flanking valley to count as a real rep.
   // This eliminates walkout dips, between-rep shuffles, and noise from real video
   // landmarks that the synthetic tests didn't expose.
-  const MIN_PROMINENCE_RATIO = 0.20;
+  const MIN_PROMINENCE_RATIO = 0.2;
   const minProminence = signalRange * MIN_PROMINENCE_RATIO;
 
   const peaks = allPeaks.filter((peakIdx) => {
@@ -143,7 +161,9 @@ export function detectReps({
   });
 
   if (typeof __DEV__ !== 'undefined' && __DEV__) {
-    console.log(`[reps] ${peaks.length} peaks from ${frames.length} frames (range=${signalRange.toFixed(3)})`);
+    console.log(
+      `[reps] ${peaks.length} peaks from ${frames.length} frames (range=${signalRange.toFixed(3)})`
+    );
   }
 
   if (peaks.length === 0) return [];

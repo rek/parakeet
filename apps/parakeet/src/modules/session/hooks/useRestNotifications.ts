@@ -1,13 +1,13 @@
 import { useEffect, useRef } from 'react';
 import { AppState } from 'react-native';
 
-import { captureException } from '@platform/utils/captureException';
 import { getRestTimerPrefs } from '@modules/settings';
 import {
   cancelRestNotification,
   scheduleRestNotification,
 } from '@platform/lib/rest-notifications';
 import { useSessionStore } from '@platform/store/sessionStore';
+import { captureException } from '@platform/utils/captureException';
 
 export function useRestNotifications(): void {
   const pendingNotifIdRef = useRef<string | null>(null);

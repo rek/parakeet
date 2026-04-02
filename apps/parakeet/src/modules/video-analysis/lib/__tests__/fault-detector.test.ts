@@ -2,8 +2,12 @@ import { describe, expect, it } from 'vitest';
 
 import { detectFaults } from '../fault-detector';
 import { LANDMARK } from '../pose-types';
-import { buildFrame, generateSquatFrames, generateDeadliftFrames } from './fixtures';
 import type { PoseFrame } from '../pose-types';
+import {
+  buildFrame,
+  generateDeadliftFrames,
+  generateSquatFrames,
+} from './fixtures';
 
 /** Build a minimal bar path that has no drift. */
 function straightPath(startFrame: number, endFrame: number) {
@@ -42,7 +46,7 @@ function buildAboveParallelSquatFrames(frameCount = 60): PoseFrame[] {
     const repPhase = i / frameCount;
     const t = Math.sin(repPhase * Math.PI);
     // Hip never goes deeper than y=0.70, which is above the knee at y=0.75
-    const hipY = 0.50 + t * 0.18; // max = 0.68 < 0.75
+    const hipY = 0.5 + t * 0.18; // max = 0.68 < 0.75
     return buildFrame({
       [LANDMARK.LEFT_HIP]: { x: 0.47, y: hipY, z: 0, visibility: 1 },
       [LANDMARK.RIGHT_HIP]: { x: 0.53, y: hipY, z: 0, visibility: 1 },
@@ -96,7 +100,12 @@ describe('detectFaults', () => {
       const repBounds = { startFrame: 0, endFrame: frames.length - 1 };
       const barPath = straightPath(0, frames.length - 1);
 
-      const faults = detectFaults({ frames, repBounds, barPath, lift: 'squat' });
+      const faults = detectFaults({
+        frames,
+        repBounds,
+        barPath,
+        lift: 'squat',
+      });
       const aboveParallel = faults.find((f) => f.type === 'above_parallel');
 
       expect(aboveParallel).toBeDefined();
@@ -108,7 +117,12 @@ describe('detectFaults', () => {
       const repBounds = { startFrame: 0, endFrame: frames.length - 1 };
       const barPath = straightPath(0, frames.length - 1);
 
-      const faults = detectFaults({ frames, repBounds, barPath, lift: 'squat' });
+      const faults = detectFaults({
+        frames,
+        repBounds,
+        barPath,
+        lift: 'squat',
+      });
       const leanFault = faults.find((f) => f.type === 'excessive_lean');
 
       expect(leanFault).toBeDefined();
@@ -120,7 +134,12 @@ describe('detectFaults', () => {
       const repBounds = { startFrame: 0, endFrame: frames.length - 1 };
       const barPath = driftingPath(0, frames.length - 1); // mean-centered drift ~0.06, well above 0.03 threshold
 
-      const faults = detectFaults({ frames, repBounds, barPath, lift: 'squat' });
+      const faults = detectFaults({
+        frames,
+        repBounds,
+        barPath,
+        lift: 'squat',
+      });
       const driftFault = faults.find((f) => f.type === 'bar_drift');
 
       expect(driftFault).toBeDefined();
@@ -132,7 +151,12 @@ describe('detectFaults', () => {
       const repBounds = { startFrame: 0, endFrame: frames.length - 1 };
       const barPath = straightPath(0, frames.length - 1);
 
-      const faults = detectFaults({ frames, repBounds, barPath, lift: 'squat' });
+      const faults = detectFaults({
+        frames,
+        repBounds,
+        barPath,
+        lift: 'squat',
+      });
 
       // Clean rep should have no faults (depth is fine in generateSquatFrames)
       const criticalFaults = faults.filter((f) => f.severity === 'critical');
@@ -144,7 +168,12 @@ describe('detectFaults', () => {
       const repBounds = { startFrame: 0, endFrame: frames.length - 1 };
       const barPath = straightPath(0, frames.length - 1);
 
-      const faults = detectFaults({ frames, repBounds, barPath, lift: 'squat' });
+      const faults = detectFaults({
+        frames,
+        repBounds,
+        barPath,
+        lift: 'squat',
+      });
       const leanFault = faults.find((f) => f.type === 'excessive_lean');
 
       expect(leanFault?.value).toBeDefined();
@@ -158,7 +187,12 @@ describe('detectFaults', () => {
       const repBounds = { startFrame: 0, endFrame: frames.length - 1 };
       const barPath = straightPath(0, frames.length - 1);
 
-      const faults = detectFaults({ frames, repBounds, barPath, lift: 'deadlift' });
+      const faults = detectFaults({
+        frames,
+        repBounds,
+        barPath,
+        lift: 'deadlift',
+      });
       const lockoutFault = faults.find((f) => f.type === 'incomplete_lockout');
 
       expect(lockoutFault).toBeDefined();
@@ -170,7 +204,12 @@ describe('detectFaults', () => {
       const repBounds = { startFrame: 0, endFrame: frames.length - 1 };
       const barPath = driftingPath(0, frames.length - 1);
 
-      const faults = detectFaults({ frames, repBounds, barPath, lift: 'deadlift' });
+      const faults = detectFaults({
+        frames,
+        repBounds,
+        barPath,
+        lift: 'deadlift',
+      });
       expect(faults.some((f) => f.type === 'bar_drift')).toBe(true);
     });
 
@@ -179,7 +218,12 @@ describe('detectFaults', () => {
       const repBounds = { startFrame: 0, endFrame: frames.length - 1 };
       const barPath = straightPath(0, frames.length - 1);
 
-      const faults = detectFaults({ frames, repBounds, barPath, lift: 'deadlift' });
+      const faults = detectFaults({
+        frames,
+        repBounds,
+        barPath,
+        lift: 'deadlift',
+      });
       for (const fault of faults) {
         expect(typeof fault.message).toBe('string');
         expect(fault.message.length).toBeGreaterThan(0);
@@ -193,7 +237,12 @@ describe('detectFaults', () => {
       const repBounds = { startFrame: 0, endFrame: 59 };
       const barPath = driftingPath(0, 59);
 
-      const faults = detectFaults({ frames, repBounds, barPath, lift: 'bench' });
+      const faults = detectFaults({
+        frames,
+        repBounds,
+        barPath,
+        lift: 'bench',
+      });
       expect(faults.some((f) => f.type === 'bar_drift')).toBe(true);
     });
 
@@ -202,7 +251,12 @@ describe('detectFaults', () => {
       const repBounds = { startFrame: 0, endFrame: 59 };
       const barPath = straightPath(0, 59);
 
-      const faults = detectFaults({ frames, repBounds, barPath, lift: 'bench' });
+      const faults = detectFaults({
+        frames,
+        repBounds,
+        barPath,
+        lift: 'bench',
+      });
       expect(faults).toHaveLength(0);
     });
   });
@@ -224,7 +278,12 @@ describe('detectFaults', () => {
       const repBounds = { startFrame: 0, endFrame: frames.length - 1 };
       const barPath = driftingPath(0, frames.length - 1);
 
-      const faults = detectFaults({ frames, repBounds, barPath, lift: 'squat' });
+      const faults = detectFaults({
+        frames,
+        repBounds,
+        barPath,
+        lift: 'squat',
+      });
       const validSeverities = new Set(['info', 'warning', 'critical']);
       for (const fault of faults) {
         expect(validSeverities.has(fault.severity)).toBe(true);

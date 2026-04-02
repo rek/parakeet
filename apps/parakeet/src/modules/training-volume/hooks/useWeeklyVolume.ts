@@ -11,8 +11,8 @@ import {
 } from '@parakeet/training-engine';
 import { useQuery } from '@tanstack/react-query';
 
-import { getMrvMevConfig } from '../lib/volume-config';
 import { volumeQueries } from '../data/volume.queries';
+import { getMrvMevConfig } from '../lib/volume-config';
 
 function rollingWindowStart(): string {
   const start = new Date();

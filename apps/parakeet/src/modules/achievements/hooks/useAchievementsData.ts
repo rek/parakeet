@@ -4,7 +4,10 @@ import type {
   CycleBadge,
   HistoricalPRs,
 } from '../application/achievement.service';
-import { achievementQueries, type FunBadgeRow } from '../data/achievements.queries';
+import {
+  achievementQueries,
+  type FunBadgeRow,
+} from '../data/achievements.queries';
 import type { StreakResult } from '../lib/engine-adapter';
 
 export type { FunBadgeRow };

@@ -113,16 +113,24 @@ export const CompetitionReadinessAssessmentSchema = z.object({
   topConcern: z.string().max(200).nullable(),
 });
 
-export type CompetitionReadinessAssessment = z.infer<typeof CompetitionReadinessAssessmentSchema>;
+export type CompetitionReadinessAssessment = z.infer<
+  typeof CompetitionReadinessAssessmentSchema
+>;
 
 export const FormCoachingResultSchema = z.object({
   summary: z.string().max(500),
-  repByRepBreakdown: z.array(z.object({
-    repNumber: z.number().int(),
-    assessment: z.string().max(300),
-    formGrade: z.enum(['good', 'acceptable', 'needs_work']),
-    competitionVerdict: z.enum(['white_light', 'red_light', 'borderline']).nullable(),
-  })).max(10),
+  repByRepBreakdown: z
+    .array(
+      z.object({
+        repNumber: z.number().int(),
+        assessment: z.string().max(300),
+        formGrade: z.enum(['good', 'acceptable', 'needs_work']),
+        competitionVerdict: z
+          .enum(['white_light', 'red_light', 'borderline'])
+          .nullable(),
+      })
+    )
+    .max(10),
   cues: z.array(FormCueSchema).max(5),
   fatigueCorrelation: z.string().max(300).nullable(),
   comparedToBaseline: z.string().max(300).nullable(),

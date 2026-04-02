@@ -715,7 +715,7 @@ async function fetchPartnerCompletedToday(userId: string): Promise<boolean> {
   if (partnerError || !partners || partners.length === 0) return false;
 
   const partnerIds = partners.map((p) =>
-    p.requester_id === userId ? p.responder_id : p.requester_id,
+    p.requester_id === userId ? p.responder_id : p.requester_id
   );
 
   // Check if any partner completed a session today

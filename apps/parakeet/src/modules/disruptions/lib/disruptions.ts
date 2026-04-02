@@ -25,8 +25,8 @@ import {
   fetchSessionsByIdsUnfiltered,
   insertDisruption,
   insertSorenessCheckin,
-  updateDisruptionAdjustmentApplied,
   updateDisruptionEndDate as repoUpdateDisruptionEndDate,
+  updateDisruptionAdjustmentApplied,
   updateDisruptionResolved,
   updateDisruptionSessionIds,
   updateSessionPlannedSets,
@@ -234,7 +234,9 @@ export async function applyUnprogrammedEventSoreness(
   soreness: Record<string, number>
 ): Promise<void> {
   const ratings = Object.fromEntries(
-    Object.entries(soreness).filter(([, level]) => level > SORENESS_NUMERIC.none)
+    Object.entries(soreness).filter(
+      ([, level]) => level > SORENESS_NUMERIC.none
+    )
   );
   if (Object.keys(ratings).length === 0) return;
 

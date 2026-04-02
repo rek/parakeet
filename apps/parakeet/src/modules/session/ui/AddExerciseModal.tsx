@@ -11,9 +11,9 @@ import {
 } from 'react-native';
 
 import type { Lift, MuscleGroup } from '@parakeet/shared-types';
+import { MUSCLE_LABELS_COMPACT } from '@shared/constants/training';
 import type { ExerciseCatalogEntry } from '@shared/utils/exercise-lookup';
 import { getAllExercises } from '@shared/utils/exercise-lookup';
-import { MUSCLE_LABELS_COMPACT } from '@shared/constants/training';
 
 import { radii, spacing, typography } from '../../../theme';
 import type { ColorScheme } from '../../../theme';

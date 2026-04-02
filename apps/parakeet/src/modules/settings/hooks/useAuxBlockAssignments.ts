@@ -1,7 +1,6 @@
-import { useQuery } from '@tanstack/react-query';
-
 import { useAuth } from '@modules/auth';
 import { getAuxiliaryPools, programQueries } from '@modules/program';
+import { useQuery } from '@tanstack/react-query';
 
 import { settingsQueries } from '../data/settings.queries';
 

@@ -59,7 +59,11 @@ function createQueryChain(terminalMethod: string, resolvedValue: unknown) {
 }
 
 /** Trace with one readiness modifier and a first set with rpeTarget=8. */
-function makeTrace(modifiers: Array<{ source: string; value: number }> = [{ source: 'readiness', value: -0.05 }]) {
+function makeTrace(
+  modifiers: Array<{ source: string; value: number }> = [
+    { source: 'readiness', value: -0.05 },
+  ]
+) {
   return {
     mainLift: {
       sets: [{ rpeTarget: 8 }],
@@ -70,10 +74,12 @@ function makeTrace(modifiers: Array<{ source: string; value: number }> = [{ sour
   };
 }
 
-function makeCalibration(overrides: Partial<{
-  suggestedAdjustment: number;
-  confidence: string;
-}> = {}) {
+function makeCalibration(
+  overrides: Partial<{
+    suggestedAdjustment: number;
+    confidence: string;
+  }> = {}
+) {
   return {
     suggestedAdjustment: 0.02,
     confidence: 'medium',
@@ -94,19 +100,31 @@ describe('updateModifierCalibrations', () => {
   });
 
   it('returns early without upserting when session has no jit_output_trace', async () => {
-    const sessionChain = createQueryChain('maybeSingle', { data: { jit_output_trace: null }, error: null });
+    const sessionChain = createQueryChain('maybeSingle', {
+      data: { jit_output_trace: null },
+      error: null,
+    });
     fromMock.mockReturnValueOnce(sessionChain);
 
-    await updateModifierCalibrations({ sessionId: SESSION_ID, userId: USER_ID });
+    await updateModifierCalibrations({
+      sessionId: SESSION_ID,
+      userId: USER_ID,
+    });
 
     expect(mockUpsertModifierCalibration).not.toHaveBeenCalled();
   });
 
   it('returns early when session query returns no data', async () => {
-    const sessionChain = createQueryChain('maybeSingle', { data: null, error: null });
+    const sessionChain = createQueryChain('maybeSingle', {
+      data: null,
+      error: null,
+    });
     fromMock.mockReturnValueOnce(sessionChain);
 
-    await updateModifierCalibrations({ sessionId: SESSION_ID, userId: USER_ID });
+    await updateModifierCalibrations({
+      sessionId: SESSION_ID,
+      userId: USER_ID,
+    });
 
     expect(mockUpsertModifierCalibration).not.toHaveBeenCalled();
   });
@@ -116,12 +134,16 @@ describe('updateModifierCalibrations', () => {
       data: { jit_output_trace: makeTrace() },
       error: null,
     });
-    const logChain = createQueryChain('maybeSingle', { data: { session_rpe: null }, error: null });
-    fromMock
-      .mockReturnValueOnce(sessionChain)
-      .mockReturnValueOnce(logChain);
+    const logChain = createQueryChain('maybeSingle', {
+      data: { session_rpe: null },
+      error: null,
+    });
+    fromMock.mockReturnValueOnce(sessionChain).mockReturnValueOnce(logChain);
 
-    await updateModifierCalibrations({ sessionId: SESSION_ID, userId: USER_ID });
+    await updateModifierCalibrations({
+      sessionId: SESSION_ID,
+      userId: USER_ID,
+    });
 
     expect(mockUpsertModifierCalibration).not.toHaveBeenCalled();
   });
@@ -137,12 +159,16 @@ describe('updateModifierCalibrations', () => {
       data: { jit_output_trace: traceNoModifiers },
       error: null,
     });
-    const logChain = createQueryChain('maybeSingle', { data: { session_rpe: 8.5 }, error: null });
-    fromMock
-      .mockReturnValueOnce(sessionChain)
-      .mockReturnValueOnce(logChain);
+    const logChain = createQueryChain('maybeSingle', {
+      data: { session_rpe: 8.5 },
+      error: null,
+    });
+    fromMock.mockReturnValueOnce(sessionChain).mockReturnValueOnce(logChain);
 
-    await updateModifierCalibrations({ sessionId: SESSION_ID, userId: USER_ID });
+    await updateModifierCalibrations({
+      sessionId: SESSION_ID,
+      userId: USER_ID,
+    });
 
     expect(mockUpsertModifierCalibration).not.toHaveBeenCalled();
   });
@@ -152,17 +178,21 @@ describe('updateModifierCalibrations', () => {
       data: { jit_output_trace: makeTrace() },
       error: null,
     });
-    const logChain = createQueryChain('maybeSingle', { data: { session_rpe: 9 }, error: null });
+    const logChain = createQueryChain('maybeSingle', {
+      data: { session_rpe: 9 },
+      error: null,
+    });
     const calibrationsChain = { select: vi.fn(), eq: vi.fn() };
     calibrationsChain.select.mockReturnValue(calibrationsChain);
     calibrationsChain.eq.mockResolvedValue({ data: [], error: null });
 
-    fromMock
-      .mockReturnValueOnce(sessionChain)
-      .mockReturnValueOnce(logChain);
+    fromMock.mockReturnValueOnce(sessionChain).mockReturnValueOnce(logChain);
     mockExtractModifierSamples.mockReturnValue([]);
 
-    await updateModifierCalibrations({ sessionId: SESSION_ID, userId: USER_ID });
+    await updateModifierCalibrations({
+      sessionId: SESSION_ID,
+      userId: USER_ID,
+    });
 
     expect(mockUpsertModifierCalibration).not.toHaveBeenCalled();
   });
@@ -172,7 +202,10 @@ describe('updateModifierCalibrations', () => {
       data: { jit_output_trace: makeTrace() },
       error: null,
     });
-    const logChain = createQueryChain('maybeSingle', { data: { session_rpe: 9 }, error: null });
+    const logChain = createQueryChain('maybeSingle', {
+      data: { session_rpe: 9 },
+      error: null,
+    });
     const calibrationsChain = { select: vi.fn(), eq: vi.fn() };
     calibrationsChain.select.mockReturnValue(calibrationsChain);
     calibrationsChain.eq.mockResolvedValue({ data: [], error: null });
@@ -182,12 +215,22 @@ describe('updateModifierCalibrations', () => {
       .mockReturnValueOnce(logChain)
       .mockReturnValueOnce(calibrationsChain);
 
-    const sample = { modifierSource: 'readiness', multiplier: 0.95, rpeTarget: 8, rpeActual: 9 };
+    const sample = {
+      modifierSource: 'readiness',
+      multiplier: 0.95,
+      rpeTarget: 8,
+      rpeActual: 9,
+    };
     mockExtractModifierSamples.mockReturnValue([sample]);
-    mockComputeCalibrationBias.mockReturnValue(makeCalibration({ suggestedAdjustment: 0.03 }));
+    mockComputeCalibrationBias.mockReturnValue(
+      makeCalibration({ suggestedAdjustment: 0.03 })
+    );
     mockCanAutoApply.mockReturnValue(true);
 
-    await updateModifierCalibrations({ sessionId: SESSION_ID, userId: USER_ID });
+    await updateModifierCalibrations({
+      sessionId: SESSION_ID,
+      userId: USER_ID,
+    });
 
     expect(mockUpsertModifierCalibration).toHaveBeenCalledOnce();
     expect(mockUpsertModifierCalibration).toHaveBeenCalledWith(
@@ -205,7 +248,10 @@ describe('updateModifierCalibrations', () => {
       data: { jit_output_trace: makeTrace() },
       error: null,
     });
-    const logChain = createQueryChain('maybeSingle', { data: { session_rpe: 9 }, error: null });
+    const logChain = createQueryChain('maybeSingle', {
+      data: { session_rpe: 9 },
+      error: null,
+    });
     const calibrationsChain = { select: vi.fn(), eq: vi.fn() };
     calibrationsChain.select.mockReturnValue(calibrationsChain);
     calibrationsChain.eq.mockResolvedValue({ data: [], error: null });
@@ -215,9 +261,16 @@ describe('updateModifierCalibrations', () => {
       .mockReturnValueOnce(logChain)
       .mockReturnValueOnce(calibrationsChain);
 
-    const sample = { modifierSource: 'readiness', multiplier: 0.95, rpeTarget: 8, rpeActual: 9 };
+    const sample = {
+      modifierSource: 'readiness',
+      multiplier: 0.95,
+      rpeTarget: 8,
+      rpeActual: 9,
+    };
     mockExtractModifierSamples.mockReturnValue([sample]);
-    mockComputeCalibrationBias.mockReturnValue(makeCalibration({ suggestedAdjustment: 0.15 }));
+    mockComputeCalibrationBias.mockReturnValue(
+      makeCalibration({ suggestedAdjustment: 0.15 })
+    );
     mockCanAutoApply.mockReturnValue(false);
     mockShouldTriggerReview.mockReturnValue(true);
     mockReviewCalibrationAdjustment.mockResolvedValue({
@@ -226,7 +279,10 @@ describe('updateModifierCalibrations', () => {
       reason: 'consistent bias',
     });
 
-    await updateModifierCalibrations({ sessionId: SESSION_ID, userId: USER_ID });
+    await updateModifierCalibrations({
+      sessionId: SESSION_ID,
+      userId: USER_ID,
+    });
 
     expect(mockReviewCalibrationAdjustment).toHaveBeenCalledOnce();
     expect(mockUpsertModifierCalibration).toHaveBeenCalledWith(
@@ -243,11 +299,21 @@ describe('updateModifierCalibrations', () => {
       data: { jit_output_trace: makeTrace() },
       error: null,
     });
-    const logChain = createQueryChain('maybeSingle', { data: { session_rpe: 9 }, error: null });
+    const logChain = createQueryChain('maybeSingle', {
+      data: { session_rpe: 9 },
+      error: null,
+    });
     const calibrationsChain = { select: vi.fn(), eq: vi.fn() };
     calibrationsChain.select.mockReturnValue(calibrationsChain);
     calibrationsChain.eq.mockResolvedValue({
-      data: [{ modifier_source: 'readiness', sample_count: 5, mean_bias: 0.5, adjustment: 0.01 }],
+      data: [
+        {
+          modifier_source: 'readiness',
+          sample_count: 5,
+          mean_bias: 0.5,
+          adjustment: 0.01,
+        },
+      ],
       error: null,
     });
 
@@ -256,14 +322,28 @@ describe('updateModifierCalibrations', () => {
       .mockReturnValueOnce(logChain)
       .mockReturnValueOnce(calibrationsChain);
 
-    const sample = { modifierSource: 'readiness', multiplier: 0.95, rpeTarget: 8, rpeActual: 9 };
+    const sample = {
+      modifierSource: 'readiness',
+      multiplier: 0.95,
+      rpeTarget: 8,
+      rpeActual: 9,
+    };
     mockExtractModifierSamples.mockReturnValue([sample]);
-    mockComputeCalibrationBias.mockReturnValue(makeCalibration({ suggestedAdjustment: 0.08 }));
+    mockComputeCalibrationBias.mockReturnValue(
+      makeCalibration({ suggestedAdjustment: 0.08 })
+    );
     mockCanAutoApply.mockReturnValue(false);
     mockShouldTriggerReview.mockReturnValue(true);
-    mockReviewCalibrationAdjustment.mockResolvedValue({ apply: true, askUser: false, reason: '' });
+    mockReviewCalibrationAdjustment.mockResolvedValue({
+      apply: true,
+      askUser: false,
+      reason: '',
+    });
 
-    await updateModifierCalibrations({ sessionId: SESSION_ID, userId: USER_ID });
+    await updateModifierCalibrations({
+      sessionId: SESSION_ID,
+      userId: USER_ID,
+    });
 
     expect(mockUpsertModifierCalibration).toHaveBeenCalledWith(
       expect.objectContaining({ adjustment: 0.08 })
@@ -275,11 +355,21 @@ describe('updateModifierCalibrations', () => {
       data: { jit_output_trace: makeTrace() },
       error: null,
     });
-    const logChain = createQueryChain('maybeSingle', { data: { session_rpe: 9 }, error: null });
+    const logChain = createQueryChain('maybeSingle', {
+      data: { session_rpe: 9 },
+      error: null,
+    });
     const calibrationsChain = { select: vi.fn(), eq: vi.fn() };
     calibrationsChain.select.mockReturnValue(calibrationsChain);
     calibrationsChain.eq.mockResolvedValue({
-      data: [{ modifier_source: 'readiness', sample_count: 3, mean_bias: 0.2, adjustment: 0.01 }],
+      data: [
+        {
+          modifier_source: 'readiness',
+          sample_count: 3,
+          mean_bias: 0.2,
+          adjustment: 0.01,
+        },
+      ],
       error: null,
     });
 
@@ -288,14 +378,28 @@ describe('updateModifierCalibrations', () => {
       .mockReturnValueOnce(logChain)
       .mockReturnValueOnce(calibrationsChain);
 
-    const sample = { modifierSource: 'readiness', multiplier: 0.95, rpeTarget: 8, rpeActual: 9 };
+    const sample = {
+      modifierSource: 'readiness',
+      multiplier: 0.95,
+      rpeTarget: 8,
+      rpeActual: 9,
+    };
     mockExtractModifierSamples.mockReturnValue([sample]);
-    mockComputeCalibrationBias.mockReturnValue(makeCalibration({ suggestedAdjustment: 0.12 }));
+    mockComputeCalibrationBias.mockReturnValue(
+      makeCalibration({ suggestedAdjustment: 0.12 })
+    );
     mockCanAutoApply.mockReturnValue(false);
     mockShouldTriggerReview.mockReturnValue(true);
-    mockReviewCalibrationAdjustment.mockResolvedValue({ apply: false, askUser: false, reason: '' });
+    mockReviewCalibrationAdjustment.mockResolvedValue({
+      apply: false,
+      askUser: false,
+      reason: '',
+    });
 
-    await updateModifierCalibrations({ sessionId: SESSION_ID, userId: USER_ID });
+    await updateModifierCalibrations({
+      sessionId: SESSION_ID,
+      userId: USER_ID,
+    });
 
     // review.apply=false → keep currentAdjustment (0.01)
     expect(mockUpsertModifierCalibration).toHaveBeenCalledWith(
@@ -308,7 +412,10 @@ describe('updateModifierCalibrations', () => {
       data: { jit_output_trace: makeTrace() },
       error: null,
     });
-    const logChain = createQueryChain('maybeSingle', { data: { session_rpe: 9 }, error: null });
+    const logChain = createQueryChain('maybeSingle', {
+      data: { session_rpe: 9 },
+      error: null,
+    });
     const calibrationsChain = { select: vi.fn(), eq: vi.fn() };
     calibrationsChain.select.mockReturnValue(calibrationsChain);
     calibrationsChain.eq.mockResolvedValue({ data: [], error: null });
@@ -318,9 +425,16 @@ describe('updateModifierCalibrations', () => {
       .mockReturnValueOnce(logChain)
       .mockReturnValueOnce(calibrationsChain);
 
-    const sample = { modifierSource: 'readiness', multiplier: 0.95, rpeTarget: 8, rpeActual: 9 };
+    const sample = {
+      modifierSource: 'readiness',
+      multiplier: 0.95,
+      rpeTarget: 8,
+      rpeActual: 9,
+    };
     mockExtractModifierSamples.mockReturnValue([sample]);
-    mockComputeCalibrationBias.mockReturnValue(makeCalibration({ suggestedAdjustment: 0.12 }));
+    mockComputeCalibrationBias.mockReturnValue(
+      makeCalibration({ suggestedAdjustment: 0.12 })
+    );
     mockCanAutoApply.mockReturnValue(false);
     mockShouldTriggerReview.mockReturnValue(true);
     mockReviewCalibrationAdjustment.mockResolvedValue({
@@ -329,7 +443,10 @@ describe('updateModifierCalibrations', () => {
       reason: 'large bias detected',
     });
 
-    await updateModifierCalibrations({ sessionId: SESSION_ID, userId: USER_ID });
+    await updateModifierCalibrations({
+      sessionId: SESSION_ID,
+      userId: USER_ID,
+    });
 
     expect(mockAsyncStorageSetItem).toHaveBeenCalledWith(
       'pending_calibration_prompt',
@@ -342,11 +459,21 @@ describe('updateModifierCalibrations', () => {
       data: { jit_output_trace: makeTrace() },
       error: null,
     });
-    const logChain = createQueryChain('maybeSingle', { data: { session_rpe: 8 }, error: null });
+    const logChain = createQueryChain('maybeSingle', {
+      data: { session_rpe: 8 },
+      error: null,
+    });
     const calibrationsChain = { select: vi.fn(), eq: vi.fn() };
     calibrationsChain.select.mockReturnValue(calibrationsChain);
     calibrationsChain.eq.mockResolvedValue({
-      data: [{ modifier_source: 'readiness', sample_count: 1, mean_bias: 0.1, adjustment: 0.005 }],
+      data: [
+        {
+          modifier_source: 'readiness',
+          sample_count: 1,
+          mean_bias: 0.1,
+          adjustment: 0.005,
+        },
+      ],
       error: null,
     });
 
@@ -355,13 +482,23 @@ describe('updateModifierCalibrations', () => {
       .mockReturnValueOnce(logChain)
       .mockReturnValueOnce(calibrationsChain);
 
-    const sample = { modifierSource: 'readiness', multiplier: 0.95, rpeTarget: 8, rpeActual: 8 };
+    const sample = {
+      modifierSource: 'readiness',
+      multiplier: 0.95,
+      rpeTarget: 8,
+      rpeActual: 8,
+    };
     mockExtractModifierSamples.mockReturnValue([sample]);
-    mockComputeCalibrationBias.mockReturnValue(makeCalibration({ suggestedAdjustment: 0.001 }));
+    mockComputeCalibrationBias.mockReturnValue(
+      makeCalibration({ suggestedAdjustment: 0.001 })
+    );
     mockCanAutoApply.mockReturnValue(false);
     mockShouldTriggerReview.mockReturnValue(false);
 
-    await updateModifierCalibrations({ sessionId: SESSION_ID, userId: USER_ID });
+    await updateModifierCalibrations({
+      sessionId: SESSION_ID,
+      userId: USER_ID,
+    });
 
     // Retains current adjustment (0.005), still upserts to save updated stats
     expect(mockUpsertModifierCalibration).toHaveBeenCalledOnce();
@@ -376,12 +513,22 @@ describe('updateModifierCalibrations', () => {
       data: { jit_output_trace: makeTrace() },
       error: null,
     });
-    const logChain = createQueryChain('maybeSingle', { data: { session_rpe: 10 }, error: null });
+    const logChain = createQueryChain('maybeSingle', {
+      data: { session_rpe: 10 },
+      error: null,
+    });
     const calibrationsChain = { select: vi.fn(), eq: vi.fn() };
     calibrationsChain.select.mockReturnValue(calibrationsChain);
     // Existing: 4 samples, mean_bias = 1.0
     calibrationsChain.eq.mockResolvedValue({
-      data: [{ modifier_source: 'readiness', sample_count: 4, mean_bias: 1.0, adjustment: 0.02 }],
+      data: [
+        {
+          modifier_source: 'readiness',
+          sample_count: 4,
+          mean_bias: 1.0,
+          adjustment: 0.02,
+        },
+      ],
       error: null,
     });
 
@@ -390,12 +537,20 @@ describe('updateModifierCalibrations', () => {
       .mockReturnValueOnce(logChain)
       .mockReturnValueOnce(calibrationsChain);
 
-    const sample = { modifierSource: 'readiness', multiplier: 0.95, rpeTarget: 8, rpeActual: 10 };
+    const sample = {
+      modifierSource: 'readiness',
+      multiplier: 0.95,
+      rpeTarget: 8,
+      rpeActual: 10,
+    };
     mockExtractModifierSamples.mockReturnValue([sample]);
     mockComputeCalibrationBias.mockReturnValue(makeCalibration());
     mockCanAutoApply.mockReturnValue(true);
 
-    await updateModifierCalibrations({ sessionId: SESSION_ID, userId: USER_ID });
+    await updateModifierCalibrations({
+      sessionId: SESSION_ID,
+      userId: USER_ID,
+    });
 
     // New bias = rpeActual - rpeTarget = 10 - 8 = 2.0 (1 new sample)
     // Combined: (1.0 * 4 + 2.0 * 1) / 5 = 1.2
@@ -418,7 +573,10 @@ describe('updateModifierCalibrations', () => {
       data: { jit_output_trace: trace },
       error: null,
     });
-    const logChain = createQueryChain('maybeSingle', { data: { session_rpe: 9 }, error: null });
+    const logChain = createQueryChain('maybeSingle', {
+      data: { session_rpe: 9 },
+      error: null,
+    });
     const calibrationsChain = { select: vi.fn(), eq: vi.fn() };
     calibrationsChain.select.mockReturnValue(calibrationsChain);
     calibrationsChain.eq.mockResolvedValue({ data: [], error: null });
@@ -428,16 +586,30 @@ describe('updateModifierCalibrations', () => {
       .mockReturnValueOnce(logChain)
       .mockReturnValueOnce(calibrationsChain);
 
-    const sample = { modifierSource: 'readiness', multiplier: 0.95, rpeTarget: 8, rpeActual: 9 };
+    const sample = {
+      modifierSource: 'readiness',
+      multiplier: 0.95,
+      rpeTarget: 8,
+      rpeActual: 9,
+    };
     mockExtractModifierSamples.mockReturnValue([sample]);
     mockComputeCalibrationBias.mockReturnValue(makeCalibration());
     mockCanAutoApply.mockReturnValue(true);
 
-    await updateModifierCalibrations({ sessionId: SESSION_ID, userId: USER_ID });
+    await updateModifierCalibrations({
+      sessionId: SESSION_ID,
+      userId: USER_ID,
+    });
 
     // extractModifierSamples must only receive the readiness modifier (not bodyweight)
-    const [{ modifiers }] = mockExtractModifierSamples.mock.calls[0] as [{ modifiers: Array<{ source: string }> }];
-    expect(modifiers.every((m) => ['readiness', 'cycle_phase', 'soreness'].includes(m.source))).toBe(true);
+    const [{ modifiers }] = mockExtractModifierSamples.mock.calls[0] as [
+      { modifiers: Array<{ source: string }> },
+    ];
+    expect(
+      modifiers.every((m) =>
+        ['readiness', 'cycle_phase', 'soreness'].includes(m.source)
+      )
+    ).toBe(true);
   });
 
   it('catches errors and calls captureException', async () => {
@@ -445,7 +617,10 @@ describe('updateModifierCalibrations', () => {
       throw new Error('network failure');
     });
 
-    await updateModifierCalibrations({ sessionId: SESSION_ID, userId: USER_ID });
+    await updateModifierCalibrations({
+      sessionId: SESSION_ID,
+      userId: USER_ID,
+    });
 
     expect(mockCaptureException).toHaveBeenCalledWith(expect.any(Error));
   });
@@ -463,7 +638,10 @@ describe('updateModifierCalibrations', () => {
       data: { jit_output_trace: traceNoSets },
       error: null,
     });
-    const logChain = createQueryChain('maybeSingle', { data: { session_rpe: 9 }, error: null });
+    const logChain = createQueryChain('maybeSingle', {
+      data: { session_rpe: 9 },
+      error: null,
+    });
     const calibrationsChain = { select: vi.fn(), eq: vi.fn() };
     calibrationsChain.select.mockReturnValue(calibrationsChain);
     calibrationsChain.eq.mockResolvedValue({ data: [], error: null });
@@ -473,12 +651,20 @@ describe('updateModifierCalibrations', () => {
       .mockReturnValueOnce(logChain)
       .mockReturnValueOnce(calibrationsChain);
 
-    const sample = { modifierSource: 'readiness', multiplier: 0.95, rpeTarget: 8, rpeActual: 9 };
+    const sample = {
+      modifierSource: 'readiness',
+      multiplier: 0.95,
+      rpeTarget: 8,
+      rpeActual: 9,
+    };
     mockExtractModifierSamples.mockReturnValue([sample]);
     mockComputeCalibrationBias.mockReturnValue(makeCalibration());
     mockCanAutoApply.mockReturnValue(true);
 
-    await updateModifierCalibrations({ sessionId: SESSION_ID, userId: USER_ID });
+    await updateModifierCalibrations({
+      sessionId: SESSION_ID,
+      userId: USER_ID,
+    });
 
     // rpeTarget defaults to 8 when sets array is empty
     expect(mockExtractModifierSamples).toHaveBeenCalledWith(

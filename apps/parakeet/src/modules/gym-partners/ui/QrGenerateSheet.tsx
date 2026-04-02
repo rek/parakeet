@@ -6,16 +6,15 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import QRCode from 'react-native-qrcode-svg';
 
 import { captureException } from '@platform/utils/captureException';
+import QRCode from 'react-native-qrcode-svg';
 
+import { Sheet } from '../../../components/ui/Sheet';
 import { spacing, typography } from '../../../theme';
 import { useTheme } from '../../../theme/ThemeContext';
 import { useCreateInvite } from '../hooks/usePartners';
 import { encodeQrPayload } from '../lib/qr-payload';
-
-import { Sheet } from '../../../components/ui/Sheet';
 
 export function QrGenerateSheet({
   visible,
@@ -44,10 +43,8 @@ export function QrGenerateSheet({
       setSecondsLeft(
         Math.max(
           0,
-          Math.floor(
-            (new Date(result.expiresAt).getTime() - Date.now()) / 1000,
-          ),
-        ),
+          Math.floor((new Date(result.expiresAt).getTime() - Date.now()) / 1000)
+        )
       );
     } catch (err) {
       captureException(err);
@@ -72,9 +69,7 @@ export function QrGenerateSheet({
     timerRef.current = setInterval(() => {
       const remaining = Math.max(
         0,
-        Math.floor(
-          (new Date(invite.expiresAt).getTime() - Date.now()) / 1000,
-        ),
+        Math.floor((new Date(invite.expiresAt).getTime() - Date.now()) / 1000)
       );
       setSecondsLeft(remaining);
       if (remaining <= 0 && timerRef.current) {

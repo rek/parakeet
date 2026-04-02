@@ -1,7 +1,7 @@
 import { StyleSheet, Text, TouchableOpacity } from 'react-native';
-import { useRouter } from 'expo-router';
 
 import { useFeatureEnabled } from '@modules/feature-flags';
+import { useRouter } from 'expo-router';
 
 import { spacing, typography } from '../../../theme';
 import { useTheme } from '../../../theme/ThemeContext';

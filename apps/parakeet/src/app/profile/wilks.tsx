@@ -162,8 +162,11 @@ export default function WilksScreen() {
   const styles = useMemo(() => buildStyles(colors), [colors]);
   const { user } = useAuth();
 
-  const { history: wilksHistory, current: wilksCurrent, isLoading } =
-    useWilksProfile({ userId: user?.id });
+  const {
+    history: wilksHistory,
+    current: wilksCurrent,
+    isLoading,
+  } = useWilksProfile({ userId: user?.id });
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -187,9 +190,7 @@ export default function WilksScreen() {
             {wilksCurrent && (
               <View style={styles.currentCard}>
                 <Text style={styles.currentScoreLabel}>Current Score</Text>
-                <Text style={styles.currentScore}>
-                  {wilksCurrent.wilks}
-                </Text>
+                <Text style={styles.currentScore}>{wilksCurrent.wilks}</Text>
                 <Text style={styles.currentMeta}>
                   Bodyweight: {wilksCurrent.bodyweightKg} kg
                 </Text>

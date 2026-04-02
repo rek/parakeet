@@ -1,11 +1,11 @@
 import { queryOptions } from '@tanstack/react-query';
 
+import { fetchPartnerActiveSession } from './partner-session.repository';
+import { fetchUnseenPartnerVideoCount } from './partner-video.repository';
 import {
   fetchAcceptedPartners,
   fetchPendingIncomingRequests,
 } from './partner.repository';
-import { fetchPartnerActiveSession } from './partner-session.repository';
-import { fetchUnseenPartnerVideoCount } from './partner-video.repository';
 
 export const partnerQueries = {
   all: () => ['gym-partners'] as const,
@@ -31,7 +31,11 @@ export const partnerQueries = {
 
   unseenVideoCount: (sinceTimestamp: string | null) =>
     queryOptions({
-      queryKey: [...partnerQueries.all(), 'unseen-videos', sinceTimestamp] as const,
+      queryKey: [
+        ...partnerQueries.all(),
+        'unseen-videos',
+        sinceTimestamp,
+      ] as const,
       queryFn: () => fetchUnseenPartnerVideoCount({ sinceTimestamp }),
     }),
 };

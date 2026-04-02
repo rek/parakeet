@@ -1,10 +1,10 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
 
 import { captureException } from '@platform/utils/captureException';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 
-import { partnerQueries } from '../data/partner.queries';
 import { subscribeToPartnerVideoInserts } from '../data/partner-video.repository';
+import { partnerQueries } from '../data/partner.queries';
 import {
   getLastSeenPartnerVideoTimestamp,
   setLastSeenPartnerVideoTimestamp,

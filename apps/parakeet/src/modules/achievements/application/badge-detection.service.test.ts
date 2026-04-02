@@ -14,12 +14,16 @@ const mockCheckPerformanceBadges = vi.hoisted(() => vi.fn((): string[] => []));
 const mockCheckSituationalBadges = vi.hoisted(() => vi.fn((): string[] => []));
 const mockCheckRpeEffortBadges = vi.hoisted(() => vi.fn((): string[] => []));
 const mockCheckVolumeRepBadges = vi.hoisted(() => vi.fn((): string[] => []));
-const mockCheckSessionMilestoneBadges = vi.hoisted(() => vi.fn((): string[] => []));
+const mockCheckSessionMilestoneBadges = vi.hoisted(() =>
+  vi.fn((): string[] => [])
+);
 const mockCheckWildRareBadges = vi.hoisted(() => vi.fn((): string[] => []));
 const mockCheckLiftIdentityBadges = vi.hoisted(() => vi.fn((): string[] => []));
 const mockCheckRestPacingBadges = vi.hoisted(() => vi.fn((): string[] => []));
 const mockCheckConsistencyBadges = vi.hoisted(() => vi.fn((): string[] => []));
-const mockCheckProgramLoyaltyBadges = vi.hoisted(() => vi.fn((): string[] => []));
+const mockCheckProgramLoyaltyBadges = vi.hoisted(() =>
+  vi.fn((): string[] => [])
+);
 const mockCheckCouplesBadges = vi.hoisted(() => vi.fn((): string[] => []));
 const mockDetectStreakBreakAndRebuild = vi.hoisted(() => vi.fn(() => false));
 const mockBuildWeekStatuses = vi.hoisted(() => vi.fn(() => []));
@@ -123,7 +127,12 @@ const BASE_INPUT = {
   sessionId: SESSION_ID,
   userId: USER_ID,
   actualSets: [
-    { weight_grams: 100000, reps_completed: 5, rpe_actual: 8, is_completed: true },
+    {
+      weight_grams: 100000,
+      reps_completed: 5,
+      rpe_actual: 8,
+      is_completed: true,
+    },
   ],
   earnedPRs: [],
   streakWeeks: 3,
@@ -223,10 +232,9 @@ describe('detectBadges', () => {
       await detectBadges(BASE_INPUT);
 
       expect(mockInsertBadges).toHaveBeenCalledOnce();
-      expect(mockInsertBadges).toHaveBeenCalledWith(
-        USER_ID,
-        [{ badgeId: 'first_blood', sessionId: SESSION_ID }]
-      );
+      expect(mockInsertBadges).toHaveBeenCalledWith(USER_ID, [
+        { badgeId: 'first_blood', sessionId: SESSION_ID },
+      ]);
     });
 
     it('returns multiple badges when several checkers fire', async () => {

@@ -1,5 +1,8 @@
 import { FormCoachingResultSchema } from '@parakeet/shared-types';
-import type { FormCoachingResult, VideoAnalysisResult } from '@parakeet/shared-types';
+import type {
+  FormCoachingResult,
+  VideoAnalysisResult,
+} from '@parakeet/shared-types';
 import { generateText, Output } from 'ai';
 
 import { abortAfter } from '../ai/abort-timeout';
@@ -24,7 +27,10 @@ export interface FormCoachingInput {
   sorenessRatings: Record<string, number> | null;
   sleepQuality: number | null;
   energyLevel: number | null;
-  activeDisruptions: Array<{ disruption_type: string; severity: string }> | null;
+  activeDisruptions: Array<{
+    disruption_type: string;
+    severity: string;
+  }> | null;
   previousVideoCount: number;
   averageBarDriftCm: number | null;
   averageDepthCm: number | null;

@@ -1,8 +1,11 @@
 import {
-  VideoAnalysisResultSchema,
   FormCoachingResultSchema,
+  VideoAnalysisResultSchema,
 } from '@parakeet/shared-types';
-import type { VideoAnalysisResult, FormCoachingResult } from '@parakeet/shared-types';
+import type {
+  FormCoachingResult,
+  VideoAnalysisResult,
+} from '@parakeet/shared-types';
 import type { DbRow } from '@platform/supabase';
 import { toJson, typedSupabase } from '@platform/supabase';
 import { captureException } from '@platform/utils/captureException';
@@ -37,7 +40,9 @@ function toSessionVideo(row: VideoRowWithProfile): SessionVideo {
     sessionId: row.session_id,
     lift: row.lift,
     setNumber: row.set_number,
-    cameraAngle: (row.camera_angle === 'front' ? 'front' : 'side') as 'side' | 'front',
+    cameraAngle: (row.camera_angle === 'front' ? 'front' : 'side') as
+      | 'side'
+      | 'front',
     localUri: row.local_uri,
     remoteUri: row.remote_uri,
     durationSec: row.duration_sec,
@@ -80,7 +85,9 @@ export async function insertSessionVideo({
   setReps?: number | null;
   setRpe?: number | null;
 }) {
-  const { data: { user } } = await typedSupabase.auth.getUser();
+  const {
+    data: { user },
+  } = await typedSupabase.auth.getUser();
   if (!user) throw new Error('Not authenticated');
 
   const { data, error } = await typedSupabase
@@ -253,7 +260,10 @@ export async function updateSessionVideoDebugLandmarks({
 }
 
 export async function deleteSessionVideo({ id }: { id: string }) {
-  const { error } = await typedSupabase.from('session_videos').delete().eq('id', id);
+  const { error } = await typedSupabase
+    .from('session_videos')
+    .delete()
+    .eq('id', id);
 
   if (error) {
     captureException(error);

@@ -59,8 +59,13 @@ function loadManifest(): Manifest {
   return JSON.parse(readFileSync(path, 'utf-8')) as Manifest;
 }
 
-function loadLandmarks(videoId: string): { frames: PoseFrame[]; fps: number } | null {
-  const path = resolve(PROJECT_ROOT, `test-videos/landmarks/${videoId}.landmarks.json`);
+function loadLandmarks(
+  videoId: string
+): { frames: PoseFrame[]; fps: number } | null {
+  const path = resolve(
+    PROJECT_ROOT,
+    `test-videos/landmarks/${videoId}.landmarks.json`
+  );
   if (!existsSync(path)) return null;
 
   const data = JSON.parse(readFileSync(path, 'utf-8')) as LandmarkFile;
@@ -77,7 +82,7 @@ function getCachedAnalysis(
   videoId: string,
   frames: PoseFrame[],
   fps: number,
-  lift: 'squat' | 'bench' | 'deadlift',
+  lift: 'squat' | 'bench' | 'deadlift'
 ) {
   if (!analysisCache.has(videoId)) {
     analysisCache.set(videoId, analyzeVideoFrames({ frames, fps, lift }));
@@ -292,7 +297,9 @@ describe('regression', () => {
   const calibrated = manifest.videos.filter((v) => v.calibrated);
 
   if (calibrated.length === 0) {
-    it.todo('no calibrated videos yet — set calibrated: true + actual fields in manifest to enable');
+    it.todo(
+      'no calibrated videos yet — set calibrated: true + actual fields in manifest to enable'
+    );
     return;
   }
 

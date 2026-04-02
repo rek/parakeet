@@ -1,15 +1,39 @@
 import { describe, expect, it } from 'vitest';
 
+import type { CriterionResult, RepVerdict } from '../competition-grader';
 import { computeReadinessFromVerdicts } from '../readiness-score';
-import type { RepVerdict, CriterionResult } from '../competition-grader';
 
-function makeVerdict(verdict: RepVerdict['verdict'], failedCriteria: string[] = []): RepVerdict {
+function makeVerdict(
+  verdict: RepVerdict['verdict'],
+  failedCriteria: string[] = []
+): RepVerdict {
   const criteria: CriterionResult[] = [
-    { name: 'depth', verdict: 'pass', measured: -5, threshold: 0, unit: 'cm', message: 'ok' },
-    { name: 'lockout', verdict: 'pass', measured: 178, threshold: 175, unit: '°', message: 'ok' },
+    {
+      name: 'depth',
+      verdict: 'pass',
+      measured: -5,
+      threshold: 0,
+      unit: 'cm',
+      message: 'ok',
+    },
+    {
+      name: 'lockout',
+      verdict: 'pass',
+      measured: 178,
+      threshold: 175,
+      unit: '°',
+      message: 'ok',
+    },
   ];
   for (const name of failedCriteria) {
-    criteria.push({ name, verdict: 'fail', measured: 0, threshold: 0, unit: '', message: 'failed' });
+    criteria.push({
+      name,
+      verdict: 'fail',
+      measured: 0,
+      threshold: 0,
+      unit: '',
+      message: 'failed',
+    });
   }
   return { verdict, criteria };
 }
@@ -90,10 +114,7 @@ describe('computeReadinessFromVerdicts', () => {
   });
 
   it('returns null mostCommonFailure when no failures', () => {
-    const verdicts = [
-      makeVerdict('white_light'),
-      makeVerdict('borderline'),
-    ];
+    const verdicts = [makeVerdict('white_light'), makeVerdict('borderline')];
     const score = computeReadinessFromVerdicts({ verdicts });
     expect(score!.mostCommonFailure).toBeNull();
   });

@@ -1,7 +1,12 @@
 import { useCallback, useMemo, useRef, useState } from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { Camera, useCameraDevice, useCameraPermission } from 'react-native-vision-camera';
+
 import Svg, { Line, Rect, Text as SvgText } from 'react-native-svg';
+import {
+  Camera,
+  useCameraDevice,
+  useCameraPermission,
+} from 'react-native-vision-camera';
 
 import { radii, spacing, typography } from '../../../theme';
 import type { ColorScheme } from '../../../theme';
@@ -94,7 +99,10 @@ export function RecordVideoSheet({
           <Svg width="100%" height="100%" viewBox="0 0 100 100">
             {/* Center line */}
             <Line
-              x1="50" y1="10" x2="50" y2="90"
+              x1="50"
+              y1="10"
+              x2="50"
+              y2="90"
               stroke="rgba(255,255,255,0.3)"
               strokeWidth="0.5"
               strokeDasharray="2,2"
@@ -102,7 +110,10 @@ export function RecordVideoSheet({
 
             {/* Positioning box */}
             <Rect
-              x="20" y="15" width="60" height="70"
+              x="20"
+              y="15"
+              width="60"
+              height="70"
               fill="none"
               stroke="rgba(255,255,255,0.25)"
               strokeWidth="0.3"
@@ -112,7 +123,8 @@ export function RecordVideoSheet({
 
             {/* Camera angle label */}
             <SvgText
-              x="50" y="8"
+              x="50"
+              y="8"
               textAnchor="middle"
               fill="rgba(255,255,255,0.6)"
               fontSize="3"
@@ -122,7 +134,8 @@ export function RecordVideoSheet({
 
             {/* Placement hint */}
             <SvgText
-              x="50" y="95"
+              x="50"
+              y="95"
               textAnchor="middle"
               fill="rgba(255,255,255,0.5)"
               fontSize="2.5"
@@ -154,14 +167,13 @@ export function RecordVideoSheet({
             isRecording && styles.recordButtonActive,
           ]}
           accessible
-          accessibilityLabel={isRecording ? 'Stop recording' : 'Start recording'}
+          accessibilityLabel={
+            isRecording ? 'Stop recording' : 'Start recording'
+          }
           accessibilityRole="button"
         >
           <View
-            style={[
-              styles.recordDot,
-              isRecording && styles.recordDotActive,
-            ]}
+            style={[styles.recordDot, isRecording && styles.recordDotActive]}
           />
         </TouchableOpacity>
 

@@ -31,8 +31,8 @@ import {
   skipSession,
   useInProgressSession,
   useMotivationalMessage,
-  useSessionLifecycle,
   useRefreshAll,
+  useSessionLifecycle,
   useTodaySessions,
   WorkoutCard,
 } from '@modules/session';

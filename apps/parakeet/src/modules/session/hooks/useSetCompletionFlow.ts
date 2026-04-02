@@ -3,9 +3,8 @@ import { useCallback, useRef, useState } from 'react';
 import type { RestTimerPrefs } from '@modules/settings';
 import type { Lift } from '@parakeet/shared-types';
 import { adaptRemainingPlan } from '@parakeet/training-engine';
-
-import { getExerciseType } from '@shared/utils/exercise-lookup';
 import { useSessionStore } from '@platform/store/sessionStore';
+import { getExerciseType } from '@shared/utils/exercise-lookup';
 import { weightGramsToKg, weightKgToGrams } from '@shared/utils/weight';
 
 import type {
@@ -334,8 +333,7 @@ export function useSetCompletionFlow({
         reps_completed: planned.reps,
         is_completed: true,
       });
-      const auxType =
-        auxWork?.exerciseType ?? getExerciseType(auxExercise);
+      const auxType = auxWork?.exerciseType ?? getExerciseType(auxExercise);
       if (auxType !== 'timed' && auxType !== 'bodyweight')
         setPendingAuxRpe({ exercise: auxExercise, setNumber: nextAuxSet });
 

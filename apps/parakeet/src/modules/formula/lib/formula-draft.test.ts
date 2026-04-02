@@ -1,10 +1,9 @@
-import { describe, expect, it } from 'vitest';
-
 import type {
   BlockIntensityConfig,
   FormulaConfig,
   RepIntensityConfig,
 } from '@parakeet/training-engine';
+import { describe, expect, it } from 'vitest';
 
 import {
   draftToOverrides,
@@ -128,7 +127,12 @@ describe('toRowDraft', () => {
 describe('initDraft', () => {
   it('produces draft keys for all three blocks and deload', () => {
     const draft = initDraft(makeFormulaConfig());
-    expect(Object.keys(draft)).toEqual(['block1', 'block2', 'block3', 'deload']);
+    expect(Object.keys(draft)).toEqual([
+      'block1',
+      'block2',
+      'block3',
+      'deload',
+    ]);
   });
 
   it('each main block has heavy, explosive, rep entries', () => {
@@ -203,7 +207,9 @@ function makeDraft(): DraftConfig {
 // draftToOverrides returns FormulaOverrides (Zod-inferred, all optional) but
 // the tests always call makeDraft() which populates all blocks. Cast the block
 // intensity to the engine type which includes reps_max.
-function heavy(overrides: ReturnType<typeof draftToOverrides>): BlockIntensityConfig {
+function heavy(
+  overrides: ReturnType<typeof draftToOverrides>
+): BlockIntensityConfig {
   return overrides.block1!.heavy as unknown as BlockIntensityConfig;
 }
 

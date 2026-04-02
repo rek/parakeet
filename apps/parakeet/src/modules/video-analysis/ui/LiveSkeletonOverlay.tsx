@@ -1,4 +1,5 @@
 import { StyleSheet } from 'react-native';
+
 import Svg, { Circle, Line } from 'react-native-svg';
 
 import type { ColorScheme } from '../../../theme';
@@ -37,7 +38,8 @@ export function LiveSkeletonOverlay({
         const la = landmarks[a];
         const lb = landmarks[b];
         if (
-          !la || !lb ||
+          !la ||
+          !lb ||
           la.visibility < MIN_VISIBILITY ||
           lb.visibility < MIN_VISIBILITY
         ) {

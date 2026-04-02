@@ -6,6 +6,8 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+
+import { captureException } from '@platform/utils/captureException';
 import {
   Camera,
   useCameraDevice,
@@ -13,14 +15,11 @@ import {
   type Code,
 } from 'react-native-vision-camera';
 
-import { captureException } from '@platform/utils/captureException';
-
+import { Sheet } from '../../../components/ui/Sheet';
 import { radii, spacing, typography } from '../../../theme';
 import { useTheme } from '../../../theme/ThemeContext';
 import { useClaimInvite } from '../hooks/usePartners';
 import { decodeQrPayload } from '../lib/qr-payload';
-
-import { Sheet } from '../../../components/ui/Sheet';
 
 type ScanState =
   | { type: 'scanning' }
@@ -76,7 +75,7 @@ export function QrScanSheet({
         setState({ type: 'error', message });
       }
     },
-    [claimInvite],
+    [claimInvite]
   );
 
   const resetScanner = useCallback(() => {
@@ -96,7 +95,7 @@ export function QrScanSheet({
       codeTypes: ['qr' as const],
       onCodeScanned: handleCodeScanned,
     }),
-    [handleCodeScanned],
+    [handleCodeScanned]
   );
 
   return (
@@ -133,9 +132,7 @@ export function QrScanSheet({
             <View style={styles.overlay}>
               <View style={styles.crosshair} />
             </View>
-            <Text style={styles.scanHint}>
-              Point at your partner's QR code
-            </Text>
+            <Text style={styles.scanHint}>Point at your partner's QR code</Text>
           </View>
         ) : state.type === 'claiming' ? (
           <View style={styles.center}>

@@ -6,10 +6,19 @@ import {
   type AnalysisStrategy,
   type StrategyName,
 } from './analysis-strategy';
-import { computeForwardLean, computeHipAngle, computeKneeAngle } from './angle-calculator';
+import {
+  computeForwardLean,
+  computeHipAngle,
+  computeKneeAngle,
+} from './angle-calculator';
 import { computeBarToShinDistance } from './bar-shin-distance';
-import { computeConcentricVelocity, computeVelocityLoss, estimateRirFromVelocityLoss } from './bar-velocity';
+import {
+  computeConcentricVelocity,
+  computeVelocityLoss,
+  estimateRirFromVelocityLoss,
+} from './bar-velocity';
 import { detectButtWink } from './butt-wink-detector';
+import { detectSquatDepth } from './depth-detector';
 import { detectCameraAngle } from './detect-camera-angle';
 import { computeElbowFlare } from './elbow-flare';
 import { computeFatigueSignatures } from './fatigue-signatures';
@@ -17,7 +26,6 @@ import { analyzeHipHingeTiming } from './hip-hinge-timing';
 import { computeHipShift } from './hip-shift';
 import { computeLockoutStability } from './lockout-stability';
 import { assessPauseQuality } from './pause-quality';
-import { detectSquatDepth } from './depth-detector';
 import { CM_PER_UNIT, type PoseFrame } from './pose-types';
 import { computeRepTempo } from './rep-tempo';
 import { computeStanceWidth } from './stance-width';
@@ -54,7 +62,9 @@ export function assembleAnalysis({
   const isSideView = cameraAngle === 'side';
 
   if (typeof __DEV__ !== 'undefined' && __DEV__) {
-    console.log(`[analysis] ${frames.length} frames, ${fps}fps, ${lift}, ${cameraAngle}, strategy=${strategy.name}`);
+    console.log(
+      `[analysis] ${frames.length} frames, ${fps}fps, ${lift}, ${cameraAngle}, strategy=${strategy.name}`
+    );
   }
 
   const rawPath = strategy.barPath.extractBarPath({ frames });
@@ -70,11 +80,21 @@ export function assembleAnalysis({
     const safeEnd = Math.max(safeStart, Math.min(endFrame, frames.length - 1));
 
     // --- Shared per-rep context (computed once, reused by fault detector) ---
-    const repPath = strategy.barPath.sliceBarPath({ barPath, startFrame: safeStart, endFrame: safeEnd });
-    const barDriftNormalized = strategy.barPath.computeBarDrift({ path: repPath });
+    const repPath = strategy.barPath.sliceBarPath({
+      barPath,
+      startFrame: safeStart,
+      endFrame: safeEnd,
+    });
+    const barDriftNormalized = strategy.barPath.computeBarDrift({
+      path: repPath,
+    });
     const bottomFrame =
       lift === 'squat'
-        ? strategy.faults.findBottomFrame({ frames, startFrame: safeStart, endFrame: safeEnd })
+        ? strategy.faults.findBottomFrame({
+            frames,
+            startFrame: safeStart,
+            endFrame: safeEnd,
+          })
         : safeStart;
 
     const barDriftCm = barDriftNormalized * CM_PER_UNIT;
@@ -106,7 +126,9 @@ export function assembleAnalysis({
     // Range of motion: vertical travel of bar path (top to bottom)
     const pathYValues = repPath.map((p) => p.y);
     const romNormalized =
-      pathYValues.length > 1 ? Math.max(...pathYValues) - Math.min(...pathYValues) : 0;
+      pathYValues.length > 1
+        ? Math.max(...pathYValues) - Math.min(...pathYValues)
+        : 0;
     const romCm = romNormalized * CM_PER_UNIT;
 
     const faults = strategy.faults.detectFaults({
@@ -119,7 +141,8 @@ export function assembleAnalysis({
     });
 
     // Bar velocity: mean concentric velocity from wrist Y displacement
-    const meanConcentricVelocityCmS = computeConcentricVelocity({ repPath, fps }) ?? undefined;
+    const meanConcentricVelocityCmS =
+      computeConcentricVelocity({ repPath, fps }) ?? undefined;
 
     // Tempo: eccentric/concentric phase durations
     const tempo = computeRepTempo({ repPath, fps });
@@ -147,7 +170,11 @@ export function assembleAnalysis({
         }
       }
       stanceWidthCm = computeStanceWidth({ frame: frames[safeStart] });
-      const shift = computeHipShift({ frames, startFrame: safeStart, endFrame: safeEnd });
+      const shift = computeHipShift({
+        frames,
+        startFrame: safeStart,
+        endFrame: safeEnd,
+      });
       hipShiftCm = shift.maxShiftCm;
       hipShiftDirection = shift.direction;
     }
@@ -162,9 +189,10 @@ export function assembleAnalysis({
         faults.push({
           type: 'elbow_flare',
           severity: 'warning',
-          message: elbowFlareDeg > 80
-            ? `Excessive elbow flare: ${elbowFlareDeg.toFixed(1)}°`
-            : `Elbows overtucked: ${elbowFlareDeg.toFixed(1)}°`,
+          message:
+            elbowFlareDeg > 80
+              ? `Excessive elbow flare: ${elbowFlareDeg.toFixed(1)}°`
+              : `Elbows overtucked: ${elbowFlareDeg.toFixed(1)}°`,
           value: elbowFlareDeg,
           threshold: elbowFlareDeg > 80 ? 80 : 30,
         });
@@ -178,7 +206,12 @@ export function assembleAnalysis({
     let hipHingeCrossoverPct: number | undefined;
     let barToShinDistanceCm: number | undefined;
     if (lift === 'deadlift') {
-      const hinge = analyzeHipHingeTiming({ frames, startFrame: safeStart, endFrame: safeEnd, fps });
+      const hinge = analyzeHipHingeTiming({
+        frames,
+        startFrame: safeStart,
+        endFrame: safeEnd,
+        fps,
+      });
       hipHingeCrossoverPct = hinge.crossoverPct;
       if (hinge.isEarlyHipShoot) {
         faults.push({
@@ -189,7 +222,11 @@ export function assembleAnalysis({
           threshold: 30,
         });
       }
-      barToShinDistanceCm = computeBarToShinDistance({ frames, startFrame: safeStart, endFrame: safeEnd });
+      barToShinDistanceCm = computeBarToShinDistance({
+        frames,
+        startFrame: safeStart,
+        endFrame: safeEnd,
+      });
       if (barToShinDistanceCm > 5) {
         faults.push({
           type: 'bar_away_from_shins',
@@ -202,7 +239,11 @@ export function assembleAnalysis({
     }
 
     // All lifts: lockout stability
-    const lockoutStabilityCv = computeLockoutStability({ frames, startFrame: safeStart, endFrame: safeEnd });
+    const lockoutStabilityCv = computeLockoutStability({
+      frames,
+      startFrame: safeStart,
+      endFrame: safeEnd,
+    });
     if (lockoutStabilityCv > 5) {
       faults.push({
         type: 'unstable_lockout',
@@ -242,7 +283,12 @@ export function assembleAnalysis({
     };
 
     // Auto-grade every rep against IPF competition standards
-    const verdict = strategy.grader.gradeRep({ rep: repAnalysis, frames, fps, lift });
+    const verdict = strategy.grader.gradeRep({
+      rep: repAnalysis,
+      frames,
+      fps,
+      lift,
+    });
 
     return { ...repAnalysis, verdict };
   });
@@ -253,16 +299,19 @@ export function assembleAnalysis({
 
   const repsWithVelocity = reps.map((r, i) => ({
     ...r,
-    velocityLossPct: velocityLosses[i] != null
-      ? Math.round(velocityLosses[i]! * 10) / 10
-      : undefined,
-    estimatedRir: estimateRirFromVelocityLoss({
-      velocityLossPct: velocityLosses[i],
-    }) ?? undefined,
+    velocityLossPct:
+      velocityLosses[i] != null
+        ? Math.round(velocityLosses[i]! * 10) / 10
+        : undefined,
+    estimatedRir:
+      estimateRirFromVelocityLoss({
+        velocityLossPct: velocityLosses[i],
+      }) ?? undefined,
   }));
 
   // Cross-rep fatigue analysis (needs ≥2 reps with metrics)
-  const fatigueSignatures = computeFatigueSignatures({ reps: repsWithVelocity }) ?? undefined;
+  const fatigueSignatures =
+    computeFatigueSignatures({ reps: repsWithVelocity }) ?? undefined;
 
   return {
     reps: repsWithVelocity,

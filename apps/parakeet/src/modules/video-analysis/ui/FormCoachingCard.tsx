@@ -12,7 +12,10 @@ import type { FormCoachingResult } from '@parakeet/shared-types';
 import { radii, spacing, typography } from '../../../theme';
 import type { ColorScheme } from '../../../theme';
 
-function gradeColor(grade: 'good' | 'acceptable' | 'needs_work', colors: ColorScheme) {
+function gradeColor(
+  grade: 'good' | 'acceptable' | 'needs_work',
+  colors: ColorScheme
+) {
   if (grade === 'good') return colors.info;
   if (grade === 'acceptable') return colors.warning;
   return colors.danger;
@@ -24,7 +27,10 @@ const GRADE_LABELS = {
   needs_work: 'Needs Work',
 } as const;
 
-function priorityColor(priority: 'high' | 'medium' | 'low', colors: ColorScheme) {
+function priorityColor(
+  priority: 'high' | 'medium' | 'low',
+  colors: ColorScheme
+) {
   if (priority === 'high') return colors.danger;
   if (priority === 'medium') return colors.warning;
   return colors.info;
@@ -109,7 +115,9 @@ export function FormCoachingCard({
                 <View
                   style={[
                     styles.gradeBadge,
-                    { backgroundColor: gradeColor(rep.formGrade, colors) + '20' },
+                    {
+                      backgroundColor: gradeColor(rep.formGrade, colors) + '20',
+                    },
                   ]}
                 >
                   <Text
@@ -173,10 +181,16 @@ export function FormCoachingCard({
         <View style={styles.section}>
           <Text style={styles.subsectionLabel}>Competition Readiness</Text>
           <Text style={styles.insightText}>
-            {Math.round(coaching.competitionReadiness.passRate * 100)}% pass rate — {coaching.competitionReadiness.assessment}
+            {Math.round(coaching.competitionReadiness.passRate * 100)}% pass
+            rate — {coaching.competitionReadiness.assessment}
           </Text>
           {coaching.competitionReadiness.topConcern && (
-            <Text style={[styles.insightText, { color: colors.danger, marginTop: 4 }]}>
+            <Text
+              style={[
+                styles.insightText,
+                { color: colors.danger, marginTop: 4 },
+              ]}
+            >
               Top concern: {coaching.competitionReadiness.topConcern}
             </Text>
           )}

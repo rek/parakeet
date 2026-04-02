@@ -53,7 +53,7 @@ export function subscribeToPartnerSessions({
       (payload) => {
         const userId = (payload.new as Record<string, unknown>)?.user_id;
         if (typeof userId === 'string') onUpdate(userId);
-      },
+      }
     )
     .subscribe();
 

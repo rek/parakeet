@@ -1,3 +1,4 @@
+import type { RepAnalysis, VideoAnalysisResult } from '@parakeet/shared-types';
 import { describe, expect, it } from 'vitest';
 
 import {
@@ -5,7 +6,6 @@ import {
   detectBaselineDeviations,
   MIN_VIDEOS_FOR_BASELINE,
 } from '../personal-baseline';
-import type { VideoAnalysisResult, RepAnalysis } from '@parakeet/shared-types';
 
 function makeAnalysis({
   reps,
@@ -30,7 +30,7 @@ function makeAnalysis({
 describe('computePersonalBaseline', () => {
   it('returns null with fewer than MIN_VIDEOS_FOR_BASELINE analyses', () => {
     const analyses = Array.from({ length: MIN_VIDEOS_FOR_BASELINE - 1 }, () =>
-      makeAnalysis({ reps: [{ barDriftCm: 2, forwardLeanDeg: 40, romCm: 50 }] }),
+      makeAnalysis({ reps: [{ barDriftCm: 2, forwardLeanDeg: 40, romCm: 50 }] })
     );
     expect(computePersonalBaseline({ analyses })).toBeNull();
   });
@@ -41,7 +41,7 @@ describe('computePersonalBaseline', () => {
         reps: [
           { barDriftCm: 2 + i * 0.5, forwardLeanDeg: 40 + i, romCm: 50 + i },
         ],
-      }),
+      })
     );
 
     const baseline = computePersonalBaseline({ analyses });
@@ -64,7 +64,7 @@ describe('computePersonalBaseline', () => {
             maxDepthCm: 3 + i,
           },
         ],
-      }),
+      })
     );
 
     const baseline = computePersonalBaseline({ analyses });
@@ -75,7 +75,7 @@ describe('computePersonalBaseline', () => {
     const analyses = Array.from({ length: 5 }, () =>
       makeAnalysis({
         reps: [{ barDriftCm: 2, forwardLeanDeg: 40, romCm: 50 }],
-      }),
+      })
     );
 
     const baseline = computePersonalBaseline({ analyses });
@@ -86,7 +86,7 @@ describe('computePersonalBaseline', () => {
     const withReps = Array.from({ length: 5 }, () =>
       makeAnalysis({
         reps: [{ barDriftCm: 2, forwardLeanDeg: 40, romCm: 50 }],
-      }),
+      })
     );
     const empty = makeAnalysis({ reps: [] });
     const analyses = [...withReps, empty];

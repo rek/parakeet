@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { VideoView, useVideoPlayer } from 'expo-video';
+
+import { useVideoPlayer, VideoView } from 'expo-video';
 
 import { radii, spacing, typography } from '../../../theme';
 import type { ColorScheme } from '../../../theme';
@@ -43,9 +44,7 @@ export function VideoPlayerCard({
 
       <View style={styles.footer}>
         <View>
-          <Text style={styles.durationText}>
-            Duration: {durationSec}s
-          </Text>
+          <Text style={styles.durationText}>Duration: {durationSec}s</Text>
           {recordedByName != null && (
             <Text style={styles.attributionText}>
               Recorded by {recordedByName}

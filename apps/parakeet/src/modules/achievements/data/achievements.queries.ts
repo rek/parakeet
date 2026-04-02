@@ -1,6 +1,5 @@
-import { queryOptions, skipToken } from '@tanstack/react-query';
-
 import { getCurrentWilksSnapshot } from '@modules/wilks';
+import { queryOptions, skipToken } from '@tanstack/react-query';
 
 import {
   getCycleBadges,
@@ -41,7 +40,9 @@ export const achievementQueries = {
   prs: (userId: string | undefined, lift: string) =>
     queryOptions({
       queryKey: [...achievementQueries.all(), 'prs', userId, lift] as const,
-      queryFn: userId ? () => getPRHistory(userId, lift as Parameters<typeof getPRHistory>[1]) : skipToken,
+      queryFn: userId
+        ? () => getPRHistory(userId, lift as Parameters<typeof getPRHistory>[1])
+        : skipToken,
       staleTime: 5 * 60 * 1000,
     }),
 

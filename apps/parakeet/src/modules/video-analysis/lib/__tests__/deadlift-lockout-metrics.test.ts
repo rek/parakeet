@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'vitest';
 
-import { analyzeHipHingeTiming } from '../hip-hinge-timing';
 import { computeBarToShinDistance } from '../bar-shin-distance';
+import { analyzeHipHingeTiming } from '../hip-hinge-timing';
 import { computeLockoutStability } from '../lockout-stability';
 import { LANDMARK } from '../pose-types';
-import type { PoseLandmark, PoseFrame } from '../pose-types';
+import type { PoseFrame, PoseLandmark } from '../pose-types';
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -15,7 +15,9 @@ function makeLandmark(x: number, y: number): PoseLandmark {
 }
 
 function makeFrame(overrides: Record<number, PoseLandmark>): PoseFrame {
-  const frame: PoseFrame = Array.from({ length: 33 }, () => makeLandmark(0.5, 0.5));
+  const frame: PoseFrame = Array.from({ length: 33 }, () =>
+    makeLandmark(0.5, 0.5)
+  );
   for (const [idx, lm] of Object.entries(overrides)) {
     frame[Number(idx)] = lm;
   }
@@ -45,7 +47,8 @@ function makeFrameWithAngles(hipDeg: number, kneeDeg: number): PoseFrame {
 
   // Knee angle: ankle X offset relative to the knee–hip vertical
   const kneeToAnkleLen = ankleY - kneeY;
-  const ankleOffsetX = kneeToAnkleLen * Math.tan(((180 - kneeDeg) * Math.PI) / 180);
+  const ankleOffsetX =
+    kneeToAnkleLen * Math.tan(((180 - kneeDeg) * Math.PI) / 180);
 
   return makeFrame({
     [LANDMARK.LEFT_SHOULDER]: makeLandmark(cx, shoulderY),
@@ -54,8 +57,14 @@ function makeFrameWithAngles(hipDeg: number, kneeDeg: number): PoseFrame {
     [LANDMARK.RIGHT_HIP]: makeLandmark(cx, hipY),
     [LANDMARK.LEFT_KNEE]: makeLandmark(cx + kneeOffsetX, kneeY),
     [LANDMARK.RIGHT_KNEE]: makeLandmark(cx + kneeOffsetX, kneeY),
-    [LANDMARK.LEFT_ANKLE]: makeLandmark(cx + kneeOffsetX + ankleOffsetX, ankleY),
-    [LANDMARK.RIGHT_ANKLE]: makeLandmark(cx + kneeOffsetX + ankleOffsetX, ankleY),
+    [LANDMARK.LEFT_ANKLE]: makeLandmark(
+      cx + kneeOffsetX + ankleOffsetX,
+      ankleY
+    ),
+    [LANDMARK.RIGHT_ANKLE]: makeLandmark(
+      cx + kneeOffsetX + ankleOffsetX,
+      ankleY
+    ),
   });
 }
 
@@ -76,7 +85,12 @@ describe('analyzeHipHingeTiming', () => {
       frames.push(makeFrameWithAngles(hipAngle, kneeAngle));
     }
 
-    const result = analyzeHipHingeTiming({ frames, startFrame: 0, endFrame: 10, fps: 30 });
+    const result = analyzeHipHingeTiming({
+      frames,
+      startFrame: 0,
+      endFrame: 10,
+      fps: 30,
+    });
     expect(result.crossoverPct).toBeGreaterThan(50);
     expect(result.isEarlyHipShoot).toBe(false);
   });
@@ -89,21 +103,28 @@ describe('analyzeHipHingeTiming', () => {
     for (let i = 0; i <= 12; i++) {
       // Shoulders move forward (X decreases) rapidly = hips extending
       // while knees stay at a fixed bent angle = hips shooting up
-      const shoulderX = 0.40 + i * 0.015; // shoulders moving back toward hip
+      const shoulderX = 0.4 + i * 0.015; // shoulders moving back toward hip
       const kneeX = 0.52; // knees stay forward (bent)
-      frames.push(makeFrame({
-        [LANDMARK.LEFT_SHOULDER]: makeLandmark(shoulderX, 0.30),
-        [LANDMARK.RIGHT_SHOULDER]: makeLandmark(shoulderX, 0.30),
-        [LANDMARK.LEFT_HIP]: makeLandmark(0.50, 0.55),
-        [LANDMARK.RIGHT_HIP]: makeLandmark(0.50, 0.55),
-        [LANDMARK.LEFT_KNEE]: makeLandmark(kneeX, 0.75),
-        [LANDMARK.RIGHT_KNEE]: makeLandmark(kneeX, 0.75),
-        [LANDMARK.LEFT_ANKLE]: makeLandmark(0.50, 0.95),
-        [LANDMARK.RIGHT_ANKLE]: makeLandmark(0.50, 0.95),
-      }));
+      frames.push(
+        makeFrame({
+          [LANDMARK.LEFT_SHOULDER]: makeLandmark(shoulderX, 0.3),
+          [LANDMARK.RIGHT_SHOULDER]: makeLandmark(shoulderX, 0.3),
+          [LANDMARK.LEFT_HIP]: makeLandmark(0.5, 0.55),
+          [LANDMARK.RIGHT_HIP]: makeLandmark(0.5, 0.55),
+          [LANDMARK.LEFT_KNEE]: makeLandmark(kneeX, 0.75),
+          [LANDMARK.RIGHT_KNEE]: makeLandmark(kneeX, 0.75),
+          [LANDMARK.LEFT_ANKLE]: makeLandmark(0.5, 0.95),
+          [LANDMARK.RIGHT_ANKLE]: makeLandmark(0.5, 0.95),
+        })
+      );
     }
 
-    const result = analyzeHipHingeTiming({ frames, startFrame: 0, endFrame: 12, fps: 30 });
+    const result = analyzeHipHingeTiming({
+      frames,
+      startFrame: 0,
+      endFrame: 12,
+      fps: 30,
+    });
     expect(result.isEarlyHipShoot).toBe(true);
     expect(result.crossoverPct).toBeLessThan(50);
   });
@@ -116,7 +137,12 @@ describe('analyzeHipHingeTiming', () => {
       makeFrameWithAngles(100, 115),
     ];
 
-    const result = analyzeHipHingeTiming({ frames, startFrame: 0, endFrame: 2, fps: 30 });
+    const result = analyzeHipHingeTiming({
+      frames,
+      startFrame: 0,
+      endFrame: 2,
+      fps: 30,
+    });
     expect(result.crossoverPct).toBe(50);
     expect(result.isEarlyHipShoot).toBe(false);
   });
@@ -128,7 +154,12 @@ describe('analyzeHipHingeTiming', () => {
       frames.push(makeFrameWithAngles(80 + i * 1, 100 + i * 8));
     }
 
-    const result = analyzeHipHingeTiming({ frames, startFrame: 0, endFrame: 10, fps: 30 });
+    const result = analyzeHipHingeTiming({
+      frames,
+      startFrame: 0,
+      endFrame: 10,
+      fps: 30,
+    });
     expect(result.crossoverPct).toBe(100);
     expect(result.isEarlyHipShoot).toBe(false);
   });
@@ -149,21 +180,29 @@ describe('computeBarToShinDistance', () => {
     });
     const frames = Array.from({ length: 5 }, () => frame);
 
-    const distance = computeBarToShinDistance({ frames, startFrame: 0, endFrame: 4 });
+    const distance = computeBarToShinDistance({
+      frames,
+      startFrame: 0,
+      endFrame: 4,
+    });
     expect(Math.abs(distance)).toBeCloseTo(0, 5);
   });
 
   it('returns a positive value greater than 5 when bar drifts forward of shins', () => {
     // Wrist midX = 0.55, knee midX = 0.50 → Δ = 0.05 → 0.05 * 243 = 12.15 cm
     const frame = makeFrame({
-      [LANDMARK.LEFT_WRIST]: makeLandmark(0.50, 0.7),
-      [LANDMARK.RIGHT_WRIST]: makeLandmark(0.60, 0.7),
+      [LANDMARK.LEFT_WRIST]: makeLandmark(0.5, 0.7),
+      [LANDMARK.RIGHT_WRIST]: makeLandmark(0.6, 0.7),
       [LANDMARK.LEFT_KNEE]: makeLandmark(0.45, 0.72),
       [LANDMARK.RIGHT_KNEE]: makeLandmark(0.55, 0.72),
     });
     const frames = Array.from({ length: 5 }, () => frame);
 
-    const distance = computeBarToShinDistance({ frames, startFrame: 0, endFrame: 4 });
+    const distance = computeBarToShinDistance({
+      frames,
+      startFrame: 0,
+      endFrame: 4,
+    });
     expect(distance).toBeGreaterThan(5);
   });
 
@@ -177,19 +216,32 @@ describe('computeBarToShinDistance', () => {
       [LANDMARK.RIGHT_KNEE]: makeLandmark(0.55, 0.72),
     });
     const behindFrame = makeFrame({
-      [LANDMARK.LEFT_WRIST]: makeLandmark(0.30, 0.7),
-      [LANDMARK.RIGHT_WRIST]: makeLandmark(0.40, 0.7),
+      [LANDMARK.LEFT_WRIST]: makeLandmark(0.3, 0.7),
+      [LANDMARK.RIGHT_WRIST]: makeLandmark(0.4, 0.7),
       [LANDMARK.LEFT_KNEE]: makeLandmark(0.45, 0.72),
       [LANDMARK.RIGHT_KNEE]: makeLandmark(0.55, 0.72),
     });
     // 12 frames: startFrame=0, endFrame=11 → thirdEnd = floor(11/3) = 3
     const frames: PoseFrame[] = [
-      closeFrame, closeFrame, closeFrame, closeFrame,
-      behindFrame, behindFrame, behindFrame, behindFrame,
-      behindFrame, behindFrame, behindFrame, behindFrame,
+      closeFrame,
+      closeFrame,
+      closeFrame,
+      closeFrame,
+      behindFrame,
+      behindFrame,
+      behindFrame,
+      behindFrame,
+      behindFrame,
+      behindFrame,
+      behindFrame,
+      behindFrame,
     ];
 
-    const distance = computeBarToShinDistance({ frames, startFrame: 0, endFrame: 11 });
+    const distance = computeBarToShinDistance({
+      frames,
+      startFrame: 0,
+      endFrame: 11,
+    });
     expect(Math.abs(distance)).toBeCloseTo(0, 3);
   });
 
@@ -197,7 +249,11 @@ describe('computeBarToShinDistance', () => {
     // endFrame - startFrame = 1 → thirdEnd = startFrame + floor(1/3) = startFrame
     // thirdEnd - startFrame = 0 < 1 → returns 0
     const frame = makeFrame({});
-    const result = computeBarToShinDistance({ frames: [frame, frame], startFrame: 0, endFrame: 1 });
+    const result = computeBarToShinDistance({
+      frames: [frame, frame],
+      startFrame: 0,
+      endFrame: 1,
+    });
     expect(result).toBe(0);
   });
 });

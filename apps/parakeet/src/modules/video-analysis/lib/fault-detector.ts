@@ -1,7 +1,7 @@
 import type { BarPathPoint, FormFault } from '@parakeet/shared-types';
 
-import { computeBarDrift, sliceBarPath } from './bar-path';
 import { computeForwardLean, computeHipAngle } from './angle-calculator';
+import { computeBarDrift, sliceBarPath } from './bar-path';
 import { detectSquatDepth } from './depth-detector';
 import { LANDMARK, type PoseFrame } from './pose-types';
 
@@ -80,7 +80,8 @@ function detectSquatFaults({
   // Depth check — only meaningful from side view (from front, hip/knee Y overlap)
   if (isSideView) {
     const bottomFrame =
-      repContext?.bottomFrame ?? findBottomFrame({ frames, startFrame, endFrame });
+      repContext?.bottomFrame ??
+      findBottomFrame({ frames, startFrame, endFrame });
     const { belowParallel } = detectSquatDepth({ frame: frames[bottomFrame] });
     if (!belowParallel) {
       faults.push({
@@ -166,7 +167,7 @@ function detectDeadliftFaults({
   const startIdx = Math.min(startFrame, frames.length - 1);
   const thirdIdx = Math.min(
     Math.round(startFrame + (endFrame - startFrame) / 3),
-    frames.length - 1,
+    frames.length - 1
   );
   const startHipAngle = computeHipAngle({ frame: frames[startIdx] });
   let minHipAngle = startHipAngle;
@@ -259,7 +260,13 @@ export function detectFaults({
   cameraAngle?: 'side' | 'front';
 }) {
   if (lift === 'squat') {
-    return detectSquatFaults({ frames, repBounds, barPath, repContext, cameraAngle });
+    return detectSquatFaults({
+      frames,
+      repBounds,
+      barPath,
+      repContext,
+      cameraAngle,
+    });
   }
   if (lift === 'deadlift') {
     return detectDeadliftFaults({ frames, repBounds, barPath, repContext });
@@ -290,7 +297,10 @@ export function computeTouchPointVariance({
     if (repPath.length === 0) return 0;
 
     // Bottom = point with highest Y in path
-    const bottom = repPath.reduce((best, p) => (p.y > best.y ? p : best), repPath[0]);
+    const bottom = repPath.reduce(
+      (best, p) => (p.y > best.y ? p : best),
+      repPath[0]
+    );
     return bottom.x;
   });
 

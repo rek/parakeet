@@ -38,7 +38,10 @@ export function VerdictBadge({
   return (
     <View style={inline ? undefined : styles.container}>
       <TouchableOpacity
-        style={[styles.badge, { borderColor: color + '40', backgroundColor: color + '10' }]}
+        style={[
+          styles.badge,
+          { borderColor: color + '40', backgroundColor: color + '10' },
+        ]}
         onPress={() => setExpanded(!expanded)}
         activeOpacity={0.7}
         accessible
@@ -53,11 +56,26 @@ export function VerdictBadge({
         <View style={[styles.details, { borderColor: colors.border }]}>
           {verdict.criteria.map((c) => (
             <View key={c.name} style={styles.criterionRow}>
-              <Text style={[styles.criterionSymbol, { color: verdictColor(
-                c.verdict === 'pass' ? 'white_light' : c.verdict === 'fail' ? 'red_light' : 'borderline',
-                colors,
-              ) }]}>
-                {c.verdict === 'pass' ? '\u2713' : c.verdict === 'fail' ? '\u2717' : '~'}
+              <Text
+                style={[
+                  styles.criterionSymbol,
+                  {
+                    color: verdictColor(
+                      c.verdict === 'pass'
+                        ? 'white_light'
+                        : c.verdict === 'fail'
+                          ? 'red_light'
+                          : 'borderline',
+                      colors
+                    ),
+                  },
+                ]}
+              >
+                {c.verdict === 'pass'
+                  ? '\u2713'
+                  : c.verdict === 'fail'
+                    ? '\u2717'
+                    : '~'}
               </Text>
               <Text style={[styles.criterionMessage, { color: colors.text }]}>
                 {c.message}

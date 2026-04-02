@@ -3,6 +3,7 @@
 
 # Test video binaries (manifest.json + landmarks/*.json are tracked)
 test-videos/*.mp4
+test-videos/*.3gp
 test-videos/landmarks/.model/
 test-videos/landmarks/device-*.landmarks.json
 test-videos/device-results/

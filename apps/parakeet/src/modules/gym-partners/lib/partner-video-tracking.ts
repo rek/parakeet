@@ -1,6 +1,5 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
-
 import { captureException } from '@platform/utils/captureException';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const LAST_SEEN_PARTNER_VIDEO_KEY = '@parakeet/lastSeenPartnerVideo';
 

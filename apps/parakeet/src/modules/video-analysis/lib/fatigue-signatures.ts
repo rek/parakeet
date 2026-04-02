@@ -42,8 +42,14 @@ export function computeFatigueSignatures({
     forwardLeanDriftDeg: delta(last.forwardLeanDeg, first.forwardLeanDeg),
     barDriftIncreaseCm: delta(last.barDriftCm, first.barDriftCm),
     romCompressionCm: delta(first.romCm, last.romCm),
-    descentSpeedChange: ratio(last.eccentricDurationSec, first.eccentricDurationSec),
-    lockoutDegradationDeg: delta(first.hipAngleAtLockoutDeg, last.hipAngleAtLockoutDeg),
+    descentSpeedChange: ratio(
+      last.eccentricDurationSec,
+      first.eccentricDurationSec
+    ),
+    lockoutDegradationDeg: delta(
+      first.hipAngleAtLockoutDeg,
+      last.hipAngleAtLockoutDeg
+    ),
     velocityLossTrend: classifyVelocityTrend({ reps }),
   };
 }

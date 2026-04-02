@@ -1,8 +1,7 @@
-import { useQueryClient } from '@tanstack/react-query';
-
 import { useAuth } from '@modules/auth';
 import { programQueries } from '@modules/program';
 import { sessionQueries } from '@modules/session';
+import { useQueryClient } from '@tanstack/react-query';
 
 import { disruptionQueries } from '../data/disruptions.queries';
 

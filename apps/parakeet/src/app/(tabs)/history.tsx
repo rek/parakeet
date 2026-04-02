@@ -23,10 +23,7 @@ import {
   useHistoryScreen,
 } from '@modules/history';
 import type { PerformanceTrend } from '@modules/history';
-import {
-  formatSessionDisplay,
-  getCompletedSessions,
-} from '@modules/session';
+import { formatSessionDisplay, getCompletedSessions } from '@modules/session';
 import type { Lift } from '@parakeet/shared-types';
 import { LIFT_LABELS } from '@shared/constants';
 import { formatDate, formatTime } from '@shared/utils/date';

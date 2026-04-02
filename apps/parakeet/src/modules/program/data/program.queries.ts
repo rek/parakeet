@@ -1,10 +1,7 @@
 import type { Lift } from '@parakeet/shared-types';
 import { queryOptions, skipToken } from '@tanstack/react-query';
 
-import {
-  getActiveProgram,
-  listPrograms,
-} from '../application/program.service';
+import { getActiveProgram, listPrograms } from '../application/program.service';
 import { getCurrentOneRmKg } from '../lib/lifter-maxes';
 
 export const programQueries = {

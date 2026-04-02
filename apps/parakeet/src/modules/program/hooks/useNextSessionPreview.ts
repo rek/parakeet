@@ -1,9 +1,8 @@
 import { useAuth } from '@modules/auth';
 import { historyQueries } from '@modules/history';
 import { safeParseWithParser } from '@parakeet/db';
-import type { Lift } from '@parakeet/shared-types';
+import type { FormulaOverrides, Lift } from '@parakeet/shared-types';
 import { FormulaOverridesSchema } from '@parakeet/shared-types';
-import type { FormulaOverrides } from '@parakeet/shared-types';
 import {
   getDefaultFormulaConfig,
   mergeFormulaConfig,
@@ -36,7 +35,7 @@ const formulaConfigQuery = (userId: string | undefined) =>
             data.overrides,
             (v) => FormulaOverridesSchema.parse(v),
             EMPTY_OVERRIDES,
-            captureException,
+            captureException
           );
           return mergeFormulaConfig(base, overrides);
         }
