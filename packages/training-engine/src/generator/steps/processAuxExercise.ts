@@ -5,7 +5,7 @@ import {
   computeAuxWeight,
   getRepTarget,
 } from '../../auxiliary/exercise-catalog';
-import { ExerciseType, getExerciseType } from '../../auxiliary/exercise-types';
+import { getExerciseType } from '../../auxiliary/exercise-types';
 import { roundToNearest } from '../../formulas/weight-rounding';
 import type { MrvMevConfig, MuscleGroup } from '../../types';
 import {
