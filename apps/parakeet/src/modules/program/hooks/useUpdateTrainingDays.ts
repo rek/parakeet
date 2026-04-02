@@ -1,9 +1,12 @@
 import { useAuth } from '@modules/auth';
-import { sessionQueries } from '@modules/session';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 import { updateTrainingDays } from '../application/program.service';
 import { programQueries } from '../data/program.queries';
+
+// SYNC: Mirrors sessionQueries.all() in @modules/session/data/session.queries.ts.
+// Inlined to avoid circular dependency: program -> session -> program.
+const SESSION_QUERY_KEY = ['session'] as const;
 
 export function useUpdateTrainingDays() {
   const { user } = useAuth();
@@ -28,7 +31,7 @@ export function useUpdateTrainingDays() {
         queryKey: programQueries.active(user?.id).queryKey,
       });
       await queryClient.invalidateQueries({
-        queryKey: sessionQueries.all(),
+        queryKey: SESSION_QUERY_KEY,
       });
     },
   });

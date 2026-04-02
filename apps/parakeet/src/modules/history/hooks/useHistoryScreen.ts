@@ -1,8 +1,10 @@
 import { useAuth } from '@modules/auth';
-import { programQueries } from '@modules/program';
-import { sessionQueries } from '@modules/session';
-import { useQuery } from '@tanstack/react-query';
+import { queryOptions, skipToken, useQuery } from '@tanstack/react-query';
 
+import {
+  getCompletedSessions,
+  listPrograms,
+} from '../application/history-screen.service';
 import { historyQueries } from '../data/history.queries';
 
 export function useHistoryScreen() {
@@ -13,9 +15,28 @@ export function useHistoryScreen() {
     enabled: !!user?.id,
   });
 
-  const sessionsQuery = useQuery(sessionQueries.completed(user?.id, 0, 20));
+  // SYNC: Mirrors sessionQueries.completed(userId, 0, 20) from @modules/session.
+  // Inlined to avoid circular dependency: history -> session -> history.
+  const sessionsQuery = useQuery(
+    queryOptions({
+      queryKey: ['session', 'completed', user?.id, 0, 20] as const,
+      queryFn: user?.id ? () => getCompletedSessions(user.id, 0, 20) : skipToken,
+    })
+  );
 
-  const programsQuery = useQuery(programQueries.inactive(user?.id));
+  // SYNC: Mirrors programQueries.inactive(userId) from @modules/program.
+  // Inlined to avoid circular dependency: history -> program -> history.
+  const programsQuery = useQuery(
+    queryOptions({
+      queryKey: ['program', 'inactive', user?.id] as const,
+      queryFn: user?.id
+        ? async () => {
+            const all = await listPrograms(user.id);
+            return all.filter((p) => p.status !== 'active');
+          }
+        : skipToken,
+    })
+  );
 
   const volumeQuery = useQuery(historyQueries.weeklySetsPerLift(user?.id, 8));
 

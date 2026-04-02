@@ -1,10 +1,13 @@
 import { useAuth } from '@modules/auth';
-import { sessionQueries } from '@modules/session';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 import { createProgram } from '../application/program.service';
 import type { CreateProgramInput } from '../application/program.service';
 import { programQueries } from '../data/program.queries';
+
+// SYNC: Mirrors sessionQueries.all() in @modules/session/data/session.queries.ts.
+// Inlined to avoid circular dependency: program -> session -> program.
+const SESSION_QUERY_KEY = ['session'] as const;
 
 export function useCreateProgram() {
   const { user } = useAuth();
@@ -17,7 +20,7 @@ export function useCreateProgram() {
         queryKey: programQueries.active(user?.id).queryKey,
       });
       await queryClient.invalidateQueries({
-        queryKey: sessionQueries.all(),
+        queryKey: SESSION_QUERY_KEY,
       });
     },
   });

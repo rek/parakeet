@@ -20,14 +20,14 @@ import {
   IntraSessionComparison,
   LongitudinalComparison,
   ReadinessCard,
+  RecordVideoSheet,
   RepMetricsCard,
   useFormCoaching,
   usePreviousVideos,
   useSessionVideos,
   useVideoAnalysis,
+  VideoPlayerCard,
 } from '@modules/video-analysis';
-import { RecordVideoSheet } from '@modules/video-analysis/ui/RecordVideoSheet';
-import { VideoPlayerCard } from '@modules/video-analysis/ui/VideoPlayerCard';
 import type { Lift } from '@parakeet/shared-types';
 import { LIFT_LABELS } from '@shared/constants';
 import { capitalize } from '@shared/utils/string';

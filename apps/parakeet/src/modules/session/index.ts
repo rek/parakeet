@@ -34,7 +34,6 @@ export * from './ui/readiness-styles';
 export * from './ui/performance-styles';
 export * from './ui/rpe-options';
 export { AddExerciseModal } from './ui/AddExerciseModal';
-export { LiftHistorySheet } from './ui/LiftHistorySheet';
 export { PrescriptionSheet } from './ui/PrescriptionSheet';
 export { PostRestOverlay } from './ui/PostRestOverlay';
 export { RestTimer } from './ui/RestTimer';

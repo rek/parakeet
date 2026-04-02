@@ -8,3 +8,4 @@ export * from './utils/chart-builders';
 export * from './hooks/useLiftHistory';
 export { useHistoryScreen } from './hooks/useHistoryScreen';
 export { useLiftDetail } from './hooks/useLiftDetail';
+export { LiftHistorySheet } from './ui/LiftHistorySheet';

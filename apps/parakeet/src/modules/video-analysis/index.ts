@@ -55,11 +55,9 @@ export { IntraSessionComparison } from './ui/IntraSessionComparison';
 export { VerdictBadge } from './ui/VerdictBadge';
 export { ReadinessCard } from './ui/ReadinessCard';
 
-// --- Native-dependent exports ---
-// Import directly from file path, NOT from this barrel, to avoid loading
-// native modules at app startup. Safe in screens gated by videoAnalysis flag.
-//   import { VideoPlayerCard } from '@modules/video-analysis/ui/VideoPlayerCard';
-//   import { RecordVideoSheet } from '@modules/video-analysis/ui/RecordVideoSheet';
-//   import { LiveSkeletonOverlay } from '@modules/video-analysis/ui/LiveSkeletonOverlay';
-export type { VideoPlayerCard } from './ui/VideoPlayerCard';
+// --- Native-dependent UI components ---
+// These load react-native-vision-camera and expo-video. Only import from
+// screens that are navigated to on demand (not eagerly loaded at startup).
+export { VideoPlayerCard } from './ui/VideoPlayerCard';
+export { RecordVideoSheet } from './ui/RecordVideoSheet';
 export type { LiveLandmark } from './hooks/useLivePoseOverlay';

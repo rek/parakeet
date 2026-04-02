@@ -1,4 +1,3 @@
-import { getProfile } from '@modules/profile';
 import { JIT_MODEL } from '@parakeet/training-engine';
 import type { Json } from '@platform/supabase';
 import { typedSupabase } from '@platform/supabase';
@@ -40,7 +39,9 @@ export async function fetchMotivationalContext(
 ): Promise<MotivationalContext> {
   const sessionIds = sessions.map((s) => s.id);
 
-  const [logsResult, prsResult, profile] = await Promise.all([
+  // Fetch profile directly to avoid circular dependency with @modules/profile.
+  // Only biological_sex is needed for coaching message personalisation.
+  const [logsResult, prsResult, profileResult] = await Promise.all([
     typedSupabase
       .from('session_logs')
       .select('session_rpe, performance_vs_plan, actual_sets, completion_pct')
@@ -49,8 +50,9 @@ export async function fetchMotivationalContext(
       .from('personal_records')
       .select('lift, pr_type')
       .in('session_id', sessionIds),
-    getProfile(),
+    typedSupabase.from('profiles').select('biological_sex').maybeSingle(),
   ]);
+  const profile = profileResult.data;
 
   const logs = logsResult.data ?? [];
 
@@ -115,7 +117,10 @@ export async function fetchMotivationalContext(
     performanceVsPlan,
     newPRs,
     currentStreak,
-    biologicalSex: profile?.biological_sex ?? null,
+    biologicalSex:
+      profile?.biological_sex === 'female' || profile?.biological_sex === 'male'
+        ? profile.biological_sex
+        : null,
     cyclePhase,
     completionPct,
     topWeightKg,

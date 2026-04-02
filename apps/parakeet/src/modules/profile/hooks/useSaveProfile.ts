@@ -1,4 +1,3 @@
-import { achievementQueries } from '@modules/achievements';
 import { useAuth } from '@modules/auth';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 
@@ -7,6 +6,16 @@ import { updateProfile } from '../application/profile.service';
 import type { BiologicalSex } from '../application/profile.service';
 import { profileQueries } from '../data/profile.queries';
 import { birthYearToDobIso } from '../utils/profile-transforms';
+
+// SYNC: These mirror achievementQueries.wilksCurrent/wilksHistory query keys.
+// Inlined to avoid circular dependency: profile -> achievements -> wilks -> program.
+// Keep in sync with achievementQueries in @modules/achievements/data/achievements.queries.ts.
+function wilksCurrentKey(userId: string | undefined) {
+  return ['achievements', 'wilks-current', userId] as const;
+}
+function wilksHistoryKey(userId: string | undefined) {
+  return ['achievements', 'wilks-history', userId] as const;
+}
 
 interface SaveProfileArgs {
   displayName: string;
@@ -63,10 +72,10 @@ export function useSaveProfile() {
         queryKey: profileQueries.bodyweightHistory(user?.id).queryKey,
       });
       await queryClient.invalidateQueries({
-        queryKey: achievementQueries.wilksCurrent(user?.id).queryKey,
+        queryKey: wilksCurrentKey(user?.id),
       });
       await queryClient.invalidateQueries({
-        queryKey: achievementQueries.wilksHistory(user?.id).queryKey,
+        queryKey: wilksHistoryKey(user?.id),
       });
     },
   });

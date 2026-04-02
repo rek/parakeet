@@ -10,7 +10,7 @@ import {
 
 import { Ionicons } from '@expo/vector-icons';
 import { useFeatureEnabled } from '@modules/feature-flags';
-import { useLiftHistory } from '@modules/history';
+import { LiftHistorySheet, useLiftHistory } from '@modules/history';
 import { computeDisplayWeights, useChallengeReview } from '@modules/jit';
 import { getProfile } from '@modules/profile';
 import {
@@ -28,7 +28,6 @@ import {
   getRecentAuxExerciseNames,
   getSession,
   groupAuxiliaryWork,
-  LiftHistorySheet,
   parsePrescriptionTrace,
   PostRestOverlay,
   RestTimer,
