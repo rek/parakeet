@@ -29,6 +29,7 @@ import {
 } from '@parakeet/shared-types';
 import type { Lift } from '@parakeet/shared-types';
 import {
+  computeInjurySorenessOverrides,
   computeWeightDeviation,
   computeWorkingOneRm,
   createAdHocJITOutput,
@@ -40,6 +41,7 @@ import {
   getMusclesForExercise,
   getMusclesForLift,
   LIFTS,
+  mergeSorenessRatings,
   reviewJITDecision,
   rpeSetMultiplier,
 } from '@parakeet/training-engine';
@@ -345,6 +347,15 @@ export async function runJITForSession(
     DisruptionSchema.parse(row)
   );
 
+  // Inject injury-derived soreness for muscles of affected lifts (GH#166).
+  // This lets the exercise scorer naturally route around injured muscles
+  // without needing a separate "safe exercises" list.
+  const injuryOverrides = computeInjurySorenessOverrides(activeDisruptions);
+  const mergedSorenessRatings = mergeSorenessRatings(
+    sorenessRatings,
+    injuryOverrides
+  );
+
   // Merge all three lift pools for widest top-up selection (engine-027)
   const auxiliaryPool = allPools
     ? [...allPools.squat, ...allPools.bench, ...allPools.deadlift]
@@ -415,7 +426,7 @@ export async function runJITForSession(
     intensityType,
     oneRmKg: workingOneRmKg,
     formulaConfig,
-    sorenessRatings,
+    sorenessRatings: mergedSorenessRatings,
     weeklyVolumeToDate,
     mrvMevConfig,
     activeAuxiliaries,
