@@ -1,14 +1,14 @@
 import { estimateOneRepMax_Epley } from '@parakeet/training-engine';
 import { describe, expect, it, vi } from 'vitest';
+import { inferSource, resolve1Rm } from './lifter-maxes';
 
 // Mock the data repository to prevent pulling in the Supabase/react-native chain.
+// Vitest hoists vi.mock calls above imports automatically.
 vi.mock('../data/lifter-maxes.repository', () => ({
   getCurrentAuthUser: vi.fn(),
   insertLifterMaxes: vi.fn(),
   fetchLatestLifterMaxes: vi.fn(),
 }));
-
-import { inferSource, resolve1Rm } from './lifter-maxes';
 
 // ── resolve1Rm ─────────────────────────────────────────────────────────────────
 
