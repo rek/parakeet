@@ -345,6 +345,41 @@ export async function runJITForSession(
     DisruptionSchema.parse(row)
   );
 
+  // Inject injury-derived soreness for muscles of affected lifts (GH#166).
+  // This lets the exercise scorer naturally route around injured muscles
+  // without needing a separate "safe exercises" list.
+  const INJURY_SORENESS: Record<string, SorenessLevel> = {
+    minor: 5 as SorenessLevel,
+    moderate: 7 as SorenessLevel,
+  };
+  const injurySorenessOverrides: Partial<Record<MuscleGroup, SorenessLevel>> =
+    {};
+  for (const d of activeDisruptions) {
+    if (d.disruption_type !== 'injury' || !d.affected_lifts) continue;
+    const injuredSoreness = INJURY_SORENESS[d.severity];
+    if (!injuredSoreness) continue; // major → session skipped entirely
+    for (const affectedLift of d.affected_lifts) {
+      const parsed = LiftSchema.safeParse(affectedLift);
+      if (!parsed.success) continue;
+      for (const { muscle } of getMusclesForLift(parsed.data)) {
+        const current = injurySorenessOverrides[muscle] ?? 0;
+        if (injuredSoreness > current) {
+          injurySorenessOverrides[muscle] = injuredSoreness;
+        }
+      }
+    }
+  }
+  // Merge: injury soreness wins only if it's higher than actual soreness
+  const mergedSorenessRatings: Partial<Record<MuscleGroup, SorenessLevel>> = {
+    ...sorenessRatings,
+  };
+  for (const [muscle, level] of Object.entries(injurySorenessOverrides)) {
+    const existing = mergedSorenessRatings[muscle as MuscleGroup] ?? 0;
+    if (level > existing) {
+      mergedSorenessRatings[muscle as MuscleGroup] = level;
+    }
+  }
+
   // Merge all three lift pools for widest top-up selection (engine-027)
   const auxiliaryPool = allPools
     ? [...allPools.squat, ...allPools.bench, ...allPools.deadlift]
@@ -415,7 +450,7 @@ export async function runJITForSession(
     intensityType,
     oneRmKg: workingOneRmKg,
     formulaConfig,
-    sorenessRatings,
+    sorenessRatings: mergedSorenessRatings,
     weeklyVolumeToDate,
     mrvMevConfig,
     activeAuxiliaries,
