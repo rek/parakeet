@@ -59,6 +59,7 @@ export async function reportDisruption(
     affected_lifts: input.affected_lifts ?? null,
     description: input.description ?? null,
     session_ids_affected: input.session_ids_affected ?? null,
+    safe_exercises: input.safe_exercises ?? null,
     status: 'active',
   });
 

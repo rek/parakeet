@@ -25,6 +25,8 @@ export const CreateDisruptionSchema = z
     affected_lifts: z.array(z.enum(['squat', 'bench', 'deadlift'])).optional(),
     description: z.string().optional(),
     session_ids_affected: z.array(z.uuid()).optional(),
+    /** Exercises the user can still safely perform despite the injury (GH#166). */
+    safe_exercises: z.array(z.string()).optional(),
   })
   .strict();
 
@@ -61,6 +63,7 @@ export const DisruptionSchema = z
     affected_date_end: z.iso.date().nullable(),
     affected_lifts: z.array(z.string()).nullable(),
     description: z.string().nullable(),
+    safe_exercises: z.array(z.string()).nullable(),
     adjustment_applied: z.array(AdjustmentSuggestionSchema).nullable(),
     resolved_at: z.iso.datetime({ offset: true }).nullable(),
     status: z.enum(['active', 'resolved', 'monitoring']),

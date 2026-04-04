@@ -672,10 +672,14 @@ function buildVolumeTopUp(
     ? new Set(upcomingLifts)
     : undefined;
   const injuredLiftSet = new Set<string>();
+  const safeExerciseSet = new Set<string>();
   if (activeDisruptions?.length) {
     for (const d of activeDisruptions) {
       if (d.disruption_type === 'injury' && d.affected_lifts) {
         for (const l of d.affected_lifts) injuredLiftSet.add(l);
+      }
+      if (d.safe_exercises) {
+        for (const e of d.safe_exercises) safeExerciseSet.add(e);
       }
     }
   }
@@ -687,7 +691,13 @@ function buildVolumeTopUp(
       const exerciseLift = getLiftForExercise(exercise);
       if (upcomingLiftSet && exerciseLift && upcomingLiftSet.has(exerciseLift))
         return false;
-      if (injuredLiftSet.size > 0 && exerciseLift && injuredLiftSet.has(exerciseLift))
+      // Filter exercises for injured lifts, but allow user-declared safe exercises (GH#166)
+      if (
+        injuredLiftSet.size > 0 &&
+        exerciseLift &&
+        injuredLiftSet.has(exerciseLift) &&
+        !safeExerciseSet.has(exercise)
+      )
         return false;
       return getMusclesForExercise(exercise).some(
         (m) => m.muscle === muscle && m.contribution >= 1.0

@@ -41,6 +41,7 @@ export function makeDisruption(
     affected_date_end: null,
     affected_lifts: [lift],
     description: 'Knee injury',
+    safe_exercises: null,
     adjustment_applied: null,
     resolved_at: null,
     status: 'active',

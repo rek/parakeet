@@ -786,6 +786,7 @@ function makeEquipmentDisruption(
     affected_date_end: null,
     affected_lifts: null,
     description: 'No gym access today',
+    safe_exercises: null,
     adjustment_applied: null,
     resolved_at: null,
     status: 'active',
@@ -1222,6 +1223,29 @@ describe('generateJITSession — volume top-up (engine-027)', () => {
           severity: 'minor',
           affected_lifts: null,
           description: 'Mild cold',
+        })],
+      })
+    );
+    const topUps = out.auxiliaryWork.filter((a) => a.isTopUp);
+    const hasLegPress = topUps.some((a) => a.exercise === 'Leg Press');
+    expect(hasLegPress).toBe(true);
+  });
+
+  it('safe_exercises bypass injury filter for top-up (GH#166)', () => {
+    // Knee injury affecting squat, but user marked Leg Press as safe
+    const out = generateJITSession(
+      baseInput({
+        primaryLift: 'bench',
+        activeAuxiliaries: ['Close-Grip Barbell Bench Press', 'Dumbbell Fly'],
+        auxiliaryPool: ['Leg Press', 'Barbell Curl'],
+        weeklyVolumeToDate: atMevExcept(DEFAULT_MRV_MEV_CONFIG_MALE, 'quads'),
+        mrvMevConfig: DEFAULT_MRV_MEV_CONFIG_MALE,
+        activeDisruptions: [makeEquipmentDisruption({
+          disruption_type: 'injury',
+          severity: 'moderate',
+          affected_lifts: ['squat'],
+          safe_exercises: ['Leg Press'],
+          description: 'Knee injury — can still do leg press',
         })],
       })
     );

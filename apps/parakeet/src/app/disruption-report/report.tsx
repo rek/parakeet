@@ -26,6 +26,7 @@ import {
 } from '@modules/disruptions';
 import type { SorenessLevel } from '@modules/disruptions';
 import { useProfile } from '@modules/profile';
+import { DEFAULT_AUXILIARY_POOLS } from '@parakeet/training-engine';
 import type {
   DisruptionType,
   DisruptionWithSuggestions,
@@ -404,6 +405,7 @@ export default function DisruptionReportScreen() {
   const [allLifts, setAllLifts] = useState(false);
   const [description, setDescription] = useState('');
   const [isMenstrualSymptoms, setIsMenstrualSymptoms] = useState(false);
+  const [safeExercises, setSafeExercises] = useState<Set<string>>(new Set());
   const [eventName, setEventName] = useState('');
   const [eventSoreness, setEventSoreness] = useState<
     Record<string, SorenessLevel>
@@ -483,6 +485,8 @@ export default function DisruptionReportScreen() {
             ? Array.from(selectedLifts)
             : undefined,
         description: effectiveDescription,
+        safe_exercises:
+          safeExercises.size > 0 ? Array.from(safeExercises) : undefined,
       });
 
       if (effectiveSeverity === 'minor') {
@@ -524,6 +528,21 @@ export default function DisruptionReportScreen() {
   }
 
   const isUnprogrammedEvent = selectedType === 'unprogrammed_event';
+
+  // Exercises from affected lifts' pools — shown for injury type so user can mark safe ones
+  const affectedLiftExercises = useMemo(() => {
+    if (selectedType !== 'injury') return [];
+    const lifts = allLifts ? TRAINING_LIFTS : Array.from(selectedLifts);
+    if (lifts.length === 0) return [];
+    const exercises = new Set<string>();
+    for (const lift of lifts) {
+      const pool = DEFAULT_AUXILIARY_POOLS[lift as Lift];
+      if (pool) {
+        for (const e of pool) exercises.add(e);
+      }
+    }
+    return Array.from(exercises);
+  }, [selectedType, selectedLifts, allLifts]);
 
   // ── Render: review state ─────────────────────────────────────────────────
 
@@ -876,6 +895,50 @@ export default function DisruptionReportScreen() {
           </TouchableOpacity>
         </View>
 
+        {/* Step 4b: Safe exercises (injury only, when lifts are selected) */}
+        {selectedType === 'injury' && affectedLiftExercises.length > 0 && (
+          <>
+            <Text style={styles.sectionLabel}>
+              Which exercises can you still do?
+            </Text>
+            <Text style={[styles.subtitle, { marginBottom: 8 }]}>
+              Select any exercises you can safely perform despite the injury.
+              These will be used for volume top-up in other sessions.
+            </Text>
+            <View style={styles.liftRow}>
+              {affectedLiftExercises.map((exercise) => (
+                <TouchableOpacity
+                  key={exercise}
+                  style={[
+                    styles.liftChip,
+                    safeExercises.has(exercise) && styles.liftChipSelected,
+                  ]}
+                  onPress={() => {
+                    const next = new Set(safeExercises);
+                    if (next.has(exercise)) {
+                      next.delete(exercise);
+                    } else {
+                      next.add(exercise);
+                    }
+                    setSafeExercises(next);
+                  }}
+                  activeOpacity={0.7}
+                >
+                  <Text
+                    style={[
+                      styles.liftChipText,
+                      safeExercises.has(exercise) &&
+                        styles.liftChipTextSelected,
+                    ]}
+                  >
+                    {exercise}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </>
+        )}
+
         {/* Unprogrammed event: event name + post-event soreness */}
         {isUnprogrammedEvent && (
           <>
@@ -930,7 +993,12 @@ export default function DisruptionReportScreen() {
         )}
 
         {/* Step 5: Description */}
-        <Text style={styles.sectionLabel}>5. More details (optional)</Text>
+        <Text style={styles.sectionLabel}>
+          {selectedType === 'injury' && affectedLiftExercises.length > 0
+            ? '6'
+            : '5'}
+          . More details (optional)
+        </Text>
         <TextInput
           style={styles.descriptionInput}
           value={description}

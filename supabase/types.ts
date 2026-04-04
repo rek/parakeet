@@ -363,6 +363,7 @@ export type Database = {
           program_id: string | null
           reported_at: string
           resolved_at: string | null
+          safe_exercises: string[] | null
           session_ids_affected: string[] | null
           severity: string
           status: string
@@ -379,6 +380,7 @@ export type Database = {
           program_id?: string | null
           reported_at?: string
           resolved_at?: string | null
+          safe_exercises?: string[] | null
           session_ids_affected?: string[] | null
           severity: string
           status?: string
@@ -395,6 +397,7 @@ export type Database = {
           program_id?: string | null
           reported_at?: string
           resolved_at?: string | null
+          safe_exercises?: string[] | null
           session_ids_affected?: string[] | null
           severity?: string
           status?: string
