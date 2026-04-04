@@ -1,8 +1,7 @@
 import { IntensityTypeSchema, LiftSchema } from '@parakeet/shared-types';
 import type { IntensityType, Lift } from '@parakeet/shared-types';
 import { typedSupabase } from '@platform/supabase';
-import type { CompletedSessionListItem, ProgramListItem } from '@shared/types/domain';
-import type { SessionStatus } from '@shared/types/domain';
+import type { CompletedSessionListItem, ProgramListItem, SessionStatus } from '@shared/types/domain';
 
 // SYNC: These functions mirror repository logic in @modules/session and @modules/program.
 // Kept here to avoid circular dependencies: history -> session -> history and

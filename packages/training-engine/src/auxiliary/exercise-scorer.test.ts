@@ -41,13 +41,13 @@ describe('exercise-scorer / deficit coverage', () => {
     const rich = scoreExercise('Bulgarian Split Squat', ctx);
     // Leg Press: quads 1.0, glutes 0.5 — less secondary coverage
     const lean = scoreExercise('Leg Press', ctx);
-    expect(rich.breakdown.deficit).toBeGreaterThan(lean.breakdown.deficit);
+    expect(rich.breakdown['deficit']).toBeGreaterThan(lean.breakdown['deficit']);
   });
 
   it('gives base 0.5 when no secondary deficits exist', () => {
     const ctx = baseCtx({ muscleDeficits: { quads: 4 } });
     const result = scoreExercise('Leg Press', ctx);
-    expect(result.breakdown.deficit).toBe(0.5);
+    expect(result.breakdown['deficit']).toBe(0.5);
   });
 });
 
@@ -61,13 +61,13 @@ describe('exercise-scorer / soreness avoidance', () => {
     const sore = scoreExercise('Bulgarian Split Squat', ctx);
     // Leg Press hits glutes at 0.5 — less penalized
     const less = scoreExercise('Leg Press', ctx);
-    expect(sore.breakdown.soreness).toBeLessThan(less.breakdown.soreness);
+    expect(sore.breakdown['soreness']).toBeLessThan(less.breakdown['soreness']);
   });
 
   it('returns 1.0 with no soreness', () => {
     const ctx = baseCtx({ sorenessRatings: {} });
     const result = scoreExercise('Leg Press', ctx);
-    expect(result.breakdown.soreness).toBe(1.0);
+    expect(result.breakdown['soreness']).toBe(1.0);
   });
 });
 
@@ -76,14 +76,14 @@ describe('exercise-scorer / movement pattern diversity', () => {
     const ctx = baseCtx({ alreadySelectedPatterns: ['squat'] });
     // Pause Squat resolves to 'squat' pattern (associatedLift = squat)
     const repeated = scoreExercise('Pause Squat', ctx);
-    expect(repeated.breakdown.diversity).toBe(0.3);
+    expect(repeated.breakdown['diversity']).toBe(0.3);
   });
 
   it('rewards novel patterns', () => {
     const ctx = baseCtx({ alreadySelectedPatterns: ['push'] });
     // Pause Squat resolves to 'squat' — novel when only 'push' used so far
     const novel = scoreExercise('Pause Squat', ctx);
-    expect(novel.breakdown.diversity).toBe(1.0);
+    expect(novel.breakdown['diversity']).toBe(1.0);
   });
 });
 
@@ -99,7 +99,7 @@ describe('exercise-scorer / fatigue appropriateness', () => {
     // Lat Pulldown: simple. Power Clean: complex
     const simple = scoreExercise('Lat Pulldown', ctx);
     const complex = scoreExercise('Power Clean', ctx);
-    expect(simple.breakdown.fatigue).toBeGreaterThan(complex.breakdown.fatigue);
+    expect(simple.breakdown['fatigue']).toBeGreaterThan(complex.breakdown['fatigue']);
   });
 
   it('prefers complex exercises when readiness is great', () => {
@@ -112,7 +112,7 @@ describe('exercise-scorer / fatigue appropriateness', () => {
     });
     const simple = scoreExercise('Lat Pulldown', ctx);
     const complex = scoreExercise('Power Clean', ctx);
-    expect(complex.breakdown.fatigue).toBeGreaterThan(simple.breakdown.fatigue);
+    expect(complex.breakdown['fatigue']).toBeGreaterThan(simple.breakdown['fatigue']);
   });
 });
 
@@ -126,13 +126,13 @@ describe('exercise-scorer / upcoming lift protection', () => {
     });
     // Close-Grip Barbell Bench Press: chest + triceps — overlaps bench muscles
     const overlap = scoreExercise('Close-Grip Barbell Bench Press', ctx);
-    expect(overlap.breakdown.upcoming).toBeLessThan(1.0);
+    expect(overlap.breakdown['upcoming']).toBeLessThan(1.0);
   });
 
   it('returns 1.0 when no upcoming lifts', () => {
     const ctx = baseCtx({ upcomingLifts: [] });
     const result = scoreExercise('Pause Squat', ctx);
-    expect(result.breakdown.upcoming).toBe(1.0);
+    expect(result.breakdown['upcoming']).toBe(1.0);
   });
 
   it('clamps to 0 with heavy multi-muscle overlap', () => {
@@ -145,7 +145,7 @@ describe('exercise-scorer / upcoming lift protection', () => {
     });
     // Pause Squat: quads 1.0, glutes 1.0, hams 0.5, lower_back 0.5 — many overlaps
     const result = scoreExercise('Pause Squat', ctx);
-    expect(result.breakdown.upcoming).toBe(0);
+    expect(result.breakdown['upcoming']).toBe(0);
   });
 });
 
@@ -155,9 +155,9 @@ describe('exercise-scorer / specificity', () => {
     const same = scoreExercise('Pause Squat', ctx); // associatedLift: squat
     const general = scoreExercise('Overhead Press', ctx); // associatedLift: null
     const cross = scoreExercise('Close-Grip Barbell Bench Press', ctx); // associatedLift: bench
-    expect(same.breakdown.specific).toBeGreaterThan(general.breakdown.specific);
-    expect(general.breakdown.specific).toBeGreaterThan(
-      cross.breakdown.specific
+    expect(same.breakdown['specific']).toBeGreaterThan(general.breakdown['specific']);
+    expect(general.breakdown['specific']).toBeGreaterThan(
+      cross.breakdown['specific']
     );
   });
 });
@@ -177,8 +177,8 @@ describe('exercise-scorer / compound-isolation balance', () => {
     const isolation = scoreExercise('Dumbbell Fly', ctx);
     // Floor Press: compound (2 muscles at 1.0)
     const compound = scoreExercise('Floor Press', ctx);
-    expect(isolation.breakdown.balance).toBeGreaterThan(
-      compound.breakdown.balance
+    expect(isolation.breakdown['balance']).toBeGreaterThan(
+      compound.breakdown['balance']
     );
   });
 
@@ -191,8 +191,8 @@ describe('exercise-scorer / compound-isolation balance', () => {
     });
     const compound = scoreExercise('Floor Press', ctx);
     const isolation = scoreExercise('Dumbbell Fly', ctx);
-    expect(compound.breakdown.balance).toBeGreaterThan(
-      isolation.breakdown.balance
+    expect(compound.breakdown['balance']).toBeGreaterThan(
+      isolation.breakdown['balance']
     );
   });
 });
@@ -208,10 +208,10 @@ describe('exercise-scorer / edge cases', () => {
     expect(result.score).toBeGreaterThanOrEqual(0);
     expect(result.score).toBeLessThanOrEqual(1);
     // Factors that depend on catalog entry fall back to 0.5
-    expect(result.breakdown.diversity).toBe(0.5);
-    expect(result.breakdown.fatigue).toBe(0.5);
-    expect(result.breakdown.specific).toBe(0.5);
-    expect(result.breakdown.balance).toBe(0.5);
+    expect(result.breakdown['diversity']).toBe(0.5);
+    expect(result.breakdown['fatigue']).toBe(0.5);
+    expect(result.breakdown['specific']).toBe(0.5);
+    expect(result.breakdown['balance']).toBe(0.5);
   });
 });
 
@@ -328,7 +328,7 @@ describe('exercise-scorer / scenarios', () => {
     // Both are hinge pattern (deadlift-associated) → both get diversity=1.0
     // Neither is squat pattern, so both benefit from diversity
     for (const r of ranked) {
-      expect(r.breakdown.diversity).toBe(1.0);
+      expect(r.breakdown['diversity']).toBe(1.0);
     }
   });
 });

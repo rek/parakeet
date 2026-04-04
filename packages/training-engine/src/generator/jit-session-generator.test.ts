@@ -1182,6 +1182,53 @@ describe('generateJITSession — volume top-up (engine-027)', () => {
     );
     expect(hasTopUpRationale).toBe(true);
   });
+
+  it('skips exercises associated with injured lifts (GH#165)', () => {
+    // Bench day, knee injury affecting squat — Leg Press (squat-associated) should be skipped
+    const out = generateJITSession(
+      baseInput({
+        primaryLift: 'bench',
+        activeAuxiliaries: ['Close-Grip Barbell Bench Press', 'Dumbbell Fly'],
+        auxiliaryPool: [
+          'Leg Press',
+          'Romanian Dumbbell Deadlift',
+          'Barbell Curl',
+        ],
+        weeklyVolumeToDate: atMevExcept(DEFAULT_MRV_MEV_CONFIG_MALE, 'quads'),
+        mrvMevConfig: DEFAULT_MRV_MEV_CONFIG_MALE,
+        activeDisruptions: [makeEquipmentDisruption({
+          disruption_type: 'injury',
+          severity: 'moderate',
+          affected_lifts: ['squat'],
+          description: 'Knee injury',
+        })],
+      })
+    );
+    const topUps = out.auxiliaryWork.filter((a) => a.isTopUp);
+    expect(topUps.every((a) => a.exercise !== 'Leg Press')).toBe(true);
+  });
+
+  it('null affected_lifts disruption does not filter top-up exercises', () => {
+    // Generic illness with null affected_lifts should not filter exercises by lift association
+    const out = generateJITSession(
+      baseInput({
+        primaryLift: 'bench',
+        activeAuxiliaries: ['Close-Grip Barbell Bench Press', 'Dumbbell Fly'],
+        auxiliaryPool: ['Leg Press', 'Barbell Curl'],
+        weeklyVolumeToDate: atMevExcept(DEFAULT_MRV_MEV_CONFIG_MALE, 'quads'),
+        mrvMevConfig: DEFAULT_MRV_MEV_CONFIG_MALE,
+        activeDisruptions: [makeEquipmentDisruption({
+          disruption_type: 'illness',
+          severity: 'minor',
+          affected_lifts: null,
+          description: 'Mild cold',
+        })],
+      })
+    );
+    const topUps = out.auxiliaryWork.filter((a) => a.isTopUp);
+    const hasLegPress = topUps.some((a) => a.exercise === 'Leg Press');
+    expect(hasLegPress).toBe(true);
+  });
 });
 
 // ---------------------------------------------------------------------------
