@@ -1,5 +1,6 @@
 import { useCallback, useState } from 'react';
 
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { captureException } from '@platform/utils/captureException';
 import { Directory, File, Paths } from 'expo-file-system';
 import * as ImagePicker from 'expo-image-picker';
@@ -10,14 +11,13 @@ import {
   extractFramesFromVideo,
 } from '../application/analyze-video';
 import { uploadVideoToStorage } from '../application/video-upload';
+import { videoQueries } from '../data/video.queries';
 import {
-  getVideoForSessionLift,
   insertSessionVideo,
   updateSessionVideoAnalysis,
   updateSessionVideoDebugLandmarks,
 } from '../data/video.repository';
 import { detectCameraAngle } from '../lib/detect-camera-angle';
-import type { SessionVideo } from '../model/types';
 
 const SUPPORTED_LIFTS = ['squat', 'bench', 'deadlift'] as const;
 
@@ -40,10 +40,22 @@ export function useVideoAnalysis({
   cameraAngle?: 'side' | 'front';
   setContext?: SetContext | null;
 }) {
+  const queryClient = useQueryClient();
   const [isProcessing, setIsProcessing] = useState(false);
   const [progress, setProgress] = useState(0);
   const [error, setError] = useState<string | null>(null);
-  const [result, setResult] = useState<SessionVideo | null>(null);
+
+  // Query: existing video for this session/lift/set (replaces loadExisting + result useState)
+  const queryOpts = videoQueries.forSessionLiftSet({
+    sessionId,
+    lift,
+    setNumber,
+  });
+  const { data: existingVideos = [] } = useQuery({
+    ...queryOpts,
+    enabled: !!sessionId && !!lift,
+  });
+  const result = existingVideos[0] ?? null;
 
   /** Shared pipeline: analyze → compress → save → update. */
   const processVideo = useCallback(
@@ -137,15 +149,19 @@ export function useVideoAnalysis({
       });
 
       // 5. If analysis succeeded, update the DB row with results
+      let finalResult = saved;
       if (analysis) {
-        const updated = await updateSessionVideoAnalysis({
+        finalResult = await updateSessionVideoAnalysis({
           id: saved.id,
           analysis,
         });
-        setResult(updated);
-      } else {
-        setResult(saved);
       }
+
+      // Update query cache immediately so UI reflects the new video
+      queryClient.setQueryData(queryOpts.queryKey, [finalResult]);
+
+      // Invalidate all video queries so related lists (session videos, lift history) refresh
+      queryClient.invalidateQueries({ queryKey: videoQueries.all() });
 
       // 6. Upload to Supabase Storage (non-blocking, best-effort)
       uploadVideoToStorage({ videoId: saved.id, localUri: destUri }).catch(
@@ -172,6 +188,8 @@ export function useVideoAnalysis({
       setContext?.weightGrams,
       setContext?.reps,
       setContext?.rpe,
+      queryClient,
+      queryOpts.queryKey,
     ]
   );
 
@@ -233,26 +251,9 @@ export function useVideoAnalysis({
     [processVideo]
   );
 
-  const loadExisting = useCallback(async () => {
-    try {
-      const videos = await getVideoForSessionLift({
-        sessionId,
-        lift,
-        setNumber,
-      });
-      if (videos.length > 0) setResult(videos[0]);
-    } catch (err) {
-      captureException(err);
-      const message =
-        err instanceof Error ? err.message : 'Failed to load video';
-      setError(message);
-    }
-  }, [sessionId, lift, setNumber]);
-
   return {
     pickAndAnalyze,
     processRecordedVideo,
-    loadExisting,
     isProcessing,
     progress,
     error,

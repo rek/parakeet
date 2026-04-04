@@ -1,9 +1,6 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 
-import { captureException } from '@platform/utils/captureException';
-
-import { getVideosForLift } from '../data/video.repository';
-import type { SessionVideo } from '../model/types';
+import { videoQueries } from '../data/video.queries';
 
 /**
  * Fetches all previous videos for a given lift.
@@ -16,23 +13,12 @@ export function usePreviousVideos({
   lift: string;
   currentVideoId: string | null;
 }) {
-  const [previousVideos, setPreviousVideos] = useState<SessionVideo[]>([]);
-
-  const load = useCallback(async () => {
-    if (!lift) return;
-    try {
-      const videos = await getVideosForLift({ lift });
-      setPreviousVideos(
-        currentVideoId ? videos.filter((v) => v.id !== currentVideoId) : videos
-      );
-    } catch (err) {
-      captureException(err);
-    }
-  }, [lift, currentVideoId]);
-
-  useEffect(() => {
-    load();
-  }, [load]);
+  const { data: previousVideos = [] } = useQuery({
+    ...videoQueries.forLift({ lift }),
+    select: (data) =>
+      currentVideoId ? data.filter((v) => v.id !== currentVideoId) : data,
+    enabled: !!lift,
+  });
 
   return { previousVideos };
 }

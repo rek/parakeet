@@ -96,7 +96,6 @@ export default function VideoAnalysisScreen() {
   const {
     pickAndAnalyze,
     processRecordedVideo,
-    loadExisting,
     isProcessing,
     progress,
     error,
@@ -136,14 +135,6 @@ export default function VideoAnalysisScreen() {
       .map((v) => v.analysis!);
     return computePersonalBaseline({ analyses: previousAnalyses });
   }, [previousVideos]);
-
-  // Load any existing video for this session+lift on mount
-  useEffect(() => {
-    if (sessionId && lift) {
-      loadExisting();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [sessionId, lift]);
 
   // Initialize coaching state from existing video
   useEffect(() => {

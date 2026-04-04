@@ -2,6 +2,7 @@ import { queryOptions } from '@tanstack/react-query';
 
 import {
   getVideoForSessionLift,
+  getVideosForLift,
   getVideosForSessionLift,
 } from './video.repository';
 
@@ -41,5 +42,11 @@ export const videoQueries = {
         'all',
       ] as const,
       queryFn: () => getVideosForSessionLift({ sessionId, lift }),
+    }),
+
+  forLift: ({ lift }: { lift: string }) =>
+    queryOptions({
+      queryKey: [...videoQueries.all(), 'lift', lift] as const,
+      queryFn: () => getVideosForLift({ lift }),
     }),
 };
