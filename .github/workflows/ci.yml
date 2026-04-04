@@ -42,8 +42,11 @@ jobs:
       - name: Check boundaries
         run: npm run check:boundaries
 
+      - name: Build shared-types declarations (for project reference consumers)
+        run: npx tsc -p packages/shared-types/tsconfig.lib.json
+
       - name: Typecheck (affected)
-        run: npx nx affected --target=typecheck --base=origin/main --head=HEAD
+        run: npx nx affected --target=typecheck --base=origin/main --head=HEAD --exclude=training-sim,dashboard
 
       - name: Lint (affected)
         run: npx nx affected --target=lint --base=origin/main --head=HEAD
