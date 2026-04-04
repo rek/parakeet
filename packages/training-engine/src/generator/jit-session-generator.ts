@@ -667,21 +667,20 @@ function buildVolumeTopUp(
   const muscleDeficits: Partial<Record<MuscleGroup, number>> =
     Object.fromEntries(candidates.map((c) => [c.muscle, c.deficit]));
 
-  for (const { muscle, deficit } of topCandidates) {
-    // Find a qualifying exercise from the pool, excluding exercises associated
-    // with lifts scheduled later this week to avoid back-to-back muscle loading,
-    // and exercises associated with lifts affected by active disruptions (GH#165)
-    const upcomingLiftSet = upcomingLifts?.length
-      ? new Set(upcomingLifts)
-      : undefined;
-    const injuredLiftSet = new Set<string>();
-    if (activeDisruptions?.length) {
-      for (const d of activeDisruptions) {
-        if (d.affected_lifts) {
-          for (const l of d.affected_lifts) injuredLiftSet.add(l);
-        }
+  // Pre-compute lift exclusion sets (loop-invariant — depends only on function params)
+  const upcomingLiftSet = upcomingLifts?.length
+    ? new Set(upcomingLifts)
+    : undefined;
+  const injuredLiftSet = new Set<string>();
+  if (activeDisruptions?.length) {
+    for (const d of activeDisruptions) {
+      if (d.disruption_type === 'injury' && d.affected_lifts) {
+        for (const l of d.affected_lifts) injuredLiftSet.add(l);
       }
     }
+  }
+
+  for (const { muscle, deficit } of topCandidates) {
     const qualifying = auxiliaryPool.filter((exercise) => {
       if (usedExercises.has(exercise)) return false;
       if (getExerciseType(exercise) === 'timed') return false;
