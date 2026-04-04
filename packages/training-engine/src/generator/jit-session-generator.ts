@@ -351,7 +351,8 @@ export function generateJITSession(
       input.upcomingLifts,
       input.sorenessRatings,
       input.sleepQuality,
-      input.energyLevel
+      input.energyLevel,
+      input.activeDisruptions
     );
     for (const tu of topUps) {
       const activeCount = auxiliaryWork.filter((a) => !a.skipped).length;
@@ -623,7 +624,8 @@ function buildVolumeTopUp(
   upcomingLifts?: Lift[],
   sorenessRatings?: Partial<Record<MuscleGroup, SorenessLevel>>,
   sleepQuality?: ReadinessLevel,
-  energyLevel?: ReadinessLevel
+  energyLevel?: ReadinessLevel,
+  activeDisruptions?: TrainingDisruption[]
 ): AuxiliaryWork[] {
   // Build main lift muscle contributions to project post-session volume
   const liftMuscles = getMusclesForLift(primaryLift);
@@ -667,17 +669,27 @@ function buildVolumeTopUp(
 
   for (const { muscle, deficit } of topCandidates) {
     // Find a qualifying exercise from the pool, excluding exercises associated
-    // with lifts scheduled later this week to avoid back-to-back muscle loading
+    // with lifts scheduled later this week to avoid back-to-back muscle loading,
+    // and exercises associated with lifts affected by active disruptions (GH#165)
     const upcomingLiftSet = upcomingLifts?.length
       ? new Set(upcomingLifts)
       : undefined;
+    const injuredLiftSet = new Set<string>();
+    if (activeDisruptions?.length) {
+      for (const d of activeDisruptions) {
+        if (d.affected_lifts) {
+          for (const l of d.affected_lifts) injuredLiftSet.add(l);
+        }
+      }
+    }
     const qualifying = auxiliaryPool.filter((exercise) => {
       if (usedExercises.has(exercise)) return false;
       if (getExerciseType(exercise) === 'timed') return false;
-      if (upcomingLiftSet) {
-        const exerciseLift = getLiftForExercise(exercise);
-        if (exerciseLift && upcomingLiftSet.has(exerciseLift)) return false;
-      }
+      const exerciseLift = getLiftForExercise(exercise);
+      if (upcomingLiftSet && exerciseLift && upcomingLiftSet.has(exerciseLift))
+        return false;
+      if (injuredLiftSet.size > 0 && exerciseLift && injuredLiftSet.has(exerciseLift))
+        return false;
       return getMusclesForExercise(exercise).some(
         (m) => m.muscle === muscle && m.contribution >= 1.0
       );
