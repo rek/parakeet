@@ -22,11 +22,11 @@ import {
   reportDisruption,
   SORENESS_CHIPS,
   SORENESS_NUMERIC,
+  getSafeExerciseCandidates,
   useDisruptionActions,
 } from '@modules/disruptions';
 import type { SorenessLevel } from '@modules/disruptions';
 import { useProfile } from '@modules/profile';
-import { DEFAULT_AUXILIARY_POOLS } from '@parakeet/training-engine';
 import type {
   DisruptionType,
   DisruptionWithSuggestions,
@@ -447,6 +447,7 @@ export default function DisruptionReportScreen() {
     }
     setSelectedLifts(next);
     setAllLifts(false);
+    setSafeExercises(new Set());
   }
 
   function toggleAllLifts() {
@@ -457,6 +458,7 @@ export default function DisruptionReportScreen() {
       setAllLifts(true);
       setSelectedLifts(new Set(TRAINING_LIFTS));
     }
+    setSafeExercises(new Set());
   }
 
   async function handleSubmit() {
@@ -532,16 +534,11 @@ export default function DisruptionReportScreen() {
   // Exercises from affected lifts' pools — shown for injury type so user can mark safe ones
   const affectedLiftExercises = useMemo(() => {
     if (selectedType !== 'injury') return [];
-    const lifts = allLifts ? TRAINING_LIFTS : Array.from(selectedLifts);
+    const lifts = allLifts
+      ? (TRAINING_LIFTS as unknown as string[])
+      : Array.from(selectedLifts);
     if (lifts.length === 0) return [];
-    const exercises = new Set<string>();
-    for (const lift of lifts) {
-      const pool = DEFAULT_AUXILIARY_POOLS[lift as Lift];
-      if (pool) {
-        for (const e of pool) exercises.add(e);
-      }
-    }
-    return Array.from(exercises);
+    return getSafeExerciseCandidates(lifts);
   }, [selectedType, selectedLifts, allLifts]);
 
   // ── Render: review state ─────────────────────────────────────────────────
