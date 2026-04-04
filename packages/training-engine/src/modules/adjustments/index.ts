@@ -6,3 +6,4 @@ export * from '../../adjustments/cycle-phase-adjuster';
 export * from '../../adjustments/intra-session-adapter';
 export * from '../../adjustments/volume-recovery';
 export * from '../../adjustments/weight-autoregulation';
+export * from '../../adjustments/injury-soreness';
