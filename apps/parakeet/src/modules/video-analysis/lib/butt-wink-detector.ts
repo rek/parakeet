@@ -5,7 +5,7 @@
  * lumbar flexion under load. Detected by a sharp drop in hip angle
  * (shoulder-hip-knee) during the last 30% of descent.
  *
- * Only meaningful from side view.
+ * Most meaningful from side views (high sagittal confidence).
  */
 
 import { computeAngle } from './angle-calculator';

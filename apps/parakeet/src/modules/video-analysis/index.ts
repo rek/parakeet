@@ -33,7 +33,11 @@ export {
   extractFramesFromVideo,
 } from './application/analyze-video';
 export { assembleCoachingContext } from './application/assemble-coaching-context';
-export { detectCameraAngle } from './lib/detect-camera-angle';
+export {
+  computeSagittalConfidence,
+  deriveCameraAngle,
+  detectCameraAngle,
+} from './lib/view-confidence';
 export { gradeRep } from './lib/competition-grader';
 export { computeReadinessFromVerdicts } from './lib/readiness-score';
 export {
@@ -45,7 +49,6 @@ export {
 // --- UI components ---
 export { VideoEntryButton } from './ui/VideoEntryButton';
 export { SetVideoIcon } from './ui/SetVideoIcon';
-export { CameraAnglePicker } from './ui/CameraAnglePicker';
 export { RepMetricsCard } from './ui/RepMetricsCard';
 export { BarPathOverlay } from './ui/BarPathOverlay';
 export { FormCoachingCard } from './ui/FormCoachingCard';

@@ -7,7 +7,7 @@ export async function insertPartnerSessionVideo({
   sessionId,
   lift,
   setNumber,
-  cameraAngle = 'side',
+  sagittalConfidence = 0.8,
   localUri,
   durationSec,
   analysis,
@@ -16,7 +16,7 @@ export async function insertPartnerSessionVideo({
   sessionId: string;
   lift: string;
   setNumber: number;
-  cameraAngle?: 'side' | 'front';
+  sagittalConfidence?: number;
   localUri: string;
   durationSec: number;
   analysis?: Json;
@@ -34,7 +34,7 @@ export async function insertPartnerSessionVideo({
       session_id: sessionId,
       lift,
       set_number: setNumber,
-      camera_angle: cameraAngle,
+      sagittal_confidence: sagittalConfidence,
       local_uri: localUri,
       duration_sec: durationSec,
       ...(analysis != null ? { analysis } : {}),

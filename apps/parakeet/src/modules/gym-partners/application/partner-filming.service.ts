@@ -1,6 +1,6 @@
 import {
   analyzeVideoFrames,
-  detectCameraAngle,
+  computeSagittalConfidence,
   extractFramesFromVideo,
 } from '@modules/video-analysis';
 import { toJson } from '@platform/supabase';
@@ -24,7 +24,6 @@ export async function filmForPartner({
   sessionId,
   lift,
   setNumber,
-  cameraAngle,
   onProgress,
 }: {
   videoUri: string;
@@ -33,7 +32,6 @@ export async function filmForPartner({
   sessionId: string;
   lift: string;
   setNumber: number;
-  cameraAngle?: 'side' | 'front';
   onProgress?: (pct: number) => void;
 }) {
   onProgress?.(0.05);
@@ -47,8 +45,8 @@ export async function filmForPartner({
 
   onProgress?.(0.5);
 
-  // 2. Use user-selected angle if provided, otherwise auto-detect
-  const resolvedAngle = cameraAngle ?? detectCameraAngle({ frames });
+  // 2. Auto-detect sagittal confidence from pose landmarks
+  const resolvedConfidence = computeSagittalConfidence({ frames });
 
   // 3. Analyze frames (form faults, bar path, etc.)
   const liftKey = lift as 'squat' | 'bench' | 'deadlift';
@@ -78,7 +76,7 @@ export async function filmForPartner({
     sessionId,
     lift,
     setNumber,
-    cameraAngle: resolvedAngle,
+    sagittalConfidence: resolvedConfidence,
     localUri: compressedUri,
     durationSec,
     analysis: analysis != null ? toJson(analysis) : undefined,
@@ -95,5 +93,5 @@ export async function filmForPartner({
 
   onProgress?.(1.0);
 
-  return { videoId, cameraAngle: resolvedAngle, analysis };
+  return { videoId, sagittalConfidence: resolvedConfidence, analysis };
 }

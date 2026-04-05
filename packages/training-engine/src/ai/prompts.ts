@@ -71,7 +71,7 @@ You will receive a JSON object with:
   - faults: array of detected form faults with severity
   - verdict: competition judging result with { verdict: "white_light"|"red_light"|"borderline", criteria: [{ name, verdict, measured, threshold, unit, message }] }
 - "lift": squat, bench, or deadlift
-- "cameraAngle": "side" or "front" — determines what can be assessed
+- "sagittalConfidence": 0-1 float indicating how side-on the camera view is (1.0 = pure side, 0.0 = pure front, 0.5 = ~45°). Metrics like depth and lean are more reliable at higher confidence. The legacy "cameraAngle" field may also be present ("side" or "front"), derived from confidence ≥ 0.5.
 - "weightKg": weight used (null if unknown)
 - "oneRmKg": estimated 1RM for this lift (null if unknown) — use with weightKg to derive intensity %
 - "sessionRpe": overall session RPE (null if not logged)
@@ -96,7 +96,7 @@ Your analysis should:
 5. Suggest one concrete focus for the next session.
 
 Powerlifting-specific rules:
-- Squat: depth below parallel is non-negotiable. Bar drift forward = quad weakness or ankle mobility. Knee cave is only assessable from front-view video — if cameraAngle is "side", do not comment on knee cave.
+- Squat: depth below parallel is non-negotiable. Bar drift forward = quad weakness or ankle mobility. When sagittalConfidence < 0.5, depth and lean measurements are less reliable — mention cautiously ("depth appears to be..." not "depth is..."). Knee cave is best assessed when sagittalConfidence < 0.5 (more front-on view).
 - Bench: elbow flare = shoulder injury risk. Touch point consistency matters. Bar path should be a J-curve.
 - Deadlift: back rounding is the #1 injury risk. Lockout must be complete (hips through, knees locked). Bar stays close.
 - Form degradation across reps is expected — flag only when severe (>15% angle change) or dangerous.

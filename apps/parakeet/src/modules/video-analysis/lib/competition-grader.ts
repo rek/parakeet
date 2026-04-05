@@ -17,8 +17,8 @@ export type { CriterionResult, RepVerdict };
 // --- Squat ---
 
 function gradeSquatDepth({ rep }: { rep: RepAnalysis }) {
-  // Depth is only measured from side view — undefined means front/diagonal
-  // camera where depth can't be assessed. Skip the criterion entirely.
+  // Depth is always computed but may be null if pose landmarks were missing.
+  // Skip the criterion when unavailable.
   if (rep.maxDepthCm == null) {
     return {
       name: 'depth',
@@ -59,7 +59,7 @@ function gradeSquatLockout({
   frames: PoseFrame[];
   rep: RepAnalysis;
 }) {
-  // Knee angle is only meaningful from side view
+  // Knee angle may be null if pose landmarks were missing
   if (rep.kneeAngleDeg == null) {
     return {
       name: 'lockout',
@@ -281,8 +281,8 @@ function gradeBenchEvenPress({
   frames: PoseFrame[];
   rep: RepAnalysis;
 }) {
-  // Even press is only meaningful from front view — from the side, perspective
-  // makes one wrist appear higher than the other even when the bar is level.
+  // Even press is most meaningful from front views — from the side, perspective
+  // can make one wrist appear higher. Skip when shoulders overlap (side-ish view).
   const endIdx = Math.min(rep.endFrame, frames.length - 1);
   const ls = frames[endIdx][LANDMARK.LEFT_SHOULDER];
   const rs = frames[endIdx][LANDMARK.RIGHT_SHOULDER];

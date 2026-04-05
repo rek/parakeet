@@ -2,7 +2,7 @@
  * Detect lateral hip shift during a squat.
  *
  * Tracks the difference in hip Y positions (left vs right) to detect
- * asymmetric loading. Only meaningful from front view.
+ * asymmetric loading. Most meaningful from front views (low sagittal confidence).
  */
 
 import { CM_PER_UNIT, LANDMARK, type PoseFrame } from './pose-types';

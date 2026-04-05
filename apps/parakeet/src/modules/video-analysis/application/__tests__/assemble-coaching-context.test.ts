@@ -13,6 +13,7 @@ function makeAnalysis(
   return {
     fps: 15,
     cameraAngle: 'side',
+    sagittalConfidence: 0.9,
     analysisVersion: 1,
     reps: reps.map((r, i) => ({
       repNumber: i + 1,

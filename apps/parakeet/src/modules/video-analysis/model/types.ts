@@ -8,7 +8,7 @@ export interface SessionVideo {
   sessionId: string;
   lift: string;
   setNumber: number;
-  cameraAngle: 'side' | 'front';
+  sagittalConfidence: number | null;
   localUri: string;
   remoteUri: string | null;
   durationSec: number;

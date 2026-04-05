@@ -10,7 +10,7 @@ export interface FormCoachingContext {
   // Video analysis metrics
   analysis: VideoAnalysisResult;
   lift: 'squat' | 'bench' | 'deadlift';
-  cameraAngle: 'side' | 'front';
+  sagittalConfidence: number;
 
   // Session context
   weightKg: number | null;
@@ -51,7 +51,7 @@ export interface FormCoachingContext {
 export function assembleCoachingContext({
   analysis,
   lift,
-  cameraAngle = 'side',
+  sagittalConfidence,
   oneRmKg = null,
   biologicalSex = null,
   session,
@@ -62,7 +62,7 @@ export function assembleCoachingContext({
 }: {
   analysis: VideoAnalysisResult;
   lift: 'squat' | 'bench' | 'deadlift';
-  cameraAngle?: 'side' | 'front';
+  sagittalConfidence?: number;
   oneRmKg?: number | null;
   biologicalSex?: 'male' | 'female' | null;
   session: {
@@ -144,7 +144,7 @@ export function assembleCoachingContext({
   return {
     analysis,
     lift,
-    cameraAngle,
+    sagittalConfidence: sagittalConfidence ?? analysis.sagittalConfidence ?? 0.8,
     weightKg,
     oneRmKg,
     // Prefer set-level RPE when available (more precise for this video's context).

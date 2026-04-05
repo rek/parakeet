@@ -1,8 +1,8 @@
 /**
  * Compute stance width from ankle-to-ankle distance.
  *
- * Best from front view; side view gives compressed projection.
- * Compute at standing frame (first or last frame of rep).
+ * Most meaningful from front views (low sagittal confidence); side view
+ * gives compressed projection. Computed at standing frame (first or last frame of rep).
  */
 
 import { CM_PER_UNIT, LANDMARK, type PoseFrame } from './pose-types';

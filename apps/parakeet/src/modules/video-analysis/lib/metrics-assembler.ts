@@ -19,7 +19,10 @@ import {
 } from './bar-velocity';
 import { detectButtWink } from './butt-wink-detector';
 import { detectSquatDepth } from './depth-detector';
-import { detectCameraAngle } from './detect-camera-angle';
+import {
+  computeSagittalConfidence,
+  deriveCameraAngle,
+} from './view-confidence';
 import { computeElbowFlare } from './elbow-flare';
 import { computeFatigueSignatures } from './fatigue-signatures';
 import { analyzeHipHingeTiming } from './hip-hinge-timing';
@@ -30,7 +33,24 @@ import { CM_PER_UNIT, type PoseFrame } from './pose-types';
 import { computeRepTempo } from './rep-tempo';
 import { computeStanceWidth } from './stance-width';
 
-const ANALYSIS_VERSION = 3;
+const ANALYSIS_VERSION = 4;
+
+/**
+ * Compensate for foreshortening when metrics are measured from oblique angles.
+ * At pure side (confidence=1.0), no correction. At 45° (confidence~0.5),
+ * values are foreshortened by ~30% — divide by sqrt(confidence) to compensate.
+ * Below 0.8 confidence, foreshortening becomes significant.
+ */
+function perspectiveCorrection(
+  value: number,
+  sagittalConfidence: number
+): number {
+  if (sagittalConfidence >= 0.8) return value;
+  // Avoid division by zero or extreme amplification at very low confidence.
+  // Below 0.1, the measurement is too unreliable to correct meaningfully.
+  const clamped = Math.max(0.1, sagittalConfidence);
+  return value / Math.sqrt(clamped);
+}
 
 /**
  * Run the full video analysis pipeline on a sequence of pose frames.
@@ -38,10 +58,14 @@ const ANALYSIS_VERSION = 3;
  * Pass `strategy` to swap algorithms (rep detection, bar path, faults, grading).
  * Default: 'v1_mediapipe'. For A/B comparison, call twice with different strategies.
  *
+ * All metrics are always computed regardless of camera angle. Sagittal confidence
+ * (0-1) indicates measurement reliability. Perspective correction is applied to
+ * foreshortened metrics (depth, lean) when confidence < 0.8.
+ *
  * Steps:
  * 1. Extract and smooth the bar path from wrist landmarks
- * 2. Detect rep boundaries from hip/wrist Y periodicity
- * 3. For each rep: compute shared context once, then angles, depth, faults
+ * 2. Detect rep boundaries from joint angle periodicity (viewpoint-invariant)
+ * 3. For each rep: compute shared context once, then all angles, depth, faults
  * 4. Return a VideoAnalysisResult ready for storage in the analysis JSONB column
  */
 export function assembleAnalysis({
@@ -56,14 +80,12 @@ export function assembleAnalysis({
   strategy?: StrategyName;
 }) {
   const strategy: AnalysisStrategy = STRATEGIES[strategyName];
-  const cameraAngle = detectCameraAngle({ frames });
-  // Side-view metrics (depth, forward lean) are meaningless from the front
-  // because hip/knee Y overlap and shoulder-hip X alignment is perpendicular.
-  const isSideView = cameraAngle === 'side';
+  const sagittalConfidence = computeSagittalConfidence({ frames });
+  const cameraAngle = deriveCameraAngle(sagittalConfidence);
 
   if (typeof __DEV__ !== 'undefined' && __DEV__) {
     console.log(
-      `[analysis] ${frames.length} frames, ${fps}fps, ${lift}, ${cameraAngle}, strategy=${strategy.name}`
+      `[analysis] ${frames.length} frames, ${fps}fps, ${lift}, confidence=${sagittalConfidence.toFixed(2)}, strategy=${strategy.name}`
     );
   }
 
@@ -102,25 +124,24 @@ export function assembleAnalysis({
     // Midpoint frame for representative angle measurements
     const midFrame = Math.round((safeStart + safeEnd) / 2);
 
-    // Forward lean and knee angle are only meaningful from the side.
-    // From the front, shoulder-hip X separation is near-zero → lean saturates
-    // at 90°, and knee angle reads near-180° (overlapping landmarks).
-    const forwardLeanDeg = isSideView
-      ? computeForwardLean({ frame: frames[midFrame] })
-      : undefined;
-    const kneeAngleAtMid = isSideView
-      ? computeKneeAngle({ frame: frames[midFrame] })
-      : undefined;
+    // Always compute all metrics — perspective-corrected at oblique angles.
+    const rawForwardLean = computeForwardLean({ frame: frames[midFrame] });
+    // Cap at 90° — computeForwardLean uses atan2 which naturally caps at 90°,
+    // but perspective correction (dividing) can push it slightly past.
+    const forwardLeanDeg = Math.min(
+      90,
+      perspectiveCorrection(rawForwardLean, sagittalConfidence)
+    );
+    const kneeAngleAtMid = computeKneeAngle({ frame: frames[midFrame] });
 
-    // Hip angle at end frame for lockout assessment — reasonable from both views
+    // Hip angle at end frame for lockout assessment — reasonable from all views
     const hipAngleAtEnd = computeHipAngle({ frame: frames[safeEnd] });
 
-    // Squat-specific: depth at bottom frame — only meaningful from side view
-    // (from front, hip and knee Y overlap regardless of actual depth)
+    // Squat depth — always computed, perspective-corrected at oblique angles
     let maxDepthCm: number | undefined;
-    if (lift === 'squat' && isSideView) {
+    if (lift === 'squat') {
       const { depthCm } = detectSquatDepth({ frame: frames[bottomFrame] });
-      maxDepthCm = depthCm;
+      maxDepthCm = perspectiveCorrection(depthCm, sagittalConfidence);
     }
 
     // Range of motion: vertical travel of bar path (top to bottom)
@@ -137,7 +158,7 @@ export function assembleAnalysis({
       barPath,
       lift,
       repContext: { repPath, barDrift: barDriftNormalized, bottomFrame },
-      cameraAngle,
+      sagittalConfidence,
     });
 
     // Bar velocity: mean concentric velocity from wrist Y displacement
@@ -149,25 +170,22 @@ export function assembleAnalysis({
 
     // --- Lift-specific metrics ---
 
-    // Squat: butt wink (side only), stance width, hip shift
+    // Squat: butt wink, stance width, hip shift — always computed
     let buttWinkDeg: number | undefined;
     let stanceWidthCm: number | undefined;
     let hipShiftCm: number | undefined;
     let hipShiftDirection: 'left' | 'right' | 'none' | undefined;
     if (lift === 'squat') {
-      // Butt wink is only detectable from side view (hip angle tracking)
-      if (isSideView) {
-        const wink = detectButtWink({ frames, bottomFrame, fps });
-        if (wink.detected && wink.magnitudeDeg != null) {
-          buttWinkDeg = wink.magnitudeDeg;
-          faults.push({
-            type: 'butt_wink',
-            severity: 'warning',
-            message: `Butt wink of ${wink.magnitudeDeg.toFixed(1)}° at bottom`,
-            value: wink.magnitudeDeg,
-            threshold: 10,
-          });
-        }
+      const wink = detectButtWink({ frames, bottomFrame, fps });
+      if (wink.detected && wink.magnitudeDeg != null) {
+        buttWinkDeg = wink.magnitudeDeg;
+        faults.push({
+          type: 'butt_wink',
+          severity: sagittalConfidence < 0.5 ? 'info' : 'warning',
+          message: `Butt wink of ${wink.magnitudeDeg.toFixed(1)}° at bottom`,
+          value: wink.magnitudeDeg,
+          threshold: 10,
+        });
       }
       stanceWidthCm = computeStanceWidth({ frame: frames[safeStart] });
       const shift = computeHipShift({
@@ -317,6 +335,7 @@ export function assembleAnalysis({
     reps: repsWithVelocity,
     fps,
     cameraAngle,
+    sagittalConfidence,
     analysisVersion: ANALYSIS_VERSION,
     fatigueSignatures,
   } satisfies VideoAnalysisResult;

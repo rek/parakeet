@@ -15,7 +15,7 @@ export type { FormCoachingResult };
 export interface FormCoachingInput {
   analysis: VideoAnalysisResult;
   lift: string;
-  cameraAngle: 'side' | 'front';
+  sagittalConfidence: number;
   weightKg: number | null;
   oneRmKg: number | null;
   sessionRpe: number | null;

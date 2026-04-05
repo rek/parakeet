@@ -12,7 +12,6 @@ import {
 import {
   BarPathOverlay,
   BaselineDeviationBadge,
-  CameraAnglePicker,
   computePersonalBaseline,
   computeReadinessFromVerdicts,
   detectBaselineDeviations,
@@ -90,7 +89,6 @@ export default function VideoAnalysisScreen() {
     ? `${liftLabel} — Set ${parsedSetNumber} @ ${parsedWeightGrams / 1000}kg × ${parsedReps ?? '?'}${parsedRpe ? ` (RPE ${parsedRpe})` : ''}`
     : `${liftLabel} Form Analysis`;
 
-  const [cameraAngle, setCameraAngle] = useState<'side' | 'front'>('side');
   const [isRecording, setIsRecording] = useState(false);
 
   const {
@@ -104,7 +102,6 @@ export default function VideoAnalysisScreen() {
     sessionId: sessionId ?? '',
     lift: lift ?? '',
     setNumber: parsedSetNumber,
-    cameraAngle,
     setContext,
   });
 
@@ -191,14 +188,6 @@ export default function VideoAnalysisScreen() {
         {/* Video section */}
         <Text style={styles.sectionHeader}>Video</Text>
 
-        {!result && (
-          <CameraAnglePicker
-            selected={cameraAngle}
-            onChange={setCameraAngle}
-            colors={colors}
-          />
-        )}
-
         {!result ? (
           // No video yet — show pick and record buttons
           <>
@@ -214,9 +203,7 @@ export default function VideoAnalysisScreen() {
               <Text style={styles.selectVideoIcon}>📹</Text>
               <Text style={styles.selectVideoText}>Select Video</Text>
               <Text style={styles.selectVideoHint}>
-                {cameraAngle === 'front'
-                  ? 'Pick a front-view video from your camera roll'
-                  : 'Pick a side-view video from your camera roll'}
+                Pick a video from your camera roll
               </Text>
             </TouchableOpacity>
 
@@ -281,7 +268,7 @@ export default function VideoAnalysisScreen() {
             <Text style={styles.analysisMetaText}>
               {analysis.reps.length} rep
               {analysis.reps.length !== 1 ? 's' : ''} detected · {analysis.fps}{' '}
-              fps · {result?.cameraAngle ?? analysis.cameraAngle} view
+              fps · {analysis.sagittalConfidence != null ? `${Math.round(analysis.sagittalConfidence * 100)}% side confidence` : analysis.cameraAngle + ' view'}
             </Text>
 
             {/* Bar path overlays — one per rep */}
@@ -398,7 +385,6 @@ export default function VideoAnalysisScreen() {
       {isRecording && (
         <View style={styles.recordingOverlay}>
           <RecordVideoSheet
-            cameraAngle={cameraAngle}
             onRecorded={(videoUri) => {
               setIsRecording(false);
               processRecordedVideo({ videoUri, durationSec: 30 });

@@ -40,9 +40,7 @@ function toSessionVideo(row: VideoRowWithProfile): SessionVideo {
     sessionId: row.session_id,
     lift: row.lift,
     setNumber: row.set_number,
-    cameraAngle: (row.camera_angle === 'front' ? 'front' : 'side') as
-      | 'side'
-      | 'front',
+    sagittalConfidence: row.sagittal_confidence ?? null,
     localUri: row.local_uri,
     remoteUri: row.remote_uri,
     durationSec: row.duration_sec,
@@ -66,7 +64,7 @@ export async function insertSessionVideo({
   sessionId,
   lift,
   setNumber,
-  cameraAngle = 'side',
+  sagittalConfidence = 0.8,
   localUri,
   remoteUri,
   durationSec,
@@ -77,7 +75,7 @@ export async function insertSessionVideo({
   sessionId: string;
   lift: string;
   setNumber: number;
-  cameraAngle?: 'side' | 'front';
+  sagittalConfidence?: number;
   localUri: string;
   remoteUri?: string | null;
   durationSec: number;
@@ -97,7 +95,7 @@ export async function insertSessionVideo({
       session_id: sessionId,
       lift,
       set_number: setNumber,
-      camera_angle: cameraAngle,
+      sagittal_confidence: sagittalConfidence,
       local_uri: localUri,
       remote_uri: remoteUri ?? null,
       duration_sec: durationSec,

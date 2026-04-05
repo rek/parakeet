@@ -31,13 +31,11 @@ export function usePartnerFilming({
       durationSec,
       lift,
       setNumber,
-      cameraAngle,
     }: {
       videoUri: string;
       durationSec: number;
       lift: string;
       setNumber: number;
-      cameraAngle: 'side' | 'front';
     }) => {
       setState({ type: 'analyzing', progress: 0 });
 
@@ -49,7 +47,6 @@ export function usePartnerFilming({
           sessionId,
           lift,
           setNumber,
-          cameraAngle,
           onProgress: (pct) => setState({ type: 'analyzing', progress: pct }),
         });
         setState({ type: 'done' });

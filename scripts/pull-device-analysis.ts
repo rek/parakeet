@@ -48,7 +48,7 @@ async function main() {
 
   const { data, error } = await supabase
     .from('session_videos')
-    .select('id, lift, camera_angle, duration_sec, analysis, debug_landmarks, created_at')
+    .select('id, lift, sagittal_confidence, duration_sec, analysis, debug_landmarks, created_at')
     .not('debug_landmarks', 'is', null)
     .order('created_at', { ascending: false })
     .limit(limit);
@@ -94,7 +94,7 @@ async function main() {
       const analysisPayload = {
         videoId: `device-${shortId}`,
         lift: row.lift,
-        cameraAngle: row.camera_angle,
+        sagittalConfidence: row.sagittal_confidence,
         durationSec: row.duration_sec,
         createdAt: row.created_at,
         deviceAnalysis: analysis,
@@ -108,7 +108,7 @@ async function main() {
     const faults = reps.flatMap((r: unknown) => ((r as { faults: unknown[] }).faults ?? []));
     const faultTypes = [...new Set(faults.map((f: unknown) => (f as { type: string }).type))];
     console.log(
-      `  → ${row.lift} | ${row.camera_angle} | ${reps.length} reps | ` +
+      `  → ${row.lift} | confidence=${row.sagittal_confidence ?? '?'} | ${reps.length} reps | ` +
       `${landmarks.frames.length} frames (${landmarkPayload.validFrames} valid) | ` +
       `faults: ${faultTypes.join(', ') || 'none'}`
     );

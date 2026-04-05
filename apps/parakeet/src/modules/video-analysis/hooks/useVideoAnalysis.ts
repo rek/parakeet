@@ -17,7 +17,7 @@ import {
   updateSessionVideoAnalysis,
   updateSessionVideoDebugLandmarks,
 } from '../data/video.repository';
-import { detectCameraAngle } from '../lib/detect-camera-angle';
+import { computeSagittalConfidence } from '../lib/view-confidence';
 
 const SUPPORTED_LIFTS = ['squat', 'bench', 'deadlift'] as const;
 
@@ -31,13 +31,11 @@ export function useVideoAnalysis({
   sessionId,
   lift,
   setNumber,
-  cameraAngle = 'side',
   setContext,
 }: {
   sessionId: string;
   lift: string;
   setNumber: number;
-  cameraAngle?: 'side' | 'front';
   setContext?: SetContext | null;
 }) {
   const queryClient = useQueryClient();
@@ -70,7 +68,7 @@ export function useVideoAnalysis({
 
       // 1. Extract pose frames from uncompressed source (better quality for CV)
       let analysis = null;
-      let detectedAngle: 'side' | 'front' = cameraAngle;
+      let detectedConfidence = 0.8;
       let extractedFrames: unknown[] | null = null;
       let extractedFps = 0;
 
@@ -87,9 +85,9 @@ export function useVideoAnalysis({
           extractedFrames = frames;
           extractedFps = fps;
 
-          // Auto-detect camera angle from pose landmark separation
+          // Auto-detect sagittal confidence from pose landmark separation
           if (frames.length > 0) {
-            detectedAngle = detectCameraAngle({ frames });
+            detectedConfidence = computeSagittalConfidence({ frames });
           }
 
           if (
@@ -140,7 +138,7 @@ export function useVideoAnalysis({
         sessionId,
         lift,
         setNumber,
-        cameraAngle: detectedAngle,
+        sagittalConfidence: detectedConfidence,
         localUri: destUri,
         durationSec,
         setWeightGrams: setContext?.weightGrams,
@@ -184,7 +182,6 @@ export function useVideoAnalysis({
       sessionId,
       lift,
       setNumber,
-      cameraAngle,
       setContext?.weightGrams,
       setContext?.reps,
       setContext?.rpe,

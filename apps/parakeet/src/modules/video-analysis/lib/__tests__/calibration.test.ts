@@ -2,7 +2,7 @@ import { existsSync, readFileSync } from 'fs';
 import { resolve } from 'path';
 
 import { analyzeVideoFrames } from '../../application/analyze-video';
-import { detectCameraAngle } from '../detect-camera-angle';
+import { computeSagittalConfidence } from '../view-confidence';
 import type { PoseFrame } from '../pose-types';
 
 // ---------------------------------------------------------------------------
@@ -29,14 +29,18 @@ interface RepCountRange {
   notes?: string;
 }
 
+interface SagittalConfidenceRange {
+  min: number;
+  max: number;
+}
+
 interface ManifestVideo {
   id: string;
   file: string;
   lift: 'squat' | 'bench' | 'deadlift';
   calibrated: boolean;
   expected: {
-    camera_angle: 'side' | 'front';
-    camera_angle_notes?: string;
+    sagittal_confidence: SagittalConfidenceRange;
     rep_count: RepCountRange;
     faults_to_test: string[];
     metrics_present: string[];
@@ -112,12 +116,14 @@ describe.each(manifest.videos)('video: $id', (video) => {
     const { min, max } = video.expected.rep_count;
     expect(result.reps.length).toBeGreaterThanOrEqual(min);
     expect(result.reps.length).toBeLessThanOrEqual(max);
-    expect(result.analysisVersion).toBe(3);
+    expect(result.analysisVersion).toBe(4);
   });
 
-  it('detects the correct camera angle', () => {
-    const angle = detectCameraAngle({ frames });
-    expect(angle).toBe(video.expected.camera_angle);
+  it('sagittal confidence is within expected range', () => {
+    const confidence = computeSagittalConfidence({ frames });
+    const { min, max } = video.expected.sagittal_confidence;
+    expect(confidence).toBeGreaterThanOrEqual(min);
+    expect(confidence).toBeLessThanOrEqual(max);
   });
 
   it('has expected metrics on every rep', () => {
@@ -130,10 +136,8 @@ describe.each(manifest.videos)('video: $id', (video) => {
       expect(Array.isArray(rep.faults)).toBe(true);
 
       if (video.lift === 'squat') {
-        // Depth is only computed from side view (front view: hip/knee Y overlap)
-        if (video.expected.camera_angle === 'side') {
-          expect(rep.maxDepthCm).toBeDefined();
-        }
+        // Depth is always computed (perspective-corrected at oblique angles)
+        expect(rep.maxDepthCm).toBeDefined();
         expect(rep.stanceWidthCm).toBeDefined();
         expect(rep.hipShiftCm).toBeDefined();
         expect(rep.hipShiftDirection).toBeDefined();
@@ -191,8 +195,7 @@ describe.each(manifest.videos)('video: $id', (video) => {
 
   if (video.lift === 'squat') {
     describe('squat-specific', () => {
-      it('maxDepthCm is defined on side-view reps', () => {
-        if (video.expected.camera_angle !== 'side') return;
+      it('maxDepthCm is defined on every rep', () => {
         const result = getCachedAnalysis(video.id, frames, fps, video.lift);
         for (const rep of result.reps) {
           expect(rep.maxDepthCm).toBeDefined();
@@ -321,12 +324,14 @@ describe('regression', () => {
       expect(result.reps.length).toBe(actual.rep_count);
     });
 
-    it('matches calibrated camera angle exactly', () => {
-      const actual = video.actual as { camera_angle: string } | null;
-      if (!actual?.camera_angle) return;
+    it('matches calibrated sagittal confidence', () => {
+      const actual = video.actual as {
+        sagittal_confidence: number;
+      } | null;
+      if (actual?.sagittal_confidence == null) return;
 
-      const angle = detectCameraAngle({ frames });
-      expect(angle).toBe(actual.camera_angle);
+      const confidence = computeSagittalConfidence({ frames });
+      expect(confidence).toBeCloseTo(actual.sagittal_confidence, 1);
     });
 
     it('matches calibrated analysis version', () => {

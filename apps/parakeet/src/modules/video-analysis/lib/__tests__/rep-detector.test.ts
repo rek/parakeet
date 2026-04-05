@@ -104,16 +104,39 @@ describe('detectReps', () => {
       expect(reps).toHaveLength(3);
     });
 
-    it('bench uses wrist Y not hip Y', () => {
-      // Freeze hips but move wrists — should still detect bench reps
+    it('bench uses elbow angle not hip Y', () => {
+      // Freeze hips but move elbows+wrists — should detect bench reps via
+      // elbow angle oscillation (viewpoint-invariant).
       const framesPerRep = 60;
       const frames = Array.from({ length: framesPerRep * 2 }, (_, i) => {
         const repPhase = (i % framesPerRep) / framesPerRep;
         const t = Math.sin(repPhase * Math.PI);
         const wristY = 0.3 + t * 0.25; // 0.3 → 0.55
+        const elbowY = 0.27 + t * 0.10; // 0.27 → 0.37
+        const leftElbowX = 0.42 - t * 0.10; // flares out at bottom
+        const rightElbowX = 0.58 + t * 0.10;
         return buildFrame({
+          [LANDMARK.LEFT_SHOULDER]: { x: 0.45, y: 0.25, z: 0, visibility: 1 },
+          [LANDMARK.RIGHT_SHOULDER]: {
+            x: 0.55,
+            y: 0.25,
+            z: 0,
+            visibility: 1,
+          },
           [LANDMARK.LEFT_HIP]: { x: 0.47, y: 0.5, z: 0, visibility: 1 },
           [LANDMARK.RIGHT_HIP]: { x: 0.53, y: 0.5, z: 0, visibility: 1 },
+          [LANDMARK.LEFT_ELBOW]: {
+            x: leftElbowX,
+            y: elbowY,
+            z: 0,
+            visibility: 1,
+          },
+          [LANDMARK.RIGHT_ELBOW]: {
+            x: rightElbowX,
+            y: elbowY,
+            z: 0,
+            visibility: 1,
+          },
           [LANDMARK.LEFT_WRIST]: { x: 0.38, y: wristY, z: 0, visibility: 1 },
           [LANDMARK.RIGHT_WRIST]: { x: 0.62, y: wristY, z: 0, visibility: 1 },
         });

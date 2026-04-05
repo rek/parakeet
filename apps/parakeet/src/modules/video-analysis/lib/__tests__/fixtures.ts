@@ -112,8 +112,11 @@ export function generateSquatFrames({
 /**
  * Generate frames simulating bench press reps.
  *
- * At lockout: wrists at y≈0.3 (bar extended away from chest)
- * At chest:   wrists at y≈0.55 (highest Y = bar touching chest)
+ * At lockout: wrists at y≈0.3, elbows nearly straight (~170° angle)
+ * At chest:   wrists at y≈0.55, elbows bent (~60° angle)
+ *
+ * Elbows move with the rep to produce a realistic elbow angle signal
+ * for viewpoint-invariant rep detection.
  */
 export function generateBenchFrames({
   reps,
@@ -130,9 +133,37 @@ export function generateBenchFrames({
     const t = Math.sin(repPhase * Math.PI);
 
     const wristY = lerp(0.3, 0.55, t); // lockout → chest touch
+    // Elbows bend as bar descends: nearly straight at lockout (~177°), bent at chest (~114°)
+    const elbowY = lerp(0.27, 0.37, t);
+    const leftElbowX = lerp(0.42, 0.32, t); // flares out at bottom
+    const rightElbowX = lerp(0.58, 0.68, t);
 
     frames.push(
       buildFrame({
+        [LANDMARK.LEFT_SHOULDER]: {
+          x: 0.45,
+          y: 0.25,
+          z: 0,
+          visibility: 1,
+        },
+        [LANDMARK.RIGHT_SHOULDER]: {
+          x: 0.55,
+          y: 0.25,
+          z: 0,
+          visibility: 1,
+        },
+        [LANDMARK.LEFT_ELBOW]: {
+          x: leftElbowX,
+          y: elbowY,
+          z: 0,
+          visibility: 1,
+        },
+        [LANDMARK.RIGHT_ELBOW]: {
+          x: rightElbowX,
+          y: elbowY,
+          z: 0,
+          visibility: 1,
+        },
         [LANDMARK.LEFT_WRIST]: { x: 0.38, y: wristY, z: 0, visibility: 1 },
         [LANDMARK.RIGHT_WRIST]: { x: 0.62, y: wristY, z: 0, visibility: 1 },
       })

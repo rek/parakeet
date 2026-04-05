@@ -74,7 +74,6 @@ export function PartnerFilmingSheet({
               durationSec: video.duration,
               lift: selection.lift,
               setNumber: selection.setNumber,
-              cameraAngle: selection.cameraAngle,
             });
             setStep(success ? 'done' : 'error');
           }
@@ -150,8 +149,7 @@ export function PartnerFilmingSheet({
               />
               <View style={styles.recordControls}>
                 <Text style={styles.recordLabel}>
-                  Set {selection?.setNumber} —{' '}
-                  {selection?.cameraAngle === 'front' ? 'Front' : 'Side'}
+                  Set {selection?.setNumber}
                 </Text>
                 <TouchableOpacity
                   style={[

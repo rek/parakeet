@@ -17,12 +17,10 @@ import type { ColorScheme } from '../../../theme';
  * Shows positioning guides for side or front view.
  */
 export function RecordVideoSheet({
-  cameraAngle,
   onRecorded,
   onCancel,
   colors,
 }: {
-  cameraAngle: 'side' | 'front';
   onRecorded: (videoUri: string) => void;
   onCancel: () => void;
   colors: ColorScheme;
@@ -141,7 +139,7 @@ export function RecordVideoSheet({
               fill="rgba(255,255,255,0.6)"
               fontSize="3"
             >
-              {cameraAngle === 'side' ? 'SIDE VIEW' : 'FRONT VIEW'}
+              FILM YOUR SET
             </SvgText>
 
             {/* Placement hint */}
@@ -152,9 +150,7 @@ export function RecordVideoSheet({
               fill="rgba(255,255,255,0.5)"
               fontSize="2.5"
             >
-              {cameraAngle === 'side'
-                ? 'Position camera at hip height, perpendicular to the bar'
-                : 'Position camera facing the lifter, centered on the rack'}
+              For best depth analysis, film from the side
             </SvgText>
           </Svg>
         </View>

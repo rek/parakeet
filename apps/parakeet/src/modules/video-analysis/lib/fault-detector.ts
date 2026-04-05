@@ -65,20 +65,19 @@ function detectSquatFaults({
   repBounds,
   barPath,
   repContext,
-  cameraAngle = 'side',
+  sagittalConfidence = 0.8,
 }: {
   frames: PoseFrame[];
   repBounds: { startFrame: number; endFrame: number };
   barPath: BarPathPoint[];
   repContext?: RepContext;
-  cameraAngle?: 'side' | 'front';
+  sagittalConfidence?: number;
 }) {
   const faults: FormFault[] = [];
   const { startFrame, endFrame } = repBounds;
-  const isSideView = cameraAngle === 'side';
 
-  // Depth check — only meaningful from side view (from front, hip/knee Y overlap)
-  if (isSideView) {
+  // Depth check — always computed, severity adjusted by confidence
+  {
     const bottomFrame =
       repContext?.bottomFrame ??
       findBottomFrame({ frames, startFrame, endFrame });
@@ -86,14 +85,17 @@ function detectSquatFaults({
     if (!belowParallel) {
       faults.push({
         type: 'above_parallel',
-        severity: 'critical',
-        message: 'Hip crease did not reach parallel',
+        severity: sagittalConfidence < 0.5 ? 'warning' : 'critical',
+        message:
+          sagittalConfidence < 0.5
+            ? 'Hip crease may not have reached parallel (low angle confidence)'
+            : 'Hip crease did not reach parallel',
       });
     }
   }
 
-  // Forward lean — only meaningful from side view (from front, lean saturates at 90°)
-  if (isSideView) {
+  // Forward lean — always computed, severity adjusted by confidence
+  {
     let maxLean = 0;
     for (let i = startFrame; i <= Math.min(endFrame, frames.length - 1); i++) {
       const lean = computeForwardLean({ frame: frames[i] });
@@ -102,7 +104,7 @@ function detectSquatFaults({
     if (maxLean > THRESHOLDS.squat.excessiveForwardLeanDeg) {
       faults.push({
         type: 'excessive_lean',
-        severity: 'warning',
+        severity: sagittalConfidence < 0.5 ? 'info' : 'warning',
         message: `Forward lean reached ${maxLean.toFixed(1)}°`,
         value: maxLean,
         threshold: THRESHOLDS.squat.excessiveForwardLeanDeg,
@@ -250,14 +252,14 @@ export function detectFaults({
   barPath,
   lift,
   repContext,
-  cameraAngle = 'side',
+  sagittalConfidence = 0.8,
 }: {
   frames: PoseFrame[];
   repBounds: { startFrame: number; endFrame: number };
   barPath: BarPathPoint[];
   lift: 'squat' | 'bench' | 'deadlift';
   repContext?: RepContext;
-  cameraAngle?: 'side' | 'front';
+  sagittalConfidence?: number;
 }) {
   if (lift === 'squat') {
     return detectSquatFaults({
@@ -265,7 +267,7 @@ export function detectFaults({
       repBounds,
       barPath,
       repContext,
-      cameraAngle,
+      sagittalConfidence,
     });
   }
   if (lift === 'deadlift') {

@@ -1097,7 +1097,7 @@ export type Database = {
       session_videos: {
         Row: {
           analysis: Json | null
-          camera_angle: string
+          sagittal_confidence: number | null
           coaching_response: Json | null
           created_at: string
           debug_landmarks: Json | null
@@ -1116,7 +1116,7 @@ export type Database = {
         }
         Insert: {
           analysis?: Json | null
-          camera_angle?: string
+          sagittal_confidence?: number | null
           coaching_response?: Json | null
           created_at?: string
           debug_landmarks?: Json | null
@@ -1135,7 +1135,7 @@ export type Database = {
         }
         Update: {
           analysis?: Json | null
-          camera_angle?: string
+          sagittal_confidence?: number | null
           coaching_response?: Json | null
           created_at?: string
           debug_landmarks?: Json | null

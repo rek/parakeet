@@ -10,7 +10,6 @@ import { useTheme } from '../../../theme/ThemeContext';
 export interface SetSelection {
   lift: string;
   setNumber: number;
-  cameraAngle: 'side' | 'front';
 }
 
 export function PartnerSetPicker({
@@ -27,7 +26,6 @@ export function PartnerSetPicker({
 
   const totalSets = plannedSets.length;
   const [selectedSet, setSelectedSet] = useState(1);
-  const [angle, setAngle] = useState<'side' | 'front'>('side');
 
   const liftLabel = LIFT_LABELS[lift as keyof typeof LIFT_LABELS] ?? lift;
 
@@ -59,32 +57,13 @@ export function PartnerSetPicker({
         ))}
       </View>
 
-      <Text style={styles.sectionLabel}>Camera Angle</Text>
-      <View style={styles.angleRow}>
-        {(['side', 'front'] as const).map((a) => (
-          <TouchableOpacity
-            key={a}
-            style={[styles.angleChip, angle === a && styles.angleChipActive]}
-            onPress={() => setAngle(a)}
-            activeOpacity={0.7}
-          >
-            <Text
-              style={[
-                styles.angleChipText,
-                angle === a && styles.angleChipTextActive,
-              ]}
-            >
-              {a === 'side' ? 'Side' : 'Front'}
-            </Text>
-          </TouchableOpacity>
-        ))}
-      </View>
+      <Text style={[styles.sectionLabel, { marginTop: spacing[1] }]}>
+        Camera angle is auto-detected from the video
+      </Text>
 
       <TouchableOpacity
         style={styles.filmButton}
-        onPress={() =>
-          onSelect({ lift, setNumber: selectedSet, cameraAngle: angle })
-        }
+        onPress={() => onSelect({ lift, setNumber: selectedSet })}
         activeOpacity={0.7}
         accessibilityLabel={`Film set ${selectedSet}`}
         accessibilityRole="button"
@@ -141,31 +120,6 @@ function buildStyles(colors: ColorScheme) {
       color: colors.textSecondary,
     },
     setChipTextActive: {
-      color: colors.primary,
-    },
-    angleRow: {
-      flexDirection: 'row',
-      gap: spacing[2],
-    },
-    angleChip: {
-      flex: 1,
-      paddingVertical: spacing[2],
-      borderRadius: radii.md,
-      borderWidth: 1,
-      borderColor: colors.border,
-      backgroundColor: colors.bgMuted,
-      alignItems: 'center',
-    },
-    angleChipActive: {
-      borderColor: colors.primary,
-      backgroundColor: colors.primaryMuted,
-    },
-    angleChipText: {
-      fontSize: typography.sizes.sm,
-      fontWeight: typography.weights.medium,
-      color: colors.textSecondary,
-    },
-    angleChipTextActive: {
       color: colors.primary,
     },
     filmButton: {

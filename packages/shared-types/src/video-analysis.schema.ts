@@ -89,7 +89,8 @@ export type FatigueSignatures = z.infer<typeof FatigueSignaturesSchema>;
 export const VideoAnalysisResultSchema = z.object({
   reps: z.array(RepAnalysisSchema),
   fps: z.number(),
-  cameraAngle: z.enum(['side', 'front']),
+  cameraAngle: z.enum(['side', 'front']).optional(),
+  sagittalConfidence: z.number().min(0).max(1),
   analysisVersion: z.number().int(),
   fatigueSignatures: FatigueSignaturesSchema.optional(),
 });

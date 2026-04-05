@@ -80,7 +80,7 @@ export interface FaultDetector {
       barDrift: number;
       bottomFrame: number;
     };
-    cameraAngle?: 'side' | 'front';
+    sagittalConfidence?: number;
   }): FormFault[];
   findBottomFrame(params: {
     frames: PoseFrame[];
