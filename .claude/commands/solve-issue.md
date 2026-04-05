@@ -4,7 +4,7 @@ Read GitHub issue $ARGUMENTS using `gh issue view $ARGUMENTS`.
 
 1. Read the issue fully. Identify: is this a bug fix or a feature?
 2. Read `docs/README.md` to find relevant modules and their paths
-3. Read `docs/specs/implementation-status.md` for current state
+3. Browse `docs/features/` for related feature dirs and check their `index.md` for current state
 4. Check `docs/backlog.md` for related items
 5. If **bug**: trace the code path, identify root cause, fix, add regression test
 6. If **feature**: follow `docs/guide/ai-workflow.md` (Orient > Design > Plan > Implement > Validate > Wrap Up)

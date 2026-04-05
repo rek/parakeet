@@ -30,7 +30,7 @@ Start here:
 1. `docs/intent.md` — system vision and design philosophy
 2. `docs/README.md` — central docs index and feature navigator
 3. `docs/guide/project-organization.md` — canonical structure and boundaries
-4. `docs/design/training-engine-architecture.md` — full system overview and AI strategy
+4. `docs/features/core-engine/design-architecture.md` — full system overview and AI strategy
 
 ## Testing
 

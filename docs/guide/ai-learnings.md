@@ -80,6 +80,10 @@ Reusable patterns discovered during implementation. Read on-demand when debuggin
 
 **Ad-hoc items bypass the planned-data array** — `handleAuxSetUpdate` looked up `exerciseType` only from JIT-generated `auxiliaryWork`. Ad-hoc exercises aren't in that array, so the lookup returned `undefined` and timed exercises got the weighted treatment. Pattern: any handler that derives behavior from a planned-data array must fall back to a canonical source (e.g., `getExerciseType()` from the catalog) for user-added items.
 
+## Documentation
+
+**Doc restructures have a long reference tail** — moving files from `docs/design/` and `docs/specs/` to `docs/features/` required fixing references in: CLAUDE.md, docs/README.md, docs/guide/ai-workflow.md, docs/guide/code-style.md, docs/decisions/, docs/prompts/, .claude/commands/, root README.md, and ~100 internal cross-references within the moved files themselves. The `.claude/commands/` files are highest priority since they direct agent behavior on every `/kickoff`, `/wrap-up`, `/finish`, and `/review` invocation. Always grep the full repo after bulk renames — don't assume "just docs" means the blast radius is small.
+
 ## Agent Patterns
 
 **Feature requests often surface latent data bugs** — trace display problems back to the write path before adding view-layer filters.
@@ -126,7 +130,15 @@ Reusable patterns discovered during implementation. Read on-demand when debuggin
 
 **Store explicit failure flags, not just RPE 10** — inferring failures from RPE 10 + low reps loses the explicit user signal. Adding `failed: true` to the JSONB when the user taps "Failed" enables direct failure-rate analysis without heuristics.
 
+**Test fixtures must match the signal path being tested** — when changing `rep-detector.ts` from Y-coordinate to joint-angle detection, the bench fixtures didn't move elbows (only wrists). The angle signal was flat, so the fallback path fired silently. Fixtures need to produce realistic oscillation in whatever signal the algorithm uses. Always verify that the NEW code path is actually being exercised by checking that the fallback doesn't fire.
+
+**Perspective correction direction: divide, not multiply** — when compensating for foreshortened measurements at oblique camera angles, the measured value is *smaller* than reality, so the correction must *increase* the value (divide by the foreshortening factor). Multiplying by `sqrt(confidence)` makes already-small values even smaller — the opposite of what's needed. For angular metrics with natural caps (e.g., forward lean maxes at 90°), clamp after correction to avoid exceeding the geometric bound.
+
+**Binary classifications on continuous inputs create silent failure cliffs** — the `'side' | 'front'` camera angle classification using a hard threshold on shoulder separation failed at every intermediate angle (~30-60°, which is the majority of real gym videos). Replacing with a continuous 0-1 confidence score eliminates the cliff: all metrics always computed, severity and precision scale with confidence, and there's no "wrong" camera position. Pattern: whenever a system classifies a continuous input into two buckets and the response differs significantly between buckets, the boundary will be a source of bugs. Use a continuous signal instead.
+
 ### UX & Information Display
+
+**Multiple display sites for the same data need a single resolver** — when three UI components (SetRow, rest timer label, post-rest overlay) each independently read `plannedSets[index]` to show the same weight/reps, they diverge the moment a transformation layer (intra-session adaptation) applies to only one path. The fix isn't to add the transformation to each site — it's to extract a single `getEffectivePlannedSet(index, ...)` function that all sites call. Pattern: if the same domain data appears in 2+ places with different formatting, add a shared resolver at the data layer, not inline lookups at each display site.
 
 **Stacked overlays need information density budgeting** — when two overlay cards (RPE picker + rest timer) are visible simultaneously, the combined height can consume ~77% of an iPhone SE screen. Suppress secondary context (e.g., "next lift" label in the timer) while the primary action (RPE entry) is pending. Only show lookahead information after the immediate action is resolved.
 

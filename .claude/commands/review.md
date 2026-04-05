@@ -178,13 +178,13 @@ Look for logic conflicts, missing guards, dead-end UX paths, and semantic mismat
 
 ### 8. Missing Features vs. Spec
 
-Check `docs/specs/implementation-status.md` against actual code. Flag specs with unchecked boxes for features that were actually built.
+Check `docs/features/*/index.md` status against actual code. Flag specs with unchecked boxes for features that were actually built.
 
 ---
 
 ## Output Format
 
-The final goal is to update existing `docs/design/*.md` and `docs/specs/**/*.md` files.
+The final goal is to update existing `docs/features/*/design*.md` and `docs/features/*/spec-*.md` files.
 
 Design changes should be written inline in the design doc, as if they were always there.
 

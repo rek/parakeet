@@ -225,7 +225,7 @@ Check implementation status against the spec list. Flag anything in specs or des
 - `auxiliary-exercise-types` design doc (Planned — bodyweight/timed exercises get nonsensical weight assignments)
 - `jit-volume-augmentation` design doc (Planned — auto-add auxiliaries when muscle below MEV)
 - `data-002` auxiliary exercise config spec — check for any unchecked tasks
-- Any spec in `docs/specs/` that has unchecked implementation tasks
+- Any spec in `docs/features/*/spec-*.md` that has unchecked implementation tasks
 
 ---
 
@@ -270,7 +270,7 @@ The Key Learnings section is categorized into 5 groups (Database & Schema, UI & 
 #### 9d. Documentation gaps and redundancy
 
 - **MEMORY.md vs project docs**: MEMORY.md stores implementation details that arguably belong in implementation-status.md. Is MEMORY.md doing too much? Should it be trimmed to only store things that don't belong in checked-in docs?
-- **Design doc freshness**: are any `docs/design/*.md` files stale (describe a planned state that was implemented differently)?
+- **Design doc freshness**: are any `docs/features/*/design*.md` files stale (describe a planned state that was implemented differently)?
 - **Spec freshness**: are there specs with unchecked boxes for features that were actually built?
 - **Missing docs**: is there anything an agent needs to know that isn't written down anywhere? (e.g., how to run the app locally, how to test against prod Supabase, how the dashboard relates to the main app)
 
@@ -288,7 +288,7 @@ Evaluate whether a lightweight lifecycle would help:
 
 ## Output Format
 
-The final goal is to update the existing `docs/design/*.md` and `docs/specs/**/*.md` files.
+The final goal is to update the existing `docs/features/*/design*.md` and `docs/features/*/spec-*.md` files.
 
 Design changes should be written inline in the design doc, as if they were always there.
 

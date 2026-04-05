@@ -111,7 +111,7 @@ const { object } = await generateObject({
 })
 ```
 
-See `docs/specs/10-ai/ai-001-vercel-ai-sdk-setup.md` for full setup spec.
+See `docs/features/ai/spec-sdk-setup.md` for full setup spec.
 
 ## References
 
@@ -119,5 +119,5 @@ See `docs/specs/10-ai/ai-001-vercel-ai-sdk-setup.md` for full setup spec.
 - [Vercel AI SDK — generateObject](https://ai-sdk.dev/docs/reference/ai-sdk-core/generate-object)
 - [Callstack react-native-ai (rejected)](https://github.com/callstackincubator/ai)
 - ADR-006: Supabase over GCP
-- `docs/design/training-engine-architecture.md`
-- `docs/design/cycle-review-and-insights.md`
+- `docs/features/core-engine/design-architecture.md`
+- `docs/features/cycle-review/design.md`

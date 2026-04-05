@@ -11,7 +11,7 @@ Before starting any non-trivial work, read these in order:
 1. [docs/intent.md](./docs/intent.md) — why the app exists, core goal
 2. [docs/README.md](./docs/README.md) — documentation layers, feature navigator, module map
 3. [docs/domain/README.md](./docs/domain/README.md) — index of all training science (constants, formulas, research)
-4. [docs/specs/implementation-status.md](./docs/specs/implementation-status.md) — what's built vs planned
+4. `docs/features/` — browse `index.md` in any feature dir for status, specs, and design links
 
 For feature/bug work, also read:
 - [docs/guide/ai-workflow.md](./docs/guide/ai-workflow.md) — orient > design > plan > implement > validate > wrap up

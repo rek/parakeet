@@ -848,7 +848,7 @@ When a `Record<string, unknown>` value is used in JSX children, narrow it explic
 
 ### Adding a new dashboard page
 
-When adding a page backed by its own Supabase table, also update `Logs.tsx` (Timeline): add the event type to `typeConfig`, `Stats`, `StatCard`, and the `Promise.all` query. See `docs/design/dashboard.md` for the full checklist.
+When adding a page backed by its own Supabase table, also update `Logs.tsx` (Timeline): add the event type to `typeConfig`, `Stats`, `StatCard`, and the `Promise.all` query. See `docs/features/infra/design-dashboard.md` for the full checklist.
 
 ### `JsonViewer` visibility
 

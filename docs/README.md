@@ -9,10 +9,9 @@ Use this as the single entry point for project documentation.
 | **Intent** | [intent.md](./intent.md) | Why the app exists, design philosophy |
 | **Domain** | [domain/](./domain/) | Training science truth: constants, formulas, research ranges. **Single source for all numeric values.** |
 | **Guides** | [guide/](./guide/) | How to work: code style, project org, dev commands, AI workflow |
-| **Specs** | [specs/](./specs/) | Implementation plans and task checklists. Link to domain for values. |
-| **Design** | [design/](./design/) | Historical feature rationale. Only needed for new architecture. |
+| **Features** | [features/](./features/) | Feature-centric docs: each dir has `index.md` (status, modules), `design*.md` (rationale), `spec-*.md` (implementation plans). |
 | **ADRs** | [decisions/](./decisions/) | Architectural choices and tradeoffs |
-| **Status** | [specs/implementation-status.md](./specs/implementation-status.md) | What's built vs planned |
+| **Status** | Each `features/*/index.md` frontmatter | What's built vs planned per feature |
 
 See [guide/ai-workflow.md](./guide/ai-workflow.md) for the full workflow and when to read/update each layer.
 
@@ -20,11 +19,12 @@ See [guide/ai-workflow.md](./guide/ai-workflow.md) for the full workflow and whe
 
 0. [intent.md](./intent.md) — system vision, goals, **strength not bodybuilding**
 1. [domain/](./domain/) — training science reference (read when working on engine or values)
-2. [guide/project-organization.md](./guide/project-organization.md) — repo structure and import boundaries
-3. [guide/code-style.md](./guide/code-style.md) — TypeScript and React Native conventions
-4. [guide/dev.md](./guide/dev.md) — day-to-day commands
-5. [guide/ai-workflow.md](./guide/ai-workflow.md) — design, plan, implement, validate, wrap up
-6. [guide/react-query-patterns.md](./guide/react-query-patterns.md) — data layer patterns and anti-patterns
+2. [features/](./features/) — feature-centric docs (each dir = one feature with index, design, specs)
+3. [guide/project-organization.md](./guide/project-organization.md) — repo structure and import boundaries
+4. [guide/code-style.md](./guide/code-style.md) — TypeScript and React Native conventions
+5. [guide/dev.md](./guide/dev.md) — day-to-day commands
+6. [guide/ai-workflow.md](./guide/ai-workflow.md) — design, plan, implement, validate, wrap up
+7. [guide/react-query-patterns.md](./guide/react-query-patterns.md) — data layer patterns and anti-patterns
 
 ## Feature Navigator
 
@@ -54,11 +54,11 @@ Use this to find code without searching.
 
 ## Architecture
 
-- [design/training-engine-architecture.md](./design/training-engine-architecture.md)
+- [features/core-engine/design-architecture.md](./features/core-engine/design-architecture.md)
 - [decisions/](./decisions/) (ADRs)
 
 ## Templates
 
-- [design/\_TEMPLATE.md](./design/_TEMPLATE.md)
+- [features/\_TEMPLATE/design.md](./features/_TEMPLATE/design.md)
+- [features/\_TEMPLATE/spec-TEMPLATE.md](./features/_TEMPLATE/spec-TEMPLATE.md)
 - [decisions/\_TEMPLATE.md](./decisions/_TEMPLATE.md)
-- [specs/\_TEMPLATE.md](./specs/_TEMPLATE.md)

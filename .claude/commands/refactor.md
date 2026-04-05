@@ -28,6 +28,6 @@ Run `/verify` after each file.
 ## After finishing
 
 - Update `docs/backlog.md` if a backlog item was completed
-- Update the relevant design doc (`docs/design/`) if architecture changed
+- Update the relevant design doc (`docs/features/<feature>/design*.md`) if architecture changed
 - Add new patterns to `docs/guide/code-style.md` or `docs/guide/ai-learnings.md`
 - Update `docs/guide/dev.md` if new commands were introduced

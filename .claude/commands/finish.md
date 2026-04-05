@@ -21,8 +21,7 @@ Address all blocking issues found by the review. Non-blocking issues should be n
 Use an `Explore` agent to search the entire codebase for any documentation, specs, design docs, domain docs, code comments, and constants that are now out of alignment with the code changes. Key places to check:
 
 - `docs/domain/` — domain source of truth
-- `docs/specs/` — implementation specs
-- `docs/design/` — design docs
+- `docs/features/` — feature specs and design docs
 - `docs/guide/ai-learnings.md` — AI learnings
 - Code comments across all changed and related files
 - Related packages (training-sim, shared-types, etc.)
@@ -49,6 +48,6 @@ If a new learning is worth capturing:
 
 ### 6. Wrap-up (from ai-workflow phase 5)
 
-- Update spec checkboxes in `docs/specs/` to match what was actually built
-- Update `docs/specs/implementation-status.md` if new features were added
+- Update spec checkboxes in `docs/features/<feature>/spec-*.md` to match what was actually built
+- Update the feature's `docs/features/<feature>/index.md` status and spec table
 - Update `docs/backlog.md` if items were completed

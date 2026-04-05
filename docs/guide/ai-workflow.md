@@ -11,10 +11,9 @@ Each layer has a single purpose. Know which to read and which to update.
 | **Intent** | `docs/intent.md` | Why the app exists, design philosophy | First read of any session | Rarely — only if core goals change |
 | **Domain** | `docs/domain/` | Training science truth: constants, formulas, research ranges | Validating values, reviewing correctness, adding/changing engine constants | Any time a training constant changes |
 | **Guides** | `docs/guide/` | How to work: code style, project org, dev commands, workflow | Before writing code | When process or conventions change |
-| **Specs** | `docs/specs/` | Implementation plans: task checklists for multi-file features | Before implementing a planned feature | After implementing (mark done, update to match reality) |
-| **Design** | `docs/design/` | Historical feature rationale (what/why) | Understanding why a feature exists | Only for genuinely new architecture (e.g., new program mode) |
+| **Features** | `docs/features/*/` | Feature-centric docs: each dir has `index.md` (status), `design*.md` (rationale), `spec-*.md` (implementation plans) | Before implementing a feature | After implementing (mark done, update to match reality) |
 | **ADRs** | `docs/decisions/` | Architectural choices and tradeoffs | When revisiting a past decision | When making a new architectural choice |
-| **Status** | `docs/specs/implementation-status.md` | What's built vs planned | Before starting any work | After every feature/bugfix |
+| **Status** | Each `docs/features/*/index.md` | What's built vs planned per feature | Before starting any work | After every feature/bugfix |
 
 ### Key rule: domain constants live in `docs/domain/` only
 
@@ -29,7 +28,7 @@ A design doc is warranted for genuinely new architecture: new program modes, new
 Before any design or implementation:
 
 - Check [README.md](../README.md) to find relevant modules and their paths.
-- Check [implementation-status.md](../specs/implementation-status.md) to see what's already built.
+- Check `docs/features/*/index.md` to see what's already built for the relevant feature.
 - Check [domain/](../domain/) if the work involves training constants or formulas.
 - Check `apps/parakeet/src/modules/<feature>/index.ts` for the current public API before adding new exports.
 
@@ -66,8 +65,8 @@ For small features (bug fixes, value changes, <5 files), skip to Plan.
 
 Only for new architectural concepts (new program mode, new data model, new AI strategy, new technology integration):
 
-- Create a design doc in `docs/design/`.
-- Use `docs/design/_TEMPLATE.md`.
+- Create a design doc in `docs/features/<feature>/design.md`.
+- Use `docs/features/_TEMPLATE/design.md`.
 - Include **Research** findings and **Decisions** from the Discuss step.
 - Focus on problem, constraints, architecture impact, rollout.
 - Link to `docs/domain/` for any training science values — do not restate them.
@@ -76,7 +75,7 @@ For smaller features, skip to Plan.
 
 ## 4) Plan (phased for big features)
 
-- Create/update implementation tasks in `docs/specs/`.
+- Create/update implementation tasks in `docs/features/<feature>/spec-*.md`.
 - Keep tasks small and ordered.
 - Reference `docs/domain/` for constants — specs describe *where* values are used, not *what* they are.
 - **Confirm scope before building** — if a task involves external systems (cloud upload, third-party APIs, new permissions), confirm with the user that the scope is wanted before implementing. Building then reverting wastes effort.
@@ -167,7 +166,7 @@ After all phases complete:
 
 1. Update `docs/domain/` if any training constants were added or changed.
 2. Update spec files to match what was actually built (not what was originally planned).
-3. Update `../specs/implementation-status.md` — new checklist entries, corrected test counts, new migrations.
+3. Update the feature's `index.md` frontmatter status and spec table.
 4. Update design doc status from **Draft** → **Implemented** (if one exists for this work).
 5. Update `supabase/types.ts` if you added migrations without running `npm run db:types` (see dev.md).
 6. Review [ai-learnings.md](./ai-learnings.md) for any new patterns worth capturing.
@@ -190,7 +189,7 @@ Orient → Research → Discuss (grill) → Design → Plan (phased) → [per ph
 ```text
 Implement <feature/change> using docs/guide/project-organization.md and docs/guide/code-style.md.
 Check docs/domain/ for relevant training science constants.
-Create/update docs/specs/<id>-<name>.md as an implementation plan.
+Create/update docs/features/<feature>/spec-<name>.md as an implementation plan.
 Then implement in small slices with validation after each slice.
-At the end: update domain docs (if constants changed), finalize specs, update implementation-status.md.
+At the end: update domain docs (if constants changed), finalize specs, update feature index.md.
 ```
