@@ -15,7 +15,7 @@ Extend `session_videos` to associate videos with a specific set number. `set_num
 
 - [x] `ALTER TABLE session_videos ADD COLUMN set_number integer NOT NULL DEFAULT 1`
 - [x] `CHECK (set_number > 0)`
-- [x] Index: `idx_session_videos_session_lift_set_angle ON session_videos(session_id, lift, set_number, camera_angle)`
+- [x] Index: `idx_session_videos_session_lift_set ON session_videos(session_id, lift, set_number)` (mobile-052 dropped `camera_angle` column)
 - [x] Drop old `idx_session_videos_session_lift_angle`
 
 ### 1.2 — Update supabase/types.ts

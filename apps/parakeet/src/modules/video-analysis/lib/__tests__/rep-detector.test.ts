@@ -5,6 +5,7 @@ import { detectReps } from '../rep-detector';
 import {
   buildFrame,
   generateBenchFrames,
+  generateDeadliftFrames,
   generateSquatFrames,
 } from './fixtures';
 
@@ -305,6 +306,123 @@ describe('detectReps', () => {
       for (const rep of reps) {
         expect(rep.endFrame).toBeGreaterThan(rep.startFrame);
       }
+    });
+  });
+
+  describe('angle-based detection path', () => {
+    it('uses angle path for fully visible squat frames', () => {
+      // generateSquatFrames produces frames with full visibility on all landmarks.
+      // The angle signal (hip-knee-ankle) should have sufficient range to be used.
+      const frames = generateSquatFrames({ reps: 3, framesPerRep: 60 });
+      const reps = detectReps({ frames, lift: 'squat' });
+      expect(reps).toHaveLength(3);
+    });
+
+    it('deadlift uses hip angle (shoulder-hip-knee) not knee angle', () => {
+      // Generate deadlift frames with moving hips+shoulders but fixed knees.
+      // Hip angle oscillates (shoulder-hip-knee), knee angle stays flat.
+      // If deadlift incorrectly used knee angle, it would fall back to Y.
+      const frames = generateDeadliftFrames({ reps: 2, framesPerRep: 60 });
+      const reps = detectReps({ frames, lift: 'deadlift' });
+      expect(reps).toHaveLength(2);
+    });
+
+    it('falls back to Y when all landmarks have low visibility', () => {
+      // Build frames with hip Y movement but all landmarks at visibility < 0.5.
+      // Angle extraction should fail → Y fallback should still detect reps.
+      const framesPerRep = 60;
+      const frames = Array.from({ length: framesPerRep * 2 }, (_, i) => {
+        const repPhase = (i % framesPerRep) / framesPerRep;
+        const t = Math.sin(repPhase * Math.PI);
+        const hipY = 0.55 + t * 0.27; // 0.55 → 0.82
+
+        return buildFrame({
+          [LANDMARK.LEFT_SHOULDER]: {
+            x: 0.45,
+            y: 0.28,
+            z: 0,
+            visibility: 0.3,
+          },
+          [LANDMARK.RIGHT_SHOULDER]: {
+            x: 0.55,
+            y: 0.28,
+            z: 0,
+            visibility: 0.3,
+          },
+          [LANDMARK.LEFT_HIP]: { x: 0.47, y: hipY, z: 0, visibility: 0.3 },
+          [LANDMARK.RIGHT_HIP]: { x: 0.53, y: hipY, z: 0, visibility: 0.3 },
+          [LANDMARK.LEFT_KNEE]: { x: 0.46, y: 0.75, z: 0, visibility: 0.3 },
+          [LANDMARK.RIGHT_KNEE]: { x: 0.54, y: 0.75, z: 0, visibility: 0.3 },
+          [LANDMARK.LEFT_ANKLE]: { x: 0.47, y: 0.95, z: 0, visibility: 0.3 },
+          [LANDMARK.RIGHT_ANKLE]: {
+            x: 0.53,
+            y: 0.95,
+            z: 0,
+            visibility: 0.3,
+          },
+        });
+      });
+
+      const reps = detectReps({ frames, lift: 'squat' });
+      expect(reps).toHaveLength(2);
+    });
+
+    it('falls back to Y when angle signal has insufficient range (<5°)', () => {
+      // Build frames where joints don't move (flat angle signal) but hip Y oscillates.
+      // hasUsableRange requires max-min > 5°; flat signal should fail this.
+      const framesPerRep = 60;
+      const frames = Array.from({ length: framesPerRep * 2 }, (_, i) => {
+        const repPhase = (i % framesPerRep) / framesPerRep;
+        const t = Math.sin(repPhase * Math.PI);
+        const hipY = 0.55 + t * 0.27;
+
+        // All three joints (hip, knee, ankle) move together in Y
+        // so the angle between them stays constant → flat angle signal.
+        return buildFrame({
+          [LANDMARK.LEFT_SHOULDER]: {
+            x: 0.45,
+            y: 0.28,
+            z: 0,
+            visibility: 1,
+          },
+          [LANDMARK.RIGHT_SHOULDER]: {
+            x: 0.55,
+            y: 0.28,
+            z: 0,
+            visibility: 1,
+          },
+          [LANDMARK.LEFT_HIP]: { x: 0.47, y: hipY, z: 0, visibility: 1 },
+          [LANDMARK.RIGHT_HIP]: { x: 0.53, y: hipY, z: 0, visibility: 1 },
+          [LANDMARK.LEFT_KNEE]: {
+            x: 0.46,
+            y: hipY + 0.2,
+            z: 0,
+            visibility: 1,
+          },
+          [LANDMARK.RIGHT_KNEE]: {
+            x: 0.54,
+            y: hipY + 0.2,
+            z: 0,
+            visibility: 1,
+          },
+          [LANDMARK.LEFT_ANKLE]: {
+            x: 0.47,
+            y: hipY + 0.4,
+            z: 0,
+            visibility: 1,
+          },
+          [LANDMARK.RIGHT_ANKLE]: {
+            x: 0.53,
+            y: hipY + 0.4,
+            z: 0,
+            visibility: 1,
+          },
+        });
+      });
+
+      const reps = detectReps({ frames, lift: 'squat' });
+      // Y signal has clear oscillation → should detect 2 reps via fallback
+      expect(reps).toHaveLength(2);
     });
   });
 

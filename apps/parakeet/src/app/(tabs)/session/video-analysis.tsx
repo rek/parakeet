@@ -268,7 +268,7 @@ export default function VideoAnalysisScreen() {
             <Text style={styles.analysisMetaText}>
               {analysis.reps.length} rep
               {analysis.reps.length !== 1 ? 's' : ''} detected · {analysis.fps}{' '}
-              fps · {analysis.sagittalConfidence != null ? `${Math.round(analysis.sagittalConfidence * 100)}% side confidence` : analysis.cameraAngle + ' view'}
+              fps · {`${Math.round(analysis.sagittalConfidence * 100)}% side confidence`}
             </Text>
 
             {/* Bar path overlays — one per rep */}

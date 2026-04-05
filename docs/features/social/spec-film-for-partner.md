@@ -27,7 +27,7 @@ The recorder's camera UI scoped to the lifter's session, CV analysis on the reco
 - [ ] `insertPartnerSessionVideo(params)` — like `video.repository.insertSessionVideo` but explicitly sets:
   - `user_id: targetUserId` (the lifter)
   - `recorded_by: auth.uid()` (the recorder)
-  - Same fields: `session_id`, `lift`, `set_number`, `camera_angle`, `local_uri`, `duration_sec`, `analysis`
+  - Same fields: `session_id`, `lift`, `set_number`, `sagittal_confidence`, `local_uri`, `duration_sec`, `analysis`
   - Does NOT call `typedSupabase.auth.getUser()` for user_id — uses the passed `targetUserId`
   - RLS INSERT policy from social-001 validates: `auth.uid() = recorded_by AND user_id is an accepted partner`
 
@@ -64,7 +64,7 @@ The recorder's camera UI scoped to the lifter's session, CV analysis on the reco
 - [ ] `usePartnerFilming(partnerId, sessionId)` hook:
   - Accepts `plannedSets` from the already-fetched partner session data (avoids redundant query)
   - Manages filming state: `idle | recording | analyzing | uploading | done | error`
-  - `startFilming(lift, setNumber, cameraAngle)` — triggers camera
+  - `startFilming(lift, setNumber)` — triggers camera (sagittalConfidence computed from landmarks)
   - `processVideo(videoUri, durationSec)` — runs analysis pipeline + upload
   - Returns: `{ sets, filmingState, startFilming, processVideo, error, retryUpload }`
 

@@ -1,6 +1,13 @@
 import { LANDMARK, type PoseFrame } from './pose-types';
 
 /**
+ * Below this confidence, foreshortening-sensitive faults are downgraded
+ * and the derived binary camera angle flips to 'front'.
+ * Shared across fault-detector severity logic and deriveCameraAngle.
+ */
+export const MIN_SAGITTAL_CONFIDENCE = 0.5;
+
+/**
  * Maximum expected landmark separation (normalized units) for a pure front view.
  * At ~170cm person filling 70% of frame, 0.30 ≈ ~73cm — well beyond
  * shoulder width, providing headroom for near-front angles.
@@ -81,7 +88,7 @@ export function computeSagittalConfidence({
 export function deriveCameraAngle(
   sagittalConfidence: number
 ): 'side' | 'front' {
-  return sagittalConfidence >= 0.5 ? 'side' : 'front';
+  return sagittalConfidence >= MIN_SAGITTAL_CONFIDENCE ? 'side' : 'front';
 }
 
 /**

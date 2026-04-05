@@ -17,7 +17,7 @@ Core pipeline: pick video → compress → save locally + DB. Pure analysis pipe
 
 - [x] Migration: `session_videos` table (id, user_id, session_id, lift, local_uri, remote_uri, duration_sec, analysis JSONB, created_at) with RLS
 - [x] Update `supabase/types.ts`
-- [x] Zod schema for `VideoAnalysisResult` in `shared-types` (reps array, fps, cameraAngle, analysisVersion)
+- [x] Zod schema for `VideoAnalysisResult` in `shared-types` (reps array, fps, sagittalConfidence, analysisVersion)
 - [x] Types: `BarPathPoint`, `RepAnalysis`, `FormFault`
 
 ### 1.3 — Module scaffold + feature flag
@@ -141,10 +141,10 @@ On-device pose estimation via MediaPipe, replacing the Phase 1 placeholder.
 
 ### 3.7 — Front view support
 
-- [x] Migration: `camera_angle` column on `session_videos` (default 'side')
+- [x] ~~Migration: `camera_angle` column on `session_videos`~~ → replaced by `sagittal_confidence real NOT NULL DEFAULT 0.8`
 - [x] `computeKneeValgus()`: frontal plane hip-knee-ankle angle + medial detection
-- [x] Repository: `insertSessionVideo` accepts `cameraAngle` parameter
-- [x] Model: `SessionVideo.cameraAngle` field
+- [x] ~~Repository: `insertSessionVideo` accepts `cameraAngle` parameter~~ → accepts `sagittalConfidence: number`
+- [x] ~~Model: `SessionVideo.cameraAngle` field~~ → `SessionVideo.sagittalConfidence: number`
 
 > **Superseded (mobile-052):** Binary `'side' | 'front'` classification replaced by continuous `sagittalConfidence` (0–1). `camera_angle` column dropped. All metrics always computed with confidence weighting. See [mobile-052](./mobile-052-view-angle-rework.md).
 

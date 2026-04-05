@@ -163,6 +163,25 @@ describe('detectFaults', () => {
       expect(criticalFaults).toHaveLength(0);
     });
 
+    it('downgrades above_parallel to warning at low sagittal confidence', () => {
+      const frames = buildAboveParallelSquatFrames();
+      const repBounds = { startFrame: 0, endFrame: frames.length - 1 };
+      const barPath = straightPath(0, frames.length - 1);
+
+      const faults = detectFaults({
+        frames,
+        repBounds,
+        barPath,
+        lift: 'squat',
+        sagittalConfidence: 0.3,
+      });
+      const depthFault = faults.find((f) => f.type === 'above_parallel');
+
+      expect(depthFault).toBeDefined();
+      expect(depthFault?.severity).toBe('warning');
+      expect(depthFault?.message).toContain('low angle confidence');
+    });
+
     it('fault value and threshold are set for detectable faults', () => {
       const frames = buildExcessiveLeanFrames();
       const repBounds = { startFrame: 0, endFrame: frames.length - 1 };
@@ -196,7 +215,8 @@ describe('detectFaults', () => {
       const lockoutFault = faults.find((f) => f.type === 'incomplete_lockout');
 
       expect(lockoutFault).toBeDefined();
-      expect(lockoutFault?.severity).toBe('info');
+      // Default sagittalConfidence=0.8 → high confidence → warning severity
+      expect(lockoutFault?.severity).toBe('warning');
     });
 
     it('detects bar drift in deadlift', () => {
@@ -211,6 +231,81 @@ describe('detectFaults', () => {
         lift: 'deadlift',
       });
       expect(faults.some((f) => f.type === 'bar_drift')).toBe(true);
+    });
+
+    it('downgrades back_rounding to info at low sagittal confidence', () => {
+      // Build frames where hip angle decreases by >15° in the first third
+      // (simulating back rounding: hips shoot up while upper back caves).
+      // Start: shoulder, hip, knee roughly straight → hip angle ~170°
+      // First third: hip moves forward → hip angle drops to ~140° (30° decrease)
+      const frameCount = 60;
+      const frames = Array.from({ length: frameCount }, (_, i) => {
+        const t = i / frameCount;
+        // Only move during first third to trigger rounding detection
+        const roundingT = t < 1 / 3 ? t * 3 : 1;
+        // Hip moves forward (increasing x) → decreasing shoulder-hip-knee angle
+        const hipX = 0.5 + roundingT * 0.25;
+        return buildFrame({
+          [LANDMARK.LEFT_SHOULDER]: { x: 0.5, y: 0.2, z: 0, visibility: 1 },
+          [LANDMARK.RIGHT_SHOULDER]: { x: 0.5, y: 0.2, z: 0, visibility: 1 },
+          [LANDMARK.LEFT_HIP]: { x: hipX, y: 0.5, z: 0, visibility: 1 },
+          [LANDMARK.RIGHT_HIP]: { x: hipX, y: 0.5, z: 0, visibility: 1 },
+          [LANDMARK.LEFT_KNEE]: { x: 0.5, y: 0.75, z: 0, visibility: 1 },
+          [LANDMARK.RIGHT_KNEE]: { x: 0.5, y: 0.75, z: 0, visibility: 1 },
+        });
+      });
+      const repBounds = { startFrame: 0, endFrame: frames.length - 1 };
+      const barPath = straightPath(0, frames.length - 1);
+
+      const faults = detectFaults({
+        frames,
+        repBounds,
+        barPath,
+        lift: 'deadlift',
+        sagittalConfidence: 0.3,
+      });
+      const roundingFault = faults.find((f) => f.type === 'back_rounding');
+
+      expect(roundingFault).toBeDefined();
+      expect(roundingFault?.severity).toBe('info');
+      expect(roundingFault?.message).toContain('low angle confidence');
+    });
+
+    it('downgrades incomplete lockout to info at low sagittal confidence', () => {
+      const frames = buildIncompleteLockoutDeadliftFrames();
+      const repBounds = { startFrame: 0, endFrame: frames.length - 1 };
+      const barPath = straightPath(0, frames.length - 1);
+
+      const faults = detectFaults({
+        frames,
+        repBounds,
+        barPath,
+        lift: 'deadlift',
+        sagittalConfidence: 0.3,
+      });
+      const lockoutFault = faults.find((f) => f.type === 'incomplete_lockout');
+
+      expect(lockoutFault).toBeDefined();
+      expect(lockoutFault?.severity).toBe('info');
+      expect(lockoutFault?.message).toContain('low angle confidence');
+    });
+
+    it('reports incomplete lockout as warning at high sagittal confidence', () => {
+      const frames = buildIncompleteLockoutDeadliftFrames();
+      const repBounds = { startFrame: 0, endFrame: frames.length - 1 };
+      const barPath = straightPath(0, frames.length - 1);
+
+      const faults = detectFaults({
+        frames,
+        repBounds,
+        barPath,
+        lift: 'deadlift',
+        sagittalConfidence: 0.9,
+      });
+      const lockoutFault = faults.find((f) => f.type === 'incomplete_lockout');
+
+      expect(lockoutFault).toBeDefined();
+      expect(lockoutFault?.severity).toBe('warning');
     });
 
     it('includes a human-readable message on each fault', () => {

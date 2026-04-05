@@ -8,7 +8,7 @@ export interface SessionVideo {
   sessionId: string;
   lift: string;
   setNumber: number;
-  sagittalConfidence: number | null;
+  sagittalConfidence: number;
   localUri: string;
   remoteUri: string | null;
   durationSec: number;

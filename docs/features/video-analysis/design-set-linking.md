@@ -56,7 +56,7 @@ Today a video is associated with a session and a lift. That is too coarse:
 | 1 | Set number column | Nullable integer on session_videos | Null = "whole lift" (backward compat), non-null = 1-indexed set |
 | 2 | Snapshot set context | Store weight_grams, reps, RPE on the video row | Session data could be edited later; snapshot at recording time ensures coaching context is always correct |
 | 3 | Entry point | PostRestOverlay record button (pre-set, primary) + SetVideoIcon on completed SetRow (post-set import) + history link (retrospective). Header icon removed (mobile-051). | PostRestOverlay has full set context and natural timing. SetVideoIcon for camera roll import. Header icon was redundant and lacked set context. |
-| 4 | Multiple videos per set | Allowed (side + front already supported via camera_angle) | No artificial limit |
+| 4 | Multiple videos per set | Allowed (each video has its own `sagittalConfidence` score) | No artificial limit |
 | 5 | Auxiliary exercises | Defer to future | Main lifts first; aux video adds complexity for lower value |
 
 ## User Benefits

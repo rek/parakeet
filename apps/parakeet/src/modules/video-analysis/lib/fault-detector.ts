@@ -4,6 +4,25 @@ import { computeForwardLean, computeHipAngle } from './angle-calculator';
 import { computeBarDrift, sliceBarPath } from './bar-path';
 import { detectSquatDepth } from './depth-detector';
 import { LANDMARK, type PoseFrame } from './pose-types';
+import { MIN_SAGITTAL_CONFIDENCE } from './view-confidence';
+
+/** Pick severity based on sagittal confidence: downgrade when view is too oblique. */
+function confidenceSeverity(
+  sagittalConfidence: number,
+  high: FormFault['severity'],
+  low: FormFault['severity']
+): FormFault['severity'] {
+  return sagittalConfidence < MIN_SAGITTAL_CONFIDENCE ? low : high;
+}
+
+/** Append "(low angle confidence)" qualifier when confidence is below threshold. */
+function confidenceMessage(
+  sagittalConfidence: number,
+  highMsg: string,
+  lowMsg: string
+): string {
+  return sagittalConfidence < MIN_SAGITTAL_CONFIDENCE ? lowMsg : highMsg;
+}
 
 // Thresholds from docs/design/video-form-analysis.md — Phase 1 fixed values.
 const THRESHOLDS = {
@@ -85,11 +104,12 @@ function detectSquatFaults({
     if (!belowParallel) {
       faults.push({
         type: 'above_parallel',
-        severity: sagittalConfidence < 0.5 ? 'warning' : 'critical',
-        message:
-          sagittalConfidence < 0.5
-            ? 'Hip crease may not have reached parallel (low angle confidence)'
-            : 'Hip crease did not reach parallel',
+        severity: confidenceSeverity(sagittalConfidence, 'critical', 'warning'),
+        message: confidenceMessage(
+          sagittalConfidence,
+          'Hip crease did not reach parallel',
+          'Hip crease may not have reached parallel (low angle confidence)'
+        ),
       });
     }
   }
@@ -104,7 +124,7 @@ function detectSquatFaults({
     if (maxLean > THRESHOLDS.squat.excessiveForwardLeanDeg) {
       faults.push({
         type: 'excessive_lean',
-        severity: sagittalConfidence < 0.5 ? 'info' : 'warning',
+        severity: confidenceSeverity(sagittalConfidence, 'warning', 'info'),
         message: `Forward lean reached ${maxLean.toFixed(1)}°`,
         value: maxLean,
         threshold: THRESHOLDS.squat.excessiveForwardLeanDeg,
@@ -136,11 +156,13 @@ function detectDeadliftFaults({
   repBounds,
   barPath,
   repContext,
+  sagittalConfidence = 0.8,
 }: {
   frames: PoseFrame[];
   repBounds: { startFrame: number; endFrame: number };
   barPath: BarPathPoint[];
   repContext?: RepContext;
+  sagittalConfidence?: number;
 }) {
   const faults: FormFault[] = [];
   const { startFrame, endFrame } = repBounds;
@@ -182,8 +204,12 @@ function detectDeadliftFaults({
   if (roundingDeg > THRESHOLDS.deadlift.backRoundingDeviationDeg) {
     faults.push({
       type: 'back_rounding',
-      severity: 'warning',
-      message: `Back rounded ${roundingDeg.toFixed(1)}° during initial pull`,
+      severity: confidenceSeverity(sagittalConfidence, 'warning', 'info'),
+      message: confidenceMessage(
+        sagittalConfidence,
+        `Back rounded ${roundingDeg.toFixed(1)}° during initial pull`,
+        `Back may have rounded ${roundingDeg.toFixed(1)}° during initial pull (low angle confidence)`
+      ),
       value: roundingDeg,
       threshold: THRESHOLDS.deadlift.backRoundingDeviationDeg,
     });
@@ -195,8 +221,12 @@ function detectDeadliftFaults({
   if (lockoutHipAngle < THRESHOLDS.deadlift.incompleteLockoutHipDeg) {
     faults.push({
       type: 'incomplete_lockout',
-      severity: 'info',
-      message: `Hip angle at lockout was ${lockoutHipAngle.toFixed(1)}°`,
+      severity: confidenceSeverity(sagittalConfidence, 'warning', 'info'),
+      message: confidenceMessage(
+        sagittalConfidence,
+        `Hip angle at lockout was ${lockoutHipAngle.toFixed(1)}°`,
+        `Hip angle at lockout was ${lockoutHipAngle.toFixed(1)}° (low angle confidence)`
+      ),
       value: lockoutHipAngle,
       threshold: THRESHOLDS.deadlift.incompleteLockoutHipDeg,
     });
@@ -214,6 +244,7 @@ function detectBenchFaults({
   repBounds: { startFrame: number; endFrame: number };
   barPath: BarPathPoint[];
   repContext?: RepContext;
+  sagittalConfidence?: number;
 }) {
   const faults: FormFault[] = [];
   const { startFrame, endFrame } = repBounds;
@@ -271,9 +302,21 @@ export function detectFaults({
     });
   }
   if (lift === 'deadlift') {
-    return detectDeadliftFaults({ frames, repBounds, barPath, repContext });
+    return detectDeadliftFaults({
+      frames,
+      repBounds,
+      barPath,
+      repContext,
+      sagittalConfidence,
+    });
   }
-  return detectBenchFaults({ frames, repBounds, barPath, repContext });
+  return detectBenchFaults({
+    frames,
+    repBounds,
+    barPath,
+    repContext,
+    sagittalConfidence,
+  });
 }
 
 /**

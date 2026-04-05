@@ -36,7 +36,7 @@ All metrics use the same `PoseFrame[]` input. Landmarks available: shoulders (11
   - Compute hip angle (shoulder-hip-knee) frame-by-frame during the last 30% of descent
   - "Butt wink" = hip angle drops sharply (>10° in <200ms) at the bottom
   - Uses: `LANDMARK.LEFT_SHOULDER`, `LEFT_HIP`, `LEFT_KNEE` (or right side, average both)
-  - Only meaningful from side view
+  - Always computed; accuracy highest from side view (high `sagittalConfidence`)
 - [x] Add to `RepAnalysis`: `buttWinkDeg: z.number().optional()`
 - [x] Add as a fault: `type: 'butt_wink'`, severity `'warning'`
 - [x] Tests: clean squat (no wink), wink at bottom, gradual hip flexion (not wink)
@@ -46,7 +46,7 @@ All metrics use the same `PoseFrame[]` input. Landmarks available: shoulders (11
 **`modules/video-analysis/lib/stance-width.ts`:**
 
 - [x] `computeStanceWidth({ frame }): number` — `|leftAnkle.x - rightAnkle.x| × CM_PER_UNIT`
-  - Best from front view; side view gives compressed projection
+  - Always computed; most accurate from front view (low `sagittalConfidence`). Side view gives compressed projection.
   - Compute at standing frame (first or last frame of rep)
 - [x] Add to `RepAnalysis`: `stanceWidthCm: z.number().optional()`
 - [x] Tests: narrow, medium, wide stance
@@ -58,7 +58,7 @@ All metrics use the same `PoseFrame[]` input. Landmarks available: shoulders (11
 - [x] `computeHipShift({ frames, startFrame, endFrame }): { maxShiftCm: number; direction: 'left' | 'right' | 'none' }`
   - Track `(leftHip.y - rightHip.y) × CM_PER_UNIT` per frame
   - Return max asymmetry and which side drops
-  - Only meaningful from front view
+  - Always computed; most accurate from front view (low `sagittalConfidence`)
 - [x] Add to `RepAnalysis`: `hipShiftCm: z.number().optional()`, `hipShiftDirection: z.string().optional()`
 - [x] Tests: symmetric, left shift, right shift
 

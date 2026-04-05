@@ -40,7 +40,7 @@ function toSessionVideo(row: VideoRowWithProfile): SessionVideo {
     sessionId: row.session_id,
     lift: row.lift,
     setNumber: row.set_number,
-    sagittalConfidence: row.sagittal_confidence ?? null,
+    sagittalConfidence: row.sagittal_confidence,
     localUri: row.local_uri,
     remoteUri: row.remote_uri,
     durationSec: row.duration_sec,

@@ -20,4 +20,4 @@ AI-powered form analysis with set-level video linking and calibration.
 | [spec-metrics.md](./spec-metrics.md) | done | Form metrics extraction |
 | [spec-calibration.md](./spec-calibration.md) | planned | Camera calibration |
 | [spec-post-rest-recording.md](./spec-post-rest-recording.md) | planned | Auto-record after rest |
-| [spec-view-angle.md](./spec-view-angle.md) | planned | View angle guidance |
+| [spec-view-angle.md](./spec-view-angle.md) | done | View angle rework (mobile-052) |

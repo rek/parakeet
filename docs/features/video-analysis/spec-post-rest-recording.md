@@ -56,7 +56,7 @@ The header-level `VideoEntryButton` was the original Phase 1 entry point before 
 | # | Decision | Choice | Rationale |
 |---|----------|--------|-----------|
 | 1 | Recording trigger | Explicit "Record" button on PostRestOverlay (opt-in) | Not every set needs recording. Phone may not be positioned. Must not add friction to the normal Complete/Failed flow. |
-| 2 | Camera angle | Default to `side`, no picker in PostRestOverlay | Speed over configurability — the lifter is in a time-pressured moment (rest just expired). The analysis screen's CameraAnglePicker handles the import path. Future: remember last-used angle per lift. |
+| 2 | Camera angle | No picker — `sagittalConfidence` computed automatically from landmarks | mobile-052 removed CameraAnglePicker. Confidence is derived from pose data, not user input. |
 | 3 | Recording stop | Manual stop on RecordVideoSheet | Decoupled from set completion to avoid accidental truncation. The lifter stops recording, then decides Complete vs Failed. |
 | 4 | Video processing timing | Background, after set completion | Don't block the lifter. Save the raw video URI on set completion, run frame extraction + analysis asynchronously. Same path as `processRecordedVideo` in `useVideoAnalysis`. |
 | 5 | Module boundary | PostRestOverlay accepts `recordingSlot?: ReactNode` (slot pattern) | Same pattern as `SetRow.videoIconSlot`. Session module stays unaware of video-analysis internals. Cross-module composition happens at the `app/` layer. |
@@ -72,7 +72,7 @@ The header-level `VideoEntryButton` was the original Phase 1 entry point before 
 - [ ] Render slot below context label, above button row (only when provided)
 - [ ] Create `PostRestRecordButton` component in `modules/video-analysis/ui/`
   - Self-gates behind `videoAnalysis` feature flag
-  - Props: `cameraAngle` (default `'side'`), `onRecorded: (videoUri: string) => void`, `onRecordingStateChange?: (isRecording: boolean) => void`
+  - Props: `onRecorded: (videoUri: string) => void`, `onRecordingStateChange?: (isRecording: boolean) => void`
   - Renders a compact "Record" button; when tapped, mounts `RecordVideoSheet` as `absoluteFill` overlay (same approach as `video-analysis.tsx`)
   - After recording: shows "Recording saved" indicator, calls `onRecorded` with the video URI
   - If already recorded: shows indicator + "Re-record" option
