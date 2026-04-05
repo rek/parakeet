@@ -162,6 +162,34 @@ function buildStyles(colors: ColorScheme) {
       fontSize: typography.sizes.xs,
       color: colors.textTertiary,
     },
+    checkinCard: {
+      backgroundColor: colors.bgSurface,
+      borderRadius: 16,
+      borderWidth: 1,
+      borderColor: colors.border,
+      padding: spacing[5],
+      marginTop: spacing[5],
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+    },
+    checkinLabel: {
+      fontSize: typography.sizes.sm,
+      color: colors.textSecondary,
+      flex: 1,
+      marginRight: spacing[3],
+    },
+    checkinButton: {
+      backgroundColor: colors.primaryMuted,
+      borderRadius: 10,
+      paddingVertical: spacing[2],
+      paddingHorizontal: spacing[4],
+    },
+    checkinButtonText: {
+      fontSize: typography.sizes.sm,
+      fontWeight: typography.weights.semibold,
+      color: colors.primary,
+    },
   });
 }
 
@@ -341,6 +369,26 @@ export default function ProgramScreen() {
               <Text style={styles.nextSessionNote}>Loading next session…</Text>
             </View>
           )}
+          <View style={styles.checkinCard}>
+            <Text style={styles.checkinLabel}>
+              How is your body holding up?
+            </Text>
+            <TouchableOpacity
+              style={styles.checkinButton}
+              onPress={() =>
+                router.push({
+                  pathname: '/session/weekly-review' as any,
+                  params: {
+                    programId: program.id,
+                    weekNumber: String(todaySession?.week_number ?? 0),
+                  },
+                })
+              }
+              activeOpacity={0.8}
+            >
+              <Text style={styles.checkinButtonText}>Body Check-in</Text>
+            </TouchableOpacity>
+          </View>
           <PartnerSection />
         </View>
       </SafeAreaView>
@@ -390,6 +438,26 @@ export default function ProgramScreen() {
             onSessionPress={handleSessionPress}
           />
         ))}
+        <View style={styles.checkinCard}>
+          <Text style={styles.checkinLabel}>
+            How is your body holding up?
+          </Text>
+          <TouchableOpacity
+            style={styles.checkinButton}
+            onPress={() =>
+              router.push({
+                pathname: '/session/weekly-review' as any,
+                params: {
+                  programId: program.id,
+                  weekNumber: String(currentWeek),
+                },
+              })
+            }
+            activeOpacity={0.8}
+          >
+            <Text style={styles.checkinButtonText}>Body Check-in</Text>
+          </TouchableOpacity>
+        </View>
         <PartnerSection />
       </ScrollView>
     </SafeAreaView>

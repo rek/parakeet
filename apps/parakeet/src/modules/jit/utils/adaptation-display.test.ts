@@ -12,7 +12,7 @@ const makeActual = (overrides: {
   set_number: overrides.set_number ?? 1,
 });
 
-const makePlanned = (weight_kg: number) => ({ weight_kg });
+const makePlanned = (weight_kg: number) => ({ weight_kg, reps: 5 });
 
 describe('computeDisplayWeights', () => {
   it('uses planned weights when there is no adaptation', () => {

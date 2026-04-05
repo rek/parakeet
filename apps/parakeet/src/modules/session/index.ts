@@ -57,6 +57,7 @@ export { groupAuxSetsByExercise } from './utils/groupAuxSetsByExercise';
 export { fmtKg } from './utils/fmtKg';
 export { buildRpeContextLabel } from './utils/buildRpeContextLabel';
 export { buildNextLiftLabel } from './utils/buildNextLiftLabel';
+export { getEffectivePlannedSet } from '@shared/utils/getEffectivePlannedSet';
 export { TraceLink } from './ui/TraceLink';
 export { formatPrescriptionTrace } from './utils/format-trace';
 export type { FormattedTrace } from './utils/format-trace';

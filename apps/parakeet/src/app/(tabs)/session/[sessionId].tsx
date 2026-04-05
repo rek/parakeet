@@ -1301,6 +1301,8 @@ export default function SessionScreen() {
                         pendingMainSetNumber:
                           timerState?.pendingMainSetNumber ?? null,
                         plannedSets,
+                        actualSets,
+                        currentAdaptation,
                         pendingAuxExercise:
                           timerState?.pendingAuxExercise ?? null,
                         pendingAuxSetNumber:

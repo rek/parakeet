@@ -1,7 +1,9 @@
+import { getEffectivePlannedSet } from '@shared/utils/getEffectivePlannedSet';
 import { weightGramsToKg } from '@shared/utils/weight';
 
 interface PlannedSet {
   weight_kg: number;
+  reps: number;
 }
 
 interface ActualSet {
@@ -22,32 +24,22 @@ export interface DisplaySet {
 
 /**
  * Map actual sets to their display weights, applying intra-session adaptation
- * when present. Adaptation weights replace planned weights for uncompleted sets
- * when the adaptation type is weight_reduced or sets_capped.
+ * when present. Delegates per-set resolution to getEffectivePlannedSet.
  */
 export function computeDisplayWeights(
   actualSets: ActualSet[],
   plannedSets: PlannedSet[],
   currentAdaptation: Adaptation | null
 ): DisplaySet[] {
-  let uncompletedIndex = 0;
   return actualSets.map((actualSet, index) => {
-    const planned = plannedSets[index];
-    let displayWeightKg =
-      planned?.weight_kg ?? weightGramsToKg(actualSet.weight_grams);
-
-    if (
-      !actualSet.is_completed &&
-      currentAdaptation !== null &&
-      (currentAdaptation.adaptationType === 'weight_reduced' ||
-        currentAdaptation.adaptationType === 'sets_capped')
-    ) {
-      const adaptedSet = currentAdaptation.sets[uncompletedIndex];
-      if (adaptedSet != null) {
-        displayWeightKg = adaptedSet.weight_kg;
-      }
-      uncompletedIndex += 1;
-    }
+    const effective = getEffectivePlannedSet(
+      index,
+      plannedSets,
+      actualSets,
+      currentAdaptation
+    );
+    const displayWeightKg =
+      effective?.weight_kg ?? weightGramsToKg(actualSet.weight_grams);
 
     return { displayWeightKg, originalIndex: index };
   });

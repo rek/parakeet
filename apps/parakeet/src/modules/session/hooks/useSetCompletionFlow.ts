@@ -17,6 +17,7 @@ import {
   DEFAULT_MAIN_REST_SECONDS,
 } from '../model/types';
 import { computeDismissResult } from '../utils/computeDismissResult';
+import { getEffectivePlannedSet } from '@shared/utils/getEffectivePlannedSet';
 import { writeAuxFailureAndAdapt } from '../utils/set-outcome-helpers';
 import {
   resolveNextAuxSetWeight,
@@ -231,7 +232,13 @@ export function useSetCompletionFlow({
   // --- Timer done: dispatch to main/aux/warmup handler ---
 
   function showMainPostRest(pendingMain: number, elapsedSeconds: number) {
-    const nextSet = plannedSets[pendingMain];
+    const state = useSessionStore.getState();
+    const nextSet = getEffectivePlannedSet(
+      pendingMain,
+      state.plannedSets,
+      state.actualSets,
+      state.currentAdaptation
+    );
     setPostRestState({
       pendingMainSetNumber: pendingMain,
       pendingAuxExercise: null,
@@ -268,15 +275,21 @@ export function useSetCompletionFlow({
   }
 
   function showWarmupPostRest(elapsedSeconds: number) {
-    const firstSet = plannedSets[0];
+    const state = useSessionStore.getState();
+    const firstSet = getEffectivePlannedSet(
+      0,
+      state.plannedSets,
+      state.actualSets,
+      state.currentAdaptation
+    );
     setPostRestState({
       pendingMainSetNumber: null,
       pendingAuxExercise: null,
       pendingAuxSetNumber: null,
       actualRestSeconds: elapsedSeconds,
       liftStartedAt: Date.now(),
-      plannedReps: firstSet.reps,
-      plannedWeightKg: firstSet.weight_kg,
+      plannedReps: firstSet?.reps ?? 0,
+      plannedWeightKg: firstSet?.weight_kg ?? null,
       nextSetNumber: 1,
       resetSecondsRemaining: null,
     });
@@ -370,15 +383,23 @@ export function useSetCompletionFlow({
     }
 
     if (nextSetNumber !== null && nextSetNumber <= plannedSets.length) {
-      const planned = plannedSets[nextSetNumber - 1];
+      const storeState = useSessionStore.getState();
+      const effective = getEffectivePlannedSet(
+        nextSetNumber - 1,
+        plannedSets,
+        storeState.actualSets,
+        storeState.currentAdaptation
+      );
+      const effectiveWeightKg = effective?.weight_kg ?? 0;
+      const effectiveReps = effective?.reps ?? 0;
       const weightGrams = resolveNextSetWeight({
-        completedSets: useSessionStore.getState().actualSets,
+        completedSets: storeState.actualSets,
         nextSetNumber,
-        plannedWeightKg: planned.weight_kg,
+        plannedWeightKg: effectiveWeightKg,
       });
       updateSet(nextSetNumber, {
         weight_grams: weightGrams,
-        reps_completed: planned.reps,
+        reps_completed: effectiveReps,
         is_completed: true,
       });
       setPendingRpeSetNumber(nextSetNumber);
@@ -457,10 +478,17 @@ export function useSetCompletionFlow({
       updateSet(prevSetNumber, { actual_rest_seconds: totalRest });
     }
     if (nextSetNumber !== null && nextSetNumber <= plannedSets.length) {
+      const storeState = useSessionStore.getState();
+      const effective = getEffectivePlannedSet(
+        nextSetNumber - 1,
+        storeState.plannedSets,
+        storeState.actualSets,
+        storeState.currentAdaptation
+      );
       const failedWeightGrams = resolveNextSetWeight({
-        completedSets: useSessionStore.getState().actualSets,
+        completedSets: storeState.actualSets,
         nextSetNumber,
-        plannedWeightKg: plannedSets[nextSetNumber - 1]?.weight_kg ?? 0,
+        plannedWeightKg: effective?.weight_kg ?? 0,
       });
       updateSet(nextSetNumber, {
         weight_grams: failedWeightGrams,

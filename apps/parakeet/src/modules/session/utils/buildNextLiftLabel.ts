@@ -1,6 +1,7 @@
 import type { AuxiliaryWork } from '../model/types';
 import { fmtKg } from './fmtKg';
 import { formatExerciseName } from './formatExerciseName';
+import { getEffectivePlannedSet } from '@shared/utils/getEffectivePlannedSet';
 
 /**
  * Builds a "next lift" label for the rest timer showing what comes after rest.
@@ -12,18 +13,30 @@ import { formatExerciseName } from './formatExerciseName';
 export function buildNextLiftLabel({
   pendingMainSetNumber,
   plannedSets,
+  actualSets,
+  currentAdaptation,
   pendingAuxExercise,
   pendingAuxSetNumber,
   auxiliaryWork,
 }: {
   pendingMainSetNumber: number | null;
   plannedSets: { weight_kg: number; reps: number }[];
+  actualSets: { is_completed: boolean }[];
+  currentAdaptation: {
+    adaptationType: string;
+    sets: Array<{ weight_kg: number }>;
+  } | null;
   pendingAuxExercise: string | null;
   pendingAuxSetNumber: number | null;
   auxiliaryWork: AuxiliaryWork[];
 }) {
   if (pendingMainSetNumber !== null) {
-    const nextPlanned = plannedSets[pendingMainSetNumber];
+    const nextPlanned = getEffectivePlannedSet(
+      pendingMainSetNumber,
+      plannedSets,
+      actualSets,
+      currentAdaptation
+    );
     if (!nextPlanned) return undefined;
     if (nextPlanned.weight_kg === 0)
       return `Next: Set ${pendingMainSetNumber + 1} × ${nextPlanned.reps}`;
