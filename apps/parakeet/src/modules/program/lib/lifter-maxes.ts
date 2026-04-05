@@ -23,14 +23,28 @@ export interface LifterMaxesInput {
 
 type MaxSource = 'input_1rm' | 'input_3rm' | 'mixed';
 
-function resolve1Rm(input: LiftInput): number {
+/**
+ * Resolves the 1RM from a lift input.
+ * If the input is a 3RM with a rep count, applies the Epley formula.
+ * Otherwise returns the raw weight as-is.
+ *
+ * @internal
+ */
+export function resolve1Rm(input: LiftInput): number {
   if (input.type === '3rm' && input.reps) {
     return estimateOneRepMax_Epley(input.weightKg, input.reps);
   }
   return input.weightKg;
 }
 
-function inferSource(input: LifterMaxesInput): MaxSource {
+/**
+ * Infers the max source label from a set of lift inputs.
+ * Returns 'input_1rm' if all lifts are 1RM, 'input_3rm' if all are 3RM,
+ * and 'mixed' otherwise.
+ *
+ * @internal
+ */
+export function inferSource(input: LifterMaxesInput): MaxSource {
   const types = [input.squat.type, input.bench.type, input.deadlift.type];
   if (types.every((t) => t === '1rm')) return 'input_1rm';
   if (types.every((t) => t === '3rm')) return 'input_3rm';
