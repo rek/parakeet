@@ -1,9 +1,12 @@
 import { existsSync, readFileSync } from 'fs';
 import { resolve } from 'path';
 
+import type { VideoAnalysisResult } from '@parakeet/shared-types';
+
 import { analyzeVideoFrames } from '../../application/analyze-video';
-import { computeSagittalConfidence } from '../view-confidence';
 import type { PoseFrame } from '../pose-types';
+import { computeSagittalConfidence } from '../view-confidence';
+import { compareSnapshot } from './snapshot-compare';
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -293,6 +296,24 @@ describe.each(manifest.videos)('video: $id', (video) => {
 });
 
 // ---------------------------------------------------------------------------
+// Snapshot helpers
+// ---------------------------------------------------------------------------
+
+interface SnapshotFile {
+  videoId: string;
+  lift: string;
+  analysisVersion: number;
+  snapshotVersion: number;
+  result: VideoAnalysisResult;
+}
+
+function loadSnapshot(videoId: string): SnapshotFile | null {
+  const path = resolve(PROJECT_ROOT, `test-videos/snapshots/${videoId}.snapshot.json`);
+  if (!existsSync(path)) return null;
+  return JSON.parse(readFileSync(path, 'utf-8')) as SnapshotFile;
+}
+
+// ---------------------------------------------------------------------------
 // Regression suite — runs only for calibrated videos
 // ---------------------------------------------------------------------------
 
@@ -340,6 +361,26 @@ describe('regression', () => {
 
       const result = getCachedAnalysis(video.id, frames, fps, video.lift);
       expect(result.analysisVersion).toBe(actual.analysis_version);
+    });
+
+    it('matches regression snapshot within tolerance', () => {
+      const snapshot = loadSnapshot(video.id);
+      if (!snapshot) return; // no snapshot yet — skip
+
+      const result = getCachedAnalysis(video.id, frames, fps, video.lift);
+      const diff = compareSnapshot(snapshot.result, result);
+
+      if (!diff.passed) {
+        const lines = diff.failures.map(
+          (f) =>
+            `  DRIFT: ${f.path} expected=${JSON.stringify(f.expected)} actual=${JSON.stringify(f.actual)} (${f.tolerance})`
+        );
+        // eslint-disable-next-line no-console
+        console.warn(
+          `Snapshot regression for ${video.id}:\n${lines.join('\n')}`
+        );
+      }
+      expect(diff.passed).toBe(true);
     });
   });
 });

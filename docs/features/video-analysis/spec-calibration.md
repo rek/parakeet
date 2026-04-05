@@ -42,7 +42,7 @@ video file → extractFramesFromVideo(uri, duration, 4fps)
                → bar path extraction (wrist landmarks)
                → rep detection (Y-periodicity peak finding)
                → per-rep: angles, depth, drift, velocity, faults, grading
-           → VideoAnalysisResult { reps[], fps, cameraAngle, analysisVersion }
+           → VideoAnalysisResult { reps[], fps, sagittalConfidence, analysisVersion }
 ```
 
 Key entry points in `modules/video-analysis/`:
@@ -84,7 +84,7 @@ These tests use **pre-extracted landmark data** (JSON fixtures) from the calibra
 - [x] `describe('calibration: squat-side-clean')`:
   - Loads `squat-side-clean.landmarks.json`
   - Calls `assembleAnalysis({ frames, fps, lift: 'squat' })`
-  - Asserts: `result.cameraAngle === 'side'`
+  - Asserts: `result.sagittalConfidence > 0.7` (high confidence for side-view video)
   - Asserts: `result.reps.length` within manifest's `expected.rep_count` range
   - Asserts: every rep has `forwardLeanDeg`, `maxDepthCm`, `barDriftCm` defined (not null)
   - Asserts: squat metrics present — `stanceWidthCm`, `hipShiftCm`, `hipShiftDirection`, `lockoutStabilityCv`
@@ -93,9 +93,8 @@ These tests use **pre-extracted landmark data** (JSON fixtures) from the calibra
   - Asserts: no unexpected `critical` faults on a clean lift (or expected faults if form is bad)
   - Once calibrated: snapshot key metric values with ±10% tolerance
 - [x] `describe('calibration: squat-front-angle')`:
-  - Asserts camera angle detection — verify `result.cameraAngle` matches manifest
-  - If front view: verify `kneeValgus` metrics are computed, `hipShiftCm`/`hipShiftDirection` meaningful
-  - If side view: verify standard squat metrics are present
+  - Asserts `result.sagittalConfidence` within manifest's expected range (e.g., `< 0.3` for front-view videos)
+  - All metrics always computed regardless of angle — verify `kneeValgus`, `hipShiftCm`, `stanceWidthCm`, standard squat metrics all present
   - Asserts: `stanceWidthCm` > 0 (should always be computable)
 - [x] `describe('calibration: squat-portrait')`:
   - Same metric assertions as squat-side-clean
@@ -125,9 +124,9 @@ These tests use **pre-extracted landmark data** (JSON fixtures) from the calibra
 
 ### Phase 3 — Regression Snapshots
 
-- [ ] After Phase 2 tests pass and `actual` values are verified by a human, update `manifest.json` with `calibrated: true` and exact expected values
-- [x] `describe('regression')` block implemented — activates when `calibrated: true` in manifest (currently todo/empty)
-- [ ] Expand regression block to assert metrics match within tolerance once calibration data exists:
+- [x] All 15 videos calibrated — `manifest.json` updated with `calibrated: true` and exact `actual` values via `calibrate-videos.ts`
+- [x] `describe('regression')` block implemented — activates when `calibrated: true` in manifest
+- [x] Tolerance-based snapshot comparison (`snapshot-compare.ts`) asserts metrics match within tolerance:
   - Rep count: exact match
   - Angles (forwardLean, kneeAngle, hipAngle, elbowFlare, buttWink): ±5°
   - Distances (depth, ROM, drift, stanceWidth, hipShift, barToShin): ±2cm
@@ -135,17 +134,15 @@ These tests use **pre-extracted landmark data** (JSON fixtures) from the calibra
   - Timing (pauseDuration, hipHingeCrossover): ±10%
   - Stability (lockoutStabilityCv): ±1% absolute
   - Fatigue signatures: ±15% or ±1 absolute (whichever is larger)
-  - Faults: exact type match (same faults fire on same reps)
-- [ ] These regression tests gate future algorithm changes — any threshold or formula tweak must still produce calibrated outputs within tolerance
+  - Faults: exact type set match (same fault types fire on same reps)
+  - Verdicts: exact match with presence mismatch detection
+- [x] Regression tests gate future algorithm changes — 185 calibration tests (15 videos × 4 regression checks + per-video assertions)
 
 ### Phase 4 — Manifest Update Automation
 
-- [ ] Add an npm script `"calibrate:videos"` that runs the calibration (Phase 1)
-- [ ] Add an npm script `"calibrate:update-fixtures"` that re-extracts landmarks and updates JSON fixtures for CI
-- [ ] Document the workflow in `test-videos/README.md`:
-  - How to add a new test video
-  - How to run calibration
-  - How to update regression snapshots after intentional algorithm changes
+- [x] `scripts/calibrate-videos.ts` — runs all test videos through pipeline, generates snapshot files (`test-videos/snapshots/`), updates manifest `actual` fields. Flags: `--video`, `--update-manifest`, `--mark-calibrated`, `--dry-run`, `--force`
+- [x] NPM scripts: `calibrate:videos` (inspect + update manifest), `calibrate:snapshots` (full re-calibration with force overwrite)
+- [x] `test-videos/README.md` — documents directory structure, adding new videos, calibration workflow, regression testing
 
 ## Key Thresholds (from `fault-detector.ts` + `metrics-assembler.ts`)
 
@@ -166,15 +163,14 @@ These are the thresholds the tests should validate against:
 
 ## Impact from mobile-052 (View Angle Rework)
 
-When mobile-052 lands, the calibration tests need updates:
+Post mobile-052 calibration updates (completed):
 
-- **Camera angle assertion:** `detectCameraAngle` → `computeSagittalConfidence`. Tests should assert a numeric range (e.g., `> 0.7` for side-view videos, `< 0.3` for front-view) instead of exact string match.
-- **Metric presence:** All side-view metrics (depth, lean, kneeAngle, buttWink) will always be computed regardless of camera angle. The `if (camera_angle === 'side')` guards in the test can be removed — every video should produce every metric for its lift.
-- **Rep detection:** Joint-angle-based detection should improve rep count accuracy on 45° videos (currently the weakest test cases). Manifest `rep_count` ranges may need tightening.
-- **Regression snapshots:** Metric values will change (perspective correction applied, rep boundaries shifted). All `actual` fields need re-calibration after mobile-052. Bump `analysisVersion` assertion from 3 to 4.
-- **New validation:** Per-metric confidence scores should be asserted (high confidence on side-view videos, lower on front-view).
+- **Camera angle assertion:** Tests assert `sagittalConfidence` numeric ranges (e.g., `> 0.7` for side-view videos, `< 0.3` for front-view) instead of binary string match.
+- **Metric presence:** All metrics always computed regardless of view angle. No `if (camera_angle === 'side')` guards — every video produces every metric for its lift.
+- **Rep detection:** Joint-angle-based detection (viewpoint-invariant) replaced Y-coordinate method. Manifest `rep_count` ranges may need tightening for 45° videos.
+- **New validation:** Per-metric confidence scores asserted (high confidence on side-view videos, lower on front-view).
 
-The 45° angle test videos (`squat-45-3reps`, `deadlift-45-6reps`, `bench-45-5reps`) become the most important regression anchors — they exercise exactly the code path mobile-052 fixes.
+The 45° angle test videos (`squat-45-3reps`, `deadlift-45-6reps`, `bench-45-5reps`) are the most important regression anchors — they exercise the confidence-weighted code paths.
 
 ## Dependencies
 

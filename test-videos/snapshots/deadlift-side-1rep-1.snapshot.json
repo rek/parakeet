@@ -1,0 +1,15 @@
+{
+  "videoId": "deadlift-side-1rep-1",
+  "lift": "deadlift",
+  "analysisVersion": 4,
+  "snapshotVersion": 1,
+  "createdAt": "2026-04-05T15:39:18.852Z",
+  "sagittalConfidence": 0.8450521000000001,
+  "result": {
+    "reps": [],
+    "fps": 4,
+    "cameraAngle": "side",
+    "sagittalConfidence": 0.8450521000000001,
+    "analysisVersion": 4
+  }
+}

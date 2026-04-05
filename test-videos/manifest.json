@@ -11,121 +11,1250 @@
       "id": "squat-side",
       "file": "squat-side.mp4",
       "lift": "squat",
-      "calibrated": false,
-      "expected": { "sagittal_confidence": { "min": 0.6, "max": 0.85 }, "rep_count": { "min": 2, "max": 6 }, "faults_to_test": ["above_parallel", "excessive_lean", "bar_drift"], "metrics_present": ["forwardLeanDeg", "maxDepthCm", "barDriftCm", "romCm", "kneeAngleDeg"], "fatigue_signatures": true },
-      "actual": null
+      "calibrated": true,
+      "expected": {
+        "sagittal_confidence": {
+          "min": 0.6,
+          "max": 0.85
+        },
+        "rep_count": {
+          "min": 2,
+          "max": 6
+        },
+        "faults_to_test": [
+          "above_parallel",
+          "excessive_lean",
+          "bar_drift"
+        ],
+        "metrics_present": [
+          "forwardLeanDeg",
+          "maxDepthCm",
+          "barDriftCm",
+          "romCm",
+          "kneeAngleDeg"
+        ],
+        "fatigue_signatures": true
+      },
+      "actual": {
+        "rep_count": 5,
+        "sagittal_confidence": 0.714,
+        "analysis_version": 4,
+        "metric_summary": {
+          "forwardLeanDeg": {
+            "mean": 50.27,
+            "min": 4.02,
+            "max": 73.82
+          },
+          "maxDepthCm": {
+            "mean": 6.44,
+            "min": 2.8,
+            "max": 14.37
+          },
+          "barDriftCm": {
+            "mean": 12.05,
+            "min": 5.82,
+            "max": 16.48
+          },
+          "romCm": {
+            "mean": 79.8,
+            "min": 69.15,
+            "max": 92.41
+          },
+          "kneeAngleDeg": {
+            "mean": 77.77,
+            "min": 54.7,
+            "max": 109.37
+          },
+          "hipAngleAtLockoutDeg": {
+            "mean": 154.43,
+            "min": 139.47,
+            "max": 170.76
+          },
+          "meanConcentricVelocityCmS": {
+            "mean": 50.89,
+            "min": 36.45,
+            "max": 65.13
+          },
+          "stanceWidthCm": {
+            "mean": 1.28,
+            "min": 0.7,
+            "max": 1.59
+          },
+          "hipShiftCm": {
+            "mean": 5.71,
+            "min": 5.4,
+            "max": 6.1
+          },
+          "lockoutStabilityCv": {
+            "mean": 5.38,
+            "min": 0.16,
+            "max": 13.95
+          }
+        },
+        "fault_types": [
+          "bar_drift",
+          "excessive_lean",
+          "unstable_lockout"
+        ],
+        "calibrated_at": "2026-04-05T15:39:18.838Z"
+      }
     },
     {
       "id": "squat-45-3reps",
       "file": "squat-45-3reps.mp4",
       "lift": "squat",
-      "calibrated": false,
-      "expected": { "sagittal_confidence": { "min": 0.1, "max": 0.35 }, "rep_count": { "min": 2, "max": 5 }, "faults_to_test": ["bar_drift"], "metrics_present": ["forwardLeanDeg", "maxDepthCm", "barDriftCm", "romCm"], "fatigue_signatures": true },
-      "actual": null
+      "calibrated": true,
+      "expected": {
+        "sagittal_confidence": {
+          "min": 0.1,
+          "max": 0.35
+        },
+        "rep_count": {
+          "min": 2,
+          "max": 5
+        },
+        "faults_to_test": [
+          "bar_drift"
+        ],
+        "metrics_present": [
+          "forwardLeanDeg",
+          "maxDepthCm",
+          "barDriftCm",
+          "romCm"
+        ],
+        "fatigue_signatures": true
+      },
+      "actual": {
+        "rep_count": 3,
+        "sagittal_confidence": 0.208,
+        "analysis_version": 4,
+        "metric_summary": {
+          "forwardLeanDeg": {
+            "mean": 34.88,
+            "min": 12.48,
+            "max": 68.06
+          },
+          "maxDepthCm": {
+            "mean": -15.45,
+            "min": -24.07,
+            "max": -3.19
+          },
+          "barDriftCm": {
+            "mean": 56.69,
+            "min": 10.68,
+            "max": 83.16
+          },
+          "romCm": {
+            "mean": 92.39,
+            "min": 83.05,
+            "max": 103.32
+          },
+          "kneeAngleDeg": {
+            "mean": 137.68,
+            "min": 83.78,
+            "max": 166.24
+          },
+          "hipAngleAtLockoutDeg": {
+            "mean": 147.01,
+            "min": 123.63,
+            "max": 164.52
+          },
+          "meanConcentricVelocityCmS": {
+            "mean": 59.14,
+            "min": 54.8,
+            "max": 62.08
+          },
+          "stanceWidthCm": {
+            "mean": 41.23,
+            "min": 35.67,
+            "max": 46.57
+          },
+          "hipShiftCm": {
+            "mean": 3.48,
+            "min": 2.85,
+            "max": 4.46
+          },
+          "lockoutStabilityCv": {
+            "mean": 7.06,
+            "min": 5.3,
+            "max": 8.97
+          }
+        },
+        "fault_types": [
+          "above_parallel",
+          "bar_drift",
+          "unstable_lockout"
+        ],
+        "calibrated_at": "2026-04-05T15:39:18.840Z"
+      }
     },
     {
       "id": "squat-45-3reps-2",
       "file": "squat-45-3reps-2.mp4",
       "lift": "squat",
-      "calibrated": false,
-      "expected": { "sagittal_confidence": { "min": 0.15, "max": 0.4 }, "rep_count": { "min": 2, "max": 5 }, "faults_to_test": ["bar_drift"], "metrics_present": ["forwardLeanDeg", "maxDepthCm", "barDriftCm", "romCm"], "fatigue_signatures": true },
-      "actual": null
+      "calibrated": true,
+      "expected": {
+        "sagittal_confidence": {
+          "min": 0.15,
+          "max": 0.4
+        },
+        "rep_count": {
+          "min": 2,
+          "max": 5
+        },
+        "faults_to_test": [
+          "bar_drift"
+        ],
+        "metrics_present": [
+          "forwardLeanDeg",
+          "maxDepthCm",
+          "barDriftCm",
+          "romCm"
+        ],
+        "fatigue_signatures": true
+      },
+      "actual": {
+        "rep_count": 3,
+        "sagittal_confidence": 0.282,
+        "analysis_version": 4,
+        "metric_summary": {
+          "forwardLeanDeg": {
+            "mean": 81.2,
+            "min": 72.68,
+            "max": 90
+          },
+          "maxDepthCm": {
+            "mean": -6.61,
+            "min": -16.43,
+            "max": 6.07
+          },
+          "barDriftCm": {
+            "mean": 28.56,
+            "min": 16.83,
+            "max": 51.08
+          },
+          "romCm": {
+            "mean": 90.96,
+            "min": 81.44,
+            "max": 103.69
+          },
+          "kneeAngleDeg": {
+            "mean": 91.61,
+            "min": 83.41,
+            "max": 100.82
+          },
+          "hipAngleAtLockoutDeg": {
+            "mean": 110.03,
+            "min": 10.12,
+            "max": 168.44
+          },
+          "meanConcentricVelocityCmS": {
+            "mean": 76.81,
+            "min": 36.6,
+            "max": 117.02
+          },
+          "stanceWidthCm": {
+            "mean": 54.83,
+            "min": 19.73,
+            "max": 75.21
+          },
+          "hipShiftCm": {
+            "mean": 8.17,
+            "min": 6.15,
+            "max": 12.22
+          },
+          "lockoutStabilityCv": {
+            "mean": 60.36,
+            "min": 31.24,
+            "max": 79.48
+          }
+        },
+        "fault_types": [
+          "above_parallel",
+          "bar_drift",
+          "excessive_lean",
+          "unstable_lockout"
+        ],
+        "calibrated_at": "2026-04-05T15:39:18.843Z"
+      }
     },
     {
       "id": "squat-45-5reps",
       "file": "squat-45-5reps.mp4",
       "lift": "squat",
-      "calibrated": false,
-      "expected": { "sagittal_confidence": { "min": 0.2, "max": 0.5 }, "rep_count": { "min": 3, "max": 7 }, "faults_to_test": ["bar_drift"], "metrics_present": ["forwardLeanDeg", "maxDepthCm", "barDriftCm", "romCm"], "fatigue_signatures": true },
-      "actual": null
+      "calibrated": true,
+      "expected": {
+        "sagittal_confidence": {
+          "min": 0.2,
+          "max": 0.5
+        },
+        "rep_count": {
+          "min": 3,
+          "max": 7
+        },
+        "faults_to_test": [
+          "bar_drift"
+        ],
+        "metrics_present": [
+          "forwardLeanDeg",
+          "maxDepthCm",
+          "barDriftCm",
+          "romCm"
+        ],
+        "fatigue_signatures": true
+      },
+      "actual": {
+        "rep_count": 5,
+        "sagittal_confidence": 0.335,
+        "analysis_version": 4,
+        "metric_summary": {
+          "forwardLeanDeg": {
+            "mean": 68.98,
+            "min": 61.49,
+            "max": 90
+          },
+          "maxDepthCm": {
+            "mean": -7.16,
+            "min": -13.81,
+            "max": 2.38
+          },
+          "barDriftCm": {
+            "mean": 5.59,
+            "min": 2.37,
+            "max": 7.95
+          },
+          "romCm": {
+            "mean": 57.4,
+            "min": 49.3,
+            "max": 65.98
+          },
+          "kneeAngleDeg": {
+            "mean": 76.92,
+            "min": 53.53,
+            "max": 95.16
+          },
+          "hipAngleAtLockoutDeg": {
+            "mean": 100.42,
+            "min": 18.13,
+            "max": 130.04
+          },
+          "meanConcentricVelocityCmS": {
+            "mean": 38.06,
+            "min": 25.41,
+            "max": 43.88
+          },
+          "stanceWidthCm": {
+            "mean": 52.55,
+            "min": 23.28,
+            "max": 60.91
+          },
+          "hipShiftCm": {
+            "mean": 3.51,
+            "min": 2.49,
+            "max": 5.75
+          },
+          "lockoutStabilityCv": {
+            "mean": 16.59,
+            "min": 0,
+            "max": 76.84
+          }
+        },
+        "fault_types": [
+          "above_parallel",
+          "bar_drift",
+          "excessive_lean",
+          "unstable_lockout"
+        ],
+        "calibrated_at": "2026-04-05T15:39:18.844Z"
+      }
     },
     {
       "id": "squat-back-7reps",
       "file": "squat-back-7reps.mp4",
       "lift": "squat",
-      "calibrated": false,
-      "expected": { "sagittal_confidence": { "min": 0.25, "max": 0.5 }, "rep_count": { "min": 5, "max": 9 }, "faults_to_test": ["bar_drift"], "metrics_present": ["forwardLeanDeg", "maxDepthCm", "barDriftCm", "romCm", "stanceWidthCm", "hipShiftCm"], "fatigue_signatures": true },
-      "actual": null
+      "calibrated": true,
+      "expected": {
+        "sagittal_confidence": {
+          "min": 0.25,
+          "max": 0.5
+        },
+        "rep_count": {
+          "min": 5,
+          "max": 9
+        },
+        "faults_to_test": [
+          "bar_drift"
+        ],
+        "metrics_present": [
+          "forwardLeanDeg",
+          "maxDepthCm",
+          "barDriftCm",
+          "romCm",
+          "stanceWidthCm",
+          "hipShiftCm"
+        ],
+        "fatigue_signatures": true
+      },
+      "actual": {
+        "rep_count": 8,
+        "sagittal_confidence": 0.371,
+        "analysis_version": 4,
+        "metric_summary": {
+          "forwardLeanDeg": {
+            "mean": 33.56,
+            "min": 6.41,
+            "max": 58.11
+          },
+          "maxDepthCm": {
+            "mean": -6.39,
+            "min": -73.77,
+            "max": 8.04
+          },
+          "barDriftCm": {
+            "mean": 14.1,
+            "min": 2.98,
+            "max": 58.91
+          },
+          "romCm": {
+            "mean": 49.17,
+            "min": 41.22,
+            "max": 62.88
+          },
+          "kneeAngleDeg": {
+            "mean": 121.54,
+            "min": 50.56,
+            "max": 172.64
+          },
+          "hipAngleAtLockoutDeg": {
+            "mean": 157.94,
+            "min": 154.61,
+            "max": 160.96
+          },
+          "meanConcentricVelocityCmS": {
+            "mean": 27.28,
+            "min": 23.22,
+            "max": 34.44
+          },
+          "stanceWidthCm": {
+            "mean": 43.02,
+            "min": 18.44,
+            "max": 49.39
+          },
+          "hipShiftCm": {
+            "mean": 3.03,
+            "min": 2,
+            "max": 5.52
+          },
+          "lockoutStabilityCv": {
+            "mean": 2.42,
+            "min": 0.02,
+            "max": 13.2
+          }
+        },
+        "fault_types": [
+          "above_parallel",
+          "bar_drift",
+          "excessive_lean",
+          "unstable_lockout"
+        ],
+        "calibrated_at": "2026-04-05T15:39:18.849Z"
+      }
     },
     {
       "id": "deadlift-side-1rep",
       "file": "deadlift-side-1rep.mp4",
       "lift": "deadlift",
-      "calibrated": false,
-      "expected": { "sagittal_confidence": { "min": 0.8, "max": 1.0 }, "rep_count": { "min": 1, "max": 2 }, "faults_to_test": ["bar_drift", "back_rounding", "incomplete_lockout"], "metrics_present": ["barDriftCm", "hipAngleAtLockoutDeg", "romCm"], "fatigue_signatures": false },
-      "actual": null
+      "calibrated": true,
+      "expected": {
+        "sagittal_confidence": {
+          "min": 0.8,
+          "max": 1
+        },
+        "rep_count": {
+          "min": 1,
+          "max": 2
+        },
+        "faults_to_test": [
+          "bar_drift",
+          "back_rounding",
+          "incomplete_lockout"
+        ],
+        "metrics_present": [
+          "barDriftCm",
+          "hipAngleAtLockoutDeg",
+          "romCm"
+        ],
+        "fatigue_signatures": false
+      },
+      "actual": {
+        "rep_count": 2,
+        "sagittal_confidence": 0.912,
+        "analysis_version": 4,
+        "metric_summary": {
+          "forwardLeanDeg": {
+            "mean": 76.54,
+            "min": 75.23,
+            "max": 77.85
+          },
+          "barDriftCm": {
+            "mean": 19.04,
+            "min": 9.45,
+            "max": 28.63
+          },
+          "romCm": {
+            "mean": 44.51,
+            "min": 32.24,
+            "max": 56.78
+          },
+          "kneeAngleDeg": {
+            "mean": 98.55,
+            "min": 72.5,
+            "max": 124.6
+          },
+          "hipAngleAtLockoutDeg": {
+            "mean": 165.61,
+            "min": 156.05,
+            "max": 175.17
+          },
+          "meanConcentricVelocityCmS": {
+            "mean": 18.23,
+            "min": 8.06,
+            "max": 28.39
+          },
+          "hipHingeCrossoverPct": {
+            "mean": 66.5,
+            "min": 33,
+            "max": 100
+          },
+          "barToShinDistanceCm": {
+            "mean": 13,
+            "min": 7.1,
+            "max": 18.89
+          },
+          "lockoutStabilityCv": {
+            "mean": 2.26,
+            "min": 0.99,
+            "max": 3.52
+          }
+        },
+        "fault_types": [
+          "back_rounding",
+          "bar_away_from_shins",
+          "bar_drift",
+          "early_hip_shoot",
+          "incomplete_lockout"
+        ],
+        "calibrated_at": "2026-04-05T15:39:18.851Z"
+      }
     },
     {
       "id": "deadlift-side-1rep-1",
       "file": "deadlift-side-1rep-1.mp4",
       "lift": "deadlift",
-      "calibrated": false,
-      "expected": { "sagittal_confidence": { "min": 0.75, "max": 0.95 }, "rep_count": { "min": 0, "max": 2, "notes": "0 reps detected — prominence filter may be too aggressive for slow singles. Needs investigation." }, "faults_to_test": ["bar_drift", "back_rounding", "incomplete_lockout"], "metrics_present": ["barDriftCm", "hipAngleAtLockoutDeg", "romCm"], "fatigue_signatures": false },
-      "actual": null
+      "calibrated": true,
+      "expected": {
+        "sagittal_confidence": {
+          "min": 0.75,
+          "max": 0.95
+        },
+        "rep_count": {
+          "min": 0,
+          "max": 2,
+          "notes": "0 reps detected — prominence filter may be too aggressive for slow singles. Needs investigation."
+        },
+        "faults_to_test": [
+          "bar_drift",
+          "back_rounding",
+          "incomplete_lockout"
+        ],
+        "metrics_present": [
+          "barDriftCm",
+          "hipAngleAtLockoutDeg",
+          "romCm"
+        ],
+        "fatigue_signatures": false
+      },
+      "actual": {
+        "rep_count": 0,
+        "sagittal_confidence": 0.845,
+        "analysis_version": 4,
+        "metric_summary": {},
+        "fault_types": [],
+        "calibrated_at": "2026-04-05T15:39:18.852Z"
+      }
     },
     {
       "id": "deadlift-side-6reps",
       "file": "deadlift-side-6reps.mp4",
       "lift": "deadlift",
-      "calibrated": false,
-      "expected": { "sagittal_confidence": { "min": 0.85, "max": 1.0 }, "rep_count": { "min": 4, "max": 10, "notes": "Angle-based rep detection (hip angle) may pick up setup/regrip movements. 6 actual reps." }, "faults_to_test": ["bar_drift", "back_rounding", "incomplete_lockout"], "metrics_present": ["barDriftCm", "hipAngleAtLockoutDeg", "romCm"], "fatigue_signatures": true },
-      "actual": null
+      "calibrated": true,
+      "expected": {
+        "sagittal_confidence": {
+          "min": 0.85,
+          "max": 1
+        },
+        "rep_count": {
+          "min": 4,
+          "max": 10,
+          "notes": "Angle-based rep detection (hip angle) may pick up setup/regrip movements. 6 actual reps."
+        },
+        "faults_to_test": [
+          "bar_drift",
+          "back_rounding",
+          "incomplete_lockout"
+        ],
+        "metrics_present": [
+          "barDriftCm",
+          "hipAngleAtLockoutDeg",
+          "romCm"
+        ],
+        "fatigue_signatures": true
+      },
+      "actual": {
+        "rep_count": 9,
+        "sagittal_confidence": 0.935,
+        "analysis_version": 4,
+        "metric_summary": {
+          "forwardLeanDeg": {
+            "mean": 65.58,
+            "min": 29.4,
+            "max": 78.41
+          },
+          "barDriftCm": {
+            "mean": 18.33,
+            "min": 4.65,
+            "max": 42.59
+          },
+          "romCm": {
+            "mean": 65.48,
+            "min": 49.21,
+            "max": 98.72
+          },
+          "kneeAngleDeg": {
+            "mean": 78.76,
+            "min": 27.12,
+            "max": 155.62
+          },
+          "hipAngleAtLockoutDeg": {
+            "mean": 136.73,
+            "min": 29.88,
+            "max": 174.61
+          },
+          "meanConcentricVelocityCmS": {
+            "mean": 16.54,
+            "min": 1.67,
+            "max": 30.38
+          },
+          "hipHingeCrossoverPct": {
+            "mean": 56.44,
+            "min": 33,
+            "max": 80
+          },
+          "barToShinDistanceCm": {
+            "mean": -4.81,
+            "min": -13.49,
+            "max": 5.93
+          },
+          "lockoutStabilityCv": {
+            "mean": 5.09,
+            "min": 0,
+            "max": 16.95
+          }
+        },
+        "fault_types": [
+          "back_rounding",
+          "bar_away_from_shins",
+          "bar_drift",
+          "early_hip_shoot",
+          "incomplete_lockout",
+          "unstable_lockout"
+        ],
+        "calibrated_at": "2026-04-05T15:39:18.856Z"
+      }
     },
     {
       "id": "deadlift-side-5reps",
       "file": "deadlift-side-5reps.mp4",
       "lift": "deadlift",
-      "calibrated": false,
-      "expected": { "sagittal_confidence": { "min": 0.75, "max": 0.95 }, "rep_count": { "min": 3, "max": 7 }, "faults_to_test": ["bar_drift", "back_rounding", "incomplete_lockout"], "metrics_present": ["barDriftCm", "hipAngleAtLockoutDeg", "romCm"], "fatigue_signatures": true },
-      "actual": null
+      "calibrated": true,
+      "expected": {
+        "sagittal_confidence": {
+          "min": 0.75,
+          "max": 0.95
+        },
+        "rep_count": {
+          "min": 3,
+          "max": 7
+        },
+        "faults_to_test": [
+          "bar_drift",
+          "back_rounding",
+          "incomplete_lockout"
+        ],
+        "metrics_present": [
+          "barDriftCm",
+          "hipAngleAtLockoutDeg",
+          "romCm"
+        ],
+        "fatigue_signatures": true
+      },
+      "actual": {
+        "rep_count": 6,
+        "sagittal_confidence": 0.875,
+        "analysis_version": 4,
+        "metric_summary": {
+          "forwardLeanDeg": {
+            "mean": 49.17,
+            "min": 1.87,
+            "max": 70.69
+          },
+          "barDriftCm": {
+            "mean": 4.51,
+            "min": 1.38,
+            "max": 7.6
+          },
+          "romCm": {
+            "mean": 42.5,
+            "min": 32.64,
+            "max": 55.48
+          },
+          "kneeAngleDeg": {
+            "mean": 87.18,
+            "min": 57.8,
+            "max": 161.42
+          },
+          "hipAngleAtLockoutDeg": {
+            "mean": 170.92,
+            "min": 162.11,
+            "max": 179.31
+          },
+          "meanConcentricVelocityCmS": {
+            "mean": 30.18,
+            "min": 10.66,
+            "max": 55.48
+          },
+          "hipHingeCrossoverPct": {
+            "mean": 63.17,
+            "min": 29,
+            "max": 100
+          },
+          "barToShinDistanceCm": {
+            "mean": 6.16,
+            "min": -3.62,
+            "max": 14.51
+          },
+          "lockoutStabilityCv": {
+            "mean": 17.86,
+            "min": 0.12,
+            "max": 59.86
+          }
+        },
+        "fault_types": [
+          "back_rounding",
+          "bar_away_from_shins",
+          "bar_drift",
+          "early_hip_shoot",
+          "unstable_lockout"
+        ],
+        "calibrated_at": "2026-04-05T15:39:18.859Z"
+      }
     },
     {
       "id": "deadlift-front-2reps",
       "file": "deadlift-front-2reps.mp4",
       "lift": "deadlift",
-      "calibrated": false,
-      "expected": { "sagittal_confidence": { "min": 0.5, "max": 0.75 }, "notes": "Named 'front' but filmed at ~45° diagonal. Sagittal confidence ~0.63.", "rep_count": { "min": 1, "max": 4 }, "faults_to_test": ["bar_drift", "back_rounding", "incomplete_lockout"], "metrics_present": ["barDriftCm", "hipAngleAtLockoutDeg", "romCm"], "fatigue_signatures": true },
-      "actual": null
+      "calibrated": true,
+      "expected": {
+        "sagittal_confidence": {
+          "min": 0.5,
+          "max": 0.75
+        },
+        "notes": "Named 'front' but filmed at ~45° diagonal. Sagittal confidence ~0.63.",
+        "rep_count": {
+          "min": 1,
+          "max": 4
+        },
+        "faults_to_test": [
+          "bar_drift",
+          "back_rounding",
+          "incomplete_lockout"
+        ],
+        "metrics_present": [
+          "barDriftCm",
+          "hipAngleAtLockoutDeg",
+          "romCm"
+        ],
+        "fatigue_signatures": true
+      },
+      "actual": {
+        "rep_count": 3,
+        "sagittal_confidence": 0.629,
+        "analysis_version": 4,
+        "metric_summary": {
+          "forwardLeanDeg": {
+            "mean": 9.54,
+            "min": 0.55,
+            "max": 18.66
+          },
+          "barDriftCm": {
+            "mean": 3.1,
+            "min": 1.27,
+            "max": 5.53
+          },
+          "romCm": {
+            "mean": 34.75,
+            "min": 29.64,
+            "max": 43.8
+          },
+          "kneeAngleDeg": {
+            "mean": 150.29,
+            "min": 145,
+            "max": 154.71
+          },
+          "hipAngleAtLockoutDeg": {
+            "mean": 165.68,
+            "min": 159.89,
+            "max": 168.92
+          },
+          "meanConcentricVelocityCmS": {
+            "mean": 19.99,
+            "min": 11,
+            "max": 29.2
+          },
+          "hipHingeCrossoverPct": {
+            "mean": 66.67,
+            "min": 50,
+            "max": 75
+          },
+          "barToShinDistanceCm": {
+            "mean": 0.51,
+            "min": -0.15,
+            "max": 1.7
+          },
+          "lockoutStabilityCv": {
+            "mean": 0.6,
+            "min": 0,
+            "max": 1.59
+          }
+        },
+        "fault_types": [
+          "back_rounding",
+          "incomplete_lockout"
+        ],
+        "calibrated_at": "2026-04-05T15:39:18.861Z"
+      }
     },
     {
       "id": "deadlift-front-3reps",
       "file": "deadlift-front-3reps.mp4",
       "lift": "deadlift",
-      "calibrated": false,
-      "expected": { "sagittal_confidence": { "min": 0.35, "max": 0.65 }, "notes": "Named 'front' but hip separation shifts weighted formula toward side. Sagittal confidence ~0.50.", "rep_count": { "min": 2, "max": 5 }, "faults_to_test": ["bar_drift"], "metrics_present": ["barDriftCm", "romCm"], "fatigue_signatures": true },
-      "actual": null
+      "calibrated": true,
+      "expected": {
+        "sagittal_confidence": {
+          "min": 0.35,
+          "max": 0.65
+        },
+        "notes": "Named 'front' but hip separation shifts weighted formula toward side. Sagittal confidence ~0.50.",
+        "rep_count": {
+          "min": 2,
+          "max": 5
+        },
+        "faults_to_test": [
+          "bar_drift"
+        ],
+        "metrics_present": [
+          "barDriftCm",
+          "romCm"
+        ],
+        "fatigue_signatures": true
+      },
+      "actual": {
+        "rep_count": 4,
+        "sagittal_confidence": 0.503,
+        "analysis_version": 4,
+        "metric_summary": {
+          "forwardLeanDeg": {
+            "mean": 56.4,
+            "min": 35.38,
+            "max": 90
+          },
+          "barDriftCm": {
+            "mean": 2.96,
+            "min": 2.08,
+            "max": 4.06
+          },
+          "romCm": {
+            "mean": 38.68,
+            "min": 27.34,
+            "max": 45.27
+          },
+          "kneeAngleDeg": {
+            "mean": 151.65,
+            "min": 145.86,
+            "max": 157.99
+          },
+          "hipAngleAtLockoutDeg": {
+            "mean": 169.99,
+            "min": 168.23,
+            "max": 170.83
+          },
+          "meanConcentricVelocityCmS": {
+            "mean": 35.47,
+            "min": 32.79,
+            "max": 38.45
+          },
+          "hipHingeCrossoverPct": {
+            "mean": 80.5,
+            "min": 67,
+            "max": 100
+          },
+          "barToShinDistanceCm": {
+            "mean": 1,
+            "min": -0.06,
+            "max": 3.2
+          },
+          "lockoutStabilityCv": {
+            "mean": 0.64,
+            "min": 0.4,
+            "max": 1.08
+          }
+        },
+        "fault_types": [
+          "back_rounding"
+        ],
+        "calibrated_at": "2026-04-05T15:39:18.862Z"
+      }
     },
     {
       "id": "deadlift-front-4reps",
       "file": "deadlift-front-4reps.mp4",
       "lift": "deadlift",
-      "calibrated": false,
-      "expected": { "sagittal_confidence": { "min": 0.3, "max": 0.6 }, "rep_count": { "min": 3, "max": 6 }, "faults_to_test": ["bar_drift"], "metrics_present": ["barDriftCm", "romCm"], "fatigue_signatures": true },
-      "actual": null
+      "calibrated": true,
+      "expected": {
+        "sagittal_confidence": {
+          "min": 0.3,
+          "max": 0.6
+        },
+        "rep_count": {
+          "min": 3,
+          "max": 6
+        },
+        "faults_to_test": [
+          "bar_drift"
+        ],
+        "metrics_present": [
+          "barDriftCm",
+          "romCm"
+        ],
+        "fatigue_signatures": true
+      },
+      "actual": {
+        "rep_count": 5,
+        "sagittal_confidence": 0.494,
+        "analysis_version": 4,
+        "metric_summary": {
+          "forwardLeanDeg": {
+            "mean": 27.07,
+            "min": 3.64,
+            "max": 90
+          },
+          "barDriftCm": {
+            "mean": 3.67,
+            "min": 1.17,
+            "max": 12.72
+          },
+          "romCm": {
+            "mean": 41.12,
+            "min": 39.48,
+            "max": 43.07
+          },
+          "kneeAngleDeg": {
+            "mean": 136.64,
+            "min": 128.59,
+            "max": 143.41
+          },
+          "hipAngleAtLockoutDeg": {
+            "mean": 163.15,
+            "min": 160.07,
+            "max": 165.19
+          },
+          "meanConcentricVelocityCmS": {
+            "mean": 25.58,
+            "min": 22.21,
+            "max": 31.68
+          },
+          "hipHingeCrossoverPct": {
+            "mean": 57.8,
+            "min": 14,
+            "max": 80
+          },
+          "barToShinDistanceCm": {
+            "mean": 0.86,
+            "min": 0.49,
+            "max": 1.43
+          },
+          "lockoutStabilityCv": {
+            "mean": 0.78,
+            "min": 0.19,
+            "max": 1.87
+          }
+        },
+        "fault_types": [
+          "back_rounding",
+          "bar_drift",
+          "early_hip_shoot"
+        ],
+        "calibrated_at": "2026-04-05T15:39:18.864Z"
+      }
     },
     {
       "id": "deadlift-45-6reps",
       "file": "deadlift-45-6reps.mp4",
       "lift": "deadlift",
-      "calibrated": false,
-      "expected": { "sagittal_confidence": { "min": 0.7, "max": 0.95 }, "rep_count": { "min": 4, "max": 8 }, "faults_to_test": ["bar_drift", "back_rounding", "incomplete_lockout"], "metrics_present": ["barDriftCm", "hipAngleAtLockoutDeg", "romCm"], "fatigue_signatures": true },
-      "actual": null
+      "calibrated": true,
+      "expected": {
+        "sagittal_confidence": {
+          "min": 0.7,
+          "max": 0.95
+        },
+        "rep_count": {
+          "min": 4,
+          "max": 8
+        },
+        "faults_to_test": [
+          "bar_drift",
+          "back_rounding",
+          "incomplete_lockout"
+        ],
+        "metrics_present": [
+          "barDriftCm",
+          "hipAngleAtLockoutDeg",
+          "romCm"
+        ],
+        "fatigue_signatures": true
+      },
+      "actual": {
+        "rep_count": 5,
+        "sagittal_confidence": 0.838,
+        "analysis_version": 4,
+        "metric_summary": {
+          "forwardLeanDeg": {
+            "mean": 37.46,
+            "min": 1.21,
+            "max": 77.38
+          },
+          "barDriftCm": {
+            "mean": 22.75,
+            "min": 10.94,
+            "max": 53.63
+          },
+          "romCm": {
+            "mean": 65.03,
+            "min": 44.09,
+            "max": 80.93
+          },
+          "kneeAngleDeg": {
+            "mean": 108.36,
+            "min": 12.24,
+            "max": 171.31
+          },
+          "hipAngleAtLockoutDeg": {
+            "mean": 125.62,
+            "min": 80.01,
+            "max": 175.01
+          },
+          "meanConcentricVelocityCmS": {
+            "mean": 50.74,
+            "min": 18.98,
+            "max": 65.74
+          },
+          "hipHingeCrossoverPct": {
+            "mean": 72.8,
+            "min": 63,
+            "max": 100
+          },
+          "barToShinDistanceCm": {
+            "mean": 3.52,
+            "min": 0.95,
+            "max": 6.72
+          },
+          "lockoutStabilityCv": {
+            "mean": 32.07,
+            "min": 0,
+            "max": 85.89
+          }
+        },
+        "fault_types": [
+          "back_rounding",
+          "bar_away_from_shins",
+          "bar_drift",
+          "incomplete_lockout",
+          "unstable_lockout"
+        ],
+        "calibrated_at": "2026-04-05T15:39:18.865Z"
+      }
     },
     {
       "id": "bench-45-5reps",
       "file": "bench-45-5reps.mp4",
       "lift": "bench",
-      "calibrated": false,
-      "expected": { "sagittal_confidence": { "min": 0.7, "max": 0.95 }, "rep_count": { "min": 3, "max": 7 }, "faults_to_test": ["bar_drift"], "metrics_present": ["barDriftCm", "romCm"], "fatigue_signatures": true },
-      "actual": null
+      "calibrated": true,
+      "expected": {
+        "sagittal_confidence": {
+          "min": 0.7,
+          "max": 0.95
+        },
+        "rep_count": {
+          "min": 3,
+          "max": 7
+        },
+        "faults_to_test": [
+          "bar_drift"
+        ],
+        "metrics_present": [
+          "barDriftCm",
+          "romCm"
+        ],
+        "fatigue_signatures": true
+      },
+      "actual": {
+        "rep_count": 5,
+        "sagittal_confidence": 0.835,
+        "analysis_version": 4,
+        "metric_summary": {
+          "forwardLeanDeg": {
+            "mean": 80.98,
+            "min": 75.24,
+            "max": 84.79
+          },
+          "barDriftCm": {
+            "mean": 14.46,
+            "min": 4.71,
+            "max": 29.44
+          },
+          "romCm": {
+            "mean": 27.9,
+            "min": 18.56,
+            "max": 47.15
+          },
+          "kneeAngleDeg": {
+            "mean": 137.27,
+            "min": 113.27,
+            "max": 169.92
+          },
+          "hipAngleAtLockoutDeg": {
+            "mean": 166.5,
+            "min": 159.28,
+            "max": 171.07
+          },
+          "meanConcentricVelocityCmS": {
+            "mean": 32.33,
+            "min": 24.75,
+            "max": 47.15
+          },
+          "elbowFlareDeg": {
+            "mean": 67.74,
+            "min": 39.26,
+            "max": 114.84
+          },
+          "pauseDurationSec": {
+            "mean": 0.05,
+            "min": 0,
+            "max": 0.25
+          },
+          "lockoutStabilityCv": {
+            "mean": 0.95,
+            "min": 0,
+            "max": 2.1
+          }
+        },
+        "fault_types": [
+          "bar_drift",
+          "elbow_flare"
+        ],
+        "calibrated_at": "2026-04-05T15:39:18.866Z"
+      }
     },
     {
       "id": "bench-front-4reps",
       "file": "bench-front-4reps.mp4",
       "lift": "bench",
-      "calibrated": false,
-      "expected": { "sagittal_confidence": { "min": 0.2, "max": 0.5 }, "rep_count": { "min": 2, "max": 6 }, "faults_to_test": ["bar_drift"], "metrics_present": ["barDriftCm", "romCm"], "fatigue_signatures": true },
-      "actual": null
+      "calibrated": true,
+      "expected": {
+        "sagittal_confidence": {
+          "min": 0.2,
+          "max": 0.5
+        },
+        "rep_count": {
+          "min": 2,
+          "max": 6
+        },
+        "faults_to_test": [
+          "bar_drift"
+        ],
+        "metrics_present": [
+          "barDriftCm",
+          "romCm"
+        ],
+        "fatigue_signatures": true
+      },
+      "actual": {
+        "rep_count": 4,
+        "sagittal_confidence": 0.356,
+        "analysis_version": 4,
+        "metric_summary": {
+          "forwardLeanDeg": {
+            "mean": 11.22,
+            "min": 1.6,
+            "max": 27.48
+          },
+          "barDriftCm": {
+            "mean": 2.92,
+            "min": 2.31,
+            "max": 3.54
+          },
+          "romCm": {
+            "mean": 29.17,
+            "min": 25.11,
+            "max": 36.29
+          },
+          "kneeAngleDeg": {
+            "mean": 88.09,
+            "min": 85.29,
+            "max": 92.23
+          },
+          "hipAngleAtLockoutDeg": {
+            "mean": 84.35,
+            "min": 67.11,
+            "max": 95.39
+          },
+          "meanConcentricVelocityCmS": {
+            "mean": 27.86,
+            "min": 19.83,
+            "max": 44.72
+          },
+          "elbowFlareDeg": {
+            "mean": 144.03,
+            "min": 133.92,
+            "max": 158.46
+          },
+          "pauseDurationSec": {
+            "mean": 0.06,
+            "min": 0,
+            "max": 0.25
+          },
+          "lockoutStabilityCv": {
+            "mean": 5.7,
+            "min": 1.25,
+            "max": 9.8
+          }
+        },
+        "fault_types": [
+          "elbow_flare",
+          "unstable_lockout"
+        ],
+        "calibrated_at": "2026-04-05T15:39:18.868Z"
+      }
     }
   ]
 }

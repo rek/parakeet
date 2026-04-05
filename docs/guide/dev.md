@@ -24,6 +24,17 @@ npm run db:types                 # Generate TypeScript types → supabase/types.
 npm run db:push                  # Push migrations to hosted Supabase
 ```
 
+### Video Calibration
+
+```bash
+npm run calibrate:videos         # Run pipeline on test videos, update manifest actual values
+npm run calibrate:snapshots      # Full re-calibration: update manifest + snapshots + mark calibrated
+npm run pull:device-analysis     # Pull landmarks from device via Supabase (needs env vars)
+npm run extract:landmarks        # Extract landmarks from video files via Python/MediaPipe
+```
+
+See `test-videos/README.md` for the full calibration workflow.
+
 ### Build production APK (EAS — preferred)
 
 Builds are triggered manually via GitHub Actions:

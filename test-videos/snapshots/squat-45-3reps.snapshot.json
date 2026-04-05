@@ -1,0 +1,566 @@
+{
+  "videoId": "squat-45-3reps",
+  "lift": "squat",
+  "analysisVersion": 4,
+  "snapshotVersion": 1,
+  "createdAt": "2026-04-05T15:39:18.840Z",
+  "sagittalConfidence": 0.20780199999999993,
+  "result": {
+    "reps": [
+      {
+        "repNumber": 1,
+        "startFrame": 0,
+        "endFrame": 29,
+        "barPath": [
+          {
+            "x": 0.49908387499999995,
+            "y": 0.051513875,
+            "frame": 0
+          },
+          {
+            "x": 0.50652875,
+            "y": 0.05038575000000001,
+            "frame": 1
+          },
+          {
+            "x": 0.5538609166666667,
+            "y": 0.050290749999999995,
+            "frame": 2
+          },
+          {
+            "x": 0.6248535000000001,
+            "y": 0.04375716666666667,
+            "frame": 3
+          },
+          {
+            "x": 0.6818528333333335,
+            "y": 0.037004333333333334,
+            "frame": 4
+          },
+          {
+            "x": 0.7004222222222222,
+            "y": 0.0247285,
+            "frame": 5
+          },
+          {
+            "x": 0.6893436666666668,
+            "y": 0.0155295,
+            "frame": 6
+          },
+          {
+            "x": 0.6862708333333334,
+            "y": 0.003188000000000002,
+            "frame": 7
+          },
+          {
+            "x": 0.6903268611111111,
+            "y": -0.008052999999999996,
+            "frame": 8
+          },
+          {
+            "x": 0.7015117499999999,
+            "y": -0.018193499999999998,
+            "frame": 9
+          },
+          {
+            "x": 0.7154121388888889,
+            "y": -0.02143483333333333,
+            "frame": 10
+          },
+          {
+            "x": 0.7248991666666668,
+            "y": -0.018877500000000002,
+            "frame": 11
+          },
+          {
+            "x": 0.7299728333333334,
+            "y": -0.010521499999999998,
+            "frame": 12
+          },
+          {
+            "x": 0.7350465000000002,
+            "y": -0.0021654999999999995,
+            "frame": 13
+          },
+          {
+            "x": 0.7401201666666668,
+            "y": 0.006190500000000002,
+            "frame": 14
+          },
+          {
+            "x": 0.7451938333333334,
+            "y": 0.014546500000000004,
+            "frame": 15
+          },
+          {
+            "x": 0.7502675000000001,
+            "y": 0.022902500000000006,
+            "frame": 16
+          },
+          {
+            "x": 0.7553411666666667,
+            "y": 0.03125850000000001,
+            "frame": 17
+          },
+          {
+            "x": 0.7604148333333334,
+            "y": 0.039614500000000004,
+            "frame": 18
+          },
+          {
+            "x": 0.7600447777777778,
+            "y": 0.07672183333333334,
+            "frame": 19
+          },
+          {
+            "x": 0.7235678333333334,
+            "y": 0.1556815,
+            "frame": 20
+          },
+          {
+            "x": 0.6963783333333334,
+            "y": 0.2602785,
+            "frame": 21
+          },
+          {
+            "x": 0.6810923333333334,
+            "y": 0.3617266666666667,
+            "frame": 22
+          },
+          {
+            "x": 0.6770101666666667,
+            "y": 0.4037536666666666,
+            "frame": 23
+          },
+          {
+            "x": 0.6956318333333332,
+            "y": 0.39353466666666675,
+            "frame": 24
+          },
+          {
+            "x": 0.7072094999999999,
+            "y": 0.3351778333333333,
+            "frame": 25
+          },
+          {
+            "x": 0.742166,
+            "y": 0.2556081666666667,
+            "frame": 26
+          },
+          {
+            "x": 0.746362,
+            "y": 0.16427116666666666,
+            "frame": 27
+          },
+          {
+            "x": 0.74525,
+            "y": 0.09782433333333333,
+            "frame": 28
+          },
+          {
+            "x": 0.7592249999999999,
+            "y": 0.06545516666666666,
+            "frame": 29
+          }
+        ],
+        "maxDepthCm": -24.07204942382741,
+        "forwardLeanDeg": 24.09409505550437,
+        "barDriftCm": 83.1578626763265,
+        "romCm": 103.32080549999999,
+        "kneeAngleDeg": 163.01734447871252,
+        "hipAngleAtLockoutDeg": 152.88589754893297,
+        "meanConcentricVelocityCmS": 54.80435699999999,
+        "concentricDurationSec": 1.5,
+        "eccentricDurationSec": 5.75,
+        "tempoRatio": 3.83,
+        "stanceWidthCm": 41.428827,
+        "hipShiftCm": 3.1315409999999955,
+        "hipShiftDirection": "left",
+        "lockoutStabilityCv": 6.910631896155219,
+        "faults": [
+          {
+            "type": "above_parallel",
+            "severity": "warning",
+            "message": "Hip crease may not have reached parallel (low angle confidence)"
+          },
+          {
+            "type": "bar_drift",
+            "severity": "warning",
+            "message": "Bar drifted 83.2cm from start",
+            "value": 0.3422134266515494,
+            "threshold": 0.03
+          },
+          {
+            "type": "unstable_lockout",
+            "severity": "warning",
+            "message": "Unstable lockout (CV 6.9%)",
+            "value": 6.910631896155219,
+            "threshold": 5
+          }
+        ],
+        "verdict": {
+          "verdict": "red_light",
+          "criteria": [
+            {
+              "name": "depth",
+              "verdict": "fail",
+              "measured": -24.07204942382741,
+              "threshold": 0,
+              "unit": "cm",
+              "message": "24.1cm above parallel — would not pass"
+            },
+            {
+              "name": "lockout",
+              "verdict": "fail",
+              "measured": 159.50047779595195,
+              "threshold": 170,
+              "unit": "°",
+              "message": "Incomplete lockout (160°) — would not pass"
+            },
+            {
+              "name": "forward_motion",
+              "verdict": "borderline",
+              "measured": 4.723300740578448,
+              "threshold": 3,
+              "unit": "cm",
+              "message": "4.7cm path deviation at top"
+            }
+          ]
+        },
+        "velocityLossPct": 0,
+        "estimatedRir": 6
+      },
+      {
+        "repNumber": 2,
+        "startFrame": 29,
+        "endFrame": 39,
+        "barPath": [
+          {
+            "x": 0.7592249999999999,
+            "y": 0.06545516666666666,
+            "frame": 29
+          },
+          {
+            "x": 0.7535193333333332,
+            "y": 0.10426400000000001,
+            "frame": 30
+          },
+          {
+            "x": 0.7382110000000001,
+            "y": 0.18794566666666665,
+            "frame": 31
+          },
+          {
+            "x": 0.7079650000000001,
+            "y": 0.3033668333333333,
+            "frame": 32
+          },
+          {
+            "x": 0.6859243333333334,
+            "y": 0.38959366666666667,
+            "frame": 33
+          },
+          {
+            "x": 0.7090883333333333,
+            "y": 0.40720599999999996,
+            "frame": 34
+          },
+          {
+            "x": 0.7408846666666667,
+            "y": 0.3727606666666667,
+            "frame": 35
+          },
+          {
+            "x": 0.7525408333333333,
+            "y": 0.2994128333333333,
+            "frame": 36
+          },
+          {
+            "x": 0.7321201666666667,
+            "y": 0.20377599999999998,
+            "frame": 37
+          },
+          {
+            "x": 0.7200765000000001,
+            "y": 0.126727,
+            "frame": 38
+          },
+          {
+            "x": 0.7290219166666666,
+            "y": 0.0878585,
+            "frame": 39
+          }
+        ],
+        "maxDepthCm": -19.084217062456837,
+        "forwardLeanDeg": 68.05803973670714,
+        "barDriftCm": 10.67895347727272,
+        "romCm": 83.04545249999998,
+        "kneeAngleDeg": 83.78460691713857,
+        "hipAngleAtLockoutDeg": 164.51864471968537,
+        "meanConcentricVelocityCmS": 62.08115399999999,
+        "concentricDurationSec": 1.25,
+        "eccentricDurationSec": 1.25,
+        "tempoRatio": 1,
+        "stanceWidthCm": 35.67361499999999,
+        "hipShiftCm": 2.8518480000000195,
+        "hipShiftDirection": "left",
+        "lockoutStabilityCv": 5.3024619894370595,
+        "faults": [
+          {
+            "type": "above_parallel",
+            "severity": "warning",
+            "message": "Hip crease may not have reached parallel (low angle confidence)"
+          },
+          {
+            "type": "bar_drift",
+            "severity": "warning",
+            "message": "Bar drifted 10.7cm from start",
+            "value": 0.04394631060606058,
+            "threshold": 0.03
+          },
+          {
+            "type": "unstable_lockout",
+            "severity": "warning",
+            "message": "Unstable lockout (CV 5.3%)",
+            "value": 5.3024619894370595,
+            "threshold": 5
+          }
+        ],
+        "verdict": {
+          "verdict": "red_light",
+          "criteria": [
+            {
+              "name": "depth",
+              "verdict": "fail",
+              "measured": -19.084217062456837,
+              "threshold": 0,
+              "unit": "cm",
+              "message": "19.1cm above parallel — would not pass"
+            },
+            {
+              "name": "lockout",
+              "verdict": "borderline",
+              "measured": 167.67700535115608,
+              "threshold": 170,
+              "unit": "°",
+              "message": "Knees nearly locked (168°)"
+            },
+            {
+              "name": "forward_motion",
+              "verdict": "pass",
+              "measured": 2.425317845557645,
+              "threshold": 3,
+              "unit": "cm",
+              "message": "Clean lockout path"
+            }
+          ]
+        },
+        "velocityLossPct": -13.3
+      },
+      {
+        "repNumber": 3,
+        "startFrame": 39,
+        "endFrame": 62,
+        "barPath": [
+          {
+            "x": 0.7290219166666666,
+            "y": 0.0878585,
+            "frame": 39
+          },
+          {
+            "x": 0.73093875,
+            "y": 0.0955515,
+            "frame": 40
+          },
+          {
+            "x": 0.70869525,
+            "y": 0.15580666666666665,
+            "frame": 41
+          },
+          {
+            "x": 0.6865341666666668,
+            "y": 0.26071483333333334,
+            "frame": 42
+          },
+          {
+            "x": 0.6844118333333334,
+            "y": 0.38328466666666666,
+            "frame": 43
+          },
+          {
+            "x": 0.6832446666666666,
+            "y": 0.44157466666666667,
+            "frame": 44
+          },
+          {
+            "x": 0.7018971666666666,
+            "y": 0.4194446666666667,
+            "frame": 45
+          },
+          {
+            "x": 0.7117490000000001,
+            "y": 0.3471918333333333,
+            "frame": 46
+          },
+          {
+            "x": 0.7247568333333333,
+            "y": 0.26013200000000003,
+            "frame": 47
+          },
+          {
+            "x": 0.7029886666666667,
+            "y": 0.15807533333333335,
+            "frame": 48
+          },
+          {
+            "x": 0.6783128333333334,
+            "y": 0.09025083333333334,
+            "frame": 49
+          },
+          {
+            "x": 0.6711646666666667,
+            "y": 0.06785266666666667,
+            "frame": 50
+          },
+          {
+            "x": 0.6675161666666667,
+            "y": 0.08814216666666667,
+            "frame": 51
+          },
+          {
+            "x": 0.6239723333333334,
+            "y": 0.10662433333333333,
+            "frame": 52
+          },
+          {
+            "x": 0.5427463333333333,
+            "y": 0.111095,
+            "frame": 53
+          },
+          {
+            "x": 0.46689949999999997,
+            "y": 0.12029916666666667,
+            "frame": 54
+          },
+          {
+            "x": 0.4251621666666667,
+            "y": 0.1279255,
+            "frame": 55
+          },
+          {
+            "x": 0.4100238333333333,
+            "y": 0.13685566666666665,
+            "frame": 56
+          },
+          {
+            "x": 0.4149398333333334,
+            "y": 0.148364,
+            "frame": 57
+          },
+          {
+            "x": 0.433463,
+            "y": 0.15757316666666665,
+            "frame": 58
+          },
+          {
+            "x": 0.4570996666666667,
+            "y": 0.16672299999999998,
+            "frame": 59
+          },
+          {
+            "x": 0.4848518333333333,
+            "y": 0.1699245,
+            "frame": 60
+          },
+          {
+            "x": 0.5041566666666667,
+            "y": 0.17136833333333334,
+            "frame": 61
+          },
+          {
+            "x": 0.514627,
+            "y": 0.1703265,
+            "frame": 62
+          }
+        ],
+        "maxDepthCm": -3.1907899929775083,
+        "forwardLeanDeg": 12.4787577694946,
+        "barDriftCm": 76.22923394417346,
+        "romCm": 90.814446,
+        "kneeAngleDeg": 166.23936784527814,
+        "hipAngleAtLockoutDeg": 123.63292343832836,
+        "meanConcentricVelocityCmS": 60.542964000000005,
+        "concentricDurationSec": 4.5,
+        "eccentricDurationSec": 1.25,
+        "tempoRatio": 0.28,
+        "stanceWidthCm": 46.574594999999995,
+        "hipShiftCm": 4.455404999999997,
+        "hipShiftDirection": "left",
+        "lockoutStabilityCv": 8.969449518246819,
+        "faults": [
+          {
+            "type": "above_parallel",
+            "severity": "warning",
+            "message": "Hip crease may not have reached parallel (low angle confidence)"
+          },
+          {
+            "type": "bar_drift",
+            "severity": "warning",
+            "message": "Bar drifted 76.2cm from start",
+            "value": 0.3137005512105904,
+            "threshold": 0.03
+          },
+          {
+            "type": "unstable_lockout",
+            "severity": "warning",
+            "message": "Unstable lockout (CV 9.0%)",
+            "value": 8.969449518246819,
+            "threshold": 5
+          }
+        ],
+        "verdict": {
+          "verdict": "red_light",
+          "criteria": [
+            {
+              "name": "depth",
+              "verdict": "fail",
+              "measured": -3.1907899929775083,
+              "threshold": 0,
+              "unit": "cm",
+              "message": "3.2cm above parallel — would not pass"
+            },
+            {
+              "name": "lockout",
+              "verdict": "fail",
+              "measured": 137.26061408232246,
+              "threshold": 170,
+              "unit": "°",
+              "message": "Incomplete lockout (137°) — would not pass"
+            },
+            {
+              "name": "forward_motion",
+              "verdict": "pass",
+              "measured": 1.304887349513464,
+              "threshold": 3,
+              "unit": "cm",
+              "message": "Clean lockout path"
+            }
+          ]
+        },
+        "velocityLossPct": -10.5
+      }
+    ],
+    "fps": 4,
+    "cameraAngle": "front",
+    "sagittalConfidence": 0.17942298333333317,
+    "analysisVersion": 4,
+    "fatigueSignatures": {
+      "forwardLeanDriftDeg": -11.6,
+      "barDriftIncreaseCm": -6.9,
+      "romCompressionCm": 12.5,
+      "descentSpeedChange": 0.22,
+      "lockoutDegradationDeg": 29.3,
+      "velocityLossTrend": "stable"
+    }
+  }
+}

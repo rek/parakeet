@@ -1,0 +1,638 @@
+{
+  "videoId": "squat-45-5reps",
+  "lift": "squat",
+  "analysisVersion": 4,
+  "snapshotVersion": 1,
+  "createdAt": "2026-04-05T15:39:18.844Z",
+  "sagittalConfidence": 0.33517849999999993,
+  "result": {
+    "reps": [
+      {
+        "repNumber": 1,
+        "startFrame": 0,
+        "endFrame": 15,
+        "barPath": [
+          {
+            "x": 0.7906725,
+            "y": 0.007212000000000003,
+            "frame": 0
+          },
+          {
+            "x": 0.7906725,
+            "y": 0.007212000000000003,
+            "frame": 1
+          },
+          {
+            "x": 0.7906725,
+            "y": 0.007212000000000003,
+            "frame": 2
+          },
+          {
+            "x": 0.7906725,
+            "y": 0.007212000000000003,
+            "frame": 3
+          },
+          {
+            "x": 0.7906725,
+            "y": 0.007212000000000003,
+            "frame": 4
+          },
+          {
+            "x": 0.7906725,
+            "y": 0.007212000000000003,
+            "frame": 5
+          },
+          {
+            "x": 0.7880419999999999,
+            "y": 0.04467033333333333,
+            "frame": 6
+          },
+          {
+            "x": 0.7681478333333333,
+            "y": 0.1118345,
+            "frame": 7
+          },
+          {
+            "x": 0.7604744999999999,
+            "y": 0.21112583333333332,
+            "frame": 8
+          },
+          {
+            "x": 0.7557028333333333,
+            "y": 0.2686908333333334,
+            "frame": 9
+          },
+          {
+            "x": 0.7620596666666666,
+            "y": 0.2787345,
+            "frame": 10
+          },
+          {
+            "x": 0.7551451666666665,
+            "y": 0.2270916666666667,
+            "frame": 11
+          },
+          {
+            "x": 0.75389675,
+            "y": 0.1823523333333333,
+            "frame": 12
+          },
+          {
+            "x": 0.7647207500000001,
+            "y": 0.158064,
+            "frame": 13
+          },
+          {
+            "x": 0.7782244166666666,
+            "y": 0.1573561111111111,
+            "frame": 14
+          },
+          {
+            "x": 0.78742,
+            "y": 0.14803383333333334,
+            "frame": 15
+          }
+        ],
+        "maxDepthCm": -5.92951909081907,
+        "forwardLeanDeg": 61.54691359374508,
+        "barDriftCm": 7.951417833339684,
+        "romCm": 65.9799675,
+        "kneeAngleDeg": 95.15812831415457,
+        "hipAngleAtLockoutDeg": 18.13273206005209,
+        "meanConcentricVelocityCmS": 25.4082096,
+        "concentricDurationSec": 1.25,
+        "eccentricDurationSec": 2.5,
+        "tempoRatio": 2,
+        "stanceWidthCm": 60.91086600000001,
+        "hipShiftCm": 3.120119999999998,
+        "hipShiftDirection": "left",
+        "lockoutStabilityCv": 76.84253963789081,
+        "faults": [
+          {
+            "type": "above_parallel",
+            "severity": "warning",
+            "message": "Hip crease may not have reached parallel (low angle confidence)"
+          },
+          {
+            "type": "excessive_lean",
+            "severity": "info",
+            "message": "Forward lean reached 75.7°",
+            "value": 75.73117201519142,
+            "threshold": 55
+          },
+          {
+            "type": "bar_drift",
+            "severity": "warning",
+            "message": "Bar drifted 8.0cm from start",
+            "value": 0.03272188408781763,
+            "threshold": 0.03
+          },
+          {
+            "type": "unstable_lockout",
+            "severity": "warning",
+            "message": "Unstable lockout (CV 76.8%)",
+            "value": 76.84253963789081,
+            "threshold": 5
+          }
+        ],
+        "verdict": {
+          "verdict": "red_light",
+          "criteria": [
+            {
+              "name": "depth",
+              "verdict": "fail",
+              "measured": -5.92951909081907,
+              "threshold": 0,
+              "unit": "cm",
+              "message": "5.9cm above parallel — would not pass"
+            },
+            {
+              "name": "lockout",
+              "verdict": "fail",
+              "measured": 38.89460960701712,
+              "threshold": 170,
+              "unit": "°",
+              "message": "Incomplete lockout (39°) — would not pass"
+            },
+            {
+              "name": "forward_motion",
+              "verdict": "pass",
+              "measured": 2.2426587267897244,
+              "threshold": 3,
+              "unit": "cm",
+              "message": "Clean lockout path"
+            }
+          ]
+        },
+        "velocityLossPct": 0,
+        "estimatedRir": 6
+      },
+      {
+        "repNumber": 2,
+        "startFrame": 15,
+        "endFrame": 24,
+        "barPath": [
+          {
+            "x": 0.78742,
+            "y": 0.14803383333333334,
+            "frame": 15
+          },
+          {
+            "x": 0.7923075,
+            "y": 0.13009716666666668,
+            "frame": 16
+          },
+          {
+            "x": 0.7679058333333334,
+            "y": 0.14803738888888887,
+            "frame": 17
+          },
+          {
+            "x": 0.7703845,
+            "y": 0.21979266666666666,
+            "frame": 18
+          },
+          {
+            "x": 0.7686885,
+            "y": 0.27406566666666665,
+            "frame": 19
+          },
+          {
+            "x": 0.7741061666666668,
+            "y": 0.26804833333333333,
+            "frame": 20
+          },
+          {
+            "x": 0.7519658333333333,
+            "y": 0.20853216666666666,
+            "frame": 21
+          },
+          {
+            "x": 0.7408385000000001,
+            "y": 0.13382316666666663,
+            "frame": 22
+          },
+          {
+            "x": 0.7495709666666667,
+            "y": 0.09627746666666666,
+            "frame": 23
+          },
+          {
+            "x": 0.7566653999999998,
+            "y": 0.07116539999999999,
+            "frame": 24
+          }
+        ],
+        "maxDepthCm": 2.38377521768906,
+        "forwardLeanDeg": 62.91004723022883,
+        "barDriftCm": 6.396289739999993,
+        "romCm": 49.3047648,
+        "kneeAngleDeg": 75.57522120520241,
+        "hipAngleAtLockoutDeg": 119.41585574363909,
+        "meanConcentricVelocityCmS": 39.44381184,
+        "concentricDurationSec": 1.25,
+        "eccentricDurationSec": 1,
+        "tempoRatio": 0.8,
+        "stanceWidthCm": 23.28126299999999,
+        "hipShiftCm": 5.747678999999995,
+        "hipShiftDirection": "left",
+        "lockoutStabilityCv": 1.1087108547592404,
+        "faults": [
+          {
+            "type": "excessive_lean",
+            "severity": "info",
+            "message": "Forward lean reached 75.7°",
+            "value": 75.73117201519142,
+            "threshold": 55
+          }
+        ],
+        "verdict": {
+          "verdict": "red_light",
+          "criteria": [
+            {
+              "name": "depth",
+              "verdict": "pass",
+              "measured": 2.38377521768906,
+              "threshold": 0,
+              "unit": "cm",
+              "message": "2.4cm below parallel"
+            },
+            {
+              "name": "lockout",
+              "verdict": "fail",
+              "measured": 129.0295469001759,
+              "threshold": 170,
+              "unit": "°",
+              "message": "Incomplete lockout (129°) — would not pass"
+            },
+            {
+              "name": "forward_motion",
+              "verdict": "pass",
+              "measured": 0,
+              "threshold": 3,
+              "unit": "cm",
+              "message": "Clean lockout path"
+            }
+          ]
+        },
+        "velocityLossPct": -55.2
+      },
+      {
+        "repNumber": 3,
+        "startFrame": 24,
+        "endFrame": 34,
+        "barPath": [
+          {
+            "x": 0.7566653999999998,
+            "y": 0.07116539999999999,
+            "frame": 24
+          },
+          {
+            "x": 0.7546057999999999,
+            "y": 0.0914783,
+            "frame": 25
+          },
+          {
+            "x": 0.7525461999999999,
+            "y": 0.1117912,
+            "frame": 26
+          },
+          {
+            "x": 0.7504866,
+            "y": 0.13210409999999997,
+            "frame": 27
+          },
+          {
+            "x": 0.7600321999999999,
+            "y": 0.19268169999999998,
+            "frame": 28
+          },
+          {
+            "x": 0.7744196666666667,
+            "y": 0.2661531666666667,
+            "frame": 29
+          },
+          {
+            "x": 0.7654953333333333,
+            "y": 0.30296700000000004,
+            "frame": 30
+          },
+          {
+            "x": 0.7527186666666666,
+            "y": 0.2678993333333333,
+            "frame": 31
+          },
+          {
+            "x": 0.7392446666666667,
+            "y": 0.1909806666666667,
+            "frame": 32
+          },
+          {
+            "x": 0.7490705000000001,
+            "y": 0.14620740000000002,
+            "frame": 33
+          },
+          {
+            "x": 0.7511315,
+            "y": 0.1285387,
+            "frame": 34
+          }
+        ],
+        "maxDepthCm": -8.876651966006355,
+        "forwardLeanDeg": 61.48849727991787,
+        "barDriftCm": 4.6876864909091065,
+        "romCm": 56.327788800000015,
+        "kneeAngleDeg": 77.68360136734654,
+        "hipAngleAtLockoutDeg": 116.18410245789715,
+        "meanConcentricVelocityCmS": 42.386076900000006,
+        "concentricDurationSec": 1,
+        "eccentricDurationSec": 1.5,
+        "tempoRatio": 1.5,
+        "stanceWidthCm": 60.49363499999997,
+        "hipShiftCm": 2.979179999999998,
+        "hipShiftDirection": "left",
+        "lockoutStabilityCv": 1.190032104375448,
+        "faults": [
+          {
+            "type": "above_parallel",
+            "severity": "warning",
+            "message": "Hip crease may not have reached parallel (low angle confidence)"
+          }
+        ],
+        "verdict": {
+          "verdict": "red_light",
+          "criteria": [
+            {
+              "name": "depth",
+              "verdict": "fail",
+              "measured": -8.876651966006355,
+              "threshold": 0,
+              "unit": "cm",
+              "message": "8.9cm above parallel — would not pass"
+            },
+            {
+              "name": "lockout",
+              "verdict": "fail",
+              "measured": 122.91471393113167,
+              "threshold": 170,
+              "unit": "°",
+              "message": "Incomplete lockout (123°) — would not pass"
+            },
+            {
+              "name": "forward_motion",
+              "verdict": "pass",
+              "measured": 0.3109289262375047,
+              "threshold": 3,
+              "unit": "cm",
+              "message": "Clean lockout path"
+            }
+          ]
+        },
+        "velocityLossPct": -66.8
+      },
+      {
+        "repNumber": 4,
+        "startFrame": 34,
+        "endFrame": 46,
+        "barPath": [
+          {
+            "x": 0.7511315,
+            "y": 0.1285387,
+            "frame": 34
+          },
+          {
+            "x": 0.7490359999999999,
+            "y": 0.13531490000000002,
+            "frame": 35
+          },
+          {
+            "x": 0.7469405,
+            "y": 0.14209110000000003,
+            "frame": 36
+          },
+          {
+            "x": 0.7448450000000001,
+            "y": 0.1488673,
+            "frame": 37
+          },
+          {
+            "x": 0.7492778333333333,
+            "y": 0.19221560000000001,
+            "frame": 38
+          },
+          {
+            "x": 0.7510053333333332,
+            "y": 0.25203183333333334,
+            "frame": 39
+          },
+          {
+            "x": 0.7489215000000001,
+            "y": 0.29542,
+            "frame": 40
+          },
+          {
+            "x": 0.7418058333333334,
+            "y": 0.282618,
+            "frame": 41
+          },
+          {
+            "x": 0.7362178333333333,
+            "y": 0.22122333333333336,
+            "frame": 42
+          },
+          {
+            "x": 0.7374432083333332,
+            "y": 0.16395120833333335,
+            "frame": 43
+          },
+          {
+            "x": 0.7401741249999999,
+            "y": 0.113991625,
+            "frame": 44
+          },
+          {
+            "x": 0.74708475,
+            "y": 0.08385125,
+            "frame": 45
+          },
+          {
+            "x": 0.753995375,
+            "y": 0.053710875,
+            "frame": 46
+          }
+        ],
+        "maxDepthCm": -9.572209650171505,
+        "forwardLeanDeg": 68.96954496240097,
+        "barDriftCm": 2.3748008365384328,
+        "romCm": 58.73531737500001,
+        "kneeAngleDeg": 53.5271643259527,
+        "hipAngleAtLockoutDeg": 130.0444500405397,
+        "meanConcentricVelocityCmS": 39.156878250000005,
+        "concentricDurationSec": 1.5,
+        "eccentricDurationSec": 1.5,
+        "tempoRatio": 1,
+        "stanceWidthCm": 60.263271,
+        "hipShiftCm": 2.490263999999995,
+        "hipShiftDirection": "left",
+        "lockoutStabilityCv": 3.8166854876770446,
+        "faults": [
+          {
+            "type": "above_parallel",
+            "severity": "warning",
+            "message": "Hip crease may not have reached parallel (low angle confidence)"
+          }
+        ],
+        "verdict": {
+          "verdict": "red_light",
+          "criteria": [
+            {
+              "name": "depth",
+              "verdict": "fail",
+              "measured": -9.572209650171505,
+              "threshold": 0,
+              "unit": "cm",
+              "message": "9.6cm above parallel — would not pass"
+            },
+            {
+              "name": "lockout",
+              "verdict": "fail",
+              "measured": 139.98655090857764,
+              "threshold": 170,
+              "unit": "°",
+              "message": "Incomplete lockout (140°) — would not pass"
+            },
+            {
+              "name": "forward_motion",
+              "verdict": "pass",
+              "measured": 4.215378046623641e-16,
+              "threshold": 3,
+              "unit": "cm",
+              "message": "Clean lockout path"
+            }
+          ]
+        },
+        "velocityLossPct": -54.1
+      },
+      {
+        "repNumber": 5,
+        "startFrame": 46,
+        "endFrame": 55,
+        "barPath": [
+          {
+            "x": 0.753995375,
+            "y": 0.053710875,
+            "frame": 46
+          },
+          {
+            "x": 0.7269309583333333,
+            "y": 0.06827329166666667,
+            "frame": 47
+          },
+          {
+            "x": 0.722584,
+            "y": 0.13749616666666667,
+            "frame": 48
+          },
+          {
+            "x": 0.7130131666666667,
+            "y": 0.237935,
+            "frame": 49
+          },
+          {
+            "x": 0.7264051666666665,
+            "y": 0.28690316666666665,
+            "frame": 50
+          },
+          {
+            "x": 0.7197958333333333,
+            "y": 0.2704526666666667,
+            "frame": 51
+          },
+          {
+            "x": 0.7134755,
+            "y": 0.2146525,
+            "frame": 52
+          },
+          {
+            "x": 0.7247318333333332,
+            "y": 0.143564,
+            "frame": 53
+          },
+          {
+            "x": 0.7309685,
+            "y": 0.0932805,
+            "frame": 54
+          },
+          {
+            "x": 0.7398365,
+            "y": 0.0611775,
+            "frame": 55
+          }
+        ],
+        "maxDepthCm": -13.809568399653807,
+        "forwardLeanDeg": 90,
+        "barDriftCm": 6.517671075000009,
+        "romCm": 56.665726875,
+        "kneeAngleDeg": 82.64132170542231,
+        "hipAngleAtLockoutDeg": 118.31045783869234,
+        "meanConcentricVelocityCmS": 43.881069600000004,
+        "concentricDurationSec": 1.25,
+        "eccentricDurationSec": 1,
+        "tempoRatio": 0.8,
+        "stanceWidthCm": 57.80976075000001,
+        "hipShiftCm": 3.2010389999999975,
+        "hipShiftDirection": "left",
+        "lockoutStabilityCv": 0,
+        "faults": [
+          {
+            "type": "above_parallel",
+            "severity": "warning",
+            "message": "Hip crease may not have reached parallel (low angle confidence)"
+          }
+        ],
+        "verdict": {
+          "verdict": "red_light",
+          "criteria": [
+            {
+              "name": "depth",
+              "verdict": "fail",
+              "measured": -13.809568399653807,
+              "threshold": 0,
+              "unit": "cm",
+              "message": "13.8cm above parallel — would not pass"
+            },
+            {
+              "name": "lockout",
+              "verdict": "fail",
+              "measured": 136.01860017766901,
+              "threshold": 170,
+              "unit": "°",
+              "message": "Incomplete lockout (136°) — would not pass"
+            },
+            {
+              "name": "forward_motion",
+              "verdict": "pass",
+              "measured": 0,
+              "threshold": 3,
+              "unit": "cm",
+              "message": "Clean lockout path"
+            }
+          ]
+        },
+        "velocityLossPct": -72.7
+      }
+    ],
+    "fps": 4,
+    "cameraAngle": "front",
+    "sagittalConfidence": 0.2744348000000002,
+    "analysisVersion": 4,
+    "fatigueSignatures": {
+      "forwardLeanDriftDeg": 28.5,
+      "barDriftIncreaseCm": -1.4,
+      "romCompressionCm": 9.3,
+      "descentSpeedChange": 0.4,
+      "lockoutDegradationDeg": -100.2,
+      "velocityLossTrend": "decreasing"
+    }
+  }
+}

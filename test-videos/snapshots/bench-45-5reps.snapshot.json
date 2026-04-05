@@ -1,0 +1,508 @@
+{
+  "videoId": "bench-45-5reps",
+  "lift": "bench",
+  "analysisVersion": 4,
+  "snapshotVersion": 1,
+  "createdAt": "2026-04-05T15:39:18.867Z",
+  "sagittalConfidence": 0.834698888888889,
+  "result": {
+    "reps": [
+      {
+        "repNumber": 1,
+        "startFrame": 0,
+        "endFrame": 6,
+        "barPath": [
+          {
+            "x": 0.695361,
+            "y": 0.347606,
+            "frame": 0
+          },
+          {
+            "x": 0.7002573333333334,
+            "y": 0.3656918333333334,
+            "frame": 1
+          },
+          {
+            "x": 0.7111839999999999,
+            "y": 0.3916813333333334,
+            "frame": 2
+          },
+          {
+            "x": 0.6818254999999999,
+            "y": 0.3881763333333333,
+            "frame": 3
+          },
+          {
+            "x": 0.6650698333333332,
+            "y": 0.33805949999999996,
+            "frame": 4
+          },
+          {
+            "x": 0.6563757499999999,
+            "y": 0.31528449999999997,
+            "frame": 5
+          },
+          {
+            "x": 0.68801275,
+            "y": 0.325451,
+            "frame": 6
+          }
+        ],
+        "forwardLeanDeg": 84.0810245049703,
+        "barDriftCm": 7.06282682142857,
+        "romCm": 18.564430500000018,
+        "kneeAngleDeg": 169.92009365616474,
+        "hipAngleAtLockoutDeg": 169.7931636689546,
+        "meanConcentricVelocityCmS": 24.752574000000024,
+        "concentricDurationSec": 1,
+        "eccentricDurationSec": 0.5,
+        "tempoRatio": 0.5,
+        "elbowFlareDeg": 56.05198923492941,
+        "pauseDurationSec": 0.25,
+        "isSinking": false,
+        "lockoutStabilityCv": 0.6857144044296012,
+        "faults": [],
+        "verdict": {
+          "verdict": "white_light",
+          "criteria": [
+            {
+              "name": "pause",
+              "verdict": "pass",
+              "measured": 0.25,
+              "threshold": 0.2,
+              "unit": "s",
+              "message": "Clear pause (0.25s)"
+            },
+            {
+              "name": "lockout",
+              "verdict": "pass",
+              "measured": 158.7326703200488,
+              "threshold": 155,
+              "unit": "°",
+              "message": "Elbows fully locked (159°)"
+            },
+            {
+              "name": "even_press",
+              "verdict": "pass",
+              "measured": 0,
+              "threshold": 2,
+              "unit": "cm",
+              "message": "Even press not assessable from this camera angle"
+            }
+          ]
+        },
+        "velocityLossPct": 0,
+        "estimatedRir": 6
+      },
+      {
+        "repNumber": 2,
+        "startFrame": 6,
+        "endFrame": 11,
+        "barPath": [
+          {
+            "x": 0.68801275,
+            "y": 0.325451,
+            "frame": 6
+          },
+          {
+            "x": 0.7125259166666665,
+            "y": 0.37243033333333325,
+            "frame": 7
+          },
+          {
+            "x": 0.7243543333333333,
+            "y": 0.39448616666666664,
+            "frame": 8
+          },
+          {
+            "x": 0.7155536666666666,
+            "y": 0.35432383333333334,
+            "frame": 9
+          },
+          {
+            "x": 0.6970098333333334,
+            "y": 0.3114598333333333,
+            "frame": 10
+          },
+          {
+            "x": 0.692492,
+            "y": 0.2953078333333334,
+            "frame": 11
+          }
+        ],
+        "forwardLeanDeg": 82.8752810496846,
+        "barDriftCm": 4.705188750000001,
+        "romCm": 24.10033499999998,
+        "kneeAngleDeg": 113.26816314576386,
+        "hipAngleAtLockoutDeg": 169.44602351120892,
+        "meanConcentricVelocityCmS": 32.13377999999997,
+        "concentricDurationSec": 0.75,
+        "eccentricDurationSec": 0.5,
+        "tempoRatio": 0.67,
+        "elbowFlareDeg": 71.1058320913035,
+        "pauseDurationSec": 0,
+        "isSinking": false,
+        "lockoutStabilityCv": 0.7104507788407768,
+        "faults": [],
+        "verdict": {
+          "verdict": "red_light",
+          "criteria": [
+            {
+              "name": "pause",
+              "verdict": "fail",
+              "measured": 0,
+              "threshold": 0.2,
+              "unit": "s",
+              "message": "No visible pause at chest"
+            },
+            {
+              "name": "lockout",
+              "verdict": "pass",
+              "measured": 156.0179638756618,
+              "threshold": 155,
+              "unit": "°",
+              "message": "Elbows fully locked (156°)"
+            },
+            {
+              "name": "even_press",
+              "verdict": "pass",
+              "measured": 0,
+              "threshold": 2,
+              "unit": "cm",
+              "message": "Even press not assessable from this camera angle"
+            }
+          ]
+        },
+        "velocityLossPct": -29.8
+      },
+      {
+        "repNumber": 3,
+        "startFrame": 11,
+        "endFrame": 17,
+        "barPath": [
+          {
+            "x": 0.692492,
+            "y": 0.2953078333333334,
+            "frame": 11
+          },
+          {
+            "x": 0.7048405,
+            "y": 0.334527,
+            "frame": 12
+          },
+          {
+            "x": 0.7220718333333332,
+            "y": 0.377337,
+            "frame": 13
+          },
+          {
+            "x": 0.7249803333333333,
+            "y": 0.39343633333333333,
+            "frame": 14
+          },
+          {
+            "x": 0.7136876666666666,
+            "y": 0.3677635833333333,
+            "frame": 15
+          },
+          {
+            "x": 0.693008,
+            "y": 0.31954125,
+            "frame": 16
+          },
+          {
+            "x": 0.6824739166666666,
+            "y": 0.29550425,
+            "frame": 17
+          }
+        ],
+        "forwardLeanDeg": 75.23839633310439,
+        "barDriftCm": 5.423650071428604,
+        "romCm": 23.845225499999987,
+        "kneeAngleDeg": 122.2914196055205,
+        "hipAngleAtLockoutDeg": 171.06610057725504,
+        "meanConcentricVelocityCmS": 31.72999499999999,
+        "concentricDurationSec": 0.75,
+        "eccentricDurationSec": 0.75,
+        "tempoRatio": 1,
+        "elbowFlareDeg": 39.262052596542006,
+        "pauseDurationSec": 0,
+        "isSinking": false,
+        "lockoutStabilityCv": 2.098862568868488,
+        "faults": [],
+        "verdict": {
+          "verdict": "red_light",
+          "criteria": [
+            {
+              "name": "pause",
+              "verdict": "fail",
+              "measured": 0,
+              "threshold": 0.2,
+              "unit": "s",
+              "message": "No visible pause at chest"
+            },
+            {
+              "name": "lockout",
+              "verdict": "pass",
+              "measured": 157.72869030070044,
+              "threshold": 155,
+              "unit": "°",
+              "message": "Elbows fully locked (158°)"
+            },
+            {
+              "name": "even_press",
+              "verdict": "pass",
+              "measured": 0,
+              "threshold": 2,
+              "unit": "cm",
+              "message": "Even press not assessable from this camera angle"
+            }
+          ]
+        },
+        "velocityLossPct": -28.2
+      },
+      {
+        "repNumber": 4,
+        "startFrame": 17,
+        "endFrame": 24,
+        "barPath": [
+          {
+            "x": 0.6824739166666666,
+            "y": 0.29550425,
+            "frame": 17
+          },
+          {
+            "x": 0.6870677500000001,
+            "y": 0.3193495,
+            "frame": 18
+          },
+          {
+            "x": 0.6984639166666667,
+            "y": 0.3717203333333334,
+            "frame": 19
+          },
+          {
+            "x": 0.7014054999999999,
+            "y": 0.4013883333333334,
+            "frame": 20
+          },
+          {
+            "x": 0.6979663333333334,
+            "y": 0.3958521666666666,
+            "frame": 21
+          },
+          {
+            "x": 0.6403975000000001,
+            "y": 0.36726333333333333,
+            "frame": 22
+          },
+          {
+            "x": 0.6218375,
+            "y": 0.3132955,
+            "frame": 23
+          },
+          {
+            "x": 0.6113494166666668,
+            "y": 0.2949741666666667,
+            "frame": 24
+          }
+        ],
+        "forwardLeanDeg": 84.78915344520047,
+        "barDriftCm": 25.694832538469573,
+        "romCm": 25.85864250000001,
+        "kneeAngleDeg": 153.04611848650484,
+        "hipAngleAtLockoutDeg": 159.28141708825513,
+        "meanConcentricVelocityCmS": 25.85864250000001,
+        "concentricDurationSec": 1,
+        "eccentricDurationSec": 0.75,
+        "tempoRatio": 0.75,
+        "elbowFlareDeg": 57.46025447468308,
+        "pauseDurationSec": 0,
+        "isSinking": false,
+        "lockoutStabilityCv": 1.2415222594666726,
+        "faults": [
+          {
+            "type": "bar_drift",
+            "severity": "warning",
+            "message": "Bar drifted 25.7cm from start",
+            "value": 0.10574005159864022,
+            "threshold": 0.03
+          }
+        ],
+        "verdict": {
+          "verdict": "white_light",
+          "criteria": [
+            {
+              "name": "pause",
+              "verdict": "pass",
+              "measured": 0.25,
+              "threshold": 0.2,
+              "unit": "s",
+              "message": "Clear pause (0.25s)"
+            },
+            {
+              "name": "lockout",
+              "verdict": "pass",
+              "measured": 156.747662498601,
+              "threshold": 155,
+              "unit": "°",
+              "message": "Elbows fully locked (157°)"
+            },
+            {
+              "name": "even_press",
+              "verdict": "pass",
+              "measured": 0,
+              "threshold": 2,
+              "unit": "cm",
+              "message": "Even press not assessable from this camera angle"
+            }
+          ]
+        },
+        "velocityLossPct": -4.5
+      },
+      {
+        "repNumber": 5,
+        "startFrame": 24,
+        "endFrame": 36,
+        "barPath": [
+          {
+            "x": 0.6113494166666668,
+            "y": 0.2949741666666667,
+            "frame": 24
+          },
+          {
+            "x": 0.66500775,
+            "y": 0.3195045,
+            "frame": 25
+          },
+          {
+            "x": 0.68478225,
+            "y": 0.37527249999999995,
+            "frame": 26
+          },
+          {
+            "x": 0.5875051666666667,
+            "y": 0.44378066666666666,
+            "frame": 27
+          },
+          {
+            "x": 0.5120721666666667,
+            "y": 0.45843677777777775,
+            "frame": 28
+          },
+          {
+            "x": 0.4635040000000001,
+            "y": 0.4365273333333333,
+            "frame": 29
+          },
+          {
+            "x": 0.5538315000000001,
+            "y": 0.34802566666666673,
+            "frame": 30
+          },
+          {
+            "x": 0.6083191666666666,
+            "y": 0.2901837222222222,
+            "frame": 31
+          },
+          {
+            "x": 0.6216028333333333,
+            "y": 0.2643953333333333,
+            "frame": 32
+          },
+          {
+            "x": 0.5972836666666667,
+            "y": 0.26750783333333333,
+            "frame": 33
+          },
+          {
+            "x": 0.5743621666666666,
+            "y": 0.269884,
+            "frame": 34
+          },
+          {
+            "x": 0.5625355000000001,
+            "y": 0.26970716666666666,
+            "frame": 35
+          },
+          {
+            "x": 0.5582025,
+            "y": 0.27013,
+            "frame": 36
+          }
+        ],
+        "forwardLeanDeg": 77.89422139870653,
+        "barDriftCm": 29.436759865384612,
+        "romCm": 47.152071,
+        "kneeAngleDeg": 127.83314782202646,
+        "hipAngleAtLockoutDeg": 162.91891740277907,
+        "meanConcentricVelocityCmS": 47.152071,
+        "concentricDurationSec": 2,
+        "eccentricDurationSec": 1,
+        "tempoRatio": 0.5,
+        "elbowFlareDeg": 114.84125490916557,
+        "pauseDurationSec": 0,
+        "isSinking": false,
+        "lockoutStabilityCv": 0,
+        "faults": [
+          {
+            "type": "bar_drift",
+            "severity": "warning",
+            "message": "Bar drifted 29.4cm from start",
+            "value": 0.12113892948717947,
+            "threshold": 0.03
+          },
+          {
+            "type": "elbow_flare",
+            "severity": "warning",
+            "message": "Excessive elbow flare: 114.8°",
+            "value": 114.84125490916557,
+            "threshold": 80
+          }
+        ],
+        "verdict": {
+          "verdict": "white_light",
+          "criteria": [
+            {
+              "name": "pause",
+              "verdict": "pass",
+              "measured": 1,
+              "threshold": 0.2,
+              "unit": "s",
+              "message": "Clear pause (1.00s)"
+            },
+            {
+              "name": "lockout",
+              "verdict": "pass",
+              "measured": 156.747662498601,
+              "threshold": 155,
+              "unit": "°",
+              "message": "Elbows fully locked (157°)"
+            },
+            {
+              "name": "even_press",
+              "verdict": "pass",
+              "measured": 0,
+              "threshold": 2,
+              "unit": "cm",
+              "message": "Even press not assessable from this camera angle"
+            }
+          ]
+        },
+        "velocityLossPct": -90.5
+      }
+    ],
+    "fps": 4,
+    "cameraAngle": "side",
+    "sagittalConfidence": 0.8302116833333334,
+    "analysisVersion": 4,
+    "fatigueSignatures": {
+      "forwardLeanDriftDeg": -6.2,
+      "barDriftIncreaseCm": 22.4,
+      "romCompressionCm": -28.6,
+      "descentSpeedChange": 2,
+      "lockoutDegradationDeg": 6.9,
+      "velocityLossTrend": "stable"
+    }
+  }
+}
