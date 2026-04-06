@@ -6,6 +6,7 @@ import { View } from 'react-native';
 import { AuthProvider, useAuthContext } from '@modules/auth';
 import {
   useMissedSessionReconciliation,
+  useRestNotificationTapHandler,
   useRestNotifications,
   useSyncQueue,
 } from '@modules/session';
@@ -50,6 +51,7 @@ function RootLayoutNav() {
   useSyncQueue();
   useMissedSessionReconciliation();
   useRestNotifications();
+  useRestNotificationTapHandler();
   useEffect(() => {
     if (!loading) {
       SplashScreen.hideAsync();

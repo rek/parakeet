@@ -12,6 +12,7 @@ import {
 import { BadgeCard, detectAchievements, StarCard } from '@modules/achievements';
 import type { EarnedBadge, PR } from '@modules/achievements';
 import { useAuth } from '@modules/auth';
+import { WeeklyReviewPromptCard } from '@modules/body-review';
 import { stampCyclePhaseOnSession } from '@modules/cycle-tracking';
 import {
   AdjustmentsCard,
@@ -261,6 +262,10 @@ export default function CompleteScreen() {
   const [cycleBadgeEarned, setCycleBadgeEarned] = useState(false);
   const [newBadges, setNewBadges] = useState<EarnedBadge[]>([]);
   const [saved, setSaved] = useState(false);
+  const [endOfWeekReview, setEndOfWeekReview] = useState<{
+    programId: string | null;
+    weekNumber: number;
+  } | null>(null);
 
   // ── Derived stats ─────────────────────────────────────────────────────────
 
@@ -374,10 +379,14 @@ export default function CompleteScreen() {
         captureException(achievementErr);
       }
 
-      // ── End-of-week: store pending review for weekend nudge ───────────────
+      // ── End-of-week: show inline prompt + store for today-screen fallback ───
       try {
         const eow = await checkEndOfWeek(sessionId);
         if (eow.shouldPrompt) {
+          setEndOfWeekReview({
+            programId: eow.programId,
+            weekNumber: eow.weekNumber,
+          });
           await AsyncStorage.setItem(
             'pending_weekly_review',
             JSON.stringify({
@@ -591,6 +600,26 @@ export default function CompleteScreen() {
               <View style={styles.cycleBadgeLine}>
                 <Text style={styles.cycleBadgeText}>Cycle complete! 🏆</Text>
               </View>
+            )}
+
+            {/* End-of-week body review prompt */}
+            {endOfWeekReview && (
+              <WeeklyReviewPromptCard
+                colors={colors}
+                onReview={() => {
+                  void AsyncStorage.removeItem('pending_weekly_review');
+                  setEndOfWeekReview(null);
+                  router.push({
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                    pathname: '/session/weekly-review' as any,
+                    params: {
+                      programId: endOfWeekReview.programId ?? '',
+                      weekNumber: String(endOfWeekReview.weekNumber),
+                    },
+                  });
+                }}
+                onSkip={() => setEndOfWeekReview(null)}
+              />
             )}
 
             {/* Done button */}

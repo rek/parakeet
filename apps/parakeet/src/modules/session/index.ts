@@ -5,6 +5,7 @@ export * from './hooks/useTodaySession';
 export * from './hooks/useInProgressSession';
 export * from './hooks/useMissedSessionReconciliation';
 export * from './hooks/useRestNotifications';
+export { useRestNotificationTapHandler } from './hooks/useRestNotificationTapHandler';
 export * from './hooks/useSyncQueue';
 export * from './hooks/useSetCompletionFlow';
 export { useSessionCacheInvalidation } from './hooks/useSessionCacheInvalidation';

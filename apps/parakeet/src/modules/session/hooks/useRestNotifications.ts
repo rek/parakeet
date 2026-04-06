@@ -46,11 +46,12 @@ export function useRestNotifications(): void {
 
         if (remaining <= 0) return;
 
-        scheduleRestNotification(
-          meta.primary_lift!,
-          meta.intensity_type!,
-          remaining
-        )
+        scheduleRestNotification({
+          lift: meta.primary_lift!,
+          intensityType: meta.intensity_type!,
+          delaySeconds: remaining,
+          sessionId: store.sessionId,
+        })
           .then((id) => {
             pendingNotifIdRef.current = id;
           })

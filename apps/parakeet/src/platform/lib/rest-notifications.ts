@@ -4,11 +4,17 @@ import { buildRestNotificationContent } from './rest-notification-helpers';
 
 export { buildRestNotificationContent } from './rest-notification-helpers';
 
-export async function scheduleRestNotification(
-  lift: string,
-  intensityType: string,
-  delaySeconds: number
-): Promise<string | null> {
+export async function scheduleRestNotification({
+  lift,
+  intensityType,
+  delaySeconds,
+  sessionId,
+}: {
+  lift: string;
+  intensityType: string;
+  delaySeconds: number;
+  sessionId: string | null;
+}): Promise<string | null> {
   try {
     const Notifications = await import('expo-notifications');
     const { status } = await Notifications.requestPermissionsAsync();
@@ -19,7 +25,7 @@ export async function scheduleRestNotification(
       content: {
         title: content.title,
         body: content.body,
-        data: { type: 'rest_done' },
+        data: { type: 'rest_done', sessionId: sessionId ?? '' },
       },
       trigger: {
         type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL,
