@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { StyleSheet, Text, TouchableOpacity } from 'react-native';
+import { AppState, StyleSheet, Text, TouchableOpacity } from 'react-native';
 
 import { getRestTimerPrefs } from '@modules/settings';
 import { useSessionStore } from '@platform/store/sessionStore';
@@ -91,11 +91,10 @@ export function ReturnToSessionBanner() {
 
       if (
         detectOvertimeEdge(prevOvertimeRef.current, remaining) &&
-        hapticAlertRef.current
+        hapticAlertRef.current &&
+        AppState.currentState === 'active'
       ) {
-        Haptics.notificationAsync(
-          Haptics.NotificationFeedbackType.Warning
-        ).catch(() => {});
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => {});
       }
       prevOvertimeRef.current = remaining <= 0;
     }, 1000);
