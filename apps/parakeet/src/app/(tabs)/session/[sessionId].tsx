@@ -56,7 +56,11 @@ import {
   setDisabledPlates,
 } from '@modules/settings';
 import type { RestTimerPrefs, WarmupPlateDisplay } from '@modules/settings';
-import { SetVideoIcon, VideoEntryButton } from '@modules/video-analysis';
+import {
+  PostRestRecordButton,
+  SetVideoIcon,
+  useVideoAnalysis,
+} from '@modules/video-analysis';
 import type { Lift } from '@parakeet/shared-types';
 import { useNetworkStatus } from '@platform/network';
 import { useSessionStore } from '@platform/store/sessionStore';
@@ -456,6 +460,61 @@ export default function SessionScreen() {
     biologicalSexRef,
   });
 
+  // ── Video recording during post-rest overlay ──────────────────────────────
+
+  const [pendingVideoUri, setPendingVideoUri] = useState<string | null>(null);
+
+  const videoLift = sessionMeta?.primary_lift ?? 'squat';
+  const videoSetNumber = postRestState?.nextSetNumber ?? 1;
+  const videoWeightGrams = postRestState?.plannedWeightKg
+    ? Math.round(postRestState.plannedWeightKg * 1000)
+    : undefined;
+
+  const { processRecordedVideo } = useVideoAnalysis({
+    sessionId: sessionId ?? '',
+    lift: videoLift,
+    setNumber: videoSetNumber,
+    setContext: videoWeightGrams
+      ? {
+          weightGrams: videoWeightGrams,
+          reps: postRestState?.plannedReps ?? 0,
+        }
+      : null,
+  });
+
+  const handleVideoRecorded = useCallback((videoUri: string) => {
+    setPendingVideoUri(videoUri);
+  }, []);
+
+  // Process pending video after a set is completed or failed
+  const processPendingVideo = useCallback(async () => {
+    if (!pendingVideoUri) return;
+    const uri = pendingVideoUri;
+    setPendingVideoUri(null);
+    try {
+      const estimatedDuration = (postRestState?.plannedReps ?? 3) * 2;
+      await processRecordedVideo({
+        videoUri: uri,
+        durationSec: estimatedDuration,
+      });
+    } catch (err) {
+      captureException(err);
+    }
+  }, [pendingVideoUri, postRestState?.plannedReps, processRecordedVideo]);
+
+  const handleLiftCompleteWithVideo = useCallback(() => {
+    handleLiftComplete();
+    processPendingVideo();
+  }, [handleLiftComplete, processPendingVideo]);
+
+  const handleLiftFailedWithVideo = useCallback(
+    (reps: number) => {
+      handleLiftFailed(reps);
+      processPendingVideo();
+    },
+    [handleLiftFailed, processPendingVideo]
+  );
+
   // ── Bootstrap ─────────────────────────────────────────────────────────────
 
   useEffect(() => {
@@ -794,10 +853,6 @@ export default function SessionScreen() {
             <View style={styles.sessionHeaderText}>
               <View style={styles.liftTitleRow}>
                 <Text style={styles.liftTitle}>{liftHeader}</Text>
-                <VideoEntryButton
-                  sessionId={sessionId}
-                  lift={sessionMeta?.primary_lift ?? null}
-                />
               </View>
               <Text style={styles.blockWeekText}>{blockWeek}</Text>
             </View>
@@ -1318,10 +1373,13 @@ export default function SessionScreen() {
               plannedReps={postRestState.plannedReps}
               plannedWeightKg={postRestState.plannedWeightKg}
               nextSetNumber={postRestState.nextSetNumber}
-              onLiftComplete={handleLiftComplete}
-              onLiftFailed={handleLiftFailed}
+              onLiftComplete={handleLiftCompleteWithVideo}
+              onLiftFailed={handleLiftFailedWithVideo}
               onReset15s={handlePostRestReset}
               resetCountdown={postRestState.resetSecondsRemaining}
+              recordingSlot={
+                <PostRestRecordButton onRecorded={handleVideoRecorded} />
+              }
             />
           )}
         </View>

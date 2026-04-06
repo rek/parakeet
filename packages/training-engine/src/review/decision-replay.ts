@@ -3,7 +3,7 @@ import type { DecisionReplay } from '@parakeet/shared-types';
 import { generateText, Output } from 'ai';
 
 import { abortAfter } from '../ai/abort-timeout';
-import { JIT_MODEL } from '../ai/models';
+import { getJITModel } from '../ai/models';
 import { DECISION_REPLAY_SYSTEM_PROMPT } from '../ai/prompts';
 import type { JITInput } from '../generator/jit-session-generator';
 
@@ -25,7 +25,7 @@ export async function scoreDecisionReplay(
   context: DecisionReplayContext
 ): Promise<DecisionReplay> {
   const { output: replay } = await generateText({
-    model: JIT_MODEL,
+    model: getJITModel(),
     output: Output.object({ schema: DecisionReplaySchema }),
     system: DECISION_REPLAY_SYSTEM_PROMPT,
     prompt: JSON.stringify({

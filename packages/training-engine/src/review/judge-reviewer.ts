@@ -3,7 +3,7 @@ import type { JudgeReview } from '@parakeet/shared-types';
 import { generateText, Output } from 'ai';
 
 import { abortAfter } from '../ai/abort-timeout';
-import { JIT_MODEL } from '../ai/models';
+import { getJITModel } from '../ai/models';
 import { JUDGE_REVIEW_SYSTEM_PROMPT } from '../ai/prompts';
 import type { JITInput, JITOutput } from '../generator/jit-session-generator';
 
@@ -21,7 +21,7 @@ export async function reviewJITDecision(
 ): Promise<JudgeReview> {
   try {
     const { output: review } = await generateText({
-      model: JIT_MODEL,
+      model: getJITModel(),
       output: Output.object({ schema: JudgeReviewSchema }),
       system: JUDGE_REVIEW_SYSTEM_PROMPT,
       prompt: JSON.stringify({ input, output }),

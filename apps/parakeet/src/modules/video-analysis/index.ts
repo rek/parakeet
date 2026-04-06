@@ -63,4 +63,5 @@ export { ReadinessCard } from './ui/ReadinessCard';
 // screens that are navigated to on demand (not eagerly loaded at startup).
 export { VideoPlayerCard } from './ui/VideoPlayerCard';
 export { RecordVideoSheet } from './ui/RecordVideoSheet';
+export { PostRestRecordButton } from './ui/PostRestRecordButton';
 export type { LiveLandmark } from './hooks/useLivePoseOverlay';

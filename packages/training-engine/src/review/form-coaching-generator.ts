@@ -6,7 +6,7 @@ import type {
 import { generateText, Output } from 'ai';
 
 import { abortAfter } from '../ai/abort-timeout';
-import { CYCLE_REVIEW_MODEL } from '../ai/models';
+import { getCycleReviewModel } from '../ai/models';
 import { FORM_COACHING_SYSTEM_PROMPT } from '../ai/prompts';
 
 export type { FormCoachingResult };
@@ -55,7 +55,7 @@ export async function generateFormCoaching({
   context: FormCoachingInput;
 }) {
   const { output } = await generateText({
-    model: CYCLE_REVIEW_MODEL,
+    model: getCycleReviewModel(),
     output: Output.object({ schema: FormCoachingResultSchema }),
     system: FORM_COACHING_SYSTEM_PROMPT,
     prompt: JSON.stringify(context),

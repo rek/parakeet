@@ -15,7 +15,7 @@ export * from './analysis/modifier-effectiveness';
 export * from './analysis/weight-deviation';
 export * from './modules/achievements';
 export * from './badges';
-export { JIT_MODEL } from './ai/models';
+export { configureAIProxy, getJITModel, getCycleReviewModel } from './ai/models';
 export { localDateString } from './utils/date';
 export { isMakeupWindowExpired } from './sessions/makeup-window';
 export type { SessionRef, MakeupWindowInput } from './sessions/makeup-window';

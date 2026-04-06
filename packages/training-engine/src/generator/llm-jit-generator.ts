@@ -3,7 +3,7 @@ import type { JITAdjustment } from '@parakeet/shared-types';
 import { generateText, Output } from 'ai';
 
 import { abortAfter } from '../ai/abort-timeout';
-import { JIT_MODEL } from '../ai/models';
+import { getJITModel } from '../ai/models';
 import { JIT_SYSTEM_PROMPT } from '../ai/prompts';
 import { computeAuxWeight } from '../auxiliary/exercise-catalog';
 import { getExerciseType } from '../auxiliary/exercise-types';
@@ -40,7 +40,7 @@ export class LLMJITGenerator implements JITGeneratorStrategy {
   async generate(input: JITInput): Promise<JITOutput> {
     try {
       const { output: adj } = await generateText({
-        model: JIT_MODEL,
+        model: getJITModel(),
         output: Output.object({ schema: JITAdjustmentSchema }),
         system: JIT_SYSTEM_PROMPT,
         prompt: JSON.stringify(buildJITContext(input)),

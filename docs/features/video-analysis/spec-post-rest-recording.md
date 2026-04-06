@@ -1,6 +1,6 @@
 # mobile-051: PostRestOverlay Recording Integration
 
-**Status:** Planned
+**Status:** Done
 **Design:** [video-form-analysis.md](../../design/video-form-analysis.md), [set-level-video-linking.md](../../design/set-level-video-linking.md)
 **Depends on:** mobile-046 (video form analysis — RecordVideoSheet), mobile-048 (set-level video linking)
 
@@ -68,9 +68,9 @@ The header-level `VideoEntryButton` was the original Phase 1 entry point before 
 
 ### Phase 1 — PostRestOverlay slot + record button
 
-- [ ] Add `recordingSlot?: ReactNode` prop to `PostRestOverlay` (`modules/session/ui/PostRestOverlay.tsx`)
-- [ ] Render slot below context label, above button row (only when provided)
-- [ ] Create `PostRestRecordButton` component in `modules/video-analysis/ui/`
+- [x] Add `recordingSlot?: ReactNode` prop to `PostRestOverlay` (`modules/session/ui/PostRestOverlay.tsx`)
+- [x] Render slot below context label, above button row (only when provided)
+- [x] Create `PostRestRecordButton` component in `modules/video-analysis/ui/`
   - Self-gates behind `videoAnalysis` feature flag
   - Props: `onRecorded: (videoUri: string) => void`, `onRecordingStateChange?: (isRecording: boolean) => void`
   - Renders a compact "Record" button; when tapped, mounts `RecordVideoSheet` as `absoluteFill` overlay (same approach as `video-analysis.tsx`)
@@ -79,19 +79,19 @@ The header-level `VideoEntryButton` was the original Phase 1 entry point before 
 
 ### Phase 2 — Session screen wiring
 
-- [ ] In `app/(tabs)/session/[sessionId].tsx`: compose `<PostRestRecordButton>` into PostRestOverlay's `recordingSlot`
-- [ ] Track recorded video URI in `useSetCompletionFlow` or local state
-- [ ] On `handleLiftComplete` / `handleLiftFailed`: if a video URI exists, call `processRecordedVideo` from `useVideoAnalysis` with full set context (`sessionId`, `lift`, `nextSetNumber`, `weightGrams`, `reps`)
-- [ ] Clear recorded video URI after processing starts
+- [x] In `app/(tabs)/session/[sessionId].tsx`: compose `<PostRestRecordButton>` into PostRestOverlay's `recordingSlot`
+- [x] Track recorded video URI in `useSetCompletionFlow` or local state
+- [x] On `handleLiftComplete` / `handleLiftFailed`: if a video URI exists, call `processRecordedVideo` from `useVideoAnalysis` with full set context (`sessionId`, `lift`, `nextSetNumber`, `weightGrams`, `reps`)
+- [x] Clear recorded video URI after processing starts
 
 ### Phase 3 — Remove header-level entry point
 
-- [ ] Remove `<VideoEntryButton sessionId={...} lift={...} />` from `[sessionId].tsx` line 797-800
-- [ ] Keep `VideoEntryButton` component (still used on history detail with `variant="link"`)
+- [x] Remove `<VideoEntryButton sessionId={...} lift={...} />` from `[sessionId].tsx` line 797-800
+- [x] Keep `VideoEntryButton` component (still used on history detail with `variant="link"`)
 
 ### Phase 4 — Module exports
 
-- [ ] Export `PostRestRecordButton` from `modules/video-analysis/index.ts`
+- [x] Export `PostRestRecordButton` from `modules/video-analysis/index.ts`
 
 ## Dependencies
 

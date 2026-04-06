@@ -3,7 +3,7 @@ import type { CalibrationReview } from '@parakeet/shared-types';
 import { generateText, Output } from 'ai';
 
 import { abortAfter } from '../ai/abort-timeout';
-import { JIT_MODEL } from '../ai/models';
+import { getJITModel } from '../ai/models';
 import type { CalibrationResult } from '../analysis/modifier-effectiveness';
 
 export type { CalibrationReview };
@@ -46,7 +46,7 @@ export async function reviewCalibrationAdjustment({
     });
 
     const { output: review } = await generateText({
-      model: JIT_MODEL,
+      model: getJITModel(),
       output: Output.object({ schema: CalibrationReviewSchema }),
       system: CALIBRATION_REVIEW_PROMPT,
       prompt,

@@ -1,6 +1,6 @@
 # mobile-050: Video Analysis Calibration Tests
 
-**Status:** In Progress
+**Status:** Done
 **Depends on:** mobile-046 (video form analysis), mobile-049 (additional video metrics)
 
 ## What This Covers

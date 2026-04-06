@@ -1,4 +1,4 @@
-import { JIT_MODEL } from '@parakeet/training-engine';
+import { getJITModel } from '@parakeet/training-engine';
 import type { Json } from '@platform/supabase';
 import { typedSupabase } from '@platform/supabase';
 import { captureException } from '@platform/utils/captureException';
@@ -191,7 +191,7 @@ export async function generateMotivationalMessage(
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), 8000);
   const result = await generateText({
-    model: JIT_MODEL,
+    model: getJITModel(),
     system: SYSTEM_PROMPT,
     prompt: JSON.stringify(ctx),
     abortSignal: controller.signal,

@@ -2,7 +2,7 @@ import { CycleReviewSchema } from '@parakeet/shared-types';
 import type { CycleReview, Lift } from '@parakeet/shared-types';
 import { generateText, Output } from 'ai';
 
-import { CYCLE_REVIEW_MODEL } from '../ai/models';
+import { getCycleReviewModel } from '../ai/models';
 import { CYCLE_REVIEW_SYSTEM_PROMPT } from '../ai/prompts';
 import type {
   AuxLiftCorrelation,
@@ -175,7 +175,7 @@ export async function generateCycleReview(
   const prompt = assembleCycleReviewPrompt(cycleReport, previousSummaries);
 
   const { output } = await generateText({
-    model: CYCLE_REVIEW_MODEL,
+    model: getCycleReviewModel(),
     output: Output.object({ schema: CycleReviewSchema }),
     system: CYCLE_REVIEW_SYSTEM_PROMPT,
     prompt,

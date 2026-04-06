@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import { useMemo, useState } from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
@@ -14,6 +15,8 @@ interface PostRestOverlayProps {
   resetCountdown: number | null;
   /** When true, hides rest controls ("+15s", "Go lift!", estimated time) — used for first-set confirmation */
   isConfirmation?: boolean;
+  /** Slot for optional recording button, rendered between context label and action buttons */
+  recordingSlot?: ReactNode;
 }
 
 export function PostRestOverlay({
@@ -25,6 +28,7 @@ export function PostRestOverlay({
   onReset15s,
   resetCountdown,
   isConfirmation = false,
+  recordingSlot,
 }: PostRestOverlayProps) {
   const { colors } = useTheme();
   const [failedReps, setFailedReps] = useState<number | null>(null);
@@ -229,6 +233,7 @@ export function PostRestOverlay({
       {contextLabel != null && (
         <Text style={styles.contextText}>{contextLabel}</Text>
       )}
+      {recordingSlot}
       {!isConfirmation && <Text style={styles.label}>Go lift!</Text>}
 
       <View style={styles.buttonRow}>
