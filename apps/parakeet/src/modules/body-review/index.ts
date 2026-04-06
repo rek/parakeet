@@ -17,3 +17,4 @@ export type {
   WeeklyBodyReview,
 } from './application/body-review.service';
 export * from './ui/mismatch-direction-styles';
+export { WeeklyReviewPromptCard } from './ui/WeeklyReviewPromptCard';
