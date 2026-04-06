@@ -57,6 +57,21 @@ export interface RawFormulaHistory {
   overrides: Record<string, unknown>;
 }
 
+export interface RawWeeklyBodyReviewMismatch {
+  muscle: string;
+  felt: number;
+  predicted: number;
+  direction: 'accumulating_fatigue' | 'recovering_well';
+}
+
+export interface RawWeeklyBodyReview {
+  week_number: number;
+  mismatches: RawWeeklyBodyReviewMismatch[];
+  felt_soreness: Record<string, number>;
+  predicted_fatigue: Record<string, { predicted: number; volumePct: number }>;
+  created_at: string;
+}
+
 export interface RawCycleData {
   program: {
     id: string;
@@ -71,6 +86,8 @@ export interface RawCycleData {
   disruptions: RawDisruption[];
   auxiliaryAssignments: RawAuxiliaryAssignment[];
   formulaHistory: RawFormulaHistory[];
+  /** Weekly body reviews submitted during this program (optional — omitted for ad-hoc) */
+  weeklyBodyReviews?: RawWeeklyBodyReview[];
 }
 
 // ---------------------------------------------------------------------------
@@ -103,6 +120,15 @@ export interface AuxLiftCorrelation {
   liftChangePct: number | null;
 }
 
+export interface BodyReviewSummary {
+  /** Total number of weekly body reviews submitted this cycle */
+  reviewCount: number;
+  /** Muscles with ≥2 accumulating_fatigue mismatches across the cycle's reviews */
+  recurringAccumulatingMuscles: string[];
+  /** Per-muscle average of (felt − predicted) across all reviews that included that muscle */
+  avgFeltVsPredictedDelta: Record<string, number>;
+}
+
 export interface CycleReport {
   programId: string;
   totalWeeks: number;
@@ -121,6 +147,8 @@ export interface CycleReport {
     overrides: Record<string, unknown>;
     createdAt: string;
   }>;
+  /** Body soreness review summary — null when no reviews were submitted */
+  bodyReviewSummary: BodyReviewSummary | null;
 }
 
 // ---------------------------------------------------------------------------
@@ -235,6 +263,11 @@ export function assembleCycleReport(raw: RawCycleData): CycleReport {
     weeklyVolume.push({ week, setsByMuscle, mrvPctByMuscle: {} });
   }
 
+  // Weekly body review summary
+  const bodyReviewSummary = assembleBodyReviewSummary(
+    raw.weeklyBodyReviews ?? []
+  );
+
   return {
     programId: raw.program.id,
     totalWeeks: raw.program.total_weeks,
@@ -253,5 +286,56 @@ export function assembleCycleReport(raw: RawCycleData): CycleReport {
       overrides: f.overrides,
       createdAt: f.created_at,
     })),
+    bodyReviewSummary,
+  };
+}
+
+/**
+ * Summarise weekly body review data for inclusion in the LLM cycle report.
+ * Returns null when no reviews exist.
+ */
+function assembleBodyReviewSummary(
+  reviews: RawWeeklyBodyReview[]
+): BodyReviewSummary | null {
+  if (reviews.length === 0) return null;
+
+  // Count accumulating_fatigue mismatches per muscle across all reviews
+  const accumulatingCounts: Record<string, number> = {};
+  // Accumulate (felt − predicted) sums and counts per muscle for delta averages
+  const deltaSums: Record<string, number> = {};
+  const deltaCounts: Record<string, number> = {};
+
+  for (const review of reviews) {
+    for (const mismatch of review.mismatches) {
+      if (mismatch.direction === 'accumulating_fatigue') {
+        accumulatingCounts[mismatch.muscle] =
+          (accumulatingCounts[mismatch.muscle] ?? 0) + 1;
+      }
+    }
+
+    for (const [muscle, felt] of Object.entries(review.felt_soreness)) {
+      const predictedEntry = review.predicted_fatigue[muscle];
+      if (predictedEntry == null) continue;
+      const delta = felt - predictedEntry.predicted;
+      deltaSums[muscle] = (deltaSums[muscle] ?? 0) + delta;
+      deltaCounts[muscle] = (deltaCounts[muscle] ?? 0) + 1;
+    }
+  }
+
+  const recurringAccumulatingMuscles = Object.entries(accumulatingCounts)
+    .filter(([, count]) => count >= 2)
+    .map(([muscle]) => muscle)
+    .sort();
+
+  const avgFeltVsPredictedDelta: Record<string, number> = {};
+  for (const [muscle, sum] of Object.entries(deltaSums)) {
+    const count = deltaCounts[muscle] ?? 1;
+    avgFeltVsPredictedDelta[muscle] = Math.round((sum / count) * 10) / 10;
+  }
+
+  return {
+    reviewCount: reviews.length,
+    recurringAccumulatingMuscles,
+    avgFeltVsPredictedDelta,
   };
 }

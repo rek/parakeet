@@ -1,5 +1,10 @@
 import type { CycleReview } from '@parakeet/shared-types';
-import type { CycleReport, RawCycleData } from '@parakeet/training-engine';
+import type {
+  CycleReport,
+  RawCycleData,
+  RawWeeklyBodyReview,
+  RawWeeklyBodyReviewMismatch,
+} from '@parakeet/training-engine';
 import type { Json } from '@platform/supabase';
 import { fromJson, toJson, typedSupabase } from '@platform/supabase';
 
@@ -53,6 +58,7 @@ export async function fetchCycleReportSourceData(
     disruptionsResult,
     auxResult,
     formulaHistoryResult,
+    bodyReviewsResult,
   ] = await Promise.all([
     typedSupabase
       .from('programs')
@@ -94,6 +100,14 @@ export async function fetchCycleReportSourceData(
       .select('id, created_at, source, overrides')
       .eq('user_id', userId)
       .order('created_at', { ascending: true }),
+    typedSupabase
+      .from('weekly_body_reviews')
+      .select(
+        'week_number, mismatches, felt_soreness, predicted_fatigue, created_at'
+      )
+      .eq('user_id', userId)
+      .eq('program_id', programId)
+      .order('created_at', { ascending: true }),
   ]);
 
   if (programResult.error) throw programResult.error;
@@ -103,6 +117,7 @@ export async function fetchCycleReportSourceData(
   if (disruptionsResult.error) throw disruptionsResult.error;
   if (auxResult.error) throw auxResult.error;
   if (formulaHistoryResult.error) throw formulaHistoryResult.error;
+  if (bodyReviewsResult.error) throw bodyReviewsResult.error;
 
   const sessions = (sessionsResult.data ?? []).map((row) => ({
     id: row.id,
@@ -204,6 +219,19 @@ export async function fetchCycleReportSourceData(
           ? (row.overrides as Record<string, unknown>)
           : {},
     })),
+    weeklyBodyReviews: (bodyReviewsResult.data ?? []).map(
+      (row): RawWeeklyBodyReview => ({
+        week_number: row.week_number,
+        mismatches: fromJson<RawWeeklyBodyReviewMismatch[]>(
+          row.mismatches ?? []
+        ),
+        felt_soreness: fromJson<Record<string, number>>(row.felt_soreness),
+        predicted_fatigue: fromJson<
+          Record<string, { predicted: number; volumePct: number }>
+        >(row.predicted_fatigue),
+        created_at: row.created_at,
+      })
+    ),
   };
 }
 
