@@ -42,7 +42,7 @@ export interface FormCoachingInput {
 /**
  * Generate LLM-powered form coaching from video analysis metrics + training context.
  *
- * Uses gpt-5 (CYCLE_REVIEW_MODEL) because form coaching is a deep analysis task
+ * Uses gpt-5 (getCycleReviewModel()) because form coaching is a deep analysis task
  * that benefits from reasoning about biomechanics, fatigue correlation, and
  * longitudinal trends. Not time-sensitive — runs after video processing completes.
  *

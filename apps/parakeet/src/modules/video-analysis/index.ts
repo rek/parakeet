@@ -22,6 +22,7 @@ export { computeLockoutStability } from './lib/lockout-stability';
 
 // --- Hooks (primary external API) ---
 export { useVideoAnalysis } from './hooks/useVideoAnalysis';
+export { usePostRestVideoCapture } from './hooks/usePostRestVideoCapture';
 export { useFormCoaching } from './hooks/useFormCoaching';
 export { usePreviousVideos } from './hooks/usePreviousVideos';
 export { useSetVideo } from './hooks/useSetVideo';

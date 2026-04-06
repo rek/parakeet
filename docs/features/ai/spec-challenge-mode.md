@@ -58,7 +58,7 @@ Design doc: [llm-challenge-mode.md](./design-challenge-mode.md)
 **`packages/training-engine/src/review/judge-reviewer.ts`** (new):
 
 - [ ] `reviewJITDecision(input: JITInput, output: JITOutput): Promise<JudgeReview>`
-  - Calls `generateText()` with `JIT_MODEL`, `JUDGE_REVIEW_SYSTEM_PROMPT`, `Output.object({ schema: JudgeReviewSchema })`
+  - Calls `generateText()` with `getJITModel()`, `JUDGE_REVIEW_SYSTEM_PROMPT`, `Output.object({ schema: JudgeReviewSchema })`
   - 8s timeout via `AbortSignal.timeout(8000)`
   - On any error (timeout, parse, network): return `{ score: 100, verdict: 'accept', concerns: [] }` (silent pass — never block on failure)
 - [ ] Export from `packages/training-engine/src/index.ts`
@@ -67,7 +67,7 @@ Design doc: [llm-challenge-mode.md](./design-challenge-mode.md)
 
 - [ ] `DecisionReplayContext` type — `{ jitInputSnapshot: JITInput, plannedSets, actualSets, auxiliarySets, sessionRpe, lift, intensityType, blockNumber }`
 - [ ] `scoreDecisionReplay(context: DecisionReplayContext): Promise<DecisionReplay>`
-  - Calls `generateText()` with `JIT_MODEL`, `DECISION_REPLAY_SYSTEM_PROMPT`, `Output.object({ schema: DecisionReplaySchema })`
+  - Calls `generateText()` with `getJITModel()`, `DECISION_REPLAY_SYSTEM_PROMPT`, `Output.object({ schema: DecisionReplaySchema })`
   - 10s timeout
   - On any error: throw (caller catches — fire-and-forget pattern)
 - [ ] Export from `packages/training-engine/src/index.ts`
@@ -183,10 +183,10 @@ Design doc: [llm-challenge-mode.md](./design-challenge-mode.md)
 
 - [ ] Fix stale model references:
   - "Claude via Vercel AI SDK" → "LLM via Vercel AI SDK"
-  - "Claude Haiku only" → "`JIT_MODEL` only"
+  - "Claude Haiku only" → "`getJITModel()` only"
   - `generateObject()` → `generateText()` with `Output.object()`
-  - "sent to Haiku" → "sent to `JIT_MODEL`"
-  - "Sonnet uses phase data" → "`CYCLE_REVIEW_MODEL` uses phase data"
+  - "sent to Haiku" → "sent to `getJITModel()`"
+  - "Sonnet uses phase data" → "`getCycleReviewModel()` uses phase data"
 - [ ] Add §10 Post-Hoc Review Judge and §11 Decision Replay Scoring (following existing format: trigger, input, output, failure mode, key files)
 
 **`./design-challenge-mode.md`:**

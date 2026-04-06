@@ -6,7 +6,7 @@ Pure domain logic — no React, no Supabase, no side effects.
 - Entry point: `src/index.ts`. Check existing exports before adding new ones.
 - `export *` for most modules; `program-generator` uses selective exports to avoid naming conflicts.
 - JIT types (`JITInput`, `JITOutput`, `AuxiliaryWork`) are defined in `jit-session-generator.ts`, not `types.ts`.
-- AI models: `JIT_MODEL` (gpt-4o-mini) exported from `src/ai/models.ts` — reuse this, don't create new model instances.
+- AI models: use `getJITModel()` and `getCycleReviewModel()` lazy getters from `src/ai/models.ts`. Configure proxy via `configureAIProxy()` at app bootstrap. Don't create new model instances.
 
 ## Testing
 

@@ -1,6 +1,6 @@
 # Spec: Weekly Body Review
 
-**Status**: Draft
+**Status**: Done
 **Domain**: Mobile App
 
 ## What This Covers
@@ -15,14 +15,14 @@ A post-session review screen triggered at the end of each program week. The lift
 
 After session completion, check if a weekly review should be prompted:
 
-- [ ] For scheduled programs:
+- [x] For scheduled programs:
   - Fetch the next session in the program. If `next.week_number > current.week_number` or no next session exists, this was the last session of the week.
   - Also trigger if there are no remaining sessions this week (all completed or skipped).
 
-- [ ] For unending programs:
+- [x] For unending programs:
   - Trigger every 3rd completed session (check `unending_session_counter % 3 === 0`).
 
-- [ ] For ad-hoc sessions:
+- [x] For ad-hoc sessions:
   - Never trigger.
 
 The trigger sets a flag that the completion screen reads to show the review prompt.
@@ -33,10 +33,10 @@ The trigger sets a flag that the completion screen reads to show the review prom
 
 When the weekly review trigger is set, show a card after the motivational message:
 
-- [ ] Header: "End of week — how does your body feel?"
-- [ ] Subtext: "Compare how you feel vs what the system predicted"
-- [ ] Button: "Review" → navigates to `session/weekly-review`
-- [ ] Dismiss: "Skip" → clears the trigger, no review stored
+- [x] Header: "End of week — how does your body feel?"
+- [x] Subtext: "Compare how you feel vs what the system predicted"
+- [x] Button: "Review" → navigates to `session/weekly-review`
+- [x] Dismiss: "Skip" → clears the trigger, no review stored
 
 ### Weekly Review Screen
 
@@ -44,24 +44,24 @@ When the weekly review trigger is set, show a card after the motivational messag
 
 New screen. No tab entry — only reachable from the completion screen prompt.
 
-- [ ] **Header**: "Week N Body Review" (or "Body Review" for unending programs)
+- [x] **Header**: "Week N Body Review" (or "Body Review" for unending programs)
 
-- [ ] **Body**: `ScrollView` with 9 muscle rows. Each row:
+- [x] **Body**: `ScrollView` with 9 muscle rows. Each row:
   - Muscle name (left)
   - 5 rating pills (1–5), pre-populated with predicted soreness from `computePredictedFatigue`
   - Below each row: thin horizontal bar showing `volumePct` (sets/MRV %), colored by volume status
 
-- [ ] **Data fetching**:
+- [x] **Data fetching**:
   ```typescript
   const { weekly, config } = useWeeklyVolume()
   const predicted = computePredictedFatigue(weekly, config)
   ```
 
-- [ ] **State**: `feltSoreness: Record<MuscleGroup, FatigueLevel>` initialized from predicted values. User adjusts by tapping pills.
+- [x] **State**: `feltSoreness: Record<MuscleGroup, FatigueLevel>` initialized from predicted values. User adjusts by tapping pills.
 
-- [ ] **Notes**: Optional `TextInput` at bottom (placeholder: "Anything else to note?")
+- [x] **Notes**: Optional `TextInput` at bottom (placeholder: "Anything else to note?")
 
-- [ ] **Submit button**: "Save Review"
+- [x] **Submit button**: "Save Review"
   - On submit:
     1. Call `detectMismatches(feltSoreness, predicted)`
     2. Store review via `saveWeeklyBodyReview(...)` (see [data-007-weekly-body-reviews.md](./spec-review-data.md))
@@ -71,22 +71,22 @@ New screen. No tab entry — only reachable from the completion screen prompt.
 
 Shown after submit if mismatches exist:
 
-- [ ] List of muscles with ≥2-level mismatch
-- [ ] Each row shows: muscle name, felt level, predicted level, direction icon (↑ accumulating fatigue / ↓ recovering well)
-- [ ] When `accumulating_fatigue` mismatches are present: suggestion text "Consider reducing MRV for [muscle] in Settings > Volume Config"
-- [ ] "Done" button → returns to today screen
+- [x] List of muscles with ≥2-level mismatch
+- [x] Each row shows: muscle name, felt level, predicted level, direction icon (↑ accumulating fatigue / ↓ recovering well)
+- [x] When `accumulating_fatigue` mismatches are present: suggestion text "Consider reducing MRV for [muscle] in Settings > Volume Config"
+- [x] "Done" button → returns to today screen
 
 ### Navigation
 
-- [ ] Add `weekly-review` route to the session stack in the appropriate `_layout.tsx`
+- [x] Add `weekly-review` route to the session stack in the appropriate `_layout.tsx`
 
 ### Cycle Report Integration
 
-**File: `apps/parakeet/src/lib/cycle-review.ts`**
+**File: `packages/training-engine/src/review/assemble-cycle-report.ts`**
 
 When assembling the cycle report for LLM review, include weekly body review data:
 
-- [ ] Fetch `getWeeklyBodyReviews(userId, programId)` and add to the report context:
+- [x] Fetch `getWeeklyBodyReviews(userId, programId)` and add to the report context:
   - Number of reviews submitted
   - Muscles with recurring `accumulating_fatigue` mismatches (appearing in ≥2 reviews)
   - Average felt vs predicted delta per muscle

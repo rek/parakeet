@@ -40,25 +40,20 @@ import 'expo/fetch'
 
 Vercel AI SDK uses the Web Fetch API. React Native's `fetch` does not fully conform; `expo/fetch` provides the required polyfill. This must be the first import to ensure the polyfill is in place before any SDK module loads.
 
-### Model Constants
+### Model Lazy Getters
 
 **`packages/training-engine/src/ai/models.ts`:**
 
 ```typescript
-import { createAnthropic } from '@ai-sdk/anthropic'
+import { createOpenAI } from '@ai-sdk/openai'
 
-const anthropic = createAnthropic({
-  apiKey: process.env.EXPO_PUBLIC_ANTHROPIC_API_KEY,
-})
-
-// Fast, cheap — used for JIT session generation (5s timeout)
-export const JIT_MODEL = anthropic('claude-haiku-4-5')
-
-// Deep reasoning — used for cycle review (async, no timeout)
-export const CYCLE_REVIEW_MODEL = anthropic('claude-sonnet-4-6')
+// Lazy getters — defer provider creation until first call,
+// allowing configureAIProxy() to redirect through Edge Function.
+export function getJITModel() { return getProvider()('gpt-4o-mini') }
+export function getCycleReviewModel() { return getProvider()('gpt-5') }
 ```
 
-Swapping to a different model or provider is a one-line change. No other files need updating.
+In production, `configureAIProxy()` is called at app bootstrap to route all calls through a Supabase Edge Function proxy (the real OpenAI key never ships in the client bundle). In local dev, calls go directly to `api.openai.com`.
 
 ### Prompt Utilities
 

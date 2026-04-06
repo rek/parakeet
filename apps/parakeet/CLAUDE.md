@@ -30,7 +30,7 @@ Server state is managed by React Query. See [docs/guide/react-query-patterns.md]
 
 - JSON parsing belongs in `modules/*/data/` codecs, not in screens.
 - AsyncStorage writes in event handlers must be `await`ed with try/catch + `captureException`.
-- `@ai-sdk/openai` version mismatch: app has v1.x, engine has v3.x. Import `JIT_MODEL` from `@parakeet/training-engine`.
+- `@ai-sdk/openai` version mismatch: app has v1.x, engine has v3.x. Import `getJITModel`/`getCycleReviewModel`/`configureAIProxy` from `@parakeet/training-engine`.
 
 ## Validation
 

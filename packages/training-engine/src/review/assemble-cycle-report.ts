@@ -294,7 +294,7 @@ export function assembleCycleReport(raw: RawCycleData): CycleReport {
  * Summarise weekly body review data for inclusion in the LLM cycle report.
  * Returns null when no reviews exist.
  */
-function assembleBodyReviewSummary(
+export function assembleBodyReviewSummary(
   reviews: RawWeeklyBodyReview[]
 ): BodyReviewSummary | null {
   if (reviews.length === 0) return null;

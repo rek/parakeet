@@ -92,18 +92,19 @@ App entry polyfill (`apps/parakeet/app/_layout.tsx`, first import):
 import 'expo/fetch'
 ```
 
-Model constants (`packages/training-engine/src/ai/models.ts`):
+Model lazy getters (`packages/training-engine/src/ai/models.ts`):
 ```typescript
-import { anthropic } from '@ai-sdk/anthropic'
+import { createOpenAI } from '@ai-sdk/openai'
 
-export const JIT_MODEL = anthropic('claude-haiku-4-5')
-export const CYCLE_REVIEW_MODEL = anthropic('claude-sonnet-4-6')
+// Lazy getters — support proxy configuration at runtime
+export function getJITModel() { return getProvider()('gpt-4o-mini') }
+export function getCycleReviewModel() { return getProvider()('gpt-5') }
 ```
 
 JIT call pattern:
 ```typescript
 const { object } = await generateObject({
-  model: JIT_MODEL,
+  model: getJITModel(),
   schema: JITAdjustmentSchema,
   system: JIT_SYSTEM_PROMPT,
   prompt: JSON.stringify(jitInput),

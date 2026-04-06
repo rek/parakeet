@@ -59,7 +59,7 @@ import type { RestTimerPrefs, WarmupPlateDisplay } from '@modules/settings';
 import {
   PostRestRecordButton,
   SetVideoIcon,
-  useVideoAnalysis,
+  usePostRestVideoCapture,
 } from '@modules/video-analysis';
 import type { Lift } from '@parakeet/shared-types';
 import { useNetworkStatus } from '@platform/network';
@@ -462,58 +462,15 @@ export default function SessionScreen() {
 
   // ── Video recording during post-rest overlay ──────────────────────────────
 
-  const [pendingVideoUri, setPendingVideoUri] = useState<string | null>(null);
+  const { handleVideoRecorded, wrapLiftComplete, wrapLiftFailed } =
+    usePostRestVideoCapture({
+      sessionId: sessionId ?? '',
+      lift: sessionMeta?.primary_lift ?? 'squat',
+      postRestState,
+    });
 
-  const videoLift = sessionMeta?.primary_lift ?? 'squat';
-  const videoSetNumber = postRestState?.nextSetNumber ?? 1;
-  const videoWeightGrams = postRestState?.plannedWeightKg
-    ? Math.round(postRestState.plannedWeightKg * 1000)
-    : undefined;
-
-  const { processRecordedVideo } = useVideoAnalysis({
-    sessionId: sessionId ?? '',
-    lift: videoLift,
-    setNumber: videoSetNumber,
-    setContext: videoWeightGrams
-      ? {
-          weightGrams: videoWeightGrams,
-          reps: postRestState?.plannedReps ?? 0,
-        }
-      : null,
-  });
-
-  const handleVideoRecorded = useCallback((videoUri: string) => {
-    setPendingVideoUri(videoUri);
-  }, []);
-
-  // Process pending video after a set is completed or failed
-  const processPendingVideo = useCallback(async () => {
-    if (!pendingVideoUri) return;
-    const uri = pendingVideoUri;
-    setPendingVideoUri(null);
-    try {
-      const estimatedDuration = (postRestState?.plannedReps ?? 3) * 2;
-      await processRecordedVideo({
-        videoUri: uri,
-        durationSec: estimatedDuration,
-      });
-    } catch (err) {
-      captureException(err);
-    }
-  }, [pendingVideoUri, postRestState?.plannedReps, processRecordedVideo]);
-
-  const handleLiftCompleteWithVideo = useCallback(() => {
-    handleLiftComplete();
-    processPendingVideo();
-  }, [handleLiftComplete, processPendingVideo]);
-
-  const handleLiftFailedWithVideo = useCallback(
-    (reps: number) => {
-      handleLiftFailed(reps);
-      processPendingVideo();
-    },
-    [handleLiftFailed, processPendingVideo]
-  );
+  const handleLiftCompleteWithVideo = wrapLiftComplete(handleLiftComplete);
+  const handleLiftFailedWithVideo = wrapLiftFailed(handleLiftFailed);
 
   // ── Bootstrap ─────────────────────────────────────────────────────────────
 

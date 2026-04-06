@@ -14,7 +14,7 @@ LLM integration strategy, constraints, and prompt architecture.
 | Challenge judge      | gpt-5         | 8000 ms | Silent skip    |
 | Decision replay      | gpt-5         | async   | None           |
 
-SDK: `@ai-sdk/openai` (Vercel AI SDK). Note: engine uses v3.x (`LanguageModelV2`), app uses v1.x (`LanguageModelV1`). Import `JIT_MODEL` from `@parakeet/training-engine`.
+SDK: `@ai-sdk/openai` (Vercel AI SDK). Note: engine uses v3.x (`LanguageModelV2`), app uses v1.x (`LanguageModelV1`). Import `getJITModel`/`getCycleReviewModel` from `@parakeet/training-engine`. In production, calls are routed through a Supabase Edge Function proxy configured via `configureAIProxy()` at bootstrap.
 
 **Source:** `packages/training-engine/src/ai/models.ts`
 

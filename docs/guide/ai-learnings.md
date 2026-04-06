@@ -84,6 +84,8 @@ Reusable patterns discovered during implementation. Read on-demand when debuggin
 
 **Doc restructures have a long reference tail** — moving files from `docs/design/` and `docs/specs/` to `docs/features/` required fixing references in: CLAUDE.md, docs/README.md, docs/guide/ai-workflow.md, docs/guide/code-style.md, docs/decisions/, docs/prompts/, .claude/commands/, root README.md, and ~100 internal cross-references within the moved files themselves. The `.claude/commands/` files are highest priority since they direct agent behavior on every `/kickoff`, `/wrap-up`, `/finish`, and `/review` invocation. Always grep the full repo after bulk renames — don't assume "just docs" means the blast radius is small.
 
+**Static-to-lazy migration has a long doc tail** — converting `export const MODEL = ...` to `export function getModel()` touches every call site (good — grep finds them) but also every doc, spec, design doc, ADR, CLAUDE.md, and code comment that references the old name (bad — grep finds them too, but only if you look). When renaming a widely-referenced export, grep the *entire repo* including `docs/` and `.claude/` for the old name. The code migration is the easy part; the documentation migration is where staleness hides.
+
 ## Agent Patterns
 
 **Feature requests often surface latent data bugs** — trace display problems back to the write path before adding view-layer filters.

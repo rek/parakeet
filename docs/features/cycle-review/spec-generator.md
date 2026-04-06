@@ -47,7 +47,7 @@ See `./design.md` for the full feature design and examples.
 **`packages/training-engine/src/review/cycle-review-generator.ts`:**
 
 - [x] `generateCycleReview(cycleReport: CycleReport, previousSummaries: PreviousCycleSummary[]): Promise<CycleReview>`
-  - Calls `generateObject()` with `CYCLE_REVIEW_MODEL` and `CYCLE_REVIEW_SYSTEM_PROMPT`
+  - Calls `generateObject()` with `getCycleReviewModel()` and `CYCLE_REVIEW_SYSTEM_PROMPT`
   - No `AbortSignal.timeout()` — runs asynchronously, user notified when done
 
 ### Storing the Result

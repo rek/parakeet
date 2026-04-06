@@ -38,7 +38,7 @@ Map of every place AI interacts with Parakeet. Two types of AI: **LLM** (LLM via
 **Strategy (user-selectable):**
 - `auto` → LLM if online, formula if offline
 - `formula` → deterministic, always offline-capable
-- `llm` → `JIT_MODEL` only
+- `llm` → `getJITModel()` only
 - `hybrid` → both in parallel (see §2)
 
 **LLM call:** `generateText()` with `Output.object()` → `JITAdjustmentSchema` (Zod)
@@ -187,7 +187,7 @@ Map of every place AI interacts with Parakeet. Two types of AI: **LLM** (LLM via
 - `newPRs` (from `personal_records` with matching `session_id`)
 - `currentStreak`, `biologicalSex`, `cyclePhase`
 
-**LLM call:** `generateText()` with `JIT_MODEL` (gpt-4o-mini), plain text output (no schema), 8s timeout.
+**LLM call:** `generateText()` with `getJITModel()` (gpt-4o-mini), plain text output (no schema), 8s timeout.
 
 **Priority rules:** PRs > high RPE (may cite `topWeightKg`) > over-performance > under-performance/low `completionPct` > deload. Secondary: `topWeightKg` for specificity, high `totalSetsCompleted`, streak, cycle phase.
 
@@ -223,8 +223,8 @@ Map of every place AI interacts with Parakeet. Two types of AI: **LLM** (LLM via
 **What:** Biological sex and menstrual cycle phase are surfaced to LLM as context; they also drive formula defaults.
 
 **How it enters the AI pipeline:**
-- `biologicalSex` + `userAge` in `JITInput` → sent to `JIT_MODEL` in JIT prompt
-- `menstrualCycleInsights` in `CycleReviewSchema` → `CYCLE_REVIEW_MODEL` uses phase data if provided
+- `biologicalSex` + `userAge` in `JITInput` → sent to `getJITModel()` in JIT prompt
+- `menstrualCycleInsights` in `CycleReviewSchema` → `getCycleReviewModel()` uses phase data if provided
 - `session_logs.cycle_phase` stamped at session completion
 
 **Formula-level effects (not LLM):**
@@ -247,7 +247,7 @@ Map of every place AI interacts with Parakeet. Two types of AI: **LLM** (LLM via
 
 **Input:** Full `JITInput` + `JITOutput` (formula's decision + rationale).
 
-**LLM call:** `generateText()` with `Output.object()` → `JudgeReviewSchema` (Zod), `JIT_MODEL`, 8s timeout.
+**LLM call:** `generateText()` with `Output.object()` → `JudgeReviewSchema` (Zod), `getJITModel()`, 8s timeout.
 
 **Output (`JudgeReview`):**
 - `score` (0–100)
@@ -276,7 +276,7 @@ Map of every place AI interacts with Parakeet. Two types of AI: **LLM** (LLM via
 
 **Input:** `jit_input_snapshot` + `planned_sets` (from session) + `actual_sets`, `auxiliary_sets`, `session_rpe` (from session_logs).
 
-**LLM call:** `generateText()` with `Output.object()` → `DecisionReplaySchema` (Zod), `JIT_MODEL`, 10s timeout.
+**LLM call:** `generateText()` with `Output.object()` → `DecisionReplaySchema` (Zod), `getJITModel()`, 10s timeout.
 
 **Output (`DecisionReplay`):**
 - `prescriptionScore` (0–100)

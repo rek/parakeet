@@ -13,7 +13,7 @@ The "Workout Done" card on the Today tab now shows a contextual, LLM-generated m
 **`apps/parakeet/src/modules/session/application/motivational-message.service.ts` (new):**
 
 - [x] `fetchMotivationalContext(sessions, currentStreak, cyclePhase): MotivationalContext` — queries `session_logs` (RPE, performance_vs_plan, actual_sets, completion_pct) and `personal_records` (PRs) for the given session IDs; fetches profile for `biological_sex`; derives `topWeightKg` (max weight_grams / 1000 across all sets), `totalSetsCompleted` (total set count), and `completionPct` (average across sessions)
-- [x] `generateMotivationalMessage(ctx: MotivationalContext): string` — calls `JIT_MODEL` (gpt-4o-mini) via Vercel AI SDK `generateText()` with a coach persona system prompt; 8s timeout; returns 1-2 sentence message
+- [x] `generateMotivationalMessage(ctx: MotivationalContext): string` — calls `getJITModel()` (gpt-4o-mini) via Vercel AI SDK `generateText()` with a coach persona system prompt; 8s timeout; returns 1-2 sentence message
 - [x] `CompletedSessionRef` type exported for WorkoutDoneCard prop typing
 
 **`apps/parakeet/src/modules/session/index.ts`:**
@@ -30,7 +30,7 @@ The "Workout Done" card on the Today tab now shows a contextual, LLM-generated m
 
 **`packages/training-engine/src/index.ts`:**
 
-- [x] Exports `JIT_MODEL` so the app can reuse the same compatible model instance (avoids `@ai-sdk/openai` version mismatch between app v1.x and training-engine v3.x)
+- [x] Exports `getJITModel` so the app can reuse the same compatible model instance (avoids `@ai-sdk/openai` version mismatch between app v1.x and training-engine v3.x)
 
 **System prompt priorities:**
 
