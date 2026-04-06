@@ -17,7 +17,7 @@ SUPABASE_DB_PASSWORD=<password> ./scripts/backup-prod.sh [--project-ref <ref>] [
 Imports historical workout data from Strong or NextSet CSV exports into Supabase as ad-hoc sessions. Auto-detects format and maps exercises via `PRESET_MAPPINGS` or interactive prompts.
 
 ```sh
-SUPABASE_URL=... SUPABASE_SERVICE_KEY=... npx tsx scripts/import-csv.ts \
+SUPABASE_URL=... SUPABASE_SERVICE_KEY=... npx tsx tools/scripts/import-csv.ts \
   --file <path> --user-id <uuid> [--unit kg|lbs] [--dry-run]
 ```
 
@@ -72,7 +72,7 @@ GOOGLE_AI_API_KEY=... npx tsx scripts/generate-exercise-videos.ts \
 Installs the most recent APK from `dist/` onto a connected Android device via `adb`.
 
 ```sh
-./scripts/install-latest-apk.sh
+./tools/scripts/install-latest-apk.sh
 ```
 
 ### `set-android-supabase-ip.mjs`
@@ -80,5 +80,5 @@ Installs the most recent APK from `dist/` onto a connected Android device via `a
 Detects your local IP and writes `EXPO_PUBLIC_SUPABASE_URL_ANDROID` to `.env.local` for local Supabase dev on Android.
 
 ```sh
-node scripts/set-android-supabase-ip.mjs [--ip=192.168.x.y]
+node tools/scripts/set-android-supabase-ip.mjs [--ip=192.168.x.y]
 ```

@@ -1,6 +1,6 @@
 # CSV Import Design
 
-**Status: Implemented** — `scripts/import-csv.ts`, migration `20260314000000`
+**Status: Implemented** — `tools/scripts/import-csv.ts`, migration `20260314000000`
 
 ## Problem Statement
 
@@ -10,12 +10,12 @@ This is a one-time migration, not an ongoing feature. Building mobile screens fo
 
 ## Approach: CLI Script
 
-`scripts/import-csv.ts` — run via `npx tsx`. Uses the Supabase service role key (bypasses RLS) so it can insert on behalf of any user.
+`tools/scripts/import-csv.ts` — run via `npx tsx`. Uses the Supabase service role key (bypasses RLS) so it can insert on behalf of any user.
 
 ```
 SUPABASE_URL=http://localhost:54321 \
 SUPABASE_SERVICE_KEY=<secret key> \
-npx tsx scripts/import-csv.ts \
+npx tsx tools/scripts/import-csv.ts \
   --file ~/exports/export.csv \
   --user-id <uuid> \
   [--unit kg|lbs] \
