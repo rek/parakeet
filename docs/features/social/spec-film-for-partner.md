@@ -14,7 +14,7 @@ The recorder's camera UI scoped to the lifter's session, CV analysis on the reco
 
 **`apps/parakeet/src/modules/gym-partners/data/partner.repository.ts`:**
 
-- [ ] `fetchPartnerSessionSets(sessionId: string): Promise<Array<{ lift: string; totalSets: number }>>`
+- [x] `fetchPartnerSessionSets(sessionId: string): Promise<Array<{ lift: string; totalSets: number }>>`
   - Derives set count from `sessions.planned_sets` JSONB (already fetched via `fetchPartnerActiveSession` in social-003)
   - Does **NOT** query `session_logs` — no cross-user RLS on session_logs (Decision 8: minimal data visibility)
   - `planned_sets` contains structural info: `[{ weight_kg, reps, rpe_target, ... }]` — count array length for total sets
@@ -24,7 +24,7 @@ The recorder's camera UI scoped to the lifter's session, CV analysis on the reco
 
 **`apps/parakeet/src/modules/gym-partners/data/partner.repository.ts`:**
 
-- [ ] `insertPartnerSessionVideo(params)` — like `video.repository.insertSessionVideo` but explicitly sets:
+- [x] `insertPartnerSessionVideo(params)` — like `video.repository.insertSessionVideo` but explicitly sets:
   - `user_id: targetUserId` (the lifter)
   - `recorded_by: auth.uid()` (the recorder)
   - Same fields: `session_id`, `lift`, `set_number`, `sagittal_confidence`, `local_uri`, `duration_sec`, `analysis`
@@ -33,7 +33,7 @@ The recorder's camera UI scoped to the lifter's session, CV analysis on the reco
 
 **`apps/parakeet/src/modules/gym-partners/application/partner-upload.service.ts`:**
 
-- [ ] `uploadPartnerVideo(params): Promise<string>` — uploads compressed video to Supabase Storage
+- [x] `uploadPartnerVideo(params): Promise<string>` — uploads compressed video to Supabase Storage
   - Path: `{lifterUserId}/{videoId}.mp4` (lifter's folder, not recorder's)
   - Uses the partner storage policy from social-001 that allows partner uploads to lifter's folder
   - Returns the remote URI
@@ -43,7 +43,7 @@ The recorder's camera UI scoped to the lifter's session, CV analysis on the reco
 
 **`apps/parakeet/src/modules/gym-partners/application/partner-filming.service.ts`:**
 
-- [ ] `filmForPartner(params)` — orchestrates the full pipeline:
+- [x] `filmForPartner(params)` — orchestrates the full pipeline:
   1. Extract pose frames via MediaPipe (`extractFramesFromVideo` from video-analysis module)
   2. Auto-detect camera angle (`detectCameraAngle` from video-analysis module)
   3. Analyze frames (`analyzeVideoFrames` from video-analysis module)
@@ -61,7 +61,7 @@ The recorder's camera UI scoped to the lifter's session, CV analysis on the reco
 
 **`apps/parakeet/src/modules/gym-partners/hooks/usePartnerFilming.ts`:**
 
-- [ ] `usePartnerFilming(partnerId, sessionId)` hook:
+- [x] `usePartnerFilming(partnerId, sessionId)` hook:
   - Accepts `plannedSets` from the already-fetched partner session data (avoids redundant query)
   - Manages filming state: `idle | recording | analyzing | uploading | done | error`
   - `startFilming(lift, setNumber)` — triggers camera (sagittalConfidence computed from landmarks)
@@ -72,7 +72,7 @@ The recorder's camera UI scoped to the lifter's session, CV analysis on the reco
 
 **`apps/parakeet/src/modules/gym-partners/ui/PartnerSetPicker.tsx`:**
 
-- [ ] Displays the lifter's session lifts + set numbers (derived from `planned_sets`)
+- [x] Displays the lifter's session lifts + set numbers (derived from `planned_sets`)
   - Each lift row shows: lift name, "Set N of M" (next unrecorded set auto-selected)
   - Camera angle picker: side / front toggle
 - [ ] Tapping a set + angle → proceeds to recording
@@ -81,7 +81,7 @@ The recorder's camera UI scoped to the lifter's session, CV analysis on the reco
 
 **`apps/parakeet/src/modules/gym-partners/ui/PartnerFilmingSheet.tsx`:**
 
-- [ ] Full-screen sheet / modal for the filming flow:
+- [x] Full-screen sheet / modal for the filming flow:
   1. Step 1: `PartnerSetPicker` — select lift, set number, angle
   2. Step 2: Recording — reuse `RecordVideoSheet` component from video-analysis module
   3. Step 3: Processing — progress indicator (analyzing → uploading)
@@ -93,14 +93,14 @@ The recorder's camera UI scoped to the lifter's session, CV analysis on the reco
 
 **`apps/parakeet/src/modules/gym-partners/ui/PartnerCard.tsx`:**
 
-- [ ] "Film" button onPress → opens `PartnerFilmingSheet` with partnerId + sessionId + plannedSets
+- [x] "Film" button onPress → opens `PartnerFilmingSheet` with partnerId + sessionId + plannedSets
 
 ### Barrel exports
 
 **`apps/parakeet/src/modules/gym-partners/index.ts`:**
 
-- [ ] Export: `usePartnerFilming`, `PartnerFilmingSheet`
-- [ ] Do NOT export `PartnerSetPicker` — internal UI detail of the filming sheet
+- [x] Export: `usePartnerFilming`, `PartnerFilmingSheet`
+- [x] Do NOT export `PartnerSetPicker` — internal UI detail of the filming sheet
 
 ## Dependencies
 

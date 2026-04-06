@@ -12,34 +12,34 @@ Adds a `PrescriptionTrace` type and inline trace builder to the JIT formula pipe
 
 **`packages/training-engine/src/generator/prescription-trace.ts`:**
 
-- [ ] `WeightDerivation` type — oneRmKg, blockPct, baseWeightKg, modifiers (source + multiplier + reason), finalWeightKg
-- [ ] `SetTrace` type — setNumber, weightDerivation, reps, rpeTarget, repSource
-- [ ] `VolumeTrace` type — source, baseSets, resultSets, reason
-- [ ] `AuxExerciseTrace` type — exercise, selectionReason, weightDerivation (oneRmKg, catalogPct, isUnstable, finalWeightKg), repSource, sets, skipped, skipReason
-- [ ] `WarmupTrace` type — workingWeightKg, protocolName, steps (pct, rawWeight, clampedWeight, reps)
-- [ ] `RestTrace` type — mainLift (formulaBase, userOverride, llmDelta, final), auxiliary
-- [ ] `PrescriptionTrace` type — top-level container with sessionId, strategy, rationale, warnings, mainLift, auxiliaries, warmup, rest
-- [ ] `PrescriptionTraceBuilder` class — accumulator with methods: `recordModifier`, `recordVolumeChange`, `recordAuxSelection`, `recordWarmup`, `recordRest`, `build()`
+- [x] `WeightDerivation` type — oneRmKg, blockPct, baseWeightKg, modifiers (source + multiplier + reason), finalWeightKg
+- [x] `SetTrace` type — setNumber, weightDerivation, reps, rpeTarget, repSource
+- [x] `VolumeTrace` type — source, baseSets, resultSets, reason
+- [x] `AuxExerciseTrace` type — exercise, selectionReason, weightDerivation (oneRmKg, catalogPct, isUnstable, finalWeightKg), repSource, sets, skipped, skipReason
+- [x] `WarmupTrace` type — workingWeightKg, protocolName, steps (pct, rawWeight, clampedWeight, reps)
+- [x] `RestTrace` type — mainLift (formulaBase, userOverride, llmDelta, final), auxiliary
+- [x] `PrescriptionTrace` type — top-level container with sessionId, strategy, rationale, warnings, mainLift, auxiliaries, warmup, rest
+- [x] `PrescriptionTraceBuilder` class — accumulator with methods: `recordModifier`, `recordVolumeChange`, `recordAuxSelection`, `recordWarmup`, `recordRest`, `build()`
 
 **`packages/training-engine/src/generator/jit-session-generator.ts`:**
 
-- [ ] Add optional `traceBuilder?: PrescriptionTraceBuilder` parameter to `generateJITSession`
-- [ ] Hook trace builder at each pipeline step (Steps 1-6b)
-- [ ] Export `generateJITSessionWithTrace(input: JITInput)` wrapper returning `{ output: JITOutput; trace: PrescriptionTrace }`
+- [x] Add optional `traceBuilder?: PrescriptionTraceBuilder` parameter to `generateJITSession`
+- [x] Hook trace builder at each pipeline step (Steps 1-6b)
+- [x] Export `generateJITSessionWithTrace(input: JITInput)` wrapper returning `{ output: JITOutput; trace: PrescriptionTrace }`
 
 **`packages/training-engine/src/index.ts`:**
 
-- [ ] Export `PrescriptionTrace`, `generateJITSessionWithTrace` types
+- [x] Export `PrescriptionTrace`, `generateJITSessionWithTrace` types
 
 **`packages/training-engine/src/generator/prescription-trace.test.ts`:**
 
-- [ ] Base case: standard input produces trace with all sections populated
-- [ ] Weight derivation: modifiers recorded for each active adjuster (soreness, readiness, cycle phase)
-- [ ] Volume trace: soreness-reduced sets shows baseSets > resultSets with reason
-- [ ] Aux exercise trace: pool rotation shows slot position; locked shows "Locked"; top-up shows MEV deficit
-- [ ] Recovery mode: trace shows recovery-specific derivation
-- [ ] Skipped main lift: trace shows skip reason
-- [ ] No modifiers active: trace shows clean derivation (no modifiers array entries)
+- [x] Base case: standard input produces trace with all sections populated
+- [x] Weight derivation: modifiers recorded for each active adjuster (soreness, readiness, cycle phase)
+- [x] Volume trace: soreness-reduced sets shows baseSets > resultSets with reason
+- [x] Aux exercise trace: pool rotation shows slot position; locked shows "Locked"; top-up shows MEV deficit
+- [x] Recovery mode: trace shows recovery-specific derivation
+- [x] Skipped main lift: trace shows skip reason
+- [x] No modifiers active: trace shows clean derivation (no modifiers array entries)
 
 ## Dependencies
 

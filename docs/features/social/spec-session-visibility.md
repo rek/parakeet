@@ -14,7 +14,7 @@ Partner section on the Program screen showing each partner's active session stat
 
 **`apps/parakeet/src/modules/gym-partners/data/partner.repository.ts`:**
 
-- [ ] `subscribeToPartnerSessions(partnerIds: string[], onUpdate: (partnerId: string) => void): () => void`
+- [x] `subscribeToPartnerSessions(partnerIds: string[], onUpdate: (partnerId: string) => void): () => void`
   - Creates a **single** Supabase Realtime channel using an `IN` filter for all partner IDs:
     ```ts
     const channel = typedSupabase
@@ -32,7 +32,7 @@ Partner section on the Program screen showing each partner's active session stat
   - Cross-user RLS policy on `sessions` (from social-001) ensures Realtime only delivers events the user's RLS allows
   - Returns an unsubscribe function that removes the channel
   - Events: INSERT, UPDATE (captures session start, status changes, session end)
-- [ ] `fetchPartnerActiveSession(partnerId: string): Promise<{ id: string; status: string; primaryLift: string; plannedSets: unknown } | null>`
+- [x] `fetchPartnerActiveSession(partnerId: string): Promise<{ id: string; status: string; primaryLift: string; plannedSets: unknown } | null>`
   - Queries `sessions` where `user_id = partnerId` and `status = 'in_progress'`, selects `id, status, primary_lift, planned_sets`
   - Returns `maybeSingle()` — null if no active session
   - `planned_sets` included so the filming set picker (Spec 4) can derive total set count without querying `session_logs`
@@ -41,7 +41,7 @@ Partner section on the Program screen showing each partner's active session stat
 
 **`apps/parakeet/src/modules/gym-partners/data/partner.queries.ts`:**
 
-- [ ] Add `partnerSession(partnerId: string)` to query factory
+- [x] Add `partnerSession(partnerId: string)` to query factory
   - Key: `['gym-partners', 'session', partnerId]`
   - Query: `fetchPartnerActiveSession(partnerId)`
   - `refetchInterval: false` (realtime handles freshness)
@@ -50,7 +50,7 @@ Partner section on the Program screen showing each partner's active session stat
 
 **`apps/parakeet/src/modules/gym-partners/hooks/usePartnerSessions.ts`:**
 
-- [ ] `usePartnerSessions()` hook:
+- [x] `usePartnerSessions()` hook:
   - Uses `usePartners()` to get accepted partner list
   - For each partner, uses `useQuery(partnerQueries.partnerSession(partnerId))`
   - Manages Realtime subscription in a `useEffect` — subscribe to all partner IDs in one channel, invalidate relevant `partnerSession` query on update
@@ -62,36 +62,36 @@ Partner section on the Program screen showing each partner's active session stat
 
 **`apps/parakeet/src/modules/gym-partners/ui/PartnerSection.tsx`:**
 
-- [ ] Section component for the Program screen
-- [ ] Header row: "GYM PARTNERS" label (tappable → navigates to management screen) + "+" button (opens QR generate sheet)
+- [x] Section component for the Program screen
+- [x] Header row: "GYM PARTNERS" label (tappable → navigates to management screen) + "+" button (opens QR generate sheet)
   - If pending requests exist: badge count on header (e.g., "1 pending")
-- [ ] Renders `PartnerCard` for each partner
-- [ ] Empty state: "Add a gym partner to film each other's lifts" with add button
-- [ ] **Self-gated by `gymPartner` feature flag** — `PartnerSection` internally calls `useFeatureEnabled('gymPartner')` and returns `null` when off. This keeps feature flag logic out of `program.tsx` (code style rule #1: zero feature knowledge in screens).
+- [x] Renders `PartnerCard` for each partner
+- [x] Empty state: "Add a gym partner to film each other's lifts" with add button
+- [x] **Self-gated by `gymPartner` feature flag** — `PartnerSection` internally calls `useFeatureEnabled('gymPartner')` and returns `null` when off. This keeps feature flag logic out of `program.tsx` (code style rule #1: zero feature knowledge in screens).
 
 **`apps/parakeet/src/modules/gym-partners/ui/PartnerCard.tsx`:**
 
-- [ ] Card showing partner info:
+- [x] Card showing partner info:
   - Display name (fallback: "Partner" when null)
   - Active session: green dot + "{Lift} — Active" + enabled "Film" button
   - No active session: dimmed dot + "No active session" + disabled "Film" button
-- [ ] "Film" button press → navigates to partner filming flow (wired in Spec 4, placeholder onPress for now)
-- [ ] Style: follows existing card patterns (surface background, border, borderRadius: 12, spacing[4] padding)
+- [x] "Film" button press → navigates to partner filming flow (wired in Spec 4, placeholder onPress for now)
+- [x] Style: follows existing card patterns (surface background, border, borderRadius: 12, spacing[4] padding)
 
 ### Program screen integration
 
 **`apps/parakeet/src/app/(tabs)/program.tsx`:**
 
-- [ ] Import `PartnerSection` from `@modules/gym-partners`
-- [ ] Render `<PartnerSection />` unconditionally at the bottom of the ScrollView content, after week rows / unending card
+- [x] Import `PartnerSection` from `@modules/gym-partners`
+- [x] Render `<PartnerSection />` unconditionally at the bottom of the ScrollView content, after week rows / unending card
   - No feature flag import in `program.tsx` — `PartnerSection` is self-gated (returns null when flag is off)
 
 ### Barrel exports
 
 **`apps/parakeet/src/modules/gym-partners/index.ts`:**
 
-- [ ] Export: `usePartnerSessions`, `PartnerSection`
-- [ ] Do NOT export `PartnerCard` — internal UI detail, only used by `PartnerSection`
+- [x] Export: `usePartnerSessions`, `PartnerSection`
+- [x] Do NOT export `PartnerCard` — internal UI detail, only used by `PartnerSection`
 
 ## Dependencies
 

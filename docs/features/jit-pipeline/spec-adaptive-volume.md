@@ -104,12 +104,12 @@ Design doc: [adaptive-volume.md](./design-adaptive-volume.md)
 
 ### Tests
 
-- [ ] Volume calibration: RPE consistently low → +1 set
-- [ ] Volume calibration: RPE low + high readiness + low soreness → +2 sets
-- [ ] Volume calibration: RPE high → -1 set
-- [ ] Volume calibration: capped at MRV
-- [ ] Volume calibration: no data (new user) → 0 modifier
-- [ ] Integration: calibration +2 then soreness -1 = net +1
+- [x] Volume calibration: RPE consistently low → +1 set
+- [x] Volume calibration: RPE low + high readiness + low soreness → +2 sets
+- [x] Volume calibration: RPE high → -1 set
+- [x] Volume calibration: capped at MRV
+- [x] Volume calibration: no data (new user) → 0 modifier
+- [x] Integration: calibration +2 then soreness -1 = net +1
 
 ## Phase 3: Closed-Loop Learning
 
@@ -142,10 +142,10 @@ Design doc: [adaptive-volume.md](./design-adaptive-volume.md)
 
 ### Tests
 
-- [ ] Modifier calibration applied when confidence >= medium
-- [ ] Weekly mismatch feeds into next session baseline
-- [ ] Progressive increase across block weeks
-- [ ] Deload resets progressive accumulation
+- [x] Modifier calibration applied when confidence >= medium
+- [x] Weekly mismatch feeds into next session baseline
+- [x] Progressive increase across block weeks
+- [x] Deload resets progressive accumulation
 
 ---
 
