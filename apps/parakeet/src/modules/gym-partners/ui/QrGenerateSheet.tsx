@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
   StyleSheet,
@@ -27,64 +27,26 @@ export function QrGenerateSheet({
   const styles = useMemo(() => buildStyles(colors), [colors]);
   const { createInvite, isPending, error, reset } = useCreateInvite();
 
-  const [invite, setInvite] = useState<{
-    token: string;
-    expiresAt: string;
-  } | null>(null);
-  const [secondsLeft, setSecondsLeft] = useState(0);
-  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const [token, setToken] = useState<string | null>(null);
 
   const generate = useCallback(async () => {
     reset();
-    setInvite(null);
+    setToken(null);
     try {
       const result = await createInvite();
-      setInvite(result);
-      setSecondsLeft(
-        Math.max(
-          0,
-          Math.floor((new Date(result.expiresAt).getTime() - Date.now()) / 1000)
-        )
-      );
+      setToken(result.token);
     } catch (err) {
       captureException(err);
     }
   }, [createInvite, reset]);
 
-  // Generate on open
   useEffect(() => {
     if (visible) {
       generate();
     } else {
-      setInvite(null);
-      setSecondsLeft(0);
-      if (timerRef.current) clearInterval(timerRef.current);
+      setToken(null);
     }
   }, [visible, generate]);
-
-  // Countdown timer
-  useEffect(() => {
-    if (!invite) return;
-
-    timerRef.current = setInterval(() => {
-      const remaining = Math.max(
-        0,
-        Math.floor((new Date(invite.expiresAt).getTime() - Date.now()) / 1000)
-      );
-      setSecondsLeft(remaining);
-      if (remaining <= 0 && timerRef.current) {
-        clearInterval(timerRef.current);
-      }
-    }, 1000);
-
-    return () => {
-      if (timerRef.current) clearInterval(timerRef.current);
-    };
-  }, [invite]);
-
-  const expired = secondsLeft <= 0 && invite !== null;
-  const minutes = Math.floor(secondsLeft / 60);
-  const seconds = secondsLeft % 60;
 
   return (
     <Sheet visible={visible} onClose={onClose} title="Add Partner">
@@ -109,37 +71,17 @@ export function QrGenerateSheet({
           </View>
         )}
 
-        {invite && !isPending && !error && (
+        {token && !isPending && !error && (
           <View style={styles.center}>
-            {expired ? (
-              <>
-                <Text style={styles.expired}>QR code expired</Text>
-                <TouchableOpacity
-                  onPress={generate}
-                  style={styles.retryButton}
-                  activeOpacity={0.7}
-                >
-                  <Text style={styles.retryText}>Regenerate</Text>
-                </TouchableOpacity>
-              </>
-            ) : (
-              <>
-                <View style={styles.qrContainer}>
-                  <QRCode
-                    value={encodeQrPayload({ token: invite.token })}
-                    size={200}
-                    backgroundColor={colors.bgSurface}
-                    color={colors.text}
-                  />
-                </View>
-                <Text style={styles.timer}>
-                  {minutes}:{seconds.toString().padStart(2, '0')}
-                </Text>
-                <Text style={styles.hint}>
-                  Ask your partner to scan this code
-                </Text>
-              </>
-            )}
+            <View style={styles.qrContainer}>
+              <QRCode
+                value={encodeQrPayload({ token })}
+                size={200}
+                backgroundColor={colors.bgSurface}
+                color={colors.text}
+              />
+            </View>
+            <Text style={styles.hint}>Ask your partner to scan this code</Text>
           </View>
         )}
       </View>
@@ -164,21 +106,10 @@ function buildStyles(colors: ReturnType<typeof useTheme>['colors']) {
       borderRadius: 16,
       backgroundColor: colors.bgSurface,
     },
-    timer: {
-      fontSize: typography.sizes['2xl'],
-      fontWeight: typography.weights.bold,
-      color: colors.text,
-      fontVariant: ['tabular-nums'],
-    },
     hint: {
       fontSize: typography.sizes.sm,
       color: colors.textSecondary,
       textAlign: 'center',
-    },
-    expired: {
-      fontSize: typography.sizes.base,
-      fontWeight: typography.weights.semibold,
-      color: colors.textSecondary,
     },
     error: {
       fontSize: typography.sizes.sm,

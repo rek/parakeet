@@ -18,7 +18,6 @@ export interface GymPartner {
 export interface PartnerInvite {
   id: string;
   token: string;
-  expiresAt: string;
 }
 
 export interface PartnerActiveSession {
