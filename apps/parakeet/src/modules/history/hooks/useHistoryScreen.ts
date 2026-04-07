@@ -7,7 +7,7 @@ import {
 } from '../application/history-screen.service';
 import { historyQueries } from '../data/history.queries';
 
-export function useHistoryScreen() {
+export function useHistoryScreen(weeks: number) {
   const { user } = useAuth();
 
   const trendsQuery = useQuery({
@@ -38,7 +38,8 @@ export function useHistoryScreen() {
     })
   );
 
-  const volumeQuery = useQuery(historyQueries.weeklySetsPerLift(user?.id, 8));
+  const volumeQuery = useQuery(historyQueries.weeklySetsPerLift(user?.id, weeks));
+  const volumeKgQuery = useQuery(historyQueries.weeklyVolumeKg(user?.id, weeks));
 
   const isLoading = trendsQuery.isLoading || sessionsQuery.isLoading;
 
@@ -48,6 +49,8 @@ export function useHistoryScreen() {
     programs: programsQuery.data,
     volume: volumeQuery.data,
     volumeLoading: volumeQuery.isLoading,
+    volumeKg: volumeKgQuery.data,
+    volumeKgLoading: volumeKgQuery.isLoading,
     isLoading,
   };
 }

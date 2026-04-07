@@ -6,6 +6,7 @@ import {
   getPerformanceTrends,
   getRecentLiftHistory,
   getWeeklySetsPerLift,
+  getWeeklyVolumeKg,
 } from '../lib/performance';
 
 export const historyQueries = {
@@ -48,5 +49,11 @@ export const historyQueries = {
     queryOptions({
       queryKey: ['volume', 'weekly', userId, weeks] as const,
       queryFn: userId ? () => getWeeklySetsPerLift(userId, weeks) : skipToken,
+    }),
+
+  weeklyVolumeKg: (userId: string | undefined, weeks: number) =>
+    queryOptions({
+      queryKey: ['volume', 'weekly-kg', userId, weeks] as const,
+      queryFn: userId ? () => getWeeklyVolumeKg(userId, weeks) : skipToken,
     }),
 };

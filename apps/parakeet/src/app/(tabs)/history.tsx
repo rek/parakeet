@@ -18,6 +18,7 @@ import {
 import type { CyclePhase } from '@modules/cycle-tracking';
 import {
   buildVolumeChartData,
+  buildVolumeKgChartData,
   getTrendConfig,
   MIN_CHART_OPACITY,
   useHistoryScreen,
@@ -42,6 +43,19 @@ type CompletedSession = Awaited<
   ReturnType<typeof getCompletedSessions>
 >[number];
 type LiftFilter = 'all' | Lift;
+type TimeRange = '1m' | '3m' | 'all';
+
+const TIME_RANGE_WEEKS: Record<TimeRange, number> = {
+  '1m': 4,
+  '3m': 13,
+  all: 260,
+};
+
+const TIME_RANGE_LABELS: Record<TimeRange, string> = {
+  '1m': '1M',
+  '3m': '3M',
+  all: 'All',
+};
 
 const LIFT_COLORS: Record<Lift, string> = {
   squat: palette.lime400,
@@ -58,11 +72,20 @@ export default function HistoryScreen() {
   const chartInnerWidth = width - spacing[6] * 2 - spacing[4] * 2;
 
   const [liftFilter, setLiftFilter] = useState<LiftFilter>('all');
+  const [timeRange, setTimeRange] = useState<TimeRange>('3m');
 
   const trendConfig = getTrendConfig(colors);
 
-  const { trends, sessions, programs, volume, volumeLoading, isLoading } =
-    useHistoryScreen();
+  const {
+    trends,
+    sessions,
+    programs,
+    volume,
+    volumeLoading,
+    volumeKg,
+    volumeKgLoading,
+    isLoading,
+  } = useHistoryScreen(TIME_RANGE_WEEKS[timeRange]);
 
   const styles = useMemo(
     () =>
@@ -147,7 +170,12 @@ export default function HistoryScreen() {
           fontSize: typography.sizes.xs,
           color: colors.textSecondary,
         },
-        // Session filter chips
+        // Time range + lift filter chips
+        timeRangeRow: {
+          flexDirection: 'row',
+          gap: spacing[2],
+          marginBottom: spacing[3],
+        },
         filterRow: {
           flexDirection: 'row',
           gap: spacing[2],
@@ -308,6 +336,14 @@ export default function HistoryScreen() {
       )
     : null;
 
+  const volumeKgChartData = volumeKg
+    ? buildVolumeKgChartData(
+        volumeKg,
+        LIFT_COLORS,
+        liftFilter === 'all' ? undefined : liftFilter
+      )
+    : null;
+
   function renderTrendCard(trend: PerformanceTrend) {
     const { symbol, color } = trendConfig[trend.trend];
     return (
@@ -430,7 +466,31 @@ export default function HistoryScreen() {
           ))}
         </View>
 
-        {/* Weekly volume chart */}
+        {/* Time range selector */}
+        <View style={styles.timeRangeRow}>
+          {(['1m', '3m', 'all'] as TimeRange[]).map((r) => (
+            <TouchableOpacity
+              key={r}
+              style={[
+                styles.filterChip,
+                timeRange === r && styles.filterChipActive,
+              ]}
+              onPress={() => setTimeRange(r)}
+              activeOpacity={0.7}
+            >
+              <Text
+                style={[
+                  styles.filterChipText,
+                  timeRange === r && styles.filterChipTextActive,
+                ]}
+              >
+                {TIME_RANGE_LABELS[r]}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+
+        {/* Weekly volume chart (sets) */}
         <Text style={styles.sectionHeader}>Weekly Volume (sets)</Text>
         {volumeChartData ? (
           <View style={styles.chartCard}>
@@ -478,6 +538,57 @@ export default function HistoryScreen() {
         ) : (
           <Text style={[styles.emptyText, { marginBottom: spacing[8] }]}>
             {volumeLoading ? 'Loading…' : 'No volume data yet.'}
+          </Text>
+        )}
+
+        {/* Weekly volume chart (kg) */}
+        <Text style={styles.sectionHeader}>Weekly Volume (kg)</Text>
+        {volumeKgChartData ? (
+          <View style={styles.chartCard}>
+            <LineChart
+              data={volumeKgChartData}
+              width={chartInnerWidth}
+              height={160}
+              withDots={false}
+              withShadow={false}
+              withInnerLines={true}
+              withOuterLines={false}
+              chartConfig={{
+                backgroundGradientFrom: colors.bgSurface,
+                backgroundGradientTo: colors.bgSurface,
+                color: (opacity = 1) =>
+                  `${palette.lime400}${Math.round(
+                    Math.max(opacity, MIN_CHART_OPACITY) * 255
+                  )
+                    .toString(16)
+                    .padStart(2, '0')}`,
+                labelColor: () => colors.textTertiary,
+                strokeWidth: 2,
+                propsForBackgroundLines: {
+                  stroke: colors.border,
+                  strokeDasharray: '',
+                },
+              }}
+              formatYLabel={(v) => `${Math.round(Number(v))}`}
+              style={{ borderRadius: radii.sm }}
+            />
+            <View style={styles.legendRow}>
+              {volumeKgChartData.lifts.map((lift) => (
+                <View key={lift} style={styles.legendItem}>
+                  <View
+                    style={[
+                      styles.legendDot,
+                      { backgroundColor: LIFT_COLORS[lift] },
+                    ]}
+                  />
+                  <Text style={styles.legendLabel}>{LIFT_LABELS[lift]}</Text>
+                </View>
+              ))}
+            </View>
+          </View>
+        ) : (
+          <Text style={[styles.emptyText, { marginBottom: spacing[8] }]}>
+            {volumeKgLoading ? 'Loading…' : 'No volume data yet.'}
           </Text>
         )}
 

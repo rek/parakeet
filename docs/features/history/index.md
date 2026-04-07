@@ -19,3 +19,4 @@ Session history tab, in-session history, mini history, and plate calculator.
 | [spec-mini-history.md](./spec-mini-history.md) | done | Mini history component |
 | [spec-plate-calculator.md](./spec-plate-calculator.md) | done | Plate calculator tool |
 | [spec-tab-upgrade.md](./spec-tab-upgrade.md) | done | History tab enhancements |
+| [spec-volume-kg-chart.md](./spec-volume-kg-chart.md) | done | Weekly volume (kg) chart — GH#133 |
