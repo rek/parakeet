@@ -21,7 +21,7 @@ export function buildNextLiftLabel({
 }: {
   pendingMainSetNumber: number | null;
   plannedSets: { weight_kg: number; reps: number }[];
-  actualSets: { is_completed: boolean }[];
+  actualSets: { is_completed: boolean; weight_grams: number }[];
   currentAdaptation: {
     adaptationType: string;
     sets: Array<{ weight_kg: number }>;

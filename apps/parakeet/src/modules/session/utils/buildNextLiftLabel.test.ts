@@ -9,15 +9,15 @@ const planned = [
 ];
 
 const allUncompleted = [
-  { is_completed: false },
-  { is_completed: false },
-  { is_completed: false },
+  { is_completed: false, weight_grams: 100000 },
+  { is_completed: false, weight_grams: 100000 },
+  { is_completed: false, weight_grams: 100000 },
 ];
 
 const firstCompleted = [
-  { is_completed: true },
-  { is_completed: false },
-  { is_completed: false },
+  { is_completed: true, weight_grams: 100000 },
+  { is_completed: false, weight_grams: 100000 },
+  { is_completed: false, weight_grams: 100000 },
 ];
 
 const auxWork = [
@@ -66,9 +66,26 @@ describe('buildNextLiftLabel', () => {
         { weight_kg: 0, reps: 10 },
         { weight_kg: 0, reps: 10 },
       ],
+      actualSets: [
+        { is_completed: false, weight_grams: 0 },
+        { is_completed: false, weight_grams: 0 },
+      ],
       pendingMainSetNumber: 1,
     });
     expect(result).toBe('Next: Set 2 × 10');
+  });
+
+  it('shows bumped weight in next label after weight autoregulation accept', () => {
+    const result = buildNextLiftLabel({
+      ...baseArgs,
+      pendingMainSetNumber: 1,
+      actualSets: [
+        { is_completed: true, weight_grams: 100000 },
+        { is_completed: false, weight_grams: 105000 }, // bumped +5kg
+        { is_completed: false, weight_grams: 105000 },
+      ],
+    });
+    expect(result).toBe('Next: Set 2 — 105kg × 5');
   });
 
   it('returns undefined for out-of-bounds main set index', () => {

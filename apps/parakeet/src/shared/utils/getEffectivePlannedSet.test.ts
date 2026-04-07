@@ -8,15 +8,27 @@ const planned = [
   { weight_kg: 100, reps: 5 },
 ];
 
-function makeActual(completedFlags: boolean[]) {
-  return completedFlags.map((c) => ({ is_completed: c }));
+function makeActual(completedFlags: boolean[], weightGrams = 100000) {
+  return completedFlags.map((c) => ({ is_completed: c, weight_grams: weightGrams }));
 }
 
 describe('getEffectivePlannedSet', () => {
-  it('returns base planned set when no adaptation', () => {
+  it('returns actualSet weight for incomplete sets when no adaptation', () => {
     const actual = makeActual([true, false, false]);
     const result = getEffectivePlannedSet(1, planned, actual, null);
     expect(result).toEqual({ weight_kg: 100, reps: 5 });
+  });
+
+  it('returns bumped actualSet weight when no adaptation and weight_grams differs from planned', () => {
+    const actual = makeActual([true, false, false], 105000); // bumped to 105kg
+    const result = getEffectivePlannedSet(1, planned, actual, null);
+    expect(result).toEqual({ weight_kg: 105, reps: 5 });
+  });
+
+  it('returns planned for completed sets when no adaptation', () => {
+    const actual = makeActual([true, false, false], 105000);
+    const result = getEffectivePlannedSet(0, planned, actual, null);
+    expect(result).toEqual({ weight_kg: 100, reps: 5 }); // completed → planned, not bumped
   });
 
   it('returns undefined for out-of-bounds index', () => {

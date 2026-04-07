@@ -15,7 +15,7 @@ const makeActual = (overrides: {
 const makePlanned = (weight_kg: number) => ({ weight_kg, reps: 5 });
 
 describe('computeDisplayWeights', () => {
-  it('uses planned weights when there is no adaptation', () => {
+  it('uses actualSet weight_grams when there is no adaptation', () => {
     const result = computeDisplayWeights(
       [
         makeActual({ weight_grams: 80000 }),
@@ -25,9 +25,24 @@ describe('computeDisplayWeights', () => {
       null
     );
     expect(result).toEqual([
-      { displayWeightKg: 100, originalIndex: 0 },
-      { displayWeightKg: 105, originalIndex: 1 },
+      { displayWeightKg: 80, originalIndex: 0 },
+      { displayWeightKg: 80, originalIndex: 1 },
     ]);
+  });
+
+  it('uses bumped weight when accepted weight autoregulation and no adaptation', () => {
+    const result = computeDisplayWeights(
+      [
+        makeActual({ is_completed: true, weight_grams: 100000 }),
+        makeActual({ is_completed: false, weight_grams: 105000 }), // bumped +5kg
+        makeActual({ is_completed: false, weight_grams: 105000 }),
+      ],
+      [makePlanned(100), makePlanned(100), makePlanned(100)],
+      null
+    );
+    expect(result[0].displayWeightKg).toBe(100); // completed → planned
+    expect(result[1].displayWeightKg).toBe(105); // bumped
+    expect(result[2].displayWeightKg).toBe(105); // bumped
   });
 
   it('falls back to actualSet.weight_grams / 1000 when no planned set exists at that index', () => {
@@ -135,7 +150,11 @@ describe('computeDisplayWeights', () => {
 
   it('preserves originalIndex for each output entry', () => {
     const result = computeDisplayWeights(
-      [makeActual({}), makeActual({}), makeActual({})],
+      [
+        makeActual({ weight_grams: 100000 }),
+        makeActual({ weight_grams: 105000 }),
+        makeActual({ weight_grams: 110000 }),
+      ],
       [makePlanned(100), makePlanned(105), makePlanned(110)],
       null
     );

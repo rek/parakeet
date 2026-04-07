@@ -5,6 +5,7 @@ interface PlannedSet {
 
 interface ActualSet {
   is_completed: boolean;
+  weight_grams: number;
 }
 
 interface Adaptation {
@@ -30,15 +31,21 @@ export function getEffectivePlannedSet(
   const planned = plannedSets[index];
   if (!planned) return undefined;
 
+  const actual = actualSets[index];
+
   if (
     currentAdaptation === null ||
     (currentAdaptation.adaptationType !== 'weight_reduced' &&
       currentAdaptation.adaptationType !== 'sets_capped')
   ) {
+    // No weight-modifying adaptation. Use actualSet.weight_grams for incomplete sets —
+    // it's initialised from planned but may have been bumped via weight autoregulation accept.
+    if (!actual?.is_completed) {
+      return { weight_kg: actual.weight_grams / 1000, reps: planned.reps };
+    }
     return planned;
   }
 
-  const actual = actualSets[index];
   if (actual?.is_completed) return planned;
 
   // Count uncompleted sets before this index to find offset into adaptation.sets[]
