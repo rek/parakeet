@@ -49,7 +49,9 @@ export function useClaimInvite() {
         queryKey: partnerQueries.all(),
       });
     },
-    onError: (err: Error) => captureException(err),
+    // No onError captureException here — QrScanSheet uses mutateAsync and catches
+    // the error itself (captureException + user-facing message). Adding it here
+    // would double-report every claim failure to Sentry.
   });
 
   return {
