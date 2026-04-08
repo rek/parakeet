@@ -57,9 +57,16 @@ export function useOtaUpdates(): OtaUpdateState {
   const [error, setError] = useState<string | null>(null);
   const [checkedAt, setCheckedAt] = useState<number | null>(null);
   const lastCheckedRef = useRef<number>(0);
+  const statusRef = useRef<OtaStatus>('idle');
+
+  const updateStatus = useCallback((next: OtaStatus) => {
+    statusRef.current = next;
+    setStatus(next);
+  }, []);
 
   const checkAndApply = useCallback(async (force = false) => {
     if (__DEV__) return;
+    if (statusRef.current === 'ready' || statusRef.current === 'restarting') return;
 
     const now = Date.now();
     if (!force && now - lastCheckedRef.current < DEBOUNCE_MS) return;
@@ -67,37 +74,38 @@ export function useOtaUpdates(): OtaUpdateState {
 
     try {
       setError(null);
-      setStatus('checking');
+      updateStatus('checking');
       const result = await Updates.checkForUpdateAsync();
 
       if (result.isAvailable) {
-        setStatus('downloading');
+        updateStatus('downloading');
         await Updates.fetchUpdateAsync();
-        setStatus('ready');
+        setCheckedAt(Date.now());
+        updateStatus('ready');
       } else {
         setCheckedAt(Date.now());
-        setStatus('up-to-date');
+        updateStatus('up-to-date');
       }
     } catch (err) {
       const message =
         err instanceof Error ? err.message : 'Unknown update error';
       setError(message);
-      setStatus('error');
+      updateStatus('error');
       captureException(err);
     }
-  }, []);
+  }, [updateStatus]);
 
   const checkForUpdate = useCallback(() => {
     void checkAndApply(true);
   }, [checkAndApply]);
 
   const applyUpdate = useCallback(() => {
-    setStatus('restarting');
+    updateStatus('restarting');
     Updates.reloadAsync().catch((err) => {
       captureException(err);
-      setStatus('ready');
+      updateStatus('ready');
     });
-  }, []);
+  }, [updateStatus]);
 
   useEffect(() => {
     void checkAndApply();

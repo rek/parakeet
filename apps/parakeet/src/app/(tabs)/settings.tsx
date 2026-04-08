@@ -233,6 +233,9 @@ function buildStyles(colors: ColorScheme) {
     signOutLabel: {
       color: colors.danger,
     },
+    updateReadyLabel: {
+      color: colors.success,
+    },
     versionLabel: {
       color: colors.textTertiary,
     },
@@ -648,9 +651,11 @@ export default function SettingsScreen() {
           labelStyle={
             otaStatus === 'error'
               ? styles.signOutLabel
-              : otaStatus === 'up-to-date'
-                ? styles.versionLabel
-                : undefined
+              : otaStatus === 'ready'
+                ? styles.updateReadyLabel
+                : otaStatus === 'up-to-date'
+                  ? styles.versionLabel
+                  : undefined
           }
           onPress={
             otaStatus === 'checking' ||
