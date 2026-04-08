@@ -274,6 +274,36 @@ describe('fetchTodaySessions', () => {
 
     await expect(fetchTodaySessions('user-1')).rejects.toThrow('query failed');
   });
+
+  it('applies program_id filter when activeProgramId is provided', async () => {
+    const sessions = [
+      { id: 's1', status: 'planned', planned_date: '2026-03-08', program_id: 'prog-5' },
+    ];
+    const chain = createListChain();
+    chain.order.mockResolvedValue({ data: sessions, error: null });
+    fromMock.mockReturnValueOnce(chain);
+
+    const result = await fetchTodaySessions('user-1', 'prog-5');
+
+    expect(result).toEqual(sessions);
+    expect(chain.or).toHaveBeenCalledWith(
+      expect.stringContaining('status.eq.in_progress')
+    );
+    expect(chain.or).toHaveBeenCalledWith(
+      'program_id.is.null,program_id.eq.prog-5'
+    );
+    expect(chain.or).toHaveBeenCalledTimes(2);
+  });
+
+  it('does not add program_id filter when activeProgramId is null', async () => {
+    const chain = createListChain();
+    chain.order.mockResolvedValue({ data: [], error: null });
+    fromMock.mockReturnValueOnce(chain);
+
+    await fetchTodaySessions('user-1', null);
+
+    expect(chain.or).toHaveBeenCalledTimes(1);
+  });
 });
 
 describe('fetchInProgressSession', () => {

@@ -209,7 +209,7 @@ describe('findTodaySessions', () => {
     const result = await findTodaySessions('user-1');
 
     expect(result).toEqual(sessions);
-    expect(mockFetchTodaySessions).toHaveBeenCalledWith('user-1');
+    expect(mockFetchTodaySessions).toHaveBeenCalledWith('user-1', 'p1');
   });
 
   it('still returns sessions when fetchActiveProgramMode throws', async () => {
@@ -225,7 +225,7 @@ describe('findTodaySessions', () => {
 
     expect(result).toEqual(sessions);
     expect(mockCaptureException).toHaveBeenCalledWith(expect.any(Error));
-    expect(mockFetchTodaySessions).toHaveBeenCalledWith('user-1');
+    expect(mockFetchTodaySessions).toHaveBeenCalledWith('user-1', null);
   });
 
   it('still returns sessions when unending lazy generation throws', async () => {

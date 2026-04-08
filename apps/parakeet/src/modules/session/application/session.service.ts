@@ -113,8 +113,12 @@ export async function findTodaySession(userId: string) {
 // For unending programs, triggers lazy session generation first.
 export async function findTodaySessions(userId: string) {
   let unendingSession: Awaited<ReturnType<typeof findTodaySession>> = null;
+  let activeProgramId: string | null = null;
   try {
     const program = await fetchActiveProgramMode(userId);
+    if (program) {
+      activeProgramId = program.id;
+    }
     if (program?.program_mode === 'unending') {
       unendingSession = await findTodaySession(userId);
     }
@@ -123,7 +127,7 @@ export async function findTodaySessions(userId: string) {
     // The direct fetchTodaySessions query still works without program context.
     captureException(err);
   }
-  const sessions = await fetchTodaySessions(userId);
+  const sessions = await fetchTodaySessions(userId, activeProgramId);
   // For unending programs, if no sessions matched today's date,
   // include the nearest planned session so the user always sees their next workout.
   if (sessions.length === 0 && unendingSession?.status === 'planned') {

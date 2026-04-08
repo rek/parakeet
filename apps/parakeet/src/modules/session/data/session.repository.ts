@@ -130,15 +130,21 @@ export async function fetchTodaySession(
 }
 
 export async function fetchTodaySessions(
-  userId: string
+  userId: string,
+  activeProgramId: string | null = null
 ): Promise<SessionRow[]> {
   const today = localDateString();
-  const { data, error } = await typedSupabase
+  let query = typedSupabase
     .from('sessions')
     .select('*')
     .eq('user_id', userId)
-    .or(`planned_date.eq.${today},status.eq.in_progress`)
-    .order('planned_date', { ascending: true });
+    .or(`planned_date.eq.${today},status.eq.in_progress`);
+
+  if (activeProgramId !== null) {
+    query = query.or(`program_id.is.null,program_id.eq.${activeProgramId}`);
+  }
+
+  const { data, error } = await query.order('planned_date', { ascending: true });
   if (error) throw error;
   // Deduplicate: in_progress session may match both conditions
   const seen = new Set<string>();
@@ -646,7 +652,8 @@ export async function fetchInProgressSession(
 }
 
 // Cancel all planned sessions for a program when it is archived/ended.
-// Prevents leftover planned sessions from surfacing on the Today screen.
+// fetchTodaySessions now also filters by active program ID, but this
+// cleanup is still useful for data hygiene and the weekly-review checks.
 export async function cancelPlannedSessionsForProgram(
   programId: string
 ): Promise<void> {
