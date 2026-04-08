@@ -31,6 +31,7 @@ The 16 rules that matter most — read this, then consult the full guide only as
 - Use strict typing throughout the codebase
 - Avoid `any` - use `unknown` if type is truly unknown
 - Prefer type inference when the type is obvious
+- **Re-exports don't create local bindings.** `export { Foo } from 'bar'` makes `Foo` available to importers of this file, but NOT usable within the same file. If the file also uses `Foo` locally, add a separate `import type { Foo } from 'bar'` alongside the re-export. The app's `tsc` may catch this when the engine's does not — always validate from the app's tsconfig after moving types across packages.
 
 ### Examples
 
@@ -178,6 +179,8 @@ const styles = StyleSheet.create({
 });
 ```
 
+**Extract signal:** "does this block have its own `useState`?" — not "is the file getting long?"
+
 ---
 
 ## Hooks
@@ -233,6 +236,24 @@ export function useUpdateProfile() {
 ```
 
 **Screen boundary**: screens (`app/`) must never import `@tanstack/react-query`. Even a trivial `useQuery` wrapper earns its existence as a module hook — it enforces that all data fetching lives in `modules/`.
+
+### Prop→state sync is an anti-pattern
+
+**Never use `useEffect` to sync props into local state.** When a component initializes state from a prop (`useState(prop)`) and syncs changes via `useEffect`, external updates create a cascade: prop changes → effect fires → sets state → `onUpdate` effect fires → parent re-renders.
+
+Instead, write a pure resolver function that derives display values from both local state and props. When externally controlled (e.g., a completed flag from the parent), bypass local state entirely and return prop values directly. No sync effects needed, no cascading updates.
+
+```typescript
+// ❌ Bad — causes render cascades
+const [isCompleted, setIsCompleted] = useState(isCompletedProp);
+useEffect(() => { setIsCompleted(isCompletedProp); }, [isCompletedProp]);
+
+// ✅ Good — pure resolver, no effect needed
+function resolveDisplay(localState: LocalState, props: Props) {
+  if (props.isCompleted !== undefined) return props.isCompleted; // externally controlled
+  return localState.isCompleted; // locally controlled
+}
+```
 
 ---
 
@@ -488,10 +509,11 @@ describe('formatDate', () => {
 
 ```typescript
 // apps/parakeet/src/modules/session/data/session.repository.test.ts
+import { describe, expect, it, vi } from 'vitest';
 import { getparakeet } from './getparakeet';
 
 // Mock external dependencies
-jest.mock('@/database');
+vi.mock('@/database');
 
 describe('getparakeet', () => {
   it('fetches parakeet by id', async () => {
@@ -505,12 +527,13 @@ describe('getparakeet', () => {
 
 ```typescript
 // apps/parakeet/src/shared/ui/Button.test.tsx
+import { describe, expect, it, vi } from 'vitest';
 import { fireEvent, render } from '@testing-library/react-native';
 import { Button } from './Button';
 
 describe('Button', () => {
   it('calls onPress when pressed', () => {
-    const onPress = jest.fn();
+    const onPress = vi.fn();
     const { getByText } = render(<Button onPress={onPress}>Click</Button>);
 
     fireEvent.press(getByText('Click'));
@@ -523,11 +546,12 @@ describe('Button', () => {
 
 ```typescript
 // apps/parakeet/src/modules/history/ui/HistoryScreen.test.tsx
+import { describe, expect, it, vi } from 'vitest';
 import { render, waitFor } from '@testing-library/react-native';
 import { ArchiveScreen } from './ArchiveScreen';
 
 // Mock data-access dependencies
-jest.mock('@parakeet/data-parakeet');
+vi.mock('@parakeet/data-parakeet');
 
 describe('ArchiveScreen', () => {
   it('displays parakeet when loaded', async () => {
@@ -589,6 +613,7 @@ libs/parakeet/feature-archive/
 
 ```typescript
 // ComponentName.test.tsx
+import { describe, expect, it, vi } from 'vitest';
 import { fireEvent, render } from '@testing-library/react-native';
 import { ComponentName } from './ComponentName';
 
@@ -599,7 +624,7 @@ describe('ComponentName', () => {
   });
 
   it('calls onPress when pressed', () => {
-    const onPress = jest.fn();
+    const onPress = vi.fn();
     const { getByText } = render(
       <ComponentName title="Test" onPress={onPress} />
     );
@@ -631,6 +656,18 @@ describe('useFeature', () => {
   });
 });
 ```
+
+### Test Quality
+
+**Tautological tests catch nothing.** `expect(CONSTANT.field).toBe(3)` only tests that a constant equals itself. Replace with behavioral tests that exercise real code paths.
+
+**Invariant tests > point tests for domain logic.** Identify properties that must hold for ALL valid inputs, build a combinatorial matrix, and assert the property. A single invariant test can catch classes of bugs that a dozen point tests miss.
+
+**Compound interaction tests catch pipeline ordering bugs.** Individual adjuster/modifier tests can all pass while the pipeline that applies them in sequence is broken. Test with 3-4 adjusters active simultaneously, not in isolation.
+
+**Scenario tests are the ultimate intent tests.** A realistic end-to-end scenario ("beginner female, menstrual phase, first heavy squat") exercises the full pipeline and catches integration failures that unit tests never reach.
+
+**Shared fixtures reduce copy-drift.** When multiple test files construct similar inputs, extract `baseInput()`, `makeDisruption()`, `makeSets()` helpers to `__test-helpers__/fixtures.ts`. Divergent copies accumulate subtle differences that hide real bugs.
 
 ---
 
@@ -789,6 +826,22 @@ console.log('User data:', user);
 // Good - use conditional logging
 if (__DEV__) {
   console.log('User data:', user);
+}
+```
+
+❌ Silent stubs for user-reachable code paths
+
+Any code path reachable by a user action must be fully implemented or immediately throw. Stubs that return defaults or just log are invisible data loss — they pass review and ship as bugs.
+
+```typescript
+// Bad — silent stub, ships as a bug
+function handleAuxLiftFailed() {
+  logRest(); // TODO: implement
+}
+
+// Good — fails loudly in testing
+function handleAuxLiftFailed(): never {
+  throw new Error('not yet implemented: aux lift failure');
 }
 ```
 

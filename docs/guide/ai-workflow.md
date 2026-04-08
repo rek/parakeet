@@ -32,6 +32,8 @@ Before any design or implementation:
 - Check [domain/](../domain/) if the work involves training constants or formulas.
 - Check `apps/parakeet/src/modules/<feature>/index.ts` for the current public API before adding new exports.
 
+**When debugging a bug:** Check two paths — (1) did the DB write actually land? and (2) did the UI query get invalidated? Missing cache invalidation is the most common cause of "stale UI" that passes write-path inspection.
+
 ## 1) Research (big features only)
 
 When the work touches a new technology, library, or domain the codebase hasn't used before:
@@ -99,6 +101,13 @@ Phases execute sequentially. Tasks within a phase can run in parallel if indepen
 
 For each phase:
 
+**Before writing code for a screen, verify:**
+- Query keys match `qk.*` patterns
+- Mutations invalidate relevant queries
+- Props flow all context the child components need
+
+A pre-implementation screen review catches issues (stale query keys, missing invalidations, prop threading) that would otherwise ship alongside the new feature.
+
 - **Fresh context**: Start each phase with a clean agent/session. Provide only the phase's tasks, relevant files, and decisions — not the entire conversation history. This prevents context degradation on big features.
 - Follow boundaries in `project-organization.md`.
 - Prefer module public APIs (`@modules/<feature>`).
@@ -125,7 +134,11 @@ When you hit a type error:
 
 A cast makes the compiler trust you. If you're wrong, the runtime breaks silently. A cast that gets copied across 3 files becomes systemic type blindness. Maximum fidelity means the type system is an ally, not an obstacle to route around.
 
-**After every migration:** Run `npm run db:types` immediately. Not as a follow-up. Not in wrap-up. Immediately. Then verify the generated types match your expectations before writing repository code.
+**When touching DB schema:**
+- Grep the column name across the full codebase before starting — making a column nullable cascades to: migration, `supabase/types.ts`, Zod schemas in `shared-types`, and domain types in `shared/types/domain.ts`.
+- If using a new enum-like sentinel value, check for a DB CHECK constraint and update it in the same migration.
+- Always verify column names against the migration SQL, not sibling query files — a silently wrong column name returns no data with no error thrown.
+- After every migration: run `npm run db:types` immediately. Not as a follow-up. Not in wrap-up. Immediately. Then verify the generated types match your expectations before writing repository code.
 
 ### Inline quality checks during execution
 
