@@ -48,6 +48,21 @@ describe('resolveSetRowDisplay', () => {
 
       expect(result.displayCompleted).toBe(true);
     });
+
+    it('allows bumped weight through when not externally completed', () => {
+      const result = resolveSetRowDisplay(
+        makeArgs({
+          isCompletedExternal: false,
+          localWeightKg: 105,
+          localWeightText: '105',
+          plannedWeightKg: 100,
+        })
+      );
+
+      expect(result.displayWeightKg).toBe(105);
+      expect(result.displayWeightText).toBe('105');
+      expect(result.displayCompleted).toBe(false);
+    });
   });
 
   describe('externally completed (PostRestOverlay)', () => {

@@ -25,10 +25,10 @@ describe('getEffectivePlannedSet', () => {
     expect(result).toEqual({ weight_kg: 105, reps: 5 });
   });
 
-  it('returns planned for completed sets when no adaptation', () => {
+  it('returns actual weight for completed sets when no adaptation', () => {
     const actual = makeActual([true, false, false], 105000);
     const result = getEffectivePlannedSet(0, planned, actual, null);
-    expect(result).toEqual({ weight_kg: 100, reps: 5 }); // completed → planned, not bumped
+    expect(result).toEqual({ weight_kg: 105, reps: 5 }); // completed → actual weight lifted
   });
 
   it('returns undefined for out-of-bounds index', () => {
@@ -108,13 +108,13 @@ describe('getEffectivePlannedSet', () => {
     });
   });
 
-  it('returns base planned for completed set even with weight_reduced adaptation', () => {
+  it('returns actual weight for completed set even with weight_reduced adaptation', () => {
     const actual = makeActual([true, false, false]);
     const adaptation = {
       adaptationType: 'weight_reduced' as const,
       sets: [{ weight_kg: 90 }, { weight_kg: 90 }],
     };
-    // index 0 is completed → return base planned
+    // index 0 is completed → return actual weight lifted, not adaptation
     const result = getEffectivePlannedSet(0, planned, actual, adaptation);
     expect(result).toEqual({ weight_kg: 100, reps: 5 });
   });

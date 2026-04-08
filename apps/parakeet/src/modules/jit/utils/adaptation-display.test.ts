@@ -40,7 +40,7 @@ describe('computeDisplayWeights', () => {
       [makePlanned(100), makePlanned(100), makePlanned(100)],
       null
     );
-    expect(result[0].displayWeightKg).toBe(100); // completed → planned
+    expect(result[0].displayWeightKg).toBe(100); // completed → actual weight
     expect(result[1].displayWeightKg).toBe(105); // bumped
     expect(result[2].displayWeightKg).toBe(105); // bumped
   });
@@ -113,7 +113,7 @@ describe('computeDisplayWeights', () => {
       [makePlanned(100), makePlanned(100), makePlanned(100)],
       adaptation
     );
-    expect(result[0].displayWeightKg).toBe(100); // completed → planned
+    expect(result[0].displayWeightKg).toBe(100); // completed → actual weight
     expect(result[1].displayWeightKg).toBe(80); // adaptation.sets[0]
     expect(result[2].displayWeightKg).toBe(80); // adaptation.sets[1]
   });

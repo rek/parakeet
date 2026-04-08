@@ -15,9 +15,8 @@ The fix is to make `getEffectivePlannedSet` prefer `actualSet.weight_grams / 100
 **`apps/parakeet/src/shared/utils/getEffectivePlannedSet.ts`:**
 
 - [x] Add `weight_grams: number` to the local `ActualSet` interface
-- [x] For incomplete sets with no weight-modifying adaptation, return `{ weight_kg: actual.weight_grams / 1000, reps: planned.reps }` instead of `planned`
-  - Weight-modifying adaptation case (`weight_reduced`, `sets_capped`) is unchanged — adaptation weight still wins
-  - Completed sets still return `planned` (callers use `actualSet.weight_grams` directly for completed sets)
+- [x] For all sets (completed or incomplete) with no weight-modifying adaptation, return `{ weight_kg: weightGramsToKg(actual.weight_grams), reps: planned.reps }` — the store's `weight_grams` is always the source of truth
+  - Weight-modifying adaptation case (`weight_reduced`, `sets_capped`) — adaptation weight wins for uncompleted sets; completed sets return actual weight
 - [x] Update tests:
   - "no adaptation, incomplete set with weight_grams matching planned" → displayWeightKg = actualSet value (still same result)
   - "no adaptation, incomplete set with bumped weight_grams (110000g)" → displayWeightKg = 110 (not planned 100)

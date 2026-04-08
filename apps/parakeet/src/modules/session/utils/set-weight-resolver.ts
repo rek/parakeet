@@ -1,8 +1,48 @@
 import { weightKgToGrams } from '@shared/utils/weight';
 
 /**
- * Resolves the weight for the next main lift set.
+ * Resolves the weight for the next main lift set, respecting explicit changes.
  *
+ * If the next set's weight was explicitly changed (e.g. via weight autoregulation
+ * accept or manual edit), it is preserved. Otherwise, carries forward the most
+ * recently completed set's weight so user deviations propagate.
+ */
+export function resolveWeightForNextSet({
+  actualSets,
+  plannedSets,
+  nextSetNumber,
+  effectiveWeightKg,
+}: {
+  actualSets: Array<{
+    set_number: number;
+    weight_grams: number;
+    is_completed: boolean;
+  }>;
+  plannedSets: Array<{ weight_kg: number }>;
+  nextSetNumber: number;
+  effectiveWeightKg: number;
+}): number {
+  const nextActualSet = actualSets.find(
+    (s) => s.set_number === nextSetNumber
+  );
+  const originalPlannedGrams = weightKgToGrams(
+    plannedSets[nextSetNumber - 1]?.weight_kg ?? 0
+  );
+  const wasExplicitlyChanged =
+    nextActualSet != null &&
+    nextActualSet.weight_grams !== originalPlannedGrams;
+
+  if (wasExplicitlyChanged) {
+    return nextActualSet.weight_grams;
+  }
+  return resolveNextSetWeight({
+    completedSets: actualSets,
+    nextSetNumber,
+    plannedWeightKg: effectiveWeightKg,
+  });
+}
+
+/**
  * Carries forward the user's actual weight from the most recently completed set
  * (they may have adjusted from planned). Falls back to planned weight if no
  * previous set is completed.

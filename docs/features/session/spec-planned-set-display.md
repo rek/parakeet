@@ -20,9 +20,9 @@ This spec introduces a single `getEffectivePlannedSet()` function and wires all 
   - Return `plannedSets[index]` as fallback if index is out of bounds for adaptation sets
 - [x] Export from `modules/session/index.ts`
 - [x] Unit tests in `utils/getEffectivePlannedSet.test.ts`:
-  - No adaptation → returns base planned set
-  - `extended_rest` adaptation → returns base planned set (no weight change)
-  - `weight_reduced` adaptation with mix of completed/uncompleted sets → returns adapted weight for uncompleted, base for completed
+  - No adaptation → returns actual weight from store (initialised from planned, may be bumped)
+  - `extended_rest` adaptation → returns actual weight from store (no weight override)
+  - `weight_reduced` adaptation with mix of completed/uncompleted sets → returns adapted weight for uncompleted, actual weight for completed
   - `sets_capped` adaptation → same behavior as weight_reduced
   - Index out of bounds for adaptation.sets → falls back to planned
   - Empty plannedSets → returns undefined gracefully

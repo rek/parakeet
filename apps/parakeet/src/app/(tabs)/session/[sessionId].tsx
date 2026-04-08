@@ -70,6 +70,7 @@ import {
   getAllExercises,
   getExerciseType,
 } from '@shared/utils/exercise-lookup';
+import { getEffectivePlannedSet } from '@shared/utils/getEffectivePlannedSet';
 import { sessionLabel } from '@shared/utils/string';
 import { weightGramsToKg } from '@shared/utils/weight';
 import { useKeepAwake } from 'expo-keep-awake';
@@ -459,6 +460,24 @@ export default function SessionScreen() {
     oneRmKgRef,
     biologicalSexRef,
   });
+
+  // Live-derive PostRestOverlay weight from store so it stays in sync with
+  // weight autoregulation accepts that land while the rest timer is running.
+  const postRestWeightKg = useMemo(() => {
+    if (!postRestState || postRestState.pendingMainSetNumber === null) {
+      return postRestState?.plannedWeightKg ?? null;
+    }
+    // pendingMainSetNumber is the 1-based set_number of the just-completed set,
+    // which equals the 0-based array index of the next set.
+    const nextIdx = postRestState.pendingMainSetNumber;
+    const liveSet = getEffectivePlannedSet(
+      nextIdx,
+      plannedSets,
+      actualSets,
+      currentAdaptation
+    );
+    return liveSet?.weight_kg ?? null;
+  }, [postRestState, plannedSets, actualSets, currentAdaptation]);
 
   // ── Video recording during post-rest overlay ──────────────────────────────
 
@@ -903,11 +922,7 @@ export default function SessionScreen() {
                 <SetRow
                   key={actualSet.set_number}
                   setNumber={actualSet.set_number}
-                  plannedWeightKg={
-                    actualSet.is_completed
-                      ? weightGramsToKg(actualSet.weight_grams)
-                      : displayWeightKg
-                  }
+                  plannedWeightKg={displayWeightKg}
                   plannedReps={
                     actualSet.is_completed
                       ? actualSet.reps_completed
@@ -1328,7 +1343,7 @@ export default function SessionScreen() {
           {postRestState !== null && !timerState?.visible && (
             <PostRestOverlay
               plannedReps={postRestState.plannedReps}
-              plannedWeightKg={postRestState.plannedWeightKg}
+              plannedWeightKg={postRestWeightKg}
               nextSetNumber={postRestState.nextSetNumber}
               onLiftComplete={handleLiftCompleteWithVideo}
               onLiftFailed={handleLiftFailedWithVideo}

@@ -1,7 +1,71 @@
 import {
   resolveNextAuxSetWeight,
   resolveNextSetWeight,
+  resolveWeightForNextSet,
 } from './set-weight-resolver';
+
+describe('resolveWeightForNextSet', () => {
+  const planned = [{ weight_kg: 100 }, { weight_kg: 100 }, { weight_kg: 100 }];
+
+  it('preserves bumped weight when next set was explicitly changed', () => {
+    const actual = [
+      { set_number: 1, weight_grams: 100_000, is_completed: true },
+      { set_number: 2, weight_grams: 105_000, is_completed: false }, // bumped +5kg
+    ];
+    expect(
+      resolveWeightForNextSet({
+        actualSets: actual,
+        plannedSets: planned,
+        nextSetNumber: 2,
+        effectiveWeightKg: 105,
+      })
+    ).toBe(105_000);
+  });
+
+  it('preserves manually reduced weight', () => {
+    const actual = [
+      { set_number: 1, weight_grams: 100_000, is_completed: true },
+      { set_number: 2, weight_grams: 97_500, is_completed: false }, // manual edit
+    ];
+    expect(
+      resolveWeightForNextSet({
+        actualSets: actual,
+        plannedSets: planned,
+        nextSetNumber: 2,
+        effectiveWeightKg: 100,
+      })
+    ).toBe(97_500);
+  });
+
+  it('carries forward when next set weight matches original planned', () => {
+    const actual = [
+      { set_number: 1, weight_grams: 95_000, is_completed: true }, // user lifted 95
+      { set_number: 2, weight_grams: 100_000, is_completed: false }, // still at planned
+    ];
+    expect(
+      resolveWeightForNextSet({
+        actualSets: actual,
+        plannedSets: planned,
+        nextSetNumber: 2,
+        effectiveWeightKg: 100,
+      })
+    ).toBe(95_000); // carry-forward from set 1
+  });
+
+  it('uses effective weight when no prior completed set and no explicit change', () => {
+    const actual = [
+      { set_number: 1, weight_grams: 100_000, is_completed: false },
+    ];
+    expect(
+      resolveWeightForNextSet({
+        actualSets: actual,
+        plannedSets: planned,
+        nextSetNumber: 1,
+        effectiveWeightKg: 100,
+      })
+    ).toBe(100_000);
+  });
+});
 
 describe('resolveNextSetWeight', () => {
   it('Set 1 (no previous completed) → uses planned weight', () => {
@@ -86,6 +150,7 @@ describe('resolveNextSetWeight', () => {
       })
     ).toBe(112_500);
   });
+
 });
 
 describe('resolveNextAuxSetWeight', () => {

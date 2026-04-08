@@ -21,7 +21,7 @@ import { getEffectivePlannedSet } from '@shared/utils/getEffectivePlannedSet';
 import { writeAuxFailureAndAdapt } from '../utils/set-outcome-helpers';
 import {
   resolveNextAuxSetWeight,
-  resolveNextSetWeight,
+  resolveWeightForNextSet,
 } from '../utils/set-weight-resolver';
 import { checkVolumeRecovery } from '../utils/volume-recovery-check';
 import { checkWeightAutoregulation } from '../utils/weight-autoregulation-check';
@@ -246,7 +246,7 @@ export function useSetCompletionFlow({
       actualRestSeconds: elapsedSeconds,
       liftStartedAt: Date.now(),
       plannedReps: nextSet?.reps ?? 0,
-      plannedWeightKg: nextSet?.weight_kg ?? null,
+      plannedWeightKg: null, // Derived live from store in [sessionId].tsx
       nextSetNumber: pendingMain + 1,
       resetSecondsRemaining: null,
     });
@@ -390,16 +390,15 @@ export function useSetCompletionFlow({
         storeState.actualSets,
         storeState.currentAdaptation
       );
-      const effectiveWeightKg = effective?.weight_kg ?? 0;
-      const effectiveReps = effective?.reps ?? 0;
-      const weightGrams = resolveNextSetWeight({
-        completedSets: storeState.actualSets,
+      const weightGrams = resolveWeightForNextSet({
+        actualSets: storeState.actualSets,
+        plannedSets,
         nextSetNumber,
-        plannedWeightKg: effectiveWeightKg,
+        effectiveWeightKg: effective?.weight_kg ?? 0,
       });
       updateSet(nextSetNumber, {
         weight_grams: weightGrams,
-        reps_completed: effectiveReps,
+        reps_completed: effective?.reps ?? 0,
         is_completed: true,
       });
       setPendingRpeSetNumber(nextSetNumber);
@@ -485,10 +484,11 @@ export function useSetCompletionFlow({
         storeState.actualSets,
         storeState.currentAdaptation
       );
-      const failedWeightGrams = resolveNextSetWeight({
-        completedSets: storeState.actualSets,
+      const failedWeightGrams = resolveWeightForNextSet({
+        actualSets: storeState.actualSets,
+        plannedSets: storeState.plannedSets,
         nextSetNumber,
-        plannedWeightKg: effective?.weight_kg ?? 0,
+        effectiveWeightKg: effective?.weight_kg ?? 0,
       });
       updateSet(nextSetNumber, {
         weight_grams: failedWeightGrams,
