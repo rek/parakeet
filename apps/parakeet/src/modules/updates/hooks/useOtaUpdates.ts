@@ -8,6 +8,7 @@ export type OtaStatus =
   | 'idle'
   | 'checking'
   | 'downloading'
+  | 'ready'
   | 'restarting'
   | 'up-to-date'
   | 'error';
@@ -27,6 +28,8 @@ export interface OtaUpdateState {
   /** Timestamp of the last successful check (epoch ms), or null if never checked. */
   lastCheckedAt: number | null;
   checkForUpdate: () => void;
+  /** Call when status is 'ready' to reload and apply the downloaded update. */
+  applyUpdate: () => void;
 }
 
 const DEBOUNCE_MS = 30_000;
@@ -46,6 +49,7 @@ const NOOP_STATE: OtaUpdateState = {
   meta: getUpdateMeta(),
   lastCheckedAt: null,
   checkForUpdate: () => {},
+  applyUpdate: () => {},
 };
 
 export function useOtaUpdates(): OtaUpdateState {
@@ -69,8 +73,7 @@ export function useOtaUpdates(): OtaUpdateState {
       if (result.isAvailable) {
         setStatus('downloading');
         await Updates.fetchUpdateAsync();
-        setStatus('restarting');
-        await Updates.reloadAsync();
+        setStatus('ready');
       } else {
         setCheckedAt(Date.now());
         setStatus('up-to-date');
@@ -87,6 +90,14 @@ export function useOtaUpdates(): OtaUpdateState {
   const checkForUpdate = useCallback(() => {
     void checkAndApply(true);
   }, [checkAndApply]);
+
+  const applyUpdate = useCallback(() => {
+    setStatus('restarting');
+    Updates.reloadAsync().catch((err) => {
+      captureException(err);
+      setStatus('ready');
+    });
+  }, []);
 
   useEffect(() => {
     void checkAndApply();
@@ -110,6 +121,7 @@ export function useOtaUpdates(): OtaUpdateState {
     meta: getUpdateMeta(),
     lastCheckedAt: checkedAt,
     checkForUpdate,
+    applyUpdate,
   };
 }
 

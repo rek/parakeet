@@ -40,6 +40,8 @@ function otaStatusLabel(status: OtaStatus, _error: string | null): string {
       return 'Checking for updates…';
     case 'downloading':
       return 'Downloading update…';
+    case 'ready':
+      return 'Update ready — tap to restart';
     case 'restarting':
       return 'Restarting…';
     case 'error':
@@ -293,6 +295,7 @@ export default function SettingsScreen() {
     meta: otaMeta,
     lastCheckedAt: otaLastCheckedAt,
     checkForUpdate,
+    applyUpdate,
   } = useOtaUpdateStatus();
 
   const [isExporting, setIsExporting] = useState(false);
@@ -650,9 +653,13 @@ export default function SettingsScreen() {
                 : undefined
           }
           onPress={
-            otaStatus === 'checking' || otaStatus === 'downloading'
+            otaStatus === 'checking' ||
+            otaStatus === 'downloading' ||
+            otaStatus === 'restarting'
               ? undefined
-              : checkForUpdate
+              : otaStatus === 'ready'
+                ? applyUpdate
+                : checkForUpdate
           }
           styles={styles}
           right={

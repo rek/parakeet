@@ -10,14 +10,15 @@ import {
   useRestNotifications,
   useSyncQueue,
 } from '@modules/session';
-import { OtaUpdatesProvider } from '@modules/updates';
+import { OtaUpdatesProvider, UpdateReadyBanner } from '@modules/updates';
 import { queryClient } from '@platform/query';
 import * as Sentry from '@sentry/react-native';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 
-// import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+
 import '@platform/supabase/bootstrap';
 
 // import { ReturnToSessionBanner } from '@modules/session';
@@ -47,7 +48,7 @@ SplashScreen.preventAutoHideAsync();
 
 function RootLayoutNav() {
   const { loading } = useAuthContext();
-  // const insets = useSafeAreaInsets();
+  const insets = useSafeAreaInsets();
   useSyncQueue();
   useMissedSessionReconciliation();
   useRestNotifications();
@@ -66,7 +67,18 @@ function RootLayoutNav() {
         <Stack.Screen name="disruption-report" />
         <Stack.Screen name="formula" options={{ presentation: 'modal' }} />
       </Stack>
-      {/* 
+      <View
+        style={{
+          position: 'absolute',
+          top: insets.top + 8,
+          left: 0,
+          right: 0,
+        }}
+        pointerEvents="box-none"
+      >
+        <UpdateReadyBanner />
+      </View>
+      {/*
       <View
         style={{
           position: 'absolute',
@@ -77,7 +89,7 @@ function RootLayoutNav() {
         pointerEvents="box-none"
       >
         <ReturnToSessionBanner />
-      </View> 
+      </View>
       */}
     </View>
   );
