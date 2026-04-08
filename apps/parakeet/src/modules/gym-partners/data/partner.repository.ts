@@ -211,8 +211,8 @@ export async function claimInvite({ token }: { token: string }) {
   } = await typedSupabase.auth.getUser();
   if (!user) throw new Error('Not authenticated');
 
-  // Atomic claim: RLS USING clause enforces (claimed_by IS NULL AND expires_at > now())
-  // using server time — no client-side clock check needed or safe.
+  // Atomic claim: RLS USING clause enforces claimed_by IS NULL using server-side
+  // evaluation — no client-side check needed or safe. Invites never expire.
   const { data, error } = await typedSupabase
     .from('gym_partner_invites')
     .update({ claimed_by: user.id })

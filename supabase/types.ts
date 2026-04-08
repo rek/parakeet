@@ -447,7 +447,6 @@ export type Database = {
         Row: {
           claimed_by: string | null
           created_at: string
-          expires_at: string
           id: string
           inviter_id: string
           token: string
@@ -455,7 +454,6 @@ export type Database = {
         Insert: {
           claimed_by?: string | null
           created_at?: string
-          expires_at: string
           id?: string
           inviter_id: string
           token?: string
@@ -463,7 +461,6 @@ export type Database = {
         Update: {
           claimed_by?: string | null
           created_at?: string
-          expires_at?: string
           id?: string
           inviter_id?: string
           token?: string
