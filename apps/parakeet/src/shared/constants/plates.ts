@@ -1,4 +1,4 @@
-const PLATE_SIZES_KG = [25, 20, 15, 10, 5, 2.5, 1.25] as const;
+export const PLATE_SIZES_KG = [25, 20, 15, 10, 5, 2.5, 1.25] as const;
 export type PlateKg = (typeof PLATE_SIZES_KG)[number];
 
 /** Standard IWF plate colors by weight (kg). */

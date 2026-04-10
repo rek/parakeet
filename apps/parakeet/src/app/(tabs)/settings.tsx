@@ -15,12 +15,15 @@ import { formatBirthYear, formatBodyweight } from '@modules/profile';
 import {
   exportTrainingData,
   getBarWeightKg,
+  getDisabledPlates,
   getWarmupPlateDisplay,
   setBarWeightKg,
+  setDisabledPlates,
   setWarmupPlateDisplay,
   useSettingsBadges,
 } from '@modules/settings';
 import type { BarWeightKg, WarmupPlateDisplay } from '@modules/settings';
+import type { PlateKg } from '@shared/constants/plates';
 import { useOtaUpdateStatus } from '@modules/updates';
 import type { OtaStatus } from '@modules/updates';
 import { SEX_LABELS, THEME_OPTIONS } from '@shared/constants';
@@ -28,6 +31,7 @@ import Constants from 'expo-constants';
 import { router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { PlateToggleRow } from '../../components/ui/PlateToggleRow';
 import { ScreenHeader } from '../../components/ui/ScreenHeader';
 import { ScreenTitle } from '../../components/ui/ScreenTitle';
 import { radii, spacing, typography } from '../../theme';
@@ -277,6 +281,16 @@ function buildStyles(colors: ColorScheme) {
     toggleBtnTextActive: {
       color: colors.primary,
     },
+    plateSettingsBlock: {
+      paddingVertical: spacing[4],
+      borderBottomWidth: 1,
+      borderBottomColor: colors.borderMuted,
+      gap: spacing[2],
+    },
+    plateSettingsLabel: {
+      fontSize: typography.sizes.base,
+      color: colors.text,
+    },
   });
 }
 
@@ -291,6 +305,7 @@ export default function SettingsScreen() {
   const [barWeightKg, setBarWeightKgState] = useState<BarWeightKg>(20);
   const [plateDisplay, setPlateDisplayState] =
     useState<WarmupPlateDisplay>('numbers');
+  const [disabledPlates, setDisabledPlatesState] = useState<PlateKg[]>([]);
 
   const {
     status: otaStatus,
@@ -318,12 +333,18 @@ export default function SettingsScreen() {
     await setBarWeightKg(kg);
   }
 
+  async function handleDisabledPlatesChange(plates: PlateKg[]) {
+    setDisabledPlatesState(plates);
+    await setDisabledPlates(plates);
+  }
+
   const { pendingSuggestions, unreviewedDevCount, profile, isProfileLoading } =
     useSettingsBadges();
 
   useEffect(() => {
     getBarWeightKg(profile?.biological_sex).then(setBarWeightKgState);
     getWarmupPlateDisplay().then(setPlateDisplayState);
+    getDisabledPlates().then(setDisabledPlatesState);
   }, [profile?.biological_sex]);
 
   const showAchievements = useFeatureEnabled('achievements');
@@ -486,6 +507,19 @@ export default function SettingsScreen() {
             </View>
           }
         />
+        <View style={styles.plateSettingsBlock}>
+          <Text style={styles.plateSettingsLabel}>Available Plates</Text>
+          <PlateToggleRow
+            disabledPlates={disabledPlates}
+            onToggle={(plate) => {
+              const next = disabledPlates.includes(plate)
+                ? disabledPlates.filter((p) => p !== plate)
+                : [...disabledPlates, plate];
+              handleDisabledPlatesChange(next);
+            }}
+            colors={colors}
+          />
+        </View>
         <Row
           label="Training Days"
           onPress={() => router.push('/settings/training-days')}

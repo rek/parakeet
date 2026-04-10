@@ -1,9 +1,10 @@
 import { useMemo } from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
-import { calculatePlates, PLATE_COLORS } from '@shared/constants/plates';
+import { calculatePlates, PLATE_SIZES_KG } from '@shared/constants/plates';
 import type { PlateKg } from '@shared/constants/plates';
 
+import { PlateToggleRow } from '../../../components/ui/PlateToggleRow';
 import { Sheet } from '../../../components/ui/Sheet';
 import { spacing, typography } from '../../../theme';
 import type { ColorScheme } from '../../../theme';
@@ -12,8 +13,6 @@ import { useTheme } from '../../../theme/ThemeContext';
 // ── Constants ─────────────────────────────────────────────────────────────────
 
 const BAR_OPTIONS = [20, 15] as const;
-
-const TOGGLEABLE_PLATES: PlateKg[] = [25, 20, 15, 10, 5, 2.5, 1.25];
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -76,27 +75,6 @@ function buildStyles(colors: ColorScheme) {
       fontSize: typography.sizes.sm,
       color: colors.textSecondary,
       marginBottom: spacing[2],
-    },
-    plateToggleRow: {
-      flexDirection: 'row',
-      gap: spacing[2],
-      flexWrap: 'wrap',
-    },
-    plateDot: {
-      width: 40,
-      height: 40,
-      borderRadius: 20,
-      borderWidth: 2,
-      alignItems: 'center',
-      justifyContent: 'center',
-    },
-    plateDotLabel: {
-      fontSize: typography.sizes.xs,
-      fontWeight: typography.weights.bold,
-      color: colors.textSecondary,
-    },
-    plateDotLabelEnabled: {
-      color: colors.textInverse,
     },
     content: {
       paddingHorizontal: spacing[4],
@@ -184,7 +162,7 @@ export function PlateCalculatorSheet({
 
   const styles = useMemo(() => buildStyles(colors), [colors]);
 
-  const availablePlates = TOGGLEABLE_PLATES.filter(
+  const availablePlates = [...PLATE_SIZES_KG].filter(
     (p) => !disabledPlates.includes(p)
   );
 
@@ -286,32 +264,11 @@ export function PlateCalculatorSheet({
       {/* Plate availability toggles */}
       <View style={styles.plateToggleSection}>
         <Text style={styles.plateToggleLabel}>Available plates</Text>
-        <View style={styles.plateToggleRow}>
-          {TOGGLEABLE_PLATES.map((kg) => {
-            const enabled = !disabledPlates.includes(kg);
-            return (
-              <TouchableOpacity
-                key={kg}
-                style={[
-                  styles.plateDot,
-                  { borderColor: PLATE_COLORS[kg] },
-                  enabled && { backgroundColor: PLATE_COLORS[kg] },
-                ]}
-                onPress={() => handlePlateToggle(kg)}
-                activeOpacity={0.7}
-              >
-                <Text
-                  style={[
-                    styles.plateDotLabel,
-                    enabled && styles.plateDotLabelEnabled,
-                  ]}
-                >
-                  {kg}
-                </Text>
-              </TouchableOpacity>
-            );
-          })}
-        </View>
+        <PlateToggleRow
+          disabledPlates={disabledPlates}
+          onToggle={handlePlateToggle}
+          colors={colors}
+        />
       </View>
 
       <View style={styles.content}>{renderContent()}</View>
