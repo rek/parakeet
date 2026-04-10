@@ -101,7 +101,15 @@ export function useOtaUpdates(): OtaUpdateState {
 
   const applyUpdate = useCallback(() => {
     updateStatus('restarting');
-    Updates.reloadAsync().catch((err) => {
+    Updates.reloadAsync({
+      reloadScreenOptions: {
+        backgroundColor: '#100a11',
+        image: require('../../../../assets/images/splash.png'),
+        imageFullScreen: true,
+        spinner: { enabled: true, color: '#ffffff', size: 'large' },
+        fade: true,
+      },
+    }).catch((err) => {
       captureException(err);
       updateStatus('ready');
     });
