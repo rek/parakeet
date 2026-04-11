@@ -51,6 +51,32 @@ Research basis: Ralston et al. 2017 meta-analysis — 5+ weekly sets significant
 
 ---
 
+## Unending Intensity Selection
+
+Unending programs do not use the CUBE rotation matrix. Intensity type is selected per-session based on athlete signals. Priority order — first matching rule wins:
+
+| Priority | Condition | Result |
+|----------|-----------|--------|
+| 1 | Deload week (`weekNumber % 4 === 0`) | `deload` |
+| 2 | Max soreness across primary muscles ≥ **7** | `rep` |
+| 3 | Days since last session for this lift ≥ **10** | `heavy` |
+| 4 | Avg RPE of last **3** sessions for this lift ≥ **8.5** | `explosive` |
+| 5 | Would repeat last intensity type | next in `heavy → explosive → rep` |
+| 6 | Default (no signal) | `heavy` |
+
+### Thresholds
+
+| Constant | Value | Rationale |
+|----------|-------|-----------|
+| Soreness threshold (high) | 7/10 | Matches soreness adjuster "high" level (7–8 = avoid heavy load) |
+| Long-gap threshold | 10 days | Beyond normal 7-day deload tolerance; fully rested |
+| RPE fatigue threshold | 8.5 avg | Sustained RPE 8.5+ = accumulated CNS stress; speed work reduces demand |
+| Recent RPE window | 3 sessions | Short window — reacts to current block, not historical baseline |
+
+**Source:** `packages/training-engine/src/cube/scheduler.ts` (`selectIntensityTypeForUnending`)
+
+---
+
 ## Block Loading (Male)
 
 | Block | Intensity | %1RM | Sets  | Reps    | RPE |

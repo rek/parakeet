@@ -228,7 +228,7 @@ export async function claimInvite({ token }: { token: string }) {
   }
 
   if (!data) {
-    throw new Error('Invite expired or already claimed');
+    throw new Error('Invite already claimed or invalid');
   }
 
   // Self-claim guard — unclaim first so the invite token stays usable

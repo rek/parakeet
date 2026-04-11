@@ -27,3 +27,4 @@ Program generation, formula configuration, and unending program support.
 | [spec-program-screen.md](./spec-program-screen.md) | done | Program UI screen |
 | [spec-formula-editor.md](./spec-formula-editor.md) | done | Formula editor UI |
 | [spec-unending-ui.md](./spec-unending-ui.md) | done | Unending program UI |
+| [spec-unending-intensity.md](./spec-unending-intensity.md) | planned | Dynamic intensity selection for unending programs |

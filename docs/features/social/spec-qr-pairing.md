@@ -26,11 +26,11 @@ QR code generation, QR scanning, invite claiming, approval/decline flow, and par
 
 **`apps/parakeet/src/modules/gym-partners/application/pairing.service.ts`:**
 
-- [x] `createInvite(): Promise<{ token: string; expiresAt: string }>` — calls `partner.repository.createInvite()`, returns token for QR display
+- [x] `createInvite(): Promise<{ token: string }>` — calls `partner.repository.createInvite()`, returns token for QR display
   - Guard: reject if current user has no `display_name` set (Decision 17 — inviter also needs a name so the scanner sees who they're pairing with)
   - Guard: reject if current user already has `MAX_PARTNERS` accepted partnerships (no point generating a QR at cap)
 - [x] `claimInvite(token: string): Promise<{ inviterName: string }>` — calls `partner.repository.claimInvite(token)` (atomic UPDATE...RETURNING). On success, creates `gym_partners` row with `status: 'pending'`. Returns inviter's display_name for confirmation.
-  - Error cases: expired/already-claimed token (0 rows affected), self-pairing, already paired, invalid token
+  - Error cases: already-claimed token (0 rows affected), self-pairing, already paired, invalid token
   - Guard: reject if current user has no `display_name` set (Decision 17)
   - Guard: reject if current user already has `MAX_PARTNERS` accepted partnerships
 - [x] `acceptPartner(partnershipId: string): Promise<void>` — calls `updatePartnerStatus(id, 'accepted')`. State machine validation is handled in the repository layer.
@@ -55,8 +55,6 @@ QR code generation, QR scanning, invite claiming, approval/decline flow, and par
 - [x] Bottom sheet that displays a QR code containing the invite token
 - [x] On open: calls `useCreateInvite()` mutation
 - [x] Shows QR code using `react-native-qrcode-svg` (QR rendering library)
-- [x] Displays countdown timer showing time remaining (5 min expiry)
-- [x] When expired: shows "Expired — tap to regenerate" state
 - [x] Loading and error states
 
 ### QR scan UI
@@ -68,23 +66,14 @@ QR code generation, QR scanning, invite claiming, approval/decline flow, and par
   - Configure `codeTypes: ['qr']` on the code scanner
 - [x] On scan: decode QR payload, call `useClaimInvite()` mutation
 - [x] Success: show "Request sent to [name]" confirmation, auto-close
-- [x] Error states: expired token, already paired, self-pairing, partner cap reached, invalid QR, missing display_name
+- [x] Error states: already-claimed token, already paired, self-pairing, partner cap reached, invalid QR, missing display_name
 - [x] Camera permission handling (request if not granted — reuse existing permission flow from `RecordVideoSheet`)
-
-### Partner approval screen
-
-**`apps/parakeet/src/modules/gym-partners/ui/PartnerApprovalScreen.tsx`:**
-
-- [x] List of pending incoming requests with partner display_name (fallback: "Partner")
-- [x] Each request has Accept and Decline buttons
-- [x] Accept calls `useAcceptPartner()`, Decline calls `useDeclinePartner()`
-- [x] Empty state when no pending requests
 
 ### Partner management screen
 
 **`apps/parakeet/src/modules/gym-partners/ui/PartnerManagementScreen.tsx`:**
 
-- [x] Section: "Pending Requests" (if any) — links to approval screen or inline accept/decline
+- [x] Section: "Pending Requests" (if any) — inline Accept/Decline per request (no separate approval screen)
 - [x] Section: "Partners" — list of accepted partners with display_name (fallback: "Partner")
 - [x] Each partner row: swipe-to-remove or long-press → remove confirmation alert
 - [x] "Add Partner" button → shows choice: "Show my QR" / "Scan partner's QR"

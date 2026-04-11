@@ -88,6 +88,25 @@ The original implementation derived the next lift purely from `sessionCounter % 
 
 This is self-correcting: if sessions are skipped, abandoned, or deleted, the next lift is always correct based on what was actually trained. The `nextUnendingSession()` pure function accepts an optional `lastCompletedLift` parameter; the app layer fetches the last completed lift from the DB and passes it through.
 
+## Intensity Selection — Dynamic (planned, issue #188)
+
+The original implementation assigned intensity type from `weekNumber % 3` via the CUBE rotation matrix. In unending mode, `weekNumber` is a counter-derived value with no calendar grounding — so "week 2 = explosive" has no real-world meaning. The same type can repeat back-to-back if the lifter's session counter happens to land on the same residue.
+
+**Planned approach:** Replace CUBE lookup with signal-driven selection for unending programs. Priority order:
+
+1. Deload week → `deload` (unchanged)
+2. Primary muscle soreness ≥ 7 → `rep` (avoid peak force on sore tissue)
+3. Days since last session ≥ 10 → `heavy` (fully rested = primed for strength)
+4. Recent RPE avg ≥ 8.5 (last 3 sessions) → `explosive` (accumulated fatigue = speed/technique day)
+5. Would repeat last intensity type → advance to next in `heavy → explosive → rep` cycle
+6. Default → `heavy`
+
+All signals are already in the DB and queried nearby in the session service (soreness, days since last, recent RPE). One new query is needed: last intensity type for this lift.
+
+Scheduled programs are unchanged — `getIntensityTypeForWeek()` stays.
+
+See `docs/domain/periodization.md` for threshold values and `spec-unending-intensity.md` for implementation tasks.
+
 ## Open Questions
 
 None.

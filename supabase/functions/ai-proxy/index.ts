@@ -13,14 +13,20 @@ const corsHeaders = {
 function errorResponse({
   status,
   message,
+  code,
 }: {
   status: number;
   message: string;
+  code?: string;
 }) {
-  return new Response(JSON.stringify({ error: message }), {
-    status,
-    headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-  });
+  // OpenAI-compatible error shape so the AI SDK can extract the message.
+  return new Response(
+    JSON.stringify({ error: { message, type: 'proxy_error', code: code ?? null } }),
+    {
+      status,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    }
+  );
 }
 
 /**
@@ -106,6 +112,7 @@ Deno.serve(async (req) => {
     return errorResponse({
       status: 429,
       message: 'Rate limit exceeded. Maximum 100 requests per hour.',
+      code: 'rate_limit_exceeded',
     });
   }
 

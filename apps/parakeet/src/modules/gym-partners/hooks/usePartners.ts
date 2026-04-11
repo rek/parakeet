@@ -28,7 +28,6 @@ export function usePartners() {
 export function useCreateInvite() {
   const mutation = useMutation({
     mutationFn: createInvite,
-    onError: (err: Error) => captureException(err),
   });
 
   return {
