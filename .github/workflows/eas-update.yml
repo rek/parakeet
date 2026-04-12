@@ -48,6 +48,6 @@ jobs:
         run: |
           eas update \
             --channel ${{ github.event.inputs.channel }} \
-            --platform all \
+            --platform android \
             --message "${{ github.event.inputs.message || github.event.head_commit.message }}" \
             --non-interactive
