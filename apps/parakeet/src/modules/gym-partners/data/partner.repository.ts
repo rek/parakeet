@@ -246,8 +246,8 @@ export async function claimInvite({ token }: { token: string }) {
   const { error: partnerError } = await typedSupabase
     .from('gym_partners')
     .insert({
-      requester_id: data.inviter_id,
-      responder_id: user.id,
+      requester_id: user.id,        // scanner sends the request
+      responder_id: data.inviter_id, // inviter accepts/declines
     });
 
   if (partnerError) {
