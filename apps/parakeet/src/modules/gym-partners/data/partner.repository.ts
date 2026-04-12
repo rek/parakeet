@@ -228,6 +228,10 @@ export async function claimInvite({ token }: { token: string }) {
   }
 
   if (!data) {
+    const err = new Error(
+      `Invite already claimed or invalid (token prefix: ${token.slice(0, 8)})`
+    );
+    captureException(err);
     throw new Error('Invite already claimed or invalid');
   }
 
