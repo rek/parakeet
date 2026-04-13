@@ -241,10 +241,19 @@ export async function claimInvite({ token }: { token: string }) {
     throw new Error('Invite already claimed or invalid');
   }
 
-  // Inviter display_name not readable: profiles RLS hides other users.
-  // UI falls back to 'partner'.
+  const inviterId = row.inviter_id as string;
+
+  // Fetch inviter display_name. Readable now that the partnership row exists
+  // (profiles RLS allows reading partner profiles). Falls back to null on any
+  // error so the success path never breaks just because of a name lookup.
+  const { data: profile } = await typedSupabase
+    .from('profiles')
+    .select('display_name')
+    .eq('id', inviterId)
+    .maybeSingle();
+
   return {
-    inviterId: row.inviter_id as string,
-    inviterName: null,
+    inviterId,
+    inviterName: profile?.display_name ?? null,
   };
 }

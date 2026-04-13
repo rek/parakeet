@@ -29,8 +29,9 @@ QR code generation, QR scanning, invite claiming, approval/decline flow, and par
 - [x] `createInvite(): Promise<{ token: string }>` — calls `partner.repository.createInvite()`, returns token for QR display
   - Guard: reject if current user has no `display_name` set (Decision 17 — inviter also needs a name so the scanner sees who they're pairing with)
   - Guard: reject if current user already has `MAX_PARTNERS` accepted partnerships (no point generating a QR at cap)
-- [x] `claimInvite(token: string): Promise<{ inviterName: string }>` — calls `partner.repository.claimInvite(token)` (atomic UPDATE...RETURNING). On success, creates `gym_partners` row with `status: 'pending'`. Returns inviter's display_name for confirmation.
-  - Error cases: already-claimed token (0 rows affected), self-pairing, already paired, invalid token
+- [x] `claimInvite(token: string): Promise<{ inviterName: string | null }>` — calls `partner.repository.claimInvite(token)` which invokes the `claim_partner_invite(p_token)` SECURITY DEFINER RPC. The RPC atomically claims the invite, inserts the `gym_partners` row with `status: 'pending'` (requester=scanner, responder=inviter), and rolls the claim back on any insert failure so the token stays usable. After a successful claim the client reads the inviter's display_name via a separate `profiles` SELECT (readable post-claim because the new "Read partner profiles" RLS policy permits it).
+  - Why an RPC: the previous `.update().select().maybeSingle()` chain returned null `data` even when the row existed and policies should pass — a PostgREST/RLS RETURNING quirk that silently failed every claim. SECURITY DEFINER bypasses RLS for the function body while `auth.uid()` still resolves to the real caller, so requester_id can't be spoofed.
+  - Error cases mapped from Postgres error codes: `P0001` already-claimed/invalid, `P0002` self-pairing, `P0003` already paired, `28000` not authenticated
   - Guard: reject if current user has no `display_name` set (Decision 17)
   - Guard: reject if current user already has `MAX_PARTNERS` accepted partnerships
 - [x] `acceptPartner(partnershipId: string): Promise<void>` — calls `updatePartnerStatus(id, 'accepted')`. State machine validation is handled in the repository layer.
