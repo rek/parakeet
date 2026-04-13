@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { AppState } from 'react-native';
 
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { captureException } from '@platform/utils/captureException';
 import * as Updates from 'expo-updates';
 
@@ -12,6 +13,17 @@ export type OtaStatus =
   | 'restarting'
   | 'up-to-date'
   | 'error';
+
+export type ReloadOutcome =
+  | { type: 'applied'; updateId: string }
+  | { type: 'rolled-back' };
+
+const PENDING_RELOAD_KEY = '@parakeet/ota-pending-reload';
+
+interface PendingReload {
+  previousUpdateId: string | null;
+  requestedAt: number;
+}
 
 export interface OtaUpdateMeta {
   channel: string | null;
@@ -27,6 +39,10 @@ export interface OtaUpdateState {
   meta: OtaUpdateMeta;
   /** Timestamp of the last successful check (epoch ms), or null if never checked. */
   lastCheckedAt: number | null;
+  /** Outcome of the last reload attempt (set on app boot after reload). */
+  reloadOutcome: ReloadOutcome | null;
+  /** Dismiss the reload outcome banner. */
+  dismissReloadOutcome: () => void;
   checkForUpdate: () => void;
   /** Call when status is 'ready' to reload and apply the downloaded update. */
   applyUpdate: () => void;
@@ -48,6 +64,8 @@ const NOOP_STATE: OtaUpdateState = {
   error: null,
   meta: getUpdateMeta(),
   lastCheckedAt: null,
+  reloadOutcome: null,
+  dismissReloadOutcome: () => {},
   checkForUpdate: () => {},
   applyUpdate: () => {},
 };
@@ -56,8 +74,46 @@ export function useOtaUpdates(): OtaUpdateState {
   const [status, setStatus] = useState<OtaStatus>('idle');
   const [error, setError] = useState<string | null>(null);
   const [checkedAt, setCheckedAt] = useState<number | null>(null);
+  const [reloadOutcome, setReloadOutcome] = useState<ReloadOutcome | null>(
+    null
+  );
   const lastCheckedRef = useRef<number>(0);
   const statusRef = useRef<OtaStatus>('idle');
+
+  // On boot: detect outcome of any pending reload from a previous session.
+  useEffect(() => {
+    let cancelled = false;
+    AsyncStorage.getItem(PENDING_RELOAD_KEY)
+      .then((raw) => {
+        if (!raw || cancelled) return;
+        AsyncStorage.removeItem(PENDING_RELOAD_KEY).catch(() => {});
+        let pending: PendingReload;
+        try {
+          pending = JSON.parse(raw);
+        } catch {
+          return;
+        }
+        const current = Updates.updateId ?? null;
+        if (current && current !== pending.previousUpdateId) {
+          setReloadOutcome({ type: 'applied', updateId: current });
+        } else {
+          setReloadOutcome({ type: 'rolled-back' });
+          captureException(
+            new Error(
+              `OTA reload rolled back: previous=${pending.previousUpdateId ?? 'embedded'} current=${current ?? 'embedded'}`
+            )
+          );
+        }
+      })
+      .catch((err) => captureException(err));
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const dismissReloadOutcome = useCallback(() => {
+    setReloadOutcome(null);
+  }, []);
 
   const updateStatus = useCallback((next: OtaStatus) => {
     statusRef.current = next;
@@ -99,8 +155,17 @@ export function useOtaUpdates(): OtaUpdateState {
     void checkAndApply(true);
   }, [checkAndApply]);
 
-  const applyUpdate = useCallback(() => {
+  const applyUpdate = useCallback(async () => {
     updateStatus('restarting');
+    const pending: PendingReload = {
+      previousUpdateId: Updates.updateId ?? null,
+      requestedAt: Date.now(),
+    };
+    try {
+      await AsyncStorage.setItem(PENDING_RELOAD_KEY, JSON.stringify(pending));
+    } catch (err) {
+      captureException(err);
+    }
     Updates.reloadAsync({
       reloadScreenOptions: {
         backgroundColor: '#100a11',
@@ -111,6 +176,7 @@ export function useOtaUpdates(): OtaUpdateState {
       },
     }).catch((err) => {
       captureException(err);
+      AsyncStorage.removeItem(PENDING_RELOAD_KEY).catch(() => {});
       updateStatus('ready');
     });
   }, [updateStatus]);
@@ -136,6 +202,8 @@ export function useOtaUpdates(): OtaUpdateState {
     error,
     meta: getUpdateMeta(),
     lastCheckedAt: checkedAt,
+    reloadOutcome,
+    dismissReloadOutcome,
     checkForUpdate,
     applyUpdate,
   };
