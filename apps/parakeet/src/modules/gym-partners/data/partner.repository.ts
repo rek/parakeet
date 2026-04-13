@@ -213,13 +213,12 @@ export async function claimInvite({ token }: { token: string }) {
 
   // Atomic claim: RLS USING clause enforces claimed_by IS NULL using server-side
   // evaluation — no client-side check needed or safe. Invites never expire.
+  // No embed: profiles RLS hides other users' profiles, which would null the row.
   const { data, error } = await typedSupabase
     .from('gym_partner_invites')
     .update({ claimed_by: user.id })
     .eq('token', token)
-    .select(
-      'inviter_id, inviter:profiles!gym_partner_invites_inviter_id_fkey(display_name)'
-    )
+    .select('inviter_id')
     .maybeSingle();
 
   if (error) {
@@ -270,8 +269,10 @@ export async function claimInvite({ token }: { token: string }) {
     throw partnerError;
   }
 
+  // Inviter display_name not readable: profiles RLS hides other users.
+  // UI falls back to 'partner'.
   return {
     inviterId: data.inviter_id,
-    inviterName: data.inviter?.display_name ?? null,
+    inviterName: null,
   };
 }
