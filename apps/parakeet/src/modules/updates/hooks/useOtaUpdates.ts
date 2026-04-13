@@ -83,14 +83,18 @@ export function useOtaUpdates(): OtaUpdateState {
   // On boot: detect outcome of any pending reload from a previous session.
   useEffect(() => {
     let cancelled = false;
-    AsyncStorage.getItem(PENDING_RELOAD_KEY)
-      .then((raw) => {
+    (async () => {
+      try {
+        const raw = await AsyncStorage.getItem(PENDING_RELOAD_KEY);
         if (!raw || cancelled) return;
-        AsyncStorage.removeItem(PENDING_RELOAD_KEY).catch(() => {});
+        // Await the remove BEFORE computing outcome so a crash mid-boot can't
+        // double-process the same pending reload on next launch.
+        await AsyncStorage.removeItem(PENDING_RELOAD_KEY);
         let pending: PendingReload;
         try {
           pending = JSON.parse(raw);
-        } catch {
+        } catch (err) {
+          captureException(err);
           return;
         }
         const current = Updates.updateId ?? null;
@@ -104,8 +108,10 @@ export function useOtaUpdates(): OtaUpdateState {
             )
           );
         }
-      })
-      .catch((err) => captureException(err));
+      } catch (err) {
+        captureException(err);
+      }
+    })();
     return () => {
       cancelled = true;
     };
@@ -176,7 +182,9 @@ export function useOtaUpdates(): OtaUpdateState {
       },
     }).catch((err) => {
       captureException(err);
-      AsyncStorage.removeItem(PENDING_RELOAD_KEY).catch(() => {});
+      AsyncStorage.removeItem(PENDING_RELOAD_KEY).catch((removeErr) => {
+        captureException(removeErr);
+      });
       updateStatus('ready');
     });
   }, [updateStatus]);

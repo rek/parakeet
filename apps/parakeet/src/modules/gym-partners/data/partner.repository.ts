@@ -213,23 +213,22 @@ export async function claimInvite({ token }: { token: string }) {
   });
 
   if (error) {
-    const msg = error.message ?? '';
-    if (msg.includes('Invite already claimed or invalid')) {
-      captureException(
-        new Error(
-          `claim_partner_invite: invalid (token prefix: ${token.slice(0, 8)})`
-        )
-      );
-      throw new Error('Invite already claimed or invalid');
+    switch (error.code) {
+      case 'P0001':
+        captureException(
+          new Error(
+            `claim_partner_invite: invalid (token prefix: ${token.slice(0, 8)})`
+          )
+        );
+        throw new Error('Invite already claimed or invalid');
+      case 'P0002':
+        throw new Error('Cannot pair with yourself');
+      case 'P0003':
+        throw new Error('Already partnered with this user');
+      default:
+        captureException(error);
+        throw error;
     }
-    if (msg.includes('Cannot pair with yourself')) {
-      throw new Error('Cannot pair with yourself');
-    }
-    if (msg.includes('Already partnered')) {
-      throw new Error('Already partnered with this user');
-    }
-    captureException(error);
-    throw error;
   }
 
   const row = Array.isArray(data) ? data[0] : null;
@@ -241,19 +240,12 @@ export async function claimInvite({ token }: { token: string }) {
     throw new Error('Invite already claimed or invalid');
   }
 
-  const inviterId = row.inviter_id as string;
-
-  // Fetch inviter display_name. Readable now that the partnership row exists
-  // (profiles RLS allows reading partner profiles). Falls back to null on any
-  // error so the success path never breaks just because of a name lookup.
-  const { data: profile } = await typedSupabase
-    .from('profiles')
-    .select('display_name')
-    .eq('id', inviterId)
-    .maybeSingle();
-
+  // Inviter display_name not readable: profiles RLS only lets the requester read
+  // the responder's profile after status='accepted'. UI falls back to 'partner'
+  // until the inviter accepts. This protects against unsolicited pre-consent
+  // display_name disclosure to anyone holding a target's UUID.
   return {
-    inviterId,
-    inviterName: profile?.display_name ?? null,
+    inviterId: row.inviter_id as string,
+    inviterName: null,
   };
 }
