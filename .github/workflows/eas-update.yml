@@ -49,5 +49,6 @@ jobs:
           eas update \
             --channel ${{ github.event.inputs.channel }} \
             --platform android \
+            --environment ${{ github.event.inputs.channel }} \
             --message "${{ github.event.inputs.message || github.event.head_commit.message }}" \
             --non-interactive
