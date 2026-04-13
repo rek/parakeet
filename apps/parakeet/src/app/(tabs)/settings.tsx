@@ -666,7 +666,7 @@ export default function SettingsScreen() {
         {/* App section */}
         <SectionHeader label="App" styles={styles} />
         <Row
-          label={`Version ${Constants.expoConfig?.version ?? '—'}  ·  ${otaMeta.updateId ? otaMeta.updateId.slice(0, 8) : ((Constants.expoConfig?.extra?.commitHash as string) ?? '—')}`}
+          label={`Version ${Constants.expoConfig?.version ?? '—'}`}
           labelStyle={styles.versionLabel}
           styles={styles}
           right={
@@ -674,6 +674,17 @@ export default function SettingsScreen() {
               {__DEV__ && <Text style={styles.devBadge}>DEV</Text>}
             </View>
           }
+        />
+        <Row
+          label={
+            otaMeta.updateId
+              ? `OTA ${otaMeta.updateId.slice(0, 8)}`
+              : `Embedded build (no OTA) · ${(Constants.expoConfig?.extra?.commitHash as string) ?? '—'}`
+          }
+          labelStyle={
+            otaMeta.updateId ? styles.versionLabel : styles.signOutLabel
+          }
+          styles={styles}
         />
         <Row
           label={`Running build from ${formatBuildDate(otaMeta.createdAt)}`}
