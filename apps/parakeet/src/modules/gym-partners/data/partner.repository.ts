@@ -206,73 +206,45 @@ export async function createInvite() {
 }
 
 export async function claimInvite({ token }: { token: string }) {
-  const {
-    data: { user },
-  } = await typedSupabase.auth.getUser();
-  if (!user) throw new Error('Not authenticated');
-
-  // Atomic claim: RLS USING clause enforces claimed_by IS NULL using server-side
-  // evaluation — no client-side check needed or safe. Invites never expire.
-  // No embed: profiles RLS hides other users' profiles, which would null the row.
-  const { data, error } = await typedSupabase
-    .from('gym_partner_invites')
-    .update({ claimed_by: user.id })
-    .eq('token', token)
-    .select('inviter_id')
-    .maybeSingle();
+  // Atomic claim via SECURITY DEFINER RPC. Bypasses PostgREST/RLS quirks
+  // with .update().select() chains that intermittently return empty.
+  const { data, error } = await typedSupabase.rpc('claim_partner_invite', {
+    p_token: token,
+  });
 
   if (error) {
+    const msg = error.message ?? '';
+    if (msg.includes('Invite already claimed or invalid')) {
+      captureException(
+        new Error(
+          `claim_partner_invite: invalid (token prefix: ${token.slice(0, 8)})`
+        )
+      );
+      throw new Error('Invite already claimed or invalid');
+    }
+    if (msg.includes('Cannot pair with yourself')) {
+      throw new Error('Cannot pair with yourself');
+    }
+    if (msg.includes('Already partnered')) {
+      throw new Error('Already partnered with this user');
+    }
     captureException(error);
     throw error;
   }
 
-  if (!data) {
+  const row = Array.isArray(data) ? data[0] : null;
+  if (!row?.inviter_id) {
     const err = new Error(
-      `Invite already claimed or invalid (token prefix: ${token.slice(0, 8)})`
+      `claim_partner_invite returned empty (token prefix: ${token.slice(0, 8)})`
     );
     captureException(err);
     throw new Error('Invite already claimed or invalid');
   }
 
-  // Self-claim guard — unclaim first so the invite token stays usable
-  if (data.inviter_id === user.id) {
-    await typedSupabase
-      .from('gym_partner_invites')
-      .update({ claimed_by: null })
-      .eq('token', token)
-      .eq('claimed_by', user.id);
-    throw new Error('Cannot pair with yourself');
-  }
-
-  // Create the partnership. If this fails (e.g. duplicate pair), unclaim the invite
-  // so the token can be retried — prevents dead-end "claimed but no partnership" state.
-  const { error: partnerError } = await typedSupabase
-    .from('gym_partners')
-    .insert({
-      requester_id: user.id,        // scanner sends the request
-      responder_id: data.inviter_id, // inviter accepts/declines
-    });
-
-  if (partnerError) {
-    // Roll back the claim so the invite token remains usable
-    const { error: rollbackError } = await typedSupabase
-      .from('gym_partner_invites')
-      .update({ claimed_by: null })
-      .eq('token', token)
-      .eq('claimed_by', user.id);
-
-    if (rollbackError) {
-      captureException(rollbackError);
-    }
-
-    captureException(partnerError);
-    throw partnerError;
-  }
-
   // Inviter display_name not readable: profiles RLS hides other users.
   // UI falls back to 'partner'.
   return {
-    inviterId: data.inviter_id,
+    inviterId: row.inviter_id as string,
     inviterName: null,
   };
 }

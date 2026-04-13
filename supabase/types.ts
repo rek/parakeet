@@ -1400,6 +1400,10 @@ export type Database = {
         Args: { p_partner_id: string; p_user_id: string }
         Returns: boolean
       }
+      claim_partner_invite: {
+        Args: { p_token: string }
+        Returns: { inviter_id: string }[]
+      }
     }
     Enums: {
       [_ in never]: never
