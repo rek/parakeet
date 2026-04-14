@@ -1111,7 +1111,7 @@ export const EXERCISE_CATALOG: ExerciseCatalogEntry[] = [
     associatedLift: null,
     primaryMuscles: ['core'],
     type: 'weighted',
-    weightPct: 0.06,
+    weightPct: 0.125,
     repTarget: 12,
     movementPattern: 'core',
     equipment: 'none',
