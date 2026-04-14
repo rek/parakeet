@@ -1,6 +1,6 @@
 # Spec: Custom Exercise Muscle Selection
 
-**Status**: Planned
+**Status**: Implemented
 
 **Domain**: Training Engine | UI | Data / User Config
 

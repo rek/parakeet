@@ -1,6 +1,6 @@
 # Feature: Custom Exercise Muscle Selection
 
-**Status**: In Review
+**Status**: Implemented
 
 **Date**: 14-Apr-2026
 

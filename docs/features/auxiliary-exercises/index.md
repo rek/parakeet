@@ -1,6 +1,6 @@
 ---
 feature: auxiliary-exercises
-status: in-progress
+status: implemented
 modules: [program, session]
 ---
 # Auxiliary Exercises
@@ -17,4 +17,4 @@ Accessory exercise rotation, configuration, and ad-hoc additions.
 | [spec-rotation.md](./spec-rotation.md) | done | Auxiliary rotation logic |
 | [spec-config.md](./spec-config.md) | done | Exercise config options |
 | [spec-ad-hoc.md](./spec-ad-hoc.md) | done | Ad-hoc exercise logging |
-| [spec-custom-muscles.md](./spec-custom-muscles.md) | in-progress | Custom exercise muscle selection (GH#192) |
+| [spec-custom-muscles.md](./spec-custom-muscles.md) | done | Custom exercise muscle selection (GH#192) |
