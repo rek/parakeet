@@ -1261,6 +1261,11 @@ describe('generateJITSession — core volume top-up (#191)', () => {
     expect(DEFAULT_CORE_POOL).toContain('Ab Wheel Rollout');
     expect(DEFAULT_CORE_POOL).toContain('Hanging Leg Raise');
     expect(DEFAULT_CORE_POOL).toContain('Dead Bug');
+    expect(DEFAULT_CORE_POOL).toContain('Bird Dog');
+    expect(DEFAULT_CORE_POOL).toContain('GHD Situp');
+    expect(DEFAULT_CORE_POOL).toContain('Decline Situp');
+    expect(DEFAULT_CORE_POOL).toContain('Cable Woodchop');
+    expect(DEFAULT_CORE_POOL).toContain('Dragon Flag');
   });
 });
 
