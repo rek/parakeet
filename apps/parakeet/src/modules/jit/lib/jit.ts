@@ -3,6 +3,7 @@ import { getCurrentCycleContext } from '@modules/cycle-tracking';
 import { getFormulaConfig } from '@modules/formula';
 import {
   getActiveAssignments,
+  getAllAuxMuscleMap,
   getAuxiliaryPool,
   getAuxiliaryPools,
   getCurrentOneRmKg,
@@ -43,6 +44,7 @@ import {
   getMusclesForLift,
   LIFTS,
   mergeSorenessRatings,
+  registerCustomExercise,
   reviewJITDecision,
   rpeSetMultiplier,
 } from '@parakeet/training-engine';
@@ -124,6 +126,7 @@ export async function runJITForSession(
     barWeightKg,
     pool,
     allPools,
+    auxMuscleMap,
   ] = await Promise.all([
     getCurrentOneRmKg(userId, lift),
     getCurrentOneRmKg(userId, 'squat'),
@@ -138,7 +141,13 @@ export async function runJITForSession(
     getBarWeightKg(biologicalSex),
     getAuxiliaryPool(userId, lift),
     isAdHoc ? Promise.resolve(null) : getAuxiliaryPools(userId),
+    getAllAuxMuscleMap(userId),
   ]);
+
+  // Seed the engine registry so getMusclesForExercise works for custom exercises.
+  for (const [name, muscles] of Object.entries(auxMuscleMap)) {
+    registerCustomExercise(name, muscles as MuscleGroup[]);
+  }
 
   const mrvMevConfig = await getMrvMevConfig(userId, biologicalSex);
 

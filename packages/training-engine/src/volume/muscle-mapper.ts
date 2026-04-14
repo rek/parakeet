@@ -1,6 +1,9 @@
 import { Lift } from '@parakeet/shared-types';
 
-import { CATALOG_BY_NAME } from '../auxiliary/exercise-catalog';
+import {
+  CATALOG_BY_NAME,
+  getCustomExerciseMuscles,
+} from '../auxiliary/exercise-catalog';
 import { MuscleContribution } from '../types';
 
 // Primary lift → muscle contributions
@@ -54,6 +57,11 @@ export function getMusclesForExercise(
       muscle,
       contribution: 1.0 as const,
     }));
+  }
+  // Fall back to user-registered custom exercises
+  const custom = getCustomExerciseMuscles(exerciseName);
+  if (custom?.length) {
+    return custom.map((muscle) => ({ muscle, contribution: 1.0 as const }));
   }
   return [];
 }

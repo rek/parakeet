@@ -12,7 +12,7 @@ import { getPrimaryMuscles } from '@modules/program';
 import { AddExerciseModal } from '@modules/session';
 import { useAuxiliaryPools } from '@modules/settings';
 import { MuscleChips } from '@modules/training-volume';
-import type { Lift } from '@parakeet/shared-types';
+import type { Lift, MuscleGroup } from '@parakeet/shared-types';
 import { TRAINING_LIFTS } from '@shared/constants/training';
 import { getExerciseType } from '@shared/utils/exercise-lookup';
 import { router } from 'expo-router';
@@ -288,8 +288,10 @@ interface LiftSectionProps {
   pool: string[];
   isSavingPool: boolean;
   isDirtyPool: boolean;
+  /** Muscles already stored in DB for all exercises in this pool (keyed by name). */
+  initialMuscles: Record<string, string[]>;
   onPoolChange: (pool: string[]) => void;
-  onSavePool: () => void;
+  onSavePool: (customMuscles: Record<string, MuscleGroup[]>) => void;
   styles: Styles;
   primaryColor: string;
 }
@@ -299,19 +301,34 @@ function LiftSection({
   pool,
   isSavingPool,
   isDirtyPool,
+  initialMuscles,
   onPoolChange,
   onSavePool,
   styles,
   primaryColor,
 }: LiftSectionProps) {
   const [pickerVisible, setPickerVisible] = useState(false);
+  // Tracks muscles for all custom exercises (both loaded from DB and newly added).
+  // Initialized lazily from DB data so reorders don't wipe existing muscle data.
+  const [customMuscles, setCustomMuscles] = useState<
+    Record<string, MuscleGroup[]>
+  >(() => initialMuscles as Record<string, MuscleGroup[]>);
 
-  function addExercise(name: string) {
+  function addExercise(name: string, muscles?: MuscleGroup[]) {
     if (!name || pool.includes(name)) return;
+    if (muscles?.length) {
+      setCustomMuscles((prev) => ({ ...prev, [name]: muscles }));
+    }
     onPoolChange([...pool, name]);
   }
 
   function removeExercise(i: number) {
+    const removed = pool[i];
+    setCustomMuscles((prev) => {
+      const next = { ...prev };
+      delete next[removed];
+      return next;
+    });
     onPoolChange(pool.filter((_, idx) => idx !== i));
   }
 
@@ -325,7 +342,7 @@ function LiftSection({
             isDirtyPool && styles.saveBtnDirty,
             isSavingPool && styles.saveBtnDisabled,
           ]}
-          onPress={onSavePool}
+          onPress={() => onSavePool(customMuscles)}
           disabled={isSavingPool}
           activeOpacity={0.8}
         >
@@ -362,8 +379,8 @@ function LiftSection({
       </TouchableOpacity>
       <AddExerciseModal
         visible={pickerVisible}
-        onConfirm={(name) => {
-          addExercise(name);
+        onConfirm={(name, muscles) => {
+          addExercise(name, muscles);
           setPickerVisible(false);
         }}
         onClose={() => setPickerVisible(false)}
@@ -389,7 +406,8 @@ export default function AuxiliaryExercisesScreen() {
     {}
   );
 
-  const { poolData, isLoading, saveAuxiliaryPool } = useAuxiliaryPools();
+  const { poolData, muscleMap, isLoading, saveAuxiliaryPool } =
+    useAuxiliaryPools();
 
   useEffect(() => {
     if (poolData && !pools) {
@@ -397,11 +415,14 @@ export default function AuxiliaryExercisesScreen() {
     }
   }, [poolData, pools]);
 
-  async function handleSavePool(lift: Lift) {
+  async function handleSavePool(
+    lift: Lift,
+    customMuscles: Record<string, MuscleGroup[]>
+  ) {
     if (!pools) return;
     setSavingPool((prev) => ({ ...prev, [lift]: true }));
     try {
-      await saveAuxiliaryPool(lift, pools[lift]);
+      await saveAuxiliaryPool(lift, pools[lift], customMuscles);
       setDirtyPools((prev) => ({ ...prev, [lift]: false }));
     } finally {
       setSavingPool((prev) => ({ ...prev, [lift]: false }));
@@ -447,11 +468,12 @@ export default function AuxiliaryExercisesScreen() {
               pool={pools[lift]}
               isSavingPool={!!savingPool[lift]}
               isDirtyPool={!!dirtyPools[lift]}
+              initialMuscles={muscleMap}
               onPoolChange={(p) => {
                 setPools((prev) => (prev ? { ...prev, [lift]: p } : prev));
                 setDirtyPools((prev) => ({ ...prev, [lift]: true }));
               }}
-              onSavePool={() => handleSavePool(lift)}
+              onSavePool={(customMuscles) => handleSavePool(lift, customMuscles)}
               styles={styles}
               primaryColor={colors.primary}
             />

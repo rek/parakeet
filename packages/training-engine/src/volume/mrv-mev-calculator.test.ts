@@ -9,6 +9,10 @@ import {
 } from './mrv-mev-calculator';
 import { getMusclesForExercise, getMusclesForLift } from './muscle-mapper';
 import { rpeSetMultiplier } from './rpe-scaler';
+import {
+  clearCustomExerciseRegistry,
+  registerCustomExercise,
+} from '../auxiliary/exercise-catalog';
 
 // Helper for calibration tests: asserts a value is within a reasonable range
 // around a center point. Use for secondary muscle volumes that depend on
@@ -263,6 +267,35 @@ describe('getMusclesForExercise', () => {
     expect(m.find((x) => x.muscle === 'upper_back')?.contribution).toBe(1.0);
     expect(m.find((x) => x.muscle === 'lower_back')?.contribution).toBe(1.0);
     expect(m.find((x) => x.muscle === 'hamstrings')).toBeUndefined();
+  });
+});
+
+describe('getMusclesForExercise — custom exercise registry', () => {
+  afterEach(() => {
+    clearCustomExerciseRegistry();
+  });
+
+  it('returns registered muscles for a custom exercise at contribution 1.0', () => {
+    registerCustomExercise('Banded Hip Thrust', ['glutes', 'hamstrings']);
+    const m = getMusclesForExercise('Banded Hip Thrust');
+    expect(m).toHaveLength(2);
+    expect(m.find((x) => x.muscle === 'glutes')?.contribution).toBe(1.0);
+    expect(m.find((x) => x.muscle === 'hamstrings')?.contribution).toBe(1.0);
+  });
+
+  it('returns [] for unknown exercise after clear', () => {
+    registerCustomExercise('Custom Move', ['chest']);
+    clearCustomExerciseRegistry();
+    expect(getMusclesForExercise('Custom Move')).toEqual([]);
+  });
+
+  it('catalog exercise takes priority over registry entry with same name', () => {
+    // Bulgarian Split Squat is in catalog with quads + glutes + hamstrings
+    registerCustomExercise('Bulgarian Split Squat', ['biceps']);
+    const m = getMusclesForExercise('Bulgarian Split Squat');
+    // Catalog entry preserved — no biceps, has quads
+    expect(m.find((x) => x.muscle === 'quads')).toBeDefined();
+    expect(m.find((x) => x.muscle === 'biceps')).toBeUndefined();
   });
 });
 

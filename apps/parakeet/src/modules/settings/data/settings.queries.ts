@@ -23,6 +23,8 @@ export const settingsQueries = {
     // pools queryFn lives in program module; key defined here for invalidation
     pools: (userId: string | undefined) =>
       ['auxiliary', 'pools', userId] as const,
+    muscles: (userId: string | undefined) =>
+      ['auxiliary', 'muscles', userId] as const,
   },
 
   rest: {

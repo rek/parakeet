@@ -6,10 +6,10 @@ import { typedSupabase } from '@platform/supabase';
 export async function fetchAuxiliaryExercises(
   userId: string,
   lift: Lift
-): Promise<{ exercise_name: string }[]> {
+): Promise<{ exercise_name: string; primary_muscles: string[] }[]> {
   const { data, error } = await typedSupabase
     .from('auxiliary_exercises')
-    .select('exercise_name')
+    .select('exercise_name, primary_muscles')
     .eq('user_id', userId)
     .eq('lift', lift)
     .order('pool_position');

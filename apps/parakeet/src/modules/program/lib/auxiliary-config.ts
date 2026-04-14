@@ -1,4 +1,4 @@
-import type { Lift } from '@parakeet/shared-types';
+import type { Lift, MuscleGroup } from '@parakeet/shared-types';
 import { DEFAULT_AUXILIARY_POOLS } from '@parakeet/training-engine';
 
 import {
@@ -20,6 +20,28 @@ export async function getAuxiliaryPool(
   return data.map((r) => r.exercise_name);
 }
 
+/**
+ * Returns a map of all auxiliary exercise names to their stored primary muscles.
+ * Used to seed the engine's custom exercise registry before JIT runs, and to
+ * preserve existing muscle data on pool re-save.
+ */
+export async function getAllAuxMuscleMap(
+  userId: string
+): Promise<Record<string, string[]>> {
+  const [sq, be, dl] = await Promise.all([
+    fetchAuxiliaryExercises(userId, 'squat'),
+    fetchAuxiliaryExercises(userId, 'bench'),
+    fetchAuxiliaryExercises(userId, 'deadlift'),
+  ]);
+  const result: Record<string, string[]> = {};
+  for (const row of [...sq, ...be, ...dl]) {
+    if (row.primary_muscles.length > 0) {
+      result[row.exercise_name] = row.primary_muscles;
+    }
+  }
+  return result;
+}
+
 export async function getAuxiliaryPools(
   userId: string
 ): Promise<Record<Lift, string[]>> {
@@ -33,7 +55,8 @@ export async function getAuxiliaryPools(
 export async function reorderAuxiliaryPool(
   userId: string,
   lift: Lift,
-  orderedExercises: string[]
+  orderedExercises: string[],
+  customMuscles?: Record<string, MuscleGroup[]>
 ): Promise<void> {
   await deleteAuxiliaryExercises(userId, lift);
 
@@ -42,7 +65,7 @@ export async function reorderAuxiliaryPool(
     lift,
     exercise_name: name,
     pool_position: i,
-    primary_muscles: getPrimaryMuscles(name),
+    primary_muscles: customMuscles?.[name] ?? getPrimaryMuscles(name),
   }));
   await insertAuxiliaryExercises(rows);
 }

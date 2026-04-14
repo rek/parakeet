@@ -1098,6 +1098,41 @@ export function getRepTarget(name: string, fallback: number): number {
   return CATALOG_BY_NAME.get(name)?.repTarget ?? fallback;
 }
 
+// ── Custom exercise registry ──────────────────────────────────────────────────
+//
+// User-defined exercises (not in EXERCISE_CATALOG) are registered here at
+// app startup so getMusclesForExercise can return their muscles. Catalog
+// exercises always take priority — the registry is only a fallback.
+
+const customExerciseRegistry = new Map<string, MuscleGroup[]>();
+
+/**
+ * Register a user-defined exercise and its primary muscles.
+ * Call this at JIT time after loading auxiliary pool data from the DB.
+ * Safe to call multiple times — idempotent per name.
+ */
+export function registerCustomExercise(
+  name: string,
+  primaryMuscles: MuscleGroup[]
+): void {
+  customExerciseRegistry.set(name, primaryMuscles);
+}
+
+/**
+ * Clear all registered custom exercises.
+ * Call between tests to prevent bleed.
+ */
+export function clearCustomExerciseRegistry(): void {
+  customExerciseRegistry.clear();
+}
+
+/** Internal: used by getMusclesForExercise to fall back to user-registered muscles. */
+export function getCustomExerciseMuscles(
+  name: string
+): MuscleGroup[] | undefined {
+  return customExerciseRegistry.get(name);
+}
+
 /** Bodyweight exercise names for a given lift + sex (JIT no-equipment fallback). */
 export function getBodyweightPool(
   lift: Lift,

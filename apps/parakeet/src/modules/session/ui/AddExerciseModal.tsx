@@ -10,7 +10,8 @@ import {
   View,
 } from 'react-native';
 
-import type { Lift, MuscleGroup } from '@parakeet/shared-types';
+import type { Lift, MuscleCategory, MuscleGroup } from '@parakeet/shared-types';
+import { MUSCLE_CATALOG } from '@parakeet/shared-types';
 import { MUSCLE_LABELS_COMPACT } from '@shared/constants/training';
 import type { ExerciseCatalogEntry } from '@shared/utils/exercise-lookup';
 import { getAllExercises } from '@shared/utils/exercise-lookup';
@@ -36,9 +37,18 @@ const FILTER_OPTIONS: { key: SectionFilter; label: string }[] = [
   { key: 'general', label: 'General' },
 ];
 
+const MUSCLE_CATEGORY_LABELS: Record<MuscleCategory, string> = {
+  legs: 'Legs',
+  push: 'Push',
+  pull: 'Pull',
+  core: 'Core',
+};
+
+const MUSCLE_CATEGORY_ORDER: MuscleCategory[] = ['legs', 'push', 'pull', 'core'];
+
 interface Props {
   visible: boolean;
-  onConfirm: (exercise: string) => void;
+  onConfirm: (exercise: string, primaryMuscles?: MuscleGroup[]) => void;
   onClose: () => void;
   /** Pre-selects a lift section filter when the modal opens. */
   defaultLift?: Lift;
@@ -201,6 +211,73 @@ function buildStyles(colors: ColorScheme) {
       color: colors.primary,
       fontWeight: typography.weights.semibold,
     },
+    // Muscle picker styles
+    pickerScroll: {
+      flex: 1,
+      paddingHorizontal: spacing[5],
+    },
+    pickerBackBtn: {
+      fontSize: typography.sizes.base,
+      color: colors.primary,
+      paddingRight: spacing[3],
+    },
+    pickerSubtitle: {
+      fontSize: typography.sizes.sm,
+      color: colors.textSecondary,
+      paddingHorizontal: spacing[5],
+      marginBottom: spacing[3],
+    },
+    pickerCategory: {
+      fontSize: typography.sizes.xs,
+      fontWeight: typography.weights.semibold,
+      color: colors.textTertiary,
+      textTransform: 'uppercase',
+      letterSpacing: 0.8,
+      marginTop: spacing[4],
+      marginBottom: spacing[2],
+    },
+    muscleChipRow: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: spacing[2],
+      marginBottom: spacing[1],
+    },
+    muscleChip: {
+      paddingHorizontal: spacing[3],
+      paddingVertical: spacing[2],
+      borderRadius: radii.full,
+      borderWidth: 1,
+      borderColor: colors.border,
+      backgroundColor: colors.bgSurface,
+    },
+    muscleChipActive: {
+      backgroundColor: colors.primary,
+      borderColor: colors.primary,
+    },
+    muscleChipText: {
+      fontSize: typography.sizes.sm,
+      color: colors.textSecondary,
+      fontWeight: typography.weights.medium,
+    },
+    muscleChipTextActive: {
+      color: colors.textInverse,
+    },
+    addBtn: {
+      marginHorizontal: spacing[5],
+      marginTop: spacing[5],
+      paddingVertical: spacing[4],
+      borderRadius: radii.md,
+      backgroundColor: colors.primary,
+      alignItems: 'center',
+    },
+    addBtnDisabled: {
+      opacity: 0.4,
+    },
+    addBtnText: {
+      fontSize: typography.sizes.base,
+      fontWeight: typography.weights.semibold,
+      color: colors.textInverse,
+    },
   });
 }
 
@@ -217,6 +294,10 @@ export function AddExerciseModal({
   const [query, setQuery] = useState('');
   const [liftFilter, setLiftFilter] = useState<SectionFilter>(
     defaultLift ?? 'all'
+  );
+  const [customStep, setCustomStep] = useState<{ name: string } | null>(null);
+  const [selectedMuscles, setSelectedMuscles] = useState<Set<MuscleGroup>>(
+    new Set()
   );
 
   const styles = useMemo(() => buildStyles(colors), [colors]);
@@ -346,7 +427,40 @@ export function AddExerciseModal({
   function handleClose() {
     setQuery('');
     setLiftFilter(defaultLift ?? 'all');
+    setCustomStep(null);
+    setSelectedMuscles(new Set());
     onClose();
+  }
+
+  function handleCustomTap(name: string) {
+    setCustomStep({ name });
+    setSelectedMuscles(new Set());
+  }
+
+  function handlePickerBack() {
+    setCustomStep(null);
+    setSelectedMuscles(new Set());
+  }
+
+  function toggleMuscle(muscle: MuscleGroup) {
+    setSelectedMuscles((prev) => {
+      const next = new Set(prev);
+      if (next.has(muscle)) {
+        next.delete(muscle);
+      } else {
+        next.add(muscle);
+      }
+      return next;
+    });
+  }
+
+  function handlePickerConfirm() {
+    if (!customStep || selectedMuscles.size === 0) return;
+    onConfirm(customStep.name, [...selectedMuscles]);
+    setCustomStep(null);
+    setSelectedMuscles(new Set());
+    setQuery('');
+    setLiftFilter(defaultLift ?? 'all');
   }
 
   function renderExerciseChips(entry: ExerciseCatalogEntry) {
@@ -372,7 +486,7 @@ export function AddExerciseModal({
       return (
         <TouchableOpacity
           style={styles.customRow}
-          onPress={() => handleSelect(item.customName!)}
+          onPress={() => handleCustomTap(item.customName!)}
           activeOpacity={0.7}
         >
           <Text style={styles.customText}>Add "{item.customName}"</Text>
@@ -405,6 +519,77 @@ export function AddExerciseModal({
     );
   }
 
+  function renderMusclePicker() {
+    const canConfirm = selectedMuscles.size > 0;
+    return (
+      <>
+        <View style={styles.header}>
+          <TouchableOpacity onPress={handlePickerBack} activeOpacity={0.7}>
+            <Text style={styles.pickerBackBtn}>← Back</Text>
+          </TouchableOpacity>
+          <Text style={styles.title}>Select muscles</Text>
+          <TouchableOpacity onPress={handleClose} activeOpacity={0.7}>
+            <Text style={styles.closeBtn}>✕</Text>
+          </TouchableOpacity>
+        </View>
+        <Text style={styles.pickerSubtitle}>
+          Which muscles does "{customStep!.name}" primarily work?
+        </Text>
+        <ScrollView
+          style={styles.pickerScroll}
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+        >
+          {MUSCLE_CATEGORY_ORDER.map((category) => {
+            const muscles = MUSCLE_CATALOG.filter(
+              (m) => m.category === category
+            );
+            return (
+              <View key={category}>
+                <Text style={styles.pickerCategory}>
+                  {MUSCLE_CATEGORY_LABELS[category]}
+                </Text>
+                <View style={styles.muscleChipRow}>
+                  {muscles.map((m) => {
+                    const active = selectedMuscles.has(m.id as MuscleGroup);
+                    return (
+                      <TouchableOpacity
+                        key={m.id}
+                        style={[
+                          styles.muscleChip,
+                          active && styles.muscleChipActive,
+                        ]}
+                        onPress={() => toggleMuscle(m.id as MuscleGroup)}
+                        activeOpacity={0.7}
+                      >
+                        <Text
+                          style={[
+                            styles.muscleChipText,
+                            active && styles.muscleChipTextActive,
+                          ]}
+                        >
+                          {MUSCLE_LABELS_COMPACT[m.id as MuscleGroup] ?? m.label}
+                        </Text>
+                      </TouchableOpacity>
+                    );
+                  })}
+                </View>
+              </View>
+            );
+          })}
+        </ScrollView>
+        <TouchableOpacity
+          style={[styles.addBtn, !canConfirm && styles.addBtnDisabled]}
+          onPress={handlePickerConfirm}
+          disabled={!canConfirm}
+          activeOpacity={0.8}
+        >
+          <Text style={styles.addBtnText}>Add Exercise</Text>
+        </TouchableOpacity>
+      </>
+    );
+  }
+
   return (
     <Modal
       visible={visible}
@@ -418,62 +603,68 @@ export function AddExerciseModal({
         onPress={handleClose}
       >
         <View style={styles.sheet} onStartShouldSetResponder={() => true}>
-          <View style={styles.header}>
-            <Text style={styles.title}>Add Exercise</Text>
-            <TouchableOpacity onPress={handleClose} activeOpacity={0.7}>
-              <Text style={styles.closeBtn}>✕</Text>
-            </TouchableOpacity>
-          </View>
+          {customStep ? (
+            renderMusclePicker()
+          ) : (
+            <>
+              <View style={styles.header}>
+                <Text style={styles.title}>Add Exercise</Text>
+                <TouchableOpacity onPress={handleClose} activeOpacity={0.7}>
+                  <Text style={styles.closeBtn}>✕</Text>
+                </TouchableOpacity>
+              </View>
 
-          <TextInput
-            style={styles.searchInput}
-            placeholder="Search or type a custom name…"
-            placeholderTextColor={colors.textTertiary}
-            value={query}
-            onChangeText={setQuery}
-            // eslint-disable-next-line jsx-a11y/no-autofocus -- intentional for modal UX
-            autoFocus
-            returnKeyType="search"
-            autoCapitalize="words"
-          />
+              <TextInput
+                style={styles.searchInput}
+                placeholder="Search or type a custom name…"
+                placeholderTextColor={colors.textTertiary}
+                value={query}
+                onChangeText={setQuery}
+                // eslint-disable-next-line jsx-a11y/no-autofocus -- intentional for modal UX
+                autoFocus
+                returnKeyType="search"
+                autoCapitalize="words"
+              />
 
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            style={styles.filterRow}
-            contentContainerStyle={styles.filterRowContent}
-            keyboardShouldPersistTaps="handled"
-          >
-            {FILTER_OPTIONS.map((opt) => (
-              <TouchableOpacity
-                key={opt.key}
-                style={[
-                  styles.filterPill,
-                  liftFilter === opt.key && styles.filterPillActive,
-                ]}
-                onPress={() => setLiftFilter(opt.key)}
-                activeOpacity={0.7}
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                style={styles.filterRow}
+                contentContainerStyle={styles.filterRowContent}
+                keyboardShouldPersistTaps="handled"
               >
-                <Text
-                  style={[
-                    styles.filterPillText,
-                    liftFilter === opt.key && styles.filterPillTextActive,
-                  ]}
-                >
-                  {opt.label}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </ScrollView>
+                {FILTER_OPTIONS.map((opt) => (
+                  <TouchableOpacity
+                    key={opt.key}
+                    style={[
+                      styles.filterPill,
+                      liftFilter === opt.key && styles.filterPillActive,
+                    ]}
+                    onPress={() => setLiftFilter(opt.key)}
+                    activeOpacity={0.7}
+                  >
+                    <Text
+                      style={[
+                        styles.filterPillText,
+                        liftFilter === opt.key && styles.filterPillTextActive,
+                      ]}
+                    >
+                      {opt.label}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
 
-          <FlatList
-            data={listItems}
-            keyExtractor={(item) => item.key}
-            renderItem={renderItem}
-            keyboardShouldPersistTaps="handled"
-            showsVerticalScrollIndicator={false}
-            style={styles.list}
-          />
+              <FlatList
+                data={listItems}
+                keyExtractor={(item) => item.key}
+                renderItem={renderItem}
+                keyboardShouldPersistTaps="handled"
+                showsVerticalScrollIndicator={false}
+                style={styles.list}
+              />
+            </>
+          )}
         </View>
       </TouchableOpacity>
     </Modal>
