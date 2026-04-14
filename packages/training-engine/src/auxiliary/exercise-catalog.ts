@@ -1114,7 +1114,7 @@ export const EXERCISE_CATALOG: ExerciseCatalogEntry[] = [
     weightPct: 0.125,
     repTarget: 12,
     movementPattern: 'core',
-    equipment: 'none',
+    equipment: 'barbell',
     complexityTier: 'simple',
   },
 ];
