@@ -17,6 +17,7 @@ import {
   updateSessionVideoAnalysis,
   updateSessionVideoDebugLandmarks,
 } from '../data/video.repository';
+import { normalizeVideoUri } from '../lib/normalize-video-uri';
 import { computeSagittalConfidence } from '../lib/view-confidence';
 
 const SUPPORTED_LIFTS = ['squat', 'bench', 'deadlift'] as const;
@@ -128,7 +129,7 @@ export function useVideoAnalysis({
         videosDir.create({ intermediates: true });
       }
       const destFile = new File(videosDir, filename);
-      const sourceFile = new File(compressedUri);
+      const sourceFile = new File(normalizeVideoUri(compressedUri));
       sourceFile.move(destFile);
       const destUri = destFile.uri;
       setProgress(0.85);

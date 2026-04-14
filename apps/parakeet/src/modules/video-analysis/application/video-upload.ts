@@ -2,6 +2,8 @@ import { typedSupabase } from '@platform/supabase';
 import { captureException } from '@platform/utils/captureException';
 import { File } from 'expo-file-system';
 
+import { normalizeVideoUri } from '../lib/normalize-video-uri';
+
 const BUCKET = 'session-videos';
 
 /**
@@ -30,8 +32,10 @@ export async function uploadVideoToStorage({
 
     const storagePath = `${user.id}/${videoId}.mp4`;
 
-    // File implements Blob in expo-file-system — pass directly to Supabase
-    const file = new File(localUri);
+    // File implements Blob in expo-file-system — pass directly to Supabase.
+    // Normalize defensively in case localUri came from a DB row predating the
+    // source-side normalization fix.
+    const file = new File(normalizeVideoUri(localUri));
 
     const { error: uploadError } = await typedSupabase.storage
       .from(BUCKET)

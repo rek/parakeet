@@ -19,6 +19,7 @@ export { assessPauseQuality } from './lib/pause-quality';
 export { analyzeHipHingeTiming } from './lib/hip-hinge-timing';
 export { computeBarToShinDistance } from './lib/bar-shin-distance';
 export { computeLockoutStability } from './lib/lockout-stability';
+export { normalizeVideoUri } from './lib/normalize-video-uri';
 
 // --- Hooks (primary external API) ---
 export { useVideoAnalysis } from './hooks/useVideoAnalysis';

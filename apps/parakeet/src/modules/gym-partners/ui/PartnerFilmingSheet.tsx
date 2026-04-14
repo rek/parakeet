@@ -8,6 +8,7 @@ import {
 } from 'react-native';
 
 import { captureException } from '@platform/utils/captureException';
+import { normalizeVideoUri } from '@modules/video-analysis';
 import {
   Camera,
   useCameraDevice,
@@ -70,7 +71,7 @@ export function PartnerFilmingSheet({
           setStep('process');
           if (selection) {
             const success = await processVideo({
-              videoUri: video.path,
+              videoUri: normalizeVideoUri(video.path),
               durationSec: video.duration,
               lift: selection.lift,
               setNumber: selection.setNumber,

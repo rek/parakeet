@@ -10,6 +10,7 @@ import {
 
 import { radii, spacing, typography } from '../../../theme';
 import type { ColorScheme } from '../../../theme';
+import { normalizeVideoUri } from '../lib/normalize-video-uri';
 
 /**
  * In-app video recording with a silhouette guide overlay.
@@ -37,7 +38,7 @@ export function RecordVideoSheet({
     cameraRef.current.startRecording({
       onRecordingFinished: (video) => {
         setIsRecording(false);
-        onRecorded(video.path);
+        onRecorded(normalizeVideoUri(video.path));
       },
       onRecordingError: () => {
         setIsRecording(false);

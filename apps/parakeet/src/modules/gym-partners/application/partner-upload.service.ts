@@ -1,5 +1,6 @@
 import { typedSupabase } from '@platform/supabase';
 import { captureException } from '@platform/utils/captureException';
+import { normalizeVideoUri } from '@modules/video-analysis';
 import { File } from 'expo-file-system';
 
 const BUCKET = 'session-videos';
@@ -22,7 +23,8 @@ export async function uploadPartnerVideo({
 }) {
   try {
     const storagePath = `${lifterUserId}/${videoId}.mp4`;
-    const file = new File(localUri);
+    // Normalize defensively in case localUri is a bare path from old data.
+    const file = new File(normalizeVideoUri(localUri));
 
     const { error: uploadError } = await typedSupabase.storage
       .from(BUCKET)

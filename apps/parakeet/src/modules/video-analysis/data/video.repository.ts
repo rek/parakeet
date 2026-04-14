@@ -310,7 +310,8 @@ export async function deleteSessionVideo({ id }: { id: string }) {
   if (row?.local_uri) {
     try {
       const { File } = await import('expo-file-system');
-      const file = new File(row.local_uri);
+      const { normalizeVideoUri } = await import('../lib/normalize-video-uri');
+      const file = new File(normalizeVideoUri(row.local_uri));
       if (file.exists) {
         file.delete();
       }
