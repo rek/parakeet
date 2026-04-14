@@ -1106,6 +1106,17 @@ export const EXERCISE_CATALOG: ExerciseCatalogEntry[] = [
     equipment: 'barbell',
     complexityTier: 'moderate',
   },
+  {
+    name: 'Standing Plate Rotation',
+    associatedLift: null,
+    primaryMuscles: ['core'],
+    type: 'weighted',
+    weightPct: 0.06,
+    repTarget: 12,
+    movementPattern: 'core',
+    equipment: 'none',
+    complexityTier: 'simple',
+  },
 ];
 
 // ── Fast lookup ───────────────────────────────────────────────────────────────
