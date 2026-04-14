@@ -5,6 +5,7 @@ import {
   baseInput,
   makeDisruption,
 } from '../__test-helpers__/fixtures';
+import { DEFAULT_CORE_POOL } from '../auxiliary/exercise-catalog';
 import {
   DEFAULT_FORMULA_CONFIG_FEMALE,
   DEFAULT_FORMULA_CONFIG_MALE,
@@ -1228,6 +1229,38 @@ describe('generateJITSession — volume top-up (engine-027)', () => {
     const topUps = out.auxiliaryWork.filter((a) => a.isTopUp);
     const hasLegPress = topUps.some((a) => a.exercise === 'Leg Press');
     expect(hasLegPress).toBe(true);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// #191: core volume top-up
+// ---------------------------------------------------------------------------
+
+describe('generateJITSession — core volume top-up (#191)', () => {
+  it('core below MEV → selects a core exercise from DEFAULT_CORE_POOL', () => {
+    const out = generateJITSession(
+      baseInput({
+        auxiliaryPool: DEFAULT_CORE_POOL,
+        weeklyVolumeToDate: atMevExcept(DEFAULT_MRV_MEV_CONFIG_MALE, 'core'),
+        mrvMevConfig: DEFAULT_MRV_MEV_CONFIG_MALE,
+      })
+    );
+    const coreTopUps = out.auxiliaryWork.filter(
+      (a) => a.isTopUp && DEFAULT_CORE_POOL.includes(a.exercise)
+    );
+    expect(coreTopUps.length).toBeGreaterThan(0);
+    expect(coreTopUps[0].topUpReason).toContain('below MEV');
+  });
+
+  it('DEFAULT_CORE_POOL excludes timed exercises', () => {
+    expect(DEFAULT_CORE_POOL.length).toBeGreaterThan(0);
+    // Plank is timed — must be excluded so volume top-up can select core exercises
+    expect(DEFAULT_CORE_POOL).not.toContain('Plank');
+    // Known non-timed core exercises must be present
+    expect(DEFAULT_CORE_POOL).toContain('Toes to Bar');
+    expect(DEFAULT_CORE_POOL).toContain('Ab Wheel Rollout');
+    expect(DEFAULT_CORE_POOL).toContain('Hanging Leg Raise');
+    expect(DEFAULT_CORE_POOL).toContain('Dead Bug');
   });
 });
 

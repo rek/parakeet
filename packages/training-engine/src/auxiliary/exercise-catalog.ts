@@ -978,6 +978,9 @@ export const EXERCISE_CATALOG: ExerciseCatalogEntry[] = [
     primaryMuscles: ['core'],
     type: 'bodyweight',
     repTarget: 10,
+    movementPattern: 'core',
+    equipment: 'bodyweight',
+    complexityTier: 'moderate',
   },
   {
     name: 'Plank',
@@ -985,6 +988,61 @@ export const EXERCISE_CATALOG: ExerciseCatalogEntry[] = [
     primaryMuscles: ['core'],
     type: 'timed',
     repTarget: 1,
+    movementPattern: 'core',
+    equipment: 'bodyweight',
+    complexityTier: 'simple',
+  },
+  {
+    name: 'Ab Wheel Rollout',
+    associatedLift: null,
+    primaryMuscles: ['core'],
+    type: 'bodyweight',
+    repTarget: 8,
+    movementPattern: 'core',
+    equipment: 'bodyweight',
+    complexityTier: 'moderate',
+  },
+  {
+    name: 'Hanging Leg Raise',
+    associatedLift: null,
+    primaryMuscles: ['core'],
+    type: 'bodyweight',
+    repTarget: 10,
+    movementPattern: 'core',
+    equipment: 'bodyweight',
+    complexityTier: 'simple',
+  },
+  {
+    name: 'Dead Bug',
+    associatedLift: null,
+    primaryMuscles: ['core'],
+    type: 'bodyweight',
+    repTarget: 10,
+    movementPattern: 'core',
+    equipment: 'bodyweight',
+    complexityTier: 'simple',
+  },
+  {
+    name: 'Cable Crunch',
+    associatedLift: null,
+    primaryMuscles: ['core'],
+    type: 'weighted',
+    weightPct: 0.15,
+    repTarget: 12,
+    movementPattern: 'core',
+    equipment: 'cable',
+    complexityTier: 'simple',
+  },
+  {
+    name: 'Pallof Press',
+    associatedLift: null,
+    primaryMuscles: ['core'],
+    type: 'weighted',
+    weightPct: 0.10,
+    repTarget: 10,
+    movementPattern: 'core',
+    equipment: 'cable',
+    complexityTier: 'simple',
   },
 ];
 
@@ -1007,6 +1065,11 @@ export const DEFAULT_AUXILIARY_POOLS: Record<Lift, string[]> = {
     (e) => e.name
   ),
 };
+
+/** Non-timed core exercises available for volume top-up selection. */
+export const DEFAULT_CORE_POOL: string[] = EXERCISE_CATALOG.filter(
+  (e) => e.primaryMuscles.includes('core') && e.type !== 'timed'
+).map((e) => e.name);
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 

@@ -35,6 +35,7 @@ import {
   createAdHocJITOutput,
   createEmptyTrace,
   DEFAULT_AUXILIARY_POOLS,
+  DEFAULT_CORE_POOL,
   generateJITSessionWithTrace,
   getAuxiliariesForBlock,
   getJITGenerator,
@@ -356,10 +357,10 @@ export async function runJITForSession(
     injuryOverrides
   );
 
-  // Merge all three lift pools for widest top-up selection (engine-027)
+  // Merge all three lift pools + core pool for widest top-up selection (engine-027, #191)
   const auxiliaryPool = allPools
-    ? [...allPools.squat, ...allPools.bench, ...allPools.deadlift]
-    : [];
+    ? [...allPools.squat, ...allPools.bench, ...allPools.deadlift, ...DEFAULT_CORE_POOL]
+    : [...DEFAULT_CORE_POOL];
 
   // Per-athlete modifier calibrations (engine-041)
   const modifierCalibrations = await fetchModifierCalibrations(userId);
