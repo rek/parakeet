@@ -68,3 +68,65 @@ describe('sessionStore persistence', () => {
     expect(merged.warmupCompleted).toEqual([1, 2, 3]);
   });
 });
+
+describe('sessionStore.acceptWeightSuggestion', () => {
+  beforeEach(() => {
+    useSessionStore.getState().reset();
+  });
+
+  it('cascades the new weight to all incomplete sets', () => {
+    const store = useSessionStore.getState();
+    store.initSession('s1', [
+      { weight_kg: 100, reps: 5 },
+      { weight_kg: 100, reps: 5 },
+      { weight_kg: 100, reps: 5 },
+    ]);
+    store.updateSet(1, {
+      weight_grams: 100_000,
+      reps_completed: 5,
+      is_completed: true,
+    });
+    store.setWeightSuggestion({
+      suggestedWeightKg: 105,
+      deltaKg: 5,
+      rationale: 'felt easy',
+    });
+
+    useSessionStore.getState().acceptWeightSuggestion();
+
+    const after = useSessionStore.getState().actualSets;
+    expect(after).toHaveLength(3);
+    // Completed set unchanged
+    expect(after[0]).toMatchObject({
+      set_number: 1,
+      weight_grams: 100_000,
+      is_completed: true,
+    });
+    // Both remaining incomplete sets bumped
+    expect(after[1]).toMatchObject({
+      set_number: 2,
+      weight_grams: 105_000,
+      is_completed: false,
+    });
+    expect(after[2]).toMatchObject({
+      set_number: 3,
+      weight_grams: 105_000,
+      is_completed: false,
+    });
+    // Banner cleared, accept flag set
+    const state = useSessionStore.getState();
+    expect(state.weightSuggestion).toBeNull();
+    expect(state.hasAcceptedWeightSuggestion).toBe(true);
+  });
+
+  it('is a no-op when no suggestion is active', () => {
+    const store = useSessionStore.getState();
+    store.initSession('s1', [{ weight_kg: 100, reps: 5 }]);
+    const before = useSessionStore.getState().actualSets;
+
+    useSessionStore.getState().acceptWeightSuggestion();
+
+    expect(useSessionStore.getState().actualSets).toEqual(before);
+    expect(useSessionStore.getState().hasAcceptedWeightSuggestion).toBe(false);
+  });
+});

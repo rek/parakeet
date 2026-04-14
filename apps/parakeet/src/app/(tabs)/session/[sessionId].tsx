@@ -922,12 +922,10 @@ export default function SessionScreen() {
                 <SetRow
                   key={actualSet.set_number}
                   setNumber={actualSet.set_number}
-                  plannedWeightKg={displayWeightKg}
-                  plannedReps={
-                    actualSet.is_completed
-                      ? actualSet.reps_completed
-                      : (planned?.reps ?? actualSet.reps_completed)
-                  }
+                  weightKg={displayWeightKg}
+                  reps={actualSet.reps_completed}
+                  placeholderWeightKg={planned?.weight_kg}
+                  placeholderReps={planned?.reps}
                   rpeValue={actualSet.rpe_actual}
                   isCompleted={actualSet.is_completed}
                   onUpdate={(data) =>
@@ -1013,22 +1011,18 @@ export default function SessionScreen() {
                       const adaptedSet = auxAdapt?.sets.find(
                         (s) => s.set_number === actualSet.set_number
                       );
+                      const displayWeightKg =
+                        !actualSet.is_completed && adaptedSet
+                          ? adaptedSet.weight_kg
+                          : weightGramsToKg(actualSet.weight_grams);
                       return (
                         <SetRow
                           key={`${aw.exercise}-${actualSet.set_number}`}
                           setNumber={actualSet.set_number}
-                          plannedWeightKg={
-                            actualSet.is_completed
-                              ? weightGramsToKg(actualSet.weight_grams)
-                              : (adaptedSet?.weight_kg ??
-                                planned?.weight_kg ??
-                                actualSet.weight_grams / 1000)
-                          }
-                          plannedReps={
-                            actualSet.is_completed
-                              ? actualSet.reps_completed
-                              : (planned?.reps ?? actualSet.reps_completed)
-                          }
+                          weightKg={displayWeightKg}
+                          reps={actualSet.reps_completed}
+                          placeholderWeightKg={planned?.weight_kg}
+                          placeholderReps={planned?.reps}
                           rpeValue={actualSet.rpe_actual}
                           isCompleted={actualSet.is_completed}
                           exerciseType={aw.exerciseType}
@@ -1088,23 +1082,20 @@ export default function SessionScreen() {
                           const adaptedSet = auxAdapt?.sets.find(
                             (s) => s.set_number === actualSet.set_number
                           );
+                          const displayWeightKg =
+                            !actualSet.is_completed && adaptedSet
+                              ? adaptedSet.weight_kg
+                              : weightGramsToKg(actualSet.weight_grams);
                           return (
                             <SetRow
                               key={`${aw.exercise}-${actualSet.set_number}`}
                               setNumber={actualSet.set_number}
-                              plannedWeightKg={
-                                actualSet.is_completed
-                                  ? weightGramsToKg(actualSet.weight_grams)
-                                  : (adaptedSet?.weight_kg ??
-                                    planned?.weight_kg ??
-                                    actualSet.weight_grams / 1000)
-                              }
-                              plannedReps={
-                                actualSet.is_completed
-                                  ? actualSet.reps_completed
-                                  : (planned?.reps ?? actualSet.reps_completed)
-                              }
+                              weightKg={displayWeightKg}
+                              reps={actualSet.reps_completed}
+                              placeholderWeightKg={planned?.weight_kg}
+                              placeholderReps={planned?.reps}
                               rpeValue={actualSet.rpe_actual}
+                              isCompleted={actualSet.is_completed}
                               exerciseType={aw.exerciseType}
                               onRpePress={() =>
                                 requestAuxRpe(aw.exercise, actualSet.set_number)
@@ -1159,9 +1150,10 @@ export default function SessionScreen() {
                       <View style={styles.adHocSetRowContent}>
                         <SetRow
                           setNumber={actualSet.set_number}
-                          plannedWeightKg={actualSet.weight_grams / 1000}
-                          plannedReps={actualSet.reps_completed}
+                          weightKg={weightGramsToKg(actualSet.weight_grams)}
+                          reps={actualSet.reps_completed}
                           rpeValue={actualSet.rpe_actual}
+                          isCompleted={actualSet.is_completed}
                           exerciseType={getExerciseType(exercise)}
                           onRpePress={() =>
                             requestAuxRpe(exercise, actualSet.set_number)

@@ -321,16 +321,10 @@ export const useSessionStore = create<SessionState>()(
         set((state) => {
           const suggestion = state.weightSuggestion;
           if (!suggestion) return {};
-          // Find the next incomplete main set and update its weight
-          const nextSet = state.actualSets.find((s) => !s.is_completed);
-          if (!nextSet) return { weightSuggestion: null };
+          const newWeightGrams = weightKgToGrams(suggestion.suggestedWeightKg);
+          // Cascade to all remaining incomplete sets so the bump propagates
           const updatedActual = state.actualSets.map((s) =>
-            s.set_number === nextSet.set_number
-              ? {
-                  ...s,
-                  weight_grams: weightKgToGrams(suggestion.suggestedWeightKg),
-                }
-              : s
+            s.is_completed ? s : { ...s, weight_grams: newWeightGrams }
           );
           return {
             actualSets: updatedActual,

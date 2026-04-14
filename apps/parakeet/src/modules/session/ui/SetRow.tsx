@@ -15,7 +15,6 @@ import { useTheme } from '../../../theme/ThemeContext';
 import type { FormattedTrace } from '../utils/format-trace';
 import { PlateCalculatorSheet } from './PlateCalculatorSheet';
 import { PlateDisplay } from './PlateDisplay';
-import { resolveSetRowDisplay } from './resolveSetRowDisplay';
 import { TraceLink } from './TraceLink';
 import { parseWeightInput } from './weight-input';
 
@@ -30,8 +29,13 @@ interface SetUpdateData {
 
 export interface SetRowProps {
   setNumber: number;
-  plannedWeightKg: number;
-  plannedReps: number;
+  /** Canonical current weight (from store). SetRow displays this directly. */
+  weightKg: number;
+  /** Canonical current reps (from store). */
+  reps: number;
+  /** Original prescription, used as input placeholder only. */
+  placeholderWeightKg?: number;
+  placeholderReps?: number;
   rpeValue?: number;
   isCompleted?: boolean;
   exerciseType?: 'weighted' | 'bodyweight' | 'timed';
@@ -50,14 +54,20 @@ export interface SetRowProps {
   videoIconSlot?: ReactNode;
 }
 
+function formatWeightText(kg: number): string {
+  return kg === 0 ? '' : String(kg);
+}
+
 // ── Component ─────────────────────────────────────────────────────────────────
 
 export function SetRow({
   setNumber,
-  plannedWeightKg,
-  plannedReps,
+  weightKg,
+  reps,
+  placeholderWeightKg,
+  placeholderReps,
   rpeValue,
-  isCompleted: isCompletedProp = false,
+  isCompleted = false,
   exerciseType = 'weighted',
   onUpdate,
   onRpePress,
@@ -69,16 +79,25 @@ export function SetRow({
   videoIconSlot,
 }: SetRowProps) {
   const { colors } = useTheme();
-  const [weightKg, setWeightKg] = useState(plannedWeightKg);
-  const [weightText, setWeightText] = useState(
-    plannedWeightKg === 0 ? '' : String(plannedWeightKg)
-  );
-  const [reps, setReps] = useState(plannedReps);
-  const [isCompleted, setIsCompleted] = useState(false);
-  const [plateSheetVisible, setPlateSheetVisible] = useState(false);
 
-  // RPE is owned by parent (set via floating quick-picker) — derive, don't sync
-  const rpe = rpeValue;
+  // Local text buffer for in-progress typing ("5.", ""). The numeric value is
+  // canonical from props; this just preserves keystrokes that haven't yet
+  // resolved to a different number.
+  const [weightText, setWeightText] = useState(() => formatWeightText(weightKg));
+
+  // Resync buffer when canonical weight changes externally (e.g. +5kg accept,
+  // ±2.5 button on another render path). Skip resync if the current buffer
+  // already parses to the new weight — that means the change came from this
+  // input's own onChange, so the user's keystroke ("5.") must not be wiped.
+  const lastWeightRef = useRef(weightKg);
+  if (lastWeightRef.current !== weightKg) {
+    lastWeightRef.current = weightKg;
+    if (parseWeightInput(weightText) !== weightKg) {
+      setWeightText(formatWeightText(weightKg));
+    }
+  }
+
+  const [plateSheetVisible, setPlateSheetVisible] = useState(false);
 
   const styles = useMemo(
     () =>
@@ -215,29 +234,20 @@ export function SetRow({
     [colors]
   );
 
-  const { displayReps, displayWeightKg, displayWeightText, displayCompleted } =
-    resolveSetRowDisplay({
-      plannedWeightKg,
-      plannedReps,
-      localWeightKg: weightKg,
-      localWeightText: weightText,
-      localReps: reps,
-      localIsCompleted: isCompleted,
-      isCompletedExternal: isCompletedProp,
-    });
-
-  // Stable ref for onUpdate so handlers don't need it as a dependency
+  // Stable ref for onUpdate so handlers can be defined without closing over
+  // a possibly-changing parent callback.
   const onUpdateRef = useRef(onUpdate);
   onUpdateRef.current = onUpdate;
 
-  // Notify parent directly from event handlers — no effect needed
-  // (per https://react.dev/learn/you-might-not-need-an-effect)
-  function notifyParent(patch: Partial<SetUpdateData>) {
-    if (isCompletedProp) return;
+  function emit(patch: Partial<SetUpdateData>) {
+    if (isCompleted && patch.isCompleted !== false) {
+      // Completed sets are read-only except via toggle-off
+      return;
+    }
     onUpdateRef.current({
       weightKg: patch.weightKg ?? weightKg,
       reps: patch.reps ?? reps,
-      rpe,
+      rpe: rpeValue,
       isCompleted: patch.isCompleted ?? isCompleted,
     });
   }
@@ -245,8 +255,7 @@ export function SetRow({
   function handleWeightChange(text: string) {
     setWeightText(text);
     const kg = parseWeightInput(text);
-    setWeightKg(kg);
-    notifyParent({ weightKg: kg });
+    if (kg !== weightKg) emit({ weightKg: kg });
   }
 
   function handleRepsChange(text: string) {
@@ -259,56 +268,51 @@ export function SetRow({
     } else {
       return;
     }
-    setReps(nextReps);
-    notifyParent({ reps: nextReps });
+    if (nextReps !== reps) emit({ reps: nextReps });
   }
 
   function handleToggleComplete() {
-    const next = !isCompleted;
-    setIsCompleted(next);
-    notifyParent({ isCompleted: next });
+    onUpdateRef.current({
+      weightKg,
+      reps,
+      rpe: rpeValue,
+      isCompleted: !isCompleted,
+    });
   }
 
   function handleWeightAdjust(delta: number) {
     const next = Math.max(0, Math.round((weightKg + delta) * 10) / 10);
-    setWeightKg(next);
-    setWeightText(next === 0 ? '' : String(next));
-    notifyParent({ weightKg: next });
+    if (next !== weightKg) emit({ weightKg: next });
   }
 
   // Timed exercises: round label + duration input (minutes) + mark complete
   if (exerciseType === 'timed') {
     return (
-      <View
-        style={[styles.wrapper, displayCompleted && styles.wrapperCompleted]}
-      >
+      <View style={[styles.wrapper, isCompleted && styles.wrapperCompleted]}>
         <View style={styles.row}>
           <Text style={styles.setLabel}>Round {setNumber}</Text>
           <TextInput
-            style={[styles.repsInput, displayCompleted && styles.inputLocked]}
-            value={displayReps === 0 ? '' : String(displayReps)}
+            style={[styles.repsInput, isCompleted && styles.inputLocked]}
+            value={reps === 0 ? '' : String(reps)}
             onChangeText={handleRepsChange}
             keyboardType="number-pad"
             returnKeyType="done"
             selectTextOnFocus
-            placeholder={String(plannedReps)}
+            placeholder={String(placeholderReps ?? reps)}
             placeholderTextColor={colors.textTertiary}
             textAlign="center"
-            editable={!displayCompleted}
+            editable={!isCompleted}
           />
           <Text style={styles.unitText}>min</Text>
           <TouchableOpacity
-            style={[
-              styles.checkButton,
-              displayCompleted && styles.checkButtonDone,
-            ]}
+            style={[styles.checkButton, isCompleted && styles.checkButtonDone]}
             onPress={handleToggleComplete}
             activeOpacity={0.7}
           >
             <Text
               style={[
                 styles.checkButtonText,
-                displayCompleted && styles.checkButtonTextDone,
+                isCompleted && styles.checkButtonTextDone,
               ]}
             >
               ✓
@@ -320,7 +324,7 @@ export function SetRow({
   }
 
   return (
-    <View style={[styles.wrapper, displayCompleted && styles.wrapperCompleted]}>
+    <View style={[styles.wrapper, isCompleted && styles.wrapperCompleted]}>
       {/* Main input row */}
       <View style={styles.row}>
         <Text style={styles.setLabel}>Set {setNumber}</Text>
@@ -328,19 +332,16 @@ export function SetRow({
         {exerciseType !== 'bodyweight' && (
           <>
             <TextInput
-              style={[
-                styles.weightInput,
-                displayCompleted && styles.inputLocked,
-              ]}
-              value={displayWeightText}
+              style={[styles.weightInput, isCompleted && styles.inputLocked]}
+              value={weightText}
               onChangeText={handleWeightChange}
               keyboardType="decimal-pad"
               returnKeyType="done"
               selectTextOnFocus
-              placeholder={String(plannedWeightKg)}
+              placeholder={String(placeholderWeightKg ?? weightKg)}
               placeholderTextColor={colors.textTertiary}
               textAlign="center"
-              editable={!displayCompleted}
+              editable={!isCompleted}
             />
             <Text style={styles.unitText}>kg</Text>
             <Text style={styles.multiplyText}>×</Text>
@@ -348,51 +349,48 @@ export function SetRow({
         )}
 
         <TextInput
-          style={[styles.repsInput, displayCompleted && styles.inputLocked]}
-          value={displayReps === 0 ? '' : String(displayReps)}
+          style={[styles.repsInput, isCompleted && styles.inputLocked]}
+          value={reps === 0 ? '' : String(reps)}
           onChangeText={handleRepsChange}
           keyboardType="number-pad"
           returnKeyType="done"
           selectTextOnFocus
-          placeholder={String(plannedReps)}
+          placeholder={String(placeholderReps ?? reps)}
           placeholderTextColor={colors.textTertiary}
           textAlign="center"
-          editable={!displayCompleted}
+          editable={!isCompleted}
         />
 
         {exerciseType !== 'bodyweight' && (
           <TouchableOpacity
             style={[
               styles.rpeChip,
-              rpe !== undefined && styles.rpeChipFilled,
-              !displayCompleted && styles.rpeChipDisabled,
+              rpeValue !== undefined && styles.rpeChipFilled,
+              !isCompleted && styles.rpeChipDisabled,
             ]}
-            onPress={displayCompleted ? onRpePress : undefined}
+            onPress={isCompleted ? onRpePress : undefined}
             activeOpacity={0.7}
           >
             <Text
               style={[
                 styles.rpeChipText,
-                rpe === undefined && styles.rpeChipPlaceholder,
+                rpeValue === undefined && styles.rpeChipPlaceholder,
               ]}
             >
-              {rpe !== undefined ? String(rpe) : 'RPE'}
+              {rpeValue !== undefined ? String(rpeValue) : 'RPE'}
             </Text>
           </TouchableOpacity>
         )}
 
         <TouchableOpacity
-          style={[
-            styles.checkButton,
-            displayCompleted && styles.checkButtonDone,
-          ]}
+          style={[styles.checkButton, isCompleted && styles.checkButtonDone]}
           onPress={handleToggleComplete}
           activeOpacity={0.7}
         >
           <Text
             style={[
               styles.checkButtonText,
-              displayCompleted && styles.checkButtonTextDone,
+              isCompleted && styles.checkButtonTextDone,
             ]}
           >
             ✓
@@ -403,11 +401,10 @@ export function SetRow({
       </View>
 
       {/* Second row: adjust buttons + plate calc + trace info */}
-      {(!displayCompleted && exerciseType === 'weighted') ||
-      prescriptionTrace ? (
+      {(!isCompleted && exerciseType === 'weighted') || prescriptionTrace ? (
         <View style={styles.adjustRow}>
           {prescriptionTrace && <TraceLink trace={prescriptionTrace} />}
-          {!displayCompleted && exerciseType === 'weighted' && (
+          {!isCompleted && exerciseType === 'weighted' && (
             <>
               <TouchableOpacity
                 style={styles.adjustButton}
@@ -423,13 +420,13 @@ export function SetRow({
               >
                 <Text style={styles.adjustButtonText}>+2.5</Text>
               </TouchableOpacity>
-              {displayWeightKg > 0 && (
+              {weightKg > 0 && (
                 <TouchableOpacity
                   onPress={() => setPlateSheetVisible(true)}
                   activeOpacity={0.7}
                 >
                   <PlateDisplay
-                    weightKg={displayWeightKg}
+                    weightKg={weightKg}
                     barWeightKg={barWeightKg}
                     disabledPlates={disabledPlates}
                   />
@@ -443,7 +440,7 @@ export function SetRow({
       <PlateCalculatorSheet
         visible={plateSheetVisible}
         onClose={() => setPlateSheetVisible(false)}
-        targetKg={displayWeightKg}
+        targetKg={weightKg}
         barWeightKg={barWeightKg}
         disabledPlates={disabledPlates}
         onBarWeightChange={onBarWeightChange}
