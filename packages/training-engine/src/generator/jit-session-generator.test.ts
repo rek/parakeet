@@ -1266,6 +1266,7 @@ describe('generateJITSession — core volume top-up (#191)', () => {
     expect(DEFAULT_CORE_POOL).toContain('Decline Situp');
     expect(DEFAULT_CORE_POOL).toContain('Cable Woodchop');
     expect(DEFAULT_CORE_POOL).toContain('Dragon Flag');
+    expect(DEFAULT_CORE_POOL).toContain('Landmine Rotation');
   });
 });
 

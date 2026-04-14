@@ -1095,6 +1095,17 @@ export const EXERCISE_CATALOG: ExerciseCatalogEntry[] = [
     equipment: 'bodyweight',
     complexityTier: 'complex',
   },
+  {
+    name: 'Landmine Rotation',
+    associatedLift: null,
+    primaryMuscles: ['core'],
+    type: 'weighted',
+    weightPct: 0.08,
+    repTarget: 10,
+    movementPattern: 'core',
+    equipment: 'barbell',
+    complexityTier: 'moderate',
+  },
 ];
 
 // ── Fast lookup ───────────────────────────────────────────────────────────────
