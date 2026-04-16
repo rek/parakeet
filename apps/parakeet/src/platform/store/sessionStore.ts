@@ -5,7 +5,6 @@ import type {
   PostRestState,
   RecoveryOffer,
   SessionAdaptation,
-  SupersetGroup,
   WeightSuggestionOffer,
 } from '@modules/session';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -48,7 +47,6 @@ interface TimerState {
   pendingMainSetNumber: number | null;
   pendingAuxExercise: string | null;
   pendingAuxSetNumber: number | null;
-  supersetGroup?: SupersetGroup;
 }
 
 export interface SessionState {
@@ -147,9 +145,6 @@ export interface SessionState {
   clearPendingRpe: () => void;
   setPendingAuxConfirmation: (data: PendingAuxConfirmation) => void;
   clearPendingAuxConfirmation: () => void;
-  registerSupersetGroup: (group: Omit<SupersetGroup, 'currentIndex'>) => void;
-  advanceSuperset: (groupId: string) => void;
-  clearSupersetGroup: (groupId: string) => void;
   reset: () => void;
 }
 
@@ -539,51 +534,6 @@ export const useSessionStore = create<SessionState>()(
 
       clearPendingAuxConfirmation: () =>
         set({ pendingAuxConfirmation: null }),
-
-      registerSupersetGroup: (group) =>
-        set((state) => {
-          if (!state.timerState) return {};
-          return {
-            timerState: {
-              ...state.timerState,
-              supersetGroup: {
-                ...group,
-                currentIndex: 0,
-              },
-            },
-          };
-        }),
-
-      advanceSuperset: (groupId) =>
-        set((state) => {
-          const sg = state.timerState?.supersetGroup;
-          if (!sg || sg.groupId !== groupId) return {};
-          return {
-            timerState: state.timerState
-              ? {
-                  ...state.timerState,
-                  supersetGroup: {
-                    ...sg,
-                    currentIndex: sg.currentIndex + 1,
-                  },
-                }
-              : null,
-          };
-        }),
-
-      clearSupersetGroup: (groupId) =>
-        set((state) => {
-          const sg = state.timerState?.supersetGroup;
-          if (!sg || sg.groupId !== groupId) return {};
-          return {
-            timerState: state.timerState
-              ? {
-                  ...state.timerState,
-                  supersetGroup: undefined,
-                }
-              : null,
-          };
-        }),
 
       reset: () =>
         set({

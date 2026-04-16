@@ -115,13 +115,5 @@ export interface PendingAuxConfirmation {
   reps: number;
 }
 
-export interface SupersetGroup {
-  groupId: string;
-  setNumbers: number[];
-  currentIndex: number;
-  restBetweenSetsSeconds: number;
-  restAfterGroupSeconds: number;
-}
-
 export const DEFAULT_MAIN_REST_SECONDS = 180;
 export const DEFAULT_AUX_REST_SECONDS = 90;

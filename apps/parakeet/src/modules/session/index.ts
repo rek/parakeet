@@ -12,7 +12,6 @@ export { useSessionCacheInvalidation } from './hooks/useSessionCacheInvalidation
 export { useSessionLifecycle } from './hooks/useSessionLifecycle';
 export { useMotivationalMessage } from './hooks/useMotivationalMessage';
 export * from './lib/sessions';
-export type { SupersetGroup } from './model/types';
 export * from './model/types';
 export * from './utils/overtime-edge';
 export * from './utils/session-sorting';
