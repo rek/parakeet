@@ -36,7 +36,7 @@ export async function insertPartnerSessionVideo({
       set_number: setNumber,
       sagittal_confidence: sagittalConfidence,
       local_uri: localUri,
-      duration_sec: durationSec,
+      duration_sec: Math.round(durationSec),
       ...(analysis != null ? { analysis } : {}),
     })
     .select('id')

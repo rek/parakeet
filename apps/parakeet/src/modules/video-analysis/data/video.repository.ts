@@ -98,7 +98,7 @@ export async function insertSessionVideo({
       sagittal_confidence: sagittalConfidence,
       local_uri: localUri,
       remote_uri: remoteUri ?? null,
-      duration_sec: durationSec,
+      duration_sec: Math.round(durationSec),
       set_weight_grams: setWeightGrams ?? null,
       set_reps: setReps ?? null,
       set_rpe: setRpe ?? null,
