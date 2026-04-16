@@ -9,6 +9,7 @@ import { weightGramsToKg, weightKgToGrams } from '@shared/utils/weight';
 
 import type {
   AuxiliaryWork,
+  PendingAuxConfirmation,
   PostRestState,
   RestRecommendations,
 } from '../model/types';
@@ -29,14 +30,12 @@ import { checkWeightAutoregulation } from '../utils/weight-autoregulation-check'
 export function useSetCompletionFlow({
   restTimerPrefsRef,
   restRecommendations,
-  auxiliaryWork,
   plannedSetsLengthRef,
   oneRmKgRef,
   biologicalSexRef,
 }: {
   restTimerPrefsRef: React.RefObject<RestTimerPrefs>;
   restRecommendations: React.RefObject<RestRecommendations | null>;
-  auxiliaryWork: AuxiliaryWork[];
   plannedSetsLengthRef: React.RefObject<number>;
   oneRmKgRef: React.RefObject<number | undefined>;
   biologicalSexRef: React.RefObject<'male' | 'female' | undefined>;
@@ -44,6 +43,11 @@ export function useSetCompletionFlow({
   const {
     timerState,
     plannedSets,
+    auxiliaryWork,
+    postRestState,
+    pendingRpeSetNumber,
+    pendingAuxRpe,
+    pendingAuxConfirmation,
     updateSet,
     updateAuxiliarySet,
     openTimer,
@@ -52,29 +56,20 @@ export function useSetCompletionFlow({
     recordSetFailure,
     recordSetSuccess,
     setAdaptation,
+    showMainPostRest,
+    showAuxPostRest,
+    showWarmupPostRest,
+    clearPostRestState,
+    extendPostRest,
+    tickPostRestCountdown,
+    setPendingRpe,
+    setPendingAuxRpe,
+    clearPendingRpe,
+    setPendingAuxConfirmation,
+    clearPendingAuxConfirmation,
   } = useSessionStore();
 
-  const [postRestState, setPostRestState] = useState<PostRestState | null>(
-    null
-  );
   const resetIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const [pendingRpeSetNumber, setPendingRpeSetNumber] = useState<number | null>(
-    null
-  );
-  const [pendingAuxRpe, setPendingAuxRpe] = useState<{
-    exercise: string;
-    setNumber: number;
-  } | null>(null);
-
-  // First aux set confirmation — shows Complete/Failed before any rest timer
-  const [pendingAuxConfirmation, setPendingAuxConfirmation] = useState<{
-    exerciseIndex: number;
-    exercise: string;
-    setNumber: number;
-    setsInExercise: number;
-    weightGrams: number;
-    reps: number;
-  } | null>(null);
 
   function cleanupResetInterval() {
     if (resetIntervalRef.current !== null) {
@@ -83,15 +78,15 @@ export function useSetCompletionFlow({
     }
   }
 
-  function clearPostRestState() {
+  function clearPostRestStateFn() {
     cleanupResetInterval();
-    setPostRestState(null);
+    clearPostRestState();
   }
 
   function dismissPostRest() {
     cleanupResetInterval();
     const result = computeDismissResult(postRestState, Date.now());
-    setPostRestState(null);
+    clearPostRestState();
     return result;
   }
 
@@ -120,7 +115,7 @@ export function useSetCompletionFlow({
 
       if (data.isCompleted) {
         if (!wasCompleted) {
-          setPendingRpeSetNumber(setNumber);
+          setPendingRpe(setNumber);
 
           // No rest timer after the last set
           if (setNumber >= plannedSetsLengthRef.current) return;
@@ -137,11 +132,13 @@ export function useSetCompletionFlow({
           });
         }
       } else {
-        setPendingRpeSetNumber((prev) => (prev === setNumber ? null : prev));
+        if (pendingRpeSetNumber === setNumber) {
+          clearPendingRpe();
+        }
       }
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [updateSet, openTimer]
+    [updateSet, openTimer, pendingRpeSetNumber, clearPendingRpe]
   );
 
   const handleAuxSetUpdate = useCallback(
@@ -184,7 +181,7 @@ export function useSetCompletionFlow({
           setsInExercise,
           weightGrams: weightKgToGrams(data.weightKg),
           reps: data.reps,
-        });
+        } as PendingAuxConfirmation);
         return;
       }
 
@@ -198,7 +195,7 @@ export function useSetCompletionFlow({
       if (data.isCompleted) {
         if (!wasAuxCompleted) {
           if (!isTimed && !isBodyweight)
-            setPendingAuxRpe({ exercise, setNumber });
+            setPendingAuxRpe(exercise, setNumber);
 
           // No rest timer after the last set of this exercise
           if (setNumber >= setsInExercise) return;
@@ -218,82 +215,16 @@ export function useSetCompletionFlow({
           });
         }
       } else {
-        setPendingAuxRpe((prev) =>
-          prev?.exercise === exercise && prev?.setNumber === setNumber
-            ? null
-            : prev
-        );
+        if (pendingAuxRpe?.exercise === exercise && pendingAuxRpe?.setNumber === setNumber) {
+          clearPendingRpe();
+        }
       }
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [updateAuxiliarySet, openTimer]
   );
 
-  // --- Timer done: dispatch to main/aux/warmup handler ---
-
-  function showMainPostRest(pendingMain: number, elapsedSeconds: number) {
-    const state = useSessionStore.getState();
-    const nextSet = getEffectivePlannedSet(
-      pendingMain,
-      state.plannedSets,
-      state.actualSets,
-      state.currentAdaptation
-    );
-    setPostRestState({
-      pendingMainSetNumber: pendingMain,
-      pendingAuxExercise: null,
-      pendingAuxSetNumber: null,
-      actualRestSeconds: elapsedSeconds,
-      liftStartedAt: Date.now(),
-      plannedReps: nextSet?.reps ?? 0,
-      plannedWeightKg: null, // Derived live from store in [sessionId].tsx
-      nextSetNumber: pendingMain + 1,
-      resetSecondsRemaining: null,
-    });
-  }
-
-  function showAuxPostRest(
-    pendingAuxExercise: string,
-    pendingAuxSet: number,
-    elapsedSeconds: number
-  ) {
-    const auxWork = auxiliaryWork.find(
-      (aw) => aw.exercise === pendingAuxExercise
-    );
-    const nextAuxSet = auxWork?.sets[pendingAuxSet];
-    setPostRestState({
-      pendingMainSetNumber: null,
-      pendingAuxExercise,
-      pendingAuxSetNumber: pendingAuxSet,
-      actualRestSeconds: elapsedSeconds,
-      liftStartedAt: Date.now(),
-      plannedReps: nextAuxSet?.reps ?? 0,
-      plannedWeightKg: nextAuxSet?.weight_kg ?? null,
-      nextSetNumber: pendingAuxSet + 1,
-      resetSecondsRemaining: null,
-    });
-  }
-
-  function showWarmupPostRest(elapsedSeconds: number) {
-    const state = useSessionStore.getState();
-    const firstSet = getEffectivePlannedSet(
-      0,
-      state.plannedSets,
-      state.actualSets,
-      state.currentAdaptation
-    );
-    setPostRestState({
-      pendingMainSetNumber: null,
-      pendingAuxExercise: null,
-      pendingAuxSetNumber: null,
-      actualRestSeconds: elapsedSeconds,
-      liftStartedAt: Date.now(),
-      plannedReps: firstSet?.reps ?? 0,
-      plannedWeightKg: firstSet?.weight_kg ?? null,
-      nextSetNumber: 1,
-      resetSecondsRemaining: null,
-    });
-  }
+  // --- Timer done: dispatch to main/aux/warmup handler (logic moved to store actions) ---
 
   function handleTimerDone() {
     const pendingMain = timerState?.pendingMainSetNumber ?? null;
@@ -302,8 +233,7 @@ export function useSetCompletionFlow({
 
     const elapsedSeconds = closeTimer();
 
-    setPendingRpeSetNumber(null);
-    setPendingAuxRpe(null);
+    clearPendingRpe();
 
     if (pendingMain !== null) {
       updateSet(pendingMain, { actual_rest_seconds: elapsedSeconds });
@@ -348,7 +278,7 @@ export function useSetCompletionFlow({
       });
       const auxType = auxWork?.exerciseType ?? getExerciseType(auxExercise);
       if (auxType !== 'timed' && auxType !== 'bodyweight')
-        setPendingAuxRpe({ exercise: auxExercise, setNumber: nextAuxSet });
+        setPendingAuxRpe(auxExercise, nextAuxSet);
 
       if (
         nextAuxSet < totalAuxSets &&
@@ -401,7 +331,7 @@ export function useSetCompletionFlow({
         reps_completed: effective?.reps ?? 0,
         is_completed: true,
       });
-      setPendingRpeSetNumber(nextSetNumber);
+      setPendingRpe(nextSetNumber);
 
       if (
         nextSetNumber < plannedSetsLengthRef.current &&
@@ -586,29 +516,16 @@ export function useSetCompletionFlow({
         { actual_rest_seconds: newRest }
       );
     }
-    setPostRestState((prev) =>
-      prev
-        ? { ...prev, actualRestSeconds: newRest, resetSecondsRemaining: 15 }
-        : null
-    );
+    extendPostRest();
     resetIntervalRef.current = setInterval(() => {
-      setPostRestState((prev) => {
-        if (!prev || prev.resetSecondsRemaining === null) return prev;
-        const next = prev.resetSecondsRemaining - 1;
-        if (next <= 0) {
-          clearInterval(resetIntervalRef.current!);
-          resetIntervalRef.current = null;
-          return { ...prev, resetSecondsRemaining: null };
-        }
-        return { ...prev, resetSecondsRemaining: next };
-      });
+      tickPostRestCountdown();
     }, 1000);
   }
 
   function handleRpeQuickSelect(rpe: number) {
     if (pendingRpeSetNumber !== null) {
       updateSet(pendingRpeSetNumber, { rpe_actual: rpe });
-      setPendingRpeSetNumber(null);
+      clearPendingRpe();
       // Check for volume recovery and weight autoregulation after main lift RPE
       checkVolumeRecovery();
       checkWeightAutoregulation();
@@ -616,21 +533,20 @@ export function useSetCompletionFlow({
       updateAuxiliarySet(pendingAuxRpe.exercise, pendingAuxRpe.setNumber, {
         rpe_actual: rpe,
       });
-      setPendingAuxRpe(null);
+      clearPendingRpe();
     }
   }
 
   function handleRpeQuickSkip() {
-    setPendingRpeSetNumber(null);
-    setPendingAuxRpe(null);
+    clearPendingRpe();
   }
 
   function requestMainRpe(setNumber: number) {
-    setPendingRpeSetNumber(setNumber);
+    setPendingRpe(setNumber);
   }
 
   function requestAuxRpe(exercise: string, setNumber: number) {
-    setPendingAuxRpe({ exercise, setNumber });
+    setPendingAuxRpe(exercise, setNumber);
   }
 
   // --- First aux set confirmation handlers ---
@@ -638,7 +554,7 @@ export function useSetCompletionFlow({
   function handleAuxConfirmComplete() {
     const conf = pendingAuxConfirmation;
     if (!conf) return;
-    setPendingAuxConfirmation(null);
+    clearPendingAuxConfirmation();
 
     // Write the completion to the store
     updateAuxiliarySet(conf.exercise, conf.setNumber, {
@@ -651,7 +567,7 @@ export function useSetCompletionFlow({
       auxiliaryWork.find((aw) => aw.exercise === conf.exercise)?.exerciseType ??
       getExerciseType(conf.exercise);
     if (confType !== 'timed' && confType !== 'bodyweight')
-      setPendingAuxRpe({ exercise: conf.exercise, setNumber: conf.setNumber });
+      setPendingAuxRpe(conf.exercise, conf.setNumber);
 
     // Open rest timer if not last set and aux timer enabled
     if (conf.setNumber >= conf.setsInExercise) return;
@@ -672,7 +588,7 @@ export function useSetCompletionFlow({
   function handleAuxConfirmFailed(actualReps: number) {
     const conf = pendingAuxConfirmation;
     if (!conf) return;
-    setPendingAuxConfirmation(null);
+    clearPendingAuxConfirmation();
 
     const failedType =
       auxiliaryWork.find((aw) => aw.exercise === conf.exercise)?.exerciseType ??
@@ -704,10 +620,6 @@ export function useSetCompletionFlow({
   }
 
   return {
-    postRestState,
-    pendingRpeSetNumber,
-    pendingAuxRpe,
-    pendingAuxConfirmation,
     handleSetUpdate,
     handleAuxSetUpdate,
     handleTimerDone,
@@ -721,6 +633,6 @@ export function useSetCompletionFlow({
     requestMainRpe,
     requestAuxRpe,
     cleanupResetInterval,
-    clearPostRestState,
+    clearPostRestState: clearPostRestStateFn,
   };
 }

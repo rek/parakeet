@@ -1,11 +1,16 @@
 import type {
   AuxSessionAdaptation,
+  AuxiliaryWork,
+  PendingAuxConfirmation,
+  PostRestState,
   RecoveryOffer,
   SessionAdaptation,
+  SupersetGroup,
   WeightSuggestionOffer,
 } from '@modules/session';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { weightKgToGrams } from '@shared/utils/weight';
+import { getEffectivePlannedSet } from '@shared/utils/getEffectivePlannedSet';
 import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
 
@@ -43,6 +48,7 @@ interface TimerState {
   pendingMainSetNumber: number | null;
   pendingAuxExercise: string | null;
   pendingAuxSetNumber: number | null;
+  supersetGroup?: SupersetGroup;
 }
 
 export interface SessionState {
@@ -50,6 +56,7 @@ export interface SessionState {
   plannedSets: { weight_kg: number; reps: number }[];
   actualSets: ActualSet[];
   auxiliarySets: AuxiliaryActualSet[];
+  auxiliaryWork: AuxiliaryWork[];
   warmupCompleted: number[];
   sessionRpe: number | undefined;
   startedAt: Date | undefined;
@@ -71,6 +78,10 @@ export interface SessionState {
   recoveryDismissed: boolean;
   weightSuggestion: WeightSuggestionOffer | null;
   hasAcceptedWeightSuggestion: boolean;
+  postRestState: PostRestState | null;
+  pendingRpeSetNumber: number | null;
+  pendingAuxRpe: { exercise: string; setNumber: number } | null;
+  pendingAuxConfirmation: PendingAuxConfirmation | null;
 
   updateSet: (setNumber: number, data: Partial<ActualSet>) => void;
   updateAuxiliarySet: (
@@ -97,6 +108,7 @@ export interface SessionState {
       exerciseType?: 'weighted' | 'bodyweight' | 'timed';
     }[]
   ) => void;
+  initAuxiliaryWork: (work: AuxiliaryWork[]) => void;
   setSessionMeta: (meta: SessionState['sessionMeta']) => void;
   setCachedJitData: (raw: string) => void;
   setCachedPrescriptionTrace: (raw: string) => void;
@@ -120,6 +132,24 @@ export interface SessionState {
   tickTimer: () => void;
   adjustTimer: (deltaSecs: number) => void;
   closeTimer: () => number;
+  showMainPostRest: (pendingMainSetNumber: number, elapsedSeconds: number) => void;
+  showAuxPostRest: (
+    pendingAuxExercise: string,
+    pendingAuxSetNumber: number,
+    elapsedSeconds: number
+  ) => void;
+  showWarmupPostRest: (elapsedSeconds: number) => void;
+  clearPostRestState: () => void;
+  extendPostRest: () => void;
+  tickPostRestCountdown: () => void;
+  setPendingRpe: (setNumber: number) => void;
+  setPendingAuxRpe: (exercise: string, setNumber: number) => void;
+  clearPendingRpe: () => void;
+  setPendingAuxConfirmation: (data: PendingAuxConfirmation) => void;
+  clearPendingAuxConfirmation: () => void;
+  registerSupersetGroup: (group: Omit<SupersetGroup, 'currentIndex'>) => void;
+  advanceSuperset: (groupId: string) => void;
+  clearSupersetGroup: (groupId: string) => void;
   reset: () => void;
 }
 
@@ -130,6 +160,7 @@ export const useSessionStore = create<SessionState>()(
       plannedSets: [],
       actualSets: [],
       auxiliarySets: [],
+      auxiliaryWork: [],
       warmupCompleted: [],
       sessionRpe: undefined,
       startedAt: undefined,
@@ -144,6 +175,10 @@ export const useSessionStore = create<SessionState>()(
       recoveryDismissed: false,
       weightSuggestion: null,
       hasAcceptedWeightSuggestion: false,
+      postRestState: null,
+      pendingRpeSetNumber: null,
+      pendingAuxRpe: null,
+      pendingAuxConfirmation: null,
 
       initSession: (sessionId, plannedSets) =>
         set({
@@ -156,6 +191,7 @@ export const useSessionStore = create<SessionState>()(
             reps_completed: s.reps,
             is_completed: false,
           })),
+          auxiliaryWork: [],
           warmupCompleted: [],
           sessionRpe: undefined,
           timerState: null,
@@ -163,6 +199,10 @@ export const useSessionStore = create<SessionState>()(
           recoveryDismissed: false,
           weightSuggestion: null,
           hasAcceptedWeightSuggestion: false,
+          postRestState: null,
+          pendingRpeSetNumber: null,
+          pendingAuxRpe: null,
+          pendingAuxConfirmation: null,
         }),
 
       initAuxiliary: (work) =>
@@ -178,6 +218,8 @@ export const useSessionStore = create<SessionState>()(
             }))
           ),
         }),
+
+      initAuxiliaryWork: (work) => set({ auxiliaryWork: work }),
 
       updateSet: (setNumber, data) =>
         set((state) => ({
@@ -380,12 +422,176 @@ export const useSessionStore = create<SessionState>()(
         return elapsed;
       },
 
+      showMainPostRest: (pendingMainSetNumber, elapsedSeconds) =>
+        set((state) => {
+          const nextSet = getEffectivePlannedSet(
+            pendingMainSetNumber,
+            state.plannedSets,
+            state.actualSets,
+            state.currentAdaptation
+          );
+          if (!nextSet) return {};
+          return {
+            postRestState: {
+              pendingMainSetNumber,
+              pendingAuxExercise: null,
+              pendingAuxSetNumber: null,
+              actualRestSeconds: elapsedSeconds,
+              liftStartedAt: Date.now(),
+              plannedReps: nextSet.reps,
+              plannedWeightKg: null, // Derived live from selectPostRestWeight
+              nextSetNumber: pendingMainSetNumber + 1,
+              resetSecondsRemaining: null,
+            },
+          };
+        }),
+
+      showAuxPostRest: (pendingAuxExercise, pendingAuxSetNumber, elapsedSeconds) =>
+        set((state) => {
+          const auxWork = state.auxiliaryWork.find((w) => w.exercise === pendingAuxExercise);
+          const auxSetPlan = auxWork?.sets[pendingAuxSetNumber - 1];
+          if (!auxSetPlan) return {};
+          return {
+            postRestState: {
+              pendingMainSetNumber: null,
+              pendingAuxExercise,
+              pendingAuxSetNumber,
+              actualRestSeconds: elapsedSeconds,
+              liftStartedAt: Date.now(),
+              plannedReps: auxSetPlan.reps,
+              plannedWeightKg: auxSetPlan.weight_kg,
+              nextSetNumber: null,
+              resetSecondsRemaining: null,
+            },
+          };
+        }),
+
+      showWarmupPostRest: (elapsedSeconds) =>
+        set((state) => {
+          const firstSet = getEffectivePlannedSet(
+            0,
+            state.plannedSets,
+            state.actualSets,
+            state.currentAdaptation
+          );
+          return {
+            postRestState: {
+              pendingMainSetNumber: null,
+              pendingAuxExercise: null,
+              pendingAuxSetNumber: null,
+              actualRestSeconds: elapsedSeconds,
+              liftStartedAt: Date.now(),
+              plannedReps: firstSet?.reps ?? 0,
+              plannedWeightKg: firstSet?.weight_kg ?? null,
+              nextSetNumber: 1,
+              resetSecondsRemaining: null,
+            },
+          };
+        }),
+
+      clearPostRestState: () => set({ postRestState: null }),
+
+      extendPostRest: () =>
+        set((state) => {
+          const prs = state.postRestState;
+          if (!prs) return {};
+          const newRest = prs.actualRestSeconds + 15;
+          return {
+            postRestState: {
+              ...prs,
+              actualRestSeconds: newRest,
+              resetSecondsRemaining: 15,
+            },
+          };
+        }),
+
+      tickPostRestCountdown: () =>
+        set((state) => {
+          const prs = state.postRestState;
+          if (!prs || prs.resetSecondsRemaining === null) return {};
+          const next = prs.resetSecondsRemaining - 1;
+          if (next <= 0) {
+            return {
+              postRestState: {
+                ...prs,
+                resetSecondsRemaining: null,
+              },
+            };
+          }
+          return {
+            postRestState: {
+              ...prs,
+              resetSecondsRemaining: next,
+            },
+          };
+        }),
+
+      setPendingRpe: (setNumber) => set({ pendingRpeSetNumber: setNumber }),
+
+      setPendingAuxRpe: (exercise, setNumber) =>
+        set({ pendingAuxRpe: { exercise, setNumber } }),
+
+      clearPendingRpe: () =>
+        set({ pendingRpeSetNumber: null, pendingAuxRpe: null }),
+
+      setPendingAuxConfirmation: (data) =>
+        set({ pendingAuxConfirmation: data }),
+
+      clearPendingAuxConfirmation: () =>
+        set({ pendingAuxConfirmation: null }),
+
+      registerSupersetGroup: (group) =>
+        set((state) => {
+          if (!state.timerState) return {};
+          return {
+            timerState: {
+              ...state.timerState,
+              supersetGroup: {
+                ...group,
+                currentIndex: 0,
+              },
+            },
+          };
+        }),
+
+      advanceSuperset: (groupId) =>
+        set((state) => {
+          const sg = state.timerState?.supersetGroup;
+          if (!sg || sg.groupId !== groupId) return {};
+          return {
+            timerState: state.timerState
+              ? {
+                  ...state.timerState,
+                  supersetGroup: {
+                    ...sg,
+                    currentIndex: sg.currentIndex + 1,
+                  },
+                }
+              : null,
+          };
+        }),
+
+      clearSupersetGroup: (groupId) =>
+        set((state) => {
+          const sg = state.timerState?.supersetGroup;
+          if (!sg || sg.groupId !== groupId) return {};
+          return {
+            timerState: state.timerState
+              ? {
+                  ...state.timerState,
+                  supersetGroup: undefined,
+                }
+              : null,
+          };
+        }),
+
       reset: () =>
         set({
           sessionId: null,
           plannedSets: [],
           actualSets: [],
           auxiliarySets: [],
+          auxiliaryWork: [],
           warmupCompleted: [],
           sessionRpe: undefined,
           startedAt: undefined,
@@ -400,6 +606,10 @@ export const useSessionStore = create<SessionState>()(
           recoveryDismissed: false,
           weightSuggestion: null,
           hasAcceptedWeightSuggestion: false,
+          postRestState: null,
+          pendingRpeSetNumber: null,
+          pendingAuxRpe: null,
+          pendingAuxConfirmation: null,
         }),
     }),
     {

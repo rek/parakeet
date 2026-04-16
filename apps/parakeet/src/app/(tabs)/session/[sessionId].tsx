@@ -32,6 +32,7 @@ import {
   PostRestOverlay,
   RestTimer,
   RpeQuickPicker,
+  selectPostRestWeight,
   SetRow,
   startSession,
   useSessionLifecycle,
@@ -332,12 +333,17 @@ export default function SessionScreen() {
   const {
     actualSets,
     auxiliarySets,
+    auxiliaryWork,
     plannedSets,
     warmupCompleted,
     sessionMeta,
     timerState,
     currentAdaptation,
     auxAdaptations,
+    postRestState,
+    pendingRpeSetNumber,
+    pendingAuxRpe,
+    pendingAuxConfirmation,
     recoveryOffer,
     acceptRecovery,
     dismissRecovery,
@@ -346,6 +352,7 @@ export default function SessionScreen() {
     dismissWeightSuggestion,
     initSession,
     initAuxiliary,
+    initAuxiliaryWork,
     addAdHocSet,
     removeAdHocSet,
     setWarmupDone,
@@ -362,7 +369,6 @@ export default function SessionScreen() {
   const { invalidateSessionCache } = useSessionLifecycle();
 
   const [warmupSetsState, setWarmupSetsState] = useState<WarmupSet[]>([]);
-  const [auxiliaryWork, setAuxiliaryWork] = useState<AuxiliaryWork[]>([]);
   const [adHocExercises, setAdHocExercises] = useState<string[]>([]);
   const [equipmentBarWeightKg, setEquipmentBarWeightKg] = useState<number>(20);
   const [equipmentDisabledPlates, setEquipmentDisabledPlates] = useState<
@@ -434,10 +440,6 @@ export default function SessionScreen() {
   // ── Set completion flow (rest timer → overlay → RPE) ──────────────────────
 
   const {
-    postRestState,
-    pendingRpeSetNumber,
-    pendingAuxRpe,
-    pendingAuxConfirmation,
     handleSetUpdate,
     handleAuxSetUpdate,
     handleTimerDone,
@@ -455,7 +457,6 @@ export default function SessionScreen() {
   } = useSetCompletionFlow({
     restTimerPrefsRef,
     restRecommendations,
-    auxiliaryWork,
     plannedSetsLengthRef,
     oneRmKgRef,
     biologicalSexRef,
@@ -463,21 +464,14 @@ export default function SessionScreen() {
 
   // Live-derive PostRestOverlay weight from store so it stays in sync with
   // weight autoregulation accepts that land while the rest timer is running.
-  const postRestWeightKg = useMemo(() => {
-    if (!postRestState || postRestState.pendingMainSetNumber === null) {
-      return postRestState?.plannedWeightKg ?? null;
-    }
-    // pendingMainSetNumber is the 1-based set_number of the just-completed set,
-    // which equals the 0-based array index of the next set.
-    const nextIdx = postRestState.pendingMainSetNumber;
-    const liveSet = getEffectivePlannedSet(
-      nextIdx,
-      plannedSets,
-      actualSets,
-      currentAdaptation
-    );
-    return liveSet?.weight_kg ?? null;
-  }, [postRestState, plannedSets, actualSets, currentAdaptation]);
+  const postRestWeightKg = useSessionStore((s) =>
+    selectPostRestWeight({
+      postRestState: s.postRestState,
+      plannedSets: s.plannedSets,
+      actualSets: s.actualSets,
+      currentAdaptation: s.currentAdaptation,
+    })
+  );
 
   // ── Video recording during post-rest overlay ──────────────────────────────
 
@@ -614,9 +608,9 @@ export default function SessionScreen() {
 
     if (currentStoreSessionId !== sessionId || jitDataChanged) {
       initSession(sessionId, mainLiftSets);
+      initAuxiliaryWork(aux ?? []);
 
       const activeAux = (aux ?? []).filter((a) => !a.skipped);
-      setAuxiliaryWork(aux ?? []);
       if (activeAux.length > 0) {
         initAuxiliary(
           activeAux.map((a) => ({
@@ -644,7 +638,7 @@ export default function SessionScreen() {
       });
     } else {
       // Returning to an existing session — restore aux work display, preserve actualSets
-      setAuxiliaryWork(aux ?? []);
+      initAuxiliaryWork(aux ?? []);
       // Restore ad-hoc exercises: any exercise in the store not in prescribed aux
       const prescribed = new Set((aux ?? []).map((a) => a.exercise));
       const adHoc = [
