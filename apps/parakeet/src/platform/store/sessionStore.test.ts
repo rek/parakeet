@@ -560,4 +560,22 @@ describe('selectPostRestWeight', () => {
     const weight = selectPostRestWeight(state);
     expect(weight).toBe(100); // Adapted weight, not original 105
   });
+
+  it('updates when user manually adjusts next set weight during rest', () => {
+    const store = useSessionStore.getState();
+    store.initSession('s1', [
+      { weight_kg: 100, reps: 5 },
+      { weight_kg: 105, reps: 5 },
+    ]);
+    store.showMainPostRest(0, 180); // Showing plan for set 2
+
+    // Post-rest overlay initially shows 105kg
+    expect(selectPostRestWeight(store)).toBe(105);
+
+    // User manually bumps weight via SetRow button (issue #189/#190 regression test)
+    store.updateSet(1, { weight_grams: 110_000 });
+
+    // Post-rest display should reflect new weight immediately (not show stale value)
+    expect(selectPostRestWeight(store)).toBe(110);
+  });
 });
