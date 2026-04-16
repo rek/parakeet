@@ -449,7 +449,7 @@ export const useSessionStore = create<SessionState>()(
       showAuxPostRest: (pendingAuxExercise, pendingAuxSetNumber, elapsedSeconds) =>
         set((state) => {
           const auxWork = state.auxiliaryWork.find((w) => w.exercise === pendingAuxExercise);
-          const auxSetPlan = auxWork?.sets[pendingAuxSetNumber - 1];
+          const auxSetPlan = auxWork?.sets[pendingAuxSetNumber];
           if (!auxSetPlan) return {};
           return {
             postRestState: {

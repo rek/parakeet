@@ -181,7 +181,7 @@ export function useSetCompletionFlow({
           setsInExercise,
           weightGrams: weightKgToGrams(data.weightKg),
           reps: data.reps,
-        } as PendingAuxConfirmation);
+        });
         return;
       }
 
@@ -221,7 +221,7 @@ export function useSetCompletionFlow({
       }
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [updateAuxiliarySet, openTimer]
+    [updateAuxiliarySet, openTimer, pendingAuxRpe, clearPendingRpe]
   );
 
   // --- Timer done: dispatch to main/aux/warmup handler (logic moved to store actions) ---

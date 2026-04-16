@@ -1,6 +1,5 @@
-import type { SessionAdaptation } from '../model/types';
 import { getEffectivePlannedSet } from '@shared/utils/getEffectivePlannedSet';
-import type { ActualSet, SessionState } from '@platform/store/sessionStore';
+import type { SessionState } from '@platform/store/sessionStore';
 
 /**
  * Pure selector: derive the weight to display during post-rest countdown.
