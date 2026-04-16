@@ -1,6 +1,6 @@
 import type { SessionState } from './sessionStore';
 import { useSessionStore } from './sessionStore';
-import { selectPostRestWeight } from '@modules/session';
+import { selectPostRestWeight } from '../../modules/session/utils/selectPostRestWeight';
 
 vi.mock('@react-native-async-storage/async-storage', () => ({
   default: {
@@ -239,7 +239,7 @@ describe('sessionStore post-rest state machine', () => {
       store.showMainPostRest(0, 180);
       store.extendPostRest();
 
-      expect(store.postRestState?.resetSecondsRemaining).toBe(15);
+      expect(useSessionStore.getState().postRestState?.resetSecondsRemaining).toBe(15);
 
       store.tickPostRestCountdown();
       expect(useSessionStore.getState().postRestState?.resetSecondsRemaining).toBe(14);
@@ -268,7 +268,7 @@ describe('sessionStore post-rest state machine', () => {
       store.initSession('s1', [{ weight_kg: 100, reps: 5 }]);
       store.showMainPostRest(0, 180);
 
-      expect(store.postRestState).not.toBeNull();
+      expect(useSessionStore.getState().postRestState).not.toBeNull();
 
       store.clearPostRestState();
 
@@ -316,8 +316,8 @@ describe('sessionStore pending RPE state', () => {
       store.setPendingRpe(1);
       store.setPendingAuxRpe('leg-curl', 2);
 
-      expect(store.pendingRpeSetNumber).toBe(1);
-      expect(store.pendingAuxRpe).not.toBeNull();
+      expect(useSessionStore.getState().pendingRpeSetNumber).toBe(1);
+      expect(useSessionStore.getState().pendingAuxRpe).not.toBeNull();
 
       store.clearPendingRpe();
 
@@ -439,7 +439,7 @@ describe('sessionStore superset state machine', () => {
         restAfterGroupSeconds: 180,
       });
 
-      expect(store.timerState?.supersetGroup?.currentIndex).toBe(0);
+      expect(useSessionStore.getState().timerState?.supersetGroup?.currentIndex).toBe(0);
 
       store.advanceSuperset('A');
 
@@ -475,7 +475,7 @@ describe('sessionStore superset state machine', () => {
         restAfterGroupSeconds: 180,
       });
 
-      expect(store.timerState?.supersetGroup).toBeDefined();
+      expect(useSessionStore.getState().timerState?.supersetGroup).toBeDefined();
 
       store.clearSupersetGroup('A');
 
@@ -567,15 +567,16 @@ describe('selectPostRestWeight', () => {
       { weight_kg: 100, reps: 5 },
       { weight_kg: 105, reps: 5 },
     ]);
-    store.showMainPostRest(0, 180); // Showing plan for set 2
+    store.showMainPostRest(1, 180); // Showing post-rest for set index 1 (105kg, set_number=2)
 
     // Post-rest overlay initially shows 105kg
-    expect(selectPostRestWeight(store)).toBe(105);
+    expect(selectPostRestWeight(useSessionStore.getState())).toBe(105);
 
     // User manually bumps weight via SetRow button (issue #189/#190 regression test)
-    store.updateSet(1, { weight_grams: 110_000 });
+    // set_number is 1-indexed: set index 1 has set_number 2
+    store.updateSet(2, { weight_grams: 110_000 });
 
     // Post-rest display should reflect new weight immediately (not show stale value)
-    expect(selectPostRestWeight(store)).toBe(110);
+    expect(selectPostRestWeight(useSessionStore.getState())).toBe(110);
   });
 });

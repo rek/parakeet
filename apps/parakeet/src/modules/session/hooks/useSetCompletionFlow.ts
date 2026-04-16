@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useRef } from 'react';
 
 import type { RestTimerPrefs } from '@modules/settings';
 import type { Lift } from '@parakeet/shared-types';
@@ -7,12 +7,7 @@ import { useSessionStore } from '@platform/store/sessionStore';
 import { getExerciseType } from '@shared/utils/exercise-lookup';
 import { weightGramsToKg, weightKgToGrams } from '@shared/utils/weight';
 
-import type {
-  AuxiliaryWork,
-  PendingAuxConfirmation,
-  PostRestState,
-  RestRecommendations,
-} from '../model/types';
+import type { RestRecommendations } from '../model/types';
 import {
   DEFAULT_AUX_REST_SECONDS,
   DEFAULT_MAIN_REST_SECONDS,

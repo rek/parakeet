@@ -42,7 +42,6 @@ import {
   WeightSuggestionBanner,
 } from '@modules/session';
 import type {
-  AuxiliaryWork,
   JitData,
   LlmRestSuggestion,
   RestRecommendations,
@@ -71,7 +70,6 @@ import {
   getAllExercises,
   getExerciseType,
 } from '@shared/utils/exercise-lookup';
-import { getEffectivePlannedSet } from '@shared/utils/getEffectivePlannedSet';
 import { sessionLabel } from '@shared/utils/string';
 import { weightGramsToKg } from '@shared/utils/weight';
 import { useKeepAwake } from 'expo-keep-awake';
