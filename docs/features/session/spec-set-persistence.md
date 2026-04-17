@@ -1,6 +1,6 @@
 # Spec: Per-Set Persistence
 
-**Status**: Planned
+**Status**: In Progress (schema + dual-write shipped 2026-04-17; history reads + legacy-column drop pending)
 **Domain**: Sessions
 **Design**: [design-durability.md](./design-durability.md)
 
@@ -44,7 +44,7 @@ CREATE POLICY "set_logs owner write" ON public.set_logs
 ```
 
 ### Unique constraint rationale
-`(session_id, kind, exercise, set_number)` — idempotent upsert target. Repeated writes for the same set (retry, late sync) collapse to one row. For primary sets, `exercise` is `NULL`; Postgres treats NULLs as distinct in UNIQUE by default — handle with `COALESCE(exercise, '')` in a partial index or use a generated column. Implementation: add a generated column `exercise_key text GENERATED ALWAYS AS (COALESCE(exercise, '')) STORED` and make the unique on `(session_id, kind, exercise_key, set_number)`.
+`(session_id, kind, exercise, set_number)` with `NULLS NOT DISTINCT` (Postgres 15+) — idempotent upsert target. Repeated writes for the same set (retry, late sync) collapse to one row. `NULLS NOT DISTINCT` avoids the default Postgres behaviour that treats NULL exercise values as distinct, so primary-set rows dedupe correctly. (Originally planned as a generated `exercise_key` column; ended up simpler.)
 
 ### Trigger: flip to `in_progress` on first set
 ```sql
@@ -67,35 +67,43 @@ Guarantees the server status reflects reality without a separate client call rac
 ## Tasks
 
 ### Data layer
-- [ ] `apps/parakeet/src/modules/session/data/session.repository.ts`
-  - [ ] `upsertSetLog(input: UpsertSetLogInput): Promise<void>` — idempotent on `(session_id, kind, exercise_key, set_number)` via `.upsert({ onConflict: 'session_id,kind,exercise_key,set_number', ignoreDuplicates: false })`.
-  - [ ] `fetchSetLogs(sessionId: string): Promise<SetLogRow[]>` — ordered by `kind, exercise, set_number`.
-  - [ ] `deleteSetLog(sessionId: string, kind, exercise, setNumber)` — for uncheck; subject to confirmation UX, not auto-called.
+- [x] `apps/parakeet/src/modules/session/data/session.repository.ts`
+  - [x] `upsertSetLog(input: UpsertSetLogInput): Promise<void>` — idempotent upsert on `(session_id, kind, exercise, set_number)`.
+  - [x] `fetchSetLogs(sessionId: string): Promise<SetLogRow[]>` — ordered by `kind, exercise, set_number`.
+  - [x] `countSetLogsForSession(sessionId: string): Promise<number>` — used by `abandonStaleInProgressSessions` to decide skip vs auto-finalise.
+  - [ ] `deleteSetLog(sessionId: string, kind, exercise, setNumber)` — deferred; requires corrections UX.
 
 ### Application layer
-- [ ] `apps/parakeet/src/modules/session/application/session.service.ts`
-  - [ ] `persistSet(input: PersistSetInput): Promise<void>` — called from the set-confirmation handler. Enqueues on network failure via `syncStore`.
-  - [ ] Remove set-batch write from `completeSession`. Keep `completeSession` responsible only for `session_logs` summary row, session status, performance adjuster, achievements.
+- [x] `apps/parakeet/src/modules/session/application/set-persistence.service.ts` (new)
+  - [x] `persistSet(args)` — best-effort upsert; on network error enqueues `upsert_set_log`, on non-network error captures to Sentry. Never throws.
+  - [x] `flushUnsyncedSets(userId)` — iterates store, fires persistSet for every `is_completed && !synced_at` set. Called on session screen mount and before `initSession` clobbers state.
+- [x] `apps/parakeet/src/modules/session/application/session.service.ts`
+  - [x] Added `auto_finalised` to `insertSessionLog` shape (feeds into `abandonStale` rewrite).
+  - [ ] `completeSession` still writes `session_logs.actual_sets` / `auxiliary_sets` during dual-write window. Legacy batch remains authoritative until history reads cut over.
 
 ### Hook layer
-- [ ] `apps/parakeet/src/modules/session/hooks/useSetCompletionFlow.ts`
-  - [ ] On `is_completed = true` transition for a set, call `persistSet()` before any other side-effect (rest timer, RPE prompt). Await it; surface a retry inline on failure.
-  - [ ] On unchecking, **do not** auto-delete from server. Instead, mark locally and require explicit confirm to remove server row (prevents accidental loss).
+- [x] `apps/parakeet/src/modules/session/hooks/useSetPersistence.ts` (new)
+  - Subscribes to `sessionStore`, diffs primary+aux snapshots on each change, fires `persistSet` for transitions to completed and for edits to already-completed sets. Skips the initial rehydrate fire via snapshot seeding.
+  - Mounted in `app/(tabs)/session/[sessionId].tsx`.
+- [ ] `apps/parakeet/src/modules/session/hooks/useSetCompletionFlow.ts` — unchanged. The subscriber-based approach in `useSetPersistence` covers every `updateSet` / `updateAuxiliarySet` call site without per-handler wiring.
 
 ### Store
-- [ ] `apps/parakeet/src/platform/store/sessionStore.ts`
-  - [ ] Add per-set `synced_at?: string` in `actualSets`/`auxiliarySets` entries.
-  - [ ] `updateSet`/`updateAuxSet` do not mutate `synced_at`; only the success path in `persistSet` does.
+- [x] `apps/parakeet/src/platform/store/sessionStore.ts`
+  - [x] `synced_at?: string` added to `ActualSet` and `AuxiliaryActualSet`.
+  - [x] `updateSet` / `updateAuxiliarySet` clear `synced_at` when any value field changes (ensures the subscriber re-syncs edits).
+  - [x] `markSetSynced` / `markAuxSetSynced` actions — called by `persistSet` success path and `useSyncQueue` drain.
+  - [x] `wouldClobberSessionStore(newSessionId)` selector — true when there are completed-but-unsynced sets on a different session.
 
 ### Sync queue
-- [ ] `apps/parakeet/src/platform/store/syncStore.ts`
-  - [ ] New op kind `'upsert_set_log'` with payload `{ sessionId, userId, kind, exercise, set_number, weight_grams, reps_completed, rpe_actual, notes, logged_at }`.
-  - [ ] Dedupe on enqueue: if queue already contains an op with the same `(sessionId, kind, exercise, set_number)`, replace payload in place (latest wins).
-- [ ] `apps/parakeet/src/modules/session/hooks/useSyncQueue.ts`
-  - [ ] Drain handles `upsert_set_log` via `upsertSetLog`; same retry semantics as `complete_session`.
+- [x] `apps/parakeet/src/platform/store/syncStore.ts`
+  - [x] New op kind `upsert_set_log` with payload matching `UpsertSetLogInput`.
+  - [x] Dedupe on enqueue: re-enqueueing for the same `(sessionId, kind, exercise, set_number)` replaces the prior op (latest wins).
+  - [x] `hasPendingForSession(sessionId)` helper for recovery flows.
+- [x] `apps/parakeet/src/modules/session/hooks/useSyncQueue.ts`
+  - [x] Drain handles `upsert_set_log` via `upsertSetLog`, marks matching store entry synced on success, standard retry semantics on network failure.
 
 ### History reads
-- [ ] `apps/parakeet/src/modules/history/` — read sets from `set_logs` joined to `sessions`. `session_logs.actual_sets` only used as fallback during migration window.
+- [ ] `apps/parakeet/src/modules/history/` — still reads `session_logs.actual_sets`. Cut over in a follow-up once backfill is verified in prod.
 
 ## Backfill
 
@@ -138,11 +146,11 @@ ON CONFLICT DO NOTHING;
 
 ## Rollout
 
-1. Ship migration + dual-write. App continues to write `session_logs.actual_sets` as before.
+1. **(done)** Ship migration + dual-write. App continues to write `session_logs.actual_sets` as before.
+   Backfill script ready at `tools/scripts/backfill-set-logs.sql`; run after `npm run db:push`.
 2. Ship history reads from `set_logs` (fallback to `session_logs.actual_sets` when no `set_logs` exist for a session).
-3. Run backfill in prod.
-4. Verify parity for a release cycle.
-5. Drop `session_logs.actual_sets` + `auxiliary_sets` columns. Remove dual-write.
+3. Verify parity for a release cycle.
+4. Drop `session_logs.actual_sets` + `auxiliary_sets` columns. Remove dual-write.
 
 ## Dependencies
 

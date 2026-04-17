@@ -350,6 +350,107 @@ export async function updateSessionToSkipped(
   if (error) throw error;
 }
 
+// ── set_logs (per-set durability) ───────────────────────────────────────────
+// Append-only. Each confirmed set writes one row here the instant the user
+// confirms it, so data survives forgotten End-taps, crashes, and reinstall.
+// See docs/features/session/design-durability.md.
+
+export interface UpsertSetLogInput {
+  sessionId: string;
+  userId: string;
+  kind: 'primary' | 'auxiliary';
+  exercise: string | null;
+  setNumber: number;
+  weightGrams: number;
+  repsCompleted: number;
+  rpeActual?: number | null;
+  actualRestSeconds?: number | null;
+  exerciseType?: string | null;
+  failed?: boolean;
+  notes?: string | null;
+  loggedAt?: string;
+}
+
+export async function upsertSetLog(input: UpsertSetLogInput): Promise<void> {
+  const { error } = await typedSupabase.from('set_logs').upsert(
+    {
+      session_id: input.sessionId,
+      user_id: input.userId,
+      kind: input.kind,
+      exercise: input.exercise,
+      set_number: input.setNumber,
+      weight_grams: input.weightGrams,
+      reps_completed: input.repsCompleted,
+      rpe_actual: input.rpeActual ?? null,
+      actual_rest_seconds: input.actualRestSeconds ?? null,
+      exercise_type: input.exerciseType ?? null,
+      failed: input.failed ?? false,
+      notes: input.notes ?? null,
+      logged_at: input.loggedAt ?? new Date().toISOString(),
+    },
+    { onConflict: 'session_id,kind,exercise,set_number' }
+  );
+  if (error) throw error;
+}
+
+export interface SetLogRow {
+  id: string;
+  session_id: string;
+  kind: 'primary' | 'auxiliary';
+  exercise: string | null;
+  set_number: number;
+  weight_grams: number;
+  reps_completed: number;
+  rpe_actual: number | null;
+  actual_rest_seconds: number | null;
+  exercise_type: string | null;
+  failed: boolean;
+  notes: string | null;
+  logged_at: string;
+}
+
+export async function fetchSetLogs(sessionId: string): Promise<SetLogRow[]> {
+  const { data, error } = await typedSupabase
+    .from('set_logs')
+    .select(
+      'id, session_id, kind, exercise, set_number, weight_grams, reps_completed, rpe_actual, actual_rest_seconds, exercise_type, failed, notes, logged_at'
+    )
+    .eq('session_id', sessionId)
+    .order('kind', { ascending: true })
+    .order('exercise', { ascending: true, nullsFirst: true })
+    .order('set_number', { ascending: true });
+  if (error) throw error;
+  return (data ?? []).map((row) => ({
+    ...row,
+    kind: row.kind as 'primary' | 'auxiliary',
+  }));
+}
+
+export async function countSetLogsForSession(
+  sessionId: string
+): Promise<number> {
+  const { count, error } = await typedSupabase
+    .from('set_logs')
+    .select('id', { count: 'exact', head: true })
+    .eq('session_id', sessionId);
+  if (error) throw error;
+  return count ?? 0;
+}
+
+// Deletes every set_logs row for a session — used when abandoning an
+// in-progress program session. Ad-hoc abandons delete the session row itself
+// and rely on ON DELETE CASCADE; program abandons reset status to planned, so
+// orphaned set_logs would otherwise resurrect as ghost sets next session.
+export async function deleteSetLogsForSession(
+  sessionId: string
+): Promise<void> {
+  const { error } = await typedSupabase
+    .from('set_logs')
+    .delete()
+    .eq('session_id', sessionId);
+  if (error) throw error;
+}
+
 export async function insertSessionLog(input: {
   sessionId: string;
   userId: string;
@@ -360,7 +461,12 @@ export async function insertSessionLog(input: {
   performanceVsPlan: 'over' | 'at' | 'under' | 'incomplete';
   startedAt?: Date;
   completedAt?: Date;
+  autoFinalised?: boolean;
 }): Promise<string> {
+  // `auto_finalised` left undefined (not false) when not explicitly set so the
+  // Supabase client omits the field from the JSON payload, making this insert
+  // compatible with environments that haven't yet run
+  // 20260417000000_create_set_logs.sql. The DB default handles the column.
   const { data, error } = await typedSupabase
     .from('session_logs')
     .insert({
@@ -373,6 +479,7 @@ export async function insertSessionLog(input: {
       performance_vs_plan: input.performanceVsPlan,
       started_at: input.startedAt?.toISOString() ?? null,
       completed_at: (input.completedAt ?? new Date()).toISOString(),
+      auto_finalised: input.autoFinalised ? true : undefined,
     })
     .select('id')
     .single();
@@ -381,11 +488,15 @@ export async function insertSessionLog(input: {
 }
 
 export async function updateSessionToCompleted(
-  sessionId: string
+  sessionId: string,
+  completedAt?: Date
 ): Promise<void> {
   const { error } = await typedSupabase
     .from('sessions')
-    .update({ status: 'completed', completed_at: new Date().toISOString() })
+    .update({
+      status: 'completed',
+      completed_at: (completedAt ?? new Date()).toISOString(),
+    })
     .eq('id', sessionId);
   if (error) throw error;
 }

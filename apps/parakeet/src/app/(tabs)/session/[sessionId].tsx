@@ -9,6 +9,7 @@ import {
 } from 'react-native';
 
 import { Ionicons } from '@expo/vector-icons';
+import { useAuth } from '@modules/auth';
 import { useFeatureEnabled } from '@modules/feature-flags';
 import { LiftHistorySheet, useLiftHistory } from '@modules/history';
 import { computeDisplayWeights, useChallengeReview } from '@modules/jit';
@@ -24,6 +25,7 @@ import {
   computeSuggestedAux,
   computeSuggestedWeight,
   DEFAULT_MAIN_REST_SECONDS,
+  flushUnsyncedSets,
   formatExerciseName,
   formatPrescriptionTrace,
   getRecentAuxExerciseNames,
@@ -38,6 +40,7 @@ import {
   startSession,
   useSessionLifecycle,
   useSetCompletionFlow,
+  useSetPersistence,
   VolumeRecoveryBanner,
   WarmupSection,
   WeightSuggestionBanner,
@@ -380,6 +383,9 @@ export default function SessionScreen() {
   );
   const postRestState = useSessionStore((s) => s.postRestQueue[0] ?? null);
 
+  const { user } = useAuth();
+  useSetPersistence(user?.id);
+
   const { invalidateSessionCache } = useSessionLifecycle();
 
   const [warmupSetsState, setWarmupSetsState] = useState<WarmupSet[]>([]);
@@ -552,6 +558,11 @@ export default function SessionScreen() {
     // Free-form ad-hoc: no JIT data needed, start with empty session
     if (isFreeForm) {
       if (currentStoreSessionId !== sessionId) {
+        // Flush any unsynced completed sets from the previous session before
+        // the store is overwritten. The queue picks up anything offline.
+        if (currentStoreSessionId && user?.id) {
+          void flushUnsyncedSets(user.id);
+        }
         initSession(sessionId, []);
 
         getSession(sessionId).then((session) => {
@@ -625,6 +636,13 @@ export default function SessionScreen() {
       storeWeight !== jitWeight;
 
     if (currentStoreSessionId !== sessionId || jitDataChanged) {
+      if (
+        currentStoreSessionId
+        && currentStoreSessionId !== sessionId
+        && user?.id
+      ) {
+        void flushUnsyncedSets(user.id);
+      }
       initSession(sessionId, mainLiftSets);
       initAuxiliaryWork(aux ?? []);
 

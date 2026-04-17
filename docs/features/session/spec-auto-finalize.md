@@ -1,6 +1,6 @@
 # Spec: Auto-Finalize + Recovery
 
-**Status**: Planned
+**Status**: In Progress (server auto-finalise shipped 2026-04-17; client recovery modal pending)
 **Domain**: Sessions
 **Design**: [design-durability.md](./design-durability.md)
 
@@ -15,8 +15,8 @@ Two safety nets once per-set persistence ships:
 
 ### Server-side finalisation
 
-- [ ] `apps/parakeet/src/modules/session/application/session.service.ts` — `abandonStaleInProgressSessions(userId)`
-  - [ ] Replace current unconditional skip with:
+- [x] `apps/parakeet/src/modules/session/application/session.service.ts` — `abandonStaleInProgressSessions(userId)`
+  - [x] Replaces the unconditional skip with:
     ```
     1. Fetch stale in_progress session(s) older than STALE_SESSION_HOURS.
     2. For each: count set_logs rows.
@@ -30,45 +30,29 @@ Two safety nets once per-set persistence ships:
        - Do NOT run performance adjuster (no session_rpe, unreliable signal).
        - Do NOT detect achievements (require explicit End for PRs — avoids surprise PRs on auto-finalised partials).
     ```
-  - [ ] Emit Sentry breadcrumb on every auto-finalise with `{ sessionId, setCount, hoursSince }`. Tag `auto_finalised: true` on the `session_logs` row (new column `auto_finalised boolean NOT NULL DEFAULT false`).
+  - [x] `auto_finalised: true` column on `session_logs` ships in the same migration as `set_logs`.
+  - [ ] Sentry breadcrumb on each auto-finalise (deferred — add alongside recovery-modal telemetry).
 
-- [ ] Migration: `ALTER TABLE session_logs ADD COLUMN auto_finalised boolean NOT NULL DEFAULT false;`
+- [x] Migration: `ALTER TABLE session_logs ADD COLUMN auto_finalised boolean NOT NULL DEFAULT false;` — see `20260417000000_create_set_logs.sql`.
 
-- [ ] `STALE_SESSION_HOURS` stays at 48 (existing). Re-evaluate after one cycle of telemetry.
+- [x] `STALE_SESSION_HOURS` stays at 48. Re-evaluate after one cycle of telemetry.
 
 ### Client-side recovery
 
-- [ ] `apps/parakeet/src/platform/store/sessionStore.ts` — `initSession(sessionId, plannedSets)`
-  - [ ] Before overwriting, check current store state:
-    ```
-    if (current.sessionId && current.sessionId !== sessionId) {
-      const hasUnsyncedWork = current.actualSets.some(
-        (s) => s.is_completed && !s.synced_at
-      );
-      if (hasUnsyncedWork) {
-        throw new SessionStoreClobberError(current.sessionId, sessionId);
-      }
-    }
-    ```
-  - [ ] Caller handles `SessionStoreClobberError` by routing to recovery modal (see below).
-  - [ ] Sentry breadcrumb on every throw.
+Taken a simpler shape than originally specced. Rather than a throwing `initSession` + modal/route, the session screen calls `flushUnsyncedSets(userId)` **before** clobbering the store. That:
 
-- [ ] `apps/parakeet/src/modules/session/hooks/useSessionRecovery.ts` (new)
-  - [ ] Mount at root layout (alongside `useSyncQueue`, `useMissedSessionReconciliation`).
-  - [ ] On foreground + authed:
-    1. Read `sessionStore.sessionId` and `actualSets`.
-    2. If store holds `is_completed` sets with no `synced_at`:
-       - Fetch server session by id.
-       - If status ∈ {`skipped`, `missed`}: open recovery modal, `captureException` (post-fix should never happen).
-       - If status ∈ {`in_progress`, `planned`}: flush unsynced sets via `persistSet` (normal path).
-       - If status = `completed`: clear store (server already has the data, local is stale).
+- Forces any unsynced set into the per-set queue (idempotent upserts).
+- Lets the server-side auto-finalise handle the old session if the user never returns to it.
+- Eliminates the "you have unsynced work, resume / save / discard?" modal entirely.
 
-- [ ] `apps/parakeet/src/app/session/recovery.tsx` (new route)
-  - [ ] Displays unsynced sets with date, lift, weight × reps × rpe.
-  - [ ] Actions:
-    - **Resume**: flip server session back to `in_progress` (if not completed elsewhere), flush sets, navigate to session screen.
-    - **Save as-is**: flip to `in_progress`, flush sets, auto-finalise immediately (no RPE prompt).
-    - **Discard**: clear local store. Confirm dialog. Sentry breadcrumb.
+Implementation:
+
+- [x] `apps/parakeet/src/platform/store/sessionStore.ts` — `wouldClobberSessionStore(newSessionId)` selector exposed for diagnostic/telemetry use.
+- [x] `apps/parakeet/src/app/(tabs)/session/[sessionId].tsx` — calls `flushUnsyncedSets(user.id)` before both `initSession` sites (JIT-driven and free-form ad-hoc) when the stored `sessionId` differs.
+- [x] `apps/parakeet/src/modules/session/hooks/useSetPersistence.ts` — on mount, calls `flushUnsyncedSets` to recover crash/pre-subscriber unsynced work.
+
+Deferred (not blocking durability):
+- [ ] Sentry tagging and a dedicated recovery screen for pathological cases (e.g. local store holds completed sets while the server session is `skipped`/`missed`). Today those will get flushed to the server; auto-finalise will then convert the server session to `completed`. The dedicated route is nice-to-have UX, not a data-safety requirement.
 
 ### Telemetry
 

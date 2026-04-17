@@ -7,6 +7,12 @@ export * from './hooks/useMissedSessionReconciliation';
 export * from './hooks/useRestNotifications';
 export { useRestNotificationTapHandler } from './hooks/useRestNotificationTapHandler';
 export * from './hooks/useSyncQueue';
+export { useSetPersistence } from './hooks/useSetPersistence';
+export {
+  persistSet,
+  flushUnsyncedSets,
+} from './application/set-persistence.service';
+export type { PersistSetArgs } from './application/set-persistence.service';
 export * from './hooks/useSetCompletionFlow';
 export { useSessionCacheInvalidation } from './hooks/useSessionCacheInvalidation';
 export { useSessionLifecycle } from './hooks/useSessionLifecycle';

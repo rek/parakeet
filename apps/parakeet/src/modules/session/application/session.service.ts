@@ -3,7 +3,7 @@ import {
   fetchActiveProgramMode,
   type UnendingProgramRef,
 } from '@modules/program';
-import type { Lift } from '@parakeet/shared-types';
+import type { ActualSet, Lift } from '@parakeet/shared-types';
 import { LiftSchema } from '@parakeet/shared-types';
 import {
   DEFAULT_TRAINING_DAYS,
@@ -27,7 +27,9 @@ import type {
 } from '@shared/types/domain';
 
 import {
+  countSetLogsForSession,
   deleteSession,
+  deleteSetLogsForSession,
   fetchCompletedSessions,
   fetchCurrentWeekLogs,
   fetchEndOfWeekContext,
@@ -47,6 +49,7 @@ import {
   fetchSessionCompletionContext,
   fetchSessionLogBySessionId,
   fetchSessionsForWeek,
+  fetchSetLogs,
   fetchTodaySession,
   fetchTodaySessions,
   getLatestSorenessRatings,
@@ -60,6 +63,7 @@ import {
   updateSessionToPlanned,
   updateSessionToSkipped,
 } from '../data/session.repository';
+import type { SetLogRow } from '../data/session.repository';
 import { validateSet } from '../utils/validateSet';
 
 export type {
@@ -214,8 +218,11 @@ export async function getInProgressSession(
 
 const STALE_SESSION_HOURS = 48;
 
-// Auto-abandon in-progress sessions older than 48 hours.
-// Called on app foreground alongside markMissedSessions.
+// Resolve a stale in-progress session on app foreground.
+// Branches on set_logs presence so sessions containing real logged work are
+// never silently dropped: they auto-finalise into a completed session_logs row
+// with session_rpe=null (user can't retroactively provide one).
+// See docs/features/session/spec-auto-finalize.md.
 export async function abandonStaleInProgressSessions(
   userId: string
 ): Promise<void> {
@@ -224,10 +231,94 @@ export async function abandonStaleInProgressSessions(
 
   const plannedDate = new Date(session.planned_date);
   const hoursSince = (Date.now() - plannedDate.getTime()) / (1000 * 60 * 60);
+  if (hoursSince <= STALE_SESSION_HOURS) return;
 
-  if (hoursSince > STALE_SESSION_HOURS) {
+  const setCount = await countSetLogsForSession(session.id);
+  if (setCount === 0) {
+    // Nothing was logged; safe to skip.
     await updateSessionToSkipped(session.id);
+    return;
   }
+
+  // Real work exists — synthesise a session_logs summary so history, adjuster,
+  // and downstream analytics see a completed session rather than a lost one.
+  await autoFinaliseSession(session.id, userId);
+}
+
+async function autoFinaliseSession(
+  sessionId: string,
+  userId: string
+): Promise<void> {
+  const logs = await fetchSetLogs(sessionId);
+  if (logs.length === 0) return;
+
+  const sessionMeta = await fetchSessionById(sessionId);
+  const plannedCount = Array.isArray(sessionMeta?.planned_sets)
+    ? sessionMeta.planned_sets.length
+    : 0;
+
+  const primary = logs.filter((l) => l.kind === 'primary');
+  const auxiliary = logs.filter((l) => l.kind === 'auxiliary');
+
+  const completedCount = primary.length;
+  const denom = plannedCount > 0 ? plannedCount : completedCount;
+  const completionPct = denom > 0 ? (completedCount / denom) * 100 : 0;
+  const performanceVsPlan =
+    completionPct < 50
+      ? 'incomplete'
+      : completionPct < 90
+        ? 'under'
+        : denom > 0 && completedCount / denom > 1.1
+          ? 'over'
+          : 'at';
+
+  const lastLoggedAt = logs.reduce<string | null>((acc, l) => {
+    if (!acc) return l.logged_at;
+    return l.logged_at > acc ? l.logged_at : acc;
+  }, null);
+  const completedAt = lastLoggedAt ? new Date(lastLoggedAt) : new Date();
+
+  await insertSessionLog({
+    sessionId,
+    userId,
+    actualSets: primary.map(setLogToActualSet),
+    auxiliarySets: auxiliary.map(setLogToActualSet),
+    sessionRpe: undefined,
+    completionPct,
+    performanceVsPlan,
+    completedAt,
+    autoFinalised: true,
+  });
+
+  await updateSessionToCompleted(sessionId, completedAt);
+
+  // Deliberately no performance adjuster, no achievement detection — End was
+  // never tapped, signal is unreliable, don't award surprise PRs on auto-save.
+}
+
+function narrowExerciseType(
+  value: string | null
+): 'weighted' | 'bodyweight' | 'timed' | undefined {
+  return value === 'weighted' || value === 'bodyweight' || value === 'timed'
+    ? value
+    : undefined;
+}
+
+function setLogToActualSet(row: SetLogRow): ActualSet {
+  const base: ActualSet = {
+    set_number: row.set_number,
+    weight_grams: row.weight_grams,
+    reps_completed: row.reps_completed,
+  };
+  if (row.exercise) base.exercise = row.exercise;
+  const exType = narrowExerciseType(row.exercise_type);
+  if (exType) base.exercise_type = exType;
+  if (row.rpe_actual != null) base.rpe_actual = row.rpe_actual;
+  if (row.actual_rest_seconds != null)
+    base.actual_rest_seconds = row.actual_rest_seconds;
+  if (row.failed) base.failed = true;
+  if (row.notes) base.notes = row.notes;
+  return base;
 }
 
 // Create a standalone ad-hoc session (no program context) and return its ID.
@@ -265,11 +356,17 @@ export async function skipSession(
 // Abandon an in-progress session, resetting it back to planned
 export async function abandonSession(sessionId: string): Promise<void> {
   const session = await fetchSessionById(sessionId);
-  // Ad-hoc sessions have no program — delete them entirely on abandon
+  // Ad-hoc sessions have no program — delete them entirely on abandon.
+  // ON DELETE CASCADE on set_logs handles cleanup.
   if (session && !session.program_id) {
     await deleteSession(sessionId);
     return;
   }
+  // Program sessions reset to planned. set_logs from the abandoned attempt
+  // must be purged or they resurrect as ghost sets next time the user opens
+  // this session (slot keys collapse for equal set numbers; higher numbers
+  // linger). See spec-set-persistence.md.
+  await deleteSetLogsForSession(sessionId);
   await updateSessionToPlanned(sessionId);
 }
 

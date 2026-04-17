@@ -26,5 +26,5 @@ Session lifecycle, logging, completion, performance, and motivational messaging.
 | [spec-logging.md](./spec-logging.md) | done | Set logging UI |
 | [spec-offline.md](./spec-offline.md) | done (update pending) | Offline session support; queue carries per-set ops |
 | [spec-motivational.md](./spec-motivational.md) | done | Motivational messaging |
-| [spec-set-persistence.md](./spec-set-persistence.md) | planned | Append-only `set_logs`; sets durable on confirm |
-| [spec-auto-finalize.md](./spec-auto-finalize.md) | planned | Server auto-finalise + client recovery UX |
+| [spec-set-persistence.md](./spec-set-persistence.md) | in progress | Append-only `set_logs`; migration + dual-write shipped; history read/drop pending |
+| [spec-auto-finalize.md](./spec-auto-finalize.md) | in progress | Server auto-finalise shipped; dedicated recovery UI deferred |

@@ -23,6 +23,8 @@ export interface ActualSet {
   is_recovered?: boolean;
   /** True when the lifter pressed "Failed" on the PostRestOverlay. */
   failed?: boolean;
+  /** ISO timestamp — set when persistSet successfully writes to set_logs. */
+  synced_at?: string;
 }
 
 export interface AuxiliaryActualSet {
@@ -36,6 +38,8 @@ export interface AuxiliaryActualSet {
   exercise_type?: 'weighted' | 'bodyweight' | 'timed';
   /** True when the lifter pressed "Failed" on the PostRestOverlay. */
   failed?: boolean;
+  /** ISO timestamp — set when persistSet successfully writes to set_logs. */
+  synced_at?: string;
 }
 
 export interface TimerState {
@@ -120,6 +124,14 @@ export interface SessionState {
     exercise: string,
     setNumber: number,
     data: Partial<AuxiliaryActualSet>
+  ) => void;
+  /** Writes synced_at for a primary set — called when its set_logs row is persisted. */
+  markSetSynced: (setNumber: number, syncedAt: string) => void;
+  /** Writes synced_at for an auxiliary set — called when its set_logs row is persisted. */
+  markAuxSetSynced: (
+    exercise: string,
+    setNumber: number,
+    syncedAt: string
   ) => void;
   addAdHocSet: (
     exercise: string,
@@ -257,16 +269,56 @@ export const useSessionStore = create<SessionState>()(
 
       updateSet: (setNumber, data) =>
         set((state) => ({
-          actualSets: state.actualSets.map((s) =>
-            s.set_number === setNumber ? { ...s, ...data } : s
-          ),
+          actualSets: state.actualSets.map((s) => {
+            if (s.set_number !== setNumber) return s;
+            // User-driven edits invalidate prior sync state so the persistence
+            // subscriber re-syncs the updated values.
+            const invalidate =
+              data.is_completed !== undefined
+              || data.weight_grams !== undefined
+              || data.reps_completed !== undefined
+              || data.rpe_actual !== undefined
+              || data.actual_rest_seconds !== undefined
+              || data.failed !== undefined;
+            return {
+              ...s,
+              ...data,
+              synced_at: invalidate ? undefined : s.synced_at,
+            };
+          }),
         })),
 
       updateAuxiliarySet: (exercise, setNumber, data) =>
         set((state) => ({
+          auxiliarySets: state.auxiliarySets.map((s) => {
+            if (s.exercise !== exercise || s.set_number !== setNumber) return s;
+            const invalidate =
+              data.is_completed !== undefined
+              || data.weight_grams !== undefined
+              || data.reps_completed !== undefined
+              || data.rpe_actual !== undefined
+              || data.actual_rest_seconds !== undefined
+              || data.failed !== undefined;
+            return {
+              ...s,
+              ...data,
+              synced_at: invalidate ? undefined : s.synced_at,
+            };
+          }),
+        })),
+
+      markSetSynced: (setNumber, syncedAt) =>
+        set((state) => ({
+          actualSets: state.actualSets.map((s) =>
+            s.set_number === setNumber ? { ...s, synced_at: syncedAt } : s
+          ),
+        })),
+
+      markAuxSetSynced: (exercise, setNumber, syncedAt) =>
+        set((state) => ({
           auxiliarySets: state.auxiliarySets.map((s) =>
             s.exercise === exercise && s.set_number === setNumber
-              ? { ...s, ...data }
+              ? { ...s, synced_at: syncedAt }
               : s
           ),
         })),
