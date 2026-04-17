@@ -34,6 +34,24 @@ export type Database = {
   }
   public: {
     Tables: {
+      ai_rate_limits: {
+        Row: {
+          created_at: string
+          id: number
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: never
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: never
+          user_id?: string
+        }
+        Relationships: []
+      }
       auxiliary_assignments: {
         Row: {
           block_number: number
@@ -1022,6 +1040,7 @@ export type Database = {
       session_logs: {
         Row: {
           actual_sets: Json
+          auto_finalised: boolean
           auxiliary_sets: Json | null
           completed_at: string | null
           completion_pct: number | null
@@ -1040,6 +1059,7 @@ export type Database = {
         }
         Insert: {
           actual_sets: Json
+          auto_finalised?: boolean
           auxiliary_sets?: Json | null
           completed_at?: string | null
           completion_pct?: number | null
@@ -1058,6 +1078,7 @@ export type Database = {
         }
         Update: {
           actual_sets?: Json
+          auto_finalised?: boolean
           auxiliary_sets?: Json | null
           completed_at?: string | null
           completion_pct?: number | null
@@ -1094,7 +1115,6 @@ export type Database = {
       session_videos: {
         Row: {
           analysis: Json | null
-          sagittal_confidence: number
           coaching_response: Json | null
           created_at: string
           debug_landmarks: Json | null
@@ -1104,6 +1124,7 @@ export type Database = {
           local_uri: string
           recorded_by: string | null
           remote_uri: string | null
+          sagittal_confidence: number
           session_id: string
           set_number: number
           set_reps: number | null
@@ -1113,7 +1134,6 @@ export type Database = {
         }
         Insert: {
           analysis?: Json | null
-          sagittal_confidence?: number
           coaching_response?: Json | null
           created_at?: string
           debug_landmarks?: Json | null
@@ -1123,6 +1143,7 @@ export type Database = {
           local_uri: string
           recorded_by?: string | null
           remote_uri?: string | null
+          sagittal_confidence?: number
           session_id: string
           set_number?: number
           set_reps?: number | null
@@ -1132,7 +1153,6 @@ export type Database = {
         }
         Update: {
           analysis?: Json | null
-          sagittal_confidence?: number
           coaching_response?: Json | null
           created_at?: string
           debug_landmarks?: Json | null
@@ -1142,6 +1162,7 @@ export type Database = {
           local_uri?: string
           recorded_by?: string | null
           remote_uri?: string | null
+          sagittal_confidence?: number
           session_id?: string
           set_number?: number
           set_reps?: number | null
@@ -1246,6 +1267,75 @@ export type Database = {
             columns: ["program_id"]
             isOneToOne: false
             referencedRelation: "programs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      set_logs: {
+        Row: {
+          actual_rest_seconds: number | null
+          corrected_by: string | null
+          exercise: string | null
+          exercise_type: string | null
+          failed: boolean
+          id: string
+          kind: string
+          logged_at: string
+          notes: string | null
+          reps_completed: number
+          rpe_actual: number | null
+          session_id: string
+          set_number: number
+          user_id: string
+          weight_grams: number
+        }
+        Insert: {
+          actual_rest_seconds?: number | null
+          corrected_by?: string | null
+          exercise?: string | null
+          exercise_type?: string | null
+          failed?: boolean
+          id?: string
+          kind: string
+          logged_at?: string
+          notes?: string | null
+          reps_completed: number
+          rpe_actual?: number | null
+          session_id: string
+          set_number: number
+          user_id: string
+          weight_grams: number
+        }
+        Update: {
+          actual_rest_seconds?: number | null
+          corrected_by?: string | null
+          exercise?: string | null
+          exercise_type?: string | null
+          failed?: boolean
+          id?: string
+          kind?: string
+          logged_at?: string
+          notes?: string | null
+          reps_completed?: number
+          rpe_actual?: number | null
+          session_id?: string
+          set_number?: number
+          user_id?: string
+          weight_grams?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "set_logs_corrected_by_fkey"
+            columns: ["corrected_by"]
+            isOneToOne: false
+            referencedRelation: "set_logs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "set_logs_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "sessions"
             referencedColumns: ["id"]
           },
         ]
@@ -1396,13 +1486,15 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      claim_partner_invite: {
+        Args: { p_token: string }
+        Returns: {
+          inviter_id: string
+        }[]
+      }
       is_accepted_partner: {
         Args: { p_partner_id: string; p_user_id: string }
         Returns: boolean
-      }
-      claim_partner_invite: {
-        Args: { p_token: string }
-        Returns: { inviter_id: string }[]
       }
     }
     Enums: {
