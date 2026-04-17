@@ -83,5 +83,10 @@ export function usePostRestVideoCapture({
     [processPendingVideo]
   );
 
-  return { handleVideoRecorded, wrapLiftComplete, wrapLiftFailed };
+  return {
+    handleVideoRecorded,
+    wrapLiftComplete,
+    wrapLiftFailed,
+    pendingVideoUri,
+  };
 }

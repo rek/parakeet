@@ -2,7 +2,10 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { AppState, StyleSheet, Text, TouchableOpacity } from 'react-native';
 
 import { getRestTimerPrefs } from '@modules/settings';
-import { useSessionStore } from '@platform/store/sessionStore';
+import {
+  selectActiveTimer,
+  useSessionStore,
+} from '@platform/store/sessionStore';
 import { sessionLabel } from '@shared/utils/string';
 import * as Haptics from 'expo-haptics';
 import { router, usePathname } from 'expo-router';
@@ -17,7 +20,8 @@ export function ReturnToSessionBanner() {
   const sessionId = useSessionStore((s) => s.sessionId);
   const sessionMeta = useSessionStore((s) => s.sessionMeta);
   const cachedJitData = useSessionStore((s) => s.cachedJitData);
-  const timerState = useSessionStore((s) => s.timerState);
+  const activeTimer = useSessionStore(selectActiveTimer);
+  const hasTimers = useSessionStore((s) => Object.keys(s.timers).length > 0);
 
   const pathname = usePathname();
 
@@ -69,19 +73,20 @@ export function ReturnToSessionBanner() {
   // Reset edge detector when the timer changes (new rest interval or closes)
   useEffect(() => {
     prevOvertimeRef.current = false;
-  }, [timerState?.visible, timerState?.durationSeconds]);
+  }, [activeTimer?.visible, activeTimer?.durationSeconds]);
 
   // Local tick to force re-render every second for live countdown
   // Also checks for haptic trigger via getState() to avoid stale closure
   const [, setTick] = useState(0);
   useEffect(() => {
-    if (!timerState?.visible) return;
+    if (!hasTimers) return;
     const id = setInterval(() => {
       setTick((n) => n + 1);
 
-      // Read fresh timerState to avoid stale closure
-      const ts = useSessionStore.getState().timerState;
-      if (!ts?.visible) return;
+      // Read fresh active timer to avoid stale closure
+      const state = useSessionStore.getState();
+      const ts = selectActiveTimer(state);
+      if (!ts) return;
 
       const elapsed =
         ts.timerStartedAt != null
@@ -99,12 +104,10 @@ export function ReturnToSessionBanner() {
       prevOvertimeRef.current = remaining <= 0;
     }, 1000);
     return () => clearInterval(id);
-  }, [timerState?.visible]);
+  }, [hasTimers]);
 
   if (!sessionId) return null;
   if (pathname.startsWith('/session')) return null;
-
-  const timerActive = timerState?.visible === true;
 
   const liftLabel = sessionMeta ? sessionLabel(sessionMeta) : 'Session';
 
@@ -116,12 +119,12 @@ export function ReturnToSessionBanner() {
 
   let restLabel = 'In progress →';
   let overtime = false;
-  if (timerActive && timerState) {
+  if (hasTimers && activeTimer) {
     const elapsed =
-      timerState.timerStartedAt != null
-        ? Math.floor((Date.now() - timerState.timerStartedAt) / 1000)
-        : timerState.elapsed;
-    const remaining = timerState.durationSeconds + timerState.offset - elapsed;
+      activeTimer.timerStartedAt != null
+        ? Math.floor((Date.now() - activeTimer.timerStartedAt) / 1000)
+        : activeTimer.elapsed;
+    const remaining = activeTimer.durationSeconds + activeTimer.offset - elapsed;
     overtime = remaining <= 0;
     restLabel = overtime ? 'Rest done' : `Rest: ${formatMMSS(remaining)}`;
   }

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 import { createAudioPlayer } from 'expo-audio';
@@ -44,7 +44,6 @@ export interface RestTimerProps {
   };
   onDone: (elapsedSeconds: number) => void;
   intensityLabel: string;
-  isAuxiliary?: boolean;
   /** When true, automatically calls onDone ~1.5s after the timer hits 0:00 */
   autoHideOnExpiry?: boolean;
   /** Extra seconds added to the timer duration from an intra-session adaptation */
@@ -57,140 +56,7 @@ export interface RestTimerProps {
   nextLiftLabel?: string;
 }
 
-// ── Internal hook (used only by AuxiliaryPill) ────────────────────────────────
-
-function useRestTimer(durationSeconds: number) {
-  const [elapsed, setElapsed] = useState(0);
-  const [offset, setOffset] = useState(0);
-  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
-
-  useEffect(() => {
-    intervalRef.current = setInterval(() => {
-      setElapsed((prev) => prev + 1);
-    }, 1000);
-    return () => {
-      if (intervalRef.current !== null) clearInterval(intervalRef.current);
-    };
-  }, []);
-
-  function stop() {
-    if (intervalRef.current !== null) {
-      clearInterval(intervalRef.current);
-      intervalRef.current = null;
-    }
-  }
-
-  const effectiveDuration = Math.max(0, durationSeconds + offset);
-  const remaining = Math.max(0, effectiveDuration - elapsed);
-  const overtime = elapsed > effectiveDuration;
-
-  function addOffset(delta: number) {
-    setOffset((prev) => {
-      const next = prev + delta;
-      return Math.max(-durationSeconds, next);
-    });
-  }
-
-  return { elapsed, remaining, overtime, stop, addOffset };
-}
-
-// ── Pill variant (auxiliary sets, inline use) ─────────────────────────────────
-
-function AuxiliaryPill({
-  durationSeconds,
-  onDone,
-}: {
-  durationSeconds: number;
-  onDone: (elapsedSeconds: number) => void;
-}) {
-  const { colors } = useTheme();
-  const { elapsed, remaining, overtime, stop } = useRestTimer(durationSeconds);
-
-  // Haptic + audio on expiry (matches FullTimer behavior)
-  const prevOvertimeRef = useRef(false);
-  useEffect(() => {
-    if (overtime && !prevOvertimeRef.current) {
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy).catch(() => {});
-      playDing();
-    }
-    prevOvertimeRef.current = overtime;
-  }, [overtime]);
-
-  // 15-second prepare warning
-  const warnFiredRef = useRef(false);
-  useEffect(() => {
-    if (shouldFirePrepareWarning(remaining, overtime, warnFiredRef.current)) {
-      warnFiredRef.current = true;
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => {});
-      playDing();
-    }
-  }, [remaining, overtime]);
-
-  const pillStyles = useMemo(
-    () =>
-      StyleSheet.create({
-        container: {
-          flexDirection: 'row',
-          alignItems: 'center',
-          alignSelf: 'flex-start',
-          backgroundColor: colors.bgMuted,
-          borderRadius: radii.full,
-          borderWidth: 1,
-          borderColor: colors.border,
-          paddingVertical: spacing[1.5],
-          paddingHorizontal: spacing[3],
-          marginTop: spacing[1.5],
-          gap: spacing[2.5],
-        },
-        time: {
-          fontSize: typography.sizes.sm,
-          fontWeight: typography.weights.semibold,
-          color: colors.textSecondary,
-        },
-        timeOvertime: {
-          color: colors.danger,
-        },
-        doneButton: {
-          backgroundColor: colors.primary,
-          borderRadius: radii.sm,
-          paddingVertical: spacing[1],
-          paddingHorizontal: spacing[2.5],
-        },
-        doneText: {
-          fontSize: typography.sizes.xs,
-          fontWeight: typography.weights.bold,
-          color: colors.textInverse,
-        },
-      }),
-    [colors]
-  );
-
-  function handleDone() {
-    stop();
-    onDone(elapsed);
-  }
-
-  const displayText = overtime
-    ? `+${formatMMSS(elapsed - durationSeconds)}`
-    : formatMMSS(remaining);
-
-  return (
-    <View style={pillStyles.container}>
-      <Text style={[pillStyles.time, overtime && pillStyles.timeOvertime]}>
-        {displayText}
-      </Text>
-      <TouchableOpacity
-        style={pillStyles.doneButton}
-        onPress={handleDone}
-        activeOpacity={0.7}
-      >
-        <Text style={pillStyles.doneText}>Done</Text>
-      </TouchableOpacity>
-    </View>
-  );
-}
-
-// ── Full timer (main sets) ────────────────────────────────────────────────────
+// ── Full timer ────────────────────────────────────────────────────────────────
 
 function FullTimer({
   durationSeconds,
@@ -444,17 +310,12 @@ export function RestTimer({
   llmSuggestion,
   onDone,
   intensityLabel,
-  isAuxiliary = false,
   autoHideOnExpiry = false,
   bonusSeconds = 0,
   audioAlert,
   hapticAlert,
   nextLiftLabel,
 }: RestTimerProps) {
-  if (isAuxiliary) {
-    return <AuxiliaryPill durationSeconds={durationSeconds} onDone={onDone} />;
-  }
-
   return (
     <FullTimer
       durationSeconds={durationSeconds}

@@ -36,10 +36,8 @@ export function useSetCompletionFlow({
   biologicalSexRef: React.RefObject<'male' | 'female' | undefined>;
 }) {
   const {
-    timerState,
     plannedSets,
     auxiliaryWork,
-    postRestState,
     pendingRpeSetNumber,
     pendingAuxRpe,
     pendingAuxConfirmation,
@@ -80,7 +78,8 @@ export function useSetCompletionFlow({
 
   function dismissPostRest() {
     cleanupResetInterval();
-    const result = computeDismissResult(postRestState, Date.now());
+    const current = useSessionStore.getState().postRestQueue[0] ?? null;
+    const result = computeDismissResult(current, Date.now());
     clearPostRestState();
     return result;
   }
@@ -222,9 +221,14 @@ export function useSetCompletionFlow({
   // --- Timer done: dispatch to main/aux/warmup handler (logic moved to store actions) ---
 
   function handleTimerDone() {
-    const pendingMain = timerState?.pendingMainSetNumber ?? null;
-    const pendingAuxExercise = timerState?.pendingAuxExercise ?? null;
-    const pendingAuxSet = timerState?.pendingAuxSetNumber ?? null;
+    const state = useSessionStore.getState();
+    const activeKey = state.activeTimerKey;
+    const activeTimer = activeKey ? state.timers[activeKey] : null;
+    if (!activeTimer) return;
+
+    const pendingMain = activeTimer.pendingMainSetNumber;
+    const pendingAuxExercise = activeTimer.pendingAuxExercise;
+    const pendingAuxSet = activeTimer.pendingAuxSetNumber;
 
     const elapsedSeconds = closeTimer();
 
@@ -493,21 +497,22 @@ export function useSetCompletionFlow({
   }
 
   function handlePostRestReset() {
-    if (!postRestState) return;
+    const current = useSessionStore.getState().postRestQueue[0];
+    if (!current) return;
     cleanupResetInterval();
 
-    const newRest = postRestState.actualRestSeconds + 15;
-    if (postRestState.pendingMainSetNumber !== null) {
-      updateSet(postRestState.pendingMainSetNumber, {
+    const newRest = current.actualRestSeconds + 15;
+    if (current.pendingMainSetNumber !== null) {
+      updateSet(current.pendingMainSetNumber, {
         actual_rest_seconds: newRest,
       });
     } else if (
-      postRestState.pendingAuxExercise !== null &&
-      postRestState.pendingAuxSetNumber !== null
+      current.pendingAuxExercise !== null &&
+      current.pendingAuxSetNumber !== null
     ) {
       updateAuxiliarySet(
-        postRestState.pendingAuxExercise,
-        postRestState.pendingAuxSetNumber,
+        current.pendingAuxExercise,
+        current.pendingAuxSetNumber,
         { actual_rest_seconds: newRest }
       );
     }

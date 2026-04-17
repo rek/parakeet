@@ -1,17 +1,20 @@
 import { getEffectivePlannedSet } from '@shared/utils/getEffectivePlannedSet';
-import type { SessionState } from '@platform/store/sessionStore';
+import type { PostRestState } from '../model/types';
 
 /**
  * Pure selector: derive the weight to display during post-rest countdown.
  * Reflects live weight from adaptation or weight suggestion.
  */
-export function selectPostRestWeight(
-  state: Pick<
-    SessionState,
-    'postRestState' | 'plannedSets' | 'actualSets' | 'currentAdaptation'
-  >
-): number | null {
-  const { postRestState } = state;
+export function selectPostRestWeight(opts: {
+  postRestState: PostRestState | null;
+  plannedSets: { weight_kg: number; reps: number }[];
+  actualSets: { is_completed: boolean; weight_grams: number }[];
+  currentAdaptation: {
+    adaptationType: string;
+    sets: Array<{ weight_kg: number }>;
+  } | null;
+}): number | null {
+  const { postRestState } = opts;
 
   if (!postRestState) {
     return null;
@@ -26,9 +29,9 @@ export function selectPostRestWeight(
   const nextIdx = postRestState.pendingMainSetNumber;
   const liveSet = getEffectivePlannedSet(
     nextIdx,
-    state.plannedSets,
-    state.actualSets,
-    state.currentAdaptation
+    opts.plannedSets,
+    opts.actualSets,
+    opts.currentAdaptation
   );
 
   return liveSet?.weight_kg ?? null;

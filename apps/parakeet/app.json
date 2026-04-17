@@ -58,7 +58,8 @@
           "cameraPermission": "Allow camera to record lifting form"
         }
       ],
-      "./plugins/with-mediapipe-model.js"
+      "./plugins/with-mediapipe-model.js",
+      "expo-sharing"
     ],
     "extra": {
       "eas": {

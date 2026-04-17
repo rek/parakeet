@@ -35,7 +35,7 @@ export function useRestNotificationTapHandler(): void {
 
             const store = useSessionStore.getState();
             const activeSessionId = store.sessionId;
-            const timerActive = store.timerState?.visible ?? false;
+            const timerActive = Object.keys(store.timers).length > 0;
 
             // Ignore stale notification: session closed or no longer the same session
             if (

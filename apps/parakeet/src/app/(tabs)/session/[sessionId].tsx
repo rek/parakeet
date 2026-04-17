@@ -16,6 +16,7 @@ import { getProfile } from '@modules/profile';
 import {
   abandonSession,
   AddExerciseModal,
+  BackgroundTimerBadge,
   buildBlockWeekLabel,
   buildIntensityLabel,
   buildNextLiftLabel,
@@ -335,10 +336,10 @@ export default function SessionScreen() {
     plannedSets,
     warmupCompleted,
     sessionMeta,
-    timerState,
+    timers,
+    activeTimerKey,
     currentAdaptation,
     auxAdaptations,
-    postRestState,
     pendingRpeSetNumber,
     pendingAuxRpe,
     pendingAuxConfirmation,
@@ -360,9 +361,24 @@ export default function SessionScreen() {
     tickTimer,
     adjustTimer,
     closeTimer,
+    switchActiveTimer,
+    completeExpiredTimers,
     resetAdaptation,
     reset,
   } = useSessionStore();
+
+  // Derive from destructured state — no extra Zustand selectors needed since
+  // the full-store destructure above already triggers re-renders on tick.
+  const activeTimer = activeTimerKey ? (timers[activeTimerKey] ?? null) : null;
+  const timerCount = Object.keys(timers).length;
+  const backgroundTimerEntries = useMemo(
+    () =>
+      Object.entries(timers)
+        .filter(([key]) => key !== activeTimerKey)
+        .map(([key, timer]) => ({ key, timer })),
+    [timers, activeTimerKey]
+  );
+  const postRestState = useSessionStore((s) => s.postRestQueue[0] ?? null);
 
   const { invalidateSessionCache } = useSessionLifecycle();
 
@@ -464,7 +480,7 @@ export default function SessionScreen() {
   // weight autoregulation accepts that land while the rest timer is running.
   const postRestWeightKg = useSessionStore((s) =>
     selectPostRestWeight({
-      postRestState: s.postRestState,
+      postRestState: s.postRestQueue[0] ?? null,
       plannedSets: s.plannedSets,
       actualSets: s.actualSets,
       currentAdaptation: s.currentAdaptation,
@@ -473,12 +489,16 @@ export default function SessionScreen() {
 
   // ── Video recording during post-rest overlay ──────────────────────────────
 
-  const { handleVideoRecorded, wrapLiftComplete, wrapLiftFailed } =
-    usePostRestVideoCapture({
-      sessionId: sessionId ?? '',
-      lift: sessionMeta?.primary_lift ?? 'squat',
-      postRestState,
-    });
+  const {
+    handleVideoRecorded,
+    wrapLiftComplete,
+    wrapLiftFailed,
+    pendingVideoUri,
+  } = usePostRestVideoCapture({
+    sessionId: sessionId ?? '',
+    lift: sessionMeta?.primary_lift ?? 'squat',
+    postRestState,
+  });
 
   const handleLiftCompleteWithVideo = wrapLiftComplete(handleLiftComplete);
   const handleLiftFailedWithVideo = wrapLiftFailed(handleLiftFailed);
@@ -653,12 +673,16 @@ export default function SessionScreen() {
 
   // ── Focus-managed timer interval ───────────────────────────────────────────
 
+  const hasTimers = Object.keys(timers).length > 0;
   useFocusEffect(
     useCallback(() => {
-      // Catch up on elapsed time if timer is running
-      if (timerState?.visible && timerState.timerStartedAt) {
+      if (hasTimers) {
         tickTimer();
-        tickIntervalRef.current = setInterval(() => tickTimer(), 1000);
+        completeExpiredTimers();
+        tickIntervalRef.current = setInterval(() => {
+          tickTimer();
+          completeExpiredTimers();
+        }, 1000);
       }
 
       return () => {
@@ -668,7 +692,7 @@ export default function SessionScreen() {
         }
       };
       // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [timerState?.visible, timerState?.timerStartedAt])
+    }, [hasTimers])
   );
 
   // ── Exercise suggestions ──────────────────────────────────────────────────
@@ -734,13 +758,15 @@ export default function SessionScreen() {
           text: 'Abandon',
           style: 'destructive',
           onPress: async () => {
-            if (timerState?.visible) closeTimer();
             cleanupResetInterval();
             clearPostRestState();
-            await abandonSession(sessionId);
             reset();
-            invalidateSessionCache();
-            router.replace('/(tabs)/today');
+            try {
+              await abandonSession(sessionId);
+            } finally {
+              invalidateSessionCache();
+              router.replace('/(tabs)/today');
+            }
           },
         },
       ]
@@ -748,8 +774,9 @@ export default function SessionScreen() {
   }
 
   function handleComplete() {
-    if (timerState?.visible) {
-      closeTimer();
+    // Clear all running timers before navigating to complete screen
+    for (const key of Object.keys(timers)) {
+      closeTimer(key);
     }
     router.push({
       pathname: '/session/complete',
@@ -777,7 +804,7 @@ export default function SessionScreen() {
 
   // LLM suggestion is only relevant for main set timers
   const activeLlmSuggestion =
-    timerState?.pendingMainSetNumber !== null
+    activeTimer?.pendingMainSetNumber !== null
       ? (llmRestSuggestion.current ?? undefined)
       : undefined;
 
@@ -1241,7 +1268,7 @@ export default function SessionScreen() {
       />
 
       {/* RPE picker (primary) + rest timer + post-rest overlay */}
-      {(timerState?.visible ||
+      {(activeTimer !== null ||
         postRestState !== null ||
         pendingRpeSetNumber !== null ||
         pendingAuxRpe !== null ||
@@ -1257,6 +1284,7 @@ export default function SessionScreen() {
                 pendingAuxConfirmation.weightGrams
               )}
               nextSetNumber={pendingAuxConfirmation.setNumber}
+              exerciseName={formatExerciseName(pendingAuxConfirmation.exercise)}
               onLiftComplete={handleAuxConfirmComplete}
               onLiftFailed={handleAuxConfirmFailed}
               onReset15s={() => {}}
@@ -1278,7 +1306,7 @@ export default function SessionScreen() {
               })}
             />
           )}
-          {timerState?.visible && (
+          {activeTimer !== null && (
             <View
               style={
                 pendingRpeSetNumber !== null || pendingAuxRpe !== null
@@ -1286,19 +1314,25 @@ export default function SessionScreen() {
                   : undefined
               }
             >
+              {timerCount > 1 && (
+                <BackgroundTimerBadge
+                  backgroundTimers={backgroundTimerEntries}
+                  onSwitch={switchActiveTimer}
+                />
+              )}
               <RestTimer
                 durationSeconds={
-                  timerState?.durationSeconds ?? DEFAULT_MAIN_REST_SECONDS
+                  activeTimer.durationSeconds ?? DEFAULT_MAIN_REST_SECONDS
                 }
-                elapsed={timerState?.elapsed ?? 0}
-                offset={timerState?.offset ?? 0}
+                elapsed={activeTimer.elapsed ?? 0}
+                offset={activeTimer.offset ?? 0}
                 onAdjust={adjustTimer}
                 llmSuggestion={activeLlmSuggestion}
                 onDone={handleTimerDone}
                 intensityLabel={intensity}
                 autoHideOnExpiry
                 bonusSeconds={
-                  timerState?.pendingMainSetNumber !== null &&
+                  activeTimer.pendingMainSetNumber !== null &&
                   currentAdaptation?.adaptationType === 'extended_rest'
                     ? (currentAdaptation.restBonusSeconds ?? 0)
                     : 0
@@ -1310,31 +1344,41 @@ export default function SessionScreen() {
                     ? undefined
                     : buildNextLiftLabel({
                         pendingMainSetNumber:
-                          timerState?.pendingMainSetNumber ?? null,
+                          activeTimer.pendingMainSetNumber ?? null,
                         plannedSets,
                         actualSets,
                         currentAdaptation,
                         pendingAuxExercise:
-                          timerState?.pendingAuxExercise ?? null,
+                          activeTimer.pendingAuxExercise ?? null,
                         pendingAuxSetNumber:
-                          timerState?.pendingAuxSetNumber ?? null,
+                          activeTimer.pendingAuxSetNumber ?? null,
                         auxiliaryWork,
                       })
                 }
               />
             </View>
           )}
-          {postRestState !== null && !timerState?.visible && (
+          {postRestState !== null && activeTimer === null && (
             <PostRestOverlay
               plannedReps={postRestState.plannedReps}
               plannedWeightKg={postRestWeightKg}
               nextSetNumber={postRestState.nextSetNumber}
+              exerciseName={
+                postRestState.pendingAuxExercise
+                  ? formatExerciseName(postRestState.pendingAuxExercise)
+                  : sessionMeta?.primary_lift
+                    ? formatExerciseName(sessionMeta.primary_lift)
+                    : undefined
+              }
               onLiftComplete={handleLiftCompleteWithVideo}
               onLiftFailed={handleLiftFailedWithVideo}
               onReset15s={handlePostRestReset}
               resetCountdown={postRestState.resetSecondsRemaining}
               recordingSlot={
-                <PostRestRecordButton onRecorded={handleVideoRecorded} />
+                <PostRestRecordButton
+                  savedUri={pendingVideoUri}
+                  onRecorded={handleVideoRecorded}
+                />
               }
             />
           )}

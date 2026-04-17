@@ -38,7 +38,7 @@ export interface AuxiliaryActualSet {
   failed?: boolean;
 }
 
-interface TimerState {
+export interface TimerState {
   visible: boolean;
   durationSeconds: number;
   elapsed: number;
@@ -47,6 +47,39 @@ interface TimerState {
   pendingMainSetNumber: number | null;
   pendingAuxExercise: string | null;
   pendingAuxSetNumber: number | null;
+}
+
+/** Derive a stable key for a timer from its pending set info. */
+export function deriveTimerKey(opts: {
+  pendingMainSetNumber?: number | null;
+  pendingAuxExercise?: string | null;
+}): string {
+  if (opts.pendingMainSetNumber != null) return 'main';
+  if (opts.pendingAuxExercise) return opts.pendingAuxExercise;
+  return 'warmup';
+}
+
+// ── Selectors ──────────────────────────────────────────────────────────────────
+
+export function selectActiveTimer(state: SessionState): TimerState | null {
+  if (!state.activeTimerKey) return null;
+  return state.timers[state.activeTimerKey] ?? null;
+}
+
+export function selectTimerCount(state: SessionState): number {
+  return Object.keys(state.timers).length;
+}
+
+export function selectBackgroundTimers(
+  state: SessionState
+): Array<{ key: string; timer: TimerState }> {
+  return Object.entries(state.timers)
+    .filter(([key]) => key !== state.activeTimerKey)
+    .map(([key, timer]) => ({ key, timer }));
+}
+
+export function selectActivePostRest(state: SessionState): PostRestState | null {
+  return state.postRestQueue[0] ?? null;
 }
 
 export interface SessionState {
@@ -67,7 +100,8 @@ export interface SessionState {
   } | null;
   cachedJitData: string | null;
   cachedPrescriptionTrace: string | null;
-  timerState: TimerState | null;
+  timers: Record<string, TimerState>;
+  activeTimerKey: string | null;
   consecutiveMainLiftFailures: number;
   currentAdaptation: SessionAdaptation | null;
   /** Per-exercise aux adaptations keyed by exercise name */
@@ -76,7 +110,7 @@ export interface SessionState {
   recoveryDismissed: boolean;
   weightSuggestion: WeightSuggestionOffer | null;
   hasAcceptedWeightSuggestion: boolean;
-  postRestState: PostRestState | null;
+  postRestQueue: PostRestState[];
   pendingRpeSetNumber: number | null;
   pendingAuxRpe: { exercise: string; setNumber: number } | null;
   pendingAuxConfirmation: PendingAuxConfirmation | null;
@@ -129,7 +163,9 @@ export interface SessionState {
   }) => void;
   tickTimer: () => void;
   adjustTimer: (deltaSecs: number) => void;
-  closeTimer: () => number;
+  closeTimer: (key?: string) => number;
+  switchActiveTimer: (key: string) => void;
+  completeExpiredTimers: () => void;
   showMainPostRest: (pendingMainSetNumber: number, elapsedSeconds: number) => void;
   showAuxPostRest: (
     pendingAuxExercise: string,
@@ -137,6 +173,7 @@ export interface SessionState {
     elapsedSeconds: number
   ) => void;
   showWarmupPostRest: (elapsedSeconds: number) => void;
+  /** Remove the first item from postRestQueue. */
   clearPostRestState: () => void;
   extendPostRest: () => void;
   tickPostRestCountdown: () => void;
@@ -162,7 +199,8 @@ export const useSessionStore = create<SessionState>()(
       sessionMeta: null,
       cachedJitData: null,
       cachedPrescriptionTrace: null,
-      timerState: null,
+      timers: {},
+      activeTimerKey: null,
       consecutiveMainLiftFailures: 0,
       currentAdaptation: null,
       auxAdaptations: {},
@@ -170,7 +208,7 @@ export const useSessionStore = create<SessionState>()(
       recoveryDismissed: false,
       weightSuggestion: null,
       hasAcceptedWeightSuggestion: false,
-      postRestState: null,
+      postRestQueue: [],
       pendingRpeSetNumber: null,
       pendingAuxRpe: null,
       pendingAuxConfirmation: null,
@@ -189,12 +227,13 @@ export const useSessionStore = create<SessionState>()(
           auxiliaryWork: [],
           warmupCompleted: [],
           sessionRpe: undefined,
-          timerState: null,
+          timers: {},
+          activeTimerKey: null,
           recoveryOffer: null,
           recoveryDismissed: false,
           weightSuggestion: null,
           hasAcceptedWeightSuggestion: false,
-          postRestState: null,
+          postRestQueue: [],
           pendingRpeSetNumber: null,
           pendingAuxRpe: null,
           pendingAuxConfirmation: null,
@@ -378,8 +417,12 @@ export const useSessionStore = create<SessionState>()(
         pendingAuxExercise,
         pendingAuxSetNumber,
       }) =>
-        set({
-          timerState: {
+        set((state) => {
+          const key = deriveTimerKey({
+            pendingMainSetNumber,
+            pendingAuxExercise,
+          });
+          const newTimer: TimerState = {
             visible: true,
             durationSeconds,
             elapsed: 0,
@@ -388,34 +431,138 @@ export const useSessionStore = create<SessionState>()(
             pendingMainSetNumber: pendingMainSetNumber ?? null,
             pendingAuxExercise: pendingAuxExercise ?? null,
             pendingAuxSetNumber: pendingAuxSetNumber ?? null,
-          },
+          };
+          // Main lift always takes visual precedence
+          const activeKey =
+            state.timers['main'] && key !== 'main'
+              ? 'main'
+              : key;
+          return {
+            timers: { ...state.timers, [key]: newTimer },
+            activeTimerKey: activeKey,
+          };
         }),
 
       tickTimer: () =>
         set((state) => {
-          const t = state.timerState;
-          if (!t || !t.timerStartedAt) return {};
-          return {
-            timerState: {
-              ...t,
-              elapsed: Math.floor((Date.now() - t.timerStartedAt) / 1000),
-            },
-          };
+          const now = Date.now();
+          const entries = Object.entries(state.timers);
+          if (entries.length === 0) return {};
+          const updated: Record<string, TimerState> = {};
+          for (const [key, t] of entries) {
+            updated[key] = t.timerStartedAt
+              ? { ...t, elapsed: Math.floor((now - t.timerStartedAt) / 1000) }
+              : t;
+          }
+          return { timers: updated };
         }),
 
       adjustTimer: (deltaSecs) =>
         set((state) => {
-          const t = state.timerState;
-          if (!t) return {};
+          const key = state.activeTimerKey;
+          if (!key || !state.timers[key]) return {};
+          const t = state.timers[key];
           const nextOffset = Math.max(-t.durationSeconds, t.offset + deltaSecs);
-          return { timerState: { ...t, offset: nextOffset } };
+          return {
+            timers: { ...state.timers, [key]: { ...t, offset: nextOffset } },
+          };
         }),
 
-      closeTimer: () => {
-        const elapsed = get().timerState?.elapsed ?? 0;
-        set({ timerState: null });
+      closeTimer: (key?: string) => {
+        const state = get();
+        const targetKey = key ?? state.activeTimerKey;
+        if (!targetKey || !state.timers[targetKey]) return 0;
+        const elapsed = state.timers[targetKey].elapsed;
+        const { [targetKey]: _, ...remaining } = state.timers;
+        // Promote next active key
+        let newActive = state.activeTimerKey;
+        if (targetKey === state.activeTimerKey) {
+          const keys = Object.keys(remaining);
+          newActive = keys.includes('main')
+            ? 'main'
+            : (keys[keys.length - 1] ?? null);
+        }
+        set({ timers: remaining, activeTimerKey: newActive });
         return elapsed;
       },
+
+      switchActiveTimer: (key: string) =>
+        set((state) => {
+          if (!state.timers[key]) return {};
+          return { activeTimerKey: key };
+        }),
+
+      completeExpiredTimers: () =>
+        set((state) => {
+          const entries = Object.entries(state.timers);
+          if (entries.length <= 1) return {}; // Only background timers expire
+          const remaining: Record<string, TimerState> = {};
+          const newQueue = [...state.postRestQueue];
+          for (const [key, t] of entries) {
+            if (key === state.activeTimerKey) {
+              remaining[key] = t;
+              continue;
+            }
+            const effectiveDuration = t.durationSeconds + t.offset;
+            if (t.elapsed >= effectiveDuration) {
+              // Background timer expired — build PostRestState
+              if (t.pendingAuxExercise !== null && t.pendingAuxSetNumber !== null) {
+                const auxWork = state.auxiliaryWork.find(
+                  (w) => w.exercise === t.pendingAuxExercise
+                );
+                const auxSetPlan = auxWork?.sets[t.pendingAuxSetNumber];
+                if (auxSetPlan) {
+                  newQueue.push({
+                    pendingMainSetNumber: null,
+                    pendingAuxExercise: t.pendingAuxExercise,
+                    pendingAuxSetNumber: t.pendingAuxSetNumber,
+                    actualRestSeconds: t.elapsed,
+                    liftStartedAt: Date.now(),
+                    plannedReps: auxSetPlan.reps,
+                    plannedWeightKg: auxSetPlan.weight_kg,
+                    nextSetNumber: null,
+                    resetSecondsRemaining: null,
+                  });
+                }
+              } else if (t.pendingMainSetNumber !== null) {
+                const nextSet = getEffectivePlannedSet(
+                  t.pendingMainSetNumber,
+                  state.plannedSets,
+                  state.actualSets,
+                  state.currentAdaptation
+                );
+                if (nextSet) {
+                  newQueue.push({
+                    pendingMainSetNumber: t.pendingMainSetNumber,
+                    pendingAuxExercise: null,
+                    pendingAuxSetNumber: null,
+                    actualRestSeconds: t.elapsed,
+                    liftStartedAt: Date.now(),
+                    plannedReps: nextSet.reps,
+                    plannedWeightKg: null,
+                    nextSetNumber: t.pendingMainSetNumber + 1,
+                    resetSecondsRemaining: null,
+                  });
+                }
+              }
+            } else {
+              remaining[key] = t;
+            }
+          }
+          if (Object.keys(remaining).length === entries.length) return {};
+          let newActive = state.activeTimerKey;
+          if (newActive && !remaining[newActive]) {
+            const keys = Object.keys(remaining);
+            newActive = keys.includes('main')
+              ? 'main'
+              : (keys[keys.length - 1] ?? null);
+          }
+          return {
+            timers: remaining,
+            activeTimerKey: newActive,
+            postRestQueue: newQueue,
+          };
+        }),
 
       showMainPostRest: (pendingMainSetNumber, elapsedSeconds) =>
         set((state) => {
@@ -427,17 +574,20 @@ export const useSessionStore = create<SessionState>()(
           );
           if (!nextSet) return {};
           return {
-            postRestState: {
-              pendingMainSetNumber,
-              pendingAuxExercise: null,
-              pendingAuxSetNumber: null,
-              actualRestSeconds: elapsedSeconds,
-              liftStartedAt: Date.now(),
-              plannedReps: nextSet.reps,
-              plannedWeightKg: null, // Derived live from selectPostRestWeight
-              nextSetNumber: pendingMainSetNumber + 1,
-              resetSecondsRemaining: null,
-            },
+            postRestQueue: [
+              ...state.postRestQueue,
+              {
+                pendingMainSetNumber,
+                pendingAuxExercise: null,
+                pendingAuxSetNumber: null,
+                actualRestSeconds: elapsedSeconds,
+                liftStartedAt: Date.now(),
+                plannedReps: nextSet.reps,
+                plannedWeightKg: null, // Derived live from selectPostRestWeight
+                nextSetNumber: pendingMainSetNumber + 1,
+                resetSecondsRemaining: null,
+              },
+            ],
           };
         }),
 
@@ -447,17 +597,20 @@ export const useSessionStore = create<SessionState>()(
           const auxSetPlan = auxWork?.sets[pendingAuxSetNumber];
           if (!auxSetPlan) return {};
           return {
-            postRestState: {
-              pendingMainSetNumber: null,
-              pendingAuxExercise,
-              pendingAuxSetNumber,
-              actualRestSeconds: elapsedSeconds,
-              liftStartedAt: Date.now(),
-              plannedReps: auxSetPlan.reps,
-              plannedWeightKg: auxSetPlan.weight_kg,
-              nextSetNumber: null,
-              resetSecondsRemaining: null,
-            },
+            postRestQueue: [
+              ...state.postRestQueue,
+              {
+                pendingMainSetNumber: null,
+                pendingAuxExercise,
+                pendingAuxSetNumber,
+                actualRestSeconds: elapsedSeconds,
+                liftStartedAt: Date.now(),
+                plannedReps: auxSetPlan.reps,
+                plannedWeightKg: auxSetPlan.weight_kg,
+                nextSetNumber: null,
+                resetSecondsRemaining: null,
+              },
+            ],
           };
         }),
 
@@ -470,54 +623,51 @@ export const useSessionStore = create<SessionState>()(
             state.currentAdaptation
           );
           return {
-            postRestState: {
-              pendingMainSetNumber: null,
-              pendingAuxExercise: null,
-              pendingAuxSetNumber: null,
-              actualRestSeconds: elapsedSeconds,
-              liftStartedAt: Date.now(),
-              plannedReps: firstSet?.reps ?? 0,
-              plannedWeightKg: firstSet?.weight_kg ?? null,
-              nextSetNumber: 1,
-              resetSecondsRemaining: null,
-            },
+            postRestQueue: [
+              ...state.postRestQueue,
+              {
+                pendingMainSetNumber: null,
+                pendingAuxExercise: null,
+                pendingAuxSetNumber: null,
+                actualRestSeconds: elapsedSeconds,
+                liftStartedAt: Date.now(),
+                plannedReps: firstSet?.reps ?? 0,
+                plannedWeightKg: firstSet?.weight_kg ?? null,
+                nextSetNumber: 1,
+                resetSecondsRemaining: null,
+              },
+            ],
           };
         }),
 
-      clearPostRestState: () => set({ postRestState: null }),
+      clearPostRestState: () =>
+        set((state) => ({
+          postRestQueue: state.postRestQueue.slice(1),
+        })),
 
       extendPostRest: () =>
         set((state) => {
-          const prs = state.postRestState;
-          if (!prs) return {};
-          const newRest = prs.actualRestSeconds + 15;
+          if (state.postRestQueue.length === 0) return {};
+          const [first, ...rest] = state.postRestQueue;
           return {
-            postRestState: {
-              ...prs,
-              actualRestSeconds: newRest,
-              resetSecondsRemaining: 15,
-            },
+            postRestQueue: [
+              { ...first, actualRestSeconds: first.actualRestSeconds + 15, resetSecondsRemaining: 15 },
+              ...rest,
+            ],
           };
         }),
 
       tickPostRestCountdown: () =>
         set((state) => {
-          const prs = state.postRestState;
-          if (!prs || prs.resetSecondsRemaining === null) return {};
-          const next = prs.resetSecondsRemaining - 1;
-          if (next <= 0) {
-            return {
-              postRestState: {
-                ...prs,
-                resetSecondsRemaining: null,
-              },
-            };
-          }
+          if (state.postRestQueue.length === 0) return {};
+          const [first, ...rest] = state.postRestQueue;
+          if (first.resetSecondsRemaining === null) return {};
+          const next = first.resetSecondsRemaining - 1;
           return {
-            postRestState: {
-              ...prs,
-              resetSecondsRemaining: next,
-            },
+            postRestQueue: [
+              { ...first, resetSecondsRemaining: next <= 0 ? null : next },
+              ...rest,
+            ],
           };
         }),
 
@@ -548,7 +698,8 @@ export const useSessionStore = create<SessionState>()(
           sessionMeta: null,
           cachedJitData: null,
           cachedPrescriptionTrace: null,
-          timerState: null,
+          timers: {},
+          activeTimerKey: null,
           consecutiveMainLiftFailures: 0,
           currentAdaptation: null,
           auxAdaptations: {},
@@ -556,7 +707,7 @@ export const useSessionStore = create<SessionState>()(
           recoveryDismissed: false,
           weightSuggestion: null,
           hasAcceptedWeightSuggestion: false,
-          postRestState: null,
+          postRestQueue: [],
           pendingRpeSetNumber: null,
           pendingAuxRpe: null,
           pendingAuxConfirmation: null,
@@ -575,16 +726,42 @@ export const useSessionStore = create<SessionState>()(
         sessionMeta: state.sessionMeta,
         cachedJitData: state.cachedJitData,
         cachedPrescriptionTrace: state.cachedPrescriptionTrace,
-        timerState: state.timerState,
+        timers: state.timers,
+        activeTimerKey: state.activeTimerKey,
         startedAt: state.startedAt,
         recoveryDismissed: state.recoveryDismissed,
       }),
       merge: (persisted, current) => {
         const raw = persisted as Partial<Record<string, unknown>> | undefined;
         const p = persisted as Partial<SessionState> | undefined;
+
+        // Migrate old single timerState → timers dict
+        let timers = p?.timers ?? {};
+        if (!p?.timers && raw?.timerState) {
+          const old = raw.timerState as TimerState;
+          const key = deriveTimerKey({
+            pendingMainSetNumber: old.pendingMainSetNumber,
+            pendingAuxExercise: old.pendingAuxExercise,
+          });
+          timers = { [key]: old };
+        }
+
+        // Migrate old single postRestState → postRestQueue
+        let postRestQueue = p?.postRestQueue ?? [];
+        if (
+          (!p?.postRestQueue || p.postRestQueue.length === 0) &&
+          raw?.postRestState
+        ) {
+          postRestQueue = [raw.postRestState as PostRestState];
+        }
+
         return {
           ...current,
           ...p,
+          timers,
+          activeTimerKey:
+            p?.activeTimerKey ?? Object.keys(timers)[0] ?? null,
+          postRestQueue,
           startedAt:
             typeof raw?.startedAt === 'string'
               ? new Date(raw.startedAt)

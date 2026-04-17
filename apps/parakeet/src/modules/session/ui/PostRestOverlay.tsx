@@ -4,11 +4,14 @@ import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 import { radii, spacing, typography } from '../../../theme';
 import { useTheme } from '../../../theme/ThemeContext';
+import { fmtKg } from '../utils/fmtKg';
 
 interface PostRestOverlayProps {
   plannedReps: number;
   plannedWeightKg?: number | null;
   nextSetNumber?: number | null;
+  /** Human-formatted exercise name (e.g. "Barbell Row"). When provided, shown as part of context label. */
+  exerciseName?: string;
   onLiftComplete: () => void;
   onLiftFailed: (reps: number) => void;
   onReset15s: () => void;
@@ -23,6 +26,7 @@ export function PostRestOverlay({
   plannedReps,
   plannedWeightKg,
   nextSetNumber,
+  exerciseName,
   onLiftComplete,
   onLiftFailed,
   onReset15s,
@@ -169,17 +173,28 @@ export function PostRestOverlay({
   const resetLabel =
     resetCountdown !== null ? `+15s (${resetCountdown}s)` : '+15s rest';
 
-  const hasContext = nextSetNumber != null && plannedReps > 0;
-  const contextLabel = hasContext
-    ? plannedWeightKg
-      ? `Set ${nextSetNumber} — ${plannedWeightKg}kg × ${plannedReps}`
-      : `Set ${nextSetNumber} × ${plannedReps}`
-    : null;
+  const contextLabel = (() => {
+    if (plannedReps <= 0) return null;
+    const weightPart = plannedWeightKg
+      ? `${fmtKg(plannedWeightKg)}kg × ${plannedReps}`
+      : `× ${plannedReps}`;
+    if (exerciseName && nextSetNumber != null) {
+      return `${exerciseName} Set ${nextSetNumber} — ${weightPart}`;
+    }
+    if (exerciseName) {
+      return `${exerciseName} — ${weightPart}`;
+    }
+    if (nextSetNumber != null) {
+      return `Set ${nextSetNumber} — ${weightPart}`;
+    }
+    return null;
+  })();
 
   if (failedReps !== null) {
     return (
       <View style={styles.container}>
         <Text style={styles.label}>How many reps?</Text>
+        {recordingSlot}
 
         <View style={styles.stepperRow}>
           <TouchableOpacity

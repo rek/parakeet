@@ -20,8 +20,8 @@ export function useRestNotifications(): void {
   }, []);
 
   useEffect(() => {
-    const timerVisible = useSessionStore.getState().timerState?.visible;
-    if (!timerVisible && pendingNotifIdRef.current) {
+    const hasTimers = Object.keys(useSessionStore.getState().timers).length > 0;
+    if (!hasTimers && pendingNotifIdRef.current) {
       cancelRestNotification(pendingNotifIdRef.current);
       pendingNotifIdRef.current = null;
     }
@@ -33,23 +33,28 @@ export function useRestNotifications(): void {
         if (!prefEnabledRef.current) return;
 
         const store = useSessionStore.getState();
-        const ts = store.timerState;
         const meta = store.sessionMeta;
+        if (!meta) return;
 
-        if (!ts?.visible || !meta) return;
+        // Find soonest-expiring timer
+        let soonestRemaining = Infinity;
+        for (const ts of Object.values(store.timers)) {
+          const elapsed =
+            ts.timerStartedAt != null
+              ? Math.floor((Date.now() - ts.timerStartedAt) / 1000)
+              : ts.elapsed;
+          const remaining = ts.durationSeconds + ts.offset - elapsed;
+          if (remaining > 0 && remaining < soonestRemaining) {
+            soonestRemaining = remaining;
+          }
+        }
 
-        const elapsed =
-          ts.timerStartedAt != null
-            ? Math.floor((Date.now() - ts.timerStartedAt) / 1000)
-            : ts.elapsed;
-        const remaining = ts.durationSeconds + ts.offset - elapsed;
-
-        if (remaining <= 0) return;
+        if (soonestRemaining === Infinity) return;
 
         scheduleRestNotification({
           lift: meta.primary_lift!,
           intensityType: meta.intensity_type!,
-          delaySeconds: remaining,
+          delaySeconds: soonestRemaining,
           sessionId: store.sessionId,
         })
           .then((id) => {

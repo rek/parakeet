@@ -1,5 +1,5 @@
 import { useCallback, useMemo, useState } from 'react';
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Modal, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 import { useFeatureEnabled } from '@modules/feature-flags';
 
@@ -12,21 +12,21 @@ import { RecordVideoSheet } from './RecordVideoSheet';
  * Compact recording button for the PostRestOverlay.
  * Self-gates behind the videoAnalysis feature flag.
  *
- * When tapped, opens RecordVideoSheet as an absolute-fill overlay.
- * After recording completes, shows a "Recording saved" indicator
- * and calls onRecorded with the video URI.
+ * Saved-video state is owned by the caller (via `savedUri` prop) so it
+ * survives PostRestOverlay unmount/remount during +15s resets.
  */
 export function PostRestRecordButton({
+  savedUri,
   onRecorded,
   onRecordingStateChange,
 }: {
+  savedUri: string | null;
   onRecorded: (videoUri: string) => void;
   onRecordingStateChange?: (isRecording: boolean) => void;
 }) {
   const enabled = useFeatureEnabled('videoAnalysis');
   const { colors } = useTheme();
   const [isRecorderOpen, setIsRecorderOpen] = useState(false);
-  const [savedUri, setSavedUri] = useState<string | null>(null);
 
   const styles = useMemo(
     () =>
@@ -43,6 +43,12 @@ export function PostRestRecordButton({
           justifyContent: 'center',
           gap: spacing[1.5],
         },
+        recordDot: {
+          width: 8,
+          height: 8,
+          borderRadius: 4,
+          backgroundColor: colors.danger,
+        },
         recordButtonText: {
           fontSize: typography.sizes.sm,
           fontWeight: typography.weights.semibold,
@@ -53,7 +59,7 @@ export function PostRestRecordButton({
           flexDirection: 'row',
           alignItems: 'center',
           justifyContent: 'center',
-          gap: spacing[1.5],
+          gap: spacing[2],
           paddingVertical: spacing[1],
         },
         savedText: {
@@ -61,9 +67,11 @@ export function PostRestRecordButton({
           color: colors.success,
           fontWeight: typography.weights.medium,
         },
-        recorderOverlay: {
-          ...StyleSheet.absoluteFillObject,
-          zIndex: 100,
+        reRecordText: {
+          fontSize: typography.sizes.xs,
+          fontWeight: typography.weights.semibold,
+          color: colors.textSecondary,
+          textDecorationLine: 'underline',
         },
       }),
     [colors]
@@ -76,7 +84,6 @@ export function PostRestRecordButton({
 
   const handleRecorded = useCallback(
     (videoUri: string) => {
-      setSavedUri(videoUri);
       setIsRecorderOpen(false);
       onRecordingStateChange?.(false);
       onRecorded(videoUri);
@@ -94,14 +101,22 @@ export function PostRestRecordButton({
   return (
     <>
       {savedUri ? (
-        <View style={styles.savedIndicator}>
-          <Text style={styles.savedText}>Recording saved</Text>
-          <TouchableOpacity onPress={handleOpenRecorder} activeOpacity={0.7}>
-            <Text
-              style={[styles.recordButtonText, { fontSize: typography.sizes.xs }]}
-            >
-              Re-record
-            </Text>
+        <View
+          style={styles.savedIndicator}
+          accessible
+          accessibilityLiveRegion="polite"
+          accessibilityLabel="Video ready. Tap Complete to analyze."
+        >
+          <Text style={styles.savedText}>Video ready</Text>
+          <TouchableOpacity
+            onPress={handleOpenRecorder}
+            activeOpacity={0.7}
+            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+            accessible
+            accessibilityRole="button"
+            accessibilityLabel="Re-record set video"
+          >
+            <Text style={styles.reRecordText}>Re-record</Text>
           </TouchableOpacity>
         </View>
       ) : (
@@ -113,19 +128,24 @@ export function PostRestRecordButton({
           accessibilityLabel="Record set video"
           accessibilityRole="button"
         >
+          <View style={styles.recordDot} />
           <Text style={styles.recordButtonText}>Record</Text>
         </TouchableOpacity>
       )}
 
-      {isRecorderOpen && (
-        <View style={styles.recorderOverlay}>
-          <RecordVideoSheet
-            onRecorded={handleRecorded}
-            onCancel={handleCancel}
-            colors={colors}
-          />
-        </View>
-      )}
+      <Modal
+        visible={isRecorderOpen}
+        animationType="fade"
+        presentationStyle="overFullScreen"
+        transparent
+        onRequestClose={handleCancel}
+      >
+        <RecordVideoSheet
+          onRecorded={handleRecorded}
+          onCancel={handleCancel}
+          colors={colors}
+        />
+      </Modal>
     </>
   );
 }

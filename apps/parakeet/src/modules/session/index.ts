@@ -37,6 +37,7 @@ export * from './ui/performance-styles';
 export * from './ui/rpe-options';
 export { AddExerciseModal } from './ui/AddExerciseModal';
 export { PrescriptionSheet } from './ui/PrescriptionSheet';
+export { BackgroundTimerBadge } from './ui/BackgroundTimerBadge';
 export { PostRestOverlay } from './ui/PostRestOverlay';
 export { RestTimer } from './ui/RestTimer';
 export { ReturnToSessionBanner } from './ui/ReturnToSessionBanner';
