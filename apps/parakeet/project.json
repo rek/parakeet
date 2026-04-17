@@ -137,6 +137,20 @@
         "command": "bash tools/scripts/install-latest-apk.sh"
       }
     },
+    "eas-update:preview": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "eas update --channel preview --auto --non-interactive",
+        "cwd": "apps/parakeet"
+      }
+    },
+    "eas-update:production": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "eas update --channel production --auto --non-interactive",
+        "cwd": "apps/parakeet"
+      }
+    },
     "lint": {
       "executor": "nx:run-commands",
       "options": {
