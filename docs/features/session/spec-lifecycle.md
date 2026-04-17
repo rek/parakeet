@@ -32,8 +32,10 @@ The `.eq('status', ...)` guards silently no-op on invalid transitions. The UI pr
 
 **Stale session auto-abandon:**
 - `abandonStaleInProgressSessions(userId)` runs on app foreground (alongside `markMissedSessions`)
-- An `in_progress` session whose `planned_date` is more than 48 hours ago is automatically skipped
-- Prevents the user from being locked out of new workouts after an interrupted session (e.g., phone dies mid-workout)
+- An `in_progress` session whose `planned_date` is more than 48 hours ago is handled as follows:
+  - **0 `set_logs` rows** → marked `skipped` (existing behaviour, nothing to save).
+  - **≥1 `set_logs` rows** → **auto-finalised**, not skipped. See [spec-auto-finalize.md](./spec-auto-finalize.md). Never silently drop a session that contains real logged work.
+- Prevents the user from being locked out of new workouts after an interrupted session (e.g., phone dies mid-workout) **without** discarding sets they already confirmed.
 
 **Soreness check-in gate:**
 - [x] Before `startSession()` is called, the app routes through `session/soreness.tsx` **only for `planned` sessions**
@@ -46,3 +48,5 @@ The `.eq('status', ...)` guards silently no-op on invalid transitions. The UI pr
 - [sessions-001-session-read-api.md](./sessions-001-session-read-api.md)
 - [mobile-011-soreness-checkin-screen.md](../soreness-and-readiness/spec-soreness-screen.md)
 - [engine-007-jit-session-generator.md](../jit-pipeline/spec-generator.md)
+- [spec-set-persistence.md](./spec-set-persistence.md) — DB trigger flips `planned → in_progress` on first set insert.
+- [spec-auto-finalize.md](./spec-auto-finalize.md) — stale-session handling branches on `set_logs` count.

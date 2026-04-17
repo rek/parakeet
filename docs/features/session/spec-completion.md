@@ -1,21 +1,31 @@
 # Spec: Session Completion (Supabase Direct)
 
-**Status**: Implemented
+**Status**: Implemented (being reshaped — see [design-durability.md](./design-durability.md))
 **Domain**: Sessions & Performance
 
 ## What This Covers
 
-Writing a completed session log to Supabase, computing performance metrics locally using the training engine, and storing the results. No REST API server, no Pub/Sub — everything runs in the app.
+End-of-workout finalisation. After [spec-set-persistence.md](./spec-set-persistence.md) ships, sets are already durable at confirmation time; this spec covers summary + adjuster + achievements only.
+
+## Durability Note (post-redesign)
+
+End is no longer the save-gate for sets. Sets persist per-tap via `persistSet()` → `set_logs`. If End never fires, [spec-auto-finalize.md](./spec-auto-finalize.md) finalises the session on the server with the existing `set_logs`. Losing End costs at most a `session_rpe` value.
 
 ## Tasks
 
-**`apps/parakeet/src/modules/session/application/session.service.ts` (completion helper; re-exported via `apps/parakeet/src/modules/session/application/session.service.ts`):**
-- [x] `completeSession(sessionId: string, userId: string, input: CompleteSessionInput): Promise<void>`
-  1. Compute completion stats locally from explicit `is_completed` confirmations (`completionPct`, `classifyPerformance`)
-  2. Insert `session_logs` row with `actual_sets` JSONB (weights stored in grams)
-  3. Update session status to `completed`
-  4. Run `suggestProgramAdjustments()` locally (last 6 logs for the lift)
-  5. Write `performance_metrics` row if suggestions were generated
+**`apps/parakeet/src/modules/session/application/session.service.ts` (completion helper):**
+- [x] `completeSession(sessionId: string, userId: string, input: CompleteSessionInput): Promise<void>` — current batch behaviour; kept intact during dual-write rollout.
+- [ ] Post-rollout changes:
+  1. Compute completion stats from `set_logs` (not from local `actualSets`).
+  2. Write `session_logs` summary row with `session_rpe`, `completed_at`, `completion_pct`, `performance_vs_plan`, `cycle_phase`. **Do NOT** write `actual_sets` / `auxiliary_sets` (derived from `set_logs`).
+  3. Update session status `in_progress → completed` (guard `.eq('status', 'in_progress')`).
+  4. Run `suggestProgramAdjustments()` locally (last 6 logs for the lift).
+  5. Write `performance_metrics` row if suggestions were generated.
+  6. Fire achievement detection.
+
+**Legacy batch behaviour (during dual-write window only):**
+- [x] Insert `session_logs` row with `actual_sets` JSONB (weights stored in grams).
+- [x] Writes stripped once backfill verified and `session_logs.actual_sets` column dropped.
 
 **`CompleteSessionInput` type:**
 ```typescript
@@ -67,6 +77,8 @@ Implementation notes:
 
 ## Dependencies
 
-- [sessions-002-session-lifecycle-api.md](./sessions-002-session-lifecycle-api.md)
+- [spec-set-persistence.md](./spec-set-persistence.md) — source of truth for set data post-rollout.
+- [spec-auto-finalize.md](./spec-auto-finalize.md) — fallback finalisation when End is not tapped.
+- [spec-lifecycle.md](./spec-lifecycle.md) — status transitions.
 - [engine-005-performance-adjuster.md](../core-engine/spec-performance-adjuster.md)
 - [infra-003-supabase-setup.md](../infra/spec-supabase.md)

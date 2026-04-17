@@ -22,6 +22,10 @@ All exercises already existed in the catalog (Row Machine, Ski Erg, Run - Treadm
 
 Video view angle rework: replaced binary side/front camera angle with continuous sagittal confidence (0–1). Joint-angle rep detection (viewpoint-invariant), always-compute metrics with confidence weighting, removed CameraAnglePicker. See [spec](features/video-analysis/spec-view-angle.md) and [design doc](features/video-analysis/design-form-analysis.md).
 
+## 16
+
+**Set durability — prevent data loss when End is not tapped.** Real incident 2026-04-15: user logged a full bench session, forgot to tap End, sets vanished when reconciliation flipped the session to `skipped`. Root cause: sets only persist to server in a batch on End. Plan: per-set append-only `set_logs` table, status trigger on first set, auto-finalise stale `in_progress` sessions with any set rows, local-store clobber guard, client-side recovery UX. See [design doc](features/session/design-durability.md), [spec-set-persistence](features/session/spec-set-persistence.md), [spec-auto-finalize](features/session/spec-auto-finalize.md). Updated: [spec-completion](features/session/spec-completion.md), [spec-lifecycle](features/session/spec-lifecycle.md), [spec-offline](features/session/spec-offline.md).
+
 ## 9
 
 4-day programs with overhead press as a first-class primary lift. See [design doc](features/ohp/design.md) and [feature index](features/ohp/index.md). ~30 files, 8 specs.
