@@ -11,6 +11,7 @@ AI-powered form analysis with set-level video linking and calibration.
 - [design-form-analysis.md](./design-form-analysis.md) — Form analysis pipeline design
 - [design-set-linking.md](./design-set-linking.md) — Set-level video linking design
 - [design-future.md](./design-future.md) — Future video feature roadmap
+- [design-local-only-storage.md](./design-local-only-storage.md) — Drop raw-video uploads; cloud keeps only analysis results (proposed)
 
 ## Specs
 | Spec | Status | Concern |

@@ -32,14 +32,25 @@ export async function uploadVideoToStorage({
 
     const storagePath = `${user.id}/${videoId}.mp4`;
 
-    // File implements Blob in expo-file-system — pass directly to Supabase.
-    // Normalize defensively in case localUri came from a DB row predating the
-    // source-side normalization fix.
+    // expo-file-system's File class declares `implements Blob` but its JS
+    // shim doesn't actually expose Blob body/size, so passing it to Supabase
+    // Storage uploads 0 bytes. Read to ArrayBuffer first and upload the bytes.
     const file = new File(normalizeVideoUri(localUri));
+    if (!file.exists) {
+      captureException(new Error(`Local video file missing: ${localUri}`));
+      return null;
+    }
+    const bytes = await file.arrayBuffer();
+    if (bytes.byteLength === 0) {
+      captureException(
+        new Error(`Local video file is empty (0 bytes): ${localUri}`)
+      );
+      return null;
+    }
 
     const { error: uploadError } = await typedSupabase.storage
       .from(BUCKET)
-      .upload(storagePath, file, {
+      .upload(storagePath, bytes, {
         contentType: 'video/mp4',
         upsert: true,
       });

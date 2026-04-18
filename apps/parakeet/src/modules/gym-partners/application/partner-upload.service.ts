@@ -23,12 +23,25 @@ export async function uploadPartnerVideo({
 }) {
   try {
     const storagePath = `${lifterUserId}/${videoId}.mp4`;
-    // Normalize defensively in case localUri is a bare path from old data.
+    // expo-file-system's File declares `implements Blob` but the JS shim
+    // doesn't expose Blob body/size — passing it directly uploads 0 bytes.
+    // Read to ArrayBuffer first.
     const file = new File(normalizeVideoUri(localUri));
+    if (!file.exists) {
+      captureException(new Error(`Local video file missing: ${localUri}`));
+      return null;
+    }
+    const bytes = await file.arrayBuffer();
+    if (bytes.byteLength === 0) {
+      captureException(
+        new Error(`Local video file is empty (0 bytes): ${localUri}`)
+      );
+      return null;
+    }
 
     const { error: uploadError } = await typedSupabase.storage
       .from(BUCKET)
-      .upload(storagePath, file, {
+      .upload(storagePath, bytes, {
         contentType: 'video/mp4',
         upsert: true,
       });

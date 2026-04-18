@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
 import type { ActualSet, PlannedSet } from '@parakeet/shared-types';
@@ -18,10 +19,12 @@ export function MainLiftResultsTable({
   mainSets,
   plannedSets,
   colors,
+  renderSetAccessory,
 }: {
   mainSets: ActualSet[];
   plannedSets: PlannedSet[];
   colors: ColorScheme;
+  renderSetAccessory?: (set: ActualSet) => ReactNode;
 }) {
   if (mainSets.length === 0) return null;
 
@@ -51,6 +54,7 @@ export function MainLiftResultsTable({
             </>
           )}
           <Text style={[styles.tableCell, styles.tableCellRpe]}>RPE</Text>
+          {renderSetAccessory ? <View style={styles.tableCellAccessory} /> : null}
         </View>
         {mainSets.map((set, i) => {
           const planned = hasPlan
@@ -96,6 +100,11 @@ export function MainLiftResultsTable({
               <Text style={[styles.tableCell, styles.tableCellRpe]}>
                 {set.rpe_actual != null ? set.rpe_actual : '—'}
               </Text>
+              {renderSetAccessory ? (
+                <View style={styles.tableCellAccessory}>
+                  {renderSetAccessory(set)}
+                </View>
+              ) : null}
             </View>
           );
         })}
@@ -148,6 +157,11 @@ function buildStyles(colors: ColorScheme) {
       width: 48,
       textAlign: 'right',
       color: colors.textSecondary,
+    },
+    tableCellAccessory: {
+      width: 32,
+      alignItems: 'flex-end',
+      justifyContent: 'center',
     },
   });
 }

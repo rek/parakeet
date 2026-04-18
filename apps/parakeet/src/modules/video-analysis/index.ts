@@ -49,8 +49,8 @@ export {
 } from './lib/personal-baseline';
 
 // --- UI components ---
-export { VideoEntryButton } from './ui/VideoEntryButton';
 export { SetVideoIcon } from './ui/SetVideoIcon';
+export { ShareVideoButton } from './ui/ShareVideoButton';
 export { RepMetricsCard } from './ui/RepMetricsCard';
 export { BarPathOverlay } from './ui/BarPathOverlay';
 export { FormCoachingCard } from './ui/FormCoachingCard';

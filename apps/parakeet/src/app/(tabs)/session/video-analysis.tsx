@@ -21,6 +21,7 @@ import {
   ReadinessCard,
   RecordVideoSheet,
   RepMetricsCard,
+  ShareVideoButton,
   useFormCoaching,
   usePreviousVideos,
   useSessionVideos,
@@ -220,13 +221,16 @@ export default function VideoAnalysisScreen() {
             </TouchableOpacity>
           </>
         ) : (
-          <VideoPlayerCard
-            localUri={result.localUri}
-            durationSec={result.durationSec}
-            onReplace={pickAndAnalyze}
-            isProcessing={isProcessing}
-            colors={colors}
-          />
+          <>
+            <VideoPlayerCard
+              localUri={result.localUri}
+              durationSec={result.durationSec}
+              onReplace={pickAndAnalyze}
+              isProcessing={isProcessing}
+              colors={colors}
+            />
+            <ShareVideoButton localUri={result.localUri} colors={colors} />
+          </>
         )}
 
         {/* Processing progress */}
