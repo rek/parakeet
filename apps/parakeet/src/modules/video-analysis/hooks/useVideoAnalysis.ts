@@ -4,7 +4,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { captureException } from '@platform/utils/captureException';
 import { Directory, File, Paths } from 'expo-file-system';
 import * as ImagePicker from 'expo-image-picker';
-import { Video } from 'react-native-compressor';
+import { getVideoMetaData, Video } from 'react-native-compressor';
 
 import {
   analyzeVideoFrames,
@@ -60,12 +60,28 @@ export function useVideoAnalysis({
   const processVideo = useCallback(
     async ({
       videoUri,
-      durationSec,
+      durationSec: hintedDurationSec,
     }: {
       videoUri: string;
       durationSec: number;
     }) => {
       setProgress(0.05);
+
+      // Probe the actual file duration via native metadata. ImagePicker reports
+      // an unreliable duration on some Android devices (observed: a 12.76s
+      // deadlift came back as 4s), and the in-app recorder passes a hard-coded
+      // 30s. A wrong duration causes extractFramesFromVideo to stop early and
+      // miss entire reps — this is how a real set can land with zero reps
+      // detected. Fall back to the hinted value if the probe fails.
+      let durationSec = hintedDurationSec;
+      try {
+        const meta = await getVideoMetaData(videoUri);
+        if (meta.duration > 0) {
+          durationSec = meta.duration;
+        }
+      } catch (err) {
+        captureException(err);
+      }
 
       // 1. Extract pose frames from uncompressed source (better quality for CV)
       let analysis = null;

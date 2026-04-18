@@ -116,9 +116,15 @@ describe.each(manifest.videos)('video: $id', (video) => {
   it('produces a valid analysis result', () => {
     const result = getCachedAnalysis(video.id, frames, fps, video.lift);
 
-    const { min, max } = video.expected.rep_count;
-    expect(result.reps.length).toBeGreaterThanOrEqual(min);
-    expect(result.reps.length).toBeLessThanOrEqual(max);
+    // Uncalibrated videos are bug repros / work-in-progress — we want the
+    // pipeline to run end-to-end without asserting the rep count matches.
+    // The regression suite (below) still enforces exact counts for calibrated
+    // videos.
+    if (video.calibrated) {
+      const { min, max } = video.expected.rep_count;
+      expect(result.reps.length).toBeGreaterThanOrEqual(min);
+      expect(result.reps.length).toBeLessThanOrEqual(max);
+    }
     expect(result.analysisVersion).toBe(4);
   });
 
