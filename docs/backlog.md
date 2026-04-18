@@ -36,6 +36,10 @@ See [design doc](features/session/design-durability.md), [spec-set-persistence](
 
 4-day programs with overhead press as a first-class primary lift. See [design doc](features/ohp/design.md) and [feature index](features/ohp/index.md). ~30 files, 8 specs.
 
+## 18
+
+**Deadlift rep detector overcounts.** Calibration fixture `dl-2-reps-side` (real prod recording, 12.76s, 2 reps, side-view) feeds through the TS pipeline and reports **4 reps** — overcounting by 2×. Uncalibrated in manifest; basic calibration test allows it to pass end-to-end, but no regression enforcement yet. Next step: inspect `detectReps` behaviour on this landmark set (likely splitting each rep's setup/concentric into separate reps, or spurious crossings of the rep-threshold during lockout). Once fixed, mark `calibrated: true` with `rep_count = 2` and re-run `npx tsx scripts/calibrate-videos.ts --video dl-2-reps-side --update-manifest --mark-calibrated`.
+
 ## 17
 
 **Local-only video storage — drop Supabase Storage uploads.** Raw `.mp4` bytes do not need to live in the cloud; only analysis results (metrics, coaching, landmarks) do. Triggered by a 0-byte upload bug on 2026-04-17 (expo-file-system's `File` class does not correctly implement `Blob`, so `supabase.storage.upload(path, file, …)` wrote empty objects silently). Patched in-place, but the incident exposed that the upload path is fragile and low-value. Gym-partner flow is the one open question — likely resolved by sending only partner-computed analysis, not video bytes. See [design doc](features/video-analysis/design-local-only-storage.md).
