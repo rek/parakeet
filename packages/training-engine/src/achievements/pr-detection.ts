@@ -160,8 +160,10 @@ export interface StreakResult {
 }
 
 /**
- * A week is "clean" when it has scheduled sessions and zero unaccounted misses.
- * Weeks with no scheduled sessions are skipped — they neither break nor extend.
+ * A week is "clean" only when every scheduled session was completed — no
+ * partial weeks, no disruption-excused skips, no unaccounted misses. Weeks
+ * with no scheduled sessions are skipped entirely (neither break nor extend);
+ * in-progress weeks must be excluded upstream by the caller.
  * Walk backwards from the most recent entry to compute currentStreak.
  */
 export function computeStreak(weekHistory: WeekStatus[]): StreakResult {
@@ -170,7 +172,10 @@ export function computeStreak(weekHistory: WeekStatus[]): StreakResult {
   }
 
   const isClean = (w: WeekStatus) =>
-    w.scheduled > 0 && w.unaccountedMisses === 0;
+    w.scheduled > 0 &&
+    w.completed === w.scheduled &&
+    w.skippedWithDisruption === 0 &&
+    w.unaccountedMisses === 0;
   const hasScheduled = (w: WeekStatus) => w.scheduled > 0;
 
   // Walk backwards to find currentStreak
@@ -208,7 +213,10 @@ export function detectStreakBreakAndRebuild(
   weekHistory: WeekStatus[]
 ): boolean {
   const isClean = (w: WeekStatus) =>
-    w.scheduled > 0 && w.unaccountedMisses === 0;
+    w.scheduled > 0 &&
+    w.completed === w.scheduled &&
+    w.skippedWithDisruption === 0 &&
+    w.unaccountedMisses === 0;
   const hasScheduled = (w: WeekStatus) => w.scheduled > 0;
 
   let run = 0;

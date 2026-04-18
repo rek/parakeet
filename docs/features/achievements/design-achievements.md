@@ -37,18 +37,21 @@ A badge is awarded each time the user completes a full training cycle (activates
 
 ### Session Streak Counter
 
-The streak counter tracks **consecutive weeks with no missed sessions** — specifically, no sessions that were unaccounted for (every session either completed or logged as a disruption).
+The streak counter tracks **consecutive program weeks in which every scheduled session was completed**. It's a strict measure of adherence to the plan, not a leniency counter.
 
 **Streak rules:**
 
-- A week counts as "clean" if all scheduled sessions were completed, made up within the allowed window, or logged as a disruption
-- A pure miss (session passed with no log and no disruption report) breaks the streak
-- The streak resets to 0 on a clean miss, not a disruption miss — logging a disruption shows accountability
-- Current streak and longest-ever streak are both shown
+- A week counts as "clean" only if `completed === scheduled` — every scheduled session in that week was completed. Partial weeks do not count.
+- A disruption-logged skip **breaks** the streak. Disruption reporting preserves honest analytics but does not preserve the streak; the streak rewards execution of the plan.
+- A pure miss (no log, no disruption) also breaks the streak.
+- The **current in-progress week is frozen** — it neither extends nor breaks the streak until its Sunday end has passed. The pill updates only when a week fully closes out clean.
+- Imported historical sessions (`intensity_type = 'import'`, e.g. Strong CSV imports) are **excluded** from streak input — the streak reflects Parakeet-planned training only.
+- Weeks with zero scheduled sessions (deload gap, pre-program dates) are skipped — they neither extend nor break.
+- Current streak and longest-ever streak are both shown.
 
 **Display:**
 
-- Streak counter visible on the Today tab (e.g., "🔥 7 weeks clean")
+- Streak counter visible on the Today tab (e.g., "🔥 7 wk" — 7 consecutive fully-completed weeks)
 - Longest streak shown on the Profile tab
 
 ### Performance Stars

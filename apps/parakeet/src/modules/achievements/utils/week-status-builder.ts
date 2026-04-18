@@ -82,7 +82,7 @@ export function buildWeekStatuses(
       }
     }
 
-    if (scheduled > 0) {
+    if (scheduled > 0 && weekIsComplete) {
       weekStatuses.push({
         weekStartDate,
         scheduled,

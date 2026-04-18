@@ -326,14 +326,25 @@ describe('computeStreak', () => {
     expect(result.longestStreak).toBe(2);
   });
 
-  it('disruption-logged miss does not break streak', () => {
+  it('disruption-logged miss breaks streak (strict rule)', () => {
     const weeks: WeekStatus[] = [
-      makeWeek('2026-01-05', 4, 3, 1, 0), // 1 disruption-skip, unaccountedMisses=0 → clean
+      makeWeek('2026-01-05', 4, 3, 1, 0), // disruption-skip → not fully completed
       makeWeek('2026-01-12', 4, 4, 0, 0),
       makeWeek('2026-01-19', 4, 4, 0, 0),
     ];
     const result = computeStreak(weeks);
-    expect(result.currentStreak).toBe(3);
+    expect(result.currentStreak).toBe(2);
+    expect(result.longestStreak).toBe(2);
+  });
+
+  it('partial-completion week (completed<scheduled, no miss) breaks streak', () => {
+    const weeks: WeekStatus[] = [
+      makeWeek('2026-01-05', 3, 3, 0, 0), // clean
+      makeWeek('2026-01-12', 3, 2, 0, 0), // stale 'planned' leftover → not clean
+      makeWeek('2026-01-19', 3, 3, 0, 0), // clean
+    ];
+    const result = computeStreak(weeks);
+    expect(result.currentStreak).toBe(1);
   });
 
   it('no-show (no log, no disruption) breaks streak', () => {

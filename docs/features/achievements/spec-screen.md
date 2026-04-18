@@ -22,7 +22,7 @@ Two surfaces: (1) session completion stars shown immediately after each workout,
     - `rep_at_weight` → "New Squat Rep PR — 6 reps @ 140 kg"
   - Animation: slide up with fade-in, staggered 200ms between cards
 - If no PRs: no star section (no "no records" message)
-- Streak update line below stars: "Week 7 clean ✓" or if streak reset: "Streak reset — log disruptions to protect your streak" (amber, only shown on reset)
+- Streak update line below stars: "Week 7 clean ✓" or if streak reset: "Streak reset — missed a session this week" (amber, only shown on reset). Note: the streak requires **every** scheduled session in a week to be completed; disruption-logged skips still break the streak under the strict rule.
 - Cycle badge granted line: shown only when `checkCycleCompletion()` returns `qualifiesForBadge: true` for the now-completed cycle
 
 **`apps/parakeet/src/modules/achievements/application/achievement.service.ts`:**
@@ -60,7 +60,7 @@ Layout:
 ```
 
 - Cycle badges: list, each shows cycle number, duration, primary stat. Tapping opens the cycle review for that program.
-- Streak card: `currentStreak` (large) + `longestStreak` (small). Streak shown on Today tab as a compact pill: "🔥 7 wk" — tapping navigates to Profile.
+- Streak card: `currentStreak` (large) + `longestStreak` (small). Streak shown on Today tab as a compact pill: "🔥 7 wk" — tapping navigates to Profile. A "week" counts only when every scheduled session that week was completed; the current in-progress week is frozen (doesn't update the pill) until its Sunday end. Imported CSV history does not contribute.
 - WILKS score: computed from `computeWilks2020()` (engine-013), displayed as a rounded integer. Tapping opens WILKS detail page.
 
 **WILKS Detail Page — `apps/parakeet/app/profile/wilks.tsx`:**

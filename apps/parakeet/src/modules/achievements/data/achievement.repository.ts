@@ -40,6 +40,7 @@ export async function fetchSessionsForStreak(userId: string) {
     .from('sessions')
     .select('id, planned_date, status')
     .eq('user_id', userId)
+    .neq('intensity_type', 'import')
     .not('planned_date', 'is', null)
     .order('planned_date', { ascending: true });
 

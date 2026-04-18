@@ -61,7 +61,7 @@ interface PRCheckInput {
 
 ### Streak Tracking
 
-**File: `packages/training-engine/src/achievements/streak-calculator.ts`**
+**File: `packages/training-engine/src/achievements/pr-detection.ts`**
 
 ```typescript
 interface WeekStatus {
@@ -73,25 +73,30 @@ interface WeekStatus {
 }
 
 interface StreakResult {
-  currentStreak: number       // consecutive clean weeks
+  currentStreak: number       // consecutive fully-completed program weeks
   longestStreak: number
   lastCleanWeekDate: string
 }
 ```
 
 - [x] `computeStreak(weekHistory: WeekStatus[]): StreakResult`
-  - A week is **clean** if `unaccountedMisses === 0` AND `scheduled > 0`
-  - Walk backwards through `weekHistory` from the most recent complete week
-  - `currentStreak` = count of consecutive clean weeks ending at the most recent complete week
-  - `longestStreak` = max run of consecutive clean weeks across all history
-  - A week with no scheduled sessions (e.g., deload, program gap) is skipped in the streak calculation (neither breaks nor extends)
+  - A week is **clean** iff all of: `scheduled > 0` AND `completed === scheduled` AND `skippedWithDisruption === 0` AND `unaccountedMisses === 0`. The streak rewards executing the plan — any miss (disruption or not) breaks it.
+  - The **current in-progress week must be filtered out upstream** by the caller (`buildWeekStatuses`). `computeStreak` assumes every entry in `weekHistory` is a complete past week.
+  - **Imported sessions** (`intensity_type = 'import'`) must be filtered out upstream (`fetchSessionsForStreak`) so they never contribute to week history.
+  - Walk backwards through `weekHistory` from the most recent complete week.
+  - `currentStreak` = count of consecutive clean weeks ending at the most recent complete week.
+  - `longestStreak` = max run of consecutive clean weeks across all history.
+  - A week with no scheduled sessions (deload, program gap) is skipped (neither breaks nor extends).
 
 **Unit tests:**
 - [x] 5 consecutive clean weeks → streak = 5
 - [x] Miss in week 3, then 2 clean → streak = 2, longest = depends on history before week 3
-- [x] Disruption-logged miss → does not break streak
+- [x] Disruption-logged miss → **breaks** streak (strict rule)
+- [x] Partial-completion week (completed < scheduled) → breaks streak
 - [x] No-show (no log, no disruption) → breaks streak
 - [x] Empty history → streak = 0
+- [x] Current in-progress week is filtered by `buildWeekStatuses` (never emitted)
+- [x] Imported sessions filtered by `fetchSessionsForStreak`
 
 ---
 

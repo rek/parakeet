@@ -89,6 +89,7 @@ function makeReport(overrides: Partial<CycleReport> = {}): CycleReport {
         createdAt: '2026-01-15T00:00:00Z',
       },
     ],
+    bodyReviewSummary: null,
     ...overrides,
   };
 }
