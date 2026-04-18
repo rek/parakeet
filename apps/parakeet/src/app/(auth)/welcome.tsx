@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 
 import { signInWithGoogleToken, signInWithMagicLink } from '@modules/auth';
+import { useFeatureEnabled } from '@modules/feature-flags';
 import { captureException } from '@platform/utils/captureException';
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
 import * as Linking from 'expo-linking';
@@ -120,6 +121,7 @@ function buildStyles(colors: ColorScheme) {
 export default function WelcomeScreen() {
   const { colors } = useTheme();
   const styles = useMemo(() => buildStyles(colors), [colors]);
+  const magicLinkEnabled = useFeatureEnabled('magicLink');
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -190,34 +192,38 @@ export default function WelcomeScreen() {
           <Text style={styles.googleButtonText}>Continue with Google</Text>
         </TouchableOpacity>
 
-        <View style={styles.divider}>
-          <View style={styles.dividerLine} />
-          <Text style={styles.dividerText}>or</Text>
-          <View style={styles.dividerLine} />
-        </View>
+        {magicLinkEnabled && (
+          <>
+            <View style={styles.divider}>
+              <View style={styles.dividerLine} />
+              <Text style={styles.dividerText}>or</Text>
+              <View style={styles.dividerLine} />
+            </View>
 
-        <TextInput
-          style={styles.input}
-          placeholder="Email address"
-          placeholderTextColor={colors.textTertiary}
-          value={email}
-          onChangeText={setEmail}
-          keyboardType="email-address"
-          autoCapitalize="none"
-          autoComplete="email"
-          editable={!loading}
-        />
-        <TouchableOpacity
-          style={[
-            styles.emailButton,
-            (!email.trim() || loading) && styles.buttonDisabled,
-          ]}
-          onPress={handleEmailOtp}
-          disabled={loading || !email.trim()}
-          activeOpacity={0.85}
-        >
-          <Text style={styles.emailButtonText}>Send magic link</Text>
-        </TouchableOpacity>
+            <TextInput
+              style={styles.input}
+              placeholder="Email address"
+              placeholderTextColor={colors.textTertiary}
+              value={email}
+              onChangeText={setEmail}
+              keyboardType="email-address"
+              autoCapitalize="none"
+              autoComplete="email"
+              editable={!loading}
+            />
+            <TouchableOpacity
+              style={[
+                styles.emailButton,
+                (!email.trim() || loading) && styles.buttonDisabled,
+              ]}
+              onPress={handleEmailOtp}
+              disabled={loading || !email.trim()}
+              activeOpacity={0.85}
+            >
+              <Text style={styles.emailButtonText}>Send magic link</Text>
+            </TouchableOpacity>
+          </>
+        )}
       </View>
 
       {loading && (

@@ -159,6 +159,13 @@ export const FEATURE_REGISTRY = [
     category: 'advanced' as const,
     defaultEnabled: false,
   },
+  {
+    id: 'magicLink',
+    label: 'Email Magic Link Sign-In',
+    description: 'Sign in with an email magic link (Google sign-in is preferred)',
+    category: 'advanced' as const,
+    defaultEnabled: false,
+  },
 ] as const;
 
 export type FeatureId = (typeof FEATURE_REGISTRY)[number]['id'];
