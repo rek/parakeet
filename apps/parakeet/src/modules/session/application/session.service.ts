@@ -19,6 +19,7 @@ import type {
   SessionRef,
 } from '@parakeet/training-engine';
 import { captureException } from '@platform/utils/captureException';
+import * as Sentry from '@sentry/react-native';
 import { DEFAULT_RPE_TARGET } from '@shared/constants/training';
 import type {
   CompletedSessionListItem,
@@ -26,10 +27,12 @@ import type {
   SessionCompletionContext,
 } from '@shared/types/domain';
 
+import { flushUnsyncedSets } from './set-persistence.service';
 import {
   countSetLogsForSession,
   deleteSession,
   deleteSetLogsForSession,
+  reviveSkippedSessionToInProgress,
   fetchCompletedSessions,
   fetchCurrentWeekLogs,
   fetchEndOfWeekContext,
@@ -251,6 +254,16 @@ async function autoFinaliseSession(
   const logs = await fetchSetLogs(sessionId);
   if (logs.length === 0) return;
 
+  Sentry.addBreadcrumb({
+    category: 'session.durability',
+    message: 'auto-finalise stale in_progress session',
+    level: 'info',
+    data: {
+      sessionId,
+      setCount: logs.length,
+    },
+  });
+
   const sessionMeta = await fetchSessionById(sessionId);
   const plannedCount = Array.isArray(sessionMeta?.planned_sets)
     ? sessionMeta.planned_sets.length
@@ -323,6 +336,26 @@ export async function skipSession(
   await updateSessionToSkipped(sessionId, reason);
 }
 
+// Recover sets from a locally-held session whose server-side record has
+// already been skipped or missed. Flushes unsynced set rows into set_logs,
+// flips the session back to in_progress, then auto-finalises so it shows up
+// as a normal completed session in history.
+//
+// Called by useSessionRecovery when the user confirms "Save" on the recovery
+// alert. Safe to call multiple times; idempotent via set_logs upserts and a
+// no-op when the server-side session is no longer in skipped/missed.
+export async function recoverSkippedSessionFromLocal(
+  sessionId: string,
+  userId: string
+): Promise<void> {
+  await flushUnsyncedSets(userId);
+
+  const revived = await reviveSkippedSessionToInProgress(sessionId);
+  if (!revived) return;
+
+  await autoFinaliseSession(sessionId, userId);
+}
+
 // Abandon an in-progress session, resetting it back to planned
 export async function abandonSession(sessionId: string): Promise<void> {
   const session = await fetchSessionById(sessionId);
@@ -356,9 +389,9 @@ export async function completeSession(
   }
 
   const normalizedSets = actualSets.map((set) => validateSet(set, 'set'));
-  const normalizedAuxiliarySets = auxiliarySets?.map((set) =>
-    validateSet(set, 'auxiliary set')
-  );
+  // Validate aux set shape too even though we no longer materialise the array —
+  // catches regressions where callers drift from the ActualSet contract.
+  auxiliarySets?.forEach((set) => validateSet(set, 'auxiliary set'));
 
   const session = await getSession(sessionId);
   const plannedCountRaw =

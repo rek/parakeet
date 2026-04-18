@@ -3,11 +3,12 @@ import 'expo/fetch';
 import { useEffect } from 'react';
 import { View } from 'react-native';
 
-import { AuthProvider, useAuthContext } from '@modules/auth';
+import { AuthProvider, useAuth, useAuthContext } from '@modules/auth';
 import {
   useMissedSessionReconciliation,
   useRestNotificationTapHandler,
   useRestNotifications,
+  useSessionRecovery,
   useSyncQueue,
 } from '@modules/session';
 import { OtaUpdatesProvider, UpdateReadyBanner } from '@modules/updates';
@@ -48,9 +49,11 @@ SplashScreen.preventAutoHideAsync();
 
 function RootLayoutNav() {
   const { loading } = useAuthContext();
+  const { user } = useAuth();
   const insets = useSafeAreaInsets();
   useSyncQueue();
   useMissedSessionReconciliation();
+  useSessionRecovery(user?.id);
   useRestNotifications();
   useRestNotificationTapHandler();
   useEffect(() => {

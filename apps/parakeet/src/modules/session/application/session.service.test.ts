@@ -42,6 +42,16 @@ vi.mock('@platform/utils/captureException', () => ({
   captureException: mockCaptureException,
 }));
 
+vi.mock('@sentry/react-native', () => ({
+  addBreadcrumb: vi.fn(),
+  captureException: vi.fn(),
+}));
+
+vi.mock('./set-persistence.service', () => ({
+  flushUnsyncedSets: vi.fn(),
+  persistSet: vi.fn(),
+}));
+
 vi.mock('@parakeet/training-engine', () => ({
   DEFAULT_TRAINING_DAYS: { 3: [1, 3, 5] },
   LIFTS: ['squat', 'bench', 'deadlift'],

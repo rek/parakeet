@@ -12,6 +12,7 @@ export * from './application/motivational-message.service';
 export * from './hooks/useTodaySession';
 export * from './hooks/useInProgressSession';
 export * from './hooks/useMissedSessionReconciliation';
+export { useSessionRecovery } from './hooks/useSessionRecovery';
 export * from './hooks/useRestNotifications';
 export { useRestNotificationTapHandler } from './hooks/useRestNotificationTapHandler';
 export * from './hooks/useSyncQueue';

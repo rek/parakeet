@@ -734,6 +734,24 @@ export async function updateSessionToPlanned(sessionId: string): Promise<void> {
   if (error) throw error;
 }
 
+// Revives a previously-skipped session by flipping it back to in_progress.
+// Used by useSessionRecovery when local state holds unsynced completed sets
+// for a session that the server has already marked as skipped or missed.
+// Returns true if the update hit a row (state was actually skipped), false
+// if the session was in a different state already.
+export async function reviveSkippedSessionToInProgress(
+  sessionId: string
+): Promise<boolean> {
+  const { data, error } = await typedSupabase
+    .from('sessions')
+    .update({ status: 'in_progress' })
+    .eq('id', sessionId)
+    .in('status', ['skipped', 'missed'])
+    .select('id');
+  if (error) throw error;
+  return (data?.length ?? 0) > 0;
+}
+
 export async function deleteSession(sessionId: string): Promise<void> {
   const { error } = await typedSupabase
     .from('sessions')
