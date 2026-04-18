@@ -505,8 +505,6 @@ export async function deleteSetLogsForSession(
 export async function insertSessionLog(input: {
   sessionId: string;
   userId: string;
-  actualSets: ActualSet[];
-  auxiliarySets?: ActualSet[];
   sessionRpe: number | undefined;
   completionPct: number;
   performanceVsPlan: 'over' | 'at' | 'under' | 'incomplete';
@@ -514,17 +512,17 @@ export async function insertSessionLog(input: {
   completedAt?: Date;
   autoFinalised?: boolean;
 }): Promise<string> {
-  // `auto_finalised` left undefined (not false) when not explicitly set so the
-  // Supabase client omits the field from the JSON payload, making this insert
-  // compatible with environments that haven't yet run
-  // 20260417000000_create_set_logs.sql. The DB default handles the column.
+  // session_logs no longer carries actual_sets / auxiliary_sets — set_logs is
+  // authoritative. The columns are dropped in a follow-up migration.
+  // `auto_finalised` left undefined (not false) when not set so the Supabase
+  // client omits the field from the payload.
   const { data, error } = await typedSupabase
     .from('session_logs')
     .insert({
       session_id: input.sessionId,
       user_id: input.userId,
-      actual_sets: input.actualSets,
-      auxiliary_sets: input.auxiliarySets ?? null,
+      actual_sets: [],
+      auxiliary_sets: null,
       session_rpe: input.sessionRpe ?? null,
       completion_pct: input.completionPct,
       performance_vs_plan: input.performanceVsPlan,

@@ -3,7 +3,7 @@ import {
   fetchActiveProgramMode,
   type UnendingProgramRef,
 } from '@modules/program';
-import type { ActualSet, Lift } from '@parakeet/shared-types';
+import type { Lift } from '@parakeet/shared-types';
 import { LiftSchema } from '@parakeet/shared-types';
 import {
   DEFAULT_TRAINING_DAYS,
@@ -63,7 +63,6 @@ import {
   updateSessionToPlanned,
   updateSessionToSkipped,
 } from '../data/session.repository';
-import type { SetLogRow } from '../data/session.repository';
 import { validateSet } from '../utils/validateSet';
 
 export type {
@@ -258,8 +257,6 @@ async function autoFinaliseSession(
     : 0;
 
   const primary = logs.filter((l) => l.kind === 'primary');
-  const auxiliary = logs.filter((l) => l.kind === 'auxiliary');
-
   const completedCount = primary.length;
   const denom = plannedCount > 0 ? plannedCount : completedCount;
   const completionPct = denom > 0 ? (completedCount / denom) * 100 : 0;
@@ -281,8 +278,6 @@ async function autoFinaliseSession(
   await insertSessionLog({
     sessionId,
     userId,
-    actualSets: primary.map(setLogToActualSet),
-    auxiliarySets: auxiliary.map(setLogToActualSet),
     sessionRpe: undefined,
     completionPct,
     performanceVsPlan,
@@ -294,31 +289,6 @@ async function autoFinaliseSession(
 
   // Deliberately no performance adjuster, no achievement detection — End was
   // never tapped, signal is unreliable, don't award surprise PRs on auto-save.
-}
-
-function narrowExerciseType(
-  value: string | null
-): 'weighted' | 'bodyweight' | 'timed' | undefined {
-  return value === 'weighted' || value === 'bodyweight' || value === 'timed'
-    ? value
-    : undefined;
-}
-
-function setLogToActualSet(row: SetLogRow): ActualSet {
-  const base: ActualSet = {
-    set_number: row.set_number,
-    weight_grams: row.weight_grams,
-    reps_completed: row.reps_completed,
-  };
-  if (row.exercise) base.exercise = row.exercise;
-  const exType = narrowExerciseType(row.exercise_type);
-  if (exType) base.exercise_type = exType;
-  if (row.rpe_actual != null) base.rpe_actual = row.rpe_actual;
-  if (row.actual_rest_seconds != null)
-    base.actual_rest_seconds = row.actual_rest_seconds;
-  if (row.failed) base.failed = true;
-  if (row.notes) base.notes = row.notes;
-  return base;
 }
 
 // Create a standalone ad-hoc session (no program context) and return its ID.
@@ -405,18 +375,13 @@ export async function completeSession(
     completionPct
   );
 
-  const setsForLog = normalizedSets
-    .filter((s) => s.is_completed)
-    .map(({ is_completed: _isCompleted, ...set }) => set);
-  const auxiliarySetsForLog = normalizedAuxiliarySets
-    ?.filter((s) => s.is_completed)
-    .map(({ is_completed: _isCompleted, ...set }) => set);
+  // Per-set data is written directly to set_logs by useSetPersistence; this
+  // summary row only stores aggregate stats. The is_completed-filtered
+  // projection is no longer needed.
 
   const sessionLogId = await insertSessionLog({
     sessionId,
     userId,
-    actualSets: setsForLog,
-    auxiliarySets: auxiliarySetsForLog,
     sessionRpe,
     completionPct,
     performanceVsPlan,
