@@ -13,10 +13,6 @@
     "icon": "./assets/images/icon.png",
     "scheme": "parakeet",
     "userInterfaceStyle": "automatic",
-    "ios": {
-      "supportsTablet": true,
-      "bundleIdentifier": "com.adam.tombleson.parakeet"
-    },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
