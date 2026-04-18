@@ -32,13 +32,17 @@ Shipped: append-only `set_logs` with first-set trigger, per-set dual-write via `
 
 See [design doc](features/session/design-durability.md), [spec-set-persistence](features/session/spec-set-persistence.md), [spec-auto-finalize](features/session/spec-auto-finalize.md).
 
+## 19
+
+**Video playback overlay — bar path + skeleton on top of `<VideoView>`.** Today the bar path is a standalone SVG card next to the video; the skeleton is only drawn over the camera preview during recording. Lifters watching their replay should be able to toggle either overlay onto the playing video. Phase 1 ships bar path overlay (no schema changes, works on all existing analysed videos). Phase 2 promotes `debug_landmarks` to a production write and ships the skeleton overlay. Toggle chips above the video; per-overlay AsyncStorage persistence; correct positioning under `contentFit="contain"` letterboxing; lerped interpolation between sparse 4fps stored frames. See [design doc](features/video-analysis/design-playback-overlay.md) and [spec](features/video-analysis/spec-playback-overlay.md).
+
 ## 9
 
 4-day programs with overhead press as a first-class primary lift. See [design doc](features/ohp/design.md) and [feature index](features/ohp/index.md). ~30 files, 8 specs.
 
-## 18
+## ~~18~~ (Done — 18 Apr 2026)
 
-**Deadlift rep detector overcounts.** Calibration fixture `dl-2-reps-side` (real prod recording, 12.76s, 2 reps, side-view) feeds through the TS pipeline and reports **4 reps** — overcounting by 2×. Uncalibrated in manifest; basic calibration test allows it to pass end-to-end, but no regression enforcement yet. Next step: inspect `detectReps` behaviour on this landmark set (likely splitting each rep's setup/concentric into separate reps, or spurious crossings of the rep-threshold during lockout). Once fixed, mark `calibrated: true` with `rep_count = 2` and re-run `npx tsx scripts/calibrate-videos.ts --video dl-2-reps-side --update-manifest --mark-calibrated`.
+Deadlift rep detector replaced the peak-counting algorithm with a hip-angle state machine for deadlift only (squat/bench keep peak-based). Root cause of the overcount was that peak-counting on the inverted hip signal flagged both the concentric bottom AND the eccentric bottom as separate reps — effectively 2× counting. The new detector tracks FLOOR (hip < 143°) → LOCKOUT (hip > 162°) transitions with a spike filter (single-frame lockouts surrounded by floor are rejected as MediaPipe noise) and anchors `startFrame` at the first floor frame of the setup cluster so metrics get the full concentric window. `dl-2-reps-side` now detects 2 reps exactly; all 16 calibration fixtures pass. See `apps/parakeet/src/modules/video-analysis/lib/rep-detector.ts`.
 
 ## 17
 

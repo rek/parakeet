@@ -96,7 +96,7 @@
           "excessive_lean",
           "unstable_lockout"
         ],
-        "calibrated_at": "2026-04-05T15:39:18.838Z"
+        "calibrated_at": "2026-04-18T17:32:40.449Z"
       }
     },
     {
@@ -185,7 +185,7 @@
           "bar_drift",
           "unstable_lockout"
         ],
-        "calibrated_at": "2026-04-05T15:39:18.840Z"
+        "calibrated_at": "2026-04-18T17:32:40.450Z"
       }
     },
     {
@@ -275,7 +275,7 @@
           "excessive_lean",
           "unstable_lockout"
         ],
-        "calibrated_at": "2026-04-05T15:39:18.843Z"
+        "calibrated_at": "2026-04-18T17:32:40.452Z"
       }
     },
     {
@@ -365,7 +365,7 @@
           "excessive_lean",
           "unstable_lockout"
         ],
-        "calibrated_at": "2026-04-05T15:39:18.844Z"
+        "calibrated_at": "2026-04-18T17:32:40.453Z"
       }
     },
     {
@@ -457,7 +457,7 @@
           "excessive_lean",
           "unstable_lockout"
         ],
-        "calibrated_at": "2026-04-05T15:39:18.849Z"
+        "calibrated_at": "2026-04-18T17:32:40.456Z"
       }
     },
     {
@@ -497,14 +497,14 @@
             "max": 77.85
           },
           "barDriftCm": {
-            "mean": 19.04,
-            "min": 9.45,
-            "max": 28.63
+            "mean": 12.29,
+            "min": 9.05,
+            "max": 15.53
           },
           "romCm": {
-            "mean": 44.51,
-            "min": 32.24,
-            "max": 56.78
+            "mean": 42.82,
+            "min": 31.84,
+            "max": 53.8
           },
           "kneeAngleDeg": {
             "mean": 98.55,
@@ -512,39 +512,38 @@
             "max": 124.6
           },
           "hipAngleAtLockoutDeg": {
-            "mean": 165.61,
-            "min": 156.05,
-            "max": 175.17
+            "mean": 169.67,
+            "min": 163.24,
+            "max": 176.09
           },
           "meanConcentricVelocityCmS": {
-            "mean": 18.23,
-            "min": 8.06,
-            "max": 28.39
+            "mean": 26.42,
+            "min": 9.8,
+            "max": 43.04
           },
           "hipHingeCrossoverPct": {
-            "mean": 66.5,
-            "min": 33,
-            "max": 100
+            "mean": 57.5,
+            "min": 40,
+            "max": 75
           },
           "barToShinDistanceCm": {
-            "mean": 13,
-            "min": 7.1,
+            "mean": 12.65,
+            "min": 6.41,
             "max": 18.89
           },
           "lockoutStabilityCv": {
-            "mean": 2.26,
-            "min": 0.99,
-            "max": 3.52
+            "mean": 7.35,
+            "min": 5.64,
+            "max": 9.06
           }
         },
         "fault_types": [
           "back_rounding",
           "bar_away_from_shins",
           "bar_drift",
-          "early_hip_shoot",
-          "incomplete_lockout"
+          "unstable_lockout"
         ],
-        "calibrated_at": "2026-04-05T15:39:18.851Z"
+        "calibrated_at": "2026-04-18T17:32:40.458Z"
       }
     },
     {
@@ -575,12 +574,61 @@
         "fatigue_signatures": false
       },
       "actual": {
-        "rep_count": 0,
+        "rep_count": 1,
         "sagittal_confidence": 0.845,
         "analysis_version": 4,
-        "metric_summary": {},
-        "fault_types": [],
-        "calibrated_at": "2026-04-05T15:39:18.852Z"
+        "metric_summary": {
+          "forwardLeanDeg": {
+            "mean": 81.06,
+            "min": 81.06,
+            "max": 81.06
+          },
+          "barDriftCm": {
+            "mean": 9.18,
+            "min": 9.18,
+            "max": 9.18
+          },
+          "romCm": {
+            "mean": 42.34,
+            "min": 42.34,
+            "max": 42.34
+          },
+          "kneeAngleDeg": {
+            "mean": 105.65,
+            "min": 105.65,
+            "max": 105.65
+          },
+          "hipAngleAtLockoutDeg": {
+            "mean": 170.59,
+            "min": 170.59,
+            "max": 170.59
+          },
+          "meanConcentricVelocityCmS": {
+            "mean": 9.96,
+            "min": 9.96,
+            "max": 9.96
+          },
+          "hipHingeCrossoverPct": {
+            "mean": 43,
+            "min": 43,
+            "max": 43
+          },
+          "barToShinDistanceCm": {
+            "mean": 3.69,
+            "min": 3.69,
+            "max": 3.69
+          },
+          "lockoutStabilityCv": {
+            "mean": 19.69,
+            "min": 19.69,
+            "max": 19.69
+          }
+        },
+        "fault_types": [
+          "bar_drift",
+          "unstable_lockout"
+        ],
+        "calibrated_at": "2026-04-18T17:32:40.459Z"
       }
     },
     {
@@ -611,65 +659,62 @@
         "fatigue_signatures": true
       },
       "actual": {
-        "rep_count": 9,
+        "rep_count": 7,
         "sagittal_confidence": 0.935,
         "analysis_version": 4,
         "metric_summary": {
           "forwardLeanDeg": {
-            "mean": 65.58,
-            "min": 29.4,
-            "max": 78.41
+            "mean": 75.47,
+            "min": 65.58,
+            "max": 85.69
           },
           "barDriftCm": {
-            "mean": 18.33,
-            "min": 4.65,
-            "max": 42.59
+            "mean": 16.59,
+            "min": 5.84,
+            "max": 28.94
           },
           "romCm": {
-            "mean": 65.48,
-            "min": 49.21,
-            "max": 98.72
+            "mean": 58.88,
+            "min": 50.76,
+            "max": 68.22
           },
           "kneeAngleDeg": {
-            "mean": 78.76,
-            "min": 27.12,
-            "max": 155.62
+            "mean": 64.7,
+            "min": 39.84,
+            "max": 101.84
           },
           "hipAngleAtLockoutDeg": {
-            "mean": 136.73,
-            "min": 29.88,
-            "max": 174.61
+            "mean": 168.84,
+            "min": 161.8,
+            "max": 177.21
           },
           "meanConcentricVelocityCmS": {
-            "mean": 16.54,
-            "min": 1.67,
-            "max": 30.38
+            "mean": 21.01,
+            "min": 8.53,
+            "max": 48.27
           },
           "hipHingeCrossoverPct": {
-            "mean": 56.44,
-            "min": 33,
-            "max": 80
+            "mean": 63.57,
+            "min": 46,
+            "max": 75
           },
           "barToShinDistanceCm": {
-            "mean": -4.81,
-            "min": -13.49,
-            "max": 5.93
+            "mean": -4.8,
+            "min": -10.2,
+            "max": 1.95
           },
           "lockoutStabilityCv": {
-            "mean": 5.09,
-            "min": 0,
-            "max": 16.95
+            "mean": 14.21,
+            "min": 1.57,
+            "max": 41.04
           }
         },
         "fault_types": [
           "back_rounding",
-          "bar_away_from_shins",
           "bar_drift",
-          "early_hip_shoot",
-          "incomplete_lockout",
           "unstable_lockout"
         ],
-        "calibrated_at": "2026-04-05T15:39:18.856Z"
+        "calibrated_at": "2026-04-18T17:32:40.462Z"
       }
     },
     {
@@ -699,64 +744,63 @@
         "fatigue_signatures": true
       },
       "actual": {
-        "rep_count": 6,
+        "rep_count": 5,
         "sagittal_confidence": 0.875,
         "analysis_version": 4,
         "metric_summary": {
           "forwardLeanDeg": {
-            "mean": 49.17,
-            "min": 1.87,
+            "mean": 63.81,
+            "min": 51.33,
             "max": 70.69
           },
           "barDriftCm": {
-            "mean": 4.51,
-            "min": 1.38,
-            "max": 7.6
+            "mean": 4.73,
+            "min": 1.13,
+            "max": 6.97
           },
           "romCm": {
-            "mean": 42.5,
-            "min": 32.64,
-            "max": 55.48
+            "mean": 37.75,
+            "min": 35.37,
+            "max": 41.18
           },
           "kneeAngleDeg": {
-            "mean": 87.18,
-            "min": 57.8,
-            "max": 161.42
+            "mean": 77.44,
+            "min": 71.24,
+            "max": 84.21
           },
           "hipAngleAtLockoutDeg": {
-            "mean": 170.92,
-            "min": 162.11,
-            "max": 179.31
+            "mean": 175.72,
+            "min": 173.02,
+            "max": 177.6
           },
           "meanConcentricVelocityCmS": {
-            "mean": 30.18,
-            "min": 10.66,
-            "max": 55.48
+            "mean": 33.34,
+            "min": 27.26,
+            "max": 40.54
           },
           "hipHingeCrossoverPct": {
-            "mean": 63.17,
-            "min": 29,
-            "max": 100
+            "mean": 60.2,
+            "min": 25,
+            "max": 75
           },
           "barToShinDistanceCm": {
-            "mean": 6.16,
-            "min": -3.62,
-            "max": 14.51
+            "mean": 3.26,
+            "min": -3.58,
+            "max": 10.11
           },
           "lockoutStabilityCv": {
-            "mean": 17.86,
-            "min": 0.12,
-            "max": 59.86
+            "mean": 26.58,
+            "min": 19.45,
+            "max": 34.13
           }
         },
         "fault_types": [
           "back_rounding",
           "bar_away_from_shins",
-          "bar_drift",
           "early_hip_shoot",
           "unstable_lockout"
         ],
-        "calibrated_at": "2026-04-05T15:39:18.859Z"
+        "calibrated_at": "2026-04-18T17:32:40.463Z"
       }
     },
     {
@@ -792,56 +836,57 @@
         "analysis_version": 4,
         "metric_summary": {
           "forwardLeanDeg": {
-            "mean": 9.54,
-            "min": 0.55,
-            "max": 18.66
+            "mean": 12.75,
+            "min": 2.18,
+            "max": 22.81
           },
           "barDriftCm": {
-            "mean": 3.1,
-            "min": 1.27,
-            "max": 5.53
+            "mean": 1.51,
+            "min": 0.59,
+            "max": 3.08
           },
           "romCm": {
-            "mean": 34.75,
-            "min": 29.64,
-            "max": 43.8
+            "mean": 25.87,
+            "min": 23.62,
+            "max": 29.57
           },
           "kneeAngleDeg": {
-            "mean": 150.29,
-            "min": 145,
-            "max": 154.71
+            "mean": 148.41,
+            "min": 138.37,
+            "max": 155.43
           },
           "hipAngleAtLockoutDeg": {
-            "mean": 165.68,
-            "min": 159.89,
-            "max": 168.92
+            "mean": 163.97,
+            "min": 163.06,
+            "max": 165.54
           },
           "meanConcentricVelocityCmS": {
-            "mean": 19.99,
-            "min": 11,
-            "max": 29.2
+            "mean": 24.78,
+            "min": 10.5,
+            "max": 39.42
           },
           "hipHingeCrossoverPct": {
-            "mean": 66.67,
-            "min": 50,
-            "max": 75
+            "mean": 50,
+            "min": 33,
+            "max": 67
           },
           "barToShinDistanceCm": {
-            "mean": 0.51,
-            "min": -0.15,
-            "max": 1.7
+            "mean": 0.65,
+            "min": -0.04,
+            "max": 1.44
           },
           "lockoutStabilityCv": {
-            "mean": 0.6,
-            "min": 0,
-            "max": 1.59
+            "mean": 5.08,
+            "min": 3.62,
+            "max": 6.59
           }
         },
         "fault_types": [
           "back_rounding",
-          "incomplete_lockout"
+          "early_hip_shoot",
+          "unstable_lockout"
         ],
-        "calibrated_at": "2026-04-05T15:39:18.861Z"
+        "calibrated_at": "2026-04-18T17:32:40.464Z"
       }
     },
     {
@@ -874,55 +919,57 @@
         "analysis_version": 4,
         "metric_summary": {
           "forwardLeanDeg": {
-            "mean": 56.4,
-            "min": 35.38,
+            "mean": 24.36,
+            "min": 0.21,
             "max": 90
           },
           "barDriftCm": {
-            "mean": 2.96,
-            "min": 2.08,
-            "max": 4.06
+            "mean": 2.9,
+            "min": 1.54,
+            "max": 6.35
           },
           "romCm": {
-            "mean": 38.68,
-            "min": 27.34,
-            "max": 45.27
+            "mean": 31.23,
+            "min": 23.1,
+            "max": 35.61
           },
           "kneeAngleDeg": {
-            "mean": 151.65,
+            "mean": 159.66,
             "min": 145.86,
-            "max": 157.99
+            "max": 170.32
           },
           "hipAngleAtLockoutDeg": {
-            "mean": 169.99,
-            "min": 168.23,
-            "max": 170.83
+            "mean": 168.6,
+            "min": 166.51,
+            "max": 170.1
           },
           "meanConcentricVelocityCmS": {
-            "mean": 35.47,
-            "min": 32.79,
-            "max": 38.45
+            "mean": 42.66,
+            "min": 33.86,
+            "max": 47.48
           },
           "hipHingeCrossoverPct": {
-            "mean": 80.5,
-            "min": 67,
-            "max": 100
+            "mean": 50,
+            "min": 33,
+            "max": 67
           },
           "barToShinDistanceCm": {
-            "mean": 1,
-            "min": -0.06,
-            "max": 3.2
+            "mean": -3.43,
+            "min": -6.02,
+            "max": -0.92
           },
           "lockoutStabilityCv": {
-            "mean": 0.64,
-            "min": 0.4,
-            "max": 1.08
+            "mean": 5.24,
+            "min": 3.05,
+            "max": 7.82
           }
         },
         "fault_types": [
-          "back_rounding"
+          "back_rounding",
+          "early_hip_shoot",
+          "unstable_lockout"
         ],
-        "calibrated_at": "2026-04-05T15:39:18.862Z"
+        "calibrated_at": "2026-04-18T17:32:40.465Z"
       }
     },
     {
@@ -949,53 +996,53 @@
         "fatigue_signatures": true
       },
       "actual": {
-        "rep_count": 5,
+        "rep_count": 4,
         "sagittal_confidence": 0.494,
         "analysis_version": 4,
         "metric_summary": {
           "forwardLeanDeg": {
-            "mean": 27.07,
-            "min": 3.64,
-            "max": 90
+            "mean": 7.76,
+            "min": 6.82,
+            "max": 10.27
           },
           "barDriftCm": {
-            "mean": 3.67,
-            "min": 1.17,
-            "max": 12.72
+            "mean": 4.62,
+            "min": 0.88,
+            "max": 13.26
           },
           "romCm": {
-            "mean": 41.12,
-            "min": 39.48,
-            "max": 43.07
+            "mean": 40.11,
+            "min": 38.87,
+            "max": 41.47
           },
           "kneeAngleDeg": {
-            "mean": 136.64,
-            "min": 128.59,
-            "max": 143.41
+            "mean": 136.08,
+            "min": 129.93,
+            "max": 149.16
           },
           "hipAngleAtLockoutDeg": {
-            "mean": 163.15,
-            "min": 160.07,
+            "mean": 163.65,
+            "min": 162.63,
             "max": 165.19
           },
           "meanConcentricVelocityCmS": {
-            "mean": 25.58,
+            "mean": 24.83,
             "min": 22.21,
-            "max": 31.68
+            "max": 27.1
           },
           "hipHingeCrossoverPct": {
-            "mean": 57.8,
-            "min": 14,
-            "max": 80
+            "mean": 56.25,
+            "min": 25,
+            "max": 75
           },
           "barToShinDistanceCm": {
-            "mean": 0.86,
-            "min": 0.49,
-            "max": 1.43
+            "mean": -4.91,
+            "min": -20.86,
+            "max": 0.69
           },
           "lockoutStabilityCv": {
-            "mean": 0.78,
-            "min": 0.19,
+            "mean": 1.03,
+            "min": 0.47,
             "max": 1.87
           }
         },
@@ -1004,7 +1051,7 @@
           "bar_drift",
           "early_hip_shoot"
         ],
-        "calibrated_at": "2026-04-05T15:39:18.864Z"
+        "calibrated_at": "2026-04-18T17:32:40.466Z"
       }
     },
     {
@@ -1018,8 +1065,9 @@
           "max": 0.95
         },
         "rep_count": {
-          "min": 4,
-          "max": 8
+          "min": 2,
+          "max": 8,
+          "notes": "45° view with heavy MediaPipe hip occlusion — lockout-to-lockout without deep-floor reset undercounts reps. Range is wide to tolerate 2-6 depending on which lockouts are visible."
         },
         "faults_to_test": [
           "bar_drift",
@@ -1034,64 +1082,64 @@
         "fatigue_signatures": true
       },
       "actual": {
-        "rep_count": 5,
+        "rep_count": 3,
         "sagittal_confidence": 0.838,
         "analysis_version": 4,
         "metric_summary": {
           "forwardLeanDeg": {
-            "mean": 37.46,
-            "min": 1.21,
-            "max": 77.38
+            "mean": 7,
+            "min": 0.5,
+            "max": 13.48
           },
           "barDriftCm": {
-            "mean": 22.75,
-            "min": 10.94,
-            "max": 53.63
+            "mean": 8.54,
+            "min": 0.06,
+            "max": 13.93
           },
           "romCm": {
-            "mean": 65.03,
-            "min": 44.09,
-            "max": 80.93
+            "mean": 51.97,
+            "min": 31.65,
+            "max": 75.69
           },
           "kneeAngleDeg": {
-            "mean": 108.36,
-            "min": 12.24,
-            "max": 171.31
+            "mean": 134.34,
+            "min": 77.18,
+            "max": 170.57
           },
           "hipAngleAtLockoutDeg": {
-            "mean": 125.62,
-            "min": 80.01,
-            "max": 175.01
+            "mean": 168.5,
+            "min": 167.24,
+            "max": 170.65
           },
           "meanConcentricVelocityCmS": {
-            "mean": 50.74,
-            "min": 18.98,
-            "max": 65.74
+            "mean": 42.47,
+            "min": 20.19,
+            "max": 64.75
           },
           "hipHingeCrossoverPct": {
-            "mean": 72.8,
-            "min": 63,
-            "max": 100
+            "mean": 41.67,
+            "min": 0,
+            "max": 75
           },
           "barToShinDistanceCm": {
-            "mean": 3.52,
-            "min": 0.95,
-            "max": 6.72
+            "mean": 3.61,
+            "min": 0,
+            "max": 9.42
           },
           "lockoutStabilityCv": {
-            "mean": 32.07,
-            "min": 0,
-            "max": 85.89
+            "mean": 34.46,
+            "min": 2.26,
+            "max": 73.56
           }
         },
         "fault_types": [
           "back_rounding",
           "bar_away_from_shins",
           "bar_drift",
-          "incomplete_lockout",
+          "early_hip_shoot",
           "unstable_lockout"
         ],
-        "calibrated_at": "2026-04-05T15:39:18.865Z"
+        "calibrated_at": "2026-04-18T17:32:40.467Z"
       }
     },
     {
@@ -1172,7 +1220,7 @@
           "bar_drift",
           "elbow_flare"
         ],
-        "calibrated_at": "2026-04-05T15:39:18.866Z"
+        "calibrated_at": "2026-04-18T17:32:40.468Z"
       }
     },
     {
@@ -1253,14 +1301,14 @@
           "elbow_flare",
           "unstable_lockout"
         ],
-        "calibrated_at": "2026-04-05T15:39:18.868Z"
+        "calibrated_at": "2026-04-18T17:32:40.469Z"
       }
     },
     {
       "id": "dl-2-reps-side",
       "file": "dl-2-reps-side.mp4",
       "lift": "deadlift",
-      "calibrated": false,
+      "calibrated": true,
       "notes": "2026-04-17 prod recording. On-device pipeline reported 0 reps; actual = 2 reps. Use this video to reproduce and fix the 0-reps detection bug.",
       "expected": {
         "sagittal_confidence": {
@@ -1271,6 +1319,66 @@
           "min": 2,
           "max": 2
         }
+      },
+      "actual": {
+        "rep_count": 2,
+        "sagittal_confidence": 0.831,
+        "analysis_version": 4,
+        "metric_summary": {
+          "forwardLeanDeg": {
+            "mean": 69.06,
+            "min": 67.71,
+            "max": 70.41
+          },
+          "barDriftCm": {
+            "mean": 7.1,
+            "min": 6.15,
+            "max": 8.04
+          },
+          "romCm": {
+            "mean": 42.22,
+            "min": 38.01,
+            "max": 46.43
+          },
+          "kneeAngleDeg": {
+            "mean": 83.91,
+            "min": 74.61,
+            "max": 93.21
+          },
+          "hipAngleAtLockoutDeg": {
+            "mean": 170.57,
+            "min": 166.13,
+            "max": 175.01
+          },
+          "meanConcentricVelocityCmS": {
+            "mean": 25.93,
+            "min": 25.34,
+            "max": 26.53
+          },
+          "hipHingeCrossoverPct": {
+            "mean": 37.5,
+            "min": 25,
+            "max": 50
+          },
+          "barToShinDistanceCm": {
+            "mean": 10.12,
+            "min": 8.96,
+            "max": 11.28
+          },
+          "lockoutStabilityCv": {
+            "mean": 5.79,
+            "min": 0.26,
+            "max": 11.32
+          }
+        },
+        "fault_types": [
+          "back_rounding",
+          "bar_away_from_shins",
+          "bar_drift",
+          "early_hip_shoot",
+          "unstable_lockout"
+        ],
+        "calibrated_at": "2026-04-18T17:33:19.662Z"
       }
     }
   ]

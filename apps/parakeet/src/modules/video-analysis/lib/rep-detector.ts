@@ -3,6 +3,28 @@ import { LANDMARK, type PoseFrame } from './pose-types';
 
 /** Minimum time between peaks — prevents double-detection on a single rep. */
 const MIN_PEAK_TIME_SEC = 0.8;
+
+// Deadlift-specific state-machine thresholds. Hip angle is the hinge joint.
+// Floor (bar on ground): deep hinge, hip angle well below 120°.
+// Lockout (extended): hip angle approaching 180°.
+// The lifter is "in transit" between these — neither counted nor reset.
+// A rep completes when a FLOOR → LOCKOUT transition is observed AND lockout
+// is held for at least MIN_LOCKOUT_HOLD_SEC. That sustain-hold filter is what
+// kills single-frame MediaPipe noise spikes that otherwise masquerade as reps.
+const DEADLIFT_FLOOR_HIP_DEG = 143;
+// Lockout threshold. A lifter who "just stood up with the bar" post-set can
+// hit the high 150s briefly — observed in dl-2-reps-side end frames. Real
+// rep lockouts in calibrated fixtures consistently hit 165+ on the visible
+// frame. Sitting the threshold at 162 keeps the phantom post-set stand-up
+// out while still catching marginal lockouts on longer sets.
+const DEADLIFT_LOCKOUT_HIP_DEG = 162;
+// At 4fps most real lockouts are visible on a single frame. Requiring two
+// consecutive frames misses the full concentric of fast deadlifts; requiring
+// just one leaves us vulnerable to noise spikes — which is why the lockout
+// threshold above is tight. Also demand that the lockout frame be preceded
+// by evidence of ascent (checked in the detector loop), so a single-frame
+// spike surrounded by floor values doesn't count.
+const DEADLIFT_MIN_LOCKOUT_HOLD_SEC = 0;
 /** Smoothing window target time — matches the ~233ms used at 30fps (7/30). */
 const SMOOTH_TIME_SEC = 7 / 30;
 /** Minimum number of valid angle frames to use angle-based detection. */
@@ -240,6 +262,161 @@ function findPeaks({
 }
 
 /**
+ * Extract the RAW (un-inverted) hip angle per frame for deadlift state-machine
+ * rep detection. Returns NaN for frames where neither side is visible.
+ */
+function extractHipAngles({ frames }: { frames: PoseFrame[] }): number[] {
+  const VIS_THRESHOLD = 0.5;
+  return frames.map((frame) => {
+    const ls = frame[LANDMARK.LEFT_SHOULDER];
+    const rs = frame[LANDMARK.RIGHT_SHOULDER];
+    const lh = frame[LANDMARK.LEFT_HIP];
+    const rh = frame[LANDMARK.RIGHT_HIP];
+    const lk = frame[LANDMARK.LEFT_KNEE];
+    const rk = frame[LANDMARK.RIGHT_KNEE];
+
+    const leftVis =
+      ls.visibility >= VIS_THRESHOLD &&
+      lh.visibility >= VIS_THRESHOLD &&
+      lk.visibility >= VIS_THRESHOLD;
+    const rightVis =
+      rs.visibility >= VIS_THRESHOLD &&
+      rh.visibility >= VIS_THRESHOLD &&
+      rk.visibility >= VIS_THRESHOLD;
+
+    if (!leftVis && !rightVis) return NaN;
+
+    let angle = 0;
+    let sides = 0;
+    if (leftVis) {
+      angle += computeAngle({ a: ls, b: lh, c: lk });
+      sides++;
+    }
+    if (rightVis) {
+      angle += computeAngle({ a: rs, b: rh, c: rk });
+      sides++;
+    }
+    return angle / sides;
+  });
+}
+
+/**
+ * State-machine rep detector for deadlift.
+ *
+ * A rep is a FLOOR → LOCKOUT cycle where lockout is held for at least
+ * `DEADLIFT_MIN_LOCKOUT_HOLD_SEC`. Holding the lockout hip angle for a beat
+ * is the robust signal that distinguishes a real rep from landmark noise —
+ * MediaPipe will sometimes report a single-frame hip angle of 155–175° mid-
+ * concentric because of limb occlusion or torso jitter, but it almost never
+ * sustains that artifact across two or more consecutive frames.
+ *
+ * `startFrame` of each rep is the most recent frame at which the lifter was
+ * clearly at floor (hip < `DEADLIFT_FLOOR_HIP_DEG`) before the concentric.
+ * `endFrame` is the last frame of the sustained lockout hold.
+ *
+ * Returns `null` if fewer than MIN_ANGLE_FRAMES of hip data are visible, so
+ * the caller can fall back to peak-based detection.
+ */
+function detectDeadliftReps({
+  frames,
+  fps,
+}: {
+  frames: PoseFrame[];
+  fps: number;
+}): { startFrame: number; endFrame: number }[] | null {
+  const hipAngles = extractHipAngles({ frames });
+  const validCount = hipAngles.filter((h) => !Number.isNaN(h)).length;
+  if (validCount < MIN_ANGLE_FRAMES) return null;
+
+  const minLockoutHoldFrames = Math.max(
+    2,
+    Math.round(fps * DEADLIFT_MIN_LOCKOUT_HOLD_SEC)
+  );
+
+  const reps: { startFrame: number; endFrame: number }[] = [];
+
+  // State machine:
+  //   WAITING_FOR_FLOOR  — we need a clear floor touch before the next rep.
+  //   WAITING_FOR_LOCKOUT — lifter has been at floor; watch for lockout.
+  // We never rewind from LOCKOUT directly to another LOCKOUT without a floor
+  // touch in between; that's what suppresses phantom reps on the eccentric.
+  let state: 'WAITING_FOR_FLOOR' | 'WAITING_FOR_LOCKOUT' =
+    'WAITING_FOR_FLOOR';
+  // First floor frame of the *current* rep's setup — used as the rep's
+  // startFrame so metrics get the full concentric window (setup → lockout),
+  // not just the last floor-ish noise spike before the lockout.
+  let repStartFloorFrame = -1;
+
+  // Spike-filter window: if a single-frame lockout is surrounded by floor
+  // values (immediately before AND within a handful of frames after), treat
+  // it as a MediaPipe detection glitch rather than a real rep. Real rep
+  // lockouts are held for >= ~0.25s OR followed by transit/descent.
+  const spikeLookaheadFrames = Math.max(2, Math.round(fps * 0.3));
+
+  for (let i = 0; i < hipAngles.length; i++) {
+    const hip = hipAngles[i];
+    if (Number.isNaN(hip)) continue;
+
+    const isFloor = hip < DEADLIFT_FLOOR_HIP_DEG;
+    const isLockout = hip > DEADLIFT_LOCKOUT_HIP_DEG;
+
+    if (isFloor) {
+      if (state === 'WAITING_FOR_FLOOR') {
+        repStartFloorFrame = i;
+        state = 'WAITING_FOR_LOCKOUT';
+      }
+      // Already WAITING_FOR_LOCKOUT — keep repStartFloorFrame anchored at
+      // the beginning of the current floor cluster so the rep window spans
+      // the full setup.
+      continue;
+    }
+
+    if (state !== 'WAITING_FOR_LOCKOUT') continue;
+    if (!isLockout) continue;
+    if (repStartFloorFrame < 0) continue;
+
+    // Minimum consecutive-frame hold, if configured.
+    const minHoldFrames = Math.max(
+      1,
+      Math.round(fps * DEADLIFT_MIN_LOCKOUT_HOLD_SEC)
+    );
+    if (minHoldFrames > 1) {
+      let held = 1;
+      for (let j = i + 1; j < hipAngles.length && held < minHoldFrames; j++) {
+        const h = hipAngles[j];
+        if (Number.isNaN(h)) continue;
+        if (h <= DEADLIFT_LOCKOUT_HIP_DEG) break;
+        held++;
+      }
+      if (held < minHoldFrames) continue;
+    }
+
+    // Spike filter: the first visible non-NaN frame in the next small window
+    // must NOT be floor. A LOCKOUT → FLOOR transition on adjacent visible
+    // frames is almost always MediaPipe swapping the hip landmark with a
+    // different joint for one frame. Real reps descend gradually through
+    // transit.
+    let isSpike = true;
+    for (
+      let j = i + 1;
+      j < Math.min(hipAngles.length, i + 1 + spikeLookaheadFrames);
+      j++
+    ) {
+      const h = hipAngles[j];
+      if (Number.isNaN(h)) continue;
+      isSpike = h < DEADLIFT_FLOOR_HIP_DEG;
+      break;
+    }
+    if (isSpike) continue;
+
+    reps.push({ startFrame: repStartFloorFrame, endFrame: i });
+    state = 'WAITING_FOR_FLOOR';
+  }
+
+  return reps;
+}
+
+/**
  * Detect rep boundaries from joint angle periodicity (viewpoint-invariant).
  *
  * Primary signal: joint angles (knee for squat/DL, elbow for bench) oscillate
@@ -266,6 +443,15 @@ export function detectReps({
 
   if (frames.length < minPeakDistance * 2) {
     return [];
+  }
+
+  // Deadlift: use a hip-angle state machine. Much more robust than peak
+  // counting on the inverted-hip signal, which picks up every landmark-
+  // noise dip as a phantom rep. Falls back to peak-based if hip angles
+  // aren't visible enough (e.g. front-camera partial occlusion).
+  if (lift === 'deadlift') {
+    const smReps = detectDeadliftReps({ frames, fps });
+    if (smReps != null) return smReps;
   }
 
   // Try viewpoint-invariant angle signal first, fall back to Y-coordinate.

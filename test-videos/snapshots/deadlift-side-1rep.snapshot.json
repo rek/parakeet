@@ -3,14 +3,14 @@
   "lift": "deadlift",
   "analysisVersion": 4,
   "snapshotVersion": 1,
-  "createdAt": "2026-04-05T15:39:18.851Z",
+  "createdAt": "2026-04-18T17:32:40.458Z",
   "sagittalConfidence": 0.9117683000000001,
   "result": {
     "reps": [
       {
         "repNumber": 1,
         "startFrame": 0,
-        "endFrame": 16,
+        "endFrame": 15,
         "barPath": [
           {
             "x": 0.49722625,
@@ -91,28 +91,23 @@
             "x": 0.4188443333333334,
             "y": 0.4150693333333333,
             "frame": 15
-          },
-          {
-            "x": 0.42166166666666666,
-            "y": 0.412045,
-            "frame": 16
           }
         ],
         "forwardLeanDeg": 77.84971463156937,
-        "barDriftCm": 9.454778793919145,
-        "romCm": 32.24081475,
+        "barDriftCm": 9.046290362804042,
+        "romCm": 31.843347749999978,
         "kneeAngleDeg": 124.59509994150514,
-        "hipAngleAtLockoutDeg": 175.17275881459426,
-        "meanConcentricVelocityCmS": 8.0602036875,
-        "hipHingeCrossoverPct": 33,
+        "hipAngleAtLockoutDeg": 163.24469750044668,
+        "meanConcentricVelocityCmS": 9.797953153846148,
+        "hipHingeCrossoverPct": 40,
         "barToShinDistanceCm": 18.894606749999998,
-        "lockoutStabilityCv": 3.524658994849091,
+        "lockoutStabilityCv": 5.636734577704911,
         "faults": [
           {
             "type": "bar_drift",
             "severity": "warning",
-            "message": "Bar drifted 9.5cm from start",
-            "value": 0.03890855470748619,
+            "message": "Bar drifted 9.0cm from start",
+            "value": 0.037227532357218276,
             "threshold": 0.03
           },
           {
@@ -123,17 +118,17 @@
             "threshold": 15
           },
           {
-            "type": "early_hip_shoot",
-            "severity": "warning",
-            "message": "Hips shot up at 33% of pull",
-            "value": 33,
-            "threshold": 30
-          },
-          {
             "type": "bar_away_from_shins",
             "severity": "warning",
             "message": "Bar 18.9cm away from shins",
             "value": 18.894606749999998,
+            "threshold": 5
+          },
+          {
+            "type": "unstable_lockout",
+            "severity": "warning",
+            "message": "Unstable lockout (CV 5.6%)",
+            "value": 5.636734577704911,
             "threshold": 5
           }
         ],
@@ -179,24 +174,9 @@
       },
       {
         "repNumber": 2,
-        "startFrame": 16,
-        "endFrame": 33,
+        "startFrame": 19,
+        "endFrame": 30,
         "barPath": [
-          {
-            "x": 0.42166166666666666,
-            "y": 0.412045,
-            "frame": 16
-          },
-          {
-            "x": 0.4204741666666667,
-            "y": 0.41139433333333336,
-            "frame": 17
-          },
-          {
-            "x": 0.41726983333333334,
-            "y": 0.4166921666666667,
-            "frame": 18
-          },
           {
             "x": 0.4130965,
             "y": 0.42703,
@@ -256,83 +236,68 @@
             "x": 0.40854850000000004,
             "y": 0.35416183333333334,
             "frame": 30
-          },
-          {
-            "x": 0.3602243333333333,
-            "y": 0.34433800000000003,
-            "frame": 31
-          },
-          {
-            "x": 0.2833585,
-            "y": 0.3435631666666667,
-            "frame": 32
-          },
-          {
-            "x": 0.24301350000000002,
-            "y": 0.34187425000000005,
-            "frame": 33
           }
         ],
         "forwardLeanDeg": 75.23380591660492,
-        "barDriftCm": 28.632894760184953,
-        "romCm": 56.781749249999976,
+        "barDriftCm": 15.532374375000026,
+        "romCm": 53.79586649999998,
         "kneeAngleDeg": 72.49528690765104,
-        "hipAngleAtLockoutDeg": 156.05344310241668,
-        "meanConcentricVelocityCmS": 28.390874624999988,
-        "concentricDurationSec": 2,
-        "eccentricDurationSec": 2.25,
-        "tempoRatio": 1.13,
-        "hipHingeCrossoverPct": 100,
-        "barToShinDistanceCm": 7.09722,
-        "lockoutStabilityCv": 0.9868514121236229,
+        "hipAngleAtLockoutDeg": 176.08950875531502,
+        "meanConcentricVelocityCmS": 43.03669319999999,
+        "concentricDurationSec": 1.25,
+        "eccentricDurationSec": 1.5,
+        "tempoRatio": 1.2,
+        "hipHingeCrossoverPct": 75,
+        "barToShinDistanceCm": 6.414714000000001,
+        "lockoutStabilityCv": 9.058587276140491,
         "faults": [
           {
             "type": "bar_drift",
             "severity": "warning",
-            "message": "Bar drifted 28.6cm from start",
-            "value": 0.11783084263450598,
+            "message": "Bar drifted 15.5cm from start",
+            "value": 0.06391923611111122,
             "threshold": 0.03
           },
           {
             "type": "back_rounding",
             "severity": "warning",
-            "message": "Back rounded 109.5° during initial pull",
-            "value": 109.46346796466828,
+            "message": "Back rounded 80.3° during initial pull",
+            "value": 80.33335017237411,
             "threshold": 15
-          },
-          {
-            "type": "incomplete_lockout",
-            "severity": "info",
-            "message": "Hip angle at lockout was 156.1°",
-            "value": 156.05344310241668,
-            "threshold": 160
           },
           {
             "type": "bar_away_from_shins",
             "severity": "warning",
-            "message": "Bar 7.1cm away from shins",
-            "value": 7.09722,
+            "message": "Bar 6.4cm away from shins",
+            "value": 6.414714000000001,
+            "threshold": 5
+          },
+          {
+            "type": "unstable_lockout",
+            "severity": "warning",
+            "message": "Unstable lockout (CV 9.1%)",
+            "value": 9.058587276140491,
             "threshold": 5
           }
         ],
         "verdict": {
-          "verdict": "borderline",
+          "verdict": "white_light",
           "criteria": [
             {
               "name": "hip_lockout",
-              "verdict": "borderline",
-              "measured": 156.05344310241668,
+              "verdict": "pass",
+              "measured": 176.08950875531502,
               "threshold": 160,
               "unit": "°",
-              "message": "Hips nearly locked (156°)"
+              "message": "Hips fully through (176°)"
             },
             {
               "name": "knee_lockout",
               "verdict": "pass",
-              "measured": 174.72586075386897,
+              "measured": 177.53582336785917,
               "threshold": 160,
               "unit": "°",
-              "message": "Knees fully locked (175°)"
+              "message": "Knees fully locked (178°)"
             },
             {
               "name": "downward_motion",
@@ -345,14 +310,14 @@
             {
               "name": "shoulders_back",
               "verdict": "pass",
-              "measured": -8.652500999999994,
+              "measured": 1.2300660000000025,
               "threshold": 5,
               "unit": "cm",
               "message": "Shoulders behind hips at lockout"
             }
           ]
         },
-        "velocityLossPct": -252.2
+        "velocityLossPct": -339.2
       }
     ],
     "fps": 4,
@@ -361,10 +326,10 @@
     "analysisVersion": 4,
     "fatigueSignatures": {
       "forwardLeanDriftDeg": -2.6,
-      "barDriftIncreaseCm": 19.2,
-      "romCompressionCm": -24.5,
+      "barDriftIncreaseCm": 6.5,
+      "romCompressionCm": -22,
       "descentSpeedChange": null,
-      "lockoutDegradationDeg": 19.1,
+      "lockoutDegradationDeg": -12.8,
       "velocityLossTrend": null
     }
   }

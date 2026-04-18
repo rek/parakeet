@@ -195,20 +195,25 @@ export function generateDeadliftFrames({
     const repPhase = (i % framesPerRep) / framesPerRep;
     const t = Math.sin(repPhase * Math.PI);
 
-    const hipY = lerp(0.5, 0.72, t); // standing → floor position
-    const shoulderX = lerp(0.5, 0.44, t); // forward hinge at floor
+    // Shoulder hinges forward and down. At floor the shoulder is ahead of and
+    // below the hip, producing a ~90° hip angle (shoulder-hip-knee).
+    // At lockout the shoulder sits above and slightly behind the hip,
+    // producing a ~175° angle — a true standing lockout.
+    const shoulderX = lerp(0.5, 0.38, t);
+    const shoulderY = lerp(0.25, 0.55, t);
+    const hipY = lerp(0.55, 0.6, t);
 
     frames.push(
       buildFrame({
         [LANDMARK.LEFT_SHOULDER]: {
-          x: shoulderX - 0.05,
-          y: 0.28,
+          x: shoulderX - 0.02,
+          y: shoulderY,
           z: 0,
           visibility: 1,
         },
         [LANDMARK.RIGHT_SHOULDER]: {
-          x: shoulderX + 0.05,
-          y: 0.28,
+          x: shoulderX + 0.02,
+          y: shoulderY,
           z: 0,
           visibility: 1,
         },
