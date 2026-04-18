@@ -75,6 +75,33 @@ vi.mock('@parakeet/training-engine', () => ({
       flavor: 'No hesitation.',
     },
   },
+  // Minimum additional exports needed because badge-detection now imports
+  // from @modules/session barrel, which transitively exercises more engine
+  // surface. These stubs mirror the real values where shape matters.
+  LIFTS: ['squat', 'bench', 'deadlift'],
+  getMusclesForLift: () => [],
+  getMusclesForExercise: () => [],
+  rpeSetMultiplier: () => 1,
+  LiftSchema: {
+    parse: (v: unknown) => v as string,
+    safeParse: (v: unknown) => ({ success: true, data: v as string }),
+  },
+  IntensityTypeSchema: {
+    parse: (v: unknown) => v as string,
+    safeParse: (v: unknown) => ({ success: true, data: v as string }),
+  },
+  BlockNumberSchema: {
+    parse: (v: unknown) => v as number,
+    safeParse: (v: unknown) => ({ success: true, data: v as number }),
+  },
+}));
+
+// @modules/session barrel pulls in RN UI — mock the only surface we touch.
+const mockFetchSessionSetsBySessionIds = vi.hoisted(() =>
+  vi.fn(async () => new Map())
+);
+vi.mock('@modules/session', () => ({
+  fetchSessionSetsBySessionIds: mockFetchSessionSetsBySessionIds,
 }));
 
 const mockSupabaseFrom = vi.hoisted(() => vi.fn());

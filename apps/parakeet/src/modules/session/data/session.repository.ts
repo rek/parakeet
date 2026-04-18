@@ -9,7 +9,6 @@ import type {
 } from '@shared/types/domain';
 import { localDateString } from '@shared/utils/localDateString';
 
-import { parseActualSetsJson } from './session-codecs';
 
 type SessionRow = DbRow<'sessions'>;
 
@@ -437,6 +436,58 @@ export async function countSetLogsForSession(
   return count ?? 0;
 }
 
+export interface SessionSetsBucket {
+  primary: ActualSet[];
+  auxiliary: ActualSet[];
+}
+
+// Groups set_logs by session_id for a batch of sessions. Returned ActualSet
+// values are shape-compatible with the legacy session_logs.actual_sets /
+// auxiliary_sets JSONB arrays so downstream consumers don't need rewiring.
+export async function fetchSessionSetsBySessionIds(
+  sessionIds: string[]
+): Promise<Map<string, SessionSetsBucket>> {
+  const map = new Map<string, SessionSetsBucket>();
+  if (sessionIds.length === 0) return map;
+
+  const { data, error } = await typedSupabase
+    .from('set_logs')
+    .select(
+      'session_id, kind, exercise, exercise_type, set_number, weight_grams, reps_completed, rpe_actual, actual_rest_seconds, failed, notes'
+    )
+    .in('session_id', sessionIds)
+    .order('set_number', { ascending: true });
+  if (error) throw error;
+
+  for (const row of data ?? []) {
+    let bucket = map.get(row.session_id);
+    if (!bucket) {
+      bucket = { primary: [], auxiliary: [] };
+      map.set(row.session_id, bucket);
+    }
+    const set: ActualSet = {
+      set_number: row.set_number,
+      weight_grams: row.weight_grams,
+      reps_completed: row.reps_completed,
+    };
+    if (row.rpe_actual != null) set.rpe_actual = row.rpe_actual;
+    if (row.actual_rest_seconds != null)
+      set.actual_rest_seconds = row.actual_rest_seconds;
+    if (row.failed) set.failed = true;
+    if (row.exercise) set.exercise = row.exercise;
+    if (row.exercise_type === 'weighted'
+      || row.exercise_type === 'bodyweight'
+      || row.exercise_type === 'timed') {
+      set.exercise_type = row.exercise_type;
+    }
+    if (row.notes) set.notes = row.notes;
+
+    if (row.kind === 'primary') bucket.primary.push(set);
+    else bucket.auxiliary.push(set);
+  }
+  return map;
+}
+
 // Deletes every set_logs row for a session — used when abandoning an
 // in-progress program session. Ad-hoc abandons delete the session row itself
 // and rely on ON DELETE CASCADE; program abandons reset status to planned, so
@@ -580,19 +631,25 @@ export async function fetchCurrentWeekLogs(
 ): Promise<CurrentWeekLogRow[]> {
   const { data, error } = await typedSupabase
     .from('session_logs')
-    .select('actual_sets, auxiliary_sets, sessions!inner(primary_lift)')
+    .select('session_id, sessions!inner(primary_lift)')
     .eq('user_id', userId)
     .gte('completed_at', startIso)
     .lt('completed_at', endIso);
 
   if (error) throw error;
-  return (data ?? []).map((row) => {
+  const rows = data ?? [];
+  const sessionIds = rows
+    .map((r) => r.session_id)
+    .filter((id): id is string => !!id);
+  const setsMap = await fetchSessionSetsBySessionIds(sessionIds);
+  return rows.map((row) => {
     const session = normalizeJoinedSession(
       row.sessions as SessionJoinLift | SessionJoinLift[] | null
     );
+    const bucket = row.session_id ? setsMap.get(row.session_id) : undefined;
     return {
-      actual_sets: parseActualSetsJson(row.actual_sets),
-      auxiliary_sets: parseActualSetsJson(row.auxiliary_sets),
+      actual_sets: bucket?.primary ?? [],
+      auxiliary_sets: bucket?.auxiliary ?? [],
       primary_lift: session?.primary_lift
         ? parseLift(session.primary_lift)
         : null,
@@ -729,17 +786,18 @@ export async function fetchSessionLogBySessionId(
   const { data, error } = await typedSupabase
     .from('session_logs')
     .select(
-      'actual_sets, auxiliary_sets, session_rpe, completion_pct, performance_vs_plan, started_at, completed_at, session_notes'
+      'session_rpe, completion_pct, performance_vs_plan, started_at, completed_at, session_notes'
     )
     .eq('session_id', sessionId)
     .maybeSingle();
   if (error) throw error;
   if (!data) return null;
+  const buckets = (await fetchSessionSetsBySessionIds([sessionId])).get(
+    sessionId
+  );
   return {
-    actual_sets: parseActualSetsJson(data.actual_sets),
-    auxiliary_sets: data.auxiliary_sets
-      ? parseActualSetsJson(data.auxiliary_sets)
-      : [],
+    actual_sets: buckets?.primary ?? [],
+    auxiliary_sets: buckets?.auxiliary ?? [],
     session_rpe: data.session_rpe ?? null,
     completion_pct: data.completion_pct ?? null,
     performance_vs_plan: data.performance_vs_plan ?? null,
@@ -882,25 +940,22 @@ export async function fetchEndOfWeekContext(
  *  Relies on RLS for user scoping — no userId parameter needed. */
 export async function fetchRecentAuxExerciseNames() {
   const { data, error } = await typedSupabase
-    .from('session_logs')
-    .select('auxiliary_sets')
-    .not('auxiliary_sets', 'is', null)
-    .order('completed_at', { ascending: false })
-    .limit(30);
+    .from('set_logs')
+    .select('exercise, logged_at')
+    .eq('kind', 'auxiliary')
+    .not('exercise', 'is', null)
+    .order('logged_at', { ascending: false })
+    .limit(300);
 
   if (error) throw error;
 
   const seen = new Set<string>();
   const names: string[] = [];
   for (const row of data ?? []) {
-    const sets = row.auxiliary_sets as unknown[];
-    if (!Array.isArray(sets)) continue;
-    for (const s of sets) {
-      const exercise = (s as { exercise?: string }).exercise;
-      if (exercise && !seen.has(exercise)) {
-        seen.add(exercise);
-        names.push(exercise);
-      }
+    const exercise = row.exercise;
+    if (exercise && !seen.has(exercise)) {
+      seen.add(exercise);
+      names.push(exercise);
     }
   }
   return names;

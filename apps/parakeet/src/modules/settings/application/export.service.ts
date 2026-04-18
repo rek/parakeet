@@ -27,20 +27,12 @@ interface ExportPayload {
   sessions: ExportSession[];
 }
 
-interface RawSet {
-  set_number: number;
-  weight_grams: number;
-  reps_completed: number;
-  rpe_actual?: number;
-}
-
 export async function exportTrainingData(userId: string): Promise<void> {
   const rows = await fetchCompletedSessionsForExport(userId);
 
   const sessions: ExportSession[] = rows.flatMap((row) =>
     row.session_logs.map((log) => {
-      const rawSets = (log.actual_sets as RawSet[] | null) ?? [];
-      const sets: ExportSet[] = rawSets.map((s) => ({
+      const sets: ExportSet[] = log.actual_sets.map((s) => ({
         set_number: s.set_number,
         weight_kg: weightGramsToKg(s.weight_grams),
         reps: s.reps_completed,
@@ -54,7 +46,7 @@ export async function exportTrainingData(userId: string): Promise<void> {
         completed_at: row.completed_at ?? '',
         ...(log.session_rpe != null ? { session_rpe: log.session_rpe } : {}),
         sets,
-        ...(log.auxiliary_sets != null
+        ...(log.auxiliary_sets.length > 0
           ? { auxiliary_sets: log.auxiliary_sets }
           : {}),
       };

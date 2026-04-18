@@ -12,7 +12,6 @@ import {
   getDaysSinceLastSession,
   getProfileSex,
   getSession,
-  parseActualSetsJson,
   parsePlannedSetsJson as parsePlannedSets,
 } from '@modules/session';
 import {
@@ -223,7 +222,7 @@ export async function runJITForSession(
     let deviation: ReturnType<typeof computeWeightDeviation> = null;
     try {
       const planned = parsePlannedSets(r.planned_sets);
-      const actual = parseActualSetsJson(r.actual_sets);
+      const actual = r.actual_sets;
       if (planned.length > 0 && actual.length > 0) {
         deviation = computeWeightDeviation({
           plannedWeightKg: planned[0].weight_kg,
@@ -285,11 +284,7 @@ export async function runJITForSession(
       if (!logLift) continue;
 
       // Main lift sets — sum RPE-scaled effective sets
-      type SetWithRpe = { rpe_actual?: number };
-      const mainSets = Array.isArray(log.actual_sets)
-        ? (log.actual_sets as SetWithRpe[])
-        : [];
-      const mainEffective = mainSets.reduce(
+      const mainEffective = log.actual_sets.reduce(
         (sum, s) => sum + rpeSetMultiplier(s.rpe_actual),
         0
       );
@@ -301,9 +296,7 @@ export async function runJITForSession(
       }
 
       // Aux sets — grouped by exercise, RPE-scaled
-      const auxSets = Array.isArray(log.auxiliary_sets)
-        ? (log.auxiliary_sets as { exercise?: string; rpe_actual?: number }[])
-        : [];
+      const auxSets = log.auxiliary_sets;
       const auxByExercise = new Map<string, number>();
       for (const s of auxSets) {
         if (s.exercise) {

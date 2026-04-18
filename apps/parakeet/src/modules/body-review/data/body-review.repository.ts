@@ -1,3 +1,4 @@
+import { fetchSessionSetsBySessionIds } from '@modules/session';
 import type { Lift } from '@parakeet/shared-types';
 import { LiftSchema, MUSCLE_GROUPS } from '@parakeet/shared-types';
 import type {
@@ -130,7 +131,7 @@ export async function fetchWeeklyVolumeForReview(
   const { data, error } = await typedSupabase
     .from('session_logs')
     .select(
-      'actual_sets, auxiliary_sets, sessions!inner(primary_lift, week_number, program_id)'
+      'session_id, sessions!inner(primary_lift, week_number, program_id)'
     )
     .eq('user_id', userId)
     .eq('sessions.program_id', programId)
@@ -138,7 +139,13 @@ export async function fetchWeeklyVolumeForReview(
 
   if (error) throw error;
 
-  for (const row of data ?? []) {
+  const rows = data ?? [];
+  const sessionIds = rows
+    .map((r) => r.session_id)
+    .filter((id): id is string => !!id);
+  const setsMap = await fetchSessionSetsBySessionIds(sessionIds);
+
+  for (const row of rows) {
     const sessions = Array.isArray(row.sessions)
       ? row.sessions[0]
       : row.sessions;
@@ -146,10 +153,8 @@ export async function fetchWeeklyVolumeForReview(
     const lift = LiftSchema.safeParse(rawLift).data as Lift | undefined;
     if (!lift) continue;
 
-    type SetWithRpe = { rpe_actual?: number };
-    const mainSets = Array.isArray(row.actual_sets)
-      ? (row.actual_sets as SetWithRpe[])
-      : [];
+    const buckets = row.session_id ? setsMap.get(row.session_id) : undefined;
+    const mainSets = buckets?.primary ?? [];
     const mainEffective = mainSets.reduce(
       (sum, s) => sum + rpeSetMultiplier(s.rpe_actual),
       0
@@ -158,9 +163,7 @@ export async function fetchWeeklyVolumeForReview(
       volume[muscle] += Math.floor(mainEffective * contribution);
     }
 
-    const auxSets = Array.isArray(row.auxiliary_sets)
-      ? (row.auxiliary_sets as { exercise?: string; rpe_actual?: number }[])
-      : [];
+    const auxSets = buckets?.auxiliary ?? [];
     const auxByExercise = new Map<string, number>();
     for (const s of auxSets) {
       if (s.exercise) {

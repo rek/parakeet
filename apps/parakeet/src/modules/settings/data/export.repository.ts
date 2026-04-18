@@ -1,3 +1,5 @@
+import { fetchSessionSetsBySessionIds } from '@modules/session';
+import type { ActualSet } from '@parakeet/shared-types';
 import { typedSupabase } from '@platform/supabase';
 
 export interface ExportSessionRow {
@@ -6,8 +8,8 @@ export interface ExportSessionRow {
   completed_at: string | null;
   intensity_type: string | null;
   session_logs: {
-    actual_sets: unknown;
-    auxiliary_sets: unknown;
+    actual_sets: ActualSet[];
+    auxiliary_sets: ActualSet[];
     session_rpe: number | null;
   }[];
 }
@@ -19,8 +21,8 @@ export async function fetchCompletedSessionsForExport(
     .from('sessions')
     .select(
       `
-      primary_lift, planned_date, completed_at, intensity_type,
-      session_logs(actual_sets, auxiliary_sets, session_rpe)
+      id, primary_lift, planned_date, completed_at, intensity_type,
+      session_logs(session_rpe)
     `
     )
     .eq('user_id', userId)
@@ -29,12 +31,28 @@ export async function fetchCompletedSessionsForExport(
 
   if (error) throw error;
 
-  return (data ?? []).map((row) => ({
-    ...row,
-    session_logs: Array.isArray(row.session_logs)
+  const rows = data ?? [];
+  const sessionIds = rows.map((r) => r.id as string);
+  const setsMap = await fetchSessionSetsBySessionIds(sessionIds);
+
+  return rows.map((row) => {
+    const buckets = setsMap.get(row.id as string);
+    const logs = Array.isArray(row.session_logs)
       ? row.session_logs
-      : ([row.session_logs].filter(
-          Boolean
-        ) as ExportSessionRow['session_logs']),
-  }));
+      : [row.session_logs].filter(Boolean);
+    const mergedLogs = (logs.length > 0 ? logs : [{ session_rpe: null }]).map(
+      (log) => ({
+        actual_sets: buckets?.primary ?? [],
+        auxiliary_sets: buckets?.auxiliary ?? [],
+        session_rpe: (log?.session_rpe as number | null) ?? null,
+      })
+    );
+    return {
+      primary_lift: row.primary_lift,
+      planned_date: row.planned_date,
+      completed_at: row.completed_at,
+      intensity_type: row.intensity_type,
+      session_logs: mergedLogs,
+    };
+  });
 }

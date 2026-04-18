@@ -1,3 +1,4 @@
+import { fetchSessionSetsBySessionIds } from '@modules/session';
 import type {
   BadgeCheckContext,
   ConsistencyData,
@@ -103,8 +104,8 @@ export async function detectBadges(
     fetchPartnerCompletedToday(userId),
   ]);
 
-  // 2. Build actual sets with rest seconds from JSONB
-  const logActualSets = parseActualSetsFromLog(sessionLog?.actual_sets);
+  // 2. Pull rest seconds from set_logs (fetched alongside sessionLog)
+  const logActualSets = sessionLog?.set_log_sets ?? [];
 
   // 3. Build context for pure checkers
   const ctx: BadgeCheckContext = {
@@ -198,11 +199,11 @@ export async function detectBadges(
 // ── Data fetchers ───────────────────────────────────────────────────────────
 
 async function fetchSessionLog(sessionId: string) {
-  const [logResult, sessionResult] = await Promise.all([
+  const [logResult, sessionResult, setsMap] = await Promise.all([
     typedSupabase
       .from('session_logs')
       .select(
-        'started_at, completed_at, duration_seconds, actual_sets, completion_pct'
+        'started_at, completed_at, duration_seconds, completion_pct'
       )
       .eq('session_id', sessionId)
       .order('logged_at', { ascending: false })
@@ -213,29 +214,23 @@ async function fetchSessionLog(sessionId: string) {
       .select('is_deload, planned_sets')
       .eq('id', sessionId)
       .maybeSingle(),
+    fetchSessionSetsBySessionIds([sessionId]),
   ]);
 
   if (logResult.error) throw logResult.error;
   if (sessionResult.error) throw sessionResult.error;
   if (!logResult.data) return null;
 
+  const buckets = setsMap.get(sessionId);
   return {
     ...logResult.data,
     is_deload: sessionResult.data?.is_deload ?? false,
     planned_sets: sessionResult.data?.planned_sets ?? [],
+    // Used by the detector to read per-set rest seconds without a second round-trip.
+    set_log_sets: (buckets?.primary ?? []).map((s) => ({
+      actual_rest_seconds: s.actual_rest_seconds,
+    })),
   };
-}
-
-function parseActualSetsFromLog(
-  actualSets: unknown
-): Array<{ actual_rest_seconds?: number }> {
-  if (!Array.isArray(actualSets)) return [];
-  return actualSets.map((s: Record<string, unknown>) => ({
-    actual_rest_seconds:
-      typeof s.actual_rest_seconds === 'number'
-        ? s.actual_rest_seconds
-        : undefined,
-  }));
 }
 
 async function fetchProfile(userId: string) {
@@ -496,10 +491,9 @@ async function fetchConsecutivePerfectSessions(
   userId: string,
   _currentSessionId: string
 ): Promise<number> {
-  // Get recent session_logs with actual_sets and planned_sets (via sessions join)
   const { data: recentLogs, error } = await typedSupabase
     .from('session_logs')
-    .select('session_id, actual_sets')
+    .select('session_id')
     .eq('user_id', userId)
     .order('logged_at', { ascending: false })
     .limit(50);
@@ -507,25 +501,23 @@ async function fetchConsecutivePerfectSessions(
   if (error) throw error;
   if (!recentLogs || recentLogs.length === 0) return 0;
 
-  // For each session_log, check if every completed set met planned reps
+  const sessionIds = recentLogs
+    .map((r) => r.session_id)
+    .filter((id): id is string => !!id);
+  const setsMap = await fetchSessionSetsBySessionIds(sessionIds);
+
+  // set_logs only contain confirmed sets — is_completed is implicit. A
+  // "perfect" session is any session_log whose primary sets are all
+  // reps_completed > 0. Walk recent-first, stop at first miss.
   let consecutive = 0;
   for (const log of recentLogs) {
-    const actual = log.actual_sets as Array<Record<string, unknown>> | null;
-    if (!Array.isArray(actual) || actual.length === 0) break;
-
-    // Check that every set is completed with reps >= some minimum
-    const allMet = actual.every((s) => {
-      if (!s.is_completed) return false;
-      return (s.reps_completed as number) > 0;
-    });
-
-    if (allMet) {
-      consecutive++;
-    } else {
-      break;
-    }
+    if (!log.session_id) break;
+    const primary = setsMap.get(log.session_id)?.primary ?? [];
+    if (primary.length === 0) break;
+    const allMet = primary.every((s) => s.reps_completed > 0);
+    if (!allMet) break;
+    consecutive++;
   }
-
   return consecutive;
 }
 
@@ -627,35 +619,29 @@ async function fetchUniqueAuxExercisesInCycle(
 ): Promise<number> {
   if (!programId) return 0;
 
+  const { data: sessionIdRows } = await typedSupabase
+    .from('sessions')
+    .select('id')
+    .eq('program_id', programId)
+    .eq('status', 'completed');
+
+  const sessionIds = (sessionIdRows ?? []).map((s) => s.id as string);
+  if (sessionIds.length === 0) return 0;
+
   const { data, error } = await typedSupabase
-    .from('session_logs')
-    .select('auxiliary_sets')
+    .from('set_logs')
+    .select('exercise')
     .eq('user_id', userId)
-    .in(
-      'session_id',
-      // Subquery: session IDs for this program
-      (
-        await typedSupabase
-          .from('sessions')
-          .select('id')
-          .eq('program_id', programId)
-          .eq('status', 'completed')
-      ).data?.map((s) => s.id as string) ?? []
-    );
+    .eq('kind', 'auxiliary')
+    .not('exercise', 'is', null)
+    .in('session_id', sessionIds);
 
   if (error) throw error;
 
   const exerciseNames = new Set<string>();
-  for (const log of data ?? []) {
-    const auxSets = log.auxiliary_sets as Array<Record<string, unknown>> | null;
-    if (!Array.isArray(auxSets)) continue;
-    for (const s of auxSets) {
-      if (typeof s.exercise === 'string' && s.exercise) {
-        exerciseNames.add(s.exercise);
-      }
-    }
+  for (const row of data ?? []) {
+    if (row.exercise) exerciseNames.add(row.exercise);
   }
-
   return exerciseNames.size;
 }
 
@@ -669,7 +655,7 @@ async function fetchConsecutiveFullRestSessions(
 ): Promise<number> {
   const { data, error } = await typedSupabase
     .from('session_logs')
-    .select('session_id, actual_sets')
+    .select('session_id')
     .eq('user_id', userId)
     .order('logged_at', { ascending: false })
     .limit(10);
@@ -677,16 +663,18 @@ async function fetchConsecutiveFullRestSessions(
   if (error) throw error;
   if (!data || data.length === 0) return 0;
 
+  const sessionIds = data
+    .map((r) => r.session_id)
+    .filter((id): id is string => !!id);
+  const setsMap = await fetchSessionSetsBySessionIds(sessionIds);
+
   let consecutive = 0;
   for (const log of data) {
-    const sets = log.actual_sets as Array<Record<string, unknown>> | null;
-    if (!Array.isArray(sets) || sets.length === 0) break;
+    if (!log.session_id) break;
+    const primary = setsMap.get(log.session_id)?.primary ?? [];
+    if (primary.length === 0) break;
 
-    const completedSets = sets.filter((s) => s.is_completed === true);
-    if (completedSets.length === 0) break;
-
-    // Every completed set must have actual_rest_seconds >= threshold
-    const allFullRest = completedSets.every(
+    const allFullRest = primary.every(
       (s) =>
         typeof s.actual_rest_seconds === 'number' &&
         s.actual_rest_seconds >= MIN_FULL_REST_SECONDS

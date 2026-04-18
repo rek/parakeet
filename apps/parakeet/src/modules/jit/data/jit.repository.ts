@@ -1,4 +1,5 @@
-import type { Lift } from '@parakeet/shared-types';
+import { fetchSessionSetsBySessionIds } from '@modules/session';
+import type { ActualSet, Lift } from '@parakeet/shared-types';
 import type { Json } from '@platform/supabase';
 import { typedSupabase } from '@platform/supabase';
 
@@ -22,7 +23,7 @@ export async function fetchJitProfile(
 
 export interface JitRecentSessionLogRow {
   session_rpe: number | null;
-  actual_sets: unknown;
+  actual_sets: ActualSet[];
   planned_sets: unknown;
 }
 
@@ -37,7 +38,7 @@ export async function fetchRecentSessionLogsForLift(
   const { data, error } = await typedSupabase
     .from('session_logs')
     .select(
-      'session_rpe, actual_sets, sessions!inner(primary_lift, planned_sets)'
+      'session_id, session_rpe, sessions!inner(primary_lift, planned_sets)'
     )
     .eq('user_id', userId)
     .eq('sessions.primary_lift', lift)
@@ -46,22 +47,30 @@ export async function fetchRecentSessionLogsForLift(
     .limit(limit);
 
   if (error) throw error;
-  return (data ?? []).map((r) => {
+
+  const rows = data ?? [];
+  const sessionIds = rows
+    .map((r) => r.session_id)
+    .filter((id): id is string => !!id);
+  const setsMap = await fetchSessionSetsBySessionIds(sessionIds);
+
+  return rows.map((r) => {
     const session = Array.isArray(r.sessions) ? r.sessions[0] : r.sessions;
+    const buckets = r.session_id ? setsMap.get(r.session_id) : undefined;
     return {
       session_rpe: r.session_rpe ?? null,
-      actual_sets: r.actual_sets,
+      actual_sets: buckets?.primary ?? [],
       planned_sets: session?.planned_sets ?? null,
     };
   });
 }
 
 export interface JitWeeklyLogRow {
-  actual_sets: unknown;
-  auxiliary_sets: unknown;
+  actual_sets: ActualSet[];
+  auxiliary_sets: ActualSet[];
   sessions:
-    | { primary_lift: string; week_number: number; program_id: string }
-    | { primary_lift: string; week_number: number; program_id: string }[]
+    | { primary_lift: string | null; week_number: number; program_id: string | null }
+    | { primary_lift: string | null; week_number: number; program_id: string | null }[]
     | null;
 }
 
@@ -73,14 +82,28 @@ export async function fetchWeeklySessionLogs(
   const { data, error } = await typedSupabase
     .from('session_logs')
     .select(
-      'actual_sets, auxiliary_sets, sessions!inner(primary_lift, week_number, program_id)'
+      'session_id, sessions!inner(primary_lift, week_number, program_id)'
     )
     .eq('user_id', userId)
     .eq('sessions.program_id', programId)
     .eq('sessions.week_number', weekNumber);
 
   if (error) throw error;
-  return (data ?? []) as JitWeeklyLogRow[];
+
+  const rows = data ?? [];
+  const sessionIds = rows
+    .map((r) => r.session_id)
+    .filter((id): id is string => !!id);
+  const setsMap = await fetchSessionSetsBySessionIds(sessionIds);
+
+  return rows.map((r) => {
+    const buckets = r.session_id ? setsMap.get(r.session_id) : undefined;
+    return {
+      actual_sets: buckets?.primary ?? [],
+      auxiliary_sets: buckets?.auxiliary ?? [],
+      sessions: r.sessions,
+    };
+  });
 }
 
 export async function fetchWeekSessionCounts(

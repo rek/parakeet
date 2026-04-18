@@ -5,6 +5,8 @@ import { captureException } from '@platform/utils/captureException';
 import { weightGramsToKg } from '@shared/utils/weight';
 import { generateText } from 'ai';
 
+import { fetchSessionSetsBySessionIds } from '../data/session.repository';
+
 export interface MotivationalContext {
   primaryLifts: string[];
   intensityTypes: string[];
@@ -41,16 +43,17 @@ export async function fetchMotivationalContext(
 
   // Fetch profile directly to avoid circular dependency with @modules/profile.
   // Only biological_sex is needed for coaching message personalisation.
-  const [logsResult, prsResult, profileResult] = await Promise.all([
+  const [logsResult, prsResult, profileResult, setsMap] = await Promise.all([
     typedSupabase
       .from('session_logs')
-      .select('session_rpe, performance_vs_plan, actual_sets, completion_pct')
+      .select('session_id, session_rpe, performance_vs_plan, completion_pct')
       .in('session_id', sessionIds),
     typedSupabase
       .from('personal_records')
       .select('lift, pr_type')
       .in('session_id', sessionIds),
     typedSupabase.from('profiles').select('biological_sex').maybeSingle(),
+    fetchSessionSetsBySessionIds(sessionIds),
   ]);
   const profile = profileResult.data;
 
@@ -82,13 +85,10 @@ export async function fetchMotivationalContext(
         )
       : null;
 
-  // Flatten all actual_sets across sessions to derive top weight and set count
-  const allSets = logs.flatMap((r) => {
-    const raw = r.actual_sets;
-    return Array.isArray(raw)
-      ? (raw as Array<{ weight_grams?: number; reps_completed?: number }>)
-      : [];
-  });
+  // Flatten primary set_logs across sessions to derive top weight and set count
+  const allSets = sessionIds.flatMap(
+    (id) => setsMap.get(id)?.primary ?? []
+  );
   const totalSetsCompleted = allSets.length;
   const maxGrams = allSets.reduce<number | null>((max, s) => {
     const g = s.weight_grams;

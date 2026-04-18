@@ -1,3 +1,4 @@
+import { fetchSessionSetsBySessionIds } from '@modules/session';
 import type { CycleReview } from '@parakeet/shared-types';
 import type {
   CycleReport,
@@ -132,16 +133,21 @@ export async function fetchCycleReportSourceData(
   const sessionIds = sessions.map((s) => s.id);
   let sessionLogs: RawCycleData['sessionLogs'] = [];
   if (sessionIds.length > 0) {
-    const logsResult = await typedSupabase
-      .from('session_logs')
-      .select('session_id, session_rpe, actual_sets, completed_at, logged_at')
-      .eq('user_id', userId)
-      .in('session_id', sessionIds);
+    const [logsResult, setsMap] = await Promise.all([
+      typedSupabase
+        .from('session_logs')
+        .select('session_id, session_rpe, completed_at, logged_at')
+        .eq('user_id', userId)
+        .in('session_id', sessionIds),
+      fetchSessionSetsBySessionIds(sessionIds),
+    ]);
     if (logsResult.error) throw logsResult.error;
     sessionLogs = (logsResult.data ?? []).map((row) => ({
       session_id: row.session_id,
       session_rpe: row.session_rpe,
-      actual_sets: Array.isArray(row.actual_sets) ? row.actual_sets : null,
+      actual_sets: row.session_id
+        ? (setsMap.get(row.session_id)?.primary ?? null)
+        : null,
       completed_at: row.completed_at ?? row.logged_at,
     }));
   }
