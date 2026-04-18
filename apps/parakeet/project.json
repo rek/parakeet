@@ -140,14 +140,14 @@
     "eas-update:preview": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "eas update --channel preview --platform android --auto --non-interactive",
+        "command": "eas update --channel preview --platform android --environment preview --auto --non-interactive",
         "cwd": "apps/parakeet"
       }
     },
     "eas-update:production": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "eas update --channel production --platform android --auto --non-interactive",
+        "command": "eas update --channel production --platform android --environment production --auto --non-interactive",
         "cwd": "apps/parakeet"
       }
     },
