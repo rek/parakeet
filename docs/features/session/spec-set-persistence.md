@@ -1,6 +1,6 @@
 # Spec: Per-Set Persistence
 
-**Status**: In Progress (schema + dual-write shipped 2026-04-17; history reads + legacy-column drop pending)
+**Status**: Implemented (2026-04-18) — all reads cut over, JSONB columns retained only as placeholder writes. Column drop documented at `tools/scripts/pending-drop-session-logs-jsonb.md`, coordinated with a follow-up client OTA.
 **Domain**: Sessions
 **Design**: [design-durability.md](./design-durability.md)
 
@@ -103,7 +103,7 @@ Guarantees the server status reflects reality without a separate client call rac
   - [x] Drain handles `upsert_set_log` via `upsertSetLog`, marks matching store entry synced on success, standard retry semantics on network failure.
 
 ### History reads
-- [ ] `apps/parakeet/src/modules/history/` — still reads `session_logs.actual_sets`. Cut over in a follow-up once backfill is verified in prod.
+- [x] `apps/parakeet/src/modules/history/` — reads set data via `fetchSessionSetsBySessionIds`, exported from session module. Consumers across JIT, achievements, cycle-review, body-review, motivational-message, export, and decision-replay also migrated.
 
 ## Backfill
 
@@ -146,11 +146,10 @@ ON CONFLICT DO NOTHING;
 
 ## Rollout
 
-1. **(done)** Ship migration + dual-write. App continues to write `session_logs.actual_sets` as before.
-   Backfill script ready at `tools/scripts/backfill-set-logs.sql`; run after `npm run db:push`.
-2. Ship history reads from `set_logs` (fallback to `session_logs.actual_sets` when no `set_logs` exist for a session).
-3. Verify parity for a release cycle.
-4. Drop `session_logs.actual_sets` + `auxiliary_sets` columns. Remove dual-write.
+1. **(done 2026-04-17)** Ship migration + per-set dual-write. Backfill `tools/scripts/backfill-set-logs.sql` applied in prod (332 rows).
+2. **(done 2026-04-18)** Cut every JSONB reader over to `fetchSessionSetsBySessionIds`. No consumer reads `session_logs.actual_sets` / `auxiliary_sets` any more.
+3. **(done 2026-04-18)** Stop deriving the JSONB arrays in `completeSession` / `autoFinaliseSession`. Writes still include placeholder `[]` / `null` for schema compat.
+4. **Pending** — coordinated deploy: (a) DB migration to loosen `actual_sets` NOT NULL + add default, (b) client OTA to stop sending the placeholder fields, (c) DB migration to drop the columns. See `tools/scripts/pending-drop-session-logs-jsonb.md`.
 
 ## Dependencies
 
