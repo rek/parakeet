@@ -1,4 +1,4 @@
-import { fetchSessionSetsBySessionIds } from '@modules/session';
+import { getSessionSetsBySessionIds } from '@modules/session';
 import type {
   BadgeCheckContext,
   ConsistencyData,
@@ -214,7 +214,7 @@ async function fetchSessionLog(sessionId: string) {
       .select('is_deload, planned_sets')
       .eq('id', sessionId)
       .maybeSingle(),
-    fetchSessionSetsBySessionIds([sessionId]),
+    getSessionSetsBySessionIds([sessionId]),
   ]);
 
   if (logResult.error) throw logResult.error;
@@ -504,7 +504,7 @@ async function fetchConsecutivePerfectSessions(
   const sessionIds = recentLogs
     .map((r) => r.session_id)
     .filter((id): id is string => !!id);
-  const setsMap = await fetchSessionSetsBySessionIds(sessionIds);
+  const setsMap = await getSessionSetsBySessionIds(sessionIds);
 
   // set_logs only contain confirmed sets — is_completed is implicit. A
   // "perfect" session is any session_log whose primary sets are all
@@ -666,7 +666,7 @@ async function fetchConsecutiveFullRestSessions(
   const sessionIds = data
     .map((r) => r.session_id)
     .filter((id): id is string => !!id);
-  const setsMap = await fetchSessionSetsBySessionIds(sessionIds);
+  const setsMap = await getSessionSetsBySessionIds(sessionIds);
 
   let consecutive = 0;
   for (const log of data) {

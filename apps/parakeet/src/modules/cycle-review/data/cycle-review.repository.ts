@@ -1,4 +1,4 @@
-import { fetchSessionSetsBySessionIds } from '@modules/session';
+import { getSessionSetsBySessionIds } from '@modules/session';
 import type { CycleReview } from '@parakeet/shared-types';
 import type {
   CycleReport,
@@ -139,7 +139,7 @@ export async function fetchCycleReportSourceData(
         .select('session_id, session_rpe, completed_at, logged_at')
         .eq('user_id', userId)
         .in('session_id', sessionIds),
-      fetchSessionSetsBySessionIds(sessionIds),
+      getSessionSetsBySessionIds(sessionIds),
     ]);
     if (logsResult.error) throw logsResult.error;
     sessionLogs = (logsResult.data ?? []).map((row) => ({

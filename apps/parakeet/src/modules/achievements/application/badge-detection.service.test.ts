@@ -97,11 +97,11 @@ vi.mock('@parakeet/training-engine', () => ({
 }));
 
 // @modules/session barrel pulls in RN UI — mock the only surface we touch.
-const mockFetchSessionSetsBySessionIds = vi.hoisted(() =>
+const mockGetSessionSetsBySessionIds = vi.hoisted(() =>
   vi.fn(async () => new Map())
 );
 vi.mock('@modules/session', () => ({
-  fetchSessionSetsBySessionIds: mockFetchSessionSetsBySessionIds,
+  getSessionSetsBySessionIds: mockGetSessionSetsBySessionIds,
 }));
 
 const mockSupabaseFrom = vi.hoisted(() => vi.fn());

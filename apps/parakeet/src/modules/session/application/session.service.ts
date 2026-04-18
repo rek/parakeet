@@ -273,14 +273,11 @@ async function autoFinaliseSession(
   const completedCount = primary.length;
   const denom = plannedCount > 0 ? plannedCount : completedCount;
   const completionPct = denom > 0 ? (completedCount / denom) * 100 : 0;
-  const performanceVsPlan =
-    completionPct < 50
-      ? 'incomplete'
-      : completionPct < 90
-        ? 'under'
-        : denom > 0 && completedCount / denom > 1.1
-          ? 'over'
-          : 'at';
+  const performanceVsPlan = classifyPerformance(
+    completedCount,
+    denom,
+    completionPct
+  );
 
   const lastLoggedAt = logs.reduce<string | null>((acc, l) => {
     if (!acc) return l.logged_at;
@@ -327,6 +324,13 @@ export async function createAdHocSession(
 export async function startSession(sessionId: string): Promise<void> {
   await updateSessionToInProgress(sessionId);
 }
+
+// Public read path for per-set data across sessions. Thin wrapper over the
+// repository so the session module's barrel stays free of repo exports (see
+// docs/guide/ai-learnings.md). Consumers outside this module use this.
+export {
+  fetchSessionSetsBySessionIds as getSessionSetsBySessionIds,
+} from '../data/session.repository';
 
 // Skip a session (planned or in_progress → skipped)
 export async function skipSession(
@@ -643,16 +647,27 @@ async function generateNextUnendingSession(
 
 type PerformanceVsPlan = 'over' | 'at' | 'under' | 'incomplete';
 
+// Classification thresholds intentionally live here as the single source of
+// truth. They are referenced from docs/domain/periodization.md (completion
+// bands: <50% incomplete, <90% under, >110% over). Update both this function
+// and the domain doc together when tuning.
+const COMPLETION_PCT_INCOMPLETE_BELOW = 50;
+const COMPLETION_PCT_UNDER_BELOW = 90;
+const COMPLETION_RATIO_OVER_ABOVE = 1.1;
+
 function classifyPerformance(
   completedCount: number,
   plannedCount: number,
   completionPct: number
 ): PerformanceVsPlan {
-  if (completionPct < 50) return 'incomplete';
-  if (completionPct < 90) return 'under';
-  // With explicit completion flags and planned denominator, completion > 110%
-  // means confirmed completed sets exceeded planned set count.
-  if (plannedCount > 0 && completedCount / plannedCount > 1.1) return 'over';
+  if (completionPct < COMPLETION_PCT_INCOMPLETE_BELOW) return 'incomplete';
+  if (completionPct < COMPLETION_PCT_UNDER_BELOW) return 'under';
+  if (
+    plannedCount > 0
+    && completedCount / plannedCount > COMPLETION_RATIO_OVER_ABOVE
+  ) {
+    return 'over';
+  }
   return 'at';
 }
 

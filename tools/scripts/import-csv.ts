@@ -914,6 +914,48 @@ async function insertSessions(
 
     if (logErr) throw new Error(`Session log insert failed: ${logErr.message}`);
     insertedLogs++;
+
+    // Dual-write to set_logs — the durability-era source of truth. Every
+    // consumer reads from set_logs; writing JSONB alone would make these
+    // imported sessions appear empty once the JSONB columns are dropped.
+    // See tools/scripts/pending-drop-session-logs-jsonb.md.
+    const setLogRows = [
+      ...session.sets.map((s) => ({
+        session_id: sessionRow.id,
+        user_id: userId,
+        kind: 'primary' as const,
+        exercise: null,
+        exercise_type: null,
+        set_number: s.set_number,
+        weight_grams: s.weight_grams,
+        reps_completed: s.reps_completed,
+        rpe_actual: s.rpe_actual ?? null,
+        actual_rest_seconds: null,
+        failed: false,
+        notes: null,
+        logged_at: session.datetime,
+      })),
+      ...session.auxSets.map((s) => ({
+        session_id: sessionRow.id,
+        user_id: userId,
+        kind: 'auxiliary' as const,
+        exercise: s.exercise,
+        exercise_type: null,
+        set_number: s.set_number,
+        weight_grams: s.weight_grams,
+        reps_completed: s.reps_completed,
+        rpe_actual: s.rpe_actual ?? null,
+        actual_rest_seconds: null,
+        failed: false,
+        notes: null,
+        logged_at: session.datetime,
+      })),
+    ];
+    if (setLogRows.length > 0) {
+      const { error: setLogErr } = await db.from('set_logs').insert(setLogRows);
+      if (setLogErr)
+        throw new Error(`set_logs insert failed: ${setLogErr.message}`);
+    }
   }
 
   return { insertedSessions, insertedLogs, insertedAuxExercises };

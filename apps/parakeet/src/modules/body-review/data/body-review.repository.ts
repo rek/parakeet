@@ -1,4 +1,4 @@
-import { fetchSessionSetsBySessionIds } from '@modules/session';
+import { getSessionSetsBySessionIds } from '@modules/session';
 import type { Lift } from '@parakeet/shared-types';
 import { LiftSchema, MUSCLE_GROUPS } from '@parakeet/shared-types';
 import type {
@@ -143,7 +143,7 @@ export async function fetchWeeklyVolumeForReview(
   const sessionIds = rows
     .map((r) => r.session_id)
     .filter((id): id is string => !!id);
-  const setsMap = await fetchSessionSetsBySessionIds(sessionIds);
+  const setsMap = await getSessionSetsBySessionIds(sessionIds);
 
   for (const row of rows) {
     const sessions = Array.isArray(row.sessions)

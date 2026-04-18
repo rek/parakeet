@@ -60,6 +60,14 @@ COMMIT;
 
 File name suggestion: `supabase/migrations/YYYYMMDDHHMMSS_drop_session_logs_set_arrays.sql`
 
+## CSV import dependency
+
+`tools/scripts/import-csv.ts` writes to both `session_logs` JSONB **and**
+`set_logs` (updated 2026-04-18). Before Migration B, verify the script still
+populates `set_logs` — it's the only consumer-visible path for historical
+data. If someone edits the importer and forgets `set_logs`, imports will look
+empty in every screen post-drop.
+
 ## Verification
 
 After Migration B, confirm no rows still reference the dropped columns:

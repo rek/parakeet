@@ -1,12 +1,5 @@
 export * from './application/session.service';
-export {
-  fetchSessionSetsBySessionIds,
-  fetchSetLogs,
-} from './data/session.repository';
-export type {
-  SessionSetsBucket,
-  SetLogRow,
-} from './data/session.repository';
+export type { SessionSetsBucket } from './data/session.repository';
 export { sessionQueries } from './data/session.queries';
 export * from './application/motivational-message.service';
 export * from './hooks/useTodaySession';

@@ -1,4 +1,4 @@
-import { fetchSessionSetsBySessionIds } from '@modules/session';
+import { getSessionSetsBySessionIds } from '@modules/session';
 import type { ActualSet, Lift } from '@parakeet/shared-types';
 import type { Json } from '@platform/supabase';
 import { typedSupabase } from '@platform/supabase';
@@ -52,7 +52,7 @@ export async function fetchRecentSessionLogsForLift(
   const sessionIds = rows
     .map((r) => r.session_id)
     .filter((id): id is string => !!id);
-  const setsMap = await fetchSessionSetsBySessionIds(sessionIds);
+  const setsMap = await getSessionSetsBySessionIds(sessionIds);
 
   return rows.map((r) => {
     const session = Array.isArray(r.sessions) ? r.sessions[0] : r.sessions;
@@ -94,7 +94,7 @@ export async function fetchWeeklySessionLogs(
   const sessionIds = rows
     .map((r) => r.session_id)
     .filter((id): id is string => !!id);
-  const setsMap = await fetchSessionSetsBySessionIds(sessionIds);
+  const setsMap = await getSessionSetsBySessionIds(sessionIds);
 
   return rows.map((r) => {
     const buckets = r.session_id ? setsMap.get(r.session_id) : undefined;
