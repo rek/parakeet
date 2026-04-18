@@ -186,20 +186,46 @@ async function fetchCompletedSessionsWithLogs(): Promise<SessionWithLog[]> {
 
   const sessionIds = sessions.map((s) => s.id);
 
-  const { data: logs, error: logsErr } = await supabase
-    .from('session_logs')
-    .select('id, session_id, session_rpe, actual_sets, auxiliary_sets, logged_at')
-    .in('session_id', sessionIds)
-    .eq('is_correction', false);
+  // Post-durability-rollout (#16): hydrate per-set data from set_logs instead
+  // of reading session_logs JSONB (placeholder-only since 2026-04-18).
+  const [{ data: logs, error: logsErr }, { data: setLogs, error: setErr }] =
+    await Promise.all([
+      supabase
+        .from('session_logs')
+        .select('id, session_id, session_rpe, logged_at')
+        .in('session_id', sessionIds)
+        .eq('is_correction', false),
+      supabase
+        .from('set_logs')
+        .select(
+          'session_id, kind, exercise, set_number, weight_grams, reps_completed, rpe_actual',
+        )
+        .in('session_id', sessionIds),
+    ]);
 
   if (logsErr) throw new Error(`session_logs query failed: ${logsErr.message}`);
+  if (setErr) throw new Error(`set_logs query failed: ${setErr.message}`);
 
-  // One log per session: prefer the latest if there are multiple
+  const primaryBySession = new Map<string, unknown[]>();
+  const auxBySession = new Map<string, unknown[]>();
+  for (const row of setLogs ?? []) {
+    const bucket = row.kind === 'primary' ? primaryBySession : auxBySession;
+    if (!bucket.has(row.session_id)) bucket.set(row.session_id, []);
+    bucket.get(row.session_id)!.push(row);
+  }
+
+  // One log per session: prefer the latest if there are multiple. Stitch
+  // set_logs rows back on so downstream parseActualSets / parseAuxSets work.
   const logBySessionId = new Map<string, SessionLogRow>();
   for (const log of logs ?? []) {
     const existing = logBySessionId.get(log.session_id);
     if (!existing || log.logged_at > existing.logged_at) {
-      logBySessionId.set(log.session_id, log as SessionLogRow);
+      const augmented: SessionLogRow = {
+        ...log,
+        actual_sets: primaryBySession.get(log.session_id) ?? [],
+        auxiliary_sets: auxBySession.get(log.session_id) ?? [],
+      };
+      logBySessionId.set(log.session_id, augmented);
     }
   }
 

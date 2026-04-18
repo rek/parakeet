@@ -45,9 +45,9 @@ A visual display of weekly training volume per muscle group versus each muscle's
   - Exceeded MRV: red with ⚠ icon
 
 **Set counting:**
-- Weekly sets come from `session_logs.actual_sets.length` (total sets in each completed session log)
-- A `session_log` row only exists for completed sessions, so all sets in it count toward weekly volume
-- Previous filter (`reps_completed > 0`) was removed as it under-counted when users didn't enter every rep
+- Weekly sets come from `set_logs` (one row per confirmed set, linked to a completed session via `session_id`). Post-durability-rollout (backlog #16, 2026-04-18) the JSONB `session_logs.actual_sets` is placeholder-only and not read.
+- A `session_log` row only exists for completed sessions, so `set_logs` rows for those sessions are the authoritative weekly-volume input.
+- Previous filter (`reps_completed > 0`) was removed as it under-counted when users didn't enter every rep.
 
 **React Query hook:**
 ```typescript

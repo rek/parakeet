@@ -103,7 +103,7 @@ Guarantees the server status reflects reality without a separate client call rac
   - [x] Drain handles `upsert_set_log` via `upsertSetLog`, marks matching store entry synced on success, standard retry semantics on network failure.
 
 ### History reads
-- [x] `apps/parakeet/src/modules/history/` — reads set data via `fetchSessionSetsBySessionIds`, exported from session module. Consumers across JIT, achievements, cycle-review, body-review, motivational-message, export, and decision-replay also migrated.
+- [x] `apps/parakeet/src/modules/history/` — reads set data via `getSessionSetsBySessionIds`, exported from session module's service layer (internal name in the repo is `fetchSessionSetsBySessionIds`; exposed publicly as the service-named `getSessionSetsBySessionIds` per ai-learnings.md barrel-leak rule). Consumers across JIT, achievements, cycle-review, body-review, motivational-message, export, and decision-replay also migrated.
 
 ## Backfill
 
@@ -147,7 +147,7 @@ ON CONFLICT DO NOTHING;
 ## Rollout
 
 1. **(done 2026-04-17)** Ship migration + per-set dual-write. Backfill `tools/scripts/backfill-set-logs.sql` applied in prod (332 rows).
-2. **(done 2026-04-18)** Cut every JSONB reader over to `fetchSessionSetsBySessionIds`. No consumer reads `session_logs.actual_sets` / `auxiliary_sets` any more.
+2. **(done 2026-04-18)** Cut every JSONB reader over to `getSessionSetsBySessionIds`. No consumer reads `session_logs.actual_sets` / `auxiliary_sets` any more.
 3. **(done 2026-04-18)** Stop deriving the JSONB arrays in `completeSession` / `autoFinaliseSession`. Writes still include placeholder `[]` / `null` for schema compat.
 4. **Pending** — coordinated deploy: (a) DB migration to loosen `actual_sets` NOT NULL + add default, (b) client OTA to stop sending the placeholder fields, (c) DB migration to drop the columns. See `tools/scripts/pending-drop-session-logs-jsonb.md`.
 

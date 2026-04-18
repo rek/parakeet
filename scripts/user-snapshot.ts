@@ -438,20 +438,50 @@ async function fetchRecentCompletedSessions(
 
   const sessionIds = sessions.map((s) => s.id);
 
-  const { data: logs, error: logsErr } = await supabase
-    .from('session_logs')
-    .select('id, session_id, session_rpe, actual_sets, auxiliary_sets, logged_at, performance_vs_plan')
-    .in('session_id', sessionIds)
-    .eq('is_correction', false);
+  // Post-durability-rollout (#16): set data lives in set_logs, not
+  // session_logs JSONB. We pull session_logs for metadata only and stitch
+  // set_logs rows back on so parseActualSets / parseAuxSets keep working.
+  const [{ data: logs, error: logsErr }, { data: setLogs, error: setErr }] =
+    await Promise.all([
+      supabase
+        .from('session_logs')
+        .select('id, session_id, session_rpe, logged_at, performance_vs_plan')
+        .in('session_id', sessionIds)
+        .eq('is_correction', false),
+      supabase
+        .from('set_logs')
+        .select(
+          'session_id, kind, exercise, set_number, weight_grams, reps_completed, rpe_actual, actual_rest_seconds, failed',
+        )
+        .in('session_id', sessionIds),
+    ]);
 
   if (logsErr) throw new Error(`session_logs query failed: ${logsErr.message}`);
+  if (setErr) throw new Error(`set_logs query failed: ${setErr.message}`);
 
-  // Latest non-correction log per session
-  const logBySessionId = new Map<string, typeof logs extends (infer T)[] | null ? T : never>();
+  const primaryBySession = new Map<string, unknown[]>();
+  const auxBySession = new Map<string, unknown[]>();
+  for (const row of setLogs ?? []) {
+    const bucket = row.kind === 'primary' ? primaryBySession : auxBySession;
+    if (!bucket.has(row.session_id)) bucket.set(row.session_id, []);
+    bucket.get(row.session_id)!.push(row);
+  }
+
+  // Latest non-correction log per session, augmented with set_logs rows.
+  type LogRow = NonNullable<typeof logs>[number];
+  type AugmentedLog = LogRow & {
+    actual_sets: unknown[];
+    auxiliary_sets: unknown[];
+  };
+  const logBySessionId = new Map<string, AugmentedLog>();
   for (const log of logs ?? []) {
     const existing = logBySessionId.get(log.session_id);
     if (!existing || log.logged_at > existing.logged_at) {
-      logBySessionId.set(log.session_id, log);
+      logBySessionId.set(log.session_id, {
+        ...log,
+        actual_sets: primaryBySession.get(log.session_id) ?? [],
+        auxiliary_sets: auxBySession.get(log.session_id) ?? [],
+      });
     }
   }
 

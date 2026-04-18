@@ -32,7 +32,6 @@ export * from './utils/prepare-warning';
 export { selectPostRestWeight } from './utils/selectPostRestWeight';
 
 export {
-  parseActualSetsJson,
   parseJitInputSnapshot,
   parsePlannedSetsJson,
   parsePrescriptionTrace,

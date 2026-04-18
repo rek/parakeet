@@ -129,9 +129,8 @@ function promptRecovery(
               decisions.set(sessionId, 'resolved');
             })
             .catch((err) => {
-              // Leave the decision as 'prompted' so user can retry after
-              // investigating; alternatively reset so they get the prompt
-              // again on next foreground. Retrying is safer than silent drop.
+              // Clear the decision so the user gets the prompt again on next
+              // foreground — safer than silently dropping their unsaved work.
               decisions.delete(sessionId);
               captureException(err);
             });

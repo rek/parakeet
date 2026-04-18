@@ -54,7 +54,7 @@ interface CompleteSessionInput {
 
 **`session_logs.auxiliary_sets`:** JSONB column (nullable); present in current consolidated schema migration (`20260307000001_fix_personal_records_unique_index.sql`).
 
-**`classifyPerformance` helper:**
+**`classifyPerformance` helper** (`apps/parakeet/src/modules/session/utils/classify-performance.ts`; thresholds cross-referenced in `docs/domain/periodization.md` → *Completion Classification Thresholds*):
 - [x] `'incomplete'`: completion_pct < 50%
 - [x] `'under'`: completion_pct < 90%
 - [x] `'over'`: completed set count exceeds planned count by >10%
@@ -72,8 +72,8 @@ Completion metric contract:
 3. completion percentage: `(completedCount / plannedCount) * 100`
 
 Implementation notes:
-- `is_completed` is used for computation only and is stripped from persisted `session_logs.actual_sets` payload.
-- This avoids treating prefilled planned reps as completed work.
+- `is_completed` is a local-store-only field. Post durability rollout (#16), per-set writes go to `set_logs` on each confirmation, which by definition only contains confirmed sets — so `is_completed` never needs to be serialised.
+- Prefilled planned reps (not yet confirmed) never reach `set_logs`, so no downstream code treats them as completed work.
 
 ## Dependencies
 

@@ -223,3 +223,22 @@ Not yet implemented. Planned extension to include Overhead Press as a fourth pri
 | 4         | S / B / D / OHP |
 
 **Source:** `packages/training-engine/src/cube/blocks.ts` (planned)
+
+---
+
+## Completion Classification Thresholds
+
+After session completion the system classifies how the lifter performed against the plan. These bands drive the UI performance label and downstream performance-adjuster suggestions.
+
+| completion_pct         | Classification | Meaning                                                     |
+|------------------------|----------------|-------------------------------------------------------------|
+| < 50%                  | `incomplete`   | User confirmed fewer than half of planned sets              |
+| 50% – < 90%            | `under`        | User hit most of the plan but missed the top of the range   |
+| 90% – 110% (inclusive) | `at`           | On-plan (same completed/planned count, or ±1 aux drift)     |
+| > 110%                 | `over`         | Confirmed set count exceeded planned count by more than 10% |
+
+**Implementation:** `apps/parakeet/src/modules/session/utils/classify-performance.ts`. Constants `COMPLETION_PCT_INCOMPLETE_BELOW`, `COMPLETION_PCT_UNDER_BELOW`, `COMPLETION_RATIO_OVER_ABOVE` live at that path and are the single source of truth. Keep this table in sync when tuning.
+
+**Rationale:** the 50/90 split distinguishes "session wasn't really completed" from "session was productive but under target". The 110% over-band protects against false positives from aux drift (adding a rep or two shouldn't read as "over-performing").
+
+**Consumers:** `completeSession`, `autoFinaliseSession`, history UI performance chips.

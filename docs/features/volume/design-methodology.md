@@ -35,8 +35,8 @@ RP Strength explicitly warns against double counting. The volume landmark values
 ## Volume Computation Pipeline
 
 ```
-session_logs.actual_sets      → CompletedSetLog { lift, completedSets }
-session_logs.auxiliary_sets   → CompletedSetLog { lift, completedSets, exercise }
+set_logs (kind='primary')      → CompletedSetLog { lift, completedSets }
+set_logs (kind='auxiliary')    → CompletedSetLog { lift, completedSets, exercise }
                                            ↓
                              computeWeeklyVolume(logs, getMusclesForLift)
                                            ↓
@@ -46,6 +46,8 @@ session_logs.auxiliary_sets   → CompletedSetLog { lift, completedSets, exercis
                                            ↓
                           Record<MuscleGroup, VolumeStatus>
 ```
+
+Sets are loaded via `getSessionSetsBySessionIds` (exported from `@modules/session`). The legacy JSONB arrays on `session_logs` are no longer read; they hold placeholder values until Migration B drops them.
 
 `getMusclesForLift(lift, exercise?)` checks `EXERCISE_MUSCLES[exercise]` first; falls back to `LIFT_MUSCLES[lift]` for unknown exercises or main lift entries.
 

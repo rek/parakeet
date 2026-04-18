@@ -28,7 +28,7 @@ Current blind spots:
 
 After every session completion, compare trace predictions vs actual outcomes:
 
-**Input:** `PrescriptionTrace.mainLift.weightDerivation.modifiers[]` + `session_logs.session_rpe` + `session_logs.actual_sets[].rpe_actual`
+**Input:** `PrescriptionTrace.mainLift.weightDerivation.modifiers[]` + `session_logs.session_rpe` + `set_logs.rpe_actual` (for the session's primary kind rows)
 
 **Per-modifier tracking:**
 

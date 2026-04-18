@@ -66,6 +66,7 @@ import {
   updateSessionToPlanned,
   updateSessionToSkipped,
 } from '../data/session.repository';
+import { classifyPerformance } from '../utils/classify-performance';
 import { validateSet } from '../utils/validateSet';
 
 export type {
@@ -643,32 +644,6 @@ async function generateNextUnendingSession(
   // Fetch by program_id+planned status so we get the newly created session,
   // not the completed session that fetchTodaySession would return first.
   return fetchPlannedSessionForProgram(program.id, userId);
-}
-
-type PerformanceVsPlan = 'over' | 'at' | 'under' | 'incomplete';
-
-// Classification thresholds intentionally live here as the single source of
-// truth. They are referenced from docs/domain/periodization.md (completion
-// bands: <50% incomplete, <90% under, >110% over). Update both this function
-// and the domain doc together when tuning.
-const COMPLETION_PCT_INCOMPLETE_BELOW = 50;
-const COMPLETION_PCT_UNDER_BELOW = 90;
-const COMPLETION_RATIO_OVER_ABOVE = 1.1;
-
-function classifyPerformance(
-  completedCount: number,
-  plannedCount: number,
-  completionPct: number
-): PerformanceVsPlan {
-  if (completionPct < COMPLETION_PCT_INCOMPLETE_BELOW) return 'incomplete';
-  if (completionPct < COMPLETION_PCT_UNDER_BELOW) return 'under';
-  if (
-    plannedCount > 0
-    && completedCount / plannedCount > COMPLETION_RATIO_OVER_ABOVE
-  ) {
-    return 'over';
-  }
-  return 'at';
 }
 
 async function getRecentLogsForLift(

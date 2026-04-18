@@ -7,7 +7,7 @@
  * Usage:
  *   SUPABASE_URL=http://localhost:54321 \
  *   SUPABASE_SERVICE_KEY=<secret key> \
- *   npx tsx scripts/import-csv.ts \
+ *   npx tsx tools/scripts/import-csv.ts \
  *     --file ~/exports/strong.csv \
  *     --user-id <uuid> \
  *     [--unit kg|lbs] \
@@ -984,7 +984,7 @@ async function main() {
     console.error(`
 Usage:
   SUPABASE_URL=... SUPABASE_SERVICE_KEY=... \\
-  npx tsx scripts/import-csv.ts \\
+  npx tsx tools/scripts/import-csv.ts \\
     --file <path-to-csv> \\
     --user-id <uuid> \\
     [--unit kg|lbs] \\

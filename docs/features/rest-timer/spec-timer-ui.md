@@ -82,15 +82,15 @@ AI suggestion chip: shown when `llmSuggestion` is present and `Math.abs(llmSugge
 
 ### Session Store Extension
 
-**`apps/parakeet/store/sessionStore.ts`:**
+**`apps/parakeet/src/platform/store/sessionStore.ts`:**
 
-Add `actual_rest_seconds?: number` to `ActualSet` type. Already persisted to MMKV — no other change needed.
+`actual_rest_seconds?: number` is a field on the in-flight `ActualSet` shape. Persisted locally via Zustand + AsyncStorage (the `parakeet-session` key).
 
 ---
 
 ### Actual Rest Logging
 
-`actual_rest_seconds` flows through to `completeSession()` payload → stored in `session_logs.actual_sets` JSONB column (existing per-set data structure; add the field to the TypeScript type for `ActualSet`).
+Post-durability-rollout (backlog #16, 2026-04-18), `actual_rest_seconds` is persisted per-set to `set_logs.actual_rest_seconds` by `useSetPersistence` on each rest-timer dismissal. It no longer rides in the batch `session_logs.actual_sets` JSONB (which is placeholder-only and scheduled for drop).
 
 **Open question (deferred):** Timer start = set log tap (option 2 from design doc). Off by logging latency (~5–15s). Acceptable for v1. A "Start lift" button (option 1) is a future Settings → Training toggle.
 
