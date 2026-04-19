@@ -1,4 +1,3 @@
-import { getSessionSetsBySessionIds } from '@modules/session';
 import type { ActualSet } from '@parakeet/shared-types';
 import { typedSupabase } from '@platform/supabase';
 
@@ -33,6 +32,7 @@ export async function fetchCompletedSessionsForExport(
 
   const rows = data ?? [];
   const sessionIds = rows.map((r) => r.id as string);
+  const { getSessionSetsBySessionIds } = await import('@modules/session');
   const setsMap = await getSessionSetsBySessionIds(sessionIds);
 
   return rows.map((row) => {

@@ -80,6 +80,27 @@
         "parallel": false
       }
     },
+    "start": {
+      "continuous": true,
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": [
+          {
+            "command": "adb reverse tcp:54321 tcp:54321 && adb reverse tcp:8081 tcp:8081",
+            "description": "Bridge USB ports (Supabase + Metro)"
+          },
+          {
+            "command": "node tools/scripts/set-android-supabase-ip.mjs",
+            "description": "Sync Android Supabase IP"
+          },
+          {
+            "command": "cd apps/parakeet && expo run:android",
+            "description": "Build, install, launch dev app + Metro"
+          }
+        ],
+        "parallel": false
+      }
+    },
     "prebuild": {
       "executor": "nx:run-commands",
       "options": {

@@ -47,6 +47,7 @@ Training science constants, formulas, and thresholds live in [docs/domain/](./do
 | [guide/ai-learnings.md](./docs/guide/ai-learnings.md)                 | Debugging or reviewing   |
 | [guide/dev.md](./docs/guide/dev.md)                                   | Running/building/testing |
 | [guide/react-query-patterns.md](./docs/guide/react-query-patterns.md) | Data layer / React Query |
+| [guide/troubleshooting.md](./docs/guide/troubleshooting.md)           | Recurring bugs + fixes   |
 
 ## Architecture Baseline
 

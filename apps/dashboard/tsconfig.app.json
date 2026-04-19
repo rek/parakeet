@@ -26,6 +26,12 @@
   "include": ["src/**/*.js", "src/**/*.jsx", "src/**/*.ts", "src/**/*.tsx"],
   "references": [
     {
+      "path": "../../packages/training-engine/tsconfig.lib.json"
+    },
+    {
+      "path": "../../packages/shared-types/tsconfig.lib.json"
+    },
+    {
       "path": "../parakeet/tsconfig.app.json"
     }
   ]

@@ -1,7 +1,6 @@
 import { useAuth } from '@modules/auth';
 import { getProfile } from '@modules/profile';
 import { fetchActiveProgramMode } from '@modules/program';
-import { getCurrentWeekLogs } from '@modules/session';
 import {
   classifyVolumeStatus,
   computeRemainingCapacity,
@@ -25,6 +24,7 @@ export function useWeeklyVolume() {
   return useQuery({
     queryKey: volumeQueries.weekly(user?.id, rollingWindowStart()),
     queryFn: async () => {
+      const { getCurrentWeekLogs } = await import('@modules/session');
       const [logs, profile, program] = await Promise.all([
         getCurrentWeekLogs(user!.id),
         getProfile(),

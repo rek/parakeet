@@ -31,6 +31,7 @@ import Constants from 'expo-constants';
 import { router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { HeaderMenuButton } from '../../components/ui/HeaderMenuButton';
 import { PlateToggleRow } from '../../components/ui/PlateToggleRow';
 import { ScreenHeader } from '../../components/ui/ScreenHeader';
 import { ScreenTitle } from '../../components/ui/ScreenTitle';
@@ -127,6 +128,11 @@ function buildStyles(colors: ColorScheme) {
     safeArea: {
       flex: 1,
       backgroundColor: colors.bg,
+    },
+    headerLeft: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing[2],
     },
     scrollView: {
       flex: 1,
@@ -374,7 +380,10 @@ export default function SettingsScreen() {
   return (
     <SafeAreaView style={styles.safeArea}>
       <ScreenHeader>
-        <ScreenTitle>Settings</ScreenTitle>
+        <View style={styles.headerLeft}>
+          <HeaderMenuButton />
+          <ScreenTitle>Settings</ScreenTitle>
+        </View>
       </ScreenHeader>
       <ScrollView
         style={styles.scrollView}

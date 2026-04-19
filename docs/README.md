@@ -25,6 +25,7 @@ See [guide/ai-workflow.md](./guide/ai-workflow.md) for the full workflow and whe
 5. [guide/dev.md](./guide/dev.md) — day-to-day commands
 6. [guide/ai-workflow.md](./guide/ai-workflow.md) — design, plan, implement, validate, wrap up
 7. [guide/react-query-patterns.md](./guide/react-query-patterns.md) — data layer patterns and anti-patterns
+8. [guide/troubleshooting.md](./guide/troubleshooting.md) — recurring bugs, symptoms, and fixes
 
 ## Feature Navigator
 

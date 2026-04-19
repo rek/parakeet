@@ -32,6 +32,7 @@ import { router } from 'expo-router';
 import { LineChart } from 'react-native-chart-kit';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { HeaderMenuButton } from '../../components/ui/HeaderMenuButton';
 import { ScreenHeader } from '../../components/ui/ScreenHeader';
 import { ScreenTitle } from '../../components/ui/ScreenTitle';
 import { palette, radii, spacing, typography } from '../../theme';
@@ -91,6 +92,11 @@ export default function HistoryScreen() {
     () =>
       StyleSheet.create({
         safeArea: { flex: 1, backgroundColor: colors.bg },
+        headerLeft: {
+          flexDirection: 'row',
+          alignItems: 'center',
+          gap: spacing[2],
+        },
         scrollView: { flex: 1 },
         container: {
           paddingHorizontal: spacing[5],
@@ -421,7 +427,10 @@ export default function HistoryScreen() {
   return (
     <SafeAreaView style={styles.safeArea}>
       <ScreenHeader>
-        <ScreenTitle>History</ScreenTitle>
+        <View style={styles.headerLeft}>
+          <HeaderMenuButton />
+          <ScreenTitle>History</ScreenTitle>
+        </View>
       </ScreenHeader>
       <ScrollView
         style={styles.scrollView}

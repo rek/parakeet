@@ -30,6 +30,7 @@ import { capitalize } from '@shared/utils/string';
 import { router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { HeaderMenuButton } from '../../components/ui/HeaderMenuButton';
 import { ScreenHeader } from '../../components/ui/ScreenHeader';
 import { ScreenTitle } from '../../components/ui/ScreenTitle';
 import { spacing, typography } from '../../theme';
@@ -53,6 +54,11 @@ function buildStyles(colors: ColorScheme) {
       justifyContent: 'space-between',
       alignItems: 'center',
       marginBottom: spacing[1],
+    },
+    headerLeft: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing[2],
     },
     subtitle: {
       fontSize: typography.sizes.sm,
@@ -259,7 +265,10 @@ export default function ProgramScreen() {
     return (
       <SafeAreaView style={styles.container}>
         <ScreenHeader>
-          <ScreenTitle>My Program</ScreenTitle>
+          <View style={styles.headerLeft}>
+            <HeaderMenuButton />
+            <ScreenTitle>My Program</ScreenTitle>
+          </View>
         </ScreenHeader>
         <View style={styles.emptyState}>
           <Text style={styles.emptyTitle}>No active program</Text>
@@ -312,7 +321,10 @@ export default function ProgramScreen() {
       <SafeAreaView style={styles.container}>
         <ScreenHeader>
           <View style={styles.headerRow}>
-            <ScreenTitle>My Program</ScreenTitle>
+            <View style={styles.headerLeft}>
+              <HeaderMenuButton />
+              <ScreenTitle>My Program</ScreenTitle>
+            </View>
             <TouchableOpacity
               onPress={confirmEndProgram}
               disabled={isEndingProgram}

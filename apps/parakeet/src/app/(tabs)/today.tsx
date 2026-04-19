@@ -55,9 +55,7 @@ import { capitalize } from '@shared/utils/string';
 import { router, useFocusEffect } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { Ionicons } from '@expo/vector-icons';
-
-import { LeftDrawer } from '../../components/ui/LeftDrawer';
+import { HeaderMenuButton } from '../../components/ui/HeaderMenuButton';
 import { ScreenHeader } from '../../components/ui/ScreenHeader';
 import { palette, radii, spacing, typography } from '../../theme';
 import type { ColorScheme } from '../../theme';
@@ -86,10 +84,6 @@ function buildStyles(colors: ColorScheme) {
       flexDirection: 'row',
       alignItems: 'center',
       gap: spacing[2],
-    },
-    burgerButton: {
-      padding: spacing[1],
-      marginLeft: -spacing[1],
     },
     title: {
       fontSize: typography.sizes['2xl'],
@@ -523,7 +517,6 @@ export default function TodayScreen() {
   const { invalidateSessionCache } = useSessionLifecycle();
   const { refreshAll } = useRefreshAll();
   const [refreshing, setRefreshing] = useState(false);
-  const [drawerOpen, setDrawerOpen] = useState(false);
   const [pendingReview, setPendingReview] = useState<{
     programId: string | null;
     weekNumber: number;
@@ -631,16 +624,7 @@ export default function TodayScreen() {
       <ScreenHeader>
         <View style={styles.headerRow}>
           <View style={styles.headerLeft}>
-            <TouchableOpacity
-              style={styles.burgerButton}
-              onPress={() => setDrawerOpen(true)}
-              activeOpacity={0.7}
-              accessibilityLabel="Open menu"
-              accessibilityRole="button"
-              hitSlop={8}
-            >
-              <Ionicons name="menu" size={28} color={colors.primary} />
-            </TouchableOpacity>
+            <HeaderMenuButton />
             <Text style={styles.title}>PARAKEET</Text>
           </View>
           {showStreaks && (streakData?.currentStreak ?? 0) >= 1 && (
@@ -651,7 +635,6 @@ export default function TodayScreen() {
           )}
         </View>
       </ScreenHeader>
-      <LeftDrawer visible={drawerOpen} onClose={() => setDrawerOpen(false)} />
 
       <ScrollView
         style={styles.scroll}
