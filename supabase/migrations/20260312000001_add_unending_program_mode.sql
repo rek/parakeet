@@ -2,7 +2,6 @@
 ALTER TABLE programs ADD COLUMN IF NOT EXISTS program_mode TEXT NOT NULL DEFAULT 'scheduled';
 ALTER TABLE programs ADD COLUMN IF NOT EXISTS unending_session_counter INTEGER NOT NULL DEFAULT 0;
 
-ALTER TABLE programs DROP CONSTRAINT IF EXISTS programs_program_mode_check;
 ALTER TABLE programs ADD CONSTRAINT programs_program_mode_check
   CHECK (program_mode IN ('scheduled', 'unending'));
 
