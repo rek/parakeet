@@ -32,7 +32,13 @@ Shipped: append-only `set_logs` with first-set trigger, per-set dual-write via `
 
 See [design doc](features/session/design-durability.md), [spec-set-persistence](features/session/spec-set-persistence.md), [spec-auto-finalize](features/session/spec-auto-finalize.md).
 
-## 20
+## ~~20~~ (Done — 19 Apr 2026)
+
+Reanalyze made testable + observable. Orchestration extracted to `modules/video-analysis/application/reanalyze.ts` (pure, dep-injected); hook is a thin RN wrapper. Local Node repro against local Supabase confirmed the DB write path works end-to-end; integration vitest at `application/__tests__/reanalyze.test.ts` exercises auth → RLS UPDATE → round-trip with a real landmark fixture so the next regression lands with a failing test, not a prod report. Blocking diagnostic alerts (from commit `ee01490`) removed in favour of Sentry breadcrumbs (`addBreadcrumb('reanalyze', step, data)`) plus an explicit success Alert (`Re-analyze complete — Detected N reps (was M)`) so the user can no longer confuse "silent no-op" with "worked but yielded 0 reps".
+
+Ruled out along the way: (a) PostgREST `.update().eq().select('*').single()` silently swallowing an RLS-filtered 0-row update — verified it throws `PGRST116` on the no-rows path; (b) analyzeVideoFrames producing stale output — fixture `dl-2-reps-side` yields 2 reps + `fatigueSignatures` on the current detector, matching the DB round-trip.
+
+### Repro notes (kept for future agents)
 
 **Video re-analyze silently does nothing — debug with a dev build, not prod OTAs.**
 

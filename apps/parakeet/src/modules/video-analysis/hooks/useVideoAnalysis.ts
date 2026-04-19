@@ -2,7 +2,7 @@ import { useCallback, useState } from 'react';
 import { Alert } from 'react-native';
 
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { captureException } from '@platform/utils/captureException';
+import { addBreadcrumb, captureException } from '@platform/utils/captureException';
 import { Directory, File, Paths } from 'expo-file-system';
 import * as ImagePicker from 'expo-image-picker';
 import { getVideoMetaData, Video } from 'react-native-compressor';
@@ -11,6 +11,10 @@ import {
   analyzeVideoFrames,
   extractFramesFromVideo,
 } from '../application/analyze-video';
+import {
+  reanalyzeSessionVideo,
+  SUPPORTED_LIFTS,
+} from '../application/reanalyze';
 import { uploadVideoToStorage } from '../application/video-upload';
 import { videoQueries } from '../data/video.queries';
 import {
@@ -20,8 +24,6 @@ import {
 } from '../data/video.repository';
 import { normalizeVideoUri } from '../lib/normalize-video-uri';
 import { computeSagittalConfidence } from '../lib/view-confidence';
-
-const SUPPORTED_LIFTS = ['squat', 'bench', 'deadlift'] as const;
 
 export interface SetContext {
   weightGrams: number;
@@ -251,103 +253,62 @@ export function useVideoAnalysis({
    * Re-run pose extraction and analysis against the existing local video file,
    * then update the same session_videos row in place. Used after a detector
    * improvement to refresh an existing recording without re-capturing.
+   *
+   * Orchestration lives in `application/reanalyze.ts` so it can be tested
+   * end-to-end against a real Supabase instance without the RN runtime. The
+   * hook is a thin wrapper that wires native deps + UI state.
    */
   const reanalyze = useCallback(async () => {
-    // Diagnostic helper — blocks so we can't miss an alert in the middle of
-    // a long async flow. Remove once re-analyze is proven reliable.
-    const diag = (title: string, message: string) =>
-      new Promise<void>((resolve) => {
-        Alert.alert(title, message, [{ text: 'OK', onPress: () => resolve() }]);
-      });
-
     if (!result) {
-      await diag('Reanalyze aborted', 'no result in cache');
+      Alert.alert('Re-analyze', 'No video loaded. Pull to refresh and try again.');
       return;
     }
     try {
       setError(null);
       setIsProcessing(true);
-      setProgress(0.05);
+      setProgress(0);
 
-      const videoUri = result.localUri;
-      const file = new File(normalizeVideoUri(videoUri));
-      const fileExists = file.exists;
-      if (!fileExists) {
-        await diag(
-          'Reanalyze: file missing',
-          `local_uri=${videoUri}`
-        );
-        throw new Error('Local video file missing');
-      }
+      const beforeReps = result.analysis?.reps.length ?? 0;
 
-      let durationSec = result.durationSec;
-      try {
-        const meta = await getVideoMetaData(videoUri);
-        if (meta.duration > 0) durationSec = meta.duration;
-      } catch (err) {
-        captureException(err);
-      }
-
-      let analysis = null;
-      let extractedFrames: unknown[] | null = null;
-      let extractedFps = 0;
-
-      if (durationSec > 0) {
-        const { frames, fps } = await extractFramesFromVideo({
-          videoUri,
-          durationSec,
-          onProgress: (p) => setProgress(0.05 + p * 0.8),
-        });
-
-        extractedFrames = frames;
-        extractedFps = fps;
-
-        if (
-          frames.length > 0 &&
-          SUPPORTED_LIFTS.includes(lift as (typeof SUPPORTED_LIFTS)[number])
-        ) {
-          analysis = analyzeVideoFrames({
-            frames,
-            fps,
-            lift: lift as (typeof SUPPORTED_LIFTS)[number],
-          });
-        }
-
-        await diag(
-          'Reanalyze: extraction done',
-          `duration=${durationSec.toFixed(1)}s frames=${frames.length} lift=${lift} analysisNull=${analysis == null} reps=${analysis?.reps?.length ?? 'n/a'}`
-        );
-      }
-
-      if (!analysis) {
-        throw new Error('analysis is null (extraction returned empty)');
-      }
-
-      const updated = await updateSessionVideoAnalysis({
-        id: result.id,
-        analysis,
+      const updated = await reanalyzeSessionVideo({
+        result,
+        lift,
+        deps: {
+          fileExists: (uri) => new File(normalizeVideoUri(uri)).exists,
+          getVideoDurationSec: async (uri) => {
+            const meta = await getVideoMetaData(uri);
+            return meta.duration ?? null;
+          },
+          extractFrames: extractFramesFromVideo,
+          analyze: ({ frames, fps, lift: l }) =>
+            analyzeVideoFrames({ frames, fps, lift: l }),
+          update: updateSessionVideoAnalysis,
+          saveDebugLandmarks:
+            typeof __DEV__ !== 'undefined' && __DEV__
+              ? ({ id, frames, fps }) =>
+                  updateSessionVideoDebugLandmarks({ id, frames, fps })
+              : undefined,
+          onProgress: setProgress,
+          onBreadcrumb: (step, data) =>
+            addBreadcrumb('reanalyze', step, data),
+        },
       });
-      await diag(
-        'Reanalyze: DB update ok',
-        `id=${result.id} reps=${updated.analysis?.reps?.length ?? 'n/a'}`
-      );
+
       queryClient.setQueryData(queryOpts.queryKey, [updated]);
       queryClient.invalidateQueries({ queryKey: videoQueries.all() });
 
-      if (typeof __DEV__ !== 'undefined' && __DEV__ && extractedFrames) {
-        updateSessionVideoDebugLandmarks({
-          id: result.id,
-          frames: extractedFrames,
-          fps: extractedFps,
-        });
-      }
-
-      setProgress(1);
+      const afterReps = updated.analysis?.reps.length ?? 0;
+      const delta =
+        beforeReps === afterReps
+          ? ` (unchanged — detector produced same ${afterReps} reps)`
+          : ` (was ${beforeReps})`;
+      Alert.alert(
+        'Re-analyze complete',
+        `Detected ${afterReps} rep${afterReps === 1 ? '' : 's'}${delta}`
+      );
     } catch (err) {
       captureException(err);
-      const message =
-        err instanceof Error ? err.message : 'Failed to reanalyze';
-      await diag('Reanalyze failed', message);
+      const message = err instanceof Error ? err.message : 'Failed to reanalyze';
       setError(message);
     } finally {
       setIsProcessing(false);
