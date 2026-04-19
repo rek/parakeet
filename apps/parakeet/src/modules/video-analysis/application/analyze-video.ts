@@ -1,5 +1,11 @@
-import { assembleAnalysis } from '../lib/metrics-assembler';
 import type { PoseFrame, PoseLandmark } from '../lib/pose-types';
+
+import { analyzeVideoFrames, EMPTY_FRAME } from './analyze-frames';
+
+// Re-export the pure analysis function so existing import sites keep working.
+// Dashboard / non-RN consumers should import from `./analyze-frames` directly
+// to avoid pulling in this file's RN-only `extractFramesFromVideo`.
+export { analyzeVideoFrames };
 
 // 4fps captures 8-16 frames per rep (reps take 2-4s). Good balance between
 // analysis quality and device memory. Tested stable at 60 frames (15s video).
@@ -9,102 +15,8 @@ const DEFAULT_TARGET_FPS = 4;
 /** MediaPipe pose landmarker model bundled in android assets via config plugin. */
 const POSE_MODEL = 'pose_landmarker_lite.task';
 
-/** Zeroed 33-landmark frame for when detection fails — maintains index alignment. */
-const EMPTY_FRAME: PoseFrame = Array.from({ length: 33 }, () => ({
-  x: 0,
-  y: 0,
-  z: 0,
-  visibility: 0,
-}));
-
 function isEmptyFrame(frame: PoseFrame) {
   return frame[0].visibility === 0 && frame[0].x === 0 && frame[0].y === 0;
-}
-
-/**
- * Interpolate empty frames using linear interpolation from neighboring
- * valid frames. Prevents zero-coordinate frames from corrupting bar path,
- * angle calculations, and rep detection.
- *
- * Strategy:
- * - If a valid neighbor exists on both sides: lerp between them
- * - If only one side has a valid neighbor: copy it (hold)
- * - If no valid neighbors exist: leave as empty (will be filtered later)
- */
-function interpolateEmptyFrames({ frames }: { frames: PoseFrame[] }) {
-  const result = [...frames];
-  const len = frames.length;
-
-  for (let i = 0; i < len; i++) {
-    if (!isEmptyFrame(result[i])) continue;
-
-    // Find nearest valid frame before and after
-    let prevIdx = -1;
-    for (let j = i - 1; j >= 0; j--) {
-      if (!isEmptyFrame(result[j])) {
-        prevIdx = j;
-        break;
-      }
-    }
-    let nextIdx = -1;
-    for (let j = i + 1; j < len; j++) {
-      if (!isEmptyFrame(frames[j])) {
-        nextIdx = j;
-        break;
-      }
-    }
-
-    if (prevIdx >= 0 && nextIdx >= 0) {
-      // Lerp between neighbors
-      const t = (i - prevIdx) / (nextIdx - prevIdx);
-      result[i] = result[prevIdx].map((lm, k) => ({
-        x: lm.x + (frames[nextIdx][k].x - lm.x) * t,
-        y: lm.y + (frames[nextIdx][k].y - lm.y) * t,
-        z: lm.z + (frames[nextIdx][k].z - lm.z) * t,
-        visibility: lm.visibility,
-      }));
-    } else if (prevIdx >= 0) {
-      result[i] = result[prevIdx].map((lm) => ({ ...lm }));
-    } else if (nextIdx >= 0) {
-      result[i] = frames[nextIdx].map((lm) => ({ ...lm }));
-    }
-    // else: no valid neighbors — stays empty
-  }
-
-  return result;
-}
-
-/**
- * Run the full analysis pipeline on pre-extracted pose frames.
- *
- * Interpolates empty frames before analysis so that failed detections
- * don't corrupt bar path, angles, or rep detection with zero coordinates.
- */
-export function analyzeVideoFrames({
-  frames,
-  fps,
-  lift,
-}: {
-  frames: PoseFrame[];
-  fps: number;
-  lift: 'squat' | 'bench' | 'deadlift';
-}) {
-  // Strategy: interpolate short gaps (1-2 frames), drop long gaps.
-  // This preserves the signal shape while filling minor detection failures.
-  const interpolated = interpolateEmptyFrames({ frames });
-
-  // Filter out any remaining empty frames (from long gaps with no neighbors)
-  // and adjust effective fps proportionally.
-  const valid = interpolated.filter((f) => !isEmptyFrame(f));
-  const effectiveFps =
-    valid.length > 0 ? fps * (valid.length / frames.length) : fps;
-
-  if (typeof __DEV__ !== 'undefined' && __DEV__) {
-    console.log(
-      `[analysis] ${valid.length}/${frames.length} usable frames (fps=${effectiveFps.toFixed(1)})`
-    );
-  }
-  return assembleAnalysis({ frames: valid, fps: effectiveFps, lift });
 }
 
 /** Yield to the event loop — lets the native GC run between frames. */

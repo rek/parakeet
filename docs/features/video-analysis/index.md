@@ -12,6 +12,7 @@ AI-powered form analysis with set-level video linking and calibration.
 - [design-set-linking.md](./design-set-linking.md) — Set-level video linking design
 - [design-future.md](./design-future.md) — Future video feature roadmap
 - [design-local-only-storage.md](./design-local-only-storage.md) — Drop raw-video uploads; cloud keeps only analysis results (proposed)
+- [design-playback-overlay.md](./design-playback-overlay.md) — Bar path + skeleton overlays on top of `<VideoView>` during playback (proposed)
 
 ## Specs
 | Spec | Status | Concern |
@@ -23,3 +24,4 @@ AI-powered form analysis with set-level video linking and calibration.
 | [spec-post-rest-recording.md](./spec-post-rest-recording.md) | done | Auto-record after rest (mobile-051) |
 | [spec-view-angle.md](./spec-view-angle.md) | done | View angle rework (mobile-052) |
 | [spec-ai-proxy.md](./spec-ai-proxy.md) | done | OpenAI Edge Function proxy (GH#161) |
+| [spec-playback-overlay.md](./spec-playback-overlay.md) | proposed | Optional bar path + skeleton overlays during video playback |

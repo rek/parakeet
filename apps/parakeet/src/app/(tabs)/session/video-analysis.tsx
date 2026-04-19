@@ -229,6 +229,10 @@ export default function VideoAnalysisScreen() {
               onReplace={pickAndAnalyze}
               isProcessing={isProcessing}
               colors={colors}
+              analysis={result.analysis}
+              videoWidthPx={result.videoWidthPx}
+              videoHeightPx={result.videoHeightPx}
+              recordedByName={result.recordedByName}
             />
             <TouchableOpacity
               style={styles.reanalyzeButton}

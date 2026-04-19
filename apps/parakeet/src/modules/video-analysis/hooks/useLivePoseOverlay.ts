@@ -2,35 +2,18 @@ import { useCallback, useState } from 'react';
 
 import {
   Delegate,
-  KnownPoseLandmarks,
   RunningMode,
   usePoseDetection,
 } from 'react-native-mediapipe';
 import type { PoseDetectionResultBundle } from 'react-native-mediapipe';
 
+import { SKELETON_CONNECTIONS } from '../lib/skeleton-connections';
+
+/** Re-exported for backwards compatibility — pure constant lives in lib/. */
+export { SKELETON_CONNECTIONS };
+
 /** MediaPipe pose landmarker model bundled in android assets. */
 const POSE_MODEL = 'pose_landmarker_lite.task';
-
-/** Landmarks to draw as skeleton lines (pairs of landmark indices). */
-export const SKELETON_CONNECTIONS = [
-  // Torso
-  [KnownPoseLandmarks.leftShoulder, KnownPoseLandmarks.rightShoulder],
-  [KnownPoseLandmarks.leftShoulder, KnownPoseLandmarks.leftHip],
-  [KnownPoseLandmarks.rightShoulder, KnownPoseLandmarks.rightHip],
-  [KnownPoseLandmarks.leftHip, KnownPoseLandmarks.rightHip],
-  // Left arm
-  [KnownPoseLandmarks.leftShoulder, KnownPoseLandmarks.leftElbow],
-  [KnownPoseLandmarks.leftElbow, KnownPoseLandmarks.leftWrist],
-  // Right arm
-  [KnownPoseLandmarks.rightShoulder, KnownPoseLandmarks.rightElbow],
-  [KnownPoseLandmarks.rightElbow, KnownPoseLandmarks.rightWrist],
-  // Left leg
-  [KnownPoseLandmarks.leftHip, KnownPoseLandmarks.leftKnee],
-  [KnownPoseLandmarks.leftKnee, KnownPoseLandmarks.leftAnkle],
-  // Right leg
-  [KnownPoseLandmarks.rightHip, KnownPoseLandmarks.rightKnee],
-  [KnownPoseLandmarks.rightKnee, KnownPoseLandmarks.rightAnkle],
-] as const;
 
 export interface LiveLandmark {
   x: number;

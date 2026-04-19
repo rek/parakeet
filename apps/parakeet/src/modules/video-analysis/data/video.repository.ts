@@ -53,6 +53,8 @@ function toSessionVideo(row: VideoRowWithProfile): SessionVideo {
     recordedByName: row.recorded_by
       ? (row.recorded_by_profile?.display_name ?? 'Partner')
       : null,
+    videoWidthPx: row.video_width_px ?? null,
+    videoHeightPx: row.video_height_px ?? null,
     createdAt: row.created_at,
   };
 }
@@ -71,6 +73,8 @@ export async function insertSessionVideo({
   setWeightGrams,
   setReps,
   setRpe,
+  videoWidthPx,
+  videoHeightPx,
 }: {
   sessionId: string;
   lift: string;
@@ -82,6 +86,8 @@ export async function insertSessionVideo({
   setWeightGrams?: number | null;
   setReps?: number | null;
   setRpe?: number | null;
+  videoWidthPx?: number | null;
+  videoHeightPx?: number | null;
 }) {
   const {
     data: { user },
@@ -102,6 +108,8 @@ export async function insertSessionVideo({
       set_weight_grams: setWeightGrams ?? null,
       set_reps: setReps ?? null,
       set_rpe: setRpe ?? null,
+      video_width_px: videoWidthPx ?? null,
+      video_height_px: videoHeightPx ?? null,
     })
     .select('*')
     .single();

@@ -19,5 +19,7 @@ export interface SessionVideo {
   setRpe: number | null;
   recordedBy: string | null;
   recordedByName: string | null;
+  videoWidthPx: number | null;
+  videoHeightPx: number | null;
   createdAt: string;
 }

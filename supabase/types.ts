@@ -1131,6 +1131,8 @@ export type Database = {
           set_rpe: number | null
           set_weight_grams: number | null
           user_id: string
+          video_height_px: number | null
+          video_width_px: number | null
         }
         Insert: {
           analysis?: Json | null
@@ -1150,6 +1152,8 @@ export type Database = {
           set_rpe?: number | null
           set_weight_grams?: number | null
           user_id: string
+          video_height_px?: number | null
+          video_width_px?: number | null
         }
         Update: {
           analysis?: Json | null
@@ -1169,6 +1173,8 @@ export type Database = {
           set_rpe?: number | null
           set_weight_grams?: number | null
           user_id?: string
+          video_height_px?: number | null
+          video_width_px?: number | null
         }
         Relationships: [
           {

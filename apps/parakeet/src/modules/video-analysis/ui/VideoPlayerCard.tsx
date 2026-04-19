@@ -1,14 +1,28 @@
-import { useMemo } from 'react';
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { useMemo, useState } from 'react';
+import {
+  LayoutChangeEvent,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 
+import type { VideoAnalysisResult } from '@parakeet/shared-types';
 import { useVideoPlayer, VideoView } from 'expo-video';
 
+import { useOverlayPreference } from '../hooks/useOverlayPreference';
+import { usePlaybackTime } from '../hooks/usePlaybackTime';
+import { computeDisplayRect } from '../lib/video-display-rect';
 import { radii, spacing, typography } from '../../../theme';
 import type { ColorScheme } from '../../../theme';
 
+import { OverlayToggleChips } from './OverlayToggleChips';
+import { PlaybackBarPathOverlay } from './PlaybackBarPathOverlay';
+
 /**
  * Video playback card using expo-video.
- * Renders a VideoView with native controls and optional replace action.
+ * Renders a VideoView with native controls and optional toggle chips for
+ * playback overlays (bar path, skeleton).
  */
 export function VideoPlayerCard({
   localUri,
@@ -17,6 +31,9 @@ export function VideoPlayerCard({
   isProcessing,
   colors,
   recordedByName,
+  analysis,
+  videoWidthPx,
+  videoHeightPx,
 }: {
   localUri: string;
   durationSec: number;
@@ -24,22 +41,79 @@ export function VideoPlayerCard({
   isProcessing: boolean;
   colors: ColorScheme;
   recordedByName?: string | null;
+  analysis?: VideoAnalysisResult | null;
+  videoWidthPx?: number | null;
+  videoHeightPx?: number | null;
 }) {
   const styles = useMemo(() => buildStyles(colors), [colors]);
 
   const player = useVideoPlayer(localUri, (p) => {
     p.loop = false;
   });
+  const currentTime = usePlaybackTime(player);
+
+  const [containerSize, setContainerSize] = useState<{
+    width: number;
+    height: number;
+  } | null>(null);
+
+  const handleLayout = (event: LayoutChangeEvent) => {
+    const { width, height } = event.nativeEvent.layout;
+    setContainerSize((prev) =>
+      prev?.width === width && prev?.height === height
+        ? prev
+        : { width, height }
+    );
+  };
+
+  const displayRect = useMemo(() => {
+    if (!containerSize) return null;
+    return computeDisplayRect({
+      containerWidth: containerSize.width,
+      containerHeight: containerSize.height,
+      videoWidthPx: videoWidthPx ?? null,
+      videoHeightPx: videoHeightPx ?? null,
+    });
+  }, [containerSize, videoWidthPx, videoHeightPx]);
+
+  const [barPathEnabled, setBarPathEnabled] = useOverlayPreference('barPath');
+  const [skeletonEnabled, setSkeletonEnabled] = useOverlayPreference('skeleton');
+
+  const showBarPath =
+    barPathEnabled &&
+    analysis != null &&
+    analysis.reps.length > 0 &&
+    displayRect != null;
+
+  // Phase 2 will set this true when debug_landmarks are populated.
+  const skeletonAvailable = false;
 
   return (
     <View style={styles.container}>
-      <View style={styles.videoWrapper}>
+      <OverlayToggleChips
+        barPathEnabled={barPathEnabled}
+        onToggleBarPath={setBarPathEnabled}
+        skeletonEnabled={skeletonEnabled}
+        onToggleSkeleton={setSkeletonEnabled}
+        skeletonAvailable={skeletonAvailable}
+        colors={colors}
+      />
+
+      <View style={styles.videoWrapper} onLayout={handleLayout}>
         <VideoView
           player={player}
           style={styles.video}
           contentFit="contain"
           nativeControls
         />
+        {showBarPath && analysis && displayRect && (
+          <PlaybackBarPathOverlay
+            analysis={analysis}
+            currentTime={currentTime}
+            displayRect={displayRect}
+            colors={colors}
+          />
+        )}
       </View>
 
       <View style={styles.footer}>
@@ -81,6 +155,7 @@ function buildStyles(colors: ColorScheme) {
       width: '100%',
       aspectRatio: 16 / 9,
       backgroundColor: colors.bg,
+      position: 'relative',
     },
     video: {
       width: '100%',
