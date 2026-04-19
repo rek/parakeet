@@ -82,7 +82,7 @@ export function useFormCoaching({
         });
 
         // 4. Generate coaching via LLM
-        const result = await generateFormCoaching({ context });
+        const { result } = await generateFormCoaching({ context });
 
         // 5. Persist to DB
         await updateSessionVideoCoaching({

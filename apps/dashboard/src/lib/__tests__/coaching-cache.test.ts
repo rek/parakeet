@@ -46,7 +46,7 @@ function makeEntry(overrides: Partial<CacheEntry> = {}): CacheEntry {
     id: crypto.randomUUID(),
     timestamp: Date.now(),
     requestHash: 'hash-' + Math.random().toString(36).slice(2),
-    request: makeRequest(),
+    request: { model: 'gpt-5', systemPrompt: 'test prompt' },
     response: {
       summary: 'ok',
       repByRepBreakdown: [],
@@ -55,7 +55,7 @@ function makeEntry(overrides: Partial<CacheEntry> = {}): CacheEntry {
       comparedToBaseline: null,
       competitionReadiness: null,
       nextSessionSuggestion: 'rest',
-    } as never,
+    },
     latencyMs: 1234,
     tokensIn: null,
     tokensOut: null,
@@ -132,6 +132,44 @@ describe('coaching-cache', () => {
       appendEntry('fix-5', makeEntry());
       clearHistory('fix-5');
       expect(getHistory('fix-5')).toEqual([]);
+    });
+  });
+
+  describe('schema validation on read', () => {
+    it('drops malformed entries, keeps valid ones', () => {
+      const good = makeEntry({ requestHash: 'good' });
+      const bad = {
+        id: 'bad',
+        timestamp: 0,
+        requestHash: 'bad',
+        // missing response, request, etc.
+      };
+      localStorage.setItem(
+        'dashboard.coaching.fix-6',
+        JSON.stringify([good, bad])
+      );
+      const history = getHistory('fix-6');
+      expect(history).toHaveLength(1);
+      expect(history[0].id).toBe(good.id);
+    });
+
+    it('returns [] on corrupt JSON', () => {
+      localStorage.setItem('dashboard.coaching.fix-7', 'not-json');
+      expect(getHistory('fix-7')).toEqual([]);
+    });
+
+    it('drops response that fails FormCoachingResultSchema', () => {
+      const entry = makeEntry({ requestHash: 'schema-drift' });
+      // Response is missing required `nextSessionSuggestion`.
+      const withBadResponse = {
+        ...entry,
+        response: { summary: 'x', repByRepBreakdown: [], cues: [] },
+      };
+      localStorage.setItem(
+        'dashboard.coaching.fix-8',
+        JSON.stringify([withBadResponse])
+      );
+      expect(getHistory('fix-8')).toEqual([]);
     });
   });
 });

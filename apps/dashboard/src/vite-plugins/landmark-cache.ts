@@ -14,7 +14,8 @@ import type { Plugin } from 'vite';
  *   POST /api/landmarks/:id   → writes body as `${id}.landmarks.json`
  */
 export function landmarkCachePlugin(): Plugin {
-  const ID_PATTERN = /^[a-z0-9._-]+$/i;
+  // Must start with an alphanumeric; prevents `.`, `..`, and hidden files.
+  const ID_PATTERN = /^[a-z0-9][a-z0-9._-]*$/i;
   const MAX_BYTES = 50 * 1024 * 1024; // 50 MB
 
   return {
@@ -35,6 +36,15 @@ export function landmarkCachePlugin(): Plugin {
           return;
         }
         const file = path.join(cacheDir, `${id}.landmarks.json`);
+        // Belt-and-braces — the id regex forbids `/` and leading `.`, so
+        // this should never fail. Still worth catching if a future refactor
+        // loosens the regex.
+        const rel = path.relative(cacheDir, file);
+        if (rel.startsWith('..') || path.isAbsolute(rel)) {
+          res.statusCode = 400;
+          res.end('path escape');
+          return;
+        }
 
         if (req.method === 'GET') {
           fs.promises

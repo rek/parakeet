@@ -1,3 +1,5 @@
+import { APICallError, NoObjectGeneratedError } from 'ai';
+
 import {
   createDirectOpenAIModel,
   FORM_COACHING_SYSTEM_PROMPT,
@@ -19,15 +21,17 @@ export const COACHING_MODEL_IDS: CoachingModelId[] = [
   'gpt-4o-mini',
 ];
 
+export type CoachingErrorKind =
+  | 'missing-key'
+  | 'auth'
+  | 'rate-limit'
+  | 'invalid-json'
+  | 'timeout'
+  | 'unknown';
+
 export class CoachingError extends Error {
   constructor(
-    public readonly kind:
-      | 'missing-key'
-      | 'auth'
-      | 'rate-limit'
-      | 'invalid-json'
-      | 'schedule'
-      | 'unknown',
+    public readonly kind: CoachingErrorKind,
     message: string,
     public readonly raw?: string
   ) {
@@ -46,7 +50,6 @@ export interface CoachingRunResult {
   result: FormCoachingResult;
   request: CoachingRequest;
   latencyMs: number;
-  /** Not all providers expose token usage via `generateText` — may be null. */
   tokensIn: number | null;
   tokensOut: number | null;
 }
@@ -82,13 +85,19 @@ export async function runCoaching({
   const startedAt = performance.now();
 
   try {
-    const result = await generateFormCoaching({
+    const { result, usage } = await generateFormCoaching({
       context,
       model: languageModel,
       systemPrompt,
     });
     const latencyMs = Math.round(performance.now() - startedAt);
-    return { result, request, latencyMs, tokensIn: null, tokensOut: null };
+    return {
+      result,
+      request,
+      latencyMs,
+      tokensIn: usage.inputTokens ?? null,
+      tokensOut: usage.outputTokens ?? null,
+    };
   } catch (err) {
     throw classifyCoachingError(err);
   }
@@ -97,23 +106,31 @@ export async function runCoaching({
 function classifyCoachingError(err: unknown): CoachingError {
   if (err instanceof CoachingError) return err;
 
-  const message = err instanceof Error ? err.message : String(err);
-  const raw =
-    typeof err === 'object' && err && 'text' in err
-      ? String((err as { text: unknown }).text ?? '')
-      : undefined;
+  // Structured model-output failure — schema validation or empty output.
+  // The raw model reply is on `.text`; surface it so prompt iteration can see
+  // what the model actually said.
+  if (NoObjectGeneratedError.isInstance(err)) {
+    return new CoachingError('invalid-json', err.message, err.text);
+  }
 
-  if (/401|unauthori[sz]ed|invalid api key/i.test(message)) {
-    return new CoachingError('auth', message, raw);
+  // HTTP-layer failure from the OpenAI call.
+  if (APICallError.isInstance(err)) {
+    const body = err.responseBody;
+    if (err.statusCode === 401 || err.statusCode === 403) {
+      return new CoachingError('auth', err.message, body);
+    }
+    if (err.statusCode === 429) {
+      return new CoachingError('rate-limit', err.message, body);
+    }
+    return new CoachingError('unknown', err.message, body);
   }
-  if (/429|rate.?limit|quota/i.test(message)) {
-    return new CoachingError('rate-limit', message, raw);
-  }
-  if (/invalid.*json|zod|parse|schema/i.test(message)) {
-    return new CoachingError('invalid-json', message, raw);
-  }
+
+  // Fallback: string-match on the error message. Catches the engine's
+  // `abortAfter(30000)` timeout (AbortError) and anything else that slips
+  // past the typed checks above.
+  const message = err instanceof Error ? err.message : String(err);
   if (/abort|timeout/i.test(message)) {
-    return new CoachingError('schedule', message, raw);
+    return new CoachingError('timeout', message);
   }
-  return new CoachingError('unknown', message, raw);
+  return new CoachingError('unknown', message);
 }

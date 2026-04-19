@@ -3,7 +3,12 @@ import type {
   FormCoachingResult,
   VideoAnalysisResult,
 } from '@parakeet/shared-types';
-import { generateText, Output, type LanguageModel } from 'ai';
+import {
+  generateText,
+  Output,
+  type LanguageModel,
+  type LanguageModelUsage,
+} from 'ai';
 
 import { abortAfter } from '../ai/abort-timeout';
 import { getCycleReviewModel } from '../ai/models';
@@ -49,6 +54,11 @@ export interface FormCoachingInput {
  * The context object is serialized to JSON and sent as the user prompt.
  * The LLM returns structured output matching FormCoachingResultSchema.
  */
+export interface FormCoachingGeneration {
+  result: FormCoachingResult;
+  usage: LanguageModelUsage;
+}
+
 export async function generateFormCoaching({
   context,
   model,
@@ -59,8 +69,8 @@ export async function generateFormCoaching({
   model?: LanguageModel;
   /** Override the default system prompt. Useful for prompt iteration tooling. */
   systemPrompt?: string;
-}) {
-  const { output } = await generateText({
+}): Promise<FormCoachingGeneration> {
+  const { output, usage } = await generateText({
     model: model ?? getCycleReviewModel(),
     output: Output.object({ schema: FormCoachingResultSchema }),
     system: systemPrompt ?? FORM_COACHING_SYSTEM_PROMPT,
@@ -69,5 +79,5 @@ export async function generateFormCoaching({
   });
 
   if (!output) throw new Error('LLM did not return valid form coaching');
-  return output as FormCoachingResult;
+  return { result: output as FormCoachingResult, usage };
 }

@@ -103,8 +103,8 @@ export function CoachPanel({
         model,
         systemPrompt: promptOverride,
       };
+      const hash = await hashRequest(request);
       try {
-        const hash = await hashRequest(request);
         if (!forceRefresh) {
           const cached = findCached(fixtureId, hash);
           if (cached) {
@@ -119,19 +119,25 @@ export function CoachPanel({
           model,
           systemPromptOverride: promptIsModified ? promptOverride : undefined,
         });
-        const entry = buildCacheEntry({ run, requestHash: hash });
+        const entry = buildCacheEntry({
+          run,
+          requestHash: hash,
+          response: run.result,
+        });
         appendEntry(fixtureId, entry);
         setHistory(getHistory(fixtureId));
         setActiveEntryId(entry.id);
       } catch (err) {
         if (err instanceof CoachingError) {
           // Persist error entries too so we can inspect them later.
-          const hash = await hashRequest(request);
           const entry: CacheEntry = {
             id: crypto.randomUUID(),
             timestamp: Date.now(),
             requestHash: hash,
-            request,
+            request: {
+              model: request.model,
+              systemPrompt: request.systemPrompt,
+            },
             response: null,
             latencyMs: 0,
             tokensIn: null,

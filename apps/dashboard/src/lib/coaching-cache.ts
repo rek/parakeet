@@ -1,27 +1,56 @@
+import {
+  FormCoachingResultSchema,
+  z,
+  type FormCoachingResult,
+} from '@parakeet/shared-types';
+
 import type {
+  CoachingErrorKind,
   CoachingRequest,
   CoachingRunResult,
 } from './coaching-runner';
-import type { FormCoachingResult } from '@parakeet/training-engine';
 
 const KEY_PREFIX = 'dashboard.coaching';
 const MAX_ENTRIES_PER_FIXTURE = 10;
 
-export interface CacheEntry {
-  id: string;
-  timestamp: number;
-  requestHash: string;
-  request: CoachingRequest;
-  response: FormCoachingResult | null;
-  latencyMs: number;
-  tokensIn: number | null;
-  tokensOut: number | null;
+/**
+ * Persisted shape. We intentionally drop `request.context` on write:
+ * - The full context is large (several KB per entry × 10 entries × N fixtures).
+ * - Consumers only render `request.model` and `request.systemPrompt`.
+ * - Cache lookup is by `requestHash`, which is computed live from the
+ *   current form state — it does not require the historical context to
+ *   round-trip.
+ */
+const StoredErrorSchema = z.object({
+  kind: z.string(),
+  message: z.string(),
+  raw: z.string().optional(),
+});
+
+const StoredRequestSchema = z.object({
+  model: z.string(),
+  systemPrompt: z.string(),
+});
+
+const StoredCacheEntrySchema = z.object({
+  id: z.string(),
+  timestamp: z.number(),
+  requestHash: z.string(),
+  request: StoredRequestSchema,
+  response: FormCoachingResultSchema.nullable(),
+  latencyMs: z.number(),
+  tokensIn: z.number().nullable(),
+  tokensOut: z.number().nullable(),
+  error: StoredErrorSchema.optional(),
+});
+
+export type CacheEntry = z.infer<typeof StoredCacheEntrySchema> & {
   error?: {
-    kind: string;
+    kind: CoachingErrorKind;
     message: string;
     raw?: string;
   };
-}
+};
 
 function historyKey(fixtureId: string): string {
   return `${KEY_PREFIX}.${fixtureId}`;
@@ -30,12 +59,20 @@ function historyKey(fixtureId: string): string {
 function readHistoryRaw(fixtureId: string): CacheEntry[] {
   const raw = localStorage.getItem(historyKey(fixtureId));
   if (!raw) return [];
+  let parsed: unknown;
   try {
-    const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) ? (parsed as CacheEntry[]) : [];
+    parsed = JSON.parse(raw);
   } catch {
     return [];
   }
+  if (!Array.isArray(parsed)) return [];
+  // Drop entries that fail validation (schema drift or tampering) rather
+  // than crashing the response card downstream. One bad entry does not
+  // poison the rest of the history.
+  return parsed.flatMap((e) => {
+    const result = StoredCacheEntrySchema.safeParse(e);
+    return result.success ? [result.data as CacheEntry] : [];
+  });
 }
 
 function writeHistoryRaw(fixtureId: string, entries: CacheEntry[]): void {
@@ -48,7 +85,6 @@ export function getHistory(fixtureId: string): CacheEntry[] {
 
 export function appendEntry(fixtureId: string, entry: CacheEntry): void {
   const existing = readHistoryRaw(fixtureId);
-  // Newest first, capped.
   const next = [entry, ...existing].slice(0, MAX_ENTRIES_PER_FIXTURE);
   writeHistoryRaw(fixtureId, next);
 }
@@ -58,7 +94,6 @@ export function findCached(
   requestHash: string
 ): CacheEntry | null {
   const entries = readHistoryRaw(fixtureId);
-  // Only successful entries are treated as cache hits.
   return entries.find((e) => e.requestHash === requestHash && !e.error) ?? null;
 }
 
@@ -100,16 +135,21 @@ export async function hashRequest(request: CoachingRequest): Promise<string> {
 export function buildCacheEntry({
   run,
   requestHash,
+  response,
 }: {
   run: CoachingRunResult;
   requestHash: string;
+  response: FormCoachingResult;
 }): CacheEntry {
   return {
     id: crypto.randomUUID(),
     timestamp: Date.now(),
     requestHash,
-    request: run.request,
-    response: run.result,
+    request: {
+      model: run.request.model,
+      systemPrompt: run.request.systemPrompt,
+    },
+    response,
     latencyMs: run.latencyMs,
     tokensIn: run.tokensIn,
     tokensOut: run.tokensOut,
