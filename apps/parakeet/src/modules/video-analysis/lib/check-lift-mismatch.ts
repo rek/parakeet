@@ -1,11 +1,11 @@
 // @spec docs/features/video-analysis/spec-lift-label.md
-import { detectLift, WARN_CONFIDENCE, type DetectableLift } from './detect-lift';
+import { detectLift, WARN_CONFIDENCE } from './detect-lift';
 import type { PoseFrame } from './pose-types';
-import { isSupportedLift } from './supported-lifts';
+import { isSupportedLift, type SupportedLift } from './supported-lifts';
 
 export interface LiftMismatch {
-  detected: DetectableLift;
-  declared: DetectableLift;
+  detected: SupportedLift;
+  declared: SupportedLift;
   confidence: number;
   reason: string;
 }
@@ -39,7 +39,7 @@ export function checkLiftMismatch({
 
   return {
     detected: detection.lift,
-    declared: declared as DetectableLift,
+    declared,
     confidence: detection.confidence,
     reason: detection.reason,
   };

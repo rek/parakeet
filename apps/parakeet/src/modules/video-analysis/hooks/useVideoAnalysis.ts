@@ -42,7 +42,7 @@ const LIFT_LABEL: Record<LiftMismatch['detected'], string> = {
  * and re-record manually); `Continue anyway` dismisses.
  *
  * Always runs analysis regardless — this is a nudge, not a gate (see
- * docs/features/video-analysis/design-lift-label.md).
+ * docs/features/video-analysis/spec-lift-label.md).
  */
 function showLiftMismatchAlert(mismatch: LiftMismatch): void {
   Alert.alert(

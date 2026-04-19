@@ -82,12 +82,10 @@ describe('detectLift.synthetic', () => {
     expect(result.confidence).toBeGreaterThan(WARN_CONFIDENCE);
   });
 
-  it('carries features + a human-readable reason', () => {
+  it('emits a human-readable reason naming the feature that decided it', () => {
     const frame = buildFrame({ shoulderY: 0.5, hipY: 0.55, wristY: 0.2 });
     const result = detectLift({ frames: repeatFrame(frame, 30) });
     expect(result.reason).toMatch(/p90|median/);
-    expect(result.features.framesUsed).toBe(30);
-    expect(result.features.wrsP90).toBeLessThan(0);
   });
 
   it('stays silent on a paused-bench clip trimmed to chest touch (no lockout frames)', () => {

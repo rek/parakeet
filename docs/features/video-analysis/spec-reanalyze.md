@@ -15,14 +15,17 @@ Detector fixes (rep counters, metric formulas, new fault rules) do not retroacti
                       ├─ deps.fileExists(localUri)
                       ├─ deps.getVideoDurationSec(localUri)     // prefers probe over cached result.durationSec
                       ├─ deps.extractFrames({ videoUri, durationSec })   // same extractor as first-run analysis
+                      ├─ checkLiftMismatch({ frames, declared: lift })   // pose sanity check (spec-lift-label.md)
+                      │    └─ deps.onLiftMismatch?(mismatch)             // non-blocking nudge
                       ├─ deps.analyze({ frames, fps, lift })
                       ├─ deps.update({ id, analysis })          // session_videos UPDATE via repository
                       └─ deps.saveDebugLandmarks({ id, frames, fps })    // dev builds only
                     → queryClient.setQueryData + invalidateQueries
                     → Alert.alert('Re-analyze complete — Detected N reps (was M)')
+                      // suppressed if onLiftMismatch fired, to avoid stacking two alerts on Android
 ```
 
-Every branch throws with a specific message so the caller's `catch` surfaces it. The success alert fires unconditionally on completion — the absence of feedback is what caused the original "silent no-op" confusion.
+Every branch throws with a specific message so the caller's `catch` surfaces it. The success alert fires on completion **unless** a lift-mismatch alert was already shown — on Android two `Alert.alert` calls in the same tick can race, so the mismatch (more informative) wins.
 
 ## Deps contract
 
@@ -53,6 +56,9 @@ interface ReanalyzeDeps {
   }) => Promise<void> | void;
   onProgress?: (pct: number) => void;
   onBreadcrumb?: (step: string, data?: Record<string, unknown>) => void;
+  /** Fires once, between extract and analyze, when `checkLiftMismatch` returns
+   *  non-null. Non-blocking — analysis still runs under the declared lift. */
+  onLiftMismatch?: (mismatch: LiftMismatch) => void;
 }
 ```
 

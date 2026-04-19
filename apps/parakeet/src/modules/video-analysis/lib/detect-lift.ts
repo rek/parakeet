@@ -1,7 +1,14 @@
 // @spec docs/features/video-analysis/spec-lift-label.md
 import { LANDMARK, type PoseFrame } from './pose-types';
+import { type SupportedLift } from './supported-lifts';
 
-export type DetectableLift = 'squat' | 'bench' | 'deadlift';
+/**
+ * Lifts the classifier can return. Aliased to `SupportedLift` so that
+ * `SUPPORTED_LIFTS` is the single source of truth — when a new lift lands
+ * in the analysis pipeline (e.g. OHP, #9), this set updates with it and
+ * there's no hidden enum to keep in sync.
+ */
+export type DetectableLift = SupportedLift;
 
 export interface LiftDetection {
   /** Detected lift, or null when we have too little signal to decide. */
@@ -10,12 +17,6 @@ export interface LiftDetection {
   confidence: number;
   /** One-line explanation of the decision — surfaced in Alert copy + telemetry. */
   reason: string;
-  /** Minimal features the decision was made from. Consumed by the caller only for logging. */
-  features: {
-    framesUsed: number;
-    wrsMedian: number | null;
-    wrsP90: number | null;
-  };
 }
 
 /**
@@ -138,15 +139,12 @@ export function detectLift({ frames }: { frames: PoseFrame[] }): LiftDetection {
       lift: null,
       confidence: 0,
       reason: `Only ${framesUsed} frames with visible wrists — cannot detect lift`,
-      features: { framesUsed, wrsMedian: null, wrsP90: null },
     };
   }
 
   const sorted = [...wrsValues].sort((a, b) => a - b);
   const wrsMedian = percentile(sorted, 0.5);
   const wrsP90 = percentile(sorted, 0.9);
-
-  const features = { framesUsed, wrsMedian, wrsP90 };
   const framesFactor = Math.min(1, framesUsed / CONFIDENT_FRAMES);
 
   // Bench: wrists above (or level with) shoulders across virtually the whole
@@ -158,7 +156,6 @@ export function detectLift({ frames }: { frames: PoseFrame[] }): LiftDetection {
       lift: 'bench',
       confidence: boundaryConfidence(strength, framesFactor),
       reason: `Wrists above shoulders throughout (p90=${wrsP90.toFixed(2)})`,
-      features,
     };
   }
 
@@ -178,7 +175,6 @@ export function detectLift({ frames }: { frames: PoseFrame[] }): LiftDetection {
       lift: 'deadlift',
       confidence: boundaryConfidence(strength, framesFactor),
       reason,
-      features,
     };
   }
 
@@ -191,6 +187,5 @@ export function detectLift({ frames }: { frames: PoseFrame[] }): LiftDetection {
     lift: 'squat',
     confidence: boundaryConfidence(squatStrength, framesFactor),
     reason: `Wrists near shoulders (median=${wrsMedian.toFixed(2)})`,
-    features,
   };
 }

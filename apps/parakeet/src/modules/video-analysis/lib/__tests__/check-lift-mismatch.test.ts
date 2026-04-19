@@ -75,4 +75,30 @@ describe('checkLiftMismatch', () => {
       checkLiftMismatch({ frames: squatFrames, declared: 'row' })
     ).toBeNull();
   });
+
+  it('returns null when the detected lift agrees but confidence is low', () => {
+    // Boundary clip: wrists sit just below the bench/squat boundary, so the
+    // classifier returns `squat` with confidence < WARN_CONFIDENCE. Even
+    // though declared agrees (squat), the gate rejects on confidence first.
+    const borderline = repeatFrame(
+      buildFrame({ shoulderY: 0.45, hipY: 0.55, wristY: 0.44 }),
+      30
+    );
+    expect(
+      checkLiftMismatch({ frames: borderline, declared: 'squat' })
+    ).toBeNull();
+  });
+
+  it('returns null when the detected lift disagrees but confidence is below WARN', () => {
+    // Same borderline clip — this time declared is bench (so `lift === declared`
+    // is false). The gate must still reject because confidence is below
+    // WARN_CONFIDENCE, otherwise every ambiguous clip would nag the user.
+    const borderline = repeatFrame(
+      buildFrame({ shoulderY: 0.45, hipY: 0.55, wristY: 0.44 }),
+      30
+    );
+    expect(
+      checkLiftMismatch({ frames: borderline, declared: 'bench' })
+    ).toBeNull();
+  });
 });
