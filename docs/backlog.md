@@ -10,28 +10,32 @@ At the end: update design doc status → Implemented, update specs to match what
 
 ---
 
-## 24 (Track A only — front-bench occlusion robustness)
+## 26
 
-Track B (front-on metrics) shipped 2026-04-19 as analysisVersion 5 — see [spec-metrics.md §Phase 6](features/video-analysis/spec-metrics.md#phase-6--front-on-bench-v5-2026-04-19--backlog-24-track-b). Rep detection now uses `(meanWristY − meanShoulderY)` below 0.5 sagittal confidence; bar tilt, press asymmetry, elbow-path symmetry, and a per-frame elbow-flare series emit on `bench-front-4reps`.
+**Bench depth assessment — detect partial reps / no chest touch.** Observed 2026-04-19 while sanity-checking v5 front-bench metrics on `bench-front-4reps`: user confirmed the bar never touches the chest on any of the 4 reps. The v5 analysis still reports 4 reps and emits bench-specific faults (flare, tilt, press asymmetry, uneven lockout) but has no metric covering **how close the bar got to the chest**. On a competition bench this is the single most red-lightable form fault (rule: visible stop on chest), and for training it's the difference between a real press and a partial.
 
-**Track A remains open.** At chest touch the bar+forearms occlude the lifter's face. MediaPipe Pose Landmarker relies on the face region as an anchor for whole-body pose, so occlusion collapses face confidence and the estimator cascades — torso and hip landmarks drift toward background features (bench frame, ceiling lights) until the face comes back post-lockout. The skeleton visibly detaches from the body at the bottom of each rep then snaps back near lockout. Downstream metrics we just shipped in §Phase 6 still consume whatever landmarks MediaPipe emits, so Track A multiplies their accuracy.
+Design directions (not yet decided, flagged for design pass):
 
-Avenues, rough order of bang-for-buck:
+- **Wrist-to-shoulder Y delta at rep bottom.** For front-on bench, bar (≈ wrist midpoint) at chest touch sits level with or just below the shoulder line → `(meanWristY − meanShoulderY) ≥ 0` at the bottom. `< 0` means wrists stopped above shoulders → partial. Reuses the same signal the v5 rep detector already computes; just sample it at the per-rep bottom frame. Per-rep `chestTouchGap` field in `RepAnalysis`.
+- **Fault types.** `no_chest_touch` (critical — bar never reached shoulder line), `shallow_bench` (warning — touched above some tolerance).
+- **Side-view version.** From side, the signal is wrist Y vs the image Y of the lifter's chest (which we don't know precisely). Could approximate chest as shoulder + N% of shoulder-hip distance. Simpler: for side view, use the bar's Y-velocity stop point — the point where eccentric velocity → 0 — and check how far it is from the "expected chest touch" given the lifter's anthropometry. Harder.
+- **Threshold tuning.** Front-bench fixture `bench-front-4reps` is the obvious test case; user has confirmed "never touches" so any working implementation must emit `no_chest_touch` on every rep of that fixture.
 
-1. ~~**Heavy model**~~ — **A/B'd 2026-04-19, no material difference on `bench-front-4reps`.** The failure mode is not model capacity: `heavy` and `lite` both produce the same skeleton drift at chest touch and the same confidence drop on closest-to-camera landmarks (ankles / heel / foot-index at lockout on the front-on bench view). Evidence: perspective distortion at the feet end of the frame pushes those landmarks into MediaPipe's under-trained region regardless of model size; faded-red "low-confidence" dots render exactly where the real toes sit. Moving on to other avenues. Dashboard gained Cache-Storage-backed model caching (`lib/model-cache.ts`) + low-confidence landmark visualisation so the next A/B is cheap.
-2. ~~**Plausibility filtering**~~ — **shipped 2026-04-19** as Stage 1a of the analysis pipeline (`lib/plausibility-filter.ts`). Rejects frames where the median visibility across 12 core landmarks drops below 0.3, or where the shoulder-midpoint jumps > 8× the clip's own median (with a 0.08-unit absolute floor). Rejected frames become `EMPTY_FRAME` and are lerped through by Stage 1b. 16/16 calibration fixtures still pass at the new thresholds. Returns `lowVisibilityRejected` / `torsoJumpRejected` counts for future dashboard surfacing.
-3. ~~**Wrist-anchored reconstruction for bench**~~ — **shipped 2026-04-19** as Stage 1a' (`lib/wrist-anchored-reconstruct.ts`). For each Stage-1a rejection whose *original* wrists are still visible, rebuild from the nearest confident anchor: shoulders/hips/knees/ankles held at anchor values, wrists taken verbatim, elbows placed at shoulder→wrist midpoint. Reconstructed-landmark visibility floored at `VIS_THRESHOLD = 0.5` so per-landmark gates don't silently fail. Bench-only (rigid-arm approximation assumes supine lifter).
-4. **World-coords fallback** — dashboard scaffolding shipped 2026-04-19: extractor captures `worldLandmarks` alongside image landmarks (`ExtractionResult.worldFrames`), `LandmarkFile` carries them, new **"World skeleton"** toggle chip on the Video Overlay page projects world-coords onto the video using the image-coord hip midpoint as anchor + image-coord shoulder-width as scale. Drawn in amber so it's distinguishable from the image-coord teal skeleton. **Next step (user):** re-extract `bench-front-4reps`, toggle both skeletons on, scrub to a chest-touch frame, and report whether the world skeleton stays anchored to the body while the image skeleton drifts. If yes → plumb world-coords into engine metric computation (start with `angle-calculator.ts`). If no → close the avenue.
-5. **Pre-crop the lifter** — run face detection on frame 0, dilate to a lifter bbox, and crop subsequent frames before passing to MediaPipe. Strips out the bench frame + ceiling context that's currently pulling the skeleton away. Cost: one extra detector pass, negligible on desktop.
+Priority: high for training accuracy (partial reps are common and currently invisible to our analysis). Scope: one new `bench-chest-touch.ts` lib module + schema field + fault + per-rep bottom-frame wiring in `metrics-assembler.ts`. ~1-2 focused work sessions.
 
-### Validation
+## ~~24~~ (Done — 19 Apr 2026)
 
-- Calibration fixture: `test-videos/bench-front-4reps.landmarks.json`. Re-run after each Track A change; rep count must stay at 4 and confidence should improve (currently 0.356).
-- Dashboard: add a visible "plausibility rejection" counter so we can eyeball how many frames each filter strips.
+**Track B** shipped as analysisVersion 5 — see [spec-metrics.md §Phase 6](features/video-analysis/spec-metrics.md#phase-6--front-on-bench-v5-2026-04-19--backlog-24-track-b). Front-bench rep detection now uses `(meanWristY − meanShoulderY)` below 0.5 sagittal confidence; bar tilt, press asymmetry, elbow-path symmetry, and a per-frame elbow-flare series all emit on `bench-front-4reps`, and the user has confirmed the flags match the lift (slight unevenness → `press_asymmetry` fires honestly).
 
-### Out of scope
+**Track A** worked through all five avenues:
 
-- Mobile pipeline's 0-valid-frames problem (that's #25).
+- **#1 Heavy model** — A/B'd, no material difference. Failure mode isn't model capacity.
+- **#2 Plausibility filter** — shipped as Stage 1a.
+- **#3 Wrist-anchored reconstruction** — shipped as Stage 1a'.
+- **#4 World-coords** — A/B'd, closed for bench (body-relative axes don't align with image axes for a supine lifter filmed from the foot end). Scaffolding retained for future standing-lift use.
+- **#5 Pre-crop** — deferred. The failure mode observed on `bench-front-4reps` is *not* MediaPipe snapping to background features; it's face-landmark bounce under bar occlusion (upstream, not ours) and perspective-distortion uncertainty on closest-to-camera landmarks (cropping would make worse, not better). Revisit only if a future clip shows true background-feature confusion.
+
+**What this item produced:** five analysis-pipeline stages (0, 1a, 1a', 1b, 2, 3), dashboard tooling for fast A/B (model cache, low-confidence landmark visualisation, world-skeleton toggle), and 60+ new tests. Surfaced one real gap that didn't belong in this item — bench-chest-touch detection, filed as [#26](#26). `bench-front-4reps`: 4 reps detected at confidence 0.356, new faults fire truthfully against the user-observed lift.
 
 ## 23
 
