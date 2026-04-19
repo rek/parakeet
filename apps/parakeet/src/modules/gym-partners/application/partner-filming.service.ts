@@ -8,14 +8,16 @@ import { captureException } from '@platform/utils/captureException';
 import { Video } from 'react-native-compressor';
 
 import { insertPartnerSessionVideo } from '../data/partner-video.repository';
-import { uploadPartnerVideo } from './partner-upload.service';
 
 /**
  * Full partner filming pipeline: extract → detect → analyze → compress →
- * insert DB → upload storage → cleanup.
+ * insert DB row into the lifter's account.
  *
- * Runs on the recorder's phone. Video is inserted into the lifter's account
- * via `insertPartnerSessionVideo` (user_id = lifter, recorded_by = recorder).
+ * Runs on the recorder's phone. The `analysis` JSONB is what the lifter
+ * actually consumes; the raw `.mp4` stays on the recorder's device
+ * (backlog #17 — no Storage upload, no cross-device video playback). If
+ * we ever want to show partner video on the lifter's phone, a dedicated
+ * transfer path needs to be built — today no consumer reads it.
  */
 export async function filmForPartner({
   videoUri,
@@ -80,15 +82,6 @@ export async function filmForPartner({
     localUri: compressedUri,
     durationSec,
     analysis: analysis != null ? toJson(analysis) : undefined,
-  });
-
-  onProgress?.(0.85);
-
-  // 6. Upload to lifter's storage folder (best-effort)
-  await uploadPartnerVideo({
-    lifterUserId: targetUserId,
-    videoId,
-    localUri: compressedUri,
   });
 
   onProgress?.(1.0);

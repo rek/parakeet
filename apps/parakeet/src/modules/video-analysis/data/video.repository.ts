@@ -84,7 +84,6 @@ export async function insertSessionVideo({
   setNumber,
   sagittalConfidence = 0.8,
   localUri,
-  remoteUri,
   durationSec,
   setWeightGrams,
   setReps,
@@ -97,7 +96,6 @@ export async function insertSessionVideo({
   setNumber: number;
   sagittalConfidence?: number;
   localUri: string;
-  remoteUri?: string | null;
   durationSec: number;
   setWeightGrams?: number | null;
   setReps?: number | null;
@@ -110,6 +108,8 @@ export async function insertSessionVideo({
   } = await typedSupabase.auth.getUser();
   if (!user) throw new Error('Not authenticated');
 
+  // `remote_uri` is intentionally not written. Videos stay on-device as
+  // of backlog #17; legacy rows retain their value for eventual cleanup.
   const { data, error } = await typedSupabase
     .from('session_videos')
     .insert({
@@ -119,7 +119,6 @@ export async function insertSessionVideo({
       set_number: setNumber,
       sagittal_confidence: sagittalConfidence,
       local_uri: localUri,
-      remote_uri: remoteUri ?? null,
       duration_sec: Math.round(durationSec),
       set_weight_grams: setWeightGrams ?? null,
       set_reps: setReps ?? null,

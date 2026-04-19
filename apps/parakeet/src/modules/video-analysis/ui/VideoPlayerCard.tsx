@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   LayoutChangeEvent,
   StyleSheet,
@@ -8,10 +8,12 @@ import {
 } from 'react-native';
 
 import type { VideoAnalysisResult } from '@parakeet/shared-types';
+import { File } from 'expo-file-system';
 import { useVideoPlayer, VideoView } from 'expo-video';
 
 import { useOverlayPreference } from '../hooks/useOverlayPreference';
 import { usePlaybackTime } from '../hooks/usePlaybackTime';
+import { normalizeVideoUri } from '../lib/normalize-video-uri';
 import type { DebugLandmarks } from '../lib/pose-types';
 import { computeDisplayRect } from '../lib/video-display-rect';
 import { radii, spacing, typography } from '../../../theme';
@@ -50,6 +52,21 @@ export function VideoPlayerCard({
   debugLandmarks?: DebugLandmarks | null;
 }) {
   const styles = useMemo(() => buildStyles(colors), [colors]);
+
+  // Probe whether the local file actually exists on this device.
+  // Partner videos insert a row into the lifter's account with the
+  // partner's device path as `local_uri`, which of course doesn't
+  // resolve on the lifter's phone (no cloud fallback since backlog #17).
+  // Rather than hand that path to `<VideoView>` and get a silent black
+  // frame, render a placeholder and skip spinning up the player.
+  const [fileExists, setFileExists] = useState<boolean | null>(null);
+  useEffect(() => {
+    try {
+      setFileExists(new File(normalizeVideoUri(localUri)).exists);
+    } catch {
+      setFileExists(false);
+    }
+  }, [localUri]);
 
   const player = useVideoPlayer(localUri, (p) => {
     p.loop = false;
@@ -106,13 +123,26 @@ export function VideoPlayerCard({
       />
 
       <View style={styles.videoWrapper} onLayout={handleLayout}>
-        <VideoView
-          player={player}
-          style={styles.video}
-          contentFit="contain"
-          nativeControls
-        />
-        {showBarPath && analysis && displayRect && (
+        {fileExists === false ? (
+          <View style={styles.missingFile}>
+            <Text style={styles.missingTitle}>
+              Video recorded on another device
+            </Text>
+            <Text style={styles.missingSubtitle}>
+              {recordedByName != null
+                ? `${recordedByName} filmed this set — their phone holds the video. The analysis below came from their device.`
+                : 'The raw file is not on this phone. Re-record this set to get a new local copy.'}
+            </Text>
+          </View>
+        ) : (
+          <VideoView
+            player={player}
+            style={styles.video}
+            contentFit="contain"
+            nativeControls
+          />
+        )}
+        {fileExists !== false && showBarPath && analysis && displayRect && (
           <PlaybackBarPathOverlay
             analysis={analysis}
             currentTime={currentTime}
@@ -120,7 +150,7 @@ export function VideoPlayerCard({
             colors={colors}
           />
         )}
-        {showSkeleton && debugLandmarks && displayRect && (
+        {fileExists !== false && showSkeleton && debugLandmarks && displayRect && (
           <PlaybackSkeletonOverlay
             frames={debugLandmarks.frames}
             fps={debugLandmarks.fps}
@@ -175,6 +205,27 @@ function buildStyles(colors: ColorScheme) {
     video: {
       width: '100%',
       height: '100%',
+    },
+    missingFile: {
+      width: '100%',
+      height: '100%',
+      paddingHorizontal: spacing[4],
+      paddingVertical: spacing[4],
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    missingTitle: {
+      fontSize: typography.sizes.sm,
+      fontWeight: typography.weights.semibold,
+      color: colors.textSecondary,
+      textAlign: 'center',
+      marginBottom: spacing[1],
+    },
+    missingSubtitle: {
+      fontSize: typography.sizes.xs,
+      color: colors.textTertiary,
+      textAlign: 'center',
+      lineHeight: 16,
     },
     footer: {
       flexDirection: 'row',

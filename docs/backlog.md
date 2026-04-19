@@ -107,9 +107,13 @@ In-place relabel button deferred — would need to rewrite `session_videos.lift`
 
 Playback overlays complete. Phase 1 bar-path overlay shipped earlier; Phase 2 skeleton overlay landed today — `ui/PlaybackSkeletonOverlay.tsx` lerps between sparse 3–4 fps landmarks to draw bones at the native video's display rect under `contentFit="contain"` letterboxing. `debug_landmarks` promoted out of the `__DEV__` guard in both `processVideo` and `reanalyze`; repository validates the stored JSON with a new `DebugLandmarksSchema` (Zod) before surfacing it on `SessionVideo.debugLandmarks`. Skeleton toggle chip flips from "No landmarks for this video" to interactive the moment a row has a populated payload. Old videos get skeletons by tapping Re-analyze (backlog #20). Phase 3 backfill deferred per spec. See [design doc](features/video-analysis/design-playback-overlay.md) and [spec](features/video-analysis/spec-playback-overlay.md).
 
-## 17
+## ~~17~~ (Phases 1 + 2 done — 19 Apr 2026)
 
-**Local-only video storage — drop Supabase Storage uploads.** Raw `.mp4` bytes do not need to live in the cloud; only analysis results (metrics, coaching, landmarks) do. Triggered by a 0-byte upload bug on 2026-04-17 (expo-file-system's `File` class does not correctly implement `Blob`, so `supabase.storage.upload(path, file, …)` wrote empty objects silently). Patched in-place, but the incident exposed that the upload path is fragile and low-value. Gym-partner flow is the one open question — likely resolved by sending only partner-computed analysis, not video bytes. See [design doc](features/video-analysis/design-local-only-storage.md).
+Raw video uploads to Supabase Storage are gone. Audit of `remote_uri` found it was write-only — every call site that wrote it was dead from the consumer side, including the partner-video flow that appeared to offer cross-device playback (lifter's UI only ever read `local_uri`, which was the partner's device path, so the partner-video playback it advertised never actually worked). Ripping both `uploadVideoToStorage` and `uploadPartnerVideo` is a pure simplification with zero functional regressions.
+
+Phase 2 adds a "Video recorded on another device" placeholder when `VideoPlayerCard` can't find the local file, so partner-filmed rows stop rendering a silent black frame. Bar-path and skeleton overlays gate off the same flag.
+
+Phase 3 (backfill of ghost `remote_uri` rows) + Phase 4 (drop the column and Storage bucket after a 6-month soak) stay deferred per the design doc. See [design doc](features/video-analysis/design-local-only-storage.md).
 
 ## 16 (Set-durability column drop — pending coordinated deploy)
 

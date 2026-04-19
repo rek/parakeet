@@ -15,7 +15,6 @@ import {
   reanalyzeSessionVideo,
   SUPPORTED_LIFTS,
 } from '../application/reanalyze';
-import { uploadVideoToStorage } from '../application/video-upload';
 import { videoQueries } from '../data/video.queries';
 import {
   insertSessionVideo,
@@ -221,10 +220,11 @@ export function useVideoAnalysis({
       // Invalidate all video queries so related lists (session videos, lift history) refresh
       queryClient.invalidateQueries({ queryKey: videoQueries.all() });
 
-      // 6. Upload to Supabase Storage (non-blocking, best-effort)
-      uploadVideoToStorage({ videoId: saved.id, localUri: destUri }).catch(
-        captureException
-      );
+      // Step 6 (raw-video upload to Supabase Storage) removed in
+      // backlog #17. The cloud only needs the structured analysis — the
+      // `.mp4` bytes stay on the recording device. `local_uri` remains
+      // the source of truth; `remote_uri` is no longer written on new
+      // rows (legacy rows keep their value until the Phase 4 column drop).
 
       // 7. Persist raw landmarks so the playback skeleton overlay can
       // render without re-running MediaPipe (backlog #19 Phase 2).

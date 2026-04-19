@@ -1,6 +1,6 @@
 ---
 feature: video-analysis
-status: phase-0-shipped
+status: phases-1-and-2-shipped
 owner: Adam
 last_updated: 2026-04-19
 ---
@@ -8,10 +8,10 @@ last_updated: 2026-04-19
 
 **Roadmap status**
 
-- **Phase 0 (hardening)** — shipped 2026-04-18. 0-byte upload bug fixed via `arrayBuffer()` conversion; guard + Sentry breadcrumb in place. Uploads still happen for now.
-- **Phase 1 (stop new uploads)** — not yet scheduled. Blocked on resolving gym-partner flow (see Open Question at bottom).
-- **Phase 2 (UI for local-only state)** — not yet scheduled.
-- **Phase 3 (legacy row cleanup)** — not yet scheduled.
+- **Phase 0 (hardening)** — shipped 2026-04-18. 0-byte upload bug fixed via `arrayBuffer()` conversion; guard + Sentry breadcrumb in place.
+- **Phase 1 (stop new uploads)** — shipped 2026-04-19. `uploadVideoToStorage` + `uploadPartnerVideo` call sites and service files deleted. `remote_uri` is no longer written on new rows. Audit confirmed no consumer reads `remote_uri` for playback — partner-video cross-device display was broken before this change, not broken by it. Legacy rows retain their URIs for eventual cleanup.
+- **Phase 2 (UI for local-only state)** — shipped 2026-04-19. `VideoPlayerCard` probes `File.exists` and shows a "Video recorded on another device" placeholder when the local file is absent (e.g. partner-recorded videos arriving on the lifter's phone). Overlays gate off the same flag so no SVG paints over a blank wrapper.
+- **Phase 3 (legacy row cleanup)** — not yet scheduled. Deferred per the original plan: a backfill clearing ghost `remote_uri` values on 0-byte Storage rows, with a 6-month soak before dropping the column + bucket.
 
 Move away from uploading raw video bytes to Supabase Storage. Keep videos on the phone; cloud only persists the analysis results (metrics, pose landmarks, coaching output) which are small, structured, and already reliable.
 
@@ -108,3 +108,4 @@ Options:
 ## Status Log
 
 - **2026-04-18** — Plan drafted after 0-byte upload bug discovery. Not implemented. Hardened current upload path as stopgap.
+- **2026-04-19** — Phase 1 + Phase 2 shipped (backlog #17). Audit showed `remote_uri` was write-only in the current codebase — nothing ever read it for playback. Rip was a pure simplification. Phase 2's missing-file placeholder also fixes the silent black-frame bug that partner-recorded videos were already hitting on the lifter's phone.
