@@ -1,7 +1,11 @@
 # Video Playback Overlay (Bar Path + Skeleton)
 
-**Status:** Proposed
+**Status:** Phase 1 shipped — Phase 2 in progress
 **Created:** 2026-04-18
+**Last updated:** 2026-04-19
+
+- **Phase 1 (bar path overlay)**: shipped. `ui/PlaybackBarPathOverlay.tsx` is wired into `VideoPlayerCard`, backed by `lib/playback-overlay-math.ts` (`computeDisplayRect`, `findActiveRep`, `pickHeadDot`) and `ui/OverlayToggleChips.tsx`. AsyncStorage persistence via `hooks/useOverlayPreference.ts`. Works on all existing analysed videos (no schema change).
+- **Phase 2 (skeleton overlay)**: in progress. `lib/skeleton-connections.ts` is ready; `debug_landmarks` promotion out of `__DEV__` guard + new `SkeletonOverlay` component pending. Dashboard-side preview (`apps/dashboard/src/app/VideoOverlayPreview.tsx`) already renders the skeleton against landmark fixtures for validation.
 
 ## Problem
 

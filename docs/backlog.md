@@ -10,6 +10,20 @@ At the end: update design doc status → Implemented, update specs to match what
 
 ---
 
+## 22
+
+**Mobile pose-detection gets 0 valid frames on videos where dashboard gets reps.** Observed 2026-04-19 on a ~14s squat clip: `[pose] 0/38 valid frames (0%)` from the mobile pipeline; the same video loaded in the dashboard (`apps/dashboard/src/app/VideoOverlayPreview.tsx` → `browser-pose-extractor.ts`) produces real landmarks and rep analysis. Mobile reanalyze completes end-to-end (see #20) but the upstream signal is empty — everything downstream is correct-but-useless.
+
+Five concrete divergences between the two extraction paths, ranked by suspected impact:
+
+1. **Thumbnail orientation** — `expo-video-thumbnails.getThumbnailAsync` may emit a thumbnail that ignores the video's rotation metadata, so portrait recordings land sideways and MediaPipe can't find a pose. Dashboard reads the `<video>` element which honours rotation via the decoder. Test: save one of the thumbnails mobile hands to MediaPipe and `adb pull` it.
+2. **fps**: mobile 4 vs dashboard 30 (default). 7.5× fewer detection chances — any clip where pose is only visible in a subset of frames loses coverage.
+3. **Model size**: mobile pinned to `pose_landmarker_lite.task` (5.6MB) due to device memory limits; dashboard lets you pick full (9MB) or heavy (29MB). Lite is much more brittle on oblique angles / partial occlusions.
+4. **Running mode**: mobile uses MediaPipe `IMAGE` per-frame; dashboard uses `VIDEO` with temporal tracking, which recovers flaky frames via continuity.
+5. **Delegate**: mobile forced to CPU (GPU SIGSEGVs on Android MediaPipe's GL runner); dashboard defaults GPU. Shouldn't affect accuracy, only speed — but worth excluding.
+
+Direction: start with (1). If `adb pull`-ed thumbnails are rotated wrong, pipe them through `expo-image-manipulator.rotate` (or bypass thumbnails entirely — `react-native-mediapipe` has a video-file extractor that skips the thumbnail step). Then revisit fps: 8fps is probably safe; 15fps on a 15s clip is 225 frames, likely fine with lite model. Validate: the same squat clip that currently returns `0/38 valid` must return ≥80% valid frames and non-zero reps. Write a device-side log harness or add a "debug landmarks pull" dashboard action for easy A/B.
+
 ## 21
 
 **Lift-label sanity check from pose data.** Catch the "recorded a bench, tapped squat" mistake before it lands as a garbage analysis. Cheap because we already run MediaPipe — no new pipeline, just a post-extract classifier over the existing `PoseFrame[]`.
@@ -106,13 +120,11 @@ Commit `ee01490` added blocking `Alert.alert(...)` diagnostic checkpoints at eac
 
 **Video playback overlay — bar path + skeleton on top of `<VideoView>`.** Today the bar path is a standalone SVG card next to the video; the skeleton is only drawn over the camera preview during recording. Lifters watching their replay should be able to toggle either overlay onto the playing video. Phase 1 ships bar path overlay (no schema changes, works on all existing analysed videos). Phase 2 promotes `debug_landmarks` to a production write and ships the skeleton overlay. Toggle chips above the video; per-overlay AsyncStorage persistence; correct positioning under `contentFit="contain"` letterboxing; lerped interpolation between sparse 4fps stored frames. See [design doc](features/video-analysis/design-playback-overlay.md) and [spec](features/video-analysis/spec-playback-overlay.md).
 
-## 22
+## ~~22 (Coach panel)~~ (Done — 19 Apr 2026)
 
-**Dashboard "Coach" panel — exercise the LLM coaching pipeline against test fixtures.** The Video Overlay page now visualises CV output (metrics, faults, verdicts) but doesn't take the next step the mobile app does: feeding that into `assembleCoachingContext` → `generateFormCoaching` (gpt-5) → structured `FormCoachingResult`. Adding it lets us iterate on the prompt, model, assembler, and rendering against real fixtures without spinning up a phone, recording a set, and waiting on the prod pipeline.
+Dashboard "Coach" panel wired the LLM form-coaching pipeline into the Video Overlay page. Reuses the mobile path verbatim — `assembleCoachingContext` + `generateFormCoaching` — with a synthetic-inputs form, model picker (gpt-5 / gpt-5-mini / gpt-4o / gpt-4o-mini), optional system-prompt override, and per-fixture localStorage cache (last 10; hash keyed on context + model + prompt). Engine signature extended with optional `model` / `systemPrompt` overrides (mobile caller unchanged). `@ai-sdk/openai` stays inside the engine via `createDirectOpenAIModel` so the dashboard never hoists a conflicting version. See [design doc](features/dashboard/design-coach-panel.md) and [spec](features/dashboard/spec-coach-panel.md).
 
-**Reuse, don't fork.** Same engine functions the mobile hook calls. Dashboard contributes only: synthetic session-context inputs (no real DB session for a fixture), an LLM transport (admin OpenAI key OR Edge Function proxy URL), and a typed renderer. When the prompt or assembler changes upstream, the dashboard reflects it the next reload — no parallel implementation to drift.
-
-See [design doc](features/dashboard/design-coach-panel.md) and [spec](features/dashboard/spec-coach-panel.md).
+> ⚠ backlog reused number 22 — a new "#22 mobile pose-detection" entry was filed at the top of this file on 2026-04-19 (same day). Renumber it when convenient.
 
 ## 9
 

@@ -1,3 +1,4 @@
+// @spec docs/features/video-analysis/spec-pipeline.md
 import type { VideoAnalysisResult } from '@parakeet/shared-types';
 
 /**

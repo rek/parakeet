@@ -75,23 +75,46 @@ On-device pose estimation via MediaPipe, replacing the Phase 1 placeholder.
 
 ### 2.2 — MediaPipe model bundling
 
-- [x] Download `pose_landmarker_full.task` (~9MB) to `assets/models/`
+- [x] Bundle `pose_landmarker_lite.task` (~5.6MB) to `assets/models/`
 - [x] Create `plugins/with-mediapipe-model.js` Expo config plugin to copy model to Android `assets/` during prebuild
 - [x] Add plugin to `app.json`
+
+> Why **lite, not full/heavy**: the full (9MB) and heavy (29MB) variants blow past Android memory budgets on constrained devices and OOM-kill the extraction loop. Lite + per-frame bitmap cleanup + `yieldToGc` between frames is the only combination that stayed stable at 60 frames in testing. The dashboard-side calibration tool (`apps/dashboard/src/app/VideoOverlayPreview.tsx`) lets you run full/heavy for comparison, but the mobile app will stay on lite until we have a memory budget to spare.
 
 ### 2.3 — Frame extraction + pose detection
 
 - [x] Implement `extractFramesFromVideo()` in `application/analyze-video.ts`:
-  - Compute frame timestamps at `targetFps` intervals (default 15fps)
-  - Extract frame images via `expo-video-thumbnails.getThumbnailAsync()`
-  - Run `PoseDetectionOnImage()` per frame → 33 landmarks
+  - Compute frame timestamps at `targetFps` intervals (default **4fps** — tuned to 8–16 samples per rep given 2–4s rep duration, stays within device memory)
+  - Extract frame images via `expo-video-thumbnails.getThumbnailAsync(videoUri, { time, quality: 0.8 })`
+  - Run `PoseDetectionOnImage()` per frame → 33 landmarks, **`Delegate.CPU`** (GPU delegate triggers SIGSEGV in MediaPipe's GL runner on several Android devices)
+  - Delete thumbnail file + yield to event loop between frames (native GC reclaims bitmaps — prevents OOM)
   - Convert MediaPipe `Landmark` → `PoseLandmark` (x, y, z, visibility)
   - Progress callback for UI
-  - Empty landmark frames for missing pose detections (maintains index alignment)
+  - Empty landmark frames for missing pose detections (maintains index alignment; `analyze-frames.ts` lerps them back in later)
+
+#### Two extraction pipelines
+
+The same `analyzeVideoFrames()` core runs on landmarks from two very different upstream pipelines. They share only the `PoseFrame[]` shape — the extraction knobs and performance profiles differ substantially, and when rep counts diverge between the two, the difference is always upstream of `analyzeVideoFrames`.
+
+| Concern | Mobile (in-app) | Dashboard (calibration) |
+| --- | --- | --- |
+| Entry | `application/analyze-video.ts` → `extractFramesFromVideo` | `apps/dashboard/src/lib/browser-pose-extractor.ts` → `extractLandmarksFromVideo` |
+| MediaPipe API | `react-native-mediapipe` `PoseDetectionOnImage` (IMAGE mode) | `@mediapipe/tasks-vision` `PoseLandmarker.detectForVideo` (VIDEO mode, temporal tracking) |
+| Frame source | `expo-video-thumbnails` JPEG (`quality: 0.8`) | `HTMLVideoElement` frame, read directly by the landmarker |
+| fps | 4 (hard-coded `DEFAULT_TARGET_FPS`) | 10 / 15 / 24 / 30 / 60 (user picker, default 30) |
+| Model | `pose_landmarker_lite.task` (5.6MB) — bundled | lite (5.6MB) / full (9MB) / heavy (29MB) — fetched from CDN |
+| Delegate | `CPU` (forced; see note above) | `GPU` (WebGL2); auto-falls back to `CPU` if init fails |
+| Memory posture | Delete thumbnail + `await yieldToGc()` per frame, 60-frame safety limit | No per-frame cleanup needed; browser handles lifetime |
+| Offline? | Yes (model bundled) | No (model + WASM fetched from jsdelivr / googleapis) |
+
+This divergence matters when investigating pose-detection quality: if the mobile path reports `0/N valid frames` on a clip the dashboard analyses successfully, suspect the extraction layer (thumbnail orientation, JPEG loss, IMAGE-mode missing temporal tracking, or fps under-sampling) before suspecting the analysis pipeline. See backlog #22 for an active investigation.
 
 ### 2.4 — Hook wiring
 
 - [x] Wire `extractFramesFromVideo()` → `analyzeVideoFrames()` in `useVideoAnalysis` hook
+  → `modules/video-analysis/application/analyze-video.ts:extractFramesFromVideo`
+  → `modules/video-analysis/application/analyze-frames.ts:analyzeVideoFrames`
+  → `modules/video-analysis/hooks/useVideoAnalysis.ts`
 - [x] Analyze BEFORE compression (better quality for CV)
 - [x] Graceful fallback when MediaPipe unavailable (logs error, saves video without analysis)
 - [x] Add `updateSessionVideoAnalysis()` to repository — saves analysis JSONB after initial insert
@@ -107,6 +130,7 @@ On-device pose estimation via MediaPipe, replacing the Phase 1 placeholder.
 ### 3.1 — Session context bridge
 
 - [x] `assemble-coaching-context.ts`: assembles video analysis metrics + session data (weight, RPE, soreness, block/week, disruptions) + longitudinal averages from previous videos into a single coaching context object
+  → `modules/video-analysis/application/assemble-coaching-context.ts`
 
 ### 3.2 — LLM coaching engine
 
@@ -154,8 +178,20 @@ On-device pose estimation via MediaPipe, replacing the Phase 1 placeholder.
 
 ### 3.9 — Real-time pose overlay
 
-- [x] `useLivePoseOverlay` hook: `usePoseDetection` with `LIVE_STREAM` mode at 15fps, GPU delegate
+- [x] `useLivePoseOverlay` hook: `usePoseDetection` with `LIVE_STREAM` mode at 15fps (GPU delegate OK here — vision-camera's frame processor uses a separate MediaPipe entry point that doesn't hit the SIGSEGV path the IMAGE extractor does)
 - [x] `LiveSkeletonOverlay` component: draws skeleton lines + landmark dots over camera preview
 - [x] `SKELETON_CONNECTIONS` constant: 12 bone connections for powerlifting-relevant skeleton
+
+## Adjacent concepts (not phases, but worth knowing)
+
+- **Strategy swap point** — `lib/analysis-strategy.ts` defines a `STRATEGIES` map keyed by strategy name (default `v1_mediapipe`). `assembleAnalysis` accepts a `strategy` argument, so alternative bar-path / rep-detection / fault / grader implementations can be A/B'd without forking. Used by the dashboard's experimental "strategy picker" (planned) and by calibration scripts when comparing detector versions.
+- **Perspective correction** — `metrics-assembler.ts perspectiveCorrection()` divides foreshortened scalar metrics (depth, forward lean) by `sqrt(sagittalConfidence)` when confidence < 0.8, so oblique-angle videos don't under-report. At pure side (confidence=1.0) the multiplier is 1.0; at 0.1 confidence it caps amplification.
+- **Debug landmarks** — `session_videos.debug_landmarks` is a dev-only JSONB snapshot of the raw `PoseFrame[]` the detector saw. Written by `updateSessionVideoDebugLandmarks` when `__DEV__` is true; never written in release builds. Consumed by `scripts/pull-device-analysis.ts` (copy device landmarks → calibration fixtures) and by the reanalyze regression test.
+- **Readiness score** — `lib/readiness-score.ts computeReadinessFromVerdicts` turns a rolling window of per-rep `RepVerdict`s (IPF pass/borderline/fail) into a 0–100 competition-readiness number. Surfaced on the analysis screen via `ReadinessCard` once at least one analysed video exists.
+- **Personal baseline & deviations** — `lib/personal-baseline.ts` needs `MIN_VIDEOS_FOR_BASELINE` (5) analyses of the same lift to compute per-metric mean/stdev. `detectBaselineDeviations` z-scores the current rep against that baseline and emits `BaselineDeviation` badges. This is *separate* from fatigue signatures (which compare first-vs-last rep *within* a set).
+
+## Reanalyze
+
+See [spec-reanalyze.md](./spec-reanalyze.md).
 
 > **Note (mobile-051):** `RecordVideoSheet` is also used from PostRestOverlay via the slot pattern (`PostRestRecordButton`), not only from the video-analysis screen. See [mobile-051](./mobile-051-post-rest-recording.md).

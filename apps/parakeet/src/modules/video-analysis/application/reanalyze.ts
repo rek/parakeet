@@ -1,3 +1,4 @@
+// @spec docs/features/video-analysis/spec-reanalyze.md
 import type { VideoAnalysisResult } from '@parakeet/shared-types';
 
 import type { PoseFrame } from '../lib/pose-types';

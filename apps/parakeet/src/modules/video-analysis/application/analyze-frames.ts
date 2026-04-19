@@ -1,3 +1,5 @@
+// @spec docs/features/video-analysis/spec-pipeline.md
+// @spec docs/features/video-analysis/spec-metrics.md
 import { assembleAnalysis } from '../lib/metrics-assembler';
 import type { PoseFrame } from '../lib/pose-types';
 

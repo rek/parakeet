@@ -1,3 +1,4 @@
+// @spec docs/features/video-analysis/spec-pipeline.md
 import type { PoseFrame, PoseLandmark } from '../lib/pose-types';
 
 import { analyzeVideoFrames, EMPTY_FRAME } from './analyze-frames';

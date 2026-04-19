@@ -1,9 +1,17 @@
 ---
 feature: video-analysis
-status: proposed
+status: phase-0-shipped
 owner: Adam
+last_updated: 2026-04-19
 ---
 # Design — Local-Only Video Storage
+
+**Roadmap status**
+
+- **Phase 0 (hardening)** — shipped 2026-04-18. 0-byte upload bug fixed via `arrayBuffer()` conversion; guard + Sentry breadcrumb in place. Uploads still happen for now.
+- **Phase 1 (stop new uploads)** — not yet scheduled. Blocked on resolving gym-partner flow (see Open Question at bottom).
+- **Phase 2 (UI for local-only state)** — not yet scheduled.
+- **Phase 3 (legacy row cleanup)** — not yet scheduled.
 
 Move away from uploading raw video bytes to Supabase Storage. Keep videos on the phone; cloud only persists the analysis results (metrics, pose landmarks, coaching output) which are small, structured, and already reliable.
 
