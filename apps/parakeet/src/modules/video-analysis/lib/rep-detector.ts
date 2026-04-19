@@ -356,11 +356,6 @@ function detectDeadliftReps({
     hipAngles[i] = rawHipAngles[prev] * (1 - t) + rawHipAngles[next] * t;
   }
 
-  const minLockoutHoldFrames = Math.max(
-    2,
-    Math.round(fps * DEADLIFT_MIN_LOCKOUT_HOLD_SEC)
-  );
-
   const reps: { startFrame: number; endFrame: number }[] = [];
 
   // State machine:

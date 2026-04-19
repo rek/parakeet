@@ -19,6 +19,7 @@ AI-powered form analysis with set-level video linking and calibration.
 |------|--------|---------|
 | [spec-pipeline.md](./spec-pipeline.md) | done | End-to-end pipeline (mobile + dashboard extractors, adjacent concepts) |
 | [spec-reanalyze.md](./spec-reanalyze.md) | done | Re-run analysis against existing local `.mp4` (backlog #20) |
+| [spec-lift-label.md](./spec-lift-label.md) | done | Pose-based lift-label sanity check (backlog #21) |
 | [spec-set-linking.md](./spec-set-linking.md) | done | Linking videos to sets |
 | [spec-metrics.md](./spec-metrics.md) | done | Form metrics extraction |
 | [spec-calibration.md](./spec-calibration.md) | done | Camera calibration |

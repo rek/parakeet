@@ -1,19 +1,22 @@
 // @spec docs/features/video-analysis/spec-reanalyze.md
 import type { VideoAnalysisResult } from '@parakeet/shared-types';
 
+import {
+  checkLiftMismatch,
+  type LiftMismatch,
+} from '../lib/check-lift-mismatch';
 import type { PoseFrame } from '../lib/pose-types';
+import {
+  isSupportedLift,
+  SUPPORTED_LIFTS,
+  type SupportedLift,
+} from '../lib/supported-lifts';
 import type { SessionVideo } from '../model/types';
 
-/**
- * Lifts for which we run rep-level analysis. Anything else just stores the
- * video without reps/metrics.
- */
-export const SUPPORTED_LIFTS = ['squat', 'bench', 'deadlift'] as const;
-export type SupportedLift = (typeof SUPPORTED_LIFTS)[number];
-
-export function isSupportedLift(lift: string): lift is SupportedLift {
-  return (SUPPORTED_LIFTS as readonly string[]).includes(lift);
-}
+// Re-export so existing callers that import these from `application/reanalyze`
+// keep working. `lib/supported-lifts.ts` is the single source of truth.
+export { SUPPORTED_LIFTS, isSupportedLift };
+export type { SupportedLift };
 
 export interface ReanalyzeDeps {
   fileExists: (uri: string) => boolean;
@@ -39,6 +42,12 @@ export interface ReanalyzeDeps {
   }) => Promise<void> | void;
   onProgress?: (pct: number) => void;
   onBreadcrumb?: (step: string, data?: Record<string, unknown>) => void;
+  /**
+   * Fired when the pose classifier is confident the video shows a different
+   * lift than the one the user declared. Non-blocking — analysis continues
+   * either way. Callers typically wire this to a user-facing Alert.
+   */
+  onLiftMismatch?: (mismatch: LiftMismatch) => void;
 }
 
 /**
@@ -96,6 +105,15 @@ export async function reanalyzeSessionVideo({
 
   if (frames.length === 0) {
     throw new Error('Pose extraction produced 0 frames');
+  }
+
+  if (deps.onLiftMismatch) {
+    const mismatch = checkLiftMismatch({ frames, declared: lift });
+    // Telemetry for the mismatch is emitted by the caller (via the
+    // onLiftMismatch callback) so both processVideo and reanalyze flows
+    // surface the same `lift-label-mismatch` / `detected` breadcrumb in
+    // Sentry. Keeping it out of the orchestrator avoids double-counting.
+    if (mismatch) deps.onLiftMismatch(mismatch);
   }
 
   const analysis = deps.analyze({ frames, fps, lift });

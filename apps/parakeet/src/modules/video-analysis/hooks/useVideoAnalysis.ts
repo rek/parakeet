@@ -22,8 +22,38 @@ import {
   updateSessionVideoAnalysis,
   updateSessionVideoDebugLandmarks,
 } from '../data/video.repository';
+import {
+  checkLiftMismatch,
+  type LiftMismatch,
+} from '../lib/check-lift-mismatch';
 import { normalizeVideoUri } from '../lib/normalize-video-uri';
 import { computeSagittalConfidence } from '../lib/view-confidence';
+
+const LIFT_LABEL: Record<LiftMismatch['detected'], string> = {
+  squat: 'squat',
+  bench: 'bench press',
+  deadlift: 'deadlift',
+};
+
+/**
+ * Surface a non-blocking warning when the pose classifier thinks the video
+ * shows a different competition lift than the one the user declared. Two
+ * buttons: `OK, will fix` is an acknowledgement (user still has to delete
+ * and re-record manually); `Continue anyway` dismisses.
+ *
+ * Always runs analysis regardless — this is a nudge, not a gate (see
+ * docs/features/video-analysis/design-lift-label.md).
+ */
+function showLiftMismatchAlert(mismatch: LiftMismatch): void {
+  Alert.alert(
+    'Lift label mismatch',
+    `This looks like a ${LIFT_LABEL[mismatch.detected]} — you labelled it ${LIFT_LABEL[mismatch.declared]}. Form coaching will be wrong if the label is off.`,
+    [
+      { text: 'OK, will fix', style: 'default' },
+      { text: 'Continue anyway', style: 'cancel' },
+    ]
+  );
+}
 
 export interface SetContext {
   weightGrams: number;
@@ -97,6 +127,7 @@ export function useVideoAnalysis({
       let detectedConfidence = 0.8;
       let extractedFrames: unknown[] | null = null;
       let extractedFps = 0;
+      let liftMismatch: LiftMismatch | null = null;
 
       if (durationSec > 0) {
         try {
@@ -114,6 +145,7 @@ export function useVideoAnalysis({
           // Auto-detect sagittal confidence from pose landmark separation
           if (frames.length > 0) {
             detectedConfidence = computeSagittalConfidence({ frames });
+            liftMismatch = checkLiftMismatch({ frames, declared: lift });
           }
 
           if (
@@ -205,6 +237,18 @@ export function useVideoAnalysis({
       }
 
       setProgress(1);
+
+      // Surface the mismatch warning after save so the user is not blocked
+      // and the video row exists to reference. Fire-and-forget — the user's
+      // choice has no downstream effect.
+      if (liftMismatch) {
+        addBreadcrumb('lift-label-mismatch', 'detected', {
+          detected: liftMismatch.detected,
+          declared: liftMismatch.declared,
+          confidence: liftMismatch.confidence,
+        });
+        showLiftMismatchAlert(liftMismatch);
+      }
     },
     [
       sessionId,
@@ -269,6 +313,10 @@ export function useVideoAnalysis({
       setProgress(0);
 
       const beforeReps = result.analysis?.reps.length ?? 0;
+      // Captured by `onLiftMismatch` inside the orchestrator so we can decide
+      // which Alert to show after the pipeline settles — stacking the
+      // mismatch warning on top of the "complete" alert flakes on Android.
+      let mismatch: LiftMismatch | null = null;
 
       const updated = await reanalyzeSessionVideo({
         result,
@@ -291,21 +339,35 @@ export function useVideoAnalysis({
           onProgress: setProgress,
           onBreadcrumb: (step, data) =>
             addBreadcrumb('reanalyze', step, data),
+          onLiftMismatch: (m) => {
+            mismatch = m;
+            addBreadcrumb('lift-label-mismatch', 'detected', {
+              detected: m.detected,
+              declared: m.declared,
+              confidence: m.confidence,
+            });
+          },
         },
       });
 
       queryClient.setQueryData(queryOpts.queryKey, [updated]);
       queryClient.invalidateQueries({ queryKey: videoQueries.all() });
 
-      const afterReps = updated.analysis?.reps.length ?? 0;
-      const delta =
-        beforeReps === afterReps
-          ? ` (unchanged — detector produced same ${afterReps} reps)`
-          : ` (was ${beforeReps})`;
-      Alert.alert(
-        'Re-analyze complete',
-        `Detected ${afterReps} rep${afterReps === 1 ? '' : 's'}${delta}`
-      );
+      if (mismatch) {
+        // The mismatch warning subsumes the "complete" summary — the rep
+        // count is meaningless if the lift label is wrong.
+        showLiftMismatchAlert(mismatch);
+      } else {
+        const afterReps = updated.analysis?.reps.length ?? 0;
+        const delta =
+          beforeReps === afterReps
+            ? ` (unchanged — detector produced same ${afterReps} reps)`
+            : ` (was ${beforeReps})`;
+        Alert.alert(
+          'Re-analyze complete',
+          `Detected ${afterReps} rep${afterReps === 1 ? '' : 's'}${delta}`
+        );
+      }
     } catch (err) {
       captureException(err);
       const message = err instanceof Error ? err.message : 'Failed to reanalyze';
