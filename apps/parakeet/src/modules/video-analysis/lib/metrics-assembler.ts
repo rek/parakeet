@@ -19,10 +19,7 @@ import {
 } from './bar-velocity';
 import { detectButtWink } from './butt-wink-detector';
 import { detectSquatDepth } from './depth-detector';
-import {
-  computeSagittalConfidence,
-  deriveCameraAngle,
-} from './view-confidence';
+import { deriveCameraAngle } from './view-confidence';
 import { computeElbowFlare } from './elbow-flare';
 import { computeFatigueSignatures } from './fatigue-signatures';
 import { analyzeHipHingeTiming } from './hip-hinge-timing';
@@ -53,14 +50,16 @@ function perspectiveCorrection(
 }
 
 /**
- * Run the full video analysis pipeline on a sequence of pose frames.
+ * Stage 3 of the analysis pipeline: deep per-rep metrics.
  *
  * Pass `strategy` to swap algorithms (rep detection, bar path, faults, grading).
  * Default: 'v1_mediapipe'. For A/B comparison, call twice with different strategies.
  *
- * All metrics are always computed regardless of camera angle. Sagittal confidence
- * (0-1) indicates measurement reliability. Perspective correction is applied to
- * foreshortened metrics (depth, lean) when confidence < 0.8.
+ * All metrics are always computed regardless of camera angle. The caller
+ * passes `sagittalConfidence` (stage 2 output — see `analyze-frames.ts`) so
+ * this function is pure given a known confidence, and so callers that want
+ * to override confidence (fixtures, calibration runs) can do so without
+ * recomputing from frames.
  *
  * Steps:
  * 1. Extract and smooth the bar path from wrist landmarks
@@ -72,15 +71,16 @@ export function assembleAnalysis({
   frames,
   fps,
   lift,
+  sagittalConfidence,
   strategy: strategyName = DEFAULT_STRATEGY,
 }: {
   frames: PoseFrame[];
   fps: number;
   lift: 'squat' | 'bench' | 'deadlift';
+  sagittalConfidence: number;
   strategy?: StrategyName;
 }) {
   const strategy: AnalysisStrategy = STRATEGIES[strategyName];
-  const sagittalConfidence = computeSagittalConfidence({ frames });
   const cameraAngle = deriveCameraAngle(sagittalConfidence);
 
   if (typeof __DEV__ !== 'undefined' && __DEV__) {

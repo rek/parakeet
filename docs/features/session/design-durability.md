@@ -1,6 +1,6 @@
 # Design: Set Durability
 
-**Status**: Planned
+**Status**: Implemented (2026-04-18) — append-only `set_logs`, per-set dual-write, offline queue, server auto-finalise, and recovery Alert all shipped. One follow-up pending: coordinated DB/client deploy to drop `session_logs.actual_sets` / `auxiliary_sets` JSONB columns, sequenced at [`tools/scripts/pending-drop-session-logs-jsonb.md`](../../../tools/scripts/pending-drop-session-logs-jsonb.md).
 **Date**: 2026-04-17
 
 ## Problem

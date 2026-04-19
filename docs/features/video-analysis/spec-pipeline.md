@@ -30,7 +30,7 @@ Core pipeline: pick video → compress → save locally + DB. Pure analysis pipe
 ### 1.4 — Analysis pipeline (pure logic in lib/)
 
 - [x] `bar-path.ts`: extract bar position from averaged wrist landmarks per frame, smooth with moving average
-- [x] `rep-detector.ts`: peak detection on hip/wrist Y-coordinate → rep boundaries (start/end frame per rep)
+- [x] `rep-detector.ts`: rep boundaries (start/end frame per rep). Squat + bench use peak detection on a joint-angle signal (see [spec-view-angle.md](./spec-view-angle.md)). Deadlift uses a dedicated hip-angle FLOOR→LOCKOUT state machine with spike-filter + sustain-hold (updated 2026-04-18, backlog #18) — peak detection double-counts on the inverted hip signal.
 - [x] `angle-calculator.ts`: compute joint angles from 3-point landmarks (hip-knee-ankle, shoulder-hip-knee, etc.)
 - [x] `depth-detector.ts`: squat depth detection from hip-crease vs knee Y
 - [x] `fault-detector.ts`: per-lift form fault detection using fixed thresholds (see design doc table)
@@ -40,6 +40,19 @@ Core pipeline: pick video → compress → save locally + DB. Pure analysis pipe
 ### 1.5 — Analysis orchestration (application/)
 
 - [x] `analyze-video.ts`: `analyzeVideoFrames()` — receives pose frames → pipes through lib/ functions → returns `VideoAnalysisResult`
+
+#### Pipeline stages (updated 2026-04-19)
+
+Analysis is a four-stage pipeline. Stages are explicit — each one's output is a named input to the next, so a future change (front-on bench pipeline, lift-driven strategy selection) drops in at a clean seam instead of bolted inside `assembleAnalysis`.
+
+| Stage | Runs in | Responsibility | Consumes | Emits |
+| --- | --- | --- | --- | --- |
+| 0 — Lift label | `hooks/useVideoAnalysis.ts`, `application/reanalyze.ts` | Check the user's declared lift against the pose with `checkLiftMismatch`; surface a user-facing nudge if it looks wrong. Analysis still runs regardless — this is a nudge, not a gate (see [spec-lift-label.md](./spec-lift-label.md)). | `frames`, `declared` lift | `LiftMismatch \| null` → Alert |
+| 1 — Frame hygiene | `application/analyze-frames.ts` | Lerp empty-landmark frames from neighbours so failed detections don't corrupt bar path, angles, or rep detection with zero coords. | `frames` | interpolated `frames[]`, `effectiveFps` |
+| 2 — Sagittal confidence | `application/analyze-frames.ts` | Measure shoulder/hip X-separation across the clip → scalar `0–1` for how side-on the camera is. Downstream metrics are foreshortened at oblique angles; this lets the metric layer compensate instead of branching on a binary side/front flag. | interpolated `frames` | `sagittalConfidence: number` |
+| 3 — Deep analysis | `lib/metrics-assembler.ts` (`assembleAnalysis`) | Bar path, rep boundaries, per-rep metrics, faults, grading. `sagittalConfidence` is an **input**, not a side-computation — so fixtures and calibration runs can override it, and the stage is pure given a known confidence. | `frames`, `fps`, `lift`, `sagittalConfidence`, optional `strategy` | `VideoAnalysisResult` |
+
+Stage 0 lives at the hook/orchestrator layer (not inside `analyzeVideoFrames`) because the mismatch drives an Alert — surfacing it requires the hook's return channel. Stages 1–3 are pure and are called together via `analyzeVideoFrames`, which is the public entry point from both the mobile hook and the dashboard calibration tool.
 
 ### 1.6 — Video pick + compress hook
 
@@ -107,7 +120,7 @@ The same `analyzeVideoFrames()` core runs on landmarks from two very different u
 | Memory posture | Delete thumbnail + `await yieldToGc()` per frame, 60-frame safety limit | No per-frame cleanup needed; browser handles lifetime |
 | Offline? | Yes (model bundled) | No (model + WASM fetched from jsdelivr / googleapis) |
 
-This divergence matters when investigating pose-detection quality: if the mobile path reports `0/N valid frames` on a clip the dashboard analyses successfully, suspect the extraction layer (thumbnail orientation, JPEG loss, IMAGE-mode missing temporal tracking, or fps under-sampling) before suspecting the analysis pipeline. See backlog #22 for an active investigation.
+This divergence matters when investigating pose-detection quality: if the mobile path reports `0/N valid frames` on a clip the dashboard analyses successfully, suspect the extraction layer (thumbnail orientation, JPEG loss, IMAGE-mode missing temporal tracking, or fps under-sampling) before suspecting the analysis pipeline. See backlog #25 for an active investigation.
 
 ### 2.4 — Hook wiring
 

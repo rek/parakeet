@@ -2,6 +2,7 @@
 // @spec docs/features/video-analysis/spec-metrics.md
 import { assembleAnalysis } from '../lib/metrics-assembler';
 import type { PoseFrame } from '../lib/pose-types';
+import { computeSagittalConfidence } from '../lib/view-confidence';
 
 /** Zeroed 33-landmark frame for when detection fails — maintains index alignment. */
 const EMPTY_FRAME: PoseFrame = Array.from({ length: 33 }, () => ({
@@ -71,8 +72,19 @@ function interpolateEmptyFrames({ frames }: { frames: PoseFrame[] }) {
  * Pure — no React Native, no native modules. Safe to import from any
  * environment (mobile app, dashboard, scripts, tests).
  *
- * Interpolates empty frames before analysis so that failed detections
- * don't corrupt bar path, angles, or rep detection with zero coordinates.
+ * Pipeline stages:
+ *   Stage 0  Lift declaration — callers (hook / reanalyze orchestrator) run
+ *            `checkLiftMismatch` upstream, so by the time we get here the
+ *            `lift` argument has either been confirmed or the user has been
+ *            nudged about a label mismatch. See `lib/check-lift-mismatch.ts`.
+ *   Stage 1  Frame hygiene — interpolate empty frames so failed detections
+ *            don't corrupt bar path, angles, or rep detection with zeros.
+ *   Stage 2  Sagittal confidence — measure shoulder/hip separation to decide
+ *            how side-on the camera is. Downstream metrics are foreshortened
+ *            at oblique angles; this scalar lets the metric layer compensate.
+ *   Stage 3  Deep analysis — bar path, per-rep metrics, faults, grading.
+ *            Runs unconditionally but consumes `sagittalConfidence` to scale
+ *            foreshortened values and downgrade fault severity.
  */
 export function analyzeVideoFrames({
   frames,
@@ -88,12 +100,19 @@ export function analyzeVideoFrames({
   const effectiveFps =
     valid.length > 0 ? fps * (valid.length / frames.length) : fps;
 
+  const sagittalConfidence = computeSagittalConfidence({ frames: valid });
+
   if (typeof __DEV__ !== 'undefined' && __DEV__) {
     console.log(
-      `[analysis] ${valid.length}/${frames.length} usable frames (fps=${effectiveFps.toFixed(1)})`
+      `[analysis] ${valid.length}/${frames.length} usable frames (fps=${effectiveFps.toFixed(1)}, sagittalConfidence=${sagittalConfidence.toFixed(2)})`
     );
   }
-  return assembleAnalysis({ frames: valid, fps: effectiveFps, lift });
+  return assembleAnalysis({
+    frames: valid,
+    fps: effectiveFps,
+    lift,
+    sagittalConfidence,
+  });
 }
 
 export { EMPTY_FRAME };
