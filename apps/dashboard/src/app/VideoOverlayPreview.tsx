@@ -14,7 +14,7 @@ import {
   findActiveRep,
   pickHeadDot,
 } from '@modules/video-analysis/lib/playback-overlay-math';
-import type { PoseFrame } from '@modules/video-analysis/lib/pose-types';
+import { LANDMARK, type PoseFrame } from '@modules/video-analysis/lib/pose-types';
 import { SKELETON_CONNECTIONS } from '@modules/video-analysis/lib/skeleton-connections';
 import { computeDisplayRect } from '@modules/video-analysis/lib/video-display-rect';
 
@@ -74,6 +74,13 @@ interface LandmarkFile {
   totalFrames: number;
   validFrames: number;
   frames: PoseFrame[];
+  /**
+   * 3D world-coordinate landmarks from MediaPipe, aligned index-for-index
+   * with `frames`. Populated on browser extraction (v2 and later) so the
+   * world-skeleton overlay can be toggled for the Track A #4 A/B.
+   * Absent on historical fixture JSONs.
+   */
+  worldFrames?: PoseFrame[];
   /** When present, the landmarks were extracted in-browser at higher fps,
    * not loaded from the on-disk fixture. */
   source?: 'fixture' | 'browser';
@@ -124,6 +131,7 @@ export function VideoOverlayPreview() {
   );
   const [showBarPath, setShowBarPath] = useState(true);
   const [showSkeleton, setShowSkeleton] = useState(false);
+const [showWorldSkeleton, setShowWorldSkeleton] = useState(false);
   const [landmarks, setLandmarks] = useState<LandmarkFile | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [currentTime, setCurrentTime] = useState(0);
@@ -272,6 +280,7 @@ export function VideoOverlayPreview() {
         totalFrames: result.totalFrames,
         validFrames: result.validFrames,
         frames: result.frames,
+        worldFrames: result.worldFrames,
         source: 'browser',
         extracted: {
           variant: result.variant,
@@ -381,6 +390,17 @@ export function VideoOverlayPreview() {
           available={!!landmarks}
           subLabel={landmarks ? null : 'No landmarks loaded'}
         />
+        <ToggleChip
+          label="World skeleton"
+          enabled={showWorldSkeleton}
+          onToggle={() => setShowWorldSkeleton((v) => !v)}
+          available={!!landmarks?.worldFrames}
+          subLabel={
+            landmarks?.worldFrames
+              ? 'MediaPipe 3D coords, hip-anchored'
+              : 'Re-extract to capture'
+          }
+        />
       </div>
 
       <ExtractionPanel
@@ -447,6 +467,17 @@ export function VideoOverlayPreview() {
             displayRect={displayRect}
           />
         )}
+        {showWorldSkeleton &&
+          landmarks?.worldFrames &&
+          displayRect && (
+            <WorldSkeletonOverlaySvg
+              imageFrames={landmarks.frames}
+              worldFrames={landmarks.worldFrames}
+              fps={landmarks.fps}
+              currentTime={currentTime}
+              displayRect={displayRect}
+            />
+          )}
       </div>
 
       {selected && (
@@ -1023,6 +1054,140 @@ function SkeletonOverlaySvg({
             r={lowConfidence ? 2 : 3}
             fill={lowConfidence ? '#ef4444' : '#2dd4bf'}
             opacity={lowConfidence ? 0.5 : 0.9}
+          />
+        );
+      })}
+    </svg>
+  );
+}
+
+/**
+ * Skeleton overlay drawn from MediaPipe's 3D `worldLandmarks` rather
+ * than image-coord landmarks.
+ *
+ * World coords are meters-scaled and hip-centred; they're temporally
+ * stabilised by the landmarker, so they may hold steadier across
+ * occlusions than image-coord landmarks (which drift toward background
+ * features when the face is hidden).
+ *
+ * To draw them on top of the video we project each world landmark onto
+ * image space using a simple similarity transform: translate so the
+ * world-hip midpoint lands on the image-hip midpoint, scale so the
+ * world shoulder-width matches the image shoulder-width. Only the x/y
+ * axes are used; z is discarded (it measures depth toward camera,
+ * which we can't recover without a calibrated camera). The projection
+ * is only meaningful when the image-coord hips + shoulders are visible
+ * on the same frame.
+ *
+ * Drawn in amber so it's visually distinguishable from the image-coord
+ * skeleton — toggling both at once shows the gap between the two
+ * estimates.
+ */
+function WorldSkeletonOverlaySvg({
+  imageFrames,
+  worldFrames,
+  fps,
+  currentTime,
+  displayRect,
+}: {
+  imageFrames: PoseFrame[];
+  worldFrames: PoseFrame[];
+  fps: number;
+  currentTime: number;
+  displayRect: {
+    width: number;
+    height: number;
+    offsetX: number;
+    offsetY: number;
+  };
+}) {
+  const { width, height, offsetX, offsetY } = displayRect;
+  if (width <= 0 || height <= 0) return null;
+  if (imageFrames.length === 0 || worldFrames.length === 0) return null;
+  if (imageFrames.length !== worldFrames.length) return null;
+
+  const frameIdxFloat = Math.max(
+    0,
+    Math.min(imageFrames.length - 1, currentTime * fps)
+  );
+  const idx = Math.round(frameIdxFloat);
+  const imgFrame = imageFrames[idx];
+  const wldFrame = worldFrames[idx];
+
+  const imgLH = imgFrame[LANDMARK.LEFT_HIP];
+  const imgRH = imgFrame[LANDMARK.RIGHT_HIP];
+  const imgLS = imgFrame[LANDMARK.LEFT_SHOULDER];
+  const imgRS = imgFrame[LANDMARK.RIGHT_SHOULDER];
+  if (
+    imgLH.visibility < MIN_VISIBILITY ||
+    imgRH.visibility < MIN_VISIBILITY ||
+    imgLS.visibility < MIN_VISIBILITY ||
+    imgRS.visibility < MIN_VISIBILITY
+  ) {
+    return null;
+  }
+  const wldLH = wldFrame[LANDMARK.LEFT_HIP];
+  const wldRH = wldFrame[LANDMARK.RIGHT_HIP];
+  const wldLS = wldFrame[LANDMARK.LEFT_SHOULDER];
+  const wldRS = wldFrame[LANDMARK.RIGHT_SHOULDER];
+
+  const imgHipMid = { x: (imgLH.x + imgRH.x) / 2, y: (imgLH.y + imgRH.y) / 2 };
+  const wldHipMid = { x: (wldLH.x + wldRH.x) / 2, y: (wldLH.y + wldRH.y) / 2 };
+  const imgShoulderDist = Math.hypot(imgLS.x - imgRS.x, imgLS.y - imgRS.y);
+  const wldShoulderDist = Math.hypot(wldLS.x - wldRS.x, wldLS.y - wldRS.y);
+  if (wldShoulderDist < 1e-6) return null;
+  const scale = imgShoulderDist / wldShoulderDist;
+
+  const projected = wldFrame.map((lm) => ({
+    x: imgHipMid.x + (lm.x - wldHipMid.x) * scale,
+    y: imgHipMid.y + (lm.y - wldHipMid.y) * scale,
+    visibility: lm.visibility,
+  }));
+
+  return (
+    <svg
+      width={width}
+      height={height}
+      viewBox={`0 0 ${width} ${height}`}
+      style={{
+        position: 'absolute',
+        left: offsetX,
+        top: offsetY,
+        pointerEvents: 'none',
+      }}
+    >
+      {SKELETON_CONNECTIONS.map(([a, b], i) => {
+        const la = projected[a];
+        const lb = projected[b];
+        if (!la || !lb) return null;
+        if (
+          la.visibility < MIN_VISIBILITY ||
+          lb.visibility < MIN_VISIBILITY
+        )
+          return null;
+        return (
+          <line
+            key={i}
+            x1={la.x * width}
+            y1={la.y * height}
+            x2={lb.x * width}
+            y2={lb.y * height}
+            stroke="#f59e0b"
+            strokeWidth={2}
+            opacity={0.85}
+          />
+        );
+      })}
+      {projected.map((lm, i) => {
+        if (lm.visibility < MIN_VISIBILITY) return null;
+        return (
+          <circle
+            key={i}
+            cx={lm.x * width}
+            cy={lm.y * height}
+            r={3}
+            fill="#f59e0b"
+            opacity={0.9}
           />
         );
       })}

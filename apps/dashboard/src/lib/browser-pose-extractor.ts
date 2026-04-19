@@ -102,6 +102,19 @@ export interface ExtractionOptions {
 
 export interface ExtractionResult {
   frames: PoseFrame[];
+  /**
+   * 3D world-coordinate landmarks, same ordering as `frames`. Meters-scaled,
+   * hip-centred. Parallel array to `frames` — use the same index to line up
+   * image-coord and world-coord readings for the same video frame. Empty
+   * frames are encoded as all-zeros (same convention as `frames`).
+   *
+   * Captured for the Track A #4 A/B: `worldLandmarks` are temporally
+   * stabilised by MediaPipe and may hold steadier across occlusions than
+   * the image-coord landmarks, which drift toward background features on
+   * bench-front chest-touch. Consumers can overlay a projected skeleton
+   * for visual comparison or compute angle metrics directly in 3D.
+   */
+  worldFrames: PoseFrame[];
   fps: number;
   totalFrames: number;
   validFrames: number;
@@ -153,6 +166,7 @@ export async function extractLandmarksFromVideo({
   const intervalSec = 1 / fps;
   const totalFrames = Math.max(1, Math.floor(video.duration * fps));
   const frames: PoseFrame[] = [];
+  const worldFrames: PoseFrame[] = [];
   const startedAt = performance.now();
   let validFrames = 0;
 
@@ -165,6 +179,7 @@ export async function extractLandmarksFromVideo({
     // in practice on Chromium; if blank frames appear, await a rAF here.
     const result = landmarker.detectForVideo(video, performance.now());
     const lms = result.landmarks?.[0];
+    const worldLms = result.worldLandmarks?.[0];
     if (lms && lms.length >= 33) {
       const frame: PoseFrame = lms.map((lm) => ({
         x: lm.x,
@@ -173,15 +188,32 @@ export async function extractLandmarksFromVideo({
         visibility: lm.visibility ?? 0,
       }));
       frames.push(frame);
+      // World landmarks ride alongside image landmarks. If MediaPipe
+      // emits only one of the two (shouldn't happen, but defensive),
+      // fall through to empty so the arrays stay index-aligned.
+      if (worldLms && worldLms.length >= 33) {
+        worldFrames.push(
+          worldLms.map((lm) => ({
+            x: lm.x,
+            y: lm.y,
+            z: lm.z,
+            visibility: lm.visibility ?? 0,
+          }))
+        );
+      } else {
+        worldFrames.push(emptyFrame());
+      }
       validFrames++;
     } else {
       frames.push(emptyFrame());
+      worldFrames.push(emptyFrame());
     }
     onProgress?.((i + 1) / totalFrames);
   }
 
   return {
     frames,
+    worldFrames,
     fps,
     totalFrames,
     validFrames,
