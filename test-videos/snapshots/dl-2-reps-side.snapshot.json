@@ -3,38 +3,43 @@
   "lift": "deadlift",
   "analysisVersion": 5,
   "snapshotVersion": 1,
-  "createdAt": "2026-04-19T11:18:35.881Z",
+  "createdAt": "2026-04-19T11:37:14.400Z",
   "sagittalConfidence": 0.8311052666666666,
   "result": {
     "reps": [
       {
         "repNumber": 1,
-        "startFrame": 12,
+        "startFrame": 11,
         "endFrame": 24,
         "barPath": [
           {
-            "x": 0.5102795,
-            "y": 0.5321656666666666,
+            "x": 0.5130555,
+            "y": 0.44301275,
+            "frame": 11
+          },
+          {
+            "x": 0.514239,
+            "y": 0.4812649166666667,
             "frame": 12
           },
           {
-            "x": 0.4988131666666667,
-            "y": 0.501048,
+            "x": 0.5151449444444445,
+            "y": 0.5058997777777777,
             "frame": 13
           },
           {
-            "x": 0.495056,
-            "y": 0.533921,
+            "x": 0.5157733333333333,
+            "y": 0.5169173333333333,
             "frame": 14
           },
           {
-            "x": 0.4989323333333333,
-            "y": 0.5283233333333334,
+            "x": 0.5196496666666667,
+            "y": 0.5113196666666666,
             "frame": 15
           },
           {
-            "x": 0.5177008333333333,
-            "y": 0.5427826666666666,
+            "x": 0.5220863888888888,
+            "y": 0.5209272222222222,
             "frame": 16
           },
           {
@@ -79,37 +84,30 @@
           }
         ],
         "forwardLeanDeg": 67.71089725071275,
-        "barDriftCm": 8.0361918480691,
+        "barDriftCm": 4.814237892857156,
         "romCm": 38.006252999999994,
         "kneeAngleDeg": 74.6148900201779,
         "hipAngleAtLockoutDeg": 175.00704948095367,
         "meanConcentricVelocityCmS": 25.337501999999997,
         "concentricDurationSec": 1.5,
-        "eccentricDurationSec": 1.5,
-        "tempoRatio": 1,
-        "hipHingeCrossoverPct": 50,
-        "barToShinDistanceCm": 11.2752,
+        "eccentricDurationSec": 1.75,
+        "tempoRatio": 1.17,
+        "hipHingeCrossoverPct": 80,
+        "barToShinDistanceCm": 13.48085025,
         "lockoutStabilityCv": 11.324488348076358,
         "faults": [
           {
-            "type": "bar_drift",
-            "severity": "warning",
-            "message": "Bar drifted 8.0cm from start",
-            "value": 0.03307074834596337,
-            "threshold": 0.03
-          },
-          {
             "type": "back_rounding",
             "severity": "warning",
-            "message": "Back rounded 40.3° during initial pull",
-            "value": 40.28851524170048,
+            "message": "Back rounded 59.9° during initial pull",
+            "value": 59.92173821639476,
             "threshold": 15
           },
           {
             "type": "bar_away_from_shins",
             "severity": "warning",
-            "message": "Bar 11.3cm away from shins",
-            "value": 11.2752,
+            "message": "Bar 13.5cm away from shins",
+            "value": 13.48085025,
             "threshold": 5
           },
           {
@@ -307,9 +305,9 @@
     "analysisVersion": 5,
     "fatigueSignatures": {
       "forwardLeanDriftDeg": 2.7,
-      "barDriftIncreaseCm": -1.9,
+      "barDriftIncreaseCm": 1.3,
       "romCompressionCm": -8.4,
-      "descentSpeedChange": 0.67,
+      "descentSpeedChange": 0.57,
       "lockoutDegradationDeg": 8.9,
       "velocityLossTrend": null
     }

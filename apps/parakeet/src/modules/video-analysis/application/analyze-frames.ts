@@ -1,6 +1,7 @@
 // @spec docs/features/video-analysis/spec-pipeline.md
 // @spec docs/features/video-analysis/spec-metrics.md
 import { assembleAnalysis } from '../lib/metrics-assembler';
+import { filterImplausibleFrames } from '../lib/plausibility-filter';
 import type { PoseFrame } from '../lib/pose-types';
 import { computeSagittalConfidence } from '../lib/view-confidence';
 
@@ -77,7 +78,11 @@ function interpolateEmptyFrames({ frames }: { frames: PoseFrame[] }) {
  *            `checkLiftMismatch` upstream, so by the time we get here the
  *            `lift` argument has either been confirmed or the user has been
  *            nudged about a label mismatch. See `lib/check-lift-mismatch.ts`.
- *   Stage 1  Frame hygiene — interpolate empty frames so failed detections
+ *   Stage 1a Plausibility filter — reject frames where pose has likely
+ *            collapsed to background features (bar occlusion on bench,
+ *            snap-to-ceiling-light). Rejected frames become `EMPTY_FRAME`
+ *            so Stage 1b lerps them away. See `lib/plausibility-filter.ts`.
+ *   Stage 1b Frame hygiene — interpolate empty frames so failed detections
  *            don't corrupt bar path, angles, or rep detection with zeros.
  *   Stage 2  Sagittal confidence — measure shoulder/hip separation to decide
  *            how side-on the camera is. Downstream metrics are foreshortened
@@ -95,7 +100,8 @@ export function analyzeVideoFrames({
   fps: number;
   lift: 'squat' | 'bench' | 'deadlift';
 }) {
-  const interpolated = interpolateEmptyFrames({ frames });
+  const plausibility = filterImplausibleFrames({ frames });
+  const interpolated = interpolateEmptyFrames({ frames: plausibility.frames });
   const valid = interpolated.filter((f) => !isEmptyFrame(f));
   const effectiveFps =
     valid.length > 0 ? fps * (valid.length / frames.length) : fps;
@@ -104,7 +110,7 @@ export function analyzeVideoFrames({
 
   if (typeof __DEV__ !== 'undefined' && __DEV__) {
     console.log(
-      `[analysis] ${valid.length}/${frames.length} usable frames (fps=${effectiveFps.toFixed(1)}, sagittalConfidence=${sagittalConfidence.toFixed(2)})`
+      `[analysis] ${valid.length}/${frames.length} usable frames (fps=${effectiveFps.toFixed(1)}, sagittalConfidence=${sagittalConfidence.toFixed(2)}, rejected=${plausibility.lowVisibilityRejected}vis+${plausibility.torsoJumpRejected}jump)`
     );
   }
   return assembleAnalysis({

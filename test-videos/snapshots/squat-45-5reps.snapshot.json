@@ -3,14 +3,14 @@
   "lift": "squat",
   "analysisVersion": 5,
   "snapshotVersion": 1,
-  "createdAt": "2026-04-19T11:18:35.788Z",
+  "createdAt": "2026-04-19T11:37:14.378Z",
   "sagittalConfidence": 0.33517849999999993,
   "result": {
     "reps": [
       {
         "repNumber": 1,
         "startFrame": 0,
-        "endFrame": 15,
+        "endFrame": 16,
         "barPath": [
           {
             "x": 0.7906725,
@@ -73,66 +73,50 @@
             "frame": 11
           },
           {
-            "x": 0.75389675,
-            "y": 0.1823523333333333,
+            "x": 0.7513119,
+            "y": 0.17718369999999997,
             "frame": 12
           },
           {
-            "x": 0.7647207500000001,
-            "y": 0.158064,
+            "x": 0.7569661999999999,
+            "y": 0.1425581,
             "frame": 13
           },
           {
-            "x": 0.7782244166666666,
-            "y": 0.1573561111111111,
+            "x": 0.7670233999999999,
+            "y": 0.1349587,
             "frame": 14
           },
           {
-            "x": 0.78742,
-            "y": 0.14803383333333334,
+            "x": 0.7770806,
+            "y": 0.12735929999999998,
             "frame": 15
+          },
+          {
+            "x": 0.7871378,
+            "y": 0.11975989999999999,
+            "frame": 16
           }
         ],
         "maxDepthCm": -5.92951909081907,
         "forwardLeanDeg": 61.54691359374508,
-        "barDriftCm": 7.951417833339684,
+        "barDriftCm": 5.729433988235248,
         "romCm": 65.9799675,
         "kneeAngleDeg": 95.15812831415457,
-        "hipAngleAtLockoutDeg": 18.13273206005209,
-        "meanConcentricVelocityCmS": 25.4082096,
-        "concentricDurationSec": 1.25,
+        "hipAngleAtLockoutDeg": 110.62325191270486,
+        "meanConcentricVelocityCmS": 25.753885200000003,
+        "concentricDurationSec": 1.5,
         "eccentricDurationSec": 2.5,
-        "tempoRatio": 2,
+        "tempoRatio": 1.67,
         "stanceWidthCm": 60.91086600000001,
-        "hipShiftCm": 3.120119999999998,
+        "hipShiftCm": 2.2310316,
         "hipShiftDirection": "left",
-        "lockoutStabilityCv": 76.84253963789081,
+        "lockoutStabilityCv": 0.21631815514715616,
         "faults": [
           {
             "type": "above_parallel",
             "severity": "warning",
             "message": "Hip crease may not have reached parallel (low angle confidence)"
-          },
-          {
-            "type": "excessive_lean",
-            "severity": "info",
-            "message": "Forward lean reached 75.7°",
-            "value": 75.73117201519142,
-            "threshold": 55
-          },
-          {
-            "type": "bar_drift",
-            "severity": "warning",
-            "message": "Bar drifted 8.0cm from start",
-            "value": 0.03272188408781763,
-            "threshold": 0.03
-          },
-          {
-            "type": "unstable_lockout",
-            "severity": "warning",
-            "message": "Unstable lockout (CV 76.8%)",
-            "value": 76.84253963789081,
-            "threshold": 5
           }
         ],
         "verdict": {
@@ -149,15 +133,15 @@
             {
               "name": "lockout",
               "verdict": "fail",
-              "measured": 38.89460960701712,
+              "measured": 114.93233751576557,
               "threshold": 170,
               "unit": "°",
-              "message": "Incomplete lockout (39°) — would not pass"
+              "message": "Incomplete lockout (115°) — would not pass"
             },
             {
               "name": "forward_motion",
               "verdict": "pass",
-              "measured": 2.2426587267897244,
+              "measured": 6.323067069935462e-15,
               "threshold": 3,
               "unit": "cm",
               "message": "Clean lockout path"
@@ -169,22 +153,17 @@
       },
       {
         "repNumber": 2,
-        "startFrame": 15,
+        "startFrame": 16,
         "endFrame": 24,
         "barPath": [
           {
-            "x": 0.78742,
-            "y": 0.14803383333333334,
-            "frame": 15
-          },
-          {
-            "x": 0.7923075,
-            "y": 0.13009716666666668,
+            "x": 0.7871378,
+            "y": 0.11975989999999999,
             "frame": 16
           },
           {
-            "x": 0.7679058333333334,
-            "y": 0.14803738888888887,
+            "x": 0.7661825999999999,
+            "y": 0.14459163333333333,
             "frame": 17
           },
           {
@@ -225,27 +204,19 @@
         ],
         "maxDepthCm": 2.38377521768906,
         "forwardLeanDeg": 62.91004723022883,
-        "barDriftCm": 6.396289739999993,
+        "barDriftCm": 5.904898199999983,
         "romCm": 49.3047648,
         "kneeAngleDeg": 75.57522120520241,
         "hipAngleAtLockoutDeg": 119.41585574363909,
         "meanConcentricVelocityCmS": 39.44381184,
         "concentricDurationSec": 1.25,
-        "eccentricDurationSec": 1,
-        "tempoRatio": 0.8,
-        "stanceWidthCm": 23.28126299999999,
+        "eccentricDurationSec": 0.75,
+        "tempoRatio": 0.6,
+        "stanceWidthCm": 63.39019499999998,
         "hipShiftCm": 5.747678999999995,
         "hipShiftDirection": "left",
         "lockoutStabilityCv": 1.1087108547592404,
-        "faults": [
-          {
-            "type": "excessive_lean",
-            "severity": "info",
-            "message": "Forward lean reached 75.7°",
-            "value": 75.73117201519142,
-            "threshold": 55
-          }
-        ],
+        "faults": [],
         "verdict": {
           "verdict": "red_light",
           "criteria": [
@@ -275,7 +246,7 @@
             }
           ]
         },
-        "velocityLossPct": -55.2
+        "velocityLossPct": -53.2
       },
       {
         "repNumber": 3,
@@ -388,7 +359,7 @@
             }
           ]
         },
-        "velocityLossPct": -66.8
+        "velocityLossPct": -64.6
       },
       {
         "repNumber": 4,
@@ -511,7 +482,7 @@
             }
           ]
         },
-        "velocityLossPct": -54.1
+        "velocityLossPct": -52
       },
       {
         "repNumber": 5,
@@ -619,7 +590,7 @@
             }
           ]
         },
-        "velocityLossPct": -72.7
+        "velocityLossPct": -70.4
       }
     ],
     "fps": 4,
@@ -628,10 +599,10 @@
     "analysisVersion": 5,
     "fatigueSignatures": {
       "forwardLeanDriftDeg": 28.5,
-      "barDriftIncreaseCm": -1.4,
+      "barDriftIncreaseCm": 0.8,
       "romCompressionCm": 9.3,
       "descentSpeedChange": 0.4,
-      "lockoutDegradationDeg": -100.2,
+      "lockoutDegradationDeg": -7.7,
       "velocityLossTrend": "decreasing"
     }
   }

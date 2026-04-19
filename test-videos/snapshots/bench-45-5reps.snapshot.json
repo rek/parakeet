@@ -3,7 +3,7 @@
   "lift": "bench",
   "analysisVersion": 5,
   "snapshotVersion": 1,
-  "createdAt": "2026-04-19T11:18:35.870Z",
+  "createdAt": "2026-04-19T11:37:14.397Z",
   "sagittalConfidence": 0.834698888888889,
   "result": {
     "reps": [
@@ -424,28 +424,28 @@
             "frame": 26
           },
           {
-            "x": 0.5875051666666667,
-            "y": 0.44378066666666666,
+            "x": 0.6916769166666668,
+            "y": 0.3938365,
             "frame": 27
           },
           {
-            "x": 0.5120721666666667,
-            "y": 0.45843677777777775,
+            "x": 0.68569175,
+            "y": 0.3751965,
             "frame": 28
           },
           {
-            "x": 0.4635040000000001,
-            "y": 0.4365273333333333,
+            "x": 0.6718475,
+            "y": 0.3366390000000001,
             "frame": 29
           },
           {
-            "x": 0.5538315000000001,
-            "y": 0.34802566666666673,
+            "x": 0.65800325,
+            "y": 0.29808150000000005,
             "frame": 30
           },
           {
-            "x": 0.6083191666666666,
-            "y": 0.2901837222222222,
+            "x": 0.6430430833333334,
+            "y": 0.2735356666666667,
             "frame": 31
           },
           {
@@ -474,19 +474,19 @@
             "frame": 36
           }
         ],
-        "forwardLeanDeg": 77.89422139870653,
-        "barDriftCm": 29.436759865384612,
-        "romCm": 47.152071,
-        "kneeAngleDeg": 127.83314782202646,
+        "forwardLeanDeg": 84.16588020228541,
+        "barDriftCm": 18.10828678846154,
+        "romCm": 31.4542035,
+        "kneeAngleDeg": 153.6398678512944,
         "hipAngleAtLockoutDeg": 162.91891740277907,
-        "meanConcentricVelocityCmS": 47.152071,
-        "concentricDurationSec": 2,
-        "eccentricDurationSec": 1,
-        "tempoRatio": 0.5,
-        "elbowFlareDeg": 95.42248590020482,
+        "meanConcentricVelocityCmS": 25.163362799999998,
+        "concentricDurationSec": 2.25,
+        "eccentricDurationSec": 0.75,
+        "tempoRatio": 0.33,
+        "elbowFlareDeg": 93.19171287742682,
         "elbowFlareMinDeg": 43.20647625294991,
         "elbowFlareMaxDeg": 115.14179769661678,
-        "elbowFlareMeanDeg": 95.42248590020482,
+        "elbowFlareMeanDeg": 93.19171287742682,
         "pauseDurationSec": 0,
         "isSinking": false,
         "lockoutStabilityCv": 0,
@@ -494,8 +494,8 @@
           {
             "type": "bar_drift",
             "severity": "warning",
-            "message": "Bar drifted 29.4cm from start",
-            "value": 0.12113892948717947,
+            "message": "Bar drifted 18.1cm from start",
+            "value": 0.07451969871794872,
             "threshold": 0.03
           },
           {
@@ -512,10 +512,10 @@
             {
               "name": "pause",
               "verdict": "pass",
-              "measured": 1,
+              "measured": 1.25,
               "threshold": 0.2,
               "unit": "s",
-              "message": "Clear pause (1.00s)"
+              "message": "Clear pause (1.25s)"
             },
             {
               "name": "lockout",
@@ -535,7 +535,7 @@
             }
           ]
         },
-        "velocityLossPct": -90.5
+        "velocityLossPct": -1.7
       }
     ],
     "fps": 4,
@@ -543,12 +543,12 @@
     "sagittalConfidence": 0.8302116833333334,
     "analysisVersion": 5,
     "fatigueSignatures": {
-      "forwardLeanDriftDeg": -6.2,
-      "barDriftIncreaseCm": 22.4,
-      "romCompressionCm": -28.6,
-      "descentSpeedChange": 2,
+      "forwardLeanDriftDeg": 0.1,
+      "barDriftIncreaseCm": 11,
+      "romCompressionCm": -12.9,
+      "descentSpeedChange": 1.5,
       "lockoutDegradationDeg": 6.9,
-      "velocityLossTrend": "stable"
+      "velocityLossTrend": "increasing"
     }
   }
 }

@@ -96,7 +96,7 @@
           "excessive_lean",
           "unstable_lockout"
         ],
-        "calibrated_at": "2026-04-19T11:18:35.755Z"
+        "calibrated_at": "2026-04-19T11:37:14.373Z"
       }
     },
     {
@@ -185,7 +185,7 @@
           "bar_drift",
           "unstable_lockout"
         ],
-        "calibrated_at": "2026-04-19T11:18:35.774Z"
+        "calibrated_at": "2026-04-19T11:37:14.375Z"
       }
     },
     {
@@ -275,7 +275,7 @@
           "excessive_lean",
           "unstable_lockout"
         ],
-        "calibrated_at": "2026-04-19T11:18:35.782Z"
+        "calibrated_at": "2026-04-19T11:37:14.377Z"
       }
     },
     {
@@ -319,9 +319,9 @@
             "max": 2.38
           },
           "barDriftCm": {
-            "mean": 5.59,
+            "mean": 5.04,
             "min": 2.37,
-            "max": 7.95
+            "max": 6.52
           },
           "romCm": {
             "mean": 57.4,
@@ -334,38 +334,35 @@
             "max": 95.16
           },
           "hipAngleAtLockoutDeg": {
-            "mean": 100.42,
-            "min": 18.13,
+            "mean": 118.92,
+            "min": 110.62,
             "max": 130.04
           },
           "meanConcentricVelocityCmS": {
-            "mean": 38.06,
-            "min": 25.41,
+            "mean": 38.12,
+            "min": 25.75,
             "max": 43.88
           },
           "stanceWidthCm": {
-            "mean": 52.55,
-            "min": 23.28,
-            "max": 60.91
+            "mean": 60.57,
+            "min": 57.81,
+            "max": 63.39
           },
           "hipShiftCm": {
-            "mean": 3.51,
-            "min": 2.49,
+            "mean": 3.33,
+            "min": 2.23,
             "max": 5.75
           },
           "lockoutStabilityCv": {
-            "mean": 16.59,
+            "mean": 1.27,
             "min": 0,
-            "max": 76.84
+            "max": 3.82
           }
         },
         "fault_types": [
-          "above_parallel",
-          "bar_drift",
-          "excessive_lean",
-          "unstable_lockout"
+          "above_parallel"
         ],
-        "calibrated_at": "2026-04-19T11:18:35.788Z"
+        "calibrated_at": "2026-04-19T11:37:14.378Z"
       }
     },
     {
@@ -401,52 +398,52 @@
         "analysis_version": 5,
         "metric_summary": {
           "forwardLeanDeg": {
-            "mean": 31.56,
+            "mean": 41.55,
             "min": 6.41,
-            "max": 58.11
+            "max": 90
           },
           "maxDepthCm": {
-            "mean": 3.23,
-            "min": -4.91,
+            "mean": 4.27,
+            "min": -0.4,
             "max": 8.04
           },
           "barDriftCm": {
-            "mean": 7.7,
+            "mean": 8.48,
             "min": 2.98,
             "max": 13.23
           },
           "romCm": {
-            "mean": 47.83,
+            "mean": 54.19,
             "min": 41.22,
-            "max": 62.88
+            "max": 90.94
           },
           "kneeAngleDeg": {
-            "mean": 115.43,
-            "min": 50.56,
+            "mean": 119.07,
+            "min": 90.37,
             "max": 172.64
           },
           "hipAngleAtLockoutDeg": {
-            "mean": 158.29,
-            "min": 154.61,
+            "mean": 149.24,
+            "min": 96.46,
             "max": 160.96
           },
           "meanConcentricVelocityCmS": {
-            "mean": 27.28,
-            "min": 23.22,
+            "mean": 24.53,
+            "min": 10.02,
             "max": 34.44
           },
           "stanceWidthCm": {
-            "mean": 42.11,
+            "mean": 40.81,
             "min": 18.44,
-            "max": 47.03
+            "max": 46.61
           },
           "hipShiftCm": {
-            "mean": 2.68,
+            "mean": 2.61,
             "min": 2,
             "max": 3.96
           },
           "lockoutStabilityCv": {
-            "mean": 2.2,
+            "mean": 2.22,
             "min": 0.02,
             "max": 13.2
           }
@@ -457,7 +454,7 @@
           "excessive_lean",
           "unstable_lockout"
         ],
-        "calibrated_at": "2026-04-19T11:18:35.805Z"
+        "calibrated_at": "2026-04-19T11:37:14.382Z"
       }
     },
     {
@@ -543,7 +540,7 @@
           "bar_drift",
           "unstable_lockout"
         ],
-        "calibrated_at": "2026-04-19T11:18:35.813Z"
+        "calibrated_at": "2026-04-19T11:37:14.384Z"
       }
     },
     {
@@ -627,7 +624,7 @@
           "bar_drift",
           "unstable_lockout"
         ],
-        "calibrated_at": "2026-04-19T11:18:35.817Z"
+        "calibrated_at": "2026-04-19T11:37:14.385Z"
       }
     },
     {
@@ -712,7 +709,7 @@
           "bar_drift",
           "unstable_lockout"
         ],
-        "calibrated_at": "2026-04-19T11:18:35.832Z"
+        "calibrated_at": "2026-04-19T11:37:14.389Z"
       }
     },
     {
@@ -798,7 +795,7 @@
           "early_hip_shoot",
           "unstable_lockout"
         ],
-        "calibrated_at": "2026-04-19T11:18:35.839Z"
+        "calibrated_at": "2026-04-19T11:37:14.391Z"
       }
     },
     {
@@ -882,7 +879,7 @@
         "fault_types": [
           "unstable_lockout"
         ],
-        "calibrated_at": "2026-04-19T11:18:35.844Z"
+        "calibrated_at": "2026-04-19T11:37:14.392Z"
       }
     },
     {
@@ -965,7 +962,7 @@
           "early_hip_shoot",
           "unstable_lockout"
         ],
-        "calibrated_at": "2026-04-19T11:18:35.849Z"
+        "calibrated_at": "2026-04-19T11:37:14.393Z"
       }
     },
     {
@@ -1047,7 +1044,7 @@
           "bar_drift",
           "early_hip_shoot"
         ],
-        "calibrated_at": "2026-04-19T11:18:35.855Z"
+        "calibrated_at": "2026-04-19T11:37:14.394Z"
       }
     },
     {
@@ -1135,7 +1132,7 @@
           "early_hip_shoot",
           "unstable_lockout"
         ],
-        "calibrated_at": "2026-04-19T11:18:35.860Z"
+        "calibrated_at": "2026-04-19T11:37:14.395Z"
       }
     },
     {
@@ -1167,22 +1164,22 @@
         "analysis_version": 5,
         "metric_summary": {
           "forwardLeanDeg": {
-            "mean": 80.98,
+            "mean": 82.23,
             "min": 75.24,
             "max": 84.79
           },
           "barDriftCm": {
-            "mean": 14.46,
+            "mean": 12.2,
             "min": 4.71,
-            "max": 29.44
+            "max": 25.69
           },
           "romCm": {
-            "mean": 27.9,
+            "mean": 24.76,
             "min": 18.56,
-            "max": 47.15
+            "max": 31.45
           },
           "kneeAngleDeg": {
-            "mean": 137.27,
+            "mean": 142.43,
             "min": 113.27,
             "max": 169.92
           },
@@ -1192,14 +1189,14 @@
             "max": 171.07
           },
           "meanConcentricVelocityCmS": {
-            "mean": 32.33,
+            "mean": 27.93,
             "min": 24.75,
-            "max": 47.15
+            "max": 32.13
           },
           "elbowFlareDeg": {
-            "mean": 81.12,
+            "mean": 80.67,
             "min": 67.13,
-            "max": 95.42
+            "max": 93.19
           },
           "pauseDurationSec": {
             "mean": 0.05,
@@ -1216,7 +1213,7 @@
           "bar_drift",
           "elbow_flare"
         ],
-        "calibrated_at": "2026-04-19T11:18:35.870Z"
+        "calibrated_at": "2026-04-19T11:37:14.397Z"
       }
     },
     {
@@ -1305,7 +1302,7 @@
           "uneven_lockout",
           "unstable_lockout"
         ],
-        "calibrated_at": "2026-04-19T11:18:35.876Z"
+        "calibrated_at": "2026-04-19T11:37:14.399Z"
       }
     },
     {
@@ -1335,9 +1332,9 @@
             "max": 70.41
           },
           "barDriftCm": {
-            "mean": 7.1,
-            "min": 6.15,
-            "max": 8.04
+            "mean": 5.48,
+            "min": 4.81,
+            "max": 6.15
           },
           "romCm": {
             "mean": 42.22,
@@ -1360,14 +1357,14 @@
             "max": 26.53
           },
           "hipHingeCrossoverPct": {
-            "mean": 37.5,
+            "mean": 52.5,
             "min": 25,
-            "max": 50
+            "max": 80
           },
           "barToShinDistanceCm": {
-            "mean": 10.12,
+            "mean": 11.22,
             "min": 8.96,
-            "max": 11.28
+            "max": 13.48
           },
           "lockoutStabilityCv": {
             "mean": 5.79,
@@ -1378,11 +1375,10 @@
         "fault_types": [
           "back_rounding",
           "bar_away_from_shins",
-          "bar_drift",
           "early_hip_shoot",
           "unstable_lockout"
         ],
-        "calibrated_at": "2026-04-19T11:18:35.881Z"
+        "calibrated_at": "2026-04-19T11:37:14.400Z"
       }
     }
   ]

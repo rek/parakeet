@@ -43,16 +43,17 @@ Core pipeline: pick video → compress → save locally + DB. Pure analysis pipe
 
 #### Pipeline stages (updated 2026-04-19)
 
-Analysis is a four-stage pipeline. Stages are explicit — each one's output is a named input to the next, so a future change (front-on bench pipeline, lift-driven strategy selection) drops in at a clean seam instead of bolted inside `assembleAnalysis`.
+Analysis is a five-stage pipeline. Stages are explicit — each one's output is a named input to the next, so a future change (front-on bench pipeline, lift-driven strategy selection) drops in at a clean seam instead of bolted inside `assembleAnalysis`.
 
 | Stage | Runs in | Responsibility | Consumes | Emits |
 | --- | --- | --- | --- | --- |
 | 0 — Lift label | `hooks/useVideoAnalysis.ts`, `application/reanalyze.ts` | Check the user's declared lift against the pose with `checkLiftMismatch`; surface a user-facing nudge if it looks wrong. Analysis still runs regardless — this is a nudge, not a gate (see [spec-lift-label.md](./spec-lift-label.md)). | `frames`, `declared` lift | `LiftMismatch \| null` → Alert |
-| 1 — Frame hygiene | `application/analyze-frames.ts` | Lerp empty-landmark frames from neighbours so failed detections don't corrupt bar path, angles, or rep detection with zero coords. | `frames` | interpolated `frames[]`, `effectiveFps` |
+| 1a — Plausibility | `application/analyze-frames.ts` → `lib/plausibility-filter.ts` | Reject frames where the pose has likely collapsed to background features. Two checks: median visibility across the 12 pose-critical landmarks below 0.3, or shoulder-midpoint jump > 8× the clip's median jump (with a 0.08-unit absolute floor). Rejected frames become `EMPTY_FRAME` so Stage 1b lerps them away. Motivated by the bar-over-face occlusion on front-on bench (backlog #24 Track A). | `frames` | `frames` (with outliers zeroed), `lowVisibilityRejected`, `torsoJumpRejected` counts |
+| 1b — Frame hygiene | `application/analyze-frames.ts` | Lerp empty-landmark frames from neighbours so failed detections don't corrupt bar path, angles, or rep detection with zero coords. | `frames` from 1a | interpolated `frames[]`, `effectiveFps` |
 | 2 — Sagittal confidence | `application/analyze-frames.ts` | Measure shoulder/hip X-separation across the clip → scalar `0–1` for how side-on the camera is. Downstream metrics are foreshortened at oblique angles; this lets the metric layer compensate instead of branching on a binary side/front flag. | interpolated `frames` | `sagittalConfidence: number` |
 | 3 — Deep analysis | `lib/metrics-assembler.ts` (`assembleAnalysis`) | Bar path, rep boundaries, per-rep metrics, faults, grading. `sagittalConfidence` is an **input**, not a side-computation — so fixtures and calibration runs can override it, and the stage is pure given a known confidence. | `frames`, `fps`, `lift`, `sagittalConfidence`, optional `strategy` | `VideoAnalysisResult` |
 
-Stage 0 lives at the hook/orchestrator layer (not inside `analyzeVideoFrames`) because the mismatch drives an Alert — surfacing it requires the hook's return channel. Stages 1–3 are pure and are called together via `analyzeVideoFrames`, which is the public entry point from both the mobile hook and the dashboard calibration tool.
+Stage 0 lives at the hook/orchestrator layer (not inside `analyzeVideoFrames`) because the mismatch drives an Alert — surfacing it requires the hook's return channel. Stages 1a–3 are pure and are called together via `analyzeVideoFrames`, which is the public entry point from both the mobile hook and the dashboard calibration tool.
 
 ### 1.6 — Video pick + compress hook
 

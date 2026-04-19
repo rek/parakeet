@@ -3,7 +3,7 @@
   "lift": "squat",
   "analysisVersion": 5,
   "snapshotVersion": 1,
-  "createdAt": "2026-04-19T11:18:35.805Z",
+  "createdAt": "2026-04-19T11:37:14.382Z",
   "sagittalConfidence": 0.3711836296296298,
   "result": {
     "reps": [
@@ -915,7 +915,7 @@
       {
         "repNumber": 6,
         "startFrame": 119,
-        "endFrame": 134,
+        "endFrame": 138,
         "barPath": [
           {
             "x": 0.584761,
@@ -953,71 +953,86 @@
             "frame": 125
           },
           {
-            "x": 0.5213591666666667,
-            "y": 0.567694,
+            "x": 0.5067246354166667,
+            "y": 0.6424642500000001,
             "frame": 126
           },
           {
-            "x": 0.5653926666666667,
-            "y": 0.5296545,
+            "x": 0.5383549062499999,
+            "y": 0.69280325,
             "frame": 127
           },
           {
-            "x": 0.580125,
-            "y": 0.41241733333333336,
+            "x": 0.5406258125,
+            "y": 0.682493,
             "frame": 128
           },
           {
-            "x": 0.5774309999999999,
-            "y": 0.36183666666666664,
+            "x": 0.5428967187499999,
+            "y": 0.6721827499999998,
             "frame": 129
           },
           {
-            "x": 0.5762013333333332,
-            "y": 0.33613316666666665,
+            "x": 0.5451676249999999,
+            "y": 0.6618724999999999,
             "frame": 130
           },
           {
-            "x": 0.5682961666666667,
-            "y": 0.3318718333333333,
+            "x": 0.54743853125,
+            "y": 0.6515622499999999,
             "frame": 131
           },
           {
-            "x": 0.5729118333333333,
-            "y": 0.33302133333333334,
+            "x": 0.5497094374999999,
+            "y": 0.6412519999999998,
             "frame": 132
           },
           {
-            "x": 0.5740048333333334,
-            "y": 0.3302886666666667,
+            "x": 0.5519803437499999,
+            "y": 0.6309417499999999,
             "frame": 133
           },
           {
-            "x": 0.5825781666666667,
-            "y": 0.32566,
+            "x": 0.55425125,
+            "y": 0.6206314999999999,
             "frame": 134
+          },
+          {
+            "x": 0.5565221562499999,
+            "y": 0.6103212499999998,
+            "frame": 135
+          },
+          {
+            "x": 0.5587930624999999,
+            "y": 0.6000109999999999,
+            "frame": 136
+          },
+          {
+            "x": 0.56106396875,
+            "y": 0.5897007499999999,
+            "frame": 137
+          },
+          {
+            "x": 0.5633348749999999,
+            "y": 0.5793904999999998,
+            "frame": 138
           }
         ],
-        "maxDepthCm": -4.91308115289236,
-        "forwardLeanDeg": 19.011764638214917,
-        "barDriftCm": 11.582516531249972,
-        "romCm": 62.8762905,
-        "kneeAngleDeg": 141.79141733567383,
-        "hipAngleAtLockoutDeg": 159.7957177766245,
-        "meanConcentricVelocityCmS": 27.178128,
-        "concentricDurationSec": 2.25,
-        "eccentricDurationSec": 1.5,
-        "tempoRatio": 0.67,
+        "maxDepthCm": 2.3332348842006474,
+        "forwardLeanDeg": 90,
+        "barDriftCm": 12.455297522051733,
+        "romCm": 90.94131225,
+        "kneeAngleDeg": 90.36982732231282,
+        "hipAngleAtLockoutDeg": 96.46443890376113,
+        "meanConcentricVelocityCmS": 10.021563000000015,
+        "concentricDurationSec": 2.75,
+        "eccentricDurationSec": 2,
+        "tempoRatio": 0.73,
         "stanceWidthCm": 46.050930000000015,
         "hipShiftCm": 3.9640589999999785,
         "hipShiftDirection": "right",
-        "lockoutStabilityCv": 0.19623610907237785,
+        "lockoutStabilityCv": 0.38105243501745345,
         "faults": [
-          {
-            "type": "above_parallel",
-            "severity": "warning",
-            "message": "Hip crease may not have reached parallel (low angle confidence)"
-          },
           {
             "type": "excessive_lean",
             "severity": "info",
@@ -1028,8 +1043,8 @@
           {
             "type": "bar_drift",
             "severity": "warning",
-            "message": "Bar drifted 11.6cm from start",
-            "value": 0.04766467708333322,
+            "message": "Bar drifted 12.5cm from start",
+            "value": 0.05125636840350507,
             "threshold": 0.03
           }
         ],
@@ -1038,81 +1053,61 @@
           "criteria": [
             {
               "name": "depth",
-              "verdict": "fail",
-              "measured": -4.91308115289236,
+              "verdict": "pass",
+              "measured": 2.3332348842006474,
               "threshold": 0,
               "unit": "cm",
-              "message": "4.9cm above parallel — would not pass"
+              "message": "2.3cm below parallel"
             },
             {
               "name": "lockout",
-              "verdict": "pass",
-              "measured": 174.95143081120278,
+              "verdict": "fail",
+              "measured": 92.00959187074565,
               "threshold": 170,
               "unit": "°",
-              "message": "Knees fully locked (175°)"
+              "message": "Incomplete lockout (92°) — would not pass"
             },
             {
               "name": "forward_motion",
               "verdict": "pass",
-              "measured": 0.7035002922835493,
+              "measured": 2.1287659135449388e-14,
               "threshold": 3,
               "unit": "cm",
               "message": "Clean lockout path"
             }
           ]
         },
-        "velocityLossPct": 10.8,
-        "estimatedRir": 4.3
+        "velocityLossPct": 67.1,
+        "estimatedRir": 0
       },
       {
         "repNumber": 7,
-        "startFrame": 134,
+        "startFrame": 138,
         "endFrame": 150,
         "barPath": [
           {
-            "x": 0.5825781666666667,
-            "y": 0.32566,
-            "frame": 134
-          },
-          {
-            "x": 0.5874156666666667,
-            "y": 0.32160150000000004,
-            "frame": 135
-          },
-          {
-            "x": 0.5961258333333334,
-            "y": 0.31454733333333335,
-            "frame": 136
-          },
-          {
-            "x": 0.5990538333333334,
-            "y": 0.3185481666666667,
-            "frame": 137
-          },
-          {
-            "x": 0.5960501666666667,
-            "y": 0.3376385,
+            "x": 0.5633348749999999,
+            "y": 0.5793904999999998,
             "frame": 138
           },
           {
-            "x": 0.5860141666666667,
-            "y": 0.3705406666666667,
+            "x": 0.5656057812499999,
+            "y": 0.56908025,
             "frame": 139
           },
           {
-            "x": 0.5812353333333333,
-            "y": 0.42302883333333335,
+            "x": 0.5678766875,
+            "y": 0.5587699999999999,
             "frame": 140
           },
           {
-            "x": 0.5741998333333332,
-            "y": 0.4806471666666667,
+            "x": 0.5701475937499999,
+            "y": 0.54845975,
             "frame": 141
           },
           {
-            "x": 0.5687203333333333,
-            "y": 0.5089326666666667,
+            "x": 0.5665251979166667,
+            "y": 0.5270195833333333,
             "frame": 142
           },
           {
@@ -1157,25 +1152,22 @@
           }
         ],
         "maxDepthCm": 4.462738648904726,
-        "forwardLeanDeg": 37.15144573200786,
-        "barDriftCm": 8.557826294117637,
-        "romCm": 47.23563600000001,
-        "kneeAngleDeg": 50.55732430009973,
+        "forwardLeanDeg": 36.13629626083365,
+        "barDriftCm": 13.186877720299446,
+        "romCm": 63.68872049999995,
+        "kneeAngleDeg": 127.48570660956835,
         "hipAngleAtLockoutDeg": 157.77322197604377,
-        "meanConcentricVelocityCmS": 23.283733500000004,
-        "concentricDurationSec": 2,
-        "eccentricDurationSec": 2,
-        "tempoRatio": 1,
-        "stanceWidthCm": 47.029977,
-        "hipShiftCm": 3.2768549999999923,
+        "meanConcentricVelocityCmS": 21.229573499999983,
+        "stanceWidthCm": 37.95356250000001,
+        "hipShiftCm": 2.8501469999999975,
         "hipShiftDirection": "left",
         "lockoutStabilityCv": 0.018860831868418238,
         "faults": [
           {
             "type": "bar_drift",
             "severity": "warning",
-            "message": "Bar drifted 8.6cm from start",
-            "value": 0.035217392156862704,
+            "message": "Bar drifted 13.2cm from start",
+            "value": 0.0542669865032899,
             "threshold": 0.03
           }
         ],
@@ -1200,16 +1192,16 @@
             },
             {
               "name": "forward_motion",
-              "verdict": "borderline",
-              "measured": 3.9701286806586946,
+              "verdict": "pass",
+              "measured": 0.6589068038802423,
               "threshold": 3,
               "unit": "cm",
-              "message": "4.0cm path deviation at top"
+              "message": "Clean lockout path"
             }
           ]
         },
-        "velocityLossPct": 23.6,
-        "estimatedRir": 2
+        "velocityLossPct": 30.4,
+        "estimatedRir": 1
       }
     ],
     "fps": 4,
@@ -1217,10 +1209,10 @@
     "sagittalConfidence": 0.3711201666666667,
     "analysisVersion": 5,
     "fatigueSignatures": {
-      "forwardLeanDriftDeg": 30.7,
-      "barDriftIncreaseCm": -4.7,
-      "romCompressionCm": 3.7,
-      "descentSpeedChange": 0.14,
+      "forwardLeanDriftDeg": 29.7,
+      "barDriftIncreaseCm": 0,
+      "romCompressionCm": -12.7,
+      "descentSpeedChange": null,
       "lockoutDegradationDeg": -0.8,
       "velocityLossTrend": "stable"
     }
