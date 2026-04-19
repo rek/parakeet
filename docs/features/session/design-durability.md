@@ -1,6 +1,6 @@
 # Design: Set Durability
 
-**Status**: Implemented (2026-04-18) — append-only `set_logs`, per-set dual-write, offline queue, server auto-finalise, and recovery Alert all shipped. One follow-up pending: coordinated DB/client deploy to drop `session_logs.actual_sets` / `auxiliary_sets` JSONB columns, sequenced at [`tools/scripts/pending-drop-session-logs-jsonb.md`](../../../tools/scripts/pending-drop-session-logs-jsonb.md).
+**Status**: Implemented (2026-04-19) — append-only `set_logs`, per-set dual-write, offline queue, server auto-finalise, recovery Alert, and the coordinated column drop are all shipped. `session_logs.actual_sets` / `auxiliary_sets` were removed in migrations `20260419130000_loosen_session_logs_set_arrays.sql` + `20260419140000_drop_session_logs_set_arrays.sql`; every writer now targets `set_logs` exclusively.
 **Date**: 2026-04-17
 
 ## Problem
@@ -68,9 +68,15 @@ Sync queue stores per-set ops (`upsert_set_log`) alongside `complete_session`. I
 - Changing the performance adjuster / achievements pipeline (consumes the same shape post-finalisation).
 - Cross-device live session sync (explicit out-of-scope; dedupe is sufficient).
 
-## Migration
+## Migration (complete)
 
-Dual-write. Backfill `set_logs` from existing `session_logs.actual_sets`. Switch history reads to `set_logs`. Drop `session_logs.actual_sets` (and `auxiliary_sets`) after a release cycle.
+Phased dual-write + backfill → reader cutover → column drop:
+
+1. **2026-04-17** — `set_logs` table created (`20260417000000_create_set_logs.sql`). Client + server started writing `set_logs` on every confirmed set while `session_logs.actual_sets` / `auxiliary_sets` continued to be written for back-compat.
+2. **2026-04-17** — Historical backfill from JSONB into `set_logs` via `tools/scripts/backfill-set-logs.sql` (now archived).
+3. **2026-04-18** — All readers (JIT, history, cycle review, export, assemble-coaching-context, video-analysis) cut over to synthesise `actual_sets` / `auxiliary_sets` buckets from `set_logs` via `fetchSessionSetsBySessionIds`.
+4. **2026-04-19** — Migration A (`20260419130000_loosen_session_logs_set_arrays.sql`) dropped the `NOT NULL` on `actual_sets` and set a default of `'[]'::jsonb`. Client stopped sending the placeholder JSONB fields from `insertSessionLog` + `tools/scripts/import-csv.ts`.
+5. **2026-04-19** — Migration B (`20260419140000_drop_session_logs_set_arrays.sql`) dropped both columns. All clients controlled in-house, so no soak period was needed. `tools/scripts/backfill-set-logs.sql` is a historical artefact and will error against the current schema — do not rerun.
 
 ## Specs
 

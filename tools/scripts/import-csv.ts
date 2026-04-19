@@ -900,11 +900,11 @@ async function insertSessions(
       throw new Error(`Session insert failed: ${sessionErr.message}`);
     insertedSessions++;
 
+    // Per-set data is written to `set_logs` below — the JSONB columns on
+    // `session_logs` are being dropped (backlog #16, Migration B).
     const { error: logErr } = await db.from('session_logs').insert({
       session_id: sessionRow.id,
       user_id: userId,
-      actual_sets: session.sets,
-      auxiliary_sets: session.auxSets.length > 0 ? session.auxSets : null,
       session_rpe: null,
       completion_pct: 100,
       performance_vs_plan: 'at',

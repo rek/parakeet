@@ -512,8 +512,11 @@ export async function insertSessionLog(input: {
   completedAt?: Date;
   autoFinalised?: boolean;
 }): Promise<string> {
-  // session_logs no longer carries actual_sets / auxiliary_sets — set_logs is
-  // authoritative. The columns are dropped in a follow-up migration.
+  // `set_logs` is the sole source of truth for per-set data. The legacy
+  // `actual_sets` / `auxiliary_sets` JSONB columns are omitted from the
+  // insert payload; Migration A (20260419130000) loosened the NOT NULL so
+  // the DB accepts the payload, and Migration B drops the columns entirely
+  // once the client rollout is complete.
   // `auto_finalised` left undefined (not false) when not set so the Supabase
   // client omits the field from the payload.
   const { data, error } = await typedSupabase
@@ -521,8 +524,6 @@ export async function insertSessionLog(input: {
     .insert({
       session_id: input.sessionId,
       user_id: input.userId,
-      actual_sets: [],
-      auxiliary_sets: null,
       session_rpe: input.sessionRpe ?? null,
       completion_pct: input.completionPct,
       performance_vs_plan: input.performanceVsPlan,

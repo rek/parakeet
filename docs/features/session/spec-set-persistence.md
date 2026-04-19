@@ -1,6 +1,6 @@
 # Spec: Per-Set Persistence
 
-**Status**: Implemented (2026-04-18) — all reads cut over, JSONB columns retained only as placeholder writes. Column drop documented at `tools/scripts/pending-drop-session-logs-jsonb.md`, coordinated with a follow-up client OTA.
+**Status**: Implemented (2026-04-19) — per-set writes durable, all readers on `set_logs`, and the legacy `session_logs.actual_sets` / `auxiliary_sets` columns dropped in migrations `20260419130000` (loosen NOT NULL) + `20260419140000` (drop columns).
 **Domain**: Sessions
 **Design**: [design-durability.md](./design-durability.md)
 
@@ -79,7 +79,7 @@ Guarantees the server status reflects reality without a separate client call rac
   - [x] `flushUnsyncedSets(userId)` — iterates store, fires persistSet for every `is_completed && !synced_at` set. Called on session screen mount and before `initSession` clobbers state.
 - [x] `apps/parakeet/src/modules/session/application/session.service.ts`
   - [x] Added `auto_finalised` to `insertSessionLog` shape (feeds into `abandonStale` rewrite).
-  - [ ] `completeSession` still writes `session_logs.actual_sets` / `auxiliary_sets` during dual-write window. Legacy batch remains authoritative until history reads cut over.
+  - [x] Dual-write to `session_logs.actual_sets` / `auxiliary_sets` removed on 2026-04-19 after the column drop (Migration B). `set_logs` is now the sole authoritative store.
 
 ### Hook layer
 - [x] `apps/parakeet/src/modules/session/hooks/useSetPersistence.ts` (new)
@@ -149,7 +149,7 @@ ON CONFLICT DO NOTHING;
 1. **(done 2026-04-17)** Ship migration + per-set dual-write. Backfill `tools/scripts/backfill-set-logs.sql` applied in prod (332 rows).
 2. **(done 2026-04-18)** Cut every JSONB reader over to `getSessionSetsBySessionIds`. No consumer reads `session_logs.actual_sets` / `auxiliary_sets` any more.
 3. **(done 2026-04-18)** Stop deriving the JSONB arrays in `completeSession` / `autoFinaliseSession`. Writes still include placeholder `[]` / `null` for schema compat.
-4. **Pending** — coordinated deploy: (a) DB migration to loosen `actual_sets` NOT NULL + add default, (b) client OTA to stop sending the placeholder fields, (c) DB migration to drop the columns. See `tools/scripts/pending-drop-session-logs-jsonb.md`.
+4. **(done 2026-04-19)** Coordinated column drop: migration `20260419130000_loosen_session_logs_set_arrays.sql` relaxed the NOT NULL + default, client insert payloads stopped sending the fields, migration `20260419140000_drop_session_logs_set_arrays.sql` dropped both columns. `tools/scripts/backfill-set-logs.sql` archived (will error against the current schema — do not rerun).
 
 ## Dependencies
 

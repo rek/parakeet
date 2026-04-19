@@ -1,9 +1,11 @@
--- Backfill set_logs from existing session_logs.actual_sets / auxiliary_sets.
--- Idempotent: unique index on (session_id, kind, exercise, set_number) with
--- NULLS NOT DISTINCT collapses repeat rows. Safe to re-run.
+-- [HISTORICAL — DO NOT RERUN] Backfill set_logs from the legacy
+-- session_logs.actual_sets / auxiliary_sets JSONB columns.
 --
--- Run once after pushing 20260417000000_create_set_logs.sql to hosted. Can be
--- applied via Supabase dashboard SQL editor or psql.
+-- Ran once in April 2026 after pushing 20260417000000_create_set_logs.sql
+-- to hosted, before Migration 20260419140000 dropped the source columns.
+-- Kept in-tree as reference for the historical shape; this script will
+-- error out against the current schema because the referenced columns no
+-- longer exist.
 
 BEGIN;
 

@@ -369,6 +369,196 @@ export type Database = {
           },
         ]
       }
+      diet_foods: {
+        Row: {
+          canonical_name: string
+          category: string
+          created_at: string
+          display_name: string
+          id: string
+        }
+        Insert: {
+          canonical_name: string
+          category: string
+          created_at?: string
+          display_name: string
+          id?: string
+        }
+        Update: {
+          canonical_name?: string
+          category?: string
+          created_at?: string
+          display_name?: string
+          id?: string
+        }
+        Relationships: []
+      }
+      diet_lifestyle: {
+        Row: {
+          category: string
+          description: string | null
+          frequency: string
+          id: string
+          name: string
+          protocol_id: string
+          rationale: string | null
+          slug: string
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          category: string
+          description?: string | null
+          frequency: string
+          id?: string
+          name: string
+          protocol_id: string
+          rationale?: string | null
+          slug: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          category?: string
+          description?: string | null
+          frequency?: string
+          id?: string
+          name?: string
+          protocol_id?: string
+          rationale?: string | null
+          slug?: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "diet_lifestyle_protocol_id_fkey"
+            columns: ["protocol_id"]
+            isOneToOne: false
+            referencedRelation: "diet_protocols"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      diet_protocol_foods: {
+        Row: {
+          food_id: string
+          notes: string | null
+          protocol_id: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          food_id: string
+          notes?: string | null
+          protocol_id: string
+          status: string
+          updated_at?: string
+        }
+        Update: {
+          food_id?: string
+          notes?: string | null
+          protocol_id?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "diet_protocol_foods_food_id_fkey"
+            columns: ["food_id"]
+            isOneToOne: false
+            referencedRelation: "diet_foods"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "diet_protocol_foods_protocol_id_fkey"
+            columns: ["protocol_id"]
+            isOneToOne: false
+            referencedRelation: "diet_protocols"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      diet_protocols: {
+        Row: {
+          created_at: string
+          description_md: string | null
+          id: string
+          name: string
+          slug: string
+        }
+        Insert: {
+          created_at?: string
+          description_md?: string | null
+          id?: string
+          name: string
+          slug: string
+        }
+        Update: {
+          created_at?: string
+          description_md?: string | null
+          id?: string
+          name?: string
+          slug?: string
+        }
+        Relationships: []
+      }
+      diet_supplements: {
+        Row: {
+          dose: string | null
+          evidence_grade: string | null
+          food_equivalent: string | null
+          id: string
+          name: string
+          nepal_sourcing: string | null
+          notes: string | null
+          protocol_id: string
+          rationale: string | null
+          slug: string
+          sort_order: number
+          tier: string
+          updated_at: string
+        }
+        Insert: {
+          dose?: string | null
+          evidence_grade?: string | null
+          food_equivalent?: string | null
+          id?: string
+          name: string
+          nepal_sourcing?: string | null
+          notes?: string | null
+          protocol_id: string
+          rationale?: string | null
+          slug: string
+          sort_order?: number
+          tier: string
+          updated_at?: string
+        }
+        Update: {
+          dose?: string | null
+          evidence_grade?: string | null
+          food_equivalent?: string | null
+          id?: string
+          name?: string
+          nepal_sourcing?: string | null
+          notes?: string | null
+          protocol_id?: string
+          rationale?: string | null
+          slug?: string
+          sort_order?: number
+          tier?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "diet_supplements_protocol_id_fkey"
+            columns: ["protocol_id"]
+            isOneToOne: false
+            referencedRelation: "diet_protocols"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       disruptions: {
         Row: {
           adjustment_applied: Json | null
@@ -1039,9 +1229,7 @@ export type Database = {
       }
       session_logs: {
         Row: {
-          actual_sets: Json
           auto_finalised: boolean
-          auxiliary_sets: Json | null
           completed_at: string | null
           completion_pct: number | null
           corrects_log_id: string | null
@@ -1058,9 +1246,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
-          actual_sets: Json
           auto_finalised?: boolean
-          auxiliary_sets?: Json | null
           completed_at?: string | null
           completion_pct?: number | null
           corrects_log_id?: string | null
@@ -1077,9 +1263,7 @@ export type Database = {
           user_id: string
         }
         Update: {
-          actual_sets?: Json
           auto_finalised?: boolean
-          auxiliary_sets?: Json | null
           completed_at?: string | null
           completion_pct?: number | null
           corrects_log_id?: string | null
