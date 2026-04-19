@@ -10,6 +10,11 @@ export default defineConfig(() => ({
   server: {
     port: 4200,
     host: 'localhost',
+    fs: {
+      // Allow serving files from the monorepo root so the VideoOverlayPreview
+      // page can stream test-videos/*.mp4 and landmarks/*.json via /@fs/.
+      allow: ['../..'],
+    },
   },
   preview: {
     port: 4200,

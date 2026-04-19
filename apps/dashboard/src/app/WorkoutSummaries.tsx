@@ -8,8 +8,9 @@ interface WorkoutRow {
   id: string;
   planned_date: string | null;
   completed_at: string | null;
-  primary_lift: string;
-  intensity_type: string;
+  primary_lift: string | null;
+  intensity_type: string | null;
+  activity_name: string | null;
   week_number: number;
   block_number: number | null;
   is_deload: boolean;
@@ -23,6 +24,16 @@ interface WorkoutRow {
     lift: string;
     pr_type: string;
   }>;
+}
+
+function titleCase(s: string) {
+  return s.charAt(0).toUpperCase() + s.slice(1);
+}
+
+function liftLabel(row: WorkoutRow): string {
+  if (row.primary_lift) return titleCase(row.primary_lift);
+  if (row.activity_name) return row.activity_name;
+  return '—';
 }
 
 function fmt(ts: string) {
@@ -104,8 +115,7 @@ function CompletionBar({ pct }: { pct: number | null }) {
 function WorkoutRow({ row }: { row: WorkoutRow }) {
   const log = row.session_logs[0];
   const prs = row.personal_records;
-  const lift =
-    row.primary_lift.charAt(0).toUpperCase() + row.primary_lift.slice(1);
+  const lift = liftLabel(row);
 
   return (
     <div
@@ -132,7 +142,7 @@ function WorkoutRow({ row }: { row: WorkoutRow }) {
         <span
           style={{ color: theme.color.textMuted, marginLeft: 4, fontSize: 10 }}
         >
-          {row.intensity_type}
+          {row.intensity_type ?? ''}
         </span>
       </div>
 
@@ -179,7 +189,7 @@ export function WorkoutSummaries() {
       .from('sessions')
       .select(
         `id, user_id, planned_date, completed_at, primary_lift,
-         intensity_type, week_number, block_number, is_deload,
+         intensity_type, activity_name, week_number, block_number, is_deload,
          session_logs(session_rpe, performance_vs_plan, completion_pct),
          personal_records(lift, pr_type)`
       )

@@ -10,6 +10,18 @@ At the end: update design doc status → Implemented, update specs to match what
 
 ---
 
+## 21
+
+**Lift-label sanity check from pose data.** Catch the "recorded a bench, tapped squat" mistake before it lands as a garbage analysis. Cheap because we already run MediaPipe — no new pipeline, just a post-extract classifier over the existing `PoseFrame[]`.
+
+Two features separate the three lifts cleanly:
+- **Torso angle** (shoulder→hip vector vs vertical): bench ~90°, squat/deadlift <30°
+- **Wrist vertical Y-range** across the clip: deadlift large (floor→hip), squat tiny (bar on traps), bench small at chest level
+
+Decision tree on those two, confidence from distance to nearest class centroid. Run in `application/analyze-video.ts` (or a new `lib/detect-lift.ts`) right after extract, before `analyzeVideoFrames`. If the classifier's lift ≠ user-declared lift with confidence ≥ 0.7, surface an Alert: *"This looks like a bench — fix the label?"* with Fix / Continue anyway buttons. Analysis still runs regardless so nothing blocks.
+
+Risk: heavy-arch bench, box squats, high-bar vs low-bar squats — tune threshold + fixtures from `test-videos/landmarks/` (all 16 already labelled correctly in `manifest.json`, so we have a ready-made eval set). Validate: all 16 fixtures classify correctly; synthetic "mislabel" test (feed bench landmarks, claim it's a squat) must warn.
+
 ## ~~2~~ (Done — 13 Mar 2026)
 
 Fixed: unending lift rotation now uses history-based selection (last completed lift → next in rotation) instead of counter-based derivation. See [design doc](features/programs/design-unending.md#lift-rotation--history-based-updated-13-mar-2026).
@@ -93,6 +105,14 @@ Commit `ee01490` added blocking `Alert.alert(...)` diagnostic checkpoints at eac
 ## 19
 
 **Video playback overlay — bar path + skeleton on top of `<VideoView>`.** Today the bar path is a standalone SVG card next to the video; the skeleton is only drawn over the camera preview during recording. Lifters watching their replay should be able to toggle either overlay onto the playing video. Phase 1 ships bar path overlay (no schema changes, works on all existing analysed videos). Phase 2 promotes `debug_landmarks` to a production write and ships the skeleton overlay. Toggle chips above the video; per-overlay AsyncStorage persistence; correct positioning under `contentFit="contain"` letterboxing; lerped interpolation between sparse 4fps stored frames. See [design doc](features/video-analysis/design-playback-overlay.md) and [spec](features/video-analysis/spec-playback-overlay.md).
+
+## 22
+
+**Dashboard "Coach" panel — exercise the LLM coaching pipeline against test fixtures.** The Video Overlay page now visualises CV output (metrics, faults, verdicts) but doesn't take the next step the mobile app does: feeding that into `assembleCoachingContext` → `generateFormCoaching` (gpt-5) → structured `FormCoachingResult`. Adding it lets us iterate on the prompt, model, assembler, and rendering against real fixtures without spinning up a phone, recording a set, and waiting on the prod pipeline.
+
+**Reuse, don't fork.** Same engine functions the mobile hook calls. Dashboard contributes only: synthetic session-context inputs (no real DB session for a fixture), an LLM transport (admin OpenAI key OR Edge Function proxy URL), and a typed renderer. When the prompt or assembler changes upstream, the dashboard reflects it the next reload — no parallel implementation to drift.
+
+See [design doc](features/dashboard/design-coach-panel.md) and [spec](features/dashboard/spec-coach-panel.md).
 
 ## 9
 

@@ -3,15 +3,28 @@ import { useEffect, useState } from 'react';
 import { isEnvAvailable } from '../lib/supabase';
 import { useSupabase } from '../lib/SupabaseContext';
 import { theme } from '../lib/theme';
+import { BodyweightEntries } from './BodyweightEntries';
 import { ChallengeReviews } from './ChallengeReviews';
 import { ComparisonLogs } from './ComparisonLogs';
 import { CycleReviews } from './CycleReviews';
+import { CycleTracking } from './CycleTracking';
 import { DecisionReplay } from './DecisionReplay';
 import { DeveloperSuggestions } from './DeveloperSuggestions';
+import { Disruptions } from './Disruptions';
 import { FormulaSuggestions } from './FormulaSuggestions';
+import { GymPartners } from './GymPartners';
 import { JITLogs } from './JITLogs';
 import { Logs } from './Logs';
+import { ModifierCalibrations } from './ModifierCalibrations';
 import { MotivationalLogs } from './MotivationalLogs';
+import { PerformanceMetrics } from './PerformanceMetrics';
+import { RecoverySnapshots } from './RecoverySnapshots';
+import { SessionVideos } from './SessionVideos';
+import { SetLogs } from './SetLogs';
+import { SorenessCheckins } from './SorenessCheckins';
+import { UserBadges } from './UserBadges';
+import { VideoOverlayPreview } from './VideoOverlayPreview';
+import { WeeklyBodyReviews } from './WeeklyBodyReviews';
 import { WorkoutSummaries } from './WorkoutSummaries';
 
 type ThemeId = 'default' | 'hot-pink';
@@ -48,7 +61,20 @@ type Page =
   | 'hybrid'
   | 'cycle_reviews'
   | 'formula'
-  | 'developer';
+  | 'developer'
+  | 'video_overlay'
+  | 'session_videos'
+  | 'set_logs'
+  | 'performance'
+  | 'modifier_calibrations'
+  | 'bodyweight'
+  | 'recovery'
+  | 'soreness'
+  | 'weekly_body_reviews'
+  | 'cycle_tracking'
+  | 'disruptions'
+  | 'badges'
+  | 'gym_partners';
 
 interface NavItem {
   id: Page;
@@ -58,76 +84,197 @@ interface NavItem {
   description: string;
 }
 
-const NAV: NavItem[] = [
+interface NavSection {
+  title: string;
+  items: NavItem[];
+}
+
+const NAV_SECTIONS: NavSection[] = [
   {
-    id: 'timeline',
-    label: 'Timeline',
-    icon: '◈',
-    color: 'var(--accent)',
-    description: 'All AI events',
+    title: 'AI Telemetry',
+    items: [
+      {
+        id: 'timeline',
+        label: 'Timeline',
+        icon: '◈',
+        color: 'var(--accent)',
+        description: 'All AI events',
+      },
+      {
+        id: 'jit',
+        label: 'JIT Sessions',
+        icon: '⚡',
+        color: 'var(--accent)',
+        description: 'Session adjustments',
+      },
+      {
+        id: 'motivational',
+        label: 'Motivational Msgs',
+        icon: '✦',
+        color: 'var(--accent)',
+        description: 'LLM input + output',
+      },
+      {
+        id: 'challenge',
+        label: 'Challenge Reviews',
+        icon: '⚑',
+        color: 'var(--accent)',
+        description: 'Post-hoc JIT judge',
+      },
+      {
+        id: 'replay',
+        label: 'Decision Replay',
+        icon: '↺',
+        color: 'var(--blue)',
+        description: 'Prescription accuracy',
+      },
+      {
+        id: 'hybrid',
+        label: 'Hybrid Comparisons',
+        icon: '⚖',
+        color: 'var(--purple)',
+        description: 'Formula vs LLM diffs',
+      },
+      {
+        id: 'cycle_reviews',
+        label: 'Cycle Reviews',
+        icon: '◎',
+        color: 'var(--green)',
+        description: 'Sonnet analysis',
+      },
+      {
+        id: 'formula',
+        label: 'Formula Suggestions',
+        icon: '∫',
+        color: 'var(--blue)',
+        description: 'AI formula overrides',
+      },
+      {
+        id: 'developer',
+        label: 'Dev Suggestions',
+        icon: '◈',
+        color: 'var(--red)',
+        description: 'Structural feedback',
+      },
+      {
+        id: 'modifier_calibrations',
+        label: 'Calibrations',
+        icon: '◆',
+        color: 'var(--blue)',
+        description: 'Modifier confidence',
+      },
+    ],
   },
   {
-    id: 'jit',
-    label: 'JIT Sessions',
-    icon: '⚡',
-    color: 'var(--accent)',
-    description: 'Session adjustments',
+    title: 'Sessions',
+    items: [
+      {
+        id: 'workouts',
+        label: 'Workout Summaries',
+        icon: '●',
+        color: 'var(--green)',
+        description: 'Completed sessions',
+      },
+      {
+        id: 'set_logs',
+        label: 'Set Logs',
+        icon: '▣',
+        color: 'var(--green)',
+        description: 'Per-set durability',
+      },
+      {
+        id: 'performance',
+        label: 'Performance Metrics',
+        icon: '∿',
+        color: 'var(--blue)',
+        description: 'Planned vs actual',
+      },
+      {
+        id: 'disruptions',
+        label: 'Disruptions',
+        icon: '✕',
+        color: 'var(--red)',
+        description: 'Injury · illness · life',
+      },
+    ],
   },
   {
-    id: 'workouts',
-    label: 'Workout Summaries',
-    icon: '●',
-    color: 'var(--green)',
-    description: 'Completed sessions',
+    title: 'Video',
+    items: [
+      {
+        id: 'video_overlay',
+        label: 'Video Overlay',
+        icon: '▶',
+        color: 'var(--purple)',
+        description: 'Bar path + skeleton preview',
+      },
+      {
+        id: 'session_videos',
+        label: 'Session Videos',
+        icon: '▤',
+        color: 'var(--purple)',
+        description: 'All uploaded clips',
+      },
+    ],
   },
   {
-    id: 'motivational',
-    label: 'Motivational Msgs',
-    icon: '✦',
-    color: 'var(--accent)',
-    description: 'LLM input + output',
+    title: 'Lifter Data',
+    items: [
+      {
+        id: 'bodyweight',
+        label: 'Bodyweight',
+        icon: '⚖',
+        color: 'var(--green)',
+        description: 'Weight log entries',
+      },
+      {
+        id: 'recovery',
+        label: 'Recovery',
+        icon: '☾',
+        color: 'var(--blue)',
+        description: 'Sleep · HRV · RHR',
+      },
+      {
+        id: 'soreness',
+        label: 'Soreness',
+        icon: '◐',
+        color: 'var(--accent)',
+        description: 'Per-muscle check-ins',
+      },
+      {
+        id: 'weekly_body_reviews',
+        label: 'Weekly Reviews',
+        icon: '◇',
+        color: 'var(--purple)',
+        description: 'Predicted vs felt',
+      },
+      {
+        id: 'cycle_tracking',
+        label: 'Cycle Tracking',
+        icon: '◌',
+        color: 'var(--purple)',
+        description: 'Period · phase state',
+      },
+      {
+        id: 'badges',
+        label: 'Badges',
+        icon: '★',
+        color: 'var(--purple)',
+        description: 'Achievements earned',
+      },
+    ],
   },
   {
-    id: 'challenge',
-    label: 'Challenge Reviews',
-    icon: '⚑',
-    color: 'var(--accent)',
-    description: 'Post-hoc JIT judge',
-  },
-  {
-    id: 'replay',
-    label: 'Decision Replay',
-    icon: '↺',
-    color: 'var(--blue)',
-    description: 'Prescription accuracy',
-  },
-  {
-    id: 'hybrid',
-    label: 'Hybrid Comparisons',
-    icon: '⚖',
-    color: 'var(--purple)',
-    description: 'Formula vs LLM diffs',
-  },
-  {
-    id: 'cycle_reviews',
-    label: 'Cycle Reviews',
-    icon: '◎',
-    color: 'var(--green)',
-    description: 'Sonnet analysis',
-  },
-  {
-    id: 'formula',
-    label: 'Formula Suggestions',
-    icon: '∫',
-    color: 'var(--blue)',
-    description: 'AI formula overrides',
-  },
-  {
-    id: 'developer',
-    label: 'Dev Suggestions',
-    icon: '◈',
-    color: 'var(--red)',
-    description: 'Structural feedback',
+    title: 'Social',
+    items: [
+      {
+        id: 'gym_partners',
+        label: 'Gym Partners',
+        icon: '⚭',
+        color: 'var(--purple)',
+        description: 'Partnership pairings',
+      },
+    ],
   },
 ];
 
@@ -246,6 +393,32 @@ function PageContent({ page }: { page: Page }) {
       return <FormulaSuggestions />;
     case 'developer':
       return <DeveloperSuggestions />;
+    case 'video_overlay':
+      return <VideoOverlayPreview />;
+    case 'session_videos':
+      return <SessionVideos />;
+    case 'set_logs':
+      return <SetLogs />;
+    case 'performance':
+      return <PerformanceMetrics />;
+    case 'modifier_calibrations':
+      return <ModifierCalibrations />;
+    case 'bodyweight':
+      return <BodyweightEntries />;
+    case 'recovery':
+      return <RecoverySnapshots />;
+    case 'soreness':
+      return <SorenessCheckins />;
+    case 'weekly_body_reviews':
+      return <WeeklyBodyReviews />;
+    case 'cycle_tracking':
+      return <CycleTracking />;
+    case 'disruptions':
+      return <Disruptions />;
+    case 'badges':
+      return <UserBadges />;
+    case 'gym_partners':
+      return <GymPartners />;
     default:
       return <Logs />;
   }
@@ -388,25 +561,32 @@ export function App() {
             gap: 2,
           }}
         >
-          <div
-            style={{
-              fontSize: 9,
-              color: 'var(--text-muted)',
-              textTransform: 'uppercase',
-              letterSpacing: '0.1em',
-              padding: '4px 12px 6px',
-              marginTop: 2,
-            }}
-          >
-            Views
-          </div>
-          {NAV.map((item) => (
-            <NavButton
-              key={item.id}
-              item={item}
-              active={page === item.id}
-              onClick={() => setPage(item.id)}
-            />
+          {NAV_SECTIONS.map((section, i) => (
+            <div
+              key={section.title}
+              style={{ display: 'flex', flexDirection: 'column', gap: 2 }}
+            >
+              <div
+                style={{
+                  fontSize: 9,
+                  color: 'var(--text-muted)',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.1em',
+                  padding: '4px 12px 6px',
+                  marginTop: i === 0 ? 2 : 10,
+                }}
+              >
+                {section.title}
+              </div>
+              {section.items.map((item) => (
+                <NavButton
+                  key={item.id}
+                  item={item}
+                  active={page === item.id}
+                  onClick={() => setPage(item.id)}
+                />
+              ))}
+            </div>
           ))}
         </nav>
 
