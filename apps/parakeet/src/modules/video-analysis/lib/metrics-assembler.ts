@@ -17,20 +17,56 @@ import {
   computeVelocityLoss,
   estimateRirFromVelocityLoss,
 } from './bar-velocity';
+import { computeBarTiltSeries } from './bar-tilt';
 import { detectButtWink } from './butt-wink-detector';
 import { detectSquatDepth } from './depth-detector';
-import { deriveCameraAngle } from './view-confidence';
-import { computeElbowFlare } from './elbow-flare';
+import { computeElbowFlareSeries } from './elbow-flare-series';
+import { computeElbowPathSymmetry } from './elbow-path-symmetry';
 import { computeFatigueSignatures } from './fatigue-signatures';
 import { analyzeHipHingeTiming } from './hip-hinge-timing';
 import { computeHipShift } from './hip-shift';
 import { computeLockoutStability } from './lockout-stability';
 import { assessPauseQuality } from './pause-quality';
 import { CM_PER_UNIT, type PoseFrame } from './pose-types';
+import { computePressAsymmetry } from './press-asymmetry';
 import { computeRepTempo } from './rep-tempo';
 import { computeStanceWidth } from './stance-width';
+import { deriveCameraAngle, MIN_SAGITTAL_CONFIDENCE } from './view-confidence';
 
-const ANALYSIS_VERSION = 4;
+/**
+ * v4 → v5: front-on bench is now a first-class path. Rep detection
+ * switches to `(meanWristY − meanShoulderY)` below `MIN_SAGITTAL_CONFIDENCE`,
+ * elbow flare is a per-frame series instead of a single midpoint sample,
+ * and three new front-specific metrics are emitted: `barTiltMaxDeg`,
+ * `pressAsymmetryRatio`, `elbowPathSymmetryRatio`.
+ */
+const ANALYSIS_VERSION = 5;
+
+/**
+ * Bar-tilt fault fires when the worst tilt across a rep exceeds this
+ * many degrees. Tuned to ignore the small drift a level lifter shows
+ * mid-press while still catching visibly uneven lockouts.
+ */
+const BAR_TILT_FAULT_DEG = 8;
+
+/**
+ * Press-asymmetry fault fires when the peak wrist Y delta across a rep
+ * exceeds this fraction of torso length. 0.08 ≈ a wrist noticeably
+ * lagging by roughly a fist-height for a typical lifter.
+ */
+const PRESS_ASYMMETRY_FAULT_RATIO = 0.08;
+
+/**
+ * Elbow-path-symmetry fault bounds. A perfectly symmetric press reads
+ * 1.0; values outside [0.8, 1.25] indicate a single-sided flare that
+ * single-frame flare sampling would average away.
+ */
+const ELBOW_PATH_SYMMETRY_MIN = 0.8;
+const ELBOW_PATH_SYMMETRY_MAX = 1.25;
+
+/** Elbow-flare fault thresholds — unchanged from v4; now driven by max over the rep. */
+const ELBOW_FLARE_MAX_FAULT_DEG = 80;
+const ELBOW_FLARE_MIN_FAULT_DEG = 30;
 
 /**
  * Compensate for foreshortening when metrics are measured from oblique angles.
@@ -91,7 +127,12 @@ export function assembleAnalysis({
 
   const rawPath = strategy.barPath.extractBarPath({ frames });
   const barPath = strategy.barPath.smoothBarPath({ path: rawPath, fps });
-  const repBoundsList = strategy.repDetector.detectReps({ frames, lift, fps });
+  const repBoundsList = strategy.repDetector.detectReps({
+    frames,
+    lift,
+    fps,
+    sagittalConfidence,
+  });
   if (typeof __DEV__ !== 'undefined' && __DEV__) {
     console.log(`[analysis] ${repBoundsList.length} reps detected`);
   }
@@ -181,7 +222,8 @@ export function assembleAnalysis({
         buttWinkDeg = wink.magnitudeDeg;
         faults.push({
           type: 'butt_wink',
-          severity: sagittalConfidence < 0.5 ? 'info' : 'warning',
+          severity:
+            sagittalConfidence < MIN_SAGITTAL_CONFIDENCE ? 'info' : 'warning',
           message: `Butt wink of ${wink.magnitudeDeg.toFixed(1)}° at bottom`,
           value: wink.magnitudeDeg,
           threshold: 10,
@@ -197,27 +239,122 @@ export function assembleAnalysis({
       hipShiftDirection = shift.direction;
     }
 
-    // Bench: elbow flare, pause quality
+    // Bench: elbow flare series, pause quality, + front-on-only metrics.
     let elbowFlareDeg: number | undefined;
+    let elbowFlareMinDeg: number | undefined;
+    let elbowFlareMaxDeg: number | undefined;
+    let elbowFlareMeanDeg: number | undefined;
     let pauseDurationSec: number | undefined;
     let isSinking: boolean | undefined;
+    let barTiltMaxDeg: number | undefined;
+    let barTiltMeanDeg: number | undefined;
+    let pressAsymmetryRatio: number | undefined;
+    let elbowPathSymmetryRatio: number | undefined;
     if (lift === 'bench') {
-      elbowFlareDeg = computeElbowFlare({ frame: frames[midFrame] });
-      if (elbowFlareDeg > 80 || elbowFlareDeg < 30) {
-        faults.push({
-          type: 'elbow_flare',
-          severity: 'warning',
-          message:
-            elbowFlareDeg > 80
-              ? `Excessive elbow flare: ${elbowFlareDeg.toFixed(1)}°`
-              : `Elbows overtucked: ${elbowFlareDeg.toFixed(1)}°`,
-          value: elbowFlareDeg,
-          threshold: elbowFlareDeg > 80 ? 80 : 30,
-        });
+      // Flare: sample per-frame across the rep and key faults off the max —
+      // v4 sampled once at midFrame, which missed peaks and overreported
+      // mean flare. `elbowFlareDeg` is preserved as the series mean for
+      // downstream consumers that haven't migrated to the min/max/mean
+      // fields yet (LLM prompts, coaching context, old UI chips).
+      const flare = computeElbowFlareSeries({
+        frames,
+        startFrame: safeStart,
+        endFrame: safeEnd,
+      });
+      if (flare.framesUsed > 0) {
+        elbowFlareMinDeg = flare.minDeg;
+        elbowFlareMaxDeg = flare.maxDeg;
+        elbowFlareMeanDeg = flare.meanDeg;
+        elbowFlareDeg = flare.meanDeg;
+        if (
+          flare.maxDeg > ELBOW_FLARE_MAX_FAULT_DEG ||
+          flare.maxDeg < ELBOW_FLARE_MIN_FAULT_DEG
+        ) {
+          faults.push({
+            type: 'elbow_flare',
+            severity: 'warning',
+            message:
+              flare.maxDeg > ELBOW_FLARE_MAX_FAULT_DEG
+                ? `Excessive elbow flare peak: ${flare.maxDeg.toFixed(1)}°`
+                : `Elbows overtucked: ${flare.maxDeg.toFixed(1)}°`,
+            value: flare.maxDeg,
+            threshold:
+              flare.maxDeg > ELBOW_FLARE_MAX_FAULT_DEG
+                ? ELBOW_FLARE_MAX_FAULT_DEG
+                : ELBOW_FLARE_MIN_FAULT_DEG,
+          });
+        }
       }
+
       const pause = assessPauseQuality({ repPath, fps });
       pauseDurationSec = pause.pauseDurationSec;
       isSinking = pause.isSinking;
+
+      // Front-on-only metrics. Side-view (`sagittalConfidence >= 0.5`)
+      // projects the L/R wrists to essentially the same image point, so
+      // these readings would be dominated by noise — worse than absent.
+      if (sagittalConfidence < MIN_SAGITTAL_CONFIDENCE) {
+        const tilt = computeBarTiltSeries({
+          frames,
+          startFrame: safeStart,
+          endFrame: safeEnd,
+        });
+        if (tilt.framesUsed > 0) {
+          barTiltMaxDeg = tilt.maxDeg;
+          barTiltMeanDeg = tilt.meanDeg;
+          if (tilt.maxDeg > BAR_TILT_FAULT_DEG) {
+            faults.push({
+              type: 'uneven_lockout',
+              severity: 'warning',
+              message: `Bar tilts ${tilt.maxDeg.toFixed(1)}° at worst — uneven lockout`,
+              value: tilt.maxDeg,
+              threshold: BAR_TILT_FAULT_DEG,
+            });
+          }
+        }
+
+        const asymmetry = computePressAsymmetry({
+          frames,
+          startFrame: safeStart,
+          endFrame: safeEnd,
+        });
+        if (asymmetry.framesUsed > 0) {
+          pressAsymmetryRatio = asymmetry.ratio;
+          if (asymmetry.ratio > PRESS_ASYMMETRY_FAULT_RATIO) {
+            faults.push({
+              type: 'press_asymmetry',
+              severity: 'warning',
+              message: `Uneven press — one wrist trailed by ${(asymmetry.ratio * 100).toFixed(0)}% of torso`,
+              value: asymmetry.ratio,
+              threshold: PRESS_ASYMMETRY_FAULT_RATIO,
+            });
+          }
+        }
+
+        const elbowSym = computeElbowPathSymmetry({
+          frames,
+          startFrame: safeStart,
+          endFrame: safeEnd,
+        });
+        if (elbowSym.framesUsed > 0) {
+          elbowPathSymmetryRatio = elbowSym.ratio;
+          if (
+            elbowSym.ratio < ELBOW_PATH_SYMMETRY_MIN ||
+            elbowSym.ratio > ELBOW_PATH_SYMMETRY_MAX
+          ) {
+            faults.push({
+              type: 'elbow_asymmetry',
+              severity: 'warning',
+              message: `Elbows flare unevenly (L/R ratio ${elbowSym.ratio.toFixed(2)})`,
+              value: elbowSym.ratio,
+              threshold:
+                elbowSym.ratio < ELBOW_PATH_SYMMETRY_MIN
+                  ? ELBOW_PATH_SYMMETRY_MIN
+                  : ELBOW_PATH_SYMMETRY_MAX,
+            });
+          }
+        }
+      }
     }
 
     // Deadlift: hip hinge timing, bar-to-shin distance
@@ -292,8 +429,15 @@ export function assembleAnalysis({
       hipShiftCm,
       hipShiftDirection,
       elbowFlareDeg,
+      elbowFlareMinDeg,
+      elbowFlareMaxDeg,
+      elbowFlareMeanDeg,
       pauseDurationSec,
       isSinking,
+      barTiltMaxDeg,
+      barTiltMeanDeg,
+      pressAsymmetryRatio,
+      elbowPathSymmetryRatio,
       hipHingeCrossoverPct,
       barToShinDistanceCm,
       lockoutStabilityCv,

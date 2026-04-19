@@ -125,7 +125,7 @@ describe.each(manifest.videos)('video: $id', (video) => {
       expect(result.reps.length).toBeGreaterThanOrEqual(min);
       expect(result.reps.length).toBeLessThanOrEqual(max);
     }
-    expect(result.analysisVersion).toBe(4);
+    expect(result.analysisVersion).toBe(5);
   });
 
   it('sagittal confidence is within expected range', () => {

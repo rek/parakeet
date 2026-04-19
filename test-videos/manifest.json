@@ -38,7 +38,7 @@
       "actual": {
         "rep_count": 5,
         "sagittal_confidence": 0.714,
-        "analysis_version": 4,
+        "analysis_version": 5,
         "metric_summary": {
           "forwardLeanDeg": {
             "mean": 50.27,
@@ -96,7 +96,7 @@
           "excessive_lean",
           "unstable_lockout"
         ],
-        "calibrated_at": "2026-04-19T01:32:02.146Z"
+        "calibrated_at": "2026-04-19T11:18:35.755Z"
       }
     },
     {
@@ -127,7 +127,7 @@
       "actual": {
         "rep_count": 3,
         "sagittal_confidence": 0.208,
-        "analysis_version": 4,
+        "analysis_version": 5,
         "metric_summary": {
           "forwardLeanDeg": {
             "mean": 34.88,
@@ -185,7 +185,7 @@
           "bar_drift",
           "unstable_lockout"
         ],
-        "calibrated_at": "2026-04-19T01:32:02.148Z"
+        "calibrated_at": "2026-04-19T11:18:35.774Z"
       }
     },
     {
@@ -216,7 +216,7 @@
       "actual": {
         "rep_count": 3,
         "sagittal_confidence": 0.282,
-        "analysis_version": 4,
+        "analysis_version": 5,
         "metric_summary": {
           "forwardLeanDeg": {
             "mean": 81.2,
@@ -275,7 +275,7 @@
           "excessive_lean",
           "unstable_lockout"
         ],
-        "calibrated_at": "2026-04-19T01:32:02.149Z"
+        "calibrated_at": "2026-04-19T11:18:35.782Z"
       }
     },
     {
@@ -306,7 +306,7 @@
       "actual": {
         "rep_count": 5,
         "sagittal_confidence": 0.335,
-        "analysis_version": 4,
+        "analysis_version": 5,
         "metric_summary": {
           "forwardLeanDeg": {
             "mean": 68.98,
@@ -365,7 +365,7 @@
           "excessive_lean",
           "unstable_lockout"
         ],
-        "calibrated_at": "2026-04-19T01:32:02.151Z"
+        "calibrated_at": "2026-04-19T11:18:35.788Z"
       }
     },
     {
@@ -398,7 +398,7 @@
       "actual": {
         "rep_count": 7,
         "sagittal_confidence": 0.371,
-        "analysis_version": 4,
+        "analysis_version": 5,
         "metric_summary": {
           "forwardLeanDeg": {
             "mean": 31.56,
@@ -457,7 +457,7 @@
           "excessive_lean",
           "unstable_lockout"
         ],
-        "calibrated_at": "2026-04-19T01:32:02.153Z"
+        "calibrated_at": "2026-04-19T11:18:35.805Z"
       }
     },
     {
@@ -489,7 +489,7 @@
       "actual": {
         "rep_count": 1,
         "sagittal_confidence": 0.912,
-        "analysis_version": 4,
+        "analysis_version": 5,
         "metric_summary": {
           "forwardLeanDeg": {
             "mean": 77.85,
@@ -543,7 +543,7 @@
           "bar_drift",
           "unstable_lockout"
         ],
-        "calibrated_at": "2026-04-19T01:32:02.155Z"
+        "calibrated_at": "2026-04-19T11:18:35.813Z"
       }
     },
     {
@@ -575,7 +575,7 @@
       "actual": {
         "rep_count": 1,
         "sagittal_confidence": 0.845,
-        "analysis_version": 4,
+        "analysis_version": 5,
         "metric_summary": {
           "forwardLeanDeg": {
             "mean": 81.06,
@@ -627,7 +627,7 @@
           "bar_drift",
           "unstable_lockout"
         ],
-        "calibrated_at": "2026-04-19T01:32:02.156Z"
+        "calibrated_at": "2026-04-19T11:18:35.817Z"
       }
     },
     {
@@ -659,7 +659,7 @@
       "actual": {
         "rep_count": 6,
         "sagittal_confidence": 0.935,
-        "analysis_version": 4,
+        "analysis_version": 5,
         "metric_summary": {
           "forwardLeanDeg": {
             "mean": 73.77,
@@ -712,7 +712,7 @@
           "bar_drift",
           "unstable_lockout"
         ],
-        "calibrated_at": "2026-04-19T01:32:02.159Z"
+        "calibrated_at": "2026-04-19T11:18:35.832Z"
       }
     },
     {
@@ -744,7 +744,7 @@
       "actual": {
         "rep_count": 5,
         "sagittal_confidence": 0.875,
-        "analysis_version": 4,
+        "analysis_version": 5,
         "metric_summary": {
           "forwardLeanDeg": {
             "mean": 63.81,
@@ -798,7 +798,7 @@
           "early_hip_shoot",
           "unstable_lockout"
         ],
-        "calibrated_at": "2026-04-19T01:32:02.161Z"
+        "calibrated_at": "2026-04-19T11:18:35.839Z"
       }
     },
     {
@@ -811,7 +811,7 @@
           "min": 0.5,
           "max": 0.75
         },
-        "notes": "Named 'front' but filmed at ~45\u00b0 diagonal. Sagittal confidence ~0.63.",
+        "notes": "Named 'front' but filmed at ~45° diagonal. Sagittal confidence ~0.63.",
         "rep_count": {
           "min": 2,
           "max": 2
@@ -831,7 +831,7 @@
       "actual": {
         "rep_count": 2,
         "sagittal_confidence": 0.629,
-        "analysis_version": 4,
+        "analysis_version": 5,
         "metric_summary": {
           "forwardLeanDeg": {
             "mean": 7.72,
@@ -882,7 +882,7 @@
         "fault_types": [
           "unstable_lockout"
         ],
-        "calibrated_at": "2026-04-19T01:32:02.162Z"
+        "calibrated_at": "2026-04-19T11:18:35.844Z"
       }
     },
     {
@@ -912,7 +912,7 @@
       "actual": {
         "rep_count": 3,
         "sagittal_confidence": 0.503,
-        "analysis_version": 4,
+        "analysis_version": 5,
         "metric_summary": {
           "forwardLeanDeg": {
             "mean": 10.12,
@@ -965,7 +965,7 @@
           "early_hip_shoot",
           "unstable_lockout"
         ],
-        "calibrated_at": "2026-04-19T01:32:02.162Z"
+        "calibrated_at": "2026-04-19T11:18:35.849Z"
       }
     },
     {
@@ -994,7 +994,7 @@
       "actual": {
         "rep_count": 4,
         "sagittal_confidence": 0.494,
-        "analysis_version": 4,
+        "analysis_version": 5,
         "metric_summary": {
           "forwardLeanDeg": {
             "mean": 7.76,
@@ -1047,7 +1047,7 @@
           "bar_drift",
           "early_hip_shoot"
         ],
-        "calibrated_at": "2026-04-19T01:32:02.163Z"
+        "calibrated_at": "2026-04-19T11:18:35.855Z"
       }
     },
     {
@@ -1063,7 +1063,7 @@
         "rep_count": {
           "min": 2,
           "max": 8,
-          "notes": "45\u00b0 view with heavy MediaPipe hip occlusion \u2014 lockout-to-lockout without deep-floor reset undercounts reps. Range is wide to tolerate 2-6 depending on which lockouts are visible."
+          "notes": "45° view with heavy MediaPipe hip occlusion — lockout-to-lockout without deep-floor reset undercounts reps. Range is wide to tolerate 2-6 depending on which lockouts are visible."
         },
         "faults_to_test": [
           "bar_drift",
@@ -1080,7 +1080,7 @@
       "actual": {
         "rep_count": 2,
         "sagittal_confidence": 0.838,
-        "analysis_version": 4,
+        "analysis_version": 5,
         "metric_summary": {
           "forwardLeanDeg": {
             "mean": 22.36,
@@ -1135,7 +1135,7 @@
           "early_hip_shoot",
           "unstable_lockout"
         ],
-        "calibrated_at": "2026-04-19T01:32:02.165Z"
+        "calibrated_at": "2026-04-19T11:18:35.860Z"
       }
     },
     {
@@ -1164,7 +1164,7 @@
       "actual": {
         "rep_count": 5,
         "sagittal_confidence": 0.835,
-        "analysis_version": 4,
+        "analysis_version": 5,
         "metric_summary": {
           "forwardLeanDeg": {
             "mean": 80.98,
@@ -1197,9 +1197,9 @@
             "max": 47.15
           },
           "elbowFlareDeg": {
-            "mean": 67.74,
-            "min": 39.26,
-            "max": 114.84
+            "mean": 81.12,
+            "min": 67.13,
+            "max": 95.42
           },
           "pauseDurationSec": {
             "mean": 0.05,
@@ -1216,7 +1216,7 @@
           "bar_drift",
           "elbow_flare"
         ],
-        "calibrated_at": "2026-04-19T01:32:02.166Z"
+        "calibrated_at": "2026-04-19T11:18:35.870Z"
       }
     },
     {
@@ -1234,27 +1234,33 @@
           "max": 4
         },
         "faults_to_test": [
-          "bar_drift"
+          "elbow_flare",
+          "press_asymmetry",
+          "uneven_lockout"
         ],
         "metrics_present": [
           "barDriftCm",
-          "romCm"
+          "romCm",
+          "barTiltMaxDeg",
+          "pressAsymmetryRatio",
+          "elbowPathSymmetryRatio",
+          "elbowFlareMaxDeg"
         ],
         "fatigue_signatures": true
       },
       "actual": {
         "rep_count": 4,
         "sagittal_confidence": 0.356,
-        "analysis_version": 4,
+        "analysis_version": 5,
         "metric_summary": {
           "forwardLeanDeg": {
-            "mean": 11.22,
+            "mean": 12,
             "min": 1.6,
             "max": 27.48
           },
           "barDriftCm": {
-            "mean": 2.92,
-            "min": 2.31,
+            "mean": 2.57,
+            "min": 1.63,
             "max": 3.54
           },
           "romCm": {
@@ -1263,24 +1269,24 @@
             "max": 36.29
           },
           "kneeAngleDeg": {
-            "mean": 88.09,
-            "min": 85.29,
+            "mean": 89.76,
+            "min": 86.42,
             "max": 92.23
           },
           "hipAngleAtLockoutDeg": {
-            "mean": 84.35,
-            "min": 67.11,
-            "max": 95.39
+            "mean": 92.31,
+            "min": 83.92,
+            "max": 98.95
           },
           "meanConcentricVelocityCmS": {
-            "mean": 27.86,
+            "mean": 29.74,
             "min": 19.83,
             "max": 44.72
           },
           "elbowFlareDeg": {
-            "mean": 144.03,
-            "min": 133.92,
-            "max": 158.46
+            "mean": 145.03,
+            "min": 143.91,
+            "max": 146.22
           },
           "pauseDurationSec": {
             "mean": 0.06,
@@ -1288,16 +1294,18 @@
             "max": 0.25
           },
           "lockoutStabilityCv": {
-            "mean": 5.7,
+            "mean": 8.64,
             "min": 1.25,
-            "max": 9.8
+            "max": 19.18
           }
         },
         "fault_types": [
           "elbow_flare",
+          "press_asymmetry",
+          "uneven_lockout",
           "unstable_lockout"
         ],
-        "calibrated_at": "2026-04-19T01:32:02.167Z"
+        "calibrated_at": "2026-04-19T11:18:35.876Z"
       }
     },
     {
@@ -1319,7 +1327,7 @@
       "actual": {
         "rep_count": 2,
         "sagittal_confidence": 0.831,
-        "analysis_version": 4,
+        "analysis_version": 5,
         "metric_summary": {
           "forwardLeanDeg": {
             "mean": 69.06,
@@ -1374,7 +1382,7 @@
           "early_hip_shoot",
           "unstable_lockout"
         ],
-        "calibrated_at": "2026-04-19T01:32:02.167Z"
+        "calibrated_at": "2026-04-19T11:18:35.881Z"
       }
     }
   ]

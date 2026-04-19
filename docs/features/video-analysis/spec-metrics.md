@@ -112,6 +112,79 @@ All metrics use the same `PoseFrame[]` input. Landmarks available: shoulders (11
 - [x] Add as fault when >5cm: `type: 'bar_away_from_shins'`
 - [x] Tests: bar close, bar drifting forward
 
+## Phase 6 — Front-On Bench (v5, 2026-04-19) — backlog #24 Track B
+
+Side-view bench metrics project the L/R wrists to near-identical image points and the elbow angle collapses toward collinearity, so from the front the v4 pipeline produced degenerate readings. Phase 6 gates a dedicated front-bench block on `sagittalConfidence < 0.5` and adds three asymmetry metrics plus a rep-detection signal that actually oscillates from the front. Elbow flare is also rewritten as a per-frame series (applies to every bench view).
+
+Bumps `ANALYSIS_VERSION` to **5**. Old rows remain displayable — all new fields are optional.
+
+### 6.1 — Front-on rep-detection signal
+
+**`modules/video-analysis/lib/rep-detector.ts`:**
+
+- [x] Extend `detectReps` signature with optional `sagittalConfidence` (default 1, matching legacy side-view behaviour).
+- [x] `extractFrontBenchSignal({ frames }): number[] | null` — `(meanWristY − meanShoulderY)` per frame; null when fewer than `MIN_ANGLE_FRAMES` frames have both wrists + both shoulders visible.
+- [x] When `lift === 'bench' && sagittalConfidence < 0.5`, use this signal instead of the inverted elbow angle. Peaks stay at chest touch (higher value = wrists dropped toward shoulders).
+- [x] Absolute-value filter for the signal-range calculation — front-bench signal is signed.
+- [x] Synthetic test: near-collinear shoulder/elbow/wrist frames at `sagittalConfidence = 0.2` → 4 reps detected; `sagittalConfidence = 1` → falls through to the elbow-angle path.
+
+### 6.2 — Elbow flare series
+
+**`modules/video-analysis/lib/elbow-flare-series.ts`:**
+
+- [x] `computeElbowFlareSeries({ frames, startFrame, endFrame }): { minDeg, maxDeg, meanDeg, framesUsed }` — sample flare every frame across the rep; average left + right when both visible, fall back to whichever side is visible.
+- [x] Fault now fires on `maxDeg > 80` or `maxDeg < 30` (v4 fired on the single midpoint sample).
+- [x] `RepAnalysis.elbowFlareDeg` preserved as the series **mean** so downstream consumers (coaching prompts, UI chips) don't break; new fields `elbowFlareMinDeg` / `elbowFlareMaxDeg` / `elbowFlareMeanDeg` surface the full distribution.
+
+### 6.3 — Bar tilt
+
+**`modules/video-analysis/lib/bar-tilt.ts`:**
+
+- [x] `computeBarTiltSeries({ frames, startFrame, endFrame }): { maxDeg, meanDeg, framesUsed }` — per-frame absolute angle of the L-R wrist line vs. horizontal.
+- [x] `RepAnalysis.barTiltMaxDeg` / `barTiltMeanDeg` — front-view only.
+- [x] Fault `uneven_lockout` when `maxDeg > 8°`.
+
+### 6.4 — Press asymmetry
+
+**`modules/video-analysis/lib/press-asymmetry.ts`:**
+
+- [x] `computePressAsymmetry({ frames, startFrame, endFrame }): { ratio, framesUsed }` — peak `|leftWristY − rightWristY|` / torso length across the window.
+- [x] `RepAnalysis.pressAsymmetryRatio` — front-view only.
+- [x] Fault `press_asymmetry` when ratio > 0.08 (≈ 8% of torso).
+
+### 6.5 — Elbow-path symmetry
+
+**`modules/video-analysis/lib/elbow-path-symmetry.ts`:**
+
+- [x] `computeElbowPathSymmetry({ frames, startFrame, endFrame }): { ratio, framesUsed }` — mean L/R elbow horizontal distance from shoulder midline, returned as left÷right.
+- [x] `RepAnalysis.elbowPathSymmetryRatio` — front-view only.
+- [x] Fault `elbow_asymmetry` when ratio < 0.8 or > 1.25.
+
+### Fault thresholds (provisional — tuned on one fixture)
+
+The following fault thresholds fire `warning`-severity faults from within `metrics-assembler.ts`:
+
+| Constant | Value | Applies to |
+| --- | --- | --- |
+| `BAR_TILT_FAULT_DEG` | 8° | `uneven_lockout` fault when `barTiltMaxDeg` exceeds this |
+| `PRESS_ASYMMETRY_FAULT_RATIO` | 0.08 | `press_asymmetry` fault when `pressAsymmetryRatio` exceeds this (≈ 8% of torso) |
+| `ELBOW_PATH_SYMMETRY_MIN` / `MAX` | 0.8 / 1.25 | `elbow_asymmetry` fault when `elbowPathSymmetryRatio` falls outside this band |
+| `ELBOW_FLARE_MAX_FAULT_DEG` / `MIN` | 80° / 30° | `elbow_flare` fault on the per-rep max (unchanged thresholds from v4, now driven by the series rather than a midpoint sample) |
+
+These were tuned by eye against a single `bench-front-4reps` fixture. They are **provisional** — revisit once we have ≥ 3 independent front-bench fixtures across lifters and phone positions. If real-world usage shows them firing on clean form, widen; if they let through what a coach would flag, tighten. Keep them co-located in `metrics-assembler.ts` (not a domain doc) until the tuning stabilises — promotion to `docs/domain/` is the signal that the values are load-bearing across sessions.
+
+### Validation
+
+- [x] Unit tests per new lib (6–8 synthetic cases each).
+- [x] Calibration run across 16 fixtures: 4 reps on `bench-front-4reps`; new faults `press_asymmetry` + `uneven_lockout` now flag on the front-view fixture; 15 side-view fixtures pass unchanged.
+- [x] Manifest `metrics_present` + `faults_to_test` updated for `bench-front-4reps`.
+
+### Out of scope (tracked in #24)
+
+- Track A occlusion robustness (heavy model, plausibility filtering, wrist-anchored reconstruction).
+- UI surfacing of the new metrics (rep card chips).
+- LLM coaching prompts referencing the new asymmetry fields — revisit once the values stabilise over real-world sessions.
+
 ## Phase 5 — Lockout Stability (All Lifts)
 
 **`modules/video-analysis/lib/lockout-stability.ts`:**

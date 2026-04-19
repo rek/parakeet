@@ -49,6 +49,12 @@ export interface RepDetector {
     frames: PoseFrame[];
     lift: 'squat' | 'bench' | 'deadlift';
     fps: number;
+    /**
+     * Stage 2 output (see `spec-pipeline.md`). Only front-bench changes
+     * behaviour on this input today; other detectors ignore it. Optional so
+     * legacy synthetic tests that don't pass it still compile.
+     */
+    sagittalConfidence?: number;
   }): RepBounds[];
 }
 

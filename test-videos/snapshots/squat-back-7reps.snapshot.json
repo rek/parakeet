@@ -1,9 +1,9 @@
 {
   "videoId": "squat-back-7reps",
   "lift": "squat",
-  "analysisVersion": 4,
+  "analysisVersion": 5,
   "snapshotVersion": 1,
-  "createdAt": "2026-04-19T01:32:02.154Z",
+  "createdAt": "2026-04-19T11:18:35.805Z",
   "sagittalConfidence": 0.3711836296296298,
   "result": {
     "reps": [
@@ -1215,7 +1215,7 @@
     "fps": 4,
     "cameraAngle": "front",
     "sagittalConfidence": 0.3711201666666667,
-    "analysisVersion": 4,
+    "analysisVersion": 5,
     "fatigueSignatures": {
       "forwardLeanDriftDeg": 30.7,
       "barDriftIncreaseCm": -4.7,

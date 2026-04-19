@@ -1,5 +1,6 @@
 import { computeAngle } from './angle-calculator';
 import { LANDMARK, type PoseFrame } from './pose-types';
+import { MIN_SAGITTAL_CONFIDENCE } from './view-confidence';
 
 /** Minimum time between peaks — prevents double-detection on a single rep. */
 const MIN_PEAK_TIME_SEC = 0.8;
@@ -49,6 +50,53 @@ function extractYSignal({
     const rh = frame[LANDMARK.RIGHT_HIP];
     return (lh.y + rh.y) / 2;
   });
+}
+
+/**
+ * Front-on bench signal: mean wrist Y minus mean shoulder Y.
+ *
+ * Convention matches the rest of the detector: higher value = "rep bottom"
+ * for `findPeaks`. At lockout the wrists sit above the shoulders (smaller
+ * Y in image coords), so the delta is negative. At chest touch the wrists
+ * land level with or just below the shoulders, so the delta crosses zero
+ * and peaks are clear.
+ *
+ * Chosen over the plain wrist-Y fallback because it cancels camera sway
+ * and lifter drift along the frame axis — both tend to drift both
+ * landmarks together.
+ *
+ * Returns null if fewer than `MIN_ANGLE_FRAMES` frames have both wrists
+ * and both shoulders visible; the caller falls back to the generic
+ * wrist-Y signal.
+ */
+function extractFrontBenchSignal({
+  frames,
+}: {
+  frames: PoseFrame[];
+}): number[] | null {
+  const VIS_THRESHOLD = 0.5;
+  let validCount = 0;
+
+  const signal = frames.map((frame) => {
+    const lw = frame[LANDMARK.LEFT_WRIST];
+    const rw = frame[LANDMARK.RIGHT_WRIST];
+    const ls = frame[LANDMARK.LEFT_SHOULDER];
+    const rs = frame[LANDMARK.RIGHT_SHOULDER];
+    if (
+      lw.visibility < VIS_THRESHOLD ||
+      rw.visibility < VIS_THRESHOLD ||
+      ls.visibility < VIS_THRESHOLD ||
+      rs.visibility < VIS_THRESHOLD
+    ) {
+      return 0;
+    }
+    validCount++;
+    const wristY = (lw.y + rw.y) / 2;
+    const shoulderY = (ls.y + rs.y) / 2;
+    return wristY - shoulderY;
+  });
+
+  return validCount >= MIN_ANGLE_FRAMES ? signal : null;
 }
 
 /**
@@ -467,6 +515,12 @@ function detectDeadliftReps({
  * with reps regardless of camera angle. Falls back to Y-coordinate method
  * when landmarks are not visible enough for angle computation.
  *
+ * Front-on bench (`lift === 'bench' && sagittalConfidence < 0.5`) takes a
+ * different route: the elbow angle barely modulates there because
+ * shoulder-elbow-wrist sit almost collinear in the image, so we use
+ * `(meanWristY − meanShoulderY)` instead — a clean oscillator from the
+ * front where the elbow angle collapses.
+ *
  * Each rep is bounded by the valleys between consecutive bottom-of-rep peaks.
  * Single-rep videos are bounded by the start and end of the signal.
  *
@@ -477,10 +531,12 @@ export function detectReps({
   frames,
   lift,
   fps = 30,
+  sagittalConfidence = 1,
 }: {
   frames: PoseFrame[];
   lift: 'squat' | 'bench' | 'deadlift';
   fps?: number;
+  sagittalConfidence?: number;
 }) {
   const minPeakDistance = Math.max(3, Math.round(fps * MIN_PEAK_TIME_SEC));
   const smoothWindow = Math.max(3, Math.round(fps * SMOOTH_TIME_SEC));
@@ -498,11 +554,25 @@ export function detectReps({
     if (smReps != null) return smReps;
   }
 
+  // Front-on bench takes a dedicated wrist-minus-shoulder-Y signal because
+  // the elbow angle is near-collinear from the front and the plain wrist-Y
+  // fallback drifts with camera sway. Falls back to the angle/Y chain if
+  // too few frames have both wrists + both shoulders visible.
+  const frontBenchSignal =
+    lift === 'bench' && sagittalConfidence < MIN_SAGITTAL_CONFIDENCE
+      ? extractFrontBenchSignal({ frames })
+      : null;
+
   // Try viewpoint-invariant angle signal first, fall back to Y-coordinate.
   // Angle signals are in degrees (0-180); need sufficient range to be useful.
-  const angleSignal = extractAngleSignal({ frames, lift });
-  const useAngle = angleSignal != null && hasUsableRange(angleSignal);
-  const raw = useAngle ? angleSignal : extractYSignal({ frames, lift });
+  const angleSignal =
+    frontBenchSignal == null ? extractAngleSignal({ frames, lift }) : null;
+  const useFrontBench = frontBenchSignal != null;
+  const useAngle =
+    !useFrontBench && angleSignal != null && hasUsableRange(angleSignal);
+  const raw =
+    frontBenchSignal ??
+    (useAngle ? angleSignal! : extractYSignal({ frames, lift }));
   const smoothed = smoothSignal({ signal: raw, windowSize: smoothWindow });
   const allPeaks = findPeaks({
     signal: smoothed,
@@ -513,10 +583,17 @@ export function detectReps({
   // have Y=0 (or angle=0 for invisible landmarks) which inflates the range.
   const isAngleSignal = useAngle;
   // Angle signals are in degrees (0-180); Y signals are normalized (0-1).
+  // Front-bench signal is `wristY - shoulderY` — same normalized units as Y.
   const zeroThreshold = isAngleSignal ? 1.0 : 0.01;
   const flatThreshold = isAngleSignal ? 2.0 : 0.005;
 
-  const nonZero = smoothed.filter((v) => v > zeroThreshold);
+  // Front-bench signal is signed (negative at lockout, positive at chest touch)
+  // so the "skip invalid frames" filter must compare on magnitude, not raw
+  // value. Y-signal and angle-signal are both non-negative, so `v > threshold`
+  // still does the right thing for those paths.
+  const nonZero = smoothed.filter((v) =>
+    useFrontBench ? Math.abs(v) > zeroThreshold : v > zeroThreshold
+  );
   const signalMin = nonZero.length > 0 ? Math.min(...nonZero) : 0;
   const signalMax = nonZero.length > 0 ? Math.max(...nonZero) : 0;
   const signalRange = signalMax - signalMin;

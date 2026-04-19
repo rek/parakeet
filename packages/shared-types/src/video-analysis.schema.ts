@@ -61,9 +61,24 @@ export const RepAnalysisSchema = z.object({
   hipShiftCm: z.number().optional(),
   hipShiftDirection: z.enum(['left', 'right', 'none']).optional(),
   // Bench-specific
+  // `elbowFlareDeg` is preserved as the mean across the concentric (v4 wrote
+  // a single-frame midpoint sample; v5+ writes the series mean). The series
+  // fields below give the full distribution.
   elbowFlareDeg: z.number().optional(),
+  elbowFlareMinDeg: z.number().optional(),
+  elbowFlareMaxDeg: z.number().optional(),
+  elbowFlareMeanDeg: z.number().optional(),
   pauseDurationSec: z.number().optional(),
   isSinking: z.boolean().optional(),
+  // Bench, front-on only — populated when `sagittalConfidence < 0.5`.
+  // `barTiltMaxDeg` is the worst tilt across the rep; mean is averaged
+  // over the concentric. `pressAsymmetryRatio` is max(|L−R| wrist Y) /
+  // torso length. `elbowPathSymmetryRatio` is (left elbow offset) /
+  // (right elbow offset) from the shoulder midline — 1.0 = symmetric.
+  barTiltMaxDeg: z.number().optional(),
+  barTiltMeanDeg: z.number().optional(),
+  pressAsymmetryRatio: z.number().optional(),
+  elbowPathSymmetryRatio: z.number().optional(),
   // Deadlift-specific
   hipHingeCrossoverPct: z.number().optional(),
   barToShinDistanceCm: z.number().optional(),

@@ -14,7 +14,6 @@ export { computeFatigueSignatures } from './lib/fatigue-signatures';
 export { detectButtWink } from './lib/butt-wink-detector';
 export { computeStanceWidth } from './lib/stance-width';
 export { computeHipShift } from './lib/hip-shift';
-export { computeElbowFlare } from './lib/elbow-flare';
 export { assessPauseQuality } from './lib/pause-quality';
 export { analyzeHipHingeTiming } from './lib/hip-hinge-timing';
 export { computeBarToShinDistance } from './lib/bar-shin-distance';

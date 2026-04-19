@@ -1,9 +1,9 @@
 {
   "videoId": "bench-45-5reps",
   "lift": "bench",
-  "analysisVersion": 4,
+  "analysisVersion": 5,
   "snapshotVersion": 1,
-  "createdAt": "2026-04-19T01:32:02.166Z",
+  "createdAt": "2026-04-19T11:18:35.870Z",
   "sagittalConfidence": 0.834698888888889,
   "result": {
     "reps": [
@@ -57,11 +57,22 @@
         "concentricDurationSec": 1,
         "eccentricDurationSec": 0.5,
         "tempoRatio": 0.5,
-        "elbowFlareDeg": 56.05198923492941,
+        "elbowFlareDeg": 78.44699786876865,
+        "elbowFlareMinDeg": 56.05198923492941,
+        "elbowFlareMaxDeg": 107.64336009610795,
+        "elbowFlareMeanDeg": 78.44699786876865,
         "pauseDurationSec": 0.25,
         "isSinking": false,
         "lockoutStabilityCv": 0.6857144044296012,
-        "faults": [],
+        "faults": [
+          {
+            "type": "elbow_flare",
+            "severity": "warning",
+            "message": "Excessive elbow flare peak: 107.6°",
+            "value": 107.64336009610795,
+            "threshold": 80
+          }
+        ],
         "verdict": {
           "verdict": "white_light",
           "criteria": [
@@ -139,11 +150,22 @@
         "concentricDurationSec": 0.75,
         "eccentricDurationSec": 0.5,
         "tempoRatio": 0.67,
-        "elbowFlareDeg": 71.1058320913035,
+        "elbowFlareDeg": 91.56441275052954,
+        "elbowFlareMinDeg": 59.31348526973607,
+        "elbowFlareMaxDeg": 108.86257048541074,
+        "elbowFlareMeanDeg": 91.56441275052954,
         "pauseDurationSec": 0,
         "isSinking": false,
         "lockoutStabilityCv": 0.7104507788407768,
-        "faults": [],
+        "faults": [
+          {
+            "type": "elbow_flare",
+            "severity": "warning",
+            "message": "Excessive elbow flare peak: 108.9°",
+            "value": 108.86257048541074,
+            "threshold": 80
+          }
+        ],
         "verdict": {
           "verdict": "red_light",
           "criteria": [
@@ -225,11 +247,22 @@
         "concentricDurationSec": 0.75,
         "eccentricDurationSec": 0.75,
         "tempoRatio": 1,
-        "elbowFlareDeg": 39.262052596542006,
+        "elbowFlareDeg": 73.03357224815134,
+        "elbowFlareMinDeg": 39.262052596542006,
+        "elbowFlareMaxDeg": 104.84423708608436,
+        "elbowFlareMeanDeg": 73.03357224815134,
         "pauseDurationSec": 0,
         "isSinking": false,
         "lockoutStabilityCv": 2.098862568868488,
-        "faults": [],
+        "faults": [
+          {
+            "type": "elbow_flare",
+            "severity": "warning",
+            "message": "Excessive elbow flare peak: 104.8°",
+            "value": 104.84423708608436,
+            "threshold": 80
+          }
+        ],
         "verdict": {
           "verdict": "red_light",
           "criteria": [
@@ -316,7 +349,10 @@
         "concentricDurationSec": 1,
         "eccentricDurationSec": 0.75,
         "tempoRatio": 0.75,
-        "elbowFlareDeg": 57.46025447468308,
+        "elbowFlareDeg": 67.12656521536093,
+        "elbowFlareMinDeg": 24.332994498724013,
+        "elbowFlareMaxDeg": 105.8781970925027,
+        "elbowFlareMeanDeg": 67.12656521536093,
         "pauseDurationSec": 0,
         "isSinking": false,
         "lockoutStabilityCv": 1.2415222594666726,
@@ -327,6 +363,13 @@
             "message": "Bar drifted 25.7cm from start",
             "value": 0.10574005159864022,
             "threshold": 0.03
+          },
+          {
+            "type": "elbow_flare",
+            "severity": "warning",
+            "message": "Excessive elbow flare peak: 105.9°",
+            "value": 105.8781970925027,
+            "threshold": 80
           }
         ],
         "verdict": {
@@ -440,7 +483,10 @@
         "concentricDurationSec": 2,
         "eccentricDurationSec": 1,
         "tempoRatio": 0.5,
-        "elbowFlareDeg": 114.84125490916557,
+        "elbowFlareDeg": 95.42248590020482,
+        "elbowFlareMinDeg": 43.20647625294991,
+        "elbowFlareMaxDeg": 115.14179769661678,
+        "elbowFlareMeanDeg": 95.42248590020482,
         "pauseDurationSec": 0,
         "isSinking": false,
         "lockoutStabilityCv": 0,
@@ -455,8 +501,8 @@
           {
             "type": "elbow_flare",
             "severity": "warning",
-            "message": "Excessive elbow flare: 114.8°",
-            "value": 114.84125490916557,
+            "message": "Excessive elbow flare peak: 115.1°",
+            "value": 115.14179769661678,
             "threshold": 80
           }
         ],
@@ -495,7 +541,7 @@
     "fps": 4,
     "cameraAngle": "side",
     "sagittalConfidence": 0.8302116833333334,
-    "analysisVersion": 4,
+    "analysisVersion": 5,
     "fatigueSignatures": {
       "forwardLeanDriftDeg": -6.2,
       "barDriftIncreaseCm": 22.4,

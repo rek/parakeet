@@ -1,9 +1,9 @@
 {
   "videoId": "bench-front-4reps",
   "lift": "bench",
-  "analysisVersion": 4,
+  "analysisVersion": 5,
   "snapshotVersion": 1,
-  "createdAt": "2026-04-19T01:32:02.167Z",
+  "createdAt": "2026-04-19T11:18:35.877Z",
   "sagittalConfidence": 0.3560002666666666,
   "result": {
     "reps": [
@@ -132,17 +132,38 @@
         "concentricDurationSec": 1,
         "eccentricDurationSec": 4.25,
         "tempoRatio": 4.25,
-        "elbowFlareDeg": 145.79008972622546,
+        "elbowFlareDeg": 144.1213346789569,
+        "elbowFlareMinDeg": 116.3169497448109,
+        "elbowFlareMaxDeg": 171.15245953173013,
+        "elbowFlareMeanDeg": 144.1213346789569,
         "pauseDurationSec": 0,
         "isSinking": false,
+        "barTiltMaxDeg": 179.92369980266375,
+        "barTiltMeanDeg": 179.0791858190297,
+        "pressAsymmetryRatio": 0.4283943134126857,
+        "elbowPathSymmetryRatio": 0.9812011700808119,
         "lockoutStabilityCv": 4.349733964203484,
         "faults": [
           {
             "type": "elbow_flare",
             "severity": "warning",
-            "message": "Excessive elbow flare: 145.8°",
-            "value": 145.79008972622546,
+            "message": "Excessive elbow flare peak: 171.2°",
+            "value": 171.15245953173013,
             "threshold": 80
+          },
+          {
+            "type": "uneven_lockout",
+            "severity": "warning",
+            "message": "Bar tilts 179.9° at worst — uneven lockout",
+            "value": 179.92369980266375,
+            "threshold": 8
+          },
+          {
+            "type": "press_asymmetry",
+            "severity": "warning",
+            "message": "Uneven press — one wrist trailed by 43% of torso",
+            "value": 0.4283943134126857,
+            "threshold": 0.08
           }
         ],
         "verdict": {
@@ -232,17 +253,38 @@
         "concentricDurationSec": 0.75,
         "eccentricDurationSec": 1,
         "tempoRatio": 1.33,
-        "elbowFlareDeg": 133.91531774612898,
+        "elbowFlareDeg": 143.90774480921843,
+        "elbowFlareMinDeg": 71.71024057122833,
+        "elbowFlareMaxDeg": 161.62381716849114,
+        "elbowFlareMeanDeg": 143.90774480921843,
         "pauseDurationSec": 0,
         "isSinking": false,
+        "barTiltMaxDeg": 179.896953018606,
+        "barTiltMeanDeg": 179.1168875451082,
+        "pressAsymmetryRatio": 0.45433743244491237,
+        "elbowPathSymmetryRatio": 0.9334865184990715,
         "lockoutStabilityCv": 9.795668971041811,
         "faults": [
           {
             "type": "elbow_flare",
             "severity": "warning",
-            "message": "Excessive elbow flare: 133.9°",
-            "value": 133.91531774612898,
+            "message": "Excessive elbow flare peak: 161.6°",
+            "value": 161.62381716849114,
             "threshold": 80
+          },
+          {
+            "type": "uneven_lockout",
+            "severity": "warning",
+            "message": "Bar tilts 179.9° at worst — uneven lockout",
+            "value": 179.896953018606,
+            "threshold": 8
+          },
+          {
+            "type": "press_asymmetry",
+            "severity": "warning",
+            "message": "Uneven press — one wrist trailed by 45% of torso",
+            "value": 0.45433743244491237,
+            "threshold": 0.08
           },
           {
             "type": "unstable_lockout",
@@ -286,7 +328,7 @@
       {
         "repNumber": 3,
         "startFrame": 28,
-        "endFrame": 34,
+        "endFrame": 35,
         "barPath": [
           {
             "x": 0.5282225,
@@ -322,39 +364,65 @@
             "x": 0.5395351666666667,
             "y": 0.3923293333333333,
             "frame": 34
+          },
+          {
+            "x": 0.5347748333333334,
+            "y": 0.34153866666666666,
+            "frame": 35
           }
         ],
-        "forwardLeanDeg": 5.421481206009384,
-        "barDriftCm": 2.3120308826533904,
+        "forwardLeanDeg": 8.514838396677764,
+        "barDriftCm": 1.8947570624999845,
         "romCm": 27.45422099999999,
-        "kneeAngleDeg": 85.29068724019905,
-        "hipAngleAtLockoutDeg": 67.10600047943055,
-        "meanConcentricVelocityCmS": 26.81950499999999,
-        "concentricDurationSec": 0.5,
+        "kneeAngleDeg": 91.93941977341703,
+        "hipAngleAtLockoutDeg": 98.94862290452909,
+        "meanConcentricVelocityCmS": 34.33584599999999,
+        "concentricDurationSec": 0.75,
         "eccentricDurationSec": 1,
-        "tempoRatio": 2,
-        "elbowFlareDeg": 137.94851031759617,
+        "tempoRatio": 1.33,
+        "elbowFlareDeg": 146.2208899159923,
+        "elbowFlareMinDeg": 129.0219286198562,
+        "elbowFlareMaxDeg": 168.00707424929314,
+        "elbowFlareMeanDeg": 146.2208899159923,
         "pauseDurationSec": 0,
         "isSinking": false,
-        "lockoutStabilityCv": 7.400856843147633,
+        "barTiltMaxDeg": 179.62904813633483,
+        "barTiltMeanDeg": 179.035132106854,
+        "pressAsymmetryRatio": 0.326798198204522,
+        "elbowPathSymmetryRatio": 1.0137396430768002,
+        "lockoutStabilityCv": 19.17599268011374,
         "faults": [
           {
             "type": "elbow_flare",
             "severity": "warning",
-            "message": "Excessive elbow flare: 137.9°",
-            "value": 137.94851031759617,
+            "message": "Excessive elbow flare peak: 168.0°",
+            "value": 168.00707424929314,
             "threshold": 80
+          },
+          {
+            "type": "uneven_lockout",
+            "severity": "warning",
+            "message": "Bar tilts 179.6° at worst — uneven lockout",
+            "value": 179.62904813633483,
+            "threshold": 8
+          },
+          {
+            "type": "press_asymmetry",
+            "severity": "warning",
+            "message": "Uneven press — one wrist trailed by 33% of torso",
+            "value": 0.326798198204522,
+            "threshold": 0.08
           },
           {
             "type": "unstable_lockout",
             "severity": "warning",
-            "message": "Unstable lockout (CV 7.4%)",
-            "value": 7.400856843147633,
+            "message": "Unstable lockout (CV 19.2%)",
+            "value": 19.17599268011374,
             "threshold": 5
           }
         ],
         "verdict": {
-          "verdict": "white_light",
+          "verdict": "borderline",
           "criteria": [
             {
               "name": "pause",
@@ -374,26 +442,21 @@
             },
             {
               "name": "even_press",
-              "verdict": "pass",
-              "measured": 0.8548740000000051,
+              "verdict": "borderline",
+              "measured": 2.1148289999999905,
               "threshold": 2,
               "unit": "cm",
-              "message": "Even press"
+              "message": "2.1cm wrist height difference at lockout"
             }
           ]
         },
-        "velocityLossPct": -35.2
+        "velocityLossPct": -73.1
       },
       {
         "repNumber": 4,
-        "startFrame": 34,
+        "startFrame": 35,
         "endFrame": 51,
         "barPath": [
-          {
-            "x": 0.5395351666666667,
-            "y": 0.3923293333333333,
-            "frame": 34
-          },
           {
             "x": 0.5347748333333334,
             "y": 0.34153866666666666,
@@ -481,25 +544,46 @@
           }
         ],
         "forwardLeanDeg": 27.47826457893328,
-        "barDriftCm": 2.6361945000000255,
+        "barDriftCm": 1.6345037647059204,
         "romCm": 25.105464,
         "kneeAngleDeg": 88.43716963501369,
         "hipAngleAtLockoutDeg": 95.39159440967188,
         "meanConcentricVelocityCmS": 20.0843712,
         "concentricDurationSec": 3,
-        "eccentricDurationSec": 1.25,
-        "tempoRatio": 0.42,
-        "elbowFlareDeg": 158.45527628117605,
+        "eccentricDurationSec": 1,
+        "tempoRatio": 0.33,
+        "elbowFlareDeg": 145.8708664892981,
+        "elbowFlareMinDeg": 121.42631314016006,
+        "elbowFlareMaxDeg": 170.94966322458023,
+        "elbowFlareMeanDeg": 145.8708664892981,
         "pauseDurationSec": 0.25,
         "isSinking": false,
+        "barTiltMaxDeg": 179.97237409677015,
+        "barTiltMeanDeg": 179.21260030645846,
+        "pressAsymmetryRatio": 1.6413577922170617,
+        "elbowPathSymmetryRatio": 0.9943042979551762,
         "lockoutStabilityCv": 1.249946298221402,
         "faults": [
           {
             "type": "elbow_flare",
             "severity": "warning",
-            "message": "Excessive elbow flare: 158.5°",
-            "value": 158.45527628117605,
+            "message": "Excessive elbow flare peak: 170.9°",
+            "value": 170.94966322458023,
             "threshold": 80
+          },
+          {
+            "type": "uneven_lockout",
+            "severity": "warning",
+            "message": "Bar tilts 180.0° at worst — uneven lockout",
+            "value": 179.97237409677015,
+            "threshold": 8
+          },
+          {
+            "type": "press_asymmetry",
+            "severity": "warning",
+            "message": "Uneven press — one wrist trailed by 164% of torso",
+            "value": 1.6413577922170617,
+            "threshold": 0.08
           }
         ],
         "verdict": {
@@ -537,12 +621,12 @@
     "fps": 4,
     "cameraAngle": "front",
     "sagittalConfidence": 0.3560002666666666,
-    "analysisVersion": 4,
+    "analysisVersion": 5,
     "fatigueSignatures": {
       "forwardLeanDriftDeg": 25.9,
-      "barDriftIncreaseCm": -0.6,
+      "barDriftIncreaseCm": -1.6,
       "romCompressionCm": 2.7,
-      "descentSpeedChange": 0.29,
+      "descentSpeedChange": 0.24,
       "lockoutDegradationDeg": -11.5,
       "velocityLossTrend": "increasing"
     }

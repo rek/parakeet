@@ -105,6 +105,59 @@ describe('detectReps', () => {
       expect(reps).toHaveLength(3);
     });
 
+    it('front-on bench detects reps when elbow angle collapses', () => {
+      // Simulate a front-on view: shoulder, elbow, wrist all sit near the
+      // same image x (barely any horizontal separation). The elbow angle
+      // barely modulates — the detector must fall through to the
+      // wrist-minus-shoulder-Y signal.
+      const framesPerRep = 60;
+      const frames = Array.from({ length: framesPerRep * 4 }, (_, i) => {
+        const repPhase = (i % framesPerRep) / framesPerRep;
+        const t = Math.sin(repPhase * Math.PI);
+        // Wrists travel 0.15 units through the rep; shoulders stay still.
+        const wristY = 0.20 + t * 0.15;
+        return buildFrame({
+          [LANDMARK.LEFT_SHOULDER]: { x: 0.48, y: 0.30, z: 0, visibility: 1 },
+          [LANDMARK.RIGHT_SHOULDER]: { x: 0.52, y: 0.30, z: 0, visibility: 1 },
+          [LANDMARK.LEFT_HIP]: { x: 0.48, y: 0.60, z: 0, visibility: 1 },
+          [LANDMARK.RIGHT_HIP]: { x: 0.52, y: 0.60, z: 0, visibility: 1 },
+          // Elbows almost collinear with shoulder + wrist — angle barely moves.
+          [LANDMARK.LEFT_ELBOW]: {
+            x: 0.48,
+            y: 0.25 + t * 0.12,
+            z: 0,
+            visibility: 1,
+          },
+          [LANDMARK.RIGHT_ELBOW]: {
+            x: 0.52,
+            y: 0.25 + t * 0.12,
+            z: 0,
+            visibility: 1,
+          },
+          [LANDMARK.LEFT_WRIST]: { x: 0.48, y: wristY, z: 0, visibility: 1 },
+          [LANDMARK.RIGHT_WRIST]: { x: 0.52, y: wristY, z: 0, visibility: 1 },
+        });
+      });
+      const reps = detectReps({
+        frames,
+        lift: 'bench',
+        sagittalConfidence: 0.2,
+      });
+      expect(reps).toHaveLength(4);
+    });
+
+    it('side-view bench ignores the front-bench branch', () => {
+      // Same fixture generator, but pass sagittalConfidence = 1 (pure side).
+      // Elbow-angle path should still run and detect 3 reps.
+      const frames = generateBenchFrames({ reps: 3, framesPerRep: 60 });
+      const reps = detectReps({
+        frames,
+        lift: 'bench',
+        sagittalConfidence: 1,
+      });
+      expect(reps).toHaveLength(3);
+    });
+
     it('bench uses elbow angle not hip Y', () => {
       // Freeze hips but move elbows+wrists — should detect bench reps via
       // elbow angle oscillation (viewpoint-invariant).
