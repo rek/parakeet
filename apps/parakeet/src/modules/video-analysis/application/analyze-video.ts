@@ -77,11 +77,23 @@ export async function extractFramesFromVideo({
   // CPU delegate — GPU causes SIGSEGV in MediaPipe's GL runner on some devices
   const delegate = Delegate.CPU;
 
+  // Diagnostic counters — surfaced in __DEV__ to debug "0/N valid frames" cases
+  // (backlog #25). Distinguishes "MediaPipe never returned a pose" from
+  // "MediaPipe returned partial landmarks we discarded" from "exception".
+  let firstThumbnail: { width: number; height: number } | null = null;
+  let firstValidVisibilityMean: number | null = null;
+  let noResultCount = 0;
+  let truncatedLandmarkCount = 0;
+  let errorCount = 0;
+
   for (let i = 0; i < totalFrames; i++) {
     const thumbnail = await getThumbnailAsync(videoUri, {
       time: frameTimes[i],
       quality: 0.8,
     });
+    if (firstThumbnail == null) {
+      firstThumbnail = { width: thumbnail.width, height: thumbnail.height };
+    }
 
     try {
       const result = await PoseDetectionOnImage(thumbnail.uri, POSE_MODEL, {
@@ -102,10 +114,27 @@ export async function extractFramesFromVideo({
           visibility: lm.visibility ?? 0,
         })) satisfies PoseLandmark[];
         frames.push(poseFrame);
+        if (firstValidVisibilityMean == null) {
+          // 12 powerlifting-relevant landmarks (shoulders/elbows/wrists/hips/
+          // knees/ankles, indices 11–16, 23–28). Same set used by the
+          // plausibility filter so the diagnostic matches what downstream
+          // sees.
+          const indices = [11, 12, 13, 14, 15, 16, 23, 24, 25, 26, 27, 28];
+          const sum = indices.reduce(
+            (acc, idx) => acc + (poseFrame[idx]?.visibility ?? 0),
+            0
+          );
+          firstValidVisibilityMean = sum / indices.length;
+        }
+      } else if (poseLandmarks) {
+        truncatedLandmarkCount++;
+        frames.push(EMPTY_FRAME);
       } else {
+        noResultCount++;
         frames.push(EMPTY_FRAME);
       }
     } catch (err) {
+      errorCount++;
       captureException(err);
       frames.push(EMPTY_FRAME);
     }
@@ -125,8 +154,15 @@ export async function extractFramesFromVideo({
 
   if (typeof __DEV__ !== 'undefined' && __DEV__) {
     const validCount = frames.filter((f) => !isEmptyFrame(f)).length;
+    const dims = firstThumbnail
+      ? `${firstThumbnail.width}x${firstThumbnail.height} (aspect=${(firstThumbnail.width / firstThumbnail.height).toFixed(2)})`
+      : 'n/a';
+    const visibilityNote =
+      firstValidVisibilityMean != null
+        ? `firstValidVis=${firstValidVisibilityMean.toFixed(2)}`
+        : 'firstValidVis=n/a';
     console.log(
-      `[pose] ${validCount}/${totalFrames} valid frames (${Math.round((validCount / totalFrames) * 100)}%)`
+      `[pose] ${validCount}/${totalFrames} valid frames (${Math.round((validCount / totalFrames) * 100)}%) thumb=${dims} reject=${noResultCount}noResult+${truncatedLandmarkCount}trunc+${errorCount}err ${visibilityNote}`
     );
   }
 

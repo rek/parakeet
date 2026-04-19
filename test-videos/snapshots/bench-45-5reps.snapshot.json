@@ -1,9 +1,9 @@
 {
   "videoId": "bench-45-5reps",
   "lift": "bench",
-  "analysisVersion": 5,
+  "analysisVersion": 6,
   "snapshotVersion": 1,
-  "createdAt": "2026-04-19T12:21:26.458Z",
+  "createdAt": "2026-04-19T14:02:28.783Z",
   "sagittalConfidence": 0.834698888888889,
   "result": {
     "reps": [
@@ -63,6 +63,7 @@
         "elbowFlareMeanDeg": 78.44699786876865,
         "pauseDurationSec": 0.25,
         "isSinking": false,
+        "chestTouchGap": 0.9579290680415572,
         "lockoutStabilityCv": 0.6857144044296012,
         "faults": [
           {
@@ -156,6 +157,7 @@
         "elbowFlareMeanDeg": 91.56441275052954,
         "pauseDurationSec": 0,
         "isSinking": false,
+        "chestTouchGap": 0.6302760726126773,
         "lockoutStabilityCv": 0.7104507788407768,
         "faults": [
           {
@@ -253,6 +255,7 @@
         "elbowFlareMeanDeg": 73.03357224815134,
         "pauseDurationSec": 0,
         "isSinking": false,
+        "chestTouchGap": 0.3846987283783415,
         "lockoutStabilityCv": 2.098862568868488,
         "faults": [
           {
@@ -355,6 +358,7 @@
         "elbowFlareMeanDeg": 67.12656521536093,
         "pauseDurationSec": 0,
         "isSinking": false,
+        "chestTouchGap": 0.40598368620984004,
         "lockoutStabilityCv": 1.2415222594666726,
         "faults": [
           {
@@ -489,6 +493,7 @@
         "elbowFlareMeanDeg": 93.19171287742682,
         "pauseDurationSec": 0,
         "isSinking": false,
+        "chestTouchGap": 0.33196507831700967,
         "lockoutStabilityCv": 0,
         "faults": [
           {
@@ -541,7 +546,7 @@
     "fps": 4,
     "cameraAngle": "side",
     "sagittalConfidence": 0.8302116833333334,
-    "analysisVersion": 5,
+    "analysisVersion": 6,
     "fatigueSignatures": {
       "forwardLeanDriftDeg": 0.1,
       "barDriftIncreaseCm": 11,

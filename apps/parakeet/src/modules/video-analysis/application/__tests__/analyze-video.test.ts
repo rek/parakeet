@@ -44,7 +44,7 @@ describe('analyzeVideoFrames — landmarker failure handling', () => {
     });
 
     expect(result.reps).toEqual([]);
-    expect(result.analysisVersion).toBe(5);
+    expect(result.analysisVersion).toBe(6);
     expect(result.fatigueSignatures).toBeUndefined();
   });
 
@@ -55,7 +55,7 @@ describe('analyzeVideoFrames — landmarker failure handling', () => {
     const result = analyzeVideoFrames({ frames, fps: 4, lift: 'squat' });
 
     // Should not crash — interpolation fills the gap
-    expect(result.analysisVersion).toBe(5);
+    expect(result.analysisVersion).toBe(6);
   });
 
   it('interpolates short gaps (1-2 empty frames) without losing reps', () => {
@@ -78,7 +78,7 @@ describe('analyzeVideoFrames — landmarker failure handling', () => {
     const result = analyzeVideoFrames({ frames: gappy, fps: 4, lift: 'squat' });
 
     // Should still produce a result — may detect fewer reps due to signal disruption
-    expect(result.analysisVersion).toBe(5);
+    expect(result.analysisVersion).toBe(6);
     expect(result.reps.length).toBeGreaterThanOrEqual(1);
     expect(result.reps.length).toBeLessThanOrEqual(3);
   });
@@ -96,7 +96,7 @@ describe('analyzeVideoFrames — landmarker failure handling', () => {
 
     // With 50% valid frames at 4fps, effective fps ≈ 2.
     // The analysis should still produce a valid result (not crash on NaN fps).
-    expect(result.analysisVersion).toBe(5);
+    expect(result.analysisVersion).toBe(6);
   });
 
   it('handles all three lifts with empty frames gracefully', () => {
@@ -106,7 +106,7 @@ describe('analyzeVideoFrames — landmarker failure handling', () => {
     for (const lift of lifts) {
       const result = analyzeVideoFrames({ frames: allEmpty, fps: 4, lift });
       expect(result.reps).toEqual([]);
-      expect(result.analysisVersion).toBe(5);
+      expect(result.analysisVersion).toBe(6);
     }
   });
 

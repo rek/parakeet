@@ -18,6 +18,7 @@ import {
   estimateRirFromVelocityLoss,
 } from './bar-velocity';
 import { computeBarTiltSeries } from './bar-tilt';
+import { computeChestTouchGap } from './bench-chest-touch';
 import { detectButtWink } from './butt-wink-detector';
 import { detectSquatDepth } from './depth-detector';
 import { computeElbowFlareSeries } from './elbow-flare-series';
@@ -34,13 +35,14 @@ import { computeStanceWidth } from './stance-width';
 import { deriveCameraAngle, MIN_SAGITTAL_CONFIDENCE } from './view-confidence';
 
 /**
- * v4 → v5: front-on bench is now a first-class path. Rep detection
- * switches to `(meanWristY − meanShoulderY)` below `MIN_SAGITTAL_CONFIDENCE`,
- * elbow flare is a per-frame series instead of a single midpoint sample,
- * and three new front-specific metrics are emitted: `barTiltMaxDeg`,
- * `pressAsymmetryRatio`, `elbowPathSymmetryRatio`.
+ * v5 → v6: bench chest-touch gap added. Per-rep `chestTouchGap` captures
+ * how far above the chest reference the bar stopped (in torso units);
+ * `no_chest_touch` (critical) and `shallow_bench` (warning) faults fire
+ * when the bar never reaches the chest. Front view uses the shoulder
+ * line as chest reference; side view approximates chest at 20% of the
+ * shoulder→hip segment. See backlog #26 and lib/bench-chest-touch.ts.
  */
-const ANALYSIS_VERSION = 5;
+const ANALYSIS_VERSION = 6;
 
 /**
  * Bar-tilt fault fires when the worst tilt across a rep exceeds this
@@ -67,6 +69,15 @@ const ELBOW_PATH_SYMMETRY_MAX = 1.25;
 /** Elbow-flare fault thresholds — unchanged from v4; now driven by max over the rep. */
 const ELBOW_FLARE_MAX_FAULT_DEG = 80;
 const ELBOW_FLARE_MIN_FAULT_DEG = 30;
+
+/**
+ * Chest-touch-gap thresholds. `gap` is the bar's closest approach above
+ * the chest reference, normalised by torso length. Provisional — tuned
+ * on `bench-front-4reps` only. Promote to docs/domain/ once ≥ 3
+ * independent fixtures confirm the bands. Backlog #26.
+ */
+const NO_CHEST_TOUCH_GAP = 0.1;
+const SHALLOW_BENCH_GAP = 0.03;
 
 /**
  * Compensate for foreshortening when metrics are measured from oblique angles.
@@ -250,6 +261,7 @@ export function assembleAnalysis({
     let barTiltMeanDeg: number | undefined;
     let pressAsymmetryRatio: number | undefined;
     let elbowPathSymmetryRatio: number | undefined;
+    let chestTouchGap: number | undefined;
     if (lift === 'bench') {
       // Flare: sample per-frame across the rep and key faults off the max —
       // v4 sampled once at midFrame, which missed peaks and overreported
@@ -289,6 +301,41 @@ export function assembleAnalysis({
       const pause = assessPauseQuality({ repPath, fps });
       pauseDurationSec = pause.pauseDurationSec;
       isSinking = pause.isSinking;
+
+      // Chest-touch gap — metric stored for both angles, faults gated to
+      // front view. Side view was validated against `bench-45-5reps` and
+      // produced gaps of 0.3–1.0 torso on reps the lifter touched, so
+      // the 20%-of-torso chest approximation is too unstable to fault
+      // on. Keeping the raw value surfaces the signal without emitting
+      // false positives. Backlog #26 explicitly predicted this outcome.
+      const chest = computeChestTouchGap({
+        frames,
+        startFrame: safeStart,
+        endFrame: safeEnd,
+        sagittalConfidence,
+      });
+      if (chest.framesUsed > 0) {
+        chestTouchGap = chest.gap;
+        if (sagittalConfidence < MIN_SAGITTAL_CONFIDENCE) {
+          if (chest.gap > NO_CHEST_TOUCH_GAP) {
+            faults.push({
+              type: 'no_chest_touch',
+              severity: 'critical',
+              message: `Bar stopped ${(chest.gap * 100).toFixed(0)}% of a torso above chest — no touch`,
+              value: chest.gap,
+              threshold: NO_CHEST_TOUCH_GAP,
+            });
+          } else if (chest.gap > SHALLOW_BENCH_GAP) {
+            faults.push({
+              type: 'shallow_bench',
+              severity: 'warning',
+              message: `Shallow rep — bar stopped ${(chest.gap * 100).toFixed(0)}% of a torso above chest`,
+              value: chest.gap,
+              threshold: SHALLOW_BENCH_GAP,
+            });
+          }
+        }
+      }
 
       // Front-on-only metrics. Side-view (`sagittalConfidence >= 0.5`)
       // projects the L/R wrists to essentially the same image point, so
@@ -438,6 +485,7 @@ export function assembleAnalysis({
       barTiltMeanDeg,
       pressAsymmetryRatio,
       elbowPathSymmetryRatio,
+      chestTouchGap,
       hipHingeCrossoverPct,
       barToShinDistanceCm,
       lockoutStabilityCv,

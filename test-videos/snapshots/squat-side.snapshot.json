@@ -1,9 +1,9 @@
 {
   "videoId": "squat-side",
   "lift": "squat",
-  "analysisVersion": 5,
+  "analysisVersion": 6,
   "snapshotVersion": 1,
-  "createdAt": "2026-04-19T12:21:26.436Z",
+  "createdAt": "2026-04-19T14:02:28.757Z",
   "sagittalConfidence": 0.7144294333333333,
   "result": {
     "reps": [
@@ -678,7 +678,7 @@
     "fps": 4,
     "cameraAngle": "side",
     "sagittalConfidence": 0.7144294333333333,
-    "analysisVersion": 5,
+    "analysisVersion": 6,
     "fatigueSignatures": {
       "forwardLeanDriftDeg": 25.9,
       "barDriftIncreaseCm": -1.7,

@@ -1,9 +1,9 @@
 {
   "videoId": "bench-front-4reps",
   "lift": "bench",
-  "analysisVersion": 5,
+  "analysisVersion": 6,
   "snapshotVersion": 1,
-  "createdAt": "2026-04-19T12:21:26.459Z",
+  "createdAt": "2026-04-19T14:02:28.784Z",
   "sagittalConfidence": 0.3560002666666666,
   "result": {
     "reps": [
@@ -142,6 +142,7 @@
         "barTiltMeanDeg": 179.0791858190297,
         "pressAsymmetryRatio": 0.4283943134126857,
         "elbowPathSymmetryRatio": 0.9812011700808119,
+        "chestTouchGap": 0.9203408438045734,
         "lockoutStabilityCv": 4.349733964203484,
         "faults": [
           {
@@ -150,6 +151,13 @@
             "message": "Excessive elbow flare peak: 171.2°",
             "value": 171.15245953173013,
             "threshold": 80
+          },
+          {
+            "type": "no_chest_touch",
+            "severity": "critical",
+            "message": "Bar stopped 92% of a torso above chest — no touch",
+            "value": 0.9203408438045734,
+            "threshold": 0.1
           },
           {
             "type": "uneven_lockout",
@@ -263,6 +271,7 @@
         "barTiltMeanDeg": 179.1168875451082,
         "pressAsymmetryRatio": 0.45433743244491237,
         "elbowPathSymmetryRatio": 0.9334865184990715,
+        "chestTouchGap": 1.4933658900806208,
         "lockoutStabilityCv": 9.795668971041811,
         "faults": [
           {
@@ -271,6 +280,13 @@
             "message": "Excessive elbow flare peak: 161.6°",
             "value": 161.62381716849114,
             "threshold": 80
+          },
+          {
+            "type": "no_chest_touch",
+            "severity": "critical",
+            "message": "Bar stopped 149% of a torso above chest — no touch",
+            "value": 1.4933658900806208,
+            "threshold": 0.1
           },
           {
             "type": "uneven_lockout",
@@ -390,6 +406,7 @@
         "barTiltMeanDeg": 179.035132106854,
         "pressAsymmetryRatio": 0.326798198204522,
         "elbowPathSymmetryRatio": 1.0137396430768002,
+        "chestTouchGap": 0.9896638152203647,
         "lockoutStabilityCv": 19.17599268011374,
         "faults": [
           {
@@ -398,6 +415,13 @@
             "message": "Excessive elbow flare peak: 168.0°",
             "value": 168.00707424929314,
             "threshold": 80
+          },
+          {
+            "type": "no_chest_touch",
+            "severity": "critical",
+            "message": "Bar stopped 99% of a torso above chest — no touch",
+            "value": 0.9896638152203647,
+            "threshold": 0.1
           },
           {
             "type": "uneven_lockout",
@@ -562,6 +586,7 @@
         "barTiltMeanDeg": 179.21260030645846,
         "pressAsymmetryRatio": 1.6413577922170617,
         "elbowPathSymmetryRatio": 0.9943042979551762,
+        "chestTouchGap": 0.9727998398518621,
         "lockoutStabilityCv": 1.249946298221402,
         "faults": [
           {
@@ -570,6 +595,13 @@
             "message": "Excessive elbow flare peak: 170.9°",
             "value": 170.94966322458023,
             "threshold": 80
+          },
+          {
+            "type": "no_chest_touch",
+            "severity": "critical",
+            "message": "Bar stopped 97% of a torso above chest — no touch",
+            "value": 0.9727998398518621,
+            "threshold": 0.1
           },
           {
             "type": "uneven_lockout",
@@ -621,7 +653,7 @@
     "fps": 4,
     "cameraAngle": "front",
     "sagittalConfidence": 0.3560002666666666,
-    "analysisVersion": 5,
+    "analysisVersion": 6,
     "fatigueSignatures": {
       "forwardLeanDriftDeg": 25.9,
       "barDriftIncreaseCm": -1.6,

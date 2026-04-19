@@ -47,7 +47,7 @@ video file → extractFramesFromVideo(uri, duration, 4fps)
 
 Key entry points in `modules/video-analysis/`:
 - `application/analyze-video.ts` — `extractFramesFromVideo()`, `analyzeVideoFrames()`
-- `lib/metrics-assembler.ts` — `assembleAnalysis()` (analysisVersion 5 — v5 added front-bench block, backlog #24 Track B)
+- `lib/metrics-assembler.ts` — `assembleAnalysis()` (analysisVersion 6 — v6 added bench chest-touch gap, backlog #26; v5 added front-bench block, backlog #24 Track B)
 - `lib/fault-detector.ts` — thresholds and fault detection
 - `lib/bar-path.ts`, `lib/angle-calculator.ts`, `lib/rep-detector.ts`, `lib/depth-detector.ts`, `lib/bar-velocity.ts`, `lib/rep-tempo.ts`
 - `lib/fatigue-signatures.ts` — cross-rep fatigue analysis

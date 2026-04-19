@@ -79,6 +79,9 @@ export const RepAnalysisSchema = z.object({
   barTiltMeanDeg: z.number().optional(),
   pressAsymmetryRatio: z.number().optional(),
   elbowPathSymmetryRatio: z.number().optional(),
+  // Bench, all angles — how far above chest the bar stopped, in torso
+  // units. > 0 = partial rep (never reached chest). See lib/bench-chest-touch.ts.
+  chestTouchGap: z.number().optional(),
   // Deadlift-specific
   hipHingeCrossoverPct: z.number().optional(),
   barToShinDistanceCm: z.number().optional(),

@@ -1,9 +1,9 @@
 {
   "videoId": "deadlift-45-6reps",
   "lift": "deadlift",
-  "analysisVersion": 5,
+  "analysisVersion": 6,
   "snapshotVersion": 1,
-  "createdAt": "2026-04-19T12:21:26.456Z",
+  "createdAt": "2026-04-19T14:02:28.781Z",
   "sagittalConfidence": 0.8381563333333333,
   "result": {
     "reps": [
@@ -332,7 +332,7 @@
     "fps": 4,
     "cameraAngle": "side",
     "sagittalConfidence": 0.8507409333333332,
-    "analysisVersion": 5,
+    "analysisVersion": 6,
     "fatigueSignatures": {
       "forwardLeanDriftDeg": 17.8,
       "barDriftIncreaseCm": 2.8,

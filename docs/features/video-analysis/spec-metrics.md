@@ -185,6 +185,52 @@ These were tuned by eye against a single `bench-front-4reps` fixture. They are *
 - UI surfacing of the new metrics (rep card chips).
 - LLM coaching prompts referencing the new asymmetry fields — revisit once the values stabilise over real-world sessions.
 
+## Phase 7 — Bench Chest-Touch Gap (v6, 2026-04-19) — backlog #26
+
+Surfaced while sanity-checking v5 front-bench metrics on `bench-front-4reps`: the user confirmed the bar never touches the chest on any of the 4 reps, but v5 reported a clean rep count and emitted no partial-rep fault. In competition bench this is the single most red-lightable form fault; for training it is the difference between a real press and a partial.
+
+Phase 7 adds a per-rep `chestTouchGap` (signed, torso-normalised) plus two faults — `no_chest_touch` (critical) and `shallow_bench` (warning) — gated to front view only. Bumps `ANALYSIS_VERSION` to **6**. All new fields are optional.
+
+### 7.1 — Chest-touch gap
+
+**`modules/video-analysis/lib/bench-chest-touch.ts`:**
+
+- [x] `computeChestTouchGap({ frames, startFrame, endFrame, sagittalConfidence }): { gap: number; framesUsed: number }` — per-frame compute `(refY − meanWristY) / torsoLen`, return the min across the rep window. `gap > 0` ⇒ bar stopped above the chest reference (partial); `gap ≤ 0` ⇒ bar reached or passed it.
+- [x] Front view (`sagittalConfidence < MIN_SAGITTAL_CONFIDENCE`): reference Y = shoulder midpoint Y. Clean read on a supine lifter filmed from the foot end.
+- [x] Side view: reference Y = `shoulderY + 0.2 * (hipY − shoulderY)` — a coarse chest approximation without a dedicated sternum landmark.
+- [x] All required landmarks gated at `VIS_THRESHOLD = 0.5`; hips required on both angles (torso-length normalisation).
+- [x] Returns `{ gap: 0, framesUsed: 0 }` when no frame is usable — caller treats zero framesUsed as "no signal".
+
+### 7.2 — Wiring into `metrics-assembler.ts`
+
+- [x] Computed on every bench rep using the existing `safeStart..safeEnd` window.
+- [x] `RepAnalysis.chestTouchGap` stored on both angles (raw signal visible to future consumers).
+- [x] Faults gated to front view only. Side-view approximation was validated against `bench-45-5reps` and produced gaps of 0.3–1.0 torso on reps the lifter touched — too unstable to fault on without a proper sternum landmark. Backlog #26 explicitly predicted this outcome.
+- [x] `no_chest_touch` severity does NOT downgrade below `MIN_SAGITTAL_CONFIDENCE` (contrast with `butt_wink`): the front view is where the metric is most reliable, and that is also where confidence is low by construction.
+
+### Fault thresholds (provisional — tuned on one fixture)
+
+| Constant | Value | Applies to |
+| --- | --- | --- |
+| `NO_CHEST_TOUCH_GAP` | 0.10 | `no_chest_touch` (critical) fault when `chestTouchGap` exceeds this on a front-view bench rep |
+| `SHALLOW_BENCH_GAP` | 0.03 | `shallow_bench` (warning) fault when `chestTouchGap` exceeds this on a front-view bench rep |
+
+Tuned by eye against `bench-front-4reps` (user-confirmed partial on all 4 reps). **Provisional** — widen or tighten once ≥ 3 independent front-bench fixtures confirm the bands across lifters and phone positions. Constants stay co-located in `metrics-assembler.ts` until the tuning stabilises.
+
+### Validation
+
+- [x] 9 unit tests in `lib/__tests__/bench-chest-touch.test.ts` (front deep touch, clear partial, shallow band, side-view approximation, visibility gates, frame-index clamping, zero-signal path).
+- [x] `analysisVersion` expectations bumped 5 → 6 in `analyze-video.test.ts` and `calibration.test.ts`.
+- [x] Calibration run across 16 fixtures: `bench-front-4reps` emits `no_chest_touch` on every rep; `bench-45-5reps` (side view) emits neither chest-touch fault.
+- [x] Manifest `metrics_present` + `faults_to_test` updated for `bench-front-4reps`.
+
+### Out of scope
+
+- Touch-and-go vs paused bench — `pauseDurationSec` / `isSinking` already cover pause timing.
+- Bar-Y velocity profile — already computed upstream.
+- Coaching-prompt update to mention partial reps — follow up once the metric stabilises over real-world sessions.
+- UI rep-card chip for the new metric — follow up.
+
 ## Phase 5 — Lockout Stability (All Lifts)
 
 **`modules/video-analysis/lib/lockout-stability.ts`:**

@@ -38,7 +38,7 @@
       "actual": {
         "rep_count": 5,
         "sagittal_confidence": 0.714,
-        "analysis_version": 5,
+        "analysis_version": 6,
         "metric_summary": {
           "forwardLeanDeg": {
             "mean": 50.27,
@@ -96,7 +96,7 @@
           "excessive_lean",
           "unstable_lockout"
         ],
-        "calibrated_at": "2026-04-19T12:21:26.436Z"
+        "calibrated_at": "2026-04-19T14:02:28.757Z"
       }
     },
     {
@@ -127,7 +127,7 @@
       "actual": {
         "rep_count": 3,
         "sagittal_confidence": 0.208,
-        "analysis_version": 5,
+        "analysis_version": 6,
         "metric_summary": {
           "forwardLeanDeg": {
             "mean": 34.88,
@@ -185,7 +185,7 @@
           "bar_drift",
           "unstable_lockout"
         ],
-        "calibrated_at": "2026-04-19T12:21:26.438Z"
+        "calibrated_at": "2026-04-19T14:02:28.759Z"
       }
     },
     {
@@ -216,7 +216,7 @@
       "actual": {
         "rep_count": 3,
         "sagittal_confidence": 0.282,
-        "analysis_version": 5,
+        "analysis_version": 6,
         "metric_summary": {
           "forwardLeanDeg": {
             "mean": 81.2,
@@ -275,7 +275,7 @@
           "excessive_lean",
           "unstable_lockout"
         ],
-        "calibrated_at": "2026-04-19T12:21:26.439Z"
+        "calibrated_at": "2026-04-19T14:02:28.761Z"
       }
     },
     {
@@ -306,7 +306,7 @@
       "actual": {
         "rep_count": 5,
         "sagittal_confidence": 0.335,
-        "analysis_version": 5,
+        "analysis_version": 6,
         "metric_summary": {
           "forwardLeanDeg": {
             "mean": 68.98,
@@ -362,7 +362,7 @@
         "fault_types": [
           "above_parallel"
         ],
-        "calibrated_at": "2026-04-19T12:21:26.441Z"
+        "calibrated_at": "2026-04-19T14:02:28.762Z"
       }
     },
     {
@@ -395,7 +395,7 @@
       "actual": {
         "rep_count": 7,
         "sagittal_confidence": 0.371,
-        "analysis_version": 5,
+        "analysis_version": 6,
         "metric_summary": {
           "forwardLeanDeg": {
             "mean": 41.55,
@@ -454,7 +454,7 @@
           "excessive_lean",
           "unstable_lockout"
         ],
-        "calibrated_at": "2026-04-19T12:21:26.444Z"
+        "calibrated_at": "2026-04-19T14:02:28.767Z"
       }
     },
     {
@@ -486,7 +486,7 @@
       "actual": {
         "rep_count": 1,
         "sagittal_confidence": 0.912,
-        "analysis_version": 5,
+        "analysis_version": 6,
         "metric_summary": {
           "forwardLeanDeg": {
             "mean": 77.85,
@@ -540,7 +540,7 @@
           "bar_drift",
           "unstable_lockout"
         ],
-        "calibrated_at": "2026-04-19T12:21:26.446Z"
+        "calibrated_at": "2026-04-19T14:02:28.769Z"
       }
     },
     {
@@ -572,7 +572,7 @@
       "actual": {
         "rep_count": 1,
         "sagittal_confidence": 0.845,
-        "analysis_version": 5,
+        "analysis_version": 6,
         "metric_summary": {
           "forwardLeanDeg": {
             "mean": 81.06,
@@ -624,7 +624,7 @@
           "bar_drift",
           "unstable_lockout"
         ],
-        "calibrated_at": "2026-04-19T12:21:26.447Z"
+        "calibrated_at": "2026-04-19T14:02:28.770Z"
       }
     },
     {
@@ -656,7 +656,7 @@
       "actual": {
         "rep_count": 6,
         "sagittal_confidence": 0.935,
-        "analysis_version": 5,
+        "analysis_version": 6,
         "metric_summary": {
           "forwardLeanDeg": {
             "mean": 73.77,
@@ -709,7 +709,7 @@
           "bar_drift",
           "unstable_lockout"
         ],
-        "calibrated_at": "2026-04-19T12:21:26.450Z"
+        "calibrated_at": "2026-04-19T14:02:28.774Z"
       }
     },
     {
@@ -741,7 +741,7 @@
       "actual": {
         "rep_count": 5,
         "sagittal_confidence": 0.875,
-        "analysis_version": 5,
+        "analysis_version": 6,
         "metric_summary": {
           "forwardLeanDeg": {
             "mean": 63.81,
@@ -795,7 +795,7 @@
           "early_hip_shoot",
           "unstable_lockout"
         ],
-        "calibrated_at": "2026-04-19T12:21:26.452Z"
+        "calibrated_at": "2026-04-19T14:02:28.776Z"
       }
     },
     {
@@ -828,7 +828,7 @@
       "actual": {
         "rep_count": 2,
         "sagittal_confidence": 0.629,
-        "analysis_version": 5,
+        "analysis_version": 6,
         "metric_summary": {
           "forwardLeanDeg": {
             "mean": 7.72,
@@ -879,7 +879,7 @@
         "fault_types": [
           "unstable_lockout"
         ],
-        "calibrated_at": "2026-04-19T12:21:26.453Z"
+        "calibrated_at": "2026-04-19T14:02:28.777Z"
       }
     },
     {
@@ -909,7 +909,7 @@
       "actual": {
         "rep_count": 3,
         "sagittal_confidence": 0.503,
-        "analysis_version": 5,
+        "analysis_version": 6,
         "metric_summary": {
           "forwardLeanDeg": {
             "mean": 10.12,
@@ -962,7 +962,7 @@
           "early_hip_shoot",
           "unstable_lockout"
         ],
-        "calibrated_at": "2026-04-19T12:21:26.454Z"
+        "calibrated_at": "2026-04-19T14:02:28.778Z"
       }
     },
     {
@@ -991,7 +991,7 @@
       "actual": {
         "rep_count": 4,
         "sagittal_confidence": 0.494,
-        "analysis_version": 5,
+        "analysis_version": 6,
         "metric_summary": {
           "forwardLeanDeg": {
             "mean": 7.76,
@@ -1044,7 +1044,7 @@
           "bar_drift",
           "early_hip_shoot"
         ],
-        "calibrated_at": "2026-04-19T12:21:26.455Z"
+        "calibrated_at": "2026-04-19T14:02:28.780Z"
       }
     },
     {
@@ -1077,7 +1077,7 @@
       "actual": {
         "rep_count": 2,
         "sagittal_confidence": 0.838,
-        "analysis_version": 5,
+        "analysis_version": 6,
         "metric_summary": {
           "forwardLeanDeg": {
             "mean": 22.36,
@@ -1132,7 +1132,7 @@
           "early_hip_shoot",
           "unstable_lockout"
         ],
-        "calibrated_at": "2026-04-19T12:21:26.456Z"
+        "calibrated_at": "2026-04-19T14:02:28.781Z"
       }
     },
     {
@@ -1161,7 +1161,7 @@
       "actual": {
         "rep_count": 5,
         "sagittal_confidence": 0.835,
-        "analysis_version": 5,
+        "analysis_version": 6,
         "metric_summary": {
           "forwardLeanDeg": {
             "mean": 82.23,
@@ -1213,7 +1213,7 @@
           "bar_drift",
           "elbow_flare"
         ],
-        "calibrated_at": "2026-04-19T12:21:26.458Z"
+        "calibrated_at": "2026-04-19T14:02:28.783Z"
       }
     },
     {
@@ -1233,7 +1233,8 @@
         "faults_to_test": [
           "elbow_flare",
           "press_asymmetry",
-          "uneven_lockout"
+          "uneven_lockout",
+          "no_chest_touch"
         ],
         "metrics_present": [
           "barDriftCm",
@@ -1241,14 +1242,15 @@
           "barTiltMaxDeg",
           "pressAsymmetryRatio",
           "elbowPathSymmetryRatio",
-          "elbowFlareMaxDeg"
+          "elbowFlareMaxDeg",
+          "chestTouchGap"
         ],
         "fatigue_signatures": true
       },
       "actual": {
         "rep_count": 4,
         "sagittal_confidence": 0.356,
-        "analysis_version": 5,
+        "analysis_version": 6,
         "metric_summary": {
           "forwardLeanDeg": {
             "mean": 12,
@@ -1298,11 +1300,12 @@
         },
         "fault_types": [
           "elbow_flare",
+          "no_chest_touch",
           "press_asymmetry",
           "uneven_lockout",
           "unstable_lockout"
         ],
-        "calibrated_at": "2026-04-19T12:21:26.459Z"
+        "calibrated_at": "2026-04-19T14:02:28.784Z"
       }
     },
     {
@@ -1324,7 +1327,7 @@
       "actual": {
         "rep_count": 2,
         "sagittal_confidence": 0.831,
-        "analysis_version": 5,
+        "analysis_version": 6,
         "metric_summary": {
           "forwardLeanDeg": {
             "mean": 69.06,
@@ -1378,7 +1381,7 @@
           "early_hip_shoot",
           "unstable_lockout"
         ],
-        "calibrated_at": "2026-04-19T12:21:26.460Z"
+        "calibrated_at": "2026-04-19T14:02:28.785Z"
       }
     }
   ]
