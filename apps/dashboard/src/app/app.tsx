@@ -1,4 +1,11 @@
 import { useEffect, useState } from 'react';
+import {
+  Navigate,
+  Route,
+  Routes,
+  useLocation,
+  useNavigate,
+} from 'react-router-dom';
 
 import { isEnvAvailable } from '../lib/supabase';
 import { useSupabase } from '../lib/SupabaseContext';
@@ -78,10 +85,12 @@ type Page =
 
 interface NavItem {
   id: Page;
+  path: string;
   label: string;
   icon: string;
   color: string;
   description: string;
+  component: React.ComponentType;
 }
 
 interface NavSection {
@@ -95,73 +104,93 @@ const NAV_SECTIONS: NavSection[] = [
     items: [
       {
         id: 'timeline',
+        path: '/timeline',
         label: 'Timeline',
         icon: '◈',
         color: 'var(--accent)',
         description: 'All AI events',
+        component: Logs,
       },
       {
         id: 'jit',
+        path: '/jit',
         label: 'JIT Sessions',
         icon: '⚡',
         color: 'var(--accent)',
         description: 'Session adjustments',
+        component: JITLogs,
       },
       {
         id: 'motivational',
+        path: '/motivational',
         label: 'Motivational Msgs',
         icon: '✦',
         color: 'var(--accent)',
         description: 'LLM input + output',
+        component: MotivationalLogs,
       },
       {
         id: 'challenge',
+        path: '/challenge',
         label: 'Challenge Reviews',
         icon: '⚑',
         color: 'var(--accent)',
         description: 'Post-hoc JIT judge',
+        component: ChallengeReviews,
       },
       {
         id: 'replay',
+        path: '/replay',
         label: 'Decision Replay',
         icon: '↺',
         color: 'var(--blue)',
         description: 'Prescription accuracy',
+        component: DecisionReplay,
       },
       {
         id: 'hybrid',
+        path: '/hybrid',
         label: 'Hybrid Comparisons',
         icon: '⚖',
         color: 'var(--purple)',
         description: 'Formula vs LLM diffs',
+        component: ComparisonLogs,
       },
       {
         id: 'cycle_reviews',
+        path: '/cycle-reviews',
         label: 'Cycle Reviews',
         icon: '◎',
         color: 'var(--green)',
         description: 'Sonnet analysis',
+        component: CycleReviews,
       },
       {
         id: 'formula',
+        path: '/formula',
         label: 'Formula Suggestions',
         icon: '∫',
         color: 'var(--blue)',
         description: 'AI formula overrides',
+        component: FormulaSuggestions,
       },
       {
         id: 'developer',
+        path: '/developer',
         label: 'Dev Suggestions',
         icon: '◈',
         color: 'var(--red)',
         description: 'Structural feedback',
+        component: DeveloperSuggestions,
       },
       {
         id: 'modifier_calibrations',
+        path: '/calibrations',
         label: 'Calibrations',
         icon: '◆',
         color: 'var(--blue)',
         description: 'Modifier confidence',
+        component: ModifierCalibrations,
       },
     ],
   },
@@ -170,31 +199,39 @@ const NAV_SECTIONS: NavSection[] = [
     items: [
       {
         id: 'workouts',
+        path: '/workouts',
         label: 'Workout Summaries',
         icon: '●',
         color: 'var(--green)',
         description: 'Completed sessions',
+        component: WorkoutSummaries,
       },
       {
         id: 'set_logs',
+        path: '/set-logs',
         label: 'Set Logs',
         icon: '▣',
         color: 'var(--green)',
         description: 'Per-set durability',
+        component: SetLogs,
       },
       {
         id: 'performance',
+        path: '/performance',
         label: 'Performance Metrics',
         icon: '∿',
         color: 'var(--blue)',
         description: 'Planned vs actual',
+        component: PerformanceMetrics,
       },
       {
         id: 'disruptions',
+        path: '/disruptions',
         label: 'Disruptions',
         icon: '✕',
         color: 'var(--red)',
         description: 'Injury · illness · life',
+        component: Disruptions,
       },
     ],
   },
@@ -203,17 +240,21 @@ const NAV_SECTIONS: NavSection[] = [
     items: [
       {
         id: 'video_overlay',
+        path: '/video-overlay',
         label: 'Video Overlay',
         icon: '▶',
         color: 'var(--purple)',
         description: 'Bar path + skeleton preview',
+        component: VideoOverlayPreview,
       },
       {
         id: 'session_videos',
+        path: '/session-videos',
         label: 'Session Videos',
         icon: '▤',
         color: 'var(--purple)',
         description: 'All uploaded clips',
+        component: SessionVideos,
       },
     ],
   },
@@ -222,45 +263,57 @@ const NAV_SECTIONS: NavSection[] = [
     items: [
       {
         id: 'bodyweight',
+        path: '/bodyweight',
         label: 'Bodyweight',
         icon: '⚖',
         color: 'var(--green)',
         description: 'Weight log entries',
+        component: BodyweightEntries,
       },
       {
         id: 'recovery',
+        path: '/recovery',
         label: 'Recovery',
         icon: '☾',
         color: 'var(--blue)',
         description: 'Sleep · HRV · RHR',
+        component: RecoverySnapshots,
       },
       {
         id: 'soreness',
+        path: '/soreness',
         label: 'Soreness',
         icon: '◐',
         color: 'var(--accent)',
         description: 'Per-muscle check-ins',
+        component: SorenessCheckins,
       },
       {
         id: 'weekly_body_reviews',
+        path: '/weekly-reviews',
         label: 'Weekly Reviews',
         icon: '◇',
         color: 'var(--purple)',
         description: 'Predicted vs felt',
+        component: WeeklyBodyReviews,
       },
       {
         id: 'cycle_tracking',
+        path: '/cycle-tracking',
         label: 'Cycle Tracking',
         icon: '◌',
         color: 'var(--purple)',
         description: 'Period · phase state',
+        component: CycleTracking,
       },
       {
         id: 'badges',
+        path: '/badges',
         label: 'Badges',
         icon: '★',
         color: 'var(--purple)',
         description: 'Achievements earned',
+        component: UserBadges,
       },
     ],
   },
@@ -269,14 +322,18 @@ const NAV_SECTIONS: NavSection[] = [
     items: [
       {
         id: 'gym_partners',
+        path: '/gym-partners',
         label: 'Gym Partners',
         icon: '⚭',
         color: 'var(--purple)',
         description: 'Partnership pairings',
+        component: GymPartners,
       },
     ],
   },
 ];
+
+const ALL_NAV_ITEMS: NavItem[] = NAV_SECTIONS.flatMap((s) => s.items);
 
 function NavButton({
   item,
@@ -371,67 +428,18 @@ function NavButton({
   );
 }
 
-function PageContent({ page }: { page: Page }) {
-  switch (page) {
-    case 'timeline':
-      return <Logs />;
-    case 'jit':
-      return <JITLogs />;
-    case 'workouts':
-      return <WorkoutSummaries />;
-    case 'motivational':
-      return <MotivationalLogs />;
-    case 'challenge':
-      return <ChallengeReviews />;
-    case 'replay':
-      return <DecisionReplay />;
-    case 'hybrid':
-      return <ComparisonLogs />;
-    case 'cycle_reviews':
-      return <CycleReviews />;
-    case 'formula':
-      return <FormulaSuggestions />;
-    case 'developer':
-      return <DeveloperSuggestions />;
-    case 'video_overlay':
-      return <VideoOverlayPreview />;
-    case 'session_videos':
-      return <SessionVideos />;
-    case 'set_logs':
-      return <SetLogs />;
-    case 'performance':
-      return <PerformanceMetrics />;
-    case 'modifier_calibrations':
-      return <ModifierCalibrations />;
-    case 'bodyweight':
-      return <BodyweightEntries />;
-    case 'recovery':
-      return <RecoverySnapshots />;
-    case 'soreness':
-      return <SorenessCheckins />;
-    case 'weekly_body_reviews':
-      return <WeeklyBodyReviews />;
-    case 'cycle_tracking':
-      return <CycleTracking />;
-    case 'disruptions':
-      return <Disruptions />;
-    case 'badges':
-      return <UserBadges />;
-    case 'gym_partners':
-      return <GymPartners />;
-    default:
-      return <Logs />;
-  }
-}
-
 // keep in sync with packages/training-engine/src/ai/models.ts
 const jitModel = 'gpt-4o-mini';
 const reviewModel = 'gpt-5';
 
 export function App() {
-  const [page, setPage] = useState<Page>('timeline');
+  const navigate = useNavigate();
+  const { pathname } = useLocation();
   const { env, setEnv } = useSupabase();
   const { themeId, setThemeId } = useTheme();
+  const activeItem =
+    ALL_NAV_ITEMS.find((item) => pathname.startsWith(item.path)) ??
+    ALL_NAV_ITEMS[0];
 
   return (
     <div
@@ -582,8 +590,8 @@ export function App() {
                 <NavButton
                   key={item.id}
                   item={item}
-                  active={page === item.id}
-                  onClick={() => setPage(item.id)}
+                  active={activeItem.id === item.id}
+                  onClick={() => navigate(item.path)}
                 />
               ))}
             </div>
@@ -649,11 +657,30 @@ export function App() {
         }}
       >
         <div
-          key={page}
+          key={activeItem.id}
           style={{ maxWidth: 900, margin: '0 auto' }}
           className="animate-fade-in"
         >
-          <PageContent page={page} />
+          <Routes>
+            <Route
+              path="/"
+              element={<Navigate to={ALL_NAV_ITEMS[0].path} replace />}
+            />
+            {ALL_NAV_ITEMS.map((item) => {
+              const Component = item.component;
+              return (
+                <Route
+                  key={item.id}
+                  path={item.path}
+                  element={<Component />}
+                />
+              );
+            })}
+            <Route
+              path="*"
+              element={<Navigate to={ALL_NAV_ITEMS[0].path} replace />}
+            />
+          </Routes>
         </div>
       </main>
     </div>
