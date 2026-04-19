@@ -150,6 +150,7 @@ Don't defer all quality checks to a post-hoc arch review. Check these during imp
 - **Error surfacing**: every async error path needs `captureException` + `Alert` (per project convention).
 - **Schema alignment**: when a pure function produces fields, verify they exist in the Zod schema that validates the output.
 - **DB types**: after pushing a migration, regenerate types before writing queries. Never hand-write DB row interfaces.
+- **Spec link**: add `// @spec docs/features/<f>/spec-<name>.md` at the top of each new non-trivial module file. See [spec-linking.md](./spec-linking.md).
 
 ## 6) Verify (per phase)
 
@@ -178,7 +179,7 @@ Dashboard conventions:
 After all phases complete:
 
 1. Update `docs/domain/` if any training constants were added or changed.
-2. Update spec files to match what was actually built (not what was originally planned).
+2. Update spec files to match what was actually built (not what was originally planned). For each ticked task, add a `→ path:symbol` back-link per [spec-linking.md](./spec-linking.md).
 3. Update the feature's `index.md` frontmatter status and spec table.
 4. Update design doc status from **Draft** → **Implemented** (if one exists for this work).
 5. Update `supabase/types.ts` if you added migrations without running `npm run db:types` (see dev.md).

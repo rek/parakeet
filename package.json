@@ -11,6 +11,7 @@
     "lint": "nx affected --target=lint",
     "test": "nx affected --target=test",
     "check:boundaries": "node tools/scripts/check-boundaries.mjs",
+    "check:spec-links": "node tools/scripts/check-spec-links.mjs",
     "db:start": "npx supabase start",
     "db:stop": "npx supabase stop",
     "db:reset": "npx supabase db reset",

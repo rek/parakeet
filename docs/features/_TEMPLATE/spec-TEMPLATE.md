@@ -10,7 +10,11 @@ One paragraph describing what this spec covers and why.
 
 ## Tasks
 
-NOTE: include less specific code (unless really important for details) and more written instructions
+NOTE: include less specific code (unless really important for details) and more written instructions.
+
+When a task is completed, add a `→` line under the checkbox pointing to the
+implementing file and symbol. See
+[docs/guide/spec-linking.md](../../guide/spec-linking.md).
 
 **`path/to/file.ts`:**
 
@@ -19,6 +23,13 @@ NOTE: include less specific code (unless really important for details) and more 
 - [ ] Unit tests in `__tests__/file.test.ts`:
   - `functionName(input)` → expected output
   - Edge case description
+
+Example of a completed task (with back-link):
+
+- [x] `otherFunction(): void` — does the thing
+  → `modules/<feature>/utils/other-file.ts:otherFunction`
+- [x] Unit tests
+  → `modules/<feature>/utils/__tests__/other-file.test.ts`
 
 **`path/to/another-file.ts`:**
 
