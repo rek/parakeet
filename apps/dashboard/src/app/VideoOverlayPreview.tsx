@@ -1517,9 +1517,10 @@ function RepTable({
         <span>Faults</span>
       </div>
 
-      {analysis.reps.map((rep) => {
+      {analysis.reps.map((rep, idx) => {
+        const nextStart = analysis.reps[idx + 1]?.startFrame ?? Infinity;
         const isActive =
-          currentFrame >= rep.startFrame && currentFrame <= rep.endFrame;
+          currentFrame >= rep.startFrame && currentFrame < nextStart;
         const isExpanded = expanded === rep.repNumber;
         const v = verdictBadge(rep.verdict);
         return (
@@ -1527,8 +1528,9 @@ function RepTable({
             <button
               type="button"
               onClick={() => {
-                setExpanded((cur) => (cur === rep.repNumber ? null : rep.repNumber));
-                onSeek(rep.startFrame / analysis.fps);
+                const opening = expanded !== rep.repNumber;
+                setExpanded(opening ? rep.repNumber : null);
+                if (opening) onSeek(rep.startFrame / analysis.fps);
               }}
               style={{
                 display: 'grid',
@@ -1545,12 +1547,16 @@ function RepTable({
                 cursor: 'pointer',
                 width: '100%',
                 textAlign: 'left',
-                background: isActive
-                  ? 'var(--surface-hover)'
-                  : 'transparent',
+                background: isExpanded
+                  ? 'var(--surface-overlay)'
+                  : isActive
+                    ? 'var(--surface-hover)'
+                    : 'transparent',
                 borderLeft: isActive
                   ? '3px solid var(--accent)'
-                  : '3px solid transparent',
+                  : isExpanded
+                    ? '3px solid var(--text-dim)'
+                    : '3px solid transparent',
               }}
             >
               <span style={{ color: 'var(--text-bright)', fontWeight: 600 }}>
