@@ -95,6 +95,7 @@ export default function VideoAnalysisScreen() {
   const {
     pickAndAnalyze,
     processRecordedVideo,
+    reanalyze,
     isProcessing,
     progress,
     error,
@@ -229,6 +230,19 @@ export default function VideoAnalysisScreen() {
               isProcessing={isProcessing}
               colors={colors}
             />
+            <TouchableOpacity
+              style={styles.reanalyzeButton}
+              onPress={reanalyze}
+              disabled={isProcessing}
+              activeOpacity={0.75}
+              accessible
+              accessibilityLabel="Re-run analysis on this video"
+              accessibilityRole="button"
+            >
+              <Text style={styles.reanalyzeText}>
+                {isProcessing ? 'Re-analyzing…' : 'Re-analyze'}
+              </Text>
+            </TouchableOpacity>
             <ShareVideoButton localUri={result.localUri} colors={colors} />
           </>
         )}
@@ -469,6 +483,20 @@ function buildStyles(colors: ColorScheme) {
       fontSize: typography.sizes.md,
       fontWeight: typography.weights.semibold,
       color: colors.textSecondary,
+    },
+    reanalyzeButton: {
+      backgroundColor: colors.bgSurface,
+      borderRadius: radii.md,
+      borderWidth: 1,
+      borderColor: colors.border,
+      paddingVertical: spacing[3],
+      alignItems: 'center',
+      marginTop: spacing[2],
+    },
+    reanalyzeText: {
+      fontSize: typography.sizes.sm,
+      fontWeight: typography.weights.semibold,
+      color: colors.primary,
     },
     recordingOverlay: {
       ...StyleSheet.absoluteFillObject,

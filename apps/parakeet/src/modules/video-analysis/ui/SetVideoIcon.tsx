@@ -1,16 +1,18 @@
-import { StyleSheet, Text, TouchableOpacity } from 'react-native';
+import { StyleSheet, TouchableOpacity } from 'react-native';
 
 import { useFeatureEnabled } from '@modules/feature-flags';
+import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 
 import { spacing } from '../../../theme';
+import { useTheme } from '../../../theme/ThemeContext';
 import { useSetVideo } from '../hooks/useSetVideo';
 
 /**
- * Small per-set camera icon for the session screen's SetRow.
+ * Small per-set video icon for the session/history SetRow.
  * Self-gated behind the videoAnalysis feature flag — renders null when disabled.
  * Only renders when the set is completed.
- * Shows a filled camera (📹) when a video exists for this set, hollow (📷) otherwise.
+ * Filled videocam when a video exists for this set, outline otherwise.
  */
 export function SetVideoIcon({
   sessionId,
@@ -31,6 +33,7 @@ export function SetVideoIcon({
 }) {
   const enabled = useFeatureEnabled('videoAnalysis');
   const router = useRouter();
+  const { colors } = useTheme();
   const { hasVideo } = useSetVideo({ sessionId, lift, setNumber });
 
   if (!enabled || !isCompleted) return null;
@@ -63,12 +66,15 @@ export function SetVideoIcon({
       }
       accessibilityRole="button"
     >
-      <Text style={styles.icon}>{hasVideo ? '📹' : '📷'}</Text>
+      <Ionicons
+        name={hasVideo ? 'videocam' : 'videocam-outline'}
+        size={20}
+        color={hasVideo ? colors.primary : colors.textTertiary}
+      />
     </TouchableOpacity>
   );
 }
 
 const styles = StyleSheet.create({
   container: { marginLeft: spacing[1] },
-  icon: { fontSize: 16 },
 });

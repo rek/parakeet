@@ -238,6 +238,95 @@ export function useVideoAnalysis({
     }
   }, [processVideo]);
 
+  /**
+   * Re-run pose extraction and analysis against the existing local video file,
+   * then update the same session_videos row in place. Used after a detector
+   * improvement to refresh an existing recording without re-capturing.
+   */
+  const reanalyze = useCallback(async () => {
+    if (!result) return;
+    try {
+      setError(null);
+      setIsProcessing(true);
+      setProgress(0.05);
+
+      const videoUri = result.localUri;
+      const file = new File(normalizeVideoUri(videoUri));
+      if (!file.exists) {
+        throw new Error(
+          'Local video file missing — recorded on another device?'
+        );
+      }
+
+      let durationSec = result.durationSec;
+      try {
+        const meta = await getVideoMetaData(videoUri);
+        if (meta.duration > 0) durationSec = meta.duration;
+      } catch (err) {
+        captureException(err);
+      }
+
+      let analysis = null;
+      let detectedConfidence = result.sagittalConfidence;
+      let extractedFrames: unknown[] | null = null;
+      let extractedFps = 0;
+
+      if (durationSec > 0) {
+        const { frames, fps } = await extractFramesFromVideo({
+          videoUri,
+          durationSec,
+          onProgress: (p) => setProgress(0.05 + p * 0.8),
+        });
+
+        extractedFrames = frames;
+        extractedFps = fps;
+
+        if (frames.length > 0) {
+          detectedConfidence = computeSagittalConfidence({ frames });
+        }
+
+        if (
+          frames.length > 0 &&
+          SUPPORTED_LIFTS.includes(lift as (typeof SUPPORTED_LIFTS)[number])
+        ) {
+          analysis = analyzeVideoFrames({
+            frames,
+            fps,
+            lift: lift as (typeof SUPPORTED_LIFTS)[number],
+          });
+        }
+      }
+
+      if (!analysis) {
+        throw new Error('No reps detected — try recording a new clip.');
+      }
+
+      const updated = await updateSessionVideoAnalysis({
+        id: result.id,
+        analysis,
+      });
+      queryClient.setQueryData(queryOpts.queryKey, [updated]);
+      queryClient.invalidateQueries({ queryKey: videoQueries.all() });
+
+      if (typeof __DEV__ !== 'undefined' && __DEV__ && extractedFrames) {
+        updateSessionVideoDebugLandmarks({
+          id: result.id,
+          frames: extractedFrames,
+          fps: extractedFps,
+        });
+      }
+
+      setProgress(1);
+    } catch (err) {
+      captureException(err);
+      const message =
+        err instanceof Error ? err.message : 'Failed to reanalyze';
+      setError(message);
+    } finally {
+      setIsProcessing(false);
+    }
+  }, [result, lift, queryClient, queryOpts.queryKey]);
+
   /** Process a video from a file path (e.g., from in-app recording). */
   const processRecordedVideo = useCallback(
     async ({
@@ -268,6 +357,7 @@ export function useVideoAnalysis({
   return {
     pickAndAnalyze,
     processRecordedVideo,
+    reanalyze,
     isProcessing,
     progress,
     error,
