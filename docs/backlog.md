@@ -10,6 +10,52 @@ At the end: update design doc status → Implemented, update specs to match what
 
 ---
 
+## 24
+
+**Bench analysis accuracy, especially front-on.** Observed 2026-04-19 running the dashboard's browser pose extractor at 30fps on a front-on bench clip: rep detection drifts, bar-path panel is meaningless, and — more worryingly — the skeleton visibly **detaches from the body at the bottom of each rep** (when the bar crosses the face) then snaps back near lockout. Face landmarks flicker throughout. The downstream analysis is noisy, but the root cause is upstream in extraction + metric selection.
+
+Two separable problems. Treat each on its own track.
+
+### Track A: occlusion robustness (the "skeleton floats away" problem)
+
+At chest touch the bar+forearms occlude the lifter's face. MediaPipe Pose Landmarker relies on the face region as an anchor for whole-body pose, so occlusion collapses face confidence and the estimator cascades — torso and hip landmarks start drifting toward background features (bench frame, ceiling lights, etc.) until the face comes back post-lockout.
+
+Avenues, rough order of bang-for-buck:
+
+1. **Heavy model** — `pose_landmarker_heavy.task` (29MB) is dramatically more robust to face occlusion than `lite` (5.6MB). Dashboard already offers it as a picker option; confirm with bench-front fixture whether heavy closes the gap. If it does, the mobile story shifts from "never use heavy" to "download on-demand for bench".
+2. **Plausibility filtering** — current `isEmptyFrame` only rejects `visibility=0 ∧ x=0 ∧ y=0`. Extend `analyze-frames.ts` with a per-frame sanity check that rejects frames where (a) median visibility across the 11 pose-critical landmarks drops below 0.4, or (b) any core landmark (hips, shoulders) jumps > N× the median inter-frame displacement. Drop those frames, lerp through them (existing `interpolateEmptyFrames` handles the mechanics).
+3. **Wrist-anchored reconstruction for bench** — wrists stay visible on the bar throughout, even when face/torso are lost. When plausibility drops, reproject the rest of the skeleton off the wrists using a rigid rig from the last confident frame. Lossy but deterministic; better than drifting landmarks pretending they're real.
+4. **World-coords fallback** — MediaPipe emits `worldLandmarks` (3D, temporally stabilised) alongside image-coords. We currently consume only image-coords. World-coords may survive occlusion better; worth trialling at least in the dashboard path where the field is readily available.
+5. **Pre-crop the lifter** — run face detection on frame 0, dilate to a lifter bbox, and crop subsequent frames before passing to MediaPipe. Strips out the bench frame + ceiling context that's currently pulling the skeleton away. Cost: one extra detector pass, negligible on desktop.
+
+### Track B: front-on metrics (see discussion for #24-prep)
+
+Independent of occlusion, the metrics we emit for bench are mostly side-view calibrated:
+
+- `extractBarPath` averages wrist landmarks — degenerate from the foot end because bar motion is nearly pure Z.
+- Rep detection falls back to `elbow angle (shoulder-elbow-wrist)`, but from front the shoulder-wrist line is nearly collinear with the elbow, so the angle barely modulates.
+- `forwardLeanDeg` is meaningless for a supine lifter.
+- `elbowFlareDeg` is sampled once at `midFrame` — way too sparse given flare is the *primary* signal we actually have from the front.
+
+Front-view-specific metrics to add, gated on `sagittalConfidence < 0.5`:
+
+- **Bar tilt** — angle between left/right wrist line vs horizontal, per frame. Max/mean per rep. Emits an `uneven_lockout` fault.
+- **Press asymmetry** — per-frame vertical delta between wrists during concentric. Ratio > threshold = weak-side fault.
+- **Elbow-path symmetry** — horizontal distance of each elbow from torso midline; L/R ratio across the rep.
+- **Rep detection signal** — swap elbow-angle for `(meanWristY − meanShoulderY)`. Lockout = wrists far above shoulders; chest touch = wrists at/below shoulder level. Clean oscillation from the front, where the elbow-angle signal collapses.
+- **Elbow-flare sampling** — compute per frame across the concentric, not once at midpoint; report min/max/mean per rep.
+
+### Validation
+
+- Calibration fixture: `test-videos/bench-front-4reps.landmarks.json` (already present, expected 4 reps). Re-run after each change; detector must hit 4 reps and not emit phantom reps during occlusion windows.
+- Add a synthetic test in `rep-detector.test.ts` covering the front-on bench signal (wrist-Y relative to shoulder-Y).
+- Dashboard: enable a visible "plausibility rejection" counter so we can eyeball how many frames each filter strips.
+
+### Out of scope for this item
+
+- The mobile pipeline's 0-valid-frames problem (that's #22).
+- Lift-label sanity check (that's #21) — but once landed, it would avoid running the bench pipeline on a mislabeled squat video in the first place.
+
 ## 23
 
 **Back-annotate `@spec` headers across all modules + spec back-links.** Convention + checker shipped 2026-04-19 (see [docs/guide/spec-linking.md](./guide/spec-linking.md) and `tools/scripts/check-spec-links.mjs`). Pilot done on `modules/video-analysis` (3 files + 2 spec tasks). Remaining: 19 unlinked modules (`achievements`, `auth`, `body-review`, `cycle-review`, `cycle-tracking`, `disruptions`, `feature-flags`, `formula`, `gym-partners`, `history`, `jit`, `onboarding`, `profile`, `program`, `session`, `settings`, `training-volume`, `updates`, `wilks`) and ~50 spec files whose ticked tasks have no `→ path:symbol` back-link.
