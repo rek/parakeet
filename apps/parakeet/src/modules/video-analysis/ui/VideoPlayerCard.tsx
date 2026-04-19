@@ -8,6 +8,7 @@ import {
 } from 'react-native';
 
 import type { VideoAnalysisResult } from '@parakeet/shared-types';
+import { captureException } from '@platform/utils/captureException';
 import { File } from 'expo-file-system';
 import { useVideoPlayer, VideoView } from 'expo-video';
 
@@ -22,6 +23,21 @@ import type { ColorScheme } from '../../../theme';
 import { OverlayToggleChips } from './OverlayToggleChips';
 import { PlaybackBarPathOverlay } from './PlaybackBarPathOverlay';
 import { PlaybackSkeletonOverlay } from './PlaybackSkeletonOverlay';
+
+/**
+ * Synchronous local-file existence check used to seed the first render.
+ * Falls back to `false` on any throw (malformed URI, missing native
+ * module in test env) and captures the error so the failure is
+ * observable rather than silent.
+ */
+function probeFileExists(uri: string): boolean {
+  try {
+    return new File(normalizeVideoUri(uri)).exists;
+  } catch (err) {
+    captureException(err);
+    return false;
+  }
+}
 
 /**
  * Video playback card using expo-video.
@@ -53,22 +69,34 @@ export function VideoPlayerCard({
 }) {
   const styles = useMemo(() => buildStyles(colors), [colors]);
 
-  // Probe whether the local file actually exists on this device.
-  // Partner videos insert a row into the lifter's account with the
-  // partner's device path as `local_uri`, which of course doesn't
-  // resolve on the lifter's phone (no cloud fallback since backlog #17).
-  // Rather than hand that path to `<VideoView>` and get a silent black
-  // frame, render a placeholder and skip spinning up the player.
-  const [fileExists, setFileExists] = useState<boolean | null>(null);
+  // Probe whether the local file actually exists on this device. Partner
+  // videos insert a row into the lifter's account with the partner's
+  // device path as `local_uri`, which of course doesn't resolve on the
+  // lifter's phone (no cloud fallback since backlog #17). Seed the state
+  // synchronously so we never render `<VideoView>` over a missing path
+  // on the first paint. Cancellation guard + `captureException` cover
+  // the rapid-localUri-swap race and malformed-URI edge cases.
+  const [fileExists, setFileExists] = useState<boolean>(() =>
+    probeFileExists(localUri)
+  );
   useEffect(() => {
+    let cancelled = false;
     try {
-      setFileExists(new File(normalizeVideoUri(localUri)).exists);
-    } catch {
-      setFileExists(false);
+      const exists = new File(normalizeVideoUri(localUri)).exists;
+      if (!cancelled) setFileExists(exists);
+    } catch (err) {
+      captureException(err);
+      if (!cancelled) setFileExists(false);
     }
+    return () => {
+      cancelled = true;
+    };
   }, [localUri]);
 
-  const player = useVideoPlayer(localUri, (p) => {
+  // Only hand the player a real URI — `expo-video` otherwise tries to
+  // prepare a native MediaPlayer against a non-existent path and logs
+  // errors before the placeholder renders.
+  const player = useVideoPlayer(fileExists ? localUri : null, (p) => {
     p.loop = false;
   });
   const currentTime = usePlaybackTime(player);
@@ -123,7 +151,7 @@ export function VideoPlayerCard({
       />
 
       <View style={styles.videoWrapper} onLayout={handleLayout}>
-        {fileExists === false ? (
+        {!fileExists ? (
           <View style={styles.missingFile}>
             <Text style={styles.missingTitle}>
               Video recorded on another device
@@ -142,7 +170,7 @@ export function VideoPlayerCard({
             nativeControls
           />
         )}
-        {fileExists !== false && showBarPath && analysis && displayRect && (
+        {fileExists && showBarPath && analysis && displayRect && (
           <PlaybackBarPathOverlay
             analysis={analysis}
             currentTime={currentTime}
@@ -150,7 +178,7 @@ export function VideoPlayerCard({
             colors={colors}
           />
         )}
-        {fileExists !== false && showSkeleton && debugLandmarks && displayRect && (
+        {fileExists && showSkeleton && debugLandmarks && displayRect && (
           <PlaybackSkeletonOverlay
             frames={debugLandmarks.frames}
             fps={debugLandmarks.fps}

@@ -68,6 +68,10 @@ Reusable patterns discovered during implementation. Read on-demand when debuggin
 
 **Design ceremony proportional to scope** — new architectural concepts warrant design doc > spec > implement. Simple UI additions can go straight to implement > spec after. One-time admin operations are CLI scripts, not mobile screens.
 
+**Audit for readers before designing a cross-cutting "migration"** — backlog #17 was drafted as a multi-phase storage migration with open questions about partner-video flows. Ten minutes of `grep -rn 'remote_uri'` showed nothing outside the writers ever read the column. What looked like a design problem was actually dead code. Pattern: before building migration phases for a shared resource (DB column, cloud bucket, feature flag), grep for consumers. Zero readers = deletion, not migration. The open-question list usually evaporates once you've proven the absence.
+
+**Hook-ordering trap with conditional native sources** — `useVideoPlayer(localUri)` fires natively the moment the component mounts. Gating it with a `useEffect`-driven `fileExists` state means the native player spins up briefly against a bad URI on the first render, which on Android produces silent error logs (and in some expo-video versions, a stuck black frame) before the placeholder takes over. Fix: seed the probe state synchronously via `useState(() => probe())` so the first render already knows the answer, and pass `null` (or a sentinel the hook accepts) to the hook when the resource is missing. General rule: when a native/effectful hook takes a conditional resource, the gating has to happen inside the hook call, not around the JSX it renders.
+
 **Lazy generation pattern for unending modes** — check for an existing record first, then generate only if missing. Never generate unconditionally.
 
 **Audit all mode-unaware code paths when adding a new program mode** — grep for every place that makes a completion-percentage or session-count decision. Achievement detection, notification logic, and "show completed session" queries are all candidates.

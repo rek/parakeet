@@ -172,11 +172,14 @@ This divergence matters when investigating pose-detection quality: if the mobile
 - [x] `LongitudinalComparison` component: overlaid bar paths from previous sessions (SVG), color-coded by recency, trend table with drift/lean/ROM across dates
 - [x] `usePreviousVideos` hook: fetches all historical videos for a lift
 
-### 3.6 — Cloud backup (scaffolded, upload deferred)
+### 3.6 — Local-only video storage (backlog #17, 2026-04-19)
 
-- [x] Migration: Supabase Storage bucket `session-videos` with RLS policies
-- [x] `uploadVideoToStorage()` function: uploads compressed video, updates `remote_uri`
-- [ ] Wire auto-upload into hook (deferred — TODO in useVideoAnalysis)
+- [x] Drop all raw-video uploads to Supabase Storage — analysis JSONB is the only thing the cloud needs.
+  → `apps/parakeet/src/modules/video-analysis/hooks/useVideoAnalysis.ts:processVideo` (step 6 removed)
+  → `apps/parakeet/src/modules/gym-partners/application/partner-filming.service.ts` (upload step removed)
+- [x] Missing-file placeholder in the player — partner-recorded videos show "Video recorded on another device" instead of a black frame.
+  → `apps/parakeet/src/modules/video-analysis/ui/VideoPlayerCard.tsx`
+- [x] `session-videos` Storage bucket + `remote_uri` column stay around for legacy rows until the Phase 3 backfill and Phase 4 column drop documented in [`design-local-only-storage.md`](./design-local-only-storage.md).
 
 ### 3.7 — Front view support
 

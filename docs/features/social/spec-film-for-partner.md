@@ -49,10 +49,9 @@ The recorder's camera UI scoped to the lifter's session, CV analysis on the reco
   3. Analyze frames (`analyzeVideoFrames` from video-analysis module)
   4. Compress video (reuse `react-native-compressor` pipeline)
   5. Insert DB row via `insertPartnerSessionVideo` (with analysis JSONB)
-  6. Upload to Supabase Storage via `uploadPartnerVideo` (background, best-effort)
-  7. Clean up local temp file
+  6. ~~Upload to Supabase Storage via `uploadPartnerVideo`~~ — dropped in backlog #17 (2026-04-19). The raw `.mp4` stays on the recorder's device; only the analysis JSONB flows to the lifter. Cross-device playback was never actually functional — the lifter's UI reads `local_uri`, which is the recorder's device path, so the placeholder in `VideoPlayerCard` now renders "Video recorded on another device" instead of a black frame.
   - Reuses pure functions from `@modules/video-analysis` — no duplication of analysis logic
-  - Error handling: if DB insert succeeds but upload fails, the analysis results are persisted in the DB row's `analysis` JSONB. Show retry for upload only — analysis is not lost. The `remote_uri` stays null until upload succeeds (same pattern as self-recorded videos in `video-upload.ts`).
+  - Error handling: if the DB insert fails nothing persists; on success the analysis JSONB is the durable artefact. No retry needed for video bytes — they are not transferred.
   - Offline edge case: if recorder has no network, DB insert fails. CV analysis results exist only in memory and are lost if the user navigates away. This is a known limitation for v1 — the recorder must have network connectivity. Document in the UI: "Requires internet connection."
   - Partnership-removed-during-filming: if the partnership status changes to `'removed'` while the pipeline is running, the RLS INSERT policy rejects the insert. Catch this error specifically and show "Partnership no longer active" instead of a generic error. Use `captureException` for all error paths (per project error handling convention).
   - All async error paths must call `captureException` + show `Alert` (per `feedback_error_handling_screens.md`)
