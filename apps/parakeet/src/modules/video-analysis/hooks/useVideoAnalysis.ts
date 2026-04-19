@@ -1,4 +1,5 @@
 import { useCallback, useState } from 'react';
+import { Alert } from 'react-native';
 
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { captureException } from '@platform/utils/captureException';
@@ -74,10 +75,16 @@ export function useVideoAnalysis({
       // miss entire reps — this is how a real set can land with zero reps
       // detected. Fall back to the hinted value if the probe fails.
       let durationSec = hintedDurationSec;
+      let videoWidthPx: number | null = null;
+      let videoHeightPx: number | null = null;
       try {
         const meta = await getVideoMetaData(videoUri);
         if (meta.duration > 0) {
           durationSec = meta.duration;
+        }
+        if (meta.width > 0 && meta.height > 0) {
+          videoWidthPx = meta.width;
+          videoHeightPx = meta.height;
         }
       } catch (err) {
         captureException(err);
@@ -161,6 +168,8 @@ export function useVideoAnalysis({
         setWeightGrams: setContext?.weightGrams,
         setReps: setContext?.reps,
         setRpe: setContext?.rpe,
+        videoWidthPx,
+        videoHeightPx,
       });
 
       // 5. If analysis succeeded, update the DB row with results
@@ -244,7 +253,17 @@ export function useVideoAnalysis({
    * improvement to refresh an existing recording without re-capturing.
    */
   const reanalyze = useCallback(async () => {
-    if (!result) return;
+    // Diagnostic helper — blocks so we can't miss an alert in the middle of
+    // a long async flow. Remove once re-analyze is proven reliable.
+    const diag = (title: string, message: string) =>
+      new Promise<void>((resolve) => {
+        Alert.alert(title, message, [{ text: 'OK', onPress: () => resolve() }]);
+      });
+
+    if (!result) {
+      await diag('Reanalyze aborted', 'no result in cache');
+      return;
+    }
     try {
       setError(null);
       setIsProcessing(true);
@@ -252,10 +271,13 @@ export function useVideoAnalysis({
 
       const videoUri = result.localUri;
       const file = new File(normalizeVideoUri(videoUri));
-      if (!file.exists) {
-        throw new Error(
-          'Local video file missing — recorded on another device?'
+      const fileExists = file.exists;
+      if (!fileExists) {
+        await diag(
+          'Reanalyze: file missing',
+          `local_uri=${videoUri}`
         );
+        throw new Error('Local video file missing');
       }
 
       let durationSec = result.durationSec;
@@ -267,7 +289,6 @@ export function useVideoAnalysis({
       }
 
       let analysis = null;
-      let detectedConfidence = result.sagittalConfidence;
       let extractedFrames: unknown[] | null = null;
       let extractedFps = 0;
 
@@ -281,10 +302,6 @@ export function useVideoAnalysis({
         extractedFrames = frames;
         extractedFps = fps;
 
-        if (frames.length > 0) {
-          detectedConfidence = computeSagittalConfidence({ frames });
-        }
-
         if (
           frames.length > 0 &&
           SUPPORTED_LIFTS.includes(lift as (typeof SUPPORTED_LIFTS)[number])
@@ -295,16 +312,25 @@ export function useVideoAnalysis({
             lift: lift as (typeof SUPPORTED_LIFTS)[number],
           });
         }
+
+        await diag(
+          'Reanalyze: extraction done',
+          `duration=${durationSec.toFixed(1)}s frames=${frames.length} lift=${lift} analysisNull=${analysis == null} reps=${analysis?.reps?.length ?? 'n/a'}`
+        );
       }
 
       if (!analysis) {
-        throw new Error('No reps detected — try recording a new clip.');
+        throw new Error('analysis is null (extraction returned empty)');
       }
 
       const updated = await updateSessionVideoAnalysis({
         id: result.id,
         analysis,
       });
+      await diag(
+        'Reanalyze: DB update ok',
+        `id=${result.id} reps=${updated.analysis?.reps?.length ?? 'n/a'}`
+      );
       queryClient.setQueryData(queryOpts.queryKey, [updated]);
       queryClient.invalidateQueries({ queryKey: videoQueries.all() });
 
@@ -321,6 +347,7 @@ export function useVideoAnalysis({
       captureException(err);
       const message =
         err instanceof Error ? err.message : 'Failed to reanalyze';
+      await diag('Reanalyze failed', message);
       setError(message);
     } finally {
       setIsProcessing(false);
