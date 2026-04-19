@@ -2,6 +2,8 @@
 
 Internal dev tool for inspecting AI decisions in the Parakeet training app.
 
+> **Admin-only.** This build is never deployed. The Coach panel on the Video Overlay page bundles `VITE_OPENAI_KEY` into the Vite build — do not publish the output.
+
 ## Views
 
 | View | Description |
@@ -44,6 +46,9 @@ VITE_SUPABASE_KEY=<service_role key>
 # Optional — enables prod toggle in the sidebar:
 VITE_SUPABASE_PROD_URL=https://your-project.supabase.co
 VITE_SUPABASE_PROD_KEY=<prod service_role key>
+
+# Optional — enables Coach panel on Video Overlay page:
+VITE_OPENAI_KEY=<openai api key>
 ```
 
 ## Theming

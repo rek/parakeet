@@ -3,7 +3,7 @@ import type {
   FormCoachingResult,
   VideoAnalysisResult,
 } from '@parakeet/shared-types';
-import { generateText, Output } from 'ai';
+import { generateText, Output, type LanguageModel } from 'ai';
 
 import { abortAfter } from '../ai/abort-timeout';
 import { getCycleReviewModel } from '../ai/models';
@@ -51,13 +51,19 @@ export interface FormCoachingInput {
  */
 export async function generateFormCoaching({
   context,
+  model,
+  systemPrompt,
 }: {
   context: FormCoachingInput;
+  /** Override the default model (gpt-5 via getCycleReviewModel()). */
+  model?: LanguageModel;
+  /** Override the default system prompt. Useful for prompt iteration tooling. */
+  systemPrompt?: string;
 }) {
   const { output } = await generateText({
-    model: getCycleReviewModel(),
+    model: model ?? getCycleReviewModel(),
     output: Output.object({ schema: FormCoachingResultSchema }),
-    system: FORM_COACHING_SYSTEM_PROMPT,
+    system: systemPrompt ?? FORM_COACHING_SYSTEM_PROMPT,
     prompt: JSON.stringify(context),
     abortSignal: abortAfter(30000),
   });

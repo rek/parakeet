@@ -19,6 +19,13 @@
         "command": "npx prettier --write \"src/**/*.{ts,tsx}\"",
         "cwd": "apps/dashboard"
       }
+    },
+    "test": {
+      "executor": "@nx/vite:test",
+      "outputs": ["{options.reportsDirectory}"],
+      "options": {
+        "reportsDirectory": "../../coverage/apps/dashboard"
+      }
     }
   }
 }

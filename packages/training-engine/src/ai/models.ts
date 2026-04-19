@@ -58,3 +58,21 @@ export function getJITModel() {
 export function getCycleReviewModel() {
   return getProvider()('gpt-5');
 }
+
+/**
+ * Direct-mode OpenAI model for admin tooling (e.g. dashboard).
+ *
+ * Bypasses the singleton provider so the caller's API key never touches
+ * the shared client state used by the app runtime. Keeps all `@ai-sdk/openai`
+ * imports inside the engine so downstream apps don't pin conflicting versions.
+ */
+export function createDirectOpenAIModel({
+  apiKey,
+  modelId,
+}: {
+  apiKey: string;
+  modelId: string;
+}) {
+  const provider = createOpenAI({ apiKey });
+  return provider(modelId);
+}

@@ -24,6 +24,7 @@ import {
   type ModelVariant,
 } from '../lib/browser-pose-extractor';
 import manifest from '../../../../test-videos/manifest.json';
+import { CoachPanel } from './coach/CoachPanel';
 
 // Vite resolves these globs at build time. Each entry maps the source path to
 // a dev-server URL (or hashed asset URL in prod build). We never bundle the
@@ -145,11 +146,13 @@ export function VideoOverlayPreview() {
 
   const selected = fixtures.find((v) => v.id === selectedId) ?? null;
   const videoUrl = selected ? (videoUrlFor(selected.file) ?? '') : '';
-  const landmarksUrl = selected ? (landmarkUrlFor(selected.id) ?? '') : '';
 
-  // Fetch landmarks JSON when selection changes
+  // Fetch landmarks JSON when selection changes.
+  // Cached browser extraction (written to .browser-cache/ by the vite
+  // middleware) takes precedence over the committed fixture so a 30fps
+  // re-extract survives reloads.
   useEffect(() => {
-    if (!landmarksUrl) {
+    if (!selected) {
       setLandmarks(null);
       return;
     }
@@ -157,25 +160,36 @@ export function VideoOverlayPreview() {
     setLoadError(null);
     setLandmarks(null);
     setCurrentTime(0);
-    fetch(landmarksUrl)
-      .then((r) => {
-        if (!r.ok) throw new Error(`HTTP ${r.status}`);
-        return r.json();
-      })
-      .then((json: LandmarkFile) => {
+
+    const fixtureUrl = landmarkUrlFor(selected.id);
+    (async () => {
+      try {
+        const cached = await fetch(`/api/landmarks/${selected.id}`);
+        if (cached.ok) {
+          const json = (await cached.json()) as LandmarkFile;
+          if (!cancelled) {
+            setLandmarks({ ...json, source: json.source ?? 'browser' });
+          }
+          return;
+        }
+        if (!fixtureUrl) throw new Error('No landmarks available for fixture');
+        const fixture = await fetch(fixtureUrl);
+        if (!fixture.ok) throw new Error(`HTTP ${fixture.status}`);
+        const json = (await fixture.json()) as LandmarkFile;
         if (!cancelled) setLandmarks({ ...json, source: 'fixture' });
-      })
-      .catch((err: unknown) => {
+      } catch (err) {
         if (!cancelled) {
           setLoadError(
             err instanceof Error ? err.message : 'Failed to load landmarks'
           );
         }
-      });
+      }
+    })();
+
     return () => {
       cancelled = true;
     };
-  }, [landmarksUrl]);
+  }, [selected]);
 
   // Run analysis when landmarks + lift are ready
   const analysis = useMemo<VideoAnalysisResult | null>(() => {
@@ -252,7 +266,7 @@ export function VideoOverlayPreview() {
         onProgress: setExtractProgress,
         shouldCancel: () => cancelRef.current,
       });
-      setLandmarks({
+      const extracted: LandmarkFile = {
         videoId: selected.id,
         fps: result.fps,
         totalFrames: result.totalFrames,
@@ -264,10 +278,22 @@ export function VideoOverlayPreview() {
           delegate: result.delegate,
           elapsedMs: result.elapsedMs,
         },
-      });
+      };
+      setLandmarks(extracted);
       setShowSkeleton(true);
       // Reset playback to start so the new skeleton renders cleanly
       v.currentTime = 0;
+
+      // Persist to .browser-cache/ so the result survives page reloads.
+      // Failure is non-fatal — the landmarks are still in-memory for this session.
+      fetch(`/api/landmarks/${selected.id}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(extracted),
+      }).catch((err: unknown) => {
+        // eslint-disable-next-line no-console
+        console.warn('landmark cache save failed', err);
+      });
     } catch (err) {
       setExtractError(err instanceof Error ? err.message : 'Extraction failed');
     } finally {
@@ -448,6 +474,16 @@ export function VideoOverlayPreview() {
             const v = videoRef.current;
             if (v) v.currentTime = timeSec;
           }}
+        />
+      )}
+
+      {analysis && selected && liftOf(selected) && (
+        <CoachPanel
+          fixtureId={selected.id}
+          analysis={analysis}
+          lift={liftOf(selected) as 'squat' | 'bench' | 'deadlift'}
+          sagittalConfidence={analysis.sagittalConfidence}
+          previousAnalyses={[]}
         />
       )}
 

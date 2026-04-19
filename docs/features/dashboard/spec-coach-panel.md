@@ -1,8 +1,18 @@
 # Spec: Dashboard Coach Panel
 
-**Status:** Proposed
+**Status:** Implemented (2026-04-19)
 **Design:** [design-coach-panel.md](./design-coach-panel.md)
 **Depends on:** Existing Video Overlay page, `@parakeet/training-engine`, `@modules/video-analysis/application/assemble-coaching-context`
+
+## Implementation notes (2026-04-19)
+
+**Engine signature extension (P1).** `generateFormCoaching` today hardcoded `FORM_COACHING_SYSTEM_PROMPT` + `getCycleReviewModel()`. Extended the signature to accept optional `systemPrompt` and `model` overrides so the dashboard can iterate the prompt and A/B models without forking the pipeline. Mobile callers unchanged (defaults preserve behavior).
+
+**Dashboard ai-sdk isolation.** Engine owns `@ai-sdk/openai` (v3); mobile app has v1. To prevent the dashboard from hoisting the wrong version, added `createDirectOpenAIModel({ apiKey, modelId })` inside the engine. Dashboard never imports `@ai-sdk/openai` — only the engine does.
+
+**Exports.** `FORM_COACHING_SYSTEM_PROMPT` + `createDirectOpenAIModel` now re-exported from `@parakeet/training-engine`.
+
+**Cache storage.** `dashboard.coaching.<fixtureId>` / `dashboard.coaching.context.<fixtureId>` in localStorage. Error entries are stored but excluded from cache-hit lookup.
 
 ## What this covers
 

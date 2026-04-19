@@ -15,7 +15,13 @@ export * from './analysis/modifier-effectiveness';
 export * from './analysis/weight-deviation';
 export * from './modules/achievements';
 export * from './badges';
-export { configureAIProxy, getJITModel, getCycleReviewModel } from './ai/models';
+export {
+  configureAIProxy,
+  createDirectOpenAIModel,
+  getCycleReviewModel,
+  getJITModel,
+} from './ai/models';
+export { FORM_COACHING_SYSTEM_PROMPT } from './ai/prompts';
 export { localDateString } from './utils/date';
 export { isMakeupWindowExpired } from './sessions/makeup-window';
 export type { SessionRef, MakeupWindowInput } from './sessions/makeup-window';
