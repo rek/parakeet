@@ -56,7 +56,7 @@ export async function extractFramesFromVideo({
   const { PoseDetectionOnImage, Delegate } =
     require('react-native-mediapipe') as typeof import('react-native-mediapipe');
   const { File } =
-    require('expo-file-system/next') as typeof import('expo-file-system/next');
+    require('expo-file-system') as typeof import('expo-file-system');
   const { captureException } =
     require('@platform/utils/captureException') as typeof import('@platform/utils/captureException');
 
