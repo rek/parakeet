@@ -12,16 +12,56 @@ At the end: update design doc status → Implemented, update specs to match what
 
 ## 26
 
-**Bench depth assessment — detect partial reps / no chest touch.** Observed 2026-04-19 while sanity-checking v5 front-bench metrics on `bench-front-4reps`: user confirmed the bar never touches the chest on any of the 4 reps. The v5 analysis still reports 4 reps and emits bench-specific faults (flare, tilt, press asymmetry, uneven lockout) but has no metric covering **how close the bar got to the chest**. On a competition bench this is the single most red-lightable form fault (rule: visible stop on chest), and for training it's the difference between a real press and a partial.
+**Bench depth assessment — detect partial reps / no chest touch.**
 
-Design directions (not yet decided, flagged for design pass):
+### What and why
 
-- **Wrist-to-shoulder Y delta at rep bottom.** For front-on bench, bar (≈ wrist midpoint) at chest touch sits level with or just below the shoulder line → `(meanWristY − meanShoulderY) ≥ 0` at the bottom. `< 0` means wrists stopped above shoulders → partial. Reuses the same signal the v5 rep detector already computes; just sample it at the per-rep bottom frame. Per-rep `chestTouchGap` field in `RepAnalysis`.
-- **Fault types.** `no_chest_touch` (critical — bar never reached shoulder line), `shallow_bench` (warning — touched above some tolerance).
-- **Side-view version.** From side, the signal is wrist Y vs the image Y of the lifter's chest (which we don't know precisely). Could approximate chest as shoulder + N% of shoulder-hip distance. Simpler: for side view, use the bar's Y-velocity stop point — the point where eccentric velocity → 0 — and check how far it is from the "expected chest touch" given the lifter's anthropometry. Harder.
-- **Threshold tuning.** Front-bench fixture `bench-front-4reps` is the obvious test case; user has confirmed "never touches" so any working implementation must emit `no_chest_touch` on every rep of that fixture.
+Observed 2026-04-19 while sanity-checking v5 front-bench metrics on `bench-front-4reps`: user confirmed the bar never touches the chest on any of the 4 reps. The v5 analysis still reports 4 reps and emits bench-specific faults (flare, tilt, press asymmetry, uneven lockout) but has **no metric** covering *how close the bar got to the chest*. On a competition bench this is the single most red-lightable form fault (rule: visible stop on chest); for training it's the difference between a real press and a partial.
 
-Priority: high for training accuracy (partial reps are common and currently invisible to our analysis). Scope: one new `bench-chest-touch.ts` lib module + schema field + fault + per-rep bottom-frame wiring in `metrics-assembler.ts`. ~1-2 focused work sessions.
+### Prior context an agent needs
+
+- **Analysis pipeline** is documented at [docs/features/video-analysis/spec-pipeline.md §1.5 "Pipeline stages"](features/video-analysis/spec-pipeline.md#pipeline-stages-updated-2026-04-19). Five stages: lift-label (0) → plausibility (1a) → wrist-reconstruct (1a') → interpolation (1b) → sagittal confidence (2) → deep analysis (3). This work lives in **Stage 3** — add to `lib/metrics-assembler.ts` alongside the other bench-specific metrics.
+- **v5 shipped 2026-04-19** as backlog #24 Track B — see [spec-metrics.md §Phase 6](features/video-analysis/spec-metrics.md#phase-6--front-on-bench-v5-2026-04-19--backlog-24-track-b). v5 added `bar-tilt.ts`, `press-asymmetry.ts`, `elbow-path-symmetry.ts`, `elbow-flare-series.ts`. **These are the templates** to follow: pure lib modules with `computeXxx({ frames, startFrame, endFrame })` signatures, consumed inside the per-rep loop in `metrics-assembler.ts`. Bump `ANALYSIS_VERSION` to **6** for this work.
+- **Threshold convention** (established §Phase 6): new constants live as `const X_FAULT_Y = …` in `metrics-assembler.ts` with a provisional-thresholds subsection in the spec explaining they're tuned on one fixture until ≥ 3 independent fixtures exist.
+- **Fixture**: `test-videos/bench-front-4reps.mp4` (+ `test-videos/landmarks/bench-front-4reps.landmarks.json`). User confirmed this video has **4 reps, none of which touch chest**. Manifest: `test-videos/manifest.json` entry for `bench-front-4reps`.
+- **Calibration**: `npm run calibrate:snapshots` regenerates every snapshot. Run after version bump.
+
+### Design directions (not yet decided — do a small design pass first)
+
+- **Front-view signal.** Bar = wrist midpoint; chest level ≈ shoulder line. At chest touch the wrists sit level with or just below shoulders → `(meanWristY − meanShoulderY) ≥ 0` at the bottom. `< 0` ⇒ wrists stopped above shoulders ⇒ partial. This is literally the same signal the v5 front-bench rep detector already oscillates on — sample its per-rep **maximum** (deepest point) rather than adding a new feature.
+  - Per-rep field: `chestTouchGap` in `RepAnalysis` — how far above the shoulder line the bar stopped, in units of torso length (scale-invariant).
+  - Faults: `no_chest_touch` (critical) when gap > 0.10 torso, `shallow_bench` (warning) when gap > 0.03 torso. Both emit on every rep of `bench-front-4reps` today.
+- **Side-view signal.** Bar Y versus the lifter's chest Y. We don't know chest Y precisely. Two options:
+  - Approximate chest ≈ `shoulderY + 0.2 * (hipY − shoulderY)` — one-fifth of the way from shoulders toward hips. Cheap and robust.
+  - Skip side-view. Only gate on front view (`sagittalConfidence < MIN_SAGITTAL_CONFIDENCE`). Losing half the users' lift angles but correct is better than wrong-everywhere.
+  - Recommend start: approximate chest, validate on `bench-45-5reps` (side-view fixture). If approximation is unstable, remove and gate front-only.
+- **Fault severity at low confidence.** `butt_wink` pattern: severity downgrades from `warning` to `info` below `MIN_SAGITTAL_CONFIDENCE`. `no_chest_touch` should **NOT** downgrade — it's most useful from front-view where we can read it cleanly.
+
+### Deliverables (in order)
+
+1. Write `lib/bench-chest-touch.ts` with `computeChestTouchGap({ frames, startFrame, endFrame, sagittalConfidence }): { gap: number; framesUsed: number }`. Pure. `@spec docs/features/video-analysis/spec-metrics.md` header.
+2. Unit tests `lib/__tests__/bench-chest-touch.test.ts`. Cover: clear-touch case (gap ≈ 0), clear-partial case (gap > 0.1), side-view approximation, visibility edge cases. **No tautological tests** — see [feedback_no_tautological_tests.md](../../../.claude/projects/-home-adam-dev-parakeet/memory/feedback_no_tautological_tests.md): the assertion must fail if the code being tested is removed.
+3. Schema: add optional `chestTouchGap: z.number().optional()` to `RepAnalysisSchema` in `packages/shared-types/src/video-analysis.schema.ts`. Bump `ANALYSIS_VERSION` to 6 in `metrics-assembler.ts`.
+4. Wire into `metrics-assembler.ts` bench block: compute per-rep using the existing `safeStart..safeEnd` window; push `no_chest_touch` / `shallow_bench` faults when thresholds trip.
+5. Update `analyze-video.test.ts` version expectations (4 → 6 in `expect(result.analysisVersion).toBe(…)` calls — currently on 5).
+6. Update `calibration.test.ts` version expectation (5 → 6).
+7. Regenerate snapshots: `npm run calibrate:snapshots`. Verify `bench-front-4reps` emits `no_chest_touch` on every rep; side-view benches emit neither fault (or only `shallow_bench` if the approximation flags something real).
+8. Update manifest `metrics_present` + `faults_to_test` for `bench-front-4reps`.
+9. Write a new subsection **§Phase 7** in `spec-metrics.md` following the §Phase 6 template (what, why, lib module list, threshold table marked provisional, validation checklist).
+10. Update spec-pipeline's "Pipeline stages" section if Stage 3 description needs adjustment (likely not — it's still "deep analysis" at the same layer).
+11. Run `/verify` (or equivalent: `nx test parakeet` + `npm run check:boundaries`).
+12. Backlog: move #26 to done with a summary of what landed.
+
+### Not in scope
+
+- **Touch-and-go vs paused bench.** Not distinguishing those here; the chest-touch metric only cares that the bar reached chest level, not how long it stayed.
+- **Bar-Y velocity profile.** v5 already computes `pauseDurationSec` and `isSinking`. Don't duplicate.
+- **Coaching prompt updates.** Adding a "mention partial rep" cue to the LLM prompt belongs to a follow-up once the metric stabilises over real-world use.
+- **UI surfacing** (rep card chips for chest-touch). Follow-up.
+
+### Starting command for a fresh agent
+
+> Read `docs/backlog.md #26`, `docs/features/video-analysis/spec-pipeline.md`, and `docs/features/video-analysis/spec-metrics.md` §Phase 6. Follow the AI workflow (orient → design → plan → implement → validate → wrap up). When done, mark #26 done in the backlog and delete this starting-command block.
 
 ## ~~24~~ (Done — 19 Apr 2026)
 
