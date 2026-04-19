@@ -62,16 +62,9 @@ export default function TabsLayout() {
             )({ color, size }),
         }}
       />
-      <Tabs.Screen
-        name="settings"
-        options={{
-          title: 'Settings',
-          tabBarLabel: 'Settings',
-          tabBarIcon: ({ color, size, focused }) =>
-            tabIcon(focused, 'settings', 'settings-outline')({ color, size }),
-        }}
-      />
+      <Tabs.Screen name="settings" options={{ href: null }} />
       <Tabs.Screen name="session" options={{ href: null }} />
+      <Tabs.Screen name="nutrition" options={{ href: null }} />
     </Tabs>
   );
 }

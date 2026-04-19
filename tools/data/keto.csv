@@ -1,0 +1,161 @@
+category,food,status,notes
+proteins,eggs,yes,
+proteins,salmon,yes,
+proteins,mackerel,yes,
+proteins,sardines,yes,
+proteins,basa fish,yes,
+proteins,other fatty fish,yes,
+proteins,white fish,yes,
+proteins,buffalo/buff meat,yes,
+proteins,chicken and poultry,yes,
+proteins,homemade buffalo milk paneer,yes,
+proteins,pea-brown rice protein powder,yes,
+proteins,tempeh,yes,small portions
+proteins,tofu and tofu skins,caution,low carb but monitor soy response
+proteins,whey protein,caution,use until replaced - sucralose sweetened
+proteins,clean bratwurst,caution,occasionally - contains sodium nitrate
+proteins,processed meats with fillers or sugars,no,
+dairy,butter (local),yes,
+dairy,heavy cream,yes,
+dairy,hard aged cheeses,yes,
+dairy,yak cheese,yes,naturally A2
+dairy,full fat buffalo milk yoghurt,yes,100g max per serving
+dairy,buffalo milk kefir,yes,small portions
+dairy,homemade buffalo milk paneer,yes,
+dairy,cream cheese,yes,
+dairy,brie and camembert,yes,
+dairy,milk as a drink,no,too much lactose
+dairy,low fat dairy anything,no,
+dairy,flavored yoghurts with added sugar,no,
+dairy,condensed or evaporated milk,no,
+fats_and_oils,olive oil,yes,
+fats_and_oils,avocado oil,yes,
+fats_and_oils,butter,yes,
+fats_and_oils,coconut oil,yes,
+fats_and_oils,avocado,yes,
+fats_and_oils,tahini,yes,
+fats_and_oils,sesame oil,yes,small finishing amounts only
+fats_and_oils,sunflower oil,no,
+fats_and_oils,vegetable oil,no,
+fats_and_oils,canola oil,no,
+fats_and_oils,any refined seed oils,no,
+vegetables,all leafy greens,yes,freely
+vegetables,spinach,yes,freely
+vegetables,kale,yes,freely
+vegetables,chard,yes,freely
+vegetables,cabbage,yes,freely
+vegetables,zucchini,yes,freely
+vegetables,cauliflower,yes,freely
+vegetables,broccoli,yes,freely
+vegetables,cucumber,yes,freely
+vegetables,capsicum,yes,freely
+vegetables,green beans,yes,freely - 3-4g net carbs per 100g
+vegetables,asparagus,yes,freely
+vegetables,mushrooms (all varieties),yes,freely
+vegetables,aubergine/eggplant,yes,freely
+vegetables,bitter gourd/karela,yes,freely
+vegetables,fennel,yes,freely
+vegetables,leeks,yes,freely
+vegetables,green onion,yes,freely
+vegetables,tomatoes,yes,cooking quantities
+vegetables,onions and garlic,yes,cooking amounts
+vegetables,potatoes,no,
+vegetables,sweet potatoes,no,
+vegetables,carrots,no,
+vegetables,beetroot,no,
+vegetables,parsnips,no,
+vegetables,corn,no,
+vegetables,peas in volume,no,too high carb
+fruits,strawberries,yes,~5g net carbs per 100g
+fruits,raspberries,yes,~5g net carbs per 100g
+fruits,blackberries,yes,~5g net carbs per 100g
+fruits,avocado,yes,~2g net carbs per 100g - freely
+fruits,lemon and lime,yes,freely
+fruits,goji berries,yes,very small portions only
+fruits,bananas,no,
+fruits,pineapple,no,
+fruits,watermelon,no,
+fruits,grapes,no,
+fruits,mangoes,no,
+fruits,oranges,no,
+fruits,papaya,no,
+fruits,green apple,no,too high carb for strict keto
+fruits,pomegranate,no,moderate carbs - avoid strict phase
+grains_and_bread,millet flour,yes,moderate portions only
+grains_and_bread,millet pancakes,yes,small portions
+grains_and_bread,homemade millet sourdough,yes,small portions
+grains_and_bread,oats,no,
+grains_and_bread,wheat bread,no,
+grains_and_bread,regular sourdough,no,
+grains_and_bread,pasta,no,
+grains_and_bread,buckwheat,no,also allergy
+grains_and_bread,corn,no,
+grains_and_bread,rice,no,
+grains_and_bread,quinoa,no,too high carb for strict keto
+legumes,green beans,yes,exception - behaves as vegetable
+legumes,peanuts and natural peanut butter,caution,~4g net carbs per 28g - small amounts only
+legumes,lentils,no,strict keto phase
+legumes,chickpeas,no,strict keto phase
+legumes,hummus,no,strict keto phase
+legumes,black beans,no,strict keto phase
+legumes,peas in volume,no,strict keto phase
+nuts_and_seeds,flaxseeds and flaxseed meal,yes,very low carb
+nuts_and_seeds,chia seeds,yes,low net carb due to fiber
+nuts_and_seeds,pumpkin seeds,yes,moderate
+nuts_and_seeds,sunflower seeds,yes,moderate - watch portions
+nuts_and_seeds,hemp seeds,yes,
+nuts_and_seeds,sesame seeds,yes,
+nuts_and_seeds,coconut unsweetened,yes,
+nuts_and_seeds,almonds,no,ALLERGY
+nuts_and_seeds,walnuts,no,ALLERGY
+nuts_and_seeds,pistachios,no,ALLERGY
+nuts_and_seeds,hazelnuts,no,ALLERGY
+nuts_and_seeds,macadamia,no,ALLERGY
+fermented_foods,buffalo milk kefir,yes,small portions
+fermented_foods,buffalo milk yoghurt,yes,small portions
+fermented_foods,homemade millet sourdough,yes,small portions
+fermented_foods,homemade kombucha,yes,watch sugar content
+fermented_foods,kimchi,yes,check for added sugar in commercial versions
+fermented_foods,aged cheeses,yes,
+fermented_foods,tempeh,yes,
+morning_shot,turmeric powder,yes,0.5 tsp - must use with black pepper
+morning_shot,moringa leaf powder,yes,0.5 tsp
+morning_shot,kale powder,yes,0.5 tsp
+morning_shot,ashwagandha powder,yes,0.25 tsp
+morning_shot,goji berry powder,yes,0.25 tsp
+morning_shot,fresh ginger,yes,
+morning_shot,black pepper,yes,pinch - essential for turmeric absorption
+morning_shot,fresh lemon juice,yes,half lemon
+condiments,apple cider vinegar,yes,
+condiments,olive oil vinaigrette,yes,
+condiments,all herbs and spices,yes,
+condiments,Himalayan pink salt,yes,
+condiments,black pepper,yes,
+condiments,fresh ginger,yes,
+condiments,fresh garlic,yes,
+condiments,turmeric,yes,
+condiments,tahini,yes,
+condiments,mustard,yes,check for added sugar
+condiments,kimchi,yes,check for added sugar
+condiments,babaganoush (fresh local),yes,
+condiments,refined sugar,no,
+condiments,honey,no,
+condiments,artificial sweeteners (sucralose/aspartame/acesulfame-K),no,
+condiments,commercial sauces with sugar or starch,no,
+condiments,gochujang,no,contains rice
+condiments,stevia,yes,acceptable sweetener
+condiments,monk fruit,yes,acceptable sweetener
+drinks,water,yes,freely
+drinks,black coffee,yes,freely
+drinks,green tea,yes,freely
+drinks,Himalayan mint tea (Ban Silam),yes,freely
+drinks,herbal teas,yes,freely
+drinks,homemade kombucha,yes,freely
+drinks,coffee with small dash of cream,yes,occasionally
+drinks,coconut water,caution,moderate sugar - post workout only
+drinks,alcohol,no,
+drinks,fruit juice,no,
+drinks,sweetened drinks,no,
+drinks,commercial sports drinks,no,
+drinks,milk as a drink,no,
+treats,85%+ dark chocolate,yes,small amounts - magnesium source

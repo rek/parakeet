@@ -1,24 +1,24 @@
 import { useEffect, useMemo, useRef } from 'react';
 import {
   Animated,
-  Dimensions,
   Modal,
   Pressable,
   StyleSheet,
   Text,
   TouchableOpacity,
+  useWindowDimensions,
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { useInProgressSession } from '@modules/session';
+import { useSessionStore } from '@platform/store/sessionStore';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 
 import { radii, spacing, typography } from '../../theme';
 import type { ColorScheme } from '../../theme';
 import { useTheme } from '../../theme/ThemeContext';
-
-const DRAWER_WIDTH = Math.min(300, Dimensions.get('window').width * 0.8);
 
 export function LeftDrawer({
   visible,
@@ -28,14 +28,24 @@ export function LeftDrawer({
   onClose: () => void;
 }) {
   const { colors } = useTheme();
-  const styles = useMemo(() => buildStyles(colors), [colors]);
-  const translateX = useRef(new Animated.Value(-DRAWER_WIDTH)).current;
+  const { width: windowWidth } = useWindowDimensions();
+  const drawerWidth = Math.min(300, windowWidth * 0.8);
+  const styles = useMemo(
+    () => buildStyles(colors, drawerWidth),
+    [colors, drawerWidth],
+  );
+  const translateX = useRef(new Animated.Value(-drawerWidth)).current;
   const overlayOpacity = useRef(new Animated.Value(0)).current;
+  const { data: activeSession } = useInProgressSession();
 
   useEffect(() => {
+    if (visible) {
+      translateX.setValue(-drawerWidth);
+      overlayOpacity.setValue(0);
+    }
     Animated.parallel([
       Animated.timing(translateX, {
-        toValue: visible ? 0 : -DRAWER_WIDTH,
+        toValue: visible ? 0 : -drawerWidth,
         duration: 220,
         useNativeDriver: true,
       }),
@@ -45,11 +55,24 @@ export function LeftDrawer({
         useNativeDriver: true,
       }),
     ]).start();
-  }, [visible, translateX, overlayOpacity]);
+  }, [visible, translateX, overlayOpacity, drawerWidth]);
 
   const go = (path: string) => {
     onClose();
     router.push(path as never);
+  };
+
+  const goCurrentSession = () => {
+    if (!activeSession) return;
+    onClose();
+    const jit = useSessionStore.getState().cachedJitData;
+    router.push({
+      pathname: '/session/[sessionId]',
+      params: {
+        sessionId: activeSession.id,
+        ...(jit ? { jitData: jit } : {}),
+      },
+    });
   };
 
   return (
@@ -70,6 +93,29 @@ export function LeftDrawer({
           <SafeAreaView style={styles.drawerInner} edges={['top', 'bottom', 'left']}>
             <Text style={styles.brand}>PARAKEET</Text>
             <View style={styles.items}>
+              <DrawerItem
+                icon="flash-outline"
+                label="Today"
+                onPress={() => go('/(tabs)/today')}
+                styles={styles}
+                colors={colors}
+              />
+              {activeSession && (
+                <DrawerItem
+                  icon="barbell-outline"
+                  label="Current Session"
+                  onPress={goCurrentSession}
+                  styles={styles}
+                  colors={colors}
+                />
+              )}
+              <DrawerItem
+                icon="nutrition-outline"
+                label="Nutrition"
+                onPress={() => go('/(tabs)/nutrition')}
+                styles={styles}
+                colors={colors}
+              />
               <DrawerItem
                 icon="settings-outline"
                 label="Settings"
@@ -110,7 +156,7 @@ function DrawerItem({
   );
 }
 
-function buildStyles(colors: ColorScheme) {
+function buildStyles(colors: ColorScheme, drawerWidth: number) {
   return StyleSheet.create({
     root: { flex: 1 },
     overlay: {
@@ -122,7 +168,7 @@ function buildStyles(colors: ColorScheme) {
       top: 0,
       bottom: 0,
       left: 0,
-      width: DRAWER_WIDTH,
+      width: drawerWidth,
       backgroundColor: colors.bgSurface,
       borderRightWidth: 1,
       borderRightColor: colors.border,
