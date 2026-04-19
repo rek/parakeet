@@ -5,6 +5,8 @@ import {
 
 import type { PoseFrame } from '@modules/video-analysis/lib/pose-types';
 
+import { fetchCachedModel } from './model-cache';
+
 /** Public CDN URLs for the upstream MediaPipe pose-landmarker models. */
 const MODEL_URLS = {
   lite: 'https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/1/pose_landmarker_lite.task',
@@ -36,10 +38,16 @@ async function getLandmarker(
     return cached.landmarker;
   }
   cached?.landmarker.close();
-  const fileset = await FilesetResolver.forVisionTasks(WASM_URL);
+  const [fileset, modelBytes] = await Promise.all([
+    FilesetResolver.forVisionTasks(WASM_URL),
+    fetchCachedModel(MODEL_URLS[variant]),
+  ]);
   const landmarker = await PoseLandmarker.createFromOptions(fileset, {
     baseOptions: {
-      modelAssetPath: MODEL_URLS[variant],
+      // Pass cached bytes so subsequent dashboard reloads don't re-fetch
+      // 29MB from the public CDN. `fetchCachedModel` falls through to a
+      // plain `fetch` when `caches` is unavailable (older browsers).
+      modelAssetBuffer: modelBytes,
       delegate,
     },
     runningMode: 'VIDEO',

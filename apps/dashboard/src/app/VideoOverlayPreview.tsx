@@ -930,7 +930,21 @@ function BarPathOverlaySvg({
   );
 }
 
+/**
+ * Primary threshold — matches the per-landmark gate used across the
+ * video-analysis lib. Landmarks above this get the full-confidence teal
+ * colour.
+ */
 const MIN_VISIBILITY = 0.5;
+
+/**
+ * Secondary threshold — landmarks between `LOW_VIS_FLOOR` and
+ * `MIN_VISIBILITY` get a faded red treatment so the viewer can tell
+ * "landmark is there but MediaPipe is unsure" apart from "landmark not
+ * detected at all". Below the floor, the landmark is essentially a
+ * zero output — nothing worth drawing.
+ */
+const LOW_VIS_FLOOR = 0.1;
 
 function SkeletonOverlaySvg({
   frames,
@@ -981,8 +995,9 @@ function SkeletonOverlaySvg({
         const la = lerped[a];
         const lb = lerped[b];
         if (!la || !lb) return null;
-        if (la.visibility < MIN_VISIBILITY || lb.visibility < MIN_VISIBILITY)
-          return null;
+        const endpointMin = Math.min(la.visibility, lb.visibility);
+        if (endpointMin < LOW_VIS_FLOOR) return null;
+        const lowConfidence = endpointMin < MIN_VISIBILITY;
         return (
           <line
             key={i}
@@ -990,22 +1005,24 @@ function SkeletonOverlaySvg({
             y1={la.y * height}
             x2={lb.x * width}
             y2={lb.y * height}
-            stroke="#2dd4bf"
-            strokeWidth={2}
-            opacity={0.8}
+            stroke={lowConfidence ? '#ef4444' : '#2dd4bf'}
+            strokeWidth={lowConfidence ? 1 : 2}
+            opacity={lowConfidence ? 0.35 : 0.8}
+            strokeDasharray={lowConfidence ? '3 3' : undefined}
           />
         );
       })}
       {lerped.map((lm, i) => {
-        if (lm.visibility < MIN_VISIBILITY) return null;
+        if (lm.visibility < LOW_VIS_FLOOR) return null;
+        const lowConfidence = lm.visibility < MIN_VISIBILITY;
         return (
           <circle
             key={i}
             cx={lm.x * width}
             cy={lm.y * height}
-            r={3}
-            fill="#2dd4bf"
-            opacity={0.9}
+            r={lowConfidence ? 2 : 3}
+            fill={lowConfidence ? '#ef4444' : '#2dd4bf'}
+            opacity={lowConfidence ? 0.5 : 0.9}
           />
         );
       })}
