@@ -3,7 +3,7 @@
   "lift": "deadlift",
   "analysisVersion": 4,
   "snapshotVersion": 1,
-  "createdAt": "2026-04-18T17:32:40.464Z",
+  "createdAt": "2026-04-19T01:32:02.162Z",
   "sagittalConfidence": 0.6291126666666667,
   "result": {
     "reps": [
@@ -236,116 +236,6 @@
           ]
         },
         "velocityLossPct": -132.7
-      },
-      {
-        "repNumber": 3,
-        "startFrame": 40,
-        "endFrame": 45,
-        "barPath": [
-          {
-            "x": 0.5321156666666668,
-            "y": 0.5415073333333333,
-            "frame": 40
-          },
-          {
-            "x": 0.5296068333333334,
-            "y": 0.5647475000000001,
-            "frame": 41
-          },
-          {
-            "x": 0.5312298333333333,
-            "y": 0.5758006666666667,
-            "frame": 42
-          },
-          {
-            "x": 0.5345908333333333,
-            "y": 0.5560803333333334,
-            "frame": 43
-          },
-          {
-            "x": 0.5363346666666667,
-            "y": 0.510378,
-            "frame": 44
-          },
-          {
-            "x": 0.5340493333333334,
-            "y": 0.45412783333333334,
-            "frame": 45
-          }
-        ],
-        "forwardLeanDeg": 22.80753181182156,
-        "barDriftCm": 0.8576098487391212,
-        "romCm": 29.566498500000016,
-        "kneeAngleDeg": 138.36804781662136,
-        "hipAngleAtLockoutDeg": 163.29289378338743,
-        "meanConcentricVelocityCmS": 39.42199800000002,
-        "concentricDurationSec": 0.75,
-        "eccentricDurationSec": 0.5,
-        "tempoRatio": 0.67,
-        "hipHingeCrossoverPct": 33,
-        "barToShinDistanceCm": -0.04058099999999337,
-        "lockoutStabilityCv": 6.586840842571361,
-        "faults": [
-          {
-            "type": "back_rounding",
-            "severity": "warning",
-            "message": "Back rounded 27.0° during initial pull",
-            "value": 27.01927757127973,
-            "threshold": 15
-          },
-          {
-            "type": "early_hip_shoot",
-            "severity": "warning",
-            "message": "Hips shot up at 33% of pull",
-            "value": 33,
-            "threshold": 30
-          },
-          {
-            "type": "unstable_lockout",
-            "severity": "warning",
-            "message": "Unstable lockout (CV 6.6%)",
-            "value": 6.586840842571361,
-            "threshold": 5
-          }
-        ],
-        "verdict": {
-          "verdict": "white_light",
-          "criteria": [
-            {
-              "name": "hip_lockout",
-              "verdict": "pass",
-              "measured": 163.29289378338743,
-              "threshold": 160,
-              "unit": "°",
-              "message": "Hips fully through (163°)"
-            },
-            {
-              "name": "knee_lockout",
-              "verdict": "pass",
-              "measured": 177.08064724540168,
-              "threshold": 160,
-              "unit": "°",
-              "message": "Knees fully locked (177°)"
-            },
-            {
-              "name": "downward_motion",
-              "verdict": "pass",
-              "measured": 0,
-              "threshold": 1,
-              "unit": "cm",
-              "message": "Smooth pull — no downward motion"
-            },
-            {
-              "name": "shoulders_back",
-              "verdict": "pass",
-              "measured": -3.363727499999995,
-              "threshold": 5,
-              "unit": "cm",
-              "message": "Shoulders behind hips at lockout"
-            }
-          ]
-        },
-        "velocityLossPct": -275.5
       }
     ],
     "fps": 4,
@@ -353,12 +243,12 @@
     "sagittalConfidence": 0.6291126666666667,
     "analysisVersion": 4,
     "fatigueSignatures": {
-      "forwardLeanDriftDeg": 9.5,
-      "barDriftIncreaseCm": -2.2,
-      "romCompressionCm": -5.9,
-      "descentSpeedChange": 0.67,
-      "lockoutDegradationDeg": -0.2,
-      "velocityLossTrend": "decreasing"
+      "forwardLeanDriftDeg": -11.1,
+      "barDriftIncreaseCm": -2.5,
+      "romCompressionCm": -0.8,
+      "descentSpeedChange": 1,
+      "lockoutDegradationDeg": -2.5,
+      "velocityLossTrend": null
     }
   }
 }

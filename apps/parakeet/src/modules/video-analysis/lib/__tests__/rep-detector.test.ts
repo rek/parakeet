@@ -149,8 +149,11 @@ describe('detectReps', () => {
 
   describe('deadlift rep detection (hip Y)', () => {
     it('detects deadlift reps using hip Y signal', () => {
-      // Deadlift uses hip Y same as squat — reuse same fixture signal shape
-      const frames = generateSquatFrames({ reps: 2, framesPerRep: 60 });
+      // Deadlift now uses a hip-angle state machine as the primary path; the
+      // Y-fallback still exists when hip landmarks aren't visible. Use the
+      // dedicated deadlift generator which produces realistic hinge
+      // biomechanics (hip angle oscillating ~113°→180°).
+      const frames = generateDeadliftFrames({ reps: 2, framesPerRep: 60 });
       const reps = detectReps({ frames, lift: 'deadlift' });
       expect(reps).toHaveLength(2);
     });

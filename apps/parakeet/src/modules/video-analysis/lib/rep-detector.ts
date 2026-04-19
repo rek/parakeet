@@ -324,9 +324,37 @@ function detectDeadliftReps({
   frames: PoseFrame[];
   fps: number;
 }): { startFrame: number; endFrame: number }[] | null {
-  const hipAngles = extractHipAngles({ frames });
-  const validCount = hipAngles.filter((h) => !Number.isNaN(h)).length;
+  const rawHipAngles = extractHipAngles({ frames });
+  const validCount = rawHipAngles.filter((h) => !Number.isNaN(h)).length;
   if (validCount < MIN_ANGLE_FRAMES) return null;
+
+  // Linearly interpolate short NaN gaps so the state machine doesn't skip
+  // frames where MediaPipe briefly lost the hip — common at 45° views where
+  // one side of the body is occluded by the bar. Long gaps stay NaN and are
+  // skipped in the main loop.
+  const MAX_INTERP_GAP = Math.max(2, Math.round(fps * 0.5));
+  const hipAngles = [...rawHipAngles];
+  for (let i = 0; i < hipAngles.length; i++) {
+    if (!Number.isNaN(hipAngles[i])) continue;
+    let prev = -1;
+    for (let j = i - 1; j >= 0; j--) {
+      if (!Number.isNaN(rawHipAngles[j])) {
+        prev = j;
+        break;
+      }
+    }
+    let next = -1;
+    for (let j = i + 1; j < hipAngles.length; j++) {
+      if (!Number.isNaN(rawHipAngles[j])) {
+        next = j;
+        break;
+      }
+    }
+    if (prev < 0 || next < 0) continue;
+    if (next - prev > MAX_INTERP_GAP) continue;
+    const t = (i - prev) / (next - prev);
+    hipAngles[i] = rawHipAngles[prev] * (1 - t) + rawHipAngles[next] * t;
+  }
 
   const minLockoutHoldFrames = Math.max(
     2,
@@ -411,6 +439,27 @@ function detectDeadliftReps({
 
     reps.push({ startFrame: repStartFloorFrame, endFrame: i });
     state = 'WAITING_FOR_FLOOR';
+  }
+
+  // Eccentric-evidence filter. When the lifter is already at lockout and the
+  // recording ends before the eccentric (bar lowering, hip returning to
+  // floor) is visible, the detector can't distinguish "final rep then stop"
+  // from "stood up post-set to put the bar away". Per calibration across
+  // our fixtures, the extra rep is always the final detected lockout with
+  // no FLOOR signal afterwards. Filter it out — but only if we have other
+  // reps, so a legitimate cut-at-lockout single-rep video isn't zeroed.
+  if (reps.length > 1) {
+    const last = reps[reps.length - 1];
+    let hasEccentric = false;
+    for (let j = last.endFrame + 1; j < hipAngles.length; j++) {
+      const h = hipAngles[j];
+      if (Number.isNaN(h)) continue;
+      if (h < DEADLIFT_FLOOR_HIP_DEG) {
+        hasEccentric = true;
+        break;
+      }
+    }
+    if (!hasEccentric) reps.pop();
   }
 
   return reps;
@@ -543,6 +592,29 @@ export function detectReps({
 
   for (let i = 0; i < peaks.length; i++) {
     reps.push({ startFrame: boundaries[i], endFrame: boundaries[i + 1] });
+  }
+
+  // Post-filter: drop reps whose window contains no real joint flexion.
+  // Rationale — for squat/bench, the peak-based detector can include setup
+  // walkouts (first rep) or rack-up tails (last rep) as extra reps because
+  // their boundaries span from the video edge to the first real valley. A
+  // real squat/bench rep has a moment of deep flexion somewhere inside its
+  // window; walkout/racking phases never reach it. We only apply this to
+  // lifts that use the angle signal (otherwise we have no reliable way to
+  // judge flexion).
+  if (useAngle && angleSignal != null) {
+    // inverted angle threshold ≈ joint flexed to ≤ 120°. Real squat/bench
+    // bottoms reach 85°+ easily (deeper = larger inverted); this is loose
+    // enough to not drop marginal reps but tight enough to exclude rack-up
+    // and walkout wobbles that barely dip.
+    const MIN_FLEXION_SIGNAL = 60;
+    return reps.filter((r) => {
+      let maxFlexion = 0;
+      for (let j = r.startFrame; j <= r.endFrame; j++) {
+        if (angleSignal[j] > maxFlexion) maxFlexion = angleSignal[j];
+      }
+      return maxFlexion >= MIN_FLEXION_SIGNAL;
+    });
   }
 
   return reps;

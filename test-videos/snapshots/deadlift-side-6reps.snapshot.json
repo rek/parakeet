@@ -3,7 +3,7 @@
   "lift": "deadlift",
   "analysisVersion": 4,
   "snapshotVersion": 1,
-  "createdAt": "2026-04-18T17:32:40.462Z",
+  "createdAt": "2026-04-19T01:32:02.159Z",
   "sagittalConfidence": 0.9353829333333333,
   "result": {
     "reps": [
@@ -1183,134 +1183,6 @@
         },
         "velocityLossPct": 56.1,
         "estimatedRir": 0
-      },
-      {
-        "repNumber": 7,
-        "startFrame": 157,
-        "endFrame": 167,
-        "barPath": [
-          {
-            "x": 0.42714783333333334,
-            "y": 0.4493846666666667,
-            "frame": 157
-          },
-          {
-            "x": 0.4142455,
-            "y": 0.4814728333333333,
-            "frame": 158
-          },
-          {
-            "x": 0.405373,
-            "y": 0.5262755,
-            "frame": 159
-          },
-          {
-            "x": 0.40028899999999995,
-            "y": 0.5781459999999999,
-            "frame": 160
-          },
-          {
-            "x": 0.3934093333333333,
-            "y": 0.6216976666666667,
-            "frame": 161
-          },
-          {
-            "x": 0.392463,
-            "y": 0.6277045,
-            "frame": 162
-          },
-          {
-            "x": 0.3713761666666667,
-            "y": 0.5884575000000001,
-            "frame": 163
-          },
-          {
-            "x": 0.3465621666666667,
-            "y": 0.5151738333333333,
-            "frame": 164
-          },
-          {
-            "x": 0.3636181666666667,
-            "y": 0.444271,
-            "frame": 165
-          },
-          {
-            "x": 0.42867666666666665,
-            "y": 0.39507983333333335,
-            "frame": 166
-          },
-          {
-            "x": 0.5253371666666666,
-            "y": 0.379395,
-            "frame": 167
-          }
-        ],
-        "forwardLeanDeg": 85.691982900618,
-        "barDriftCm": 28.943748409090897,
-        "romCm": 60.339208500000005,
-        "kneeAngleDeg": 68.40412852745706,
-        "hipAngleAtLockoutDeg": 169.5267074151069,
-        "meanConcentricVelocityCmS": 48.2713668,
-        "concentricDurationSec": 1.25,
-        "eccentricDurationSec": 1.25,
-        "tempoRatio": 1,
-        "hipHingeCrossoverPct": 75,
-        "barToShinDistanceCm": 1.9482221249999951,
-        "lockoutStabilityCv": 1.569075825738643,
-        "faults": [
-          {
-            "type": "bar_drift",
-            "severity": "warning",
-            "message": "Bar drifted 28.9cm from start",
-            "value": 0.1191100757575757,
-            "threshold": 0.03
-          },
-          {
-            "type": "back_rounding",
-            "severity": "warning",
-            "message": "Back rounded 69.7° during initial pull",
-            "value": 69.72879031772347,
-            "threshold": 15
-          }
-        ],
-        "verdict": {
-          "verdict": "white_light",
-          "criteria": [
-            {
-              "name": "hip_lockout",
-              "verdict": "pass",
-              "measured": 169.5267074151069,
-              "threshold": 160,
-              "unit": "°",
-              "message": "Hips fully through (170°)"
-            },
-            {
-              "name": "knee_lockout",
-              "verdict": "pass",
-              "measured": 172.96940561945365,
-              "threshold": 160,
-              "unit": "°",
-              "message": "Knees fully locked (173°)"
-            },
-            {
-              "name": "downward_motion",
-              "verdict": "pass",
-              "measured": 0,
-              "threshold": 1,
-              "unit": "cm",
-              "message": "Smooth pull — no downward motion"
-            },
-            {
-              "name": "shoulders_back",
-              "verdict": "pass",
-              "measured": -9.863734500000001,
-              "threshold": 5,
-              "unit": "cm",
-              "message": "Shoulders behind hips at lockout"
-            }
-          ]
-        },
-        "velocityLossPct": -148.5
       }
     ],
     "fps": 4,
@@ -1318,11 +1190,11 @@
     "sagittalConfidence": 0.9353829333333333,
     "analysisVersion": 4,
     "fatigueSignatures": {
-      "forwardLeanDriftDeg": 13.7,
-      "barDriftIncreaseCm": 20.8,
-      "romCompressionCm": 2.8,
-      "descentSpeedChange": 1.67,
-      "lockoutDegradationDeg": -7.7,
+      "forwardLeanDriftDeg": 5.1,
+      "barDriftIncreaseCm": 11.5,
+      "romCompressionCm": -5.1,
+      "descentSpeedChange": 2,
+      "lockoutDegradationDeg": -7,
       "velocityLossTrend": "increasing"
     }
   }

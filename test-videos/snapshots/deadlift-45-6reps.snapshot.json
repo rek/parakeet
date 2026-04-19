@@ -3,7 +3,7 @@
   "lift": "deadlift",
   "analysisVersion": 4,
   "snapshotVersion": 1,
-  "createdAt": "2026-04-18T17:32:40.467Z",
+  "createdAt": "2026-04-19T01:32:02.165Z",
   "sagittalConfidence": 0.8381563333333333,
   "result": {
     "reps": [
@@ -124,9 +124,14 @@
       },
       {
         "repNumber": 2,
-        "startFrame": 11,
+        "startFrame": 10,
         "endFrame": 34,
         "barPath": [
+          {
+            "x": 0.35227450000000005,
+            "y": 0.464733,
+            "frame": 10
+          },
           {
             "x": 0.3969141666666667,
             "y": 0.4818826666666666,
@@ -248,31 +253,31 @@
             "frame": 34
           }
         ],
-        "forwardLeanDeg": 0.501756451695489,
-        "barDriftCm": 13.932755156250003,
+        "forwardLeanDeg": 31.23514280703883,
+        "barDriftCm": 14.447458080000011,
         "romCm": 75.69433799999999,
-        "kneeAngleDeg": 170.5722202490799,
+        "kneeAngleDeg": 67.52054199884716,
         "hipAngleAtLockoutDeg": 167.2372370890279,
         "meanConcentricVelocityCmS": 20.185156799999998,
         "concentricDurationSec": 4,
-        "eccentricDurationSec": 1.75,
-        "tempoRatio": 0.44,
+        "eccentricDurationSec": 2,
+        "tempoRatio": 0.5,
         "hipHingeCrossoverPct": 75,
-        "barToShinDistanceCm": 1.4023454062499985,
+        "barToShinDistanceCm": 1.8725647499999991,
         "lockoutStabilityCv": 27.570745768708417,
         "faults": [
           {
             "type": "bar_drift",
             "severity": "warning",
-            "message": "Bar drifted 13.9cm from start",
-            "value": 0.057336440972222236,
+            "message": "Bar drifted 14.4cm from start",
+            "value": 0.059454560000000045,
             "threshold": 0.03
           },
           {
             "type": "back_rounding",
             "severity": "warning",
-            "message": "Back rounded 91.1° during initial pull",
-            "value": 91.07353047206823,
+            "message": "Back rounded 115.8° during initial pull",
+            "value": 115.84681285783762,
             "threshold": 15
           },
           {
@@ -322,74 +327,6 @@
         },
         "velocityLossPct": 68.8,
         "estimatedRir": 0
-      },
-      {
-        "repNumber": 3,
-        "startFrame": 45,
-        "endFrame": 47,
-        "barPath": [
-          {
-            "x": 0.40038341666666666,
-            "y": 0.4230056666666666,
-            "frame": 45
-          },
-          {
-            "x": 0.3948313333333333,
-            "y": 0.5123505,
-            "frame": 46
-          },
-          {
-            "x": 0.3919011111111111,
-            "y": 0.553233,
-            "frame": 47
-          }
-        ],
-        "forwardLeanDeg": 7.0187633777340315,
-        "barDriftCm": 0.06483033742331691,
-        "romCm": 31.645242000000007,
-        "kneeAngleDeg": 77.18159911509937,
-        "hipAngleAtLockoutDeg": 170.65351010951616,
-        "hipHingeCrossoverPct": 50,
-        "barToShinDistanceCm": 0,
-        "lockoutStabilityCv": 2.2555352969164044,
-        "faults": [],
-        "verdict": {
-          "verdict": "red_light",
-          "criteria": [
-            {
-              "name": "hip_lockout",
-              "verdict": "fail",
-              "measured": 141.9748750464272,
-              "threshold": 160,
-              "unit": "°",
-              "message": "Incomplete hip lockout (142°) — would not pass"
-            },
-            {
-              "name": "knee_lockout",
-              "verdict": "pass",
-              "measured": 166.47188963640633,
-              "threshold": 160,
-              "unit": "°",
-              "message": "Knees fully locked (166°)"
-            },
-            {
-              "name": "downward_motion",
-              "verdict": "pass",
-              "measured": 0,
-              "threshold": 3,
-              "unit": "cm",
-              "message": "Insufficient data"
-            },
-            {
-              "name": "shoulders_back",
-              "verdict": "fail",
-              "measured": 21.661992,
-              "threshold": 5,
-              "unit": "cm",
-              "message": "Shoulders 21.7cm forward of hips"
-            }
-          ]
-        }
       }
     ],
     "fps": 4,
@@ -397,11 +334,11 @@
     "sagittalConfidence": 0.8507409333333332,
     "analysisVersion": 4,
     "fatigueSignatures": {
-      "forwardLeanDriftDeg": -6.5,
-      "barDriftIncreaseCm": -11.6,
-      "romCompressionCm": 16.9,
+      "forwardLeanDriftDeg": 17.8,
+      "barDriftIncreaseCm": 2.8,
+      "romCompressionCm": -27.1,
       "descentSpeedChange": null,
-      "lockoutDegradationDeg": -3.1,
+      "lockoutDegradationDeg": 0.4,
       "velocityLossTrend": null
     }
   }

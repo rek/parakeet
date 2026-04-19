@@ -189,11 +189,23 @@ export function generateDeadliftFrames({
   framesPerRep?: number;
 }) {
   const frames: PoseFrame[] = [];
-  const totalFrames = reps * framesPerRep;
+  // Emulate real footage: after the final rep's lockout, the lifter sets the
+  // bar down (eccentric back to floor). Without this tail, the state-machine
+  // detector correctly refuses to count the final "lockout" as a rep — same
+  // heuristic that prevents counting a post-set stand-up in real videos.
+  const setDownFrames = Math.round(framesPerRep / 2);
+  const totalFrames = reps * framesPerRep + setDownFrames;
 
   for (let i = 0; i < totalFrames; i++) {
-    const repPhase = (i % framesPerRep) / framesPerRep;
-    const t = Math.sin(repPhase * Math.PI);
+    let t: number;
+    if (i < reps * framesPerRep) {
+      const repPhase = (i % framesPerRep) / framesPerRep;
+      t = Math.sin(repPhase * Math.PI);
+    } else {
+      // Final setdown: linear descent from standing back to floor.
+      const setDownProgress = (i - reps * framesPerRep) / setDownFrames;
+      t = setDownProgress;
+    }
 
     // Shoulder hinges forward and down. At floor the shoulder is ahead of and
     // below the hip, producing a ~90° hip angle (shoulder-hip-knee).
