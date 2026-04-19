@@ -1,3 +1,5 @@
+import { z } from '@parakeet/shared-types';
+
 /** Single landmark from MediaPipe Pose (normalized 0-1 coordinates) */
 export interface PoseLandmark {
   x: number;
@@ -8,6 +10,33 @@ export interface PoseLandmark {
 
 /** All 33 landmarks for one frame */
 export type PoseFrame = PoseLandmark[];
+
+/**
+ * Zod schema for a pose landmark. Shared with `shared-types` to stay on the
+ * same zod version as the rest of the runtime — see `coaching-cache.ts` for
+ * the v3/v4 split story.
+ */
+export const PoseLandmarkSchema = z.object({
+  x: z.number(),
+  y: z.number(),
+  z: z.number(),
+  visibility: z.number(),
+});
+
+export const PoseFrameSchema = z.array(PoseLandmarkSchema);
+
+/**
+ * Stored shape for `session_videos.debug_landmarks`. Persisted once per
+ * video at insert time so the playback skeleton overlay can be drawn
+ * without re-running MediaPipe.
+ */
+export const DebugLandmarksSchema = z.object({
+  frames: z.array(PoseFrameSchema),
+  fps: z.number().positive(),
+  extractedAt: z.string(),
+});
+
+export type DebugLandmarks = z.infer<typeof DebugLandmarksSchema>;
 
 /** MediaPipe landmark indices relevant to powerlifting */
 export const LANDMARK = {

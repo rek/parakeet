@@ -317,6 +317,7 @@ function makeResult(overrides: Partial<SessionVideo>): SessionVideo {
     recordedByName: null,
     videoWidthPx: null,
     videoHeightPx: null,
+    debugLandmarks: null,
     createdAt: new Date().toISOString(),
     ...overrides,
   };
@@ -367,6 +368,7 @@ function rowToSessionVideo(row: Record<string, unknown>): SessionVideo {
     recordedByName: null,
     videoWidthPx: (row.video_width_px as number) ?? null,
     videoHeightPx: (row.video_height_px as number) ?? null,
+    debugLandmarks: null,
     createdAt: row.created_at as string,
   };
 }

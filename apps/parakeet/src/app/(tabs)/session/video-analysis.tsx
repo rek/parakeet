@@ -232,6 +232,7 @@ export default function VideoAnalysisScreen() {
               analysis={result.analysis}
               videoWidthPx={result.videoWidthPx}
               videoHeightPx={result.videoHeightPx}
+              debugLandmarks={result.debugLandmarks}
               recordedByName={result.recordedByName}
             />
             <TouchableOpacity

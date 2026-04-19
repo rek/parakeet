@@ -1,6 +1,6 @@
 # Spec: Video Playback Overlay
 
-**Status:** Proposed
+**Status:** Implemented (2026-04-19)
 **Design:** [design-playback-overlay.md](./design-playback-overlay.md)
 **Depends on:** mobile-046 (video form analysis), mobile-052 (view angle rework)
 
@@ -78,29 +78,37 @@ Needed for letterbox math. Cheap to capture at insert.
 
 ### 2.1 — Promote `debug_landmarks` write
 
-- [ ] In `useVideoAnalysis.processVideo` step 7: remove the `__DEV__` guard around `updateSessionVideoDebugLandmarks`. Keep it non-blocking (fire-and-forget with `captureException`) — landmark loss is non-fatal.
-- [ ] Rename consideration: column stays `debug_landmarks` for now (no migration needed). If renaming, do it in a follow-up to keep this spec focused.
-- [ ] Repository: surface `debugLandmarks` on `SessionVideo` model (new field, nullable). Add a Zod codec for the `{ frames, fps, extractedAt }` shape so we don't read raw `unknown` at the UI layer.
+- [x] Remove the `__DEV__` guard around `updateSessionVideoDebugLandmarks` in `useVideoAnalysis.processVideo` step 7. Remains fire-and-forget with `captureException`.
+  → `apps/parakeet/src/modules/video-analysis/hooks/useVideoAnalysis.ts:processVideo`
+- [x] Same promotion in `reanalyze` — `saveDebugLandmarks` dep always wired (no `__DEV__`).
+  → `apps/parakeet/src/modules/video-analysis/hooks/useVideoAnalysis.ts:reanalyze`
+- [x] Column name stays `debug_landmarks`. No migration.
+- [x] `DebugLandmarksSchema` Zod codec + `DebugLandmarks` type exposed from `lib/pose-types.ts`; repository validates on read via `parseDebugLandmarks`.
+  → `apps/parakeet/src/modules/video-analysis/lib/pose-types.ts:DebugLandmarksSchema`
+  → `apps/parakeet/src/modules/video-analysis/data/video.repository.ts:parseDebugLandmarks`
+- [x] `SessionVideo.debugLandmarks: DebugLandmarks | null` surfaced.
+  → `apps/parakeet/src/modules/video-analysis/model/types.ts`
 
 ### 2.2 — Skeleton overlay component
 
-- [ ] New file: `modules/video-analysis/ui/PlaybackSkeletonOverlay.tsx`.
-- [ ] Props: `frames: PoseFrame[]`, `fps: number`, `currentTime: number`, `displayRect`, `colors`.
-- [ ] Compute lerped frame: `frameIdxFloat = currentTime * fps`; clamp to `[0, frames.length - 1]`; lerp per-landmark x/y/visibility between `floor` and `ceil`.
-- [ ] Render: `<Line>` per `SKELETON_CONNECTIONS` entry (reuse from `useLivePoseOverlay`); `<Circle>` per landmark with `visibility >= 0.5`. Same visual style as `LiveSkeletonOverlay`.
-- [ ] Skip rendering if both endpoints of a bone have `visibility < 0.5` (matches `LiveSkeletonOverlay` behaviour).
-- [ ] Vitest: lerp math (boundary cases: t=0, t=1, mid-frame), visibility filtering, empty-frames no-op.
+- [x] `lib/skeleton-lerp.ts:lerpPoseFrame({ frames, fps, currentTime })` — pure per-landmark linear interpolation. Visibility is *not* lerped (floor frame's value carries) so a partially-occluded joint cannot suddenly become visible mid-interpolation.
+  → `apps/parakeet/src/modules/video-analysis/lib/skeleton-lerp.ts:lerpPoseFrame`
+- [x] `ui/PlaybackSkeletonOverlay.tsx` — absolute-positioned `<Svg>` at `displayRect`, `<Line>` per `SKELETON_CONNECTIONS` (skip bones with either endpoint < 0.5 visibility), `<Circle>` per visible landmark. Same visual language as `LiveSkeletonOverlay`.
+  → `apps/parakeet/src/modules/video-analysis/ui/PlaybackSkeletonOverlay.tsx:PlaybackSkeletonOverlay`
+- [x] Unit tests: t=0, t=1, mid-frame, out-of-range clamping, non-positive fps, empty frames, visibility-not-lerped.
+  → `apps/parakeet/src/modules/video-analysis/lib/__tests__/skeleton-lerp.test.ts`
 
 ### 2.3 — Wire into `VideoPlayerCard`
 
-- [ ] Read `useOverlayPreference('skeleton')`.
-- [ ] `skeletonAvailable = video.debugLandmarks?.frames != null && video.debugLandmarks.frames.length > 0`.
-- [ ] Mount `PlaybackSkeletonOverlay` when enabled, available, and `displayRect` resolved.
+- [x] `useOverlayPreference('skeleton')` already wired from Phase 1.
+- [x] `skeletonAvailable` flips to `true` when `debugLandmarks` payload is present with ≥ 1 frame. Caller passes `result.debugLandmarks` through.
+  → `apps/parakeet/src/modules/video-analysis/ui/VideoPlayerCard.tsx`
+  → `apps/parakeet/src/app/(tabs)/session/video-analysis.tsx`
 
 ### 2.4 — Validation
 
-- [ ] `/verify` passes.
-- [ ] Manual on-device: record a fresh video, confirm `debug_landmarks` is persisted in prod, toggle skeleton overlay on during playback, verify joints track the lifter smoothly through the rep (no visible jitter from sparse-frame interpolation).
+- [x] `/verify`-equivalent: `nx run parakeet:lint` clean, `vitest run src/modules/video-analysis` green (474 tests).
+- [ ] Manual on-device: record a fresh video, confirm `debug_landmarks` persists in prod, toggle skeleton overlay on during playback, verify joints track smoothly with no visible jitter from the 3–4 fps → 30 fps lerp.
 - [ ] Storage check: confirm a 30s video's row stays well under 50KB JSON for `debug_landmarks` + `analysis`.
 
 ## Phase 3 (optional) — Re-analysis backfill

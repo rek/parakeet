@@ -226,9 +226,11 @@ export function useVideoAnalysis({
         captureException
       );
 
-      // 7. In dev builds, store raw landmarks for calibration test harness.
-      // Non-blocking — fire and forget so it doesn't slow down the UI.
-      if (typeof __DEV__ !== 'undefined' && __DEV__ && extractedFrames) {
+      // 7. Persist raw landmarks so the playback skeleton overlay can
+      // render without re-running MediaPipe (backlog #19 Phase 2).
+      // Non-blocking — the row is already saved; losing this write only
+      // disables the skeleton overlay on that one video.
+      if (extractedFrames) {
         updateSessionVideoDebugLandmarks({
           id: saved.id,
           frames: extractedFrames,
@@ -331,11 +333,8 @@ export function useVideoAnalysis({
           analyze: ({ frames, fps, lift: l }) =>
             analyzeVideoFrames({ frames, fps, lift: l }),
           update: updateSessionVideoAnalysis,
-          saveDebugLandmarks:
-            typeof __DEV__ !== 'undefined' && __DEV__
-              ? ({ id, frames, fps }) =>
-                  updateSessionVideoDebugLandmarks({ id, frames, fps })
-              : undefined,
+          saveDebugLandmarks: ({ id, frames, fps }) =>
+            updateSessionVideoDebugLandmarks({ id, frames, fps }),
           onProgress: setProgress,
           onBreadcrumb: (step, data) =>
             addBreadcrumb('reanalyze', step, data),

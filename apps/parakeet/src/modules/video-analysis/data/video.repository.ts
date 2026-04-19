@@ -10,6 +10,10 @@ import type { DbRow } from '@platform/supabase';
 import { toJson, typedSupabase } from '@platform/supabase';
 import { captureException } from '@platform/utils/captureException';
 
+import {
+  DebugLandmarksSchema,
+  type DebugLandmarks,
+} from '../lib/pose-types';
 import type { SessionVideo } from '../model/types';
 
 type SessionVideoRow = DbRow<'session_videos'>;
@@ -27,6 +31,17 @@ function parseCoaching(raw: unknown): FormCoachingResult | null {
   const result = FormCoachingResultSchema.safeParse(raw);
   if (result.success) return result.data;
   captureException(new Error(`Invalid coaching JSON: ${result.error.message}`));
+  return null;
+}
+
+function parseDebugLandmarks(raw: unknown): DebugLandmarks | null {
+  if (raw == null) return null;
+  const result = DebugLandmarksSchema.safeParse(raw);
+  if (result.success) return result.data;
+  // Non-fatal — the overlay simply stays disabled for malformed rows.
+  captureException(
+    new Error(`Invalid debug_landmarks JSON: ${result.error.message}`)
+  );
   return null;
 }
 
@@ -55,6 +70,7 @@ function toSessionVideo(row: VideoRowWithProfile): SessionVideo {
       : null,
     videoWidthPx: row.video_width_px ?? null,
     videoHeightPx: row.video_height_px ?? null,
+    debugLandmarks: parseDebugLandmarks(row.debug_landmarks),
     createdAt: row.created_at,
   };
 }
@@ -259,8 +275,12 @@ export async function updateSessionVideoCoaching({
 }
 
 /**
- * Store raw PoseFrame[] landmarks for calibration debugging.
- * Only called in __DEV__ — the column is nullable and ignored in production.
+ * Persist raw PoseFrame[] landmarks to `session_videos.debug_landmarks`.
+ *
+ * Used by the playback skeleton overlay (backlog #19 Phase 2) — the column
+ * is nullable so rows created before this shipped simply hide the overlay.
+ * Non-fatal on write failure: losing the skeleton is preferable to blocking
+ * the primary save path, so the caller should not `await` for correctness.
  */
 export async function updateSessionVideoDebugLandmarks({
   id,
@@ -279,7 +299,6 @@ export async function updateSessionVideoDebugLandmarks({
 
   if (error) {
     captureException(error);
-    // Non-fatal — debug data loss is acceptable
   }
 }
 

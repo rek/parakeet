@@ -12,12 +12,14 @@ import { useVideoPlayer, VideoView } from 'expo-video';
 
 import { useOverlayPreference } from '../hooks/useOverlayPreference';
 import { usePlaybackTime } from '../hooks/usePlaybackTime';
+import type { DebugLandmarks } from '../lib/pose-types';
 import { computeDisplayRect } from '../lib/video-display-rect';
 import { radii, spacing, typography } from '../../../theme';
 import type { ColorScheme } from '../../../theme';
 
 import { OverlayToggleChips } from './OverlayToggleChips';
 import { PlaybackBarPathOverlay } from './PlaybackBarPathOverlay';
+import { PlaybackSkeletonOverlay } from './PlaybackSkeletonOverlay';
 
 /**
  * Video playback card using expo-video.
@@ -34,6 +36,7 @@ export function VideoPlayerCard({
   analysis,
   videoWidthPx,
   videoHeightPx,
+  debugLandmarks,
 }: {
   localUri: string;
   durationSec: number;
@@ -44,6 +47,7 @@ export function VideoPlayerCard({
   analysis?: VideoAnalysisResult | null;
   videoWidthPx?: number | null;
   videoHeightPx?: number | null;
+  debugLandmarks?: DebugLandmarks | null;
 }) {
   const styles = useMemo(() => buildStyles(colors), [colors]);
 
@@ -85,8 +89,10 @@ export function VideoPlayerCard({
     analysis.reps.length > 0 &&
     displayRect != null;
 
-  // Phase 2 will set this true when debug_landmarks are populated.
-  const skeletonAvailable = false;
+  const skeletonAvailable =
+    debugLandmarks != null && debugLandmarks.frames.length > 0;
+  const showSkeleton =
+    skeletonEnabled && skeletonAvailable && displayRect != null;
 
   return (
     <View style={styles.container}>
@@ -109,6 +115,15 @@ export function VideoPlayerCard({
         {showBarPath && analysis && displayRect && (
           <PlaybackBarPathOverlay
             analysis={analysis}
+            currentTime={currentTime}
+            displayRect={displayRect}
+            colors={colors}
+          />
+        )}
+        {showSkeleton && debugLandmarks && displayRect && (
+          <PlaybackSkeletonOverlay
+            frames={debugLandmarks.frames}
+            fps={debugLandmarks.fps}
             currentTime={currentTime}
             displayRect={displayRect}
             colors={colors}

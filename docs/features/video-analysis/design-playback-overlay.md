@@ -1,11 +1,12 @@
 # Video Playback Overlay (Bar Path + Skeleton)
 
-**Status:** Phase 1 shipped — Phase 2 in progress
+**Status:** Implemented (2026-04-19)
 **Created:** 2026-04-18
 **Last updated:** 2026-04-19
 
 - **Phase 1 (bar path overlay)**: shipped. `ui/PlaybackBarPathOverlay.tsx` is wired into `VideoPlayerCard`, backed by `lib/playback-overlay-math.ts` (`computeDisplayRect`, `findActiveRep`, `pickHeadDot`) and `ui/OverlayToggleChips.tsx`. AsyncStorage persistence via `hooks/useOverlayPreference.ts`. Works on all existing analysed videos (no schema change).
-- **Phase 2 (skeleton overlay)**: in progress. `lib/skeleton-connections.ts` is ready; `debug_landmarks` promotion out of `__DEV__` guard + new `SkeletonOverlay` component pending. Dashboard-side preview (`apps/dashboard/src/app/VideoOverlayPreview.tsx`) already renders the skeleton against landmark fixtures for validation.
+- **Phase 2 (skeleton overlay)**: shipped. `ui/PlaybackSkeletonOverlay.tsx` lerps between sparse 3–4 fps landmark frames and draws bones via the existing `lib/skeleton-connections.ts`. `debug_landmarks` promoted out of the `__DEV__` guard in `useVideoAnalysis.processVideo` and via the `saveDebugLandmarks` dep in `reanalyze`; repository validates the payload with a new `DebugLandmarksSchema` Zod codec before surfacing it on `SessionVideo.debugLandmarks`. Skeleton chip flips from "No landmarks for this video" to interactive when the row has a populated payload.
+- **Phase 3 (re-analysis backfill)**: deferred per spec. Users who want skeletons on older videos can tap **Re-analyze** (already exists, backlog #20) — the existing flow writes `debug_landmarks` through the same path.
 
 ## Problem
 

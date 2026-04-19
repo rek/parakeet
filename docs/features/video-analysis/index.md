@@ -26,4 +26,4 @@ AI-powered form analysis with set-level video linking and calibration.
 | [spec-post-rest-recording.md](./spec-post-rest-recording.md) | done | Auto-record after rest (mobile-051) |
 | [spec-view-angle.md](./spec-view-angle.md) | done | View angle rework (mobile-052) |
 | [spec-ai-proxy.md](./spec-ai-proxy.md) | done | OpenAI Edge Function proxy (GH#161) |
-| [spec-playback-overlay.md](./spec-playback-overlay.md) | partial | Phase 1 bar path shipped; Phase 2 skeleton pending |
+| [spec-playback-overlay.md](./spec-playback-overlay.md) | done | Phase 1 bar path + Phase 2 skeleton overlay (backlog #19) |

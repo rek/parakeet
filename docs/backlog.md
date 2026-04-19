@@ -82,9 +82,9 @@ Pose-geometry classifier (`lib/detect-lift.ts`) runs after frame extraction in `
 
 In-place relabel button deferred — would need to rewrite `session_videos.lift`, purge prior coaching, and re-run `analyzeVideoFrames`. File as follow-up when needed.
 
-## 19
+## ~~19~~ (Done — 19 Apr 2026)
 
-**Video playback overlay — bar path + skeleton on top of `<VideoView>`.** Today the bar path is a standalone SVG card next to the video; the skeleton is only drawn over the camera preview during recording. Lifters watching their replay should be able to toggle either overlay onto the playing video. Phase 1 ships bar path overlay (no schema changes, works on all existing analysed videos). Phase 2 promotes `debug_landmarks` to a production write and ships the skeleton overlay. Toggle chips above the video; per-overlay AsyncStorage persistence; correct positioning under `contentFit="contain"` letterboxing; lerped interpolation between sparse 4fps stored frames. See [design doc](features/video-analysis/design-playback-overlay.md) and [spec](features/video-analysis/spec-playback-overlay.md).
+Playback overlays complete. Phase 1 bar-path overlay shipped earlier; Phase 2 skeleton overlay landed today — `ui/PlaybackSkeletonOverlay.tsx` lerps between sparse 3–4 fps landmarks to draw bones at the native video's display rect under `contentFit="contain"` letterboxing. `debug_landmarks` promoted out of the `__DEV__` guard in both `processVideo` and `reanalyze`; repository validates the stored JSON with a new `DebugLandmarksSchema` (Zod) before surfacing it on `SessionVideo.debugLandmarks`. Skeleton toggle chip flips from "No landmarks for this video" to interactive the moment a row has a populated payload. Old videos get skeletons by tapping Re-analyze (backlog #20). Phase 3 backfill deferred per spec. See [design doc](features/video-analysis/design-playback-overlay.md) and [spec](features/video-analysis/spec-playback-overlay.md).
 
 ## 17
 
