@@ -109,4 +109,5 @@ describe('analyzeVideoFrames — landmarker failure handling', () => {
       expect(result.analysisVersion).toBe(5);
     }
   });
+
 });

@@ -4,6 +4,7 @@ import { assembleAnalysis } from '../lib/metrics-assembler';
 import { filterImplausibleFrames } from '../lib/plausibility-filter';
 import type { PoseFrame } from '../lib/pose-types';
 import { computeSagittalConfidence } from '../lib/view-confidence';
+import { reconstructBenchRejections } from '../lib/wrist-anchored-reconstruct';
 
 /** Zeroed 33-landmark frame for when detection fails — maintains index alignment. */
 const EMPTY_FRAME: PoseFrame = Array.from({ length: 33 }, () => ({
@@ -80,10 +81,17 @@ function interpolateEmptyFrames({ frames }: { frames: PoseFrame[] }) {
  *            nudged about a label mismatch. See `lib/check-lift-mismatch.ts`.
  *   Stage 1a Plausibility filter — reject frames where pose has likely
  *            collapsed to background features (bar occlusion on bench,
- *            snap-to-ceiling-light). Rejected frames become `EMPTY_FRAME`
- *            so Stage 1b lerps them away. See `lib/plausibility-filter.ts`.
- *   Stage 1b Frame hygiene — interpolate empty frames so failed detections
- *            don't corrupt bar path, angles, or rep detection with zeros.
+ *            snap-to-ceiling-light). Rejected frames become `EMPTY_FRAME`.
+ *            See `lib/plausibility-filter.ts`.
+ *   Stage 1a' Wrist-anchored reconstruction (bench only) — for each
+ *            rejected frame that still has visible wrists, rebuild the
+ *            body from the anchor frame's torso + the rejected frame's
+ *            wrists. Bench-only because the lifter is supine and still,
+ *            so the rigid-arm approximation is good enough. See
+ *            `lib/wrist-anchored-reconstruct.ts`.
+ *   Stage 1b Frame hygiene — interpolate any remaining empty frames so
+ *            failed detections don't corrupt bar path, angles, or rep
+ *            detection with zeros.
  *   Stage 2  Sagittal confidence — measure shoulder/hip separation to decide
  *            how side-on the camera is. Downstream metrics are foreshortened
  *            at oblique angles; this scalar lets the metric layer compensate.
@@ -101,6 +109,13 @@ export function analyzeVideoFrames({
   lift: 'squat' | 'bench' | 'deadlift';
 }) {
   const plausibility = filterImplausibleFrames({ frames });
+  const reconstructedCount =
+    lift === 'bench'
+      ? reconstructBenchRejections({
+          originalFrames: frames,
+          filteredFrames: plausibility.frames,
+        })
+      : 0;
   const interpolated = interpolateEmptyFrames({ frames: plausibility.frames });
   const valid = interpolated.filter((f) => !isEmptyFrame(f));
   const effectiveFps =
@@ -110,7 +125,7 @@ export function analyzeVideoFrames({
 
   if (typeof __DEV__ !== 'undefined' && __DEV__) {
     console.log(
-      `[analysis] ${valid.length}/${frames.length} usable frames (fps=${effectiveFps.toFixed(1)}, sagittalConfidence=${sagittalConfidence.toFixed(2)}, rejected=${plausibility.lowVisibilityRejected}vis+${plausibility.torsoJumpRejected}jump)`
+      `[analysis] ${valid.length}/${frames.length} usable frames (fps=${effectiveFps.toFixed(1)}, sagittalConfidence=${sagittalConfidence.toFixed(2)}, rejected=${plausibility.lowVisibilityRejected}vis+${plausibility.torsoJumpRejected}jump, reconstructed=${reconstructedCount})`
     );
   }
   return assembleAnalysis({
