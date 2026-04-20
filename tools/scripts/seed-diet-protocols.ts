@@ -115,19 +115,42 @@ async function main() {
     if (fErr || !foodRows) throw fErr ?? new Error('no food rows');
     const foodIdByCanon = new Map(foodRows.map((r) => [r.canonical_name, r.id]));
 
-    const keepFoodIds: string[] = [];
-    const pfUpserts = foods.map((r) => {
+    // Dedupe by food_id — a food can appear in the CSV under multiple
+    // categories (avocado = fat + fruit; tempeh = protein + fermented),
+    // but the junction's (protocol_id, food_id) must be unique. First
+    // occurrence wins, consistent with uniqueFoods above. Duplicates
+    // with differing status/notes are logged so CSV drift stays visible.
+    const pfMap = new Map<string, { status: string; notes: string | null }>();
+    let duplicateRowCount = 0;
+    for (const r of foods) {
       const foodId = foodIdByCanon.get(canonical(r.food));
       if (!foodId) throw new Error(`missing food id for ${r.food}`);
-      keepFoodIds.push(foodId);
-      return {
-        protocol_id: protoRow.id,
-        food_id: foodId,
+      const existing = pfMap.get(foodId);
+      if (existing) {
+        duplicateRowCount++;
+        const drift =
+          existing.status !== r.status ||
+          (existing.notes ?? '') !== (r.notes || '');
+        if (drift) {
+          console.warn(
+            `[${p.slug}] duplicate food "${r.food}" differs from first occurrence — first wins`,
+          );
+        }
+        continue;
+      }
+      pfMap.set(foodId, {
         status: r.status,
         notes: r.notes || null,
-        updated_at: new Date().toISOString(),
-      };
-    });
+      });
+    }
+    const pfUpserts = [...pfMap].map(([foodId, v]) => ({
+      protocol_id: protoRow.id,
+      food_id: foodId,
+      status: v.status,
+      notes: v.notes,
+      updated_at: new Date().toISOString(),
+    }));
+    const keepFoodIds = pfUpserts.map((u) => u.food_id);
     const { error: pfErr } = await db
       .from('diet_protocol_foods')
       .upsert(pfUpserts, { onConflict: 'protocol_id,food_id' });
@@ -139,7 +162,9 @@ async function main() {
       .eq('protocol_id', protoRow.id)
       .not('food_id', 'in', `(${keepFoodIds.join(',')})`);
     if (pfDelErr) throw pfDelErr;
-    console.log(`[${p.slug}] upserted ${pfUpserts.length} protocol_foods`);
+    console.log(
+      `[${p.slug}] upserted ${pfUpserts.length} protocol_foods (${duplicateRowCount} CSV duplicates collapsed)`,
+    );
 
     // 3. Supplements (optional).
     if (fs.existsSync(supplementsPath)) {
