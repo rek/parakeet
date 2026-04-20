@@ -55,17 +55,3 @@ Direction: start with (1). If `adb pull`-ed thumbnails are rotated wrong, pipe t
 
 `react-native-mediapipe` does **not** expose a video-file extractor (only `PoseDetectionOnImage` for paths and `usePoseDetection` for live camera frames) — original backlog mention was optimistic. Path-based extraction stays.
 
-## 27
-
-**Nutrition module — lipedema/RAD research + Nepal-context protocol.** Phase 1 shipped 2026-04-19: new `modules/nutrition` with Overview/Foods/Supplements/Lifestyle/Compare/Sources tabs, sidebar entry, CSV/MD source-of-truth under `tools/data/`, three migrations (`diet_protocols`, `diet_foods`, `diet_protocol_foods`, `diet_supplements`, `diet_lifestyle`), idempotent seed script (`npm run db:seed:diet`), research-queries.sql, `react-native-markdown-display` themed renderer.
-
-Full context + remaining work + future brainstorm: **[gh#199](https://github.com/rek/parakeet/issues/199)**. That issue is the canonical handoff doc — read it first.
-
-Highest-value follow-ups (from #199):
-1. Intake logging — `user_diet_intake` table; tap morning-shot/supplement items to mark done.
-2. Symptom & measurement tracking — `lipedema_measurements` (circumferences, pain, swelling, photos).
-3. Training correlation — overlay adherence onto Wilks / session density / soreness. The reason this lives in parakeet.
-4. Flesh out `keto.md` + add `keto_supplements.csv` / `keto_lifestyle.csv`.
-5. Feature-flag gate before this ships to prod (`db:push` not yet run).
-6. Tests for `extract-sources.ts` and the CSV parsers.
-
