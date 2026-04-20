@@ -14,13 +14,12 @@ import {
 import type { PoseFrame } from '../../lib/pose-types';
 import type { SessionVideo } from '../../model/types';
 
+// Integration test: requires a running local Supabase stack + real
+// env-provided keys. No hardcoded fallbacks — the test skips cleanly
+// below if the stack isn't reachable.
 const SUPABASE_URL = process.env.SUPABASE_URL ?? 'http://localhost:54321';
-const SUPABASE_ANON_KEY =
-  process.env.SUPABASE_ANON_KEY ??
-  'sb_publishable_REDACTED';
-const SUPABASE_SERVICE_KEY =
-  process.env.SUPABASE_SERVICE_KEY ??
-  'sb_secret_REDACTED';
+const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY ?? '';
+const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY ?? '';
 
 const FIXTURE_PATH = resolve(
   __dirname,
@@ -38,9 +37,12 @@ const localSupabaseReachable = await (async () => {
   }
 })();
 
-// Integration tests require a running local Supabase stack + fixture file.
-// Skip cleanly in CI and in workspaces where `supabase start` isn't in play.
-const runIntegration = localSupabaseReachable && existsSync(FIXTURE_PATH);
+// Integration tests require a running local Supabase stack + fixture
+// file + env-provided keys. Skip cleanly in CI and in workspaces where
+// `supabase start` isn't in play.
+const keysPresent = Boolean(SUPABASE_ANON_KEY && SUPABASE_SERVICE_KEY);
+const runIntegration =
+  localSupabaseReachable && existsSync(FIXTURE_PATH) && keysPresent;
 const describeIntegration = runIntegration ? describe : describe.skip;
 
 describe('reanalyze.pure', () => {
