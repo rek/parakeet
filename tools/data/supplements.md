@@ -41,16 +41,35 @@ correction rationale, C for weak / case-only evidence.
 
 ## Nepal sourcing key
 
-- **🇳🇵 Local** — reliably available in Kathmandu pharmacies / shops.
+- **🇳🇵 Local** — reliably available via **Daraz.com.np** (Nepal's
+  dominant e-commerce site) or Kathmandu pharmacies.
 - **📦 Import** — iHerb (ships to Nepal) / Amazon via forwarder /
-  traveller bring-back.
+  traveller bring-back. Used when Daraz doesn't stock the specific
+  form.
 - **🌱 Food** — obtainable via diet, no pill needed.
 
-Pre-flight for international buys: iHerb ships to Nepal via air
-freight; customs duties may apply depending on declared value and
-product class. Daflon (Servier India: 450 mg diosmin + 50 mg
-hesperidin per tab) is regional-distribution across South Asia and is
-the locally-stocked form of that combination.
+### Daraz Nepal — brand-level confirmations (checked 2026-04-20)
+
+| Supplement | Daraz brand options |
+| --- | --- |
+| **Magnesium glycinate** | Zenith Nutrition 600 mg (122 mg elemental); HK Vitals 1682 mg total / 370 mg elemental (full target dose in 1 tab). |
+| **Vitamin D3 + K2 (combined)** | Calcima-K2 (CCM + K2-MK7 + D3 + Zn); Nutrela D2K chewables. Combined form is cheaper and more convenient than separate bottles. |
+| **Omega-3 fish oil** | MuscleBlaze Omega 3 Gold 1300 mg (500 mg EPA + 400 mg DHA, Labdoor USA certified); HK Vitals Triple Strength (525 mg EPA + 375 mg DHA). **Pick Labdoor-certified for heavy-metal purity.** |
+| **Brazil nuts (selenium food route)** | Bhumi Nepal Brazil Nuts 500 g — stocked. **Not applicable to this user (tree-nut allergy).** |
+
+### Daraz — not stocked (use iHerb or local pharmacy)
+
+| Supplement | Alternative |
+| --- | --- |
+| **Standalone selenium tablets** | Multivitamins-with-selenium sold on Daraz but concentration too low; iHerb for 200 mcg standalone. |
+| **Butcher's broom** | iHerb. |
+| **Diosmin + Hesperidin (Daflon)** | Not on Daraz — local pharmacy route. Daflon (Servier India, 450 + 50 mg per tab) is regional-distribution across South Asia; widely stocked in Kathmandu pharmacies for hemorrhoids / varicose veins (same compound). |
+| **Sublingual B12 methylcobalamin** | Local pharmacy (injectable + sublingual routinely stocked) or iHerb. |
+| **C8 MCT oil** | iHerb — coconut-derived MCT blends exist on Daraz but not pure C8. |
+
+**iHerb shipping to Nepal**: confirmed supported (all 180+ countries
+via air freight). Customs duties may apply — DDP checkout option pre-
+pays duties to avoid carrier-side handling fees.
 
 ---
 
@@ -65,7 +84,7 @@ the locally-stocked form of that combination.
 | Rationale | Near-universal deficiency in RAD patients. Immune, bone, neuromuscular, mood. Also modulates adipose inflammation. |
 | Evidence | **B** — deficiency well documented in lipedema cohorts; supplementation effect on lipedema-specific outcomes less well studied. |
 | Food equivalent | Oily fish gives some but not therapeutic dose. Sun exposure helps but inconsistent. |
-| Nepal sourcing | **🇳🇵 Local** — widely available; check IU potency on label. **📦 Import** for D3+K2 combos. |
+| Nepal sourcing | **🇳🇵 Local** — widely available; check IU potency on label. Daraz stocks combined D3+K2 products (Calcima-K2, Nutrela D2K) — cheaper than buying two bottles. |
 | Status | ✓ In `rad_supplements.csv`. |
 
 ### Vitamin C — *Suggested tier*
@@ -87,9 +106,9 @@ the locally-stocked form of that combination.
 | Dose | 200 mcg/day (do not exceed 400 mcg — toxicity risk) |
 | Rationale | Thyroid function, antioxidant (glutathione peroxidase). ~47% of lipedema patients deficient in published series. Cho/Herbst retrospective case (n=1) used 400 mcg/day + butcher's broom → 70–79% leg volume reduction. |
 | Evidence | **C** — one retrospective case study; plausible mechanism. 2025 scoping review cites conservative 45–60 mcg range for routine use. |
-| Food equivalent | **🌱 2 Brazil nuts ≈ 200 mcg.** Most efficient route if nuts available. |
-| Nepal sourcing | Brazil nuts rare/expensive in Nepal; seek in expat-oriented grocers or import. Selenium tablets **📦 Import** typically. |
-| Status | ✓ Selenium in `rad_supplements.csv`. Brazil nuts not yet in `rad.csv` nuts category (follow-up). |
+| Food equivalent | 2 Brazil nuts ≈ 200 mcg is the classical food route — **not available to this user** (tree-nut allergy; Brazil nuts are marked `no,ALLERGY` in `rad.csv`). Tablet only. |
+| Nepal sourcing | Standalone selenium tablets not widely stocked on **Daraz Nepal** (mostly found inside multivitamin combos). Standalone: **📦 Import** (iHerb). Bhumi Nepal Brazil Nuts 500g *is* stocked on Daraz for users without the allergy. |
+| Status | ✓ Selenium in `rad_supplements.csv`. Brazil nuts in `rad.csv` + `keto.csv` as `no,ALLERGY`. |
 
 ### Diosmin (often as Diosmin + Hesperidin, "Daflon" or equivalent)
 
@@ -143,7 +162,7 @@ the locally-stocked form of that combination.
 | Rationale | Muscle, sleep, insulin sensitivity, vascular tone. Commonly depleted under stress / ketogenic adaptation. |
 | Evidence | **B** per 2025 scoping review ("evaluate" tier for lipedema); **A** for deficiency correction generally. |
 | Food equivalent | Leafy greens, seeds, dark chocolate — contributory, often not sufficient. |
-| Nepal sourcing | Glycinate: **📦 Import** typically. Citrate: **🇳🇵 Local** more commonly. |
+| Nepal sourcing | **🇳🇵 Local** — Daraz stocks **Zenith Nutrition 600 mg** (122 mg elemental) and **HK Vitals** (370 mg elemental per tab — hits full target dose in one pill). Citrate more widely available in Kathmandu pharmacies too. |
 | Status | **Already in rad.csv (both glycinate and citrate).** ✓ |
 
 ---
@@ -166,7 +185,7 @@ the locally-stocked form of that combination.
 | Supplement | When to consider |
 | --- | --- |
 | **Vitamin K2 (MK-7)** | Always if taking D3 long-term — directs calcium to bones, away from arteries. 100 mcg/day. 📦 Import. |
-| **Omega-3 fish oil (EPA/DHA)** — *now core* | 1–2 g combined EPA+DHA/day (Cannataro 2021 used 3 g). One of the two "Suggested" tier supplements per 2025 scoping review. If fish intake <2×/week this moves from optional to core. 📦 Import. |
+| **Omega-3 fish oil (EPA/DHA)** — *now core* | 1–2 g combined EPA+DHA/day (Cannataro 2021 used 3 g). One of the two "Suggested" tier supplements per 2025 scoping review. 🇳🇵 Local via Daraz (MuscleBlaze Omega 3 Gold, Labdoor USA certified; HK Vitals Triple Strength). |
 | **Calcium** — *core on long-term keto* | 1000–1200 mg/day total intake (food first). Low-carb diets raise urinary calcium excretion (bone-loss flag from 2025 scoping review). Use citrate form; space 4h from thyroid hormone / iron / bisphosphonates. |
 | **Probiotic** | If gut dysbiosis symptoms. Multi-strain. Or lean on kefir/yoghurt (already in CSV). |
 | **Zinc** | If picolinate form, 15–30 mg/day. Monitor copper balance if long-term. 🇳🇵 Local. |
