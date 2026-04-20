@@ -116,21 +116,42 @@ Diet alone isn't the whole protocol.
 
 ## Evidence quality
 
-- **Strongest evidence**: low-GI / ketogenic patterns for lipedema symptom
-  reduction. RCT (70 women, 8 weeks) showed superior pain relief on
-  low-carb vs control. 22-month follow-up study showed sustained weight,
-  BMI, and pain improvements. Systematic review + meta-analysis (Nutrients
-  2024) and narrative review (Current Obesity Reports 2025) both support
-  ketogenic intervention as effective for lipedema.
-- **Weaker evidence**: specific supplement doses (D3, selenium, diosmin,
-  butcher's broom, rutin). Mostly anecdotal / small retrospective cases.
-  Not harmful at reasonable doses, but not RCT-validated.
-- **Weakest evidence**: A1/A2 casein distinction as a disease driver. The
-  A2-milk hypothesis has commercial backing but mixed peer-reviewed
-  support; its relevance to lipedema specifically is unstudied. Treat the
-  A2 preference as a personal sensitivity adaptation, not a RAD-protocol
-  requirement.
+Calibrated against the **2025 Nutrition Reviews scoping review** — the
+current gold-standard overview of nutritional intervention evidence in
+lipedema.
+
+- **Moderate evidence** (the top of a thin field): low-carb / ketogenic
+  patterns for lipedema symptom reduction. **Lundanes 2024 RCT** (n=70,
+  8 weeks) showed superior pain relief on low-carb vs control (−1.1 VAS,
+  p=0.009), *uncorrelated with weight loss*. **Sørlie 2022 LIPODIET
+  pilot** (n=9) and **2024 Nutrients SR** (n=329, 7 studies) corroborate.
+  **Cannataro 2021** is a single-case 22-month report — hypothesis-
+  generating, not confirmatory. German DGPL S2k guideline: 94.7%
+  expert consensus for ketogenic diet; 100% for Mediterranean.
+- **Limited evidence**: Mediterranean diet — a single small trial
+  (n=29) showed mixed circumference results. Modified Mediterranean-
+  ketogenic variant (Cestaro 2023, 2025 Nutrients) is promising but
+  early.
+- **No supplement has established efficacy for lipedema per se** (2025
+  scoping review). The "Suggested" tier is **DHA/EPA (1–2 g/day)** and
+  **Vitamin C (500–1000 mg/day)** — based on case reports + mechanistic
+  anti-inflammatory rationale. Everything else (D3, selenium, diosmin,
+  butcher's broom, rutin, magnesium) sits in the "Evaluate as needed"
+  tier: not harmful at reasonable doses, but not RCT-validated. The
+  Cho/Herbst retrospective case used **selenium 400 mcg + butcher's
+  broom 1 g/day** and saw 70–79% leg-volume reduction — suggestive but
+  n=1.
+- **Weakest evidence**: A1/A2 casein distinction as a disease driver.
+  The A2-milk hypothesis has commercial backing but mixed peer-reviewed
+  support; its relevance to lipedema specifically is unstudied. Treat
+  the A2 preference as a personal sensitivity adaptation, not a
+  RAD-protocol requirement.
 - **Contested**: red meat avoidance (see "Protein choices" above).
+- **Key caution flagged by the 2025 scoping review**: low-carb diets
+  increase urinary calcium excretion — bone-loss risk on long-term
+  keto. Monitor calcium intake + consider DXA if on keto > 12 months.
+- **Bariatric surgery does not reduce lipedema-specific fat**; the
+  pathological adipose persists even after significant weight loss.
 
 ## What this diet does NOT claim
 
@@ -142,29 +163,64 @@ adipose remains surgical (lymph-sparing liposuction).
 
 ## Sources
 
-- Herbst KL. *Rare adipose disorders (RADs) masquerading as obesity.* Acta
-  Pharmacol Sin. 2012.
-  [PubMed 22301856](https://pubmed.ncbi.nlm.nih.gov/22301856/)
-- Herbst KL. *The RAD Diet.*
-  [lipomadoc.org/blog/rad-diet](http://www.lipomadoc.org/blog/rad-diet)
-- *Diet & Supplement Recommendations for Lipedema.*
-  [lipedemaspecialist.com](https://www.lipedemaspecialist.com/2022/01/17/diet-supplement-recommendations-for-lipedema/)
-- *Nutritious Eating to Reduce Lipedema.*
-  [lipedema.net](https://lipedema.net/nutritious-eating-to-reduce-lipedema/)
-- Cannataro R. et al. *Management of Lipedema with Ketogenic Diet: 22-Month
-  Follow-Up.* [PMC8707844](https://pmc.ncbi.nlm.nih.gov/articles/PMC8707844/)
-- *Bucher's Broom and Selenium Improve Lipedema: A Retrospective Case Study.*
+### Primary clinical evidence
+
+- Lundanes J et al. *Effect of a low-carbohydrate diet on pain and
+  quality of life in female patients with lipedema: a randomized
+  controlled trial.* Obesity 2024.
+  [Wiley](https://onlinelibrary.wiley.com/doi/full/10.1002/oby.24026)
+  — **the n=70 RCT**.
+- Sørlie V et al. *Effect of a ketogenic diet on pain and quality of
+  life in patients with lipedema: the LIPODIET pilot study.* Clinical
+  Nutrition ESPEN 2022.
+  [PMC9358738](https://pmc.ncbi.nlm.nih.gov/articles/PMC9358738/)
+- Cannataro R et al. *Management of Lipedema with Ketogenic Diet:
+  22-Month Follow-Up.* Healthcare 2021.
+  [PMC8707844](https://pmc.ncbi.nlm.nih.gov/articles/PMC8707844/)
+  — **single-case** follow-up.
+- Cho S, Herbst KL. *Butcher's Broom and Selenium Improve Lipedema:
+  A Retrospective Case Study.*
   [ResearchGate](https://www.researchgate.net/publication/271097697_Bucher's_Broom_and_Selenium_Improve_Lipedema_A_Retrospective_Case_Study)
-- *Nutritional Supplements and Lipedema: Scientific and Rational Use.*
-  [MDPI](https://www.mdpi.com/1661-3821/2/4/20)
-- *Ketogenic Diet: A Nutritional Therapeutic Tool for Lipedema?*
-  [PMC10748777](https://pmc.ncbi.nlm.nih.gov/articles/PMC10748777/)
+  · [LEGATO library](https://library.lipedema.org/bibliography/GXRY9832)
+
+### Reviews and meta-analyses
+
+- *Current Evidence-Based Clinical Nutritional Approaches in Lipedema:
+  A Scoping Review.* Nutrition Reviews 2025.
+  [OUP](https://academic.oup.com/nutritionreviews/advance-article/doi/10.1093/nutrit/nuaf203/8342097)
+  — current gold-standard overview.
 - *The Efficacy of Ketogenic Diets for Lipedema — Systematic Review &
-  Meta-Analysis.* Nutrients 2024.
+  Meta-Analysis.* Nutrients 2024, 16(19):3276.
   [MDPI](https://www.mdpi.com/2072-6643/16/19/3276)
 - *Therapeutic Applications of Ketogenic Diets in Lipedema — Narrative
   Review.* Current Obesity Reports 2025.
   [Springer](https://link.springer.com/article/10.1007/s13679-025-00642-y)
+- *Ketogenic Diet: A Nutritional Therapeutic Tool for Lipedema?*
+  [PMC10748777](https://pmc.ncbi.nlm.nih.gov/articles/PMC10748777/)
+- *Exploring the Anti-Inflammatory Potential of a Mediterranean-Style
+  Ketogenic Diet in Women with Lipedema.* Nutrients 2025, 17(18):3014.
+  [MDPI](https://www.mdpi.com/2072-6643/17/18/3014)
+
+### Supplements
+
+- *Nutritional Supplements and Lipedema: Scientific and Rational Use.*
+  MDPI Lymphology 2022, 2(4).
+  [MDPI](https://www.mdpi.com/1661-3821/2/4/20)
+
+### Herbst RAD diet (foundational)
+
+- Herbst KL. *Rare adipose disorders (RADs) masquerading as obesity.*
+  Acta Pharmacol Sin 2012.
+  [PubMed 22301856](https://pubmed.ncbi.nlm.nih.gov/22301856/)
+- Herbst KL. *The RAD Diet.*
+  [lipomadoc.org/blog/rad-diet](http://www.lipomadoc.org/blog/rad-diet)
+- Herbst KL. *Medicine and Supplements for People with Lipedema and
+  Dercum's Disease.*
+  [PDF](http://lipedemaitalia.info/wp-content/uploads/2020/07/medicine-and-supplement-for-people-with-lipedema-and-DD-Herbst.pdf)
+- *Diet & Supplement Recommendations for Lipedema.*
+  [lipedemaspecialist.com](https://www.lipedemaspecialist.com/2022/01/17/diet-supplement-recommendations-for-lipedema/)
+- *Nutritious Eating to Reduce Lipedema.*
+  [lipedema.net](https://lipedema.net/nutritious-eating-to-reduce-lipedema/)
 - *Mediterranean / lean-meat framing.*
-  [lipocura](https://www.lipocura.com/lipoblog/lipedema-nutrition/),
+  [lipocura](https://www.lipocura.com/lipoblog/lipedema-nutrition/) ·
   [Talk Lipoedema](https://www.talklipoedema.org/nutrition)

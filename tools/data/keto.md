@@ -13,11 +13,30 @@ split: ~70–75% calories from fat, ~20–25% protein, ~5–10% carbs (often
 ≤20–50g net carbs/day). Blood ketones ≥0.5 mmol/L ≈ "in ketosis".
 
 **Why it's in this research set.** Keto has the strongest published
-evidence for lipedema symptom reduction of any diet to date — notably the
-22-month follow-up study *Management of Lipedema with Ketogenic Diet*
-(Cannataro et al., 2021). Low-glycemic / ketogenic patterns reduce the
-insulin and inflammation signals that appear to worsen Rare Adipose
-Disorders. Keto is the aggressive lever; RAD is the sustainable one.
+evidence for lipedema symptom reduction of any diet to date — though the
+evidence base is still "moderate" in absolute terms (2025 Nutrition
+Reviews scoping review). The anchors:
+
+- **Lundanes et al. 2024** (*Obesity*, Wiley) — the largest RCT to date:
+  70 women with lipedema + obesity, 8-week low-carbohydrate diet vs
+  1200-kcal control. LCD arm: greater weight loss (−2.8 kg), pain
+  reduction (−1.1 on VAS, p=0.009). Pain reduction was *not* correlated
+  with weight loss — pointing at a direct mechanistic effect.
+- **LIPODIET pilot** (Sørlie et al. 2022) — 9 women, 7-week LCHF
+  (fat 70–75 E%, carbs 5–10 E%, protein 20 E%): weight −4.6 kg
+  (p<0.001), VAS pain −2.3 cm (p=0.018).
+- **Cannataro et al. 2021** — a **single-case 22-month follow-up**
+  (n=1) showing durable −41 kg weight, −67% VAS pain, −27% thigh
+  circumference. Hypothesis-generating, not confirmatory.
+- **2024 Nutrients SR + meta-analysis** — 7 studies, 329 participants,
+  consistent positive effects on anthropometric and body-composition
+  metrics.
+- **German DGPL S2k guideline**: ketogenic diet recommended with
+  **94.7% expert consensus**; Mediterranean diet 100% consensus.
+
+Low-glycemic / ketogenic patterns reduce insulin and inflammation
+signals that worsen Rare Adipose Disorders. Keto is the aggressive
+lever; RAD is the sustainable one.
 
 ## Macro targets
 
@@ -155,12 +174,17 @@ Knowing these up front is 80% of the durable-keto problem.
 
 | Claim | Grade | Notes |
 | --- | --- | --- |
-| Keto reduces lipedema pain / swelling | **A** | RCT (Cannataro 2021, 70 women, 8 weeks); 22-month follow-up showed sustained effect; 2024 Nutrients systematic review + meta-analysis; 2025 Current Obesity Reports narrative review. |
-| Electrolyte supplementation prevents keto flu | **A** | Mechanism direct; clinically obvious; not RCT'd but not really contested. |
-| Specific macro split (70/25/5) | **B** | Works clinically; individual variation large. |
-| Omega-3 fish oil helps inflammation on top of keto | **B** | Generally accepted; lipedema-specific data thin. |
-| MCT oil accelerates ketosis | **B** | Causes faster BHB rise; whether it improves outcomes beyond that is weaker. |
-| Exogenous ketones substitute for the diet | **C** | Don't. Raising BHB without insulin/carb control misses the mechanism. |
+| Low-carb reduces lipedema pain independent of weight loss | **A** | Lundanes 2024 RCT (n=70, 8 weeks, *Obesity*): −1.1 VAS pain (p=0.009), no correlation with weight loss. |
+| Keto reduces lipedema pain + body composition | **B** | Sørlie 2022 LIPODIET pilot (n=9, 7 weeks, 70–75% fat / 5–10% carb); 2024 Nutrients SR + MA (n=329, 7 studies); Cannataro 2021 single-case 22-month report. Moderate evidence overall per 2025 Nutrition Reviews scoping review. |
+| Keto is a defensible first-line diet | **B** | German DGPL S2k guideline: 94.7% expert consensus (with hypocaloric option). |
+| Electrolyte supplementation prevents keto flu | **A** | Mechanism direct; clinically obvious; not RCT'd but not contested. |
+| Low-carb increases urinary calcium excretion / bone-loss risk | **B** | Flagged explicitly by 2025 scoping review; monitor Ca intake + DXA if long-term. |
+| Specific macro split (70/25/5) | **B** | Works clinically across LIPODIET and Cannataro; individual variation large. |
+| Omega-3 (DHA/EPA 1–2 g/day) helps inflammation on top of keto | **B** | 2025 scoping review classifies as "Suggested" for lipedema. |
+| Vitamin C (500–1000 mg/day) suggested adjunct | **B** | 2025 scoping review "Suggested" tier; collagen + anti-inflammatory rationale. |
+| MCT oil accelerates ketosis | **B** | Causes faster BHB rise; outcome benefit beyond that weaker. |
+| Exogenous ketones substitute for the diet | **C** | Raising BHB without insulin/carb control misses the mechanism. |
+| **No supplement has established efficacy for lipedema per se** | **meta** | 2025 scoping review consensus — supplements address deficiencies induced by the diet, not the disease. |
 
 ## What this protocol does NOT claim
 
@@ -172,16 +196,39 @@ adipose remains surgical (lymph-sparing liposuction).
 
 ## Sources
 
-- Cannataro R. et al. *Management of Lipedema with Ketogenic Diet: 22-Month
-  Follow-Up.* [PMC8707844](https://pmc.ncbi.nlm.nih.gov/articles/PMC8707844/)
+- Lundanes J et al. *Effect of a low-carbohydrate diet on pain and
+  quality of life in female patients with lipedema: a randomized
+  controlled trial.* Obesity 2024.
+  [Wiley](https://onlinelibrary.wiley.com/doi/full/10.1002/oby.24026)
+  — **the n=70 RCT**. Primary RCT evidence for low-carb → pain
+  reduction in lipedema.
+- Sørlie V et al. *Effect of a ketogenic diet on pain and quality of
+  life in patients with lipedema: the LIPODIET pilot study.* Clinical
+  Nutrition ESPEN 2022.
+  [PMC9358738](https://pmc.ncbi.nlm.nih.gov/articles/PMC9358738/)
+  — n=9 pilot, 7-week LCHF, VAS pain −2.3 cm p=0.018.
+- Cannataro R et al. *Management of Lipedema with Ketogenic Diet:
+  22-Month Follow-Up.* Healthcare 2021.
+  [PMC8707844](https://pmc.ncbi.nlm.nih.gov/articles/PMC8707844/)
+  — **single-case** follow-up; hypothesis-generating, not a trial.
 - *The Efficacy of Ketogenic Diets for Lipedema — Systematic Review &
-  Meta-Analysis.* Nutrients 2024.
-  [MDPI](https://www.mdpi.com/2072-6643/16/19/3276)
+  Meta-Analysis.* Nutrients 2024, 16(19):3276.
+  [MDPI](https://www.mdpi.com/2072-6643/16/19/3276) ·
+  [PubMed](https://pubmed.ncbi.nlm.nih.gov/39408242/)
+  — 7 studies, n=329.
+- *Current Evidence-Based Clinical Nutritional Approaches in Lipedema:
+  A Scoping Review.* Nutrition Reviews 2025 (Oxford Academic).
+  [OUP](https://academic.oup.com/nutritionreviews/advance-article/doi/10.1093/nutrit/nuaf203/8342097)
+  — gold-standard overview; German DGPL S2k consensus + supplement
+  tier framework.
 - *Therapeutic Applications of Ketogenic Diets in Lipedema — Narrative
   Review.* Current Obesity Reports 2025.
   [Springer](https://link.springer.com/article/10.1007/s13679-025-00642-y)
 - *Ketogenic Diet: A Nutritional Therapeutic Tool for Lipedema?*
   [PMC10748777](https://pmc.ncbi.nlm.nih.gov/articles/PMC10748777/)
+- *Exploring the Anti-Inflammatory Potential of a Mediterranean-Style
+  Ketogenic Diet in Women with Lipedema.* Nutrients 2025, 17(18):3014.
+  [MDPI](https://www.mdpi.com/2072-6643/17/18/3014)
 - Volek JS, Phinney SD. *The Art and Science of Low Carbohydrate Living*
   — canonical electrolyte-dosing and adaptation framework.
   [Publisher](https://www.artandscienceoflowcarb.com/)

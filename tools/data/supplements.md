@@ -1,24 +1,56 @@
 # Supplements — Lipedema / RAD Protocol (Nepal Context)
 
-Companion to `diets.md`. This file covers pill/powder/tincture supplements
-that sit alongside the food allowlist. Food-sourced micronutrients (omega-3
-from sardines, rutin from goji, curcumin from turmeric) live in `rad.csv`;
-titrated therapeutic doses live here.
+Companion to `diets.md`, `rad.md`, `keto.md`, and `labs.md`. This file
+covers pill/powder/tincture supplements that sit alongside the food
+allowlist. Food-sourced micronutrients (omega-3 from sardines, rutin
+from goji, curcumin from turmeric) live in `rad.csv`; titrated
+therapeutic doses live here and in `rad_supplements.csv` /
+`keto_supplements.csv`.
 
-**Evidence grades used below:**
+## Headline caveat
 
-- **A** — supported by RCT or systematic review for lipedema/RAD.
-- **B** — retrospective case studies, small trials, or strong mechanistic
-  basis.
-- **C** — anecdotal / clinical-experience / extrapolated from related
-  conditions. Most RAD supplements sit here. Not harmful at the listed
-  doses; just be honest about the evidence level.
+The **2025 Nutrition Reviews scoping review** is explicit:
 
-**Nepal sourcing key:**
+> The usefulness of any dietary supplement in treating lipedema has
+> not been established, based on evidence from the current literature.
+
+Supplements address **deficiencies induced by the chosen diet** and
+conditions that coexist with lipedema (inflammation, vascular
+fragility, low D3), not the disease itself. Durable improvement comes
+from the diet + lymphatic lifestyle; supplements are the supporting
+cast.
+
+## Evidence tiers
+
+Aligned with the 2025 scoping review classification:
+
+- **Suggested** — case-report evidence plus strong mechanistic
+  rationale for lipedema. Currently only **DHA/EPA (1–2 g/day)** and
+  **Vitamin C (500–1000 mg/day)**.
+- **Evaluate as needed** — use when deficiency is documented or
+  clinically indicated; don't take blindly. D3, K2, selenium, B12,
+  magnesium, zinc, calcium (on keto), polyphenols.
+- **Weak / anecdotal** — diosmin+hesperidin, butcher's broom, rutin,
+  berberine, exogenous ketones. Mechanism is plausible; lipedema-
+  specific data is thin.
+
+Internal grade letters (A/B/C) in the CSVs map approximately to these
+tiers — A for the strongest diet-adjacent evidence (omega-3, vitamin C,
+electrolyte supplementation on keto), B for mechanistic/deficiency-
+correction rationale, C for weak / case-only evidence.
+
+## Nepal sourcing key
 
 - **🇳🇵 Local** — reliably available in Kathmandu pharmacies / shops.
-- **📦 Import** — iHerb / Amazon via forwarder / traveller bring-back.
+- **📦 Import** — iHerb (ships to Nepal) / Amazon via forwarder /
+  traveller bring-back.
 - **🌱 Food** — obtainable via diet, no pill needed.
+
+Pre-flight for international buys: iHerb ships to Nepal via air
+freight; customs duties may apply depending on declared value and
+product class. Daflon (Servier India: 450 mg diosmin + 50 mg
+hesperidin per tab) is regional-distribution across South Asia and is
+the locally-stocked form of that combination.
 
 ---
 
@@ -34,18 +66,30 @@ titrated therapeutic doses live here.
 | Evidence | **B** — deficiency well documented in lipedema cohorts; supplementation effect on lipedema-specific outcomes less well studied. |
 | Food equivalent | Oily fish gives some but not therapeutic dose. Sun exposure helps but inconsistent. |
 | Nepal sourcing | **🇳🇵 Local** — widely available; check IU potency on label. **📦 Import** for D3+K2 combos. |
-| Status | **Missing from rad.csv — add.** |
+| Status | ✓ In `rad_supplements.csv`. |
+
+### Vitamin C — *Suggested tier*
+
+| Field | Value |
+| --- | --- |
+| Dose | 500–1000 mg/day, divided into 2 doses. Cannataro 2021 keto protocol used 1 g/day. |
+| Rationale | Collagen synthesis, anti-inflammatory / antioxidant, capillary integrity. Classified as **Suggested** by the 2025 Nutrition Reviews scoping review — one of only two supplements at that tier for lipedema (alongside DHA/EPA). |
+| Evidence | **B** — case-report + strong mechanistic basis. |
+| Food equivalent | **🌱 Citrus, guava, amla, bell peppers, kiwi.** Food form is adequate for maintenance; supplement for therapeutic anti-inflammatory dose. |
+| Nepal sourcing | **🇳🇵 Local** — widely stocked (both ascorbic acid and food-based). |
+| Cautions | Very high dose (>2 g/day) can cause GI upset / loose stool; dose-divide. Chemotherapy: do not use without oncology sign-off. |
+| Status | ✓ In `rad_supplements.csv` and `keto_supplements.csv`. |
 
 ### Selenium
 
 | Field | Value |
 | --- | --- |
 | Dose | 200 mcg/day (do not exceed 400 mcg — toxicity risk) |
-| Rationale | Thyroid function, antioxidant (glutathione peroxidase), reduces lipedema swelling (per Cho/Herbst retrospective case study with Butcher's Broom). |
-| Evidence | **B** — one retrospective case study; plausible mechanism. |
+| Rationale | Thyroid function, antioxidant (glutathione peroxidase). ~47% of lipedema patients deficient in published series. Cho/Herbst retrospective case (n=1) used 400 mcg/day + butcher's broom → 70–79% leg volume reduction. |
+| Evidence | **C** — one retrospective case study; plausible mechanism. 2025 scoping review cites conservative 45–60 mcg range for routine use. |
 | Food equivalent | **🌱 2 Brazil nuts ≈ 200 mcg.** Most efficient route if nuts available. |
 | Nepal sourcing | Brazil nuts rare/expensive in Nepal; seek in expat-oriented grocers or import. Selenium tablets **📦 Import** typically. |
-| Status | **Missing from rad.csv — add Brazil nuts to nuts_and_seeds + selenium to supplements.** |
+| Status | ✓ Selenium in `rad_supplements.csv`. Brazil nuts not yet in `rad.csv` nuts category (follow-up). |
 
 ### Diosmin (often as Diosmin + Hesperidin, "Daflon" or equivalent)
 
@@ -53,20 +97,20 @@ titrated therapeutic doses live here.
 | --- | --- |
 | Dose | 500–600 mg, 1–2×/day |
 | Rationale | Citrus bioflavonoid. Venous/lymphatic tonic, anti-inflammatory, reduces capillary fragility and edema. Standard of care for chronic venous insufficiency; applied to lipedema for similar mechanisms. |
-| Evidence | **B** — strong for venous insufficiency; by extension for lipedema. |
+| Evidence | **C** for lipedema specifically (extrapolated from CVI evidence); **B** for chronic venous insufficiency. |
 | Food equivalent | Small amounts in citrus peel; not therapeutic. |
-| Nepal sourcing | **🇳🇵 Local** — Daflon / generic diosmin+hesperidin stocked in Kathmandu pharmacies (used for hemorrhoids/varicose veins, same compound). |
-| Status | **Missing from rad.csv — add.** |
+| Nepal sourcing | **🇳🇵 Local** — Daflon (Servier India: 450 mg diosmin + 50 mg hesperidin per tablet) stocked across South Asia for hemorrhoids / varicose veins (same compound). 1–2 tabs/day. |
+| Status | ✓ In `rad_supplements.csv`. |
 
 ### Butcher's Broom (*Ruscus aculeatus*)
 
 | Field | Value |
 | --- | --- |
 | Dose | Label dose — typically 150–300 mg extract 2×/day |
-| Rationale | Vasoconstrictor of venous capillaries, reduces edema. Paired with selenium in Cho/Herbst retrospective lipedema study. |
-| Evidence | **B** — one retrospective case study for lipedema. |
+| Rationale | Vasoconstrictor of venous capillaries, reduces edema. Paired with selenium in Cho/Herbst retrospective lipedema study (case used **1 g/day**; CSV recommends a more conservative 300 mg 2×/day). |
+| Evidence | **C** — one retrospective case study for lipedema; no RCT. |
 | Nepal sourcing | **📦 Import** — not typically stocked locally. |
-| Status | **Missing from rad.csv — add.** |
+| Status | ✓ In `rad_supplements.csv`. |
 
 ### Rutin
 
@@ -88,7 +132,7 @@ titrated therapeutic doses live here.
 | Evidence | **C** for RAD-specific; **A** for deficiency correction generally. |
 | Food equivalent | Animal products only (meat, fish, eggs, dairy). Fermented foods do **not** provide reliable B12. |
 | Nepal sourcing | **🇳🇵 Local** — sublingual and injectable both available. |
-| Status | **Missing from rad.csv — add.** |
+| Status | ✓ In `rad_supplements.csv`. |
 
 ### Magnesium
 
@@ -97,7 +141,7 @@ titrated therapeutic doses live here.
 | Dose | 300–400 mg elemental/day. Split or at bedtime. |
 | Forms | **Glycinate** (calming, best absorbed), **citrate** (also laxative), **malate** (energy). Avoid oxide (poorly absorbed). |
 | Rationale | Muscle, sleep, insulin sensitivity, vascular tone. Commonly depleted under stress / ketogenic adaptation. |
-| Evidence | **A** for deficiency correction; **C** for RAD-specific benefit. |
+| Evidence | **B** per 2025 scoping review ("evaluate" tier for lipedema); **A** for deficiency correction generally. |
 | Food equivalent | Leafy greens, seeds, dark chocolate — contributory, often not sufficient. |
 | Nepal sourcing | Glycinate: **📦 Import** typically. Citrate: **🇳🇵 Local** more commonly. |
 | Status | **Already in rad.csv (both glycinate and citrate).** ✓ |
@@ -122,33 +166,58 @@ titrated therapeutic doses live here.
 | Supplement | When to consider |
 | --- | --- |
 | **Vitamin K2 (MK-7)** | Always if taking D3 long-term — directs calcium to bones, away from arteries. 100 mcg/day. 📦 Import. |
-| **Omega-3 fish oil (EPA/DHA)** | If fish intake <2×/week. 2–3g combined EPA+DHA/day. Check for third-party purity testing. 📦 Import. |
+| **Omega-3 fish oil (EPA/DHA)** — *now core* | 1–2 g combined EPA+DHA/day (Cannataro 2021 used 3 g). One of the two "Suggested" tier supplements per 2025 scoping review. If fish intake <2×/week this moves from optional to core. 📦 Import. |
+| **Calcium** — *core on long-term keto* | 1000–1200 mg/day total intake (food first). Low-carb diets raise urinary calcium excretion (bone-loss flag from 2025 scoping review). Use citrate form; space 4h from thyroid hormone / iron / bisphosphonates. |
 | **Probiotic** | If gut dysbiosis symptoms. Multi-strain. Or lean on kefir/yoghurt (already in CSV). |
 | **Zinc** | If picolinate form, 15–30 mg/day. Monitor copper balance if long-term. 🇳🇵 Local. |
 | **CoQ10 (ubiquinol)** | If fatigue / post-exertional malaise. 100–200 mg/day. 📦 Import. |
+| **MCT oil (C8 preferred)** — *keto only* | Optional keto accelerant. Start ½ tsp, build to 1 tbsp; GI upset dose-dependent. 📦 Import. |
+| **Berberine** — *keto only* | 500 mg 2–3×/day with meals if fasting insulin / glucose not normalising on keto alone. Interacts with metformin. 📦 Import. |
+| **Psyllium husk** — *keto only* | 5–10 g/day during weeks 1–4 for constipation. Take with plenty of water. 🇳🇵 Local. |
 
 ---
 
-## Gap summary (what to add to `rad.csv`)
+## Contraindications and drug interactions
 
-Add these to the `supplements` category:
+Flag for a clinician conversation before starting if you're on any of
+the following. Non-exhaustive — this is decision-support, not a
+pharmacology reference.
 
-```csv
-supplements,vitamin D3,yes,2000-5000 IU daily with fat - pair with K2 MK-7
-supplements,vitamin K2 (MK-7),yes,100 mcg daily - routes calcium correctly when on D3
-supplements,selenium,yes,200 mcg daily - or 2 Brazil nuts if available
-supplements,diosmin + hesperidin,yes,500-600 mg 1-2x daily - lymphatic tonic - Daflon brand locally
-supplements,butcher's broom,yes,150-300 mg 2x daily - reduces lymphatic edema - import only
-supplements,vitamin B12 (methylcobalamin),yes,1000 mcg sublingual daily
-```
+| Supplement | Interacts with | Effect |
+| --- | --- | --- |
+| **Vitamin K2 (MK-7)** | Warfarin / Coumadin | Shifts INR even at low doses. Never start without telling the prescriber. |
+| **Diosmin + Hesperidin (Daflon)** | Anticoagulants (warfarin, DOACs), antiplatelets (aspirin, clopidogrel) | Theoretical additive bleeding risk. Caution with bleeding disorders. |
+| **Butcher's Broom** | Alpha-blockers, MAO inhibitors | Vasoconstrictor; BP changes possible. Pregnancy: avoid (no safety data). |
+| **Berberine** | Metformin, sulfonylureas, insulin | Additive glucose lowering → risk of hypoglycemia. |
+| **Omega-3 fish oil** | Anticoagulants | High-dose (>3 g/day) additive bleeding risk. Typical 1–2 g/day fine. |
+| **Magnesium** | Bisphosphonates, tetracyclines, quinolones, thyroid hormone | Binds these drugs — space 2–4h apart. |
+| **Calcium** | Thyroid hormone, iron, bisphosphonates | Same binding concern — space 4h apart. |
+| **Selenium** | High-dose selenium + statins | Selenium >400 mcg/day can mask statin-related muscle issues. Stay ≤200 mcg unless directed. |
+| **Zinc** | Copper | Long-term high-dose zinc depletes copper. Monitor or take a low-dose copper balancer. |
+| **Vitamin C (high dose)** | Chemotherapy | Do not use without oncology sign-off. |
+| **Vitamin D3 (high dose)** | Calcium channel blockers, thiazide diuretics | Risk of hypercalcemia at very high D3 + these drugs. |
 
-And add this to `nuts_and_seeds`:
+## Pregnancy and breastfeeding
 
-```csv
-nuts_and_seeds,brazil nuts,yes,1-2 daily for selenium - do not exceed 3 - check availability
-```
+Lipedema is hormonally triggered — pregnancy is both a common onset
+window and a time when the protocol needs adjustment.
 
-Once added, re-run seed script.
+- **Ketogenic diet is not routinely recommended in pregnancy.** A more
+  conservative low-GI Mediterranean pattern (75–100g carb/day) is the
+  cautious default. Discuss with OB/GYN.
+- **Safe / supported in pregnancy**: vitamin D (at prenatal dose),
+  B12, omega-3, magnesium, iron, choline, folate. Most of these are
+  already prenatal-vitamin components.
+- **Avoid in pregnancy**: Diosmin / Butcher's Broom / Berberine / MCT
+  oil at loading doses / exogenous ketones / high-dose vitamin A.
+- **Breastfeeding**: omega-3, D3, B12 continue; avoid berberine.
+
+## Lab monitoring
+
+Every supplement recommendation here is a candidate for individual
+titration. The companion `labs.md` lists the biomarkers worth
+tracking before starting and at follow-up, including the **low-carb
+urinary calcium / bone-loss flag** raised by the 2025 scoping review.
 
 ---
 
