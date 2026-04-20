@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { useFeatureEnabled } from '@modules/feature-flags';
 import { useInProgressSession } from '@modules/session';
 import { useSessionStore } from '@platform/store/sessionStore';
 import { Ionicons } from '@expo/vector-icons';
@@ -37,6 +38,7 @@ export function LeftDrawer({
   const translateX = useRef(new Animated.Value(-drawerWidth)).current;
   const overlayOpacity = useRef(new Animated.Value(0)).current;
   const { data: activeSession } = useInProgressSession();
+  const nutritionEnabled = useFeatureEnabled('nutrition');
 
   useEffect(() => {
     if (visible) {
@@ -109,13 +111,15 @@ export function LeftDrawer({
                   colors={colors}
                 />
               )}
-              <DrawerItem
-                icon="nutrition-outline"
-                label="Nutrition"
-                onPress={() => go('/(tabs)/nutrition')}
-                styles={styles}
-                colors={colors}
-              />
+              {nutritionEnabled && (
+                <DrawerItem
+                  icon="nutrition-outline"
+                  label="Nutrition"
+                  onPress={() => go('/(tabs)/nutrition')}
+                  styles={styles}
+                  colors={colors}
+                />
+              )}
               <DrawerItem
                 icon="settings-outline"
                 label="Settings"

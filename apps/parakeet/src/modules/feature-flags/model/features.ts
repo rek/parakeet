@@ -121,6 +121,13 @@ export const FEATURE_REGISTRY = [
     category: 'health' as const,
     defaultEnabled: true,
   },
+  {
+    id: 'nutrition',
+    label: 'Nutrition Protocols',
+    description: 'Lipedema / RAD diet protocols, supplements, and lifestyle catalog',
+    category: 'health' as const,
+    defaultEnabled: false,
+  },
 
   // Advanced
   {

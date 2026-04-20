@@ -15,6 +15,11 @@ export default defineConfig({
   test: {
     globals: true,
     environment: 'node',
-    include: ['src/**/*.test.ts', 'src/**/*.spec.ts'],
+    include: [
+      'src/**/*.test.ts',
+      'src/**/*.spec.ts',
+      // tools/ has no project of its own; co-tested with parakeet.
+      '../../tools/scripts/**/*.test.ts',
+    ],
   },
 });
