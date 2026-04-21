@@ -657,9 +657,18 @@ function buildVolumeTopUp(
     if (deficit > 0) candidates.push({ muscle, deficit });
   }
 
-  // Highest deficit first, max 2 muscles
-  candidates.sort((a, b) => b.deficit - a.deficit);
-  const topCandidates = candidates.slice(0, 2);
+  // Core priority (gh#203): no compound contributes to core, so core depends
+  // entirely on aux/top-up. Raw-deficit sort would bury core behind larger
+  // push/pull/hinge deficits every session. When core is in deficit, always
+  // reserve a top-up slot for it alongside the highest-deficit non-core muscle.
+  // Still max 2 muscles.
+  const coreCandidate = candidates.find((c) => c.muscle === 'core');
+  const nonCore = candidates
+    .filter((c) => c.muscle !== 'core')
+    .sort((a, b) => b.deficit - a.deficit);
+  const topCandidates = coreCandidate
+    ? [coreCandidate, ...nonCore.slice(0, 1)]
+    : nonCore.slice(0, 2);
 
   const result: AuxiliaryWork[] = [];
   const usedExercises = new Set<string>(activeAuxiliaries);

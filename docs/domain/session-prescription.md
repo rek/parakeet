@@ -137,6 +137,10 @@ proRatedMEV[muscle] = ceil(MEV[muscle] × sessionIndex / totalSessionsThisWeek)
 
 Push muscles (chest, triceps, shoulders, biceps) that have zero contribution from the primary lift scheduled for this session use **full MEV** (not pro-rated).
 
+### Core priority
+
+No compound lift contributes to core, so core depends entirely on aux/top-up volume. Raw-deficit sort would bury core behind larger hinge/pull deficits every session. When core is in deficit, one top-up slot is always reserved for core; the other goes to the highest-deficit non-core muscle. Still capped at 2 muscles per session (gh#203).
+
 ### Selection Rules
 
 | Constraint              | Value / Rule                                             |

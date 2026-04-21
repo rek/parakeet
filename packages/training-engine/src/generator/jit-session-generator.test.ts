@@ -1253,6 +1253,44 @@ describe('generateJITSession — core volume top-up (#191)', () => {
     expect(coreTopUps[0].topUpReason).toContain('below MEV');
   });
 
+  it('core deficit < non-core deficit → core still forced into top-up slot', () => {
+    // All muscles at 0 weekly volume. Squat contributes 0 to upper_back/core,
+    // so both show deficits; upper_back deficit (10) >> core deficit (4).
+    // Under raw-deficit sort, upper_back + another large-deficit muscle would
+    // take both slots and core would be dropped. Core-priority rule pins core.
+    const out = generateJITSession(
+      baseInput({
+        auxiliaryPool: [...DEFAULT_CORE_POOL, 'Barbell Hang Clean'],
+        weeklyVolumeToDate: {},
+        mrvMevConfig: DEFAULT_MRV_MEV_CONFIG_MALE,
+      })
+    );
+    const topUps = out.auxiliaryWork.filter((a) => a.isTopUp);
+    const coreTopUps = topUps.filter((a) =>
+      DEFAULT_CORE_POOL.includes(a.exercise)
+    );
+    expect(coreTopUps.length).toBe(1);
+    // The other slot should be filled by the highest-deficit non-core muscle
+    expect(topUps.length).toBe(2);
+    expect(topUps.some((a) => a.exercise === 'Barbell Hang Clean')).toBe(true);
+  });
+
+  it('core pinned but no qualifying core exercise → slot dropped, non-core still selected', () => {
+    // Pool has no core primary-movers. Core is pinned as first candidate but
+    // silently drops when qualifying=[]. The non-core slot must still fire so
+    // a future "fix" that falls back to a third non-core candidate breaks here.
+    const out = generateJITSession(
+      baseInput({
+        auxiliaryPool: ['Barbell Hang Clean'],
+        weeklyVolumeToDate: {},
+        mrvMevConfig: DEFAULT_MRV_MEV_CONFIG_MALE,
+      })
+    );
+    const topUps = out.auxiliaryWork.filter((a) => a.isTopUp);
+    expect(topUps.length).toBe(1);
+    expect(topUps[0].exercise).toBe('Barbell Hang Clean');
+  });
+
   it('DEFAULT_CORE_POOL excludes timed exercises', () => {
     expect(DEFAULT_CORE_POOL.length).toBeGreaterThan(0);
     // Plank is timed — must be excluded so volume top-up can select core exercises

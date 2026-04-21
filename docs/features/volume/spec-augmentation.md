@@ -25,7 +25,7 @@ Depends on:
 **`buildVolumeTopUp()` actual algorithm:**
 1. Build main lift muscle contributions map (from `getMusclesForLift`)
 2. For each muscle where `mev > 0`: `projected = weeklyVol + floor(mainLiftSetCount × contrib)`; pro-rate MEV by week progress: `effectiveMev = ceil(mev × sessionIndex / totalSessionsThisWeek)` (falls back to full `mev` when params are absent); `deficit = effectiveMev - projected`; collect where `deficit > 0`
-3. Sort by deficit descending, take top 2
+3. Take top 2 muscles (max per session). **Core priority (gh#203):** when core is in deficit, one slot is always reserved for core; the other goes to the highest-deficit non-core muscle. Otherwise sort by deficit descending and take top 2. See [session-prescription.md](../../domain/session-prescription.md#core-priority).
 4. For each: filter `auxiliaryPool` for exercises where `getMusclesForExercise(ex)` has contribution ≥ 1.0 for that muscle, not `timed`, not already in `usedExercises` (starts from `activeAuxiliaries`, grows as top-ups are picked)
 5. If no match: skip. Otherwise rank qualifying exercises via `rankExercises()` (exercise scorer) and pick highest-scored candidate. Scorer considers: muscle deficit coverage (0.30), soreness avoidance (0.25), movement pattern diversity (0.15), fatigue appropriateness (0.10), upcoming lift protection (0.10), main lift specificity (0.05), compound/isolation balance (0.05). Track selected movement patterns across iterations for diversity scoring.
 6. `setCount = max(1, min(3, deficit, remainingMrv))`; weight uses `getLiftForExercise(exercise)` to look up the correct 1RM from `allOneRmKg` (falls back to primary lift `oneRmKg` when absent or exercise has no catalog lift); reps from `AUX_REP_TARGETS`
@@ -50,6 +50,8 @@ Note: top-up skipped silently (no warning) when no candidate exists; rationale e
 - [x] Missing sessionIndex/totalSessionsThisWeek falls back to full MEV
 - [x] Cross-lift top-up uses correct 1RM (bench exercise during squat day uses bench 1RM, not squat 1RM)
 - [x] Missing allOneRmKg falls back to primary lift 1RM
+- [x] Core deficit < non-core deficit → core still forced into top-up slot (gh#203)
+- [x] Core pinned but no qualifying core exercise → slot dropped, non-core still selected (gh#203)
 
 ### Caller — `apps/parakeet/src/modules/jit/lib/jit.ts`
 
