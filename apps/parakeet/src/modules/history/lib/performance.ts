@@ -145,6 +145,46 @@ export async function getWeeklySetsPerLift(
   });
 }
 
+export async function getWeeklyHeaviestPerLift(
+  userId: string,
+  weeks = 8
+): Promise<{ weekStart: string; lift: Lift; heaviestKg: number }[]> {
+  const fromDate = new Date();
+  fromDate.setDate(fromDate.getDate() - weeks * 7);
+
+  const data = await fetchWeeklySessionLogs(userId, fromDate);
+
+  const grouped = new Map<string, number>();
+
+  for (const row of data) {
+    const session = Array.isArray(row.sessions)
+      ? row.sessions[0]
+      : row.sessions;
+    const lift = session?.primary_lift as Lift | undefined;
+    if (!lift || !row.completed_at) continue;
+
+    const weekStart = getIsoWeekStart(row.completed_at);
+    const key = `${weekStart}__${lift}`;
+
+    if (!Array.isArray(row.actual_sets)) continue;
+    for (const set of row.actual_sets as {
+      weight_grams?: number;
+      reps_completed?: number;
+    }[]) {
+      if (!set.weight_grams || !set.reps_completed || set.reps_completed <= 0)
+        continue;
+      const kg = weightGramsToKg(set.weight_grams);
+      const current = grouped.get(key) ?? 0;
+      if (kg > current) grouped.set(key, kg);
+    }
+  }
+
+  return Array.from(grouped.entries()).map(([key, heaviestKg]) => {
+    const [weekStart, lift] = key.split('__') as [string, Lift];
+    return { weekStart, lift, heaviestKg };
+  });
+}
+
 export async function getWeeklyVolumeKg(
   userId: string,
   weeks = 8

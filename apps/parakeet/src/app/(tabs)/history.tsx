@@ -19,6 +19,7 @@ import type { CyclePhase } from '@modules/cycle-tracking';
 import {
   buildVolumeChartData,
   buildVolumeKgChartData,
+  buildWeeklyHeaviestChartData,
   getTrendConfig,
   MIN_CHART_OPACITY,
   useHistoryScreen,
@@ -85,6 +86,8 @@ export default function HistoryScreen() {
     volumeLoading,
     volumeKg,
     volumeKgLoading,
+    heaviest,
+    heaviestLoading,
     isLoading,
   } = useHistoryScreen(TIME_RANGE_WEEKS[timeRange]);
 
@@ -350,6 +353,14 @@ export default function HistoryScreen() {
       )
     : null;
 
+  const heaviestChartData = heaviest
+    ? buildWeeklyHeaviestChartData(
+        heaviest,
+        LIFT_COLORS,
+        liftFilter === 'all' ? undefined : liftFilter
+      )
+    : null;
+
   function renderTrendCard(trend: PerformanceTrend) {
     const { symbol, color } = trendConfig[trend.trend];
     return (
@@ -598,6 +609,57 @@ export default function HistoryScreen() {
         ) : (
           <Text style={[styles.emptyText, { marginBottom: spacing[8] }]}>
             {volumeKgLoading ? 'Loading…' : 'No volume data yet.'}
+          </Text>
+        )}
+
+        {/* Weekly heaviest lift (kg) */}
+        <Text style={styles.sectionHeader}>Heaviest Lift (kg)</Text>
+        {heaviestChartData ? (
+          <View style={styles.chartCard}>
+            <LineChart
+              data={heaviestChartData}
+              width={chartInnerWidth}
+              height={160}
+              withDots={false}
+              withShadow={false}
+              withInnerLines={true}
+              withOuterLines={false}
+              chartConfig={{
+                backgroundGradientFrom: colors.bgSurface,
+                backgroundGradientTo: colors.bgSurface,
+                color: (opacity = 1) =>
+                  `${palette.lime400}${Math.round(
+                    Math.max(opacity, MIN_CHART_OPACITY) * 255
+                  )
+                    .toString(16)
+                    .padStart(2, '0')}`,
+                labelColor: () => colors.textTertiary,
+                strokeWidth: 2,
+                propsForBackgroundLines: {
+                  stroke: colors.border,
+                  strokeDasharray: '',
+                },
+              }}
+              formatYLabel={(v) => `${Math.round(Number(v))}`}
+              style={{ borderRadius: radii.sm }}
+            />
+            <View style={styles.legendRow}>
+              {heaviestChartData.lifts.map((lift) => (
+                <View key={lift} style={styles.legendItem}>
+                  <View
+                    style={[
+                      styles.legendDot,
+                      { backgroundColor: LIFT_COLORS[lift] },
+                    ]}
+                  />
+                  <Text style={styles.legendLabel}>{LIFT_LABELS[lift]}</Text>
+                </View>
+              ))}
+            </View>
+          </View>
+        ) : (
+          <Text style={[styles.emptyText, { marginBottom: spacing[8] }]}>
+            {heaviestLoading ? 'Loading…' : 'No heaviest-lift data yet.'}
           </Text>
         )}
 

@@ -40,6 +40,7 @@ export function useHistoryScreen(weeks: number) {
 
   const volumeQuery = useQuery(historyQueries.weeklySetsPerLift(user?.id, weeks));
   const volumeKgQuery = useQuery(historyQueries.weeklyVolumeKg(user?.id, weeks));
+  const heaviestQuery = useQuery(historyQueries.weeklyHeaviest(user?.id, weeks));
 
   const isLoading = trendsQuery.isLoading || sessionsQuery.isLoading;
 
@@ -51,6 +52,8 @@ export function useHistoryScreen(weeks: number) {
     volumeLoading: volumeQuery.isLoading,
     volumeKg: volumeKgQuery.data,
     volumeKgLoading: volumeKgQuery.isLoading,
+    heaviest: heaviestQuery.data,
+    heaviestLoading: heaviestQuery.isLoading,
     isLoading,
   };
 }

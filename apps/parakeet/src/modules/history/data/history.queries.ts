@@ -5,6 +5,7 @@ import {
   getPerformanceByLift,
   getPerformanceTrends,
   getRecentLiftHistory,
+  getWeeklyHeaviestPerLift,
   getWeeklySetsPerLift,
   getWeeklyVolumeKg,
 } from '../lib/performance';
@@ -55,5 +56,13 @@ export const historyQueries = {
     queryOptions({
       queryKey: ['volume', 'weekly-kg', userId, weeks] as const,
       queryFn: userId ? () => getWeeklyVolumeKg(userId, weeks) : skipToken,
+    }),
+
+  weeklyHeaviest: (userId: string | undefined, weeks: number) =>
+    queryOptions({
+      queryKey: ['heaviest', 'weekly', userId, weeks] as const,
+      queryFn: userId
+        ? () => getWeeklyHeaviestPerLift(userId, weeks)
+        : skipToken,
     }),
 };

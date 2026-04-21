@@ -16,6 +16,12 @@ export type WeeklyVolKgRow = {
   volumeKg: number;
 };
 
+export type WeeklyHeaviestRow = {
+  weekStart: string;
+  lift: Lift;
+  heaviestKg: number;
+};
+
 function buildWeekList(weeklyData: { weekStart: string }[]): string[] | null {
   let weeks = [...new Set(weeklyData.map((d) => d.weekStart))].sort();
   if (weeks.length < 1) return null;
@@ -91,6 +97,33 @@ export function buildVolumeKgChartData(
         (d) => d.weekStart === week && d.lift === lift
       );
       return Math.round(entry?.volumeKg ?? 0);
+    }),
+    color: makeColorFn(liftColors[lift]),
+    strokeWidth: 2,
+  }));
+
+  return { labels, datasets, lifts };
+}
+
+export function buildWeeklyHeaviestChartData(
+  weeklyData: WeeklyHeaviestRow[],
+  liftColors: Record<Lift, string>,
+  liftFilter?: Lift
+) {
+  const weeks = buildWeekList(weeklyData);
+  if (!weeks) return null;
+
+  const labels = buildWeekLabels(weeks);
+  const lifts = liftFilter
+    ? [liftFilter]
+    : (['squat', 'bench', 'deadlift'] as Lift[]);
+
+  const datasets = lifts.map((lift) => ({
+    data: weeks.map((week) => {
+      const entry = weeklyData.find(
+        (d) => d.weekStart === week && d.lift === lift
+      );
+      return Math.round(entry?.heaviestKg ?? 0);
     }),
     color: makeColorFn(liftColors[lift]),
     strokeWidth: 2,
