@@ -49,6 +49,7 @@ See `./design.md` for the full feature design and examples.
 - [x] `generateCycleReview(cycleReport: CycleReport, previousSummaries: PreviousCycleSummary[]): Promise<CycleReview>`
   - Calls `generateObject()` with `getCycleReviewModel()` and `CYCLE_REVIEW_SYSTEM_PROMPT`
   - No `AbortSignal.timeout()` — runs asynchronously, user notified when done
+- [ ] Add `abortSignal: AbortSignal.timeout(120_000)` to the `generateObject()` call — without a timeout the promise can hang indefinitely if the model stalls, silently preventing the cycle review row from ever being inserted
 
 ### Storing the Result
 

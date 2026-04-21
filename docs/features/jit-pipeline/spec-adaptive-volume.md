@@ -37,6 +37,7 @@ Design doc: [adaptive-volume.md](./design-adaptive-volume.md)
   - 4-5 sleep/energy: enable volume boost (new — currently only neutral or reduce)
   - 1-2: reduce (existing behavior with finer thresholds)
   - 3: neutral
+- [ ] Add deload guard: if `input.intensityType === 'deload'`, return early with no adjustment — deload sessions must not be further reduced by low readiness scores
 
 **File: `apps/parakeet/src/app/(tabs)/session/soreness.tsx`**
 

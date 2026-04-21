@@ -35,6 +35,7 @@ CREATE POLICY "users_own_volume_config" ON muscle_volume_config
 - [x] Each row: muscle name, MEV stepper input, MRV stepper input
 - [x] Validation: `mev >= 0`, `mrv > mev`, `mrv <= 30` (hard cap)
 - [x] Save button: calls `updateMuscleConfig()` for each changed row
+- [ ] Save button error handling: wrap in `try/catch`; on error: `captureException(err)` + `Alert.alert('Save Failed', 'Could not save volume config — please try again.')`; do not silently fail
 - [x] "Reset to defaults" button: calls `resetMuscleToDefault()` for all muscles
 
 ## Dependencies

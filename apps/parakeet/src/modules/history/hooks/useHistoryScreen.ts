@@ -43,6 +43,22 @@ export function useHistoryScreen(weeks: number) {
   const heaviestQuery = useQuery(historyQueries.weeklyHeaviest(user?.id, weeks));
 
   const isLoading = trendsQuery.isLoading || sessionsQuery.isLoading;
+  const isError =
+    trendsQuery.isError ||
+    sessionsQuery.isError ||
+    programsQuery.isError ||
+    volumeQuery.isError ||
+    volumeKgQuery.isError ||
+    heaviestQuery.isError;
+
+  function refetch() {
+    void trendsQuery.refetch();
+    void sessionsQuery.refetch();
+    void programsQuery.refetch();
+    void volumeQuery.refetch();
+    void volumeKgQuery.refetch();
+    void heaviestQuery.refetch();
+  }
 
   return {
     trends: trendsQuery.data,
@@ -55,5 +71,7 @@ export function useHistoryScreen(weeks: number) {
     heaviest: heaviestQuery.data,
     heaviestLoading: heaviestQuery.isLoading,
     isLoading,
+    isError,
+    refetch,
   };
 }

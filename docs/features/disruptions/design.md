@@ -71,9 +71,16 @@ See [domain/adjustments.md](../domain/adjustments.md#disruption-modifiers) for t
 6. On submit: soreness is injected into `soreness_checkins` (same table as pre-session check-in); next JIT generation picks it up automatically
 7. No explicit weight adjustments are generated — soreness injection IS the adjustment
 
-**Deload Overlap** *(future enhancement — not planned for current sprint)*:
+**Deload Overlap** *(known gap — not yet implemented)*:
 
-If a disruption overlaps with a scheduled deload week, the intended behaviour is that the deload takes precedence. This logic is not yet implemented.
+If a disruption overlaps with a scheduled deload week, the intended behaviour is that the deload takes precedence and is not further modified by disruption, soreness, readiness, or cycle-phase adjustments. Currently, `applyDisruptionAdjustment` (Step 5) and `applySorenessAdjustment` (Step 3) and `applyReadinessAdjustment` have no deload guard. Combined reductions on an already light deload session can produce near-zero loading, which is counter to the recovery intent of the deload.
+
+Required guards (tracked in jit-pipeline specs):
+- `applySorenessAdjustment`: early return if `intensityType === 'deload'`
+- `applyReadinessAdjustment`: early return if `intensityType === 'deload'`
+- `applyCyclePhaseAdjustment`: early return if `intensityType === 'deload'`
+
+Note: `applyDisruptionAdjustment` compounding on deload is documented as intentional conservative behaviour (see jit-pipeline/spec-generator.md Step 5). The soreness/readiness/cycle-phase guards are the priority fix.
 
 **Mid-session Reporting** *(future enhancement — not planned for current sprint)*:
 

@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
+  Alert,
   ScrollView,
   StyleSheet,
   Text,
@@ -21,6 +22,8 @@ import type { Lift } from '@parakeet/shared-types';
 import { TRAINING_LIFTS } from '@shared/constants/training';
 import { router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
+
+import { captureException } from '@platform/utils/captureException';
 
 import { BackLink } from '../../components/navigation/BackLink';
 import { ScreenTitle } from '../../components/ui/ScreenTitle';
@@ -415,6 +418,9 @@ export default function WarmupProtocolScreen() {
     setSaving((prev) => ({ ...prev, [lift]: true }));
     try {
       await saveWarmupConfig(lift, protocols[lift]);
+    } catch (err) {
+      captureException(err);
+      Alert.alert('Save Failed', 'Could not save warmup config — please try again.');
     } finally {
       setSaving((prev) => ({ ...prev, [lift]: false }));
     }

@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   ScrollView,
   StyleSheet,
@@ -69,6 +69,27 @@ export function CalculatorSection({
   const [trainingDay, setTrainingDay] = useState(false);
   const [kcalOverride, setKcalOverride] = useState('');
 
+  const profileApplied = useRef(false);
+  useEffect(() => {
+    if (!profile || profileApplied.current) return;
+    profileApplied.current = true;
+    // Only fill empty fields — never overwrite a value the user has already typed.
+    if (profile.bodyweight_kg != null && bodyweight === '') setBodyweight(profile.bodyweight_kg.toString());
+    if (profile.biological_sex) setSex(profile.biological_sex);
+    if (profile.date_of_birth && age === '') {
+      const d = new Date(profile.date_of_birth);
+      const now = new Date();
+      let a = now.getFullYear() - d.getFullYear();
+      const mo = now.getMonth() - d.getMonth();
+      if (mo < 0 || (mo === 0 && now.getDate() < d.getDate())) a--;
+      setAge(a.toString());
+    }
+    if (profile.height_cm != null && height === '') setHeight(profile.height_cm.toString());
+    if (profile.lean_mass_kg != null && leanMass === '') setLeanMass(profile.lean_mass_kg.toString());
+    if (profile.activity_level) setActivity(profile.activity_level);
+    if (profile.goal) setGoal(profile.goal);
+  }, [profile]); // eslint-disable-line react-hooks/exhaustive-deps -- intentionally reads initial state only
+
   const parsed = useMemo(() => {
     const bw = Number.parseFloat(bodyweight);
     if (!Number.isFinite(bw) || bw <= 0) return null;
@@ -108,7 +129,7 @@ export function CalculatorSection({
     >
       <Text style={styles.header}>Protocol</Text>
       <View style={styles.pickerRow}>
-        {(['keto', 'rad'] as DietProtocolSlug[]).map((p) => (
+        {(['standard', 'keto', 'rad'] as DietProtocolSlug[]).map((p) => (
           <TouchableOpacity
             key={p}
             style={[styles.pill, protocol === p && styles.pillActive]}
@@ -121,7 +142,7 @@ export function CalculatorSection({
                 protocol === p && styles.pillTextActive,
               ]}
             >
-              {p === 'keto' ? 'Keto' : 'RAD'}
+              {p === 'keto' ? 'Keto' : p === 'rad' ? 'RAD' : 'Standard'}
             </Text>
           </TouchableOpacity>
         ))}

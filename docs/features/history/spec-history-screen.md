@@ -32,6 +32,10 @@ The History tab showing performance trends, completed sessions, and archived pro
 - "Review" button → navigates to `history/cycle-review/[programId].tsx` (mobile-014)
 - Abandoned programs (not ≥80% complete): shown with a "Incomplete" badge, no Review button
 
+### Error State
+
+- [ ] Surface `isError` from `useHistoryScreen` (or equivalent query hooks) — when queries fail, show an error card with a "Retry" button rather than the empty-state fallback ("No performance data yet."). A silent empty state during a transient network error is indistinguishable from genuinely empty data and confusing to the user.
+
 ### Data Access
 
 Uses existing module APIs:

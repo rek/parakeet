@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import {
   ActivityIndicator,
+  Alert,
   Platform,
   ScrollView,
   StyleSheet,
@@ -518,6 +519,9 @@ export default function DisruptionReportScreen() {
       await applyDisruptionAdjustment(disruption.id, user.id);
       invalidateAfterAdjustment();
       router.back();
+    } catch (err) {
+      captureException(err);
+      Alert.alert('Error', 'Failed to apply adjustments — please try again.');
     } finally {
       setIsApplying(false);
     }

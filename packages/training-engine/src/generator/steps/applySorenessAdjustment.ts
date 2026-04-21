@@ -9,6 +9,7 @@ export function applySorenessAdjustment(
   input: JITInput,
   traceBuilder?: PrescriptionTraceBuilder
 ) {
+  if (input.intensityType === 'deload') return;
   const preCount = ctx.plannedCount;
   const sorenessModifier = getSorenessModifier(
     ctx.worstSoreness,

@@ -9,6 +9,7 @@ export function applyReadinessAdjustment(
   input: JITInput,
   traceBuilder?: PrescriptionTraceBuilder
 ) {
+  if (input.intensityType === 'deload') return;
   const preCount = ctx.plannedCount;
   const readinessModifier = getReadinessModifier(
     input.sleepQuality,

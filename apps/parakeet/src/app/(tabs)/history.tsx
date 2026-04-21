@@ -89,6 +89,8 @@ export default function HistoryScreen() {
     heaviest,
     heaviestLoading,
     isLoading,
+    isError,
+    refetch,
   } = useHistoryScreen(TIME_RANGE_WEEKS[timeRange]);
 
   const styles = useMemo(
@@ -327,6 +329,19 @@ export default function HistoryScreen() {
       <SafeAreaView style={styles.safeArea}>
         <View style={styles.centered}>
           <ActivityIndicator size="large" color={colors.primary} />
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  if (isError) {
+    return (
+      <SafeAreaView style={styles.safeArea}>
+        <View style={styles.centered}>
+          <Text style={styles.emptyText}>Failed to load history.</Text>
+          <TouchableOpacity onPress={refetch} style={{ marginTop: spacing[3] }}>
+            <Text style={{ color: colors.primary, fontWeight: '600' }}>Retry</Text>
+          </TouchableOpacity>
         </View>
       </SafeAreaView>
     );

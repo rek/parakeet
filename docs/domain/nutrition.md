@@ -65,6 +65,7 @@ active tissue, not total body weight).
 | --- | --- | --- |
 | Keto | 1.4 g/kg (lean if known else bodyweight) | Cannataro 2021 protocol (~30% kcal from protein in an 1300 kcal plan). |
 | RAD | 1.8 g/kg | Helms et al., *Int Soc Sports Nutr* position stand on natural bodybuilding; slightly above-floor for strength athletes. |
+| Standard | 1.8 g/kg (lean if known else bodyweight) | Same floor as RAD — strength training demands apply regardless of dietary approach. ISSN position stand on protein and exercise (Stokes et al. 2018). |
 
 **Training-day bump**: `protein_g × 1.1` on training days, per the ISSN
 position stand on protein timing & training demands.
@@ -91,6 +92,21 @@ g/kg:
 - **Carbohydrate**: `(kcal − protein_kcal − fat_kcal) / 4` — residual.
   Net carbs are not tracked here (RAD emphasises glycemic index /
   whole-food quality rather than a hard cap).
+
+### Standard
+
+Carb-forward approach suited to amateur powerlifters who eat a
+conventional diet without specialised protocols. Lower dietary
+friction than RAD or Keto — macros map naturally to how most people
+already eat (rice, potatoes, oats, meat, eggs).
+
+- **Carbohydrate**: 45% of kcal — first allocation. Supports
+  glycolytic demand of heavy compound training; within the AMDR
+  (45–65%) for active individuals.
+- **Fat**: residual — `fat_g = (kcal − protein_kcal − carb_kcal) / 9`.
+  Typically lands ~25–30% depending on bodyweight and goal.
+- **Protein**: 1.8 g/kg (same floor as RAD). Strength training
+  demands do not change because the dietary approach is different.
 
 ## Output shape
 

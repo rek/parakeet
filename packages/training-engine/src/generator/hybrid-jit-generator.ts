@@ -78,11 +78,18 @@ export class HybridJITGenerator implements JITGeneratorStrategy {
     if (!llmOutput) {
       const llmError = (llmResult as PromiseRejectedResult).reason;
       if (this.logger) {
+        const fallbackOutput: JITOutput = {
+          ...formulaOutput,
+          jit_strategy: 'formula_fallback',
+          rationale: [
+            `LLM_FALLBACK: ${llmError instanceof Error ? llmError.message : String(llmError)}`,
+          ],
+        };
         try {
-          this.logger(input, formulaOutput, formulaOutput, {
+          this.logger(input, formulaOutput, fallbackOutput, {
             weightPct: 0,
             setDelta: 0,
-            rpeContextSummary: `LLM_FALLBACK: ${llmError instanceof Error ? llmError.message : String(llmError)}`,
+            rpeContextSummary: fallbackOutput.rationale[0],
           });
         } catch {
           // logging errors are silently swallowed

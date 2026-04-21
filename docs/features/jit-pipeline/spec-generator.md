@@ -87,6 +87,7 @@ interface AuxiliaryWork {
   - If avg_rpe_deviation ≥ 0.75 over last 2 sessions: `intensityMultiplier *= 0.975` (small) or `*= 0.95` (large, ≥ 1.25)
   - If avg_rpe_deviation ≤ -0.75: `intensityMultiplier *= 1.025` (small) or `*= 1.05` (large, ≤ -1.25)
 - [x] **Step 3 — Soreness adjustment**
+  - If `input.intensityType === 'deload'`: skip this step entirely — deload sessions are already at recovery intensity and must not be further reduced by soreness
   - If `sorenessModifier.recoveryMode`: replace base sets with recovery sets (40% × 3×5)
   - Otherwise: apply setReduction and intensityMultiplier from soreness modifier
 - [x] **Step 4 — MRV check (primary muscles)**

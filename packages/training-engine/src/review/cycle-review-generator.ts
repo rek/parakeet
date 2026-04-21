@@ -179,6 +179,7 @@ export async function generateCycleReview(
     output: Output.object({ schema: CycleReviewSchema }),
     system: CYCLE_REVIEW_SYSTEM_PROMPT,
     prompt,
+    abortSignal: AbortSignal.timeout(120_000),
   });
   return output;
 }

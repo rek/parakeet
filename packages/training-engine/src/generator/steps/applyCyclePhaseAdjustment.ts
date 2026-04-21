@@ -9,6 +9,7 @@ export function applyCyclePhaseAdjustment(
   input: JITInput,
   traceBuilder?: PrescriptionTraceBuilder
 ) {
+  if (input.intensityType === 'deload') return;
   const preCount = ctx.plannedCount;
   const cyclePhaseModifier = getCyclePhaseModifier(input.cyclePhase);
 

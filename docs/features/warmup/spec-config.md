@@ -39,6 +39,7 @@ CREATE POLICY "users_own_warmup_config" ON warmup_configs
 - [x] Below the picker: a preview of the warmup sets based on current 1RM for that lift
   - Example for Squat 140kg 1RM, Block 1 Heavy (working weight ~112.5kg): `Standard → 45kg×5, 67.5kg×3, 85kg×2, 102.5kg×1`
 - [x] Custom step editor when "Custom" is selected: list of steps with +/− buttons, percentage (1–99) and reps (1–10) inputs, steps kept in ascending order, Save button calls `updateWarmupConfig()` with `type: 'custom'`
+- [ ] All save paths (`handleSaveLift` per lift, custom step save) must wrap the `updateWarmupConfig()` call in `try/catch`; on error: `captureException(err)` + `Alert.alert('Save Failed', 'Could not save warmup config — please try again.')`
 
 ## Dependencies
 

@@ -103,6 +103,13 @@ Design intent: minor disruptions apply immediately without requiring the user to
 - [x] In the review screen: if `autoApplied === true`, hide the "Apply All Adjustments" button and replace with a read-only note: "Adjustments auto-applied (minor severity)"
 - [x] Moderate + major: unchanged — user must confirm
 
+## Error handling in handleApply
+
+`handleApply()` in report.tsx must not silently swallow failures — the user needs to know if the adjustment wasn't saved.
+
+- [ ] Wrap the `applyDisruptionAdjustment` call in a `try/catch`; on error: `captureException(err)` + `Alert.alert('Error', 'Failed to apply adjustments — please try again.')`
+- [ ] The existing `finally` block already re-enables the button; no change needed there
+
 ## Query invalidation after apply
 
 After `applyDisruptionAdjustment` resolves in `handleApply()` (report.tsx), invalidate both:

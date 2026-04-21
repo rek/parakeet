@@ -31,7 +31,7 @@ export type ActivityLevel =
   | 'active'
   | 'very_active';
 export type Goal = 'cut' | 'maintain' | 'bulk';
-export type DietProtocolSlug = 'keto' | 'rad';
+export type DietProtocolSlug = 'keto' | 'rad' | 'standard';
 
 export interface MacroTargetInput {
   bodyweight_kg: number;
@@ -106,6 +106,50 @@ const GOAL_KCAL_DELTA: Record<Goal, number> = {
 };
 
 // ---------------------------------------------------------------------------
+// Protocol config
+// ---------------------------------------------------------------------------
+
+interface ProtocolConfig {
+  /** g/kg of reference mass for protein. */
+  protein_g_per_kg: number;
+  /** Fixed carb ceiling in grams (keto only). null = percentage-based. */
+  carb_ceiling_g: number | null;
+  /** Net carb cap for display (keto only). */
+  net_carb_g_cap: number | null;
+  /** Fraction of kcal allocated to carbs before fat (standard). null = fat-first. */
+  carb_pct: number | null;
+  /** Fraction of kcal allocated to fat before carbs (RAD). null = carb-first. */
+  fat_pct: number | null;
+}
+
+const PROTOCOL_CONFIG: Record<DietProtocolSlug, ProtocolConfig> = {
+  // Cannataro 2021 — ~30% kcal from protein; hard carb ceiling defines ketosis.
+  keto: {
+    protein_g_per_kg: 1.4,
+    carb_ceiling_g: 50,
+    net_carb_g_cap: 20,
+    carb_pct: null,
+    fat_pct: null,
+  },
+  // Helms et al. 2014 — fat-first Mediterranean split for powerlifters.
+  rad: {
+    protein_g_per_kg: 1.8,
+    carb_ceiling_g: null,
+    net_carb_g_cap: null,
+    carb_pct: null,
+    fat_pct: 0.4,
+  },
+  // Stokes et al. ISSN 2018 — carb-forward, standard diet for amateur strength athletes.
+  standard: {
+    protein_g_per_kg: 1.8,
+    carb_ceiling_g: null,
+    net_carb_g_cap: null,
+    carb_pct: 0.45,
+    fat_pct: null,
+  },
+};
+
+// ---------------------------------------------------------------------------
 // BMR
 // ---------------------------------------------------------------------------
 
@@ -128,55 +172,57 @@ function mifflinStJeor(
  * height is available. Constants are rule-of-thumb averages, not
  * research-grade; the returned MacroTarget flags low_confidence=true.
  */
-function bodyweightFallback(
-  bodyweight_kg: number,
-  sex: BiologicalSex,
-): number {
+function bodyweightFallback(bodyweight_kg: number, sex: BiologicalSex): number {
   return sex === 'male' ? 24 * bodyweight_kg : 22 * bodyweight_kg;
 }
 
-// ---------------------------------------------------------------------------
-// Protein
-// ---------------------------------------------------------------------------
-
-interface ProteinTarget {
-  g_per_day: number;
-  g_per_kg: number;
-  basis: 'lean_mass' | 'bodyweight';
-}
-
-function proteinTarget(
+function computeBmr(
   bodyweight_kg: number,
+  biological_sex: BiologicalSex,
+  height_cm: number | null | undefined,
+  age_years: number | null | undefined,
   lean_mass_kg: number | null | undefined,
-  protocol: DietProtocolSlug,
-  training_day: boolean,
-): ProteinTarget {
-  // Target g/kg — midpoint of accepted ranges. Lean-mass basis is
-  // preferred when known (1.4 g/kg lean ≈ 2.0 g/kg bodyweight at 30% bf).
-  const basePerKg =
-    protocol === 'keto'
-      ? lean_mass_kg != null
-        ? 1.4 // keto-on-lean-mass midpoint
-        : 1.4 // keto-on-bodyweight (Cannataro used ~30% kcal = ~1.4 g/kg bw)
-      : lean_mass_kg != null
-        ? 1.8
-        : 1.8; // RAD more protein-permissive
-
-  const trainingBump = training_day ? 1.1 : 1;
-  const perKg = basePerKg * trainingBump;
-
-  if (lean_mass_kg != null) {
+): { bmr: number; bmr_method: MacroTarget['bmr_method']; low_confidence: boolean } {
+  if (lean_mass_kg != null && lean_mass_kg > 0) {
+    return { bmr: katchMcCardle(lean_mass_kg), bmr_method: 'katch_mcardle', low_confidence: false };
+  }
+  if (height_cm != null && height_cm > 0) {
+    const age = age_years ?? MacroTargetDefaults.age_years_fallback;
     return {
-      g_per_day: Math.round(lean_mass_kg * perKg),
-      g_per_kg: perKg,
-      basis: 'lean_mass',
+      bmr: mifflinStJeor(bodyweight_kg, height_cm, age, biological_sex),
+      bmr_method: 'mifflin_st_jeor',
+      low_confidence: age_years == null,
     };
   }
-  return {
-    g_per_day: Math.round(bodyweight_kg * perKg),
-    g_per_kg: perKg,
-    basis: 'bodyweight',
-  };
+  return { bmr: bodyweightFallback(bodyweight_kg, biological_sex), bmr_method: 'fallback', low_confidence: true };
+}
+
+// ---------------------------------------------------------------------------
+// Carb + Fat split
+// ---------------------------------------------------------------------------
+
+function computeCarbFat(
+  config: ProtocolConfig,
+  kcal: number,
+  protein_kcal: number,
+): { carb_g: number; fat_g: number } {
+  if (config.carb_ceiling_g != null) {
+    // Keto: fixed carb ceiling, fat fills residual.
+    const carb_g = config.carb_ceiling_g;
+    const fat_g = Math.max(0, Math.round((kcal - protein_kcal - carb_g * 4) / 9));
+    return { carb_g, fat_g };
+  }
+  if (config.carb_pct != null) {
+    // Standard: carb-first, fat fills residual.
+    const carb_g = Math.round((kcal * config.carb_pct) / 4);
+    const fat_g = Math.max(0, Math.round((kcal - protein_kcal - carb_g * 4) / 9));
+    return { carb_g, fat_g };
+  }
+  // RAD: fat-first, carbs fill residual.
+  const fat_pct = config.fat_pct ?? 0.4;
+  const fat_g = Math.round((kcal * fat_pct) / 9);
+  const carb_g = Math.max(0, Math.round((kcal - protein_kcal - fat_g * 9) / 4));
+  return { carb_g, fat_g };
 }
 
 // ---------------------------------------------------------------------------
@@ -196,23 +242,12 @@ export function computeMacroTargets(input: MacroTargetInput): MacroTarget {
     training_day = false,
   } = input;
 
+  const config = PROTOCOL_CONFIG[protocol];
+
   // 1. BMR
-  let bmr: number;
-  let bmr_method: MacroTarget['bmr_method'];
-  let low_confidence = false;
-  if (lean_mass_kg != null && lean_mass_kg > 0) {
-    bmr = katchMcCardle(lean_mass_kg);
-    bmr_method = 'katch_mcardle';
-  } else if (height_cm != null && height_cm > 0) {
-    const age = age_years ?? MacroTargetDefaults.age_years_fallback;
-    bmr = mifflinStJeor(bodyweight_kg, height_cm, age, biological_sex);
-    bmr_method = 'mifflin_st_jeor';
-    if (age_years == null) low_confidence = true;
-  } else {
-    bmr = bodyweightFallback(bodyweight_kg, biological_sex);
-    bmr_method = 'fallback';
-    low_confidence = true;
-  }
+  const { bmr, bmr_method, low_confidence } = computeBmr(
+    bodyweight_kg, biological_sex, height_cm, age_years, lean_mass_kg,
+  );
 
   // 2. TDEE
   const activity = activity_level ?? MacroTargetDefaults.activity_level;
@@ -227,48 +262,25 @@ export function computeMacroTargets(input: MacroTargetInput): MacroTarget {
       ? Math.round(kcal_override)
       : derivedKcal;
 
-  // 4. Protein
-  const protein = proteinTarget(
-    bodyweight_kg,
-    lean_mass_kg,
-    protocol,
-    training_day,
-  );
-  const protein_g = protein.g_per_day;
+  // 4. Protein — lean-mass basis preferred when known.
+  const perKg = config.protein_g_per_kg * (training_day ? 1.1 : 1);
+  const ref_mass = lean_mass_kg != null && lean_mass_kg > 0 ? lean_mass_kg : bodyweight_kg;
+  const protein_g = Math.round(ref_mass * perKg);
   const protein_kcal = protein_g * 4;
 
-  // 5. Carb + Fat by protocol
-  let carb_g: number;
-  let fat_g: number;
-  let net_carb_g_cap: number | null;
-
-  if (protocol === 'keto') {
-    // Hard ceiling: 50g total / 20g net. Fat = residual.
-    carb_g = 50;
-    net_carb_g_cap = 20;
-    const carb_kcal = carb_g * 4;
-    fat_g = Math.max(0, Math.round((kcal - protein_kcal - carb_kcal) / 9));
-  } else {
-    // RAD: 40% fat / 30% carb / protein already set (~25–30%).
-    // If protein already exceeds 30% (small lifter, high g/kg), carbs
-    // are reduced — fat stays at 40% floor.
-    const fat_kcal = kcal * 0.4;
-    fat_g = Math.round(fat_kcal / 9);
-    const carb_kcal = Math.max(0, kcal - protein_kcal - fat_kcal);
-    carb_g = Math.round(carb_kcal / 4);
-    net_carb_g_cap = null;
-  }
+  // 5. Carb + Fat split by protocol.
+  const { carb_g, fat_g } = computeCarbFat(config, kcal, protein_kcal);
 
   return {
     kcal,
     protein_g,
     fat_g,
     carb_g,
-    net_carb_g_cap,
+    net_carb_g_cap: config.net_carb_g_cap,
     bmr_kcal: Math.round(bmr),
     tdee_kcal: Math.round(tdee),
     bmr_method,
     low_confidence,
-    kcal_overridden: kcal !== derivedKcal,
+    kcal_overridden: kcal_override != null && kcal_override > 0,
   };
 }
