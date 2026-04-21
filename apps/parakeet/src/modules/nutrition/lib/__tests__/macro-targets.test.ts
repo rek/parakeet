@@ -37,7 +37,7 @@ describe('computeMacroTargets', () => {
       lean_mass_kg: 48,
       protocol: 'rad',
     });
-    expect(r.bmr_method).toBe('katch_mccardle');
+    expect(r.bmr_method).toBe('katch_mcardle');
     // 370 + 21.6 * 48 = 1406.8
     expect(r.bmr_kcal).toBe(1407);
   });
@@ -156,5 +156,57 @@ describe('computeMacroTargets', () => {
   it('low_confidence cleared when all inputs present', () => {
     const r = computeMacroTargets({ ...baseFemale, protocol: 'rad' });
     expect(r.low_confidence).toBe(false);
+  });
+
+  it('training-day bump composes with Katch-McArdle branch', () => {
+    const off = computeMacroTargets({
+      ...baseFemale,
+      lean_mass_kg: 48,
+      protocol: 'rad',
+    });
+    const on = computeMacroTargets({
+      ...baseFemale,
+      lean_mass_kg: 48,
+      training_day: true,
+      protocol: 'rad',
+    });
+    expect(on.protein_g).toBe(Math.round(off.protein_g * 1.1));
+    // Both should use Katch-McArdle BMR regardless of training day.
+    expect(on.bmr_method).toBe('katch_mcardle');
+    expect(off.bmr_method).toBe('katch_mcardle');
+  });
+
+  it('keto + bulk with small lifter keeps fat >= 0 (no negative macros)', () => {
+    // Low bodyweight + bulk can push kcal below (protein + carb) if keto
+    // protein is very high. Guard: fat_g must never go negative.
+    const r = computeMacroTargets({
+      bodyweight_kg: 45,
+      biological_sex: 'female',
+      age_years: 25,
+      height_cm: 150,
+      activity_level: 'sedentary',
+      goal: 'bulk',
+      training_day: true,
+      protocol: 'keto',
+    });
+    expect(r.fat_g).toBeGreaterThanOrEqual(0);
+    expect(r.protein_g).toBeGreaterThan(0);
+    expect(r.carb_g).toBe(50);
+  });
+
+  it('returns sane output even with zero bodyweight (no NaN propagation)', () => {
+    // Boundary: defensive, not a supported usage path. We just don't
+    // want NaN leaking to the UI.
+    const r = computeMacroTargets({
+      bodyweight_kg: 0,
+      biological_sex: 'female',
+      age_years: 35,
+      height_cm: 160,
+      protocol: 'rad',
+    });
+    expect(Number.isFinite(r.kcal)).toBe(true);
+    expect(Number.isFinite(r.protein_g)).toBe(true);
+    expect(Number.isFinite(r.fat_g)).toBe(true);
+    expect(Number.isFinite(r.carb_g)).toBe(true);
   });
 });

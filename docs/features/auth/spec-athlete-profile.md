@@ -43,6 +43,20 @@ Storage and collection of athlete demographic data: gender, date of birth, and b
 **`apps/parakeet/src/app/profile/index.tsx`:**
 - [x] Optional "Bodyweight (kg)" decimal input field; saved via `updateProfile()`
 
+**DB migration — `supabase/migrations/20260421100000_extend_profiles_body_comp.sql`:** (body-comp extension for nutrition macro targets)
+- [x] `ALTER TABLE profiles ADD height_cm, lean_mass_kg, activity_level, goal` (all nullable). Enum check constraints on the latter two.
+  → `supabase/migrations/20260421100000_extend_profiles_body_comp.sql`
+
+**`apps/parakeet/src/modules/profile/`** (body-comp extension):
+- [x] `Profile` + `UpdateProfileInput` extended with `height_cm`, `lean_mass_kg`, `activity_level`, `goal`
+- [x] `getProfileById` SELECT extended; service normalises `activity_level` / `goal` via type predicates (no `as` casts)
+- [x] `useSaveProfile` persists the new fields through `SaveProfileArgs`
+
+**`apps/parakeet/src/app/profile/index.tsx`** (body-comp extension):
+- [x] "Body composition & activity" card added below the primary profile card. Height (cm), lean mass (kg, with DEXA-preferred helper), activity-level picker (5 options), goal picker (3 options). All optional; drive macro-target accuracy.
+
+See [../nutrition/spec-macro-targets.md](../nutrition/spec-macro-targets.md) for the calculator that consumes these fields.
+
 ## Design Notes
 
 - Gender drives MEV/MRV defaults — female defaults are ~20–30% higher per RP Strength research

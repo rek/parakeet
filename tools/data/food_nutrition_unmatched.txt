@@ -1,12 +1,47 @@
-# 11 foods need manual fill (IFCT_2017 or other)
-- all herbs and spices
-- ashwagandha
-- bee pollen granules
-- commercial cow dairy
-- dark leafy greens
+# 5 foods need manual fill (IFCT_2017 / Korean DB / approximation)
 - doenjang
 - gochugaru/korean chilli flakes
 - gochujang
+- homemade kombucha
+- japchae glass noodles
+
+# 39 foods intentionally skipped — allergens / status=no / groups / supplements (no macro meaning)
+- alcohol
+- all herbs and spices
+- all leafy greens
+- almonds
+- any refined seed oils
+- artificial sweeteners (sucralose/aspartame/acesulfame-k)
+- ashwagandha
+- ashwagandha powder
+- bee pollen granules
+- brazil nuts
+- commercial cow dairy
+- commercial cow milk as primary drink
+- commercial sauces
+- commercial sauces with sugar or starch
+- commercial sports drinks
+- dark leafy greens
+- flavored yoghurts with added sugar
+- hazelnuts
 - heavily processed meats with long additive lists
 - himalayan mint tea (ban silam)
-- japchae glass noodles
+- large amounts of straight milk
+- low fat dairy anything
+- macadamia
+- meats in sugar-heavy marinades
+- monk fruit
+- moringa leaf powder
+- pistachios
+- processed meats with fillers or sugars
+- processed meats with sodium nitrate
+- refined sugar
+- refined sugar and anything containing it
+- seed oils in cooking
+- stevia
+- turmeric powder
+- walnuts
+- water
+- wheat and all gluten-containing grains
+- whey protein
+- yak cheese

@@ -4,7 +4,6 @@ import { useProfile } from '@modules/profile';
 
 import {
   computeMacroTargets,
-  type BiologicalSex,
   type DietProtocolSlug,
   type MacroTarget,
 } from '../lib/macro-targets';
@@ -48,10 +47,18 @@ export function useMacroTargets(
       return { target: null, missing, isLoading: false };
     }
 
+    // All fields are non-null after the missing-check above, but
+    // TS narrowing doesn't follow through the array-push-and-check.
+    // Explicit guards here so the computeMacroTargets call is cast-free.
+    const bodyweight = profile.bodyweight_kg;
+    const sex = profile.biological_sex;
+    if (bodyweight == null || sex == null) {
+      return { target: null, missing: [], isLoading: false };
+    }
     const age_years = computeAgeYears(profile.date_of_birth);
     const target = computeMacroTargets({
-      bodyweight_kg: profile.bodyweight_kg!,
-      biological_sex: profile.biological_sex as BiologicalSex,
+      bodyweight_kg: bodyweight,
+      biological_sex: sex,
       age_years,
       height_cm: profile.height_cm,
       lean_mass_kg: profile.lean_mass_kg,

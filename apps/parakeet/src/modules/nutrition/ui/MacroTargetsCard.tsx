@@ -125,8 +125,8 @@ function humanizeMissing(missing: string[]): string {
   return readable.slice(0, -1).join(', ') + ' and ' + readable.at(-1);
 }
 
-function describeMethod(method: 'katch_mccardle' | 'mifflin_st_jeor' | 'fallback'): string {
-  if (method === 'katch_mccardle') return 'Katch-McArdle';
+function describeMethod(method: 'katch_mcardle' | 'mifflin_st_jeor' | 'fallback'): string {
+  if (method === 'katch_mcardle') return 'Katch-McArdle';
   if (method === 'mifflin_st_jeor') return 'Mifflin-St Jeor';
   return 'Bodyweight estimate';
 }

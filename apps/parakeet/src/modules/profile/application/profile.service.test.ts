@@ -22,6 +22,10 @@ const PROFILE_ROW = {
   biological_sex: 'male' as const,
   date_of_birth: '1990-05-15',
   bodyweight_kg: 85,
+  height_cm: null,
+  lean_mass_kg: null,
+  activity_level: null,
+  goal: null,
   created_at: '2024-01-01T00:00:00Z',
 };
 

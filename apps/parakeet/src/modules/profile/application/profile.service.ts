@@ -48,6 +48,13 @@ const ACTIVITY_LEVELS: ReadonlySet<ActivityLevel> = new Set([
 ]);
 const GOALS: ReadonlySet<Goal> = new Set(['cut', 'maintain', 'bulk']);
 
+function isActivityLevel(v: unknown): v is ActivityLevel {
+  return typeof v === 'string' && ACTIVITY_LEVELS.has(v as ActivityLevel);
+}
+function isGoal(v: unknown): v is Goal {
+  return typeof v === 'string' && GOALS.has(v as Goal);
+}
+
 export async function getProfile(): Promise<Profile | null> {
   const userId = await getAuthenticatedUserId();
   if (!userId) return null;
@@ -59,12 +66,10 @@ export async function getProfile(): Promise<Profile | null> {
     data.biological_sex === 'female' || data.biological_sex === 'male'
       ? data.biological_sex
       : null;
-  const activity_level =
-    data.activity_level && ACTIVITY_LEVELS.has(data.activity_level as ActivityLevel)
-      ? (data.activity_level as ActivityLevel)
-      : null;
-  const goal =
-    data.goal && GOALS.has(data.goal as Goal) ? (data.goal as Goal) : null;
+  const activity_level = isActivityLevel(data.activity_level)
+    ? data.activity_level
+    : null;
+  const goal = isGoal(data.goal) ? data.goal : null;
 
   return {
     ...data,

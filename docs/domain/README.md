@@ -16,6 +16,7 @@ Single source of truth for training science decisions in Parakeet. Every constan
 | [athlete-signals.md](athlete-signals.md) | All inputs collected from the lifter and how they flow through the system |
 | [performance-analysis.md](performance-analysis.md) | 1RM formulas, working 1RM, Wilks, PR detection, modifier calibration |
 | [ai-coaching.md](ai-coaching.md) | LLM models, JIT strategy, constraints, challenge mode, cycle reviews |
+| [nutrition.md](nutrition.md) | Macro-target calculator: BMR cascade, activity multipliers, goal deltas, protocol splits (keto / RAD), training-day bump |
 | [references.md](references.md) | All external citations with URLs |
 
 ## Rules

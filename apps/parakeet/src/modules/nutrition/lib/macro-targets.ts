@@ -2,6 +2,11 @@
  * Compute daily macro + kcal targets for the current lifter given a
  * chosen diet protocol.
  *
+ * **All numeric constants in this file (activity multipliers, goal
+ * deltas, protocol splits, protein g/kg, training-day bump, keto
+ * ceiling) are documented in the domain doc — update both together:**
+ *   → `docs/domain/nutrition.md`
+ *
  * Pure function. All inputs optional except bodyweight + sex. Missing
  * height / lean-mass / activity / goal fall back to documented
  * defaults (see MacroTargetDefaults below).
@@ -54,7 +59,7 @@ export interface MacroTarget {
   /** Upstream values used — surfaced for the UI explanation copy. */
   bmr_kcal: number;
   tdee_kcal: number;
-  bmr_method: 'katch_mccardle' | 'mifflin_st_jeor' | 'fallback';
+  bmr_method: 'katch_mcardle' | 'mifflin_st_jeor' | 'fallback';
   /**
    * True if we couldn't use a validated BMR formula. UI should show
    * a 'rough estimate' badge and nudge the user to fill missing
@@ -185,7 +190,7 @@ export function computeMacroTargets(input: MacroTargetInput): MacroTarget {
   let low_confidence = false;
   if (lean_mass_kg != null && lean_mass_kg > 0) {
     bmr = katchMcCardle(lean_mass_kg);
-    bmr_method = 'katch_mccardle';
+    bmr_method = 'katch_mcardle';
   } else if (height_cm != null && height_cm > 0) {
     const age = age_years ?? MacroTargetDefaults.age_years_fallback;
     bmr = mifflinStJeor(bodyweight_kg, height_cm, age, biological_sex);

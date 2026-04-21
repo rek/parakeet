@@ -265,8 +265,10 @@ async function main() {
       .from('diet_foods')
       .select('id, canonical_name');
     if (afErr || !allFoods) throw afErr ?? new Error('no food rows');
+    // Normalize both sides through canonical() so lookup is stable even
+    // if a DB row was ever written bypassing the seed script.
     const foodIdByCanon = new Map(
-      allFoods.map((r) => [r.canonical_name, r.id]),
+      allFoods.map((r) => [canonical(r.canonical_name), r.id]),
     );
 
     const upserts: {
@@ -313,11 +315,23 @@ async function main() {
       .upsert(upserts, { onConflict: 'food_id,serving_g' });
     if (nErr) throw nErr;
 
-    const { error: nDelErr } = await db
-      .from('diet_food_nutrition')
-      .delete()
-      .not('food_id', 'in', `(${keepFoodIds.join(',')})`);
-    if (nDelErr) throw nDelErr;
+    // Prune. PostgREST rejects `in ()` so guard the empty case by
+    // pruning unconditionally when keepFoodIds is empty (treat as
+    // "wipe the table"). UUID values are safe inside an unquoted in()
+    // list — no embedded commas.
+    if (keepFoodIds.length > 0) {
+      const { error: nDelErr } = await db
+        .from('diet_food_nutrition')
+        .delete()
+        .not('food_id', 'in', `(${keepFoodIds.join(',')})`);
+      if (nDelErr) throw nDelErr;
+    } else {
+      const { error: nDelErr } = await db
+        .from('diet_food_nutrition')
+        .delete()
+        .neq('food_id', '00000000-0000-0000-0000-000000000000');
+      if (nDelErr) throw nDelErr;
+    }
     console.log(`[nutrition] upserted ${upserts.length} food_nutrition rows`);
   } else {
     console.log('[nutrition] no food_nutrition.csv; skipping');
