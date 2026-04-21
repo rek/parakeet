@@ -71,3 +71,7 @@ backup_*.sql
 backups
 backups/*
 vite.config.*.timestamp*
+
+# USDA FoodData Central bulk download — input for import-usda-nutrition.ts,
+# not committed. Users re-download from fdc.nal.usda.gov/download-datasets.
+tools/data/usda/

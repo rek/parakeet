@@ -3,7 +3,11 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 import { addBodyweightEntry } from '../application/bodyweight.service';
 import { updateProfile } from '../application/profile.service';
-import type { BiologicalSex } from '../application/profile.service';
+import type {
+  ActivityLevel,
+  BiologicalSex,
+  Goal,
+} from '../application/profile.service';
 import { profileQueries } from '../data/profile.queries';
 import { birthYearToDobIso } from '../utils/profile-transforms';
 
@@ -22,6 +26,18 @@ interface SaveProfileArgs {
   gender: BiologicalSex | null;
   birthYear: string;
   bodyweightKg: string;
+  heightCm?: string;
+  leanMassKg?: string;
+  activityLevel?: ActivityLevel | null;
+  goal?: Goal | null;
+}
+
+function parseOptionalNumber(raw: string | undefined): number | null {
+  if (!raw) return null;
+  const trimmed = raw.trim();
+  if (trimmed.length === 0) return null;
+  const n = Number.parseFloat(trimmed);
+  return Number.isFinite(n) ? n : null;
 }
 
 /**
@@ -40,6 +56,10 @@ export function useSaveProfile() {
       gender,
       birthYear,
       bodyweightKg,
+      heightCm,
+      leanMassKg,
+      activityLevel,
+      goal,
     }: SaveProfileArgs) => {
       const dobIso = birthYearToDobIso(birthYear);
 
@@ -56,6 +76,10 @@ export function useSaveProfile() {
         biological_sex: gender,
         date_of_birth: dobIso,
         bodyweight_kg: validBodyweight,
+        height_cm: parseOptionalNumber(heightCm),
+        lean_mass_kg: parseOptionalNumber(leanMassKg),
+        activity_level: activityLevel ?? null,
+        goal: goal ?? null,
       });
 
       if (validBodyweight != null) {

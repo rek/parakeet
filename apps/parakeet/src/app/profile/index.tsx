@@ -16,7 +16,12 @@ import {
   useProfileEditor,
   useSaveProfile,
 } from '@modules/profile';
-import type { BiologicalSex, BodyweightEntry } from '@modules/profile';
+import type {
+  ActivityLevel,
+  BiologicalSex,
+  BodyweightEntry,
+  Goal,
+} from '@modules/profile';
 import { captureException } from '@platform/utils/captureException';
 import { router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -31,6 +36,20 @@ import { useTheme } from '../../theme/ThemeContext';
 const GENDER_OPTIONS: { value: BiologicalSex; label: string }[] = [
   { value: 'female', label: 'Female' },
   { value: 'male', label: 'Male' },
+];
+
+const ACTIVITY_OPTIONS: { value: ActivityLevel; label: string }[] = [
+  { value: 'sedentary', label: 'Sedentary' },
+  { value: 'light', label: 'Light' },
+  { value: 'moderate', label: 'Moderate' },
+  { value: 'active', label: 'Active' },
+  { value: 'very_active', label: 'Very active' },
+];
+
+const GOAL_OPTIONS: { value: Goal; label: string }[] = [
+  { value: 'cut', label: 'Cut' },
+  { value: 'maintain', label: 'Maintain' },
+  { value: 'bulk', label: 'Bulk' },
 ];
 
 function formatDate(iso: string) {
@@ -89,6 +108,33 @@ function buildStyles(colors: ColorScheme) {
     },
     sexRow: {
       gap: spacing[2],
+    },
+    pickerRow: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: spacing[2],
+    },
+    sectionHeaderWrap: {
+      marginTop: spacing[6],
+      marginBottom: spacing[3],
+    },
+    sectionHeader: {
+      fontSize: typography.sizes.sm,
+      fontWeight: typography.weights.bold,
+      color: colors.textSecondary,
+      textTransform: 'uppercase',
+      letterSpacing: typography.letterSpacing.wide,
+    },
+    sectionHint: {
+      fontSize: typography.sizes.xs,
+      color: colors.textTertiary,
+      marginTop: spacing[1],
+    },
+    helperText: {
+      fontSize: typography.sizes.xs,
+      color: colors.textTertiary,
+      marginTop: spacing[1],
+      fontStyle: 'italic',
     },
     sexOption: {
       borderWidth: 1,
@@ -198,6 +244,12 @@ export default function ProfileScreen() {
   const [gender, setGender] = useState<BiologicalSex | null>(null);
   const [birthYear, setBirthYear] = useState('');
   const [bodyweightKg, setBodyweightKg] = useState('');
+  const [heightCm, setHeightCm] = useState('');
+  const [leanMassKg, setLeanMassKg] = useState('');
+  const [activityLevel, setActivityLevel] = useState<ActivityLevel | null>(
+    null,
+  );
+  const [goal, setGoal] = useState<Goal | null>(null);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [saveSuccess, setSaveSuccess] = useState(false);
 
@@ -213,6 +265,12 @@ export default function ProfileScreen() {
     setBodyweightKg(
       profile.bodyweight_kg != null ? profile.bodyweight_kg.toString() : ''
     );
+    setHeightCm(profile.height_cm != null ? profile.height_cm.toString() : '');
+    setLeanMassKg(
+      profile.lean_mass_kg != null ? profile.lean_mass_kg.toString() : '',
+    );
+    setActivityLevel(profile.activity_level ?? null);
+    setGoal(profile.goal ?? null);
   }, [profile]);
 
   const birthYearIsValid = isValidBirthYear(birthYear);
@@ -225,14 +283,34 @@ export default function ProfileScreen() {
       : '';
     const initialBodyweight =
       profile?.bodyweight_kg != null ? profile.bodyweight_kg.toString() : '';
+    const initialHeight =
+      profile?.height_cm != null ? profile.height_cm.toString() : '';
+    const initialLeanMass =
+      profile?.lean_mass_kg != null ? profile.lean_mass_kg.toString() : '';
+    const initialActivity = profile?.activity_level ?? null;
+    const initialGoal = profile?.goal ?? null;
 
     return (
       displayName !== initialName ||
       gender !== initialGender ||
       birthYear !== initialBirthYear ||
-      bodyweightKg !== initialBodyweight
+      bodyweightKg !== initialBodyweight ||
+      heightCm !== initialHeight ||
+      leanMassKg !== initialLeanMass ||
+      activityLevel !== initialActivity ||
+      goal !== initialGoal
     );
-  }, [profile, displayName, gender, birthYear, bodyweightKg]);
+  }, [
+    profile,
+    displayName,
+    gender,
+    birthYear,
+    bodyweightKg,
+    heightCm,
+    leanMassKg,
+    activityLevel,
+    goal,
+  ]);
 
   function handleSave() {
     setSaveSuccess(false);
@@ -246,7 +324,16 @@ export default function ProfileScreen() {
       return;
     }
     saveProfile(
-      { displayName, gender, birthYear, bodyweightKg },
+      {
+        displayName,
+        gender,
+        birthYear,
+        bodyweightKg,
+        heightCm,
+        leanMassKg,
+        activityLevel,
+        goal,
+      },
       {
         onSuccess: () => {
           setSaveSuccess(true);
@@ -370,6 +457,103 @@ export default function ProfileScreen() {
               placeholderTextColor={colors.textTertiary}
               keyboardType="decimal-pad"
             />
+          </View>
+        </View>
+
+        {/* Body composition & activity — optional; improves macro-target accuracy */}
+        <View style={styles.sectionHeaderWrap}>
+          <Text style={styles.sectionHeader}>Body composition & activity</Text>
+          <Text style={styles.sectionHint}>
+            Optional — improves daily macro-target accuracy.
+          </Text>
+        </View>
+
+        <View style={styles.card}>
+          <View style={styles.fieldBlock}>
+            <FieldLabel label="Height (cm)" styles={styles} />
+            <TextInput
+              style={styles.input}
+              value={heightCm}
+              onChangeText={setHeightCm}
+              placeholder="e.g. 170"
+              placeholderTextColor={colors.textTertiary}
+              keyboardType="decimal-pad"
+            />
+          </View>
+
+          <View style={styles.fieldBlock}>
+            <FieldLabel label="Lean mass (kg)" styles={styles} />
+            <TextInput
+              style={styles.input}
+              value={leanMassKg}
+              onChangeText={setLeanMassKg}
+              placeholder="Optional"
+              placeholderTextColor={colors.textTertiary}
+              keyboardType="decimal-pad"
+            />
+            <Text style={styles.helperText}>
+              DEXA scan preferred. Bioimpedance (smart-scale) readings are
+              unreliable on lipedema-affected limbs — leave blank rather than
+              guess.
+            </Text>
+          </View>
+
+          <View style={styles.fieldBlock}>
+            <FieldLabel label="Activity level" styles={styles} />
+            <View style={styles.pickerRow}>
+              {ACTIVITY_OPTIONS.map((option) => {
+                const selected = activityLevel === option.value;
+                return (
+                  <TouchableOpacity
+                    key={option.value}
+                    style={[
+                      styles.sexOption,
+                      selected && styles.sexOptionSelected,
+                    ]}
+                    onPress={() => setActivityLevel(option.value)}
+                    activeOpacity={0.8}
+                  >
+                    <Text
+                      style={[
+                        styles.sexOptionText,
+                        selected && styles.sexOptionTextSelected,
+                      ]}
+                    >
+                      {option.label}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+          </View>
+
+          <View style={styles.fieldBlockLast}>
+            <FieldLabel label="Goal" styles={styles} />
+            <View style={styles.pickerRow}>
+              {GOAL_OPTIONS.map((option) => {
+                const selected = goal === option.value;
+                return (
+                  <TouchableOpacity
+                    key={option.value}
+                    style={[
+                      styles.sexOption,
+                      selected && styles.sexOptionSelected,
+                    ]}
+                    onPress={() => setGoal(option.value)}
+                    activeOpacity={0.8}
+                  >
+                    <Text
+                      style={[
+                        styles.sexOptionText,
+                        selected && styles.sexOptionTextSelected,
+                      ]}
+                    >
+                      {option.label}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
           </View>
         </View>
 

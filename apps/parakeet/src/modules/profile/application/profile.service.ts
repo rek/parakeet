@@ -6,6 +6,13 @@ import {
 } from '../data/profile.repository';
 
 export type BiologicalSex = 'female' | 'male';
+export type ActivityLevel =
+  | 'sedentary'
+  | 'light'
+  | 'moderate'
+  | 'active'
+  | 'very_active';
+export type Goal = 'cut' | 'maintain' | 'bulk';
 
 export interface Profile {
   id: string;
@@ -13,13 +20,33 @@ export interface Profile {
   biological_sex: BiologicalSex | null;
   date_of_birth: string | null; // ISO date 'YYYY-MM-DD'
   bodyweight_kg: number | null;
+  height_cm: number | null;
+  lean_mass_kg: number | null;
+  activity_level: ActivityLevel | null;
+  goal: Goal | null;
   created_at: string;
 }
 
 export type UpdateProfileInput = Pick<
   ProfileUpdateRecord,
-  'display_name' | 'biological_sex' | 'date_of_birth' | 'bodyweight_kg'
+  | 'display_name'
+  | 'biological_sex'
+  | 'date_of_birth'
+  | 'bodyweight_kg'
+  | 'height_cm'
+  | 'lean_mass_kg'
+  | 'activity_level'
+  | 'goal'
 >;
+
+const ACTIVITY_LEVELS: ReadonlySet<ActivityLevel> = new Set([
+  'sedentary',
+  'light',
+  'moderate',
+  'active',
+  'very_active',
+]);
+const GOALS: ReadonlySet<Goal> = new Set(['cut', 'maintain', 'bulk']);
 
 export async function getProfile(): Promise<Profile | null> {
   const userId = await getAuthenticatedUserId();
@@ -32,10 +59,18 @@ export async function getProfile(): Promise<Profile | null> {
     data.biological_sex === 'female' || data.biological_sex === 'male'
       ? data.biological_sex
       : null;
+  const activity_level =
+    data.activity_level && ACTIVITY_LEVELS.has(data.activity_level as ActivityLevel)
+      ? (data.activity_level as ActivityLevel)
+      : null;
+  const goal =
+    data.goal && GOALS.has(data.goal as Goal) ? (data.goal as Goal) : null;
 
   return {
     ...data,
     biological_sex: normalizedSex,
+    activity_level,
+    goal,
   };
 }
 

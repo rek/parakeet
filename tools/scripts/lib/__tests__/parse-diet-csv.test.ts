@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import {
   parseFoodCsv,
   parseLifestyleCsv,
+  parseNutritionCsv,
   parseQuotedCsv,
   parseSupplementCsv,
 } from '../parse-diet-csv';
@@ -212,5 +213,77 @@ describe('parseLifestyleCsv', () => {
     );
     const csv = [header, ...rows].join('\n');
     expect(parseLifestyleCsv(csv)).toHaveLength(cats.length);
+  });
+});
+
+describe('parseNutritionCsv', () => {
+  const header =
+    'canonical_name,serving_g,kcal,protein_g,fat_g,carb_g,fiber_g,source,source_id';
+
+  it('parses USDA-sourced rows with fiber', () => {
+    const csv = [
+      header,
+      'eggs,100,143,12.6,9.5,0.7,0,USDA_SR,748967',
+    ].join('\n');
+    expect(parseNutritionCsv(csv)).toEqual([
+      {
+        canonical_name: 'eggs',
+        serving_g: 100,
+        kcal: 143,
+        protein_g: 12.6,
+        fat_g: 9.5,
+        carb_g: 0.7,
+        fiber_g: 0,
+        source: 'USDA_SR',
+        source_id: '748967',
+      },
+    ]);
+  });
+
+  it('tolerates extra confidence / description columns appended by the importer', () => {
+    const csv = [
+      header + ',confidence,usda_description',
+      'eggs,100,143,12.6,9.5,0.7,0,USDA_SR,748967,105.0,"Egg, whole, raw, fresh"',
+    ].join('\n');
+    expect(parseNutritionCsv(csv)).toHaveLength(1);
+  });
+
+  it('null fiber when blank', () => {
+    const csv = [header, 'salt,100,0,0,0,0,,manual,'].join('\n');
+    expect(parseNutritionCsv(csv)[0].fiber_g).toBeNull();
+  });
+
+  it('null source_id when blank (manual rows)', () => {
+    const csv = [header, 'doenjang,100,198,12,8,20,4,manual,'].join('\n');
+    expect(parseNutritionCsv(csv)[0].source_id).toBeNull();
+  });
+
+  it('rejects invalid source', () => {
+    const csv = [header, 'x,100,10,1,0,1,0,wikipedia,123'].join('\n');
+    expect(() => parseNutritionCsv(csv)).toThrow(/invalid source/);
+  });
+
+  it('throws when kcal/macros are non-numeric', () => {
+    const csv = [header, 'x,100,,,,,0,manual,'].join('\n');
+    expect(() => parseNutritionCsv(csv)).toThrow(/must be numeric/);
+  });
+
+  it('throws on unexpected header', () => {
+    const csv = ['name,serving', 'eggs,100'].join('\n');
+    expect(() => parseNutritionCsv(csv)).toThrow(/Unexpected nutrition header/);
+  });
+
+  it('defaults serving_g to 100 when blank', () => {
+    const csv = [header, 'eggs,,143,12.6,9.5,0.7,0,USDA_SR,1'].join('\n');
+    expect(parseNutritionCsv(csv)[0].serving_g).toBe(100);
+  });
+
+  it('accepts all documented source types', () => {
+    const sources = ['USDA_SR', 'USDA_Foundation', 'USDA_FNDDS', 'IFCT_2017', 'manual'];
+    const rows = sources.map(
+      (src, i) => `food${i},100,100,5,2,10,1,${src},id${i}`,
+    );
+    const csv = [header, ...rows].join('\n');
+    expect(parseNutritionCsv(csv)).toHaveLength(sources.length);
   });
 });

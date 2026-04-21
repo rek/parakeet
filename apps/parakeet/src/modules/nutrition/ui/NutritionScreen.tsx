@@ -13,10 +13,12 @@ import type { ColorScheme } from '../../../theme';
 import { useTheme } from '../../../theme/ThemeContext';
 import { useProtocolBundle, useProtocols } from '../hooks/useNutrition';
 import { Markdown } from '../lib/markdown';
+import type { DietProtocolSlug } from '../lib/macro-targets';
 import { CompareSection } from './CompareSection';
 import { DailyRituals } from './DailyRituals';
 import { FoodSection } from './FoodSection';
 import { LifestyleSection } from './LifestyleSection';
+import { MacroTargetsCard } from './MacroTargetsCard';
 import { ProtocolSelector } from './ProtocolSelector';
 import { SourcesSection } from './SourcesSection';
 import { SupplementSection } from './SupplementSection';
@@ -143,6 +145,9 @@ export function NutritionScreen() {
         <>
           {tab === 'overview' && (
             <>
+              {isMacroProtocol(bundle.protocol.slug) ? (
+                <MacroTargetsCard protocol={bundle.protocol.slug} />
+              ) : null}
               <DailyRituals foods={bundle.foods} />
               {bundle.protocol.descriptionMd ? (
                 <Markdown source={bundle.protocol.descriptionMd} />
@@ -167,6 +172,10 @@ export function NutritionScreen() {
       ) : null}
     </ScrollView>
   );
+}
+
+function isMacroProtocol(slug: string): slug is DietProtocolSlug {
+  return slug === 'keto' || slug === 'rad';
 }
 
 function buildStyles(colors: ColorScheme) {

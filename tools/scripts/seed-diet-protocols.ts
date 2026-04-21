@@ -33,6 +33,7 @@ import { createClient } from '@supabase/supabase-js';
 import {
   parseFoodCsv,
   parseLifestyleCsv,
+  parseNutritionCsv,
   parseSupplementCsv,
 } from './lib/parse-diet-csv';
 
@@ -243,6 +244,83 @@ async function main() {
         .delete()
         .eq('protocol_id', protoRow.id);
     }
+  }
+
+  // ---------------------------------------------------------------------
+  // 5. Food nutrition (global; not per-protocol).
+  //
+  // Seeded from tools/data/food_nutrition.csv. Keyed on diet_foods by
+  // canonical_name. Prunes rows whose food_id no longer matches any
+  // canonical in the CSV — same idempotent upsert+prune pattern as
+  // protocol_foods.
+  // ---------------------------------------------------------------------
+  const nutritionPath = path.join(DATA_DIR, 'food_nutrition.csv');
+  if (fs.existsSync(nutritionPath)) {
+    const nutritionRows = parseNutritionCsv(
+      fs.readFileSync(nutritionPath, 'utf8'),
+    );
+    console.log(`[nutrition] ${nutritionRows.length} nutrition rows`);
+
+    const { data: allFoods, error: afErr } = await db
+      .from('diet_foods')
+      .select('id, canonical_name');
+    if (afErr || !allFoods) throw afErr ?? new Error('no food rows');
+    const foodIdByCanon = new Map(
+      allFoods.map((r) => [r.canonical_name, r.id]),
+    );
+
+    const upserts: {
+      food_id: string;
+      serving_g: number;
+      kcal: number;
+      protein_g: number;
+      fat_g: number;
+      carb_g: number;
+      fiber_g: number | null;
+      source: string;
+      source_id: string | null;
+      updated_at: string;
+    }[] = [];
+    const keepFoodIds: string[] = [];
+    let missingFoodCount = 0;
+    for (const r of nutritionRows) {
+      const foodId = foodIdByCanon.get(canonical(r.canonical_name));
+      if (!foodId) {
+        missingFoodCount++;
+        continue;
+      }
+      keepFoodIds.push(foodId);
+      upserts.push({
+        food_id: foodId,
+        serving_g: r.serving_g,
+        kcal: r.kcal,
+        protein_g: r.protein_g,
+        fat_g: r.fat_g,
+        carb_g: r.carb_g,
+        fiber_g: r.fiber_g,
+        source: r.source,
+        source_id: r.source_id,
+        updated_at: new Date().toISOString(),
+      });
+    }
+    if (missingFoodCount > 0) {
+      console.warn(
+        `[nutrition] ${missingFoodCount} nutrition rows had no matching diet_food (skipped)`,
+      );
+    }
+    const { error: nErr } = await db
+      .from('diet_food_nutrition')
+      .upsert(upserts, { onConflict: 'food_id,serving_g' });
+    if (nErr) throw nErr;
+
+    const { error: nDelErr } = await db
+      .from('diet_food_nutrition')
+      .delete()
+      .not('food_id', 'in', `(${keepFoodIds.join(',')})`);
+    if (nDelErr) throw nDelErr;
+    console.log(`[nutrition] upserted ${upserts.length} food_nutrition rows`);
+  } else {
+    console.log('[nutrition] no food_nutrition.csv; skipping');
   }
 
   console.log('done.');

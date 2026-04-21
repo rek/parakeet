@@ -38,6 +38,25 @@ export interface SupplementRow {
   sort_order: number;
 }
 
+export type NutritionSource =
+  | 'USDA_SR'
+  | 'USDA_Foundation'
+  | 'USDA_FNDDS'
+  | 'IFCT_2017'
+  | 'manual';
+
+export interface NutritionRow {
+  canonical_name: string;
+  serving_g: number;
+  kcal: number;
+  protein_g: number;
+  fat_g: number;
+  carb_g: number;
+  fiber_g: number | null;
+  source: NutritionSource;
+  source_id: string | null;
+}
+
 export interface LifestyleRow {
   slug: string;
   name: string;
@@ -239,6 +258,82 @@ export function parseLifestyleCsv(text: string): LifestyleRow[] {
       description: description?.trim() || null,
       rationale: rationale?.trim() || null,
       sort_order: Number.isFinite(sortVal) ? sortVal : 0,
+    };
+  });
+}
+
+const NUTRITION_HEADER_REQUIRED = [
+  'canonical_name',
+  'serving_g',
+  'kcal',
+  'protein_g',
+  'fat_g',
+  'carb_g',
+  'fiber_g',
+  'source',
+  'source_id',
+] as const;
+
+const NUTRITION_SOURCES = new Set<NutritionSource>([
+  'USDA_SR',
+  'USDA_Foundation',
+  'USDA_FNDDS',
+  'IFCT_2017',
+  'manual',
+]);
+
+function parseNumber(s: string | undefined, fallback: number | null = null): number | null {
+  if (s === undefined) return fallback;
+  const trimmed = s.trim();
+  if (trimmed.length === 0) return fallback;
+  const n = Number.parseFloat(trimmed);
+  return Number.isFinite(n) ? n : fallback;
+}
+
+/**
+ * Parses tools/data/food_nutrition.csv. Header columns after
+ * `source_id` (e.g. `confidence`, `usda_description`) are tolerated
+ * and ignored — the importer adds them for human review.
+ */
+export function parseNutritionCsv(text: string): NutritionRow[] {
+  const rows = parseQuotedCsv(text).filter((r) => r.some((c) => c.length > 0));
+  const [header, ...rest] = rows;
+  for (let i = 0; i < NUTRITION_HEADER_REQUIRED.length; i++) {
+    if ((header[i] ?? '').trim() !== NUTRITION_HEADER_REQUIRED[i]) {
+      throw new Error(
+        `Unexpected nutrition header at col ${i}: got "${header[i]}" expected "${NUTRITION_HEADER_REQUIRED[i]}"`,
+      );
+    }
+  }
+  return rest.map((cols, i) => {
+    const canonical_name = (cols[0] ?? '').trim();
+    if (!canonical_name) {
+      throw new Error(`Row ${i + 2}: empty canonical_name`);
+    }
+    const serving = parseNumber(cols[1], 100);
+    const kcal = parseNumber(cols[2]);
+    const protein_g = parseNumber(cols[3]);
+    const fat_g = parseNumber(cols[4]);
+    const carb_g = parseNumber(cols[5]);
+    const fiber_g = parseNumber(cols[6]);
+    const sourceT = (cols[7] ?? '').trim() as NutritionSource;
+    if (!NUTRITION_SOURCES.has(sourceT)) {
+      throw new Error(`Row ${i + 2}: invalid source "${cols[7]}"`);
+    }
+    if (kcal === null || protein_g === null || fat_g === null || carb_g === null) {
+      throw new Error(`Row ${i + 2}: kcal/protein/fat/carb must be numeric`);
+    }
+    const sourceIdRaw = (cols[8] ?? '').trim();
+    return {
+      canonical_name,
+      serving_g: serving ?? 100,
+      kcal,
+      protein_g,
+      fat_g,
+      carb_g,
+      fiber_g,
+      source: sourceT,
+      source_id: sourceIdRaw.length > 0 ? sourceIdRaw : null,
     };
   });
 }

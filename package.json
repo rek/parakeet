@@ -18,6 +18,7 @@
     "db:push": "npx supabase db push",
     "db:types": "npx supabase gen types typescript --local > supabase/types.ts",
     "db:seed:diet": "bash tools/scripts/seed-diet-protocols.sh",
+    "db:import:usda": "npx tsx tools/scripts/import-usda-nutrition.ts",
     "extract:landmarks": "python3 scripts/extract-landmarks.py",
     "pull:device-analysis": "npx tsx scripts/pull-device-analysis.ts",
     "calibrate:videos": "npx tsx scripts/calibrate-videos.ts --update-manifest",

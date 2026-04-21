@@ -11,13 +11,27 @@ export interface ProfileRecord
     | 'biological_sex'
     | 'date_of_birth'
     | 'bodyweight_kg'
+    | 'height_cm'
+    | 'lean_mass_kg'
+    | 'activity_level'
+    | 'goal'
     | 'created_at'
   > {}
 
 export type ProfileUpdateRecord = Pick<
   DbUpdate<'profiles'>,
-  'display_name' | 'biological_sex' | 'date_of_birth' | 'bodyweight_kg'
+  | 'display_name'
+  | 'biological_sex'
+  | 'date_of_birth'
+  | 'bodyweight_kg'
+  | 'height_cm'
+  | 'lean_mass_kg'
+  | 'activity_level'
+  | 'goal'
 >;
+
+const PROFILE_SELECT =
+  'id, display_name, biological_sex, date_of_birth, bodyweight_kg, height_cm, lean_mass_kg, activity_level, goal, created_at';
 
 export async function getAuthenticatedUserId(): Promise<string | null> {
   const {
@@ -31,9 +45,7 @@ export async function getProfileById(
 ): Promise<ProfileRecord | null> {
   const { data, error } = await typedSupabase
     .from('profiles')
-    .select(
-      'id, display_name, biological_sex, date_of_birth, bodyweight_kg, created_at'
-    )
+    .select(PROFILE_SELECT)
     .eq('id', userId)
     .maybeSingle();
 
