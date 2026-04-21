@@ -173,6 +173,7 @@ export function PrescriptionSheet({
   const {
     strategyLabel,
     contextLabel,
+    basePrescription,
     rationale,
     warnings,
     weightLines,
@@ -181,7 +182,8 @@ export function PrescriptionSheet({
     restLines,
   } = trace;
 
-  const hasAdjustments = rationale.length > 0 || volumeLines.length > 0;
+  const hasAdjustments =
+    rationale.length > 0 || volumeLines.length > 0 || basePrescription !== null;
 
   return (
     <Sheet
@@ -239,6 +241,14 @@ export function PrescriptionSheet({
                 i
               )
             )}
+          </View>
+        )}
+
+        {/* Programme baseline */}
+        {basePrescription !== null && (
+          <View style={styles.section}>
+            <Text style={styles.sectionHeader}>Programme</Text>
+            <Text style={styles.derivationLine}>{basePrescription}</Text>
           </View>
         )}
 

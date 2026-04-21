@@ -255,4 +255,59 @@ describe('generateJITSessionWithTrace', () => {
       );
     }
   });
+
+  // ── baseConfig ─────────────────────────────────────────────────────────────
+
+  it('populates baseConfig for heavy session', () => {
+    const { trace } = generateJITSessionWithTrace(
+      baseInput({ intensityType: 'heavy', blockNumber: 1 })
+    );
+
+    expect(trace.baseConfig).not.toBeNull();
+    expect(trace.baseConfig!.sets).toBe(2); // B1 heavy male: 2 sets
+    expect(trace.baseConfig!.reps).toBe(5); // B1 heavy: 5 reps
+    expect(trace.baseConfig!.repsMax).toBeUndefined();
+    expect(trace.baseConfig!.pct).toBeCloseTo(0.8);
+  });
+
+  it('populates baseConfig with repsMax for rep session', () => {
+    const { trace } = generateJITSessionWithTrace(
+      baseInput({ intensityType: 'rep', blockNumber: 1 })
+    );
+
+    expect(trace.baseConfig).not.toBeNull();
+    expect(trace.baseConfig!.reps).toBe(8); // B1 rep: reps_min = 8
+    expect(trace.baseConfig!.repsMax).toBe(12); // B1 rep: reps_max = 12
+    expect(trace.baseConfig!.pct).toBeCloseTo(0.7);
+  });
+
+  it('populates baseConfig for explosive session', () => {
+    const { trace } = generateJITSessionWithTrace(
+      baseInput({ intensityType: 'explosive', blockNumber: 2 })
+    );
+
+    expect(trace.baseConfig).not.toBeNull();
+    expect(trace.baseConfig!.sets).toBe(2); // B2 explosive: 2 sets
+    expect(trace.baseConfig!.reps).toBe(6); // B2 explosive: 6 reps
+    expect(trace.baseConfig!.repsMax).toBeUndefined();
+    expect(trace.baseConfig!.pct).toBeCloseTo(0.7);
+  });
+
+  it('leaves baseConfig null for deload session', () => {
+    const { trace } = generateJITSessionWithTrace(
+      baseInput({ intensityType: 'deload' })
+    );
+
+    expect(trace.baseConfig).toBeNull();
+  });
+
+  it('baseConfig reflects cycled block for blockNumber > 3', () => {
+    // blockNumber 4 cycles to block1 config
+    const { trace } = generateJITSessionWithTrace(
+      baseInput({ intensityType: 'heavy', blockNumber: 4 })
+    );
+
+    expect(trace.baseConfig).not.toBeNull();
+    expect(trace.baseConfig!.pct).toBeCloseTo(0.8); // same as B1 heavy
+  });
 });

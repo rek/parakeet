@@ -87,6 +87,13 @@ export interface RestTrace {
   auxiliarySeconds: number;
 }
 
+export interface BaseConfig {
+  sets: number;
+  reps: number;
+  repsMax?: number;
+  pct: number;
+}
+
 export interface PrescriptionTrace {
   sessionId: string;
   strategy: 'formula' | 'llm' | 'hybrid' | 'formula_fallback';
@@ -96,6 +103,7 @@ export interface PrescriptionTrace {
   oneRmKg: number;
   rationale: string[];
   warnings: string[];
+  baseConfig: BaseConfig | null;
   mainLift: {
     weightDerivation: WeightDerivation | null;
     volumeChanges: VolumeTrace[];
@@ -119,6 +127,7 @@ export function createEmptyTrace(): PrescriptionTrace {
     oneRmKg: 0,
     rationale: [],
     warnings: [],
+    baseConfig: null,
     mainLift: {
       weightDerivation: null,
       volumeChanges: [],
@@ -156,6 +165,8 @@ export class PrescriptionTraceBuilder {
   private _baseWeightKg = 0;
   private _modifiers: WeightDerivation['modifiers'] = [];
   private _finalWeightKg = 0;
+
+  private _baseConfig: BaseConfig | null = null;
 
   private _volumeChanges: VolumeTrace[] = [];
   private _sets: SetTrace[] = [];
@@ -215,6 +226,11 @@ export class PrescriptionTraceBuilder {
     this._oneRmSource = oneRmSource;
     this._blockPct = blockPct;
     this._baseWeightKg = baseWeightKg;
+    return this;
+  }
+
+  setBaseConfig(config: BaseConfig) {
+    this._baseConfig = config;
     return this;
   }
 
@@ -308,6 +324,7 @@ export class PrescriptionTraceBuilder {
       oneRmKg: this.oneRmKg,
       rationale,
       warnings,
+      baseConfig: this._baseConfig,
       mainLift: {
         weightDerivation,
         volumeChanges: this._volumeChanges,

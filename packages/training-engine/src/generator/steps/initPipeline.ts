@@ -48,6 +48,18 @@ export function initPipeline(
       workingOneRmKg: input.oneRmSource === 'working' ? oneRmKg : undefined,
       oneRmSource: input.oneRmSource,
     });
+
+    if (intensityType !== 'deload') {
+      const cycledBlock = (((blockNumber - 1) % 3) + 1) as 1 | 2 | 3;
+      const blockCfg = formulaConfig[`block${cycledBlock}`];
+      const ic = blockCfg[intensityType as 'heavy' | 'explosive' | 'rep'];
+      traceBuilder.setBaseConfig({
+        sets: baseSets.length,
+        reps: baseSets[0].reps,
+        repsMax: baseSets[0].reps_range?.[1],
+        pct: ic.pct,
+      });
+    }
   }
 
   const primaryMuscles = getPrimaryMusclesForSession(primaryLift);

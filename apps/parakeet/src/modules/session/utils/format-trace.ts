@@ -24,6 +24,7 @@ export interface FormattedAuxSection {
 export interface FormattedTrace {
   strategyLabel: string;
   contextLabel: string;
+  basePrescription: string | null;
   rationale: string[];
   warnings: string[];
   weightLines: TraceLine[] | null;
@@ -211,12 +212,24 @@ const STRATEGY_LABELS: Record<string, string> = {
   formula_fallback: 'Fallback',
 };
 
+function formatBasePrescription(trace: PrescriptionTrace): string | null {
+  const bc = trace.baseConfig;
+  if (!bc || trace.mainLift.isSkipped || trace.mainLift.isRecoveryMode) {
+    return null;
+  }
+  const repsText =
+    bc.repsMax != null ? `${bc.reps}–${bc.repsMax} reps` : `${bc.reps} reps`;
+  const pct = (bc.pct * 100).toFixed(0);
+  return `${bc.sets} sets × ${repsText} @ ${pct}% 1RM`;
+}
+
 export function formatPrescriptionTrace(
   trace: PrescriptionTrace
 ): FormattedTrace {
   return {
     strategyLabel: STRATEGY_LABELS[trace.strategy] ?? trace.strategy,
     contextLabel: `${capitalize(trace.primaryLift)} · ${capitalize(trace.intensityType)} · Block ${trace.blockNumber}`,
+    basePrescription: formatBasePrescription(trace),
     rationale: trace.rationale,
     warnings: trace.warnings,
     weightLines: trace.mainLift.weightDerivation

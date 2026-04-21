@@ -18,8 +18,9 @@ Adds a `PrescriptionTrace` type and inline trace builder to the JIT formula pipe
 - [x] `AuxExerciseTrace` type — exercise, selectionReason, weightDerivation (oneRmKg, catalogPct, isUnstable, finalWeightKg), repSource, sets, skipped, skipReason
 - [x] `WarmupTrace` type — workingWeightKg, protocolName, steps (pct, rawWeight, clampedWeight, reps)
 - [x] `RestTrace` type — mainLift (formulaBase, userOverride, llmDelta, final), auxiliary
-- [x] `PrescriptionTrace` type — top-level container with sessionId, strategy, rationale, warnings, mainLift, auxiliaries, warmup, rest
-- [x] `PrescriptionTraceBuilder` class — accumulator with methods: `recordModifier`, `recordVolumeChange`, `recordAuxSelection`, `recordWarmup`, `recordRest`, `build()`
+- [x] `BaseConfig` type — sets, reps, repsMax (optional), pct — the formula baseline before adjustments
+- [x] `PrescriptionTrace` type — top-level container with sessionId, strategy, rationale, warnings, baseConfig, mainLift, auxiliaries, warmup, rest
+- [x] `PrescriptionTraceBuilder` class — accumulator with methods: `recordModifier`, `recordVolumeChange`, `recordAuxSelection`, `recordWarmup`, `recordRest`, `setBaseConfig`, `build()`
 
 **`packages/training-engine/src/generator/jit-session-generator.ts`:**
 
@@ -40,6 +41,9 @@ Adds a `PrescriptionTrace` type and inline trace builder to the JIT formula pipe
 - [x] Recovery mode: trace shows recovery-specific derivation
 - [x] Skipped main lift: trace shows skip reason
 - [x] No modifiers active: trace shows clean derivation (no modifiers array entries)
+- [x] baseConfig populated for heavy/explosive/rep sessions with correct sets, reps, repsMax, pct
+- [x] baseConfig is null for deload sessions
+- [x] baseConfig respects cycled block (blockNumber > 3 cycles back to block1)
 
 ## Dependencies
 
