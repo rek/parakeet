@@ -128,6 +128,14 @@ export const FEATURE_REGISTRY = [
     category: 'health' as const,
     defaultEnabled: false,
   },
+  {
+    id: 'lipedemaTracking',
+    label: 'Lipedema Tracking',
+    description:
+      'Weekly limb-circumference + pain/swelling log for tracking lipedema trends',
+    category: 'health' as const,
+    defaultEnabled: false,
+  },
 
   // Advanced
   {

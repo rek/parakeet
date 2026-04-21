@@ -39,6 +39,7 @@ export function LeftDrawer({
   const overlayOpacity = useRef(new Animated.Value(0)).current;
   const { data: activeSession } = useInProgressSession();
   const nutritionEnabled = useFeatureEnabled('nutrition');
+  const lipedemaTrackingEnabled = useFeatureEnabled('lipedemaTracking');
 
   useEffect(() => {
     if (visible) {
@@ -116,6 +117,15 @@ export function LeftDrawer({
                   icon="nutrition-outline"
                   label="Nutrition"
                   onPress={() => go('/(tabs)/nutrition')}
+                  styles={styles}
+                  colors={colors}
+                />
+              )}
+              {lipedemaTrackingEnabled && (
+                <DrawerItem
+                  icon="body-outline"
+                  label="Lipedema Tracking"
+                  onPress={() => go('/(tabs)/lipedema-tracking')}
                   styles={styles}
                   colors={colors}
                 />

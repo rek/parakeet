@@ -1108,6 +1108,72 @@ export type Database = {
         }
         Relationships: []
       }
+      lipedema_measurements: {
+        Row: {
+          ankle_l_mm: number | null
+          ankle_r_mm: number | null
+          calf_max_l_mm: number | null
+          calf_max_r_mm: number | null
+          created_at: string
+          id: string
+          notes: string | null
+          pain_0_10: number | null
+          photo_url: string | null
+          recorded_date: string
+          swelling_0_10: number | null
+          thigh_mid_l_mm: number | null
+          thigh_mid_r_mm: number | null
+          updated_at: string
+          upper_arm_l_mm: number | null
+          upper_arm_r_mm: number | null
+          user_id: string
+          wrist_l_mm: number | null
+          wrist_r_mm: number | null
+        }
+        Insert: {
+          ankle_l_mm?: number | null
+          ankle_r_mm?: number | null
+          calf_max_l_mm?: number | null
+          calf_max_r_mm?: number | null
+          created_at?: string
+          id?: string
+          notes?: string | null
+          pain_0_10?: number | null
+          photo_url?: string | null
+          recorded_date?: string
+          swelling_0_10?: number | null
+          thigh_mid_l_mm?: number | null
+          thigh_mid_r_mm?: number | null
+          updated_at?: string
+          upper_arm_l_mm?: number | null
+          upper_arm_r_mm?: number | null
+          user_id: string
+          wrist_l_mm?: number | null
+          wrist_r_mm?: number | null
+        }
+        Update: {
+          ankle_l_mm?: number | null
+          ankle_r_mm?: number | null
+          calf_max_l_mm?: number | null
+          calf_max_r_mm?: number | null
+          created_at?: string
+          id?: string
+          notes?: string | null
+          pain_0_10?: number | null
+          photo_url?: string | null
+          recorded_date?: string
+          swelling_0_10?: number | null
+          thigh_mid_l_mm?: number | null
+          thigh_mid_r_mm?: number | null
+          updated_at?: string
+          upper_arm_l_mm?: number | null
+          upper_arm_r_mm?: number | null
+          user_id?: string
+          wrist_l_mm?: number | null
+          wrist_r_mm?: number | null
+        }
+        Relationships: []
+      }
       diet_food_nutrition: {
         Row: {
           carb_g: number
