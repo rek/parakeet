@@ -116,6 +116,30 @@ docs and the code together.
       protocols `keto` and `rad`.
   → `apps/parakeet/src/modules/nutrition/ui/MacroTargetsCard.tsx`
 
+**`apps/parakeet/src/modules/nutrition/ui/CalculatorSection.tsx`:**
+
+- [x] New "Calculator" tab on `NutritionScreen` — manual what-if tool.
+      Inputs default from the lifter's profile; user can override any
+      field (bodyweight, sex, age, height, lean mass, activity, goal,
+      training-day toggle, pinned kcal). Live output. Shows "pinned"
+      badge + derived-vs-pinned delta when `kcal_override` is applied.
+      Powerlifter-calibrated: defaults activity to `active` with an
+      explicit hint that the general-population multipliers undercount
+      heavy-compound training load.
+  → `apps/parakeet/src/modules/nutrition/ui/CalculatorSection.tsx`
+
+**`apps/parakeet/src/modules/nutrition/lib/macro-targets.ts` — kcal_override:**
+
+- [x] Optional `kcal_override` input. When set (>0), bypasses BMR ×
+      activity × goal and uses the pinned value as `kcal` directly.
+      BMR + TDEE are still computed for display. Output gains a
+      `kcal_overridden: boolean` flag surfaced as a "pinned" UI badge.
+  → `apps/parakeet/src/modules/nutrition/lib/macro-targets.ts:computeMacroTargets`
+- [x] 4 new override tests (override pins kcal, null/0 fall back,
+      BMR+TDEE preserved for display, 2000 kcal × 70 kg hand-math
+      check).
+  → `apps/parakeet/src/modules/nutrition/lib/__tests__/macro-targets.test.ts`
+
 **`apps/parakeet/src/modules/profile/`:**
 
 - [x] `Profile` interface + `UpdateProfileInput` extended with the 4

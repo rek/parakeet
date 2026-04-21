@@ -194,6 +194,64 @@ describe('computeMacroTargets', () => {
     expect(r.carb_g).toBe(50);
   });
 
+  it('kcal_override pins the daily target and flags kcal_overridden', () => {
+    const r = computeMacroTargets({
+      ...baseFemale,
+      protocol: 'keto',
+      kcal_override: 2000,
+    });
+    expect(r.kcal).toBe(2000);
+    expect(r.kcal_overridden).toBe(true);
+    // Macros re-computed against the 2000 target, not the derived TDEE.
+    const sum = r.protein_g * 4 + r.fat_g * 9 + r.carb_g * 4;
+    expect(Math.abs(sum - r.kcal)).toBeLessThan(6);
+  });
+
+  it('kcal_override null / 0 falls back to derived kcal', () => {
+    const baseline = computeMacroTargets({ ...baseFemale, protocol: 'rad' });
+    const nulled = computeMacroTargets({
+      ...baseFemale,
+      protocol: 'rad',
+      kcal_override: null,
+    });
+    const zeroed = computeMacroTargets({
+      ...baseFemale,
+      protocol: 'rad',
+      kcal_override: 0,
+    });
+    expect(nulled.kcal).toBe(baseline.kcal);
+    expect(zeroed.kcal).toBe(baseline.kcal);
+    expect(nulled.kcal_overridden).toBe(false);
+    expect(zeroed.kcal_overridden).toBe(false);
+  });
+
+  it('kcal_override preserves bmr_kcal and tdee_kcal for display', () => {
+    // User can see what the fn *would* have prescribed vs what they pinned.
+    const r = computeMacroTargets({
+      ...baseFemale,
+      protocol: 'keto',
+      kcal_override: 2500,
+    });
+    expect(r.bmr_kcal).toBeGreaterThan(0);
+    expect(r.tdee_kcal).toBeGreaterThan(r.bmr_kcal);
+    expect(r.kcal).toBe(2500);
+  });
+
+  it('keto at 2000 kcal for a 70kg lifter matches hand math', () => {
+    const r = computeMacroTargets({
+      bodyweight_kg: 70,
+      biological_sex: 'female',
+      protocol: 'keto',
+      kcal_override: 2000,
+    });
+    // protein = 70 × 1.4 = 98 g
+    expect(r.protein_g).toBe(98);
+    // carb = 50 g (hard ceiling)
+    expect(r.carb_g).toBe(50);
+    // fat = (2000 − 98×4 − 50×4) / 9 = 1408 / 9 ≈ 156.4 → 156
+    expect(r.fat_g).toBe(156);
+  });
+
   it('returns sane output even with zero bodyweight (no NaN propagation)', () => {
     // Boundary: defensive, not a supported usage path. We just don't
     // want NaN leaking to the UI.

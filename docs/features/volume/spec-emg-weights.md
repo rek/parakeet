@@ -48,7 +48,7 @@ High-priority — known likely errors in current model:
 Lower priority — model likely reasonable but confirm:
 
 - Box Squat (vs Pause Squat — different muscle emphasis?)
-- Block Pulls vs Rack Pulls (upper_back vs lower_back split)
+- Block Pulls vs Rack Pull (upper_back vs lower_back split)
 - Incline DB Press (chest vs shoulders split at various angles)
 - Floor Press (triceps lockout emphasis vs chest)
 - Bulgarian Split Squat (glute vs quad — research suggests both are primary)

@@ -14,6 +14,7 @@ import { useTheme } from '../../../theme/ThemeContext';
 import { useProtocolBundle, useProtocols } from '../hooks/useNutrition';
 import { Markdown } from '../lib/markdown';
 import type { DietProtocolSlug } from '../lib/macro-targets';
+import { CalculatorSection } from './CalculatorSection';
 import { CompareSection } from './CompareSection';
 import { DailyRituals } from './DailyRituals';
 import { FoodSection } from './FoodSection';
@@ -29,6 +30,7 @@ type Tab =
   | 'supplements'
   | 'lifestyle'
   | 'compare'
+  | 'calculator'
   | 'sources';
 const TABS: Tab[] = [
   'overview',
@@ -36,6 +38,7 @@ const TABS: Tab[] = [
   'supplements',
   'lifestyle',
   'compare',
+  'calculator',
   'sources',
 ];
 const TAB_LABELS: Record<Tab, string> = {
@@ -44,6 +47,7 @@ const TAB_LABELS: Record<Tab, string> = {
   supplements: 'Supplements',
   lifestyle: 'Lifestyle',
   compare: 'Compare',
+  calculator: 'Calculator',
   sources: 'Sources',
 };
 
@@ -95,7 +99,7 @@ export function NutritionScreen() {
     );
   }
 
-  const showSelector = tab !== 'compare';
+  const showSelector = tab !== 'compare' && tab !== 'calculator';
 
   return (
     <ScrollView
@@ -137,6 +141,12 @@ export function NutritionScreen() {
 
       {tab === 'compare' ? (
         <CompareSection />
+      ) : tab === 'calculator' ? (
+        <CalculatorSection
+          defaultProtocol={
+            slug && isMacroProtocol(slug) ? slug : 'keto'
+          }
+        />
       ) : bundleLoading ? (
         <View style={styles.stateBox}>
           <ActivityIndicator color={colors.primary} />

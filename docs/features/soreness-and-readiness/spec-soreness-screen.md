@@ -57,11 +57,13 @@ The screen reads the session's `primary_lift` to determine which muscles to show
 
 **On "Generate Today's Workout" tap:**
 
-1. Write soreness ratings to `soreness_checkins` table
-2. Call JIT generator with full input (fetches all required data)
-3. Show loading indicator: "Generating your workout..."
+1. Flip `generating=true` **before any await** — immediately disables both the Generate button and the header "Skip" action, and mounts the "Generating your workout..." loading overlay. Re-entry guard (`if (generating) return`) short-circuits same-tick duplicate taps. This closes the double-submission window while the check-in network write is in flight (gh#200).
+2. Write soreness ratings to `soreness_checkins` table
+3. Call JIT generator with full input (fetches all required data)
 4. Write `planned_sets` and `jit_generated_at` to session in Supabase
 5. Navigate to `session/[sessionId]` (the live workout screen)
+
+On any error thrown by the JIT generator the handler resets `generating=false` so the user can retry; a failed check-in write is logged via `captureException` but does not abort the JIT run.
 
 **Supabase write:**
 

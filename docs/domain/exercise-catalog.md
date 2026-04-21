@@ -62,7 +62,8 @@ At the reference 1RM, output equals the linear formula. Above it, weight grows s
 | Overhead Press         | bench           | 0.58      | weighted |
 | JM Press               | bench           | 0.50      | weighted |
 | Romanian Deadlift      | deadlift        | 0.70      | weighted |
-| Block Pulls            | deadlift        | 0.90      | weighted |
+| Rack Pull              | deadlift        | 1.05      | weighted |
+| Block Pulls            | deadlift        | 0.95      | weighted |
 | Good Mornings          | deadlift        | 0.40      | weighted |
 | Lat Pulldown           | deadlift        | 0.28      | weighted |
 | Seated Machine Row     | deadlift        | 0.28      | weighted |

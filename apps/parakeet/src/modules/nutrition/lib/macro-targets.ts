@@ -47,6 +47,13 @@ export interface MacroTargetInput {
    * on protein timing & training demands.
    */
   training_day?: boolean;
+  /**
+   * Manual kcal target override. When set (> 0), bypasses BMR × activity
+   * × goal and uses this value as `kcal` directly. BMR + TDEE are still
+   * computed for display so the calculator UI can show what the fn
+   * *would* have prescribed vs what the user pinned.
+   */
+  kcal_override?: number | null;
 }
 
 export interface MacroTarget {
@@ -66,6 +73,11 @@ export interface MacroTarget {
    * profile fields.
    */
   low_confidence: boolean;
+  /**
+   * True iff `kcal_override` was applied. UI may show a "pinned kcal"
+   * badge and the delta vs BMR × activity × goal.
+   */
+  kcal_overridden: boolean;
 }
 
 export const MacroTargetDefaults = {
@@ -206,9 +218,14 @@ export function computeMacroTargets(input: MacroTargetInput): MacroTarget {
   const activity = activity_level ?? MacroTargetDefaults.activity_level;
   const tdee = bmr * ACTIVITY_MULTIPLIER[activity];
 
-  // 3. Goal-adjusted kcal
+  // 3. Goal-adjusted kcal (or user override).
   const goalT = goal ?? MacroTargetDefaults.goal;
-  const kcal = Math.round(tdee * (1 + GOAL_KCAL_DELTA[goalT]));
+  const derivedKcal = Math.round(tdee * (1 + GOAL_KCAL_DELTA[goalT]));
+  const kcal_override = input.kcal_override;
+  const kcal =
+    kcal_override != null && kcal_override > 0
+      ? Math.round(kcal_override)
+      : derivedKcal;
 
   // 4. Protein
   const protein = proteinTarget(
@@ -252,5 +269,6 @@ export function computeMacroTargets(input: MacroTargetInput): MacroTarget {
     tdee_kcal: Math.round(tdee),
     bmr_method,
     low_confidence,
+    kcal_overridden: kcal !== derivedKcal,
   };
 }

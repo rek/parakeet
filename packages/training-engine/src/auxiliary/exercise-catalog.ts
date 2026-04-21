@@ -573,7 +573,9 @@ export const EXERCISE_CATALOG: ExerciseCatalogEntry[] = [
       { muscle: 'upper_back', contribution: 1.0 },
       { muscle: 'lower_back', contribution: 1.0 },
     ],
-    weightPct: 0.8,
+    // Partial ROM from knee/above-knee pins — supramax overload is the whole point.
+    // 105% of DL 1RM at 4 reps; engine has no 1.0 cap on weightPct.
+    weightPct: 1.05,
     repTarget: 4,
   },
   {
@@ -701,7 +703,8 @@ export const EXERCISE_CATALOG: ExerciseCatalogEntry[] = [
       { muscle: 'glutes', contribution: 0.5 },
       { muscle: 'upper_back', contribution: 0.5 },
     ],
-    weightPct: 0.8,
+    // 2" blocks — near-full ROM, still mild overload. 95% of DL 1RM at 4 reps.
+    weightPct: 0.95,
     repTarget: 4,
   },
   {

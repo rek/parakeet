@@ -186,8 +186,9 @@ describe('generateJITSession — catalog exercise weight percentages', () => {
     );
     // Dumbbell Row: sqrt + 0.85× fatigue (upper_back overlap deadlift)
     expect(out.auxiliaryWork[0].sets[0].weight_kg).toBe(30);
-    // Rack Pull: linear + 0.85× fatigue (upper_back+lower_back overlap deadlift)
-    expect(out.auxiliaryWork[1].sets[0].weight_kg).toBe(150);
+    // Rack Pull: linear 105% + 0.85× fatigue (upper_back+lower_back overlap deadlift)
+    // 220 × 1.05 = 231 → round2.5 = 230 × 0.85 = 195.5 → round2.5 = 195
+    expect(out.auxiliaryWork[1].sets[0].weight_kg).toBe(195);
   });
 
   it('unknown custom exercise falls back to 67.5% default', () => {

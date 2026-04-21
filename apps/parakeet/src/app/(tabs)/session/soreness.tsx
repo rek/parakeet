@@ -470,6 +470,7 @@ export default function SorenessScreen() {
       LIFT_PRIMARY_SORENESS_MUSCLES[session.primary_lift as Lift] ?? [];
     if (expectedMuscles.length > 0 && Object.keys(ratings).length === 0) return;
     autoGenerateTriggered.current = true;
+    setGenerating(true);
     void runJIT(ratings);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isAutoGenerate, session, user, ratings]);
@@ -504,7 +505,6 @@ export default function SorenessScreen() {
 
   async function runJIT(ratingsToUse: Record<string, number>) {
     if (!session || !user) return;
-    setGenerating(true);
     try {
       const primaryLift = session.primary_lift as Lift | null;
       const [jitResult, fetchedOneRmKg] = await Promise.all([
@@ -555,7 +555,8 @@ export default function SorenessScreen() {
   }
 
   async function handleGenerate() {
-    if (!session || !user) return;
+    if (!session || !user || generating) return;
+    setGenerating(true);
     const allRatings = buildAllRatings();
     try {
       await recordSorenessCheckin({
@@ -575,7 +576,8 @@ export default function SorenessScreen() {
   }
 
   async function handleSkip() {
-    if (!session || !user) return;
+    if (!session || !user || generating) return;
+    setGenerating(true);
     const freshRatings = allFreshRatings();
     setRatings(freshRatings);
     try {
@@ -612,6 +614,7 @@ export default function SorenessScreen() {
           onPress={handleSkip}
           activeOpacity={0.7}
           style={styles.headerSkip}
+          disabled={generating}
         >
           <Text style={styles.headerSkipText}>Skip</Text>
         </TouchableOpacity>

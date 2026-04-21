@@ -31,10 +31,20 @@ Standard Harris-Benedict style. Self-reported.
 | Level | Multiplier | Description |
 | --- | --- | --- |
 | `sedentary` | 1.2 | Desk job, no training |
-| `light` | 1.375 | 1–3 sessions/week |
-| `moderate` | 1.55 | 3–5 sessions/week — **default** |
-| `active` | 1.725 | 6–7 sessions/week |
-| `very_active` | 1.9 | Multiple sessions/day |
+| `light` | 1.375 | 1–2 easy sessions/week |
+| `moderate` | 1.55 | 3–4 sessions/week |
+| `active` | 1.725 | **Powerlifter default** — 5–6 heavy compound sessions/week |
+| `very_active` | 1.9 | 6+ heavy sessions/week or active job on top |
+
+**Powerlifter calibration note.** Harris-Benedict / Mifflin-St Jeor
+multipliers were derived for the general population and tend to
+*undercount* NEAT on heavy compound training days (thermic cost of
+~5 × 5 @ RPE 8+ isn't equivalent to the same volume of cardio in
+these tables). The parakeet default for a training lifter is
+`active`, not `moderate`. Drop to `moderate` for deload weeks or
+when volume is genuinely low. If the lifter is under-recovering
+with session RPE trending up week-over-week, bumping to
+`very_active` is often the corrective lever.
 
 ## Goal adjustments
 
