@@ -218,10 +218,12 @@ export async function insertSorenessCheckin(input: {
   ratings: Record<string, number>;
   skipped: boolean;
 }): Promise<void> {
-  await typedSupabase.from('soreness_checkins').insert({
+  const { error } = await typedSupabase.from('soreness_checkins').insert({
     user_id: input.userId,
     session_id: input.sessionId,
     ratings: input.ratings,
     skipped: input.skipped,
+    recorded_at: new Date().toISOString(),
   });
+  if (error) throw error;
 }

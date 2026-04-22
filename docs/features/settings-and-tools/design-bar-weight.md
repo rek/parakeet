@@ -17,7 +17,11 @@ The app hardcoded a 20 kg bar in three separate places:
 3. **Soreness adjuster** — same `Math.max(20, ...)` recovery floor (used by the standalone function)
 4. **WarmupSection display** — hardcoded `if (weightKg <= 20) return 'Bar (20 kg)'`
 
-Athletes using a 15 kg women's bar got incorrectly inflated warmup weights and a wrong bar label.
+Athletes who train with a 15 kg bar (uncommon in powerlifting) got incorrectly inflated warmup weights and a wrong bar label if they didn't change the setting.
+
+## Decision: Default is always 20 kg
+
+Powerlifting uses a 20 kg men's bar for all three competition lifts regardless of the athlete's sex. Female powerlifters competing at any level train with the same 20 kg bar. The 15 kg option exists only for athletes who explicitly use a women's bar — this is uncommon in powerlifting contexts and is never auto-selected based on `biological_sex`. The default is always 20 kg; no sex-based defaulting is applied.
 
 ## Solution
 
