@@ -1,7 +1,41 @@
+import { safeParseWithParser } from '@parakeet/db';
+import type { FormulaOverrides } from '@parakeet/shared-types';
+import { FormulaOverridesSchema } from '@parakeet/shared-types';
+import type { FormulaConfig } from '@parakeet/training-engine';
+import { getDefaultFormulaConfig, mergeFormulaConfig } from '@parakeet/training-engine';
 import type { DbInsert, DbRow } from '@platform/supabase';
 import { typedSupabase } from '@platform/supabase';
+import { captureException } from '@platform/utils/captureException';
 import type { ProgramListItem, ProgramSessionView } from '@shared/types/domain';
 import { localDateString } from '@shared/utils/localDateString';
+
+const EMPTY_OVERRIDES: FormulaOverrides = {} as FormulaOverrides;
+
+/**
+ * Fetches the active formula config for a user.
+ * Kept here (not in @modules/formula) to break the formula ↔ program require cycle:
+ * formula/hooks imports programQueries, so program cannot import @modules/formula.
+ * Same React Query cache key as formulaQueries.config() so they share the cache.
+ */
+export async function fetchActiveFormulaConfig(
+  userId: string
+): Promise<FormulaConfig> {
+  const { data } = await typedSupabase
+    .from('formula_configs')
+    .select('*')
+    .eq('user_id', userId)
+    .eq('is_active', true)
+    .maybeSingle();
+  const base = getDefaultFormulaConfig();
+  if (!data) return base;
+  const overrides = safeParseWithParser(
+    data.overrides,
+    (v) => FormulaOverridesSchema.parse(v),
+    EMPTY_OVERRIDES,
+    captureException
+  );
+  return mergeFormulaConfig(base, overrides);
+}
 
 function parseProgramStatus(status: string): ProgramListItem['status'] {
   if (status === 'active' || status === 'completed' || status === 'archived')

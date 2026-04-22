@@ -1,45 +1,18 @@
 import { useAuth } from '@modules/auth';
 import { historyQueries } from '@modules/history';
-import { safeParseWithParser } from '@parakeet/db';
-import type { FormulaOverrides, Lift } from '@parakeet/shared-types';
-import { FormulaOverridesSchema } from '@parakeet/shared-types';
-import {
-  getDefaultFormulaConfig,
-  mergeFormulaConfig,
-} from '@parakeet/training-engine';
-import { typedSupabase } from '@platform/supabase';
-import { captureException } from '@platform/utils/captureException';
+import type { Lift } from '@parakeet/shared-types';
 import { queryOptions, skipToken, useQuery } from '@tanstack/react-query';
 
+import { fetchActiveFormulaConfig } from '../data/program.repository';
 import { programQueries } from '../data/program.queries';
 
-const EMPTY_OVERRIDES: FormulaOverrides = {} as FormulaOverrides;
-
-// SYNC: Inline formula config query to avoid circular dependency on @modules/formula.
-// Mirrors formulaQueries.config() in @modules/formula/data/formula.queries.ts.
-// Same key ['formula', 'config', userId] so they share the React Query cache.
+// SYNC: query key matches formulaQueries.config() in @modules/formula so they
+// share the React Query cache. formula ↔ program require cycle prevents importing
+// @modules/formula here directly.
 const formulaConfigQuery = (userId: string | undefined) =>
   queryOptions({
     queryKey: ['formula', 'config', userId] as const,
-    queryFn: userId
-      ? async () => {
-          const { data } = await typedSupabase
-            .from('formula_configs')
-            .select('*')
-            .eq('user_id', userId)
-            .eq('is_active', true)
-            .maybeSingle();
-          const base = getDefaultFormulaConfig();
-          if (!data) return base;
-          const overrides = safeParseWithParser(
-            data.overrides,
-            (v) => FormulaOverridesSchema.parse(v),
-            EMPTY_OVERRIDES,
-            captureException
-          );
-          return mergeFormulaConfig(base, overrides);
-        }
-      : skipToken,
+    queryFn: userId ? () => fetchActiveFormulaConfig(userId) : skipToken,
   });
 
 export function useNextSessionPreview({
