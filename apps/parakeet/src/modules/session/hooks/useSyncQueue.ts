@@ -81,6 +81,14 @@ export function useSyncQueue() {
             await queryClient.invalidateQueries({
               queryKey: ['achievements'],
             });
+
+            // Fire-and-forget: run achievement detection now that data is on the server.
+            // Dynamic import breaks the session ↔ achievements circular dependency.
+            import('@modules/achievements')
+              .then(({ detectAchievements }) =>
+                detectAchievements(sessionId, userId, actualSets)
+              )
+              .catch(captureException);
           } else if (op.operation === 'upsert_set_log') {
             await upsertSetLog({
               sessionId: op.payload.sessionId,
