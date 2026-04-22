@@ -1,6 +1,6 @@
 # Feature: Exercise Subtitles
 
-**Status**: In Review
+**Status**: Implemented
 
 **Date**: 22 Apr 2026
 
@@ -34,7 +34,7 @@ Two Rack Pull entries replace the current single one:
 | Name | Subtitle | weightPct | Notes |
 |------|----------|-----------|-------|
 | Rack Pull | Above the knee | 1.05 | Existing entry, short ROM supramax |
-| Rack Pull Below Knee | Below the knee | 1.00 | New entry, meaningful ROM, full 1RM load |
+| Rack Pull Below Knee | Below the knee | 0.95 | New entry, meaningful ROM, same load as block pulls |
 
 ## References
 

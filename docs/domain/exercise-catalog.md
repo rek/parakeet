@@ -158,7 +158,7 @@ Per-exercise overrides in the catalog take precedence (e.g., Barbell Box Squat =
 
 ## Pool Rotation
 
-- Default: 8 exercises per lift pool
+- Default pool sizes vary by lift (deadlift has 9 after adding Rack Pull Below Knee)
 - Rotation: advance 2 positions per block, wrap around
 - User can reorder, lock positions, add/remove exercises in Settings
 - Ad-hoc exercises added mid-session are not part of the pool rotation

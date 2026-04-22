@@ -42,6 +42,7 @@ export const DEFAULT_AUXILIARY_POOLS: Record<Lift, string[]> = {
     'Stiff-Leg DL',
     'Sumo DL',
     'Rack Pull',
+    'Rack Pull Below Knee',
     'Hyperextensions',
   ],
 }
