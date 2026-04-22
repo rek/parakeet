@@ -478,7 +478,9 @@ export async function completeSession(
     )
     .catch(captureException);
 
-  // Check if program has reached ≥80% completion → trigger async cycle review.
+  // Trigger cycle review when all scheduled sessions are done.
+  // Firing at 80% excluded the deload week from the LLM analysis.
+  // Users who miss sessions can still get a review via End Program.
   // Unending programs have no fixed session count; cycle review is triggered manually via End Program.
   if (session?.program_id) {
     const programMeta = await fetchActiveProgramMode(userId);
@@ -489,7 +491,7 @@ export async function completeSession(
       );
       const total = statuses.length;
       const completed = statuses.filter((s) => s.status === 'completed').length;
-      if (total > 0 && completed / total >= 0.8) {
+      if (total > 0 && completed >= total) {
         const { onCycleComplete } = await import('@modules/program');
         onCycleComplete(session.program_id, userId);
       }
