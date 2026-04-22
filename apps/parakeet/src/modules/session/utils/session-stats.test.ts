@@ -57,4 +57,16 @@ describe('computeSessionStats', () => {
     const result = computeSessionStats([incomplete], [completed]);
     expect(result.isAuxOnly).toBe(false);
   });
+
+  it('hybrid: actual + aux both non-empty — completionPct derived from actual only', () => {
+    // 2 of 4 actual completed; aux sets are all completed but must not inflate the count
+    const result = computeSessionStats(
+      [completed, incomplete, completed, incomplete],
+      [completed, completed, completed]
+    );
+    expect(result.isAuxOnly).toBe(false);
+    expect(result.totalSets).toBe(4);
+    expect(result.completedSets).toBe(2);
+    expect(result.completionPct).toBe('50');
+  });
 });

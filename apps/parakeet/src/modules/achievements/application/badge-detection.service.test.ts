@@ -8,6 +8,55 @@ const mockFetchUserBadgeIds = vi.hoisted(() => vi.fn());
 const mockInsertBadges = vi.hoisted(() => vi.fn());
 const mockFetchSessionsForStreak = vi.hoisted(() => vi.fn());
 const mockFetchDisruptionsForStreak = vi.hoisted(() => vi.fn());
+const mockFetchBadgeSessionLog = vi.hoisted(() => vi.fn(async () => null));
+const mockFetchBadgeProfile = vi.hoisted(() =>
+  vi.fn(async () => ({ bodyweight_kg: 90 }))
+);
+const mockFetchCompletedSessionCount = vi.hoisted(() =>
+  vi.fn(async () => 0)
+);
+const mockFetchPreviousSession = vi.hoisted(() => vi.fn(async () => null));
+const mockFetchAllLiftE1RMs = vi.hoisted(() => vi.fn(async () => []));
+const mockFetchSorenessData = vi.hoisted(() =>
+  vi.fn(async () => ({ sleepQuality: null, energyLevel: null }))
+);
+const mockFetchDisruptionContext = vi.hoisted(() =>
+  vi.fn(async () => ({
+    hasActiveMajor: false,
+    daysSinceLast: null,
+    lastDurationDays: null,
+  }))
+);
+const mockFetchPrTypeCounts = vi.hoisted(() =>
+  vi.fn(async () => ({ volumePrCount: 0, oneRmPrCount: 0 }))
+);
+const mockFetchConsistencyData = vi.hoisted(() =>
+  vi.fn(async (_userId: string, _sessionId: string, streakWeeks: number) => ({
+    sessionsBeforeSixAm: 0,
+    sessionsAfterNinePm: 0,
+    distinctSundaySessions: 0,
+    streakWeeks,
+    consecutiveLegDaySessions: 0,
+    isPerfectWeek: false,
+    consecutivePerfectSessions: 0,
+  }))
+);
+const mockFetchProgramLoyaltyData = vi.hoisted(() =>
+  vi.fn(async () => ({
+    consecutiveSameFormulaCycles: 0,
+    formulaChangesThisCycle: 0,
+    consecutiveCyclesWithoutDeload: 0,
+  }))
+);
+const mockFetchUniqueAuxExercisesInCycle = vi.hoisted(() =>
+  vi.fn(async () => 0)
+);
+const mockFetchConsecutiveFullRestSessions = vi.hoisted(() =>
+  vi.fn(async () => 0)
+);
+const mockFetchPartnerCompletedToday = vi.hoisted(() =>
+  vi.fn(async () => false)
+);
 
 // badge checkers — each returns an array of badge IDs
 const mockCheckPerformanceBadges = vi.hoisted(() => vi.fn((): string[] => []));
@@ -36,6 +85,19 @@ vi.mock('../data/badge.repository', () => ({
 vi.mock('../data/achievement.repository', () => ({
   fetchSessionsForStreak: mockFetchSessionsForStreak,
   fetchDisruptionsForStreak: mockFetchDisruptionsForStreak,
+  fetchBadgeSessionLog: mockFetchBadgeSessionLog,
+  fetchBadgeProfile: mockFetchBadgeProfile,
+  fetchCompletedSessionCount: mockFetchCompletedSessionCount,
+  fetchPreviousSession: mockFetchPreviousSession,
+  fetchAllLiftE1RMs: mockFetchAllLiftE1RMs,
+  fetchSorenessData: mockFetchSorenessData,
+  fetchDisruptionContext: mockFetchDisruptionContext,
+  fetchPrTypeCounts: mockFetchPrTypeCounts,
+  fetchConsistencyData: mockFetchConsistencyData,
+  fetchProgramLoyaltyData: mockFetchProgramLoyaltyData,
+  fetchUniqueAuxExercisesInCycle: mockFetchUniqueAuxExercisesInCycle,
+  fetchConsecutiveFullRestSessions: mockFetchConsecutiveFullRestSessions,
+  fetchPartnerCompletedToday: mockFetchPartnerCompletedToday,
 }));
 
 vi.mock('../utils/week-status-builder', () => ({
