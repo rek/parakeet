@@ -446,6 +446,105 @@ function VolumeCompactCard() {
   );
 }
 
+// ── Session list ──────────────────────────────────────────────────────────────
+
+function TodaySessionsList({
+  sessions,
+}: {
+  sessions: NonNullable<ReturnType<typeof useTodaySessions>['data']>;
+}) {
+  const { colors } = useTheme();
+  const { user } = useAuth();
+  const { data: activeSession } = useInProgressSession();
+  const { data: streakData } = useStreak();
+  const { data: cycleContext } = useCyclePhase();
+  const { invalidateSessionCache } = useSessionLifecycle();
+  const showMotivational = useFeatureEnabled('motivationalMessages');
+  const showCycleTracking = useFeatureEnabled('cycleTracking');
+  const styles = useMemo(() => buildStyles(colors), [colors]);
+
+  const { completed: completedSessions, upcoming: otherSessions } =
+    partitionTodaySessions(sessions);
+
+  return (
+    <>
+      {completedSessions.length > 0 && (
+        <WorkoutDoneCard
+          sessions={completedSessions}
+          currentStreak={streakData?.currentStreak ?? 0}
+          cyclePhase={cycleContext?.phase ?? null}
+          userId={user!.id}
+          showMotivational={showMotivational}
+        />
+      )}
+      {otherSessions.map((s) => {
+        const isLocked =
+          s.status === 'planned' &&
+          !!activeSession &&
+          activeSession.id !== s.id;
+        return (
+          <View key={s.id}>
+            <WorkoutCard
+              session={s}
+              isLocked={isLocked}
+              onStart={(sessionId) => {
+                const isFreeForm = s.program_id === null && !s.primary_lift;
+                if (isFreeForm) {
+                  router.push({
+                    pathname: '/session/[sessionId]',
+                    params: { sessionId, freeForm: '1' },
+                  });
+                } else {
+                  router.push({
+                    pathname: '/session/soreness',
+                    params: { sessionId },
+                  });
+                }
+              }}
+              onResume={async (sessionId) => {
+                const isFreeForm = s.program_id === null && !s.primary_lift;
+                if (isFreeForm) {
+                  router.push({
+                    pathname: '/session/[sessionId]',
+                    params: { sessionId, freeForm: '1' },
+                  });
+                  return;
+                }
+                const jit = await getReadyCachedJitData();
+                if (!jit) {
+                  router.push({
+                    pathname: '/session/soreness',
+                    params: { sessionId },
+                  });
+                } else {
+                  router.push({
+                    pathname: '/session/[sessionId]',
+                    params: { sessionId, jitData: jit },
+                  });
+                }
+              }}
+              onSkip={async (sessionId, reason) => {
+                await skipSession(sessionId, reason);
+              }}
+              onSkipComplete={() => invalidateSessionCache()}
+            />
+            {showCycleTracking &&
+              cycleContext?.isOvulatoryWindow &&
+              s.primary_lift === 'squat' && (
+                <View style={styles.ovulatoryChip}>
+                  <Text style={styles.ovulatoryChipText}>
+                    ℹ Ovulatory phase — high-load squat day. Focus on knee
+                    tracking and warm-up quality.
+                  </Text>
+                </View>
+              )}
+          </View>
+        );
+      })}
+    </>
+  );
+}
+
 // ── Screen ────────────────────────────────────────────────────────────────────
 
 function WorkoutDoneCard({
@@ -510,7 +609,6 @@ export default function TodayScreen() {
     isLoading: sessionLoading,
     isError: sessionError,
   } = useTodaySessions();
-  const { data: activeSession } = useInProgressSession();
   const { data: program, isLoading: programLoading } = useActiveProgram();
   const { data: volumeData } = useWeeklyVolume();
   const { data: cycleContext } = useCyclePhase();
@@ -537,7 +635,6 @@ export default function TodayScreen() {
   const showVolume = useFeatureEnabled('volumeDashboard');
   const showDisruptions = useFeatureEnabled('disruptions');
   const showAdHoc = useFeatureEnabled('adHocWorkouts');
-  const showMotivational = useFeatureEnabled('motivationalMessages');
 
   const handleRefresh = useCallback(async () => {
     setRefreshing(true);
@@ -830,91 +927,7 @@ export default function TodayScreen() {
                 </Text>
               </View>
             ) : (
-              (() => {
-                const {
-                  completed: completedSessions,
-                  upcoming: otherSessions,
-                } = partitionTodaySessions(sessions);
-                return (
-                  <>
-                    {completedSessions.length > 0 && (
-                      <WorkoutDoneCard
-                        sessions={completedSessions}
-                        currentStreak={streakData?.currentStreak ?? 0}
-                        cyclePhase={cycleContext?.phase ?? null}
-                        userId={user!.id}
-                        showMotivational={showMotivational}
-                      />
-                    )}
-                    {otherSessions.map((s) => {
-                      const isLocked =
-                        s.status === 'planned' &&
-                        !!activeSession &&
-                        activeSession.id !== s.id;
-                      return (
-                        <View key={s.id}>
-                          <WorkoutCard
-                            session={s}
-                            isLocked={isLocked}
-                            onStart={(sessionId) => {
-                              const isFreeForm =
-                                s.program_id === null && !s.primary_lift;
-                              if (isFreeForm) {
-                                router.push({
-                                  pathname: '/session/[sessionId]',
-                                  params: { sessionId, freeForm: '1' },
-                                });
-                              } else {
-                                router.push({
-                                  pathname: '/session/soreness',
-                                  params: { sessionId },
-                                });
-                              }
-                            }}
-                            onResume={async (sessionId) => {
-                              const isFreeForm =
-                                s.program_id === null && !s.primary_lift;
-                              if (isFreeForm) {
-                                router.push({
-                                  pathname: '/session/[sessionId]',
-                                  params: { sessionId, freeForm: '1' },
-                                });
-                                return;
-                              }
-                              const jit = await getReadyCachedJitData();
-                              if (!jit) {
-                                router.push({
-                                  pathname: '/session/soreness',
-                                  params: { sessionId },
-                                });
-                              } else {
-                                router.push({
-                                  pathname: '/session/[sessionId]',
-                                  params: { sessionId, jitData: jit },
-                                });
-                              }
-                            }}
-                            onSkip={async (sessionId, reason) => {
-                              await skipSession(sessionId, reason);
-                            }}
-                            onSkipComplete={() => invalidateSessionCache()}
-                          />
-                          {showCycleTracking &&
-                            cycleContext?.isOvulatoryWindow &&
-                            s.primary_lift === 'squat' && (
-                              <View style={styles.ovulatoryChip}>
-                                <Text style={styles.ovulatoryChipText}>
-                                  ℹ Ovulatory phase — high-load squat day.
-                                  Focus on knee tracking and warm-up quality.
-                                </Text>
-                              </View>
-                            )}
-                        </View>
-                      );
-                    })}
-                  </>
-                );
-              })()
+              <TodaySessionsList sessions={sessions} />
             )}
 
             {showAdHoc && (

@@ -199,6 +199,59 @@ function buildStyles(colors: ColorScheme) {
   });
 }
 
+interface UnendingPreview {
+  counter: number;
+  firstSet: ReturnType<typeof calculateSets>[number] | null;
+  setCount: number | null;
+  repsLabel: string | null;
+  rpeTarget: number | null;
+  lastSessionRpe: number | null;
+  rpeAdjustNote: string | null;
+}
+
+function computeUnendingPreview(
+  program: { unending_session_counter?: number | null },
+  todaySession: { block_number?: number | null; intensity_type?: string | null } | null | undefined,
+  oneRmKg: number | null | undefined,
+  formulaConfig: Parameters<typeof calculateSets>[4] | null | undefined,
+  nextLift: Lift | undefined,
+  liftHistory: { entries?: Array<{ sessionRpe?: number | null }> } | null | undefined
+): UnendingPreview {
+  const counter = program.unending_session_counter ?? 0;
+  const blockNum = (todaySession?.block_number ?? 1) as 1 | 2 | 3;
+  const intensityType = (todaySession?.intensity_type ?? 'heavy') as IntensityType;
+
+  let estimatedSets = null;
+  try {
+    if (oneRmKg && formulaConfig && todaySession && nextLift) {
+      estimatedSets = calculateSets(nextLift, intensityType, blockNum, oneRmKg, formulaConfig);
+    }
+  } catch (err) {
+    captureException(err);
+  }
+
+  const firstSet = estimatedSets?.[0] ?? null;
+  const setCount = estimatedSets?.length ?? null;
+  const lastSessionRpe = liftHistory?.entries?.[0]?.sessionRpe ?? null;
+
+  const repsLabel = firstSet
+    ? firstSet.reps_range
+      ? `${firstSet.reps_range[0]}–${firstSet.reps_range[1]}`
+      : `${firstSet.reps}`
+    : null;
+
+  const rpeTarget = firstSet?.rpe_target ?? null;
+  return {
+    counter,
+    firstSet,
+    setCount,
+    repsLabel,
+    rpeTarget,
+    lastSessionRpe,
+    rpeAdjustNote: computeRpeAdjustmentNote(rpeTarget, lastSessionRpe),
+  };
+}
+
 export default function ProgramScreen() {
   const { colors } = useTheme();
   const styles = useMemo(() => buildStyles(colors), [colors]);
@@ -285,37 +338,22 @@ export default function ProgramScreen() {
   }
 
   if (isUnending) {
-    const counter = program.unending_session_counter ?? 0;
-
-    const blockNum = (todaySession?.block_number ?? 1) as 1 | 2 | 3;
-    const intensityType = (todaySession?.intensity_type ??
-      'heavy') as IntensityType;
-    let estimatedSets = null;
-    try {
-      if (oneRmKg && formulaConfig && todaySession && nextLift) {
-        estimatedSets = calculateSets(
-          nextLift,
-          intensityType,
-          blockNum,
-          oneRmKg,
-          formulaConfig
-        );
-      }
-    } catch (err) {
-      captureException(err);
-    }
-    const firstSet = estimatedSets?.[0] ?? null;
-    const setCount = estimatedSets?.length ?? null;
-    const lastSessionRpe = liftHistory?.entries?.[0]?.sessionRpe ?? null;
-
-    const repsLabel = firstSet
-      ? firstSet.reps_range
-        ? `${firstSet.reps_range[0]}–${firstSet.reps_range[1]}`
-        : `${firstSet.reps}`
-      : null;
-
-    const rpeTarget = firstSet?.rpe_target ?? null;
-    const rpeAdjustNote = computeRpeAdjustmentNote(rpeTarget, lastSessionRpe);
+    const {
+      counter,
+      firstSet,
+      setCount,
+      repsLabel,
+      rpeTarget,
+      lastSessionRpe,
+      rpeAdjustNote,
+    } = computeUnendingPreview(
+      program,
+      todaySession,
+      oneRmKg,
+      formulaConfig,
+      nextLift,
+      liftHistory
+    );
 
     return (
       <SafeAreaView style={styles.container}>
