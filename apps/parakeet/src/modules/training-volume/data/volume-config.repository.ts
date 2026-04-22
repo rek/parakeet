@@ -1,6 +1,17 @@
 import type { MuscleGroup } from '@parakeet/shared-types';
 import { typedSupabase } from '@platform/supabase';
 
+export async function fetchBiologicalSexForVolume(
+  userId: string
+): Promise<'female' | 'male' | null> {
+  const { data } = await typedSupabase
+    .from('profiles')
+    .select('biological_sex')
+    .eq('id', userId)
+    .single();
+  return (data?.biological_sex as 'female' | 'male' | null) ?? null;
+}
+
 export async function fetchMuscleVolumeConfig(
   userId: string
 ): Promise<
