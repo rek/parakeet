@@ -120,7 +120,7 @@ export function SlotDropdown({
         onPress={() => setOpen(true)}
         activeOpacity={0.7}
       >
-        <ExerciseName name={value} nameStyle={styles.triggerText} />
+        <ExerciseName name={value} nameStyle={styles.triggerText} numberOfLines={1} />
         <Text style={styles.chevron}>›</Text>
       </TouchableOpacity>
       <Modal

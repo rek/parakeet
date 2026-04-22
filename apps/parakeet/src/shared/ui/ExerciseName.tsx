@@ -1,4 +1,4 @@
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text } from 'react-native';
 import type { StyleProp, TextStyle } from 'react-native';
 
 import { getExerciseSubtitle } from '@shared/utils/exercise-lookup';
@@ -8,29 +8,39 @@ import { useTheme } from '../../theme/ThemeContext';
 
 interface ExerciseNameProps {
   name: string;
-  /** Style applied to the primary name text. */
+  /** Style applied to the outer Text (typography + layout). */
   nameStyle?: StyleProp<TextStyle>;
+  /** Clamp lines — passed to the outer Text so long names truncate correctly. */
+  numberOfLines?: number;
 }
 
-export function ExerciseName({ name, nameStyle }: ExerciseNameProps) {
+export function ExerciseName({
+  name,
+  nameStyle,
+  numberOfLines,
+}: ExerciseNameProps) {
   const { colors } = useTheme();
   const subtitle = getExerciseSubtitle(name);
 
   return (
-    <View>
-      <Text style={nameStyle}>{formatExerciseName(name)}</Text>
+    <Text style={nameStyle} numberOfLines={numberOfLines}>
+      {formatExerciseName(name)}
       {subtitle && (
         <Text style={[styles.subtitle, { color: colors.textTertiary }]}>
+          {'\n'}
           {subtitle}
         </Text>
       )}
-    </View>
+    </Text>
   );
 }
 
 const styles = StyleSheet.create({
   subtitle: {
     fontSize: 11,
-    marginTop: 1,
+    fontWeight: 'normal',
+    // Override any textTransform/letterSpacing inherited from a parent Text.
+    textTransform: 'none',
+    letterSpacing: 0,
   },
 });

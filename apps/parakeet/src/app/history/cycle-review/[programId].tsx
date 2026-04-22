@@ -19,6 +19,7 @@ import type { FormulaConfig } from '@modules/formula';
 import { getRatingStyles, getVolumeLevelColors } from '@modules/history';
 import { classifyVolumeLevel } from '@modules/training-volume';
 import type { MuscleGroup } from '@parakeet/shared-types';
+import { ExerciseName } from '@shared/ui/ExerciseName';
 import {
   MUSCLE_GROUPS_ORDER,
   MUSCLE_LABELS_ABBR,
@@ -561,7 +562,7 @@ export default function CycleReviewScreen() {
                 </Text>
                 {aux.mostCorrelated.map((item, i) => (
                   <View key={i} style={styles.auxItem}>
-                    <Text style={styles.auxExercise}>{item.exercise}</Text>
+                    <ExerciseName name={item.exercise} nameStyle={styles.auxExercise} />
                     <Text style={styles.auxExplanation}>
                       {item.explanation}
                     </Text>
@@ -577,7 +578,7 @@ export default function CycleReviewScreen() {
                 </Text>
                 {aux.leastEffective.map((item, i) => (
                   <View key={i} style={styles.auxItem}>
-                    <Text style={styles.auxExercise}>{item.exercise}</Text>
+                    <ExerciseName name={item.exercise} nameStyle={styles.auxExercise} />
                     <Text style={styles.auxExplanation}>
                       {item.explanation}
                     </Text>

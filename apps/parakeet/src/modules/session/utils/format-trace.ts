@@ -5,7 +5,7 @@ import type {
   VolumeTrace,
   WeightDerivation,
 } from '@parakeet/training-engine';
-import { capitalize } from '@shared/utils/string';
+import { capitalize, formatExerciseName } from '@shared/utils/string';
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -237,7 +237,7 @@ export function formatPrescriptionTrace(
       : null,
     volumeLines: formatVolumeChanges({ changes: trace.mainLift.volumeChanges }),
     auxSections: trace.auxiliaries.map((aux) => ({
-      name: capitalize(aux.exercise.replace(/_/g, ' ')),
+      name: formatExerciseName(aux.exercise),
       exerciseId: aux.exercise,
       lines: formatAuxTrace({ aux }),
     })),
