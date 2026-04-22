@@ -1,0 +1,22 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(rtk gh *)",
+      "Bash(rtk ls *)",
+      "Bash(rtk grep *)",
+      "Bash(grep -E \"\\\\.ts$|\\\\.tsx$\")",
+      "Bash(rtk git *)",
+      "Bash(rtk find *)",
+      "WebSearch",
+      "WebFetch(domain:barbend.com)",
+      "Bash(rtk npx *)",
+      "Bash(rtk npm *)",
+      "Bash(rtk read *)",
+      "Bash(nx test *)",
+      "Bash(rtk tsc *)",
+      "Bash(nx affected *)",
+      "Bash(nx lint *)",
+      "Bash(nx run *)"
+    ]
+  }
+}
