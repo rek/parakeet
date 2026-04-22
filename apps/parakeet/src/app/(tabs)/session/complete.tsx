@@ -324,12 +324,17 @@ export default function CompleteScreen() {
       startedAt: startedAt?.toISOString(),
     };
 
-    // Store capacity assessment for volume calibration (works offline too)
+    // Store capacity assessment for volume calibration (works offline too).
+    // A single bounded key replaces the old per-session keys that grew without
+    // limit and whose slice(-5) ordering was non-deterministic (UUIDs).
     if (capacityAssessment !== null) {
-      AsyncStorage.setItem(
-        `capacity_assessment:${sessionId}`,
-        String(capacityAssessment)
-      ).catch(captureException);
+      AsyncStorage.getItem('capacity_assessments_log')
+        .then((raw) => {
+          const existing: number[] = raw ? (JSON.parse(raw) as number[]) : [];
+          const updated = [...existing, capacityAssessment].slice(-5);
+          return AsyncStorage.setItem('capacity_assessments_log', JSON.stringify(updated));
+        })
+        .catch(captureException);
     }
 
     // Offline: queue and show optimistic success

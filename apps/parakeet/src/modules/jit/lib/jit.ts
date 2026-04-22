@@ -376,21 +376,14 @@ export async function runJITForSession(
     | null
     | undefined;
   try {
-    // Fetch recent capacity assessments from AsyncStorage.
-    // Keys are stored as capacity_assessment:<sessionId> — order doesn't matter,
-    // we just need the most recent values. Limit to 5 to avoid processing stale data.
-    const allKeys = await AsyncStorage.getAllKeys();
-    const capacityKeys = allKeys.filter((k) =>
-      k.startsWith('capacity_assessment:')
-    );
-    if (capacityKeys.length > 0) {
-      // Sort by key to approximate chronological order (UUIDs are not sortable,
-      // but this is best-effort — the calibration system is robust to ordering)
-      const recentKeys = capacityKeys.slice(-5);
-      const entries = await AsyncStorage.multiGet(recentKeys);
-      capacityHistory = entries
-        .map(([, v]) => (v ? parseInt(v, 10) : null))
-        .filter((v): v is number => v !== null && !isNaN(v));
+    const raw = await AsyncStorage.getItem('capacity_assessments_log');
+    if (raw) {
+      const parsed = JSON.parse(raw) as unknown;
+      if (Array.isArray(parsed)) {
+        capacityHistory = (parsed as unknown[])
+          .map((v) => (typeof v === 'number' ? v : parseInt(String(v), 10)))
+          .filter((v): v is number => !isNaN(v));
+      }
     }
   } catch (err) {
     captureException(err);
