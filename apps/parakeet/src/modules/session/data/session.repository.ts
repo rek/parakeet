@@ -1,7 +1,7 @@
 import type { ActualSet, IntensityType, Lift } from '@parakeet/shared-types';
 import { IntensityTypeSchema, LiftSchema } from '@parakeet/shared-types';
 import type { DbInsert, DbRow } from '@platform/supabase';
-import { typedSupabase } from '@platform/supabase';
+import { toJson, typedSupabase } from '@platform/supabase';
 import type {
   CompletedSessionListItem,
   ProgramSessionView,
@@ -387,7 +387,7 @@ export async function upsertSetLog(input: UpsertSetLogInput): Promise<void> {
       notes: input.notes ?? null,
       logged_at: input.loggedAt ?? new Date().toISOString(),
     },
-    { onConflict: 'session_id,kind,exercise,set_number' }
+    { onConflict: 'session_id,kind,exercise,set_number', ignoreDuplicates: true }
   );
   if (error) throw error;
 }
@@ -992,4 +992,25 @@ export async function fetchHasNextWeekSessions(
 
   if (error) throw error;
   return (count ?? 0) > 0;
+}
+
+export async function insertDecisionReplayLog(input: {
+  userId: string;
+  sessionId: string;
+  prescriptionScore: number;
+  rpeAccuracy: number;
+  volumeAppropriateness: string;
+  insights: unknown;
+}): Promise<void> {
+  const { error } = await typedSupabase.from('decision_replay_logs').insert([
+    {
+      user_id: input.userId,
+      session_id: input.sessionId,
+      prescription_score: input.prescriptionScore,
+      rpe_accuracy: input.rpeAccuracy,
+      volume_appropriateness: input.volumeAppropriateness,
+      insights: toJson(input.insights),
+    },
+  ]);
+  if (error) throw error;
 }

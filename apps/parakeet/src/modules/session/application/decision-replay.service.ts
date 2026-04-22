@@ -1,10 +1,10 @@
 import { scoreDecisionReplay } from '@parakeet/training-engine';
 import type { JITInput } from '@parakeet/training-engine';
-import { toJson, typedSupabase } from '@platform/supabase';
 
 import {
   fetchSessionById,
   fetchSessionLogBySessionId,
+  insertDecisionReplayLog,
 } from '../data/session.repository';
 
 export async function scoreDecisionReplayAsync(
@@ -28,16 +28,12 @@ export async function scoreDecisionReplayAsync(
     blockNumber: session.block_number ?? null,
   });
 
-  const { error } = await typedSupabase.from('decision_replay_logs').insert([
-    {
-      user_id: userId,
-      session_id: sessionId,
-      prescription_score: replay.prescriptionScore,
-      rpe_accuracy: replay.rpeAccuracy,
-      volume_appropriateness: replay.volumeAppropriateness,
-      insights: toJson(replay.insights),
-    },
-  ]);
-
-  if (error) throw error;
+  await insertDecisionReplayLog({
+    userId,
+    sessionId,
+    prescriptionScore: replay.prescriptionScore,
+    rpeAccuracy: replay.rpeAccuracy,
+    volumeAppropriateness: replay.volumeAppropriateness,
+    insights: replay.insights,
+  });
 }
