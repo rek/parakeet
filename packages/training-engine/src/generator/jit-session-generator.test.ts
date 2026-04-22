@@ -1849,3 +1849,55 @@ describe('generateJITSession — volumeReductions metadata', () => {
     expect(out.volumeReductions!.baseSetsCount).toBe(2); // default baseInput produces 2 sets
   });
 });
+
+// ---------------------------------------------------------------------------
+// Integration: rep range adjustment (step 2b)
+// ---------------------------------------------------------------------------
+
+describe('generateJITSession — rep range adjustment', () => {
+  it('Block 1 rep day, strong RPE below target → prescribes reps_max (12)', () => {
+    const out = generateJITSession(
+      baseInput({
+        blockNumber: 1,
+        intensityType: 'rep',
+        recentLogs: [
+          { actual_rpe: 6.5, target_rpe: 8.0 },
+          { actual_rpe: 6.5, target_rpe: 8.0 },
+        ],
+      })
+    );
+    // avgDev = -1.5 (≤ -1.25) → reps_max=12; weight boost ×1.05 also applies
+    expect(out.mainLiftSets[0].reps).toBe(12);
+    expect(out.rationale.some((r) => /well below target/i.test(r))).toBe(true);
+  });
+
+  it('Block 1 rep day, mild RPE below target → reps unchanged (reps_min=8)', () => {
+    const out = generateJITSession(
+      baseInput({
+        blockNumber: 1,
+        intensityType: 'rep',
+        recentLogs: [
+          { actual_rpe: 7.0, target_rpe: 8.0 },
+          { actual_rpe: 7.0, target_rpe: 8.0 },
+        ],
+      })
+    );
+    // avgDev = -1.0 — above -RPE_LARGE_GAP; rep range step no-ops, weight boost fires
+    expect(out.mainLiftSets[0].reps).toBe(8);
+  });
+
+  it('Block 1 heavy day, strong low RPE → reps unchanged (step only fires on rep days)', () => {
+    const out = generateJITSession(
+      baseInput({
+        blockNumber: 1,
+        intensityType: 'heavy',
+        recentLogs: [
+          { actual_rpe: 6.5, target_rpe: 8.5 },
+          { actual_rpe: 6.5, target_rpe: 8.5 },
+        ],
+      })
+    );
+    // Heavy day: reps=5, no rep range adjustment
+    expect(out.mainLiftSets[0].reps).toBe(5);
+  });
+});

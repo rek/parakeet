@@ -93,7 +93,7 @@ describe('applyRepRangeAdjustment', () => {
     });
   });
 
-  describe('rep day — RPE at or above target', () => {
+  describe('rep day — RPE at or above target (no-op)', () => {
     it('RPE at target (avgDev 0) → no-op', () => {
       const ctx = makeCtx({ baseSets: setsWithRange(3, 8, [8, 12]) });
       applyRepRangeAdjustment(ctx, baseInput({ intensityType: 'rep', recentLogs: logs([8, 8]) }));
@@ -107,37 +107,37 @@ describe('applyRepRangeAdjustment', () => {
       expect(ctx.baseSets.every((s) => s.reps === 8)).toBe(true);
       expect(ctx.rationale).toHaveLength(0);
     });
+  });
 
-    it('RPE just at threshold (avgDev -0.74) → no-op', () => {
+  describe('rep day — mild signal (−1.25 to −0.75): no-op (weight boost covers this)', () => {
+    it('avgDev just below threshold (−0.75) → no-op', () => {
       const ctx = makeCtx({ baseSets: setsWithRange(3, 8, [8, 12]) });
       applyRepRangeAdjustment(ctx, baseInput({
         intensityType: 'rep',
         recentLogs: [{ actual_rpe: 7.26, target_rpe: 8 }, { actual_rpe: 7.26, target_rpe: 8 }],
       }));
+      // avgDev = -0.74 — does not cross RPE_LARGE_GAP (1.25)
       expect(ctx.baseSets.every((s) => s.reps === 8)).toBe(true);
+      expect(ctx.rationale).toHaveLength(0);
     });
-  });
 
-  describe('rep day — mild signal (−1.25 to −0.75): prescribe middle', () => {
-    it('B1 Rep (8–12): prescribes 10', () => {
+    it('B1 Rep (8–12), avgDev −1.0 (mild) → no-op', () => {
+      // avgDev = -1.0: above -RPE_LARGE_GAP (-1.25), only weight boost fires (step 2)
       const ctx = makeCtx({ baseSets: setsWithRange(3, 8, [8, 12]) });
       applyRepRangeAdjustment(ctx, baseInput({ intensityType: 'rep', recentLogs: logs([7, 7]) }));
-      expect(ctx.baseSets.every((s) => s.reps === 10)).toBe(true);
-      expect(ctx.rationale).toHaveLength(1);
-      expect(ctx.rationale[0]).toContain('below target');
-      expect(ctx.rationale[0]).toContain('10 reps');
+      expect(ctx.baseSets.every((s) => s.reps === 8)).toBe(true);
+      expect(ctx.rationale).toHaveLength(0);
     });
 
-    it('B2 Rep (4–8): prescribes 6', () => {
-      const ctx = makeCtx({ baseSets: setsWithRange(3, 4, [4, 8]) });
-      applyRepRangeAdjustment(ctx, baseInput({ intensityType: 'rep', recentLogs: logs([7, 7]) }));
-      expect(ctx.baseSets.every((s) => s.reps === 6)).toBe(true);
-    });
-
-    it('B3 Rep (3–5): prescribes 4', () => {
-      const ctx = makeCtx({ baseSets: setsWithRange(3, 3, [3, 5]) });
-      applyRepRangeAdjustment(ctx, baseInput({ intensityType: 'rep', recentLogs: logs([7, 7]) }));
-      expect(ctx.baseSets.every((s) => s.reps === 4)).toBe(true);
+    it('avgDev exactly −1.25 (boundary) → fires (≤ triggers)', () => {
+      // −1.25 is exactly RPE_LARGE_GAP — should prescribe reps_max
+      const ctx = makeCtx({ baseSets: setsWithRange(3, 8, [8, 12]) });
+      applyRepRangeAdjustment(ctx, baseInput({
+        intensityType: 'rep',
+        recentLogs: [{ actual_rpe: 6.75, target_rpe: 8 }, { actual_rpe: 6.75, target_rpe: 8 }],
+      }));
+      // avgDev = 6.75 - 8 = -1.25 exactly
+      expect(ctx.baseSets.every((s) => s.reps === 12)).toBe(true);
     });
   });
 
@@ -166,6 +166,19 @@ describe('applyRepRangeAdjustment', () => {
       const ctx = makeCtx({ baseSets: setsWithRange(3, 8, [8, 12]) });
       applyRepRangeAdjustment(ctx, baseInput({ intensityType: 'rep', recentLogs: logs([6, 6]) }));
       expect(ctx.rationale).toHaveLength(1);
+    });
+
+    it('rationale uses reps from first adjusted set (not baseSets[0] when no reps_range)', () => {
+      // First set has no reps_range, second and third do — rationale should reflect adjusted reps
+      const ctx = makeCtx({
+        baseSets: [
+          { set_number: 1, weight_kg: 100, reps: 8, rpe_target: 8 },
+          { set_number: 2, weight_kg: 100, reps: 8, rpe_target: 8, reps_range: [8, 12] as [number, number] },
+          { set_number: 3, weight_kg: 100, reps: 8, rpe_target: 8, reps_range: [8, 12] as [number, number] },
+        ],
+      });
+      applyRepRangeAdjustment(ctx, baseInput({ intensityType: 'rep', recentLogs: logs([6, 6]) }));
+      expect(ctx.rationale[0]).toContain('12 reps');
     });
   });
 

@@ -1,65 +1,48 @@
-import type { JITInput, RecentSessionSummary } from '../jit-session-generator';
+import type { JITInput } from '../jit-session-generator';
+import type { PrescriptionTraceBuilder } from '../prescription-trace';
 import type { PipelineContext } from './pipeline-context';
-
-// ---------------------------------------------------------------------------
-// Constants — mirrors applyRpeAdjustment thresholds
-// ---------------------------------------------------------------------------
-
-/** Minimum RPE below target to trigger any rep adjustment */
-const UNDER_SMALL = -0.75;
-/** RPE below target to prescribe reps_max instead of middle */
-const UNDER_LARGE = -1.25;
+import { computeAvgRpeDev, RPE_LARGE_GAP } from './rpe-history-thresholds';
 
 // ---------------------------------------------------------------------------
 // Step 2b: Rep range adjustment (Rep days only)
 //
-// applyRpeAdjustment already handles weight for the weak signal (-0.75 to -1.25).
-// This step fires only on the same signal; it does NOT fire above UNDER_SMALL
-// to avoid double-counting a mild signal with both more weight and more reps.
-// Strong signal (≤ UNDER_LARGE) → reps_max.
-// Mild signal (UNDER_LARGE to UNDER_SMALL) → middle of range.
-// Disruption (step 7) can still override reps downward after this step.
+// Only fires on strong below-target signal (avgDev <= -RPE_LARGE_GAP).
+// Mild signal (-0.75 to -1.25) is handled by the weight boost in step 2
+// alone — adding reps on top would compound to a ~25% total-work increase
+// from a 2-session mild signal.
+// Strong signal (≤ -1.25): prescribe reps_max.
+// Disruption (step 7) can still reduce reps downward after this step.
 // ---------------------------------------------------------------------------
 
 export function applyRepRangeAdjustment(
   ctx: PipelineContext,
-  input: JITInput
+  input: JITInput,
+  traceBuilder?: PrescriptionTraceBuilder
 ): void {
   if (input.intensityType !== 'rep') return;
   if (ctx.inRecoveryMode || ctx.skippedMainLift) return;
 
-  const rpeHistory = input.recentLogs
-    .filter(
-      (l): l is RecentSessionSummary & { actual_rpe: number } =>
-        l.actual_rpe !== null
-    )
-    .slice(0, 2);
+  const avgDev = computeAvgRpeDev(input.recentLogs);
+  if (avgDev === null || avgDev > -RPE_LARGE_GAP) return;
 
-  if (rpeHistory.length < 2) return;
-
-  const avgDev =
-    rpeHistory.reduce((s, l) => s + (l.actual_rpe - l.target_rpe), 0) /
-    rpeHistory.length;
-
-  if (avgDev > UNDER_SMALL) return;
-
-  let adjusted = false;
+  let firstAdjustedReps: number | null = null;
   for (const set of ctx.baseSets) {
     if (!set.reps_range) continue;
-    const [min, max] = set.reps_range;
-    const target =
-      avgDev <= UNDER_LARGE ? max : Math.floor((min + max) / 2);
+    const target = set.reps_range[1]; // reps_max
     if (target !== set.reps) {
       set.reps = target;
-      adjusted = true;
+      firstAdjustedReps ??= target;
     }
   }
 
-  if (adjusted) {
-    const prescribedReps = ctx.baseSets[0]?.reps ?? 0;
-    const label = avgDev <= UNDER_LARGE ? 'well below' : 'below';
+  if (firstAdjustedReps !== null) {
     ctx.rationale.push(
-      `Recent RPE ${label} target — prescribing ${prescribedReps} reps`
+      `Recent RPE well below target — prescribing ${firstAdjustedReps} reps`
     );
+    traceBuilder?.recordModifier({
+      source: 'rpe_history',
+      multiplier: 1,
+      reason: `Rep range adjusted: strong RPE below target → reps_max (${firstAdjustedReps})`,
+    });
   }
 }

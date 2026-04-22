@@ -159,15 +159,16 @@ The system currently only reduces volume. The adaptive volume calibration step (
 
 When multiple adjustments are active simultaneously:
 
-| Rule                          | Detail                                                                    |
-| ----------------------------- | ------------------------------------------------------------------------- |
-| Soreness + disruption         | Take `min()` per dimension (sets, intensity) -- not additive              |
-| Major disruption              | Full override -- skip session, ignore prior adjustments                   |
-| Soreness >= 9                 | Recovery mode -- ignore all other adjustments                             |
-| RPE + moderate soreness (5-6) | Both apply independently                                                  |
-| Readiness                     | Always applies (independent)                                              |
-| Cycle phase                   | Always applies (independent)                                              |
-| Volume calibration (Step 0)   | Runs first. Reductions apply on top of calibrated base.                   |
-| MRV cap                       | Always last -- hard constraint after all modifiers, including calibration |
+| Rule                                     | Detail                                                                                              |
+| ---------------------------------------- | --------------------------------------------------------------------------------------------------- |
+| Soreness + disruption                    | Take `min()` per dimension (sets, intensity) -- not additive                                        |
+| Major disruption                         | Full override -- skip session, ignore prior adjustments                                             |
+| Soreness >= 9                            | Recovery mode -- ignore all other adjustments                                                       |
+| RPE + moderate soreness (5-6)            | Both apply independently                                                                            |
+| Readiness                                | Always applies (independent)                                                                        |
+| Cycle phase                              | Always applies (independent)                                                                        |
+| Volume calibration (Step 0)              | Runs first. Reductions apply on top of calibrated base.                                             |
+| MRV cap                                  | Always last -- hard constraint after all modifiers, including calibration                           |
+| RPE step 2 + step 2b (rep days only)     | Both fire on strong signal (avgDev ≤ −1.25): step 2 boosts weight ×1.05, step 2b prescribes reps_max. Mild signal (−0.75 to −1.25): only step 2 fires. Disruption (step 7) can still reduce reps after step 2b. |
 
 **Source:** `packages/training-engine/src/generator/jit-session-generator.ts`

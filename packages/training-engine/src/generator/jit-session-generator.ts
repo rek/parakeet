@@ -305,7 +305,7 @@ export function generateJITSession(
 
   // Steps 2–7 — Modifier pipeline (each step mutates ctx, can only reduce)
   applyRpeAdjustment(ctx, input, traceBuilder);
-  applyRepRangeAdjustment(ctx, input);
+  applyRepRangeAdjustment(ctx, input, traceBuilder);
   applyReadinessAdjustment(ctx, input, traceBuilder);
   applyCyclePhaseAdjustment(ctx, input, traceBuilder);
   applySorenessAdjustment(ctx, input, traceBuilder);

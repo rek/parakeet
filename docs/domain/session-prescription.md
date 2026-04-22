@@ -15,7 +15,7 @@ Steps execute in order. Each step may modify `sets`, `intensity`, or `reps` fiel
 | 0    | `applyVolumeCalibration`    | Adjusts base set count up or down (-2 to +3) based on RPE trends, capacity signals, and modifier learning. See [adaptive-volume.md](../design/adaptive-volume.md). |
 | 1    | `initPipeline`              | Sets base sets, reps, %1RM, and RPE from formula config (block × intensity type).                 |
 | 2    | `applyRpeAdjustment`        | Looks at last 2 sessions' avg RPE deviation. Tiered: ≥ 0.75 over → ×0.975 (small) or ×0.95 (large, ≥ 1.25). ≤ −0.75 under → ×1.025 (small) or ×1.05 (large, ≤ −1.25). |
-| 2b   | `applyRepRangeAdjustment`   | **Rep days only.** Uses same RPE history. ≤ −0.75: prescribe middle of reps_range. ≤ −1.25: prescribe reps_max. Only fires on strong signal to avoid double-counting with step 2 weight boost. |
+| 2b   | `applyRepRangeAdjustment`   | **Rep days only.** Uses same RPE history. Only fires on strong signal (avgDev ≤ −1.25): prescribes `reps_max`. Mild signal (−0.75 to −1.25) is handled by the weight boost in step 2 alone — adding reps on top would compound to a ~25% total-work increase. |
 | 3    | `applyReadinessAdjustment`  | Applies sleep and energy modifiers. See [adjustments.md](adjustments.md).                         |
 | 4    | `applyCyclePhaseAdjustment` | Applies menstrual phase modifiers. See [adjustments.md](adjustments.md).                          |
 | 5    | `applySorenessAdjustment`   | Uses worst soreness score across primary muscles for the prescribed lift. See [adjustments.md](adjustments.md). |
