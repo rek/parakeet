@@ -53,6 +53,18 @@ export interface DietLifestyle {
   sortOrder: number;
 }
 
+export interface FoodNutritionRow {
+  foodId: string;
+  displayName: string;
+  category: string;
+  servingG: number;
+  kcal: number;
+  proteinG: number;
+  fatG: number;
+  carbG: number;
+  fiberG: number | null;
+}
+
 export interface ProtocolBundle {
   protocol: DietProtocol;
   foods: DietFood[];

@@ -1,6 +1,10 @@
 import { queryOptions, skipToken } from '@tanstack/react-query';
 
-import { fetchProtocolBundle, fetchProtocols } from './nutrition.repository';
+import {
+  fetchAllFoodNutrition,
+  fetchProtocolBundle,
+  fetchProtocols,
+} from './nutrition.repository';
 
 export const nutritionQueries = {
   all: () => ['nutrition'] as const,
@@ -17,5 +21,12 @@ export const nutritionQueries = {
       queryKey: [...nutritionQueries.all(), 'protocol', slug] as const,
       queryFn: slug ? () => fetchProtocolBundle(slug) : skipToken,
       staleTime: 10 * 60 * 1000,
+    }),
+
+  foodNutrition: () =>
+    queryOptions({
+      queryKey: [...nutritionQueries.all(), 'food-nutrition'] as const,
+      queryFn: fetchAllFoodNutrition,
+      staleTime: 30 * 60 * 1000,
     }),
 };

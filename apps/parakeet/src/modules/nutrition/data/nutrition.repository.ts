@@ -5,6 +5,7 @@ import type {
   DietLifestyle,
   DietProtocol,
   DietSupplement,
+  FoodNutritionRow,
   ProtocolBundle,
 } from '../model/types';
 
@@ -110,4 +111,30 @@ export async function fetchProtocolBundle(
     supplements,
     lifestyle,
   };
+}
+
+export async function fetchAllFoodNutrition(): Promise<FoodNutritionRow[]> {
+  const { data, error } = await typedSupabase
+    .from('diet_food_nutrition')
+    .select('food_id, serving_g, kcal, protein_g, fat_g, carb_g, fiber_g, diet_foods(display_name, category)')
+    .order('food_id');
+  if (error) throw error;
+  return (data ?? [])
+    .map((r) => {
+      const food = r.diet_foods;
+      if (!food) return null;
+      return {
+        foodId: r.food_id,
+        displayName: food.display_name,
+        category: food.category,
+        servingG: r.serving_g,
+        kcal: r.kcal,
+        proteinG: r.protein_g,
+        fatG: r.fat_g,
+        carbG: r.carb_g,
+        fiberG: r.fiber_g,
+      } satisfies FoodNutritionRow;
+    })
+    .filter((r): r is FoodNutritionRow => r !== null)
+    .sort((a, b) => a.displayName.localeCompare(b.displayName));
 }

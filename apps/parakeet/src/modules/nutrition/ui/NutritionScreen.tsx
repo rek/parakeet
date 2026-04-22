@@ -19,6 +19,7 @@ import { CompareSection } from './CompareSection';
 import { DailyRituals } from './DailyRituals';
 import { FoodSection } from './FoodSection';
 import { LifestyleSection } from './LifestyleSection';
+import { MacroLookupSection } from './MacroLookupSection';
 import { MacroTargetsCard } from './MacroTargetsCard';
 import { ProtocolSelector } from './ProtocolSelector';
 import { SourcesSection } from './SourcesSection';
@@ -27,6 +28,7 @@ import { SupplementSection } from './SupplementSection';
 type Tab =
   | 'overview'
   | 'foods'
+  | 'macros'
   | 'supplements'
   | 'lifestyle'
   | 'compare'
@@ -35,6 +37,7 @@ type Tab =
 const TABS: Tab[] = [
   'overview',
   'foods',
+  'macros',
   'supplements',
   'lifestyle',
   'compare',
@@ -44,6 +47,7 @@ const TABS: Tab[] = [
 const TAB_LABELS: Record<Tab, string> = {
   overview: 'Overview',
   foods: 'Foods',
+  macros: 'Macros',
   supplements: 'Supplements',
   lifestyle: 'Lifestyle',
   compare: 'Compare',
@@ -99,7 +103,7 @@ export function NutritionScreen() {
     );
   }
 
-  const showSelector = tab !== 'compare' && tab !== 'calculator';
+  const showSelector = tab !== 'compare' && tab !== 'calculator' && tab !== 'macros';
 
   return (
     <ScrollView
@@ -147,6 +151,8 @@ export function NutritionScreen() {
             slug && isMacroProtocol(slug) ? slug : 'standard'
           }
         />
+      ) : tab === 'macros' ? (
+        <MacroLookupSection />
       ) : bundleLoading ? (
         <View style={styles.stateBox}>
           <ActivityIndicator color={colors.primary} />

@@ -1,7 +1,7 @@
 export { NutritionScreen } from './ui/NutritionScreen';
 export { MacroTargetsCard } from './ui/MacroTargetsCard';
 export { nutritionQueries } from './data/nutrition.queries';
-export { useProtocols, useProtocolBundle } from './hooks/useNutrition';
+export { useProtocols, useProtocolBundle, useFoodNutrition } from './hooks/useNutrition';
 export { useMacroTargets } from './hooks/useMacroTargets';
 export { computeMacroTargets, MacroTargetDefaults } from './lib/macro-targets';
 export type {
@@ -18,6 +18,7 @@ export type {
   DietProtocol,
   DietSupplement,
   EvidenceGrade,
+  FoodNutritionRow,
   FoodStatus,
   LifestyleCategory,
   LifestyleFrequency,

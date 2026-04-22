@@ -9,3 +9,7 @@ export function useProtocols() {
 export function useProtocolBundle(slug: string) {
   return useQuery(nutritionQueries.protocol(slug));
 }
+
+export function useFoodNutrition() {
+  return useQuery(nutritionQueries.foodNutrition());
+}
