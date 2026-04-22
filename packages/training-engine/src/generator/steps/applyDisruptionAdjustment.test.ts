@@ -97,5 +97,22 @@ describe('applyDisruptionAdjustment', () => {
       expect(ctx.plannedCount).toBe(plannedBefore);
       expect(ctx.skippedMainLift).toBe(false);
     });
+
+    it('moderate disruption halves preCount, not baseSets.length (compounding reductions)', () => {
+      // Verifies the fix: when soreness/readiness already reduced plannedCount,
+      // moderate disruption halves the current count, not the original baseline.
+      const input = baseInput({
+        intensityType: 'heavy',
+        activeDisruptions: [makeDisruption('moderate')],
+      });
+      const ctx = initPipeline(input);
+      // Simulate prior soreness step: baseSets.length=5, plannedCount reduced to 2
+      ctx.plannedCount = 2;
+
+      applyDisruptionAdjustment(ctx, input);
+
+      // ceil(2/2) = 1, min(2, 1) = 1 — NOT ceil(5/2)=3 which would leave it unchanged
+      expect(ctx.plannedCount).toBe(1);
+    });
   });
 });

@@ -4,7 +4,7 @@ import { Alert } from 'react-native';
 
 import { stampCyclePhaseOnSession } from '@modules/cycle-tracking';
 import { useNetworkStatus } from '@platform/network/useNetworkStatus';
-import { useSessionStore } from '@platform/store/sessionStore';
+import { useSessionStore } from '../store/sessionStore';
 import { useSyncStore } from '@platform/store/syncStore';
 import { captureException } from '@platform/utils/captureException';
 import { useQueryClient } from '@tanstack/react-query';

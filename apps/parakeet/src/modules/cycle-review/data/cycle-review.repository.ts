@@ -271,11 +271,13 @@ export async function insertCycleReviewRow(input: {
   userId: string;
   compiledReport: CycleReport;
   llmResponse: CycleReview;
-}): Promise<void> {
+}): Promise<boolean> {
   // Upsert with ignoreDuplicates so concurrent generation attempts (onCycleComplete +
   // user-triggered) don't race to violate the (user_id, program_id) unique constraint.
   // The first writer wins; subsequent writes for the same program are silently dropped.
-  const { error } = await typedSupabase.from('cycle_reviews').upsert(
+  // Returns true if newly inserted, false if already existed (so callers can skip
+  // inserting dependent rows like formula suggestions).
+  const { data, error } = await typedSupabase.from('cycle_reviews').upsert(
     {
       program_id: input.programId,
       user_id: input.userId,
@@ -283,8 +285,9 @@ export async function insertCycleReviewRow(input: {
       llm_response: toJson(input.llmResponse),
     },
     { onConflict: 'user_id,program_id', ignoreDuplicates: true }
-  );
+  ).select('program_id').maybeSingle();
   if (error) throw error;
+  return data !== null;
 }
 
 export async function insertFormulaSuggestionConfig(input: {

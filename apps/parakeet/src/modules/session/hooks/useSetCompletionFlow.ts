@@ -4,7 +4,7 @@ import { useCallback, useRef } from 'react';
 import type { RestTimerPrefs } from '@modules/settings';
 import type { Lift } from '@parakeet/shared-types';
 import { adaptRemainingPlan } from '@parakeet/training-engine';
-import { useSessionStore } from '@platform/store/sessionStore';
+import { useSessionStore } from '../store/sessionStore';
 import { getExerciseType } from '@shared/utils/exercise-lookup';
 import { weightGramsToKg, weightKgToGrams } from '@shared/utils/weight';
 

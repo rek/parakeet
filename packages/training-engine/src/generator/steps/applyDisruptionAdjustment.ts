@@ -54,7 +54,7 @@ export function applyDisruptionAdjustment(
         reason: `${desc} — major disruption`,
       });
     } else if (worst.severity === 'moderate') {
-      const disruptionSets = Math.max(1, Math.ceil(ctx.baseSets.length / 2));
+      const disruptionSets = Math.max(1, Math.ceil(preCount / 2));
       ctx.plannedCount = Math.min(ctx.plannedCount, disruptionSets);
       ctx.intensityMultiplier = Math.min(ctx.intensityMultiplier, 0.9);
       ctx.rationale.push(`${desc} — volume and intensity reduced`);

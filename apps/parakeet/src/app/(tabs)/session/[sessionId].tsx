@@ -67,7 +67,7 @@ import {
 } from '@modules/video-analysis';
 import type { Lift } from '@parakeet/shared-types';
 import { useNetworkStatus } from '@platform/network';
-import { useSessionStore } from '@platform/store/sessionStore';
+import { useSessionStore } from '@modules/session';
 import { captureException } from '@platform/utils/captureException';
 import type { PlateKg } from '@shared/constants/plates';
 import { ExerciseName } from '@shared/ui/ExerciseName';

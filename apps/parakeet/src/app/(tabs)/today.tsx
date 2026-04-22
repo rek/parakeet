@@ -44,7 +44,7 @@ import {
   useWeeklyVolume,
   volumeFillPct,
 } from '@modules/training-volume';
-import { getReadyCachedJitData } from '@platform/store/sessionStore';
+import { getReadyCachedJitData } from '@modules/session';
 import { captureException } from '@platform/utils/captureException';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {

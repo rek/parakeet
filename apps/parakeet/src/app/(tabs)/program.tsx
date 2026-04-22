@@ -24,7 +24,7 @@ import {
 import type { ProgramSession } from '@modules/program';
 import { useInProgressSession, useTodaySession } from '@modules/session';
 import type { IntensityType, Lift } from '@parakeet/shared-types';
-import { useSessionStore } from '@platform/store/sessionStore';
+import { useSessionStore } from '@modules/session';
 import { captureException } from '@platform/utils/captureException';
 import { capitalize } from '@shared/utils/string';
 import { router } from 'expo-router';

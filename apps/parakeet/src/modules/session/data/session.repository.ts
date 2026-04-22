@@ -681,18 +681,18 @@ export async function fetchOverdueScheduledSessions(
     .eq('programs.program_mode', 'scheduled');
 
   if (error) throw error;
-  return (data ?? []).map((row) => {
-    if (row.planned_date === null) {
-      throw new Error(`Session ${row.id} has null planned_date`);
-    }
-    return {
+  return (data ?? []).flatMap((row) => {
+    if (row.planned_date === null) return [];
+    const lift = parseLiftNullable(row.primary_lift);
+    if (lift === null) return [];
+    return [{
       id: row.id,
       planned_date: row.planned_date,
-      primary_lift: parseLift(row.primary_lift),
+      primary_lift: lift,
       week_number: row.week_number,
       // Inner join on programs guarantees program_id is non-null here
       program_id: row.program_id!,
-    };
+    }];
   });
 }
 
@@ -714,16 +714,16 @@ export async function fetchProgramSessionsForMakeup(
     .eq('user_id', userId);
 
   if (error) throw error;
-  return (data ?? []).map((row) => {
-    if (row.planned_date === null) {
-      throw new Error(`Session ${row.id} has null planned_date`);
-    }
-    return {
+  return (data ?? []).flatMap((row) => {
+    if (row.planned_date === null) return [];
+    const lift = parseLiftNullable(row.primary_lift);
+    if (lift === null) return [];
+    return [{
       id: row.id,
       planned_date: row.planned_date,
-      primary_lift: parseLift(row.primary_lift),
+      primary_lift: lift,
       week_number: row.week_number,
-    };
+    }];
   });
 }
 
@@ -796,6 +796,16 @@ export interface SessionLogDetail {
   started_at: string | null;
   completed_at: string | null;
   session_notes: string | null;
+}
+
+export async function sessionLogExists(sessionId: string): Promise<boolean> {
+  const { data, error } = await typedSupabase
+    .from('session_logs')
+    .select('id')
+    .eq('session_id', sessionId)
+    .maybeSingle();
+  if (error) throw error;
+  return data !== null;
 }
 
 export async function fetchSessionLogBySessionId(

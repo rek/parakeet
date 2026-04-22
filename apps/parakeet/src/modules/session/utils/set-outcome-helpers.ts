@@ -1,6 +1,6 @@
 // @spec docs/features/session/spec-set-persistence.md
 import { adaptAuxRemainingPlan } from '@parakeet/training-engine';
-import { useSessionStore } from '@platform/store/sessionStore';
+import { useSessionStore } from '../store/sessionStore';
 import { weightGramsToKg, weightKgToGrams } from '@shared/utils/weight';
 
 import type { AuxiliaryWork } from '../model/types';

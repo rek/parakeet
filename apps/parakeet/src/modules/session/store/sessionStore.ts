@@ -6,7 +6,7 @@ import type {
   RecoveryOffer,
   SessionAdaptation,
   WeightSuggestionOffer,
-} from '@modules/session';
+} from '../model/types';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { weightKgToGrams } from '@shared/utils/weight';
 import { getEffectivePlannedSet } from '@shared/utils/getEffectivePlannedSet';

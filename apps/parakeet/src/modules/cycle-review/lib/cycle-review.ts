@@ -83,12 +83,16 @@ export async function storeCycleReview(
   compiledReport: CycleReport,
   llmResponse: CycleReview
 ): Promise<void> {
-  await insertCycleReviewRow({
+  const inserted = await insertCycleReviewRow({
     programId,
     userId,
     compiledReport,
     llmResponse,
   });
+
+  // Skip dependent inserts if this program already had a review — concurrent
+  // generation attempts (onCycleComplete + manual retry) share the same guard.
+  if (!inserted) return;
 
   for (const suggestion of llmResponse.formulaSuggestions ?? []) {
     await insertFormulaSuggestionConfig({

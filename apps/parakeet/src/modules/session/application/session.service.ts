@@ -67,6 +67,7 @@ import {
   insertSessionLog,
   insertSorenessCheckin,
   markSessionAsMissed,
+  sessionLogExists,
   updateSessionToCompleted,
   updateSessionToInProgress,
   updateSessionToPlanned,
@@ -260,6 +261,9 @@ async function autoFinaliseSession(
 ): Promise<void> {
   const logs = await fetchSetLogs(sessionId);
   if (logs.length === 0) return;
+
+  const alreadyLogged = await sessionLogExists(sessionId);
+  if (alreadyLogged) return;
 
   Sentry.addBreadcrumb({
     category: 'session.durability',

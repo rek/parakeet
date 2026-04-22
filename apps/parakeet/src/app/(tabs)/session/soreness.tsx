@@ -26,7 +26,7 @@ import {
   recordSorenessCheckin,
 } from '@modules/session';
 import type { Lift, MuscleGroup } from '@parakeet/shared-types';
-import { useSessionStore } from '@platform/store/sessionStore';
+import { useSessionStore } from '@modules/session';
 import { captureException } from '@platform/utils/captureException';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {
@@ -603,7 +603,7 @@ export default function SorenessScreen() {
 
   // ── Derived state ─────────────────────────────────────────────────────────
 
-  const hasSevereSoreness = Object.values(ratings).some((r) => r >= 9);
+  const hasSevereSoreness = [...Object.values(ratings), ...Object.values(otherSoreness)].some((r) => r >= 9);
   const liftLabel = session ? sessionLabel(session) : 'Loading...';
 
   // ── Render ────────────────────────────────────────────────────────────────

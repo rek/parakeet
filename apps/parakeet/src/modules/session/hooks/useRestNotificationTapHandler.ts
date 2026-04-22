@@ -1,7 +1,7 @@
 // @spec docs/features/rest-timer/spec-notification.md
 import { useEffect } from 'react';
 
-import { useSessionStore } from '@platform/store/sessionStore';
+import { useSessionStore } from '../store/sessionStore';
 import { captureException } from '@platform/utils/captureException';
 import { router } from 'expo-router';
 

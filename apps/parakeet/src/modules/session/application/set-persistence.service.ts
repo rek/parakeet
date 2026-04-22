@@ -3,7 +3,7 @@
 // via the `set_logs` table, falling back to the sync queue on network error.
 // See docs/features/session/design-durability.md.
 
-import { useSessionStore } from '@platform/store/sessionStore';
+import { useSessionStore } from '../store/sessionStore';
 import { useSyncStore } from '@platform/store/syncStore';
 import { captureException } from '@platform/utils/captureException';
 

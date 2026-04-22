@@ -71,3 +71,14 @@ export { getEffectivePlannedSet } from '@shared/utils/getEffectivePlannedSet';
 export { TraceLink } from './ui/TraceLink';
 export { formatPrescriptionTrace } from './utils/format-trace';
 export type { FormattedTrace } from './utils/format-trace';
+export {
+  useSessionStore,
+  deriveTimerKey,
+  getReadyCachedJitData,
+} from './store/sessionStore';
+export type {
+  ActualSet,
+  AuxiliaryActualSet,
+  SessionState,
+  TimerState,
+} from './store/sessionStore';

@@ -6,7 +6,7 @@ import { getRestTimerPrefs } from '@modules/settings';
 import {
   selectActiveTimer,
   useSessionStore,
-} from '@platform/store/sessionStore';
+} from '../store/sessionStore';
 import { sessionLabel } from '@shared/utils/string';
 import * as Haptics from 'expo-haptics';
 import { router, usePathname } from 'expo-router';

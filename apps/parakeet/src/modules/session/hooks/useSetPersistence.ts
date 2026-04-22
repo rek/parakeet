@@ -9,8 +9,8 @@ import type {
   ActualSet,
   AuxiliaryActualSet,
   SessionState,
-} from '@platform/store/sessionStore';
-import { useSessionStore } from '@platform/store/sessionStore';
+} from '../store/sessionStore';
+import { useSessionStore } from '../store/sessionStore';
 
 import {
   flushUnsyncedSets,

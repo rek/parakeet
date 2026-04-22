@@ -1,4 +1,4 @@
-import type { AuxiliaryActualSet } from '@platform/store/sessionStore';
+import type { AuxiliaryActualSet } from '../store/sessionStore';
 import { describe, expect, it } from 'vitest';
 
 import type { AuxiliaryWork } from '../model/types';

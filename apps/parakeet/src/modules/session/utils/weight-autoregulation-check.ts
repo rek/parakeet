@@ -1,7 +1,7 @@
 // @spec docs/features/intra-session/spec-weight-autoregulation.md
 import { Lift } from '@parakeet/shared-types';
 import { evaluateWeightAutoregulation } from '@parakeet/training-engine';
-import { useSessionStore } from '@platform/store/sessionStore';
+import { useSessionStore } from '../store/sessionStore';
 import { DEFAULT_RPE_TARGET } from '@shared/constants/training';
 import { weightGramsToKg } from '@shared/utils/weight';
 

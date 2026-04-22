@@ -2,7 +2,7 @@
 import { useMemo } from 'react';
 import { ScrollView, StyleSheet, Text, TouchableOpacity } from 'react-native';
 
-import type { TimerState } from '@platform/store/sessionStore';
+import type { TimerState } from '../store/sessionStore';
 
 import { formatMMSS } from '../../../shared/utils';
 import { radii, spacing, typography } from '../../../theme';

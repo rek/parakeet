@@ -1,6 +1,6 @@
 import type { SessionState } from './sessionStore';
 import { deriveTimerKey, useSessionStore } from './sessionStore';
-import { selectPostRestWeight } from '../../modules/session/utils/selectPostRestWeight';
+import { selectPostRestWeight } from '../utils/selectPostRestWeight';
 
 vi.mock('@react-native-async-storage/async-storage', () => ({
   default: {

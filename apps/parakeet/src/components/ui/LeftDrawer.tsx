@@ -13,7 +13,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { useFeatureEnabled } from '@modules/feature-flags';
 import { useInProgressSession } from '@modules/session';
-import { useSessionStore } from '@platform/store/sessionStore';
+import { useSessionStore } from '@modules/session';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 

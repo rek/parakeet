@@ -1,6 +1,6 @@
 // @spec docs/features/session/spec-performance.md
 import { evaluateVolumeRecovery } from '@parakeet/training-engine';
-import { useSessionStore } from '@platform/store/sessionStore';
+import { useSessionStore } from '../store/sessionStore';
 import { DEFAULT_RPE_TARGET } from '@shared/constants/training';
 
 import type { JitData } from '../model/types';

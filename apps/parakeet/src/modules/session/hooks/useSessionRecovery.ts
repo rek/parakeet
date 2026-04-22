@@ -9,7 +9,7 @@
 import { useEffect, useRef } from 'react';
 import { Alert, AppState, type AppStateStatus } from 'react-native';
 
-import { useSessionStore } from '@platform/store/sessionStore';
+import { useSessionStore } from '../store/sessionStore';
 import { captureException } from '@platform/utils/captureException';
 import * as Sentry from '@sentry/react-native';
 

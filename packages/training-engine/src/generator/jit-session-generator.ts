@@ -320,6 +320,8 @@ export function generateJITSession(
   const intensityModifier = ctx.inRecoveryMode ? 0.4 : ctx.intensityMultiplier;
 
   // Step 6 — Auxiliary work
+  // Deload sessions are recovery weeks — soreness should not further suppress aux volume.
+  const auxSoreness = input.intensityType === 'deload' ? (1 as SorenessLevel) : ctx.worstSoreness;
   const auxiliaryWork = buildAuxiliaryWork(
     activeAuxiliaries,
     oneRmKg,
@@ -327,7 +329,7 @@ export function generateJITSession(
     input.weeklyVolumeToDate,
     input.mrvMevConfig,
     ctx.primaryMuscles,
-    ctx.worstSoreness,
+    auxSoreness,
     ctx.warnings,
     input.biologicalSex,
     input.activeDisruptions,
