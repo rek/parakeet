@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import {
   ActivityIndicator,
   ScrollView,
@@ -339,18 +339,11 @@ export default function CycleReviewScreen() {
     error,
     refetch,
     isRefetching,
+    showRetry,
     triggerReview,
     isTriggeringReview,
     triggerError,
   } = useCycleReview(programId);
-
-  const [showRetry, setShowRetry] = useState(false);
-
-  useEffect(() => {
-    if (review) return;
-    const timer = setTimeout(() => setShowRetry(true), 60_000);
-    return () => clearTimeout(timer);
-  }, [review]);
 
   const llmData: CycleReviewData = (review ?? {}) as CycleReviewData;
 
