@@ -131,9 +131,21 @@ const PROTOCOL_CONFIG: Record<DietProtocolSlug, ProtocolConfig> = {
     carb_pct: null,
     fat_pct: null,
   },
-  // Helms et al. 2014 — fat-first Mediterranean split for powerlifters.
+  // RAD = Rare Adipose Disorders Diet (Herbst). Mediterranean-style, low-GI,
+  // anti-inflammatory. Designed for lipedema / Dercum's / MSL — NOT a general
+  // powerlifting protocol.
+  //
+  // Fat 40%: standard Mediterranean allocation. Clinical lipedema trials
+  // (LIPODIET, Sørlie 2022) used 70–75% fat (closer to keto); 40% is the
+  // Mediterranean floor. Choose keto if higher fat restriction is prescribed.
+  //
+  // Protein 1.4 g/kg: adapted from Cannataro 2021 (keto-lipedema, 22-month
+  // follow-up) — the only lipedema-specific protein figure in the literature.
+  // Standard LIPODIET data implies ~1.0–1.1 g/kg; 1.4 g/kg is a conservative
+  // upward adjustment for resistance-training load. This is NOT sourced from
+  // Helms 2014 (natural bodybuilding), which was erroneously cited here before.
   rad: {
-    protein_g_per_kg: 1.8,
+    protein_g_per_kg: 1.4,
     carb_ceiling_g: null,
     net_carb_g_cap: null,
     carb_pct: null,

@@ -144,7 +144,7 @@ export function NutritionScreen() {
       ) : tab === 'calculator' ? (
         <CalculatorSection
           defaultProtocol={
-            slug && isMacroProtocol(slug) ? slug : 'keto'
+            slug && isMacroProtocol(slug) ? slug : 'standard'
           }
         />
       ) : bundleLoading ? (
@@ -185,7 +185,7 @@ export function NutritionScreen() {
 }
 
 function isMacroProtocol(slug: string): slug is DietProtocolSlug {
-  return slug === 'keto' || slug === 'rad';
+  return slug === 'keto' || slug === 'rad' || slug === 'standard';
 }
 
 function buildStyles(colors: ColorScheme) {

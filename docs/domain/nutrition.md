@@ -32,19 +32,20 @@ Standard Harris-Benedict style. Self-reported.
 | --- | --- | --- |
 | `sedentary` | 1.2 | Desk job, no training |
 | `light` | 1.375 | 1–2 easy sessions/week |
-| `moderate` | 1.55 | 3–4 sessions/week |
-| `active` | 1.725 | **Powerlifter default** — 5–6 heavy compound sessions/week |
-| `very_active` | 1.9 | 6+ heavy sessions/week or active job on top |
+| `moderate` | 1.55 | 3–4 general sessions/week or deload week |
+| `active` | 1.725 | **Powerlifter default** — 3 heavy compound sessions/week |
+| `very_active` | 1.9 | 4+ sessions/week, or physically demanding job on top |
 
 **Powerlifter calibration note.** Harris-Benedict / Mifflin-St Jeor
 multipliers were derived for the general population and tend to
-*undercount* NEAT on heavy compound training days (thermic cost of
-~5 × 5 @ RPE 8+ isn't equivalent to the same volume of cardio in
-these tables). The parakeet default for a training lifter is
-`active`, not `moderate`. Drop to `moderate` for deload weeks or
-when volume is genuinely low. If the lifter is under-recovering
-with session RPE trending up week-over-week, bumping to
-`very_active` is often the corrective lever.
+*undercount* NEAT on heavy compound training days. A 3-session/week
+powerlifting program (squat, bench, deadlift days at RPE 7–9) has
+a thermic cost equivalent to far more frequent general-fitness
+sessions — the `active` multiplier (1.725) is the right anchor, not
+`moderate`. Drop to `moderate` for deload weeks or genuinely low
+volume weeks. If the lifter is under-recovering with session RPE
+trending up week-over-week, bumping to `very_active` is often the
+corrective lever.
 
 ## Goal adjustments
 
@@ -64,8 +65,8 @@ active tissue, not total body weight).
 | Protocol | g/kg (basis) | Source |
 | --- | --- | --- |
 | Keto | 1.4 g/kg (lean if known else bodyweight) | Cannataro 2021 protocol (~30% kcal from protein in an 1300 kcal plan). |
-| RAD | 1.8 g/kg | Helms et al., *Int Soc Sports Nutr* position stand on natural bodybuilding; slightly above-floor for strength athletes. |
-| Standard | 1.8 g/kg (lean if known else bodyweight) | Same floor as RAD — strength training demands apply regardless of dietary approach. ISSN position stand on protein and exercise (Stokes et al. 2018). |
+| RAD | 1.4 g/kg (lean if known else bodyweight) | Cannataro 2021 (keto-lipedema, only lipedema-specific protein figure in the literature). Standard LIPODIET (Sørlie 2022) implies ~1.0–1.1 g/kg; 1.4 g/kg is a conservative upward adjustment for resistance-training load. **Not from Helms 2014** (bodybuilding) — that citation was an error. |
+| Standard | 1.8 g/kg (lean if known else bodyweight) | ISSN position stand on protein and exercise (Stokes et al. 2018). |
 
 **Training-day bump**: `protein_g × 1.1` on training days, per the ISSN
 position stand on protein timing & training demands.
@@ -84,14 +85,23 @@ g/kg:
 - **Fat clamp**: `max(0, …)` to guard against bulk + small lifter
   combos where protein + carb kcal exceed target.
 
-### RAD
+### RAD (Rare Adipose Disorders Diet)
 
-- **Fat**: 40% of kcal — Mediterranean-style, emphasises olive oil /
-  fatty fish / nuts.
-- **Protein**: g/kg basis (as above); becomes residual % by implication.
+**Protocol context:** Developed by Dr Karen Herbst for lipedema, Dercum's
+disease, and MSL. Mediterranean-style, low-GI, anti-inflammatory. This is
+a medical protocol, not a general powerlifting diet. Use only if the lifter
+has a RAD diagnosis or has been advised to follow it.
+
+- **Fat**: 40% of kcal — Mediterranean baseline (olive oil, fatty fish,
+  nuts). Note: lipedema clinical trials (LIPODIET, Sørlie 2022) used
+  70–75% fat (ketogenic range). If higher fat restriction is clinically
+  indicated, use the Keto protocol instead.
+- **Protein**: 1.4 g/kg — adapted from Cannataro 2021 (keto-lipedema).
+  Standard LIPODIET implies ~1.0–1.1 g/kg; 1.4 g/kg adjusts upward for
+  resistance-training load. **Not from Helms 2014** (bodybuilding).
 - **Carbohydrate**: `(kcal − protein_kcal − fat_kcal) / 4` — residual.
-  Net carbs are not tracked here (RAD emphasises glycemic index /
-  whole-food quality rather than a hard cap).
+  Net carbs are not tracked (RAD emphasises GI / whole-food quality over
+  a hard cap).
 
 ### Standard
 

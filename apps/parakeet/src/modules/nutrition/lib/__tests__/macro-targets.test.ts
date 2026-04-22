@@ -126,10 +126,10 @@ describe('computeMacroTargets', () => {
       protocol: 'rad',
     });
     const withoutLean = computeMacroTargets({ ...baseFemale, protocol: 'rad' });
-    // Lean-mass protein: 48 * 1.8 = 86.4 → 86
-    expect(withLean.protein_g).toBe(86);
-    // Bodyweight protein: 70 * 1.8 = 126
-    expect(withoutLean.protein_g).toBe(126);
+    // Lean-mass protein: 48 * 1.4 = 67.2 → 67
+    expect(withLean.protein_g).toBe(67);
+    // Bodyweight protein: 70 * 1.4 = 98
+    expect(withoutLean.protein_g).toBe(98);
   });
 
   it('training day bumps protein by 10%', () => {

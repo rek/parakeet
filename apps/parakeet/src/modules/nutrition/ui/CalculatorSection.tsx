@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import {
+  Linking,
   ScrollView,
   StyleSheet,
   Text,
@@ -45,12 +46,7 @@ export function CalculatorSection({
   );
   const [age, setAge] = useState(() => {
     if (!profile?.date_of_birth) return '';
-    const d = new Date(profile.date_of_birth);
-    const now = new Date();
-    let a = now.getFullYear() - d.getFullYear();
-    const m = now.getMonth() - d.getMonth();
-    if (m < 0 || (m === 0 && now.getDate() < d.getDate())) a--;
-    return a.toString();
+    return ageFromDob(profile.date_of_birth);
   });
   const [height, setHeight] = useState(() =>
     profile?.height_cm != null ? profile.height_cm.toString() : '',
@@ -76,14 +72,7 @@ export function CalculatorSection({
     // Only fill empty fields — never overwrite a value the user has already typed.
     if (profile.bodyweight_kg != null && bodyweight === '') setBodyweight(profile.bodyweight_kg.toString());
     if (profile.biological_sex) setSex(profile.biological_sex);
-    if (profile.date_of_birth && age === '') {
-      const d = new Date(profile.date_of_birth);
-      const now = new Date();
-      let a = now.getFullYear() - d.getFullYear();
-      const mo = now.getMonth() - d.getMonth();
-      if (mo < 0 || (mo === 0 && now.getDate() < d.getDate())) a--;
-      setAge(a.toString());
-    }
+    if (profile.date_of_birth && age === '') setAge(ageFromDob(profile.date_of_birth));
     if (profile.height_cm != null && height === '') setHeight(profile.height_cm.toString());
     if (profile.lean_mass_kg != null && leanMass === '') setLeanMass(profile.lean_mass_kg.toString());
     if (profile.activity_level) setActivity(profile.activity_level);
@@ -206,37 +195,34 @@ export function CalculatorSection({
         />
 
         <Text style={styles.smallLabel}>Activity</Text>
-        <Text style={styles.hint}>
-          Powerlifter anchor: "Active" = 5–6 heavy-compound sessions/week.
-          "Moderate" if deload / low volume. The general-population
-          multipliers undercount strength-training NEAT.
-        </Text>
-        <View style={styles.pickerRow}>
-          {(
-            [
-              'sedentary',
-              'light',
-              'moderate',
-              'active',
-              'very_active',
-            ] as ActivityLevel[]
-          ).map((a) => (
-            <TouchableOpacity
-              key={a}
-              style={[styles.pillSm, activity === a && styles.pillActive]}
-              onPress={() => setActivity(a)}
-              activeOpacity={0.8}
-            >
-              <Text
-                style={[
-                  styles.pillTextSm,
-                  activity === a && styles.pillTextActive,
-                ]}
+        <View style={styles.activityList}>
+          {ACTIVITY_OPTIONS.map((opt) => {
+            const active = activity === opt.value;
+            return (
+              <TouchableOpacity
+                key={opt.value}
+                style={[styles.activityRow, active && styles.activityRowActive]}
+                onPress={() => setActivity(opt.value)}
+                activeOpacity={0.8}
               >
-                {a === 'very_active' ? 'Very' : cap(a)}
-              </Text>
-            </TouchableOpacity>
-          ))}
+                <View style={styles.activityLeft}>
+                  <Text style={[styles.activityLabel, active && styles.activityLabelActive]}>
+                    {opt.label}
+                    {opt.default ? (
+                      <Text style={styles.activityDefaultTag}> · powerlifter default</Text>
+                    ) : null}
+                  </Text>
+                  <Text style={styles.activityDesc}>{opt.desc}</Text>
+                </View>
+                <View style={styles.activityMultiplierBox}>
+                  <Text style={[styles.activityMultiplierLabel, active && styles.activityMultiplierActive]}>TDEE</Text>
+                  <Text style={[styles.activityMultiplier, active && styles.activityMultiplierActive]}>
+                    BMR × {opt.multiplier}
+                  </Text>
+                </View>
+              </TouchableOpacity>
+            );
+          })}
         </View>
 
         <Text style={styles.smallLabel}>Goal</Text>
@@ -331,15 +317,141 @@ export function CalculatorSection({
               Low confidence — fill height + age for a validated BMR.
             </Text>
           ) : null}
+          <Text style={styles.footnote}>
+            Total kcal = TDEE × goal adjustment. All protocols share the same
+            energy target — only the macro split differs. If the number looks
+            high, check your activity level: "Active" assumes 5–6 heavy
+            sessions/week. Drop to "Moderate" for deload weeks.
+          </Text>
         </View>
       ) : (
         <View style={styles.emptyBox}>
           <Text style={styles.emptyText}>Enter bodyweight to see targets.</Text>
         </View>
       )}
+
+      {protocol === 'rad' ? (
+        <View style={styles.radNoteCard}>
+          <Text style={styles.radNoteTitle}>About the RAD protocol</Text>
+          <Text style={styles.radNoteBody}>
+            RAD = Rare Adipose Disorders Diet. Developed by Dr Karen Herbst for
+            lipedema, Dercum's disease, and MSL — conditions where pathological
+            fat tissue does not respond to standard caloric restriction.
+            Mediterranean-style: low glycemic index, anti-inflammatory, whole
+            foods, no refined sugar or flour, limited A1 dairy, omega-3 emphasis.
+            {'\n\n'}
+            Protein target (1.4 g/kg) is adapted from Cannataro 2021
+            keto-lipedema data — adjusted upward from ~1.0–1.1 g/kg (LIPODIET)
+            to account for resistance-training load. This is not a general
+            powerlifting diet. If higher fat restriction has been clinically
+            recommended, use the Keto protocol instead.
+          </Text>
+        </View>
+      ) : null}
+
+      <Text style={styles.header}>References</Text>
+      <View style={styles.refCard}>
+        {[...BMR_REFS, ...PROTOCOL_REFS[protocol]].map((ref, i) => (
+          <TouchableOpacity
+            key={i}
+            onPress={() => void Linking.openURL(ref.url)}
+            activeOpacity={0.7}
+          >
+            <Text style={[styles.refLine, styles.refLink]}>{ref.text}</Text>
+          </TouchableOpacity>
+        ))}
+      </View>
     </ScrollView>
   );
 }
+
+// Parse year directly from ISO string to avoid UTC-vs-local offset bug.
+function ageFromDob(dob: string): string {
+  const birthYear = parseInt(dob.slice(0, 4), 10);
+  const now = new Date();
+  const thisYear = now.getFullYear();
+  const birthMonth = parseInt(dob.slice(5, 7), 10) - 1;
+  const birthDay = parseInt(dob.slice(8, 10), 10);
+  let a = thisYear - birthYear;
+  if (now.getMonth() < birthMonth || (now.getMonth() === birthMonth && now.getDate() < birthDay)) a--;
+  return a.toString();
+}
+
+const ACTIVITY_OPTIONS: {
+  value: ActivityLevel;
+  label: string;
+  desc: string;
+  multiplier: string;
+  default?: true;
+}[] = [
+  { value: 'sedentary', label: 'Sedentary', desc: 'Desk job, no training', multiplier: '1.2' },
+  { value: 'light', label: 'Light', desc: '1–2 easy sessions/week', multiplier: '1.375' },
+  { value: 'moderate', label: 'Moderate', desc: '3–4 general sessions/week · use on deload weeks', multiplier: '1.55' },
+  { value: 'active', label: 'Active', desc: '3 heavy compound sessions/week — thermic cost higher than frequency suggests', multiplier: '1.725', default: true },
+  { value: 'very_active', label: 'Very active', desc: '4+ sessions/week or physically demanding job on top', multiplier: '1.9' },
+];
+
+interface Ref { text: string; url: string }
+
+const BMR_REFS: Ref[] = [
+  {
+    text: 'Mifflin et al. A new predictive equation for resting energy expenditure. Am J Clin Nutr, 1990.',
+    url: 'https://pubmed.ncbi.nlm.nih.gov/2305711/',
+  },
+  {
+    text: 'Katch & McArdle. Exercise Physiology, 1996. (Katch-McArdle BMR formula)',
+    url: 'https://pubmed.ncbi.nlm.nih.gov/7560634/',
+  },
+];
+
+const PROTOCOL_REFS: Record<DietProtocolSlug, Ref[]> = {
+  standard: [
+    {
+      text: 'Stokes et al. ISSN position stand on protein and exercise — 1.8 g/kg for strength athletes. Nutrients, 2018.',
+      url: 'https://pubmed.ncbi.nlm.nih.gov/29497353/',
+    },
+    {
+      text: 'Helms et al. Evidence-based recommendations for natural bodybuilding contest preparation. J Int Soc Sports Nutr, 2014.',
+      url: 'https://pubmed.ncbi.nlm.nih.gov/25926415/',
+    },
+  ],
+  keto: [
+    {
+      text: 'Cannataro et al. Management of lipedema with ketogenic diet: 22-month follow-up. Healthcare, 2021. (1.4 g/kg protein, keto for lipedema)',
+      url: 'https://pmc.ncbi.nlm.nih.gov/articles/PMC8707844/',
+    },
+    {
+      text: 'Sørlie et al. LIPODIET pilot — keto for lipedema: 70–75% fat, 5–10% carb. Clin Nutr ESPEN, 2022.',
+      url: 'https://pmc.ncbi.nlm.nih.gov/articles/PMC9358738/',
+    },
+    {
+      text: 'Current evidence-based nutritional approaches in lipedema: a scoping review. Nutrition Reviews, 2025.',
+      url: 'https://academic.oup.com/nutritionreviews/advance-article/doi/10.1093/nutrit/nuaf203/8342097',
+    },
+  ],
+  rad: [
+    {
+      text: 'Herbst KL. Rare adipose disorders (RADs) masquerading as obesity. Acta Pharmacol Sin, 2012. (foundational RAD paper)',
+      url: 'https://pubmed.ncbi.nlm.nih.gov/22301856/',
+    },
+    {
+      text: 'Cannataro et al. Management of lipedema with ketogenic diet: 22-month follow-up. Healthcare, 2021. (source for 1.4 g/kg protein adaptation)',
+      url: 'https://pmc.ncbi.nlm.nih.gov/articles/PMC8707844/',
+    },
+    {
+      text: 'Lundanes et al. Low-carbohydrate diet for pain and quality of life in lipedema: RCT (n=70). Obesity, 2024.',
+      url: 'https://onlinelibrary.wiley.com/doi/full/10.1002/oby.24026',
+    },
+    {
+      text: 'Current evidence-based nutritional approaches in lipedema: a scoping review. Nutrition Reviews, 2025.',
+      url: 'https://academic.oup.com/nutritionreviews/advance-article/doi/10.1093/nutrit/nuaf203/8342097',
+    },
+    {
+      text: 'Sørlie et al. LIPODIET pilot (n=9) — 70–75% fat, 5–10% carb, ~20% protein (~1.0–1.1 g/kg). Clin Nutr ESPEN, 2022.',
+      url: 'https://pmc.ncbi.nlm.nih.gov/articles/PMC9358738/',
+    },
+  ],
+};
 
 function LabeledInput({
   label,
@@ -454,25 +566,12 @@ function buildStyles(colors: ColorScheme) {
       borderColor: colors.border,
       backgroundColor: colors.bg,
     },
-    pillSm: {
-      paddingHorizontal: spacing[3],
-      paddingVertical: spacing[1],
-      borderRadius: radii.sm,
-      borderWidth: 1,
-      borderColor: colors.border,
-      backgroundColor: colors.bg,
-    },
     pillActive: {
       borderColor: colors.primary,
       backgroundColor: colors.primaryMuted,
     },
     pillText: {
       fontSize: typography.sizes.sm,
-      fontWeight: typography.weights.semibold,
-      color: colors.textSecondary,
-    },
-    pillTextSm: {
-      fontSize: typography.sizes.xs,
       fontWeight: typography.weights.semibold,
       color: colors.textSecondary,
     },
@@ -571,11 +670,88 @@ function buildStyles(colors: ColorScheme) {
       color: colors.textTertiary,
       fontStyle: 'italic',
     },
-    hint: {
+    activityList: {
+      gap: spacing[2],
+    },
+    activityRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      borderWidth: 1,
+      borderColor: colors.border,
+      borderRadius: radii.sm,
+      backgroundColor: colors.bg,
+      paddingHorizontal: spacing[3],
+      paddingVertical: spacing[2],
+      gap: spacing[2],
+    },
+    activityRowActive: {
+      borderColor: colors.primary,
+      backgroundColor: colors.primaryMuted,
+    },
+    activityLeft: { flex: 1, gap: 2 },
+    activityLabel: {
+      fontSize: typography.sizes.sm,
+      fontWeight: typography.weights.semibold,
+      color: colors.textSecondary,
+    },
+    activityLabelActive: { color: colors.primary },
+    activityDefaultTag: {
+      fontSize: typography.sizes.xs,
+      fontWeight: typography.weights.regular,
+      color: colors.primary,
+    },
+    activityDesc: {
       fontSize: typography.sizes.xs,
       color: colors.textTertiary,
-      fontStyle: 'italic',
-      marginBottom: spacing[1],
+    },
+    activityMultiplierBox: {
+      alignItems: 'flex-end',
+    },
+    activityMultiplierLabel: {
+      fontSize: typography.sizes.xs,
+      color: colors.textTertiary,
+      textTransform: 'uppercase',
+      letterSpacing: typography.letterSpacing.wider,
+    },
+    activityMultiplier: {
+      fontSize: typography.sizes.xs,
+      fontWeight: typography.weights.semibold,
+      color: colors.textTertiary,
+    },
+    activityMultiplierActive: { color: colors.primary },
+    radNoteCard: {
+      backgroundColor: colors.bgSurface,
+      borderRadius: radii.md,
+      borderLeftWidth: 3,
+      borderLeftColor: colors.warning,
+      padding: spacing[4],
+      gap: spacing[2],
+    },
+    radNoteTitle: {
+      fontSize: typography.sizes.sm,
+      fontWeight: typography.weights.bold,
+      color: colors.text,
+    },
+    radNoteBody: {
+      fontSize: typography.sizes.xs,
+      color: colors.textSecondary,
+      lineHeight: 18,
+    },
+    refCard: {
+      backgroundColor: colors.bgSurface,
+      borderRadius: radii.md,
+      padding: spacing[4],
+      gap: spacing[2],
+    },
+    refLine: {
+      fontSize: typography.sizes.xs,
+      color: colors.textTertiary,
+      lineHeight: 18,
+    },
+    refLink: {
+      color: colors.primary,
+      textDecorationLine: 'underline',
     },
     emptyBox: {
       padding: spacing[4],
