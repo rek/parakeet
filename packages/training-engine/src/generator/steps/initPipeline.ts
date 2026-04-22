@@ -65,7 +65,7 @@ export function initPipeline(
   const primaryMuscles = getPrimaryMusclesForSession(primaryLift);
   const worstSoreness = getWorstSoreness(primaryMuscles, sorenessRatings);
 
-  return {
+  const ctx: PipelineContext = {
     intensityMultiplier: 1.0,
     plannedCount: baseSets.length,
     baseSetsCount: baseSets.length,
@@ -82,4 +82,25 @@ export function initPipeline(
     sorenessSetsRemoved: 0,
     disruptionSetsRemoved: 0,
   };
+
+  if (intensityType !== 'deload' && baseSets.length > 0) {
+    const cycledBlock = (((blockNumber - 1) % 3) + 1);
+    const firstSet = baseSets[0];
+    const repsText = firstSet.reps_range
+      ? `${firstSet.reps_range[0]}–${firstSet.reps_range[1]} reps`
+      : `${firstSet.reps} reps`;
+    const pctDisplay = Math.round((baseWeight / oneRmKg) * 100);
+    const PURPOSES: Record<string, string> = {
+      heavy: 'maximal strength',
+      explosive: 'speed-strength',
+      rep: 'work capacity',
+    };
+    const purpose = PURPOSES[intensityType] ?? intensityType;
+    const label = intensityType.charAt(0).toUpperCase() + intensityType.slice(1);
+    ctx.rationale.push(
+      `${label} day (Block ${cycledBlock}): ${purpose} — ${repsText} @ ${pctDisplay}% 1RM`
+    );
+  }
+
+  return ctx;
 }

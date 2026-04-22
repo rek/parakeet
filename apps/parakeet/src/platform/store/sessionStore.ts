@@ -88,7 +88,7 @@ export function selectActivePostRest(state: SessionState): PostRestState | null 
 
 export interface SessionState {
   sessionId: string | null;
-  plannedSets: { weight_kg: number; reps: number }[];
+  plannedSets: { weight_kg: number; reps: number; reps_range?: [number, number] }[];
   actualSets: ActualSet[];
   auxiliarySets: AuxiliaryActualSet[];
   auxiliaryWork: AuxiliaryWork[];
@@ -143,7 +143,7 @@ export interface SessionState {
   setSessionRpe: (rpe: number) => void;
   initSession: (
     sessionId: string,
-    plannedSets: { weight_kg: number; reps: number }[]
+    plannedSets: { weight_kg: number; reps: number; reps_range?: [number, number] }[]
   ) => void;
   initAuxiliary: (
     work: {

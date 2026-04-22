@@ -36,6 +36,8 @@ export interface SetRowProps {
   /** Original prescription, used as input placeholder only. */
   placeholderWeightKg?: number;
   placeholderReps?: number;
+  /** Rep range from the prescription (e.g. [3, 5] for Block 3 Rep day). Shown as a hint. */
+  repsRange?: [number, number];
   rpeValue?: number;
   isCompleted?: boolean;
   exerciseType?: 'weighted' | 'bodyweight' | 'timed';
@@ -66,6 +68,7 @@ export function SetRow({
   reps,
   placeholderWeightKg,
   placeholderReps,
+  repsRange,
   rpeValue,
   isCompleted = false,
   exerciseType = 'weighted',
@@ -230,6 +233,11 @@ export function SetRow({
           fontWeight: typography.weights.semibold,
           color: colors.textSecondary,
         },
+        repsRangeHint: {
+          fontSize: typography.sizes.xs,
+          color: colors.textTertiary,
+          marginLeft: spacing[1],
+        },
       }),
     [colors]
   );
@@ -360,6 +368,12 @@ export function SetRow({
           textAlign="center"
           editable={!isCompleted}
         />
+
+        {repsRange && !isCompleted && (
+          <Text style={styles.repsRangeHint}>
+            {repsRange[0]}–{repsRange[1]}
+          </Text>
+        )}
 
         {exerciseType !== 'bodyweight' && (
           <TouchableOpacity

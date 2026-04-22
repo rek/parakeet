@@ -964,6 +964,7 @@ export default function SessionScreen() {
                   reps={actualSet.reps_completed}
                   placeholderWeightKg={planned?.weight_kg}
                   placeholderReps={planned?.reps}
+                  repsRange={planned?.reps_range}
                   rpeValue={actualSet.rpe_actual}
                   isCompleted={actualSet.is_completed}
                   onUpdate={(data) =>

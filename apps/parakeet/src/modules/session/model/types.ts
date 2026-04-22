@@ -5,6 +5,7 @@ export interface PlannedSet {
   reps: number;
   rpe_target?: number;
   set_type?: string;
+  reps_range?: [number, number];
 }
 
 export interface WarmupSet {
