@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { Alert } from 'react-native';
 
+import { stampCyclePhaseOnSession } from '@modules/cycle-tracking';
 import { useNetworkStatus } from '@platform/network/useNetworkStatus';
 import { useSessionStore } from '@platform/store/sessionStore';
 import { useSyncStore } from '@platform/store/syncStore';
@@ -81,6 +82,9 @@ export function useSyncQueue() {
             await queryClient.invalidateQueries({
               queryKey: ['achievements'],
             });
+
+            // Stamp cycle phase — was skipped when the session was queued offline.
+            stampCyclePhaseOnSession(userId, sessionId).catch(captureException);
 
             // Fire-and-forget: run achievement detection now that data is on the server.
             // Dynamic import breaks the session ↔ achievements circular dependency.

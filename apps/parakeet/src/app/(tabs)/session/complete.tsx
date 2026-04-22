@@ -351,9 +351,11 @@ export default function CompleteScreen() {
       });
 
       // Stamp cycle phase on the session log (no-op if tracking disabled)
-      stampCyclePhaseOnSession(user.id, sessionId).catch((err) =>
-        captureException(err)
-      );
+      try {
+        await stampCyclePhaseOnSession(user.id, sessionId);
+      } catch (err) {
+        captureException(err);
+      }
 
       // Data is committed — show the saved state regardless of what follows
       setSaved(true);
