@@ -90,12 +90,12 @@ export function initPipeline(
       ? `${firstSet.reps_range[0]}–${firstSet.reps_range[1]} reps`
       : `${firstSet.reps} reps`;
     const pctDisplay = Math.round((baseWeight / oneRmKg) * 100);
-    const PURPOSES: Record<string, string> = {
+    const PURPOSES: Record<'heavy' | 'explosive' | 'rep', string> = {
       heavy: 'maximal strength',
       explosive: 'speed-strength',
       rep: 'work capacity',
     };
-    const purpose = PURPOSES[intensityType] ?? intensityType;
+    const purpose = PURPOSES[intensityType as 'heavy' | 'explosive' | 'rep'];
     const label = intensityType.charAt(0).toUpperCase() + intensityType.slice(1);
     ctx.rationale.push(
       `${label} day (Block ${cycledBlock}): ${purpose} — ${repsText} @ ${pctDisplay}% 1RM`
