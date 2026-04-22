@@ -31,6 +31,12 @@ export async function triggerCycleReview(
   programId: string,
   userId: string
 ): Promise<CycleReview> {
+  // Guard: return existing review rather than spending another LLM call.
+  // Covers the race between the fire-and-forget onCycleComplete path and
+  // manual user retries from the cycle review screen.
+  const existing = await getCycleReview(programId, userId);
+  if (existing) return existing;
+
   const report = await compileCycleReport(programId, userId);
   const previousSummaries = await getPreviousCycleSummaries(
     userId,
