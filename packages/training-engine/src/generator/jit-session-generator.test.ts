@@ -1422,6 +1422,45 @@ describe('generateJITSession — volume top-up MEV pro-rating', () => {
     const topUps = out.auxiliaryWork.filter((a) => a.isTopUp);
     expect(topUps.length).toBeGreaterThan(0);
   });
+
+  it('sessionIndex=0 falls back to full MEV (0 is falsy — no pro-rating)', () => {
+    // sessionIndex=0 is falsy, so the pro-rating branch is skipped.
+    // effectiveMev = full MEV, not pro-rated.
+    // weeklyVol for hamstrings=0 → deficit = full hamstrings MEV → triggers top-up.
+    const out = generateJITSession(
+      baseInput({
+        auxiliaryPool: pool,
+        weeklyVolumeToDate: atMevExcept(
+          DEFAULT_MRV_MEV_CONFIG_MALE,
+          'hamstrings'
+        ),
+        mrvMevConfig: DEFAULT_MRV_MEV_CONFIG_MALE,
+        sessionIndex: 0,
+        totalSessionsThisWeek: 3,
+      })
+    );
+    const topUps = out.auxiliaryWork.filter((a) => a.isTopUp);
+    expect(topUps.length).toBeGreaterThan(0);
+  });
+
+  it('totalSessionsThisWeek=0 falls back to full MEV (no divide-by-zero)', () => {
+    // totalSessionsThisWeek=0 is falsy — pro-rating guard skips the division.
+    // effectiveMev = full MEV; deficit triggers top-up; no divide-by-zero.
+    const out = generateJITSession(
+      baseInput({
+        auxiliaryPool: pool,
+        weeklyVolumeToDate: atMevExcept(
+          DEFAULT_MRV_MEV_CONFIG_MALE,
+          'hamstrings'
+        ),
+        mrvMevConfig: DEFAULT_MRV_MEV_CONFIG_MALE,
+        sessionIndex: 2,
+        totalSessionsThisWeek: 0,
+      })
+    );
+    const topUps = out.auxiliaryWork.filter((a) => a.isTopUp);
+    expect(topUps.length).toBeGreaterThan(0);
+  });
 });
 
 // ---------------------------------------------------------------------------
