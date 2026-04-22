@@ -13,6 +13,7 @@ import {
 import type { Lift, MuscleCategory, MuscleGroup } from '@parakeet/shared-types';
 import { MUSCLE_CATALOG } from '@parakeet/shared-types';
 import { MUSCLE_LABELS_COMPACT } from '@shared/constants/training';
+import { ExerciseName } from '@shared/ui/ExerciseName';
 import type { ExerciseCatalogEntry } from '@shared/utils/exercise-lookup';
 import { getAllExercises } from '@shared/utils/exercise-lookup';
 
@@ -498,9 +499,10 @@ export function AddExerciseModal({
       return (
         <View style={[styles.exerciseRow, styles.exerciseRowExcluded]}>
           <View style={styles.exerciseRowInner}>
-            <Text style={[styles.exerciseName, styles.exerciseNameExcluded]}>
-              {entry.name}
-            </Text>
+            <ExerciseName
+              name={entry.name}
+              nameStyle={[styles.exerciseName, styles.exerciseNameExcluded]}
+            />
             {renderExerciseChips(entry)}
           </View>
           <Text style={styles.addedLabel}>Added</Text>
@@ -513,7 +515,7 @@ export function AddExerciseModal({
         onPress={() => handleSelect(entry.name)}
         activeOpacity={0.7}
       >
-        <Text style={styles.exerciseName}>{entry.name}</Text>
+        <ExerciseName name={entry.name} nameStyle={styles.exerciseName} />
         {renderExerciseChips(entry)}
       </TouchableOpacity>
     );

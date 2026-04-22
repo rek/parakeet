@@ -70,6 +70,7 @@ import { useNetworkStatus } from '@platform/network';
 import { useSessionStore } from '@platform/store/sessionStore';
 import { captureException } from '@platform/utils/captureException';
 import type { PlateKg } from '@shared/constants/plates';
+import { ExerciseName } from '@shared/ui/ExerciseName';
 import {
   getAllExercises,
   getExerciseType,
@@ -1026,9 +1027,10 @@ export default function SessionScreen() {
               const auxAdapt = auxAdaptations[aw.exercise];
               return (
                 <View key={aw.exercise} style={styles.auxExercise}>
-                  <Text style={styles.auxExerciseName}>
-                    {formatExerciseName(aw.exercise)}
-                  </Text>
+                  <ExerciseName
+                    name={aw.exercise}
+                    nameStyle={styles.auxExerciseName}
+                  />
 
                   {auxAdapt?.adaptationType === 'weight_reduced' && (
                     <View style={styles.adaptationBanner}>
@@ -1096,9 +1098,10 @@ export default function SessionScreen() {
                   const auxAdapt = auxAdaptations[aw.exercise];
                   return (
                     <View key={aw.exercise} style={styles.auxExercise}>
-                      <Text style={styles.auxExerciseName}>
-                        {formatExerciseName(aw.exercise)}
-                      </Text>
+                      <ExerciseName
+                        name={aw.exercise}
+                        nameStyle={styles.auxExerciseName}
+                      />
                       {aw.topUpReason && (
                         <Text style={styles.topUpReason}>{aw.topUpReason}</Text>
                       )}
@@ -1167,9 +1170,10 @@ export default function SessionScreen() {
               return (
                 <View key={exercise} style={styles.auxExercise}>
                   <View style={styles.adHocExerciseHeader}>
-                    <Text style={styles.auxExerciseName}>
-                      {formatExerciseName(exercise)}
-                    </Text>
+                    <ExerciseName
+                      name={exercise}
+                      nameStyle={styles.auxExerciseName}
+                    />
                     <TouchableOpacity
                       onPress={() => handleAddAdHocSet(exercise)}
                       hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}

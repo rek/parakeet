@@ -14,6 +14,7 @@ import { useAuxiliaryPools } from '@modules/settings';
 import { MuscleChips } from '@modules/training-volume';
 import type { Lift, MuscleGroup } from '@parakeet/shared-types';
 import { TRAINING_LIFTS } from '@shared/constants/training';
+import { ExerciseName } from '@shared/ui/ExerciseName';
 import { getExerciseType } from '@shared/utils/exercise-lookup';
 import { router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -232,9 +233,7 @@ function PoolList({ pool, onReorder, onRemove, styles }: PoolListProps) {
             <Text style={styles.poolPosition}>{i + 1}.</Text>
             <View style={styles.poolExerciseCol}>
               <View style={styles.poolExerciseRow}>
-                <Text style={styles.poolExercise} numberOfLines={1}>
-                  {ex}
-                </Text>
+                <ExerciseName name={ex} nameStyle={styles.poolExercise} />
                 {isBW && (
                   <View style={styles.bwBadge}>
                     <Text style={styles.bwBadgeText}>BW</Text>

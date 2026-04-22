@@ -1,7 +1,7 @@
 import { StyleSheet, Text, View } from 'react-native';
 
 import type { ActualSet } from '@parakeet/shared-types';
-import { capitalize } from '@shared/utils/string';
+import { ExerciseName } from '@shared/ui/ExerciseName';
 import { weightGramsToKg } from '@shared/utils/weight';
 
 import { radii, spacing, typography } from '../../../theme';
@@ -34,9 +34,7 @@ export function AuxResultsTable({
             sets.every((s) => s.weight_grams === 0));
         return (
           <View key={exercise}>
-            <Text style={styles.sectionHeader}>
-              {capitalize(exercise.replace(/_/g, ' '))}
-            </Text>
+            <ExerciseName name={exercise} nameStyle={styles.sectionHeader} />
             <View style={styles.setsTable}>
               <View style={styles.tableHeader}>
                 <Text style={[styles.tableCell, styles.tableCellSet]}>

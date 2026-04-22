@@ -3,6 +3,13 @@ export function capitalize(s: string | null | undefined): string {
   return s.charAt(0).toUpperCase() + s.slice(1);
 }
 
+export function formatExerciseName(name: string): string {
+  return name
+    .split('_')
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ');
+}
+
 /** Build the header label for a session (e.g. "Squat — Heavy" or "Ad-Hoc Workout"). */
 export function sessionLabel(meta: {
   primary_lift?: string | null;
