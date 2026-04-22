@@ -229,8 +229,8 @@ describe('getMusclesForLift — exercise name lookup', () => {
     expect(muscles.find((m) => m.muscle === 'chest')?.contribution).toBe(0.5);
   });
 
-  it('Overhead Press maps to shoulders primary, not chest', () => {
-    const muscles = getMusclesForLift('bench', 'Overhead Press');
+  it('Barbell Overhead Press maps to shoulders primary, not chest', () => {
+    const muscles = getMusclesForLift('bench', 'Barbell Overhead Press');
     expect(muscles.find((m) => m.muscle === 'shoulders')?.contribution).toBe(
       1.0
     );

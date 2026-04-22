@@ -59,7 +59,8 @@ At the reference 1RM, output equals the linear formula. Above it, weight grows s
 | Hack Squat             | squat           | 0.40      | weighted |
 | Close-Grip Bench       | bench           | 0.80      | weighted |
 | Dumbbell Incline Bench | bench           | 0.28      | weighted |
-| Overhead Press         | bench           | 0.58      | weighted |
+| Barbell Overhead Press | bench           | 0.58      | weighted |
+| Dumbbell Overhead Press| bench           | 0.25      | weighted |
 | JM Press               | bench           | 0.50      | weighted |
 | Romanian Deadlift      | deadlift        | 0.70      | weighted |
 | Rack Pull              | deadlift        | 1.05      | weighted |

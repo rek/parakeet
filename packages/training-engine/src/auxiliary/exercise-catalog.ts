@@ -760,10 +760,9 @@ export const EXERCISE_CATALOG: ExerciseCatalogEntry[] = [
     complexityTier: 'simple',
   },
 
-  // ── General — no single-lift affinity ─────────────────────────────────────
   {
-    name: 'Overhead Press',
-    associatedLift: null,
+    name: 'Barbell Overhead Press',
+    associatedLift: 'bench',
     primaryMuscles: ['shoulders', 'triceps'],
     type: 'weighted',
     muscleContributions: [
@@ -774,6 +773,21 @@ export const EXERCISE_CATALOG: ExerciseCatalogEntry[] = [
     weightPct: 0.58,
     repTarget: 8,
   },
+  {
+    name: 'Dumbbell Overhead Press',
+    associatedLift: 'bench',
+    primaryMuscles: ['shoulders', 'triceps'],
+    type: 'weighted',
+    muscleContributions: [
+      { muscle: 'shoulders', contribution: 1.0 },
+      { muscle: 'triceps', contribution: 1.0 },
+      { muscle: 'upper_back', contribution: 0.5 },
+    ],
+    weightPct: 0.25,
+    repTarget: 10,
+  },
+
+  // ── General — no single-lift affinity ─────────────────────────────────────
   {
     name: 'Chin Up (weighted)',
     associatedLift: null,

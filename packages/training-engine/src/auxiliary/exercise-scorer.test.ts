@@ -153,7 +153,7 @@ describe('exercise-scorer / specificity', () => {
   it('prefers same-lift exercises', () => {
     const ctx = baseCtx({ primaryLift: 'squat' });
     const same = scoreExercise('Pause Squat', ctx); // associatedLift: squat
-    const general = scoreExercise('Overhead Press', ctx); // associatedLift: null
+    const general = scoreExercise('Pull-ups', ctx); // associatedLift: null
     const cross = scoreExercise('Close-Grip Barbell Bench Press', ctx); // associatedLift: bench
     expect(same.breakdown['specific']).toBeGreaterThan(general.breakdown['specific']);
     expect(general.breakdown['specific']).toBeGreaterThan(
