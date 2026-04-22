@@ -253,7 +253,7 @@ export interface CycleCompletionInput {
 export interface CycleCompletionResult {
   isComplete: boolean;
   completionPct: number;
-  qualifiesForBadge: boolean; // completionPct >= 0.80
+  qualifiesForBadge: boolean; // all sessions completed or disruption-skipped
 }
 
 /**
@@ -272,8 +272,8 @@ export function checkCycleCompletion(
 
   const completionPct =
     (completedSessions + skippedWithDisruption) / totalScheduledSessions;
-  const qualifiesForBadge = completionPct >= 0.8;
   const isComplete = completionPct >= 1.0;
+  const qualifiesForBadge = isComplete;
 
   return { isComplete, completionPct, qualifiesForBadge };
 }

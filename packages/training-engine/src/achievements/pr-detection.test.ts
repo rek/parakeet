@@ -412,14 +412,14 @@ describe('computeStreak', () => {
 // ---------------------------------------------------------------------------
 
 describe('checkCycleCompletion', () => {
-  it('16/20 sessions completed, 0 disruptions → 80% → qualifies', () => {
+  it('16/20 sessions completed, 0 disruptions → 80% → does not qualify (sessions remain)', () => {
     const result = checkCycleCompletion({
       totalScheduledSessions: 20,
       completedSessions: 16,
       skippedWithDisruption: 0,
     });
     expect(result.completionPct).toBe(0.8);
-    expect(result.qualifiesForBadge).toBe(true);
+    expect(result.qualifiesForBadge).toBe(false);
     expect(result.isComplete).toBe(false);
   });
 
@@ -455,14 +455,14 @@ describe('checkCycleCompletion', () => {
     expect(result.isComplete).toBe(false);
   });
 
-  it('exactly 80% with disruptions counted → qualifies', () => {
+  it('exactly 80% with disruptions counted → does not qualify (sessions remain)', () => {
     const result = checkCycleCompletion({
       totalScheduledSessions: 10,
       completedSessions: 6,
       skippedWithDisruption: 2,
     });
     expect(result.completionPct).toBe(0.8);
-    expect(result.qualifiesForBadge).toBe(true);
+    expect(result.qualifiesForBadge).toBe(false);
   });
 
   it('isComplete = true only at 100%', () => {

@@ -1,3 +1,4 @@
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { getActiveDisruptions } from '@modules/disruptions';
 import {
   getProgramCompletionCounts,
@@ -112,17 +113,22 @@ export async function detectAchievements(
 
   // Unending programs have no fixed session count — cycle badge is not applicable.
   if (sessionContext.programId && sessionContext.programMode !== 'unending') {
-    const { total, completed, skipped } = await getProgramCompletionCounts(
-      sessionContext.programId,
-      userId
-    );
-    const cycleResult = checkCycleCompletion({
-      totalScheduledSessions: total,
-      completedSessions: completed,
-      skippedWithDisruption: skipped,
-    });
-    if (cycleResult.qualifiesForBadge) {
-      result.cycleBadgeEarned = true;
+    const dedupKey = `cycle_badge_shown_${sessionContext.programId}`;
+    const alreadyShown = await AsyncStorage.getItem(dedupKey);
+    if (!alreadyShown) {
+      const { total, completed, skipped } = await getProgramCompletionCounts(
+        sessionContext.programId,
+        userId
+      );
+      const cycleResult = checkCycleCompletion({
+        totalScheduledSessions: total,
+        completedSessions: completed,
+        skippedWithDisruption: skipped,
+      });
+      if (cycleResult.qualifiesForBadge) {
+        result.cycleBadgeEarned = true;
+        await AsyncStorage.setItem(dedupKey, '1');
+      }
     }
   }
 
