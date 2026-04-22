@@ -51,22 +51,35 @@ describe('generateProgram — 10-week 3-day', () => {
     });
   });
 
-  it('week 4 (block 2): squat/heavy, bench/rep, deadlift/explosive', () => {
+  it('week 4: deload (every 4th week)', () => {
     const week4 = result.sessions.filter((s) => s.weekNumber === 4);
-    expect(week4[0]).toMatchObject({
+    expect(week4).toHaveLength(3);
+    week4.forEach((s) => {
+      expect(s.isDeload).toBe(true);
+      expect(s.intensityType).toBe('deload');
+      expect(s.blockNumber).toBeNull();
+    });
+  });
+
+  it('week 5 (first week of block 2): squat/heavy, bench/rep, deadlift/explosive', () => {
+    const week5 = result.sessions.filter((s) => s.weekNumber === 5);
+    expect(week5[0]).toMatchObject({
       primaryLift: 'squat',
       intensityType: 'heavy',
       blockNumber: 2,
+      isDeload: false,
     });
-    expect(week4[1]).toMatchObject({
+    expect(week5[1]).toMatchObject({
       primaryLift: 'bench',
       intensityType: 'rep',
       blockNumber: 2,
+      isDeload: false,
     });
-    expect(week4[2]).toMatchObject({
+    expect(week5[2]).toMatchObject({
       primaryLift: 'deadlift',
       intensityType: 'explosive',
       blockNumber: 2,
+      isDeload: false,
     });
   });
 

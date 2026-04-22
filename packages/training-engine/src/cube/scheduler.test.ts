@@ -12,20 +12,21 @@ import {
   nextTrainingDate,
 } from './scheduler';
 
+// Tests cover only training weeks (non-deload). Deload weeks (multiples of 4
+// or final week) are handled by generateDeloadWeek and never call these.
 describe('getBlockNumber', () => {
   it.each([
     [1, 1],
     [2, 1],
     [3, 1],
-    [4, 2],
+    // week 4 = deload, skipped
     [5, 2],
     [6, 2],
-    [7, 3],
-    [8, 3],
+    [7, 2],
+    // week 8 = deload, skipped
     [9, 3],
-    [10, 4],
-    [11, 4],
-    [12, 4],
+    [10, 3],
+    [11, 3],
   ])('week %i → block %i', (week, block) => {
     expect(getBlockNumber(week)).toBe(block);
   });
@@ -36,25 +37,35 @@ describe('getWeekInBlock', () => {
     [1, 1],
     [2, 2],
     [3, 3],
-    [4, 1],
-    [5, 2],
-    [6, 3],
-    [7, 1],
-    [8, 2],
-    [9, 3],
+    // week 4 = deload, skipped
+    [5, 1],
+    [6, 2],
+    [7, 3],
+    // week 8 = deload, skipped
+    [9, 1],
+    [10, 2],
+    [11, 3],
   ])('week %i → weekInBlock %i', (week, wib) => {
     expect(getWeekInBlock(week)).toBe(wib);
   });
 });
 
 describe('isDeloadWeek', () => {
-  it('returns true when weekNumber === totalWeeks', () => {
+  it('returns true for final week', () => {
     expect(isDeloadWeek(10, 10)).toBe(true);
   });
 
-  it('returns false for non-final weeks', () => {
-    expect(isDeloadWeek(9, 10)).toBe(false);
+  it('returns true every 4th week (mid-cycle deloads)', () => {
+    expect(isDeloadWeek(4, 12)).toBe(true);
+    expect(isDeloadWeek(8, 12)).toBe(true);
+    expect(isDeloadWeek(12, 12)).toBe(true);
+  });
+
+  it('returns false for non-deload weeks', () => {
     expect(isDeloadWeek(1, 10)).toBe(false);
+    expect(isDeloadWeek(3, 12)).toBe(false);
+    expect(isDeloadWeek(5, 12)).toBe(false);
+    expect(isDeloadWeek(9, 12)).toBe(false);
   });
 });
 
@@ -74,24 +85,24 @@ describe('getIntensityTypeForWeek — all 9 week/lift combinations', () => {
     expect(getIntensityTypeForWeek(week, lift)).toBe(expected);
   });
 
-  // Block 2 repeats the same rotation (weeks 4-6)
+  // Block 2 starts at week 5 (week 4 is deload)
   it.each([
-    [4, 'squat', 'heavy'],
-    [4, 'bench', 'rep'],
-    [4, 'deadlift', 'explosive'],
-    [6, 'squat', 'rep'],
-    [6, 'bench', 'explosive'],
-    [6, 'deadlift', 'heavy'],
+    [5, 'squat', 'heavy'],
+    [5, 'bench', 'rep'],
+    [5, 'deadlift', 'explosive'],
+    [7, 'squat', 'rep'],
+    [7, 'bench', 'explosive'],
+    [7, 'deadlift', 'heavy'],
   ] as const)('block 2: week %i %s → %s', (week, lift, expected) => {
     expect(getIntensityTypeForWeek(week, lift)).toBe(expected);
   });
 
-  // Block 4 (weeks 10-12) cycles back to block-1 rotation (week-in-block = 1)
+  // Block 3 starts at week 9 (week 8 is deload) — rotation repeats from block-1
   it.each([
-    [10, 'squat', 'heavy'],
-    [10, 'bench', 'rep'],
-    [10, 'deadlift', 'explosive'],
-  ] as const)('block 4: week %i %s → %s', (week, lift, expected) => {
+    [9, 'squat', 'heavy'],
+    [9, 'bench', 'rep'],
+    [9, 'deadlift', 'explosive'],
+  ] as const)('block 3: week %i %s → %s', (week, lift, expected) => {
     expect(getIntensityTypeForWeek(week, lift)).toBe(expected);
   });
 });

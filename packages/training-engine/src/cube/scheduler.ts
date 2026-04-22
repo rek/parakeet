@@ -68,16 +68,22 @@ export function nextDateForWeekday(weekday: number): Date {
   return d;
 }
 
+// Count training weeks (exclude every 4th week which is a deload).
+// Only valid for non-deload weeks — deload weeks are handled by generateDeloadWeek.
+function trainingWeekIndex(weekNumber: number): number {
+  return weekNumber - Math.floor(weekNumber / 4);
+}
+
 export function getBlockNumber(weekNumber: number): number {
-  return Math.floor((weekNumber - 1) / 3) + 1;
+  return Math.ceil(trainingWeekIndex(weekNumber) / 3);
 }
 
 export function getWeekInBlock(weekNumber: number): 1 | 2 | 3 {
-  return (((weekNumber - 1) % 3) + 1) as 1 | 2 | 3;
+  return (((trainingWeekIndex(weekNumber) - 1) % 3) + 1) as 1 | 2 | 3;
 }
 
 export function isDeloadWeek(weekNumber: number, totalWeeks: number): boolean {
-  return weekNumber === totalWeeks;
+  return weekNumber % 4 === 0 || weekNumber === totalWeeks;
 }
 
 export function getIntensityTypeForWeek(
