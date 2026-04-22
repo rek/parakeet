@@ -4,6 +4,25 @@ Exercise types, weight scaling, rep targets, and auxiliary processing rules.
 
 ---
 
+## Exercise Naming Convention
+
+Format: `{Equipment} {Movement}` — equipment prefix first, always.
+
+| Implement  | Prefix      | Example                    |
+|------------|-------------|----------------------------|
+| Barbell    | `Barbell`   | `Barbell Overhead Press`   |
+| Dumbbell   | `Dumbbell`  | `Dumbbell Romanian Deadlift` |
+| Kettlebell | `Kettlebell`| `Kettlebell Swing`         |
+| Cable      | `Cable`     | `Cable Curl`               |
+| Machine    | no prefix   | `Leg Press`, `Hack Squat`  |
+| Bodyweight | no prefix   | `Pull-ups`, `Dips`         |
+
+**Why this matters:** the weight scaling system (`computeAuxWeight`) detects implement type by checking whether the name *starts with* `Dumbbell` or `Kettlebell`. A name like `Romanian Dumbbell Deadlift` would silently get barbell linear scaling instead of the correct sqrt scaling. Always put the equipment first.
+
+When adding a new exercise, use the explicit barbell/dumbbell variant names rather than a bare movement name (e.g. `Barbell Row` not `Row`). If the exercise exists for multiple implements, add a separate catalog entry for each.
+
+---
+
 ## Exercise Types
 
 | Type       | Weight        | Reps            | RPE/Rest          |
@@ -63,7 +82,8 @@ At the reference 1RM, output equals the linear formula. Above it, weight grows s
 | Dumbbell Overhead Press| bench           | 0.25      | weighted |
 | JM Press               | bench           | 0.50      | weighted |
 | Romanian Deadlift      | deadlift        | 0.70      | weighted |
-| Rack Pull              | deadlift        | 1.05      | weighted |
+| Rack Pull              | deadlift        | 1.05      | weighted | subtitle: Above the knee |
+| Rack Pull Below Knee   | deadlift        | 0.95      | weighted | subtitle: Below the knee |
 | Block Pulls            | deadlift        | 0.95      | weighted |
 | Good Mornings          | deadlift        | 0.40      | weighted |
 | Lat Pulldown           | deadlift        | 0.28      | weighted |
