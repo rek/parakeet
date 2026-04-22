@@ -100,3 +100,12 @@ export async function listPrograms(userId: string): Promise<ProgramListItem[]> {
     created_at: row.created_at,
   }));
 }
+
+export async function fetchReviewedProgramIds(userId: string): Promise<Set<string>> {
+  const { data, error } = await typedSupabase
+    .from('cycle_reviews')
+    .select('program_id')
+    .eq('user_id', userId);
+  if (error) throw error;
+  return new Set((data ?? []).map((r) => r.program_id));
+}

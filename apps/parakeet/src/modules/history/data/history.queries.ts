@@ -2,6 +2,7 @@
 import type { Lift } from '@parakeet/shared-types';
 import { queryOptions, skipToken } from '@tanstack/react-query';
 
+import { fetchReviewedProgramIds } from './history.repository';
 import {
   getPerformanceByLift,
   getPerformanceTrends,
@@ -65,5 +66,11 @@ export const historyQueries = {
       queryFn: userId
         ? () => getWeeklyHeaviestPerLift(userId, weeks)
         : skipToken,
+    }),
+
+  reviewedProgramIds: (userId: string | undefined) =>
+    queryOptions({
+      queryKey: ['cycle-review', 'reviewed-ids', userId] as const,
+      queryFn: userId ? () => fetchReviewedProgramIds(userId) : skipToken,
     }),
 };

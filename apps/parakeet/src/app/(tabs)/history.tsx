@@ -82,6 +82,7 @@ export default function HistoryScreen() {
     trends,
     sessions,
     programs,
+    reviewedProgramIds,
     volume,
     volumeLoading,
     volumeKg,
@@ -722,15 +723,17 @@ export default function HistoryScreen() {
                         : ''}
                     </Text>
                   </View>
-                  <TouchableOpacity
-                    style={styles.reviewButton}
-                    onPress={() =>
-                      router.push(`/history/cycle-review/${program.id}`)
-                    }
-                    activeOpacity={0.8}
-                  >
-                    <Text style={styles.reviewButtonText}>Review</Text>
-                  </TouchableOpacity>
+                  {reviewedProgramIds?.has(program.id) && (
+                    <TouchableOpacity
+                      style={styles.reviewButton}
+                      onPress={() =>
+                        router.push(`/history/cycle-review/${program.id}`)
+                      }
+                      activeOpacity={0.8}
+                    >
+                      <Text style={styles.reviewButtonText}>Review</Text>
+                    </TouchableOpacity>
+                  )}
                 </View>
               ))}
             </View>
