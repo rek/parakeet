@@ -1,13 +1,17 @@
+// @spec docs/features/session/spec-lifecycle.md
 import {
   appendNextUnendingSession,
   fetchActiveProgramMode,
   type UnendingProgramRef,
 } from '@modules/program';
-import type { Lift } from '@parakeet/shared-types';
+import type { Lift, MuscleGroup } from '@parakeet/shared-types';
 import { LiftSchema } from '@parakeet/shared-types';
 import {
+  computeNextUnendingLift,
   DEFAULT_TRAINING_DAYS,
   getDefaultThresholds,
+  getPrimaryMusclesForSession,
+  getWorstSoreness,
   isMakeupWindowExpired,
   localDateString,
   nextTrainingDate,
@@ -15,8 +19,10 @@ import {
 } from '@parakeet/training-engine';
 import type {
   CompletedSetLog,
+  IntensityTypeSignals,
   SessionLogSummary,
   SessionRef,
+  SorenessLevel,
 } from '@parakeet/training-engine';
 import { captureException } from '@platform/utils/captureException';
 import * as Sentry from '@sentry/react-native';
@@ -621,12 +627,49 @@ async function generateNextUnendingSession(
     program.id,
     userId
   );
+
+  const nextLift = computeNextUnendingLift({
+    sessionCounter: program.unending_session_counter,
+    trainingDaysPerWeek: program.training_days_per_week,
+    lastCompletedLift,
+  });
+
+  const [sorenessRatings, lastCompletedAt, recentLogs] = await Promise.all([
+    getLatestSorenessRatings(userId),
+    fetchLastCompletedAtForLift(userId, nextLift),
+    getRecentLogsForLift(userId, nextLift, 3),
+  ]);
+
+  const primaryMuscleSoreness: number | null = sorenessRatings
+    ? getWorstSoreness(
+        getPrimaryMusclesForSession(nextLift),
+        sorenessRatings as Partial<Record<MuscleGroup, SorenessLevel>>
+      )
+    : null;
+
+  const daysSinceLastSession: number | null = lastCompletedAt?.completed_at
+    ? Math.floor(
+        (Date.now() - new Date(lastCompletedAt.completed_at).getTime()) /
+          86_400_000
+      )
+    : null;
+
+  const intensitySignals: IntensityTypeSignals = {
+    primaryMuscleSoreness,
+    daysSinceLastSession,
+    recentRpe: recentLogs
+      .map((l) => l.actual_rpe)
+      .filter((r): r is number => r !== null),
+    lastIntensityType: recentLogs[0]?.intensity_type ?? null,
+  };
+
   try {
     await appendNextUnendingSession(
       program,
       userId,
       plannedDate,
-      lastCompletedLift
+      lastCompletedLift,
+      intensitySignals
     );
   } catch (err: unknown) {
     // Unique constraint violation (23505) means another call already inserted —

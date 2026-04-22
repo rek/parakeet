@@ -1,5 +1,6 @@
+// @spec docs/features/programs/spec-unending.md
 import type { Lift } from '@parakeet/shared-types';
-import { nextUnendingSession } from '@parakeet/training-engine';
+import { nextUnendingSession, type IntensityTypeSignals } from '@parakeet/training-engine';
 
 import {
   insertSessionRows,
@@ -19,12 +20,14 @@ export async function appendNextUnendingSession(
   program: UnendingProgramRef,
   userId: string,
   plannedDate: string,
-  lastCompletedLift?: Lift | null
+  lastCompletedLift?: Lift | null,
+  intensitySignals?: IntensityTypeSignals
 ): Promise<void> {
   const next = nextUnendingSession({
     sessionCounter: program.unending_session_counter,
     trainingDaysPerWeek: program.training_days_per_week,
     lastCompletedLift,
+    intensitySignals,
   });
 
   await insertSessionRows([

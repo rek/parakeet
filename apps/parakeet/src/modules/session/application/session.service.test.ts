@@ -23,6 +23,9 @@ const mockNextTrainingDate = vi.hoisted(() =>
 
 const mockFetchLastCompletedLiftForProgram = vi.hoisted(() => vi.fn());
 const mockFetchHasCompletedSessionToday = vi.hoisted(() => vi.fn());
+const mockGetLatestSorenessRatings = vi.hoisted(() => vi.fn().mockResolvedValue(null));
+const mockFetchLastCompletedAtForLift = vi.hoisted(() => vi.fn().mockResolvedValue(null));
+const mockFetchRecentLogsForLift = vi.hoisted(() => vi.fn().mockResolvedValue([]));
 
 vi.mock('../data/session.repository', () => ({
   fetchTodaySession: mockFetchTodaySession,
@@ -31,6 +34,9 @@ vi.mock('../data/session.repository', () => ({
   fetchPlannedSessionForProgram: mockFetchPlannedSessionForProgram,
   fetchLastCompletedLiftForProgram: mockFetchLastCompletedLiftForProgram,
   fetchHasCompletedSessionToday: mockFetchHasCompletedSessionToday,
+  getLatestSorenessRatings: mockGetLatestSorenessRatings,
+  fetchLastCompletedAtForLift: mockFetchLastCompletedAtForLift,
+  fetchRecentLogsForLift: mockFetchRecentLogsForLift,
 }));
 
 vi.mock('@modules/program', () => ({
@@ -60,6 +66,9 @@ vi.mock('@parakeet/training-engine', () => ({
   getDefaultThresholds: () => ({}),
   isMakeupWindowExpired: () => false,
   suggestProgramAdjustments: () => [],
+  computeNextUnendingLift: () => 'squat',
+  getPrimaryMusclesForSession: () => ['quads', 'glutes', 'lower_back'],
+  getWorstSoreness: () => null,
 }));
 
 vi.mock('@parakeet/shared-types', () => ({

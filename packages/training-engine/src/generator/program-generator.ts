@@ -9,6 +9,8 @@ import {
   getIntensityTypeForWeek,
   getWeekInBlock,
   isDeloadWeek,
+  selectIntensityTypeForUnending,
+  type IntensityTypeSignals,
 } from '../cube/scheduler';
 import {
   AuxiliaryAssignment,
@@ -109,6 +111,19 @@ export interface NextUnendingSessionInput {
   sessionCounter: number; // program.unending_session_counter (0-based)
   trainingDaysPerWeek: number;
   lastCompletedLift?: Lift | null; // history-based: rotate past this lift
+  intensitySignals?: IntensityTypeSignals; // when present, triggers dynamic selection
+}
+
+export function computeNextUnendingLift(input: {
+  sessionCounter: number;
+  trainingDaysPerWeek: number;
+  lastCompletedLift?: Lift | null;
+}): Lift {
+  const { sessionCounter, trainingDaysPerWeek, lastCompletedLift } = input;
+  const daysPerWeek = Math.max(1, trainingDaysPerWeek);
+  return lastCompletedLift
+    ? nextLiftAfter(lastCompletedLift)
+    : LIFTS[(sessionCounter % daysPerWeek) % LIFTS.length];
 }
 
 export interface NextUnendingSessionResult {
@@ -148,9 +163,11 @@ export function nextUnendingSession(
   // Deload every 4th week equivalent (week 4, 8, 12, …)
   const isDeload = weekNumber % 4 === 0;
 
-  const intensityType: IntensityType = isDeload
-    ? 'deload'
-    : getIntensityTypeForWeek(weekNumber, lift);
+  const intensityType: IntensityType = input.intensitySignals
+    ? selectIntensityTypeForUnending(lift, weekNumber, input.intensitySignals)
+    : isDeload
+      ? 'deload'
+      : getIntensityTypeForWeek(weekNumber, lift);
 
   return {
     weekNumber,

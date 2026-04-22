@@ -3,6 +3,7 @@ export {
   generateWeekSessions,
   generateDeloadWeek,
   nextUnendingSession,
+  computeNextUnendingLift,
 } from '../../generator/program-generator';
 export type {
   NextUnendingSessionInput,

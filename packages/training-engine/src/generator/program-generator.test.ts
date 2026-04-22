@@ -1,8 +1,11 @@
 import {
+  computeNextUnendingLift,
   generateAuxiliaryAssignments,
   generateProgram,
   nextUnendingSession,
 } from './program-generator';
+import type { IntensityTypeSignals } from '../cube/scheduler';
+import { selectIntensityTypeForUnending } from '../cube/scheduler';
 
 const START_DATE = new Date('2026-01-05'); // Monday
 
@@ -231,5 +234,86 @@ describe('nextUnendingSession — history-based lift rotation', () => {
     expect(result.isDeload).toBe(true);
     expect(result.intensityType).toBe('deload');
     expect(result.primaryLift).toBe('deadlift');
+  });
+});
+
+describe('computeNextUnendingLift', () => {
+  it('after squat → bench', () => {
+    expect(computeNextUnendingLift({ sessionCounter: 0, trainingDaysPerWeek: 3, lastCompletedLift: 'squat' })).toBe('bench');
+  });
+  it('after bench → deadlift', () => {
+    expect(computeNextUnendingLift({ sessionCounter: 0, trainingDaysPerWeek: 3, lastCompletedLift: 'bench' })).toBe('deadlift');
+  });
+  it('after deadlift → squat', () => {
+    expect(computeNextUnendingLift({ sessionCounter: 0, trainingDaysPerWeek: 3, lastCompletedLift: 'deadlift' })).toBe('squat');
+  });
+  it('null falls back to counter', () => {
+    // counter=1, daysPerWeek=3 → 1%3=1 → LIFTS[1%3] = bench
+    expect(computeNextUnendingLift({ sessionCounter: 1, trainingDaysPerWeek: 3, lastCompletedLift: null })).toBe('bench');
+  });
+});
+
+describe('selectIntensityTypeForUnending', () => {
+  const noSignals: IntensityTypeSignals = {
+    primaryMuscleSoreness: null,
+    daysSinceLastSession: null,
+    recentRpe: [],
+    lastIntensityType: null,
+  };
+
+  it('deload week overrides all other signals', () => {
+    expect(selectIntensityTypeForUnending('squat', 4, { ...noSignals, primaryMuscleSoreness: 9, daysSinceLastSession: 14 })).toBe('deload');
+  });
+
+  it('soreness >= 7 → rep', () => {
+    expect(selectIntensityTypeForUnending('squat', 1, { ...noSignals, primaryMuscleSoreness: 7 })).toBe('rep');
+    expect(selectIntensityTypeForUnending('squat', 1, { ...noSignals, primaryMuscleSoreness: 6 })).not.toBe('rep');
+  });
+
+  it('days >= 10 → heavy', () => {
+    expect(selectIntensityTypeForUnending('bench', 1, { ...noSignals, daysSinceLastSession: 10 })).toBe('heavy');
+  });
+
+  it('avg RPE >= 8.5 → explosive', () => {
+    expect(selectIntensityTypeForUnending('deadlift', 1, { ...noSignals, recentRpe: [9, 8, 9] })).toBe('explosive');
+    expect(selectIntensityTypeForUnending('deadlift', 1, { ...noSignals, recentRpe: [8, 8, 8] })).not.toBe('explosive');
+  });
+
+  it('avoids repeating last intensity type: heavy → explosive', () => {
+    expect(selectIntensityTypeForUnending('squat', 1, { ...noSignals, lastIntensityType: 'heavy' })).toBe('explosive');
+  });
+
+  it('avoids repeating last intensity type: explosive → rep', () => {
+    expect(selectIntensityTypeForUnending('squat', 1, { ...noSignals, lastIntensityType: 'explosive' })).toBe('rep');
+  });
+
+  it('avoids repeating last intensity type: rep → heavy', () => {
+    expect(selectIntensityTypeForUnending('squat', 1, { ...noSignals, lastIntensityType: 'rep' })).toBe('heavy');
+  });
+
+  it('lastIntensityType=deload treated as null — falls to default', () => {
+    expect(selectIntensityTypeForUnending('squat', 1, { ...noSignals, lastIntensityType: 'deload' })).toBe('heavy');
+  });
+
+  it('default with no signals → heavy', () => {
+    expect(selectIntensityTypeForUnending('squat', 1, noSignals)).toBe('heavy');
+  });
+
+  it('null soreness does not trigger rule 2', () => {
+    expect(selectIntensityTypeForUnending('squat', 1, { ...noSignals, primaryMuscleSoreness: null })).toBe('heavy');
+  });
+
+  it('empty recentRpe does not trigger rule 4', () => {
+    expect(selectIntensityTypeForUnending('squat', 1, { ...noSignals, recentRpe: [] })).toBe('heavy');
+  });
+
+  it('intensitySignals wired through nextUnendingSession', () => {
+    const result = nextUnendingSession({
+      sessionCounter: 0,
+      trainingDaysPerWeek: 3,
+      lastCompletedLift: null,
+      intensitySignals: { primaryMuscleSoreness: 8, daysSinceLastSession: null, recentRpe: [], lastIntensityType: null },
+    });
+    expect(result.intensityType).toBe('rep');
   });
 });

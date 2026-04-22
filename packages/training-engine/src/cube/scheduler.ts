@@ -10,6 +10,42 @@ const CUBE_ROTATION: Record<number, Record<Lift, IntensityType>> = {
   3: { squat: 'rep', bench: 'explosive', deadlift: 'heavy' },
 };
 
+export interface IntensityTypeSignals {
+  primaryMuscleSoreness: number | null;
+  daysSinceLastSession: number | null;
+  recentRpe: number[];
+  lastIntensityType: IntensityType | null;
+}
+
+const INTENSITY_ROTATION: IntensityType[] = ['heavy', 'explosive', 'rep'];
+
+export function selectIntensityTypeForUnending(
+  _lift: Lift,
+  weekNumber: number,
+  signals: IntensityTypeSignals
+): IntensityType {
+  const { primaryMuscleSoreness, daysSinceLastSession, recentRpe, lastIntensityType } = signals;
+
+  if (weekNumber % 4 === 0) return 'deload';
+
+  if (primaryMuscleSoreness !== null && primaryMuscleSoreness >= 7) return 'rep';
+
+  if (daysSinceLastSession !== null && daysSinceLastSession >= 10) return 'heavy';
+
+  const rpeValues = recentRpe.filter((r): r is number => r != null);
+  if (rpeValues.length > 0) {
+    const avg = rpeValues.reduce((a, b) => a + b, 0) / rpeValues.length;
+    if (avg >= 8.5) return 'explosive';
+  }
+
+  if (lastIntensityType !== null && lastIntensityType !== 'deload') {
+    const idx = INTENSITY_ROTATION.indexOf(lastIntensityType);
+    if (idx !== -1) return INTENSITY_ROTATION[(idx + 1) % INTENSITY_ROTATION.length];
+  }
+
+  return 'heavy';
+}
+
 // Default training weekdays per frequency (0=Sun, 1=Mon, ..., 6=Sat)
 export const DEFAULT_TRAINING_DAYS: Record<number, number[]> = {
   3: [1, 3, 5], // Mon, Wed, Fri
