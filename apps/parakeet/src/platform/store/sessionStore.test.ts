@@ -527,6 +527,53 @@ describe('selectPostRestWeight', () => {
   });
 });
 
+describe('initSession adaptation state reset (gh#193 regression)', () => {
+  beforeEach(() => {
+    useSessionStore.getState().reset();
+  });
+
+  it('resets consecutiveMainLiftFailures to 0 on new session', () => {
+    const store = useSessionStore.getState();
+    store.initSession('s1', [{ weight_kg: 100, reps: 5 }]);
+    store.recordSetFailure();
+    store.recordSetFailure();
+    expect(useSessionStore.getState().consecutiveMainLiftFailures).toBe(2);
+
+    store.initSession('s2', [{ weight_kg: 80, reps: 5 }]);
+    expect(useSessionStore.getState().consecutiveMainLiftFailures).toBe(0);
+  });
+
+  it('resets currentAdaptation to null on new session', () => {
+    const store = useSessionStore.getState();
+    store.initSession('s1', [{ weight_kg: 100, reps: 5 }]);
+    store.setAdaptation({
+      adaptationType: 'weight_reduced',
+      sets: [{ set_number: 1, weight_kg: 95, reps: 5 }],
+      restBonusSeconds: 0,
+      rationale: 'test',
+    });
+    expect(useSessionStore.getState().currentAdaptation).not.toBeNull();
+
+    store.initSession('s2', [{ weight_kg: 80, reps: 5 }]);
+    expect(useSessionStore.getState().currentAdaptation).toBeNull();
+  });
+
+  it('resets auxAdaptations to empty object on new session', () => {
+    const store = useSessionStore.getState();
+    store.initSession('s1', [{ weight_kg: 100, reps: 5 }]);
+    store.setAuxAdaptation('leg-curl', {
+      exercise: 'leg-curl',
+      adaptationType: 'weight_reduced',
+      sets: [{ set_number: 1, weight_kg: 40, reps: 10 }],
+      rationale: 'test',
+    });
+    expect(Object.keys(useSessionStore.getState().auxAdaptations)).toHaveLength(1);
+
+    store.initSession('s2', [{ weight_kg: 80, reps: 5 }]);
+    expect(useSessionStore.getState().auxAdaptations).toEqual({});
+  });
+});
+
 describe('concurrent timers', () => {
   beforeEach(() => {
     useSessionStore.getState().reset();

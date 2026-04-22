@@ -249,6 +249,9 @@ export const useSessionStore = create<SessionState>()(
           pendingRpeSetNumber: null,
           pendingAuxRpe: null,
           pendingAuxConfirmation: null,
+          consecutiveMainLiftFailures: 0,
+          currentAdaptation: null,
+          auxAdaptations: {},
         }),
 
       initAuxiliary: (work) =>
