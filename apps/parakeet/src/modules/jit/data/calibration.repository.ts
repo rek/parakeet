@@ -9,6 +9,24 @@ export interface CalibrationRow {
   mean_bias: number | null;
 }
 
+/** Fetch raw modifier calibration rows for running-mean computation. */
+export async function fetchRawModifierCalibrations(userId: string): Promise<
+  Array<{
+    modifier_source: string;
+    sample_count: number;
+    mean_bias: number | null;
+    adjustment: number;
+  }>
+> {
+  const { data, error } = await typedSupabase
+    .from('modifier_calibrations')
+    .select('modifier_source, sample_count, mean_bias, adjustment')
+    .eq('user_id', userId);
+
+  if (error) throw error;
+  return data ?? [];
+}
+
 /** Fetch all modifier calibrations for a user. Returns a map of source → adjustment. */
 export async function fetchModifierCalibrations(userId: string) {
   const { data, error } = await typedSupabase

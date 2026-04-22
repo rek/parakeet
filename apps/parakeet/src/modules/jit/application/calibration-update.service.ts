@@ -9,11 +9,17 @@ import type {
   ModifierSource,
   PrescriptionTrace,
 } from '@parakeet/training-engine';
-import { typedSupabase } from '@platform/supabase';
 import { captureException } from '@platform/utils/captureException';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-import { upsertModifierCalibration } from '../data/calibration.repository';
+import {
+  fetchRawModifierCalibrations,
+  upsertModifierCalibration,
+} from '../data/calibration.repository';
+import {
+  fetchSessionById,
+  fetchSessionLogBySessionId,
+} from '../../session/data/session.repository';
 
 /**
  * After session completion, extract trace modifiers + actual RPE and update
@@ -27,29 +33,20 @@ export async function updateModifierCalibrations({
   userId: string;
 }) {
   try {
-    // Fetch session trace + session log RPE
-    const { data: session } = await typedSupabase
-      .from('sessions')
-      .select('jit_output_trace')
-      .eq('id', sessionId)
-      .maybeSingle();
+    const [session, sessionLog] = await Promise.all([
+      fetchSessionById(sessionId),
+      fetchSessionLogBySessionId(sessionId),
+    ]);
 
     if (!session?.jit_output_trace) return;
-
-    const { data: log } = await typedSupabase
-      .from('session_logs')
-      .select('session_rpe')
-      .eq('session_id', sessionId)
-      .maybeSingle();
-
-    if (!log?.session_rpe) return;
+    if (!sessionLog?.session_rpe) return;
 
     const trace = session.jit_output_trace as unknown as PrescriptionTrace;
     if (!trace.mainLift?.weightDerivation?.modifiers?.length) return;
 
     // Extract RPE target from planned sets (first set's rpe_target)
     const rpeTarget = trace.mainLift.sets[0]?.rpeTarget ?? 8;
-    const rpeActual = log.session_rpe;
+    const rpeActual = sessionLog.session_rpe;
 
     // Extract samples from trace modifiers
     // Only calibrate sources where the JIT pipeline applies calibration adjustments
@@ -76,14 +73,10 @@ export async function updateModifierCalibrations({
       bySource.set(sample.modifierSource, existing);
     }
 
-    // Fetch existing samples from previous sessions for this user
-    const { data: existingCalibrations } = await typedSupabase
-      .from('modifier_calibrations')
-      .select('modifier_source, sample_count, mean_bias, adjustment')
-      .eq('user_id', userId);
+    const existingCalibrations = await fetchRawModifierCalibrations(userId);
 
     for (const [source, newSamples] of bySource) {
-      const existing = (existingCalibrations ?? []).find(
+      const existing = existingCalibrations.find(
         (c) => c.modifier_source === source
       );
 
