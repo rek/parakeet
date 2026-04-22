@@ -29,12 +29,29 @@ The integration is device-agnostic by design. Rather than coupling to a specific
 
 | Layer | Tool | Role |
 |-------|------|------|
-| Device | PineTime (InfiniTime), Bangle.js, or Gadgetbridge-compatible (Amazfit Bip/GTR, Mi Band, Casio, etc.) | HR, HRV, sleep, steps, SpO2 sensors |
-| Bridge | Gadgetbridge (F-Droid) | Open-source Android app. Syncs device data to Health Connect. Supports 40+ device families. |
+| Layer | Tool | Role |
+|-------|------|------|
+| Sleep/recovery strap | **Amazfit Helio Strap** (~$99) | HRV, sleep stages, SpO2, resting HR, 10-day battery. Screenless. Worn 24/7 except during training. No subscription. |
+| Workout HR | **Polar H10 chest strap** (~$90) | Best-in-class HR accuracy under barbell load. Optical wrist HR degrades with wrist compression + motion artifact during lifting. Polar Beat → Health Connect native. |
+| Bridge (Helio) | Zepp app (Android) | Syncs 26 data types to Health Connect natively. Setup: Profile → 3rd-party account linking → Health Connect. |
+| Bridge (Polar) | Polar Beat (Android) | Syncs Polar H10 data to Health Connect natively. |
 | API | Android Health Connect | Google's standardized health data layer. Read-only from Parakeet's perspective. |
 | RN binding | `react-native-health-connect` | Expo-compatible typed API for Health Connect records |
 
-This means Parakeet never communicates with the watch directly. The user sets up Gadgetbridge once (pair device, enable Health Connect sync), and Parakeet reads normalized data from Health Connect. If the user switches watches, nothing changes in Parakeet.
+**Why two devices:** Chest straps give the most accurate HR signal during compound lifts where wrist/arm optical sensors fail under load and wrist compression. The Helio Strap handles sleep and recovery tracking the rest of the time.
+
+**Helio Strap notes:**
+- Zepp → Health Connect confirmed working as of Jan 2025 update (26 types inc. HRV, sleep, HR)
+- One reported issue with HR data not syncing correctly to Health Connect — monitor on setup
+- Fallback: Gadgetbridge also supports many Amazfit devices if Zepp sync proves unreliable
+
+**Dismissed options:**
+- Oura Ring 4: no Health Connect support as of 2026; proprietary API + subscription required. Disqualified.
+- RingConn Gen 2: no confirmed Health Connect or Gadgetbridge support.
+- Colmi R02: viable budget ring (~$35 via Gadgetbridge) if Helio Strap is overkill.
+- Wrist watch (e.g. Amazfit GTR Mini, Garmin): viable single-device fallback but weaker HR accuracy under load.
+
+This means Parakeet never communicates with devices directly. The user sets up Zepp (Helio) and Polar Beat (H10) once, and Parakeet reads normalized data from Health Connect. If the user switches devices, nothing changes in Parakeet.
 
 ### Why Health Connect (not direct BLE)
 

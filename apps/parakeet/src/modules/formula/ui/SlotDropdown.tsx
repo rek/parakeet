@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 
 import { MuscleChips } from '@modules/training-volume';
+import { ExerciseName } from '@shared/ui/ExerciseName';
 import { getPrimaryMuscles } from '@shared/utils/getPrimaryMuscles';
 
 import { useTheme } from '../../../theme/ThemeContext';
@@ -119,9 +120,7 @@ export function SlotDropdown({
         onPress={() => setOpen(true)}
         activeOpacity={0.7}
       >
-        <Text style={styles.triggerText} numberOfLines={1}>
-          {value}
-        </Text>
+        <ExerciseName name={value} nameStyle={styles.triggerText} />
         <Text style={styles.chevron}>›</Text>
       </TouchableOpacity>
       <Modal
@@ -151,14 +150,13 @@ export function SlotDropdown({
                   onPress={() => select(ex)}
                   activeOpacity={0.7}
                 >
-                  <Text
-                    style={[
+                  <ExerciseName
+                    name={ex}
+                    nameStyle={[
                       styles.optionText,
                       ex === value && styles.optionSelected,
                     ]}
-                  >
-                    {ex}
-                  </Text>
+                  />
                   <MuscleChips muscles={getPrimaryMuscles(ex)} />
                 </TouchableOpacity>
               )}
