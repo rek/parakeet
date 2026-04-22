@@ -221,6 +221,58 @@ const FORCE_FDC: Record<string, string> = {
   'spinach': '168462',
   'vegetable oil': '171411', // Oil, soybean, salad or cooking (generic veg oil)
   'olive oil vinaigrette': '171413', // Oil, olive, salad or cooking
+  'pumpkin': '168449', // Pumpkin, cooked, boiled, drained, without salt
+  'brussels sprouts': '170383', // Brussels sprouts, raw
+  'celery': '169988', // Celery, raw
+  'tuna (canned in water)': '171986', // Fish, tuna, light, canned in water, without salt
+  'turkey (lean cuts)': '171098', // Turkey, whole, breast, meat only, raw
+  'cottage cheese': '173417', // Cheese, cottage, lowfat, 1% milkfat
+  'lamb (lean cuts)': '172491', // Lamb, loin, lean only, raw
+  'bok choy (pak choi)': '170390', // Cabbage, chinese (pak-choi), raw
+  'coconut milk (full fat)': '170172', // Coconut milk, raw (full fat)
+  'bean sprouts': '169957', // Mung beans, sprouted, raw
+  'kabocha / thai pumpkin (fak thong)': '169295', // Squash, winter, butternut, raw (closest kabocha proxy)
+  'shrimp': '175179', // Crustaceans, shrimp, raw
+  'morning glory (water spinach)': '169301', // Water convolvulus, raw
+  'long beans': '169222', // Yardlong bean, raw
+  'bamboo shoots': '169211', // Bamboo shoots, cooked, boiled, drained, without salt
+  'longan': '169089', // Longans, raw
+  'lychee': '169086', // Litchis, raw
+  'guava': '173044', // Guavas, common, raw
+  'pomelo': '167754', // Pummelo, raw
+  'jackfruit': '174687', // Jackfruit, raw
+  'taro': '168486', // Taro, cooked, without salt
+  'water chestnuts': '170066', // Waterchestnuts, chinese (matai), raw
+  'lotus root': '168430', // Lotus root, cooked, boiled, drained, without salt
+  'tamarind': '167763', // Tamarinds, raw
+  'fresh coconut meat': '170169', // Nuts, coconut meat, raw
+  'sticky rice': '169711', // Rice, white, glutinous, unenriched, cooked
+  'snow peas': '170010', // Peas, edible-podded, raw
+  'winged beans': '170476', // Winged beans, immature seeds, raw
+  'duck': '172410', // Duck, domesticated, meat only, raw
+  'grouper': '171962', // Fish, grouper, mixed species, raw
+  'starfruit': '171715', // Carambola, (starfruit), raw
+  'tilapia': '175176', // Fish, tilapia, raw
+  'artichoke': '169205', // Artichokes, (globe or french), raw
+  'turnip': '170465', // Turnips, raw
+  'radish': '169276', // Radishes, raw
+  'daikon radish': '168451', // Radishes, oriental, raw
+  'arugula': '169387', // Arugula, raw
+  'watercress': '170068', // Watercress, raw
+  'collard greens': '170406', // Collards, raw
+  'okra': '169260', // Okra, raw
+  'celeriac': '170400', // Celeriac, raw
+  'rutabaga': '168454', // Rutabagas, raw
+  'jicama': '170073', // Yambean (jicama), raw
+  'radicchio': '168564', // Radicchio, raw
+  'endive': '168412', // Endive, raw
+  'romaine lettuce': '169247', // Lettuce, cos or romaine, raw
+  'beet greens': '170375', // Beet greens, raw
+  'kohlrabi': '168424', // Kohlrabi, raw
+  'chayote': '170402', // Chayote, fruit, raw
+  'turnip greens': '170061', // Turnip greens, raw
+  'jerusalem artichoke': '169236', // Jerusalem-artichokes, raw
+  'iceberg lettuce': '169248', // Lettuce, iceberg (includes crisphead types), raw
 };
 
 const ALIASES: Record<string, string[]> = {

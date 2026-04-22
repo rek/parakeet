@@ -5,6 +5,12 @@ proteins,mackerel,yes,prioritize omega-3 rich varieties
 proteins,sardines,yes,prioritize omega-3 rich varieties
 proteins,basa fish,yes,
 proteins,other fatty fish,yes,
+proteins,tuna (canned in water),yes,omega-3 rich - prefer wild-caught; no-salt-added preferred
+proteins,turkey (lean cuts),yes,clean lean protein - breast meat only
+proteins,shrimp,yes,lean protein - anti-inflammatory omega-3s; very common in Thai cuisine
+proteins,duck,yes,poultry - lean when skinless; common in Thailand
+proteins,grouper,yes,lean white fish - very common in Southeast Asia
+proteins,tilapia,yes,lean white fish - widely available in Thailand
 proteins,buffalo/buff meat,yes,leaner than beef - permitted under Herbst (as exception) and keto-for-lipedema positions
 proteins,goat / chevon (lean cuts),yes,practical Nepal red-meat choice - permitted under keto-for-lipedema framing; diverges from Herbst baseline (see rad.md Protein choices)
 proteins,chicken and poultry,yes,
@@ -14,6 +20,7 @@ proteins,tempeh,yes,preferred over tofu - fermented
 proteins,pea-brown rice protein powder,yes,
 proteins,clean natural sausage,yes,occasionally - check ingredients
 proteins,beef (lean cuts),caution,contested - Herbst avoids red meat; keto-for-lipedema literature permits lean cuts in moderation. See rad.md Protein choices.
+proteins,lamb (lean cuts),caution,red meat - same stance as beef; lean loin or leg only
 proteins,pork (lean cuts),caution,same stance as beef - lean loin/tenderloin only; processed pork (bacon/ham) is a firm no.
 proteins,whey protein,caution,insulinogenic and contains IGF-1 - replace with pea protein
 proteins,processed meats with sodium nitrate,caution,pro-inflammatory - cross-camp consensus: cured/nitrated/smoked meats are out
@@ -31,6 +38,7 @@ dairy,full fat yoghurt (buffalo preferred),yes,
 dairy,commercial cow dairy,caution,possible A1 casein from crossbred herds in Nepal
 dairy,fresh unfermented cow milk cheese,caution,higher A1 casein
 dairy,large amounts of straight milk,caution,
+dairy,cottage cheese,caution,commercial cow dairy concern - prefer buffalo/goat dairy; useful high-protein fallback
 dairy,low fat dairy anything,no,
 dairy,flavored yoghurts with added sugar,no,
 dairy,commercial cow milk as primary drink,no,
@@ -38,6 +46,8 @@ fats_and_oils,olive oil,yes,primary cooking and dressing oil
 fats_and_oils,avocado oil,yes,
 fats_and_oils,butter (local),yes,
 fats_and_oils,coconut oil,yes,
+fats_and_oils,coconut milk (full fat),yes,Thai curries - high fat - anti-inflammatory MCTs
+fats_and_oils,fresh coconut meat,yes,high fat (33g/100g) - MCTs - anti-inflammatory
 fats_and_oils,avocado,yes,
 fats_and_oils,tahini,yes,
 fats_and_oils,sesame oil,yes,small finishing amounts only - omega-6 concern
@@ -57,6 +67,38 @@ vegetables,cucumber,yes,freely
 vegetables,capsicum,yes,freely
 vegetables,green beans,yes,freely - behaves as vegetable
 vegetables,asparagus,yes,freely
+vegetables,brussels sprouts,yes,freely - cruciferous - anti-inflammatory
+vegetables,celery,yes,freely - anti-inflammatory
+vegetables,bok choy (pak choi),yes,freely - leafy green common in Thailand
+vegetables,bean sprouts,yes,freely - mung bean sprouts common in Thai dishes
+vegetables,morning glory (water spinach),yes,freely - pak bung - staple Thai stir-fry green
+vegetables,bamboo shoots,yes,freely - very low carb - common in Thai curries
+vegetables,snow peas,yes,freely - edible pod - 4.9g net carbs
+vegetables,winged beans,yes,freely - high protein bean - anti-inflammatory
+vegetables,long beans,yes,moderate portions - yard-long bean - common in Thai cooking
+vegetables,arugula,yes,freely - anti-inflammatory
+vegetables,watercress,yes,freely - anti-inflammatory - high vitamin K
+vegetables,collard greens,yes,freely - cruciferous - anti-inflammatory
+vegetables,beet greens,yes,freely - high magnesium and potassium
+vegetables,turnip greens,yes,freely - cruciferous
+vegetables,endive,yes,freely - bitter greens support bile and lymphatic flow
+vegetables,romaine lettuce,yes,freely
+vegetables,iceberg lettuce,yes,freely
+vegetables,radish,yes,freely - anti-inflammatory
+vegetables,daikon radish,yes,freely - common in SE Asian cooking - aids digestion
+vegetables,okra,yes,freely - mucilaginous fiber anti-inflammatory - specific lymphatic support
+vegetables,radicchio,yes,freely - bitter - liver support
+vegetables,kohlrabi,yes,freely
+vegetables,jicama,yes,freely - prebiotic fiber
+vegetables,chayote,yes,freely
+vegetables,turnip,yes,moderate portions
+vegetables,artichoke,yes,moderate portions - high fiber - liver and lymphatic support
+vegetables,celeriac,yes,moderate portions
+vegetables,rutabaga,yes,moderate portions
+vegetables,lotus root,yes,moderate portions - high carb but anti-inflammatory
+vegetables,water chestnuts,caution,starchy - ~20g net carbs per 100g
+vegetables,taro,caution,very high carb (~30g net) - small portions only
+vegetables,jerusalem artichoke,caution,high carb but inulin prebiotic - small portions
 vegetables,mushrooms (all varieties),yes,freely - beta-glucans support lymphatic function
 vegetables,oyster mushrooms,yes,freely - high beta-glucan
 vegetables,shiitake mushrooms,yes,freely - immune and anti-inflammatory
@@ -70,6 +112,8 @@ vegetables,onions and garlic,yes,freely
 vegetables,carrots,yes,moderate portions
 vegetables,beetroot,yes,moderate portions
 vegetables,sweet potatoes,yes,moderate portions
+vegetables,pumpkin,yes,moderate portions - low GI - anti-inflammatory
+vegetables,kabocha / Thai pumpkin (fak thong),yes,moderate portions - Thai staple - higher carb than orange pumpkin
 vegetables,corn,no,high glycemic - zein protein similar to gluten
 vegetables,white potatoes,no,high glycemic - limited nutritional offset
 fruits,strawberries,yes,freely - high flavonoids
@@ -83,6 +127,12 @@ fruits,green apple,yes,moderate - eat skin for quercetin
 fruits,papaya,yes,moderate - digestive enzymes - anti-inflammatory
 fruits,oranges,yes,occasional - hesperidin has specific lymphatic benefits
 fruits,blueberries,yes,small portions - high anthocyanins
+fruits,starfruit,yes,freely - 3.9g net carbs - anti-inflammatory
+fruits,guava,yes,moderate - very high fiber (5.4g/100g) - anti-inflammatory
+fruits,longan,yes,small portions - 14g net carbs
+fruits,lychee,yes,small portions - 15g net carbs
+fruits,pomelo,yes,occasional - 8.6g net carbs - hesperidin lymphatic benefits (similar to oranges)
+fruits,jackfruit,caution,ripe = 22g net carbs; unripe/green jackfruit is lower carb and used as savoury
 fruits,bananas,no,high fructose - specifically problematic for lipedema
 fruits,pineapple,no,high fructose
 fruits,watermelon,no,high glycemic
@@ -93,6 +143,7 @@ grains_and_bread,millet pancakes,yes,gluten free
 grains_and_bread,homemade millet sourdough,yes,gluten free and fermented
 grains_and_bread,quinoa,yes,gluten free - complete protein - contains quercetin and kaempferol
 grains_and_bread,rice,yes,occasional - lower inflammatory load than wheat
+grains_and_bread,sticky rice,caution,very high GI - small portions only - common in Thailand
 grains_and_bread,wheat and all gluten-containing grains,no,primary RAD elimination
 grains_and_bread,oats,no,contain avenin similar to gluten - often cross-contaminated
 grains_and_bread,buckwheat,no,also allergy
@@ -160,6 +211,7 @@ condiments,turmeric,yes,anti-inflammatory
 condiments,kimchi,yes,fermented - prioritize
 condiments,babaganoush (fresh local),yes,
 condiments,tahini,yes,
+condiments,tamarind,caution,very high sugar (57g carbs/100g) - condiment amounts only; common in Thai cooking
 condiments,gochugaru/Korean chilli flakes,yes,capsaicin beneficial for lipedema
 condiments,doenjang,yes,fermented soy - preferred
 condiments,gochujang,caution,contains rice - small amounts only

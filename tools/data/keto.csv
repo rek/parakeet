@@ -6,8 +6,15 @@ proteins,sardines,yes,
 proteins,basa fish,yes,
 proteins,other fatty fish,yes,
 proteins,white fish,yes,
+proteins,tuna (canned in water),yes,zero carbs - lean protein
+proteins,turkey (lean cuts),yes,zero carbs - breast meat preferred
+proteins,shrimp,yes,zero carbs - excellent lean protein
+proteins,duck,yes,zero carbs - lean when skinless
+proteins,grouper,yes,zero carbs - lean white fish
+proteins,tilapia,yes,zero carbs - lean white fish
 proteins,buffalo/buff meat,yes,leaner than beef - excellent keto staple; A2 source for paneer/ghee too
 proteins,goat / chevon (lean cuts),yes,practical Nepal red-meat choice; keto-for-lipedema literature permits lean red meat in moderation
+proteins,lamb (lean cuts),yes,zero carbs - lean cuts
 proteins,beef (lean cuts),yes,lean cuts preferred (sirloin / round); grass-fed where available. Diverges from Herbst baseline - see rad.md.
 proteins,pork (lean cuts),yes,loin or tenderloin only; cured/processed pork (bacon/ham) cautioned due to nitrates and added sugar
 proteins,chicken and poultry,yes,
@@ -25,6 +32,7 @@ dairy,yak cheese,yes,naturally A2
 dairy,full fat buffalo milk yoghurt,yes,100g max per serving
 dairy,buffalo milk kefir,yes,small portions
 dairy,homemade buffalo milk paneer,yes,
+dairy,cottage cheese,yes,~2.7g carbs per 100g - moderate portions
 dairy,cream cheese,yes,
 dairy,brie and camembert,yes,
 dairy,milk as a drink,no,too much lactose
@@ -35,6 +43,8 @@ fats_and_oils,olive oil,yes,
 fats_and_oils,avocado oil,yes,
 fats_and_oils,butter,yes,
 fats_and_oils,coconut oil,yes,
+fats_and_oils,coconut milk (full fat),yes,Thai curries - ~3.3g net carbs per 100ml - watch total
+fats_and_oils,fresh coconut meat,yes,~6.2g net carbs - 33g fat - MCT rich
 fats_and_oils,avocado,yes,
 fats_and_oils,tahini,yes,
 fats_and_oils,sesame oil,yes,small finishing amounts only
@@ -54,6 +64,41 @@ vegetables,cucumber,yes,freely
 vegetables,capsicum,yes,freely
 vegetables,green beans,yes,freely - 3-4g net carbs per 100g
 vegetables,asparagus,yes,freely
+vegetables,brussels sprouts,yes,~5g net carbs per 100g - moderate portions
+vegetables,celery,yes,freely - ~1.4g net carbs per 100g
+vegetables,pumpkin,yes,~3.8g net carbs per 100g - moderate portions
+vegetables,bok choy (pak choi),yes,freely - ~1.2g net carbs per 100g
+vegetables,bean sprouts,yes,~4g net carbs per 100g - moderate portions
+vegetables,kabocha / Thai pumpkin (fak thong),caution,~10g net carbs per 100g cooked - small portions only
+vegetables,morning glory (water spinach),yes,freely - ~1g net carbs - common Thai green
+vegetables,bamboo shoots,yes,freely - ~0.9g net carbs
+vegetables,snow peas,yes,~4.9g net carbs - moderate portions
+vegetables,winged beans,yes,~4.3g net carbs - good protein too
+vegetables,arugula,yes,freely - ~2g net carbs
+vegetables,watercress,yes,freely - ~0.8g net carbs
+vegetables,collard greens,yes,freely - ~1.4g net carbs
+vegetables,beet greens,yes,freely - ~0.6g net carbs
+vegetables,turnip greens,yes,freely - ~3.9g net carbs
+vegetables,endive,yes,freely - ~0.2g net carbs
+vegetables,romaine lettuce,yes,freely - ~1.2g net carbs
+vegetables,iceberg lettuce,yes,freely - ~1.8g net carbs
+vegetables,radish,yes,freely - ~1.8g net carbs
+vegetables,daikon radish,yes,freely - ~2.5g net carbs
+vegetables,okra,yes,~4.2g net carbs - moderate portions
+vegetables,radicchio,yes,~3.6g net carbs
+vegetables,kohlrabi,yes,~2.6g net carbs
+vegetables,jicama,yes,~3.9g net carbs
+vegetables,chayote,yes,~2.8g net carbs
+vegetables,turnip,yes,~4.6g net carbs
+vegetables,artichoke,yes,~5.1g net carbs - moderate portions
+vegetables,long beans,caution,~8.3g net carbs - small portions only
+vegetables,celeriac,caution,~7.4g net carbs - small portions only
+vegetables,rutabaga,caution,~6.3g net carbs - small portions only
+vegetables,starfruit,yes,~3.9g net carbs - freely
+vegetables,lotus root,caution,~12.9g net carbs - very small portions
+vegetables,water chestnuts,no,~21g net carbs
+vegetables,taro,no,~29.5g net carbs
+vegetables,jerusalem artichoke,no,~15.8g net carbs
 vegetables,mushrooms (all varieties),yes,freely
 vegetables,aubergine/eggplant,yes,freely
 vegetables,bitter gourd/karela,yes,freely
@@ -75,6 +120,12 @@ fruits,blackberries,yes,~5g net carbs per 100g
 fruits,avocado,yes,~2g net carbs per 100g - freely
 fruits,lemon and lime,yes,freely
 fruits,goji berries,yes,very small portions only
+fruits,starfruit,yes,~3.9g net carbs - freely
+fruits,guava,caution,~8.9g net carbs but 5.4g fiber - small portions
+fruits,longan,no,~14g net carbs
+fruits,lychee,no,~15g net carbs
+fruits,pomelo,no,~8.6g net carbs - hard to eat only 100g
+fruits,jackfruit,no,~22g net carbs (ripe)
 fruits,bananas,no,
 fruits,pineapple,no,
 fruits,watermelon,no,
@@ -87,6 +138,7 @@ fruits,pomegranate,no,moderate carbs - avoid strict phase
 grains_and_bread,millet flour,yes,moderate portions only
 grains_and_bread,millet pancakes,yes,small portions
 grains_and_bread,homemade millet sourdough,yes,small portions
+grains_and_bread,sticky rice,no,~20g net carbs per 100g cooked
 grains_and_bread,oats,no,
 grains_and_bread,wheat bread,no,
 grains_and_bread,regular sourdough,no,
@@ -142,6 +194,7 @@ condiments,tahini,yes,
 condiments,mustard,yes,check for added sugar
 condiments,kimchi,yes,check for added sugar
 condiments,babaganoush (fresh local),yes,
+condiments,tamarind,no,~57g carbs per 100g - avoid even condiment amounts on strict keto
 condiments,refined sugar,no,
 condiments,honey,no,
 condiments,artificial sweeteners (sucralose/aspartame/acesulfame-K),no,
