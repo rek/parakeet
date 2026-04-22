@@ -1,3 +1,4 @@
+// @spec docs/features/auth/spec-auth.md
 import * as Sentry from '@sentry/react-native';
 import type {
   AuthChangeEvent,

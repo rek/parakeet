@@ -1,3 +1,4 @@
+// @spec docs/features/nutrition/spec-macro-targets.md
 import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   Linking,

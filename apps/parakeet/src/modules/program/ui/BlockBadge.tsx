@@ -1,3 +1,4 @@
+// @spec docs/features/programs/spec-program-screen.md
 import { useMemo } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 

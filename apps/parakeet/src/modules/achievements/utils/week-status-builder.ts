@@ -1,3 +1,4 @@
+// @spec docs/features/achievements/spec-screen.md
 import type { WeekStatus } from '../lib/engine-adapter';
 
 interface SessionRow {

@@ -1,3 +1,4 @@
+// @spec docs/features/social/spec-session-visibility.md
 import { useMemo, useState } from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 

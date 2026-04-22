@@ -1,3 +1,4 @@
+// @spec docs/features/social/spec-db-foundation.md
 import type { DbRow } from '@platform/supabase';
 import { typedSupabase } from '@platform/supabase';
 import { captureException } from '@platform/utils/captureException';

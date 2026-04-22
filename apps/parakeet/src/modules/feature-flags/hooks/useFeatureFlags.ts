@@ -1,3 +1,4 @@
+// @spec docs/features/settings-and-tools/spec-feature-flags.md
 /**
  * React Query hook for feature flags.
  *

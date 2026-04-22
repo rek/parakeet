@@ -1,3 +1,4 @@
+// @spec docs/features/social/spec-session-visibility.md
 import { typedSupabase } from '@platform/supabase';
 import { captureException } from '@platform/utils/captureException';
 

@@ -1,3 +1,4 @@
+// @spec docs/features/session/spec-planned-set-display.md
 import type { AuxiliaryWork } from '../model/types';
 import { fmtKg } from './fmtKg';
 import { formatExerciseName } from './formatExerciseName';

@@ -1,3 +1,4 @@
+// @spec docs/features/session/spec-auto-finalize.md
 // Pathological-path recovery. useSetPersistence + flushUnsyncedSets cover the
 // 99% case (local sets will re-sync on next mount). This hook surfaces the
 // rare case where the server has already marked the session skipped/missed

@@ -1,3 +1,4 @@
+// @spec docs/features/nutrition/spec-ui.md
 import { useEffect, useMemo, useState } from 'react';
 import {
   ActivityIndicator,

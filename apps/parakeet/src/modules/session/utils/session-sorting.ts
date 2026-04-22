@@ -1,3 +1,4 @@
+// @spec docs/features/session/spec-read.md
 import { INTENSITY_LABELS, LIFT_LABELS } from '@shared/constants';
 
 const STATUS_ORDER: Record<string, number> = {

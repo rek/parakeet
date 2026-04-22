@@ -1,3 +1,4 @@
+// @spec docs/features/programs/spec-formula-config.md
 import { typedSupabase } from '@platform/supabase';
 import type { DbInsert, DbRow, Json } from '@platform/supabase';
 

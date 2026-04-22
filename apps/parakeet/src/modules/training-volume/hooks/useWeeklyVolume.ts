@@ -1,3 +1,4 @@
+// @spec docs/features/volume/spec-augmentation.md
 import { useAuth } from '@modules/auth';
 import { getProfile } from '@modules/profile';
 import { fetchActiveProgramMode } from '@modules/program';

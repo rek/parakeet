@@ -1,3 +1,4 @@
+// @spec docs/features/disruptions/spec-apply.md
 import { DisruptionSchema, LiftSchema } from '@parakeet/shared-types';
 import type {
   CreateDisruption,

@@ -1,3 +1,4 @@
+// @spec docs/features/auth/spec-athlete-profile.md
 import { typedSupabase } from '@platform/supabase';
 
 export interface BodyweightEntry {

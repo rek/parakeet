@@ -1,3 +1,4 @@
+// @spec docs/features/achievements/spec-screen.md
 import type { Lift } from '@parakeet/shared-types';
 import { weightGramsToKg } from '@shared/utils/weight';
 

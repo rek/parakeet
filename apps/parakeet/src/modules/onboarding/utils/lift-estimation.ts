@@ -1,3 +1,4 @@
+// @spec docs/features/auth/spec-onboarding.md
 import { estimateOneRepMax_Epley } from '@parakeet/training-engine';
 
 interface LiftState {

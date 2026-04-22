@@ -79,7 +79,6 @@ tree-nut-allergy catch that affects the selenium food route.
 - [x] Memory captured at `memory/reference_nutrition_sourcing_nepal.md`
       so future sessions don't re-research. Tree-nut-allergy gotcha
       flagged explicitly to prevent regression.
-  → `/home/adam/.claude/projects/-home-adam-dev-parakeet/memory/reference_nutrition_sourcing_nepal.md`
 
 ## Dependencies
 

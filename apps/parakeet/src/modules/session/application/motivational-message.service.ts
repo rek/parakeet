@@ -1,3 +1,4 @@
+// @spec docs/features/session/spec-motivational.md
 import { getJITModel } from '@parakeet/training-engine';
 import type { Json } from '@platform/supabase';
 import { captureException } from '@platform/utils/captureException';

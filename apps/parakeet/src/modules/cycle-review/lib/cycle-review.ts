@@ -1,3 +1,4 @@
+// @spec docs/features/cycle-review/spec-generator.md
 import type { CycleReview } from '@parakeet/shared-types';
 import {
   assembleCycleReport,

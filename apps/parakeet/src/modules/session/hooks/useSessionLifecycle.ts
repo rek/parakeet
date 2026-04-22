@@ -1,3 +1,4 @@
+// @spec docs/features/session/spec-lifecycle.md
 import { useQueryClient } from '@tanstack/react-query';
 
 import { sessionQueries } from '../data/session.queries';

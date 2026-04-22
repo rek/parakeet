@@ -1,3 +1,4 @@
+// @spec docs/features/session/spec-offline.md
 import { useEffect, useRef } from 'react';
 import { Alert } from 'react-native';
 

@@ -1,3 +1,4 @@
+// @spec docs/features/social/spec-db-foundation.md
 import { useCallback, useMemo, useState } from 'react';
 import {
   ActivityIndicator,

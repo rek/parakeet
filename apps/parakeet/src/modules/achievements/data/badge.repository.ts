@@ -1,3 +1,4 @@
+// @spec docs/features/achievements/spec-screen.md
 import type { Json } from '@platform/supabase';
 import { typedSupabase } from '@platform/supabase';
 

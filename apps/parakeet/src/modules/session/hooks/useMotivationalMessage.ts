@@ -1,3 +1,4 @@
+// @spec docs/features/session/spec-motivational.md
 import { useQuery } from '@tanstack/react-query';
 
 import type { CompletedSessionRef } from '../application/motivational-message.service';

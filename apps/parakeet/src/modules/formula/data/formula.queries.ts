@@ -1,3 +1,4 @@
+// @spec docs/features/programs/spec-formula-config.md
 import { queryOptions, skipToken } from '@tanstack/react-query';
 
 import {

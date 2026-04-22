@@ -1,3 +1,4 @@
+// @spec docs/features/disruptions/spec-apply.md
 import type { AdjustmentSuggestion } from '@parakeet/shared-types';
 
 export function describeAction(suggestion: AdjustmentSuggestion): string {

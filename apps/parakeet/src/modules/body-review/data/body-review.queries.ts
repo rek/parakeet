@@ -1,3 +1,4 @@
+// @spec docs/features/soreness-and-readiness/spec-review-data.md
 import { queryOptions, skipToken } from '@tanstack/react-query';
 
 import { getWeeklyBodyReviews } from '../application/body-review.service';

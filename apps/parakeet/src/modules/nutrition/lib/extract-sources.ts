@@ -1,3 +1,4 @@
+// @spec docs/features/nutrition/spec-data-layer.md
 export interface SourceLink {
   title: string;
   url: string;

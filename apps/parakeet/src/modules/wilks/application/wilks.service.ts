@@ -1,3 +1,4 @@
+// @spec docs/features/achievements/spec-wilks.md
 import { getCurrentMaxes } from '@modules/program';
 import { computeWilks2020 } from '@parakeet/training-engine';
 import { weightGramsToKg } from '@shared/utils/weight';

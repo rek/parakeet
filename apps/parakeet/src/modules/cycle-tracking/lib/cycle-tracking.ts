@@ -1,3 +1,4 @@
+// @spec docs/features/cycle-tracking/spec-phase-calc.md
 import {
   computeCyclePhase,
   getCyclePhaseModifier,

@@ -1,3 +1,4 @@
+// @spec docs/features/volume/spec-volume-config.md
 import type { MuscleGroup } from '@parakeet/shared-types';
 import { typedSupabase } from '@platform/supabase';
 

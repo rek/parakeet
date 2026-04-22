@@ -1,3 +1,4 @@
+// @spec docs/features/programs/spec-formula-config.md
 import { safeParseWithParser } from '@parakeet/db';
 import { FormulaOverridesSchema } from '@parakeet/shared-types';
 import type { FormulaOverrides } from '@parakeet/shared-types';

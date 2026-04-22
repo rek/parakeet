@@ -1,3 +1,4 @@
+// @spec docs/features/settings-and-tools/spec-bar-weight.md
 import { toJson, typedSupabase } from '@platform/supabase';
 
 export async function fetchWarmupConfig(

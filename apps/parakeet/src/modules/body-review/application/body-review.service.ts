@@ -1,3 +1,4 @@
+// @spec docs/features/soreness-and-readiness/spec-readiness.md
 import {
   computePredictedFatigue,
   detectMismatches,

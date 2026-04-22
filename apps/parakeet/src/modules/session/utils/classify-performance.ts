@@ -1,3 +1,4 @@
+// @spec docs/features/session/spec-performance.md
 // Completion-percentage classification for session_logs.performance_vs_plan.
 // Source of truth — kept in sync with docs/domain/periodization.md "Completion
 // Classification Thresholds". Update both when tuning.

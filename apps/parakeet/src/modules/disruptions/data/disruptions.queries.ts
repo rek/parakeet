@@ -1,3 +1,4 @@
+// @spec docs/features/disruptions/spec-adjuster.md
 import { queryOptions, skipToken } from '@tanstack/react-query';
 
 import { fetchActiveDisruptions } from './disruptions.repository';

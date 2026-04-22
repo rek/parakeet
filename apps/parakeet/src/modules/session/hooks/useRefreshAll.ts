@@ -1,3 +1,4 @@
+// @spec docs/features/session/spec-set-persistence.md
 import { useQueryClient } from '@tanstack/react-query';
 
 /**

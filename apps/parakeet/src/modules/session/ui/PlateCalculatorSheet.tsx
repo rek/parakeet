@@ -1,3 +1,4 @@
+// @spec docs/features/session/spec-planned-set-display.md
 import { useMemo } from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 

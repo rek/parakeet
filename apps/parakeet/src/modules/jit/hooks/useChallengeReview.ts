@@ -1,3 +1,4 @@
+// @spec docs/features/jit-pipeline/spec-adaptive-volume.md
 import { useQuery } from '@tanstack/react-query';
 
 import { jitQueries } from '../data/jit.queries';

@@ -1,3 +1,4 @@
+// @spec docs/features/session/spec-planned-set-display.md
 import { capitalize } from '@shared/utils/string';
 
 export function buildIntensityLabel(

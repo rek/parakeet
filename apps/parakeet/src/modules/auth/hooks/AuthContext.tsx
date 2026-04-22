@@ -1,3 +1,4 @@
+// @spec docs/features/auth/spec-auth.md
 import { createContext, useContext, useEffect, useState } from 'react';
 
 import * as Sentry from '@sentry/react-native';

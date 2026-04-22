@@ -1,3 +1,4 @@
+// @spec docs/features/session/spec-performance.md
 import type { ActualSet, PlannedSet } from '@parakeet/shared-types';
 import { weightGramsToKg } from '@shared/utils/weight';
 

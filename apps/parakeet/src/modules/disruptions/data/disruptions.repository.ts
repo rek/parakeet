@@ -1,3 +1,4 @@
+// @spec docs/features/disruptions/spec-adjuster.md
 import type { DbInsert, DbRow, Json } from '@platform/supabase';
 import { typedSupabase } from '@platform/supabase';
 

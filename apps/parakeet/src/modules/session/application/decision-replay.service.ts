@@ -1,3 +1,4 @@
+// @spec docs/features/session/spec-logging.md
 import { scoreDecisionReplay } from '@parakeet/training-engine';
 import type { JITInput } from '@parakeet/training-engine';
 

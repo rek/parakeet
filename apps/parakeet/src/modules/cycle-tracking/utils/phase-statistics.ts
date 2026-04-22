@@ -1,3 +1,4 @@
+// @spec docs/features/cycle-tracking/spec-phase-calc.md
 import type { CyclePhase } from '../lib/cycle-tracking';
 import { CYCLE_PHASE_LABELS, CYCLE_PHASES } from '../ui/cycle-phase-styles';
 

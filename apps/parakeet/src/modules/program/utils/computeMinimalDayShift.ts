@@ -1,3 +1,4 @@
+// @spec docs/features/programs/spec-generation-api.md
 /**
  * Compute the smallest shift (in days) to move from one first-training-day
  * weekday to another, using the closest rotation direction.

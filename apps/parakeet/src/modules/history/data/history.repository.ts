@@ -1,3 +1,4 @@
+// @spec docs/features/history/spec-history-screen.md
 import { IntensityTypeSchema, LiftSchema } from '@parakeet/shared-types';
 import type { IntensityType, Lift } from '@parakeet/shared-types';
 import { typedSupabase } from '@platform/supabase';

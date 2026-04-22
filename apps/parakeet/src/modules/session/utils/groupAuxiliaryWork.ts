@@ -1,3 +1,4 @@
+// @spec docs/features/session/spec-adhoc.md
 import type { AuxiliaryActualSet } from '@platform/store/sessionStore';
 
 import type { AuxiliaryWork } from '../model/types';

@@ -1,3 +1,4 @@
+// @spec docs/features/social/spec-film-for-partner.md
 import { useCallback, useState } from 'react';
 
 import { captureException } from '@platform/utils/captureException';

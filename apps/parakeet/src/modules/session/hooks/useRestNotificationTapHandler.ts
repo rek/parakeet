@@ -1,3 +1,4 @@
+// @spec docs/features/rest-timer/spec-notification.md
 import { useEffect } from 'react';
 
 import { useSessionStore } from '@platform/store/sessionStore';

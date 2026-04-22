@@ -1,3 +1,4 @@
+// @spec docs/features/programs/spec-generator.md
 import type { Lift } from '@parakeet/shared-types';
 import type { DbInsert } from '@platform/supabase';
 import { typedSupabase } from '@platform/supabase';

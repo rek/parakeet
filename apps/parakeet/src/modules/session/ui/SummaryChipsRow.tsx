@@ -1,3 +1,4 @@
+// @spec docs/features/session/spec-completion.md
 import { useMemo } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 

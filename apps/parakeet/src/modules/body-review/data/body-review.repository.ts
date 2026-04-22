@@ -1,3 +1,4 @@
+// @spec docs/features/soreness-and-readiness/spec-review-data.md
 import { getSessionSetsBySessionIds } from '@modules/session';
 import type { Lift } from '@parakeet/shared-types';
 import { LiftSchema, MUSCLE_GROUPS } from '@parakeet/shared-types';

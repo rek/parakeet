@@ -1,3 +1,4 @@
+// @spec docs/features/rest-timer/spec-settings.md
 import type { IntensityType, Lift } from '@parakeet/shared-types';
 
 import {

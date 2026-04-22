@@ -1,3 +1,4 @@
+// @spec docs/features/history/spec-history-screen.md
 import type { Lift } from '@parakeet/shared-types';
 import { queryOptions, skipToken } from '@tanstack/react-query';
 

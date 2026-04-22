@@ -1,3 +1,4 @@
+// @spec docs/features/session/spec-lifecycle.md
 import { useAuth } from '@modules/auth';
 import { useQuery } from '@tanstack/react-query';
 

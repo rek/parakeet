@@ -1,3 +1,4 @@
+// @spec docs/features/jit-pipeline/spec-generator.md
 import type { BiologicalSex } from '@modules/profile';
 import type { Lift } from '@parakeet/shared-types';
 import { roundToNearest } from '@shared/utils/weight';

@@ -1,3 +1,4 @@
+// @spec docs/features/social/spec-film-for-partner.md
 import {
   analyzeVideoFrames,
   computeSagittalConfidence,

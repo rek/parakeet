@@ -1,3 +1,4 @@
+// @spec docs/features/session/spec-planned-set-display.md
 import { useMemo } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 

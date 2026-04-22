@@ -1,3 +1,4 @@
+// @spec docs/features/programs/spec-program-screen.md
 import { useAuth } from '@modules/auth';
 import { useQuery } from '@tanstack/react-query';
 

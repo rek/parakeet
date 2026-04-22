@@ -1,3 +1,4 @@
+// @spec docs/features/achievements/spec-pr-detection.md
 /**
  * Re-exports of @parakeet/training-engine symbols used within the achievements
  * module. Internal files import from this adapter so the dependency on the

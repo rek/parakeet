@@ -1,3 +1,4 @@
+// @spec docs/features/social/spec-qr-pairing.md
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,

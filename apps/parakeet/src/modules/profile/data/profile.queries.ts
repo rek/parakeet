@@ -1,3 +1,4 @@
+// @spec docs/features/auth/spec-athlete-profile.md
 import { queryOptions, skipToken } from '@tanstack/react-query';
 
 import { getBodyweightHistory } from '../application/bodyweight.service';

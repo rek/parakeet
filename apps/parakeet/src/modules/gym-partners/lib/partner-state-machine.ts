@@ -1,3 +1,4 @@
+// @spec docs/features/social/spec-qr-pairing.md
 import type { PartnerStatus } from '../model/types';
 
 export type PartnerRole = 'requester' | 'responder';

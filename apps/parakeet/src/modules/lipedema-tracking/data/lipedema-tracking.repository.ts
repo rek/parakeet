@@ -1,3 +1,4 @@
+// @spec docs/features/lipedema-tracking/spec-data-layer.md
 import { typedSupabase } from '@platform/supabase';
 import type { DbInsert, DbRow, DbUpdate } from '@platform/supabase';
 

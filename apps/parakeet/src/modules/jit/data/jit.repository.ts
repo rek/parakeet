@@ -1,3 +1,4 @@
+// @spec docs/features/jit-pipeline/spec-generator.md
 import { getSessionSetsBySessionIds } from '@modules/session';
 import type { ActualSet, Lift } from '@parakeet/shared-types';
 import type { Json } from '@platform/supabase';

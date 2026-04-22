@@ -1,3 +1,4 @@
+// @spec docs/features/cycle-tracking/spec-data.md
 import { typedSupabase } from '@platform/supabase';
 
 import type { CycleConfig, PeriodStartEntry } from '../lib/cycle-tracking';

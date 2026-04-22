@@ -1,3 +1,4 @@
+// @spec docs/features/session/spec-planned-set-display.md
 import { StyleSheet, Text, View } from 'react-native';
 
 import { calculatePlates, PLATE_COLORS } from '@shared/constants/plates';

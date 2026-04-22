@@ -1,3 +1,4 @@
+// @spec docs/features/session/spec-set-persistence.md
 import { useCallback, useRef } from 'react';
 
 import type { RestTimerPrefs } from '@modules/settings';

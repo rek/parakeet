@@ -1,3 +1,4 @@
+// @spec docs/features/volume/spec-volume-config.md
 import { useAuth } from '@modules/auth';
 import type { MuscleGroup } from '@parakeet/shared-types';
 import { useQuery, useQueryClient } from '@tanstack/react-query';

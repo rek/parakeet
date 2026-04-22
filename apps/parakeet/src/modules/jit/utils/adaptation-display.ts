@@ -1,3 +1,4 @@
+// @spec docs/features/jit-pipeline/spec-adaptive-volume.md
 import { getEffectivePlannedSet } from '@shared/utils/getEffectivePlannedSet';
 import { weightGramsToKg } from '@shared/utils/weight';
 

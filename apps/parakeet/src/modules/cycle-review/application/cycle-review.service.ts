@@ -1,3 +1,4 @@
+// @spec docs/features/cycle-review/spec-generator.md
 import { subscribeToCycleReviewInserts } from '../data/cycle-review.repository';
 import { getCycleReview, triggerCycleReview } from '../lib/cycle-review';
 

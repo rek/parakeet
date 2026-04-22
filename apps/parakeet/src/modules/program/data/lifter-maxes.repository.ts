@@ -1,3 +1,4 @@
+// @spec docs/features/programs/spec-lifter-maxes.md
 import type { DbInsert } from '@platform/supabase';
 import { typedSupabase } from '@platform/supabase';
 

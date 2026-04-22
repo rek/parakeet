@@ -1,3 +1,4 @@
+// @spec docs/features/session/spec-logging.md
 import type {
   AuxExerciseTrace,
   PrescriptionTrace,

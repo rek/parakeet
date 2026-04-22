@@ -1,3 +1,4 @@
+// @spec docs/features/programs/spec-lifter-maxes.md
 import { LifterMaxesInputSchema } from '@parakeet/shared-types';
 import type { Lift } from '@parakeet/shared-types';
 import { estimateOneRepMax_Epley } from '@parakeet/training-engine';

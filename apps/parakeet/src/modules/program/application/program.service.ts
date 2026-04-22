@@ -1,3 +1,4 @@
+// @spec docs/features/programs/spec-generation-api.md
 import {
   calculateSessionDate,
   computeBlockOffset,

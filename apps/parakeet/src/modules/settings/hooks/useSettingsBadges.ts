@@ -1,3 +1,4 @@
+// @spec docs/features/settings-and-tools/spec-bar-weight.md
 import { useAuth } from '@modules/auth';
 import { profileQueries } from '@modules/profile';
 import { useQuery } from '@tanstack/react-query';

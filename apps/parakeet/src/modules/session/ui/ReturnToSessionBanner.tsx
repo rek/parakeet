@@ -1,3 +1,4 @@
+// @spec docs/features/session/spec-lifecycle.md
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { AppState, StyleSheet, Text, TouchableOpacity } from 'react-native';
 

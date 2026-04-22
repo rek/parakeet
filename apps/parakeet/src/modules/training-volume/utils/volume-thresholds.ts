@@ -1,3 +1,4 @@
+// @spec docs/features/volume/spec-augmentation.md
 import type { MuscleGroup } from '@parakeet/shared-types';
 
 import type { VolumeStatus } from '../lib/engine-adapter';

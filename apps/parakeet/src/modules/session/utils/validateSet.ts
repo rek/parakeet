@@ -1,3 +1,4 @@
+// @spec docs/features/session/spec-set-persistence.md
 /**
  * Validates and normalizes a set for session completion.
  *

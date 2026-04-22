@@ -1,3 +1,4 @@
+// @spec docs/features/auth/spec-athlete-profile.md
 export function birthYearToDobIso(birthYear: string): string {
   return `${parseInt(birthYear, 10)}-01-01`;
 }

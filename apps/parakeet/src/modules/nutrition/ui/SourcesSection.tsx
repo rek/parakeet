@@ -1,3 +1,4 @@
+// @spec docs/features/nutrition/spec-data-layer.md
 import { useMemo } from 'react';
 import { Linking, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 

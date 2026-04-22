@@ -1,3 +1,4 @@
+// @spec docs/features/session/spec-planned-set-display.md
 import type { AuxiliaryActualSet } from '@platform/store/sessionStore';
 import { weightGramsToKg } from '@shared/utils/weight';
 

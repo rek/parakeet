@@ -1,3 +1,4 @@
+// @spec docs/features/auth/spec-athlete-profile.md
 import type { DbRow, DbUpdate } from '@platform/supabase';
 import { typedSupabase } from '@platform/supabase';
 

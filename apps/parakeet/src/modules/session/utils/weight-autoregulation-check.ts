@@ -1,3 +1,4 @@
+// @spec docs/features/intra-session/spec-weight-autoregulation.md
 import { Lift } from '@parakeet/shared-types';
 import { evaluateWeightAutoregulation } from '@parakeet/training-engine';
 import { useSessionStore } from '@platform/store/sessionStore';

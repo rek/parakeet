@@ -1,3 +1,4 @@
+// @spec docs/features/intra-session/spec-weight-autoregulation.md
 import { getEffectivePlannedSet } from '@shared/utils/getEffectivePlannedSet';
 import type { PostRestState } from '../model/types';
 

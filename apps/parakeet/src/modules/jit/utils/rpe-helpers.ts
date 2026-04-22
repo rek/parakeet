@@ -1,3 +1,4 @@
+// @spec docs/features/jit-pipeline/spec-generator.md
 /**
  * Derive a human-readable RPE adjustment note.
  * Returns empty string when no adjustment is expected.

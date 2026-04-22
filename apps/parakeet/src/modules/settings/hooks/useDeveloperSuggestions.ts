@@ -1,3 +1,4 @@
+// @spec docs/features/settings-and-tools/spec-bar-weight.md
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 
 import { settingsQueries } from '../data/settings.queries';

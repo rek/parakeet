@@ -1,3 +1,4 @@
+// @spec docs/features/session/spec-completion.md
 export interface SessionStats {
   isAuxOnly: boolean;
   totalSets: number;

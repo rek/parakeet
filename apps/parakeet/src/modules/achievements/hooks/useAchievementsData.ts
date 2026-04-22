@@ -1,3 +1,4 @@
+// @spec docs/features/achievements/spec-screen.md
 import { useQuery } from '@tanstack/react-query';
 
 import type {

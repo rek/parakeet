@@ -1,3 +1,4 @@
+// @spec docs/features/session/spec-set-persistence.md
 import type { ActualSet, IntensityType, Lift } from '@parakeet/shared-types';
 import { IntensityTypeSchema, LiftSchema } from '@parakeet/shared-types';
 import type { DbInsert, DbRow, Json } from '@platform/supabase';

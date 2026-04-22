@@ -1,3 +1,4 @@
+// @spec docs/features/session/spec-set-persistence.md
 import { useMemo } from 'react';
 import {
   ScrollView,

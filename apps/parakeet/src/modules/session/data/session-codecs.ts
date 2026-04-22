@@ -1,3 +1,4 @@
+// @spec docs/features/session/spec-set-persistence.md
 import { safeParseNullableJsonArray } from '@parakeet/db';
 import { PlannedSetSchema } from '@parakeet/shared-types';
 import type { PlannedSet } from '@parakeet/shared-types';

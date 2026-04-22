@@ -1,3 +1,4 @@
+// @spec docs/features/history/spec-tab-upgrade.md
 import { MIN_CHART_OPACITY } from './chart-helpers';
 
 // ── Types ─────────────────────────────────────────────────────────────────────

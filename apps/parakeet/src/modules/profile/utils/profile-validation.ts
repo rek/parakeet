@@ -1,3 +1,4 @@
+// @spec docs/features/auth/spec-athlete-profile.md
 const BIRTH_YEAR_REGEX = /^\d{4}$/;
 
 export function isValidBirthYear(year: string): boolean {

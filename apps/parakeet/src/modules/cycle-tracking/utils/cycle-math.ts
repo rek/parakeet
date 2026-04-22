@@ -1,3 +1,4 @@
+// @spec docs/features/cycle-tracking/spec-phase-calc.md
 export const CYCLE_LENGTH_MIN = 24;
 export const CYCLE_LENGTH_MAX = 35;
 

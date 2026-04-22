@@ -1,3 +1,4 @@
+// @spec docs/features/auth/spec-auth.md
 import { typedSupabase } from '@platform/supabase';
 import type {
   AuthChangeEvent,

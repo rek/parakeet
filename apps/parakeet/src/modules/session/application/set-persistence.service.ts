@@ -1,3 +1,4 @@
+// @spec docs/features/session/spec-set-persistence.md
 // Per-set durability service. Writes each confirmed set to server immediately
 // via the `set_logs` table, falling back to the sync queue on network error.
 // See docs/features/session/design-durability.md.

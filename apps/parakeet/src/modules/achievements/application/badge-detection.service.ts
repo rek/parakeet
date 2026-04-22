@@ -1,3 +1,4 @@
+// @spec docs/features/achievements/spec-pr-detection.md
 import type { BadgeCheckContext } from '@parakeet/training-engine';
 import {
   checkConsistencyBadges,

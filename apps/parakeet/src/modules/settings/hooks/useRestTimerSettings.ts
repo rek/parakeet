@@ -1,3 +1,4 @@
+// @spec docs/features/rest-timer/spec-settings.md
 import { useAuth } from '@modules/auth';
 import type { IntensityType } from '@parakeet/shared-types';
 import { useQuery, useQueryClient } from '@tanstack/react-query';

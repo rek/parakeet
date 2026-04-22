@@ -1,3 +1,4 @@
+// @spec docs/features/auth/spec-athlete-profile.md
 import { useAuth } from '@modules/auth';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 

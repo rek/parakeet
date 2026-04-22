@@ -1,3 +1,4 @@
+// @spec docs/features/session/spec-adhoc.md
 import type { Lift } from '@parakeet/shared-types';
 import type {
   ExerciseCatalogEntry,

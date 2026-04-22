@@ -1,3 +1,4 @@
+// @spec docs/features/lipedema-tracking/spec-data-layer.md
 import type { LipedemaMeasurement } from '../model/types';
 
 export interface TrendPoint {

@@ -1,3 +1,4 @@
+// @spec docs/features/jit-pipeline/spec-generator.md
 import { queryOptions } from '@tanstack/react-query';
 
 import { fetchChallengeReview } from './jit.repository';

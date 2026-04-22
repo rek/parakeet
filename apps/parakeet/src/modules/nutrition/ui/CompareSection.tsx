@@ -1,3 +1,4 @@
+// @spec docs/features/nutrition/spec-macro-targets.md
 import { useMemo } from 'react';
 import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 

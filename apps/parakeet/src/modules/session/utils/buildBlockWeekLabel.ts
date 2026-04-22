@@ -1,3 +1,4 @@
+// @spec docs/features/session/spec-planned-set-display.md
 export function buildBlockWeekLabel(
   meta: {
     primary_lift: string | null;

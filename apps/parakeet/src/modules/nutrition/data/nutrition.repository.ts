@@ -1,3 +1,4 @@
+// @spec docs/features/nutrition/spec-data-layer.md
 import { typedSupabase } from '@platform/supabase';
 
 import type {

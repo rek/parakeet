@@ -1,3 +1,4 @@
+// @spec docs/features/nutrition/spec-ui.md
 import { useMemo, useState } from 'react';
 import { StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 

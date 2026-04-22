@@ -1,3 +1,4 @@
+// @spec docs/features/history/spec-tab-upgrade.md
 import type { Lift } from '@parakeet/shared-types';
 import { typedSupabase } from '@platform/supabase';
 

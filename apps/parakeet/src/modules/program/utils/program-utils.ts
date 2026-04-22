@@ -1,3 +1,4 @@
+// @spec docs/features/programs/spec-generation-api.md
 import type { ProgramSessionView } from '@shared/types/domain';
 
 export type ProgramSession = ProgramSessionView;

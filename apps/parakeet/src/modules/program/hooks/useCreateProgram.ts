@@ -1,3 +1,4 @@
+// @spec docs/features/programs/spec-generation-api.md
 import { useAuth } from '@modules/auth';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 

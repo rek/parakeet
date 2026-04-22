@@ -1,3 +1,4 @@
+// @spec docs/features/rest-timer/spec-timer-ui.md
 import type { ReactNode } from 'react';
 import { useMemo, useState } from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';

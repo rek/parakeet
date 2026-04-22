@@ -1,3 +1,4 @@
+// @spec docs/features/social/spec-received-video.md
 import type { Json } from '@platform/supabase';
 import { typedSupabase } from '@platform/supabase';
 import { captureException } from '@platform/utils/captureException';

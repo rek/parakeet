@@ -1,3 +1,4 @@
+// @spec docs/features/session/spec-adhoc.md
 import type { ActualSet } from '@parakeet/shared-types';
 
 /**

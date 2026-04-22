@@ -1,3 +1,4 @@
+// @spec docs/features/rest-timer/spec-notification.md
 import { useEffect, useRef } from 'react';
 import { AppState } from 'react-native';
 

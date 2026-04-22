@@ -1,3 +1,4 @@
+// @spec docs/features/session/spec-set-persistence.md
 import { volumeQueries } from '@modules/training-volume';
 import { useQueryClient } from '@tanstack/react-query';
 

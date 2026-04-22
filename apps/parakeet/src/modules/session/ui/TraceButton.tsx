@@ -1,3 +1,4 @@
+// @spec docs/features/session/spec-logging.md
 import { useState } from 'react';
 import { StyleSheet, Text, TouchableOpacity } from 'react-native';
 

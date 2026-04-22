@@ -1,3 +1,4 @@
+// @spec docs/features/history/spec-tab-upgrade.md
 import type { Lift } from '@parakeet/shared-types';
 
 // react-native-chart-kit passes opacity=0.2 to dataset color functions for

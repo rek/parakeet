@@ -1,3 +1,4 @@
+// @spec docs/features/session/spec-today.md
 import { useAuth } from '@modules/auth';
 import { useQuery } from '@tanstack/react-query';
 

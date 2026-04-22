@@ -1,3 +1,4 @@
+// @spec docs/features/history/spec-history-screen.md
 import { useMemo } from 'react';
 import {
   ActivityIndicator,

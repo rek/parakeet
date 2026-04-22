@@ -1,3 +1,4 @@
+// @spec docs/features/session/spec-read.md
 import { queryOptions, skipToken } from '@tanstack/react-query';
 
 import {

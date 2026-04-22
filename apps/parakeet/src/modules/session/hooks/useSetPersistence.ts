@@ -1,3 +1,4 @@
+// @spec docs/features/session/spec-set-persistence.md
 // Subscribes to sessionStore and fires persistSet whenever a set transitions
 // to completed or has its values edited. Complements the legacy completeSession
 // batch write so each confirmed set is durable from the moment of confirmation.

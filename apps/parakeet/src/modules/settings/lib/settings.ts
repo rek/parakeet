@@ -1,3 +1,4 @@
+// @spec docs/features/settings-and-tools/spec-bar-weight.md
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import type { PlateKg } from '@shared/constants/plates';
 

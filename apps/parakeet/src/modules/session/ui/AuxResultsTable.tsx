@@ -1,3 +1,4 @@
+// @spec docs/features/session/spec-completion.md
 import { StyleSheet, Text, View } from 'react-native';
 
 import type { ActualSet } from '@parakeet/shared-types';

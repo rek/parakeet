@@ -1,3 +1,4 @@
+// @spec docs/features/social/spec-db-foundation.md
 import { captureException } from '@platform/utils/captureException';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 

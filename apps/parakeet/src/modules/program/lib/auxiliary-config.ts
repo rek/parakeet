@@ -1,3 +1,4 @@
+// @spec docs/features/programs/spec-generator.md
 import type { Lift, MuscleGroup } from '@parakeet/shared-types';
 import { DEFAULT_AUXILIARY_POOLS } from '@parakeet/training-engine';
 

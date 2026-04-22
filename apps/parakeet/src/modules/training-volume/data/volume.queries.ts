@@ -1,3 +1,4 @@
+// @spec docs/features/volume/spec-volume-config.md
 export const volumeQueries = {
   all: () => ['volume'] as const,
   weekly: (userId: string | undefined, windowStart: string) =>

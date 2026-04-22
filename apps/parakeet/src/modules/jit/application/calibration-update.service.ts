@@ -1,3 +1,4 @@
+// @spec docs/features/jit-pipeline/spec-adaptive-volume.md
 import {
   canAutoApply,
   computeCalibrationBias,

@@ -1,3 +1,4 @@
+// @spec docs/features/programs/spec-formula-editor.md
 import type { FormulaOverrides } from '@parakeet/shared-types';
 import type {
   BlockIntensityConfig,

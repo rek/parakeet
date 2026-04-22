@@ -1,3 +1,4 @@
+// @spec docs/features/session/spec-set-persistence.md
 import { useMemo, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
 import {

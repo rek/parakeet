@@ -1,3 +1,4 @@
+// @spec docs/features/programs/spec-generation-api.md
 import type { Lift } from '@parakeet/shared-types';
 import { queryOptions, skipToken } from '@tanstack/react-query';
 

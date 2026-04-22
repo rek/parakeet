@@ -1,3 +1,4 @@
+// @spec docs/features/cycle-review/spec-generator.md
 import { getSessionSetsBySessionIds } from '@modules/session';
 import type { CycleReview } from '@parakeet/shared-types';
 import type {

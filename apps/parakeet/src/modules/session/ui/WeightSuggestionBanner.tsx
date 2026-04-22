@@ -1,3 +1,4 @@
+// @spec docs/features/session/spec-performance.md
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import type { ColorScheme } from '../../../theme';

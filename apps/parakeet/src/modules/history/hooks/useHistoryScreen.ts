@@ -1,3 +1,4 @@
+// @spec docs/features/history/spec-history-screen.md
 import { useAuth } from '@modules/auth';
 import { queryOptions, skipToken, useQuery } from '@tanstack/react-query';
 

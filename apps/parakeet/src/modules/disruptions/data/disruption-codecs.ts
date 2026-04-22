@@ -1,3 +1,4 @@
+// @spec docs/features/disruptions/spec-adjuster.md
 import { safeParseJsonArray, safeParseNullableJsonArray } from '@parakeet/db';
 import {
   AdjustmentSuggestionSchema,

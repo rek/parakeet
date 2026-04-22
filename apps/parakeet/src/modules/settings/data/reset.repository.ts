@@ -1,3 +1,4 @@
+// @spec docs/features/settings-and-tools/spec-bar-weight.md
 import { typedSupabase } from '@platform/supabase';
 
 type UserTable =

@@ -1,3 +1,4 @@
+// @spec docs/features/achievements/spec-wilks.md
 import { useQuery } from '@tanstack/react-query';
 
 import { achievementQueries } from '../data/achievements.queries';

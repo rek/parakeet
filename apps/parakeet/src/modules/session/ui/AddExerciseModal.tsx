@@ -1,3 +1,4 @@
+// @spec docs/features/session/spec-adhoc.md
 import { useMemo, useState } from 'react';
 import {
   FlatList,

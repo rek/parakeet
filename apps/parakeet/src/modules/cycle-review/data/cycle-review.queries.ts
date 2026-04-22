@@ -1,3 +1,4 @@
+// @spec docs/features/cycle-review/spec-generator.md
 import { queryOptions, skipToken } from '@tanstack/react-query';
 
 import { getCycleReview } from '../application/cycle-review.service';

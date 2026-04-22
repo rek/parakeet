@@ -1,3 +1,4 @@
+// @spec docs/features/settings-and-tools/spec-export.md
 import type { ActualSet } from '@parakeet/shared-types';
 import { typedSupabase } from '@platform/supabase';
 

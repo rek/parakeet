@@ -1,3 +1,4 @@
+// @spec docs/features/disruptions/spec-adjuster.md
 import type { DisruptionType, Lift, Severity } from '@parakeet/shared-types';
 import { TRAINING_LIFTS } from '@shared/constants/training';
 

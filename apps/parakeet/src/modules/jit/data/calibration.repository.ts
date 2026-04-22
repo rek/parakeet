@@ -1,3 +1,4 @@
+// @spec docs/features/jit-pipeline/spec-adaptive-volume.md
 import type { ModifierSource } from '@parakeet/training-engine';
 import { typedSupabase } from '@platform/supabase';
 

@@ -1,3 +1,4 @@
+// @spec docs/features/jit-pipeline/spec-generator.md
 import { getLatestMismatchDirection } from '@modules/body-review';
 import { getCurrentCycleContext } from '@modules/cycle-tracking';
 import { getFormulaConfig } from '@modules/formula';

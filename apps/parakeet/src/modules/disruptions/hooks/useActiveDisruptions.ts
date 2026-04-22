@@ -1,3 +1,4 @@
+// @spec docs/features/disruptions/spec-adjuster.md
 import { useAuth } from '@modules/auth';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 

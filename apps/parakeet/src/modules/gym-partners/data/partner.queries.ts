@@ -1,3 +1,4 @@
+// @spec docs/features/social/spec-db-foundation.md
 import { queryOptions } from '@tanstack/react-query';
 
 import { fetchPartnerActiveSession } from './partner-session.repository';

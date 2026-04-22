@@ -1,3 +1,4 @@
+// @spec docs/features/settings-and-tools/spec-export.md
 import { weightGramsToKg } from '@shared/utils/weight';
 import { File, Paths } from 'expo-file-system';
 import * as Sharing from 'expo-sharing';

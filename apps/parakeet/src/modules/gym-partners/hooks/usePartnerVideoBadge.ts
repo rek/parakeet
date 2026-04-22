@@ -1,3 +1,4 @@
+// @spec docs/features/social/spec-received-video.md
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { captureException } from '@platform/utils/captureException';

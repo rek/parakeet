@@ -1,3 +1,4 @@
+// @spec docs/features/session/spec-read.md
 import { useMemo } from 'react';
 import {
   ActivityIndicator,

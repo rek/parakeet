@@ -1,3 +1,4 @@
+// @spec docs/features/social/spec-session-visibility.md
 import { useCallback, useEffect, useMemo, useRef } from 'react';
 
 import { useQueries, useQueryClient } from '@tanstack/react-query';

@@ -1,3 +1,4 @@
+// @spec docs/features/intra-session/spec-weight-autoregulation.md
 import { weightKgToGrams } from '@shared/utils/weight';
 
 /**

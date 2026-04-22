@@ -1,3 +1,4 @@
+// @spec docs/features/programs/spec-formula-config.md
 import { useQueryClient } from '@tanstack/react-query';
 
 import { formulaQueries } from '../data/formula.queries';

@@ -1,3 +1,4 @@
+// @spec docs/features/settings-and-tools/spec-bar-weight.md
 import { queryOptions, skipToken } from '@tanstack/react-query';
 
 import {

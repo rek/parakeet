@@ -1,3 +1,4 @@
+// @spec docs/features/nutrition/spec-macro-targets.md
 /**
  * Compute daily macro + kcal targets for the current lifter given a
  * chosen diet protocol.

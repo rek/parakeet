@@ -1,3 +1,4 @@
+// @spec docs/features/session/spec-missed.md
 // useMissedSessionReconciliation.ts
 import { useCallback, useEffect, useRef } from 'react';
 import { AppState, type AppStateStatus } from 'react-native';

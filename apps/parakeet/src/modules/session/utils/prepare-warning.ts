@@ -1,3 +1,4 @@
+// @spec docs/features/session/spec-lifecycle.md
 /**
  * Returns true when the 15-second prepare warning should fire.
  * Fires once per timer session when remaining crosses into ≤15s,
