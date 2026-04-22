@@ -233,7 +233,7 @@ export function runSimulation(options: SimulatorOptions): SimulationLog {
     );
     const activeAux: [string, string] = auxForSession
       ? [auxForSession.exercise1, auxForSession.exercise2]
-      : ['Leg Press', 'Front Squat'];
+      : ['Leg Press', 'Barbell Front Squat'];
 
     // Calculate session position within the week
     const sessionsThisWeek = program.sessions.filter(

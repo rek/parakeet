@@ -39,6 +39,8 @@ export interface BodyweightPoolEntry {
 
 export interface ExerciseCatalogEntry {
   name: string;
+  /** Short variant descriptor shown below the name in UI (e.g. 'Above the knee'). */
+  subtitle?: string;
   /** Which main lift this exercise primarily develops. null = general / no single-lift affinity. */
   associatedLift: Lift | null;
   /** Muscle groups this exercise trains at the primary (1.0 contribution) level. */
@@ -152,20 +154,6 @@ export const EXERCISE_CATALOG: ExerciseCatalogEntry[] = [
     repTarget: 4,
   },
   {
-    name: 'Box Squat',
-    associatedLift: 'squat',
-    primaryMuscles: ['quads', 'glutes'],
-    type: 'weighted',
-    muscleContributions: [
-      { muscle: 'quads', contribution: 1.0 },
-      { muscle: 'glutes', contribution: 1.0 },
-      { muscle: 'hamstrings', contribution: 0.5 },
-      { muscle: 'lower_back', contribution: 0.5 },
-    ],
-    weightPct: 0.7,
-    repTarget: 4,
-  },
-  {
     name: 'High-Bar Squat',
     associatedLift: 'squat',
     primaryMuscles: ['quads', 'glutes'],
@@ -177,19 +165,6 @@ export const EXERCISE_CATALOG: ExerciseCatalogEntry[] = [
       { muscle: 'lower_back', contribution: 0.5 },
     ],
     weightPct: 0.9,
-    repTarget: 4,
-  },
-  {
-    name: 'Front Squat',
-    associatedLift: 'squat',
-    primaryMuscles: ['quads', 'upper_back'],
-    type: 'weighted',
-    muscleContributions: [
-      { muscle: 'quads', contribution: 1.0 },
-      { muscle: 'upper_back', contribution: 0.5 },
-      { muscle: 'lower_back', contribution: 0.5 },
-    ],
-    weightPct: 0.8,
     repTarget: 4,
   },
   {
@@ -552,7 +527,7 @@ export const EXERCISE_CATALOG: ExerciseCatalogEntry[] = [
     complexityTier: 'simple',
   },
   {
-    name: 'Seated machine row',
+    name: 'Seated Machine Row',
     associatedLift: 'deadlift',
     primaryMuscles: ['upper_back'],
     type: 'weighted',
@@ -566,6 +541,7 @@ export const EXERCISE_CATALOG: ExerciseCatalogEntry[] = [
   },
   {
     name: 'Rack Pull',
+    subtitle: 'Above the knee',
     associatedLift: 'deadlift',
     primaryMuscles: ['upper_back', 'lower_back'],
     type: 'weighted',
@@ -573,9 +549,23 @@ export const EXERCISE_CATALOG: ExerciseCatalogEntry[] = [
       { muscle: 'upper_back', contribution: 1.0 },
       { muscle: 'lower_back', contribution: 1.0 },
     ],
-    // Partial ROM from knee/above-knee pins — supramax overload is the whole point.
+    // Very short ROM from above-knee pins — supramax overload is the whole point.
     // 105% of DL 1RM at 4 reps; engine has no 1.0 cap on weightPct.
     weightPct: 1.05,
+    repTarget: 4,
+  },
+  {
+    name: 'Rack Pull Below Knee',
+    subtitle: 'Below the knee',
+    associatedLift: 'deadlift',
+    primaryMuscles: ['upper_back', 'lower_back'],
+    type: 'weighted',
+    muscleContributions: [
+      { muscle: 'upper_back', contribution: 1.0 },
+      { muscle: 'lower_back', contribution: 1.0 },
+    ],
+    // Skips floor-to-knee (hardest portion) but meaningful ROM — same load as block pulls.
+    weightPct: 0.95,
     repTarget: 4,
   },
   {
@@ -607,7 +597,7 @@ export const EXERCISE_CATALOG: ExerciseCatalogEntry[] = [
     isCompound: true,
   },
   {
-    name: 'Romanian Dumbbell Deadlift',
+    name: 'Dumbbell Romanian Deadlift',
     associatedLift: 'deadlift',
     primaryMuscles: ['hamstrings', 'glutes'],
     type: 'weighted',

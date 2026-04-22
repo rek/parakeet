@@ -62,7 +62,7 @@ function makeReport(overrides: Partial<CycleReport> = {}): CycleReport {
         liftChangePct: 5.4,
       },
       {
-        exercise: 'Box Squat',
+        exercise: 'Barbell Box Squat',
         lift: 'squat',
         precedingWeeks: 4,
         liftChangePct: 5.4,
@@ -201,7 +201,7 @@ describe('extractSummary', () => {
       (c) => c.exercise === 'Close Grip'
     );
     const boxSquat = summary.topAuxCorrelations.find(
-      (c) => c.exercise === 'Box Squat'
+      (c) => c.exercise === 'Barbell Box Squat'
     );
 
     expect(pauseSquat?.correlationDirection).toBe('positive');

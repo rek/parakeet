@@ -226,7 +226,7 @@ describe('generateJITSessionWithTrace', () => {
   it('traces volume top-up exercises', () => {
     const { trace } = generateJITSessionWithTrace(
       baseInput({
-        auxiliaryPool: ['Romanian Dumbbell Deadlift', 'Leg Press'],
+        auxiliaryPool: ['Dumbbell Romanian Deadlift', 'Leg Press'],
         weeklyVolumeToDate: atMevExcept(
           DEFAULT_MRV_MEV_CONFIG_MALE,
           'hamstrings'

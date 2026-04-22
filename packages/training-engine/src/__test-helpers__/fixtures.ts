@@ -17,7 +17,7 @@ export function baseInput(overrides?: Partial<JITInput>): JITInput {
     sorenessRatings: {},
     weeklyVolumeToDate: {},
     mrvMevConfig: DEFAULT_MRV_MEV_CONFIG_MALE,
-    activeAuxiliaries: ['Pause Squat', 'Box Squat'],
+    activeAuxiliaries: ['Pause Squat', 'Barbell Box Squat'],
     recentLogs: [],
     activeDisruptions: [],
     warmupConfig: { type: 'preset', name: 'standard' },

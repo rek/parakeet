@@ -238,7 +238,7 @@ describe('getMusclesForLift — exercise name lookup', () => {
   });
 
   it('Romanian DL maps hamstrings + glutes primary, lower_back secondary', () => {
-    const muscles = getMusclesForLift('deadlift', 'Romanian Dumbbell Deadlift');
+    const muscles = getMusclesForLift('deadlift', 'Dumbbell Romanian Deadlift');
     expect(muscles.find((m) => m.muscle === 'hamstrings')?.contribution).toBe(
       1.0
     );
