@@ -1,9 +1,4 @@
-# 5 foods need manual fill (IFCT_2017 / Korean DB / approximation)
-- doenjang
-- gochugaru/korean chilli flakes
-- gochujang
-- homemade kombucha
-- japchae glass noodles
+# all diet_foods either matched or intentionally skipped
 
 # 39 foods intentionally skipped — allergens / status=no / groups / supplements (no macro meaning)
 - alcohol
