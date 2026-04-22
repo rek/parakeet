@@ -23,6 +23,7 @@ const mockNextTrainingDate = vi.hoisted(() =>
 
 const mockFetchLastCompletedLiftForProgram = vi.hoisted(() => vi.fn());
 const mockFetchHasCompletedSessionToday = vi.hoisted(() => vi.fn());
+const mockAppendNextUnendingSession = vi.hoisted(() => vi.fn());
 const mockGetLatestSorenessRatings = vi.hoisted(() => vi.fn().mockResolvedValue(null));
 const mockFetchLastCompletedAtForLift = vi.hoisted(() => vi.fn().mockResolvedValue(null));
 const mockFetchRecentLogsForLift = vi.hoisted(() => vi.fn().mockResolvedValue([]));
@@ -41,7 +42,7 @@ vi.mock('../data/session.repository', () => ({
 
 vi.mock('@modules/program', () => ({
   fetchActiveProgramMode: mockFetchActiveProgramMode,
-  appendNextUnendingSession: vi.fn(),
+  appendNextUnendingSession: mockAppendNextUnendingSession,
 }));
 
 vi.mock('@platform/utils/captureException', () => ({
@@ -207,6 +208,44 @@ describe('findTodaySession', () => {
     const result = await findTodaySession('user-1');
 
     expect(result).toEqual(existing);
+  });
+
+  it('builds intensitySignals from repo data and passes to appendNextUnendingSession', async () => {
+    const generated = { id: 's2', status: 'planned' };
+    mockFetchTodaySession.mockResolvedValue(null);
+    mockFetchActiveProgramMode.mockResolvedValue({
+      id: 'p1',
+      program_mode: 'unending',
+      training_days_per_week: 3,
+      training_days: null,
+      unending_session_counter: 2,
+    });
+    mockFetchHasCompletedSessionToday.mockResolvedValue(false);
+    mockFetchPlannedSessionForProgram
+      .mockResolvedValueOnce(null)
+      .mockResolvedValueOnce(generated)
+      .mockResolvedValueOnce(generated);
+
+    // Soreness: worst primary muscle = 8
+    mockGetLatestSorenessRatings.mockResolvedValue({ quads: 8, glutes: 3 });
+    // Last session for lift was 5 days ago
+    const fiveDaysAgo = new Date(Date.now() - 5 * 86_400_000).toISOString();
+    mockFetchLastCompletedAtForLift.mockResolvedValue({ completed_at: fiveDaysAgo });
+    // Two recent sessions with RPE 9 and 8
+    mockFetchRecentLogsForLift.mockResolvedValue([
+      { actual_rpe: 9, intensity_type: 'heavy' },
+      { actual_rpe: 8, intensity_type: 'explosive' },
+    ]);
+
+    await findTodaySession('user-1');
+
+    expect(mockAppendNextUnendingSession).toHaveBeenCalledOnce();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const signals = (mockAppendNextUnendingSession.mock.calls[0] as any)[4];
+    expect(signals.primaryMuscleSoreness).toBe(null); // getWorstSoreness mocked → null
+    expect(signals.daysSinceLastSession).toBe(5);
+    expect(signals.recentRpe).toEqual([9, 8]);
+    expect(signals.lastIntensityType).toBe('heavy');
   });
 });
 

@@ -151,11 +151,7 @@ export function nextUnendingSession(
 
   const weekNumber = Math.floor(sessionCounter / daysPerWeek) + 1;
   const dayNumber = (sessionCounter % daysPerWeek) + 1;
-  // History-based lift selection: rotate past last completed lift.
-  // Falls back to counter-based derivation when no history exists (first session).
-  const lift = lastCompletedLift
-    ? nextLiftAfter(lastCompletedLift)
-    : LIFTS[(sessionCounter % daysPerWeek) % LIFTS.length];
+  const lift = computeNextUnendingLift({ sessionCounter, trainingDaysPerWeek, lastCompletedLift });
 
   // Blocks cycle 1→2→3→1… every 3 training weeks (same as scheduled)
   const blockNumber = (Math.floor((weekNumber - 1) / 3) % 3) + 1;
