@@ -13,7 +13,6 @@ import {
   type IntensityTypeSignals,
 } from '../cube/scheduler';
 import {
-  AuxiliaryAssignment,
   AuxiliaryPool,
   GeneratedProgramStructure,
   GenerateProgramInput,
@@ -175,32 +174,3 @@ export function nextUnendingSession(
   };
 }
 
-export function generateAuxiliaryAssignments(
-  totalWeeks: number,
-  auxiliaryPool: AuxiliaryPool
-): AuxiliaryAssignment[] {
-  const assignments: AuxiliaryAssignment[] = [];
-  const lifts: Lift[] = ['squat', 'bench', 'deadlift'];
-  const totalBlocks = Math.ceil((totalWeeks - 1) / 3);
-
-  for (let blockNumber = 1; blockNumber <= totalBlocks; blockNumber++) {
-    for (const lift of lifts) {
-      const pool = auxiliaryPool[lift];
-      if (!pool || pool.length < 2) continue;
-
-      const poolSize = pool.length;
-      const blockIndex = blockNumber - 1;
-      const pos1 = (blockIndex * 2) % poolSize;
-      const pos2 = (blockIndex * 2 + 1) % poolSize;
-
-      assignments.push({
-        blockNumber,
-        lift,
-        exercise1: pool[pos1],
-        exercise2: pool[pos2],
-      });
-    }
-  }
-
-  return assignments;
-}

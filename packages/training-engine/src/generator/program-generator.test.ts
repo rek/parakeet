@@ -1,6 +1,5 @@
 import {
   computeNextUnendingLift,
-  generateAuxiliaryAssignments,
   generateProgram,
   nextUnendingSession,
 } from './program-generator';
@@ -108,86 +107,6 @@ describe('generateProgram — 10-week 3-day', () => {
   });
 });
 
-describe('generateAuxiliaryAssignments', () => {
-  const pool = {
-    squat: [
-      'pause squat',
-      'front squat',
-      'goblet squat',
-      'box squat',
-      'tempo squat',
-      'belt squat',
-    ],
-    bench: [
-      'close grip bench',
-      'incline bench',
-      'dumbbell press',
-      'floor press',
-      'pin press',
-      'board press',
-    ],
-    deadlift: [
-      'rdl',
-      'deficit pull',
-      'rack pull',
-      'sumo pull',
-      'snatch grip',
-      'block pull',
-    ],
-  };
-
-  // 9 weeks → ceil(8/3) = 3 blocks → 9 assignments
-  const assignments = generateAuxiliaryAssignments(9, pool);
-
-  it('produces 9 assignments for a 9-week program (3 blocks × 3 lifts)', () => {
-    expect(assignments).toHaveLength(9);
-  });
-
-  it('block 1 squat picks pool positions 0 and 1', () => {
-    const a = assignments.find(
-      (x) => x.blockNumber === 1 && x.lift === 'squat'
-    );
-    expect(a?.exercise1).toBe('pause squat');
-    expect(a?.exercise2).toBe('front squat');
-  });
-
-  it('block 2 squat picks pool positions 2 and 3', () => {
-    const a = assignments.find(
-      (x) => x.blockNumber === 2 && x.lift === 'squat'
-    );
-    expect(a?.exercise1).toBe('goblet squat');
-    expect(a?.exercise2).toBe('box squat');
-  });
-
-  it('block 3 squat picks pool positions 4 and 5', () => {
-    const a = assignments.find(
-      (x) => x.blockNumber === 3 && x.lift === 'squat'
-    );
-    expect(a?.exercise1).toBe('tempo squat');
-    expect(a?.exercise2).toBe('belt squat');
-  });
-
-  it('wraps around when pool is smaller than 6', () => {
-    const smallPool = { squat: ['A', 'B', 'C'] };
-    const result = generateAuxiliaryAssignments(9, smallPool);
-    const b3 = result.find((x) => x.blockNumber === 3 && x.lift === 'squat');
-    // blockIndex=2, pos1=(4%3)=1, pos2=(5%3)=2 → B, C
-    expect(b3?.exercise1).toBe('B');
-    expect(b3?.exercise2).toBe('C');
-  });
-
-  it('produces 12 assignments for a 12-week program (4 blocks × 3 lifts)', () => {
-    const result = generateAuxiliaryAssignments(12, pool);
-    expect(result).toHaveLength(12);
-    const blockNums = [...new Set(result.map((r) => r.blockNumber))].sort();
-    expect(blockNums).toEqual([1, 2, 3, 4]);
-  });
-
-  it('skips lifts with fewer than 2 exercises in pool', () => {
-    const result = generateAuxiliaryAssignments(9, { squat: ['only one'] });
-    expect(result).toHaveLength(0);
-  });
-});
 
 describe('nextUnendingSession — history-based lift rotation', () => {
   const base = { sessionCounter: 5, trainingDaysPerWeek: 3 };
