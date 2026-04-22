@@ -35,7 +35,8 @@ export function useMotivationalMessage({
       const ctx = await fetchMotivationalContext(
         sessions,
         currentStreak,
-        cyclePhase
+        cyclePhase,
+        userId
       );
       return generateMotivationalMessage(ctx, sessionIds, userId);
     },

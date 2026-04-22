@@ -1,11 +1,17 @@
 import { getJITModel } from '@parakeet/training-engine';
 import type { Json } from '@platform/supabase';
-import { typedSupabase } from '@platform/supabase';
 import { captureException } from '@platform/utils/captureException';
 import { weightGramsToKg } from '@shared/utils/weight';
 import { generateText } from 'ai';
 
-import { fetchSessionSetsBySessionIds } from '../data/session.repository';
+import {
+  fetchBiologicalSex,
+  fetchExistingMotivationalMessage,
+  fetchPRsForSessions,
+  fetchSessionLogsForMotivational,
+  fetchSessionSetsBySessionIds,
+  insertMotivationalMessageLog,
+} from '../data/session.repository';
 
 export interface MotivationalContext {
   primaryLifts: string[];
@@ -37,31 +43,21 @@ export interface CompletedSessionRef {
 export async function fetchMotivationalContext(
   sessions: CompletedSessionRef[],
   currentStreak: number,
-  cyclePhase: string | null
+  cyclePhase: string | null,
+  userId: string
 ): Promise<MotivationalContext> {
   const sessionIds = sessions.map((s) => s.id);
 
-  // Fetch profile directly to avoid circular dependency with @modules/profile.
-  // Only biological_sex is needed for coaching message personalisation.
-  const [logsResult, prsResult, profileResult, setsMap] = await Promise.all([
-    typedSupabase
-      .from('session_logs')
-      .select('session_id, session_rpe, performance_vs_plan, completion_pct')
-      .in('session_id', sessionIds),
-    typedSupabase
-      .from('personal_records')
-      .select('lift, pr_type')
-      .in('session_id', sessionIds),
-    typedSupabase.from('profiles').select('biological_sex').maybeSingle(),
+  const [logs, prs, biologicalSex, setsMap] = await Promise.all([
+    fetchSessionLogsForMotivational(sessionIds),
+    fetchPRsForSessions(sessionIds),
+    fetchBiologicalSex(userId),
     fetchSessionSetsBySessionIds(sessionIds),
   ]);
-  const profile = profileResult.data;
-
-  const logs = logsResult.data ?? [];
 
   // Take the highest RPE across all sessions logged today
   const sessionRpe = logs.reduce<number | null>((max, row) => {
-    const rpe = row.session_rpe as number | null;
+    const rpe = row.session_rpe;
     if (rpe == null) return max;
     return max == null ? rpe : Math.max(max, rpe);
   }, null);
@@ -76,7 +72,7 @@ export async function fetchMotivationalContext(
 
   // Average completion % across all session logs
   const completionPcts = logs
-    .map((r) => r.completion_pct as number | null)
+    .map((r) => r.completion_pct)
     .filter((v): v is number => v != null);
   const completionPct =
     completionPcts.length > 0
@@ -86,9 +82,7 @@ export async function fetchMotivationalContext(
       : null;
 
   // Flatten primary set_logs across sessions to derive top weight and set count
-  const allSets = sessionIds.flatMap(
-    (id) => setsMap.get(id)?.primary ?? []
-  );
+  const allSets = sessionIds.flatMap((id) => setsMap.get(id)?.primary ?? []);
   const totalSetsCompleted = allSets.length;
   const maxGrams = allSets.reduce<number | null>((max, s) => {
     const g = s.weight_grams;
@@ -98,7 +92,7 @@ export async function fetchMotivationalContext(
   const topWeightKg =
     maxGrams != null ? Math.round(weightGramsToKg(maxGrams)) : null;
 
-  const newPRs = (prsResult.data ?? []).map((row) => ({
+  const newPRs = prs.map((row) => ({
     lift: row.lift as string,
     prType: row.pr_type as string,
   }));
@@ -117,10 +111,7 @@ export async function fetchMotivationalContext(
     performanceVsPlan,
     newPRs,
     currentStreak,
-    biologicalSex:
-      profile?.biological_sex === 'female' || profile?.biological_sex === 'male'
-        ? profile.biological_sex
-        : null,
+    biologicalSex,
     cyclePhase,
     completionPct,
     topWeightKg,
@@ -150,33 +141,6 @@ Style rules:
 - Exclamation points or emojis are fine.
 - Max 2 sentences. Be specific to the data provided — reference the actual lift names, weight, or block number if relevant.`;
 
-async function fetchExistingMessage({
-  userId,
-  sessionIds,
-}: {
-  userId: string;
-  sessionIds: string[];
-}) {
-  try {
-    const sorted = [...sessionIds].sort();
-    const { data } = await typedSupabase
-      .from('motivational_message_logs')
-      .select('message, session_ids')
-      .eq('user_id', userId)
-      .contains('session_ids', sorted)
-      .order('created_at', { ascending: false })
-      .limit(5);
-    // contains is a superset check — verify exact length match
-    const match = (data ?? []).find(
-      (row) => (row.session_ids as string[]).length === sorted.length
-    );
-    return match?.message ?? null;
-  } catch (err) {
-    captureException(err);
-    return null;
-  }
-}
-
 export async function generateMotivationalMessage(
   ctx: MotivationalContext,
   sessionIds?: string[],
@@ -184,8 +148,15 @@ export async function generateMotivationalMessage(
 ): Promise<string> {
   // Return persisted message if one already exists for these sessions
   if (userId && sessionIds?.length) {
-    const existing = await fetchExistingMessage({ userId, sessionIds });
-    if (existing) return existing;
+    try {
+      const existing = await fetchExistingMotivationalMessage({
+        userId,
+        sessionIds,
+      });
+      if (existing) return existing;
+    } catch (err) {
+      captureException(err);
+    }
   }
 
   const controller = new AbortController();
@@ -201,17 +172,12 @@ export async function generateMotivationalMessage(
 
   // Fire-and-forget: persist the log for dashboard telemetry
   if (userId && sessionIds?.length) {
-    typedSupabase
-      .from('motivational_message_logs')
-      .insert({
-        user_id: userId,
-        session_ids: sessionIds,
-        context: JSON.parse(JSON.stringify(ctx)) as Json,
-        message,
-      })
-      .then(({ error }) => {
-        if (error) console.warn('Failed to persist motivational log:', error);
-      });
+    insertMotivationalMessageLog({
+      userId,
+      sessionIds,
+      context: JSON.parse(JSON.stringify(ctx)) as Json,
+      message,
+    });
   }
 
   return message;
