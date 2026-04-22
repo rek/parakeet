@@ -111,20 +111,22 @@ describe('suggestDisruptionAdjustment — travel', () => {
 });
 
 describe('suggestDisruptionAdjustment — fatigue', () => {
-  it('minor fatigue → informational only, no suggestions returned', () => {
+  it('minor fatigue → 10% weight_reduced on affected lift', () => {
     const result = suggestDisruptionAdjustment(
       makeDisruption('fatigue', 'minor', ['deadlift']),
       [squat, bench, deadlift]
     );
-    expect(result).toHaveLength(0);
+    expect(result).toHaveLength(1);
+    expect(result[0]).toMatchObject({ action: 'weight_reduced', reduction_pct: 10 });
   });
 
-  it('minor fatigue with no lift filter → still no suggestions', () => {
+  it('minor fatigue with no lift filter → 10% weight_reduced on all sessions', () => {
     const result = suggestDisruptionAdjustment(
       makeDisruption('fatigue', 'minor', null),
       [squat, bench, deadlift]
     );
-    expect(result).toHaveLength(0);
+    expect(result).toHaveLength(3);
+    result.forEach((r) => expect(r).toMatchObject({ action: 'weight_reduced', reduction_pct: 10 }));
   });
 
   it('moderate fatigue → 20% weight_reduced', () => {

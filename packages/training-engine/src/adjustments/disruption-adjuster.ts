@@ -144,9 +144,14 @@ function buildSuggestions(
           },
         ];
       }
-      // Minor fatigue: informational only — disruption is recorded in JIT context
-      // but no automatic weight reduction is applied
-      return [];
+      return [
+        {
+          session_id: sessionId,
+          action: 'weight_reduced',
+          reduction_pct: 10,
+          rationale: 'Minor fatigue — reduce intensity 10%',
+        },
+      ];
 
     case 'equipment_unavailable':
       return [
