@@ -1,6 +1,6 @@
 import type { ActualSet, IntensityType, Lift } from '@parakeet/shared-types';
 import { IntensityTypeSchema, LiftSchema } from '@parakeet/shared-types';
-import type { DbInsert, DbRow } from '@platform/supabase';
+import type { DbInsert, DbRow, Json } from '@platform/supabase';
 import { toJson, typedSupabase } from '@platform/supabase';
 import type {
   CompletedSessionListItem,
@@ -1013,4 +1013,82 @@ export async function insertDecisionReplayLog(input: {
     },
   ]);
   if (error) throw error;
+}
+
+export async function fetchSessionLogsForMotivational(
+  sessionIds: string[]
+): Promise<
+  Array<{
+    session_id: string | null;
+    session_rpe: number | null;
+    performance_vs_plan: string | null;
+    completion_pct: number | null;
+  }>
+> {
+  const { data, error } = await typedSupabase
+    .from('session_logs')
+    .select('session_id, session_rpe, performance_vs_plan, completion_pct')
+    .in('session_id', sessionIds);
+  if (error) throw error;
+  return data ?? [];
+}
+
+export async function fetchPRsForSessions(
+  sessionIds: string[]
+): Promise<Array<{ lift: string | null; pr_type: string | null }>> {
+  const { data, error } = await typedSupabase
+    .from('personal_records')
+    .select('lift, pr_type')
+    .in('session_id', sessionIds);
+  if (error) throw error;
+  return data ?? [];
+}
+
+export async function fetchBiologicalSex(
+  userId: string
+): Promise<'female' | 'male' | null> {
+  const { data } = await typedSupabase
+    .from('profiles')
+    .select('biological_sex')
+    .eq('id', userId)
+    .maybeSingle();
+  const sex = data?.biological_sex;
+  return sex === 'female' || sex === 'male' ? sex : null;
+}
+
+export async function fetchExistingMotivationalMessage(input: {
+  userId: string;
+  sessionIds: string[];
+}): Promise<string | null> {
+  const sorted = [...input.sessionIds].sort();
+  const { data } = await typedSupabase
+    .from('motivational_message_logs')
+    .select('message, session_ids')
+    .eq('user_id', input.userId)
+    .contains('session_ids', sorted)
+    .order('created_at', { ascending: false })
+    .limit(5);
+  const match = (data ?? []).find(
+    (row) => (row.session_ids as string[]).length === sorted.length
+  );
+  return match?.message ?? null;
+}
+
+export function insertMotivationalMessageLog(input: {
+  userId: string;
+  sessionIds: string[];
+  context: Json;
+  message: string;
+}): void {
+  typedSupabase
+    .from('motivational_message_logs')
+    .insert({
+      user_id: input.userId,
+      session_ids: input.sessionIds,
+      context: input.context,
+      message: input.message,
+    })
+    .then(({ error }) => {
+      if (error) console.warn('Failed to persist motivational log:', error);
+    });
 }
