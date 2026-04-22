@@ -940,16 +940,20 @@ describe('generateJITSession — equipment_unavailable disruption', () => {
     );
   });
 
-  it('no bodyweight exercises added when soreness >= 9', () => {
+  it('bodyweight exercises still added when soreness >= 9 (0 kg is always appropriate)', () => {
     const out = generateJITSession(
       baseInput({
         activeDisruptions: [makeEquipmentDisruption()],
         sorenessRatings: { quads: 10 },
       })
     );
-    // All aux exercises should be skipped; no bodyweight appended
-    expect(out.auxiliaryWork).toHaveLength(2);
-    expect(out.auxiliaryWork.every((ex) => ex.skipped)).toBe(true);
+    // Original aux exercises are skipped due to soreness, but bodyweight
+    // compensation is still appended because 0-kg exercises suit any soreness level.
+    const active = out.auxiliaryWork.filter((ex) => !ex.skipped);
+    const skipped = out.auxiliaryWork.filter((ex) => ex.skipped);
+    expect(skipped.length).toBeGreaterThanOrEqual(1);
+    expect(active.length).toBeGreaterThanOrEqual(1);
+    expect(active.every((ex) => ex.sets.every((s) => s.weight_kg === 0))).toBe(true);
   });
 
   it('exercise cap: no-equipment + auxiliaryPool combined does not exceed 5 non-skipped aux exercises', () => {

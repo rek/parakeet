@@ -563,7 +563,9 @@ function buildAuxiliaryWork(
   // No-equipment disruption: append bodyweight compensation exercises
   // The global MAX_AUX_EXERCISES=5 cap in generateJITSession prevents the combined
   // total (bodyweight + volume top-ups) from exceeding 5 non-skipped aux exercises.
-  if (hasNoEquipment && primaryLift && worstSoreness < 9) {
+  // Soreness gate removed: bodyweight (0 kg) exercises are appropriate at any soreness
+  // level and are the only available modality when equipment is absent.
+  if (hasNoEquipment && primaryLift) {
     const activeExerciseCount = result.filter((a) => !a.skipped).length;
     const maxTotalExercises = 5;
     const slotsAvailable = Math.max(0, maxTotalExercises - activeExerciseCount);
