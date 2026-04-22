@@ -1,6 +1,6 @@
 import { queryOptions, skipToken } from '@tanstack/react-query';
 
-import { getActiveDisruptions } from '../lib/disruptions';
+import { fetchActiveDisruptions } from './disruptions.repository';
 
 export const disruptionQueries = {
   all: () => ['disruptions'] as const,
@@ -8,6 +8,6 @@ export const disruptionQueries = {
   active: (userId: string | undefined) =>
     queryOptions({
       queryKey: [...disruptionQueries.all(), 'active', userId] as const,
-      queryFn: userId ? () => getActiveDisruptions(userId) : skipToken,
+      queryFn: userId ? () => fetchActiveDisruptions(userId) : skipToken,
     }),
 };

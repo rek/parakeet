@@ -33,7 +33,7 @@ import {
   updateSessionStatus,
 } from '../data/disruptions.repository';
 import type { SessionPartialRow } from '../data/disruptions.repository';
-import { SORENESS_NUMERIC } from './disruption-presets';
+import { SORENESS_NUMERIC } from '../lib/disruption-presets';
 
 type SessionRow = SessionPartialRow;
 type SuggestedSession = { id: string; primary_lift: Lift; status: string };
