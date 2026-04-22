@@ -38,6 +38,7 @@ import { applyCyclePhaseAdjustment } from './steps/applyCyclePhaseAdjustment';
 import { applyDisruptionAdjustment } from './steps/applyDisruptionAdjustment';
 import { applyMrvCap } from './steps/applyMrvCap';
 import { applyReadinessAdjustment } from './steps/applyReadinessAdjustment';
+import { applyRepRangeAdjustment } from './steps/applyRepRangeAdjustment';
 import { applyRpeAdjustment } from './steps/applyRpeAdjustment';
 import { applySorenessAdjustment } from './steps/applySorenessAdjustment';
 import { applyVolumeCalibration } from './steps/applyVolumeCalibration';
@@ -304,6 +305,7 @@ export function generateJITSession(
 
   // Steps 2–7 — Modifier pipeline (each step mutates ctx, can only reduce)
   applyRpeAdjustment(ctx, input, traceBuilder);
+  applyRepRangeAdjustment(ctx, input);
   applyReadinessAdjustment(ctx, input, traceBuilder);
   applyCyclePhaseAdjustment(ctx, input, traceBuilder);
   applySorenessAdjustment(ctx, input, traceBuilder);
