@@ -1071,158 +1071,30 @@ export type Database = {
       }
       profiles: {
         Row: {
-          activity_level: string | null
           biological_sex: string | null
           bodyweight_kg: number | null
           created_at: string
           date_of_birth: string | null
           display_name: string | null
-          goal: string | null
-          height_cm: number | null
           id: string
-          lean_mass_kg: number | null
         }
         Insert: {
-          activity_level?: string | null
           biological_sex?: string | null
           bodyweight_kg?: number | null
           created_at?: string
           date_of_birth?: string | null
           display_name?: string | null
-          goal?: string | null
-          height_cm?: number | null
           id: string
-          lean_mass_kg?: number | null
         }
         Update: {
-          activity_level?: string | null
           biological_sex?: string | null
           bodyweight_kg?: number | null
           created_at?: string
           date_of_birth?: string | null
           display_name?: string | null
-          goal?: string | null
-          height_cm?: number | null
           id?: string
-          lean_mass_kg?: number | null
         }
         Relationships: []
-      }
-      lipedema_measurements: {
-        Row: {
-          ankle_l_mm: number | null
-          ankle_r_mm: number | null
-          calf_max_l_mm: number | null
-          calf_max_r_mm: number | null
-          created_at: string
-          id: string
-          notes: string | null
-          pain_0_10: number | null
-          photo_url: string | null
-          recorded_date: string
-          swelling_0_10: number | null
-          thigh_mid_l_mm: number | null
-          thigh_mid_r_mm: number | null
-          updated_at: string
-          upper_arm_l_mm: number | null
-          upper_arm_r_mm: number | null
-          user_id: string
-          wrist_l_mm: number | null
-          wrist_r_mm: number | null
-        }
-        Insert: {
-          ankle_l_mm?: number | null
-          ankle_r_mm?: number | null
-          calf_max_l_mm?: number | null
-          calf_max_r_mm?: number | null
-          created_at?: string
-          id?: string
-          notes?: string | null
-          pain_0_10?: number | null
-          photo_url?: string | null
-          recorded_date?: string
-          swelling_0_10?: number | null
-          thigh_mid_l_mm?: number | null
-          thigh_mid_r_mm?: number | null
-          updated_at?: string
-          upper_arm_l_mm?: number | null
-          upper_arm_r_mm?: number | null
-          user_id: string
-          wrist_l_mm?: number | null
-          wrist_r_mm?: number | null
-        }
-        Update: {
-          ankle_l_mm?: number | null
-          ankle_r_mm?: number | null
-          calf_max_l_mm?: number | null
-          calf_max_r_mm?: number | null
-          created_at?: string
-          id?: string
-          notes?: string | null
-          pain_0_10?: number | null
-          photo_url?: string | null
-          recorded_date?: string
-          swelling_0_10?: number | null
-          thigh_mid_l_mm?: number | null
-          thigh_mid_r_mm?: number | null
-          updated_at?: string
-          upper_arm_l_mm?: number | null
-          upper_arm_r_mm?: number | null
-          user_id?: string
-          wrist_l_mm?: number | null
-          wrist_r_mm?: number | null
-        }
-        Relationships: []
-      }
-      diet_food_nutrition: {
-        Row: {
-          carb_g: number
-          fat_g: number
-          fiber_g: number | null
-          food_id: string
-          id: string
-          kcal: number
-          protein_g: number
-          serving_g: number
-          source: string
-          source_id: string | null
-          updated_at: string
-        }
-        Insert: {
-          carb_g: number
-          fat_g: number
-          fiber_g?: number | null
-          food_id: string
-          id?: string
-          kcal: number
-          protein_g: number
-          serving_g?: number
-          source: string
-          source_id?: string | null
-          updated_at?: string
-        }
-        Update: {
-          carb_g?: number
-          fat_g?: number
-          fiber_g?: number | null
-          food_id?: string
-          id?: string
-          kcal?: number
-          protein_g?: number
-          serving_g?: number
-          source?: string
-          source_id?: string | null
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "diet_food_nutrition_food_id_fkey"
-            columns: ["food_id"]
-            isOneToOne: false
-            referencedRelation: "diet_foods"
-            referencedColumns: ["id"]
-          },
-        ]
       }
       programs: {
         Row: {
