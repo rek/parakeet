@@ -70,6 +70,8 @@ export interface JitData {
   rationale?: string[];
   /** Intensity scaling factor (e.g. 0.95 = intensity reduced 5%) */
   intensityModifier?: number;
+  /** 'formula_fallback' when LLM failed and formula output was used instead */
+  jit_strategy?: string;
 }
 
 // ── Intra-session adaptation types (app-owned mirrors of engine types) ────────

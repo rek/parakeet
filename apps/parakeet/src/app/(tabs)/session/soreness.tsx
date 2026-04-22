@@ -525,6 +525,13 @@ export default function SorenessScreen() {
       useSessionStore
         .getState()
         .setCachedPrescriptionTrace(JSON.stringify(jitResult.trace));
+      // Surface LLM fallback to user — they'd otherwise see formula sets with no explanation
+      if (jitOutput.jit_strategy === 'formula_fallback') {
+        Alert.alert(
+          'AI coaching unavailable',
+          'Could not reach the AI model — your session is using the standard formula prescription instead.'
+        );
+      }
       router.replace({
         pathname: '/session/[sessionId]',
         params: {
@@ -539,6 +546,7 @@ export default function SorenessScreen() {
             volumeReductions: jitOutput.volumeReductions,
             rationale: jitOutput.rationale,
             intensityModifier: jitOutput.intensityModifier,
+            jit_strategy: jitOutput.jit_strategy,
           }),
         },
       });
