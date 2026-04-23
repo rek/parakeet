@@ -9,13 +9,11 @@ import { LiftSchema } from '@parakeet/shared-types';
 import {
   computeNextUnendingLift,
   DEFAULT_TRAINING_DAYS,
-  getDefaultThresholds,
   getPrimaryMusclesForSession,
   getWorstSoreness,
   isMakeupWindowExpired,
   localDateString,
   nextTrainingDate,
-  suggestProgramAdjustments,
 } from '@parakeet/training-engine';
 import type {
   CompletedSetLog,
@@ -63,7 +61,6 @@ import {
   fetchTodaySessions,
   getLatestSorenessRatings,
   insertAdHocSession,
-  insertPerformanceMetric,
   insertSessionLog,
   insertSorenessCheckin,
   markSessionAsMissed,
@@ -438,31 +435,6 @@ export async function completeSession(
   });
 
   await updateSessionToCompleted(sessionId);
-
-  if (session?.primary_lift) {
-    const recentLogs = await getRecentLogsForLift(
-      userId,
-      LiftSchema.parse(session.primary_lift),
-      6
-    );
-    const biologicalSex = await fetchProfileSex(userId);
-    const suggestions = suggestProgramAdjustments(
-      recentLogs,
-      getDefaultThresholds(biologicalSex)
-    );
-
-    if (suggestions.length > 0) {
-      await insertPerformanceMetric({
-        session_log_id: sessionLogId,
-        user_id: userId,
-        lift: session.primary_lift,
-        intensity_type: session.intensity_type!,
-        recorded_at: new Date().toISOString(),
-        week_number: session.week_number ?? null,
-        block_number: session.block_number ?? null,
-      });
-    }
-  }
 
   // Fire-and-forget: decision replay scoring
   import('./decision-replay.service')
