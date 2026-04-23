@@ -52,6 +52,12 @@ interface DisruptionAdjustmentSuggestion {
 - Fatigue affecting deadlift only → 10% DL weight reduction, squat/bench unchanged
 - Major injury: session_skipped action returned, not weight_reduced
 
+## Known Spec/Code Mismatch — Minor Fatigue
+
+- [ ] **Resolve minor-fatigue divergence between spec and code.** The table above prescribes `fatigue | minor → weight_reduced 10%`, but `disruption-adjuster.ts` returns `[]` for minor fatigue ("informational only — disruption is recorded in JIT context but no automatic weight reduction is applied"). This mismatch has a direct user impact because the menstrual-symptoms preset uses `type='fatigue', severity='minor'` — the user reports menstrual symptoms, but no load reduction is ever applied. Either:
+  - Update the code to honour the spec (10% reduction on minor fatigue), OR
+  - Update this spec + `design.md` to describe the current behaviour (informational only) and add a dedicated pathway for menstrual symptoms that applies real adjustment (e.g. route through cycle-phase tracking when sex=female and phase=menses, instead of going through disruption-adjuster).
+
 ## Dependencies
 
 - [engine-004-program-generator.md](../programs/spec-generator.md)

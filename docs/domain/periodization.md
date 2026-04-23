@@ -44,10 +44,12 @@ Research basis: Ralston et al. 2017 meta-analysis — 5+ weekly sets significant
 
 ### Deload
 
-- Scheduled programs: week 10.
+- Scheduled programs: the final week of the cycle only (`weekNumber === totalWeeks`). A 10-week program has one deload (week 10); a 12-week program has one deload (week 12) after eleven training weeks.
 - Unending programs: every 4th training week — `weekNumber % 4 === 0`.
 
 **Source:** `packages/training-engine/src/cube/scheduler.ts`
+
+**Known issue:** The "final-week-only" deload for scheduled programs diverges sharply from strength-training best practice (deload every 3–4 weeks) and from the unending program's own cadence. A lifter on a 12-week scheduled program trains 11 consecutive weeks without a programmed deload, while the same lifter in unending mode would get a deload every 4th training week. This inconsistency is not deliberate — it is a defect of the scheduled generator that predates the unending mode. Tracked separately; do not propagate this assumption to new generators.
 
 ---
 

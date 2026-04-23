@@ -69,6 +69,10 @@ See `./design.md` for the full feature design and examples.
   - Errors caught and logged via `captureException`; LLM failure does not block cycle completion; no row is inserted on failure
   - Note: `getCycleReview()` also triggers generation on-demand when no row exists. If the user opens the cycle review screen before `onCycleComplete` completes, both paths may execute concurrently — `storeCycleReview` will insert a duplicate row. Known race condition with no current guard.
   - Note: The UI must distinguish "no review yet" from "review failed" — these are different states. See mobile-014 for screen-level handling.
+- [ ] **Trigger at program-end, not 80%** — the current 80%-completion gate fires while the cycle is still ongoing. For a 10-week (30-session) program, the LLM runs after session 24; sessions 25-30 (including the deload week) are excluded from the review. Because `triggerCycleReview` short-circuits when an existing row is found, the later sessions never contribute. Options:
+  - Defer trigger until `completed/total === 1.0` (or until `isDeloadWeek` session completes), OR
+  - Allow regeneration once more when program hits 100%; compare to stored review and overwrite if meaningfully different
+- [ ] **Populate bodyweight and Wilks in `PreviousCycleSummary`** — `getPreviousCycleSummaries` currently calls `extractSummary(report, review, cycleNumber, 0, 0, 0)`, hardcoding `bodyWeightStartKg`, `bodyWeightEndKg`, and `wilksScore` to zero. This makes the multi-cycle LLM context useless for tracking strength progression across cycles. Pull actual values from `bodyweight_entries` and `extractSummary` should receive the real start/end bodyweights and Wilks computed from final maxes.
 
 ### Multi-Cycle Context
 

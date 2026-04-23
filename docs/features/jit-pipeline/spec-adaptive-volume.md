@@ -102,6 +102,9 @@ Design doc: [adaptive-volume.md](./design-adaptive-volume.md)
 - [x] Fetch recent capacity assessments from AsyncStorage
 - [x] Populate `capacityHistory` in JITInput
 - [x] Populate `weeklyMismatchDirection` from body review data via `getLatestMismatchDirection()`
+- [ ] **Purge stale `capacity_assessment:<sessionId>` AsyncStorage keys.** Keys are written on session completion but never removed. Over time AsyncStorage fills with one key per completed session — unbounded growth. Additionally `capacityKeys.slice(-5)` takes the last 5 in raw `getAllKeys()` order, which is not chronological (AsyncStorage ordering is an implementation detail), so "most recent" is not guaranteed. Options:
+  - Move `capacity_assessment` into the `session_logs` row (migration deferred per phase 1 note) and drop the AsyncStorage path entirely, OR
+  - Maintain a bounded rolling key `capacity_assessments_recent` that stores a JSON array of the last 10 values with their session timestamps, written append-style on each completion.
 
 ### Tests
 

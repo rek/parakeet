@@ -7,6 +7,10 @@
 
 The user has reviewed the suggested adjustments and confirmed they want to apply them. Updates session `planned_sets` directly in Supabase.
 
+## Open Issues
+
+- [ ] **`session_logs` summary stays stale after disruption-applied rep reduction.** When `applyDisruptionAdjustment` rewrites `planned_sets` to reduce reps, the session's `session_log` (if one already exists for a partially completed session) retains the pre-adjustment plan reference. For now this is acceptable because disruptions are typically applied before completion, but if a user reports a moderate illness mid-cycle and we apply an adjustment to a session that is in `in_progress` with `set_logs` already written, the completion stats will compare actuals to the revised planned_sets and misclassify performance. Decide: either refuse to apply a disruption to `in_progress` sessions, or tag session_logs with a `plan_revision` marker so the classifier knows which plan it is comparing against.
+
 ## Tasks
 
 **`apps/parakeet/lib/disruptions.ts` (addition):**

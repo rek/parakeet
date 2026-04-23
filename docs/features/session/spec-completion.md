@@ -63,6 +63,9 @@ interface CompleteSessionInput {
 **Performance adjuster suggestions:**
 - [x] `suggestProgramAdjustments()` is evaluated after completion using the most recent 6 logs for the session lift.
 - [x] Non-empty suggestion results currently gate a `performance_metrics` insert for the session/lift context.
+- [ ] **Dead write path.** The `suggestions` result is only used as a boolean gate to insert a `performance_metrics` row; the suggestions themselves are never persisted. `performance_metrics` is never read by any screen or service (only inserted). The `planned_volume_grams`, `actual_volume_grams`, `planned_intensity_pct`, `actual_intensity_pct`, `max_rpe_actual`, `avg_rpe_actual`, `completion_pct`, `estimated_1rm_grams`, and `sets_per_muscle` columns are NOT NULL-set in the insert and remain NULL. Either:
+  - Remove the `suggestProgramAdjustments` call and `performance_metrics` insert entirely (dead code), OR
+  - Implement `getPendingAdjustmentSuggestions` per `spec-performance.md` and populate all the columns on insert.
 
 ## Completion Semantics Contract
 

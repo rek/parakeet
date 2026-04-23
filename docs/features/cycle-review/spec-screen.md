@@ -20,6 +20,9 @@ Navigation path: History tab → completed program card → "Review" button.
 - Once row exists: render full review
 - If query fails: render explicit error state with retry action (do not show indefinite loading)
 
+**History-tab entry point:**
+- [ ] **Hide or disable "Review" button on archived programs that have no cycle review row** — history.tsx renders a Review button for every past program regardless of whether a review actually exists. For scheduled programs ended before 80% completion, no review was ever generated; tapping Review lands on the cycle review screen and spins forever (or eventually falls through to on-demand generation of a partial report). Action: fetch `cycle_reviews.program_id IN (...)` alongside the program list and only render the Review button when a row exists, OR label archived-without-review programs with a disabled "No review — program ended early" pill. This prevents a dead-end UX path for users who abandon a program early.
+
 **Supabase Realtime (preferred over polling):**
 - Subscribe to `cycle_reviews` insert events filtered by `program_id`
 - On insert: invalidate React Query cache → triggers re-render

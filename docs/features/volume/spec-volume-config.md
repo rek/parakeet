@@ -26,9 +26,10 @@ CREATE POLICY "users_own_volume_config" ON muscle_volume_config
 ```
 
 **`apps/parakeet/lib/volume-config.ts`:**
-- [x] `getMrvMevConfig(userId: string): Promise<MrvMevConfig>` — fetch user's full config, merging DB rows over engine defaults for missing muscles
+- [x] `getMrvMevConfig(userId: string, biologicalSex?: BiologicalSex): Promise<MrvMevConfig>` — fetch user's full config, merging DB rows over engine defaults for missing muscles
 - [x] `updateMuscleConfig(userId: string, muscle: MuscleGroup, update: { mev?: number; mrv?: number }): Promise<void>` — upsert a single muscle's config
 - [x] `resetMuscleToDefault(userId: string, muscle: MuscleGroup): Promise<void>` — delete the override row, reverting to research defaults
+- [ ] `updateMuscleConfig` must forward `biologicalSex` to its internal `getMrvMevConfig` call. Currently it does not (`const existing = await getMrvMevConfig(userId)`), so for female users the "current" fallback value used when `update.mev` or `update.mrv` is undefined resolves to the male default instead of the female default. Today's only caller (`saveMuscleConfigs`) always supplies both fields, masking the bug, but any future partial update (e.g. bump MRV only) on a female account will silently overwrite MEV with the male value. Fix: accept and pass through `biologicalSex` explicitly, or require the caller to pass both values.
 
 **Settings screen — Volume Config (`apps/parakeet/app/(tabs)/settings.tsx`):**
 - [x] Display all 9 muscle groups with current MEV and MRV values

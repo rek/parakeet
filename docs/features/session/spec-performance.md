@@ -12,7 +12,7 @@ Helper functions for reading aggregated performance data from Supabase. Used by 
 **`apps/parakeet/src/modules/history/lib/performance.ts`:**
 - [x] `getPerformanceByLift(userId: string, lift: Lift, fromDate?: Date): Promise<SessionLog[]>` — session logs for a specific lift joined with session metadata, newest first
 - [x] `getPerformanceTrends(userId: string): Promise<PerformanceTrend[]>` — last 30 sessions, trends computed locally via `computeTrends()`
-- [x] `getPendingAdjustmentSuggestions(userId: string): Promise<AdjustmentSuggestion[]>` — unreviewed performance_metrics suggestions, newest first
+- [ ] `getPendingAdjustmentSuggestions(userId: string): Promise<AdjustmentSuggestion[]>` — unreviewed performance_metrics suggestions, newest first. **Not implemented.** The write path in `session.service.ts` runs `suggestProgramAdjustments()` and inserts a `performance_metrics` row, but the read path is missing and the inserted row does not persist the suggestion contents (only the session/lift metadata is written). Decide whether to implement this or retire the performance_metrics write to keep the system honest.
 
 **`computeTrends` (local, in app):**
 - [x] Groups last 30 session logs by `primary_lift`

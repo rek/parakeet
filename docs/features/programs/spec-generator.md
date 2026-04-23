@@ -3,6 +3,15 @@
 **Status**: Implemented
 **Domain**: Training Engine
 
+## Open Issues
+
+- [ ] **Scheduled programs have no mid-cycle deloads.** `isDeloadWeek(weekNumber, totalWeeks)` returns `true` only when `weekNumber === totalWeeks`. For a 12-week program, weeks 1-11 are all training — the lifter gets no programmed recovery week until week 12. This diverges from standard periodization practice (deload every 3-4 weeks) and from the unending generator (every 4th week). Options:
+  - Align with unending: mark `weekNumber % 4 === 0` as deload in scheduled mode too, plus the final week
+  - Keep current behaviour but clamp `totalWeeks` to a range where this is defensible (≤ 6)
+  - Make deload cadence a formula-config parameter
+- [ ] **Dead duplicate function `generateAuxiliaryAssignments` in `program-generator.ts`.** The same-named exported function exists in `auxiliary/auxiliary-rotator.ts` with a different signature (`programId, totalWeeks, pool, startOffset`). Because `modules/auxiliary/index.ts` exports after `modules/program-generation/index.ts`, the auxiliary-rotator version wins and the `program-generator.ts` version is unreachable. Delete the dead export to remove the name collision.
+- [ ] **Future flexibility: generalize past squat/bench/deadlift.** `LIFTS` is hardcoded to `['squat', 'bench', 'deadlift']` throughout the engine (scheduler CUBE rotation, warmup presets, exercise catalog, volume mapping). Expanding to Hyrox / conditioning / accessory-only cycles requires generalizing the Lift enum into a program-type-scoped lift set and factoring the Cube rotation matrix into program-type strategies. Not urgent — strength training is the stated focus — but note the expected refactor surface before more generators are wired in.
+
 ## What This Covers
 
 The `generateProgram` function now creates **structural scaffolding only** — session placeholders with metadata (week, block, lift, intensity type, planned date) but **no `planned_sets`**. Sets are calculated JIT when the user opens the session.
