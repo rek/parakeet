@@ -1,3 +1,4 @@
+// @spec docs/features/updates/spec-ota-updates.md
 import { useEffect, useMemo } from 'react';
 import { StyleSheet, Text, TouchableOpacity } from 'react-native';
 

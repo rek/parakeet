@@ -17,10 +17,11 @@ At the end: update design doc status → Implemented, update specs to match what
 **2026-04-22: @spec headers shipped across 244 files in 21 modules.** Checker now reports `21/22 modules unlinked → 1/22 unlinked`. Only `updates` remains: it has no feature spec dir (OTA updates was never specced). Write a spec first, then link.
 
 Remaining work:
-- `updates` module (3 non-trivial files) — needs spec written before headers can be added
 - ~50 spec files whose ticked tasks have no `→ path:symbol` back-link — do incrementally when features are touched
 - Engine code under `packages/training-engine/src/` — same convention, not yet linked
 - When spec back-links reach ~100%, flip `npm run check:spec-links` from advisory to `--strict` in `/verify`
+
+**2026-04-24:** `updates` module specced (`docs/features/updates/spec-ota-updates.md`) and `@spec` headers added to all 3 non-trivial files. Checker should now report 0/22 unlinked modules.
 
 ## 25
 

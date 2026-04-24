@@ -1,3 +1,4 @@
+// @spec docs/features/updates/spec-ota-updates.md
 import { createContext, useContext } from 'react';
 
 import { NOOP_STATE, useOtaUpdates } from './hooks/useOtaUpdates';

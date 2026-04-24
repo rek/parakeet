@@ -5,6 +5,7 @@ import { SorenessLevel } from '../../adjustments/soreness-adjuster';
 import { MuscleGroup } from '../../types';
 import { DEFAULT_MRV_MEV_CONFIG_MALE } from '../../volume/mrv-mev-calculator';
 import { PipelineContext } from './pipeline-context';
+import { applyCyclePhaseAdjustment } from './applyCyclePhaseAdjustment';
 import { applyMrvCap } from './applyMrvCap';
 import { applyReadinessAdjustment } from './applyReadinessAdjustment';
 import { applyRpeAdjustment } from './applyRpeAdjustment';
@@ -393,6 +394,20 @@ describe('applyMrvCap', () => {
 // ---------------------------------------------------------------------------
 
 describe('applySorenessAdjustment', () => {
+  describe('deload guard', () => {
+    it('deload session with high soreness → no-op (guard fires before modifier lookup)', () => {
+      const ctx = makeCtx({ worstSoreness: 7 as SorenessLevel, plannedCount: 5 });
+      const input = baseInput({ intensityType: 'deload', biologicalSex: 'male' });
+
+      applySorenessAdjustment(ctx, input);
+
+      expect(ctx.plannedCount).toBe(5);
+      expect(ctx.intensityMultiplier).toBe(1.0);
+      expect(ctx.inRecoveryMode).toBe(false);
+      expect(ctx.sorenessSetsRemoved).toBe(0);
+    });
+  });
+
   describe('recovery mode (soreness 9-10)', () => {
     it('soreness 9 → inRecoveryMode=true, rationale set', () => {
       const ctx = makeCtx({ worstSoreness: 9 as SorenessLevel });
@@ -505,6 +520,19 @@ describe('applySorenessAdjustment', () => {
 // ---------------------------------------------------------------------------
 
 describe('applyReadinessAdjustment', () => {
+  describe('deload guard', () => {
+    it('deload session with poor sleep and low energy → no-op', () => {
+      const ctx = makeCtx({ plannedCount: 5 });
+      const input = baseInput({ intensityType: 'deload', sleepQuality: 1, energyLevel: 1 });
+
+      applyReadinessAdjustment(ctx, input);
+
+      expect(ctx.plannedCount).toBe(5);
+      expect(ctx.intensityMultiplier).toBe(1.0);
+      expect(ctx.readinessSetsRemoved).toBe(0);
+    });
+  });
+
   describe('no readiness signals → no-op', () => {
     it('both sleepQuality and energyLevel undefined → no change', () => {
       const ctx = makeCtx();
@@ -602,6 +630,78 @@ describe('applyReadinessAdjustment', () => {
 
       applyReadinessAdjustment(ctx, input);
 
+      expect(ctx.intensityMultiplier).toBe(1.0);
+    });
+  });
+});
+
+// ---------------------------------------------------------------------------
+// applyCyclePhaseAdjustment
+// ---------------------------------------------------------------------------
+
+describe('applyCyclePhaseAdjustment', () => {
+  describe('deload guard', () => {
+    it('deload session with menstrual phase → no-op', () => {
+      const ctx = makeCtx({ plannedCount: 5 });
+      const input = baseInput({ intensityType: 'deload', cyclePhase: 'menstrual' });
+
+      applyCyclePhaseAdjustment(ctx, input);
+
+      expect(ctx.plannedCount).toBe(5);
+      expect(ctx.intensityMultiplier).toBe(1.0);
+      expect(ctx.cyclePhaseSetsRemoved).toBe(0);
+    });
+
+    it('deload session with late_luteal phase → no-op', () => {
+      const ctx = makeCtx({ plannedCount: 5 });
+      const input = baseInput({ intensityType: 'deload', cyclePhase: 'late_luteal' });
+
+      applyCyclePhaseAdjustment(ctx, input);
+
+      expect(ctx.plannedCount).toBe(5);
+      expect(ctx.intensityMultiplier).toBe(1.0);
+    });
+  });
+
+  describe('non-deload adjustments', () => {
+    it('menstrual phase → −1 set + 5% intensity cut', () => {
+      const ctx = makeCtx({ plannedCount: 5 });
+      const input = baseInput({ cyclePhase: 'menstrual' });
+
+      applyCyclePhaseAdjustment(ctx, input);
+
+      expect(ctx.plannedCount).toBe(4);
+      expect(ctx.intensityMultiplier).toBeCloseTo(0.95);
+      expect(ctx.cyclePhaseSetsRemoved).toBe(1);
+    });
+
+    it('luteal phase → 2.5% intensity cut, no set reduction', () => {
+      const ctx = makeCtx({ plannedCount: 5 });
+      const input = baseInput({ cyclePhase: 'luteal' });
+
+      applyCyclePhaseAdjustment(ctx, input);
+
+      expect(ctx.plannedCount).toBe(5);
+      expect(ctx.intensityMultiplier).toBeCloseTo(0.975);
+    });
+
+    it('follicular phase → no-op (neutral)', () => {
+      const ctx = makeCtx({ plannedCount: 5 });
+      const input = baseInput({ cyclePhase: 'follicular' });
+
+      applyCyclePhaseAdjustment(ctx, input);
+
+      expect(ctx.plannedCount).toBe(5);
+      expect(ctx.intensityMultiplier).toBe(1.0);
+    });
+
+    it('no cycle phase → no-op', () => {
+      const ctx = makeCtx({ plannedCount: 5 });
+      const input = baseInput({ cyclePhase: undefined });
+
+      applyCyclePhaseAdjustment(ctx, input);
+
+      expect(ctx.plannedCount).toBe(5);
       expect(ctx.intensityMultiplier).toBe(1.0);
     });
   });

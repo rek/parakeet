@@ -194,7 +194,7 @@ Flag modules that are missing layers (e.g. business logic in `data/` or `ui/` be
 ### 6. Features That Don't Make Sense or Are Internally Contradictory
 
 - **Minor disruption auto-apply at -20% vs fatigue at -10%**: The design doc says "bad day fatigue > Minor > auto-applied at -10%". The disruption adjuster uses `reps_reduction` not weight reduction. Are these consistent?
-- **Deload overlap**: Not implemented but no guard exists. Can a user accidentally override a deload week with a disruption?
+- **Deload overlap**: Guards implemented — soreness/readiness/cycle-phase adjusters early-return on `intensityType === 'deload'`. Disruption adjuster still runs but notes the disruption without reducing load (intentional).
 - **Mid-session disruption**: No entry point. The session screen has no path to report an injury mid-workout. Is there at least a note or TODO?
 - **`formula_config_id` is null on program insert**: If formula resolution at JIT runtime ever fails to find a config, what is the fallback? Does it use defaults silently or error?
 - **Menstrual cycle phase on session complete**: `stampCyclePhaseOnSession` — what happens if the user hasn't configured cycle tracking? Does it throw or skip gracefully?

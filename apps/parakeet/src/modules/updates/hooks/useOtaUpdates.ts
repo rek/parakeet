@@ -1,3 +1,4 @@
+// @spec docs/features/updates/spec-ota-updates.md
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { AppState } from 'react-native';
 
