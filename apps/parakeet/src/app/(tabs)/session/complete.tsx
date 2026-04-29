@@ -22,10 +22,10 @@ import {
   isNetworkError,
   RPE_OPTIONS,
   useSessionCacheInvalidation,
+  useSessionStore,
 } from '@modules/session';
 import type { JitData } from '@modules/session';
 import { useNetworkStatus } from '@platform/network';
-import { useSessionStore } from '@modules/session';
 import { useSyncStore } from '@platform/store/syncStore';
 import { captureException } from '@platform/utils/captureException';
 import { scheduleWeeklyReviewNotification } from '@platform/utils/notifications';
