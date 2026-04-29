@@ -11,6 +11,7 @@ import {
   useSessionRecovery,
   useSyncQueue,
 } from '@modules/session';
+import { useWearableSync } from '@modules/wearable';
 import { OtaUpdatesProvider, UpdateReadyBanner } from '@modules/updates';
 import { queryClient } from '@platform/query';
 import * as Sentry from '@sentry/react-native';
@@ -54,6 +55,7 @@ function RootLayoutNav() {
   useSyncQueue();
   useMissedSessionReconciliation();
   useSessionRecovery(user?.id);
+  useWearableSync();
   useRestNotifications();
   useRestNotificationTapHandler();
   useEffect(() => {

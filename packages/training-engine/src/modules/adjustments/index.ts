@@ -7,3 +7,5 @@ export * from '../../adjustments/intra-session-adapter';
 export * from '../../adjustments/volume-recovery';
 export * from '../../adjustments/weight-autoregulation';
 export * from '../../adjustments/injury-soreness';
+export * from '../../adjustments/wearable-readiness-adjuster';
+export * from '../../adjustments/readiness-score';

@@ -1,3 +1,4 @@
+export * from './modules/biometric';
 export * from './modules/cycle-review';
 export * from './modules/disruption';
 export * from './modules/jit';

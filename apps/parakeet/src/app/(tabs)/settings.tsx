@@ -11,6 +11,7 @@ import {
 
 import { useAuth } from '@modules/auth';
 import { useFeatureEnabled } from '@modules/feature-flags';
+import { useWearableStatus } from '@modules/wearable';
 import { formatBirthYear, formatBodyweight } from '@modules/profile';
 import {
   exportTrainingData,
@@ -240,6 +241,11 @@ function buildStyles(colors: ColorScheme) {
       borderRadius: radii.full,
       backgroundColor: colors.primary,
     },
+    wearableDot: {
+      width: 8,
+      height: 8,
+      borderRadius: radii.full,
+    },
     signOutLabel: {
       color: colors.danger,
     },
@@ -305,6 +311,7 @@ function buildStyles(colors: ColorScheme) {
 export default function SettingsScreen() {
   const { colors, themeName, setTheme } = useTheme();
   const { user, signOut } = useAuth();
+  const wearableStatus = useWearableStatus();
 
   const styles = useMemo(() => buildStyles(colors), [colors]);
 
@@ -554,6 +561,28 @@ export default function SettingsScreen() {
             styles={styles}
           />
         )}
+        <Row
+          label="Wearable"
+          onPress={() => router.push('/settings/wearable')}
+          styles={styles}
+          right={
+            <View style={styles.rowRight}>
+              <View
+                style={[
+                  styles.wearableDot,
+                  {
+                    backgroundColor: !wearableStatus.isAvailable
+                      ? colors.textTertiary
+                      : wearableStatus.isPermitted
+                        ? colors.success
+                        : colors.warning,
+                  },
+                ]}
+              />
+              <Text style={styles.chevron}>›</Text>
+            </View>
+          }
+        />
 
         <View style={styles.divider} />
 

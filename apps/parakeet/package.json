@@ -43,6 +43,7 @@
     "react": "*",
     "react-native": "*",
     "react-native-compressor": "*",
+    "react-native-health-connect": "^3.5.0",
     "react-native-markdown-display": "^7.0.2",
     "react-native-mediapipe": "*",
     "react-native-qrcode-svg": "*",

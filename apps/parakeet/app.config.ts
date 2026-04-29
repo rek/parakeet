@@ -22,7 +22,12 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
       ? 'com.adam.tombleson.parakeet.dev'
       : 'com.adam.tombleson.parakeet',
     googleServicesFile: './google-services.json',
+    minSdkVersion: 28,
   },
+  plugins: [
+    ...(config.plugins ?? []),
+    'react-native-health-connect',
+  ],
   extra: {
     ...config.extra,
     buildDate: new Date().toISOString(),

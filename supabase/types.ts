@@ -129,6 +129,36 @@ export type Database = {
         }
         Relationships: []
       }
+      biometric_readings: {
+        Row: {
+          created_at: string
+          id: string
+          recorded_at: string
+          source: string
+          type: string
+          user_id: string
+          value: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          recorded_at: string
+          source?: string
+          type: string
+          user_id: string
+          value: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          recorded_at?: string
+          source?: string
+          type?: string
+          user_id?: string
+          value?: number
+        }
+        Relationships: []
+      }
       bodyweight_entries: {
         Row: {
           created_at: string
@@ -1289,36 +1319,60 @@ export type Database = {
       }
       recovery_snapshots: {
         Row: {
-          hrv_ms: number | null
+          active_minutes_24h: number | null
+          created_at: string
+          date: string
+          deep_sleep_pct: number | null
+          hrv_baseline_7d: number | null
+          hrv_pct_change: number | null
+          hrv_rmssd: number | null
           id: string
-          raw_payload: Json | null
-          recorded_at: string
-          resting_hr_bpm: number | null
-          sleep_duration_minutes: number | null
-          sleep_quality_score: number | null
-          source: string
+          readiness_score: number | null
+          rem_sleep_pct: number | null
+          resting_hr: number | null
+          resting_hr_baseline_7d: number | null
+          rhr_pct_change: number | null
+          sleep_duration_min: number | null
+          spo2_avg: number | null
+          steps_24h: number | null
           user_id: string
         }
         Insert: {
-          hrv_ms?: number | null
+          active_minutes_24h?: number | null
+          created_at?: string
+          date: string
+          deep_sleep_pct?: number | null
+          hrv_baseline_7d?: number | null
+          hrv_pct_change?: number | null
+          hrv_rmssd?: number | null
           id?: string
-          raw_payload?: Json | null
-          recorded_at: string
-          resting_hr_bpm?: number | null
-          sleep_duration_minutes?: number | null
-          sleep_quality_score?: number | null
-          source: string
+          readiness_score?: number | null
+          rem_sleep_pct?: number | null
+          resting_hr?: number | null
+          resting_hr_baseline_7d?: number | null
+          rhr_pct_change?: number | null
+          sleep_duration_min?: number | null
+          spo2_avg?: number | null
+          steps_24h?: number | null
           user_id: string
         }
         Update: {
-          hrv_ms?: number | null
+          active_minutes_24h?: number | null
+          created_at?: string
+          date?: string
+          deep_sleep_pct?: number | null
+          hrv_baseline_7d?: number | null
+          hrv_pct_change?: number | null
+          hrv_rmssd?: number | null
           id?: string
-          raw_payload?: Json | null
-          recorded_at?: string
-          resting_hr_bpm?: number | null
-          sleep_duration_minutes?: number | null
-          sleep_quality_score?: number | null
-          source?: string
+          readiness_score?: number | null
+          rem_sleep_pct?: number | null
+          resting_hr?: number | null
+          resting_hr_baseline_7d?: number | null
+          rhr_pct_change?: number | null
+          sleep_duration_min?: number | null
+          spo2_avg?: number | null
+          steps_24h?: number | null
           user_id?: string
         }
         Relationships: []
