@@ -15,6 +15,7 @@ export interface WeightDerivation {
     source:
       | 'rpe_history'
       | 'readiness'
+      | 'wearable-readiness'
       | 'cycle_phase'
       | 'soreness'
       | 'disruption';
@@ -38,6 +39,7 @@ export interface VolumeTrace {
     | 'volume_calibration'
     | 'rpe_history'
     | 'readiness'
+    | 'wearable-readiness'
     | 'cycle_phase'
     | 'soreness'
     | 'disruption'

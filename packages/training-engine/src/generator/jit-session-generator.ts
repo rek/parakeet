@@ -104,6 +104,16 @@ export interface JITInput {
   // Readiness signals (engine-028): 1=poor/low, 2=ok/normal, 3=great/high
   sleepQuality?: ReadinessLevel;
   energyLevel?: ReadinessLevel;
+  // Wearable recovery signals — supersede sleepQuality/energyLevel when present.
+  // All optional; partial data is normal. Populated from today's recovery_snapshots row.
+  // See spec-pipeline.md §10 and spec-readiness-adjuster.md §3.
+  hrvPctChange?: number;
+  restingHrPctChange?: number;
+  sleepDurationMin?: number;
+  deepSleepPct?: number;
+  spo2Avg?: number;
+  nonTrainingLoad?: number;
+  readinessScore?: number;
   // Menstrual cycle phase for cycle-aware JIT adjustments (engine-030)
   cyclePhase?: CyclePhase;
   // Week progress for pro-rated MEV threshold in volume top-up (engine-027 fix)

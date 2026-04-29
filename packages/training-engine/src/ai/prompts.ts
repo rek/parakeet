@@ -18,6 +18,16 @@ Rest adjustments:
 - The delta must be between -60 and +60. Omit restAdjustments entirely if the formula default is appropriate.
 - Only suggest a larger rest if RPE was very high (>=9.5) or disruption/soreness is significant.
 - Only suggest shorter rest if this is a deload or RPE was notably low (<=7.5).
+
+Wearable recovery data (when present — these fields may be absent if no wearable is connected or baselines are still being established):
+- hrvPctChange: % change from the lifter's 7-day HRV baseline. Negative = worse recovery. Below -20% is significant.
+- restingHrPctChange: % change from the lifter's 7-day RHR baseline. Positive = elevated. Above +10% warrants caution.
+- sleepDurationMin: minutes slept last night. Below 360 (6h) is poor. Below 300 (5h) is critical.
+- deepSleepPct: % of sleep in deep stage. Below 15% impairs muscular recovery regardless of total duration.
+- nonTrainingLoad: 0-3 scale of non-training physical activity. 3 = high load contributing to fatigue.
+- readinessScore: composite 0-100 recovery score. Below 40 = significant concern. Above 70 = good.
+
+When wearable and subjective signals (sleepQuality, energyLevel) both exist and conflict, prioritise the wearable data but call out the discrepancy in the rationale (e.g., "lifter reported feeling fresh but HRV is 18% below baseline — reducing intensity 5%"). Wearable signals do NOT override active disruptions; disruption precedence is unchanged.
 `;
 
 export const JUDGE_REVIEW_SYSTEM_PROMPT = `
@@ -132,6 +142,20 @@ Your analysis should:
 4. Surface concrete formula suggestions (specific parameter changes with rationale).
 5. Note any structural observations that would require developer attention.
 6. Provide a plain-language summary of recommendations for the next cycle.
+
+Recovery data (when present in \`recoverySummary\`):
+- recoverySummary.dayCount — number of days the lifter had wearable coverage. Low coverage means recovery analysis is unreliable; weight your conclusions accordingly.
+- recoverySummary.avgReadinessScore — cycle-level mean of the daily 0–100 composite. Below 55 across the whole cycle is a yellow flag.
+- recoverySummary.avgHrvPctChange — mean HRV change vs baseline. Sustained negative drift correlates with overreaching.
+- recoverySummary.avgRhrPctChange — mean RHR change vs baseline. Sustained positive drift corroborates HRV concerns.
+- recoverySummary.avgSleepDurationMin — cycle-level mean sleep. Below 380 (~6h20m) routinely is a sleep-debt finding worth surfacing.
+- recoverySummary.lowReadinessStreaks — date ranges of ≥3 consecutive days with score < 50. Cross-reference with weeks where performance dipped — this is the strongest overreaching evidence available.
+- recoverySummary.recent — last 14 daily snapshot rows for chart context.
+
+When recoverySummary is null, do not speculate about recovery. Note that wearable data was not available and confine the review to subjective signals and performance.
+
+Sustained HRV decline of >10% for three or more days often precedes performance drops by 1–2 sessions — flag this when present.
+Sleep patterns correlated with the training schedule (e.g. consistently <6h on training days) reveal scheduling issues — suggest schedule adjustments rather than reducing volume.
 
 Return a JSON object matching the CycleReview schema exactly.
 `;

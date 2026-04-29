@@ -4,6 +4,7 @@
 export type ModifierSource =
   | 'rpe_history'
   | 'readiness'
+  | 'wearable-readiness'
   | 'cycle_phase'
   | 'soreness'
   | 'disruption';

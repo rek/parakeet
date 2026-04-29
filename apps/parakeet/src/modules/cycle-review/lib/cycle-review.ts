@@ -11,6 +11,7 @@ import type {
   RawCycleData,
 } from '@parakeet/training-engine';
 import { fromJson } from '@platform/supabase';
+import { fetchSnapshotsForRange } from '@modules/wearable';
 
 import {
   fetchCycleReportSourceData,
@@ -54,7 +55,14 @@ export async function compileCycleReport(
   userId: string
 ): Promise<CycleReport> {
   const raw: RawCycleData = await fetchCycleReportSourceData(programId, userId);
-  return assembleCycleReport(raw);
+  const startDate = raw.program.start_date;
+  const endDate = new Date().toISOString().slice(0, 10);
+  const recoverySnapshots = await fetchSnapshotsForRange(
+    userId,
+    startDate,
+    endDate
+  );
+  return assembleCycleReport({ ...raw, recoverySnapshots });
 }
 
 export async function getPreviousCycleSummaries(

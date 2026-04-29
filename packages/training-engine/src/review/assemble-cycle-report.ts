@@ -1,4 +1,4 @@
-import type { Lift } from '@parakeet/shared-types';
+import type { Lift, RecoverySnapshot } from '@parakeet/shared-types';
 
 import { LIFTS } from '../auxiliary/exercise-catalog';
 
@@ -88,6 +88,8 @@ export interface RawCycleData {
   formulaHistory: RawFormulaHistory[];
   /** Weekly body reviews submitted during this program (optional — omitted for ad-hoc) */
   weeklyBodyReviews?: RawWeeklyBodyReview[];
+  /** Daily recovery snapshots covering the cycle's date range — optional */
+  recoverySnapshots?: RecoverySnapshot[];
 }
 
 // ---------------------------------------------------------------------------
@@ -120,6 +122,23 @@ export interface AuxLiftCorrelation {
   liftChangePct: number | null;
 }
 
+export interface RecoverySummary {
+  /** Days with a snapshot row (signal coverage indicator) */
+  dayCount: number;
+  /** Mean readiness score across days with a non-null score, or null */
+  avgReadinessScore: number | null;
+  /** Mean HRV % change vs baseline across the cycle, or null */
+  avgHrvPctChange: number | null;
+  /** Mean RHR % change vs baseline across the cycle, or null */
+  avgRhrPctChange: number | null;
+  /** Mean sleep duration in minutes across days with sleep data, or null */
+  avgSleepDurationMin: number | null;
+  /** Date ranges (≥3 consecutive days) where avgReadinessScore < 50 — likely overreaching */
+  lowReadinessStreaks: Array<{ start: string; end: string; avgScore: number }>;
+  /** Up to 14 most recent snapshot rows for chart context */
+  recent: RecoverySnapshot[];
+}
+
 export interface BodyReviewSummary {
   /** Total number of weekly body reviews submitted this cycle */
   reviewCount: number;
@@ -149,6 +168,8 @@ export interface CycleReport {
   }>;
   /** Body soreness review summary — null when no reviews were submitted */
   bodyReviewSummary: BodyReviewSummary | null;
+  /** Recovery summary — null when no recovery snapshots exist for the cycle */
+  recoverySummary: RecoverySummary | null;
 }
 
 // ---------------------------------------------------------------------------
@@ -268,6 +289,10 @@ export function assembleCycleReport(raw: RawCycleData): CycleReport {
     raw.weeklyBodyReviews ?? []
   );
 
+  const recoverySummary = raw.recoverySnapshots
+    ? buildRecoverySummary(raw.recoverySnapshots)
+    : null;
+
   return {
     programId: raw.program.id,
     totalWeeks: raw.program.total_weeks,
@@ -287,6 +312,68 @@ export function assembleCycleReport(raw: RawCycleData): CycleReport {
       createdAt: f.created_at,
     })),
     bodyReviewSummary,
+    recoverySummary,
+  };
+}
+
+export function buildRecoverySummary(
+  snapshots: RecoverySnapshot[]
+): RecoverySummary | null {
+  if (snapshots.length === 0) return null;
+
+  const sorted = [...snapshots].sort((a, b) => a.date.localeCompare(b.date));
+
+  const mean = (xs: number[]): number | null =>
+    xs.length === 0
+      ? null
+      : Math.round((xs.reduce((a, b) => a + b, 0) / xs.length) * 10) / 10;
+
+  const scores = sorted
+    .map((s) => s.readiness_score)
+    .filter((v): v is number => v !== null);
+  const hrvChanges = sorted
+    .map((s) => s.hrv_pct_change)
+    .filter((v): v is number => v !== null);
+  const rhrChanges = sorted
+    .map((s) => s.rhr_pct_change)
+    .filter((v): v is number => v !== null);
+  const sleepDur = sorted
+    .map((s) => s.sleep_duration_min)
+    .filter((v): v is number => v !== null);
+
+  // Identify ≥3 consecutive days with score < 50
+  const lowStreaks: RecoverySummary['lowReadinessStreaks'] = [];
+  let runStart = -1;
+  let runScores: number[] = [];
+  for (let i = 0; i < sorted.length; i++) {
+    const score = sorted[i].readiness_score;
+    const isLow = score !== null && score < 50;
+    if (isLow) {
+      if (runStart < 0) runStart = i;
+      runScores.push(score);
+    }
+    if ((!isLow || i === sorted.length - 1) && runStart >= 0) {
+      const runEnd = isLow ? i : i - 1;
+      if (runEnd - runStart + 1 >= 3) {
+        lowStreaks.push({
+          start: sorted[runStart].date,
+          end: sorted[runEnd].date,
+          avgScore: mean(runScores)!,
+        });
+      }
+      runStart = -1;
+      runScores = [];
+    }
+  }
+
+  return {
+    dayCount: sorted.length,
+    avgReadinessScore: mean(scores),
+    avgHrvPctChange: mean(hrvChanges),
+    avgRhrPctChange: mean(rhrChanges),
+    avgSleepDurationMin: mean(sleepDur),
+    lowReadinessStreaks: lowStreaks,
+    recent: sorted.slice(-14),
   };
 }
 
