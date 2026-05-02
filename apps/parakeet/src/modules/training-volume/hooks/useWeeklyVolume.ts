@@ -1,14 +1,15 @@
 // @spec docs/features/volume/spec-augmentation.md
 import { useAuth } from '@modules/auth';
 import { getProfile } from '@modules/profile';
-import { fetchActiveProgramMode } from '@modules/program';
+import { fetchActiveProgramMode, getAllAuxMuscleMap } from '@modules/program';
 import {
   classifyVolumeStatus,
   computeRemainingCapacity,
   computeVolumeBreakdown,
   computeWeeklyVolume,
-  getMusclesForLift,
+  createMuscleMapper,
 } from '@parakeet/training-engine';
+import type { MuscleGroup } from '@parakeet/training-engine';
 import { useQuery } from '@tanstack/react-query';
 
 import { volumeQueries } from '../data/volume.queries';
@@ -26,16 +27,22 @@ export function useWeeklyVolume() {
     queryKey: volumeQueries.weekly(user?.id, rollingWindowStart()),
     queryFn: async () => {
       const { getCurrentWeekLogs } = await import('@modules/session');
-      const [logs, profile, program] = await Promise.all([
+      const [logs, profile, program, auxMuscleMap] = await Promise.all([
         getCurrentWeekLogs(user!.id),
         getProfile(),
         fetchActiveProgramMode(user!.id),
+        getAllAuxMuscleMap(user!.id),
       ]);
       const config = await getMrvMevConfig(user!.id, profile?.biological_sex);
-      const weekly = computeWeeklyVolume(logs, getMusclesForLift);
+      // Mapper credits user-defined exercises (e.g. "Pec Deck") to the muscles
+      // the lifter selected when registering them — not the day's primary lift.
+      const muscleMapper = createMuscleMapper(
+        auxMuscleMap as Record<string, MuscleGroup[]>
+      );
+      const weekly = computeWeeklyVolume(logs, muscleMapper);
       const breakdown = computeVolumeBreakdown({
         sessionLogs: logs,
-        muscleMapper: getMusclesForLift,
+        muscleMapper,
       });
       const status = classifyVolumeStatus(weekly, config);
       const remaining = computeRemainingCapacity(weekly, config);

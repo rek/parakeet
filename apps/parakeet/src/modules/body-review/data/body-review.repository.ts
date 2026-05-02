@@ -1,4 +1,5 @@
 // @spec docs/features/soreness-and-readiness/spec-review-data.md
+import { getAllAuxMuscleMap } from '@modules/program';
 import { getSessionSetsBySessionIds } from '@modules/session';
 import type { Lift } from '@parakeet/shared-types';
 import { LiftSchema, MUSCLE_GROUPS } from '@parakeet/shared-types';
@@ -9,8 +10,7 @@ import type {
   PredictedFatigue,
 } from '@parakeet/training-engine';
 import {
-  getMusclesForExercise,
-  getMusclesForLift,
+  createMuscleMapper,
   rpeSetMultiplier,
 } from '@parakeet/training-engine';
 import type { DbRow } from '@platform/supabase';
@@ -144,7 +144,17 @@ export async function fetchWeeklyVolumeForReview(
   const sessionIds = rows
     .map((r) => r.session_id)
     .filter((id): id is string => !!id);
-  const setsMap = await getSessionSetsBySessionIds(sessionIds);
+  const [setsMap, auxMuscleMap] = await Promise.all([
+    getSessionSetsBySessionIds(sessionIds),
+    getAllAuxMuscleMap(userId),
+  ]);
+
+  // Mapper credits user-defined exercises (e.g. "Pec Deck") to the muscles the
+  // lifter selected when registering them, falling back to the day's lift only
+  // when both the catalog and the user's custom map miss.
+  const muscleMapper = createMuscleMapper(
+    auxMuscleMap as Record<string, MuscleGroup[]>
+  );
 
   for (const row of rows) {
     const sessions = Array.isArray(row.sessions)
@@ -160,7 +170,7 @@ export async function fetchWeeklyVolumeForReview(
       (sum, s) => sum + rpeSetMultiplier(s.rpe_actual),
       0
     );
-    for (const { muscle, contribution } of getMusclesForLift(lift)) {
+    for (const { muscle, contribution } of muscleMapper(lift)) {
       volume[muscle] += Math.floor(mainEffective * contribution);
     }
 
@@ -175,10 +185,7 @@ export async function fetchWeeklyVolumeForReview(
       }
     }
     for (const [exercise, effective] of auxByExercise) {
-      const auxMuscles = getMusclesForExercise(exercise);
-      const muscles =
-        auxMuscles.length > 0 ? auxMuscles : getMusclesForLift(lift);
-      for (const { muscle, contribution } of muscles) {
+      for (const { muscle, contribution } of muscleMapper(lift, exercise)) {
         volume[muscle] += Math.floor(effective * contribution);
       }
     }

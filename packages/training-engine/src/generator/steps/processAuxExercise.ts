@@ -7,11 +7,11 @@ import {
 } from '../../auxiliary/exercise-catalog';
 import { getExerciseType } from '../../auxiliary/exercise-types';
 import { roundToNearest } from '../../formulas/weight-rounding';
-import type { MrvMevConfig, MuscleGroup } from '../../types';
-import {
-  getMusclesForExercise,
-  getMusclesForLift,
-} from '../../volume/muscle-mapper';
+import type {
+  MrvMevConfig,
+  MuscleGroup,
+  MuscleMapper,
+} from '../../types';
 import type { AuxiliaryWork } from '../jit-session-generator';
 
 /** Fraction of weight retained when aux shares muscles with the session's main lift.
@@ -31,6 +31,7 @@ export function processAuxExercise({
   hasNoEquipment,
   warnings,
   primaryLift,
+  muscleMapper,
 }: {
   exercise: string;
   worstSoreness: SorenessLevel;
@@ -43,6 +44,7 @@ export function processAuxExercise({
   hasNoEquipment: boolean;
   warnings: string[];
   primaryLift: Lift;
+  muscleMapper: MuscleMapper;
 }): AuxiliaryWork {
   const exerciseType = getExerciseType(exercise);
 
@@ -97,9 +99,9 @@ export function processAuxExercise({
   // Prod data shows RPE 9.5-10 on compound aux (e.g. CGBP after bench) without this.
   if (mainLiftSetCount > 0) {
     const mainLiftMuscles = new Set(
-      getMusclesForLift(primaryLift).map((m) => m.muscle)
+      muscleMapper(primaryLift).map((m) => m.muscle)
     );
-    const auxMuscles = getMusclesForExercise(exercise);
+    const auxMuscles = muscleMapper(null, exercise);
     const hasOverlap = auxMuscles.some(
       (m) => m.contribution >= 0.5 && mainLiftMuscles.has(m.muscle)
     );
