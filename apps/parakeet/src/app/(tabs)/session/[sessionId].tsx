@@ -39,6 +39,7 @@ import {
   SetRow,
   startSession,
   useSessionLifecycle,
+  useSessionStore,
   useSetCompletionFlow,
   useSetPersistence,
   VolumeRecoveryBanner,
@@ -67,7 +68,6 @@ import {
 } from '@modules/video-analysis';
 import type { Lift } from '@parakeet/shared-types';
 import { useNetworkStatus } from '@platform/network';
-import { useSessionStore } from '@modules/session';
 import { captureException } from '@platform/utils/captureException';
 import type { PlateKg } from '@shared/constants/plates';
 import { ExerciseName } from '@shared/ui/ExerciseName';

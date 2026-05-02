@@ -27,6 +27,7 @@ import {
 import { useFeatureEnabled } from '@modules/feature-flags';
 import { useActiveProgram } from '@modules/program';
 import {
+  getReadyCachedJitData,
   partitionTodaySessions,
   skipSession,
   useInProgressSession,
@@ -44,7 +45,6 @@ import {
   useWeeklyVolume,
   volumeFillPct,
 } from '@modules/training-volume';
-import { getReadyCachedJitData } from '@modules/session';
 import { captureException } from '@platform/utils/captureException';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {

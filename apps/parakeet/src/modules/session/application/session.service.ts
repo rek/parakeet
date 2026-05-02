@@ -424,7 +424,7 @@ export async function completeSession(
   // summary row only stores aggregate stats. The is_completed-filtered
   // projection is no longer needed.
 
-  const sessionLogId = await insertSessionLog({
+  await insertSessionLog({
     sessionId,
     userId,
     sessionRpe,

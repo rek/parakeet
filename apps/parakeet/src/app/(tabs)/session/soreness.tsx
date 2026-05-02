@@ -24,9 +24,9 @@ import {
   getReadinessPillColors,
   getSession,
   recordSorenessCheckin,
+  useSessionStore,
 } from '@modules/session';
 import type { Lift, MuscleGroup } from '@parakeet/shared-types';
-import { useSessionStore } from '@modules/session';
 import { captureException } from '@platform/utils/captureException';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {
