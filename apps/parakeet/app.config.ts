@@ -22,11 +22,21 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
       ? 'com.adam.tombleson.parakeet.dev'
       : 'com.adam.tombleson.parakeet',
     googleServicesFile: './google-services.json',
-    minSdkVersion: 28,
   },
   plugins: [
     ...(config.plugins ?? []),
     'react-native-health-connect',
+    // Health Connect (androidx.health.connect:connect-client) requires
+    // minSdk 26. Pinned to 28; the bare `android.minSdkVersion` field
+    // alone is not honoured by gradle without this plugin.
+    [
+      'expo-build-properties',
+      {
+        android: {
+          minSdkVersion: 28,
+        },
+      },
+    ],
   ],
   extra: {
     ...config.extra,
