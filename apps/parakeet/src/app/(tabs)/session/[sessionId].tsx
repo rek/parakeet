@@ -39,6 +39,7 @@ import {
   SetRow,
   startSession,
   useSessionLifecycle,
+  useSessionStore,
   useSetCompletionFlow,
   useSetPersistence,
   useSessionStore,

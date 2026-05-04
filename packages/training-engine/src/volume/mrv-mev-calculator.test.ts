@@ -7,12 +7,12 @@ import {
   DEFAULT_MRV_MEV_CONFIG_FEMALE,
   DEFAULT_MRV_MEV_CONFIG_MALE,
 } from './mrv-mev-calculator';
-import { getMusclesForExercise, getMusclesForLift } from './muscle-mapper';
-import { rpeSetMultiplier } from './rpe-scaler';
 import {
-  clearCustomExerciseRegistry,
-  registerCustomExercise,
-} from '../auxiliary/exercise-catalog';
+  createMuscleMapper,
+  getMusclesForExercise,
+  getMusclesForLift,
+} from './muscle-mapper';
+import { rpeSetMultiplier } from './rpe-scaler';
 
 // Helper for calibration tests: asserts a value is within a reasonable range
 // around a center point. Use for secondary muscle volumes that depend on
@@ -270,32 +270,51 @@ describe('getMusclesForExercise', () => {
   });
 });
 
-describe('getMusclesForExercise — custom exercise registry', () => {
-  afterEach(() => {
-    clearCustomExerciseRegistry();
-  });
-
-  it('returns registered muscles for a custom exercise at contribution 1.0', () => {
-    registerCustomExercise('Banded Hip Thrust', ['glutes', 'hamstrings']);
-    const m = getMusclesForExercise('Banded Hip Thrust');
+describe('createMuscleMapper — custom exercise map', () => {
+  it('credits registered muscles for a custom exercise at contribution 1.0', () => {
+    const mapper = createMuscleMapper({
+      'Banded Hip Thrust': ['glutes', 'hamstrings'],
+    });
+    const m = mapper(null, 'Banded Hip Thrust');
     expect(m).toHaveLength(2);
     expect(m.find((x) => x.muscle === 'glutes')?.contribution).toBe(1.0);
     expect(m.find((x) => x.muscle === 'hamstrings')?.contribution).toBe(1.0);
   });
 
-  it('returns [] for unknown exercise after clear', () => {
-    registerCustomExercise('Custom Move', ['chest']);
-    clearCustomExerciseRegistry();
-    expect(getMusclesForExercise('Custom Move')).toEqual([]);
+  it('returns [] for unknown exercise when neither catalog nor map matches', () => {
+    const mapper = createMuscleMapper({ 'Custom Move': ['chest'] });
+    expect(mapper(null, 'Other Custom Move')).toEqual([]);
   });
 
-  it('catalog exercise takes priority over registry entry with same name', () => {
+  it('catalog exercise takes priority over custom map entry with same name', () => {
     // Bulgarian Split Squat is in catalog with quads + glutes + hamstrings
-    registerCustomExercise('Bulgarian Split Squat', ['biceps']);
-    const m = getMusclesForExercise('Bulgarian Split Squat');
+    const mapper = createMuscleMapper({ 'Bulgarian Split Squat': ['biceps'] });
+    const m = mapper(null, 'Bulgarian Split Squat');
     // Catalog entry preserved — no biceps, has quads
     expect(m.find((x) => x.muscle === 'quads')).toBeDefined();
     expect(m.find((x) => x.muscle === 'biceps')).toBeUndefined();
+  });
+
+  it('Pec Deck on a deadlift day still credits chest, not deadlift muscles', () => {
+    // Regression: previously, custom exercises fell through to the day's lift
+    // map, so chest accessory work on a deadlift day would credit hamstrings
+    // / lower back instead of chest.
+    const mapper = createMuscleMapper({ 'Pec Deck': ['chest'] });
+    const m = mapper('deadlift', 'Pec Deck');
+    expect(m).toHaveLength(1);
+    expect(m[0]).toEqual({ muscle: 'chest', contribution: 1.0 });
+  });
+
+  it('default mapper has no customs and falls back to lift map', () => {
+    const m = getMusclesForLift('bench', 'Pec Deck');
+    // Falls back to bench muscles: chest 1.0, triceps 0.4, shoulders 0.4
+    expect(m.find((x) => x.muscle === 'chest')?.contribution).toBe(1.0);
+  });
+
+  it('catalog-only getMusclesForExercise does not see custom map', () => {
+    // Standalone export is the catalog-only mapper. Callers that need user
+    // customs must build their own mapper via createMuscleMapper.
+    expect(getMusclesForExercise('Pec Deck')).toEqual([]);
   });
 });
 

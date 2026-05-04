@@ -27,11 +27,12 @@ import {
   FormulaConfig,
   MrvMevConfig,
   MuscleGroup,
+  MuscleMapper,
   PUSH_MUSCLES,
 } from '../types';
 import {
-  getMusclesForExercise,
-  getMusclesForLift,
+  createMuscleMapper,
+  CustomMuscleMap,
 } from '../volume/muscle-mapper';
 import { PrescriptionTraceBuilder } from './prescription-trace';
 import { applyCyclePhaseAdjustment } from './steps/applyCyclePhaseAdjustment';
@@ -139,6 +140,12 @@ export interface JITInput {
   capacityHistory?: number[];
   // Weekly body review mismatch direction for primary muscles: 'recovering_well' | 'accumulating_fatigue' | null.
   weeklyMismatchDirection?: 'recovering_well' | 'accumulating_fatigue' | null;
+  // User-defined exercises (e.g. "Pec Deck") and the muscles the lifter
+  // selected when registering them. Used by the engine to credit volume to
+  // those muscles for exercises that aren't in the catalog. Catalog entries
+  // always take priority. Kept as plain data so JITInput stays serializable
+  // (used for replay/diagnostics in jit_input columns).
+  customMuscleMap?: CustomMuscleMap;
 }
 
 export interface AuxiliaryWork {
@@ -306,6 +313,7 @@ export function generateJITSession(
     userRestOverrides,
     barWeightKg = 20,
   } = input;
+  const muscleMapper = createMuscleMapper(input.customMuscleMap);
 
   // Step 1 — Initialize pipeline context (base sets, primary muscles, soreness)
   const ctx = initPipeline(input, traceBuilder);
@@ -341,6 +349,7 @@ export function generateJITSession(
     ctx.primaryMuscles,
     auxSoreness,
     ctx.warnings,
+    muscleMapper,
     input.biologicalSex,
     input.activeDisruptions,
     primaryLift
@@ -358,6 +367,7 @@ export function generateJITSession(
       input.weeklyVolumeToDate,
       input.mrvMevConfig,
       activeAuxiliaries,
+      muscleMapper,
       input.biologicalSex,
       input.sessionIndex,
       input.totalSessionsThisWeek,
@@ -549,6 +559,7 @@ function buildAuxiliaryWork(
   primaryMuscles: MuscleGroup[],
   worstSoreness: SorenessLevel,
   warnings: string[],
+  muscleMapper: MuscleMapper,
   biologicalSex?: 'female' | 'male',
   activeDisruptions?: TrainingDisruption[],
   primaryLift?: Lift
@@ -571,6 +582,7 @@ function buildAuxiliaryWork(
       hasNoEquipment,
       warnings,
       primaryLift: primaryLift ?? 'squat',
+      muscleMapper,
     })
   );
 
@@ -633,6 +645,7 @@ function buildVolumeTopUp(
   weeklyVolumeToDate: Partial<Record<MuscleGroup, number>>,
   mrvMevConfig: MrvMevConfig,
   activeAuxiliaries: [string, string],
+  muscleMapper: MuscleMapper,
   biologicalSex?: 'female' | 'male',
   sessionIndex?: number,
   totalSessionsThisWeek?: number,
@@ -644,7 +657,7 @@ function buildVolumeTopUp(
   activeDisruptions?: TrainingDisruption[]
 ): AuxiliaryWork[] {
   // Build main lift muscle contributions to project post-session volume
-  const liftMuscles = getMusclesForLift(primaryLift);
+  const liftMuscles = muscleMapper(primaryLift);
   const mainContrib = new Map<MuscleGroup, number>();
   for (const { muscle, contribution } of liftMuscles) {
     mainContrib.set(muscle, (mainContrib.get(muscle) ?? 0) + contribution);
@@ -714,7 +727,7 @@ function buildVolumeTopUp(
         return false;
       if (injuredLiftSet.size > 0 && exerciseLift && injuredLiftSet.has(exerciseLift))
         return false;
-      return getMusclesForExercise(exercise).some(
+      return muscleMapper(null, exercise).some(
         (m) => m.muscle === muscle && m.contribution >= 1.0
       );
     });
@@ -727,6 +740,7 @@ function buildVolumeTopUp(
       sorenessRatings: sorenessRatings ?? {},
       sleepQuality,
       energyLevel,
+      muscleMapper,
       primaryLift,
       mainLiftSetCount,
       upcomingLifts,

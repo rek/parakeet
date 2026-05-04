@@ -97,13 +97,18 @@ volume[muscle] += effectiveSets x contribution
 
 ## Exercise-to-Muscle Resolution
 
-When attributing volume for an arbitrary catalog exercise, muscle contributions are resolved in priority order:
+Volume attribution uses a `MuscleMapper` — a function `(lift, exercise?) → MuscleContribution[]` built per-user via `createMuscleMapper(customMuscleMap)`. The custom map carries the muscles the lifter selected when registering exercises that don't appear in the catalog (e.g. "Pec Deck", "Cable Fly").
+
+When resolving an exercise, sources are consulted in priority order:
 
 | Priority | Source                              | Contribution value       |
 |----------|-------------------------------------|--------------------------|
 | 1        | Catalog `muscleContributions` field | As specified             |
 | 2        | Catalog `primaryMuscles` list       | 1.0 per listed muscle    |
-| 3        | `LIFT_MUSCLES` map for primary lift | As per primary lift table|
-| 4        | (none found)                        | Empty — no volume counted|
+| 3        | User custom muscle map              | 1.0 per listed muscle    |
+| 4        | `LIFT_MUSCLES` map for primary lift | As per primary lift table|
+| 5        | (none found)                        | Empty — no volume counted|
+
+The catalog-only standalone exports `getMusclesForLift` and `getMusclesForExercise` are equivalent to a mapper with no custom map. Use them only when no user context is available (e.g. simulator, generic lookup helpers). Production attribution paths — JIT pipeline, weekly home-page volume, body review — all build a per-user mapper from the lifter's stored aux muscle map so user-defined exercises credit the muscles the lifter selected, regardless of the day's primary lift.
 
 **Source:** `packages/training-engine/src/volume/muscle-mapper.ts`

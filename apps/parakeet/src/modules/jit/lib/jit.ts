@@ -39,16 +39,14 @@ import {
   computeWorkingOneRm,
   createAdHocJITOutput,
   createEmptyTrace,
+  createMuscleMapper,
   DEFAULT_AUXILIARY_POOLS,
   DEFAULT_CORE_POOL,
   generateJITSessionWithTrace,
   getAuxiliariesForBlock,
   getJITGenerator,
-  getMusclesForExercise,
-  getMusclesForLift,
   LIFTS,
   mergeSorenessRatings,
-  registerCustomExercise,
   reviewJITDecision,
   rpeSetMultiplier,
 } from '@parakeet/training-engine';
@@ -158,10 +156,13 @@ export async function runJITForSession(
     fetchTodaySnapshot(userId),
   ]);
 
-  // Seed the engine registry so getMusclesForExercise works for custom exercises.
-  for (const [name, muscles] of Object.entries(auxMuscleMap)) {
-    registerCustomExercise(name, muscles as MuscleGroup[]);
-  }
+  // Build a muscle mapper that knows about the lifter's user-defined exercises
+  // (e.g. "Pec Deck"). Used below for weekly-volume attribution so customs
+  // credit the muscles the lifter selected when registering them. The plain
+  // `auxMuscleMap` is passed into JITInput as data so the engine can build its
+  // own mapper while keeping the input fully serializable for replay.
+  const customMuscleMap = auxMuscleMap as Record<string, MuscleGroup[]>;
+  const muscleMapper = createMuscleMapper(customMuscleMap);
 
   const mrvMevConfig = await getMrvMevConfig(userId, biologicalSex);
 
@@ -303,14 +304,16 @@ export async function runJITForSession(
         (sum, s) => sum + rpeSetMultiplier(s.rpe_actual),
         0
       );
-      const mainMuscles = getMusclesForLift(logLift);
+      const mainMuscles = muscleMapper(logLift);
       for (const { muscle, contribution } of mainMuscles) {
         weeklyVolumeToDate[muscle] =
           (weeklyVolumeToDate[muscle] ?? 0) +
           Math.floor(mainEffective * contribution);
       }
 
-      // Aux sets — grouped by exercise, RPE-scaled
+      // Aux sets — grouped by exercise, RPE-scaled. The mapper falls back to
+      // the day's lift if the exercise is unknown and not in the user's custom
+      // map, matching the previous behavior.
       const auxSets = log.auxiliary_sets;
       const auxByExercise = new Map<string, number>();
       for (const s of auxSets) {
@@ -323,9 +326,7 @@ export async function runJITForSession(
         }
       }
       for (const [exercise, effective] of auxByExercise) {
-        const auxMuscles = getMusclesForExercise(exercise);
-        const muscles =
-          auxMuscles.length > 0 ? auxMuscles : getMusclesForLift(logLift);
+        const muscles = muscleMapper(logLift, exercise);
         for (const { muscle, contribution } of muscles) {
           weeklyVolumeToDate[muscle] =
             (weeklyVolumeToDate[muscle] ?? 0) +
@@ -479,6 +480,7 @@ export async function runJITForSession(
     oneRmSource,
     capacityHistory: capacityHistory?.length ? capacityHistory : undefined,
     weeklyMismatchDirection: weeklyMismatchDirection ?? undefined,
+    customMuscleMap,
   };
 
   const strategyOverride = await getJITStrategyOverride();

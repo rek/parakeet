@@ -27,6 +27,7 @@ import {
 import { useFeatureEnabled } from '@modules/feature-flags';
 import { useActiveProgram } from '@modules/program';
 import {
+  getReadyCachedJitData,
   partitionTodaySessions,
   skipSession,
   useInProgressSession,

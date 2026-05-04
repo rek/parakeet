@@ -2,11 +2,7 @@ import { Lift } from '@parakeet/shared-types';
 
 import { ReadinessLevel } from '../adjustments/readiness-adjuster';
 import { SorenessLevel } from '../adjustments/soreness-adjuster';
-import { MuscleGroup } from '../types';
-import {
-  getMusclesForExercise,
-  getMusclesForLift,
-} from '../volume/muscle-mapper';
+import { MuscleGroup, MuscleMapper } from '../types';
 import {
   CATALOG_BY_NAME,
   ComplexityTier,
@@ -45,6 +41,10 @@ export interface ExerciseScoringContext {
   alreadySelectedExercises: string[];
 
   biologicalSex?: 'female' | 'male';
+
+  /** Resolves an exercise to its muscle contributions. Includes the user's
+   *  custom muscle map when built via createMuscleMapper. */
+  muscleMapper: MuscleMapper;
 }
 
 export interface ScoredExercise {
@@ -77,7 +77,7 @@ function scoreDeficitCoverage(
   exercise: string,
   ctx: ExerciseScoringContext
 ): number {
-  const muscles = getMusclesForExercise(exercise);
+  const muscles = ctx.muscleMapper(null, exercise);
   const deficits = ctx.muscleDeficits;
   const maxDeficit = Math.max(
     1,
@@ -108,7 +108,7 @@ function scoreSorenessAvoidance(
   exercise: string,
   ctx: ExerciseScoringContext
 ): number {
-  const muscles = getMusclesForExercise(exercise);
+  const muscles = ctx.muscleMapper(null, exercise);
   let penalty = 0;
   for (const { muscle, contribution } of muscles) {
     const soreness = ctx.sorenessRatings[muscle];
@@ -176,10 +176,10 @@ function scoreUpcomingProtection(
   ctx: ExerciseScoringContext
 ): number {
   if (!ctx.upcomingLifts?.length) return 1.0;
-  const exerciseMuscles = getMusclesForExercise(exercise);
+  const exerciseMuscles = ctx.muscleMapper(null, exercise);
   const upcomingMuscles = new Set<MuscleGroup>();
   for (const lift of ctx.upcomingLifts) {
-    for (const { muscle } of getMusclesForLift(lift)) {
+    for (const { muscle } of ctx.muscleMapper(lift)) {
       upcomingMuscles.add(muscle);
     }
   }

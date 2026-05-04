@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { MuscleGroup } from '../types';
+import { defaultMuscleMapper } from '../volume/muscle-mapper';
 import { EXERCISE_CATALOG } from './exercise-catalog';
 import {
   ExerciseScoringContext,
@@ -23,6 +24,7 @@ function baseCtx(
     mainLiftSetCount: 5,
     alreadySelectedPatterns: [],
     alreadySelectedExercises: [],
+    muscleMapper: defaultMuscleMapper,
     ...overrides,
   };
 }

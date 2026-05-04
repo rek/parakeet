@@ -4,7 +4,6 @@ import { updateModifierCalibrations } from './calibration-update.service';
 
 // ── Mocks ────────────────────────────────────────────────────────────────────
 
-const fromMock = vi.hoisted(() => vi.fn());
 const mockCaptureException = vi.hoisted(() => vi.fn());
 const mockExtractModifierSamples = vi.hoisted(() => vi.fn());
 const mockComputeCalibrationBias = vi.hoisted(() => vi.fn());
@@ -12,13 +11,10 @@ const mockCanAutoApply = vi.hoisted(() => vi.fn());
 const mockShouldTriggerReview = vi.hoisted(() => vi.fn());
 const mockReviewCalibrationAdjustment = vi.hoisted(() => vi.fn());
 const mockUpsertModifierCalibration = vi.hoisted(() => vi.fn());
+const mockFetchRawModifierCalibrations = vi.hoisted(() => vi.fn());
+const mockFetchSessionById = vi.hoisted(() => vi.fn());
+const mockFetchSessionLogBySessionId = vi.hoisted(() => vi.fn());
 const mockAsyncStorageSetItem = vi.hoisted(() => vi.fn());
-
-vi.mock('@platform/supabase', () => ({
-  typedSupabase: {
-    from: fromMock,
-  },
-}));
 
 vi.mock('@platform/utils/captureException', () => ({
   captureException: mockCaptureException,
@@ -34,6 +30,12 @@ vi.mock('@parakeet/training-engine', () => ({
 
 vi.mock('../data/calibration.repository', () => ({
   upsertModifierCalibration: mockUpsertModifierCalibration,
+  fetchRawModifierCalibrations: mockFetchRawModifierCalibrations,
+}));
+
+vi.mock('../../session/data/session.repository', () => ({
+  fetchSessionById: mockFetchSessionById,
+  fetchSessionLogBySessionId: mockFetchSessionLogBySessionId,
 }));
 
 vi.mock('@react-native-async-storage/async-storage', () => ({
@@ -43,20 +45,6 @@ vi.mock('@react-native-async-storage/async-storage', () => ({
 }));
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
-
-/** Build a minimal Supabase chainable query that resolves to `resolvedValue` on terminal call. */
-function createQueryChain(terminalMethod: string, resolvedValue: unknown) {
-  const chain: Record<string, ReturnType<typeof vi.fn>> = {
-    select: vi.fn(),
-    eq: vi.fn(),
-    maybeSingle: vi.fn(),
-  };
-  for (const key of ['select', 'eq']) {
-    chain[key].mockReturnValue(chain);
-  }
-  chain[terminalMethod].mockResolvedValue(resolvedValue);
-  return chain;
-}
 
 /** Trace with one readiness modifier and a first set with rpeTarget=8. */
 function makeTrace(
@@ -97,14 +85,13 @@ describe('updateModifierCalibrations', () => {
     vi.clearAllMocks();
     mockUpsertModifierCalibration.mockResolvedValue(undefined);
     mockAsyncStorageSetItem.mockResolvedValue(undefined);
+    // Default to empty existing calibrations; individual tests override.
+    mockFetchRawModifierCalibrations.mockResolvedValue([]);
   });
 
   it('returns early without upserting when session has no jit_output_trace', async () => {
-    const sessionChain = createQueryChain('maybeSingle', {
-      data: { jit_output_trace: null },
-      error: null,
-    });
-    fromMock.mockReturnValueOnce(sessionChain);
+    mockFetchSessionById.mockResolvedValue({ jit_output_trace: null });
+    mockFetchSessionLogBySessionId.mockResolvedValue({ session_rpe: 9 });
 
     await updateModifierCalibrations({
       sessionId: SESSION_ID,
@@ -115,11 +102,8 @@ describe('updateModifierCalibrations', () => {
   });
 
   it('returns early when session query returns no data', async () => {
-    const sessionChain = createQueryChain('maybeSingle', {
-      data: null,
-      error: null,
-    });
-    fromMock.mockReturnValueOnce(sessionChain);
+    mockFetchSessionById.mockResolvedValue(null);
+    mockFetchSessionLogBySessionId.mockResolvedValue({ session_rpe: 9 });
 
     await updateModifierCalibrations({
       sessionId: SESSION_ID,
@@ -130,15 +114,10 @@ describe('updateModifierCalibrations', () => {
   });
 
   it('returns early when session_log has no session_rpe', async () => {
-    const sessionChain = createQueryChain('maybeSingle', {
-      data: { jit_output_trace: makeTrace() },
-      error: null,
+    mockFetchSessionById.mockResolvedValue({
+      jit_output_trace: makeTrace(),
     });
-    const logChain = createQueryChain('maybeSingle', {
-      data: { session_rpe: null },
-      error: null,
-    });
-    fromMock.mockReturnValueOnce(sessionChain).mockReturnValueOnce(logChain);
+    mockFetchSessionLogBySessionId.mockResolvedValue({ session_rpe: null });
 
     await updateModifierCalibrations({
       sessionId: SESSION_ID,
@@ -155,15 +134,10 @@ describe('updateModifierCalibrations', () => {
         weightDerivation: { modifiers: [] },
       },
     };
-    const sessionChain = createQueryChain('maybeSingle', {
-      data: { jit_output_trace: traceNoModifiers },
-      error: null,
+    mockFetchSessionById.mockResolvedValue({
+      jit_output_trace: traceNoModifiers,
     });
-    const logChain = createQueryChain('maybeSingle', {
-      data: { session_rpe: 8.5 },
-      error: null,
-    });
-    fromMock.mockReturnValueOnce(sessionChain).mockReturnValueOnce(logChain);
+    mockFetchSessionLogBySessionId.mockResolvedValue({ session_rpe: 8.5 });
 
     await updateModifierCalibrations({
       sessionId: SESSION_ID,
@@ -174,19 +148,10 @@ describe('updateModifierCalibrations', () => {
   });
 
   it('returns early when extractModifierSamples returns empty array', async () => {
-    const sessionChain = createQueryChain('maybeSingle', {
-      data: { jit_output_trace: makeTrace() },
-      error: null,
+    mockFetchSessionById.mockResolvedValue({
+      jit_output_trace: makeTrace(),
     });
-    const logChain = createQueryChain('maybeSingle', {
-      data: { session_rpe: 9 },
-      error: null,
-    });
-    const calibrationsChain = { select: vi.fn(), eq: vi.fn() };
-    calibrationsChain.select.mockReturnValue(calibrationsChain);
-    calibrationsChain.eq.mockResolvedValue({ data: [], error: null });
-
-    fromMock.mockReturnValueOnce(sessionChain).mockReturnValueOnce(logChain);
+    mockFetchSessionLogBySessionId.mockResolvedValue({ session_rpe: 9 });
     mockExtractModifierSamples.mockReturnValue([]);
 
     await updateModifierCalibrations({
@@ -198,22 +163,10 @@ describe('updateModifierCalibrations', () => {
   });
 
   it('auto-applies calibration when canAutoApply returns true', async () => {
-    const sessionChain = createQueryChain('maybeSingle', {
-      data: { jit_output_trace: makeTrace() },
-      error: null,
+    mockFetchSessionById.mockResolvedValue({
+      jit_output_trace: makeTrace(),
     });
-    const logChain = createQueryChain('maybeSingle', {
-      data: { session_rpe: 9 },
-      error: null,
-    });
-    const calibrationsChain = { select: vi.fn(), eq: vi.fn() };
-    calibrationsChain.select.mockReturnValue(calibrationsChain);
-    calibrationsChain.eq.mockResolvedValue({ data: [], error: null });
-
-    fromMock
-      .mockReturnValueOnce(sessionChain)
-      .mockReturnValueOnce(logChain)
-      .mockReturnValueOnce(calibrationsChain);
+    mockFetchSessionLogBySessionId.mockResolvedValue({ session_rpe: 9 });
 
     const sample = {
       modifierSource: 'readiness',
@@ -244,22 +197,10 @@ describe('updateModifierCalibrations', () => {
   });
 
   it('triggers LLM review when canAutoApply is false and shouldTriggerReview is true', async () => {
-    const sessionChain = createQueryChain('maybeSingle', {
-      data: { jit_output_trace: makeTrace() },
-      error: null,
+    mockFetchSessionById.mockResolvedValue({
+      jit_output_trace: makeTrace(),
     });
-    const logChain = createQueryChain('maybeSingle', {
-      data: { session_rpe: 9 },
-      error: null,
-    });
-    const calibrationsChain = { select: vi.fn(), eq: vi.fn() };
-    calibrationsChain.select.mockReturnValue(calibrationsChain);
-    calibrationsChain.eq.mockResolvedValue({ data: [], error: null });
-
-    fromMock
-      .mockReturnValueOnce(sessionChain)
-      .mockReturnValueOnce(logChain)
-      .mockReturnValueOnce(calibrationsChain);
+    mockFetchSessionLogBySessionId.mockResolvedValue({ session_rpe: 9 });
 
     const sample = {
       modifierSource: 'readiness',
@@ -295,32 +236,18 @@ describe('updateModifierCalibrations', () => {
   });
 
   it('stores suggested adjustment when review.apply is true', async () => {
-    const sessionChain = createQueryChain('maybeSingle', {
-      data: { jit_output_trace: makeTrace() },
-      error: null,
+    mockFetchSessionById.mockResolvedValue({
+      jit_output_trace: makeTrace(),
     });
-    const logChain = createQueryChain('maybeSingle', {
-      data: { session_rpe: 9 },
-      error: null,
-    });
-    const calibrationsChain = { select: vi.fn(), eq: vi.fn() };
-    calibrationsChain.select.mockReturnValue(calibrationsChain);
-    calibrationsChain.eq.mockResolvedValue({
-      data: [
-        {
-          modifier_source: 'readiness',
-          sample_count: 5,
-          mean_bias: 0.5,
-          adjustment: 0.01,
-        },
-      ],
-      error: null,
-    });
-
-    fromMock
-      .mockReturnValueOnce(sessionChain)
-      .mockReturnValueOnce(logChain)
-      .mockReturnValueOnce(calibrationsChain);
+    mockFetchSessionLogBySessionId.mockResolvedValue({ session_rpe: 9 });
+    mockFetchRawModifierCalibrations.mockResolvedValue([
+      {
+        modifier_source: 'readiness',
+        sample_count: 5,
+        mean_bias: 0.5,
+        adjustment: 0.01,
+      },
+    ]);
 
     const sample = {
       modifierSource: 'readiness',
@@ -351,32 +278,18 @@ describe('updateModifierCalibrations', () => {
   });
 
   it('retains existing adjustment when review.apply is false', async () => {
-    const sessionChain = createQueryChain('maybeSingle', {
-      data: { jit_output_trace: makeTrace() },
-      error: null,
+    mockFetchSessionById.mockResolvedValue({
+      jit_output_trace: makeTrace(),
     });
-    const logChain = createQueryChain('maybeSingle', {
-      data: { session_rpe: 9 },
-      error: null,
-    });
-    const calibrationsChain = { select: vi.fn(), eq: vi.fn() };
-    calibrationsChain.select.mockReturnValue(calibrationsChain);
-    calibrationsChain.eq.mockResolvedValue({
-      data: [
-        {
-          modifier_source: 'readiness',
-          sample_count: 3,
-          mean_bias: 0.2,
-          adjustment: 0.01,
-        },
-      ],
-      error: null,
-    });
-
-    fromMock
-      .mockReturnValueOnce(sessionChain)
-      .mockReturnValueOnce(logChain)
-      .mockReturnValueOnce(calibrationsChain);
+    mockFetchSessionLogBySessionId.mockResolvedValue({ session_rpe: 9 });
+    mockFetchRawModifierCalibrations.mockResolvedValue([
+      {
+        modifier_source: 'readiness',
+        sample_count: 3,
+        mean_bias: 0.2,
+        adjustment: 0.01,
+      },
+    ]);
 
     const sample = {
       modifierSource: 'readiness',
@@ -408,22 +321,10 @@ describe('updateModifierCalibrations', () => {
   });
 
   it('queues AsyncStorage prompt when review.askUser is true', async () => {
-    const sessionChain = createQueryChain('maybeSingle', {
-      data: { jit_output_trace: makeTrace() },
-      error: null,
+    mockFetchSessionById.mockResolvedValue({
+      jit_output_trace: makeTrace(),
     });
-    const logChain = createQueryChain('maybeSingle', {
-      data: { session_rpe: 9 },
-      error: null,
-    });
-    const calibrationsChain = { select: vi.fn(), eq: vi.fn() };
-    calibrationsChain.select.mockReturnValue(calibrationsChain);
-    calibrationsChain.eq.mockResolvedValue({ data: [], error: null });
-
-    fromMock
-      .mockReturnValueOnce(sessionChain)
-      .mockReturnValueOnce(logChain)
-      .mockReturnValueOnce(calibrationsChain);
+    mockFetchSessionLogBySessionId.mockResolvedValue({ session_rpe: 9 });
 
     const sample = {
       modifierSource: 'readiness',
@@ -455,32 +356,18 @@ describe('updateModifierCalibrations', () => {
   });
 
   it('stores stats-only when neither canAutoApply nor shouldTriggerReview', async () => {
-    const sessionChain = createQueryChain('maybeSingle', {
-      data: { jit_output_trace: makeTrace() },
-      error: null,
+    mockFetchSessionById.mockResolvedValue({
+      jit_output_trace: makeTrace(),
     });
-    const logChain = createQueryChain('maybeSingle', {
-      data: { session_rpe: 8 },
-      error: null,
-    });
-    const calibrationsChain = { select: vi.fn(), eq: vi.fn() };
-    calibrationsChain.select.mockReturnValue(calibrationsChain);
-    calibrationsChain.eq.mockResolvedValue({
-      data: [
-        {
-          modifier_source: 'readiness',
-          sample_count: 1,
-          mean_bias: 0.1,
-          adjustment: 0.005,
-        },
-      ],
-      error: null,
-    });
-
-    fromMock
-      .mockReturnValueOnce(sessionChain)
-      .mockReturnValueOnce(logChain)
-      .mockReturnValueOnce(calibrationsChain);
+    mockFetchSessionLogBySessionId.mockResolvedValue({ session_rpe: 8 });
+    mockFetchRawModifierCalibrations.mockResolvedValue([
+      {
+        modifier_source: 'readiness',
+        sample_count: 1,
+        mean_bias: 0.1,
+        adjustment: 0.005,
+      },
+    ]);
 
     const sample = {
       modifierSource: 'readiness',
@@ -509,33 +396,19 @@ describe('updateModifierCalibrations', () => {
   });
 
   it('uses running mean when prior calibration exists', async () => {
-    const sessionChain = createQueryChain('maybeSingle', {
-      data: { jit_output_trace: makeTrace() },
-      error: null,
+    mockFetchSessionById.mockResolvedValue({
+      jit_output_trace: makeTrace(),
     });
-    const logChain = createQueryChain('maybeSingle', {
-      data: { session_rpe: 10 },
-      error: null,
-    });
-    const calibrationsChain = { select: vi.fn(), eq: vi.fn() };
-    calibrationsChain.select.mockReturnValue(calibrationsChain);
+    mockFetchSessionLogBySessionId.mockResolvedValue({ session_rpe: 10 });
     // Existing: 4 samples, mean_bias = 1.0
-    calibrationsChain.eq.mockResolvedValue({
-      data: [
-        {
-          modifier_source: 'readiness',
-          sample_count: 4,
-          mean_bias: 1.0,
-          adjustment: 0.02,
-        },
-      ],
-      error: null,
-    });
-
-    fromMock
-      .mockReturnValueOnce(sessionChain)
-      .mockReturnValueOnce(logChain)
-      .mockReturnValueOnce(calibrationsChain);
+    mockFetchRawModifierCalibrations.mockResolvedValue([
+      {
+        modifier_source: 'readiness',
+        sample_count: 4,
+        mean_bias: 1.0,
+        adjustment: 0.02,
+      },
+    ]);
 
     const sample = {
       modifierSource: 'readiness',
@@ -569,22 +442,8 @@ describe('updateModifierCalibrations', () => {
       { source: 'readiness', value: -0.05 },
       { source: 'bodyweight', value: 0.02 }, // not in CALIBRATED_SOURCES
     ]);
-    const sessionChain = createQueryChain('maybeSingle', {
-      data: { jit_output_trace: trace },
-      error: null,
-    });
-    const logChain = createQueryChain('maybeSingle', {
-      data: { session_rpe: 9 },
-      error: null,
-    });
-    const calibrationsChain = { select: vi.fn(), eq: vi.fn() };
-    calibrationsChain.select.mockReturnValue(calibrationsChain);
-    calibrationsChain.eq.mockResolvedValue({ data: [], error: null });
-
-    fromMock
-      .mockReturnValueOnce(sessionChain)
-      .mockReturnValueOnce(logChain)
-      .mockReturnValueOnce(calibrationsChain);
+    mockFetchSessionById.mockResolvedValue({ jit_output_trace: trace });
+    mockFetchSessionLogBySessionId.mockResolvedValue({ session_rpe: 9 });
 
     const sample = {
       modifierSource: 'readiness',
@@ -613,9 +472,8 @@ describe('updateModifierCalibrations', () => {
   });
 
   it('catches errors and calls captureException', async () => {
-    fromMock.mockImplementation(() => {
-      throw new Error('network failure');
-    });
+    mockFetchSessionById.mockRejectedValue(new Error('network failure'));
+    mockFetchSessionLogBySessionId.mockResolvedValue({ session_rpe: 9 });
 
     await updateModifierCalibrations({
       sessionId: SESSION_ID,
@@ -634,22 +492,8 @@ describe('updateModifierCalibrations', () => {
         },
       },
     };
-    const sessionChain = createQueryChain('maybeSingle', {
-      data: { jit_output_trace: traceNoSets },
-      error: null,
-    });
-    const logChain = createQueryChain('maybeSingle', {
-      data: { session_rpe: 9 },
-      error: null,
-    });
-    const calibrationsChain = { select: vi.fn(), eq: vi.fn() };
-    calibrationsChain.select.mockReturnValue(calibrationsChain);
-    calibrationsChain.eq.mockResolvedValue({ data: [], error: null });
-
-    fromMock
-      .mockReturnValueOnce(sessionChain)
-      .mockReturnValueOnce(logChain)
-      .mockReturnValueOnce(calibrationsChain);
+    mockFetchSessionById.mockResolvedValue({ jit_output_trace: traceNoSets });
+    mockFetchSessionLogBySessionId.mockResolvedValue({ session_rpe: 9 });
 
     const sample = {
       modifierSource: 'readiness',
