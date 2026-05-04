@@ -246,6 +246,11 @@ function buildStyles(colors: ColorScheme) {
       height: 8,
       borderRadius: radii.full,
     },
+    wearableSubtitle: {
+      fontSize: typography.sizes.sm,
+      color: colors.textTertiary,
+      marginTop: 2,
+    },
     signOutLabel: {
       color: colors.danger,
     },
@@ -561,28 +566,39 @@ export default function SettingsScreen() {
             styles={styles}
           />
         )}
-        <Row
-          label="Wearable"
+        <TouchableOpacity
+          style={styles.row}
           onPress={() => router.push('/settings/wearable')}
-          styles={styles}
-          right={
-            <View style={styles.rowRight}>
-              <View
-                style={[
-                  styles.wearableDot,
-                  {
-                    backgroundColor: !wearableStatus.isAvailable
-                      ? colors.textTertiary
-                      : wearableStatus.isPermitted
-                        ? colors.success
-                        : colors.warning,
-                  },
-                ]}
-              />
-              <Text style={styles.chevron}>›</Text>
-            </View>
-          }
-        />
+          activeOpacity={0.6}
+        >
+          <View style={{ flex: 1 }}>
+            <Text style={styles.rowLabel}>Wearable</Text>
+            <Text style={styles.wearableSubtitle}>
+              {!wearableStatus.isAvailable
+                ? 'Not available on this device'
+                : !wearableStatus.isPermitted
+                  ? 'Tap to connect'
+                  : wearableStatus.lastSyncAt
+                    ? `Last sync ${formatTimeAgo(wearableStatus.lastSyncAt)}`
+                    : 'Connected'}
+            </Text>
+          </View>
+          <View style={styles.rowRight}>
+            <View
+              style={[
+                styles.wearableDot,
+                {
+                  backgroundColor: !wearableStatus.isAvailable
+                    ? colors.textTertiary
+                    : wearableStatus.isPermitted
+                      ? colors.success
+                      : colors.warning,
+                },
+              ]}
+            />
+            <Text style={styles.chevron}>›</Text>
+          </View>
+        </TouchableOpacity>
 
         <View style={styles.divider} />
 

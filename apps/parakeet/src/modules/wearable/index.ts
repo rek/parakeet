@@ -21,3 +21,8 @@ export { useWearableSync } from './hooks/useWearableSync';
 
 // UI — Phase 1 settings
 export { WearableSettings } from './ui/WearableSettings';
+
+// UI — Phase 3 pre-session recovery
+export { RecoveryCard } from './ui/RecoveryCard';
+export { HrvTrendChart } from './ui/HrvTrendChart';
+export { SleepSummary } from './ui/SleepSummary';

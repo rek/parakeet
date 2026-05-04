@@ -9,7 +9,7 @@ Integrates open-source wearable devices (heart rate monitors, smartwatches) into
 
 ## Problem Statement
 
-The system currently captures readiness through two subjective 3-point scales: sleep quality (Poor / OK / Great) and energy level (Low / Normal / High). These are valuable but limited:
+The system currently captures readiness through two subjective 5-point scales: sleep quality (Terrible / Poor / OK / Good / Great) and energy level (Drained / Low / OK / Good / High). Defined in `apps/parakeet/src/shared/constants/training.ts` as `READINESS_LABELS`. The engine type `ReadinessLevel = 1 | 2 | 3 | 4 | 5` accepts legacy 1–3 inputs via normalisation. These scales are valuable but limited:
 
 **Pain points:**
 - Subjective signals are noisy. A lifter may report "OK" sleep when they actually slept 4.5 hours because they don't feel tired yet — cortisol masking is real. The system cannot distinguish genuine readiness from perceived readiness.
@@ -29,29 +29,24 @@ The integration is device-agnostic by design. Rather than coupling to a specific
 
 | Layer | Tool | Role |
 |-------|------|------|
-| Layer | Tool | Role |
-|-------|------|------|
-| Sleep/recovery strap | **Amazfit Helio Strap** (~$99) | HRV, sleep stages, SpO2, resting HR, 10-day battery. Screenless. Worn 24/7 except during training. No subscription. |
-| Workout HR | **Polar H10 chest strap** (~$90) | Best-in-class HR accuracy under barbell load. Optical wrist HR degrades with wrist compression + motion artifact during lifting. Polar Beat → Health Connect native. |
-| Bridge (Helio) | Zepp app (Android) | Syncs 26 data types to Health Connect natively. Setup: Profile → 3rd-party account linking → Health Connect. |
+| Sleep/recovery ring | **Oura Ring 4** | HRV, sleep stages, resting HR, steps, calories. Worn 24/7. Syncs to Health Connect natively via Oura Android app. |
+| Workout HR (optional) | **Polar H10 chest strap** (~$90) | Best-in-class HR accuracy under barbell load. Optical ring/wrist HR degrades under wrist compression + motion artifact during lifting. Polar Beat → Health Connect native. |
+| Bridge (Oura) | Oura Android app | Settings → Data Sharing → Health Connect. Writes HRV, sleep, HR, steps, calories. |
 | Bridge (Polar) | Polar Beat (Android) | Syncs Polar H10 data to Health Connect natively. |
 | API | Android Health Connect | Google's standardized health data layer. Read-only from Parakeet's perspective. |
 | RN binding | `react-native-health-connect` | Expo-compatible typed API for Health Connect records |
 
-**Why two devices:** Chest straps give the most accurate HR signal during compound lifts where wrist/arm optical sensors fail under load and wrist compression. The Helio Strap handles sleep and recovery tracking the rest of the time.
-
-**Helio Strap notes:**
-- Zepp → Health Connect confirmed working as of Jan 2025 update (26 types inc. HRV, sleep, HR)
-- One reported issue with HR data not syncing correctly to Health Connect — monitor on setup
-- Fallback: Gadgetbridge also supports many Amazfit devices if Zepp sync proves unreliable
+**Oura notes:**
+- Health Connect writes: HRV, heart rate, sleep (duration + stages + RHR), steps, distance, calories
+- Health Connect does NOT include SpO2 — SpO2 auto-disruption feature unavailable unless supplemented by another device
+- Setup: Oura app → Settings → Data Sharing → Health Connect → enable each data type
 
 **Dismissed options:**
-- Oura Ring 4: no Health Connect support as of 2026; proprietary API + subscription required. Disqualified.
 - RingConn Gen 2: no confirmed Health Connect or Gadgetbridge support.
-- Colmi R02: viable budget ring (~$35 via Gadgetbridge) if Helio Strap is overkill.
+- Colmi R02: viable budget ring (~$35 via Gadgetbridge) if Oura is overkill.
 - Wrist watch (e.g. Amazfit GTR Mini, Garmin): viable single-device fallback but weaker HR accuracy under load.
 
-This means Parakeet never communicates with devices directly. The user sets up Zepp (Helio) and Polar Beat (H10) once, and Parakeet reads normalized data from Health Connect. If the user switches devices, nothing changes in Parakeet.
+This means Parakeet never communicates with devices directly. The user sets up Oura (or any Health Connect-compatible device) once, and Parakeet reads normalized data from Health Connect. If the user switches devices, nothing changes in Parakeet.
 
 ### Why Health Connect (not direct BLE)
 
@@ -66,7 +61,7 @@ This means Parakeet never communicates with devices directly. The user sets up Z
 |--------|-------------------|---------------|-----------------|
 | **HRV (RMSSD)** | `HeartRateVariabilityRmssdRecord` | Gold standard recovery readiness. Drop >15% from 7-day baseline = impaired recovery. | Supersedes subjective `sleepQuality` + `energyLevel` |
 | **Resting HR** | `RestingHeartRateRecord` | Elevated RHR = illness, fatigue, overreaching. >10% above baseline warrants caution. | Feeds readiness adjuster |
-| **Sleep duration** | `SleepSessionRecord` | <6h = reduce volume. <5h = aggressive reduction. | Replaces subjective `sleepQuality` 1\|2\|3 |
+| **Sleep duration** | `SleepSessionRecord` | <6h = reduce volume. <5h = aggressive reduction. | Replaces subjective `sleepQuality` 1–5 |
 | **Sleep stages** | `SleepSessionRecord.stages` | Deep sleep <15% = impaired muscular recovery regardless of total duration. | Nuances sleep beyond duration |
 | **Intra-session HR** | `HeartRateRecord` (real-time observer) | RPE validation: HR says hard but lifter says easy → flag. Post-session EPOC estimation. | New signal — no subjective equivalent |
 | **Steps / active minutes** | `StepsRecord` / `ActiveCaloriesBurnedRecord` | High non-training load compounds fatigue. >15k steps on rest day = reduced recovery. | New signal for total stress load |
@@ -112,14 +107,14 @@ When wearable data and subjective input both exist:
 **Flow C — Pre-session with wearable data:**
 
 1. User taps "Start" on today's session
-2. Soreness check-in screen appears (unchanged)
-3. Below soreness: **RecoveryCard** replaces the sleep/energy pickers when wearable data is available:
+2. Soreness check-in screen (`apps/parakeet/src/app/(tabs)/session/soreness.tsx`) appears — soreness muscle ratings unchanged
+3. Below the soreness section, in place of the existing `ReadinessPillRow` "Sleep" + "Energy" rows: **RecoveryCard** when `useRecoverySnapshot()` returns data:
    - HRV trend sparkline (7 days) with today's reading highlighted
    - Sleep summary: duration + deep/REM %
    - Readiness score badge (0–100, color-coded)
    - If HRV or sleep is concerning, a brief note: "HRV 18% below baseline — session will be adjusted"
-4. If no wearable data → existing sleep/energy pickers appear (zero regression)
-5. User taps "Generate Today's Workout" → JIT runs with objective signals
+4. If `useRecoverySnapshot()` returns null (no wearable, no baseline yet, or partial data without baseline) → the existing two `ReadinessPillRow` sleep/energy 5-pill selectors render as today (zero regression)
+5. User taps "Generate Today's Workout" → `runJIT` calls `runJITForSession` which fetches today's `recovery_snapshots` row and populates the wearable JITInput fields. When the card was shown, the screen passes `undefined` for `sleepQuality`/`energyLevel`. When the pickers were shown, it passes the picker values.
 
 **Flow D — Intra-session HR monitoring (Phase 4):**
 
@@ -377,11 +372,14 @@ wearable/
 - **No HRV during training**: HRV measurement requires stillness. Intra-session, we use HR only.
 - **No calorie tracking or body composition**: Out of scope. Wearable integration is focused on recovery readiness and training load, not nutrition.
 
-## Open Questions
+## Decisions
 
-- [ ] Should the composite readiness score (0–100) be surfaced directly to the user, or only used internally by the engine? Showing it risks users anchoring on "the number" rather than trusting the system's adjustments.
-- [ ] Should extreme SpO2 drops auto-create a disruption, or just surface a warning that the user must act on? Auto-creation is more protective but removes user agency.
-- [ ] What is the minimum data history needed before baselines are reliable? 7 days is standard in sport science, but should the system wait 7 days before using wearable data for adjustments, or start immediately with wider confidence intervals?
+- **Readiness score surfaced to user**: Yes — show the 0–100 score on the RecoveryCard. User wants visibility into the number.
+- **SpO2 auto-disruption**: Dropped. Oura does not write SpO2 to Health Connect, making this unimplementable with the current device. Feature removed from scope. The schema retains the `spo2` `BiometricType` enum value and `spo2_avg` snapshot column for future devices, but no logic consumes it. See [spec-spo2-disruption.md](./spec-spo2-disruption.md) for the deferred design.
+- **Baseline warmup period**: 5 days minimum. The wearable readiness adjuster does not fire until at least 5 daily HRV (or RHR) readings exist for the user. Gate enforced in `recovery.service.ts` via the snapshot row: if `hrv_baseline_7d` is null or `<5` underlying readings exist, `hrv_pct_change` (and `rhr_pct_change`) are written as null. The dispatch in `jit-session-generator.ts` Step 2b uses `hasWearableData(input)` which returns false when these fields are null/undefined → falls back to subjective `getReadinessModifier`.
+- **Composite readiness score locus**: `computeReadinessScore` lives in `packages/training-engine/src/adjustments/readiness-score.ts` (pure function, testable, depends only on signal numbers). `recovery.service.ts` in the wearable app module imports it from `@parakeet/training-engine` to compute the score before upserting `recovery_snapshots`.
+- **Expo config plugin**: `react-native-health-connect` requires Android Manifest entries (declared permissions + `<queries>` block) that must be added via an Expo config plugin. See [spec-expo-plugin.md](./spec-expo-plugin.md). `app.config.ts` must register the plugin and the Android `minSdkVersion` must be ≥ 28 (Health Connect requirement).
+- **Subjective UI fallback**: When wearable data exists for today, the `ReadinessPillRow` components for sleep/energy on `apps/parakeet/src/app/(tabs)/session/soreness.tsx` are hidden — replaced by `RecoveryCard`. The screen still calls `runJITForSession` with `sleepQuality`/`energyLevel` as `undefined`; the engine falls back to the wearable adjuster via the `JITInput` wearable fields populated by `runJITForSession`'s recovery snapshot fetch.
 
 ## Future Enhancements
 
@@ -392,14 +390,25 @@ wearable/
 
 ## References
 
-- Related Design Docs: [body-state-readiness.md](./body-state-readiness.md), [ai-overview.md](./ai-overview.md), [disruption-management.md](./disruption-management.md)
-- Spec: [types-002-biometric-schemas.md](./spec-biometric-schemas.md)
-- Spec: [data-008-biometric-tables.md](./spec-biometric-tables.md)
-- Spec: [engine-032-wearable-readiness-adjuster.md](./spec-readiness-adjuster.md)
-- Spec: [mobile-038-wearable-data-pipeline.md](./spec-data-pipeline.md)
-- Spec: [mobile-039-recovery-card-ui.md](./spec-recovery-card-ui.md)
-- Spec: [mobile-040-intra-session-hr.md](./spec-intra-session-hr.md)
-- External: Plews et al. (2013) "Training Adaptation and Heart Rate Variability in Elite Endurance Athletes"
-- External: Flatt & Howells (2019) "Ultra-Short-Term Heart Rate Variability Monitoring for Recovery Assessment in Strength Training"
-- External: Gadgetbridge project — https://gadgetbridge.org
-- External: Android Health Connect — https://developer.android.com/health-and-fitness/guides/health-connect
+### Specs (this feature)
+- [spec-biometric-types.md](./spec-biometric-types.md) — Zod + TypeScript types (Phase 1)
+- [spec-biometric-data.md](./spec-biometric-data.md) — Supabase tables, RLS, repositories (Phase 1 + Phase 4 migration)
+- [spec-expo-plugin.md](./spec-expo-plugin.md) — `react-native-health-connect` Expo config plugin (Phase 1)
+- [spec-pipeline.md](./spec-pipeline.md) — Wearable app module: Health Connect, sync, recovery, JIT wiring, settings UI (Phase 1)
+- [spec-readiness-adjuster.md](./spec-readiness-adjuster.md) — Engine: wearable adjuster, dispatch, prompts (Phase 2)
+- [spec-recovery-card.md](./spec-recovery-card.md) — Pre-session UI on `soreness.tsx` (Phase 3)
+- [spec-cycle-review-recovery.md](./spec-cycle-review-recovery.md) — CycleReport recovery snapshots (Phase 2)
+- [spec-spo2-disruption.md](./spec-spo2-disruption.md) — Deferred SpO2 auto-disruption (out of scope; design preserved)
+- [spec-intra-hr.md](./spec-intra-hr.md) — Real-time HR + post-session metrics (Phase 4)
+
+### Domain references
+- [domain/adjustments.md](../../domain/adjustments.md) — readiness modifier framework
+- [domain/athlete-signals.md](../../domain/athlete-signals.md) — input signals catalog
+- [domain/session-prescription.md](../../domain/session-prescription.md) — JIT pipeline steps
+
+### External
+- Plews et al. (2013) "Training Adaptation and Heart Rate Variability in Elite Endurance Athletes"
+- Flatt & Howells (2019) "Ultra-Short-Term Heart Rate Variability Monitoring for Recovery Assessment in Strength Training"
+- Gadgetbridge project — https://gadgetbridge.org
+- Android Health Connect — https://developer.android.com/health-and-fitness/guides/health-connect
+- `react-native-health-connect` — https://matinzd.github.io/react-native-health-connect/

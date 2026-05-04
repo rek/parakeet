@@ -26,6 +26,12 @@ import {
   recordSorenessCheckin,
   useSessionStore,
 } from '@modules/session';
+import {
+  RecoveryCard,
+  syncWearableData,
+  useRecoverySnapshot,
+  useWearableStatus,
+} from '@modules/wearable';
 import type { Lift, MuscleGroup } from '@parakeet/shared-types';
 import { captureException } from '@platform/utils/captureException';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -407,6 +413,10 @@ export default function SorenessScreen() {
   );
   const autoGenerateTriggered = useRef(false);
 
+  const { data: recoverySnapshot } = useRecoverySnapshot();
+  const wearableStatus = useWearableStatus();
+  const hasWearable = Boolean(recoverySnapshot);
+
   const primaryMuscles: readonly MuscleGroup[] = session
     ? (LIFT_PRIMARY_SORENESS_MUSCLES[session.primary_lift as Lift] ?? [])
     : [];
@@ -461,6 +471,16 @@ export default function SorenessScreen() {
       .catch((err) => captureException(err));
   }, [user]);
 
+  // Opportunistic sync if data is stale — fire-and-forget, no spinner
+  useEffect(() => {
+    if (!user?.id) return;
+    const last = wearableStatus.lastSyncAt;
+    if (!last || Date.now() - last > 30 * 60 * 1000) {
+      void syncWearableData(user.id).catch(captureException);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   // ── Auto-generate ─────────────────────────────────────────────────────────
 
   useEffect(() => {
@@ -512,8 +532,8 @@ export default function SorenessScreen() {
           session,
           user.id,
           ratingsToUse,
-          sleepQuality,
-          energyLevel,
+          hasWearable ? undefined : sleepQuality,
+          hasWearable ? undefined : energyLevel,
           cyclePhase ?? undefined
         ),
         primaryLift
@@ -683,27 +703,31 @@ export default function SorenessScreen() {
           1–4 Fresh · 5–6 Moderate · 7–8 High · 9–10 Severe
         </Text>
 
-        {/* Sleep + Energy readiness */}
-        <View style={styles.readinessSection}>
-          <ReadinessPillRow
-            label="Sleep"
-            levels={READINESS_LEVELS}
-            labels={READINESS_LABELS.sleep}
-            value={sleepQuality}
-            onChange={setSleepQuality}
-            styles={styles}
-            colors={colors}
-          />
-          <ReadinessPillRow
-            label="Energy"
-            levels={READINESS_LEVELS}
-            labels={READINESS_LABELS.energy}
-            value={energyLevel}
-            onChange={setEnergyLevel}
-            styles={styles}
-            colors={colors}
-          />
-        </View>
+        {/* Recovery card (wearable) or manual sleep/energy pickers */}
+        {hasWearable ? (
+          <RecoveryCard />
+        ) : (
+          <View style={styles.readinessSection}>
+            <ReadinessPillRow
+              label="Sleep"
+              levels={READINESS_LEVELS}
+              labels={READINESS_LABELS.sleep}
+              value={sleepQuality}
+              onChange={setSleepQuality}
+              styles={styles}
+              colors={colors}
+            />
+            <ReadinessPillRow
+              label="Energy"
+              levels={READINESS_LEVELS}
+              labels={READINESS_LABELS.energy}
+              value={energyLevel}
+              onChange={setEnergyLevel}
+              styles={styles}
+              colors={colors}
+            />
+          </View>
+        )}
 
         {/* Cycle phase informational chip */}
         {cyclePhase && cyclePhaseRationale && (
