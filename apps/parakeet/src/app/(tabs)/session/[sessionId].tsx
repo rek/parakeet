@@ -42,7 +42,6 @@ import {
   useSessionStore,
   useSetCompletionFlow,
   useSetPersistence,
-  useSessionStore,
   VolumeRecoveryBanner,
   WarmupSection,
   WeightSuggestionBanner,

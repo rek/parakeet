@@ -33,7 +33,6 @@ import {
   useInProgressSession,
   useMotivationalMessage,
   useRefreshAll,
-  getReadyCachedJitData,
   useSessionLifecycle,
   useTodaySessions,
   WorkoutCard,
