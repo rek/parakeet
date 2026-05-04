@@ -2,7 +2,7 @@
   "expo": {
     "name": "Parakeet",
     "slug": "parakeet",
-    "version": "1.0.11",
+    "version": "1.0.12",
     "orientation": "portrait",
     "updates": {
       "url": "https://u.expo.dev/b18331dc-0e4d-4562-9bdd-62a6e89f12a7"
