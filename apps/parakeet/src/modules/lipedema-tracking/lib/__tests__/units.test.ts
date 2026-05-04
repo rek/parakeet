@@ -1,6 +1,11 @@
 import { describe, expect, it } from 'vitest';
 
-import { cmStringToMm, mmToCmString, parseZeroToTen } from '../units';
+import {
+  cmStringToMm,
+  mmToCmString,
+  parseInProgressCmToMm,
+  parseZeroToTen,
+} from '../units';
 
 describe('cmStringToMm', () => {
   it('rounds cm with 1 decimal to integer mm', () => {
@@ -45,6 +50,27 @@ describe('mmToCmString', () => {
     for (const v of ['0.0', '0.3', '55.5', '100.0', '325.7']) {
       expect(mmToCmString(cmStringToMm(v))).toBe(v);
     }
+  });
+});
+
+describe('parseInProgressCmToMm', () => {
+  it('returns mm for realistic limb measurements', () => {
+    expect(parseInProgressCmToMm('62.0')).toBe(620);
+    expect(parseInProgressCmToMm('1.0')).toBe(10);
+    expect(parseInProgressCmToMm('325.7')).toBe(3257);
+  });
+
+  it('returns null for in-progress sub-1cm input (the typing-zero trap)', () => {
+    expect(parseInProgressCmToMm('0')).toBeNull();
+    expect(parseInProgressCmToMm('0.')).toBeNull();
+    expect(parseInProgressCmToMm('0.5')).toBeNull();
+    expect(parseInProgressCmToMm('0.9')).toBeNull();
+  });
+
+  it('returns null for empty / invalid', () => {
+    expect(parseInProgressCmToMm('')).toBeNull();
+    expect(parseInProgressCmToMm('.')).toBeNull();
+    expect(parseInProgressCmToMm('abc')).toBeNull();
   });
 });
 

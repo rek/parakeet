@@ -6,9 +6,11 @@
 
 ## What this covers
 
-Table + module + entry screen for weekly lipedema measurement logs.
-One row per user per recorded_date; upsert semantics. RLS so only the
-owner reads/writes. Feature-flag gated off by default.
+Table + module + entry screen for lipedema measurement logs (one row
+per user per recorded_date; upsert semantics, expected cadence
+weekly). RLS so only the owner reads/writes. Feature-flag gated off
+by default. Date navigator + per-limb delta vs prior + tap-history-to-edit
+make the form feel like a journal, not a database row.
 
 ## Tasks
 
@@ -24,11 +26,16 @@ owner reads/writes. Feature-flag gated off by default.
       `auth.uid() = user_id`. No cross-user reads even with service key
       bypass unused here.
   → same file
+- [x] `BEFORE UPDATE` trigger to bump `updated_at` automatically so any
+      future writer that forgets to set it explicitly stays honest.
+  → `supabase/migrations/20260504100000_lipedema_measurements_updated_at_trigger.sql`
 
 **`apps/parakeet/src/modules/lipedema-tracking/`:**
 
 - [x] `model/types.ts` — `LipedemaMeasurement`, `MeasurementDraft`,
-      `Limb`, `Side`, `LIMB_LABELS`.
+      `Limb`, `Side`, `LIMB_LABELS`. Domain field names are camelCase
+      (`painScore`, `swellingScore`, `*Mm`); snake_case stays at the
+      DB column boundary inside the repository row mapper.
   → `apps/parakeet/src/modules/lipedema-tracking/model/types.ts`
 - [x] `data/lipedema-tracking.repository.ts` —
       `fetchMeasurements(limit)`, `upsertMeasurement(input)`,
@@ -42,23 +49,32 @@ owner reads/writes. Feature-flag gated off by default.
       `useDeleteMeasurement`. Mutations invalidate the module's query
       prefix.
   → `apps/parakeet/src/modules/lipedema-tracking/hooks/useMeasurements.ts`
-- [x] `lib/units.ts` — `cmStringToMm`, `mmToCmString`, `parseZeroToTen`.
-      Pure. 14 unit tests covering round-trip, clamp, trim, null.
+- [x] `lib/units.ts` — `cmStringToMm`, `mmToCmString`,
+      `parseInProgressCmToMm`, `parseZeroToTen`. Pure. Unit tests
+      cover round-trip, clamp, trim, null, and the in-progress-typing
+      sub-1cm guard.
   → `apps/parakeet/src/modules/lipedema-tracking/lib/units.ts`
   → `apps/parakeet/src/modules/lipedema-tracking/lib/__tests__/units.test.ts`
-- [x] `lib/trends.ts` — `limbTrend(rows, pick)`, `latestDelta(series)`.
-      Used by future trend chart; tested now with 5 cases.
+- [x] `lib/trends.ts` — `limbTrend(rows, pick)`, `seriesDrift(series)`,
+      `adjacentDelta(series)`, `priorValue(rows, pick, excludeDate?)`.
+      `priorValue` powers the per-limb delta tag on the entry form.
+      Each helper unit-tested.
   → `apps/parakeet/src/modules/lipedema-tracking/lib/trends.ts`
   → `apps/parakeet/src/modules/lipedema-tracking/lib/__tests__/trends.test.ts`
 - [x] `application/draft.ts` — `emptyDraft`, `measurementToDraft`,
-      `draftToUpsert`, `draftIsEmpty`. Pure. 4 tests covering
-      round-trip and empty-check.
+      `draftToUpsert`, `draftIsEmpty`. Pure. Tests cover round-trip,
+      empty-check, and notes-only/blank discrimination.
   → `apps/parakeet/src/modules/lipedema-tracking/application/draft.ts`
   → `apps/parakeet/src/modules/lipedema-tracking/application/__tests__/draft.test.ts`
-- [x] `ui/TrackingScreen.tsx` — form + history. Preloads today's
-      entry if it exists (upsert-in-place). Prevents save on fully
-      empty draft. Alert-gated delete. Hooks-before-early-return
-      satisfied.
+- [x] `ui/TrackingScreen.tsx` — date navigator + form + history.
+      Preloads the selected day's entry exactly once per date change
+      (ref-guarded so post-save invalidation never clobbers in-flight
+      edits). Per-limb delta vs prior non-null value rendered next to
+      each input. Tap any history card to load it back into the form.
+      Pre-fill button copies last entry into a blank draft. Toast
+      confirms save / delete. Alert-gated delete with error alert on
+      failure (per `feedback_error_handling_screens.md`). Save error
+      auto-clears on next field edit.
   → `apps/parakeet/src/modules/lipedema-tracking/ui/TrackingScreen.tsx`
 - [x] `index.ts` — public API barrel.
   → `apps/parakeet/src/modules/lipedema-tracking/index.ts`

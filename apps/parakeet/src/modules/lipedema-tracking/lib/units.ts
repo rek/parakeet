@@ -19,6 +19,21 @@ export function mmToCmString(mm: number | null | undefined): string {
   return (mm / 10).toFixed(1);
 }
 
+/**
+ * cm string → integer mm, but only when the string represents a
+ * realistic limb measurement *in progress*. Used by the live delta
+ * tag in the entry form: while the user is mid-typing ("0", "0.",
+ * ".") we do not want to compare to the prior value and flash a
+ * misleading huge negative delta. Returns null until the input parses
+ * to a value of at least 1 cm.
+ */
+export function parseInProgressCmToMm(s: string): number | null {
+  const mm = cmStringToMm(s);
+  if (mm == null) return null;
+  if (mm < 10) return null;
+  return mm;
+}
+
 /** Numeric 0-10 string → number. Clamp + reject NaN. */
 export function parseZeroToTen(s: string): number | null {
   const trimmed = s.trim();

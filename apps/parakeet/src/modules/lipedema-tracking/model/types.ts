@@ -30,8 +30,10 @@ export interface LipedemaMeasurement {
   upperArmRMm: number | null;
   wristLMm: number | null;
   wristRMm: number | null;
-  pain_0_10: number | null;
-  swelling_0_10: number | null;
+  /** 0–10 scale, 0.5 step. */
+  painScore: number | null;
+  /** 0–10 scale, 0.5 step. */
+  swellingScore: number | null;
   notes: string | null;
   photoUrl: string | null;
   createdAt: string;

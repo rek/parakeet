@@ -5,8 +5,18 @@ export {
   useMeasurements,
   useSaveMeasurement,
 } from './hooks/useMeasurements';
-export { cmStringToMm, mmToCmString, parseZeroToTen } from './lib/units';
-export { latestDelta, limbTrend } from './lib/trends';
+export {
+  cmStringToMm,
+  mmToCmString,
+  parseInProgressCmToMm,
+  parseZeroToTen,
+} from './lib/units';
+export {
+  adjacentDelta,
+  limbTrend,
+  priorValue,
+  seriesDrift,
+} from './lib/trends';
 export {
   draftIsEmpty,
   draftToUpsert,

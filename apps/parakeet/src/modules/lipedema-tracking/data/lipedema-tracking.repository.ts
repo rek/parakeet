@@ -1,6 +1,6 @@
 // @spec docs/features/lipedema-tracking/spec-data-layer.md
 import { typedSupabase } from '@platform/supabase';
-import type { DbInsert, DbRow, DbUpdate } from '@platform/supabase';
+import type { DbInsert, DbRow } from '@platform/supabase';
 
 import type { LipedemaMeasurement } from '../model/types';
 
@@ -24,8 +24,8 @@ function rowToModel(r: Row): LipedemaMeasurement {
     upperArmRMm: r.upper_arm_r_mm,
     wristLMm: r.wrist_l_mm,
     wristRMm: r.wrist_r_mm,
-    pain_0_10: r.pain_0_10,
-    swelling_0_10: r.swelling_0_10,
+    painScore: r.pain_0_10,
+    swellingScore: r.swelling_0_10,
     notes: r.notes,
     photoUrl: r.photo_url,
     createdAt: r.created_at,
@@ -90,7 +90,3 @@ export async function deleteMeasurement(id: string): Promise<void> {
     .eq('id', id);
   if (error) throw error;
 }
-
-export type MeasurementPatch = Partial<
-  Omit<DbUpdate<'lipedema_measurements'>, 'id' | 'user_id' | 'created_at'>
->;

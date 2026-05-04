@@ -13,8 +13,9 @@ export interface LimbTrend {
 
 /**
  * Extract per-limb L+R circumference series from the full measurements
- * list. Missing values are skipped (the point isn't emitted) rather
- * than imputed — the UI shows gaps honestly.
+ * list. Missing values are skipped (no imputation) — the UI shows gaps
+ * honestly. Sort is lexicographic on YYYY-MM-DD which matches chrono
+ * order; cheap and correct for any ISO date format.
  */
 export function limbTrend(
   rows: LipedemaMeasurement[],
@@ -34,12 +35,41 @@ export function limbTrend(
 }
 
 /**
- * Simple delta: latest-minus-baseline. Null when fewer than 2 points.
- * Positive delta = growth (concerning for lipedema).
+ * Last value minus first value across the whole series. Positive =
+ * growth (concerning for lipedema). Null when fewer than 2 points.
  */
-export function latestDelta(series: TrendPoint[]): number | null {
+export function seriesDrift(series: TrendPoint[]): number | null {
   if (series.length < 2) return null;
-  const first = series[0];
-  const last = series[series.length - 1];
-  return last.value - first.value;
+  return series[series.length - 1].value - series[0].value;
+}
+
+/**
+ * Last value minus the value before it. Useful for "change since last
+ * entry" badges. Null when fewer than 2 points.
+ */
+export function adjacentDelta(series: TrendPoint[]): number | null {
+  if (series.length < 2) return null;
+  return series[series.length - 1].value - series[series.length - 2].value;
+}
+
+/**
+ * Most recent measurement for a given limb side, scanning back through
+ * sorted-desc rows for the first non-null value. Null if none found.
+ * `excludeDate` lets the form ignore the in-progress entry so the
+ * "previous" delta is genuinely the prior session.
+ */
+export function priorValue(
+  rows: LipedemaMeasurement[],
+  pick: (m: LipedemaMeasurement) => number | null,
+  excludeDate?: string,
+): { date: string; value: number } | null {
+  const sorted = [...rows].sort((a, b) =>
+    b.recordedDate.localeCompare(a.recordedDate),
+  );
+  for (const r of sorted) {
+    if (excludeDate && r.recordedDate === excludeDate) continue;
+    const v = pick(r);
+    if (v != null) return { date: r.recordedDate, value: v };
+  }
+  return null;
 }

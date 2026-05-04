@@ -35,8 +35,8 @@ export function measurementToDraft(m: LipedemaMeasurement): MeasurementDraft {
     upperArmR: mmToCmString(m.upperArmRMm),
     wristL: mmToCmString(m.wristLMm),
     wristR: mmToCmString(m.wristRMm),
-    pain: m.pain_0_10 == null ? '' : m.pain_0_10.toString(),
-    swelling: m.swelling_0_10 == null ? '' : m.swelling_0_10.toString(),
+    pain: m.painScore == null ? '' : m.painScore.toString(),
+    swelling: m.swellingScore == null ? '' : m.swellingScore.toString(),
     notes: m.notes ?? '',
   };
 }
