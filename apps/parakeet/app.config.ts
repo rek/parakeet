@@ -26,6 +26,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   plugins: [
     ...(config.plugins ?? []),
     'react-native-health-connect',
+    './plugins/with-health-connect-permissions.js',
     // Health Connect (androidx.health.connect:connect-client) requires
     // minSdk 26. Pinned to 28; the bare `android.minSdkVersion` field
     // alone is not honoured by gradle without this plugin.

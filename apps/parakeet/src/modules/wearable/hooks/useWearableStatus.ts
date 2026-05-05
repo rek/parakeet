@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import { checkPermissions, isHealthConnectAvailable } from '../lib/health-connect';
@@ -10,7 +10,11 @@ export interface WearableStatus {
   isSyncing: boolean;
 }
 
-export function useWearableStatus(): WearableStatus {
+export interface UseWearableStatusResult extends WearableStatus {
+  refresh: () => Promise<void>;
+}
+
+export function useWearableStatus(): UseWearableStatusResult {
   const [state, setState] = useState<WearableStatus>({
     isAvailable: false,
     isPermitted: false,
@@ -18,12 +22,21 @@ export function useWearableStatus(): WearableStatus {
     isSyncing: false,
   });
 
-  useEffect(() => {
-    void (async () => {
+  const refresh = useCallback(async () => {
+    try {
       const isAvailable = await isHealthConnectAvailable();
-      const perms = isAvailable
-        ? await checkPermissions()
-        : { granted: false, permissions: {} };
+      let perms: { granted: boolean; permissions: Record<string, boolean> } = {
+        granted: false,
+        permissions: {},
+      };
+      if (isAvailable) {
+        try {
+          perms = await checkPermissions();
+        } catch {
+          // checkPermissions can throw if Health Connect is uninitialized;
+          // treat as not-permitted rather than crashing the screen.
+        }
+      }
       const last = await AsyncStorage.getItem('wearable_last_sync_ms');
       setState({
         isAvailable,
@@ -31,8 +44,14 @@ export function useWearableStatus(): WearableStatus {
         lastSyncAt: last ? Number(last) : null,
         isSyncing: false,
       });
-    })();
+    } catch {
+      // Swallow — leaves state at last known value.
+    }
   }, []);
 
-  return state;
+  useEffect(() => {
+    void refresh();
+  }, [refresh]);
+
+  return { ...state, refresh };
 }

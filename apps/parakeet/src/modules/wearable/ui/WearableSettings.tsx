@@ -132,6 +132,7 @@ export function WearableSettings() {
     setIsConnecting(true);
     try {
       await requestPermissions();
+      await status.refresh();
     } catch (err) {
       captureException(err);
       Alert.alert('Error', 'Could not request permissions. Please try again.');

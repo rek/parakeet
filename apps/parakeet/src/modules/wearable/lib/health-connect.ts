@@ -44,6 +44,7 @@ export async function initHealthConnect(): Promise<boolean> {
 }
 
 export async function requestPermissions(): Promise<PermissionStatus> {
+  await initialize();
   const granted = await requestPermission(READ_PERMISSIONS);
   const grantedSet = new Set(
     granted
@@ -61,6 +62,7 @@ export async function requestPermissions(): Promise<PermissionStatus> {
 }
 
 export async function checkPermissions(): Promise<PermissionStatus> {
+  await initialize();
   const granted = await getGrantedPermissions();
   const grantedSet = new Set(
     granted
