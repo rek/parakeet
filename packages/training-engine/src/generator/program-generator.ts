@@ -13,7 +13,6 @@ import {
   type IntensityTypeSignals,
 } from '../cube/scheduler';
 import {
-  AuxiliaryPool,
   GeneratedProgramStructure,
   GenerateProgramInput,
   SessionScaffold,
