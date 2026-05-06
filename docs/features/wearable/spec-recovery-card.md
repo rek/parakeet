@@ -1,9 +1,11 @@
 # Spec: Recovery Card UI
 
-**Status**: Planned
+**Status**: Superseded by Phase 1.5 prefill — `RecoveryCard` ships in `modules/wearable/ui/` but is no longer rendered.
 **Domain**: UI
 **Phase**: 3 (Pre-Session UI)
 **Owner**: any executor agent
+
+> **2026-05-06 update.** The soreness screen (`apps/parakeet/src/app/(tabs)/session/soreness.tsx`) no longer mounts `RecoveryCard`. Sleep + energy pills always render and are prefilled from the `recovery_snapshots` row via `modules/wearable/utils/prefill.ts`. Component is kept for potential reuse on a wearable-detail screen. The "Settings status row" portion of this spec (wearable connect state) is unaffected.
 
 ## What This Covers
 

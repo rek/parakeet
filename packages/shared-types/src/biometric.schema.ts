@@ -20,9 +20,9 @@ export const BiometricReadingSchema = z.object({
   user_id: z.uuid(),
   type: BiometricTypeSchema,
   value: z.number(),
-  recorded_at: z.iso.datetime(),
+  recorded_at: z.iso.datetime({ offset: true }),
   source: z.string(),
-  created_at: z.iso.datetime(),
+  created_at: z.iso.datetime({ offset: true }),
 });
 
 export type BiometricReading = z.infer<typeof BiometricReadingSchema>;
@@ -53,7 +53,7 @@ export const RecoverySnapshotSchema = z.object({
   steps_24h: z.number().nullable(),
   active_minutes_24h: z.number().nullable(),
   readiness_score: z.number().min(0).max(100).nullable(),
-  created_at: z.iso.datetime(),
+  created_at: z.iso.datetime({ offset: true }),
 });
 
 export type RecoverySnapshot = z.infer<typeof RecoverySnapshotSchema>;

@@ -1,4 +1,6 @@
 // @spec docs/features/wearable/spec-pipeline.md
+import { addBreadcrumb } from '@platform/utils/captureException';
+
 import {
   checkPermissions,
   isHealthConnectAvailable,
@@ -16,12 +18,28 @@ export type SyncResult =
   | { synced: true; readingsInserted: number }
   | { synced: false; reason: 'unavailable' | 'permission_denied' };
 
+// Wrap each sync step so a failure carries the step name into the thrown
+// error AND leaves a Sentry breadcrumb trail. The outer screen handler still
+// captureException's the rethrown error — Sentry gets one event with the full
+// step trail, and the alert message identifies the failing step.
+async function runStep<T>(name: string, fn: () => Promise<T>): Promise<T> {
+  addBreadcrumb('wearable.sync', `start ${name}`);
+  try {
+    const result = await fn();
+    addBreadcrumb('wearable.sync', `done ${name}`);
+    return result;
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    throw new Error(`wearable.sync ${name}: ${message}`, { cause: err });
+  }
+}
+
 export async function syncWearableData(userId: string): Promise<SyncResult> {
-  if (!(await isHealthConnectAvailable())) {
+  if (!(await runStep('isHealthConnectAvailable', isHealthConnectAvailable))) {
     return { synced: false, reason: 'unavailable' };
   }
 
-  const perms = await checkPermissions();
+  const perms = await runStep('checkPermissions', checkPermissions);
   if (!perms.granted) {
     return { synced: false, reason: 'permission_denied' };
   }
@@ -30,12 +48,12 @@ export async function syncWearableData(userId: string): Promise<SyncResult> {
   const start = new Date(end.getTime() - 24 * 60 * 60 * 1000);
 
   const [hrv, rhr, spo2, sleeps, steps, activeMins] = await Promise.all([
-    readHrv(start, end),
-    readRestingHr(start, end),
-    readSpO2(start, end),
-    readSleepSessions(start, end),
-    readSteps(start, end),
-    readActiveMinutes(start, end),
+    runStep('readHrv', () => readHrv(start, end)),
+    runStep('readRestingHr', () => readRestingHr(start, end)),
+    runStep('readSpO2', () => readSpO2(start, end)),
+    runStep('readSleepSessions', () => readSleepSessions(start, end)),
+    runStep('readSteps', () => readSteps(start, end)),
+    runStep('readActiveMinutes', () => readActiveMinutes(start, end)),
   ]);
 
   const readings = [
@@ -91,8 +109,12 @@ export async function syncWearableData(userId: string): Promise<SyncResult> {
     },
   ];
 
-  const { insertedCount } = await upsertBiometricReadings(userId, readings);
-  await computeAndStoreRecoverySnapshot(userId);
+  const { insertedCount } = await runStep('upsertBiometricReadings', () =>
+    upsertBiometricReadings(userId, readings)
+  );
+  await runStep('computeAndStoreRecoverySnapshot', () =>
+    computeAndStoreRecoverySnapshot(userId)
+  );
 
   return { synced: true, readingsInserted: insertedCount };
 }

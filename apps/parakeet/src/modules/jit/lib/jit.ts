@@ -1,9 +1,5 @@
 // @spec docs/features/jit-pipeline/spec-generator.md
 import { getLatestMismatchDirection } from '@modules/body-review';
-import {
-  deriveNonTrainingLoad,
-  fetchTodaySnapshot,
-} from '@modules/wearable';
 import { getCurrentCycleContext } from '@modules/cycle-tracking';
 import { getFormulaConfig } from '@modules/formula';
 import {
@@ -32,7 +28,7 @@ import {
   IntensityTypeSchema,
   LiftSchema,
 } from '@parakeet/shared-types';
-import type { Lift, RecoverySnapshot } from '@parakeet/shared-types';
+import type { Lift } from '@parakeet/shared-types';
 import {
   computeInjurySorenessOverrides,
   computeWeightDeviation,
@@ -85,13 +81,6 @@ import { estimateOneRmKgFromProfile } from './max-estimation';
 // Re-export so screens import ReadinessLevel from @modules/jit.
 export type { ReadinessLevel };
 
-function deriveNonTrainingLoadFromSnapshot(
-  s: RecoverySnapshot
-): number | undefined {
-  if (s.steps_24h === null && s.active_minutes_24h === null) return undefined;
-  return deriveNonTrainingLoad(s.steps_24h, s.active_minutes_24h);
-}
-
 type Session = Awaited<ReturnType<typeof getSession>>;
 
 export async function runJITForSession(
@@ -137,7 +126,6 @@ export async function runJITForSession(
     pool,
     allPools,
     auxMuscleMap,
-    recoverySnapshot,
   ] = await Promise.all([
     getCurrentOneRmKg(userId, lift),
     getCurrentOneRmKg(userId, 'squat'),
@@ -153,7 +141,6 @@ export async function runJITForSession(
     getAuxiliaryPool(userId, lift),
     isAdHoc ? Promise.resolve(null) : getAuxiliaryPools(userId),
     getAllAuxMuscleMap(userId),
-    fetchTodaySnapshot(userId),
   ]);
 
   // Build a muscle mapper that knows about the lifter's user-defined exercises
@@ -459,15 +446,6 @@ export async function runJITForSession(
     },
     sleepQuality,
     energyLevel,
-    ...(recoverySnapshot && {
-      hrvPctChange: recoverySnapshot.hrv_pct_change ?? undefined,
-      restingHrPctChange: recoverySnapshot.rhr_pct_change ?? undefined,
-      sleepDurationMin: recoverySnapshot.sleep_duration_min ?? undefined,
-      deepSleepPct: recoverySnapshot.deep_sleep_pct ?? undefined,
-      spo2Avg: recoverySnapshot.spo2_avg ?? undefined,
-      nonTrainingLoad: deriveNonTrainingLoadFromSnapshot(recoverySnapshot),
-      readinessScore: recoverySnapshot.readiness_score ?? undefined,
-    }),
     cyclePhase,
     sessionIndex,
     totalSessionsThisWeek,

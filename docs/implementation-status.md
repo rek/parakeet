@@ -31,4 +31,4 @@ ls docs/features/
 | [video-analysis](./features/video-analysis/) | partial |
 | [volume](./features/volume/) | partial |
 | [warmup](./features/warmup/) | partial |
-| [wearable](./features/wearable/) | planned |
+| [wearable](./features/wearable/) | partial (Phase 1 + 1.5 done; Phase 2 deferred; Phase 4 planned) |

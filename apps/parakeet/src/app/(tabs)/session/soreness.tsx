@@ -27,7 +27,8 @@ import {
   useSessionStore,
 } from '@modules/session';
 import {
-  RecoveryCard,
+  mapAutonomicToLevel,
+  mapSleepDurationToLevel,
   syncWearableData,
   useRecoverySnapshot,
   useWearableStatus,
@@ -174,11 +175,18 @@ function buildStyles(colors: ColorScheme) {
       alignItems: 'center',
       justifyContent: 'space-between',
     },
+    readinessLabelColumn: {
+      flex: 1,
+      marginRight: 12,
+    },
     readinessLabel: {
       fontSize: 15,
       color: colors.text,
-      flex: 1,
-      marginRight: 12,
+    },
+    readinessHint: {
+      fontSize: 11,
+      color: colors.textTertiary,
+      marginTop: 2,
     },
     readinessPills: {
       flexDirection: 'row',
@@ -321,6 +329,7 @@ function MuscleRatingRow({
 
 interface ReadinessPillRowProps {
   label: string;
+  hint?: string;
   levels: typeof READINESS_LEVELS;
   labels: Record<number, string>;
   value: ReadinessLevel;
@@ -331,6 +340,7 @@ interface ReadinessPillRowProps {
 
 function ReadinessPillRow({
   label,
+  hint,
   levels,
   labels,
   value,
@@ -342,7 +352,10 @@ function ReadinessPillRow({
 
   return (
     <View style={styles.readinessRow}>
-      <Text style={styles.readinessLabel}>{label}</Text>
+      <View style={styles.readinessLabelColumn}>
+        <Text style={styles.readinessLabel}>{label}</Text>
+        {hint && <Text style={styles.readinessHint}>{hint}</Text>}
+      </View>
       <View style={styles.readinessPills}>
         {levels.map((level) => {
           const isActive = value === level;
@@ -403,6 +416,10 @@ export default function SorenessScreen() {
   const [musclesExpanded, setMusclesExpanded] = useState(false);
   const [sleepQuality, setSleepQuality] = useState<ReadinessLevel>(2);
   const [energyLevel, setEnergyLevel] = useState<ReadinessLevel>(2);
+  const [sleepTouched, setSleepTouched] = useState(false);
+  const [energyTouched, setEnergyTouched] = useState(false);
+  const [sleepFromWearable, setSleepFromWearable] = useState(false);
+  const [energyFromWearable, setEnergyFromWearable] = useState(false);
   const [cyclePhase, setCyclePhase] = useState<CyclePhase | null>(null);
   const [cyclePhaseRationale, setCyclePhaseRationale] = useState<string | null>(
     null
@@ -413,9 +430,9 @@ export default function SorenessScreen() {
   );
   const autoGenerateTriggered = useRef(false);
 
-  const { data: recoverySnapshot } = useRecoverySnapshot();
+  const { data: recoverySnapshot, isPending: recoveryQueryPending } =
+    useRecoverySnapshot();
   const wearableStatus = useWearableStatus();
-  const hasWearable = Boolean(recoverySnapshot);
 
   const primaryMuscles: readonly MuscleGroup[] = session
     ? (LIFT_PRIMARY_SORENESS_MUSCLES[session.primary_lift as Lift] ?? [])
@@ -481,11 +498,42 @@ export default function SorenessScreen() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Prefill sleep + energy pills from wearable snapshot. Only seeds untouched
+  // pills — once the user taps a pill, manual value wins.
+  useEffect(() => {
+    if (!recoverySnapshot) return;
+
+    if (!sleepTouched) {
+      const mapped = mapSleepDurationToLevel(
+        recoverySnapshot.sleep_duration_min
+      );
+      if (mapped !== null) {
+        setSleepQuality(mapped);
+        setSleepFromWearable(true);
+      }
+    }
+
+    if (!energyTouched) {
+      const mapped = mapAutonomicToLevel(
+        recoverySnapshot.hrv_pct_change,
+        recoverySnapshot.rhr_pct_change
+      );
+      if (mapped !== null) {
+        setEnergyLevel(mapped);
+        setEnergyFromWearable(true);
+      }
+    }
+  }, [recoverySnapshot, sleepTouched, energyTouched]);
+
   // ── Auto-generate ─────────────────────────────────────────────────────────
 
   useEffect(() => {
     if (!isAutoGenerate || !session || !user || autoGenerateTriggered.current)
       return;
+    // Wait for recovery query to settle so wearable prefill (if any) is applied
+    // before JIT runs. Auto-generate skips the soreness UI entirely, so without
+    // this gate the pills would still hold their default `2` when JIT fires.
+    if (recoveryQueryPending) return;
     const expectedMuscles =
       LIFT_PRIMARY_SORENESS_MUSCLES[session.primary_lift as Lift] ?? [];
     if (expectedMuscles.length > 0 && Object.keys(ratings).length === 0) return;
@@ -493,7 +541,7 @@ export default function SorenessScreen() {
     setGenerating(true);
     void runJIT(ratings);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isAutoGenerate, session, user, ratings]);
+  }, [isAutoGenerate, session, user, ratings, recoveryQueryPending]);
 
   // ── Helpers ───────────────────────────────────────────────────────────────
 
@@ -532,8 +580,8 @@ export default function SorenessScreen() {
           session,
           user.id,
           ratingsToUse,
-          hasWearable ? undefined : sleepQuality,
-          hasWearable ? undefined : energyLevel,
+          sleepQuality,
+          energyLevel,
           cyclePhase ?? undefined
         ),
         primaryLift
@@ -703,31 +751,39 @@ export default function SorenessScreen() {
           1–4 Fresh · 5–6 Moderate · 7–8 High · 9–10 Severe
         </Text>
 
-        {/* Recovery card (wearable) or manual sleep/energy pickers */}
-        {hasWearable ? (
-          <RecoveryCard />
-        ) : (
-          <View style={styles.readinessSection}>
-            <ReadinessPillRow
-              label="Sleep"
-              levels={READINESS_LEVELS}
-              labels={READINESS_LABELS.sleep}
-              value={sleepQuality}
-              onChange={setSleepQuality}
-              styles={styles}
-              colors={colors}
-            />
-            <ReadinessPillRow
-              label="Energy"
-              levels={READINESS_LEVELS}
-              labels={READINESS_LABELS.energy}
-              value={energyLevel}
-              onChange={setEnergyLevel}
-              styles={styles}
-              colors={colors}
-            />
-          </View>
-        )}
+        {/* Sleep + energy pills — prefilled from wearable when available */}
+        <View style={styles.readinessSection}>
+          <ReadinessPillRow
+            label="Sleep"
+            hint={
+              sleepFromWearable && !sleepTouched ? 'from wearable' : undefined
+            }
+            levels={READINESS_LEVELS}
+            labels={READINESS_LABELS.sleep}
+            value={sleepQuality}
+            onChange={(v) => {
+              setSleepQuality(v);
+              setSleepTouched(true);
+            }}
+            styles={styles}
+            colors={colors}
+          />
+          <ReadinessPillRow
+            label="Energy"
+            hint={
+              energyFromWearable && !energyTouched ? 'from wearable' : undefined
+            }
+            levels={READINESS_LEVELS}
+            labels={READINESS_LABELS.energy}
+            value={energyLevel}
+            onChange={(v) => {
+              setEnergyLevel(v);
+              setEnergyTouched(true);
+            }}
+            styles={styles}
+            colors={colors}
+          />
+        </View>
 
         {/* Cycle phase informational chip */}
         {cyclePhase && cyclePhaseRationale && (

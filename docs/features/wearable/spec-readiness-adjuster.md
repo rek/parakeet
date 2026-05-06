@@ -1,9 +1,11 @@
 # Spec: Wearable Readiness Adjuster
 
-**Status**: Planned
+**Status**: §2 (`computeReadinessScore`) done. Full adjuster + dispatch deferred — superseded by Phase 1.5 UI prefill.
 **Domain**: Training Engine
 **Phase**: 2 (Engine Integration). `computeReadinessScore` is also imported by Phase 1 `recovery.service.ts` — see Out-of-Order Note.
 **Owner**: any executor agent
+
+> **2026-05-06 update.** The dispatcher in `applyReadinessAdjustment.ts` and the `getWearableReadinessModifier` adjuster ship in the engine but are unreachable from production. JIT no longer feeds wearable fields into `JITInput`; the soreness screen prefills the subjective sleep/energy pills from `recovery_snapshots` instead (`apps/parakeet/src/modules/wearable/utils/prefill.ts`). Engine always routes to subjective `getReadinessModifier`. Revisit this spec if/when we want fine-grained HRV-curve modulation back.
 
 ## What This Covers
 

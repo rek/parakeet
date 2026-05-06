@@ -1,9 +1,11 @@
 # Spec: Wearable Data Pipeline
 
-**Status**: Planned
+**Status**: Phase 1 done. §10 (JIT wiring) deferred — see update note.
 **Domain**: App / Data
 **Phase**: 1 (everything except `RecoveryCard` UI in §11) + Phase 2 hand-off (JIT wiring in §10)
 **Owner**: any executor agent
+
+> **2026-05-06 update — §10 deferred.** Wearable fields are *not* spread into `JITInput` anymore. The current "first integration" path translates `recovery_snapshots` → subjective sleep/energy pills on the soreness screen via `modules/wearable/utils/prefill.ts`. Engine continues to use `getReadinessModifier`. §§1–9 (sync, baselines, recovery snapshot, hooks, settings) remain accurate. §11 (RecoveryCard UI) is superseded — see [spec-recovery-card.md](./spec-recovery-card.md).
 
 ## What This Covers
 

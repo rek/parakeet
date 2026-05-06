@@ -26,3 +26,6 @@ export { WearableSettings } from './ui/WearableSettings';
 export { RecoveryCard } from './ui/RecoveryCard';
 export { HrvTrendChart } from './ui/HrvTrendChart';
 export { SleepSummary } from './ui/SleepSummary';
+
+// Utils
+export { mapAutonomicToLevel, mapSleepDurationToLevel } from './utils/prefill';
