@@ -49,7 +49,7 @@ function getProvider() {
   return cachedProvider;
 }
 
-/** Fast, cheap — used for JIT session generation (5s timeout) */
+/** Fast, cheap — used for JIT session generation (12s timeout, 2 attempts) */
 export function getJITModel() {
   return getProvider()('gpt-4o-mini');
 }

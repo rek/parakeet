@@ -3,6 +3,13 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 const OPENAI_BASE = 'https://api.openai.com';
 const MAX_REQUESTS_PER_HOUR = 100;
 
+// Module-level singletons — avoid re-creating clients on every request
+const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+const adminClient = createClient(supabaseUrl, supabaseServiceKey, {
+  auth: { persistSession: false },
+});
+
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers':
@@ -39,15 +46,7 @@ async function authenticateRequest({ authHeader }: { authHeader: string | null }
   }
 
   const token = authHeader.replace('Bearer ', '');
-  const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-  const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-
-  const supabase = createClient(supabaseUrl, supabaseServiceKey, {
-    auth: { persistSession: false },
-    global: { headers: { Authorization: `Bearer ${token}` } },
-  });
-
-  const { data, error } = await supabase.auth.getUser(token);
+  const { data, error } = await adminClient.auth.getUser(token);
   if (error || !data.user) {
     return { error: errorResponse({ status: 401, message: 'Invalid or expired token' }) };
   }
@@ -60,19 +59,9 @@ async function authenticateRequest({ authHeader }: { authHeader: string | null }
  * Returns true if the request is allowed, false if rate limited.
  */
 async function checkRateLimit({ userId }: { userId: string }) {
-  const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-  const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+  const windowStart = new Date(Date.now() - 60 * 60 * 1000).toISOString();
 
-  const supabase = createClient(supabaseUrl, supabaseServiceKey, {
-    auth: { persistSession: false },
-  });
-
-  const windowStart = new Date(
-    Date.now() - 60 * 60 * 1000
-  ).toISOString();
-
-  // Count requests in the current window
-  const { count } = await supabase
+  const { count } = await adminClient
     .from('ai_rate_limits')
     .select('*', { count: 'exact', head: true })
     .eq('user_id', userId)
@@ -82,10 +71,7 @@ async function checkRateLimit({ userId }: { userId: string }) {
     return false;
   }
 
-  // Log this request
-  await supabase
-    .from('ai_rate_limits')
-    .insert({ user_id: userId });
+  await adminClient.from('ai_rate_limits').insert({ user_id: userId });
 
   return true;
 }

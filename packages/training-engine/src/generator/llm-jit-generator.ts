@@ -38,20 +38,23 @@ export class LLMJITGenerator implements JITGeneratorStrategy {
   readonly description = 'LLM-based holistic generator — requires network';
 
   async generate(input: JITInput): Promise<JITOutput> {
-    try {
-      const { output: adj } = await generateText({
-        model: getJITModel(),
-        output: Output.object({ schema: JITAdjustmentSchema }),
-        system: JIT_SYSTEM_PROMPT,
-        prompt: JSON.stringify(buildJITContext(input)),
-        abortSignal: abortAfter(5000),
-      });
-      const output = applyAdjustment(adj, input);
-      return { ...enforceHardConstraints(output, input), jit_strategy: 'llm' };
-    } catch {
-      const fallback = await new FormulaJITGenerator().generate(input);
-      return { ...fallback, jit_strategy: 'formula_fallback' };
+    for (let attempt = 1; attempt <= 2; attempt++) {
+      try {
+        const { output: adj } = await generateText({
+          model: getJITModel(),
+          output: Output.object({ schema: JITAdjustmentSchema }),
+          system: JIT_SYSTEM_PROMPT,
+          prompt: JSON.stringify(buildJITContext(input)),
+          abortSignal: abortAfter(12000),
+        });
+        const output = applyAdjustment(adj, input);
+        return { ...enforceHardConstraints(output, input), jit_strategy: 'llm' };
+      } catch {
+        // retry on attempt 1; fall through to formula on attempt 2
+      }
     }
+    const fallback = await new FormulaJITGenerator().generate(input);
+    return { ...fallback, jit_strategy: 'formula_fallback' };
   }
 }
 
