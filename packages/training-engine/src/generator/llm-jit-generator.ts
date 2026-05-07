@@ -3,6 +3,7 @@ import type { JITAdjustment } from '@parakeet/shared-types';
 import { generateText, Output } from 'ai';
 
 import { abortAfter } from '../ai/abort-timeout';
+import { reportEngineError } from '../ai/error-reporter';
 import { getJITModel } from '../ai/models';
 import { JIT_SYSTEM_PROMPT } from '../ai/prompts';
 import { computeAuxWeight } from '../auxiliary/exercise-catalog';
@@ -38,6 +39,7 @@ export class LLMJITGenerator implements JITGeneratorStrategy {
   readonly description = 'LLM-based holistic generator — requires network';
 
   async generate(input: JITInput): Promise<JITOutput> {
+    let lastError: unknown;
     for (let attempt = 1; attempt <= 2; attempt++) {
       try {
         const { output: adj } = await generateText({
@@ -49,10 +51,20 @@ export class LLMJITGenerator implements JITGeneratorStrategy {
         });
         const output = applyAdjustment(adj, input);
         return { ...enforceHardConstraints(output, input), jit_strategy: 'llm' };
-      } catch {
-        // retry on attempt 1; fall through to formula on attempt 2
+      } catch (err) {
+        lastError = err;
+        reportEngineError(err, {
+          source: 'LLMJITGenerator',
+          attempt,
+          sessionId: input.sessionId,
+        });
       }
     }
+    reportEngineError(lastError, {
+      source: 'LLMJITGenerator',
+      phase: 'fallback',
+      sessionId: input.sessionId,
+    });
     const fallback = await new FormulaJITGenerator().generate(input);
     return { ...fallback, jit_strategy: 'formula_fallback' };
   }

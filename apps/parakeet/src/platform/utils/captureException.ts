@@ -1,17 +1,22 @@
 import * as Sentry from '@sentry/react-native';
 
-export function captureException(error: unknown): void {
+export function captureException(
+  error: unknown,
+  options?: { extra?: Record<string, unknown> }
+): void {
+  const captureContext = options?.extra ? { extra: options.extra } : undefined;
+
   if (error instanceof Error) {
-    Sentry.captureException(error);
+    Sentry.captureException(error, captureContext);
     return;
   }
 
   if (typeof error === 'string') {
-    Sentry.captureException(new Error(error));
+    Sentry.captureException(new Error(error), captureContext);
     return;
   }
 
-  Sentry.captureException(JSON.stringify(error));
+  Sentry.captureException(JSON.stringify(error), captureContext);
 }
 
 /**

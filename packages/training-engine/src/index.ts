@@ -21,6 +21,10 @@ export {
   getCycleReviewModel,
   getJITModel,
 } from './ai/models';
+export {
+  configureEngineErrorReporter,
+  type EngineErrorContext,
+} from './ai/error-reporter';
 export { FORM_COACHING_SYSTEM_PROMPT } from './ai/prompts';
 export { localDateString } from './utils/date';
 export { isMakeupWindowExpired } from './sessions/makeup-window';
