@@ -120,11 +120,14 @@ export function applyAdjustment(
   }
 
   // Apply aux overrides
+  const overrideByExercise = new Map(
+    adj.auxOverrides.map((o) => [o.exercise, o.action])
+  );
   const auxiliaryWork: AuxiliaryWork[] = input.activeAuxiliaries.map(
     (exercise) => {
       const exerciseType = getExerciseType(exercise);
       const override: 'skip' | 'reduce' | 'normal' | undefined =
-        adj.auxOverrides[exercise];
+        overrideByExercise.get(exercise);
       if (override === 'skip') {
         return {
           exercise,

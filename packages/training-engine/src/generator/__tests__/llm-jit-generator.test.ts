@@ -37,7 +37,7 @@ function baseAdj(overrides: Partial<JITAdjustment> = {}): JITAdjustment {
     intensityModifier: 1.0,
     setModifier: 0,
     skipMainLift: false,
-    auxOverrides: {},
+    auxOverrides: [],
     rationale: ['Normal session'],
     confidence: 'high',
     ...overrides,

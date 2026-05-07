@@ -1,5 +1,7 @@
 import { z } from 'zod';
 
+import { AuxOverrideSchema } from './jit.schema';
+
 export const JudgeReviewSchema = z.object({
   score: z.number().min(0).max(100),
   verdict: z.enum(['accept', 'flag']),
@@ -8,9 +10,7 @@ export const JudgeReviewSchema = z.object({
     .object({
       intensityModifier: z.number().min(0.4).max(1.2).optional(),
       setModifier: z.number().int().min(-3).max(2).optional(),
-      auxOverrides: z
-        .record(z.string(), z.enum(['skip', 'reduce', 'normal']))
-        .optional(),
+      auxOverrides: z.array(AuxOverrideSchema).optional(),
     })
     .optional(),
 });

@@ -38,7 +38,7 @@ function buildLlmOutput(adj: Partial<JITAdjustment>, input: JITInput) {
     intensityModifier: 1.0,
     setModifier: 0,
     skipMainLift: false,
-    auxOverrides: {},
+    auxOverrides: [],
     rationale: ['Normal session'],
     confidence: 'high',
     ...adj,

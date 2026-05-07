@@ -118,7 +118,7 @@ describe('JudgeReviewSchema', () => {
       suggestedOverrides: {
         intensityModifier: 0.9,
         setModifier: -1,
-        auxOverrides: { rdl: 'skip' },
+        auxOverrides: [{ exercise: 'rdl', action: 'skip' }],
       },
     });
     expect(() => JudgeReviewSchema.parse(valid)).not.toThrow();

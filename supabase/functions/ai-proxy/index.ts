@@ -102,16 +102,17 @@ Deno.serve(async (req) => {
     });
   }
 
-  // Extract the OpenAI path from the request URL.
-  // Clients may send either:
-  //   /functions/v1/ai-proxy/v1/chat/completions   (already prefixed)
-  //   /functions/v1/ai-proxy/responses             (AI SDK v6 / Responses API — needs /v1 prefix)
-  // We always forward to api.openai.com under /v1/<path>.
+  // Extract the OpenAI sub-path from the request URL.
+  // Inside Supabase's Edge runtime, the function receives the request with the
+  // function name still prefixed but WITHOUT /functions/v1, e.g.
+  //   /ai-proxy/responses
+  //   /ai-proxy/v1/chat/completions
+  // Older clients may send the full /functions/v1/ai-proxy/... form. Strip
+  // whichever prefix is present, then ensure the result starts with /v1/.
   const url = new URL(req.url);
-  const pathAfterProxy = url.pathname.replace(
-    /^\/functions\/v1\/ai-proxy/,
-    ''
-  );
+  const pathAfterProxy = url.pathname
+    .replace(/^\/functions\/v1\/ai-proxy/, '')
+    .replace(/^\/ai-proxy/, '');
   let openaiPath = pathAfterProxy || '/v1/chat/completions';
   if (!openaiPath.startsWith('/v1/')) {
     openaiPath = `/v1${openaiPath}`;
@@ -142,6 +143,14 @@ Deno.serve(async (req) => {
       headers: openaiHeaders,
       body,
     });
+
+    if (!openaiResponse.ok) {
+      const cloned = openaiResponse.clone();
+      const respBody = await cloned.text();
+      console.error(
+        `[ai-proxy] OpenAI returned ${openaiResponse.status} for ${openaiUrl} :: ${respBody.slice(0, 500)}`
+      );
+    }
 
     // Stream the response back transparently
     const responseHeaders = new Headers(corsHeaders);
