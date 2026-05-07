@@ -195,6 +195,9 @@ export function applyAdjustment(
   const intensityModifier = skippedMainLift ? 0 : adj.intensityModifier;
 
   // Apply rest adjustment from LLM if provided (engine-021)
+  // Schema is nullable (not optional) for OpenAI strict-JSON-schema compat:
+  // model emits `restAdjustments: null` (or `mainLift: null`) when there's
+  // nothing to adjust. Treat null and missing the same way.
   const formulaBase = formulaRestForMain(input);
   const rawDelta = adj.restAdjustments?.mainLift ?? 0;
   const clampedDelta = Math.max(-60, Math.min(60, rawDelta));
@@ -213,9 +216,10 @@ export function applyAdjustment(
     ),
   };
 
-  // Only populate llmRestSuggestion when the LLM actually returned a restAdjustments field
+  // Only populate llmRestSuggestion when the LLM actually returned a non-null
+  // restAdjustments AND a non-null mainLift inside it.
   const llmRestSuggestion =
-    adj.restAdjustments !== undefined
+    adj.restAdjustments != null && adj.restAdjustments.mainLift != null
       ? { deltaSeconds: clampedDelta, formulaBaseSeconds: formulaBase }
       : undefined;
 

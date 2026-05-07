@@ -6,13 +6,15 @@ export const JudgeReviewSchema = z.object({
   score: z.number().min(0).max(100),
   verdict: z.enum(['accept', 'flag']),
   concerns: z.array(z.string().max(200)).max(3),
+  // Strict-JSON-schema compatible: nullable instead of optional, so every
+  // property remains in `required`. See note in jit.schema.ts.
   suggestedOverrides: z
     .object({
-      intensityModifier: z.number().min(0.4).max(1.2).optional(),
-      setModifier: z.number().int().min(-3).max(2).optional(),
-      auxOverrides: z.array(AuxOverrideSchema).optional(),
+      intensityModifier: z.number().min(0.4).max(1.2).nullable(),
+      setModifier: z.number().int().min(-3).max(2).nullable(),
+      auxOverrides: z.array(AuxOverrideSchema).nullable(),
     })
-    .optional(),
+    .nullable(),
 });
 
 export type JudgeReview = z.infer<typeof JudgeReviewSchema>;

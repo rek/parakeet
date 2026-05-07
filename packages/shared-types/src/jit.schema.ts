@@ -8,6 +8,10 @@ export const AuxOverrideSchema = z.object({
   action: z.enum(['skip', 'reduce', 'normal']),
 });
 
+// OpenAI structured-output strict mode requires every property listed in
+// `properties` to also appear in `required`. Use `.nullable()` (not
+// `.optional()`) so the schema stays strict-compatible while still allowing
+// the model to omit a field by emitting `null`.
 export const JITAdjustmentSchema = z.object({
   intensityModifier: z.number().min(0.4).max(1.2),
   setModifier: z.number().int().min(-3).max(2),
@@ -17,9 +21,9 @@ export const JITAdjustmentSchema = z.object({
   confidence: z.enum(['high', 'medium', 'low']),
   restAdjustments: z
     .object({
-      mainLift: z.number().optional(), // delta seconds from formula default, [-60, +60] enforced post-parse
+      mainLift: z.number().nullable(), // delta seconds from formula default, [-60, +60] enforced post-parse
     })
-    .optional(),
+    .nullable(),
 });
 
 export type JITAdjustment = z.infer<typeof JITAdjustmentSchema>;

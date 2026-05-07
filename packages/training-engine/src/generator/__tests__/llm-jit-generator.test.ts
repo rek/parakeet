@@ -40,6 +40,7 @@ function baseAdj(overrides: Partial<JITAdjustment> = {}): JITAdjustment {
     auxOverrides: [],
     rationale: ['Normal session'],
     confidence: 'high',
+    restAdjustments: null,
     ...overrides,
   };
 }

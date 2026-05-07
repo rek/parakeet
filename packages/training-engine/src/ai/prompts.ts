@@ -14,8 +14,8 @@ Rules:
 - If signals are mild and session should proceed normally, return intensityModifier: 1.0, setModifier: 0.
 
 Rest adjustments:
-- Optionally include "restAdjustments": { "mainLift": <delta_seconds> }, a delta in seconds from the formula default.
-- The delta must be between -60 and +60. Omit restAdjustments entirely if the formula default is appropriate.
+- "restAdjustments" must be present in every response. When the formula default is appropriate, set it to null OR set "restAdjustments": { "mainLift": null }.
+- When suggesting a change, set "restAdjustments": { "mainLift": <delta_seconds> } where the delta is between -60 and +60.
 - Only suggest a larger rest if RPE was very high (>=9.5) or disruption/soreness is significant.
 - Only suggest shorter rest if this is a deload or RPE was notably low (<=7.5).
 
@@ -47,7 +47,7 @@ Rules:
 - Check rest appropriateness: is rest too short given high RPE/soreness, or too long for a deload?
 - If everything looks reasonable, score 80+ and verdict "accept" with an empty concerns array.
 - Concerns must be specific and actionable, not vague.
-- suggestedOverrides is optional — only include if you have a concrete alternative.
+- "suggestedOverrides" must be present in every response. Set it to null when you have no concrete alternative; otherwise include the object with each inner field set to null when not changing it.
 
 Return a JSON object matching the JudgeReview schema exactly.
 `;

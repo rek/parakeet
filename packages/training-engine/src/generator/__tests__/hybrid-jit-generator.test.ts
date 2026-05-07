@@ -41,6 +41,7 @@ function buildLlmOutput(adj: Partial<JITAdjustment>, input: JITInput) {
     auxOverrides: [],
     rationale: ['Normal session'],
     confidence: 'high',
+    restAdjustments: null,
     ...adj,
   };
   return { ...applyAdjustment(fullAdj, input), jit_strategy: 'llm' as const };

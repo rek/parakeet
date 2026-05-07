@@ -30,6 +30,7 @@ function makeReview(overrides: Partial<JudgeReview> = {}): JudgeReview {
     score: 85,
     verdict: 'accept',
     concerns: [],
+    suggestedOverrides: null,
     ...overrides,
   };
 }
@@ -173,8 +174,9 @@ describe('JudgeReviewSchema', () => {
     ).toThrow();
   });
 
-  it('allows suggestedOverrides to be omitted', () => {
-    const { suggestedOverrides: _, ...noOverrides } = makeReview();
-    expect(() => JudgeReviewSchema.parse(noOverrides)).not.toThrow();
+  it('allows suggestedOverrides to be null', () => {
+    expect(() =>
+      JudgeReviewSchema.parse(makeReview({ suggestedOverrides: null }))
+    ).not.toThrow();
   });
 });
