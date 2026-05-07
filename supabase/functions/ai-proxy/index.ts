@@ -103,15 +103,19 @@ Deno.serve(async (req) => {
   }
 
   // Extract the OpenAI path from the request URL.
-  // Client sends to: /functions/v1/ai-proxy/v1/chat/completions
-  // We forward to: https://api.openai.com/v1/chat/completions
+  // Clients may send either:
+  //   /functions/v1/ai-proxy/v1/chat/completions   (already prefixed)
+  //   /functions/v1/ai-proxy/responses             (AI SDK v6 / Responses API — needs /v1 prefix)
+  // We always forward to api.openai.com under /v1/<path>.
   const url = new URL(req.url);
   const pathAfterProxy = url.pathname.replace(
     /^\/functions\/v1\/ai-proxy/,
     ''
   );
-  // If no sub-path, default to /v1/chat/completions
-  const openaiPath = pathAfterProxy || '/v1/chat/completions';
+  let openaiPath = pathAfterProxy || '/v1/chat/completions';
+  if (!openaiPath.startsWith('/v1/')) {
+    openaiPath = `/v1${openaiPath}`;
+  }
   const openaiUrl = `${OPENAI_BASE}${openaiPath}`;
 
   const openaiKey = Deno.env.get('OPENAI_API_KEY');
