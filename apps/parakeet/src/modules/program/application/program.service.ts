@@ -253,23 +253,27 @@ export function onCycleComplete(programId: string, userId: string): void {
     .then(
       ({
         getCycleReview,
+        markCycleReviewPending,
         compileCycleReport,
         getPreviousCycleSummaries,
         storeCycleReview,
       }) =>
         // Skip LLM if another path (e.g. manual retry) already generated the review.
         getCycleReview(programId, userId).then((existing) => {
-          if (existing) return;
-          return import('@parakeet/training-engine').then(
-            ({ generateCycleReview }) =>
-              compileCycleReport(programId, userId).then((report) =>
-                getPreviousCycleSummaries(userId, programId, 3).then(
-                  (summaries) =>
-                    generateCycleReview(report, summaries).then((review) =>
-                      storeCycleReview(programId, userId, report, review)
-                    )
+          if (existing?.status === 'complete') return;
+          // Write pending row before LLM so UI can offer retry if this call fails.
+          return markCycleReviewPending(programId, userId).then(() =>
+            import('@parakeet/training-engine').then(
+              ({ generateCycleReview }) =>
+                compileCycleReport(programId, userId).then((report) =>
+                  getPreviousCycleSummaries(userId, programId, 3).then(
+                    (summaries) =>
+                      generateCycleReview(report, summaries).then((review) =>
+                        storeCycleReview(programId, userId, report, review)
+                      )
+                  )
                 )
-              )
+            )
           );
         })
     )

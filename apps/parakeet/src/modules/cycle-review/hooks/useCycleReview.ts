@@ -2,6 +2,7 @@
 import { useEffect, useRef, useState } from 'react';
 
 import { useAuth } from '@modules/auth';
+import type { CycleReview } from '@parakeet/shared-types';
 import { captureException } from '@platform/utils/captureException';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
@@ -22,11 +23,12 @@ export function useCycleReview(programId: string) {
 
   const query = useQuery({
     ...cycleReviewQueries.byProgram(programId, user?.id),
-    // Poll every 10s until data arrives. Stop polling once data or error received.
-    refetchInterval: (q) => (q.state.data || q.state.error ? false : 10_000),
+    // Poll every 10s until complete review arrives. Keep polling if pending (may still be generating).
+    refetchInterval: (q) =>
+      q.state.data?.status === 'complete' || q.state.error ? false : 10_000,
   });
 
-  const triggerMutation = useMutation({
+  const triggerMutation = useMutation<CycleReview, Error, void>({
     mutationFn: () => {
       retryCount.current += 1;
       return triggerCycleReview(programId, user!.id);
@@ -36,7 +38,7 @@ export function useCycleReview(programId: string) {
         queryKey: cycleReviewQueries.byProgramPrefix(programId),
       });
     },
-    onError: captureException,
+    onError: (err) => captureException(err),
   });
 
   useEffect(() => {
@@ -45,9 +47,15 @@ export function useCycleReview(programId: string) {
     }
   }, [query.error]);
 
-  // Show retry button after delay only when no review exists and budget remains.
+  // Show retry button after delay when no complete review exists and budget remains.
+  // If DB has a pending row (prior failure), show immediately without waiting.
   useEffect(() => {
-    if (query.data || retryCount.current >= MAX_RETRY_ATTEMPTS) return;
+    const hasComplete = query.data?.status === 'complete';
+    if (hasComplete || retryCount.current >= MAX_RETRY_ATTEMPTS) return;
+    if (query.data?.status === 'pending') {
+      setShowRetry(true);
+      return;
+    }
     const timer = setTimeout(() => setShowRetry(true), RETRY_SHOW_DELAY_MS);
     return () => clearTimeout(timer);
   // Intentionally omits retryCount.current — ref changes don't re-run effects.
@@ -66,11 +74,14 @@ export function useCycleReview(programId: string) {
   }, [programId, user?.id, queryClient]);
 
   const canRetry = retryCount.current < MAX_RETRY_ATTEMPTS;
+  const reviewPending = query.data?.status === 'pending';
 
   return {
     ...query,
+    data: query.data?.review ?? null,
+    reviewPending,
     showRetry: showRetry && canRetry,
-    triggerReview: triggerMutation.mutate,
+    triggerReview: () => triggerMutation.mutate(),
     isTriggeringReview: triggerMutation.isPending,
     triggerError: triggerMutation.error,
   };

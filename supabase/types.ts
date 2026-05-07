@@ -241,26 +241,29 @@ export type Database = {
       }
       cycle_reviews: {
         Row: {
-          compiled_report: Json
+          compiled_report: Json | null
           generated_at: string
+          generation_status: string
           id: string
-          llm_response: Json
+          llm_response: Json | null
           program_id: string
           user_id: string
         }
         Insert: {
-          compiled_report: Json
+          compiled_report?: Json | null
           generated_at?: string
+          generation_status?: string
           id?: string
-          llm_response: Json
+          llm_response?: Json | null
           program_id: string
           user_id: string
         }
         Update: {
-          compiled_report?: Json
+          compiled_report?: Json | null
           generated_at?: string
+          generation_status?: string
           id?: string
-          llm_response?: Json
+          llm_response?: Json | null
           program_id?: string
           user_id?: string
         }

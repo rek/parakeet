@@ -36,16 +36,34 @@ export function subscribeToCycleReviewInserts(
 export async function fetchCycleReviewByProgram(
   programId: string,
   userId: string
-): Promise<CycleReview | null> {
+): Promise<{ status: 'pending' | 'complete'; review: CycleReview | null } | null> {
   const { data, error } = await typedSupabase
     .from('cycle_reviews')
-    .select('llm_response')
+    .select('generation_status, llm_response')
     .eq('program_id', programId)
     .eq('user_id', userId)
     .maybeSingle();
 
   if (error) throw error;
-  return data ? fromJson<CycleReview>(data.llm_response) : null;
+  if (!data) return null;
+  const status = data.generation_status === 'pending' ? 'pending' : 'complete';
+  return { status, review: data.llm_response ? fromJson<CycleReview>(data.llm_response) : null };
+}
+
+export async function insertPendingCycleReviewRow({
+  programId,
+  userId,
+}: {
+  programId: string;
+  userId: string;
+}): Promise<void> {
+  const { error } = await typedSupabase
+    .from('cycle_reviews')
+    .insert({ program_id: programId, user_id: userId, generation_status: 'pending' })
+    .select()
+    .maybeSingle();
+  // Ignore conflict (row already exists in any state); only write if no row yet.
+  if (error && error.code !== '23505') throw error;
 }
 
 export async function fetchCycleReportSourceData(
@@ -272,20 +290,21 @@ export async function insertCycleReviewRow(input: {
   compiledReport: CycleReport;
   llmResponse: CycleReview;
 }): Promise<boolean> {
-  // Upsert with ignoreDuplicates so concurrent generation attempts (onCycleComplete +
-  // user-triggered) don't race to violate the (user_id, program_id) unique constraint.
-  // The first writer wins; subsequent writes for the same program are silently dropped.
-  // Returns true if newly inserted, false if already existed (so callers can skip
-  // inserting dependent rows like formula suggestions).
-  const { data, error } = await typedSupabase.from('cycle_reviews').upsert(
-    {
-      program_id: input.programId,
-      user_id: input.userId,
+  // Update the pending row written before the LLM call. Concurrent callers race to
+  // update the same row; only the first wins (WHERE generation_status='pending').
+  // Returns true if this caller completed the row, false if another caller already did.
+  const { data, error } = await typedSupabase
+    .from('cycle_reviews')
+    .update({
+      generation_status: 'complete',
       compiled_report: toJson(input.compiledReport),
       llm_response: toJson(input.llmResponse),
-    },
-    { onConflict: 'user_id,program_id', ignoreDuplicates: true }
-  ).select('program_id').maybeSingle();
+    })
+    .eq('program_id', input.programId)
+    .eq('user_id', input.userId)
+    .eq('generation_status', 'pending')
+    .select('program_id')
+    .maybeSingle();
   if (error) throw error;
   return data !== null;
 }

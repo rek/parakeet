@@ -339,6 +339,7 @@ export default function CycleReviewScreen() {
     error,
     refetch,
     isRefetching,
+    reviewPending,
     showRetry,
     triggerReview,
     isTriggeringReview,
@@ -424,6 +425,15 @@ export default function CycleReviewScreen() {
   }
 
   if (!review) {
+    const pendingTitle = reviewPending
+      ? 'Review generation failed'
+      : 'Generating your review…';
+    const pendingSubtitle = reviewPending
+      ? 'Tap to retry — previous attempt did not complete.'
+      : triggerError instanceof Error
+        ? `Generation failed: ${triggerError.message}`
+        : 'Usually takes under 30 seconds. Checking automatically.';
+
     return (
       <SafeAreaView style={styles.safeArea}>
         <View style={styles.header}>
@@ -431,13 +441,11 @@ export default function CycleReviewScreen() {
           <ScreenTitle>Cycle Review</ScreenTitle>
         </View>
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color={colors.primary} />
-          <Text style={styles.loadingTitle}>Generating your review…</Text>
-          <Text style={styles.loadingSubtitle}>
-            {triggerError instanceof Error
-              ? `Generation failed: ${triggerError.message}`
-              : 'Usually takes under 30 seconds. Checking automatically.'}
-          </Text>
+          {!reviewPending && (
+            <ActivityIndicator size="large" color={colors.primary} />
+          )}
+          <Text style={styles.loadingTitle}>{pendingTitle}</Text>
+          <Text style={styles.loadingSubtitle}>{pendingSubtitle}</Text>
           <TouchableOpacity
             style={styles.retryButton}
             onPress={() => void refetch()}
@@ -455,7 +463,7 @@ export default function CycleReviewScreen() {
             activeOpacity={0.8}
           >
             <Text style={styles.generateButtonText}>
-              {isTriggeringReview ? 'Generating…' : 'Generate Now'}
+              {isTriggeringReview ? 'Generating…' : reviewPending ? 'Retry' : 'Generate Now'}
             </Text>
           </TouchableOpacity>
         </View>

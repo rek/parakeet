@@ -20,13 +20,18 @@ import {
   insertCycleReviewRow,
   insertDeveloperSuggestion,
   insertFormulaSuggestionConfig,
+  insertPendingCycleReviewRow,
 } from '../data/cycle-review.repository';
 
-export async function getCycleReview(
+export async function getCycleReview(programId: string, userId: string) {
+  return fetchCycleReviewByProgram(programId, userId);
+}
+
+export async function markCycleReviewPending(
   programId: string,
   userId: string
-): Promise<CycleReview | null> {
-  return fetchCycleReviewByProgram(programId, userId);
+): Promise<void> {
+  await insertPendingCycleReviewRow({ programId, userId });
 }
 
 export async function triggerCycleReview(
@@ -37,7 +42,10 @@ export async function triggerCycleReview(
   // Covers the race between the fire-and-forget onCycleComplete path and
   // manual user retries from the cycle review screen.
   const existing = await getCycleReview(programId, userId);
-  if (existing) return existing;
+  if (existing?.status === 'complete') return existing.review!;
+
+  // Mark pending before LLM so UI can offer retry if this fails.
+  await markCycleReviewPending(programId, userId);
 
   const report = await compileCycleReport(programId, userId);
   const previousSummaries = await getPreviousCycleSummaries(
@@ -106,7 +114,7 @@ export async function storeCycleReview(
     await insertFormulaSuggestionConfig({
       userId,
       source: 'ai_suggestion',
-      overrides: suggestion.overrides ?? {},
+      overrides: {},
       aiRationale: `${suggestion.description} — ${suggestion.rationale}`,
     });
   }
