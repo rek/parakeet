@@ -3,6 +3,7 @@ import type { JudgeReview } from '@parakeet/shared-types';
 import { generateText, Output } from 'ai';
 
 import { abortAfter } from '../ai/abort-timeout';
+import { reportEngineError } from '../ai/error-reporter';
 import { getJITModel } from '../ai/models';
 import { JUDGE_REVIEW_SYSTEM_PROMPT } from '../ai/prompts';
 import type { JITInput, JITOutput } from '../generator/jit-session-generator';
@@ -13,6 +14,7 @@ export const SILENT_PASS: JudgeReview = {
   score: 100,
   verdict: 'accept',
   concerns: [],
+  suggestedOverrides: null,
 };
 
 export async function reviewJITDecision(
@@ -28,7 +30,11 @@ export async function reviewJITDecision(
       abortSignal: abortAfter(8000),
     });
     return review ?? SILENT_PASS;
-  } catch {
+  } catch (err) {
+    reportEngineError(err, {
+      source: 'JudgeReviewer',
+      sessionId: input.sessionId,
+    });
     return SILENT_PASS;
   }
 }

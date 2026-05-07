@@ -3,6 +3,7 @@ import type { CalibrationReview } from '@parakeet/shared-types';
 import { generateText, Output } from 'ai';
 
 import { abortAfter } from '../ai/abort-timeout';
+import { reportEngineError } from '../ai/error-reporter';
 import { getJITModel } from '../ai/models';
 import type { CalibrationResult } from '../analysis/modifier-effectiveness';
 
@@ -54,7 +55,11 @@ export async function reviewCalibrationAdjustment({
     });
 
     return review ?? DEFAULT_REJECT;
-  } catch {
+  } catch (err) {
+    reportEngineError(err, {
+      source: 'CalibrationReviewer',
+      modifierSource: calibration.modifierSource,
+    });
     return DEFAULT_REJECT;
   }
 }

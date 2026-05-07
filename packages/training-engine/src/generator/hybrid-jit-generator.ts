@@ -1,3 +1,4 @@
+import { reportEngineError } from '../ai/error-reporter';
 import { FormulaJITGenerator } from './formula-jit-generator';
 import type { JITInput, JITOutput } from './jit-session-generator';
 import type { JITGeneratorStrategy } from './jit-strategy';
@@ -74,40 +75,39 @@ export class HybridJITGenerator implements JITGeneratorStrategy {
       throw (formulaResult as PromiseRejectedResult).reason;
     }
 
-    // LLM failed → fall back to formula output; surface reason for app-layer logging
-    if (!llmOutput) {
-      const llmError = (llmResult as PromiseRejectedResult).reason;
+    // Two ways the LLM path can be unavailable:
+    //   1. Promise rejected (very rare — LLMJITGenerator catches internally)
+    //   2. LLMJITGenerator caught all retries and returned formula_fallback
+    // In either case, surface formula_fallback to the caller — never relabel
+    // a fallback as 'llm', or persisted sessions misrepresent which path ran.
+    const llmFailed = !llmOutput || llmOutput.jit_strategy === 'formula_fallback';
+    if (llmFailed) {
+      let reason = 'LLM_FALLBACK';
+      if (llmResult.status === 'rejected') {
+        const err = llmResult.reason;
+        reason = `LLM_FALLBACK: ${err instanceof Error ? err.message : String(err)}`;
+      } else if (llmOutput?.jit_strategy === 'formula_fallback') {
+        // LLMJITGenerator already reported the underlying error via
+        // reportEngineError before resolving with formula_fallback.
+        reason = 'LLM_FALLBACK: internal_fallback';
+      }
       if (this.logger) {
         const fallbackOutput: JITOutput = {
           ...formulaOutput,
           jit_strategy: 'formula_fallback',
-          rationale: [
-            `LLM_FALLBACK: ${llmError instanceof Error ? llmError.message : String(llmError)}`,
-          ],
+          rationale: [reason],
         };
-        try {
-          this.logger(input, formulaOutput, fallbackOutput, {
-            weightPct: 0,
-            setDelta: 0,
-            rpeContextSummary: fallbackOutput.rationale[0],
-          });
-        } catch {
-          // logging errors are silently swallowed
-        }
+        this.runLogger(input, formulaOutput, fallbackOutput, {
+          weightPct: 0,
+          setDelta: 0,
+          rpeContextSummary: reason,
+        });
       }
       return { ...formulaOutput, jit_strategy: 'formula_fallback' };
     }
 
     const divergence = computeDivergence(formulaOutput, llmOutput);
-
-    // Fire-and-forget comparison log — must not block JIT output
-    if (this.logger) {
-      try {
-        this.logger(input, formulaOutput, llmOutput, divergence);
-      } catch {
-        // logging errors are silently swallowed
-      }
-    }
+    this.runLogger(input, formulaOutput, llmOutput, divergence);
 
     if (divergence.weightPct <= 0.1 && divergence.setDelta === 0) {
       // Agree within 10% weight + same set count → use LLM (better rationale)
@@ -133,5 +133,22 @@ export class HybridJITGenerator implements JITGeneratorStrategy {
           divergence.weightPct > 0.15 || divergence.setDelta !== 0,
       },
     };
+  }
+
+  private runLogger(
+    input: JITInput,
+    formulaOutput: JITOutput,
+    llmOutput: JITOutput,
+    divergence: DivergenceResult
+  ) {
+    if (!this.logger) return;
+    try {
+      this.logger(input, formulaOutput, llmOutput, divergence);
+    } catch (err) {
+      reportEngineError(err, {
+        source: 'HybridJITGenerator.logger',
+        sessionId: input.sessionId,
+      });
+    }
   }
 }

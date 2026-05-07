@@ -173,6 +173,25 @@ describe('HybridJITGenerator', () => {
     expect(output.comparisonData).toBeUndefined();
   });
 
+  it('preserves formula_fallback when LLM resolves with internal fallback (does not relabel as llm)', async () => {
+    // LLMJITGenerator catches its own retries and resolves with
+    // jit_strategy: 'formula_fallback' instead of rejecting. Hybrid must NOT
+    // relabel that as 'llm' just because the promise fulfilled.
+    const input = baseInput();
+    const llmGen = new LLMJITGenerator();
+    const formulaOutput = await new FormulaJITGenerator().generate(input);
+    vi.spyOn(llmGen, 'generate').mockResolvedValueOnce({
+      ...formulaOutput,
+      jit_strategy: 'formula_fallback',
+    });
+
+    const gen = new HybridJITGenerator(new FormulaJITGenerator(), llmGen);
+    const output = await gen.generate(input);
+
+    expect(output.jit_strategy).toBe('formula_fallback');
+    expect(output.comparisonData).toBeUndefined();
+  });
+
   it('preserves formula output in comparisonData.formulaOutput', async () => {
     const input = baseInput();
     const llmGen = new LLMJITGenerator();

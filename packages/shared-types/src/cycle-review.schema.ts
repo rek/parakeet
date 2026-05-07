@@ -19,11 +19,16 @@ const RecommendedChangesSchema = z.object({
   reorder: z.array(z.string()),
 });
 
+// `overrides` was a `z.record(z.string(), z.unknown())` describing the
+// proposed parameter changes. OpenAI structured-output strict mode rejects
+// `propertyNames` (which zod emits for record) AND open-ended `unknown`
+// values (no schema), so the field was unrepresentable. The dashboard
+// renderer doesn't consume it; downstream code stores the rationale string.
+// Keep the human-readable fields and drop the structured one.
 const FormulaSuggestionSchema = z.object({
   description: z.string(),
   rationale: z.string(),
   priority: z.enum(['high', 'medium', 'low']),
-  overrides: z.record(z.string(), z.unknown()),
 });
 
 const StructuralSuggestionSchema = z.object({
