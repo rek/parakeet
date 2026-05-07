@@ -9,8 +9,13 @@ import { JIT_SYSTEM_PROMPT } from '../ai/prompts';
 import { computeAuxWeight } from '../auxiliary/exercise-catalog';
 import { getExerciseType } from '../auxiliary/exercise-types';
 import { roundToNearest } from '../formulas/weight-rounding';
+import { createMuscleMapper } from '../volume/muscle-mapper';
 import { FormulaJITGenerator } from './formula-jit-generator';
 import { enforceHardConstraints } from './jit-constraints';
+import {
+  buildVolumeTopUp,
+  MAX_AUX_EXERCISES,
+} from './jit-session-generator';
 import type {
   AuxiliaryWork,
   JITInput,
@@ -174,6 +179,39 @@ export function applyAdjustment(
       };
     }
   );
+
+  // Volume top-up (engine-027 / gh#203): the LLM adjusts the configured aux
+  // pair but cannot add new exercises. Volume top-up is a hard rule — when a
+  // muscle is below MEV, append an exercise; when core is below MEV, one slot
+  // is always reserved for it (core has zero compound contribution). Mirror
+  // the formula path's Step 6b so the LLM strategy honors the same guarantee.
+  if (input.auxiliaryPool && input.auxiliaryPool.length > 0) {
+    const muscleMapper = createMuscleMapper(input.customMuscleMap);
+    const topUps = buildVolumeTopUp(
+      input.auxiliaryPool,
+      input.primaryLift,
+      input.oneRmKg,
+      mainLiftSets.length,
+      input.weeklyVolumeToDate,
+      input.mrvMevConfig,
+      input.activeAuxiliaries,
+      muscleMapper,
+      input.biologicalSex,
+      input.sessionIndex,
+      input.totalSessionsThisWeek,
+      input.allOneRmKg,
+      input.upcomingLifts,
+      input.sorenessRatings,
+      input.sleepQuality,
+      input.energyLevel,
+      input.activeDisruptions
+    );
+    for (const tu of topUps) {
+      const activeCount = auxiliaryWork.filter((a) => !a.skipped).length;
+      if (activeCount >= MAX_AUX_EXERCISES) break;
+      auxiliaryWork.push(tu);
+    }
+  }
 
   const warmupSets =
     mainLiftSets.length > 0 && !skippedMainLift

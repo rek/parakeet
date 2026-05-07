@@ -32,8 +32,13 @@ export class HybridJITGenerator implements JITGeneratorStrategy {
     const formulaOutput = formulaResult.status === 'fulfilled' ? formulaResult.value : null
     const llmOutput    = llmResult.status    === 'fulfilled' ? llmResult.value    : null
 
-    // If LLM failed, fall back to formula (same as LLMJITGenerator fallback behaviour)
-    if (!llmOutput) {
+    // The LLM strategy can fail in two ways:
+    //   (a) Promise rejects (very rare — LLMJITGenerator catches internally)
+    //   (b) LLMJITGenerator caught all retries and resolved with jit_strategy: 'formula_fallback'
+    // In either case, surface formula_fallback to the caller — never relabel a fallback as 'llm',
+    // or persisted sessions misrepresent which path actually ran.
+    const llmFailed = !llmOutput || llmOutput.jit_strategy === 'formula_fallback'
+    if (llmFailed) {
       return { ...formulaOutput!, jit_strategy: 'formula_fallback' }
     }
 
@@ -195,8 +200,10 @@ When `comparisonData.shouldSurfaceToUser === true`, the session screen (`[sessio
 
 - [x] Both agree within 10% + same sets → LLM output returned
 - [x] Diverge > 15% weight → `shouldSurfaceToUser: true` in comparisonData
-- [x] LLM fails → formula output returned with `jit_strategy: 'formula_fallback'`
+- [x] LLM fails (promise rejects) → formula output returned with `jit_strategy: 'formula_fallback'`
+- [x] LLM resolves with internal `jit_strategy: 'formula_fallback'` → hybrid preserves the fallback label, does NOT relabel as 'llm' (regression guard)
 - [x] Formula fails → should not happen (formula is always local); test that error propagates
+- [x] Logger throw → caught and reported via `reportEngineError` (no empty catch)
 
 ## Dependencies
 

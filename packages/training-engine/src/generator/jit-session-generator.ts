@@ -357,7 +357,6 @@ export function generateJITSession(
 
   // Step 6b — Volume top-up (engine-027): append exercises for under-MEV muscles
   // Cap at MAX_AUX_EXERCISES to keep total session exercises ≤ 6 (5 aux + 1 main lift)
-  const MAX_AUX_EXERCISES = 5;
   if (input.auxiliaryPool && input.auxiliaryPool.length > 0) {
     const topUps = buildVolumeTopUp(
       input.auxiliaryPool,
@@ -637,7 +636,12 @@ function buildAuxiliaryWork(
  *   - Exercises already in activeAuxiliaries are excluded
  *   - No top-up if no exercise in the pool targets the deficient muscle
  */
-function buildVolumeTopUp(
+/** Cap session exercises at 6 total (5 aux + 1 main lift). Used to size the
+ *  volume top-up output so it never blows past this ceiling regardless of
+ *  which strategy (formula | llm | hybrid) generated the base aux list. */
+export const MAX_AUX_EXERCISES = 5;
+
+export function buildVolumeTopUp(
   auxiliaryPool: string[],
   primaryLift: Lift,
   oneRmKg: number,

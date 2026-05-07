@@ -2,6 +2,8 @@ import type { JITAdjustment } from '@parakeet/shared-types';
 import { generateText } from 'ai';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { atMevExcept } from '../../__test-helpers__/fixtures';
+import { DEFAULT_CORE_POOL } from '../../auxiliary/exercise-catalog';
 import { DEFAULT_FORMULA_CONFIG_MALE } from '../../cube/blocks';
 import { DEFAULT_MRV_MEV_CONFIG_MALE } from '../../volume/mrv-mev-calculator';
 import { enforceHardConstraints } from '../jit-constraints';
@@ -127,6 +129,28 @@ describe('applyAdjustment', () => {
         expect(r).toBe(formulaBase);
       });
       expect(output.llmRestSuggestion).toBeUndefined();
+    });
+  });
+
+  describe('volume top-up (gh#203)', () => {
+    it('appends a core exercise when core is below MEV', () => {
+      const output = applyAdjustment(
+        baseAdj(),
+        baseInput({
+          auxiliaryPool: DEFAULT_CORE_POOL,
+          weeklyVolumeToDate: atMevExcept(DEFAULT_MRV_MEV_CONFIG_MALE, 'core'),
+        })
+      );
+      const coreTopUps = output.auxiliaryWork.filter(
+        (a) => a.isTopUp && DEFAULT_CORE_POOL.includes(a.exercise)
+      );
+      expect(coreTopUps.length).toBeGreaterThan(0);
+      expect(coreTopUps[0].topUpReason).toContain('below MEV');
+    });
+
+    it('does not append top-ups when auxiliaryPool is empty', () => {
+      const output = applyAdjustment(baseAdj(), baseInput());
+      expect(output.auxiliaryWork.some((a) => a.isTopUp)).toBe(false);
     });
   });
 });

@@ -20,11 +20,11 @@ Design doc: [llm-challenge-mode.md](./design-challenge-mode.md)
 
 **`packages/shared-types/src/challenge.schema.ts`** (new):
 
-- [ ] `JudgeReviewSchema` — structured LLM output for post-hoc review
+- [x] `JudgeReviewSchema` — structured LLM output for post-hoc review
   - `score: z.number().int().min(0).max(100)` — overall quality rating
   - `verdict: z.enum(['accept', 'flag'])` — binary decision
   - `concerns: z.array(z.string().max(200)).max(3)` — specific issues found
-  - `suggestedOverrides: z.object({ intensityModifier?, setModifier?, auxOverrides? }).optional()` — partial fix the user can accept
+  - `suggestedOverrides: z.object({ intensityModifier, setModifier, auxOverrides }).nullable()` — partial fix the user can accept. **All inner fields are `.nullable()` (not `.optional()`) and `auxOverrides` is `z.array(AuxOverrideSchema)` (not `z.record`)**: OpenAI Responses-API strict-JSON-schema mode requires every property in `properties` to appear in `required` and rejects `propertyNames`. The model emits `null` for "no change" rather than omitting the field. See [`../jit-pipeline/spec-llm-strategy.md`](../jit-pipeline/spec-llm-strategy.md) for the same constraint on JITAdjustmentSchema.
 - [ ] `DecisionReplaySchema` — structured LLM output for retrospective scoring
   - `prescriptionScore: z.number().int().min(0).max(100)` — how appropriate was the prescription
   - `rpeAccuracy: z.number().int().min(0).max(100)` — how close prescribed RPE was to actual
@@ -43,7 +43,7 @@ Design doc: [llm-challenge-mode.md](./design-challenge-mode.md)
   - Score 80–100 if the prescription reasonably handles the signals
   - Flag (score < 70) only for genuine missed interactions: double-penalties (soreness + disruption on same muscle), volume despite high days-since-last-session, aux conflicting with main lift soreness, inappropriate rest for RPE/disruption combo
   - Never flag stylistic differences (e.g. "I would have reduced by 5% instead of 2.5%")
-  - `suggestedOverrides` only when there's a concrete actionable fix
+  - `suggestedOverrides` must be present in every response. Set to `null` when there's no concrete actionable fix; otherwise set the inner fields, with each unchanged field set to `null` (strict-schema requirement)
 - [ ] `DECISION_REPLAY_SYSTEM_PROMPT` — sports scientist analyzing prescription accuracy
   - Receives JSON: `{ prescription: { plannedSets, auxiliaryWork }, actual: { completedSets, actualRpe, auxiliarySetsCompleted, sessionRpe }, context: { lift, intensityType, blockNumber, sorenessRatings, sleepQuality, energyLevel } }`
   - RPE deviation > 1.5 is significant (might indicate over/under-prescription)

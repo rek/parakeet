@@ -56,7 +56,7 @@ Three cards (Squat / Bench / Deadlift), each showing:
 ### 5. Formula Suggestions
 - Only shown if `llmResponse.formulaSuggestions.length > 0`
 - Each suggestion card shows: description, rationale, priority badge
-- "Accept" button → calls `createFormulaOverride()` with `suggestion.overrides`; dismisses card
+- "Accept" button → opens the formula editor pre-filled from the suggestion's `description`/`rationale`. (The structured `overrides` record was removed from `CycleReviewSchema` — OpenAI strict-schema mode is incompatible with `z.record(z.string(), z.unknown())`. Acceptance is now a navigation hand-off rather than a one-click apply.)
 - "Dismiss" button → calls `deactivateFormulaConfig(suggestionId, userId)`; dismisses card
 - On accept: show "Formula updated" toast + navigate to formula editor if user wants to review
 - Suggestion identity must map to persisted `formula_configs` rows if dismiss is expected to mutate backend state.

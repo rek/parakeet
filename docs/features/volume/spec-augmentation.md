@@ -18,7 +18,8 @@ Depends on:
 - [x] Added `auxiliaryPool?: string[]`, `sessionIndex?: number`, `totalSessionsThisWeek?: number`, `allOneRmKg?: Partial<Record<Lift, number>>` to `JITInput`
 - [x] Added `isTopUp?: boolean` and `topUpReason?: string` to `AuxiliaryWork` interface
 - [x] Added Step 6b "Volume Top-Up" in the pipeline — runs after `buildAuxiliaryWork` (Step 6), before warmup (Step 8)
-- [x] New function `buildVolumeTopUp()` in same file
+- [x] New function `buildVolumeTopUp()` in same file (exported alongside `MAX_AUX_EXERCISES = 5` so other strategies can honor the same cap)
+- [x] **`LLMJITGenerator.applyAdjustment` invokes `buildVolumeTopUp` after building its own auxiliaryWork** — the LLM only adjusts the configured aux pair, so without this call the LLM strategy would skip the core-priority guarantee. Same MAX_AUX_EXERCISES cap applies. See [`../jit-pipeline/spec-llm-strategy.md`](../jit-pipeline/spec-llm-strategy.md).
 - [x] Exercise scoring: `rankExercises()` replaces `qualifying[0]` — 7-factor weighted scorer in `exercise-scorer.ts`; `sorenessRatings`, `sleepQuality`, `energyLevel` threaded from `JITInput`; movement patterns tracked across iterations for diversity
 - [x] Catalog metadata: `MovementPattern`, `Equipment`, `ComplexityTier`, `isCompound` on `ExerciseCatalogEntry`; auto-deriving resolvers (`resolveMovementPattern`, `resolveEquipment`, `resolveIsCompound`, `resolveComplexityTier`); 31 entries with explicit overrides
 
@@ -52,6 +53,7 @@ Note: top-up skipped silently (no warning) when no candidate exists; rationale e
 - [x] Missing allOneRmKg falls back to primary lift 1RM
 - [x] Core deficit < non-core deficit → core still forced into top-up slot (gh#203)
 - [x] Core pinned but no qualifying core exercise → slot dropped, non-core still selected (gh#203)
+- [x] LLM path coverage: `applyAdjustment(baseAdj(), baseInput({ auxiliaryPool: DEFAULT_CORE_POOL, weeklyVolumeToDate: atMevExcept(...,'core') }))` produces a core top-up — proves the LLM strategy honors the same gh#203 contract as the formula path (`src/generator/__tests__/llm-jit-generator.test.ts`)
 
 ### Caller — `apps/parakeet/src/modules/jit/lib/jit.ts`
 

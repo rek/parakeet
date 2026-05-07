@@ -19,7 +19,7 @@ See `./design.md` for the full feature design and examples.
   - `progressByLift`: record of squat/bench/deadlift with `rating` (LiftRatingSchema) and `narrative`
   - `auxiliaryInsights`: `mostCorrelated`, `leastEffective`, `recommendedChanges`
   - `volumeInsights`: `musclesUnderRecovered`, `musclesUndertrained`, `frequencyRecommendation`
-  - `formulaSuggestions`: array with `description`, `rationale`, `priority`, `overrides`
+  - `formulaSuggestions`: array with `description`, `rationale`, `priority` (the `overrides` record was dropped — OpenAI Responses-API strict-schema mode rejects `z.record` (`propertyNames`) and `z.unknown` (no schema). The dashboard renderer never consumed the field; the rationale string carries the actionable content.)
   - `structuralSuggestions`: array with `description`, `rationale`, `developerNote`
   - `nextCycleRecommendations`: string, max 2000 chars
   - `menstrualInsights`: optional string, max 1000 chars
