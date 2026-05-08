@@ -182,8 +182,8 @@ function buildStyles(colors: ColorScheme, drawerWidth: number) {
       bottom: 0,
       left: 0,
       width: drawerWidth,
-      backgroundColor: colors.bgSurface,
-      borderRightWidth: 1,
+      backgroundColor: '#000000',
+      borderRightWidth: 2,
       borderRightColor: colors.border,
     },
     drawerInner: {
