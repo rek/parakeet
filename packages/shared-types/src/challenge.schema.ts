@@ -8,8 +8,12 @@ import { AuxOverrideSchema } from './jit.schema';
 const truncateConcern = (s: string) =>
   s.length > 200 ? s.slice(0, 197) + '...' : s;
 
+// DB columns for these scores are INTEGER. LLM occasionally returns 2.5;
+// round to integer post-parse so we never hand a float to Postgres.
+const roundScore = (n: number) => Math.round(n);
+
 export const JudgeReviewSchema = z.object({
-  score: z.number().min(0).max(100),
+  score: z.number().min(0).max(100).transform(roundScore),
   verdict: z.enum(['accept', 'flag']),
   concerns: z.array(z.string().transform(truncateConcern)).max(3),
   // Strict-JSON-schema compatible: nullable instead of optional, so every
@@ -29,8 +33,8 @@ const truncateInsight = (s: string) =>
   s.length > 200 ? s.slice(0, 197) + '...' : s;
 
 export const DecisionReplaySchema = z.object({
-  prescriptionScore: z.number().min(0).max(100),
-  rpeAccuracy: z.number().min(0).max(100),
+  prescriptionScore: z.number().min(0).max(100).transform(roundScore),
+  rpeAccuracy: z.number().min(0).max(100).transform(roundScore),
   volumeAppropriateness: z.enum(['too_much', 'right', 'too_little']),
   insights: z.array(z.string().transform(truncateInsight)).max(5),
 });

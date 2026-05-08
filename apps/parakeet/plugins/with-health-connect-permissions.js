@@ -30,6 +30,50 @@ function withManifest(config) {
         manifest['uses-permission'].push({ $: { 'android:name': name } });
       }
     }
+
+    // Health Connect on Android 13 and below (provider APK from Play Store)
+    // enumerates compatible apps via VIEW_PERMISSION_USAGE / HEALTH_PERMISSIONS.
+    // Without this activity-alias, Health Connect's permissions screen does
+    // not list our app even when uses-permission entries are present.
+    const application = manifest.application?.[0];
+    if (application) {
+      application['activity-alias'] = application['activity-alias'] ?? [];
+      const aliases = application['activity-alias'];
+      const aliasName = 'ViewPermissionUsageActivity';
+      const alreadyHasAlias = aliases.some(
+        (a) => a.$?.['android:name'] === aliasName
+      );
+      if (!alreadyHasAlias) {
+        aliases.push({
+          $: {
+            'android:name': aliasName,
+            'android:exported': 'true',
+            'android:targetActivity': '.MainActivity',
+            'android:permission':
+              'android.permission.START_VIEW_PERMISSION_USAGE',
+          },
+          'intent-filter': [
+            {
+              action: [
+                {
+                  $: {
+                    'android:name': 'android.intent.action.VIEW_PERMISSION_USAGE',
+                  },
+                },
+              ],
+              category: [
+                {
+                  $: {
+                    'android:name': 'android.intent.category.HEALTH_PERMISSIONS',
+                  },
+                },
+              ],
+            },
+          ],
+        });
+      }
+    }
+
     return config;
   });
 }
