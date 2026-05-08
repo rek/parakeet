@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef } from 'react';
 import {
   Animated,
+  Image,
   Modal,
   Pressable,
   StyleSheet,
@@ -93,6 +94,7 @@ export function LeftDrawer({
           style={[styles.drawer, { transform: [{ translateX }] }]}
         >
           <SafeAreaView style={styles.drawerInner} edges={['top', 'bottom', 'left']}>
+            <View style={styles.top}>
             <Text style={styles.brand}>PARAKEET</Text>
             <View style={styles.items}>
               <DrawerItem
@@ -137,6 +139,12 @@ export function LeftDrawer({
                 colors={colors}
               />
             </View>
+            </View>
+            <Image
+              source={require('../../../assets/images/sidebar.png')}
+              style={styles.sidebarImage}
+              resizeMode="cover"
+            />
           </SafeAreaView>
         </Animated.View>
       </View>
@@ -190,6 +198,15 @@ function buildStyles(colors: ColorScheme, drawerWidth: number) {
       flex: 1,
       paddingHorizontal: spacing[4],
       paddingTop: spacing[4],
+      justifyContent: 'space-between',
+    },
+    top: {},
+    sidebarImage: {
+      width: drawerWidth - spacing[4] * 2,
+      height: drawerWidth - spacing[4] * 2,
+      borderRadius: radii.md,
+      alignSelf: 'center',
+      marginBottom: spacing[2],
     },
     brand: {
       fontSize: typography.sizes.xl,
