@@ -3,6 +3,7 @@
 import {
   getSdkStatus,
   initialize,
+  openHealthConnectSettings,
   requestPermission,
   getGrantedPermissions,
   readRecords,
@@ -26,13 +27,30 @@ export type PermissionStatus = {
   permissions: Record<string, boolean>;
 };
 
-export async function isHealthConnectAvailable(): Promise<boolean> {
+export type HealthConnectAvailability =
+  | 'available'
+  | 'provider_update_required'
+  | 'unsupported';
+
+export async function getHealthConnectAvailability(): Promise<HealthConnectAvailability> {
   try {
     const status = await getSdkStatus();
-    return status === SdkAvailabilityStatus.SDK_AVAILABLE;
+    if (status === SdkAvailabilityStatus.SDK_AVAILABLE) return 'available';
+    if (status === SdkAvailabilityStatus.SDK_UNAVAILABLE_PROVIDER_UPDATE_REQUIRED) {
+      return 'provider_update_required';
+    }
+    return 'unsupported';
   } catch {
-    return false;
+    return 'unsupported';
   }
+}
+
+export async function isHealthConnectAvailable(): Promise<boolean> {
+  return (await getHealthConnectAvailability()) === 'available';
+}
+
+export function openSettings(): void {
+  openHealthConnectSettings();
 }
 
 export async function initHealthConnect(): Promise<boolean> {

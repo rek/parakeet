@@ -16,7 +16,7 @@ import { radii, spacing, typography } from '../../../theme';
 import type { ColorScheme } from '../../../theme';
 import { useTheme } from '../../../theme/ThemeContext';
 import { syncWearableData } from '../application/sync.service';
-import { requestPermissions } from '../lib/health-connect';
+import { openSettings, requestPermissions } from '../lib/health-connect';
 import { useRecoverySnapshot } from '../hooks/useRecoverySnapshot';
 import { useWearableStatus } from '../hooks/useWearableStatus';
 import {
@@ -326,13 +326,35 @@ export function WearableSettings() {
     if (isConnecting) return;
     setIsConnecting(true);
     try {
-      await requestPermissions();
+      const result = await requestPermissions();
       await status.refresh();
+      if (!result.granted) {
+        Alert.alert(
+          'Permissions not granted',
+          'Parakeet needs read access in Health Connect. Open Health Connect settings to grant permissions.',
+          [
+            { text: 'Cancel', style: 'cancel' },
+            { text: 'Open Settings', onPress: () => openSettings() },
+          ]
+        );
+      }
     } catch (err) {
       captureException(err);
       Alert.alert('Error', 'Could not request permissions. Please try again.');
     } finally {
       setIsConnecting(false);
+    }
+  }
+
+  function handleInstallHealthConnect() {
+    try {
+      openSettings();
+    } catch (err) {
+      captureException(err);
+      Alert.alert(
+        'Health Connect required',
+        'Install or update Health Connect from the Play Store, then return here.'
+      );
     }
   }
 
@@ -361,16 +383,21 @@ export function WearableSettings() {
   }
 
   const dotColor = !status.isAvailable
-    ? colors.textTertiary
+    ? status.availability === 'provider_update_required'
+      ? colors.warning
+      : colors.textTertiary
     : status.isPermitted
       ? colors.success
       : colors.warning;
 
-  const statusText = !status.isAvailable
-    ? 'Not available on this device'
-    : status.isPermitted
-      ? 'Connected'
-      : 'Permissions needed';
+  const statusText =
+    status.availability === 'provider_update_required'
+      ? 'Health Connect needs to be installed or updated'
+      : !status.isAvailable
+        ? 'Not available on this device'
+        : status.isPermitted
+          ? 'Connected'
+          : 'Permissions needed';
 
   return (
     <ScrollView
@@ -424,6 +451,16 @@ export function WearableSettings() {
           ) : (
             <Text style={styles.primaryBtnText}>Connect Health Data</Text>
           )}
+        </TouchableOpacity>
+      )}
+
+      {status.availability === 'provider_update_required' && (
+        <TouchableOpacity
+          style={styles.primaryBtn}
+          onPress={handleInstallHealthConnect}
+          activeOpacity={0.7}
+        >
+          <Text style={styles.primaryBtnText}>Install Health Connect</Text>
         </TouchableOpacity>
       )}
 

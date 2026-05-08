@@ -142,21 +142,35 @@ describe('JudgeReviewSchema', () => {
     ).toThrow();
   });
 
-  it('rejects concern over 200 chars', () => {
-    expect(() =>
-      JudgeReviewSchema.parse(makeReview({ concerns: ['x'.repeat(201)] }))
-    ).toThrow();
+  it('truncates concern over 200 chars instead of rejecting', () => {
+    const parsed = JudgeReviewSchema.parse(
+      makeReview({ concerns: ['x'.repeat(250)] })
+    );
+    expect(parsed.concerns[0].length).toBe(200);
+    expect(parsed.concerns[0].endsWith('...')).toBe(true);
   });
 
   it('enforces intensityModifier bounds on suggestedOverrides', () => {
     expect(() =>
       JudgeReviewSchema.parse(
-        makeReview({ suggestedOverrides: { intensityModifier: 1.5 } })
+        makeReview({
+          suggestedOverrides: {
+            intensityModifier: 1.5,
+            setModifier: null,
+            auxOverrides: null,
+          },
+        })
       )
     ).toThrow();
     expect(() =>
       JudgeReviewSchema.parse(
-        makeReview({ suggestedOverrides: { intensityModifier: 0.3 } })
+        makeReview({
+          suggestedOverrides: {
+            intensityModifier: 0.3,
+            setModifier: null,
+            auxOverrides: null,
+          },
+        })
       )
     ).toThrow();
   });
@@ -164,12 +178,24 @@ describe('JudgeReviewSchema', () => {
   it('enforces setModifier bounds on suggestedOverrides', () => {
     expect(() =>
       JudgeReviewSchema.parse(
-        makeReview({ suggestedOverrides: { setModifier: 5 } })
+        makeReview({
+          suggestedOverrides: {
+            intensityModifier: null,
+            setModifier: 5,
+            auxOverrides: null,
+          },
+        })
       )
     ).toThrow();
     expect(() =>
       JudgeReviewSchema.parse(
-        makeReview({ suggestedOverrides: { setModifier: -4 } })
+        makeReview({
+          suggestedOverrides: {
+            intensityModifier: null,
+            setModifier: -4,
+            auxOverrides: null,
+          },
+        })
       )
     ).toThrow();
   });

@@ -2,10 +2,16 @@ import { z } from 'zod';
 
 import { AuxOverrideSchema } from './jit.schema';
 
+// String maxLength is not enforced by OpenAI structured outputs, so we transform
+// to truncate instead of reject. Hard reject would throw post-parse and discard
+// the whole review for an over-length string. Truncation preserves the signal.
+const truncateConcern = (s: string) =>
+  s.length > 200 ? s.slice(0, 197) + '...' : s;
+
 export const JudgeReviewSchema = z.object({
   score: z.number().min(0).max(100),
   verdict: z.enum(['accept', 'flag']),
-  concerns: z.array(z.string().max(200)).max(3),
+  concerns: z.array(z.string().transform(truncateConcern)).max(3),
   // Strict-JSON-schema compatible: nullable instead of optional, so every
   // property remains in `required`. See note in jit.schema.ts.
   suggestedOverrides: z
@@ -19,11 +25,14 @@ export const JudgeReviewSchema = z.object({
 
 export type JudgeReview = z.infer<typeof JudgeReviewSchema>;
 
+const truncateInsight = (s: string) =>
+  s.length > 200 ? s.slice(0, 197) + '...' : s;
+
 export const DecisionReplaySchema = z.object({
   prescriptionScore: z.number().min(0).max(100),
   rpeAccuracy: z.number().min(0).max(100),
   volumeAppropriateness: z.enum(['too_much', 'right', 'too_little']),
-  insights: z.array(z.string().max(200)).max(5),
+  insights: z.array(z.string().transform(truncateInsight)).max(5),
 });
 
 export type DecisionReplay = z.infer<typeof DecisionReplaySchema>;

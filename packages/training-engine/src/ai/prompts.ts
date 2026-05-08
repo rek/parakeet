@@ -47,6 +47,7 @@ Rules:
 - Check rest appropriateness: is rest too short given high RPE/soreness, or too long for a deload?
 - If everything looks reasonable, score 80+ and verdict "accept" with an empty concerns array.
 - Concerns must be specific and actionable, not vague.
+- Each concern string MUST be 200 characters or fewer. Keep them tight — one sentence each.
 - "suggestedOverrides" must be present in every response. Set it to null when you have no concrete alternative; otherwise include the object with each inner field set to null when not changing it.
 
 Return a JSON object matching the JudgeReview schema exactly.

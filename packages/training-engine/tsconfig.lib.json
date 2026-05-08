@@ -5,16 +5,13 @@
     "declaration": true,
     "types": ["node"]
   },
-  "include": ["src/**/*.ts"],
+  "include": ["src/**/*.ts", "../shared-types/src/**/*.ts"],
   "exclude": [
     "jest.config.ts",
     "jest.config.cts",
     "src/**/*.spec.ts",
-    "src/**/*.test.ts"
-  ],
-  "references": [
-    {
-      "path": "../shared-types/tsconfig.lib.json"
-    }
+    "src/**/*.test.ts",
+    "../shared-types/src/**/*.spec.ts",
+    "../shared-types/src/**/*.test.ts"
   ]
 }

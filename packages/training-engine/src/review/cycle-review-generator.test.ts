@@ -90,6 +90,7 @@ function makeReport(overrides: Partial<CycleReport> = {}): CycleReport {
       },
     ],
     bodyReviewSummary: null,
+    recoverySummary: null,
     ...overrides,
   };
 }

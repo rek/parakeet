@@ -1,10 +1,15 @@
 import { useCallback, useEffect, useState } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-import { checkPermissions, isHealthConnectAvailable } from '../lib/health-connect';
+import {
+  checkPermissions,
+  getHealthConnectAvailability,
+  type HealthConnectAvailability,
+} from '../lib/health-connect';
 
 export interface WearableStatus {
   isAvailable: boolean;
+  availability: HealthConnectAvailability;
   isPermitted: boolean;
   lastSyncAt: number | null;
   isSyncing: boolean;
@@ -17,6 +22,7 @@ export interface UseWearableStatusResult extends WearableStatus {
 export function useWearableStatus(): UseWearableStatusResult {
   const [state, setState] = useState<WearableStatus>({
     isAvailable: false,
+    availability: 'unsupported',
     isPermitted: false,
     lastSyncAt: null,
     isSyncing: false,
@@ -24,7 +30,8 @@ export function useWearableStatus(): UseWearableStatusResult {
 
   const refresh = useCallback(async () => {
     try {
-      const isAvailable = await isHealthConnectAvailable();
+      const availability = await getHealthConnectAvailability();
+      const isAvailable = availability === 'available';
       let perms: { granted: boolean; permissions: Record<string, boolean> } = {
         granted: false,
         permissions: {},
@@ -40,6 +47,7 @@ export function useWearableStatus(): UseWearableStatusResult {
       const last = await AsyncStorage.getItem('wearable_last_sync_ms');
       setState({
         isAvailable,
+        availability,
         isPermitted: perms.granted,
         lastSyncAt: last ? Number(last) : null,
         isSyncing: false,

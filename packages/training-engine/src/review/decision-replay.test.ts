@@ -159,9 +159,11 @@ describe('DecisionReplaySchema', () => {
     ).toThrow();
   });
 
-  it('rejects insight over 200 chars', () => {
-    expect(() =>
-      DecisionReplaySchema.parse(makeReplay({ insights: ['x'.repeat(201)] }))
-    ).toThrow();
+  it('truncates insight over 200 chars instead of rejecting', () => {
+    const parsed = DecisionReplaySchema.parse(
+      makeReplay({ insights: ['x'.repeat(250)] })
+    );
+    expect(parsed.insights[0].length).toBe(200);
+    expect(parsed.insights[0].endsWith('...')).toBe(true);
   });
 });

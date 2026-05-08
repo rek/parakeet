@@ -27,7 +27,7 @@ export async function reviewJITDecision(
       output: Output.object({ schema: JudgeReviewSchema }),
       system: JUDGE_REVIEW_SYSTEM_PROMPT,
       prompt: JSON.stringify({ input, output }),
-      abortSignal: abortAfter(8000),
+      abortSignal: abortAfter(12000),
     });
     return review ?? SILENT_PASS;
   } catch (err) {
