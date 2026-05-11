@@ -1,3 +1,4 @@
+import { DEFAULT_ROUNDING_INCREMENT_KG } from '../formulas/weight-rounding';
 import { FormulaConfig, FormulaRestSeconds } from '../types';
 
 export const DEFAULT_REST_SECONDS_MALE: FormulaRestSeconds = {
@@ -65,7 +66,7 @@ export const DEFAULT_FORMULA_CONFIG_MALE: FormulaConfig = {
     deadlift_min: 5,
     deadlift_max: 10,
   },
-  rounding_increment_kg: 2.5,
+  rounding_increment_kg: DEFAULT_ROUNDING_INCREMENT_KG,
   rest_seconds: DEFAULT_REST_SECONDS_MALE,
 };
 
@@ -118,7 +119,7 @@ export const DEFAULT_FORMULA_CONFIG_FEMALE: FormulaConfig = {
     deadlift_min: 5,
     deadlift_max: 7.5,
   },
-  rounding_increment_kg: 2.5,
+  rounding_increment_kg: DEFAULT_ROUNDING_INCREMENT_KG,
   rest_seconds: DEFAULT_REST_SECONDS_FEMALE,
 };
 

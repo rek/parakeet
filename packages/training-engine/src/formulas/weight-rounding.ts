@@ -1,6 +1,15 @@
 import { PLATE_SIZES_KG, type PlateKg } from './plate-calculator';
 
-export function roundToNearest(weightKg: number, incrementKg = 2.5): number {
+/** Default rounding increment in kg. Matches a standard IWF plate stack
+ *  including 1.25kg fractionals (`2 × smallest plate`). Single source of
+ *  truth — used by the rounder, the plate-increment helper's fallback,
+ *  and the formula config in `cube/blocks.ts`. */
+export const DEFAULT_ROUNDING_INCREMENT_KG = 2.5;
+
+export function roundToNearest(
+  weightKg: number,
+  incrementKg = DEFAULT_ROUNDING_INCREMENT_KG
+): number {
   return Math.round(weightKg / incrementKg) * incrementKg;
 }
 
@@ -15,7 +24,7 @@ export function roundToNearest(weightKg: number, incrementKg = 2.5): number {
 export function plateIncrementKg(disabledPlatesKg?: readonly PlateKg[]): number {
   const disabled = new Set(disabledPlatesKg ?? []);
   const enabled = PLATE_SIZES_KG.filter((p) => !disabled.has(p));
-  if (enabled.length === 0) return 2.5;
+  if (enabled.length === 0) return DEFAULT_ROUNDING_INCREMENT_KG;
   const smallest = Math.min(...enabled);
   return smallest * 2;
 }
@@ -27,7 +36,8 @@ export function effectiveIncrementKg(input: {
   weightIncrementKg?: number;
   formulaConfig?: { rounding_increment_kg?: number };
 }): number {
-  const formula = input.formulaConfig?.rounding_increment_kg ?? 2.5;
+  const formula =
+    input.formulaConfig?.rounding_increment_kg ?? DEFAULT_ROUNDING_INCREMENT_KG;
   const plate = input.weightIncrementKg ?? formula;
   return Math.max(formula, plate);
 }
