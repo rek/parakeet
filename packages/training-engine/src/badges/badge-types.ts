@@ -141,9 +141,9 @@ export interface BadgeCheckContext {
   bodyweightKg: number | null;
   streakWeeks: number;
 
-  // Sleep/energy from soreness check-in
-  sleepQuality: number | null; // 1-3
-  energyLevel: number | null; // 1-3
+  // Sleep/energy from soreness check-in (1-5 scale: 1=worst, 3=neutral, 5=best)
+  sleepQuality: number | null;
+  energyLevel: number | null;
 
   // Disruptions
   hasActiveMajorDisruption: boolean;

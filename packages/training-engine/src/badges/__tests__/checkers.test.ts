@@ -435,24 +435,46 @@ describe('checkSituationalBadges', () => {
       expect(checkSituationalBadges(ctx)).toContain('didnt_want_to_be_here');
     });
 
-    it('does not earn badge when sleep is 2', () => {
+    // 1-5 native scale: poor band is 1-2 (Drained/Terrible + Low/Poor).
+    // Badge fires when BOTH sleep and energy are in the poor band.
+    it('earns badge when sleep=2 and energy=1 (both in poor band)', () => {
       const ctx = makeCtx({
         sleepQuality: 2,
         energyLevel: 1,
         plannedSets: [makePlannedSet()],
-        actualSets: [makeActualSet()],
+        actualSets: [makeActualSet({ is_completed: true })],
+      });
+      expect(checkSituationalBadges(ctx)).toContain('didnt_want_to_be_here');
+    });
+
+    it('earns badge when sleep=1 and energy=2 (both in poor band)', () => {
+      const ctx = makeCtx({
+        sleepQuality: 1,
+        energyLevel: 2,
+        plannedSets: [makePlannedSet()],
+        actualSets: [makeActualSet({ is_completed: true })],
+      });
+      expect(checkSituationalBadges(ctx)).toContain('didnt_want_to_be_here');
+    });
+
+    it('does not earn badge when sleep is 3 (OK — out of poor band)', () => {
+      const ctx = makeCtx({
+        sleepQuality: 3,
+        energyLevel: 1,
+        plannedSets: [makePlannedSet()],
+        actualSets: [makeActualSet({ is_completed: true })],
       });
       expect(checkSituationalBadges(ctx)).not.toContain(
         'didnt_want_to_be_here'
       );
     });
 
-    it('does not earn badge when energy is 2', () => {
+    it('does not earn badge when energy is 3 (OK — out of poor band)', () => {
       const ctx = makeCtx({
         sleepQuality: 1,
-        energyLevel: 2,
+        energyLevel: 3,
         plannedSets: [makePlannedSet()],
-        actualSets: [makeActualSet()],
+        actualSets: [makeActualSet({ is_completed: true })],
       });
       expect(checkSituationalBadges(ctx)).not.toContain(
         'didnt_want_to_be_here'

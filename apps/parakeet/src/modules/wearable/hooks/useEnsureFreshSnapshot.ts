@@ -41,6 +41,7 @@ export function useEnsureFreshSnapshot(opts?: {
     const userId = user.id;
 
     void (async () => {
+      let timerId: ReturnType<typeof setTimeout> | undefined;
       try {
         const stored = await AsyncStorage.getItem(LAST_SYNC_KEY);
         const lastSync = stored ? Number(stored) : 0;
@@ -48,17 +49,18 @@ export function useEnsureFreshSnapshot(opts?: {
           return;
         }
 
+        // Record sync attempt time before fetching so a concurrent
+        // `useWearableSync` mount-call sees the throttle and skips.
+        await AsyncStorage.setItem(LAST_SYNC_KEY, String(Date.now()));
+
         await Promise.race([
-          (async () => {
-            await syncWearableData(userId);
-            await AsyncStorage.setItem(LAST_SYNC_KEY, String(Date.now()));
-          })(),
-          new Promise<never>((_, reject) =>
-            setTimeout(
+          syncWearableData(userId),
+          new Promise<never>((_, reject) => {
+            timerId = setTimeout(
               () => reject(new Error('useEnsureFreshSnapshot: sync timeout')),
               timeoutMs
-            )
-          ),
+            );
+          }),
         ]);
 
         if (cancelled) return;
@@ -70,6 +72,9 @@ export function useEnsureFreshSnapshot(opts?: {
         // absence) still drives prefill, and the user can override pills.
         captureException(err);
       } finally {
+        // Clear the timer so it doesn't fire later as an unhandled rejection
+        // after the sync branch already won the race.
+        if (timerId !== undefined) clearTimeout(timerId);
         if (!cancelled) setResolved(true);
       }
     })();

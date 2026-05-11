@@ -144,9 +144,9 @@ function scoreFatigueAppropriate(
   if (!entry) return 0.5;
   const tier = resolveComplexityTier(entry);
 
-  const sleep = ctx.sleepQuality ?? 2;
-  const energy = ctx.energyLevel ?? 2;
-  const readiness = (sleep + energy) / 2; // 1–3
+  const sleep = ctx.sleepQuality ?? 3;
+  const energy = ctx.energyLevel ?? 3;
+  const readiness = (sleep + energy) / 2; // 1–5 native, 3 = neutral midpoint
 
   return complexityReadinessScore(tier, readiness);
 }
@@ -155,13 +155,14 @@ function complexityReadinessScore(
   tier: ComplexityTier,
   readiness: number
 ): number {
-  // readiness 1 (poor): simple=1.0, moderate=0.5, complex=0.2
-  // readiness 2 (ok):   simple=0.7, moderate=0.7, complex=0.7
-  // readiness 3 (great): simple=0.6, moderate=0.8, complex=1.0
-  if (readiness <= 1.5) {
+  // 1-5 scale, 3 = neutral. Bands:
+  //   poor   (<= 2.5): simple=1.0, moderate=0.5, complex=0.2
+  //   neutral (2.5 – 3.5): all=0.7
+  //   great  (>= 3.5): simple=0.6, moderate=0.8, complex=1.0
+  if (readiness <= 2.5) {
     return tier === 'simple' ? 1.0 : tier === 'moderate' ? 0.5 : 0.2;
   }
-  if (readiness >= 2.5) {
+  if (readiness >= 3.5) {
     return tier === 'simple' ? 0.6 : tier === 'moderate' ? 0.8 : 1.0;
   }
   return 0.7;

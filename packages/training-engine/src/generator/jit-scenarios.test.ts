@@ -59,7 +59,9 @@ describe('JIT scenarios — real training days', () => {
     expect(out.mainLiftSets[0].weight_kg).toBe(170);
   });
 
-  it('female returning from illness, poor sleep, luteal phase', () => {
+  it('female returning from illness, poor sleep + low energy, luteal phase', () => {
+    // 1-5 scale: sleepQuality=1 (Terrible) + energyLevel=2 (Low) → both poor
+    // band → readiness adjuster removes a set and applies 0.95× intensity.
     const out = generateJITSession(
       baseInput({
         primaryLift: 'bench',

@@ -105,12 +105,13 @@ describe('exercise-scorer / fatigue appropriateness', () => {
   });
 
   it('prefers complex exercises when readiness is great', () => {
+    // 1-5 native scale: 4-5 = great (Good/High); 3 is neutral.
     const ctx = baseCtx({
       targetMuscle: 'upper_back',
       muscleDeficits: { upper_back: 4 },
       primaryLift: 'deadlift',
-      sleepQuality: 3,
-      energyLevel: 3,
+      sleepQuality: 5,
+      energyLevel: 5,
     });
     const simple = scoreExercise('Lat Pulldown', ctx);
     const complex = scoreExercise('Power Clean', ctx);

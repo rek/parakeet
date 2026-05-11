@@ -15,8 +15,16 @@ export function checkSituationalBadges(ctx: BadgeCheckContext): BadgeId[] {
     earned.push('comeback_kid');
   }
 
-  // #16 Didn't Want To Be Here — poor sleep + low energy + 100% completion
-  if (ctx.sleepQuality === 1 && ctx.energyLevel === 1) {
+  // #16 Didn't Want To Be Here — poor sleep + low energy + 100% completion.
+  // 1-5 scale: poor band is 1-2. Pre-2026-05-11 this checked `=== 1 && === 1`
+  // which on the legacy 1-3 scale meant "poor sleep AND low energy"; preserve
+  // that semantic on the native 1-5 scale by widening to `<= 2`.
+  if (
+    ctx.sleepQuality !== null &&
+    ctx.energyLevel !== null &&
+    ctx.sleepQuality <= 2 &&
+    ctx.energyLevel <= 2
+  ) {
     const completedCount = ctx.actualSets.filter((s) => s.is_completed).length;
     const totalCount = ctx.plannedSets.length;
     if (totalCount > 0 && completedCount >= totalCount) {
