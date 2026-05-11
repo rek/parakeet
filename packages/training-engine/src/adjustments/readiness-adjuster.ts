@@ -1,5 +1,16 @@
-/** 1-5 scale. Legacy 1-3 values are accepted and normalised:
- *  old 1 (poor) → 1, old 2 (normal) → 3, old 3 (great) → 5. */
+/** Subjective readiness scale.
+ *
+ *  Native 1–5: 1 = worst (Drained/Terrible), 3 = neutral (OK), 5 = best (High/Great).
+ *  This is the same scale rendered on the soreness screen pills and the same
+ *  scale `applyVolumeCalibration` reads. The engine reads these values raw —
+ *  there is no internal collapse to a legacy 1–3 scale.
+ *
+ *  Adjustment bands:
+ *    1–2 = poor (intensity ↓ 2.5% per signal; both poor → 1 set off + 5% ↓)
+ *    3   = neutral (no change)
+ *    4–5 = great (boost 2.5% only when BOTH are 4+)
+ *
+ *  Undefined inputs are treated as neutral (3) — no signal means no change. */
 export type ReadinessLevel = 1 | 2 | 3 | 4 | 5;
 
 export interface ReadinessModifier {
@@ -14,27 +25,16 @@ const NEUTRAL: ReadinessModifier = {
   rationale: null,
 };
 
-/** Normalise legacy 1-3 input to 1-5 scale.
- *  1→1, 2→3, 3→5. Values 4-5 are already on the new scale. */
-function normalise(level: number): number {
-  if (level >= 4) return level;
-  if (level === 1) return 1;
-  if (level === 3) return 5;
-  return 3; // level === 2 → neutral midpoint
-}
-
 /** Returns an intensity/volume modifier based on sleep quality and energy level.
- *  Both inputs are optional — undefined is treated as normal (neutral).
- *  Accepts both legacy 1-3 and new 1-5 inputs via normalisation. */
+ *  Both inputs are optional — undefined is treated as neutral. */
 export function getReadinessModifier(
   sleepQuality?: ReadinessLevel,
   energyLevel?: ReadinessLevel
 ): ReadinessModifier {
-  // Default undefined to old-scale 2 (normal) which normalises to 3 (neutral)
-  const s = normalise(sleepQuality ?? 2);
-  const e = normalise(energyLevel ?? 2);
+  const s = sleepQuality ?? 3;
+  const e = energyLevel ?? 3;
 
-  // Both poor (1-2 on 5-point scale)
+  // Both poor (1–2)
   if (s <= 2 && e <= 2) {
     return {
       setReduction: 1,
@@ -61,7 +61,7 @@ export function getReadinessModifier(
     };
   }
 
-  // Both great (4-5 on 5-point scale)
+  // Both great (4–5)
   if (s >= 4 && e >= 4) {
     return {
       setReduction: 0,

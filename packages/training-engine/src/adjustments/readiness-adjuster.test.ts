@@ -1,55 +1,88 @@
 import { getReadinessModifier } from './readiness-adjuster';
 
-describe('getReadinessModifier', () => {
-  it('both poor (1,1) → -1 set, 0.95x intensity', () => {
+describe('getReadinessModifier (1-5 native scale)', () => {
+  it('both Drained (1,1) → -1 set, 0.95x intensity', () => {
     const m = getReadinessModifier(1, 1);
     expect(m.setReduction).toBe(1);
     expect(m.intensityMultiplier).toBe(0.95);
     expect(m.rationale).not.toBeNull();
   });
 
-  it('poor sleep, ok energy (1,2) → 0 sets, 0.975x', () => {
+  it('both Low (2,2) → -1 set, 0.95x intensity (both poor band)', () => {
+    const m = getReadinessModifier(2, 2);
+    expect(m.setReduction).toBe(1);
+    expect(m.intensityMultiplier).toBe(0.95);
+  });
+
+  it('Drained sleep + Low energy (1,2) → -1 set, 0.95x (both poor)', () => {
     const m = getReadinessModifier(1, 2);
+    expect(m.setReduction).toBe(1);
+    expect(m.intensityMultiplier).toBe(0.95);
+  });
+
+  it('Drained sleep + OK energy (1,3) → poor sleep only, 0.975x', () => {
+    const m = getReadinessModifier(1, 3);
     expect(m.setReduction).toBe(0);
     expect(m.intensityMultiplier).toBe(0.975);
+    expect(m.rationale).toMatch(/sleep/i);
   });
 
-  it('poor sleep, high energy (1,3) → 0.975x', () => {
-    expect(getReadinessModifier(1, 3).intensityMultiplier).toBe(0.975);
+  it('Low sleep + OK energy (2,3) → poor sleep only, 0.975x', () => {
+    const m = getReadinessModifier(2, 3);
+    expect(m.intensityMultiplier).toBe(0.975);
+    expect(m.rationale).toMatch(/sleep/i);
   });
 
-  it('ok sleep, low energy (2,1) → 0.975x', () => {
-    expect(getReadinessModifier(2, 1).intensityMultiplier).toBe(0.975);
+  it('OK sleep + Drained energy (3,1) → low energy only, 0.975x', () => {
+    const m = getReadinessModifier(3, 1);
+    expect(m.intensityMultiplier).toBe(0.975);
+    expect(m.rationale).toMatch(/energy/i);
   });
 
-  it('great sleep, low energy (3,1) → 0.975x', () => {
-    expect(getReadinessModifier(3, 1).intensityMultiplier).toBe(0.975);
+  it('OK sleep + Low energy (3,2) → low energy only, 0.975x', () => {
+    const m = getReadinessModifier(3, 2);
+    expect(m.intensityMultiplier).toBe(0.975);
+    expect(m.rationale).toMatch(/energy/i);
   });
 
-  it('normal/normal (2,2) → neutral', () => {
-    const m = getReadinessModifier(2, 2);
+  it('OK / OK (3,3) → neutral', () => {
+    const m = getReadinessModifier(3, 3);
     expect(m.setReduction).toBe(0);
     expect(m.intensityMultiplier).toBe(1.0);
     expect(m.rationale).toBeNull();
   });
 
-  it('both great (3,3) → 0 sets, 1.025x', () => {
-    const m = getReadinessModifier(3, 3);
+  it('Good / Good (4,4) → boost 1.025x', () => {
+    const m = getReadinessModifier(4, 4);
     expect(m.setReduction).toBe(0);
     expect(m.intensityMultiplier).toBe(1.025);
-    expect(m.rationale).not.toBeNull();
   });
 
-  it('great sleep, ok energy (3,2) → neutral', () => {
-    const m = getReadinessModifier(3, 2);
+  it('High / High (5,5) → boost 1.025x', () => {
+    const m = getReadinessModifier(5, 5);
+    expect(m.intensityMultiplier).toBe(1.025);
+  });
+
+  it('Good sleep + OK energy (4,3) → neutral (boost needs both 4+)', () => {
+    const m = getReadinessModifier(4, 3);
     expect(m.intensityMultiplier).toBe(1.0);
-    expect(m.setReduction).toBe(0);
   });
 
-  it('undefined inputs default to normal → neutral', () => {
+  it('High sleep + OK energy (5,3) → neutral (boost needs both 4+)', () => {
+    expect(getReadinessModifier(5, 3).intensityMultiplier).toBe(1.0);
+  });
+
+  it('undefined inputs default to neutral → no change', () => {
     const m = getReadinessModifier(undefined, undefined);
     expect(m.intensityMultiplier).toBe(1.0);
     expect(m.setReduction).toBe(0);
     expect(m.rationale).toBeNull();
+  });
+
+  it('only one side defined uses other as neutral (3)', () => {
+    expect(getReadinessModifier(1, undefined).intensityMultiplier).toBe(0.975);
+    expect(getReadinessModifier(undefined, 1).intensityMultiplier).toBe(0.975);
+    expect(getReadinessModifier(5, undefined).intensityMultiplier).toBe(1.0);
+    expect(getReadinessModifier(undefined, 5).intensityMultiplier).toBe(1.0);
   });
 });

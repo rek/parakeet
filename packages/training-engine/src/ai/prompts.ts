@@ -27,7 +27,9 @@ Wearable recovery data (when present — these fields may be absent if no wearab
 - nonTrainingLoad: 0-3 scale of non-training physical activity. 3 = high load contributing to fatigue.
 - readinessScore: composite 0-100 recovery score. Below 40 = significant concern. Above 70 = good.
 
-When wearable and subjective signals (sleepQuality, energyLevel) both exist and conflict, prioritise the wearable data but call out the discrepancy in the rationale (e.g., "lifter reported feeling fresh but HRV is 18% below baseline — reducing intensity 5%"). Wearable signals do NOT override active disruptions; disruption precedence is unchanged.
+Subjective readiness scale (sleepQuality, energyLevel) is 1–5: 1=Drained/Terrible, 2=Low/Poor, 3=OK (neutral), 4=Good, 5=High/Great. Treat 1–2 as poor, 3 as neutral, 4–5 as great. A wearable-prefilled value that the lifter then taps to a different pill is an explicit override — respect what the lifter selected.
+
+When wearable and subjective signals both exist and conflict, prioritise the wearable data but call out the discrepancy in the rationale (e.g., "lifter reported feeling fresh but HRV is 18% below baseline — reducing intensity 5%"). Wearable signals do NOT override active disruptions; disruption precedence is unchanged.
 `;
 
 export const JUDGE_REVIEW_SYSTEM_PROMPT = `
@@ -90,7 +92,7 @@ You will receive a JSON object with:
 - "blockNumber", "weekNumber", "intensityType": programming context
 - "isDeload": whether this is a deload session
 - "sorenessRatings": muscle-specific soreness (1-10 scale, null if not checked in)
-- "sleepQuality", "energyLevel": readiness signals (1-3 scale, null if not checked in)
+- "sleepQuality", "energyLevel": readiness signals (1–5 scale: 1=worst, 3=neutral, 5=best, null if not checked in)
 - "activeDisruptions": illness, travel, etc. (null if none)
 - "previousVideoCount": how many previous videos exist for this lift
 - "averageBarDriftCm", "averageDepthCm", "averageForwardLeanDeg": longitudinal averages (null if <5 videos)

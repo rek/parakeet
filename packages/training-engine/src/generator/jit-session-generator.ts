@@ -102,7 +102,9 @@ export interface JITInput {
   auxiliaryPool?: string[];
   // 1RM for each lift — used by volume top-up to calculate correct weights for cross-lift exercises
   allOneRmKg?: Partial<Record<Lift, number>>;
-  // Readiness signals (engine-028): 1=poor/low, 2=ok/normal, 3=great/high
+  // Subjective readiness signals (engine-028).
+  // 1–5 scale: 1=Drained/Terrible, 2=Low/Poor, 3=OK (neutral), 4=Good, 5=High/Great.
+  // Engine reads raw — see `readiness-adjuster.ts` for adjustment bands.
   sleepQuality?: ReadinessLevel;
   energyLevel?: ReadinessLevel;
   // Wearable recovery signals — supersede sleepQuality/energyLevel when present.

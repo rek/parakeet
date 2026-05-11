@@ -15,6 +15,7 @@ export {
 } from './data/recovery.repository';
 
 // Hooks
+export { useEnsureFreshSnapshot } from './hooks/useEnsureFreshSnapshot';
 export { useRecoverySnapshot } from './hooks/useRecoverySnapshot';
 export { useWearableStatus } from './hooks/useWearableStatus';
 export { useWearableSync } from './hooks/useWearableSync';

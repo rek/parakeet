@@ -1,19 +1,13 @@
 import { StyleSheet, Text, View } from 'react-native';
 
+import { READINESS_LABELS } from '@shared/constants/training';
+
 import type { ColorScheme } from '../../../theme';
 import { getReadinessPillColors } from './readiness-styles';
 
-const READINESS_LABELS: Record<number, string> = {
-  1: 'Poor',
-  2: 'Normal',
-  3: 'Great',
-};
-
-const ENERGY_LABELS: Record<number, string> = {
-  1: 'Low',
-  2: 'Normal',
-  3: 'High',
-};
+// 1-5 scale: 3 is the engine-neutral midpoint. Chip is hidden at neutral so the
+// card only surfaces non-default readiness signals.
+const NEUTRAL_READINESS = 3;
 
 export function SessionContextCard({
   sorenessRatings,
@@ -36,8 +30,8 @@ export function SessionContextCard({
     : [];
   const hasSoreness = soreMuscles.length > 0;
   const hasReadiness =
-    (sleepQuality != null && sleepQuality !== 2) ||
-    (energyLevel != null && energyLevel !== 2);
+    (sleepQuality != null && sleepQuality !== NEUTRAL_READINESS) ||
+    (energyLevel != null && energyLevel !== NEUTRAL_READINESS);
   const hasDisruptions =
     activeDisruptions != null && activeDisruptions.length > 0;
 
@@ -69,7 +63,7 @@ export function SessionContextCard({
         <View style={styles.section}>
           <Text style={styles.label}>Readiness</Text>
           <View style={styles.chipRow}>
-            {sleepQuality != null && sleepQuality !== 2 && (
+            {sleepQuality != null && sleepQuality !== NEUTRAL_READINESS && (
               <View
                 style={[
                   styles.readinessChip,
@@ -82,11 +76,14 @@ export function SessionContextCard({
                     { color: pillColors.text[sleepQuality] },
                   ]}
                 >
-                  Sleep: {READINESS_LABELS[sleepQuality] ?? sleepQuality}
+                  Sleep:{' '}
+                  {(READINESS_LABELS.sleep as Record<number, string>)[
+                    sleepQuality
+                  ] ?? sleepQuality}
                 </Text>
               </View>
             )}
-            {energyLevel != null && energyLevel !== 2 && (
+            {energyLevel != null && energyLevel !== NEUTRAL_READINESS && (
               <View
                 style={[
                   styles.readinessChip,
@@ -99,7 +96,10 @@ export function SessionContextCard({
                     { color: pillColors.text[energyLevel] },
                   ]}
                 >
-                  Energy: {ENERGY_LABELS[energyLevel] ?? energyLevel}
+                  Energy:{' '}
+                  {(READINESS_LABELS.energy as Record<number, string>)[
+                    energyLevel
+                  ] ?? energyLevel}
                 </Text>
               </View>
             )}

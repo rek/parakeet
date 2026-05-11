@@ -42,17 +42,26 @@ Overrides all other modifiers. Produces a fixed recovery session:
 
 ## Readiness Modifiers
 
-Sleep and energy are each rated 1-3 (1=poor, 2=normal, 3=great). `undefined` is treated as normal (2).
+Sleep and energy are each rated **1–5 native** (1=Drained/Terrible, 2=Low/Poor, 3=OK, 4=Good, 5=High/Great). The engine reads these values raw — there is no internal collapse to a legacy 1–3 scale. `undefined` is treated as the neutral midpoint (3). UI labels live in `apps/parakeet/src/shared/constants/training.ts` (`READINESS_LABELS`).
+
+Bands:
+- **Poor (1–2):** triggers reduction.
+- **Neutral (3):** no change.
+- **Great (4–5):** boost, but only when BOTH sleep and energy are 4+.
 
 | Sleep | Energy | Sets Reduced | Intensity Multiplier | Rationale                           |
 | ----- | ------ | ------------ | -------------------- | ----------------------------------- |
-| 1     | 1      | 1            | 0.95                 | Poor sleep and low energy           |
-| 1     | 2-3    | 0            | 0.975                | Poor sleep only                     |
-| 2-3   | 1      | 0            | 0.975                | Low energy only                     |
-| 3     | 3      | 0            | 1.025                | Great sleep and high energy (boost) |
+| 1–2   | 1–2    | 1            | 0.95                 | Poor sleep and low energy           |
+| 1–2   | ≥3     | 0            | 0.975                | Poor sleep only                     |
+| ≥3    | 1–2    | 0            | 0.975                | Low energy only                     |
+| ≥4    | ≥4     | 0            | 1.025                | Great sleep and high energy (boost) |
 | other | other  | 0            | 1.0                  | Neutral                             |
 
+`applyVolumeCalibration` (engine-043) consumes the same raw 1–5 signal — `readinessLow = sleep <= 2 || energy <= 2`, `readinessHigh = sleep >= 4 && energy >= 4`. Both adjusters share the band definitions.
+
 **Source:** `packages/training-engine/src/adjustments/readiness-adjuster.ts`
+
+**Why this matters:** the UI pill labels (Drained/Low/OK/Good/High) and the engine's adjustment bands must agree on what each integer means. A user tapping "Low" (2) expects the engine to register a reduction; tapping "OK" (3) expects no change. Prior to 2026-05-11 a `normalise()` helper collapsed 1-5 inputs to legacy 1-3 bands incorrectly (`2→3 neutral`, `3→5 great`), so the pill semantics and engine semantics drifted. That helper is gone — see [features/wearable/spec-pipeline.md](../features/wearable/spec-pipeline.md) for the corresponding fix on the soreness check-in path.
 
 ---
 

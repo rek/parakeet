@@ -13,11 +13,13 @@ Collected on the check-in screen before each workout.
 | Signal        | Scale | Values                                                                        | Used In        |
 | ------------- | ----- | ----------------------------------------------------------------------------- | -------------- |
 | Soreness      | 1-10  | Per muscle group (9 muscles). 1–4 fresh, 5–6 moderate, 7–8 high, 9–10 severe. | JIT Steps 0, 5 |
-| Sleep quality | 1-5   | Terrible/Poor/OK/Good/Great. Legacy 1-3 mapped (1→1, 2→3, 3→5).               | JIT Steps 0, 3 |
-| Energy level  | 1-5   | Drained/Low/OK/Good/High. Legacy 1-3 mapped (1→1, 2→3, 3→5).                  | JIT Steps 0, 3 |
+| Sleep quality | 1-5   | Terrible/Poor/OK/Good/Great. Native scale — engine reads raw; 3 is neutral.   | JIT Steps 0, 3 |
+| Energy level  | 1-5   | Drained/Low/OK/Good/High. Native scale — engine reads raw; 3 is neutral.      | JIT Steps 0, 3 |
 | Cycle phase   | auto  | Calculated from last period start                                             | JIT Step 4     |
 
-Soreness is checked for the session's primary lift muscles only. Sleep and energy are optional — `undefined` = normal.
+Soreness is checked for the session's primary lift muscles only. Sleep and energy are optional — `undefined` = neutral (3). The soreness screen also defaults both pills to 3 so an untapped pill never surfaces a "low energy" rationale.
+
+When a wearable is connected, the soreness screen prefills sleep + energy pills from `recovery_snapshots` (HRV/RHR % change → energy band, sleep duration → sleep band). Tapping a pill overrides the prefill — the override is what flows to JIT. See [features/wearable/spec-pipeline.md](../features/wearable/spec-pipeline.md) for the prefill mapping and the pre-checkin sync gate that ensures the snapshot is current.
 
 Expanded scales enable asymmetric responses: high readiness (4-5) can trigger volume boost in Step 0 (volume calibration), not just neutral. Low soreness (1-4 on 10-point scale) signals capacity for more work.
 

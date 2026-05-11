@@ -29,9 +29,8 @@ import {
 import {
   mapAutonomicToLevel,
   mapSleepDurationToLevel,
-  syncWearableData,
+  useEnsureFreshSnapshot,
   useRecoverySnapshot,
-  useWearableStatus,
 } from '@modules/wearable';
 import type { Lift, MuscleGroup } from '@parakeet/shared-types';
 import { captureException } from '@platform/utils/captureException';
@@ -414,8 +413,11 @@ export default function SorenessScreen() {
     {}
   );
   const [musclesExpanded, setMusclesExpanded] = useState(false);
-  const [sleepQuality, setSleepQuality] = useState<ReadinessLevel>(2);
-  const [energyLevel, setEnergyLevel] = useState<ReadinessLevel>(2);
+  // Default to the 1–5 scale neutral midpoint (3 = "OK"). Engine treats 3 as
+  // no-change; using 2 would surface a "Low energy" rationale before the user
+  // ever taps a pill. UI labels: `READINESS_LABELS` in shared/constants/training.
+  const [sleepQuality, setSleepQuality] = useState<ReadinessLevel>(3);
+  const [energyLevel, setEnergyLevel] = useState<ReadinessLevel>(3);
   const [sleepTouched, setSleepTouched] = useState(false);
   const [energyTouched, setEnergyTouched] = useState(false);
   const [sleepFromWearable, setSleepFromWearable] = useState(false);
@@ -430,9 +432,13 @@ export default function SorenessScreen() {
   );
   const autoGenerateTriggered = useRef(false);
 
+  // Pre-checkin sync gate: actively sync Health Connect on mount (bounded by
+  // an 8s timeout) and invalidate the snapshot query so prefill reads current
+  // data. `syncResolved` flips true once sync settles (success/skip/timeout)
+  // so auto-generate doesn't fire on a stale snapshot.
+  const { resolved: syncResolved } = useEnsureFreshSnapshot();
   const { data: recoverySnapshot, isPending: recoveryQueryPending } =
     useRecoverySnapshot();
-  const wearableStatus = useWearableStatus();
 
   const primaryMuscles: readonly MuscleGroup[] = session
     ? (LIFT_PRIMARY_SORENESS_MUSCLES[session.primary_lift as Lift] ?? [])
@@ -488,16 +494,6 @@ export default function SorenessScreen() {
       .catch((err) => captureException(err));
   }, [user]);
 
-  // Opportunistic sync if data is stale — fire-and-forget, no spinner
-  useEffect(() => {
-    if (!user?.id) return;
-    const last = wearableStatus.lastSyncAt;
-    if (!last || Date.now() - last > 30 * 60 * 1000) {
-      void syncWearableData(user.id).catch(captureException);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
   // Prefill sleep + energy pills from wearable snapshot. Only seeds untouched
   // pills — once the user taps a pill, manual value wins.
   useEffect(() => {
@@ -530,18 +526,44 @@ export default function SorenessScreen() {
   useEffect(() => {
     if (!isAutoGenerate || !session || !user || autoGenerateTriggered.current)
       return;
-    // Wait for recovery query to settle so wearable prefill (if any) is applied
-    // before JIT runs. Auto-generate skips the soreness UI entirely, so without
-    // this gate the pills would still hold their default `2` when JIT fires.
-    if (recoveryQueryPending) return;
+    // Wait until BOTH the pre-checkin sync settled and the snapshot query
+    // resolved. Without the sync gate, JIT could read yesterday's snapshot.
+    if (!syncResolved || recoveryQueryPending) return;
     const expectedMuscles =
       LIFT_PRIMARY_SORENESS_MUSCLES[session.primary_lift as Lift] ?? [];
     if (expectedMuscles.length > 0 && Object.keys(ratings).length === 0) return;
+
+    // Compute resolved readiness values inline. State updates queued by the
+    // prefill effect in this same commit do NOT show up in `sleepQuality` /
+    // `energyLevel` until the next render — passing those state values to
+    // runJIT would race against the prefill (GH#210).
+    const resolvedSleep = sleepTouched
+      ? sleepQuality
+      : (recoverySnapshot
+          ? mapSleepDurationToLevel(recoverySnapshot.sleep_duration_min)
+          : null) ?? sleepQuality;
+    const resolvedEnergy = energyTouched
+      ? energyLevel
+      : (recoverySnapshot
+          ? mapAutonomicToLevel(
+              recoverySnapshot.hrv_pct_change,
+              recoverySnapshot.rhr_pct_change
+            )
+          : null) ?? energyLevel;
+
     autoGenerateTriggered.current = true;
     setGenerating(true);
-    void runJIT(ratings);
+    void runJIT(ratings, { sleep: resolvedSleep, energy: resolvedEnergy });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isAutoGenerate, session, user, ratings, recoveryQueryPending]);
+  }, [
+    isAutoGenerate,
+    session,
+    user,
+    ratings,
+    syncResolved,
+    recoveryQueryPending,
+    recoverySnapshot,
+  ]);
 
   // ── Helpers ───────────────────────────────────────────────────────────────
 
@@ -571,17 +593,24 @@ export default function SorenessScreen() {
     return fresh;
   }
 
-  async function runJIT(ratingsToUse: Record<string, number>) {
+  async function runJIT(
+    ratingsToUse: Record<string, number>,
+    readinessOverride?: { sleep: ReadinessLevel; energy: ReadinessLevel }
+  ) {
     if (!session || !user) return;
     try {
       const primaryLift = session.primary_lift as Lift | null;
+      // Override path is used by auto-generate to avoid the same-commit race
+      // where prefill state updates haven't applied yet (GH#210).
+      const sleepForJit = readinessOverride?.sleep ?? sleepQuality;
+      const energyForJit = readinessOverride?.energy ?? energyLevel;
       const [jitResult, fetchedOneRmKg] = await Promise.all([
         runJITForSession(
           session,
           user.id,
           ratingsToUse,
-          sleepQuality,
-          energyLevel,
+          sleepForJit,
+          energyForJit,
           cyclePhase ?? undefined
         ),
         primaryLift
