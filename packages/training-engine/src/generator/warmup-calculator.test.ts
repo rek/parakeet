@@ -111,6 +111,30 @@ describe('generateWarmupSets — standard protocol', () => {
   });
 });
 
+describe('generateWarmupSets — plate increment (GH#209 follow-up)', () => {
+  it('respects 5kg increment when 1.25kg plates are disabled', () => {
+    // working 112.5kg, standard pcts 0.4/0.6/0.75/0.9.
+    // 0.4×112.5=45, 0.6×112.5=67.5→70 (Math.round 13.5→14×5),
+    // 0.75×112.5=84.375→85, 0.9×112.5=101.25→100.
+    const sets = generateWarmupSets(
+      112.5,
+      { type: 'preset', name: 'standard' },
+      20,
+      5
+    );
+    expect(sets.map((s) => s.weightKg)).toEqual([45, 70, 85, 100]);
+    sets.forEach((s) => expect(s.weightKg % 5).toBe(0));
+  });
+
+  it('defaults to 2.5kg when no increment passed', () => {
+    const sets = generateWarmupSets(112.5, {
+      type: 'preset',
+      name: 'standard',
+    });
+    expect(sets.map((s) => s.weightKg)).toEqual([45, 67.5, 85, 102.5]);
+  });
+});
+
 describe('generateWarmupSets — minimal protocol', () => {
   it('80kg → [40×5, 60×2]', () => {
     const sets = generateWarmupSets(80, { type: 'preset', name: 'minimal' });

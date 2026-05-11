@@ -119,6 +119,67 @@ describe('exercise-scorer / fatigue appropriateness', () => {
   });
 });
 
+describe('exercise-scorer / recency penalty (GH#211)', () => {
+  it('penalises the most recently used exercise heaviest', () => {
+    const recentlyUsed = scoreExercise('Dragon Flag', {
+      ...baseCtx({ targetMuscle: 'core', muscleDeficits: { core: 4 } }),
+      recentAuxExercises: ['Dragon Flag', 'Ab Wheel Rollout'],
+    });
+    const fresh = scoreExercise('Toes to Bar', {
+      ...baseCtx({ targetMuscle: 'core', muscleDeficits: { core: 4 } }),
+      recentAuxExercises: ['Dragon Flag', 'Ab Wheel Rollout'],
+    });
+    expect(recentlyUsed.breakdown['recency']).toBeLessThan(
+      fresh.breakdown['recency']
+    );
+    expect(recentlyUsed.breakdown['recency']).toBe(0.2);
+    expect(fresh.breakdown['recency']).toBe(1.0);
+  });
+
+  it('decays the penalty with recency rank', () => {
+    const recent = ['A', 'B', 'C', 'D', 'E'];
+    const ctxFor = (name: string) => ({
+      ...baseCtx({ targetMuscle: 'core', muscleDeficits: { core: 4 } }),
+      recentAuxExercises: recent,
+    });
+    // 0 → 0.2, 1 → 0.4, 2 → 0.6, 3 → 0.8, 4 → 1.0 (clamped). FP tolerance.
+    expect(scoreExercise('A', ctxFor('A')).breakdown['recency']).toBeCloseTo(0.2, 6);
+    expect(scoreExercise('B', ctxFor('B')).breakdown['recency']).toBeCloseTo(0.4, 6);
+    expect(scoreExercise('C', ctxFor('C')).breakdown['recency']).toBeCloseTo(0.6, 6);
+    expect(scoreExercise('D', ctxFor('D')).breakdown['recency']).toBeCloseTo(0.8, 6);
+    expect(scoreExercise('E', ctxFor('E')).breakdown['recency']).toBeCloseTo(1.0, 6);
+  });
+
+  it('neutral (1.0) when no recent list is supplied', () => {
+    const result = scoreExercise('Dragon Flag', {
+      ...baseCtx({ targetMuscle: 'core', muscleDeficits: { core: 4 } }),
+    });
+    expect(result.breakdown['recency']).toBe(1.0);
+  });
+
+  it('GH#211: rotation breaks the deterministic Dragon Flag pick', () => {
+    // All core exercises tied on deficit/soreness/diversity. Without recency
+    // the same exercise wins every session; with recency, the previous pick
+    // drops below at least one alternative.
+    const candidates = ['Dragon Flag', 'Ab Wheel Rollout', 'Toes to Bar'];
+    const base = baseCtx({
+      targetMuscle: 'core',
+      muscleDeficits: { core: 4 },
+    });
+
+    // Session 1: no history.
+    const r1 = rankExercises(candidates, base);
+    const winner1 = r1[0].exercise;
+
+    // Session 2: previous winner is most-recent.
+    const r2 = rankExercises(candidates, {
+      ...base,
+      recentAuxExercises: [winner1],
+    });
+    expect(r2[0].exercise).not.toBe(winner1);
+  });
+});
+
 describe('exercise-scorer / upcoming lift protection', () => {
   it('penalizes exercises overlapping with upcoming lift muscles', () => {
     const ctx = baseCtx({
@@ -261,13 +322,14 @@ describe('exercise-scorer / invariants', () => {
 
   it('breakdown sub-scores × weights ≈ total score', () => {
     const weights: Record<string, number> = {
-      deficit: 0.3,
-      soreness: 0.25,
-      diversity: 0.15,
-      fatigue: 0.1,
-      upcoming: 0.1,
+      deficit: 0.28,
+      soreness: 0.22,
+      diversity: 0.13,
+      recency: 0.1,
+      fatigue: 0.09,
+      upcoming: 0.09,
       specific: 0.05,
-      balance: 0.05,
+      balance: 0.04,
     };
     for (const name of allWeighted.slice(0, 20)) {
       const ctx = baseCtx({

@@ -214,7 +214,8 @@ export function applyAdjustment(
       input.sleepQuality,
       input.energyLevel,
       input.activeDisruptions,
-      input.weightIncrementKg
+      input.weightIncrementKg,
+      input.recentAuxExercises
     );
     for (const tu of topUps) {
       const activeCount = auxiliaryWork.filter((a) => !a.skipped).length;
@@ -234,7 +235,9 @@ export function applyAdjustment(
             primaryLift: input.primaryLift,
             sorenessRatings: input.sorenessRatings,
             biologicalSex: input.biologicalSex,
-          })
+          }),
+          input.barWeightKg,
+          input.weightIncrementKg
         )
       : [];
 

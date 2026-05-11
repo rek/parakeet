@@ -111,16 +111,19 @@ export function resolveEffectiveWarmupProtocol(opts: {
 export function generateWarmupSets(
   workingWeightKg: number,
   protocol: WarmupProtocol,
-  barWeightKg = 20
+  barWeightKg = 20,
+  weightIncrementKg = 2.5
 ): WarmupSet[] {
   const steps = resolveProtocol(protocol);
   const sets: WarmupSet[] = [];
   let prevWeight: number | null = null;
 
   for (const step of steps) {
+    // GH#209 / review of ca55087: warmup is JIT output and must respect the
+    // lifter's reachable plate increment, not the engine default 2.5kg.
     const weightKg = Math.max(
       barWeightKg,
-      roundToNearest(workingWeightKg * step.pct)
+      roundToNearest(workingWeightKg * step.pct, weightIncrementKg)
     );
 
     // Skip duplicate consecutive weights

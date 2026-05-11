@@ -92,7 +92,9 @@ export function enforceHardConstraints(
     });
     warmupSets = generateWarmupSets(
       mainLiftSets[0].weight_kg,
-      effectiveProtocol
+      effectiveProtocol,
+      input.barWeightKg,
+      input.weightIncrementKg
     );
   } else {
     warmupSets = [];

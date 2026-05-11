@@ -40,6 +40,12 @@ export interface ExerciseScoringContext {
   /** Exercise names already selected (for compound/isolation balance). */
   alreadySelectedExercises: string[];
 
+  /** Exercise names from recent sessions, ordered newest-first. Drives the
+   *  recency-penalty factor so the same core/aux exercise isn't chosen every
+   *  session when no other signal distinguishes the candidates (GH#211).
+   *  Recommended: last 3 sessions' aux + top-up exercises. */
+  recentAuxExercises?: string[];
+
   biologicalSex?: 'female' | 'male';
 
   /** Resolves an exercise to its muscle contributions. Includes the user's
@@ -57,13 +63,14 @@ export interface ScoredExercise {
 // Weights — sum to 1.0
 // ---------------------------------------------------------------------------
 
-const W_DEFICIT = 0.3;
-const W_SORENESS = 0.25;
-const W_DIVERSITY = 0.15;
-const W_FATIGUE = 0.1;
-const W_UPCOMING = 0.1;
+const W_DEFICIT = 0.28;
+const W_SORENESS = 0.22;
+const W_DIVERSITY = 0.13;
+const W_RECENCY = 0.1;
+const W_FATIGUE = 0.09;
+const W_UPCOMING = 0.09;
 const W_SPECIFIC = 0.05;
-const W_BALANCE = 0.05;
+const W_BALANCE = 0.04;
 
 // ---------------------------------------------------------------------------
 // Scoring factors (each returns [0, 1])
@@ -208,6 +215,27 @@ function scoreSpecificity(
 }
 
 /**
+ * Recency penalty: exercises used in recent sessions score lower so the
+ * rotation visibly cycles instead of locking onto a single deterministic
+ * winner (GH#211 — "don't pick Dragon Flag every session"). The penalty
+ * decays linearly with recency rank: most-recent = 0.2, then 0.4, 0.6,
+ * 0.8, and clears to 1.0 beyond the recent window. Empty / undefined
+ * recent list returns the neutral 1.0.
+ */
+function scoreRecency(
+  exercise: string,
+  ctx: ExerciseScoringContext
+): number {
+  const recent = ctx.recentAuxExercises;
+  if (!recent || recent.length === 0) return 1.0;
+  const idx = recent.indexOf(exercise);
+  if (idx === -1) return 1.0;
+  // newest entry (idx 0) → heaviest penalty; fades by index.
+  // 0 → 0.2, 1 → 0.4, 2 → 0.6, 3 → 0.8, ≥4 → 1.0.
+  return Math.min(1.0, 0.2 + idx * 0.2);
+}
+
+/**
  * Compound/isolation balance: if already-selected exercises lean one way,
  * prefer the other.
  */
@@ -248,6 +276,7 @@ export function scoreExercise(
   const deficit = scoreDeficitCoverage(exercise, ctx);
   const soreness = scoreSorenessAvoidance(exercise, ctx);
   const diversity = scorePatternDiversity(exercise, ctx);
+  const recency = scoreRecency(exercise, ctx);
   const fatigue = scoreFatigueAppropriate(exercise, ctx);
   const upcoming = scoreUpcomingProtection(exercise, ctx);
   const specific = scoreSpecificity(exercise, ctx);
@@ -257,6 +286,7 @@ export function scoreExercise(
     W_DEFICIT * deficit +
     W_SORENESS * soreness +
     W_DIVERSITY * diversity +
+    W_RECENCY * recency +
     W_FATIGUE * fatigue +
     W_UPCOMING * upcoming +
     W_SPECIFIC * specific +
@@ -269,6 +299,7 @@ export function scoreExercise(
       deficit,
       soreness,
       diversity,
+      recency,
       fatigue,
       upcoming,
       specific,

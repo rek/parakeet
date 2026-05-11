@@ -70,6 +70,7 @@ import {
   fetchActiveDisruptions,
   fetchJitProfile,
   fetchProgramWeekInfo,
+  fetchRecentAuxExerciseNames,
   fetchRecentSessionLogsForLift,
   fetchUpcomingSessionLifts,
   fetchWeeklySessionLogs,
@@ -228,7 +229,12 @@ export async function runJITForSession(
       : rotationDefaults[1],
   ];
 
-  const recentData = await fetchRecentSessionLogsForLift(userId, lift, 6);
+  const [recentData, recentAuxExercises] = await Promise.all([
+    fetchRecentSessionLogsForLift(userId, lift, 6),
+    // 4 sessions ≈ slightly more than one full S/B/D rotation; scorer
+    // penalty decays linearly so older entries clear naturally (GH#211).
+    fetchRecentAuxExerciseNames(userId, 4),
+  ]);
 
   const recentLogs: RecentSessionSummary[] = recentData.map((r) => {
     let deviation: ReturnType<typeof computeWeightDeviation> = null;
@@ -456,6 +462,7 @@ export async function runJITForSession(
     sleepQuality,
     energyLevel,
     weightIncrementKg,
+    recentAuxExercises: recentAuxExercises.length > 0 ? recentAuxExercises : undefined,
     cyclePhase,
     sessionIndex,
     totalSessionsThisWeek,

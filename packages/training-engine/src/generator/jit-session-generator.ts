@@ -114,6 +114,12 @@ export interface JITInput {
    *  are disabled. Defaults to `formulaConfig.rounding_increment_kg` when
    *  undefined; the more restrictive of the two wins. See GH#209. */
   weightIncrementKg?: number;
+  /** Auxiliary exercise names from recent sessions, ordered newest-first.
+   *  Drives the recency-penalty factor in the auxiliary scorer so the same
+   *  core/aux exercise isn't deterministically chosen every session when
+   *  other signals (deficit, soreness, specificity) don't break the tie.
+   *  See GH#211. */
+  recentAuxExercises?: string[];
   // Wearable recovery signals — supersede sleepQuality/energyLevel when present.
   // All optional; partial data is normal. Populated from today's recovery_snapshots row.
   // See spec-pipeline.md §10 and spec-readiness-adjuster.md §3.
@@ -386,7 +392,8 @@ export function generateJITSession(
       input.sleepQuality,
       input.energyLevel,
       input.activeDisruptions,
-      input.weightIncrementKg
+      input.weightIncrementKg,
+      input.recentAuxExercises
     );
     for (const tu of topUps) {
       const activeCount = auxiliaryWork.filter((a) => !a.skipped).length;
@@ -445,7 +452,8 @@ export function generateJITSession(
     warmupSets = generateWarmupSets(
       workingWeight,
       effectiveProtocol,
-      barWeightKg
+      barWeightKg,
+      input.weightIncrementKg
     );
     traceBuilder?.recordWarmup({
       workingWeightKg: workingWeight,
@@ -672,7 +680,8 @@ export function buildVolumeTopUp(
   sleepQuality?: ReadinessLevel,
   energyLevel?: ReadinessLevel,
   activeDisruptions?: TrainingDisruption[],
-  weightIncrementKg = 2.5
+  weightIncrementKg = 2.5,
+  recentAuxExercises?: string[]
 ): AuxiliaryWork[] {
   // Build main lift muscle contributions to project post-session volume
   const liftMuscles = muscleMapper(primaryLift);
@@ -764,6 +773,7 @@ export function buildVolumeTopUp(
       upcomingLifts,
       alreadySelectedPatterns: patternsUsed,
       alreadySelectedExercises: [...usedExercises],
+      recentAuxExercises,
       biologicalSex,
     });
     const exercise = ranked[0].exercise;

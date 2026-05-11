@@ -125,6 +125,51 @@ export async function fetchWeekSessionCounts(
   };
 }
 
+/**
+ * Distinct auxiliary exercise names from the lifter's last N completed
+ * sessions, ordered newest-first. Drives the recency penalty in the JIT
+ * aux scorer so the same core/aux pick isn't deterministically chosen
+ * every session (GH#211). Includes both configured aux work and volume
+ * top-up exercises (both land in `auxiliary_sets`).
+ */
+export async function fetchRecentAuxExerciseNames(
+  userId: string,
+  sessionLimit: number
+): Promise<string[]> {
+  const { data, error } = await typedSupabase
+    .from('session_logs')
+    .select('session_id, completed_at')
+    .eq('user_id', userId)
+    .order('completed_at', { ascending: false })
+    .limit(sessionLimit);
+
+  if (error) throw error;
+
+  const rows = data ?? [];
+  const sessionIds = rows
+    .map((r) => r.session_id)
+    .filter((id): id is string => !!id);
+  if (sessionIds.length === 0) return [];
+
+  const setsMap = await getSessionSetsBySessionIds(sessionIds);
+
+  // Order matters — preserve the newest-first order from `rows` so the
+  // scorer can index into the list. Dedupe within each session and across
+  // sessions while keeping the most recent occurrence.
+  const seen = new Set<string>();
+  const ordered: string[] = [];
+  for (const id of sessionIds) {
+    const auxSets = setsMap.get(id)?.auxiliary ?? [];
+    for (const s of auxSets) {
+      const name = (s as { exercise?: string | null }).exercise;
+      if (!name || seen.has(name)) continue;
+      seen.add(name);
+      ordered.push(name);
+    }
+  }
+  return ordered;
+}
+
 export async function fetchProgramWeekInfo(programId: string): Promise<{
   programMode: string;
   trainingDaysPerWeek: number;
