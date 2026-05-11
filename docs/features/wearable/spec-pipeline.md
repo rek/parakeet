@@ -6,6 +6,8 @@
 **Owner**: any executor agent
 
 > **2026-05-06 update — §10 deferred.** Wearable fields are *not* spread into `JITInput` anymore. The current "first integration" path translates `recovery_snapshots` → subjective sleep/energy pills on the soreness screen via `modules/wearable/utils/prefill.ts`. Engine continues to use `getReadinessModifier`. §§1–9 (sync, baselines, recovery snapshot, hooks, settings) remain accurate. §11 (RecoveryCard UI) is superseded — see [spec-recovery-card.md](./spec-recovery-card.md).
+>
+> **2026-05-11 update — Phase 1.5 contract.** GH#210 exposed three gaps in the prefill path that the original spec didn't cover. The contract is now formalised below in §9.5 *Phase 1.5 soreness-screen contract*. §6 *Foreground sync hook* has been updated to remove the initial-mount call (now owned by `useEnsureFreshSnapshot`) and to re-read `LAST_SYNC_KEY` from storage on every change event.
 
 ## What This Covers
 
@@ -349,8 +351,10 @@ In `RootLayoutNav` (the existing component that hosts other recovery hooks), cal
 
 **File:** `apps/parakeet/src/modules/wearable/hooks/useWearableSync.ts`
 
+Background→foreground sync. Mounted once in `RootLayoutNav` (Step 5). Does **not** fire on its initial mount — `useEnsureFreshSnapshot` (§9.5) owns cold-start. Throttle is read fresh from `AsyncStorage[LAST_SYNC_KEY]` on every event so a concurrent `useEnsureFreshSnapshot` write is visible.
+
 ```typescript
-import { useEffect, useRef } from 'react';
+import { useEffect } from 'react';
 import { AppState, type AppStateStatus } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
@@ -364,31 +368,29 @@ const MIN_SYNC_INTERVAL_MS = 5 * 60 * 1000;     // 5 minutes
 
 export function useWearableSync(): void {
   const { user } = useAuth();
-  const lastSyncRef = useRef<number>(0);
 
   useEffect(() => {
     if (!user) return;
 
-    void (async () => {
-      const stored = await AsyncStorage.getItem(LAST_SYNC_KEY);
-      lastSyncRef.current = stored ? Number(stored) : 0;
-    })();
-
     const handleChange = async (state: AppStateStatus) => {
       if (state !== 'active' || !user) return;
+      const stored = await AsyncStorage.getItem(LAST_SYNC_KEY);
+      const lastSync = stored ? Number(stored) : 0;
       const now = Date.now();
-      if (now - lastSyncRef.current < MIN_SYNC_INTERVAL_MS) return;
-      lastSyncRef.current = now;
+      if (now - lastSync < MIN_SYNC_INTERVAL_MS) return;
       try {
-        await syncWearableData(user.id);
+        // Stamp before AND after sync — concurrent throttle checks see us
+        // in flight; the post-stamp extends the window past sync duration.
         await AsyncStorage.setItem(LAST_SYNC_KEY, String(now));
+        await syncWearableData(user.id);
+        await AsyncStorage.setItem(LAST_SYNC_KEY, String(Date.now()));
       } catch (err) {
         captureException(err);
       }
     };
 
     const sub = AppState.addEventListener('change', handleChange);
-    void handleChange(AppState.currentState);    // also fire on mount
+    // No initial-mount call — cold-start is covered by useEnsureFreshSnapshot.
 
     return () => sub.remove();
   }, [user]);
@@ -529,6 +531,90 @@ Add a row in the existing settings list (where "Manage Formulas", "Volume & Reco
 
 Status data sourced from `useWearableStatus()`.
 
+### 9.5. Phase 1.5 soreness-screen contract
+
+The current production path translates `recovery_snapshots` into the subjective sleep + energy pills on `apps/parakeet/src/app/(tabs)/session/soreness.tsx`. JIT no longer carries wearable fields (§10 deferred). This section codifies the rules the soreness screen must honour — the original spec didn't, which produced [GH#210](https://github.com/rek/parakeet/issues/210) (override appeared to take but a stale rationale surfaced during the working set).
+
+#### Scale
+
+Both pills are on the **1–5 native** scale (`READINESS_LABELS` in `apps/parakeet/src/shared/constants/training.ts`):
+
+| Value | Sleep label | Energy label | Engine band |
+| ----- | ----------- | ------------ | ----------- |
+| 1     | Terrible    | Drained      | poor        |
+| 2     | Poor        | Low          | poor        |
+| 3     | OK          | OK           | neutral     |
+| 4     | Good        | Good         | great       |
+| 5     | Great       | High         | great       |
+
+The engine (`getReadinessModifier`, `applyVolumeCalibration`, `exercise-scorer`) reads these integers raw. There is no internal collapse to a 1–3 scale.
+
+#### Default pill state
+
+Both pills default to **3** (engine neutral). An untouched pill must not trigger a "Low energy" or "Poor sleep" rationale. The previous default of 2 ("Low") combined with the broken legacy normaliser hid the bug — once the normaliser was removed, defaulting to 2 would emit a reduction on every fresh session.
+
+#### Pre-checkin sync gate — `useEnsureFreshSnapshot`
+
+**File:** `apps/parakeet/src/modules/wearable/hooks/useEnsureFreshSnapshot.ts`
+
+On mount, before allowing JIT to run, the screen actively syncs Health Connect and refreshes the snapshot query:
+
+1. Read `LAST_SYNC_KEY` from AsyncStorage. If a sync ran within the last 60s, skip (the existing snapshot is fresh enough).
+2. Stamp `LAST_SYNC_KEY` with the current timestamp **before** the sync. Concurrent throttle checks (e.g. `useWearableSync`) see us in flight and skip.
+3. `Promise.race(syncWearableData(userId), timeout(8s))`. Timeout is non-fatal — captureException and continue. The timer id is cleared in `finally` so the rejected timeout doesn't fire as an unhandled rejection after the sync wins the race.
+4. On success, `queryClient.invalidateQueries(recoveryQueryKeys.today(userId))` so the snapshot query refetches with fresh data.
+5. Flip `resolved: true` once the sync settles (success, skip, or timeout).
+
+The hook is the only path that ensures cold-start onto the soreness route reads current biometric data. `useWearableSync` (root layout) covers app foregrounding generically and intentionally does **not** fire on its initial mount to avoid colliding with this hook.
+
+#### Wearable → pill prefill
+
+When `recoverySnapshot` is available and the pill has not been touched:
+
+- `sleep_duration_min` → `mapSleepDurationToLevel` → 1–5 (see `modules/wearable/utils/prefill.ts`).
+- `(hrv_pct_change, rhr_pct_change)` → `mapAutonomicToLevel` → 1–5.
+
+The prefill effect deps `[recoverySnapshot, sleepTouched, energyTouched]`. Touch flags are sticky — once true they cannot revert, so a user override survives a re-fetch of the snapshot.
+
+#### Override behaviour
+
+Tapping a pill sets the touched flag for that pill and clears the "from wearable" hint. From that moment the user value is what flows to JIT. The override is per-pill: touching the sleep pill does not unlock the energy prefill.
+
+#### Auto-generate race rule
+
+When the soreness screen is entered with `?autoGenerate=1`, JIT must run with the **resolved** sleep/energy values, not whatever the React state currently holds. The prefill effect's `setSleepQuality` / `setEnergyLevel` calls are scheduled state updates — they don't apply until the next render. If the auto-generate effect runs in the same render commit (typical, since both fire when `recoveryQueryPending` flips false) and reads `sleepQuality` / `energyLevel` from the closure, it sees the **pre-prefill defaults**.
+
+The screen MUST compute the resolved values inline before invoking `runJIT`:
+
+```typescript
+const resolvedSleep = sleepTouched
+  ? sleepQuality
+  : (recoverySnapshot
+      ? mapSleepDurationToLevel(recoverySnapshot.sleep_duration_min)
+      : null) ?? sleepQuality;
+const resolvedEnergy = energyTouched
+  ? energyLevel
+  : (recoverySnapshot
+      ? mapAutonomicToLevel(
+          recoverySnapshot.hrv_pct_change,
+          recoverySnapshot.rhr_pct_change
+        )
+      : null) ?? energyLevel;
+
+void runJIT(ratings, { sleep: resolvedSleep, energy: resolvedEnergy });
+```
+
+`runJIT` accepts an optional `readinessOverride` arg that bypasses state read. The manual *Generate* button path doesn't need overrides — by the time the user taps Generate, prefill state has already applied to render N+1.
+
+#### Auto-generate gate
+
+The auto-generate effect must wait for **both**:
+
+1. `syncResolved === true` (`useEnsureFreshSnapshot` settled).
+2. `recoveryQueryPending === false` (the invalidate-triggered refetch finished).
+
+Skipping the sync gate races the JIT against a stale snapshot. Skipping the query gate races against the in-flight refetch.
+
 ### 10. JIT wiring (Phase 2 hand-off)
 
 **File:** `apps/parakeet/src/modules/jit/lib/jit.ts`
@@ -608,6 +694,7 @@ export {
 } from './data/recovery.repository';
 
 // Hooks
+export { useEnsureFreshSnapshot } from './hooks/useEnsureFreshSnapshot';
 export { useRecoverySnapshot } from './hooks/useRecoverySnapshot';
 export { useWearableStatus } from './hooks/useWearableStatus';
 export { useWearableSync } from './hooks/useWearableSync';
@@ -632,9 +719,10 @@ export { WearableSettings } from './ui/WearableSettings';
 
 ## Risks
 
-- **AppState mount timing.** `AppState.addEventListener` may miss the initial 'active' on cold start. Mitigated by also calling `handleChange(AppState.currentState)` at mount.
+- **AppState mount timing.** `AppState.addEventListener` may miss the initial 'active' on cold start. Cold-start coverage is now owned by `useEnsureFreshSnapshot` (§9.5), so `useWearableSync` deliberately does **not** fire on mount. Both hooks share `LAST_SYNC_KEY` to throttle each other.
 - **Date string assumptions.** `new Date().toISOString().slice(0, 10)` returns UTC date. For users near midnight in non-UTC zones the snapshot may bind to "yesterday". Acceptable for v1; if needed, switch to a timezone-aware library (already used elsewhere in the app — search for existing date utils first).
-- **Read race.** A pre-session run that arrives before `useWearableSync` completes will see stale or null data. Mitigation: also trigger sync from the soreness screen pre-mount when `lastSyncAt` is older than 30 min (Phase 3 implementation detail).
+- **Read race.** Resolved as of 2026-05-11: see §9.5. The soreness screen actively syncs + invalidates the snapshot query on mount and gates auto-generate on the result. Manual *Generate* runs after the user has interacted, so the pre-mount sync has already had time to complete.
+- **Same-commit prefill race.** Auto-generate must compute resolved sleep/energy values inline (not via state) — see §9.5 *Auto-generate race rule*. State updates from the prefill effect do not apply to closures created in the same render commit.
 
 ## Out of Scope
 

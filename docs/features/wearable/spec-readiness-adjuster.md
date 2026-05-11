@@ -51,6 +51,8 @@ export function getReadinessModifier(
 ): ReadinessModifier;
 ```
 
+**Scale (canonical):** 1–5 native, read raw. Bands: `<= 2` poor, `3` neutral (also the `undefined` default), `>= 4` great. Boost requires both sleep and energy at 4+. Same bands `applyVolumeCalibration` and `exercise-scorer` already use. Prior to 2026-05-11 the function ran inputs through a `normalise()` helper that incorrectly collapsed 1-5 to legacy 1-3 bands (2→3 neutral, 3→5 great) — that helper is gone. Any future re-enabling of this wearable dispatch must reuse the same raw 1-5 contract.
+
 The wearable adjuster reuses `ReadinessModifier` exactly — no shape divergence.
 
 ## Tasks

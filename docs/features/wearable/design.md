@@ -9,7 +9,7 @@ Integrates open-source wearable devices (heart rate monitors, smartwatches) into
 
 ## Problem Statement
 
-The system currently captures readiness through two subjective 5-point scales: sleep quality (Terrible / Poor / OK / Good / Great) and energy level (Drained / Low / OK / Good / High). Defined in `apps/parakeet/src/shared/constants/training.ts` as `READINESS_LABELS`. The engine type `ReadinessLevel = 1 | 2 | 3 | 4 | 5` accepts legacy 1–3 inputs via normalisation. These scales are valuable but limited:
+The system currently captures readiness through two subjective 5-point scales: sleep quality (Terrible / Poor / OK / Good / Great) and energy level (Drained / Low / OK / Good / High). Defined in `apps/parakeet/src/shared/constants/training.ts` as `READINESS_LABELS`. The engine reads these 1–5 values raw — pill labels and adjustment bands share one scale (`<= 2` poor, `3` neutral, `>= 4` great). These scales are valuable but limited:
 
 **Pain points:**
 - Subjective signals are noisy. A lifter may report "OK" sleep when they actually slept 4.5 hours because they don't feel tired yet — cortisol masking is real. The system cannot distinguish genuine readiness from perceived readiness.
