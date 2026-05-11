@@ -102,7 +102,7 @@ interface AuxiliaryWork {
   - Per-exercise rep target: `AUX_REP_TARGETS[exercise] ?? baseReps` — strength variations 4–6 reps; hypertrophy 8–12; isolation/high-rep 10–15
   - Apply soreness check and MRV check per auxiliary muscle
 - [x] **Step 7 — Final output assembly**
-  - Apply intensityMultiplier to all weight_kg values → round to nearest 2.5kg
+  - Apply intensityMultiplier to all weight_kg values → round to the **effective plate increment** (GH#209). Default 2.5kg (smallest fractional plate × 2). When the lifter has disabled the 1.25kg plates the increment becomes 5kg; disabling 2.5s too makes it 10kg. The engine reads `JITInput.weightIncrementKg` (set by the app from `getDisabledPlates()` via `plateIncrementKg()`) and takes `max(formulaConfig.rounding_increment_kg, weightIncrementKg)` — the more restrictive wins. See `effectiveIncrementKg` in `formulas/weight-rounding.ts`.
   - Compute volumeModifier and intensityModifier
 - [x] **Step 8 — Warmup generation**
   - If mainLiftSets non-empty and not skippedMainLift: resolve effective warmup protocol via `resolveEffectiveWarmupProtocol()` (respects recovery mode, weight < 40kg override, and explicit user config), then generate warmup from `mainLiftSets[0].weight_kg`

@@ -21,7 +21,7 @@ Steps execute in order. Each step may modify `sets`, `intensity`, or `reps` fiel
 | 5    | `applySorenessAdjustment`   | Uses worst soreness score across primary muscles for the prescribed lift. See [adjustments.md](adjustments.md). |
 | 6    | `applyMrvCap`               | If any primary muscle is at or over MRV, skips or caps sets. See MRV Cap section below.           |
 | 7    | `applyDisruptionAdjustment` | Major disruption → skip. Moderate → reduce sets. Minor → log only.                               |
-| 8    | `buildFinalMainSets`        | Applies all multipliers, rounds weight to nearest 2.5 kg.                                         |
+| 8    | `buildFinalMainSets`        | Applies all multipliers, rounds weight to the lifter's smallest reachable plate increment (default 2.5 kg; 5 kg with no 1.25s; etc. — see [periodization.md § Weight Rounding](periodization.md)). |
 | 9    | `processAuxExercise`        | Selects 2 aux exercises and runs volume top-up logic.                                              |
 
 **Source:** `packages/training-engine/src/generator/jit-session-generator.ts`, `packages/training-engine/src/generator/steps/`

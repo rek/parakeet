@@ -1,7 +1,9 @@
 import {
+  effectiveIncrementKg,
   estimateWorkingWeight,
   gramsToKg,
   kgToGrams,
+  plateIncrementKg,
   roundToNearest,
 } from './weight-rounding';
 
@@ -23,6 +25,83 @@ describe('gramsToKg / kgToGrams', () => {
 
   it('converts kg to grams', () => {
     expect(kgToGrams(140)).toBe(140000);
+  });
+});
+
+describe('plateIncrementKg (GH#209)', () => {
+  it('defaults to 2.5kg when no disabled plates passed', () => {
+    expect(plateIncrementKg()).toBe(2.5);
+    expect(plateIncrementKg([])).toBe(2.5);
+  });
+
+  it('returns 2.5kg when 1.25kg plates are enabled', () => {
+    expect(plateIncrementKg([25])).toBe(2.5);
+    expect(plateIncrementKg([25, 20])).toBe(2.5);
+  });
+
+  it('returns 5kg when 1.25kg plates are disabled', () => {
+    expect(plateIncrementKg([1.25])).toBe(5);
+  });
+
+  it('returns 10kg when both 1.25 and 2.5 are disabled', () => {
+    expect(plateIncrementKg([1.25, 2.5])).toBe(10);
+  });
+
+  it('returns 20kg when only 10s remain', () => {
+    expect(plateIncrementKg([25, 20, 15, 5, 2.5, 1.25])).toBe(20);
+  });
+
+  it('falls back to 2.5kg when every plate is disabled', () => {
+    expect(plateIncrementKg([25, 20, 15, 10, 5, 2.5, 1.25])).toBe(2.5);
+  });
+});
+
+describe('effectiveIncrementKg', () => {
+  it('uses formula config increment when no plate constraint', () => {
+    expect(
+      effectiveIncrementKg({ formulaConfig: { rounding_increment_kg: 2.5 } })
+    ).toBe(2.5);
+  });
+
+  it('uses plate-derived increment when more restrictive than formula', () => {
+    expect(
+      effectiveIncrementKg({
+        weightIncrementKg: 5,
+        formulaConfig: { rounding_increment_kg: 2.5 },
+      })
+    ).toBe(5);
+  });
+
+  it('uses formula increment when more restrictive than plate', () => {
+    expect(
+      effectiveIncrementKg({
+        weightIncrementKg: 2.5,
+        formulaConfig: { rounding_increment_kg: 5 },
+      })
+    ).toBe(5);
+  });
+
+  it('GH#209: a 52.5 prescription is rounded off the 1.25-plate ladder', () => {
+    // With plates that can't reach 52.5 (smallest enabled 2.5kg per side,
+    // so increment 5), 52.5 rounds to a 5kg-multiple reachable weight.
+    const increment = effectiveIncrementKg({ weightIncrementKg: 5 });
+    const result = roundToNearest(52.5, increment);
+    expect(result % 5).toBe(0);
+    expect([50, 55]).toContain(result);
+  });
+
+  it('GH#209: 52.5 stays 52.5 with default increment 2.5', () => {
+    const increment = effectiveIncrementKg({});
+    expect(roundToNearest(52.5, increment)).toBe(52.5);
+  });
+
+  it('GH#209: 52 rounds to 50 when 1.25 plates disabled', () => {
+    const increment = effectiveIncrementKg({ weightIncrementKg: 5 });
+    expect(roundToNearest(52, increment)).toBe(50);
+  });
+
+  it('defaults to 2.5kg when nothing supplied', () => {
+    expect(effectiveIncrementKg({})).toBe(2.5);
   });
 });
 

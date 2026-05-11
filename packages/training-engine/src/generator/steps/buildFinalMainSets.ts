@@ -1,6 +1,9 @@
 import type { PlannedSet } from '@parakeet/shared-types';
 
-import { roundToNearest } from '../../formulas/weight-rounding';
+import {
+  effectiveIncrementKg,
+  roundToNearest,
+} from '../../formulas/weight-rounding';
 import type { JITInput } from '../jit-session-generator';
 import type { PrescriptionTraceBuilder } from '../prescription-trace';
 import type { PipelineContext } from './pipeline-context';
@@ -11,11 +14,12 @@ export function buildFinalMainSets(
   traceBuilder?: PrescriptionTraceBuilder
 ): PlannedSet[] {
   const barWeightKg = input.barWeightKg ?? 20;
+  const increment = effectiveIncrementKg(input);
 
   if (ctx.inRecoveryMode) {
     const recoveryWeight = Math.max(
       barWeightKg,
-      roundToNearest(ctx.baseWeight * 0.4)
+      roundToNearest(ctx.baseWeight * 0.4, increment)
     );
     const sets: PlannedSet[] = Array.from({ length: 3 }, (_, i) => ({
       set_number: i + 1,
@@ -40,7 +44,10 @@ export function buildFinalMainSets(
     return [];
   }
 
-  const finalWeight = roundToNearest(ctx.baseWeight * ctx.intensityMultiplier);
+  const finalWeight = roundToNearest(
+    ctx.baseWeight * ctx.intensityMultiplier,
+    increment
+  );
   const sets = ctx.baseSets.slice(0, ctx.plannedCount).map((s, i) => ({
     ...s,
     set_number: i + 1,

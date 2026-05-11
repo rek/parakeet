@@ -1,7 +1,7 @@
 import { IntensityType, Lift, PlannedSet } from '@parakeet/shared-types';
 
 import { InvalidInputError } from '../errors';
-import { roundToNearest } from '../formulas/weight-rounding';
+import { effectiveIncrementKg, roundToNearest } from '../formulas/weight-rounding';
 import {
   DeepPartial,
   FormulaConfig,
@@ -13,9 +13,10 @@ export function calculateSets(
   intensityType: IntensityType,
   blockNumber: number,
   oneRmKg: number,
-  formulaConfig: FormulaConfig
+  formulaConfig: FormulaConfig,
+  weightIncrementKg?: number
 ): PlannedSet[] {
-  const increment = formulaConfig.rounding_increment_kg;
+  const increment = effectiveIncrementKg({ formulaConfig, weightIncrementKg });
 
   if (intensityType === 'deload') {
     const { pct, sets, reps, rpe_target } = formulaConfig.deload;

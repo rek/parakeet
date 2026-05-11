@@ -8,7 +8,10 @@ import { getJITModel } from '../ai/models';
 import { JIT_SYSTEM_PROMPT } from '../ai/prompts';
 import { computeAuxWeight } from '../auxiliary/exercise-catalog';
 import { getExerciseType } from '../auxiliary/exercise-types';
-import { roundToNearest } from '../formulas/weight-rounding';
+import {
+  effectiveIncrementKg,
+  roundToNearest,
+} from '../formulas/weight-rounding';
 import { createMuscleMapper } from '../volume/muscle-mapper';
 import { FormulaJITGenerator } from './formula-jit-generator';
 import { enforceHardConstraints } from './jit-constraints';
@@ -97,12 +100,14 @@ export function applyAdjustment(
   adj: JITAdjustment,
   input: JITInput
 ): JITOutput {
+  const increment = effectiveIncrementKg(input);
   const baseSets = calculateSets(
     input.primaryLift,
     input.intensityType,
     input.blockNumber,
     input.oneRmKg,
-    input.formulaConfig
+    input.formulaConfig,
+    input.weightIncrementKg
   );
   const baseWeight = baseSets[0]?.weight_kg ?? 0;
 
@@ -111,7 +116,10 @@ export function applyAdjustment(
 
   if (!skippedMainLift) {
     const targetCount = Math.max(0, baseSets.length + adj.setModifier);
-    const finalWeight = roundToNearest(baseWeight * adj.intensityModifier);
+    const finalWeight = roundToNearest(
+      baseWeight * adj.intensityModifier,
+      increment
+    );
     mainLiftSets = baseSets.slice(0, targetCount).map((s, i) => ({
       ...s,
       set_number: i + 1,
@@ -159,11 +167,12 @@ export function applyAdjustment(
           oneRmKg: input.oneRmKg,
           lift: input.primaryLift,
           biologicalSex: input.biologicalSex,
-        })
+        }),
+        increment
       );
       const auxWeight =
         override === 'reduce'
-          ? roundToNearest(baseAuxWeight * 0.9)
+          ? roundToNearest(baseAuxWeight * 0.9, increment)
           : baseAuxWeight;
       const setCount = override === 'reduce' ? 2 : 3;
       return {
@@ -204,7 +213,8 @@ export function applyAdjustment(
       input.sorenessRatings,
       input.sleepQuality,
       input.energyLevel,
-      input.activeDisruptions
+      input.activeDisruptions,
+      input.weightIncrementKg
     );
     for (const tu of topUps) {
       const activeCount = auxiliaryWork.filter((a) => !a.skipped).length;

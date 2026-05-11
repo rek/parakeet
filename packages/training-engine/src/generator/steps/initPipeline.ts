@@ -34,7 +34,8 @@ export function initPipeline(
     intensityType,
     blockNumber,
     oneRmKg,
-    formulaConfig
+    formulaConfig,
+    input.weightIncrementKg
   );
   const baseWeight = baseSets[0]?.weight_kg ?? 0;
 

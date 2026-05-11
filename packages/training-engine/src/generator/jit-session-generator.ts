@@ -107,6 +107,13 @@ export interface JITInput {
   // Engine reads raw — see `readiness-adjuster.ts` for adjustment bands.
   sleepQuality?: ReadinessLevel;
   energyLevel?: ReadinessLevel;
+  /** Smallest weight increment the lifter can actually load on the bar.
+   *  Derived from the user's available plate set (see `plateIncrementKg`
+   *  in `formulas/weight-rounding.ts`). Engine rounds all prescribed weights
+   *  to this increment so e.g. 52.5kg is never prescribed when 1.25kg plates
+   *  are disabled. Defaults to `formulaConfig.rounding_increment_kg` when
+   *  undefined; the more restrictive of the two wins. See GH#209. */
+  weightIncrementKg?: number;
   // Wearable recovery signals — supersede sleepQuality/energyLevel when present.
   // All optional; partial data is normal. Populated from today's recovery_snapshots row.
   // See spec-pipeline.md §10 and spec-readiness-adjuster.md §3.
@@ -354,7 +361,8 @@ export function generateJITSession(
     muscleMapper,
     input.biologicalSex,
     input.activeDisruptions,
-    primaryLift
+    primaryLift,
+    input.weightIncrementKg
   );
 
   // Step 6b — Volume top-up (engine-027): append exercises for under-MEV muscles
@@ -377,7 +385,8 @@ export function generateJITSession(
       input.sorenessRatings,
       input.sleepQuality,
       input.energyLevel,
-      input.activeDisruptions
+      input.activeDisruptions,
+      input.weightIncrementKg
     );
     for (const tu of topUps) {
       const activeCount = auxiliaryWork.filter((a) => !a.skipped).length;
@@ -563,7 +572,8 @@ function buildAuxiliaryWork(
   muscleMapper: MuscleMapper,
   biologicalSex?: 'female' | 'male',
   activeDisruptions?: TrainingDisruption[],
-  primaryLift?: Lift
+  primaryLift?: Lift,
+  weightIncrementKg?: number
 ): AuxiliaryWork[] {
   const hasNoEquipment =
     activeDisruptions?.some(
@@ -584,6 +594,7 @@ function buildAuxiliaryWork(
       warnings,
       primaryLift: primaryLift ?? 'squat',
       muscleMapper,
+      weightIncrementKg,
     })
   );
 
@@ -660,7 +671,8 @@ export function buildVolumeTopUp(
   sorenessRatings?: Partial<Record<MuscleGroup, SorenessLevel>>,
   sleepQuality?: ReadinessLevel,
   energyLevel?: ReadinessLevel,
-  activeDisruptions?: TrainingDisruption[]
+  activeDisruptions?: TrainingDisruption[],
+  weightIncrementKg = 2.5
 ): AuxiliaryWork[] {
   // Build main lift muscle contributions to project post-session volume
   const liftMuscles = muscleMapper(primaryLift);
@@ -780,7 +792,8 @@ export function buildVolumeTopUp(
               oneRmKg: effectiveOneRmKg,
               lift: exerciseLift ?? primaryLift,
               biologicalSex,
-            })
+            }),
+            weightIncrementKg
           );
 
     const sets: PlannedSet[] = Array.from({ length: setCount }, (_, i) => ({

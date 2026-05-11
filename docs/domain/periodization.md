@@ -134,9 +134,15 @@ Female loading uses the same %1RM and rep ranges but differs in sets and RPE tar
 
 ### Weight Rounding
 
-All prescribed weights are rounded to the nearest **2.5 kg**.
+All prescribed weights are rounded to the **lifter's smallest reachable plate increment** (GH#209). Default 2.5 kg — the smallest IWF fractional plate is 1.25 kg, and a barbell loads symmetrically (2 × smallest plate). When the lifter has disabled 1.25 kg plates in settings, the increment becomes 5 kg, so 52.5 is never prescribed if it can't be loaded. Disabling 2.5s too makes it 10 kg.
 
-**Source:** `packages/training-engine/src/cube/blocks.ts`
+The engine takes `max(formulaConfig.rounding_increment_kg, plateIncrementKg(disabledPlates))` — the more restrictive of the program policy and the equipment constraint wins.
+
+**Sources:**
+- Default formula increment: `packages/training-engine/src/cube/blocks.ts` (`rounding_increment_kg: 2.5`)
+- Plate-derived increment: `packages/training-engine/src/formulas/weight-rounding.ts` (`plateIncrementKg`, `effectiveIncrementKg`)
+- User's plate set: `apps/parakeet/src/modules/settings/lib/settings.ts` (`getDisabledPlates`)
+- Plumbed into JIT: `apps/parakeet/src/modules/jit/lib/jit.ts` → `JITInput.weightIncrementKg`
 
 ---
 

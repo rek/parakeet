@@ -164,7 +164,7 @@ These apply regardless of which strategy runs. They are enforced by a validation
 | MRV cap         | If weekly volume ≥ MRV for any primary muscle, skip main lift. Non-negotiable.                 |
 | Weight floor    | Generated weight cannot be < 40% of the formula base weight. Guards against LLM hallucination. |
 | Minimum sets    | If main lift is not skipped, minimum 1 working set.                                            |
-| Weight rounding | All weights rounded to nearest 2.5kg.                                                          |
+| Weight rounding | All prescribed weights rounded to the lifter's smallest reachable plate increment. Defaults to 2.5kg (a standard plate stack with 1.25kg fractionals). With 1.25 plates disabled, increment becomes 5kg — so e.g. 52.5 is never prescribed when the lifter cannot load it (GH#209). The engine takes the more restrictive of the user's plate-derived increment and `formulaConfig.rounding_increment_kg`. See `plateIncrementKg` / `effectiveIncrementKg` in `packages/training-engine/src/formulas/weight-rounding.ts`. |
 | Warmup          | Always formula-generated from working weight. No strategy overrides warmup.                    |
 
 ## Three Strategy Implementations

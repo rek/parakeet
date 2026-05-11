@@ -90,6 +90,49 @@ describe('calculateSets — deload', () => {
   });
 });
 
+describe('calculateSets — plate increment override (GH#209)', () => {
+  it('GH#209: prescription is rounded to a reachable plate combo', () => {
+    // 0.80 × 65 = 52. Default 2.5kg increment → 52.5 (needs a 1.25 plate
+    // per side). With plate increment 5 (no 1.25s) → 50.
+    const sets = calculateSets(
+      'bench',
+      'heavy',
+      1,
+      65,
+      DEFAULT_FORMULA_CONFIG_MALE,
+      5
+    );
+    expect(sets[0].weight_kg).toBe(50);
+  });
+
+  it('without the constraint, the same input lands on a 1.25-plate weight', () => {
+    const sets = calculateSets(
+      'bench',
+      'heavy',
+      1,
+      65,
+      DEFAULT_FORMULA_CONFIG_MALE
+    );
+    expect(sets[0].weight_kg).toBe(52.5);
+  });
+
+  it('plate increment never produces a sub-increment fractional', () => {
+    // Sweep a few 1RMs; with increment 5 every prescribed weight must be a
+    // multiple of 5 (the user has no 1.25 plates).
+    for (const oneRm of [60, 72.5, 80, 92.5, 105, 117.5]) {
+      const sets = calculateSets(
+        'bench',
+        'heavy',
+        1,
+        oneRm,
+        DEFAULT_FORMULA_CONFIG_MALE,
+        5
+      );
+      expect(sets[0].weight_kg % 5).toBe(0);
+    }
+  });
+});
+
 describe('mergeFormulaConfig', () => {
   it('user override of block1.heavy.pct=0.75, squat 140kg → 105kg', () => {
     const config = mergeFormulaConfig(DEFAULT_FORMULA_CONFIG_MALE, {

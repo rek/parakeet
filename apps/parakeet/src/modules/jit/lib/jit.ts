@@ -17,6 +17,7 @@ import {
 } from '@modules/session';
 import {
   getBarWeightKg,
+  getDisabledPlates,
   getJITStrategyOverride,
   getUserRestOverrides,
   getWarmupConfig,
@@ -43,6 +44,7 @@ import {
   getJITGenerator,
   LIFTS,
   mergeSorenessRatings,
+  plateIncrementKg,
   reviewJITDecision,
   rpeSetMultiplier,
 } from '@parakeet/training-engine';
@@ -126,6 +128,7 @@ export async function runJITForSession(
     pool,
     allPools,
     auxMuscleMap,
+    disabledPlates,
   ] = await Promise.all([
     getCurrentOneRmKg(userId, lift),
     getCurrentOneRmKg(userId, 'squat'),
@@ -141,7 +144,13 @@ export async function runJITForSession(
     getAuxiliaryPool(userId, lift),
     isAdHoc ? Promise.resolve(null) : getAuxiliaryPools(userId),
     getAllAuxMuscleMap(userId),
+    getDisabledPlates(),
   ]);
+
+  // GH#209: smallest weight step the lifter can actually load. Used by the
+  // engine to round every prescribed weight to a reachable value instead of
+  // the default 2.5kg, which assumes a 1.25kg fractional plate exists.
+  const weightIncrementKg = plateIncrementKg(disabledPlates);
 
   // Build a muscle mapper that knows about the lifter's user-defined exercises
   // (e.g. "Pec Deck"). Used below for weekly-volume attribution so customs
@@ -446,6 +455,7 @@ export async function runJITForSession(
     },
     sleepQuality,
     energyLevel,
+    weightIncrementKg,
     cyclePhase,
     sessionIndex,
     totalSessionsThisWeek,

@@ -32,6 +32,7 @@ export function processAuxExercise({
   warnings,
   primaryLift,
   muscleMapper,
+  weightIncrementKg = 2.5,
 }: {
   exercise: string;
   worstSoreness: SorenessLevel;
@@ -45,6 +46,7 @@ export function processAuxExercise({
   warnings: string[];
   primaryLift: Lift;
   muscleMapper: MuscleMapper;
+  weightIncrementKg?: number;
 }): AuxiliaryWork {
   const exerciseType = getExerciseType(exercise);
 
@@ -135,8 +137,10 @@ export function processAuxExercise({
               oneRmKg,
               lift: primaryLift,
               biologicalSex,
-            })
-          ) * intensityMult
+            }),
+            weightIncrementKg
+          ) * intensityMult,
+          weightIncrementKg
         );
 
   const sets: PlannedSet[] = Array.from({ length: setCount }, (_, i) => ({

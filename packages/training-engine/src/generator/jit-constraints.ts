@@ -1,5 +1,8 @@
 import { getPrimaryMusclesForSession } from '../adjustments/soreness-adjuster';
-import { roundToNearest } from '../formulas/weight-rounding';
+import {
+  effectiveIncrementKg,
+  roundToNearest,
+} from '../formulas/weight-rounding';
 import { getMusclesForLift } from '../volume/muscle-mapper';
 import type { JITInput, JITOutput } from './jit-session-generator';
 import { calculateSets } from './set-calculator';
@@ -14,6 +17,7 @@ export function enforceHardConstraints(
 ): JITOutput {
   let { mainLiftSets, skippedMainLift, warnings } = output;
   const newWarnings = [...warnings];
+  const increment = effectiveIncrementKg(input);
 
   // MRV cap — non-negotiable
   if (!skippedMainLift) {
@@ -41,10 +45,11 @@ export function enforceHardConstraints(
       input.intensityType,
       input.blockNumber,
       input.oneRmKg,
-      input.formulaConfig
+      input.formulaConfig,
+      input.weightIncrementKg
     );
     const baseWeight = baseSets[0]?.weight_kg ?? 0;
-    const floorWeight = roundToNearest(baseWeight * 0.4);
+    const floorWeight = roundToNearest(baseWeight * 0.4, increment);
     mainLiftSets = mainLiftSets.map((s) => ({
       ...s,
       weight_kg: Math.max(s.weight_kg, floorWeight),
@@ -58,7 +63,8 @@ export function enforceHardConstraints(
       input.intensityType,
       input.blockNumber,
       input.oneRmKg,
-      input.formulaConfig
+      input.formulaConfig,
+      input.weightIncrementKg
     );
     if (baseSets.length > 0) {
       mainLiftSets = [baseSets[0]];
@@ -66,10 +72,11 @@ export function enforceHardConstraints(
     }
   }
 
-  // Weight rounding — all weights to nearest 2.5kg
+  // Weight rounding — to the lifter's smallest reachable plate increment
+  // (GH#209). Defaults to 2.5kg when no plate constraint is given.
   mainLiftSets = mainLiftSets.map((s) => ({
     ...s,
-    weight_kg: roundToNearest(s.weight_kg),
+    weight_kg: roundToNearest(s.weight_kg, increment),
   }));
 
   // Warmup — always formula-generated from working weight
