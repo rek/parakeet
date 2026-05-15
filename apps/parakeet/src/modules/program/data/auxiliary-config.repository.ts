@@ -24,17 +24,22 @@ export async function deleteAuxiliaryExercises(
   userId: string,
   category: PoolCategory
 ): Promise<void> {
-  await typedSupabase
+  const { error } = await typedSupabase
     .from('auxiliary_exercises')
     .delete()
     .eq('user_id', userId)
     .eq('lift', category);
+  if (error) throw error;
 }
 
 export async function insertAuxiliaryExercises(
   rows: DbInsert<'auxiliary_exercises'>[]
 ): Promise<void> {
-  await typedSupabase.from('auxiliary_exercises').insert(rows);
+  if (rows.length === 0) return;
+  const { error } = await typedSupabase
+    .from('auxiliary_exercises')
+    .insert(rows);
+  if (error) throw error;
 }
 
 export async function fetchActiveAssignments(
