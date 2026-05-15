@@ -377,9 +377,12 @@ export async function runJITForSession(
     injuryOverrides
   );
 
-  // Merge all three lift pools + core pool for widest top-up selection (engine-027, #191)
+  // Merge all three lift pools + user-configured core pool for widest top-up
+  // selection (engine-027, #191, #211). The core pool is sourced from
+  // auxiliary_exercises via getAuxiliaryPools, which falls back to
+  // DEFAULT_CORE_POOL when the user has no custom rows.
   const auxiliaryPool = allPools
-    ? [...allPools.squat, ...allPools.bench, ...allPools.deadlift, ...DEFAULT_CORE_POOL]
+    ? [...allPools.squat, ...allPools.bench, ...allPools.deadlift, ...allPools.core]
     : [...DEFAULT_CORE_POOL];
 
   // Per-athlete modifier calibrations (engine-041)

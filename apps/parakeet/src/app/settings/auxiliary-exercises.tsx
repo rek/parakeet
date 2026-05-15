@@ -9,10 +9,11 @@ import {
 } from 'react-native';
 
 import { getPrimaryMuscles } from '@modules/program';
+import type { AuxiliaryPoolCategory } from '@modules/program';
 import { AddExerciseModal } from '@modules/session';
 import { useAuxiliaryPools } from '@modules/settings';
 import { MuscleChips } from '@modules/training-volume';
-import type { Lift, MuscleGroup } from '@parakeet/shared-types';
+import type { MuscleGroup } from '@parakeet/shared-types';
 import { TRAINING_LIFTS } from '@shared/constants/training';
 import { ExerciseName } from '@shared/ui/ExerciseName';
 import { getExerciseType } from '@shared/utils/exercise-lookup';
@@ -26,12 +27,13 @@ import { useTheme } from '../../theme/ThemeContext';
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
-const LIFTS = TRAINING_LIFTS;
+const POOL_CATEGORIES: AuxiliaryPoolCategory[] = [...TRAINING_LIFTS, 'core'];
 
-const LIFT_LABELS: Record<Lift, string> = {
+const CATEGORY_LABELS: Record<AuxiliaryPoolCategory, string> = {
   squat: 'Squat',
   bench: 'Bench',
   deadlift: 'Deadlift',
+  core: 'Core',
 };
 
 // ── Styles ─────────────────────────────────────────────────────────────────────
@@ -283,7 +285,7 @@ function PoolList({ pool, onReorder, onRemove, styles }: PoolListProps) {
 // ── Lift section ──────────────────────────────────────────────────────────────
 
 interface LiftSectionProps {
-  lift: Lift;
+  category: AuxiliaryPoolCategory;
   pool: string[];
   isSavingPool: boolean;
   isDirtyPool: boolean;
@@ -296,7 +298,7 @@ interface LiftSectionProps {
 }
 
 function LiftSection({
-  lift,
+  category,
   pool,
   isSavingPool,
   isDirtyPool,
@@ -334,7 +336,7 @@ function LiftSection({
   return (
     <View style={styles.liftSection}>
       <View style={styles.liftHeader}>
-        <Text style={styles.liftTitle}>{LIFT_LABELS[lift]}</Text>
+        <Text style={styles.liftTitle}>{CATEGORY_LABELS[category]}</Text>
         <TouchableOpacity
           style={[
             styles.saveBtn,
@@ -383,7 +385,7 @@ function LiftSection({
           setPickerVisible(false);
         }}
         onClose={() => setPickerVisible(false)}
-        defaultLift={lift}
+        defaultLift={category}
         excludeNames={pool}
       />
     </View>
@@ -392,18 +394,18 @@ function LiftSection({
 
 // ── Screen ────────────────────────────────────────────────────────────────────
 
-type Pools = Record<Lift, string[]>;
+type Pools = Record<AuxiliaryPoolCategory, string[]>;
 
 export default function AuxiliaryExercisesScreen() {
   const { colors } = useTheme();
   const styles = useMemo(() => buildStyles(colors), [colors]);
   const [pools, setPools] = useState<Pools | null>(null);
-  const [savingPool, setSavingPool] = useState<Partial<Record<Lift, boolean>>>(
-    {}
-  );
-  const [dirtyPools, setDirtyPools] = useState<Partial<Record<Lift, boolean>>>(
-    {}
-  );
+  const [savingPool, setSavingPool] = useState<
+    Partial<Record<AuxiliaryPoolCategory, boolean>>
+  >({});
+  const [dirtyPools, setDirtyPools] = useState<
+    Partial<Record<AuxiliaryPoolCategory, boolean>>
+  >({});
 
   const { poolData, muscleMap, isLoading, saveAuxiliaryPool } =
     useAuxiliaryPools();
@@ -415,16 +417,16 @@ export default function AuxiliaryExercisesScreen() {
   }, [poolData, pools]);
 
   async function handleSavePool(
-    lift: Lift,
+    category: AuxiliaryPoolCategory,
     customMuscles: Record<string, MuscleGroup[]>
   ) {
     if (!pools) return;
-    setSavingPool((prev) => ({ ...prev, [lift]: true }));
+    setSavingPool((prev) => ({ ...prev, [category]: true }));
     try {
-      await saveAuxiliaryPool(lift, pools[lift], customMuscles);
-      setDirtyPools((prev) => ({ ...prev, [lift]: false }));
+      await saveAuxiliaryPool(category, pools[category], customMuscles);
+      setDirtyPools((prev) => ({ ...prev, [category]: false }));
     } finally {
-      setSavingPool((prev) => ({ ...prev, [lift]: false }));
+      setSavingPool((prev) => ({ ...prev, [category]: false }));
     }
   }
 
@@ -460,19 +462,23 @@ export default function AuxiliaryExercisesScreen() {
             <Text style={styles.blockAssignmentsChevron}>›</Text>
           </TouchableOpacity>
 
-          {LIFTS.map((lift) => (
+          {POOL_CATEGORIES.map((category) => (
             <LiftSection
-              key={lift}
-              lift={lift}
-              pool={pools[lift]}
-              isSavingPool={!!savingPool[lift]}
-              isDirtyPool={!!dirtyPools[lift]}
+              key={category}
+              category={category}
+              pool={pools[category]}
+              isSavingPool={!!savingPool[category]}
+              isDirtyPool={!!dirtyPools[category]}
               initialMuscles={muscleMap}
               onPoolChange={(p) => {
-                setPools((prev) => (prev ? { ...prev, [lift]: p } : prev));
-                setDirtyPools((prev) => ({ ...prev, [lift]: true }));
+                setPools((prev) =>
+                  prev ? { ...prev, [category]: p } : prev
+                );
+                setDirtyPools((prev) => ({ ...prev, [category]: true }));
               }}
-              onSavePool={(customMuscles) => handleSavePool(lift, customMuscles)}
+              onSavePool={(customMuscles) =>
+                handleSavePool(category, customMuscles)
+              }
               styles={styles}
               primaryColor={colors.primary}
             />

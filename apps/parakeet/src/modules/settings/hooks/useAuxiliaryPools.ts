@@ -5,7 +5,8 @@ import {
   getAuxiliaryPools,
   reorderAuxiliaryPool,
 } from '@modules/program';
-import type { Lift, MuscleGroup } from '@parakeet/shared-types';
+import type { AuxiliaryPoolCategory } from '@modules/program';
+import type { MuscleGroup } from '@parakeet/shared-types';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 
 import { settingsQueries } from '../data/settings.queries';
@@ -27,12 +28,12 @@ export function useAuxiliaryPools() {
   });
 
   async function saveAuxiliaryPool(
-    lift: Lift,
+    category: AuxiliaryPoolCategory,
     pool: string[],
     customMuscles?: Record<string, MuscleGroup[]>
   ) {
     if (!user) return;
-    await reorderAuxiliaryPool(user.id, lift, pool, customMuscles);
+    await reorderAuxiliaryPool(user.id, category, pool, customMuscles);
     queryClient.invalidateQueries({
       queryKey: settingsQueries.auxiliary.all(),
     });

@@ -1,6 +1,9 @@
 // @spec docs/features/programs/spec-generator.md
 import type { Lift, MuscleGroup } from '@parakeet/shared-types';
-import { DEFAULT_AUXILIARY_POOLS } from '@parakeet/training-engine';
+import {
+  DEFAULT_AUXILIARY_POOLS,
+  DEFAULT_CORE_POOL,
+} from '@parakeet/training-engine';
 
 import {
   deleteAuxiliaryExercises,
@@ -12,12 +15,23 @@ import {
 } from '../data/auxiliary-config.repository';
 import { getPrimaryMuscles } from '../utils/auxiliary-muscles';
 
+/** Pool categories the user can configure. 'core' is not a powerlifting lift,
+ *  but is stored in the same auxiliary_exercises table for symmetry with the
+ *  lift pools (DB CHECK allows 'core' since 20260515 migration). */
+export type AuxiliaryPoolCategory = Lift | 'core';
+
+function defaultPoolFor(category: AuxiliaryPoolCategory): string[] {
+  return category === 'core'
+    ? DEFAULT_CORE_POOL
+    : DEFAULT_AUXILIARY_POOLS[category];
+}
+
 export async function getAuxiliaryPool(
   userId: string,
-  lift: Lift
+  category: AuxiliaryPoolCategory
 ): Promise<string[]> {
-  const data = await fetchAuxiliaryExercises(userId, lift);
-  if (data.length === 0) return DEFAULT_AUXILIARY_POOLS[lift];
+  const data = await fetchAuxiliaryExercises(userId, category);
+  if (data.length === 0) return defaultPoolFor(category);
   return data.map((r) => r.exercise_name);
 }
 
@@ -29,13 +43,14 @@ export async function getAuxiliaryPool(
 export async function getAllAuxMuscleMap(
   userId: string
 ): Promise<Record<string, string[]>> {
-  const [sq, be, dl] = await Promise.all([
+  const [sq, be, dl, co] = await Promise.all([
     fetchAuxiliaryExercises(userId, 'squat'),
     fetchAuxiliaryExercises(userId, 'bench'),
     fetchAuxiliaryExercises(userId, 'deadlift'),
+    fetchAuxiliaryExercises(userId, 'core'),
   ]);
   const result: Record<string, string[]> = {};
-  for (const row of [...sq, ...be, ...dl]) {
+  for (const row of [...sq, ...be, ...dl, ...co]) {
     if (row.primary_muscles.length > 0) {
       result[row.exercise_name] = row.primary_muscles;
     }
@@ -45,25 +60,26 @@ export async function getAllAuxMuscleMap(
 
 export async function getAuxiliaryPools(
   userId: string
-): Promise<Record<Lift, string[]>> {
+): Promise<Record<AuxiliaryPoolCategory, string[]>> {
   return {
     squat: await getAuxiliaryPool(userId, 'squat'),
     bench: await getAuxiliaryPool(userId, 'bench'),
     deadlift: await getAuxiliaryPool(userId, 'deadlift'),
+    core: await getAuxiliaryPool(userId, 'core'),
   };
 }
 
 export async function reorderAuxiliaryPool(
   userId: string,
-  lift: Lift,
+  category: AuxiliaryPoolCategory,
   orderedExercises: string[],
   customMuscles?: Record<string, MuscleGroup[]>
 ): Promise<void> {
-  await deleteAuxiliaryExercises(userId, lift);
+  await deleteAuxiliaryExercises(userId, category);
 
   const rows = orderedExercises.map((name, i) => ({
     user_id: userId,
-    lift,
+    lift: category,
     exercise_name: name,
     pool_position: i,
     primary_muscles: customMuscles?.[name] ?? getPrimaryMuscles(name),

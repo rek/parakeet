@@ -22,12 +22,13 @@ import { radii, spacing, typography } from '../../../theme';
 import type { ColorScheme } from '../../../theme';
 import { useTheme } from '../../../theme/ThemeContext';
 
-type SectionFilter = 'all' | Lift | 'general';
+type SectionFilter = 'all' | Lift | 'core' | 'general';
 
 const SECTION_LABELS: Record<string, string> = {
   squat: 'Squat',
   bench: 'Bench',
   deadlift: 'Deadlift',
+  core: 'Core',
   general: 'General',
 };
 
@@ -36,6 +37,7 @@ const FILTER_OPTIONS: { key: SectionFilter; label: string }[] = [
   { key: 'squat', label: 'Squat' },
   { key: 'bench', label: 'Bench' },
   { key: 'deadlift', label: 'Deadlift' },
+  { key: 'core', label: 'Core' },
   { key: 'general', label: 'General' },
 ];
 
@@ -52,8 +54,9 @@ interface Props {
   visible: boolean;
   onConfirm: (exercise: string, primaryMuscles?: MuscleGroup[]) => void;
   onClose: () => void;
-  /** Pre-selects a lift section filter when the modal opens. */
-  defaultLift?: Lift;
+  /** Pre-selects a section filter when the modal opens. 'core' restricts the
+   *  list to non-timed core exercises (matches DEFAULT_CORE_POOL). */
+  defaultLift?: Lift | 'core';
   /** Exercises already in the user's pool — shown greyed out, not tappable. */
   excludeNames?: string[];
   /** Exercises to show in a "Suggested" section at the top of the list. */
@@ -313,27 +316,45 @@ export function AddExerciseModal({
       filtered = filtered.filter((e) => e.name.toLowerCase().includes(q));
     }
     if (liftFilter !== 'all') {
-      filtered = filtered.filter((e) =>
-        liftFilter === 'general'
-          ? e.associatedLift === null
-          : e.associatedLift === liftFilter
-      );
+      filtered = filtered.filter((e) => {
+        if (liftFilter === 'core') {
+          return (
+            e.associatedLift === null &&
+            e.primaryMuscles.includes('core') &&
+            e.type !== 'timed'
+          );
+        }
+        if (liftFilter === 'general') {
+          return (
+            e.associatedLift === null && !e.primaryMuscles.includes('core')
+          );
+        }
+        return e.associatedLift === liftFilter;
+      });
     }
 
     const byLift: Record<string, ExerciseCatalogEntry[]> = {
       squat: [],
       bench: [],
       deadlift: [],
+      core: [],
       general: [],
     };
     for (const entry of filtered) {
-      const key = entry.associatedLift ?? 'general';
+      let key: string;
+      if (entry.associatedLift) {
+        key = entry.associatedLift;
+      } else if (entry.primaryMuscles.includes('core') && entry.type !== 'timed') {
+        key = 'core';
+      } else {
+        key = 'general';
+      }
       byLift[key].push(entry);
     }
 
     const sections =
       liftFilter === 'all'
-        ? ['squat', 'bench', 'deadlift', 'general']
+        ? ['squat', 'bench', 'deadlift', 'core', 'general']
         : [liftFilter];
 
     const items: ListItem[] = [];

@@ -3,16 +3,17 @@ import type { Lift } from '@parakeet/shared-types';
 import type { DbInsert } from '@platform/supabase';
 import { typedSupabase } from '@platform/supabase';
 
+type PoolCategory = Lift | 'core';
 
 export async function fetchAuxiliaryExercises(
   userId: string,
-  lift: Lift
+  category: PoolCategory
 ): Promise<{ exercise_name: string; primary_muscles: string[] }[]> {
   const { data, error } = await typedSupabase
     .from('auxiliary_exercises')
     .select('exercise_name, primary_muscles')
     .eq('user_id', userId)
-    .eq('lift', lift)
+    .eq('lift', category)
     .order('pool_position');
 
   if (error) throw error;
@@ -21,13 +22,13 @@ export async function fetchAuxiliaryExercises(
 
 export async function deleteAuxiliaryExercises(
   userId: string,
-  lift: Lift
+  category: PoolCategory
 ): Promise<void> {
   await typedSupabase
     .from('auxiliary_exercises')
     .delete()
     .eq('user_id', userId)
-    .eq('lift', lift);
+    .eq('lift', category);
 }
 
 export async function insertAuxiliaryExercises(
