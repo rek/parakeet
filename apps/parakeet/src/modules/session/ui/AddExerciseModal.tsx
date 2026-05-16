@@ -13,6 +13,7 @@ import {
 
 import type { Lift, MuscleCategory, MuscleGroup } from '@parakeet/shared-types';
 import { MUSCLE_CATALOG } from '@parakeet/shared-types';
+import type { ExerciseType } from '@parakeet/training-engine';
 import { MUSCLE_LABELS_COMPACT } from '@shared/constants/training';
 import { ExerciseName } from '@shared/ui/ExerciseName';
 import type { ExerciseCatalogEntry } from '@shared/utils/exercise-lookup';
@@ -22,13 +23,14 @@ import { radii, spacing, typography } from '../../../theme';
 import type { ColorScheme } from '../../../theme';
 import { useTheme } from '../../../theme/ThemeContext';
 
-type SectionFilter = 'all' | Lift | 'core' | 'general';
+type SectionFilter = 'all' | Lift | 'core' | 'cardio' | 'general';
 
 const SECTION_LABELS: Record<string, string> = {
   squat: 'Squat',
   bench: 'Bench',
   deadlift: 'Deadlift',
   core: 'Core',
+  cardio: 'Cardio',
   general: 'General',
 };
 
@@ -38,7 +40,32 @@ const FILTER_OPTIONS: { key: SectionFilter; label: string }[] = [
   { key: 'bench', label: 'Bench' },
   { key: 'deadlift', label: 'Deadlift' },
   { key: 'core', label: 'Core' },
+  { key: 'cardio', label: 'Cardio' },
   { key: 'general', label: 'General' },
+];
+
+const TYPE_OPTIONS: {
+  key: ExerciseType;
+  label: string;
+  description: string;
+}[] = [
+  {
+    key: 'weighted',
+    label: 'Weighted',
+    description:
+      'External load (barbell, dumbbell, cable). Has prescribed weight + reps.',
+  },
+  {
+    key: 'bodyweight',
+    label: 'Bodyweight',
+    description: 'No external load. Reps only — e.g. pull-ups, push-ups.',
+  },
+  {
+    key: 'timed',
+    label: 'Timed / Cardio',
+    description:
+      "Single mark-complete entry. Running, rowing, planks — no weight, no rep target.",
+  },
 ];
 
 const MUSCLE_CATEGORY_LABELS: Record<MuscleCategory, string> = {
@@ -52,11 +79,16 @@ const MUSCLE_CATEGORY_ORDER: MuscleCategory[] = ['legs', 'push', 'pull', 'core']
 
 interface Props {
   visible: boolean;
-  onConfirm: (exercise: string, primaryMuscles?: MuscleGroup[]) => void;
+  onConfirm: (
+    exercise: string,
+    primaryMuscles?: MuscleGroup[],
+    exerciseType?: ExerciseType
+  ) => void;
   onClose: () => void;
   /** Pre-selects a section filter when the modal opens. 'core' restricts the
-   *  list to non-timed core exercises (matches DEFAULT_CORE_POOL). */
-  defaultLift?: Lift | 'core';
+   *  list to non-timed core exercises (matches DEFAULT_CORE_POOL); 'cardio'
+   *  restricts to timed exercises with no lift affinity (DEFAULT_CARDIO_POOL). */
+  defaultLift?: Lift | 'core' | 'cardio';
   /** Exercises already in the user's pool — shown greyed out, not tappable. */
   excludeNames?: string[];
   /** Exercises to show in a "Suggested" section at the top of the list. */
@@ -232,6 +264,27 @@ function buildStyles(colors: ColorScheme) {
       paddingHorizontal: spacing[5],
       marginBottom: spacing[3],
     },
+    typeOptionCard: {
+      marginHorizontal: spacing[5],
+      marginBottom: spacing[3],
+      paddingHorizontal: spacing[4],
+      paddingVertical: spacing[4],
+      borderWidth: 1,
+      borderColor: colors.border,
+      borderRadius: radii.md,
+      backgroundColor: colors.bgSurface,
+    },
+    typeOptionLabel: {
+      fontSize: typography.sizes.base,
+      fontWeight: typography.weights.semibold,
+      color: colors.text,
+      marginBottom: spacing[1],
+    },
+    typeOptionDescription: {
+      fontSize: typography.sizes.sm,
+      color: colors.textSecondary,
+      lineHeight: typography.sizes.sm * 1.4,
+    },
     pickerCategory: {
       fontSize: typography.sizes.xs,
       fontWeight: typography.weights.semibold,
@@ -300,7 +353,11 @@ export function AddExerciseModal({
   const [liftFilter, setLiftFilter] = useState<SectionFilter>(
     defaultLift ?? 'all'
   );
-  const [customStep, setCustomStep] = useState<{ name: string } | null>(null);
+  const [customStep, setCustomStep] = useState<{
+    name: string;
+    phase: 'type' | 'muscles';
+    type?: ExerciseType;
+  } | null>(null);
   const [selectedMuscles, setSelectedMuscles] = useState<Set<MuscleGroup>>(
     new Set()
   );
@@ -324,9 +381,18 @@ export function AddExerciseModal({
             e.type !== 'timed'
           );
         }
+        if (liftFilter === 'cardio') {
+          return (
+            e.associatedLift === null &&
+            e.type === 'timed' &&
+            !e.primaryMuscles.includes('core')
+          );
+        }
         if (liftFilter === 'general') {
           return (
-            e.associatedLift === null && !e.primaryMuscles.includes('core')
+            e.associatedLift === null &&
+            !e.primaryMuscles.includes('core') &&
+            e.type !== 'timed'
           );
         }
         return e.associatedLift === liftFilter;
@@ -338,6 +404,7 @@ export function AddExerciseModal({
       bench: [],
       deadlift: [],
       core: [],
+      cardio: [],
       general: [],
     };
     for (const entry of filtered) {
@@ -346,6 +413,8 @@ export function AddExerciseModal({
         key = entry.associatedLift;
       } else if (entry.primaryMuscles.includes('core') && entry.type !== 'timed') {
         key = 'core';
+      } else if (entry.type === 'timed') {
+        key = 'cardio';
       } else {
         key = 'general';
       }
@@ -354,7 +423,7 @@ export function AddExerciseModal({
 
     const sections =
       liftFilter === 'all'
-        ? ['squat', 'bench', 'deadlift', 'core', 'general']
+        ? ['squat', 'bench', 'deadlift', 'core', 'cardio', 'general']
         : [liftFilter];
 
     const items: ListItem[] = [];
@@ -456,12 +525,34 @@ export function AddExerciseModal({
   }
 
   function handleCustomTap(name: string) {
-    setCustomStep({ name });
+    setCustomStep({ name, phase: 'type' });
     setSelectedMuscles(new Set());
   }
 
   function handlePickerBack() {
+    if (customStep?.phase === 'muscles') {
+      // Step back from muscles → type picker so user can change their mind.
+      setCustomStep({ name: customStep.name, phase: 'type' });
+      setSelectedMuscles(new Set());
+      return;
+    }
     setCustomStep(null);
+    setSelectedMuscles(new Set());
+  }
+
+  function handleTypeSelect(type: ExerciseType) {
+    if (!customStep) return;
+    // Timed exercises don't need muscle attribution — they're not load-bearing,
+    // so credit them to no muscle (engine excludes timed from volume math).
+    if (type === 'timed') {
+      onConfirm(customStep.name, [], type);
+      setCustomStep(null);
+      setSelectedMuscles(new Set());
+      setQuery('');
+      setLiftFilter(defaultLift ?? 'all');
+      return;
+    }
+    setCustomStep({ name: customStep.name, phase: 'muscles', type });
     setSelectedMuscles(new Set());
   }
 
@@ -479,7 +570,7 @@ export function AddExerciseModal({
 
   function handlePickerConfirm() {
     if (!customStep || selectedMuscles.size === 0) return;
-    onConfirm(customStep.name, [...selectedMuscles]);
+    onConfirm(customStep.name, [...selectedMuscles], customStep.type);
     setCustomStep(null);
     setSelectedMuscles(new Set());
     setQuery('');
@@ -540,6 +631,45 @@ export function AddExerciseModal({
         <ExerciseName name={entry.name} nameStyle={styles.exerciseName} />
         {renderExerciseChips(entry)}
       </TouchableOpacity>
+    );
+  }
+
+  function renderTypePicker() {
+    if (!customStep) return null;
+    return (
+      <>
+        <View style={styles.header}>
+          <TouchableOpacity onPress={handlePickerBack} activeOpacity={0.7}>
+            <Text style={styles.pickerBackBtn}>← Back</Text>
+          </TouchableOpacity>
+          <Text style={styles.title}>Exercise type</Text>
+          <TouchableOpacity onPress={handleClose} activeOpacity={0.7}>
+            <Text style={styles.closeBtn}>✕</Text>
+          </TouchableOpacity>
+        </View>
+        <Text style={styles.pickerSubtitle}>
+          How is "{customStep.name}" performed?
+        </Text>
+        <ScrollView
+          style={styles.pickerScroll}
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+        >
+          {TYPE_OPTIONS.map((opt) => (
+            <TouchableOpacity
+              key={opt.key}
+              style={styles.typeOptionCard}
+              onPress={() => handleTypeSelect(opt.key)}
+              activeOpacity={0.7}
+            >
+              <Text style={styles.typeOptionLabel}>{opt.label}</Text>
+              <Text style={styles.typeOptionDescription}>
+                {opt.description}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
+      </>
     );
   }
 
@@ -627,7 +757,9 @@ export function AddExerciseModal({
         onPress={handleClose}
       >
         <View style={styles.sheet} onStartShouldSetResponder={() => true}>
-          {customStep ? (
+          {customStep && customStep.phase === 'type' ? (
+            renderTypePicker()
+          ) : customStep && customStep.phase === 'muscles' ? (
             renderMusclePicker()
           ) : (
             <>

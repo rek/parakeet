@@ -66,7 +66,8 @@ import {
   SetVideoIcon,
   usePostRestVideoCapture,
 } from '@modules/video-analysis';
-import type { Lift } from '@parakeet/shared-types';
+import type { Lift, MuscleGroup } from '@parakeet/shared-types';
+import type { ExerciseType } from '@parakeet/training-engine';
 import { useNetworkStatus } from '@platform/network';
 import { captureException } from '@platform/utils/captureException';
 import type { PlateKg } from '@shared/constants/plates';
@@ -739,16 +740,24 @@ export default function SessionScreen() {
 
   // ── Screen-local handlers ─────────────────────────────────────────────────
 
-  function handleConfirmAddExercise(name: string) {
+  function handleConfirmAddExercise(
+    name: string,
+    _muscles?: MuscleGroup[],
+    customType?: ExerciseType
+  ) {
     if (!adHocExercises.includes(name)) {
       setAdHocExercises((prev) => [...prev, name]);
+      const resolvedType = customType ?? getExerciseType(name);
       const oneRmGrams =
         oneRmKgRef.current != null ? Math.round(oneRmKgRef.current * 1000) : 0;
+      // Timed and bodyweight exercises don't carry a prescribed load; skip
+      // the weight calculation so we don't fabricate a barbell weight for a
+      // user-typed "Running" entry.
       const suggestedWeight =
-        oneRmGrams > 0
+        resolvedType === 'weighted' && oneRmGrams > 0
           ? computeSuggestedWeight(name, oneRmGrams, exerciseCatalog)
           : 0;
-      addAdHocSet(name, suggestedWeight, getExerciseType(name));
+      addAdHocSet(name, suggestedWeight, resolvedType);
     }
     setAddExerciseVisible(false);
   }

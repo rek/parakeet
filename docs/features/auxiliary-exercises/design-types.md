@@ -53,11 +53,13 @@ Timed exercises contribute volume via their muscle mapping (if any — cardio ex
 
 **Type is assigned at the engine level** — `packages/training-engine/src/auxiliary/exercise-catalog.ts` is the canonical source of truth. `exercise-types.ts` delegates to the catalog via a fast `Map` lookup, with a small fallback table for common user-typed spelling variants (e.g. "Pull Ups", "Pullups"). The UI reads type from `AuxiliaryWork.exerciseType` rather than trying to infer it from the exercise name.
 
-**Single catalog, derived artifacts** — `EXERCISE_CATALOG` is the single typed source of truth. `DEFAULT_AUXILIARY_POOLS`, `getMusclesForExercise()`, `getExerciseType()`, and the manual-add picker all derive from it. Adding an exercise requires editing only `exercise-catalog.ts`.
+**Custom exercises carry a user-chosen type** — when a user adds a custom exercise via `AddExerciseModal`, a type-picker step (Weighted / Bodyweight / Timed) precedes the muscle step. The choice is persisted on `auxiliary_exercises.exercise_type` and seeded into the engine via `JITInput.customExerciseTypeMap`. The resolver `createExerciseTyper(customTypeMap)` is the runtime entry point: catalog wins → custom map → fallback table → `'weighted'`. The catalog always wins over the custom map so known exercises can't be mistyped by a user override. (Pre-GH#212 the modal had no type picker and unknown names silently defaulted to `weighted`, which produced fabricated barbell loads for cardio.)
 
-**Unknown exercises default to `weighted`** — custom exercises the user adds that aren't in the catalog get `weighted` behaviour, which is the safest default (weight and reps are optional to fill in).
+**Single catalog, derived artifacts** — `EXERCISE_CATALOG` is the single typed source of truth. `DEFAULT_AUXILIARY_POOLS`, `DEFAULT_CORE_POOL`, `DEFAULT_CARDIO_POOL`, `getMusclesForExercise()`, `getExerciseType()`, and the manual-add picker all derive from it. Adding an exercise requires editing only `exercise-catalog.ts`.
 
-**`timed` exercises are not skipped at MRV** — they don't consume meaningful muscle sets, so MRV gating does not apply. They are always included unless the session is skipped entirely.
+**Unknown exercises default to `weighted`** — custom exercises with no user-set type and not in the catalog/fallback fall back to `weighted`. Once the user picks a type via the modal, that choice persists and overrides the default.
+
+**`timed` exercises are not skipped at MRV** — they don't consume meaningful muscle sets, so MRV gating does not apply. They are always included unless the session is skipped entirely. `buildVolumeTopUp` filters timed exercises out of its candidate set before scoring, so cardio entries in the merged auxiliary pool never get auto-picked for volume top-up.
 
 ## References
 

@@ -7,7 +7,7 @@ import { reportEngineError } from '../ai/error-reporter';
 import { getJITModel } from '../ai/models';
 import { JIT_SYSTEM_PROMPT } from '../ai/prompts';
 import { computeAuxWeight } from '../auxiliary/exercise-catalog';
-import { getExerciseType } from '../auxiliary/exercise-types';
+import { createExerciseTyper } from '../auxiliary/exercise-types';
 import {
   effectiveIncrementKg,
   roundToNearest,
@@ -136,9 +136,10 @@ export function applyAdjustment(
   const overrideByExercise = new Map(
     adj.auxOverrides.map((o) => [o.exercise, o.action])
   );
+  const exerciseTyper = createExerciseTyper(input.customExerciseTypeMap);
   const auxiliaryWork: AuxiliaryWork[] = input.activeAuxiliaries.map(
     (exercise) => {
-      const exerciseType = getExerciseType(exercise);
+      const exerciseType = exerciseTyper(exercise);
       const override: 'skip' | 'reduce' | 'normal' | undefined =
         overrideByExercise.get(exercise);
       if (override === 'skip') {
@@ -215,7 +216,8 @@ export function applyAdjustment(
       input.energyLevel,
       input.activeDisruptions,
       input.weightIncrementKg,
-      input.recentAuxExercises
+      input.recentAuxExercises,
+      exerciseTyper
     );
     for (const tu of topUps) {
       const activeCount = auxiliaryWork.filter((a) => !a.skipped).length;

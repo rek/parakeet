@@ -31,9 +31,35 @@ When adding a new exercise, use the explicit barbell/dumbbell variant names rath
 | bodyweight | 0 (omitted)   | From config     | RPE/rest suppressed |
 | timed      | 0             | 0 (duration)    | RPE/rest suppressed |
 
-Type resolution: catalog lookup first, then fallback map (Pull-ups, Chin-ups, Push-ups, Step-ups = bodyweight), then default = weighted.
+Type resolution (via `createExerciseTyper(customTypeMap?)`):
+
+1. **Catalog** lookup — `EXERCISE_CATALOG` entry's `type` field. Always wins; a user can't mistype a known exercise.
+2. **Custom type map** — per-user overrides keyed by exercise name. Populated from `auxiliary_exercises.exercise_type` (the type-picker step in `AddExerciseModal`) and threaded into JIT as `JITInput.customExerciseTypeMap`.
+3. **Fallback table** — small map for common spelling variants (`Pull Ups`, `Pullups`, `Chin Ups`, `Push Ups`, `Step Up`, `Bodyweight Squat` → `bodyweight`).
+4. **Default** — `weighted`.
+
+`getExerciseType(name)` is the catalog-only resolver (no user context). Use it in engine paths that aren't user-aware; otherwise prefer the user-aware factory.
 
 **Source:** `packages/training-engine/src/auxiliary/exercise-types.ts`
+
+---
+
+## Pool Categories
+
+User-curated auxiliary pools live in the `auxiliary_exercises` table, keyed by the `lift` column. `AuxiliaryPoolCategory = Lift | 'core' | 'cardio'`.
+
+| Category   | Default source                  | Surfaces in JIT?                                                                         |
+|------------|---------------------------------|------------------------------------------------------------------------------------------|
+| `squat`    | `DEFAULT_AUXILIARY_POOLS.squat` | Yes — block-rotated pair on squat days; also feeds merged top-up pool.                  |
+| `bench`    | `DEFAULT_AUXILIARY_POOLS.bench` | Yes — block-rotated pair on bench days; also feeds merged top-up pool.                  |
+| `deadlift` | `DEFAULT_AUXILIARY_POOLS.deadlift` | Yes — block-rotated pair on deadlift days; also feeds merged top-up pool.            |
+| `core`     | `DEFAULT_CORE_POOL`             | Yes — feeds merged top-up pool. No compound contributes to core, so core relies on it.   |
+| `cardio`   | `DEFAULT_CARDIO_POOL`           | No (effectively) — entries are `timed`, filtered out of top-up before scoring. UX only. |
+
+`DEFAULT_CORE_POOL` = catalog entries with `primaryMuscles.includes('core') && type !== 'timed'`.
+`DEFAULT_CARDIO_POOL` = catalog entries with `type === 'timed' && associatedLift === null && !primaryMuscles.includes('core')` — currently `Row Machine`, `Ski Erg`, `Run - Treadmill`, `Run - Outside`.
+
+**Source:** `packages/training-engine/src/auxiliary/exercise-catalog.ts`, `apps/parakeet/src/modules/program/lib/auxiliary-config.ts`
 
 ---
 

@@ -102,6 +102,7 @@ export type Database = {
       auxiliary_exercises: {
         Row: {
           exercise_name: string
+          exercise_type: string | null
           id: string
           is_active: boolean
           lift: string
@@ -111,6 +112,7 @@ export type Database = {
         }
         Insert: {
           exercise_name: string
+          exercise_type?: string | null
           id?: string
           is_active?: boolean
           lift: string
@@ -120,6 +122,7 @@ export type Database = {
         }
         Update: {
           exercise_name?: string
+          exercise_type?: string | null
           id?: string
           is_active?: boolean
           lift?: string

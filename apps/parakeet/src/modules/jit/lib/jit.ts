@@ -5,6 +5,7 @@ import { getFormulaConfig } from '@modules/formula';
 import {
   getActiveAssignments,
   getAllAuxMuscleMap,
+  getAllAuxTypeMap,
   getAuxiliaryPool,
   getAuxiliaryPools,
   getCurrentOneRmKg,
@@ -129,6 +130,7 @@ export async function runJITForSession(
     pool,
     allPools,
     auxMuscleMap,
+    auxTypeMap,
     disabledPlates,
   ] = await Promise.all([
     getCurrentOneRmKg(userId, lift),
@@ -145,6 +147,7 @@ export async function runJITForSession(
     getAuxiliaryPool(userId, lift),
     isAdHoc ? Promise.resolve(null) : getAuxiliaryPools(userId),
     getAllAuxMuscleMap(userId),
+    getAllAuxTypeMap(userId),
     getDisabledPlates(),
   ]);
 
@@ -159,6 +162,7 @@ export async function runJITForSession(
   // `auxMuscleMap` is passed into JITInput as data so the engine can build its
   // own mapper while keeping the input fully serializable for replay.
   const customMuscleMap = auxMuscleMap as Record<string, MuscleGroup[]>;
+  const customExerciseTypeMap = auxTypeMap;
   const muscleMapper = createMuscleMapper(customMuscleMap);
 
   const mrvMevConfig = await getMrvMevConfig(userId, biologicalSex);
@@ -377,12 +381,18 @@ export async function runJITForSession(
     injuryOverrides
   );
 
-  // Merge all three lift pools + user-configured core pool for widest top-up
-  // selection (engine-027, #191, #211). The core pool is sourced from
-  // auxiliary_exercises via getAuxiliaryPools, which falls back to
-  // DEFAULT_CORE_POOL when the user has no custom rows.
+  // Merge all lift pools + user-configured core + cardio pools for widest
+  // top-up selection (engine-027, #191, #211). Cardio entries are `timed`,
+  // which buildVolumeTopUp filters out before scoring — they are in the pool
+  // for UX/ad-hoc surfacing only, not for top-up selection.
   const auxiliaryPool = allPools
-    ? [...allPools.squat, ...allPools.bench, ...allPools.deadlift, ...allPools.core]
+    ? [
+        ...allPools.squat,
+        ...allPools.bench,
+        ...allPools.deadlift,
+        ...allPools.core,
+        ...allPools.cardio,
+      ]
     : [...DEFAULT_CORE_POOL];
 
   // Per-athlete modifier calibrations (engine-041)
@@ -479,6 +489,10 @@ export async function runJITForSession(
     capacityHistory: capacityHistory?.length ? capacityHistory : undefined,
     weeklyMismatchDirection: weeklyMismatchDirection ?? undefined,
     customMuscleMap,
+    customExerciseTypeMap:
+      Object.keys(customExerciseTypeMap).length > 0
+        ? customExerciseTypeMap
+        : undefined,
   };
 
   const strategyOverride = await getJITStrategyOverride();

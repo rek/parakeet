@@ -1152,6 +1152,17 @@ export const DEFAULT_CORE_POOL: string[] = EXERCISE_CATALOG.filter(
   (e) => e.primaryMuscles.includes('core') && e.type !== 'timed'
 ).map((e) => e.name);
 
+/** Timed general-purpose cardio/conditioning exercises (running, rowing, etc.).
+ *  No `associatedLift` and not core — purely a UX pool so users can curate
+ *  which conditioning options surface in pickers. Never picked by volume
+ *  top-up (timed exercises are filtered out before selection). */
+export const DEFAULT_CARDIO_POOL: string[] = EXERCISE_CATALOG.filter(
+  (e) =>
+    e.type === 'timed' &&
+    e.associatedLift === null &&
+    !e.primaryMuscles.includes('core')
+).map((e) => e.name);
+
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 /** Full catalog — use for manual add pickers. */

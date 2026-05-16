@@ -20,7 +20,12 @@ import {
   resolveMovementPattern,
 } from '../auxiliary/exercise-catalog';
 import { rankExercises } from '../auxiliary/exercise-scorer';
-import { ExerciseType, getExerciseType } from '../auxiliary/exercise-types';
+import {
+  createExerciseTyper,
+  CustomExerciseTypeMap,
+  ExerciseType,
+  getExerciseType,
+} from '../auxiliary/exercise-types';
 import { CyclePhase } from '../formulas/cycle-phase';
 import { roundToNearest } from '../formulas/weight-rounding';
 import {
@@ -161,6 +166,10 @@ export interface JITInput {
   // always take priority. Kept as plain data so JITInput stays serializable
   // (used for replay/diagnostics in jit_input columns).
   customMuscleMap?: CustomMuscleMap;
+  // User-defined exercise types (e.g. "Running" → 'timed'). Captured from the
+  // type-picker step in AddExerciseModal and stored on auxiliary_exercises.
+  // Catalog wins over this map; only used for names not in the catalog.
+  customExerciseTypeMap?: CustomExerciseTypeMap;
 }
 
 export interface AuxiliaryWork {
@@ -329,6 +338,7 @@ export function generateJITSession(
     barWeightKg = 20,
   } = input;
   const muscleMapper = createMuscleMapper(input.customMuscleMap);
+  const exerciseTyper = createExerciseTyper(input.customExerciseTypeMap);
 
   // Step 1 — Initialize pipeline context (base sets, primary muscles, soreness)
   const ctx = initPipeline(input, traceBuilder);
@@ -368,7 +378,8 @@ export function generateJITSession(
     input.biologicalSex,
     input.activeDisruptions,
     primaryLift,
-    input.weightIncrementKg
+    input.weightIncrementKg,
+    exerciseTyper
   );
 
   // Step 6b — Volume top-up (engine-027): append exercises for under-MEV muscles
@@ -393,7 +404,8 @@ export function generateJITSession(
       input.energyLevel,
       input.activeDisruptions,
       input.weightIncrementKg,
-      input.recentAuxExercises
+      input.recentAuxExercises,
+      exerciseTyper
     );
     for (const tu of topUps) {
       const activeCount = auxiliaryWork.filter((a) => !a.skipped).length;
@@ -581,7 +593,8 @@ function buildAuxiliaryWork(
   biologicalSex?: 'female' | 'male',
   activeDisruptions?: TrainingDisruption[],
   primaryLift?: Lift,
-  weightIncrementKg?: number
+  weightIncrementKg?: number,
+  exerciseTyper: (name: string) => ExerciseType = getExerciseType
 ): AuxiliaryWork[] {
   const hasNoEquipment =
     activeDisruptions?.some(
@@ -603,6 +616,7 @@ function buildAuxiliaryWork(
       primaryLift: primaryLift ?? 'squat',
       muscleMapper,
       weightIncrementKg,
+      exerciseTyper,
     })
   );
 
@@ -681,7 +695,10 @@ export function buildVolumeTopUp(
   energyLevel?: ReadinessLevel,
   activeDisruptions?: TrainingDisruption[],
   weightIncrementKg = 2.5,
-  recentAuxExercises?: string[]
+  recentAuxExercises?: string[],
+  // Falls back to catalog-only resolution when the caller hasn't built a
+  // user-aware typer. Engine internal callers always pass a real typer.
+  exerciseTyper: (name: string) => ExerciseType = getExerciseType
 ): AuxiliaryWork[] {
   // Build main lift muscle contributions to project post-session volume
   const liftMuscles = muscleMapper(primaryLift);
@@ -748,7 +765,7 @@ export function buildVolumeTopUp(
   for (const { muscle, deficit } of topCandidates) {
     const qualifying = auxiliaryPool.filter((exercise) => {
       if (usedExercises.has(exercise)) return false;
-      if (getExerciseType(exercise) === 'timed') return false;
+      if (exerciseTyper(exercise) === 'timed') return false;
       const exerciseLift = getLiftForExercise(exercise);
       if (upcomingLiftSet && exerciseLift && upcomingLiftSet.has(exerciseLift))
         return false;
@@ -781,7 +798,7 @@ export function buildVolumeTopUp(
     const entry = CATALOG_BY_NAME.get(exercise);
     if (entry) patternsUsed.push(resolveMovementPattern(entry));
 
-    const exerciseType = getExerciseType(exercise);
+    const exerciseType = exerciseTyper(exercise);
     const remainingMrv =
       mrvMevConfig[muscle].mrv - (weeklyVolumeToDate[muscle] ?? 0);
     const setCount = Math.max(1, Math.min(3, deficit, remainingMrv));

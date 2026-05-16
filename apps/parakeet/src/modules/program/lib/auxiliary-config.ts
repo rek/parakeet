@@ -2,7 +2,9 @@
 import type { Lift, MuscleGroup } from '@parakeet/shared-types';
 import {
   DEFAULT_AUXILIARY_POOLS,
+  DEFAULT_CARDIO_POOL,
   DEFAULT_CORE_POOL,
+  type ExerciseType,
 } from '@parakeet/training-engine';
 
 import {
@@ -15,15 +17,16 @@ import {
 } from '../data/auxiliary-config.repository';
 import { getPrimaryMuscles } from '../utils/auxiliary-muscles';
 
-/** Pool categories the user can configure. 'core' is not a powerlifting lift,
- *  but is stored in the same auxiliary_exercises table for symmetry with the
- *  lift pools (DB CHECK allows 'core' since 20260515 migration). */
-export type AuxiliaryPoolCategory = Lift | 'core';
+/** Pool categories the user can configure. 'core' and 'cardio' are not
+ *  powerlifting lifts, but are stored in the same auxiliary_exercises table
+ *  for symmetry with the lift pools (DB CHECK allows 'core' since 20260515,
+ *  'cardio' since 20260516). */
+export type AuxiliaryPoolCategory = Lift | 'core' | 'cardio';
 
 function defaultPoolFor(category: AuxiliaryPoolCategory): string[] {
-  return category === 'core'
-    ? DEFAULT_CORE_POOL
-    : DEFAULT_AUXILIARY_POOLS[category];
+  if (category === 'core') return DEFAULT_CORE_POOL;
+  if (category === 'cardio') return DEFAULT_CARDIO_POOL;
+  return DEFAULT_AUXILIARY_POOLS[category];
 }
 
 export async function getAuxiliaryPool(
@@ -43,16 +46,47 @@ export async function getAuxiliaryPool(
 export async function getAllAuxMuscleMap(
   userId: string
 ): Promise<Record<string, string[]>> {
-  const [sq, be, dl, co] = await Promise.all([
+  const [sq, be, dl, co, ca] = await Promise.all([
     fetchAuxiliaryExercises(userId, 'squat'),
     fetchAuxiliaryExercises(userId, 'bench'),
     fetchAuxiliaryExercises(userId, 'deadlift'),
     fetchAuxiliaryExercises(userId, 'core'),
+    fetchAuxiliaryExercises(userId, 'cardio'),
   ]);
   const result: Record<string, string[]> = {};
-  for (const row of [...sq, ...be, ...dl, ...co]) {
+  for (const row of [...sq, ...be, ...dl, ...co, ...ca]) {
     if (row.primary_muscles.length > 0) {
       result[row.exercise_name] = row.primary_muscles;
+    }
+  }
+  return result;
+}
+
+/**
+ * Returns a map of user-customized exercise types (only for rows where the
+ * user picked a type via the AddExerciseModal type-picker step). Used to
+ * seed the engine's `customExerciseTypeMap` before JIT runs, so e.g. a
+ * user-added "Running" is treated as `timed` instead of falling back to
+ * the default `weighted`.
+ */
+export async function getAllAuxTypeMap(
+  userId: string
+): Promise<Record<string, ExerciseType>> {
+  const [sq, be, dl, co, ca] = await Promise.all([
+    fetchAuxiliaryExercises(userId, 'squat'),
+    fetchAuxiliaryExercises(userId, 'bench'),
+    fetchAuxiliaryExercises(userId, 'deadlift'),
+    fetchAuxiliaryExercises(userId, 'core'),
+    fetchAuxiliaryExercises(userId, 'cardio'),
+  ]);
+  const result: Record<string, ExerciseType> = {};
+  for (const row of [...sq, ...be, ...dl, ...co, ...ca]) {
+    if (
+      row.exercise_type === 'weighted' ||
+      row.exercise_type === 'bodyweight' ||
+      row.exercise_type === 'timed'
+    ) {
+      result[row.exercise_name] = row.exercise_type;
     }
   }
   return result;
@@ -66,6 +100,7 @@ export async function getAuxiliaryPools(
     bench: await getAuxiliaryPool(userId, 'bench'),
     deadlift: await getAuxiliaryPool(userId, 'deadlift'),
     core: await getAuxiliaryPool(userId, 'core'),
+    cardio: await getAuxiliaryPool(userId, 'cardio'),
   };
 }
 
@@ -73,7 +108,8 @@ export async function reorderAuxiliaryPool(
   userId: string,
   category: AuxiliaryPoolCategory,
   orderedExercises: string[],
-  customMuscles?: Record<string, MuscleGroup[]>
+  customMuscles?: Record<string, MuscleGroup[]>,
+  customTypes?: Record<string, ExerciseType>
 ): Promise<void> {
   await deleteAuxiliaryExercises(userId, category);
 
@@ -83,6 +119,7 @@ export async function reorderAuxiliaryPool(
     exercise_name: name,
     pool_position: i,
     primary_muscles: customMuscles?.[name] ?? getPrimaryMuscles(name),
+    exercise_type: customTypes?.[name] ?? null,
   }));
   await insertAuxiliaryExercises(rows);
 }

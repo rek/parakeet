@@ -112,6 +112,26 @@ describe('generateJITSession — per-exercise rep targets', () => {
     expect(out.auxiliaryWork[0].sets[0].reps).toBe(12);
   });
 
+  it('customExerciseTypeMap → user-typed Running is treated as timed (mark-complete, no weight)', () => {
+    // Without customExerciseTypeMap, "Running" would silently fall back to
+    // 'weighted' and JIT would prescribe a barbell-style weighted set.
+    const out = generateJITSession(
+      baseInput({
+        activeAuxiliaries: ['Running', 'Barbell Box Squat'],
+        customExerciseTypeMap: { Running: 'timed' },
+      })
+    );
+    const running = out.auxiliaryWork.find((a) => a.exercise === 'Running');
+    expect(running).toBeDefined();
+    expect(running!.exerciseType).toBe('timed');
+    expect(running!.sets).toHaveLength(1);
+    expect(running!.sets[0]).toMatchObject({
+      set_number: 1,
+      weight_kg: 0,
+      reps: 0,
+    });
+  });
+
   it('biceps aux (Barbell Curl) → 10 reps, weight at 20% of 1RM not 67.5%', () => {
     // bench 1RM 140kg → Barbell Curl (barbell, linear): 140*0.20=28→27.5kg
     // Dumbbell Curl (dumbbell, sqrt): 0.15×sqrt(80×140)=0.15×105.83=15.87→15

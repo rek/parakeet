@@ -5,6 +5,7 @@ import {
   computeAuxWeight,
   getRepTarget,
 } from '../../auxiliary/exercise-catalog';
+import type { ExerciseType } from '../../auxiliary/exercise-types';
 import { getExerciseType } from '../../auxiliary/exercise-types';
 import { roundToNearest } from '../../formulas/weight-rounding';
 import type {
@@ -33,6 +34,7 @@ export function processAuxExercise({
   primaryLift,
   muscleMapper,
   weightIncrementKg = 2.5,
+  exerciseTyper = getExerciseType,
 }: {
   exercise: string;
   worstSoreness: SorenessLevel;
@@ -47,8 +49,11 @@ export function processAuxExercise({
   primaryLift: Lift;
   muscleMapper: MuscleMapper;
   weightIncrementKg?: number;
+  /** Type resolver that honours user-defined custom exercise types.
+   *  Defaults to the catalog-only `getExerciseType` for legacy callers. */
+  exerciseTyper?: (name: string) => ExerciseType;
 }): AuxiliaryWork {
-  const exerciseType = getExerciseType(exercise);
+  const exerciseType = exerciseTyper(exercise);
 
   // Soreness 9-10 (severe): skip entirely
   if (worstSoreness >= 9) {

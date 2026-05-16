@@ -3,15 +3,21 @@ import type { Lift } from '@parakeet/shared-types';
 import type { DbInsert } from '@platform/supabase';
 import { typedSupabase } from '@platform/supabase';
 
-type PoolCategory = Lift | 'core';
+type PoolCategory = Lift | 'core' | 'cardio';
 
 export async function fetchAuxiliaryExercises(
   userId: string,
   category: PoolCategory
-): Promise<{ exercise_name: string; primary_muscles: string[] }[]> {
+): Promise<
+  {
+    exercise_name: string;
+    primary_muscles: string[];
+    exercise_type: string | null;
+  }[]
+> {
   const { data, error } = await typedSupabase
     .from('auxiliary_exercises')
-    .select('exercise_name, primary_muscles')
+    .select('exercise_name, primary_muscles, exercise_type')
     .eq('user_id', userId)
     .eq('lift', category)
     .order('pool_position');

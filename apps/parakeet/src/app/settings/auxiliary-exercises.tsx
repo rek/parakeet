@@ -14,6 +14,7 @@ import { AddExerciseModal } from '@modules/session';
 import { useAuxiliaryPools } from '@modules/settings';
 import { MuscleChips } from '@modules/training-volume';
 import type { MuscleGroup } from '@parakeet/shared-types';
+import type { ExerciseType } from '@parakeet/training-engine';
 import { TRAINING_LIFTS } from '@shared/constants/training';
 import { ExerciseName } from '@shared/ui/ExerciseName';
 import { getExerciseType } from '@shared/utils/exercise-lookup';
@@ -27,13 +28,18 @@ import { useTheme } from '../../theme/ThemeContext';
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
-const POOL_CATEGORIES: AuxiliaryPoolCategory[] = [...TRAINING_LIFTS, 'core'];
+const POOL_CATEGORIES: AuxiliaryPoolCategory[] = [
+  ...TRAINING_LIFTS,
+  'core',
+  'cardio',
+];
 
 const CATEGORY_LABELS: Record<AuxiliaryPoolCategory, string> = {
   squat: 'Squat',
   bench: 'Bench',
   deadlift: 'Deadlift',
   core: 'Core',
+  cardio: 'Cardio',
 };
 
 // ── Styles ─────────────────────────────────────────────────────────────────────
@@ -292,7 +298,10 @@ interface LiftSectionProps {
   /** Muscles already stored in DB for all exercises in this pool (keyed by name). */
   initialMuscles: Record<string, string[]>;
   onPoolChange: (pool: string[]) => void;
-  onSavePool: (customMuscles: Record<string, MuscleGroup[]>) => void;
+  onSavePool: (
+    customMuscles: Record<string, MuscleGroup[]>,
+    customTypes: Record<string, ExerciseType>
+  ) => void;
   styles: Styles;
   primaryColor: string;
 }
@@ -314,11 +323,23 @@ function LiftSection({
   const [customMuscles, setCustomMuscles] = useState<
     Record<string, MuscleGroup[]>
   >(() => initialMuscles as Record<string, MuscleGroup[]>);
+  // Tracks user-chosen exercise types for custom additions. Catalog exercises
+  // never set this; the engine resolves their type from EXERCISE_CATALOG.
+  const [customTypes, setCustomTypes] = useState<Record<string, ExerciseType>>(
+    {}
+  );
 
-  function addExercise(name: string, muscles?: MuscleGroup[]) {
+  function addExercise(
+    name: string,
+    muscles?: MuscleGroup[],
+    type?: ExerciseType
+  ) {
     if (!name || pool.includes(name)) return;
     if (muscles?.length) {
       setCustomMuscles((prev) => ({ ...prev, [name]: muscles }));
+    }
+    if (type) {
+      setCustomTypes((prev) => ({ ...prev, [name]: type }));
     }
     onPoolChange([...pool, name]);
   }
@@ -326,6 +347,11 @@ function LiftSection({
   function removeExercise(i: number) {
     const removed = pool[i];
     setCustomMuscles((prev) => {
+      const next = { ...prev };
+      delete next[removed];
+      return next;
+    });
+    setCustomTypes((prev) => {
       const next = { ...prev };
       delete next[removed];
       return next;
@@ -343,7 +369,7 @@ function LiftSection({
             isDirtyPool && styles.saveBtnDirty,
             isSavingPool && styles.saveBtnDisabled,
           ]}
-          onPress={() => onSavePool(customMuscles)}
+          onPress={() => onSavePool(customMuscles, customTypes)}
           disabled={isSavingPool}
           activeOpacity={0.8}
         >
@@ -380,8 +406,8 @@ function LiftSection({
       </TouchableOpacity>
       <AddExerciseModal
         visible={pickerVisible}
-        onConfirm={(name, muscles) => {
-          addExercise(name, muscles);
+        onConfirm={(name, muscles, type) => {
+          addExercise(name, muscles, type);
           setPickerVisible(false);
         }}
         onClose={() => setPickerVisible(false)}
@@ -418,12 +444,18 @@ export default function AuxiliaryExercisesScreen() {
 
   async function handleSavePool(
     category: AuxiliaryPoolCategory,
-    customMuscles: Record<string, MuscleGroup[]>
+    customMuscles: Record<string, MuscleGroup[]>,
+    customTypes: Record<string, ExerciseType>
   ) {
     if (!pools) return;
     setSavingPool((prev) => ({ ...prev, [category]: true }));
     try {
-      await saveAuxiliaryPool(category, pools[category], customMuscles);
+      await saveAuxiliaryPool(
+        category,
+        pools[category],
+        customMuscles,
+        customTypes
+      );
       setDirtyPools((prev) => ({ ...prev, [category]: false }));
     } finally {
       setSavingPool((prev) => ({ ...prev, [category]: false }));
@@ -476,8 +508,8 @@ export default function AuxiliaryExercisesScreen() {
                 );
                 setDirtyPools((prev) => ({ ...prev, [category]: true }));
               }}
-              onSavePool={(customMuscles) =>
-                handleSavePool(category, customMuscles)
+              onSavePool={(customMuscles, customTypes) =>
+                handleSavePool(category, customMuscles, customTypes)
               }
               styles={styles}
               primaryColor={colors.primary}
