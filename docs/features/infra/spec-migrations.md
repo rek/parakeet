@@ -16,6 +16,18 @@ Supabase migration files for the full schema. All weights stored as integer gram
 - [x] Apply to prod: `supabase db push --db-url $PROD_DB_URL`
 - [x] Generate TypeScript types: `npm run db:types` (after `npm run db:start`)
 
+**Required boilerplate for every new `public` table** (Supabase Data API stopped granting default access on 2026-05-30 for new projects, 2026-10-30 for existing — without these, supabase-js / PostgREST / GraphQL return PostgREST `42501`):
+
+```sql
+ALTER TABLE "public"."your_table" ENABLE ROW LEVEL SECURITY;
+-- ...policies...
+GRANT ALL ON TABLE "public"."your_table" TO "anon";
+GRANT ALL ON TABLE "public"."your_table" TO "authenticated";
+GRANT ALL ON TABLE "public"."your_table" TO "service_role";
+```
+
+RLS gates row visibility; the GRANTs only expose the table to the Data API. Backfill grants for older tables live in `20260513000000_explicit_data_api_grants.sql`.
+
 **`20260223000000_initial_schema.sql` — all 16 tables:**
 
 ```sql
