@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
 import {
+  Alert,
   Modal,
   StyleSheet,
   Text,
@@ -236,6 +237,13 @@ export function WorkoutCard({
       await onSkip(session.id, skipReason.trim() || undefined);
       setSkipModalVisible(false);
       onSkipComplete?.();
+    } catch (err) {
+      Alert.alert(
+        'Could not skip session',
+        err instanceof Error
+          ? err.message
+          : 'Something went wrong. Check your connection and try again.'
+      );
     } finally {
       setIsSkipping(false);
     }

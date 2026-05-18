@@ -340,14 +340,24 @@ export async function updateSessionToInProgress(
 
 export async function updateSessionToSkipped(
   sessionId: string,
-  _reason?: string
+  reason?: string
 ): Promise<void> {
-  const { error } = await typedSupabase
+  const { data, error } = await typedSupabase
     .from('sessions')
-    .update({ status: 'skipped' })
+    .update({ status: 'skipped', skip_reason: reason?.trim() || null })
     .eq('id', sessionId)
-    .in('status', ['planned', 'in_progress']);
+    .in('status', ['planned', 'in_progress'])
+    .select('id')
+    .maybeSingle();
   if (error) throw error;
+  // Without this guard the call returns successfully when the row is in a
+  // non-skippable state (already completed/skipped), and the UI thinks the
+  // skip worked. Surface it instead.
+  if (!data) {
+    throw new Error(
+      'This session can no longer be skipped — it may already be completed or skipped.'
+    );
+  }
 }
 
 // ── set_logs (per-set durability) ───────────────────────────────────────────

@@ -1590,6 +1590,7 @@ export type Database = {
           planned_sets: Json | null
           primary_lift: string | null
           program_id: string | null
+          skip_reason: string | null
           status: string
           updated_at: string
           user_id: string
@@ -1612,6 +1613,7 @@ export type Database = {
           planned_sets?: Json | null
           primary_lift?: string | null
           program_id?: string | null
+          skip_reason?: string | null
           status?: string
           updated_at?: string
           user_id: string
@@ -1634,6 +1636,7 @@ export type Database = {
           planned_sets?: Json | null
           primary_lift?: string | null
           program_id?: string | null
+          skip_reason?: string | null
           status?: string
           updated_at?: string
           user_id?: string
