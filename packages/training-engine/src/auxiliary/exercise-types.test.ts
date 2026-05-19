@@ -47,6 +47,7 @@ describe('DEFAULT_CARDIO_POOL', () => {
       'Ski Erg',
       'Run - Treadmill',
       'Run - Outside',
+      'Assault Bike',
     ]);
   });
 

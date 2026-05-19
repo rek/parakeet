@@ -57,7 +57,7 @@ User-curated auxiliary pools live in the `auxiliary_exercises` table, keyed by t
 | `cardio`   | `DEFAULT_CARDIO_POOL`           | No (effectively) — entries are `timed`, filtered out of top-up before scoring. UX only. |
 
 `DEFAULT_CORE_POOL` = catalog entries with `primaryMuscles.includes('core') && type !== 'timed'`.
-`DEFAULT_CARDIO_POOL` = catalog entries with `type === 'timed' && associatedLift === null && !primaryMuscles.includes('core')` — currently `Row Machine`, `Ski Erg`, `Run - Treadmill`, `Run - Outside`.
+`DEFAULT_CARDIO_POOL` = catalog entries with `type === 'timed' && associatedLift === null && !primaryMuscles.includes('core')` — currently `Row Machine`, `Ski Erg`, `Run - Treadmill`, `Run - Outside`, `Assault Bike`.
 
 **Source:** `packages/training-engine/src/auxiliary/exercise-catalog.ts`, `apps/parakeet/src/modules/program/lib/auxiliary-config.ts`
 

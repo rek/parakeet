@@ -980,6 +980,13 @@ export const EXERCISE_CATALOG: ExerciseCatalogEntry[] = [
     repTarget: 1,
   },
   {
+    name: 'Assault Bike',
+    associatedLift: null,
+    primaryMuscles: ['quads', 'hamstrings', 'shoulders'],
+    type: 'timed',
+    repTarget: 1,
+  },
+  {
     name: 'Toes to Bar',
     associatedLift: null,
     primaryMuscles: ['core'],
