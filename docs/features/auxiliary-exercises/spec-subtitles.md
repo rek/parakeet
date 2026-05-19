@@ -49,10 +49,10 @@ Adds an optional `subtitle` field to `ExerciseCatalogEntry`, splits Rack Pull in
 - [x] Replace `capitalize(exercise.replace(/_/g, ' '))` with `<ExerciseName>`
   → `apps/parakeet/src/modules/session/ui/AuxResultsTable.tsx`
 
-**`apps/parakeet/src/modules/session/ui/AddExerciseModal.tsx`:**
+**`apps/parakeet/src/shared/ui/AddExerciseModal.tsx`:**
 
 - [x] Replace both exercise name Text elements with `<ExerciseName>`
-  → `apps/parakeet/src/modules/session/ui/AddExerciseModal.tsx`
+  → `apps/parakeet/src/shared/ui/AddExerciseModal.tsx`
 
 **`apps/parakeet/src/app/settings/auxiliary-exercises.tsx`:**
 

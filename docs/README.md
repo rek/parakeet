@@ -49,6 +49,7 @@ Use this to find code without searching.
 | Video Analysis  | `@modules/video-analysis`  | Bar path tracking, form faults, LLM coaching, personal baselines             | `useVideoAnalysis`, `useFormCoaching`                  |
 | Gym Partners    | `@modules/gym-partners`    | Partner pairing, filming for partners, partner session visibility             | `usePartners`, `usePartnerFilming`, `PartnerSection`   |
 | Lipedema Tracking | `@modules/lipedema-tracking` | Daily limb-circumference + pain/swelling log, per-limb deltas, history edit | `TrackingScreen`, `useMeasurements`, `priorValue`     |
+| Workout Templates | `@modules/workout-templates` | Global wiki-style workout bundles (HIIT, EMOM, finishers); insert into current session | `useWorkoutTemplates`, `WorkoutTemplatesList`, `WorkoutTemplateEditor` |
 
 **Platform (infra):** `@platform/supabase`, `@platform/query`, `@platform/network`, `@platform/store`
 **Shared (cross-feature):** `@shared/types`, `@shared/utils`, `@shared/constants`

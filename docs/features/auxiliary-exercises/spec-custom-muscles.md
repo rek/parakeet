@@ -35,7 +35,7 @@ When a user adds a custom exercise (not in catalog), collect muscle group select
 
 ## Phase 2 — UI: muscle picker step in AddExerciseModal
 
-**`apps/parakeet/src/modules/session/ui/AddExerciseModal.tsx`:**
+**`apps/parakeet/src/shared/ui/AddExerciseModal.tsx`:**
 
 - [ ] Change `onConfirm` prop type to `(exercise: string, primaryMuscles?: MuscleGroup[]) => void`
 - [ ] Add state: `customStep: { name: string } | null` — truthy = picker step active

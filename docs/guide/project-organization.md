@@ -166,3 +166,15 @@ Zod schemas and inferred TypeScript types shared between app and engine.
 Key schemas: `FormulaOverridesSchema`, `CreateFormulaConfigSchema`, `DisruptionSchema`, `JITAdjustmentSchema`, `CycleReviewSchema`.
 
 Entry: `packages/shared-types/src/index.ts`
+
+## Catalog Rename Sweep
+
+The exercise catalog in `packages/training-engine/src/auxiliary/exercise-catalog.ts` is keyed by display name. Several DB tables store that display name as free text — renaming a catalog entry without sweeping them silently breaks data.
+
+When you rename a catalog entry, the same migration must `UPDATE` every referencing column:
+
+- `set_logs.exercise`
+- `auxiliary_exercises` (whichever name column applies)
+- `workout_template_items.exercise`
+
+Example: `supabase/migrations/20260422100000_rename_overhead_press_to_barbell.sql`. The slug refactor that would eliminate this rule is tracked in GH#215.

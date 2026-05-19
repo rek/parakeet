@@ -770,3 +770,185 @@ describe('concurrent timers', () => {
     expect(deriveTimerKey({ pendingMainSetNumber: null, pendingAuxExercise: null })).toBe('warmup');
   });
 });
+
+describe('addTemplateBlock', () => {
+  beforeEach(() => {
+    useSessionStore.getState().reset();
+  });
+
+  const templateEntry = (
+    exercise: string,
+    templateInstanceId: string,
+    prescribedRest = 20
+  ): Omit<
+    import('./sessionStore').AuxiliaryActualSet,
+    'set_number'
+  > => ({
+    exercise,
+    weight_grams: 0,
+    reps_completed: 0,
+    is_completed: false,
+    exercise_type: 'timed',
+    prescribed_rest_seconds: prescribedRest,
+    template_instance_id: templateInstanceId,
+  });
+
+  it('assigns set_numbers starting at 1 per exercise when none exist', () => {
+    const store = useSessionStore.getState();
+    store.addTemplateBlock([
+      templateEntry('Assault Bike', 't-1'),
+      templateEntry('Ski Erg', 't-1'),
+      templateEntry('Assault Bike', 't-1'),
+      templateEntry('Ski Erg', 't-1'),
+    ]);
+
+    const stored = useSessionStore.getState().auxiliarySets;
+    expect(stored).toHaveLength(4);
+    expect(stored.map((s) => `${s.exercise}#${s.set_number}`)).toEqual([
+      'Assault Bike#1',
+      'Ski Erg#1',
+      'Assault Bike#2',
+      'Ski Erg#2',
+    ]);
+  });
+
+  it('continues set numbering from existing sets for the same exercise', () => {
+    useSessionStore.setState({
+      auxiliarySets: [
+        {
+          exercise: 'Assault Bike',
+          set_number: 1,
+          weight_grams: 0,
+          reps_completed: 0,
+          is_completed: true,
+        },
+        {
+          exercise: 'Assault Bike',
+          set_number: 2,
+          weight_grams: 0,
+          reps_completed: 0,
+          is_completed: true,
+        },
+      ],
+    });
+
+    useSessionStore.getState().addTemplateBlock([
+      templateEntry('Assault Bike', 't-1'),
+      templateEntry('Assault Bike', 't-1'),
+    ]);
+
+    const numbers = useSessionStore
+      .getState()
+      .auxiliarySets.filter((s) => s.exercise === 'Assault Bike')
+      .map((s) => s.set_number);
+    expect(numbers).toEqual([1, 2, 3, 4]);
+  });
+
+  it('preserves prescribed_rest_seconds and template_instance_id on each entry', () => {
+    useSessionStore.getState().addTemplateBlock([
+      templateEntry('Assault Bike', 't-1', 20),
+      templateEntry('Ski Erg', 't-1', 30),
+    ]);
+
+    const stored = useSessionStore.getState().auxiliarySets;
+    expect(stored[0].prescribed_rest_seconds).toBe(20);
+    expect(stored[1].prescribed_rest_seconds).toBe(30);
+    expect(new Set(stored.map((s) => s.template_instance_id))).toEqual(
+      new Set(['t-1'])
+    );
+  });
+});
+
+describe('removeTemplateBlock', () => {
+  beforeEach(() => {
+    useSessionStore.getState().reset();
+  });
+
+  const templateEntry = (
+    exercise: string,
+    templateInstanceId: string,
+    prescribedRest = 20
+  ): Omit<
+    import('./sessionStore').AuxiliaryActualSet,
+    'set_number'
+  > => ({
+    exercise,
+    weight_grams: 0,
+    reps_completed: 0,
+    is_completed: false,
+    exercise_type: 'timed',
+    prescribed_rest_seconds: prescribedRest,
+    template_instance_id: templateInstanceId,
+  });
+
+  it('removes every entry tagged with the given instance id', () => {
+    useSessionStore.getState().addTemplateBlock([
+      templateEntry('Assault Bike', 't-1'),
+      templateEntry('Ski Erg', 't-1'),
+      templateEntry('Assault Bike', 't-2'),
+    ]);
+
+    useSessionStore.getState().removeTemplateBlock('t-1');
+
+    const remaining = useSessionStore.getState().auxiliarySets;
+    expect(remaining).toHaveLength(1);
+    expect(remaining[0].exercise).toBe('Assault Bike');
+    expect(remaining[0].template_instance_id).toBe('t-2');
+  });
+
+  it('renumbers each affected exercise contiguously after removal', () => {
+    useSessionStore.setState({
+      auxiliarySets: [
+        {
+          exercise: 'Assault Bike',
+          set_number: 1,
+          weight_grams: 0,
+          reps_completed: 0,
+          is_completed: true,
+        },
+        {
+          exercise: 'Assault Bike',
+          set_number: 2,
+          weight_grams: 0,
+          reps_completed: 0,
+          is_completed: true,
+        },
+      ],
+    });
+    useSessionStore.getState().addTemplateBlock([
+      templateEntry('Assault Bike', 't-1'),
+      templateEntry('Ski Erg', 't-1'),
+      templateEntry('Assault Bike', 't-1'),
+      templateEntry('Ski Erg', 't-1'),
+      templateEntry('Assault Bike', 't-1'),
+      templateEntry('Ski Erg', 't-1'),
+    ]);
+
+    expect(
+      useSessionStore
+        .getState()
+        .auxiliarySets.filter((s) => s.exercise === 'Assault Bike')
+        .map((s) => s.set_number)
+    ).toEqual([1, 2, 3, 4, 5]);
+
+    useSessionStore.getState().removeTemplateBlock('t-1');
+
+    const stored = useSessionStore.getState().auxiliarySets;
+    expect(
+      stored.filter((s) => s.exercise === 'Assault Bike').map((s) => s.set_number)
+    ).toEqual([1, 2]);
+    expect(stored.filter((s) => s.exercise === 'Ski Erg')).toEqual([]);
+  });
+
+  it('is a no-op when no entries match the instance id', () => {
+    useSessionStore.getState().addTemplateBlock([
+      templateEntry('Assault Bike', 't-1'),
+      templateEntry('Ski Erg', 't-1'),
+    ]);
+
+    const before = useSessionStore.getState().auxiliarySets;
+    useSessionStore.getState().removeTemplateBlock('does-not-exist');
+    const after = useSessionStore.getState().auxiliarySets;
+    expect(after).toEqual(before);
+  });
+});

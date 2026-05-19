@@ -14,10 +14,14 @@ import { useFeatureEnabled } from '@modules/feature-flags';
 import { LiftHistorySheet, useLiftHistory } from '@modules/history';
 import { computeDisplayWeights, useChallengeReview } from '@modules/jit';
 import { getProfile } from '@modules/profile';
+import type { WorkoutTemplateWithItems } from '@modules/workout-templates';
+import { AddExerciseModal } from '@shared/ui/AddExerciseModal';
 import {
   abandonSession,
-  AddExerciseModal,
+  AddWorkoutTemplateModal,
+  AuxTemplateBlock,
   BackgroundTimerBadge,
+  expandTemplate,
   buildBlockWeekLabel,
   buildIntensityLabel,
   buildNextLiftLabel,
@@ -359,6 +363,8 @@ export default function SessionScreen() {
     initAuxiliaryWork,
     addAdHocSet,
     removeAdHocSet,
+    addTemplateBlock,
+    removeTemplateBlock,
     setWarmupDone,
     setSessionMeta,
     setCachedJitData,
@@ -391,6 +397,9 @@ export default function SessionScreen() {
   const { invalidateSessionCache } = useSessionLifecycle();
 
   const [warmupSetsState, setWarmupSetsState] = useState<WarmupSet[]>([]);
+  // Exercises rendered as cards in the aux area that aren't in the JIT
+  // prescription. Union of two sources: truly ad-hoc adds (AddExerciseModal)
+  // and template-derived adds (AddWorkoutTemplateModal → handleConfirmAddWorkout).
   const [adHocExercises, setAdHocExercises] = useState<string[]>([]);
   const [equipmentBarWeightKg, setEquipmentBarWeightKg] = useState<number>(20);
   const [equipmentDisabledPlates, setEquipmentDisabledPlates] = useState<
@@ -399,6 +408,7 @@ export default function SessionScreen() {
   const [warmupPlateDisplay, setWarmupPlateDisplay] =
     useState<WarmupPlateDisplay>('numbers');
   const [addExerciseVisible, setAddExerciseVisible] = useState(false);
+  const [addWorkoutVisible, setAddWorkoutVisible] = useState(false);
   const [historySheetVisible, setHistorySheetVisible] = useState(false);
   const insets = useSafeAreaInsets();
   const traceEnabled = useFeatureEnabled('prescriptionTrace');
@@ -582,9 +592,15 @@ export default function SessionScreen() {
           invalidateSessionCache();
         });
       } else {
-        // Resuming free-form: restore ad-hoc exercises from store
+        // Resuming free-form: restore ad-hoc exercises from store. Skip
+        // template-tagged sets — they render via AuxTemplateBlock, not the
+        // per-exercise card list, so they don't belong in adHocExercises.
         const adHoc = [
-          ...new Set(storeState.auxiliarySets.map((s) => s.exercise)),
+          ...new Set(
+            storeState.auxiliarySets
+              .filter((s) => s.template_instance_id == null)
+              .map((s) => s.exercise)
+          ),
         ];
         setAdHocExercises(adHoc);
       }
@@ -682,7 +698,10 @@ export default function SessionScreen() {
       const adHoc = [
         ...new Set(
           storeState.auxiliarySets
-            .filter((s) => !prescribed.has(s.exercise))
+            .filter(
+              (s) =>
+                !prescribed.has(s.exercise) && s.template_instance_id == null
+            )
             .map((s) => s.exercise)
         ),
       ];
@@ -728,6 +747,24 @@ export default function SessionScreen() {
     [auxiliaryWork, adHocExercises]
   );
 
+  // Group template-inserted aux entries by their instance id, preserving the
+  // round-by-round insertion order. AuxTemplateBlock renders each block as a
+  // single interleaved card so HIIT-style circuits read correctly.
+  const templateBlocks = useMemo(() => {
+    const blocks = new Map<string, typeof auxiliarySets>();
+    for (const entry of auxiliarySets) {
+      const id = entry.template_instance_id;
+      if (id == null) continue;
+      const existing = blocks.get(id) ?? [];
+      existing.push(entry);
+      blocks.set(id, existing);
+    }
+    return Array.from(blocks.entries()).map(([id, entries]) => ({
+      id,
+      entries,
+    }));
+  }, [auxiliarySets]);
+
   const suggestedExerciseNames = useMemo(
     () =>
       computeSuggestedAux(
@@ -764,6 +801,22 @@ export default function SessionScreen() {
 
   function handleAddAdHocSet(exercise: string) {
     addAdHocSet(exercise, undefined, getExerciseType(exercise));
+  }
+
+  function handleConfirmAddWorkout(template: WorkoutTemplateWithItems) {
+    const oneRmGrams =
+      oneRmKgRef.current != null ? Math.round(oneRmKgRef.current * 1000) : 0;
+    const entries = expandTemplate(template, template.items, {
+      computeWeightGrams: (exercise) =>
+        oneRmGrams > 0
+          ? computeSuggestedWeight(exercise, oneRmGrams, exerciseCatalog)
+          : 0,
+    });
+    addTemplateBlock(entries);
+    // Template blocks render via AuxTemplateBlock — intentionally not
+    // merged into adHocExercises so we don't double-render them as
+    // per-exercise cards.
+    setAddWorkoutVisible(false);
   }
 
   function handleRemoveAdHocSet(exercise: string, setNumber: number) {
@@ -1176,7 +1229,11 @@ export default function SessionScreen() {
             )}
 
             {adHocExercises.map((exercise, exerciseIndex) => {
-              const sets = auxiliarySets.filter((s) => s.exercise === exercise);
+              const sets = auxiliarySets.filter(
+                (s) =>
+                  s.exercise === exercise && s.template_instance_id == null
+              );
+              if (sets.length === 0) return null;
               return (
                 <View key={exercise} style={styles.auxExercise}>
                   <View style={styles.adHocExerciseHeader}>
@@ -1249,6 +1306,25 @@ export default function SessionScreen() {
           </View>
         )}
 
+        {/* Template blocks (HIIT, EMOM, etc.) — rendered as interleaved round
+            sequences rather than per-exercise groupings. */}
+        {templateBlocks.map((block) => (
+          <AuxTemplateBlock
+            key={block.id}
+            block={block.entries}
+            auxiliarySets={auxiliarySets}
+            onRemoveBlock={() => removeTemplateBlock(block.id)}
+            onAuxSetUpdate={(exercise, setNumber, setsInExercise, data) =>
+              handleAuxSetUpdate(-1, exercise, setNumber, setsInExercise, data)
+            }
+            onAuxRpePress={requestAuxRpe}
+            barWeightKg={equipmentBarWeightKg}
+            disabledPlates={equipmentDisabledPlates}
+            onBarWeightChange={handleBarWeightChange}
+            onDisabledPlatesChange={handleDisabledPlatesChange}
+          />
+        ))}
+
         {/* Add exercise button */}
         <TouchableOpacity
           style={styles.addExerciseButton}
@@ -1258,6 +1334,17 @@ export default function SessionScreen() {
           accessibilityRole="button"
         >
           <Text style={styles.addExerciseButtonText}>+ Add Exercise</Text>
+        </TouchableOpacity>
+
+        {/* Add workout (template) button */}
+        <TouchableOpacity
+          style={styles.addExerciseButton}
+          onPress={() => setAddWorkoutVisible(true)}
+          activeOpacity={0.7}
+          accessibilityLabel="Add workout template"
+          accessibilityRole="button"
+        >
+          <Text style={styles.addExerciseButtonText}>+ Add Workout</Text>
         </TouchableOpacity>
 
         {/* Complete workout button — inline, must scroll to reach */}
@@ -1297,6 +1384,13 @@ export default function SessionScreen() {
         suggestedNames={suggestedExerciseNames}
         recentNames={recentAuxNames}
         excludeNames={alreadyInSession}
+      />
+
+      {/* Add workout (template) modal */}
+      <AddWorkoutTemplateModal
+        visible={addWorkoutVisible}
+        onConfirm={handleConfirmAddWorkout}
+        onClose={() => setAddWorkoutVisible(false)}
       />
 
       {/* RPE picker (primary) + rest timer + post-rest overlay */}

@@ -40,6 +40,18 @@ export interface AuxiliaryActualSet {
   failed?: boolean;
   /** ISO timestamp — set when persistSet successfully writes to set_logs. */
   synced_at?: string;
+  /** Per-entry rest override. When set, the rest timer uses this instead of
+   *  the user's global RestTimerPrefs default. Written by template expansion
+   *  (and any future per-exercise rest planning). */
+  prescribed_rest_seconds?: number;
+  /** Shared across all entries injected from one template insertion. Used by
+   *  UI to render a grouping band and to bulk-remove the block. Absent on
+   *  ad-hoc sets and JIT-generated aux. */
+  template_instance_id?: string;
+  /** Display name of the source template, copied at insertion time. Lets the
+   *  block renderer show "HIIT — Bike/Ski/Row" without re-fetching the
+   *  template by id. */
+  template_name?: string;
 }
 
 export interface TimerState {
@@ -133,12 +145,26 @@ export interface SessionState {
     setNumber: number,
     syncedAt: string
   ) => void;
+  /** Single ad-hoc set for an exercise the user typed into AddExerciseModal.
+   *  Template-derived bulk inserts go through `addTemplateBlock` instead. */
   addAdHocSet: (
     exercise: string,
     initialWeightGrams?: number,
     exerciseType?: 'weighted' | 'bodyweight' | 'timed'
   ) => void;
+  /** Removes one set. For template-block sets, prefer `removeTemplateBlock`
+   *  to drop the whole block in one shot. */
   removeAdHocSet: (exercise: string, setNumber: number) => void;
+  /** Bulk-inserts a block of template-derived aux entries. set_number on each
+   *  entry is treated as template-relative (1..rounds per exercise) and
+   *  renumbered to continue from any existing sets for that exercise. */
+  addTemplateBlock: (
+    entries: Omit<AuxiliaryActualSet, 'set_number'>[]
+  ) => void;
+  /** Bulk-removes every aux set sharing the given template_instance_id, then
+   *  renumbers remaining sets of any affected exercise so set_numbers stay
+   *  contiguous (1..N). Mirrors `removeAdHocSet`'s renumber pattern. */
+  removeTemplateBlock: (templateInstanceId: string) => void;
   setWarmupDone: (index: number, done: boolean) => void;
   setSessionRpe: (rpe: number) => void;
   initSession: (
@@ -366,6 +392,48 @@ export const useSessionStore = create<SessionState>()(
               return s;
             });
           return { auxiliarySets: remaining };
+        }),
+
+      addTemplateBlock: (entries) =>
+        set((state) => {
+          // Per-exercise running counter seeded from current auxiliarySets
+          // so template entries continue numbering from any existing sets.
+          const counters = new Map<string, number>();
+          for (const s of state.auxiliarySets) {
+            counters.set(
+              s.exercise,
+              Math.max(counters.get(s.exercise) ?? 0, s.set_number)
+            );
+          }
+          const numbered: AuxiliaryActualSet[] = entries.map((e) => {
+            const next = (counters.get(e.exercise) ?? 0) + 1;
+            counters.set(e.exercise, next);
+            return { ...e, set_number: next };
+          });
+          return { auxiliarySets: [...state.auxiliarySets, ...numbered] };
+        }),
+
+      removeTemplateBlock: (templateInstanceId) =>
+        set((state) => {
+          // Drop all entries tagged with this instance, then renumber the
+          // remaining sets of each affected exercise so set_numbers stay
+          // contiguous (1..N) — mirrors removeAdHocSet's renumber pattern.
+          const affectedExercises = new Set(
+            state.auxiliarySets
+              .filter((s) => s.template_instance_id === templateInstanceId)
+              .map((s) => s.exercise)
+          );
+          const kept = state.auxiliarySets.filter(
+            (s) => s.template_instance_id !== templateInstanceId
+          );
+          const counters = new Map<string, number>();
+          const renumbered = kept.map((s) => {
+            if (!affectedExercises.has(s.exercise)) return s;
+            const next = (counters.get(s.exercise) ?? 0) + 1;
+            counters.set(s.exercise, next);
+            return { ...s, set_number: next };
+          });
+          return { auxiliarySets: renumbered };
         }),
 
       setWarmupDone: (index, done) =>

@@ -616,6 +616,11 @@ export default function SettingsScreen() {
             styles={styles}
           />
         )}
+        <Row
+          label="Workout Templates"
+          onPress={() => router.push('/settings/workout-templates')}
+          styles={styles}
+        />
         {showWarmups && (
           <Row
             label="Warmup Protocol"

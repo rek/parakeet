@@ -19,9 +19,9 @@ import { ExerciseName } from '@shared/ui/ExerciseName';
 import type { ExerciseCatalogEntry } from '@shared/utils/exercise-lookup';
 import { getAllExercises } from '@shared/utils/exercise-lookup';
 
-import { radii, spacing, typography } from '../../../theme';
-import type { ColorScheme } from '../../../theme';
-import { useTheme } from '../../../theme/ThemeContext';
+import { radii, spacing, typography } from '../../theme';
+import type { ColorScheme } from '../../theme';
+import { useTheme } from '../../theme/ThemeContext';
 
 type SectionFilter = 'all' | Lift | 'core' | 'cardio' | 'general';
 

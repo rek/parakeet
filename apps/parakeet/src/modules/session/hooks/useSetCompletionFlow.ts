@@ -15,6 +15,7 @@ import {
 } from '../model/types';
 import { computeDismissResult } from '../utils/computeDismissResult';
 import { getEffectivePlannedSet } from '@shared/utils/getEffectivePlannedSet';
+import { resolveAuxRestSeconds } from '../utils/resolveAuxRestSeconds';
 import { writeAuxFailureAndAdapt } from '../utils/set-outcome-helpers';
 import {
   resolveNextAuxSetWeight,
@@ -199,9 +200,14 @@ export function useSetCompletionFlow({
 
           if (!restTimerPrefsRef.current.auxSetsEnabled) return;
 
-          const duration =
-            restRecommendations.current?.auxiliary[exerciseIndex] ??
-            DEFAULT_AUX_REST_SECONDS;
+          const duration = resolveAuxRestSeconds({
+            exercise,
+            setNumber,
+            auxiliarySets: useSessionStore.getState().auxiliarySets,
+            fallback:
+              restRecommendations.current?.auxiliary[exerciseIndex] ??
+              DEFAULT_AUX_REST_SECONDS,
+          });
 
           openTimer({
             durationSeconds: duration,
@@ -289,9 +295,14 @@ export function useSetCompletionFlow({
         const exerciseIndex = auxiliaryWork.findIndex(
           (aw) => aw.exercise === auxExercise
         );
-        const duration =
-          restRecommendations.current?.auxiliary[exerciseIndex] ??
-          DEFAULT_AUX_REST_SECONDS;
+        const duration = resolveAuxRestSeconds({
+          exercise: auxExercise,
+          setNumber: nextAuxSet,
+          auxiliarySets: useSessionStore.getState().auxiliarySets,
+          fallback:
+            restRecommendations.current?.auxiliary[exerciseIndex] ??
+            DEFAULT_AUX_REST_SECONDS,
+        });
         openTimer({
           durationSeconds: duration,
           pendingAuxExercise: auxExercise,
@@ -575,9 +586,14 @@ export function useSetCompletionFlow({
     if (confType === 'timed' || confType === 'bodyweight') return;
     if (!restTimerPrefsRef.current.auxSetsEnabled) return;
 
-    const duration =
-      restRecommendations.current?.auxiliary[conf.exerciseIndex] ??
-      DEFAULT_AUX_REST_SECONDS;
+    const duration = resolveAuxRestSeconds({
+      exercise: conf.exercise,
+      setNumber: conf.setNumber,
+      auxiliarySets: useSessionStore.getState().auxiliarySets,
+      fallback:
+        restRecommendations.current?.auxiliary[conf.exerciseIndex] ??
+        DEFAULT_AUX_REST_SECONDS,
+    });
 
     openTimer({
       durationSeconds: duration,
@@ -609,9 +625,14 @@ export function useSetCompletionFlow({
     if (failedType === 'timed' || failedType === 'bodyweight') return;
     if (!restTimerPrefsRef.current.auxSetsEnabled) return;
 
-    const duration =
-      restRecommendations.current?.auxiliary[conf.exerciseIndex] ??
-      DEFAULT_AUX_REST_SECONDS;
+    const duration = resolveAuxRestSeconds({
+      exercise: conf.exercise,
+      setNumber: conf.setNumber,
+      auxiliarySets: useSessionStore.getState().auxiliarySets,
+      fallback:
+        restRecommendations.current?.auxiliary[conf.exerciseIndex] ??
+        DEFAULT_AUX_REST_SECONDS,
+    });
 
     openTimer({
       durationSeconds: duration,

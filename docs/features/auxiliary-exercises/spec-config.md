@@ -187,7 +187,7 @@ Two related bugs surfaced together. A user adding a custom auxiliary exercise ha
 - [x] `getExerciseType(name)` retained as catalog-only resolver for legacy callers
 
 **`packages/training-engine/src/auxiliary/exercise-catalog.ts`:**
-- [x] `DEFAULT_CARDIO_POOL` — derived: filters `EXERCISE_CATALOG` for `type === 'timed' && associatedLift === null && !primaryMuscles.includes('core')`. Yields the 4 timed cardio entries (`Row Machine`, `Ski Erg`, `Run - Treadmill`, `Run - Outside`).
+- [x] `DEFAULT_CARDIO_POOL` — derived: filters `EXERCISE_CATALOG` for `type === 'timed' && associatedLift === null && !primaryMuscles.includes('core')`. Yields the 5 timed cardio entries (`Row Machine`, `Ski Erg`, `Run - Treadmill`, `Run - Outside`, `Assault Bike`).
 
 **`packages/training-engine/src/generator/jit-session-generator.ts`:**
 - [x] `JITInput.customExerciseTypeMap?: CustomExerciseTypeMap` — flows alongside `customMuscleMap`
@@ -216,7 +216,7 @@ Two related bugs surfaced together. A user adding a custom auxiliary exercise ha
 - [x] Fetches `getAllAuxTypeMap` alongside `getAllAuxMuscleMap`; populates `JITInput.customExerciseTypeMap` (only when non-empty, to keep replay traces clean)
 - [x] Merges `allPools.cardio` into the unified `auxiliaryPool` so cardio entries show up in pickers. Volume top-up still filters them out at `buildVolumeTopUp` (timed entries are removed before scoring), so cardio never gets auto-picked.
 
-**`apps/parakeet/src/modules/session/ui/AddExerciseModal.tsx`:**
+**`apps/parakeet/src/shared/ui/AddExerciseModal.tsx`:**
 - [x] `defaultLift?: Lift | 'core' | 'cardio'` — pre-selects the section filter
 - [x] Adds a "Cardio" filter pill. Cardio filter rule: `associatedLift === null && type === 'timed' && !primaryMuscles.includes('core')`
 - [x] `onConfirm` widened to `(name, muscles?, exerciseType?)` — backwards-compatible, optional args

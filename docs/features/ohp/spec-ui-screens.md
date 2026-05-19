@@ -44,7 +44,7 @@ Updates all UI screens that hardcode 3-lift arrays or need OHP-specific display 
 
 ### Session
 
-**`apps/parakeet/src/modules/session/ui/AddExerciseModal.tsx`:**
+**`apps/parakeet/src/shared/ui/AddExerciseModal.tsx`:**
 
 - [ ] Add `'overhead_press'` to filter options list
 - [ ] Add `overhead_press: 'OHP'` to `SECTION_LABELS`

@@ -1862,6 +1862,77 @@ export type Database = {
           },
         ]
       }
+      workout_template_items: {
+        Row: {
+          duration_seconds: number | null
+          exercise: string
+          id: string
+          position: number
+          reps: number | null
+          rest_after_seconds: number
+          template_id: string
+        }
+        Insert: {
+          duration_seconds?: number | null
+          exercise: string
+          id?: string
+          position: number
+          reps?: number | null
+          rest_after_seconds: number
+          template_id: string
+        }
+        Update: {
+          duration_seconds?: number | null
+          exercise?: string
+          id?: string
+          position?: number
+          reps?: number | null
+          rest_after_seconds?: number
+          template_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "workout_template_items_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "workout_templates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      workout_templates: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          description: string | null
+          id: string
+          name: string
+          rounds: number
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          name: string
+          rounds?: number
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          name?: string
+          rounds?: number
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

@@ -10,7 +10,7 @@ import {
 
 import { getPrimaryMuscles } from '@modules/program';
 import type { AuxiliaryPoolCategory } from '@modules/program';
-import { AddExerciseModal } from '@modules/session';
+import { AddExerciseModal } from '@shared/ui/AddExerciseModal';
 import { useAuxiliaryPools } from '@modules/settings';
 import { MuscleChips } from '@modules/training-volume';
 import type { MuscleGroup } from '@parakeet/shared-types';

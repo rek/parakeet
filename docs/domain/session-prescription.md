@@ -121,8 +121,9 @@ Per-block rest seconds are defined in [periodization.md](periodization.md).
 |--------------------|-----------------------------------------------|
 | LLM suggestion     | ± 60 s from formula default                   |
 | User override      | Per-lift × per-intensity in `rest_configs` table |
+| Per-entry override | `AuxiliaryActualSet.prescribed_rest_seconds` (set by workout templates, see [features/workout-templates](../features/workout-templates/)). Wins over `rest_configs` and global defaults when present. |
 
-**Source:** `packages/training-engine/src/cube/blocks.ts`
+**Source:** `packages/training-engine/src/cube/blocks.ts`, `apps/parakeet/src/modules/session/utils/resolveAuxRestSeconds.ts`
 
 ---
 
