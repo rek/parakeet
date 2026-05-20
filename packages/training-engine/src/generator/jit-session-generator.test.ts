@@ -1921,3 +1921,172 @@ describe('generateJITSession — rep range adjustment', () => {
     expect(out.mainLiftSets[0].reps).toBe(5);
   });
 });
+
+// ---------------------------------------------------------------------------
+// GH#217: Aux proportional propagation + top-up primary-muscle exclusion
+// ---------------------------------------------------------------------------
+
+describe('generateJITSession — GH#217 aux proportional reduction', () => {
+  it('stacked penalties (sleep+energy poor, late luteal, soreness 6) → aux sets and weight cut proportionally', () => {
+    const out = generateJITSession(
+      baseInput({
+        primaryLift: 'squat',
+        intensityType: 'heavy',
+        blockNumber: 1,
+        sleepQuality: 2,
+        energyLevel: 2,
+        cyclePhase: 'late_luteal',
+        sorenessRatings: { quads: 6 },
+        activeAuxiliaries: ['Unknown Aux A', 'Unknown Aux B'],
+      })
+    );
+    // Squat heavy block 1 base = 2 sets. Readiness -1, cycle -1, soreness -1
+    // all clamp to max(1, ...) so plannedCount lands at 1.
+    expect(out.mainLiftSets).toHaveLength(1);
+    // mainLiftVolumeRatio = 1/2 = 0.5 → aux 3 × 0.5 = 1.5 → round = 2 sets
+    out.auxiliaryWork.forEach((a) => {
+      expect(a.skipped).toBe(false);
+      expect(a.sets).toHaveLength(2);
+    });
+    // Intensity: readiness 0.95 × cycle 0.95 = 0.9025
+    // 140 × 0.675 = 94.5 → round 95; 95 × 0.9025 = 85.7 → round 85
+    out.auxiliaryWork.forEach((a) => {
+      expect(a.sets[0].weight_kg).toBe(85);
+    });
+  });
+
+  it('moderate disruption (non-equipment) scales aux proportionally', () => {
+    const dis = { ...makeDisruption('moderate'), affected_lifts: null };
+    const out = generateJITSession(
+      baseInput({
+        activeDisruptions: [dis],
+        activeAuxiliaries: ['Unknown Aux A', 'Unknown Aux B'],
+      })
+    );
+    // Moderate disruption: main 2→1 sets, ×0.9 intensity
+    expect(out.mainLiftSets).toHaveLength(1);
+    // Aux ratio 0.5 → 2 sets; weight 95 × 0.9 = 85.5 → round 85
+    out.auxiliaryWork.forEach((a) => {
+      expect(a.skipped).toBe(false);
+      expect(a.sets).toHaveLength(2);
+      expect(a.sets[0].weight_kg).toBe(85);
+    });
+  });
+
+  it('major disruption (main skipped) → aux also suppressed', () => {
+    const dis = { ...makeDisruption('major'), affected_lifts: null };
+    const out = generateJITSession(
+      baseInput({
+        activeDisruptions: [dis],
+        activeAuxiliaries: ['Unknown Aux A', 'Unknown Aux B'],
+      })
+    );
+    expect(out.skippedMainLift).toBe(true);
+    out.auxiliaryWork.forEach((a) => {
+      expect(a.skipped).toBe(true);
+      expect(a.skipReason).toMatch(/main lift skipped/i);
+    });
+  });
+
+  it('deload session bypasses proportional propagation (aux preserved)', () => {
+    // Even with penalty signals, deload base is intentionally low — aux unchanged
+    const out = generateJITSession(
+      baseInput({
+        intensityType: 'deload',
+        sleepQuality: 2,
+        energyLevel: 2,
+        cyclePhase: 'late_luteal',
+        sorenessRatings: { quads: 6 },
+        activeAuxiliaries: ['Unknown Aux A', 'Unknown Aux B'],
+      })
+    );
+    out.auxiliaryWork.forEach((a) => {
+      expect(a.skipped).toBe(false);
+      expect(a.sets).toHaveLength(3);
+    });
+  });
+
+  it('clean session (no penalties) → aux unchanged (regression guard)', () => {
+    const out = generateJITSession(
+      baseInput({
+        activeAuxiliaries: ['Unknown Aux A', 'Unknown Aux B'],
+      })
+    );
+    out.auxiliaryWork.forEach((a) => {
+      expect(a.sets).toHaveLength(3);
+    });
+  });
+});
+
+describe('generateJITSession — GH#217 top-up excludes primary muscles', () => {
+  it('bench day never produces chest top-up even when chest is below MEV', () => {
+    const out = generateJITSession(
+      baseInput({
+        primaryLift: 'bench',
+        intensityType: 'heavy',
+        blockNumber: 1,
+        sessionIndex: 3,
+        totalSessionsThisWeek: 3,
+        oneRmKg: 100,
+        // Chest sits at 0; everything else at MEV — only chest is "deficient"
+        weeklyVolumeToDate: atMevExcept(DEFAULT_MRV_MEV_CONFIG_MALE, 'chest'),
+        auxiliaryPool: [
+          'Dumbbell Bench Press',
+          'Incline Dumbbell Press',
+          'Cable Fly',
+        ],
+        activeAuxiliaries: ['Close-Grip Barbell Bench Press', 'Overhead Press'],
+      })
+    );
+    const chestTopUp = out.auxiliaryWork.find(
+      (a) => a.isTopUp && a.topUpReason?.includes('chest')
+    );
+    expect(chestTopUp).toBeUndefined();
+  });
+
+  it('squat day never produces quads/glutes/lower_back top-ups', () => {
+    const out = generateJITSession(
+      baseInput({
+        primaryLift: 'squat',
+        intensityType: 'heavy',
+        blockNumber: 1,
+        sessionIndex: 3,
+        totalSessionsThisWeek: 3,
+        weeklyVolumeToDate: {}, // all muscles below MEV
+        auxiliaryPool: [
+          'Leg Press',
+          'Bulgarian Split Squat',
+          'Romanian Deadlift',
+        ],
+        activeAuxiliaries: ['Pause Squat', 'Barbell Box Squat'],
+      })
+    );
+    const forbidden = ['quads', 'glutes', 'lower_back', 'lower back'];
+    for (const aux of out.auxiliaryWork) {
+      if (!aux.isTopUp || !aux.topUpReason) continue;
+      for (const muscle of forbidden) {
+        expect(aux.topUpReason.toLowerCase()).not.toContain(muscle);
+      }
+    }
+  });
+
+  it('non-primary muscles still get topped up (regression: top-up itself still works)', () => {
+    const out = generateJITSession(
+      baseInput({
+        primaryLift: 'squat',
+        intensityType: 'heavy',
+        blockNumber: 1,
+        sessionIndex: 3,
+        totalSessionsThisWeek: 3,
+        // All squat-day primaries are well above MEV; only biceps is deficient
+        weeklyVolumeToDate: atMevExcept(DEFAULT_MRV_MEV_CONFIG_MALE, 'biceps'),
+        auxiliaryPool: ['Barbell Curl', 'Dumbbell Curl', 'Hammer Curl'],
+        activeAuxiliaries: ['Pause Squat', 'Barbell Box Squat'],
+      })
+    );
+    const bicepsTopUp = out.auxiliaryWork.find(
+      (a) => a.isTopUp && a.topUpReason?.includes('biceps')
+    );
+    expect(bicepsTopUp).toBeDefined();
+  });
+});
