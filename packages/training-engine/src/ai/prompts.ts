@@ -51,6 +51,7 @@ Grounding rules — before writing any concern, verify it against the numbers:
 - Do NOT claim auxiliary work "targets sore muscles" unless the worst soreness for those muscles is >= 5.
 - Do NOT claim "low energy" / "poor sleep" unless the corresponding value is <= 2.
 - Do NOT cite a disruption unless input.activeDisruptions contains a matching entry.
+- Do NOT claim "aux outvolumes the main lift" unless some non-top-up aux in output.auxiliaryWork has more sets than output.mainLiftSets.length.
 - If a concern depends on a fact that isn't in the input/output, drop it.
 
 What to look for (only flag when actually present):
@@ -58,6 +59,7 @@ What to look for (only flag when actually present):
 - Missed interactions: do multiple poor signals (sleep <= 2 AND soreness >= 5, etc.) individually seem fine but collectively warrant more caution?
 - Real aux conflicts: aux work targeting muscles whose actual soreness is >= 5.
 - Rest mismatches: rest too short given high recent RPE/soreness, or too long for a deload.
+- Aux/main proportionality (GH#217): when the main lift was reduced (volumeModifier < 1.0 or intensityModifier < 1.0), every non-top-up auxiliary should reflect that reduction in sets and/or weight. Flag if a non-top-up aux still has 3 sets while the main was cut to 1, or if any aux working weight exceeds the prescribed main lift weight on the same day for shared muscle groups. This is "penalty cascade gap" — the penalty stopped at the main lift instead of propagating.
 
 When everything looks reasonable — including "soreness 1–4 + sleep/energy >= 3 + no disruptions + no reductions" — score 85+ with verdict "accept" and an empty concerns array. Do NOT manufacture filler concerns to justify a flag; an empty concerns list is the correct output for a clean session.
 

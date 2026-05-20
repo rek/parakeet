@@ -3,6 +3,7 @@ import type { JudgeReview } from '@parakeet/shared-types';
 import { generateText } from 'ai';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { JUDGE_REVIEW_SYSTEM_PROMPT } from '../ai/prompts';
 import type { JITInput, JITOutput } from '../generator/jit-session-generator';
 import { groundReview, reviewJITDecision, SILENT_PASS } from './judge-reviewer';
 
@@ -265,6 +266,123 @@ describe('groundReview', () => {
       makeOutput({ skippedMainLift: true })
     );
     expect(grounded.concerns).toHaveLength(1);
+  });
+
+  // GH#217 — aux outvolumes main
+  it('drops "aux outvolumes main" concerns when no aux exceeds main sets', () => {
+    const review = makeReview({
+      score: 65,
+      verdict: 'flag',
+      concerns: [
+        'Auxiliary work outvolumes the main lift on a penalty day.',
+      ],
+    });
+    const grounded = groundReview(
+      review,
+      makeInput(),
+      makeOutput({
+        mainLiftSets: [
+          { set_number: 1, weight_kg: 100, reps: 5, rpe_target: 8 },
+          { set_number: 2, weight_kg: 100, reps: 5, rpe_target: 8 },
+        ],
+        auxiliaryWork: [
+          {
+            exercise: 'Pause Squat',
+            exerciseType: 'weighted',
+            sets: [
+              { set_number: 1, weight_kg: 80, reps: 10, rpe_target: 7.5 },
+              { set_number: 2, weight_kg: 80, reps: 10, rpe_target: 7.5 },
+            ],
+            skipped: false,
+          },
+        ],
+      } as unknown as JITOutput)
+    );
+    expect(grounded.concerns).toEqual([]);
+  });
+
+  it('keeps "aux outvolumes main" concerns when an aux actually has more sets', () => {
+    const review = makeReview({
+      score: 60,
+      verdict: 'flag',
+      concerns: [
+        'Auxiliary exercise exceeds main lift in number of sets after penalty reduction.',
+      ],
+    });
+    const grounded = groundReview(
+      review,
+      makeInput(),
+      makeOutput({
+        intensityModifier: 0.7,
+        volumeModifier: 0.5,
+        mainLiftSets: [
+          { set_number: 1, weight_kg: 100, reps: 5, rpe_target: 8 },
+        ],
+        auxiliaryWork: [
+          {
+            exercise: 'Close-Grip Bench',
+            exerciseType: 'weighted',
+            sets: [
+              { set_number: 1, weight_kg: 80, reps: 10, rpe_target: 7.5 },
+              { set_number: 2, weight_kg: 80, reps: 10, rpe_target: 7.5 },
+              { set_number: 3, weight_kg: 80, reps: 10, rpe_target: 7.5 },
+            ],
+            skipped: false,
+          },
+        ],
+      } as unknown as JITOutput)
+    );
+    expect(grounded.concerns).toHaveLength(1);
+  });
+
+  it('ignores top-up aux when checking outvolume claim', () => {
+    const review = makeReview({
+      score: 60,
+      verdict: 'flag',
+      concerns: ['Auxiliary work outvolumes main lift.'],
+    });
+    const grounded = groundReview(
+      review,
+      makeInput(),
+      makeOutput({
+        mainLiftSets: [
+          { set_number: 1, weight_kg: 100, reps: 5, rpe_target: 8 },
+        ],
+        // Only top-ups exceed main sets — should be ignored, concern dropped
+        auxiliaryWork: [
+          {
+            exercise: 'Cable Fly',
+            exerciseType: 'weighted',
+            isTopUp: true,
+            topUpReason: 'biceps below MEV',
+            sets: [
+              { set_number: 1, weight_kg: 30, reps: 12, rpe_target: 7.5 },
+              { set_number: 2, weight_kg: 30, reps: 12, rpe_target: 7.5 },
+              { set_number: 3, weight_kg: 30, reps: 12, rpe_target: 7.5 },
+            ],
+            skipped: false,
+          },
+        ],
+      } as unknown as JITOutput)
+    );
+    expect(grounded.concerns).toEqual([]);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Prompt content (GH#217)
+// ---------------------------------------------------------------------------
+
+describe('JUDGE_REVIEW_SYSTEM_PROMPT', () => {
+  it('teaches the LLM to check aux/main proportionality on penalty days', () => {
+    expect(JUDGE_REVIEW_SYSTEM_PROMPT).toMatch(/aux\/main proportionality/i);
+    expect(JUDGE_REVIEW_SYSTEM_PROMPT).toMatch(/penalty cascade gap/i);
+  });
+
+  it('grounds the aux-outvolumes claim against actual numbers', () => {
+    expect(JUDGE_REVIEW_SYSTEM_PROMPT).toMatch(
+      /Do NOT claim "aux outvolumes the main lift"/i
+    );
   });
 });
 
