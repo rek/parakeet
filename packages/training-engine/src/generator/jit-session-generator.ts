@@ -7,6 +7,7 @@ import {
 
 import { ReadinessLevel } from '../adjustments/readiness-adjuster';
 import {
+  getPrimaryMusclesForSession,
   SorenessLevel,
   SorenessModifier,
 } from '../adjustments/soreness-adjuster';
@@ -734,9 +735,17 @@ export function buildVolumeTopUp(
     mainContrib.set(muscle, (mainContrib.get(muscle) ?? 0) + contribution);
   }
 
+  // GH#217: never top up the primary muscles of today's main lift. The lifter
+  // is already training those muscles; reactive top-up creates redundant work
+  // (e.g. chest top-up on bench day) and undoes penalty reductions that just
+  // cut the main lift. If the program wants more of that muscle, it belongs in
+  // the program template, not the top-up.
+  const primaryMusclesToday = new Set(getPrimaryMusclesForSession(primaryLift));
+
   // Find muscles below MEV after factoring in today's main lift
   const candidates: Array<{ muscle: MuscleGroup; deficit: number }> = [];
   for (const muscle of Object.keys(mrvMevConfig) as MuscleGroup[]) {
+    if (primaryMusclesToday.has(muscle)) continue;
     const { mev } = mrvMevConfig[muscle];
     if (mev <= 0) continue;
     const weeklyVol = weeklyVolumeToDate[muscle] ?? 0;
