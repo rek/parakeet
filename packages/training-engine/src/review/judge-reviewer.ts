@@ -29,7 +29,8 @@ export async function reviewJITDecision(
       prompt: JSON.stringify({ input, output }),
       abortSignal: abortAfter(12000),
     });
-    return review ?? SILENT_PASS;
+    if (!review) return SILENT_PASS;
+    return groundReview(review, input, output);
   } catch (err) {
     reportEngineError(err, {
       source: 'JudgeReviewer',
@@ -37,4 +38,51 @@ export async function reviewJITDecision(
     });
     return SILENT_PASS;
   }
+}
+
+// Filters out concerns the LLM hallucinated against the actual numbers.
+// See gh#216: the judge fabricated "intensity and volume reduce for mild
+// soreness" on a session where soreness was 1/1/1 and no modifier fired.
+export function groundReview(
+  review: JudgeReview,
+  input: JITInput,
+  output: JITOutput
+): JudgeReview {
+  const hasReduction =
+    output.intensityModifier < 1.0 ||
+    output.volumeModifier < 1.0 ||
+    output.skippedMainLift;
+  const worstSoreness = Math.max(
+    1,
+    ...Object.values(input.sorenessRatings ?? {}).filter(
+      (v): v is number => typeof v === 'number'
+    )
+  );
+  const sleep = input.sleepQuality ?? 3;
+  const energy = input.energyLevel ?? 3;
+
+  const REDUCTION = /\b(reduc|cutting|lowered|decreas)/i;
+  const SORE_REF = /\b(sore|soreness)\b/i;
+  const LOW_ENERGY = /\blow energy\b|\bpoor energy\b/i;
+  const LOW_SLEEP = /\blow sleep\b|\bpoor sleep\b/i;
+
+  const grounded = review.concerns.filter((c) => {
+    if (!hasReduction && REDUCTION.test(c)) return false;
+    if (worstSoreness <= 4 && SORE_REF.test(c)) return false;
+    if (energy >= 3 && LOW_ENERGY.test(c)) return false;
+    if (sleep >= 3 && LOW_SLEEP.test(c)) return false;
+    return true;
+  });
+
+  if (grounded.length === review.concerns.length) return review;
+
+  if (grounded.length === 0 && review.verdict === 'flag') {
+    return {
+      ...review,
+      concerns: [],
+      verdict: 'accept',
+      score: Math.max(review.score, 85),
+    };
+  }
+  return { ...review, concerns: grounded };
 }

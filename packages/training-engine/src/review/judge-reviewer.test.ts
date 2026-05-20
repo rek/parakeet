@@ -4,7 +4,7 @@ import { generateText } from 'ai';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { JITInput, JITOutput } from '../generator/jit-session-generator';
-import { reviewJITDecision, SILENT_PASS } from './judge-reviewer';
+import { groundReview, reviewJITDecision, SILENT_PASS } from './judge-reviewer';
 
 vi.mock('ai', () => ({
   generateText: vi.fn(),
@@ -23,7 +23,33 @@ const stubInput = {
 const stubOutput = {
   mainLiftSets: [],
   generatedAt: new Date(),
+  intensityModifier: 1.0,
+  volumeModifier: 1.0,
+  skippedMainLift: false,
 } as unknown as JITOutput;
+
+function makeInput(overrides: Partial<JITInput> = {}): JITInput {
+  return {
+    sessionId: 's-1',
+    primaryLift: 'squat',
+    sorenessRatings: { quads: 1, glutes: 1, lower_back: 1 },
+    sleepQuality: 4,
+    energyLevel: 3,
+    activeDisruptions: [],
+    ...overrides,
+  } as unknown as JITInput;
+}
+
+function makeOutput(overrides: Partial<JITOutput> = {}): JITOutput {
+  return {
+    mainLiftSets: [],
+    generatedAt: new Date(),
+    intensityModifier: 1.0,
+    volumeModifier: 1.0,
+    skippedMainLift: false,
+    ...overrides,
+  } as unknown as JITOutput;
+}
 
 function makeReview(overrides: Partial<JudgeReview> = {}): JudgeReview {
   return {
@@ -50,7 +76,10 @@ describe('reviewJITDecision', () => {
     });
     mockGenerateText.mockResolvedValueOnce({ output: fakeReview });
 
-    const result = await reviewJITDecision(stubInput, stubOutput);
+    const result = await reviewJITDecision(
+      makeInput({ sorenessRatings: { quads: 7, glutes: 7, lower_back: 7 } }),
+      stubOutput
+    );
 
     expect(result.score).toBe(72);
     expect(result.verdict).toBe('flag');
@@ -95,6 +124,147 @@ describe('reviewJITDecision', () => {
 
     const call = mockGenerateText.mock.calls[0][0];
     expect(call.abortSignal).toBeDefined();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// groundReview — filters hallucinated concerns against actual numbers (gh#216)
+// ---------------------------------------------------------------------------
+
+describe('groundReview', () => {
+  it('drops "reduce" concerns when no reduction was applied', () => {
+    const review = makeReview({
+      score: 65,
+      verdict: 'flag',
+      concerns: [
+        'Intensity and volume reduce for mild soreness, which may not be warranted.',
+      ],
+    });
+    const grounded = groundReview(review, makeInput(), makeOutput());
+    expect(grounded.concerns).toEqual([]);
+    expect(grounded.verdict).toBe('accept');
+    expect(grounded.score).toBeGreaterThanOrEqual(85);
+  });
+
+  it('keeps "reduce" concerns when a reduction actually fired', () => {
+    const review = makeReview({
+      score: 60,
+      verdict: 'flag',
+      concerns: ['Intensity reduced too aggressively for moderate soreness.'],
+    });
+    const grounded = groundReview(
+      review,
+      makeInput({ sorenessRatings: { quads: 6, glutes: 6, lower_back: 6 } }),
+      makeOutput({ intensityModifier: 0.95, volumeModifier: 0.66 })
+    );
+    expect(grounded.concerns).toHaveLength(1);
+    expect(grounded.verdict).toBe('flag');
+  });
+
+  it('drops "sore muscles" concerns when worst soreness <= 4', () => {
+    const review = makeReview({
+      score: 65,
+      verdict: 'flag',
+      concerns: [
+        'Auxiliary work targets sore muscles, potentially exacerbating recovery.',
+      ],
+    });
+    const grounded = groundReview(review, makeInput(), makeOutput());
+    expect(grounded.concerns).toEqual([]);
+    expect(grounded.verdict).toBe('accept');
+  });
+
+  it('keeps "sore muscles" concerns when worst soreness >= 5', () => {
+    const review = makeReview({
+      score: 60,
+      verdict: 'flag',
+      concerns: ['Auxiliary work targets sore quads (rated 7).'],
+    });
+    const grounded = groundReview(
+      review,
+      makeInput({ sorenessRatings: { quads: 7, glutes: 3, lower_back: 3 } }),
+      makeOutput()
+    );
+    expect(grounded.concerns).toHaveLength(1);
+  });
+
+  it('drops "low energy" concerns when energy >= 3', () => {
+    const review = makeReview({
+      score: 65,
+      verdict: 'flag',
+      concerns: ['Intensity is high given low energy levels (3).'],
+    });
+    const grounded = groundReview(
+      review,
+      makeInput({ energyLevel: 3 }),
+      makeOutput()
+    );
+    expect(grounded.concerns).toEqual([]);
+  });
+
+  it('keeps "low energy" concerns when energy <= 2', () => {
+    const review = makeReview({
+      score: 60,
+      verdict: 'flag',
+      concerns: ['Intensity is high given low energy (1).'],
+    });
+    const grounded = groundReview(
+      review,
+      makeInput({ energyLevel: 1 }),
+      makeOutput()
+    );
+    expect(grounded.concerns).toHaveLength(1);
+  });
+
+  it('keeps only the grounded concern when one of two is hallucinated', () => {
+    const review = makeReview({
+      score: 60,
+      verdict: 'flag',
+      concerns: [
+        'Intensity reduced for mild soreness, which may not be warranted.',
+        'Rest is too short given high recent RPE.',
+      ],
+    });
+    const grounded = groundReview(review, makeInput(), makeOutput());
+    expect(grounded.concerns).toEqual([
+      'Rest is too short given high recent RPE.',
+    ]);
+    expect(grounded.verdict).toBe('flag');
+  });
+
+  it('passes through review unchanged when no filtering applies', () => {
+    const review = makeReview({
+      score: 88,
+      verdict: 'accept',
+      concerns: [],
+    });
+    const grounded = groundReview(review, makeInput(), makeOutput());
+    expect(grounded).toBe(review);
+  });
+
+  it('downgrades verdict but preserves a high score when filtering empties concerns', () => {
+    const review = makeReview({
+      score: 92,
+      verdict: 'flag',
+      concerns: ['Intensity reduced for mild soreness.'],
+    });
+    const grounded = groundReview(review, makeInput(), makeOutput());
+    expect(grounded.score).toBe(92);
+    expect(grounded.verdict).toBe('accept');
+  });
+
+  it('respects skippedMainLift as a reduction signal', () => {
+    const review = makeReview({
+      score: 60,
+      verdict: 'flag',
+      concerns: ['Volume reduced too aggressively.'],
+    });
+    const grounded = groundReview(
+      review,
+      makeInput({ sorenessRatings: { quads: 9, glutes: 9, lower_back: 9 } }),
+      makeOutput({ skippedMainLift: true })
+    );
+    expect(grounded.concerns).toHaveLength(1);
   });
 });
 
