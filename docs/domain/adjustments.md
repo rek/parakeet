@@ -179,5 +179,6 @@ When multiple adjustments are active simultaneously:
 | Volume calibration (Step 0)              | Runs first. Reductions apply on top of calibrated base.                                             |
 | MRV cap                                  | Always last -- hard constraint after all modifiers, including calibration                           |
 | RPE step 2 + step 2b (rep days only)     | Both fire on strong signal (avgDev ≤ −1.25): step 2 boosts weight ×1.05, step 2b prescribes reps_max. Mild signal (−0.75 to −1.25): only step 2 fires. Disruption (step 7) can still reduce reps after step 2b. |
+| Aux propagation (GH#217)                 | Every main-lift reduction (readiness, cycle, soreness, disruption, RPE history, volume calibration) flows to aux as `mainLiftVolumeRatio = plannedCount / baseSetsCount` (set ceiling) and `mainIntensityMultiplier = ctx.intensityMultiplier` (weight ceiling). Ratios are clamped to `[0, 1]` — main-lift boosts do not inflate aux. Carve-outs: deload sessions (modifiers already baked into base) and `equipment_unavailable` disruptions (intent is more aux, not less). `skippedMainLift` suppresses non-top-up aux entirely. |
 
 **Source:** `packages/training-engine/src/generator/jit-session-generator.ts`

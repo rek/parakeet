@@ -22,7 +22,7 @@ Steps execute in order. Each step may modify `sets`, `intensity`, or `reps` fiel
 | 6    | `applyMrvCap`               | If any primary muscle is at or over MRV, skips or caps sets. See MRV Cap section below.           |
 | 7    | `applyDisruptionAdjustment` | Major disruption → skip. Moderate → reduce sets. Minor → log only.                               |
 | 8    | `buildFinalMainSets`        | Applies all multipliers, rounds weight to the lifter's smallest reachable plate increment (default 2.5 kg; 5 kg with no 1.25s; etc. — see [periodization.md § Weight Rounding](periodization.md)). |
-| 9    | `processAuxExercise`        | Selects 2 aux exercises and runs volume top-up logic.                                              |
+| 9    | `processAuxExercise`        | For each configured auxiliary: scales sets by `mainLiftVolumeRatio` and weight by `mainIntensityMultiplier` (both clamped to [0,1]) so every main-lift penalty (readiness, cycle, soreness, disruption, RPE history) propagates proportionally to aux. Severe soreness (≥9) and `skippedMainLift` skip the exercise entirely. POST_MAIN_FATIGUE_FACTOR (×0.85 weight) still applies on top when aux shares muscles with the main lift. Bypassed for deload sessions and `equipment_unavailable` disruptions. See [adjustments.md § Compounding Rules](adjustments.md#compounding-rules) and GH#217.  |
 
 **Source:** `packages/training-engine/src/generator/jit-session-generator.ts`, `packages/training-engine/src/generator/steps/`
 
@@ -131,13 +131,25 @@ Per-block rest seconds are defined in [periodization.md](periodization.md).
 
 Runs after regular aux selection in step 9. Selects additional exercises for muscles that are below their pro-rated MEV threshold for the session.
 
+### Primary-Muscle Exclusion (GH#217)
+
+The primary muscles of today's main lift are **never** candidates for top-up — the lifter is already training those muscles, and a top-up would either create redundant work or undo penalty reductions that just cut the main lift. If a program wants more volume for a primary muscle, it belongs in the program template, not the reactive top-up.
+
+| Lift     | Excluded from top-up                       |
+| -------- | ------------------------------------------ |
+| Squat    | quads, glutes, lower_back                  |
+| Bench    | chest, triceps, shoulders                  |
+| Deadlift | hamstrings, glutes, lower_back, upper_back |
+
+Resolution source: `getPrimaryMusclesForSession(primaryLift)` in `soreness-adjuster.ts` — same set used for soreness assessment.
+
 ### Pro-Rated MEV
 
 ```
 proRatedMEV[muscle] = ceil(MEV[muscle] × sessionIndex / totalSessionsThisWeek)
 ```
 
-Push muscles (chest, triceps, shoulders, biceps) that have zero contribution from the primary lift scheduled for this session use **full MEV** (not pro-rated).
+Push muscles (chest, triceps, shoulders, biceps) that have zero contribution from the primary lift scheduled for this session use **full MEV** (not pro-rated). Note: on bench day, chest/triceps/shoulders are excluded by the primary-muscle filter above before the push-muscle override ever fires.
 
 ### Core priority
 
