@@ -132,6 +132,28 @@ export function applyAdjustment(
     mainLiftSets = [];
   }
 
+  // GH#217: propagate main-lift modifiers to aux proportionally so the LLM
+  // cannot leave aux at baseline while it slashes the main lift. Deload and
+  // equipment_unavailable disruptions bypass (matching formula path).
+  const isDeload = input.intensityType === 'deload';
+  const hasEquipmentDisruption =
+    input.activeDisruptions?.some(
+      (d) => d.disruption_type === 'equipment_unavailable'
+    ) ?? false;
+  const propagatePenalties = !isDeload && !hasEquipmentDisruption;
+  const volumeRatio = propagatePenalties
+    ? Math.min(
+        1,
+        Math.max(
+          0,
+          baseSets.length > 0 ? mainLiftSets.length / baseSets.length : 1
+        )
+      )
+    : 1;
+  const intensityRatio = propagatePenalties
+    ? Math.min(1, Math.max(0, adj.intensityModifier))
+    : 1;
+
   // Apply aux overrides
   const overrideByExercise = new Map(
     adj.auxOverrides.map((o) => [o.exercise, o.action])
@@ -142,13 +164,16 @@ export function applyAdjustment(
       const exerciseType = exerciseTyper(exercise);
       const override: 'skip' | 'reduce' | 'normal' | undefined =
         overrideByExercise.get(exercise);
-      if (override === 'skip') {
+      if (override === 'skip' || (propagatePenalties && skippedMainLift)) {
         return {
           exercise,
           exerciseType,
           sets: [],
           skipped: true,
-          skipReason: 'LLM: skip override',
+          skipReason:
+            propagatePenalties && skippedMainLift
+              ? 'Main lift skipped — auxiliary suppressed'
+              : 'LLM: skip override',
         };
       }
 
@@ -171,11 +196,19 @@ export function applyAdjustment(
         }),
         increment
       );
-      const auxWeight =
+      const llmAdjustedWeight =
         override === 'reduce'
           ? roundToNearest(baseAuxWeight * 0.9, increment)
           : baseAuxWeight;
-      const setCount = override === 'reduce' ? 2 : 3;
+      const proportionalWeightCeiling = roundToNearest(
+        baseAuxWeight * intensityRatio,
+        increment
+      );
+      const auxWeight = Math.min(llmAdjustedWeight, proportionalWeightCeiling);
+
+      const llmAdjustedSets = override === 'reduce' ? 2 : 3;
+      const proportionalSetCeiling = Math.max(1, Math.round(3 * volumeRatio));
+      const setCount = Math.min(llmAdjustedSets, proportionalSetCeiling);
       return {
         exercise,
         exerciseType,

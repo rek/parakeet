@@ -153,6 +153,59 @@ describe('applyAdjustment', () => {
       expect(output.auxiliaryWork.some((a) => a.isTopUp)).toBe(false);
     });
   });
+
+  describe('GH#217 proportional aux clamp', () => {
+    it('LLM cuts main to 50% → aux sets capped proportionally', () => {
+      const adj = baseAdj({
+        intensityModifier: 0.7,
+        setModifier: -1,
+      });
+      const output = applyAdjustment(adj, baseInput());
+      // base squat heavy block 1 = 2 sets; setModifier -1 → 1 set; ratio 0.5
+      // proportional ceiling for aux = round(3 × 0.5) = 2 sets
+      expect(output.mainLiftSets).toHaveLength(1);
+      output.auxiliaryWork.forEach((a) => {
+        expect(a.sets.length).toBeLessThanOrEqual(2);
+      });
+    });
+
+    it('LLM cuts intensityModifier → aux weight ceiling matches', () => {
+      const adj = baseAdj({ intensityModifier: 0.6 });
+      const output = applyAdjustment(adj, baseInput());
+      // Aux weight should reflect the 0.6 ceiling, not full baseAuxWeight
+      const baseline = applyAdjustment(baseAdj(), baseInput());
+      output.auxiliaryWork.forEach((a, i) => {
+        if (a.sets.length === 0) return;
+        expect(a.sets[0].weight_kg).toBeLessThanOrEqual(
+          baseline.auxiliaryWork[i].sets[0].weight_kg
+        );
+      });
+    });
+
+    it('LLM skips main lift → aux suppressed', () => {
+      const adj = baseAdj({ skipMainLift: true });
+      const output = applyAdjustment(adj, baseInput());
+      expect(output.skippedMainLift).toBe(true);
+      output.auxiliaryWork
+        .filter((a) => !a.isTopUp)
+        .forEach((a) => {
+          expect(a.skipped).toBe(true);
+          expect(a.skipReason).toMatch(/main lift skipped/i);
+        });
+    });
+
+    it('deload bypasses proportional clamp', () => {
+      const adj = baseAdj({ intensityModifier: 0.7, setModifier: -1 });
+      const output = applyAdjustment(
+        adj,
+        baseInput({ intensityType: 'deload' })
+      );
+      // Deload: aux gets 3 sets at full weight regardless of main cut
+      output.auxiliaryWork.forEach((a) => {
+        expect(a.sets).toHaveLength(3);
+      });
+    });
+  });
 });
 
 // ---------------------------------------------------------------------------
