@@ -52,12 +52,10 @@ export function groundReview(
     output.intensityModifier < 1.0 ||
     output.volumeModifier < 1.0 ||
     output.skippedMainLift;
-  const worstSoreness = Math.max(
-    1,
-    ...Object.values(input.sorenessRatings ?? {}).filter(
-      (v): v is number => typeof v === 'number'
-    )
-  );
+  const sorenessValues = Object.values(input.sorenessRatings ?? {}).filter(
+    (v) => typeof v === 'number'
+  ) as number[];
+  const worstSoreness = Math.max(1, ...sorenessValues);
   const sleep = input.sleepQuality ?? 3;
   const energy = input.energyLevel ?? 3;
 
