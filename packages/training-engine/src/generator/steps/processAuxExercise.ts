@@ -35,6 +35,9 @@ export function processAuxExercise({
   muscleMapper,
   weightIncrementKg = 2.5,
   exerciseTyper = getExerciseType,
+  mainLiftVolumeRatio = 1.0,
+  mainIntensityMultiplier = 1.0,
+  skippedMainLift = false,
 }: {
   exercise: string;
   worstSoreness: SorenessLevel;
@@ -52,8 +55,33 @@ export function processAuxExercise({
   /** Type resolver that honours user-defined custom exercise types.
    *  Defaults to the catalog-only `getExerciseType` for legacy callers. */
   exerciseTyper?: (name: string) => ExerciseType;
+  /** Final / base set ratio for the main lift after all pipeline modifiers
+   *  (readiness, cycle, soreness, disruption, RPE history). Aux set count is
+   *  scaled by this ratio so penalty signals propagate proportionally instead
+   *  of stopping at the main lift. Clamped to [0,1] — calibration boosts on
+   *  the main lift do not increase aux volume. See GH#217. */
+  mainLiftVolumeRatio?: number;
+  /** Cumulative main-lift intensity multiplier from the pipeline. Applied to
+   *  aux weight on top of the existing POST_MAIN_FATIGUE_FACTOR. Clamped to
+   *  [0,1] for the same asymmetric reason as mainLiftVolumeRatio. */
+  mainIntensityMultiplier?: number;
+  /** True when the main lift was skipped (major disruption). Aux is suppressed
+   *  rather than left to dominate a session the engine just bailed on. */
+  skippedMainLift?: boolean;
 }): AuxiliaryWork {
   const exerciseType = exerciseTyper(exercise);
+
+  // Main lift skipped (major disruption): suppress aux so the session isn't
+  // dominated by accessories the engine intentionally bailed out of.
+  if (skippedMainLift) {
+    return {
+      exercise,
+      exerciseType,
+      sets: [],
+      skipped: true,
+      skipReason: 'Main lift skipped — auxiliary suppressed',
+    };
+  }
 
   // Soreness 9-10 (severe): skip entirely
   if (worstSoreness >= 9) {
@@ -117,14 +145,16 @@ export function processAuxExercise({
     }
   }
 
-  if (worstSoreness >= 7) {
-    // High soreness (7-8): reduce sets and intensity
-    setCount = Math.max(1, setCount - 1);
-    intensityMult *= 0.95;
-  } else if (worstSoreness >= 5) {
-    // Moderate soreness (5-6): reduce sets only
-    setCount = Math.max(1, setCount - 1);
-  }
+  // GH#217: propagate ALL main-lift modifiers (readiness, cycle, soreness,
+  // disruption, RPE history) to aux proportionally. This replaces the prior
+  // soreness-only aux reduction; the soreness contribution now flows through
+  // via mainLiftVolumeRatio + mainIntensityMultiplier just like every other
+  // signal. Clamp to ≤1 so calibration-driven main-lift boosts don't inflate
+  // aux volume — the volume top-up step handles MEV-driven additions.
+  const volumeRatio = Math.min(1, Math.max(0, mainLiftVolumeRatio));
+  const intensityRatio = Math.min(1, Math.max(0, mainIntensityMultiplier));
+  setCount = Math.max(1, Math.round(setCount * volumeRatio));
+  intensityMult *= intensityRatio;
 
   // No-equipment disruption: add an extra set to compensate for reduced barbell work
   if (hasNoEquipment) {

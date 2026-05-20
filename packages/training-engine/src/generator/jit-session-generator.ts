@@ -363,8 +363,26 @@ export function generateJITSession(
   const intensityModifier = ctx.inRecoveryMode ? 0.4 : ctx.intensityMultiplier;
 
   // Step 6 — Auxiliary work
-  // Deload sessions are recovery weeks — soreness should not further suppress aux volume.
-  const auxSoreness = input.intensityType === 'deload' ? (1 as SorenessLevel) : ctx.worstSoreness;
+  // Deload sessions are recovery weeks — soreness should not further suppress aux volume,
+  // and the proportional modifier propagation (GH#217) is bypassed since deload modifiers
+  // are intentionally already baked into the base prescription.
+  const isDeload = input.intensityType === 'deload';
+  // equipment_unavailable disruption deliberately reduces main and boosts aux as
+  // bodyweight compensation; the proportional propagation would invert that intent
+  // by also cutting aux. The +1 set logic + bodyweight pool handle this case.
+  const hasEquipmentDisruption =
+    input.activeDisruptions?.some(
+      (d) => d.disruption_type === 'equipment_unavailable'
+    ) ?? false;
+  const auxSoreness = isDeload ? (1 as SorenessLevel) : ctx.worstSoreness;
+  const auxVolumeRatio =
+    isDeload || hasEquipmentDisruption
+      ? 1
+      : ctx.baseSetsCount > 0
+        ? ctx.plannedCount / ctx.baseSetsCount
+        : 1;
+  const auxIntensityRatio =
+    isDeload || hasEquipmentDisruption ? 1 : ctx.intensityMultiplier;
   const auxiliaryWork = buildAuxiliaryWork(
     activeAuxiliaries,
     oneRmKg,
@@ -379,7 +397,10 @@ export function generateJITSession(
     input.activeDisruptions,
     primaryLift,
     input.weightIncrementKg,
-    exerciseTyper
+    exerciseTyper,
+    auxVolumeRatio,
+    auxIntensityRatio,
+    ctx.skippedMainLift
   );
 
   // Step 6b — Volume top-up (engine-027): append exercises for under-MEV muscles
@@ -594,7 +615,10 @@ function buildAuxiliaryWork(
   activeDisruptions?: TrainingDisruption[],
   primaryLift?: Lift,
   weightIncrementKg?: number,
-  exerciseTyper: (name: string) => ExerciseType = getExerciseType
+  exerciseTyper: (name: string) => ExerciseType = getExerciseType,
+  mainLiftVolumeRatio = 1,
+  mainIntensityMultiplier = 1,
+  skippedMainLift = false
 ): AuxiliaryWork[] {
   const hasNoEquipment =
     activeDisruptions?.some(
@@ -617,6 +641,9 @@ function buildAuxiliaryWork(
       muscleMapper,
       weightIncrementKg,
       exerciseTyper,
+      mainLiftVolumeRatio,
+      mainIntensityMultiplier,
+      skippedMainLift,
     })
   );
 
