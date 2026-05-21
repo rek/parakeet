@@ -32,6 +32,7 @@ import {
 } from '@parakeet/shared-types';
 import type { Lift } from '@parakeet/shared-types';
 import {
+  computeDivergence,
   computeInjurySorenessOverrides,
   computeWeightDeviation,
   computeWorkingOneRm,
@@ -497,7 +498,8 @@ export async function runJITForSession(
 
   const strategyOverride = await getJITStrategyOverride();
 
-  const comparisonLogger = (
+  const writeComparisonLog = (
+    strategyUsed: string,
     input: JITInput,
     formulaOutput: JITOutput,
     llmOutput: JITOutput,
@@ -510,19 +512,70 @@ export async function runJITForSession(
       formula_output: toJson(formulaOutput),
       llm_output: toJson(llmOutput),
       divergence: toJson(divergence),
-      strategy_used: 'llm',
+      strategy_used: strategyUsed,
     }).catch(captureException);
   };
 
-  const generator = getJITGenerator(strategyOverride, true, comparisonLogger);
+  // HybridJITGenerator self-logs via this callback. The pure-llm path is
+  // logged separately below using the formula output we already compute for
+  // the trace, so every llm-strategy session leaves a divergence record.
+  const hybridLogger = (
+    input: JITInput,
+    formulaOutput: JITOutput,
+    llmOutput: JITOutput,
+    divergence: unknown
+  ) => writeComparisonLog('hybrid', input, formulaOutput, llmOutput, divergence);
+
+  const generator = getJITGenerator(strategyOverride, true, hybridLogger);
   const jitOutput = await generator.generate(jitInput);
 
   // Generate prescription trace from the same inputs. Re-runs the formula path
   // regardless of which strategy produced jitOutput — the trace explains the
   // deterministic formula reasoning. Cost: one extra formula pass (~1ms).
-  const { trace } = generateJITSessionWithTrace(jitInput);
+  const { output: formulaOutput, trace } = generateJITSessionWithTrace(jitInput);
   if (jitOutput.jit_strategy) {
     trace.strategy = jitOutput.jit_strategy;
+  }
+
+  // Log divergence for pure-llm strategy (hybrid self-logs via hybridLogger
+  // above; formula strategy has no LLM output to compare). When the LLM path
+  // fell back to formula, persist a zero-divergence row tagged accordingly
+  // so the telemetry distinguishes "LLM agreed" from "LLM unavailable".
+  if (generator.name === 'llm') {
+    const fellBack = jitOutput.jit_strategy === 'formula_fallback';
+
+    // Surface LLM regressions vs formula in the trace so they're visible in
+    // JITLogs and stored on the session row. Threshold: any set drop, or
+    // ≥5% main-lift weight reduction. Formula's mainLift already reflects
+    // volume_calibration etc., so this catches the LLM silently undoing it.
+    if (!fellBack) {
+      const formulaSetCount = formulaOutput.mainLiftSets.length;
+      const llmSetCount = jitOutput.mainLiftSets.length;
+      if (llmSetCount < formulaSetCount) {
+        trace.warnings.push(
+          `LLM reduced main-lift volume from ${formulaSetCount} to ${llmSetCount} set(s) vs formula calibration`
+        );
+      }
+      const formulaWeight = formulaOutput.mainLiftSets[0]?.weight_kg ?? 0;
+      const llmWeight = jitOutput.mainLiftSets[0]?.weight_kg ?? 0;
+      if (formulaWeight > 0 && llmWeight < formulaWeight * 0.95) {
+        const pctDrop = Math.round((1 - llmWeight / formulaWeight) * 100);
+        trace.warnings.push(
+          `LLM reduced main-lift weight ${pctDrop}% vs formula baseline (${formulaWeight}kg → ${llmWeight}kg)`
+        );
+      }
+    }
+
+    const divergence = fellBack
+      ? { weightPct: 0, setDelta: 0, rpeContextSummary: 'LLM_FALLBACK' }
+      : computeDivergence(formulaOutput, jitOutput);
+    writeComparisonLog(
+      fellBack ? 'formula_fallback' : 'llm',
+      jitInput,
+      formulaOutput,
+      jitOutput,
+      divergence
+    );
   }
 
   await updateSessionJitOutput(session.id, {
