@@ -1,13 +1,12 @@
 import { z } from 'zod';
 
-export const RehabLiftSchema = z.enum(['squat', 'bench', 'deadlift']);
-export type RehabLift = z.infer<typeof RehabLiftSchema>;
+import { LiftSchema } from './program.schema';
 
 export const RehabCapSchema = z
   .object({
     id: z.uuid(),
     user_id: z.uuid(),
-    lift: RehabLiftSchema,
+    lift: LiftSchema,
     cap_kg: z.number().positive(),
     note: z.string().nullable(),
     planned_end_date: z.iso.date().nullable(),
@@ -22,7 +21,7 @@ export type RehabCap = z.infer<typeof RehabCapSchema>;
 
 export const CreateRehabCapInputSchema = z
   .object({
-    lift: RehabLiftSchema,
+    lift: LiftSchema,
     cap_kg: z.number().positive(),
     note: z.string().optional(),
     planned_end_date: z.iso.date().optional(),

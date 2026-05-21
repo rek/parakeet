@@ -1,6 +1,6 @@
 ---
 feature: rehab-mode
-status: planned
+status: in-progress
 modules: [rehab-mode]
 ---
 # Rehab Mode
@@ -15,7 +15,7 @@ Origin: [GH#220](https://github.com/rek/parakeet/issues/220) — user rehabbing 
 ## Specs
 | Spec | Status | Concern |
 |------|--------|---------|
-| [spec-data.md](./spec-data.md) | planned | `rehab_caps` table, set-log flags, types |
-| [spec-engine.md](./spec-engine.md) | planned | JIT cap enforcement, suppression of adaptive steps |
-| [spec-app.md](./spec-app.md) | planned | `@modules/rehab-mode` service, hooks, repository |
+| [spec-data.md](./spec-data.md) | done | `rehab_caps` table, set-log flags, types |
+| [spec-engine.md](./spec-engine.md) | done | JIT cap enforcement (formula + LLM + hybrid), suppression of adaptive steps, downstream filters |
+| [spec-app.md](./spec-app.md) | in-progress | `@modules/rehab-mode` service + queries done; JIT input wiring + set-log stamp + hooks pending |
 | [spec-ui.md](./spec-ui.md) | planned | Settings management, Today chip, RPE pain-limited toggle |

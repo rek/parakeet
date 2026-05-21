@@ -99,8 +99,9 @@ Three PR types, checked after each session:
 | Major disruption active | All PR detection blocked                  |
 | Minor/moderate          | PR detection allowed                      |
 | Rep PR cap              | Max 3 rep-at-weight PRs per session       |
+| Rehab Mode active / pain-limited (GH#220) | Sets with `during_rehab` or `pain_limited` excluded from working-1RM (e1RM) estimation; app-layer orchestrator empties `earnedPRs` for sessions that contain any `during_rehab` set so no badge is awarded. See [features/rehab-mode/design.md](../features/rehab-mode/design.md). |
 
-**Source:** `packages/training-engine/src/badges/checkers/`, `engine-022`
+**Source:** `packages/training-engine/src/badges/checkers/`, `packages/training-engine/src/analysis/weight-deviation.ts`
 
 ---
 
@@ -117,6 +118,7 @@ Tracks whether modifiers (soreness, readiness, etc.) are producing accurate pres
 | Auto-apply gate        | Medium+ confidence AND < 5% adjustment |
 | Large adjustment gate  | Requires LLM review                    |
 | Bias clamp             | +/- 0.15                               |
+| Rehab Mode filter (GH#220) | `ModifierSample.duringRehab` samples dropped before bias computation — capped pain-ambiguous RPE is noise for modifier effectiveness. |
 
 **Source:** `packages/training-engine/src/analysis/modifier-effectiveness.ts`
 

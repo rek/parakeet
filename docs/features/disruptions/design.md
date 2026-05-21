@@ -135,7 +135,7 @@ This flow is useful for ongoing disruptions that have a known recovery date, or 
 
 ## References
 
-- Related Design Docs: [performance-logging.md](./performance-logging.md), [formula-management.md](./formula-management.md)
+- Related Design Docs: [performance-logging.md](./performance-logging.md), [formula-management.md](./formula-management.md), [rehab-mode/design.md](../rehab-mode/design.md) — sibling feature for **long-term** rehab/injury blocks where the engine's adaptive behavior must be silenced rather than just reduced once per occurrence.
 - Spec: [disruptions-001-report.md](../specs/08-disruptions/disruptions-001-report.md)
 - Spec: [disruptions-002-apply-adjustment.md](../specs/08-disruptions/disruptions-002-apply-adjustment.md)
 - Spec: [disruptions-003-resolution.md](../specs/08-disruptions/disruptions-003-resolution.md)

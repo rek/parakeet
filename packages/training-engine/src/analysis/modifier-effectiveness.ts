@@ -61,9 +61,9 @@ export function computeCalibrationBias({
   // Rehab Mode (GH#220): exclude samples where the RPE came from a capped
   // pain-ambiguous set. Modifier effectiveness wants signal about how well
   // the modifier predicted true muscular RPE — capped sets are noise.
-  samples = samples.filter((s) => !s.duringRehab);
+  const filtered = samples.filter((s) => !s.duringRehab);
 
-  if (samples.length === 0) {
+  if (filtered.length === 0) {
     return {
       modifierSource: 'soreness' as ModifierSource,
       sampleCount: 0,
@@ -73,10 +73,10 @@ export function computeCalibrationBias({
     };
   }
 
-  const source = samples[0].modifierSource;
-  const n = samples.length;
+  const source = filtered[0].modifierSource;
+  const n = filtered.length;
   const meanBias =
-    samples.reduce((sum, s) => sum + (s.rpeActual - s.rpeTarget), 0) / n;
+    filtered.reduce((sum, s) => sum + (s.rpeActual - s.rpeTarget), 0) / n;
 
   // Convert bias to multiplier adjustment:
   // Negative bias (too easy) → positive adjustment (make modifier less aggressive, closer to 1.0)

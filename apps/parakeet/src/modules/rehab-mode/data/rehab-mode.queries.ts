@@ -1,5 +1,5 @@
 // @spec docs/features/rehab-mode/spec-app.md
-import type { RehabLift } from '@parakeet/shared-types';
+import type { Lift } from '@parakeet/shared-types';
 import { queryOptions, skipToken } from '@tanstack/react-query';
 
 import {
@@ -17,7 +17,7 @@ export const rehabModeQueries = {
       queryFn: userId ? () => getActiveRehabCaps(userId) : skipToken,
     }),
 
-  activeForLift: (userId: string | undefined, lift: RehabLift) =>
+  activeForLift: (userId: string | undefined, lift: Lift) =>
     queryOptions({
       queryKey: [...rehabModeQueries.all(), 'active', userId, lift] as const,
       queryFn: userId ? () => getActiveRehabCapForLift(userId, lift) : skipToken,

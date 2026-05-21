@@ -30,6 +30,12 @@ The cap itself is **passed in** via `JITInput`. The engine does not query Supaba
   → `packages/training-engine/src/generator/steps/applyRepRangeAdjustment.ts`
 - [x] Step 8 (`buildFinalMainSets`): clamps `weight_kg = min(formulaWeight, ceilToIncrement(capKg))` using `roundUpToNearest` (cap rounds **up**, per GH#220 decision). Sets `ctx.cappedByRehab = true` and `ctx.rehabCapKg = ceiling` + adds a rationale line when the clamp fires. Recovery mode (severe soreness) also bases the 40% floor on the clamped weight rather than the uncapped formula weight.
   → `packages/training-engine/src/generator/steps/buildFinalMainSets.ts`
+- [x] **Shared clamp helper** in `generator/rehab-clamp.ts` — `applyRehabClamp(weight, input, increment)` + `resolveRehabCeilingKg(input, increment)`. Consumed by `buildFinalMainSets` (formula path) AND `enforceHardConstraints` (LLM + hybrid paths) so the cap is honored by every strategy. Without this the LLM strategy would silently ignore the cap.
+  → `packages/training-engine/src/generator/rehab-clamp.ts`
+- [x] `enforceHardConstraints` applies the clamp as a final post-pass and stamps `cappedByRehab` + `rehabCapKg` + a `[constraint] Capped at Nkg by Rehab Mode` warning. Idempotent — re-running on already-clamped output does not double-warn.
+  → `packages/training-engine/src/generator/jit-constraints.ts`
+- [x] LLM input context: `buildJITContext` drops `recentLogs` tagged `containedRehabSets` so the LLM does not see polluted history.
+  → `packages/training-engine/src/generator/llm-jit-generator.ts`
 - [x] Volume top-up: no code change needed — the existing primary-muscle exclusion (`getPrimaryMusclesForSession(primaryLift)`) already prevents top-up from picking the capped lift's primary muscles. Cross-lift case (e.g. squat-rehab on deadlift day) is out of scope for v1; revisit if it causes problems in practice.
   → `packages/training-engine/src/generator/jit-session-generator.ts:746` (existing `primaryMusclesToday` filter)
 - [x] Aux exercises: no special handling per design. Aux propagation (GH#217) already scales aux weight by `mainIntensityMultiplier`; the cap reducing main weight will naturally flow through. Intentional.
@@ -64,8 +70,10 @@ The cap itself is **passed in** via `JITInput`. The engine does not query Supaba
 
 **Unit / integration tests**
 
-- [x] `jit-rehab-mode.test.ts`: cap clamp, cap on different lift, plate-increment round-up, suppression of Steps 0/2/2b, moderate-disruption stacking, severe-soreness recovery mode based on capped weight.
+- [x] `jit-rehab-mode.test.ts`: cap clamp, cap on different lift, plate-increment round-up, suppression of Steps 0/2/2b, moderate-disruption stacking, severe-soreness recovery mode based on capped weight, post-cap-lift `recentLogs` cleanup.
   → `packages/training-engine/src/generator/jit-rehab-mode.test.ts`
+- [x] `llm-jit-generator.test.ts`: LLM path cap enforcement (raw `applyAdjustment` does not clamp; `enforceHardConstraints` does, with the round-up semantics; idempotent on pre-clamped output; cap on different lift is a no-op).
+  → `packages/training-engine/src/generator/__tests__/llm-jit-generator.test.ts`
 - [x] `weight-rounding.test.ts`: `roundUpToNearest` for 2.5kg / 5kg / 10kg increments.
   → `packages/training-engine/src/formulas/weight-rounding.test.ts`
 - [x] `weight-deviation.test.ts`: pain-limited and during-rehab sets excluded from e1RM; deviation still computed.

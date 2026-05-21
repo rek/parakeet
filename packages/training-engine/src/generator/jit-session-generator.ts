@@ -35,7 +35,7 @@ import {
   MuscleGroup,
   MuscleMapper,
   PUSH_MUSCLES,
-  type RehabCap,
+  type ActiveRehabCap,
 } from '../types';
 import {
   createMuscleMapper,
@@ -185,7 +185,7 @@ export interface JITInput {
    *  intra-session weight autoregulation and volume add-back. The app layer
    *  fetches the active cap via `getActiveRehabCapForLift` and threads it
    *  into JIT input — engine remains pure. */
-  activeRehabCap?: RehabCap;
+  activeRehabCap?: ActiveRehabCap;
 }
 
 export interface AuxiliaryWork {

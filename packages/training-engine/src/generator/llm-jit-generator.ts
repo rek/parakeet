@@ -82,15 +82,24 @@ function buildJITContext(input: JITInput): object {
   // Omit warmupConfig — always formula-generated; LLM cannot override warmup
   const { warmupConfig: _warmup, ...rest } = input;
 
+  // Drop rehab-tagged history (GH#220) — pain-ambiguous RPE from capped work
+  // would lead the LLM into the same mistake as the formula path would have
+  // made without the Step 0/2 early-returns: either lowering weight in
+  // response to high "pain RPE" or raising it in response to low "muscle RPE".
+  // The LLM has the cap (`activeRehabCap`) and the rationale it generates can
+  // mention it, but the polluted history must not be in front of it.
+  const cleanRecentLogs = input.recentLogs.filter((l) => !l.containedRehabSets);
+
   // Provide rest context so the LLM can make an informed rest adjustment
   const formulaRestSeconds = formulaRestForMain(input);
   const lastSetRpe =
-    input.recentLogs.length > 0
-      ? input.recentLogs[input.recentLogs.length - 1].actual_rpe
+    cleanRecentLogs.length > 0
+      ? cleanRecentLogs[cleanRecentLogs.length - 1].actual_rpe
       : null;
 
   return {
     ...rest,
+    recentLogs: cleanRecentLogs,
     formulaRestSeconds,
     ...(lastSetRpe !== null ? { lastSetRpe } : {}),
   };

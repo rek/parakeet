@@ -34,12 +34,15 @@ Captured per set during the workout.
 | Signal        | Scale   | Capture Point                   | Purpose                     |
 | ------------- | ------- | ------------------------------- | --------------------------- |
 | RPE           | 6-10    | After each set via quick picker | Volume attribution, trend   |
+| Pain-limited (GH#220) | bool | Optional toggle on the RPE picker (rendered only when Rehab Mode is active for the current lift) | Tags the set `pain_limited: true`; the RPE value is stored for history but excluded from working-1RM, PR detection, auto-progression, and modifier calibration |
 | Failed set    | bool    | "Failed" button on overlay      | Sets `failed: true`, RPE=10 |
 | Rest time     | seconds | Automatic from rest timer       | Badge detection, analysis   |
 | Actual weight | grams   | Pre-filled, user adjustable     | Weight deviation tracking   |
 | Actual reps   | count   | Pre-filled, user adjustable     | Rep PR detection            |
 
 RPE interpretation: 6 = 4 RIR, 7 = 3 RIR, 8 = 2 RIR, 9 = 1 RIR, 10 = failure.
+
+When a Rehab Mode cap is active for the current lift (GH#220), every logged set is also stamped server-side with `during_rehab: true`. The two flags are independent: a set can be `during_rehab` without being `pain_limited` (capped weight but muscular RPE was honest), or `pain_limited` without `during_rehab` (cap inactive but lifter still marks pain — shouldn't happen in normal usage but the data model allows it).
 
 **Source:** `apps/parakeet/src/modules/session/hooks/useSetCompletionFlow.ts`
 

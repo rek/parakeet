@@ -9,14 +9,15 @@ import type { MuscleGroup } from '@parakeet/shared-types';
  *  the JIT pipeline clamps prescribed weight to `capKg` (rounded UP to the
  *  effective plate increment) and suppresses adaptive logic that would push
  *  past the cap or infer a false 1RM: volume calibration, RPE auto-progression,
- *  rep-range boosts, weight autoregulation, volume add-back. The pipeline
- *  pushes this through as a separate input so the engine remains pure —
- *  fetching the active cap is the app layer's job. */
-export interface RehabCap {
+ *  rep-range boosts, weight autoregulation, volume add-back.
+ *
+ *  The engine takes the minimal runtime shape — the app fetches the DB row
+ *  (full `RehabCap` in `@parakeet/shared-types`) and threads just the lift +
+ *  capKg through. Keeping the engine type tiny prevents the dead-fields hazard
+ *  (id / user_id / timestamps mean nothing to pure pipeline code). */
+export interface ActiveRehabCap {
   lift: Lift;
   capKg: number;
-  startedAt: string;
-  note?: string;
 }
 
 export interface BlockIntensityConfig {

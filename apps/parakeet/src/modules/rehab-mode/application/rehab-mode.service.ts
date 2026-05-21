@@ -1,7 +1,7 @@
 // @spec docs/features/rehab-mode/spec-app.md
 import type {
   CreateRehabCapInput,
-  RehabLift,
+  Lift,
   UpdateRehabCapInput,
 } from '@parakeet/shared-types';
 
@@ -44,7 +44,7 @@ export async function getActiveRehabCaps(userId: string): Promise<RehabCapRow[]>
 
 export async function getActiveRehabCapForLift(
   userId: string,
-  lift: RehabLift
+  lift: Lift
 ): Promise<RehabCapRow | null> {
   return repoGetActiveCapForLift(userId, lift);
 }

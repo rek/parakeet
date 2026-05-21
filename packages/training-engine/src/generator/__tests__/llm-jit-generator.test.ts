@@ -287,6 +287,87 @@ describe('enforceHardConstraints', () => {
     );
   });
 
+  // ── Rehab Mode (GH#220) ─────────────────────────────────────────────────
+  it('Rehab Mode: applyAdjustment on its own does NOT clamp — enforceHardConstraints does', () => {
+    // Even with an active cap on squat, applyAdjustment trusts the LLM's
+    // intensityModifier. The clamp is intentionally pushed into the post-pass
+    // so all three strategies (formula / llm / hybrid) share one enforcement
+    // point. This test pins that contract.
+    const adj = baseAdj({ intensityModifier: 1.0 });
+    const input = baseInput({ activeRehabCap: { lift: 'squat', capKg: 80 } });
+    const raw = applyAdjustment(adj, input);
+    // Pre-constraint: weight ~112.5 (formula base × 1.0), not clamped
+    expect(raw.mainLiftSets[0].weight_kg).toBeGreaterThan(100);
+    expect(raw.cappedByRehab).toBeUndefined();
+  });
+
+  it('Rehab Mode: enforceHardConstraints clamps the LLM weight to the cap', () => {
+    const adj = baseAdj({ intensityModifier: 1.0 });
+    const input = baseInput({ activeRehabCap: { lift: 'squat', capKg: 80 } });
+    const raw = applyAdjustment(adj, input);
+    const constrained = enforceHardConstraints(raw, input);
+    expect(constrained.mainLiftSets[0].weight_kg).toBe(80);
+    expect(constrained.cappedByRehab).toBe(true);
+    expect(constrained.rehabCapKg).toBe(80);
+    expect(
+      constrained.warnings.some((w) => /Capped at 80kg by Rehab Mode/.test(w))
+    ).toBe(true);
+  });
+
+  it('Rehab Mode: cap rounds UP to the plate increment in the LLM path too', () => {
+    // 82.5 cap + 5kg plates → prescription becomes 85 (same semantics as formula path)
+    const adj = baseAdj({ intensityModifier: 1.0 });
+    const input = baseInput({
+      activeRehabCap: { lift: 'squat', capKg: 82.5 },
+      weightIncrementKg: 5,
+    });
+    const constrained = enforceHardConstraints(applyAdjustment(adj, input), input);
+    expect(constrained.mainLiftSets[0].weight_kg).toBe(85);
+    expect(constrained.rehabCapKg).toBe(85);
+  });
+
+  it('Rehab Mode: cap on different lift than session does NOT clamp', () => {
+    const adj = baseAdj({ intensityModifier: 1.0 });
+    const input = baseInput({
+      primaryLift: 'squat',
+      activeRehabCap: { lift: 'bench', capKg: 50 },
+    });
+    const constrained = enforceHardConstraints(applyAdjustment(adj, input), input);
+    expect(constrained.mainLiftSets[0].weight_kg).toBeGreaterThan(100);
+    expect(constrained.cappedByRehab).toBeUndefined();
+  });
+
+  it('Rehab Mode: no double-warn when buildFinalMainSets already stamped cappedByRehab', () => {
+    // Simulating the formula-path → enforceHardConstraints handoff: the
+    // constraint pass should be idempotent and not re-warn when the flag is
+    // already set and weights are already at the ceiling.
+    const input = baseInput({ activeRehabCap: { lift: 'squat', capKg: 80 } });
+    const preCapped = {
+      sessionId: 'sess-001',
+      generatedAt: new Date(),
+      mainLiftSets: [
+        { set_number: 1, weight_kg: 80, reps: 5, rpe_target: 8.5 },
+      ],
+      warmupSets: [],
+      auxiliaryWork: [],
+      volumeModifier: 1.0,
+      intensityModifier: 1.0,
+      rationale: [],
+      warnings: [],
+      skippedMainLift: false,
+      restRecommendations: { mainLift: [180], auxiliary: [] },
+      cappedByRehab: true,
+      rehabCapKg: 80,
+    };
+    const constrained = enforceHardConstraints(preCapped, input);
+    expect(constrained.cappedByRehab).toBe(true);
+    expect(constrained.rehabCapKg).toBe(80);
+    expect(constrained.mainLiftSets[0].weight_kg).toBe(80);
+    expect(
+      constrained.warnings.filter((w) => /Capped at.*Rehab Mode/.test(w))
+    ).toHaveLength(0);
+  });
+
   it('applies minimal warmup override in recovery mode (severe soreness)', () => {
     const input = baseInput({ sorenessRatings: { quads: 10 } });
 

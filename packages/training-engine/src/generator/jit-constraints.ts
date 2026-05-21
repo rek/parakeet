@@ -5,6 +5,7 @@ import {
 } from '../formulas/weight-rounding';
 import { getMusclesForLift } from '../volume/muscle-mapper';
 import type { JITInput, JITOutput } from './jit-session-generator';
+import { applyRehabClamp } from './rehab-clamp';
 import { calculateSets } from './set-calculator';
 import {
   generateWarmupSets,
@@ -16,6 +17,8 @@ export function enforceHardConstraints(
   input: JITInput
 ): JITOutput {
   let { mainLiftSets, skippedMainLift, warnings } = output;
+  let cappedByRehab = output.cappedByRehab ?? false;
+  let rehabCapKg = output.rehabCapKg;
   const newWarnings = [...warnings];
   const increment = effectiveIncrementKg(input);
 
@@ -79,6 +82,28 @@ export function enforceHardConstraints(
     weight_kg: roundToNearest(s.weight_kg, increment),
   }));
 
+  // Rehab Mode cap (GH#220) — non-negotiable ceiling. Applied here so the LLM
+  // and hybrid strategies honor the cap even though they bypass
+  // buildFinalMainSets. Without this, a user with a cap on squat would get
+  // capped weights under the formula strategy but not under the LLM strategy.
+  if (mainLiftSets.length > 0) {
+    let anyClamped = false;
+    let ceiling: number | null = null;
+    mainLiftSets = mainLiftSets.map((s) => {
+      const clamp = applyRehabClamp(s.weight_kg, input, increment);
+      if (clamp.cappedByRehab) {
+        anyClamped = true;
+        ceiling = clamp.rehabCapKg;
+      }
+      return { ...s, weight_kg: clamp.finalWeightKg };
+    });
+    if (anyClamped && !cappedByRehab) {
+      cappedByRehab = true;
+      rehabCapKg = ceiling ?? rehabCapKg;
+      newWarnings.push(`[constraint] Capped at ${ceiling}kg by Rehab Mode`);
+    }
+  }
+
   // Warmup — always formula-generated from working weight
   let { warmupSets } = output;
   if (mainLiftSets.length > 0 && !skippedMainLift) {
@@ -106,5 +131,8 @@ export function enforceHardConstraints(
     warmupSets,
     skippedMainLift,
     warnings: newWarnings,
+    ...(cappedByRehab && rehabCapKg != null
+      ? { cappedByRehab: true, rehabCapKg }
+      : {}),
   };
 }

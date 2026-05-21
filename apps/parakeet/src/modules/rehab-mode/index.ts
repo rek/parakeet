@@ -18,7 +18,7 @@ export {
 
 export type {
   CreateRehabCapInput,
+  Lift,
   RehabCap,
-  RehabLift,
   UpdateRehabCapInput,
 } from '@parakeet/shared-types';

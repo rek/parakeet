@@ -3,25 +3,11 @@ import type { PlannedSet } from '@parakeet/shared-types';
 import {
   effectiveIncrementKg,
   roundToNearest,
-  roundUpToNearest,
 } from '../../formulas/weight-rounding';
 import type { JITInput } from '../jit-session-generator';
 import type { PrescriptionTraceBuilder } from '../prescription-trace';
+import { resolveRehabCeilingKg } from '../rehab-clamp';
 import type { PipelineContext } from './pipeline-context';
-
-/** Resolve the effective working-weight ceiling for this session. When a rehab
- *  cap is active for this lift, the cap is rounded UP to the lifter's plate
- *  increment (GH#220) — the lifter chose the cap knowing their plate set, so
- *  rounding down would silently lose meaningful work. Returns `null` when no
- *  cap is active. */
-function resolveRehabCeilingKg(
-  input: JITInput,
-  increment: number
-): number | null {
-  if (!input.activeRehabCap) return null;
-  if (input.activeRehabCap.lift !== input.primaryLift) return null;
-  return roundUpToNearest(input.activeRehabCap.capKg, increment);
-}
 
 export function buildFinalMainSets(
   ctx: PipelineContext,
