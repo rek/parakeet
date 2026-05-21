@@ -12,10 +12,12 @@
 -- ended_at = now()) frees the slot so a future rehab block can be started
 -- without losing the history of the previous one.
 --
--- New columns on set_logs:
---   during_rehab — set server-side at write time if a rehab cap is active
---                  for the parent session's primary lift. Once stamped, never
---                  changes (the set was logged in a rehab context, period).
+-- New columns on set_logs (both default false; stamped by the session repo's
+-- write path in a later phase, not by a DB trigger):
+--   during_rehab — stamped true when the session repo inserts a set and a
+--                  rehab cap is active for the parent session's primary lift.
+--                  Once stamped, never changes (the set was logged in a rehab
+--                  context, period).
 --   pain_limited — user toggled the "pain-limited" pill on the RPE picker
 --                  for this set. Stored alongside rpe_actual but excluded
 --                  from auto-progression / working-1RM / PR detection.

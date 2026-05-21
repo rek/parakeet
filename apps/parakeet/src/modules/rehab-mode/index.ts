@@ -1,16 +1,20 @@
 // @spec docs/features/rehab-mode/spec-app.md
 export {
-  ActiveRehabCapExistsError,
+  enableRehabCap,
   endRehabCap,
-  getActiveCapForLift,
+  getActiveRehabCapForLift,
+  getActiveRehabCaps,
   getRehabCap,
   getRehabCapHistory,
-  insertRehabCap,
-  listActiveRehabCaps,
   updateRehabCap,
-} from './data/rehab-mode.repository';
+} from './application/rehab-mode.service';
 
-export type { RehabCapRow } from './data/rehab-mode.repository';
+export { rehabModeQueries } from './data/rehab-mode.queries';
+
+export {
+  ActiveRehabCapExistsError,
+  type RehabCapRow,
+} from './data/rehab-mode.repository';
 
 export type {
   CreateRehabCapInput,

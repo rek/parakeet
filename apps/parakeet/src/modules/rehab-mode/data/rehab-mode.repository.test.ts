@@ -4,6 +4,8 @@ import {
   ActiveRehabCapExistsError,
   endRehabCap,
   getActiveCapForLift,
+  getRehabCap,
+  getRehabCapHistory,
   insertRehabCap,
   listActiveRehabCaps,
   updateRehabCap,
@@ -15,10 +17,8 @@ vi.mock('@platform/supabase', () => ({
   typedSupabase: { from: fromMock },
 }));
 
-type ChainShape = ReturnType<typeof createChain>;
-
 function createChain(result: { data: unknown; error: unknown; count?: number }) {
-  const chain: Record<string, ReturnType<typeof vi.fn>> = {
+  const chain = {
     select: vi.fn(),
     insert: vi.fn(),
     update: vi.fn(),
@@ -28,18 +28,24 @@ function createChain(result: { data: unknown; error: unknown; count?: number }) 
     range: vi.fn(),
     maybeSingle: vi.fn(),
     single: vi.fn(),
+    // Make the chain itself thenable so callers can await it after any chainable
+    // method (e.g. `.order(...)` for list reads, `.range(...)` for paginated).
+    then: (onFulfilled: (v: typeof result) => unknown) =>
+      Promise.resolve(result).then(onFulfilled),
   };
-  // All chainable methods return the chain itself
-  for (const key of ['select', 'insert', 'update', 'eq', 'is', 'order', 'range']) {
+  for (const key of [
+    'select',
+    'insert',
+    'update',
+    'eq',
+    'is',
+    'order',
+    'range',
+  ] as const) {
     chain[key].mockReturnValue(chain);
   }
-  // Terminal methods resolve to the configured result
   chain.maybeSingle.mockResolvedValue(result);
   chain.single.mockResolvedValue(result);
-  // .range is also terminal for paginated reads
-  chain.range.mockResolvedValue(result);
-  // .order is terminal for non-paginated multi-row reads
-  chain.order.mockResolvedValue(result);
   return chain;
 }
 
@@ -160,6 +166,73 @@ describe('updateRehabCap', () => {
       note: null,
       planned_end_date: null,
     });
+  });
+});
+
+describe('getRehabCap', () => {
+  it('scopes the read to id + user_id', async () => {
+    const row = { id: 'r1', user_id: 'u1' };
+    const chain = createChain({ data: row, error: null });
+    fromMock.mockReturnValueOnce(chain);
+
+    const result = await getRehabCap('r1', 'u1');
+
+    expect(chain.eq).toHaveBeenCalledWith('id', 'r1');
+    expect(chain.eq).toHaveBeenCalledWith('user_id', 'u1');
+    expect(chain.maybeSingle).toHaveBeenCalled();
+    expect(result).toEqual(row);
+  });
+
+  it('returns null when no row matches', async () => {
+    const chain = createChain({ data: null, error: null });
+    fromMock.mockReturnValueOnce(chain);
+
+    const result = await getRehabCap('missing', 'u1');
+
+    expect(result).toBeNull();
+  });
+});
+
+describe('getRehabCapHistory', () => {
+  it('paginates with default page=0 pageSize=20 → range(0, 19)', async () => {
+    const chain = createChain({ data: [], error: null, count: 0 });
+    fromMock.mockReturnValueOnce(chain);
+
+    const result = await getRehabCapHistory('u1');
+
+    expect(chain.eq).toHaveBeenCalledWith('user_id', 'u1');
+    expect(chain.range).toHaveBeenCalledWith(0, 19);
+    expect(chain.order).toHaveBeenCalledWith('started_at', { ascending: false });
+    expect(result).toEqual({ items: [], total: 0 });
+  });
+
+  it('computes range correctly for page=2 pageSize=20 → range(40, 59)', async () => {
+    const chain = createChain({ data: [], error: null, count: 100 });
+    fromMock.mockReturnValueOnce(chain);
+
+    const result = await getRehabCapHistory('u1', { page: 2, pageSize: 20 });
+
+    expect(chain.range).toHaveBeenCalledWith(40, 59);
+    expect(result.total).toBe(100);
+  });
+
+  it('uses custom pageSize: page=1 pageSize=10 → range(10, 19)', async () => {
+    const chain = createChain({ data: [], error: null, count: 0 });
+    fromMock.mockReturnValueOnce(chain);
+
+    await getRehabCapHistory('u1', { page: 1, pageSize: 10 });
+
+    expect(chain.range).toHaveBeenCalledWith(10, 19);
+  });
+
+  it('returns items + total from supabase response', async () => {
+    const items = [{ id: 'r1' }, { id: 'r2' }];
+    const chain = createChain({ data: items, error: null, count: 42 });
+    fromMock.mockReturnValueOnce(chain);
+
+    const result = await getRehabCapHistory('u1');
+
+    expect(result).toEqual({ items, total: 42 });
   });
 });
 

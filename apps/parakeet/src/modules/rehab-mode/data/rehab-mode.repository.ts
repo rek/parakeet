@@ -1,5 +1,9 @@
 // @spec docs/features/rehab-mode/spec-data.md
-import type { CreateRehabCapInput, UpdateRehabCapInput } from '@parakeet/shared-types';
+import type {
+  CreateRehabCapInput,
+  RehabLift,
+  UpdateRehabCapInput,
+} from '@parakeet/shared-types';
 import type { DbInsert, DbRow, DbUpdate } from '@platform/supabase';
 import { typedSupabase } from '@platform/supabase';
 
@@ -8,7 +12,7 @@ export type RehabCapRow = DbRow<'rehab_caps'>;
 /** Thrown when a second active cap is attempted for the same (user_id, lift).
  *  Surfaced to UI so a friendly error message can replace the raw PG error. */
 export class ActiveRehabCapExistsError extends Error {
-  constructor(public readonly lift: string) {
+  constructor(public readonly lift: RehabLift) {
     super(`A rehab cap is already active for ${lift}.`);
     this.name = 'ActiveRehabCapExistsError';
   }
@@ -31,7 +35,7 @@ export async function listActiveRehabCaps(
 
 export async function getActiveCapForLift(
   userId: string,
-  lift: 'squat' | 'bench' | 'deadlift'
+  lift: RehabLift
 ): Promise<RehabCapRow | null> {
   const { data, error } = await typedSupabase
     .from('rehab_caps')

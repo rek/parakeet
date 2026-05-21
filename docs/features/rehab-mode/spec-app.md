@@ -13,24 +13,27 @@ The module follows the same layered shape as `@modules/disruptions` (`data/` →
 
 **Module skeleton: `apps/parakeet/src/modules/rehab-mode/`**
 
-- [ ] `index.ts` — public API: `RehabModeService`, `useActiveRehabCaps`, `useRehabCapForLift`, `useRehabModeMutations`, type re-exports
-- [ ] `data/rehab-mode.repository.ts` — see [spec-data.md](./spec-data.md)
-- [ ] `services/rehab-mode.service.ts` — see below
-- [ ] `hooks/useActiveRehabCaps.ts`, `hooks/useRehabCapForLift.ts`, `hooks/useRehabModeMutations.ts` — React Query hooks
-- [ ] `constants/index.ts` — query key namespace (see below), default cap percentage (50% of 1RM)
+- [x] `index.ts` — public API: barrel exports the service + queryOptions factory + typed error + types. Raw repository is module-internal.
+  → `apps/parakeet/src/modules/rehab-mode/index.ts`
+- [x] `data/rehab-mode.repository.ts` — see [spec-data.md](./spec-data.md)
+  → `apps/parakeet/src/modules/rehab-mode/data/rehab-mode.repository.ts`
+- [x] `application/rehab-mode.service.ts` — verb-named wrappers around the repo (`application/`, not `services/`, per house convention — see `apps/parakeet/CLAUDE.md`).
+  → `apps/parakeet/src/modules/rehab-mode/application/rehab-mode.service.ts`
+- [ ] `hooks/useActiveRehabCaps.ts`, `hooks/useRehabCapForLift.ts`, `hooks/useRehabModeMutations.ts` — React Query hooks (Phase 3 / spec-ui follow-up)
 
-**Service: `services/rehab-mode.service.ts`**
+**Service: `application/rehab-mode.service.ts`**
 
-- [ ] `enableRehabCap(userId, input: CreateRehabCapInput): Promise<RehabCap>` — wraps repository insert, throws a user-friendly error if the unique constraint fires ("Rehab Mode is already active for {lift}.")
-- [ ] `updateRehabCap(id, userId, patch: UpdateRehabCapInput): Promise<RehabCap>`
-- [ ] `endRehabCap(id, userId): Promise<RehabCap>` — wraps repository endRehabCap
-- [ ] `getActiveCapForLift(userId, lift): Promise<RehabCap | null>` — convenience for JIT input assembly
+- [x] `enableRehabCap`, `updateRehabCap`, `endRehabCap`, `getActiveRehabCaps`, `getActiveRehabCapForLift`, `getRehabCap`, `getRehabCapHistory`. The typed `ActiveRehabCapExistsError` from the repository propagates unchanged so callers can `catch` it without string-matching PG codes.
+  → `apps/parakeet/src/modules/rehab-mode/application/rehab-mode.service.ts`
 
-**React Query keys: extend `apps/parakeet/src/platform/query/keys.ts`**
+**React Query factory: `data/rehab-mode.queries.ts`**
 
-- [ ] `qk.rehabMode.active(userId)` — list of active caps for user
-- [ ] `qk.rehabMode.byLift(userId, lift)` — single active cap per lift
-- [ ] `qk.rehabMode.history(userId)` — paginated history
+Per `apps/parakeet/CLAUDE.md` new-code convention: `queryOptions` factories live co-located with the data layer; no entries on the legacy `qk.*` helper.
+
+- [x] `rehabModeQueries.activeCaps(userId)`
+- [x] `rehabModeQueries.activeForLift(userId, lift)`
+- [x] `rehabModeQueries.history(userId, paging)`
+  → `apps/parakeet/src/modules/rehab-mode/data/rehab-mode.queries.ts`
 
 **Hooks**
 

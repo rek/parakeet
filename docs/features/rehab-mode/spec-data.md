@@ -47,6 +47,10 @@ Database schema for storing rehab caps and the per-set flags that mark sets logg
   → `apps/parakeet/src/modules/rehab-mode/data/rehab-mode.repository.test.ts`
 - [x] `endRehabCap` sets `ended_at` to the supplied date in ISO format.
   → `apps/parakeet/src/modules/rehab-mode/data/rehab-mode.repository.test.ts`
+- [x] `getRehabCap` scopes the read to `id + user_id` and returns `null` when no row matches.
+  → `apps/parakeet/src/modules/rehab-mode/data/rehab-mode.repository.test.ts`
+- [x] `getRehabCapHistory` pagination math: default → `range(0, 19)`; page 2, size 20 → `range(40, 59)`; custom size 10 → `range(10, 19)`. Returns `{ items, total }`.
+  → `apps/parakeet/src/modules/rehab-mode/data/rehab-mode.repository.test.ts`
 - [ ] **Deferred to integration testing**: RLS cross-user empty reads + frees-the-unique-slot-after-end-then-re-insert. These exercise actual DB constraints; cover them with an integration test once the local fixture pattern is set up for this module.
 
 ## Dependencies
