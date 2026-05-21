@@ -5,6 +5,7 @@ import {
   kgToGrams,
   plateIncrementKg,
   roundToNearest,
+  roundUpToNearest,
 } from './weight-rounding';
 
 describe('roundToNearest', () => {
@@ -15,6 +16,28 @@ describe('roundToNearest', () => {
 
   it('rounds to custom increment', () => {
     expect(roundToNearest(101, 5)).toBe(100);
+  });
+});
+
+describe('roundUpToNearest (GH#220)', () => {
+  it('rounds up to default 2.5kg', () => {
+    expect(roundUpToNearest(82.5)).toBe(82.5);
+    expect(roundUpToNearest(81)).toBe(82.5);
+    expect(roundUpToNearest(80.1)).toBe(82.5);
+  });
+
+  it('rounds up to 5kg increment when 1.25 plates disabled', () => {
+    expect(roundUpToNearest(82.5, 5)).toBe(85);
+    expect(roundUpToNearest(80.1, 5)).toBe(85);
+  });
+
+  it('leaves a value that already lands on the increment unchanged', () => {
+    expect(roundUpToNearest(80, 5)).toBe(80);
+    expect(roundUpToNearest(100, 2.5)).toBe(100);
+  });
+
+  it('rounds up to 10kg when only 5s remain', () => {
+    expect(roundUpToNearest(82.5, 10)).toBe(90);
   });
 });
 

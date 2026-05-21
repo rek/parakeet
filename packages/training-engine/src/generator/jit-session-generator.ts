@@ -35,6 +35,7 @@ import {
   MuscleGroup,
   MuscleMapper,
   PUSH_MUSCLES,
+  type RehabCap,
 } from '../types';
 import {
   createMuscleMapper,
@@ -171,6 +172,14 @@ export interface JITInput {
   // type-picker step in AddExerciseModal and stored on auxiliary_exercises.
   // Catalog wins over this map; only used for names not in the catalog.
   customExerciseTypeMap?: CustomExerciseTypeMap;
+  /** Active rehab cap for this session's primary lift, when one exists
+   *  (GH#220). When present, the engine clamps the final weight to capKg
+   *  (rounded UP to plate increment), suppresses Steps 0/2/2b, excludes the
+   *  capped lift's primary muscles from volume top-up, and exits early from
+   *  intra-session weight autoregulation and volume add-back. The app layer
+   *  fetches the active cap via `getActiveRehabCapForLift` and threads it
+   *  into JIT input — engine remains pure. */
+  activeRehabCap?: RehabCap;
 }
 
 export interface AuxiliaryWork {
@@ -238,6 +247,13 @@ export interface JITOutput {
     /** True only for severe soreness (9-10) recovery mode — blocks volume recovery offer */
     recoveryBlocked: boolean;
   };
+  /** True when the final main-lift weight was determined by an active Rehab
+   *  Mode cap rather than the formula × modifier stack (GH#220). When true,
+   *  `rehabCapKg` is the cap value. The UI uses this to render a "Capped by
+   *  Rehab Mode" footnote and to suppress in-session autoregulation / volume
+   *  add-back prompts that would push past the cap. */
+  cappedByRehab?: boolean;
+  rehabCapKg?: number;
 }
 
 /** Produces a minimal JITOutput for free-form ad-hoc sessions (no primary lift). */
@@ -585,6 +601,9 @@ export function generateJITSession(
         recoveryBlocked: ctx.inRecoveryMode,
       },
     }),
+    ...(ctx.cappedByRehab && ctx.rehabCapKg !== null
+      ? { cappedByRehab: true, rehabCapKg: ctx.rehabCapKg }
+      : {}),
   };
 }
 

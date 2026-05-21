@@ -21,4 +21,9 @@ export interface PipelineContext {
   cyclePhaseSetsRemoved: number;
   sorenessSetsRemoved: number;
   disruptionSetsRemoved: number;
+  // Rehab Mode (GH#220) — true if the final weight was clamped by an active
+  // rehab cap rather than determined by the formula × modifiers. Surfaced on
+  // JITOutput so the UI can render a "Capped by Rehab Mode" footnote.
+  cappedByRehab: boolean;
+  rehabCapKg: number | null;
 }

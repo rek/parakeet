@@ -11,33 +11,35 @@ The cap itself is **passed in** via `JITInput`. The engine does not query Supaba
 
 ## Tasks
 
-**Types: `packages/training-engine/src/types/rehab-cap.ts`** (new)
+**Types: `packages/training-engine/src/types.ts`** (added inline, not a separate file)
 
-- [ ] Define `RehabCap`:
-  ```typescript
-  interface RehabCap {
-    lift: Lift;
-    capKg: number;
-    startedAt: string; // ISO timestamp
-    note?: string;
-  }
-  ```
-- [ ] Export from package barrel.
+- [x] `RehabCap` exported from `@parakeet/training-engine`.
+  → `packages/training-engine/src/types.ts`
 
 **`packages/training-engine/src/generator/jit-session-generator.ts`**
 
-- [ ] Add to `JITInput`: `activeRehabCap?: RehabCap` — present iff the session's `primary_lift` has an active cap.
-- [ ] Add to `JITOutput`:
-  - `cappedByRehab: boolean` — true if final weight was determined by the cap rather than the formula
-  - `rehabCapKg?: number` — the cap used, when active
-- [ ] Step 0 (`applyVolumeCalibration`): if `activeRehabCap` set, **skip** entirely. No volume +/- from RPE trends, capacity, or modifier learning while in rehab.
-- [ ] Step 2 (`applyRpeAdjustment`): if `activeRehabCap` set, **skip** entirely. No auto-progression in either direction.
-- [ ] Step 2b (`applyRepRangeAdjustment`): if `activeRehabCap` set, **skip**. Rep boosts are an adaptive response and don't apply during rehab.
-- [ ] Step 8 (`buildFinalMainSets`): after rounding to plate increment, clamp `weight_kg = min(weight_kg, capKg)`. If the clamp fires, set `cappedByRehab = true` and add a rationale line: "Capped at {capKg}kg by Rehab Mode."
-- [ ] Volume top-up: if `activeRehabCap` set, exclude the capped lift's primary muscles from top-up candidacy. They're already getting capped main-lift work; adding top-up volume would undo the intent of capping.
-- [ ] Aux exercises (Step 9): no special handling. Aux propagation (GH#217) already follows main-lift volume ratio; the cap reducing main weight will naturally flow to aux via `mainIntensityMultiplier`. Document this is intentional.
-- [ ] Volume recovery (intra-session): if `activeRehabCap` set, do not offer to add removed sets back. The cap implies the lifter doesn't want adaptive volume increases.
-- [ ] Weight autoregulation (intra-session): if `activeRehabCap` set, suppress the "+2.5/+5 kg next set" suggestion when RPE is low. The cap is the ceiling.
+- [x] `JITInput.activeRehabCap?: RehabCap` — populated by the app layer when the session's `primary_lift` has an active cap.
+  → `packages/training-engine/src/generator/jit-session-generator.ts`
+- [x] `JITOutput.cappedByRehab?: boolean` and `rehabCapKg?: number` — surfaced only when the clamp actually fired (cap > formula weight = no-op = no fields emitted).
+  → `packages/training-engine/src/generator/jit-session-generator.ts`
+- [x] Step 0 (`applyVolumeCalibration`): early-returns when `activeRehabCap` set. No volume calibration from RPE trends, capacity, or modifier learning during rehab.
+  → `packages/training-engine/src/generator/steps/applyVolumeCalibration.ts`
+- [x] Step 2 (`applyRpeAdjustment`): early-returns when `activeRehabCap` set. No auto-progression while RPE is pain-ambiguous.
+  → `packages/training-engine/src/generator/steps/applyRpeAdjustment.ts`
+- [x] Step 2b (`applyRepRangeAdjustment`): early-returns when `activeRehabCap` set.
+  → `packages/training-engine/src/generator/steps/applyRepRangeAdjustment.ts`
+- [x] Step 8 (`buildFinalMainSets`): clamps `weight_kg = min(formulaWeight, ceilToIncrement(capKg))` using `roundUpToNearest` (cap rounds **up**, per GH#220 decision). Sets `ctx.cappedByRehab = true` and `ctx.rehabCapKg = ceiling` + adds a rationale line when the clamp fires. Recovery mode (severe soreness) also bases the 40% floor on the clamped weight rather than the uncapped formula weight.
+  → `packages/training-engine/src/generator/steps/buildFinalMainSets.ts`
+- [x] Volume top-up: no code change needed — the existing primary-muscle exclusion (`getPrimaryMusclesForSession(primaryLift)`) already prevents top-up from picking the capped lift's primary muscles. Cross-lift case (e.g. squat-rehab on deadlift day) is out of scope for v1; revisit if it causes problems in practice.
+  → `packages/training-engine/src/generator/jit-session-generator.ts:746` (existing `primaryMusclesToday` filter)
+- [x] Aux exercises: no special handling per design. Aux propagation (GH#217) already scales aux weight by `mainIntensityMultiplier`; the cap reducing main weight will naturally flow through. Intentional.
+- [ ] Volume recovery (intra-session): suppress add-back offers when `activeRehabCap` set. **Phase 2b**.
+- [ ] Weight autoregulation (intra-session): suppress next-set weight increase suggestion when `activeRehabCap` set. **Phase 2b**.
+
+**`packages/training-engine/src/formulas/weight-rounding.ts`**
+
+- [x] `roundUpToNearest(weightKg, incrementKg)` helper — used by the cap-clamp logic so a 82.5kg cap with 5kg plate increment prescribes 85kg, not 80kg.
+  → `packages/training-engine/src/formulas/weight-rounding.ts`
 
 **`packages/training-engine/src/adjustments/performance-adjuster.ts`**
 

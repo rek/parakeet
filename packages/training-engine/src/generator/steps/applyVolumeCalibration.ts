@@ -21,6 +21,11 @@ export function applyVolumeCalibration(
   // Skip calibration if already in recovery mode or main lift skipped
   if (ctx.inRecoveryMode || ctx.skippedMainLift) return;
 
+  // Rehab Mode (GH#220): no adaptive volume changes while a cap is active.
+  // The lifter has set a deliberate ceiling; adding sets to "use more capacity"
+  // would undo the rehab intent.
+  if (input.activeRehabCap) return;
+
   let modifier = 0;
   const reasons: string[] = [];
 

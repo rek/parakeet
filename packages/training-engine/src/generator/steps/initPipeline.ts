@@ -82,6 +82,8 @@ export function initPipeline(
     cyclePhaseSetsRemoved: 0,
     sorenessSetsRemoved: 0,
     disruptionSetsRemoved: 0,
+    cappedByRehab: false,
+    rehabCapKg: null,
   };
 
   if (intensityType !== 'deload' && baseSets.length > 0) {

@@ -22,6 +22,10 @@ export function applyRepRangeAdjustment(
   if (input.intensityType !== 'rep') return;
   if (ctx.inRecoveryMode || ctx.skippedMainLift) return;
 
+  // Rehab Mode (GH#220): no rep-range boosts while a cap is active. Same
+  // ambiguous-RPE reasoning as applyRpeAdjustment.
+  if (input.activeRehabCap) return;
+
   const avgDev = computeAvgRpeDev(input.recentLogs);
   if (avgDev === null || avgDev > -RPE_LARGE_GAP) return;
 

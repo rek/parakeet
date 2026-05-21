@@ -13,6 +13,18 @@ export function roundToNearest(
   return Math.round(weightKg / incrementKg) * incrementKg;
 }
 
+/** Rounds UP to the next reachable increment. Use when honouring a user-set
+ *  ceiling (e.g. Rehab Mode cap, GH#220) — if the cap is 82.5kg and the lifter
+ *  has 5kg increments, prescription becomes 85kg rather than 80kg. The lifter
+ *  chose the cap knowing their plate situation; rounding down would silently
+ *  lose meaningful work. */
+export function roundUpToNearest(
+  weightKg: number,
+  incrementKg = DEFAULT_ROUNDING_INCREMENT_KG
+): number {
+  return Math.ceil(weightKg / incrementKg) * incrementKg;
+}
+
 /** Smallest reachable weight step given the user's available plate set.
  *  Returns `2 × smallest enabled plate` because barbells must load symmetrically.
  *  When no plate constraints are passed, falls back to the default 2.5kg

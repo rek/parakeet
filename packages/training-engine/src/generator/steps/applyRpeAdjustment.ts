@@ -21,6 +21,11 @@ export function applyRpeAdjustment(
   input: JITInput,
   traceBuilder?: PrescriptionTraceBuilder
 ) {
+  // Rehab Mode (GH#220): no auto-progression while a cap is active. RPE during
+  // rehab is ambiguous (muscular vs pain-limited); using it to move weight
+  // would push past the cap or chase pain signals.
+  if (input.activeRehabCap) return;
+
   const avgDev = computeAvgRpeDev(input.recentLogs);
   if (avgDev === null) return;
 

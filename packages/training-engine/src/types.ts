@@ -1,6 +1,24 @@
 import { IntensityType, Lift } from '@parakeet/shared-types';
 import type { MuscleGroup } from '@parakeet/shared-types';
 
+// ---------------------------------------------------------------------------
+// Rehab Mode (GH#220)
+// ---------------------------------------------------------------------------
+
+/** Per-lift weight ceiling for a long-term rehab/injury block. When active,
+ *  the JIT pipeline clamps prescribed weight to `capKg` (rounded UP to the
+ *  effective plate increment) and suppresses adaptive logic that would push
+ *  past the cap or infer a false 1RM: volume calibration, RPE auto-progression,
+ *  rep-range boosts, weight autoregulation, volume add-back. The pipeline
+ *  pushes this through as a separate input so the engine remains pure —
+ *  fetching the active cap is the app layer's job. */
+export interface RehabCap {
+  lift: Lift;
+  capKg: number;
+  startedAt: string;
+  note?: string;
+}
+
 export interface BlockIntensityConfig {
   pct: number;
   sets: number;

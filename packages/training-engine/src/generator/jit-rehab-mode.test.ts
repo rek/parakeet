@@ -1,0 +1,183 @@
+// @spec docs/features/rehab-mode/spec-engine.md
+import { baseInput, makeDisruption } from '../__test-helpers__/fixtures';
+import type { RehabCap } from '../types';
+import { generateJITSession } from './jit-session-generator';
+
+function rehabCap(overrides?: Partial<RehabCap>): RehabCap {
+  return {
+    lift: 'squat',
+    capKg: 80,
+    startedAt: '2026-05-01T00:00:00Z',
+    ...overrides,
+  };
+}
+
+describe('Rehab Mode — main lift weight clamp (GH#220)', () => {
+  it('clamps prescribed weight to the cap when formula would exceed it', () => {
+    // Squat block 1 heavy at 140kg 1RM → ~112.5kg working weight. Cap = 80.
+    const out = generateJITSession(
+      baseInput({ activeRehabCap: rehabCap({ capKg: 80 }) })
+    );
+    expect(out.mainLiftSets[0].weight_kg).toBe(80);
+    expect(out.cappedByRehab).toBe(true);
+    expect(out.rehabCapKg).toBe(80);
+    expect(out.rationale.some((r) => /Capped at 80kg by Rehab Mode/i.test(r))).toBe(
+      true
+    );
+  });
+
+  it('does not clamp when formula weight is below the cap', () => {
+    // Set a very high cap above formula weight — cap should not bite.
+    const out = generateJITSession(
+      baseInput({ activeRehabCap: rehabCap({ capKg: 200 }) })
+    );
+    expect(out.cappedByRehab).toBeUndefined();
+    expect(out.rehabCapKg).toBeUndefined();
+    expect(out.mainLiftSets[0].weight_kg).toBeGreaterThan(100);
+  });
+
+  it('rounds the cap UP to the lifter\'s plate increment (GH#220 decision)', () => {
+    // Cap = 82.5, plate increment = 5 (no 1.25 plates) → prescription = 85
+    const out = generateJITSession(
+      baseInput({
+        activeRehabCap: rehabCap({ capKg: 82.5 }),
+        weightIncrementKg: 5,
+      })
+    );
+    expect(out.mainLiftSets[0].weight_kg).toBe(85);
+    expect(out.cappedByRehab).toBe(true);
+    expect(out.rehabCapKg).toBe(85);
+  });
+
+  it('cap on a different lift does not affect today\'s session', () => {
+    // Squat day, but the rehab cap is on bench → no cap behavior.
+    const out = generateJITSession(
+      baseInput({
+        primaryLift: 'squat',
+        activeRehabCap: rehabCap({ lift: 'bench', capKg: 50 }),
+      })
+    );
+    expect(out.cappedByRehab).toBeUndefined();
+    expect(out.mainLiftSets[0].weight_kg).toBeGreaterThan(100);
+  });
+});
+
+describe('Rehab Mode — suppression of adaptive steps', () => {
+  it('Step 2 RPE auto-progression does not raise weight when cap is active', () => {
+    const withCap = generateJITSession(
+      baseInput({
+        recentLogs: [
+          { actual_rpe: 6, target_rpe: 8 },
+          { actual_rpe: 6, target_rpe: 8 },
+        ],
+        activeRehabCap: rehabCap({ capKg: 80 }),
+      })
+    );
+    // The RPE auto-progression rationale should not appear.
+    expect(
+      withCap.rationale.some((r) => /Recent RPE below target/i.test(r))
+    ).toBe(false);
+  });
+
+  it('Step 0 volume calibration does not add sets when cap is active', () => {
+    const withoutCap = generateJITSession(
+      baseInput({
+        recentLogs: [
+          { actual_rpe: 6, target_rpe: 8 },
+          { actual_rpe: 6, target_rpe: 8 },
+        ],
+        sleepQuality: 5,
+        energyLevel: 5,
+        sorenessRatings: { quads: 1, glutes: 1, lower_back: 1 },
+      })
+    );
+    const withCap = generateJITSession(
+      baseInput({
+        recentLogs: [
+          { actual_rpe: 6, target_rpe: 8 },
+          { actual_rpe: 6, target_rpe: 8 },
+        ],
+        sleepQuality: 5,
+        energyLevel: 5,
+        sorenessRatings: { quads: 1, glutes: 1, lower_back: 1 },
+        activeRehabCap: rehabCap({ capKg: 80 }),
+      })
+    );
+    // Without cap: calibration should add sets given strong positive signals.
+    // With cap: set count stays at base.
+    expect(withCap.mainLiftSets.length).toBeLessThanOrEqual(
+      withoutCap.mainLiftSets.length
+    );
+    expect(
+      withCap.rationale.some((r) => /Volume calibration: increase/i.test(r))
+    ).toBe(false);
+  });
+
+  it('Step 2b rep-range boost does not fire on rep days when cap is active', () => {
+    const out = generateJITSession(
+      baseInput({
+        intensityType: 'rep',
+        recentLogs: [
+          { actual_rpe: 6.5, target_rpe: 8 },
+          { actual_rpe: 6.5, target_rpe: 8 },
+        ],
+        activeRehabCap: rehabCap({ capKg: 80 }),
+      })
+    );
+    expect(
+      out.rationale.some((r) => /Recent RPE well below target — prescribing/i.test(r))
+    ).toBe(false);
+  });
+});
+
+describe('Rehab Mode — stacking with other modifiers', () => {
+  it('moderate disruption intensity reduction stacks under the cap', () => {
+    // Moderate disruption applies intensityMultiplier ≤ 0.9. With cap 100 and
+    // squat formula ~112.5 → 112.5 × 0.9 = ~101.25 → still rounds above cap.
+    // Final = 100 (cap wins).
+    const out = generateJITSession(
+      baseInput({
+        activeRehabCap: rehabCap({ capKg: 100 }),
+        activeDisruptions: [makeDisruption('moderate', 'squat')],
+      })
+    );
+    expect(out.mainLiftSets[0].weight_kg).toBe(100);
+    expect(out.cappedByRehab).toBe(true);
+  });
+
+  it('moderate disruption can reduce below the cap (cap does not fire)', () => {
+    // Bigger cap so the moderate-disruption-reduced weight lands below it.
+    // 112.5 × 0.9 = 101.25 → rounds to 100. Cap = 110 → cap doesn\'t bite.
+    const out = generateJITSession(
+      baseInput({
+        activeRehabCap: rehabCap({ capKg: 110 }),
+        activeDisruptions: [makeDisruption('moderate', 'squat')],
+      })
+    );
+    expect(out.mainLiftSets[0].weight_kg).toBeLessThan(110);
+    expect(out.cappedByRehab).toBeUndefined();
+  });
+
+  it('severe soreness recovery mode bases the 40% on the capped weight', () => {
+    // Severe soreness triggers recovery mode (3×5 @ 40% × base). With a cap,
+    // recovery weight = 40% × min(formulaBase=112.5, cap=80) = 40% × 80 = 32
+    // → rounded to 2.5 = 32.5, bar weight floor max(20, 32.5) = 32.5.
+    const out = generateJITSession(
+      baseInput({
+        activeRehabCap: rehabCap({ capKg: 80 }),
+        sorenessRatings: { quads: 10 },
+      })
+    );
+    expect(out.mainLiftSets).toHaveLength(3);
+    expect(out.mainLiftSets[0].weight_kg).toBe(32.5);
+    expect(out.mainLiftSets[0].reps).toBe(5);
+  });
+
+  it('severe soreness without cap uses 40% of uncapped formula weight', () => {
+    // Control: 40% × 112.5 = 45kg, rounded to 2.5 = 45.
+    const out = generateJITSession(
+      baseInput({ sorenessRatings: { quads: 10 } })
+    );
+    expect(out.mainLiftSets[0].weight_kg).toBe(45);
+  });
+});
