@@ -59,7 +59,7 @@ that pushes people away from doing conditioning work at all.
 | Per-item rest | Durable — stored on each in-session entry. Also enables future "plan a session with different rest per exercise" generally. |
 | Template visibility | Global, shared across all users. |
 | Edit permissions | Wiki-style. Any authenticated user. |
-| Catalog reference | Free-text display name in `workout_template_items.exercise` (consistent with `set_logs.exercise` and `auxiliary_exercises` — all three tables sweep on catalog rename). Stable-slug refactor deferred to GH#215. |
+| Catalog reference | Stable slug in `workout_template_items.exercise_slug` (paired with display-name snapshot in `exercise`). Same pattern as `set_logs.exercise_slug` and `auxiliary_exercises.exercise_slug` — see GH#215. Catalog renames no longer require DB sweeps. |
 | Volume credit | Inherited from catalog `primary_muscles`. No override column. |
 | Skip-rounds mid-template | Deferred. |
 | `MAX_AUX_EXERCISES` cap | Templates exempt — cap is for JIT-selected aux only. |
@@ -79,7 +79,7 @@ that pushes people away from doing conditioning work at all.
 ## References
 
 - GH#214 — Issue + locked-in decisions
-- GH#215 — Deferred slug-refactor
+- GH#215 — Stable slug refactor (landed)
 - [spec-schema.md](./spec-schema.md)
 - [spec-management.md](./spec-management.md)
 - [spec-insertion.md](./spec-insertion.md)

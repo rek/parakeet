@@ -4,8 +4,8 @@ import { ReadinessLevel } from '../adjustments/readiness-adjuster';
 import { SorenessLevel } from '../adjustments/soreness-adjuster';
 import { MuscleGroup, MuscleMapper } from '../types';
 import {
-  CATALOG_BY_NAME,
   ComplexityTier,
+  getCatalogEntry,
   MovementPattern,
   resolveComplexityTier,
   resolveIsCompound,
@@ -133,7 +133,7 @@ function scorePatternDiversity(
   exercise: string,
   ctx: ExerciseScoringContext
 ): number {
-  const entry = CATALOG_BY_NAME.get(exercise);
+  const entry = getCatalogEntry(exercise);
   if (!entry) return 0.5;
   const pattern = resolveMovementPattern(entry);
   return ctx.alreadySelectedPatterns.includes(pattern) ? 0.3 : 1.0;
@@ -147,7 +147,7 @@ function scoreFatigueAppropriate(
   exercise: string,
   ctx: ExerciseScoringContext
 ): number {
-  const entry = CATALOG_BY_NAME.get(exercise);
+  const entry = getCatalogEntry(exercise);
   if (!entry) return 0.5;
   const tier = resolveComplexityTier(entry);
 
@@ -207,7 +207,7 @@ function scoreSpecificity(
   exercise: string,
   ctx: ExerciseScoringContext
 ): number {
-  const entry = CATALOG_BY_NAME.get(exercise);
+  const entry = getCatalogEntry(exercise);
   if (!entry) return 0.5;
   if (entry.associatedLift === ctx.primaryLift) return 1.0;
   if (entry.associatedLift === null) return 0.6;
@@ -243,7 +243,7 @@ function scoreCompoundBalance(
   exercise: string,
   ctx: ExerciseScoringContext
 ): number {
-  const entry = CATALOG_BY_NAME.get(exercise);
+  const entry = getCatalogEntry(exercise);
   if (!entry) return 0.5;
   const isCompound = resolveIsCompound(entry);
 
@@ -252,7 +252,7 @@ function scoreCompoundBalance(
 
   let compounds = 0;
   for (const name of selected) {
-    const e = CATALOG_BY_NAME.get(name);
+    const e = getCatalogEntry(name);
     if (e && resolveIsCompound(e)) compounds++;
   }
   const compoundRatio = compounds / selected.length;

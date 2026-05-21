@@ -30,6 +30,7 @@ import {
   updateProgramTrainingDays,
   updateUnendingSessionCounter,
 } from '../data/program.repository';
+import { resolveAuxExerciseSlug } from '../data/auxiliary-config.repository';
 import { getAuxiliaryPools } from '../lib/auxiliary-config';
 import { getCurrentMaxes } from '../lib/lifter-maxes';
 import { captureException } from '../utils/captureException';
@@ -109,7 +110,9 @@ async function buildProgram(
       block_number: a.blockNumber,
       lift: a.lift,
       exercise_1: a.exercise1,
+      exercise_1_slug: resolveAuxExerciseSlug(a.exercise1),
       exercise_2: a.exercise2,
+      exercise_2_slug: resolveAuxExerciseSlug(a.exercise2),
     }))
   );
 

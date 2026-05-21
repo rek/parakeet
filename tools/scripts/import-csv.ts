@@ -20,7 +20,11 @@
 import * as fs from 'fs';
 import * as readline from 'readline';
 import { createClient } from '@supabase/supabase-js';
-import { EXERCISE_CATALOG } from '../../packages/training-engine/src/auxiliary/exercise-catalog';
+import {
+  EXERCISE_CATALOG,
+  getCatalogEntry,
+  slugify,
+} from '../../packages/training-engine/src/auxiliary/exercise-catalog';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -858,6 +862,8 @@ async function insertSessions(
       const { error } = await db.from('auxiliary_exercises').insert({
         user_id: userId,
         exercise_name: aux.exerciseName,
+        exercise_slug:
+          getCatalogEntry(aux.exerciseName)?.slug ?? slugify(aux.exerciseName),
         lift: aux.forLift,
         pool_position: nextPos,
         primary_muscles: [], // user can edit in settings → Auxiliary Exercises
@@ -925,6 +931,7 @@ async function insertSessions(
         user_id: userId,
         kind: 'primary' as const,
         exercise: null,
+        exercise_slug: null,
         exercise_type: null,
         set_number: s.set_number,
         weight_grams: s.weight_grams,
@@ -940,6 +947,8 @@ async function insertSessions(
         user_id: userId,
         kind: 'auxiliary' as const,
         exercise: s.exercise,
+        exercise_slug:
+          getCatalogEntry(s.exercise)?.slug ?? slugify(s.exercise),
         exercise_type: null,
         set_number: s.set_number,
         weight_grams: s.weight_grams,

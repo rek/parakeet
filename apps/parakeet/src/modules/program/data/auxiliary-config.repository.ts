@@ -1,5 +1,6 @@
 // @spec docs/features/programs/spec-generator.md
 import type { Lift } from '@parakeet/shared-types';
+import { getCatalogEntry, slugify } from '@parakeet/training-engine';
 import type { DbInsert } from '@platform/supabase';
 import { typedSupabase } from '@platform/supabase';
 
@@ -11,19 +12,25 @@ export async function fetchAuxiliaryExercises(
 ): Promise<
   {
     exercise_name: string;
+    exercise_slug: string;
     primary_muscles: string[];
     exercise_type: string | null;
   }[]
 > {
   const { data, error } = await typedSupabase
     .from('auxiliary_exercises')
-    .select('exercise_name, primary_muscles, exercise_type')
+    .select('exercise_name, exercise_slug, primary_muscles, exercise_type')
     .eq('user_id', userId)
     .eq('lift', category)
     .order('pool_position');
 
   if (error) throw error;
   return data ?? [];
+}
+
+/** Stable slug for a pool entry: catalog hit → catalog slug; otherwise slugify. */
+export function resolveAuxExerciseSlug(exerciseName: string): string {
+  return getCatalogEntry(exerciseName)?.slug ?? slugify(exerciseName);
 }
 
 export async function deleteAuxiliaryExercises(

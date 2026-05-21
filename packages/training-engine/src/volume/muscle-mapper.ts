@@ -1,6 +1,6 @@
 import { Lift } from '@parakeet/shared-types';
 
-import { CATALOG_BY_NAME } from '../auxiliary/exercise-catalog';
+import { getCatalogEntry } from '../auxiliary/exercise-catalog';
 import { MuscleContribution, MuscleGroup, MuscleMapper } from '../types';
 
 // Primary lift → muscle contributions
@@ -46,7 +46,7 @@ export function createMuscleMapper(
 ): MuscleMapper {
   return (lift, exercise) => {
     if (exercise) {
-      const entry = CATALOG_BY_NAME.get(exercise);
+      const entry = getCatalogEntry(exercise);
       if (entry?.muscleContributions) return entry.muscleContributions;
       if (entry?.primaryMuscles.length) {
         return entry.primaryMuscles.map((muscle) => ({

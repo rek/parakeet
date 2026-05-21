@@ -1,3 +1,4 @@
+import { slugify } from '@parakeet/training-engine';
 import { describe, expect, it } from 'vitest';
 
 import type { WorkoutTemplateItem } from '@modules/workout-templates';
@@ -15,6 +16,7 @@ const baseItem = (
   template_id: 't-1',
   position,
   exercise,
+  exercise_slug: slugify(exercise),
   duration_seconds: duration,
   reps,
   rest_after_seconds: rest,

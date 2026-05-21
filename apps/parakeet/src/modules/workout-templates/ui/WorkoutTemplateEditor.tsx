@@ -61,6 +61,7 @@ export function WorkoutTemplateEditor({ templateId }: Props) {
       existing.items.map((it) => ({
         position: it.position,
         exercise: it.exercise,
+        exercise_slug: it.exercise_slug,
         duration_seconds: it.duration_seconds,
         reps: it.reps,
         rest_after_seconds: it.rest_after_seconds,

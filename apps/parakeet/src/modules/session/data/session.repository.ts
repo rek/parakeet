@@ -1,6 +1,7 @@
 // @spec docs/features/session/spec-set-persistence.md
 import type { ActualSet, IntensityType, Lift } from '@parakeet/shared-types';
 import { IntensityTypeSchema, LiftSchema } from '@parakeet/shared-types';
+import { getCatalogEntry, slugify } from '@parakeet/training-engine';
 import type { DbInsert, DbRow, Json } from '@platform/supabase';
 import { toJson, typedSupabase } from '@platform/supabase';
 import type {
@@ -381,13 +382,23 @@ export interface UpsertSetLogInput {
   loggedAt?: string;
 }
 
+/** Stable slug from a display name. Catalog hit → catalog slug; otherwise
+ *  deterministic slugify of the user-typed name. NULL for primary-lift rows
+ *  (which carry no exercise reference). */
+function resolveExerciseSlug(exercise: string | null): string | null {
+  if (exercise == null) return null;
+  return getCatalogEntry(exercise)?.slug ?? slugify(exercise);
+}
+
 export async function upsertSetLog(input: UpsertSetLogInput): Promise<void> {
+  const exerciseSlug = resolveExerciseSlug(input.exercise);
   const { error } = await typedSupabase.from('set_logs').upsert(
     {
       session_id: input.sessionId,
       user_id: input.userId,
       kind: input.kind,
       exercise: input.exercise,
+      exercise_slug: exerciseSlug,
       set_number: input.setNumber,
       weight_grams: input.weightGrams,
       reps_completed: input.repsCompleted,
@@ -398,7 +409,10 @@ export async function upsertSetLog(input: UpsertSetLogInput): Promise<void> {
       notes: input.notes ?? null,
       logged_at: input.loggedAt ?? new Date().toISOString(),
     },
-    { onConflict: 'session_id,kind,exercise,set_number', ignoreDuplicates: true }
+    {
+      onConflict: 'session_id,kind,exercise_slug,set_number',
+      ignoreDuplicates: true,
+    }
   );
   if (error) throw error;
 }
@@ -408,6 +422,7 @@ export interface SetLogRow {
   session_id: string;
   kind: 'primary' | 'auxiliary';
   exercise: string | null;
+  exercise_slug: string | null;
   set_number: number;
   weight_grams: number;
   reps_completed: number;
@@ -423,11 +438,11 @@ export async function fetchSetLogs(sessionId: string): Promise<SetLogRow[]> {
   const { data, error } = await typedSupabase
     .from('set_logs')
     .select(
-      'id, session_id, kind, exercise, set_number, weight_grams, reps_completed, rpe_actual, actual_rest_seconds, exercise_type, failed, notes, logged_at'
+      'id, session_id, kind, exercise, exercise_slug, set_number, weight_grams, reps_completed, rpe_actual, actual_rest_seconds, exercise_type, failed, notes, logged_at'
     )
     .eq('session_id', sessionId)
     .order('kind', { ascending: true })
-    .order('exercise', { ascending: true, nullsFirst: true })
+    .order('exercise_slug', { ascending: true, nullsFirst: true })
     .order('set_number', { ascending: true });
   if (error) throw error;
   return (data ?? []).map((row) => ({
@@ -464,7 +479,7 @@ export async function fetchSessionSetsBySessionIds(
   const { data, error } = await typedSupabase
     .from('set_logs')
     .select(
-      'session_id, kind, exercise, exercise_type, set_number, weight_grams, reps_completed, rpe_actual, actual_rest_seconds, failed, notes'
+      'session_id, kind, exercise, exercise_slug, exercise_type, set_number, weight_grams, reps_completed, rpe_actual, actual_rest_seconds, failed, notes'
     )
     .in('session_id', sessionIds)
     .order('set_number', { ascending: true });
@@ -486,6 +501,7 @@ export async function fetchSessionSetsBySessionIds(
       set.actual_rest_seconds = row.actual_rest_seconds;
     if (row.failed) set.failed = true;
     if (row.exercise) set.exercise = row.exercise;
+    if (row.exercise_slug) set.exercise_slug = row.exercise_slug;
     if (row.exercise_type === 'weighted'
       || row.exercise_type === 'bodyweight'
       || row.exercise_type === 'timed') {

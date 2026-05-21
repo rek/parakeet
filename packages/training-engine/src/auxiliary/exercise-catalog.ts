@@ -39,6 +39,9 @@ export interface BodyweightPoolEntry {
 
 export interface ExerciseCatalogEntry {
   name: string;
+  /** Stable kebab-case identifier. Never changes once assigned. Catalog renames
+   *  edit `name` but leave `slug` untouched, so stored DB references survive. */
+  slug: string;
   /** Short variant descriptor shown below the name in UI (e.g. 'Above the knee'). */
   subtitle?: string;
   /** Which main lift this exercise primarily develops. null = general / no single-lift affinity. */
@@ -79,6 +82,7 @@ export const EXERCISE_CATALOG: ExerciseCatalogEntry[] = [
   // ── Squat auxiliaries ─────────────────────────────────────────────────────
   {
     name: 'Barbell Box Squat',
+    slug: 'barbell-box-squat',
     associatedLift: 'squat',
     primaryMuscles: ['quads', 'glutes'],
     type: 'weighted',
@@ -91,6 +95,7 @@ export const EXERCISE_CATALOG: ExerciseCatalogEntry[] = [
   },
   {
     name: 'Dumbbell Step Up',
+    slug: 'dumbbell-step-up',
     associatedLift: 'squat',
     primaryMuscles: ['quads', 'glutes'],
     type: 'weighted',
@@ -103,6 +108,7 @@ export const EXERCISE_CATALOG: ExerciseCatalogEntry[] = [
   },
   {
     name: 'Dumbbell Lunge',
+    slug: 'dumbbell-lunge',
     associatedLift: 'squat',
     primaryMuscles: ['quads', 'glutes'],
     type: 'weighted',
@@ -115,6 +121,7 @@ export const EXERCISE_CATALOG: ExerciseCatalogEntry[] = [
   },
   {
     name: 'Front Barbell Box Squat',
+    slug: 'front-barbell-box-squat',
     associatedLift: 'squat',
     primaryMuscles: ['quads', 'upper_back'],
     type: 'weighted',
@@ -128,6 +135,7 @@ export const EXERCISE_CATALOG: ExerciseCatalogEntry[] = [
   },
   {
     name: 'Barbell Front Squat',
+    slug: 'barbell-front-squat',
     associatedLift: 'squat',
     primaryMuscles: ['quads', 'upper_back'],
     type: 'weighted',
@@ -141,6 +149,7 @@ export const EXERCISE_CATALOG: ExerciseCatalogEntry[] = [
   },
   {
     name: 'Pause Squat',
+    slug: 'pause-squat',
     associatedLift: 'squat',
     primaryMuscles: ['quads', 'glutes'],
     type: 'weighted',
@@ -155,6 +164,7 @@ export const EXERCISE_CATALOG: ExerciseCatalogEntry[] = [
   },
   {
     name: 'High-Bar Squat',
+    slug: 'high-bar-squat',
     associatedLift: 'squat',
     primaryMuscles: ['quads', 'glutes'],
     type: 'weighted',
@@ -169,6 +179,7 @@ export const EXERCISE_CATALOG: ExerciseCatalogEntry[] = [
   },
   {
     name: 'Bulgarian Split Squat',
+    slug: 'bulgarian-split-squat',
     associatedLift: 'squat',
     primaryMuscles: ['quads', 'glutes'],
     type: 'weighted',
@@ -182,6 +193,7 @@ export const EXERCISE_CATALOG: ExerciseCatalogEntry[] = [
   },
   {
     name: 'Leg Press',
+    slug: 'leg-press',
     associatedLift: 'squat',
     primaryMuscles: ['quads', 'glutes'],
     type: 'weighted',
@@ -197,6 +209,7 @@ export const EXERCISE_CATALOG: ExerciseCatalogEntry[] = [
   },
   {
     name: 'Hack Squat',
+    slug: 'hack-squat',
     associatedLift: 'squat',
     primaryMuscles: ['quads', 'glutes'],
     type: 'weighted',
@@ -213,6 +226,7 @@ export const EXERCISE_CATALOG: ExerciseCatalogEntry[] = [
 
   {
     name: 'Barbell Thruster',
+    slug: 'barbell-thruster',
     associatedLift: 'squat',
     primaryMuscles: ['quads', 'glutes', 'shoulders'],
     type: 'weighted',
@@ -229,6 +243,7 @@ export const EXERCISE_CATALOG: ExerciseCatalogEntry[] = [
   // ── Bench auxiliaries ─────────────────────────────────────────────────────
   {
     name: 'Close-Grip Barbell Bench Press',
+    slug: 'close-grip-barbell-bench-press',
     associatedLift: 'bench',
     primaryMuscles: ['chest', 'triceps'],
     type: 'weighted',
@@ -242,6 +257,7 @@ export const EXERCISE_CATALOG: ExerciseCatalogEntry[] = [
   },
   {
     name: 'Dumbbell Incline Bench Press',
+    slug: 'dumbbell-incline-bench-press',
     associatedLift: 'bench',
     primaryMuscles: ['chest', 'shoulders'],
     type: 'weighted',
@@ -255,6 +271,7 @@ export const EXERCISE_CATALOG: ExerciseCatalogEntry[] = [
   },
   {
     name: 'Barbell Pause Bench Press',
+    slug: 'barbell-pause-bench-press',
     associatedLift: 'bench',
     primaryMuscles: ['chest', 'triceps'],
     type: 'weighted',
@@ -263,6 +280,7 @@ export const EXERCISE_CATALOG: ExerciseCatalogEntry[] = [
   },
   {
     name: 'Decline Barbell Bench Press',
+    slug: 'decline-barbell-bench-press',
     associatedLift: 'bench',
     primaryMuscles: ['chest', 'triceps'],
     type: 'weighted',
@@ -271,6 +289,7 @@ export const EXERCISE_CATALOG: ExerciseCatalogEntry[] = [
   },
   {
     name: 'Barbell Incline Bench Press',
+    slug: 'barbell-incline-bench-press',
     associatedLift: 'bench',
     primaryMuscles: ['chest', 'shoulders'],
     type: 'weighted',
@@ -279,6 +298,7 @@ export const EXERCISE_CATALOG: ExerciseCatalogEntry[] = [
   },
   {
     name: 'Dumbbell Fly',
+    slug: 'dumbbell-fly',
     associatedLift: 'bench',
     primaryMuscles: ['chest'],
     type: 'weighted',
@@ -289,6 +309,7 @@ export const EXERCISE_CATALOG: ExerciseCatalogEntry[] = [
   },
   {
     name: 'Floor Press',
+    slug: 'floor-press',
     associatedLift: 'bench',
     primaryMuscles: ['chest', 'triceps'],
     type: 'weighted',
@@ -301,6 +322,7 @@ export const EXERCISE_CATALOG: ExerciseCatalogEntry[] = [
   },
   {
     name: 'Board Press',
+    slug: 'board-press',
     associatedLift: 'bench',
     primaryMuscles: ['chest', 'triceps'],
     type: 'weighted',
@@ -313,6 +335,7 @@ export const EXERCISE_CATALOG: ExerciseCatalogEntry[] = [
   },
   {
     name: 'Spoto Press',
+    slug: 'spoto-press',
     associatedLift: 'bench',
     primaryMuscles: ['chest', 'triceps'],
     type: 'weighted',
@@ -325,6 +348,7 @@ export const EXERCISE_CATALOG: ExerciseCatalogEntry[] = [
   },
   {
     name: '1 Inch Pause Bench',
+    slug: '1-inch-pause-bench',
     associatedLift: 'bench',
     primaryMuscles: ['chest', 'triceps'],
     type: 'weighted',
@@ -338,6 +362,7 @@ export const EXERCISE_CATALOG: ExerciseCatalogEntry[] = [
   },
   {
     name: 'Barbell Block Bench Press',
+    slug: 'barbell-block-bench-press',
     associatedLift: 'bench',
     primaryMuscles: ['chest', 'triceps'],
     type: 'weighted',
@@ -350,6 +375,7 @@ export const EXERCISE_CATALOG: ExerciseCatalogEntry[] = [
   },
   {
     name: 'Barbell Push Press',
+    slug: 'barbell-push-press',
     associatedLift: 'bench',
     primaryMuscles: ['shoulders', 'triceps'],
     type: 'weighted',
@@ -364,6 +390,7 @@ export const EXERCISE_CATALOG: ExerciseCatalogEntry[] = [
   },
   {
     name: 'JM Press',
+    slug: 'jm-press',
     associatedLift: 'bench',
     primaryMuscles: ['triceps'],
     type: 'weighted',
@@ -376,6 +403,7 @@ export const EXERCISE_CATALOG: ExerciseCatalogEntry[] = [
   },
   {
     name: 'Barbell Curl',
+    slug: 'barbell-curl',
     associatedLift: 'bench',
     primaryMuscles: ['biceps'],
     type: 'weighted',
@@ -387,6 +415,7 @@ export const EXERCISE_CATALOG: ExerciseCatalogEntry[] = [
   },
   {
     name: 'Dumbbell Curl',
+    slug: 'dumbbell-curl',
     associatedLift: 'bench',
     primaryMuscles: ['biceps'],
     type: 'weighted',
@@ -398,6 +427,7 @@ export const EXERCISE_CATALOG: ExerciseCatalogEntry[] = [
   },
   {
     name: 'Cable Curl',
+    slug: 'cable-curl',
     associatedLift: 'bench',
     primaryMuscles: ['biceps'],
     type: 'weighted',
@@ -409,6 +439,7 @@ export const EXERCISE_CATALOG: ExerciseCatalogEntry[] = [
   },
   {
     name: 'EZ-Bar Curl',
+    slug: 'ez-bar-curl',
     associatedLift: 'bench',
     primaryMuscles: ['biceps'],
     type: 'weighted',
@@ -421,6 +452,7 @@ export const EXERCISE_CATALOG: ExerciseCatalogEntry[] = [
   },
   {
     name: 'Decline Push-ups',
+    slug: 'decline-push-ups',
     associatedLift: 'bench',
     primaryMuscles: ['chest'],
     type: 'bodyweight',
@@ -428,6 +460,7 @@ export const EXERCISE_CATALOG: ExerciseCatalogEntry[] = [
   },
   {
     name: 'Diamond Push-ups',
+    slug: 'diamond-push-ups',
     associatedLift: 'bench',
     primaryMuscles: ['chest', 'triceps'],
     type: 'bodyweight',
@@ -435,6 +468,7 @@ export const EXERCISE_CATALOG: ExerciseCatalogEntry[] = [
   },
   {
     name: 'Archer Push-ups',
+    slug: 'archer-push-ups',
     associatedLift: 'bench',
     primaryMuscles: ['chest'],
     type: 'bodyweight',
@@ -442,6 +476,7 @@ export const EXERCISE_CATALOG: ExerciseCatalogEntry[] = [
   },
   {
     name: 'Pike Push-ups',
+    slug: 'pike-push-ups',
     associatedLift: 'bench',
     primaryMuscles: ['shoulders'],
     type: 'bodyweight',
@@ -449,6 +484,7 @@ export const EXERCISE_CATALOG: ExerciseCatalogEntry[] = [
   },
   {
     name: 'Standard Push-ups',
+    slug: 'standard-push-ups',
     associatedLift: 'bench',
     primaryMuscles: ['chest'],
     type: 'bodyweight',
@@ -456,6 +492,7 @@ export const EXERCISE_CATALOG: ExerciseCatalogEntry[] = [
   },
   {
     name: 'Wide Push-ups',
+    slug: 'wide-push-ups',
     associatedLift: 'bench',
     primaryMuscles: ['chest'],
     type: 'bodyweight',
@@ -463,6 +500,7 @@ export const EXERCISE_CATALOG: ExerciseCatalogEntry[] = [
   },
   {
     name: 'Close-Grip Push-ups',
+    slug: 'close-grip-push-ups',
     associatedLift: 'bench',
     primaryMuscles: ['chest', 'triceps'],
     type: 'bodyweight',
@@ -472,6 +510,7 @@ export const EXERCISE_CATALOG: ExerciseCatalogEntry[] = [
   // ── Deadlift auxiliaries ──────────────────────────────────────────────────
   {
     name: 'Barbell Hang Clean',
+    slug: 'barbell-hang-clean',
     associatedLift: 'deadlift',
     primaryMuscles: ['upper_back'],
     type: 'weighted',
@@ -486,6 +525,7 @@ export const EXERCISE_CATALOG: ExerciseCatalogEntry[] = [
   },
   {
     name: 'Clean and Jerk',
+    slug: 'clean-and-jerk',
     associatedLift: 'deadlift',
     primaryMuscles: ['upper_back', 'shoulders'],
     type: 'weighted',
@@ -501,6 +541,7 @@ export const EXERCISE_CATALOG: ExerciseCatalogEntry[] = [
   },
   {
     name: 'Power Clean',
+    slug: 'power-clean',
     associatedLift: 'deadlift',
     primaryMuscles: ['upper_back'],
     type: 'weighted',
@@ -515,6 +556,7 @@ export const EXERCISE_CATALOG: ExerciseCatalogEntry[] = [
   },
   {
     name: 'Lat Pulldown',
+    slug: 'lat-pulldown',
     associatedLift: 'deadlift',
     primaryMuscles: ['upper_back'],
     type: 'weighted',
@@ -528,6 +570,7 @@ export const EXERCISE_CATALOG: ExerciseCatalogEntry[] = [
   },
   {
     name: 'Seated Machine Row',
+    slug: 'seated-machine-row',
     associatedLift: 'deadlift',
     primaryMuscles: ['upper_back'],
     type: 'weighted',
@@ -541,6 +584,7 @@ export const EXERCISE_CATALOG: ExerciseCatalogEntry[] = [
   },
   {
     name: 'Rack Pull',
+    slug: 'rack-pull',
     subtitle: 'Above the knee',
     associatedLift: 'deadlift',
     primaryMuscles: ['upper_back', 'lower_back'],
@@ -556,6 +600,7 @@ export const EXERCISE_CATALOG: ExerciseCatalogEntry[] = [
   },
   {
     name: 'Rack Pull Below Knee',
+    slug: 'rack-pull-below-knee',
     subtitle: 'Below the knee',
     associatedLift: 'deadlift',
     primaryMuscles: ['upper_back', 'lower_back'],
@@ -570,6 +615,7 @@ export const EXERCISE_CATALOG: ExerciseCatalogEntry[] = [
   },
   {
     name: 'Kettlebell Swing',
+    slug: 'kettlebell-swing',
     associatedLift: 'deadlift',
     primaryMuscles: ['hamstrings', 'glutes'],
     type: 'weighted',
@@ -578,6 +624,7 @@ export const EXERCISE_CATALOG: ExerciseCatalogEntry[] = [
   },
   {
     name: 'Pendlay Row',
+    slug: 'pendlay-row',
     associatedLift: 'deadlift',
     primaryMuscles: ['upper_back'],
     type: 'weighted',
@@ -588,6 +635,7 @@ export const EXERCISE_CATALOG: ExerciseCatalogEntry[] = [
   },
   {
     name: 'Barbell Row',
+    slug: 'barbell-row',
     associatedLift: 'deadlift',
     primaryMuscles: ['upper_back'],
     type: 'weighted',
@@ -598,6 +646,7 @@ export const EXERCISE_CATALOG: ExerciseCatalogEntry[] = [
   },
   {
     name: 'Dumbbell Romanian Deadlift',
+    slug: 'dumbbell-romanian-deadlift',
     associatedLift: 'deadlift',
     primaryMuscles: ['hamstrings', 'glutes'],
     type: 'weighted',
@@ -611,6 +660,7 @@ export const EXERCISE_CATALOG: ExerciseCatalogEntry[] = [
   },
   {
     name: 'Hexbar Deadlift',
+    slug: 'hexbar-deadlift',
     associatedLift: 'deadlift',
     primaryMuscles: ['hamstrings', 'glutes', 'quads'],
     type: 'weighted',
@@ -619,6 +669,7 @@ export const EXERCISE_CATALOG: ExerciseCatalogEntry[] = [
   },
   {
     name: 'Hexbar Deadlift Deficit',
+    slug: 'hexbar-deadlift-deficit',
     associatedLift: 'deadlift',
     primaryMuscles: ['hamstrings', 'glutes', 'quads'],
     type: 'weighted',
@@ -627,6 +678,7 @@ export const EXERCISE_CATALOG: ExerciseCatalogEntry[] = [
   },
   {
     name: 'Dumbbell Row',
+    slug: 'dumbbell-row',
     associatedLift: 'deadlift',
     primaryMuscles: ['upper_back'],
     type: 'weighted',
@@ -637,6 +689,7 @@ export const EXERCISE_CATALOG: ExerciseCatalogEntry[] = [
   },
   {
     name: 'Sumo Deadlift',
+    slug: 'sumo-deadlift',
     associatedLift: 'deadlift',
     primaryMuscles: ['hamstrings', 'glutes', 'quads'],
     type: 'weighted',
@@ -650,6 +703,7 @@ export const EXERCISE_CATALOG: ExerciseCatalogEntry[] = [
   },
   {
     name: 'Deficit Deadlift',
+    slug: 'deficit-deadlift',
     associatedLift: 'deadlift',
     primaryMuscles: ['hamstrings', 'lower_back'],
     type: 'weighted',
@@ -663,6 +717,7 @@ export const EXERCISE_CATALOG: ExerciseCatalogEntry[] = [
   },
   {
     name: 'Kettlebell Deadlift',
+    slug: 'kettlebell-deadlift',
     associatedLift: 'deadlift',
     primaryMuscles: ['hamstrings', 'glutes'],
     type: 'weighted',
@@ -671,6 +726,7 @@ export const EXERCISE_CATALOG: ExerciseCatalogEntry[] = [
   },
   {
     name: 'Good Mornings',
+    slug: 'good-mornings',
     associatedLift: 'deadlift',
     primaryMuscles: ['hamstrings', 'lower_back'],
     type: 'weighted',
@@ -684,6 +740,7 @@ export const EXERCISE_CATALOG: ExerciseCatalogEntry[] = [
   },
   {
     name: 'Block Pulls',
+    slug: 'block-pulls',
     associatedLift: 'deadlift',
     primaryMuscles: ['lower_back', 'upper_back'],
     type: 'weighted',
@@ -699,6 +756,7 @@ export const EXERCISE_CATALOG: ExerciseCatalogEntry[] = [
   },
   {
     name: 'Stiff-Leg Deadlift',
+    slug: 'stiff-leg-deadlift',
     associatedLift: 'deadlift',
     primaryMuscles: ['hamstrings', 'lower_back'],
     type: 'weighted',
@@ -712,6 +770,7 @@ export const EXERCISE_CATALOG: ExerciseCatalogEntry[] = [
   },
   {
     name: 'Barbell Snatch',
+    slug: 'barbell-snatch',
     associatedLift: 'deadlift',
     primaryMuscles: ['upper_back', 'shoulders'],
     type: 'weighted',
@@ -726,6 +785,7 @@ export const EXERCISE_CATALOG: ExerciseCatalogEntry[] = [
   },
   {
     name: 'Dumbbell Snatch',
+    slug: 'dumbbell-snatch',
     associatedLift: 'deadlift',
     primaryMuscles: ['upper_back'],
     type: 'weighted',
@@ -739,6 +799,7 @@ export const EXERCISE_CATALOG: ExerciseCatalogEntry[] = [
   },
   {
     name: 'Deadhang',
+    slug: 'deadhang',
     associatedLift: 'deadlift',
     primaryMuscles: ['upper_back'],
     type: 'timed',
@@ -752,6 +813,7 @@ export const EXERCISE_CATALOG: ExerciseCatalogEntry[] = [
 
   {
     name: 'Barbell Overhead Press',
+    slug: 'barbell-overhead-press',
     associatedLift: 'bench',
     primaryMuscles: ['shoulders', 'triceps'],
     type: 'weighted',
@@ -765,6 +827,7 @@ export const EXERCISE_CATALOG: ExerciseCatalogEntry[] = [
   },
   {
     name: 'Dumbbell Overhead Press',
+    slug: 'dumbbell-overhead-press',
     associatedLift: 'bench',
     primaryMuscles: ['shoulders', 'triceps'],
     type: 'weighted',
@@ -780,6 +843,7 @@ export const EXERCISE_CATALOG: ExerciseCatalogEntry[] = [
   // ── General — no single-lift affinity ─────────────────────────────────────
   {
     name: 'Chin Up (weighted)',
+    slug: 'chin-up-weighted',
     associatedLift: null,
     primaryMuscles: ['upper_back'],
     type: 'weighted',
@@ -794,6 +858,7 @@ export const EXERCISE_CATALOG: ExerciseCatalogEntry[] = [
   },
   {
     name: 'Jump Squat',
+    slug: 'jump-squat',
     associatedLift: null,
     primaryMuscles: ['quads', 'glutes'],
     type: 'bodyweight',
@@ -801,6 +866,7 @@ export const EXERCISE_CATALOG: ExerciseCatalogEntry[] = [
   },
   {
     name: 'Pistol Squat',
+    slug: 'pistol-squat',
     associatedLift: null,
     primaryMuscles: ['quads', 'glutes'],
     type: 'bodyweight',
@@ -808,6 +874,7 @@ export const EXERCISE_CATALOG: ExerciseCatalogEntry[] = [
   },
   {
     name: 'Box Jump',
+    slug: 'box-jump',
     associatedLift: null,
     primaryMuscles: ['quads', 'glutes'],
     type: 'bodyweight',
@@ -815,6 +882,7 @@ export const EXERCISE_CATALOG: ExerciseCatalogEntry[] = [
   },
   {
     name: 'Sumo Squat',
+    slug: 'sumo-squat',
     associatedLift: null,
     primaryMuscles: ['quads', 'glutes'],
     type: 'bodyweight',
@@ -822,6 +890,7 @@ export const EXERCISE_CATALOG: ExerciseCatalogEntry[] = [
   },
   {
     name: 'Curtsy Lunge',
+    slug: 'curtsy-lunge',
     associatedLift: null,
     primaryMuscles: ['quads', 'glutes'],
     type: 'bodyweight',
@@ -829,6 +898,7 @@ export const EXERCISE_CATALOG: ExerciseCatalogEntry[] = [
   },
   {
     name: 'Hip Thrust',
+    slug: 'hip-thrust',
     associatedLift: null,
     primaryMuscles: ['glutes'],
     type: 'bodyweight',
@@ -840,6 +910,7 @@ export const EXERCISE_CATALOG: ExerciseCatalogEntry[] = [
   },
   {
     name: 'Glute Bridge',
+    slug: 'glute-bridge',
     associatedLift: null,
     primaryMuscles: ['glutes'],
     type: 'bodyweight',
@@ -848,6 +919,7 @@ export const EXERCISE_CATALOG: ExerciseCatalogEntry[] = [
   },
   {
     name: 'Nordic Hamstring Curl',
+    slug: 'nordic-hamstring-curl',
     associatedLift: null,
     primaryMuscles: ['hamstrings'],
     type: 'bodyweight',
@@ -856,6 +928,7 @@ export const EXERCISE_CATALOG: ExerciseCatalogEntry[] = [
   },
   {
     name: 'Single-Leg RDL',
+    slug: 'single-leg-rdl',
     associatedLift: null,
     primaryMuscles: ['hamstrings', 'glutes'],
     type: 'bodyweight',
@@ -863,6 +936,7 @@ export const EXERCISE_CATALOG: ExerciseCatalogEntry[] = [
   },
   {
     name: 'Bodyweight Good Morning',
+    slug: 'bodyweight-good-morning',
     associatedLift: null,
     primaryMuscles: ['hamstrings', 'lower_back'],
     type: 'bodyweight',
@@ -871,6 +945,7 @@ export const EXERCISE_CATALOG: ExerciseCatalogEntry[] = [
   },
   {
     name: 'Hyperextension',
+    slug: 'hyperextension',
     associatedLift: null,
     primaryMuscles: ['lower_back'],
     type: 'bodyweight',
@@ -885,6 +960,7 @@ export const EXERCISE_CATALOG: ExerciseCatalogEntry[] = [
   },
   {
     name: 'Single-Leg Glute Bridge',
+    slug: 'single-leg-glute-bridge',
     associatedLift: null,
     primaryMuscles: ['glutes'],
     type: 'bodyweight',
@@ -893,6 +969,7 @@ export const EXERCISE_CATALOG: ExerciseCatalogEntry[] = [
   },
   {
     name: 'Donkey Kick',
+    slug: 'donkey-kick',
     associatedLift: null,
     primaryMuscles: ['glutes'],
     type: 'bodyweight',
@@ -901,6 +978,7 @@ export const EXERCISE_CATALOG: ExerciseCatalogEntry[] = [
   },
   {
     name: 'Glute Kickback',
+    slug: 'glute-kickback',
     associatedLift: null,
     primaryMuscles: ['glutes'],
     type: 'bodyweight',
@@ -909,6 +987,7 @@ export const EXERCISE_CATALOG: ExerciseCatalogEntry[] = [
   },
   {
     name: 'Pull-ups',
+    slug: 'pull-ups',
     associatedLift: null,
     primaryMuscles: ['upper_back'],
     type: 'bodyweight',
@@ -916,18 +995,21 @@ export const EXERCISE_CATALOG: ExerciseCatalogEntry[] = [
   },
   {
     name: 'Chin-ups',
+    slug: 'chin-ups',
     associatedLift: null,
     primaryMuscles: ['upper_back', 'biceps'],
     type: 'bodyweight',
   },
   {
     name: 'Push-ups',
+    slug: 'push-ups',
     associatedLift: null,
     primaryMuscles: ['chest'],
     type: 'bodyweight',
   },
   {
     name: 'Dips',
+    slug: 'dips',
     associatedLift: null,
     primaryMuscles: ['chest', 'triceps'],
     type: 'bodyweight',
@@ -940,12 +1022,14 @@ export const EXERCISE_CATALOG: ExerciseCatalogEntry[] = [
   },
   {
     name: 'Air Squat',
+    slug: 'air-squat',
     associatedLift: null,
     primaryMuscles: ['quads', 'glutes'],
     type: 'bodyweight',
   },
   {
     name: 'Lunge',
+    slug: 'lunge',
     associatedLift: null,
     primaryMuscles: ['quads', 'glutes'],
     type: 'bodyweight',
@@ -953,6 +1037,7 @@ export const EXERCISE_CATALOG: ExerciseCatalogEntry[] = [
   // ── Cardio / Core ─────────────────────────────────────────────────────────
   {
     name: 'Row Machine',
+    slug: 'row-machine',
     associatedLift: null,
     primaryMuscles: ['upper_back', 'biceps'],
     type: 'timed',
@@ -960,6 +1045,7 @@ export const EXERCISE_CATALOG: ExerciseCatalogEntry[] = [
   },
   {
     name: 'Ski Erg',
+    slug: 'ski-erg',
     associatedLift: null,
     primaryMuscles: ['upper_back', 'shoulders', 'triceps'],
     type: 'timed',
@@ -967,6 +1053,7 @@ export const EXERCISE_CATALOG: ExerciseCatalogEntry[] = [
   },
   {
     name: 'Run - Treadmill',
+    slug: 'run-treadmill',
     associatedLift: null,
     primaryMuscles: ['quads', 'hamstrings'],
     type: 'timed',
@@ -974,6 +1061,7 @@ export const EXERCISE_CATALOG: ExerciseCatalogEntry[] = [
   },
   {
     name: 'Run - Outside',
+    slug: 'run-outside',
     associatedLift: null,
     primaryMuscles: ['quads', 'hamstrings'],
     type: 'timed',
@@ -981,6 +1069,7 @@ export const EXERCISE_CATALOG: ExerciseCatalogEntry[] = [
   },
   {
     name: 'Assault Bike',
+    slug: 'assault-bike',
     associatedLift: null,
     primaryMuscles: ['quads', 'hamstrings', 'shoulders'],
     type: 'timed',
@@ -988,6 +1077,7 @@ export const EXERCISE_CATALOG: ExerciseCatalogEntry[] = [
   },
   {
     name: 'Toes to Bar',
+    slug: 'toes-to-bar',
     associatedLift: null,
     primaryMuscles: ['core'],
     type: 'bodyweight',
@@ -998,6 +1088,7 @@ export const EXERCISE_CATALOG: ExerciseCatalogEntry[] = [
   },
   {
     name: 'Plank',
+    slug: 'plank',
     associatedLift: null,
     primaryMuscles: ['core'],
     type: 'timed',
@@ -1008,6 +1099,7 @@ export const EXERCISE_CATALOG: ExerciseCatalogEntry[] = [
   },
   {
     name: 'Ab Wheel Rollout',
+    slug: 'ab-wheel-rollout',
     associatedLift: null,
     primaryMuscles: ['core'],
     type: 'bodyweight',
@@ -1018,6 +1110,7 @@ export const EXERCISE_CATALOG: ExerciseCatalogEntry[] = [
   },
   {
     name: 'Hanging Leg Raise',
+    slug: 'hanging-leg-raise',
     associatedLift: null,
     primaryMuscles: ['core'],
     type: 'bodyweight',
@@ -1028,6 +1121,7 @@ export const EXERCISE_CATALOG: ExerciseCatalogEntry[] = [
   },
   {
     name: 'Dead Bug',
+    slug: 'dead-bug',
     associatedLift: null,
     primaryMuscles: ['core'],
     type: 'weighted',
@@ -1039,6 +1133,7 @@ export const EXERCISE_CATALOG: ExerciseCatalogEntry[] = [
   },
   {
     name: 'Cable Crunch',
+    slug: 'cable-crunch',
     associatedLift: null,
     primaryMuscles: ['core'],
     type: 'weighted',
@@ -1050,6 +1145,7 @@ export const EXERCISE_CATALOG: ExerciseCatalogEntry[] = [
   },
   {
     name: 'Pallof Press',
+    slug: 'pallof-press',
     associatedLift: null,
     primaryMuscles: ['core'],
     type: 'weighted',
@@ -1061,6 +1157,7 @@ export const EXERCISE_CATALOG: ExerciseCatalogEntry[] = [
   },
   {
     name: 'Bird Dog',
+    slug: 'bird-dog',
     associatedLift: null,
     primaryMuscles: ['core'],
     type: 'bodyweight',
@@ -1071,6 +1168,7 @@ export const EXERCISE_CATALOG: ExerciseCatalogEntry[] = [
   },
   {
     name: 'GHD Situp',
+    slug: 'ghd-situp',
     associatedLift: null,
     primaryMuscles: ['core'],
     type: 'bodyweight',
@@ -1081,6 +1179,7 @@ export const EXERCISE_CATALOG: ExerciseCatalogEntry[] = [
   },
   {
     name: 'Decline Situp',
+    slug: 'decline-situp',
     associatedLift: null,
     primaryMuscles: ['core'],
     type: 'bodyweight',
@@ -1091,6 +1190,7 @@ export const EXERCISE_CATALOG: ExerciseCatalogEntry[] = [
   },
   {
     name: 'Cable Woodchop',
+    slug: 'cable-woodchop',
     associatedLift: null,
     primaryMuscles: ['core'],
     type: 'weighted',
@@ -1102,6 +1202,7 @@ export const EXERCISE_CATALOG: ExerciseCatalogEntry[] = [
   },
   {
     name: 'Dragon Flag',
+    slug: 'dragon-flag',
     associatedLift: null,
     primaryMuscles: ['core'],
     type: 'bodyweight',
@@ -1112,6 +1213,7 @@ export const EXERCISE_CATALOG: ExerciseCatalogEntry[] = [
   },
   {
     name: 'Landmine Rotation',
+    slug: 'landmine-rotation',
     associatedLift: null,
     primaryMuscles: ['core'],
     type: 'weighted',
@@ -1123,6 +1225,7 @@ export const EXERCISE_CATALOG: ExerciseCatalogEntry[] = [
   },
   {
     name: 'Standing Plate Rotation',
+    slug: 'standing-plate-rotation',
     associatedLift: null,
     primaryMuscles: ['core'],
     type: 'weighted',
@@ -1139,6 +1242,53 @@ export const EXERCISE_CATALOG: ExerciseCatalogEntry[] = [
 export const CATALOG_BY_NAME = new Map<string, ExerciseCatalogEntry>(
   EXERCISE_CATALOG.map((e) => [e.name, e])
 );
+
+/** Slug-keyed lookup. Slugs are stable across catalog renames, so this is the
+ *  preferred map when resolving stored DB references. */
+export const CATALOG_BY_SLUG = new Map<string, ExerciseCatalogEntry>(
+  EXERCISE_CATALOG.map((e) => [e.slug, e])
+);
+
+/** Catalog entry lookup that accepts either a display name OR a slug.
+ *  Prefer this in code paths that may receive either (legacy stored names
+ *  vs new slug-keyed reads). */
+export function getCatalogEntry(
+  nameOrSlug: string
+): ExerciseCatalogEntry | undefined {
+  return CATALOG_BY_SLUG.get(nameOrSlug) ?? CATALOG_BY_NAME.get(nameOrSlug);
+}
+
+// ── Slug helpers ──────────────────────────────────────────────────────────────
+
+/** Deterministic kebab-case slug for a user-typed custom exercise name.
+ *  Pure: same input always produces the same output. */
+export function slugify(name: string): string {
+  return name
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+}
+
+/** Title-case a kebab slug for display fallback. Used when a stored slug has
+ *  no catalog entry (user custom with deleted pool entry, orphaned set_logs row). */
+export function prettifySlug(slug: string): string {
+  return slug
+    .split('-')
+    .filter((part) => part.length > 0)
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(' ');
+}
+
+/** Resolve a slug to its display name. Catalog wins, then stored display
+ *  fallback, then prettify. Use this at the UI boundary for any exercise label. */
+export function getDisplayNameForSlug(
+  slug: string,
+  storedDisplay?: string | null
+): string {
+  return (
+    CATALOG_BY_SLUG.get(slug)?.name ?? storedDisplay ?? prettifySlug(slug)
+  );
+}
 
 // ── Derived default pools (lift-specific entries only, in catalog order) ──────
 
@@ -1177,24 +1327,27 @@ export function getAllExercises(): ExerciseCatalogEntry[] {
   return EXERCISE_CATALOG;
 }
 
-/** Primary muscles (contribution >= 1.0) for an exercise. Empty array if unknown. */
-export function getPrimaryMusclesForExercise(name: string): MuscleGroup[] {
-  return CATALOG_BY_NAME.get(name)?.primaryMuscles ?? [];
+/** Primary muscles (contribution >= 1.0) for an exercise. Empty array if unknown.
+ *  Accepts a display name or a slug. */
+export function getPrimaryMusclesForExercise(
+  nameOrSlug: string
+): MuscleGroup[] {
+  return getCatalogEntry(nameOrSlug)?.primaryMuscles ?? [];
 }
 
 /** Which main lift this exercise is associated with. null if general or unknown. */
-export function getLiftForExercise(name: string): Lift | null {
-  return CATALOG_BY_NAME.get(name)?.associatedLift ?? null;
+export function getLiftForExercise(nameOrSlug: string): Lift | null {
+  return getCatalogEntry(nameOrSlug)?.associatedLift ?? null;
 }
 
 /** Weight % of associated lift 1RM for JIT load calculation. Default: 0.675. */
-export function getWeightPct(name: string): number {
-  return CATALOG_BY_NAME.get(name)?.weightPct ?? 0.675;
+export function getWeightPct(nameOrSlug: string): number {
+  return getCatalogEntry(nameOrSlug)?.weightPct ?? 0.675;
 }
 
 /** Rep target for JIT generation. Returns fallback if not specified in catalog. */
-export function getRepTarget(name: string, fallback: number): number {
-  return CATALOG_BY_NAME.get(name)?.repTarget ?? fallback;
+export function getRepTarget(nameOrSlug: string, fallback: number): number {
+  return getCatalogEntry(nameOrSlug)?.repTarget ?? fallback;
 }
 
 /** Bodyweight exercise names for a given lift + sex (JIT no-equipment fallback). */
@@ -1301,8 +1454,10 @@ export function computeAuxWeight({
   biologicalSex?: 'female' | 'male';
 }) {
   const pct = getWeightPct(exercise);
-  const isUnstable =
-    exercise.startsWith('Dumbbell') || exercise.startsWith('Kettlebell');
+  const entry = getCatalogEntry(exercise);
+  const isUnstable = entry
+    ? entry.name.startsWith('Dumbbell') || entry.name.startsWith('Kettlebell')
+    : exercise.startsWith('Dumbbell') || exercise.startsWith('Kettlebell');
 
   if (!isUnstable) return oneRmKg * pct;
 

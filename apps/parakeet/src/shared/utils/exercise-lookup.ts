@@ -3,21 +3,27 @@
  *
  * If the engine's exercise API changes, only this file needs updating.
  */
-import { CATALOG_BY_NAME } from '@parakeet/training-engine';
+import { getCatalogEntry } from '@parakeet/training-engine';
 
 import { formatExerciseName } from './string';
 
 export {
   getAllExercises,
+  getCatalogEntry,
+  getDisplayNameForSlug,
   getExerciseType,
   getMusclesForExercise,
+  prettifySlug,
+  slugify,
 } from '@parakeet/training-engine';
 export type { ExerciseCatalogEntry } from '@parakeet/training-engine';
 
-/** Returns the catalog subtitle for an exercise name (snake_case or Title Case). */
-export function getExerciseSubtitle(name: string): string | undefined {
+/** Returns the catalog subtitle for an exercise name, slug, or snake_case form. */
+export function getExerciseSubtitle(
+  nameOrSlug: string
+): string | undefined {
   return (
-    CATALOG_BY_NAME.get(name)?.subtitle ??
-    CATALOG_BY_NAME.get(formatExerciseName(name))?.subtitle
+    getCatalogEntry(nameOrSlug)?.subtitle ??
+    getCatalogEntry(formatExerciseName(nameOrSlug))?.subtitle
   );
 }

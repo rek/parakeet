@@ -1,4 +1,5 @@
 // @spec docs/features/workout-templates/spec-schema.md
+import { getCatalogEntry, slugify } from '@parakeet/training-engine';
 import { typedSupabase } from '@platform/supabase';
 
 import type {
@@ -9,6 +10,10 @@ import type {
   WorkoutTemplateListEntry,
   WorkoutTemplateWithItems,
 } from '../model/types';
+
+function resolveTemplateExerciseSlug(name: string): string {
+  return getCatalogEntry(name)?.slug ?? slugify(name);
+}
 
 export async function fetchWorkoutTemplates(): Promise<
   WorkoutTemplateListEntry[]
@@ -39,7 +44,7 @@ export async function fetchWorkoutTemplateDetail(
   const { data, error } = await typedSupabase
     .from('workout_templates')
     .select(
-      'id, name, description, rounds, created_by, updated_by, created_at, updated_at, workout_template_items(id, template_id, position, exercise, duration_seconds, reps, rest_after_seconds)'
+      'id, name, description, rounds, created_by, updated_by, created_at, updated_at, workout_template_items(id, template_id, position, exercise, exercise_slug, duration_seconds, reps, rest_after_seconds)'
     )
     .eq('id', templateId)
     .maybeSingle();
@@ -113,6 +118,7 @@ export async function replaceWorkoutTemplateItems(
         template_id: templateId,
         position: item.position,
         exercise: item.exercise,
+        exercise_slug: resolveTemplateExerciseSlug(item.exercise),
         duration_seconds: item.duration_seconds,
         reps: item.reps,
         rest_after_seconds: item.rest_after_seconds,

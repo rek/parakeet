@@ -1,5 +1,5 @@
 // @spec docs/features/workout-templates/spec-insertion.md
-import { CATALOG_BY_NAME } from '@parakeet/training-engine';
+import { getCatalogEntry } from '@parakeet/training-engine';
 import type {
   WorkoutTemplate,
   WorkoutTemplateItem,
@@ -58,7 +58,7 @@ export function expandTemplate(
 
   for (let round = 0; round < template.rounds; round++) {
     for (const item of sorted) {
-      const catalog = CATALOG_BY_NAME.get(item.exercise);
+      const catalog = getCatalogEntry(item.exercise);
       const isTimed = catalog?.type === 'timed';
       const isWeighted = catalog?.type === 'weighted';
       const weight_grams =

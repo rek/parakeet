@@ -58,8 +58,10 @@ export type Database = {
           created_at: string
           exercise_1: string
           exercise_1_locked: boolean
+          exercise_1_slug: string
           exercise_2: string
           exercise_2_locked: boolean
+          exercise_2_slug: string
           id: string
           lift: string
           program_id: string
@@ -70,8 +72,10 @@ export type Database = {
           created_at?: string
           exercise_1: string
           exercise_1_locked?: boolean
+          exercise_1_slug: string
           exercise_2: string
           exercise_2_locked?: boolean
+          exercise_2_slug: string
           id?: string
           lift: string
           program_id: string
@@ -82,8 +86,10 @@ export type Database = {
           created_at?: string
           exercise_1?: string
           exercise_1_locked?: boolean
+          exercise_1_slug?: string
           exercise_2?: string
           exercise_2_locked?: boolean
+          exercise_2_slug?: string
           id?: string
           lift?: string
           program_id?: string
@@ -102,6 +108,7 @@ export type Database = {
       auxiliary_exercises: {
         Row: {
           exercise_name: string
+          exercise_slug: string
           exercise_type: string | null
           id: string
           is_active: boolean
@@ -112,6 +119,7 @@ export type Database = {
         }
         Insert: {
           exercise_name: string
+          exercise_slug: string
           exercise_type?: string | null
           id?: string
           is_active?: boolean
@@ -122,6 +130,7 @@ export type Database = {
         }
         Update: {
           exercise_name?: string
+          exercise_slug?: string
           exercise_type?: string | null
           id?: string
           is_active?: boolean
@@ -1657,6 +1666,7 @@ export type Database = {
           actual_rest_seconds: number | null
           corrected_by: string | null
           exercise: string | null
+          exercise_slug: string | null
           exercise_type: string | null
           failed: boolean
           id: string
@@ -1674,6 +1684,7 @@ export type Database = {
           actual_rest_seconds?: number | null
           corrected_by?: string | null
           exercise?: string | null
+          exercise_slug?: string | null
           exercise_type?: string | null
           failed?: boolean
           id?: string
@@ -1691,6 +1702,7 @@ export type Database = {
           actual_rest_seconds?: number | null
           corrected_by?: string | null
           exercise?: string | null
+          exercise_slug?: string | null
           exercise_type?: string | null
           failed?: boolean
           id?: string
@@ -1866,6 +1878,7 @@ export type Database = {
         Row: {
           duration_seconds: number | null
           exercise: string
+          exercise_slug: string
           id: string
           position: number
           reps: number | null
@@ -1875,6 +1888,7 @@ export type Database = {
         Insert: {
           duration_seconds?: number | null
           exercise: string
+          exercise_slug: string
           id?: string
           position: number
           reps?: number | null
@@ -1884,6 +1898,7 @@ export type Database = {
         Update: {
           duration_seconds?: number | null
           exercise?: string
+          exercise_slug?: string
           id?: string
           position?: number
           reps?: number | null

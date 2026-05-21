@@ -6,6 +6,7 @@ import { computeSuggestedAux, computeSuggestedWeight } from './aux-suggestions';
 const CATALOG: ExerciseCatalogEntry[] = [
   {
     name: 'Barbell Box Squat',
+    slug: 'barbell-box-squat',
     associatedLift: 'squat',
     primaryMuscles: ['quads', 'glutes'],
     type: 'weighted',
@@ -13,6 +14,7 @@ const CATALOG: ExerciseCatalogEntry[] = [
   },
   {
     name: 'Romanian Deadlift',
+    slug: 'romanian-deadlift',
     associatedLift: 'squat',
     primaryMuscles: ['hamstrings', 'glutes'],
     type: 'weighted',
@@ -20,6 +22,7 @@ const CATALOG: ExerciseCatalogEntry[] = [
   },
   {
     name: 'Leg Press',
+    slug: 'leg-press',
     associatedLift: 'squat',
     primaryMuscles: ['quads'],
     type: 'weighted',
@@ -27,12 +30,14 @@ const CATALOG: ExerciseCatalogEntry[] = [
   },
   {
     name: 'Bodyweight Squat',
+    slug: 'bodyweight-squat',
     associatedLift: 'squat',
     primaryMuscles: ['quads', 'glutes'],
     type: 'bodyweight',
   },
   {
     name: 'Bench Press Close Grip',
+    slug: 'bench-press-close-grip',
     associatedLift: 'bench',
     primaryMuscles: ['triceps', 'chest'],
     type: 'weighted',
@@ -40,6 +45,7 @@ const CATALOG: ExerciseCatalogEntry[] = [
   },
   {
     name: 'Plank',
+    slug: 'plank',
     associatedLift: null,
     primaryMuscles: ['core'],
     type: 'timed',
@@ -137,6 +143,7 @@ describe('computeSuggestedWeight', () => {
   it('uses default weightPct 0.675 when not specified', () => {
     const entry: ExerciseCatalogEntry = {
       name: 'Custom Lift',
+      slug: 'custom-lift',
       associatedLift: 'bench',
       primaryMuscles: ['chest'],
       type: 'weighted',

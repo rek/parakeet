@@ -1,6 +1,73 @@
 import { describe, expect, it } from 'vitest';
 
-import { computeAuxWeight, getWeightPct } from './exercise-catalog';
+import {
+  CATALOG_BY_SLUG,
+  computeAuxWeight,
+  EXERCISE_CATALOG,
+  getCatalogEntry,
+  getDisplayNameForSlug,
+  getWeightPct,
+  prettifySlug,
+  slugify,
+} from './exercise-catalog';
+
+describe('exercise slugs', () => {
+  it('every catalog entry has a non-empty kebab-case slug', () => {
+    for (const entry of EXERCISE_CATALOG) {
+      expect(entry.slug, `entry ${entry.name} missing slug`).toBeTruthy();
+      expect(entry.slug).toMatch(/^[a-z0-9]+(-[a-z0-9]+)*$/);
+    }
+  });
+
+  it('slugs are unique across the catalog', () => {
+    const seen = new Set<string>();
+    for (const entry of EXERCISE_CATALOG) {
+      expect(seen.has(entry.slug), `duplicate slug: ${entry.slug}`).toBe(false);
+      seen.add(entry.slug);
+    }
+    expect(CATALOG_BY_SLUG.size).toBe(EXERCISE_CATALOG.length);
+  });
+
+  it('slug matches slugify(name) for entries with simple names', () => {
+    // Sanity: catch accidental drift between auto-generated and stored slug.
+    // (Some entries may legitimately diverge if name has punctuation we
+    // don't want in the slug — those are exceptions, not the rule.)
+    for (const entry of EXERCISE_CATALOG) {
+      const generated = slugify(entry.name);
+      expect(entry.slug).toBe(generated);
+    }
+  });
+});
+
+describe('getCatalogEntry', () => {
+  it('resolves by name', () => {
+    expect(getCatalogEntry('Barbell Box Squat')?.slug).toBe('barbell-box-squat');
+  });
+  it('resolves by slug', () => {
+    expect(getCatalogEntry('barbell-box-squat')?.name).toBe('Barbell Box Squat');
+  });
+  it('returns undefined for unknown input', () => {
+    expect(getCatalogEntry('not-a-real-exercise')).toBeUndefined();
+  });
+});
+
+describe('slug display helpers', () => {
+  it('prettifySlug title-cases each part', () => {
+    expect(prettifySlug('my-custom-hinge')).toBe('My Custom Hinge');
+    expect(prettifySlug('one')).toBe('One');
+  });
+
+  it('getDisplayNameForSlug prefers catalog name', () => {
+    expect(getDisplayNameForSlug('barbell-box-squat')).toBe('Barbell Box Squat');
+  });
+
+  it('getDisplayNameForSlug falls back to stored display, then prettify', () => {
+    expect(getDisplayNameForSlug('user-custom-x', 'My Funky Hinge')).toBe(
+      'My Funky Hinge'
+    );
+    expect(getDisplayNameForSlug('user-custom-x')).toBe('User Custom X');
+  });
+});
 
 describe('clean variant weight ordering', () => {
   it('Power Clean >= Hang Clean > Clean and Jerk', () => {

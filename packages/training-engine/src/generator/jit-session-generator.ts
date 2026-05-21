@@ -12,9 +12,9 @@ import {
   SorenessModifier,
 } from '../adjustments/soreness-adjuster';
 import {
-  CATALOG_BY_NAME,
   computeAuxWeight,
   getBodyweightPool,
+  getCatalogEntry,
   getLiftForExercise,
   getRepTarget,
   MovementPattern,
@@ -834,7 +834,7 @@ export function buildVolumeTopUp(
     });
     const exercise = ranked[0].exercise;
     usedExercises.add(exercise);
-    const entry = CATALOG_BY_NAME.get(exercise);
+    const entry = getCatalogEntry(exercise);
     if (entry) patternsUsed.push(resolveMovementPattern(entry));
 
     const exerciseType = exerciseTyper(exercise);

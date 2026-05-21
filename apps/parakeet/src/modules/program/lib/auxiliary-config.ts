@@ -13,6 +13,7 @@ import {
   fetchAllBlockAssignments,
   fetchAuxiliaryExercises,
   insertAuxiliaryExercises,
+  resolveAuxExerciseSlug,
   upsertBlockAssignment,
 } from '../data/auxiliary-config.repository';
 import { getPrimaryMuscles } from '../utils/auxiliary-muscles';
@@ -117,6 +118,7 @@ export async function reorderAuxiliaryPool(
     user_id: userId,
     lift: category,
     exercise_name: name,
+    exercise_slug: resolveAuxExerciseSlug(name),
     pool_position: i,
     primary_muscles: customMuscles?.[name] ?? getPrimaryMuscles(name),
     exercise_type: customTypes?.[name] ?? null,
@@ -186,8 +188,10 @@ export async function saveBlockAssignment(
     lift,
     block_number: blockNumber,
     exercise_1: exercise1,
+    exercise_1_slug: resolveAuxExerciseSlug(exercise1),
     exercise_1_locked: exercise1Locked,
     exercise_2: exercise2,
+    exercise_2_slug: resolveAuxExerciseSlug(exercise2),
     exercise_2_locked: exercise2Locked,
   });
 }

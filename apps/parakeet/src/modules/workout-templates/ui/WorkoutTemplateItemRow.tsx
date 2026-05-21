@@ -8,7 +8,7 @@ import {
   View,
 } from 'react-native';
 
-import { CATALOG_BY_NAME } from '@parakeet/training-engine';
+import { getCatalogEntry } from '@parakeet/training-engine';
 import { ExerciseName } from '@shared/ui/ExerciseName';
 
 import type { ColorScheme } from '../../../theme';
@@ -37,14 +37,18 @@ export function WorkoutTemplateItemRow({
 }: Props) {
   const { colors } = useTheme();
   const styles = useMemo(() => buildStyles(colors), [colors]);
-  const catalogEntry = CATALOG_BY_NAME.get(item.exercise);
+  const catalogEntry = getCatalogEntry(item.exercise);
   const isTimed = catalogEntry?.type === 'timed';
 
   return (
     <View style={styles.container}>
       <View style={styles.headerRow}>
         <View style={styles.nameWrap}>
-          <ExerciseName name={item.exercise} nameStyle={styles.name} />
+          <ExerciseName
+            name={item.exercise}
+            slug={item.exercise_slug}
+            nameStyle={styles.name}
+          />
         </View>
         <View style={styles.actions}>
           <TouchableOpacity

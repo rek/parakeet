@@ -167,14 +167,13 @@ Key schemas: `FormulaOverridesSchema`, `CreateFormulaConfigSchema`, `DisruptionS
 
 Entry: `packages/shared-types/src/index.ts`
 
-## Catalog Rename Sweep
+## Catalog Renames
 
-The exercise catalog in `packages/training-engine/src/auxiliary/exercise-catalog.ts` is keyed by display name. Several DB tables store that display name as free text — renaming a catalog entry without sweeping them silently breaks data.
+The exercise catalog in `packages/training-engine/src/auxiliary/exercise-catalog.ts` has two keys per entry: a stable `slug` (kebab-case, never changes) and a `name` (display, freely editable). Every referencing DB column stores the slug alongside a display-name snapshot:
 
-When you rename a catalog entry, the same migration must `UPDATE` every referencing column:
+- `set_logs.exercise_slug` (+ `exercise`)
+- `auxiliary_exercises.exercise_slug` (+ `exercise_name`)
+- `workout_template_items.exercise_slug` (+ `exercise`)
+- `auxiliary_assignments.exercise_1_slug`, `exercise_2_slug` (+ display columns)
 
-- `set_logs.exercise`
-- `auxiliary_exercises` (whichever name column applies)
-- `workout_template_items.exercise`
-
-Example: `supabase/migrations/20260422100000_rename_overhead_press_to_barbell.sql`. The slug refactor that would eliminate this rule is tracked in GH#215.
+To rename an exercise, edit only `name` in the catalog. The UI resolves display via `getDisplayNameForSlug(slug, storedName)` at the render boundary, so existing rows reflect the new name immediately — no migration needed. The historical sweep migration `20260422100000_rename_overhead_press_to_barbell.sql` and the slug refactor `20260521000000_exercise_slug_refactor.sql` (GH#215) bracket the transition.

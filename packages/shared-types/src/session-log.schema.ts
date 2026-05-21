@@ -3,6 +3,10 @@ import { z } from 'zod';
 export const ActualSetSchema = z
   .object({
     exercise: z.string().optional(),
+    /** Stable catalog identifier (kebab-case). Use for catalog lookups and
+     *  display resolution; the `exercise` field is a snapshot of the display
+     *  name at write time (preserves user-typed customs verbatim). */
+    exercise_slug: z.string().optional(),
     set_number: z.number().int().positive(),
     weight_grams: z.number().int().nonnegative(),
     reps_completed: z.number().int().min(0),
