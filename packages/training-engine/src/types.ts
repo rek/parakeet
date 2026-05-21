@@ -174,6 +174,10 @@ export interface SessionLogSummary {
   actual_rpe: number | null;
   target_rpe: number;
   completion_pct: number | null;
+  /** True when this session contained any sets logged under an active rehab
+   *  cap (GH#220). Performance suggestions exclude these sessions — the RPE
+   *  is pain-ambiguous and the weight was capped, not adapted. */
+  containedRehabSets?: boolean;
 }
 
 export interface AdjustmentThresholds {

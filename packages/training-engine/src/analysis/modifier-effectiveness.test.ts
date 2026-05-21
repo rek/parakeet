@@ -22,6 +22,39 @@ function makeSamples(
   }));
 }
 
+describe('computeCalibrationBias — Rehab Mode (GH#220)', () => {
+  it('drops duringRehab samples before computing bias', () => {
+    const samples: ModifierSample[] = [
+      // 4 clean samples: bias 0
+      ...makeSamples(4, 8, 8),
+      // 6 rehab samples with extreme bias — would dominate the average if not dropped
+      ...Array.from({ length: 6 }, () => ({
+        modifierSource: 'soreness' as const,
+        multiplier: 0.85,
+        rpeTarget: 8,
+        rpeActual: 6,
+        duringRehab: true,
+      })),
+    ];
+    const result = computeCalibrationBias({ samples });
+    expect(result.sampleCount).toBe(4);
+    expect(result.meanBias).toBe(0);
+  });
+
+  it('returns exploring when all samples are duringRehab', () => {
+    const samples: ModifierSample[] = Array.from({ length: 10 }, () => ({
+      modifierSource: 'soreness' as const,
+      multiplier: 0.85,
+      rpeTarget: 8,
+      rpeActual: 6,
+      duringRehab: true,
+    }));
+    const result = computeCalibrationBias({ samples });
+    expect(result.sampleCount).toBe(0);
+    expect(result.confidence).toBe('exploring');
+  });
+});
+
 describe('computeCalibrationBias', () => {
   it('returns exploring confidence with zero samples', () => {
     const result = computeCalibrationBias({ samples: [] });

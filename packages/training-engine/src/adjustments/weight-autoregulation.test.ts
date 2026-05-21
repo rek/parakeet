@@ -150,6 +150,14 @@ describe('evaluateWeightAutoregulation', () => {
     expect(result!.suggestedWeightKg % 2.5).toBe(0);
   });
 
+  // -- Rehab Mode (GH#220) --
+  it('returns null when isInRehabMode — cap is the ceiling', () => {
+    const result = evaluateWeightAutoregulation(
+      makeCtx({ rpeActual: 6.5, rpeTarget: 8.0, isInRehabMode: true })
+    );
+    expect(result).toBeNull();
+  });
+
   // -- Rationale format --
   it('rationale includes RPE values and delta', () => {
     const result = evaluateWeightAutoregulation(

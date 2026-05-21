@@ -18,6 +18,10 @@ export interface ModifierSample {
   rpeActual: number;
   /** For soreness: the soreness level that triggered the modifier (1-10). */
   sorenessLevel?: number;
+  /** True when this sample's RPE came from a set logged under an active rehab
+   *  cap (GH#220). Excluded from calibration — capped pain-ambiguous RPE is
+   *  noise for modifier-effectiveness learning. */
+  duringRehab?: boolean;
 }
 
 export interface CalibrationResult {
@@ -54,6 +58,11 @@ export function computeCalibrationBias({
 }: {
   samples: ModifierSample[];
 }) {
+  // Rehab Mode (GH#220): exclude samples where the RPE came from a capped
+  // pain-ambiguous set. Modifier effectiveness wants signal about how well
+  // the modifier predicted true muscular RPE — capped sets are noise.
+  samples = samples.filter((s) => !s.duringRehab);
+
   if (samples.length === 0) {
     return {
       modifierSource: 'soreness' as ModifierSource,

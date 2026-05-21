@@ -31,6 +31,8 @@ export interface VolumeRecoveryContext {
   currentReps: number;
   /** RPE target for the session's working sets */
   rpeTarget: number;
+  /** Rehab Mode active for this lift — never offer to add sets back (GH#220) */
+  isInRehabMode?: boolean;
 }
 
 export interface VolumeRecoveryOffer {
@@ -64,6 +66,10 @@ export function evaluateVolumeRecovery(
     currentReps,
     rpeTarget,
   } = ctx;
+
+  // Rehab Mode (GH#220): never offer to add sets back; cap implies the lifter
+  // doesn't want adaptive volume increases.
+  if (ctx.isInRehabMode) return null;
 
   // Recovery mode (soreness 9-10) — session is fundamentally different, no recovery
   if (volumeReductions.recoveryBlocked) return null;

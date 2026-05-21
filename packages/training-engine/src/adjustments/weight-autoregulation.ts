@@ -23,6 +23,8 @@ export interface WeightAutoregulationContext {
   isRecoveryMode: boolean;
   /** Already accepted a weight suggestion this session */
   hasAlreadyAdjusted: boolean;
+  /** Rehab Mode active for this lift — don't push past the cap (GH#220) */
+  isInRehabMode?: boolean;
 }
 
 export interface WeightSuggestion {
@@ -91,6 +93,8 @@ export function evaluateWeightAutoregulation(
   if (isDeload) return null;
   if (isRecoveryMode) return null;
   if (hasAlreadyAdjusted) return null;
+  // Rehab Mode (GH#220): the cap is the ceiling — never suggest pushing past it.
+  if (ctx.isInRehabMode) return null;
 
   const gap = rpeTarget - rpeActual;
   if (gap < MIN_GAP) return null;

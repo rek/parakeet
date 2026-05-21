@@ -284,6 +284,46 @@ describe('computeWorkingOneRm', () => {
     expect(result.workingOneRmKg).toBe(100);
   });
 
+  // -- Rehab Mode (GH#220) --
+  describe('Rehab Mode set exclusion', () => {
+    it('excludes painLimited sets from qualifying 1RM estimation', () => {
+      const result = computeWeightDeviation({
+        plannedWeightKg: 100,
+        actualSets: [
+          { weightKg: 100, reps: 5, rpe: 9, painLimited: true }, // excluded
+          { weightKg: 100, reps: 5, rpe: 9, painLimited: false }, // qualifies
+        ],
+      });
+      expect(result).not.toBeNull();
+      // Both contribute to actualMaxWeightKg (100), but only the second
+      // qualifies for e1RM. e1RM = 100 × (1 + 5/30) ≈ 116.67.
+      expect(result!.estimatedOneRmKg).toBeCloseTo(116.67, 1);
+    });
+
+    it('excludes duringRehab sets from qualifying 1RM estimation', () => {
+      const result = computeWeightDeviation({
+        plannedWeightKg: 100,
+        actualSets: [
+          { weightKg: 80, reps: 5, rpe: 9, duringRehab: true },
+          { weightKg: 80, reps: 5, rpe: 9, duringRehab: true },
+        ],
+      });
+      expect(result).not.toBeNull();
+      // Both excluded — no qualifying sets, no e1RM.
+      expect(result!.estimatedOneRmKg).toBeNull();
+    });
+
+    it('still computes deviation/actualMax from rehab sets — they happened', () => {
+      const result = computeWeightDeviation({
+        plannedWeightKg: 100,
+        actualSets: [{ weightKg: 80, reps: 5, rpe: 9, duringRehab: true }],
+      });
+      expect(result).not.toBeNull();
+      expect(result!.actualMaxWeightKg).toBe(80);
+      expect(result!.deviationKg).toBe(-20);
+    });
+  });
+
   it('does not count summaries with null estimatedOneRmKg toward qualifying threshold', () => {
     // 2 real estimates + 3 nulls → only 2 qualifying → falls back to stored
     const summaries = [

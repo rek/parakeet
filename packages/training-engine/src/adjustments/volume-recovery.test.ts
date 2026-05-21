@@ -192,4 +192,13 @@ describe('evaluateVolumeRecovery', () => {
     expect(result).not.toBeNull();
     expect(result!.recoveredSets[0].weight_kg).toBe(102.5);
   });
+
+  // -- Rehab Mode (GH#220) --
+  it('returns null when isInRehabMode — cap implies no adaptive volume', () => {
+    // All conditions for an offer are met, but isInRehabMode suppresses it.
+    const result = evaluateVolumeRecovery(
+      makeContext({ isInRehabMode: true })
+    );
+    expect(result).toBeNull();
+  });
 });

@@ -17,6 +17,14 @@ export interface ActualSetKg {
   weightKg: number;
   reps: number;
   rpe?: number;
+  /** True when the set was logged with the RPE pain-limited toggle on (GH#220).
+   *  Pain-limited RPE doesn't reflect muscular capacity and so is excluded
+   *  from 1RM estimation. */
+  painLimited?: boolean;
+  /** True when the set was logged while a rehab cap was active for the lift
+   *  (GH#220). Excluded from 1RM estimation — the working weight was capped,
+   *  not chosen for maximal effort. */
+  duringRehab?: boolean;
 }
 
 export interface WeightDeviationSummary {
@@ -55,13 +63,17 @@ export function computeWeightDeviation({
   const deviationKg = actualMaxWeightKg - plannedWeightKg;
   const deviationPct = deviationKg / plannedWeightKg;
 
-  // Qualifying sets for 1RM estimation: RPE >= MIN_RPE, reps within Epley's valid range
+  // Qualifying sets for 1RM estimation: RPE >= MIN_RPE, reps within Epley's
+  // valid range, NOT pain-limited (GH#220), NOT logged under a rehab cap
+  // (GH#220). Working 1RM is meant to reflect true strength capacity.
   const qualifyingSets = validSets.filter(
     (s) =>
       s.rpe !== undefined &&
       s.rpe >= MIN_RPE &&
       s.reps >= MIN_REPS &&
-      s.reps <= MAX_REPS
+      s.reps <= MAX_REPS &&
+      !s.painLimited &&
+      !s.duringRehab
   );
 
   let estimatedOneRmKg: number | null = null;

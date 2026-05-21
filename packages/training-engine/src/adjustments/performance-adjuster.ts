@@ -26,6 +26,11 @@ export function suggestProgramAdjustments(
   logs: SessionLogSummary[],
   thresholds: AdjustmentThresholds = DEFAULT_THRESHOLDS_MALE
 ): PerformanceSuggestion[] {
+  // Rehab Mode (GH#220): drop any session that included sets logged under an
+  // active rehab cap. Capped RPE is pain-ambiguous and the weight was a
+  // ceiling, not an adapted target — pulling these into the deviation signal
+  // would poison the suggestion stream for the lift.
+  logs = logs.filter((l) => !l.containedRehabSets);
   const suggestions: PerformanceSuggestion[] = [];
 
   // Rule 3: flag incomplete sessions

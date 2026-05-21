@@ -290,6 +290,30 @@ describe('DEFAULT_THRESHOLDS_FEMALE / getDefaultThresholds', () => {
     expect(result.filter((s) => s.type === 'reduce_pct')).toHaveLength(0);
   });
 
+  it('Rehab Mode (GH#220): containedRehabSets sessions are dropped before grouping', () => {
+    // Without the rehab flag this would emit a reduce_pct suggestion. With the
+    // flag set on both qualifying sessions, no suggestion fires.
+    const logs: SessionLogSummary[] = [
+      makeLog({
+        lift: 'squat',
+        intensity_type: 'heavy',
+        actual_rpe: 9.6,
+        target_rpe: 8.5,
+        containedRehabSets: true,
+      }),
+      makeLog({
+        lift: 'squat',
+        intensity_type: 'heavy',
+        actual_rpe: 9.6,
+        target_rpe: 8.5,
+        containedRehabSets: true,
+      }),
+    ];
+    const result = suggestProgramAdjustments(logs, DEFAULT_THRESHOLDS_FEMALE);
+    expect(result.filter((s) => s.type === 'reduce_pct')).toHaveLength(0);
+    expect(result.filter((s) => s.type === 'increase_pct')).toHaveLength(0);
+  });
+
   it('3 sessions at +1.6 RPE with female thresholds → reduce_pct suggestion', () => {
     const logs = [
       makeLog({
