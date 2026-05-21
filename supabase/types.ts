@@ -1392,6 +1392,45 @@ export type Database = {
         }
         Relationships: []
       }
+      rehab_caps: {
+        Row: {
+          cap_kg: number
+          created_at: string
+          ended_at: string | null
+          id: string
+          lift: string
+          note: string | null
+          planned_end_date: string | null
+          started_at: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          cap_kg: number
+          created_at?: string
+          ended_at?: string | null
+          id?: string
+          lift: string
+          note?: string | null
+          planned_end_date?: string | null
+          started_at?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          cap_kg?: number
+          created_at?: string
+          ended_at?: string | null
+          id?: string
+          lift?: string
+          note?: string | null
+          planned_end_date?: string | null
+          started_at?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       rest_configs: {
         Row: {
           intensity_type: string | null
@@ -1665,6 +1704,7 @@ export type Database = {
         Row: {
           actual_rest_seconds: number | null
           corrected_by: string | null
+          during_rehab: boolean
           exercise: string | null
           exercise_slug: string | null
           exercise_type: string | null
@@ -1673,6 +1713,7 @@ export type Database = {
           kind: string
           logged_at: string
           notes: string | null
+          pain_limited: boolean
           reps_completed: number
           rpe_actual: number | null
           session_id: string
@@ -1683,6 +1724,7 @@ export type Database = {
         Insert: {
           actual_rest_seconds?: number | null
           corrected_by?: string | null
+          during_rehab?: boolean
           exercise?: string | null
           exercise_slug?: string | null
           exercise_type?: string | null
@@ -1691,6 +1733,7 @@ export type Database = {
           kind: string
           logged_at?: string
           notes?: string | null
+          pain_limited?: boolean
           reps_completed: number
           rpe_actual?: number | null
           session_id: string
@@ -1701,6 +1744,7 @@ export type Database = {
         Update: {
           actual_rest_seconds?: number | null
           corrected_by?: string | null
+          during_rehab?: boolean
           exercise?: string | null
           exercise_slug?: string | null
           exercise_type?: string | null
@@ -1709,6 +1753,7 @@ export type Database = {
           kind?: string
           logged_at?: string
           notes?: string | null
+          pain_limited?: boolean
           reps_completed?: number
           rpe_actual?: number | null
           session_id?: string

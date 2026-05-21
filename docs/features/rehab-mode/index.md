@@ -1,0 +1,21 @@
+---
+feature: rehab-mode
+status: planned
+modules: [rehab-mode]
+---
+# Rehab Mode
+
+Per-lift long-term capacity cap for lifters training through injury or pain. Pauses adaptive engine behaviour (auto-progression, PR detection, working-1RM updates, volume top-up) and tags pain-limited RPE inputs so they don't pollute calibration.
+
+Origin: [GH#220](https://github.com/rek/parakeet/issues/220) — user rehabbing knee for a full 10-week cycle. RPE inputs are ambiguous (muscular RPE low, pain-limited RPE high) and either honest answer breaks adaptive logic.
+
+## Design
+- [design.md](./design.md) — Rehab Mode design
+
+## Specs
+| Spec | Status | Concern |
+|------|--------|---------|
+| [spec-data.md](./spec-data.md) | planned | `rehab_caps` table, set-log flags, types |
+| [spec-engine.md](./spec-engine.md) | planned | JIT cap enforcement, suppression of adaptive steps |
+| [spec-app.md](./spec-app.md) | planned | `@modules/rehab-mode` service, hooks, repository |
+| [spec-ui.md](./spec-ui.md) | planned | Settings management, Today chip, RPE pain-limited toggle |

@@ -5,6 +5,7 @@ export * from './modules/jit';
 export * from './modules/formula';
 export * from './modules/lifter-maxes';
 export * from './modules/program';
+export * from './modules/rehab-cap';
 export * from './modules/session';
 export * from './modules/user';
 export * from './modules/challenge';
