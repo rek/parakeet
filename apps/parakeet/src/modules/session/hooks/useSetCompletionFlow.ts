@@ -30,12 +30,17 @@ export function useSetCompletionFlow({
   plannedSetsLengthRef,
   oneRmKgRef,
   biologicalSexRef,
+  weightIncrementKgRef,
 }: {
   restTimerPrefsRef: React.RefObject<RestTimerPrefs>;
   restRecommendations: React.RefObject<RestRecommendations | null>;
   plannedSetsLengthRef: React.RefObject<number>;
   oneRmKgRef: React.RefObject<number | undefined>;
   biologicalSexRef: React.RefObject<'male' | 'female' | undefined>;
+  /** Smallest reachable plate increment for this lifter. Threaded into both
+   *  main-lift failure adaptation and aux failure adaptation so reductions
+   *  honor the user's plate availability (GH#219). */
+  weightIncrementKgRef: React.RefObject<number | undefined>;
 }) {
   const {
     plannedSets,
@@ -403,7 +408,8 @@ export function useSetCompletionFlow({
         failedSetNumber,
         auxWeightGrams,
         actualReps,
-        auxiliaryWork
+        auxiliaryWork,
+        weightIncrementKgRef.current
       );
     }
   }
@@ -484,6 +490,7 @@ export function useSetCompletionFlow({
         primaryLift,
         oneRmKg: resolvedOneRmKg,
         biologicalSex: biologicalSexRef.current,
+        weightIncrementKg: weightIncrementKgRef.current,
       });
 
       if (adapted.adaptationType !== 'none') {
@@ -617,7 +624,8 @@ export function useSetCompletionFlow({
       conf.setNumber,
       conf.weightGrams,
       actualReps,
-      auxiliaryWork
+      auxiliaryWork,
+      weightIncrementKgRef.current
     );
 
     // Open rest timer if not last set and aux timer enabled

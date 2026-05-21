@@ -330,3 +330,89 @@ describe('adaptAuxRemainingPlan — weight floor at 50% of failed weight', () =>
     expect(result.sets[0].weight_kg).toBe(55);
   });
 });
+
+// ---------------------------------------------------------------------------
+// GH#219: honor lifter's plate-derived increment when reducing weight
+// ---------------------------------------------------------------------------
+
+describe('adaptRemainingPlan — GH#219 plate increment', () => {
+  it('rounds 5% reduction to 5 kg when 1.25 kg plates are absent', () => {
+    // Set weight 100 kg × 0.95 = 95 → at 2.5 inc rounds to 95; at 5 inc rounds to 95 (multiple of 5)
+    // Use 102.5 → × 0.95 = 97.375 → 2.5 inc = 97.5, 5 inc = 95
+    const sets = makeSets(1, 102.5);
+    const result = adaptRemainingPlan({
+      ...BASE_CTX,
+      consecutiveFailures: 2,
+      remainingSets: sets,
+      weightIncrementKg: 5,
+    });
+    expect(result.sets[0].weight_kg).toBe(95);
+  });
+
+  it('rounds 10% reduction to 5 kg when 1.25 kg plates are absent', () => {
+    // 102.5 × 0.90 = 92.25 → 2.5 inc = 92.5, 5 inc = 90
+    const sets = makeSets(1, 102.5);
+    const result = adaptRemainingPlan({
+      ...BASE_CTX,
+      consecutiveFailures: 3,
+      remainingSets: sets,
+      weightIncrementKg: 5,
+    });
+    expect(result.sets[0].weight_kg).toBe(90);
+  });
+
+  it('rounds floor (40% 1RM) to the lifter increment', () => {
+    // oneRmKg=200, floor 40% = 80 (multiple of 5, no rounding change)
+    // Use oneRmKg=210 → floor 84 → 5 inc = 85, 2.5 inc = 85 — pick oneRmKg=222 → floor=88.8 → 5 inc=90, 2.5 inc=87.5
+    const sets = makeSets(1, 92);
+    const result = adaptRemainingPlan({
+      ...BASE_CTX,
+      oneRmKg: 222,
+      consecutiveFailures: 3,
+      remainingSets: sets,
+      weightIncrementKg: 5,
+    });
+    // 92 × 0.9 = 82.8 → 5 inc = 85; floor (222 × 0.4 = 88.8) → 5 inc = 90
+    // Reduced 85 < floor 90 → clamped to 90
+    expect(result.sets[0].weight_kg).toBe(90);
+  });
+
+  it('defaults to 2.5 kg when weightIncrementKg is absent (regression)', () => {
+    // 102.5 × 0.95 = 97.375 → 2.5 inc = 97.5
+    const sets = makeSets(1, 102.5);
+    const result = adaptRemainingPlan({
+      ...BASE_CTX,
+      consecutiveFailures: 2,
+      remainingSets: sets,
+    });
+    expect(result.sets[0].weight_kg).toBe(97.5);
+  });
+});
+
+describe('adaptAuxRemainingPlan — GH#219 plate increment', () => {
+  it('rounds aux reduction to 5 kg when 1.25 kg plates are absent', () => {
+    // 47 × 0.9 = 42.3 → 2.5 inc = 42.5, 5 inc = 40
+    const sets = makeSets(1, 47);
+    const result = adaptAuxRemainingPlan({
+      exercise: 'Barbell Curl',
+      failedWeightKg: 47,
+      remainingSets: sets,
+      weightIncrementKg: 5,
+    });
+    expect(result.sets[0].weight_kg).toBe(40);
+  });
+
+  it('rounds aux floor (50% failed weight) to the lifter increment', () => {
+    // failedWeightKg=37 → floor 50% = 18.5 → 5 inc = 20, 2.5 inc = 17.5
+    // Set weight 20 × 0.9 = 18 → 5 inc = 20; floor 20 → no clamp needed (equal)
+    const sets = makeSets(1, 20);
+    const result = adaptAuxRemainingPlan({
+      exercise: 'Lateral Raise',
+      failedWeightKg: 37,
+      remainingSets: sets,
+      weightIncrementKg: 5,
+    });
+    // 20 × 0.9 = 18 → 5 inc = 20; floor 20 → result 20
+    expect(result.sets[0].weight_kg).toBe(20);
+  });
+});

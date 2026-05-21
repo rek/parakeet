@@ -182,7 +182,7 @@ These fire during the workout, after the JIT prescription is generated.
 |-----------|---------|--------|
 | Weight autoregulation | RPE gap ≥ 1.0 below target after a main lift set | Suggests weight increase for next set (+2.5/+5 kg bench, +5/+10 kg squat/DL) |
 | Volume recovery | Avg RPE gap ≥ 1.5 below target, sets were removed by modifiers | Offers to add removed sets back |
-| Failure adaptation (main) | Failed set (reps < planned) | Tier 1: +60s rest → Tier 2: -5%/-10% weight → Tier 3: optional sets |
-| Failure adaptation (aux) | Failed aux set | Immediate -10% weight on remaining sets of that exercise |
+| Failure adaptation (main) | Failed set (reps < planned) | Tier 1: +60s rest → Tier 2: -5%/-10% weight → Tier 3: optional sets. Weight is rounded to the lifter's smallest reachable plate increment, so e.g. 5 kg jumps when no 1.25 kg plates are available (GH#219). |
+| Failure adaptation (aux) | Failed aux set | Immediate -10% weight on remaining sets of that exercise; same plate-increment rounding as main (GH#219). |
 
 **Source:** `packages/training-engine/src/adjustments/weight-autoregulation.ts`, `volume-recovery.ts`, `intra-session-adapter.ts`

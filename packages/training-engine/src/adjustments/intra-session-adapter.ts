@@ -20,6 +20,11 @@ export interface IntraSessionContext {
   primaryLift: Lift;
   oneRmKg: number;
   biologicalSex?: 'male' | 'female';
+  /** Smallest reachable weight step for this lifter (e.g. 5 kg when they have
+   *  no 1.25 kg fractionals). Used to round the reduced weight + floor so the
+   *  prescribed value is loadable on the bar. Defaults to 2.5 kg when absent.
+   *  See GH#219. */
+  weightIncrementKg?: number;
 }
 
 export type AdaptationType =
@@ -54,15 +59,17 @@ export function detectSetFailure(
 
 /**
  * Applies a percentage reduction to a set's weight, clamping to a floor of
- * 40% of the session 1RM, and rounds to the nearest 2.5 kg.
+ * 40% of the session 1RM, and rounding to the lifter's smallest reachable
+ * plate increment (defaults to 2.5 kg). See GH#219.
  */
 function reduceWeight(
   set: PlannedSet,
   reductionPct: number,
-  oneRmKg: number
+  oneRmKg: number,
+  incrementKg = 2.5
 ): PlannedSet {
-  const floor = roundToNearest2_5(oneRmKg * 0.4);
-  const reduced = roundToNearest2_5(set.weight_kg * (1 - reductionPct));
+  const floor = roundToNearest(oneRmKg * 0.4, incrementKg);
+  const reduced = roundToNearest(set.weight_kg * (1 - reductionPct), incrementKg);
   return { ...set, weight_kg: Math.max(reduced, floor) };
 }
 
@@ -81,12 +88,15 @@ export interface AuxAdaptedPlan {
  * Adapts remaining auxiliary sets after a failure. Simpler than main lift
  * adaptation: immediate 10% weight reduction (no extended-rest tier, no 1RM
  * floor — aux exercises don't have a tracked 1RM). Floor is 50% of the failed
- * set weight to prevent absurdly light prescriptions.
+ * set weight to prevent absurdly light prescriptions. Rounds to the lifter's
+ * smallest reachable plate increment when provided (defaults to 2.5 kg).
+ * See GH#219.
  */
 export function adaptAuxRemainingPlan(ctx: {
   exercise: string;
   failedWeightKg: number;
   remainingSets: PlannedSet[];
+  weightIncrementKg?: number;
 }): AuxAdaptedPlan {
   if (ctx.remainingSets.length === 0) {
     return {
@@ -97,11 +107,12 @@ export function adaptAuxRemainingPlan(ctx: {
     };
   }
 
-  const floor = roundToNearest2_5(ctx.failedWeightKg * 0.5);
+  const inc = ctx.weightIncrementKg ?? 2.5;
+  const floor = roundToNearest(ctx.failedWeightKg * 0.5, inc);
   return {
     exercise: ctx.exercise,
     sets: ctx.remainingSets.map((s) => {
-      const reduced = roundToNearest2_5(s.weight_kg * 0.9);
+      const reduced = roundToNearest(s.weight_kg * 0.9, inc);
       return { ...s, weight_kg: Math.max(reduced, floor) };
     }),
     adaptationType: 'weight_reduced',
@@ -126,7 +137,8 @@ export function adaptAuxRemainingPlan(ctx: {
  * nearest 2.5 kg.
  */
 export function adaptRemainingPlan(ctx: IntraSessionContext): AdaptedPlan {
-  const { consecutiveFailures, remainingSets, oneRmKg } = ctx;
+  const { consecutiveFailures, remainingSets, oneRmKg, weightIncrementKg } = ctx;
+  const inc = weightIncrementKg ?? 2.5;
 
   if (consecutiveFailures === 0 || remainingSets.length === 0) {
     return {
@@ -149,7 +161,7 @@ export function adaptRemainingPlan(ctx: IntraSessionContext): AdaptedPlan {
 
   if (consecutiveFailures === 2) {
     return {
-      sets: remainingSets.map((s) => reduceWeight(s, 0.05, oneRmKg)),
+      sets: remainingSets.map((s) => reduceWeight(s, 0.05, oneRmKg, inc)),
       restBonusSeconds: 0,
       adaptationType: 'weight_reduced',
       rationale:
@@ -159,7 +171,7 @@ export function adaptRemainingPlan(ctx: IntraSessionContext): AdaptedPlan {
 
   // consecutiveFailures >= 3
   return {
-    sets: remainingSets.map((s) => reduceWeight(s, 0.1, oneRmKg)),
+    sets: remainingSets.map((s) => reduceWeight(s, 0.1, oneRmKg, inc)),
     restBonusSeconds: 0,
     adaptationType: 'sets_capped',
     rationale:

@@ -71,7 +71,7 @@ import {
   usePostRestVideoCapture,
 } from '@modules/video-analysis';
 import type { Lift, MuscleGroup } from '@parakeet/shared-types';
-import type { ExerciseType } from '@parakeet/training-engine';
+import { plateIncrementKg, type ExerciseType } from '@parakeet/training-engine';
 import { useNetworkStatus } from '@platform/network';
 import { captureException } from '@platform/utils/captureException';
 import type { PlateKg } from '@shared/constants/plates';
@@ -453,6 +453,11 @@ export default function SessionScreen() {
   // Intra-session adaptation context — set once from parsed JIT data
   const oneRmKgRef = useRef<number | undefined>(undefined);
   const biologicalSexRef = useRef<'male' | 'female' | undefined>(undefined);
+  // Plate-derived smallest reachable increment — tracks equipmentDisabledPlates
+  // so failure-adaptation reductions round to a weight the lifter can actually
+  // load on the bar (GH#219).
+  const weightIncrementKgRef = useRef<number | undefined>(undefined);
+  weightIncrementKgRef.current = plateIncrementKg(equipmentDisabledPlates);
 
   // Timer prefs loaded once on mount
   const restTimerPrefsRef = useRef<RestTimerPrefs>({
@@ -492,6 +497,7 @@ export default function SessionScreen() {
     plannedSetsLengthRef,
     oneRmKgRef,
     biologicalSexRef,
+    weightIncrementKgRef,
   });
 
   // Live-derive PostRestOverlay weight from store so it stays in sync with

@@ -23,7 +23,8 @@ export function writeAuxFailureAndAdapt(
   failedSetNumber: number,
   weightGrams: number,
   actualReps: number,
-  auxiliaryWork: AuxiliaryWork[]
+  auxiliaryWork: AuxiliaryWork[],
+  weightIncrementKg?: number
 ): void {
   const state = useSessionStore.getState();
 
@@ -58,6 +59,7 @@ export function writeAuxFailureAndAdapt(
     exercise,
     failedWeightKg: weightGramsToKg(weightGrams),
     remainingSets,
+    weightIncrementKg,
   });
 
   if (adapted.adaptationType !== 'none') {
