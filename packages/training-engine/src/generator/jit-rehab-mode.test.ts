@@ -181,3 +181,63 @@ describe('Rehab Mode — stacking with other modifiers', () => {
     expect(out.mainLiftSets[0].weight_kg).toBe(45);
   });
 });
+
+describe('Rehab Mode — recentLogs filtering after cap is lifted', () => {
+  it('Step 2 RPE auto-progression ignores rehab-tagged history', () => {
+    // No active cap (rehab ended), but recentLogs are from when it was active.
+    // Without the filter, two RPE-10 sessions would trigger ×0.95 weight cut.
+    // With the filter, both are excluded → no auto-progression fires.
+    const polluted = generateJITSession(
+      baseInput({
+        recentLogs: [
+          { actual_rpe: 10, target_rpe: 8, containedRehabSets: true },
+          { actual_rpe: 10, target_rpe: 8, containedRehabSets: true },
+        ],
+      })
+    );
+    const clean = generateJITSession(baseInput());
+    expect(polluted.mainLiftSets[0].weight_kg).toBe(
+      clean.mainLiftSets[0].weight_kg
+    );
+    expect(
+      polluted.rationale.some((r) => /Recent RPE above target/i.test(r))
+    ).toBe(false);
+  });
+
+  it('Step 0 volume calibration ignores rehab-tagged history', () => {
+    // Two RPE-6 (target 8) sessions tagged as rehab — without filter would
+    // signal "easy work, add sets". With filter, calibration sees no signal.
+    const polluted = generateJITSession(
+      baseInput({
+        recentLogs: [
+          { actual_rpe: 6, target_rpe: 8, containedRehabSets: true },
+          { actual_rpe: 6, target_rpe: 8, containedRehabSets: true },
+        ],
+        sleepQuality: 5,
+        energyLevel: 5,
+        sorenessRatings: { quads: 1, glutes: 1, lower_back: 1 },
+      })
+    );
+    expect(
+      polluted.rationale.some((r) => /below target — \+/i.test(r))
+    ).toBe(false);
+  });
+
+  it('clean sessions in recentLogs still drive auto-progression normally', () => {
+    // Mix of clean + rehab-tagged; the two clean ones must be enough to
+    // surface the RPE signal even though the rehab ones are present.
+    const out = generateJITSession(
+      baseInput({
+        recentLogs: [
+          { actual_rpe: 10, target_rpe: 8, containedRehabSets: false },
+          { actual_rpe: 10, target_rpe: 8, containedRehabSets: false },
+          { actual_rpe: 6, target_rpe: 8, containedRehabSets: true }, // noise
+        ],
+      })
+    );
+    // Two clean RPE-10 sessions → "RPE above target" cut should fire
+    expect(
+      out.rationale.some((r) => /Recent RPE above target/i.test(r))
+    ).toBe(true);
+  });
+});

@@ -12,14 +12,18 @@ export const SMALL_UNDER_MULTIPLIER = 1.025;
 export const LARGE_UNDER_MULTIPLIER = 1.05;
 
 /** Compute average RPE deviation (actual − target) over last 2 sessions with a real RPE value.
- *  Returns null when there are fewer than 2 qualifying logs. */
+ *  Returns null when there are fewer than 2 qualifying logs.
+ *
+ *  Drops sessions tagged `containedRehabSets` (GH#220) — those RPE values came
+ *  from capped pain-ambiguous work and would skew the auto-progression signal
+ *  for the first clean session after a rehab block ends. */
 export function computeAvgRpeDev(
   recentLogs: RecentSessionSummary[]
 ): number | null {
   const history = recentLogs
     .filter(
       (l): l is RecentSessionSummary & { actual_rpe: number } =>
-        l.actual_rpe !== null
+        l.actual_rpe !== null && !l.containedRehabSets
     )
     .slice(0, 2);
 

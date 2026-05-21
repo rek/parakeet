@@ -72,6 +72,12 @@ export interface RecentSessionSummary {
   actualMaxWeightKg?: number;
   deviationKg?: number;
   estimatedOneRmKg?: number;
+  /** True when the session contained any set logged under an active rehab
+   *  cap (GH#220). Even after the cap is lifted, those sessions' RPE is
+   *  pain-ambiguous and the weight was capped — they must not drive Steps
+   *  0/2/2b auto-progression on the next clean session. App layer computes
+   *  this from `set_logs.during_rehab` when assembling JITInput. */
+  containedRehabSets?: boolean;
 }
 
 export interface JITInput {

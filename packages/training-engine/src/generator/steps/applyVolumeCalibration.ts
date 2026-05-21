@@ -30,8 +30,10 @@ export function applyVolumeCalibration(
   const reasons: string[] = [];
 
   // --- Signal 1: RPE trend from recent sessions ---
+  // Drop rehab-tagged sessions (GH#220) — capped pain-ambiguous RPE shouldn't
+  // drive calibration on the first clean session after a rehab block ends.
   const rpeLogs = input.recentLogs.filter(
-    (l) => l.actual_rpe != null && l.target_rpe != null
+    (l) => l.actual_rpe != null && l.target_rpe != null && !l.containedRehabSets
   );
   let avgRpeGap = 0;
   if (rpeLogs.length >= 2) {
