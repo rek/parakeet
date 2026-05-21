@@ -401,7 +401,8 @@ export function generateJITSession(
     exerciseTyper,
     auxVolumeRatio,
     auxIntensityRatio,
-    ctx.skippedMainLift
+    ctx.skippedMainLift,
+    input.intensityType
   );
 
   // Step 6b — Volume top-up (engine-027): append exercises for under-MEV muscles
@@ -619,7 +620,8 @@ function buildAuxiliaryWork(
   exerciseTyper: (name: string) => ExerciseType = getExerciseType,
   mainLiftVolumeRatio = 1,
   mainIntensityMultiplier = 1,
-  skippedMainLift = false
+  skippedMainLift = false,
+  intensityType: IntensityType = 'heavy'
 ): AuxiliaryWork[] {
   const hasNoEquipment =
     activeDisruptions?.some(
@@ -645,6 +647,7 @@ function buildAuxiliaryWork(
       mainLiftVolumeRatio,
       mainIntensityMultiplier,
       skippedMainLift,
+      intensityType,
     })
   );
 

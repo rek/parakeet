@@ -1,4 +1,4 @@
-import type { Lift, PlannedSet } from '@parakeet/shared-types';
+import type { IntensityType, Lift, PlannedSet } from '@parakeet/shared-types';
 
 import type { SorenessLevel } from '../../adjustments/soreness-adjuster';
 import {
@@ -16,9 +16,22 @@ import type {
 import type { AuxiliaryWork } from '../jit-session-generator';
 
 /** Fraction of weight retained when aux shares muscles with the session's main lift.
- *  Prod data: compound aux after heavy main (e.g. CGBP after bench) shows RPE 9.5-10
- *  with the standard weight; 15% discount aligns with observed fatigue effect. */
-const POST_MAIN_FATIGUE_FACTOR = 0.85;
+ *  Prod data: compound aux after heavy main (e.g. CGBP after bench at 80%+ RPE 8.5)
+ *  shows RPE 9.5-10 with the standard weight; 15% discount aligns with observed
+ *  fatigue effect. Lower-intensity main work generates proportionally less fatigue,
+ *  so the discount tapers toward 1.0 on rep/explosive/deload days. */
+export function getPostMainFatigueFactor(intensityType: IntensityType): number {
+  switch (intensityType) {
+    case 'heavy':
+      return 0.85;
+    case 'rep':
+      return 0.9;
+    case 'explosive':
+      return 0.95;
+    case 'deload':
+      return 1.0;
+  }
+}
 
 export function processAuxExercise({
   exercise,
@@ -38,6 +51,7 @@ export function processAuxExercise({
   mainLiftVolumeRatio = 1.0,
   mainIntensityMultiplier = 1.0,
   skippedMainLift = false,
+  intensityType = 'heavy',
 }: {
   exercise: string;
   worstSoreness: SorenessLevel;
@@ -62,12 +76,16 @@ export function processAuxExercise({
    *  the main lift do not increase aux volume. See GH#217. */
   mainLiftVolumeRatio?: number;
   /** Cumulative main-lift intensity multiplier from the pipeline. Applied to
-   *  aux weight on top of the existing POST_MAIN_FATIGUE_FACTOR. Clamped to
+   *  aux weight on top of the existing post-main-fatigue factor. Clamped to
    *  [0,1] for the same asymmetric reason as mainLiftVolumeRatio. */
   mainIntensityMultiplier?: number;
   /** True when the main lift was skipped (major disruption). Aux is suppressed
    *  rather than left to dominate a session the engine just bailed on. */
   skippedMainLift?: boolean;
+  /** Drives the post-main-fatigue factor: heavy main = bigger discount, speed
+   *  main = almost none. Defaults to 'heavy' so legacy callers retain the
+   *  historical 0.85 behavior. */
+  intensityType?: IntensityType;
 }): AuxiliaryWork {
   const exerciseType = exerciseTyper(exercise);
 
@@ -141,7 +159,7 @@ export function processAuxExercise({
       (m) => m.contribution >= 0.5 && mainLiftMuscles.has(m.muscle)
     );
     if (hasOverlap) {
-      intensityMult *= POST_MAIN_FATIGUE_FACTOR;
+      intensityMult *= getPostMainFatigueFactor(intensityType);
     }
   }
 

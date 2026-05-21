@@ -126,15 +126,18 @@ Default fallback: 0.675
 
 ## Post-Main Fatigue Factor
 
-```
-POST_MAIN_FATIGUE_FACTOR = 0.85
-```
+Applied when an auxiliary exercise shares muscles (contribution >= 0.5) with the session's primary lift. Tapers by main-lift intensity type — heavy main work generates more pre-fatigue than speed work, so the discount shrinks toward 1.0 on lighter days. Stacks multiplicatively with soreness modifiers.
 
-Applied when an auxiliary exercise shares muscles (contribution >= 0.5) with the session's primary lift. Stacks multiplicatively with soreness modifiers.
+| Intensity type | Factor | Rationale |
+|----------------|--------|-----------|
+| `heavy`        | 0.85   | Main lift at ~80% / RPE 8.5; CGBP after bench reads RPE 9.5-10 without the discount (prod data). |
+| `rep`          | 0.90   | Moderate fatigue from rep-range main work. |
+| `explosive`    | 0.95   | Speed work at ~65% / RPE 7 generates minimal pre-fatigue. |
+| `deload`       | 1.00   | No additional discount — deload already light by design. |
 
-Example: Close-Grip Bench after Bench day -- triceps overlap >= 0.5, so aux weight is reduced to 85% of standard.
+Example: Close-Grip Bench after **heavy** bench day → triceps overlap ≥ 0.5, aux weight × 0.85. Same exercise on **explosive** bench day → aux weight × 0.95 (almost no discount).
 
-**Source:** `packages/training-engine/src/generator/steps/processAuxExercise.ts`
+**Source:** `packages/training-engine/src/generator/steps/processAuxExercise.ts` (`getPostMainFatigueFactor`)
 
 ---
 
