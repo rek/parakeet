@@ -19,7 +19,10 @@ The module follows the same layered shape as `@modules/disruptions` (`data/` →
   → `apps/parakeet/src/modules/rehab-mode/data/rehab-mode.repository.ts`
 - [x] `application/rehab-mode.service.ts` — verb-named wrappers around the repo (`application/`, not `services/`, per house convention — see `apps/parakeet/CLAUDE.md`).
   → `apps/parakeet/src/modules/rehab-mode/application/rehab-mode.service.ts`
-- [ ] `hooks/useActiveRehabCaps.ts`, `hooks/useRehabCapForLift.ts`, `hooks/useRehabModeMutations.ts` — React Query hooks (Phase 3 / spec-ui follow-up)
+- [x] `hooks/useActiveRehabCaps.ts` — both `useActiveRehabCaps` and `useRehabCapForLift` (single file by convention).
+  → `apps/parakeet/src/modules/rehab-mode/hooks/useActiveRehabCaps.ts`
+- [x] `hooks/useRehabModeMutations.ts` — `enable`, `update`, `end` mutations. Each `onSuccess` invalidates `rehabModeQueries.all()`, the active program, and all session queries so future JIT regeneration picks up the new state.
+  → `apps/parakeet/src/modules/rehab-mode/hooks/useRehabModeMutations.ts`
 
 **Service: `application/rehab-mode.service.ts`**
 
@@ -46,21 +49,30 @@ Per `apps/parakeet/CLAUDE.md` new-code convention: `queryOptions` factories live
   - `qk.program.active(userId)` — future sessions' JIT prescriptions will change next time they generate
   - `qk.session.detail(sessionId)` for any currently-rendered session whose primary lift matches — the live prescription will recompute on next open
 
-**JIT input wiring: `apps/parakeet/src/modules/jit/lib/buildJitInput.ts`** (or equivalent assembler)
+**JIT input wiring: `apps/parakeet/src/modules/jit/lib/jit.ts`**
 
-- [ ] Add a parallel fetch for `getActiveCapForLift(userId, session.primary_lift)`.
-- [ ] Populate `JITInput.activeRehabCap` when present.
-- [ ] When assembling `recentLogs` for the performance adjuster, set `containedRehabSets: true` for any session whose `set_logs` rows include `during_rehab: true` on the matching lift. The repository query for recent sessions needs to pull the `during_rehab` column to compute this — update the SELECT list.
+- [x] Parallel fetch added for `getActiveRehabCapForLift(userId, lift)` alongside the recent-logs + aux-history fetches. Wrapped into `{ lift, capKg }` for the engine input.
+  → `apps/parakeet/src/modules/jit/lib/jit.ts`
+- [x] `JITInput.activeRehabCap` populated when a cap exists for the current lift.
+  → `apps/parakeet/src/modules/jit/lib/jit.ts`
+- [x] `recentLogs` carry `containedRehabSets: true` for any session whose `set_logs` rows include `during_rehab=true`. Repository SELECT now pulls the column and aggregates per session via `SessionSetsBucket.containedRehabSets`. Each `ActualSetKg` passed to `computeWeightDeviation` is also tagged `duringRehab` so working-1RM excludes them.
+  → `apps/parakeet/src/modules/jit/data/jit.repository.ts`, `apps/parakeet/src/modules/jit/lib/jit.ts`
 
-**Set-log write path: `apps/parakeet/src/modules/session/data/set-log.repository.ts`** (or equivalent)
+**Set-log write path: `apps/parakeet/src/modules/session/data/session.repository.ts` + DB trigger**
 
-- [ ] At set-log insert, compute `during_rehab` server-side via a small helper: `isLiftInRehab(userId, lift, atTimestamp) → boolean`. Reads `rehab_caps` for an active cap on `lift` where `started_at <= atTimestamp AND (ended_at is null OR ended_at >= atTimestamp)`.
-- [ ] Accept `pain_limited` from the UI; default `false` if absent.
-- [ ] Do **not** allow client-supplied `during_rehab` — always computed server-side from the live `rehab_caps` state. Prevents drift if the UI gets out of sync.
+- [x] `during_rehab` is stamped server-side by the `set_logs_stamp_during_rehab` BEFORE INSERT/UPDATE trigger. Client value is ignored — the trigger looks up the parent session's `primary_lift`, checks `rehab_caps` for an active cap, and sets the flag accordingly. Prevents UI-cache drift; can't be bypassed by any client.
+  → `supabase/migrations/20260522000000_rehab_during_trigger.sql`
+- [x] `UpsertSetLogInput.painLimited?: boolean` accepted (default false); flows through to the row.
+  → `apps/parakeet/src/modules/session/data/session.repository.ts`
+
+**PR detection gate: `apps/parakeet/src/modules/achievements/hooks/useAchievementDetection.ts`**
+
+- [x] `sessionContainedRehabSets(sessionId)` repository helper added (returns true if any of the session's `set_logs` was stamped `during_rehab`). Fetched in parallel with session context inside `detectAchievements`. When true, the entire PR-detection branch is skipped — no e1RM, no volume, no rep-at-weight PRs are stored, and downstream badges don't see them. Streak + cycle-completion logic still runs because the rehab session is still a session.
+  → `apps/parakeet/src/modules/session/data/session.repository.ts`, `apps/parakeet/src/modules/achievements/hooks/useAchievementDetection.ts`
 
 **Today-screen chip integration: `apps/parakeet/src/app/(tabs)/today.tsx`**
 
-- [ ] Render the rehab-cap chip alongside (or just after) the existing disruption chip row, via a new `RehabCapChipsRow` component in `modules/rehab-mode/ui/`.
+- [ ] Render the rehab-cap chip alongside (or just after) the existing disruption chip row, via a new `RehabCapChipsRow` component in `modules/rehab-mode/ui/` — **Phase 4 (UI).**
 
 **Unit / integration tests**
 

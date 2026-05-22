@@ -380,6 +380,10 @@ export interface UpsertSetLogInput {
   failed?: boolean;
   notes?: string | null;
   loggedAt?: string;
+  /** Rehab Mode pain-limited toggle (GH#220) — user-supplied per set.
+   *  `during_rehab` is NOT accepted from the client; it's stamped server-side
+   *  by the `set_logs_stamp_during_rehab` trigger. */
+  painLimited?: boolean;
 }
 
 /** Stable slug from a display name. Catalog hit → catalog slug; otherwise
@@ -408,6 +412,7 @@ export async function upsertSetLog(input: UpsertSetLogInput): Promise<void> {
       failed: input.failed ?? false,
       notes: input.notes ?? null,
       logged_at: input.loggedAt ?? new Date().toISOString(),
+      pain_limited: input.painLimited ?? false,
     },
     {
       onConflict: 'session_id,kind,exercise_slug,set_number',
@@ -451,6 +456,22 @@ export async function fetchSetLogs(sessionId: string): Promise<SetLogRow[]> {
   }));
 }
 
+/** Returns true if any set_log for this session was stamped `during_rehab`
+ *  by the trigger — i.e. an active rehab cap covered the session's primary
+ *  lift when the sets were inserted. Used by the PR-detection orchestrator
+ *  to suppress badge / PR awards on capped sessions (GH#220). */
+export async function sessionContainedRehabSets(
+  sessionId: string
+): Promise<boolean> {
+  const { count, error } = await typedSupabase
+    .from('set_logs')
+    .select('id', { head: true, count: 'exact' })
+    .eq('session_id', sessionId)
+    .eq('during_rehab', true);
+  if (error) throw error;
+  return (count ?? 0) > 0;
+}
+
 export async function countSetLogsForSession(
   sessionId: string
 ): Promise<number> {
@@ -465,6 +486,11 @@ export async function countSetLogsForSession(
 export interface SessionSetsBucket {
   primary: ActualSet[];
   auxiliary: ActualSet[];
+  /** Rehab Mode session marker (GH#220) — true if any set in this session
+   *  was logged while a rehab cap was active for the parent session's lift.
+   *  Computed from `set_logs.during_rehab` at fetch time so downstream JIT /
+   *  PR / calibration consumers can drop the session from their inputs. */
+  containedRehabSets: boolean;
 }
 
 // Groups set_logs by session_id for a batch of sessions. Returned ActualSet
@@ -479,7 +505,7 @@ export async function fetchSessionSetsBySessionIds(
   const { data, error } = await typedSupabase
     .from('set_logs')
     .select(
-      'session_id, kind, exercise, exercise_slug, exercise_type, set_number, weight_grams, reps_completed, rpe_actual, actual_rest_seconds, failed, notes'
+      'session_id, kind, exercise, exercise_slug, exercise_type, set_number, weight_grams, reps_completed, rpe_actual, actual_rest_seconds, failed, notes, during_rehab, pain_limited'
     )
     .in('session_id', sessionIds)
     .order('set_number', { ascending: true });
@@ -488,9 +514,10 @@ export async function fetchSessionSetsBySessionIds(
   for (const row of data ?? []) {
     let bucket = map.get(row.session_id);
     if (!bucket) {
-      bucket = { primary: [], auxiliary: [] };
+      bucket = { primary: [], auxiliary: [], containedRehabSets: false };
       map.set(row.session_id, bucket);
     }
+    if (row.during_rehab) bucket.containedRehabSets = true;
     const set: ActualSet = {
       set_number: row.set_number,
       weight_grams: row.weight_grams,

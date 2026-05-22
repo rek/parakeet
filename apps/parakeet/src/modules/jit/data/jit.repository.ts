@@ -26,6 +26,10 @@ export interface JitRecentSessionLogRow {
   session_rpe: number | null;
   actual_sets: ActualSet[];
   planned_sets: unknown;
+  /** True when this session was logged with any sets while a rehab cap was
+   *  active for the lift (GH#220). Fed into `RecentSessionSummary` so the
+   *  engine can exclude pollutes pain-ambiguous history. */
+  containedRehabSets: boolean;
 }
 
 export async function fetchRecentSessionLogsForLift(
@@ -62,6 +66,7 @@ export async function fetchRecentSessionLogsForLift(
       session_rpe: r.session_rpe ?? null,
       actual_sets: buckets?.primary ?? [],
       planned_sets: session?.planned_sets ?? null,
+      containedRehabSets: buckets?.containedRehabSets ?? false,
     };
   });
 }

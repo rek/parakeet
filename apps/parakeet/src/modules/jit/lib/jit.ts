@@ -23,6 +23,7 @@ import {
   getUserRestOverrides,
   getWarmupConfig,
 } from '@modules/settings';
+import { getActiveRehabCapForLift } from '@modules/rehab-mode';
 import { getMrvMevConfig } from '@modules/training-volume';
 import {
   BlockNumberSchema,
@@ -234,12 +235,18 @@ export async function runJITForSession(
       : rotationDefaults[1],
   ];
 
-  const [recentData, recentAuxExercises] = await Promise.all([
+  const [recentData, recentAuxExercises, activeRehabCapRow] = await Promise.all([
     fetchRecentSessionLogsForLift(userId, lift, 6),
     // 4 sessions ≈ slightly more than one full S/B/D rotation; scorer
     // penalty decays linearly so older entries clear naturally (GH#211).
     fetchRecentAuxExerciseNames(userId, 4),
+    // Rehab Mode (GH#220): active cap for the current lift, if any. Null when
+    // no cap is active; the engine treats null/undefined the same.
+    getActiveRehabCapForLift(userId, lift),
   ]);
+  const activeRehabCap = activeRehabCapRow
+    ? { lift, capKg: Number(activeRehabCapRow.cap_kg) }
+    : undefined;
 
   const recentLogs: RecentSessionSummary[] = recentData.map((r) => {
     let deviation: ReturnType<typeof computeWeightDeviation> = null;
@@ -249,10 +256,16 @@ export async function runJITForSession(
       if (planned.length > 0 && actual.length > 0) {
         deviation = computeWeightDeviation({
           plannedWeightKg: planned[0].weight_kg,
+          // Tag every set with the session-level `containedRehabSets` so the
+          // engine's working-1RM filter excludes them (GH#220). Per-set
+          // `painLimited` would be granular, but the UI only surfaces the
+          // pain-limited toggle while a cap is active anyway — session-level
+          // is sufficient and avoids plumbing the flag through ActualSet JSON.
           actualSets: actual.map((s) => ({
             weightKg: weightGramsToKg(s.weight_grams),
             reps: s.reps_completed,
             rpe: s.rpe_actual,
+            ...(r.containedRehabSets && { duringRehab: true }),
           })),
         });
       }
@@ -268,6 +281,7 @@ export async function runJITForSession(
         deviationKg: deviation.deviationKg,
         estimatedOneRmKg: deviation.estimatedOneRmKg ?? undefined,
       }),
+      ...(r.containedRehabSets && { containedRehabSets: true }),
     };
   });
 
@@ -494,6 +508,7 @@ export async function runJITForSession(
       Object.keys(customExerciseTypeMap).length > 0
         ? customExerciseTypeMap
         : undefined,
+    activeRehabCap,
   };
 
   const strategyOverride = await getJITStrategyOverride();

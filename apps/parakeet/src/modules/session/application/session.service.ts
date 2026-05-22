@@ -338,6 +338,7 @@ export async function startSession(sessionId: string): Promise<void> {
 // docs/guide/ai-learnings.md). Consumers outside this module use this.
 export {
   fetchSessionSetsBySessionIds as getSessionSetsBySessionIds,
+  sessionContainedRehabSets,
 } from '../data/session.repository';
 
 // Skip a session (planned or in_progress → skipped)

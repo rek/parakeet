@@ -4,6 +4,7 @@ import { getActiveDisruptions } from '@modules/disruptions';
 import {
   getProgramCompletionCounts,
   getSessionCompletionContext,
+  sessionContainedRehabSets,
 } from '@modules/session';
 import type { Lift } from '@parakeet/shared-types';
 import {
@@ -56,16 +57,25 @@ export async function detectAchievements(
     newBadges: [],
   };
 
-  const [sessionContext, activeDisruptionRows] = await Promise.all([
-    getSessionCompletionContext(sessionId),
-    getActiveDisruptions(userId),
-  ]);
+  const [sessionContext, activeDisruptionRows, sessionInRehab] =
+    await Promise.all([
+      getSessionCompletionContext(sessionId),
+      getActiveDisruptions(userId),
+      sessionContainedRehabSets(sessionId),
+    ]);
   const lift = (sessionContext.primaryLift as Lift | null) ?? null;
+
+  // Rehab Mode (GH#220): suppress PR detection (and downstream badge awards)
+  // for any session whose set_logs were stamped `during_rehab` by the trigger.
+  // The lifter doesn't want their preserved real 1RM rewritten by capped
+  // pain-ambiguous work. Streak + cycle-completion logic below still runs —
+  // the rehab session is still a session.
+  const suppressPRs = sessionInRehab;
 
   // Capture pre-upsert e1RM for "Technically a PR" badge
   const previousE1Rm: Record<string, number> = {};
 
-  if (lift) {
+  if (lift && !suppressPRs) {
     const historicalPRs = await getPRHistory(userId, lift);
     if (historicalPRs.best1rmKg > 0) {
       previousE1Rm[lift] = historicalPRs.best1rmKg;

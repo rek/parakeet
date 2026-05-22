@@ -16,6 +16,12 @@ export {
   type RehabCapRow,
 } from './data/rehab-mode.repository';
 
+export {
+  useActiveRehabCaps,
+  useRehabCapForLift,
+} from './hooks/useActiveRehabCaps';
+export { useRehabModeMutations } from './hooks/useRehabModeMutations';
+
 export type {
   CreateRehabCapInput,
   Lift,
