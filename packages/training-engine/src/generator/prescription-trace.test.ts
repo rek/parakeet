@@ -199,7 +199,8 @@ describe('generateJITSessionWithTrace', () => {
       (m) => m.source === 'disruption'
     );
     expect(disruptionMod).toBeDefined();
-    expect(disruptionMod!.multiplier).toBe(0.9);
+    // Finding #1: moderate injury aligns with canonical adjuster (40% cut).
+    expect(disruptionMod!.multiplier).toBeCloseTo(0.6, 5);
   });
 
   it('traces assigned auxiliary exercises', () => {

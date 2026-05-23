@@ -66,8 +66,8 @@ describe('applyAdjustment', () => {
     expect(output.rationale).toContain('Minor soreness — reducing intensity');
   });
 
-  describe('rest adjustments (engine-021)', () => {
-    it('applies +60s rest delta', () => {
+  describe('rest adjustments (engine-021) — advisory-only after finding #18', () => {
+    it('+60s delta exposed via llmRestSuggestion; per-set rest stays at formula default', () => {
       const output = applyAdjustment(
         baseAdj({ restAdjustments: { mainLift: 60 } }),
         baseInput()
@@ -75,8 +75,10 @@ describe('applyAdjustment', () => {
 
       const formulaBase = DEFAULT_FORMULA_CONFIG_MALE.rest_seconds.block1.heavy;
       expect(output.restRecommendations.mainLift.length).toBeGreaterThan(0);
+      // Per-set rest is unchanged from formula — the chip applies the
+      // delta only after the user opts in.
       output.restRecommendations.mainLift.forEach((r) => {
-        expect(r).toBe(formulaBase + 60);
+        expect(r).toBe(formulaBase);
       });
       expect(output.llmRestSuggestion).toEqual({
         deltaSeconds: 60,
@@ -94,18 +96,19 @@ describe('applyAdjustment', () => {
       );
 
       const formulaBase = DEFAULT_FORMULA_CONFIG_MALE.rest_seconds.block1.heavy;
+      // Per-set rest remains the formula default
       output.restRecommendations.mainLift.forEach((r) => {
-        expect(r).toBe(formulaBase + 60); // clamped to 60, not 90
+        expect(r).toBe(formulaBase);
       });
       expect(output.llmRestSuggestion).toEqual({
-        deltaSeconds: 60,
+        deltaSeconds: 60, // clamped from 90
         formulaBaseSeconds: formulaBase,
       });
       expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining('clamped'));
       warnSpy.mockRestore();
     });
 
-    it('applies -30s rest delta', () => {
+    it('-30s delta still appears in llmRestSuggestion; per-set rest unchanged', () => {
       const output = applyAdjustment(
         baseAdj({ restAdjustments: { mainLift: -30 } }),
         baseInput()
@@ -113,7 +116,7 @@ describe('applyAdjustment', () => {
 
       const formulaBase = DEFAULT_FORMULA_CONFIG_MALE.rest_seconds.block1.heavy;
       output.restRecommendations.mainLift.forEach((r) => {
-        expect(r).toBe(formulaBase - 30);
+        expect(r).toBe(formulaBase);
       });
       expect(output.llmRestSuggestion).toEqual({
         deltaSeconds: -30,
@@ -203,6 +206,36 @@ describe('applyAdjustment', () => {
       // Deload: aux gets 3 sets at full weight regardless of main cut
       output.auxiliaryWork.forEach((a) => {
         expect(a.sets).toHaveLength(3);
+      });
+    });
+  });
+
+  describe('LLM aux honours severe soreness (finding #17)', () => {
+    it('skips all aux when worstSoreness >= 9', () => {
+      const output = applyAdjustment(
+        baseAdj(),
+        baseInput({
+          sorenessRatings: { quads: 9 },
+        })
+      );
+      // Every aux should be marked skipped with the severe-soreness reason
+      expect(output.auxiliaryWork.length).toBeGreaterThan(0);
+      output.auxiliaryWork.forEach((a) => {
+        expect(a.skipped).toBe(true);
+        expect(a.skipReason).toContain('Severe soreness');
+      });
+    });
+
+    it('does not skip when worstSoreness is 7 (moderate)', () => {
+      const output = applyAdjustment(
+        baseAdj(),
+        baseInput({
+          sorenessRatings: { quads: 7 },
+        })
+      );
+      // 7/10 is below the skip threshold (9); aux still runs
+      output.auxiliaryWork.forEach((a) => {
+        expect(a.skipped).toBe(false);
       });
     });
   });

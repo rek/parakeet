@@ -21,6 +21,12 @@ export function applyVolumeCalibration(
   // Skip calibration if already in recovery mode or main lift skipped
   if (ctx.inRecoveryMode || ctx.skippedMainLift) return;
 
+  // Finding #12: deload sessions are intentional recovery weeks; adaptive
+  // calibration must not add or remove sets from a deload prescription.
+  // Without this, recent over-target RPE on heavy weeks would still trigger
+  // a -1 set on the deload, defeating the recovery intent.
+  if (input.intensityType === 'deload') return;
+
   // Rehab Mode (GH#220): no adaptive volume changes while a cap is active.
   // The lifter has set a deliberate ceiling; adding sets to "use more capacity"
   // would undo the rehab intent.
@@ -88,13 +94,13 @@ export function applyVolumeCalibration(
 
   // --- Signal 7: Progressive volume within block ---
   // If we're in week 2-3 of a block and RPE has been consistently low,
-  // progressively increase. Deload weeks (blockNumber cycling) reset.
+  // progressively increase. Deload weeks were handled by the early-return
+  // above (finding #12), so intensityType here is non-deload.
   let progressiveBoost = 0;
   const weekInBlock =
     input.weekNumber > 0 ? ((input.weekNumber - 1) % 3) + 1 : 1;
-  const isDeload = input.intensityType === 'deload';
 
-  if (!isDeload && weekInBlock >= 2 && avgRpeGap >= 0.5 && !sorenessHigh) {
+  if (weekInBlock >= 2 && avgRpeGap >= 0.5 && !sorenessHigh) {
     progressiveBoost = weekInBlock >= 3 ? 2 : 1;
     reasons.push(
       `Week ${weekInBlock} of block, RPE trend favorable — +${progressiveBoost} progressive`

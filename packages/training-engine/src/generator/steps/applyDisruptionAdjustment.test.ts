@@ -57,7 +57,7 @@ describe('applyDisruptionAdjustment', () => {
   });
 
   describe('non-deload sessions', () => {
-    it('moderate disruption — reduces sets and intensity', () => {
+    it('moderate disruption — reduces sets and intensity to off-pipeline reduction_pct', () => {
       const input = baseInput({
         intensityType: 'heavy',
         activeDisruptions: [makeDisruption('moderate')],
@@ -68,7 +68,65 @@ describe('applyDisruptionAdjustment', () => {
       applyDisruptionAdjustment(ctx, input);
 
       expect(ctx.plannedCount).toBeLessThan(plannedBefore);
-      expect(ctx.intensityMultiplier).toBeLessThanOrEqual(0.9);
+      // Moderate injury → 40% reduction in the canonical adjuster
+      // (see disruption-adjuster.ts) → multiplier 0.6.
+      expect(ctx.intensityMultiplier).toBeCloseTo(0.6, 5);
+    });
+
+    it('engine moderate-injury multiplier matches suggestDisruptionAdjustment reduction_pct', () => {
+      // Regression guard: the engine pipeline step must agree with the
+      // canonical off-pipeline adjuster. Previously the engine hard-coded
+      // 0.9 (10% cut) while the user-facing preview said 40%.
+      const input = baseInput({
+        intensityType: 'heavy',
+        activeDisruptions: [makeDisruption('moderate')],
+      });
+      const ctx = initPipeline(input);
+
+      applyDisruptionAdjustment(ctx, input);
+
+      // 40% reduction → 0.6 multiplier
+      expect(ctx.intensityMultiplier).toBeCloseTo(0.6, 5);
+    });
+
+    it('equipment_unavailable (no weight_reduced suggestion) — rationale only, no intensity cut', () => {
+      // The canonical adjuster returns `exercise_substituted`, not
+      // `weight_reduced`, for equipment_unavailable. The engine must not
+      // silently apply a default intensity reduction in this case.
+      const input = baseInput({
+        intensityType: 'heavy',
+        activeDisruptions: [
+          {
+            ...makeDisruption('moderate'),
+            disruption_type: 'equipment_unavailable',
+          },
+        ],
+      });
+      const ctx = initPipeline(input);
+      const intensityBefore = ctx.intensityMultiplier;
+
+      applyDisruptionAdjustment(ctx, input);
+
+      expect(ctx.intensityMultiplier).toBe(intensityBefore);
+      expect(
+        ctx.rationale.some((r) => r.includes('equipment_unavailable'))
+      ).toBe(true);
+    });
+
+    it('minor injury — applies 20% reduction matching adjuster', () => {
+      const input = baseInput({
+        intensityType: 'heavy',
+        activeDisruptions: [makeDisruption('minor')],
+      });
+      const ctx = initPipeline(input);
+      const plannedBefore = ctx.plannedCount;
+
+      applyDisruptionAdjustment(ctx, input);
+
+      // Minor injury → 20% reduction → 0.8 multiplier
+      expect(ctx.intensityMultiplier).toBeCloseTo(0.8, 5);
+      // Set count unchanged for minor (no halving)
+      expect(ctx.plannedCount).toBe(plannedBefore);
     });
 
     it('major disruption — skips main lift', () => {

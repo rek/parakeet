@@ -3,7 +3,7 @@ import {
   effectiveIncrementKg,
   roundToNearest,
 } from '../formulas/weight-rounding';
-import { getMusclesForLift } from '../volume/muscle-mapper';
+import { createMuscleMapper } from '../volume/muscle-mapper';
 import type { JITInput, JITOutput } from './jit-session-generator';
 import { applyRehabClamp } from './rehab-clamp';
 import { calculateSets } from './set-calculator';
@@ -25,7 +25,11 @@ export function enforceHardConstraints(
   // MRV cap — non-negotiable
   if (!skippedMainLift) {
     const primaryMuscles = getPrimaryMusclesForSession(input.primaryLift);
-    const liftMuscles = getMusclesForLift(input.primaryLift);
+    // Route through the user-aware mapper for consistency with the rest of
+    // the pipeline. For the primary-lift (no `exercise`) path this returns
+    // the catalog contributions unchanged.
+    const muscleMapper = createMuscleMapper(input.customMuscleMap);
+    const liftMuscles = muscleMapper(input.primaryLift);
     for (const { muscle } of liftMuscles) {
       if (!primaryMuscles.includes(muscle)) continue;
       const weeklyVol = input.weeklyVolumeToDate[muscle] ?? 0;

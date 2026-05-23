@@ -256,4 +256,26 @@ describe('resolveEffectiveWarmupProtocol', () => {
     });
     expect(result).toEqual(extended);
   });
+
+  it('undefined warmupConfig defaults to standard for males (finding #14)', () => {
+    const result = resolveEffectiveWarmupProtocol({
+      workingWeightKg: 100,
+      warmupConfig: undefined,
+      primaryLift: 'squat',
+      sorenessRatings: {},
+      biologicalSex: 'male',
+    });
+    expect(result).toEqual({ type: 'preset', name: 'standard' });
+  });
+
+  it('undefined warmupConfig defaults to standard_female for females (finding #14)', () => {
+    const result = resolveEffectiveWarmupProtocol({
+      workingWeightKg: 100,
+      warmupConfig: undefined,
+      primaryLift: 'squat',
+      sorenessRatings: {},
+      biologicalSex: 'female',
+    });
+    expect(result).toEqual({ type: 'preset', name: 'standard_female' });
+  });
 });

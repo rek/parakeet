@@ -7,6 +7,10 @@ import { reportEngineError } from '../ai/error-reporter';
 import { getJITModel } from '../ai/models';
 import { JIT_SYSTEM_PROMPT } from '../ai/prompts';
 import { computeAuxWeight } from '../auxiliary/exercise-catalog';
+import {
+  getPrimaryMusclesForSession,
+  getWorstSoreness,
+} from '../adjustments/soreness-adjuster';
 import { createExerciseTyper } from '../auxiliary/exercise-types';
 import {
   effectiveIncrementKg,
@@ -79,7 +83,10 @@ export class LLMJITGenerator implements JITGeneratorStrategy {
 }
 
 function buildJITContext(input: JITInput): object {
-  // Omit warmupConfig — always formula-generated; LLM cannot override warmup
+  // Omit warmupConfig — always formula-generated; LLM cannot override warmup.
+  // userAge is included via `...rest`; the JIT_SYSTEM_PROMPT now references
+  // it as a recovery-rate signal (finding #9). Engine consumer remains dead
+  // — we are not adding hard-coded age thresholds.
   const { warmupConfig: _warmup, ...rest } = input;
 
   // Drop rehab-tagged history (GH#220) — pain-ambiguous RPE from capped work
@@ -168,6 +175,15 @@ export function applyAdjustment(
     adj.auxOverrides.map((o) => [o.exercise, o.action])
   );
   const exerciseTyper = createExerciseTyper(input.customExerciseTypeMap);
+  // Finding #17: the LLM strategy ignores soreness signal for aux. Apply the
+  // engine's worst-soreness rule (≥9 → skip aux entirely) so a lifter with
+  // severe DOMS doesn't get LLM-prescribed aux through the back door. We
+  // don't override the LLM's exercise choice or set count beyond this rule.
+  const primaryMusclesForSession = getPrimaryMusclesForSession(input.primaryLift);
+  const worstSoreness = getWorstSoreness(
+    primaryMusclesForSession,
+    input.sorenessRatings
+  );
   const auxiliaryWork: AuxiliaryWork[] = input.activeAuxiliaries.map(
     (exercise) => {
       const exerciseType = exerciseTyper(exercise);
@@ -183,6 +199,17 @@ export function applyAdjustment(
             propagatePenalties && skippedMainLift
               ? 'Main lift skipped — auxiliary suppressed'
               : 'LLM: skip override',
+        };
+      }
+
+      // Soreness ≥ 9 (severe): skip aux entirely — matches processAuxExercise.
+      if (worstSoreness >= 9) {
+        return {
+          exercise,
+          exerciseType,
+          sets: [],
+          skipped: true,
+          skipReason: 'Severe soreness — auxiliary exercise skipped',
         };
       }
 
@@ -293,6 +320,12 @@ export function applyAdjustment(
   // Schema is nullable (not optional) for OpenAI strict-JSON-schema compat:
   // model emits `restAdjustments: null` (or `mainLift: null`) when there's
   // nothing to adjust. Treat null and missing the same way.
+  //
+  // Finding #18: choose option A (advisory-only). The per-set
+  // restRecommendations.mainLift now stays at the formula default; the LLM's
+  // delta lives only on `llmRestSuggestion` for the chip to opt-in apply.
+  // This prevents the LLM silently rewriting per-set rest behind the user's
+  // back when they never tapped the chip's accept button.
   const formulaBase = formulaRestForMain(input);
   const rawDelta = adj.restAdjustments?.mainLift ?? 0;
   const clampedDelta = Math.max(-60, Math.min(60, rawDelta));
@@ -303,9 +336,11 @@ export function applyAdjustment(
     );
   }
 
-  const mainLiftRest = formulaBase + clampedDelta;
+  // TODO: wire chip accept to update restRecommendations
+  // (the chip's accept handler should set restRecommendations.mainLift to
+  // formulaBase + clampedDelta when the user taps "Use AI suggestion").
   const restRecommendations = {
-    mainLift: mainLiftSets.map(() => mainLiftRest),
+    mainLift: mainLiftSets.map(() => formulaBase),
     auxiliary: auxiliaryWork.map(
       () => input.formulaConfig.rest_seconds.auxiliary
     ),

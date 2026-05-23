@@ -87,13 +87,21 @@ const LOW_WEIGHT_WARMUP_THRESHOLD_KG = 40;
  */
 export function resolveEffectiveWarmupProtocol(opts: {
   workingWeightKg: number;
-  warmupConfig: WarmupProtocol;
+  warmupConfig?: WarmupProtocol;
   warmupConfigExplicit?: boolean;
   primaryLift: Lift;
   sorenessRatings: Partial<Record<MuscleGroup, SorenessLevel>>;
   biologicalSex?: 'female' | 'male';
 }): WarmupProtocol {
-  if (opts.warmupConfigExplicit) return opts.warmupConfig;
+  // Finding #14: callers occasionally pass `warmupConfig: undefined` (e.g.
+  // partial JIT inputs in tests or fallback paths). Default to the
+  // sex-appropriate standard preset so we never crash on `opts.warmupConfig.type`.
+  const warmupConfig: WarmupProtocol = opts.warmupConfig ?? {
+    type: 'preset',
+    name: opts.biologicalSex === 'female' ? 'standard_female' : 'standard',
+  };
+
+  if (opts.warmupConfigExplicit) return warmupConfig;
 
   const primaryMuscles = getPrimaryMusclesForSession(opts.primaryLift);
   const worstSoreness = getWorstSoreness(primaryMuscles, opts.sorenessRatings);
@@ -105,7 +113,7 @@ export function resolveEffectiveWarmupProtocol(opts: {
   if (isRecoveryMode || opts.workingWeightKg < LOW_WEIGHT_WARMUP_THRESHOLD_KG) {
     return { type: 'preset', name: 'minimal' };
   }
-  return opts.warmupConfig;
+  return warmupConfig;
 }
 
 export function generateWarmupSets(

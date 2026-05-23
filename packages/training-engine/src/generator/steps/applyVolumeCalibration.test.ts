@@ -126,6 +126,20 @@ describe('applyVolumeCalibration', () => {
     expect(ctx.baseSets.length).toBeGreaterThan(beforeSets);
   });
 
+  it('skips calibration entirely on deload weeks (finding #12)', () => {
+    // Recent over-target RPE would normally trigger -1 set. On a deload
+    // week the prescription is already at recovery loading and must not
+    // be further reduced (or boosted).
+    const input = baseInput({
+      intensityType: 'deload',
+      recentLogs: makeRecentLogs(3, -1.5),
+    });
+    const ctx = initPipeline(input);
+    const before = ctx.plannedCount;
+    applyVolumeCalibration(ctx, input);
+    expect(ctx.plannedCount).toBe(before);
+  });
+
   it('skips calibration in recovery mode', () => {
     const input = baseInput({
       recentLogs: makeRecentLogs(3, 2.0),

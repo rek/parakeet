@@ -366,6 +366,13 @@ export function generateJITSession(
   // Step 1 — Initialize pipeline context (base sets, primary muscles, soreness)
   const ctx = initPipeline(input, traceBuilder);
 
+  // Capture the formula-derived base set count BEFORE Step 0 mutates it.
+  // Finding #11: volumeModifier/auxVolumeRatio compare final sets against
+  // the FORMULA baseline so penalty propagation reflects the true reduction
+  // — not the post-calibration baseline (which already absorbed +N sets from
+  // adaptive volume).
+  const formulaBaseSetsCount = ctx.baseSets.length;
+
   // Step 0 — Adaptive volume calibration (can increase or decrease base set count)
   applyVolumeCalibration(ctx, input, traceBuilder);
 
@@ -382,7 +389,7 @@ export function generateJITSession(
   const mainLiftSets = buildFinalMainSets(ctx, input, traceBuilder);
 
   const volumeModifier =
-    ctx.baseSets.length > 0 ? mainLiftSets.length / ctx.baseSets.length : 1.0;
+    formulaBaseSetsCount > 0 ? mainLiftSets.length / formulaBaseSetsCount : 1.0;
   const intensityModifier = ctx.inRecoveryMode ? 0.4 : ctx.intensityMultiplier;
 
   // Step 6 — Auxiliary work
@@ -401,8 +408,8 @@ export function generateJITSession(
   const auxVolumeRatio =
     isDeload || hasEquipmentDisruption
       ? 1
-      : ctx.baseSetsCount > 0
-        ? ctx.plannedCount / ctx.baseSetsCount
+      : formulaBaseSetsCount > 0
+        ? ctx.plannedCount / formulaBaseSetsCount
         : 1;
   const auxIntensityRatio =
     isDeload || hasEquipmentDisruption ? 1 : ctx.intensityMultiplier;
@@ -812,6 +819,11 @@ export function buildVolumeTopUp(
   const patternsUsed: MovementPattern[] = [];
   const muscleDeficits: Partial<Record<MuscleGroup, number>> =
     Object.fromEntries(candidates.map((c) => [c.muscle, c.deficit]));
+  // Finding #16: track sets already booked by previous top-up iterations
+  // against EACH muscle (including overlapping contributions ≥ 1.0). The
+  // per-iteration remainingMrv calc must include this so two top-ups that
+  // hit overlapping muscles don't double-book the same MRV headroom.
+  const topUpVolumeByMuscle: Partial<Record<MuscleGroup, number>> = {};
 
   // Pre-compute lift exclusion sets (loop-invariant — depends only on function params)
   const upcomingLiftSet = upcomingLifts?.length
@@ -864,8 +876,21 @@ export function buildVolumeTopUp(
 
     const exerciseType = exerciseTyper(exercise);
     const remainingMrv =
-      mrvMevConfig[muscle].mrv - (weeklyVolumeToDate[muscle] ?? 0);
+      mrvMevConfig[muscle].mrv -
+      (weeklyVolumeToDate[muscle] ?? 0) -
+      (topUpVolumeByMuscle[muscle] ?? 0);
     const setCount = Math.max(1, Math.min(3, deficit, remainingMrv));
+
+    // Book this top-up's contribution against ALL muscles it hits (≥ 1.0).
+    // Without this, two top-ups targeting overlapping muscles (e.g. both
+    // contribute 1.0 to upper_back) would each see the unmodified
+    // weeklyVolumeToDate and double-book MRV headroom.
+    const exerciseMuscles = muscleMapper(null, exercise);
+    for (const { muscle: m, contribution } of exerciseMuscles) {
+      if (contribution >= 1.0) {
+        topUpVolumeByMuscle[m] = (topUpVolumeByMuscle[m] ?? 0) + setCount;
+      }
+    }
 
     const baseReps = biologicalSex === 'female' ? 12 : 10;
     const reps = getRepTarget(exercise, baseReps);

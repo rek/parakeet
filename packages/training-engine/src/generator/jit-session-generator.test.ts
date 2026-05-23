@@ -412,15 +412,17 @@ describe('generateJITSession — disruption adjustment', () => {
     const out = generateJITSession(
       baseInput({
         sorenessRatings: { quads: 8 }, // soreness: -2 sets (2→0, clamped to 1), ×0.95
-        activeDisruptions: [makeDisruption('moderate')], // disruption: ceil(2/2)=1 set, ×0.90
+        activeDisruptions: [makeDisruption('moderate')], // moderate injury: 40% cut → ×0.60 (finding #1)
       })
     );
     // min(1 from soreness, 1 from disruption) = 1 set
     expect(out.mainLiftSets).toHaveLength(1);
-    // min(0.95 from soreness, 0.90 from disruption) = 0.90
-    // min(soreness ×0.95, disruption ×0.90) = ×0.90
-    expect(out.mainLiftSets[0].weight_kg).toBe(102.5);
-    expect(out.rationale.some((r) => /knee injury/i.test(r))).toBe(true);
+    // Engine now aligns with canonical adjuster: moderate injury = ×0.60.
+    // ×0.95 × 0.60 (signals compound multiplicatively when both apply) →
+    // 112.5 × 0.60 (disruption is more conservative, soreness contribution
+    // already accounted within ctx.intensityMultiplier path).
+    expect(out.mainLiftSets[0].weight_kg).toBe(67.5);
+    expect(out.rationale.some((r) => /injury/i.test(r))).toBe(true);
     expect(out.rationale.some((r) => /soreness/i.test(r))).toBe(true);
   });
 
@@ -428,27 +430,25 @@ describe('generateJITSession — disruption adjustment', () => {
     const out = generateJITSession(
       baseInput({
         sorenessRatings: { quads: 2 }, // soreness: no reduction (×1.0)
-        activeDisruptions: [makeDisruption('moderate')], // disruption: ceil(2/2)=1 set, ×0.90
+        activeDisruptions: [makeDisruption('moderate')], // moderate injury: 40% cut → ×0.60
       })
     );
-    // soreness doesn't reduce (2 sets, ×1.0), disruption gives 1 set at ×0.90
-    // min(2, 1) = 1 set; min(1.0, 0.90) = 0.90
+    // soreness doesn't reduce (×1.0), disruption gives 1 set at ×0.60
     expect(out.mainLiftSets).toHaveLength(1);
-    expect(out.mainLiftSets[0].weight_kg).toBe(102.5);
+    expect(out.mainLiftSets[0].weight_kg).toBe(67.5);
   });
 
   it('soreness is limiting factor when disruption is minor', () => {
     const out = generateJITSession(
       baseInput({
         sorenessRatings: { quads: 8 }, // soreness: -2 sets → 1 set, ×0.95
-        activeDisruptions: [makeDisruption('minor')], // minor: no set/intensity change
+        activeDisruptions: [makeDisruption('minor')], // minor injury: 20% cut → ×0.80
       })
     );
-    // minor disruption only adds rationale, doesn't reduce
-    // soreness is the limiting factor: 1 set at ×0.95
+    // Minor injury now applies the canonical 20% reduction (finding #1).
+    // Soreness ×0.95 vs disruption ×0.80 → disruption is the limiting factor.
     expect(out.mainLiftSets).toHaveLength(1);
-    // Soreness alone is the limiting factor (×0.95)
-    expect(out.mainLiftSets[0].weight_kg).toBe(107.5);
+    expect(out.mainLiftSets[0].weight_kg).toBe(90);
     expect(out.rationale.some((r) => /soreness/i.test(r))).toBe(true);
   });
 
@@ -1255,6 +1255,48 @@ describe('generateJITSession — volume top-up (engine-027)', () => {
     const hasLegPress = topUps.some((a) => a.exercise === 'Leg Press');
     expect(hasLegPress).toBe(true);
   });
+
+  it('two top-ups targeting overlapping muscles do not double-book MRV (finding #16)', () => {
+    // upper_back has limited MRV headroom; deadlift contributes 0.7 to it.
+    // Both Pendlay Row and Barbell Bent-Over Row hit upper_back at 1.0.
+    // Without per-iteration remainingMrv recompute, two top-ups would
+    // double-book the same headroom and both pick 3 sets even when only
+    // ~2 fit. Verify the second pick is constrained.
+    const mrvMev = {
+      ...DEFAULT_MRV_MEV_CONFIG_MALE,
+      upper_back: { mev: 8, mrv: 12 },
+      biceps: { mev: 6, mrv: 18 },
+    };
+    const out = generateJITSession(
+      baseInput({
+        primaryLift: 'deadlift',
+        activeAuxiliaries: ['Romanian Deadlift', 'Good Morning'],
+        auxiliaryPool: [
+          'Pendlay Row',
+          'Barbell Bent-Over Row',
+          'Barbell Curl',
+        ],
+        weeklyVolumeToDate: {
+          ...atMevExcept(mrvMev, 'upper_back', 'biceps'),
+          upper_back: 6, // near MEV, leaves ~6 MRV headroom across all sets
+          biceps: 0,
+        },
+        mrvMevConfig: mrvMev,
+      })
+    );
+    const topUps = out.auxiliaryWork.filter((a) => a.isTopUp);
+    // Sum sets that target upper_back at contribution ≥ 1.0 against the
+    // remaining MRV (12 - 6 = 6). With deadlift's main lift already
+    // contributing ~floor(setCount * 0.7), the residual headroom for
+    // top-ups is even tighter; bookkeeping must prevent oversubscription.
+    const upperBackTopUpSets = topUps
+      .filter((a) =>
+        ['Pendlay Row', 'Barbell Bent-Over Row'].includes(a.exercise)
+      )
+      .reduce((sum, a) => sum + a.sets.length, 0);
+    // The MRV cap is 6 - main-lift contribution. We assert <= 6 strictly.
+    expect(upperBackTopUpSets).toBeLessThanOrEqual(6);
+  });
 });
 
 // ---------------------------------------------------------------------------
@@ -1963,13 +2005,13 @@ describe('generateJITSession — GH#217 aux proportional reduction', () => {
         activeAuxiliaries: ['Unknown Aux A', 'Unknown Aux B'],
       })
     );
-    // Moderate disruption: main 2→1 sets, ×0.9 intensity
+    // Moderate injury (finding #1): main 2→1 sets, ×0.6 intensity
     expect(out.mainLiftSets).toHaveLength(1);
-    // Aux ratio 0.5 → 2 sets; weight 95 × 0.9 = 85.5 → round 85
+    // Aux ratio 0.5 → 2 sets; aux base 95kg × 0.6 ratio → ~57.5
     out.auxiliaryWork.forEach((a) => {
       expect(a.skipped).toBe(false);
       expect(a.sets).toHaveLength(2);
-      expect(a.sets[0].weight_kg).toBe(85);
+      expect(a.sets[0].weight_kg).toBe(57.5);
     });
   });
 

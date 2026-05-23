@@ -132,22 +132,22 @@ describe('Rehab Mode — suppression of adaptive steps', () => {
 
 describe('Rehab Mode — stacking with other modifiers', () => {
   it('moderate disruption intensity reduction stacks under the cap', () => {
-    // Moderate disruption applies intensityMultiplier ≤ 0.9. With cap 100 and
-    // squat formula ~112.5 → 112.5 × 0.9 = ~101.25 → still rounds above cap.
-    // Final = 100 (cap wins).
+    // Moderate injury now applies ×0.60 (finding #1). With formula ~112.5 →
+    // 112.5 × 0.6 = 67.5. Set cap below 67.5 so the cap is the binding
+    // constraint, confirming Rehab still wins when the disruption alone
+    // would land above the cap.
     const out = generateJITSession(
       baseInput({
-        activeRehabCap: rehabCap({ capKg: 100 }),
+        activeRehabCap: rehabCap({ capKg: 60 }),
         activeDisruptions: [makeDisruption('moderate', 'squat')],
       })
     );
-    expect(out.mainLiftSets[0].weight_kg).toBe(100);
+    expect(out.mainLiftSets[0].weight_kg).toBe(60);
     expect(out.cappedByRehab).toBe(true);
   });
 
   it('moderate disruption can reduce below the cap (cap does not fire)', () => {
-    // Bigger cap so the moderate-disruption-reduced weight lands below it.
-    // 112.5 × 0.9 = 101.25 → rounds to 100. Cap = 110 → cap doesn\'t bite.
+    // Moderate injury ×0.60 → 67.5kg. Cap = 110 → cap doesn't bite.
     const out = generateJITSession(
       baseInput({
         activeRehabCap: rehabCap({ capKg: 110 }),
