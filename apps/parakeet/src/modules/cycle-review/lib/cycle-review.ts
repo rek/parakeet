@@ -19,8 +19,8 @@ import {
   fetchPreviousCycleReviewRows,
   insertCycleReviewRow,
   insertDeveloperSuggestion,
-  insertFormulaSuggestionConfig,
   insertPendingCycleReviewRow,
+  markCycleReviewErrored,
 } from '../data/cycle-review.repository';
 
 export async function getCycleReview(programId: string, userId: string) {
@@ -44,18 +44,31 @@ export async function triggerCycleReview(
   const existing = await getCycleReview(programId, userId);
   if (existing?.status === 'complete') return existing.review!;
 
-  // Mark pending before LLM so UI can offer retry if this fails.
+  // Mark pending (idempotent upsert) before LLM so UI can offer retry if this fails.
   await markCycleReviewPending(programId, userId);
 
-  const report = await compileCycleReport(programId, userId);
-  const previousSummaries = await getPreviousCycleSummaries(
-    userId,
-    programId,
-    3
-  );
-  const review = await generateCycleReview(report, previousSummaries);
-  await storeCycleReview(programId, userId, report, review);
-  return review;
+  try {
+    const report = await compileCycleReport(programId, userId);
+    const previousSummaries = await getPreviousCycleSummaries(
+      userId,
+      programId,
+      3
+    );
+    const review = await generateCycleReview(report, previousSummaries);
+    await storeCycleReview(programId, userId, report, review);
+    return review;
+  } catch (err) {
+    // Flip the pending row to 'error' so the UI can stop polling and surface
+    // a retry button immediately rather than spinning indefinitely.
+    const errorMessage =
+      err instanceof Error ? err.message : 'Unknown generation error';
+    try {
+      await markCycleReviewErrored({ programId, userId, errorMessage });
+    } catch {
+      // Best-effort — the original error is the one the caller needs.
+    }
+    throw err;
+  }
 }
 
 export async function compileCycleReport(
@@ -110,22 +123,24 @@ export async function storeCycleReview(
   // generation attempts (onCycleComplete + manual retry) share the same guard.
   if (!inserted) return;
 
-  for (const suggestion of llmResponse.formulaSuggestions ?? []) {
-    await insertFormulaSuggestionConfig({
-      userId,
-      source: 'ai_suggestion',
-      overrides: {},
-      aiRationale: `${suggestion.description} — ${suggestion.rationale}`,
-    });
-  }
+  // formulaSuggestions are advisory-only. The previous code inserted an empty
+  // `overrides: {}` row into `formula_configs` which had no effect — silent
+  // no-op. The editor's Accept button is being reworked elsewhere to navigate-
+  // and-prefill instead of apply, so the insert is removed entirely.
 
-  for (const suggestion of llmResponse.structuralSuggestions ?? []) {
+  // Developer suggestions: idempotent on (cycle_review_id, suggestion_index)
+  // via the unique partial index added in 20260523010000_cycle_review_error_state.sql.
+  // Retries after a partial failure simply overwrite the same row.
+  const suggestions = llmResponse.structuralSuggestions ?? [];
+  for (let i = 0; i < suggestions.length; i++) {
+    const suggestion = suggestions[i];
     await insertDeveloperSuggestion({
       userId,
       programId,
       description: suggestion.description,
       rationale: suggestion.rationale,
       developerNote: suggestion.developerNote,
+      suggestionIndex: i,
     });
   }
 }

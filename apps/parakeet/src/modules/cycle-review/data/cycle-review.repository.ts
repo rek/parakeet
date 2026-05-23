@@ -14,12 +14,23 @@ export function subscribeToCycleReviewInserts(
   programId: string,
   onInsert: () => void
 ): () => void {
+  // Listen to '*' (INSERT + UPDATE + DELETE). The completion path is an UPDATE
+  // (the pending row was inserted up-front by markCycleReviewPending), so
+  // filtering on INSERT alone silently missed the completion event and the
+  // screen stayed in its loading state until the next polling refetch.
+  //
+  // NOTE: the Supabase Realtime publication must include UPDATEs for
+  // public.cycle_reviews. The default `supabase_realtime` publication created
+  // by `supabase db reset` includes all DML on all tables, but a hand-rolled
+  // publication that lists only `INSERT` will silently swallow these events.
+  // If realtime updates don't arrive, verify with:
+  //   SELECT pubinsert, pubupdate, pubdelete FROM pg_publication WHERE pubname = 'supabase_realtime';
   const channel = typedSupabase
     .channel(`cycle-review-${programId}`)
     .on(
       'postgres_changes',
       {
-        event: 'INSERT',
+        event: '*',
         schema: 'public',
         table: 'cycle_reviews',
         filter: `program_id=eq.${programId}`,
@@ -36,18 +47,28 @@ export function subscribeToCycleReviewInserts(
 export async function fetchCycleReviewByProgram(
   programId: string,
   userId: string
-): Promise<{ status: 'pending' | 'complete'; review: CycleReview | null } | null> {
+): Promise<{
+  status: 'pending' | 'complete' | 'error';
+  review: CycleReview | null;
+  errorMessage: string | null;
+} | null> {
   const { data, error } = await typedSupabase
     .from('cycle_reviews')
-    .select('generation_status, llm_response')
+    .select('generation_status, llm_response, error_message')
     .eq('program_id', programId)
     .eq('user_id', userId)
     .maybeSingle();
 
   if (error) throw error;
   if (!data) return null;
-  const status = data.generation_status === 'pending' ? 'pending' : 'complete';
-  return { status, review: data.llm_response ? fromJson<CycleReview>(data.llm_response) : null };
+  const raw = data.generation_status;
+  const status: 'pending' | 'complete' | 'error' =
+    raw === 'pending' ? 'pending' : raw === 'error' ? 'error' : 'complete';
+  return {
+    status,
+    review: data.llm_response ? fromJson<CycleReview>(data.llm_response) : null,
+    errorMessage: data.error_message ?? null,
+  };
 }
 
 export async function insertPendingCycleReviewRow({
@@ -57,13 +78,42 @@ export async function insertPendingCycleReviewRow({
   programId: string;
   userId: string;
 }): Promise<void> {
+  // Upsert so retries from an 'error' row reset back to 'pending' without
+  // tripping the unique (user_id, program_id) constraint. Existing 'complete'
+  // rows are protected by triggerCycleReview's guard (returns early).
   const { error } = await typedSupabase
     .from('cycle_reviews')
-    .insert({ program_id: programId, user_id: userId, generation_status: 'pending' })
-    .select()
-    .maybeSingle();
-  // Ignore conflict (row already exists in any state); only write if no row yet.
-  if (error && error.code !== '23505') throw error;
+    .upsert(
+      {
+        program_id: programId,
+        user_id: userId,
+        generation_status: 'pending',
+        error_message: null,
+      },
+      { onConflict: 'user_id,program_id' }
+    );
+  if (error) throw error;
+}
+
+export async function markCycleReviewErrored({
+  programId,
+  userId,
+  errorMessage,
+}: {
+  programId: string;
+  userId: string;
+  errorMessage: string;
+}): Promise<void> {
+  const { error } = await typedSupabase
+    .from('cycle_reviews')
+    .update({
+      generation_status: 'error',
+      error_message: errorMessage.slice(0, 500),
+    })
+    .eq('program_id', programId)
+    .eq('user_id', userId)
+    .eq('generation_status', 'pending');
+  if (error) throw error;
 }
 
 export async function fetchCycleReportSourceData(
@@ -82,7 +132,7 @@ export async function fetchCycleReportSourceData(
   ] = await Promise.all([
     typedSupabase
       .from('programs')
-      .select('id, total_weeks, start_date, status')
+      .select('id, total_weeks, start_date, status, training_days_per_week')
       .eq('id', programId)
       .eq('user_id', userId)
       .single(),
@@ -216,9 +266,12 @@ export async function fetchCycleReportSourceData(
   return {
     program: {
       id: programResult.data.id,
-      total_weeks: programResult.data.total_weeks ?? 0,
+      // Pass `null` straight through for unending programs — the cycle report
+      // assembler distinguishes null/0/undefined from a real week count.
+      total_weeks: programResult.data.total_weeks ?? null,
       start_date: programResult.data.start_date,
       status: programResult.data.status,
+      training_days_per_week: programResult.data.training_days_per_week ?? null,
     },
     sessions,
     sessionLogs: sessionLogs,
@@ -309,35 +362,51 @@ export async function insertCycleReviewRow(input: {
   return data !== null;
 }
 
-export async function insertFormulaSuggestionConfig(input: {
-  userId: string;
-  source: string;
-  overrides: Record<string, unknown>;
-  aiRationale: string;
-}): Promise<void> {
-  const { error } = await typedSupabase.from('formula_configs').insert({
-    user_id: input.userId,
-    is_active: false,
-    source: input.source,
-    overrides: toJson(input.overrides),
-    ai_rationale: input.aiRationale,
-  });
-  if (error) throw error;
-}
-
 export async function insertDeveloperSuggestion(input: {
   userId: string;
   programId: string;
   description: string;
   rationale: string;
   developerNote?: string;
+  /**
+   * Stable index within the cycle review's structuralSuggestions array.
+   * Used by the (cycle_review_id, suggestion_index) unique partial index to
+   * make partial-retry inserts idempotent. See migration
+   * 20260523010000_cycle_review_error_state.sql.
+   */
+  suggestionIndex?: number;
 }): Promise<void> {
-  const { error } = await typedSupabase.from('developer_suggestions').insert({
+  // Look up cycle_review_id so suggestion_index has something to pair with.
+  // Failure to find one (legacy callers) falls back to a plain insert.
+  const { data: reviewRow } = await typedSupabase
+    .from('cycle_reviews')
+    .select('id')
+    .eq('user_id', input.userId)
+    .eq('program_id', input.programId)
+    .maybeSingle();
+
+  // Cast through unknown — generated Supabase types lag the migration that
+  // adds cycle_review_id + suggestion_index columns. Migration ships in
+  // supabase/migrations/20260523010000_cycle_review_error_state.sql.
+  const payload: Record<string, unknown> = {
     user_id: input.userId,
     program_id: input.programId,
     description: input.description,
     rationale: input.rationale,
     developer_note: input.developerNote ?? '',
-  });
+  };
+  if (reviewRow?.id) payload.cycle_review_id = reviewRow.id;
+  if (input.suggestionIndex !== undefined)
+    payload.suggestion_index = input.suggestionIndex;
+
+  // Upsert on (cycle_review_id, suggestion_index). If the partial unique index
+  // doesn't exist yet (pre-migration), this still inserts a new row.
+  const { error } = await typedSupabase
+    .from('developer_suggestions')
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    .upsert(payload as any, {
+      onConflict: 'cycle_review_id,suggestion_index',
+      ignoreDuplicates: false,
+    });
   if (error) throw error;
 }

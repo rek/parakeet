@@ -12,7 +12,12 @@ import {
 } from '../application/cycle-review.service';
 import { cycleReviewQueries } from '../data/cycle-review.queries';
 
-const RETRY_SHOW_DELAY_MS = 60_000;
+// When a pending row exists in the DB the LLM call is presumed in-flight —
+// give it a full 60s before showing retry. When no row exists at all, the
+// auto-trigger has likely not fired (or failed), so the user shouldn't have
+// to wait the full 60s before being able to manually generate.
+const RETRY_SHOW_DELAY_PENDING_MS = 60_000;
+const RETRY_SHOW_DELAY_NO_ROW_MS = 25_000;
 const MAX_RETRY_ATTEMPTS = 3;
 
 export function useCycleReview(programId: string) {
@@ -23,9 +28,14 @@ export function useCycleReview(programId: string) {
 
   const query = useQuery({
     ...cycleReviewQueries.byProgram(programId, user?.id),
-    // Poll every 10s until complete review arrives. Keep polling if pending (may still be generating).
+    // Poll every 10s until complete or errored. 'error' rows are terminal so
+    // we stop polling and let the user retry manually.
     refetchInterval: (q) =>
-      q.state.data?.status === 'complete' || q.state.error ? false : 10_000,
+      q.state.data?.status === 'complete' ||
+      q.state.data?.status === 'error' ||
+      q.state.error
+        ? false
+        : 10_000,
   });
 
   const triggerMutation = useMutation<CycleReview, Error, void>({
@@ -48,15 +58,25 @@ export function useCycleReview(programId: string) {
   }, [query.error]);
 
   // Show retry button after delay when no complete review exists and budget remains.
-  // If DB has a pending row (prior failure), show immediately without waiting.
+  // Behaviour:
+  //  - 'error' row: show immediately (LLM failed; user should retry now).
+  //  - 'pending' row: wait the full 60s (generation in flight).
+  //  - no row at all (null): wait 25s — auto-trigger should have written a row
+  //    by then; if it hasn't, surfacing a manual button is friendlier than the
+  //    old 60s wait for a flow that's already gone wrong.
   useEffect(() => {
-    const hasComplete = query.data?.status === 'complete';
+    const status = query.data?.status;
+    const hasComplete = status === 'complete';
     if (hasComplete || retryCount.current >= MAX_RETRY_ATTEMPTS) return;
-    if (query.data?.status === 'pending') {
+    if (status === 'error') {
       setShowRetry(true);
       return;
     }
-    const timer = setTimeout(() => setShowRetry(true), RETRY_SHOW_DELAY_MS);
+    const delay =
+      status === 'pending'
+        ? RETRY_SHOW_DELAY_PENDING_MS
+        : RETRY_SHOW_DELAY_NO_ROW_MS;
+    const timer = setTimeout(() => setShowRetry(true), delay);
     return () => clearTimeout(timer);
   // Intentionally omits retryCount.current — ref changes don't re-run effects.
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -75,11 +95,15 @@ export function useCycleReview(programId: string) {
 
   const canRetry = retryCount.current < MAX_RETRY_ATTEMPTS;
   const reviewPending = query.data?.status === 'pending';
+  const reviewErrored = query.data?.status === 'error';
+  const errorMessage = query.data?.errorMessage ?? null;
 
   return {
     ...query,
     data: query.data?.review ?? null,
     reviewPending,
+    reviewErrored,
+    errorMessage,
     showRetry: showRetry && canRetry,
     triggerReview: () => triggerMutation.mutate(),
     isTriggeringReview: triggerMutation.isPending,

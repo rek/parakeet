@@ -254,6 +254,8 @@ export type Database = {
       cycle_reviews: {
         Row: {
           compiled_report: Json | null
+          // MANUAL: regenerate after 20260523010000_cycle_review_error_state.sql lands
+          error_message: string | null
           generated_at: string
           generation_status: string
           id: string
@@ -263,6 +265,8 @@ export type Database = {
         }
         Insert: {
           compiled_report?: Json | null
+          // MANUAL: regenerate after 20260523010000_cycle_review_error_state.sql lands
+          error_message?: string | null
           generated_at?: string
           generation_status?: string
           id?: string
@@ -272,6 +276,8 @@ export type Database = {
         }
         Update: {
           compiled_report?: Json | null
+          // MANUAL: regenerate after 20260523010000_cycle_review_error_state.sql lands
+          error_message?: string | null
           generated_at?: string
           generation_status?: string
           id?: string

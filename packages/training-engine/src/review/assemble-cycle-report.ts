@@ -75,9 +75,20 @@ export interface RawWeeklyBodyReview {
 export interface RawCycleData {
   program: {
     id: string;
-    total_weeks: number;
+    /**
+     * Total weeks for a scheduled program. `null` for unending programs which
+     * have no fixed length — callers must pass through the raw DB value
+     * rather than coercing to 0 (a 0 here propagates 0 sets/week throughout
+     * the report and divides-by-zero in correlation calcs).
+     */
+    total_weeks: number | null;
     start_date: string;
     status: string;
+    /**
+     * Used to derive precedingWeeks when total_weeks is null (unending).
+     * Defaults to 3 if not provided.
+     */
+    training_days_per_week?: number | null;
   };
   sessions: RawSession[];
   sessionLogs: RawSessionLog[];
@@ -150,7 +161,12 @@ export interface BodyReviewSummary {
 
 export interface CycleReport {
   programId: string;
-  totalWeeks: number;
+  /**
+   * Total weeks of the program. `undefined` for unending programs — the LLM
+   * uses this signal to know whether to evaluate progression against a fixed
+   * block plan or against an indefinite continuation.
+   */
+  totalWeeks: number | undefined;
   completionPct: number;
   lifts: Partial<Record<Lift, LiftSummary>>;
   weeklyVolume: WeeklyVolumeRow[];
@@ -243,6 +259,21 @@ export function assembleCycleReport(raw: RawCycleData): CycleReport {
     };
   }
 
+  // Precedes correlations: for scheduled programs use the program's total_weeks
+  // (fixed length). For unending programs (total_weeks null/0/undefined) derive
+  // an effective week count from how many sessions were actually trained
+  // divided by training_days_per_week (default 3), rounded up. Coercing to 0
+  // here produced zero-week correlations that the LLM ignored.
+  const rawTotalWeeks = raw.program.total_weeks;
+  const isUnending = rawTotalWeeks == null || rawTotalWeeks === 0;
+  const trainingDaysPerWeek = raw.program.training_days_per_week ?? 3;
+  const derivedPrecedingWeeks = isUnending
+    ? Math.max(
+        1,
+        Math.ceil(raw.sessions.length / Math.max(1, trainingDaysPerWeek))
+      )
+    : rawTotalWeeks;
+
   // Auxiliary correlations (simplified: map exercise → subsequent lift improvement)
   const auxiliaryCorrelations: AuxLiftCorrelation[] = [];
   for (const assignment of raw.auxiliaryAssignments) {
@@ -259,7 +290,7 @@ export function assembleCycleReport(raw: RawCycleData): CycleReport {
       auxiliaryCorrelations.push({
         exercise,
         lift: liftName,
-        precedingWeeks: raw.program.total_weeks,
+        precedingWeeks: derivedPrecedingWeeks,
         liftChangePct: changePct,
       });
     }
@@ -295,7 +326,10 @@ export function assembleCycleReport(raw: RawCycleData): CycleReport {
 
   return {
     programId: raw.program.id,
-    totalWeeks: raw.program.total_weeks,
+    // Pass `undefined` for unending programs so the LLM sees the absence of a
+    // fixed plan rather than the misleading "0 weeks" signal that came from
+    // the old coalesce-to-0 behaviour in the caller.
+    totalWeeks: isUnending ? undefined : (rawTotalWeeks ?? undefined),
     completionPct,
     lifts,
     weeklyVolume,

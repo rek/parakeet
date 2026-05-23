@@ -476,6 +476,28 @@ export default function CycleReviewScreen() {
   const formulas = llmData.formulaSuggestions ?? [];
   const meta = llmData.meta ?? {};
 
+  // Detect "review generated but empty" — happens when the LLM returns a valid
+  // shape with no actionable insights (e.g. a 1-session program). Without this
+  // branch the screen renders a near-blank scroll view that looks broken.
+  const hasProgress = Object.keys(progress).length > 0;
+  const hasAuxInsights = Boolean(
+    aux.mostCorrelated?.length ||
+      aux.leastEffective?.length ||
+      aux.recommendedChanges?.length
+  );
+  const hasVolume =
+    llmData.weeklyVolume && Object.keys(llmData.weeklyVolume).length > 0;
+  const hasFormulas = formulas.length > 0;
+  const hasNextCycle = Boolean(llmData.nextCycleRecommendations);
+  const hasOverallAssessment = Boolean(llmData.overallAssessment);
+  const isEmptyReview =
+    !hasProgress &&
+    !hasAuxInsights &&
+    !hasVolume &&
+    !hasFormulas &&
+    !hasNextCycle &&
+    !hasOverallAssessment;
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.header}>
@@ -488,6 +510,15 @@ export default function CycleReviewScreen() {
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
       >
+        {/* Empty-review placeholder */}
+        {isEmptyReview && (
+          <View style={styles.summaryCard}>
+            <Text style={styles.overallAssessment}>
+              Review generated but no actionable insights found this cycle.
+            </Text>
+          </View>
+        )}
+
         {/* 1. Overall summary */}
         {llmData.overallAssessment && (
           <View style={styles.summaryCard}>

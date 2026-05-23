@@ -33,7 +33,8 @@ export interface AuxCorrelationSummary {
 
 export interface PreviousCycleSummary {
   cycleNumber: number;
-  programLengthWeeks: number;
+  /** undefined for unending programs (no fixed length). */
+  programLengthWeeks: number | undefined;
   completionPct: number;
   liftProgress: Partial<Record<Lift, LiftProgressSummary>>;
   topAuxCorrelations: AuxCorrelationSummary[];
