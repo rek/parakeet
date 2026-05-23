@@ -108,6 +108,7 @@ export function useSyncQueue() {
               exerciseType: op.payload.exerciseType,
               failed: op.payload.failed,
               notes: op.payload.notes,
+              painLimited: op.payload.painLimited,
               loggedAt: op.payload.loggedAt,
             });
             dequeue(op.id);

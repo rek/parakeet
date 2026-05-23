@@ -23,6 +23,8 @@ export interface PersistSetArgs {
   exerciseType?: string | null;
   failed?: boolean;
   notes?: string | null;
+  /** Rehab Mode pain-limited tag (GH#220). */
+  painLimited?: boolean;
 }
 
 async function persistSetInternal(args: PersistSetArgs): Promise<void> {
@@ -41,6 +43,7 @@ async function persistSetInternal(args: PersistSetArgs): Promise<void> {
       exerciseType: args.exerciseType,
       failed: args.failed,
       notes: args.notes,
+      painLimited: args.painLimited,
       loggedAt,
     });
     markSynced(args, loggedAt);
@@ -61,6 +64,7 @@ async function persistSetInternal(args: PersistSetArgs): Promise<void> {
           exerciseType: args.exerciseType,
           failed: args.failed,
           notes: args.notes,
+          painLimited: args.painLimited,
           loggedAt,
         },
       });
@@ -123,6 +127,7 @@ export async function flushUnsyncedSets(userId: string): Promise<void> {
         actualRestSeconds: s.actual_rest_seconds ?? null,
         exerciseType: null,
         failed: s.failed ?? false,
+        painLimited: s.pain_limited ?? false,
       })
     ),
     ...aux.map((s) =>

@@ -143,23 +143,29 @@ export async function detectAchievements(
     }
   }
 
-  // Fun badges detection
-  result.newBadges = await detectBadges({
-    sessionId,
-    userId,
-    actualSets,
-    earnedPRs: result.earnedPRs.map((pr) => ({
-      type: pr.type,
-      lift: pr.lift,
-      value: pr.value,
-      weightKg: pr.weightKg,
-    })),
-    streakWeeks: result.streakWeeks ?? 0,
-    cycleBadgeEarned: result.cycleBadgeEarned,
-    primaryLift: lift,
-    programId: sessionContext.programId,
-    previousE1Rm,
-  });
+  // Fun badges detection — skip on rehab sessions (GH#220). Badge checkers
+  // like `the_tonne` (10000kg session volume) and `the_centurion` (100+ reps)
+  // would otherwise award trophies on capped sessions where the volume came
+  // entirely from rehab work. PR gate above isn't sufficient — checkers
+  // also key off raw actualSets.
+  if (!suppressPRs) {
+    result.newBadges = await detectBadges({
+      sessionId,
+      userId,
+      actualSets,
+      earnedPRs: result.earnedPRs.map((pr) => ({
+        type: pr.type,
+        lift: pr.lift,
+        value: pr.value,
+        weightKg: pr.weightKg,
+      })),
+      streakWeeks: result.streakWeeks ?? 0,
+      cycleBadgeEarned: result.cycleBadgeEarned,
+      primaryLift: lift,
+      programId: sessionContext.programId,
+      previousE1Rm,
+    });
+  }
 
   return result;
 }

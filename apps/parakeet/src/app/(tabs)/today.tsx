@@ -27,6 +27,11 @@ import {
 import { useFeatureEnabled } from '@modules/feature-flags';
 import { useActiveProgram } from '@modules/program';
 import {
+  RehabCapChipsRow,
+  useActiveRehabCaps,
+  useRehabModeMutations,
+} from '@modules/rehab-mode';
+import {
   getReadyCachedJitData,
   partitionTodaySessions,
   skipSession,
@@ -700,6 +705,9 @@ export default function TodayScreen() {
 
   const { data: disruptions, invalidateDisruptions } = useActiveDisruptions();
 
+  const { data: activeRehabCaps } = useActiveRehabCaps();
+  const { end: endRehabMutation } = useRehabModeMutations();
+
   const { data: streakData } = useStreak();
 
   if (sessionLoading || programLoading) {
@@ -797,6 +805,15 @@ export default function TodayScreen() {
                   updateDisruptionEndDate(id, user!.id, endDate)
                 }
                 onResolved={() => invalidateDisruptions()}
+              />
+            )}
+
+            {activeRehabCaps && activeRehabCaps.length > 0 && (
+              <RehabCapChipsRow
+                caps={activeRehabCaps}
+                onEnd={async (id) => {
+                  await endRehabMutation.mutateAsync(id);
+                }}
               />
             )}
 

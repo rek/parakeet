@@ -27,6 +27,7 @@ function primaryFingerprint(s: ActualSet): string {
     s.rpe_actual ?? '',
     s.actual_rest_seconds ?? '',
     s.failed ? 1 : 0,
+    s.pain_limited ? 1 : 0,
   ].join('|');
 }
 
@@ -101,6 +102,7 @@ export function useSetPersistence(userId: string | undefined) {
         actualRestSeconds: s.actual_rest_seconds ?? null,
         exerciseType: null,
         failed: s.failed ?? false,
+        painLimited: s.pain_limited ?? false,
       });
     }
     prevPrimaryRef.current = nextPrimary;

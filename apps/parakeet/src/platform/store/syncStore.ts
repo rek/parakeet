@@ -40,6 +40,8 @@ export interface UpsertSetLogPayload {
   exerciseType?: string | null;
   failed?: boolean;
   notes?: string | null;
+  /** Rehab Mode pain-limited tag (GH#220). */
+  painLimited?: boolean;
   loggedAt: string;
 }
 

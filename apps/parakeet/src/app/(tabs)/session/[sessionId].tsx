@@ -14,6 +14,7 @@ import { useFeatureEnabled } from '@modules/feature-flags';
 import { LiftHistorySheet, useLiftHistory } from '@modules/history';
 import { computeDisplayWeights, useChallengeReview } from '@modules/jit';
 import { getProfile } from '@modules/profile';
+import { useRehabCapForLift } from '@modules/rehab-mode';
 import type { WorkoutTemplateWithItems } from '@modules/workout-templates';
 import { AddExerciseModal } from '@shared/ui/AddExerciseModal';
 import {
@@ -781,6 +782,28 @@ export default function SessionScreen() {
     [alreadyInSession, sessionMeta?.primary_lift, exerciseCatalog]
   );
 
+  // Rehab Mode (GH#220): drives the pain-limited pill on the RPE picker.
+  // Only fetched when the session has a primary lift (ad-hoc sessions skip).
+  const sessionLift = (sessionMeta?.primary_lift as Lift | null) ?? null;
+  const { data: activeRehabCapForSession } = useRehabCapForLift(
+    sessionLift ?? 'squat'
+  );
+  const rehabApplies =
+    sessionLift !== null &&
+    activeRehabCapForSession != null &&
+    activeRehabCapForSession.lift === sessionLift
+      ? activeRehabCapForSession
+      : null;
+  // Default the pain-limited toggle to whatever the most recent main-lift
+  // RPE was tagged as. Saves taps in the all-pain-limited case.
+  const previousPainLimited = useMemo(() => {
+    if (!rehabApplies) return false;
+    const lastWithRpe = [...actualSets]
+      .reverse()
+      .find((s) => s.rpe_actual !== undefined);
+    return lastWithRpe?.pain_limited === true;
+  }, [actualSets, rehabApplies]);
+
   // ── Screen-local handlers ─────────────────────────────────────────────────
 
   function handleConfirmAddExercise(
@@ -1436,6 +1459,14 @@ export default function SessionScreen() {
                 auxiliaryWork,
                 plannedSetsCount: plannedSets.length,
               })}
+              // Rehab Mode (GH#220): show the pain-limited toggle only for
+              // main-lift RPE when an active cap covers this lift. Default-on
+              // when the previous set in this session was tagged pain-limited
+              // (saves taps in the common all-rehab session).
+              showPainLimitedToggle={
+                pendingRpeSetNumber !== null && !!rehabApplies
+              }
+              defaultPainLimited={previousPainLimited}
             />
           )}
           {activeTimer !== null && (

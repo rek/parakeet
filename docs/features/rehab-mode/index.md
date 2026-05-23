@@ -1,6 +1,6 @@
 ---
 feature: rehab-mode
-status: in-progress
+status: implemented
 modules: [rehab-mode]
 ---
 # Rehab Mode
@@ -18,4 +18,4 @@ Origin: [GH#220](https://github.com/rek/parakeet/issues/220) — user rehabbing 
 | [spec-data.md](./spec-data.md) | done | `rehab_caps` table, set-log flags, types |
 | [spec-engine.md](./spec-engine.md) | done | JIT cap enforcement (formula + LLM + hybrid), suppression of adaptive steps, downstream filters |
 | [spec-app.md](./spec-app.md) | done | `@modules/rehab-mode` service + queries + hooks; JIT input wiring; server-side set-log stamp via DB trigger; PR-detection gate |
-| [spec-ui.md](./spec-ui.md) | planned | Settings management, Today chip, RPE pain-limited toggle |
+| [spec-ui.md](./spec-ui.md) | done | Settings management, Today chip + bottom sheet, RPE pain-limited toggle |

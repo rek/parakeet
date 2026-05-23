@@ -25,6 +25,10 @@ export interface ActualSet {
   failed?: boolean;
   /** ISO timestamp — set when persistSet successfully writes to set_logs. */
   synced_at?: string;
+  /** Rehab Mode pain-limited tag (GH#220). True when the lifter marked the
+   *  RPE as pain-limited rather than muscular. Stored for history but excluded
+   *  from working-1RM, PR detection, auto-progression, and modifier calibration. */
+  pain_limited?: boolean;
 }
 
 export interface AuxiliaryActualSet {

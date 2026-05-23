@@ -547,6 +547,11 @@ export default function SettingsScreen() {
           styles={styles}
         />
         <Row
+          label="Rehab Mode"
+          onPress={() => router.push('/settings/rehab-mode')}
+          styles={styles}
+        />
+        <Row
           label="Manage Formulas"
           onPress={() => router.push('/formula/editor')}
           styles={styles}

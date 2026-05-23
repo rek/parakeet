@@ -541,9 +541,15 @@ export function useSetCompletionFlow({
     }, 1000);
   }
 
-  function handleRpeQuickSelect(rpe: number) {
+  function handleRpeQuickSelect(rpe: number, painLimited = false) {
     if (pendingRpeSetNumber !== null) {
-      updateSet(pendingRpeSetNumber, { rpe_actual: rpe });
+      // Rehab Mode (GH#220): the pain-limited tag flows from the picker into
+      // the set log. Aux sets don't currently support pain-limited (the toggle
+      // is rendered only when a rehab cap is active for the main lift).
+      updateSet(pendingRpeSetNumber, {
+        rpe_actual: rpe,
+        ...(painLimited && { pain_limited: true }),
+      });
       clearPendingRpe();
       // Check for volume recovery and weight autoregulation after main lift RPE
       checkVolumeRecovery();

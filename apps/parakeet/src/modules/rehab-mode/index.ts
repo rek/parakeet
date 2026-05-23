@@ -22,6 +22,8 @@ export {
 } from './hooks/useActiveRehabCaps';
 export { useRehabModeMutations } from './hooks/useRehabModeMutations';
 
+export { RehabCapChipsRow } from './ui/RehabCapChipsRow';
+
 export type {
   CreateRehabCapInput,
   Lift,
