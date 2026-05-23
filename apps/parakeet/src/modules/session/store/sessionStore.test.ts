@@ -10,6 +10,11 @@ vi.mock('@react-native-async-storage/async-storage', () => ({
   },
 }));
 
+vi.mock('@sentry/react-native', () => ({
+  addBreadcrumb: vi.fn(),
+  captureException: vi.fn(),
+}));
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function getPersistOptions(store: unknown): {
   partialize: (state: SessionState) => Partial<SessionState>;
@@ -21,6 +26,33 @@ function getPersistOptions(store: unknown): {
 describe('sessionStore persistence', () => {
   beforeEach(() => {
     useSessionStore.getState().reset();
+  });
+
+  it('partialize includes auxiliaryWork so background-timer post-rest can hydrate cold', () => {
+    const store = useSessionStore;
+    store.getState().initSession('s1', [{ weight_kg: 100, reps: 5 }]);
+    store.getState().initAuxiliaryWork([
+      {
+        exercise: 'curl',
+        sets: [{ weight_kg: 20, reps: 10 }],
+        skipped: false,
+      },
+    ]);
+
+    const opts = getPersistOptions(store);
+    const partialized = opts.partialize(store.getState());
+
+    expect(Array.isArray((partialized as { auxiliaryWork?: unknown }).auxiliaryWork)).toBe(true);
+    expect(
+      ((partialized as { auxiliaryWork: { exercise: string }[] })
+        .auxiliaryWork)[0].exercise
+    ).toBe('curl');
+
+    // Round-trip via JSON.
+    const serialized = JSON.parse(JSON.stringify(partialized));
+    const merged = opts.merge(serialized, store.getState());
+    expect(merged.auxiliaryWork).toHaveLength(1);
+    expect(merged.auxiliaryWork[0].exercise).toBe('curl');
   });
 
   it('startedAt round-trips through JSON serialization via merge', () => {

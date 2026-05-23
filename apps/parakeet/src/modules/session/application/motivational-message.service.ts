@@ -142,6 +142,19 @@ Style rules:
 - Exclamation points or emojis are fine.
 - Max 2 sentences. Be specific to the data provided — reference the actual lift names, weight, or block number if relevant.`;
 
+/**
+ * Deterministic fallback when the LLM call fails or times out. Prefers a
+ * PR-specific message when one is present, else a generic completion line.
+ * One fallback per call — multi-session consolidation already happens upstream.
+ */
+export function buildMotivationalFallback(ctx: MotivationalContext): string {
+  const firstPr = ctx.newPRs[0];
+  if (firstPr) {
+    return `PR on ${firstPr.lift} — nice work.`;
+  }
+  return 'Workout done. Nice work.';
+}
+
 export async function generateMotivationalMessage(
   ctx: MotivationalContext,
   sessionIds?: string[],
@@ -160,16 +173,26 @@ export async function generateMotivationalMessage(
     }
   }
 
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), 8000);
-  const result = await generateText({
-    model: getJITModel(),
-    system: SYSTEM_PROMPT,
-    prompt: JSON.stringify(ctx),
-    abortSignal: controller.signal,
-  });
-  clearTimeout(timer);
-  const message = result.text.trim();
+  let message: string;
+  try {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 8000);
+    const result = await generateText({
+      model: getJITModel(),
+      system: SYSTEM_PROMPT,
+      prompt: JSON.stringify(ctx),
+      abortSignal: controller.signal,
+    });
+    clearTimeout(timer);
+    message = result.text.trim();
+    // Defensive: if the LLM returned an empty body, fall through to fallback.
+    if (!message) {
+      message = buildMotivationalFallback(ctx);
+    }
+  } catch (err) {
+    captureException(err);
+    message = buildMotivationalFallback(ctx);
+  }
 
   // Fire-and-forget: persist the log for dashboard telemetry
   if (userId && sessionIds?.length) {

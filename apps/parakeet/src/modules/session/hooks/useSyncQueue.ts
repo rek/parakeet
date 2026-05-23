@@ -2,7 +2,10 @@
 import { useEffect, useRef } from 'react';
 import { Alert } from 'react-native';
 
-import { stampCyclePhaseOnSession } from '@modules/cycle-tracking';
+import {
+  stampCapturedCyclePhaseOnSession,
+  stampCyclePhaseOnSession,
+} from '@modules/cycle-tracking';
 import { useNetworkStatus } from '@platform/network/useNetworkStatus';
 import { useSessionStore } from '../store/sessionStore';
 import { useSyncStore } from '@platform/store/syncStore';
@@ -35,6 +38,21 @@ export function useSyncQueue() {
     processingRef.current = true;
 
     let syncedCount = 0;
+    // Aggregate per-set drops by sessionId so we emit one breadcrumb per
+    // session per drain (instead of N per-set events). Escalation happens
+    // at the end of the pass when no complete_session op exists for the
+    // same session — that combo means actual data loss.
+    const droppedSetsBySession = new Map<string, number>();
+    // Snapshot the queue at start so the escalation check at the end uses the
+    // pre-drain state, not the post-drain state. Without this, a successfully
+    // drained complete_session op would be missing from the snapshot and a
+    // sibling per-set drop would falsely escalate to "no backstop." Sessions
+    // whose complete_session drained in this same pass are still backstopped.
+    const sessionsWithCompletionAtStart = new Set(
+      queue
+        .filter((q) => q.operation === 'complete_session')
+        .map((q) => q.payload.sessionId)
+    );
 
     try {
       for (const op of queue) {
@@ -47,6 +65,12 @@ export function useSyncQueue() {
             Alert.alert(
               'Sync Failed',
               'Your workout data could not be saved after multiple attempts. Please check your connection and try again.'
+            );
+          } else {
+            const sid = op.payload.sessionId;
+            droppedSetsBySession.set(
+              sid,
+              (droppedSetsBySession.get(sid) ?? 0) + 1
             );
           }
           continue;
@@ -61,6 +85,7 @@ export function useSyncQueue() {
               auxiliarySets,
               sessionRpe,
               startedAt,
+              cyclePhase,
             } = op.payload;
 
             await completeSession(sessionId, userId, {
@@ -84,8 +109,21 @@ export function useSyncQueue() {
               queryKey: ['achievements'],
             });
 
-            // Stamp cycle phase — was skipped when the session was queued offline.
-            stampCyclePhaseOnSession(userId, sessionId).catch(captureException);
+            // Stamp cycle phase. Prefer the value captured at completion time
+            // (so a session completed in luteal phase but synced 5 days later
+            // doesn't get stamped 'follicular'). Fall back to the live phase
+            // only when the payload predates the capture-at-completion change
+            // (undefined). A captured `null` means "no phase" and must NOT
+            // fall through to the live-phase write.
+            if (cyclePhase != null) {
+              stampCapturedCyclePhaseOnSession(
+                userId,
+                sessionId,
+                cyclePhase
+              ).catch(captureException);
+            } else {
+              stampCyclePhaseOnSession(userId, sessionId).catch(captureException);
+            }
 
             // Fire-and-forget: run achievement detection now that data is on the server.
             // Dynamic import breaks the session ↔ achievements circular dependency.
@@ -155,6 +193,27 @@ export function useSyncQueue() {
             ? 'Your workout has been saved successfully.'
             : `${syncedCount} workouts have been saved successfully.`
         );
+      }
+
+      // Aggregated per-set drop reporting. One breadcrumb per affected
+      // session. Escalate to a warning-severity event when the session also
+      // has no complete_session op at start of drain — that combo means the
+      // per-set logs are the only record of the work and it's now lost.
+      if (droppedSetsBySession.size > 0) {
+        for (const [sid, count] of droppedSetsBySession) {
+          captureException(
+            new Error(
+              `upsert_set_log dropped after retries — session=${sid} count=${count}`
+            )
+          );
+          if (!sessionsWithCompletionAtStart.has(sid)) {
+            captureException(
+              new Error(
+                `Per-set sync loss with no complete_session backstop — session=${sid} count=${count}`
+              )
+            );
+          }
+        }
       }
     } finally {
       processingRef.current = false;

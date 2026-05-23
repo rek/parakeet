@@ -1,12 +1,14 @@
 import type {
   AuxSessionAdaptation,
   AuxiliaryWork,
+  JitData,
   PendingAuxConfirmation,
   PostRestState,
   RecoveryOffer,
   SessionAdaptation,
   WeightSuggestionOffer,
 } from '../model/types';
+import { captureException } from '@platform/utils/captureException';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { weightKgToGrams } from '@shared/utils/weight';
 import { getEffectivePlannedSet } from '@shared/utils/getEffectivePlannedSet';
@@ -100,6 +102,45 @@ export function selectBackgroundTimers(
 
 export function selectActivePostRest(state: SessionState): PostRestState | null {
   return state.postRestQueue[0] ?? null;
+}
+
+/**
+ * Resolve a planned aux set for a background-timer post-rest expiry.
+ *
+ * Looks first at the in-memory `auxiliaryWork` mirror; falls back to the
+ * persisted `cachedJitData`. If both miss, breadcrumbs to Sentry and returns
+ * null so the post-rest overlay simply doesn't open rather than crashing on
+ * undefined access. Background-timer expiry can fire long after the data
+ * was last hydrated; this guards the cold-resume edge case.
+ */
+function resolveAuxSetPlanForPostRest(
+  state: SessionState,
+  exercise: string,
+  setNumber: number
+): { weight_kg: number; reps: number } | null {
+  const fromMirror = state.auxiliaryWork.find((w) => w.exercise === exercise);
+  const mirrorSet = fromMirror?.sets[setNumber];
+  if (mirrorSet) return mirrorSet;
+
+  if (state.cachedJitData) {
+    try {
+      const parsed = JSON.parse(state.cachedJitData) as JitData;
+      const fromCache = (parsed.auxiliaryWork ?? []).find(
+        (w) => w.exercise === exercise
+      );
+      const cachedSet = fromCache?.sets[setNumber];
+      if (cachedSet) return cachedSet;
+    } catch {
+      // Fallthrough to breadcrumb.
+    }
+  }
+
+  captureException(
+    new Error(
+      `Post-rest aux set plan missing for ${exercise} set ${setNumber}`
+    )
+  );
+  return null;
 }
 
 export interface SessionState {
@@ -634,10 +675,11 @@ export const useSessionStore = create<SessionState>()(
             if (t.elapsed >= effectiveDuration) {
               // Background timer expired — build PostRestState
               if (t.pendingAuxExercise !== null && t.pendingAuxSetNumber !== null) {
-                const auxWork = state.auxiliaryWork.find(
-                  (w) => w.exercise === t.pendingAuxExercise
+                const auxSetPlan = resolveAuxSetPlanForPostRest(
+                  state,
+                  t.pendingAuxExercise,
+                  t.pendingAuxSetNumber
                 );
-                const auxSetPlan = auxWork?.sets[t.pendingAuxSetNumber];
                 if (auxSetPlan) {
                   newQueue.push({
                     pendingMainSetNumber: null,
@@ -848,6 +890,11 @@ export const useSessionStore = create<SessionState>()(
         plannedSets: state.plannedSets,
         actualSets: state.actualSets,
         auxiliarySets: state.auxiliarySets,
+        // Persist the JIT-derived aux prescription so background-timer
+        // expiry can look up the next set's planned reps/weight even after
+        // the app was killed mid-session (cachedJitData covers boot, but the
+        // post-rest queue path relies on the in-memory mirror).
+        auxiliaryWork: state.auxiliaryWork,
         warmupCompleted: state.warmupCompleted,
         sessionRpe: state.sessionRpe,
         sessionMeta: state.sessionMeta,
