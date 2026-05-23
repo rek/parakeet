@@ -55,9 +55,6 @@ export async function reportDisruption(
   userId: string,
   input: CreateDisruption
 ): Promise<DisruptionWithSuggestions> {
-  // TODO(GH#disruption-event-name): once supabase/types.ts is regenerated
-  // after the event_name migration ships, drop the `as` cast — DbInsert
-  // will include `event_name: string | null`.
   const disruption = await insertDisruption({
     user_id: userId,
     disruption_type: input.disruption_type,
@@ -66,10 +63,10 @@ export async function reportDisruption(
     affected_date_end: input.affected_date_end ?? null,
     affected_lifts: input.affected_lifts ?? null,
     description: input.description ?? null,
-    ...(input.event_name != null && { event_name: input.event_name }),
+    event_name: input.event_name ?? null,
     session_ids_affected: input.session_ids_affected ?? null,
     status: 'active',
-  } as Parameters<typeof insertDisruption>[0]);
+  });
 
   let affectedSessions: SessionRow[] = [];
   const explicitIds = input.session_ids_affected ?? [];

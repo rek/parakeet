@@ -254,7 +254,6 @@ export type Database = {
       cycle_reviews: {
         Row: {
           compiled_report: Json | null
-          // MANUAL: regenerate after 20260523010000_cycle_review_error_state.sql lands
           error_message: string | null
           generated_at: string
           generation_status: string
@@ -265,7 +264,6 @@ export type Database = {
         }
         Insert: {
           compiled_report?: Json | null
-          // MANUAL: regenerate after 20260523010000_cycle_review_error_state.sql lands
           error_message?: string | null
           generated_at?: string
           generation_status?: string
@@ -276,7 +274,6 @@ export type Database = {
         }
         Update: {
           compiled_report?: Json | null
-          // MANUAL: regenerate after 20260523010000_cycle_review_error_state.sql lands
           error_message?: string | null
           generated_at?: string
           generation_status?: string
@@ -373,6 +370,7 @@ export type Database = {
       developer_suggestions: {
         Row: {
           created_at: string
+          cycle_review_id: string | null
           description: string
           developer_note: string
           id: string
@@ -382,10 +380,12 @@ export type Database = {
           rationale: string
           reviewed_at: string | null
           status: string
+          suggestion_index: number | null
           user_id: string
         }
         Insert: {
           created_at?: string
+          cycle_review_id?: string | null
           description: string
           developer_note: string
           id?: string
@@ -395,10 +395,12 @@ export type Database = {
           rationale: string
           reviewed_at?: string | null
           status?: string
+          suggestion_index?: number | null
           user_id: string
         }
         Update: {
           created_at?: string
+          cycle_review_id?: string | null
           description?: string
           developer_note?: string
           id?: string
@@ -408,9 +410,17 @@ export type Database = {
           rationale?: string
           reviewed_at?: string | null
           status?: string
+          suggestion_index?: number | null
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "developer_suggestions_cycle_review_id_fkey"
+            columns: ["cycle_review_id"]
+            isOneToOne: false
+            referencedRelation: "cycle_reviews"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "developer_suggestions_program_id_fkey"
             columns: ["program_id"]
@@ -668,6 +678,7 @@ export type Database = {
           affected_lifts: string[] | null
           description: string | null
           disruption_type: string
+          event_name: string | null
           id: string
           program_id: string | null
           reported_at: string
@@ -684,6 +695,7 @@ export type Database = {
           affected_lifts?: string[] | null
           description?: string | null
           disruption_type: string
+          event_name?: string | null
           id?: string
           program_id?: string | null
           reported_at?: string
@@ -700,6 +712,7 @@ export type Database = {
           affected_lifts?: string[] | null
           description?: string | null
           disruption_type?: string
+          event_name?: string | null
           id?: string
           program_id?: string | null
           reported_at?: string
@@ -1197,7 +1210,7 @@ export type Database = {
           session_id: string | null
           user_id: string
           value: number
-          weight_kg: number | null
+          weight_grams: number | null
         }
         Insert: {
           achieved_at?: string
@@ -1207,7 +1220,7 @@ export type Database = {
           session_id?: string | null
           user_id: string
           value: number
-          weight_kg?: number | null
+          weight_grams?: number | null
         }
         Update: {
           achieved_at?: string
@@ -1217,7 +1230,7 @@ export type Database = {
           session_id?: string | null
           user_id?: string
           value?: number
-          weight_kg?: number | null
+          weight_grams?: number | null
         }
         Relationships: [
           {
