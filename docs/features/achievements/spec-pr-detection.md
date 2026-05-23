@@ -175,6 +175,10 @@ CREATE UNIQUE INDEX pr_unique ON personal_records (user_id, lift, pr_type, COALE
 - Fetch all rows from `personal_records` for this user+lift
 - Map into `historicalPRs` shape expected by `detectSessionPRs`
 
+## Open Issues (2026-05 review)
+
+- [ ] **`personal_records.weight_kg` is `numeric` (float kg), violating the "weights stored as integer grams" invariant.** The column is also part of the upsert `onConflict` target (`user_id,lift,pr_type,weight_kg`). Float comparison at 102.5 kg works today, but a JIT-derived `102.50000001` will create a duplicate PR row. Migrate to `weight_grams int`, convert via `weightKgToGrams` at the write/read boundary, and update the unique index. The same applies to `value` if it carries kg (e.g., for `estimated_1rm`).
+
 ## Dependencies
 
 - [engine-001-one-rep-max-formulas.md](./engine-001-one-rep-max-formulas.md) — estimated1rmKg pre-computation

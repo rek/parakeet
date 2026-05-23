@@ -41,6 +41,15 @@ The home tab that shows all of today's sessions and any active disruption banner
 **Foreground reconciliation:**
 - On app foreground / Today tab focus: call `markMissedSessions(userId)` then invalidate `['session', 'today']` React Query prefix
 
+## Open Issues (2026-05 review)
+
+- [ ] **Calibration prompt button labels read backwards.** The calibration adjustment is already applied to the DB before the prompt fires; the buttons are:
+  - "Sounds right" → just dismisses (keeps the newly applied value)
+  - "Keep current" → reverts to the pre-prompt value
+  Reading "Keep current" naturally means "keep whatever is current right now" (= the newly applied value), but the code reverts. Rename to `Accept change` / `Revert change` and add a one-line copy clarifying that the change is already in effect until they tap Revert. Also: "Sounds right" should persist user acceptance (e.g., `upsertModifierCalibration` with `confidence: 'high'`) instead of just deleting the AsyncStorage key — currently the engine has no signal the calibration was confirmed.
+- [ ] **Volume card has no error/empty state.** `VolumeCompactCard` shows "Loading…" forever if `useWeeklyVolume` errors out or returns `null`. Expose `isError`/`isPending` and render "Couldn't load volume — tap to retry" or `null` for genuinely empty.
+- [ ] **Session-error fallback tile uses the rest-day card with a red border but neutral title text.** Add `style={{ color: colors.danger }}` to the error title and an explicit retry icon so it doesn't read as "rest day."
+
 ## Dependencies
 
 - [parakeet-001-expo-router-layout.md](./parakeet-001-expo-router-layout.md)

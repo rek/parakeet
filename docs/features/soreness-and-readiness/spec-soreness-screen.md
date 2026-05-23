@@ -79,6 +79,12 @@ await supabase.from('soreness_checkins').insert({
 
 **State:** Local Zustand `sorenessStore` holds current ratings during the screen session. Cleared after JIT generation completes.
 
+## Open Issues (2026-05 review)
+
+- [ ] **"Resolved readiness" reconciliation logic is inlined in the screen (~40 lines, GH#210 race avoidance).** This is real domain logic that should live in `modules/jit/application/resolveReadiness.ts` (pure) with a unit test, leaving the screen with a one-line call. Same for the JIT trigger glue: extract `useGenerateJitFlow()` from `runJIT` (`soreness.tsx:596-660`).
+- [ ] **Session-fetch failure has no user-visible surface.** The bootstrap effect silently swallows errors from `getSession`: `session` stays `null`, the "Generate" button stays disabled, and the lift label is stuck on "Loading…". Surface a fetch error + "Open today" fallback button.
+- [ ] **Re-running JIT (e.g., updating soreness after a bad night's sleep) silently destroys disruption-applied weights.** See `jit-pipeline/spec-generator.md` open issue. If user already accepted a disruption adjustment on this session, gate re-generation with a confirm or compose the disruption's stored adjustment into the JIT input.
+
 ## Dependencies
 
 - [engine-007-jit-session-generator.md](../jit-pipeline/spec-generator.md)

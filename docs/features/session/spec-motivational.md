@@ -65,6 +65,11 @@ The "Workout Done" card on the Today tab now shows a contextual, LLM-generated m
 }
 ```
 
+## Open Issues (2026-05 review)
+
+- [ ] **LLM call has no fallback string.** `motivational-message.service.ts:164-184` does not wrap the `generateText` call in try/catch. A 5xx, abort, or network error propagates to the React Query callsite, which has `retry: false`, leaving `WorkoutDoneCard` with `message = null` and an empty subtitle. Wrap the call, capture the error, and return a deterministic fallback derived from `ctx` (e.g. "PR on Squat — nice work" / "Workout done." / "Consistency wins. Nice work."). Multi-session consolidation: one fallback per group, not per session.
+- [ ] **Treat existing-message lookup failures distinctly.** The pre-LLM lookup (lines 152-158) is in try/catch, but a transient DB error there short-circuits to a fresh LLM call — duplicating message generation for an already-cached message. On lookup error, surface a "couldn't load" message rather than silently regenerating.
+
 ## Dependencies
 
 - [mobile-004-today-screen.md](./mobile-004-today-screen.md)

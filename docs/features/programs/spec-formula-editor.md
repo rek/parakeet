@@ -43,6 +43,12 @@ The formula editor screen in Settings where users view, understand, and override
 - "Dismiss" → calls `deactivateFormulaConfig(suggestionId, userId)` (marks the suggestion row inactive)
 - Red dot badge on Settings tab when unreviewed suggestions exist
 
+## Open Issues (2026-05 review)
+
+- [ ] **AI suggestion Accept applies an empty `overrides: {}` payload — silent no-op.** The `overrides` record was dropped from `CycleReviewSchema` for OpenAI strict-mode, but `storeCycleReview` still inserts `formula_configs` rows with `overrides: {}` and the editor's Accept button calls `handleAcceptSuggestion(item.id, item.overrides)`. Two options: (a) remove the Accept affordance for AI suggestions and render them as advisory text linking back to the editor pre-filled with the suggestion's description/rationale, OR (b) restore a structured `overrides` payload (open-mode schema, not OpenAI strict) and re-wire ingestion. See `cycle-review/spec-generator.md`.
+- [ ] **`handleSave` has try/finally but no catch.** A failed `saveOverride` or `regenerateProgram` propagates as an unhandled rejection. Wrap in try/catch with a user-visible `Alert.alert('Save failed', ...)` and `captureException`.
+- [ ] **No `configError` state on the editor hook.** A failed `useFormulaEditor` config fetch leaves the screen on the loading spinner forever. Add an error path and a retry surface.
+
 ## Dependencies
 
 - [formulas-002-config-api.md](./spec-formula-config.md)

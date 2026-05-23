@@ -58,6 +58,10 @@ Configurable bar weight (15 kg / 20 kg) propagated from a settings toggle throug
 **`apps/parakeet/src/components/session/PlateCalculatorSheet.tsx`:**
 - [x] `STORAGE_KEY` changed from `'plateCalc_barKg'` to `'bar_weight_kg'` — unified with the settings key, so both UIs stay in sync
 
+## Open Issues (2026-05 review)
+
+- [ ] **`getBarWeightKg` ignores `biological_sex` — female users default to 20 kg (men's bar).** The function takes `_biologicalSex` but discards it. A new female user who never opens Settings warms up off the wrong bar weight; the recovery-mode floor `max(20, …)` rounds plates ineffectively for women lifting near the women's bar (15 kg). Change the default to `biologicalSex === 'female' ? 15 : 20`, update the test, and audit all consumers (warmup calculator, plate calculator, recovery floor in `applySorenessToSets`, JIT `barWeightKg` input).
+
 ## Notes
 
 - All engine defaults remain 20 — no behavior change without an explicit settings change

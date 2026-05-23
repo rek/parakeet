@@ -66,8 +66,7 @@ const [eventSoreness, setEventSoreness] = useState<Record<string, SorenessLevel>
 
 - [x] If `suggestions.length === 0` and type is `unprogrammed_event`: show "Soreness logged — upcoming sessions will auto-adjust" instead of the generic no-adjustments message
 
-## Dependencies
+## Open Issues
 
-- [disruptions-001-report.md](./disruptions-001-report.md)
-- soreness_checkins table (already exists from mobile-011 soreness check-in spec)
-- Migration `20260309000000_nullable_soreness_session_id.sql`
+- [ ] **`event_name` is mashed into the free-text `description` column.** `handleSubmit` does `description = ${eventName.trim()}: ${description}`. There is no dedicated column, so the event name is unsearchable, unfilterable, and intermixed with prose. `DisruptionChipsRow` shows the generic type label only ("Unplanned Event"), losing the "Hyrox race" name on the chip. Add a nullable `event_name` column + migration, surface it via the repo, and render it in the chip + review screen instead of the type label.
+- [ ] **Review screen "Done" button on a major unprogrammed event is the only affordance — `handleApply` is unreachable.** Severity is forced to `major`, so the `effectiveSeverity === 'minor'` auto-apply branch is skipped and the review screen takes the `autoApplied || isUnprogrammedEvent` branch which only renders Done. Today this is consistent because the engine returns `[]` suggestions for `unprogrammed_event`, but the contract is invisible. Add an invariant test that `unprogrammed_event` always returns `[]` suggestions, OR honour the Apply path if a future generator emits suggestions for this type.

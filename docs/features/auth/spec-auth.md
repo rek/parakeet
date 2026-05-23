@@ -81,6 +81,10 @@ Supabase Authentication integration in the parakeet app. Replaces Firebase Auth 
     FOR ALL USING (auth.uid() = id);
   ```
 
+## Open Issues (2026-05 review)
+
+- [ ] **`getInitialAuthSession` has no error path.** If bootstrap rejects (e.g. AsyncStorage corruption), `loading` never flips to `false` and the app is stuck on the spinner. In `AuthContext.tsx`, attach `.catch((err) => { captureException(err); setLoading(false); })` so the user can at least reach the welcome screen.
+
 ## Dependencies
 
 - [infra-002-supabase-setup.md](../infra/spec-supabase.md)

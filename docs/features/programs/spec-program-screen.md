@@ -46,6 +46,13 @@ The Program tab showing the full 10-week program in a scannable week-grid format
 **No program state:**
 - If `getActiveProgram()` returns `null`, show "No active program" with "Create Program" button
 
+**Scheduled program with zero sessions:**
+- If `program.program_mode !== 'unending'` and `program.sessions.length === 0` (program created but session generation hasn't completed or failed), render a placeholder tile "Sessions being prepared…" with a tap-to-retry action that calls a regenerate path. Today this state renders only the header + check-in card with a totally empty middle — looks broken.
+
+## Open Issues (2026-05 review)
+
+- [ ] **`getCurrentBlock` uses a non-null assertion on `start_date` and a hard-coded fallback of 9 weeks.** `program-utils.ts:53` does `currentBlockNumber(program.start_date!, program.total_weeks ?? 9)`. For an imported scheduled program with no start_date this crashes; for a scheduled program where `total_weeks` is unexpectedly null this silently uses 9-week boundaries. Type-guard `start_date` and treat null `total_weeks` for `program_mode !== 'unending'` as a data error (warn + return 1).
+
 ## Dependencies
 
 - [parakeet-001-expo-router-layout.md](./parakeet-001-expo-router-layout.md)

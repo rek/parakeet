@@ -99,8 +99,10 @@ This flow is useful for ongoing disruptions that have a known recovery date, or 
 
 1. User taps a disruption chip in the Today screen chip row
 2. Bottom sheet modal shows type, severity, description, affected lifts, end date
-3. User taps "Mark Resolved" → Alert confirms → disruption status → resolved; affected sessions have `planned_sets` cleared for JIT re-generation
+3. User taps "Mark Resolved" → Alert confirms → disruption status → resolved; affected sessions have `planned_sets` cleared for JIT re-generation **AND any sessions this disruption marked `skipped` (whose `planned_date >= today`) are restored to `planned`**
 4. Chip disappears from row; upcoming sessions regenerate at normal loading on next open
+
+**Ongoing-disruption re-confirmation:** Disruptions submitted as "Ongoing" (no end date) are surfaced for re-confirmation when older than the type-specific shelf life (injury: 14 days, illness/fatigue: 7 days, travel/equipment: 30 days). On app foreground the user sees a single "Is this still ongoing?" prompt per disruption with three options: still active (extends shelf life), recovered (calls `resolveDisruption`), or remind me later (24h snooze). Prevents stale disruptions from injecting soreness/skip rules into JIT indefinitely.
 
 ### Visual Design Notes
 

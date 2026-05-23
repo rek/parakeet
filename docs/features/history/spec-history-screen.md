@@ -32,6 +32,11 @@ The History tab showing performance trends, completed sessions, and archived pro
 - "Review" button → navigates to `history/cycle-review/[programId].tsx` (mobile-014)
 - Abandoned programs (not ≥80% complete): shown with a "Incomplete" badge, no Review button
 
+### Open Issues (2026-05 review)
+
+- [ ] **Review button is hidden for any program that hasn't already been reviewed.** Today the screen gates Review on `reviewedProgramIds.has(program.id)`. Archived programs whose review failed (or whose user never opened the review screen) have no entry point — the user must hand-construct the URL. Always render Review for `program.status === 'completed'`; the screen already handles "needs generation" via `triggerCycleReview`. For programs whose review is intentionally unavailable (e.g. ended <50% complete), disable the button with the copy "No review — program ended early."
+- [ ] **Volume chart "Loading…" and "No volume data yet" use the same `emptyText` style.** Use a spinner for loading and reserve `emptyText` for the empty case so the two states are visually distinct.
+
 ### Error State
 
 - [ ] Surface `isError` from `useHistoryScreen` (or equivalent query hooks) — when queries fail, show an error card with a "Retry" button rather than the empty-state fallback ("No performance data yet."). A silent empty state during a transient network error is indistinguishable from genuinely empty data and confusing to the user.

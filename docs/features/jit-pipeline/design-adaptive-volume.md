@@ -83,7 +83,7 @@ Volume calibration runs as Step 0 of the JIT pipeline, before all reduction step
 
 **Signals that increase volume:**
 
-- RPE consistently below target (avg gap >= 1.0 over last 3 sessions for this lift)
+- RPE consistently below target (avg gap ≥ 0.75 over last 2 sessions triggers a small downward intensity correction; ≥ 1.25 triggers a large one — see `RPE_OVER_THRESHOLD` / `RPE_LARGE_GAP` in `rpe-history-thresholds.ts`. Older docs that referenced a ≥ 1.0 trigger over 3 sessions are out of date.)
 - Post-session capacity assessment: "had more in me" or "way too easy"
 - Low pre-session soreness for primary muscles (fresh and recovered)
 - High readiness (good sleep + high energy)

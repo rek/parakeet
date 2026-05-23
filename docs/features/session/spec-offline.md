@@ -74,6 +74,11 @@ Handling offline scenarios during active workout logging. Session logging works 
 - `src/app/session/complete.tsx` — offline-safe completion
 - `src/app/_layout.tsx` — mounts `useSyncQueue`
 
+## Open Issues (2026-05 review)
+
+- [ ] **`upsert_set_log` drops silently after `MAX_RETRIES=5`.** `useSyncQueue` comment claims the completion batch covers dropped per-set ops — but only if the user taps End. If the user abandons the session without ending it, the per-set queue was the only durability path. Surface a single aggregated breadcrumb/alert when ≥ 1 set-log op is dropped in a drain pass, and escalate if `complete_session` is not in the queue when a per-set op is dropped.
+- [ ] **JWT expiry kills LLM/JIT calls mid-flight.** AI proxy returns 401 on expired JWT and the AI SDK treats 4xx as non-retryable. JIT, motivational, and cycle-review calls all flow through this path. In the engine's `models.ts` fetch wrapper, on 401 call `supabase.auth.refreshSession()` once and retry, OR have the proxy return 503 with a retryable flag specifically for token errors.
+
 ## Dependencies
 
 - [parakeet-005-session-logging-screen.md](./parakeet-005-session-logging-screen.md)

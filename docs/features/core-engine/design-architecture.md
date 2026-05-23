@@ -305,6 +305,32 @@ The `jit_comparison_logs` table in Supabase stores full inputs and outputs from 
 - `jit_comparison_logs` table + 90-day retention
 - LLM strategy benefits from sleep data automatically; Formula strategy updated separately
 
+## App-Layer Module Shape (companion to engine)
+
+The engine package is pure; the app layer wraps it through module-first folders under `apps/parakeet/src/modules/<feature>/`. Each module should expose `data/`, `application/`, `ui/`, `utils/`, and a public `index.ts`. Boundaries:
+
+- `app/` is composition only — no business logic.
+- `modules/*/ui/` may not import repositories directly. It calls into `application/` services.
+- Supabase access lives in `modules/*/data/*.repository.ts`. Lib files and UI must not touch `typedSupabase`. (The 2026-03 lib-to-data extraction enforced this; periodic regression checks are warranted.)
+- `lib/*.ts` is for pure utilities and contracts; when a `lib/` file is doing repository orchestration, rename it to `*.service.ts` and move it to `application/`.
+- `platform/*` must not import from `modules/*`.
+- `packages/shared-types` must not import `packages/training-engine` (one-way dep).
+- Cross-module imports use `@modules/<name>` (the public `index.ts`), never deep paths.
+
+### Known shape & test debt (2026-05 review snapshot)
+
+Tracked here so that anyone restructuring a module knows the surface area. Each item is a follow-up, not a blocker.
+
+- `modules/jit/services/` is non-canonical — should be `modules/jit/application/`. Move the calibration-update service.
+- `modules/settings/constants/warmup-presets.ts` self-imports via `@modules/settings/lib/warmup-config` (deep path). Switch to a relative import or re-export the type from the module index.
+- Multiple modules house Supabase-calling orchestration in `lib/*.ts` rather than `application/*.service.ts`: `jit/lib/jit.ts`, `cycle-tracking/lib/cycle-tracking.ts`, `cycle-review/lib/cycle-review.ts`, `history/lib/performance.ts`, `program/lib/{auxiliary-config,lifter-maxes}.ts`, `settings/lib/{developer-suggestions,reset,rest-config,warmup-config}.ts`, `training-volume/lib/volume-config.ts`. Either rename + move, or split: pure functions stay in `lib/`, repo-calling shells move to `application/`.
+- `modules/achievements/data/session.repository.ts` re-exports a sibling module's *private* repository. Either consume the session module through its public API or copy the narrow function set with an inline justification.
+- 19 modules are missing one or more of `data/`, `application/`, `ui/`, `utils/`, `index.ts`. Worst offender: `onboarding` (only `lib/` + `index.ts`) where ~700-line route components own significant business logic. Build out `data/`, `application/`, `ui/` for onboarding so the route file can compose.
+- Three giant route files own orchestration that should be in `application/` services: `(tabs)/session/[sessionId].tsx` (1552 L), `(tabs)/session/soreness.tsx` (862 L), `(tabs)/today.tsx` (978 L). Extract `session-bootstrap.service.ts`, `resolveReadiness.ts`, `decideSessionEntryRoute.ts`, etc.
+- 18 of 24 `application/*.service.ts` files lack sibling tests. Largest: `program.service.ts` (284 L), `disruption.service.ts` (252 L), `achievement.service.ts` (214 L), `motivational-message.service.ts` (185 L), the four `video-analysis/application/*.service.ts` files, `set-persistence.service.ts`, and `wearable/application/*` (sync, recovery, baseline).
+- Pure `lib/*.ts` files without tests — biggest gap is `modules/video-analysis/lib/` (30+ pure computer-vision math files: `angle-calculator`, `bar-velocity`, `butt-wink-detector`, `competition-grader`, `depth-detector`, `rep-detector`, `bar-path`, `bar-tilt`). Pure-function test surface, zero coverage. Other targets: `modules/program/lib/programs.ts`, `auxiliary-config.ts`; `modules/training-volume/lib/{engine-adapter,volume-config}.ts`; `modules/gym-partners/lib/{partner-state-machine,partner-video-tracking,qr-payload}.ts`.
+- `captureException.ts` is duplicated in three modules (`cycle-review`, `program`, `session`) plus an authoritative `platform/utils/captureException.ts`. Consolidate to the platform helper.
+
 ## Domain References
 
 - [domain/volume-landmarks.md](../domain/volume-landmarks.md) — MEV/MRV defaults per muscle group

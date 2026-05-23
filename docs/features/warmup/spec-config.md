@@ -40,6 +40,8 @@ CREATE POLICY "users_own_warmup_config" ON warmup_configs
   - Example for Squat 140kg 1RM, Block 1 Heavy (working weight ~112.5kg): `Standard → 45kg×5, 67.5kg×3, 85kg×2, 102.5kg×1`
 - [x] Custom step editor when "Custom" is selected: list of steps with +/− buttons, percentage (1–99) and reps (1–10) inputs, steps kept in ascending order, Save button calls `updateWarmupConfig()` with `type: 'custom'`
 - [ ] All save paths (`handleSaveLift` per lift, custom step save) must wrap the `updateWarmupConfig()` call in `try/catch`; on error: `captureException(err)` + `Alert.alert('Save Failed', 'Could not save warmup config — please try again.')`
+- [ ] **`apps/parakeet/src/modules/settings/lib/warmup-config.ts:1` has the wrong `@spec` tag.** It points at `docs/features/settings-and-tools/spec-bar-weight.md` (a different feature). Update the comment to `@spec docs/features/warmup/spec-config.md`.
+- [ ] **Defensive default inside the engine.** `resolveEffectiveWarmupProtocol` dereferences `opts.warmupConfig`. If any caller passes null, JIT crashes. Add a default — `{ type: 'preset', name: biologicalSex === 'female' ? 'standard_female' : 'standard' }` — at the start of the resolver to neutralise the case.
 
 ## Dependencies
 

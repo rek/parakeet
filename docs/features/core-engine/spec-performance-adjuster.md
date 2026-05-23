@@ -66,6 +66,10 @@ await supabase.from('performance_metrics').insert({
 - [x] Incomplete session (60% completion) → flag_for_review suggestion
 - [x] Low RPE pattern → increase suggestion
 
+## Open Issues (2026-05 review)
+
+- [ ] **`DEFAULT_THRESHOLDS_FEMALE` is exported and tested but never imported anywhere in the app.** The female-specific RPE deviation threshold (1.5 vs male 1.25) defined in `docs/domain/sex-differences.md` is dead — `suggestProgramAdjustments` is itself unreferenced from production code (see `session/spec-completion.md` open issue: the `performance_metrics` insert is a dead write path). Decide: either wire `suggestProgramAdjustments` into a weekly review job using `getDefaultThresholds(biologicalSex)` and persist the suggestions for the formula editor to consume, OR remove the engine export, drop the dead Supabase write, and document that sex-specific thresholds are not yet applied.
+
 ## Dependencies
 
 - [engine-004-program-generator.md](./engine-004-program-generator.md)

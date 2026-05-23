@@ -11,6 +11,7 @@ Accessory exercise rotation, configuration, and ad-hoc additions.
 - [design-types.md](./design-types.md) — Auxiliary exercise types
 - [design-ad-hoc.md](./design-ad-hoc.md) — Ad-hoc exercise design
 - [design-subtitles.md](./design-subtitles.md) — Exercise variant subtitles (GH#205)
+- [design-history-anchored-weight.md](./design-history-anchored-weight.md) — User history overrides formula percentages (GH#221)
 
 ## Specs
 | Spec | Status | Concern |

@@ -77,6 +77,11 @@ Test cases:
 - luteal → intensity 0.975, volume 0, rationale present
 - late_luteal → intensity 0.95, volume -1, rationale present
 
+## Open Issues (2026-05 review)
+
+- [ ] **Stale cycle data still gets stamped.** `getCurrentCycleContext` returns a phase based on `(now - last_period_start) mod cycle_length_days` with no upper bound. If a user logged a period six months ago and never updated, the engine will keep stamping a phase derived from the abandoned data and attribute training adjustments to "menstrual" or "luteal" with full confidence. Add a guard in `getCurrentCycleContext`: when `now - last_period_start > 2 * cycle_length_days`, return `null` (no phase). Surface a "Cycle data may be outdated — log a recent period" prompt on the settings cycle row.
+- [ ] **`updateSessionCyclePhase` writes to `session_logs.session_id` — never fires for offline completions.** `complete.tsx:360` calls `stampCyclePhaseOnSession` after `completeSession`, but the offline-queued completion path returns early (line 341-345). The session is eventually flushed by the sync queue with no phase. Include `cycle_phase` in the offline `complete_session` payload, or compute it server-side in a trigger reading `cycle_tracking.last_period_start`.
+
 ## Domain References
 
 - [domain/adjustments.md](../../domain/adjustments.md) — cycle phase modifier table and research basis (McNulty 2020)

@@ -67,6 +67,12 @@ interface CompleteSessionInput {
   - Remove the `suggestProgramAdjustments` call and `performance_metrics` insert entirely (dead code), OR
   - Implement `getPendingAdjustmentSuggestions` per `spec-performance.md` and populate all the columns on insert.
 
+## Open Issues (2026-05 review)
+
+- [ ] **`onCycleComplete` fires before achievement detection settles on the complete screen.** `complete.tsx` flips `setSaved(true)` (the Done button surface) before awaiting `detectAchievements`. First tap on Done can leave the celebratory state — PR star, badge, motivational message — un-rendered. Either await `detectAchievements` before flipping `setSaved`, or disable Done until detection settles.
+- [ ] **Cycle phase stamp never fires for offline completions.** `complete.tsx:358-363` calls `stampCyclePhaseOnSession` after `completeSession`, but the offline-queued completion path (`session.service.ts:341-345`) returns early without stamping. The session is later flushed by the sync queue with no phase. Include `cycle_phase` in the offline `complete_session` payload, or compute it server-side from `cycle_tracking.last_period_start` in a trigger.
+- [ ] **`auxiliaryWork` (the JIT-prescribed aux plan) is not persisted by `sessionStore.partialize`.** `actualSets`, `auxiliarySets`, `cachedJitData` are persisted, but `auxiliaryWork` isn't. After a process restart mid-session the prescribed aux is reconstructed from `cachedJitData` if available; if not, the post-rest rest timer's `auxSetPlan` lookup (`sessionStore.ts:638-640`) fails for prescribed aux and the next-set weight suggestion path goes blank. Either persist `auxiliaryWork`, or guard the lookup and reconstruct from `cachedJitData` with a Sentry breadcrumb when both are absent after rehydration with non-empty `actualSets`.
+
 ## Completion Semantics Contract
 
 Completion metric contract:

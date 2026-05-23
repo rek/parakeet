@@ -18,7 +18,7 @@ MRV/MEV tracking, EMG weights, volume augmentation, and push coverage.
 | Spec | Status | Concern |
 |------|--------|---------|
 | [spec-mrv-mev.md](./spec-mrv-mev.md) | done | MRV/MEV thresholds |
-| [spec-emg-weights.md](./spec-emg-weights.md) | planned | EMG-based muscle weights |
+| [spec-emg-weights.md](./spec-emg-weights.md) | planned (no GH issue) | EMG-based muscle weights — confirm vs. deferred. No code in `modules/training-volume/` references EMG. If not on roadmap, flip to `deferred` and consider promoting the feature status to `implemented`. If on roadmap, link the tracking issue here. |
 | [spec-augmentation.md](./spec-augmentation.md) | done | Volume top-up logic |
 | [spec-push-boost.md](./spec-push-boost.md) | done | Push muscle boost |
 | [spec-training-age.md](./spec-training-age.md) | done | Training age calculation |

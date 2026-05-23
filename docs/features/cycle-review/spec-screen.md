@@ -19,6 +19,8 @@ Navigation path: History tab → completed program card → "Review" button.
 - Poll every 10 seconds via React Query `refetchInterval: 10_000` until row appears
 - Once row exists: render full review
 - If query fails: render explicit error state with retry action (do not show indefinite loading)
+- [ ] **Distinguish "no pending row" from "pending row" earlier.** Today the retry surface only appears after 60s. If `triggerCycleReview` errored before writing a pending row, the screen polls a non-existent row for a minute with no signal. Distinguish in the hook: `query.data == null` (no row) → show retry after 20-30s; `query.data?.status === 'pending'` → keep current 60s threshold.
+- [ ] **Render an explicit "review generated but empty" placeholder.** When the LLM responds with minimal data (no `progressByLift`, no `auxiliaryInsights`), the screen renders only the header — visually indistinguishable from a still-loading state. Add a short copy block: "Review generated but no actionable insights found this cycle."
 
 **History-tab entry point:**
 - [ ] **Hide or disable "Review" button on archived programs that have no cycle review row** — history.tsx renders a Review button for every past program regardless of whether a review actually exists. For scheduled programs ended before 80% completion, no review was ever generated; tapping Review lands on the cycle review screen and spins forever (or eventually falls through to on-demand generation of a partial report). Action: fetch `cycle_reviews.program_id IN (...)` alongside the program list and only render the Review button when a row exists, OR label archived-without-review programs with a disabled "No review — program ended early" pill. This prevents a dead-end UX path for users who abandon a program early.
