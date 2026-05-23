@@ -20,11 +20,15 @@ import {
 } from '@modules/cycle-tracking';
 import {
   DisruptionChipsRow,
+  extendDisruptionShelfLife,
+  OngoingDisruptionPrompt,
   resolveDisruption,
   updateDisruptionEndDate,
   useActiveDisruptions,
+  useDisruptionSnooze,
 } from '@modules/disruptions';
 import { useFeatureEnabled } from '@modules/feature-flags';
+import { useCalibrationActions } from '@modules/jit';
 import { useActiveProgram } from '@modules/program';
 import {
   RehabCapChipsRow,
@@ -392,9 +396,37 @@ function buildStyles(colors: ColorScheme) {
 
 function VolumeCompactCard() {
   const { colors } = useTheme();
-  const { data } = useWeeklyVolume();
+  const { data, isPending, isError, refetch } = useWeeklyVolume();
 
   const styles = useMemo(() => buildStyles(colors), [colors]);
+
+  // Treat truly empty (no muscle entries / zero total sets) as nothing to show.
+  const isEmpty =
+    !!data &&
+    COMPACT_VOLUME_MUSCLES.every((m) => (data.weekly[m] ?? 0) === 0);
+
+  if (isError) {
+    return (
+      <TouchableOpacity
+        style={styles.volumeCard}
+        activeOpacity={0.7}
+        onPress={() => {
+          void refetch();
+        }}
+      >
+        <View style={styles.volumeCardHeader}>
+          <Text style={styles.volumeCardTitle}>Weekly Volume</Text>
+        </View>
+        <Text style={[styles.volumeLoading, { color: colors.danger }]}>
+          Couldn't load volume — tap to retry
+        </Text>
+      </TouchableOpacity>
+    );
+  }
+
+  if (!isPending && isEmpty) {
+    return null;
+  }
 
   return (
     <View style={styles.volumeCard}>
@@ -705,6 +737,26 @@ export default function TodayScreen() {
 
   const { data: disruptions, invalidateDisruptions } = useActiveDisruptions();
 
+  // Ongoing-disruption re-confirmation: when a disruption has no
+  // `affected_date_end` it's flagged as open-ended. We surface a one-tap
+  // prompt so the lifter confirms whether the issue is still active.
+  // The prompt is per-disruption snoozable for 24h via AsyncStorage.
+  // TODO(bundle-b-followup): once Bundle B exposes `reported_at` on the
+  // active-disruption shape, gate the prompt on (today - reported_at) >
+  // DISRUPTION_SHELF_LIFE_DAYS[type] rather than just open-endedness.
+  const { snoozedIds: snoozedDisruptionIds, snooze: snoozeDisruption } =
+    useDisruptionSnooze();
+  const { acceptCalibration, revertCalibration } = useCalibrationActions();
+
+  const ongoingDisruptions = useMemo(
+    () =>
+      (disruptions ?? []).filter(
+        (d) =>
+          d.affected_date_end == null && !snoozedDisruptionIds.has(d.id)
+      ),
+    [disruptions, snoozedDisruptionIds]
+  );
+
   const { data: activeRehabCaps } = useActiveRehabCaps();
   const { end: endRehabMutation } = useRehabModeMutations();
 
@@ -808,6 +860,32 @@ export default function TodayScreen() {
               />
             )}
 
+            {showDisruptions &&
+              ongoingDisruptions.length > 0 &&
+              ongoingDisruptions.map((d) => (
+                <OngoingDisruptionPrompt
+                  key={`ongoing-${d.id}`}
+                  disruption={d}
+                  onStillActive={async (days) => {
+                    try {
+                      await extendDisruptionShelfLife(d.id, user!.id, days);
+                      invalidateDisruptions();
+                    } catch (err) {
+                      captureException(err);
+                    }
+                  }}
+                  onRecovered={async () => {
+                    try {
+                      await resolveDisruption(d.id, user!.id);
+                      invalidateDisruptions();
+                    } catch (err) {
+                      captureException(err);
+                    }
+                  }}
+                  onSnooze={() => snoozeDisruption(d.id)}
+                />
+              ))}
+
             {activeRehabCaps && activeRehabCaps.length > 0 && (
               <RehabCapChipsRow
                 caps={activeRehabCaps}
@@ -817,7 +895,11 @@ export default function TodayScreen() {
               />
             )}
 
-            {/* Calibration adjustment prompt */}
+            {/* Calibration adjustment prompt.
+                Accept = the (already-applied) new value sticks; we just bump
+                  confidence to 'high' and dismiss the prompt.
+                Revert = put back the previous default; user wants the old
+                  behaviour. Both actions clear the AsyncStorage prompt key. */}
             {pendingCalibration && (
               <View style={styles.weeklyReviewCard}>
                 <Text style={styles.weeklyReviewTitle}>
@@ -832,9 +914,17 @@ export default function TodayScreen() {
                     style={styles.weeklyReviewButton}
                     onPress={async () => {
                       try {
-                        await AsyncStorage.removeItem(
-                          'pending_calibration_prompt'
-                        );
+                        await acceptCalibration({
+                          userId: user!.id,
+                          modifierSource:
+                            pendingCalibration.modifierSource as
+                              | 'readiness'
+                              | 'cycle_phase'
+                              | 'soreness',
+                          proposed: pendingCalibration.proposed,
+                          sampleCount: pendingCalibration.sampleCount,
+                          meanBias: pendingCalibration.meanBias,
+                        });
                       } catch (err) {
                         captureException(err);
                       }
@@ -843,32 +933,24 @@ export default function TodayScreen() {
                     activeOpacity={0.8}
                   >
                     <Text style={styles.weeklyReviewButtonText}>
-                      Sounds right
+                      Accept change
                     </Text>
                   </TouchableOpacity>
-                  {/* TODO: "Not sure — let's discuss" button opens LLM conversation */}
                   <TouchableOpacity
                     style={styles.weeklyReviewLaterButton}
                     onPress={async () => {
                       try {
-                        // Revert the adjustment to the previous value
-                        const { upsertModifierCalibration } = await import(
-                          '@modules/jit'
-                        );
-                        await upsertModifierCalibration({
+                        await revertCalibration({
                           userId: user!.id,
-                          modifierSource: pendingCalibration.modifierSource as
-                            | 'readiness'
-                            | 'cycle_phase'
-                            | 'soreness',
-                          adjustment: pendingCalibration.currentDefault,
-                          confidence: 'medium',
+                          modifierSource:
+                            pendingCalibration.modifierSource as
+                              | 'readiness'
+                              | 'cycle_phase'
+                              | 'soreness',
+                          currentDefault: pendingCalibration.currentDefault,
                           sampleCount: pendingCalibration.sampleCount,
                           meanBias: pendingCalibration.meanBias,
                         });
-                        await AsyncStorage.removeItem(
-                          'pending_calibration_prompt'
-                        );
                       } catch (err) {
                         captureException(err);
                       }
@@ -877,7 +959,7 @@ export default function TodayScreen() {
                     activeOpacity={0.7}
                   >
                     <Text style={styles.weeklyReviewLaterButtonText}>
-                      Keep current
+                      Revert change
                     </Text>
                   </TouchableOpacity>
                 </View>
@@ -931,7 +1013,11 @@ export default function TodayScreen() {
                 onPress={handleRefresh}
                 activeOpacity={0.7}
               >
-                <Text style={styles.restDayTitle}>Could not load sessions</Text>
+                <Text
+                  style={[styles.restDayTitle, { color: colors.danger }]}
+                >
+                  Could not load sessions ↻
+                </Text>
                 <Text style={styles.restDaySubtitle}>
                   Tap to retry, or pull down to refresh.
                 </Text>

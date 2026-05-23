@@ -22,3 +22,8 @@ export const DISRUPTION_SHELF_LIFE_DAYS: Record<DisruptionType, number> = {
 
 /** Days a snooze adds before the prompt re-fires (finding #7). */
 export const DISRUPTION_SNOOZE_DAYS = 1;
+
+/** Fallback shelf life when a disruption_type isn't in the lookup table —
+ *  for forward-compat with new types added by migration without a docs/lib
+ *  bump. The 7-day default errs on the side of prompting sooner. */
+export const DEFAULT_DISRUPTION_SHELF_LIFE_DAYS = 7;

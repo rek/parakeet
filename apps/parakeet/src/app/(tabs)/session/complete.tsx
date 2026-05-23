@@ -19,6 +19,7 @@ import {
   checkEndOfWeek,
   completeSession,
   computeSessionStats,
+  getCyclePhaseSnapshotForUser,
   isNetworkError,
   RPE_OPTIONS,
   useSessionCacheInvalidation,
@@ -293,7 +294,12 @@ export default function CompleteScreen() {
       return;
     }
 
-    // Build payload once (used for both online save and offline queue)
+    // Build payload once (used for both online save and offline queue).
+    // Cycle phase is captured here (at the moment of completion) so that
+    // when an offline drain runs hours/days later it stamps the phase that
+    // was current at workout time — not whatever phase the drain happens
+    // to see. No-op when cycle tracking is disabled (returns null).
+    const cyclePhase = await getCyclePhaseSnapshotForUser(user.id);
     const notesValue = notes.trim() || undefined;
     const completionPayload = {
       sessionId,
@@ -322,6 +328,7 @@ export default function CompleteScreen() {
           : undefined,
       sessionRpe,
       startedAt: startedAt?.toISOString(),
+      cyclePhase,
     };
 
     // Store capacity assessment for volume calibration (works offline too).
@@ -362,12 +369,12 @@ export default function CompleteScreen() {
         captureException(err);
       }
 
-      // Data is committed — show the saved state regardless of what follows
-      setSaved(true);
-
       invalidateAfterCompletion();
 
       // ── Achievement detection (best-effort) ───────────────────────────────
+      // Awaited BEFORE flipping `saved` so PR/badge cards render in the same
+      // frame as the post-save UI — avoids a flash of "Done" with no
+      // achievements followed by them popping in milliseconds later.
       try {
         const achievements = await detectAchievements(
           sessionId,
@@ -385,6 +392,9 @@ export default function CompleteScreen() {
       } catch (achievementErr) {
         captureException(achievementErr);
       }
+
+      // Data is committed and achievements settled — show the saved state.
+      setSaved(true);
 
       // ── End-of-week: show inline prompt + store for today-screen fallback ───
       try {
@@ -452,15 +462,22 @@ export default function CompleteScreen() {
           </View>
         )}
 
-        {/* Stats card */}
-        <View style={styles.statsCard}>
-          <View style={styles.statRow}>
-            <Text style={styles.statLabel}>Sets completed</Text>
-            <Text style={styles.statValue}>
-              {completedSets}/{totalSets}
-            </Text>
+        {/* Stats card — hidden when there's nothing to count (avoids "0/0"
+            on fully ad-hoc sessions where everything was added then removed) */}
+        {totalSets > 0 && (
+          <View style={styles.statsCard}>
+            <View style={styles.statRow}>
+              <Text style={styles.statLabel}>
+                {actualSets.length === 0 && auxiliarySets.length > 0
+                  ? 'Auxiliary sets'
+                  : 'Sets completed'}
+              </Text>
+              <Text style={styles.statValue}>
+                {completedSets}/{totalSets}
+              </Text>
+            </View>
           </View>
-        </View>
+        )}
 
         {/* Adjustment context — shown when JIT reduced volume or intensity */}
         <AdjustmentsCard

@@ -454,29 +454,58 @@ export default function SorenessScreen() {
     if (!sessionId || !user) return;
 
     void (async () => {
-      const [data, latest, expanded, disruptions] = await Promise.all([
-        getSession(sessionId),
-        getLatestSorenessCheckin(user.id),
-        AsyncStorage.getItem(MUSCLES_EXPANDED_KEY),
-        getActiveDisruptions(user.id),
-      ]);
+      try {
+        const [data, latest, expanded, disruptions] = await Promise.all([
+          getSession(sessionId),
+          getLatestSorenessCheckin(user.id),
+          AsyncStorage.getItem(MUSCLES_EXPANDED_KEY),
+          getActiveDisruptions(user.id),
+        ]);
 
-      setSession(data);
-      if (expanded === 'true') setMusclesExpanded(true);
-      const descs = disruptions
-        .filter((d) => d.description)
-        .map((d) => d.description as string);
-      setActiveDisruptionDescs(descs);
-
-      if (data?.primary_lift) {
-        const muscles =
-          LIFT_PRIMARY_SORENESS_MUSCLES[data.primary_lift as Lift] ?? [];
-        const initialRatings: Record<string, number> = {};
-        for (const muscle of muscles) {
-          initialRatings[muscle] =
-            (latest as Record<string, number>)?.[muscle] ?? 1;
+        if (!data) {
+          // Surface clearly rather than silently rendering an empty form.
+          Alert.alert(
+            'Session not found',
+            'This workout no longer exists. Returning to Today.',
+            [
+              {
+                text: 'Open Today',
+                onPress: () => router.replace('/(tabs)/today'),
+              },
+            ]
+          );
+          return;
         }
-        setRatings(initialRatings);
+
+        setSession(data);
+        if (expanded === 'true') setMusclesExpanded(true);
+        const descs = disruptions
+          .filter((d) => d.description)
+          .map((d) => d.description as string);
+        setActiveDisruptionDescs(descs);
+
+        if (data.primary_lift) {
+          const muscles =
+            LIFT_PRIMARY_SORENESS_MUSCLES[data.primary_lift as Lift] ?? [];
+          const initialRatings: Record<string, number> = {};
+          for (const muscle of muscles) {
+            initialRatings[muscle] =
+              (latest as Record<string, number>)?.[muscle] ?? 1;
+          }
+          setRatings(initialRatings);
+        }
+      } catch (err) {
+        captureException(err);
+        Alert.alert(
+          'Could not load session',
+          'Something went wrong loading this workout.',
+          [
+            {
+              text: 'Open Today',
+              onPress: () => router.replace('/(tabs)/today'),
+            },
+          ]
+        );
       }
     })();
   }, [sessionId, user]);
@@ -537,6 +566,13 @@ export default function SorenessScreen() {
     // prefill effect in this same commit do NOT show up in `sleepQuality` /
     // `energyLevel` until the next render — passing those state values to
     // runJIT would race against the prefill (GH#210).
+    //
+    // TODO(bundle-followup): extract this readiness resolution into a pure
+    // function `modules/jit/application/resolveReadiness.ts`. The same
+    // resolution logic is duplicated in the autogenerate effect and the
+    // manual generate path below — pulling it into a single module-side
+    // function would keep this screen thin and let us unit-test the
+    // wearable-vs-touched precedence in isolation. Deferred per direction.
     const resolvedSleep = sleepTouched
       ? sleepQuality
       : (recoverySnapshot
@@ -593,11 +629,53 @@ export default function SorenessScreen() {
     return fresh;
   }
 
+  /**
+   * When the session already had JIT generated AND there's an active
+   * disruption that affects this lift, regenerating JIT would discard the
+   * disruption-adjusted prescription. Bundle B composes disruption into the
+   * JIT input on the engine side; here we just ask the lifter first.
+   */
+  async function shouldConfirmDisruptionOverwrite(): Promise<boolean> {
+    if (!session || !user) return false;
+    if (!session.jit_generated_at) return false;
+    try {
+      const active = await getActiveDisruptions(user.id);
+      const lift = session.primary_lift;
+      const affectsThisSession = active.some((d) => {
+        const lifts = (d.affected_lifts ?? []) as readonly string[];
+        return lifts.length === 0 || (lift != null && lifts.includes(lift));
+      });
+      return affectsThisSession;
+    } catch (err) {
+      captureException(err);
+      return false;
+    }
+  }
+
   async function runJIT(
     ratingsToUse: Record<string, number>,
     readinessOverride?: { sleep: ReadinessLevel; energy: ReadinessLevel }
   ) {
     if (!session || !user) return;
+    // Prompt before discarding a disruption-adjusted prescription.
+    const needsConfirm = await shouldConfirmDisruptionOverwrite();
+    if (needsConfirm) {
+      const proceed = await new Promise<boolean>((resolve) => {
+        Alert.alert(
+          'Regenerate prescription?',
+          'This session may have a disruption-adjusted prescription. Regenerate?',
+          [
+            { text: 'Cancel', style: 'cancel', onPress: () => resolve(false) },
+            { text: 'Regenerate', onPress: () => resolve(true) },
+          ],
+          { onDismiss: () => resolve(false) }
+        );
+      });
+      if (!proceed) {
+        setGenerating(false);
+        return;
+      }
+    }
     try {
       const primaryLift = session.primary_lift as Lift | null;
       // Override path is used by auto-generate to avoid the same-commit race

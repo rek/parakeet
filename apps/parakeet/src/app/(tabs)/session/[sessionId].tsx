@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
+  ActivityIndicator,
   Alert,
   ScrollView,
   StyleSheet,
@@ -30,19 +31,18 @@ import {
   computeSuggestedAux,
   computeSuggestedWeight,
   DEFAULT_MAIN_REST_SECONDS,
-  flushUnsyncedSets,
   formatExerciseName,
   formatPrescriptionTrace,
   getRecentAuxExerciseNames,
-  getSession,
   groupAuxiliaryWork,
+  groupTemplateBlocks,
   parsePrescriptionTrace,
   PostRestOverlay,
   RestTimer,
   RpeQuickPicker,
   selectPostRestWeight,
   SetRow,
-  startSession,
+  useSessionBootstrap,
   useSessionLifecycle,
   useSessionStore,
   useSetCompletionFlow,
@@ -52,10 +52,8 @@ import {
   WeightSuggestionBanner,
 } from '@modules/session';
 import type {
-  JitData,
   LlmRestSuggestion,
   RestRecommendations,
-  WarmupSet,
 } from '@modules/session';
 import {
   getBarWeightKg,
@@ -359,16 +357,11 @@ export default function SessionScreen() {
     weightSuggestion,
     acceptWeightSuggestion,
     dismissWeightSuggestion,
-    initSession,
-    initAuxiliary,
-    initAuxiliaryWork,
     addAdHocSet,
     removeAdHocSet,
     addTemplateBlock,
     removeTemplateBlock,
     setWarmupDone,
-    setSessionMeta,
-    setCachedJitData,
     openTimer,
     tickTimer,
     adjustTimer,
@@ -397,11 +390,6 @@ export default function SessionScreen() {
 
   const { invalidateSessionCache } = useSessionLifecycle();
 
-  const [warmupSetsState, setWarmupSetsState] = useState<WarmupSet[]>([]);
-  // Exercises rendered as cards in the aux area that aren't in the JIT
-  // prescription. Union of two sources: truly ad-hoc adds (AddExerciseModal)
-  // and template-derived adds (AddWorkoutTemplateModal → handleConfirmAddWorkout).
-  const [adHocExercises, setAdHocExercises] = useState<string[]>([]);
   const [equipmentBarWeightKg, setEquipmentBarWeightKg] = useState<number>(20);
   const [equipmentDisabledPlates, setEquipmentDisabledPlates] = useState<
     PlateKg[]
@@ -563,159 +551,21 @@ export default function SessionScreen() {
     }
   }
 
-  useEffect(() => {
-    if (!sessionId) {
-      router.back();
-      return;
-    }
-
-    // Read current store state directly — avoids stale closure from first render
-    // (Zustand may not have finished hydrating from AsyncStorage at render time)
-    const storeState = useSessionStore.getState();
-    const currentStoreSessionId = storeState.sessionId;
-
-    // Free-form ad-hoc: no JIT data needed, start with empty session
-    if (isFreeForm) {
-      if (currentStoreSessionId !== sessionId) {
-        // Flush any unsynced completed sets from the previous session before
-        // the store is overwritten. The queue picks up anything offline.
-        if (currentStoreSessionId && user?.id) {
-          void flushUnsyncedSets(user.id);
-        }
-        initSession(sessionId, []);
-
-        getSession(sessionId).then((session) => {
-          if (!session) {
-            router.back();
-            return;
-          }
-          setSessionMeta({
-            primary_lift: session.primary_lift,
-            intensity_type: session.intensity_type,
-            block_number: session.block_number ?? null,
-            week_number: session.week_number,
-            activity_name: session.activity_name,
-          });
-          invalidateSessionCache();
-        });
-      } else {
-        // Resuming free-form: restore ad-hoc exercises from store. Skip
-        // template-tagged sets — they render via AuxTemplateBlock, not the
-        // per-exercise card list, so they don't belong in adHocExercises.
-        const adHoc = [
-          ...new Set(
-            storeState.auxiliarySets
-              .filter((s) => s.template_instance_id == null)
-              .map((s) => s.exercise)
-          ),
-        ];
-        setAdHocExercises(adHoc);
-      }
-      return;
-    }
-
-    // If no jitData param, try recovering from the store's cached JIT (resume path
-    // when navigating from program tab without cached JIT in route params)
-    const effectiveJitData =
-      jitData ??
-      (currentStoreSessionId === sessionId ? storeState.cachedJitData : null);
-
-    if (!effectiveJitData) {
-      router.back();
-      return;
-    }
-
-    let parsed: JitData;
-    try {
-      parsed = JSON.parse(effectiveJitData) as JitData;
-    } catch {
-      router.back();
-      return;
-    }
-
-    setCachedJitData(effectiveJitData);
-
-    const { mainLiftSets, warmupSets: ws, auxiliaryWork: aux } = parsed;
-    setWarmupSetsState(ws ?? []);
-
-    if (parsed.restRecommendations) {
-      restRecommendations.current = parsed.restRecommendations;
-    }
-    if (parsed.llmRestSuggestion) {
-      llmRestSuggestion.current = parsed.llmRestSuggestion;
-    }
-    if (parsed.oneRmKg != null) {
-      oneRmKgRef.current = parsed.oneRmKg;
-    }
-
-    // Re-initialize if this is a different session OR if JIT data changed for the
-    // same session (e.g. user re-ran soreness check-in → new weights from JIT).
-    // Compare first planned weight to detect stale store data.
-    const storeWeight = storeState.actualSets[0]?.weight_grams;
-    const jitWeight = mainLiftSets[0]
-      ? Math.round(mainLiftSets[0].weight_kg * 1000)
-      : undefined;
-    const jitDataChanged =
-      currentStoreSessionId === sessionId &&
-      jitWeight !== undefined &&
-      storeWeight !== jitWeight;
-
-    if (currentStoreSessionId !== sessionId || jitDataChanged) {
-      if (
-        currentStoreSessionId
-        && currentStoreSessionId !== sessionId
-        && user?.id
-      ) {
-        void flushUnsyncedSets(user.id);
-      }
-      initSession(sessionId, mainLiftSets);
-      initAuxiliaryWork(aux ?? []);
-
-      const activeAux = (aux ?? []).filter((a) => !a.skipped);
-      if (activeAux.length > 0) {
-        initAuxiliary(
-          activeAux.map((a) => ({
-            exercise: a.exercise,
-            sets: a.sets,
-            exerciseType: a.exerciseType,
-          }))
-        );
-      }
-
-      getSession(sessionId).then((session) => {
-        if (!session) {
-          router.back();
-          return;
-        }
-        setSessionMeta({
-          primary_lift: session.primary_lift,
-          intensity_type: session.intensity_type,
-          block_number: session.block_number ?? null,
-          week_number: session.week_number,
-        });
-        startSession(sessionId).then(() => {
-          invalidateSessionCache();
-        });
-      });
-    } else {
-      // Returning to an existing session — restore aux work display, preserve actualSets
-      initAuxiliaryWork(aux ?? []);
-      // Restore ad-hoc exercises: any exercise in the store not in prescribed aux
-      const prescribed = new Set((aux ?? []).map((a) => a.exercise));
-      const adHoc = [
-        ...new Set(
-          storeState.auxiliarySets
-            .filter(
-              (s) =>
-                !prescribed.has(s.exercise) && s.template_instance_id == null
-            )
-            .map((s) => s.exercise)
-        ),
-      ];
-      setAdHocExercises(adHoc);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  const {
+    bootstrapped,
+    warmupSets: warmupSetsState,
+    adHocExercises,
+    setAdHocExercises,
+  } = useSessionBootstrap({
+    sessionId,
+    jitDataParam: jitData,
+    isFreeForm,
+    userId: user?.id,
+    invalidateSessionCache,
+    oneRmKgRef,
+    restRecommendationsRef: restRecommendations,
+    llmRestSuggestionRef: llmRestSuggestion,
+  });
 
   // ── Focus-managed timer interval ───────────────────────────────────────────
 
@@ -754,23 +604,10 @@ export default function SessionScreen() {
     [auxiliaryWork, adHocExercises]
   );
 
-  // Group template-inserted aux entries by their instance id, preserving the
-  // round-by-round insertion order. AuxTemplateBlock renders each block as a
-  // single interleaved card so HIIT-style circuits read correctly.
-  const templateBlocks = useMemo(() => {
-    const blocks = new Map<string, typeof auxiliarySets>();
-    for (const entry of auxiliarySets) {
-      const id = entry.template_instance_id;
-      if (id == null) continue;
-      const existing = blocks.get(id) ?? [];
-      existing.push(entry);
-      blocks.set(id, existing);
-    }
-    return Array.from(blocks.entries()).map(([id, entries]) => ({
-      id,
-      entries,
-    }));
-  }, [auxiliarySets]);
+  const templateBlocks = useMemo(
+    () => groupTemplateBlocks(auxiliarySets),
+    [auxiliarySets]
+  );
 
   const suggestedExerciseNames = useMemo(
     () =>
@@ -937,6 +774,16 @@ export default function SessionScreen() {
     (challengeReview?.concerns.length ?? 0) > 0;
 
   // ── Render ────────────────────────────────────────────────────────────────
+
+  if (!bootstrapped) {
+    return (
+      <SafeAreaView
+        style={[styles.safeArea, { alignItems: 'center', justifyContent: 'center' }]}
+      >
+        <ActivityIndicator size="large" color={colors.primary} />
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.safeArea}>
