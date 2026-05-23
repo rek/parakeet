@@ -97,6 +97,8 @@ export function useFormulaEditor({ topTab }: { topTab: TopTab }) {
     userId: user?.id,
     config: configQuery.data,
     configLoading: configQuery.isLoading,
+    configError: configQuery.error,
+    refetchConfig: configQuery.refetch,
     history: historyQuery.data,
     aiSuggestions: suggestionsQuery.data,
     oneRmKg,

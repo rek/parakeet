@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
+  Alert,
   Modal,
   ScrollView,
   StyleSheet,
@@ -19,6 +20,7 @@ import {
   useFormulaEditor,
 } from '@modules/formula';
 import type { BlockKey, DraftConfig, RowDraft } from '@modules/formula';
+import { captureException } from '@platform/utils/captureException';
 import { router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -255,6 +257,51 @@ function buildStyles(colors: ColorScheme) {
       marginTop: 32,
     },
 
+    // Config-load error retry surface
+    errorRetry: {
+      marginTop: 40,
+      padding: 16,
+      borderRadius: 10,
+      borderWidth: 1,
+      borderColor: colors.border,
+      alignItems: 'center',
+    },
+    errorRetryText: {
+      fontSize: 14,
+      color: colors.primary,
+      fontWeight: '600',
+    },
+
+    // AI-suggestion guidance banner shown above the editor after the user
+    // taps "Open in editor" on a suggestion.
+    suggestionGuidanceBanner: {
+      borderWidth: 1,
+      borderColor: colors.primary,
+      backgroundColor: colors.primaryMuted,
+      borderRadius: 10,
+      padding: 12,
+      gap: 6,
+      marginBottom: 8,
+    },
+    suggestionGuidanceLabel: {
+      fontSize: 11,
+      fontWeight: '700',
+      color: colors.primary,
+      letterSpacing: 0.5,
+      textTransform: 'uppercase',
+    },
+    suggestionGuidanceText: {
+      fontSize: 13,
+      color: colors.text,
+      lineHeight: 18,
+    },
+    suggestionGuidanceDismiss: {
+      fontSize: 12,
+      color: colors.primary,
+      fontWeight: '600',
+      alignSelf: 'flex-end',
+    },
+
     // Save sheet
     sheetBackdrop: {
       flex: 1,
@@ -457,16 +504,23 @@ export default function FormulaEditorScreen() {
   const [showSaveSheet, setShowSaveSheet] = useState(false);
   const [regenerate, setRegenerate] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  // When the user taps "Open in editor" on an AI suggestion we keep the
+  // suggestion rationale around to render above the editor as guidance.
+  const [suggestionGuidance, setSuggestionGuidance] = useState<string | null>(
+    null
+  );
 
   const {
     config,
     configLoading,
+    configError,
+    refetchConfig,
     history,
     aiSuggestions,
     oneRmKg,
     activeProgram,
     saveOverride,
-    acceptSuggestion,
+    acceptSuggestion: _acceptSuggestion,
     dismissSuggestion,
     reactivate,
   } = useFormulaEditor({ topTab });
@@ -502,16 +556,29 @@ export default function FormulaEditorScreen() {
       }
       setShowSaveSheet(false);
       router.back();
+    } catch (err) {
+      // Sentry + user-visible failure. Without this the sheet would stay open
+      // with a silent spinner spin-down and the user would have no idea their
+      // override didn't land.
+      captureException(err);
+      Alert.alert(
+        'Save failed',
+        'Could not save formula override — please try again.'
+      );
     } finally {
       setIsSaving(false);
     }
   }
 
-  async function handleAcceptSuggestion(
-    _suggestionId: string,
-    overrides: unknown
-  ) {
-    await acceptSuggestion({ overrides });
+  /**
+   * Suggestions are advisory only — accepting one no longer applies an empty
+   * `overrides: {}` payload (which would silently no-op). Instead, switch the
+   * user to the manual editor with the suggestion text shown so they can use
+   * it as guidance while making their own changes.
+   */
+  function handleOpenSuggestionInEditor(rationale: string | null) {
+    setSuggestionGuidance(rationale ?? null);
+    setTopTab('editor');
   }
 
   async function handleDismissSuggestion(suggestionId: string) {
@@ -671,13 +738,49 @@ export default function FormulaEditorScreen() {
             keyboardShouldPersistTaps="handled"
             showsVerticalScrollIndicator={false}
           >
-            {configLoading || !draft ? (
+            {configError ? (
+              // Recoverable failure — give the user a retry instead of leaving
+              // the screen stuck on a spinner forever.
+              <TouchableOpacity
+                style={styles.errorRetry}
+                onPress={() => {
+                  void refetchConfig();
+                }}
+                accessibilityRole="button"
+                accessibilityLabel="Retry loading formula config"
+                activeOpacity={0.7}
+              >
+                <Text style={styles.errorRetryText}>
+                  Couldn't load formula config — tap to retry
+                </Text>
+              </TouchableOpacity>
+            ) : configLoading || !draft ? (
               <ActivityIndicator
                 color={colors.primary}
                 style={{ marginTop: 40 }}
               />
             ) : (
               <>
+                {suggestionGuidance && (
+                  <View style={styles.suggestionGuidanceBanner}>
+                    <Text style={styles.suggestionGuidanceLabel}>
+                      AI suggestion
+                    </Text>
+                    <Text style={styles.suggestionGuidanceText}>
+                      {suggestionGuidance}
+                    </Text>
+                    <TouchableOpacity
+                      onPress={() => setSuggestionGuidance(null)}
+                      accessibilityRole="button"
+                      accessibilityLabel="Dismiss AI suggestion guidance"
+                      activeOpacity={0.7}
+                    >
+                      <Text style={styles.suggestionGuidanceDismiss}>
+                        Hide
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
+                )}
                 {oneRmKg > 0 && (
                   <Text style={styles.exampleNote}>
                     Example weights based on your squat 1RM ({oneRmKg} kg)
@@ -763,11 +866,11 @@ export default function FormulaEditorScreen() {
                 <TouchableOpacity
                   style={styles.acceptButton}
                   onPress={() =>
-                    handleAcceptSuggestion(item.id, item.overrides)
+                    handleOpenSuggestionInEditor(item.ai_rationale ?? null)
                   }
                   activeOpacity={0.8}
                 >
-                  <Text style={styles.acceptButtonText}>Accept</Text>
+                  <Text style={styles.acceptButtonText}>Open in editor</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
                   style={styles.dismissButton}

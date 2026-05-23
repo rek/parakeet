@@ -5,6 +5,7 @@ export * from './hooks/useActiveProgram';
 export * from './hooks/useCreateProgram';
 export * from './hooks/useEndProgram';
 export * from './hooks/useNextSessionPreview';
+export * from './hooks/useRetryProgramGeneration';
 export * from './hooks/useUpdateTrainingDays';
 export * from './lib/auxiliary-config';
 export * from './lib/lifter-maxes';

@@ -1,4 +1,5 @@
 // @spec docs/features/programs/spec-generation-api.md
+import { captureException } from '@platform/utils/captureException';
 import type { ProgramSessionView } from '@shared/types/domain';
 
 export type ProgramSession = ProgramSessionView;
@@ -50,7 +51,27 @@ export function getCurrentBlock(program: {
       program.training_days_per_week ?? 3
     );
   }
-  return currentBlockNumber(program.start_date!, program.total_weeks ?? 9);
+  // Defensive guards for scheduled programs: missing start_date or total_weeks
+  // should never happen in practice, but if it does we fall back to block 1
+  // and report rather than crashing the screen. The previous non-null
+  // assertion on start_date masked these failures.
+  if (!program.start_date) {
+    const err = new Error(
+      '[getCurrentBlock] scheduled program missing start_date'
+    );
+    console.warn(err.message);
+    captureException(err);
+    return 1;
+  }
+  if (program.total_weeks == null) {
+    const err = new Error(
+      '[getCurrentBlock] scheduled program missing total_weeks; falling back to 9'
+    );
+    console.warn(err.message);
+    captureException(err);
+    return currentBlockNumber(program.start_date, 9);
+  }
+  return currentBlockNumber(program.start_date, program.total_weeks);
 }
 
 /**

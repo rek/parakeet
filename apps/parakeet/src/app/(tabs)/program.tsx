@@ -19,6 +19,7 @@ import {
   useActiveProgram,
   useEndProgram,
   useNextSessionPreview,
+  useRetryProgramGeneration,
   WeekRow,
 } from '@modules/program';
 import type { ProgramSession } from '@modules/program';
@@ -199,6 +200,38 @@ function buildStyles(colors: ColorScheme) {
       fontWeight: typography.weights.semibold,
       color: colors.primary,
     },
+    // Empty scheduled-program placeholder (sessions not yet generated)
+    emptyScheduledTile: {
+      backgroundColor: colors.bgSurface,
+      borderRadius: 16,
+      borderWidth: 1,
+      borderColor: colors.border,
+      padding: spacing[6],
+      margin: spacing[5],
+      gap: spacing[3],
+    },
+    emptyScheduledTitle: {
+      fontSize: typography.sizes.base,
+      fontWeight: typography.weights.semibold,
+      color: colors.text,
+    },
+    emptyScheduledNote: {
+      fontSize: typography.sizes.sm,
+      color: colors.textSecondary,
+    },
+    emptyScheduledButton: {
+      backgroundColor: colors.primaryMuted,
+      borderRadius: 10,
+      paddingVertical: spacing[3],
+      paddingHorizontal: spacing[4],
+      alignItems: 'center',
+      alignSelf: 'flex-start',
+    },
+    emptyScheduledButtonText: {
+      fontSize: typography.sizes.sm,
+      fontWeight: typography.weights.semibold,
+      color: colors.primary,
+    },
   });
 }
 
@@ -275,6 +308,8 @@ export default function ProgramScreen() {
   const { endProgram, isPending: isEndingProgram } = useEndProgram({
     isUnending,
   });
+  const { retryGeneration, isPending: isRetryingGeneration } =
+    useRetryProgramGeneration();
 
   function handleSessionPress(session: ProgramSession) {
     if (session.status === 'in_progress') {
@@ -450,6 +485,57 @@ export default function ProgramScreen() {
 
   // Scheduled program — existing grid view
   const sessions: ProgramSession[] = program.sessions ?? [];
+
+  // Programs occasionally land in an "active but no sessions" state when the
+  // initial scaffold write fails partway through. Render a recoverable tile
+  // instead of an empty grid the user can't act on.
+  if (program.program_mode !== 'unending' && sessions.length === 0) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <ScreenHeader>
+          <View style={styles.headerRow}>
+            <View style={styles.headerLeft}>
+              <HeaderMenuButton />
+              <ScreenTitle>My Program</ScreenTitle>
+            </View>
+            <TouchableOpacity
+              onPress={confirmEndProgram}
+              disabled={isEndingProgram}
+            >
+              <Text style={styles.endProgramText}>End Program</Text>
+            </TouchableOpacity>
+          </View>
+        </ScreenHeader>
+        <View style={styles.emptyScheduledTile}>
+          <Text style={styles.emptyScheduledTitle}>
+            Sessions being prepared…
+          </Text>
+          <Text style={styles.emptyScheduledNote}>
+            We couldn't find any sessions for this program. Tap below to retry
+            generation.
+          </Text>
+          <TouchableOpacity
+            style={styles.emptyScheduledButton}
+            onPress={() =>
+              retryGeneration({
+                total_weeks: program.total_weeks,
+                training_days_per_week: program.training_days_per_week,
+                training_days: program.training_days,
+                start_date: program.start_date,
+              })
+            }
+            disabled={isRetryingGeneration}
+            activeOpacity={0.8}
+          >
+            <Text style={styles.emptyScheduledButtonText}>
+              {isRetryingGeneration ? 'Retrying…' : 'Retry generation'}
+            </Text>
+          </TouchableOpacity>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
   const weekGroups = groupByWeek(sessions);
   const currentWeek = determineCurrentWeek(sessions);
 
