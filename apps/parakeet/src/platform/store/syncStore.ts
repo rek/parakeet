@@ -25,6 +25,13 @@ export interface CompleteSessionPayload {
   }[];
   sessionRpe?: number;
   startedAt?: string;
+  /**
+   * Cycle phase captured at the moment the user tapped "Save & Finish" while
+   * offline. The drain path applies this to session_logs.cycle_phase so the
+   * stamp reflects when the workout was completed (not when sync drained,
+   * which could be days later with a different phase).
+   */
+  cyclePhase?: string | null;
 }
 
 export interface UpsertSetLogPayload {

@@ -451,9 +451,9 @@ export async function completeSession(
     )
     .catch(captureException);
 
-  // Trigger cycle review when all scheduled sessions are done.
-  // Firing at 80% excluded the deload week from the LLM analysis.
-  // Users who miss sessions can still get a review via End Program.
+  // Trigger cycle review when every scheduled session has reached a terminal
+  // state (completed/missed/skipped). Counting only `completed` left programs
+  // with even one missed/skipped session stuck without an auto-trigger.
   // Unending programs have no fixed session count; cycle review is triggered manually via End Program.
   if (session?.program_id) {
     const programMeta = await fetchActiveProgramMode(userId);
@@ -463,8 +463,13 @@ export async function completeSession(
         userId
       );
       const total = statuses.length;
-      const completed = statuses.filter((s) => s.status === 'completed').length;
-      if (total > 0 && completed >= total) {
+      const terminal = statuses.filter(
+        (s) =>
+          s.status === 'completed' ||
+          s.status === 'missed' ||
+          s.status === 'skipped'
+      ).length;
+      if (total > 0 && terminal >= total) {
         const { onCycleComplete } = await import('@modules/program');
         onCycleComplete(session.program_id, userId);
       }
@@ -735,6 +740,28 @@ export async function getProfileSex(
   userId: string
 ): Promise<'female' | 'male' | undefined> {
   return fetchProfileSex(userId);
+}
+
+// Compute the user's current cycle phase snapshot for inclusion in an offline
+// complete_session payload. The drain path uses this captured value when
+// stamping session_logs.cycle_phase so the phase reflects when the workout
+// was completed, not when the device finally regained connectivity (which
+// could be days later — a different phase entirely).
+//
+// Dynamic import keeps the cycle-tracking module out of the session service's
+// static dependency graph.
+export async function getCyclePhaseSnapshotForUser(
+  userId: string
+): Promise<string | null> {
+  try {
+    const { getCurrentCycleContext } = await import('@modules/cycle-tracking');
+    const ctx = await getCurrentCycleContext(userId);
+    return ctx?.phase ?? null;
+  } catch (err) {
+    // Don't let cycle-tracking failures block session completion.
+    captureException(err);
+    return null;
+  }
 }
 
 export async function getRecentAuxExerciseNames(): Promise<string[]> {

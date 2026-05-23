@@ -238,32 +238,97 @@ describe('getCurrentCycleContext', () => {
   });
 
   it('computes and returns cycle context when enabled with a period start', async () => {
-    fromMock.mockReturnValueOnce(
-      makeSingleChain({
-        data: {
-          is_enabled: true,
-          cycle_length_days: 28,
-          last_period_start: '2026-03-01',
-        },
-        error: null,
-      })
-    );
-    const expectedContext = {
-      phase: 'follicular',
-      dayOfCycle: 8,
-      daysUntilNextPeriod: 20,
-      isOvulatoryWindow: false,
-      isLateLuteal: false,
-    };
-    mockComputeCyclePhase.mockReturnValue(expectedContext);
+    // Mock "today" inside the stale window (within 2 cycles of 2026-03-01).
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-03-09T12:00:00Z'));
+    try {
+      fromMock.mockReturnValueOnce(
+        makeSingleChain({
+          data: {
+            is_enabled: true,
+            cycle_length_days: 28,
+            last_period_start: '2026-03-01',
+          },
+          error: null,
+        })
+      );
+      const expectedContext = {
+        phase: 'follicular',
+        dayOfCycle: 8,
+        daysUntilNextPeriod: 20,
+        isOvulatoryWindow: false,
+        isLateLuteal: false,
+      };
+      mockComputeCyclePhase.mockReturnValue(expectedContext);
 
-    const result = await getCurrentCycleContext(USER_ID);
+      const result = await getCurrentCycleContext(USER_ID);
 
-    expect(result).toEqual(expectedContext);
-    expect(mockComputeCyclePhase).toHaveBeenCalledWith(
-      new Date('2026-03-01'),
-      28
-    );
+      expect(result).toEqual(expectedContext);
+      expect(mockComputeCyclePhase).toHaveBeenCalledWith(
+        new Date('2026-03-01'),
+        28
+      );
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('returns null when last_period_start is older than 2 cycle lengths (stale)', async () => {
+    // Set "today" to a point more than 2 × 28 days after 2026-01-01.
+    vi.useFakeTimers();
+    // 2026-04-01 is 90 days after 2026-01-01 (>56). Stale.
+    vi.setSystemTime(new Date('2026-04-01T12:00:00Z'));
+    try {
+      fromMock.mockReturnValueOnce(
+        makeSingleChain({
+          data: {
+            is_enabled: true,
+            cycle_length_days: 28,
+            last_period_start: '2026-01-01',
+          },
+          error: null,
+        })
+      );
+
+      const result = await getCurrentCycleContext(USER_ID);
+
+      expect(result).toBeNull();
+      expect(mockComputeCyclePhase).not.toHaveBeenCalled();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('returns computed phase when last_period_start is exactly within 2 cycles', async () => {
+    vi.useFakeTimers();
+    // 2026-02-25 is 55 days after 2026-01-01 (<56). Not stale yet.
+    vi.setSystemTime(new Date('2026-02-25T12:00:00Z'));
+    try {
+      fromMock.mockReturnValueOnce(
+        makeSingleChain({
+          data: {
+            is_enabled: true,
+            cycle_length_days: 28,
+            last_period_start: '2026-01-01',
+          },
+          error: null,
+        })
+      );
+      mockComputeCyclePhase.mockReturnValue({
+        phase: 'luteal',
+        dayOfCycle: 27,
+        daysUntilNextPeriod: 1,
+        isOvulatoryWindow: false,
+        isLateLuteal: true,
+      });
+
+      const result = await getCurrentCycleContext(USER_ID);
+
+      expect(result).not.toBeNull();
+      expect(mockComputeCyclePhase).toHaveBeenCalled();
+    } finally {
+      vi.useRealTimers();
+    }
   });
 });
 
@@ -467,101 +532,116 @@ describe('stampCyclePhaseOnSession', () => {
   });
 
   it('stamps cycle_phase on session_logs when enabled with a period start', async () => {
-    // getCycleConfig
-    fromMock.mockReturnValueOnce(
-      makeSingleChain({
-        data: {
-          is_enabled: true,
-          cycle_length_days: 28,
-          last_period_start: '2026-03-01',
-        },
-        error: null,
-      })
-    );
+    // Pin "today" inside the stale window — the new 2-cycle staleness guard in
+    // getCurrentCycleContext would otherwise return null for a 2026-03-01
+    // last_period_start when the system clock is far in the future.
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-03-15T12:00:00Z'));
+    try {
+      // getCycleConfig
+      fromMock.mockReturnValueOnce(
+        makeSingleChain({
+          data: {
+            is_enabled: true,
+            cycle_length_days: 28,
+            last_period_start: '2026-03-01',
+          },
+          error: null,
+        })
+      );
 
-    mockComputeCyclePhase.mockReturnValue({
-      phase: 'luteal',
-      dayOfCycle: 20,
-      daysUntilNextPeriod: 8,
-      isOvulatoryWindow: false,
-      isLateLuteal: false,
-    });
+      mockComputeCyclePhase.mockReturnValue({
+        phase: 'luteal',
+        dayOfCycle: 20,
+        daysUntilNextPeriod: 8,
+        isOvulatoryWindow: false,
+        isLateLuteal: false,
+      });
 
-    // session_logs update chain
-    const updateChain = {
-      update: vi.fn(),
-      eq: vi.fn(),
-    };
-    updateChain.update.mockReturnValue(updateChain);
-    updateChain.eq.mockReturnValue(updateChain);
-    // Final .eq() resolves
-    updateChain.eq
-      .mockResolvedValueOnce({ error: null })
-      .mockResolvedValueOnce({ error: null });
+      // session_logs update chain
+      const updateChain = {
+        update: vi.fn(),
+        eq: vi.fn(),
+      };
+      updateChain.update.mockReturnValue(updateChain);
+      updateChain.eq.mockReturnValue(updateChain);
+      // Final .eq() resolves
+      updateChain.eq
+        .mockResolvedValueOnce({ error: null })
+        .mockResolvedValueOnce({ error: null });
 
-    // Re-mock final resolution properly: chain returns self until the last eq
-    const sessionLogsChain = {
-      update: vi.fn(),
-      eq: vi.fn(),
-    };
-    sessionLogsChain.update.mockReturnValue(sessionLogsChain);
-    // First eq returns chain, second eq (last call) resolves
-    let eqCallCount = 0;
-    sessionLogsChain.eq.mockImplementation(() => {
-      eqCallCount++;
-      if (eqCallCount >= 2) {
-        return Promise.resolve({ error: null });
-      }
-      return sessionLogsChain;
-    });
+      // Re-mock final resolution properly: chain returns self until the last eq
+      const sessionLogsChain = {
+        update: vi.fn(),
+        eq: vi.fn(),
+      };
+      sessionLogsChain.update.mockReturnValue(sessionLogsChain);
+      // First eq returns chain, second eq (last call) resolves
+      let eqCallCount = 0;
+      sessionLogsChain.eq.mockImplementation(() => {
+        eqCallCount++;
+        if (eqCallCount >= 2) {
+          return Promise.resolve({ error: null });
+        }
+        return sessionLogsChain;
+      });
 
-    fromMock.mockReturnValueOnce(sessionLogsChain);
+      fromMock.mockReturnValueOnce(sessionLogsChain);
 
-    await stampCyclePhaseOnSession(USER_ID, 'session-1');
+      await stampCyclePhaseOnSession(USER_ID, 'session-1');
 
-    expect(sessionLogsChain.update).toHaveBeenCalledWith({
-      cycle_phase: 'luteal',
-    });
-    expect(fromMock).toHaveBeenCalledTimes(2);
+      expect(sessionLogsChain.update).toHaveBeenCalledWith({
+        cycle_phase: 'luteal',
+      });
+      expect(fromMock).toHaveBeenCalledTimes(2);
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it('throws when session_logs update fails', async () => {
-    fromMock.mockReturnValueOnce(
-      makeSingleChain({
-        data: {
-          is_enabled: true,
-          cycle_length_days: 28,
-          last_period_start: '2026-03-01',
-        },
-        error: null,
-      })
-    );
-    mockComputeCyclePhase.mockReturnValue({
-      phase: 'follicular',
-      dayOfCycle: 7,
-      daysUntilNextPeriod: 21,
-      isOvulatoryWindow: false,
-      isLateLuteal: false,
-    });
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-03-15T12:00:00Z'));
+    try {
+      fromMock.mockReturnValueOnce(
+        makeSingleChain({
+          data: {
+            is_enabled: true,
+            cycle_length_days: 28,
+            last_period_start: '2026-03-01',
+          },
+          error: null,
+        })
+      );
+      mockComputeCyclePhase.mockReturnValue({
+        phase: 'follicular',
+        dayOfCycle: 7,
+        daysUntilNextPeriod: 21,
+        isOvulatoryWindow: false,
+        isLateLuteal: false,
+      });
 
-    const sessionLogsChain = {
-      update: vi.fn(),
-      eq: vi.fn(),
-    };
-    sessionLogsChain.update.mockReturnValue(sessionLogsChain);
-    let eqCallCount = 0;
-    sessionLogsChain.eq.mockImplementation(() => {
-      eqCallCount++;
-      if (eqCallCount >= 2) {
-        return Promise.resolve({ error: new Error('update failed') });
-      }
-      return sessionLogsChain;
-    });
+      const sessionLogsChain = {
+        update: vi.fn(),
+        eq: vi.fn(),
+      };
+      sessionLogsChain.update.mockReturnValue(sessionLogsChain);
+      let eqCallCount = 0;
+      sessionLogsChain.eq.mockImplementation(() => {
+        eqCallCount++;
+        if (eqCallCount >= 2) {
+          return Promise.resolve({ error: new Error('update failed') });
+        }
+        return sessionLogsChain;
+      });
 
-    fromMock.mockReturnValueOnce(sessionLogsChain);
+      fromMock.mockReturnValueOnce(sessionLogsChain);
 
-    await expect(
-      stampCyclePhaseOnSession(USER_ID, 'session-1')
-    ).rejects.toThrow('update failed');
+      await expect(
+        stampCyclePhaseOnSession(USER_ID, 'session-1')
+      ).rejects.toThrow('update failed');
+    } finally {
+      vi.useRealTimers();
+    }
   });
 });

@@ -55,6 +55,20 @@ export async function getCurrentCycleContext(
 ): Promise<CycleContext | null> {
   const config = await getCycleConfig(userId);
   if (!config.is_enabled || !config.last_period_start) return null;
+
+  // Bail out when last_period_start is stale (more than 2 full cycles old).
+  // A stale entry means the user stopped logging — extrapolating their phase
+  // beyond ~2 cycles gives noisy / misleading downstream signals (cycle-phase
+  // modifier, JIT adjustments). Returning null tells consumers "no phase",
+  // which they already treat as a no-op.
+  const lastStartMs = new Date(config.last_period_start).getTime();
+  if (!Number.isNaN(lastStartMs)) {
+    const ageMs = Date.now() - lastStartMs;
+    const staleThresholdMs =
+      2 * config.cycle_length_days * 24 * 60 * 60 * 1000;
+    if (ageMs > staleThresholdMs) return null;
+  }
+
   return computeCyclePhase(
     new Date(config.last_period_start),
     config.cycle_length_days
@@ -106,4 +120,19 @@ export async function stampCyclePhaseOnSession(
   const context = await getCurrentCycleContext(userId);
   if (!context) return;
   await updateSessionCyclePhase(userId, sessionId, context.phase);
+}
+
+/**
+ * Stamp a previously captured cycle phase onto a session_logs row. Used by
+ * the offline sync drain so the phase reflects when the session was completed
+ * (captured at "Save & Finish" tap), not when sync drained (possibly days
+ * later, with a different phase).
+ */
+export async function stampCapturedCyclePhaseOnSession(
+  userId: string,
+  sessionId: string,
+  phase: string | null | undefined
+): Promise<void> {
+  if (!phase) return;
+  await updateSessionCyclePhase(userId, sessionId, phase);
 }

@@ -19,6 +19,8 @@ export * from './hooks/useSetCompletionFlow';
 export { useSessionCacheInvalidation } from './hooks/useSessionCacheInvalidation';
 export { useSessionLifecycle } from './hooks/useSessionLifecycle';
 export { useMotivationalMessage } from './hooks/useMotivationalMessage';
+export { useSessionBootstrap } from './hooks/useSessionBootstrap';
+export { groupTemplateBlocks } from './utils/groupTemplateBlocks';
 export * from './lib/sessions';
 export * from './model/types';
 export * from './utils/overtime-edge';
