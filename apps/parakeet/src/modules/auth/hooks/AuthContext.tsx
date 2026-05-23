@@ -32,11 +32,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    getInitialAuthSession().then((s) => {
-      setSession(s);
-      setUser(s?.user ?? null);
-      setLoading(false);
-    });
+    getInitialAuthSession()
+      .then((s) => {
+        setSession(s);
+        setUser(s?.user ?? null);
+        setLoading(false);
+      })
+      .catch((err) => {
+        // Never leave the app stuck on the loading splash. Surface to Sentry
+        // and fall through to the unauthenticated state — onAuthStateChanged
+        // will route the user once a real session arrives.
+        Sentry.captureException(err);
+        setLoading(false);
+      });
 
     const subscription = onAuthStateChanged(async (_event, s) => {
       setSession(s);

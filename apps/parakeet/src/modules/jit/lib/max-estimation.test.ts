@@ -9,6 +9,8 @@ import { estimateOneRmKgFromProfile } from './max-estimation';
 // Age multipliers: <20 → 0.92, 20-29 → 1.0, 30-39 → 0.97, 40-49 → 0.92,
 //                  50-59 → 0.86, 60+ → 0.78, null → 0.95
 // Result is rounded to nearest 2.5 kg, floored at MIN_ESTIMATED_MAX_KG
+// Tests pass `hasTrainingExperienceSignal: true` to bypass the novice scaling
+// (0.6×) that's applied to estimates when no training-experience signal exists.
 
 function isoDateYearsAgo(years: number): string {
   const d = new Date();
@@ -24,6 +26,7 @@ describe('estimateOneRmKgFromProfile', () => {
         biologicalSex: 'male',
         dateOfBirth: isoDateYearsAgo(28),
         bodyweightKg: 85,
+        hasTrainingExperienceSignal: true,
       });
       expect(result).toBeGreaterThan(0);
     });
@@ -35,6 +38,7 @@ describe('estimateOneRmKgFromProfile', () => {
         biologicalSex: 'male',
         dateOfBirth: isoDateYearsAgo(25),
         bodyweightKg: 85,
+        hasTrainingExperienceSignal: true,
       });
       expect(result).toBe(115);
     });
@@ -46,6 +50,7 @@ describe('estimateOneRmKgFromProfile', () => {
         biologicalSex: 'male',
         dateOfBirth: isoDateYearsAgo(25),
         bodyweightKg: 85,
+        hasTrainingExperienceSignal: true,
       });
       expect(result).toBe(85);
     });
@@ -57,6 +62,7 @@ describe('estimateOneRmKgFromProfile', () => {
         biologicalSex: 'male',
         dateOfBirth: isoDateYearsAgo(25),
         bodyweightKg: 85,
+        hasTrainingExperienceSignal: true,
       });
       expect(result).toBe(140);
     });
@@ -69,6 +75,7 @@ describe('estimateOneRmKgFromProfile', () => {
         biologicalSex: 'female',
         dateOfBirth: isoDateYearsAgo(28),
         bodyweightKg: 70,
+        hasTrainingExperienceSignal: true,
       });
       expect(result).toBeGreaterThan(0);
     });
@@ -80,6 +87,7 @@ describe('estimateOneRmKgFromProfile', () => {
         biologicalSex: 'female',
         dateOfBirth: isoDateYearsAgo(25),
         bodyweightKg: 70,
+        hasTrainingExperienceSignal: true,
       });
       expect(result).toBe(72.5);
     });
@@ -91,6 +99,7 @@ describe('estimateOneRmKgFromProfile', () => {
         biologicalSex: 'female',
         dateOfBirth: isoDateYearsAgo(25),
         bodyweightKg: 70,
+        hasTrainingExperienceSignal: true,
       });
       expect(result).toBe(45);
     });
@@ -102,6 +111,7 @@ describe('estimateOneRmKgFromProfile', () => {
         biologicalSex: 'female',
         dateOfBirth: isoDateYearsAgo(25),
         bodyweightKg: 70,
+        hasTrainingExperienceSignal: true,
       });
       expect(result).toBe(87.5);
     });
@@ -112,12 +122,14 @@ describe('estimateOneRmKgFromProfile', () => {
         biologicalSex: 'male',
         dateOfBirth: isoDateYearsAgo(25),
         bodyweightKg: 80,
+        hasTrainingExperienceSignal: true,
       });
       const female = estimateOneRmKgFromProfile({
         lift: 'bench',
         biologicalSex: 'female',
         dateOfBirth: isoDateYearsAgo(25),
         bodyweightKg: 80,
+        hasTrainingExperienceSignal: true,
       });
       expect(female).toBeLessThan(male);
     });
@@ -130,12 +142,14 @@ describe('estimateOneRmKgFromProfile', () => {
         biologicalSex: 'male',
         dateOfBirth: isoDateYearsAgo(25),
         bodyweightKg: null,
+        hasTrainingExperienceSignal: true,
       });
       const withExplicit = estimateOneRmKgFromProfile({
         lift: 'squat',
         biologicalSex: 'male',
         dateOfBirth: isoDateYearsAgo(25),
         bodyweightKg: 85,
+        hasTrainingExperienceSignal: true,
       });
       expect(withDefault).toBe(withExplicit);
     });
@@ -145,12 +159,14 @@ describe('estimateOneRmKgFromProfile', () => {
         lift: 'deadlift',
         biologicalSex: 'female',
         dateOfBirth: isoDateYearsAgo(25),
+        hasTrainingExperienceSignal: true,
       });
       const withExplicit = estimateOneRmKgFromProfile({
         lift: 'deadlift',
         biologicalSex: 'female',
         dateOfBirth: isoDateYearsAgo(25),
         bodyweightKg: 70,
+        hasTrainingExperienceSignal: true,
       });
       expect(withDefault).toBe(withExplicit);
     });
@@ -161,12 +177,14 @@ describe('estimateOneRmKgFromProfile', () => {
         biologicalSex: 'male',
         dateOfBirth: isoDateYearsAgo(25),
         bodyweightKg: 0,
+        hasTrainingExperienceSignal: true,
       });
       const withDefault = estimateOneRmKgFromProfile({
         lift: 'bench',
         biologicalSex: 'male',
         dateOfBirth: isoDateYearsAgo(25),
         bodyweightKg: null,
+        hasTrainingExperienceSignal: true,
       });
       expect(withZero).toBe(withDefault);
     });
@@ -178,6 +196,7 @@ describe('estimateOneRmKgFromProfile', () => {
         biologicalSex: 'male' as const,
         dateOfBirth: isoDateYearsAgo(25),
         bodyweightKg: 85,
+        hasTrainingExperienceSignal: true,
       };
       const squat = estimateOneRmKgFromProfile({ lift: 'squat', ...shared });
       const bench = estimateOneRmKgFromProfile({ lift: 'bench', ...shared });
@@ -196,6 +215,7 @@ describe('estimateOneRmKgFromProfile', () => {
         biologicalSex: 'male' as const,
         dateOfBirth: isoDateYearsAgo(25),
         bodyweightKg: 85,
+        hasTrainingExperienceSignal: true,
       };
       const squat = estimateOneRmKgFromProfile({ lift: 'squat', ...shared });
       const bench = estimateOneRmKgFromProfile({ lift: 'bench', ...shared });
@@ -216,6 +236,7 @@ describe('estimateOneRmKgFromProfile', () => {
         biologicalSex: 'male',
         dateOfBirth: isoDateYearsAgo(25),
         bodyweightKg: 100,
+        hasTrainingExperienceSignal: true,
       });
       // 100 * 1.0 * 1.0 = 100
       expect(result).toBe(100);
@@ -227,6 +248,7 @@ describe('estimateOneRmKgFromProfile', () => {
         biologicalSex: 'male',
         dateOfBirth: isoDateYearsAgo(17),
         bodyweightKg: 100,
+        hasTrainingExperienceSignal: true,
       });
       // 100 * 1.0 * 0.92 = 92 → rounds to 92.5
       expect(result).toBe(92.5);
@@ -238,6 +260,7 @@ describe('estimateOneRmKgFromProfile', () => {
         biologicalSex: 'male',
         dateOfBirth: isoDateYearsAgo(35),
         bodyweightKg: 100,
+        hasTrainingExperienceSignal: true,
       });
       // 100 * 1.0 * 0.97 = 97 → rounds to 97.5
       expect(result).toBe(97.5);
@@ -249,6 +272,7 @@ describe('estimateOneRmKgFromProfile', () => {
         biologicalSex: 'male',
         dateOfBirth: isoDateYearsAgo(45),
         bodyweightKg: 100,
+        hasTrainingExperienceSignal: true,
       });
       // 100 * 1.0 * 0.92 = 92 → rounds to 92.5
       expect(result).toBe(92.5);
@@ -260,6 +284,7 @@ describe('estimateOneRmKgFromProfile', () => {
         biologicalSex: 'male',
         dateOfBirth: isoDateYearsAgo(55),
         bodyweightKg: 100,
+        hasTrainingExperienceSignal: true,
       });
       // 100 * 1.0 * 0.86 = 86 → rounds to 85
       expect(result).toBe(85);
@@ -271,6 +296,7 @@ describe('estimateOneRmKgFromProfile', () => {
         biologicalSex: 'male',
         dateOfBirth: isoDateYearsAgo(65),
         bodyweightKg: 100,
+        hasTrainingExperienceSignal: true,
       });
       // 100 * 1.0 * 0.78 = 78 → rounds to 77.5
       expect(result).toBe(77.5);
@@ -282,6 +308,7 @@ describe('estimateOneRmKgFromProfile', () => {
         biologicalSex: 'male',
         dateOfBirth: null,
         bodyweightKg: 100,
+        hasTrainingExperienceSignal: true,
       });
       // 100 * 1.0 * 0.95 = 95 → rounds to 95
       expect(result).toBe(95);
@@ -293,6 +320,7 @@ describe('estimateOneRmKgFromProfile', () => {
         biologicalSex: 'male',
         dateOfBirth: undefined as unknown as null,
         bodyweightKg: 100,
+        hasTrainingExperienceSignal: true,
       });
       expect(result).toBe(95);
     });
@@ -303,6 +331,7 @@ describe('estimateOneRmKgFromProfile', () => {
         biologicalSex: 'male',
         dateOfBirth: 'not-a-date',
         bodyweightKg: 100,
+        hasTrainingExperienceSignal: true,
       });
       expect(result).toBe(95);
     });
@@ -315,6 +344,7 @@ describe('estimateOneRmKgFromProfile', () => {
         biologicalSex: 'female',
         dateOfBirth: isoDateYearsAgo(65),
         bodyweightKg: 30,
+        hasTrainingExperienceSignal: true,
       });
       expect(result).toBeGreaterThanOrEqual(40);
     });
@@ -325,6 +355,7 @@ describe('estimateOneRmKgFromProfile', () => {
         biologicalSex: 'female',
         dateOfBirth: isoDateYearsAgo(65),
         bodyweightKg: 30,
+        hasTrainingExperienceSignal: true,
       });
       expect(result).toBeGreaterThanOrEqual(30);
     });
@@ -335,26 +366,32 @@ describe('estimateOneRmKgFromProfile', () => {
         biologicalSex: 'female',
         dateOfBirth: isoDateYearsAgo(65),
         bodyweightKg: 30,
+        hasTrainingExperienceSignal: true,
       });
       expect(result).toBeGreaterThanOrEqual(50);
     });
   });
 
   describe('null biologicalSex', () => {
-    it('defaults to male when biologicalSex is null', () => {
+    it('defaults to female (safer / smaller) when biologicalSex is null', () => {
+      // Safety default: when sex is unknown we under-estimate so first sets
+      // stay lighter. Confirmed by the female multiplier producing a smaller
+      // estimate than the male one for the same inputs.
       const withNull = estimateOneRmKgFromProfile({
         lift: 'bench',
         biologicalSex: null,
         dateOfBirth: isoDateYearsAgo(25),
         bodyweightKg: 85,
+        hasTrainingExperienceSignal: true,
       });
-      const withMale = estimateOneRmKgFromProfile({
+      const withFemale = estimateOneRmKgFromProfile({
         lift: 'bench',
-        biologicalSex: 'male',
+        biologicalSex: 'female',
         dateOfBirth: isoDateYearsAgo(25),
         bodyweightKg: 85,
+        hasTrainingExperienceSignal: true,
       });
-      expect(withNull).toBe(withMale);
+      expect(withNull).toBe(withFemale);
     });
   });
 
@@ -367,9 +404,58 @@ describe('estimateOneRmKgFromProfile', () => {
           biologicalSex: 'male',
           dateOfBirth: isoDateYearsAgo(28),
           bodyweightKg: 90,
+          hasTrainingExperienceSignal: true,
         });
         expect(result % 2.5).toBeCloseTo(0, 5);
       }
+    });
+  });
+
+  describe('novice scaling (no training-experience signal)', () => {
+    it('produces a conservative (lower) estimate when hasTrainingExperienceSignal is omitted', () => {
+      const novice = estimateOneRmKgFromProfile({
+        lift: 'squat',
+        biologicalSex: 'male',
+        dateOfBirth: isoDateYearsAgo(25),
+        bodyweightKg: 85,
+      });
+      const confirmed = estimateOneRmKgFromProfile({
+        lift: 'squat',
+        biologicalSex: 'male',
+        dateOfBirth: isoDateYearsAgo(25),
+        bodyweightKg: 85,
+        hasTrainingExperienceSignal: true,
+      });
+      expect(novice).toBeLessThan(confirmed);
+    });
+
+    it('produces the same result when hasTrainingExperienceSignal is false vs omitted', () => {
+      const omitted = estimateOneRmKgFromProfile({
+        lift: 'squat',
+        biologicalSex: 'male',
+        dateOfBirth: isoDateYearsAgo(25),
+        bodyweightKg: 85,
+      });
+      const explicitFalse = estimateOneRmKgFromProfile({
+        lift: 'squat',
+        biologicalSex: 'male',
+        dateOfBirth: isoDateYearsAgo(25),
+        bodyweightKg: 85,
+        hasTrainingExperienceSignal: false,
+      });
+      expect(omitted).toBe(explicitFalse);
+    });
+
+    it('still enforces the lift minimum floor when novice-scaled below it', () => {
+      // 70 * 1.05 * 1.0 * 0.6 = 44.1 → rounds to 45 → above squat floor (40)
+      // But for someone tiny, the floor should still apply.
+      const result = estimateOneRmKgFromProfile({
+        lift: 'squat',
+        biologicalSex: 'female',
+        dateOfBirth: isoDateYearsAgo(25),
+        bodyweightKg: 35,
+      });
+      expect(result).toBeGreaterThanOrEqual(40);
     });
   });
 });

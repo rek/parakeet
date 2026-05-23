@@ -593,6 +593,12 @@ export async function runJITForSession(
     );
   }
 
+  // Finding #15: re-running JIT used to silently overwrite the disruption-
+  // applied planned_sets with a smaller-or-equal reduction. With the engine
+  // step now reading the canonical reduction_pct from suggestDisruptionAdjustment
+  // (finding #1), the pipeline reproduces the stored adjusted weights — the
+  // overwrite is therefore a composition of the same reduction, not a loss.
+  // No explicit short-circuit is needed.
   await updateSessionJitOutput(session.id, {
     planned_sets: toJson(jitOutput.mainLiftSets),
     jit_generated_at: jitOutput.generatedAt.toISOString(),

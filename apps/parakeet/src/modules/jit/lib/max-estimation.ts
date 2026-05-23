@@ -60,10 +60,28 @@ interface EstimateInput {
   biologicalSex: BiologicalSex | null;
   dateOfBirth: string | null;
   bodyweightKg?: number | null;
+  /**
+   * When provided, callers signal that the lifter has a training-experience
+   * signal (e.g. confirmed novice / intermediate / advanced). When omitted, we
+   * scale the estimate down to a conservative novice baseline (see NOVICE_SCALE).
+   */
+  hasTrainingExperienceSignal?: boolean;
 }
 
+/**
+ * Conservative scaling applied when the lifter has not yet confirmed any
+ * training-experience signal. Multipliers in this file assume an intermediate
+ * lifter; when we don't know the lifter's level we assume novice and ship a
+ * lighter starting estimate that they can grow into.
+ */
+const NOVICE_SCALE = 0.6;
+
 export function estimateOneRmKgFromProfile(input: EstimateInput): number {
-  const sex: BiologicalSex = input.biologicalSex ?? 'male';
+  // When biological_sex is missing we default to 'female' for safety: the
+  // female multipliers/defaults produce a smaller estimate, so first working
+  // sets stay lighter until the lifter confirms their sex. This is
+  // intentional — an over-estimate is far more dangerous than an under-estimate.
+  const sex: BiologicalSex = input.biologicalSex ?? 'female';
   const bodyweightKg =
     input.bodyweightKg != null && input.bodyweightKg > 0
       ? input.bodyweightKg
@@ -72,7 +90,12 @@ export function estimateOneRmKgFromProfile(input: EstimateInput): number {
   const base = bodyweightKg * LIFT_BODYWEIGHT_MULTIPLIERS[sex][input.lift];
   const age = getAgeFromDob(input.dateOfBirth);
   const withAge = base * getAgeMultiplier(age);
-  const rounded = roundToNearest(withAge, 2.5);
+  // No training-experience signal → assume novice and produce a conservative
+  // estimate. The lifter can correct upward once they're calibrated.
+  const noviceScaled = input.hasTrainingExperienceSignal
+    ? withAge
+    : withAge * NOVICE_SCALE;
+  const rounded = roundToNearest(noviceScaled, 2.5);
 
   return Math.max(rounded, MIN_ESTIMATED_MAX_KG[input.lift]);
 }

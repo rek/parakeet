@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
+  Alert,
   Linking,
   ScrollView,
   StyleSheet,
@@ -27,6 +28,7 @@ import type { BarWeightKg, WarmupPlateDisplay } from '@modules/settings';
 import type { PlateKg } from '@shared/constants/plates';
 import { useOtaUpdateStatus } from '@modules/updates';
 import type { OtaStatus } from '@modules/updates';
+import { captureException } from '@platform/utils/captureException';
 import { SEX_LABELS, THEME_OPTIONS } from '@shared/constants';
 import Constants from 'expo-constants';
 import { router } from 'expo-router';
@@ -341,6 +343,12 @@ export default function SettingsScreen() {
     setIsExporting(true);
     try {
       await exportTrainingData(user.id);
+    } catch (err) {
+      captureException(err);
+      Alert.alert(
+        'Export failed',
+        'We could not generate the export. Please try again.'
+      );
     } finally {
       setIsExporting(false);
     }

@@ -58,8 +58,29 @@ describe('getBarWeightKg', () => {
     expect(await getBarWeightKg()).toBe(20);
   });
 
-  it('ignores the _biologicalSex argument (no effect on result)', async () => {
+  it('stored value wins regardless of biologicalSex argument', async () => {
     mockGetItem.mockResolvedValue('15');
+    expect(await getBarWeightKg('male')).toBe(15);
+  });
+
+  it('defaults to 15 for female lifters when nothing stored', async () => {
+    mockGetItem.mockResolvedValue(null);
+    expect(await getBarWeightKg('female')).toBe(15);
+  });
+
+  it('defaults to 20 for male lifters when nothing stored', async () => {
+    mockGetItem.mockResolvedValue(null);
+    expect(await getBarWeightKg('male')).toBe(20);
+  });
+
+  it('defaults to 20 when biologicalSex is null/undefined', async () => {
+    mockGetItem.mockResolvedValue(null);
+    expect(await getBarWeightKg(null)).toBe(20);
+    expect(await getBarWeightKg()).toBe(20);
+  });
+
+  it('defaults to 15 for female when AsyncStorage throws', async () => {
+    mockGetItem.mockRejectedValue(new Error('storage error'));
     expect(await getBarWeightKg('female')).toBe(15);
   });
 });

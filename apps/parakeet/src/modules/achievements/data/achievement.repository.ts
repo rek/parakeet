@@ -1,10 +1,26 @@
 // @spec docs/features/achievements/spec-screen.md
+//
+// TODO(migration-pending): The `personal_records.weight_kg` column is being
+// renamed to `weight_grams` (integer) to comply with the engine's integer-grams
+// invariant. This file already reads/writes `weight_grams` and converts to/from
+// kg at the boundary using `kgToGrams` / `gramsToKg` from the engine. The DB
+// migration is owned by the parent agent and will rename the column atomically;
+// once it lands, regenerate supabase/types.ts and remove the local casts below.
 import { getSessionSetsBySessionIds } from '@modules/session';
 import type { Lift } from '@parakeet/shared-types';
 import type { ConsistencyData, ProgramLoyaltyData } from '@parakeet/training-engine';
+import { gramsToKg, kgToGrams } from '@parakeet/training-engine';
 import { typedSupabase } from '@platform/supabase';
 
 import type { PR } from '../lib/engine-adapter';
+
+interface RawPersonalRecordRow {
+  pr_type: string;
+  value: number;
+  weight_grams: number | null;
+  session_id: string | null;
+  achieved_at: string;
+}
 
 export async function upsertPersonalRecords(
   userId: string,
@@ -12,30 +28,55 @@ export async function upsertPersonalRecords(
 ): Promise<void> {
   if (prs.length === 0) return;
 
-  const { error } = await typedSupabase.from('personal_records').upsert(
-    prs.map((pr) => ({
-      user_id: userId,
-      lift: pr.lift,
-      pr_type: pr.type,
-      value: pr.value,
-      weight_kg: pr.weightKg ?? null,
-      session_id: pr.sessionId,
-      achieved_at: pr.achievedAt,
-    })),
-    { onConflict: 'user_id,lift,pr_type,weight_kg' }
-  );
+  const rows = prs.map((pr) => ({
+    user_id: userId,
+    lift: pr.lift,
+    pr_type: pr.type,
+    value: pr.value,
+    // Engine invariant: weights are integer grams. Convert at the write
+    // boundary so the DB never sees a partial-kg float.
+    weight_grams: pr.weightKg != null ? kgToGrams(pr.weightKg) : null,
+    session_id: pr.sessionId,
+    achieved_at: pr.achievedAt,
+  }));
+
+  // Generated types still describe the pre-migration `weight_kg` column —
+  // bypass them with a single `as never` until supabase/types.ts is regenerated.
+  const { error } = await typedSupabase
+    .from('personal_records')
+    .upsert(rows as never, {
+      // Conflict target follows the renamed column. Migration lands the new
+      // unique index on (user_id, lift, pr_type, weight_grams).
+      onConflict: 'user_id,lift,pr_type,weight_grams',
+    });
   if (error) throw error;
 }
 
 export async function fetchPersonalRecords(userId: string, lift: Lift) {
+  // weight_grams replaces weight_kg post-migration. See top-of-file TODO.
+  // The select string is cast through `unknown` so the supabase client doesn't
+  // try to validate the unknown column against the stale generated types.
   const { data, error } = await typedSupabase
     .from('personal_records')
-    .select('pr_type, value, weight_kg, session_id, achieved_at')
+    .select(
+      'pr_type, value, weight_grams, session_id, achieved_at' as unknown as '*'
+    )
     .eq('user_id', userId)
     .eq('lift', lift);
 
   if (error) throw error;
-  return data ?? [];
+
+  const rows = (data ?? []) as unknown as RawPersonalRecordRow[];
+  // Downstream consumers (achievement.service.ts) read `row.weight_kg`. Map
+  // grams→kg at the read boundary so the rest of the module continues to
+  // operate in user-facing kg.
+  return rows.map((row) => ({
+    pr_type: row.pr_type,
+    value: row.value,
+    session_id: row.session_id,
+    achieved_at: row.achieved_at,
+    weight_kg: row.weight_grams != null ? gramsToKg(row.weight_grams) : null,
+  }));
 }
 
 export async function fetchSessionsForStreak(userId: string) {

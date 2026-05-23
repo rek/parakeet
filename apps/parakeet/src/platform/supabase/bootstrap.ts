@@ -24,7 +24,22 @@ if (supabaseUrl && !supabaseUrl.includes('localhost')) {
       const { data } = await typedSupabase.auth.getSession();
       return data.session?.access_token ?? '';
     },
+    // Called by the engine when the proxy returns 401 — refresh the JWT so
+    // long-running app sessions don't hard-fail every LLM call after the
+    // access token expires.
+    refreshAuthToken: async () => {
+      await typedSupabase.auth.refreshSession();
+    },
   });
+} else if (!process.env['EXPO_PUBLIC_OPENAI_API_KEY']) {
+  // Local-dev fallback: the engine talks directly to api.openai.com using
+  // EXPO_PUBLIC_OPENAI_API_KEY. Without it every LLM call will 401 silently.
+  // Warn once so the failure mode is visible at startup, not after the user
+  // triggers an action that depends on the AI.
+  // eslint-disable-next-line no-console
+  console.warn(
+    '[ai-proxy] direct mode active without OpenAI key; LLM calls will fail'
+  );
 }
 
 export {};

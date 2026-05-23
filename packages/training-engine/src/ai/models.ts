@@ -3,6 +3,12 @@ import { createOpenAI } from '@ai-sdk/openai';
 type AIProxyConfig = {
   proxyBaseURL: string;
   authTokenProvider: () => Promise<string>;
+  /**
+   * Optional refresh hook. Called once when the proxy returns 401 so the
+   * caller can refresh the session JWT (e.g. supabase.auth.refreshSession()).
+   * After refresh the request is retried once.
+   */
+  refreshAuthToken?: () => Promise<void>;
 };
 
 let proxyConfig: AIProxyConfig | null = null;
@@ -18,8 +24,9 @@ let cachedProvider: ReturnType<typeof createOpenAI> | null = null;
 export function configureAIProxy({
   proxyBaseURL,
   authTokenProvider,
+  refreshAuthToken,
 }: AIProxyConfig) {
-  proxyConfig = { proxyBaseURL, authTokenProvider };
+  proxyConfig = { proxyBaseURL, authTokenProvider, refreshAuthToken };
   cachedProvider = null; // Force re-creation on next use
 }
 
@@ -27,16 +34,33 @@ function getProvider() {
   if (cachedProvider) return cachedProvider;
 
   if (proxyConfig) {
-    const { proxyBaseURL, authTokenProvider } = proxyConfig;
+    const { proxyBaseURL, authTokenProvider, refreshAuthToken } = proxyConfig;
     cachedProvider = createOpenAI({
       apiKey: 'proxy-mode',
       baseURL: proxyBaseURL,
       fetch: async (url, init) => {
-        const token = await authTokenProvider();
-        const headers = new Headers(init?.headers as HeadersInit);
-        // Replace the AI SDK's "Bearer proxy-mode" with the real JWT
-        headers.set('Authorization', `Bearer ${token}`);
-        return globalThis.fetch(url, { ...init, headers });
+        const sendWithToken = async () => {
+          const token = await authTokenProvider();
+          const headers = new Headers(init?.headers as HeadersInit);
+          // Replace the AI SDK's "Bearer proxy-mode" with the real JWT
+          headers.set('Authorization', `Bearer ${token}`);
+          return globalThis.fetch(url, { ...init, headers });
+        };
+
+        const first = await sendWithToken();
+        // JWT expired? Refresh once and retry. If still 401 we fall through
+        // to the caller with the second response.
+        if (first.status === 401 && refreshAuthToken) {
+          try {
+            await refreshAuthToken();
+          } catch {
+            // Refresh itself failed — return the original 401 so the caller
+            // sees the auth error rather than a confusing refresh error.
+            return first;
+          }
+          return sendWithToken();
+        }
+        return first;
       },
     });
   } else {

@@ -7,9 +7,11 @@ const BAR_WEIGHT_KEY = 'bar_weight_kg';
 export type BarWeightKg = 15 | 20;
 
 export async function getBarWeightKg(
-  _biologicalSex?: string | null
+  biologicalSex?: string | null
 ): Promise<BarWeightKg> {
-  const defaultWeight: BarWeightKg = 20;
+  // Default reflects biological sex: women's bar is 15 kg, men's is 20 kg.
+  // The lifter's stored override (set in Settings) always wins when present.
+  const defaultWeight: BarWeightKg = biologicalSex === 'female' ? 15 : 20;
   try {
     const raw = await AsyncStorage.getItem(BAR_WEIGHT_KEY);
     if (raw === '15') return 15;

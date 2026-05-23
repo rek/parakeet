@@ -244,13 +244,18 @@ export async function fetchUpcomingSessionLifts(
   weekNumber: number,
   currentDayNumber: number
 ): Promise<string[]> {
+  // Finding #13: tighten to actively-upcoming statuses. The previous
+  // `.neq('completed')` accidentally counted missed/skipped sessions
+  // toward "upcoming this week", which biased the top-up filter against
+  // muscles those sessions would have hit — even though they're no longer
+  // happening.
   const { data, error } = await typedSupabase
     .from('sessions')
     .select('primary_lift')
     .eq('program_id', programId)
     .eq('week_number', weekNumber)
     .gt('day_number', currentDayNumber)
-    .neq('status', 'completed')
+    .in('status', ['planned', 'in_progress'])
     .not('primary_lift', 'is', null);
 
   if (error) throw error;

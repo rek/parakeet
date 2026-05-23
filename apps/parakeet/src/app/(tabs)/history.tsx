@@ -82,7 +82,6 @@ export default function HistoryScreen() {
     trends,
     sessions,
     programs,
-    reviewedProgramIds,
     volume,
     volumeLoading,
     volumeKg,
@@ -164,6 +163,12 @@ export default function HistoryScreen() {
           borderColor: colors.border,
           borderRadius: radii.md,
           padding: spacing[4],
+          marginBottom: spacing[8],
+        },
+        chartLoading: {
+          alignItems: 'center',
+          justifyContent: 'center',
+          paddingVertical: spacing[6],
           marginBottom: spacing[8],
         },
         legendRow: {
@@ -307,6 +312,17 @@ export default function HistoryScreen() {
           fontSize: typography.sizes.sm,
           fontWeight: typography.weights.bold,
           color: colors.primary,
+        },
+        reviewButtonDisabled: {
+          backgroundColor: colors.bgMuted,
+          borderColor: colors.border,
+          maxWidth: 180,
+        },
+        reviewButtonDisabledText: {
+          fontSize: typography.sizes.xs,
+          fontWeight: typography.weights.medium,
+          color: colors.textSecondary,
+          textAlign: 'center',
         },
         cyclePatternButton: {
           backgroundColor: palette.amber100,
@@ -571,9 +587,13 @@ export default function HistoryScreen() {
               ))}
             </View>
           </View>
+        ) : volumeLoading ? (
+          <View style={[styles.chartLoading]}>
+            <ActivityIndicator size="small" color={colors.primary} />
+          </View>
         ) : (
           <Text style={[styles.emptyText, { marginBottom: spacing[8] }]}>
-            {volumeLoading ? 'Loading…' : 'No volume data yet.'}
+            No volume data yet.
           </Text>
         )}
 
@@ -622,9 +642,13 @@ export default function HistoryScreen() {
               ))}
             </View>
           </View>
+        ) : volumeKgLoading ? (
+          <View style={[styles.chartLoading]}>
+            <ActivityIndicator size="small" color={colors.primary} />
+          </View>
         ) : (
           <Text style={[styles.emptyText, { marginBottom: spacing[8] }]}>
-            {volumeKgLoading ? 'Loading…' : 'No volume data yet.'}
+            No volume data yet.
           </Text>
         )}
 
@@ -673,9 +697,13 @@ export default function HistoryScreen() {
               ))}
             </View>
           </View>
+        ) : heaviestLoading ? (
+          <View style={[styles.chartLoading]}>
+            <ActivityIndicator size="small" color={colors.primary} />
+          </View>
         ) : (
           <Text style={[styles.emptyText, { marginBottom: spacing[8] }]}>
-            {heaviestLoading ? 'Loading…' : 'No heaviest-lift data yet.'}
+            No heaviest-lift data yet.
           </Text>
         )}
 
@@ -723,7 +751,10 @@ export default function HistoryScreen() {
                         : ''}
                     </Text>
                   </View>
-                  {reviewedProgramIds?.has(program.id) && (
+                  {program.status === 'completed' ? (
+                    // Completed programs always offer Review. If the review row
+                    // doesn't exist yet the cycle-review screen handles
+                    // triggerCycleReview / "needs generation" on its own.
                     <TouchableOpacity
                       style={styles.reviewButton}
                       onPress={() =>
@@ -733,6 +764,14 @@ export default function HistoryScreen() {
                     >
                       <Text style={styles.reviewButtonText}>Review</Text>
                     </TouchableOpacity>
+                  ) : (
+                    // Programs ended early (status === 'archived') don't have
+                    // enough data for a meaningful cycle review.
+                    <View style={[styles.reviewButton, styles.reviewButtonDisabled]}>
+                      <Text style={styles.reviewButtonDisabledText}>
+                        No review — program ended early
+                      </Text>
+                    </View>
                   )}
                 </View>
               ))}
