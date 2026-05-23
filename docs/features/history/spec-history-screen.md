@@ -34,8 +34,8 @@ The History tab showing performance trends, completed sessions, and archived pro
 
 ### Open Issues (2026-05 review)
 
-- [ ] **Review button is hidden for any program that hasn't already been reviewed.** Today the screen gates Review on `reviewedProgramIds.has(program.id)`. Archived programs whose review failed (or whose user never opened the review screen) have no entry point — the user must hand-construct the URL. Always render Review for `program.status === 'completed'`; the screen already handles "needs generation" via `triggerCycleReview`. For programs whose review is intentionally unavailable (e.g. ended <50% complete), disable the button with the copy "No review — program ended early."
-- [ ] **Volume chart "Loading…" and "No volume data yet" use the same `emptyText` style.** Use a spinner for loading and reserve `emptyText` for the empty case so the two states are visually distinct.
+- [x] (landed) **Review button is hidden for any program that hasn't already been reviewed.** Today the screen gates Review on `reviewedProgramIds.has(program.id)`. Archived programs whose review failed (or whose user never opened the review screen) have no entry point — the user must hand-construct the URL. Always render Review for `program.status === 'completed'`; the screen already handles "needs generation" via `triggerCycleReview`. For programs whose review is intentionally unavailable (e.g. ended <50% complete), disable the button with the copy "No review — program ended early."
+- [x] (landed) **Volume chart "Loading…" and "No volume data yet" use the same `emptyText` style.** Use a spinner for loading and reserve `emptyText` for the empty case so the two states are visually distinct.
 
 ### Error State
 

@@ -41,7 +41,7 @@
 
 ## Open Issues (2026-05 review)
 
-- [ ] **Novice estimation is inflated and unsafe for first-session prescription.** `estimateOneRmKgFromProfile` returns `bodyweight × 1.05` for an untrained female squat. A 22-year-old 70 kg untrained woman gets squat 1RM ≈ 73.5 kg → week-1 heavy prescription of 70–80% × workingOneRm ≈ 51–58 kg, which can be a 1RM attempt every set. Either prompt for a self-rated training level during onboarding and multiply by ~0.6 for novice, or cap the first session at ≤ 50% e1RM until 2–3 sessions of RPE-anchored data exist (`computeWorkingOneRm` switches `source` to `'working'`).
+- [x] (landed) **Novice estimation is inflated and unsafe for first-session prescription.** `estimateOneRmKgFromProfile` returns `bodyweight × 1.05` for an untrained female squat. A 22-year-old 70 kg untrained woman gets squat 1RM ≈ 73.5 kg → week-1 heavy prescription of 70–80% × workingOneRm ≈ 51–58 kg, which can be a 1RM attempt every set. Either prompt for a self-rated training level during onboarding and multiply by ~0.6 for novice, or cap the first session at ≤ 50% e1RM until 2–3 sessions of RPE-anchored data exist (`computeWorkingOneRm` switches `source` to `'working'`).
 - [ ] **`max-estimation.ts:66` defaults `biologicalSex` to `'male'` when undefined.** A pre-onboarding female account gets male-estimated 1RMs at first sign-in. Once she sets her sex in onboarding, the persisted `1rm_kg` is not re-estimated. Either invalidate / re-estimate when `biological_sex` changes from undefined to a known value, or refuse estimation until sex is set.
 
 ## Dependencies

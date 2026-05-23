@@ -76,4 +76,4 @@ All weights in kg (decimal). `session_rpe`, `rpe`, and `auxiliary_sets` are omit
 
 ## Open Issues (2026-05 review)
 
-- [ ] **`handleExport` has try/finally but no catch.** `exportTrainingData` throws when `Sharing.isAvailableAsync()` returns false (or on filesystem errors); the rejection becomes an unhandled promise rejection and the user sees nothing. Wrap with `catch (err) { captureException(err); Alert.alert('Export failed', '...'); }` between try and finally.
+- [x] (landed) **`handleExport` has try/finally but no catch.** `exportTrainingData` throws when `Sharing.isAvailableAsync()` returns false (or on filesystem errors); the rejection becomes an unhandled promise rejection and the user sees nothing. Wrap with `catch (err) { captureException(err); Alert.alert('Export failed', '...'); }` between try and finally.

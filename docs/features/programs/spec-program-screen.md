@@ -51,7 +51,7 @@ The Program tab showing the full 10-week program in a scannable week-grid format
 
 ## Open Issues (2026-05 review)
 
-- [ ] **`getCurrentBlock` uses a non-null assertion on `start_date` and a hard-coded fallback of 9 weeks.** `program-utils.ts:53` does `currentBlockNumber(program.start_date!, program.total_weeks ?? 9)`. For an imported scheduled program with no start_date this crashes; for a scheduled program where `total_weeks` is unexpectedly null this silently uses 9-week boundaries. Type-guard `start_date` and treat null `total_weeks` for `program_mode !== 'unending'` as a data error (warn + return 1).
+- [x] (landed) **`getCurrentBlock` uses a non-null assertion on `start_date` and a hard-coded fallback of 9 weeks.** `program-utils.ts:53` does `currentBlockNumber(program.start_date!, program.total_weeks ?? 9)`. For an imported scheduled program with no start_date this crashes; for a scheduled program where `total_weeks` is unexpectedly null this silently uses 9-week boundaries. Type-guard `start_date` and treat null `total_weeks` for `program_mode !== 'unending'` as a data error (warn + return 1).
 
 ## Dependencies
 
