@@ -1,12 +1,15 @@
 // @spec docs/features/disruptions/spec-apply.md
 import { DisruptionSchema, LiftSchema } from '@parakeet/shared-types';
 import type {
+  AdjustmentSuggestion,
   CreateDisruption,
   DisruptionWithSuggestions,
   Lift,
+  SessionImpactPreview,
   TrainingDisruption,
 } from '@parakeet/shared-types';
-import { suggestDisruptionAdjustment } from '@parakeet/training-engine';
+import { getDisabledPlates } from '@modules/settings';
+import { suggestDisruptionAdjustment, plateIncrementKg } from '@parakeet/training-engine';
 import { roundToNearest } from '@shared/utils/weight';
 
 import {
@@ -26,6 +29,7 @@ import {
   fetchSessionsByIdsUnfiltered,
   insertDisruption,
   insertSorenessCheckin,
+  unskipSessionsOnOrAfter,
   updateDisruptionEndDate as repoUpdateDisruptionEndDate,
   updateDisruptionAdjustmentApplied,
   updateDisruptionResolved,
@@ -51,6 +55,9 @@ export async function reportDisruption(
   userId: string,
   input: CreateDisruption
 ): Promise<DisruptionWithSuggestions> {
+  // TODO(GH#disruption-event-name): once supabase/types.ts is regenerated
+  // after the event_name migration ships, drop the `as` cast — DbInsert
+  // will include `event_name: string | null`.
   const disruption = await insertDisruption({
     user_id: userId,
     disruption_type: input.disruption_type,
@@ -59,9 +66,10 @@ export async function reportDisruption(
     affected_date_end: input.affected_date_end ?? null,
     affected_lifts: input.affected_lifts ?? null,
     description: input.description ?? null,
+    ...(input.event_name != null && { event_name: input.event_name }),
     session_ids_affected: input.session_ids_affected ?? null,
     status: 'active',
-  });
+  } as Parameters<typeof insertDisruption>[0]);
 
   let affectedSessions: SessionRow[] = [];
   const explicitIds = input.session_ids_affected ?? [];
@@ -102,13 +110,94 @@ export async function reportDisruption(
     )
   );
 
-  return { ...parsedDisruption, suggested_adjustments, future_sessions_count };
+  const session_impacts = buildSessionImpacts(
+    suggested_adjustments,
+    affectedSessions
+  );
+
+  return {
+    ...parsedDisruption,
+    suggested_adjustments,
+    future_sessions_count,
+    session_impacts,
+  };
+}
+
+/** Build [day-of-week, lift, action, before → after] preview rows for the
+ *  review screen by zipping suggestions against the current planned sets
+ *  (finding #4). Sessions whose planned_sets are null (future JIT) get an
+ *  entry with null before/after numbers so the row still renders with the
+ *  action label. */
+function buildSessionImpacts(
+  suggestions: AdjustmentSuggestion[],
+  affectedSessions: SessionRow[]
+): SessionImpactPreview[] {
+  const sessionsById = new Map(affectedSessions.map((s) => [s.id, s]));
+  return suggestions
+    .map((suggestion): SessionImpactPreview | null => {
+      const session = sessionsById.get(suggestion.session_id);
+      if (!session) return null;
+      const parsedLift = LiftSchema.safeParse(session.primary_lift);
+      const liftLabel = parsedLift.success ? parsedLift.data : 'unknown';
+      const planned = parsePlannedSetsJson(session.planned_sets);
+      const firstSet = planned?.[0];
+
+      if (
+        suggestion.action === 'weight_reduced' &&
+        suggestion.reduction_pct != null
+      ) {
+        const before = firstSet?.weight_kg ?? null;
+        const after =
+          before !== null
+            ? Math.round((before * (1 - suggestion.reduction_pct / 100)) * 10) /
+              10
+            : null;
+        return {
+          session_id: suggestion.session_id,
+          planned_date: session.planned_date ?? null,
+          primary_lift: liftLabel,
+          action: suggestion.action,
+          before_weight_kg: before,
+          after_weight_kg: after,
+        };
+      }
+      if (
+        suggestion.action === 'reps_reduced' &&
+        suggestion.reps_reduction != null
+      ) {
+        const before = firstSet?.reps ?? null;
+        const after =
+          before !== null
+            ? Math.max(1, before - suggestion.reps_reduction)
+            : null;
+        return {
+          session_id: suggestion.session_id,
+          planned_date: session.planned_date ?? null,
+          primary_lift: liftLabel,
+          action: suggestion.action,
+          before_reps: before,
+          after_reps: after,
+        };
+      }
+      return {
+        session_id: suggestion.session_id,
+        planned_date: session.planned_date ?? null,
+        primary_lift: liftLabel,
+        action: suggestion.action,
+      };
+    })
+    .filter((row): row is SessionImpactPreview => row !== null);
 }
 
 export async function applyDisruptionAdjustment(
   disruptionId: string,
   userId: string
 ): Promise<void> {
+  // Idempotency gate: fetchActiveDisruptionById only returns rows where
+  // adjustment_applied IS NULL. We stamp an empty-array sentinel BEFORE the
+  // per-session loop so a retry-after-partial-write doesn't compound the
+  // reduction by running the loop again. The retry returns null and is a
+  // no-op. See findings #2.
   const disruption = await fetchActiveDisruptionById(disruptionId, userId);
 
   if (!disruption) throw new Error('Disruption not found or already applied');
@@ -143,6 +232,22 @@ export async function applyDisruptionAdjustment(
     )
   );
 
+  // GH#209: round to the lifter's smallest reachable plate increment, not the
+  // default 2.5kg. Otherwise a user with no 1.25kg plates gets prescribed
+  // unreachable weights like 52.5kg.
+  const disabledPlates = await getDisabledPlates();
+  const weightIncrementKg = plateIncrementKg(disabledPlates);
+
+  // Stamp pending BEFORE the loop so partial-write retries are gated out by
+  // the fetchActiveDisruptionById null check.
+  //
+  // Trade-off: if the loop below crashes (e.g. network error mid-loop) the
+  // disruption is permanently "applied" with an empty payload. Some sessions
+  // may be adjusted, others not. There is no automatic recovery — the user
+  // would need to report a fresh disruption. We accept this over compounding
+  // a -40% reduction into -64% on retry.
+  await updateDisruptionAdjustmentApplied(disruptionId, []);
+
   for (const suggestion of suggestions) {
     if (
       suggestion.action === 'weight_reduced' &&
@@ -157,7 +262,8 @@ export async function applyDisruptionAdjustment(
       const adjustedSets = sets.map((set) => ({
         ...set,
         weight_kg: roundToNearest(
-          set.weight_kg * (1 - suggestion.reduction_pct! / 100)
+          set.weight_kg * (1 - suggestion.reduction_pct! / 100),
+          weightIncrementKg
         ),
       }));
 
@@ -198,6 +304,22 @@ export async function updateDisruptionEndDate(
   await repoUpdateDisruptionEndDate(disruptionId, userId, endDate);
 }
 
+/** Extend the shelf life of an active disruption by `days` days from today.
+ *  Bundle C surfaces this through the today-screen prompt for ongoing
+ *  disruptions older than their type-specific shelf life (finding #7). The
+ *  underlying repo write only touches `affected_date_end`, which both the
+ *  active-disruption query and the engine pipeline already honour. */
+export async function extendDisruptionShelfLife(
+  disruptionId: string,
+  userId: string,
+  days: number
+): Promise<void> {
+  const endDate = new Date();
+  endDate.setUTCDate(endDate.getUTCDate() + days);
+  const iso = endDate.toISOString().slice(0, 10);
+  await repoUpdateDisruptionEndDate(disruptionId, userId, iso);
+}
+
 export async function resolveDisruption(
   disruptionId: string,
   userId: string,
@@ -205,10 +327,28 @@ export async function resolveDisruption(
 ): Promise<void> {
   const resolvedDate = resolvedAt ?? new Date().toISOString();
 
+  // Fetch the disruption (including adjustment_applied) BEFORE marking
+  // resolved so we can identify which sessions were skipped by this
+  // disruption and need restoring (finding #6).
+  const beforeResolve = await fetchDisruptionById(disruptionId, userId);
+
   await updateDisruptionResolved(disruptionId, userId, resolvedDate);
 
   const sessionIds = await fetchDisruptionSessionIds(disruptionId);
   if (sessionIds.length > 0) {
+    // For sessions this disruption skipped, restore status back to 'planned'
+    // for any future or today's session — clearSessionJit then nulls
+    // planned_sets so JIT regenerates them fresh.
+    const today = new Date().toISOString().slice(0, 10);
+    const previousSuggestions = parseAdjustmentSuggestionsJson(
+      beforeResolve?.adjustment_applied
+    );
+    const skippedSessionIds = previousSuggestions
+      .filter((s) => s.action === 'session_skipped')
+      .map((s) => s.session_id);
+    if (skippedSessionIds.length > 0) {
+      await unskipSessionsOnOrAfter(skippedSessionIds, today);
+    }
     await clearSessionJit(sessionIds);
   }
 }

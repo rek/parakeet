@@ -5,7 +5,7 @@ import { typedSupabase } from '@platform/supabase';
 export type DisruptionRow = DbRow<'disruptions'>;
 export type SessionPartialRow = Pick<
   DbRow<'sessions'>,
-  'id' | 'primary_lift' | 'planned_sets' | 'status'
+  'id' | 'primary_lift' | 'planned_sets' | 'status' | 'planned_date'
 >;
 
 export async function insertDisruption(
@@ -25,7 +25,7 @@ export async function fetchSessionsByIds(
 ): Promise<SessionPartialRow[]> {
   const { data } = await typedSupabase
     .from('sessions')
-    .select('id, primary_lift, planned_sets, status')
+    .select('id, primary_lift, planned_sets, status, planned_date')
     .in('id', ids)
     .in('status', ['planned', 'in_progress']);
   return data ?? [];
@@ -38,7 +38,7 @@ export async function fetchSessionsByDateRange(
 ): Promise<SessionPartialRow[]> {
   let query = typedSupabase
     .from('sessions')
-    .select('id, primary_lift, planned_sets, status')
+    .select('id, primary_lift, planned_sets, status, planned_date')
     .eq('user_id', userId)
     .in('status', ['planned', 'in_progress'])
     .gte('planned_date', dateStart);
@@ -80,7 +80,7 @@ export async function fetchSessionsByIdsUnfiltered(
 ): Promise<SessionPartialRow[]> {
   const { data } = await typedSupabase
     .from('sessions')
-    .select('id, primary_lift, planned_sets, status')
+    .select('id, primary_lift, planned_sets, status, planned_date')
     .in('id', ids);
   return data ?? [];
 }
@@ -156,12 +156,33 @@ export async function clearSessionJit(sessionIds: string[]): Promise<void> {
     .in('status', ['planned']);
 }
 
+/** Restore status 'skipped' → 'planned' for the given sessions when their
+ *  planned_date is on/after `dateOnOrAfter` (YYYY-MM-DD). Used by
+ *  resolveDisruption so resolving a major disruption unskips the future
+ *  sessions it had skipped (finding #6). */
+export async function unskipSessionsOnOrAfter(
+  sessionIds: string[],
+  dateOnOrAfter: string
+): Promise<void> {
+  await typedSupabase
+    .from('sessions')
+    .update({ status: 'planned' })
+    .in('id', sessionIds)
+    .eq('status', 'skipped')
+    .gte('planned_date', dateOnOrAfter);
+}
+
 export async function fetchActiveDisruptions(userId: string) {
+  // event_name is selected so the chip can render the event label instead of
+  // mashing it into description (finding #8). Until supabase types.ts is
+  // regenerated after the migration ships, the `select('*')` + unknown cast
+  // keeps tsc green while still pulling the column down.
+  // TODO(migration-cleanup): once 20260524000001_disruption_event_name.sql is
+  // applied and `npm run db:types` regenerates supabase/types.ts, drop the
+  // cast and inline this return shape into the data layer's row type.
   const { data, error } = await typedSupabase
     .from('disruptions')
-    .select(
-      'id, disruption_type, severity, affected_lifts, description, affected_date_end'
-    )
+    .select('*')
     .eq('user_id', userId)
     .neq('status', 'resolved')
     .or(
@@ -169,7 +190,15 @@ export async function fetchActiveDisruptions(userId: string) {
     )
     .order('reported_at', { ascending: false });
   if (error) throw error;
-  return data ?? [];
+  return ((data ?? []) as unknown) as Array<{
+    id: string;
+    disruption_type: string;
+    severity: string;
+    affected_lifts: string[] | null;
+    description: string | null;
+    affected_date_end: string | null;
+    event_name?: string | null;
+  }>;
 }
 
 export async function fetchDisruptionHistory(

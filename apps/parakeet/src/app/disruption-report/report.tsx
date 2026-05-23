@@ -16,6 +16,7 @@ import {
   applyDisruptionAdjustment,
   applyUnprogrammedEventSoreness,
   DISRUPTION_TYPES,
+  formatImpactAction,
   getMenstrualSymptomsPreset,
   getSeverityPalette,
   groupSuggestions,
@@ -305,6 +306,32 @@ function buildStyles(colors: ColorScheme) {
       color: colors.textSecondary,
       lineHeight: 18,
     },
+    impactList: { marginTop: 12, marginBottom: 4 },
+    impactRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      borderWidth: 1,
+      borderColor: colors.border,
+      borderRadius: 10,
+      paddingVertical: 10,
+      paddingHorizontal: 14,
+      marginBottom: 8,
+    },
+    impactRowDay: {
+      fontSize: 13,
+      color: colors.textSecondary,
+      fontWeight: '500',
+    },
+    impactRowLift: {
+      fontSize: 13,
+      color: colors.text,
+      fontWeight: '600',
+    },
+    impactRowAction: {
+      fontSize: 13,
+      color: colors.textSecondary,
+    },
     autoAppliedNote: {
       padding: 16,
       backgroundColor: colors.successMuted,
@@ -468,10 +495,11 @@ export default function DisruptionReportScreen() {
     setSubmitError(null);
     setIsSubmitting(true);
     try {
-      const effectiveDescription =
+      const trimmedEventName =
         selectedType === 'unprogrammed_event' && eventName.trim()
-          ? `${eventName.trim()}${description.trim() ? ': ' + description.trim() : ''}`
-          : description.trim() || undefined;
+          ? eventName.trim()
+          : undefined;
+      const trimmedDescription = description.trim() || undefined;
 
       const result = await reportDisruption(user.id, {
         disruption_type: selectedType,
@@ -483,7 +511,8 @@ export default function DisruptionReportScreen() {
           : selectedLifts.size > 0
             ? Array.from(selectedLifts)
             : undefined,
-        description: effectiveDescription,
+        description: trimmedDescription,
+        ...(trimmedEventName != null && { event_name: trimmedEventName }),
       });
 
       if (effectiveSeverity === 'minor') {
@@ -533,6 +562,7 @@ export default function DisruptionReportScreen() {
 
   if (screenState === 'review' && disruption) {
     const suggestions = disruption.suggested_adjustments ?? [];
+    const impacts = disruption.session_impacts ?? [];
 
     // Group by action label for a compact summary
     const groups = groupSuggestions(suggestions);
@@ -593,6 +623,31 @@ export default function DisruptionReportScreen() {
                     {disruption.future_sessions_count !== 1 ? 's' : ''} will be
                     adjusted when generated.
                   </Text>
+                </View>
+              )}
+              {impacts.length > 0 && (
+                <View style={styles.impactList}>
+                  <Text style={styles.adjustmentSummaryHeader}>
+                    Per-session impact
+                  </Text>
+                  {impacts.map((row) => (
+                    <View key={row.session_id} style={styles.impactRow}>
+                      <Text style={styles.impactRowDay}>
+                        {row.planned_date
+                          ? new Date(row.planned_date + 'T00:00:00')
+                              .toLocaleDateString('en-AU', { weekday: 'short' })
+                          : '—'}
+                        {' · '}
+                        <Text style={styles.impactRowLift}>
+                          {row.primary_lift.charAt(0).toUpperCase() +
+                            row.primary_lift.slice(1)}
+                        </Text>
+                      </Text>
+                      <Text style={styles.impactRowAction}>
+                        {formatImpactAction(row)}
+                      </Text>
+                    </View>
+                  ))}
                 </View>
               )}
             </>

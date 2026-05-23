@@ -29,6 +29,9 @@ export interface ActiveDisruption {
   affected_lifts: string[] | null;
   description: string | null;
   affected_date_end: string | null;
+  /** Distinct event label for unprogrammed events (e.g. "Hyrox"). When set,
+   *  the chip renders this instead of the generic type word (finding #8). */
+  event_name?: string | null;
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -44,8 +47,18 @@ function chipBg(severity: string, colors: ColorScheme): string {
   return colors.warningMuted;
 }
 
-function chipLabel(disruption_type: string): string {
-  const word = disruption_type.split('_')[0];
+function chipLabel(d: Pick<ActiveDisruption, 'disruption_type' | 'event_name'>): string {
+  // Unprogrammed events get their event_name (e.g. "Hyrox") on the chip so
+  // the lifter sees the actual cause rather than "Unprogrammed" — see
+  // finding #8.
+  if (
+    d.disruption_type === 'unprogrammed_event' &&
+    d.event_name &&
+    d.event_name.trim().length > 0
+  ) {
+    return d.event_name.trim();
+  }
+  const word = d.disruption_type.split('_')[0];
   return word.charAt(0).toUpperCase() + word.slice(1);
 }
 
@@ -437,7 +450,7 @@ export function DisruptionChipsRow({
             >
               <View style={[styles.dot, { backgroundColor: sevColor }]} />
               <Text style={[styles.chipText, { color: sevColor }]}>
-                ⚡ {chipLabel(d.disruption_type)}
+                ⚡ {chipLabel(d)}
               </Text>
             </TouchableOpacity>
           );

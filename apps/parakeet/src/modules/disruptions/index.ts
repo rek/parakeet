@@ -1,6 +1,7 @@
 export * from './application/disruption.service';
 export * from './data/disruptions.queries';
 export * from './lib/disruption-presets';
+export * from './lib/disruption-shelf-life';
 export * from './constants/disruption-types';
 export * from './ui/disruption-styles';
 export { DisruptionChipsRow } from './ui/DisruptionChipsRow';
