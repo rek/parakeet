@@ -1,13 +1,15 @@
 // @spec docs/features/rehab-mode/spec-engine.md
 import { baseInput, makeDisruption } from '../__test-helpers__/fixtures';
-import type { RehabCap } from '../types';
+import type { ActiveRehabCap } from '../types';
 import { generateJITSession } from './jit-session-generator';
 
-function rehabCap(overrides?: Partial<RehabCap>): RehabCap {
+// Engine consumes the minimal ActiveRehabCap shape (lift + capKg). The full
+// DB row lives in @parakeet/shared-types; the app strips it down before
+// passing to the engine.
+function rehabCap(overrides?: Partial<ActiveRehabCap>): ActiveRehabCap {
   return {
     lift: 'squat',
     capKg: 80,
-    startedAt: '2026-05-01T00:00:00Z',
     ...overrides,
   };
 }

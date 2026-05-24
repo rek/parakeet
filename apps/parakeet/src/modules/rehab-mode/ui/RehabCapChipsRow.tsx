@@ -33,7 +33,7 @@ function buildStyles(colors: ColorScheme) {
       alignItems: 'center',
       gap: spacing[1.5],
       borderWidth: 1,
-      borderColor: palette.slate400,
+      borderColor: palette.zinc400,
       borderRadius: 999,
       paddingHorizontal: spacing[3],
       paddingVertical: spacing[2],
@@ -43,7 +43,7 @@ function buildStyles(colors: ColorScheme) {
       width: 6,
       height: 6,
       borderRadius: 3,
-      backgroundColor: palette.slate400,
+      backgroundColor: palette.zinc400,
     },
     chipText: {
       fontSize: typography.sizes.xs,

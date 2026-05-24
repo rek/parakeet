@@ -27,6 +27,8 @@ function makeCtx(overrides?: Partial<PipelineContext>): PipelineContext {
     cyclePhaseSetsRemoved: 0,
     sorenessSetsRemoved: 0,
     disruptionSetsRemoved: 0,
+    cappedByRehab: false,
+    rehabCapKg: null,
     ...overrides,
   };
 }
