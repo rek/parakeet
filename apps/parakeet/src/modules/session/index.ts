@@ -59,6 +59,11 @@ export { WeightSuggestionBanner } from './ui/WeightSuggestionBanner';
 export { WarmupSection } from './ui/WarmupSection';
 export { WorkoutCard } from './ui/WorkoutCard';
 export { AdjustmentsCard } from './ui/AdjustmentsCard';
+export { AuxAnchorNote } from './ui/AuxAnchorNote';
+export {
+  shouldShowAnchorNote,
+  DIVERGENCE_THRESHOLD,
+} from './ui/aux-anchor-note.helpers';
 export { SessionContextCard } from './ui/SessionContextCard';
 export { SummaryChipsRow } from './ui/SummaryChipsRow';
 export { MainLiftResultsTable } from './ui/MainLiftResultsTable';

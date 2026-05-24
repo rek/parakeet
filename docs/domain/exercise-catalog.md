@@ -65,7 +65,9 @@ User-curated auxiliary pools live in the `auxiliary_exercises` table, keyed by t
 
 ## Weight Scaling
 
-### Linear (barbell, machine)
+> **GH#221 — History anchor takes precedence.** When the lifter has prior completed sessions of an aux exercise, the engine derives the working weight from a rolling average of their actual top sets (`anchor` source), not from the formulas below. The catalog `weightPct` becomes a cold-start bootstrap and a blend partner for sessions 1–2; from session 3 onward, history is the source of truth. See [features/auxiliary-exercises/spec-history-anchored-weight.md](../features/auxiliary-exercises/spec-history-anchored-weight.md) for the full anchor logic. The formulas below describe the fallback path used when no history is available.
+
+### Linear (barbell, machine) — fallback / cold-start
 
 ```
 weight = roundToNearest(oneRmKg x weightPct, 2.5)
@@ -73,7 +75,7 @@ weight = roundToNearest(oneRmKg x weightPct, 2.5)
 
 Default `weightPct`: 0.675
 
-### Sqrt (dumbbell, kettlebell)
+### Sqrt (dumbbell, kettlebell) — fallback / cold-start
 
 Applied to exercises starting with "Dumbbell" or "Kettlebell":
 
@@ -137,7 +139,9 @@ Applied when an auxiliary exercise shares muscles (contribution >= 0.5) with the
 
 Example: Close-Grip Bench after **heavy** bench day → triceps overlap ≥ 0.5, aux weight × 0.85. Same exercise on **explosive** bench day → aux weight × 0.95 (almost no discount).
 
-**Source:** `packages/training-engine/src/generator/steps/processAuxExercise.ts` (`getPostMainFatigueFactor`)
+> **GH#221 — Discount is skipped once history anchor is established.** When the aux anchor source is `history` or `snap` (3+ completed sessions or two consecutive overrides), the historical sets were themselves logged after main work, so the fatigue context is already baked into the rolling average. Applying the discount again would double-count. The discount continues to apply during cold-start (`formula` source) and the 1–2 session blend window (`blend` source) because the formula component is still load-bearing.
+
+**Source:** `packages/training-engine/src/generator/steps/processAuxExercise.ts` (`getPostMainFatigueFactor`, conditional on `useHistoryAnchor`)
 
 ---
 

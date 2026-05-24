@@ -134,6 +134,7 @@ These are all inputs that should inform session generation. The `JITInput` struc
 - `warmupConfig` — warmup protocol for this lift
 - `activeAuxiliaries` — 2 exercises assigned for this block
 - `biologicalSex` — male / female / unknown (drives MRV/MEV defaults)
+- `auxHistory` — per-aux-exercise recent completed sessions keyed by canonical catalog slug; populates the history anchor (GH#221). App layer fetches `set_logs` + recovers prescribed weight from persisted `PrescriptionTrace`. Empty/absent → engine runs the formula path unchanged.
 
 **Future signals (optional fields, already in the struct):**
 
@@ -141,7 +142,7 @@ These are all inputs that should inform session generation. The `JITInput` struc
 - `hrvScore` — Long-term
 - `bodyWeightKg` — already collected at cycle start
 
-Total: ~43 meaningful input values today, extensible without breaking existing strategies.
+Total: ~44 meaningful input values today, extensible without breaking existing strategies.
 
 ## The Generator Interface
 

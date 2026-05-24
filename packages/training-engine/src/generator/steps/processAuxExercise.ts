@@ -1,6 +1,7 @@
 import type { IntensityType, Lift, PlannedSet } from '@parakeet/shared-types';
 
 import type { SorenessLevel } from '../../adjustments/soreness-adjuster';
+import { AuxAnchorResult, toAnchorCarrier } from '../../auxiliary/anchor';
 import {
   computeAuxWeight,
   getRepTarget,
@@ -52,6 +53,7 @@ export function processAuxExercise({
   mainIntensityMultiplier = 1.0,
   skippedMainLift = false,
   intensityType = 'heavy',
+  anchorResult,
 }: {
   exercise: string;
   worstSoreness: SorenessLevel;
@@ -86,8 +88,21 @@ export function processAuxExercise({
    *  main = almost none. Defaults to 'heavy' so legacy callers retain the
    *  historical 0.85 behavior. */
   intensityType?: IntensityType;
+  /** History-anchored weight result (GH#221). When source is 'history' or
+   *  'snap', the anchor base is used directly and the post-main fatigue
+   *  discount is skipped because the historical sets were themselves logged
+   *  after main work — the fatigue context is already baked in. For 'blend'
+   *  and 'formula' sources, the existing formula path runs (with fatigue
+   *  discount applied), because the anchor is not yet fully trusted. */
+  anchorResult?: AuxAnchorResult;
 }): AuxiliaryWork {
   const exerciseType = exerciseTyper(exercise);
+  const useHistoryAnchor =
+    anchorResult != null &&
+    (anchorResult.source === 'history' || anchorResult.source === 'snap');
+  const anchorMeta: AuxiliaryWork['anchor'] | undefined = anchorResult
+    ? toAnchorCarrier(anchorResult)
+    : undefined;
 
   // Main lift skipped (major disruption): suppress aux so the session isn't
   // dominated by accessories the engine intentionally bailed out of.
@@ -98,6 +113,7 @@ export function processAuxExercise({
       sets: [],
       skipped: true,
       skipReason: 'Main lift skipped — auxiliary suppressed',
+      anchor: anchorMeta,
     };
   }
 
@@ -109,6 +125,7 @@ export function processAuxExercise({
       sets: [],
       skipped: true,
       skipReason: 'Severe soreness — auxiliary exercise skipped',
+      anchor: anchorMeta,
     };
   }
 
@@ -126,6 +143,7 @@ export function processAuxExercise({
           sets: [],
           skipped: true,
           skipReason: `MRV approaching for ${muscle}`,
+          anchor: anchorMeta,
         };
       }
     }
@@ -138,6 +156,7 @@ export function processAuxExercise({
       exerciseType,
       sets: [{ set_number: 1, weight_kg: 0, reps: 0, rpe_target: 7.0 }],
       skipped: false,
+      anchor: anchorMeta,
     };
   }
 
@@ -150,7 +169,10 @@ export function processAuxExercise({
   // Post-main-lift fatigue discount: if the aux exercise shares muscles with the
   // primary lift (at ≥0.5 contribution), the lifter is pre-fatigued from main work.
   // Prod data shows RPE 9.5-10 on compound aux (e.g. CGBP after bench) without this.
-  if (mainLiftSetCount > 0) {
+  // GH#221: skipped once history anchor is established — the historical sets were
+  // logged in the same fatigue context, so applying the discount again would
+  // double-count. Still applies during cold-start ('formula') and blend phase.
+  if (mainLiftSetCount > 0 && !useHistoryAnchor) {
     const mainLiftMuscles = new Set(
       muscleMapper(primaryLift).map((m) => m.muscle)
     );
@@ -179,6 +201,17 @@ export function processAuxExercise({
     setCount += 1;
   }
 
+  // GH#221: when history anchor is in play (source = history|snap), pass the
+  // anchor as `anchorKg` so computeAuxWeight returns it directly. When source
+  // is 'blend' or 'formula', the anchor blends into formulaWeightKg upstream;
+  // here we still use the formula path so plate rounding + intensityMult run
+  // exactly like before. (For 'blend', `anchorResult.anchorKg` is the blended
+  // value — pass it as anchorKg so the blend reaches the final weight.)
+  const anchorPassthrough =
+    anchorResult != null && anchorResult.source !== 'formula'
+      ? anchorResult.anchorKg
+      : undefined;
+
   // Bodyweight: no load — weight 0, reps only
   const finalWeight =
     exerciseType === 'bodyweight'
@@ -190,6 +223,7 @@ export function processAuxExercise({
               oneRmKg,
               lift: primaryLift,
               biologicalSex,
+              anchorKg: anchorPassthrough,
             }),
             weightIncrementKg
           ) * intensityMult,
@@ -203,5 +237,5 @@ export function processAuxExercise({
     rpe_target: 7.5,
   }));
 
-  return { exercise, exerciseType, sets, skipped: false };
+  return { exercise, exerciseType, sets, skipped: false, anchor: anchorMeta };
 }

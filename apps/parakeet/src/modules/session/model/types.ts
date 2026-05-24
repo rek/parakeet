@@ -22,6 +22,19 @@ export interface AuxiliaryWork {
   exerciseType?: 'weighted' | 'bodyweight' | 'timed';
   isTopUp?: boolean;
   topUpReason?: string;
+  /** History-anchor metadata (GH#221). Mirrors the engine's
+   *  AuxiliaryWork.anchor. Drives the divergence note + explainer sheet.
+   *  `anchorBaseKg` is the pre-modifier anchor — use this in any UX
+   *  comparing to formula so main-lift modifier shrinkage doesn't get
+   *  misattributed to "your recent" history. */
+  anchor?: {
+    source: 'formula' | 'blend' | 'history' | 'snap';
+    confidence: 'exploring' | 'low' | 'medium' | 'high';
+    formulaWeightKg: number;
+    anchorBaseKg: number;
+    sessionsUsed: number;
+    rationale: string;
+  };
 }
 
 export interface RestRecommendations {

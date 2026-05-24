@@ -97,10 +97,12 @@ interface AuxiliaryWork {
   - If any activeDisruptions affect this lift: apply disruption-adjuster reductions (takes full precedence over steps 2–4)
   - **Deload interaction**: During deload weeks the base sets from Step 1 are already reduced (lower volume/intensity). Disruption reductions in Step 5 apply on top of those already-reduced values, so the effects compound conservatively. This is intentional — a disruption during a deload means even lighter work, which is the correct conservative response.
 - [x] **Step 6 — Auxiliary work**
-  - For each auxiliary exercise (2 total): base 3–4 sets at 67.5% 1RM (default), per-exercise rep target, RPE 7.5
-  - Per-exercise weight %: `AUX_WEIGHT_PCT[exercise] ?? 0.675` — divergent exercises (Good Mornings, Bulgarian Split Squat, OHP, JM Press, curls) use lower percentages; see table in engine-019
-  - Per-exercise rep target: `AUX_REP_TARGETS[exercise] ?? baseReps` — strength variations 4–6 reps; hypertrophy 8–12; isolation/high-rep 10–15
+  - For each auxiliary exercise (2 total): base 3–4 sets, per-exercise rep target, RPE 7.5
+  - **Weight base (GH#221):** resolve per-exercise history anchor via `resolveAuxAnchor` → `computeAuxAnchor`. When 3+ completed sessions exist for the slug, anchor = rolling average of recent top sets (`source: 'history'`). Sessions 1–2 blend formula + history (`source: 'blend'`). Two consecutive same-direction overrides within 5% snap the anchor (`source: 'snap'`). Cold-start (`source: 'formula'`) falls back to `weightPct × oneRmKg` (default 0.675; divergent exercises use lower percentages — see [domain/exercise-catalog.md § Weight Percentages](../../domain/exercise-catalog.md))
+  - **Post-main fatigue (GH#221):** the ×0.85 / ×0.90 / ×0.95 / ×1.0 discount (heavy/rep/explosive/deload) is skipped when anchor source is `history` or `snap` because historical sets already encode that context
+  - Per-exercise rep target: `getRepTarget(exercise, baseReps)` — strength variations 4–6 reps; hypertrophy 8–12; isolation/high-rep 10–15
   - Apply soreness check and MRV check per auxiliary muscle
+  - `AuxiliaryWork.anchor` metadata (source, confidence, formulaWeightKg, anchorBaseKg, sessionsUsed, rationale) flows to the UI for the divergence note + explainer sheet
 - [x] **Step 7 — Final output assembly**
   - Apply intensityMultiplier to all weight_kg values → round to the **effective plate increment** (GH#209). Default 2.5kg (smallest fractional plate × 2). When the lifter has disabled the 1.25kg plates the increment becomes 5kg; disabling 2.5s too makes it 10kg. The engine reads `JITInput.weightIncrementKg` (set by the app from `getDisabledPlates()` via `plateIncrementKg()`) and takes `max(formulaConfig.rounding_increment_kg, weightIncrementKg)` — the more restrictive wins. See `effectiveIncrementKg` in `formulas/weight-rounding.ts`.
   - Compute volumeModifier and intensityModifier

@@ -1,6 +1,8 @@
 // Types and builder for tracing every decision in the JIT session generator pipeline.
 // Callers record state at each pipeline step; build() assembles the final snapshot.
 
+import type { AuxAnchorCarrier } from '../auxiliary/anchor';
+
 export interface WeightDerivation {
   oneRmKg: number;
   /** Original 1RM from lifter_maxes (before working 1RM substitution). */
@@ -58,6 +60,14 @@ export interface AuxWeightTrace {
   finalWeightKg: number;
 }
 
+/**
+ * Anchor metadata captured in the prescription trace. Derived from the
+ * `AuxiliaryWork.anchor` carrier minus `rationale` (which is user-facing
+ * UI copy, not a calibration signal). Calibration uses `anchorBaseKg` to
+ * separate the anchor's contribution from post-modifier shrinkage.
+ */
+export type AuxAnchorTrace = Omit<AuxAnchorCarrier, 'rationale'>;
+
 export interface AuxExerciseTrace {
   exercise: string;
   selectionReason: string;
@@ -67,6 +77,10 @@ export interface AuxExerciseTrace {
   sets: number;
   skipped: boolean;
   skipReason?: string;
+  /** History-anchor metadata (GH#221). Present when the engine considered
+   *  an anchor for this exercise — even when source = 'formula'. Powers
+   *  post-session calibration of the anchor logic. */
+  anchor?: AuxAnchorTrace;
 }
 
 export interface WarmupTrace {

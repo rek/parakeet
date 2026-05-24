@@ -21,3 +21,4 @@ Accessory exercise rotation, configuration, and ad-hoc additions.
 | [spec-ad-hoc.md](./spec-ad-hoc.md) | done | Ad-hoc exercise logging |
 | [spec-custom-muscles.md](./spec-custom-muscles.md) | done | Custom exercise muscle selection (GH#192) |
 | [spec-subtitles.md](./spec-subtitles.md) | done | Exercise variant subtitles (GH#205) |
+| [spec-history-anchored-weight.md](./spec-history-anchored-weight.md) | done | History-anchored aux weight (GH#221) |

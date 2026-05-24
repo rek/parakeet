@@ -1,8 +1,15 @@
 // @spec docs/features/jit-pipeline/spec-generator.md
 import { getSessionSetsBySessionIds } from '@modules/session';
 import type { ActualSet, Lift } from '@parakeet/shared-types';
+import {
+  getCatalogEntry,
+  slugify,
+  type AuxHistoryEntry,
+} from '@parakeet/training-engine';
 import type { Json } from '@platform/supabase';
 import { typedSupabase } from '@platform/supabase';
+import { addBreadcrumb } from '@platform/utils/captureException';
+import { weightGramsToKg } from '@shared/utils/weight';
 
 export interface JitProfileRow {
   bodyweight_kg: number | string | null | undefined;
@@ -322,4 +329,163 @@ export async function insertChallengeReview(row: {
 }): Promise<void> {
   const { error } = await typedSupabase.from('challenge_reviews').insert([row]);
   if (error) throw error;
+}
+
+// ---------------------------------------------------------------------------
+// History-anchored aux weights (GH#221)
+// @spec docs/features/auxiliary-exercises/spec-history-anchored-weight.md
+// ---------------------------------------------------------------------------
+
+/** Resolve an exercise name (display or slug) to its canonical slug. Catalog
+ *  wins; falls back to deterministic kebab-case slugify for user customs and
+ *  legacy data where the catalog entry has been removed. */
+function nameToSlug(nameOrSlug: string): string {
+  return getCatalogEntry(nameOrSlug)?.slug ?? slugify(nameOrSlug);
+}
+
+/** Recover the prescribed weight for an aux exercise from the persisted
+ *  PrescriptionTrace, matching by canonical slug so catalog renames don't
+ *  silently disable history-anchoring (exercise-catalog slug invariant).
+ *  Returns null if the trace is missing or the exercise isn't in it (legacy
+ *  data). */
+function extractPrescribedWeight(
+  trace: unknown,
+  exerciseSlug: string
+): number | null {
+  if (!trace || typeof trace !== 'object') return null;
+  const auxiliaries = (trace as { auxiliaries?: unknown }).auxiliaries;
+  if (!Array.isArray(auxiliaries)) return null;
+  for (const aux of auxiliaries) {
+    if (!aux || typeof aux !== 'object') continue;
+    const traceName = (aux as { exercise?: unknown }).exercise;
+    if (typeof traceName !== 'string') continue;
+    if (nameToSlug(traceName) !== exerciseSlug) continue;
+    const wt = (aux as { weightTrace?: { finalWeightKg?: number } | null })
+      .weightTrace;
+    if (wt && typeof wt.finalWeightKg === 'number') return wt.finalWeightKg;
+    return null;
+  }
+  return null;
+}
+
+/**
+ * Per-aux-exercise recent completed sessions, used by the engine to compute
+ * the history-anchored weight (GH#221). Returns up to `sessionLimit` entries
+ * per exercise (canonical slug), newest-first.
+ *
+ * `exerciseNames` should be the union of exercises the JIT run might
+ * prescribe: the two active aux exercises plus any candidates from the
+ * volume top-up pool. Names can be display names or slugs — both are
+ * normalized to the canonical catalog slug here so catalog renames don't
+ * silently disable history matching (see `EXERCISE_CATALOG` slug
+ * invariant). Passing extra candidates is cheap.
+ *
+ * Prescribed weight is recovered from `sessions.jit_output_trace` with
+ * slug-aware matching. Sessions without a usable trace produce entries
+ * with `prescribedWeightKg: null`, which disables snap detection for
+ * those entries but still feeds the rolling average.
+ */
+export async function fetchAuxHistory(
+  userId: string,
+  exerciseNames: string[],
+  sessionLimit: number
+): Promise<Record<string, AuxHistoryEntry[]>> {
+  const result: Record<string, AuxHistoryEntry[]> = {};
+  if (exerciseNames.length === 0 || sessionLimit <= 0) return result;
+
+  // Pull more sessions than the per-exercise window to allow for sessions
+  // that don't contain the target exercise. 4× the window is generous
+  // without blowing up the query.
+  const sessionFetchLimit = Math.max(sessionLimit * 4, 12);
+
+  const { data: sessionRows, error: sessionErr } = await typedSupabase
+    .from('session_logs')
+    .select('session_id, completed_at')
+    .eq('user_id', userId)
+    .order('completed_at', { ascending: false })
+    .limit(sessionFetchLimit);
+
+  if (sessionErr) throw sessionErr;
+
+  const orderedRows = (sessionRows ?? []).filter(
+    (r): r is { session_id: string; completed_at: string } =>
+      !!r.session_id && !!r.completed_at
+  );
+  if (orderedRows.length === 0) return result;
+
+  const sessionIds = orderedRows.map((r) => r.session_id);
+
+  // Fetch jit_output_trace alongside the session metadata so we can extract
+  // prescribed weights without a second round trip.
+  const { data: sessionMeta, error: metaErr } = await typedSupabase
+    .from('sessions')
+    .select('id, jit_output_trace')
+    .in('id', sessionIds);
+  if (metaErr) throw metaErr;
+
+  const traceById = new Map<string, unknown>(
+    (sessionMeta ?? []).map((s) => [
+      s.id,
+      (s as { jit_output_trace?: unknown }).jit_output_trace,
+    ])
+  );
+
+  const setsByid = await getSessionSetsBySessionIds(sessionIds);
+
+  // Resolve every input to its canonical slug — the keys we'll match against
+  // and the keys we'll return. The catalog's `slug` field survives renames
+  // while display names don't, so slug-keyed matching is the only reliable
+  // way to follow a lifter's history across catalog updates.
+  const wantedSlugs = new Set(exerciseNames.map((n) => nameToSlug(n)));
+
+  // Iterate sessions newest-first (orderedRows preserves order). For each
+  // session, group the auxiliary set_logs by canonical slug. Cap each
+  // exercise's history at sessionLimit.
+  for (const { session_id, completed_at } of orderedRows) {
+    const bucket = setsByid.get(session_id);
+    if (!bucket) continue;
+    const auxSets = bucket.auxiliary;
+    if (auxSets.length === 0) continue;
+
+    const bySlug = new Map<string, ActualSet[]>();
+    for (const s of auxSets) {
+      // Prefer the stored slug (set_logs.exercise_slug); fall back to
+      // slugifying the display name for legacy rows logged before the
+      // slug column was populated.
+      const slug =
+        s.exercise_slug ?? (s.exercise ? nameToSlug(s.exercise) : null);
+      if (!slug || !wantedSlugs.has(slug)) continue;
+      const list = bySlug.get(slug) ?? [];
+      list.push(s);
+      bySlug.set(slug, list);
+    }
+
+    if (bySlug.size === 0) continue;
+
+    const trace = traceById.get(session_id);
+    for (const [slug, sets] of bySlug) {
+      const list = result[slug] ?? [];
+      if (list.length >= sessionLimit) continue;
+      const prescribedWeightKg = extractPrescribedWeight(trace, slug);
+      if (prescribedWeightKg == null) {
+        addBreadcrumb('aux-anchor', 'missing prescribed weight in trace', {
+          slug,
+          sessionId: session_id,
+        });
+      }
+      list.push({
+        sessionId: session_id,
+        completedAt: completed_at,
+        prescribedWeightKg,
+        sets: sets.map((s) => ({
+          weightKg: weightGramsToKg(s.weight_grams),
+          reps: s.reps_completed,
+          rpe: s.rpe_actual ?? undefined,
+        })),
+      });
+      result[slug] = list;
+    }
+  }
+
+  return result;
 }

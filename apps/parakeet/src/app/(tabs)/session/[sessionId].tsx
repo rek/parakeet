@@ -21,6 +21,7 @@ import { AddExerciseModal } from '@shared/ui/AddExerciseModal';
 import {
   abandonSession,
   AddWorkoutTemplateModal,
+  AuxAnchorNote,
   AuxTemplateBlock,
   BackgroundTimerBadge,
   expandTemplate,
@@ -971,6 +972,15 @@ export default function SessionScreen() {
                     nameStyle={styles.auxExerciseName}
                   />
 
+                  {aw.anchor && aw.sets[0] && (
+                    <AuxAnchorNote
+                      anchor={aw.anchor}
+                      prescribedWeightKg={aw.sets[0].weight_kg}
+                      weightIncrementKg={weightIncrementKgRef.current ?? 2.5}
+                      colors={colors}
+                    />
+                  )}
+
                   {auxAdapt?.adaptationType === 'weight_reduced' && (
                     <View style={styles.adaptationBanner}>
                       <Text style={styles.adaptationBannerText}>
@@ -1043,6 +1053,16 @@ export default function SessionScreen() {
                       />
                       {aw.topUpReason && (
                         <Text style={styles.topUpReason}>{aw.topUpReason}</Text>
+                      )}
+                      {aw.anchor && aw.sets[0] && (
+                        <AuxAnchorNote
+                          anchor={aw.anchor}
+                          prescribedWeightKg={aw.sets[0].weight_kg}
+                          weightIncrementKg={
+                            weightIncrementKgRef.current ?? 2.5
+                          }
+                          colors={colors}
+                        />
                       )}
                       {auxAdapt?.adaptationType === 'weight_reduced' && (
                         <View style={styles.adaptationBanner}>

@@ -99,4 +99,37 @@ describe('clean variant weight ordering', () => {
     expect(hangClean).toBeCloseTo(180 * 0.5, 1);
     expect(cleanAndJerk).toBeCloseTo(180 * 0.45, 1);
   });
+
+  describe('anchorKg override (GH#221)', () => {
+    it('returns anchorKg directly when provided, ignoring formula', () => {
+      const result = computeAuxWeight({
+        exercise: 'Power Clean',
+        oneRmKg: 180,
+        lift: 'deadlift',
+        anchorKg: 105,
+      });
+      expect(result).toBe(105);
+    });
+
+    it('ignores anchorKg = 0 (treats as absent)', () => {
+      const result = computeAuxWeight({
+        exercise: 'Power Clean',
+        oneRmKg: 180,
+        lift: 'deadlift',
+        anchorKg: 0,
+      });
+      expect(result).toBeCloseTo(180 * 0.55, 1);
+    });
+
+    it('honors anchorKg for unstable (DB/KB) exercises too', () => {
+      const result = computeAuxWeight({
+        exercise: 'Dumbbell Curl',
+        oneRmKg: 100,
+        lift: 'bench',
+        biologicalSex: 'male',
+        anchorKg: 12.5,
+      });
+      expect(result).toBe(12.5);
+    });
+  });
 });

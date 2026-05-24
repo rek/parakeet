@@ -12,6 +12,13 @@ import {
   SorenessModifier,
 } from '../adjustments/soreness-adjuster';
 import {
+  AuxAnchorCarrier,
+  AuxAnchorResult,
+  AuxHistoryEntry,
+  computeAuxAnchor,
+  toAnchorCarrier,
+} from '../auxiliary/anchor';
+import {
   computeAuxWeight,
   getBodyweightPool,
   getCatalogEntry,
@@ -19,6 +26,7 @@ import {
   getRepTarget,
   MovementPattern,
   resolveMovementPattern,
+  slugify,
 } from '../auxiliary/exercise-catalog';
 import { rankExercises } from '../auxiliary/exercise-scorer';
 import {
@@ -186,6 +194,15 @@ export interface JITInput {
    *  fetches the active cap via `getActiveRehabCapForLift` and threads it
    *  into JIT input — engine remains pure. */
   activeRehabCap?: ActiveRehabCap;
+  /** Per-aux-exercise recent completed sessions, keyed by exercise name
+   *  (or slug — app layer normalizes). Drives the history-anchored aux
+   *  weight (GH#221). When absent or empty for a given exercise, the
+   *  formula path runs unchanged. Engine remains pure: app layer queries
+   *  set_logs + jit_output_jsonb and passes the structured input here. */
+  auxHistory?: Record<string, AuxHistoryEntry[]>;
+  /** Current time as ISO string. Optional — falls back to `new Date()` at
+   *  generation time. Tests use this to make stale-window decay deterministic. */
+  nowIso?: string;
 }
 
 export interface AuxiliaryWork {
@@ -198,6 +215,14 @@ export interface AuxiliaryWork {
   isTopUp?: boolean;
   /** Human-readable reason for the top-up, e.g. "hamstrings below MEV" */
   topUpReason?: string;
+  /** History-anchor metadata (GH#221). Present whenever the engine
+   *  considered an anchor for this exercise — even when source = 'formula'
+   *  (e.g. no history). UI uses this to render the divergence callout.
+   *  `anchorBaseKg` is the anchor weight BEFORE main-lift modifiers
+   *  (readiness, cycle, soreness, intensity ratio). The note copy should
+   *  use this when comparing to the formula — otherwise main-lift
+   *  modifier shrinkage gets misattributed to "your recent" history. */
+  anchor?: AuxAnchorCarrier;
 }
 
 export interface JITOutput {
@@ -431,7 +456,9 @@ export function generateJITSession(
     auxVolumeRatio,
     auxIntensityRatio,
     ctx.skippedMainLift,
-    input.intensityType
+    input.intensityType,
+    input.auxHistory,
+    input.nowIso ?? new Date().toISOString()
   );
 
   // Step 6b — Volume top-up (engine-027): append exercises for under-MEV muscles
@@ -457,7 +484,9 @@ export function generateJITSession(
       input.activeDisruptions,
       input.weightIncrementKg,
       input.recentAuxExercises,
-      exerciseTyper
+      exerciseTyper,
+      input.auxHistory,
+      input.nowIso ?? new Date().toISOString()
     );
     for (const tu of topUps) {
       const activeCount = auxiliaryWork.filter((a) => !a.skipped).length;
@@ -497,6 +526,18 @@ export function generateJITSession(
         sets: aux.sets.length,
         skipped: aux.skipped,
         skipReason: aux.skipReason,
+        // AuxAnchorTrace = Omit<AuxAnchorCarrier, 'rationale'> — listing the
+        // fields explicitly so a new carrier field that should flow into the
+        // trace fails typecheck here until added.
+        anchor: aux.anchor
+          ? {
+              source: aux.anchor.source,
+              confidence: aux.anchor.confidence,
+              sessionsUsed: aux.anchor.sessionsUsed,
+              formulaWeightKg: aux.anchor.formulaWeightKg,
+              anchorBaseKg: aux.anchor.anchorBaseKg,
+            }
+          : undefined,
       });
     }
   }
@@ -635,6 +676,26 @@ export function generateJITSessionWithTrace(input: JITInput) {
 // Auxiliary work builder
 // ---------------------------------------------------------------------------
 
+/**
+ * Resolve the history-anchor for one aux exercise. The app layer keys
+ * `auxHistory` by canonical catalog slug (so renames don't break matching);
+ * we also accept display-name keys for in-engine callers that haven't been
+ * updated. Returns undefined when no anchor input is available —
+ * processAuxExercise then runs the formula path unchanged.
+ */
+function resolveAuxAnchor(
+  exercise: string,
+  formulaWeightKg: number,
+  auxHistory: Record<string, AuxHistoryEntry[]> | undefined,
+  nowIso: string
+): AuxAnchorResult | undefined {
+  if (!auxHistory) return undefined;
+  const slug = getCatalogEntry(exercise)?.slug ?? slugify(exercise);
+  const history = auxHistory[slug] ?? auxHistory[exercise] ?? [];
+  if (history.length === 0) return undefined;
+  return computeAuxAnchor({ formulaWeightKg, history, nowIso });
+}
+
 function buildAuxiliaryWork(
   exercises: [string, string],
   oneRmKg: number,
@@ -653,15 +714,29 @@ function buildAuxiliaryWork(
   mainLiftVolumeRatio = 1,
   mainIntensityMultiplier = 1,
   skippedMainLift = false,
-  intensityType: IntensityType = 'heavy'
+  intensityType: IntensityType = 'heavy',
+  auxHistory?: Record<string, AuxHistoryEntry[]>,
+  nowIso: string = new Date().toISOString()
 ): AuxiliaryWork[] {
   const hasNoEquipment =
     activeDisruptions?.some(
       (d) => d.disruption_type === 'equipment_unavailable'
     ) ?? false;
 
-  const result = exercises.map((exercise) =>
-    processAuxExercise({
+  const result = exercises.map((exercise) => {
+    const formulaWeightKg = computeAuxWeight({
+      exercise,
+      oneRmKg,
+      lift: primaryLift ?? 'squat',
+      biologicalSex,
+    });
+    const anchorResult = resolveAuxAnchor(
+      exercise,
+      formulaWeightKg,
+      auxHistory,
+      nowIso
+    );
+    return processAuxExercise({
       exercise,
       worstSoreness,
       primaryMuscles,
@@ -680,8 +755,9 @@ function buildAuxiliaryWork(
       mainIntensityMultiplier,
       skippedMainLift,
       intensityType,
-    })
-  );
+      anchorResult,
+    });
+  });
 
   // No-equipment disruption: append bodyweight compensation exercises
   // The global MAX_AUX_EXERCISES=5 cap in generateJITSession prevents the combined
@@ -761,7 +837,10 @@ export function buildVolumeTopUp(
   recentAuxExercises?: string[],
   // Falls back to catalog-only resolution when the caller hasn't built a
   // user-aware typer. Engine internal callers always pass a real typer.
-  exerciseTyper: (name: string) => ExerciseType = getExerciseType
+  exerciseTyper: (name: string) => ExerciseType = getExerciseType,
+  // GH#221: per-aux history for anchor computation on top-up picks.
+  auxHistory?: Record<string, AuxHistoryEntry[]>,
+  nowIso: string = new Date().toISOString()
 ): AuxiliaryWork[] {
   // Build main lift muscle contributions to project post-session volume
   const liftMuscles = muscleMapper(primaryLift);
@@ -899,16 +978,27 @@ export function buildVolumeTopUp(
       exerciseLift && allOneRmKg?.[exerciseLift] != null
         ? allOneRmKg[exerciseLift]!
         : oneRmKg;
+    const formulaWeightKg =
+      exerciseType === 'bodyweight'
+        ? 0
+        : computeAuxWeight({
+            exercise,
+            oneRmKg: effectiveOneRmKg,
+            lift: exerciseLift ?? primaryLift,
+            biologicalSex,
+          });
+    // GH#221: top-up picks also honor the history anchor when one exists.
+    const anchorResult =
+      exerciseType === 'bodyweight'
+        ? undefined
+        : resolveAuxAnchor(exercise, formulaWeightKg, auxHistory, nowIso);
+    const useAnchorWeight =
+      anchorResult != null && anchorResult.source !== 'formula';
     const finalWeight =
       exerciseType === 'bodyweight'
         ? 0
         : roundToNearest(
-            computeAuxWeight({
-              exercise,
-              oneRmKg: effectiveOneRmKg,
-              lift: exerciseLift ?? primaryLift,
-              biologicalSex,
-            }),
+            useAnchorWeight ? anchorResult.anchorKg : formulaWeightKg,
             weightIncrementKg
           );
 
@@ -926,6 +1016,7 @@ export function buildVolumeTopUp(
       skipped: false,
       isTopUp: true,
       topUpReason: `${muscle.replace('_', ' ')} below MEV`,
+      anchor: anchorResult ? toAnchorCarrier(anchorResult) : undefined,
     });
   }
 

@@ -1,6 +1,6 @@
 # Feature: History-Anchored Auxiliary Weights
 
-**Status**: Draft
+**Status**: Implemented
 
 **Date**: 2026-05-23
 
@@ -33,27 +33,29 @@ This is the same philosophy the engine already applies to main lifts (working 1R
 
 ### What the lifter sees
 
-**First session with a new aux exercise:** prescription comes from the catalog formula (current behavior). Lifter completes the sets, may adjust weight up or down.
+**Session 1 (no history):** prescription comes from the catalog formula. Standard fatigue discount applies on heavy days. Lifter completes the sets, may adjust weight up or down.
 
-**Second session onward:** prescription is anchored to the most recent completed sets of that exercise, adjusted for the current session's main-lift load context (heavy day = small fatigue discount, deload = full prescription, etc.). The number on the screen reflects what they actually did last time, not what the formula thinks they should do.
+**Sessions 2-3 (blend phase):** prescription is a weighted blend of formula and the emerging rolling-average anchor. Each completed session shifts the blend further toward history. Post-main fatigue discount still applies during this phase since the anchor is not yet fully trusted.
 
-**When the lifter manually overrides a weight:** the override is treated as a strong signal. Next session's prescription respects the override direction. Two consecutive overrides in the same direction = the system fully adopts the lifter's number; the formula effectively stops contributing.
+**Session 3+ (anchor established):** prescription is the rolling average of the last 3 completed sessions of this exercise. The catalog formula is no longer consulted. The post-main fatigue discount is dropped — the historical sets were themselves logged after main work, so the fatigue context is already baked in.
 
-**When an aux exercise hasn't been done in a long time:** if the gap exceeds a recency horizon (e.g. > 4 weeks since last completed), the system falls back toward the formula and surfaces a conservative starting weight so the lifter isn't asked to match a number from months ago.
+**When the lifter manually overrides a weight:** the override and its logged reps are added to the rolling average like any other completed set. **If two consecutive sessions are overridden in the same direction (both above prescribed or both below) and within a tight band of each other, the system snaps the anchor to the override and discards prior rolling history.** This is the "you told me twice — I'm listening" rule.
+
+**When an aux exercise hasn't been done in 8+ weeks:** the rolling-average window is considered stale. The system decays the anchor back toward the formula and prescribes a conservative starting weight rather than asking the lifter to match a number from months ago.
 
 ### Adjustment direction
 
-History anchoring **does not** disable other signals — it changes what the modifiers apply to:
+History anchoring changes only the **base** — the number before modifiers. Once the anchor is established (3+ sessions), the modifier stack changes:
 
-- Main-lift fatigue discount (post-main multiplier) still applies, on top of the history-derived anchor.
-- Soreness/disruption escalation can still suppress or scale aux work.
-- The MRV cap still skips aux when weekly volume is saturated.
+- Post-main fatigue discount: **dropped** (history already reflects this context).
+- Soreness, readiness, cycle phase, disruption modifiers: **still apply** on top of the anchor (these reflect today's state, which history can't predict).
+- MRV cap: **still applies** as a hard gate.
 
-The change is purely the **base** — the number before modifiers — moves from `1RM × pct` to `last completed weight at this exercise`.
+During the cold-start and blend phases, all original modifiers still apply (including the fatigue discount).
 
-### RPE feedback
+### Divergence transparency
 
-If logged RPE on the aux ran consistently above target (overprescribed), the next anchor is the lighter of the recent set weights, not the heaviest. If RPE ran below target (underprescribed), the next anchor trends toward the heavier sets. This mirrors the main-lift RPE rule but acts on the per-exercise anchor instead of the 1RM.
+When the anchor base and formula disagree by more than 20%, a small note appears on the aux row ("Using your recent 110kg rather than the formula's 150kg"). Tapping the note opens an explainer sheet showing the anchor's source and confidence, how many sessions contributed, the formula's value, the anchor base, today's prescribed weight (which may differ from the anchor base due to main-lift modifiers), and a plain-language rationale. Within ±20% the prescription is presented without commentary.
 
 ## User Benefits
 
@@ -65,23 +67,32 @@ If logged RPE on the aux ran consistently above target (overprescribed), the nex
 
 **Strength-aligned**: Consistent with the engine's existing philosophy of treating logged RPE and completed sets as ground truth for the main lifts. Aux work is finally on the same footing.
 
+## Decisions
+
+The following parameters are settled and should drive the spec:
+
+| Decision | Value | Rationale |
+| --- | --- | --- |
+| Anchor source | Rolling average of last N completed sessions | Smooths noise from any single bad day while remaining responsive. |
+| Window size | Fixed: last 3 sessions | Tight enough to track recent capacity, wide enough that one off-day is ~33% of the signal. |
+| Handoff curve | Blend formula ↔ anchor across sessions 1–3, full anchor at session 3 | No cliff. History weight rises linearly from 0 to 1 over the first three sessions. |
+| Recency horizon | 8 weeks since last completed session | Survives a normal block + deload without losing the anchor; long enough not to nag returning users. |
+| Stale-window decay | Anchor weight decays back toward formula past the horizon | Avoids matching a stale PR after a long break. |
+| Post-main fatigue discount | Dropped once anchor is established (session 3+) | History was logged in the same fatigue context — applying the discount again would double-count. Kept during cold-start and blend. |
+| Override capture | Manual overrides count as normal completed sets in the rolling average | Consistent — the override IS what the lifter did. |
+| Override snap rule | Two consecutive same-direction overrides within ~5% of each other → anchor snaps to override, prior history discarded | Honors the user's "I told you twice" signal. Direction = both above or both below prescribed. |
+| Session eligibility | Any logged set with weight + reps counts | Maximally inclusive. Partial sessions are still real data. |
+| Divergence callout | When anchor diverges from formula by > 20%, show a one-line note with a tappable explainer | Builds trust on large gaps without nagging on small ones. |
+| LLM integration | Formula path computes and persists the anchor in `PrescriptionTrace` even when the LLM strategy generated the session; the LLM prompt itself does not currently consume `auxHistory` or surface anchor metadata in aux rows | Keeps anchor-driven post-session calibration intact on LLM/hybrid sessions. Threading anchor data into the LLM prompt is tracked separately. |
+| Plate-rounding hysteresis | Don't surface an anchor change unless it moves the prescribed weight by ≥ one plate increment | Avoid "we updated by 1.2kg" notes when rounding swallows the change. |
+| Custom exercises | Anchored by exercise slug, not catalog entry | Custom and catalog exercises follow the same path. |
+
 ## Edge Cases
 
-- **No history yet** — formula bootstraps the first session; system marks the anchor as "exploring" until N completed sets exist.
-- **Long gap (decay)** — beyond a configurable recency horizon, anchor weight is biased downward toward the formula to avoid asking the lifter to match a stale PR.
-- **Catastrophic deviation** — if the formula and history disagree by more than a threshold (e.g. history is 50% of formula), surface a small note ("we're using your recent 110kg as the anchor — that's below the formula's 150kg estimate") so the lifter understands.
-- **Plate rounding** — small calibration shifts may not move the prescribed weight at all. The system should not show "we adjusted by 1.2kg" if rounding swallowed the change. Hysteresis applies: don't surface an anchor change unless it moves at least one increment.
-- **Confidence levels** — borrow from existing `modifier_calibrations` infrastructure (exploring → low → medium → high). After N consecutive sessions with consistent anchor, confidence rises; the formula is no longer consulted.
-- **Custom exercises** — same logic applies. History anchors do not require a catalog entry; the exercise slug is the key.
-- **Aux skipped sets** — completed sets at lower-than-prescribed weight or reps still inform the anchor (they're real data), but flagged differently from full completions so the system can detect "the lifter kept failing this" patterns.
-
-## Open Questions
-
-- [ ] How many completed sets are required before the anchor takes over from the formula? (Suggest: ≥1 full session, but increase confidence over 3+ sessions.)
-- [ ] Should the anchor be the most-recent set, a rolling average, or the best recent set? Each has different failure modes when the lifter has a bad day.
-- [ ] Does the post-main fatigue discount still apply on top of a history anchor that already reflects post-main fatigue from prior sessions? (Likely no — the history already encodes that context.)
-- [ ] How does this interact with `jit-pipeline/spec-llm-strategy.md` — should the LLM see the per-exercise history as additional context, or does the formula path own the anchor and the LLM gets a pre-anchored base?
-- [ ] Recency horizon — fixed (4 weeks) or proportional to typical aux rotation cadence?
+- **Bailed sessions** — sessions with only warm-up sets logged should not pollute the anchor; the eligibility rule ("any logged set") implicitly trusts that the lifter logged what they meant to log. If this proves noisy in prod, revisit by requiring at least one set ≥ formula floor.
+- **Reset and snap** — when the override snap rule fires, the rolling-average window is reset; the next session starts fresh with the override as session 1 of the new window. The blend phase does not re-run (the snap is itself the "I'm sure" signal).
+- **Mixed exercise variants** — paused bench and standard bench are separate slugs and do not share an anchor. Cross-variant inference is out of scope.
+- **First session ever for a lifter** — main-lift 1RM may itself be a self-reported estimate. Formula percentages on top of an unverified 1RM are already approximate; the cold-start window is the existing risk surface, not a new one.
 
 ## References
 

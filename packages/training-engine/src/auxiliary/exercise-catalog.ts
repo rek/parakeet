@@ -1434,25 +1434,36 @@ const SQRT_REFERENCE_1RM: Record<Lift, { male: number; female: number }> = {
 };
 
 /**
- * Compute auxiliary exercise working weight, applying sqrt scaling for
- * dumbbell/kettlebell exercises to correct for non-linear stabilization penalty.
+ * Compute auxiliary exercise working weight.
  *
- * For barbell/machine/cable exercises: weight = oneRmKg × weightPct (linear, as before)
- * For dumbbell/kettlebell exercises: weight = weightPct × sqrt(referenceRm × oneRmKg)
- *   — At the reference 1RM, output equals the linear formula.
- *   — Above it, weight grows slower (stronger lifters get proportionally lighter DBs).
+ * Precedence:
+ *   1. If `anchorKg` is provided (history-anchored prescription — GH#221),
+ *      return it directly. The caller has already computed an anchor that
+ *      overrides the formula. The catalog `weightPct` is no longer load-
+ *      bearing once the lifter has real history on this exercise.
+ *   2. Otherwise, fall back to the formula:
+ *      - barbell/machine/cable: weight = oneRmKg × weightPct (linear)
+ *      - dumbbell/kettlebell:   weight = weightPct × sqrt(referenceRm × oneRmKg)
+ *        At the reference 1RM, output equals the linear formula. Above it,
+ *        weight grows slower (stronger lifters get proportionally lighter DBs).
  */
 export function computeAuxWeight({
   exercise,
   oneRmKg,
   lift,
   biologicalSex,
+  anchorKg,
 }: {
   exercise: string;
   oneRmKg: number;
   lift: Lift;
   biologicalSex?: 'female' | 'male';
+  /** History-anchored weight (GH#221). When provided, overrides the
+   *  formula entirely. Caller is responsible for plate rounding. */
+  anchorKg?: number;
 }) {
+  if (anchorKg != null && anchorKg > 0) return anchorKg;
+
   const pct = getWeightPct(exercise);
   const entry = getCatalogEntry(exercise);
   const isUnstable = entry

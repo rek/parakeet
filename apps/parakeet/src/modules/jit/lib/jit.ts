@@ -71,6 +71,7 @@ import { fetchModifierCalibrations } from '../data/calibration.repository';
 
 import {
   fetchActiveDisruptions,
+  fetchAuxHistory,
   fetchJitProfile,
   fetchProgramWeekInfo,
   fetchRecentAuxExerciseNames,
@@ -410,6 +411,19 @@ export async function runJITForSession(
       ]
     : [...DEFAULT_CORE_POOL];
 
+  // GH#221: history-anchored aux weights. Fetch recent completed sessions
+  // for each plausible aux exercise (active pair + full top-up pool). The
+  // engine reads this map keyed by exercise display name; the repository
+  // returns one entry per session per exercise that has actual set logs.
+  const auxHistoryExercises = Array.from(
+    new Set([...activeAuxiliaries, ...auxiliaryPool])
+  );
+  const auxHistory = await fetchAuxHistory(
+    userId,
+    auxHistoryExercises,
+    /* sessionLimit */ 3
+  );
+
   // Per-athlete modifier calibrations (engine-041)
   const modifierCalibrations = await fetchModifierCalibrations(userId);
 
@@ -509,6 +523,7 @@ export async function runJITForSession(
         ? customExerciseTypeMap
         : undefined,
     activeRehabCap,
+    auxHistory: Object.keys(auxHistory).length > 0 ? auxHistory : undefined,
   };
 
   const strategyOverride = await getJITStrategyOverride();
