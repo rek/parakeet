@@ -188,4 +188,14 @@ The final goal is to update existing `docs/features/*/design*.md` and `docs/feat
 
 Design changes should be written inline in the design doc, as if they were always there.
 
-Spec changes should be added as new checkboxes to implement.
+Spec changes should be added as new checkboxes to implement. Group them under a section titled exactly:
+
+```
+## Open Issues (YYYY-MM review)
+```
+
+(or `## Known issues (YYYY-MM review)` when the items are bugs you've identified but the fix is implicit). The dated heading is the contract `/wrap-up` greps for to flip checkboxes back to `[x]` once the fixes land — don't rename it freely.
+
+Each checkbox should start with a **bold short title** so commit messages can reference it precisely: `- [ ] **Title in bold.** Detail and fix prose.`
+
+If you find an existing `Open Issues (YYYY-MM review)` block on a doc you're updating, append to it rather than creating a second dated block.
