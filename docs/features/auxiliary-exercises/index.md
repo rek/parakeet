@@ -22,4 +22,4 @@ Accessory exercise rotation, configuration, and ad-hoc additions.
 | [spec-custom-muscles.md](./spec-custom-muscles.md) | done | Custom exercise muscle selection (GH#192) |
 | [spec-subtitles.md](./spec-subtitles.md) | done | Exercise variant subtitles (GH#205) |
 | [spec-history-anchored-weight.md](./spec-history-anchored-weight.md) | done | History-anchored aux weight (GH#221) |
-| [spec-anchor-llm-strategy.md](./spec-anchor-llm-strategy.md) | draft | Aux anchor in LLM & Hybrid strategies (GH#223) |
+| [spec-anchor-llm-strategy.md](./spec-anchor-llm-strategy.md) | done | Aux anchor in LLM & Hybrid strategies (GH#223) |
