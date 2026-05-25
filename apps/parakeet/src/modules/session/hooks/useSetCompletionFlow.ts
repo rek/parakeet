@@ -201,7 +201,9 @@ export function useSetCompletionFlow({
           // No rest timer after the last set of this exercise
           if (setNumber >= setsInExercise) return;
 
-          if (isTimed || isBodyweight) return;
+          // Timed exercises have a single round, no inter-set rest. Bodyweight
+          // does get a rest timer — recovery between sets is universal (GH#195).
+          if (isTimed) return;
 
           if (!restTimerPrefsRef.current.auxSetsEnabled) return;
 
@@ -294,7 +296,6 @@ export function useSetCompletionFlow({
       if (
         nextAuxSet < totalAuxSets &&
         auxType !== 'timed' &&
-        auxType !== 'bodyweight' &&
         restTimerPrefsRef.current.auxSetsEnabled
       ) {
         const exerciseIndex = auxiliaryWork.findIndex(
@@ -594,9 +595,9 @@ export function useSetCompletionFlow({
     if (confType !== 'timed' && confType !== 'bodyweight')
       setPendingAuxRpe(conf.exercise, conf.setNumber);
 
-    // Open rest timer if not last set and aux timer enabled
     if (conf.setNumber >= conf.setsInExercise) return;
-    if (confType === 'timed' || confType === 'bodyweight') return;
+    // Bodyweight gets a rest timer (GH#195); only timed exercises skip.
+    if (confType === 'timed') return;
     if (!restTimerPrefsRef.current.auxSetsEnabled) return;
 
     const duration = resolveAuxRestSeconds({
@@ -634,9 +635,8 @@ export function useSetCompletionFlow({
       weightIncrementKgRef.current
     );
 
-    // Open rest timer if not last set and aux timer enabled
     if (conf.setNumber >= conf.setsInExercise) return;
-    if (failedType === 'timed' || failedType === 'bodyweight') return;
+    if (failedType === 'timed') return;
     if (!restTimerPrefsRef.current.auxSetsEnabled) return;
 
     const duration = resolveAuxRestSeconds({
