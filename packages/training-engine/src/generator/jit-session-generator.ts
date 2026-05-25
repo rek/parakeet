@@ -13,9 +13,8 @@ import {
 } from '../adjustments/soreness-adjuster';
 import {
   AuxAnchorCarrier,
-  AuxAnchorResult,
   AuxHistoryEntry,
-  computeAuxAnchor,
+  resolveAuxAnchor,
   toAnchorCarrier,
 } from '../auxiliary/anchor';
 import {
@@ -26,7 +25,6 @@ import {
   getRepTarget,
   MovementPattern,
   resolveMovementPattern,
-  slugify,
 } from '../auxiliary/exercise-catalog';
 import { rankExercises } from '../auxiliary/exercise-scorer';
 import {
@@ -675,26 +673,6 @@ export function generateJITSessionWithTrace(input: JITInput) {
 // ---------------------------------------------------------------------------
 // Auxiliary work builder
 // ---------------------------------------------------------------------------
-
-/**
- * Resolve the history-anchor for one aux exercise. The app layer keys
- * `auxHistory` by canonical catalog slug (so renames don't break matching);
- * we also accept display-name keys for in-engine callers that haven't been
- * updated. Returns undefined when no anchor input is available —
- * processAuxExercise then runs the formula path unchanged.
- */
-function resolveAuxAnchor(
-  exercise: string,
-  formulaWeightKg: number,
-  auxHistory: Record<string, AuxHistoryEntry[]> | undefined,
-  nowIso: string
-): AuxAnchorResult | undefined {
-  if (!auxHistory) return undefined;
-  const slug = getCatalogEntry(exercise)?.slug ?? slugify(exercise);
-  const history = auxHistory[slug] ?? auxHistory[exercise] ?? [];
-  if (history.length === 0) return undefined;
-  return computeAuxAnchor({ formulaWeightKg, history, nowIso });
-}
 
 function buildAuxiliaryWork(
   exercises: [string, string],

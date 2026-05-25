@@ -97,6 +97,77 @@ describe('computeDivergence', () => {
     const result = computeDivergence(formula, llm);
     expect(result.weightPct).toBe(0);
   });
+
+  // GH#223: surface LLM anchorOverride entries into the divergence row
+  describe('auxAnchorOverrides (GH#223)', () => {
+    const base = {
+      mainLiftSets: [{ set_number: 1, weight_kg: 100, reps: 5, rpe_target: 8 }],
+      rationale: ['x'],
+    };
+
+    it('populates auxAnchorOverrides when LLM emitted at least one override', () => {
+      const llm = {
+        ...base,
+        auxiliaryWork: [
+          {
+            exercise: 'Pause Squat',
+            sets: [],
+            skipped: false,
+            anchor: {
+              source: 'snap',
+              confidence: 'high',
+              formulaWeightKg: 98,
+              anchorBaseKg: 60,
+              sessionsUsed: 3,
+              rationale: 'recent shoulder tweak',
+              fromLLMOverride: true,
+              engineAnchorKg: 80,
+            },
+          },
+        ],
+      } as Parameters<typeof computeDivergence>[1];
+
+      const result = computeDivergence(
+        base as Parameters<typeof computeDivergence>[0],
+        llm
+      );
+      expect(result.auxAnchorOverrides).toEqual([
+        {
+          exercise: 'Pause Squat',
+          anchorWeightKg: 80,
+          llmOverrideWeightKg: 60,
+          reason: 'recent shoulder tweak',
+        },
+      ]);
+    });
+
+    it('field absent (not empty) when LLM emitted no overrides', () => {
+      const llm = {
+        ...base,
+        auxiliaryWork: [
+          {
+            exercise: 'Pause Squat',
+            sets: [],
+            skipped: false,
+            anchor: {
+              source: 'history',
+              confidence: 'high',
+              formulaWeightKg: 98,
+              anchorBaseKg: 80,
+              sessionsUsed: 3,
+              rationale: 'avg of last 3',
+            },
+          },
+        ],
+      } as Parameters<typeof computeDivergence>[1];
+
+      const result = computeDivergence(
+        base as Parameters<typeof computeDivergence>[0],
+        llm
+      );
+      expect(result.auxAnchorOverrides).toBeUndefined();
+    });
+  });
 });
 
 // ---------------------------------------------------------------------------

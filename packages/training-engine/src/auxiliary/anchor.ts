@@ -10,6 +10,8 @@
  * for the decisions table that governs every constant here.
  */
 
+import { getCatalogEntry, slugify } from './exercise-catalog';
+
 /** Window of completed sessions feeding the rolling-average anchor. */
 export const ANCHOR_WINDOW_SIZE = 3;
 
@@ -75,6 +77,12 @@ export interface AuxAnchorResult {
  * renames `anchorKg` → `anchorBaseKg` to make the pre-modifier semantics
  * explicit — UI rows would otherwise confuse it with the post-modifier
  * prescribed weight on the same row.
+ *
+ * `fromLLMOverride` and `engineAnchorKg` (GH#223) are only set when the LLM
+ * strategy emits a non-null `anchorOverride` for this exercise. Hybrid
+ * divergence uses them to record `(engineAnchorKg → anchorBaseKg)` in
+ * `jit_comparison_logs`; the UI explainer prefixes rationale with
+ * "AI suggested:" so the lifter can distinguish system-anchor from override.
  */
 export type AuxAnchorCarrier = Pick<
   AuxAnchorResult,
@@ -84,6 +92,13 @@ export type AuxAnchorCarrier = Pick<
    *  renamed here so callers don't mistake it for the post-modifier
    *  prescribed weight on the same row). */
   anchorBaseKg: number;
+  /** True when the LLM strategy emitted an `anchorOverride` for this aux.
+   *  When true, `anchorBaseKg` is the LLM's number, not the engine's. */
+  fromLLMOverride?: boolean;
+  /** Engine's pre-override anchor weight. Present only when
+   *  `fromLLMOverride === true` so divergence + UX can show what the engine
+   *  would have used absent the override. */
+  engineAnchorKg?: number;
 };
 
 /** Helper for constructing a carrier from an `AuxAnchorResult`. Centralised
@@ -309,4 +324,24 @@ export function computeAuxAnchor(input: AuxAnchorInput): AuxAnchorResult {
     decayApplied,
     rationale,
   };
+}
+
+/**
+ * Resolve the history-anchor for one aux exercise. The app layer keys
+ * `auxHistory` by canonical catalog slug (so renames don't break matching);
+ * we also accept display-name keys for in-engine callers that haven't been
+ * updated. Returns undefined when no history is available for this exercise
+ * — callers then run the formula path unchanged.
+ */
+export function resolveAuxAnchor(
+  exercise: string,
+  formulaWeightKg: number,
+  auxHistory: Record<string, AuxHistoryEntry[]> | undefined,
+  nowIso: string
+): AuxAnchorResult | undefined {
+  if (!auxHistory) return undefined;
+  const slug = getCatalogEntry(exercise)?.slug ?? slugify(exercise);
+  const history = auxHistory[slug] ?? auxHistory[exercise] ?? [];
+  if (history.length === 0) return undefined;
+  return computeAuxAnchor({ formulaWeightKg, history, nowIso });
 }

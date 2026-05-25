@@ -130,4 +130,23 @@ describe('shouldShowAnchorNote', () => {
       })
     ).toBe(false);
   });
+
+  // GH#223: LLM anchor override stays visible via the same predicate
+  it('shows for an LLM override that diverges from formula', () => {
+    // Engine anchor 80, LLM override 60, formula 98 → carrier records the LLM's
+    // 60 as anchorBaseKg with source='snap' + fromLLMOverride=true. Divergence
+    // vs formula (98 vs 60 ≈ 39%) > threshold → note must show.
+    expect(
+      shouldShowAnchorNote({
+        anchor: anchor({
+          source: 'snap',
+          formulaWeightKg: 98,
+          anchorBaseKg: 60,
+          fromLLMOverride: true,
+          engineAnchorKg: 80,
+        }),
+        weightIncrementKg: 2.5,
+      })
+    ).toBe(true);
+  });
 });

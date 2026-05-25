@@ -1,8 +1,10 @@
+import { JITAdjustmentSchema } from '@parakeet/shared-types';
 import type { JITAdjustment } from '@parakeet/shared-types';
 import { generateText } from 'ai';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { atMevExcept } from '../../__test-helpers__/fixtures';
+import type { AuxHistoryEntry } from '../../auxiliary/anchor';
 import { DEFAULT_CORE_POOL } from '../../auxiliary/exercise-catalog';
 import { DEFAULT_FORMULA_CONFIG_MALE } from '../../cube/blocks';
 import { DEFAULT_MRV_MEV_CONFIG_MALE } from '../../volume/mrv-mev-calculator';
@@ -237,6 +239,189 @@ describe('applyAdjustment', () => {
       output.auxiliaryWork.forEach((a) => {
         expect(a.skipped).toBe(false);
       });
+    });
+  });
+
+  // GH#223: LLM aux path consumes engine anchor; LLM may dissent via override
+  describe('aux anchor (GH#223)', () => {
+    const historyEntry = (weightKg: number, daysAgo: number): AuxHistoryEntry => ({
+      sessionId: `s-${daysAgo}`,
+      completedAt: new Date(
+        Date.parse('2026-05-25T12:00:00Z') - daysAgo * 86_400_000
+      ).toISOString(),
+      prescribedWeightKg: weightKg,
+      sets: [{ weightKg, reps: 8, rpe: 8 }],
+    });
+
+    it('history-anchored: 3+ sessions → carrier source=history, anchorBaseKg=avg', () => {
+      // 3 logged sessions of Pause Squat at 80/80/80kg; formula would suggest ~98kg
+      // (squat oneRM 140kg × Pause Squat weightPct ~0.70).
+      const output = applyAdjustment(
+        baseAdj(),
+        baseInput({
+          nowIso: '2026-05-25T12:00:00Z',
+          auxHistory: {
+            'pause-squat': [
+              historyEntry(80, 2),
+              historyEntry(80, 5),
+              historyEntry(80, 8),
+            ],
+          },
+        })
+      );
+      const pauseSquat = output.auxiliaryWork.find(
+        (a) => a.exercise === 'Pause Squat'
+      );
+      expect(pauseSquat?.anchor?.source).toBe('history');
+      expect(pauseSquat?.anchor?.anchorBaseKg).toBe(80);
+      expect(pauseSquat?.anchor?.fromLLMOverride).toBeUndefined();
+      // Final weight derived from anchor (80) — not formula (~98).
+      expect(pauseSquat?.sets[0].weight_kg).toBe(80);
+    });
+
+    it('no history → carrier present with source=formula (note hidden downstream)', () => {
+      const output = applyAdjustment(baseAdj(), baseInput());
+      const pauseSquat = output.auxiliaryWork.find(
+        (a) => a.exercise === 'Pause Squat'
+      );
+      // No auxHistory provided → carrier is undefined (engine returns undefined
+      // from resolveAuxAnchor). UI divergence note hides automatically.
+      expect(pauseSquat?.anchor).toBeUndefined();
+    });
+
+    it('LLM anchorOverride: aux base = override.weightKg, source=snap, fromLLMOverride=true', () => {
+      const adj = baseAdj({
+        auxOverrides: [
+          {
+            exercise: 'Pause Squat',
+            action: 'normal',
+            anchorOverride: { weightKg: 60, reason: 'recent shoulder tweak' },
+          },
+        ],
+      });
+      const output = applyAdjustment(adj, baseInput());
+      const pauseSquat = output.auxiliaryWork.find(
+        (a) => a.exercise === 'Pause Squat'
+      );
+      expect(pauseSquat?.anchor?.source).toBe('snap');
+      expect(pauseSquat?.anchor?.fromLLMOverride).toBe(true);
+      expect(pauseSquat?.anchor?.anchorBaseKg).toBe(60);
+      expect(pauseSquat?.anchor?.rationale).toContain('shoulder tweak');
+      // Plate rounding still applies — final weight rounded to 2.5kg increments.
+      expect(pauseSquat?.sets[0].weight_kg).toBe(60);
+    });
+
+    it('schema rejects anchorOverride.weightKg > 500 (out of bounds)', () => {
+      const raw = {
+        intensityModifier: 1.0,
+        setModifier: 0,
+        skipMainLift: false,
+        auxOverrides: [
+          {
+            exercise: 'Pause Squat',
+            action: 'normal',
+            anchorOverride: { weightKg: 9999, reason: 'hallucinated' },
+          },
+        ],
+        rationale: ['x'],
+        confidence: 'high',
+        restAdjustments: null,
+      };
+      expect(() => JITAdjustmentSchema.parse(raw)).toThrow();
+    });
+
+    it('schema rejects auxOverrides entry missing anchorOverride (nullable-not-optional)', () => {
+      const raw = {
+        intensityModifier: 1.0,
+        setModifier: 0,
+        skipMainLift: false,
+        auxOverrides: [{ exercise: 'Pause Squat', action: 'normal' }],
+        rationale: ['x'],
+        confidence: 'high',
+        restAdjustments: null,
+      };
+      expect(() => JITAdjustmentSchema.parse(raw)).toThrow();
+    });
+
+    it('schema accepts explicit anchorOverride: null', () => {
+      const raw = {
+        intensityModifier: 1.0,
+        setModifier: 0,
+        skipMainLift: false,
+        auxOverrides: [
+          { exercise: 'Pause Squat', action: 'normal', anchorOverride: null },
+        ],
+        rationale: ['x'],
+        confidence: 'high',
+        restAdjustments: null,
+      };
+      expect(() => JITAdjustmentSchema.parse(raw)).not.toThrow();
+    });
+
+    it("action: 'reduce' stacks on anchor base (× 0.9 of anchor, not × 0.9 of formula)", () => {
+      // 3 sessions @ 80kg → anchor=80. action: 'reduce' should yield 80×0.9=72kg
+      // (rounded to plate increment 2.5 → 72.5kg). If it stacked on formula
+      // (~98kg) we'd see 88kg.
+      const adj = baseAdj({
+        auxOverrides: [
+          {
+            exercise: 'Pause Squat',
+            action: 'reduce',
+            anchorOverride: null,
+          },
+        ],
+      });
+      const output = applyAdjustment(
+        adj,
+        baseInput({
+          nowIso: '2026-05-25T12:00:00Z',
+          auxHistory: {
+            'pause-squat': [
+              historyEntry(80, 2),
+              historyEntry(80, 5),
+              historyEntry(80, 8),
+            ],
+          },
+        })
+      );
+      const pauseSquat = output.auxiliaryWork.find(
+        (a) => a.exercise === 'Pause Squat'
+      );
+      // 80 × 0.9 = 72; rounded to 2.5 plate increment = 72.5
+      expect(pauseSquat?.sets[0].weight_kg).toBe(72.5);
+      // 'reduce' also caps sets at 2
+      expect(pauseSquat?.sets).toHaveLength(2);
+    });
+
+    it('engineAnchorKg present when fromLLMOverride; pre-override anchor preserved', () => {
+      const adj = baseAdj({
+        auxOverrides: [
+          {
+            exercise: 'Pause Squat',
+            action: 'normal',
+            anchorOverride: { weightKg: 60, reason: 'tweak' },
+          },
+        ],
+      });
+      const output = applyAdjustment(
+        adj,
+        baseInput({
+          nowIso: '2026-05-25T12:00:00Z',
+          auxHistory: {
+            'pause-squat': [
+              historyEntry(80, 2),
+              historyEntry(80, 5),
+              historyEntry(80, 8),
+            ],
+          },
+        })
+      );
+      const pauseSquat = output.auxiliaryWork.find(
+        (a) => a.exercise === 'Pause Squat'
+      );
+      expect(pauseSquat?.anchor?.fromLLMOverride).toBe(true);
+      expect(pauseSquat?.anchor?.engineAnchorKg).toBe(80);
+      expect(pauseSquat?.anchor?.anchorBaseKg).toBe(60);
     });
   });
 });

@@ -34,6 +34,13 @@ export interface AuxiliaryWork {
     anchorBaseKg: number;
     sessionsUsed: number;
     rationale: string;
+    /** GH#223: true when the LLM strategy emitted an `anchorOverride` for
+     *  this aux. UI prefixes the rationale with "AI suggested:" and the
+     *  hybrid divergence row records (engineAnchorKg → anchorBaseKg). */
+    fromLLMOverride?: boolean;
+    /** Engine's pre-override anchor weight, only present when
+     *  `fromLLMOverride === true`. */
+    engineAnchorKg?: number;
   };
 }
 

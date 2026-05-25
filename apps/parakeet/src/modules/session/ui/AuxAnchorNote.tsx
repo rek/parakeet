@@ -110,7 +110,11 @@ export function AuxAnchorNote({
               <Text style={styles.label}>Prescribed today</Text>
               <Text style={styles.value}>{prescribedWeightKg}kg</Text>
             </View>
-            <Text style={styles.rationale}>{anchor.rationale}</Text>
+            <Text style={styles.rationale}>
+              {anchor.fromLLMOverride
+                ? `AI suggested: ${anchor.rationale}`
+                : anchor.rationale}
+            </Text>
             <TouchableOpacity
               onPress={() => setExpanded(false)}
               style={styles.closeButton}

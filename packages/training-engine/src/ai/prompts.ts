@@ -35,6 +35,13 @@ Age (userAge, optional integer years) is a relevant signal when present:
 - Older lifters (≥55) recover more slowly between sessions. When recent RPE has been trending high or readiness signals are poor, lean toward smaller intensity reductions and shorter recovery rest rather than aggressive volume cuts.
 - Younger lifters (≤22) typically tolerate higher volume; if everything else is green, do not reduce just to be safe.
 - Do not invent thresholds beyond what the data supports — only mention age in the rationale when it materially changes the recommendation.
+
+Auxiliary anchor (auxAnchors):
+- For each configured auxiliary exercise, the input may include auxAnchors[exercise] = { source, anchorKg, formulaWeightKg, sessionsUsed, rationale, confidence }. This is the engine's pre-computed working weight for that aux — derived from the lifter's own recent top sets (source 'history' or 'snap'), a blend of formula + history ('blend'), or pure catalog formula ('formula').
+- Default behavior: trust the anchor. Emit the aux with action: 'normal' and anchorOverride: null. The anchor decision tree (snap, rolling average, blend, decay) is a deterministic rule the engine enforces uniformly — re-deriving it from raw auxHistory invites silent drift.
+- Override only when context the anchor cannot see makes it unsafe: a fresh injury, the first session after a deload that broke a PR, a recent equipment change. State the concrete reason in anchorOverride.reason (one short sentence, ≤160 chars). The override weightKg must be in [0, 500].
+- Do NOT override based on raw auxHistory alone — the anchor already encodes that signal.
+- anchorOverride must be present on every auxOverrides entry. Use null when you have no override; only emit the object when overriding.
 `;
 
 export const JUDGE_REVIEW_SYSTEM_PROMPT = `

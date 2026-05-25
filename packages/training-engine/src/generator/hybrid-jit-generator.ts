@@ -15,6 +15,17 @@ interface DivergenceResult {
   setDelta: number;
   /** First line of LLM rationale — context summary for developer display */
   rpeContextSummary: string;
+  /** Per-aux LLM `anchorOverride` records (GH#223). Present only when the
+   *  LLM emitted at least one non-null override on the configured aux pair;
+   *  absent (not empty) otherwise so consumers can distinguish "no overrides"
+   *  from "field not implemented yet". `anchorWeightKg` is what the engine
+   *  would have used, `llmOverrideWeightKg` is what the LLM proposed. */
+  auxAnchorOverrides?: Array<{
+    exercise: string;
+    anchorWeightKg: number;
+    llmOverrideWeightKg: number;
+    reason: string;
+  }>;
 }
 
 /** Optional callback injected at construction time for fire-and-forget logging.
@@ -36,6 +47,25 @@ export function computeDivergence(
 ): DivergenceResult {
   const formulaWeight = formula.mainLiftSets[0]?.weight_kg ?? 0;
   const llmWeight = llm.mainLiftSets[0]?.weight_kg ?? 0;
+
+  // GH#223: surface LLM aux-anchor overrides so jit_comparison_logs records
+  // override frequency and rationale quality. Marker is the carrier's
+  // `fromLLMOverride` flag (no string matching). Skipped/timed aux are
+  // included if they carry an override — the LLM may override the base then
+  // skip on a separate signal, and we still want the override visible.
+  const overrides = (llm.auxiliaryWork ?? [])
+    .filter((a) => a.anchor?.fromLLMOverride === true)
+    .map((a) => ({
+      exercise: a.exercise,
+      // engineAnchorKg is set when fromLLMOverride is true (carrierFor in
+      // llm-jit-generator). Fall back to formulaWeightKg for defensive null
+      // handling — both should never both be missing in practice.
+      anchorWeightKg:
+        a.anchor?.engineAnchorKg ?? a.anchor?.formulaWeightKg ?? 0,
+      llmOverrideWeightKg: a.anchor?.anchorBaseKg ?? 0,
+      reason: a.anchor?.rationale ?? '',
+    }));
+
   return {
     weightPct:
       formulaWeight > 0
@@ -43,6 +73,7 @@ export function computeDivergence(
         : 0,
     setDelta: llm.mainLiftSets.length - formula.mainLiftSets.length,
     rpeContextSummary: llm.rationale?.[0] ?? '',
+    ...(overrides.length > 0 ? { auxAnchorOverrides: overrides } : {}),
   };
 }
 
