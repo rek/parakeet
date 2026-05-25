@@ -299,6 +299,12 @@ describe('computeAuxAnchor', () => {
     expect(result.decayApplied).toBe(true);
     expect(result.anchorKg).toBe(75);
     expect(result.source).toBe('formula');
+    // Full decay must also zero out the pedigree fields: a formula result
+    // claiming `confidence: 'medium'` + `sessionsUsed: 3` would mislead the
+    // post-session calibration trace into thinking history backed the
+    // prescription when it didn't.
+    expect(result.confidence).toBe('exploring');
+    expect(result.sessionsUsed).toBe(0);
   });
 
   it('snap takes precedence over stale decay (bypasses decay entirely)', () => {

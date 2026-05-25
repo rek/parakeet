@@ -17,7 +17,7 @@ The engine remains pure. History is fetched by the app layer and passed in via `
 
 Given a per-exercise history (newest-first, capped at `ANCHOR_WINDOW_SIZE = 3`):
 
-1. **Snap** — last two sessions both have top-set weight diverging from `prescribedWeightKg` in the same direction (both above or both below) and within `ANCHOR_SNAP_TOLERANCE = 0.05` of each other → `anchor = max(topSet of last two)`, `source = 'snap'`.
+1. **Snap** — last two sessions both have top-set weight diverging from `prescribedWeightKg` in the same direction (both above or both below) and within `ANCHOR_SNAP_TOLERANCE = 0.05` (i.e. 5 % of the heavier of the two top-sets) of each other → `anchor = max(topSet of last two)`, `source = 'snap'`.
 2. **History** — ≥ 3 sessions available → `anchor = avg(topSet of last 3)`, `source = 'history'`.
 3. **Blend** — 1–2 sessions available → `anchor = lerp(formula, historyAvg, sessionCount / 3)`, `source = 'blend'`.
 4. **Formula** — no usable history → `anchor = formulaWeightKg`, `source = 'formula'`.
@@ -28,7 +28,7 @@ After the source decision, apply stale-window decay:
 - Past the horizon, decay lerps linearly to 0 over `ANCHOR_DECAY_DAYS = 28`.
 - `anchor = lerp(formula, anchor, decay)`.
 - Snap bypasses decay (override sessions are recent by definition).
-- When decay reaches 0, source resets to `'formula'`.
+- When decay reaches 0, source resets to `'formula'`, and `sessionsUsed` / `confidence` are also reset to `0` / `'exploring'` so a fully-decayed result is indistinguishable from a cold start (avoids misleading the post-session calibration trace).
 
 Confidence:
 - `snap` → `'high'` regardless of session count.
@@ -42,7 +42,7 @@ All other modifiers (`mainIntensityMultiplier`, `mainLiftVolumeRatio`, no-equipm
 
 ### Override Detection
 
-A session entry's `prescribedWeightKg` is recovered from `sessions.jit_output_trace.auxiliaries[].weightTrace.finalWeightKg`, matched by canonical catalog slug. Sessions without a recoverable trace produce entries with `prescribedWeightKg: null`; snap detection is inhibited for those entries but they still feed the rolling average. An override is detected when `topSetWeight` differs from `prescribedWeightKg` by ≥ `ANCHOR_OVERRIDE_MIN_DELTA = 0.02`.
+A session entry's `prescribedWeightKg` is recovered from `sessions.jit_output_trace.auxiliaries[].weightTrace.finalWeightKg`, matched by canonical catalog slug. Sessions without a recoverable trace produce entries with `prescribedWeightKg: null`; snap detection is inhibited for those entries but they still feed the rolling average. An override is detected when `topSetWeight` differs from `prescribedWeightKg` by at least `ANCHOR_OVERRIDE_MIN_DELTA = 0.02` (a fraction — i.e. ≥ 2 % of prescribed weight, not 0.02 kg).
 
 ### Slug-Keyed History
 
@@ -77,7 +77,7 @@ Tests (`anchor.test.ts`):
 - Snap rejects far-apart magnitudes.
 - Window cap: only first 3 entries considered.
 - Stale 9 weeks → partial decay applied; lerp toward formula.
-- Stale 12+ weeks → full decay, source reverts to `'formula'`.
+- Stale 12+ weeks → full decay, source reverts to `'formula'`, `sessionsUsed` resets to `0`, `confidence` resets to `'exploring'`.
 - Snap with stale history → snap bypasses decay.
 - Top-set selection picks heaviest set, not last set.
 - Legacy entries with `prescribedWeightKg: null` do not trigger snap.
@@ -167,6 +167,8 @@ App-side `AuxiliaryWork.anchor` mirrors the engine's shape (duck-typed; the mode
 Both numbers are rounded to the lifter's plate increment.
 
 Tap opens a `Modal` (inlined in the same file) showing source, confidence, sessions used, formula base, anchor base, prescribed today, and the plain-language rationale.
+
+> **Deferred:** the original design also called for a list of the contributing sessions (date, top-set, RPE) inside the modal. Parked in [GH#226](https://github.com/rek/parakeet/issues/226) until there's lifter signal that the rarer "which workouts?" question needs answering.
 
 `shouldShowAnchorNote(...)` is the pure visibility predicate, extracted into `aux-anchor-note.helpers.ts` so it can be unit-tested without React Native. It hides the note when:
 - `source === 'formula'`

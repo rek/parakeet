@@ -281,6 +281,7 @@ export function computeAuxAnchor(input: AuxAnchorInput): AuxAnchorResult {
 
   const decay = computeStaleDecay({ history: trimmed, nowIso });
   const decayApplied = decay < 1 && source !== 'snap';
+  let effectiveSessionCount = sessionCount;
   if (decayApplied) {
     anchorKg = lerp(formulaWeightKg, anchorKg, decay);
     rationale +=
@@ -288,15 +289,21 @@ export function computeAuxAnchor(input: AuxAnchorInput): AuxAnchorResult {
         ? ' History is stale (no recent session) — fell back to the formula.'
         : ' History is partially stale — anchor pulled toward the formula.';
     if (decay === 0) {
+      // Full decay → the result is indistinguishable from a cold-start
+      // formula prescription. Also zero out the pedigree fields so that
+      // downstream consumers (e.g. AuxAnchorTrace → post-session
+      // calibration) don't read `confidence: 'medium'` from sessions that
+      // contributed nothing.
       source = 'formula';
+      effectiveSessionCount = 0;
     }
   }
 
   return {
     anchorKg,
     source,
-    sessionsUsed: sessionCount,
-    confidence: confidenceFor(sessionCount, snap),
+    sessionsUsed: effectiveSessionCount,
+    confidence: confidenceFor(effectiveSessionCount, snap),
     formulaWeightKg,
     snapDetected: snap,
     decayApplied,
