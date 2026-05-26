@@ -46,9 +46,15 @@ export function generateWeekSessions(
   });
 }
 
+// A deload session is tagged with the block it follows (e.g. week 4 deload
+// inherits block 1, week 8 follows block 2). This keeps the JIT pipeline's
+// `getActiveAssignments(programId, blockNumber)` lookup coherent — the lifter
+// deloads the same auxiliaries they were just running. Previously this was
+// `blockNumber: null`, which crashed `runJITForSession` via Zod
+// (Sentry react-native#122700262).
 export function generateDeloadWeek(
   weekNumber: number,
-  _totalWeeks: number,
+  blockNumber: number,
   dayOffsets: number[],
   startDate: Date
 ): SessionScaffold[] {
@@ -59,7 +65,7 @@ export function generateDeloadWeek(
       dayNumber: dayIndex + 1,
       primaryLift: lift,
       intensityType: 'deload' as IntensityType,
-      blockNumber: null,
+      blockNumber,
       isDeload: true,
       plannedDate: calculateSessionDate(
         startDate,
@@ -84,8 +90,11 @@ export function generateProgram(
 
   for (let week = 1; week <= totalWeeks; week++) {
     if (isDeloadWeek(week, totalWeeks)) {
+      // Inherit the block of the preceding training week. Clamp to 1 for the
+      // degenerate case of a totalWeeks=1 program (which is itself a deload).
+      const followingBlock = week > 1 ? getBlockNumber(week - 1) : 1;
       sessions.push(
-        ...generateDeloadWeek(week, totalWeeks, dayOffsets, startDate)
+        ...generateDeloadWeek(week, followingBlock, dayOffsets, startDate)
       );
     } else {
       const blockNumber = getBlockNumber(week);
