@@ -27,8 +27,9 @@ The `generateProgram` function now creates **structural scaffolding only** — s
 - [x] `generateWeekSessions(weekNumber, blockNumber, weekInBlock, trainingDaysPerWeek, startDate): SessionScaffold[]`
   - Each session has: `weekNumber`, `dayNumber`, `primaryLift`, `intensityType`, `blockNumber`, `isDeload`, `plannedDate`
   - `plannedSets: null` — explicitly null, not an empty array (signals "not yet JIT-generated")
-- [x] `generateDeloadWeek(weekNumber, totalWeeks, trainingDaysPerWeek, startDate): SessionScaffold[]`
+- [x] `generateDeloadWeek(weekNumber, blockNumber, dayOffsets, startDate): SessionScaffold[]`
   - Same structure, `isDeload: true`, `intensityType: 'deload'`
+  - `blockNumber` is the block the deload **follows** (week 4 deload → block 1, week 8 → block 2, final-week deload → previous training week's block). Keeps the JIT pipeline's aux-assignment lookup coherent.
 
 **Type: `SessionScaffold`**
 ```typescript
@@ -37,7 +38,7 @@ interface SessionScaffold {
   dayNumber: number
   primaryLift: Lift
   intensityType: IntensityType
-  blockNumber: 1 | 2 | 3 | null  // null for deload
+  blockNumber: number  // deload sessions inherit the block they follow
   isDeload: boolean
   plannedDate: Date
   plannedSets: null  // always null; populated by JIT generator

@@ -50,13 +50,13 @@ describe('generateProgram — 10-week 3-day', () => {
     });
   });
 
-  it('week 4: deload (every 4th week)', () => {
+  it('week 4: deload inherits the block it follows (block 1)', () => {
     const week4 = result.sessions.filter((s) => s.weekNumber === 4);
     expect(week4).toHaveLength(3);
     week4.forEach((s) => {
       expect(s.isDeload).toBe(true);
       expect(s.intensityType).toBe('deload');
-      expect(s.blockNumber).toBeNull();
+      expect(s.blockNumber).toBe(1);
     });
   });
 
@@ -82,13 +82,13 @@ describe('generateProgram — 10-week 3-day', () => {
     });
   });
 
-  it('week 10: all 3 sessions are deload', () => {
+  it('week 10: all 3 sessions are deload, inheriting block 3', () => {
     const week10 = result.sessions.filter((s) => s.weekNumber === 10);
     expect(week10).toHaveLength(3);
     week10.forEach((s) => {
       expect(s.isDeload).toBe(true);
       expect(s.intensityType).toBe('deload');
-      expect(s.blockNumber).toBeNull();
+      expect(s.blockNumber).toBe(3);
     });
   });
 

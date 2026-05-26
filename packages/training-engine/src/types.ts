@@ -137,7 +137,8 @@ export interface SessionScaffold {
   dayNumber: number;
   primaryLift: Lift;
   intensityType: IntensityType;
-  blockNumber: number | null; // null for deload week
+  // Deload sessions inherit the block they follow (e.g. week 4 deload → block 1).
+  blockNumber: number;
   isDeload: boolean;
   plannedDate: Date;
   plannedSets: null; // always null; populated by JIT generator
