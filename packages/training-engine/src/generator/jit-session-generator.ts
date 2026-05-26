@@ -58,7 +58,11 @@ import { applySorenessAdjustment } from './steps/applySorenessAdjustment';
 import { applyVolumeCalibration } from './steps/applyVolumeCalibration';
 import { buildFinalMainSets } from './steps/buildFinalMainSets';
 import { initPipeline } from './steps/initPipeline';
-import { processAuxExercise } from './steps/processAuxExercise';
+import {
+  DELOAD_AUX_INTENSITY_RATIO,
+  DELOAD_AUX_VOLUME_RATIO,
+  processAuxExercise,
+} from './steps/processAuxExercise';
 import {
   generateWarmupSets,
   resolveEffectiveWarmupProtocol,
@@ -416,26 +420,33 @@ export function generateJITSession(
   const intensityModifier = ctx.inRecoveryMode ? 0.4 : ctx.intensityMultiplier;
 
   // Step 6 — Auxiliary work
-  // Deload sessions are recovery weeks — soreness should not further suppress aux volume,
-  // and the proportional modifier propagation (GH#217) is bypassed since deload modifiers
-  // are intentionally already baked into the base prescription.
-  const isDeload = input.intensityType === 'deload';
-  // equipment_unavailable disruption deliberately reduces main and boosts aux as
+  // Deload sessions are recovery weeks — soreness should not further suppress aux volume.
+  // Equipment_unavailable disruption deliberately reduces main and boosts aux as
   // bodyweight compensation; the proportional propagation would invert that intent
-  // by also cutting aux. The +1 set logic + bodyweight pool handle this case.
+  // by also cutting aux. The +1 set logic + bodyweight pool handle that case.
+  const isDeload = input.intensityType === 'deload';
   const hasEquipmentDisruption =
     input.activeDisruptions?.some(
       (d) => d.disruption_type === 'equipment_unavailable'
     ) ?? false;
   const auxSoreness = isDeload ? (1 as SorenessLevel) : ctx.worstSoreness;
-  const auxVolumeRatio =
-    isDeload || hasEquipmentDisruption
+  // GH#231: on deload, aux must also be deloaded — previously these ratios
+  // were forced to 1.0 ("modifiers already baked into the base prescription"),
+  // but that's only true for the main lift. Aux still used computeAuxWeight /
+  // anchor weights at full intensity, leaving the supposed "deload" with full
+  // accessory work after a light main set.
+  const auxVolumeRatio = isDeload
+    ? DELOAD_AUX_VOLUME_RATIO
+    : hasEquipmentDisruption
       ? 1
       : formulaBaseSetsCount > 0
         ? ctx.plannedCount / formulaBaseSetsCount
         : 1;
-  const auxIntensityRatio =
-    isDeload || hasEquipmentDisruption ? 1 : ctx.intensityMultiplier;
+  const auxIntensityRatio = isDeload
+    ? DELOAD_AUX_INTENSITY_RATIO
+    : hasEquipmentDisruption
+      ? 1
+      : ctx.intensityMultiplier;
   const auxiliaryWork = buildAuxiliaryWork(
     activeAuxiliaries,
     oneRmKg,
@@ -461,7 +472,13 @@ export function generateJITSession(
 
   // Step 6b — Volume top-up (engine-027): append exercises for under-MEV muscles
   // Cap at MAX_AUX_EXERCISES to keep total session exercises ≤ 6 (5 aux + 1 main lift)
-  if (input.auxiliaryPool && input.auxiliaryPool.length > 0) {
+  //
+  // GH#235: deload weeks are intentionally below MEV — that's what makes them
+  // recovery weeks. Running the top-up loop here would defeat the deload by
+  // adding sets back up to MEV (or worse, adding spurious work because
+  // weeklyVolumeToDate is keyed by week_number and the deload week always
+  // starts at zero on its first session, so every muscle looks "below MEV").
+  if (!isDeload && input.auxiliaryPool && input.auxiliaryPool.length > 0) {
     const topUps = buildVolumeTopUp(
       input.auxiliaryPool,
       primaryLift,
@@ -835,7 +852,7 @@ export function buildVolumeTopUp(
   const primaryMusclesToday = new Set(getPrimaryMusclesForSession(primaryLift));
 
   // Find muscles below MEV after factoring in today's main lift
-  const candidates: Array<{ muscle: MuscleGroup; deficit: number }> = [];
+  const candidates: Array<{ muscle: MuscleGroup; deficit: number; mev: number }> = [];
   for (const muscle of Object.keys(mrvMevConfig) as MuscleGroup[]) {
     if (primaryMusclesToday.has(muscle)) continue;
     const { mev } = mrvMevConfig[muscle];
@@ -855,7 +872,7 @@ export function buildVolumeTopUp(
           ? Math.ceil((mev * sessionIndex) / totalSessionsThisWeek)
           : mev;
     const deficit = effectiveMev - projected;
-    if (deficit > 0) candidates.push({ muscle, deficit });
+    if (deficit > 0) candidates.push({ muscle, deficit, mev });
   }
 
   // Core priority (gh#203): no compound contributes to core, so core depends
@@ -863,10 +880,15 @@ export function buildVolumeTopUp(
   // push/pull/hinge deficits every session. When core is in deficit, always
   // reserve a top-up slot for it alongside the highest-deficit non-core muscle.
   // Still max 2 muscles.
+  //
+  // GH#233: rank by normalized deficit (deficit / mev) so a muscle that is
+  // "70% short of its MEV" outranks one that is "30% short", regardless of
+  // raw set magnitudes. Without normalization, big-MEV muscles like upper
+  // back drown out smaller-MEV ones (e.g. triceps mev=8) every time.
   const coreCandidate = candidates.find((c) => c.muscle === 'core');
   const nonCore = candidates
     .filter((c) => c.muscle !== 'core')
-    .sort((a, b) => b.deficit - a.deficit);
+    .sort((a, b) => b.deficit / b.mev - a.deficit / a.mev);
   const topCandidates = coreCandidate
     ? [coreCandidate, ...nonCore.slice(0, 1)]
     : nonCore.slice(0, 2);
@@ -886,11 +908,21 @@ export function buildVolumeTopUp(
   const upcomingLiftSet = upcomingLifts?.length
     ? new Set(upcomingLifts)
     : undefined;
-  const injuredLiftSet = new Set<string>();
+  // GH#232: any active disruption with affected_lifts should gate top-up
+  // exercise selection — not just injuries. An "unprogrammed event" (e.g. the
+  // user reports they tweaked their back and flagged squat+deadlift as
+  // affected) needs to suppress quad/hip top-ups the same way an injury does,
+  // otherwise we'll prescribe a Front Box Squat the day after they said
+  // "don't squat".
+  const excludedLiftSet = new Set<string>();
   if (activeDisruptions?.length) {
     for (const d of activeDisruptions) {
-      if (d.disruption_type === 'injury' && d.affected_lifts) {
-        for (const l of d.affected_lifts) injuredLiftSet.add(l);
+      if (!d.affected_lifts) continue;
+      if (
+        d.disruption_type === 'injury' ||
+        d.disruption_type === 'unprogrammed_event'
+      ) {
+        for (const l of d.affected_lifts) excludedLiftSet.add(l);
       }
     }
   }
@@ -902,7 +934,7 @@ export function buildVolumeTopUp(
       const exerciseLift = getLiftForExercise(exercise);
       if (upcomingLiftSet && exerciseLift && upcomingLiftSet.has(exerciseLift))
         return false;
-      if (injuredLiftSet.size > 0 && exerciseLift && injuredLiftSet.has(exerciseLift))
+      if (excludedLiftSet.size > 0 && exerciseLift && excludedLiftSet.has(exerciseLift))
         return false;
       return muscleMapper(null, exercise).some(
         (m) => m.muscle === muscle && m.contribution >= 1.0

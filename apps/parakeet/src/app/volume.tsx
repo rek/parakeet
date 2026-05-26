@@ -113,7 +113,7 @@ function MuscleBar({
             {sets}
             {isOver ? ' ⚠' : ''}
           </Text>
-          <Text style={styles.barMrv}>/{mrv}</Text>
+          <Text style={styles.barMrv}>/{mrv} MRV</Text>
         </View>
       </View>
 

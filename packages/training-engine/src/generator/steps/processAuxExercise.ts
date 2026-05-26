@@ -34,6 +34,15 @@ export function getPostMainFatigueFactor(intensityType: IntensityType): number {
   }
 }
 
+/** Aux scaling for deload sessions (GH#231). Without this, deloads only
+ *  reduce the main lift — aux exercises keep their full anchor/formula
+ *  weight and set count, which is heavier total work than a normal session
+ *  once the cut main lift is subtracted. Empirically a deload aux at ~50%
+ *  intensity / 2 sets keeps the recovery-week intent intact while preserving
+ *  the movement pattern. */
+export const DELOAD_AUX_INTENSITY_RATIO = 0.5;
+export const DELOAD_AUX_VOLUME_RATIO = 0.67;
+
 export function processAuxExercise({
   exercise,
   worstSoreness,

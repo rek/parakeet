@@ -1120,6 +1120,25 @@ describe('generateJITSession — volume top-up (engine-027)', () => {
     }
   });
 
+  it('deload session skips top-up entirely (GH#235)', () => {
+    // Pre-GH#235: deload sessions ran the top-up loop, and because
+    // weeklyVolumeToDate is keyed by week_number — which always starts empty
+    // on the first day of a new week — every muscle looked "below MEV" on day
+    // 1 of a deload. Result: deload sessions got piled with extra accessory
+    // work that defeated the recovery intent. Deload is supposed to be sub-
+    // MEV by design.
+    const out = generateJITSession(
+      baseInput({
+        intensityType: 'deload',
+        auxiliaryPool: pool,
+        weeklyVolumeToDate: {}, // everything looks "below MEV"
+        mrvMevConfig: DEFAULT_MRV_MEV_CONFIG_MALE,
+      })
+    );
+    const topUps = out.auxiliaryWork.filter((a) => a.isTopUp);
+    expect(topUps).toHaveLength(0);
+  });
+
   it('no qualifying exercise in pool → no top-up for that muscle', () => {
     // Pool has no exercises targeting hamstrings with contribution >= 1.0
     const noHamstringPool = ['Leg Press', 'Close-Grip Barbell Bench Press'];
@@ -1227,6 +1246,35 @@ describe('generateJITSession — volume top-up (engine-027)', () => {
           severity: 'moderate',
           affected_lifts: ['squat'],
           description: 'Knee injury',
+        })],
+      })
+    );
+    const topUps = out.auxiliaryWork.filter((a) => a.isTopUp);
+    expect(topUps.every((a) => a.exercise !== 'Leg Press')).toBe(true);
+  });
+
+  it('unprogrammed_event with affected_lifts filters top-up exercises (GH#232)', () => {
+    // Anette case: she logged an event with affected_lifts=['squat'] flagging
+    // sore quads, but disruption_type='unprogrammed_event' (not 'injury'). The
+    // top-up picker only honored 'injury', so it prescribed a squat-pattern
+    // aux (Leg Press) the day after she said "don't squat". Both types should
+    // gate exercise selection when affected_lifts is set.
+    const out = generateJITSession(
+      baseInput({
+        primaryLift: 'bench',
+        activeAuxiliaries: ['Close-Grip Barbell Bench Press', 'Dumbbell Fly'],
+        auxiliaryPool: [
+          'Leg Press',
+          'Dumbbell Romanian Deadlift',
+          'Barbell Curl',
+        ],
+        weeklyVolumeToDate: atMevExcept(DEFAULT_MRV_MEV_CONFIG_MALE, 'quads'),
+        mrvMevConfig: DEFAULT_MRV_MEV_CONFIG_MALE,
+        activeDisruptions: [makeEquipmentDisruption({
+          disruption_type: 'unprogrammed_event',
+          severity: 'major',
+          affected_lifts: ['squat'],
+          description: 'Sore quads',
         })],
       })
     );
@@ -2030,8 +2078,13 @@ describe('generateJITSession — GH#217 aux proportional reduction', () => {
     });
   });
 
-  it('deload session bypasses proportional propagation (aux preserved)', () => {
-    // Even with penalty signals, deload base is intentionally low — aux unchanged
+  it('deload session applies deload aux ratios (GH#231)', () => {
+    // Pre-GH#231: deload bypassed aux propagation entirely → aux ran at 3 sets,
+    // full weight, identical to a heavy week. That left "deload" cutting only
+    // the main lift while accessories ran unmodified — total session was often
+    // heavier than non-deload weeks after subtracting the lighter main.
+    // Now: aux gets DELOAD_AUX_VOLUME_RATIO (0.67) → 2 sets, and
+    // DELOAD_AUX_INTENSITY_RATIO (0.5) on weight.
     const out = generateJITSession(
       baseInput({
         intensityType: 'deload',
@@ -2044,7 +2097,7 @@ describe('generateJITSession — GH#217 aux proportional reduction', () => {
     );
     out.auxiliaryWork.forEach((a) => {
       expect(a.skipped).toBe(false);
-      expect(a.sets).toHaveLength(3);
+      expect(a.sets).toHaveLength(2);
     });
   });
 

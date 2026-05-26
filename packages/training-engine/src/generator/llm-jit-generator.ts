@@ -24,6 +24,10 @@ import {
 } from '../formulas/weight-rounding';
 import { createMuscleMapper } from '../volume/muscle-mapper';
 import { FormulaJITGenerator } from './formula-jit-generator';
+import {
+  DELOAD_AUX_INTENSITY_RATIO,
+  DELOAD_AUX_VOLUME_RATIO,
+} from './steps/processAuxExercise';
 import { enforceHardConstraints } from './jit-constraints';
 import {
   buildVolumeTopUp,
@@ -180,26 +184,35 @@ export function applyAdjustment(
   }
 
   // GH#217: propagate main-lift modifiers to aux proportionally so the LLM
-  // cannot leave aux at baseline while it slashes the main lift. Deload and
-  // equipment_unavailable disruptions bypass (matching formula path).
+  // cannot leave aux at baseline while it slashes the main lift.
+  // GH#231: on deload, aux gets explicit deload ratios (was forced to 1.0).
+  // equipment_unavailable keeps the 1.0 bypass — aux is intentionally boosted
+  // there as bodyweight compensation.
   const isDeload = input.intensityType === 'deload';
   const hasEquipmentDisruption =
     input.activeDisruptions?.some(
       (d) => d.disruption_type === 'equipment_unavailable'
     ) ?? false;
+  // Skip-main propagation: still off during deload / equipment bypass — same as
+  // before. The aux scaling above no longer uses this flag, but the
+  // skipped-main aux suppression below still does.
   const propagatePenalties = !isDeload && !hasEquipmentDisruption;
-  const volumeRatio = propagatePenalties
-    ? Math.min(
-        1,
-        Math.max(
-          0,
-          baseSets.length > 0 ? mainLiftSets.length / baseSets.length : 1
-        )
-      )
-    : 1;
-  const intensityRatio = propagatePenalties
-    ? Math.min(1, Math.max(0, adj.intensityModifier))
-    : 1;
+  const volumeRatio = isDeload
+    ? DELOAD_AUX_VOLUME_RATIO
+    : hasEquipmentDisruption
+      ? 1
+      : Math.min(
+          1,
+          Math.max(
+            0,
+            baseSets.length > 0 ? mainLiftSets.length / baseSets.length : 1
+          )
+        );
+  const intensityRatio = isDeload
+    ? DELOAD_AUX_INTENSITY_RATIO
+    : hasEquipmentDisruption
+      ? 1
+      : Math.min(1, Math.max(0, adj.intensityModifier));
 
   // Apply aux overrides
   const overrideByExercise = new Map(
@@ -366,7 +379,9 @@ export function applyAdjustment(
   // muscle is below MEV, append an exercise; when core is below MEV, one slot
   // is always reserved for it (core has zero compound contribution). Mirror
   // the formula path's Step 6b so the LLM strategy honors the same guarantee.
-  if (input.auxiliaryPool && input.auxiliaryPool.length > 0) {
+  //
+  // GH#235: skip on deload — see matching comment in jit-session-generator.
+  if (!isDeload && input.auxiliaryPool && input.auxiliaryPool.length > 0) {
     const muscleMapper = createMuscleMapper(input.customMuscleMap);
     const topUps = buildVolumeTopUp(
       input.auxiliaryPool,

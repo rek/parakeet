@@ -199,15 +199,18 @@ describe('applyAdjustment', () => {
         });
     });
 
-    it('deload bypasses proportional clamp', () => {
+    it('deload applies explicit deload aux ratios (GH#231)', () => {
       const adj = baseAdj({ intensityModifier: 0.7, setModifier: -1 });
       const output = applyAdjustment(
         adj,
         baseInput({ intensityType: 'deload' })
       );
-      // Deload: aux gets 3 sets at full weight regardless of main cut
+      // Pre-GH#231: deload bypassed propagation entirely → aux ran at 3 sets,
+      // full weight. That meant deload only cut the main lift while accessory
+      // load was unchanged. Now deload gets DELOAD_AUX_VOLUME_RATIO=0.67 →
+      // 2 sets, regardless of what the LLM tried to apply on top.
       output.auxiliaryWork.forEach((a) => {
-        expect(a.sets).toHaveLength(3);
+        expect(a.sets).toHaveLength(2);
       });
     });
   });
