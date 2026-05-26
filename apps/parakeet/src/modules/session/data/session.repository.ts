@@ -937,9 +937,13 @@ export async function fetchPlannedSessionForProgram(
   return data;
 }
 
-// Fetch the primary lift of the most recently completed session in a program.
-// Used by unending mode to determine which lift comes next in the rotation.
-export async function fetchLastCompletedLiftForProgram(
+// Fetch the primary lift of the most recently resolved (completed OR skipped)
+// session in a program. Used by unending mode to determine which lift comes
+// next in the rotation.
+// Why include skipped: otherwise skipping a session is a no-op for the
+// rotation, and lazy session generation regenerates the same lift forever
+// (GH#229 — user could not skip past a squat day).
+export async function fetchLastResolvedLiftForProgram(
   programId: string,
   userId: string
 ): Promise<Lift | null> {
@@ -948,8 +952,11 @@ export async function fetchLastCompletedLiftForProgram(
     .select('primary_lift')
     .eq('program_id', programId)
     .eq('user_id', userId)
-    .eq('status', 'completed')
-    .order('completed_at', { ascending: false })
+    .in('status', ['completed', 'skipped'])
+    // planned_date is the natural recency for both completed and skipped.
+    // Tie-break on completed_at so a same-day completion beats a same-day skip.
+    .order('planned_date', { ascending: false })
+    .order('completed_at', { ascending: false, nullsFirst: false })
     .limit(1)
     .maybeSingle();
   if (error) throw error;

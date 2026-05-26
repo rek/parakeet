@@ -15,18 +15,20 @@ export interface UnendingProgramRef {
 }
 
 // Builds and inserts the next session row for an unending program and advances the counter.
-// lastCompletedLift drives history-based rotation (squat→bench→deadlift→squat).
+// lastResolvedLift drives history-based rotation (squat→bench→deadlift→squat).
+// "Resolved" = completed OR skipped — both advance the rotation so the user
+// can skip past a lift instead of regenerating it forever.
 export async function appendNextUnendingSession(
   program: UnendingProgramRef,
   userId: string,
   plannedDate: string,
-  lastCompletedLift?: Lift | null,
+  lastResolvedLift?: Lift | null,
   intensitySignals?: IntensityTypeSignals
 ): Promise<void> {
   const next = nextUnendingSession({
     sessionCounter: program.unending_session_counter,
     trainingDaysPerWeek: program.training_days_per_week,
-    lastCompletedLift,
+    lastResolvedLift,
     intensitySignals,
   });
 

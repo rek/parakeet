@@ -1,5 +1,15 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { generateCycleReview } from '@parakeet/training-engine';
+import {
+  insertPendingCycleReviewRow,
+  markCycleReviewErrored,
+} from '../data/cycle-review.repository';
+
+import { triggerCycleReview } from './cycle-review';
+
+// vi.mock calls are hoisted to the top of the file by vitest, so their lexical
+// position below the imports does not affect runtime behaviour.
 vi.mock('@parakeet/training-engine', () => ({
   assembleCycleReport: vi.fn(() => ({ totalWeeks: 4 } as never)),
   extractSummary: vi.fn(),
@@ -25,14 +35,6 @@ vi.mock('../data/cycle-review.repository', () => ({
   insertPendingCycleReviewRow: vi.fn(),
   markCycleReviewErrored: vi.fn(),
 }));
-
-import { generateCycleReview } from '@parakeet/training-engine';
-import {
-  insertPendingCycleReviewRow,
-  markCycleReviewErrored,
-} from '../data/cycle-review.repository';
-
-import { triggerCycleReview } from './cycle-review';
 
 describe('triggerCycleReview', () => {
   beforeEach(() => {

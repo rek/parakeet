@@ -108,19 +108,19 @@ export function generateProgram(
 export interface NextUnendingSessionInput {
   sessionCounter: number; // program.unending_session_counter (0-based)
   trainingDaysPerWeek: number;
-  lastCompletedLift?: Lift | null; // history-based: rotate past this lift
+  lastResolvedLift?: Lift | null; // history-based: rotate past most recent completed-or-skipped lift
   intensitySignals?: IntensityTypeSignals; // when present, triggers dynamic selection
 }
 
 export function computeNextUnendingLift(input: {
   sessionCounter: number;
   trainingDaysPerWeek: number;
-  lastCompletedLift?: Lift | null;
+  lastResolvedLift?: Lift | null;
 }): Lift {
-  const { sessionCounter, trainingDaysPerWeek, lastCompletedLift } = input;
+  const { sessionCounter, trainingDaysPerWeek, lastResolvedLift } = input;
   const daysPerWeek = Math.max(1, trainingDaysPerWeek);
-  return lastCompletedLift
-    ? nextLiftAfter(lastCompletedLift)
+  return lastResolvedLift
+    ? nextLiftAfter(lastResolvedLift)
     : LIFTS[(sessionCounter % daysPerWeek) % LIFTS.length];
 }
 
@@ -144,12 +144,12 @@ function nextLiftAfter(lastLift: Lift): Lift {
 export function nextUnendingSession(
   input: NextUnendingSessionInput
 ): NextUnendingSessionResult {
-  const { sessionCounter, trainingDaysPerWeek, lastCompletedLift } = input;
+  const { sessionCounter, trainingDaysPerWeek, lastResolvedLift } = input;
   const daysPerWeek = Math.max(1, trainingDaysPerWeek);
 
   const weekNumber = Math.floor(sessionCounter / daysPerWeek) + 1;
   const dayNumber = (sessionCounter % daysPerWeek) + 1;
-  const lift = computeNextUnendingLift({ sessionCounter, trainingDaysPerWeek, lastCompletedLift });
+  const lift = computeNextUnendingLift({ sessionCounter, trainingDaysPerWeek, lastResolvedLift });
 
   // Blocks cycle 1→2→3→1… every 3 training weeks (same as scheduled)
   const blockNumber = (Math.floor((weekNumber - 1) / 3) % 3) + 1;

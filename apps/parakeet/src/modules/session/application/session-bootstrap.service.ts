@@ -2,8 +2,7 @@
 import { useSessionStore } from '../store/sessionStore';
 import { flushUnsyncedSets } from './set-persistence.service';
 import type { JitData, WarmupSet } from '../model/types';
-import { getSession } from './session.service';
-import { startSession } from './session.service';
+import { getSession, startSession } from './session.service';
 
 export type BootstrapAction =
   | { kind: 'session_init'; sessionId: string; parsed: JitData }

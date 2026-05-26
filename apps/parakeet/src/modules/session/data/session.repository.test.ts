@@ -4,6 +4,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   fetchCompletedSessions,
   fetchInProgressSession,
+  fetchLastResolvedLiftForProgram,
   fetchTodaySession,
   fetchTodaySessions,
 } from './session.repository';
@@ -399,5 +400,74 @@ describe('fetchCompletedSessions', () => {
     await expect(fetchCompletedSessions('user-1', 0, 20)).rejects.toThrow(
       'query failed'
     );
+  });
+});
+
+describe('fetchLastResolvedLiftForProgram', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  function createQueryChain(result: {
+    data: { primary_lift: string } | null;
+    error: Error | null;
+  }) {
+    const chain = {
+      select: vi.fn(),
+      eq: vi.fn(),
+      in: vi.fn(),
+      order: vi.fn(),
+      limit: vi.fn(),
+      maybeSingle: vi.fn(),
+    };
+    chain.select.mockReturnValue(chain);
+    chain.eq.mockReturnValue(chain);
+    chain.in.mockReturnValue(chain);
+    chain.order.mockReturnValue(chain);
+    chain.limit.mockReturnValue(chain);
+    chain.maybeSingle.mockResolvedValue(result);
+    return chain;
+  }
+
+  // GH#229: skipped sessions must count toward rotation; otherwise the lazy
+  // session generator regenerates the same lift forever after every skip.
+  it('queries both completed and skipped statuses (GH#229)', async () => {
+    const chain = createQueryChain({ data: { primary_lift: 'squat' }, error: null });
+    fromMock.mockReturnValueOnce(chain);
+
+    await fetchLastResolvedLiftForProgram('prog-1', 'user-1');
+
+    expect(chain.in).toHaveBeenCalledWith('status', ['completed', 'skipped']);
+  });
+
+  it('orders by planned_date desc with completed_at tie-break', async () => {
+    const chain = createQueryChain({ data: { primary_lift: 'squat' }, error: null });
+    fromMock.mockReturnValueOnce(chain);
+
+    await fetchLastResolvedLiftForProgram('prog-1', 'user-1');
+
+    expect(chain.order).toHaveBeenNthCalledWith(1, 'planned_date', { ascending: false });
+    expect(chain.order).toHaveBeenNthCalledWith(2, 'completed_at', {
+      ascending: false,
+      nullsFirst: false,
+    });
+  });
+
+  it('returns null when no resolved session exists', async () => {
+    const chain = createQueryChain({ data: null, error: null });
+    fromMock.mockReturnValueOnce(chain);
+
+    const result = await fetchLastResolvedLiftForProgram('prog-1', 'user-1');
+
+    expect(result).toBeNull();
+  });
+
+  it('throws when query fails', async () => {
+    const chain = createQueryChain({ data: null, error: new Error('query failed') });
+    fromMock.mockReturnValueOnce(chain);
+
+    await expect(
+      fetchLastResolvedLiftForProgram('prog-1', 'user-1')
+    ).rejects.toThrow('query failed');
   });
 });

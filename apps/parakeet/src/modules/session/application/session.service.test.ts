@@ -21,7 +21,7 @@ const mockNextTrainingDate = vi.hoisted(() =>
   vi.fn((_days: number[]) => '2026-03-09')
 );
 
-const mockFetchLastCompletedLiftForProgram = vi.hoisted(() => vi.fn());
+const mockFetchLastResolvedLiftForProgram = vi.hoisted(() => vi.fn());
 const mockFetchHasCompletedSessionToday = vi.hoisted(() => vi.fn());
 const mockAppendNextUnendingSession = vi.hoisted(() => vi.fn());
 const mockGetLatestSorenessRatings = vi.hoisted(() => vi.fn().mockResolvedValue(null));
@@ -33,7 +33,7 @@ vi.mock('../data/session.repository', () => ({
   fetchTodaySessions: mockFetchTodaySessions,
   fetchInProgressSession: mockFetchInProgressSession,
   fetchPlannedSessionForProgram: mockFetchPlannedSessionForProgram,
-  fetchLastCompletedLiftForProgram: mockFetchLastCompletedLiftForProgram,
+  fetchLastResolvedLiftForProgram: mockFetchLastResolvedLiftForProgram,
   fetchHasCompletedSessionToday: mockFetchHasCompletedSessionToday,
   getLatestSorenessRatings: mockGetLatestSorenessRatings,
   fetchLastCompletedAtForLift: mockFetchLastCompletedAtForLift,
@@ -206,6 +206,33 @@ describe('findTodaySession', () => {
     const result = await findTodaySession('user-1');
 
     expect(result).toEqual(existing);
+  });
+
+  it('passes lastResolvedLift (incl. skipped) to appendNextUnendingSession so skip advances rotation (GH#229)', async () => {
+    const generated = { id: 's2', status: 'planned' };
+    mockFetchTodaySession.mockResolvedValue(null);
+    mockFetchActiveProgramMode.mockResolvedValue({
+      id: 'p1',
+      program_mode: 'unending',
+      training_days_per_week: 3,
+      training_days: null,
+      unending_session_counter: 5,
+    });
+    mockFetchHasCompletedSessionToday.mockResolvedValue(false);
+    mockFetchPlannedSessionForProgram
+      .mockResolvedValueOnce(null)
+      .mockResolvedValueOnce(generated)
+      .mockResolvedValueOnce(generated);
+    // Most recently resolved lift was squat (e.g., user just skipped today's squat).
+    // Rotation must advance past it, not regenerate squat forever.
+    mockFetchLastResolvedLiftForProgram.mockResolvedValue('squat');
+
+    await findTodaySession('user-1');
+
+    expect(mockAppendNextUnendingSession).toHaveBeenCalledOnce();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const lastResolvedLift = (mockAppendNextUnendingSession.mock.calls[0] as any)[3];
+    expect(lastResolvedLift).toBe('squat');
   });
 
   it('builds intensitySignals from repo data and passes to appendNextUnendingSession', async () => {

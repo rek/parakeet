@@ -1,5 +1,10 @@
 import { describe, expect, it, vi } from 'vitest';
 
+import type { MotivationalContext } from './motivational-message.service';
+import { buildMotivationalFallback } from './motivational-message.service';
+
+// vi.mock calls are hoisted by vitest, so their lexical position below the
+// imports does not affect runtime behaviour.
 vi.mock('@sentry/react-native', () => ({
   addBreadcrumb: vi.fn(),
   captureException: vi.fn(),
@@ -21,9 +26,6 @@ vi.mock('../data/session.repository', () => ({
   fetchSessionSetsBySessionIds: vi.fn(),
   insertMotivationalMessageLog: vi.fn(),
 }));
-
-import type { MotivationalContext } from './motivational-message.service';
-import { buildMotivationalFallback } from './motivational-message.service';
 
 function makeCtx(
   overrides: Partial<MotivationalContext> = {}

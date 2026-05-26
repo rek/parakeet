@@ -44,7 +44,7 @@ import {
   fetchHasNextWeekSessions,
   fetchInProgressSession,
   fetchLastCompletedAtForLift,
-  fetchLastCompletedLiftForProgram,
+  fetchLastResolvedLiftForProgram,
   fetchOverdueScheduledSessions,
   fetchPlannedSessionForProgram,
   fetchProfileSex,
@@ -607,7 +607,7 @@ async function generateNextUnendingSession(
     referenceDate.setDate(referenceDate.getDate() + 1);
   }
   const plannedDate = nextTrainingDate(trainingDays, referenceDate);
-  const lastCompletedLift = await fetchLastCompletedLiftForProgram(
+  const lastResolvedLift = await fetchLastResolvedLiftForProgram(
     program.id,
     userId
   );
@@ -615,7 +615,7 @@ async function generateNextUnendingSession(
   const nextLift = computeNextUnendingLift({
     sessionCounter: program.unending_session_counter,
     trainingDaysPerWeek: program.training_days_per_week,
-    lastCompletedLift,
+    lastResolvedLift,
   });
 
   const [sorenessRatings, lastCompletedAt, recentLogs] = await Promise.all([
@@ -652,7 +652,7 @@ async function generateNextUnendingSession(
       program,
       userId,
       plannedDate,
-      lastCompletedLift,
+      lastResolvedLift,
       intensitySignals
     );
   } catch (err: unknown) {

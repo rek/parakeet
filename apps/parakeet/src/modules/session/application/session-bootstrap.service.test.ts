@@ -1,5 +1,15 @@
 import { describe, expect, it, vi } from 'vitest';
 
+import {
+  decideBootstrap,
+  recoverAdHocExercises,
+  type BootstrapStoreSnapshot,
+} from './session-bootstrap.service';
+
+// vi.mock calls are hoisted by vitest, so their lexical position below the
+// imports does not affect runtime behaviour. session.service depends on a tree
+// that imports react-native; only the pure decideBootstrap and
+// recoverAdHocExercises are under test here.
 vi.mock('@react-native-async-storage/async-storage', () => ({
   default: {
     getItem: vi.fn().mockResolvedValue(null),
@@ -13,8 +23,6 @@ vi.mock('@sentry/react-native', () => ({
   captureException: vi.fn(),
 }));
 
-// session.service depends on a tree that imports react-native; only the
-// pure decideBootstrap + recoverAdHocExercises are under test here.
 vi.mock('./session.service', () => ({
   getSession: vi.fn(),
   startSession: vi.fn(),
@@ -23,12 +31,6 @@ vi.mock('./session.service', () => ({
 vi.mock('./set-persistence.service', () => ({
   flushUnsyncedSets: vi.fn().mockResolvedValue(undefined),
 }));
-
-import {
-  decideBootstrap,
-  recoverAdHocExercises,
-  type BootstrapStoreSnapshot,
-} from './session-bootstrap.service';
 
 const emptyStore: BootstrapStoreSnapshot = {
   sessionId: null,

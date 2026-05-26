@@ -112,30 +112,30 @@ describe('nextUnendingSession — history-based lift rotation', () => {
   const base = { sessionCounter: 5, trainingDaysPerWeek: 3 };
 
   it('after squat → bench', () => {
-    const result = nextUnendingSession({ ...base, lastCompletedLift: 'squat' });
+    const result = nextUnendingSession({ ...base, lastResolvedLift: 'squat' });
     expect(result.primaryLift).toBe('bench');
   });
 
   it('after bench → deadlift', () => {
-    const result = nextUnendingSession({ ...base, lastCompletedLift: 'bench' });
+    const result = nextUnendingSession({ ...base, lastResolvedLift: 'bench' });
     expect(result.primaryLift).toBe('deadlift');
   });
 
   it('after deadlift → squat', () => {
     const result = nextUnendingSession({
       ...base,
-      lastCompletedLift: 'deadlift',
+      lastResolvedLift: 'deadlift',
     });
     expect(result.primaryLift).toBe('squat');
   });
 
-  it('null lastCompletedLift falls back to counter-based', () => {
+  it('null lastResolvedLift falls back to counter-based', () => {
     // counter=5, 5%3=2, LIFT_ORDER[2]='deadlift'
-    const result = nextUnendingSession({ ...base, lastCompletedLift: null });
+    const result = nextUnendingSession({ ...base, lastResolvedLift: null });
     expect(result.primaryLift).toBe('deadlift');
   });
 
-  it('undefined lastCompletedLift falls back to counter-based', () => {
+  it('undefined lastResolvedLift falls back to counter-based', () => {
     const result = nextUnendingSession({
       sessionCounter: 0,
       trainingDaysPerWeek: 3,
@@ -144,12 +144,12 @@ describe('nextUnendingSession — history-based lift rotation', () => {
   });
 
   it('intensity type uses history-derived lift, not counter-derived', () => {
-    // counter=0 would give squat (counter-based), but lastCompletedLift=squat → bench
+    // counter=0 would give squat (counter-based), but lastResolvedLift=squat → bench
     // Week 1 bench intensity from CUBE_ROTATION: 'rep'
     const result = nextUnendingSession({
       sessionCounter: 0,
       trainingDaysPerWeek: 3,
-      lastCompletedLift: 'squat',
+      lastResolvedLift: 'squat',
     });
     expect(result.primaryLift).toBe('bench');
     expect(result.intensityType).toBe('rep'); // week 1 bench = rep
@@ -160,7 +160,7 @@ describe('nextUnendingSession — history-based lift rotation', () => {
     const result = nextUnendingSession({
       sessionCounter: 9,
       trainingDaysPerWeek: 3,
-      lastCompletedLift: 'bench',
+      lastResolvedLift: 'bench',
     });
     expect(result.weekNumber).toBe(4);
     expect(result.isDeload).toBe(true);
@@ -171,17 +171,17 @@ describe('nextUnendingSession — history-based lift rotation', () => {
 
 describe('computeNextUnendingLift', () => {
   it('after squat → bench', () => {
-    expect(computeNextUnendingLift({ sessionCounter: 0, trainingDaysPerWeek: 3, lastCompletedLift: 'squat' })).toBe('bench');
+    expect(computeNextUnendingLift({ sessionCounter: 0, trainingDaysPerWeek: 3, lastResolvedLift: 'squat' })).toBe('bench');
   });
   it('after bench → deadlift', () => {
-    expect(computeNextUnendingLift({ sessionCounter: 0, trainingDaysPerWeek: 3, lastCompletedLift: 'bench' })).toBe('deadlift');
+    expect(computeNextUnendingLift({ sessionCounter: 0, trainingDaysPerWeek: 3, lastResolvedLift: 'bench' })).toBe('deadlift');
   });
   it('after deadlift → squat', () => {
-    expect(computeNextUnendingLift({ sessionCounter: 0, trainingDaysPerWeek: 3, lastCompletedLift: 'deadlift' })).toBe('squat');
+    expect(computeNextUnendingLift({ sessionCounter: 0, trainingDaysPerWeek: 3, lastResolvedLift: 'deadlift' })).toBe('squat');
   });
   it('null falls back to counter', () => {
     // counter=1, daysPerWeek=3 → 1%3=1 → LIFTS[1%3] = bench
-    expect(computeNextUnendingLift({ sessionCounter: 1, trainingDaysPerWeek: 3, lastCompletedLift: null })).toBe('bench');
+    expect(computeNextUnendingLift({ sessionCounter: 1, trainingDaysPerWeek: 3, lastResolvedLift: null })).toBe('bench');
   });
 });
 
@@ -243,7 +243,7 @@ describe('selectIntensityTypeForUnending', () => {
     const result = nextUnendingSession({
       sessionCounter: 0,
       trainingDaysPerWeek: 3,
-      lastCompletedLift: null,
+      lastResolvedLift: null,
       intensitySignals: { primaryMuscleSoreness: 8, daysSinceLastSession: null, recentRpe: [], lastIntensityType: null },
     });
     expect(result.intensityType).toBe('rep');

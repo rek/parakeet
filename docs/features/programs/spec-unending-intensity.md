@@ -135,12 +135,12 @@ fetching lift-specific signals, without duplicating the formula.
 export function computeNextUnendingLift(input: {
   sessionCounter: number;
   trainingDaysPerWeek: number;
-  lastCompletedLift?: Lift | null;
+  lastResolvedLift?: Lift | null;
 }): Lift {
-  const { sessionCounter, trainingDaysPerWeek, lastCompletedLift } = input;
+  const { sessionCounter, trainingDaysPerWeek, lastResolvedLift } = input;
   const daysPerWeek = Math.max(1, trainingDaysPerWeek);
-  return lastCompletedLift
-    ? nextLiftAfter(lastCompletedLift)
+  return lastResolvedLift
+    ? nextLiftAfter(lastResolvedLift)
     : LIFTS[(sessionCounter % daysPerWeek) % LIFTS.length];
 }
 ```
@@ -153,7 +153,7 @@ derivation inside `nextUnendingSession()` (lines 151-153).
 export interface NextUnendingSessionInput {
   sessionCounter: number;
   trainingDaysPerWeek: number;
-  lastCompletedLift?: Lift | null;
+  lastResolvedLift?: Lift | null;
   intensitySignals?: IntensityTypeSignals;   // NEW — triggers dynamic selection
 }
 
@@ -284,13 +284,13 @@ export async function appendNextUnendingSession(
   program: UnendingProgramRef,
   userId: string,
   plannedDate: string,
-  lastCompletedLift?: Lift | null,
+  lastResolvedLift?: Lift | null,
   intensitySignals?: IntensityTypeSignals
 ): Promise<void> {
   const next = nextUnendingSession({
     sessionCounter: program.unending_session_counter,
     trainingDaysPerWeek: program.training_days_per_week,
-    lastCompletedLift,
+    lastResolvedLift,
     intensitySignals,           // NEW — passed through to engine
   });
   // ... rest unchanged ...
@@ -321,13 +321,13 @@ Replace `generateNextUnendingSession` body (after `plannedDate` is computed,
 before the `try` block):
 
 ```typescript
-const lastCompletedLift = await fetchLastCompletedLiftForProgram(program.id, userId);
+const lastResolvedLift = await fetchLastResolvedLiftForProgram(program.id, userId);
 
 // Determine which lift comes next so we can fetch lift-specific signals.
 const nextLift = computeNextUnendingLift({
   sessionCounter: program.unending_session_counter,
   trainingDaysPerWeek: program.training_days_per_week,
-  lastCompletedLift,
+  lastResolvedLift,
 });
 
 // Fetch signals in parallel — all are independent of each other.
@@ -364,7 +364,7 @@ try {
     program,
     userId,
     plannedDate,
-    lastCompletedLift,
+    lastResolvedLift,
     intensitySignals,          // NEW
   );
 } catch (err: unknown) {
