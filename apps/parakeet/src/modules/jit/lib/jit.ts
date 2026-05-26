@@ -31,7 +31,7 @@ import {
   IntensityTypeSchema,
   LiftSchema,
 } from '@parakeet/shared-types';
-import type { Lift } from '@parakeet/shared-types';
+import type { IntensityType, Lift } from '@parakeet/shared-types';
 import {
   computeDivergence,
   computeInjurySorenessOverrides,
@@ -90,6 +90,12 @@ export type { ReadinessLevel };
 
 type Session = Awaited<ReturnType<typeof getSession>>;
 
+function deriveBlockFromIntensity(intensityType: IntensityType): 1 | 2 | 3 {
+  if (intensityType === 'heavy') return 1;
+  if (intensityType === 'explosive') return 2;
+  return 3;
+}
+
 export async function runJITForSession(
   session: NonNullable<Session>,
   userId: string,
@@ -108,20 +114,16 @@ export async function runJITForSession(
   const lift = LiftSchema.parse(session.primary_lift);
   const intensityType = IntensityTypeSchema.parse(session.intensity_type);
 
-  // Ad-hoc sessions (no program) have a null block_number by design. Legacy
-  // programmatic sessions can also reach this point with a null block_number
-  // (Sentry react-native#122700262 — older row predates the column being
-  // populated for that program). In both cases, derive the block from
-  // intensity_type instead of crashing the JIT pipeline.
+  // Ad-hoc sessions (no program) have a null block_number by design.
+  // Programmatic deload sessions are also written with block_number=null by
+  // the program generator (program-generator.ts:62), which crashed the JIT
+  // pipeline via BlockNumberSchema.parse(null) — Sentry react-native#122700262.
+  // Derive the block from intensity_type in either case.
   const isAdHoc = session.program_id === null;
   const blockNumber =
     session.block_number !== null
       ? BlockNumberSchema.parse(session.block_number)
-      : intensityType === 'heavy'
-        ? 1
-        : intensityType === 'explosive'
-          ? 2
-          : 3;
+      : deriveBlockFromIntensity(intensityType);
   if (!isAdHoc && session.block_number === null) {
     captureException(
       new Error(
