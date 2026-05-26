@@ -108,15 +108,28 @@ export async function runJITForSession(
   const lift = LiftSchema.parse(session.primary_lift);
   const intensityType = IntensityTypeSchema.parse(session.intensity_type);
 
-  // For ad-hoc sessions (no program), derive block number from intensity type
+  // Ad-hoc sessions (no program) have a null block_number by design. Legacy
+  // programmatic sessions can also reach this point with a null block_number
+  // (Sentry react-native#122700262 — older row predates the column being
+  // populated for that program). In both cases, derive the block from
+  // intensity_type instead of crashing the JIT pipeline.
   const isAdHoc = session.program_id === null;
-  const blockNumber = isAdHoc
-    ? intensityType === 'heavy'
-      ? 1
-      : intensityType === 'explosive'
-        ? 2
-        : 3
-    : BlockNumberSchema.parse(session.block_number);
+  const blockNumber =
+    session.block_number !== null
+      ? BlockNumberSchema.parse(session.block_number)
+      : intensityType === 'heavy'
+        ? 1
+        : intensityType === 'explosive'
+          ? 2
+          : 3;
+  if (!isAdHoc && session.block_number === null) {
+    captureException(
+      new Error(
+        `JIT: programmatic session ${session.id} has null block_number; ` +
+          `derived block=${blockNumber} from intensity_type=${intensityType}`
+      )
+    );
+  }
 
   const biologicalSex = await getProfileSex(userId);
 
