@@ -407,6 +407,16 @@ export async function completeSession(
   auxiliarySets?.forEach((set) => validateSet(set, 'auxiliary set'));
 
   const session = await getSession(sessionId);
+
+  // Idempotency: if a non-correction session_logs row already exists, this
+  // completion already landed in a prior attempt. Skip the duplicate insert
+  // and the cascade (achievements, calibration, cycle-review trigger).
+  // Without this guard, sync-queue retries that fail after insertSessionLog
+  // succeeds re-run the whole pipeline and accumulate session_logs rows that
+  // break fetchSessionLogBySessionId's .maybeSingle() call.
+  if (session?.status === 'completed' && (await sessionLogExists(sessionId))) {
+    return;
+  }
   const plannedCountRaw =
     (Array.isArray(session?.planned_sets)
       ? session.planned_sets.length

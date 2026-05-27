@@ -595,13 +595,21 @@ export async function updateSessionToCompleted(
   sessionId: string,
   completedAt?: Date
 ): Promise<void> {
+  // Guard so a re-fired completion (sync-queue retry, double End-tap) can't
+  // overwrite completed_at on an already-completed session. Accept either
+  // non-terminal state — 'planned' covers the case where set_logs never
+  // landed on the server, so the set_logs_mark_in_progress trigger never
+  // flipped the status. Spec-completion.md task 3 prescribes 'in_progress'
+  // only, but that pre-dates the durability incidents where set_logs writes
+  // dropped silently while session_logs landed.
   const { error } = await typedSupabase
     .from('sessions')
     .update({
       status: 'completed',
       completed_at: (completedAt ?? new Date()).toISOString(),
     })
-    .eq('id', sessionId);
+    .eq('id', sessionId)
+    .in('status', ['planned', 'in_progress']);
   if (error) throw error;
 }
 

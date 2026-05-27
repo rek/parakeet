@@ -38,39 +38,27 @@ export function useSyncQueue() {
     processingRef.current = true;
 
     let syncedCount = 0;
-    // Aggregate per-set drops by sessionId so we emit one breadcrumb per
-    // session per drain (instead of N per-set events). Escalation happens
-    // at the end of the pass when no complete_session op exists for the
-    // same session — that combo means actual data loss.
+    // Aggregate per-set drops by sessionId so we emit one alert + breadcrumb
+    // per session per drain (instead of N per-set events).
     const droppedSetsBySession = new Map<string, number>();
-    // Snapshot the queue at start so the escalation check at the end uses the
-    // pre-drain state, not the post-drain state. Without this, a successfully
-    // drained complete_session op would be missing from the snapshot and a
-    // sibling per-set drop would falsely escalate to "no backstop." Sessions
-    // whose complete_session drained in this same pass are still backstopped.
-    const sessionsWithCompletionAtStart = new Set(
-      queue
-        .filter((q) => q.operation === 'complete_session')
-        .map((q) => q.payload.sessionId)
-    );
 
     try {
       for (const op of queue) {
         if (op.retryCount >= MAX_RETRIES) {
           dequeue(op.id);
-          // Silent drop for per-set writes — they're best-effort and the
-          // completeSession batch write still covers on End-tap during the
-          // dual-write rollout window. Only alert on full-session failures.
-          if (op.operation !== 'upsert_set_log') {
-            Alert.alert(
-              'Sync Failed',
-              'Your workout data could not be saved after multiple attempts. Please check your connection and try again.'
-            );
-          } else {
+          if (op.operation === 'upsert_set_log') {
+            // set_logs is the sole source of truth post-2026-04-19; a dropped
+            // per-set op is permanent data loss. Aggregate by session and
+            // alert once per drain (see end of pass).
             const sid = op.payload.sessionId;
             droppedSetsBySession.set(
               sid,
               (droppedSetsBySession.get(sid) ?? 0) + 1
+            );
+          } else {
+            Alert.alert(
+              'Sync Failed',
+              'Your workout data could not be saved after multiple attempts. Please check your connection and try again.'
             );
           }
           continue;
@@ -174,9 +162,15 @@ export function useSyncQueue() {
           } else {
             captureException(err);
             dequeue(op.id);
-            // Only alert for full-session failures; per-set drains are
-            // backstopped by the completeSession batch write.
-            if (op.operation !== 'upsert_set_log') {
+            if (op.operation === 'upsert_set_log') {
+              // Permanent loss (constraint, RLS) — same aggregation bucket as
+              // the MAX_RETRIES drop so the user sees one alert per session.
+              const sid = op.payload.sessionId;
+              droppedSetsBySession.set(
+                sid,
+                (droppedSetsBySession.get(sid) ?? 0) + 1
+              );
+            } else {
               Alert.alert(
                 'Sync Failed',
                 'Your workout could not be saved. The error has been reported.'
@@ -195,25 +189,25 @@ export function useSyncQueue() {
         );
       }
 
-      // Aggregated per-set drop reporting. One breadcrumb per affected
-      // session. Escalate to a warning-severity event when the session also
-      // has no complete_session op at start of drain — that combo means the
-      // per-set logs are the only record of the work and it's now lost.
+      // Aggregated per-set drop reporting. set_logs is the sole source of
+      // truth — any drop is permanent data loss. One Sentry event + one user
+      // alert per affected session per drain.
       if (droppedSetsBySession.size > 0) {
+        let totalDropped = 0;
         for (const [sid, count] of droppedSetsBySession) {
+          totalDropped += count;
           captureException(
             new Error(
-              `upsert_set_log dropped after retries — session=${sid} count=${count}`
+              `set_logs sync loss — session=${sid} count=${count}`
             )
           );
-          if (!sessionsWithCompletionAtStart.has(sid)) {
-            captureException(
-              new Error(
-                `Per-set sync loss with no complete_session backstop — session=${sid} count=${count}`
-              )
-            );
-          }
         }
+        Alert.alert(
+          'Some sets could not be saved',
+          totalDropped === 1
+            ? '1 set was lost during sync. The error has been reported. Your other workout data is saved.'
+            : `${totalDropped} sets were lost during sync. The error has been reported. Your other workout data is saved.`
+        );
       }
     } finally {
       processingRef.current = false;

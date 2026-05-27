@@ -48,32 +48,32 @@ async function persistSetInternal(args: PersistSetArgs): Promise<void> {
     });
     markSynced(args, loggedAt);
   } catch (err) {
-    if (isNetworkError(err)) {
-      useSyncStore.getState().enqueue({
-        operation: 'upsert_set_log',
-        payload: {
-          sessionId: args.sessionId,
-          userId: args.userId,
-          kind: args.kind,
-          exercise: args.exercise,
-          setNumber: args.setNumber,
-          weightGrams: args.weightGrams,
-          repsCompleted: args.repsCompleted,
-          rpeActual: args.rpeActual,
-          actualRestSeconds: args.actualRestSeconds,
-          exerciseType: args.exerciseType,
-          failed: args.failed,
-          notes: args.notes,
-          painLimited: args.painLimited,
-          loggedAt,
-        },
-      });
-      return;
-    }
-    // Non-network error (RLS, constraint, missing table): capture and move on.
-    // We deliberately do not retry — legacy completeSession batch write still
-    // covers the full session on End-tap during the dual-write rollout.
-    captureException(err);
+    // Enqueue every failure (network or otherwise). `set_logs` is the sole
+    // source of truth post-2026-04-19 (Migration B dropped the legacy JSONB
+    // arrays from session_logs), so there is no `completeSession` batch-write
+    // backstop — a silent drop here is permanent data loss. Non-network errors
+    // (constraint, RLS) won't recover via retry, but the queue's MAX_RETRIES
+    // drop path now alerts the user instead of dropping in silence.
+    if (!isNetworkError(err)) captureException(err);
+    useSyncStore.getState().enqueue({
+      operation: 'upsert_set_log',
+      payload: {
+        sessionId: args.sessionId,
+        userId: args.userId,
+        kind: args.kind,
+        exercise: args.exercise,
+        setNumber: args.setNumber,
+        weightGrams: args.weightGrams,
+        repsCompleted: args.repsCompleted,
+        rpeActual: args.rpeActual,
+        actualRestSeconds: args.actualRestSeconds,
+        exerciseType: args.exerciseType,
+        failed: args.failed,
+        notes: args.notes,
+        painLimited: args.painLimited,
+        loggedAt,
+      },
+    });
   }
 }
 
