@@ -167,10 +167,14 @@ function complexityReadinessScore(
   //   neutral (2.5 – 3.5): all=0.7
   //   great  (>= 3.5): simple=0.6, moderate=0.8, complex=1.0
   if (readiness <= 2.5) {
-    return tier === 'simple' ? 1.0 : tier === 'moderate' ? 0.5 : 0.2;
+    if (tier === 'simple') return 1.0;
+    if (tier === 'moderate') return 0.5;
+    return 0.2;
   }
   if (readiness >= 3.5) {
-    return tier === 'simple' ? 0.6 : tier === 'moderate' ? 0.8 : 1.0;
+    if (tier === 'simple') return 0.6;
+    if (tier === 'moderate') return 0.8;
+    return 1.0;
   }
   return 0.7;
 }

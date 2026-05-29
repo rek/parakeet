@@ -247,20 +247,21 @@ function Meta({
   );
 }
 
+function gradeBg(grade: EvidenceGrade, colors: ColorScheme): string {
+  if (grade === 'A') return colors.successMuted;
+  if (grade === 'B') return colors.infoMuted;
+  return colors.warningMuted;
+}
+function gradeFg(grade: EvidenceGrade, colors: ColorScheme): string {
+  if (grade === 'A') return colors.success;
+  if (grade === 'B') return colors.info;
+  return colors.warning;
+}
+
 function EvidenceBadge({ grade }: { grade: EvidenceGrade }) {
   const { colors } = useTheme();
-  const bg =
-    grade === 'A'
-      ? colors.successMuted
-      : grade === 'B'
-        ? colors.infoMuted
-        : colors.warningMuted;
-  const fg =
-    grade === 'A'
-      ? colors.success
-      : grade === 'B'
-        ? colors.info
-        : colors.warning;
+  const bg = gradeBg(grade, colors);
+  const fg = gradeFg(grade, colors);
   return (
     <View
       style={{

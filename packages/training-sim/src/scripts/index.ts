@@ -75,8 +75,14 @@ export const ADHERENT_FEMALE: LifeScript = {
         } else if (trainingDaysInWeek.includes(dayInWeek)) {
           // Training day with cycle-phase-appropriate soreness
           const sleep: 1 | 2 | 3 = dayInCycle < 5 ? 2 : 3; // slightly worse sleep during menstruation
-          const energy: 1 | 2 | 3 =
-            dayInCycle < 5 ? 2 : dayInCycle > 21 ? 2 : 3;
+          let energy: 1 | 2 | 3;
+          if (dayInCycle < 5) {
+            energy = 2;
+          } else if (dayInCycle > 21) {
+            energy = 2;
+          } else {
+            energy = 3;
+          }
 
           events.push({
             type: 'train',
@@ -166,8 +172,22 @@ export const BUSY_SCRIPT: LifeScript = {
         } else if (trainingDaysInWeek.includes(dayInWeek)) {
           // Vary sleep/energy — roughly 1/3 poor, 1/3 ok, 1/3 great
           const mod = absoluteDay % 3;
-          const sleep: 1 | 2 | 3 = mod === 0 ? 1 : mod === 1 ? 2 : 3;
-          const energy: 1 | 2 | 3 = mod === 0 ? 2 : mod === 1 ? 1 : 3;
+          let sleep: 1 | 2 | 3;
+          if (mod === 0) {
+            sleep = 1;
+          } else if (mod === 1) {
+            sleep = 2;
+          } else {
+            sleep = 3;
+          }
+          let energy: 1 | 2 | 3;
+          if (mod === 0) {
+            energy = 2;
+          } else if (mod === 1) {
+            energy = 1;
+          } else {
+            energy = 3;
+          }
           events.push({ type: 'train', sleep, energy });
         } else {
           events.push({ type: 'rest' });
@@ -201,8 +221,14 @@ export const STABLE_FEMALE: LifeScript = {
           events.push({ type: 'period-start' });
         } else if (trainingDaysInWeek.includes(dayInWeek)) {
           const sleep: 1 | 2 | 3 = dayInCycle < 5 ? 2 : 3;
-          const energy: 1 | 2 | 3 =
-            dayInCycle < 5 ? 2 : dayInCycle > 23 ? 2 : 3;
+          let energy: 1 | 2 | 3;
+          if (dayInCycle < 5) {
+            energy = 2;
+          } else if (dayInCycle > 23) {
+            energy = 2;
+          } else {
+            energy = 3;
+          }
 
           events.push({
             type: 'train',
@@ -242,8 +268,14 @@ export const JUNIOR_MALE: LifeScript = {
 
         if (trainingDaysInWeek.includes(dayInWeek)) {
           // Young lifter: inconsistent sleep, usually high energy
-          const sleep: 1 | 2 | 3 =
-            absoluteDay % 4 === 0 ? 1 : absoluteDay % 3 === 0 ? 2 : 3;
+          let sleep: 1 | 2 | 3;
+          if (absoluteDay % 4 === 0) {
+            sleep = 1;
+          } else if (absoluteDay % 3 === 0) {
+            sleep = 2;
+          } else {
+            sleep = 3;
+          }
           const energy: 1 | 2 | 3 = 3;
           events.push({ type: 'train', sleep, energy });
         } else {
@@ -278,8 +310,14 @@ export const ELITE_FEMALE: LifeScript = {
           events.push({ type: 'period-start' });
         } else if (trainingDaysInWeek.includes(dayInWeek)) {
           const sleep: 1 | 2 | 3 = 3;
-          const energy: 1 | 2 | 3 =
-            dayInCycle < 4 ? 2 : dayInCycle > 20 ? 2 : 3;
+          let energy: 1 | 2 | 3;
+          if (dayInCycle < 4) {
+            energy = 2;
+          } else if (dayInCycle > 20) {
+            energy = 2;
+          } else {
+            energy = 3;
+          }
           events.push({ type: 'train', sleep, energy });
         } else {
           events.push({ type: 'rest' });

@@ -435,18 +435,24 @@ export function generateJITSession(
   // but that's only true for the main lift. Aux still used computeAuxWeight /
   // anchor weights at full intensity, leaving the supposed "deload" with full
   // accessory work after a light main set.
-  const auxVolumeRatio = isDeload
-    ? DELOAD_AUX_VOLUME_RATIO
-    : hasEquipmentDisruption
-      ? 1
-      : formulaBaseSetsCount > 0
-        ? ctx.plannedCount / formulaBaseSetsCount
-        : 1;
-  const auxIntensityRatio = isDeload
-    ? DELOAD_AUX_INTENSITY_RATIO
-    : hasEquipmentDisruption
-      ? 1
-      : ctx.intensityMultiplier;
+  let auxVolumeRatio: number;
+  if (isDeload) {
+    auxVolumeRatio = DELOAD_AUX_VOLUME_RATIO;
+  } else if (hasEquipmentDisruption) {
+    auxVolumeRatio = 1;
+  } else if (formulaBaseSetsCount > 0) {
+    auxVolumeRatio = ctx.plannedCount / formulaBaseSetsCount;
+  } else {
+    auxVolumeRatio = 1;
+  }
+  let auxIntensityRatio: number;
+  if (isDeload) {
+    auxIntensityRatio = DELOAD_AUX_INTENSITY_RATIO;
+  } else if (hasEquipmentDisruption) {
+    auxIntensityRatio = 1;
+  } else {
+    auxIntensityRatio = ctx.intensityMultiplier;
+  }
   const auxiliaryWork = buildAuxiliaryWork(
     activeAuxiliaries,
     oneRmKg,
@@ -514,13 +520,17 @@ export function generateJITSession(
   // Trace auxiliary exercises (assigned + top-ups)
   if (traceBuilder) {
     for (const aux of auxiliaryWork) {
+      let selectionReason: string;
+      if (aux.isTopUp) {
+        selectionReason = aux.topUpReason ?? 'volume top-up';
+      } else if (aux.skipped) {
+        selectionReason = aux.skipReason ?? 'skipped';
+      } else {
+        selectionReason = 'assigned auxiliary';
+      }
       traceBuilder.recordAuxiliary({
         exercise: aux.exercise,
-        selectionReason: aux.isTopUp
-          ? (aux.topUpReason ?? 'volume top-up')
-          : aux.skipped
-            ? (aux.skipReason ?? 'skipped')
-            : 'assigned auxiliary',
+        selectionReason,
         weightTrace:
           !aux.skipped && aux.sets[0]?.weight_kg > 0
             ? {
@@ -865,12 +875,18 @@ export function buildVolumeTopUp(
     // use the full MEV target rather than the pro-rated threshold. This front-loads
     // push coverage on squat/deadlift days, preventing zero-volume weeks when no
     // bench session occurs or bench is skipped.
-    const effectiveMev =
-      PUSH_MUSCLES.has(muscle) && primaryLiftContrib === 0
-        ? mev
-        : sessionIndex && totalSessionsThisWeek && totalSessionsThisWeek > 0
-          ? Math.ceil((mev * sessionIndex) / totalSessionsThisWeek)
-          : mev;
+    let effectiveMev: number;
+    if (PUSH_MUSCLES.has(muscle) && primaryLiftContrib === 0) {
+      effectiveMev = mev;
+    } else if (
+      sessionIndex &&
+      totalSessionsThisWeek &&
+      totalSessionsThisWeek > 0
+    ) {
+      effectiveMev = Math.ceil((mev * sessionIndex) / totalSessionsThisWeek);
+    } else {
+      effectiveMev = mev;
+    }
     const deficit = effectiveMev - projected;
     if (deficit > 0) candidates.push({ muscle, deficit, mev });
   }

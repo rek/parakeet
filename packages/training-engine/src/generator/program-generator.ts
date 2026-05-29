@@ -166,11 +166,18 @@ export function nextUnendingSession(
   // Deload every 4th week equivalent (week 4, 8, 12, …)
   const isDeload = weekNumber % 4 === 0;
 
-  const intensityType: IntensityType = input.intensitySignals
-    ? selectIntensityTypeForUnending(lift, weekNumber, input.intensitySignals)
-    : isDeload
-      ? 'deload'
-      : getIntensityTypeForWeek(weekNumber, lift);
+  let intensityType: IntensityType;
+  if (input.intensitySignals) {
+    intensityType = selectIntensityTypeForUnending(
+      lift,
+      weekNumber,
+      input.intensitySignals
+    );
+  } else if (isDeload) {
+    intensityType = 'deload';
+  } else {
+    intensityType = getIntensityTypeForWeek(weekNumber, lift);
+  }
 
   return {
     weekNumber,

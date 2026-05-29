@@ -50,6 +50,41 @@ export function AddWorkoutTemplateModal({
     if (detail) onConfirm(detail);
   }
 
+  function renderBody() {
+    if (isLoading) {
+      return (
+        <View style={styles.centered}>
+          <ActivityIndicator color={colors.primary} />
+        </View>
+      );
+    }
+    if (templates.length === 0) {
+      return (
+        <View style={styles.centered}>
+          <Text style={styles.emptyText}>No templates yet.</Text>
+          <Text style={styles.emptySubtext}>
+            Create one under Settings → Workout Templates.
+          </Text>
+        </View>
+      );
+    }
+    return (
+      <FlatList
+        data={templates}
+        keyExtractor={(t) => t.id}
+        renderItem={({ item }) => (
+          <TemplateRow
+            template={item}
+            onPress={() => handleSelect(item.id)}
+            styles={styles}
+          />
+        )}
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.listContent}
+      />
+    );
+  }
+
   return (
     <Modal
       visible={visible}
@@ -70,32 +105,7 @@ export function AddWorkoutTemplateModal({
             </TouchableOpacity>
           </View>
 
-          {isLoading ? (
-            <View style={styles.centered}>
-              <ActivityIndicator color={colors.primary} />
-            </View>
-          ) : templates.length === 0 ? (
-            <View style={styles.centered}>
-              <Text style={styles.emptyText}>No templates yet.</Text>
-              <Text style={styles.emptySubtext}>
-                Create one under Settings → Workout Templates.
-              </Text>
-            </View>
-          ) : (
-            <FlatList
-              data={templates}
-              keyExtractor={(t) => t.id}
-              renderItem={({ item }) => (
-                <TemplateRow
-                  template={item}
-                  onPress={() => handleSelect(item.id)}
-                  styles={styles}
-                />
-              )}
-              showsVerticalScrollIndicator={false}
-              contentContainerStyle={styles.listContent}
-            />
-          )}
+          {renderBody()}
         </View>
       </TouchableOpacity>
     </Modal>

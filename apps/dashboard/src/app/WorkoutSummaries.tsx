@@ -30,6 +30,12 @@ function titleCase(s: string) {
   return s.charAt(0).toUpperCase() + s.slice(1);
 }
 
+function toArray<T>(value: T | T[] | null | undefined): T[] {
+  if (Array.isArray(value)) return value;
+  if (value) return [value];
+  return [];
+}
+
 function liftLabel(row: WorkoutRow): string {
   if (row.primary_lift) return titleCase(row.primary_lift);
   if (row.activity_name) return row.activity_name;
@@ -68,14 +74,15 @@ function prTypeName(prType: string): string {
   return prType;
 }
 
+function completionColor(value: number): string {
+  if (value >= 90) return theme.color.green;
+  if (value >= 70) return theme.color.accent;
+  return theme.color.red;
+}
+
 function CompletionBar({ pct }: { pct: number | null }) {
   const value = pct ?? 0;
-  const color =
-    value >= 90
-      ? theme.color.green
-      : value >= 70
-        ? theme.color.accent
-        : theme.color.red;
+  const color = completionColor(value);
   return (
     <div
       style={{ display: 'flex', alignItems: 'center', gap: 6, minWidth: 100 }}
@@ -205,16 +212,8 @@ export function WorkoutSummaries() {
           setRows(
             (data ?? []).map((row) => ({
               ...row,
-              session_logs: Array.isArray(row.session_logs)
-                ? row.session_logs
-                : row.session_logs
-                  ? [row.session_logs]
-                  : [],
-              personal_records: Array.isArray(row.personal_records)
-                ? row.personal_records
-                : row.personal_records
-                  ? [row.personal_records]
-                  : [],
+              session_logs: toArray(row.session_logs),
+              personal_records: toArray(row.personal_records),
             })) as WorkoutRow[]
           );
         }
@@ -233,6 +232,72 @@ export function WorkoutSummaries() {
       return rpe != null ? sum + rpe : sum;
     }, 0) /
     (rows.filter((r) => r.session_logs[0]?.session_rpe != null).length || 1);
+
+  const renderBody = () => {
+    if (loading) {
+      return (
+        <div
+          style={{
+            color: theme.color.textMuted,
+            fontFamily: theme.font.mono,
+            fontSize: 12,
+          }}
+        >
+          Loading...
+        </div>
+      );
+    }
+    if (rows.length === 0) {
+      return (
+        <div
+          style={{
+            color: theme.color.textMuted,
+            fontFamily: theme.font.mono,
+            fontSize: 12,
+          }}
+        >
+          No completed sessions found.
+        </div>
+      );
+    }
+    return (
+      <div
+        style={{
+          background: theme.bg.surface,
+          border: `1px solid ${theme.border.base}`,
+          borderRadius: 8,
+          overflow: 'hidden',
+        }}
+      >
+        {/* Column headers */}
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: '140px 100px 80px 1fr 100px 100px auto',
+            gap: 10,
+            padding: '8px 14px',
+            borderBottom: `1px solid ${theme.border.base}`,
+            fontSize: 10,
+            fontFamily: theme.font.mono,
+            color: theme.color.textMuted,
+            textTransform: 'uppercase',
+            letterSpacing: '0.06em',
+          }}
+        >
+          <span>Date</span>
+          <span>Lift</span>
+          <span>Week</span>
+          <span>PRs</span>
+          <span>Completion</span>
+          <span>RPE</span>
+          <span>vs Plan</span>
+        </div>
+        {rows.map((row) => (
+          <WorkoutRow key={row.id} row={row} />
+        ))}
+      </div>
+    );
+  };
 
   return (
     <div>
@@ -295,63 +360,7 @@ export function WorkoutSummaries() {
         </div>
       </div>
 
-      {loading ? (
-        <div
-          style={{
-            color: theme.color.textMuted,
-            fontFamily: theme.font.mono,
-            fontSize: 12,
-          }}
-        >
-          Loading...
-        </div>
-      ) : rows.length === 0 ? (
-        <div
-          style={{
-            color: theme.color.textMuted,
-            fontFamily: theme.font.mono,
-            fontSize: 12,
-          }}
-        >
-          No completed sessions found.
-        </div>
-      ) : (
-        <div
-          style={{
-            background: theme.bg.surface,
-            border: `1px solid ${theme.border.base}`,
-            borderRadius: 8,
-            overflow: 'hidden',
-          }}
-        >
-          {/* Column headers */}
-          <div
-            style={{
-              display: 'grid',
-              gridTemplateColumns: '140px 100px 80px 1fr 100px 100px auto',
-              gap: 10,
-              padding: '8px 14px',
-              borderBottom: `1px solid ${theme.border.base}`,
-              fontSize: 10,
-              fontFamily: theme.font.mono,
-              color: theme.color.textMuted,
-              textTransform: 'uppercase',
-              letterSpacing: '0.06em',
-            }}
-          >
-            <span>Date</span>
-            <span>Lift</span>
-            <span>Week</span>
-            <span>PRs</span>
-            <span>Completion</span>
-            <span>RPE</span>
-            <span>vs Plan</span>
-          </div>
-          {rows.map((row) => (
-            <WorkoutRow key={row.id} row={row} />
-          ))}
-        </div>
-      )}
+      {renderBody()}
     </div>
   );
 }

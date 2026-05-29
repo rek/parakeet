@@ -13,11 +13,20 @@ export function computeDismissResult(
   const auxExercise = postRestState?.pendingAuxExercise ?? null;
   const auxSetNumber = postRestState?.pendingAuxSetNumber ?? null;
   // Post-warmup overlay: no pending main set and no aux — use stored nextSetNumber
-  const nextSetNumber =
-    prevSetNumber != null
-      ? prevSetNumber + 1
-      : auxExercise == null
-        ? (postRestState?.nextSetNumber ?? null)
-        : null;
+  const nextSetNumber = computeNextSetNumber(
+    prevSetNumber,
+    auxExercise,
+    postRestState
+  );
   return { totalRest, prevSetNumber, nextSetNumber, auxExercise, auxSetNumber };
+}
+
+function computeNextSetNumber(
+  prevSetNumber: number | null,
+  auxExercise: unknown,
+  postRestState: PostRestState | null
+): number | null {
+  if (prevSetNumber != null) return prevSetNumber + 1;
+  if (auxExercise == null) return postRestState?.nextSetNumber ?? null;
+  return null;
 }
