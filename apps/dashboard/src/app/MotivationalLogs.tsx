@@ -25,10 +25,36 @@ function fmt(ts: string) {
   });
 }
 
+type BadgeVariant =
+  | 'accent'
+  | 'green'
+  | 'red'
+  | 'purple'
+  | 'blue'
+  | 'muted';
+
+function rpeVariant(rpe: number): BadgeVariant {
+  if (rpe >= 9) return 'red';
+  if (rpe >= 8) return 'accent';
+  return 'green';
+}
+
+function perfVariant(perf: string): BadgeVariant {
+  if (perf === 'over') return 'green';
+  if (perf === 'at') return 'blue';
+  return 'accent';
+}
+
+function completionVariant(pct: number): BadgeVariant {
+  if (pct >= 95) return 'green';
+  if (pct >= 75) return 'blue';
+  return 'accent';
+}
+
 function contextBadges(ctx: Record<string, unknown>) {
   const badges: Array<{
     label: string;
-    variant: 'accent' | 'green' | 'red' | 'purple' | 'blue' | 'muted';
+    variant: BadgeVariant;
   }> = [];
   const prs = ctx.newPRs as Array<{ lift: string; prType: string }> | undefined;
   if (prs && prs.length > 0) {
@@ -40,21 +66,21 @@ function contextBadges(ctx: Record<string, unknown>) {
   if (rpe != null) {
     badges.push({
       label: `RPE ${rpe}`,
-      variant: rpe >= 9 ? 'red' : rpe >= 8 ? 'accent' : 'green',
+      variant: rpeVariant(rpe),
     });
   }
   const perf = ctx.performanceVsPlan as string | null;
   if (perf) {
     badges.push({
       label: perf,
-      variant: perf === 'over' ? 'green' : perf === 'at' ? 'blue' : 'accent',
+      variant: perfVariant(perf),
     });
   }
   const pct = ctx.completionPct as number | null;
   if (pct != null) {
     badges.push({
       label: `${pct}% done`,
-      variant: pct >= 95 ? 'green' : pct >= 75 ? 'blue' : 'accent',
+      variant: completionVariant(pct),
     });
   }
   const topKg = ctx.topWeightKg as number | null;
@@ -239,6 +265,43 @@ export function MotivationalLogs() {
     };
   }, [supabase, env]);
 
+  const renderBody = () => {
+    if (loading) {
+      return (
+        <div
+          style={{
+            color: theme.color.textMuted,
+            fontFamily: theme.font.mono,
+            fontSize: 12,
+          }}
+        >
+          Loading...
+        </div>
+      );
+    }
+    if (logs.length === 0) {
+      return (
+        <div
+          style={{
+            color: theme.color.textMuted,
+            fontFamily: theme.font.mono,
+            fontSize: 12,
+          }}
+        >
+          No motivational message logs found. Complete a workout to generate
+          one.
+        </div>
+      );
+    }
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+        {logs.map((log) => (
+          <LogCard key={log.id} log={log} />
+        ))}
+      </div>
+    );
+  };
+
   return (
     <div>
       <div style={{ marginBottom: 24 }}>
@@ -283,34 +346,7 @@ export function MotivationalLogs() {
         </div>
       </div>
 
-      {loading ? (
-        <div
-          style={{
-            color: theme.color.textMuted,
-            fontFamily: theme.font.mono,
-            fontSize: 12,
-          }}
-        >
-          Loading...
-        </div>
-      ) : logs.length === 0 ? (
-        <div
-          style={{
-            color: theme.color.textMuted,
-            fontFamily: theme.font.mono,
-            fontSize: 12,
-          }}
-        >
-          No motivational message logs found. Complete a workout to generate
-          one.
-        </div>
-      ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-          {logs.map((log) => (
-            <LogCard key={log.id} log={log} />
-          ))}
-        </div>
-      )}
+      {renderBody()}
     </div>
   );
 }

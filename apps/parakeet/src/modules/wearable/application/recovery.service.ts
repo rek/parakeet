@@ -10,22 +10,28 @@ const BASELINE_DAYS = 7;
 
 export type NonTrainingLoad = 0 | 1 | 2 | 3;
 
+function stepsLoad(steps: number | null): NonTrainingLoad {
+  if (steps === null) return 0;
+  if (steps > 15000) return 3;
+  if (steps >= 7000) return 2;
+  if (steps >= 3000) return 1;
+  return 0;
+}
+
+function activeMinutesLoad(activeMinutes: number | null): NonTrainingLoad {
+  if (activeMinutes === null) return 0;
+  if (activeMinutes > 60) return 3;
+  if (activeMinutes >= 30) return 2;
+  if (activeMinutes >= 15) return 1;
+  return 0;
+}
+
 export function deriveNonTrainingLoad(
   steps: number | null,
   activeMinutes: number | null
 ): NonTrainingLoad {
-  const stepsLevel: NonTrainingLoad =
-    steps === null ? 0
-    : steps > 15000 ? 3
-    : steps >= 7000 ? 2
-    : steps >= 3000 ? 1
-    : 0;
-  const activeLevel: NonTrainingLoad =
-    activeMinutes === null ? 0
-    : activeMinutes > 60 ? 3
-    : activeMinutes >= 30 ? 2
-    : activeMinutes >= 15 ? 1
-    : 0;
+  const stepsLevel = stepsLoad(steps);
+  const activeLevel = activeMinutesLoad(activeMinutes);
   return Math.max(stepsLevel, activeLevel) as NonTrainingLoad;
 }
 

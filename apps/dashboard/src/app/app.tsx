@@ -346,6 +346,28 @@ function NavButton({
 }) {
   const [hovered, setHovered] = useState(false);
 
+  const buttonBackground = () => {
+    if (active) {
+      return (
+        {
+          'var(--accent)': 'var(--accent-dim)',
+          'var(--green)': 'var(--green-dim)',
+          'var(--purple)': 'var(--purple-dim)',
+          'var(--blue)': 'var(--blue-dim)',
+          'var(--red)': 'var(--red-dim)',
+        }[item.color] ?? 'var(--accent-dim)'
+      );
+    }
+    if (hovered) return 'var(--surface-hover)';
+    return 'transparent';
+  };
+
+  const labelColor = () => {
+    if (active) return item.color;
+    if (hovered) return 'var(--text)';
+    return 'var(--text-dim)';
+  };
+
   return (
     <button
       onClick={onClick}
@@ -363,17 +385,7 @@ function NavButton({
         fontFamily: 'var(--mono)',
         textAlign: 'left',
         transition: 'all 0.12s ease',
-        background: active
-          ? ({
-              'var(--accent)': 'var(--accent-dim)',
-              'var(--green)': 'var(--green-dim)',
-              'var(--purple)': 'var(--purple-dim)',
-              'var(--blue)': 'var(--blue-dim)',
-              'var(--red)': 'var(--red-dim)',
-            }[item.color] ?? 'var(--accent-dim)')
-          : hovered
-            ? 'var(--surface-hover)'
-            : 'transparent',
+        background: buttonBackground(),
       }}
     >
       <span
@@ -393,11 +405,7 @@ function NavButton({
           style={{
             fontSize: 12,
             fontWeight: active ? 600 : 400,
-            color: active
-              ? item.color
-              : hovered
-                ? 'var(--text)'
-                : 'var(--text-dim)',
+            color: labelColor(),
             transition: 'color 0.12s',
             letterSpacing: '-0.01em',
           }}
@@ -519,6 +527,16 @@ export function App() {
             {(['local', 'prod'] as const).map((e) => {
               const available = isEnvAvailable(e);
               const active = env === e;
+              const envBackground = () => {
+                if (!active) return 'transparent';
+                return e === 'prod' ? theme.bg.redDim : theme.bg.greenDim;
+              };
+              const envColor = () => {
+                if (active) {
+                  return e === 'prod' ? 'var(--red)' : 'var(--green)';
+                }
+                return available ? 'var(--text-dim)' : 'var(--text-muted)';
+              };
               return (
                 <button
                   key={e}
@@ -531,18 +549,8 @@ export function App() {
                     border: active
                       ? `1px solid ${e === 'prod' ? 'var(--red)' : 'var(--green)'}`
                       : '1px solid var(--border)',
-                    background: active
-                      ? e === 'prod'
-                        ? theme.bg.redDim
-                        : theme.bg.greenDim
-                      : 'transparent',
-                    color: active
-                      ? e === 'prod'
-                        ? 'var(--red)'
-                        : 'var(--green)'
-                      : available
-                        ? 'var(--text-dim)'
-                        : 'var(--text-muted)',
+                    background: envBackground(),
+                    color: envColor(),
                     fontSize: 10,
                     fontFamily: 'var(--mono)',
                     cursor: available ? 'pointer' : 'not-allowed',

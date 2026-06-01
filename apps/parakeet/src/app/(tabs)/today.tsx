@@ -1,4 +1,5 @@
 import { useCallback, useMemo, useState } from 'react';
+import type { ReactNode } from 'react';
 import {
   ActivityIndicator,
   RefreshControl,
@@ -621,19 +622,26 @@ function WorkoutDoneCard({
     .map((s) => capitalize(s.primary_lift ?? ''))
     .join(', ');
 
+  let motivationalContent: ReactNode = null;
+  if (showMotivational && isLoading) {
+    motivationalContent = (
+      <ActivityIndicator
+        size="small"
+        color={colors.success}
+        style={{ opacity: 0.5, marginTop: spacing[2] }}
+      />
+    );
+  } else if (message) {
+    motivationalContent = (
+      <Text style={styles.workoutDoneSubtitle}>{message}</Text>
+    );
+  }
+
   return (
     <View style={styles.workoutDoneCard}>
       <Text style={styles.workoutDoneTitle}>Workout Done ✓</Text>
       <Text style={styles.workoutDoneLift}>{lifts}</Text>
-      {showMotivational && isLoading ? (
-        <ActivityIndicator
-          size="small"
-          color={colors.success}
-          style={{ opacity: 0.5, marginTop: spacing[2] }}
-        />
-      ) : message ? (
-        <Text style={styles.workoutDoneSubtitle}>{message}</Text>
-      ) : null}
+      {motivationalContent}
     </View>
   );
 }
@@ -678,6 +686,37 @@ export default function TodayScreen() {
     await refreshAll();
     setRefreshing(false);
   }, [refreshAll]);
+
+  // Today's main content: load error, rest day, or the session list.
+  const renderTodayContent = () => {
+    if (sessionError && sessions.length === 0) {
+      return (
+        <TouchableOpacity
+          style={[styles.restDayCard, { borderColor: colors.danger }]}
+          onPress={handleRefresh}
+          activeOpacity={0.7}
+        >
+          <Text style={[styles.restDayTitle, { color: colors.danger }]}>
+            Could not load sessions ↻
+          </Text>
+          <Text style={styles.restDaySubtitle}>
+            Tap to retry, or pull down to refresh.
+          </Text>
+        </TouchableOpacity>
+      );
+    }
+    if (sessions.length === 0) {
+      return (
+        <View style={styles.restDayCard}>
+          <Text style={styles.restDayTitle}>Rest Day</Text>
+          <Text style={styles.restDaySubtitle}>
+            Keep recovering — next session coming up soon.
+          </Text>
+        </View>
+      );
+    }
+    return <TodaySessionsList sessions={sessions} />;
+  };
 
   // Invalidate session queries when this tab gains focus (e.g. returning from
   // the ad-hoc or session screens). refetchOnWindowFocus is inert in React
@@ -1007,31 +1046,7 @@ export default function TodayScreen() {
               </View>
             )}
 
-            {sessionError && sessions.length === 0 ? (
-              <TouchableOpacity
-                style={[styles.restDayCard, { borderColor: colors.danger }]}
-                onPress={handleRefresh}
-                activeOpacity={0.7}
-              >
-                <Text
-                  style={[styles.restDayTitle, { color: colors.danger }]}
-                >
-                  Could not load sessions ↻
-                </Text>
-                <Text style={styles.restDaySubtitle}>
-                  Tap to retry, or pull down to refresh.
-                </Text>
-              </TouchableOpacity>
-            ) : sessions.length === 0 ? (
-              <View style={styles.restDayCard}>
-                <Text style={styles.restDayTitle}>Rest Day</Text>
-                <Text style={styles.restDaySubtitle}>
-                  Keep recovering — next session coming up soon.
-                </Text>
-              </View>
-            ) : (
-              <TodaySessionsList sessions={sessions} />
-            )}
+            {renderTodayContent()}
 
             {showAdHoc && (
               <TouchableOpacity

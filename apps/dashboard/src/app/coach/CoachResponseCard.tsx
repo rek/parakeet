@@ -245,5 +245,7 @@ function ResponseBody({ response }: { response: FormCoachingResult }) {
 }
 
 function priorityRank(p: 'high' | 'medium' | 'low'): number {
-  return p === 'high' ? 0 : p === 'medium' ? 1 : 2;
+  if (p === 'high') return 0;
+  if (p === 'medium') return 1;
+  return 2;
 }

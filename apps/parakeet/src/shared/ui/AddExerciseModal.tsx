@@ -744,6 +744,75 @@ export function AddExerciseModal({
     );
   }
 
+  function renderSheetBody() {
+    if (customStep && customStep.phase === 'type') {
+      return renderTypePicker();
+    }
+    if (customStep && customStep.phase === 'muscles') {
+      return renderMusclePicker();
+    }
+    return (
+      <>
+        <View style={styles.header}>
+          <Text style={styles.title}>Add Exercise</Text>
+          <TouchableOpacity onPress={handleClose} activeOpacity={0.7}>
+            <Text style={styles.closeBtn}>✕</Text>
+          </TouchableOpacity>
+        </View>
+
+        <TextInput
+          style={styles.searchInput}
+          placeholder="Search or type a custom name…"
+          placeholderTextColor={colors.textTertiary}
+          value={query}
+          onChangeText={setQuery}
+          // eslint-disable-next-line jsx-a11y/no-autofocus -- intentional for modal UX
+          autoFocus
+          returnKeyType="search"
+          autoCapitalize="words"
+        />
+
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          style={styles.filterRow}
+          contentContainerStyle={styles.filterRowContent}
+          keyboardShouldPersistTaps="handled"
+        >
+          {FILTER_OPTIONS.map((opt) => (
+            <TouchableOpacity
+              key={opt.key}
+              style={[
+                styles.filterPill,
+                liftFilter === opt.key && styles.filterPillActive,
+              ]}
+              onPress={() => setLiftFilter(opt.key)}
+              activeOpacity={0.7}
+            >
+              <Text
+                style={[
+                  styles.filterPillText,
+                  liftFilter === opt.key && styles.filterPillTextActive,
+                ]}
+              >
+                {opt.label}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
+
+        <FlatList
+          data={listItems}
+          keyExtractor={(item) => item.key}
+          renderItem={renderItem}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+          style={styles.list}
+        />
+      </>
+    );
+  }
+
   return (
     <Modal
       visible={visible}
@@ -757,70 +826,7 @@ export function AddExerciseModal({
         onPress={handleClose}
       >
         <View style={styles.sheet} onStartShouldSetResponder={() => true}>
-          {customStep && customStep.phase === 'type' ? (
-            renderTypePicker()
-          ) : customStep && customStep.phase === 'muscles' ? (
-            renderMusclePicker()
-          ) : (
-            <>
-              <View style={styles.header}>
-                <Text style={styles.title}>Add Exercise</Text>
-                <TouchableOpacity onPress={handleClose} activeOpacity={0.7}>
-                  <Text style={styles.closeBtn}>✕</Text>
-                </TouchableOpacity>
-              </View>
-
-              <TextInput
-                style={styles.searchInput}
-                placeholder="Search or type a custom name…"
-                placeholderTextColor={colors.textTertiary}
-                value={query}
-                onChangeText={setQuery}
-                // eslint-disable-next-line jsx-a11y/no-autofocus -- intentional for modal UX
-                autoFocus
-                returnKeyType="search"
-                autoCapitalize="words"
-              />
-
-              <ScrollView
-                horizontal
-                showsHorizontalScrollIndicator={false}
-                style={styles.filterRow}
-                contentContainerStyle={styles.filterRowContent}
-                keyboardShouldPersistTaps="handled"
-              >
-                {FILTER_OPTIONS.map((opt) => (
-                  <TouchableOpacity
-                    key={opt.key}
-                    style={[
-                      styles.filterPill,
-                      liftFilter === opt.key && styles.filterPillActive,
-                    ]}
-                    onPress={() => setLiftFilter(opt.key)}
-                    activeOpacity={0.7}
-                  >
-                    <Text
-                      style={[
-                        styles.filterPillText,
-                        liftFilter === opt.key && styles.filterPillTextActive,
-                      ]}
-                    >
-                      {opt.label}
-                    </Text>
-                  </TouchableOpacity>
-                ))}
-              </ScrollView>
-
-              <FlatList
-                data={listItems}
-                keyExtractor={(item) => item.key}
-                renderItem={renderItem}
-                keyboardShouldPersistTaps="handled"
-                showsVerticalScrollIndicator={false}
-                style={styles.list}
-              />
-            </>
-          )}
+          {renderSheetBody()}
         </View>
       </TouchableOpacity>
     </Modal>

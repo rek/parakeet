@@ -23,6 +23,60 @@ export function AuxResultsTable({
 
   const styles = buildStyles(colors);
 
+  function renderHeaderCells(isTimed: boolean, isBodyweight: boolean) {
+    if (isTimed) {
+      return (
+        <Text style={[styles.tableCell, styles.tableCellWeight]}>Duration</Text>
+      );
+    }
+    if (isBodyweight) {
+      return (
+        <Text style={[styles.tableCell, styles.tableCellWeight]}>Reps</Text>
+      );
+    }
+    return (
+      <>
+        <Text style={[styles.tableCell, styles.tableCellWeight]}>Weight</Text>
+        <Text style={[styles.tableCell, styles.tableCellReps]}>Reps</Text>
+        <Text style={[styles.tableCell, styles.tableCellRpe]}>RPE</Text>
+      </>
+    );
+  }
+
+  function renderRowCells(
+    set: ActualSet,
+    isTimed: boolean,
+    isBodyweight: boolean
+  ) {
+    if (isTimed) {
+      return (
+        <Text style={[styles.tableCell, styles.tableCellWeight]}>
+          {set.reps_completed} min
+        </Text>
+      );
+    }
+    if (isBodyweight) {
+      return (
+        <Text style={[styles.tableCell, styles.tableCellWeight]}>
+          {set.reps_completed}
+        </Text>
+      );
+    }
+    return (
+      <>
+        <Text style={[styles.tableCell, styles.tableCellWeight]}>
+          {weightGramsToKg(set.weight_grams).toFixed(1)} kg
+        </Text>
+        <Text style={[styles.tableCell, styles.tableCellReps]}>
+          {set.reps_completed}
+        </Text>
+        <Text style={[styles.tableCell, styles.tableCellRpe]}>
+          {set.rpe_actual != null ? set.rpe_actual : '—'}
+        </Text>
+      </>
+    );
+  }
+
   return (
     <>
       {entries.map(([exercise, sets]) => {
@@ -41,27 +95,7 @@ export function AuxResultsTable({
                 <Text style={[styles.tableCell, styles.tableCellSet]}>
                   {isTimed ? 'Round' : 'Set'}
                 </Text>
-                {isTimed ? (
-                  <Text style={[styles.tableCell, styles.tableCellWeight]}>
-                    Duration
-                  </Text>
-                ) : isBodyweight ? (
-                  <Text style={[styles.tableCell, styles.tableCellWeight]}>
-                    Reps
-                  </Text>
-                ) : (
-                  <>
-                    <Text style={[styles.tableCell, styles.tableCellWeight]}>
-                      Weight
-                    </Text>
-                    <Text style={[styles.tableCell, styles.tableCellReps]}>
-                      Reps
-                    </Text>
-                    <Text style={[styles.tableCell, styles.tableCellRpe]}>
-                      RPE
-                    </Text>
-                  </>
-                )}
+                {renderHeaderCells(isTimed, isBodyweight)}
               </View>
               {sets.map((set, i) => (
                 <View
@@ -71,27 +105,7 @@ export function AuxResultsTable({
                   <Text style={[styles.tableCell, styles.tableCellSet]}>
                     {set.set_number}
                   </Text>
-                  {isTimed ? (
-                    <Text style={[styles.tableCell, styles.tableCellWeight]}>
-                      {set.reps_completed} min
-                    </Text>
-                  ) : isBodyweight ? (
-                    <Text style={[styles.tableCell, styles.tableCellWeight]}>
-                      {set.reps_completed}
-                    </Text>
-                  ) : (
-                    <>
-                      <Text style={[styles.tableCell, styles.tableCellWeight]}>
-                        {weightGramsToKg(set.weight_grams).toFixed(1)} kg
-                      </Text>
-                      <Text style={[styles.tableCell, styles.tableCellReps]}>
-                        {set.reps_completed}
-                      </Text>
-                      <Text style={[styles.tableCell, styles.tableCellRpe]}>
-                        {set.rpe_actual != null ? set.rpe_actual : '—'}
-                      </Text>
-                    </>
-                  )}
+                  {renderRowCells(set, isTimed, isBodyweight)}
                 </View>
               ))}
             </View>

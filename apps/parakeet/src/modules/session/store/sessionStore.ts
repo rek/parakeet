@@ -482,13 +482,19 @@ export const useSessionStore = create<SessionState>()(
         }),
 
       setWarmupDone: (index, done) =>
-        set((state) => ({
-          warmupCompleted: done
-            ? state.warmupCompleted.includes(index)
-              ? state.warmupCompleted
-              : [...state.warmupCompleted, index]
-            : state.warmupCompleted.filter((i) => i !== index),
-        })),
+        set((state) => {
+          if (!done) {
+            return {
+              warmupCompleted: state.warmupCompleted.filter(
+                (i) => i !== index,
+              ),
+            };
+          }
+          if (state.warmupCompleted.includes(index)) {
+            return { warmupCompleted: state.warmupCompleted };
+          }
+          return { warmupCompleted: [...state.warmupCompleted, index] };
+        }),
 
       setSessionRpe: (rpe) => set({ sessionRpe: rpe }),
 

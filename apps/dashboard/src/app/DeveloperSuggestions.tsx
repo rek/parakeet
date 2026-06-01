@@ -227,12 +227,12 @@ export function DeveloperSuggestions() {
     load();
   }, [supabase]);
 
-  const filtered =
-    filter === 'all'
-      ? suggestions
-      : filter === 'unreviewed'
-        ? suggestions.filter((s) => !s.is_reviewed)
-        : suggestions.filter((s) => s.priority === filter);
+  let filtered = suggestions;
+  if (filter === 'unreviewed') {
+    filtered = suggestions.filter((s) => !s.is_reviewed);
+  } else if (filter !== 'all') {
+    filtered = suggestions.filter((s) => s.priority === filter);
+  }
 
   const unreviewedCount = suggestions.filter((s) => !s.is_reviewed).length;
 

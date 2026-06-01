@@ -10,6 +10,15 @@ const DIRECTION_CONFIG = {
   neutral: { symbol: '→', label: 'Changed' },
 } as const;
 
+function directionColor(
+  direction: BaselineDeviation['direction'],
+  colors: ColorScheme
+) {
+  if (direction === 'better') return colors.success;
+  if (direction === 'worse') return colors.danger;
+  return colors.warning;
+}
+
 /**
  * Compact badge showing how a rep metric deviates from the lifter's personal baseline.
  * Green for improvement, red for regression. Only rendered when deviation exceeds threshold.
@@ -22,12 +31,7 @@ export function BaselineDeviationBadge({
   colors: ColorScheme;
 }) {
   const config = DIRECTION_CONFIG[deviation.direction];
-  const badgeColor =
-    deviation.direction === 'better'
-      ? colors.success
-      : deviation.direction === 'worse'
-        ? colors.danger
-        : colors.warning;
+  const badgeColor = directionColor(deviation.direction, colors);
 
   return (
     <View style={[styles.badge, { borderColor: badgeColor + '40' }]}>

@@ -1444,14 +1444,21 @@ function CalibrationCheck({
   );
 }
 
+function checkColor(pass: boolean | null): string {
+  if (pass === true) return 'var(--green)';
+  if (pass === false) return 'var(--red)';
+  return 'var(--text-muted)';
+}
+
+function checkIcon(pass: boolean | null): string {
+  if (pass === true) return '✓';
+  if (pass === false) return '✕';
+  return '·';
+}
+
 function CheckRow({ check }: { check: CheckResult }) {
-  const color =
-    check.pass === true
-      ? 'var(--green)'
-      : check.pass === false
-        ? 'var(--red)'
-        : 'var(--text-muted)';
-  const icon = check.pass === true ? '✓' : check.pass === false ? '✕' : '·';
+  const color = checkColor(check.pass);
+  const icon = checkIcon(check.pass);
   return (
     <>
       <span style={{ color, fontWeight: 700 }}>{icon}</span>
@@ -1500,12 +1507,7 @@ function FatigueSignaturesPanel({
     {
       label: 'Velocity loss trend',
       value: signatures.velocityLossTrend ?? '—',
-      color:
-        signatures.velocityLossTrend === 'increasing'
-          ? 'var(--red)'
-          : signatures.velocityLossTrend === 'decreasing'
-            ? 'var(--green)'
-            : 'var(--text-dim)',
+      color: velocityTrendColor(signatures.velocityLossTrend),
     },
   ];
 
@@ -1571,6 +1573,14 @@ function FatigueSignaturesPanel({
       </div>
     </div>
   );
+}
+
+function velocityTrendColor(
+  trend: FatigueSignatures['velocityLossTrend']
+): string {
+  if (trend === 'increasing') return 'var(--red)';
+  if (trend === 'decreasing') return 'var(--green)';
+  return 'var(--text-dim)';
 }
 
 function fmtDeg(v: number | null) {
@@ -1741,6 +1751,16 @@ function RepTable({
           currentFrame >= rep.startFrame && currentFrame < nextStart;
         const isExpanded = expanded === rep.repNumber;
         const v = verdictBadge(rep.verdict);
+        const rowBackground = () => {
+          if (isExpanded) return 'var(--surface-overlay)';
+          if (isActive) return 'var(--surface-hover)';
+          return 'transparent';
+        };
+        const rowBorderLeft = () => {
+          if (isActive) return '3px solid var(--accent)';
+          if (isExpanded) return '3px solid var(--text-dim)';
+          return '3px solid transparent';
+        };
         return (
           <div key={rep.repNumber}>
             <button
@@ -1765,16 +1785,8 @@ function RepTable({
                 cursor: 'pointer',
                 width: '100%',
                 textAlign: 'left',
-                background: isExpanded
-                  ? 'var(--surface-overlay)'
-                  : isActive
-                    ? 'var(--surface-hover)'
-                    : 'transparent',
-                borderLeft: isActive
-                  ? '3px solid var(--accent)'
-                  : isExpanded
-                    ? '3px solid var(--text-dim)'
-                    : '3px solid transparent',
+                background: rowBackground(),
+                borderLeft: rowBorderLeft(),
               }}
             >
               <span style={{ color: 'var(--text-bright)', fontWeight: 600 }}>
@@ -1849,6 +1861,18 @@ function fmtVal(v: number | undefined, unit: string) {
       <span style={{ color: 'var(--text-muted)', marginLeft: 1 }}>{unit}</span>
     </span>
   );
+}
+
+function criterionColor(verdict: string): string {
+  if (verdict === 'pass') return 'var(--green)';
+  if (verdict === 'borderline') return 'var(--accent)';
+  return 'var(--red)';
+}
+
+function criterionIcon(verdict: string): string {
+  if (verdict === 'pass') return '✓';
+  if (verdict === 'borderline') return '~';
+  return '✕';
 }
 
 function RepDetail({
@@ -1953,18 +1977,8 @@ function RepDetail({
             }}
           >
             {rep.verdict.criteria.map((c, i) => {
-              const color =
-                c.verdict === 'pass'
-                  ? 'var(--green)'
-                  : c.verdict === 'borderline'
-                    ? 'var(--accent)'
-                    : 'var(--red)';
-              const icon =
-                c.verdict === 'pass'
-                  ? '✓'
-                  : c.verdict === 'borderline'
-                    ? '~'
-                    : '✕';
+              const color = criterionColor(c.verdict);
+              const icon = criterionIcon(c.verdict);
               return (
                 <span key={i} style={{ display: 'contents' }}>
                   <span style={{ color, fontWeight: 700 }}>{icon}</span>

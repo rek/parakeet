@@ -654,6 +654,65 @@ export default function FormulaEditorScreen() {
 
   // ── Render ────────────────────────────────────────────────────────────────
 
+  const renderConfigBody = () => {
+    if (configError) {
+      // Recoverable failure — give the user a retry instead of leaving
+      // the screen stuck on a spinner forever.
+      return (
+        <TouchableOpacity
+          style={styles.errorRetry}
+          onPress={() => {
+            void refetchConfig();
+          }}
+          accessibilityRole="button"
+          accessibilityLabel="Retry loading formula config"
+          activeOpacity={0.7}
+        >
+          <Text style={styles.errorRetryText}>
+            Couldn't load formula config — tap to retry
+          </Text>
+        </TouchableOpacity>
+      );
+    }
+    if (configLoading || !draft) {
+      return (
+        <ActivityIndicator color={colors.primary} style={{ marginTop: 40 }} />
+      );
+    }
+    return (
+      <>
+        {suggestionGuidance && (
+          <View style={styles.suggestionGuidanceBanner}>
+            <Text style={styles.suggestionGuidanceLabel}>AI suggestion</Text>
+            <Text style={styles.suggestionGuidanceText}>
+              {suggestionGuidance}
+            </Text>
+            <TouchableOpacity
+              onPress={() => setSuggestionGuidance(null)}
+              accessibilityRole="button"
+              accessibilityLabel="Dismiss AI suggestion guidance"
+              activeOpacity={0.7}
+            >
+              <Text style={styles.suggestionGuidanceDismiss}>Hide</Text>
+            </TouchableOpacity>
+          </View>
+        )}
+        {oneRmKg > 0 && (
+          <Text style={styles.exampleNote}>
+            Example weights based on your squat 1RM ({oneRmKg} kg)
+          </Text>
+        )}
+        {renderBlockContent(activeBlock)}
+      </>
+    );
+  };
+
+  const sourceBadgeLabel = (source: string): string => {
+    if (source === 'user') return 'User';
+    if (source === 'ai_suggestion') return 'AI';
+    return 'System';
+  };
+
   return (
     <SafeAreaView style={styles.safeArea}>
       {/* Header */}
@@ -738,57 +797,7 @@ export default function FormulaEditorScreen() {
             keyboardShouldPersistTaps="handled"
             showsVerticalScrollIndicator={false}
           >
-            {configError ? (
-              // Recoverable failure — give the user a retry instead of leaving
-              // the screen stuck on a spinner forever.
-              <TouchableOpacity
-                style={styles.errorRetry}
-                onPress={() => {
-                  void refetchConfig();
-                }}
-                accessibilityRole="button"
-                accessibilityLabel="Retry loading formula config"
-                activeOpacity={0.7}
-              >
-                <Text style={styles.errorRetryText}>
-                  Couldn't load formula config — tap to retry
-                </Text>
-              </TouchableOpacity>
-            ) : configLoading || !draft ? (
-              <ActivityIndicator
-                color={colors.primary}
-                style={{ marginTop: 40 }}
-              />
-            ) : (
-              <>
-                {suggestionGuidance && (
-                  <View style={styles.suggestionGuidanceBanner}>
-                    <Text style={styles.suggestionGuidanceLabel}>
-                      AI suggestion
-                    </Text>
-                    <Text style={styles.suggestionGuidanceText}>
-                      {suggestionGuidance}
-                    </Text>
-                    <TouchableOpacity
-                      onPress={() => setSuggestionGuidance(null)}
-                      accessibilityRole="button"
-                      accessibilityLabel="Dismiss AI suggestion guidance"
-                      activeOpacity={0.7}
-                    >
-                      <Text style={styles.suggestionGuidanceDismiss}>
-                        Hide
-                      </Text>
-                    </TouchableOpacity>
-                  </View>
-                )}
-                {oneRmKg > 0 && (
-                  <Text style={styles.exampleNote}>
-                    Example weights based on your squat 1RM ({oneRmKg} kg)
-                  </Text>
-                )}
-                {renderBlockContent(activeBlock)}
-              </>
-            )}
+            {renderConfigBody()}
           </ScrollView>
         </>
       )}
@@ -815,11 +824,7 @@ export default function FormulaEditorScreen() {
                   ]}
                 >
                   <Text style={styles.sourceBadgeText}>
-                    {item.source === 'user'
-                      ? 'User'
-                      : item.source === 'ai_suggestion'
-                        ? 'AI'
-                        : 'System'}
+                    {sourceBadgeLabel(item.source)}
                   </Text>
                 </View>
                 {item.is_active && (

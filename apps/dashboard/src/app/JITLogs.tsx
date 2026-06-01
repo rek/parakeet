@@ -25,6 +25,12 @@ function modifierColor(val: number) {
   return 'var(--text-bright)';
 }
 
+function setDeltaColor(delta: number) {
+  if (delta > 0) return 'var(--green)';
+  if (delta < 0) return 'var(--red)';
+  return 'var(--text-dim)';
+}
+
 function ModifierBar({
   value,
   min = 0.4,
@@ -192,12 +198,7 @@ function SessionCard({ session }: { session: Session }) {
             </div>
             <div
               style={{
-                color:
-                  setDelta > 0
-                    ? 'var(--green)'
-                    : setDelta < 0
-                      ? 'var(--red)'
-                      : 'var(--text-dim)',
+                color: setDeltaColor(setDelta),
                 fontWeight: 700,
                 fontSize: 14,
               }}
@@ -269,12 +270,7 @@ function SessionCard({ session }: { session: Session }) {
                 </div>
                 <span
                   style={{
-                    color:
-                      setDelta > 0
-                        ? 'var(--green)'
-                        : setDelta < 0
-                          ? 'var(--red)'
-                          : 'var(--text-dim)',
+                    color: setDeltaColor(setDelta),
                     fontWeight: 700,
                     fontSize: 18,
                   }}

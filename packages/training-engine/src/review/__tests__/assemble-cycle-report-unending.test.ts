@@ -23,12 +23,18 @@ function makeRaw(overrides: Partial<RawCycleData> = {}): RawCycleData {
   };
 }
 
+function liftForIndex(i: number): string {
+  if (i % 3 === 0) return 'squat';
+  if (i % 3 === 1) return 'bench';
+  return 'deadlift';
+}
+
 function makeSession(i: number): RawSession {
   return {
     id: `s-${i}`,
     week_number: Math.floor(i / 3) + 1,
     block_number: 1,
-    primary_lift: i % 3 === 0 ? 'squat' : i % 3 === 1 ? 'bench' : 'deadlift',
+    primary_lift: liftForIndex(i),
     intensity_type: 'heavy',
     status: 'completed',
     planned_sets: null,

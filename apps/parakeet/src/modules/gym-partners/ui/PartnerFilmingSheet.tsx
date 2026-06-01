@@ -26,6 +26,12 @@ import { PartnerSetPicker } from './PartnerSetPicker';
 
 type Step = 'pick' | 'record' | 'process' | 'done' | 'error';
 
+function progressLabel(progress: number): string {
+  if (progress < 0.5) return 'Analyzing form...';
+  if (progress < 0.75) return 'Compressing...';
+  return 'Uploading...';
+}
+
 export function PartnerFilmingSheet({
   visible,
   onClose,
@@ -108,6 +114,60 @@ export function PartnerFilmingSheet({
   const progress =
     filmingState.type === 'analyzing' ? filmingState.progress : 0;
 
+  const renderRecordStep = () => {
+    if (!hasPermission) {
+      return (
+        <View style={styles.center}>
+          <Text style={styles.hint}>Camera permission required</Text>
+          <TouchableOpacity
+            onPress={requestPermission}
+            style={styles.actionButton}
+            activeOpacity={0.7}
+          >
+            <Text style={styles.actionText}>Grant Permission</Text>
+          </TouchableOpacity>
+        </View>
+      );
+    }
+    if (!device) {
+      return (
+        <View style={styles.center}>
+          <Text style={styles.hint}>No camera available</Text>
+        </View>
+      );
+    }
+    return (
+      <>
+        <Camera
+          ref={cameraRef}
+          device={device}
+          isActive={visible && step === 'record'}
+          video
+          style={styles.camera}
+        />
+        <View style={styles.recordControls}>
+          <Text style={styles.recordLabel}>Set {selection?.setNumber}</Text>
+          <TouchableOpacity
+            style={[
+              styles.recordButton,
+              isRecording && styles.recordButtonActive,
+            ]}
+            onPress={
+              isRecording ? handleStopRecording : handleStartRecording
+            }
+            activeOpacity={0.7}
+            accessibilityLabel={
+              isRecording ? 'Stop recording' : 'Start recording'
+            }
+            accessibilityRole="button"
+          >
+            <View style={isRecording ? styles.stopIcon : styles.recordIcon} />
+          </TouchableOpacity>
+        </View>
+      </>
+    );
+  };
+
   return (
     <Sheet
       visible={visible}
@@ -124,69 +184,13 @@ export function PartnerFilmingSheet({
       )}
 
       {step === 'record' && (
-        <View style={styles.recordContainer}>
-          {!hasPermission ? (
-            <View style={styles.center}>
-              <Text style={styles.hint}>Camera permission required</Text>
-              <TouchableOpacity
-                onPress={requestPermission}
-                style={styles.actionButton}
-                activeOpacity={0.7}
-              >
-                <Text style={styles.actionText}>Grant Permission</Text>
-              </TouchableOpacity>
-            </View>
-          ) : !device ? (
-            <View style={styles.center}>
-              <Text style={styles.hint}>No camera available</Text>
-            </View>
-          ) : (
-            <>
-              <Camera
-                ref={cameraRef}
-                device={device}
-                isActive={visible && step === 'record'}
-                video
-                style={styles.camera}
-              />
-              <View style={styles.recordControls}>
-                <Text style={styles.recordLabel}>
-                  Set {selection?.setNumber}
-                </Text>
-                <TouchableOpacity
-                  style={[
-                    styles.recordButton,
-                    isRecording && styles.recordButtonActive,
-                  ]}
-                  onPress={
-                    isRecording ? handleStopRecording : handleStartRecording
-                  }
-                  activeOpacity={0.7}
-                  accessibilityLabel={
-                    isRecording ? 'Stop recording' : 'Start recording'
-                  }
-                  accessibilityRole="button"
-                >
-                  <View
-                    style={isRecording ? styles.stopIcon : styles.recordIcon}
-                  />
-                </TouchableOpacity>
-              </View>
-            </>
-          )}
-        </View>
+        <View style={styles.recordContainer}>{renderRecordStep()}</View>
       )}
 
       {step === 'process' && (
         <View style={styles.center}>
           <ActivityIndicator size="large" color={colors.primary} />
-          <Text style={styles.progressText}>
-            {progress < 0.5
-              ? 'Analyzing form...'
-              : progress < 0.75
-                ? 'Compressing...'
-                : 'Uploading...'}
-          </Text>
+          <Text style={styles.progressText}>{progressLabel(progress)}</Text>
           <Text style={styles.progressPct}>{Math.round(progress * 100)}%</Text>
         </View>
       )}

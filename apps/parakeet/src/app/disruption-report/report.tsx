@@ -501,16 +501,21 @@ export default function DisruptionReportScreen() {
           : undefined;
       const trimmedDescription = description.trim() || undefined;
 
+      let affectedLifts: Lift[] | undefined;
+      if (allLifts) {
+        affectedLifts = undefined;
+      } else if (selectedLifts.size > 0) {
+        affectedLifts = Array.from(selectedLifts);
+      } else {
+        affectedLifts = undefined;
+      }
+
       const result = await reportDisruption(user.id, {
         disruption_type: selectedType,
         severity: effectiveSeverity,
         affected_date_start: startDate,
         affected_date_end: isOngoing ? undefined : endDate,
-        affected_lifts: allLifts
-          ? undefined
-          : selectedLifts.size > 0
-            ? Array.from(selectedLifts)
-            : undefined,
+        affected_lifts: affectedLifts,
         description: trimmedDescription,
         ...(trimmedEventName != null && { event_name: trimmedEventName }),
       });
@@ -566,6 +571,16 @@ export default function DisruptionReportScreen() {
 
     // Group by action label for a compact summary
     const groups = groupSuggestions(suggestions);
+
+    const autoAppliedNote = (): string => {
+      if (autoApplied && suggestions.length > 0) {
+        return 'Adjustments auto-applied (minor severity)';
+      }
+      if (autoApplied) {
+        return 'Disruption recorded — no weight changes needed at this level';
+      }
+      return 'Soreness injected — no session changes required';
+    };
 
     return (
       <SafeAreaView style={styles.safeArea}>
@@ -659,11 +674,7 @@ export default function DisruptionReportScreen() {
               <>
                 <View style={styles.autoAppliedNote}>
                   <Text style={styles.autoAppliedNoteText}>
-                    {autoApplied && suggestions.length > 0
-                      ? 'Adjustments auto-applied (minor severity)'
-                      : autoApplied
-                        ? 'Disruption recorded — no weight changes needed at this level'
-                        : 'Soreness injected — no session changes required'}
+                    {autoAppliedNote()}
                   </Text>
                 </View>
                 <TouchableOpacity

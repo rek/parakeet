@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import { useEffect, useState } from 'react';
 
 import { Badge } from '../components/Badge';
@@ -293,6 +294,89 @@ export function DecisionReplay() {
     (l) => l.volume_appropriateness === 'too_little'
   ).length;
 
+  let body: ReactNode;
+  if (loading) {
+    body = (
+      <div
+        style={{
+          color: theme.color.textMuted,
+          fontFamily: theme.font.mono,
+          fontSize: 12,
+        }}
+      >
+        Loading...
+      </div>
+    );
+  } else if (logs.length === 0) {
+    body = (
+      <div
+        style={{
+          color: theme.color.textMuted,
+          fontFamily: theme.font.mono,
+          fontSize: 12,
+        }}
+      >
+        No decision replay logs found. Complete sessions with LLM challenge mode
+        enabled to generate records.
+      </div>
+    );
+  } else {
+    body = (
+      <>
+        {/* Summary stats bar */}
+        <div
+          style={{
+            display: 'flex',
+            gap: 10,
+            flexWrap: 'wrap',
+            marginBottom: 20,
+          }}
+        >
+          <StatBox
+            label="Avg Prescription Score"
+            value={String(avgPrescription)}
+            color={
+              typeof avgPrescription === 'string' && avgPrescription !== '—'
+                ? scoreColor(parseFloat(avgPrescription))
+                : theme.color.textBright
+            }
+          />
+          <StatBox
+            label="Avg RPE Accuracy"
+            value={String(avgRpe)}
+            color={
+              typeof avgRpe === 'string' && avgRpe !== '—'
+                ? scoreColor(parseFloat(avgRpe))
+                : theme.color.textBright
+            }
+          />
+          <StatBox
+            label="Volume: Right"
+            value={String(right)}
+            color={theme.color.green}
+          />
+          <StatBox
+            label="Volume: Too Much"
+            value={String(tooMuch)}
+            color={theme.color.red}
+          />
+          <StatBox
+            label="Volume: Too Little"
+            value={String(tooLittle)}
+            color={theme.color.accent}
+          />
+        </div>
+
+        {/* Log cards */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+          {logs.map((log) => (
+            <LogCard key={log.id} log={log} />
+          ))}
+        </div>
+      </>
+    );
+  }
+
   return (
     <div>
       {/* Page header */}
@@ -338,81 +422,7 @@ export function DecisionReplay() {
         </div>
       </div>
 
-      {loading ? (
-        <div
-          style={{
-            color: theme.color.textMuted,
-            fontFamily: theme.font.mono,
-            fontSize: 12,
-          }}
-        >
-          Loading...
-        </div>
-      ) : logs.length === 0 ? (
-        <div
-          style={{
-            color: theme.color.textMuted,
-            fontFamily: theme.font.mono,
-            fontSize: 12,
-          }}
-        >
-          No decision replay logs found. Complete sessions with LLM challenge
-          mode enabled to generate records.
-        </div>
-      ) : (
-        <>
-          {/* Summary stats bar */}
-          <div
-            style={{
-              display: 'flex',
-              gap: 10,
-              flexWrap: 'wrap',
-              marginBottom: 20,
-            }}
-          >
-            <StatBox
-              label="Avg Prescription Score"
-              value={String(avgPrescription)}
-              color={
-                typeof avgPrescription === 'string' && avgPrescription !== '—'
-                  ? scoreColor(parseFloat(avgPrescription))
-                  : theme.color.textBright
-              }
-            />
-            <StatBox
-              label="Avg RPE Accuracy"
-              value={String(avgRpe)}
-              color={
-                typeof avgRpe === 'string' && avgRpe !== '—'
-                  ? scoreColor(parseFloat(avgRpe))
-                  : theme.color.textBright
-              }
-            />
-            <StatBox
-              label="Volume: Right"
-              value={String(right)}
-              color={theme.color.green}
-            />
-            <StatBox
-              label="Volume: Too Much"
-              value={String(tooMuch)}
-              color={theme.color.red}
-            />
-            <StatBox
-              label="Volume: Too Little"
-              value={String(tooLittle)}
-              color={theme.color.accent}
-            />
-          </div>
-
-          {/* Log cards */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-            {logs.map((log) => (
-              <LogCard key={log.id} log={log} />
-            ))}
-          </div>
-        </>
-      )}
+      {body}
     </div>
   );
 }

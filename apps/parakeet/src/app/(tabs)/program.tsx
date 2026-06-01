@@ -245,6 +245,16 @@ interface UnendingPreview {
   rpeAdjustNote: string | null;
 }
 
+function formatRepsLabel(
+  firstSet: ReturnType<typeof calculateSets>[number] | null
+): string | null {
+  if (!firstSet) return null;
+  if (firstSet.reps_range) {
+    return `${firstSet.reps_range[0]}–${firstSet.reps_range[1]}`;
+  }
+  return `${firstSet.reps}`;
+}
+
 function computeUnendingPreview(
   program: { unending_session_counter?: number | null },
   todaySession: { block_number?: number | null; intensity_type?: string | null } | null | undefined,
@@ -270,11 +280,7 @@ function computeUnendingPreview(
   const setCount = estimatedSets?.length ?? null;
   const lastSessionRpe = liftHistory?.entries?.[0]?.sessionRpe ?? null;
 
-  const repsLabel = firstSet
-    ? firstSet.reps_range
-      ? `${firstSet.reps_range[0]}–${firstSet.reps_range[1]}`
-      : `${firstSet.reps}`
-    : null;
+  const repsLabel = formatRepsLabel(firstSet);
 
   const rpeTarget = firstSet?.rpe_target ?? null;
   return {

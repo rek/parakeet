@@ -96,6 +96,18 @@ function deriveBlockFromIntensity(intensityType: IntensityType): 1 | 2 | 3 {
   return 3;
 }
 
+function parseBodyweightKg(raw: unknown): number | null {
+  if (typeof raw === 'number') return raw;
+  if (typeof raw === 'string') return parseFloat(raw);
+  return null;
+}
+
+function primaryMusclesForLift(lift: Lift): readonly MuscleGroup[] {
+  if (lift === 'squat') return ['quads', 'glutes', 'lower_back'];
+  if (lift === 'bench') return ['chest', 'triceps', 'shoulders'];
+  return ['hamstrings', 'glutes', 'lower_back', 'upper_back'];
+}
+
 export async function runJITForSession(
   session: NonNullable<Session>,
   userId: string,
@@ -191,13 +203,7 @@ export async function runJITForSession(
   if (resolvedOneRmKg === null) {
     const profile = await fetchJitProfile(userId);
 
-    const rawBodyweight = profile?.bodyweight_kg;
-    const bodyweightKg =
-      typeof rawBodyweight === 'number'
-        ? rawBodyweight
-        : typeof rawBodyweight === 'string'
-          ? parseFloat(rawBodyweight)
-          : null;
+    const bodyweightKg = parseBodyweightKg(profile?.bodyweight_kg);
 
     dateOfBirth = profile?.date_of_birth ?? null;
 
@@ -465,12 +471,7 @@ export async function runJITForSession(
 
   // Weekly body review mismatch direction for primary muscles (engine-043 Phase 3)
   try {
-    const primaryMuscles =
-      lift === 'squat'
-        ? (['quads', 'glutes', 'lower_back'] as const)
-        : lift === 'bench'
-          ? (['chest', 'triceps', 'shoulders'] as const)
-          : (['hamstrings', 'glutes', 'lower_back', 'upper_back'] as const);
+    const primaryMuscles = primaryMusclesForLift(lift);
     weeklyMismatchDirection = await getLatestMismatchDirection(
       userId,
       session.program_id,

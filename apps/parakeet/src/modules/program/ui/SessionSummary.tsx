@@ -37,19 +37,19 @@ export function SessionSummary({
     onPress(session);
   }
 
-  const dotColor = isInProgress
-    ? colors.primary
-    : isLocked
-      ? colors.textTertiary
-      : ((
-          {
-            in_progress: colors.primary,
-            planned: colors.textTertiary,
-            completed: colors.success,
-            skipped: colors.danger,
-            missed: colors.danger,
-          } as Record<string, string>
-        )[session.status] ?? colors.textTertiary);
+  function resolveDotColor(): string {
+    if (isInProgress) return colors.primary;
+    if (isLocked) return colors.textTertiary;
+    const byStatus: Record<string, string> = {
+      in_progress: colors.primary,
+      planned: colors.textTertiary,
+      completed: colors.success,
+      skipped: colors.danger,
+      missed: colors.danger,
+    };
+    return byStatus[session.status] ?? colors.textTertiary;
+  }
+  const dotColor = resolveDotColor();
 
   const styles = useMemo(
     () =>

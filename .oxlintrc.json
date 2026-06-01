@@ -3,6 +3,7 @@
     "no-console": "off",
     "no-debugger": "warn",
     "no-unused-vars": "error",
+    "no-nested-ternary": "error",
     "import/first": "error",
     "import/no-duplicates": "error",
     "import/no-anonymous-default-export": "warn",

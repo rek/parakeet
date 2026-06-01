@@ -144,51 +144,60 @@ export function NutritionScreen() {
         })}
       </ScrollView>
 
-      {tab === 'compare' ? (
-        <CompareSection />
-      ) : tab === 'calculator' ? (
+      {renderTabContent()}
+    </ScrollView>
+  );
+
+  function renderTabContent() {
+    if (tab === 'compare') return <CompareSection />;
+    if (tab === 'calculator') {
+      return (
         <CalculatorSection
           defaultProtocol={
             slug && isMacroProtocol(slug) ? slug : 'standard'
           }
         />
-      ) : tab === 'macros' ? (
-        <MacroLookupSection />
-      ) : bundleLoading ? (
+      );
+    }
+    if (tab === 'macros') return <MacroLookupSection />;
+    if (bundleLoading) {
+      return (
         <View style={styles.stateBox}>
           <ActivityIndicator color={colors.primary} />
         </View>
-      ) : bundle ? (
-        <>
-          {tab === 'overview' && (
-            <>
-              {isMacroProtocol(bundle.protocol.slug) ? (
-                <MacroTargetsCard protocol={bundle.protocol.slug} />
-              ) : null}
-              <DailyRituals foods={bundle.foods} />
-              {bundle.protocol.descriptionMd ? (
-                <Markdown source={bundle.protocol.descriptionMd} />
-              ) : (
-                <Text style={styles.emptyText}>
-                  No prose doc for this protocol yet.
-                </Text>
-              )}
-            </>
-          )}
-          {tab === 'foods' && <FoodSection foods={bundle.foods} />}
-          {tab === 'supplements' && (
-            <SupplementSection supplements={bundle.supplements} />
-          )}
-          {tab === 'lifestyle' && (
-            <LifestyleSection items={bundle.lifestyle} />
-          )}
-          {tab === 'sources' && (
-            <SourcesSection descriptionMd={bundle.protocol.descriptionMd} />
-          )}
-        </>
-      ) : null}
-    </ScrollView>
-  );
+      );
+    }
+    if (!bundle) return null;
+    return (
+      <>
+        {tab === 'overview' && (
+          <>
+            {isMacroProtocol(bundle.protocol.slug) ? (
+              <MacroTargetsCard protocol={bundle.protocol.slug} />
+            ) : null}
+            <DailyRituals foods={bundle.foods} />
+            {bundle.protocol.descriptionMd ? (
+              <Markdown source={bundle.protocol.descriptionMd} />
+            ) : (
+              <Text style={styles.emptyText}>
+                No prose doc for this protocol yet.
+              </Text>
+            )}
+          </>
+        )}
+        {tab === 'foods' && <FoodSection foods={bundle.foods} />}
+        {tab === 'supplements' && (
+          <SupplementSection supplements={bundle.supplements} />
+        )}
+        {tab === 'lifestyle' && (
+          <LifestyleSection items={bundle.lifestyle} />
+        )}
+        {tab === 'sources' && (
+          <SourcesSection descriptionMd={bundle.protocol.descriptionMd} />
+        )}
+      </>
+    );
+  }
 }
 
 function isMacroProtocol(slug: string): slug is DietProtocolSlug {

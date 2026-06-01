@@ -33,6 +33,12 @@ function daysBetween(from: string, to = new Date()) {
   return Math.floor(ms / (1000 * 60 * 60 * 24));
 }
 
+function sinceColor(since: number | null, cycleLengthDays: number) {
+  if (since == null) return theme.color.textMuted;
+  if (since > cycleLengthDays) return theme.color.accent;
+  return theme.color.textDim;
+}
+
 function CycleStateTable() {
   const { rows, loading, error } = useSupabaseRows<CycleStateRow>((s) =>
     s
@@ -93,12 +99,7 @@ function CycleStateTable() {
             </span>
             <span
               style={{
-                color:
-                  since == null
-                    ? theme.color.textMuted
-                    : since > r.cycle_length_days
-                      ? theme.color.accent
-                      : theme.color.textDim,
+                color: sinceColor(since, r.cycle_length_days),
               }}
             >
               {since != null ? `${since}d` : '—'}

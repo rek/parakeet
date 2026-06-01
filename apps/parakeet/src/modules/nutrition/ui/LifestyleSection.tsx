@@ -127,20 +127,21 @@ function Card({
   );
 }
 
+function badgeBg(frequency: LifestyleFrequency, colors: ColorScheme): string {
+  if (frequency === 'daily') return colors.primaryMuted;
+  if (frequency === 'weekly') return colors.infoMuted;
+  return colors.bgSurface;
+}
+function badgeFg(frequency: LifestyleFrequency, colors: ColorScheme): string {
+  if (frequency === 'daily') return colors.primary;
+  if (frequency === 'weekly') return colors.info;
+  return colors.textSecondary;
+}
+
 function FrequencyBadge({ frequency }: { frequency: LifestyleFrequency }) {
   const { colors } = useTheme();
-  const bg =
-    frequency === 'daily'
-      ? colors.primaryMuted
-      : frequency === 'weekly'
-        ? colors.infoMuted
-        : colors.bgSurface;
-  const fg =
-    frequency === 'daily'
-      ? colors.primary
-      : frequency === 'weekly'
-        ? colors.info
-        : colors.textSecondary;
+  const bg = badgeBg(frequency, colors);
+  const fg = badgeFg(frequency, colors);
   return (
     <View
       style={{

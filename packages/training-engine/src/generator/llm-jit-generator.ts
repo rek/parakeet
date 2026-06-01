@@ -197,22 +197,28 @@ export function applyAdjustment(
   // before. The aux scaling above no longer uses this flag, but the
   // skipped-main aux suppression below still does.
   const propagatePenalties = !isDeload && !hasEquipmentDisruption;
-  const volumeRatio = isDeload
-    ? DELOAD_AUX_VOLUME_RATIO
-    : hasEquipmentDisruption
-      ? 1
-      : Math.min(
-          1,
-          Math.max(
-            0,
-            baseSets.length > 0 ? mainLiftSets.length / baseSets.length : 1
-          )
-        );
-  const intensityRatio = isDeload
-    ? DELOAD_AUX_INTENSITY_RATIO
-    : hasEquipmentDisruption
-      ? 1
-      : Math.min(1, Math.max(0, adj.intensityModifier));
+  let volumeRatio: number;
+  if (isDeload) {
+    volumeRatio = DELOAD_AUX_VOLUME_RATIO;
+  } else if (hasEquipmentDisruption) {
+    volumeRatio = 1;
+  } else {
+    volumeRatio = Math.min(
+      1,
+      Math.max(
+        0,
+        baseSets.length > 0 ? mainLiftSets.length / baseSets.length : 1
+      )
+    );
+  }
+  let intensityRatio: number;
+  if (isDeload) {
+    intensityRatio = DELOAD_AUX_INTENSITY_RATIO;
+  } else if (hasEquipmentDisruption) {
+    intensityRatio = 1;
+  } else {
+    intensityRatio = Math.min(1, Math.max(0, adj.intensityModifier));
+  }
 
   // Apply aux overrides
   const overrideByExercise = new Map(
@@ -330,12 +336,14 @@ export function applyAdjustment(
       // already encodes per-session fatigue context so reintroducing it
       // would double-count.
       const engineAnchor = engineAnchorByExercise.get(exercise);
-      const anchorKg =
-        anchorOverride != null
-          ? anchorOverride.weightKg
-          : engineAnchor != null && engineAnchor.source !== 'formula'
-            ? engineAnchor.anchorKg
-            : undefined;
+      let anchorKg: number | undefined;
+      if (anchorOverride != null) {
+        anchorKg = anchorOverride.weightKg;
+      } else if (engineAnchor != null && engineAnchor.source !== 'formula') {
+        anchorKg = engineAnchor.anchorKg;
+      } else {
+        anchorKg = undefined;
+      }
       const baseAuxWeight = roundToNearest(
         computeAuxWeight({
           exercise,

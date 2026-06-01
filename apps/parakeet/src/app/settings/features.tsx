@@ -34,6 +34,14 @@ function isPresetMatch(
   );
 }
 
+function activePresetFor(
+  flags: Record<FeatureId, boolean>
+): 'simple' | 'full' | 'custom' {
+  if (isPresetMatch(flags, SIMPLE_PRESET)) return 'simple';
+  if (isPresetMatch(flags, FULL_PRESET)) return 'full';
+  return 'custom';
+}
+
 function buildStyles(colors: ColorScheme) {
   return StyleSheet.create({
     safeArea: {
@@ -125,11 +133,7 @@ export default function FeaturesScreen() {
   const styles = useMemo(() => buildStyles(colors), [colors]);
   const { flags, toggle, applyPreset } = useFeatureFlags();
 
-  const activePreset = isPresetMatch(flags, SIMPLE_PRESET)
-    ? 'simple'
-    : isPresetMatch(flags, FULL_PRESET)
-      ? 'full'
-      : 'custom';
+  const activePreset = activePresetFor(flags);
 
   const handlePreset = useCallback(
     async (preset: 'simple' | 'full') => {

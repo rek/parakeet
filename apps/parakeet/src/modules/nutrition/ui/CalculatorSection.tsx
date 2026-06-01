@@ -132,7 +132,7 @@ export function CalculatorSection({
                 protocol === p && styles.pillTextActive,
               ]}
             >
-              {p === 'keto' ? 'Keto' : p === 'rad' ? 'RAD' : 'Standard'}
+              {protocolLabel(p)}
             </Text>
           </TouchableOpacity>
         ))}
@@ -308,8 +308,7 @@ export function CalculatorSection({
             {parsed.tdee_kcal}
             {parsed.kcal_overridden
               ? ` · derived was ${Math.round(
-                  parsed.tdee_kcal *
-                    (goal === 'cut' ? 0.85 : goal === 'bulk' ? 1.1 : 1),
+                  parsed.tdee_kcal * goalAdjustment(goal),
                 )}`
               : ''}
           </Text>
@@ -506,6 +505,16 @@ function MacroCell({
 
 function cap(s: string): string {
   return s.charAt(0).toUpperCase() + s.slice(1);
+}
+function protocolLabel(p: DietProtocolSlug): string {
+  if (p === 'keto') return 'Keto';
+  if (p === 'rad') return 'RAD';
+  return 'Standard';
+}
+function goalAdjustment(goal: Goal): number {
+  if (goal === 'cut') return 0.85;
+  if (goal === 'bulk') return 1.1;
+  return 1;
 }
 function methodLabel(m: 'katch_mcardle' | 'mifflin_st_jeor' | 'fallback'): string {
   if (m === 'katch_mcardle') return 'Katch-McArdle';

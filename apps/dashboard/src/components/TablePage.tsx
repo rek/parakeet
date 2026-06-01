@@ -52,6 +52,63 @@ export function TablePage<T>({
   renderRow,
   keyOf,
 }: TablePageProps<T>) {
+  const renderBody = () => {
+    if (loading) {
+      return <div style={messageStyle}>Loading…</div>;
+    }
+    if (rows.length === 0) {
+      return <div style={messageStyle}>{emptyMessage}</div>;
+    }
+    return (
+      <div
+        style={{
+          background: theme.bg.surface,
+          border: `1px solid ${theme.border.base}`,
+          borderRadius: 8,
+          overflow: 'hidden',
+        }}
+      >
+        {/* Column headers */}
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: columnsTemplate,
+            gap: 10,
+            padding: '8px 14px',
+            borderBottom: `1px solid ${theme.border.base}`,
+            fontSize: 10,
+            fontFamily: theme.font.mono,
+            color: theme.color.textMuted,
+            textTransform: 'uppercase',
+            letterSpacing: '0.06em',
+          }}
+        >
+          {columnLabels.map((l) => (
+            <span key={l}>{l}</span>
+          ))}
+        </div>
+        {rows.map((row, i) => (
+          <div
+            key={keyOf(row, i)}
+            style={{
+              display: 'grid',
+              gridTemplateColumns: columnsTemplate,
+              alignItems: 'center',
+              gap: 10,
+              padding: '10px 14px',
+              borderBottom: `1px solid ${theme.border.base}`,
+              fontSize: 12,
+              fontFamily: theme.font.mono,
+              color: theme.color.text,
+            }}
+          >
+            {renderRow(row, i)}
+          </div>
+        ))}
+      </div>
+    );
+  };
+
   return (
     <div>
       {/* Header */}
@@ -128,58 +185,7 @@ export function TablePage<T>({
         </div>
       )}
 
-      {loading ? (
-        <div style={messageStyle}>Loading…</div>
-      ) : rows.length === 0 ? (
-        <div style={messageStyle}>{emptyMessage}</div>
-      ) : (
-        <div
-          style={{
-            background: theme.bg.surface,
-            border: `1px solid ${theme.border.base}`,
-            borderRadius: 8,
-            overflow: 'hidden',
-          }}
-        >
-          {/* Column headers */}
-          <div
-            style={{
-              display: 'grid',
-              gridTemplateColumns: columnsTemplate,
-              gap: 10,
-              padding: '8px 14px',
-              borderBottom: `1px solid ${theme.border.base}`,
-              fontSize: 10,
-              fontFamily: theme.font.mono,
-              color: theme.color.textMuted,
-              textTransform: 'uppercase',
-              letterSpacing: '0.06em',
-            }}
-          >
-            {columnLabels.map((l) => (
-              <span key={l}>{l}</span>
-            ))}
-          </div>
-          {rows.map((row, i) => (
-            <div
-              key={keyOf(row, i)}
-              style={{
-                display: 'grid',
-                gridTemplateColumns: columnsTemplate,
-                alignItems: 'center',
-                gap: 10,
-                padding: '10px 14px',
-                borderBottom: `1px solid ${theme.border.base}`,
-                fontSize: 12,
-                fontFamily: theme.font.mono,
-                color: theme.color.text,
-              }}
-            >
-              {renderRow(row, i)}
-            </div>
-          ))}
-        </div>
-      )}
+      {renderBody()}
     </div>
   );
 }

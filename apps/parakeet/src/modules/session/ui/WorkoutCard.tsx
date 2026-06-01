@@ -43,6 +43,38 @@ function getIntensityBadge(intensityType: string, colors: ColorScheme) {
   );
 }
 
+function getBlockLabel(
+  session: NonNullable<Session>,
+  isFreeFormAdHoc: boolean
+): string {
+  if (isFreeFormAdHoc) return 'Free-form workout';
+  if (session.program_id === null) return 'Ad-Hoc Workout';
+  if (session.block_number !== null) {
+    return `Block ${session.block_number} · Week ${session.week_number}`;
+  }
+  return `Week ${session.week_number}`;
+}
+
+function getLiftName(
+  session: NonNullable<Session>,
+  isFreeFormAdHoc: boolean
+): string {
+  if (isFreeFormAdHoc) return session.activity_name ?? 'Ad-Hoc Workout';
+  if (session.primary_lift) {
+    return (
+      session.primary_lift.charAt(0).toUpperCase() +
+      session.primary_lift.slice(1)
+    );
+  }
+  return 'Workout';
+}
+
+function getStartButtonLabel(isInProgress: boolean, isLocked: boolean): string {
+  if (isInProgress) return 'Resume Workout';
+  if (isLocked) return 'Another session active';
+  return 'Start Workout';
+}
+
 function buildStyles(colors: ColorScheme) {
   return StyleSheet.create({
     card: {
@@ -258,13 +290,24 @@ export function WorkoutCard({
   const badge = session.intensity_type
     ? getIntensityBadge(session.intensity_type, colors)
     : null;
-  const blockLabel = isFreeFormAdHoc
-    ? 'Free-form workout'
-    : session.program_id === null
-      ? 'Ad-Hoc Workout'
-      : session.block_number !== null
-        ? `Block ${session.block_number} · Week ${session.week_number}`
-        : `Week ${session.week_number}`;
+  const blockLabel = getBlockLabel(session, isFreeFormAdHoc);
+
+  function renderSetsInfo() {
+    if (isFreeFormAdHoc) {
+      return <Text style={styles.noSetsText}>Add exercises as you go</Text>;
+    }
+    if (session.planned_sets === null) {
+      return (
+        <Text style={styles.noSetsText}>Workout generated when you start</Text>
+      );
+    }
+    return (
+      <Text style={styles.setsText}>
+        {Array.isArray(session.planned_sets) ? session.planned_sets.length : 0}{' '}
+        sets
+      </Text>
+    );
+  }
 
   return (
     <>
@@ -272,12 +315,7 @@ export function WorkoutCard({
         {/* Lift name + intensity badge */}
         <View style={styles.cardHeader}>
           <Text style={styles.liftName}>
-            {isFreeFormAdHoc
-              ? (session.activity_name ?? 'Ad-Hoc Workout')
-              : session.primary_lift
-                ? session.primary_lift.charAt(0).toUpperCase() +
-                  session.primary_lift.slice(1)
-                : 'Workout'}
+            {getLiftName(session, isFreeFormAdHoc)}
           </Text>
           {badge && (
             <View
@@ -295,20 +333,7 @@ export function WorkoutCard({
         <Text style={styles.blockWeekText}>{blockLabel}</Text>
 
         {/* Sets info */}
-        {isFreeFormAdHoc ? (
-          <Text style={styles.noSetsText}>Add exercises as you go</Text>
-        ) : session.planned_sets === null ? (
-          <Text style={styles.noSetsText}>
-            Workout generated when you start
-          </Text>
-        ) : (
-          <Text style={styles.setsText}>
-            {Array.isArray(session.planned_sets)
-              ? session.planned_sets.length
-              : 0}{' '}
-            sets
-          </Text>
-        )}
+        {renderSetsInfo()}
 
         {/* Planned date */}
         <Text style={styles.dateText}>{formatDate(session.planned_date)}</Text>
@@ -329,11 +354,7 @@ export function WorkoutCard({
                 isLocked && styles.startButtonTextLocked,
               ]}
             >
-              {isInProgress
-                ? 'Resume Workout'
-                : isLocked
-                  ? 'Another session active'
-                  : 'Start Workout'}
+              {getStartButtonLabel(isInProgress, isLocked)}
             </Text>
           </TouchableOpacity>
           {!isInProgress && !isFreeFormAdHoc && (

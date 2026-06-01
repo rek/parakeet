@@ -14,6 +14,12 @@ interface BackgroundTimerBadgeProps {
   onSwitch: (key: string) => void;
 }
 
+function getTimerLabel(key: string): string {
+  if (key === 'main') return 'Main';
+  if (key === 'warmup') return 'Warmup';
+  return formatExerciseName(key);
+}
+
 export function BackgroundTimerBadge({
   backgroundTimers,
   onSwitch,
@@ -81,12 +87,7 @@ export function BackgroundTimerBadge({
         const display = overtime
           ? `+${formatMMSS(timer.elapsed - effectiveDuration)}`
           : formatMMSS(remaining);
-        const label =
-          key === 'main'
-            ? 'Main'
-            : key === 'warmup'
-              ? 'Warmup'
-              : formatExerciseName(key);
+        const label = getTimerLabel(key);
 
         return (
           <TouchableOpacity

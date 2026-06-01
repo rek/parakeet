@@ -40,6 +40,14 @@ const CONFIDENCE_THRESHOLDS = {
   high: 20,
 } as const;
 
+/** Map a sample count to a calibration confidence label across thresholds. */
+function confidenceForSampleCount(n: number): CalibrationConfidence {
+  if (n >= CONFIDENCE_THRESHOLDS.high) return 'high';
+  if (n >= CONFIDENCE_THRESHOLDS.medium) return 'medium';
+  if (n >= CONFIDENCE_THRESHOLDS.low) return 'low';
+  return 'exploring';
+}
+
 /** Maximum auto-apply adjustment (absolute). Changes larger than this require LLM review. */
 const AUTO_APPLY_THRESHOLD = 0.05;
 
@@ -86,14 +94,7 @@ export function computeCalibrationBias({
   // Clamp to prevent wild swings
   const suggestedAdjustment = Math.max(-0.15, Math.min(0.15, rawAdjustment));
 
-  const confidence: CalibrationConfidence =
-    n >= CONFIDENCE_THRESHOLDS.high
-      ? 'high'
-      : n >= CONFIDENCE_THRESHOLDS.medium
-        ? 'medium'
-        : n >= CONFIDENCE_THRESHOLDS.low
-          ? 'low'
-          : 'exploring';
+  const confidence: CalibrationConfidence = confidenceForSampleCount(n);
 
   return {
     modifierSource: source,

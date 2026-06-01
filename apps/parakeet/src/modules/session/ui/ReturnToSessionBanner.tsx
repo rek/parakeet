@@ -16,6 +16,19 @@ import { radii, spacing, typography } from '../../../theme';
 import { useTheme } from '../../../theme/ThemeContext';
 import { detectOvertimeEdge } from '../utils/overtime-edge';
 
+function getBlockLabel(
+  sessionMeta: {
+    block_number: number | null;
+    week_number: number | null;
+  } | null
+): string {
+  if (!sessionMeta) return '';
+  if (sessionMeta.block_number !== null) {
+    return `Block ${sessionMeta.block_number} · Week ${sessionMeta.week_number}`;
+  }
+  return `Week ${sessionMeta.week_number}`;
+}
+
 export function ReturnToSessionBanner() {
   const { colors } = useTheme();
   const sessionId = useSessionStore((s) => s.sessionId);
@@ -112,11 +125,7 @@ export function ReturnToSessionBanner() {
 
   const liftLabel = sessionMeta ? sessionLabel(sessionMeta) : 'Session';
 
-  const blockLabel = sessionMeta
-    ? sessionMeta.block_number !== null
-      ? `Block ${sessionMeta.block_number} · Week ${sessionMeta.week_number}`
-      : `Week ${sessionMeta.week_number}`
-    : '';
+  const blockLabel = getBlockLabel(sessionMeta);
 
   let restLabel = 'In progress →';
   let overtime = false;

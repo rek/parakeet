@@ -125,7 +125,7 @@ describe('computeDivergence', () => {
             },
           },
         ],
-      } as Parameters<typeof computeDivergence>[1];
+      } as unknown as Parameters<typeof computeDivergence>[1];
 
       const result = computeDivergence(
         base as Parameters<typeof computeDivergence>[0],
@@ -159,7 +159,7 @@ describe('computeDivergence', () => {
             },
           },
         ],
-      } as Parameters<typeof computeDivergence>[1];
+      } as unknown as Parameters<typeof computeDivergence>[1];
 
       const result = computeDivergence(
         base as Parameters<typeof computeDivergence>[0],
