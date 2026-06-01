@@ -1034,6 +1034,27 @@ export const EXERCISE_CATALOG: ExerciseCatalogEntry[] = [
     primaryMuscles: ['quads', 'glutes'],
     type: 'bodyweight',
   },
+  {
+    // Full-body conditioning movement: squat → plank → push-up → jump. No
+    // external load, so it tracks reps only (weight/RPE suppressed by type).
+    name: 'Burpees',
+    slug: 'burpees',
+    associatedLift: null,
+    primaryMuscles: ['quads', 'chest'],
+    type: 'bodyweight',
+    muscleContributions: [
+      { muscle: 'quads', contribution: 1.0 },
+      { muscle: 'chest', contribution: 0.75 },
+      { muscle: 'shoulders', contribution: 0.5 },
+      { muscle: 'triceps', contribution: 0.5 },
+      { muscle: 'glutes', contribution: 0.5 },
+    ],
+    repTarget: 12,
+    movementPattern: 'squat',
+    equipment: 'bodyweight',
+    isCompound: true,
+    complexityTier: 'moderate',
+  },
   // ── Cardio / Core ─────────────────────────────────────────────────────────
   {
     name: 'Row Machine',
