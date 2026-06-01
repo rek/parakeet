@@ -14,6 +14,9 @@ function getCommitHash(): string {
 
 export default ({ config }: ConfigContext): ExpoConfig => ({
   ...config,
+  // config.slug is typed optional on ConfigContext but is always supplied by
+  // app.json ("parakeet") at runtime; pin it so the return satisfies ExpoConfig.
+  slug: config.slug ?? 'parakeet',
   name: isDev ? 'Parakeet (Dev)' : 'Parakeet',
   version: pkg.version,
   android: {

@@ -119,7 +119,7 @@ function videosWithFixtures(): ManifestVideo[] {
   // Cross-reference: dashboard only lists videos that have BOTH a landmarks
   // fixture and the source video file. The first is needed for analysis;
   // the second for playback.
-  return (manifest.videos as ManifestVideo[]).filter(
+  return (manifest.videos as unknown as ManifestVideo[]).filter(
     (v) => landmarkUrlFor(v.id) != null && videoUrlFor(v.file) != null
   );
 }

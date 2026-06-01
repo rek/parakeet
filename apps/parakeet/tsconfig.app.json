@@ -5,7 +5,7 @@
     "types": ["node"],
     "composite": true
   },
-  "files": ["../../node_modules/@nx/expo/typings/svg.d.ts"],
+  "files": ["../../node_modules/@nx/expo/typings/svg.d.ts", "package.json"],
   "exclude": [
     "**/*.test.ts",
     "**/*.spec.ts",
@@ -32,7 +32,7 @@
   ],
   "references": [
     {
-      "path": "../../packages/db"
+      "path": "../../packages/db/tsconfig.lib.json"
     },
     {
       "path": "../../packages/training-engine/tsconfig.lib.json"
