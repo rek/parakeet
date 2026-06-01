@@ -86,6 +86,50 @@ function formatBuildDate(otaCreatedAt: Date | null) {
   });
 }
 
+type WearableStatusInfo = ReturnType<typeof useWearableStatus>;
+
+function wearableSubtitle(status: WearableStatusInfo): string {
+  if (!status.isAvailable) return 'Not available on this device';
+  if (!status.isPermitted) return 'Tap to connect';
+  if (status.lastSyncAt) return `Last sync ${formatTimeAgo(status.lastSyncAt)}`;
+  return 'Connected';
+}
+
+function wearableDotColor(
+  status: WearableStatusInfo,
+  colors: ColorScheme,
+): string {
+  if (!status.isAvailable) return colors.textTertiary;
+  if (status.isPermitted) return colors.success;
+  return colors.warning;
+}
+
+function otaLabelStyle(
+  status: OtaStatus,
+  styles: ReturnType<typeof buildStyles>,
+): TextStyle | undefined {
+  if (status === 'error') return styles.signOutLabel;
+  if (status === 'ready') return styles.updateReadyLabel;
+  if (status === 'up-to-date') return styles.versionLabel;
+  return undefined;
+}
+
+function otaRowOnPress(
+  status: OtaStatus,
+  applyUpdate: () => void,
+  checkForUpdate: () => void,
+): (() => void) | undefined {
+  if (
+    status === 'checking' ||
+    status === 'downloading' ||
+    status === 'restarting'
+  ) {
+    return undefined;
+  }
+  if (status === 'ready') return applyUpdate;
+  return checkForUpdate;
+}
+
 // ── Sub-components ────────────────────────────────────────────────────────────
 
 interface SectionHeaderProps {
@@ -587,13 +631,7 @@ export default function SettingsScreen() {
           <View style={{ flex: 1 }}>
             <Text style={styles.rowLabel}>Wearable</Text>
             <Text style={styles.wearableSubtitle}>
-              {!wearableStatus.isAvailable
-                ? 'Not available on this device'
-                : !wearableStatus.isPermitted
-                  ? 'Tap to connect'
-                  : wearableStatus.lastSyncAt
-                    ? `Last sync ${formatTimeAgo(wearableStatus.lastSyncAt)}`
-                    : 'Connected'}
+              {wearableSubtitle(wearableStatus)}
             </Text>
           </View>
           <View style={styles.rowRight}>
@@ -601,11 +639,7 @@ export default function SettingsScreen() {
               style={[
                 styles.wearableDot,
                 {
-                  backgroundColor: !wearableStatus.isAvailable
-                    ? colors.textTertiary
-                    : wearableStatus.isPermitted
-                      ? colors.success
-                      : colors.warning,
+                  backgroundColor: wearableDotColor(wearableStatus, colors),
                 },
               ]}
             />
@@ -765,24 +799,8 @@ export default function SettingsScreen() {
         />
         <Row
           label={otaStatusLabel(otaStatus, otaError)}
-          labelStyle={
-            otaStatus === 'error'
-              ? styles.signOutLabel
-              : otaStatus === 'ready'
-                ? styles.updateReadyLabel
-                : otaStatus === 'up-to-date'
-                  ? styles.versionLabel
-                  : undefined
-          }
-          onPress={
-            otaStatus === 'checking' ||
-            otaStatus === 'downloading' ||
-            otaStatus === 'restarting'
-              ? undefined
-              : otaStatus === 'ready'
-                ? applyUpdate
-                : checkForUpdate
-          }
+          labelStyle={otaLabelStyle(otaStatus, styles)}
+          onPress={otaRowOnPress(otaStatus, applyUpdate, checkForUpdate)}
           styles={styles}
           right={
             otaLastCheckedAt ? (

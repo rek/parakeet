@@ -282,6 +282,59 @@ export default function LiftHistoryScreen() {
 
   const chartData = buildLiftChartData(chartEntries, liftColor);
 
+  const emptyChartMessage = (): string => {
+    if (rows.length === 0) return 'No sessions logged yet.';
+    if (filteredRows.length === 0) return 'No sessions match this filter.';
+    return 'Not enough data to plot.';
+  };
+
+  const renderChart = () => {
+    if (historyLoading) {
+      return (
+        <View style={styles.chartPlaceholder}>
+          <ActivityIndicator color={colors.primary} />
+        </View>
+      );
+    }
+    if (chartData) {
+      return (
+        <View style={styles.chartCard}>
+          <LineChart
+            data={chartData}
+            width={chartWidth}
+            height={180}
+            withDots={true}
+            withShadow={false}
+            withInnerLines={true}
+            withOuterLines={false}
+            chartConfig={{
+              backgroundGradientFrom: colors.bgSurface,
+              backgroundGradientTo: colors.bgSurface,
+              color: (opacity = 1) =>
+                liftColor +
+                Math.round(Math.max(opacity, MIN_CHART_OPACITY) * 255)
+                  .toString(16)
+                  .padStart(2, '0'),
+              labelColor: () => colors.textTertiary,
+              strokeWidth: 2,
+              propsForDots: { r: '3', fill: liftColor, stroke: liftColor },
+              propsForBackgroundLines: {
+                stroke: colors.border,
+                strokeDasharray: '',
+              },
+            }}
+            style={{ borderRadius: radii.sm }}
+            formatYLabel={(v) =>
+              chartType === 'volume' ? `${Math.round(Number(v))}` : `${v}`
+            }
+            yAxisSuffix={activeChartDef.suffix}
+          />
+        </View>
+      );
+    }
+    return <Text style={styles.emptyText}>{emptyChartMessage()}</Text>;
+  };
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <ScrollView
@@ -334,52 +387,7 @@ export default function LiftHistoryScreen() {
         </View>
 
         {/* Chart */}
-        {historyLoading ? (
-          <View style={styles.chartPlaceholder}>
-            <ActivityIndicator color={colors.primary} />
-          </View>
-        ) : chartData ? (
-          <View style={styles.chartCard}>
-            <LineChart
-              data={chartData}
-              width={chartWidth}
-              height={180}
-              withDots={true}
-              withShadow={false}
-              withInnerLines={true}
-              withOuterLines={false}
-              chartConfig={{
-                backgroundGradientFrom: colors.bgSurface,
-                backgroundGradientTo: colors.bgSurface,
-                color: (opacity = 1) =>
-                  liftColor +
-                  Math.round(Math.max(opacity, MIN_CHART_OPACITY) * 255)
-                    .toString(16)
-                    .padStart(2, '0'),
-                labelColor: () => colors.textTertiary,
-                strokeWidth: 2,
-                propsForDots: { r: '3', fill: liftColor, stroke: liftColor },
-                propsForBackgroundLines: {
-                  stroke: colors.border,
-                  strokeDasharray: '',
-                },
-              }}
-              style={{ borderRadius: radii.sm }}
-              formatYLabel={(v) =>
-                chartType === 'volume' ? `${Math.round(Number(v))}` : `${v}`
-              }
-              yAxisSuffix={activeChartDef.suffix}
-            />
-          </View>
-        ) : (
-          <Text style={styles.emptyText}>
-            {rows.length === 0
-              ? 'No sessions logged yet.'
-              : filteredRows.length === 0
-                ? 'No sessions match this filter.'
-                : 'Not enough data to plot.'}
-          </Text>
-        )}
+        {renderChart()}
 
         {/* Intensity filter chips */}
         <Text style={styles.sectionHeader}>Sessions</Text>

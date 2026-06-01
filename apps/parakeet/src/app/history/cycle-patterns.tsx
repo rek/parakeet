@@ -128,14 +128,14 @@ export default function CyclePatternsScreen() {
         <BackLink onPress={() => router.back()} />
         <ScreenTitle marginBottom={spacing[5]}>Cycle Patterns</ScreenTitle>
 
-        {isLoading ? null : !hasEnoughData ? (
+        {!isLoading && !hasEnoughData && (
           <View style={styles.noticeCard}>
             <Text style={styles.noticeText}>
               Keep tracking — patterns become visible after 2–3 cycles (
               {phasedSessions.length} phase-tagged sessions so far)
             </Text>
           </View>
-        ) : null}
+        )}
 
         {/* RPE by phase */}
         <Text style={styles.sectionHeader}>Average RPE by Phase</Text>

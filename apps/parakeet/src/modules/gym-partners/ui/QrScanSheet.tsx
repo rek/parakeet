@@ -99,6 +99,76 @@ export function QrScanSheet({
     [handleCodeScanned]
   );
 
+  const renderContent = () => {
+    if (!hasPermission) {
+      return (
+        <View style={styles.center}>
+          <Text style={styles.hint}>Camera permission required</Text>
+          <TouchableOpacity
+            onPress={requestPermission}
+            style={styles.actionButton}
+            activeOpacity={0.7}
+          >
+            <Text style={styles.actionText}>Grant Permission</Text>
+          </TouchableOpacity>
+        </View>
+      );
+    }
+    if (!device) {
+      return (
+        <View style={styles.center}>
+          <Text style={styles.hint}>No camera available</Text>
+        </View>
+      );
+    }
+    if (state.type === 'scanning') {
+      return (
+        <View style={styles.cameraContainer}>
+          <Camera
+            device={device}
+            isActive={visible}
+            style={StyleSheet.absoluteFill}
+            codeScanner={codeScanner}
+          />
+          <View style={styles.overlay}>
+            <View style={styles.crosshair} />
+          </View>
+          <Text style={styles.scanHint}>Point at your partner's QR code</Text>
+        </View>
+      );
+    }
+    if (state.type === 'claiming') {
+      return (
+        <View style={styles.center}>
+          <ActivityIndicator color={colors.primary} />
+          <Text style={styles.hint}>Sending request...</Text>
+        </View>
+      );
+    }
+    if (state.type === 'success') {
+      return (
+        <View style={styles.center}>
+          <Text style={styles.successIcon}>{'✓'}</Text>
+          <Text style={styles.successText}>
+            Request sent to {state.inviterName ?? 'partner'}
+          </Text>
+        </View>
+      );
+    }
+    return (
+      <View style={styles.center}>
+        <Text style={styles.error}>{state.message}</Text>
+        <TouchableOpacity
+          onPress={resetScanner}
+          style={styles.actionButton}
+          activeOpacity={0.7}
+        >
+          <Text style={styles.actionText}>Try Again</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  };
+
   return (
     <Sheet
       visible={visible}
@@ -106,60 +176,7 @@ export function QrScanSheet({
       title="Scan Partner's QR"
       maxHeight="75%"
     >
-      <View style={styles.content}>
-        {!hasPermission ? (
-          <View style={styles.center}>
-            <Text style={styles.hint}>Camera permission required</Text>
-            <TouchableOpacity
-              onPress={requestPermission}
-              style={styles.actionButton}
-              activeOpacity={0.7}
-            >
-              <Text style={styles.actionText}>Grant Permission</Text>
-            </TouchableOpacity>
-          </View>
-        ) : !device ? (
-          <View style={styles.center}>
-            <Text style={styles.hint}>No camera available</Text>
-          </View>
-        ) : state.type === 'scanning' ? (
-          <View style={styles.cameraContainer}>
-            <Camera
-              device={device}
-              isActive={visible}
-              style={StyleSheet.absoluteFill}
-              codeScanner={codeScanner}
-            />
-            <View style={styles.overlay}>
-              <View style={styles.crosshair} />
-            </View>
-            <Text style={styles.scanHint}>Point at your partner's QR code</Text>
-          </View>
-        ) : state.type === 'claiming' ? (
-          <View style={styles.center}>
-            <ActivityIndicator color={colors.primary} />
-            <Text style={styles.hint}>Sending request...</Text>
-          </View>
-        ) : state.type === 'success' ? (
-          <View style={styles.center}>
-            <Text style={styles.successIcon}>{'✓'}</Text>
-            <Text style={styles.successText}>
-              Request sent to {state.inviterName ?? 'partner'}
-            </Text>
-          </View>
-        ) : (
-          <View style={styles.center}>
-            <Text style={styles.error}>{state.message}</Text>
-            <TouchableOpacity
-              onPress={resetScanner}
-              style={styles.actionButton}
-              activeOpacity={0.7}
-            >
-              <Text style={styles.actionText}>Try Again</Text>
-            </TouchableOpacity>
-          </View>
-        )}
-      </View>
+      <View style={styles.content}>{renderContent()}</View>
     </Sheet>
   );
 }

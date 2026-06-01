@@ -22,6 +22,12 @@ function confidenceBadge(c: string) {
   return <Badge label={c} variant="muted" />;
 }
 
+function adjustmentColor(adjustment: number) {
+  if (adjustment > 1) return theme.color.green;
+  if (adjustment < 1) return theme.color.red;
+  return theme.color.textDim;
+}
+
 function fmt(ts: string | null) {
   if (ts == null) return '—';
   return new Date(ts).toLocaleString('en-GB', {
@@ -89,12 +95,7 @@ export function ModifierCalibrations() {
           </span>
           <span
             style={{
-              color:
-                r.adjustment > 1
-                  ? theme.color.green
-                  : r.adjustment < 1
-                    ? theme.color.red
-                    : theme.color.textDim,
+              color: adjustmentColor(r.adjustment),
             }}
           >
             ×{r.adjustment.toFixed(2)}

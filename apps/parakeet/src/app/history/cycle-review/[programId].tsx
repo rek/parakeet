@@ -428,11 +428,20 @@ export default function CycleReviewScreen() {
     const pendingTitle = reviewPending
       ? 'Review generation failed'
       : 'Generating your review…';
-    const pendingSubtitle = reviewPending
-      ? 'Tap to retry — previous attempt did not complete.'
-      : triggerError instanceof Error
-        ? `Generation failed: ${triggerError.message}`
-        : 'Usually takes under 30 seconds. Checking automatically.';
+    let pendingSubtitle: string;
+    if (reviewPending) {
+      pendingSubtitle = 'Tap to retry — previous attempt did not complete.';
+    } else if (triggerError instanceof Error) {
+      pendingSubtitle = `Generation failed: ${triggerError.message}`;
+    } else {
+      pendingSubtitle = 'Usually takes under 30 seconds. Checking automatically.';
+    }
+
+    const generateButtonLabel = (): string => {
+      if (isTriggeringReview) return 'Generating…';
+      if (reviewPending) return 'Retry';
+      return 'Generate Now';
+    };
 
     return (
       <SafeAreaView style={styles.safeArea}>
@@ -463,7 +472,7 @@ export default function CycleReviewScreen() {
             activeOpacity={0.8}
           >
             <Text style={styles.generateButtonText}>
-              {isTriggeringReview ? 'Generating…' : reviewPending ? 'Retry' : 'Generate Now'}
+              {generateButtonLabel()}
             </Text>
           </TouchableOpacity>
         </View>

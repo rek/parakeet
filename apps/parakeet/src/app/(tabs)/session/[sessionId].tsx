@@ -667,7 +667,10 @@ export default function SessionScreen() {
   }
 
   function handleAddAdHocSet(exercise: string) {
-    addAdHocSet(exercise, undefined, getExerciseType(exercise));
+    // Pass no type so the store reuses the existing sets' stored exercise_type
+    // (a user-typed "no extra load" custom keeps bodyweight, not catalog-default
+    // weighted). Falls back to catalog only when no prior set carries a type.
+    addAdHocSet(exercise, undefined, undefined);
   }
 
   function handleConfirmAddWorkout(template: WorkoutTemplateWithItems) {
@@ -749,6 +752,15 @@ export default function SessionScreen() {
   const liftHeader = sessionMeta ? sessionLabel(sessionMeta) : '';
   const blockWeek = buildBlockWeekLabel(sessionMeta);
   const intensity = buildIntensityLabel(sessionMeta);
+
+  // Name shown in the post-rest overlay: the pending aux exercise, else the
+  // session's primary lift.
+  let postRestExerciseName: string | undefined;
+  if (postRestState?.pendingAuxExercise) {
+    postRestExerciseName = formatExerciseName(postRestState.pendingAuxExercise);
+  } else if (sessionMeta?.primary_lift) {
+    postRestExerciseName = formatExerciseName(sessionMeta.primary_lift);
+  }
 
   // LLM suggestion is only relevant for main set timers
   const activeLlmSuggestion =
@@ -1158,7 +1170,9 @@ export default function SessionScreen() {
                           reps={actualSet.reps_completed}
                           rpeValue={actualSet.rpe_actual}
                           isCompleted={actualSet.is_completed}
-                          exerciseType={getExerciseType(exercise)}
+                          exerciseType={
+                            actualSet.exercise_type ?? getExerciseType(exercise)
+                          }
                           onRpePress={() =>
                             requestAuxRpe(exercise, actualSet.set_number)
                           }
@@ -1393,13 +1407,7 @@ export default function SessionScreen() {
               plannedReps={postRestState.plannedReps}
               plannedWeightKg={postRestWeightKg}
               nextSetNumber={postRestState.nextSetNumber}
-              exerciseName={
-                postRestState.pendingAuxExercise
-                  ? formatExerciseName(postRestState.pendingAuxExercise)
-                  : sessionMeta?.primary_lift
-                    ? formatExerciseName(sessionMeta.primary_lift)
-                    : undefined
-              }
+              exerciseName={postRestExerciseName}
               onLiftComplete={handleLiftCompleteWithVideo}
               onLiftFailed={handleLiftFailedWithVideo}
               onReset15s={handlePostRestReset}

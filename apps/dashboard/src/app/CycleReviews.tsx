@@ -18,6 +18,18 @@ function fmt(ts: string) {
   });
 }
 
+function priorityColor(priority: string) {
+  if (priority === 'high') return 'var(--red)';
+  if (priority === 'medium') return 'var(--accent)';
+  return 'var(--text-dim)';
+}
+
+function priorityBackground(priority: string) {
+  if (priority === 'high') return 'var(--red-dim)';
+  if (priority === 'medium') return 'var(--accent-dim)';
+  return theme.bg.surfaceOverlay;
+}
+
 interface LLMResponse {
   overallAssessment?: string;
   progressByLift?: Record<string, { rating?: string; narrative?: string }>;
@@ -402,18 +414,8 @@ function ReviewCard({ review }: { review: CycleReview }) {
                             letterSpacing: '0.06em',
                             padding: '1px 5px',
                             borderRadius: 3,
-                            color:
-                              s.priority === 'high'
-                                ? 'var(--red)'
-                                : s.priority === 'medium'
-                                  ? 'var(--accent)'
-                                  : 'var(--text-dim)',
-                            background:
-                              s.priority === 'high'
-                                ? 'var(--red-dim)'
-                                : s.priority === 'medium'
-                                  ? 'var(--accent-dim)'
-                                  : theme.bg.surfaceOverlay,
+                            color: priorityColor(s.priority),
+                            background: priorityBackground(s.priority),
                             fontWeight: 700,
                           }}
                         >

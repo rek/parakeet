@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import { useEffect, useState } from 'react';
 
 import { Badge } from '../components/Badge';
@@ -227,6 +228,42 @@ export function ChallengeReviews() {
   const flagRate =
     reviews.length > 0 ? Math.round((flagCount / reviews.length) * 100) : null;
 
+  let body: ReactNode;
+  if (loading) {
+    body = (
+      <div
+        style={{
+          color: theme.color.textMuted,
+          fontFamily: theme.font.mono,
+          fontSize: 12,
+        }}
+      >
+        Loading...
+      </div>
+    );
+  } else if (reviews.length === 0) {
+    body = (
+      <div
+        style={{
+          color: theme.color.textMuted,
+          fontFamily: theme.font.mono,
+          fontSize: 12,
+        }}
+      >
+        No challenge reviews found. Run a session using the hybrid or LLM
+        strategy to generate one.
+      </div>
+    );
+  } else {
+    body = (
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+        {reviews.map((review) => (
+          <LogCard key={review.id} review={review} />
+        ))}
+      </div>
+    );
+  }
+
   return (
     <div>
       {/* Page header */}
@@ -360,34 +397,7 @@ export function ChallengeReviews() {
       )}
 
       {/* Content */}
-      {loading ? (
-        <div
-          style={{
-            color: theme.color.textMuted,
-            fontFamily: theme.font.mono,
-            fontSize: 12,
-          }}
-        >
-          Loading...
-        </div>
-      ) : reviews.length === 0 ? (
-        <div
-          style={{
-            color: theme.color.textMuted,
-            fontFamily: theme.font.mono,
-            fontSize: 12,
-          }}
-        >
-          No challenge reviews found. Run a session using the hybrid or LLM
-          strategy to generate one.
-        </div>
-      ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-          {reviews.map((review) => (
-            <LogCard key={review.id} review={review} />
-          ))}
-        </div>
-      )}
+      {body}
     </div>
   );
 }

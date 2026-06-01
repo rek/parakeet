@@ -29,6 +29,12 @@ export async function getPerformanceByLift(
   return fetchPerformanceByLift(userId, lift, fromDate);
 }
 
+function classifyTrend(delta: number): PerformanceTrend['trend'] {
+  if (delta > 2.5) return 'improving';
+  if (delta < -2.5) return 'declining';
+  return 'stable';
+}
+
 export async function getPerformanceTrends(
   userId: string
 ): Promise<PerformanceTrend[]> {
@@ -71,8 +77,7 @@ function computeTrends(rows: RawLogRow[]): PerformanceTrend[] {
     const older = average(oneRmSeries.slice(-5));
     const delta = recent - older;
 
-    const trend: PerformanceTrend['trend'] =
-      delta > 2.5 ? 'improving' : delta < -2.5 ? 'declining' : 'stable';
+    const trend = classifyTrend(delta);
 
     const validCompletions = liftRows
       .map((r) => r.completion_pct)

@@ -18,6 +18,13 @@ function fmtDate(d: string) {
   });
 }
 
+function deltaColor(showDelta: boolean, delta: number | undefined) {
+  if (!showDelta || delta == null) return theme.color.textMuted;
+  if (delta > 0) return theme.color.accent;
+  if (delta < 0) return theme.color.green;
+  return theme.color.textDim;
+}
+
 export function BodyweightEntries() {
   const { rows, loading, error } = useSupabaseRows<BwRow>((s) =>
     s
@@ -98,14 +105,7 @@ export function BodyweightEntries() {
             </span>
             <span
               style={{
-                color:
-                  !showDelta || delta == null
-                    ? theme.color.textMuted
-                    : delta > 0
-                      ? theme.color.accent
-                      : delta < 0
-                        ? theme.color.green
-                        : theme.color.textDim,
+                color: deltaColor(showDelta, delta),
               }}
             >
               {showDelta && delta != null

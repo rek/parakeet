@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import type { ReactNode } from 'react';
 import {
   ActivityIndicator,
   Animated,
@@ -457,6 +458,25 @@ export default function AuxBlockAssignmentsScreen() {
     [activeProgram]
   );
 
+  // Empty/loading placeholder shown before block-assignment content is ready.
+  let earlyState: ReactNode = null;
+  if (!activeProgram && !isLoading) {
+    earlyState = (
+      <View style={styles.emptyState}>
+        <Text style={styles.emptyStateText}>No active program.</Text>
+        <Text style={styles.emptyStateSubtext}>
+          Start a program to configure block assignments.
+        </Text>
+      </View>
+    );
+  } else if (isLoading) {
+    earlyState = (
+      <View style={styles.loading}>
+        <ActivityIndicator color={colors.primary} size="large" />
+      </View>
+    );
+  }
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.header}>
@@ -467,18 +487,7 @@ export default function AuxBlockAssignmentsScreen() {
         </Text>
       </View>
 
-      {!activeProgram && !isLoading ? (
-        <View style={styles.emptyState}>
-          <Text style={styles.emptyStateText}>No active program.</Text>
-          <Text style={styles.emptyStateSubtext}>
-            Start a program to configure block assignments.
-          </Text>
-        </View>
-      ) : isLoading ? (
-        <View style={styles.loading}>
-          <ActivityIndicator color={colors.primary} size="large" />
-        </View>
-      ) : (
+      {earlyState ?? (
         <>
           {/* Block tabs */}
           <View style={styles.tabs}>

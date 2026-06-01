@@ -44,6 +44,14 @@ export function subscribeToCycleReviewInserts(
   };
 }
 
+function normalizeGenerationStatus(
+  raw: unknown
+): 'pending' | 'complete' | 'error' {
+  if (raw === 'pending') return 'pending';
+  if (raw === 'error') return 'error';
+  return 'complete';
+}
+
 export async function fetchCycleReviewByProgram(
   programId: string,
   userId: string
@@ -61,9 +69,7 @@ export async function fetchCycleReviewByProgram(
 
   if (error) throw error;
   if (!data) return null;
-  const raw = data.generation_status;
-  const status: 'pending' | 'complete' | 'error' =
-    raw === 'pending' ? 'pending' : raw === 'error' ? 'error' : 'complete';
+  const status = normalizeGenerationStatus(data.generation_status);
   return {
     status,
     review: data.llm_response ? fromJson<CycleReview>(data.llm_response) : null,

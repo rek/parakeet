@@ -1,4 +1,4 @@
-import { MUSCLE_GROUPS, MuscleGroup } from '@parakeet/training-engine';
+import { MuscleGroup } from '@parakeet/training-engine';
 
 import { InvariantViolation, SimulationLog } from '../types';
 
@@ -21,52 +21,42 @@ export function checkMuscleCoverage(log: SimulationLog): InvariantViolation[] {
     blockSessions.set(blockNum, existing);
   }
 
+  // Muscles that are typically trained directly by the big-three + standard
+  // aux rotation; obscure muscles are excluded to keep this a loose check.
+  const coreMuscles: MuscleGroup[] = [
+    'quads',
+    'hamstrings',
+    'chest',
+    'upper_back',
+    'triceps',
+    'shoulders',
+  ];
+
   for (const [blockNum, sessions] of blockSessions) {
-    // Collect all muscles hit by non-skipped auxiliary work in this block
+    if (sessions.length === 0) continue;
+
+    // Collect every muscle that received any volume in any session of this
+    // block. weeklyVolumeSnapshot resets each training week, so coverage must
+    // be accumulated across the whole block rather than read from the final
+    // session alone — otherwise a block ending on a fresh-week lower-body day
+    // would falsely report the upper-body muscles as uncovered.
     const musclesHit = new Set<string>();
-
     for (const session of sessions) {
-      // Main lift muscles always count
-      const mainLiftVolume = session.weeklyVolumeSnapshot;
-      for (const [muscle, vol] of Object.entries(mainLiftVolume)) {
-        if (vol > 0) musclesHit.add(muscle);
-      }
-
-      // Aux exercise muscles
-      for (const aux of session.auxiliaryWork) {
-        if (aux.skipped) continue;
-        // We don't have direct muscle mapping here, but the exercise
-        // contributes volume tracked in weeklyVolumeSnapshot
+      for (const [muscle, vol] of Object.entries(session.weeklyVolumeSnapshot)) {
+        if (vol && vol > 0) musclesHit.add(muscle);
       }
     }
 
-    // Check which muscles with MEV > 0 got zero volume in this block
-    const lastSession = sessions[sessions.length - 1];
-    if (!lastSession) continue;
-
-    for (const muscle of MUSCLE_GROUPS) {
-      const finalVol = lastSession.weeklyVolumeSnapshot[muscle as MuscleGroup];
-      // Only flag if a muscle got literally zero volume across the entire block
-      // This is a very loose check — tighter checks belong in volume_safety
-      if (finalVol === undefined || finalVol === 0) {
-        // Only warn for muscles that are typically trained (not obscure ones)
-        const coreMuscles: MuscleGroup[] = [
-          'quads',
-          'hamstrings',
-          'chest',
-          'upper_back',
-          'triceps',
-          'shoulders',
-        ];
-        if (coreMuscles.includes(muscle as MuscleGroup)) {
-          violations.push({
-            category: 'auxiliary_balance',
-            rule: 'muscle_zero_coverage',
-            severity: 'warning',
-            message: `${muscle} received zero volume in block ${blockNum}`,
-            weekNumber: sessions[0].weekNumber,
-          });
-        }
+    // Flag core muscles that got zero volume across the entire block.
+    for (const muscle of coreMuscles) {
+      if (!musclesHit.has(muscle)) {
+        violations.push({
+          category: 'auxiliary_balance',
+          rule: 'muscle_zero_coverage',
+          severity: 'warning',
+          message: `${muscle} received zero volume in block ${blockNum}`,
+          weekNumber: sessions[0].weekNumber,
+        });
       }
     }
   }

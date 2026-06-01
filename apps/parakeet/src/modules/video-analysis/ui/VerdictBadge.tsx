@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
-import type { RepVerdict } from '@parakeet/shared-types';
+import type { CriterionResult, RepVerdict } from '@parakeet/shared-types';
 
 import { radii, spacing, typography } from '../../../theme';
 import type { ColorScheme } from '../../../theme';
@@ -16,6 +16,20 @@ function verdictColor(verdict: RepVerdict['verdict'], colors: ColorScheme) {
   if (verdict === 'white_light') return colors.success;
   if (verdict === 'borderline') return colors.warning;
   return colors.danger;
+}
+
+function criterionVerdictKey(
+  verdict: CriterionResult['verdict']
+): RepVerdict['verdict'] {
+  if (verdict === 'pass') return 'white_light';
+  if (verdict === 'fail') return 'red_light';
+  return 'borderline';
+}
+
+function criterionSymbol(verdict: CriterionResult['verdict']) {
+  if (verdict === 'pass') return '\u2713';
+  if (verdict === 'fail') return '\u2717';
+  return '~';
 }
 
 /**
@@ -61,21 +75,13 @@ export function VerdictBadge({
                   styles.criterionSymbol,
                   {
                     color: verdictColor(
-                      c.verdict === 'pass'
-                        ? 'white_light'
-                        : c.verdict === 'fail'
-                          ? 'red_light'
-                          : 'borderline',
+                      criterionVerdictKey(c.verdict),
                       colors
                     ),
                   },
                 ]}
               >
-                {c.verdict === 'pass'
-                  ? '\u2713'
-                  : c.verdict === 'fail'
-                    ? '\u2717'
-                    : '~'}
+                {criterionSymbol(c.verdict)}
               </Text>
               <Text style={[styles.criterionMessage, { color: colors.text }]}>
                 {c.message}

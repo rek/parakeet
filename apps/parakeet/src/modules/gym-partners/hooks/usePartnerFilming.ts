@@ -12,6 +12,14 @@ type FilmingState =
   | { type: 'done' }
   | { type: 'error'; message: string };
 
+function filmingErrorMessage(err: unknown): string {
+  if (err instanceof Error && err.message.includes('partner')) {
+    return 'Partnership no longer active';
+  }
+  if (err instanceof Error) return err.message;
+  return 'Failed to process video';
+}
+
 export function usePartnerFilming({
   partnerId,
   sessionId,
@@ -54,13 +62,7 @@ export function usePartnerFilming({
         return true;
       } catch (err) {
         captureException(err);
-        const message =
-          err instanceof Error && err.message.includes('partner')
-            ? 'Partnership no longer active'
-            : err instanceof Error
-              ? err.message
-              : 'Failed to process video';
-        setState({ type: 'error', message });
+        setState({ type: 'error', message: filmingErrorMessage(err) });
         return false;
       }
     },

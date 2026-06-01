@@ -318,19 +318,27 @@ interface PriorityBadgeProps {
   colors: ColorScheme;
 }
 
+function priorityColor(
+  priority: DeveloperSuggestion['priority'],
+  colors: ColorScheme
+): string {
+  if (priority === 'high') return colors.danger;
+  if (priority === 'medium') return colors.warning;
+  return colors.textTertiary;
+}
+
+function priorityBg(
+  priority: DeveloperSuggestion['priority'],
+  colors: ColorScheme
+): string {
+  if (priority === 'high') return colors.dangerMuted;
+  if (priority === 'medium') return colors.warningMuted;
+  return colors.bgMuted;
+}
+
 function PriorityBadge({ priority, styles, colors }: PriorityBadgeProps) {
-  const color =
-    priority === 'high'
-      ? colors.danger
-      : priority === 'medium'
-        ? colors.warning
-        : colors.textTertiary;
-  const bg =
-    priority === 'high'
-      ? colors.dangerMuted
-      : priority === 'medium'
-        ? colors.warningMuted
-        : colors.bgMuted;
+  const color = priorityColor(priority, colors);
+  const bg = priorityBg(priority, colors);
   return (
     <View style={[styles.priorityBadge, { backgroundColor: bg }]}>
       <Text style={[styles.priorityBadgeText, { color }]}>

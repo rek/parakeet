@@ -382,22 +382,24 @@ export function WearableSettings() {
     }
   }
 
-  const dotColor = !status.isAvailable
-    ? status.availability === 'provider_update_required'
-      ? colors.warning
-      : colors.textTertiary
-    : status.isPermitted
-      ? colors.success
-      : colors.warning;
+  let dotColor: string;
+  if (!status.isAvailable) {
+    dotColor =
+      status.availability === 'provider_update_required'
+        ? colors.warning
+        : colors.textTertiary;
+  } else {
+    dotColor = status.isPermitted ? colors.success : colors.warning;
+  }
 
-  const statusText =
-    status.availability === 'provider_update_required'
-      ? 'Health Connect needs to be installed or updated'
-      : !status.isAvailable
-        ? 'Not available on this device'
-        : status.isPermitted
-          ? 'Connected'
-          : 'Permissions needed';
+  let statusText: string;
+  if (status.availability === 'provider_update_required') {
+    statusText = 'Health Connect needs to be installed or updated';
+  } else if (!status.isAvailable) {
+    statusText = 'Not available on this device';
+  } else {
+    statusText = status.isPermitted ? 'Connected' : 'Permissions needed';
+  }
 
   return (
     <ScrollView

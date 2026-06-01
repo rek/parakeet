@@ -57,6 +57,18 @@ function shiftIso(iso: string, days: number): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 }
 
+function saveButtonLabel({
+  existingForDate,
+  isToday,
+}: {
+  existingForDate: unknown;
+  isToday: boolean;
+}): string {
+  if (existingForDate) return 'Update entry';
+  if (isToday) return 'Save today';
+  return 'Save entry';
+}
+
 const LIMBS: Limb[] = ['thigh_mid', 'calf_max', 'ankle', 'upper_arm', 'wrist'];
 
 const LIMB_ROW_KEYS: Record<
@@ -377,7 +389,7 @@ export function TrackingScreen() {
             <ActivityIndicator color={colors.textInverse} />
           ) : (
             <Text style={styles.saveButtonText}>
-              {existingForDate ? 'Update entry' : isToday ? 'Save today' : 'Save entry'}
+              {saveButtonLabel({ existingForDate, isToday })}
             </Text>
           )}
         </TouchableOpacity>
@@ -467,6 +479,29 @@ function SideInput({
   const currentMm = parseInProgressCmToMm(value);
   const delta = currentMm != null && prior ? currentMm - prior.value : null;
 
+  const renderDelta = () => {
+    if (delta != null && delta !== 0) {
+      return (
+        <Text
+          style={[
+            styles.deltaTag,
+            delta > 0 ? styles.deltaTagUp : styles.deltaTagDown,
+          ]}
+        >
+          {delta > 0 ? '▲' : '▼'} {(Math.abs(delta) / 10).toFixed(1)} cm
+        </Text>
+      );
+    }
+    if (prior) {
+      return (
+        <Text style={styles.deltaTagMuted}>
+          prev {mmToCmString(prior.value)}
+        </Text>
+      );
+    }
+    return <Text style={styles.deltaTagMuted}>no prior</Text>;
+  };
+
   return (
     <View style={styles.sideInputWrap}>
       <View style={styles.sideInputRow}>
@@ -481,22 +516,7 @@ function SideInput({
           returnKeyType="done"
         />
       </View>
-      {delta != null && delta !== 0 ? (
-        <Text
-          style={[
-            styles.deltaTag,
-            delta > 0 ? styles.deltaTagUp : styles.deltaTagDown,
-          ]}
-        >
-          {delta > 0 ? '▲' : '▼'} {(Math.abs(delta) / 10).toFixed(1)} cm
-        </Text>
-      ) : prior ? (
-        <Text style={styles.deltaTagMuted}>
-          prev {mmToCmString(prior.value)}
-        </Text>
-      ) : (
-        <Text style={styles.deltaTagMuted}>no prior</Text>
-      )}
+      {renderDelta()}
     </View>
   );
 }

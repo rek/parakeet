@@ -341,6 +341,22 @@ export default function HistoryScreen() {
     [colors]
   );
 
+  // Loading spinner or empty-state text shown when a chart has no data yet.
+  const renderChartFallback = (loading: boolean, emptyText: string) => {
+    if (loading) {
+      return (
+        <View style={[styles.chartLoading]}>
+          <ActivityIndicator size="small" color={colors.primary} />
+        </View>
+      );
+    }
+    return (
+      <Text style={[styles.emptyText, { marginBottom: spacing[8] }]}>
+        {emptyText}
+      </Text>
+    );
+  };
+
   if (isLoading) {
     return (
       <SafeAreaView style={styles.safeArea}>
@@ -587,14 +603,8 @@ export default function HistoryScreen() {
               ))}
             </View>
           </View>
-        ) : volumeLoading ? (
-          <View style={[styles.chartLoading]}>
-            <ActivityIndicator size="small" color={colors.primary} />
-          </View>
         ) : (
-          <Text style={[styles.emptyText, { marginBottom: spacing[8] }]}>
-            No volume data yet.
-          </Text>
+          renderChartFallback(volumeLoading, 'No volume data yet.')
         )}
 
         {/* Weekly volume chart (kg) */}
@@ -642,14 +652,8 @@ export default function HistoryScreen() {
               ))}
             </View>
           </View>
-        ) : volumeKgLoading ? (
-          <View style={[styles.chartLoading]}>
-            <ActivityIndicator size="small" color={colors.primary} />
-          </View>
         ) : (
-          <Text style={[styles.emptyText, { marginBottom: spacing[8] }]}>
-            No volume data yet.
-          </Text>
+          renderChartFallback(volumeKgLoading, 'No volume data yet.')
         )}
 
         {/* Weekly heaviest lift (kg) */}
@@ -697,14 +701,8 @@ export default function HistoryScreen() {
               ))}
             </View>
           </View>
-        ) : heaviestLoading ? (
-          <View style={[styles.chartLoading]}>
-            <ActivityIndicator size="small" color={colors.primary} />
-          </View>
         ) : (
-          <Text style={[styles.emptyText, { marginBottom: spacing[8] }]}>
-            No heaviest-lift data yet.
-          </Text>
+          renderChartFallback(heaviestLoading, 'No heaviest-lift data yet.')
         )}
 
         {/* Previous programs */}
