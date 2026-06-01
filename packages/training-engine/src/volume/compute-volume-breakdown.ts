@@ -6,7 +6,7 @@ import {
 } from '../types';
 import { rpeSetMultiplier } from './rpe-scaler';
 
-interface ExerciseVolumeContribution {
+export interface ExerciseVolumeContribution {
   source: string;
   rawSets: number;
   effectiveSets: number;
@@ -14,7 +14,7 @@ interface ExerciseVolumeContribution {
   volumeAdded: number;
 }
 
-interface MuscleVolumeBreakdown {
+export interface MuscleVolumeBreakdown {
   totalVolume: number;
   contributions: ExerciseVolumeContribution[];
 }
