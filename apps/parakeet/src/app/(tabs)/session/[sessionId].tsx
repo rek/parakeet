@@ -13,7 +13,11 @@ import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '@modules/auth';
 import { useFeatureEnabled } from '@modules/feature-flags';
 import { LiftHistorySheet, useLiftHistory } from '@modules/history';
-import { computeDisplayWeights, useChallengeReview } from '@modules/jit';
+import {
+  computeDisplayWeights,
+  revertSessionToFormula,
+  useChallengeReview,
+} from '@modules/jit';
 import { getProfile } from '@modules/profile';
 import { useRehabCapForLift } from '@modules/rehab-mode';
 import type { WorkoutTemplateWithItems } from '@modules/workout-templates';
@@ -71,7 +75,13 @@ import {
   usePostRestVideoCapture,
 } from '@modules/video-analysis';
 import type { Lift, MuscleGroup } from '@parakeet/shared-types';
-import { plateIncrementKg, type ExerciseType } from '@parakeet/training-engine';
+import {
+  plateIncrementKg,
+  type AuxiliaryWork,
+  type ExerciseType,
+  type PrescriptionTrace,
+} from '@parakeet/training-engine';
+import { toJson } from '@platform/supabase';
 import { useNetworkStatus } from '@platform/network';
 import { captureException } from '@platform/utils/captureException';
 import type { PlateKg } from '@shared/constants/plates';
@@ -288,6 +298,34 @@ function buildStyles(colors: ColorScheme) {
       fontWeight: '600',
       color: colors.warning,
     },
+    revertBanner: {
+      marginHorizontal: 16,
+      marginBottom: 8,
+      paddingHorizontal: 12,
+      paddingVertical: 10,
+      borderRadius: 8,
+      backgroundColor: colors.warningMuted,
+      borderWidth: 1,
+      borderColor: colors.warning,
+      gap: 8,
+    },
+    revertBannerText: {
+      fontSize: 13,
+      fontWeight: '600',
+      color: colors.warning,
+    },
+    revertButton: {
+      alignSelf: 'flex-start' as const,
+      paddingHorizontal: 12,
+      paddingVertical: 6,
+      borderRadius: 6,
+      backgroundColor: colors.primary,
+    },
+    revertButtonText: {
+      fontSize: 13,
+      fontWeight: '700',
+      color: colors.textInverse,
+    },
     challengeBanner: {
       marginHorizontal: 16,
       marginBottom: 8,
@@ -405,13 +443,17 @@ export default function SessionScreen() {
   const cachedTrace = useSessionStore((s) => s.cachedPrescriptionTrace);
   const formattedTrace = useMemo(() => {
     if (!cachedTrace) return null;
-    try {
-      const raw = parsePrescriptionTrace(JSON.parse(cachedTrace));
-      return raw ? formatPrescriptionTrace(raw) : null;
-    } catch {
-      return null;
-    }
+    const raw = parsePrescriptionTrace(cachedTrace);
+    return raw ? formatPrescriptionTrace(raw) : null;
   }, [cachedTrace]);
+
+  // Revert-to-formula: offered only when the AI diverged from the formula
+  // (formulaBaseline present) and nothing has been logged yet — reverting
+  // re-inits the prescription, so it must not clobber completed sets.
+  const canRevertToFormula =
+    traceEnabled &&
+    cachedTrace?.formulaBaseline != null &&
+    !actualSets.some((s) => s.is_completed);
 
   // Auto-open history sheet when banner navigates back with openHistory param
   useEffect(() => {
@@ -557,6 +599,7 @@ export default function SessionScreen() {
     warmupSets: warmupSetsState,
     adHocExercises,
     setAdHocExercises,
+    setWarmupSets: setWarmupSetsState,
   } = useSessionBootstrap({
     sessionId,
     jitDataParam: jitData,
@@ -567,6 +610,67 @@ export default function SessionScreen() {
     restRecommendationsRef: restRecommendations,
     llmRestSuggestionRef: llmRestSuggestion,
   });
+
+  const handleRevertToFormula = useCallback(() => {
+    const baseline = cachedTrace?.formulaBaseline;
+    if (!baseline || !sessionId || !cachedTrace) return;
+    Alert.alert(
+      'Use formula prescription?',
+      'Replace the AI-adjusted sets with the standard formula prescription for this session?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Revert',
+          onPress: () => {
+            void (async () => {
+              try {
+                const revertedTrace: PrescriptionTrace = {
+                  ...cachedTrace,
+                  strategy: 'formula',
+                  rationale: baseline.rationale,
+                  formulaBaseline: undefined,
+                };
+                await revertSessionToFormula(sessionId, {
+                  planned_sets: toJson(baseline.mainLiftSets),
+                  jit_output_trace: toJson(revertedTrace),
+                });
+                // Swap the live prescription in place (no remount): main sets +
+                // aux from the formula baseline, warmup regenerated from the
+                // restored weight, and the trace so the explainer/banner update.
+                const store = useSessionStore.getState();
+                store.initSession(sessionId, baseline.mainLiftSets);
+                const formulaAux = baseline.auxiliaryWork as AuxiliaryWork[];
+                store.initAuxiliaryWork(formulaAux);
+                // initSession does NOT reset auxiliarySets (the loggable aux
+                // rows), so mirror the bootstrap and replace them too — called
+                // unconditionally (even with an empty list) to clear the stale
+                // LLM-prescribed rows. Without this the lifter would log against
+                // the AI's auxiliaries despite reverting the plan.
+                store.initAuxiliary(
+                  formulaAux
+                    .filter((a) => !a.skipped)
+                    .map((a) => ({
+                      exercise: a.exercise,
+                      sets: a.sets,
+                      exerciseType: a.exerciseType,
+                    }))
+                );
+                store.setCachedPrescriptionTrace(revertedTrace);
+                setWarmupSetsState(baseline.warmupSets);
+                restRecommendations.current = baseline.restRecommendations;
+              } catch (err) {
+                captureException(err);
+                Alert.alert(
+                  'Revert failed',
+                  'Could not revert to the formula prescription — please try again.'
+                );
+              }
+            })();
+          },
+        },
+      ]
+    );
+  }, [cachedTrace, sessionId, setWarmupSetsState, restRecommendations]);
 
   // ── Focus-managed timer interval ───────────────────────────────────────────
 
@@ -899,6 +1003,24 @@ export default function SessionScreen() {
                   </Text>
                 </View>
               )}
+
+            {/* Revert-to-formula: the AI cut this session below the formula
+                baseline. Offered until the first set is logged. */}
+            {canRevertToFormula && (
+              <View style={styles.revertBanner}>
+                <Text style={styles.revertBannerText}>
+                  The AI coach reduced this session below the standard formula
+                  prescription.
+                </Text>
+                <TouchableOpacity
+                  style={styles.revertButton}
+                  onPress={handleRevertToFormula}
+                  activeOpacity={0.7}
+                >
+                  <Text style={styles.revertButtonText}>Revert to formula</Text>
+                </TouchableOpacity>
+              </View>
+            )}
 
             {computeDisplayWeights(
               actualSets,

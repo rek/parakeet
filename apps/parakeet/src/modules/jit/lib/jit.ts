@@ -65,6 +65,7 @@ import { toJson } from '@platform/supabase';
 import { captureException } from '@platform/utils/captureException';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { DEFAULT_RPE_TARGET } from '@shared/constants/training';
+import { firstFromJoin } from '@shared/utils/joins';
 import { weightGramsToKg } from '@shared/utils/weight';
 
 import { fetchModifierCalibrations } from '../data/calibration.repository';
@@ -81,12 +82,16 @@ import {
   fetchWeekSessionCounts,
   insertChallengeReview,
   insertComparisonLog,
+  revertSessionToFormula,
   updateSessionJitOutput,
 } from '../data/jit.repository';
 import { estimateOneRmKgFromProfile } from './max-estimation';
 
 // Re-export so screens import ReadinessLevel from @modules/jit.
 export type { ReadinessLevel };
+// Re-export the formula-revert write so the session screen can offer a
+// one-tap revert without reaching into the data layer directly.
+export { revertSessionToFormula };
 
 type Session = Awaited<ReturnType<typeof getSession>>;
 
@@ -335,9 +340,7 @@ export async function runJITForSession(
       .filter((l): l is Lift => l !== undefined);
 
     for (const log of weekLogs) {
-      const joinedSession = Array.isArray(log.sessions)
-        ? log.sessions[0]
-        : log.sessions;
+      const joinedSession = firstFromJoin(log.sessions);
       const rawLift = joinedSession?.primary_lift;
       const logLift = LiftSchema.safeParse(rawLift).data;
       if (!logLift) continue;
@@ -604,12 +607,42 @@ export async function runJITForSession(
       }
       const formulaWeight = formulaOutput.mainLiftSets[0]?.weight_kg ?? 0;
       const llmWeight = jitOutput.mainLiftSets[0]?.weight_kg ?? 0;
-      if (formulaWeight > 0 && llmWeight < formulaWeight * 0.95) {
+      const weightDiverged =
+        formulaWeight > 0 && llmWeight < formulaWeight * 0.95;
+      if (weightDiverged) {
         const pctDrop = Math.round((1 - llmWeight / formulaWeight) * 100);
         trace.warnings.push(
           `LLM reduced main-lift weight ${pctDrop}% vs formula baseline (${formulaWeight}kg → ${llmWeight}kg)`
         );
       }
+
+      // When the LLM cut volume or weight below the formula, attach the formula
+      // prescription so the session screen can offer a one-tap revert. Persisted
+      // on the trace (jsonb, survives reload) — no extra column needed.
+      if (llmSetCount < formulaSetCount || weightDiverged) {
+        trace.formulaBaseline = {
+          mainLiftSets: formulaOutput.mainLiftSets,
+          warmupSets: formulaOutput.warmupSets,
+          auxiliaryWork: formulaOutput.auxiliaryWork,
+          rationale: formulaOutput.rationale,
+          intensityModifier: formulaOutput.intensityModifier,
+          restRecommendations: formulaOutput.restRecommendations,
+        };
+      }
+
+      // The trace is built from a formula pass, so trace.rationale explains the
+      // *formula's* decision — which can directly contradict the weights the LLM
+      // actually prescribed (e.g. "Volume calibration: increase by 2 sets" while
+      // the LLM cut to 1 set, or "high energy — boosted 2.5%" next to a 15% cut).
+      // The LLM's own reasoning lives on jitOutput.rationale but was previously
+      // discarded (persisted only to jit_comparison_logs). Surface it so the
+      // displayed "why" matches the prescribed sets. Fall back to an explicit
+      // marker when the model returned no rationale at all — never show formula
+      // reasoning for an LLM prescription, and never show a silent reduction.
+      trace.rationale =
+        jitOutput.rationale.length > 0
+          ? jitOutput.rationale
+          : ['AI coach adjusted the prescription but returned no explanation.'];
     }
 
     const divergence = fellBack

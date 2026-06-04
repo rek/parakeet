@@ -137,5 +137,14 @@ export function useSessionBootstrap(input: UseSessionBootstrapInput) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  return { bootstrapped, warmupSets, adHocExercises, setAdHocExercises };
+  // setWarmupSets is exposed so the "revert to formula" flow can swap the
+  // displayed warmup (regenerated from the formula working weight) in place,
+  // without remounting the screen.
+  return {
+    bootstrapped,
+    warmupSets,
+    adHocExercises,
+    setAdHocExercises,
+    setWarmupSets,
+  };
 }

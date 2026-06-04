@@ -9,6 +9,7 @@ import type {
   ProgramSessionView,
   SessionStatus,
 } from '@shared/types/domain';
+import { firstFromJoin } from '@shared/utils/joins';
 import { localDateString } from '@shared/utils/localDateString';
 
 
@@ -47,11 +48,6 @@ function parseSessionStatus(value: string): SessionStatus {
     return value;
   }
   throw new Error(`Unexpected session status: ${value}`);
-}
-
-function normalizeJoinedSession<T>(value: T | T[] | null): T | null {
-  if (value === null) return null;
-  return Array.isArray(value) ? (value[0] ?? null) : value;
 }
 
 function toProgramSessionView(row: {
@@ -183,10 +179,9 @@ export async function fetchSessionCompletionContext(sessionId: string): Promise<
 
   if (error) throw error;
   if (!data) return null;
-  const programMode = Array.isArray(data.programs)
-    ? (data.programs[0]?.program_mode ?? null)
-    : ((data.programs as { program_mode: string } | null)?.program_mode ??
-      null);
+  const programMode =
+    firstFromJoin(data.programs as { program_mode: string } | null)
+      ?.program_mode ?? null;
   return {
     primary_lift: data.primary_lift,
     program_id: data.program_id,
@@ -280,6 +275,28 @@ export async function insertSorenessCheckin(input: {
     recorded_at: new Date().toISOString(),
   });
   if (error) throw error;
+}
+
+// Returns the ratings from the most recent NON-skipped soreness check-in for a
+// specific session. Used to re-seed the readiness pills (sleep/energy) on
+// regeneration so a value the lifter already entered is not silently
+// overwritten by the wearable prefill — which otherwise feeds an unconfirmed
+// autonomic reading into JIT on the skip / auto-generate paths (prod session
+// 79cf94f5: lifter entered energy 3, wearable mapping pushed energy 1 on regen).
+export async function getSorenessCheckinForSession(
+  sessionId: string
+): Promise<Record<string, number> | null> {
+  const { data, error } = await typedSupabase
+    .from('soreness_checkins')
+    .select('ratings, skipped')
+    .eq('session_id', sessionId)
+    .eq('skipped', false)
+    .order('recorded_at', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  if (error) throw error;
+  if (!data) return null;
+  return data.ratings as Record<string, number>;
 }
 
 // Returns the ratings from the most recent soreness check-in for a user,
@@ -596,21 +613,51 @@ export async function updateSessionToCompleted(
   completedAt?: Date
 ): Promise<void> {
   // Guard so a re-fired completion (sync-queue retry, double End-tap) can't
-  // overwrite completed_at on an already-completed session. Accept either
-  // non-terminal state — 'planned' covers the case where set_logs never
-  // landed on the server, so the set_logs_mark_in_progress trigger never
-  // flipped the status. Spec-completion.md task 3 prescribes 'in_progress'
-  // only, but that pre-dates the durability incidents where set_logs writes
-  // dropped silently while session_logs landed.
-  const { error } = await typedSupabase
+  // overwrite completed_at on an already-completed session. Accept any
+  // non-completed state:
+  //   - 'planned' covers the case where set_logs never landed on the server,
+  //     so the set_logs_mark_in_progress trigger never flipped the status.
+  //   - 'skipped'/'missed' cover an overdue session the user came back to and
+  //     finished. Previously these were excluded, so completing a skipped
+  //     session wrote the session_logs row but silently left the session
+  //     'skipped' (0 rows updated, no error) — the durability gap behind the
+  //     lost-squat incident.
+  // 'completed' stays excluded so a re-fire can't clobber completed_at.
+  // Spec-completion.md task 3 prescribes 'in_progress' only, but that pre-dates
+  // the durability incidents where set_logs writes dropped silently while
+  // session_logs landed.
+  const { data, error } = await typedSupabase
     .from('sessions')
     .update({
       status: 'completed',
       completed_at: (completedAt ?? new Date()).toISOString(),
     })
     .eq('id', sessionId)
-    .in('status', ['planned', 'in_progress']);
+    .in('status', ['planned', 'in_progress', 'skipped', 'missed'])
+    .select('id');
   if (error) throw error;
+
+  // A zero-row update is legitimate only when the session is already completed
+  // (idempotent re-fire — the guard above intentionally skips it). Any other
+  // zero-row case means the flip was silently lost: the session_logs row has
+  // landed but the session header would diverge, exactly as it did when a
+  // 'skipped' session slipped past the old guard. Surface it instead of
+  // failing silently.
+  if (!data || data.length === 0) {
+    const { data: current, error: readError } = await typedSupabase
+      .from('sessions')
+      .select('status')
+      .eq('id', sessionId)
+      .maybeSingle();
+    if (readError) throw readError;
+    if (current?.status !== 'completed') {
+      throw new Error(
+        `Session ${sessionId} could not be marked completed (current status: ${
+          current?.status ?? 'missing'
+        })`
+      );
+    }
+  }
 }
 
 export async function fetchProfileSex(
@@ -663,7 +710,7 @@ export async function fetchRecentLogsForLift(
 
   if (error) throw error;
   return (data ?? []).map((row) => {
-    const session = normalizeJoinedSession(
+    const session = firstFromJoin(
       row.sessions as
         | SessionJoinLiftIntensity
         | SessionJoinLiftIntensity[]
@@ -704,7 +751,7 @@ export async function fetchCurrentWeekLogs(
     .filter((id): id is string => !!id);
   const setsMap = await fetchSessionSetsBySessionIds(sessionIds);
   return rows.map((row) => {
-    const session = normalizeJoinedSession(
+    const session = firstFromJoin(
       row.sessions as SessionJoinLift | SessionJoinLift[] | null
     );
     const bucket = row.session_id ? setsMap.get(row.session_id) : undefined;
@@ -1017,9 +1064,7 @@ export async function fetchEndOfWeekContext(
   if (error) throw error;
   if (!data) return null;
 
-  const programs = Array.isArray(data.programs)
-    ? data.programs[0]
-    : data.programs;
+  const programs = firstFromJoin(data.programs);
   const programMode =
     (programs?.program_mode as 'scheduled' | 'unending' | null) ?? null;
   const counter = programs?.unending_session_counter ?? null;

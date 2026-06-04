@@ -1,4 +1,7 @@
-import { getPrimaryMusclesForSession } from '../adjustments/soreness-adjuster';
+import {
+  getPrimaryMusclesForSession,
+  getWorstSoreness,
+} from '../adjustments/soreness-adjuster';
 import {
   effectiveIncrementKg,
   roundToNearest,
@@ -21,6 +24,18 @@ export function enforceHardConstraints(
   let rehabCapKg = output.rehabCapKg;
   const newWarnings = [...warnings];
   const increment = effectiveIncrementKg(input);
+
+  // Formula baseline for this session — the deterministic reference the weight
+  // floor, minimum-set, and over-reaction guards all measure against. Computed
+  // once here and reused (the args never vary within this pass).
+  const baseSets = calculateSets(
+    input.primaryLift,
+    input.intensityType,
+    input.blockNumber,
+    input.oneRmKg,
+    input.formulaConfig,
+    input.weightIncrementKg
+  );
 
   // MRV cap — non-negotiable
   if (!skippedMainLift) {
@@ -47,14 +62,6 @@ export function enforceHardConstraints(
 
   // Weight floor — guard against LLM hallucination
   if (!skippedMainLift && mainLiftSets.length > 0) {
-    const baseSets = calculateSets(
-      input.primaryLift,
-      input.intensityType,
-      input.blockNumber,
-      input.oneRmKg,
-      input.formulaConfig,
-      input.weightIncrementKg
-    );
     const baseWeight = baseSets[0]?.weight_kg ?? 0;
     const floorWeight = roundToNearest(baseWeight * 0.4, increment);
     mainLiftSets = mainLiftSets.map((s) => ({
@@ -65,17 +72,55 @@ export function enforceHardConstraints(
 
   // Minimum sets — if not skipped, must have ≥1 working set
   if (!skippedMainLift && mainLiftSets.length === 0) {
-    const baseSets = calculateSets(
-      input.primaryLift,
-      input.intensityType,
-      input.blockNumber,
-      input.oneRmKg,
-      input.formulaConfig,
-      input.weightIncrementKg
-    );
     if (baseSets.length > 0) {
       mainLiftSets = [baseSets[0]];
       newWarnings.push('[constraint] Minimum 1 working set enforced');
+    }
+  }
+
+  // Over-reaction guard (LLM/hybrid). The documented adjustment envelope
+  // (docs/domain/adjustments.md) caps a no-disruption, non-severe-soreness day
+  // at −1 set and ×0.95 intensity — even the worst subjective case (sleep AND
+  // energy both 1–2) stays inside it. The LLM strategy has stacked a large
+  // intensity cut AND a large volume cut on neutral/mild days with only generic
+  // rationale (prod deadlift 79cf94f5: no disruption, soreness < 7 → 4 sets ×
+  // 100kg cut to 1 set × 85kg). When no strong objective signal justifies it,
+  // clamp the combined reduction back toward that envelope. Strong signals — an
+  // active disruption or primary-muscle soreness ≥ 7 — bypass the guard; deload
+  // is an intentional reduction and is exempt. Subjective readiness never
+  // bypasses, because its own documented ceiling is already inside the envelope.
+  const isDeload = input.intensityType === 'deload';
+  const hasDisruption = (input.activeDisruptions?.length ?? 0) > 0;
+  const worstSoreness = getWorstSoreness(
+    getPrimaryMusclesForSession(input.primaryLift),
+    input.sorenessRatings
+  );
+  const strongSignal = hasDisruption || worstSoreness >= 7;
+  if (!skippedMainLift && !isDeload && !strongSignal && mainLiftSets.length > 0) {
+    const baseCount = baseSets.length;
+    const baseWeight = baseSets[0]?.weight_kg ?? 0;
+    const curWeight = mainLiftSets[0].weight_kg;
+    const bigVolumeCut = mainLiftSets.length <= baseCount - 2;
+    const bigIntensityCut = baseWeight > 0 && curWeight < baseWeight * 0.9;
+    if (bigVolumeCut && bigIntensityCut) {
+      // Restore to the documented single-axis ceiling: at most −1 set, weight
+      // floored at 95% of the formula baseline. Keep whatever the LLM chose if
+      // it was already gentler than the floor. Overwriting every set's weight
+      // with one flooredWeight is safe because formula main-lift sets are
+      // uniform-weight straight sets (see set-calculator); revisit if ramped.
+      const restoredCount = Math.max(mainLiftSets.length, baseCount - 1);
+      const flooredWeight = Math.max(
+        curWeight,
+        roundToNearest(baseWeight * 0.95, increment)
+      );
+      mainLiftSets = baseSets.slice(0, restoredCount).map((s, i) => ({
+        ...s,
+        set_number: i + 1,
+        weight_kg: flooredWeight,
+      }));
+      newWarnings.push(
+        `[constraint] Over-reaction guard: no disruption and soreness < 7 — combined volume + intensity cut clamped to formula envelope (restored to ${restoredCount} set(s) @ ${flooredWeight}kg)`
+      );
     }
   }
 

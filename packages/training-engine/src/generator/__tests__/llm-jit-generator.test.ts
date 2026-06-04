@@ -3,7 +3,7 @@ import type { JITAdjustment } from '@parakeet/shared-types';
 import { generateText } from 'ai';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { atMevExcept } from '../../__test-helpers__/fixtures';
+import { atMevExcept, makeDisruption } from '../../__test-helpers__/fixtures';
 import type { AuxHistoryEntry } from '../../auxiliary/anchor';
 import { DEFAULT_CORE_POOL } from '../../auxiliary/exercise-catalog';
 import { DEFAULT_FORMULA_CONFIG_MALE } from '../../cube/blocks';
@@ -611,5 +611,74 @@ describe('enforceHardConstraints', () => {
     const constrained = enforceHardConstraints(fakeOutput, input);
     // minimal protocol = 2 warmup sets
     expect(constrained.warmupSets).toHaveLength(2);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Over-reaction guard — combined large intensity + volume cut without a strong
+// signal is clamped back to the documented envelope (docs/domain/adjustments.md)
+// ---------------------------------------------------------------------------
+
+describe('enforceHardConstraints — over-reaction guard', () => {
+  // Use a block with enough base sets that a -2 set cut still leaves a working
+  // set (so the guard path, not the min-1-set path, is exercised).
+  const guardInput = (overrides: Partial<JITInput> = {}) =>
+    baseInput({ blockNumber: 3, intensityType: 'heavy', ...overrides });
+
+  const baseline = (input: JITInput) =>
+    enforceHardConstraints(applyAdjustment(baseAdj(), input), input);
+
+  // 15% intensity cut + 2-set volume cut, mild signals only.
+  const aggressiveAdj = baseAdj({
+    intensityModifier: 0.85,
+    setModifier: -2,
+    rationale: ['felt a bit tired'],
+  });
+
+  it('clamps a combined cut when there is no disruption and soreness < 7', () => {
+    const input = guardInput();
+    const base = baseline(input);
+    const baseCount = base.mainLiftSets.length;
+    const baseWeight = base.mainLiftSets[0].weight_kg;
+    // Precondition: enough sets that -2 leaves the main lift standing.
+    expect(baseCount).toBeGreaterThanOrEqual(3);
+
+    const out = enforceHardConstraints(applyAdjustment(aggressiveAdj, input), input);
+
+    // Volume restored to the documented single-axis ceiling (−1 set)…
+    expect(out.mainLiftSets).toHaveLength(baseCount - 1);
+    // …and weight floored at 95% of the formula baseline.
+    expect(out.mainLiftSets[0].weight_kg).toBeGreaterThanOrEqual(
+      Math.floor(baseWeight * 0.95)
+    );
+    expect(
+      out.warnings.some((w) => /Over-reaction guard/.test(w))
+    ).toBe(true);
+  });
+
+  it('does NOT clamp when primary-muscle soreness ≥ 7 (strong signal)', () => {
+    const input = guardInput({ sorenessRatings: { quads: 8 } });
+    const base = baseline(input);
+    const out = enforceHardConstraints(applyAdjustment(aggressiveAdj, input), input);
+    // The LLM's aggressive cut is respected — fewer sets than baseline−1, and
+    // weight left below the 95% floor.
+    expect(out.mainLiftSets.length).toBeLessThan(base.mainLiftSets.length - 1);
+    expect(out.warnings.some((w) => /Over-reaction guard/.test(w))).toBe(false);
+  });
+
+  it('does NOT clamp when a disruption is active (strong signal)', () => {
+    const input = guardInput({
+      activeDisruptions: [makeDisruption('moderate')],
+    });
+    const out = enforceHardConstraints(applyAdjustment(aggressiveAdj, input), input);
+    expect(out.warnings.some((w) => /Over-reaction guard/.test(w))).toBe(false);
+  });
+
+  it('does NOT clamp a gentle single-axis adjustment', () => {
+    const input = guardInput();
+    // 5% intensity cut, no volume change → inside the envelope, untouched.
+    const gentle = baseAdj({ intensityModifier: 0.95, setModifier: 0 });
+    const out = enforceHardConstraints(applyAdjustment(gentle, input), input);
+    expect(out.warnings.some((w) => /Over-reaction guard/.test(w))).toBe(false);
   });
 });

@@ -1,7 +1,25 @@
 // Types and builder for tracing every decision in the JIT session generator pipeline.
 // Callers record state at each pipeline step; build() assembles the final snapshot.
 
+import type { PlannedSet } from '@parakeet/shared-types';
+
 import type { AuxAnchorCarrier } from '../auxiliary/anchor';
+import type { WarmupSet } from './warmup-calculator';
+
+/** Snapshot of the formula prescription, attached to the trace when an LLM /
+ *  hybrid strategy diverged from the formula baseline. Lets the session UI
+ *  offer a one-tap "revert to formula" of the full prescription (main lift,
+ *  warmup, auxiliaries). `auxiliaryWork` is typed loosely (`unknown[]`) to keep
+ *  prescription-trace free of an import cycle with jit-session-generator (which
+ *  imports this module); the app re-validates it when parsing the trace JSON. */
+export interface FormulaBaselineSnapshot {
+  mainLiftSets: PlannedSet[];
+  warmupSets: WarmupSet[];
+  auxiliaryWork: unknown[];
+  rationale: string[];
+  intensityModifier: number;
+  restRecommendations: { mainLift: number[]; auxiliary: number[] };
+}
 
 export interface WeightDerivation {
   oneRmKg: number;
@@ -130,6 +148,10 @@ export interface PrescriptionTrace {
   auxiliaries: AuxExerciseTrace[];
   warmup: WarmupTrace | null;
   rest: RestTrace;
+  /** Present only on a diverged LLM/hybrid session — the formula prescription
+   *  the lifter can revert to. Absent when the strategy is formula, when the
+   *  LLM agreed with the formula, or when it fell back to formula. */
+  formulaBaseline?: FormulaBaselineSnapshot;
 }
 
 /** Empty trace for sessions that skip JIT (free-form ad-hoc, no primary lift). */

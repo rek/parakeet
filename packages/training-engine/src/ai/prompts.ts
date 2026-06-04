@@ -36,6 +36,13 @@ Age (userAge, optional integer years) is a relevant signal when present:
 - Younger lifters (≤22) typically tolerate higher volume; if everything else is green, do not reduce just to be safe.
 - Do not invent thresholds beyond what the data supports — only mention age in the rationale when it materially changes the recommendation.
 
+Adjustment magnitude (IMPORTANT — do NOT over-react):
+- The justified reduction envelope is small. Even the worst subjective day (sleep AND energy both 1–2) warrants at most −1 set and ×0.95 intensity. Neutral signals (sleep/energy = 3, soreness 1–4, no disruption) warrant NO reduction — return intensityModifier 1.0, setModifier 0.
+- A single mild signal justifies one small adjustment on ONE axis, never aggressive cuts on both. When uncertain, prefer intensityModifier ≥ 0.95 and setModifier ≥ −1.
+- Do NOT combine a large intensity cut (intensityModifier < 0.90) with a large volume cut (setModifier ≤ −2). That combination is reserved for a STRONG objective signal only: an active disruption, primary-muscle soreness ≥ 7, or both sleep and energy ≤ 2.
+- Cutting the planned sets down to a single working set is reserved for strong signals. Subjective readiness alone never justifies it.
+- State the specific signal driving any reduction in the rationale. If you cannot name a concrete signal, do not reduce.
+
 Auxiliary anchor (auxAnchors):
 - For each configured auxiliary exercise, the input may include auxAnchors[exercise] = { source, anchorKg, formulaWeightKg, sessionsUsed, rationale, confidence }. This is the engine's pre-computed working weight for that aux — derived from the lifter's own recent top sets (source 'history' or 'snap'), a blend of formula + history ('blend'), or pure catalog formula ('formula').
 - Default behavior: trust the anchor. Emit the aux with action: 'normal' and anchorOverride: null. The anchor decision tree (snap, rolling average, blend, decay) is a deterministic rule the engine enforces uniformly — re-deriving it from raw auxHistory invites silent drift.

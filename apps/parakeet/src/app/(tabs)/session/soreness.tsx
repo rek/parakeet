@@ -23,6 +23,7 @@ import {
   getLatestSorenessCheckin,
   getReadinessPillColors,
   getSession,
+  getSorenessCheckinForSession,
   recordSorenessCheckin,
   useSessionStore,
 } from '@modules/session';
@@ -455,12 +456,14 @@ export default function SorenessScreen() {
 
     void (async () => {
       try {
-        const [data, latest, expanded, disruptions] = await Promise.all([
-          getSession(sessionId),
-          getLatestSorenessCheckin(user.id),
-          AsyncStorage.getItem(MUSCLES_EXPANDED_KEY),
-          getActiveDisruptions(user.id),
-        ]);
+        const [data, latest, sessionCheckin, expanded, disruptions] =
+          await Promise.all([
+            getSession(sessionId),
+            getLatestSorenessCheckin(user.id),
+            getSorenessCheckinForSession(sessionId),
+            AsyncStorage.getItem(MUSCLES_EXPANDED_KEY),
+            getActiveDisruptions(user.id),
+          ]);
 
         if (!data) {
           // Surface clearly rather than silently rendering an empty form.
@@ -483,6 +486,33 @@ export default function SorenessScreen() {
           .filter((d) => d.description)
           .map((d) => d.description as string);
         setActiveDisruptionDescs(descs);
+
+        // Re-seed readiness from a prior check-in for THIS session so a value
+        // the lifter already entered survives regeneration. Marking them
+        // touched stops the wearable prefill effect (and the skip/auto-generate
+        // resolve path) from silently overwriting them with an unconfirmed
+        // autonomic reading. Without this, a lifter who entered energy 3 then
+        // re-entered/skipped got the wearable's energy 1 fed to JIT.
+        if (sessionCheckin) {
+          const priorEnergy = sessionCheckin.energy_level;
+          const priorSleep = sessionCheckin.sleep_quality;
+          if (
+            typeof priorEnergy === 'number' &&
+            priorEnergy >= 1 &&
+            priorEnergy <= 5
+          ) {
+            setEnergyLevel(priorEnergy as ReadinessLevel);
+            setEnergyTouched(true);
+          }
+          if (
+            typeof priorSleep === 'number' &&
+            priorSleep >= 1 &&
+            priorSleep <= 5
+          ) {
+            setSleepQuality(priorSleep as ReadinessLevel);
+            setSleepTouched(true);
+          }
+        }
 
         if (data.primary_lift) {
           const muscles =
@@ -697,9 +727,7 @@ export default function SorenessScreen() {
       ]);
       const jitOutput = jitResult.output;
       // Store prescription trace in Zustand (too large for route params)
-      useSessionStore
-        .getState()
-        .setCachedPrescriptionTrace(JSON.stringify(jitResult.trace));
+      useSessionStore.getState().setCachedPrescriptionTrace(jitResult.trace);
       // Surface LLM fallback to user — they'd otherwise see formula sets with no explanation
       if (jitOutput.jit_strategy === 'formula_fallback') {
         Alert.alert(

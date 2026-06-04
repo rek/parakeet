@@ -9,6 +9,7 @@ import {
 import type { Json } from '@platform/supabase';
 import { typedSupabase } from '@platform/supabase';
 import { addBreadcrumb } from '@platform/utils/captureException';
+import { firstFromJoin } from '@shared/utils/joins';
 import { weightGramsToKg } from '@shared/utils/weight';
 
 export interface JitProfileRow {
@@ -67,7 +68,7 @@ export async function fetchRecentSessionLogsForLift(
   const setsMap = await getSessionSetsBySessionIds(sessionIds);
 
   return rows.map((r) => {
-    const session = Array.isArray(r.sessions) ? r.sessions[0] : r.sessions;
+    const session = firstFromJoin(r.sessions);
     const buckets = r.session_id ? setsMap.get(r.session_id) : undefined;
     return {
       session_rpe: r.session_rpe ?? null,
@@ -315,6 +316,28 @@ export async function updateSessionJitOutput(
   const { error } = await typedSupabase
     .from('sessions')
     .update(update)
+    .eq('id', sessionId);
+  if (error) throw error;
+}
+
+// Revert a diverged LLM session to its formula baseline. Writes the formula
+// planned_sets + reverted trace and re-tags the strategy. Leaves
+// jit_input_snapshot untouched (the inputs didn't change — only which strategy
+// the lifter chose). See the "Revert to formula" affordance on the session UI.
+export async function revertSessionToFormula(
+  sessionId: string,
+  update: {
+    planned_sets: Json;
+    jit_output_trace: Json;
+  }
+): Promise<void> {
+  const { error } = await typedSupabase
+    .from('sessions')
+    .update({
+      planned_sets: update.planned_sets,
+      jit_strategy: 'formula',
+      jit_output_trace: update.jit_output_trace,
+    })
     .eq('id', sessionId);
   if (error) throw error;
 }

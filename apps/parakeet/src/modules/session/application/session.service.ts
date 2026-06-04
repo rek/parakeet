@@ -60,6 +60,7 @@ import {
   fetchTodaySession,
   fetchTodaySessions,
   getLatestSorenessRatings,
+  getSorenessCheckinForSession as getSorenessCheckinForSessionRepo,
   insertAdHocSession,
   insertSessionLog,
   insertSorenessCheckin,
@@ -215,6 +216,14 @@ export async function getLatestSorenessCheckin(
   userId: string
 ): Promise<Record<string, number> | null> {
   return getLatestSorenessRatings(userId);
+}
+
+// Latest non-skipped check-in for a single session — used to re-seed the
+// readiness pills on regen so an entered value survives the wearable prefill.
+export async function getSorenessCheckinForSession(
+  sessionId: string
+): Promise<Record<string, number> | null> {
+  return getSorenessCheckinForSessionRepo(sessionId);
 }
 
 export async function getInProgressSession(
