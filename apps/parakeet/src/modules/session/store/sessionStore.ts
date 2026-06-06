@@ -8,6 +8,7 @@ import type {
   SessionAdaptation,
   WeightSuggestionOffer,
 } from '../model/types';
+import type { PrescriptionTrace } from '@parakeet/training-engine';
 import { captureException } from '@platform/utils/captureException';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { weightKgToGrams } from '@shared/utils/weight';
@@ -160,7 +161,7 @@ export interface SessionState {
     activity_name?: string | null;
   } | null;
   cachedJitData: string | null;
-  cachedPrescriptionTrace: string | null;
+  cachedPrescriptionTrace: PrescriptionTrace | null;
   timers: Record<string, TimerState>;
   activeTimerKey: string | null;
   consecutiveMainLiftFailures: number;
@@ -226,7 +227,7 @@ export interface SessionState {
   initAuxiliaryWork: (work: AuxiliaryWork[]) => void;
   setSessionMeta: (meta: SessionState['sessionMeta']) => void;
   setCachedJitData: (raw: string) => void;
-  setCachedPrescriptionTrace: (raw: string) => void;
+  setCachedPrescriptionTrace: (raw: PrescriptionTrace | null) => void;
   recordSetFailure: () => void;
   recordSetSuccess: () => void;
   setAdaptation: (plan: SessionAdaptation) => void;
