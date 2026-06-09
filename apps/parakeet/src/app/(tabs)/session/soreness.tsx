@@ -4,6 +4,7 @@ import {
   Alert,
   ScrollView,
   StyleSheet,
+  Switch,
   Text,
   TouchableOpacity,
   View,
@@ -16,7 +17,11 @@ import {
 } from '@modules/cycle-tracking';
 import type { CyclePhase } from '@modules/cycle-tracking';
 import { getActiveDisruptions } from '@modules/disruptions';
-import { runJITForSession } from '@modules/jit';
+import {
+  CARDIO_DURATION_OPTIONS_MIN,
+  DEFAULT_CARDIO_DURATION_MIN,
+  runJITForSession,
+} from '@modules/jit';
 import type { ReadinessLevel } from '@modules/jit';
 import { getCurrentOneRmKg } from '@modules/program';
 import {
@@ -55,6 +60,8 @@ import { useTheme } from '../../../theme/ThemeContext';
 const RATING_LEVELS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10] as const;
 const READINESS_LEVELS = [1, 2, 3, 4, 5] as const;
 const MUSCLES_EXPANDED_KEY = 'readiness_muscles_expanded';
+const CARDIO_ENABLED_KEY = 'checkin_cardio_enabled';
+const CARDIO_DURATION_KEY = 'checkin_cardio_duration_min';
 
 // ── Styles builder ────────────────────────────────────────────────────────────
 
@@ -218,6 +225,59 @@ function buildStyles(colors: ColorScheme) {
       fontSize: 13,
       color: colors.primary,
       fontWeight: '500',
+    },
+    cardioSection: {
+      borderWidth: 1,
+      borderColor: colors.border,
+      borderRadius: 12,
+      paddingVertical: 12,
+      paddingHorizontal: 14,
+      marginBottom: 16,
+    },
+    cardioHeaderRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+    },
+    cardioHeaderText: {
+      flex: 1,
+      marginRight: 12,
+    },
+    cardioTitle: {
+      fontSize: 15,
+      color: colors.text,
+      fontWeight: '600',
+    },
+    cardioSubtitle: {
+      fontSize: 12,
+      color: colors.textTertiary,
+      marginTop: 2,
+    },
+    cardioDurationRow: {
+      flexDirection: 'row',
+      gap: 8,
+      marginTop: 12,
+    },
+    cardioDurationPill: {
+      paddingHorizontal: 14,
+      height: 36,
+      borderRadius: 18,
+      alignItems: 'center',
+      justifyContent: 'center',
+      borderWidth: 1.5,
+      borderColor: colors.border,
+    },
+    cardioDurationPillActive: {
+      borderColor: colors.primary,
+      backgroundColor: colors.primaryMuted,
+    },
+    cardioDurationText: {
+      fontSize: 13,
+      fontWeight: '600',
+      color: colors.textSecondary,
+    },
+    cardioDurationTextActive: {
+      color: colors.primary,
     },
     infoCard: {
       backgroundColor: colors.primaryMuted,
@@ -414,6 +474,12 @@ export default function SorenessScreen() {
     {}
   );
   const [musclesExpanded, setMusclesExpanded] = useState(false);
+  // Optional cardio block (GH#237). Default off; remembers the lifter's last
+  // choice. Additive — does not affect volume/recovery accounting.
+  const [cardioEnabled, setCardioEnabled] = useState(false);
+  const [cardioDurationMin, setCardioDurationMin] = useState<number>(
+    DEFAULT_CARDIO_DURATION_MIN
+  );
   // Default to the 1–5 scale neutral midpoint (3 = "OK"). Engine treats 3 as
   // no-change; using 2 would surface a "Low energy" rationale before the user
   // ever taps a pill. UI labels: `READINESS_LABELS` in shared/constants/training.
@@ -456,14 +522,23 @@ export default function SorenessScreen() {
 
     void (async () => {
       try {
-        const [data, latest, sessionCheckin, expanded, disruptions] =
-          await Promise.all([
-            getSession(sessionId),
-            getLatestSorenessCheckin(user.id),
-            getSorenessCheckinForSession(sessionId),
-            AsyncStorage.getItem(MUSCLES_EXPANDED_KEY),
-            getActiveDisruptions(user.id),
-          ]);
+        const [
+          data,
+          latest,
+          sessionCheckin,
+          expanded,
+          disruptions,
+          cardioPref,
+          cardioDurationPref,
+        ] = await Promise.all([
+          getSession(sessionId),
+          getLatestSorenessCheckin(user.id),
+          getSorenessCheckinForSession(sessionId),
+          AsyncStorage.getItem(MUSCLES_EXPANDED_KEY),
+          getActiveDisruptions(user.id),
+          AsyncStorage.getItem(CARDIO_ENABLED_KEY),
+          AsyncStorage.getItem(CARDIO_DURATION_KEY),
+        ]);
 
         if (!data) {
           // Surface clearly rather than silently rendering an empty form.
@@ -482,6 +557,13 @@ export default function SorenessScreen() {
 
         setSession(data);
         if (expanded === 'true') setMusclesExpanded(true);
+        if (cardioPref === 'true') setCardioEnabled(true);
+        if (cardioDurationPref) {
+          const parsed = Number(cardioDurationPref);
+          if (CARDIO_DURATION_OPTIONS_MIN.includes(parsed as never)) {
+            setCardioDurationMin(parsed);
+          }
+        }
         const descs = disruptions
           .filter((d) => d.description)
           .map((d) => d.description as string);
@@ -647,6 +729,24 @@ export default function SorenessScreen() {
     await AsyncStorage.setItem(MUSCLES_EXPANDED_KEY, String(next));
   }
 
+  async function toggleCardio(next: boolean) {
+    setCardioEnabled(next);
+    try {
+      await AsyncStorage.setItem(CARDIO_ENABLED_KEY, String(next));
+    } catch (err) {
+      captureException(err);
+    }
+  }
+
+  async function selectCardioDuration(durationMin: number) {
+    setCardioDurationMin(durationMin);
+    try {
+      await AsyncStorage.setItem(CARDIO_DURATION_KEY, String(durationMin));
+    } catch (err) {
+      captureException(err);
+    }
+  }
+
   function buildAllRatings(): Record<string, number> {
     return { ...otherSoreness, ...ratings };
   }
@@ -719,7 +819,8 @@ export default function SorenessScreen() {
           ratingsToUse,
           sleepForJit,
           energyForJit,
-          cyclePhase ?? undefined
+          cyclePhase ?? undefined,
+          { include: cardioEnabled, durationMin: cardioDurationMin }
         ),
         primaryLift
           ? getCurrentOneRmKg(user.id, primaryLift)
@@ -918,6 +1019,50 @@ export default function SorenessScreen() {
             styles={styles}
             colors={colors}
           />
+        </View>
+
+        {/* Optional cardio block (GH#237) */}
+        <View style={styles.cardioSection}>
+          <View style={styles.cardioHeaderRow}>
+            <View style={styles.cardioHeaderText}>
+              <Text style={styles.cardioTitle}>Add cardio</Text>
+              <Text style={styles.cardioSubtitle}>
+                Appends a timed cardio finisher to today's session.
+              </Text>
+            </View>
+            <Switch
+              value={cardioEnabled}
+              onValueChange={(v) => void toggleCardio(v)}
+              trackColor={{ false: colors.border, true: colors.primary }}
+            />
+          </View>
+          {cardioEnabled && (
+            <View style={styles.cardioDurationRow}>
+              {CARDIO_DURATION_OPTIONS_MIN.map((min) => {
+                const selected = cardioDurationMin === min;
+                return (
+                  <TouchableOpacity
+                    key={min}
+                    style={[
+                      styles.cardioDurationPill,
+                      selected && styles.cardioDurationPillActive,
+                    ]}
+                    onPress={() => void selectCardioDuration(min)}
+                    activeOpacity={0.7}
+                  >
+                    <Text
+                      style={[
+                        styles.cardioDurationText,
+                        selected && styles.cardioDurationTextActive,
+                      ]}
+                    >
+                      {min} min
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+          )}
         </View>
 
         {/* Cycle phase informational chip */}

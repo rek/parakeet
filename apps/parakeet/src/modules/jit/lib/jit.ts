@@ -85,6 +85,7 @@ import {
   revertSessionToFormula,
   updateSessionJitOutput,
 } from '../data/jit.repository';
+import { buildCardioBlock } from '../utils/buildCardioBlock';
 import { estimateOneRmKgFromProfile } from './max-estimation';
 
 // Re-export so screens import ReadinessLevel from @modules/jit.
@@ -121,7 +122,11 @@ export async function runJITForSession(
   energyLevel?: ReadinessLevel,
   /** Optional: pass cycle phase from the UI layer to avoid a double-fetch.
    *  If not provided, jit.ts will fetch it internally for female users. */
-  cyclePhaseOverride?: CyclePhase
+  cyclePhaseOverride?: CyclePhase,
+  /** Optional: append a non-adaptive cardio block (enabled via the check-in
+   *  "Add cardio" toggle). Additive only — does not touch volume/recovery
+   *  accounting (timed exercises are excluded from volume top-up scoring). */
+  cardioOptions?: { include: boolean; durationMin?: number }
 ): Promise<{ output: JITOutput; trace: PrescriptionTrace }> {
   // Free-form ad-hoc sessions have no primary lift — return empty JIT output
   if (!session.primary_lift) {
@@ -686,6 +691,21 @@ export async function runJITForSession(
       })
     )
     .catch(captureException);
+
+  // Optional cardio block (check-in "Add cardio" toggle). Appended after the
+  // prescription is finalized so it never perturbs strategy/divergence logic.
+  // Additive only — cardio is `timed`, which the engine already excludes from
+  // volume top-up scoring, so volume/recovery accounting is untouched.
+  if (cardioOptions?.include) {
+    const cardio = buildCardioBlock({
+      cardioPool: allPools?.cardio,
+      recentAuxExercises,
+      durationMin: cardioOptions.durationMin,
+    });
+    if (cardio) {
+      jitOutput.auxiliaryWork = [...jitOutput.auxiliaryWork, cardio];
+    }
+  }
 
   return { output: jitOutput, trace };
 }
