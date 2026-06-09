@@ -984,3 +984,35 @@ describe('removeTemplateBlock', () => {
     expect(after).toEqual(before);
   });
 });
+
+describe('setAuxSetSkipped', () => {
+  beforeEach(() => {
+    useSessionStore.getState().reset();
+  });
+
+  it('marks a single aux set skipped without touching others or renumbering', () => {
+    useSessionStore.getState().initAuxiliary([
+      { exercise: 'Leg Press', sets: [{ weight_kg: 100, reps: 10 }, { weight_kg: 100, reps: 10 }] },
+    ]);
+
+    useSessionStore.getState().setAuxSetSkipped('Leg Press', 2, true);
+
+    const sets = useSessionStore.getState().auxiliarySets;
+    expect(sets.map((s) => s.set_number)).toEqual([1, 2]);
+    expect(sets.find((s) => s.set_number === 1)?.skipped).toBeFalsy();
+    expect(sets.find((s) => s.set_number === 2)?.skipped).toBe(true);
+  });
+
+  it('restores a skipped aux set', () => {
+    useSessionStore.getState().initAuxiliary([
+      { exercise: 'Leg Press', sets: [{ weight_kg: 100, reps: 10 }] },
+    ]);
+
+    useSessionStore.getState().setAuxSetSkipped('Leg Press', 1, true);
+    useSessionStore.getState().setAuxSetSkipped('Leg Press', 1, false);
+
+    expect(
+      useSessionStore.getState().auxiliarySets[0].skipped
+    ).toBe(false);
+  });
+});

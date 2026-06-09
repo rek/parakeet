@@ -213,7 +213,7 @@ Unending programs generate sessions on-demand (lazy) rather than pre-building a 
 | Aspect           | Behavior                                                                 |
 |------------------|--------------------------------------------------------------------------|
 | Session generation | On-demand at JIT time                                                  |
-| Lift rotation    | S → B → D, determined from session history; falls back to counter-based |
+| Lift rotation    | S → B → D, determined from session history; falls back to counter-based. Lifter may manually swap the lift at generate time — rotation re-bases off the lift actually done (see [session/spec-workout-type-swap.md](../features/session/spec-workout-type-swap.md)). |
 | Block cycling    | `((floor((weekNumber - 1) / 3) % 3) + 1)`                              |
 | Deload trigger   | Every 4th training week: `weekNumber % 4 === 0`                         |
 

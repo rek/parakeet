@@ -14,6 +14,7 @@ import {
   isMakeupWindowExpired,
   localDateString,
   nextTrainingDate,
+  selectIntensityTypeForUnending,
 } from '@parakeet/training-engine';
 import type {
   CompletedSetLog,
@@ -66,6 +67,7 @@ import {
   insertSorenessCheckin,
   markSessionAsMissed,
   sessionLogExists,
+  updateSessionLift,
   updateSessionToCompleted,
   updateSessionToInProgress,
   updateSessionToPlanned,
@@ -637,34 +639,7 @@ async function generateNextUnendingSession(
     lastResolvedLift,
   });
 
-  const [sorenessRatings, lastCompletedAt, recentLogs] = await Promise.all([
-    getLatestSorenessRatings(userId),
-    fetchLastCompletedAtForLift(userId, nextLift),
-    getRecentLogsForLift(userId, nextLift, 3),
-  ]);
-
-  const primaryMuscleSoreness: number | null = sorenessRatings
-    ? getWorstSoreness(
-        getPrimaryMusclesForSession(nextLift),
-        sorenessRatings as Partial<Record<MuscleGroup, SorenessLevel>>
-      )
-    : null;
-
-  const daysSinceLastSession: number | null = lastCompletedAt?.completed_at
-    ? Math.floor(
-        (Date.now() - new Date(lastCompletedAt.completed_at).getTime()) /
-          86_400_000
-      )
-    : null;
-
-  const intensitySignals: IntensityTypeSignals = {
-    primaryMuscleSoreness,
-    daysSinceLastSession,
-    recentRpe: recentLogs
-      .map((l) => l.actual_rpe)
-      .filter((r): r is number => r !== null),
-    lastIntensityType: recentLogs[0]?.intensity_type ?? null,
-  };
+  const intensitySignals = await buildIntensitySignalsForLift(userId, nextLift);
 
   try {
     await appendNextUnendingSession(
@@ -690,6 +665,71 @@ async function generateNextUnendingSession(
   // Fetch by program_id+planned status so we get the newly created session,
   // not the completed session that fetchTodaySession would return first.
   return fetchPlannedSessionForProgram(program.id, userId);
+}
+
+// Gathers the recovery/fatigue signals that drive unending intensity selection
+// for a given lift: worst soreness across the lift's primary muscles, days since
+// the lift was last trained, recent RPE, and the last intensity type used. Shared
+// by next-session generation and the mid-flow lift swap.
+async function buildIntensitySignalsForLift(
+  userId: string,
+  lift: Lift
+): Promise<IntensityTypeSignals> {
+  const [sorenessRatings, lastCompletedAt, recentLogs] = await Promise.all([
+    getLatestSorenessRatings(userId),
+    fetchLastCompletedAtForLift(userId, lift),
+    getRecentLogsForLift(userId, lift, 3),
+  ]);
+
+  const primaryMuscleSoreness: number | null = sorenessRatings
+    ? getWorstSoreness(
+        getPrimaryMusclesForSession(lift),
+        sorenessRatings as Partial<Record<MuscleGroup, SorenessLevel>>
+      )
+    : null;
+
+  const daysSinceLastSession: number | null = lastCompletedAt?.completed_at
+    ? Math.floor(
+        (Date.now() - new Date(lastCompletedAt.completed_at).getTime()) /
+          86_400_000
+      )
+    : null;
+
+  return {
+    primaryMuscleSoreness,
+    daysSinceLastSession,
+    recentRpe: recentLogs
+      .map((l) => l.actual_rpe)
+      .filter((r): r is number => r !== null),
+    lastIntensityType: recentLogs[0]?.intensity_type ?? null,
+  };
+}
+
+/**
+ * Swaps the planned lift on an unending session and recomputes the recommended
+ * intensity for that lift, then clears the stale (old-lift) JIT prescription so
+ * the caller regenerates. No-op when the lift is unchanged.
+ *
+ * Rotation re-bases naturally: the next session is picked from the last
+ * *resolved* lift, so doing the swapped lift shifts the displaced one to next.
+ * Intended for unending programs only — callers gate on `program_mode`.
+ */
+export async function swapSessionLift(input: {
+  sessionId: string;
+  userId: string;
+  newLift: Lift;
+}): Promise<void> {
+  const session = await getSession(input.sessionId);
+  if (!session) throw new Error('Session not found');
+  if (session.primary_lift === input.newLift) return;
+
+  const signals = await buildIntensitySignalsForLift(input.userId, input.newLift);
+  const intensityType = selectIntensityTypeForUnending(
+    input.newLift,
+    session.week_number,
+    signals
+  );
+  await updateSessionLift(input.sessionId, input.newLift, intensityType);
 }
 
 async function getRecentLogsForLift(

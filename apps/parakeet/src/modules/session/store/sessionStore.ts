@@ -59,6 +59,11 @@ export interface AuxiliaryActualSet {
    *  block renderer show "HIIT — Bike/Ski/Row" without re-fetching the
    *  template by id. */
   template_name?: string;
+  /** Lifter opted out of this planned set mid-session (machine busy, ran out
+   *  of time, didn't want it). Skipped sets are never written to set_logs and
+   *  are excluded from completion stats. set_number is left untouched so
+   *  adaptation and weight-placeholder lookups stay aligned. Reversible. */
+  skipped?: boolean;
 }
 
 export interface TimerState {
@@ -190,6 +195,14 @@ export interface SessionState {
     exercise: string,
     setNumber: number,
     syncedAt: string
+  ) => void;
+  /** Marks/unmarks a planned auxiliary set as skipped. Skipped sets stay in
+   *  the list (greyed, restorable) but are never logged and don't count toward
+   *  completion. set_number is preserved so nothing downstream renumbers. */
+  setAuxSetSkipped: (
+    exercise: string,
+    setNumber: number,
+    skipped: boolean
   ) => void;
   /** Single ad-hoc set for an exercise the user typed into AddExerciseModal.
    *  Template-derived bulk inserts go through `addTemplateBlock` instead. */
@@ -394,6 +407,15 @@ export const useSessionStore = create<SessionState>()(
           auxiliarySets: state.auxiliarySets.map((s) =>
             s.exercise === exercise && s.set_number === setNumber
               ? { ...s, synced_at: syncedAt }
+              : s
+          ),
+        })),
+
+      setAuxSetSkipped: (exercise, setNumber, skipped) =>
+        set((state) => ({
+          auxiliarySets: state.auxiliarySets.map((s) =>
+            s.exercise === exercise && s.set_number === setNumber
+              ? { ...s, skipped }
               : s
           ),
         })),

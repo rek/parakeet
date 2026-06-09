@@ -844,6 +844,28 @@ export async function updateSessionToPlanned(sessionId: string): Promise<void> {
   if (error) throw error;
 }
 
+// Swaps the planned lift (and its recomputed intensity) on a session. Clears the
+// cached JIT prescription — `planned_sets`/`jit_generated_at` were derived for
+// the old lift, so they're invalid and must be regenerated. Guarded to
+// pre-completion states so a finished session's identity can't be rewritten.
+export async function updateSessionLift(
+  sessionId: string,
+  primaryLift: string,
+  intensityType: string
+): Promise<void> {
+  const { error } = await typedSupabase
+    .from('sessions')
+    .update({
+      primary_lift: primaryLift,
+      intensity_type: intensityType,
+      planned_sets: null,
+      jit_generated_at: null,
+    })
+    .eq('id', sessionId)
+    .in('status', ['planned', 'in_progress']);
+  if (error) throw error;
+}
+
 // Revives a previously-skipped session by flipping it back to in_progress.
 // Used by useSessionRecovery when local state holds unsynced completed sets
 // for a session that the server has already marked as skipped or missed.

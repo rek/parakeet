@@ -28,9 +28,12 @@ import {
   getLatestSorenessCheckin,
   getReadinessPillColors,
   getSession,
+  getSessionCompletionContext,
   getSorenessCheckinForSession,
   recordSorenessCheckin,
+  swapSessionLift,
   useSessionStore,
+  WorkoutTypeSelector,
 } from '@modules/session';
 import {
   mapAutonomicToLevel,
@@ -39,6 +42,7 @@ import {
   useRecoverySnapshot,
 } from '@modules/wearable';
 import type { Lift, MuscleGroup } from '@parakeet/shared-types';
+import { LIFTS } from '@parakeet/training-engine';
 import { captureException } from '@platform/utils/captureException';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {
@@ -494,6 +498,11 @@ export default function SorenessScreen() {
     null
   );
   const [generating, setGenerating] = useState(false);
+  // Workout-type swap (unending only): which lift the rotation originally
+  // recommended, and whether a swap is currently being persisted.
+  const [programMode, setProgramMode] = useState<string | null>(null);
+  const [recommendedLift, setRecommendedLift] = useState<Lift | null>(null);
+  const [swappingLift, setSwappingLift] = useState(false);
   const [activeDisruptionDescs, setActiveDisruptionDescs] = useState<string[]>(
     []
   );
@@ -530,6 +539,7 @@ export default function SorenessScreen() {
           disruptions,
           cardioPref,
           cardioDurationPref,
+          completionContext,
         ] = await Promise.all([
           getSession(sessionId),
           getLatestSorenessCheckin(user.id),
@@ -538,6 +548,7 @@ export default function SorenessScreen() {
           getActiveDisruptions(user.id),
           AsyncStorage.getItem(CARDIO_ENABLED_KEY),
           AsyncStorage.getItem(CARDIO_DURATION_KEY),
+          getSessionCompletionContext(sessionId),
         ]);
 
         if (!data) {
@@ -556,6 +567,10 @@ export default function SorenessScreen() {
         }
 
         setSession(data);
+        // Capture the rotation's original pick so the selector can tag it
+        // "Recommended" even after the lifter swaps to a different lift.
+        setProgramMode(completionContext.programMode);
+        setRecommendedLift(data.primary_lift as Lift);
         if (expanded === 'true') setMusclesExpanded(true);
         if (cardioPref === 'true') setCardioEnabled(true);
         if (cardioDurationPref) {
@@ -782,6 +797,28 @@ export default function SorenessScreen() {
     }
   }
 
+  // Swap the planned lift (unending only). Persists the new lift + recomputed
+  // intensity, then re-fetches the session so the soreness sliders re-derive to
+  // the chosen lift's muscles. JIT runs later off the updated session row.
+  async function handleSelectLift(newLift: Lift) {
+    if (!session || !user || swappingLift || generating) return;
+    if (newLift === session.primary_lift) return;
+    setSwappingLift(true);
+    try {
+      await swapSessionLift({ sessionId: session.id, userId: user.id, newLift });
+      const updated = await getSession(session.id);
+      if (updated) setSession(updated);
+    } catch (err: unknown) {
+      captureException(err);
+      Alert.alert(
+        "Couldn't switch lift",
+        err instanceof Error ? err.message : 'Try again.'
+      );
+    } finally {
+      setSwappingLift(false);
+    }
+  }
+
   async function runJIT(
     ratingsToUse: Record<string, number>,
     readinessOverride?: { sleep: ReadinessLevel; energy: ReadinessLevel }
@@ -937,6 +974,20 @@ export default function SorenessScreen() {
         contentContainerStyle={styles.container}
         keyboardShouldPersistTaps="handled"
       >
+        {/* Workout-type swap — unending programs only. Lets the lifter train a
+            different lift than the rotation prescribed; soreness rows below
+            re-derive to the chosen lift's muscles. */}
+        {programMode === 'unending' && session && recommendedLift && (
+          <WorkoutTypeSelector
+            lifts={LIFTS}
+            selected={session.primary_lift as Lift}
+            recommended={recommendedLift}
+            intensityType={session.intensity_type ?? ''}
+            disabled={swappingLift || generating}
+            onSelect={handleSelectLift}
+          />
+        )}
+
         <Text style={styles.prompt}>How are these muscles feeling today?</Text>
 
         {/* Active disruption context banner */}

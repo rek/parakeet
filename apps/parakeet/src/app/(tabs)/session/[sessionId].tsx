@@ -26,6 +26,7 @@ import {
   abandonSession,
   AddWorkoutTemplateModal,
   AuxAnchorNote,
+  AuxSetRow,
   AuxTemplateBlock,
   BackgroundTimerBadge,
   expandTemplate,
@@ -397,6 +398,7 @@ export default function SessionScreen() {
     dismissWeightSuggestion,
     addAdHocSet,
     removeAdHocSet,
+    setAuxSetSkipped,
     addTemplateBlock,
     removeTemplateBlock,
     setWarmupDone,
@@ -1140,33 +1142,54 @@ export default function SessionScreen() {
                           ? adaptedSet.weight_kg
                           : weightGramsToKg(actualSet.weight_grams);
                       return (
-                        <SetRow
+                        <AuxSetRow
                           key={`${aw.exercise}-${actualSet.set_number}`}
                           setNumber={actualSet.set_number}
-                          weightKg={displayWeightKg}
-                          reps={actualSet.reps_completed}
-                          placeholderWeightKg={planned?.weight_kg}
-                          placeholderReps={planned?.reps}
-                          rpeValue={actualSet.rpe_actual}
-                          isCompleted={actualSet.is_completed}
                           exerciseType={aw.exerciseType}
-                          onRpePress={() =>
-                            requestAuxRpe(aw.exercise, actualSet.set_number)
-                          }
-                          onUpdate={(data) =>
-                            handleAuxSetUpdate(
-                              aw.origIndex,
+                          isCompleted={actualSet.is_completed}
+                          isSkipped={!!actualSet.skipped}
+                          onSkip={() =>
+                            setAuxSetSkipped(
                               aw.exercise,
                               actualSet.set_number,
-                              aw.sets.length,
-                              data
+                              true
                             )
                           }
-                          barWeightKg={equipmentBarWeightKg}
-                          disabledPlates={equipmentDisabledPlates}
-                          onBarWeightChange={handleBarWeightChange}
-                          onDisabledPlatesChange={handleDisabledPlatesChange}
-                        />
+                          onRestore={() =>
+                            setAuxSetSkipped(
+                              aw.exercise,
+                              actualSet.set_number,
+                              false
+                            )
+                          }
+                        >
+                          <SetRow
+                            setNumber={actualSet.set_number}
+                            weightKg={displayWeightKg}
+                            reps={actualSet.reps_completed}
+                            placeholderWeightKg={planned?.weight_kg}
+                            placeholderReps={planned?.reps}
+                            rpeValue={actualSet.rpe_actual}
+                            isCompleted={actualSet.is_completed}
+                            exerciseType={aw.exerciseType}
+                            onRpePress={() =>
+                              requestAuxRpe(aw.exercise, actualSet.set_number)
+                            }
+                            onUpdate={(data) =>
+                              handleAuxSetUpdate(
+                                aw.origIndex,
+                                aw.exercise,
+                                actualSet.set_number,
+                                aw.sets.length,
+                                data
+                              )
+                            }
+                            barWeightKg={equipmentBarWeightKg}
+                            disabledPlates={equipmentDisabledPlates}
+                            onBarWeightChange={handleBarWeightChange}
+                            onDisabledPlatesChange={handleDisabledPlatesChange}
+                          />
+                        </AuxSetRow>
                       );
                     })
                   )}

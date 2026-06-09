@@ -21,6 +21,8 @@ Session lifecycle, logging, completion, performance, and motivational messaging.
 | [spec-performance.md](./spec-performance.md) | done | In-session performance tracking |
 | [spec-missed.md](./spec-missed.md) | done | Missed session handling |
 | [spec-adhoc.md](./spec-adhoc.md) | done | Ad-hoc session creation |
+| [spec-skip-aux-set.md](./spec-skip-aux-set.md) | done | Skip/restore an individual planned auxiliary set mid-session |
+| [spec-workout-type-swap.md](./spec-workout-type-swap.md) | done | Swap the planned lift on the generate screen (unending) |
 | [spec-planned-set-display.md](./spec-planned-set-display.md) | done | Planned set display logic |
 | [spec-today.md](./spec-today.md) | done | Today's session screen |
 | [spec-logging.md](./spec-logging.md) | done | Set logging UI |

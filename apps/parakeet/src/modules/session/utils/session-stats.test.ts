@@ -58,6 +58,24 @@ describe('computeSessionStats', () => {
     expect(result.isAuxOnly).toBe(false);
   });
 
+  it('excludes skipped aux sets from the aux-only count', () => {
+    const skipped = { is_completed: false, skipped: true };
+    // 1 completed + 1 incomplete + 1 skipped → denominator drops the skipped one
+    const result = computeSessionStats([], [completed, incomplete, skipped]);
+    expect(result.isAuxOnly).toBe(true);
+    expect(result.totalSets).toBe(2);
+    expect(result.completedSets).toBe(1);
+    expect(result.completionPct).toBe('50');
+  });
+
+  it('isAuxOnly is false when the only aux sets are all skipped', () => {
+    const skipped = { is_completed: false, skipped: true };
+    const result = computeSessionStats([], [skipped, skipped]);
+    expect(result.isAuxOnly).toBe(false);
+    expect(result.totalSets).toBe(0);
+    expect(result.completionPct).toBe('0');
+  });
+
   it('hybrid: actual + aux both non-empty — completionPct derived from actual only', () => {
     // 2 of 4 actual completed; aux sets are all completed but must not inflate the count
     const result = computeSessionStats(
