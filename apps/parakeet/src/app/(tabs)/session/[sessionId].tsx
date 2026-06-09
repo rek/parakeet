@@ -81,7 +81,6 @@ import {
   type ExerciseType,
   type PrescriptionTrace,
 } from '@parakeet/training-engine';
-import { toJson } from '@platform/supabase';
 import { useNetworkStatus } from '@platform/network';
 import { captureException } from '@platform/utils/captureException';
 import type { PlateKg } from '@shared/constants/plates';
@@ -441,18 +440,21 @@ export default function SessionScreen() {
   const insets = useSafeAreaInsets();
   const traceEnabled = useFeatureEnabled('prescriptionTrace');
   const cachedTrace = useSessionStore((s) => s.cachedPrescriptionTrace);
-  const formattedTrace = useMemo(() => {
-    if (!cachedTrace) return null;
-    const raw = parsePrescriptionTrace(cachedTrace);
-    return raw ? formatPrescriptionTrace(raw) : null;
-  }, [cachedTrace]);
+  const parsedTrace = useMemo(
+    () => (cachedTrace ? parsePrescriptionTrace(cachedTrace) : null),
+    [cachedTrace]
+  );
+  const formattedTrace = useMemo(
+    () => (parsedTrace ? formatPrescriptionTrace(parsedTrace) : null),
+    [parsedTrace]
+  );
 
   // Revert-to-formula: offered only when the AI diverged from the formula
   // (formulaBaseline present) and nothing has been logged yet — reverting
   // re-inits the prescription, so it must not clobber completed sets.
   const canRevertToFormula =
     traceEnabled &&
-    cachedTrace?.formulaBaseline != null &&
+    parsedTrace?.formulaBaseline != null &&
     !actualSets.some((s) => s.is_completed);
 
   // Auto-open history sheet when banner navigates back with openHistory param
@@ -612,8 +614,8 @@ export default function SessionScreen() {
   });
 
   const handleRevertToFormula = useCallback(() => {
-    const baseline = cachedTrace?.formulaBaseline;
-    if (!baseline || !sessionId || !cachedTrace) return;
+    const baseline = parsedTrace?.formulaBaseline;
+    if (!baseline || !sessionId || !parsedTrace) return;
     Alert.alert(
       'Use formula prescription?',
       'Replace the AI-adjusted sets with the standard formula prescription for this session?',
@@ -625,14 +627,14 @@ export default function SessionScreen() {
             void (async () => {
               try {
                 const revertedTrace: PrescriptionTrace = {
-                  ...cachedTrace,
+                  ...parsedTrace,
                   strategy: 'formula',
                   rationale: baseline.rationale,
                   formulaBaseline: undefined,
                 };
                 await revertSessionToFormula(sessionId, {
-                  planned_sets: toJson(baseline.mainLiftSets),
-                  jit_output_trace: toJson(revertedTrace),
+                  plannedSets: baseline.mainLiftSets,
+                  trace: revertedTrace,
                 });
                 // Swap the live prescription in place (no remount): main sets +
                 // aux from the formula baseline, warmup regenerated from the
@@ -670,7 +672,7 @@ export default function SessionScreen() {
         },
       ]
     );
-  }, [cachedTrace, sessionId, setWarmupSetsState, restRecommendations]);
+  }, [parsedTrace, sessionId, setWarmupSetsState, restRecommendations]);
 
   // ── Focus-managed timer interval ───────────────────────────────────────────
 

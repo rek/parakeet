@@ -1,13 +1,14 @@
 // @spec docs/features/jit-pipeline/spec-generator.md
 import { getSessionSetsBySessionIds } from '@modules/session';
-import type { ActualSet, Lift } from '@parakeet/shared-types';
+import type { ActualSet, Lift, PlannedSet } from '@parakeet/shared-types';
 import {
   getCatalogEntry,
   slugify,
   type AuxHistoryEntry,
+  type PrescriptionTrace,
 } from '@parakeet/training-engine';
 import type { Json } from '@platform/supabase';
-import { typedSupabase } from '@platform/supabase';
+import { toJson, typedSupabase } from '@platform/supabase';
 import { addBreadcrumb } from '@platform/utils/captureException';
 import { firstFromJoin } from '@shared/utils/joins';
 import { weightGramsToKg } from '@shared/utils/weight';
@@ -327,16 +328,16 @@ export async function updateSessionJitOutput(
 export async function revertSessionToFormula(
   sessionId: string,
   update: {
-    planned_sets: Json;
-    jit_output_trace: Json;
+    plannedSets: PlannedSet[];
+    trace: PrescriptionTrace;
   }
 ): Promise<void> {
   const { error } = await typedSupabase
     .from('sessions')
     .update({
-      planned_sets: update.planned_sets,
+      planned_sets: toJson(update.plannedSets),
       jit_strategy: 'formula',
-      jit_output_trace: update.jit_output_trace,
+      jit_output_trace: toJson(update.trace),
     })
     .eq('id', sessionId);
   if (error) throw error;
