@@ -73,23 +73,36 @@ function ShareBanner({
   styles: ReturnType<typeof buildStyles>;
   colors: ColorScheme;
 }) {
+  // Once opted in, collapse to a slim row — the full explainer only needs to be
+  // prominent while sharing is off (to drive the opt-in).
+  if (enabled) {
+    return (
+      <View style={styles.bannerCompact}>
+        <Text style={styles.bannerCompactLabel}>Sharing your highlights</Text>
+        <Switch
+          value
+          onValueChange={onToggle}
+          disabled={disabled}
+          trackColor={{ true: colors.primary, false: colors.border }}
+        />
+      </View>
+    );
+  }
+
   return (
     <View style={styles.banner}>
       <View style={styles.bannerRow}>
-        <Text style={styles.bannerTitle}>
-          {enabled ? "You're sharing" : 'Share your highlights'}
-        </Text>
+        <Text style={styles.bannerTitle}>Share your highlights</Text>
         <Switch
-          value={enabled}
+          value={false}
           onValueChange={onToggle}
           disabled={disabled}
           trackColor={{ true: colors.primary, false: colors.border }}
         />
       </View>
       <Text style={styles.bannerBody}>
-        {enabled
-          ? 'Your PRs, Wilks, and streaks appear on your flock’s feed. Turn off any time to remove your card.'
-          : 'Show your PRs, Wilks, and streaks to the flock. Never your logged weights, RPE, or any health data.'}
+        Show your PRs, Wilks, and streaks to the flock. Never your logged
+        weights, RPE, or any health data.
       </Text>
     </View>
   );
@@ -123,6 +136,18 @@ function buildStyles(colors: ColorScheme) {
       fontSize: typography.sizes.sm,
       color: colors.textSecondary,
       lineHeight: 18,
+    },
+    bannerCompact: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      paddingVertical: spacing[1],
+      paddingHorizontal: spacing[1],
+      marginBottom: spacing[3],
+    },
+    bannerCompactLabel: {
+      fontSize: typography.sizes.sm,
+      color: colors.textTertiary,
     },
     empty: {
       fontSize: typography.sizes.sm,
