@@ -66,6 +66,7 @@ export default function TabsLayout() {
       <Tabs.Screen name="session" options={{ href: null }} />
       <Tabs.Screen name="nutrition" options={{ href: null }} />
       <Tabs.Screen name="lipedema-tracking" options={{ href: null }} />
+      <Tabs.Screen name="flock" options={{ href: null }} />
     </Tabs>
   );
 }

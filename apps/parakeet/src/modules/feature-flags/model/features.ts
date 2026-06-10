@@ -175,6 +175,14 @@ export const FEATURE_REGISTRY = [
     defaultEnabled: false,
   },
   {
+    id: 'flock',
+    label: 'Flock',
+    description:
+      "Opt-in feed of friends' PRs, Wilks, and streak highlights — read-only, no raw logs or health data",
+    category: 'advanced' as const,
+    defaultEnabled: false,
+  },
+  {
     id: 'magicLink',
     label: 'Email Magic Link Sign-In',
     description: 'Sign in with an email magic link (Google sign-in is preferred)',

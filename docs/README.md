@@ -48,6 +48,7 @@ Use this to find code without searching.
 | Profile         | `@modules/profile`         | User profile CRUD                                                            | `getProfile`, `updateProfile`                          |
 | Video Analysis  | `@modules/video-analysis`  | Bar path tracking, form faults, LLM coaching, personal baselines             | `useVideoAnalysis`, `useFormCoaching`                  |
 | Gym Partners    | `@modules/gym-partners`    | Partner pairing, filming for partners, partner session visibility             | `usePartners`, `usePartnerFilming`, `PartnerSection`   |
+| Flock           | `@modules/flock`           | Opt-in motivational feed: friends' PR/Wilks/streak highlight cards (read-only) | `useFlock`, `useFlockSharing`, `FlockScreen`, `publishFlockHighlight` |
 | Lipedema Tracking | `@modules/lipedema-tracking` | Daily limb-circumference + pain/swelling log, per-limb deltas, history edit | `TrackingScreen`, `useMeasurements`, `priorValue`     |
 | Workout Templates | `@modules/workout-templates` | Global wiki-style workout bundles (HIIT, EMOM, finishers); insert into current session | `useWorkoutTemplates`, `WorkoutTemplatesList`, `WorkoutTemplateEditor` |
 

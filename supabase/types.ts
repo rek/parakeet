@@ -732,6 +732,66 @@ export type Database = {
           },
         ]
       }
+      flock_config: {
+        Row: {
+          sharing_enabled: boolean
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          sharing_enabled?: boolean
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          sharing_enabled?: boolean
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      flock_highlights: {
+        Row: {
+          display_name: string
+          headline: string
+          headline_kind: string
+          latest_pr_lift: string | null
+          latest_pr_reps: number | null
+          latest_pr_weight_g: number | null
+          published_at: string
+          streak_weeks: number | null
+          user_id: string
+          wilks: number | null
+          wilks_delta: number | null
+        }
+        Insert: {
+          display_name: string
+          headline: string
+          headline_kind: string
+          latest_pr_lift?: string | null
+          latest_pr_reps?: number | null
+          latest_pr_weight_g?: number | null
+          published_at?: string
+          streak_weeks?: number | null
+          user_id: string
+          wilks?: number | null
+          wilks_delta?: number | null
+        }
+        Update: {
+          display_name?: string
+          headline?: string
+          headline_kind?: string
+          latest_pr_lift?: string | null
+          latest_pr_reps?: number | null
+          latest_pr_weight_g?: number | null
+          published_at?: string
+          streak_weeks?: number | null
+          user_id?: string
+          wilks?: number | null
+          wilks_delta?: number | null
+        }
+        Relationships: []
+      }
       formula_configs: {
         Row: {
           ai_rationale: string | null

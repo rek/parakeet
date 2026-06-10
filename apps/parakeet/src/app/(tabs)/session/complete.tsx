@@ -14,6 +14,7 @@ import type { EarnedBadge, PR } from '@modules/achievements';
 import { useAuth } from '@modules/auth';
 import { WeeklyReviewPromptCard } from '@modules/body-review';
 import { stampCyclePhaseOnSession } from '@modules/cycle-tracking';
+import { publishFlockHighlight } from '@modules/flock';
 import {
   AdjustmentsCard,
   checkEndOfWeek,
@@ -389,6 +390,11 @@ export default function CompleteScreen() {
         if (achievements.cycleBadgeEarned) setCycleBadgeEarned(true);
         if (achievements.newBadges.length > 0)
           setNewBadges(achievements.newBadges);
+
+        // Publish a Flock highlight (best-effort, fire-and-forget). Never
+        // awaited — completion already succeeded and this must not delay the
+        // saved state or surface errors to the lifter.
+        void publishFlockHighlight({ userId: user.id, achievements });
       } catch (achievementErr) {
         captureException(achievementErr);
       }

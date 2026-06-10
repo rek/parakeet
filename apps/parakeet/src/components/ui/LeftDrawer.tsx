@@ -40,6 +40,7 @@ export function LeftDrawer({
   const { data: activeSession } = useInProgressSession();
   const nutritionEnabled = useFeatureEnabled('nutrition');
   const lipedemaTrackingEnabled = useFeatureEnabled('lipedemaTracking');
+  const flockEnabled = useFeatureEnabled('flock');
 
   useEffect(() => {
     if (visible) {
@@ -127,6 +128,15 @@ export function LeftDrawer({
                   icon="body-outline"
                   label="Lipedema Tracking"
                   onPress={() => go('/(tabs)/lipedema-tracking')}
+                  styles={styles}
+                  colors={colors}
+                />
+              )}
+              {flockEnabled && (
+                <DrawerItem
+                  icon="people-outline"
+                  label="Flock"
+                  onPress={() => go('/(tabs)/flock')}
                   styles={styles}
                   colors={colors}
                 />
