@@ -51,7 +51,9 @@ export function partitionTodaySessions<
   );
   return {
     // Exclude completed ad-hoc — they don't need a "done" card
-    completed: sorted.filter((s) => s.status === 'completed' && !isFreeFormAdHoc(s)),
+    completed: sorted.filter(
+      (s) => s.status === 'completed' && !isFreeFormAdHoc(s)
+    ),
     // Exclude completed, skipped, and missed — these are done
     upcoming: sorted.filter(
       (s) =>

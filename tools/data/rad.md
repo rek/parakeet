@@ -2,15 +2,15 @@
 
 ## What RAD stands for
 
-*Rare Adipose Disorders* — an umbrella term for conditions involving
+_Rare Adipose Disorders_ — an umbrella term for conditions involving
 abnormal subcutaneous adipose tissue that are routinely misdiagnosed as
 ordinary obesity. The three primary RADs are:
 
-| Disorder | Description |
-| --- | --- |
-| **Lipedema** | Symmetric, progressive, painful fat accumulation in the legs/hips (and often arms), sparing the feet/hands. Predominantly affects women; hormonally triggered (puberty, pregnancy, menopause). |
-| **Dercum's Disease (DD)** | Adiposis dolorosa — multiple painful lipomas, chronic pain, fatigue, cognitive symptoms. |
-| **Multiple Symmetric Lipomatosis (MSL)** | Symmetric benign lipomas (neck, shoulders, trunk); can occur with or without HIV. Madelung's disease variant. |
+| Disorder                                 | Description                                                                                                                                                                                    |
+| ---------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Lipedema**                             | Symmetric, progressive, painful fat accumulation in the legs/hips (and often arms), sparing the feet/hands. Predominantly affects women; hormonally triggered (puberty, pregnancy, menopause). |
+| **Dercum's Disease (DD)**                | Adiposis dolorosa — multiple painful lipomas, chronic pain, fatigue, cognitive symptoms.                                                                                                       |
+| **Multiple Symmetric Lipomatosis (MSL)** | Symmetric benign lipomas (neck, shoulders, trunk); can occur with or without HIV. Madelung's disease variant.                                                                                  |
 
 The defining clinical fact: **these disorders do not respond to caloric
 restriction or bariatric surgery for the abnormal-fat component.** Lifestyle
@@ -60,7 +60,7 @@ low glycemic load, anti-inflammatory action, and lymphatic support.
   inflammatory disease.
 - **Keto-for-lipedema camp** (Cannataro 2021, Nutrients 2024 systematic
   review, Current Obesity Reports 2025 narrative review): red meat is
-  *permitted* in moderation, lean cuts preferred. Rationale: the
+  _permitted_ in moderation, lean cuts preferred. Rationale: the
   insulin/glycemic lever dominates — carb control matters more than
   protein source.
 - **Consensus across both camps**: processed meats out (bacon, sausage,
@@ -123,7 +123,7 @@ lipedema.
 - **Moderate evidence** (the top of a thin field): low-carb / ketogenic
   patterns for lipedema symptom reduction. **Lundanes 2024 RCT** (n=70,
   8 weeks) showed superior pain relief on low-carb vs control (−1.1 VAS,
-  p=0.009), *uncorrelated with weight loss*. **Sørlie 2022 LIPODIET
+  p=0.009), _uncorrelated with weight loss_. **Sørlie 2022 LIPODIET
   pilot** (n=9) and **2024 Nutrients SR** (n=329, 7 studies) corroborate.
   **Cannataro 2021** is a single-case 22-month report — hypothesis-
   generating, not confirmatory. German DGPL S2k guideline: 94.7%
@@ -165,62 +165,62 @@ adipose remains surgical (lymph-sparing liposuction).
 
 ### Primary clinical evidence
 
-- Lundanes J et al. *Effect of a low-carbohydrate diet on pain and
+- Lundanes J et al. _Effect of a low-carbohydrate diet on pain and
   quality of life in female patients with lipedema: a randomized
-  controlled trial.* Obesity 2024.
+  controlled trial._ Obesity 2024.
   [Wiley](https://onlinelibrary.wiley.com/doi/full/10.1002/oby.24026)
   — **the n=70 RCT**.
-- Sørlie V et al. *Effect of a ketogenic diet on pain and quality of
-  life in patients with lipedema: the LIPODIET pilot study.* Clinical
+- Sørlie V et al. _Effect of a ketogenic diet on pain and quality of
+  life in patients with lipedema: the LIPODIET pilot study._ Clinical
   Nutrition ESPEN 2022.
   [PMC9358738](https://pmc.ncbi.nlm.nih.gov/articles/PMC9358738/)
-- Cannataro R et al. *Management of Lipedema with Ketogenic Diet:
-  22-Month Follow-Up.* Healthcare 2021.
+- Cannataro R et al. _Management of Lipedema with Ketogenic Diet:
+  22-Month Follow-Up._ Healthcare 2021.
   [PMC8707844](https://pmc.ncbi.nlm.nih.gov/articles/PMC8707844/)
   — **single-case** follow-up.
-- Cho S, Herbst KL. *Butcher's Broom and Selenium Improve Lipedema:
-  A Retrospective Case Study.*
+- Cho S, Herbst KL. _Butcher's Broom and Selenium Improve Lipedema:
+  A Retrospective Case Study._
   [ResearchGate](https://www.researchgate.net/publication/271097697_Bucher's_Broom_and_Selenium_Improve_Lipedema_A_Retrospective_Case_Study)
   · [LEGATO library](https://library.lipedema.org/bibliography/GXRY9832)
 
 ### Reviews and meta-analyses
 
-- *Current Evidence-Based Clinical Nutritional Approaches in Lipedema:
-  A Scoping Review.* Nutrition Reviews 2025.
+- _Current Evidence-Based Clinical Nutritional Approaches in Lipedema:
+  A Scoping Review._ Nutrition Reviews 2025.
   [OUP](https://academic.oup.com/nutritionreviews/advance-article/doi/10.1093/nutrit/nuaf203/8342097)
   — current gold-standard overview.
-- *The Efficacy of Ketogenic Diets for Lipedema — Systematic Review &
-  Meta-Analysis.* Nutrients 2024, 16(19):3276.
+- _The Efficacy of Ketogenic Diets for Lipedema — Systematic Review &
+  Meta-Analysis._ Nutrients 2024, 16(19):3276.
   [MDPI](https://www.mdpi.com/2072-6643/16/19/3276)
-- *Therapeutic Applications of Ketogenic Diets in Lipedema — Narrative
-  Review.* Current Obesity Reports 2025.
+- _Therapeutic Applications of Ketogenic Diets in Lipedema — Narrative
+  Review._ Current Obesity Reports 2025.
   [Springer](https://link.springer.com/article/10.1007/s13679-025-00642-y)
-- *Ketogenic Diet: A Nutritional Therapeutic Tool for Lipedema?*
+- _Ketogenic Diet: A Nutritional Therapeutic Tool for Lipedema?_
   [PMC10748777](https://pmc.ncbi.nlm.nih.gov/articles/PMC10748777/)
-- *Exploring the Anti-Inflammatory Potential of a Mediterranean-Style
-  Ketogenic Diet in Women with Lipedema.* Nutrients 2025, 17(18):3014.
+- _Exploring the Anti-Inflammatory Potential of a Mediterranean-Style
+  Ketogenic Diet in Women with Lipedema._ Nutrients 2025, 17(18):3014.
   [MDPI](https://www.mdpi.com/2072-6643/17/18/3014)
 
 ### Supplements
 
-- *Nutritional Supplements and Lipedema: Scientific and Rational Use.*
+- _Nutritional Supplements and Lipedema: Scientific and Rational Use._
   MDPI Lymphology 2022, 2(4).
   [MDPI](https://www.mdpi.com/1661-3821/2/4/20)
 
 ### Herbst RAD diet (foundational)
 
-- Herbst KL. *Rare adipose disorders (RADs) masquerading as obesity.*
+- Herbst KL. _Rare adipose disorders (RADs) masquerading as obesity._
   Acta Pharmacol Sin 2012.
   [PubMed 22301856](https://pubmed.ncbi.nlm.nih.gov/22301856/)
-- Herbst KL. *The RAD Diet.*
+- Herbst KL. _The RAD Diet._
   [lipomadoc.org/blog/rad-diet](http://www.lipomadoc.org/blog/rad-diet)
-- Herbst KL. *Medicine and Supplements for People with Lipedema and
-  Dercum's Disease.*
+- Herbst KL. _Medicine and Supplements for People with Lipedema and
+  Dercum's Disease._
   [PDF](http://lipedemaitalia.info/wp-content/uploads/2020/07/medicine-and-supplement-for-people-with-lipedema-and-DD-Herbst.pdf)
-- *Diet & Supplement Recommendations for Lipedema.*
+- _Diet & Supplement Recommendations for Lipedema._
   [lipedemaspecialist.com](https://www.lipedemaspecialist.com/2022/01/17/diet-supplement-recommendations-for-lipedema/)
-- *Nutritious Eating to Reduce Lipedema.*
+- _Nutritious Eating to Reduce Lipedema._
   [lipedema.net](https://lipedema.net/nutritious-eating-to-reduce-lipedema/)
-- *Mediterranean / lean-meat framing.*
+- _Mediterranean / lean-meat framing._
   [lipocura](https://www.lipocura.com/lipoblog/lipedema-nutrition/) ·
   [Talk Lipoedema](https://www.talklipoedema.org/nutrition)

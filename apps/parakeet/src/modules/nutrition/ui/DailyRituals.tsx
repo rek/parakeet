@@ -23,14 +23,14 @@ export function DailyRituals({ foods }: { foods: DietFood[] }) {
       foods
         .filter((f) => f.category === 'morning_shot' && f.status === 'yes')
         .sort((a, b) => a.displayName.localeCompare(b.displayName)),
-    [foods],
+    [foods]
   );
   const superfoods = useMemo(
     () =>
       foods
         .filter((f) => f.category === 'rad_superfoods' && f.status === 'yes')
         .sort((a, b) => a.displayName.localeCompare(b.displayName)),
-    [foods],
+    [foods]
   );
 
   if (shot.length === 0 && superfoods.length === 0) return null;
@@ -41,11 +41,7 @@ export function DailyRituals({ foods }: { foods: DietFood[] }) {
       {shot.length > 0 && (
         <View style={styles.card}>
           <View style={styles.titleRow}>
-            <Ionicons
-              name="sunny-outline"
-              size={18}
-              color={colors.secondary}
-            />
+            <Ionicons name="sunny-outline" size={18} color={colors.secondary} />
             <Text style={styles.title}>Morning Shot</Text>
           </View>
           <Text style={styles.hint}>
@@ -53,7 +49,12 @@ export function DailyRituals({ foods }: { foods: DietFood[] }) {
           </Text>
           <View style={styles.pillRow}>
             {shot.map((f) => (
-              <Pill key={f.id} label={f.displayName} detail={f.notes} styles={styles} />
+              <Pill
+                key={f.id}
+                label={f.displayName}
+                detail={f.notes}
+                styles={styles}
+              />
             ))}
           </View>
         </View>
@@ -61,16 +62,19 @@ export function DailyRituals({ foods }: { foods: DietFood[] }) {
       {superfoods.length > 0 && (
         <View style={styles.card}>
           <View style={styles.titleRow}>
-            <Ionicons
-              name="leaf-outline"
-              size={18}
-              color={colors.primary}
-            />
-            <Text style={styles.title}>Superfoods — eat daily / near-daily</Text>
+            <Ionicons name="leaf-outline" size={18} color={colors.primary} />
+            <Text style={styles.title}>
+              Superfoods — eat daily / near-daily
+            </Text>
           </View>
           <View style={styles.pillRow}>
             {superfoods.map((f) => (
-              <Pill key={f.id} label={f.displayName} detail={f.notes} styles={styles} />
+              <Pill
+                key={f.id}
+                label={f.displayName}
+                detail={f.notes}
+                styles={styles}
+              />
             ))}
           </View>
         </View>

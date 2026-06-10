@@ -74,10 +74,7 @@ export function VerdictBadge({
                 style={[
                   styles.criterionSymbol,
                   {
-                    color: verdictColor(
-                      criterionVerdictKey(c.verdict),
-                      colors
-                    ),
+                    color: verdictColor(criterionVerdictKey(c.verdict), colors),
                   },
                 ]}
               >

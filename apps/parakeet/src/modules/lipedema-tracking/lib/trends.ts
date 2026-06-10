@@ -19,10 +19,10 @@ export interface LimbTrend {
  */
 export function limbTrend(
   rows: LipedemaMeasurement[],
-  pick: (m: LipedemaMeasurement) => { l: number | null; r: number | null },
+  pick: (m: LipedemaMeasurement) => { l: number | null; r: number | null }
 ): LimbTrend {
   const sorted = [...rows].sort((a, b) =>
-    a.recordedDate.localeCompare(b.recordedDate),
+    a.recordedDate.localeCompare(b.recordedDate)
   );
   const sideL: TrendPoint[] = [];
   const sideR: TrendPoint[] = [];
@@ -61,10 +61,10 @@ export function adjacentDelta(series: TrendPoint[]): number | null {
 export function priorValue(
   rows: LipedemaMeasurement[],
   pick: (m: LipedemaMeasurement) => number | null,
-  excludeDate?: string,
+  excludeDate?: string
 ): { date: string; value: number } | null {
   const sorted = [...rows].sort((a, b) =>
-    b.recordedDate.localeCompare(a.recordedDate),
+    b.recordedDate.localeCompare(a.recordedDate)
   );
   for (const r of sorted) {
     if (excludeDate && r.recordedDate === excludeDate) continue;

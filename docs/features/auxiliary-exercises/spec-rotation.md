@@ -12,40 +12,13 @@ Manages the pool of auxiliary exercises per lift and the block-based sequential 
 **File: `packages/training-engine/src/auxiliary/auxiliary-rotator.ts`**
 
 **Default exercise pools:**
+
 ```typescript
 export const DEFAULT_AUXILIARY_POOLS: Record<Lift, string[]> = {
-  squat: [
-    'Pause Squat',
-    'Box Squat',
-    'Bulgarian Split Squat',
-    'Leg Press',
-    'High-Bar Squat',
-    'Belt Squat',
-    'Hack Squat',
-    'Front Squat',
-  ],
-  bench: [
-    'Close-Grip Bench',
-    'Incline DB Press',
-    'Dips',
-    'Floor Press',
-    'Overhead Press',
-    'JM Press',
-    'Board Press',
-    'Spoto Press',
-  ],
-  deadlift: [
-    'Romanian DL',
-    'Block Pulls',
-    'Deficit DL',
-    'Good Mornings',
-    'Stiff-Leg DL',
-    'Sumo DL',
-    'Rack Pull',
-    'Rack Pull Below Knee',
-    'Hyperextensions',
-  ],
-}
+  squat: ['Pause Squat', 'Box Squat', 'Bulgarian Split Squat', 'Leg Press', 'High-Bar Squat', 'Belt Squat', 'Hack Squat', 'Front Squat'],
+  bench: ['Close-Grip Bench', 'Incline DB Press', 'Dips', 'Floor Press', 'Overhead Press', 'JM Press', 'Board Press', 'Spoto Press'],
+  deadlift: ['Romanian DL', 'Block Pulls', 'Deficit DL', 'Good Mornings', 'Stiff-Leg DL', 'Sumo DL', 'Rack Pull', 'Rack Pull Below Knee', 'Hyperextensions'],
+};
 ```
 
 - [x] `getAuxiliariesForBlock(lift: Lift, blockNumber: 1 | 2 | 3, pool: string[]): [string, string]`
@@ -73,20 +46,23 @@ export const DEFAULT_AUXILIARY_POOLS: Record<Lift, string[]> = {
   - Each record: `{ program_id, lift, block_number, exercise_1, exercise_2 }`
 
 **Type: `AuxiliaryPool`**
+
 ```typescript
 interface AuxiliaryPool {
-  squat: string[]     // user's ordered pool for squat
-  bench: string[]     // user's ordered pool for bench
-  deadlift: string[]  // user's ordered pool for deadlift
+  squat: string[]; // user's ordered pool for squat
+  bench: string[]; // user's ordered pool for bench
+  deadlift: string[]; // user's ordered pool for deadlift
 }
 ```
 
 **User customization:**
+
 - User can reorder, add, or remove exercises from their pool in Settings → Auxiliary Exercises
 - User can manually lock/swap an individual assignment without affecting the rotation order
 - Locked assignments are flagged `is_locked: true` in `auxiliary_assignments` and skipped during rotation recalculation
 
 **Unit tests (`packages/training-engine/__tests__/auxiliary-rotator.test.ts`):**
+
 - [x] `getAuxiliariesForBlock('squat', 1, DEFAULT_AUXILIARY_POOLS.squat)` → `['Pause Squat', 'Box Squat']`
 - [x] `getAuxiliariesForBlock('squat', 2, DEFAULT_AUXILIARY_POOLS.squat)` → `['Bulgarian Split Squat', 'Leg Press']`
 - [x] `getAuxiliariesForBlock('squat', 3, DEFAULT_AUXILIARY_POOLS.squat)` → `['High-Bar Squat', 'Belt Squat']`

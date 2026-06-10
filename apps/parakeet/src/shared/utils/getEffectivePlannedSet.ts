@@ -45,11 +45,17 @@ export function getEffectivePlannedSet(
       currentAdaptation.adaptationType !== 'sets_capped')
   ) {
     if (!actual) return planned;
-    return { weight_kg: weightGramsToKg(actual.weight_grams), reps: planned.reps };
+    return {
+      weight_kg: weightGramsToKg(actual.weight_grams),
+      reps: planned.reps,
+    };
   }
 
   if (actual?.is_completed) {
-    return { weight_kg: weightGramsToKg(actual.weight_grams), reps: planned.reps };
+    return {
+      weight_kg: weightGramsToKg(actual.weight_grams),
+      reps: planned.reps,
+    };
   }
 
   // Count uncompleted sets before this index to find offset into adaptation.sets[]

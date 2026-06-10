@@ -10,19 +10,19 @@ Related docs: [periodization.md](periodization.md) for block loading tables, [vo
 
 Steps execute in order. Each step may modify `sets`, `intensity`, or `reps` fields on the prescription. Step 0 is the only step that can **increase** set count; step 2b can increase reps within the prescribed range on Rep days; all other steps can only reduce or leave unchanged.
 
-| Step | Name                        | What it does                                                                                       |
-|------|-----------------------------|----------------------------------------------------------------------------------------------------|
-| 0    | `applyVolumeCalibration`    | Adjusts base set count up or down (-2 to +3) based on RPE trends, capacity signals, and modifier learning. See [adaptive-volume.md](../design/adaptive-volume.md). **Early-return when `activeRehabCap` is set (GH#220).** Filters `recentLogs` to drop sessions tagged `containedRehabSets`. |
-| 1    | `initPipeline`              | Sets base sets, reps, %1RM, and RPE from formula config (block × intensity type).                 |
-| 2    | `applyRpeAdjustment`        | Looks at last 2 sessions' avg RPE deviation. Tiered: ≥ 0.75 over → ×0.975 (small) or ×0.95 (large, ≥ 1.25). ≤ −0.75 under → ×1.025 (small) or ×1.05 (large, ≤ −1.25). **Early-return when `activeRehabCap` is set; `computeAvgRpeDev` filters `recentLogs.containedRehabSets` (GH#220).** |
-| 2b   | `applyRepRangeAdjustment`   | **Rep days only.** Uses same RPE history. Only fires on strong signal (avgDev ≤ −1.25): prescribes `reps_max`. Mild signal (−0.75 to −1.25) is handled by the weight boost in step 2 alone — adding reps on top would compound to a ~25% total-work increase. **Early-return when `activeRehabCap` is set (GH#220).** |
-| 3    | `applyReadinessAdjustment`  | Applies sleep and energy modifiers. See [adjustments.md](adjustments.md).                         |
-| 4    | `applyCyclePhaseAdjustment` | Applies menstrual phase modifiers. See [adjustments.md](adjustments.md).                          |
-| 5    | `applySorenessAdjustment`   | Uses worst soreness score across primary muscles for the prescribed lift. See [adjustments.md](adjustments.md). |
-| 6    | `applyMrvCap`               | If any primary muscle is at or over MRV, skips or caps sets. See MRV Cap section below.           |
-| 7    | `applyDisruptionAdjustment` | Major disruption → skip. Moderate → reduce sets. Minor → log only.                               |
-| 8    | `buildFinalMainSets`        | Applies all multipliers, rounds weight to the lifter's smallest reachable plate increment (default 2.5 kg; 5 kg with no 1.25s; etc. — see [periodization.md § Weight Rounding](periodization.md)). **Clamps to `min(weight, ceilToIncrement(rehabCap.capKg))` when a cap is active (GH#220); recovery-mode 40% floor is computed against the clamped basis.** Same clamp also runs in `enforceHardConstraints` so LLM + hybrid strategies honor the cap. |
-| 9    | `processAuxExercise`        | For each configured auxiliary: resolves a history anchor via `computeAuxAnchor` (rolling avg of last 3 completed sessions, falls back to formula). Scales sets by `mainLiftVolumeRatio` and weight by `mainIntensityMultiplier` (both clamped to [0,1]) so every main-lift penalty (readiness, cycle, soreness, disruption, RPE history) propagates proportionally to aux. Severe soreness (≥9) and `skippedMainLift` skip the exercise entirely. POST_MAIN_FATIGUE_FACTOR (×0.85 weight) applies when aux shares muscles with the main lift, **but is skipped when anchor source is `history` or `snap` — historical sets already encode that fatigue context (GH#221).** Bypassed for deload sessions and `equipment_unavailable` disruptions. Volume top-up picks (`buildVolumeTopUp`) honor the same anchor. See [adjustments.md § Compounding Rules](adjustments.md#compounding-rules), GH#217, GH#221.  |
+| Step | Name                        | What it does                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
+| ---- | --------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| 0    | `applyVolumeCalibration`    | Adjusts base set count up or down (-2 to +3) based on RPE trends, capacity signals, and modifier learning. See [adaptive-volume.md](../design/adaptive-volume.md). **Early-return when `activeRehabCap` is set (GH#220).** Filters `recentLogs` to drop sessions tagged `containedRehabSets`.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
+| 1    | `initPipeline`              | Sets base sets, reps, %1RM, and RPE from formula config (block × intensity type).                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
+| 2    | `applyRpeAdjustment`        | Looks at last 2 sessions' avg RPE deviation. Tiered: ≥ 0.75 over → ×0.975 (small) or ×0.95 (large, ≥ 1.25). ≤ −0.75 under → ×1.025 (small) or ×1.05 (large, ≤ −1.25). **Early-return when `activeRehabCap` is set; `computeAvgRpeDev` filters `recentLogs.containedRehabSets` (GH#220).**                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| 2b   | `applyRepRangeAdjustment`   | **Rep days only.** Uses same RPE history. Only fires on strong signal (avgDev ≤ −1.25): prescribes `reps_max`. Mild signal (−0.75 to −1.25) is handled by the weight boost in step 2 alone — adding reps on top would compound to a ~25% total-work increase. **Early-return when `activeRehabCap` is set (GH#220).**                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+| 3    | `applyReadinessAdjustment`  | Applies sleep and energy modifiers. See [adjustments.md](adjustments.md).                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| 4    | `applyCyclePhaseAdjustment` | Applies menstrual phase modifiers. See [adjustments.md](adjustments.md).                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| 5    | `applySorenessAdjustment`   | Uses worst soreness score across primary muscles for the prescribed lift. See [adjustments.md](adjustments.md).                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| 6    | `applyMrvCap`               | If any primary muscle is at or over MRV, skips or caps sets. See MRV Cap section below.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| 7    | `applyDisruptionAdjustment` | Major disruption → skip. Moderate → reduce sets. Minor → log only.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+| 8    | `buildFinalMainSets`        | Applies all multipliers, rounds weight to the lifter's smallest reachable plate increment (default 2.5 kg; 5 kg with no 1.25s; etc. — see [periodization.md § Weight Rounding](periodization.md)). **Clamps to `min(weight, ceilToIncrement(rehabCap.capKg))` when a cap is active (GH#220); recovery-mode 40% floor is computed against the clamped basis.** Same clamp also runs in `enforceHardConstraints` so LLM + hybrid strategies honor the cap.                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| 9    | `processAuxExercise`        | For each configured auxiliary: resolves a history anchor via `computeAuxAnchor` (rolling avg of last 3 completed sessions, falls back to formula). Scales sets by `mainLiftVolumeRatio` and weight by `mainIntensityMultiplier` (both clamped to [0,1]) so every main-lift penalty (readiness, cycle, soreness, disruption, RPE history) propagates proportionally to aux. Severe soreness (≥9) and `skippedMainLift` skip the exercise entirely. POST_MAIN_FATIGUE_FACTOR (×0.85 weight) applies when aux shares muscles with the main lift, **but is skipped when anchor source is `history` or `snap` — historical sets already encode that fatigue context (GH#221).** Bypassed for deload sessions and `equipment_unavailable` disruptions. Volume top-up picks (`buildVolumeTopUp`) honor the same anchor. See [adjustments.md § Compounding Rules](adjustments.md#compounding-rules), GH#217, GH#221. |
 
 **Source:** `packages/training-engine/src/generator/jit-session-generator.ts`, `packages/training-engine/src/generator/steps/`
 
@@ -32,11 +32,11 @@ Steps execute in order. Each step may modify `sets`, `intensity`, or `reps` fiel
 
 When multiple adjustments apply simultaneously:
 
-| Scenario                              | Rule                                                                   |
-|---------------------------------------|------------------------------------------------------------------------|
-| Soreness + disruption both active     | Take `min()` per dimension (sets, intensity) — not additive.          |
-| Major disruption                      | Overrides all prior adjustments; session is skipped or replaced.      |
-| Soreness >= 9                         | Recovery session: 40% × 3 sets × 5 reps @ RPE 5.0. Overrides everything. |
+| Scenario                          | Rule                                                                     |
+| --------------------------------- | ------------------------------------------------------------------------ |
+| Soreness + disruption both active | Take `min()` per dimension (sets, intensity) — not additive.             |
+| Major disruption                  | Overrides all prior adjustments; session is skipped or replaced.         |
+| Soreness >= 9                     | Recovery session: 40% × 3 sets × 5 reps @ RPE 5.0. Overrides everything. |
 
 **Source:** `packages/training-engine/src/generator/steps/`
 
@@ -50,10 +50,10 @@ Applied in step 6. Uses values from [volume-landmarks.md](volume-landmarks.md) a
 remaining[muscle] = MRV[muscle] - weeklyVolumeToDate[muscle]
 ```
 
-| Condition              | Action                                                          |
-|------------------------|-----------------------------------------------------------------|
-| `remaining ≤ 0`        | Skip main lift entirely for this session.                       |
-| `remaining > 0`        | Cap sets to `floor(remaining / contribution)` per muscle; take the most restrictive cap across all primary muscles. |
+| Condition       | Action                                                                                                              |
+| --------------- | ------------------------------------------------------------------------------------------------------------------- |
+| `remaining ≤ 0` | Skip main lift entirely for this session.                                                                           |
+| `remaining > 0` | Cap sets to `floor(remaining / contribution)` per muscle; take the most restrictive cap across all primary muscles. |
 
 **Source:** `packages/training-engine/src/generator/steps/`
 
@@ -66,7 +66,7 @@ Bar weight floor is **20 kg** by default, configurable to **15 kg**. Duplicate c
 ### Standard (Male)
 
 | Step | % of Working Weight | Reps |
-|------|---------------------|------|
+| ---- | ------------------- | ---- |
 | 1    | 40%                 | 5    |
 | 2    | 60%                 | 3    |
 | 3    | 75%                 | 2    |
@@ -75,7 +75,7 @@ Bar weight floor is **20 kg** by default, configurable to **15 kg**. Duplicate c
 ### Standard (Female)
 
 | Step | % of Working Weight | Reps |
-|------|---------------------|------|
+| ---- | ------------------- | ---- |
 | 1    | 40%                 | 5    |
 | 2    | 55%                 | 4    |
 | 3    | 70%                 | 3    |
@@ -85,14 +85,14 @@ Bar weight floor is **20 kg** by default, configurable to **15 kg**. Duplicate c
 ### Minimal
 
 | Step | % of Working Weight | Reps |
-|------|---------------------|------|
+| ---- | ------------------- | ---- |
 | 1    | 50%                 | 5    |
 | 2    | 75%                 | 2    |
 
 ### Extended
 
 | Step | % of Working Weight | Reps |
-|------|---------------------|------|
+| ---- | ------------------- | ---- |
 | 1    | 30%                 | 10   |
 | 2    | 50%                 | 5    |
 | 3    | 65%                 | 3    |
@@ -103,7 +103,7 @@ Bar weight floor is **20 kg** by default, configurable to **15 kg**. Duplicate c
 ### Empty Bar
 
 | Step | % of Working Weight | Reps |
-|------|---------------------|------|
+| ---- | ------------------- | ---- |
 | 1    | 0% (bar)            | 10   |
 | 2    | 50%                 | 5    |
 | 3    | 70%                 | 3    |
@@ -117,10 +117,10 @@ Bar weight floor is **20 kg** by default, configurable to **15 kg**. Duplicate c
 
 Per-block rest seconds are defined in [periodization.md](periodization.md).
 
-| Adjustment type    | Rule                                          |
-|--------------------|-----------------------------------------------|
-| LLM suggestion     | ± 60 s from formula default                   |
-| User override      | Per-lift × per-intensity in `rest_configs` table |
+| Adjustment type    | Rule                                                                                                                                                                                                  |
+| ------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| LLM suggestion     | ± 60 s from formula default                                                                                                                                                                           |
+| User override      | Per-lift × per-intensity in `rest_configs` table                                                                                                                                                      |
 | Per-entry override | `AuxiliaryActualSet.prescribed_rest_seconds` (set by workout templates, see [features/workout-templates](../features/workout-templates/)). Wins over `rest_configs` and global defaults when present. |
 
 **Source:** `packages/training-engine/src/cube/blocks.ts`, `apps/parakeet/src/modules/session/utils/resolveAuxRestSeconds.ts`
@@ -157,13 +157,13 @@ No compound lift contributes to core, so core depends entirely on aux/top-up vol
 
 ### Selection Rules
 
-| Constraint              | Value / Rule                                             |
-|-------------------------|----------------------------------------------------------|
-| Max muscles per session | 2                                                        |
-| Sets per exercise       | 3                                                        |
+| Constraint              | Value / Rule                                            |
+| ----------------------- | ------------------------------------------------------- |
+| Max muscles per session | 2                                                       |
+| Sets per exercise       | 3                                                       |
 | Eligible exercises      | Primary movers only (contribution ≥ 1.0)                |
-| Excluded exercises      | Timed exercises; lifts scheduled in upcoming sessions    |
-| RPE target              | 7.5                                                      |
+| Excluded exercises      | Timed exercises; lifts scheduled in upcoming sessions   |
+| RPE target              | 7.5                                                     |
 | Total aux cap           | `MAX_AUX_EXERCISES = 5` (includes regular aux + top-up) |
 
 ### Exercise Ranking
@@ -178,11 +178,11 @@ After filtering to eligible exercises, candidates are ranked by a multi-signal s
 
 These fire during the workout, after the JIT prescription is generated.
 
-| Mechanism | Trigger | Effect |
-|-----------|---------|--------|
-| Weight autoregulation | RPE gap ≥ 1.0 below target after a main lift set | Suggests weight increase for next set (+2.5/+5 kg bench, +5/+10 kg squat/DL). Suppressed when `isInRehabMode` — cap is the ceiling (GH#220). |
-| Volume recovery | Avg RPE gap ≥ 1.5 below target, sets were removed by modifiers | Offers to add removed sets back. Suppressed when `isInRehabMode` (GH#220). |
-| Failure adaptation (main) | Failed set (reps < planned) | Tier 1: +60s rest → Tier 2: -5%/-10% weight → Tier 3: optional sets. Weight is rounded to the lifter's smallest reachable plate increment, so e.g. 5 kg jumps when no 1.25 kg plates are available (GH#219). |
-| Failure adaptation (aux) | Failed aux set | Immediate -10% weight on remaining sets of that exercise; same plate-increment rounding as main (GH#219). |
+| Mechanism                 | Trigger                                                        | Effect                                                                                                                                                                                                       |
+| ------------------------- | -------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Weight autoregulation     | RPE gap ≥ 1.0 below target after a main lift set               | Suggests weight increase for next set (+2.5/+5 kg bench, +5/+10 kg squat/DL). Suppressed when `isInRehabMode` — cap is the ceiling (GH#220).                                                                 |
+| Volume recovery           | Avg RPE gap ≥ 1.5 below target, sets were removed by modifiers | Offers to add removed sets back. Suppressed when `isInRehabMode` (GH#220).                                                                                                                                   |
+| Failure adaptation (main) | Failed set (reps < planned)                                    | Tier 1: +60s rest → Tier 2: -5%/-10% weight → Tier 3: optional sets. Weight is rounded to the lifter's smallest reachable plate increment, so e.g. 5 kg jumps when no 1.25 kg plates are available (GH#219). |
+| Failure adaptation (aux)  | Failed aux set                                                 | Immediate -10% weight on remaining sets of that exercise; same plate-increment rounding as main (GH#219).                                                                                                    |
 
 **Source:** `packages/training-engine/src/adjustments/weight-autoregulation.ts`, `volume-recovery.ts`, `intra-session-adapter.ts`

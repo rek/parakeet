@@ -36,6 +36,7 @@ The rotation table and scheduling logic that determines which intensity type (He
   - Returns new Date (no mutation of startDate)
 
 **Unit tests (`packages/training-engine/__tests__/scheduler.test.ts`):**
+
 - [x] All 9 week/lift combinations produce correct intensity type
 - [x] Week 10 returns deload for all lifts
 - [x] Block/week-in-block calculations are correct for weeks 1-9

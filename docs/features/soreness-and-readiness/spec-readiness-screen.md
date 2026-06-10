@@ -75,15 +75,13 @@ In `runJITForSession()`, the soreness check-in ratings are already fetched. Extr
 
 - [ ] Extract `sleep_quality` and `energy_level` from the ratings JSONB:
   ```typescript
-  const checkin = await getLatestSorenessCheckinForSession(sessionId)
-  const sleepQuality = checkin?.ratings?.sleep_quality as 1 | 2 | 3 | undefined
-  const energyLevel = checkin?.ratings?.energy_level as 1 | 2 | 3 | undefined
+  const checkin = await getLatestSorenessCheckinForSession(sessionId);
+  const sleepQuality = checkin?.ratings?.sleep_quality as 1 | 2 | 3 | undefined;
+  const energyLevel = checkin?.ratings?.energy_level as 1 | 2 | 3 | undefined;
   ```
 - [ ] Wire cycle phase for female users:
   ```typescript
-  const cycleCtx = biologicalSex === 'female'
-    ? await getCurrentCycleContext(userId)
-    : null
+  const cycleCtx = biologicalSex === 'female' ? await getCurrentCycleContext(userId) : null;
   ```
 - [ ] Add all three fields to `JITInput`:
   ```typescript
@@ -92,7 +90,7 @@ In `runJITForSession()`, the soreness check-in ratings are already fetched. Extr
     sleepQuality,
     energyLevel,
     cyclePhase: cycleCtx?.phase,
-  }
+  };
   ```
 
 ### Constants
@@ -104,7 +102,7 @@ In `runJITForSession()`, the soreness check-in ratings are already fetched. Extr
   export const READINESS_LABELS = {
     sleep: { 1: 'Poor', 2: 'OK', 3: 'Great' },
     energy: { 1: 'Low', 2: 'Normal', 3: 'High' },
-  } as const
+  } as const;
   ```
 
 ## Dependencies

@@ -32,27 +32,30 @@ The `generateProgram` function now creates **structural scaffolding only** — s
   - `blockNumber` is the block the deload **follows** (week 4 deload → block 1, week 8 → block 2, final-week deload → previous training week's block). Keeps the JIT pipeline's aux-assignment lookup coherent.
 
 **Type: `SessionScaffold`**
+
 ```typescript
 interface SessionScaffold {
-  weekNumber: number
-  dayNumber: number
-  primaryLift: Lift
-  intensityType: IntensityType
-  blockNumber: number  // deload sessions inherit the block they follow
-  isDeload: boolean
-  plannedDate: Date
-  plannedSets: null  // always null; populated by JIT generator
-  jitGeneratedAt: null
+  weekNumber: number;
+  dayNumber: number;
+  primaryLift: Lift;
+  intensityType: IntensityType;
+  blockNumber: number; // deload sessions inherit the block they follow
+  isDeload: boolean;
+  plannedDate: Date;
+  plannedSets: null; // always null; populated by JIT generator
+  jitGeneratedAt: null;
 }
 ```
 
 **Auxiliary assignment generation:**
+
 - [x] `generateAuxiliaryAssignments(totalWeeks: number, auxiliaryPool: AuxiliaryPool): AuxiliaryAssignment[]`
   - For each block (1, 2, 3) and each lift (squat, bench, deadlift):
     - Select exercises at pool positions `[(blockIndex × 2) % poolSize, (blockIndex × 2 + 1) % poolSize]`
     - Returns list of `AuxiliaryAssignment` objects to write to DB
 
 **Integration test:**
+
 - [x] 10-week, 3-day program → 30 session scaffolds (3 × 10)
 - [x] All `plannedSets` are null
 - [x] Week 1 sessions: squat/heavy, bench/rep, deadlift/explosive

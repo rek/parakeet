@@ -42,7 +42,9 @@ export function checkMuscleCoverage(log: SimulationLog): InvariantViolation[] {
     // would falsely report the upper-body muscles as uncovered.
     const musclesHit = new Set<string>();
     for (const session of sessions) {
-      for (const [muscle, vol] of Object.entries(session.weeklyVolumeSnapshot)) {
+      for (const [muscle, vol] of Object.entries(
+        session.weeklyVolumeSnapshot
+      )) {
         if (vol && vol > 0) musclesHit.add(muscle);
       }
     }

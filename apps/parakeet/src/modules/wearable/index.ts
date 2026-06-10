@@ -1,8 +1,5 @@
 // Application
-export {
-  syncWearableData,
-  type SyncResult,
-} from './application/sync.service';
+export { syncWearableData, type SyncResult } from './application/sync.service';
 export {
   computeAndStoreRecoverySnapshot,
   deriveNonTrainingLoad,

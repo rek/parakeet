@@ -1,12 +1,12 @@
 // @spec docs/features/wearable/spec-expo-plugin.md
 // @spec docs/features/wearable/spec-pipeline.md
 import {
+  getGrantedPermissions,
   getSdkStatus,
   initialize,
   openHealthConnectSettings,
-  requestPermission,
-  getGrantedPermissions,
   readRecords,
+  requestPermission,
   SdkAvailabilityStatus,
   SleepStageType,
 } from 'react-native-health-connect';
@@ -36,7 +36,9 @@ export async function getHealthConnectAvailability(): Promise<HealthConnectAvail
   try {
     const status = await getSdkStatus();
     if (status === SdkAvailabilityStatus.SDK_AVAILABLE) return 'available';
-    if (status === SdkAvailabilityStatus.SDK_UNAVAILABLE_PROVIDER_UPDATE_REQUIRED) {
+    if (
+      status === SdkAvailabilityStatus.SDK_UNAVAILABLE_PROVIDER_UPDATE_REQUIRED
+    ) {
       return 'provider_update_required';
     }
     return 'unsupported';
@@ -155,8 +157,7 @@ export async function readSleepSessions(
     let remMs = 0;
     for (const stage of stages) {
       const durationMs =
-        new Date(stage.endTime).getTime() -
-        new Date(stage.startTime).getTime();
+        new Date(stage.endTime).getTime() - new Date(stage.startTime).getTime();
       if (stage.stage === SleepStageType.DEEP) deepMs += durationMs;
       else if (stage.stage === SleepStageType.REM) remMs += durationMs;
     }
@@ -190,14 +191,16 @@ export async function readSpO2(
   }));
 }
 
-export async function readActiveMinutes(start: Date, end: Date): Promise<number> {
+export async function readActiveMinutes(
+  start: Date,
+  end: Date
+): Promise<number> {
   const result = await readRecords('ActiveCaloriesBurned', {
     timeRangeFilter: toTimeFilter(start, end),
   });
   const totalMs = result.records.reduce((sum, r) => {
     return (
-      sum +
-      (new Date(r.endTime).getTime() - new Date(r.startTime).getTime())
+      sum + (new Date(r.endTime).getTime() - new Date(r.startTime).getTime())
     );
   }, 0);
   return totalMs / 60000;

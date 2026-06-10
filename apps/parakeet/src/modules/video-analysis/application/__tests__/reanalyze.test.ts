@@ -1,18 +1,19 @@
+import { randomUUID } from 'crypto';
+import { existsSync, readFileSync } from 'fs';
+import { resolve } from 'path';
+
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { createClient } from '@supabase/supabase-js';
-import { readFileSync, existsSync } from 'fs';
-import { randomUUID } from 'crypto';
-import { resolve } from 'path';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
+import type { PoseFrame } from '../../lib/pose-types';
+import type { SessionVideo } from '../../model/types';
 import { analyzeVideoFrames } from '../analyze-video';
 import {
   isSupportedLift,
   reanalyzeSessionVideo,
   SUPPORTED_LIFTS,
 } from '../reanalyze';
-import type { PoseFrame } from '../../lib/pose-types';
-import type { SessionVideo } from '../../model/types';
 
 // Integration test: requires a running local Supabase stack + real
 // env-provided keys. No hardcoded fallbacks — the test skips cleanly
@@ -128,9 +129,8 @@ describe('reanalyze.pure', () => {
         fileExists: () => true,
         getVideoDurationSec: async () => 13,
         extractFrames: async () => ({
-          frames: Array.from(
-            { length: 30 },
-            () => Array.from({ length: 33 }, () => makeLandmark())
+          frames: Array.from({ length: 30 }, () =>
+            Array.from({ length: 33 }, () => makeLandmark())
           ) as PoseFrame[],
           fps: 4,
         }),
@@ -148,153 +148,150 @@ describe('reanalyze.pure', () => {
   });
 });
 
-describeIntegration(
-  'reanalyze.integration (local Supabase)',
-  () => {
-    let admin: SupabaseClient;
-    let user: SupabaseClient;
-    let userId: string;
-    let sessionId: string;
-    let videoId: string;
+describeIntegration('reanalyze.integration (local Supabase)', () => {
+  let admin: SupabaseClient;
+  let user: SupabaseClient;
+  let userId: string;
+  let sessionId: string;
+  let videoId: string;
 
-    beforeAll(async () => {
-      admin = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
+  beforeAll(async () => {
+    admin = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
 
-      const email = `reanalyze-integration-${Date.now()}@example.com`;
-      const password = 'testpass123';
-      const { data: created, error: createErr } =
-        await admin.auth.admin.createUser({
-          email,
-          password,
-          email_confirm: true,
-        });
-      if (createErr || !created.user) throw createErr;
-      userId = created.user.id;
-
-      await admin
-        .from('profiles')
-        .insert({ id: userId, display_name: 'Integration Test' });
-
-      sessionId = randomUUID();
-      await admin.from('sessions').insert({
-        id: sessionId,
-        user_id: userId,
-        planned_date: new Date().toISOString().slice(0, 10),
-        status: 'completed',
-        week_number: 0,
-        day_number: 0,
+    const email = `reanalyze-integration-${Date.now()}@example.com`;
+    const password = 'testpass123';
+    const { data: created, error: createErr } =
+      await admin.auth.admin.createUser({
+        email,
+        password,
+        email_confirm: true,
       });
+    if (createErr || !created.user) throw createErr;
+    userId = created.user.id;
 
-      videoId = randomUUID();
-      const stuckAnalysis = {
+    await admin
+      .from('profiles')
+      .insert({ id: userId, display_name: 'Integration Test' });
+
+    sessionId = randomUUID();
+    await admin.from('sessions').insert({
+      id: sessionId,
+      user_id: userId,
+      planned_date: new Date().toISOString().slice(0, 10),
+      status: 'completed',
+      week_number: 0,
+      day_number: 0,
+    });
+
+    videoId = randomUUID();
+    const stuckAnalysis = {
+      fps: 4,
+      reps: [],
+      cameraAngle: 'side',
+      analysisVersion: 4,
+      sagittalConfidence: 0.8,
+    };
+    await admin.from('session_videos').insert({
+      id: videoId,
+      user_id: userId,
+      session_id: sessionId,
+      lift: 'deadlift',
+      set_number: 2,
+      sagittal_confidence: 0.8,
+      local_uri: 'file:///fake.mp4',
+      duration_sec: 13,
+      analysis: stuckAnalysis,
+    });
+
+    user = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    const { error: signInErr } = await user.auth.signInWithPassword({
+      email,
+      password,
+    });
+    if (signInErr) throw signInErr;
+  });
+
+  afterAll(async () => {
+    if (!admin) return;
+    await admin.from('session_videos').delete().eq('id', videoId);
+    await admin.from('sessions').delete().eq('id', sessionId);
+    await admin.auth.admin.deleteUser(userId);
+  });
+
+  it('updates the DB row in place with refreshed analysis', async () => {
+    const fixture = JSON.parse(readFileSync(FIXTURE_PATH, 'utf-8')) as {
+      frames: PoseFrame[];
+      fps: number;
+    };
+
+    const result = makeResult({
+      id: videoId,
+      sessionId,
+      lift: 'deadlift',
+      setNumber: 2,
+      localUri: 'file:///fake.mp4',
+      durationSec: 13,
+      analysis: {
         fps: 4,
         reps: [],
         cameraAngle: 'side',
         analysisVersion: 4,
         sagittalConfidence: 0.8,
-      };
-      await admin.from('session_videos').insert({
-        id: videoId,
-        user_id: userId,
-        session_id: sessionId,
-        lift: 'deadlift',
-        set_number: 2,
-        sagittal_confidence: 0.8,
-        local_uri: 'file:///fake.mp4',
-        duration_sec: 13,
-        analysis: stuckAnalysis,
-      });
-
-      user = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-      const { error: signInErr } = await user.auth.signInWithPassword({
-        email,
-        password,
-      });
-      if (signInErr) throw signInErr;
+      } as never,
     });
 
-    afterAll(async () => {
-      if (!admin) return;
-      await admin.from('session_videos').delete().eq('id', videoId);
-      await admin.from('sessions').delete().eq('id', sessionId);
-      await admin.auth.admin.deleteUser(userId);
-    });
+    const steps: Array<[string, Record<string, unknown> | undefined]> = [];
 
-    it('updates the DB row in place with refreshed analysis', async () => {
-      const fixture = JSON.parse(readFileSync(FIXTURE_PATH, 'utf-8')) as {
-        frames: PoseFrame[];
-        fps: number;
-      };
-
-      const result = makeResult({
-        id: videoId,
-        sessionId,
-        lift: 'deadlift',
-        setNumber: 2,
-        localUri: 'file:///fake.mp4',
-        durationSec: 13,
-        analysis: {
-          fps: 4,
-          reps: [],
-          cameraAngle: 'side',
-          analysisVersion: 4,
-          sagittalConfidence: 0.8,
-        } as never,
-      });
-
-      const steps: Array<[string, Record<string, unknown> | undefined]> = [];
-
-      const updated = await reanalyzeSessionVideo({
-        result,
-        lift: 'deadlift',
-        deps: {
-          fileExists: () => true,
-          getVideoDurationSec: async () => fixture.frames.length / fixture.fps,
-          extractFrames: async () => fixture,
-          analyze: ({ frames, fps, lift }) =>
-            analyzeVideoFrames({ frames, fps, lift }),
-          update: async ({ id, analysis }) => {
-            const { data, error } = await user
-              .from('session_videos')
-              .update({ analysis })
-              .eq('id', id)
-              .select('*')
-              .single();
-            if (error) throw error;
-            return rowToSessionVideo(data);
-          },
-          onBreadcrumb: (step, data) => steps.push([step, data]),
+    const updated = await reanalyzeSessionVideo({
+      result,
+      lift: 'deadlift',
+      deps: {
+        fileExists: () => true,
+        getVideoDurationSec: async () => fixture.frames.length / fixture.fps,
+        extractFrames: async () => fixture,
+        analyze: ({ frames, fps, lift }) =>
+          analyzeVideoFrames({ frames, fps, lift }),
+        update: async ({ id, analysis }) => {
+          const { data, error } = await user
+            .from('session_videos')
+            .update({ analysis })
+            .eq('id', id)
+            .select('*')
+            .single();
+          if (error) throw error;
+          return rowToSessionVideo(data);
         },
-      });
+        onBreadcrumb: (step, data) => steps.push([step, data]),
+      },
+    });
 
-      expect(updated.analysis?.reps.length).toBeGreaterThan(0);
-      expect(updated.analysis?.fatigueSignatures).toBeDefined();
-      expect(updated.id).toBe(videoId);
+    expect(updated.analysis?.reps.length).toBeGreaterThan(0);
+    expect(updated.analysis?.fatigueSignatures).toBeDefined();
+    expect(updated.id).toBe(videoId);
 
-      // Verify the row in DB actually changed (round-trip through PostgREST)
-      const { data: final, error: finalErr } = await user
-        .from('session_videos')
-        .select('analysis')
-        .eq('id', videoId)
-        .single();
-      expect(finalErr).toBeNull();
-      const finalAnalysis = final?.analysis as {
-        reps: unknown[];
-        fatigueSignatures?: unknown;
-      };
-      expect(finalAnalysis.reps.length).toBeGreaterThan(0);
+    // Verify the row in DB actually changed (round-trip through PostgREST)
+    const { data: final, error: finalErr } = await user
+      .from('session_videos')
+      .select('analysis')
+      .eq('id', videoId)
+      .single();
+    expect(finalErr).toBeNull();
+    const finalAnalysis = final?.analysis as {
+      reps: unknown[];
+      fatigueSignatures?: unknown;
+    };
+    expect(finalAnalysis.reps.length).toBeGreaterThan(0);
 
-      expect(steps.map(([s]) => s)).toEqual(
-        expect.arrayContaining([
-          'extract-start',
-          'extract-done',
-          'analyze-done',
-          'db-update-ok',
-        ])
-      );
-    }, 30_000);
-  }
-);
+    expect(steps.map(([s]) => s)).toEqual(
+      expect.arrayContaining([
+        'extract-start',
+        'extract-done',
+        'analyze-done',
+        'db-update-ok',
+      ])
+    );
+  }, 30_000);
+});
 
 // ---------------------------------------------------------------------------
 // Helpers

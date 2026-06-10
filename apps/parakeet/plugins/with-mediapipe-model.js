@@ -11,7 +11,13 @@ function withMediaPipeModel(config) {
   return withDangerousMod(config, [
     'android',
     (config) => {
-      const src = path.resolve(__dirname, '..', 'assets', 'models', 'pose_landmarker_full.task');
+      const src = path.resolve(
+        __dirname,
+        '..',
+        'assets',
+        'models',
+        'pose_landmarker_full.task'
+      );
       const assetsDir = path.resolve(
         config.modRequest.platformProjectRoot,
         'app',

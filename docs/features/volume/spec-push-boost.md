@@ -8,6 +8,7 @@
 A targeted refinement to `buildVolumeTopUp()` in `jit-session-generator.ts` that bypasses MEV pro-rating for push muscles (chest, triceps, shoulders) when the day's primary lift contributes zero to those muscles. This prevents push volume from being systematically under-trigged in squat/deadlift-heavy blocks.
 
 Depends on:
+
 - **JIT volume augmentation** (engine-027) — `buildVolumeTopUp()` function
 
 ## Problem
@@ -23,28 +24,21 @@ Worst case: 2 non-bench sessions/week, 3-set cap each → max 6 push sets. If ch
 Inside `buildVolumeTopUp()`, in the per-muscle loop before computing `deficit`:
 
 **Before:**
+
 ```typescript
-const effectiveMev =
-  sessionIndex && totalSessionsThisWeek && totalSessionsThisWeek > 0
-    ? Math.ceil((mev * sessionIndex) / totalSessionsThisWeek)
-    : mev;
+const effectiveMev = sessionIndex && totalSessionsThisWeek && totalSessionsThisWeek > 0 ? Math.ceil((mev * sessionIndex) / totalSessionsThisWeek) : mev;
 ```
 
 **After:**
+
 ```typescript
 // Push muscles (chest, triceps, shoulders) that receive zero direct contribution
 // from today's primary lift use the full MEV target rather than the pro-rated
 // threshold. This front-loads push coverage on squat/deadlift days, preventing
 // zero-volume weeks when no bench session occurs or bench is skipped.
-const isPushMuscle =
-  muscle === 'chest' || muscle === 'triceps' || muscle === 'shoulders';
+const isPushMuscle = muscle === 'chest' || muscle === 'triceps' || muscle === 'shoulders';
 const primaryLiftContrib = mainContrib.get(muscle) ?? 0;
-const effectiveMev =
-  isPushMuscle && primaryLiftContrib === 0
-    ? mev
-    : sessionIndex && totalSessionsThisWeek && totalSessionsThisWeek > 0
-      ? Math.ceil((mev * sessionIndex) / totalSessionsThisWeek)
-      : mev;
+const effectiveMev = isPushMuscle && primaryLiftContrib === 0 ? mev : sessionIndex && totalSessionsThisWeek && totalSessionsThisWeek > 0 ? Math.ceil((mev * sessionIndex) / totalSessionsThisWeek) : mev;
 ```
 
 ### Invariants

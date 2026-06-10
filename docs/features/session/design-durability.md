@@ -31,6 +31,7 @@ Real incident: 2026-04-15 bench session. User logged sets, never tapped End. Ses
 New append-only `set_logs` table. One row per confirmed set. Written the instant `is_completed` flips to true on the device. Weights as integer grams. `session_logs.actual_sets` becomes derived (or dropped) after backfill.
 
 Append-only over JSONB upsert because:
+
 - Set data is immutable by nature — each confirmed set is a fact, not a mutable record.
 - Natural dedupe key `(session_id, kind, set_number)` — kind ∈ {`primary`, `auxiliary`}, set_number scoped per exercise for aux.
 - Trivial multi-device reconcile.
@@ -49,6 +50,7 @@ Append-only over JSONB upsert because:
 ### Local store guard
 
 `initSession(newId)` refuses to overwrite a store that holds:
+
 - a different `sessionId`, AND
 - any `actualSets` entry with `is_completed: true` AND a set not yet present in `set_logs` on server.
 

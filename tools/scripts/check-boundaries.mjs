@@ -16,7 +16,6 @@
  * Type-only imports (`import type`) are exempt from layer isolation rules (2, 3)
  * since they are erased at compile time and create no runtime coupling.
  */
-
 import fs from 'node:fs';
 import path from 'node:path';
 
@@ -81,9 +80,13 @@ function checkFile(filePath) {
       const importKeyword = before.match(/import\s+(type)\s+/s);
       if (importKeyword) {
         // Ensure no other `from` between the `import type` and this `from`
-        const afterImportType =
-          before.slice(before.lastIndexOf(importKeyword[0]));
-        if (!afterImportType.includes("from '") && !afterImportType.includes('from "')) {
+        const afterImportType = before.slice(
+          before.lastIndexOf(importKeyword[0])
+        );
+        if (
+          !afterImportType.includes("from '") &&
+          !afterImportType.includes('from "')
+        ) {
           isTypeOnly = true;
         }
       }
@@ -108,12 +111,16 @@ function checkFile(filePath) {
     if (moduleAny && owningModule) {
       const targetModule = moduleAny[1];
       if (targetModule !== owningModule) {
-        if (!moduleGraph.has(owningModule)) moduleGraph.set(owningModule, new Map());
+        if (!moduleGraph.has(owningModule))
+          moduleGraph.set(owningModule, new Map());
         const edges = moduleGraph.get(owningModule);
         const isDynamic = match[2] !== undefined; // match[2] is from import()
         // An edge is 'static' if any static import exists; only 'dynamic' if all are dynamic
         if (!edges.has(targetModule) || !isDynamic) {
-          edges.set(targetModule, isDynamic ? (edges.get(targetModule) || 'dynamic') : 'static');
+          edges.set(
+            targetModule,
+            isDynamic ? edges.get(targetModule) || 'dynamic' : 'static'
+          );
         }
       }
     }

@@ -16,34 +16,32 @@ Four named protocols are built in. Users can also define fully custom step seque
 **Types:**
 
 ```typescript
-type WarmupPresetName = 'standard' | 'minimal' | 'extended' | 'empty_bar'
+type WarmupPresetName = 'standard' | 'minimal' | 'extended' | 'empty_bar';
 
-type WarmupProtocol =
-  | { type: 'preset'; name: WarmupPresetName }
-  | { type: 'custom'; steps: WarmupStep[] }
+type WarmupProtocol = { type: 'preset'; name: WarmupPresetName } | { type: 'custom'; steps: WarmupStep[] };
 
 interface WarmupStep {
-  pct: number   // fraction of working weight (0.0–1.0)
-  reps: number
+  pct: number; // fraction of working weight (0.0–1.0)
+  reps: number;
 }
 
 interface WarmupSet {
-  setNumber: number
-  weightKg: number        // rounded to nearest 2.5kg, minimum 20kg (empty bar)
-  displayWeight: string   // "20 kg (bar)" when at or below 20kg
-  reps: number
-  isWarmup: true
+  setNumber: number;
+  weightKg: number; // rounded to nearest 2.5kg, minimum 20kg (empty bar)
+  displayWeight: string; // "20 kg (bar)" when at or below 20kg
+  reps: number;
+  isWarmup: true;
 }
 ```
 
 **Built-in protocols (% of working weight × reps):**
 
-| Protocol | Steps |
-|----------|-------|
-| `standard` (default) | 40%×5, 60%×3, 75%×2, 90%×1 |
-| `minimal` | 50%×5, 75%×2 |
-| `extended` | 30%×10, 50%×5, 65%×3, 80%×2, 90%×1, 95%×1 |
-| `empty_bar` | 20kg×10 (fixed), 50%×5, 70%×3, 85%×1 |
+| Protocol             | Steps                                     |
+| -------------------- | ----------------------------------------- |
+| `standard` (default) | 40%×5, 60%×3, 75%×2, 90%×1                |
+| `minimal`            | 50%×5, 75%×2                              |
+| `extended`           | 30%×10, 50%×5, 65%×3, 80%×2, 90%×1, 95%×1 |
+| `empty_bar`          | 20kg×10 (fixed), 50%×5, 70%×3, 85%×1      |
 
 `empty_bar` is designed for bench press and overhead press — the first set is always the empty bar regardless of working weight, useful when learning movement patterns before adding load.
 
@@ -65,6 +63,7 @@ interface WarmupSet {
   - Used by all three JIT paths (formula, LLM, constraint enforcement)
 
 **Unit tests (`packages/training-engine/__tests__/warmup-calculator.test.ts`):**
+
 - [x] Working weight 112.5kg, `standard` → [45kg×5, 67.5kg×3, 85kg×2, 102.5kg×1]
 - [x] Working weight 60kg, `standard` → [25kg×5, 37.5kg×3, 45kg×2, 55kg×1]
 - [x] Working weight 30kg, `standard` → first step `30×0.4=12→20kg`, second `30×0.6=18→20kg`; both map to 20kg so second is deduped out

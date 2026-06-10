@@ -87,7 +87,9 @@ export function SetRow({
   // Local text buffer for in-progress typing ("5.", ""). The numeric value is
   // canonical from props; this just preserves keystrokes that haven't yet
   // resolved to a different number.
-  const [weightText, setWeightText] = useState(() => formatWeightText(weightKg));
+  const [weightText, setWeightText] = useState(() =>
+    formatWeightText(weightKg)
+  );
 
   // Resync buffer when canonical weight changes externally (e.g. +5kg accept,
   // ±2.5 button on another render path). Skip resync if the current buffer

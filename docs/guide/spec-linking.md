@@ -15,9 +15,9 @@ Completed spec tasks MUST name the implementing file and symbol.
 
 ```markdown
 - [x] `runJIT(input: JITInput): JITOutput` — orchestrator
-  → `modules/jit/application/jit-session-generator.ts:runJIT`
+      → `modules/jit/application/jit-session-generator.ts:runJIT`
 - [x] Unit tests
-  → `modules/jit/application/__tests__/jit-session-generator.test.ts`
+      → `modules/jit/application/__tests__/jit-session-generator.test.ts`
 ```
 
 Rules:
@@ -88,9 +88,9 @@ Spec excerpt (`docs/features/jit/spec-pipeline.md`):
 **`modules/jit/application/jit-session-generator.ts`:**
 
 - [x] `runJIT(input): JITOutput` — 5-step pipeline
-  → `modules/jit/application/jit-session-generator.ts:runJIT`
+      → `modules/jit/application/jit-session-generator.ts:runJIT`
 - [x] `buildAuxiliaryWork(...)` — volume top-up
-  → `modules/jit/application/jit-session-generator.ts:buildAuxiliaryWork`
+      → `modules/jit/application/jit-session-generator.ts:buildAuxiliaryWork`
 ```
 
 Code header (`modules/jit/application/jit-session-generator.ts`):

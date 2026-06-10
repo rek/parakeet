@@ -10,10 +10,12 @@ User profile management using Supabase SDK directly from the parakeet app. No cu
 ## Tasks
 
 **`apps/parakeet/lib/profile.ts` (helper functions):**
+
 - [x] `getProfile(): Promise<Profile | null>` — fetch current user profile from `profiles` table
 - [x] `updateProfile(update: { display_name?: string }): Promise<void>` — update display name
 
 **Settings screen:**
+
 - [x] Display: email (from `supabase.auth.getUser()`), display_name (from `profiles`)
 - [x] Edit: display_name field with save button → calls `updateProfile()`
 - [x] Sign out button → calls `supabase.auth.signOut()`

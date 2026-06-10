@@ -1,10 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { DEFAULT_CARDIO_POOL } from './exercise-catalog';
-import {
-  createExerciseTyper,
-  getExerciseType,
-} from './exercise-types';
+import { createExerciseTyper, getExerciseType } from './exercise-types';
 
 describe('createExerciseTyper', () => {
   it('matches getExerciseType for catalog names when no custom map is supplied', () => {

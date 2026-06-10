@@ -12,6 +12,7 @@ We need to manage a multi-package codebase that includes a React Native parakeet
 Use **Nx** as the monorepo build system and workspace manager.
 
 Key configuration:
+
 - Nx workspace root with `nx.json` and `package.json` at root
 - Apps in `apps/` (parakeet, api)
 - Shared packages in `packages/` (training-engine, api-client, shared-types, db)
@@ -21,6 +22,7 @@ Key configuration:
 ## Rationale
 
 ### Pros
+
 - Incremental builds and test caching — only affected packages re-run in CI
 - `nx affected` command detects which apps/packages changed and limits CI scope
 - TypeScript path aliases enable clean cross-package imports without publishing to npm
@@ -29,6 +31,7 @@ Key configuration:
 - First-class dependency graph visualization for architecture review
 
 ### Cons
+
 - Initial setup overhead vs. a simple single-package repo
 - Nx cache can be confusing when debugging stale outputs
 - Team must understand Nx project configuration (`project.json`) structure
@@ -36,30 +39,36 @@ Key configuration:
 ## Alternatives Considered
 
 ### Alternative 1: Turborepo
+
 - Similar capability to Nx for build caching and affected detection
 - **Why not chosen:** Nx has stronger plugin ecosystem, better Expo support, and more mature TypeScript path alias handling
 
 ### Alternative 2: Separate repositories + npm packages
+
 - Each package published to a private npm registry
 - **Why not chosen:** Adds friction to cross-package development (publish → update → install cycle), slows iteration on shared types and training engine
 
 ### Alternative 3: Single flat package (no monorepo)
+
 - Everything in one `package.json`
 - **Why not chosen:** Would force training engine logic into the same deployable as the parakeet app, violating the architectural constraint that training logic must not live in the frontend
 
 ## Consequences
 
 ### Positive
+
 - `packages/training-engine` can be imported directly by `apps/api` without npm publishing
 - `packages/shared-types` ensures parakeet and API share the same Zod schemas and TypeScript types
 - CI only runs tests for changed packages, keeping build times low as the project grows
 - Clear physical separation enforces the architectural boundary: parakeet cannot accidentally import from training-engine
 
 ### Negative
+
 - Developers must learn Nx concepts (targets, executors, affected)
 - `node_modules` hoisting behavior can occasionally surprise; use `nx reset` when builds are stale
 
 ### Neutral
+
 - All tooling config (ESLint, Prettier, TypeScript) is centralized at the workspace root
 
 ## Implementation Notes
@@ -85,14 +94,15 @@ nx affected --target=test --base=origin/main
 ```
 
 **Path alias example (`tsconfig.base.json`):**
+
 ```json
 {
   "compilerOptions": {
     "paths": {
       "@parakeet/training-engine": ["packages/training-engine/src/index.ts"],
-      "@parakeet/shared-types":    ["packages/shared-types/src/index.ts"],
-      "@parakeet/api-client":      ["packages/api-client/src/index.ts"],
-      "@parakeet/db":              ["packages/db/src/index.ts"]
+      "@parakeet/shared-types": ["packages/shared-types/src/index.ts"],
+      "@parakeet/api-client": ["packages/api-client/src/index.ts"],
+      "@parakeet/db": ["packages/db/src/index.ts"]
     }
   }
 }

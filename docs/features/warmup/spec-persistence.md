@@ -19,6 +19,7 @@ Warm-up sets are currently UI-only — shown during a session from the JIT outpu
 Add `warmup_sets` JSONB column to `session_logs` table.
 
 Each entry:
+
 ```json
 {
   "set_number": 1,
@@ -47,8 +48,8 @@ ALTER TABLE session_logs ADD COLUMN warmup_sets JSONB;
 
 ```typescript
 interface WarmupSet {
-  set_number: number
-  weight_grams: number
-  reps: number
+  set_number: number;
+  weight_grams: number;
+  reps: number;
 }
 ```

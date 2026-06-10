@@ -73,10 +73,7 @@ export function AuxAnchorNote({
         animationType="fade"
         onRequestClose={() => setExpanded(false)}
       >
-        <Pressable
-          style={styles.backdrop}
-          onPress={() => setExpanded(false)}
-        />
+        <Pressable style={styles.backdrop} onPress={() => setExpanded(false)} />
         <View style={styles.sheet}>
           <ScrollView style={styles.sheetScroll}>
             <Text style={styles.sheetHeader}>How this weight was chosen</Text>
@@ -128,7 +125,9 @@ export function AuxAnchorNote({
   );
 }
 
-function labelForSource(source: AuxAnchorNoteProps['anchor']['source']): string {
+function labelForSource(
+  source: AuxAnchorNoteProps['anchor']['source']
+): string {
   switch (source) {
     case 'history':
       return 'Your recent sessions';

@@ -1,11 +1,11 @@
 // @spec docs/features/intra-session/spec-weight-autoregulation.md
 import { Lift } from '@parakeet/shared-types';
 import { evaluateWeightAutoregulation } from '@parakeet/training-engine';
-import { useSessionStore } from '../store/sessionStore';
 import { DEFAULT_RPE_TARGET } from '@shared/constants/training';
 import { weightGramsToKg } from '@shared/utils/weight';
 
 import type { JitData } from '../model/types';
+import { useSessionStore } from '../store/sessionStore';
 
 /**
  * Reads the current session state and checks whether a weight increase

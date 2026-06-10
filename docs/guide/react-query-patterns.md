@@ -50,10 +50,11 @@ const todoQueries = {
       queryFn: () => fetchTodo(id),
       staleTime: 5000,
     }),
-}
+};
 ```
 
 **Why:**
+
 - Zero runtime cost — just returns the object
 - Type-tags queryKey so `getQueryData` infers the return type
 - Works across `useQuery`, `useSuspenseQuery`, `prefetchQuery`, imperative calls
@@ -66,11 +67,11 @@ const todoQueries = {
 
 ### Configuration
 
-| Setting | Default | Guidance |
-|---------|---------|----------|
-| `staleTime` | 0 | Increase per data volatility. 0 = always refetch on mount/focus. |
-| `gcTime` | 5 min | Rarely needs changing. How long inactive cache entries survive. |
-| `retry` | 3 | Set to `false` in tests. |
+| Setting     | Default | Guidance                                                         |
+| ----------- | ------- | ---------------------------------------------------------------- |
+| `staleTime` | 0       | Increase per data volatility. 0 = always refetch on mount/focus. |
+| `gcTime`    | 5 min   | Rarely needs changing. How long inactive cache entries survive.  |
+| `retry`     | 3       | Set to `false` in tests.                                         |
 
 ### Conditional Queries
 
@@ -81,14 +82,14 @@ Prefer `skipToken` over `enabled` + non-null assertions:
 useQuery({
   queryKey: ['user', id],
   queryFn: id ? () => fetchUser(id) : skipToken,
-})
+});
 
 // Avoid
 useQuery({
   queryKey: ['user', id],
-  queryFn: () => fetchUser(id!),  // unsafe assertion
+  queryFn: () => fetchUser(id!), // unsafe assertion
   enabled: !!id,
-})
+});
 ```
 
 ### select for Partial Subscriptions
@@ -100,7 +101,7 @@ Components re-render only when their selected slice changes (via structural shar
 const { data: todoCount } = useQuery({
   ...todoQueries.list(filters),
   select: (data) => data.length,
-})
+});
 ```
 
 Use for: derived values, single fields, computed aggregates. Don't over-optimize — only when profiling shows a problem.
@@ -124,22 +125,23 @@ Mutations are **imperative** — you call `mutate()` when you want. Queries are 
 const mutation = useMutation({
   mutationFn: updateTodo,
   onSuccess: () => {
-    queryClient.invalidateQueries({ queryKey: ['todos'] })
+    queryClient.invalidateQueries({ queryKey: ['todos'] });
   },
-})
+});
 
 // mutate callbacks → UI concerns (toast, redirect, form reset)
 mutation.mutate(values, {
   onSuccess: () => {
-    toast.success('Saved')
-    navigation.goBack()
+    toast.success('Saved');
+    navigation.goBack();
   },
-})
+});
 ```
 
 ### Concurrent Mutations
 
 When multiple mutations target the same data:
+
 1. Cancel in-flight queries before optimistic updates
 2. Only invalidate when no sibling mutations are pending: `isMutating({ mutationKey }) === 1`
 
@@ -147,11 +149,11 @@ When multiple mutations target the same data:
 
 ## Error Handling (3 Layers)
 
-| Layer | Scope | Use for |
-|-------|-------|---------|
-| **Global** `QueryCache.onError` | Once per failed request | Sentry, error toasts for background failures |
-| **Error Boundary** `throwOnError` | Component subtree | 5xx crashes; use function form for granular control |
-| **Local** per-hook | Single component | Specific UX (form validation errors, retry UI) |
+| Layer                             | Scope                   | Use for                                             |
+| --------------------------------- | ----------------------- | --------------------------------------------------- |
+| **Global** `QueryCache.onError`   | Once per failed request | Sentry, error toasts for background failures        |
+| **Error Boundary** `throwOnError` | Component subtree       | 5xx crashes; use function form for granular control |
+| **Local** per-hook                | Single component        | Specific UX (form validation errors, retry UI)      |
 
 Never use per-query `onError` for notifications — it fires once per observer (duplicates in multiple components).
 
@@ -163,12 +165,12 @@ new QueryClient({
     onError: (error, query) => {
       if (query.state.data !== undefined) {
         // Background failure with existing data — toast, don't crash
-        toast.error(`Update failed: ${error.message}`)
+        toast.error(`Update failed: ${error.message}`);
       }
-      captureException(error)
+      captureException(error);
     },
   }),
-})
+});
 ```
 
 ---
@@ -182,18 +184,16 @@ new QueryClient({
   mutationCache: new MutationCache({
     onSuccess: (_data, _variables, _context, mutation) => {
       // Targeted: use meta.invalidates if set
-      const invalidates = mutation.meta?.invalidates as string[][] | undefined
+      const invalidates = mutation.meta?.invalidates as string[][] | undefined;
       if (invalidates) {
-        invalidates.forEach((key) =>
-          queryClient.invalidateQueries({ queryKey: key })
-        )
-        return
+        invalidates.forEach((key) => queryClient.invalidateQueries({ queryKey: key }));
+        return;
       }
       // Fallback: invalidate everything (inactive queries just get marked stale)
-      queryClient.invalidateQueries()
+      queryClient.invalidateQueries();
     },
   }),
-})
+});
 ```
 
 Tag mutations with what they affect:
@@ -202,7 +202,7 @@ Tag mutations with what they affect:
 useMutation({
   mutationFn: updateTodo,
   meta: { invalidates: [['todos']] },
-})
+});
 ```
 
 ---
@@ -227,10 +227,10 @@ useMutation({
 
 ## Forms
 
-| Approach | When | Pattern |
-|----------|------|---------|
-| **Copy to form state** | Simple edit forms, single user | `defaultValues` from query data, `staleTime: Infinity` |
-| **Keep server state live** | Collaborative editing | Only track dirty fields locally, merge with query data at render |
+| Approach                   | When                           | Pattern                                                          |
+| -------------------------- | ------------------------------ | ---------------------------------------------------------------- |
+| **Copy to form state**     | Simple edit forms, single user | `defaultValues` from query data, `staleTime: Infinity`           |
+| **Keep server state live** | Collaborative editing          | Only track dirty fields locally, merge with query data at render |
 
 Always: disable submit with `isPending`, reset form in mutation `onSuccess`, invalidate query after mutation.
 
@@ -238,11 +238,11 @@ Always: disable submit with `isPending`, reset form in mutation `onSuccess`, inv
 
 ## Offline
 
-| `networkMode` | Behavior | Use for |
-|---------------|----------|---------|
-| `online` (default) | Pauses when offline, `fetchStatus: 'paused'` | Standard apps |
-| `offlineFirst` | First request always fires, retries pause | PWAs, service workers |
-| `always` | Ignores connectivity entirely | Web workers, non-network async |
+| `networkMode`      | Behavior                                     | Use for                        |
+| ------------------ | -------------------------------------------- | ------------------------------ |
+| `online` (default) | Pauses when offline, `fetchStatus: 'paused'` | Standard apps                  |
+| `offlineFirst`     | First request always fires, retries pause    | PWAs, service workers          |
+| `always`           | Ignores connectivity entirely                | Web workers, non-network async |
 
 ---
 
@@ -258,12 +258,12 @@ Rule of thumb: `initialData` for seeding from other queries, `placeholderData` f
 
 ## Anti-Patterns
 
-| Don't | Do instead |
-|-------|------------|
-| Copy query data into `useState` | Use query data directly; derive with `select` |
-| Pass params to `refetch()` | Change the query key (state drives fetch) |
-| Write raw query key arrays | Use key factory (`qk.*` or `queryOptions`) |
-| Use `onError` on individual queries for toasts | Use global `QueryCache.onError` |
-| Disable `refetchOnWindowFocus` | Embrace it — it's the stale-while-revalidate UX |
-| Optimize renders before profiling | Fix slow renders before reducing re-renders |
-| Import `@tanstack/react-query` in screens | Always wrap in a module hook — screens are composition only |
+| Don't                                          | Do instead                                                  |
+| ---------------------------------------------- | ----------------------------------------------------------- |
+| Copy query data into `useState`                | Use query data directly; derive with `select`               |
+| Pass params to `refetch()`                     | Change the query key (state drives fetch)                   |
+| Write raw query key arrays                     | Use key factory (`qk.*` or `queryOptions`)                  |
+| Use `onError` on individual queries for toasts | Use global `QueryCache.onError`                             |
+| Disable `refetchOnWindowFocus`                 | Embrace it — it's the stale-while-revalidate UX             |
+| Optimize renders before profiling              | Fix slow renders before reducing re-renders                 |
+| Import `@tanstack/react-query` in screens      | Always wrap in a module hook — screens are composition only |

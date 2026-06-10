@@ -15,27 +15,30 @@ How previous cycle summaries are compiled and injected into the LLM prompt when 
 
 ```typescript
 interface PreviousCycleSummary {
-  cycleNumber: number
-  programLengthWeeks: number
-  completionPct: number
-  liftProgress: Record<Lift, {
-    oneRmStartKg: number
-    oneRmEndKg: number
-    oneRmChangeKg: number
-    avgRpeVsTarget: number    // positive = above target (too hard)
-    sessionCount: number
-  }>
+  cycleNumber: number;
+  programLengthWeeks: number;
+  completionPct: number;
+  liftProgress: Record<
+    Lift,
+    {
+      oneRmStartKg: number;
+      oneRmEndKg: number;
+      oneRmChangeKg: number;
+      avgRpeVsTarget: number; // positive = above target (too hard)
+      sessionCount: number;
+    }
+  >;
   topAuxCorrelations: Array<{
-    exercise: string
-    lift: Lift
-    correlationDirection: 'positive' | 'negative' | 'neutral'
-  }>
-  volumeNotes: string[]           // short bullets from that cycle's review
-  formulaChangesCount: number
-  disruptionCount: number
-  bodyWeightStartKg: number
-  bodyWeightEndKg: number
-  wilksScore: number
+    exercise: string;
+    lift: Lift;
+    correlationDirection: 'positive' | 'negative' | 'neutral';
+  }>;
+  volumeNotes: string[]; // short bullets from that cycle's review
+  formulaChangesCount: number;
+  disruptionCount: number;
+  bodyWeightStartKg: number;
+  bodyWeightEndKg: number;
+  wilksScore: number;
 }
 ```
 
@@ -48,44 +51,29 @@ Summaries are **derived from stored `cycle_reviews` rows** — not re-computed f
 **File: `apps/parakeet/src/modules/cycle-review/lib/cycle-review.ts`** — already has this function stub. Implement fully:
 
 ```typescript
-export async function getPreviousCycleSummaries(
-  userId: string,
-  beforeProgramId: string,
-  limit = 3,
-): Promise<PreviousCycleSummary[]> {
+export async function getPreviousCycleSummaries(userId: string, beforeProgramId: string, limit = 3): Promise<PreviousCycleSummary[]> {
   // Fetch the last `limit` completed cycle_reviews before the current program
-  const { data, error } = await supabase
-    .from('cycle_reviews')
-    .select('program_id, llm_response, compiled_report')
-    .eq('user_id', userId)
-    .neq('program_id', beforeProgramId)
-    .not('llm_response', 'is', null)
-    .order('created_at', { ascending: false })
-    .limit(limit)
+  const { data, error } = await supabase.from('cycle_reviews').select('program_id, llm_response, compiled_report').eq('user_id', userId).neq('program_id', beforeProgramId).not('llm_response', 'is', null).order('created_at', { ascending: false }).limit(limit);
 
-  if (error) throw error
+  if (error) throw error;
 
-  return (data ?? []).map(row => extractSummary(row.compiled_report, row.llm_response))
+  return (data ?? []).map((row) => extractSummary(row.compiled_report, row.llm_response));
 }
 
 function extractSummary(report: CycleReport, review: CycleReview): PreviousCycleSummary {
   return {
-    cycleNumber:          report.meta.cycleNumber,
-    programLengthWeeks:   report.meta.programLengthWeeks,
-    completionPct:        report.meta.completionPct,
-    liftProgress:         buildLiftProgress(report.liftSummary),
-    topAuxCorrelations:   extractTopAuxCorrelations(review.auxiliaryInsights),
-    volumeNotes:          buildVolumeNotes(review.volumeInsights),
-    formulaChangesCount:  report.formulaHistory.length,
-    disruptionCount:      report.meta.disruptionCount,
-    bodyWeightStartKg:    report.meta.bodyWeightStart,
-    bodyWeightEndKg:      report.meta.bodyWeightEnd,
-    wilksScore:           computeWilks2020(
-                            report.meta.biologicalSex,
-                            report.meta.bodyWeightEnd,
-                            buildTotal(report.liftSummary),
-                          ),
-  }
+    cycleNumber: report.meta.cycleNumber,
+    programLengthWeeks: report.meta.programLengthWeeks,
+    completionPct: report.meta.completionPct,
+    liftProgress: buildLiftProgress(report.liftSummary),
+    topAuxCorrelations: extractTopAuxCorrelations(review.auxiliaryInsights),
+    volumeNotes: buildVolumeNotes(review.volumeInsights),
+    formulaChangesCount: report.formulaHistory.length,
+    disruptionCount: report.meta.disruptionCount,
+    bodyWeightStartKg: report.meta.bodyWeightStart,
+    bodyWeightEndKg: report.meta.bodyWeightEnd,
+    wilksScore: computeWilks2020(report.meta.biologicalSex, report.meta.bodyWeightEnd, buildTotal(report.liftSummary)),
+  };
 }
 ```
 
@@ -98,16 +86,15 @@ function extractSummary(report: CycleReport, review: CycleReview): PreviousCycle
 The `assembleCycleReviewPrompt()` function receives `previousSummaries: PreviousCycleSummary[]` and appends them to the prompt context:
 
 ```typescript
-const previousContext = previousSummaries.length > 0
-  ? `\n\nPrevious ${previousSummaries.length} cycle(s) summary:\n${JSON.stringify(previousSummaries, null, 2)}`
-  : '\n\nThis is the first completed cycle — no historical comparison available.'
+const previousContext = previousSummaries.length > 0 ? `\n\nPrevious ${previousSummaries.length} cycle(s) summary:\n${JSON.stringify(previousSummaries, null, 2)}` : '\n\nThis is the first completed cycle — no historical comparison available.';
 
-const fullContext = currentCycleContext + previousContext
+const fullContext = currentCycleContext + previousContext;
 ```
 
 **Token budget:** Each `PreviousCycleSummary` is ~400 tokens when serialised. With limit=3, this adds ~1,200 tokens. The full cycle review prompt is typically 3,000–5,000 tokens — this stays well within model context limits.
 
 **Prompt instruction addition:**
+
 ```
 You have been given summaries of the previous N training cycles. Use this history to:
 - Identify trends across cycles (e.g., consistent stalling on a lift)
@@ -125,11 +112,11 @@ Do not repeat information from previous cycles in your response — focus on wha
 
 ```typescript
 export async function getCycleReview(userId: string, programId: string) {
-  const report = await compileCycleReport(userId, programId)
-  const previousSummaries = await getPreviousCycleSummaries(userId, programId, 3)
-  const review = await generateCycleReview(report, previousSummaries)
-  await storeCycleReview(userId, programId, report, review)
-  return review
+  const report = await compileCycleReport(userId, programId);
+  const previousSummaries = await getPreviousCycleSummaries(userId, programId, 3);
+  const review = await generateCycleReview(report, previousSummaries);
+  await storeCycleReview(userId, programId, report, review);
+  return review;
 }
 ```
 
@@ -138,6 +125,7 @@ export async function getCycleReview(userId: string, programId: string) {
 ### Unit Tests
 
 **File: `packages/training-engine/src/review/cycle-review-generator.test.ts`** — add:
+
 - [x] `extractSummary()` correctly maps `CycleReport` + `CycleReview` to `PreviousCycleSummary`
 - [x] `buildLiftProgress()` computes oneRmChangeKg correctly from liftSummary
 - [x] `getPreviousCycleSummaries()` with no prior reviews → returns `[]`

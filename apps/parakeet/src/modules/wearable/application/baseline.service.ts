@@ -1,5 +1,6 @@
-import { fetchReadingsForBaseline } from '../data/biometric.repository';
 import type { BiometricType } from '@parakeet/shared-types';
+
+import { fetchReadingsForBaseline } from '../data/biometric.repository';
 
 const MIN_DAYS_FOR_BASELINE = 5;
 

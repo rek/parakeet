@@ -10,6 +10,7 @@ Let users change which days of the week they train without creating a new progra
 ## Problem Statement
 
 **Pain points:**
+
 - Training days are locked at program creation. The only way to change them is to end the current program and start a new one, losing progress context.
 - A user whose gym closes on Wednesdays starting next month has no recourse within the app.
 - The system already stores per-program training days and all date-computation functions accept arbitrary day arrays — the constraint is purely a missing UI.
@@ -31,6 +32,7 @@ Let users change which days of the week they train without creating a new progra
 7. **Unending programs:** Change applies immediately with no confirmation needed — the next lazily-generated session will land on the new day.
 
 **Alternative Flows:**
+
 - If no program is active, the setting is hidden or disabled with an explanation.
 - If the user picks the same days they already have, the save button is disabled.
 
@@ -56,31 +58,31 @@ Let users change which days of the week they train without creating a new progra
 
 ## Scheduled vs Unending Behavior
 
-| Aspect | Scheduled | Unending |
-|--------|-----------|----------|
-| Session rows exist? | Yes — all pre-generated | Only the next one |
-| Date update needed? | Yes — recompute `planned_date` for all future `planned` sessions | No — `nextTrainingDate()` reads the new days at generation time |
-| Confirmation prompt? | Yes — user should know dates are shifting | No — change is invisible until next session |
-| Complexity | Medium — bulk update with date recalculation | Low — column update only |
+| Aspect               | Scheduled                                                        | Unending                                                        |
+| -------------------- | ---------------------------------------------------------------- | --------------------------------------------------------------- |
+| Session rows exist?  | Yes — all pre-generated                                          | Only the next one                                               |
+| Date update needed?  | Yes — recompute `planned_date` for all future `planned` sessions | No — `nextTrainingDate()` reads the new days at generation time |
+| Confirmation prompt? | Yes — user should know dates are shifting                        | No — change is invisible until next session                     |
+| Complexity           | Medium — bulk update with date recalculation                     | Low — column update only                                        |
 
 ## Blast Radius (~5 files)
 
 This is a small feature. The engine and date-computation layer require no changes.
 
-| Layer | Files | Change |
-|-------|-------|--------|
-| Settings UI | `app/settings/training-days.tsx` (new) | Weekday picker screen |
-| Settings hub | `app/(tabs)/settings.tsx` | Add "Training Days" row |
-| Settings layout | `app/settings/_layout.tsx` | Add route |
-| Program service | `modules/program/application/program.service.ts` | `updateTrainingDays()` — update column + recompute scheduled dates |
-| Program repository | `modules/program/data/program.repository.ts` | `updateProgramTrainingDays()` — DB write |
+| Layer              | Files                                            | Change                                                             |
+| ------------------ | ------------------------------------------------ | ------------------------------------------------------------------ |
+| Settings UI        | `app/settings/training-days.tsx` (new)           | Weekday picker screen                                              |
+| Settings hub       | `app/(tabs)/settings.tsx`                        | Add "Training Days" row                                            |
+| Settings layout    | `app/settings/_layout.tsx`                       | Add route                                                          |
+| Program service    | `modules/program/application/program.service.ts` | `updateTrainingDays()` — update column + recompute scheduled dates |
+| Program repository | `modules/program/data/program.repository.ts`     | `updateProgramTrainingDays()` — DB write                           |
 
 ## Spec Breakdown
 
-| Spec ID | Title | Layer |
-|---------|-------|-------|
-| programs-006 | Update training days service | program module |
-| mobile-042 | Training days settings screen | mobile |
+| Spec ID      | Title                         | Layer          |
+| ------------ | ----------------------------- | -------------- |
+| programs-006 | Update training days service  | program module |
+| mobile-042   | Training days settings screen | mobile         |
 
 ## Open Questions
 

@@ -118,7 +118,11 @@ export function detectLift({ frames }: { frames: PoseFrame[] }): LiftDetection {
   const wrsValues: number[] = [];
 
   for (const frame of frames) {
-    const shoulder = midpoint(frame, LANDMARK.LEFT_SHOULDER, LANDMARK.RIGHT_SHOULDER);
+    const shoulder = midpoint(
+      frame,
+      LANDMARK.LEFT_SHOULDER,
+      LANDMARK.RIGHT_SHOULDER
+    );
     const hip = midpoint(frame, LANDMARK.LEFT_HIP, LANDMARK.RIGHT_HIP);
     if (!shoulder || !hip) continue;
 

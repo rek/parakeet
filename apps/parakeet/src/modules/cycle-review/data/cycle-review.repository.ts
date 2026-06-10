@@ -87,17 +87,15 @@ export async function insertPendingCycleReviewRow({
   // Upsert so retries from an 'error' row reset back to 'pending' without
   // tripping the unique (user_id, program_id) constraint. Existing 'complete'
   // rows are protected by triggerCycleReview's guard (returns early).
-  const { error } = await typedSupabase
-    .from('cycle_reviews')
-    .upsert(
-      {
-        program_id: programId,
-        user_id: userId,
-        generation_status: 'pending',
-        error_message: null,
-      },
-      { onConflict: 'user_id,program_id' }
-    );
+  const { error } = await typedSupabase.from('cycle_reviews').upsert(
+    {
+      program_id: programId,
+      user_id: userId,
+      generation_status: 'pending',
+      error_message: null,
+    },
+    { onConflict: 'user_id,program_id' }
+  );
   if (error) throw error;
 }
 

@@ -2,7 +2,6 @@ import {
   configureAIProxy,
   configureEngineErrorReporter,
 } from '@parakeet/training-engine';
-
 import { captureException } from '@platform/utils/captureException';
 
 import { typedSupabase } from './supabase-client';

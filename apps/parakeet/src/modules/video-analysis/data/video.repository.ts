@@ -10,10 +10,7 @@ import type { DbRow } from '@platform/supabase';
 import { toJson, typedSupabase } from '@platform/supabase';
 import { captureException } from '@platform/utils/captureException';
 
-import {
-  DebugLandmarksSchema,
-  type DebugLandmarks,
-} from '../lib/pose-types';
+import { DebugLandmarksSchema, type DebugLandmarks } from '../lib/pose-types';
 import type { SessionVideo } from '../model/types';
 
 type SessionVideoRow = DbRow<'session_videos'>;

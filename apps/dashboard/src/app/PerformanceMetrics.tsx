@@ -1,7 +1,7 @@
 import { Badge } from '../components/Badge';
 import { TablePage } from '../components/TablePage';
-import { useSupabaseRows } from '../lib/useSupabaseRows';
 import { theme } from '../lib/theme';
+import { useSupabaseRows } from '../lib/useSupabaseRows';
 
 interface PerfRow {
   id: string;
@@ -41,7 +41,10 @@ function deltaBadge(planned: number | null, actual: number | null) {
     return <Badge label="—" variant="muted" />;
   }
   const ratio = actual / planned;
-  if (ratio >= 1.05) return <Badge label={`+${((ratio - 1) * 100).toFixed(0)}%`} variant="green" />;
+  if (ratio >= 1.05)
+    return (
+      <Badge label={`+${((ratio - 1) * 100).toFixed(0)}%`} variant="green" />
+    );
   if (ratio <= 0.95)
     return <Badge label={`${((ratio - 1) * 100).toFixed(0)}%`} variant="red" />;
   return <Badge label="≈ Plan" variant="blue" />;
@@ -97,14 +100,18 @@ export function PerformanceMetrics() {
       keyOf={(r) => r.id}
       renderRow={(r) => (
         <>
-          <span style={{ color: theme.color.textDim }}>{fmt(r.recorded_at)}</span>
+          <span style={{ color: theme.color.textDim }}>
+            {fmt(r.recorded_at)}
+          </span>
           <span style={{ fontWeight: 600 }}>
             {r.lift.charAt(0).toUpperCase() + r.lift.slice(1)}
           </span>
           <span style={{ color: theme.color.textDim }}>
             {r.week_number != null ? `W${r.week_number}` : '—'}
           </span>
-          <span style={{ color: theme.color.textDim }}>{kg(r.planned_volume_grams)}</span>
+          <span style={{ color: theme.color.textDim }}>
+            {kg(r.planned_volume_grams)}
+          </span>
           <span>{kg(r.actual_volume_grams)}</span>
           {deltaBadge(r.planned_volume_grams, r.actual_volume_grams)}
           <span style={{ color: theme.color.textDim }}>

@@ -1,8 +1,4 @@
-import {
-  FilesetResolver,
-  PoseLandmarker,
-} from '@mediapipe/tasks-vision';
-
+import { FilesetResolver, PoseLandmarker } from '@mediapipe/tasks-vision';
 import type { PoseFrame } from '@modules/video-analysis/lib/pose-types';
 
 import { fetchCachedModel } from './model-cache';
@@ -11,12 +7,14 @@ import { fetchCachedModel } from './model-cache';
 const MODEL_URLS = {
   lite: 'https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/1/pose_landmarker_lite.task',
   full: 'https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_full/float16/1/pose_landmarker_full.task',
-  heavy: 'https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_heavy/float16/1/pose_landmarker_heavy.task',
+  heavy:
+    'https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_heavy/float16/1/pose_landmarker_heavy.task',
 } as const;
 
 export type ModelVariant = keyof typeof MODEL_URLS;
 
-const WASM_URL = 'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.34/wasm';
+const WASM_URL =
+  'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.34/wasm';
 
 interface CacheEntry {
   variant: ModelVariant;
@@ -30,11 +28,7 @@ async function getLandmarker(
   variant: ModelVariant,
   delegate: 'GPU' | 'CPU'
 ): Promise<PoseLandmarker> {
-  if (
-    cached &&
-    cached.variant === variant &&
-    cached.delegate === delegate
-  ) {
+  if (cached && cached.variant === variant && cached.delegate === delegate) {
     return cached.landmarker;
   }
   cached?.landmarker.close();
@@ -152,7 +146,10 @@ export async function extractLandmarksFromVideo({
     if (delegate === 'GPU') {
       // Retry on CPU if GPU init fails (rare on modern browsers; here as safety)
       // eslint-disable-next-line no-console
-      console.warn('GPU pose landmarker init failed, falling back to CPU', gpuErr);
+      console.warn(
+        'GPU pose landmarker init failed, falling back to CPU',
+        gpuErr
+      );
       landmarker = await getLandmarker(variant, 'CPU');
       delegate = 'CPU';
     } else {

@@ -38,7 +38,7 @@ Design doc: [adaptive-volume.md](./design-adaptive-volume.md)
   - 1-2: reduce (existing behavior with finer thresholds)
   - 3: neutral
 - [x] Add deload guard: if `input.intensityType === 'deload'`, return early with no adjustment — deload sessions must not be further reduced by low readiness scores
-  → `packages/training-engine/src/generator/steps/applyReadinessAdjustment.ts`
+      → `packages/training-engine/src/generator/steps/applyReadinessAdjustment.ts`
 
 **File: `apps/parakeet/src/app/(tabs)/session/soreness.tsx`**
 

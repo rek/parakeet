@@ -117,7 +117,10 @@ describe('suggestDisruptionAdjustment — fatigue', () => {
       [squat, bench, deadlift]
     );
     expect(result).toHaveLength(1);
-    expect(result[0]).toMatchObject({ action: 'weight_reduced', reduction_pct: 10 });
+    expect(result[0]).toMatchObject({
+      action: 'weight_reduced',
+      reduction_pct: 10,
+    });
   });
 
   it('minor fatigue with no lift filter → 10% weight_reduced on all sessions', () => {
@@ -126,7 +129,9 @@ describe('suggestDisruptionAdjustment — fatigue', () => {
       [squat, bench, deadlift]
     );
     expect(result).toHaveLength(3);
-    result.forEach((r) => expect(r).toMatchObject({ action: 'weight_reduced', reduction_pct: 10 }));
+    result.forEach((r) =>
+      expect(r).toMatchObject({ action: 'weight_reduced', reduction_pct: 10 })
+    );
   });
 
   it('moderate fatigue → 20% weight_reduced', () => {

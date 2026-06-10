@@ -8,7 +8,11 @@ export const lipedemaTrackingQueries = {
 
   measurements: (limit = 52) =>
     queryOptions({
-      queryKey: [...lipedemaTrackingQueries.all(), 'measurements', limit] as const,
+      queryKey: [
+        ...lipedemaTrackingQueries.all(),
+        'measurements',
+        limit,
+      ] as const,
       queryFn: () => fetchMeasurements(limit),
       staleTime: 60 * 1000,
     }),

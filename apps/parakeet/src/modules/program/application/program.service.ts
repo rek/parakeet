@@ -11,6 +11,7 @@ import {
 } from '@parakeet/training-engine';
 import type { ProgramListItem } from '@shared/types/domain';
 
+import { resolveAuxExerciseSlug } from '../data/auxiliary-config.repository';
 import { getAuthenticatedUserId } from '../data/profile.repository';
 import {
   archiveActivePrograms,
@@ -30,7 +31,6 @@ import {
   updateProgramTrainingDays,
   updateUnendingSessionCounter,
 } from '../data/program.repository';
-import { resolveAuxExerciseSlug } from '../data/auxiliary-config.repository';
 import { getAuxiliaryPools } from '../lib/auxiliary-config';
 import { getCurrentMaxes } from '../lib/lifter-maxes';
 import { captureException } from '../utils/captureException';

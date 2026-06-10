@@ -3,6 +3,7 @@ feature: lipedema-tracking
 status: done
 modules: [lipedema-tracking]
 ---
+
 # Lipedema Tracking
 
 Daily-upsert symptom + limb-circumference log (expected cadence
@@ -18,13 +19,14 @@ insights (gh#204).
 
 ## Specs
 
-| Spec | Status | Concern |
-| --- | --- | --- |
-| [spec-data-layer.md](./spec-data-layer.md) | done | `lipedema_measurements` table + RLS + `updated_at` trigger + module scaffold + entry UI (date nav, per-limb deltas, edit-from-history, toasts) + feature flag + drawer |
+| Spec                                       | Status | Concern                                                                                                                                                                |
+| ------------------------------------------ | ------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [spec-data-layer.md](./spec-data-layer.md) | done   | `lipedema_measurements` table + RLS + `updated_at` trigger + module scaffold + entry UI (date nav, per-limb deltas, edit-from-history, toasts) + feature flag + drawer |
 
 ## Scope
 
 In:
+
 - Per-day measurement entry (upsert — one row per user per day).
 - Five limb landmarks × L/R: thigh mid, calf max, ankle, upper arm, wrist (millimetres at the DB boundary; cm with 1 decimal in the UI).
 - Pain 0–10, swelling 0–10 (0.5 step).
@@ -36,6 +38,7 @@ In:
 - Save / delete toast.
 
 Out (deferred to later phase-2 slices under gh#204):
+
 - Photo upload (column is in the schema; UI not yet wired).
 - Trend charts (pure helpers `limbTrend`, `seriesDrift`, `adjacentDelta`, `priorValue` are in place; no chart component yet).
 - Training correlation overlay.

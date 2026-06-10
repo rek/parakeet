@@ -1,10 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
+import { buildFrame, generateSquatFrames } from '../../lib/__tests__/fixtures';
 import type { PoseFrame } from '../../lib/pose-types';
-import {
-  buildFrame,
-  generateSquatFrames,
-} from '../../lib/__tests__/fixtures';
 import { analyzeVideoFrames } from '../analyze-video';
 
 // ---------------------------------------------------------------------------
@@ -109,5 +106,4 @@ describe('analyzeVideoFrames — landmarker failure handling', () => {
       expect(result.analysisVersion).toBe(6);
     }
   });
-
 });

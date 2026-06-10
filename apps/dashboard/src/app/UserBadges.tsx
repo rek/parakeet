@@ -1,7 +1,7 @@
 import { Badge } from '../components/Badge';
 import { TablePage } from '../components/TablePage';
-import { useSupabaseRows } from '../lib/useSupabaseRows';
 import { theme } from '../lib/theme';
+import { useSupabaseRows } from '../lib/useSupabaseRows';
 
 interface BadgeRow {
   id: string;
@@ -57,7 +57,11 @@ export function UserBadges() {
       accent={theme.color.purple}
       subtitle={`Last ${rows.length} earnings`}
       stats={[
-        { label: 'Distinct badges', value: uniqueBadges.size, color: theme.color.purple },
+        {
+          label: 'Distinct badges',
+          value: uniqueBadges.size,
+          color: theme.color.purple,
+        },
         { label: 'Lifters', value: uniqueUsers.size, color: theme.color.blue },
         {
           label: 'Tied to a session',

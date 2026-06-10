@@ -123,11 +123,7 @@ function TemplateRow({
 }) {
   const totalEntries = template.item_count * template.rounds;
   return (
-    <TouchableOpacity
-      style={styles.row}
-      onPress={onPress}
-      activeOpacity={0.7}
-    >
+    <TouchableOpacity style={styles.row} onPress={onPress} activeOpacity={0.7}>
       <Text style={styles.rowName}>{template.name}</Text>
       {template.description ? (
         <Text style={styles.rowDescription} numberOfLines={2}>

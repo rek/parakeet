@@ -17,17 +17,18 @@ Add `rest_seconds` to the `FormulaConfig` type:
 
 ```typescript
 interface FormulaRestSeconds {
-  block1: { heavy: number; explosive: number; rep: number }
-  block2: { heavy: number; explosive: number; rep: number }
-  block3: { heavy: number; explosive: number; rep: number }
-  deload: number
-  auxiliary: number   // fixed for all aux work
+  block1: { heavy: number; explosive: number; rep: number };
+  block2: { heavy: number; explosive: number; rep: number };
+  block3: { heavy: number; explosive: number; rep: number };
+  deload: number;
+  auxiliary: number; // fixed for all aux work
 }
 ```
 
 Add to `FormulaConfig`:
+
 ```typescript
-rest_seconds: FormulaRestSeconds
+rest_seconds: FormulaRestSeconds;
 ```
 
 See [domain/periodization.md](../../domain/periodization.md) for `DEFAULT_REST_SECONDS_MALE` and `DEFAULT_REST_SECONDS_FEMALE` tables (rest seconds by block and intensity type). Female values are male values minus 30s on all non-deload entries (faster inter-set recovery; see [sex-based-adaptations.md](../cycle-tracking/design.md)). Deload and auxiliary unchanged.
@@ -41,6 +42,7 @@ See [domain/periodization.md](../../domain/periodization.md) for `DEFAULT_REST_S
 **File: `packages/training-engine/src/generator/jit-session-generator.ts`**
 
 Add to `JITOutput`:
+
 ```typescript
 restRecommendations: {
   mainLift: number[]    // rest_after_seconds for each main working set (by index)
@@ -51,6 +53,7 @@ restRecommendations: {
 Rest is on `JITOutput`, not on `PlannedSet`, to keep the planned-set DB schema unchanged.
 
 **Formula strategy — populating `restRecommendations`:**
+
 - For each main lift set: look up `formulaConfig.rest_seconds[blockKey][intensityType]`
 - `blockKey` derived from `blockNumber` (`block1` | `block2` | `block3`)
 - All sets in the session get the same rest value (rest is intensity-type-level, not set-level for the formula path)
@@ -58,6 +61,7 @@ Rest is on `JITOutput`, not on `PlannedSet`, to keep the planned-set DB schema u
 - If user has an entry in `rest_configs` for this lift + intensity type (passed in via `JITInput`): use user override instead of formula default
 
 **JITInput extension:**
+
 ```typescript
 userRestOverrides?: Array<{
   lift?: Lift             // null = applies to all
@@ -71,6 +75,7 @@ userRestOverrides?: Array<{
 ### Unit Tests
 
 **File: `packages/training-engine/src/generator/jit-session-generator.test.ts`** — add cases:
+
 - [x] Block 3 Heavy, male defaults → `restRecommendations.mainLift` all 300
 - [x] Block 2 Rep, female defaults → `restRecommendations.mainLift` all 90
 - [x] User override present for squat heavy → override value used instead of formula default

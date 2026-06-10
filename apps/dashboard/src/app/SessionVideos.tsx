@@ -1,7 +1,7 @@
 import { Badge } from '../components/Badge';
 import { TablePage } from '../components/TablePage';
-import { useSupabaseRows } from '../lib/useSupabaseRows';
 import { theme } from '../lib/theme';
+import { useSupabaseRows } from '../lib/useSupabaseRows';
 
 interface VideoRow {
   id: string;
@@ -87,7 +87,9 @@ export function SessionVideos() {
       keyOf={(r) => r.id}
       renderRow={(r) => (
         <>
-          <span style={{ color: theme.color.textDim }}>{fmt(r.created_at)}</span>
+          <span style={{ color: theme.color.textDim }}>
+            {fmt(r.created_at)}
+          </span>
           <span style={{ fontWeight: 600 }}>
             {r.lift.charAt(0).toUpperCase() + r.lift.slice(1)}
           </span>
@@ -108,9 +110,7 @@ export function SessionVideos() {
             {r.debug_landmarks != null && (
               <Badge label="Landmarks" variant="accent" />
             )}
-            {r.remote_uri != null && (
-              <Badge label="Cloud" variant="purple" />
-            )}
+            {r.remote_uri != null && <Badge label="Cloud" variant="purple" />}
             {r.recorded_by != null && (
               <Badge label="Partner" variant="purple" />
             )}

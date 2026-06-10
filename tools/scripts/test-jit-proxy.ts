@@ -12,10 +12,10 @@
  */
 import { createClient } from '@supabase/supabase-js';
 
-import { DEFAULT_FORMULA_CONFIG_MALE } from '../../packages/training-engine/src/cube/blocks';
 import { configureAIProxy } from '../../packages/training-engine/src/ai/models';
-import { LLMJITGenerator } from '../../packages/training-engine/src/generator/llm-jit-generator';
+import { DEFAULT_FORMULA_CONFIG_MALE } from '../../packages/training-engine/src/cube/blocks';
 import type { JITInput } from '../../packages/training-engine/src/generator/jit-session-generator';
+import { LLMJITGenerator } from '../../packages/training-engine/src/generator/llm-jit-generator';
 import { DEFAULT_MRV_MEV_CONFIG_MALE } from '../../packages/training-engine/src/volume/mrv-mev-calculator';
 
 const SUPABASE_URL = required('SUPABASE_URL');
@@ -76,7 +76,12 @@ async function main() {
   console.log(`Running ${RUNS} JIT generations against hosted proxy…\n`);
 
   const generator = new LLMJITGenerator();
-  const results: Array<{ ok: boolean; strategy: string; ms: number; err?: string }> = [];
+  const results: Array<{
+    ok: boolean;
+    strategy: string;
+    ms: number;
+    err?: string;
+  }> = [];
 
   for (let i = 1; i <= RUNS; i++) {
     const start = Date.now();
@@ -84,7 +89,8 @@ async function main() {
       const out = await generator.generate(buildInput());
       const ms = Date.now() - start;
       results.push({ ok: true, strategy: out.jit_strategy ?? 'unknown', ms });
-      const tag = out.jit_strategy === 'llm' ? '✓ llm' : `✗ ${out.jit_strategy}`;
+      const tag =
+        out.jit_strategy === 'llm' ? '✓ llm' : `✗ ${out.jit_strategy}`;
       console.log(`#${i}  ${ms}ms  ${tag}`);
     } catch (e) {
       const ms = Date.now() - start;
@@ -97,13 +103,17 @@ async function main() {
   await supabase.auth.signOut();
 
   const llm = results.filter((r) => r.strategy === 'llm').length;
-  const fallback = results.filter((r) => r.strategy === 'formula_fallback').length;
+  const fallback = results.filter(
+    (r) => r.strategy === 'formula_fallback'
+  ).length;
   const threw = results.filter((r) => !r.ok).length;
   const avgMs = Math.round(
     results.reduce((s, r) => s + r.ms, 0) / Math.max(1, results.length)
   );
 
-  console.log(`\nllm=${llm}  formula_fallback=${fallback}  threw=${threw}  avg=${avgMs}ms`);
+  console.log(
+    `\nllm=${llm}  formula_fallback=${fallback}  threw=${threw}  avg=${avgMs}ms`
+  );
   process.exit(llm === RUNS ? 0 : 1);
 }
 

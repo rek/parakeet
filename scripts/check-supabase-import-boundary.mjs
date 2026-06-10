@@ -1,5 +1,4 @@
 #!/usr/bin/env node
-
 import fs from 'node:fs';
 import path from 'node:path';
 
@@ -32,7 +31,9 @@ function walk(dir) {
     if (!importPattern.test(content)) continue;
 
     const relativePath = path.relative(rootDir, fullPath).replaceAll('\\', '/');
-    const allowed = allowedDirPrefixes.some((prefix) => relativePath.startsWith(prefix));
+    const allowed = allowedDirPrefixes.some((prefix) =>
+      relativePath.startsWith(prefix)
+    );
     if (!allowed) violations.push(relativePath);
   }
 }
@@ -40,7 +41,9 @@ function walk(dir) {
 walk(srcRoot);
 
 if (violations.length > 0) {
-  console.error('Found forbidden `lib/supabase` imports outside data/network/lib:');
+  console.error(
+    'Found forbidden `lib/supabase` imports outside data/network/lib:'
+  );
   for (const file of violations) {
     console.error(`- ${file}`);
   }

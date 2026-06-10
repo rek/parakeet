@@ -19,7 +19,7 @@ Full tables: [volume-landmarks.md](volume-landmarks.md)
 Female config uses the same %1RM but differs in sets and RPE targets. Key differences:
 
 | Block | Intensity | Female Sets | Male Sets | Female RPE | Male RPE |
-|-------|-----------|-------------|-----------|------------|----------|
+| ----- | --------- | ----------- | --------- | ---------- | -------- |
 | B1    | Heavy     | 3           | 2         | 8.0        | 8.5      |
 | B1    | Explosive | 3           | 3         | 6.5        | 7.0      |
 | B1    | Rep       | 3-4         | 2-3       | 7.5        | 8.0      |
@@ -34,10 +34,10 @@ Full tables: [periodization.md](periodization.md)
 
 ## Performance Thresholds
 
-| Parameter                      | Male | Female | Rationale |
-|--------------------------------|------|--------|-----------|
-| RPE deviation threshold        | 1.0  | 1.5    | RPE fluctuates across menstrual cycle |
-| Consecutive sessions required  | 2    | 3      | More data needed to separate cycle effects from real trends |
+| Parameter                     | Male | Female | Rationale                                                   |
+| ----------------------------- | ---- | ------ | ----------------------------------------------------------- |
+| RPE deviation threshold       | 1.0  | 1.5    | RPE fluctuates across menstrual cycle                       |
+| Consecutive sessions required | 2    | 3      | More data needed to separate cycle effects from real trends |
 
 **Source:** `packages/training-engine/src/adjustments/performance-adjuster.ts`
 
@@ -46,9 +46,9 @@ Full tables: [periodization.md](periodization.md)
 ## Auxiliary Reps
 
 | Sex    | Default Reps |
-|--------|-------------|
-| Male   | 10          |
-| Female | 12          |
+| ------ | ------------ |
+| Male   | 10           |
+| Female | 12           |
 
 Per-exercise overrides (e.g., Barbell Box Squat = 4 reps) apply regardless of sex.
 
@@ -68,10 +68,10 @@ Full tables: [periodization.md](periodization.md)
 
 ## Warmup Protocol
 
-| Sex    | Steps | Percentages                          |
-|--------|-------|--------------------------------------|
-| Male   | 4     | 40%, 60%, 75%, 90%                   |
-| Female | 5     | 40%, 55%, 70%, 85%, 92.5%            |
+| Sex    | Steps | Percentages               |
+| ------ | ----- | ------------------------- |
+| Male   | 4     | 40%, 60%, 75%, 90%        |
+| Female | 5     | 40%, 55%, 70%, 85%, 92.5% |
 
 Female protocol has more gradual ramp to accommodate typically lower absolute loads and reduce injury risk.
 
@@ -81,10 +81,10 @@ Female protocol has more gradual ramp to accommodate typically lower absolute lo
 
 ## Training Max Increases
 
-| Sex    | Bench     | Squat      | Deadlift   |
-|--------|-----------|------------|------------|
-| Male   | 2.5-5 kg  | 5-10 kg    | 5-10 kg    |
-| Female | 2.5 kg    | 5-7.5 kg   | 5-7.5 kg   |
+| Sex    | Bench    | Squat    | Deadlift |
+| ------ | -------- | -------- | -------- |
+| Male   | 2.5-5 kg | 5-10 kg  | 5-10 kg  |
+| Female | 2.5 kg   | 5-7.5 kg | 5-7.5 kg |
 
 Less aggressive progression for female lifters.
 
@@ -95,7 +95,7 @@ Less aggressive progression for female lifters.
 ## Soreness Level 4
 
 | Sex    | Sets Reduced | Intensity Multiplier |
-|--------|--------------|----------------------|
+| ------ | ------------ | -------------------- |
 | Male   | 2            | 0.95                 |
 | Female | 1            | 0.97                 |
 

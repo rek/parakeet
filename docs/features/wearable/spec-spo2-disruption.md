@@ -10,6 +10,7 @@
 Originally planned: when overnight SpO2 drops below 94%, auto-create a `minor` severity `illness` disruption so the JIT pipeline gracefully reduces load before the lifter consciously notices symptoms. **Dropped from v1** because the recommended device (Oura Ring 4) does not write SpO2 to Android Health Connect — the signal would never fire in practice with the current stack.
 
 The schema retains SpO2 fields for forward compatibility:
+
 - `BiometricType` enum includes `'spo2'`
 - `recovery_snapshots.spo2_avg` column exists
 - `WearableReadinessInput.spo2Avg` field exists (unused by the adjuster)
@@ -54,6 +55,7 @@ Trigger conditions for un-deferring this spec:
 ## Tasks (when revived)
 
 1. Add `createIllnessFromLowSpO2` private function inside `recovery.service.ts`:
+
    ```typescript
    async function createIllnessFromLowSpO2(userId: string, spo2Avg: number): Promise<void> {
      const active = await fetchActiveDisruptions(userId);
@@ -68,6 +70,7 @@ Trigger conditions for un-deferring this spec:
    ```
 
 2. Call after computing `spo2Avg` but before snapshot upsert:
+
    ```typescript
    if (snapshot.spo2_avg !== null && snapshot.spo2_avg < 94) {
      await createIllnessFromLowSpO2(userId, snapshot.spo2_avg);

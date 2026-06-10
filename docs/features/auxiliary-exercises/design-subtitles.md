@@ -31,10 +31,10 @@ Rack Pull is the primary case: "above the knee" and "below the knee" are mechani
 
 Two Rack Pull entries replace the current single one:
 
-| Name | Subtitle | weightPct | Notes |
-|------|----------|-----------|-------|
-| Rack Pull | Above the knee | 1.05 | Existing entry, short ROM supramax |
-| Rack Pull Below Knee | Below the knee | 0.95 | New entry, meaningful ROM, same load as block pulls |
+| Name                 | Subtitle       | weightPct | Notes                                               |
+| -------------------- | -------------- | --------- | --------------------------------------------------- |
+| Rack Pull            | Above the knee | 1.05      | Existing entry, short ROM supramax                  |
+| Rack Pull Below Knee | Below the knee | 0.95      | New entry, meaningful ROM, same load as block pulls |
 
 ## References
 

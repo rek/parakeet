@@ -1,6 +1,6 @@
 // @spec docs/features/wearable/spec-pipeline.md
-import { computeReadinessScore } from '@parakeet/training-engine';
 import type { RecoverySnapshotInsert } from '@parakeet/shared-types';
+import { computeReadinessScore } from '@parakeet/training-engine';
 
 import { fetchLatestReading } from '../data/biometric.repository';
 import { upsertRecoverySnapshot } from '../data/recovery.repository';
@@ -65,8 +65,12 @@ export async function computeAndStoreRecoverySnapshot(
     fetchLatestReading(userId, 'rem_sleep_pct'),
   ]);
 
-  const hrvPctChange = latestHrv ? computePctChange(latestHrv.value, hrvBaseline) : null;
-  const rhrPctChange = latestRhr ? computePctChange(latestRhr.value, rhrBaseline) : null;
+  const hrvPctChange = latestHrv
+    ? computePctChange(latestHrv.value, hrvBaseline)
+    : null;
+  const rhrPctChange = latestRhr
+    ? computePctChange(latestRhr.value, rhrBaseline)
+    : null;
 
   const nonTrainingLoad = deriveNonTrainingLoad(
     stepsToday?.value ?? null,

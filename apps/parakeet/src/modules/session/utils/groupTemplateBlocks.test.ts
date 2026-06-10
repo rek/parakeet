@@ -4,7 +4,10 @@ import type { AuxiliaryActualSet } from '../store/sessionStore';
 import { groupTemplateBlocks } from './groupTemplateBlocks';
 
 function makeSet(
-  overrides: Partial<AuxiliaryActualSet> & { exercise: string; set_number: number }
+  overrides: Partial<AuxiliaryActualSet> & {
+    exercise: string;
+    set_number: number;
+  }
 ): AuxiliaryActualSet {
   return {
     weight_grams: 0,

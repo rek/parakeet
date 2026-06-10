@@ -1,6 +1,6 @@
 import { TablePage } from '../components/TablePage';
-import { useSupabaseRows } from '../lib/useSupabaseRows';
 import { theme } from '../lib/theme';
+import { useSupabaseRows } from '../lib/useSupabaseRows';
 
 interface BwRow {
   id: string;
@@ -100,9 +100,7 @@ export function BodyweightEntries() {
             >
               {r.user_id.slice(0, 8)}
             </span>
-            <span style={{ fontWeight: 600 }}>
-              {r.weight_kg.toFixed(1)}kg
-            </span>
+            <span style={{ fontWeight: 600 }}>{r.weight_kg.toFixed(1)}kg</span>
             <span
               style={{
                 color: deltaColor(showDelta, delta),

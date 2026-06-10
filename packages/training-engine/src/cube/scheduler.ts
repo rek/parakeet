@@ -24,13 +24,20 @@ export function selectIntensityTypeForUnending(
   weekNumber: number,
   signals: IntensityTypeSignals
 ): IntensityType {
-  const { primaryMuscleSoreness, daysSinceLastSession, recentRpe, lastIntensityType } = signals;
+  const {
+    primaryMuscleSoreness,
+    daysSinceLastSession,
+    recentRpe,
+    lastIntensityType,
+  } = signals;
 
   if (weekNumber % 4 === 0) return 'deload';
 
-  if (primaryMuscleSoreness !== null && primaryMuscleSoreness >= 7) return 'rep';
+  if (primaryMuscleSoreness !== null && primaryMuscleSoreness >= 7)
+    return 'rep';
 
-  if (daysSinceLastSession !== null && daysSinceLastSession >= 10) return 'heavy';
+  if (daysSinceLastSession !== null && daysSinceLastSession >= 10)
+    return 'heavy';
 
   const rpeValues = recentRpe.filter((r): r is number => r != null);
   if (rpeValues.length > 0) {
@@ -40,7 +47,8 @@ export function selectIntensityTypeForUnending(
 
   if (lastIntensityType !== null && lastIntensityType !== 'deload') {
     const idx = INTENSITY_ROTATION.indexOf(lastIntensityType);
-    if (idx !== -1) return INTENSITY_ROTATION[(idx + 1) % INTENSITY_ROTATION.length];
+    if (idx !== -1)
+      return INTENSITY_ROTATION[(idx + 1) % INTENSITY_ROTATION.length];
   }
 
   return 'heavy';

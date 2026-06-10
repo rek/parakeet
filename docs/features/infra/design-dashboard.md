@@ -45,6 +45,7 @@ apps/dashboard/
 `Logs.tsx` is the unified AI event feed. **Every new dashboard page that reads from its own Supabase table must also add a corresponding entry to `Logs.tsx`**. Failure to do so means the Timeline shows 0 for that event type while the detail page shows data — a confusing discrepancy.
 
 Checklist when adding a new dashboard page:
+
 1. Add the Supabase query to `Promise.all` in `Logs.tsx`
 2. Add an entry to `typeConfig` with colour/label/icon
 3. Add a field to `Stats` and a `StatCard`
@@ -59,6 +60,7 @@ Checklist when adding a new dashboard page:
 The sidebar shows `local` and `prod` toggle buttons. Switching re-fetches all data via the new Supabase client. Context is provided by `SupabaseContext`; all views consume `useSupabase()` and pass `supabase` in their `useEffect` deps so data re-fetches on change.
 
 Env configuration in `apps/dashboard/.env.local`:
+
 ```
 VITE_SUPABASE_URL=http://localhost:54321
 VITE_SUPABASE_KEY=<local service_role>
@@ -73,8 +75,10 @@ VITE_SUPABASE_PROD_KEY=<prod service_role>
 All colours are CSS custom properties in `styles.css`. Components must reference these via `theme.ts` constants — no raw `rgba()`/hex values in component files.
 
 Pattern:
+
 ```ts
 import { theme } from '../lib/theme';
+
 // use theme.border.accent, theme.bg.purpleDim, etc.
 ```
 

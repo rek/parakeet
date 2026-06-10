@@ -11,6 +11,7 @@ Scale MRV/MEV volume thresholds by training age (beginner/intermediate/advanced)
 ## Problem Statement
 
 **Pain points:**
+
 - A beginner lifter gets the same MRV cap (e.g., 20 sets/week quads) as an intermediate lifter. Beginners can't recover from this volume — the system prescribes too much.
 - An advanced lifter is capped at the same MRV as an intermediate. They could handle more volume but the system holds them back.
 - `Persona.trainingAge` exists in the simulation but is never used for volume calculations — it's a dead field.
@@ -20,6 +21,7 @@ Scale MRV/MEV volume thresholds by training age (beginner/intermediate/advanced)
 ## User Experience
 
 This feature has no direct user-facing UI. It operates at the engine level:
+
 - Beginner athletes see lower volume prescriptions (fewer sets per muscle group per week)
 - Advanced athletes see higher volume prescriptions
 - Intermediate athletes are unchanged (×1.0 baseline)

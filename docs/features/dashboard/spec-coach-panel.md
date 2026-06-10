@@ -115,11 +115,11 @@ Non-goals: multi-fixture batch eval, diff view between two responses, persisting
 
 ## Test coverage
 
-| File | Tests |
-|---|---|
-| `lib/coaching-cache.ts` | ~5 — hash determinism, append/cap, hit lookup, clear |
-| `lib/coaching-runner.ts` | none (transport wrapper; manual iteration) |
-| Components | none — UI iteration speed is the value, snapshot tests would slow it |
+| File                     | Tests                                                                |
+| ------------------------ | -------------------------------------------------------------------- |
+| `lib/coaching-cache.ts`  | ~5 — hash determinism, append/cap, hit lookup, clear                 |
+| `lib/coaching-runner.ts` | none (transport wrapper; manual iteration)                           |
+| Components               | none — UI iteration speed is the value, snapshot tests would slow it |
 
 ## Files touched
 
@@ -144,13 +144,13 @@ docs/backlog.md                                     (edit — item #20)
 
 ## Risks (operational)
 
-| Risk | Mitigation |
-|---|---|
-| Forgotten `.env.local` commit leaks the OpenAI key | `.env.local` is in root `.gitignore`; verify with `git check-ignore` before first commit on this work. |
-| Build with key bundled is published somewhere | Dashboard build is never deployed today. Add a one-line "internal admin only" warning to dashboard README. |
-| Engine `generateFormCoaching` signature changes | Adding a TS check in `coaching-runner.ts` prevents silent breakage; refactor renames are explicit imports. |
-| Token cost during prompt iteration | Cache by default. Force-refresh button is the only way to spend a token on a previously-seen request. Show running token count per session. |
-| Schema drift in `FormCoachingResultSchema` | Renderer types from the same Zod schema; new optional fields render as "—" without a code edit. |
+| Risk                                               | Mitigation                                                                                                                                  |
+| -------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| Forgotten `.env.local` commit leaks the OpenAI key | `.env.local` is in root `.gitignore`; verify with `git check-ignore` before first commit on this work.                                      |
+| Build with key bundled is published somewhere      | Dashboard build is never deployed today. Add a one-line "internal admin only" warning to dashboard README.                                  |
+| Engine `generateFormCoaching` signature changes    | Adding a TS check in `coaching-runner.ts` prevents silent breakage; refactor renames are explicit imports.                                  |
+| Token cost during prompt iteration                 | Cache by default. Force-refresh button is the only way to spend a token on a previously-seen request. Show running token count per session. |
+| Schema drift in `FormCoachingResultSchema`         | Renderer types from the same Zod schema; new optional fields render as "—" without a code edit.                                             |
 
 ## Acceptance
 

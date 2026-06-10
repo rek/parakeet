@@ -2,9 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import { shouldShowAnchorNote } from './aux-anchor-note.helpers';
 
-type Anchor = NonNullable<
-  Parameters<typeof shouldShowAnchorNote>[0]['anchor']
->;
+type Anchor = NonNullable<Parameters<typeof shouldShowAnchorNote>[0]['anchor']>;
 
 function anchor(overrides: Partial<Anchor>): Anchor {
   return {

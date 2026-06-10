@@ -1,9 +1,8 @@
 #!/usr/bin/env node
-
-import { networkInterfaces } from 'os';
-import { readFileSync, writeFileSync } from 'fs';
-import { resolve } from 'path';
 import { execSync } from 'child_process';
+import { readFileSync, writeFileSync } from 'fs';
+import { networkInterfaces } from 'os';
+import { resolve } from 'path';
 
 const ENV_FILES = ['.env.local', 'apps/parakeet/.env.local'];
 const ENV_KEY = 'EXPO_PUBLIC_SUPABASE_URL_ANDROID';
@@ -11,9 +10,15 @@ const SUPABASE_PORT = 54321;
 
 function isPrivateIpv4(ip) {
   const parts = ip.split('.').map(Number);
-  if (parts.length !== 4 || parts.some((p) => Number.isNaN(p) || p < 0 || p > 255)) return false;
+  if (
+    parts.length !== 4 ||
+    parts.some((p) => Number.isNaN(p) || p < 0 || p > 255)
+  )
+    return false;
   const [a, b] = parts;
-  return a === 10 || (a === 172 && b >= 16 && b <= 31) || (a === 192 && b === 168);
+  return (
+    a === 10 || (a === 172 && b >= 16 && b <= 31) || (a === 192 && b === 168)
+  );
 }
 
 function rankInterfaceName(name) {
@@ -24,10 +29,14 @@ function rankInterfaceName(name) {
 
 function detectLanIp() {
   try {
-    const entries = Object.entries(networkInterfaces()).flatMap(([name, addrs]) =>
-      (addrs ?? [])
-        .filter((a) => a.family === 'IPv4' && !a.internal && isPrivateIpv4(a.address))
-        .map((a) => ({ name, ip: a.address }))
+    const entries = Object.entries(networkInterfaces()).flatMap(
+      ([name, addrs]) =>
+        (addrs ?? [])
+          .filter(
+            (a) =>
+              a.family === 'IPv4' && !a.internal && isPrivateIpv4(a.address)
+          )
+          .map((a) => ({ name, ip: a.address }))
     );
 
     if (entries.length) {
@@ -43,7 +52,9 @@ function detectLanIp() {
   }
 
   try {
-    const route = execSync('ip route get 1.1.1.1 2>/dev/null', { encoding: 'utf8' });
+    const route = execSync('ip route get 1.1.1.1 2>/dev/null', {
+      encoding: 'utf8',
+    });
     const viaRoute = route.match(/\bsrc\s+(\d+\.\d+\.\d+\.\d+)/)?.[1];
     if (viaRoute && isPrivateIpv4(viaRoute)) return viaRoute;
   } catch {
@@ -65,7 +76,9 @@ function detectLanIp() {
 }
 
 function getCliIp() {
-  const value = process.argv.find((arg) => arg.startsWith('--ip='))?.slice('--ip='.length);
+  const value = process.argv
+    .find((arg) => arg.startsWith('--ip='))
+    ?.slice('--ip='.length);
   if (!value) return null;
   if (!isPrivateIpv4(value)) {
     console.error(`Invalid private IPv4 passed via --ip: ${value}`);
@@ -96,7 +109,9 @@ function upsertEnvVar(filePath, key, value) {
 
 const ip = getCliIp() ?? detectLanIp();
 if (!ip) {
-  console.error('Could not auto-detect a private IPv4 address. Pass one explicitly: --ip=192.168.x.y');
+  console.error(
+    'Could not auto-detect a private IPv4 address. Pass one explicitly: --ip=192.168.x.y'
+  );
   process.exit(1);
 }
 

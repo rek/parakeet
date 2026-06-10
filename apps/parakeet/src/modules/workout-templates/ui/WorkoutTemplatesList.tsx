@@ -75,9 +75,7 @@ function TemplateRow({
   return (
     <TouchableOpacity
       style={styles.row}
-      onPress={() =>
-        router.push(`/settings/workout-templates/${template.id}`)
-      }
+      onPress={() => router.push(`/settings/workout-templates/${template.id}`)}
       activeOpacity={0.7}
     >
       <Text style={styles.rowName}>{template.name}</Text>

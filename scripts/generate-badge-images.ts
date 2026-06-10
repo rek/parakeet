@@ -13,6 +13,7 @@
 
 import * as fs from 'fs';
 import * as path from 'path';
+
 import { GoogleGenAI, Modality } from '@google/genai';
 import sharp from 'sharp';
 
@@ -42,72 +43,311 @@ interface Badge {
 
 const BADGES: Badge[] = [
   // Consistency
-  { id: 'dawn_patrol', name: 'Dawn Patrol', description: 'Complete 5 sessions before 6:00 AM', category: 'consistency' },
-  { id: 'night_owl', name: 'Night Owl', description: 'Complete 5 sessions after 9:00 PM', category: 'consistency' },
-  { id: 'iron_monk', name: 'Iron Monk', description: '30 consecutive sessions with every planned set completed', category: 'consistency' },
-  { id: 'sunday_scaries_cure', name: 'Sunday Scaries Cure', description: 'Complete a session on 10 different Sundays', category: 'consistency' },
-  { id: 'year_365', name: '365', description: 'Log at least one session in 52 consecutive weeks', category: 'consistency' },
-  { id: 'perfect_week', name: 'Perfect Week', description: 'Complete all planned sessions and rest days in a 7-day period', category: 'consistency' },
-  { id: 'leg_day_loyalist', name: 'Leg Day Loyalist', description: '20 consecutive planned sessions with squat or deadlift', category: 'consistency' },
+  {
+    id: 'dawn_patrol',
+    name: 'Dawn Patrol',
+    description: 'Complete 5 sessions before 6:00 AM',
+    category: 'consistency',
+  },
+  {
+    id: 'night_owl',
+    name: 'Night Owl',
+    description: 'Complete 5 sessions after 9:00 PM',
+    category: 'consistency',
+  },
+  {
+    id: 'iron_monk',
+    name: 'Iron Monk',
+    description: '30 consecutive sessions with every planned set completed',
+    category: 'consistency',
+  },
+  {
+    id: 'sunday_scaries_cure',
+    name: 'Sunday Scaries Cure',
+    description: 'Complete a session on 10 different Sundays',
+    category: 'consistency',
+  },
+  {
+    id: 'year_365',
+    name: '365',
+    description: 'Log at least one session in 52 consecutive weeks',
+    category: 'consistency',
+  },
+  {
+    id: 'perfect_week',
+    name: 'Perfect Week',
+    description:
+      'Complete all planned sessions and rest days in a 7-day period',
+    category: 'consistency',
+  },
+  {
+    id: 'leg_day_loyalist',
+    name: 'Leg Day Loyalist',
+    description: '20 consecutive planned sessions with squat or deadlift',
+    category: 'consistency',
+  },
 
   // Performance
-  { id: 'gravity_meet_your_match', name: 'Gravity, Meet Your Match', description: 'Any primary lift e1RM exceeds bodyweight', category: 'performance' },
-  { id: 'sir_isaacs_worst_nightmare', name: "Sir Isaac's Worst Nightmare", description: 'Any primary lift e1RM exceeds 2x bodyweight', category: 'performance' },
-  { id: 'the_tonne', name: 'The Tonne', description: 'Total session volume exceeds 10,000 kg in single session', category: 'performance' },
-  { id: 'round_number_enjoyer', name: 'Round Number Enjoyer', description: 'Hit PR on a round number (100, 140, 200 kg)', category: 'performance' },
-  { id: 'triple_threat', name: 'Triple Threat', description: 'Earn all three PR types in a single session', category: 'performance' },
-  { id: 'technically_a_pr', name: 'Technically a PR', description: 'Set e1RM PR by smallest increment (0.5–1.25 kg)', category: 'performance' },
-  { id: 'the_centurion', name: 'The Centurion', description: 'Complete 100+ reps of single primary lift in one session', category: 'performance' },
+  {
+    id: 'gravity_meet_your_match',
+    name: 'Gravity, Meet Your Match',
+    description: 'Any primary lift e1RM exceeds bodyweight',
+    category: 'performance',
+  },
+  {
+    id: 'sir_isaacs_worst_nightmare',
+    name: "Sir Isaac's Worst Nightmare",
+    description: 'Any primary lift e1RM exceeds 2x bodyweight',
+    category: 'performance',
+  },
+  {
+    id: 'the_tonne',
+    name: 'The Tonne',
+    description: 'Total session volume exceeds 10,000 kg in single session',
+    category: 'performance',
+  },
+  {
+    id: 'round_number_enjoyer',
+    name: 'Round Number Enjoyer',
+    description: 'Hit PR on a round number (100, 140, 200 kg)',
+    category: 'performance',
+  },
+  {
+    id: 'triple_threat',
+    name: 'Triple Threat',
+    description: 'Earn all three PR types in a single session',
+    category: 'performance',
+  },
+  {
+    id: 'technically_a_pr',
+    name: 'Technically a PR',
+    description: 'Set e1RM PR by smallest increment (0.5–1.25 kg)',
+    category: 'performance',
+  },
+  {
+    id: 'the_centurion',
+    name: 'The Centurion',
+    description: 'Complete 100+ reps of single primary lift in one session',
+    category: 'performance',
+  },
 
   // Situational
-  { id: 'comeback_kid', name: 'Comeback Kid', description: 'Set PR within 2 sessions of returning from 7+ day disruption', category: 'situational' },
-  { id: 'didnt_want_to_be_here', name: "Didn't Want To Be Here", description: 'Log session with poor sleep + low energy, complete 100% of planned sets', category: 'situational' },
-  { id: 'volume_goblin', name: 'Volume Goblin', description: 'Earn 5 Volume PRs before earning single 1RM PR', category: 'situational' },
-  { id: 'one_more_rep', name: 'One More Rep', description: 'Log actual reps exceeding planned reps on 3+ sets', category: 'situational' },
-  { id: 'plate_math_phd', name: 'Plate Math PhD', description: 'Complete session using 5+ distinct weight values', category: 'situational' },
-  { id: 'sandbagger', name: 'Sandbagger', description: 'Hit new Rep-at-Weight PR on final set of exercise', category: 'situational' },
-  { id: 'bad_day_survivor', name: 'Bad Day Survivor', description: 'Complete 50%+ of planned volume while Major disruption active', category: 'situational' },
-  { id: 'the_grinder', name: 'The Grinder', description: 'RPE 9.5+ on 3 or more sets in single session', category: 'situational' },
-  { id: 'tactical_retreat', name: 'Tactical Retreat', description: 'Return from deload week and set PR in very next session', category: 'situational' },
+  {
+    id: 'comeback_kid',
+    name: 'Comeback Kid',
+    description: 'Set PR within 2 sessions of returning from 7+ day disruption',
+    category: 'situational',
+  },
+  {
+    id: 'didnt_want_to_be_here',
+    name: "Didn't Want To Be Here",
+    description:
+      'Log session with poor sleep + low energy, complete 100% of planned sets',
+    category: 'situational',
+  },
+  {
+    id: 'volume_goblin',
+    name: 'Volume Goblin',
+    description: 'Earn 5 Volume PRs before earning single 1RM PR',
+    category: 'situational',
+  },
+  {
+    id: 'one_more_rep',
+    name: 'One More Rep',
+    description: 'Log actual reps exceeding planned reps on 3+ sets',
+    category: 'situational',
+  },
+  {
+    id: 'plate_math_phd',
+    name: 'Plate Math PhD',
+    description: 'Complete session using 5+ distinct weight values',
+    category: 'situational',
+  },
+  {
+    id: 'sandbagger',
+    name: 'Sandbagger',
+    description: 'Hit new Rep-at-Weight PR on final set of exercise',
+    category: 'situational',
+  },
+  {
+    id: 'bad_day_survivor',
+    name: 'Bad Day Survivor',
+    description:
+      'Complete 50%+ of planned volume while Major disruption active',
+    category: 'situational',
+  },
+  {
+    id: 'the_grinder',
+    name: 'The Grinder',
+    description: 'RPE 9.5+ on 3 or more sets in single session',
+    category: 'situational',
+  },
+  {
+    id: 'tactical_retreat',
+    name: 'Tactical Retreat',
+    description: 'Return from deload week and set PR in very next session',
+    category: 'situational',
+  },
 
   // Lift Identity
-  { id: 'bench_bro', name: 'Bench Bro', description: 'Bench e1RM exceeds squat e1RM', category: 'lift_identity' },
-  { id: 'the_specialist', name: 'The Specialist', description: "One lift's e1RM is 40%+ higher than weakest lift", category: 'lift_identity' },
-  { id: 'equal_opportunity_lifter', name: 'Equal Opportunity Lifter', description: 'All three primary lift e1RMs within 15% of each other', category: 'lift_identity' },
+  {
+    id: 'bench_bro',
+    name: 'Bench Bro',
+    description: 'Bench e1RM exceeds squat e1RM',
+    category: 'lift_identity',
+  },
+  {
+    id: 'the_specialist',
+    name: 'The Specialist',
+    description: "One lift's e1RM is 40%+ higher than weakest lift",
+    category: 'lift_identity',
+  },
+  {
+    id: 'equal_opportunity_lifter',
+    name: 'Equal Opportunity Lifter',
+    description: 'All three primary lift e1RMs within 15% of each other',
+    category: 'lift_identity',
+  },
 
   // Rest Pacing
-  { id: 'impatient', name: 'Impatient', description: 'Start 10+ sets before rest timer expires in single session', category: 'rest_pacing' },
-  { id: 'zen_master', name: 'Zen Master', description: 'Wait for full rest timer to expire on every set across 5 consecutive sessions', category: 'rest_pacing' },
-  { id: 'social_hour', name: 'Social Hour', description: 'Average rest between sets exceeds 5 minutes across full session', category: 'rest_pacing' },
+  {
+    id: 'impatient',
+    name: 'Impatient',
+    description: 'Start 10+ sets before rest timer expires in single session',
+    category: 'rest_pacing',
+  },
+  {
+    id: 'zen_master',
+    name: 'Zen Master',
+    description:
+      'Wait for full rest timer to expire on every set across 5 consecutive sessions',
+    category: 'rest_pacing',
+  },
+  {
+    id: 'social_hour',
+    name: 'Social Hour',
+    description:
+      'Average rest between sets exceeds 5 minutes across full session',
+    category: 'rest_pacing',
+  },
 
   // RPE Effort
-  { id: 'rpe_whisperer', name: 'RPE Whisperer', description: 'Log RPE within 0.5 of prescribed RPE on every set in session (min 8 sets)', category: 'rpe_effort' },
-  { id: 'sandbag_detected', name: 'Sandbag Detected', description: 'Log RPE 6 or below on every set of session', category: 'rpe_effort' },
-  { id: 'send_it', name: 'Send It', description: "Log RPE 10 on any set that wasn't the last set of the day", category: 'rpe_effort' },
+  {
+    id: 'rpe_whisperer',
+    name: 'RPE Whisperer',
+    description:
+      'Log RPE within 0.5 of prescribed RPE on every set in session (min 8 sets)',
+    category: 'rpe_effort',
+  },
+  {
+    id: 'sandbag_detected',
+    name: 'Sandbag Detected',
+    description: 'Log RPE 6 or below on every set of session',
+    category: 'rpe_effort',
+  },
+  {
+    id: 'send_it',
+    name: 'Send It',
+    description: "Log RPE 10 on any set that wasn't the last set of the day",
+    category: 'rpe_effort',
+  },
 
   // Program Loyalty
-  { id: 'old_faithful', name: 'Old Faithful', description: 'Run same program formula for 3+ consecutive cycles', category: 'program_loyalty' },
-  { id: 'shiny_object_syndrome', name: 'Shiny Object Syndrome', description: 'Change program formula 3+ times within single cycle', category: 'program_loyalty' },
-  { id: 'deload_denier', name: 'Deload Denier', description: 'Complete 3 consecutive cycles without single deload week', category: 'program_loyalty' },
+  {
+    id: 'old_faithful',
+    name: 'Old Faithful',
+    description: 'Run same program formula for 3+ consecutive cycles',
+    category: 'program_loyalty',
+  },
+  {
+    id: 'shiny_object_syndrome',
+    name: 'Shiny Object Syndrome',
+    description: 'Change program formula 3+ times within single cycle',
+    category: 'program_loyalty',
+  },
+  {
+    id: 'deload_denier',
+    name: 'Deload Denier',
+    description: 'Complete 3 consecutive cycles without single deload week',
+    category: 'program_loyalty',
+  },
 
   // Volume Rep
-  { id: 'rep_machine', name: 'Rep Machine', description: 'Complete 50+ total reps of single primary lift in one session', category: 'volume_rep' },
-  { id: 'singles_club', name: 'Singles Club', description: 'Complete session where every primary lift set is single (1 rep)', category: 'volume_rep' },
-  { id: 'jack_of_all_lifts', name: 'Jack of All Lifts', description: 'Use 10+ unique auxiliary exercises within single training cycle', category: 'volume_rep' },
+  {
+    id: 'rep_machine',
+    name: 'Rep Machine',
+    description:
+      'Complete 50+ total reps of single primary lift in one session',
+    category: 'volume_rep',
+  },
+  {
+    id: 'singles_club',
+    name: 'Singles Club',
+    description:
+      'Complete session where every primary lift set is single (1 rep)',
+    category: 'volume_rep',
+  },
+  {
+    id: 'jack_of_all_lifts',
+    name: 'Jack of All Lifts',
+    description:
+      'Use 10+ unique auxiliary exercises within single training cycle',
+    category: 'volume_rep',
+  },
 
   // Session Milestones
-  { id: 'first_blood', name: 'First Blood', description: 'Complete your very first session ever', category: 'session_milestones' },
-  { id: 'parakeet_og', name: 'Parakeet OG', description: 'Complete your very first cycle', category: 'session_milestones' },
-  { id: 'century_club', name: 'Century Club', description: 'Complete 100 total sessions', category: 'session_milestones' },
-  { id: 'five_hundred_club', name: '500 Club', description: 'Complete 500 total sessions', category: 'session_milestones' },
+  {
+    id: 'first_blood',
+    name: 'First Blood',
+    description: 'Complete your very first session ever',
+    category: 'session_milestones',
+  },
+  {
+    id: 'parakeet_og',
+    name: 'Parakeet OG',
+    description: 'Complete your very first cycle',
+    category: 'session_milestones',
+  },
+  {
+    id: 'century_club',
+    name: 'Century Club',
+    description: 'Complete 100 total sessions',
+    category: 'session_milestones',
+  },
+  {
+    id: 'five_hundred_club',
+    name: '500 Club',
+    description: 'Complete 500 total sessions',
+    category: 'session_milestones',
+  },
 
   // Wild Rare
-  { id: 'ghost_protocol', name: 'Ghost Protocol', description: 'Complete session in under 30 minutes', category: 'wild_rare' },
-  { id: 'marathon_lifter', name: 'Marathon Lifter', description: 'Session lasts longer than 2 hours', category: 'wild_rare' },
-  { id: 'the_streak_breaker', name: 'The Streak Breaker', description: 'Break streak of 8+ weeks, then rebuild it back to 8+ weeks', category: 'wild_rare' },
+  {
+    id: 'ghost_protocol',
+    name: 'Ghost Protocol',
+    description: 'Complete session in under 30 minutes',
+    category: 'wild_rare',
+  },
+  {
+    id: 'marathon_lifter',
+    name: 'Marathon Lifter',
+    description: 'Session lasts longer than 2 hours',
+    category: 'wild_rare',
+  },
+  {
+    id: 'the_streak_breaker',
+    name: 'The Streak Breaker',
+    description: 'Break streak of 8+ weeks, then rebuild it back to 8+ weeks',
+    category: 'wild_rare',
+  },
 
   // Couples
-  { id: 'power_couple', name: 'Power Couple', description: 'Both users complete session on same calendar day', category: 'couples' },
+  {
+    id: 'power_couple',
+    name: 'Power Couple',
+    description: 'Both users complete session on same calendar day',
+    category: 'couples',
+  },
 ];
 
 // ---------------------------------------------------------------------------
@@ -391,7 +631,9 @@ async function main(): Promise<void> {
   const succeeded: string[] = [];
   const failed: Array<{ id: string; error: string }> = [];
 
-  console.log(`\nGenerating ${badges.length} badge image(s) -> ${OUTPUT_DIR}\n`);
+  console.log(
+    `\nGenerating ${badges.length} badge image(s) -> ${OUTPUT_DIR}\n`
+  );
 
   for (let i = 0; i < badges.length; i++) {
     const badge = badges[i];
@@ -402,7 +644,9 @@ async function main(): Promise<void> {
     if (!force && badgeId === null && fs.existsSync(outputPath)) {
       const stat = fs.statSync(outputPath);
       if (stat.size > 2048) {
-        console.log(`${prefix} ... skipped (exists, ${Math.round(stat.size / 1024)}KB)`);
+        console.log(
+          `${prefix} ... skipped (exists, ${Math.round(stat.size / 1024)}KB)`
+        );
         succeeded.push(badge.id);
         continue;
       }

@@ -1,5 +1,3 @@
-import { APICallError, NoObjectGeneratedError } from 'ai';
-
 import {
   createDirectOpenAIModel,
   FORM_COACHING_SYSTEM_PROMPT,
@@ -7,12 +5,9 @@ import {
   type FormCoachingInput,
   type FormCoachingResult,
 } from '@parakeet/training-engine';
+import { APICallError, NoObjectGeneratedError } from 'ai';
 
-export type CoachingModelId =
-  | 'gpt-5'
-  | 'gpt-5-mini'
-  | 'gpt-4o'
-  | 'gpt-4o-mini';
+export type CoachingModelId = 'gpt-5' | 'gpt-5-mini' | 'gpt-4o' | 'gpt-4o-mini';
 
 export const COACHING_MODEL_IDS: CoachingModelId[] = [
   'gpt-5',

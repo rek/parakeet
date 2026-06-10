@@ -10,6 +10,7 @@ The Supabase client singleton for the parakeet app, React Query integration, and
 ## Tasks
 
 **Packages:**
+
 ```bash
 npm install @supabase/supabase-js @react-native-async-storage/async-storage
 npm install @tanstack/react-query
@@ -18,21 +19,23 @@ npm install @tanstack/react-query
 **`apps/parakeet/lib/supabase.ts`** — see [auth-001-supabase-auth-setup.md](./spec-auth.md) for the client singleton definition.
 
 **`apps/parakeet/lib/query-client.ts`:**
+
 ```typescript
-import { QueryClient } from '@tanstack/react-query'
+import { QueryClient } from '@tanstack/react-query';
 
 export const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 1000 * 60 * 5,    // 5 minutes
-      gcTime: 1000 * 60 * 60,      // 1 hour
+      staleTime: 1000 * 60 * 5, // 5 minutes
+      gcTime: 1000 * 60 * 60, // 1 hour
       retry: 2,
     },
   },
-})
+});
 ```
 
 **`apps/parakeet/app/_layout.tsx`:**
+
 ```typescript
 import { QueryClientProvider } from '@tanstack/react-query'
 import { queryClient } from '@/lib/query-client'
@@ -49,52 +52,60 @@ export default function RootLayout() {
 ```
 
 **React Query hooks pattern (example):**
+
 ```typescript
 // apps/parakeet/hooks/useActiveProgram.ts
 export function useActiveProgram() {
-  const userId = useUserId()
+  const userId = useUserId();
   return useQuery({
     queryKey: ['program', 'active', userId],
     queryFn: () => getActiveProgram(userId),
     enabled: !!userId,
-  })
+  });
 }
 
 // apps/parakeet/hooks/useTodaySession.ts
 export function useTodaySession() {
-  const userId = useUserId()
+  const userId = useUserId();
   return useQuery({
     queryKey: ['session', 'today', userId],
     queryFn: () => findTodaySession(userId),
     enabled: !!userId,
-  })
+  });
 }
 ```
 
 **Real-time sync (Supabase Realtime):**
+
 ```typescript
 // apps/parakeet/hooks/useSessionSync.ts
 // Subscribes to changes on the sessions table for the current user
 // Cross-device sync — changes on one device appear on all user's devices
 export function useSessionSync(programId: string) {
-  const queryClient = useQueryClient()
+  const queryClient = useQueryClient();
 
   useEffect(() => {
     const channel = supabase
       .channel('session-changes')
-      .on('postgres_changes', {
-        event: '*',
-        schema: 'public',
-        table: 'sessions',
-        filter: `program_id=eq.${programId}`,
-      }, () => {
-        queryClient.invalidateQueries({ queryKey: ['session'] })
-        queryClient.invalidateQueries({ queryKey: ['program'] })
-      })
-      .subscribe()
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'sessions',
+          filter: `program_id=eq.${programId}`,
+        },
+        () => {
+          queryClient.invalidateQueries({ queryKey: ['session'] });
+          queryClient.invalidateQueries({ queryKey: ['program'] });
+        }
+      )
+      .subscribe();
 
-    return () => { supabase.removeChannel(channel) }
-  }, [programId, queryClient])
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [programId, queryClient]);
 }
 ```
 

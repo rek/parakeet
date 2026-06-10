@@ -8,7 +8,7 @@
 
 At the end of each training cycle, Parakeet compiles all session data into a structured report and sends it to an LLM for expert-level analysis. The LLM acts as a coach reviewing a complete training log — finding what worked, what didn't, which auxiliary exercises correlated with main lift improvements, and what should change in the next cycle. This is the primary mechanism through which the system gets smarter about a specific lifter over time.
 
-This is a separate concern from JIT session generation. JIT answers: *"What should I lift today, given how I feel right now?"* Cycle Review answers: *"What does 10–14 weeks of data tell us about how THIS lifter responds to training?"*
+This is a separate concern from JIT session generation. JIT answers: _"What should I lift today, given how I feel right now?"_ Cycle Review answers: _"What does 10–14 weeks of data tell us about how THIS lifter responds to training?"_
 
 ## Problem Statement
 
@@ -79,35 +79,41 @@ The LLM is asked to return a structured `CycleReview` object:
 
 ```typescript
 interface CycleReview {
-  overallAssessment: string          // 2-3 sentence summary
-  progressByLift: Record<Lift, {
-    rating: 'excellent' | 'good' | 'stalled' | 'concerning'
-    narrative: string
-  }>
-  auxiliaryInsights: {
-    mostCorrelated: {exercise: string, lift: string, explanation: string}[]
-    leastEffective: {exercise: string, lift: string, explanation: string}[]
-    recommendedChanges: {
-      add?: string[], remove?: string[], reorder?: {exercise: string, newPosition: number}[]
+  overallAssessment: string; // 2-3 sentence summary
+  progressByLift: Record<
+    Lift,
+    {
+      rating: 'excellent' | 'good' | 'stalled' | 'concerning';
+      narrative: string;
     }
-  }
+  >;
+  auxiliaryInsights: {
+    mostCorrelated: { exercise: string; lift: string; explanation: string }[];
+    leastEffective: { exercise: string; lift: string; explanation: string }[];
+    recommendedChanges: {
+      add?: string[];
+      remove?: string[];
+      reorder?: { exercise: string; newPosition: number }[];
+    };
+  };
   volumeInsights: {
-    musclesUnderRecovered: string[]   // consistently near MRV
-    musclesUndertrained: string[]     // consistently below MEV
-    frequencyRecommendation?: string
-  }
+    musclesUnderRecovered: string[]; // consistently near MRV
+    musclesUndertrained: string[]; // consistently below MEV
+    frequencyRecommendation?: string;
+  };
   formulaSuggestions: {
-    description: string
-    rationale: string
-    priority: 'high' | 'medium' | 'low'
-  }[]
-  structuralSuggestions: {           // for developer review — may require code changes
-    description: string
-    rationale: string
-    developerNote: string
-  }[]
-  nextCycleRecommendations: string   // natural language summary of key changes to make
-  menstrualInsights?: string         // female users — cycle-performance patterns observed
+    description: string;
+    rationale: string;
+    priority: 'high' | 'medium' | 'low';
+  }[];
+  structuralSuggestions: {
+    // for developer review — may require code changes
+    description: string;
+    rationale: string;
+    developerNote: string;
+  }[];
+  nextCycleRecommendations: string; // natural language summary of key changes to make
+  menstrualInsights?: string; // female users — cycle-performance patterns observed
 }
 ```
 
@@ -147,10 +153,12 @@ The cycle review generates suggestions, but the real value compounds across mult
 ### How Data Accumulates
 
 Each completed `CycleReport` is stored in Supabase (`cycle_reviews` table). When generating the next cycle review, the LLM receives:
+
 - The current cycle's `CycleReport`
 - Summaries of the previous 2–3 cycles (not full reports — summarised key metrics to stay within context limits)
 
 This allows observations like:
+
 - "This is the third consecutive cycle where Bench has stalled in Block 2 — this is likely a structural issue with the programming, not day-to-day variation"
 - "Over three cycles, your estimated Squat 1RM has increased 8.5% while your bodyweight has stayed flat — WILKS score is improving meaningfully"
 - "Romanian Deadlift has been in the aux pool for two cycles with no measurable correlation with Deadlift performance. Removing it is now a high-confidence recommendation."
@@ -168,6 +176,7 @@ This is a specific formula suggestion that gets routed through the standard sugg
 Some insights require code changes — new auxiliary exercises, changes to the Cube Method rotation, structural program modifications. These are surfaced in a separate channel, clearly labelled as requiring developer attention.
 
 Examples:
+
 - "This lifter might benefit from a 5-day/week frequency option — currently only 3 and 4 are supported"
 - "Consider adding Romanian Deadlift variant (Deficit RDL) to the Deadlift auxiliary pool"
 - "The 2-week Explosive block structure appears to be insufficient for this lifter to see explosive strength benefits — consider extending Block 1 Explosive sessions"
@@ -177,10 +186,12 @@ Developer suggestions are stored in a `developer_suggestions` table and viewable
 ## Future Enhancements
 
 **Phase 2:**
+
 - Cycle comparison view: side-by-side two cycles, showing what changed and what the effect was
 - Export cycle review as PDF (shareable with a coach)
 
 **Long-term:**
+
 - Automatic aux exercise pool curation: based on 3+ cycles of correlation data, the system suggests specific exercises to add to or remove from the pool rather than just reordering
 - Federated insights: with user consent, anonymised cycle data from multiple users informs better population-level defaults (opt-in only)
 - **Modifier frequency analysis**: Aggregate [prescription trace](./prescription-trace-integration.md) data across a cycle to reveal per-session modifier patterns — frequency, magnitude, and interactions between adjustment sources (soreness, readiness, cycle phase, disruption). The cycle review LLM receives this as structured context: "Soreness active on 8/12 squat sessions, averaging ×0.92. Readiness never triggered. Consider whether soreness threshold is too sensitive."
@@ -189,4 +200,3 @@ Developer suggestions are stored in a `developer_suggestions` table and viewable
 
 - Related Design Docs: [training-engine-architecture.md](./training-engine-architecture.md), [formula-management.md](./formula-management.md), [program-generation.md](./program-generation.md), [achievements.md](./achievements.md), [sex-based-adaptations.md](./sex-based-adaptations.md), [prescription-trace-integration.md](./prescription-trace-integration.md)
 - Specs: [engine-005-performance-adjuster.md](../core-engine/spec-performance-adjuster.md), [engine-012-cycle-review-generator.md](./spec-generator.md), [engine-024-developer-suggestions.md](./spec-dev-suggestions.md), [engine-025-multi-cycle-context.md](./spec-multi-cycle.md), [mobile-014-cycle-review-screen.md](./spec-screen.md)
-

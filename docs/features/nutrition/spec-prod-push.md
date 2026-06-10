@@ -17,13 +17,13 @@ data in prod.
 
 - [x] `nutrition` entry in `FEATURE_REGISTRY`; category `health`;
       `defaultEnabled: false`.
-  → `apps/parakeet/src/modules/feature-flags/model/features.ts`
+      → `apps/parakeet/src/modules/feature-flags/model/features.ts`
 - [x] `LeftDrawer` Nutrition entry gated by `useFeatureEnabled('nutrition')`.
-  → `apps/parakeet/src/components/ui/LeftDrawer.tsx`
+      → `apps/parakeet/src/components/ui/LeftDrawer.tsx`
 - [x] Nutrition route gated by `useFeatureEnabled('nutrition')`.
       Hooks-before-return rule satisfied (all hooks called before the
       conditional `return null`).
-  → `apps/parakeet/src/app/(tabs)/nutrition.tsx`
+      → `apps/parakeet/src/app/(tabs)/nutrition.tsx`
 
 **Unified seed path:**
 
@@ -31,9 +31,9 @@ data in prod.
       `SUPABASE_URL` + `SUPABASE_SERVICE_KEY` in env → use them; else
       fall back to `supabase status` for local stack. Same
       `npm run db:seed:diet` works local and prod.
-  → `tools/scripts/seed-diet-protocols.sh`
+      → `tools/scripts/seed-diet-protocols.sh`
 - [x] Seeder tsx script already env-driven; no script forked.
-  → `tools/scripts/seed-diet-protocols.ts`
+      → `tools/scripts/seed-diet-protocols.ts`
 
 **Seeder hardening — dedupe (protocol_id, food_id):**
 
@@ -44,14 +44,14 @@ data in prod.
       the junction upsert via `Map` keyed by `food_id`; first-seen
       wins; drift on status/notes logged as a warning; collapsed-
       duplicate count printed alongside the upsert count.
-  → `tools/scripts/seed-diet-protocols.ts:main`
+      → `tools/scripts/seed-diet-protocols.ts:main`
 
 **Vitest include extended:**
 
 - [x] `apps/parakeet/vitest.config.ts` — include
       `../../tools/scripts/**/*.test.ts` so parser tests run under
       `nx test parakeet` (tools/ has no project of its own).
-  → `apps/parakeet/vitest.config.ts`
+      → `apps/parakeet/vitest.config.ts`
 
 **Prod push procedure (user-action, documented in gh#199 + commit msgs):**
 

@@ -16,36 +16,36 @@ The Just-In-Time session generator is the core orchestrator that runs when a use
 ```typescript
 interface JITInput {
   // Session context (from sessions table)
-  sessionId: string
-  weekNumber: number
-  blockNumber: 1 | 2 | 3
-  primaryLift: Lift
-  intensityType: IntensityType
+  sessionId: string;
+  weekNumber: number;
+  blockNumber: 1 | 2 | 3;
+  primaryLift: Lift;
+  intensityType: IntensityType;
 
   // User's current 1RM (most recent lifter_maxes row)
-  oneRmKg: number
+  oneRmKg: number;
 
   // Formula config (merged system defaults + user overrides)
-  formulaConfig: FormulaConfig
+  formulaConfig: FormulaConfig;
 
   // Pre-workout soreness (from soreness_checkins)
-  sorenessRatings: Record<MuscleGroup, SorenessLevel>
+  sorenessRatings: Record<MuscleGroup, SorenessLevel>;
 
   // Volume context (computed from this week's session_logs)
-  weeklyVolumeToDate: Record<MuscleGroup, number>
-  mrvMevConfig: MrvMevConfig
+  weeklyVolumeToDate: Record<MuscleGroup, number>;
+  mrvMevConfig: MrvMevConfig;
 
   // Auxiliary exercises active this block (from auxiliary_assignments)
-  activeAuxiliaries: [string, string]
+  activeAuxiliaries: [string, string];
 
   // Recent performance history for same lift (last 6 sessions within 60 days)
-  recentLogs: RecentSessionSummary[]
+  recentLogs: RecentSessionSummary[];
 
   // Active disruptions
-  activeDisruptions: TrainingDisruption[]
+  activeDisruptions: TrainingDisruption[];
 
   // Warmup protocol for this lift (from warmup_configs, falls back to 'standard')
-  warmupConfig: WarmupProtocol
+  warmupConfig: WarmupProtocol;
 }
 ```
 
@@ -53,23 +53,23 @@ interface JITInput {
 
 ```typescript
 interface JITOutput {
-  sessionId: string
-  generatedAt: Date
-  mainLiftSets: PlannedSet[]
-  warmupSets: WarmupSet[]     // generated from mainLiftSets[0].weight_kg after Step 7
-  auxiliaryWork: AuxiliaryWork[]
-  volumeModifier: number      // final volume scale applied (0.0–1.2)
-  intensityModifier: number   // final intensity scale applied (0.85–1.05)
-  rationale: string[]         // plain-language explanations of all adjustments
-  warnings: string[]          // "Approaching MRV for quads", etc.
-  skippedMainLift: boolean    // true if MRV exceeded and main lift was skipped
+  sessionId: string;
+  generatedAt: Date;
+  mainLiftSets: PlannedSet[];
+  warmupSets: WarmupSet[]; // generated from mainLiftSets[0].weight_kg after Step 7
+  auxiliaryWork: AuxiliaryWork[];
+  volumeModifier: number; // final volume scale applied (0.0–1.2)
+  intensityModifier: number; // final intensity scale applied (0.85–1.05)
+  rationale: string[]; // plain-language explanations of all adjustments
+  warnings: string[]; // "Approaching MRV for quads", etc.
+  skippedMainLift: boolean; // true if MRV exceeded and main lift was skipped
 }
 
 interface AuxiliaryWork {
-  exercise: string
-  sets: PlannedSet[]
-  skipped: boolean
-  skipReason?: string
+  exercise: string;
+  sets: PlannedSet[];
+  skipped: boolean;
+  skipReason?: string;
 }
 ```
 
@@ -114,23 +114,25 @@ interface AuxiliaryWork {
 ```typescript
 // apps/parakeet/lib/session.ts
 async function generateAndSaveSession(sessionId: string): Promise<JITOutput> {
-  const [session, oneRm, formulaConfig, soreness, weeklyVolume, mrvConfig,
-         auxiliaries, recentLogs, disruptions] = await Promise.all([
+  const [session, oneRm, formulaConfig, soreness, weeklyVolume, mrvConfig, auxiliaries, recentLogs, disruptions] = await Promise.all([
     supabase.from('sessions').select('*').eq('id', sessionId).single(),
     supabase.from('lifter_maxes').select('*').eq('lift', lift).order('recorded_at', { ascending: false }).limit(1).single(),
     // ... fetch all inputs
-  ])
+  ]);
 
-  const output = generateJITSession(input)
+  const output = generateJITSession(input);
 
   // Write planned_sets and mark jit_generated_at
-  await supabase.from('sessions').update({
-    planned_sets: output.mainLiftSets,
-    jit_generated_at: output.generatedAt.toISOString(),
-    jit_input_snapshot: input,       // JSONB snapshot for debugging
-  }).eq('id', sessionId)
+  await supabase
+    .from('sessions')
+    .update({
+      planned_sets: output.mainLiftSets,
+      jit_generated_at: output.generatedAt.toISOString(),
+      jit_input_snapshot: input, // JSONB snapshot for debugging
+    })
+    .eq('id', sessionId);
 
-  return output
+  return output;
 }
 ```
 

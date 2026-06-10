@@ -40,27 +40,27 @@ export function CalculatorSection({
 
   const [protocol, setProtocol] = useState<DietProtocolSlug>(defaultProtocol);
   const [bodyweight, setBodyweight] = useState(() =>
-    profile?.bodyweight_kg != null ? profile.bodyweight_kg.toString() : '',
+    profile?.bodyweight_kg != null ? profile.bodyweight_kg.toString() : ''
   );
   const [sex, setSex] = useState<BiologicalSex>(
-    profile?.biological_sex ?? 'female',
+    profile?.biological_sex ?? 'female'
   );
   const [age, setAge] = useState(() => {
     if (!profile?.date_of_birth) return '';
     return ageFromDob(profile.date_of_birth);
   });
   const [height, setHeight] = useState(() =>
-    profile?.height_cm != null ? profile.height_cm.toString() : '',
+    profile?.height_cm != null ? profile.height_cm.toString() : ''
   );
   const [leanMass, setLeanMass] = useState(() =>
-    profile?.lean_mass_kg != null ? profile.lean_mass_kg.toString() : '',
+    profile?.lean_mass_kg != null ? profile.lean_mass_kg.toString() : ''
   );
   // Powerlifter default: 'active'. The research-grade Harris-Benedict
   // activity multipliers undercount heavy-compound energy cost, so
   // parakeet's baseline assumes 5-6 sessions/week with compound lifts.
   // Users can drop to moderate if deload / sedentary job / low volume.
   const [activity, setActivity] = useState<ActivityLevel>(
-    profile?.activity_level ?? 'active',
+    profile?.activity_level ?? 'active'
   );
   const [goal, setGoal] = useState<Goal>(profile?.goal ?? 'maintain');
   const [trainingDay, setTrainingDay] = useState(false);
@@ -71,11 +71,15 @@ export function CalculatorSection({
     if (!profile || profileApplied.current) return;
     profileApplied.current = true;
     // Only fill empty fields — never overwrite a value the user has already typed.
-    if (profile.bodyweight_kg != null && bodyweight === '') setBodyweight(profile.bodyweight_kg.toString());
+    if (profile.bodyweight_kg != null && bodyweight === '')
+      setBodyweight(profile.bodyweight_kg.toString());
     if (profile.biological_sex) setSex(profile.biological_sex);
-    if (profile.date_of_birth && age === '') setAge(ageFromDob(profile.date_of_birth));
-    if (profile.height_cm != null && height === '') setHeight(profile.height_cm.toString());
-    if (profile.lean_mass_kg != null && leanMass === '') setLeanMass(profile.lean_mass_kg.toString());
+    if (profile.date_of_birth && age === '')
+      setAge(ageFromDob(profile.date_of_birth));
+    if (profile.height_cm != null && height === '')
+      setHeight(profile.height_cm.toString());
+    if (profile.lean_mass_kg != null && leanMass === '')
+      setLeanMass(profile.lean_mass_kg.toString());
     if (profile.activity_level) setActivity(profile.activity_level);
     if (profile.goal) setGoal(profile.goal);
   }, [profile]); // eslint-disable-line react-hooks/exhaustive-deps -- intentionally reads initial state only
@@ -127,10 +131,7 @@ export function CalculatorSection({
             activeOpacity={0.8}
           >
             <Text
-              style={[
-                styles.pillText,
-                protocol === p && styles.pillTextActive,
-              ]}
+              style={[styles.pillText, protocol === p && styles.pillTextActive]}
             >
               {protocolLabel(p)}
             </Text>
@@ -207,17 +208,37 @@ export function CalculatorSection({
                 activeOpacity={0.8}
               >
                 <View style={styles.activityLeft}>
-                  <Text style={[styles.activityLabel, active && styles.activityLabelActive]}>
+                  <Text
+                    style={[
+                      styles.activityLabel,
+                      active && styles.activityLabelActive,
+                    ]}
+                  >
                     {opt.label}
                     {opt.default ? (
-                      <Text style={styles.activityDefaultTag}> · powerlifter default</Text>
+                      <Text style={styles.activityDefaultTag}>
+                        {' '}
+                        · powerlifter default
+                      </Text>
                     ) : null}
                   </Text>
                   <Text style={styles.activityDesc}>{opt.desc}</Text>
                 </View>
                 <View style={styles.activityMultiplierBox}>
-                  <Text style={[styles.activityMultiplierLabel, active && styles.activityMultiplierActive]}>TDEE</Text>
-                  <Text style={[styles.activityMultiplier, active && styles.activityMultiplierActive]}>
+                  <Text
+                    style={[
+                      styles.activityMultiplierLabel,
+                      active && styles.activityMultiplierActive,
+                    ]}
+                  >
+                    TDEE
+                  </Text>
+                  <Text
+                    style={[
+                      styles.activityMultiplier,
+                      active && styles.activityMultiplierActive,
+                    ]}
+                  >
                     BMR × {opt.multiplier}
                   </Text>
                 </View>
@@ -249,13 +270,8 @@ export function CalculatorSection({
           onPress={() => setTrainingDay((v) => !v)}
           activeOpacity={0.8}
         >
-          <Text
-            style={[
-              styles.toggleText,
-              trainingDay && styles.toggleTextOn,
-            ]}
-          >
-            Training day (+10% protein)  {trainingDay ? '●' : '○'}
+          <Text style={[styles.toggleText, trainingDay && styles.toggleTextOn]}>
+            Training day (+10% protein) {trainingDay ? '●' : '○'}
           </Text>
         </TouchableOpacity>
 
@@ -282,7 +298,11 @@ export function CalculatorSection({
             ) : null}
           </View>
           <View style={styles.macroRow}>
-            <MacroCell label="Protein" value={parsed.protein_g} styles={styles} />
+            <MacroCell
+              label="Protein"
+              value={parsed.protein_g}
+              styles={styles}
+            />
             <MacroCell label="Fat" value={parsed.fat_g} styles={styles} />
             <MacroCell
               label={protocol === 'keto' ? 'Carb (cap)' : 'Carb'}
@@ -308,7 +328,7 @@ export function CalculatorSection({
             {parsed.tdee_kcal}
             {parsed.kcal_overridden
               ? ` · derived was ${Math.round(
-                  parsed.tdee_kcal * goalAdjustment(goal),
+                  parsed.tdee_kcal * goalAdjustment(goal)
                 )}`
               : ''}
           </Text>
@@ -338,7 +358,8 @@ export function CalculatorSection({
             lipedema, Dercum's disease, and MSL — conditions where pathological
             fat tissue does not respond to standard caloric restriction.
             Mediterranean-style: low glycemic index, anti-inflammatory, whole
-            foods, no refined sugar or flour, limited A1 dairy, omega-3 emphasis.
+            foods, no refined sugar or flour, limited A1 dairy, omega-3
+            emphasis.
             {'\n\n'}
             Protein target (1.4 g/kg) is adapted from Cannataro 2021
             keto-lipedema data — adjusted upward from ~1.0–1.1 g/kg (LIPODIET)
@@ -373,7 +394,11 @@ function ageFromDob(dob: string): string {
   const birthMonth = parseInt(dob.slice(5, 7), 10) - 1;
   const birthDay = parseInt(dob.slice(8, 10), 10);
   let a = thisYear - birthYear;
-  if (now.getMonth() < birthMonth || (now.getMonth() === birthMonth && now.getDate() < birthDay)) a--;
+  if (
+    now.getMonth() < birthMonth ||
+    (now.getMonth() === birthMonth && now.getDate() < birthDay)
+  )
+    a--;
   return a.toString();
 }
 
@@ -384,14 +409,43 @@ const ACTIVITY_OPTIONS: {
   multiplier: string;
   default?: true;
 }[] = [
-  { value: 'sedentary', label: 'Sedentary', desc: 'Desk job, no training', multiplier: '1.2' },
-  { value: 'light', label: 'Light', desc: '1–2 easy sessions/week', multiplier: '1.375' },
-  { value: 'moderate', label: 'Moderate', desc: '3–4 general sessions/week · use on deload weeks', multiplier: '1.55' },
-  { value: 'active', label: 'Active', desc: '3 heavy compound sessions/week — thermic cost higher than frequency suggests', multiplier: '1.725', default: true },
-  { value: 'very_active', label: 'Very active', desc: '4+ sessions/week or physically demanding job on top', multiplier: '1.9' },
+  {
+    value: 'sedentary',
+    label: 'Sedentary',
+    desc: 'Desk job, no training',
+    multiplier: '1.2',
+  },
+  {
+    value: 'light',
+    label: 'Light',
+    desc: '1–2 easy sessions/week',
+    multiplier: '1.375',
+  },
+  {
+    value: 'moderate',
+    label: 'Moderate',
+    desc: '3–4 general sessions/week · use on deload weeks',
+    multiplier: '1.55',
+  },
+  {
+    value: 'active',
+    label: 'Active',
+    desc: '3 heavy compound sessions/week — thermic cost higher than frequency suggests',
+    multiplier: '1.725',
+    default: true,
+  },
+  {
+    value: 'very_active',
+    label: 'Very active',
+    desc: '4+ sessions/week or physically demanding job on top',
+    multiplier: '1.9',
+  },
 ];
 
-interface Ref { text: string; url: string }
+interface Ref {
+  text: string;
+  url: string;
+}
 
 const BMR_REFS: Ref[] = [
   {
@@ -516,7 +570,9 @@ function goalAdjustment(goal: Goal): number {
   if (goal === 'bulk') return 1.1;
   return 1;
 }
-function methodLabel(m: 'katch_mcardle' | 'mifflin_st_jeor' | 'fallback'): string {
+function methodLabel(
+  m: 'katch_mcardle' | 'mifflin_st_jeor' | 'fallback'
+): string {
   if (m === 'katch_mcardle') return 'Katch-McArdle';
   if (m === 'mifflin_st_jeor') return 'Mifflin-St Jeor';
   return 'Bodyweight est.';

@@ -1,9 +1,9 @@
 import { useMemo } from 'react';
 import { StyleSheet, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { useFeatureEnabled } from '@modules/feature-flags';
 import { NutritionScreen } from '@modules/nutrition';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { HeaderMenuButton } from '../../components/ui/HeaderMenuButton';
 import { ScreenHeader } from '../../components/ui/ScreenHeader';
@@ -24,7 +24,7 @@ export default function NutritionRoute() {
           gap: spacing[2],
         },
       }),
-    [colors],
+    [colors]
   );
 
   if (!nutritionEnabled) return null;

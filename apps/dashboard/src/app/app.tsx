@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+
 import {
   Navigate,
   Route,
@@ -677,11 +678,7 @@ export function App() {
             {ALL_NAV_ITEMS.map((item) => {
               const Component = item.component;
               return (
-                <Route
-                  key={item.id}
-                  path={item.path}
-                  element={<Component />}
-                />
+                <Route key={item.id} path={item.path} element={<Component />} />
               );
             })}
             <Route

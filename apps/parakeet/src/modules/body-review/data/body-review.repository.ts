@@ -131,9 +131,7 @@ export async function fetchWeeklyVolumeForReview(
 
   const { data, error } = await typedSupabase
     .from('session_logs')
-    .select(
-      'session_id, sessions!inner(primary_lift, week_number, program_id)'
-    )
+    .select('session_id, sessions!inner(primary_lift, week_number, program_id)')
     .eq('user_id', userId)
     .eq('sessions.program_id', programId)
     .eq('sessions.week_number', weekNumber);

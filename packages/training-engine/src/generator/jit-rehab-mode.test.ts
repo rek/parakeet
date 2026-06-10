@@ -23,9 +23,9 @@ describe('Rehab Mode — main lift weight clamp (GH#220)', () => {
     expect(out.mainLiftSets[0].weight_kg).toBe(80);
     expect(out.cappedByRehab).toBe(true);
     expect(out.rehabCapKg).toBe(80);
-    expect(out.rationale.some((r) => /Capped at 80kg by Rehab Mode/i.test(r))).toBe(
-      true
-    );
+    expect(
+      out.rationale.some((r) => /Capped at 80kg by Rehab Mode/i.test(r))
+    ).toBe(true);
   });
 
   it('does not clamp when formula weight is below the cap', () => {
@@ -38,7 +38,7 @@ describe('Rehab Mode — main lift weight clamp (GH#220)', () => {
     expect(out.mainLiftSets[0].weight_kg).toBeGreaterThan(100);
   });
 
-  it('rounds the cap UP to the lifter\'s plate increment (GH#220 decision)', () => {
+  it("rounds the cap UP to the lifter's plate increment (GH#220 decision)", () => {
     // Cap = 82.5, plate increment = 5 (no 1.25 plates) → prescription = 85
     const out = generateJITSession(
       baseInput({
@@ -51,7 +51,7 @@ describe('Rehab Mode — main lift weight clamp (GH#220)', () => {
     expect(out.rehabCapKg).toBe(85);
   });
 
-  it('cap on a different lift does not affect today\'s session', () => {
+  it("cap on a different lift does not affect today's session", () => {
     // Squat day, but the rehab cap is on bench → no cap behavior.
     const out = generateJITSession(
       baseInput({
@@ -127,7 +127,9 @@ describe('Rehab Mode — suppression of adaptive steps', () => {
       })
     );
     expect(
-      out.rationale.some((r) => /Recent RPE well below target — prescribing/i.test(r))
+      out.rationale.some((r) =>
+        /Recent RPE well below target — prescribing/i.test(r)
+      )
     ).toBe(false);
   });
 });
@@ -220,9 +222,9 @@ describe('Rehab Mode — recentLogs filtering after cap is lifted', () => {
         sorenessRatings: { quads: 1, glutes: 1, lower_back: 1 },
       })
     );
-    expect(
-      polluted.rationale.some((r) => /below target — \+/i.test(r))
-    ).toBe(false);
+    expect(polluted.rationale.some((r) => /below target — \+/i.test(r))).toBe(
+      false
+    );
   });
 
   it('clean sessions in recentLogs still drive auto-progression normally', () => {
@@ -238,8 +240,8 @@ describe('Rehab Mode — recentLogs filtering after cap is lifted', () => {
       })
     );
     // Two clean RPE-10 sessions → "RPE above target" cut should fire
-    expect(
-      out.rationale.some((r) => /Recent RPE above target/i.test(r))
-    ).toBe(true);
+    expect(out.rationale.some((r) => /Recent RPE above target/i.test(r))).toBe(
+      true
+    );
   });
 });

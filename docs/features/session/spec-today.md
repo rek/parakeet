@@ -10,6 +10,7 @@ The home tab that shows all of today's sessions and any active disruption banner
 ## Tasks
 
 **`apps/parakeet/app/(tabs)/today.tsx`:**
+
 - On mount: call `useTodaySessions()` hook (plural) via React Query (cache: 30 seconds, background refetch on focus)
 - Also fetches `useInProgressSession()` to determine locked state for planned sessions
 - States:
@@ -20,6 +21,7 @@ The home tab that shows all of today's sessions and any active disruption banner
      - `in_progress` / `planned` → `WorkoutCard`; planned sessions show `isLocked=true` if another session is already in_progress
 
 **`apps/parakeet/components/training/WorkoutCard.tsx`:**
+
 - Props: `session: Session`, `onSkipComplete?: () => void`, `isLocked?: boolean`
 - Header: week and block label, intensity badge
 - Body: primary lift name, planned sets summary
@@ -30,15 +32,18 @@ The home tab that shows all of today's sessions and any active disruption banner
 - Skip button only shown when not `in_progress` and not locked
 
 **"Skip" confirmation sheet:**
+
 - Bottom sheet slides up with optional reason field
 - On confirm: `skipSession(sessionId)` → `sessions.status = 'skipped'`
 
 **React Query hooks (`apps/parakeet/src/modules/session/hooks/`):**
+
 - `useTodaySessions()` — fetches all sessions where `planned_date = today` OR `status = in_progress`; deduplicated; ordered by `planned_date asc`
 - `useInProgressSession()` — fetches the active in_progress session (if any); 10s stale time; shared/deduplicated by React Query across all consumers
 - `useTodaySession()` (singular, still exists) — priority-ordered single session for other consumers
 
 **Foreground reconciliation:**
+
 - On app foreground / Today tab focus: call `markMissedSessions(userId)` then invalidate `['session', 'today']` React Query prefix
 
 ## Open Issues (2026-05 review)
@@ -46,7 +51,7 @@ The home tab that shows all of today's sessions and any active disruption banner
 - [x] (landed) **Calibration prompt button labels read backwards.** The calibration adjustment is already applied to the DB before the prompt fires; the buttons are:
   - "Sounds right" → just dismisses (keeps the newly applied value)
   - "Keep current" → reverts to the pre-prompt value
-  Reading "Keep current" naturally means "keep whatever is current right now" (= the newly applied value), but the code reverts. Rename to `Accept change` / `Revert change` and add a one-line copy clarifying that the change is already in effect until they tap Revert. Also: "Sounds right" should persist user acceptance (e.g., `upsertModifierCalibration` with `confidence: 'high'`) instead of just deleting the AsyncStorage key — currently the engine has no signal the calibration was confirmed.
+    Reading "Keep current" naturally means "keep whatever is current right now" (= the newly applied value), but the code reverts. Rename to `Accept change` / `Revert change` and add a one-line copy clarifying that the change is already in effect until they tap Revert. Also: "Sounds right" should persist user acceptance (e.g., `upsertModifierCalibration` with `confidence: 'high'`) instead of just deleting the AsyncStorage key — currently the engine has no signal the calibration was confirmed.
 - [x] (landed) **Volume card has no error/empty state.** `VolumeCompactCard` shows "Loading…" forever if `useWeeklyVolume` errors out or returns `null`. Expose `isError`/`isPending` and render "Couldn't load volume — tap to retry" or `null` for genuinely empty.
 - [x] (landed) **Session-error fallback tile uses the rest-day card with a red border but neutral title text.** Add `style={{ color: colors.danger }}` to the error title and an explicit retry icon so it doesn't read as "rest day."
 
@@ -55,4 +60,3 @@ The home tab that shows all of today's sessions and any active disruption banner
 - [parakeet-001-expo-router-layout.md](./parakeet-001-expo-router-layout.md)
 - [sessions-001-session-read-api.md](./spec-read.md)
 - [disruptions-003-resolution.md](../disruptions/spec-resolution.md)
-

@@ -12,7 +12,6 @@ import type {
 import { firstFromJoin } from '@shared/utils/joins';
 import { localDateString } from '@shared/utils/localDateString';
 
-
 type SessionRow = DbRow<'sessions'>;
 
 interface SessionJoinLift {
@@ -141,7 +140,9 @@ export async function fetchTodaySessions(
     query = query.or(`program_id.is.null,program_id.eq.${activeProgramId}`);
   }
 
-  const { data, error } = await query.order('planned_date', { ascending: true });
+  const { data, error } = await query.order('planned_date', {
+    ascending: true,
+  });
   if (error) throw error;
   // Deduplicate: in_progress session may match both conditions
   const seen = new Set<string>();
@@ -546,9 +547,11 @@ export async function fetchSessionSetsBySessionIds(
     if (row.failed) set.failed = true;
     if (row.exercise) set.exercise = row.exercise;
     if (row.exercise_slug) set.exercise_slug = row.exercise_slug;
-    if (row.exercise_type === 'weighted'
-      || row.exercise_type === 'bodyweight'
-      || row.exercise_type === 'timed') {
+    if (
+      row.exercise_type === 'weighted' ||
+      row.exercise_type === 'bodyweight' ||
+      row.exercise_type === 'timed'
+    ) {
       set.exercise_type = row.exercise_type;
     }
     if (row.notes) set.notes = row.notes;
@@ -793,14 +796,16 @@ export async function fetchOverdueScheduledSessions(
     if (row.planned_date === null) return [];
     const lift = parseLiftNullable(row.primary_lift);
     if (lift === null) return [];
-    return [{
-      id: row.id,
-      planned_date: row.planned_date,
-      primary_lift: lift,
-      week_number: row.week_number,
-      // Inner join on programs guarantees program_id is non-null here
-      program_id: row.program_id!,
-    }];
+    return [
+      {
+        id: row.id,
+        planned_date: row.planned_date,
+        primary_lift: lift,
+        week_number: row.week_number,
+        // Inner join on programs guarantees program_id is non-null here
+        program_id: row.program_id!,
+      },
+    ];
   });
 }
 
@@ -826,12 +831,14 @@ export async function fetchProgramSessionsForMakeup(
     if (row.planned_date === null) return [];
     const lift = parseLiftNullable(row.primary_lift);
     if (lift === null) return [];
-    return [{
-      id: row.id,
-      planned_date: row.planned_date,
-      primary_lift: lift,
-      week_number: row.week_number,
-    }];
+    return [
+      {
+        id: row.id,
+        planned_date: row.planned_date,
+        primary_lift: lift,
+        week_number: row.week_number,
+      },
+    ];
   });
 }
 

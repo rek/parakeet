@@ -5,17 +5,16 @@
 
 import { useEffect, useRef } from 'react';
 
+import {
+  flushUnsyncedSets,
+  persistSet,
+} from '../application/set-persistence.service';
 import type {
   ActualSet,
   AuxiliaryActualSet,
   SessionState,
 } from '../store/sessionStore';
 import { useSessionStore } from '../store/sessionStore';
-
-import {
-  flushUnsyncedSets,
-  persistSet,
-} from '../application/set-persistence.service';
 
 // Fields whose changes warrant a re-sync. synced_at itself is excluded so
 // markSetSynced() doesn't retrigger us.

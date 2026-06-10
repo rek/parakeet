@@ -94,15 +94,18 @@ function buildConcernNote(s: NonNullable<ReturnType<typeof useRecoverySnapshot>[
 ```
 
 **Score badge:**
+
 - Circular pill with the integer score, label "Recovery" beneath.
 - Colour-coded background: red (score < 40), amber (40–60), green (> 60).
 - When `score` is null: render a neutral grey badge with "—".
 
 **Card styling:**
+
 - Match the existing soreness-screen card pattern (`infoCard` / `warningCard` styles in `soreness.tsx`): rounded 12px corners, `paddingVertical: 14`, `paddingHorizontal: 16`, themed background.
 - Card width fills the parent.
 
 **Accessibility:**
+
 - `accessible={true}`
 - `accessibilityLabel`: `"Recovery score 72 of 100. HRV 4 percent above baseline. Slept 7 hours 30 minutes. 18 percent deep sleep."`
 - Avoid emojis (per project conventions).
@@ -121,7 +124,7 @@ function buildConcernNote(s: NonNullable<ReturnType<typeof useRecoverySnapshot>[
 - No axes, no labels — minimalist sparkline.
 
 ```typescript
-import Svg, { Polyline, Line, Circle } from 'react-native-svg';
+import Svg, { Circle, Line, Polyline } from 'react-native-svg';
 
 interface Props {}
 
@@ -135,9 +138,9 @@ export function HrvTrendChart() {
 **Hook:** `apps/parakeet/src/modules/wearable/hooks/useHrvTrend.ts`
 
 ```typescript
-import { useQuery, queryOptions } from '@tanstack/react-query';
-
 import { useAuth } from '@modules/auth';
+import { queryOptions, useQuery } from '@tanstack/react-query';
+
 import { fetchReadingsForBaseline } from '../data/biometric.repository';
 
 export function useHrvTrend() {
@@ -207,14 +210,7 @@ const hasWearable = Boolean(snapshot);
 - When `hasWearable === true`, the screen passes `undefined` for both `sleepQuality` and `energyLevel` to `runJITForSession`:
 
 ```tsx
-runJITForSession(
-  session,
-  user.id,
-  ratingsToUse,
-  hasWearable ? undefined : sleepQuality,
-  hasWearable ? undefined : energyLevel,
-  cyclePhase ?? undefined
-);
+runJITForSession(session, user.id, ratingsToUse, hasWearable ? undefined : sleepQuality, hasWearable ? undefined : energyLevel, cyclePhase ?? undefined);
 ```
 
 - `recordSorenessCheckin` continues to receive whatever `sleepQuality`/`energyLevel` state holds (default 2). Acceptable to log the default; if future analytics want to distinguish "user had wearable" vs "user picked default", store an additional flag — out of scope for this spec.
@@ -247,24 +243,18 @@ Add a row in the existing settings list. Placement: alongside other navigation r
 ```tsx
 const { isAvailable, isPermitted, lastSyncAt } = useWearableStatus();
 
-const subtitle =
-  !isAvailable    ? 'Not available on this device'
-  : !isPermitted  ? 'Tap to connect'
-  : lastSyncAt    ? `Last sync ${formatRelativeTime(lastSyncAt)}`
-  : 'Connected';
+const subtitle = !isAvailable ? 'Not available on this device' : !isPermitted ? 'Tap to connect' : lastSyncAt ? `Last sync ${formatRelativeTime(lastSyncAt)}` : 'Connected';
 
-const dotColor =
-  !isAvailable   ? colors.textTertiary    // gray
-  : !isPermitted ? colors.warning         // amber
-  :                colors.success;        // green
+const dotColor = !isAvailable
+  ? colors.textTertiary // gray
+  : !isPermitted
+    ? colors.warning // amber
+    : colors.success; // green
 
-<Row
-  label="Wearable"
-  right={<View style={[styles.statusDot, { backgroundColor: dotColor }]} />}
-  onPress={() => router.push('/settings/wearable')}
-  styles={styles}
-/>
-{/* place subtitle inside Row's children if Row supports it; otherwise add a custom row */}
+<Row label="Wearable" right={<View style={[styles.statusDot, { backgroundColor: dotColor }]} />} onPress={() => router.push('/settings/wearable')} styles={styles} />;
+{
+  /* place subtitle inside Row's children if Row supports it; otherwise add a custom row */
+}
 ```
 
 If `Row` doesn't accept a subtitle slot, add a small wrapper in this file rather than extending the shared `Row` API — Phase 3 should not refactor the settings primitives.

@@ -8,8 +8,8 @@ import {
   View,
 } from 'react-native';
 
-import { captureException } from '@platform/utils/captureException';
 import { normalizeVideoUri } from '@modules/video-analysis';
+import { captureException } from '@platform/utils/captureException';
 import {
   Camera,
   useCameraDevice,
@@ -152,9 +152,7 @@ export function PartnerFilmingSheet({
               styles.recordButton,
               isRecording && styles.recordButtonActive,
             ]}
-            onPress={
-              isRecording ? handleStopRecording : handleStartRecording
-            }
+            onPress={isRecording ? handleStopRecording : handleStartRecording}
             activeOpacity={0.7}
             accessibilityLabel={
               isRecording ? 'Stop recording' : 'Start recording'

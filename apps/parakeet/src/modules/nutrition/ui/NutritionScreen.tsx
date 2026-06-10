@@ -13,8 +13,8 @@ import { radii, spacing, typography } from '../../../theme';
 import type { ColorScheme } from '../../../theme';
 import { useTheme } from '../../../theme/ThemeContext';
 import { useProtocolBundle, useProtocols } from '../hooks/useNutrition';
-import { Markdown } from '../lib/markdown';
 import type { DietProtocolSlug } from '../lib/macro-targets';
+import { Markdown } from '../lib/markdown';
 import { CalculatorSection } from './CalculatorSection';
 import { CompareSection } from './CompareSection';
 import { DailyRituals } from './DailyRituals';
@@ -59,8 +59,11 @@ const TAB_LABELS: Record<Tab, string> = {
 export function NutritionScreen() {
   const { colors } = useTheme();
   const styles = useMemo(() => buildStyles(colors), [colors]);
-  const { data: protocols, isLoading: protocolsLoading, error: protocolsError } =
-    useProtocols();
+  const {
+    data: protocols,
+    isLoading: protocolsLoading,
+    error: protocolsError,
+  } = useProtocols();
   const [slug, setSlug] = useState<string | null>(null);
   const [tab, setTab] = useState<Tab>('overview');
 
@@ -72,7 +75,7 @@ export function NutritionScreen() {
   }, [slug, protocols]);
 
   const { data: bundle, isLoading: bundleLoading } = useProtocolBundle(
-    slug ?? '',
+    slug ?? ''
   );
 
   if (protocolsError) {
@@ -104,7 +107,8 @@ export function NutritionScreen() {
     );
   }
 
-  const showSelector = tab !== 'compare' && tab !== 'calculator' && tab !== 'macros';
+  const showSelector =
+    tab !== 'compare' && tab !== 'calculator' && tab !== 'macros';
 
   return (
     <ScrollView
@@ -134,9 +138,7 @@ export function NutritionScreen() {
               onPress={() => setTab(t)}
               activeOpacity={0.75}
             >
-              <Text
-                style={[styles.tabLabel, active && styles.tabLabelActive]}
-              >
+              <Text style={[styles.tabLabel, active && styles.tabLabelActive]}>
                 {TAB_LABELS[t]}
               </Text>
             </TouchableOpacity>
@@ -153,9 +155,7 @@ export function NutritionScreen() {
     if (tab === 'calculator') {
       return (
         <CalculatorSection
-          defaultProtocol={
-            slug && isMacroProtocol(slug) ? slug : 'standard'
-          }
+          defaultProtocol={slug && isMacroProtocol(slug) ? slug : 'standard'}
         />
       );
     }
@@ -189,9 +189,7 @@ export function NutritionScreen() {
         {tab === 'supplements' && (
           <SupplementSection supplements={bundle.supplements} />
         )}
-        {tab === 'lifestyle' && (
-          <LifestyleSection items={bundle.lifestyle} />
-        )}
+        {tab === 'lifestyle' && <LifestyleSection items={bundle.lifestyle} />}
         {tab === 'sources' && (
           <SourcesSection descriptionMd={bundle.protocol.descriptionMd} />
         )}

@@ -11,22 +11,22 @@ import {
   View,
 } from 'react-native';
 
-import { AddExerciseModal } from '@shared/ui/AddExerciseModal';
 import { captureException } from '@platform/utils/captureException';
+import { AddExerciseModal } from '@shared/ui/AddExerciseModal';
 import { router } from 'expo-router';
 
 import type { ColorScheme } from '../../../theme';
 import { radii, spacing, typography } from '../../../theme';
 import { useTheme } from '../../../theme/ThemeContext';
 import {
-  useCreateWorkoutTemplate,
-  useDeleteWorkoutTemplate,
-} from '../hooks/useWorkoutTemplates';
-import {
   useReplaceWorkoutTemplateItems,
   useUpdateWorkoutTemplate,
   useWorkoutTemplate,
 } from '../hooks/useWorkoutTemplate';
+import {
+  useCreateWorkoutTemplate,
+  useDeleteWorkoutTemplate,
+} from '../hooks/useWorkoutTemplates';
 import type { WorkoutTemplateItemInput } from '../model/types';
 import { defaultItemForExercise } from '../utils/template-item-defaults';
 import { WorkoutTemplateItemRow } from './WorkoutTemplateItemRow';
@@ -98,13 +98,18 @@ export function WorkoutTemplateEditor({ templateId }: Props) {
 
   function removeItem(index: number) {
     setItems((prev) =>
-      prev.filter((_, i) => i !== index).map((item, i) => ({ ...item, position: i }))
+      prev
+        .filter((_, i) => i !== index)
+        .map((item, i) => ({ ...item, position: i }))
     );
   }
 
   function addItem(exercise: string) {
     setShowPicker(false);
-    setItems((prev) => [...prev, defaultItemForExercise(exercise, prev.length)]);
+    setItems((prev) => [
+      ...prev,
+      defaultItemForExercise(exercise, prev.length),
+    ]);
   }
 
   async function handleSave() {

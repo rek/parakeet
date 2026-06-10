@@ -143,7 +143,10 @@ function loadManifest(): ManifestVideo[] {
 
 function loadLandmarks(id: string): PoseFrame[] | null {
   try {
-    const path = resolve(PROJECT_ROOT, `test-videos/landmarks/${id}.landmarks.json`);
+    const path = resolve(
+      PROJECT_ROOT,
+      `test-videos/landmarks/${id}.landmarks.json`
+    );
     const raw = JSON.parse(readFileSync(path, 'utf-8')) as LandmarkFile;
     return raw.frames;
   } catch {
@@ -193,7 +196,11 @@ describe('detectLift.fixtures', () => {
     // Without this, a regression that silently drops confidence to 0 across
     // the board would pass the per-fixture tests above — they only assert
     // "not confidently wrong", and `null` satisfies that trivially.
-    const highConfByLift: Record<string, number> = { squat: 0, bench: 0, deadlift: 0 };
+    const highConfByLift: Record<string, number> = {
+      squat: 0,
+      bench: 0,
+      deadlift: 0,
+    };
     for (const video of videos) {
       const frames = loadLandmarks(video.id);
       if (!frames) continue;

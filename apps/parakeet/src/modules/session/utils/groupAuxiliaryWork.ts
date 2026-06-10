@@ -1,7 +1,6 @@
 // @spec docs/features/session/spec-adhoc.md
-import type { AuxiliaryActualSet } from '../store/sessionStore';
-
 import type { AuxiliaryWork } from '../model/types';
+import type { AuxiliaryActualSet } from '../store/sessionStore';
 
 export function groupAuxiliaryWork(
   auxiliaryWork: AuxiliaryWork[],

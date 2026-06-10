@@ -18,8 +18,18 @@ describe('parseFoodCsv', () => {
     ].join('\n');
     expect(parseFoodCsv(csv)).toEqual([
       { category: 'protein', food: 'eggs', status: 'yes', notes: '' },
-      { category: 'protein', food: 'tofu', status: 'caution', notes: 'phytoestrogen' },
-      { category: 'grain', food: 'white bread', status: 'no', notes: 'high GI' },
+      {
+        category: 'protein',
+        food: 'tofu',
+        status: 'caution',
+        notes: 'phytoestrogen',
+      },
+      {
+        category: 'grain',
+        food: 'white bread',
+        status: 'no',
+        notes: 'high GI',
+      },
     ]);
   });
 
@@ -44,10 +54,9 @@ describe('parseFoodCsv', () => {
   });
 
   it('rejects invalid status values', () => {
-    const csv = [
-      'category,food,status,notes',
-      'protein,eggs,maybe,',
-    ].join('\n');
+    const csv = ['category,food,status,notes', 'protein,eggs,maybe,'].join(
+      '\n'
+    );
     expect(() => parseFoodCsv(csv)).toThrow(/invalid status/);
   });
 
@@ -163,12 +172,15 @@ describe('parseSupplementCsv', () => {
 
   it('rejects header mismatch', () => {
     const csv = ['slug,name,tier', 'x,X,core'].join('\n');
-    expect(() => parseSupplementCsv(csv)).toThrow(/Unexpected supplement header/);
+    expect(() => parseSupplementCsv(csv)).toThrow(
+      /Unexpected supplement header/
+    );
   });
 });
 
 describe('parseLifestyleCsv', () => {
-  const header = 'slug,name,category,frequency,description,rationale,sort_order';
+  const header =
+    'slug,name,category,frequency,description,rationale,sort_order';
 
   it('parses a well-formed row', () => {
     const csv = [
@@ -209,7 +221,7 @@ describe('parseLifestyleCsv', () => {
     ];
     const freqs = ['daily', 'weekly', 'as_needed'];
     const rows = cats.map(
-      (c, i) => `s${i},N${i},${c},${freqs[i % freqs.length]},,,${i}`,
+      (c, i) => `s${i},N${i},${c},${freqs[i % freqs.length]},,,${i}`
     );
     const csv = [header, ...rows].join('\n');
     expect(parseLifestyleCsv(csv)).toHaveLength(cats.length);
@@ -221,10 +233,9 @@ describe('parseNutritionCsv', () => {
     'canonical_name,serving_g,kcal,protein_g,fat_g,carb_g,fiber_g,source,source_id';
 
   it('parses USDA-sourced rows with fiber', () => {
-    const csv = [
-      header,
-      'eggs,100,143,12.6,9.5,0.7,0,USDA_SR,748967',
-    ].join('\n');
+    const csv = [header, 'eggs,100,143,12.6,9.5,0.7,0,USDA_SR,748967'].join(
+      '\n'
+    );
     expect(parseNutritionCsv(csv)).toEqual([
       {
         canonical_name: 'eggs',
@@ -279,9 +290,15 @@ describe('parseNutritionCsv', () => {
   });
 
   it('accepts all documented source types', () => {
-    const sources = ['USDA_SR', 'USDA_Foundation', 'USDA_FNDDS', 'IFCT_2017', 'manual'];
+    const sources = [
+      'USDA_SR',
+      'USDA_Foundation',
+      'USDA_FNDDS',
+      'IFCT_2017',
+      'manual',
+    ];
     const rows = sources.map(
-      (src, i) => `food${i},100,100,5,2,10,1,${src},id${i}`,
+      (src, i) => `food${i},100,100,5,2,10,1,${src},id${i}`
     );
     const csv = [header, ...rows].join('\n');
     expect(parseNutritionCsv(csv)).toHaveLength(sources.length);

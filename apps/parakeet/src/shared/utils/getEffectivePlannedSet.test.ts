@@ -9,7 +9,10 @@ const planned = [
 ];
 
 function makeActual(completedFlags: boolean[], weightGrams = 100000) {
-  return completedFlags.map((c) => ({ is_completed: c, weight_grams: weightGrams }));
+  return completedFlags.map((c) => ({
+    is_completed: c,
+    weight_grams: weightGrams,
+  }));
 }
 
 describe('getEffectivePlannedSet', () => {

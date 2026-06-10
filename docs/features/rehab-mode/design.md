@@ -62,7 +62,7 @@ The existing system handles transient injuries via the `disruption` module (a sh
 
 - **Concurrent disruption + rehab cap**: Both apply. The cap is the ceiling; a disruption (e.g. "knee extra sore today") can further reduce weight below the cap. The disruption resolve flow is unchanged.
 - **Cap exceeds formula weight**: No-op. The cap is a ceiling, not a floor. If `formulaWeight ≤ capKg`, the cap never bites.
-- **Soreness severe (≥9) on capped lift**: Recovery mode wins (40% × 3×5) — overrides everything as today. The 40% is computed against the *capped* working weight, not the user's stored 1RM.
+- **Soreness severe (≥9) on capped lift**: Recovery mode wins (40% × 3×5) — overrides everything as today. The 40% is computed against the _capped_ working weight, not the user's stored 1RM.
 - **Re-enabling after end**: Each enable/disable is a new `rehab_caps` row. History is preserved for analytics and so the user can review past rehab blocks.
 
 ### Visual Design Notes

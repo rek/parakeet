@@ -10,6 +10,7 @@ Creating a new training program: calling the training engine locally, writing th
 ## Tasks
 
 **`apps/parakeet/lib/programs.ts`:**
+
 - [x] `createProgram(input: CreateProgramInput): Promise<Program>`
   1. Get current 1RMs and formula config
   2. Generate structural scaffolding locally via `generateProgram()`
@@ -20,19 +21,22 @@ Creating a new training program: calling the training engine locally, writing th
   7. Insert auxiliary assignments
 
 **`CreateProgramInput` type:**
+
 ```typescript
 interface CreateProgramInput {
-  totalWeeks: 10 | 12 | 14   // standard Cube Method lengths
-  trainingDaysPerWeek: 3 | 4
-  startDate: Date
+  totalWeeks: 10 | 12 | 14; // standard Cube Method lengths
+  trainingDaysPerWeek: 3 | 4;
+  startDate: Date;
 }
 ```
 
 **Onboarding screen `apps/parakeet/app/(auth)/onboarding/program-settings.tsx`:**
+
 - [x] Inputs: total weeks (picker), days per week (picker), start date (date picker)
 - [x] "Preview Program" button → navigate to review screen showing Week 1 session structure
 
 **Program review screen `apps/parakeet/app/(auth)/onboarding/review.tsx`:**
+
 - [x] Shows Week 1: day-by-day view with lift, intensity type, auxiliary names
 - [x] "Activate Program" button → calls `createProgram()` → navigates to Today tab
 

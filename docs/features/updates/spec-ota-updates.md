@@ -50,6 +50,7 @@ idle → checking → downloading → ready → restarting
 ### Rollback detection (boot)
 
 On every app launch, `useOtaUpdates` reads `@parakeet/ota-pending-reload`:
+
 - If present: remove it immediately (prevents double-processing on crash-loop), then compare `Updates.updateId` to the stored `previousUpdateId`
   - Different → `reloadOutcome = { type: 'applied', updateId: current }` (success)
   - Same or null → `reloadOutcome = { type: 'rolled-back' }` + Sentry error
@@ -63,12 +64,12 @@ On every app launch, `useOtaUpdates` reads `@parakeet/ota-pending-reload`:
 
 Rendered in the app shell. Shows conditionally:
 
-| Condition | Appearance |
-|-----------|-----------|
-| `status === 'ready'` | Green pill — "Update ready — tap to restart" |
-| `status === 'restarting'` | Green pill (disabled) — "Restarting…" |
-| `reloadOutcome.type === 'applied'` | Green pill — "Update applied · {shortId}"; auto-dismisses after 4 s |
-| `reloadOutcome.type === 'rolled-back'` | Red pill — "Update failed — rolled back"; tap to dismiss |
+| Condition                              | Appearance                                                          |
+| -------------------------------------- | ------------------------------------------------------------------- |
+| `status === 'ready'`                   | Green pill — "Update ready — tap to restart"                        |
+| `status === 'restarting'`              | Green pill (disabled) — "Restarting…"                               |
+| `reloadOutcome.type === 'applied'`     | Green pill — "Update applied · {shortId}"; auto-dismisses after 4 s |
+| `reloadOutcome.type === 'rolled-back'` | Red pill — "Update failed — rolled back"; tap to dismiss            |
 
 The banner is `null` for all other states.
 
@@ -76,24 +77,24 @@ The banner is `null` for all other states.
 
 ## Public API (`modules/updates/index.ts`)
 
-| Export | Type | Purpose |
-|--------|------|---------|
-| `OtaUpdatesProvider` | Component | Wraps app; drives the update state machine |
-| `useOtaUpdateStatus` | Hook | Read update state anywhere in the tree |
-| `UpdateReadyBanner` | Component | Self-contained banner; place in app shell |
-| `OtaStatus` | Type | Status union |
-| `OtaUpdateMeta` | Type | Channel, runtimeVersion, updateId, createdAt |
-| `OtaUpdateState` | Type | Full state shape including actions |
+| Export               | Type      | Purpose                                      |
+| -------------------- | --------- | -------------------------------------------- |
+| `OtaUpdatesProvider` | Component | Wraps app; drives the update state machine   |
+| `useOtaUpdateStatus` | Hook      | Read update state anywhere in the tree       |
+| `UpdateReadyBanner`  | Component | Self-contained banner; place in app shell    |
+| `OtaStatus`          | Type      | Status union                                 |
+| `OtaUpdateMeta`      | Type      | Channel, runtimeVersion, updateId, createdAt |
+| `OtaUpdateState`     | Type      | Full state shape including actions           |
 
 ---
 
 ## Implementation
 
 - [x] `OtaStatus`, `OtaUpdateState`, `OtaUpdateMeta` types
-  → `modules/updates/hooks/useOtaUpdates.ts`
+      → `modules/updates/hooks/useOtaUpdates.ts`
 - [x] `useOtaUpdates` — state machine, check/download/apply/rollback
-  → `modules/updates/hooks/useOtaUpdates.ts:useOtaUpdates`
+      → `modules/updates/hooks/useOtaUpdates.ts:useOtaUpdates`
 - [x] `OtaUpdatesContext` + `OtaUpdatesProvider` + `useOtaUpdateStatus`
-  → `modules/updates/OtaUpdatesContext.tsx`
+      → `modules/updates/OtaUpdatesContext.tsx`
 - [x] `UpdateReadyBanner` — ready/restarting/outcome banners
-  → `modules/updates/ui/UpdateReadyBanner.tsx:UpdateReadyBanner`
+      → `modules/updates/ui/UpdateReadyBanner.tsx:UpdateReadyBanner`

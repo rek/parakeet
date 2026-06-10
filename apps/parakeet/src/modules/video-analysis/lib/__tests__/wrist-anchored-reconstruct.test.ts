@@ -6,11 +6,7 @@ import {
   reconstructBenchRejections,
 } from '../wrist-anchored-reconstruct';
 
-function makeLandmark(
-  x: number,
-  y: number,
-  visibility = 1
-): PoseLandmark {
+function makeLandmark(x: number, y: number, visibility = 1): PoseLandmark {
   return { x, y, z: 0, visibility };
 }
 
@@ -135,7 +131,10 @@ describe('reconstructBenchFrame', () => {
     ];
     const filteredFrames: PoseFrame[] = originalFrames.map((f) => f);
     filteredFrames[3] = Array.from({ length: 33 }, () => makeLandmark(0, 0, 0));
-    const count = reconstructBenchRejections({ originalFrames, filteredFrames });
+    const count = reconstructBenchRejections({
+      originalFrames,
+      filteredFrames,
+    });
     expect(count).toBe(1);
     expect(filteredFrames[3][LANDMARK.LEFT_ELBOW].y).toBeCloseTo(0.375, 3);
   });
@@ -153,7 +152,10 @@ describe('reconstructBenchRejections', () => {
       EMPTY.map((lm) => ({ ...lm })),
       originalFrames[2],
     ];
-    const count = reconstructBenchRejections({ originalFrames, filteredFrames });
+    const count = reconstructBenchRejections({
+      originalFrames,
+      filteredFrames,
+    });
     expect(count).toBe(1);
     expect(filteredFrames[1][LANDMARK.LEFT_WRIST].y).toBeCloseTo(0.55, 3);
   });
@@ -167,7 +169,10 @@ describe('reconstructBenchRejections', () => {
       originalFrames[0],
       EMPTY.map((lm) => ({ ...lm })),
     ];
-    const count = reconstructBenchRejections({ originalFrames, filteredFrames });
+    const count = reconstructBenchRejections({
+      originalFrames,
+      filteredFrames,
+    });
     expect(count).toBe(0);
     expect(filteredFrames[1][0].visibility).toBe(0);
   });
@@ -177,11 +182,11 @@ describe('reconstructBenchRejections', () => {
       makeConfidentFrame(),
       makeConfidentFrame(),
     ];
-    const filteredFrames: PoseFrame[] = [
-      originalFrames[0],
-      originalFrames[1],
-    ];
-    const count = reconstructBenchRejections({ originalFrames, filteredFrames });
+    const filteredFrames: PoseFrame[] = [originalFrames[0], originalFrames[1]];
+    const count = reconstructBenchRejections({
+      originalFrames,
+      filteredFrames,
+    });
     expect(count).toBe(0);
   });
 
@@ -194,7 +199,10 @@ describe('reconstructBenchRejections', () => {
       originalFrames[0],
       EMPTY.map((lm) => ({ ...lm })),
     ];
-    const count = reconstructBenchRejections({ originalFrames, filteredFrames });
+    const count = reconstructBenchRejections({
+      originalFrames,
+      filteredFrames,
+    });
     expect(count).toBe(0);
   });
 });

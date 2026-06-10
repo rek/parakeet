@@ -39,8 +39,10 @@ function gradeSquatDepth({ rep }: { rep: RepAnalysis }) {
 
   let message: string;
   if (verdict === 'pass') message = `${depth.toFixed(1)}cm below parallel`;
-  else if (verdict === 'borderline') message = `Borderline depth (${depth.toFixed(1)}cm)`;
-  else message = `${Math.abs(depth).toFixed(1)}cm above parallel — would not pass`;
+  else if (verdict === 'borderline')
+    message = `Borderline depth (${depth.toFixed(1)}cm)`;
+  else
+    message = `${Math.abs(depth).toFixed(1)}cm above parallel — would not pass`;
 
   return {
     name: 'depth',
@@ -82,9 +84,12 @@ function gradeSquatLockout({
   else verdict = 'fail';
 
   let message: string;
-  if (verdict === 'pass') message = `Knees fully locked (${kneeAngle.toFixed(0)}°)`;
-  else if (verdict === 'borderline') message = `Knees nearly locked (${kneeAngle.toFixed(0)}°)`;
-  else message = `Incomplete lockout (${kneeAngle.toFixed(0)}°) — would not pass`;
+  if (verdict === 'pass')
+    message = `Knees fully locked (${kneeAngle.toFixed(0)}°)`;
+  else if (verdict === 'borderline')
+    message = `Knees nearly locked (${kneeAngle.toFixed(0)}°)`;
+  else
+    message = `Incomplete lockout (${kneeAngle.toFixed(0)}°) — would not pass`;
 
   return {
     name: 'lockout',
@@ -216,7 +221,8 @@ function gradeBenchPause({ rep, fps }: { rep: RepAnalysis; fps: number }) {
 
   let message: string;
   if (verdict === 'pass') message = `Clear pause (${stallSeconds.toFixed(2)}s)`;
-  else if (verdict === 'borderline') message = `Short pause (${stallSeconds.toFixed(2)}s) — may not be called`;
+  else if (verdict === 'borderline')
+    message = `Short pause (${stallSeconds.toFixed(2)}s) — may not be called`;
   else message = 'No visible pause at chest';
 
   return {
@@ -260,9 +266,12 @@ function gradeBenchLockout({
   else verdict = 'fail';
 
   let message: string;
-  if (verdict === 'pass') message = `Elbows fully locked (${elbowAngle.toFixed(0)}°)`;
-  else if (verdict === 'borderline') message = `Elbows nearly locked (${elbowAngle.toFixed(0)}°)`;
-  else message = `Incomplete lockout (${elbowAngle.toFixed(0)}°) — would not pass`;
+  if (verdict === 'pass')
+    message = `Elbows fully locked (${elbowAngle.toFixed(0)}°)`;
+  else if (verdict === 'borderline')
+    message = `Elbows nearly locked (${elbowAngle.toFixed(0)}°)`;
+  else
+    message = `Incomplete lockout (${elbowAngle.toFixed(0)}°) — would not pass`;
 
   return {
     name: 'lockout',
@@ -387,9 +396,12 @@ function gradeDeadliftHipLockout({
   else verdict = 'fail';
 
   let message: string;
-  if (verdict === 'pass') message = `Hips fully through (${hipAngle.toFixed(0)}°)`;
-  else if (verdict === 'borderline') message = `Hips nearly locked (${hipAngle.toFixed(0)}°)`;
-  else message = `Incomplete hip lockout (${hipAngle.toFixed(0)}°) — would not pass`;
+  if (verdict === 'pass')
+    message = `Hips fully through (${hipAngle.toFixed(0)}°)`;
+  else if (verdict === 'borderline')
+    message = `Hips nearly locked (${hipAngle.toFixed(0)}°)`;
+  else
+    message = `Incomplete hip lockout (${hipAngle.toFixed(0)}°) — would not pass`;
 
   return {
     name: 'hip_lockout',

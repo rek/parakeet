@@ -31,14 +31,14 @@ Expanded scales enable asymmetric responses: high readiness (4-5) can trigger vo
 
 Captured per set during the workout.
 
-| Signal        | Scale   | Capture Point                   | Purpose                     |
-| ------------- | ------- | ------------------------------- | --------------------------- |
-| RPE           | 6-10    | After each set via quick picker | Volume attribution, trend   |
-| Pain-limited (GH#220) | bool | Optional toggle on the RPE picker (rendered only when Rehab Mode is active for the current lift) | Tags the set `pain_limited: true`; the RPE value is stored for history but excluded from working-1RM, PR detection, auto-progression, and modifier calibration |
-| Failed set    | bool    | "Failed" button on overlay      | Sets `failed: true`, RPE=10 |
-| Rest time     | seconds | Automatic from rest timer       | Badge detection, analysis   |
-| Actual weight | grams   | Pre-filled, user adjustable     | Weight deviation tracking   |
-| Actual reps   | count   | Pre-filled, user adjustable     | Rep PR detection            |
+| Signal                | Scale   | Capture Point                                                                                    | Purpose                                                                                                                                                        |
+| --------------------- | ------- | ------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| RPE                   | 6-10    | After each set via quick picker                                                                  | Volume attribution, trend                                                                                                                                      |
+| Pain-limited (GH#220) | bool    | Optional toggle on the RPE picker (rendered only when Rehab Mode is active for the current lift) | Tags the set `pain_limited: true`; the RPE value is stored for history but excluded from working-1RM, PR detection, auto-progression, and modifier calibration |
+| Failed set            | bool    | "Failed" button on overlay                                                                       | Sets `failed: true`, RPE=10                                                                                                                                    |
+| Rest time             | seconds | Automatic from rest timer                                                                        | Badge detection, analysis                                                                                                                                      |
+| Actual weight         | grams   | Pre-filled, user adjustable                                                                      | Weight deviation tracking                                                                                                                                      |
+| Actual reps           | count   | Pre-filled, user adjustable                                                                      | Rep PR detection                                                                                                                                               |
 
 RPE interpretation: 6 = 4 RIR, 7 = 3 RIR, 8 = 2 RIR, 9 = 1 RIR, 10 = failure.
 

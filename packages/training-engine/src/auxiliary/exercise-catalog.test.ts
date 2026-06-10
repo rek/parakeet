@@ -41,10 +41,14 @@ describe('exercise slugs', () => {
 
 describe('getCatalogEntry', () => {
   it('resolves by name', () => {
-    expect(getCatalogEntry('Barbell Box Squat')?.slug).toBe('barbell-box-squat');
+    expect(getCatalogEntry('Barbell Box Squat')?.slug).toBe(
+      'barbell-box-squat'
+    );
   });
   it('resolves by slug', () => {
-    expect(getCatalogEntry('barbell-box-squat')?.name).toBe('Barbell Box Squat');
+    expect(getCatalogEntry('barbell-box-squat')?.name).toBe(
+      'Barbell Box Squat'
+    );
   });
   it('returns undefined for unknown input', () => {
     expect(getCatalogEntry('not-a-real-exercise')).toBeUndefined();
@@ -58,7 +62,9 @@ describe('slug display helpers', () => {
   });
 
   it('getDisplayNameForSlug prefers catalog name', () => {
-    expect(getDisplayNameForSlug('barbell-box-squat')).toBe('Barbell Box Squat');
+    expect(getDisplayNameForSlug('barbell-box-squat')).toBe(
+      'Barbell Box Squat'
+    );
   });
 
   it('getDisplayNameForSlug falls back to stored display, then prettify', () => {

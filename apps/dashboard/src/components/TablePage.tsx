@@ -158,7 +158,9 @@ export function TablePage<T>({
           >
             {stats.map((s) => (
               <div key={s.label}>
-                <span style={{ color: theme.color.textMuted }}>{s.label}: </span>
+                <span style={{ color: theme.color.textMuted }}>
+                  {s.label}:{' '}
+                </span>
                 <span style={{ color: s.color ?? accent, fontWeight: 600 }}>
                   {s.value}
                 </span>

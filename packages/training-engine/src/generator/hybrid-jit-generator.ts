@@ -111,7 +111,8 @@ export class HybridJITGenerator implements JITGeneratorStrategy {
     //   2. LLMJITGenerator caught all retries and returned formula_fallback
     // In either case, surface formula_fallback to the caller — never relabel
     // a fallback as 'llm', or persisted sessions misrepresent which path ran.
-    const llmFailed = !llmOutput || llmOutput.jit_strategy === 'formula_fallback';
+    const llmFailed =
+      !llmOutput || llmOutput.jit_strategy === 'formula_fallback';
     if (llmFailed) {
       let reason = 'LLM_FALLBACK';
       if (llmResult.status === 'rejected') {

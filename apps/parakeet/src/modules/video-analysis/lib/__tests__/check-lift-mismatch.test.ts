@@ -45,7 +45,9 @@ const squatFrames = repeatFrame(
 
 describe('checkLiftMismatch', () => {
   it('returns null when classifier and user agree', () => {
-    expect(checkLiftMismatch({ frames: benchFrames, declared: 'bench' })).toBeNull();
+    expect(
+      checkLiftMismatch({ frames: benchFrames, declared: 'bench' })
+    ).toBeNull();
   });
 
   it('returns a mismatch object when classifier disagrees with high confidence', () => {

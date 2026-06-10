@@ -340,7 +340,10 @@ export default function CompleteScreen() {
         .then((raw) => {
           const existing: number[] = raw ? (JSON.parse(raw) as number[]) : [];
           const updated = [...existing, capacityAssessment].slice(-5);
-          return AsyncStorage.setItem('capacity_assessments_log', JSON.stringify(updated));
+          return AsyncStorage.setItem(
+            'capacity_assessments_log',
+            JSON.stringify(updated)
+          );
         })
         .catch(captureException);
     }

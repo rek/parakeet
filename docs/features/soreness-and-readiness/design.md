@@ -12,6 +12,7 @@ Body-State Review & Readiness closes the feedback loop between what the system p
 The system currently tracks body-state signals — soreness, training volume, cycle phase, disruptions — but uses them incompletely:
 
 **Pain points:**
+
 - The pre-workout soreness check only asks about the 3 muscles relevant to today's lift. If quads are destroyed from Tuesday's squat session but today is bench day, the system never learns that. Cross-session fatigue accumulation is invisible.
 - No subjective readiness signals are captured. Sleep quality and energy level meaningfully affect training capacity but are not part of the system's model.
 - Volume predicts fatigue mathematically (sets vs MRV), but the system never asks "does this match how you actually feel?" There is no feedback loop — the lifter cannot tell the system that its predictions are wrong.
@@ -64,6 +65,7 @@ See [domain/adjustments.md](../domain/adjustments.md) for cycle phase modifier v
 6. Adjustments stack with soreness and readiness modifiers (e.g., late luteal + poor sleep = larger reduction)
 
 **Alternative Flows:**
+
 - Skipping the expanded muscles: defaults other muscles to 1. System uses only lift-specific soreness as it does today (backward compatible).
 - Skipping the weekly review: no data stored for that week. The prompt does not re-appear until the next qualifying session.
 - Cycle tracking disabled: cycle phase adjustments are completely inactive. No UI elements appear.

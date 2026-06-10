@@ -1,6 +1,9 @@
 // @spec docs/features/programs/spec-unending.md
 import type { Lift } from '@parakeet/shared-types';
-import { nextUnendingSession, type IntensityTypeSignals } from '@parakeet/training-engine';
+import {
+  nextUnendingSession,
+  type IntensityTypeSignals,
+} from '@parakeet/training-engine';
 
 import {
   insertSessionRows,

@@ -14,6 +14,7 @@ Settings → Training → Rest Timer. Lets users override formula rest defaults 
 **`apps/parakeet/app/settings/rest-timer.tsx`:**
 
 Layout:
+
 ```
 Settings › Training › Rest Timer
 
@@ -44,14 +45,15 @@ AI rest suggestions        [●] On
 **"Reset to defaults":** Calls `resetRestOverrides(userId)` → clears all rows for this user → formula defaults resume on next JIT run.
 
 **Alerts toggles:** Persisted to Async Storage (not Supabase — device-local preference):
+
 ```typescript
 // apps/parakeet/src/modules/settings/lib/settings.ts
-const REST_TIMER_PREFS_KEY = 'rest_timer_prefs'
+const REST_TIMER_PREFS_KEY = 'rest_timer_prefs';
 
 interface RestTimerPrefs {
-  audioAlert: boolean      // default true
-  hapticAlert: boolean     // default true
-  llmSuggestions: boolean  // default true
+  audioAlert: boolean; // default true
+  hapticAlert: boolean; // default true
+  llmSuggestions: boolean; // default true
 }
 ```
 
@@ -62,6 +64,7 @@ interface RestTimerPrefs {
 ### Navigation
 
 Add route to `apps/parakeet/app/settings/_layout.tsx`:
+
 - Entry: `Settings → Training → Rest Timer`
 - `Settings` screen already has a Training section — add "Rest Timer" row there
 

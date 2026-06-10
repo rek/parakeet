@@ -6,21 +6,21 @@ The 16 rules that matter most — read this, then consult the full guide only as
 
 1. **Zero feature knowledge in screens** — `app/` screens must never contain feature-specific logic, styles, routing, or flag checks for optional features. Export a self-contained component from the module (e.g., `<VideoEntryButton>`) that handles its own feature flag gate, routing, and styles. The screen renders it with props (IDs, data) and nothing else. Removing a feature = delete the module + remove 1 import and 1 render line per screen.
 2. **Single-arg objects** — `function foo({ a, b }: { a: string; b: number })`, not multiple args
-2. **No explicit return types** — let TypeScript infer; never write `: Promise<Foo>`
-3. **Derive types from implementations** — `Awaited<ReturnType<typeof fn>>`, `ComponentProps<typeof Comp>`
-4. **No `any`** — use `unknown`, or narrow the type
-5. **`as const`** for constant objects/arrays; derive union types from them
-6. **Import order**: React/RN → third-party → `@modules/*` → `@platform/*` → `@shared/*` → local
-7. **Module imports** — `@modules/<feature>`, never deep paths like `@modules/session/application/...`
-8. **Hook return shape** — `{ data, isLoading, error }` (object, not positional array)
-9. **File naming** — `PascalCase.tsx` for components, `camelCase.ts` for everything else, `use*.ts` for hooks
-10. **Test with Vitest** — not Jest; run with `nx run <package>:test`
-11. **No new legacy folders** — no new `lib/`, `services/`, `hooks/`, `utils/` at top-level in `src/`
-12. **Module boundary** — validate with `npm run check:boundaries` after structural changes
-13. **Prefer `modules/<feature>/` for new business code** — infra goes in `platform/`, cross-feature in `shared/`
-14. **`FlatList` over `ScrollView`** for lists; use `keyExtractor` + `getItemLayout`
-15. **Accessibility** — add `accessible`, `accessibilityLabel`, `accessibilityRole` to interactive elements
-16. **Barrel exports = public API** — a module's `index.ts` exports only what external consumers need: hooks, UI components, pure functions, and types. Never export raw repository functions (`insertX`, `getX`, `deleteX`) — those are internal implementation details consumed by the module's own hooks. If an external consumer needs data, it uses a hook.
+3. **No explicit return types** — let TypeScript infer; never write `: Promise<Foo>`
+4. **Derive types from implementations** — `Awaited<ReturnType<typeof fn>>`, `ComponentProps<typeof Comp>`
+5. **No `any`** — use `unknown`, or narrow the type
+6. **`as const`** for constant objects/arrays; derive union types from them
+7. **Import order**: React/RN → third-party → `@modules/*` → `@platform/*` → `@shared/*` → local
+8. **Module imports** — `@modules/<feature>`, never deep paths like `@modules/session/application/...`
+9. **Hook return shape** — `{ data, isLoading, error }` (object, not positional array)
+10. **File naming** — `PascalCase.tsx` for components, `camelCase.ts` for everything else, `use*.ts` for hooks
+11. **Test with Vitest** — not Jest; run with `nx run <package>:test`
+12. **No new legacy folders** — no new `lib/`, `services/`, `hooks/`, `utils/` at top-level in `src/`
+13. **Module boundary** — validate with `npm run check:boundaries` after structural changes
+14. **Prefer `modules/<feature>/` for new business code** — infra goes in `platform/`, cross-feature in `shared/`
+15. **`FlatList` over `ScrollView`** for lists; use `keyExtractor` + `getItemLayout`
+16. **Accessibility** — add `accessible`, `accessibilityLabel`, `accessibilityRole` to interactive elements
+17. **Barrel exports = public API** — a module's `index.ts` exports only what external consumers need: hooks, UI components, pure functions, and types. Never export raw repository functions (`insertX`, `getX`, `deleteX`) — those are internal implementation details consumed by the module's own hooks. If an external consumer needs data, it uses a hook.
 
 ---
 
@@ -193,45 +193,48 @@ Server state is managed by React Query, not manual `useState`/`useEffect`. See [
 
 ```typescript
 // modules/program/data/program.queries.ts
-import { queryOptions, skipToken } from '@tanstack/react-query'
-import { getActiveProgram } from '../application/program.service'
+import { queryOptions, skipToken } from '@tanstack/react-query';
+
+import { getActiveProgram } from '../application/program.service';
 
 export const programQueries = {
-  all:    () => ['program'] as const,
-  active: (userId: string | undefined) => queryOptions({
-    queryKey: [...programQueries.all(), 'active', userId] as const,
-    queryFn:  userId ? () => getActiveProgram(userId) : skipToken,
-  }),
-}
+  all: () => ['program'] as const,
+  active: (userId: string | undefined) =>
+    queryOptions({
+      queryKey: [...programQueries.all(), 'active', userId] as const,
+      queryFn: userId ? () => getActiveProgram(userId) : skipToken,
+    }),
+};
 ```
 
 **Hooks** wrap `queryOptions` only when they add real logic (auth, aggregation, config):
 
 ```typescript
 // modules/program/hooks/useActiveProgram.ts
-import { useQuery } from '@tanstack/react-query'
-import { useAuth } from '@modules/auth'
-import { programQueries } from '../data/program.queries'
+import { useAuth } from '@modules/auth';
+import { useQuery } from '@tanstack/react-query';
+
+import { programQueries } from '../data/program.queries';
 
 export function useActiveProgram() {
-  const { user } = useAuth()
-  return useQuery(programQueries.active(user?.id))
+  const { user } = useAuth();
+  return useQuery(programQueries.active(user?.id));
 }
 ```
 
 **Mutations** use `useMutation` with invalidation:
 
 ```typescript
-import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 export function useUpdateProfile() {
-  const queryClient = useQueryClient()
+  const queryClient = useQueryClient();
   return useMutation({
     mutationFn: updateProfile,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: profileQueries.all() })
+      queryClient.invalidateQueries({ queryKey: profileQueries.all() });
     },
-  })
+  });
 }
 ```
 
@@ -246,7 +249,9 @@ Instead, write a pure resolver function that derives display values from both lo
 ```typescript
 // ❌ Bad — causes render cascades
 const [isCompleted, setIsCompleted] = useState(isCompletedProp);
-useEffect(() => { setIsCompleted(isCompletedProp); }, [isCompletedProp]);
+useEffect(() => {
+  setIsCompleted(isCompletedProp);
+}, [isCompletedProp]);
 
 // ✅ Good — pure resolver, no effect needed
 function resolveDisplay(localState: LocalState, props: Props) {
@@ -309,13 +314,15 @@ The file name should always be the same name as the single named export within.
 // 1. React and React Native
 import React from 'react';
 import { Text, View } from 'react-native';
-// 2. Third-party libraries
-import { useNavigation } from '@react-navigation/native';
-import axios from 'axios';
+
 // 3. App aliases (module/platform/shared)
 import { useAuth } from '@modules/auth';
 import { qk } from '@platform/query';
+// 2. Third-party libraries
+import { useNavigation } from '@react-navigation/native';
 import { formatDate } from '@shared/utils/date';
+import axios from 'axios';
+
 // 4. Local components/types
 import { Button } from '../components/Button';
 // 6. Styles
@@ -510,6 +517,7 @@ describe('formatDate', () => {
 ```typescript
 // apps/parakeet/src/modules/session/data/session.repository.test.ts
 import { describe, expect, it, vi } from 'vitest';
+
 import { getparakeet } from './getparakeet';
 
 // Mock external dependencies
@@ -640,6 +648,7 @@ describe('ComponentName', () => {
 ```typescript
 // useFeature.test.ts
 import { renderHook, waitFor } from '@testing-library/react-native';
+
 import { useFeature } from './useFeature';
 
 describe('useFeature', () => {
@@ -859,12 +868,12 @@ All colours live in `src/styles.css` as CSS custom properties. Import `theme.ts`
 import { theme } from '../lib/theme';
 
 // Good
-border: `1px solid ${theme.border.accent}`
-background: theme.bg.purpleDim
+border: `1px solid ${theme.border.accent}`;
+background: theme.bg.purpleDim;
 
 // Bad
-border: '1px solid rgba(245,158,11,0.25)'
-background: 'rgba(167,139,250,0.12)'
+border: '1px solid rgba(245,158,11,0.25)';
+background: 'rgba(167,139,250,0.12)';
 ```
 
 To add a new colour: add the CSS var to `:root` in `styles.css`, then add a constant to `theme.ts`.
@@ -893,10 +902,14 @@ When a `Record<string, unknown>` value is used in JSX children, narrow it explic
 
 ```tsx
 // Bad — TS error: 'unknown' not assignable to ReactNode
-{meta?.strategy && renderBadge(meta.strategy as string)}
+{
+  meta?.strategy && renderBadge(meta.strategy as string);
+}
 
 // Good
-{typeof meta?.strategy === 'string' && renderBadge(meta.strategy)}
+{
+  typeof meta?.strategy === 'string' && renderBadge(meta.strategy);
+}
 ```
 
 ### Adding a new dashboard page

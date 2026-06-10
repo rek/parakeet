@@ -1,12 +1,15 @@
-import { describe, expect, it } from 'vitest';
-
 import type { BarPathPoint, RepAnalysis } from '@parakeet/shared-types';
+import { describe, expect, it } from 'vitest';
 
 import { findActiveRep, pickHeadDot, repColor } from '../playback-overlay-math';
 
 const palette = ['#A', '#B', '#C', '#D', '#E', '#F'] as const;
 
-function rep(repNumber: number, startFrame: number, endFrame: number): RepAnalysis {
+function rep(
+  repNumber: number,
+  startFrame: number,
+  endFrame: number
+): RepAnalysis {
   return {
     repNumber,
     startFrame,

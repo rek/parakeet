@@ -1,8 +1,9 @@
 // @spec docs/features/session/spec-skip-aux-set.md
-import { Ionicons } from '@expo/vector-icons';
 import { useMemo } from 'react';
 import type { ReactNode } from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+
+import { Ionicons } from '@expo/vector-icons';
 
 import { spacing, typography } from '../../../theme';
 import { useTheme } from '../../../theme/ThemeContext';

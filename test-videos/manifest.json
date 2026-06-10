@@ -21,11 +21,7 @@
           "min": 2,
           "max": 6
         },
-        "faults_to_test": [
-          "above_parallel",
-          "excessive_lean",
-          "bar_drift"
-        ],
+        "faults_to_test": ["above_parallel", "excessive_lean", "bar_drift"],
         "metrics_present": [
           "forwardLeanDeg",
           "maxDepthCm",
@@ -91,11 +87,7 @@
             "max": 13.95
           }
         },
-        "fault_types": [
-          "bar_drift",
-          "excessive_lean",
-          "unstable_lockout"
-        ],
+        "fault_types": ["bar_drift", "excessive_lean", "unstable_lockout"],
         "calibrated_at": "2026-04-19T14:02:28.757Z"
       }
     },
@@ -113,9 +105,7 @@
           "min": 3,
           "max": 3
         },
-        "faults_to_test": [
-          "bar_drift"
-        ],
+        "faults_to_test": ["bar_drift"],
         "metrics_present": [
           "forwardLeanDeg",
           "maxDepthCm",
@@ -180,11 +170,7 @@
             "max": 8.97
           }
         },
-        "fault_types": [
-          "above_parallel",
-          "bar_drift",
-          "unstable_lockout"
-        ],
+        "fault_types": ["above_parallel", "bar_drift", "unstable_lockout"],
         "calibrated_at": "2026-04-19T14:02:28.759Z"
       }
     },
@@ -202,9 +188,7 @@
           "min": 3,
           "max": 3
         },
-        "faults_to_test": [
-          "bar_drift"
-        ],
+        "faults_to_test": ["bar_drift"],
         "metrics_present": [
           "forwardLeanDeg",
           "maxDepthCm",
@@ -292,9 +276,7 @@
           "min": 5,
           "max": 5
         },
-        "faults_to_test": [
-          "bar_drift"
-        ],
+        "faults_to_test": ["bar_drift"],
         "metrics_present": [
           "forwardLeanDeg",
           "maxDepthCm",
@@ -359,9 +341,7 @@
             "max": 3.82
           }
         },
-        "fault_types": [
-          "above_parallel"
-        ],
+        "fault_types": ["above_parallel"],
         "calibrated_at": "2026-04-19T14:02:28.762Z"
       }
     },
@@ -379,9 +359,7 @@
           "min": 7,
           "max": 7
         },
-        "faults_to_test": [
-          "bar_drift"
-        ],
+        "faults_to_test": ["bar_drift"],
         "metrics_present": [
           "forwardLeanDeg",
           "maxDepthCm",
@@ -471,16 +449,8 @@
           "min": 1,
           "max": 1
         },
-        "faults_to_test": [
-          "bar_drift",
-          "back_rounding",
-          "incomplete_lockout"
-        ],
-        "metrics_present": [
-          "barDriftCm",
-          "hipAngleAtLockoutDeg",
-          "romCm"
-        ],
+        "faults_to_test": ["bar_drift", "back_rounding", "incomplete_lockout"],
+        "metrics_present": ["barDriftCm", "hipAngleAtLockoutDeg", "romCm"],
         "fatigue_signatures": false
       },
       "actual": {
@@ -557,16 +527,8 @@
           "min": 1,
           "max": 1
         },
-        "faults_to_test": [
-          "bar_drift",
-          "back_rounding",
-          "incomplete_lockout"
-        ],
-        "metrics_present": [
-          "barDriftCm",
-          "hipAngleAtLockoutDeg",
-          "romCm"
-        ],
+        "faults_to_test": ["bar_drift", "back_rounding", "incomplete_lockout"],
+        "metrics_present": ["barDriftCm", "hipAngleAtLockoutDeg", "romCm"],
         "fatigue_signatures": false
       },
       "actual": {
@@ -620,10 +582,7 @@
             "max": 19.69
           }
         },
-        "fault_types": [
-          "bar_drift",
-          "unstable_lockout"
-        ],
+        "fault_types": ["bar_drift", "unstable_lockout"],
         "calibrated_at": "2026-04-19T14:02:28.770Z"
       }
     },
@@ -641,16 +600,8 @@
           "min": 6,
           "max": 6
         },
-        "faults_to_test": [
-          "bar_drift",
-          "back_rounding",
-          "incomplete_lockout"
-        ],
-        "metrics_present": [
-          "barDriftCm",
-          "hipAngleAtLockoutDeg",
-          "romCm"
-        ],
+        "faults_to_test": ["bar_drift", "back_rounding", "incomplete_lockout"],
+        "metrics_present": ["barDriftCm", "hipAngleAtLockoutDeg", "romCm"],
         "fatigue_signatures": true
       },
       "actual": {
@@ -704,11 +655,7 @@
             "max": 41.04
           }
         },
-        "fault_types": [
-          "back_rounding",
-          "bar_drift",
-          "unstable_lockout"
-        ],
+        "fault_types": ["back_rounding", "bar_drift", "unstable_lockout"],
         "calibrated_at": "2026-04-19T14:02:28.774Z"
       }
     },
@@ -726,16 +673,8 @@
           "min": 5,
           "max": 5
         },
-        "faults_to_test": [
-          "bar_drift",
-          "back_rounding",
-          "incomplete_lockout"
-        ],
-        "metrics_present": [
-          "barDriftCm",
-          "hipAngleAtLockoutDeg",
-          "romCm"
-        ],
+        "faults_to_test": ["bar_drift", "back_rounding", "incomplete_lockout"],
+        "metrics_present": ["barDriftCm", "hipAngleAtLockoutDeg", "romCm"],
         "fatigue_signatures": true
       },
       "actual": {
@@ -813,16 +752,8 @@
           "min": 2,
           "max": 2
         },
-        "faults_to_test": [
-          "bar_drift",
-          "back_rounding",
-          "incomplete_lockout"
-        ],
-        "metrics_present": [
-          "barDriftCm",
-          "hipAngleAtLockoutDeg",
-          "romCm"
-        ],
+        "faults_to_test": ["bar_drift", "back_rounding", "incomplete_lockout"],
+        "metrics_present": ["barDriftCm", "hipAngleAtLockoutDeg", "romCm"],
         "fatigue_signatures": true
       },
       "actual": {
@@ -876,9 +807,7 @@
             "max": 5.02
           }
         },
-        "fault_types": [
-          "unstable_lockout"
-        ],
+        "fault_types": ["unstable_lockout"],
         "calibrated_at": "2026-04-19T14:02:28.777Z"
       }
     },
@@ -897,13 +826,8 @@
           "min": 3,
           "max": 3
         },
-        "faults_to_test": [
-          "bar_drift"
-        ],
-        "metrics_present": [
-          "barDriftCm",
-          "romCm"
-        ],
+        "faults_to_test": ["bar_drift"],
+        "metrics_present": ["barDriftCm", "romCm"],
         "fatigue_signatures": true
       },
       "actual": {
@@ -957,11 +881,7 @@
             "max": 7.82
           }
         },
-        "fault_types": [
-          "back_rounding",
-          "early_hip_shoot",
-          "unstable_lockout"
-        ],
+        "fault_types": ["back_rounding", "early_hip_shoot", "unstable_lockout"],
         "calibrated_at": "2026-04-19T14:02:28.778Z"
       }
     },
@@ -979,13 +899,8 @@
           "min": 4,
           "max": 4
         },
-        "faults_to_test": [
-          "bar_drift"
-        ],
-        "metrics_present": [
-          "barDriftCm",
-          "romCm"
-        ],
+        "faults_to_test": ["bar_drift"],
+        "metrics_present": ["barDriftCm", "romCm"],
         "fatigue_signatures": true
       },
       "actual": {
@@ -1039,11 +954,7 @@
             "max": 1.87
           }
         },
-        "fault_types": [
-          "back_rounding",
-          "bar_drift",
-          "early_hip_shoot"
-        ],
+        "fault_types": ["back_rounding", "bar_drift", "early_hip_shoot"],
         "calibrated_at": "2026-04-19T14:02:28.780Z"
       }
     },
@@ -1062,16 +973,8 @@
           "max": 8,
           "notes": "45° view with heavy MediaPipe hip occlusion — lockout-to-lockout without deep-floor reset undercounts reps. Range is wide to tolerate 2-6 depending on which lockouts are visible."
         },
-        "faults_to_test": [
-          "bar_drift",
-          "back_rounding",
-          "incomplete_lockout"
-        ],
-        "metrics_present": [
-          "barDriftCm",
-          "hipAngleAtLockoutDeg",
-          "romCm"
-        ],
+        "faults_to_test": ["bar_drift", "back_rounding", "incomplete_lockout"],
+        "metrics_present": ["barDriftCm", "hipAngleAtLockoutDeg", "romCm"],
         "fatigue_signatures": true
       },
       "actual": {
@@ -1149,13 +1052,8 @@
           "min": 5,
           "max": 5
         },
-        "faults_to_test": [
-          "bar_drift"
-        ],
-        "metrics_present": [
-          "barDriftCm",
-          "romCm"
-        ],
+        "faults_to_test": ["bar_drift"],
+        "metrics_present": ["barDriftCm", "romCm"],
         "fatigue_signatures": true
       },
       "actual": {
@@ -1209,10 +1107,7 @@
             "max": 2.1
           }
         },
-        "fault_types": [
-          "bar_drift",
-          "elbow_flare"
-        ],
+        "fault_types": ["bar_drift", "elbow_flare"],
         "calibrated_at": "2026-04-19T14:02:28.783Z"
       }
     },

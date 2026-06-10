@@ -273,9 +273,7 @@ describe('groundReview', () => {
     const review = makeReview({
       score: 65,
       verdict: 'flag',
-      concerns: [
-        'Auxiliary work outvolumes the main lift on a penalty day.',
-      ],
+      concerns: ['Auxiliary work outvolumes the main lift on a penalty day.'],
     });
     const grounded = groundReview(
       review,

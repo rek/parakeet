@@ -4,7 +4,8 @@ import { fetchTodaySnapshot } from './recovery.repository';
 
 export const recoveryQueryKeys = {
   all: ['wearable', 'recovery'] as const,
-  today: (userId: string) => [...recoveryQueryKeys.all, 'today', userId] as const,
+  today: (userId: string) =>
+    [...recoveryQueryKeys.all, 'today', userId] as const,
 };
 
 export function todayRecoverySnapshotOptions(userId: string) {

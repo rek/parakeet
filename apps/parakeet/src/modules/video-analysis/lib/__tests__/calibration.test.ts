@@ -314,7 +314,10 @@ interface SnapshotFile {
 }
 
 function loadSnapshot(videoId: string): SnapshotFile | null {
-  const path = resolve(PROJECT_ROOT, `test-videos/snapshots/${videoId}.snapshot.json`);
+  const path = resolve(
+    PROJECT_ROOT,
+    `test-videos/snapshots/${videoId}.snapshot.json`
+  );
   if (!existsSync(path)) return null;
   return JSON.parse(readFileSync(path, 'utf-8')) as SnapshotFile;
 }

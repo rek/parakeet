@@ -1,8 +1,9 @@
 // @spec docs/features/session/spec-workout-type-swap.md
-import type { Lift } from '@parakeet/shared-types';
-import { capitalize } from '@shared/utils/string';
 import { useMemo } from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+
+import type { Lift } from '@parakeet/shared-types';
+import { capitalize } from '@shared/utils/string';
 
 import { radii, spacing, typography } from '../../../theme';
 import { useTheme } from '../../../theme/ThemeContext';

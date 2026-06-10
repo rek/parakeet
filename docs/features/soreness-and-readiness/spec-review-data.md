@@ -14,6 +14,7 @@ Database table, migration, and Supabase wrapper functions for storing end-of-wee
 **File: `supabase/migrations/20260308000000_add_weekly_body_reviews.sql`**
 
 - [ ] Create `weekly_body_reviews` table:
+
   ```sql
   CREATE TABLE weekly_body_reviews (
     id               UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -62,36 +63,33 @@ Database table, migration, and Supabase wrapper functions for storing end-of-wee
 **File: `apps/parakeet/src/lib/weekly-body-reviews.ts`**
 
 - [ ] `saveWeeklyBodyReview(userId, review)` — inserts a new review row:
+
   ```typescript
   export async function saveWeeklyBodyReview(
     userId: string,
     review: {
-      programId: string | null
-      weekNumber: number
-      feltSoreness: Record<string, number>
-      predictedFatigue: Record<string, { predictedSoreness: number; volumePct: number; volumeStatus: string }>
-      mismatches: Array<{ muscle: string; felt: number; predicted: number; difference: number; direction: string }>
-      notes?: string
+      programId: string | null;
+      weekNumber: number;
+      feltSoreness: Record<string, number>;
+      predictedFatigue: Record<string, { predictedSoreness: number; volumePct: number; volumeStatus: string }>;
+      mismatches: Array<{ muscle: string; felt: number; predicted: number; difference: number; direction: string }>;
+      notes?: string;
     }
-  ): Promise<void>
+  ): Promise<void>;
   ```
 
 - [ ] `getWeeklyBodyReviews(userId, programId?)` — fetch all reviews for a user, optionally filtered to a program:
+
   ```typescript
-  export async function getWeeklyBodyReviews(
-    userId: string,
-    programId?: string
-  ): Promise<WeeklyBodyReview[]>
+  export async function getWeeklyBodyReviews(userId: string, programId?: string): Promise<WeeklyBodyReview[]>;
   ```
+
   Returns results ordered by `created_at` descending.
 
 - [ ] `getLatestWeeklyReview(userId, programId, weekNumber)` — fetch the most recent review for a specific program week (used to pre-populate if the user revisits):
+
   ```typescript
-  export async function getLatestWeeklyReview(
-    userId: string,
-    programId: string,
-    weekNumber: number
-  ): Promise<WeeklyBodyReview | null>
+  export async function getLatestWeeklyReview(userId: string, programId: string, weekNumber: number): Promise<WeeklyBodyReview | null>;
   ```
 
 - [ ] Export `WeeklyBodyReview` interface matching the table shape with typed JSONB fields.

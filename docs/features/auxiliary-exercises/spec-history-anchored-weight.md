@@ -31,6 +31,7 @@ After the source decision, apply stale-window decay:
 - When decay reaches 0, source resets to `'formula'`, and `sessionsUsed` / `confidence` are also reset to `0` / `'exploring'` so a fully-decayed result is indistinguishable from a cold start (avoids misleading the post-session calibration trace).
 
 Confidence:
+
 - `snap` → `'high'` regardless of session count.
 - 0 sessions → `'exploring'`, 1–2 → `'low'`, 3–5 → `'medium'`, 6+ → `'high'`.
 
@@ -69,6 +70,7 @@ Pure functions. No I/O.
 - Constants: `ANCHOR_WINDOW_SIZE`, `ANCHOR_RECENCY_HORIZON_DAYS`, `ANCHOR_DECAY_DAYS`, `ANCHOR_SNAP_TOLERANCE`, `ANCHOR_OVERRIDE_MIN_DELTA`
 
 Tests (`anchor.test.ts`):
+
 - No history → formula passthrough, `'exploring'`.
 - 1 session → blend at 1/3, `'low'`.
 - 3 sessions → pure history average, `'medium'`.
@@ -87,6 +89,7 @@ Tests (`anchor.test.ts`):
 `computeAuxWeight` accepts optional `anchorKg`. When provided and positive, returns it directly (caller is responsible for plate rounding). Otherwise runs the linear or sqrt formula path. Documented in JSDoc.
 
 Tests in `exercise-catalog.test.ts`:
+
 - `anchorKg` provided → returns it, ignoring 1RM and weightPct.
 - `anchorKg: 0` → treated as absent; formula path runs.
 - `anchorKg` honored for dumbbell/kettlebell exercises (bypasses sqrt scaling).
@@ -94,6 +97,7 @@ Tests in `exercise-catalog.test.ts`:
 ### Engine — `packages/training-engine/src/generator/steps/processAuxExercise.ts`
 
 Accepts optional `anchorResult: AuxAnchorResult`. When present:
+
 - For source `'history'` or `'snap'`: passes `anchorResult.anchorKg` to `computeAuxWeight` as `anchorKg`, and skips the post-main fatigue discount (`useHistoryAnchor` branch).
 - For source `'blend'`: passes the blended `anchorResult.anchorKg` as `anchorKg` (the blend already includes the formula contribution); applies the fatigue discount as normal because the anchor is not yet fully trusted.
 - For source `'formula'`: ignores `anchorResult.anchorKg`; formula path runs unchanged.
@@ -101,6 +105,7 @@ Accepts optional `anchorResult: AuxAnchorResult`. When present:
 Anchor metadata is attached to every returned `AuxiliaryWork` — including skipped rows (severe soreness, MRV cap, main lift skipped, timed) — so the UI contract is uniform.
 
 `AuxiliaryWork.anchor` shape:
+
 ```typescript
 anchor?: {
   source: 'formula' | 'blend' | 'history' | 'snap';
@@ -115,6 +120,7 @@ anchor?: {
 `anchorBaseKg` is the anchor weight BEFORE main-lift modifiers (`mainIntensityMultiplier`, soreness, etc.). The UI divergence note compares this to `formulaWeightKg`, not the post-modifier final prescribed weight. See [docs/guide/ai-learnings.md § Engine & Domain Logic](../../guide/ai-learnings.md) ("Comparison UX needs the pre-modifier base").
 
 Tests in `processAuxExercise.test.ts`:
+
 - Source `'history'`, heavy main day → fatigue discount not applied; final weight = anchor.
 - Source `'blend'`, heavy main day → fatigue discount applies on top of the blended base.
 - Source `'snap'` → precedence over fatigue regardless of intensity type.
@@ -171,12 +177,14 @@ Tap opens a `Modal` (inlined in the same file) showing source, confidence, sessi
 > **Deferred:** the original design also called for a list of the contributing sessions (date, top-set, RPE) inside the modal. Parked in [GH#226](https://github.com/rek/parakeet/issues/226) until there's lifter signal that the rarer "which workouts?" question needs answering.
 
 `shouldShowAnchorNote(...)` is the pure visibility predicate, extracted into `aux-anchor-note.helpers.ts` so it can be unit-tested without React Native. It hides the note when:
+
 - `source === 'formula'`
 - `formulaWeightKg <= 0` (bodyweight / timed)
 - `|anchorBaseKg − formulaWeightKg| / formulaWeightKg ≤ 0.20`
 - `roundToNearest(anchorBaseKg, incr) === roundToNearest(formulaWeightKg, incr)` (plate-rounding hysteresis)
 
 Tests in `AuxAnchorNote.test.ts`:
+
 - Hides on source `'formula'`.
 - Hides on zero formula weight.
 - Hides within 20% divergence.

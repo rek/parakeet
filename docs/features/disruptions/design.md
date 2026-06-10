@@ -13,6 +13,7 @@ Disruption Management lets users communicate real-world disruptions — injury, 
 Life constantly interrupts training. Without a structured way to log and respond to disruptions, users face a false choice: push through when they shouldn't (injury risk) or abandon the program after missing sessions (lost momentum and wasted planning).
 
 **Pain points:**
+
 - Missing sessions without logging them causes the program to desync from reality
 - Pushing through an injury without reducing load risks turning a minor issue into a major setback
 - Generic training apps have no concept of "this week was different because I was sick"
@@ -23,15 +24,15 @@ Life constantly interrupts training. Without a structured way to log and respond
 
 ## Disruption Types
 
-| Type | Description |
-|------|-------------|
-| Injury | Pain or dysfunction in a specific area affecting one or more lifts |
-| Illness | General illness reducing overall training capacity |
-| Travel | Access to equipment is limited or unavailable |
-| Fatigue | Unusually high fatigue (non-injury) — bad sleep, high stress, etc. |
-| Equipment Unavailable | Specific equipment (e.g., squat rack) not accessible |
-| Unprogrammed Event | A demanding athletic event outside the normal program (competition, race, team sport) |
-| Other | Freeform — user describes the situation |
+| Type                  | Description                                                                           |
+| --------------------- | ------------------------------------------------------------------------------------- |
+| Injury                | Pain or dysfunction in a specific area affecting one or more lifts                    |
+| Illness               | General illness reducing overall training capacity                                    |
+| Travel                | Access to equipment is limited or unavailable                                         |
+| Fatigue               | Unusually high fatigue (non-injury) — bad sleep, high stress, etc.                    |
+| Equipment Unavailable | Specific equipment (e.g., squat rack) not accessible                                  |
+| Unprogrammed Event    | A demanding athletic event outside the normal program (competition, race, team sport) |
+| Other                 | Freeform — user describes the situation                                               |
 
 ## User Experience
 
@@ -61,7 +62,7 @@ See [domain/adjustments.md](../domain/adjustments.md#disruption-modifiers) for t
 
 8. Active disruption appears as a chip in the Today screen chip row until resolved or until `affected_date_end` passes (whichever comes first). Ongoing disruptions (no end date) remain until manually resolved.
 
-**Unprogrammed Event Flow** *(partially implemented — spec disruptions-005)*:
+**Unprogrammed Event Flow** _(partially implemented — spec disruptions-005)_:
 
 1. User selects "Unprogrammed Event" as the disruption type
 2. Severity is fixed at "major" automatically (full deload treatment for affected sessions)
@@ -71,11 +72,11 @@ See [domain/adjustments.md](../domain/adjustments.md#disruption-modifiers) for t
 6. On submit: soreness is injected into `soreness_checkins` (same table as pre-session check-in); next JIT generation picks it up automatically
 7. No explicit weight adjustments are generated — soreness injection IS the adjustment
 
-**Deload Overlap** *(implemented)*:
+**Deload Overlap** _(implemented)_:
 
 If a disruption overlaps with a scheduled deload week, the deload takes precedence. Soreness, readiness, and cycle-phase adjusters all early-return when `intensityType === 'deload'`, preserving the planned recovery load. `applyDisruptionAdjustment` still runs on deload sessions — it notes the disruption but does not reduce sets or skip the session (intentional conservative behaviour, see jit-pipeline/spec-generator.md Step 5).
 
-**Mid-session Reporting** *(future enhancement — not planned for current sprint)*:
+**Mid-session Reporting** _(future enhancement — not planned for current sprint)_:
 
 Reporting a disruption from within an active session (e.g., to immediately reduce the current session's weight) has no entry point built yet.
 
@@ -128,10 +129,12 @@ This flow is useful for ongoing disruptions that have a known recovery date, or 
 ## Future Enhancements
 
 **Phase 2:**
+
 - Disruption recurrence detection (same lift, same type, within 8 weeks) → prompt to review loading
 - Return-to-training protocol suggestions after major injuries (gradual percentage ramp-up over 3 weeks)
 
 **Long-term:**
+
 - Correlation with recovery data: if HRV is consistently low on days user reports fatigue disruptions, surface this pattern
 - Coach visibility: coaches can see disruptions reported by athletes they manage
 
@@ -148,4 +151,3 @@ This flow is useful for ongoing disruptions that have a known recovery date, or 
 
 - [domain/adjustments.md](../domain/adjustments.md) — disruption modifier table (type x severity)
 - [domain/athlete-signals.md](../domain/athlete-signals.md) — disruption signal definitions
-

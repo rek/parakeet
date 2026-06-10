@@ -2,12 +2,12 @@ import { describe, expect, it } from 'vitest';
 
 import { makeDisruption } from '../__test-helpers__/fixtures';
 import type { MuscleGroup } from '../types';
-import type { SorenessLevel } from './soreness-adjuster';
 import {
   computeInjurySorenessOverrides,
   INJURY_SORENESS,
   mergeSorenessRatings,
 } from './injury-soreness';
+import type { SorenessLevel } from './soreness-adjuster';
 
 describe('computeInjurySorenessOverrides', () => {
   it('returns empty for no disruptions', () => {

@@ -10,6 +10,7 @@ A sheet that tells the user exactly which plates to load for a given weight. Ope
 ## Tasks
 
 **`packages/training-engine/src/formulas/plate-calculator.ts`:**
+
 - [x] `calculatePlates(targetKg: number, barKg: number): PlateResult` — greedy algorithm (largest to smallest) returning plates per side and any unachievable remainder
   - Standard plate denominations (kg): [25, 20, 15, 10, 5, 2.5, 1.25]
   - If remainder > 0 after all plates assigned, return it in `remainder` field so the UI can flag it
@@ -21,6 +22,7 @@ A sheet that tells the user exactly which plates to load for a given weight. Ope
   - `calculatePlates(60, 15)` → correct women's bar result
 
 **`apps/parakeet/src/components/session/PlateCalculatorSheet.tsx`:**
+
 - [x] Bottom sheet (reuse existing sheet pattern from `LiftHistorySheet`) displaying plates per side as a stacked list
   - Each row: plate weight (bold) + count (e.g. "20 kg × 2")
   - Header row shows total weight and bar weight
@@ -30,6 +32,7 @@ A sheet that tells the user exactly which plates to load for a given weight. Ope
 - [x] Empty state: if targetKg ≤ barKg, show "Bar only — no plates needed"
 
 **`apps/parakeet/src/components/training/SetRow.tsx`:**
+
 - [x] Add a small plate icon button inline with the weight input
   - Tapping opens `PlateCalculatorSheet` with current actual weight (falls back to planned weight if actual not yet entered)
   - Button only visible when `weightKg > 0`

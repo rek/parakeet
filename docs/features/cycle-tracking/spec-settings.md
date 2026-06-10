@@ -38,6 +38,7 @@ Also covers the optional prompt shown at the end of onboarding for female users.
 ### Settings Route
 
 **`apps/parakeet/src/app/(tabs)/settings.tsx`:** add under Advanced section:
+
 ```
 Row label: "Cycle Tracking"  →  /settings/cycle-tracking
 Only rendered if user.biological_sex === 'female'
@@ -50,6 +51,7 @@ Only rendered if user.biological_sex === 'female'
 **`apps/parakeet/src/app/(auth)/onboarding/program-settings.tsx`:**
 
 After the birth year field, if `biologicalSex === 'female'`, show an optional prompt:
+
 ```
 "Would you like to track your menstrual cycle?
 This helps us understand your training patterns — no symptoms required.

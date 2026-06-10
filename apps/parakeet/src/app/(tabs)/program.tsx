@@ -257,20 +257,33 @@ function formatRepsLabel(
 
 function computeUnendingPreview(
   program: { unending_session_counter?: number | null },
-  todaySession: { block_number?: number | null; intensity_type?: string | null } | null | undefined,
+  todaySession:
+    | { block_number?: number | null; intensity_type?: string | null }
+    | null
+    | undefined,
   oneRmKg: number | null | undefined,
   formulaConfig: Parameters<typeof calculateSets>[4] | null | undefined,
   nextLift: Lift | undefined,
-  liftHistory: { entries?: Array<{ sessionRpe?: number | null }> } | null | undefined
+  liftHistory:
+    | { entries?: Array<{ sessionRpe?: number | null }> }
+    | null
+    | undefined
 ): UnendingPreview {
   const counter = program.unending_session_counter ?? 0;
   const blockNum = (todaySession?.block_number ?? 1) as 1 | 2 | 3;
-  const intensityType = (todaySession?.intensity_type ?? 'heavy') as IntensityType;
+  const intensityType = (todaySession?.intensity_type ??
+    'heavy') as IntensityType;
 
   let estimatedSets = null;
   try {
     if (oneRmKg && formulaConfig && todaySession && nextLift) {
-      estimatedSets = calculateSets(nextLift, intensityType, blockNum, oneRmKg, formulaConfig);
+      estimatedSets = calculateSets(
+        nextLift,
+        intensityType,
+        blockNum,
+        oneRmKg,
+        formulaConfig
+      );
     }
   } catch (err) {
     captureException(err);
@@ -584,9 +597,7 @@ export default function ProgramScreen() {
           />
         ))}
         <View style={styles.checkinCard}>
-          <Text style={styles.checkinLabel}>
-            How is your body holding up?
-          </Text>
+          <Text style={styles.checkinLabel}>How is your body holding up?</Text>
           <TouchableOpacity
             style={styles.checkinButton}
             onPress={() =>

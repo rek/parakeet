@@ -18,11 +18,13 @@ npm install ai @ai-sdk/anthropic
 ### Environment Variables
 
 **`apps/parakeet/.env.local`** (development, gitignored):
+
 ```
 EXPO_PUBLIC_ANTHROPIC_API_KEY=sk-ant-...
 ```
 
 **EAS Secrets** (production builds):
+
 ```bash
 eas secret:create --scope project --name EXPO_PUBLIC_ANTHROPIC_API_KEY --value sk-ant-...
 ```
@@ -34,7 +36,8 @@ The `EXPO_PUBLIC_` prefix makes the key accessible in Expo's environment. The ke
 **`apps/parakeet/app/_layout.tsx`** — add as the **first import** before any AI SDK usage:
 
 ```typescript
-import 'expo/fetch'
+import 'expo/fetch';
+
 // ... rest of imports
 ```
 
@@ -45,12 +48,16 @@ Vercel AI SDK uses the Web Fetch API. React Native's `fetch` does not fully conf
 **`packages/training-engine/src/ai/models.ts`:**
 
 ```typescript
-import { createOpenAI } from '@ai-sdk/openai'
+import { createOpenAI } from '@ai-sdk/openai';
 
 // Lazy getters — defer provider creation until first call,
 // allowing configureAIProxy() to redirect through Edge Function.
-export function getJITModel() { return getProvider()('gpt-4o-mini') }
-export function getCycleReviewModel() { return getProvider()('gpt-5') }
+export function getJITModel() {
+  return getProvider()('gpt-4o-mini');
+}
+export function getCycleReviewModel() {
+  return getProvider()('gpt-5');
+}
 ```
 
 In production, `configureAIProxy()` is called at app bootstrap to route all calls through a Supabase Edge Function proxy (the real OpenAI key never ships in the client bundle). In local dev, calls go directly to `api.openai.com`.
@@ -73,7 +80,7 @@ Rules:
 - setModifier must be between -3 and +2.
 - Provide 1-4 concise rationale strings explaining your reasoning.
 - If signals are mild and session should proceed normally, return intensityModifier: 1.0, setModifier: 0.
-`
+`;
 
 export const CYCLE_REVIEW_SYSTEM_PROMPT = `
 You are an expert powerlifting coach reviewing a complete training cycle for a single athlete.
@@ -91,7 +98,7 @@ Your analysis should:
 6. Provide a plain-language summary of recommendations for the next cycle.
 
 Return a JSON object matching the CycleReview schema exactly.
-`
+`;
 ```
 
 ### Hard Constraint Constants
@@ -100,12 +107,12 @@ Return a JSON object matching the CycleReview schema exactly.
 
 ```typescript
 // JITAdjustment hard bounds — enforced after any strategy runs
-export const JIT_INTENSITY_MIN = 0.40
-export const JIT_INTENSITY_MAX = 1.20
-export const JIT_SET_DELTA_MIN = -3
-export const JIT_SET_DELTA_MAX = 2
-export const JIT_RATIONALE_MAX_ITEMS = 5
-export const JIT_RATIONALE_MAX_CHARS = 200
+export const JIT_INTENSITY_MIN = 0.4;
+export const JIT_INTENSITY_MAX = 1.2;
+export const JIT_SET_DELTA_MIN = -3;
+export const JIT_SET_DELTA_MAX = 2;
+export const JIT_RATIONALE_MAX_ITEMS = 5;
+export const JIT_RATIONALE_MAX_CHARS = 200;
 ```
 
 ## Open Issues (2026-05 review)

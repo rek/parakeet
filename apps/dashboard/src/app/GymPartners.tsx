@@ -1,7 +1,7 @@
 import { Badge } from '../components/Badge';
 import { TablePage } from '../components/TablePage';
-import { useSupabaseRows } from '../lib/useSupabaseRows';
 import { theme } from '../lib/theme';
+import { useSupabaseRows } from '../lib/useSupabaseRows';
 
 interface PartnerRow {
   id: string;
@@ -68,11 +68,19 @@ export function GymPartners() {
       rows={rows}
       emptyMessage="No gym-partner relationships yet."
       columnsTemplate="130px 1fr 1fr 100px 130px"
-      columnLabels={['Requested', 'Requester', 'Responder', 'Status', 'Updated']}
+      columnLabels={[
+        'Requested',
+        'Requester',
+        'Responder',
+        'Status',
+        'Updated',
+      ]}
       keyOf={(r) => r.id}
       renderRow={(r) => (
         <>
-          <span style={{ color: theme.color.textDim }}>{fmt(r.created_at)}</span>
+          <span style={{ color: theme.color.textDim }}>
+            {fmt(r.created_at)}
+          </span>
           <span
             style={{
               color: theme.color.textDim,

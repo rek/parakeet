@@ -1169,7 +1169,7 @@ export const EXERCISE_CATALOG: ExerciseCatalogEntry[] = [
     associatedLift: null,
     primaryMuscles: ['core'],
     type: 'weighted',
-    weightPct: 0.10,
+    weightPct: 0.1,
     repTarget: 10,
     movementPattern: 'core',
     equipment: 'cable',
@@ -1214,7 +1214,7 @@ export const EXERCISE_CATALOG: ExerciseCatalogEntry[] = [
     associatedLift: null,
     primaryMuscles: ['core'],
     type: 'weighted',
-    weightPct: 0.10,
+    weightPct: 0.1,
     repTarget: 12,
     movementPattern: 'core',
     equipment: 'cable',
@@ -1305,9 +1305,7 @@ export function getDisplayNameForSlug(
   slug: string,
   storedDisplay?: string | null
 ): string {
-  return (
-    CATALOG_BY_SLUG.get(slug)?.name ?? storedDisplay ?? prettifySlug(slug)
-  );
+  return CATALOG_BY_SLUG.get(slug)?.name ?? storedDisplay ?? prettifySlug(slug);
 }
 
 // ── Derived default pools (lift-specific entries only, in catalog order) ──────

@@ -403,8 +403,7 @@ function VolumeCompactCard() {
 
   // Treat truly empty (no muscle entries / zero total sets) as nothing to show.
   const isEmpty =
-    !!data &&
-    COMPACT_VOLUME_MUSCLES.every((m) => (data.weekly[m] ?? 0) === 0);
+    !!data && COMPACT_VOLUME_MUSCLES.every((m) => (data.weekly[m] ?? 0) === 0);
 
   if (isError) {
     return (
@@ -790,8 +789,7 @@ export default function TodayScreen() {
   const ongoingDisruptions = useMemo(
     () =>
       (disruptions ?? []).filter(
-        (d) =>
-          d.affected_date_end == null && !snoozedDisruptionIds.has(d.id)
+        (d) => d.affected_date_end == null && !snoozedDisruptionIds.has(d.id)
       ),
     [disruptions, snoozedDisruptionIds]
   );
@@ -955,11 +953,10 @@ export default function TodayScreen() {
                       try {
                         await acceptCalibration({
                           userId: user!.id,
-                          modifierSource:
-                            pendingCalibration.modifierSource as
-                              | 'readiness'
-                              | 'cycle_phase'
-                              | 'soreness',
+                          modifierSource: pendingCalibration.modifierSource as
+                            | 'readiness'
+                            | 'cycle_phase'
+                            | 'soreness',
                           proposed: pendingCalibration.proposed,
                           sampleCount: pendingCalibration.sampleCount,
                           meanBias: pendingCalibration.meanBias,
@@ -981,11 +978,10 @@ export default function TodayScreen() {
                       try {
                         await revertCalibration({
                           userId: user!.id,
-                          modifierSource:
-                            pendingCalibration.modifierSource as
-                              | 'readiness'
-                              | 'cycle_phase'
-                              | 'soreness',
+                          modifierSource: pendingCalibration.modifierSource as
+                            | 'readiness'
+                            | 'cycle_phase'
+                            | 'soreness',
                           currentDefault: pendingCalibration.currentDefault,
                           sampleCount: pendingCalibration.sampleCount,
                           meanBias: pendingCalibration.meanBias,

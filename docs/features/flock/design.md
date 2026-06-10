@@ -16,7 +16,7 @@ already know each other.
 
 ## Problem
 
-Parakeet is deliberately single-player: every screen is about *your* body, *your* next
+Parakeet is deliberately single-player: every screen is about _your_ body, _your_ next
 session. But the people running this instance are a family that trains together and pushes
 each other. Today there is no way to see how anyone else is doing. Motivation that comes
 naturally from a shared gym — "oh, Sara just pulled 140?" — is invisible in the app.
@@ -53,20 +53,20 @@ discovery. These are noted in Open Questions / Future as explicit later decision
 
 ## Decisions
 
-| # | Decision | Choice | Rationale |
-|---|----------|--------|-----------|
-| 1 | Audience model | Instance-wide; everyone is in the flock | Closed family/friends instance. No friend graph, no requests, no discovery needed. Everyone who shares is visible to everyone who shares. |
-| 2 | Direction | Read-only feed | Ships fast, minimal surface. Reactions/comments are a deliberate later decision (see Future). |
-| 3 | What's shared | Celebratory / derived signals only | PRs, Wilks + delta, streak, one-line highlight. No raw logged weights, RPE, or fails — preserves the gym-partner privacy wall. |
-| 4 | Health/medical data | Excluded from v1 | Cycle phase, lipedema tracking, and bodyweight are sensitive even within family. "Opted into the app" ≠ "opted into broadcasting medical data." Revisit as granular opt-in later. |
-| 5 | Privacy mechanism | Sanitized highlights projection, not direct table reads | Friends never get RLS read on `achievements` / `session_logs` / health tables. The producing lifter's device publishes a curated `flock_highlights` row. Wall stays intact; the projection *is* the contract. |
-| 6 | Share consent | Master "share my highlights" toggle, default OFF, with first-open prompt | Even in a trusted family, broadcasting is explicit. One toggle (not per-friend) keeps it simple. Off until the lifter says yes. |
-| 7 | Highlight selection | Derived on-device at session complete | The same place achievements are already detected. Pick the best celebratory signal (new PR > Wilks bump > streak milestone > "trained today") and publish it. |
-| 8 | Navigation | Drawer item in `LeftDrawer` | The left drawer (`components/ui/LeftDrawer.tsx`, opened via the header menu button) is where feature-flagged destinations live — Nutrition and Lipedema Tracking are both there, gated by `useFeatureEnabled`. Add a "Flock" `DrawerItem` gated by the `flock` flag, routing to `/(tabs)/flock`. Plenty of room; no tab-bar crowding. |
-| 9 | Feature flag | `flock`, default off, Advanced category | Mirrors the gym-partner rollout pattern (first social feature shipped behind a flag). Opt-in until stable. |
-| 10 | Relationship to gym-partners | Separate feature/module | Different shape (community vs pairwise) and opposite data posture (broadcast achievements vs hide performance). Shares nothing but the `profiles` table. |
-| 11 | Empty / no-share state | Card hidden until a lifter shares | A lifter who hasn't enabled sharing simply doesn't appear. No "ghost" cards, no implying participation. |
-| 12 | Data freshness | Highlights refresh on session complete | No realtime needed — this is motivational, not live. Pull-to-refresh + publish-on-complete is enough. |
+| #   | Decision                     | Choice                                                                   | Rationale                                                                                                                                                                                                                                                                                                                             |
+| --- | ---------------------------- | ------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | Audience model               | Instance-wide; everyone is in the flock                                  | Closed family/friends instance. No friend graph, no requests, no discovery needed. Everyone who shares is visible to everyone who shares.                                                                                                                                                                                             |
+| 2   | Direction                    | Read-only feed                                                           | Ships fast, minimal surface. Reactions/comments are a deliberate later decision (see Future).                                                                                                                                                                                                                                         |
+| 3   | What's shared                | Celebratory / derived signals only                                       | PRs, Wilks + delta, streak, one-line highlight. No raw logged weights, RPE, or fails — preserves the gym-partner privacy wall.                                                                                                                                                                                                        |
+| 4   | Health/medical data          | Excluded from v1                                                         | Cycle phase, lipedema tracking, and bodyweight are sensitive even within family. "Opted into the app" ≠ "opted into broadcasting medical data." Revisit as granular opt-in later.                                                                                                                                                     |
+| 5   | Privacy mechanism            | Sanitized highlights projection, not direct table reads                  | Friends never get RLS read on `achievements` / `session_logs` / health tables. The producing lifter's device publishes a curated `flock_highlights` row. Wall stays intact; the projection _is_ the contract.                                                                                                                         |
+| 6   | Share consent                | Master "share my highlights" toggle, default OFF, with first-open prompt | Even in a trusted family, broadcasting is explicit. One toggle (not per-friend) keeps it simple. Off until the lifter says yes.                                                                                                                                                                                                       |
+| 7   | Highlight selection          | Derived on-device at session complete                                    | The same place achievements are already detected. Pick the best celebratory signal (new PR > Wilks bump > streak milestone > "trained today") and publish it.                                                                                                                                                                         |
+| 8   | Navigation                   | Drawer item in `LeftDrawer`                                              | The left drawer (`components/ui/LeftDrawer.tsx`, opened via the header menu button) is where feature-flagged destinations live — Nutrition and Lipedema Tracking are both there, gated by `useFeatureEnabled`. Add a "Flock" `DrawerItem` gated by the `flock` flag, routing to `/(tabs)/flock`. Plenty of room; no tab-bar crowding. |
+| 9   | Feature flag                 | `flock`, default off, Advanced category                                  | Mirrors the gym-partner rollout pattern (first social feature shipped behind a flag). Opt-in until stable.                                                                                                                                                                                                                            |
+| 10  | Relationship to gym-partners | Separate feature/module                                                  | Different shape (community vs pairwise) and opposite data posture (broadcast achievements vs hide performance). Shares nothing but the `profiles` table.                                                                                                                                                                              |
+| 11  | Empty / no-share state       | Card hidden until a lifter shares                                        | A lifter who hasn't enabled sharing simply doesn't appear. No "ghost" cards, no implying participation.                                                                                                                                                                                                                               |
+| 12  | Data freshness               | Highlights refresh on session complete                                   | No realtime needed — this is motivational, not live. Pull-to-refresh + publish-on-complete is enough.                                                                                                                                                                                                                                 |
 
 ## User Flows
 
@@ -74,7 +74,7 @@ discovery. These are noted in Open Questions / Future as explicit later decision
 
 1. Lifter opens the Flock screen (drawer → Flock) for the first time.
 2. Sees an explainer: "Share your PRs and highlights with the flock?" + what is/isn't shared
-   (PRs, Wilks, streaks — *not* weights, RPE, or any health data).
+   (PRs, Wilks, streaks — _not_ weights, RPE, or any health data).
 3. Toggles "Share my highlights" on. From now on their card appears for everyone.
 4. Can turn it off anytime in Settings → Flock; their card disappears immediately.
 
@@ -142,9 +142,9 @@ group — not a social network. No discovery, no public profiles, no follower gr
 ## Open Questions
 
 - [ ] **Default share state** — decision #6 sets default OFF for safety. For a tight family
-  instance, is an opt-*out* default acceptable instead? Needs the user's call.
+      instance, is an opt-_out_ default acceptable instead? Needs the user's call.
 - [ ] **Highlight ranking** — exact priority when a session triggers multiple signals (PR vs
-  Wilks bump vs streak). Spec'd as PR > Wilks > streak > trained-today; confirm.
+      Wilks bump vs streak). Spec'd as PR > Wilks > streak > trained-today; confirm.
 - [ ] **Avatars** — do profiles have an avatar today, or is this name + bird glyph only in v1?
 
 ## Future (explicitly out of v1)

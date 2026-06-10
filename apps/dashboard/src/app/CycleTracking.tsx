@@ -1,7 +1,7 @@
 import { Badge } from '../components/Badge';
 import { TablePage } from '../components/TablePage';
-import { useSupabaseRows } from '../lib/useSupabaseRows';
 import { theme } from '../lib/theme';
+import { useSupabaseRows } from '../lib/useSupabaseRows';
 
 interface CycleStateRow {
   id: string;
@@ -55,9 +55,7 @@ function CycleStateTable() {
       title="Cycle Tracking — Current State"
       accent={theme.color.purple}
       subtitle={`${rows.length} users`}
-      stats={[
-        { label: 'Enabled', value: enabled, color: theme.color.green },
-      ]}
+      stats={[{ label: 'Enabled', value: enabled, color: theme.color.green }]}
       loading={loading}
       error={error}
       rows={rows}

@@ -21,7 +21,9 @@
       "@parakeet/shared-types": ["packages/shared-types/src/index.ts"],
       "@parakeet/training-engine": ["packages/training-engine/src/index.ts"],
       "@parakeet/training-sim": ["packages/training-sim/src/index.ts"],
-      "expo-modules-core": ["node_modules/expo/node_modules/expo-modules-core/build"]
+      "expo-modules-core": [
+        "node_modules/expo/node_modules/expo-modules-core/build"
+      ]
     }
   },
   "include": [

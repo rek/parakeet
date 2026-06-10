@@ -84,8 +84,16 @@ export interface JitWeeklyLogRow {
   actual_sets: ActualSet[];
   auxiliary_sets: ActualSet[];
   sessions:
-    | { primary_lift: string | null; week_number: number; program_id: string | null }
-    | { primary_lift: string | null; week_number: number; program_id: string | null }[]
+    | {
+        primary_lift: string | null;
+        week_number: number;
+        program_id: string | null;
+      }
+    | {
+        primary_lift: string | null;
+        week_number: number;
+        program_id: string | null;
+      }[]
     | null;
 }
 
@@ -96,9 +104,7 @@ export async function fetchWeeklySessionLogs(
 ): Promise<JitWeeklyLogRow[]> {
   const { data, error } = await typedSupabase
     .from('session_logs')
-    .select(
-      'session_id, sessions!inner(primary_lift, week_number, program_id)'
-    )
+    .select('session_id, sessions!inner(primary_lift, week_number, program_id)')
     .eq('user_id', userId)
     .eq('sessions.program_id', programId)
     .eq('sessions.week_number', weekNumber);

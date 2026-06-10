@@ -14,6 +14,7 @@ Extends the LLM JIT prompt to optionally return per-set rest suggestions. The LL
 **File: `packages/training-engine/src/generator/jit-session-generator.ts`**
 
 Add to `JITAdjustment`:
+
 ```typescript
 restAdjustments?: {
   mainLift?: number    // delta seconds from formula default, constrained to [-60, +60]
@@ -26,6 +27,7 @@ restAdjustments?: {
 **File: `packages/training-engine/src/generator/llm-jit-generator.ts`**
 
 Add to the LLM context JSON:
+
 ```json
 {
   "formulaRestSeconds": 300,
@@ -35,6 +37,7 @@ Add to the LLM context JSON:
 ```
 
 Add to the LLM output schema:
+
 ```json
 {
   "restAdjustmentSeconds": 60
@@ -42,6 +45,7 @@ Add to the LLM output schema:
 ```
 
 System prompt addition (append to existing prompt):
+
 ```
 Optionally include "restAdjustmentSeconds": a delta in seconds from the formula default.
 Must be between -60 and +60. Omit if the formula default is appropriate.
@@ -50,11 +54,12 @@ Only suggest shorter rest if this is a deload or RPE was notably low (≤7.5).
 ```
 
 **Constraint enforcement (post-LLM, before returning JITOutput):**
+
 ```typescript
-const rawDelta = adjustment.restAdjustments?.mainLift ?? 0
-const clampedDelta = Math.max(-60, Math.min(60, rawDelta))
-const formulaBase = getFormulaRest(input)
-restRecommendations.mainLift = mainLiftSets.map(() => formulaBase + clampedDelta)
+const rawDelta = adjustment.restAdjustments?.mainLift ?? 0;
+const clampedDelta = Math.max(-60, Math.min(60, rawDelta));
+const formulaBase = getFormulaRest(input);
+restRecommendations.mainLift = mainLiftSets.map(() => formulaBase + clampedDelta);
 ```
 
 Hard constraint: if clamping changes the value, log a warning (LLM exceeded allowed range).
@@ -62,6 +67,7 @@ Hard constraint: if clamping changes the value, log a warning (LLM exceeded allo
 ### Display Flag
 
 The `JITOutput` gains an optional field:
+
 ```typescript
 llmRestSuggestion?: {
   deltaSeconds: number         // the clamped delta that was applied
@@ -76,6 +82,7 @@ The chip is shown when `Math.abs(llmRestSuggestion.deltaSeconds) >= 30`.
 ### Unit Tests
 
 **File: `packages/training-engine/src/generator/__tests__/llm-jit-generator.test.ts`** — add cases:
+
 - [x] LLM returns `restAdjustmentSeconds: 60` → clamped to 60, added to formula base
 - [x] LLM returns `restAdjustmentSeconds: 90` → clamped to 60 (warn logged)
 - [x] LLM returns `restAdjustmentSeconds: -30` → formula base − 30

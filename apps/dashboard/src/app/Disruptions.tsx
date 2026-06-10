@@ -1,7 +1,7 @@
 import { Badge } from '../components/Badge';
 import { TablePage } from '../components/TablePage';
-import { useSupabaseRows } from '../lib/useSupabaseRows';
 import { theme } from '../lib/theme';
+import { useSupabaseRows } from '../lib/useSupabaseRows';
 
 interface DisruptionRow {
   id: string;
@@ -38,7 +38,8 @@ function fmtDate(d: string | null) {
 }
 
 function severityBadge(s: string) {
-  if (s === 'severe' || s === 'high') return <Badge label="Severe" variant="red" />;
+  if (s === 'severe' || s === 'high')
+    return <Badge label="Severe" variant="red" />;
   if (s === 'moderate' || s === 'medium')
     return <Badge label="Moderate" variant="accent" />;
   if (s === 'mild' || s === 'low') return <Badge label="Mild" variant="blue" />;
@@ -105,7 +106,9 @@ export function Disruptions() {
       keyOf={(r) => r.id}
       renderRow={(r) => (
         <>
-          <span style={{ color: theme.color.textDim }}>{fmt(r.reported_at)}</span>
+          <span style={{ color: theme.color.textDim }}>
+            {fmt(r.reported_at)}
+          </span>
           {typeBadge(r.disruption_type)}
           {severityBadge(r.severity)}
           {statusBadge(r.status)}

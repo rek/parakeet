@@ -1,6 +1,6 @@
+import type { RecoverySnapshot } from '@parakeet/shared-types';
 import { describe, expect, it } from 'vitest';
 
-import type { RecoverySnapshot } from '@parakeet/shared-types';
 import {
   assembleCycleReport,
   buildRecoverySummary,
@@ -37,9 +37,7 @@ function makeSnapshot(
   };
 }
 
-function makeMinimalRaw(
-  overrides: Partial<RawCycleData> = {}
-): RawCycleData {
+function makeMinimalRaw(overrides: Partial<RawCycleData> = {}): RawCycleData {
   return {
     program: {
       id: 'prog-1',
@@ -80,10 +78,7 @@ describe('buildRecoverySummary', () => {
   });
 
   it('all-null physiology snapshots → dayCount > 0, all aggregates null, no streaks', () => {
-    const snapshots = [
-      makeSnapshot('2026-01-01'),
-      makeSnapshot('2026-01-02'),
-    ];
+    const snapshots = [makeSnapshot('2026-01-01'), makeSnapshot('2026-01-02')];
     const summary = buildRecoverySummary(snapshots);
     expect(summary).not.toBeNull();
     expect(summary!.dayCount).toBe(2);

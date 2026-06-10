@@ -13,6 +13,7 @@ The Warmup Calculator automatically generates a personalised warmup sequence bef
 Every experienced lifter knows they need to warm up before heavy sets. But calculating 40%, 60%, 75% of 147.5kg in your head — while setting up a squat rack — is unnecessary friction. And warmup needs aren't the same across every session: a heavy day benefits from a longer ramp-up, a recovery day doesn't need six warmup sets.
 
 **Pain points:**
+
 - Mental overhead of calculating warmup weights from percentages during a workout
 - Warmup protocols vary by lift preference and training context (heavy vs. recovery day)
 - Most training apps don't generate warmup sets at all — users manage this entirely on their own
@@ -29,6 +30,7 @@ See [domain/session-prescription.md](../domain/session-prescription.md#warmup-pr
 All weights are rounded to the nearest 2.5kg with a minimum of 20kg (the empty bar). If two consecutive steps would produce the same rounded weight, the duplicate step is automatically skipped.
 
 **Automatic protocol switching:** When the user has **not** explicitly configured a warmup protocol for the lift, the system overrides the default with Minimal in two situations:
+
 - The session is classified as a recovery session
 - The working weight is below 40kg (a full ramp-up isn't meaningful at very light loads)
 
@@ -79,9 +81,11 @@ If the user has explicitly chosen a protocol (e.g. `empty_bar` for bench), it is
 ## Future Enhancements
 
 **Phase 2:**
+
 - "Skip warmup" shortcut — collapses the warmup section immediately without checking boxes, for cases where the user warmed up elsewhere (e.g., at the end of another session)
 
 **Long-term:**
+
 - Warmup time estimates: show approximate time to complete the warmup based on the number of sets
 - Dynamic warmup: bar-speed or subjective readiness input after the first warmup set, adjusting subsequent sets
 

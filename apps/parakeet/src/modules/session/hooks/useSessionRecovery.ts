@@ -9,12 +9,12 @@
 import { useEffect, useRef } from 'react';
 import { Alert, AppState, type AppStateStatus } from 'react-native';
 
-import { useSessionStore } from '../store/sessionStore';
 import { captureException } from '@platform/utils/captureException';
 import * as Sentry from '@sentry/react-native';
 
 import { recoverSkippedSessionFromLocal } from '../application/session.service';
 import { fetchSessionById } from '../data/session.repository';
+import { useSessionStore } from '../store/sessionStore';
 
 type Decision = 'pending' | 'prompted' | 'resolved';
 
@@ -27,14 +27,11 @@ export function useSessionRecovery(userId: string | undefined) {
   useEffect(() => {
     if (!userId) return;
     void detectAndRecover(userId, decisionsRef.current);
-    const sub = AppState.addEventListener(
-      'change',
-      (state: AppStateStatus) => {
-        if (state === 'active') {
-          void detectAndRecover(userId, decisionsRef.current);
-        }
+    const sub = AppState.addEventListener('change', (state: AppStateStatus) => {
+      if (state === 'active') {
+        void detectAndRecover(userId, decisionsRef.current);
       }
-    );
+    });
     return () => {
       sub.remove();
     };
@@ -51,8 +48,8 @@ async function detectAndRecover(
     if (!sessionId) return;
 
     const hasUnsynced =
-      state.actualSets.some((s) => s.is_completed && !s.synced_at)
-      || state.auxiliarySets.some((s) => s.is_completed && !s.synced_at);
+      state.actualSets.some((s) => s.is_completed && !s.synced_at) ||
+      state.auxiliarySets.some((s) => s.is_completed && !s.synced_at);
     if (!hasUnsynced) return;
 
     // Alert is already on screen or the user has already chosen for this
@@ -72,7 +69,8 @@ async function detectAndRecover(
     if (session.status === 'completed') {
       Sentry.addBreadcrumb({
         category: 'session.durability',
-        message: 'clearing stale local store — server session already completed',
+        message:
+          'clearing stale local store — server session already completed',
         level: 'info',
         data: { sessionId },
       });

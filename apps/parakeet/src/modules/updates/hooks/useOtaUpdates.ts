@@ -2,8 +2,8 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { AppState } from 'react-native';
 
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { captureException } from '@platform/utils/captureException';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Updates from 'expo-updates';
 
 export type OtaStatus =
@@ -127,36 +127,40 @@ export function useOtaUpdates(): OtaUpdateState {
     setStatus(next);
   }, []);
 
-  const checkAndApply = useCallback(async (force = false) => {
-    if (__DEV__) return;
-    if (statusRef.current === 'ready' || statusRef.current === 'restarting') return;
+  const checkAndApply = useCallback(
+    async (force = false) => {
+      if (__DEV__) return;
+      if (statusRef.current === 'ready' || statusRef.current === 'restarting')
+        return;
 
-    const now = Date.now();
-    if (!force && now - lastCheckedRef.current < DEBOUNCE_MS) return;
-    lastCheckedRef.current = now;
+      const now = Date.now();
+      if (!force && now - lastCheckedRef.current < DEBOUNCE_MS) return;
+      lastCheckedRef.current = now;
 
-    try {
-      setError(null);
-      updateStatus('checking');
-      const result = await Updates.checkForUpdateAsync();
+      try {
+        setError(null);
+        updateStatus('checking');
+        const result = await Updates.checkForUpdateAsync();
 
-      if (result.isAvailable) {
-        updateStatus('downloading');
-        await Updates.fetchUpdateAsync();
-        setCheckedAt(Date.now());
-        updateStatus('ready');
-      } else {
-        setCheckedAt(Date.now());
-        updateStatus('up-to-date');
+        if (result.isAvailable) {
+          updateStatus('downloading');
+          await Updates.fetchUpdateAsync();
+          setCheckedAt(Date.now());
+          updateStatus('ready');
+        } else {
+          setCheckedAt(Date.now());
+          updateStatus('up-to-date');
+        }
+      } catch (err) {
+        const message =
+          err instanceof Error ? err.message : 'Unknown update error';
+        setError(message);
+        updateStatus('error');
+        captureException(err);
       }
-    } catch (err) {
-      const message =
-        err instanceof Error ? err.message : 'Unknown update error';
-      setError(message);
-      updateStatus('error');
-      captureException(err);
-    }
-  }, [updateStatus]);
+    },
+    [updateStatus]
+  );
 
   const checkForUpdate = useCallback(() => {
     void checkAndApply(true);

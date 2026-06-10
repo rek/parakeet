@@ -31,6 +31,7 @@
 - [x] `kgToGrams(kg: number): number` — `Math.round(kg * 1000)` (integer grams)
 
 **Unit tests (`packages/training-engine/__tests__/one-rep-max.test.ts`):**
+
 - [x] `estimateOneRepMax_Epley(130, 3)` → 143kg (Epley gives 130 × (1 + 3/30) = 143)
 - [x] `estimateOneRepMax_Epley(100, 1)` → 100 (unchanged at 1 rep)
 - [x] `estimateOneRepMax_Epley(-5, 3)` → throws `InvalidInputError`

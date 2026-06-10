@@ -12,14 +12,13 @@ import { captureException } from '@platform/utils/captureException';
 import { File } from 'expo-file-system';
 import { useVideoPlayer, VideoView } from 'expo-video';
 
+import { radii, spacing, typography } from '../../../theme';
+import type { ColorScheme } from '../../../theme';
 import { useOverlayPreference } from '../hooks/useOverlayPreference';
 import { usePlaybackTime } from '../hooks/usePlaybackTime';
 import { normalizeVideoUri } from '../lib/normalize-video-uri';
 import type { DebugLandmarks } from '../lib/pose-types';
 import { computeDisplayRect } from '../lib/video-display-rect';
-import { radii, spacing, typography } from '../../../theme';
-import type { ColorScheme } from '../../../theme';
-
 import { OverlayToggleChips } from './OverlayToggleChips';
 import { PlaybackBarPathOverlay } from './PlaybackBarPathOverlay';
 import { PlaybackSkeletonOverlay } from './PlaybackSkeletonOverlay';
@@ -126,7 +125,8 @@ export function VideoPlayerCard({
   }, [containerSize, videoWidthPx, videoHeightPx]);
 
   const [barPathEnabled, setBarPathEnabled] = useOverlayPreference('barPath');
-  const [skeletonEnabled, setSkeletonEnabled] = useOverlayPreference('skeleton');
+  const [skeletonEnabled, setSkeletonEnabled] =
+    useOverlayPreference('skeleton');
 
   const showBarPath =
     barPathEnabled &&

@@ -13,6 +13,7 @@ Formula Management gives users full visibility into the Cube Method loading para
 Most training apps treat their programming logic as a black box. Advanced lifters benefit from understanding what drives their loading scheme — but they don't have the information (or the time) to tune individual formula parameters themselves. The right approach is a system that adjusts automatically, surfaces those adjustments transparently, and lets the user approve or reject them.
 
 **Pain points:**
+
 - Users can't see why their session calls for a specific weight — the calculation is hidden
 - Auto-generated suggestions that silently modify programs erode trust
 - There is no audit trail of what changed, when, and why
@@ -31,7 +32,7 @@ Similarly, **JIT session generation is entirely deterministic math** — Cube Me
 
 The word "AI" in earlier versions of these docs was used loosely to mean "generated automatically by the system." It is avoided here to prevent confusion with language models.
 
-**Note on auto-calibration:** The [prescription trace integration](./prescription-trace-integration.md) system introduces a separate calibration layer that adjusts *modifier thresholds* (soreness, readiness, cycle phase) per athlete based on trace + RPE outcomes. This is distinct from formula suggestion generation — formula suggestions change block percentages and set counts; modifier calibration changes how aggressively the system adjusts for body-state signals. Significant calibration changes (>5% shift) are reviewed by an LLM before application. This LLM involvement is scoped to calibration review, not formula suggestion generation.
+**Note on auto-calibration:** The [prescription trace integration](./prescription-trace-integration.md) system introduces a separate calibration layer that adjusts _modifier thresholds_ (soreness, readiness, cycle phase) per athlete based on trace + RPE outcomes. This is distinct from formula suggestion generation — formula suggestions change block percentages and set counts; modifier calibration changes how aggressively the system adjusts for body-state signals. Significant calibration changes (>5% shift) are reviewed by an LLM before application. This LLM involvement is scoped to calibration review, not formula suggestion generation.
 
 ## Design Principles
 
@@ -70,6 +71,7 @@ The word "AI" in earlier versions of these docs was used loosely to mean "genera
 7. If dismissed, the suggestion is logged as dismissed and the detector will reconsider after more sessions are logged
 
 **Suggestion Generation Rules:**
+
 - A new suggestion is only generated if **zero** unreviewed suggestions currently exist
 - Suggestions are generated on session completion when the detector finds a qualifying pattern
 - Each suggestion covers one specific change with clear rationale
@@ -105,10 +107,12 @@ The word "AI" in earlier versions of these docs was used loosely to mean "genera
 ## Future Enhancements
 
 **Phase 2:**
+
 - Formula import/export: share a formula config with a coach or training partner (JSON format)
 - Coach override mode: a coach can lock certain parameters so the athlete can't change them
 
 **Long-term:**
+
 - If an LLM integration is added in future (e.g., to generate natural-language training insights or suggest more nuanced formula changes), it would slot into this same suggestion/approval flow — the user-facing pattern stays the same regardless of what generates the suggestion
 
 ## Domain References

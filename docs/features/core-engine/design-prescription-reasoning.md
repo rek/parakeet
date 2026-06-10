@@ -10,7 +10,7 @@ Every workout prescription element (weight, reps, exercise selection, rest durat
 
 ## Problem Statement
 
-The JIT engine makes dozens of decisions per session using ~43 inputs (soreness, disruptions, cycle phase, readiness, RPE history, volume tracking, formula config). The user sees the output (120kg x 5 @ RPE 8) but has no way to understand *why* — why this weight, why this many sets, why this exercise was added.
+The JIT engine makes dozens of decisions per session using ~43 inputs (soreness, disruptions, cycle phase, readiness, RPE history, volume tracking, formula config). The user sees the output (120kg x 5 @ RPE 8) but has no way to understand _why_ — why this weight, why this many sets, why this exercise was added.
 
 - User can't debug unexpected prescriptions ("why is the weight so low today?")
 - User can't learn how the system responds to their inputs ("did my soreness rating actually change anything?")

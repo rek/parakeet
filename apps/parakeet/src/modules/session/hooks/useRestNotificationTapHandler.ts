@@ -1,9 +1,10 @@
 // @spec docs/features/rest-timer/spec-notification.md
 import { useEffect } from 'react';
 
-import { useSessionStore } from '../store/sessionStore';
 import { captureException } from '@platform/utils/captureException';
 import { router } from 'expo-router';
+
+import { useSessionStore } from '../store/sessionStore';
 
 /**
  * Listens for notification response events (user taps) and routes back to the

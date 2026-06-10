@@ -1,7 +1,7 @@
 import { Badge } from '../components/Badge';
 import { TablePage } from '../components/TablePage';
-import { useSupabaseRows } from '../lib/useSupabaseRows';
 import { theme } from '../lib/theme';
+import { useSupabaseRows } from '../lib/useSupabaseRows';
 
 interface RecoveryRow {
   id: string;
@@ -79,7 +79,9 @@ export function RecoverySnapshots() {
       keyOf={(r) => r.id}
       renderRow={(r) => (
         <>
-          <span style={{ color: theme.color.textDim }}>{fmt(r.recorded_at)}</span>
+          <span style={{ color: theme.color.textDim }}>
+            {fmt(r.recorded_at)}
+          </span>
           <span
             style={{
               color: theme.color.textDim,

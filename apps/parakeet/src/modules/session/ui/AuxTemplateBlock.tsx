@@ -1,12 +1,6 @@
 // @spec docs/features/workout-templates/spec-insertion.md
 import { useMemo } from 'react';
-import {
-  Alert,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
-} from 'react-native';
+import { Alert, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 import { type PlateKg } from '@shared/constants/plates';
 import { ExerciseName } from '@shared/ui/ExerciseName';

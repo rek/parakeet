@@ -40,15 +40,12 @@ Choose the recommended option unless Phase 1 is being shipped under tight scope.
 export type ReadinessLevel = 1 | 2 | 3 | 4 | 5;
 
 export interface ReadinessModifier {
-  setReduction: number;            // ≥ 0
-  intensityMultiplier: number;     // around 1.0
+  setReduction: number; // ≥ 0
+  intensityMultiplier: number; // around 1.0
   rationale: string | null;
 }
 
-export function getReadinessModifier(
-  sleepQuality?: ReadinessLevel,
-  energyLevel?: ReadinessLevel
-): ReadinessModifier;
+export function getReadinessModifier(sleepQuality?: ReadinessLevel, energyLevel?: ReadinessLevel): ReadinessModifier;
 ```
 
 **Scale (canonical):** 1–5 native, read raw. Bands: `<= 2` poor, `3` neutral (also the `undefined` default), `>= 4` great. Boost requires both sleep and energy at 4+. Same bands `applyVolumeCalibration` and `exercise-scorer` already use. Prior to 2026-05-11 the function ran inputs through a `normalise()` helper that incorrectly collapsed 1-5 to legacy 1-3 bands (2→3 neutral, 3→5 great) — that helper is gone. Any future re-enabling of this wearable dispatch must reuse the same raw 1-5 contract.
@@ -65,13 +62,13 @@ The wearable adjuster reuses `ReadinessModifier` exactly — no shape divergence
 import type { ReadinessModifier } from './readiness-adjuster';
 
 export interface WearableReadinessInput {
-  hrvPctChange?: number;        // % change vs 7-day baseline. negative = worse.
-  restingHrPctChange?: number;  // % change vs 7-day baseline. positive = worse.
-  sleepDurationMin?: number;    // last night's sleep, minutes
-  deepSleepPct?: number;        // 0–100
-  spo2Avg?: number;             // 0–100 (NOT consumed here — kept for symmetry)
-  nonTrainingLoad?: number;     // 0–3: 0=sedentary, 3=heavy
-  readinessScore?: number;      // 0–100 composite (informational; not used for decisions)
+  hrvPctChange?: number; // % change vs 7-day baseline. negative = worse.
+  restingHrPctChange?: number; // % change vs 7-day baseline. positive = worse.
+  sleepDurationMin?: number; // last night's sleep, minutes
+  deepSleepPct?: number; // 0–100
+  spo2Avg?: number; // 0–100 (NOT consumed here — kept for symmetry)
+  nonTrainingLoad?: number; // 0–3: 0=sedentary, 3=heavy
+  readinessScore?: number; // 0–100 composite (informational; not used for decisions)
 }
 
 const NEUTRAL: ReadinessModifier = {
@@ -90,16 +87,10 @@ const INTENSITY_FLOOR = 0.85;
  * count — they're modifiers / informational and never the sole basis for adjustment.
  */
 export function hasWearableData(input: WearableReadinessInput): boolean {
-  return (
-    input.hrvPctChange !== undefined ||
-    input.sleepDurationMin !== undefined ||
-    input.restingHrPctChange !== undefined
-  );
+  return input.hrvPctChange !== undefined || input.sleepDurationMin !== undefined || input.restingHrPctChange !== undefined;
 }
 
-export function getWearableReadinessModifier(
-  input: WearableReadinessInput
-): ReadinessModifier {
+export function getWearableReadinessModifier(input: WearableReadinessInput): ReadinessModifier {
   if (!hasWearableData(input)) return NEUTRAL;
 
   const reasons: string[] = [];
@@ -170,12 +161,7 @@ export function getWearableReadinessModifier(
   }
 
   // ── Boost (gated: all positive) ────────────────────────────────────────────
-  if (
-    !anyNegative &&
-    hrvPositive &&
-    sleep !== undefined && sleep >= 420 &&
-    input.deepSleepPct !== undefined && input.deepSleepPct >= 20
-  ) {
+  if (!anyNegative && hrvPositive && sleep !== undefined && sleep >= 420 && input.deepSleepPct !== undefined && input.deepSleepPct >= 20) {
     intensityMultiplier *= 1.025;
     reasons.push('Strong recovery signals — boosted');
   }
@@ -195,6 +181,7 @@ export function getWearableReadinessModifier(
 ```
 
 **Notes for executor:**
+
 - All thresholds are intentionally conservative. Wearable signals run alongside soreness, disruption, and other adjusters — they should not double-penalise.
 - `spo2Avg` is NOT consumed here. SpO2 dropouts are handled (or were intended to be handled) via auto-disruption — see [spec-spo2-disruption.md](./spec-spo2-disruption.md). Currently dropped from scope; field remains for forward compat.
 - `readinessScore` is NOT consumed by this function. It's stored on the snapshot and shown in UI. Decisions use the underlying signals.
@@ -209,7 +196,7 @@ import type { WearableReadinessInput } from './wearable-readiness-adjuster';
 
 interface Component {
   weight: number;
-  score: number | null;   // null = signal missing
+  score: number | null; // null = signal missing
 }
 
 function clamp(n: number, lo: number, hi: number): number {
@@ -230,36 +217,28 @@ function lerp(value: number, lo: number, hi: number, outLo: number, outHi: numbe
 export function computeReadinessScore(input: WearableReadinessInput): number | null {
   // HRV: -30% → 0, +15% → 100
   const hrv: Component = {
-    weight: 0.40,
-    score: input.hrvPctChange !== undefined
-      ? lerp(input.hrvPctChange, -30, 15, 0, 100)
-      : null,
+    weight: 0.4,
+    score: input.hrvPctChange !== undefined ? lerp(input.hrvPctChange, -30, 15, 0, 100) : null,
   };
 
   // Sleep: 240min → 0, 540min → 100, plus +10 bonus when deepSleepPct >= 20
-  const sleepBaseline = input.sleepDurationMin !== undefined
-    ? lerp(input.sleepDurationMin, 240, 540, 0, 100)
-    : null;
+  const sleepBaseline = input.sleepDurationMin !== undefined ? lerp(input.sleepDurationMin, 240, 540, 0, 100) : null;
   const deepBonus = input.deepSleepPct !== undefined && input.deepSleepPct >= 20 ? 10 : 0;
   const sleep: Component = {
-    weight: 0.30,
+    weight: 0.3,
     score: sleepBaseline === null ? null : clamp(sleepBaseline + deepBonus, 0, 100),
   };
 
   // RHR: +20% → 0, -10% → 100
   const rhr: Component = {
-    weight: 0.20,
-    score: input.restingHrPctChange !== undefined
-      ? lerp(input.restingHrPctChange, 20, -10, 0, 100)
-      : null,
+    weight: 0.2,
+    score: input.restingHrPctChange !== undefined ? lerp(input.restingHrPctChange, 20, -10, 0, 100) : null,
   };
 
   // Load: 3 → 25, 2 → 50, 1 → 75, 0 → 100
   const load: Component = {
-    weight: 0.10,
-    score: input.nonTrainingLoad !== undefined
-      ? clamp(100 - input.nonTrainingLoad * 25, 0, 100)
-      : null,
+    weight: 0.1,
+    score: input.nonTrainingLoad !== undefined ? clamp(100 - input.nonTrainingLoad * 25, 0, 100) : null,
   };
 
   const present = [hrv, sleep, rhr, load].filter((c) => c.score !== null);
@@ -302,11 +281,8 @@ The existing call in Step 2b is `applyReadinessAdjustment(ctx, input, traceBuild
 
 ```typescript
 // Inside applyReadinessAdjustment (or its file)
-import {
-  getWearableReadinessModifier,
-  hasWearableData,
-} from '../adjustments/wearable-readiness-adjuster';
 import { getReadinessModifier } from '../adjustments/readiness-adjuster';
+import { getWearableReadinessModifier, hasWearableData } from '../adjustments/wearable-readiness-adjuster';
 
 function pickReadinessModifier(input: JITInput): ReadinessModifier {
   const wearableInput = {
@@ -316,9 +292,7 @@ function pickReadinessModifier(input: JITInput): ReadinessModifier {
     deepSleepPct: input.deepSleepPct,
     nonTrainingLoad: input.nonTrainingLoad,
   };
-  return hasWearableData(wearableInput)
-    ? getWearableReadinessModifier(wearableInput)
-    : getReadinessModifier(input.sleepQuality, input.energyLevel);
+  return hasWearableData(wearableInput) ? getWearableReadinessModifier(wearableInput) : getReadinessModifier(input.sleepQuality, input.energyLevel);
 }
 ```
 
@@ -361,11 +335,7 @@ Append to `CYCLE_REVIEW_SYSTEM_PROMPT` (or the recovery-aware section) — see [
 Add named exports (do NOT expose internals you don't intend to test against):
 
 ```typescript
-export {
-  getWearableReadinessModifier,
-  hasWearableData,
-  type WearableReadinessInput,
-} from './adjustments/wearable-readiness-adjuster';
+export { getWearableReadinessModifier, hasWearableData, type WearableReadinessInput } from './adjustments/wearable-readiness-adjuster';
 export { computeReadinessScore } from './adjustments/readiness-score';
 ```
 
@@ -380,7 +350,7 @@ Vitest pattern (existing `readiness-adjuster.test.ts` is the reference). Cover:
 - All signals undefined → `hasWearableData === false` and `NEUTRAL` returned.
 - `hrvPctChange: -25` → `setReduction === 1`, `intensityMultiplier ≈ 0.95`, rationale mentions HRV.
 - `hrvPctChange: -15` → `setReduction === 0`, `intensityMultiplier ≈ 0.975`.
-- `hrvPctChange: -25, restingHrPctChange: 12` → setReduction 1, intensityMultiplier ≈ 0.95 * 0.975 = 0.92625.
+- `hrvPctChange: -25, restingHrPctChange: 12` → setReduction 1, intensityMultiplier ≈ 0.95 \* 0.975 = 0.92625.
 - `sleepDurationMin: 240` → setReduction 1, intensityMultiplier ≈ 0.95.
 - `sleepDurationMin: 330` → intensityMultiplier ≈ 0.975.
 - `sleepDurationMin: 480, deepSleepPct: 10` → low deep sleep adds 0.975 multiplier.

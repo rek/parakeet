@@ -186,7 +186,12 @@ function RehabCapSheet({
   }
 
   return (
-    <Modal visible={!!cap} transparent animationType="slide" onRequestClose={onClose}>
+    <Modal
+      visible={!!cap}
+      transparent
+      animationType="slide"
+      onRequestClose={onClose}
+    >
       <View style={styles.overlay}>
         <TouchableOpacity
           style={styles.backdrop}
@@ -199,7 +204,11 @@ function RehabCapSheet({
             <Text style={styles.modalTitle}>
               🩹 {cap ? LIFT_LABELS[cap.lift as Lift] : ''} — Rehab Mode
             </Text>
-            <TouchableOpacity onPress={onClose} hitSlop={12} activeOpacity={0.7}>
+            <TouchableOpacity
+              onPress={onClose}
+              hitSlop={12}
+              activeOpacity={0.7}
+            >
               <Text style={styles.closeBtn}>✕</Text>
             </TouchableOpacity>
           </View>

@@ -4,8 +4,8 @@ import { useCallback, useRef } from 'react';
 import type { RestTimerPrefs } from '@modules/settings';
 import type { Lift } from '@parakeet/shared-types';
 import { adaptRemainingPlan } from '@parakeet/training-engine';
-import { useSessionStore } from '../store/sessionStore';
 import { getExerciseType } from '@shared/utils/exercise-lookup';
+import { getEffectivePlannedSet } from '@shared/utils/getEffectivePlannedSet';
 import { weightGramsToKg, weightKgToGrams } from '@shared/utils/weight';
 
 import type { RestRecommendations } from '../model/types';
@@ -13,8 +13,8 @@ import {
   DEFAULT_AUX_REST_SECONDS,
   DEFAULT_MAIN_REST_SECONDS,
 } from '../model/types';
+import { useSessionStore } from '../store/sessionStore';
 import { computeDismissResult } from '../utils/computeDismissResult';
-import { getEffectivePlannedSet } from '@shared/utils/getEffectivePlannedSet';
 import { resolveAuxRestSeconds } from '../utils/resolveAuxRestSeconds';
 import { writeAuxFailureAndAdapt } from '../utils/set-outcome-helpers';
 import {
@@ -195,8 +195,7 @@ export function useSetCompletionFlow({
 
       if (data.isCompleted) {
         if (!wasAuxCompleted) {
-          if (!isTimed && !isBodyweight)
-            setPendingAuxRpe(exercise, setNumber);
+          if (!isTimed && !isBodyweight) setPendingAuxRpe(exercise, setNumber);
 
           // No rest timer after the last set of this exercise
           if (setNumber >= setsInExercise) return;
@@ -223,7 +222,10 @@ export function useSetCompletionFlow({
           });
         }
       } else {
-        if (pendingAuxRpe?.exercise === exercise && pendingAuxRpe?.setNumber === setNumber) {
+        if (
+          pendingAuxRpe?.exercise === exercise &&
+          pendingAuxRpe?.setNumber === setNumber
+        ) {
           clearPendingRpe();
         }
       }

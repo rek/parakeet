@@ -10,6 +10,7 @@ Reading program data from Supabase. Used by the Program tab (week grid) and Toda
 ## Tasks
 
 **`apps/parakeet/lib/programs.ts` (read helpers):**
+
 - [x] `getActiveProgram(userId: string): Promise<Program | null>` — fetches active program with sessions (excluding `planned_sets` JSONB for performance)
 - [x] `getProgram(programId: string): Promise<Program | null>` — fetch specific program with all sessions (RLS ensures ownership)
 - [x] `listPrograms(userId: string): Promise<ProgramSummary[]>` — list all programs summary only (no sessions)

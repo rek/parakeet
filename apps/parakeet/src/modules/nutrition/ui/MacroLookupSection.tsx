@@ -47,7 +47,8 @@ function FoodDetail({
   const protein = scale(item.proteinG, grams, item.servingG);
   const fat = scale(item.fatG, grams, item.servingG);
   const carbs = scale(item.carbG, grams, item.servingG);
-  const fiber = item.fiberG !== null ? scale(item.fiberG, grams, item.servingG) : null;
+  const fiber =
+    item.fiberG !== null ? scale(item.fiberG, grams, item.servingG) : null;
 
   function handleCustomChange(text: string) {
     setCustomText(text);
@@ -69,7 +70,10 @@ function FoodDetail({
         {GRAM_PRESETS.map((g) => (
           <TouchableOpacity
             key={g}
-            style={[styles.gramPill, grams === g && !customText && styles.gramPillActive]}
+            style={[
+              styles.gramPill,
+              grams === g && !customText && styles.gramPillActive,
+            ]}
             onPress={() => handlePresetPress(g)}
             activeOpacity={0.75}
             accessible
@@ -87,7 +91,10 @@ function FoodDetail({
           </TouchableOpacity>
         ))}
         <TextInput
-          style={[styles.gramInput, customText.length > 0 && styles.gramInputActive]}
+          style={[
+            styles.gramInput,
+            customText.length > 0 && styles.gramInputActive,
+          ]}
           placeholder="g"
           placeholderTextColor={colors.textTertiary}
           keyboardType="numeric"
@@ -101,12 +108,38 @@ function FoodDetail({
 
       {/* Macro grid */}
       <View style={styles.macroGrid}>
-        <MacroCell label="kcal" value={fmt(kcal)} highlight colors={colors} styles={styles} />
-        <MacroCell label="Protein" value={`${fmt(protein)}g`} colors={colors} styles={styles} />
-        <MacroCell label="Fat" value={`${fmt(fat)}g`} colors={colors} styles={styles} />
-        <MacroCell label="Carbs" value={`${fmt(carbs)}g`} colors={colors} styles={styles} />
+        <MacroCell
+          label="kcal"
+          value={fmt(kcal)}
+          highlight
+          colors={colors}
+          styles={styles}
+        />
+        <MacroCell
+          label="Protein"
+          value={`${fmt(protein)}g`}
+          colors={colors}
+          styles={styles}
+        />
+        <MacroCell
+          label="Fat"
+          value={`${fmt(fat)}g`}
+          colors={colors}
+          styles={styles}
+        />
+        <MacroCell
+          label="Carbs"
+          value={`${fmt(carbs)}g`}
+          colors={colors}
+          styles={styles}
+        />
         {fiber !== null && (
-          <MacroCell label="Fiber" value={`${fmt(fiber)}g`} colors={colors} styles={styles} />
+          <MacroCell
+            label="Fiber"
+            value={`${fmt(fiber)}g`}
+            colors={colors}
+            styles={styles}
+          />
         )}
       </View>
     </View>
@@ -127,8 +160,15 @@ function MacroCell({
   styles: ReturnType<typeof buildStyles>;
 }) {
   return (
-    <View style={[styles.macroCell, highlight && { backgroundColor: colors.primaryMuted }]}>
-      <Text style={[styles.macroCellValue, highlight && { color: colors.primary }]}>
+    <View
+      style={[
+        styles.macroCell,
+        highlight && { backgroundColor: colors.primaryMuted },
+      ]}
+    >
+      <Text
+        style={[styles.macroCellValue, highlight && { color: colors.primary }]}
+      >
         {value}
       </Text>
       <Text style={styles.macroCellLabel}>{label}</Text>
@@ -164,17 +204,15 @@ function FoodRow({
         <View style={styles.foodHeaderText}>
           <Text style={styles.foodName}>{item.displayName}</Text>
           <Text style={styles.foodMeta}>
-            {fmt(item.proteinG)}g P · {fmt(item.carbG)}g C · {fmt(item.fatG)}g F
-            {' '}· {fmt(item.kcal)} kcal
+            {fmt(item.proteinG)}g P · {fmt(item.carbG)}g C · {fmt(item.fatG)}g F{' '}
+            · {fmt(item.kcal)} kcal
           </Text>
         </View>
         <Text style={[styles.chevron, { color: colors.textTertiary }]}>
           {expanded ? '▲' : '▼'}
         </Text>
       </TouchableOpacity>
-      {expanded && (
-        <FoodDetail item={item} colors={colors} styles={styles} />
-      )}
+      {expanded && <FoodDetail item={item} colors={colors} styles={styles} />}
     </View>
   );
 }
@@ -195,7 +233,7 @@ export function MacroLookupSection() {
     return foods.filter(
       (f) =>
         f.displayName.toLowerCase().includes(q) ||
-        f.category.toLowerCase().includes(q),
+        f.category.toLowerCase().includes(q)
     );
   }, [foods, query]);
 

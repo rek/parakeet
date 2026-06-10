@@ -49,7 +49,10 @@ describe('decideBootstrap', () => {
       },
       emptyStore
     );
-    expect(action).toEqual({ kind: 'abort_back', reason: 'missing_session_id' });
+    expect(action).toEqual({
+      kind: 'abort_back',
+      reason: 'missing_session_id',
+    });
   });
 
   it('detects parse_error on malformed JIT JSON', () => {
@@ -203,10 +206,7 @@ describe('recoverAdHocExercises', () => {
 
   it('filters out prescribed aux exercises', () => {
     const result = recoverAdHocExercises({
-      auxiliarySets: [
-        { exercise: 'curl' },
-        { exercise: 'tricep_pushdown' },
-      ],
+      auxiliarySets: [{ exercise: 'curl' }, { exercise: 'tricep_pushdown' }],
       prescribedAuxExercises: ['curl'],
     });
     expect(result).toEqual(['tricep_pushdown']);

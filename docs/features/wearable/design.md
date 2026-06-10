@@ -12,6 +12,7 @@ Integrates open-source wearable devices (heart rate monitors, smartwatches) into
 The system currently captures readiness through two subjective 5-point scales: sleep quality (Terrible / Poor / OK / Good / Great) and energy level (Drained / Low / OK / Good / High). Defined in `apps/parakeet/src/shared/constants/training.ts` as `READINESS_LABELS`. The engine reads these 1–5 values raw — pill labels and adjustment bands share one scale (`<= 2` poor, `3` neutral, `>= 4` great). These scales are valuable but limited:
 
 **Pain points:**
+
 - Subjective signals are noisy. A lifter may report "OK" sleep when they actually slept 4.5 hours because they don't feel tired yet — cortisol masking is real. The system cannot distinguish genuine readiness from perceived readiness.
 - HRV (heart rate variability) is the single best predictor of recovery status in strength training. It cannot be captured subjectively. A 20% HRV drop from baseline reliably predicts reduced training capacity, even when the athlete feels fine.
 - Resting heart rate elevation is an early indicator of illness, overreaching, or incomplete recovery — often detectable 24–48 hours before symptoms appear. The system has no access to this signal.
@@ -27,21 +28,23 @@ The integration is device-agnostic by design. Rather than coupling to a specific
 
 **Recommended open-source stack:**
 
-| Layer | Tool | Role |
-|-------|------|------|
-| Sleep/recovery ring | **Oura Ring 4** | HRV, sleep stages, resting HR, steps, calories. Worn 24/7. Syncs to Health Connect natively via Oura Android app. |
+| Layer                 | Tool                             | Role                                                                                                                                                                       |
+| --------------------- | -------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Sleep/recovery ring   | **Oura Ring 4**                  | HRV, sleep stages, resting HR, steps, calories. Worn 24/7. Syncs to Health Connect natively via Oura Android app.                                                          |
 | Workout HR (optional) | **Polar H10 chest strap** (~$90) | Best-in-class HR accuracy under barbell load. Optical ring/wrist HR degrades under wrist compression + motion artifact during lifting. Polar Beat → Health Connect native. |
-| Bridge (Oura) | Oura Android app | Settings → Data Sharing → Health Connect. Writes HRV, sleep, HR, steps, calories. |
-| Bridge (Polar) | Polar Beat (Android) | Syncs Polar H10 data to Health Connect natively. |
-| API | Android Health Connect | Google's standardized health data layer. Read-only from Parakeet's perspective. |
-| RN binding | `react-native-health-connect` | Expo-compatible typed API for Health Connect records |
+| Bridge (Oura)         | Oura Android app                 | Settings → Data Sharing → Health Connect. Writes HRV, sleep, HR, steps, calories.                                                                                          |
+| Bridge (Polar)        | Polar Beat (Android)             | Syncs Polar H10 data to Health Connect natively.                                                                                                                           |
+| API                   | Android Health Connect           | Google's standardized health data layer. Read-only from Parakeet's perspective.                                                                                            |
+| RN binding            | `react-native-health-connect`    | Expo-compatible typed API for Health Connect records                                                                                                                       |
 
 **Oura notes:**
+
 - Health Connect writes: HRV, heart rate, sleep (duration + stages + RHR), steps, distance, calories
 - Health Connect does NOT include SpO2 — SpO2 auto-disruption feature unavailable unless supplemented by another device
 - Setup: Oura app → Settings → Data Sharing → Health Connect → enable each data type
 
 **Dismissed options:**
+
 - RingConn Gen 2: no confirmed Health Connect or Gadgetbridge support.
 - Colmi R02: viable budget ring (~$35 via Gadgetbridge) if Oura is overkill.
 - Wrist watch (e.g. Amazfit GTR Mini, Garmin): viable single-device fallback but weaker HR accuracy under load.
@@ -57,15 +60,15 @@ This means Parakeet never communicates with devices directly. The user sets up O
 
 ## Signals & Training Value
 
-| Signal | Health Connect Type | Training Value | Replaces/Extends |
-|--------|-------------------|---------------|-----------------|
-| **HRV (RMSSD)** | `HeartRateVariabilityRmssdRecord` | Gold standard recovery readiness. Drop >15% from 7-day baseline = impaired recovery. | Supersedes subjective `sleepQuality` + `energyLevel` |
-| **Resting HR** | `RestingHeartRateRecord` | Elevated RHR = illness, fatigue, overreaching. >10% above baseline warrants caution. | Feeds readiness adjuster |
-| **Sleep duration** | `SleepSessionRecord` | <6h = reduce volume. <5h = aggressive reduction. | Replaces subjective `sleepQuality` 1–5 |
-| **Sleep stages** | `SleepSessionRecord.stages` | Deep sleep <15% = impaired muscular recovery regardless of total duration. | Nuances sleep beyond duration |
-| **Intra-session HR** | `HeartRateRecord` (real-time observer) | RPE validation: HR says hard but lifter says easy → flag. Post-session EPOC estimation. | New signal — no subjective equivalent |
-| **Steps / active minutes** | `StepsRecord` / `ActiveCaloriesBurnedRecord` | High non-training load compounds fatigue. >15k steps on rest day = reduced recovery. | New signal for total stress load |
-| **SpO2** | `OxygenSaturationRecord` | Sudden drop below 94% flags illness before symptoms. Can auto-create disruption. | New signal — illness early warning |
+| Signal                     | Health Connect Type                          | Training Value                                                                          | Replaces/Extends                                     |
+| -------------------------- | -------------------------------------------- | --------------------------------------------------------------------------------------- | ---------------------------------------------------- |
+| **HRV (RMSSD)**            | `HeartRateVariabilityRmssdRecord`            | Gold standard recovery readiness. Drop >15% from 7-day baseline = impaired recovery.    | Supersedes subjective `sleepQuality` + `energyLevel` |
+| **Resting HR**             | `RestingHeartRateRecord`                     | Elevated RHR = illness, fatigue, overreaching. >10% above baseline warrants caution.    | Feeds readiness adjuster                             |
+| **Sleep duration**         | `SleepSessionRecord`                         | <6h = reduce volume. <5h = aggressive reduction.                                        | Replaces subjective `sleepQuality` 1–5               |
+| **Sleep stages**           | `SleepSessionRecord.stages`                  | Deep sleep <15% = impaired muscular recovery regardless of total duration.              | Nuances sleep beyond duration                        |
+| **Intra-session HR**       | `HeartRateRecord` (real-time observer)       | RPE validation: HR says hard but lifter says easy → flag. Post-session EPOC estimation. | New signal — no subjective equivalent                |
+| **Steps / active minutes** | `StepsRecord` / `ActiveCaloriesBurnedRecord` | High non-training load compounds fatigue. >15k steps on rest day = reduced recovery.    | New signal for total stress load                     |
+| **SpO2**                   | `OxygenSaturationRecord`                     | Sudden drop below 94% flags illness before symptoms. Can auto-create disruption.        | New signal — illness early warning                   |
 
 ### Signal Priority for JIT
 
@@ -78,6 +81,7 @@ This means Parakeet never communicates with devices directly. The user sets up O
 ### Objective vs Subjective Conflict Resolution
 
 When wearable data and subjective input both exist:
+
 - **Objective data takes precedence** for intensity/volume adjustments. If HRV says recovery is impaired but the lifter reports feeling great, the engine reduces load and explains why in the rationale.
 - **Subjective data is still captured** and included in the JIT input. The LLM sees both signals and can note discrepancies. This is useful for calibration — if subjective and objective consistently diverge, the cycle review can surface it.
 - **Subjective input is never blocked**. Even with a wearable, the lifter can still rate sleep/energy. The system treats wearable data as the primary signal and subjective as supporting context.
@@ -124,6 +128,7 @@ When wearable data and subjective input both exist:
 4. Post-session: avg HR, max HR, and 60s recovery (HR drop after last set) computed and stored
 
 **Alternative flows:**
+
 - Wearable not worn last night: no sleep/HRV data → falls back to subjective pickers
 - Partial data (HR but no HRV): uses what's available, fills gaps with subjective input
 - Health Connect permission denied: wearable module inactive, subjective flow unchanged
@@ -171,6 +176,7 @@ When wearable data and subjective input both exist:
 ```
 
 **Sync triggers:**
+
 - App foreground (`AppState` change listener) — read last 24h
 - Pre-session (before JIT runs) — ensure fresh data, re-compute snapshot if stale
 - Manual "Sync Now" in settings
@@ -180,6 +186,7 @@ When wearable data and subjective input both exist:
 ### New tables
 
 **`biometric_readings`** — raw time-series from Health Connect:
+
 - `id` UUID PK
 - `user_id` UUID FK → users
 - `type` TEXT (hrv_rmssd | resting_hr | sleep_duration | deep_sleep_pct | rem_sleep_pct | spo2 | steps | active_minutes)
@@ -190,6 +197,7 @@ When wearable data and subjective input both exist:
 - UNIQUE(user_id, type, recorded_at) — dedup on re-sync
 
 **`recovery_snapshots`** — one computed row per user per day:
+
 - `id` UUID PK
 - `user_id` UUID FK → users
 - `date` DATE
@@ -212,6 +220,7 @@ When wearable data and subjective input both exist:
 ### Extensions to existing tables
 
 **`session_logs`** — intra-session HR data (Phase 4):
+
 - `hr_samples` JSONB nullable — `[{ timestamp_ms, bpm }]`
 - `avg_hr` NUMERIC nullable
 - `max_hr` NUMERIC nullable
@@ -220,6 +229,7 @@ When wearable data and subjective input both exist:
 ### New Zod schemas
 
 `packages/shared-types/src/modules/biometric.schema.ts`:
+
 - `BiometricTypeSchema` — enum of reading types
 - `BiometricReadingSchema` — raw reading row
 - `RecoverySnapshotSchema` — daily computed snapshot
@@ -227,6 +237,7 @@ When wearable data and subjective input both exist:
 ### JITInput extensions
 
 New optional fields on `JITInput` (backward compatible — all optional):
+
 - `hrvPctChange?: number` — % change from 7-day baseline (negative = worse)
 - `restingHrPctChange?: number` — % change from 7-day baseline (positive = worse)
 - `sleepDurationMin?: number` — actual minutes slept last night
@@ -245,18 +256,19 @@ New file: `packages/training-engine/src/adjustments/wearable-readiness-adjuster.
 
 Deterministic decision table (no LLM needed for the formula path):
 
-| Condition | setReduction | intensityMultiplier | Rationale |
-|-----------|-------------|--------------------|----|
-| HRV drop >20% | 1 | 0.95 | "HRV significantly below baseline — reduced volume and intensity" |
-| HRV drop 10–20% | 0 | 0.975 | "HRV below baseline — reduced intensity 2.5%" |
-| RHR elevated >10% | 0 | 0.975 | "Resting heart rate elevated — reduced intensity 2.5%" |
-| Sleep <5h | 1 | 0.95 | "Very short sleep — reduced volume and intensity" |
-| Sleep 5–6h | 0 | 0.975 | "Short sleep — reduced intensity 2.5%" |
-| Deep sleep <15% | 0 | 0.975 | "Low deep sleep — reduced intensity 2.5%" |
-| SpO2 <94% | — | — | Auto-create illness disruption (handled separately) |
-| HRV improvement >10% AND sleep >7h AND deep >20% | 0 | 1.025 | "Strong recovery signals — intensity boosted 2.5%" |
+| Condition                                        | setReduction | intensityMultiplier | Rationale                                                         |
+| ------------------------------------------------ | ------------ | ------------------- | ----------------------------------------------------------------- |
+| HRV drop >20%                                    | 1            | 0.95                | "HRV significantly below baseline — reduced volume and intensity" |
+| HRV drop 10–20%                                  | 0            | 0.975               | "HRV below baseline — reduced intensity 2.5%"                     |
+| RHR elevated >10%                                | 0            | 0.975               | "Resting heart rate elevated — reduced intensity 2.5%"            |
+| Sleep <5h                                        | 1            | 0.95                | "Very short sleep — reduced volume and intensity"                 |
+| Sleep 5–6h                                       | 0            | 0.975               | "Short sleep — reduced intensity 2.5%"                            |
+| Deep sleep <15%                                  | 0            | 0.975               | "Low deep sleep — reduced intensity 2.5%"                         |
+| SpO2 <94%                                        | —            | —                   | Auto-create illness disruption (handled separately)               |
+| HRV improvement >10% AND sleep >7h AND deep >20% | 0            | 1.025               | "Strong recovery signals — intensity boosted 2.5%"                |
 
 Stacking rules:
+
 - HRV + RHR adjustments stack (multiplicative on intensityMultiplier)
 - Sleep + HRV adjustments stack
 - setReduction caps at 2 (never remove more than 2 sets from wearable signals alone)
@@ -282,6 +294,7 @@ Wearable recovery data (when present):
 ### Cycle review integration
 
 `CycleReport` input gains:
+
 - `recoverySnapshots[]` — daily recovery data for the full cycle
 - LLM can correlate HRV trends with performance, detect overreaching patterns, and suggest recovery adjustments
 
@@ -318,6 +331,7 @@ wearable/
 ## Implementation Phases
 
 ### Phase 1 — Data Pipeline (no UI changes, no engine changes)
+
 - Install `react-native-health-connect`
 - Supabase migration: `biometric_readings`, `recovery_snapshots` tables
 - Zod schemas in `shared-types`
@@ -328,6 +342,7 @@ wearable/
 - **Validation**: sync runs, data persists, baselines compute correctly
 
 ### Phase 2 — Engine Integration (training engine changes, JIT wiring)
+
 - Extend `JITInput` with wearable fields
 - New `wearable-readiness-adjuster.ts` in training engine
 - Wire `jit.ts` to fetch recovery snapshot and populate JIT input
@@ -336,6 +351,7 @@ wearable/
 - **Validation**: JIT output changes when wearable data present, unchanged when absent
 
 ### Phase 3 — Pre-Session UI
+
 - `RecoveryCard` component on soreness check-in screen
 - `HrvTrendChart` sparkline
 - `SleepSummary` display
@@ -343,6 +359,7 @@ wearable/
 - **Validation**: UI shows correct data, graceful fallback
 
 ### Phase 4 — Intra-Session HR & Post-Session Analysis
+
 - Real-time HR observer via Health Connect during active session
 - `HrBadge` component in session header
 - HR samples stored on `session_logs` at completion
@@ -391,6 +408,7 @@ wearable/
 ## References
 
 ### Specs (this feature)
+
 - [spec-biometric-types.md](./spec-biometric-types.md) — Zod + TypeScript types (Phase 1)
 - [spec-biometric-data.md](./spec-biometric-data.md) — Supabase tables, RLS, repositories (Phase 1 + Phase 4 migration)
 - [spec-expo-plugin.md](./spec-expo-plugin.md) — `react-native-health-connect` Expo config plugin (Phase 1)
@@ -402,11 +420,13 @@ wearable/
 - [spec-intra-hr.md](./spec-intra-hr.md) — Real-time HR + post-session metrics (Phase 4)
 
 ### Domain references
+
 - [domain/adjustments.md](../../domain/adjustments.md) — readiness modifier framework
 - [domain/athlete-signals.md](../../domain/athlete-signals.md) — input signals catalog
 - [domain/session-prescription.md](../../domain/session-prescription.md) — JIT pipeline steps
 
 ### External
+
 - Plews et al. (2013) "Training Adaptation and Heart Rate Variability in Elite Endurance Athletes"
 - Flatt & Howells (2019) "Ultra-Short-Term Heart Rate Variability Monitoring for Recovery Assessment in Strength Training"
 - Gadgetbridge project — https://gadgetbridge.org

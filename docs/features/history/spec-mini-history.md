@@ -10,15 +10,18 @@ Adds a quick, context-aware history surface for the active lift while a session 
 ## Tasks
 
 **Trigger behavior**
+
 - [ ] Add a new banner interaction mode for active sessions: tapping the return banner opens a mini history sheet after returning to the session route.
 - [ ] Keep current one-tap return behavior available as fallback when history data cannot be loaded.
 
 **`apps/parakeet/src/app/session/[sessionId].tsx`:**
+
 - [ ] Add a bottom-sheet/modal section for "Recent [Lift] Performance".
 - [ ] Sheet content must be read-only and non-blocking for set logging.
 - [ ] Sheet closes independently; session timer and set state remain intact.
 
 **Mini history content**
+
 - [ ] Show last 3-5 completed sessions for the same lift:
   - planned date
   - top estimated 1RM (if available)
@@ -28,10 +31,12 @@ Adds a quick, context-aware history surface for the active lift while a session 
 - [ ] Show an empty-state message when no prior lift data exists.
 
 **Data/query**
+
 - [ ] Add a dedicated query helper scoped to `userId + lift` for lightweight recent-history reads.
 - [ ] Query should not fetch full program/session payloads; keep response small for in-workout responsiveness.
 
 **Resilience**
+
 - [ ] If query fails, show inline error state in the sheet and keep session logging fully usable.
 - [ ] If offline, show cached data when available; otherwise show "history unavailable offline".
 

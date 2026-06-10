@@ -10,25 +10,30 @@ Sends a local notification when rest finishes while the app is backgrounded duri
 ## Tasks
 
 **Notification trigger**
+
 - [x] When rest timer is active and app moves to background, schedule a local notification for expected rest expiry time.
 - [x] If user returns and completes/dismisses rest before fire time, cancel the pending notification.
 - [x] If timer is extended/reduced while backgrounded is not possible, scheduled time remains based on last known duration+offset.
 
 **Notification content**
+
 - [x] Title: `Rest done`
 - [x] Body: include lift/intensity context (for example `Squat — Heavy is ready`).
 - [x] Include deep link payload to return to active session route (`sessionId` in notification data).
 
 **App integration**
+
 - [x] Handle tap on notification by routing directly to session screen with current session context (`useRestNotificationTapHandler`).
 - [x] Ensure stale notifications are ignored if session already completed/closed (sessionId mismatch or timer no longer active).
 
 **Permissions and settings**
+
 - [x] Request notification permission lazily on first feature use (via `requestPermissionsAsync` in `scheduleRestNotification`).
 - [x] If permission denied, silently skip notification scheduling.
 - [x] Add a user toggle in rest/session settings to enable/disable background rest notifications (`backgroundRestNotification` pref).
 
 **Reliability**
+
 - [x] Guarantee at most one active rest notification per active session timer (`pendingNotifIdRef` in `useRestNotifications`).
 - [x] Cancel all scheduled rest notifications on session completion/reset/logout (notification cancelled when `timerState.visible` becomes false).
 

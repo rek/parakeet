@@ -32,7 +32,7 @@ export interface MacroTargetsResult {
  */
 export function useMacroTargets(
   protocol: DietProtocolSlug,
-  options?: { training_day?: boolean },
+  options?: { training_day?: boolean }
 ): MacroTargetsResult {
   const profileQuery = useProfile();
   const profile = profileQuery.data ?? null;

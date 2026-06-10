@@ -14,25 +14,28 @@ Enables the user to navigate freely to any app screen (history, volume, achievem
 **`apps/parakeet/src/platform/store/sessionStore.ts`:**
 
 Add to `SessionState` interface:
+
 - [x] `sessionMeta: { primary_lift: string; intensity_type: string; block_number: number | null; week_number: number } | null`
 - [x] `cachedJitData: string | null` — raw jitData route param string, stored for re-navigation
 - [x] `timerState: TimerState | null` — see type below
 
 Add `TimerState` interface (local to file):
+
 ```typescript
 interface TimerState {
-  visible: boolean
-  durationSeconds: number
-  elapsed: number                      // total seconds elapsed
-  offset: number                       // user ±30s adjustments
-  timerStartedAt: number | null        // Date.now() when timer last started/resumed
-  pendingMainSetNumber: number | null
-  pendingAuxExercise: string | null
-  pendingAuxSetNumber: number | null
+  visible: boolean;
+  durationSeconds: number;
+  elapsed: number; // total seconds elapsed
+  offset: number; // user ±30s adjustments
+  timerStartedAt: number | null; // Date.now() when timer last started/resumed
+  pendingMainSetNumber: number | null;
+  pendingAuxExercise: string | null;
+  pendingAuxSetNumber: number | null;
 }
 ```
 
 Add actions:
+
 - [x] `setSessionMeta(meta: SessionState['sessionMeta']): void`
 - [x] `setCachedJitData(raw: string): void`
 - [x] `openTimer(opts: { durationSeconds: number; pendingMainSetNumber?: number; pendingAuxExercise?: string; pendingAuxSetNumber?: number }): void`
@@ -45,9 +48,11 @@ Add actions:
   - Returns `timerState.elapsed` for set attribution; sets `timerState = null`
 
 Extend `reset()`:
+
 - [x] Also clear `sessionMeta`, `cachedJitData`, `timerState`
 
 Extend `partialize`:
+
 - [x] Add `sessionMeta`, `cachedJitData`, `timerState` to persisted fields
   - Note: `timerStartedAt` is a number (epoch ms), safe for JSON
 

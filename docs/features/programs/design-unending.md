@@ -13,6 +13,7 @@ Unending programs are a second program mode alongside the existing fixed-length 
 The current program model assumes a fixed training cycle of 10–14 weeks. This serves athletes preparing for a specific meet or who prefer structured programming. But some athletes train continuously without fixed cycles — they want the adaptive, data-driven session generation that Parakeet provides without being locked to a calendar.
 
 **Pain points:**
+
 - A lifter who trains year-round has to create and abandon programs repeatedly just to keep the app functional
 - The program view showing a 10-week grid feels meaningless when the lifter isn't following a planned peaking cycle
 - There is no "just train" mode — every program implies a fixed structure, fixed end date, and explicit cycle completion event
@@ -84,11 +85,11 @@ Unending programs have no future-dated sessions — the next session is always c
 
 The original implementation derived the next lift purely from `sessionCounter % 3` → `LIFT_ORDER[idx]`. This was fragile: if the counter drifted (session skipped, duplicate generation, app crash mid-creation), lifts could repeat or skip with no self-correction.
 
-**Current approach:** The next lift is derived from the last *resolved* lift in the program — meaning the most recent session whose status is `completed` or `skipped` — advancing one position in the squat→bench→deadlift rotation. The counter continues to drive periodization (week number, block number, intensity type, deload cycle). When no resolved session exists yet (first session), the counter-based fallback is used.
+**Current approach:** The next lift is derived from the last _resolved_ lift in the program — meaning the most recent session whose status is `completed` or `skipped` — advancing one position in the squat→bench→deadlift rotation. The counter continues to drive periodization (week number, block number, intensity type, deload cycle). When no resolved session exists yet (first session), the counter-based fallback is used.
 
 This is self-correcting: skipping or completing a session both advance the rotation, so a lifter can skip a sore-muscle day to move on to the next lift. Abandoned or deleted sessions leave no resolved record and don't advance the rotation. The `nextUnendingSession()` pure function accepts an optional `lastResolvedLift` parameter; the app layer fetches it via `fetchLastResolvedLiftForProgram` (ordered by `planned_date` desc, completed-or-skipped) and passes it through.
 
-> Why include skipped (GH#229): an earlier version only counted *completed* lifts. That created a loop where lazy session generation kept regenerating the same lift after every skip — the user could not skip past a squat day to bench. Including skipped fixes that.
+> Why include skipped (GH#229): an earlier version only counted _completed_ lifts. That created a loop where lazy session generation kept regenerating the same lift after every skip — the user could not skip past a squat day to bench. Including skipped fixes that.
 
 ## Intensity Selection — Dynamic (planned, issue #188)
 

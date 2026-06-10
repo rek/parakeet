@@ -6,12 +6,12 @@ How this app counts training volume and applies it against MRV (Maximum Recovera
 
 Only **hard sets** count toward MRV — defined as sets taken within **0-3 reps of failure** (approximately RPE 7 or higher). This is the standard RP Strength / Mike Israetel definition.
 
-| Set type | Counts toward MRV? | Reason |
-|---|---|---|
-| Main lift working sets | ✅ Yes | Hard sets, primary stimulus |
-| Auxiliary exercise sets | ✅ Yes | Hard sets (JIT assigns RPE 7.5) |
-| Warm-up sets | ❌ No | Far from failure, insufficient stimulus |
-| Sets below ~60% 1RM | ❌ No | Not approaching failure for trained lifters |
+| Set type                | Counts toward MRV? | Reason                                      |
+| ----------------------- | ------------------ | ------------------------------------------- |
+| Main lift working sets  | ✅ Yes             | Hard sets, primary stimulus                 |
+| Auxiliary exercise sets | ✅ Yes             | Hard sets (JIT assigns RPE 7.5)             |
+| Warm-up sets            | ❌ No              | Far from failure, insufficient stimulus     |
+| Sets below ~60% 1RM     | ❌ No              | Not approaching failure for trained lifters |
 
 **Source:** RP Strength Volume Landmarks framework; Arvo.guru volume guide ("Warm-up sets and sets stopped far from failure don't count toward your volume because they don't provide sufficient stimulus").
 
@@ -22,6 +22,7 @@ See [domain/muscle-mapping.md](../domain/muscle-mapping.md) for the canonical li
 ### Auxiliary Exercises
 
 Each exercise has its own muscle map (see `muscle-mapper.ts` `EXERCISE_MUSCLES`). This differs meaningfully from the parent lift — for example:
+
 - **Close-Grip Bench** (bench day aux): triceps 1.0, chest 0.5, shoulders 0.5 (triceps is primary)
 - **Overhead Press** (bench day aux): shoulders 1.0, triceps 1.0, upper_back 0.5 (chest barely involved)
 - **Romanian DL** (deadlift day aux): hamstrings 1.0, glutes 1.0, lower_back 0.5
@@ -60,13 +61,15 @@ They may still be worth storing for analytical purposes (session pacing review, 
 ## Future: EMG-Based Contribution Refinement
 
 The current contribution weights use a binary 1.0 / 0.5 model. More precise values (e.g. 0.75, 0.25) exist in the EMG literature and would improve accuracy for exercises with atypical secondary involvement — for example:
+
 - **Leg Press**: minimal glutes (hip is not at full extension) — could be 0.25 instead of 0.5
 - **Good Mornings**: very high lower_back demand — could warrant 1.0 + 1.0 instead of 1.0 + 0.5
 - **Dips**: shoulder involvement varies by torso angle — chest-forward dips hit chest more than triceps
 
 Key research sources to consult when refining:
+
 - Bret Contreras EMG studies (via bretcontreras.com and published research)
-- Brad Schoenfeld's *Science and Development of Muscle Hypertrophy*
+- Brad Schoenfeld's _Science and Development of Muscle Hypertrophy_
 - NSCA exercise science literature
 
 Contribution values live in `EXERCISE_MUSCLES` in `packages/training-engine/src/volume/muscle-mapper.ts`.

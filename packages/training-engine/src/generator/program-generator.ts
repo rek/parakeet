@@ -158,7 +158,11 @@ export function nextUnendingSession(
 
   const weekNumber = Math.floor(sessionCounter / daysPerWeek) + 1;
   const dayNumber = (sessionCounter % daysPerWeek) + 1;
-  const lift = computeNextUnendingLift({ sessionCounter, trainingDaysPerWeek, lastResolvedLift });
+  const lift = computeNextUnendingLift({
+    sessionCounter,
+    trainingDaysPerWeek,
+    lastResolvedLift,
+  });
 
   // Blocks cycle 1→2→3→1… every 3 training weeks (same as scheduled)
   const blockNumber = (Math.floor((weekNumber - 1) / 3) % 3) + 1;
@@ -188,4 +192,3 @@ export function nextUnendingSession(
     isDeload,
   };
 }
-

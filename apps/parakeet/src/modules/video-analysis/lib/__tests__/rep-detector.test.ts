@@ -115,12 +115,12 @@ describe('detectReps', () => {
         const repPhase = (i % framesPerRep) / framesPerRep;
         const t = Math.sin(repPhase * Math.PI);
         // Wrists travel 0.15 units through the rep; shoulders stay still.
-        const wristY = 0.20 + t * 0.15;
+        const wristY = 0.2 + t * 0.15;
         return buildFrame({
-          [LANDMARK.LEFT_SHOULDER]: { x: 0.48, y: 0.30, z: 0, visibility: 1 },
-          [LANDMARK.RIGHT_SHOULDER]: { x: 0.52, y: 0.30, z: 0, visibility: 1 },
-          [LANDMARK.LEFT_HIP]: { x: 0.48, y: 0.60, z: 0, visibility: 1 },
-          [LANDMARK.RIGHT_HIP]: { x: 0.52, y: 0.60, z: 0, visibility: 1 },
+          [LANDMARK.LEFT_SHOULDER]: { x: 0.48, y: 0.3, z: 0, visibility: 1 },
+          [LANDMARK.RIGHT_SHOULDER]: { x: 0.52, y: 0.3, z: 0, visibility: 1 },
+          [LANDMARK.LEFT_HIP]: { x: 0.48, y: 0.6, z: 0, visibility: 1 },
+          [LANDMARK.RIGHT_HIP]: { x: 0.52, y: 0.6, z: 0, visibility: 1 },
           // Elbows almost collinear with shoulder + wrist — angle barely moves.
           [LANDMARK.LEFT_ELBOW]: {
             x: 0.48,
@@ -166,9 +166,9 @@ describe('detectReps', () => {
         const repPhase = (i % framesPerRep) / framesPerRep;
         const t = Math.sin(repPhase * Math.PI);
         const wristY = 0.3 + t * 0.25; // 0.3 → 0.55
-        const elbowY = 0.27 + t * 0.10; // 0.27 → 0.37
-        const leftElbowX = 0.42 - t * 0.10; // flares out at bottom
-        const rightElbowX = 0.58 + t * 0.10;
+        const elbowY = 0.27 + t * 0.1; // 0.27 → 0.37
+        const leftElbowX = 0.42 - t * 0.1; // flares out at bottom
+        const rightElbowX = 0.58 + t * 0.1;
         return buildFrame({
           [LANDMARK.LEFT_SHOULDER]: { x: 0.45, y: 0.25, z: 0, visibility: 1 },
           [LANDMARK.RIGHT_SHOULDER]: {

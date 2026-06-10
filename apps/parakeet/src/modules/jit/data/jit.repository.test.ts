@@ -37,9 +37,7 @@ function makeOrderedSessionLogs(rows: Array<{ id: string; date: string }>) {
   return chain;
 }
 
-function makeSessionTraces(
-  traces: Array<{ id: string; trace: unknown }>
-) {
+function makeSessionTraces(traces: Array<{ id: string; trace: unknown }>) {
   // sessions query: from().select().in() — `.in` resolves.
   const chain = {
     select: vi.fn(),
@@ -70,9 +68,7 @@ function setsBucket(auxRows: FakeSetLog[]) {
   };
 }
 
-function buildTrace(
-  auxes: Array<{ exercise: string; finalWeightKg: number }>
-) {
+function buildTrace(auxes: Array<{ exercise: string; finalWeightKg: number }>) {
   return {
     auxiliaries: auxes.map((a) => ({
       exercise: a.exercise,
@@ -165,11 +161,9 @@ describe('fetchAuxHistory', () => {
 
     expect(result['close-grip-barbell-bench-press']).toBeDefined();
     expect(result['close-grip-barbell-bench-press']).toHaveLength(3);
-    expect(result['close-grip-barbell-bench-press'].map((e) => e.sessionId)).toEqual([
-      's1',
-      's2',
-      's3',
-    ]);
+    expect(
+      result['close-grip-barbell-bench-press'].map((e) => e.sessionId)
+    ).toEqual(['s1', 's2', 's3']);
   });
 
   it('skips sessions whose set_logs contain no rows matching the wanted slugs', async () => {
@@ -248,9 +242,7 @@ describe('fetchAuxHistory', () => {
       .mockReturnValueOnce(makeOrderedSessionLogs(sessions))
       .mockReturnValueOnce(
         // Trace exists but doesn't include this exercise.
-        makeSessionTraces([
-          { id: 's1', trace: { auxiliaries: [] } },
-        ])
+        makeSessionTraces([{ id: 's1', trace: { auxiliaries: [] } }])
       );
     getSessionSetsBySessionIdsMock.mockResolvedValue(setsBySession);
 
@@ -261,7 +253,9 @@ describe('fetchAuxHistory', () => {
     );
 
     expect(result['close-grip-barbell-bench-press']).toHaveLength(1);
-    expect(result['close-grip-barbell-bench-press'][0].prescribedWeightKg).toBeNull();
+    expect(
+      result['close-grip-barbell-bench-press'][0].prescribedWeightKg
+    ).toBeNull();
     expect(addBreadcrumbMock).toHaveBeenCalledWith(
       'aux-anchor',
       'missing prescribed weight in trace',

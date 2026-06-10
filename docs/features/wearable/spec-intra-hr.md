@@ -31,8 +31,9 @@ Real-time heart rate observation during active training sessions via Health Conn
 ```typescript
 import { useEffect, useRef, useState } from 'react';
 
-import { captureException } from '@platform/utils/captureException';
 import type { HrSample } from '@parakeet/shared-types';
+import { captureException } from '@platform/utils/captureException';
+
 import { readHeartRate } from '../lib/health-connect';
 
 const POLL_INTERVAL_MS = 5000;
@@ -62,7 +63,7 @@ export function useHrMonitor(isActive: boolean): HrMonitorState {
     samplesRef.current = [];
     setState({ currentBpm: null, samples: [], isConnected: false });
 
-    let lastReadAt = new Date(Date.now() - 60_000);    // first poll covers last minute
+    let lastReadAt = new Date(Date.now() - 60_000); // first poll covers last minute
 
     const poll = async () => {
       try {
@@ -104,6 +105,7 @@ export function useHrMonitor(isActive: boolean): HrMonitorState {
 ```
 
 **Notes:**
+
 - Polling, not real-time observer — Health Connect's APIs are read-on-demand per `react-native-health-connect`.
 - `samples` accumulates for the entire active period; consumer reads `samples` at completion to persist.
 - On `isActive: false`, the hook does NOT clear `samples` — the caller may still need them for completion.
@@ -113,7 +115,7 @@ export function useHrMonitor(isActive: boolean): HrMonitorState {
 **File:** `apps/parakeet/src/modules/wearable/ui/HrBadge.tsx`
 
 ```typescript
-import { View, Text, StyleSheet } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 
 interface Props {
   bpm: number | null;
@@ -151,19 +153,15 @@ export function HrBadge({ bpm }: Props) {
 **File:** `apps/parakeet/src/modules/session/application/session.service.ts`
 
 ```typescript
-import { computeAvgHr, computeMaxHr, computeHrRecovery60s } from '@parakeet/training-engine';
 import type { HrSample } from '@parakeet/shared-types';
+import { computeAvgHr, computeHrRecovery60s, computeMaxHr } from '@parakeet/training-engine';
 
 export interface CompleteSessionInput {
   // existing fields...
   hrData?: { samples: HrSample[] };
 }
 
-export async function completeSession(
-  sessionId: string,
-  userId: string,
-  input: CompleteSessionInput
-): Promise<void> {
+export async function completeSession(sessionId: string, userId: string, input: CompleteSessionInput): Promise<void> {
   // existing logic up to insertSessionLog...
 
   let hrFields = {};
@@ -216,10 +214,7 @@ export function computeMaxHr(samples: HrSample[]): number | null {
  * after the peak HR in the last 5 minutes of the session.
  * A drop >20 BPM is a strong autonomic-recovery marker.
  */
-export function computeHrRecovery60s(
-  samples: HrSample[],
-  sessionEndTimestampMs: number
-): number | null {
+export function computeHrRecovery60s(samples: HrSample[], sessionEndTimestampMs: number): number | null {
   if (samples.length < 2) return null;
 
   const lastFiveMinStart = sessionEndTimestampMs - 5 * 60 * 1000;
@@ -246,6 +241,7 @@ export function computeHrRecovery60s(
 ```
 
 **Notes:**
+
 - ±15 second tolerance is arbitrary but matches the 5-second polling interval generously.
 - Returns null when the recovery window has insufficient data — caller stores null without flagging an error.
 - Tests in §6 cover the boundary conditions.
@@ -270,11 +266,7 @@ Vitest. Cover:
 **File:** `packages/training-engine/src/index.ts`
 
 ```typescript
-export {
-  computeAvgHr,
-  computeMaxHr,
-  computeHrRecovery60s,
-} from './formulas/hr-metrics';
+export { computeAvgHr, computeMaxHr, computeHrRecovery60s } from './formulas/hr-metrics';
 ```
 
 ### 8. Decision-replay enrichment
@@ -284,7 +276,7 @@ export {
 Extend the payload built for the LLM to include HR fields when present:
 
 ```typescript
-const sessionLog = await fetchSessionLog(sessionId);    // adjust for actual fn name
+const sessionLog = await fetchSessionLog(sessionId); // adjust for actual fn name
 
 const replayPayload = {
   // existing fields: jitInputSnapshot, plannedSets, actualSets, auxiliarySets, sessionRpe, lift, intensityType, blockNumber...

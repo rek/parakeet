@@ -1,9 +1,4 @@
-export type Limb =
-  | 'thigh_mid'
-  | 'calf_max'
-  | 'ankle'
-  | 'upper_arm'
-  | 'wrist';
+export type Limb = 'thigh_mid' | 'calf_max' | 'ankle' | 'upper_arm' | 'wrist';
 
 export type Side = 'l' | 'r';
 

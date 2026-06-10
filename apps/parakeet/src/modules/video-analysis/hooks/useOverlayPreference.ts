@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { captureException } from '@platform/utils/captureException';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export type OverlayPreferenceKey = 'barPath' | 'skeleton';
 

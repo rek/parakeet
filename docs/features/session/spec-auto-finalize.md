@@ -64,6 +64,7 @@ Dedicated recovery route deliberately skipped — the Alert gives Save / Discard
 ## Tests
 
 ### Unit
+
 - [ ] `abandonStaleInProgressSessions` with 0 `set_logs` → marks skipped.
 - [ ] Same with ≥1 `set_logs` → auto-finalises; `session_logs.auto_finalised = true`; achievements NOT called.
 - [ ] `initSession` with different sessionId + unsynced completed set → throws `SessionStoreClobberError`.
@@ -71,6 +72,7 @@ Dedicated recovery route deliberately skipped — the Alert gives Save / Discard
 - [ ] `initSession` with different sessionId but all sets synced → no throw (clears safely).
 
 ### Integration
+
 - [ ] Simulate: log sets Mon, skip End, foreground Wed → session `completed`, sets present, `auto_finalised=true`, no achievements.
 - [ ] Simulate: local store has unsynced Wed sets, server session is `skipped` → recovery modal opens; user taps Save → server session becomes `completed` with those sets.
 - [ ] Simulate: crash mid-logging, reopen same session → no duplicate set rows, recovery modal not shown (synced path).

@@ -32,10 +32,7 @@ npm install react-native-chart-kit
 Implemented. Queries `session_logs` joined with `sessions`, groups by ISO week start (Monday) + `primary_lift`, sums `actual_sets` array length per group. Returns sorted by `weekStart` ASC.
 
 ```ts
-export async function getWeeklySetsPerLift(
-  userId: string,
-  weeks = 8
-): Promise<{ weekStart: string; lift: Lift; setsCompleted: number }[]>
+export async function getWeeklySetsPerLift(userId: string, weeks = 8): Promise<{ weekStart: string; lift: Lift; setsCompleted: number }[]>;
 ```
 
 ---
@@ -88,6 +85,7 @@ Time is omitted (no separator) when `completed_at` is null.
 **Fix**: filter `normalizedSets` and `normalizedAuxiliarySets` to `is_completed === true` before stripping the flag and inserting. The `completion_pct` / `performance_vs_plan` calculation is unaffected (computed before the filter). Offline sync path goes through the same `completeSession` function; no separate fix needed.
 
 Files changed:
+
 - `apps/parakeet/src/modules/session/application/session.service.ts` — lines 242–247
 
 ---

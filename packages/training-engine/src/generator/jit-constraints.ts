@@ -96,7 +96,12 @@ export function enforceHardConstraints(
     input.sorenessRatings
   );
   const strongSignal = hasDisruption || worstSoreness >= 7;
-  if (!skippedMainLift && !isDeload && !strongSignal && mainLiftSets.length > 0) {
+  if (
+    !skippedMainLift &&
+    !isDeload &&
+    !strongSignal &&
+    mainLiftSets.length > 0
+  ) {
     const baseCount = baseSets.length;
     const baseWeight = baseSets[0]?.weight_kg ?? 0;
     const curWeight = mainLiftSets[0].weight_kg;

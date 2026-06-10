@@ -36,11 +36,11 @@ Get the service key from `npx supabase status` (the "Secret" key).
 
 Keyword heuristics, no fuzzy library. Parenthetical qualifiers like `(Barbell)` stripped before matching. Matching is case-insensitive.
 
-| Canonical key | Keywords that match |
-|---|---|
-| `squat` | squat, back squat, low bar, high bar |
-| `bench` | bench, bench press, chest press |
-| `deadlift` | deadlift, dead lift, conventional, sumo |
+| Canonical key    | Keywords that match                                 |
+| ---------------- | --------------------------------------------------- |
+| `squat`          | squat, back squat, low bar, high bar                |
+| `bench`          | bench, bench press, chest press                     |
+| `deadlift`       | deadlift, dead lift, conventional, sumo             |
 | `overhead_press` | overhead press, ohp, shoulder press, military press |
 
 If no keyword matches, the exercise is shown with no suggestion and the user types a key or `skip`.
@@ -123,6 +123,7 @@ session_logs
 **Stored:** all sets for mapped exercises where `IsCompleted=true`, weight > 0, reps > 0.
 
 **Skipped:**
+
 - Exercises mapped to `skip`
 - `IsCompleted=false` rows (NextSet format)
 - Sets with zero weight or zero reps
@@ -145,6 +146,7 @@ ALTER TABLE sessions ADD CONSTRAINT sessions_intensity_type_check
 `supabase/types.ts` hand-edited to reflect nullable `program_id` on sessions.
 
 App code fixes from nullable cascade:
+
 - `session.repository.ts`: `row.program_id!` in `fetchOverdueScheduledSessions` (inner join guarantees non-null)
 - `jit/lib/jit.ts`: `session.program_id!` in two spots (JIT never runs on import sessions)
 

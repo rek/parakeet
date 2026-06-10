@@ -1,8 +1,11 @@
 import { useCallback, useState } from 'react';
 import { Alert } from 'react-native';
 
+import {
+  addBreadcrumb,
+  captureException,
+} from '@platform/utils/captureException';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { addBreadcrumb, captureException } from '@platform/utils/captureException';
 import { Directory, File, Paths } from 'expo-file-system';
 import * as ImagePicker from 'expo-image-picker';
 import { getVideoMetaData, Video } from 'react-native-compressor';
@@ -306,7 +309,10 @@ export function useVideoAnalysis({
    */
   const reanalyze = useCallback(async () => {
     if (!result) {
-      Alert.alert('Re-analyze', 'No video loaded. Pull to refresh and try again.');
+      Alert.alert(
+        'Re-analyze',
+        'No video loaded. Pull to refresh and try again.'
+      );
       return;
     }
     try {
@@ -336,8 +342,7 @@ export function useVideoAnalysis({
           saveDebugLandmarks: ({ id, frames, fps }) =>
             updateSessionVideoDebugLandmarks({ id, frames, fps }),
           onProgress: setProgress,
-          onBreadcrumb: (step, data) =>
-            addBreadcrumb('reanalyze', step, data),
+          onBreadcrumb: (step, data) => addBreadcrumb('reanalyze', step, data),
           onLiftMismatch: (m) => {
             mismatch = m;
             addBreadcrumb('lift-label-mismatch', 'detected', {
@@ -369,7 +374,8 @@ export function useVideoAnalysis({
       }
     } catch (err) {
       captureException(err);
-      const message = err instanceof Error ? err.message : 'Failed to reanalyze';
+      const message =
+        err instanceof Error ? err.message : 'Failed to reanalyze';
       setError(message);
     } finally {
       setIsProcessing(false);

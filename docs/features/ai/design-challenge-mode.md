@@ -137,7 +137,7 @@ Session Start                              Session End
 
 ## Future Enhancement: Trace-Enriched Review
 
-Both the Judge and Replay currently receive `JITInput` + `JITOutput` but not the *reasoning chain* between them. The [prescription trace](./prescription-reasoning.md) system now generates a `PrescriptionTrace` alongside every JIT output, recording every modifier applied and why.
+Both the Judge and Replay currently receive `JITInput` + `JITOutput` but not the _reasoning chain_ between them. The [prescription trace](./prescription-reasoning.md) system now generates a `PrescriptionTrace` alongside every JIT output, recording every modifier applied and why.
 
 **Judge enhancement:** Trace context lets the judge validate modifier proportionality ("soreness ×0.85 for level 3 — is that right for this athlete?") and detect double-penalties more precisely.
 

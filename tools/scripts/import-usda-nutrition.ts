@@ -35,7 +35,7 @@ import { parseQuotedCsv } from './lib/parse-diet-csv';
 const DATA_DIR = path.resolve(__dirname, '../data');
 const USDA_DIR = path.join(
   DATA_DIR,
-  'usda/FoodData_Central_sr_legacy_food_csv_2018-04',
+  'usda/FoodData_Central_sr_legacy_food_csv_2018-04'
 );
 const OUT_PATH = path.join(DATA_DIR, 'food_nutrition.csv');
 const UNMATCHED_PATH = path.join(DATA_DIR, 'food_nutrition_unmatched.txt');
@@ -83,7 +83,7 @@ function loadDietFoodCanonicals(): Set<string> {
 function loadExistingMatched(): Map<string, string> {
   if (!fs.existsSync(OUT_PATH)) return new Map();
   const rows = parseQuotedCsv(fs.readFileSync(OUT_PATH, 'utf8')).filter((r) =>
-    r.some((c) => c.length > 0),
+    r.some((c) => c.length > 0)
   );
   const existing = new Map<string, string>();
   for (const row of rows.slice(1)) {
@@ -104,7 +104,7 @@ interface UsdaFood {
 
 function loadUsdaFoods(): UsdaFood[] {
   const rows = parseQuotedCsv(
-    fs.readFileSync(path.join(USDA_DIR, 'food.csv'), 'utf8'),
+    fs.readFileSync(path.join(USDA_DIR, 'food.csv'), 'utf8')
   ).filter((r) => r.some((c) => c.length > 0));
   return rows.slice(1).map((r) => ({
     fdc_id: r[0],
@@ -122,7 +122,7 @@ function loadUsdaMacros(): Map<string, Partial<Record<string, number>>> {
   const wanted = new Set(Object.values(NUTRIENT_IDS));
   const text = fs.readFileSync(
     path.join(USDA_DIR, 'food_nutrient.csv'),
-    'utf8',
+    'utf8'
   );
   const lines = text.split('\n');
   const byFdc = new Map<string, Partial<Record<string, number>>>();
@@ -182,33 +182,33 @@ const STOP_WORDS = new Set([
  * the target macro-calc reflects the food as normally eaten.
  */
 const FORCE_FDC: Record<string, string> = {
-  'rice': '169704', // Rice, brown, long-grain, cooked
-  'honey': '169640', // Honey
-  'oats': '169705', // Oats
+  rice: '169704', // Rice, brown, long-grain, cooked
+  honey: '169640', // Honey
+  oats: '169705', // Oats
   'onions and garlic': '170000', // Onions, raw
   'lemon and lime': '167746', // Lemons, raw, without peel
   'fresh lemon juice': '167746', // Lemons, raw — same, juice macros approximate
   'peanuts and natural peanut butter': '172470', // Peanut butter, smooth, no salt
-  'pomegranate': '169134', // Pomegranates, raw
+  pomegranate: '169134', // Pomegranates, raw
   'tofu and tofu skins': '172476', // Tofu, raw, regular
   'flaxseeds and flaxseed meal': '169414', // Seeds, flaxseed
-  'corn': '169999', // Corn, sweet, yellow, cooked, no salt
+  corn: '169999', // Corn, sweet, yellow, cooked, no salt
   'corn products': '169999',
   'sweet potatoes': '168482', // Sweet potato, raw, unprepared
-  'salmon': '173686', // Fish, salmon, Atlantic, wild, raw
+  salmon: '173686', // Fish, salmon, Atlantic, wild, raw
   'other fatty fish': '173686',
-  'mackerel': '175119', // Fish, mackerel, Atlantic, raw
-  'sardines': '175139', // Fish, sardine, Atlantic, canned in oil
-  'beetroot': '169145', // Beets, raw
+  mackerel: '175119', // Fish, mackerel, Atlantic, raw
+  sardines: '175139', // Fish, sardine, Atlantic, canned in oil
+  beetroot: '169145', // Beets, raw
   'aubergine/eggplant': '169228', // Eggplant, raw
   'babaganoush (fresh local)': '169228',
-  'mangoes': '169910', // Mangos, raw
-  'pineapple': '169124', // Pineapple, raw, all varieties
-  'berries': '167762', // Strawberries, raw — proxy for generic berries
+  mangoes: '169910', // Mangos, raw
+  pineapple: '169124', // Pineapple, raw, all varieties
+  berries: '167762', // Strawberries, raw — proxy for generic berries
   'green apple': '171688', // Apples, raw, with skin
   'green beans': '169961', // Beans, snap, green, raw
   'peas in volume': '170419', // Peas, green, raw
-  'chickpeas': '173757', // Chickpeas, mature, cooked, boiled, no salt
+  chickpeas: '173757', // Chickpeas, mature, cooked, boiled, no salt
   'chickpeas/kabuli chana': '173757',
   'black chickpeas/kala chana': '173757',
   'buffalo/buff meat': '175299', // Game meat, buffalo, water, raw
@@ -218,12 +218,12 @@ const FORCE_FDC: Record<string, string> = {
   'brie and camembert': '172178', // Cheese, camembert
   'fresh unfermented cow milk cheese': '170847', // Cheese, mozzarella, part skim
   'homemade buffalo milk paneer': '170847',
-  'spinach': '168462',
+  spinach: '168462',
   'vegetable oil': '171411', // Oil, soybean, salad or cooking (generic veg oil)
   'olive oil vinaigrette': '171413', // Oil, olive, salad or cooking
-  'pumpkin': '168449', // Pumpkin, cooked, boiled, drained, without salt
+  pumpkin: '168449', // Pumpkin, cooked, boiled, drained, without salt
   'brussels sprouts': '170383', // Brussels sprouts, raw
-  'celery': '169988', // Celery, raw
+  celery: '169988', // Celery, raw
   'tuna (canned in water)': '171986', // Fish, tuna, light, canned in water, without salt
   'turkey (lean cuts)': '171098', // Turkey, whole, breast, meat only, raw
   'cottage cheese': '173417', // Cheese, cottage, lowfat, 1% milkfat
@@ -232,44 +232,44 @@ const FORCE_FDC: Record<string, string> = {
   'coconut milk (full fat)': '170172', // Coconut milk, raw (full fat)
   'bean sprouts': '169957', // Mung beans, sprouted, raw
   'kabocha / thai pumpkin (fak thong)': '169295', // Squash, winter, butternut, raw (closest kabocha proxy)
-  'shrimp': '175179', // Crustaceans, shrimp, raw
+  shrimp: '175179', // Crustaceans, shrimp, raw
   'morning glory (water spinach)': '169301', // Water convolvulus, raw
   'long beans': '169222', // Yardlong bean, raw
   'bamboo shoots': '169211', // Bamboo shoots, cooked, boiled, drained, without salt
-  'longan': '169089', // Longans, raw
-  'lychee': '169086', // Litchis, raw
-  'guava': '173044', // Guavas, common, raw
-  'pomelo': '167754', // Pummelo, raw
-  'jackfruit': '174687', // Jackfruit, raw
-  'taro': '168486', // Taro, cooked, without salt
+  longan: '169089', // Longans, raw
+  lychee: '169086', // Litchis, raw
+  guava: '173044', // Guavas, common, raw
+  pomelo: '167754', // Pummelo, raw
+  jackfruit: '174687', // Jackfruit, raw
+  taro: '168486', // Taro, cooked, without salt
   'water chestnuts': '170066', // Waterchestnuts, chinese (matai), raw
   'lotus root': '168430', // Lotus root, cooked, boiled, drained, without salt
-  'tamarind': '167763', // Tamarinds, raw
+  tamarind: '167763', // Tamarinds, raw
   'fresh coconut meat': '170169', // Nuts, coconut meat, raw
   'sticky rice': '169711', // Rice, white, glutinous, unenriched, cooked
   'snow peas': '170010', // Peas, edible-podded, raw
   'winged beans': '170476', // Winged beans, immature seeds, raw
-  'duck': '172410', // Duck, domesticated, meat only, raw
-  'grouper': '171962', // Fish, grouper, mixed species, raw
-  'starfruit': '171715', // Carambola, (starfruit), raw
-  'tilapia': '175176', // Fish, tilapia, raw
-  'artichoke': '169205', // Artichokes, (globe or french), raw
-  'turnip': '170465', // Turnips, raw
-  'radish': '169276', // Radishes, raw
+  duck: '172410', // Duck, domesticated, meat only, raw
+  grouper: '171962', // Fish, grouper, mixed species, raw
+  starfruit: '171715', // Carambola, (starfruit), raw
+  tilapia: '175176', // Fish, tilapia, raw
+  artichoke: '169205', // Artichokes, (globe or french), raw
+  turnip: '170465', // Turnips, raw
+  radish: '169276', // Radishes, raw
   'daikon radish': '168451', // Radishes, oriental, raw
-  'arugula': '169387', // Arugula, raw
-  'watercress': '170068', // Watercress, raw
+  arugula: '169387', // Arugula, raw
+  watercress: '170068', // Watercress, raw
   'collard greens': '170406', // Collards, raw
-  'okra': '169260', // Okra, raw
-  'celeriac': '170400', // Celeriac, raw
-  'rutabaga': '168454', // Rutabagas, raw
-  'jicama': '170073', // Yambean (jicama), raw
-  'radicchio': '168564', // Radicchio, raw
-  'endive': '168412', // Endive, raw
+  okra: '169260', // Okra, raw
+  celeriac: '170400', // Celeriac, raw
+  rutabaga: '168454', // Rutabagas, raw
+  jicama: '170073', // Yambean (jicama), raw
+  radicchio: '168564', // Radicchio, raw
+  endive: '168412', // Endive, raw
   'romaine lettuce': '169247', // Lettuce, cos or romaine, raw
   'beet greens': '170375', // Beet greens, raw
-  'kohlrabi': '168424', // Kohlrabi, raw
-  'chayote': '170402', // Chayote, fruit, raw
+  kohlrabi: '168424', // Kohlrabi, raw
+  chayote: '170402', // Chayote, fruit, raw
   'turnip greens': '170061', // Turnip greens, raw
   'jerusalem artichoke': '169236', // Jerusalem-artichokes, raw
   'iceberg lettuce': '169248', // Lettuce, iceberg (includes crisphead types), raw
@@ -279,7 +279,14 @@ const ALIASES: Record<string, string[]> = {
   'aubergine/eggplant': ['eggplant', 'raw'],
   'bitter gourd/karela': ['balsam', 'pear', 'bitter', 'gourd'],
   'brie and camembert': ['cheese', 'brie'],
-  'chicken and poultry': ['chicken', 'broilers', 'fryers', 'breast', 'meat', 'raw'],
+  'chicken and poultry': [
+    'chicken',
+    'broilers',
+    'fryers',
+    'breast',
+    'meat',
+    'raw',
+  ],
   'clean bratwurst': ['sausage', 'bratwurst', 'pork'],
   'clean natural sausage': ['sausage', 'italian', 'pork'],
   'fresh unfermented cow milk cheese': ['cheese', 'mozzarella'],
@@ -289,29 +296,29 @@ const ALIASES: Record<string, string[]> = {
   'pea-brown rice protein powder': ['rice', 'brown', 'long', 'grain', 'raw'],
   'regular sourdough': ['bread', 'whole', 'wheat'],
   'millet pancakes': ['millet', 'cooked'],
-  'chickpeas': ['chickpeas', 'mature', 'boiled'],
+  chickpeas: ['chickpeas', 'mature', 'boiled'],
   'flaxseeds and flaxseed meal': ['seeds', 'flaxseed'],
-  'corn': ['corn', 'sweet', 'yellow', 'cooked', 'drained'],
+  corn: ['corn', 'sweet', 'yellow', 'cooked', 'drained'],
   'corn products': ['corn', 'sweet', 'yellow', 'cooked', 'drained'],
-  'honey': ['honey', 'strained'],
-  'mustard': ['mustard', 'prepared', 'yellow'],
-  'oats': ['oats'],
+  honey: ['honey', 'strained'],
+  mustard: ['mustard', 'prepared', 'yellow'],
+  oats: ['oats'],
   'onions and garlic': ['onions', 'raw'],
   'peanuts and natural peanut butter': ['peanut', 'butter', 'smooth'],
   'peas in volume': ['peas', 'green', 'cooked', 'drained'],
-  'pomegranate': ['pomegranates', 'raw'],
-  'rice': ['rice', 'brown', 'long', 'cooked'],
+  pomegranate: ['pomegranates', 'raw'],
+  rice: ['rice', 'brown', 'long', 'cooked'],
   'sweet potatoes': ['sweet', 'potato', 'raw', 'unprepared'],
   'tofu and tofu skins': ['tofu', 'firm', 'prepared'],
   'green beans': ['beans', 'snap', 'green', 'raw'],
   'lemon and lime': ['lemons', 'raw'],
   'olive oil vinaigrette': ['oil', 'olive', 'salad'],
   'vegetable oil': ['oil', 'vegetable'],
-  'mangoes': ['mangos', 'raw'],
-  'pistachios': ['nuts', 'pistachio', 'raw'],
-  'beetroot': ['beets', 'raw'],
-  'capsicum': ['peppers', 'sweet', 'red', 'raw'],
-  'sardines': ['fish', 'sardine', 'atlantic', 'canned'],
+  mangoes: ['mangos', 'raw'],
+  pistachios: ['nuts', 'pistachio', 'raw'],
+  beetroot: ['beets', 'raw'],
+  capsicum: ['peppers', 'sweet', 'red', 'raw'],
+  sardines: ['fish', 'sardine', 'atlantic', 'canned'],
   'aged cheeses': ['cheese', 'parmesan'],
   'hard aged cheeses': ['cheese', 'parmesan'],
   'goat or sheep dairy': ['milk', 'goat'],
@@ -319,17 +326,17 @@ const ALIASES: Record<string, string[]> = {
   'goji berries': ['goji', 'berries', 'dried'],
   'homemade millet sourdough': ['bread', 'whole', 'wheat'],
   'babaganoush (fresh local)': ['eggplant', 'raw'],
-  'salmon': ['fish', 'salmon', 'atlantic', 'raw'],
-  'mackerel': ['fish', 'mackerel', 'atlantic', 'raw'],
+  salmon: ['fish', 'salmon', 'atlantic', 'raw'],
+  mackerel: ['fish', 'mackerel', 'atlantic', 'raw'],
   'basa fish': ['fish', 'catfish', 'channel', 'raw'],
   'other fatty fish': ['fish', 'salmon', 'atlantic', 'raw'],
   'white fish': ['fish', 'cod', 'atlantic', 'raw'],
   'tofu and tofu skins': ['tofu', 'raw', 'firm'],
-  'tempeh': ['tempeh'],
+  tempeh: ['tempeh'],
   'hummus (fresh olive oil based)': ['hummus'],
-  'oats': ['oats'],
-  'potatoes': ['potatoes', 'boiled', 'flesh'],
-  'bananas': ['bananas', 'raw'],
+  oats: ['oats'],
+  potatoes: ['potatoes', 'boiled', 'flesh'],
+  bananas: ['bananas', 'raw'],
   'black beans': ['beans', 'black', 'mature', 'boiled'],
   'black soybeans': ['soybeans', 'mature', 'boiled'],
   'chickpeas/kabuli chana': ['chickpeas', 'mature', 'boiled'],
@@ -348,10 +355,10 @@ const ALIASES: Record<string, string[]> = {
   'buffalo milk kefir': ['yogurt', 'whole', 'plain'],
   'buffalo milk yoghurt': ['yogurt', 'whole', 'plain'],
   'butter (local)': ['butter', 'salted'],
-  'honey': ['honey'],
+  honey: ['honey'],
   'mushrooms (all varieties)': ['mushrooms', 'white', 'raw'],
-  'pineapple': ['pineapple', 'raw'],
-  'berries': ['strawberries', 'raw'],
+  pineapple: ['pineapple', 'raw'],
+  berries: ['strawberries', 'raw'],
   'green apple': ['apples', 'raw', 'with', 'skin'],
   'himalayan pink salt': ['salt', 'table'],
   'himalayan pink salt in morning water': ['salt', 'table'],
@@ -417,7 +424,8 @@ const SKIP_MACROS = new Set<string>([
 function stripPlural(t: string): string {
   if (t.length > 4 && t.endsWith('ies')) return t.slice(0, -3) + 'y';
   if (t.length > 4 && t.endsWith('es')) return t.slice(0, -2);
-  if (t.length > 3 && t.endsWith('s') && !t.endsWith('ss')) return t.slice(0, -1);
+  if (t.length > 3 && t.endsWith('s') && !t.endsWith('ss'))
+    return t.slice(0, -1);
   return t;
 }
 
@@ -442,7 +450,7 @@ function expandCanonical(canon: string): string[] {
       ...new Set(
         alias
           .map((t) => stripPlural(t.toLowerCase()))
-          .filter((t) => t.length > 1 && !STOP_WORDS.has(t)),
+          .filter((t) => t.length > 1 && !STOP_WORDS.has(t))
       ),
     ];
   }
@@ -567,7 +575,7 @@ function formatRow(
   fiber: number | null,
   sourceId: string,
   confidence: number,
-  description: string,
+  description: string
 ): string {
   return [
     quoteCsvField(canon),
@@ -592,7 +600,7 @@ function main() {
   if (!fs.existsSync(USDA_DIR)) {
     console.error(`USDA data missing at ${USDA_DIR}`);
     console.error(
-      'Download the SR Legacy CSV from https://fdc.nal.usda.gov/download-datasets.html',
+      'Download the SR Legacy CSV from https://fdc.nal.usda.gov/download-datasets.html'
     );
     console.error('and unzip it into tools/data/usda/.');
     process.exit(1);
@@ -603,7 +611,7 @@ function main() {
 
   const existingRows = fs.existsSync(OUT_PATH)
     ? parseQuotedCsv(fs.readFileSync(OUT_PATH, 'utf8')).filter((r) =>
-        r.some((c) => c.length > 0),
+        r.some((c) => c.length > 0)
       )
     : [];
   const existing = new Map<string, string[]>();
@@ -649,7 +657,11 @@ function main() {
         unmatched.push(canon);
         continue;
       }
-      best = { fdc_id: forcedFood.fdc_id, description: forcedFood.description, score: 999 };
+      best = {
+        fdc_id: forcedFood.fdc_id,
+        description: forcedFood.description,
+        score: 999,
+      };
     } else {
       best = bestMatch(canon, foods);
     }
@@ -677,8 +689,8 @@ function main() {
         fiber,
         best.fdc_id,
         best.score,
-        best.description,
-      ),
+        best.description
+      )
     );
     autoMatched++;
   }
@@ -700,10 +712,10 @@ function main() {
   fs.writeFileSync(UNMATCHED_PATH, unmatchedBody + skippedBody);
   console.log(
     `wrote ${output.length - 1} rows to food_nutrition.csv ` +
-      `(${autoMatched} auto-matched, ${existing.size} preserved)`,
+      `(${autoMatched} auto-matched, ${existing.size} preserved)`
   );
   console.log(
-    `${unmatched.length} unmatched + ${skippedIntentionally.length} intentionally skipped (see food_nutrition_unmatched.txt)`,
+    `${unmatched.length} unmatched + ${skippedIntentionally.length} intentionally skipped (see food_nutrition_unmatched.txt)`
   );
 }
 

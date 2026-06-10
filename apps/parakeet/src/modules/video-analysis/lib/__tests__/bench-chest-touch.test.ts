@@ -3,11 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { computeChestTouchGap } from '../bench-chest-touch';
 import { LANDMARK, type PoseFrame, type PoseLandmark } from '../pose-types';
 
-function makeLandmark(
-  x: number,
-  y: number,
-  visibility = 1
-): PoseLandmark {
+function makeLandmark(x: number, y: number, visibility = 1): PoseLandmark {
   return { x, y, z: 0, visibility };
 }
 
@@ -59,7 +55,7 @@ describe('computeChestTouchGap (front view)', () => {
 
   it('returns gap > 0.10 when bar stops well above shoulder line', () => {
     // Bar never gets below y=0.20 — still 0.10 above shoulderY=0.30.
-    const wristYs = [0.1, 0.15, 0.18, 0.20, 0.18, 0.15, 0.1];
+    const wristYs = [0.1, 0.15, 0.18, 0.2, 0.18, 0.15, 0.1];
     const frames = wristYs.map((y) => makeFrame({ wristY: y }));
     const result = computeChestTouchGap({
       frames,

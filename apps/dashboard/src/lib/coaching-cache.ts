@@ -115,9 +115,7 @@ function canonicalJson(value: unknown): string {
   const keys = Object.keys(obj).sort();
   return (
     '{' +
-    keys
-      .map((k) => JSON.stringify(k) + ':' + canonicalJson(obj[k]))
-      .join(',') +
+    keys.map((k) => JSON.stringify(k) + ':' + canonicalJson(obj[k])).join(',') +
     '}'
   );
 }

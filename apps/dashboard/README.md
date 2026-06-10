@@ -6,14 +6,14 @@ Internal dev tool for inspecting AI decisions in the Parakeet training app.
 
 ## Views
 
-| View | Description |
-|------|-------------|
-| Timeline | Chronological feed of all AI events |
-| JIT Sessions | Per-session adjustments: intensity bar, set delta, rationale, JSON |
-| Hybrid Comparisons | Formula vs LLM diff with DIVERGED/CONSENSUS badges |
-| Cycle Reviews | Full Sonnet output: assessment, ratings, suggestions |
-| Formula Suggestions | AI-proposed formula overrides with active/inactive status |
-| Developer Suggestions | Priority-sorted structural feedback |
+| View                  | Description                                                        |
+| --------------------- | ------------------------------------------------------------------ |
+| Timeline              | Chronological feed of all AI events                                |
+| JIT Sessions          | Per-session adjustments: intensity bar, set delta, rationale, JSON |
+| Hybrid Comparisons    | Formula vs LLM diff with DIVERGED/CONSENSUS badges                 |
+| Cycle Reviews         | Full Sonnet output: assessment, ratings, suggestions               |
+| Formula Suggestions   | AI-proposed formula overrides with active/inactive status          |
+| Developer Suggestions | Priority-sorted structural feedback                                |
 
 ## Commands
 

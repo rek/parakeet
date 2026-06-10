@@ -69,7 +69,10 @@ function reduceWeight(
   incrementKg = 2.5
 ): PlannedSet {
   const floor = roundToNearest(oneRmKg * 0.4, incrementKg);
-  const reduced = roundToNearest(set.weight_kg * (1 - reductionPct), incrementKg);
+  const reduced = roundToNearest(
+    set.weight_kg * (1 - reductionPct),
+    incrementKg
+  );
   return { ...set, weight_kg: Math.max(reduced, floor) };
 }
 
@@ -137,7 +140,8 @@ export function adaptAuxRemainingPlan(ctx: {
  * nearest 2.5 kg.
  */
 export function adaptRemainingPlan(ctx: IntraSessionContext): AdaptedPlan {
-  const { consecutiveFailures, remainingSets, oneRmKg, weightIncrementKg } = ctx;
+  const { consecutiveFailures, remainingSets, oneRmKg, weightIncrementKg } =
+    ctx;
   const inc = weightIncrementKg ?? 2.5;
 
   if (consecutiveFailures === 0 || remainingSets.length === 0) {

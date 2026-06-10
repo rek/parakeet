@@ -13,6 +13,7 @@ Performance Logging lets users record their actual workout results — weights l
 Paper training logs and generic note apps are disconnected from the planned program. Users can't easily see how they performed against the plan, and without structured data, there is no basis for intelligent program adjustments over time.
 
 **Pain points:**
+
 - Writing notes in a generic app doesn't capture the plan vs. actual comparison
 - Users forget what they lifted last week, making progressive overload guesswork
 - No structured RPE tracking means the system can't detect when loading is too high or too low
@@ -90,10 +91,12 @@ This estimated 1RM is stored alongside the session log and used to pre-populate 
 ## Future Enhancements
 
 **Phase 2:**
+
 - Rest timer between sets → see [rest-timer.md](./rest-timer.md) for full design
 - Barbell plate calculator overlay (shows which plates to load for a given weight)
 
 **Long-term:**
+
 - Video form logging (attach a clip to a set)
 - Velocity tracking integration (via barbell velocity trackers)
 - Correlation overlay on history view (e.g., show sleep score for that day alongside performance)
@@ -101,8 +104,8 @@ This estimated 1RM is stored alongside the session log and used to pre-populate 
 ## References
 
 - Related Design Docs: [program-generation.md](./program-generation.md), [disruption-management.md](./disruption-management.md), [achievements.md](./achievements.md)
-- Helms, E.R. et al. (2016) — "Application of the Repetitions in Reserve-Based Rating of Perceived Exertion Scale for Resistance Training" *Strength Cond J*
-- Zourdos, M.C. et al. (2016) — "Novel Resistance Training-Specific Rating of Perceived Exertion Scale Measuring Repetitions in Reserve" *J Strength Cond Res*
+- Helms, E.R. et al. (2016) — "Application of the Repetitions in Reserve-Based Rating of Perceived Exertion Scale for Resistance Training" _Strength Cond J_
+- Zourdos, M.C. et al. (2016) — "Novel Resistance Training-Specific Rating of Perceived Exertion Scale Measuring Repetitions in Reserve" _J Strength Cond Res_
 - Epley, B. (1985) — 1RM prediction equation (Epley formula)
 - Architecture: [training-engine-architecture.md](./training-engine-architecture.md#progressive-overload-theoretical-assumptions)
 - Spec: [mobile-020-history-screen.md](../history/spec-history-screen.md)

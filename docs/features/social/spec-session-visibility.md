@@ -19,13 +19,17 @@ Partner section on the Program screen showing each partner's active session stat
     ```ts
     const channel = typedSupabase
       .channel('partner-sessions')
-      .on('postgres_changes', {
-        event: '*',
-        schema: 'public',
-        table: 'sessions',
-        filter: `user_id=in.(${partnerIds.join(',')})`,
-      }, (payload) => onUpdate(payload.new.user_id))
-      .subscribe()
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'sessions',
+          filter: `user_id=in.(${partnerIds.join(',')})`,
+        },
+        (payload) => onUpdate(payload.new.user_id)
+      )
+      .subscribe();
     ```
     One channel for all partners — avoids creating N channels (one per partner) which wastes resources.
   - Prerequisite: `sessions` table must be in `supabase_realtime` publication (added in social-001 migration)

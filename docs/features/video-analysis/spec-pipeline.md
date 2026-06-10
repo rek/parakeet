@@ -45,14 +45,14 @@ Core pipeline: pick video → compress → save locally + DB. Pure analysis pipe
 
 Analysis is a five-stage pipeline. Stages are explicit — each one's output is a named input to the next, so a future change (front-on bench pipeline, lift-driven strategy selection) drops in at a clean seam instead of bolted inside `assembleAnalysis`.
 
-| Stage | Runs in | Responsibility | Consumes | Emits |
-| --- | --- | --- | --- | --- |
-| 0 — Lift label | `hooks/useVideoAnalysis.ts`, `application/reanalyze.ts` | Check the user's declared lift against the pose with `checkLiftMismatch`; surface a user-facing nudge if it looks wrong. Analysis still runs regardless — this is a nudge, not a gate (see [spec-lift-label.md](./spec-lift-label.md)). | `frames`, `declared` lift | `LiftMismatch \| null` → Alert |
-| 1a — Plausibility | `application/analyze-frames.ts` → `lib/plausibility-filter.ts` | Reject frames where the pose has likely collapsed to background features. Two checks: median visibility across the 12 pose-critical landmarks below 0.3, or shoulder-midpoint jump > 8× the clip's median jump (with a 0.08-unit absolute floor). Rejected frames become `EMPTY_FRAME` so Stage 1b lerps them away. Motivated by the bar-over-face occlusion on front-on bench (backlog #24 Track A). | `frames` | `frames` (with outliers zeroed), `lowVisibilityRejected`, `torsoJumpRejected` counts |
-| 1a' — Wrist-anchored reconstruction (bench only) | `application/analyze-frames.ts` → `lib/wrist-anchored-reconstruct.ts` | For each Stage-1a rejection whose *original* wrists are still visible, rebuild the frame: anchor shoulders/hips/knees/ankles at the nearest confident neighbour, take wrists verbatim, place elbows at midpoint of shoulder→wrist. Reconstructed landmarks are floored at `VIS_THRESHOLD = 0.5` so per-landmark gates downstream don't silently fail. Bench-only — the rigid-arm approximation only holds for a supine lifter. | rejected frames, `originalFrames`, `lift` | `reconstructedCount`, `filteredFrames` mutated in place |
-| 1b — Frame hygiene | `application/analyze-frames.ts` | Lerp remaining empty-landmark frames from neighbours (catches non-bench rejections and bench rejections where wrists were also lost). | `frames` from 1a/1a' | interpolated `frames[]`, `effectiveFps` |
-| 2 — Sagittal confidence | `application/analyze-frames.ts` | Measure shoulder/hip X-separation across the clip → scalar `0–1` for how side-on the camera is. Downstream metrics are foreshortened at oblique angles; this lets the metric layer compensate instead of branching on a binary side/front flag. | interpolated `frames` | `sagittalConfidence: number` |
-| 3 — Deep analysis | `lib/metrics-assembler.ts` (`assembleAnalysis`) | Bar path, rep boundaries, per-rep metrics, faults, grading. `sagittalConfidence` is an **input**, not a side-computation — so fixtures and calibration runs can override it, and the stage is pure given a known confidence. | `frames`, `fps`, `lift`, `sagittalConfidence`, optional `strategy` | `VideoAnalysisResult` |
+| Stage                                            | Runs in                                                               | Responsibility                                                                                                                                                                                                                                                                                                                                                                                                                 | Consumes                                                           | Emits                                                                                |
+| ------------------------------------------------ | --------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------ | ------------------------------------------------------------------------------------ |
+| 0 — Lift label                                   | `hooks/useVideoAnalysis.ts`, `application/reanalyze.ts`               | Check the user's declared lift against the pose with `checkLiftMismatch`; surface a user-facing nudge if it looks wrong. Analysis still runs regardless — this is a nudge, not a gate (see [spec-lift-label.md](./spec-lift-label.md)).                                                                                                                                                                                        | `frames`, `declared` lift                                          | `LiftMismatch \| null` → Alert                                                       |
+| 1a — Plausibility                                | `application/analyze-frames.ts` → `lib/plausibility-filter.ts`        | Reject frames where the pose has likely collapsed to background features. Two checks: median visibility across the 12 pose-critical landmarks below 0.3, or shoulder-midpoint jump > 8× the clip's median jump (with a 0.08-unit absolute floor). Rejected frames become `EMPTY_FRAME` so Stage 1b lerps them away. Motivated by the bar-over-face occlusion on front-on bench (backlog #24 Track A).                          | `frames`                                                           | `frames` (with outliers zeroed), `lowVisibilityRejected`, `torsoJumpRejected` counts |
+| 1a' — Wrist-anchored reconstruction (bench only) | `application/analyze-frames.ts` → `lib/wrist-anchored-reconstruct.ts` | For each Stage-1a rejection whose _original_ wrists are still visible, rebuild the frame: anchor shoulders/hips/knees/ankles at the nearest confident neighbour, take wrists verbatim, place elbows at midpoint of shoulder→wrist. Reconstructed landmarks are floored at `VIS_THRESHOLD = 0.5` so per-landmark gates downstream don't silently fail. Bench-only — the rigid-arm approximation only holds for a supine lifter. | rejected frames, `originalFrames`, `lift`                          | `reconstructedCount`, `filteredFrames` mutated in place                              |
+| 1b — Frame hygiene                               | `application/analyze-frames.ts`                                       | Lerp remaining empty-landmark frames from neighbours (catches non-bench rejections and bench rejections where wrists were also lost).                                                                                                                                                                                                                                                                                          | `frames` from 1a/1a'                                               | interpolated `frames[]`, `effectiveFps`                                              |
+| 2 — Sagittal confidence                          | `application/analyze-frames.ts`                                       | Measure shoulder/hip X-separation across the clip → scalar `0–1` for how side-on the camera is. Downstream metrics are foreshortened at oblique angles; this lets the metric layer compensate instead of branching on a binary side/front flag.                                                                                                                                                                                | interpolated `frames`                                              | `sagittalConfidence: number`                                                         |
+| 3 — Deep analysis                                | `lib/metrics-assembler.ts` (`assembleAnalysis`)                       | Bar path, rep boundaries, per-rep metrics, faults, grading. `sagittalConfidence` is an **input**, not a side-computation — so fixtures and calibration runs can override it, and the stage is pure given a known confidence.                                                                                                                                                                                                   | `frames`, `fps`, `lift`, `sagittalConfidence`, optional `strategy` | `VideoAnalysisResult`                                                                |
 
 Stage 0 lives at the hook/orchestrator layer (not inside `analyzeVideoFrames`) because the mismatch drives an Alert — surfacing it requires the hook's return channel. Stages 1a–3 are pure and are called together via `analyzeVideoFrames`, which is the public entry point from both the mobile hook and the dashboard calibration tool.
 
@@ -111,25 +111,25 @@ On-device pose estimation via MediaPipe, replacing the Phase 1 placeholder.
 
 The same `analyzeVideoFrames()` core runs on landmarks from two very different upstream pipelines. They share only the `PoseFrame[]` shape — the extraction knobs and performance profiles differ substantially, and when rep counts diverge between the two, the difference is always upstream of `analyzeVideoFrames`.
 
-| Concern | Mobile (in-app) | Dashboard (calibration) |
-| --- | --- | --- |
-| Entry | `application/analyze-video.ts` → `extractFramesFromVideo` | `apps/dashboard/src/lib/browser-pose-extractor.ts` → `extractLandmarksFromVideo` |
-| MediaPipe API | `react-native-mediapipe` `PoseDetectionOnImage` (IMAGE mode) | `@mediapipe/tasks-vision` `PoseLandmarker.detectForVideo` (VIDEO mode, temporal tracking) |
-| Frame source | `expo-video-thumbnails` JPEG (`quality: 0.8`) | `HTMLVideoElement` frame, read directly by the landmarker |
-| fps | 4 (hard-coded `DEFAULT_TARGET_FPS`) | 10 / 15 / 24 / 30 / 60 (user picker, default 30) |
-| Model | `pose_landmarker_lite.task` (5.6MB) — bundled | lite (5.6MB) / full (9MB) / heavy (29MB) — fetched from CDN |
-| Delegate | `CPU` (forced; see note above) | `GPU` (WebGL2); auto-falls back to `CPU` if init fails |
-| Memory posture | Delete thumbnail + `await yieldToGc()` per frame, 60-frame safety limit | No per-frame cleanup needed; browser handles lifetime |
-| Offline? | Yes (model bundled) | No (model + WASM fetched from jsdelivr / googleapis) |
+| Concern        | Mobile (in-app)                                                         | Dashboard (calibration)                                                                   |
+| -------------- | ----------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
+| Entry          | `application/analyze-video.ts` → `extractFramesFromVideo`               | `apps/dashboard/src/lib/browser-pose-extractor.ts` → `extractLandmarksFromVideo`          |
+| MediaPipe API  | `react-native-mediapipe` `PoseDetectionOnImage` (IMAGE mode)            | `@mediapipe/tasks-vision` `PoseLandmarker.detectForVideo` (VIDEO mode, temporal tracking) |
+| Frame source   | `expo-video-thumbnails` JPEG (`quality: 0.8`)                           | `HTMLVideoElement` frame, read directly by the landmarker                                 |
+| fps            | 4 (hard-coded `DEFAULT_TARGET_FPS`)                                     | 10 / 15 / 24 / 30 / 60 (user picker, default 30)                                          |
+| Model          | `pose_landmarker_lite.task` (5.6MB) — bundled                           | lite (5.6MB) / full (9MB) / heavy (29MB) — fetched from CDN                               |
+| Delegate       | `CPU` (forced; see note above)                                          | `GPU` (WebGL2); auto-falls back to `CPU` if init fails                                    |
+| Memory posture | Delete thumbnail + `await yieldToGc()` per frame, 60-frame safety limit | No per-frame cleanup needed; browser handles lifetime                                     |
+| Offline?       | Yes (model bundled)                                                     | No (model + WASM fetched from jsdelivr / googleapis)                                      |
 
 This divergence matters when investigating pose-detection quality: if the mobile path reports `0/N valid frames` on a clip the dashboard analyses successfully, suspect the extraction layer (thumbnail orientation, JPEG loss, IMAGE-mode missing temporal tracking, or fps under-sampling) before suspecting the analysis pipeline. See backlog #25 for an active investigation.
 
 ### 2.4 — Hook wiring
 
 - [x] Wire `extractFramesFromVideo()` → `analyzeVideoFrames()` in `useVideoAnalysis` hook
-  → `modules/video-analysis/application/analyze-video.ts:extractFramesFromVideo`
-  → `modules/video-analysis/application/analyze-frames.ts:analyzeVideoFrames`
-  → `modules/video-analysis/hooks/useVideoAnalysis.ts`
+      → `modules/video-analysis/application/analyze-video.ts:extractFramesFromVideo`
+      → `modules/video-analysis/application/analyze-frames.ts:analyzeVideoFrames`
+      → `modules/video-analysis/hooks/useVideoAnalysis.ts`
 - [x] Analyze BEFORE compression (better quality for CV)
 - [x] Graceful fallback when MediaPipe unavailable (logs error, saves video without analysis)
 - [x] Add `updateSessionVideoAnalysis()` to repository — saves analysis JSONB after initial insert
@@ -145,7 +145,7 @@ This divergence matters when investigating pose-detection quality: if the mobile
 ### 3.1 — Session context bridge
 
 - [x] `assemble-coaching-context.ts`: assembles video analysis metrics + session data (weight, RPE, soreness, block/week, disruptions) + longitudinal averages from previous videos into a single coaching context object
-  → `modules/video-analysis/application/assemble-coaching-context.ts`
+      → `modules/video-analysis/application/assemble-coaching-context.ts`
 
 ### 3.2 — LLM coaching engine
 
@@ -175,10 +175,10 @@ This divergence matters when investigating pose-detection quality: if the mobile
 ### 3.6 — Local-only video storage (backlog #17, 2026-04-19)
 
 - [x] Drop all raw-video uploads to Supabase Storage — analysis JSONB is the only thing the cloud needs.
-  → `apps/parakeet/src/modules/video-analysis/hooks/useVideoAnalysis.ts:processVideo` (step 6 removed)
-  → `apps/parakeet/src/modules/gym-partners/application/partner-filming.service.ts` (upload step removed)
+      → `apps/parakeet/src/modules/video-analysis/hooks/useVideoAnalysis.ts:processVideo` (step 6 removed)
+      → `apps/parakeet/src/modules/gym-partners/application/partner-filming.service.ts` (upload step removed)
 - [x] Missing-file placeholder in the player — partner-recorded videos show "Video recorded on another device" instead of a black frame.
-  → `apps/parakeet/src/modules/video-analysis/ui/VideoPlayerCard.tsx`
+      → `apps/parakeet/src/modules/video-analysis/ui/VideoPlayerCard.tsx`
 - [x] `session-videos` Storage bucket + `remote_uri` column stay around for legacy rows until the Phase 3 backfill and Phase 4 column drop documented in [`design-local-only-storage.md`](./design-local-only-storage.md).
 
 ### 3.7 — Front view support
@@ -206,7 +206,7 @@ This divergence matters when investigating pose-detection quality: if the mobile
 - **Perspective correction** — `metrics-assembler.ts perspectiveCorrection()` divides foreshortened scalar metrics (depth, forward lean) by `sqrt(sagittalConfidence)` when confidence < 0.8, so oblique-angle videos don't under-report. At pure side (confidence=1.0) the multiplier is 1.0; at 0.1 confidence it caps amplification.
 - **Debug landmarks** — `session_videos.debug_landmarks` is a dev-only JSONB snapshot of the raw `PoseFrame[]` the detector saw. Written by `updateSessionVideoDebugLandmarks` when `__DEV__` is true; never written in release builds. Consumed by `scripts/pull-device-analysis.ts` (copy device landmarks → calibration fixtures) and by the reanalyze regression test.
 - **Readiness score** — `lib/readiness-score.ts computeReadinessFromVerdicts` turns a rolling window of per-rep `RepVerdict`s (IPF pass/borderline/fail) into a 0–100 competition-readiness number. Surfaced on the analysis screen via `ReadinessCard` once at least one analysed video exists.
-- **Personal baseline & deviations** — `lib/personal-baseline.ts` needs `MIN_VIDEOS_FOR_BASELINE` (5) analyses of the same lift to compute per-metric mean/stdev. `detectBaselineDeviations` z-scores the current rep against that baseline and emits `BaselineDeviation` badges. This is *separate* from fatigue signatures (which compare first-vs-last rep *within* a set).
+- **Personal baseline & deviations** — `lib/personal-baseline.ts` needs `MIN_VIDEOS_FOR_BASELINE` (5) analyses of the same lift to compute per-metric mean/stdev. `detectBaselineDeviations` z-scores the current rep against that baseline and emits `BaselineDeviation` badges. This is _separate_ from fatigue signatures (which compare first-vs-last rep _within_ a set).
 
 ## Reanalyze
 

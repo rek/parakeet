@@ -64,7 +64,7 @@ const TYPE_OPTIONS: {
     key: 'timed',
     label: 'Timed / Cardio',
     description:
-      "Single mark-complete entry. Running, rowing, planks — no weight, no rep target.",
+      'Single mark-complete entry. Running, rowing, planks — no weight, no rep target.',
   },
 ];
 
@@ -75,7 +75,12 @@ const MUSCLE_CATEGORY_LABELS: Record<MuscleCategory, string> = {
   core: 'Core',
 };
 
-const MUSCLE_CATEGORY_ORDER: MuscleCategory[] = ['legs', 'push', 'pull', 'core'];
+const MUSCLE_CATEGORY_ORDER: MuscleCategory[] = [
+  'legs',
+  'push',
+  'pull',
+  'core',
+];
 
 interface Props {
   visible: boolean;
@@ -411,7 +416,10 @@ export function AddExerciseModal({
       let key: string;
       if (entry.associatedLift) {
         key = entry.associatedLift;
-      } else if (entry.primaryMuscles.includes('core') && entry.type !== 'timed') {
+      } else if (
+        entry.primaryMuscles.includes('core') &&
+        entry.type !== 'timed'
+      ) {
         key = 'core';
       } else if (entry.type === 'timed') {
         key = 'cardio';
@@ -722,7 +730,8 @@ export function AddExerciseModal({
                             active && styles.muscleChipTextActive,
                           ]}
                         >
-                          {MUSCLE_LABELS_COMPACT[m.id as MuscleGroup] ?? m.label}
+                          {MUSCLE_LABELS_COMPACT[m.id as MuscleGroup] ??
+                            m.label}
                         </Text>
                       </TouchableOpacity>
                     );

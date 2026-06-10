@@ -33,7 +33,9 @@ export function roundUpToNearest(
  *  GH#209: a prescribed 52.5kg requires 1.25kg plates per side. If the lifter
  *  has no 1.25s, 52.5 is unreachable; the next reachable value is 50 or 55.
  *  Pass the result of this fn as the second arg to `roundToNearest`. */
-export function plateIncrementKg(disabledPlatesKg?: readonly PlateKg[]): number {
+export function plateIncrementKg(
+  disabledPlatesKg?: readonly PlateKg[]
+): number {
   const disabled = new Set(disabledPlatesKg ?? []);
   const enabled = PLATE_SIZES_KG.filter((p) => !disabled.has(p));
   if (enabled.length === 0) return DEFAULT_ROUNDING_INCREMENT_KG;

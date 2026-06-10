@@ -124,7 +124,8 @@ export const FEATURE_REGISTRY = [
   {
     id: 'nutrition',
     label: 'Nutrition Protocols',
-    description: 'Lipedema / RAD diet protocols, supplements, and lifestyle catalog',
+    description:
+      'Lipedema / RAD diet protocols, supplements, and lifestyle catalog',
     category: 'health' as const,
     defaultEnabled: false,
   },
@@ -185,7 +186,8 @@ export const FEATURE_REGISTRY = [
   {
     id: 'magicLink',
     label: 'Email Magic Link Sign-In',
-    description: 'Sign in with an email magic link (Google sign-in is preferred)',
+    description:
+      'Sign in with an email magic link (Google sign-in is preferred)',
     category: 'advanced' as const,
     defaultEnabled: false,
   },

@@ -31,7 +31,13 @@ type SourcingFilter = NepalSourcing | 'all';
 
 const TIER_FILTERS: TierFilter[] = ['all', 'core', 'food_sourced', 'optional'];
 const GRADE_FILTERS: GradeFilter[] = ['all', 'A', 'B', 'C'];
-const SOURCING_FILTERS: SourcingFilter[] = ['all', 'local', 'import', 'food', 'mixed'];
+const SOURCING_FILTERS: SourcingFilter[] = [
+  'all',
+  'local',
+  'import',
+  'food',
+  'mixed',
+];
 
 const TIER_FILTER_LABELS: Record<TierFilter, string> = {
   all: 'All',
@@ -68,12 +74,13 @@ export function SupplementSection({
     () =>
       supplements.filter((s) => {
         if (tierFilter !== 'all' && s.tier !== tierFilter) return false;
-        if (gradeFilter !== 'all' && s.evidenceGrade !== gradeFilter) return false;
+        if (gradeFilter !== 'all' && s.evidenceGrade !== gradeFilter)
+          return false;
         if (sourcingFilter !== 'all' && s.nepalSourcing !== sourcingFilter)
           return false;
         return true;
       }),
-    [supplements, tierFilter, gradeFilter, sourcingFilter],
+    [supplements, tierFilter, gradeFilter, sourcingFilter]
   );
 
   const grouped = useMemo(() => {
@@ -200,9 +207,7 @@ function Card({
         {item.evidenceGrade && <EvidenceBadge grade={item.evidenceGrade} />}
       </View>
       {item.dose && <Text style={styles.dose}>{item.dose}</Text>}
-      {item.rationale && (
-        <Text style={styles.rationale}>{item.rationale}</Text>
-      )}
+      {item.rationale && <Text style={styles.rationale}>{item.rationale}</Text>}
       {(item.foodEquivalent || item.nepalSourcing) && (
         <View style={styles.metaRow}>
           {item.nepalSourcing && (

@@ -10,6 +10,7 @@ The three onboarding screens: lift max input, program settings, and program prev
 ## Tasks
 
 **`apps/parakeet/app/(auth)/onboarding/lift-maxes.tsx`:**
+
 - Three sections: Squat, Bench Press, Deadlift
 - Per section:
   - Toggle: "1RM" | "3RM" (default 3RM)
@@ -22,6 +23,7 @@ The three onboarding screens: lift max input, program settings, and program prev
   - navigates immediately to program settings with `estimatedStart=1` (no intermediate state, no extra Next tap required)
 
 **`apps/parakeet/app/(auth)/onboarding/program-settings.tsx`:**
+
 - Duration selector: 3-button segmented control (10 weeks | 12 weeks | 14 weeks), default 10
 - Days per week: segmented control (3 or 4), default 3
 - Start date: `DateTimePicker` (expo-datetime-picker), default next Monday
@@ -35,12 +37,14 @@ The three onboarding screens: lift max input, program settings, and program prev
   - shows loading state and validation hints
 
 **`apps/parakeet/app/(auth)/onboarding/review.tsx`:**
+
 - Horizontal scroll of Week 1 session cards (3 cards for 3-day program)
 - Each card: lift name, intensity type badge (Heavy/Explosive/Rep), weight × sets × reps, planned date
 - "Looks good — Start Training" button → navigate to `/(tabs)/today`
 - "Edit Inputs" link → navigate back to lift-maxes screen
 
 **State management:**
+
 - Onboarding state held in local component state (not persisted — user must complete onboarding in one session or start over)
 - After program activation: navigate and clear onboarding state
 

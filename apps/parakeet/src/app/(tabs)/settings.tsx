@@ -12,7 +12,6 @@ import {
 
 import { useAuth } from '@modules/auth';
 import { useFeatureEnabled } from '@modules/feature-flags';
-import { useWearableStatus } from '@modules/wearable';
 import { formatBirthYear, formatBodyweight } from '@modules/profile';
 import {
   exportTrainingData,
@@ -25,11 +24,12 @@ import {
   useSettingsBadges,
 } from '@modules/settings';
 import type { BarWeightKg, WarmupPlateDisplay } from '@modules/settings';
-import type { PlateKg } from '@shared/constants/plates';
 import { useOtaUpdateStatus } from '@modules/updates';
 import type { OtaStatus } from '@modules/updates';
+import { useWearableStatus } from '@modules/wearable';
 import { captureException } from '@platform/utils/captureException';
 import { SEX_LABELS, THEME_OPTIONS } from '@shared/constants';
+import type { PlateKg } from '@shared/constants/plates';
 import Constants from 'expo-constants';
 import { router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -97,7 +97,7 @@ function wearableSubtitle(status: WearableStatusInfo): string {
 
 function wearableDotColor(
   status: WearableStatusInfo,
-  colors: ColorScheme,
+  colors: ColorScheme
 ): string {
   if (!status.isAvailable) return colors.textTertiary;
   if (status.isPermitted) return colors.success;
@@ -106,7 +106,7 @@ function wearableDotColor(
 
 function otaLabelStyle(
   status: OtaStatus,
-  styles: ReturnType<typeof buildStyles>,
+  styles: ReturnType<typeof buildStyles>
 ): TextStyle | undefined {
   if (status === 'error') return styles.signOutLabel;
   if (status === 'ready') return styles.updateReadyLabel;
@@ -117,7 +117,7 @@ function otaLabelStyle(
 function otaRowOnPress(
   status: OtaStatus,
   applyUpdate: () => void,
-  checkForUpdate: () => void,
+  checkForUpdate: () => void
 ): (() => void) | undefined {
   if (
     status === 'checking' ||

@@ -16,14 +16,13 @@ import {
 } from '@modules/training-volume';
 import type { MrvMevConfig } from '@modules/training-volume';
 import type { MuscleGroup } from '@parakeet/shared-types';
+import { captureException } from '@platform/utils/captureException';
 import {
   MUSCLE_GROUPS_ORDER,
   MUSCLE_LABELS_FULL,
 } from '@shared/constants/training';
 import { router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
-
-import { captureException } from '@platform/utils/captureException';
 
 import { BackLink } from '../../components/navigation/BackLink';
 import { ScreenTitle } from '../../components/ui/ScreenTitle';
@@ -294,7 +293,10 @@ export default function VolumeConfigScreen() {
       router.back();
     } catch (err) {
       captureException(err);
-      Alert.alert('Save Failed', 'Could not save volume config — please try again.');
+      Alert.alert(
+        'Save Failed',
+        'Could not save volume config — please try again.'
+      );
     } finally {
       setIsSaving(false);
     }

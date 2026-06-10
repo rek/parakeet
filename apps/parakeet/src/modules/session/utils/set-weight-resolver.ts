@@ -23,9 +23,7 @@ export function resolveWeightForNextSet({
   nextSetNumber: number;
   effectiveWeightKg: number;
 }): number {
-  const nextActualSet = actualSets.find(
-    (s) => s.set_number === nextSetNumber
-  );
+  const nextActualSet = actualSets.find((s) => s.set_number === nextSetNumber);
   const originalPlannedGrams = weightKgToGrams(
     plannedSets[nextSetNumber - 1]?.weight_kg ?? 0
   );

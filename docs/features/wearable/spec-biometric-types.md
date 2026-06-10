@@ -27,16 +27,7 @@ import { z } from 'zod';
 
 // ── Raw readings ──────────────────────────────────────────────────────────────
 
-export const BiometricTypeSchema = z.enum([
-  'hrv_rmssd',
-  'resting_hr',
-  'sleep_duration',
-  'deep_sleep_pct',
-  'rem_sleep_pct',
-  'spo2',
-  'steps',
-  'active_minutes',
-]);
+export const BiometricTypeSchema = z.enum(['hrv_rmssd', 'resting_hr', 'sleep_duration', 'deep_sleep_pct', 'rem_sleep_pct', 'spo2', 'steps', 'active_minutes']);
 
 export type BiometricType = z.infer<typeof BiometricTypeSchema>;
 
@@ -46,7 +37,7 @@ export const BiometricReadingSchema = z.object({
   type: BiometricTypeSchema,
   value: z.number(),
   recorded_at: z.iso.datetime(),
-  source: z.string(),                  // device name or 'health_connect'
+  source: z.string(), // device name or 'health_connect'
   created_at: z.iso.datetime(),
 });
 
@@ -65,7 +56,7 @@ export type BiometricReadingInsert = z.infer<typeof BiometricReadingInsertSchema
 export const RecoverySnapshotSchema = z.object({
   id: z.uuid(),
   user_id: z.uuid(),
-  date: z.iso.date(),                                // YYYY-MM-DD
+  date: z.iso.date(), // YYYY-MM-DD
   hrv_rmssd: z.number().nullable(),
   hrv_baseline_7d: z.number().nullable(),
   hrv_pct_change: z.number().nullable(),
@@ -104,13 +95,14 @@ export const SessionHrDataSchema = z.object({
   hr_samples: z.array(HrSampleSchema),
   avg_hr: z.number().nullable(),
   max_hr: z.number().nullable(),
-  hr_recovery_60s: z.number().nullable(),  // BPM drop in first 60s post-final-set
+  hr_recovery_60s: z.number().nullable(), // BPM drop in first 60s post-final-set
 });
 
 export type SessionHrData = z.infer<typeof SessionHrDataSchema>;
 ```
 
 **Notes for executor:**
+
 - Use `z.iso.datetime()` and `z.iso.date()` (existing project convention — see `disruption.schema.ts`).
 - Use `z.uuid()` shorthand (existing convention).
 - Do NOT add `.strict()` — match existing schema convention (allow Supabase to add columns without breaking parses).

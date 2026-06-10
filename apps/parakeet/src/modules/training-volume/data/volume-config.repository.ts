@@ -13,9 +13,7 @@ export async function fetchBiologicalSexForVolume(
   return (data?.biological_sex as 'female' | 'male' | null) ?? null;
 }
 
-export async function fetchMuscleVolumeConfig(
-  userId: string
-): Promise<
+export async function fetchMuscleVolumeConfig(userId: string): Promise<
   {
     muscle_group: string;
     mev_sets_per_week: number;

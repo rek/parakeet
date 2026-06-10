@@ -9,23 +9,24 @@
 Integrate video recording into the PostRestOverlay so lifters can start recording before their set. This is the primary in-app recording path — the phone is already propped up, the rest timer just expired, and full set context (set number, weight, reps, RPE) is available without a picker.
 
 Also:
+
 - Remove the header-level `VideoEntryButton` (icon variant) from the active session screen — redundant since mobile-048 added per-set entry points
 - Clarify `SetVideoIcon` on completed set rows as the camera-roll-import entry point (behavior unchanged)
 
 ## Problem
 
-In-app recording is in the wrong place. `SetVideoIcon` only appears on completed sets (`is_completed === true`), but you need to start recording *before* you lift. The current flow assumes you either filmed with the native camera app (camera roll import) or want to record after the fact (doesn't make sense for self-recording).
+In-app recording is in the wrong place. `SetVideoIcon` only appears on completed sets (`is_completed === true`), but you need to start recording _before_ you lift. The current flow assumes you either filmed with the native camera app (camera roll import) or want to record after the fact (doesn't make sense for self-recording).
 
 The header-level `VideoEntryButton` was the original Phase 1 entry point before set-level linking existed. It navigates to the analysis screen with only `sessionId + lift` — no set number, no weight, no RPE. The coaching assembler falls back to a "heaviest weight" heuristic instead of knowing the exact set context. This is the coarse granularity that mobile-048 was designed to replace.
 
 ## Entry Point Model (After This Spec)
 
-| Entry point | When | Context | Use case |
-|---|---|---|---|
-| **PostRestOverlay "Record" button** | Before the set (rest timer expired) | Full: set number, weight, reps from `postRestState` | Primary in-app recording path |
-| **SetVideoIcon on completed set row** | After completing a set | Full: set number, weight, reps, RPE from set data | Camera roll import (filmed with native camera) |
-| **History detail "Add Video" link** | After the session | Session + lift only | Retrospective add from camera roll |
-| ~~Header-level VideoEntryButton~~ | ~~Removed~~ | — | Superseded by PostRestOverlay + SetVideoIcon |
+| Entry point                           | When                                | Context                                             | Use case                                       |
+| ------------------------------------- | ----------------------------------- | --------------------------------------------------- | ---------------------------------------------- |
+| **PostRestOverlay "Record" button**   | Before the set (rest timer expired) | Full: set number, weight, reps from `postRestState` | Primary in-app recording path                  |
+| **SetVideoIcon on completed set row** | After completing a set              | Full: set number, weight, reps, RPE from set data   | Camera roll import (filmed with native camera) |
+| **History detail "Add Video" link**   | After the session                   | Session + lift only                                 | Retrospective add from camera roll             |
+| ~~Header-level VideoEntryButton~~     | ~~Removed~~                         | —                                                   | Superseded by PostRestOverlay + SetVideoIcon   |
 
 ## UX Flow
 
@@ -53,16 +54,16 @@ The header-level `VideoEntryButton` was the original Phase 1 entry point before 
 
 ## Decisions
 
-| # | Decision | Choice | Rationale |
-|---|----------|--------|-----------|
-| 1 | Recording trigger | Explicit "Record" button on PostRestOverlay (opt-in) | Not every set needs recording. Phone may not be positioned. Must not add friction to the normal Complete/Failed flow. |
-| 2 | Camera angle | No picker — `sagittalConfidence` computed automatically from landmarks | mobile-052 removed CameraAnglePicker. Confidence is derived from pose data, not user input. |
-| 3 | Recording stop | Manual stop on RecordVideoSheet | Decoupled from set completion to avoid accidental truncation. The lifter stops recording, then decides Complete vs Failed. |
-| 4 | Video processing timing | Background, after set completion | Don't block the lifter. Save the raw video URI on set completion, run frame extraction + analysis asynchronously. Same path as `processRecordedVideo` in `useVideoAnalysis`. |
-| 5 | Module boundary | PostRestOverlay accepts `recordingSlot?: ReactNode` (slot pattern) | Same pattern as `SetRow.videoIconSlot`. Session module stays unaware of video-analysis internals. Cross-module composition happens at the `app/` layer. |
-| 6 | Set linking | Auto-link to `postRestState.nextSetNumber` | PostRestOverlay already knows the next set's number, weight, and reps. No picker needed — eliminates the ambiguity of the old header-level button. |
-| 7 | Header-level button removal | Remove `VideoEntryButton` (icon variant) from session screen | Redundant since mobile-048 added per-set icons. Lacks set context. Confusing to have both header and per-set icons. |
-| 8 | Feature flag | Reuse `videoAnalysis` flag | PostRestRecordButton self-gates on the same flag. No new flag needed. |
+| #   | Decision                    | Choice                                                                 | Rationale                                                                                                                                                                    |
+| --- | --------------------------- | ---------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | Recording trigger           | Explicit "Record" button on PostRestOverlay (opt-in)                   | Not every set needs recording. Phone may not be positioned. Must not add friction to the normal Complete/Failed flow.                                                        |
+| 2   | Camera angle                | No picker — `sagittalConfidence` computed automatically from landmarks | mobile-052 removed CameraAnglePicker. Confidence is derived from pose data, not user input.                                                                                  |
+| 3   | Recording stop              | Manual stop on RecordVideoSheet                                        | Decoupled from set completion to avoid accidental truncation. The lifter stops recording, then decides Complete vs Failed.                                                   |
+| 4   | Video processing timing     | Background, after set completion                                       | Don't block the lifter. Save the raw video URI on set completion, run frame extraction + analysis asynchronously. Same path as `processRecordedVideo` in `useVideoAnalysis`. |
+| 5   | Module boundary             | PostRestOverlay accepts `recordingSlot?: ReactNode` (slot pattern)     | Same pattern as `SetRow.videoIconSlot`. Session module stays unaware of video-analysis internals. Cross-module composition happens at the `app/` layer.                      |
+| 6   | Set linking                 | Auto-link to `postRestState.nextSetNumber`                             | PostRestOverlay already knows the next set's number, weight, and reps. No picker needed — eliminates the ambiguity of the old header-level button.                           |
+| 7   | Header-level button removal | Remove `VideoEntryButton` (icon variant) from session screen           | Redundant since mobile-048 added per-set icons. Lacks set context. Confusing to have both header and per-set icons.                                                          |
+| 8   | Feature flag                | Reuse `videoAnalysis` flag                                             | PostRestRecordButton self-gates on the same flag. No new flag needed.                                                                                                        |
 
 ## Implementation Phases
 

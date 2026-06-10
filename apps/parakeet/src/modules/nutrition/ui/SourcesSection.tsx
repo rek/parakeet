@@ -1,6 +1,12 @@
 // @spec docs/features/nutrition/spec-data-layer.md
 import { useMemo } from 'react';
-import { Linking, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import {
+  Linking,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 
 import { Ionicons } from '@expo/vector-icons';
 
@@ -9,7 +15,11 @@ import type { ColorScheme } from '../../../theme';
 import { useTheme } from '../../../theme/ThemeContext';
 import { extractSources, type SourceLink } from '../lib/extract-sources';
 
-export function SourcesSection({ descriptionMd }: { descriptionMd: string | null }) {
+export function SourcesSection({
+  descriptionMd,
+}: {
+  descriptionMd: string | null;
+}) {
   const { colors } = useTheme();
   const styles = useMemo(() => buildStyles(colors), [colors]);
   const sources = useMemo(() => extractSources(descriptionMd), [descriptionMd]);
@@ -25,8 +35,8 @@ export function SourcesSection({ descriptionMd }: { descriptionMd: string | null
   return (
     <View style={styles.root}>
       <Text style={styles.intro}>
-        {sources.length} source{sources.length === 1 ? '' : 's'} referenced
-        in the protocol prose. Tap to open.
+        {sources.length} source{sources.length === 1 ? '' : 's'} referenced in
+        the protocol prose. Tap to open.
       </Text>
       {sources.map((s, i) => (
         <SourceCard key={s.url} index={i + 1} source={s} styles={styles} />
@@ -62,11 +72,7 @@ function SourceCard({
           {hostname(source.url)}
         </Text>
       </View>
-      <Ionicons
-        name="open-outline"
-        size={18}
-        color={colors.textTertiary}
-      />
+      <Ionicons name="open-outline" size={18} color={colors.textTertiary} />
     </TouchableOpacity>
   );
 }

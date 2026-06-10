@@ -39,27 +39,24 @@ Analyzes logged session performance and generates adjustment suggestions when pa
   - `max_suggestions_per_lift: number` (default 1)
 
 **Integration with Supabase (called from app after session completion):**
+
 ```typescript
 // apps/parakeet — after session complete
-const logs = await supabase
-  .from('session_logs')
-  .select('*')
-  .eq('lift', lift)
-  .order('completed_at', { ascending: false })
-  .limit(6)
+const logs = await supabase.from('session_logs').select('*').eq('lift', lift).order('completed_at', { ascending: false }).limit(6);
 
-const suggestions = suggestProgramAdjustments(logs.data, DEFAULT_THRESHOLDS)
+const suggestions = suggestProgramAdjustments(logs.data, DEFAULT_THRESHOLDS);
 
 // Write performance_metrics row
 await supabase.from('performance_metrics').insert({
   session_id: sessionId,
   user_id: userId,
-  suggestions: suggestions,         // JSONB
+  suggestions: suggestions, // JSONB
   computed_at: new Date().toISOString(),
-})
+});
 ```
 
 **Unit tests (`packages/training-engine/__tests__/performance-adjuster.test.ts`):**
+
 - [x] 2 consecutive Squat Heavy sessions RPE 9.6 (target 8.5) → high RPE suggestion returned
 - [x] 1 session with high RPE → no suggestion (below consecutive threshold)
 - [x] 3 sessions alternating high/low RPE → no suggestion (not consecutive)

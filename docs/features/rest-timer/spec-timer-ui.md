@@ -14,25 +14,28 @@ The between-set rest timer that starts automatically after a set is logged. Rend
 **`apps/parakeet/components/training/RestTimer.tsx`:**
 
 Props:
+
 ```typescript
 interface RestTimerProps {
-  durationSeconds: number          // from JITOutput.restRecommendations
+  durationSeconds: number; // from JITOutput.restRecommendations
   llmSuggestion?: {
-    deltaSeconds: number
-    formulaBaseSeconds: number
-  }
-  onDone: () => void               // called when user taps Done or timer hits 0
-  intensityLabel: string           // e.g. "Block 3 · Heavy"
-  isAuxiliary?: boolean            // true = smaller pill style
+    deltaSeconds: number;
+    formulaBaseSeconds: number;
+  };
+  onDone: () => void; // called when user taps Done or timer hits 0
+  intensityLabel: string; // e.g. "Block 3 · Heavy"
+  isAuxiliary?: boolean; // true = smaller pill style
 }
 ```
 
 **State:**
+
 - `remaining: number` — countdown in seconds, starts at `durationSeconds`
 - `overtime: boolean` — true when remaining hits 0 and user hasn't dismissed
 - `elapsed: number` — total seconds since timer started (used to record `actual_rest_seconds`)
 
 **Behaviour:**
+
 - Timer ticks every second via `useInterval` (or `setInterval` in a ref)
 - At `remaining === 0`: trigger audio alert + haptic; flip to overtime mode (counts up, display turns red)
 - `+30s` button: `remaining += 30` (ephemeral, does not persist)
@@ -41,6 +44,7 @@ interface RestTimerProps {
 - Auto-dismiss: when the user taps the checkmark to log the next set, timer dismisses (session store action triggers this)
 
 **Display:**
+
 ```
 ┌─────────────────────────────────────┐
 │  Block 3 · Heavy                    │
@@ -58,6 +62,7 @@ Overtime mode: countdown text turns red, shows "+00:12" style elapsed-over displ
 AI suggestion chip: shown when `llmSuggestion` is present and `Math.abs(llmSuggestion.deltaSeconds) >= 30`. Text: "AI: [formulaBase ± delta] suggested". Tapping chip does nothing (informational only).
 
 **Audio + haptic (fires when overtime edge is detected, i.e. `elapsed > effectiveDuration` for first time):**
+
 - `expo-av` (`Audio.Sound.createAsync`) plays `assets/sounds/ding.wav` (880Hz tone, 0.35s, auto-unloads after playback); respects `RestTimerPrefs.audioAlert`
 - `expo-haptics` `Haptics.impactAsync(ImpactFeedbackStyle.Heavy)` at 0:00; respects `RestTimerPrefs.hapticAlert`
 - Both implemented in `FullTimer` via `useEffect([overtime])` + `prevOvertimeRef` edge detection; resets on `[durationSeconds, offset]` change
@@ -72,7 +77,7 @@ AI suggestion chip: shown when `llmSuggestion` is present and `Math.abs(llmSugge
 - Timer renders as `<BottomSheet>` (using `@gorhom/bottom-sheet`) above the set list
 - When timer dismisses, record `actual_rest_seconds` on the previous set in `sessionStore`:
   ```typescript
-  sessionStore.updateSet(prevSetNumber, { actual_rest_seconds: elapsed })
+  sessionStore.updateSet(prevSetNumber, { actual_rest_seconds: elapsed });
   ```
 - When user taps checkmark for the **next** set while timer is active: timer auto-dismisses, records elapsed
 

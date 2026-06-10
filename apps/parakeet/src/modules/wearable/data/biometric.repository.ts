@@ -1,11 +1,11 @@
 // @spec docs/features/wearable/spec-biometric-data.md
-import { typedSupabase } from '@platform/supabase';
 import {
   BiometricReadingSchema,
   type BiometricReading,
   type BiometricReadingInsert,
   type BiometricType,
 } from '@parakeet/shared-types';
+import { typedSupabase } from '@platform/supabase';
 
 export async function upsertBiometricReadings(
   userId: string,

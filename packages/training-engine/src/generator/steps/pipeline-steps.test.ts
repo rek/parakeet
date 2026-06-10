@@ -4,12 +4,12 @@ import { baseInput, makeSets } from '../../__test-helpers__/fixtures';
 import { SorenessLevel } from '../../adjustments/soreness-adjuster';
 import { MuscleGroup } from '../../types';
 import { DEFAULT_MRV_MEV_CONFIG_MALE } from '../../volume/mrv-mev-calculator';
-import { PipelineContext } from './pipeline-context';
 import { applyCyclePhaseAdjustment } from './applyCyclePhaseAdjustment';
 import { applyMrvCap } from './applyMrvCap';
 import { applyReadinessAdjustment } from './applyReadinessAdjustment';
 import { applyRpeAdjustment } from './applyRpeAdjustment';
 import { applySorenessAdjustment } from './applySorenessAdjustment';
+import { PipelineContext } from './pipeline-context';
 
 // ---------------------------------------------------------------------------
 // Test helpers
@@ -398,8 +398,14 @@ describe('applyMrvCap', () => {
 describe('applySorenessAdjustment', () => {
   describe('deload guard', () => {
     it('deload session with high soreness → no-op (guard fires before modifier lookup)', () => {
-      const ctx = makeCtx({ worstSoreness: 7 as SorenessLevel, plannedCount: 5 });
-      const input = baseInput({ intensityType: 'deload', biologicalSex: 'male' });
+      const ctx = makeCtx({
+        worstSoreness: 7 as SorenessLevel,
+        plannedCount: 5,
+      });
+      const input = baseInput({
+        intensityType: 'deload',
+        biologicalSex: 'male',
+      });
 
       applySorenessAdjustment(ctx, input);
 
@@ -435,7 +441,10 @@ describe('applySorenessAdjustment', () => {
     });
 
     it('recovery mode — sorenessSetsRemoved is 0 (sets not counted as removed)', () => {
-      const ctx = makeCtx({ worstSoreness: 9 as SorenessLevel, plannedCount: 5 });
+      const ctx = makeCtx({
+        worstSoreness: 9 as SorenessLevel,
+        plannedCount: 5,
+      });
       const input = baseInput();
 
       applySorenessAdjustment(ctx, input);
@@ -457,7 +466,10 @@ describe('applySorenessAdjustment', () => {
     });
 
     it('soreness 7 (high, male) → 2 set reduction + 5% intensity cut', () => {
-      const ctx = makeCtx({ worstSoreness: 7 as SorenessLevel, plannedCount: 5 });
+      const ctx = makeCtx({
+        worstSoreness: 7 as SorenessLevel,
+        plannedCount: 5,
+      });
       const input = baseInput({ biologicalSex: 'male' });
 
       applySorenessAdjustment(ctx, input);
@@ -468,7 +480,10 @@ describe('applySorenessAdjustment', () => {
     });
 
     it('soreness 7 (high, female) → 1 set reduction + 3% intensity cut', () => {
-      const ctx = makeCtx({ worstSoreness: 7 as SorenessLevel, plannedCount: 5 });
+      const ctx = makeCtx({
+        worstSoreness: 7 as SorenessLevel,
+        plannedCount: 5,
+      });
       const input = baseInput({ biologicalSex: 'female' });
 
       applySorenessAdjustment(ctx, input);
@@ -478,7 +493,10 @@ describe('applySorenessAdjustment', () => {
     });
 
     it('plannedCount never goes below 1 even with large setReduction', () => {
-      const ctx = makeCtx({ worstSoreness: 7 as SorenessLevel, plannedCount: 1 });
+      const ctx = makeCtx({
+        worstSoreness: 7 as SorenessLevel,
+        plannedCount: 1,
+      });
       const input = baseInput({ biologicalSex: 'male' }); // HIGH_MALE: setReduction=2
 
       applySorenessAdjustment(ctx, input);
@@ -525,7 +543,11 @@ describe('applyReadinessAdjustment', () => {
   describe('deload guard', () => {
     it('deload session with poor sleep and low energy → no-op', () => {
       const ctx = makeCtx({ plannedCount: 5 });
-      const input = baseInput({ intensityType: 'deload', sleepQuality: 1, energyLevel: 1 });
+      const input = baseInput({
+        intensityType: 'deload',
+        sleepQuality: 1,
+        energyLevel: 1,
+      });
 
       applyReadinessAdjustment(ctx, input);
 
@@ -645,7 +667,10 @@ describe('applyCyclePhaseAdjustment', () => {
   describe('deload guard', () => {
     it('deload session with menstrual phase → no-op', () => {
       const ctx = makeCtx({ plannedCount: 5 });
-      const input = baseInput({ intensityType: 'deload', cyclePhase: 'menstrual' });
+      const input = baseInput({
+        intensityType: 'deload',
+        cyclePhase: 'menstrual',
+      });
 
       applyCyclePhaseAdjustment(ctx, input);
 
@@ -656,7 +681,10 @@ describe('applyCyclePhaseAdjustment', () => {
 
     it('deload session with late_luteal phase → no-op', () => {
       const ctx = makeCtx({ plannedCount: 5 });
-      const input = baseInput({ intensityType: 'deload', cyclePhase: 'late_luteal' });
+      const input = baseInput({
+        intensityType: 'deload',
+        cyclePhase: 'late_luteal',
+      });
 
       applyCyclePhaseAdjustment(ctx, input);
 

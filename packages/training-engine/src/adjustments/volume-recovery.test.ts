@@ -196,9 +196,7 @@ describe('evaluateVolumeRecovery', () => {
   // -- Rehab Mode (GH#220) --
   it('returns null when isInRehabMode — cap implies no adaptive volume', () => {
     // All conditions for an offer are met, but isInRehabMode suppresses it.
-    const result = evaluateVolumeRecovery(
-      makeContext({ isInRehabMode: true })
-    );
+    const result = evaluateVolumeRecovery(makeContext({ isInRehabMode: true }));
     expect(result).toBeNull();
   });
 });

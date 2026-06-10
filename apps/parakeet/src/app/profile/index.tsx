@@ -234,10 +234,7 @@ export default function ProfileScreen() {
   const { colors } = useTheme();
   const styles = useMemo(() => buildStyles(colors), [colors]);
   const { profile, bwHistory, isLoading } = useProfileEditor();
-  const {
-    saveProfile,
-    isPending: isSavePending,
-  } = useSaveProfile();
+  const { saveProfile, isPending: isSavePending } = useSaveProfile();
   const { deleteEntry } = useDeleteBodyweight();
 
   const [displayName, setDisplayName] = useState('');
@@ -247,7 +244,7 @@ export default function ProfileScreen() {
   const [heightCm, setHeightCm] = useState('');
   const [leanMassKg, setLeanMassKg] = useState('');
   const [activityLevel, setActivityLevel] = useState<ActivityLevel | null>(
-    null,
+    null
   );
   const [goal, setGoal] = useState<Goal | null>(null);
   const [saveError, setSaveError] = useState<string | null>(null);
@@ -267,7 +264,7 @@ export default function ProfileScreen() {
     );
     setHeightCm(profile.height_cm != null ? profile.height_cm.toString() : '');
     setLeanMassKg(
-      profile.lean_mass_kg != null ? profile.lean_mass_kg.toString() : '',
+      profile.lean_mass_kg != null ? profile.lean_mass_kg.toString() : ''
     );
     setActivityLevel(profile.activity_level ?? null);
     setGoal(profile.goal ?? null);

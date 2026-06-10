@@ -31,6 +31,7 @@ Sex-specific default `FormulaConfig` objects for the Cube Method scheduler. Fema
   - `'male'` or `undefined` → `DEFAULT_FORMULA_CONFIG_MALE`
 
 **Unit tests (`packages/training-engine/src/__tests__/blocks.test.ts`):**
+
 - [ ] `getDefaultFormulaConfig('female').block1.heavy.sets` === 3
 - [ ] `getDefaultFormulaConfig('female').block1.heavy.rpe_target` === 8.0
 - [ ] `getDefaultFormulaConfig('female').block2.heavy.sets` === 3
@@ -41,6 +42,7 @@ Sex-specific default `FormulaConfig` objects for the Cube Method scheduler. Fema
 - [ ] `getDefaultFormulaConfig(undefined)` returns male config
 
 **Export from `packages/training-engine/src/index.ts`:**
+
 - [ ] `export * from './cube/blocks'` already covers new exports — no change needed
 
 ## Usage Context

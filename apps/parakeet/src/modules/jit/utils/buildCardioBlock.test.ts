@@ -53,11 +53,11 @@ describe('buildCardioBlock', () => {
   });
 
   it('clamps absurd durations into range', () => {
-    expect(buildCardioBlock({ cardioPool: POOL, durationMin: 999 })?.sets[0].reps).toBe(
-      90
-    );
-    expect(buildCardioBlock({ cardioPool: POOL, durationMin: 0 })?.sets[0].reps).toBe(
-      1
-    );
+    expect(
+      buildCardioBlock({ cardioPool: POOL, durationMin: 999 })?.sets[0].reps
+    ).toBe(90);
+    expect(
+      buildCardioBlock({ cardioPool: POOL, durationMin: 0 })?.sets[0].reps
+    ).toBe(1);
   });
 });

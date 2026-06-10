@@ -24,9 +24,15 @@ const mockNextTrainingDate = vi.hoisted(() =>
 const mockFetchLastResolvedLiftForProgram = vi.hoisted(() => vi.fn());
 const mockFetchHasCompletedSessionToday = vi.hoisted(() => vi.fn());
 const mockAppendNextUnendingSession = vi.hoisted(() => vi.fn());
-const mockGetLatestSorenessRatings = vi.hoisted(() => vi.fn().mockResolvedValue(null));
-const mockFetchLastCompletedAtForLift = vi.hoisted(() => vi.fn().mockResolvedValue(null));
-const mockFetchRecentLogsForLift = vi.hoisted(() => vi.fn().mockResolvedValue([]));
+const mockGetLatestSorenessRatings = vi.hoisted(() =>
+  vi.fn().mockResolvedValue(null)
+);
+const mockFetchLastCompletedAtForLift = vi.hoisted(() =>
+  vi.fn().mockResolvedValue(null)
+);
+const mockFetchRecentLogsForLift = vi.hoisted(() =>
+  vi.fn().mockResolvedValue([])
+);
 
 vi.mock('../data/session.repository', () => ({
   fetchTodaySession: mockFetchTodaySession,
@@ -231,7 +237,9 @@ describe('findTodaySession', () => {
 
     expect(mockAppendNextUnendingSession).toHaveBeenCalledOnce();
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const lastResolvedLift = (mockAppendNextUnendingSession.mock.calls[0] as any)[3];
+    const lastResolvedLift = (
+      mockAppendNextUnendingSession.mock.calls[0] as any
+    )[3];
     expect(lastResolvedLift).toBe('squat');
   });
 
@@ -255,7 +263,9 @@ describe('findTodaySession', () => {
     mockGetLatestSorenessRatings.mockResolvedValue({ quads: 8, glutes: 3 });
     // Last session for lift was 5 days ago
     const fiveDaysAgo = new Date(Date.now() - 5 * 86_400_000).toISOString();
-    mockFetchLastCompletedAtForLift.mockResolvedValue({ completed_at: fiveDaysAgo });
+    mockFetchLastCompletedAtForLift.mockResolvedValue({
+      completed_at: fiveDaysAgo,
+    });
     // Two recent sessions with RPE 9 and 8
     mockFetchRecentLogsForLift.mockResolvedValue([
       { actual_rpe: 9, intensity_type: 'heavy' },

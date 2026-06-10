@@ -3,10 +3,6 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { AppState, StyleSheet, Text, TouchableOpacity } from 'react-native';
 
 import { getRestTimerPrefs } from '@modules/settings';
-import {
-  selectActiveTimer,
-  useSessionStore,
-} from '../store/sessionStore';
 import { sessionLabel } from '@shared/utils/string';
 import * as Haptics from 'expo-haptics';
 import { router, usePathname } from 'expo-router';
@@ -14,6 +10,7 @@ import { router, usePathname } from 'expo-router';
 import { formatMMSS } from '../../../shared/utils';
 import { radii, spacing, typography } from '../../../theme';
 import { useTheme } from '../../../theme/ThemeContext';
+import { selectActiveTimer, useSessionStore } from '../store/sessionStore';
 import { detectOvertimeEdge } from '../utils/overtime-edge';
 
 function getBlockLabel(
@@ -134,7 +131,8 @@ export function ReturnToSessionBanner() {
       activeTimer.timerStartedAt != null
         ? Math.floor((Date.now() - activeTimer.timerStartedAt) / 1000)
         : activeTimer.elapsed;
-    const remaining = activeTimer.durationSeconds + activeTimer.offset - elapsed;
+    const remaining =
+      activeTimer.durationSeconds + activeTimer.offset - elapsed;
     overtime = remaining <= 0;
     restLabel = overtime ? 'Rest done' : `Rest: ${formatMMSS(remaining)}`;
   }

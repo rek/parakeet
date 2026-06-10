@@ -174,7 +174,7 @@ function mifflinStJeor(
   bodyweight_kg: number,
   height_cm: number,
   age_years: number,
-  sex: BiologicalSex,
+  sex: BiologicalSex
 ): number {
   const base = 10 * bodyweight_kg + 6.25 * height_cm - 5 * age_years;
   return sex === 'male' ? base + 5 : base - 161;
@@ -194,10 +194,18 @@ function computeBmr(
   biological_sex: BiologicalSex,
   height_cm: number | null | undefined,
   age_years: number | null | undefined,
-  lean_mass_kg: number | null | undefined,
-): { bmr: number; bmr_method: MacroTarget['bmr_method']; low_confidence: boolean } {
+  lean_mass_kg: number | null | undefined
+): {
+  bmr: number;
+  bmr_method: MacroTarget['bmr_method'];
+  low_confidence: boolean;
+} {
   if (lean_mass_kg != null && lean_mass_kg > 0) {
-    return { bmr: katchMcCardle(lean_mass_kg), bmr_method: 'katch_mcardle', low_confidence: false };
+    return {
+      bmr: katchMcCardle(lean_mass_kg),
+      bmr_method: 'katch_mcardle',
+      low_confidence: false,
+    };
   }
   if (height_cm != null && height_cm > 0) {
     const age = age_years ?? MacroTargetDefaults.age_years_fallback;
@@ -207,7 +215,11 @@ function computeBmr(
       low_confidence: age_years == null,
     };
   }
-  return { bmr: bodyweightFallback(bodyweight_kg, biological_sex), bmr_method: 'fallback', low_confidence: true };
+  return {
+    bmr: bodyweightFallback(bodyweight_kg, biological_sex),
+    bmr_method: 'fallback',
+    low_confidence: true,
+  };
 }
 
 // ---------------------------------------------------------------------------
@@ -217,18 +229,24 @@ function computeBmr(
 function computeCarbFat(
   config: ProtocolConfig,
   kcal: number,
-  protein_kcal: number,
+  protein_kcal: number
 ): { carb_g: number; fat_g: number } {
   if (config.carb_ceiling_g != null) {
     // Keto: fixed carb ceiling, fat fills residual.
     const carb_g = config.carb_ceiling_g;
-    const fat_g = Math.max(0, Math.round((kcal - protein_kcal - carb_g * 4) / 9));
+    const fat_g = Math.max(
+      0,
+      Math.round((kcal - protein_kcal - carb_g * 4) / 9)
+    );
     return { carb_g, fat_g };
   }
   if (config.carb_pct != null) {
     // Standard: carb-first, fat fills residual.
     const carb_g = Math.round((kcal * config.carb_pct) / 4);
-    const fat_g = Math.max(0, Math.round((kcal - protein_kcal - carb_g * 4) / 9));
+    const fat_g = Math.max(
+      0,
+      Math.round((kcal - protein_kcal - carb_g * 4) / 9)
+    );
     return { carb_g, fat_g };
   }
   // RAD: fat-first, carbs fill residual.
@@ -259,7 +277,11 @@ export function computeMacroTargets(input: MacroTargetInput): MacroTarget {
 
   // 1. BMR
   const { bmr, bmr_method, low_confidence } = computeBmr(
-    bodyweight_kg, biological_sex, height_cm, age_years, lean_mass_kg,
+    bodyweight_kg,
+    biological_sex,
+    height_cm,
+    age_years,
+    lean_mass_kg
   );
 
   // 2. TDEE
@@ -277,7 +299,8 @@ export function computeMacroTargets(input: MacroTargetInput): MacroTarget {
 
   // 4. Protein — lean-mass basis preferred when known.
   const perKg = config.protein_g_per_kg * (training_day ? 1.1 : 1);
-  const ref_mass = lean_mass_kg != null && lean_mass_kg > 0 ? lean_mass_kg : bodyweight_kg;
+  const ref_mass =
+    lean_mass_kg != null && lean_mass_kg > 0 ? lean_mass_kg : bodyweight_kg;
   const protein_g = Math.round(ref_mass * perKg);
   const protein_kcal = protein_g * 4;
 

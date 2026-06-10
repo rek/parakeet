@@ -30,20 +30,24 @@ reading as a missed/failed set.
 ## Code
 
 ### `modules/session/store/sessionStore.ts`
+
 - `AuxiliaryActualSet.skipped?: boolean` — persisted via the existing
   `auxiliarySets` partialize, so it survives an app kill mid-session.
 - `setAuxSetSkipped(exercise, setNumber, skipped)` → `sessionStore.ts:setAuxSetSkipped`
   — flips the flag on the matching aux set; leaves `set_number` untouched.
 
 ### `modules/session/utils/session-stats.ts`
+
 - `computeSessionStats` filters `skipped` aux out of the active set before
   deriving `isAuxOnly`, `totalSets`, and `completedSets`.
 
 ### `modules/session/ui/AuxSetRow.tsx`
+
 - `AuxSetRow` → wraps an aux `SetRow`. Renders the greyed "Skipped + restore"
   state when `isSkipped`, otherwise the row plus the skip `×` (only when
   `!isCompleted`).
 
 ### `app/(tabs)/session/[sessionId].tsx`
+
 - Regular and volume-top-up aux `SetRow`s are wrapped in `AuxSetRow`, wired to
   `setAuxSetSkipped`.

@@ -15,7 +15,7 @@ on:
       message:
         description: Update message
         required: false
-        default: ""
+        default: ''
 
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true

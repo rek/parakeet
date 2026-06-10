@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
-import type { AuxAnchorResult } from '../../auxiliary/anchor';
 import { baseInput } from '../../__test-helpers__/fixtures';
+import type { AuxAnchorResult } from '../../auxiliary/anchor';
 import { DEFAULT_MRV_MEV_CONFIG_MALE } from '../../volume/mrv-mev-calculator';
 import { createMuscleMapper } from '../../volume/muscle-mapper';
 import { generateJITSession } from '../jit-session-generator';

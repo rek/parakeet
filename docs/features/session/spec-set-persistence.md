@@ -44,9 +44,11 @@ CREATE POLICY "set_logs owner write" ON public.set_logs
 ```
 
 ### Unique constraint rationale
+
 `(session_id, kind, exercise, set_number)` with `NULLS NOT DISTINCT` (Postgres 15+) — idempotent upsert target. Repeated writes for the same set (retry, late sync) collapse to one row. `NULLS NOT DISTINCT` avoids the default Postgres behaviour that treats NULL exercise values as distinct, so primary-set rows dedupe correctly. (Originally planned as a generated `exercise_key` column; ended up simpler.)
 
 ### Trigger: flip to `in_progress` on first set
+
 ```sql
 CREATE FUNCTION public.set_logs_mark_in_progress() RETURNS trigger AS $$
 BEGIN
@@ -62,11 +64,13 @@ CREATE TRIGGER set_logs_mark_in_progress_trigger
 AFTER INSERT ON public.set_logs
 FOR EACH ROW EXECUTE FUNCTION public.set_logs_mark_in_progress();
 ```
+
 Guarantees the server status reflects reality without a separate client call race.
 
 ## Tasks
 
 ### Data layer
+
 - [x] `apps/parakeet/src/modules/session/data/session.repository.ts`
   - [x] `upsertSetLog(input: UpsertSetLogInput): Promise<void>` — idempotent upsert on `(session_id, kind, exercise, set_number)`.
   - [x] `fetchSetLogs(sessionId: string): Promise<SetLogRow[]>` — ordered by `kind, exercise, set_number`.
@@ -74,6 +78,7 @@ Guarantees the server status reflects reality without a separate client call rac
   - [ ] `deleteSetLog(sessionId: string, kind, exercise, setNumber)` — deferred; requires corrections UX.
 
 ### Application layer
+
 - [x] `apps/parakeet/src/modules/session/application/set-persistence.service.ts` (new)
   - [x] `persistSet(args)` — best-effort upsert; on network error enqueues `upsert_set_log`, on non-network error captures to Sentry. Never throws.
   - [x] `flushUnsyncedSets(userId)` — iterates store, fires persistSet for every `is_completed && !synced_at` set. Called on session screen mount and before `initSession` clobbers state.
@@ -82,12 +87,14 @@ Guarantees the server status reflects reality without a separate client call rac
   - [x] Dual-write to `session_logs.actual_sets` / `auxiliary_sets` removed on 2026-04-19 after the column drop (Migration B). `set_logs` is now the sole authoritative store.
 
 ### Hook layer
+
 - [x] `apps/parakeet/src/modules/session/hooks/useSetPersistence.ts` (new)
   - Subscribes to `sessionStore`, diffs primary+aux snapshots on each change, fires `persistSet` for transitions to completed and for edits to already-completed sets. Skips the initial rehydrate fire via snapshot seeding.
   - Mounted in `app/(tabs)/session/[sessionId].tsx`.
 - [ ] `apps/parakeet/src/modules/session/hooks/useSetCompletionFlow.ts` — unchanged. The subscriber-based approach in `useSetPersistence` covers every `updateSet` / `updateAuxiliarySet` call site without per-handler wiring.
 
 ### Store
+
 - [x] `apps/parakeet/src/platform/store/sessionStore.ts`
   - [x] `synced_at?: string` added to `ActualSet` and `AuxiliaryActualSet`.
   - [x] `updateSet` / `updateAuxiliarySet` clear `synced_at` when any value field changes (ensures the subscriber re-syncs edits).
@@ -95,6 +102,7 @@ Guarantees the server status reflects reality without a separate client call rac
   - [x] `wouldClobberSessionStore(newSessionId)` selector — true when there are completed-but-unsynced sets on a different session.
 
 ### Sync queue
+
 - [x] `apps/parakeet/src/platform/store/syncStore.ts`
   - [x] New op kind `upsert_set_log` with payload matching `UpsertSetLogInput`.
   - [x] Dedupe on enqueue: re-enqueueing for the same `(sessionId, kind, exercise, set_number)` replaces the prior op (latest wins).
@@ -103,11 +111,13 @@ Guarantees the server status reflects reality without a separate client call rac
   - [x] Drain handles `upsert_set_log` via `upsertSetLog`, marks matching store entry synced on success, standard retry semantics on network failure.
 
 ### History reads
+
 - [x] `apps/parakeet/src/modules/history/` — reads set data via `getSessionSetsBySessionIds`, exported from session module's service layer (internal name in the repo is `fetchSessionSetsBySessionIds`; exposed publicly as the service-named `getSessionSetsBySessionIds` per ai-learnings.md barrel-leak rule). Consumers across JIT, achievements, cycle-review, body-review, motivational-message, export, and decision-replay also migrated.
 
 ## Backfill
 
 Migration script (one-shot, idempotent):
+
 ```sql
 INSERT INTO public.set_logs (session_id, user_id, kind, exercise, set_number, weight_grams, reps_completed, rpe_actual, notes, logged_at)
 SELECT
@@ -131,16 +141,19 @@ ON CONFLICT DO NOTHING;
 ## Tests
 
 ### Unit
+
 - [ ] `persistSet` idempotent: two calls with same `(session, kind, exercise, set_number)` produce one row.
 - [ ] `persistSet` offline: enqueues, does not throw; queue drain resolves on reconnect.
 - [ ] Store dedupe: re-enqueue with same set replaces payload.
 
 ### Integration
+
 - [ ] Log 3 primary sets, kill process cold, reopen app → `set_logs` has 3 rows; session status = `in_progress`.
 - [ ] Log 3 sets online, 2 aux sets offline → reconnect → server has 5 rows.
 - [ ] Run backfill on a DB snapshot → row count equals sum of `jsonb_array_length(actual_sets) + jsonb_array_length(auxiliary_sets)` across existing `session_logs`.
 
 ### RLS
+
 - [ ] Other-user cannot select / insert against a session they don't own.
 - [ ] First-set trigger flips `planned → in_progress` but leaves `completed` untouched.
 

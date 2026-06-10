@@ -1,7 +1,6 @@
+import type { WorkoutTemplateItem } from '@modules/workout-templates';
 import { slugify } from '@parakeet/training-engine';
 import { describe, expect, it } from 'vitest';
-
-import type { WorkoutTemplateItem } from '@modules/workout-templates';
 
 import { expandTemplate } from './expandTemplate';
 
@@ -98,9 +97,13 @@ describe('expandTemplate', () => {
       baseItem(1, 'Dumbbell Curl', null, 12, 60), // weighted — should resolve
     ];
 
-    const entries = expandTemplate({ rounds: 1, name: 'test-template' }, items, {
-      computeWeightGrams: (ex) => (ex === 'Dumbbell Curl' ? 5000 : 99999),
-    });
+    const entries = expandTemplate(
+      { rounds: 1, name: 'test-template' },
+      items,
+      {
+        computeWeightGrams: (ex) => (ex === 'Dumbbell Curl' ? 5000 : 99999),
+      }
+    );
 
     expect(entries[0].weight_grams).toBe(0); // timed never calls the resolver
     expect(entries[1].weight_grams).toBe(5000);

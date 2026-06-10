@@ -12,7 +12,7 @@ rotation prescribed — "I don't want the planned bench today, I'll squat instea
   **intensity** (heavy/explosive/rep) is auto-recomputed for the chosen lift and
   shown read-only. No manual intensity override.
 - **Rotation re-bases off what you did.** Unending picks the next lift from the
-  last *resolved* lift (`computeNextUnendingLift` ← `fetchLastResolvedLiftForProgram`).
+  last _resolved_ lift (`computeNextUnendingLift` ← `fetchLastResolvedLiftForProgram`).
   Changing this session's `primary_lift` is all that's needed — the displaced
   lift naturally becomes next. No counters touched; `week_number`/`day_number`/
   `block_number`/`is_deload` are unchanged (schedule position is preserved, only
@@ -26,7 +26,7 @@ rotation prescribed — "I don't want the planned bench today, I'll squat instea
   the soreness sliders re-derive to the new lift's primary muscles
   (`LIFT_PRIMARY_SORENESS_MUSCLES[primary_lift]`).
 - Intensity is recomputed via `selectIntensityTypeForUnending(lift, week_number,
-  signals)` — same engine rule as next-session generation (see
+signals)` — same engine rule as next-session generation (see
   [domain/periodization.md](../../domain/periodization.md#unending-intensity-selection)).
 - The stale (old-lift) JIT prescription is cleared (`planned_sets` +
   `jit_generated_at` → null); JIT regenerates off the updated session row when
@@ -37,24 +37,29 @@ rotation prescribed — "I don't want the planned bench today, I'll squat instea
 ## Code
 
 ### `packages/training-engine` (no change)
+
 - `selectIntensityTypeForUnending`, `LIFTS`, `computeNextUnendingLift` — reused.
 
 ### `modules/session/data/session.repository.ts`
+
 - `updateSessionLift(sessionId, primaryLift, intensityType)` — updates lift +
   intensity, nulls `planned_sets`/`jit_generated_at`; guarded to
   `status IN ('planned','in_progress')`.
 
 ### `modules/session/application/session.service.ts`
+
 - `buildIntensitySignalsForLift(userId, lift)` — extracted from
   `generateNextUnendingSession` (now shared by both paths).
 - `swapSessionLift({ sessionId, userId, newLift })` → recomputes intensity for
   the new lift and calls `updateSessionLift`. No-op when the lift is unchanged.
 
 ### `modules/session/ui/WorkoutTypeSelector.tsx`
+
 - `WorkoutTypeSelector` — segmented lift chips; recommended tag; read-only
   "Intensity: X (auto)" note.
 
 ### `app/(tabs)/session/soreness.tsx`
+
 - Fetches `programMode` + captures `recommendedLift` at bootstrap; renders the
   selector when unending; `handleSelectLift` calls `swapSessionLift` then
   refreshes the session.

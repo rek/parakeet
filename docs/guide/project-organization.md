@@ -45,12 +45,12 @@ Component / Screen
 
 ### Where things live
 
-| File | Location | Responsibility |
-|------|----------|---------------|
-| `*.repository.ts` | `modules/*/data/` | Supabase queries, row normalization, type parsing. **Private** to the module — never exported via `index.ts`. |
-| `*.queries.ts` | `modules/*/data/` | `queryOptions` factories (key + queryFn co-located). Exported via module `index.ts`. |
-| `*.service.ts` | `modules/*/application/` | Orchestration: coordinates repositories, applies business rules, calls other module services. |
-| `use*.ts` | `modules/*/hooks/` | Thin React Query wrappers. Only exists when it adds logic beyond the `queryOptions` — e.g. `useAuth()`, multi-query aggregation, `select`, `refetchInterval`. |
+| File              | Location                 | Responsibility                                                                                                                                                |
+| ----------------- | ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `*.repository.ts` | `modules/*/data/`        | Supabase queries, row normalization, type parsing. **Private** to the module — never exported via `index.ts`.                                                 |
+| `*.queries.ts`    | `modules/*/data/`        | `queryOptions` factories (key + queryFn co-located). Exported via module `index.ts`.                                                                          |
+| `*.service.ts`    | `modules/*/application/` | Orchestration: coordinates repositories, applies business rules, calls other module services.                                                                 |
+| `use*.ts`         | `modules/*/hooks/`       | Thin React Query wrappers. Only exists when it adds logic beyond the `queryOptions` — e.g. `useAuth()`, multi-query aggregation, `select`, `refetchInterval`. |
 
 ### Query definitions (`*.queries.ts`)
 
@@ -58,16 +58,18 @@ Each module owns its query keys and functions via `queryOptions` factories:
 
 ```ts
 // modules/program/data/program.queries.ts
-import { queryOptions } from '@tanstack/react-query'
-import { getActiveProgram } from '../application/program.service'
+import { queryOptions } from '@tanstack/react-query';
+
+import { getActiveProgram } from '../application/program.service';
 
 export const programQueries = {
-  all:    () => ['program'] as const,
-  active: (userId: string) => queryOptions({
-    queryKey: [...programQueries.all(), 'active', userId] as const,
-    queryFn:  () => getActiveProgram(userId),
-  }),
-}
+  all: () => ['program'] as const,
+  active: (userId: string) =>
+    queryOptions({
+      queryKey: [...programQueries.all(), 'active', userId] as const,
+      queryFn: () => getActiveProgram(userId),
+    }),
+};
 ```
 
 These replace the centralized `qk` key registry in `platform/query/keys.ts` (legacy — still used in existing code, but new code should define queries in the module's `data/` folder).
@@ -106,6 +108,7 @@ Legacy top-level folders (`lib`, `services`, `data`, `hooks`, `queries`, `networ
 Expo Router shell only — no business logic. Screens compose module APIs.
 
 Key routes:
+
 - `(tabs)/today.tsx` — Today screen (workout card, volume, disruption banners)
 - `(tabs)/session/[sessionId].tsx` — Active session logging
 - `(tabs)/session/complete.tsx` — Session complete screen
@@ -125,26 +128,26 @@ Key routes:
 
 Infrastructure only. No feature business logic.
 
-| Path | Alias | What it provides |
-| ---- | ----- | ---------------- |
-| `platform/supabase/` | `@platform/supabase` | Supabase client, database types, bootstrap |
-| `platform/query/` | `@platform/query` | React Query client, query key registry, default options |
-| `platform/network/` | `@platform/network` | Network status hook, JSON codec helpers |
-| `platform/store/` | (direct import) | Zustand stores: `sessionStore`, `syncStore` |
-| `platform/lib/` | (direct import) | Storage adapter, rest notification scheduler |
-| `platform/utils/` | (direct import) | `captureException` wrapper |
+| Path                 | Alias                | What it provides                                        |
+| -------------------- | -------------------- | ------------------------------------------------------- |
+| `platform/supabase/` | `@platform/supabase` | Supabase client, database types, bootstrap              |
+| `platform/query/`    | `@platform/query`    | React Query client, query key registry, default options |
+| `platform/network/`  | `@platform/network`  | Network status hook, JSON codec helpers                 |
+| `platform/store/`    | (direct import)      | Zustand stores: `sessionStore`, `syncStore`             |
+| `platform/lib/`      | (direct import)      | Storage adapter, rest notification scheduler            |
+| `platform/utils/`    | (direct import)      | `captureException` wrapper                              |
 
 ## Shared (`apps/parakeet/src/shared/`)
 
 Cross-feature, domain-agnostic utilities and types.
 
-| Path | What it provides |
-| ---- | ---------------- |
-| `shared/types/domain.ts` | App-layer domain types (mirrors DB shapes for UI use) |
-| `shared/types/navigation.ts` | Expo Router typed params |
-| `shared/utils/date.ts` | Date formatting helpers |
-| `shared/constants/training.ts` | Training constants (lift names, muscle groups, etc.) |
-| `shared/network/database.ts` | Shared DB row type helpers |
+| Path                           | What it provides                                      |
+| ------------------------------ | ----------------------------------------------------- |
+| `shared/types/domain.ts`       | App-layer domain types (mirrors DB shapes for UI use) |
+| `shared/types/navigation.ts`   | Expo Router typed params                              |
+| `shared/utils/date.ts`         | Date formatting helpers                               |
+| `shared/constants/training.ts` | Training constants (lift names, muscle groups, etc.)  |
+| `shared/network/database.ts`   | Shared DB row type helpers                            |
 
 ## Packages
 

@@ -15,7 +15,7 @@ Extract all training domain logic into **`packages/training-engine`**: a pure Ty
 In Phase 1, `apps/api` imports it directly as an Nx package dependency:
 
 ```typescript
-import { generateProgram } from "@parakeet/training-engine";
+import { generateProgram } from '@parakeet/training-engine';
 ```
 
 `apps/parakeet` has zero access to `packages/training-engine` (enforced via Nx module boundary rules).
@@ -100,11 +100,7 @@ import { generateProgram } from "@parakeet/training-engine";
           },
           {
             "sourceTag": "scope:api",
-            "onlyDependOnLibsWithTags": [
-              "scope:shared",
-              "scope:server",
-              "scope:engine"
-            ]
+            "onlyDependOnLibsWithTags": ["scope:shared", "scope:server", "scope:engine"]
           }
         ]
       }
@@ -117,23 +113,18 @@ import { generateProgram } from "@parakeet/training-engine";
 
 ```typescript
 // Program generation
-export { generateProgram } from "./generator/program-generator";
-export { estimateOneRepMax } from "./formulas/one-rep-max";
+export { generateProgram } from './generator/program-generator';
+export { estimateOneRepMax } from './formulas/one-rep-max';
 
 // Adjustment suggestions
-export { suggestProgramAdjustments } from "./adjustments/performance-adjuster";
-export { suggestEdgeCaseAdjustment } from "./adjustments/edge-case-adjuster";
+export { suggestProgramAdjustments } from './adjustments/performance-adjuster';
+export { suggestEdgeCaseAdjustment } from './adjustments/edge-case-adjuster';
 
 // Default formula config (used by GET /v1/formulas/defaults)
-export { DEFAULT_FORMULA_CONFIG } from "./cube/blocks";
+export { DEFAULT_FORMULA_CONFIG } from './cube/blocks';
 
 // Types
-export type {
-  GeneratedProgram,
-  FormulaConfig,
-  LiftMaxes,
-  AdjustmentSuggestion,
-} from "./types/program.types";
+export type { GeneratedProgram, FormulaConfig, LiftMaxes, AdjustmentSuggestion } from './types/program.types';
 ```
 
 ## References

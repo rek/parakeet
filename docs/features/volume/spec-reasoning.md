@@ -5,7 +5,7 @@
 
 ## What This Covers
 
-The volume dashboard (`volume.tsx`) shows weekly set counts per muscle group and MRV/MEV thresholds, but provides no explanation of *why* the numbers are what they are. This spec adds expandable rows that reveal two things when tapped:
+The volume dashboard (`volume.tsx`) shows weekly set counts per muscle group and MRV/MEV thresholds, but provides no explanation of _why_ the numbers are what they are. This spec adds expandable rows that reveal two things when tapped:
 
 1. **Volume breakdown** — which exercises contributed how many effective sets to each muscle, including RPE scaling and muscle contribution factors
 2. **MRV/MEV source** — whether thresholds are sex-based research defaults or user-customized, and what the defaults would be
@@ -29,6 +29,7 @@ The volume dashboard (`volume.tsx`) shows weekly set counts per muscle group and
   - Types (`ExerciseVolumeContribution`, `MuscleVolumeBreakdown`) defined in-file but NOT exported separately — consumers derive via `ReturnType<typeof computeVolumeBreakdown>` per code-style rule 3
 
 **Existing code to reuse:**
+
 - `rpeSetMultiplier` from `packages/training-engine/src/volume/rpe-scaler.ts`
 - `MuscleMapper` type, `MUSCLE_GROUPS`, `MuscleGroup` from `mrv-mev-calculator.ts`
 - `CompletedSetLog` from `packages/training-engine/src/types.ts`
@@ -110,17 +111,20 @@ This fixes a pre-existing invariant violation (CLAUDE.md: "Query keys must use t
 - [ ] Pass `breakdown`, `config`, `biologicalSex` from `useWeeklyVolume` data to `MuscleBar`
 
 **MuscleBar changes:**
+
 - [ ] Accept new props: `expanded: boolean`, `breakdown: MuscleVolumeBreakdown`, `biologicalSex`, `onToggle`
 - [ ] When `expanded`, render detail section below the bar track
 
 **Detail section — Volume breakdown:**
 
 For each contribution in `breakdown.contributions`:
+
 ```
   Squat            4s × 1.0  = 4.0
   Leg Press        3s × 1.0  = 3.0
   Bulgarian Split  2s × 0.75 = 1.5
 ```
+
 - Left: exercise/lift name (flex 1, truncate if needed)
 - Center: `{rawSets}s × {contribution}` in secondary text
 - Right: `{volumeAdded}` to 1 decimal place (e.g. "1.5")
@@ -129,12 +133,14 @@ For each contribution in `breakdown.contributions`:
 **Detail section — Config reasoning:**
 
 Use `classifyConfigSource` from training-engine (Task 2):
+
 - If not custom: `MRV {mrv} · MEV {mev}  Research defaults ({sex})`
 - If custom: `MRV {mrv} · MEV {mev}  Custom (default: {defaultMrv} / {defaultMev})`
 
 Rendered as a single line in muted/tertiary text below the breakdown rows.
 
 **New styles to add to `buildStyles`:**
+
 - `chevron`: small text next to label, `fontSize: 12`, `color: textTertiary`
 - `detailContainer`: `paddingLeft: 4, paddingBottom: 8, gap: 4`
 - `detailRow`: `flexDirection: 'row', alignItems: 'center'`

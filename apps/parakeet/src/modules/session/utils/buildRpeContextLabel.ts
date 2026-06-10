@@ -1,8 +1,8 @@
 // @spec docs/features/session/spec-planned-set-display.md
-import type { AuxiliaryActualSet } from '../store/sessionStore';
 import { weightGramsToKg } from '@shared/utils/weight';
 
 import type { AuxiliaryWork } from '../model/types';
+import type { AuxiliaryActualSet } from '../store/sessionStore';
 import { fmtKg } from './fmtKg';
 import { formatExerciseName } from './formatExerciseName';
 

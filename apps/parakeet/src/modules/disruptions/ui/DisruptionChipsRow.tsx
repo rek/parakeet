@@ -47,7 +47,9 @@ function chipBg(severity: string, colors: ColorScheme): string {
   return colors.warningMuted;
 }
 
-function chipLabel(d: Pick<ActiveDisruption, 'disruption_type' | 'event_name'>): string {
+function chipLabel(
+  d: Pick<ActiveDisruption, 'disruption_type' | 'event_name'>
+): string {
   // Unprogrammed events get their event_name (e.g. "Hyrox") on the chip so
   // the lifter sees the actual cause rather than "Unprogrammed" — see
   // finding #8.

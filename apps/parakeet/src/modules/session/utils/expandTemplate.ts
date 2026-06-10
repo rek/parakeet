@@ -1,9 +1,9 @@
 // @spec docs/features/workout-templates/spec-insertion.md
-import { getCatalogEntry } from '@parakeet/training-engine';
 import type {
   WorkoutTemplate,
   WorkoutTemplateItem,
 } from '@modules/workout-templates';
+import { getCatalogEntry } from '@parakeet/training-engine';
 
 import type { AuxiliaryActualSet } from '../store/sessionStore';
 

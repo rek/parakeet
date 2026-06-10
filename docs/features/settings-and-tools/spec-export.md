@@ -20,7 +20,7 @@ A one-tap data export from Settings that writes all completed session logs to a 
 Queries all `sessions` with `status = 'completed'` joined with `session_logs`:
 
 ```ts
-export async function fetchCompletedSessionsForExport(userId: string): Promise<ExportSessionRow[]>
+export async function fetchCompletedSessionsForExport(userId: string): Promise<ExportSessionRow[]>;
 ```
 
 Returns `ExportSessionRow[]` with `primary_lift`, `planned_date`, `completed_at`, `intensity_type`, and nested `session_logs` (actual_sets, auxiliary_sets, session_rpe).
@@ -28,7 +28,7 @@ Returns `ExportSessionRow[]` with `primary_lift`, `planned_date`, `completed_at`
 ### ✅ `apps/parakeet/src/modules/settings/application/export.service.ts`
 
 ```ts
-export async function exportTrainingData(userId: string): Promise<void>
+export async function exportTrainingData(userId: string): Promise<void>;
 ```
 
 - Fetches rows via `fetchCompletedSessionsForExport`

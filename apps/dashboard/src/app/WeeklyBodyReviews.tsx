@@ -1,7 +1,7 @@
 import { Badge } from '../components/Badge';
 import { TablePage } from '../components/TablePage';
-import { useSupabaseRows } from '../lib/useSupabaseRows';
 import { theme } from '../lib/theme';
+import { useSupabaseRows } from '../lib/useSupabaseRows';
 
 interface ReviewRow {
   id: string;
@@ -48,8 +48,9 @@ export function WeeklyBodyReviews() {
   const withMismatches = rows.filter(
     (r) => r.mismatches && Object.keys(r.mismatches).length > 0
   ).length;
-  const withNotes = rows.filter((r) => r.notes != null && r.notes.length > 0)
-    .length;
+  const withNotes = rows.filter(
+    (r) => r.notes != null && r.notes.length > 0
+  ).length;
 
   return (
     <TablePage
@@ -80,7 +81,9 @@ export function WeeklyBodyReviews() {
       keyOf={(r) => r.id}
       renderRow={(r) => (
         <>
-          <span style={{ color: theme.color.textDim }}>{fmt(r.created_at)}</span>
+          <span style={{ color: theme.color.textDim }}>
+            {fmt(r.created_at)}
+          </span>
           <span
             style={{
               color: theme.color.textDim,

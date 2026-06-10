@@ -13,6 +13,7 @@ Parakeet generates a structural training program from three inputs: 1-rep max (o
 Intermediate powerlifters understand periodization concepts but struggle to translate them into precise week-by-week loading schemes. Pre-generated programs become stale when circumstances change (soreness, fatigue, performance trend).
 
 **Pain points:**
+
 - Pre-generated weights don't account for how the lifter feels on a given day
 - Changing one input (e.g., updating a max) requires recalculating the entire program
 - Generic programs can push athletes toward or past their max recoverable volume
@@ -79,6 +80,7 @@ When the user completes a training cycle, the system automatically estimates new
 4. This produces a **system-estimated 1RM** for each lift
 
 When the user taps "New Program":
+
 1. App shows the estimated new maxes pre-populated ("Based on your training this cycle: Squat 145kg, Bench 105kg, Deadlift 170kg")
 2. User can confirm or manually adjust any value before generating the new program
 3. App generates the new program version using the confirmed maxes
@@ -110,6 +112,7 @@ When the user taps "New Program":
 ## Auxiliary Exercise Rotation
 
 Each main lift has a pool of 8 auxiliary exercises. Two are active each block, rotating sequentially through the pool across programs:
+
 - Block 1: exercises 1+2
 - Block 2: exercises 3+4
 - Block 3: exercises 5+6
@@ -120,6 +123,7 @@ Users can reorder the pool (Settings → Auxiliary Exercises) or lock individual
 ## Program Length
 
 Supported lengths: **6 to 14 weeks**, in 2-week increments (6, 8, 10, 12, 14). The default is 10 weeks (standard Cube Method cycle). Shorter programs (6–8 weeks) function as mini-cycles or bridge programs and use a compressed block structure:
+
 - 6 weeks: 1 block per lift type (2 weeks each) + 2-week deload optional
 - 8 weeks: ~2.5 weeks per block + deload
 
@@ -144,9 +148,11 @@ The "End Program" button appears on the Program tab for all programs.
 ## Future Enhancements
 
 **Phase 2:**
+
 - Competition date targeting (auto-calculate program length to peak on a specific date)
 
 **Long-term:**
+
 - Support for alternative programming systems (5/3/1, GZCLP, Juggernaut)
 
 ## References
@@ -155,4 +161,3 @@ The "End Program" button appears on the Program tab for all programs.
 - External: Brandon Lilly's Cube Method (10-week concurrent periodization)
 - Specs: [engine-007-jit-session-generator.md](../specs/04-engine/engine-007-jit-session-generator.md), [engine-004-program-generator.md](../specs/04-engine/engine-004-program-generator.md), [sessions-006-missed-session-logic.md](../specs/07-sessions/sessions-006-missed-session-logic.md)
 - Architecture: [training-engine-architecture.md](./training-engine-architecture.md)
-

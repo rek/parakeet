@@ -57,14 +57,16 @@ function withManifest(config) {
               action: [
                 {
                   $: {
-                    'android:name': 'android.intent.action.VIEW_PERMISSION_USAGE',
+                    'android:name':
+                      'android.intent.action.VIEW_PERMISSION_USAGE',
                   },
                 },
               ],
               category: [
                 {
                   $: {
-                    'android:name': 'android.intent.category.HEALTH_PERMISSIONS',
+                    'android:name':
+                      'android.intent.category.HEALTH_PERMISSIONS',
                   },
                 },
               ],
@@ -89,10 +91,7 @@ function withMainActivityHook(config) {
     }
 
     if (!src.includes(IMPORT_LINE)) {
-      src = src.replace(
-        /^(package [^\n]+\n)/m,
-        `$1\n${IMPORT_LINE}\n`
-      );
+      src = src.replace(/^(package [^\n]+\n)/m, `$1\n${IMPORT_LINE}\n`);
     }
 
     if (!src.includes(SETUP_LINE)) {

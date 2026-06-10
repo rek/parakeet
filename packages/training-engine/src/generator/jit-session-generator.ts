@@ -43,10 +43,7 @@ import {
   PUSH_MUSCLES,
   type ActiveRehabCap,
 } from '../types';
-import {
-  createMuscleMapper,
-  CustomMuscleMap,
-} from '../volume/muscle-mapper';
+import { createMuscleMapper, CustomMuscleMap } from '../volume/muscle-mapper';
 import { PrescriptionTraceBuilder } from './prescription-trace';
 import { applyCyclePhaseAdjustment } from './steps/applyCyclePhaseAdjustment';
 import { applyDisruptionAdjustment } from './steps/applyDisruptionAdjustment';
@@ -862,7 +859,11 @@ export function buildVolumeTopUp(
   const primaryMusclesToday = new Set(getPrimaryMusclesForSession(primaryLift));
 
   // Find muscles below MEV after factoring in today's main lift
-  const candidates: Array<{ muscle: MuscleGroup; deficit: number; mev: number }> = [];
+  const candidates: Array<{
+    muscle: MuscleGroup;
+    deficit: number;
+    mev: number;
+  }> = [];
   for (const muscle of Object.keys(mrvMevConfig) as MuscleGroup[]) {
     if (primaryMusclesToday.has(muscle)) continue;
     const { mev } = mrvMevConfig[muscle];
@@ -950,7 +951,11 @@ export function buildVolumeTopUp(
       const exerciseLift = getLiftForExercise(exercise);
       if (upcomingLiftSet && exerciseLift && upcomingLiftSet.has(exerciseLift))
         return false;
-      if (excludedLiftSet.size > 0 && exerciseLift && excludedLiftSet.has(exerciseLift))
+      if (
+        excludedLiftSet.size > 0 &&
+        exerciseLift &&
+        excludedLiftSet.has(exerciseLift)
+      )
         return false;
       return muscleMapper(null, exercise).some(
         (m) => m.muscle === muscle && m.contribution >= 1.0

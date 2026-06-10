@@ -25,12 +25,13 @@ Computes weekly volume per muscle group from completed session logs and compares
   - Negative value means MRV is exceeded
 
 **Type: `MrvMevConfig`**
+
 ```typescript
 interface MrvMevConfig {
   [muscle: MuscleGroup]: {
-    mev: number   // minimum effective volume (sets/week)
-    mrv: number   // maximum recoverable volume (sets/week)
-  }
+    mev: number; // minimum effective volume (sets/week)
+    mrv: number; // maximum recoverable volume (sets/week)
+  };
 }
 ```
 
@@ -44,6 +45,7 @@ See [domain/volume-landmarks.md](../../domain/volume-landmarks.md) for `DEFAULT_
 See [domain/muscle-mapping.md](../../domain/muscle-mapping.md) for the `LIFT_MUSCLES` contribution table (primary and secondary contributions per lift).
 
 **Unit tests (`packages/training-engine/__tests__/mrv-mev-calculator.test.ts`):**
+
 - [x] 3 squat sessions × 5 sets = 15 quad sets → quads: 15 (approaching_mrv at MRV=20)
 - [x] 2 bench sessions × 3 sets = 6 chest sets + 3 tricep secondary sets (= 3 × 0.5 = 1.5 → floor to 1) → check triceps: 1
 - [x] `computeRemainingCapacity`: 18 quad sets logged, MRV=20 → remaining: 2

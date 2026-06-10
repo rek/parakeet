@@ -17,8 +17,8 @@ export function classifyPerformance(
   if (completionPct < COMPLETION_PCT_INCOMPLETE_BELOW) return 'incomplete';
   if (completionPct < COMPLETION_PCT_UNDER_BELOW) return 'under';
   if (
-    plannedCount > 0
-    && completedCount / plannedCount > COMPLETION_RATIO_OVER_ABOVE
+    plannedCount > 0 &&
+    completedCount / plannedCount > COMPLETION_RATIO_OVER_ABOVE
   ) {
     return 'over';
   }

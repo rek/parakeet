@@ -14,6 +14,7 @@ End is no longer the save-gate for sets. Sets persist per-tap via `persistSet()`
 ## Tasks
 
 **`apps/parakeet/src/modules/session/application/session.service.ts` (completion helper):**
+
 - [x] `completeSession(sessionId: string, userId: string, input: CompleteSessionInput): Promise<void>` — current batch behaviour; kept intact during dual-write rollout.
 - [ ] Post-rollout changes:
   1. Compute completion stats from `set_logs` (not from local `actualSets`).
@@ -24,43 +25,48 @@ End is no longer the save-gate for sets. Sets persist per-tap via `persistSet()`
   6. Fire achievement detection.
 
 **Legacy batch behaviour (during dual-write window only):**
+
 - [x] Insert `session_logs` row with `actual_sets` JSONB (weights stored in grams).
 - [x] Writes stripped once backfill verified and `session_logs.actual_sets` column dropped.
 
 **`CompleteSessionInput` type:**
+
 ```typescript
 interface CompleteSessionInput {
   actualSets: {
-    set_number: number
-    weight_grams: number   // kg × 1000 — e.g. 112500 for 112.5kg
-    reps_completed: number
-    is_completed: boolean  // explicit user confirmation that set was completed
-    rpe_actual?: number    // 6.0–10.0 in 0.5 increments
-    notes?: string
-  }[]
-  auxiliarySets?: {        // optional; absent if no auxiliary work was done
-    exercise: string
-    set_number: number
-    weight_grams: number
-    reps_completed: number
-    is_completed: boolean
-    rpe_actual?: number
-  }[]
-  sessionRpe?: number
-  startedAt?: Date
-  completedAt?: Date
+    set_number: number;
+    weight_grams: number; // kg × 1000 — e.g. 112500 for 112.5kg
+    reps_completed: number;
+    is_completed: boolean; // explicit user confirmation that set was completed
+    rpe_actual?: number; // 6.0–10.0 in 0.5 increments
+    notes?: string;
+  }[];
+  auxiliarySets?: {
+    // optional; absent if no auxiliary work was done
+    exercise: string;
+    set_number: number;
+    weight_grams: number;
+    reps_completed: number;
+    is_completed: boolean;
+    rpe_actual?: number;
+  }[];
+  sessionRpe?: number;
+  startedAt?: Date;
+  completedAt?: Date;
 }
 ```
 
 **`session_logs.auxiliary_sets`:** JSONB column (nullable); present in current consolidated schema migration (`20260307000001_fix_personal_records_unique_index.sql`).
 
-**`classifyPerformance` helper** (`apps/parakeet/src/modules/session/utils/classify-performance.ts`; thresholds cross-referenced in `docs/domain/periodization.md` → *Completion Classification Thresholds*):
+**`classifyPerformance` helper** (`apps/parakeet/src/modules/session/utils/classify-performance.ts`; thresholds cross-referenced in `docs/domain/periodization.md` → _Completion Classification Thresholds_):
+
 - [x] `'incomplete'`: completion_pct < 50%
 - [x] `'under'`: completion_pct < 90%
 - [x] `'over'`: completed set count exceeds planned count by >10%
 - [x] `'at'`: otherwise
 
 **Performance adjuster suggestions:**
+
 - [x] `suggestProgramAdjustments()` is evaluated after completion using the most recent 6 logs for the session lift.
 - [x] Non-empty suggestion results currently gate a `performance_metrics` insert for the session/lift context.
 - [ ] **Dead write path.** The `suggestions` result is only used as a boolean gate to insert a `performance_metrics` row; the suggestions themselves are never persisted. `performance_metrics` is never read by any screen or service (only inserted). The `planned_volume_grams`, `actual_volume_grams`, `planned_intensity_pct`, `actual_intensity_pct`, `max_rpe_actual`, `avg_rpe_actual`, `completion_pct`, `estimated_1rm_grams`, and `sets_per_muscle` columns are NOT NULL-set in the insert and remain NULL. Either:
@@ -76,11 +82,13 @@ interface CompleteSessionInput {
 ## Completion Semantics Contract
 
 Completion metric contract:
+
 1. numerator: count of sets explicitly confirmed complete (`is_completed === true`)
 2. denominator: planned set count from `session.planned_sets.length` when available (fallback to logged set count)
 3. completion percentage: `(completedCount / plannedCount) * 100`
 
 Implementation notes:
+
 - `is_completed` is a local-store-only field. Post durability rollout (#16), per-set writes go to `set_logs` on each confirmation, which by definition only contains confirmed sets — so `is_completed` never needs to be serialised.
 - Prefilled planned reps (not yet confirmed) never reach `set_logs`, so no downstream code treats them as completed work.
 

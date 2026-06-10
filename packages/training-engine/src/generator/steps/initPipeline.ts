@@ -87,7 +87,7 @@ export function initPipeline(
   };
 
   if (intensityType !== 'deload' && baseSets.length > 0) {
-    const cycledBlock = (((blockNumber - 1) % 3) + 1);
+    const cycledBlock = ((blockNumber - 1) % 3) + 1;
     const firstSet = baseSets[0];
     const repsText = firstSet.reps_range
       ? `${firstSet.reps_range[0]}–${firstSet.reps_range[1]} reps`
@@ -99,7 +99,8 @@ export function initPipeline(
       rep: 'work capacity',
     };
     const purpose = PURPOSES[intensityType as 'heavy' | 'explosive' | 'rep'];
-    const label = intensityType.charAt(0).toUpperCase() + intensityType.slice(1);
+    const label =
+      intensityType.charAt(0).toUpperCase() + intensityType.slice(1);
     ctx.rationale.push(
       `${label} day (Block ${cycledBlock}): ${purpose} — ${repsText} @ ${pctDisplay}% 1RM`
     );

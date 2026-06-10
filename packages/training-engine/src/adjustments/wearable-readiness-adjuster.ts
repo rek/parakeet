@@ -91,7 +91,11 @@ export function getWearableReadinessModifier(
   }
 
   // ── Deep sleep (only meaningful with sleep duration present) ───────────────
-  if (sleep !== undefined && input.deepSleepPct !== undefined && input.deepSleepPct < 15) {
+  if (
+    sleep !== undefined &&
+    input.deepSleepPct !== undefined &&
+    input.deepSleepPct < 15
+  ) {
     intensityMultiplier *= 0.975;
     reasons.push('Low deep sleep percentage');
     anyNegative = true;
@@ -108,8 +112,10 @@ export function getWearableReadinessModifier(
   if (
     !anyNegative &&
     hrvPositive &&
-    sleep !== undefined && sleep >= 420 &&
-    input.deepSleepPct !== undefined && input.deepSleepPct >= 20
+    sleep !== undefined &&
+    sleep >= 420 &&
+    input.deepSleepPct !== undefined &&
+    input.deepSleepPct >= 20
   ) {
     intensityMultiplier *= 1.025;
     reasons.push('Strong recovery signals — boosted');
@@ -117,7 +123,8 @@ export function getWearableReadinessModifier(
 
   // ── Caps ───────────────────────────────────────────────────────────────────
   if (setReduction > SET_REDUCTION_CAP) setReduction = SET_REDUCTION_CAP;
-  if (intensityMultiplier < INTENSITY_FLOOR) intensityMultiplier = INTENSITY_FLOOR;
+  if (intensityMultiplier < INTENSITY_FLOOR)
+    intensityMultiplier = INTENSITY_FLOOR;
 
   if (reasons.length === 0) return NEUTRAL;
 

@@ -20,7 +20,9 @@ export const rehabModeQueries = {
   activeForLift: (userId: string | undefined, lift: Lift) =>
     queryOptions({
       queryKey: [...rehabModeQueries.all(), 'active', userId, lift] as const,
-      queryFn: userId ? () => getActiveRehabCapForLift(userId, lift) : skipToken,
+      queryFn: userId
+        ? () => getActiveRehabCapForLift(userId, lift)
+        : skipToken,
     }),
 
   history: (

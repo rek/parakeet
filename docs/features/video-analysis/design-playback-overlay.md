@@ -25,29 +25,29 @@ Extend `VideoPlayerCard` to host one or more SVG overlays that:
 
 Two overlay types:
 
-| Overlay | Source data | Existing video coverage |
-|---|---|---|
-| Bar path trail | `analysis.repAnalyses[].barPath` | All videos with successful analysis |
-| Skeleton (33 landmarks) | `debug_landmarks.frames` | None in prod yet — `debug_landmarks` is `__DEV__`-only today |
+| Overlay                 | Source data                      | Existing video coverage                                      |
+| ----------------------- | -------------------------------- | ------------------------------------------------------------ |
+| Bar path trail          | `analysis.repAnalyses[].barPath` | All videos with successful analysis                          |
+| Skeleton (33 landmarks) | `debug_landmarks.frames`         | None in prod yet — `debug_landmarks` is `__DEV__`-only today |
 
 ## Decisions
 
-| # | Decision | Choice | Rationale |
-|---|----------|--------|-----------|
-| 1 | Toggle placement | Chip row above the video, inside `VideoPlayerCard` | Native player controls already occupy the video surface — floating buttons fight them. Chips above are immediately discoverable, cost no extra navigation, and keep state co-located with the player. |
-| 2 | Toggle persistence | AsyncStorage per overlay type (`video.overlay.barPath`, `video.overlay.skeleton`) | Lifter who likes the overlay shouldn't re-toggle every replay. Per-overlay (not bundled) so they can keep bar path on and skeleton off — different signal-to-clutter ratios. |
-| 3 | Default state | Both off | Overlay is opinionated and can occlude the bar. Off-by-default avoids surprising users who just want playback. |
-| 4 | Bar path render mode | Full path always visible + an animated head dot at current playback frame | The path *is* the analysis — partially-drawn trails feel like a "loading" state. The dot supplies the "where am I" cue without hiding the rest. |
-| 5 | Per-rep colouring | Each rep is a distinct hue; rep number labelled at start | Distinguishing reps is more useful than colour-by-drift severity once the overlay is on the actual video — drift is now visually obvious from the path itself. |
-| 6 | Skeleton render mode | Single frame at current playback time, lerped between adjacent stored frames | Source is sparse (4fps); video plays at ~30fps. Hard-snapping to nearest stored frame produces visible jitter. Linear interpolation per-landmark gives smooth motion. |
-| 7 | Skeleton storage promotion | Promote `debug_landmarks` write out of `__DEV__` guard. Keep column name; treat as production data. | Column already exists. Cost is ~16KB JSON per video (33 × 4 × 4fps × 30s). Trivial vs the 5–8MB compressed video in the same row. No new schema. |
-| 8 | Backfill | None — skeleton overlay enabled only on videos with non-null `debug_landmarks`. Re-analysis from local file is future work. | Existing prod videos lack landmarks. Re-running pose extraction per-video is expensive (4fps × duration of MediaPipe inference) and only valuable if user opts in. Defer; gate the chip with a tooltip. |
-| 9 | Letterbox math | Compute display rect from container size + video aspect (from `videoWidthPx`/`videoHeightPx` columns persisted at insert) | `contentFit="contain"` letterboxes the video inside its container. Overlay must match the **display rect**, not the container rect, or landmarks drift off the body. Storing dimensions at insert avoids a second `getVideoMetaData` round-trip on every playback. |
-| 10 | Time sync | `player.timeUpdateEventInterval = 0.1`; subscribe via `useEvent` from `expo` | Default interval is too coarse for a moving overlay. 100ms is the sweet spot (10Hz UI updates, well under perceptual lag, well within RN's affordable re-render budget). |
-| 11 | Disabled state for missing skeleton | Skeleton chip rendered greyed with sub-label "No landmarks for this video" | Honest UX. Don't hide the feature — explain why it's unavailable. Future re-analysis CTA can slot in here. |
-| 12 | Module placement | New `PlaybackBarPathOverlay.tsx` and `PlaybackSkeletonOverlay.tsx` in `modules/video-analysis/ui/`; consumed by `VideoPlayerCard` | Each overlay is independently testable. `VideoPlayerCard` becomes the composition point. No cross-module dependency. |
-| 13 | Coordinate convention | All overlays consume normalised 0..1 coords + display-rect dimensions in pixels | Same convention as `LiveSkeletonOverlay`. Consistent mental model: stored data is camera-frame normalised; overlay scales to wherever it ends up rendered. |
-| 14 | Performance budget | <2ms render per `timeUpdate` event; no `react-native-reanimated`, no Skia | SVG with 33 circles + 12 lines + 1 polyline is well within RN's render budget. Reanimated/Skia would be premature optimisation; the bottleneck (if any) will be `setState` re-renders, not draw calls. |
+| #   | Decision                            | Choice                                                                                                                            | Rationale                                                                                                                                                                                                                                                          |
+| --- | ----------------------------------- | --------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| 1   | Toggle placement                    | Chip row above the video, inside `VideoPlayerCard`                                                                                | Native player controls already occupy the video surface — floating buttons fight them. Chips above are immediately discoverable, cost no extra navigation, and keep state co-located with the player.                                                              |
+| 2   | Toggle persistence                  | AsyncStorage per overlay type (`video.overlay.barPath`, `video.overlay.skeleton`)                                                 | Lifter who likes the overlay shouldn't re-toggle every replay. Per-overlay (not bundled) so they can keep bar path on and skeleton off — different signal-to-clutter ratios.                                                                                       |
+| 3   | Default state                       | Both off                                                                                                                          | Overlay is opinionated and can occlude the bar. Off-by-default avoids surprising users who just want playback.                                                                                                                                                     |
+| 4   | Bar path render mode                | Full path always visible + an animated head dot at current playback frame                                                         | The path _is_ the analysis — partially-drawn trails feel like a "loading" state. The dot supplies the "where am I" cue without hiding the rest.                                                                                                                    |
+| 5   | Per-rep colouring                   | Each rep is a distinct hue; rep number labelled at start                                                                          | Distinguishing reps is more useful than colour-by-drift severity once the overlay is on the actual video — drift is now visually obvious from the path itself.                                                                                                     |
+| 6   | Skeleton render mode                | Single frame at current playback time, lerped between adjacent stored frames                                                      | Source is sparse (4fps); video plays at ~30fps. Hard-snapping to nearest stored frame produces visible jitter. Linear interpolation per-landmark gives smooth motion.                                                                                              |
+| 7   | Skeleton storage promotion          | Promote `debug_landmarks` write out of `__DEV__` guard. Keep column name; treat as production data.                               | Column already exists. Cost is ~16KB JSON per video (33 × 4 × 4fps × 30s). Trivial vs the 5–8MB compressed video in the same row. No new schema.                                                                                                                   |
+| 8   | Backfill                            | None — skeleton overlay enabled only on videos with non-null `debug_landmarks`. Re-analysis from local file is future work.       | Existing prod videos lack landmarks. Re-running pose extraction per-video is expensive (4fps × duration of MediaPipe inference) and only valuable if user opts in. Defer; gate the chip with a tooltip.                                                            |
+| 9   | Letterbox math                      | Compute display rect from container size + video aspect (from `videoWidthPx`/`videoHeightPx` columns persisted at insert)         | `contentFit="contain"` letterboxes the video inside its container. Overlay must match the **display rect**, not the container rect, or landmarks drift off the body. Storing dimensions at insert avoids a second `getVideoMetaData` round-trip on every playback. |
+| 10  | Time sync                           | `player.timeUpdateEventInterval = 0.1`; subscribe via `useEvent` from `expo`                                                      | Default interval is too coarse for a moving overlay. 100ms is the sweet spot (10Hz UI updates, well under perceptual lag, well within RN's affordable re-render budget).                                                                                           |
+| 11  | Disabled state for missing skeleton | Skeleton chip rendered greyed with sub-label "No landmarks for this video"                                                        | Honest UX. Don't hide the feature — explain why it's unavailable. Future re-analysis CTA can slot in here.                                                                                                                                                         |
+| 12  | Module placement                    | New `PlaybackBarPathOverlay.tsx` and `PlaybackSkeletonOverlay.tsx` in `modules/video-analysis/ui/`; consumed by `VideoPlayerCard` | Each overlay is independently testable. `VideoPlayerCard` becomes the composition point. No cross-module dependency.                                                                                                                                               |
+| 13  | Coordinate convention               | All overlays consume normalised 0..1 coords + display-rect dimensions in pixels                                                   | Same convention as `LiveSkeletonOverlay`. Consistent mental model: stored data is camera-frame normalised; overlay scales to wherever it ends up rendered.                                                                                                         |
+| 14  | Performance budget                  | <2ms render per `timeUpdate` event; no `react-native-reanimated`, no Skia                                                         | SVG with 33 circles + 12 lines + 1 polyline is well within RN's render budget. Reanimated/Skia would be premature optimisation; the bottleneck (if any) will be `setState` re-renders, not draw calls.                                                             |
 
 ## UX Flow
 
@@ -81,6 +81,7 @@ analysis (already in DB)
 ```
 
 Frame index from playback time:
+
 ```
 frameIdx = currentTime * analysis.fps
 ```
@@ -124,11 +125,11 @@ SVG renders at `displayWidth × displayHeight`, positioned absolutely at `(offse
 
 ## Storage cost
 
-| Item | Per video |
-|---|---|
-| Bar path (already in `analysis`) | ~0.5 KB |
-| Full landmarks (after promotion) | ~16 KB JSON, 4fps × 30s × 33 × 4 floats |
-| New columns (`video_width_px`, `video_height_px`) | 8 bytes |
+| Item                                              | Per video                               |
+| ------------------------------------------------- | --------------------------------------- |
+| Bar path (already in `analysis`)                  | ~0.5 KB                                 |
+| Full landmarks (after promotion)                  | ~16 KB JSON, 4fps × 30s × 33 × 4 floats |
+| New columns (`video_width_px`, `video_height_px`) | 8 bytes                                 |
 
 Compared to the 5–8 MB compressed video in the same row, landmark JSON is rounding error.
 

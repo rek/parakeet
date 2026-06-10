@@ -1,13 +1,9 @@
 import { describe, expect, it } from 'vitest';
 
-import { computePressAsymmetry } from '../press-asymmetry';
 import { LANDMARK, type PoseFrame, type PoseLandmark } from '../pose-types';
+import { computePressAsymmetry } from '../press-asymmetry';
 
-function makeLandmark(
-  x: number,
-  y: number,
-  visibility = 1
-): PoseLandmark {
+function makeLandmark(x: number, y: number, visibility = 1): PoseLandmark {
   return { x, y, z: 0, visibility };
 }
 

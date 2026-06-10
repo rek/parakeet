@@ -17,6 +17,7 @@ At the end: update design doc status → Implemented, update specs to match what
 **2026-04-22: @spec headers shipped across 244 files in 21 modules.** Checker now reports `21/22 modules unlinked → 1/22 unlinked`. Only `updates` remains: it has no feature spec dir (OTA updates was never specced). Write a spec first, then link.
 
 Remaining work:
+
 - ~50 spec files whose ticked tasks have no `→ path:symbol` back-link — do incrementally when features are touched
 - Engine code under `packages/training-engine/src/` — same convention, not yet linked
 - When spec back-links reach ~100%, flip `npm run check:spec-links` from advisory to `--strict` in `/verify`
@@ -36,7 +37,7 @@ Remaining work:
 - `noResult` — MediaPipe ran but the pose didn't pass the 0.5 confidence gates. High → model/orientation issue.
 - `trunc` — fewer than 33 landmarks returned. Should always be 0; non-zero indicates an upstream API change.
 - `err` — `PoseDetectionOnImage` threw. Captured to Sentry already; counter just makes the rate visible alongside the rest.
-- `firstValidVis` — mean visibility on the 12 powerlifting-relevant landmarks of the first frame that *did* detect. If this is < 0.3, the lifter is being detected but at a confidence the plausibility filter will reject downstream.
+- `firstValidVis` — mean visibility on the 12 powerlifting-relevant landmarks of the first frame that _did_ detect. If this is < 0.3, the lifter is being detected but at a confidence the plausibility filter will reject downstream.
 
 ### Next step (waiting on device run)
 
@@ -86,11 +87,11 @@ Items 26–50 below all came out of the 2026-05 /review pass. Most have a `## Op
 
 ## 30
 
-**Expose `reported_at` on the active-disruption query** + tighten the ongoing-disruption prompt trigger. Today the prompt fires for any open-ended disruption; should fire only when `(today - reported_at) > DISRUPTION_SHELF_LIFE_DAYS[type]`. Add `reported_at` to the select in `fetchActiveDisruptions`, expose on `ActiveDisruption` type, gate the filter in `today.tsx`. TODO in [`app/(tabs)/today.tsx`](../apps/parakeet/src/app/(tabs)/today.tsx) marks the site.
+**Expose `reported_at` on the active-disruption query** + tighten the ongoing-disruption prompt trigger. Today the prompt fires for any open-ended disruption; should fire only when `(today - reported_at) > DISRUPTION_SHELF_LIFE_DAYS[type]`. Add `reported_at` to the select in `fetchActiveDisruptions`, expose on `ActiveDisruption` type, gate the filter in `today.tsx`. TODO in [`app/(tabs)/today.tsx`](<../apps/parakeet/src/app/(tabs)/today.tsx>) marks the site.
 
 ## 31
 
-**Extract `resolveReadiness` from `soreness.tsx`.** Three callers now (auto-generate, manual generate, disruption-overwrite confirm) — the case strengthened after the 2026-05 review. Move ~40 lines of inline reconciliation logic to `modules/jit/application/resolveReadiness.ts` as a pure function with unit tests, then collapse the screen call sites to one-liners. TODO comment already in [`soreness.tsx`](../apps/parakeet/src/app/(tabs)/session/soreness.tsx) pointing at the future home.
+**Extract `resolveReadiness` from `soreness.tsx`.** Three callers now (auto-generate, manual generate, disruption-overwrite confirm) — the case strengthened after the 2026-05 review. Move ~40 lines of inline reconciliation logic to `modules/jit/application/resolveReadiness.ts` as a pure function with unit tests, then collapse the screen call sites to one-liners. TODO comment already in [`soreness.tsx`](<../apps/parakeet/src/app/(tabs)/session/soreness.tsx>) pointing at the future home.
 
 ## 32
 
@@ -173,4 +174,3 @@ Items 26–50 below all came out of the 2026-05 /review pass. Most have a `## Op
 - **Pure `utils/*` without tests**: `modules/session/utils/{buildIntensityLabel,buildRpeContextLabel,groupAuxSetsByExercise,selectPostRestWeight,validateSet,volume-recovery-check,weight-autoregulation-check}`; `modules/training-volume/utils/volume-thresholds`; `modules/gym-partners/lib/{partner-state-machine,qr-payload}`.
 
 Recommend tackling video-analysis lib first — pure functions, ideal test surface, zero coverage today. Then largest application services. Pure utils last (smallest leverage, simplest to land).
-

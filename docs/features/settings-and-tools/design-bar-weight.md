@@ -36,11 +36,13 @@ A single AsyncStorage key (`bar_weight_kg`) holds the selected bar weight (15 or
 ## Affected Files
 
 ### Engine (packages/training-engine)
+
 - `generator/warmup-calculator.ts` — `generateWarmupSets(weight, protocol, barWeightKg=20)`
 - `adjustments/soreness-adjuster.ts` — `applySorenessToSets(sets, modifier, minSets, barWeightKg=20)`
 - `generator/jit-session-generator.ts` — `JITInput.barWeightKg?: number`; destructured with default 20; passed to both call sites
 
 ### App (apps/parakeet)
+
 - `modules/settings/lib/settings.ts` — `getBarWeightKg()`, `setBarWeightKg()`, `BarWeightKg` type
 - `modules/jit/lib/jit.ts` — fetches bar weight in parallel with other JIT inputs, adds to `jitInput`
 - `app/(tabs)/settings.tsx` — "Bar Weight" 15/20 toggle in Training section

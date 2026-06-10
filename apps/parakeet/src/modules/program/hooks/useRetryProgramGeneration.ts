@@ -43,9 +43,7 @@ export function useRetryProgramGeneration() {
       // instead of casting blindly. A program row with total_weeks: 9 (or any
       // out-of-spec value introduced by an old migration) should fail loudly
       // here rather than feed a lying type into the engine.
-      if (
-        !VALID_TOTAL_WEEKS.includes(program.total_weeks as ValidTotalWeeks)
-      ) {
+      if (!VALID_TOTAL_WEEKS.includes(program.total_weeks as ValidTotalWeeks)) {
         throw new Error(
           `Unsupported total_weeks=${program.total_weeks} for program regeneration`
         );

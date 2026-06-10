@@ -14,11 +14,13 @@ A visual display of weekly training volume per muscle group versus each muscle's
 **Full screen: `apps/parakeet/app/volume.tsx`** — accessible by tapping the card or from Settings
 
 **Data source:**
+
 - `weeklyVolumeToDate` computed by calling `computeWeeklyVolume()` from `packages/training-engine` on current week's `session_logs`
 - `mrvMevConfig` fetched via `getMrvMevConfig()` from `lib/volume-config.ts`
 - `classifyVolumeStatus()` determines the bar color per muscle
 
 **Compact view (Today screen card):**
+
 ```
   ┌──────────────────────────────────────┐
   │  Weekly Volume          [View All →] │
@@ -30,6 +32,7 @@ A visual display of weekly training volume per muscle group versus each muscle's
 ```
 
 **Full volume dashboard (`apps/parakeet/src/app/volume.tsx`):**
+
 - One bar per muscle group (all 9)
 - Bar fills from 0 to MRV (right edge = MRV)
 - MEV marker: white tick at the MEV position — always visible over any fill color
@@ -45,29 +48,28 @@ A visual display of weekly training volume per muscle group versus each muscle's
   - Exceeded MRV: red with ⚠ icon
 
 **Set counting:**
+
 - Weekly sets come from `set_logs` (one row per confirmed set, linked to a completed session via `session_id`). Post-durability-rollout (backlog #16, 2026-04-18) the JSONB `session_logs.actual_sets` is placeholder-only and not read.
 - A `session_log` row only exists for completed sessions, so `set_logs` rows for those sessions are the authoritative weekly-volume input.
 - Previous filter (`reps_completed > 0`) was removed as it under-counted when users didn't enter every rep.
 
 **React Query hook:**
+
 ```typescript
 // apps/parakeet/hooks/useWeeklyVolume.ts
 export function useWeeklyVolume() {
-  const userId = useUserId()
+  const userId = useUserId();
   return useQuery({
     queryKey: ['volume', 'weekly', userId, currentWeekStart()],
     queryFn: async () => {
-      const [logs, config] = await Promise.all([
-        getCurrentWeekLogs(userId),
-        getMrvMevConfig(userId),
-      ])
-      const weekly = computeWeeklyVolume(logs, createMuscleMapper())
-      const status = classifyVolumeStatus(weekly, config)
-      const remaining = computeRemainingCapacity(weekly, config)
-      return { weekly, status, remaining, config }
+      const [logs, config] = await Promise.all([getCurrentWeekLogs(userId), getMrvMevConfig(userId)]);
+      const weekly = computeWeeklyVolume(logs, createMuscleMapper());
+      const status = classifyVolumeStatus(weekly, config);
+      const remaining = computeRemainingCapacity(weekly, config);
+      return { weekly, status, remaining, config };
     },
-    staleTime: 1000 * 60,  // refresh every minute during a workout
-  })
+    staleTime: 1000 * 60, // refresh every minute during a workout
+  });
 }
 ```
 

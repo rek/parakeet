@@ -1,10 +1,10 @@
 import { useEffect } from 'react';
 import { AppState } from 'react-native';
 import type { AppStateStatus } from 'react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 
-import { captureException } from '@platform/utils/captureException';
 import { useAuth } from '@modules/auth';
+import { captureException } from '@platform/utils/captureException';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import { syncWearableData } from '../application/sync.service';
 

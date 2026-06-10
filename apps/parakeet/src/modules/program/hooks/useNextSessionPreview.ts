@@ -4,8 +4,8 @@ import { historyQueries } from '@modules/history';
 import type { Lift } from '@parakeet/shared-types';
 import { queryOptions, skipToken, useQuery } from '@tanstack/react-query';
 
-import { fetchActiveFormulaConfig } from '../data/program.repository';
 import { programQueries } from '../data/program.queries';
+import { fetchActiveFormulaConfig } from '../data/program.repository';
 
 // SYNC: query key matches formulaQueries.config() in @modules/formula so they
 // share the React Query cache. formula ↔ program require cycle prevents importing

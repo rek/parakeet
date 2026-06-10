@@ -14,12 +14,14 @@ Handling offline scenarios during active workout logging. Session logging works 
 **Strategy: Optimistic local state with per-set background sync queue**
 
 **`src/platform/store/sessionStore.ts` (Zustand + AsyncStorage persistence):**
+
 - All set updates are written to AsyncStorage immediately via Zustand `persist` middleware (survives app crash).
 - `actualSets` array is the authoritative in-progress state on device.
 - Each `actualSets` / `auxiliarySets` entry carries `synced_at?: string`, set only after the matching `upsert_set_log` drains successfully.
 - `warmupCompleted` (Set) and `startedAt` (Date) require special handling: `warmupCompleted` excluded from persistence; `startedAt` rehydrated via custom `merge`.
 
 **`src/platform/store/syncStore.ts` (pending operations queue):**
+
 - Queue entries: `{ id, operation, payload, createdAt, retryCount }`.
 - Operation kinds:
   - `upsert_set_log` — per-set write (primary or auxiliary). Payload keyed by `(sessionId, kind, exercise, set_number)`.
@@ -31,26 +33,31 @@ Handling offline scenarios during active workout logging. Session logging works 
 - On non-retryable error (constraint violation, auth): dequeue + `captureException` + alert.
 
 **Per-set offline handling:**
+
 - User taps check on a set → store updates locally → `persistSet()` called.
 - If online: `upsertSetLog` succeeds → mark `synced_at`.
 - If offline: enqueue `upsert_set_log` → UI shows set as confirmed with small pending indicator.
 - On reconnect: `useSyncQueue` drains per-set ops first, then `complete_session` if present.
 
 **Session completion offline handling:**
+
 - `completeSession()` failure due to network → enqueue `complete_session` op (session summary only, since sets already queued/synced).
 - Optimistic success UI with sync indicator.
 - On reconnect + foreground: queue drains; per-set ops first (ordering matters: `complete_session` assumes set_logs present).
 
 **Connectivity detection:**
+
 - Show offline banner in session screen when connectivity is lost
 - Banner disappears and pending sync triggers when connectivity restored
 
 **Conflict resolution:**
+
 - Server wins for program data (planned sets, session schedule)
 - Client wins for session log data (what the user actually lifted — never overwrite with server data)
 - If session was somehow completed on the server during an offline period: compare `logged_at` timestamps; keep the most recent
 
 **React Query integration:**
+
 - Mutations (complete session, skip session) use React Query's `onMutate` / `onError` / `onSettled` for optimistic updates
 - If mutation fails: rollback optimistic state and re-fetch from server
 

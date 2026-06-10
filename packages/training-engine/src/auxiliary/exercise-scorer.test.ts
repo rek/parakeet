@@ -43,7 +43,9 @@ describe('exercise-scorer / deficit coverage', () => {
     const rich = scoreExercise('Bulgarian Split Squat', ctx);
     // Leg Press: quads 1.0, glutes 0.5 — less secondary coverage
     const lean = scoreExercise('Leg Press', ctx);
-    expect(rich.breakdown['deficit']).toBeGreaterThan(lean.breakdown['deficit']);
+    expect(rich.breakdown['deficit']).toBeGreaterThan(
+      lean.breakdown['deficit']
+    );
   });
 
   it('gives base 0.5 when no secondary deficits exist', () => {
@@ -101,7 +103,9 @@ describe('exercise-scorer / fatigue appropriateness', () => {
     // Lat Pulldown: simple. Power Clean: complex
     const simple = scoreExercise('Lat Pulldown', ctx);
     const complex = scoreExercise('Power Clean', ctx);
-    expect(simple.breakdown['fatigue']).toBeGreaterThan(complex.breakdown['fatigue']);
+    expect(simple.breakdown['fatigue']).toBeGreaterThan(
+      complex.breakdown['fatigue']
+    );
   });
 
   it('prefers complex exercises when readiness is great', () => {
@@ -115,7 +119,9 @@ describe('exercise-scorer / fatigue appropriateness', () => {
     });
     const simple = scoreExercise('Lat Pulldown', ctx);
     const complex = scoreExercise('Power Clean', ctx);
-    expect(complex.breakdown['fatigue']).toBeGreaterThan(simple.breakdown['fatigue']);
+    expect(complex.breakdown['fatigue']).toBeGreaterThan(
+      simple.breakdown['fatigue']
+    );
   });
 });
 
@@ -143,11 +149,26 @@ describe('exercise-scorer / recency penalty (GH#211)', () => {
       recentAuxExercises: recent,
     });
     // 0 → 0.2, 1 → 0.4, 2 → 0.6, 3 → 0.8, 4 → 1.0 (clamped). FP tolerance.
-    expect(scoreExercise('A', ctxFor('A')).breakdown['recency']).toBeCloseTo(0.2, 6);
-    expect(scoreExercise('B', ctxFor('B')).breakdown['recency']).toBeCloseTo(0.4, 6);
-    expect(scoreExercise('C', ctxFor('C')).breakdown['recency']).toBeCloseTo(0.6, 6);
-    expect(scoreExercise('D', ctxFor('D')).breakdown['recency']).toBeCloseTo(0.8, 6);
-    expect(scoreExercise('E', ctxFor('E')).breakdown['recency']).toBeCloseTo(1.0, 6);
+    expect(scoreExercise('A', ctxFor('A')).breakdown['recency']).toBeCloseTo(
+      0.2,
+      6
+    );
+    expect(scoreExercise('B', ctxFor('B')).breakdown['recency']).toBeCloseTo(
+      0.4,
+      6
+    );
+    expect(scoreExercise('C', ctxFor('C')).breakdown['recency']).toBeCloseTo(
+      0.6,
+      6
+    );
+    expect(scoreExercise('D', ctxFor('D')).breakdown['recency']).toBeCloseTo(
+      0.8,
+      6
+    );
+    expect(scoreExercise('E', ctxFor('E')).breakdown['recency']).toBeCloseTo(
+      1.0,
+      6
+    );
   });
 
   it('neutral (1.0) when no recent list is supplied', () => {
@@ -219,7 +240,9 @@ describe('exercise-scorer / specificity', () => {
     const same = scoreExercise('Pause Squat', ctx); // associatedLift: squat
     const general = scoreExercise('Pull-ups', ctx); // associatedLift: null
     const cross = scoreExercise('Close-Grip Barbell Bench Press', ctx); // associatedLift: bench
-    expect(same.breakdown['specific']).toBeGreaterThan(general.breakdown['specific']);
+    expect(same.breakdown['specific']).toBeGreaterThan(
+      general.breakdown['specific']
+    );
     expect(general.breakdown['specific']).toBeGreaterThan(
       cross.breakdown['specific']
     );

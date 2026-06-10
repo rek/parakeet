@@ -49,11 +49,7 @@ const FREQ_LABEL: Record<LifestyleFrequency, string> = {
   as_needed: 'As needed',
 };
 
-export function LifestyleSection({
-  items,
-}: {
-  items: DietLifestyle[];
-}) {
+export function LifestyleSection({ items }: { items: DietLifestyle[] }) {
   const { colors } = useTheme();
   const styles = useMemo(() => buildStyles(colors), [colors]);
 
@@ -82,8 +78,8 @@ export function LifestyleSection({
     <View style={styles.root}>
       <Text style={styles.intro}>
         Diet alone isn't the protocol. Lymphatic health depends on the full
-        stack — compression, manual drainage, low-impact movement, sleep,
-        and stress regulation. Tap any item for detail.
+        stack — compression, manual drainage, low-impact movement, sleep, and
+        stress regulation. Tap any item for detail.
       </Text>
       {grouped.map(({ category, items }) => (
         <View key={category} style={styles.group}>
@@ -120,9 +116,7 @@ function Card({
       {item.description && (
         <Text style={styles.description}>{item.description}</Text>
       )}
-      {item.rationale && (
-        <Text style={styles.rationale}>{item.rationale}</Text>
-      )}
+      {item.rationale && <Text style={styles.rationale}>{item.rationale}</Text>}
     </View>
   );
 }

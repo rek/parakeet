@@ -79,31 +79,31 @@ Needed for letterbox math. Cheap to capture at insert.
 ### 2.1 — Promote `debug_landmarks` write
 
 - [x] Remove the `__DEV__` guard around `updateSessionVideoDebugLandmarks` in `useVideoAnalysis.processVideo` step 7. Remains fire-and-forget with `captureException`.
-  → `apps/parakeet/src/modules/video-analysis/hooks/useVideoAnalysis.ts:processVideo`
+      → `apps/parakeet/src/modules/video-analysis/hooks/useVideoAnalysis.ts:processVideo`
 - [x] Same promotion in `reanalyze` — `saveDebugLandmarks` dep always wired (no `__DEV__`).
-  → `apps/parakeet/src/modules/video-analysis/hooks/useVideoAnalysis.ts:reanalyze`
+      → `apps/parakeet/src/modules/video-analysis/hooks/useVideoAnalysis.ts:reanalyze`
 - [x] Column name stays `debug_landmarks`. No migration.
 - [x] `DebugLandmarksSchema` Zod codec + `DebugLandmarks` type exposed from `lib/pose-types.ts`; repository validates on read via `parseDebugLandmarks`.
-  → `apps/parakeet/src/modules/video-analysis/lib/pose-types.ts:DebugLandmarksSchema`
-  → `apps/parakeet/src/modules/video-analysis/data/video.repository.ts:parseDebugLandmarks`
+      → `apps/parakeet/src/modules/video-analysis/lib/pose-types.ts:DebugLandmarksSchema`
+      → `apps/parakeet/src/modules/video-analysis/data/video.repository.ts:parseDebugLandmarks`
 - [x] `SessionVideo.debugLandmarks: DebugLandmarks | null` surfaced.
-  → `apps/parakeet/src/modules/video-analysis/model/types.ts`
+      → `apps/parakeet/src/modules/video-analysis/model/types.ts`
 
 ### 2.2 — Skeleton overlay component
 
-- [x] `lib/skeleton-lerp.ts:lerpPoseFrame({ frames, fps, currentTime })` — pure per-landmark linear interpolation. Visibility is *not* lerped (floor frame's value carries) so a partially-occluded joint cannot suddenly become visible mid-interpolation.
-  → `apps/parakeet/src/modules/video-analysis/lib/skeleton-lerp.ts:lerpPoseFrame`
+- [x] `lib/skeleton-lerp.ts:lerpPoseFrame({ frames, fps, currentTime })` — pure per-landmark linear interpolation. Visibility is _not_ lerped (floor frame's value carries) so a partially-occluded joint cannot suddenly become visible mid-interpolation.
+      → `apps/parakeet/src/modules/video-analysis/lib/skeleton-lerp.ts:lerpPoseFrame`
 - [x] `ui/PlaybackSkeletonOverlay.tsx` — absolute-positioned `<Svg>` at `displayRect`, `<Line>` per `SKELETON_CONNECTIONS` (skip bones with either endpoint < 0.5 visibility), `<Circle>` per visible landmark. Same visual language as `LiveSkeletonOverlay`.
-  → `apps/parakeet/src/modules/video-analysis/ui/PlaybackSkeletonOverlay.tsx:PlaybackSkeletonOverlay`
+      → `apps/parakeet/src/modules/video-analysis/ui/PlaybackSkeletonOverlay.tsx:PlaybackSkeletonOverlay`
 - [x] Unit tests: t=0, t=1, mid-frame, out-of-range clamping, non-positive fps, empty frames, visibility-not-lerped.
-  → `apps/parakeet/src/modules/video-analysis/lib/__tests__/skeleton-lerp.test.ts`
+      → `apps/parakeet/src/modules/video-analysis/lib/__tests__/skeleton-lerp.test.ts`
 
 ### 2.3 — Wire into `VideoPlayerCard`
 
 - [x] `useOverlayPreference('skeleton')` already wired from Phase 1.
 - [x] `skeletonAvailable` flips to `true` when `debugLandmarks` payload is present with ≥ 1 frame. Caller passes `result.debugLandmarks` through.
-  → `apps/parakeet/src/modules/video-analysis/ui/VideoPlayerCard.tsx`
-  → `apps/parakeet/src/app/(tabs)/session/video-analysis.tsx`
+      → `apps/parakeet/src/modules/video-analysis/ui/VideoPlayerCard.tsx`
+      → `apps/parakeet/src/app/(tabs)/session/video-analysis.tsx`
 
 ### 2.4 — Validation
 
@@ -122,12 +122,12 @@ Defer until users ask. Spec stub:
 
 ## Test coverage targets
 
-| File | Tests |
-|---|---|
-| `lib/video-display-rect.ts` | 4 (wider, taller, exact, null) |
-| `ui/PlaybackBarPathOverlay.tsx` | ~5 (rep colour assignment, head-dot visibility per phase, frame→rep mapping, multi-rep render, empty analysis) |
-| `ui/PlaybackSkeletonOverlay.tsx` | ~4 (lerp boundaries, visibility filter, empty frames, single-frame degenerate) |
-| Integration / on-device | manual checklist above |
+| File                             | Tests                                                                                                          |
+| -------------------------------- | -------------------------------------------------------------------------------------------------------------- |
+| `lib/video-display-rect.ts`      | 4 (wider, taller, exact, null)                                                                                 |
+| `ui/PlaybackBarPathOverlay.tsx`  | ~5 (rep colour assignment, head-dot visibility per phase, frame→rep mapping, multi-rep render, empty analysis) |
+| `ui/PlaybackSkeletonOverlay.tsx` | ~4 (lerp boundaries, visibility filter, empty frames, single-frame degenerate)                                 |
+| Integration / on-device          | manual checklist above                                                                                         |
 
 No snapshot tests on overlay components — SVG output is brittle and the value lives in math, not pixels.
 
@@ -159,10 +159,10 @@ supabase/types.ts                       (regen)
 
 ## Risks
 
-| Risk | Mitigation |
-|---|---|
-| Letterbox math wrong on portrait videos | Manual on-device validation with both portrait and landscape sources before Phase 1 lands. Pure-function tests cover both branches. |
-| `timeUpdate` interval too noisy / janky | 100ms tested as default; if RN re-render budget is exceeded on low-end devices, fall back to 200ms or move overlay to Reanimated `useDerivedValue`. |
-| Existing prod videos with no `videoWidthPx`/`videoHeightPx` | Display-rect helper falls back to container rect; sub-label warns "Overlay alignment may be off". User can re-record to fix. |
-| `debug_landmarks` JSON inflates row size | At 4fps × 30s, ~16KB JSON. Even at 60s × 5fps, ~50KB. Negligible vs the 5–8MB video. Add a hard cap (`frames.length > 600 → drop oldest`) only if real videos exceed expectations. |
-| Skeleton lerp produces "rubber-band" effect when landmark visibility flips | Visibility threshold (0.5) is checked per-frame, not lerped. Hide bone if either endpoint drops below threshold in the *nearest* stored frame, not the lerped frame. |
+| Risk                                                                       | Mitigation                                                                                                                                                                         |
+| -------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Letterbox math wrong on portrait videos                                    | Manual on-device validation with both portrait and landscape sources before Phase 1 lands. Pure-function tests cover both branches.                                                |
+| `timeUpdate` interval too noisy / janky                                    | 100ms tested as default; if RN re-render budget is exceeded on low-end devices, fall back to 200ms or move overlay to Reanimated `useDerivedValue`.                                |
+| Existing prod videos with no `videoWidthPx`/`videoHeightPx`                | Display-rect helper falls back to container rect; sub-label warns "Overlay alignment may be off". User can re-record to fix.                                                       |
+| `debug_landmarks` JSON inflates row size                                   | At 4fps × 30s, ~16KB JSON. Even at 60s × 5fps, ~50KB. Negligible vs the 5–8MB video. Add a hard cap (`frames.length > 600 → drop oldest`) only if real videos exceed expectations. |
+| Skeleton lerp produces "rubber-band" effect when landmark visibility flips | Visibility threshold (0.5) is checked per-frame, not lerped. Hide bone if either endpoint drops below threshold in the _nearest_ stored frame, not the lerped frame.               |

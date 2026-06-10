@@ -649,8 +649,9 @@ export default function DisruptionReportScreen() {
                     <View key={row.session_id} style={styles.impactRow}>
                       <Text style={styles.impactRowDay}>
                         {row.planned_date
-                          ? new Date(row.planned_date + 'T00:00:00')
-                              .toLocaleDateString('en-AU', { weekday: 'short' })
+                          ? new Date(
+                              row.planned_date + 'T00:00:00'
+                            ).toLocaleDateString('en-AU', { weekday: 'short' })
                           : '—'}
                         {' · '}
                         <Text style={styles.impactRowLift}>

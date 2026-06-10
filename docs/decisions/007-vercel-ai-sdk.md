@@ -88,20 +88,27 @@ npm install ai @ai-sdk/anthropic
 ```
 
 App entry polyfill (`apps/parakeet/app/_layout.tsx`, first import):
+
 ```typescript
-import 'expo/fetch'
+import 'expo/fetch';
 ```
 
 Model lazy getters (`packages/training-engine/src/ai/models.ts`):
+
 ```typescript
-import { createOpenAI } from '@ai-sdk/openai'
+import { createOpenAI } from '@ai-sdk/openai';
 
 // Lazy getters — support proxy configuration at runtime
-export function getJITModel() { return getProvider()('gpt-4o-mini') }
-export function getCycleReviewModel() { return getProvider()('gpt-5') }
+export function getJITModel() {
+  return getProvider()('gpt-4o-mini');
+}
+export function getCycleReviewModel() {
+  return getProvider()('gpt-5');
+}
 ```
 
 JIT call pattern:
+
 ```typescript
 const { object } = await generateObject({
   model: getJITModel(),
@@ -109,7 +116,7 @@ const { object } = await generateObject({
   system: JIT_SYSTEM_PROMPT,
   prompt: JSON.stringify(jitInput),
   abortSignal: AbortSignal.timeout(5000),
-})
+});
 ```
 
 See `docs/features/ai/spec-sdk-setup.md` for full setup spec.

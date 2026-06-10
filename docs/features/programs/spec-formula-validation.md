@@ -30,11 +30,13 @@ Zod validation schema for formula config overrides. Ensures user and AI inputs s
 - [x] Export `CreateFormulaConfigSchema` (wraps overrides) and inferred type `CreateFormulaConfigInput`
 
 **Validation in API route handler:**
+
 - [x] Call `CreateFormulaConfigSchema.parse(body)` before reaching service
 - [x] On validation failure: return 400 with array of validation errors in a user-readable format
   - Example: `"block1.heavy.pct must be between 0.40 and 1.05"` (not raw Zod error messages)
 
 **Unit tests:**
+
 - [x] Valid partial override passes (only block1.heavy.pct provided, everything else absent)
 - [x] pct = 1.10 fails (above max)
 - [x] pct_min = 0.85, pct_max = 0.80 fails (min > max)

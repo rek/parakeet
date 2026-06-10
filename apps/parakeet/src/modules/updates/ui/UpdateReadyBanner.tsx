@@ -78,7 +78,9 @@ export function UpdateReadyBanner() {
       style={[styles.pill, styles.success]}
     >
       <Text style={styles.label}>
-        {status === 'restarting' ? 'Restarting…' : 'Update ready — tap to restart'}
+        {status === 'restarting'
+          ? 'Restarting…'
+          : 'Update ready — tap to restart'}
       </Text>
     </TouchableOpacity>
   );

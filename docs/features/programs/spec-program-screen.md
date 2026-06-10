@@ -10,21 +10,25 @@ The Program tab showing the full 10-week program in a scannable week-grid format
 ## Tasks
 
 **`apps/parakeet/app/(tabs)/program.tsx`:**
+
 - On mount: fetch active program via `useActiveProgram()` hook calling `getActiveProgram(userId)` from `programs-003` (React Query, cache 5 minutes)
 - Header: program title, block progress indicator ("Block 2 of 3 — Week 5 of 10")
 - Scrollable list of `WeekRow` components (one per week)
 - Current week: auto-expanded, scrolled into view on mount
 
 **`apps/parakeet/components/program/WeekGrid.tsx`:**
+
 - Renders the list of `WeekRow` components
 - Accepts `program: Program` as prop
 
 **`apps/parakeet/components/program/WeekRow.tsx`:**
+
 - Collapsed state: week number, block badge (color-coded), completion indicator (e.g., "2/3 sessions done")
 - Tap to expand → shows SessionSummary cards for each session in the week
 - Deload week: grey badge, "Deload" label
 
 **`apps/parakeet/components/program/BlockBadge.tsx`:**
+
 - Props: `blockNumber: 1 | 2 | 3 | 'deload'`
 - Block 1: blue badge with "B1"
 - Block 2: orange badge with "B2"
@@ -32,6 +36,7 @@ The Program tab showing the full 10-week program in a scannable week-grid format
 - Deload: grey badge with "DL"
 
 **`apps/parakeet/components/program/SessionSummary.tsx`:**
+
 - Props: `session: Session`
 - Uses `useInProgressSession()` hook internally to determine locked state
 - Shows: primary lift, intensity type, planned/completed date, block badge
@@ -44,9 +49,11 @@ The Program tab showing the full 10-week program in a scannable week-grid format
   - `missed`: red dot + red "Missed" pill badge, not tappable
 
 **No program state:**
+
 - If `getActiveProgram()` returns `null`, show "No active program" with "Create Program" button
 
 **Scheduled program with zero sessions:**
+
 - If `program.program_mode !== 'unending'` and `program.sessions.length === 0` (program created but session generation hasn't completed or failed), render a placeholder tile "Sessions being prepared…" with a tap-to-retry action that calls a regenerate path. Today this state renders only the header + check-in card with a totally empty middle — looks broken.
 
 ## Open Issues (2026-05 review)

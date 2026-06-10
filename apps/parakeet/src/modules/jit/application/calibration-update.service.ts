@@ -14,13 +14,13 @@ import { captureException } from '@platform/utils/captureException';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import {
-  fetchRawModifierCalibrations,
-  upsertModifierCalibration,
-} from '../data/calibration.repository';
-import {
   fetchSessionById,
   fetchSessionLogBySessionId,
 } from '../../session/data/session.repository';
+import {
+  fetchRawModifierCalibrations,
+  upsertModifierCalibration,
+} from '../data/calibration.repository';
 
 /**
  * After session completion, extract trace modifiers + actual RPE and update

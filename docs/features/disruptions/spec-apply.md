@@ -21,79 +21,51 @@ The user has reviewed the suggested adjustments and confirmed they want to apply
 **`apps/parakeet/lib/disruptions.ts` (addition):**
 
 ```typescript
-export async function applyDisruptionAdjustment(
-  disruptionId: string,
-  userId: string
-): Promise<void> {
+export async function applyDisruptionAdjustment(disruptionId: string, userId: string): Promise<void> {
   // 1. Fetch the disruption (RLS ensures ownership)
-  const { data: disruption } = await supabase
-    .from('disruptions')
-    .select('*')
-    .eq('id', disruptionId)
-    .eq('user_id', userId)
-    .eq('status', 'active')
-    .is('adjustment_applied', null)
-    .single()
+  const { data: disruption } = await supabase.from('disruptions').select('*').eq('id', disruptionId).eq('user_id', userId).eq('status', 'active').is('adjustment_applied', null).single();
 
-  if (!disruption) throw new Error('Disruption not found or already applied')
+  if (!disruption) throw new Error('Disruption not found or already applied');
 
   // 2. Re-generate suggestions from engine (deterministic — same input = same output)
-  const sessionIds = disruption.session_ids_affected ?? []
-  const affectedSessions = sessionIds.length > 0
-    ? (await supabase
-        .from('sessions')
-        .select('id, primary_lift, planned_sets, status')
-        .in('id', sessionIds)
-      ).data ?? []
-    : []
+  const sessionIds = disruption.session_ids_affected ?? [];
+  const affectedSessions = sessionIds.length > 0 ? ((await supabase.from('sessions').select('id, primary_lift, planned_sets, status').in('id', sessionIds)).data ?? []) : [];
 
-  const suggestions = suggestDisruptionAdjustment(disruption, affectedSessions)
+  const suggestions = suggestDisruptionAdjustment(disruption, affectedSessions);
 
   // 3. Apply adjustments to each session
   for (const suggestion of suggestions) {
     if (suggestion.action === 'weight_reduced' && suggestion.reduction_pct) {
-      const session = affectedSessions.find(s => s.id === suggestion.session_id)
-      if (!session?.planned_sets) continue
+      const session = affectedSessions.find((s) => s.id === suggestion.session_id);
+      if (!session?.planned_sets) continue;
 
       const adjustedSets = session.planned_sets.map((set: PlannedSet) => ({
         ...set,
         weight_kg: roundToNearest2_5(set.weight_kg * (1 - suggestion.reduction_pct / 100)),
-      }))
+      }));
 
-      await supabase
-        .from('sessions')
-        .update({ planned_sets: adjustedSets })
-        .eq('id', suggestion.session_id)
+      await supabase.from('sessions').update({ planned_sets: adjustedSets }).eq('id', suggestion.session_id);
     }
 
     if (suggestion.action === 'session_skipped') {
-      await supabase
-        .from('sessions')
-        .update({ status: 'skipped' })
-        .eq('id', suggestion.session_id)
+      await supabase.from('sessions').update({ status: 'skipped' }).eq('id', suggestion.session_id);
     }
 
     if (suggestion.action === 'reps_reduced' && suggestion.reps_modifier) {
-      const session = affectedSessions.find(s => s.id === suggestion.session_id)
-      if (!session?.planned_sets) continue
+      const session = affectedSessions.find((s) => s.id === suggestion.session_id);
+      if (!session?.planned_sets) continue;
 
       const adjustedSets = session.planned_sets.map((set: PlannedSet) => ({
         ...set,
         reps: Math.max(1, set.reps + suggestion.reps_modifier),
-      }))
+      }));
 
-      await supabase
-        .from('sessions')
-        .update({ planned_sets: adjustedSets })
-        .eq('id', suggestion.session_id)
+      await supabase.from('sessions').update({ planned_sets: adjustedSets }).eq('id', suggestion.session_id);
     }
   }
 
   // 4. Record what was applied on the disruption row
-  await supabase
-    .from('disruptions')
-    .update({ adjustment_applied: suggestions })
-    .eq('id', disruptionId)
+  await supabase.from('disruptions').update({ adjustment_applied: suggestions }).eq('id', disruptionId);
 }
 ```
 
@@ -122,6 +94,7 @@ Design intent: minor disruptions apply immediately without requiring the user to
 ## Query invalidation after apply
 
 After `applyDisruptionAdjustment` resolves in `handleApply()` (report.tsx), invalidate both:
+
 - `qk.program.active(userId)` — so the program grid reflects updated session statuses (e.g., `planned` → `skipped`)
 - `qk.session.today(userId)` — so the Today screen reflects any status change to today's session
 

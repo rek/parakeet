@@ -6,14 +6,14 @@ Use this process for non-trivial work.
 
 Each layer has a single purpose. Know which to read and which to update.
 
-| Layer | Path | Purpose | When to read | When to update |
-|-------|------|---------|-------------|----------------|
-| **Intent** | `docs/intent.md` | Why the app exists, design philosophy | First read of any session | Rarely — only if core goals change |
-| **Domain** | `docs/domain/` | Training science truth: constants, formulas, research ranges | Validating values, reviewing correctness, adding/changing engine constants | Any time a training constant changes |
-| **Guides** | `docs/guide/` | How to work: code style, project org, dev commands, workflow | Before writing code | When process or conventions change |
-| **Features** | `docs/features/*/` | Feature-centric docs: each dir has `index.md` (status), `design*.md` (rationale), `spec-*.md` (implementation plans) | Before implementing a feature | After implementing (mark done, update to match reality) |
-| **ADRs** | `docs/decisions/` | Architectural choices and tradeoffs | When revisiting a past decision | When making a new architectural choice |
-| **Status** | Each `docs/features/*/index.md` | What's built vs planned per feature | Before starting any work | After every feature/bugfix |
+| Layer        | Path                            | Purpose                                                                                                              | When to read                                                               | When to update                                          |
+| ------------ | ------------------------------- | -------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------- | ------------------------------------------------------- |
+| **Intent**   | `docs/intent.md`                | Why the app exists, design philosophy                                                                                | First read of any session                                                  | Rarely — only if core goals change                      |
+| **Domain**   | `docs/domain/`                  | Training science truth: constants, formulas, research ranges                                                         | Validating values, reviewing correctness, adding/changing engine constants | Any time a training constant changes                    |
+| **Guides**   | `docs/guide/`                   | How to work: code style, project org, dev commands, workflow                                                         | Before writing code                                                        | When process or conventions change                      |
+| **Features** | `docs/features/*/`              | Feature-centric docs: each dir has `index.md` (status), `design*.md` (rationale), `spec-*.md` (implementation plans) | Before implementing a feature                                              | After implementing (mark done, update to match reality) |
+| **ADRs**     | `docs/decisions/`               | Architectural choices and tradeoffs                                                                                  | When revisiting a past decision                                            | When making a new architectural choice                  |
+| **Status**   | Each `docs/features/*/index.md` | What's built vs planned per feature                                                                                  | Before starting any work                                                   | After every feature/bugfix                              |
 
 ### Key rule: domain constants live in `docs/domain/` only
 
@@ -54,6 +54,7 @@ Walk down each branch of the decision tree **one question at a time**. For each 
 The goal is to surface every gray area, ambiguity, and tradeoff before committing to a design. Decisions accumulate in the design doc under a **Decisions** section.
 
 Examples of what to resolve:
+
 - Architecture: on-device vs server? New module vs extend existing?
 - Scope: what's Phase 1 vs Phase 2? What's explicitly out of scope?
 - Data: what's stored, where, what format? What happens to old data?
@@ -79,7 +80,7 @@ For smaller features, skip to Plan.
 
 - Create/update implementation tasks in `docs/features/<feature>/spec-*.md`.
 - Keep tasks small and ordered.
-- Reference `docs/domain/` for constants — specs describe *where* values are used, not *what* they are.
+- Reference `docs/domain/` for constants — specs describe _where_ values are used, not _what_ they are.
 - **Confirm scope before building** — if a task involves external systems (cloud upload, third-party APIs, new permissions), confirm with the user that the scope is wanted before implementing. Building then reverting wastes effort.
 - **Prioritize by architectural value, not by ease** — never say "lowest-hanging fruit" or "easiest win." Order tasks by what delivers the most complete, well-structured system.
 
@@ -102,6 +103,7 @@ Phases execute sequentially. Tasks within a phase can run in parallel if indepen
 For each phase:
 
 **Before writing code for a screen, verify:**
+
 - Query keys match `qk.*` patterns
 - Mutations invalidate relevant queries
 - Props flow all context the child components need
@@ -128,6 +130,7 @@ When a phase adds native dependencies (MediaPipe, vision-camera, etc.):
 **`as any`, `as unknown as X`, and hand-written DB row types are never acceptable — not even temporarily.** They are symptoms of skipped steps, not solutions.
 
 When you hit a type error:
+
 1. **Stop.** Don't cast around it.
 2. **Fix the source.** If Supabase types are missing, run `npm run db:types` now. If the migration hasn't been pushed, push it now. If the LLM parameter type is wrong, fix the type definition now.
 3. **If you can't fix the source in this step**, you are working in the wrong order. Back up, fix the prerequisite, then continue.
@@ -135,6 +138,7 @@ When you hit a type error:
 A cast makes the compiler trust you. If you're wrong, the runtime breaks silently. A cast that gets copied across 3 files becomes systemic type blindness. Maximum fidelity means the type system is an ally, not an obstacle to route around.
 
 **When touching DB schema:**
+
 - Grep the column name across the full codebase before starting — making a column nullable cascades to: migration, `supabase/types.ts`, Zod schemas in `shared-types`, and domain types in `shared/types/domain.ts`.
 - If using a new enum-like sentinel value, check for a DB CHECK constraint and update it in the same migration.
 - Always verify column names against the migration SQL, not sibling query files — a silently wrong column name returns no data with no error thrown.
@@ -159,6 +163,7 @@ After each phase, verify before moving to the next:
 **Automated checks:** Run `/verify` (typecheck, boundaries, tests, lint).
 
 **Manual checks:**
+
 - Walk through the user-facing flow on device/simulator.
 - Test edge cases identified during Discuss.
 - Confirm the phase delivers what was planned.
@@ -166,10 +171,12 @@ After each phase, verify before moving to the next:
 If verification fails, fix before advancing. Do not accumulate debt across phases.
 
 For the dashboard app:
+
 - `tsc --noEmit -p apps/dashboard/tsconfig.app.json`
 - `npx nx lint dashboard`
 
 Dashboard conventions:
+
 - Theme: all colours/borders must use `src/lib/theme.ts` constants or CSS vars from `src/styles.css`; no raw `rgba()`/hex in component files
 - Interactive divs: use `<button className="btn-reset">` not `<div onClick>`
 - Env switching: `SupabaseContext` — all components get `supabase` via `useSupabase()`, add to `useEffect` deps
@@ -189,11 +196,13 @@ After all phases complete:
 ## Flow Summary
 
 **Small features** (bug fixes, <5 files, familiar tech):
+
 ```
 Orient → Plan → Execute → Verify → Wrap Up
 ```
 
 **Big features** (new architecture, new tech, multi-phase):
+
 ```
 Orient → Research → Discuss (grill) → Design → Plan (phased) → [per phase: Execute → Verify] → Wrap Up
 ```

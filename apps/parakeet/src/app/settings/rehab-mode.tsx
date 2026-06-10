@@ -17,16 +17,16 @@ import { useAuth } from '@modules/auth';
 import { getCurrentOneRmKg } from '@modules/program';
 import {
   ActiveRehabCapExistsError,
-  type RehabCapRow,
   useActiveRehabCaps,
   useRehabModeMutations,
+  type RehabCapRow,
 } from '@modules/rehab-mode';
-import DateTimePicker, {
-  type DateTimePickerEvent,
-} from '@react-native-community/datetimepicker';
 import type { Lift } from '@parakeet/shared-types';
 import { roundToNearest } from '@parakeet/training-engine';
 import { captureException } from '@platform/utils/captureException';
+import DateTimePicker, {
+  type DateTimePickerEvent,
+} from '@react-native-community/datetimepicker';
 import { LIFT_LABELS } from '@shared/constants';
 import { formatDate, localDateIso } from '@shared/utils/date';
 import { router } from 'expo-router';
@@ -271,7 +271,12 @@ function RehabCapForm({
   const canSubmit = Number.isFinite(parsedCap) && parsedCap > 0 && !saving;
 
   return (
-    <Modal visible={visible} transparent animationType="slide" onRequestClose={onCancel}>
+    <Modal
+      visible={visible}
+      transparent
+      animationType="slide"
+      onRequestClose={onCancel}
+    >
       <View style={styles.modalOverlay}>
         <TouchableOpacity
           style={styles.modalBackdrop}
@@ -293,7 +298,8 @@ function RehabCapForm({
             placeholderTextColor={colors.textTertiary}
           />
           <Text style={styles.helperText}>
-            Prescribed weight will never exceed this (rounded up to your plate increment).
+            Prescribed weight will never exceed this (rounded up to your plate
+            increment).
           </Text>
 
           <Text style={styles.fieldLabel}>Note (optional)</Text>
@@ -343,7 +349,8 @@ function RehabCapForm({
           )}
 
           <Text style={styles.helperText}>
-            The cap stays active until you turn it off — the end date is just a reminder.
+            The cap stays active until you turn it off — the end date is just a
+            reminder.
           </Text>
 
           <View style={styles.modalActions}>
@@ -357,9 +364,7 @@ function RehabCapForm({
             </TouchableOpacity>
             <TouchableOpacity
               style={[styles.primaryBtn, !canSubmit && styles.btnDisabled]}
-              onPress={() =>
-                onSubmit({ capKg, note, plannedEndDate })
-              }
+              onPress={() => onSubmit({ capKg, note, plannedEndDate })}
               activeOpacity={0.8}
               disabled={!canSubmit}
             >
@@ -410,7 +415,8 @@ export default function RehabModeSettings() {
     } catch (err) {
       captureException(err);
     }
-    const defaultCap = defaultCapKg > 0 ? roundToNearest(defaultCapKg * 0.5) : 0;
+    const defaultCap =
+      defaultCapKg > 0 ? roundToNearest(defaultCapKg * 0.5) : 0;
     setEditingId(null);
     setFormInitial({
       capKg: defaultCap > 0 ? String(defaultCap) : '',
@@ -497,9 +503,9 @@ export default function RehabModeSettings() {
       <View style={styles.titleWrap}>
         <ScreenTitle>Rehab Mode</ScreenTitle>
         <Text style={styles.subtitle}>
-          Cap one or more lifts at a fixed weight during a rehab or injury block.
-          The engine respects the cap as a hard ceiling and pauses auto-progression
-          for that lift — your real 1RM is preserved.
+          Cap one or more lifts at a fixed weight during a rehab or injury
+          block. The engine respects the cap as a hard ceiling and pauses
+          auto-progression for that lift — your real 1RM is preserved.
         </Text>
       </View>
 
@@ -551,7 +557,10 @@ export default function RehabModeSettings() {
 
                     <View style={styles.actionRow}>
                       <TouchableOpacity
-                        style={[styles.primaryBtn, saving && styles.btnDisabled]}
+                        style={[
+                          styles.primaryBtn,
+                          saving && styles.btnDisabled,
+                        ]}
                         onPress={() => openForEdit(cap)}
                         activeOpacity={0.8}
                         disabled={saving}
@@ -579,7 +588,9 @@ export default function RehabModeSettings() {
                       activeOpacity={0.8}
                       disabled={saving}
                     >
-                      <Text style={styles.enableBtnText}>Enable Rehab Mode</Text>
+                      <Text style={styles.enableBtnText}>
+                        Enable Rehab Mode
+                      </Text>
                     </TouchableOpacity>
                   </>
                 )}

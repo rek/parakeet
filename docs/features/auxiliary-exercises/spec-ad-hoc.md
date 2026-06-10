@@ -20,19 +20,23 @@ Allows users to add any exercise to a live session beyond the prescribed auxilia
 ### `apps/parakeet/src/app/(tabs)/session/[sessionId].tsx`
 
 **New local state:**
+
 - `adHocExercises: string[]` — ordered list of ad-hoc exercise names added this session
 - `addExerciseVisible: boolean` — modal open state
 - `exerciseInput: string` — controlled text input value
 
 **New handlers:**
+
 - `handleConfirmAddExercise()` — normalises input (trim, lowercase, spaces→underscores), guards against duplicates, calls `addAdHocSet`, appends to `adHocExercises`, closes modal
 - `handleAddAdHocSet(exercise)` — calls `addAdHocSet` to append another set row
 
 **Resume path (existing session branch in `useEffect`):**
+
 - Derives ad-hoc exercises on return by diffing `auxiliarySets` against prescribed `auxiliaryWork`
 - Any exercise in the store not in the prescribed list is added to `adHocExercises`
 
 **Rendering:**
+
 - Aux section now renders when `auxiliaryWork.length > 0 || adHocExercises.length > 0`
 - Ad-hoc exercises render after prescribed ones inside the same "Auxiliary Work" section
 - Each ad-hoc exercise header has a `+ Set` button (inline, right-aligned)
@@ -40,6 +44,7 @@ Allows users to add any exercise to a live session beyond the prescribed auxilia
 - `SetRow` and `handleAuxSetUpdate` are reused unchanged for ad-hoc sets
 
 **Modal:**
+
 - RN `Modal` with `transparent` + `fade` animation
 - Single `TextInput` with `autoFocus`, `returnKeyType="done"`, submits on Return
 - Cancel clears input and closes; Add normalises and commits

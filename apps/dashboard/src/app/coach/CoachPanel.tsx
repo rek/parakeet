@@ -1,11 +1,11 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
+import { assembleCoachingContext } from '@modules/video-analysis/application/assemble-coaching-context';
 import type { VideoAnalysisResult } from '@parakeet/shared-types';
 import {
   FORM_COACHING_SYSTEM_PROMPT,
   type FormCoachingInput,
 } from '@parakeet/training-engine';
-import { assembleCoachingContext } from '@modules/video-analysis/application/assemble-coaching-context';
 
 import {
   appendEntry,
@@ -16,13 +16,12 @@ import {
   type CacheEntry,
 } from '../../lib/coaching-cache';
 import {
-  CoachingError,
   COACHING_MODEL_IDS,
+  CoachingError,
   runCoaching,
   type CoachingModelId,
 } from '../../lib/coaching-runner';
 import { theme } from '../../lib/theme';
-
 import {
   CoachContextForm,
   type ContextFormValue,
@@ -79,7 +78,8 @@ export function CoachPanel({
       },
       log: {
         session_rpe: form.sessionRpe,
-        actual_sets: form.weightKg != null ? [{ weight_kg: form.weightKg }] : [],
+        actual_sets:
+          form.weightKg != null ? [{ weight_kg: form.weightKg }] : [],
       },
       jitSnapshot: {
         sorenessRatings: form.sorenessRatings,
@@ -185,14 +185,13 @@ export function CoachPanel({
           marginBottom: 10,
         }}
       >
-        Coach {promptIsModified && <em style={{ opacity: 0.7 }}>· modified prompt</em>}
+        Coach{' '}
+        {promptIsModified && (
+          <em style={{ opacity: 0.7 }}>· modified prompt</em>
+        )}
       </div>
 
-      <CoachContextForm
-        fixtureId={fixtureId}
-        lift={lift}
-        onChange={setForm}
-      />
+      <CoachContextForm fixtureId={fixtureId} lift={lift} onChange={setForm} />
 
       <div
         style={{

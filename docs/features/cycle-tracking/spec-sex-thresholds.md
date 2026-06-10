@@ -17,9 +17,9 @@ Adds `DEFAULT_THRESHOLDS_FEMALE` alongside the renamed `DEFAULT_THRESHOLDS_MALE`
   export const DEFAULT_THRESHOLDS_FEMALE: AdjustmentThresholds = {
     rpe_deviation_threshold: 1.5,
     consecutive_sessions_required: 3,
-    incomplete_session_threshold: 80,  // unchanged
-    max_suggestions_per_lift: 1,       // unchanged
-  }
+    incomplete_session_threshold: 80, // unchanged
+    max_suggestions_per_lift: 1, // unchanged
+  };
   ```
 - [ ] Export `getDefaultThresholds(biologicalSex?: 'female' | 'male'): AdjustmentThresholds`
   - `'female'` → `DEFAULT_THRESHOLDS_FEMALE`
@@ -32,6 +32,7 @@ Adds `DEFAULT_THRESHOLDS_FEMALE` alongside the renamed `DEFAULT_THRESHOLDS_MALE`
   - `biological_sex` available from `getProfile(userId)` — may already be in scope
 
 **Unit tests (`packages/training-engine/src/__tests__/performance-adjuster.test.ts`):**
+
 - [ ] `getDefaultThresholds('female').rpe_deviation_threshold` === 1.5
 - [ ] `getDefaultThresholds('female').consecutive_sessions_required` === 3
 - [ ] `getDefaultThresholds('male').rpe_deviation_threshold` === 1.0

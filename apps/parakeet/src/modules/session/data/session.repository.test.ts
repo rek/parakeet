@@ -278,7 +278,12 @@ describe('fetchTodaySessions', () => {
 
   it('applies program_id filter when activeProgramId is provided', async () => {
     const sessions = [
-      { id: 's1', status: 'planned', planned_date: '2026-03-08', program_id: 'prog-5' },
+      {
+        id: 's1',
+        status: 'planned',
+        planned_date: '2026-03-08',
+        program_id: 'prog-5',
+      },
     ];
     const chain = createListChain();
     chain.order.mockResolvedValue({ data: sessions, error: null });
@@ -432,7 +437,10 @@ describe('fetchLastResolvedLiftForProgram', () => {
   // GH#229: skipped sessions must count toward rotation; otherwise the lazy
   // session generator regenerates the same lift forever after every skip.
   it('queries both completed and skipped statuses (GH#229)', async () => {
-    const chain = createQueryChain({ data: { primary_lift: 'squat' }, error: null });
+    const chain = createQueryChain({
+      data: { primary_lift: 'squat' },
+      error: null,
+    });
     fromMock.mockReturnValueOnce(chain);
 
     await fetchLastResolvedLiftForProgram('prog-1', 'user-1');
@@ -441,12 +449,17 @@ describe('fetchLastResolvedLiftForProgram', () => {
   });
 
   it('orders by planned_date desc with completed_at tie-break', async () => {
-    const chain = createQueryChain({ data: { primary_lift: 'squat' }, error: null });
+    const chain = createQueryChain({
+      data: { primary_lift: 'squat' },
+      error: null,
+    });
     fromMock.mockReturnValueOnce(chain);
 
     await fetchLastResolvedLiftForProgram('prog-1', 'user-1');
 
-    expect(chain.order).toHaveBeenNthCalledWith(1, 'planned_date', { ascending: false });
+    expect(chain.order).toHaveBeenNthCalledWith(1, 'planned_date', {
+      ascending: false,
+    });
     expect(chain.order).toHaveBeenNthCalledWith(2, 'completed_at', {
       ascending: false,
       nullsFirst: false,
@@ -463,7 +476,10 @@ describe('fetchLastResolvedLiftForProgram', () => {
   });
 
   it('throws when query fails', async () => {
-    const chain = createQueryChain({ data: null, error: new Error('query failed') });
+    const chain = createQueryChain({
+      data: null,
+      error: new Error('query failed'),
+    });
     fromMock.mockReturnValueOnce(chain);
 
     await expect(

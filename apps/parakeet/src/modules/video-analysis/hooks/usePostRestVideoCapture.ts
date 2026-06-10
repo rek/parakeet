@@ -59,27 +59,28 @@ export function usePostRestVideoCapture({
     setPendingVideoUri(null);
     try {
       const estimatedDuration = plannedRepsRef.current * 2;
-      await processRecordedVideo({ videoUri: uri, durationSec: estimatedDuration });
+      await processRecordedVideo({
+        videoUri: uri,
+        durationSec: estimatedDuration,
+      });
     } catch (err) {
       captureException(err);
     }
   }, [pendingVideoUri, processRecordedVideo]);
 
   const wrapLiftComplete = useCallback(
-    (originalHandler: () => void) =>
-      () => {
-        originalHandler();
-        processPendingVideo();
-      },
+    (originalHandler: () => void) => () => {
+      originalHandler();
+      processPendingVideo();
+    },
     [processPendingVideo]
   );
 
   const wrapLiftFailed = useCallback(
-    (originalHandler: (reps: number) => void) =>
-      (reps: number) => {
-        originalHandler(reps);
-        processPendingVideo();
-      },
+    (originalHandler: (reps: number) => void) => (reps: number) => {
+      originalHandler(reps);
+      processPendingVideo();
+    },
     [processPendingVideo]
   );
 

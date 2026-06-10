@@ -12,7 +12,9 @@ import { StatusChip } from './StatusChip';
 interface Row {
   name: string;
   category: string;
-  byProtocol: Partial<Record<string, { status: FoodStatus; notes: string | null }>>;
+  byProtocol: Partial<
+    Record<string, { status: FoodStatus; notes: string | null }>
+  >;
 }
 
 /**
@@ -47,7 +49,12 @@ export function CompareSection() {
     );
   }
 
-  if (bundleA.isLoading || bundleB.isLoading || !bundleA.data || !bundleB.data) {
+  if (
+    bundleA.isLoading ||
+    bundleB.isLoading ||
+    !bundleA.data ||
+    !bundleB.data
+  ) {
     return (
       <View style={styles.stateBox}>
         <ActivityIndicator color={colors.primary} />
@@ -64,18 +71,22 @@ export function CompareSection() {
       r.byProtocol[a.protocol.slug] &&
       r.byProtocol[b.protocol.slug] &&
       r.byProtocol[a.protocol.slug]!.status !==
-        r.byProtocol[b.protocol.slug]!.status,
+        r.byProtocol[b.protocol.slug]!.status
   );
   const onlyA = rows.filter(
-    (r) => r.byProtocol[a.protocol.slug] && !r.byProtocol[b.protocol.slug],
+    (r) => r.byProtocol[a.protocol.slug] && !r.byProtocol[b.protocol.slug]
   );
   const onlyB = rows.filter(
-    (r) => r.byProtocol[b.protocol.slug] && !r.byProtocol[a.protocol.slug],
+    (r) => r.byProtocol[b.protocol.slug] && !r.byProtocol[a.protocol.slug]
   );
 
   return (
     <View style={styles.wrap}>
-      <Section title="Disagreements" hint="Same food, different verdict." styles={styles}>
+      <Section
+        title="Disagreements"
+        hint="Same food, different verdict."
+        styles={styles}
+      >
         {disagreements.length === 0 ? (
           <Text style={styles.empty}>No overlap disagreements.</Text>
         ) : (
@@ -122,13 +133,36 @@ export function CompareSection() {
 }
 
 function buildRows(
-  a: { protocol: { slug: string }; foods: { id: string; displayName: string; category: string; status: FoodStatus; notes: string | null }[] },
-  b: { protocol: { slug: string }; foods: { id: string; displayName: string; category: string; status: FoodStatus; notes: string | null }[] },
+  a: {
+    protocol: { slug: string };
+    foods: {
+      id: string;
+      displayName: string;
+      category: string;
+      status: FoodStatus;
+      notes: string | null;
+    }[];
+  },
+  b: {
+    protocol: { slug: string };
+    foods: {
+      id: string;
+      displayName: string;
+      category: string;
+      status: FoodStatus;
+      notes: string | null;
+    }[];
+  }
 ): Row[] {
   const byKey = new Map<string, Row>();
   const put = (
     slug: string,
-    f: { displayName: string; category: string; status: FoodStatus; notes: string | null },
+    f: {
+      displayName: string;
+      category: string;
+      status: FoodStatus;
+      notes: string | null;
+    }
   ) => {
     const key = f.displayName.toLowerCase() + '|' + f.category;
     const existing = byKey.get(key) ?? {
@@ -144,7 +178,7 @@ function buildRows(
   return [...byKey.values()].sort((x, y) =>
     x.category === y.category
       ? x.name.localeCompare(y.name)
-      : x.category.localeCompare(y.category),
+      : x.category.localeCompare(y.category)
   );
 }
 
@@ -152,7 +186,7 @@ function renderOnlyList(
   rows: Row[],
   slug: string,
   styles: ReturnType<typeof buildStyles>,
-  _colors: ColorScheme,
+  _colors: ColorScheme
 ) {
   if (rows.length === 0) {
     return <Text style={styles.empty}>Nothing unique.</Text>;

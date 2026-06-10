@@ -47,6 +47,7 @@ Builds are triggered manually via GitHub Actions:
 EAS builds remotely and env vars are pulled from EAS secrets (managed on expo.dev → project → Secrets).
 
 Profiles:
+
 - `development` — dev client, internal distribution
 - `preview` — APK, internal distribution (sideload-ready)
 - `production` — APK, production
@@ -135,10 +136,15 @@ EXPO_PUBLIC_SUPABASE_URL=http://localhost:54321
 
 ```bash
 npx nx lint parakeet                                    # oxlint — unused vars, imports, a11y
-npx nx format parakeet                                  # Prettier — import ordering, code style
+npm run format                                          # Prettier — write, whole repo
+npm run format:check                                    # Prettier — check only (CI gate)
 tsc --noEmit -p apps/parakeet/tsconfig.typecheck.json   # type check
-npx nx run-many -t lint format                          # all projects at once
+npx nx run-many -t lint                                 # lint all projects at once
 ```
+
+> Formatting is enforced in CI via `npm run format:check` (plain `prettier --check .`).
+> Use `npm run format` to fix — not `nx format`, whose check/write scopes are
+> asymmetric and can leave files CI flags as unformatted.
 
 ### Testing
 

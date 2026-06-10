@@ -1,10 +1,10 @@
 // @spec docs/features/wearable/spec-biometric-data.md
-import { typedSupabase } from '@platform/supabase';
 import {
   RecoverySnapshotSchema,
   type RecoverySnapshot,
   type RecoverySnapshotInsert,
 } from '@parakeet/shared-types';
+import { typedSupabase } from '@platform/supabase';
 
 export async function upsertRecoverySnapshot(
   userId: string,
@@ -12,10 +12,7 @@ export async function upsertRecoverySnapshot(
 ): Promise<RecoverySnapshot> {
   const { data, error } = await typedSupabase
     .from('recovery_snapshots')
-    .upsert(
-      { ...snapshot, user_id: userId },
-      { onConflict: 'user_id,date' }
-    )
+    .upsert({ ...snapshot, user_id: userId }, { onConflict: 'user_id,date' })
     .select('*')
     .single();
   if (error) throw error;

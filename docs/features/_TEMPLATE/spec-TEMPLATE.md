@@ -27,9 +27,9 @@ implementing file and symbol. See
 Example of a completed task (with back-link):
 
 - [x] `otherFunction(): void` — does the thing
-  → `modules/<feature>/utils/other-file.ts:otherFunction`
+      → `modules/<feature>/utils/other-file.ts:otherFunction`
 - [x] Unit tests
-  → `modules/<feature>/utils/__tests__/other-file.test.ts`
+      → `modules/<feature>/utils/__tests__/other-file.test.ts`
 
 **`path/to/another-file.ts`:**
 

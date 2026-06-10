@@ -16,10 +16,7 @@ The formula trace pass still computes the anchor (so post-session calibration se
 In `packages/training-engine/src/generator/llm-jit-generator.ts:226-235`, the LLM path computes the configured aux pair via:
 
 ```ts
-const baseAuxWeight = roundToNearest(
-  computeAuxWeight({ exercise, oneRmKg, lift, biologicalSex }),
-  increment
-);
+const baseAuxWeight = roundToNearest(computeAuxWeight({ exercise, oneRmKg, lift, biologicalSex }), increment);
 ```
 
 This call **omits** the optional `anchorKg` parameter that `computeAuxWeight` learned from GH#221. The LLM never proposes anchor-vs-formula reasoning back to the engine (no schema field), and the emitted `AuxiliaryWork` has no `anchor` metadata, so:
@@ -55,13 +52,8 @@ Before building the configured aux pair, resolve the anchor for each exercise:
 
 ```ts
 for (const exercise of input.activeAuxiliaries) {
-  const formulaWeightKg = roundToNearest(
-    computeAuxWeight({ exercise, oneRmKg, lift, biologicalSex }),
-    increment
-  );
-  const anchorResult = resolveAuxAnchor(
-    exercise, formulaWeightKg, input.auxHistory, input.nowIso
-  );
+  const formulaWeightKg = roundToNearest(computeAuxWeight({ exercise, oneRmKg, lift, biologicalSex }), increment);
+  const anchorResult = resolveAuxAnchor(exercise, formulaWeightKg, input.auxHistory, input.nowIso);
   // ...
 }
 ```
@@ -84,7 +76,7 @@ Every returned `AuxiliaryWork` from the LLM path attaches `anchor` metadata in t
 
 ```ts
 anchor: {
-  source, confidence, formulaWeightKg, anchorBaseKg, sessionsUsed, rationale
+  (source, confidence, formulaWeightKg, anchorBaseKg, sessionsUsed, rationale);
 }
 ```
 

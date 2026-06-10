@@ -24,10 +24,10 @@ where `torsoLength = hypot(shoulderMid.x - hipMid.x, shoulderMid.y - hipMid.y)`.
 
 The lifts sit in three different bands because the bar lives in three different places:
 
-| Lift | Bar | wrs signature |
-| --- | --- | --- |
-| Squat | Traps | near zero (wrists on the bar, bar on shoulders) |
-| Bench | Pressed up | negative (wrists above shoulders throughout the rep) |
+| Lift     | Bar         | wrs signature                                         |
+| -------- | ----------- | ----------------------------------------------------- |
+| Squat    | Traps       | near zero (wrists on the bar, bar on shoulders)       |
+| Bench    | Pressed up  | negative (wrists above shoulders throughout the rep)  |
 | Deadlift | Floor → hip | large positive at floor, moderate positive at lockout |
 
 We summarise the per-frame signal with two percentiles over the visible frames:
@@ -56,11 +56,11 @@ return squat
 
 Every branch computes a `strength` that is 0 exactly on the decision boundary and 1 when the signal is unambiguously in-class. A shared `boundaryConfidence(strength, framesFactor)` then maps strength into the `[0.5, 1.0]` range, multiplied by `framesFactor = min(1, framesUsed / 20)` so short clips never land in the confident band.
 
-| Branch | `strength` |
-| --- | --- |
-| Bench | `(BENCH_MAX_WRS_P90 − wrsP90) / 0.9` (saturates at 1 when wrsP90 ≈ −1) |
-| Deadlift | `max((wrsP90 − 0.3) / 1.5, (wrsMedian − 0.2) / 0.5)` |
-| Squat | `1 − abs(wrsMedian) × 3` (1 when median=0, 0 when `|median| ≥ 1/3`) |
+| Branch   | `strength`                                                             |
+| -------- | ---------------------------------------------------------------------- | ------ | ------- |
+| Bench    | `(BENCH_MAX_WRS_P90 − wrsP90) / 0.9` (saturates at 1 when wrsP90 ≈ −1) |
+| Deadlift | `max((wrsP90 − 0.3) / 1.5, (wrsMedian − 0.2) / 0.5)`                   |
+| Squat    | `1 − abs(wrsMedian) × 3` (1 when median=0, 0 when `                    | median | ≥ 1/3`) |
 
 `WARN_CONFIDENCE = 0.75` — the UX only prompts on a mismatch when the classifier clears this threshold. Lower-confidence predictions are still available for telemetry (breadcrumbs, Sentry) but silent.
 
@@ -72,11 +72,11 @@ A prediction at the decision boundary is a coin flip, so its confidence should n
 
 Eval set lives in `test-videos/manifest.json`. The 16 calibrated fixtures cover the views we support:
 
-| Lift | Fixtures |
-| --- | --- |
-| Squat | `squat-side`, `squat-45-3reps`, `squat-45-3reps-2`, `squat-45-5reps`, `squat-back-7reps` |
-| Bench | `bench-45-5reps`, `bench-front-4reps` |
-| Deadlift | `deadlift-side-*`, `deadlift-front-*`, `deadlift-45-6reps`, `dl-2-reps-side` |
+| Lift     | Fixtures                                                                                 |
+| -------- | ---------------------------------------------------------------------------------------- |
+| Squat    | `squat-side`, `squat-45-3reps`, `squat-45-3reps-2`, `squat-45-5reps`, `squat-back-7reps` |
+| Bench    | `bench-45-5reps`, `bench-front-4reps`                                                    |
+| Deadlift | `deadlift-side-*`, `deadlift-front-*`, `deadlift-45-6reps`, `dl-2-reps-side`             |
 
 Two fixtures (`squat-side`, `deadlift-side-5reps`) have zero usable frames after the visibility filter — they exercise the abstention path. Two more (`squat-45-3reps-2` with 14 usable frames and heavy landmark noise; `bench-45-5reps` sitting on the bench/squat boundary) exercise the low-confidence silent-abstention path.
 
@@ -102,7 +102,7 @@ Two fixtures (`squat-side`, `deadlift-side-5reps`) have zero usable frames after
 
 1. `lib/check-lift-mismatch.ts` wraps `detectLift` with the mismatch-decision rules (declared lift is supported; classifier is confident; detected ≠ declared) and returns `LiftMismatch | null`. Pure; 4 unit tests.
    → `apps/parakeet/src/modules/video-analysis/lib/check-lift-mismatch.ts:checkLiftMismatch`
-2. `hooks/useVideoAnalysis.ts` runs `checkLiftMismatch` after `extractFramesFromVideo` inside `processVideo`. The mismatch is stashed in a local variable until after the video row has been saved to the DB, then a non-blocking `Alert.alert` surfaces with the message *"This looks like a <detected> — you labelled it <declared>. Form coaching will be wrong if the label is off."* Two buttons: `OK, will fix` (acknowledge) and `Continue anyway` (dismiss). Neither button mutates state — the user still deletes and re-records manually to correct the label, which matches the existing error-handling pattern in the app. Fires `addBreadcrumb('lift-label-mismatch', 'detected', { detected, declared, confidence })` for telemetry.
+2. `hooks/useVideoAnalysis.ts` runs `checkLiftMismatch` after `extractFramesFromVideo` inside `processVideo`. The mismatch is stashed in a local variable until after the video row has been saved to the DB, then a non-blocking `Alert.alert` surfaces with the message _"This looks like a <detected> — you labelled it <declared>. Form coaching will be wrong if the label is off."_ Two buttons: `OK, will fix` (acknowledge) and `Continue anyway` (dismiss). Neither button mutates state — the user still deletes and re-records manually to correct the label, which matches the existing error-handling pattern in the app. Fires `addBreadcrumb('lift-label-mismatch', 'detected', { detected, declared, confidence })` for telemetry.
    → `apps/parakeet/src/modules/video-analysis/hooks/useVideoAnalysis.ts:processVideo` + `showLiftMismatchAlert`
 3. `application/reanalyze.ts` also runs the check and exposes an optional `onLiftMismatch?: (mismatch) => void` dep so the hook's `reanalyze` can wire the same Alert. Emits a `lift-label-mismatch` breadcrumb via `onBreadcrumb` on detection.
    → `apps/parakeet/src/modules/video-analysis/application/reanalyze.ts:reanalyzeSessionVideo`
@@ -110,5 +110,5 @@ Two fixtures (`squat-side`, `deadlift-side-5reps`) have zero usable frames after
 
 ### Deliberate deviations from the backlog sketch
 
-- Alert copy uses *OK, will fix* / *Continue anyway* instead of *Continue as X* / *Change to Y*. A one-tap lift swap would need to re-run `analyzeVideoFrames` with the new reference frame, update `session_videos.lift` + set linkage, and (in `reanalyze`) also purge the previous coaching response. That's a larger surface; user feedback (`feedback_completeness.md`) says to keep scope tight and file follow-ups rather than half-ship a hidden flow. Today: the user acknowledges, deletes, and re-records — matching how every other correction in the app works. A future task can add in-place relabeling once the rest of the session-video lifecycle supports it.
+- Alert copy uses _OK, will fix_ / _Continue anyway_ instead of _Continue as X_ / _Change to Y_. A one-tap lift swap would need to re-run `analyzeVideoFrames` with the new reference frame, update `session_videos.lift` + set linkage, and (in `reanalyze`) also purge the previous coaching response. That's a larger surface; user feedback (`feedback_completeness.md`) says to keep scope tight and file follow-ups rather than half-ship a hidden flow. Today: the user acknowledges, deletes, and re-records — matching how every other correction in the app works. A future task can add in-place relabeling once the rest of the session-video lifecycle supports it.
 - Declared-lift filter: only the three SBD lifts trigger the warning. OHP / rows / machine work never prompt, even though the classifier would happily say `bench` for an overhead press. Prevents false positives on lifts we're not equipped to analyse.

@@ -20,8 +20,6 @@ import {
 } from '@modules/jit';
 import { getProfile } from '@modules/profile';
 import { useRehabCapForLift } from '@modules/rehab-mode';
-import type { WorkoutTemplateWithItems } from '@modules/workout-templates';
-import { AddExerciseModal } from '@shared/ui/AddExerciseModal';
 import {
   abandonSession,
   AddWorkoutTemplateModal,
@@ -29,7 +27,6 @@ import {
   AuxSetRow,
   AuxTemplateBlock,
   BackgroundTimerBadge,
-  expandTemplate,
   buildBlockWeekLabel,
   buildIntensityLabel,
   buildNextLiftLabel,
@@ -37,6 +34,7 @@ import {
   computeSuggestedAux,
   computeSuggestedWeight,
   DEFAULT_MAIN_REST_SECONDS,
+  expandTemplate,
   formatExerciseName,
   formatPrescriptionTrace,
   getRecentAuxExerciseNames,
@@ -57,10 +55,7 @@ import {
   WarmupSection,
   WeightSuggestionBanner,
 } from '@modules/session';
-import type {
-  LlmRestSuggestion,
-  RestRecommendations,
-} from '@modules/session';
+import type { LlmRestSuggestion, RestRecommendations } from '@modules/session';
 import {
   getBarWeightKg,
   getDisabledPlates,
@@ -75,6 +70,7 @@ import {
   SetVideoIcon,
   usePostRestVideoCapture,
 } from '@modules/video-analysis';
+import type { WorkoutTemplateWithItems } from '@modules/workout-templates';
 import type { Lift, MuscleGroup } from '@parakeet/shared-types';
 import {
   plateIncrementKg,
@@ -85,6 +81,7 @@ import {
 import { useNetworkStatus } from '@platform/network';
 import { captureException } from '@platform/utils/captureException';
 import type { PlateKg } from '@shared/constants/plates';
+import { AddExerciseModal } from '@shared/ui/AddExerciseModal';
 import { ExerciseName } from '@shared/ui/ExerciseName';
 import {
   getAllExercises,
@@ -899,7 +896,10 @@ export default function SessionScreen() {
   if (!bootstrapped) {
     return (
       <SafeAreaView
-        style={[styles.safeArea, { alignItems: 'center', justifyContent: 'center' }]}
+        style={[
+          styles.safeArea,
+          { alignItems: 'center', justifyContent: 'center' },
+        ]}
       >
         <ActivityIndicator size="large" color={colors.primary} />
       </SafeAreaView>
@@ -1285,8 +1285,7 @@ export default function SessionScreen() {
 
             {adHocExercises.map((exercise, exerciseIndex) => {
               const sets = auxiliarySets.filter(
-                (s) =>
-                  s.exercise === exercise && s.template_instance_id == null
+                (s) => s.exercise === exercise && s.template_instance_id == null
               );
               if (sets.length === 0) return null;
               return (

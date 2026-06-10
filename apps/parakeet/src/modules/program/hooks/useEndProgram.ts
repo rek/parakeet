@@ -5,7 +5,11 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { updateProgramStatus } from '../application/program.service';
 import { programQueries } from '../data/program.queries';
 
-export function useEndProgram({ isUnending: _isUnending }: { isUnending: boolean }) {
+export function useEndProgram({
+  isUnending: _isUnending,
+}: {
+  isUnending: boolean;
+}) {
   const { user } = useAuth();
   const queryClient = useQueryClient();
 

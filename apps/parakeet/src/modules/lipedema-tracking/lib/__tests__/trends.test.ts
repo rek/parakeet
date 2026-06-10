@@ -5,7 +5,7 @@ import { adjacentDelta, limbTrend, priorValue, seriesDrift } from '../trends';
 
 function row(
   date: string,
-  partial: Partial<LipedemaMeasurement> = {},
+  partial: Partial<LipedemaMeasurement> = {}
 ): LipedemaMeasurement {
   return {
     id: date,
@@ -72,7 +72,7 @@ describe('seriesDrift', () => {
         { date: '2026-04-01', value: 620 },
         { date: '2026-04-08', value: 610 },
         { date: '2026-04-15', value: 595 },
-      ]),
+      ])
     ).toBe(-25);
   });
 
@@ -89,7 +89,7 @@ describe('adjacentDelta', () => {
         { date: '2026-04-01', value: 620 },
         { date: '2026-04-08', value: 610 },
         { date: '2026-04-15', value: 595 },
-      ]),
+      ])
     ).toBe(-15);
   });
 

@@ -32,12 +32,10 @@ import type {
   SessionCompletionContext,
 } from '@shared/types/domain';
 
-import { flushUnsyncedSets } from './set-persistence.service';
 import {
   countSetLogsForSession,
   deleteSession,
   deleteSetLogsForSession,
-  reviveSkippedSessionToInProgress,
   fetchCompletedSessions,
   fetchCurrentWeekLogs,
   fetchEndOfWeekContext,
@@ -66,6 +64,7 @@ import {
   insertSessionLog,
   insertSorenessCheckin,
   markSessionAsMissed,
+  reviveSkippedSessionToInProgress,
   sessionLogExists,
   updateSessionLift,
   updateSessionToCompleted,
@@ -75,6 +74,7 @@ import {
 } from '../data/session.repository';
 import { classifyPerformance } from '../utils/classify-performance';
 import { validateSet } from '../utils/validateSet';
+import { flushUnsyncedSets } from './set-persistence.service';
 
 export type {
   CompleteSessionInput,
@@ -723,7 +723,10 @@ export async function swapSessionLift(input: {
   if (!session) throw new Error('Session not found');
   if (session.primary_lift === input.newLift) return;
 
-  const signals = await buildIntensitySignalsForLift(input.userId, input.newLift);
+  const signals = await buildIntensitySignalsForLift(
+    input.userId,
+    input.newLift
+  );
   const intensityType = selectIntensityTypeForUnending(
     input.newLift,
     session.week_number,

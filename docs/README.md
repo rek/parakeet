@@ -4,14 +4,14 @@ Use this as the single entry point for project documentation.
 
 ## Documentation Layers
 
-| Layer | Path | What to find there |
-|-------|------|--------------------|
-| **Intent** | [intent.md](./intent.md) | Why the app exists, design philosophy |
-| **Domain** | [domain/](./domain/) | Training science truth: constants, formulas, research ranges. **Single source for all numeric values.** |
-| **Guides** | [guide/](./guide/) | How to work: code style, project org, dev commands, AI workflow |
-| **Features** | [features/](./features/) | Feature-centric docs: each dir has `index.md` (status, modules), `design*.md` (rationale), `spec-*.md` (implementation plans). |
-| **ADRs** | [decisions/](./decisions/) | Architectural choices and tradeoffs |
-| **Status** | Each `features/*/index.md` frontmatter | What's built vs planned per feature |
+| Layer        | Path                                   | What to find there                                                                                                             |
+| ------------ | -------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| **Intent**   | [intent.md](./intent.md)               | Why the app exists, design philosophy                                                                                          |
+| **Domain**   | [domain/](./domain/)                   | Training science truth: constants, formulas, research ranges. **Single source for all numeric values.**                        |
+| **Guides**   | [guide/](./guide/)                     | How to work: code style, project org, dev commands, AI workflow                                                                |
+| **Features** | [features/](./features/)               | Feature-centric docs: each dir has `index.md` (status, modules), `design*.md` (rationale), `spec-*.md` (implementation plans). |
+| **ADRs**     | [decisions/](./decisions/)             | Architectural choices and tradeoffs                                                                                            |
+| **Status**   | Each `features/*/index.md` frontmatter | What's built vs planned per feature                                                                                            |
 
 See [guide/ai-workflow.md](./guide/ai-workflow.md) for the full workflow and when to read/update each layer.
 
@@ -31,25 +31,25 @@ See [guide/ai-workflow.md](./guide/ai-workflow.md) for the full workflow and whe
 
 Use this to find code without searching.
 
-| Feature         | Import alias               | Covers                                                                       | Key Exports                                            |
-| --------------- | -------------------------- | ---------------------------------------------------------------------------- | ------------------------------------------------------ |
-| Auth            | `@modules/auth`            | Sign-in, Google OAuth, email OTP, session                                    | `useAuth`, `AuthService`                               |
-| Program         | `@modules/program`         | Active program, lifter maxes, auxiliary config, formula config               | `useActiveProgram`, `ProgramService`, `submitMaxes`    |
-| Session         | `@modules/session`         | Session lifecycle, JIT trigger, rest timer, sync queue, motivational message | `useTodaySession`, `SessionService`, `completeSession` |
-| JIT             | `@modules/jit`             | JIT session generation (formula/LLM/hybrid strategies)                       | `runJIT`, `estimateMax`                                |
-| History         | `@modules/history`         | Performance trends, lift history, recent sets                                | `getPerformanceByLift`, `buildVolumeChartData`         |
-| Disruptions     | `@modules/disruptions`     | Report/apply/resolve training disruptions                                    | `reportDisruption`, `getActiveDisruptions`             |
-| Cycle Review    | `@modules/cycle-review`    | Post-cycle analysis, LLM coaching, developer suggestions                     | `useCycleReview`, `compileCycleReport`                 |
-| Cycle Tracking  | `@modules/cycle-tracking`  | Menstrual cycle config, current phase                                        | `useCyclePhase`, `getCycleConfig`                      |
-| Settings        | `@modules/settings`        | Rest prefs, warmup config, JIT strategy, developer suggestions               | `SettingsService`, `getRestTimerPrefs`                 |
-| Achievements    | `@modules/achievements`    | PRs, streaks, Wilks badges, detection hook                                   | `useAchievementDetection`, `getPRHistory`              |
-| Training Volume | `@modules/training-volume` | Weekly volume, MRV/MEV config                                                | `useWeeklyVolume`, `getMrvMevConfig`                   |
-| Wilks           | `@modules/wilks`           | Wilks score computation                                                      | `WilksService`                                         |
-| Profile         | `@modules/profile`         | User profile CRUD                                                            | `getProfile`, `updateProfile`                          |
-| Video Analysis  | `@modules/video-analysis`  | Bar path tracking, form faults, LLM coaching, personal baselines             | `useVideoAnalysis`, `useFormCoaching`                  |
-| Gym Partners    | `@modules/gym-partners`    | Partner pairing, filming for partners, partner session visibility             | `usePartners`, `usePartnerFilming`, `PartnerSection`   |
-| Flock           | `@modules/flock`           | Opt-in motivational feed: friends' PR/Wilks/streak highlight cards (read-only) | `useFlock`, `useFlockSharing`, `FlockScreen`, `publishFlockHighlight` |
-| Lipedema Tracking | `@modules/lipedema-tracking` | Daily limb-circumference + pain/swelling log, per-limb deltas, history edit | `TrackingScreen`, `useMeasurements`, `priorValue`     |
+| Feature           | Import alias                 | Covers                                                                                 | Key Exports                                                            |
+| ----------------- | ---------------------------- | -------------------------------------------------------------------------------------- | ---------------------------------------------------------------------- |
+| Auth              | `@modules/auth`              | Sign-in, Google OAuth, email OTP, session                                              | `useAuth`, `AuthService`                                               |
+| Program           | `@modules/program`           | Active program, lifter maxes, auxiliary config, formula config                         | `useActiveProgram`, `ProgramService`, `submitMaxes`                    |
+| Session           | `@modules/session`           | Session lifecycle, JIT trigger, rest timer, sync queue, motivational message           | `useTodaySession`, `SessionService`, `completeSession`                 |
+| JIT               | `@modules/jit`               | JIT session generation (formula/LLM/hybrid strategies)                                 | `runJIT`, `estimateMax`                                                |
+| History           | `@modules/history`           | Performance trends, lift history, recent sets                                          | `getPerformanceByLift`, `buildVolumeChartData`                         |
+| Disruptions       | `@modules/disruptions`       | Report/apply/resolve training disruptions                                              | `reportDisruption`, `getActiveDisruptions`                             |
+| Cycle Review      | `@modules/cycle-review`      | Post-cycle analysis, LLM coaching, developer suggestions                               | `useCycleReview`, `compileCycleReport`                                 |
+| Cycle Tracking    | `@modules/cycle-tracking`    | Menstrual cycle config, current phase                                                  | `useCyclePhase`, `getCycleConfig`                                      |
+| Settings          | `@modules/settings`          | Rest prefs, warmup config, JIT strategy, developer suggestions                         | `SettingsService`, `getRestTimerPrefs`                                 |
+| Achievements      | `@modules/achievements`      | PRs, streaks, Wilks badges, detection hook                                             | `useAchievementDetection`, `getPRHistory`                              |
+| Training Volume   | `@modules/training-volume`   | Weekly volume, MRV/MEV config                                                          | `useWeeklyVolume`, `getMrvMevConfig`                                   |
+| Wilks             | `@modules/wilks`             | Wilks score computation                                                                | `WilksService`                                                         |
+| Profile           | `@modules/profile`           | User profile CRUD                                                                      | `getProfile`, `updateProfile`                                          |
+| Video Analysis    | `@modules/video-analysis`    | Bar path tracking, form faults, LLM coaching, personal baselines                       | `useVideoAnalysis`, `useFormCoaching`                                  |
+| Gym Partners      | `@modules/gym-partners`      | Partner pairing, filming for partners, partner session visibility                      | `usePartners`, `usePartnerFilming`, `PartnerSection`                   |
+| Flock             | `@modules/flock`             | Opt-in motivational feed: friends' PR/Wilks/streak highlight cards (read-only)         | `useFlock`, `useFlockSharing`, `FlockScreen`, `publishFlockHighlight`  |
+| Lipedema Tracking | `@modules/lipedema-tracking` | Daily limb-circumference + pain/swelling log, per-limb deltas, history edit            | `TrackingScreen`, `useMeasurements`, `priorValue`                      |
 | Workout Templates | `@modules/workout-templates` | Global wiki-style workout bundles (HIIT, EMOM, finishers); insert into current session | `useWorkoutTemplates`, `WorkoutTemplatesList`, `WorkoutTemplateEditor` |
 
 **Platform (infra):** `@platform/supabase`, `@platform/query`, `@platform/network`, `@platform/store`

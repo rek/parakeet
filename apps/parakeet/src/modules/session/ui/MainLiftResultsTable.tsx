@@ -55,7 +55,9 @@ export function MainLiftResultsTable({
             </>
           )}
           <Text style={[styles.tableCell, styles.tableCellRpe]}>RPE</Text>
-          {renderSetAccessory ? <View style={styles.tableCellAccessory} /> : null}
+          {renderSetAccessory ? (
+            <View style={styles.tableCellAccessory} />
+          ) : null}
         </View>
         {mainSets.map((set, i) => {
           const planned = hasPlan

@@ -1,7 +1,7 @@
 import { Badge } from '../components/Badge';
 import { TablePage } from '../components/TablePage';
-import { useSupabaseRows } from '../lib/useSupabaseRows';
 import { theme } from '../lib/theme';
+import { useSupabaseRows } from '../lib/useSupabaseRows';
 
 interface CalibrationRow {
   id: string;
@@ -70,14 +70,7 @@ export function ModifierCalibrations() {
       rows={rows}
       emptyMessage="No modifier calibrations recorded yet."
       columnsTemplate="160px 1fr 80px 80px 80px 140px"
-      columnLabels={[
-        'Source',
-        'User',
-        'Adjust',
-        'Bias',
-        'Samples',
-        'Updated',
-      ]}
+      columnLabels={['Source', 'User', 'Adjust', 'Bias', 'Samples', 'Updated']}
       keyOf={(r) => r.id}
       renderRow={(r) => (
         <>
@@ -104,9 +97,7 @@ export function ModifierCalibrations() {
             {r.mean_bias != null ? r.mean_bias.toFixed(2) : '—'}
           </span>
           <span style={{ color: theme.color.textDim }}>{r.sample_count}</span>
-          <div
-            style={{ display: 'flex', gap: 6, alignItems: 'center' }}
-          >
+          <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
             {confidenceBadge(r.confidence)}
             <span style={{ color: theme.color.textMuted, fontSize: 10 }}>
               {fmt(r.updated_at)}

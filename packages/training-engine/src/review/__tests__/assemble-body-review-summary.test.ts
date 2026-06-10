@@ -56,7 +56,12 @@ describe('assembleBodyReviewSummary', () => {
       makeReview({
         week_number: 1,
         mismatches: [
-          { muscle: 'glutes', felt: 4, predicted: 2, direction: 'accumulating_fatigue' },
+          {
+            muscle: 'glutes',
+            felt: 4,
+            predicted: 2,
+            direction: 'accumulating_fatigue',
+          },
         ],
       }),
       makeReview({
@@ -75,13 +80,23 @@ describe('assembleBodyReviewSummary', () => {
       makeReview({
         week_number: 1,
         mismatches: [
-          { muscle: 'lower_back', felt: 5, predicted: 2, direction: 'accumulating_fatigue' },
+          {
+            muscle: 'lower_back',
+            felt: 5,
+            predicted: 2,
+            direction: 'accumulating_fatigue',
+          },
         ],
       }),
       makeReview({
         week_number: 2,
         mismatches: [
-          { muscle: 'lower_back', felt: 4, predicted: 2, direction: 'accumulating_fatigue' },
+          {
+            muscle: 'lower_back',
+            felt: 4,
+            predicted: 2,
+            direction: 'accumulating_fatigue',
+          },
         ],
       }),
     ];
@@ -133,13 +148,23 @@ describe('assembleBodyReviewSummary', () => {
       makeReview({
         week_number: 1,
         mismatches: [
-          { muscle: 'chest', felt: 1, predicted: 3, direction: 'recovering_well' },
+          {
+            muscle: 'chest',
+            felt: 1,
+            predicted: 3,
+            direction: 'recovering_well',
+          },
         ],
       }),
       makeReview({
         week_number: 2,
         mismatches: [
-          { muscle: 'chest', felt: 1, predicted: 3, direction: 'recovering_well' },
+          {
+            muscle: 'chest',
+            felt: 1,
+            predicted: 3,
+            direction: 'recovering_well',
+          },
         ],
       }),
     ];

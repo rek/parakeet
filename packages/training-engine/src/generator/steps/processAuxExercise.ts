@@ -9,11 +9,7 @@ import {
 import type { ExerciseType } from '../../auxiliary/exercise-types';
 import { getExerciseType } from '../../auxiliary/exercise-types';
 import { roundToNearest } from '../../formulas/weight-rounding';
-import type {
-  MrvMevConfig,
-  MuscleGroup,
-  MuscleMapper,
-} from '../../types';
+import type { MrvMevConfig, MuscleGroup, MuscleMapper } from '../../types';
 import type { AuxiliaryWork } from '../jit-session-generator';
 
 /** Fraction of weight retained when aux shares muscles with the session's main lift.

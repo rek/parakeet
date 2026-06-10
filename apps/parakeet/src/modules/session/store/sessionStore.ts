@@ -1,6 +1,14 @@
+import type { PrescriptionTrace } from '@parakeet/training-engine';
+import { captureException } from '@platform/utils/captureException';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { getEffectivePlannedSet } from '@shared/utils/getEffectivePlannedSet';
+import { weightKgToGrams } from '@shared/utils/weight';
+import { create } from 'zustand';
+import { createJSONStorage, persist } from 'zustand/middleware';
+
 import type {
-  AuxSessionAdaptation,
   AuxiliaryWork,
+  AuxSessionAdaptation,
   JitData,
   PendingAuxConfirmation,
   PostRestState,
@@ -8,13 +16,6 @@ import type {
   SessionAdaptation,
   WeightSuggestionOffer,
 } from '../model/types';
-import type { PrescriptionTrace } from '@parakeet/training-engine';
-import { captureException } from '@platform/utils/captureException';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { weightKgToGrams } from '@shared/utils/weight';
-import { getEffectivePlannedSet } from '@shared/utils/getEffectivePlannedSet';
-import { create } from 'zustand';
-import { createJSONStorage, persist } from 'zustand/middleware';
 
 export interface ActualSet {
   set_number: number;
@@ -106,7 +107,9 @@ export function selectBackgroundTimers(
     .map(([key, timer]) => ({ key, timer }));
 }
 
-export function selectActivePostRest(state: SessionState): PostRestState | null {
+export function selectActivePostRest(
+  state: SessionState
+): PostRestState | null {
   return state.postRestQueue[0] ?? null;
 }
 
@@ -142,16 +145,18 @@ function resolveAuxSetPlanForPostRest(
   }
 
   captureException(
-    new Error(
-      `Post-rest aux set plan missing for ${exercise} set ${setNumber}`
-    )
+    new Error(`Post-rest aux set plan missing for ${exercise} set ${setNumber}`)
   );
   return null;
 }
 
 export interface SessionState {
   sessionId: string | null;
-  plannedSets: { weight_kg: number; reps: number; reps_range?: [number, number] }[];
+  plannedSets: {
+    weight_kg: number;
+    reps: number;
+    reps_range?: [number, number];
+  }[];
   actualSets: ActualSet[];
   auxiliarySets: AuxiliaryActualSet[];
   auxiliaryWork: AuxiliaryWork[];
@@ -217,9 +222,7 @@ export interface SessionState {
   /** Bulk-inserts a block of template-derived aux entries. set_number on each
    *  entry is treated as template-relative (1..rounds per exercise) and
    *  renumbered to continue from any existing sets for that exercise. */
-  addTemplateBlock: (
-    entries: Omit<AuxiliaryActualSet, 'set_number'>[]
-  ) => void;
+  addTemplateBlock: (entries: Omit<AuxiliaryActualSet, 'set_number'>[]) => void;
   /** Bulk-removes every aux set sharing the given template_instance_id, then
    *  renumbers remaining sets of any affected exercise so set_numbers stay
    *  contiguous (1..N). Mirrors `removeAdHocSet`'s renumber pattern. */
@@ -228,7 +231,11 @@ export interface SessionState {
   setSessionRpe: (rpe: number) => void;
   initSession: (
     sessionId: string,
-    plannedSets: { weight_kg: number; reps: number; reps_range?: [number, number] }[]
+    plannedSets: {
+      weight_kg: number;
+      reps: number;
+      reps_range?: [number, number];
+    }[]
   ) => void;
   initAuxiliary: (
     work: {
@@ -263,7 +270,10 @@ export interface SessionState {
   closeTimer: (key?: string) => number;
   switchActiveTimer: (key: string) => void;
   completeExpiredTimers: () => void;
-  showMainPostRest: (pendingMainSetNumber: number, elapsedSeconds: number) => void;
+  showMainPostRest: (
+    pendingMainSetNumber: number,
+    elapsedSeconds: number
+  ) => void;
   showAuxPostRest: (
     pendingAuxExercise: string,
     pendingAuxSetNumber: number,
@@ -362,12 +372,12 @@ export const useSessionStore = create<SessionState>()(
             // User-driven edits invalidate prior sync state so the persistence
             // subscriber re-syncs the updated values.
             const invalidate =
-              data.is_completed !== undefined
-              || data.weight_grams !== undefined
-              || data.reps_completed !== undefined
-              || data.rpe_actual !== undefined
-              || data.actual_rest_seconds !== undefined
-              || data.failed !== undefined;
+              data.is_completed !== undefined ||
+              data.weight_grams !== undefined ||
+              data.reps_completed !== undefined ||
+              data.rpe_actual !== undefined ||
+              data.actual_rest_seconds !== undefined ||
+              data.failed !== undefined;
             return {
               ...s,
               ...data,
@@ -381,12 +391,12 @@ export const useSessionStore = create<SessionState>()(
           auxiliarySets: state.auxiliarySets.map((s) => {
             if (s.exercise !== exercise || s.set_number !== setNumber) return s;
             const invalidate =
-              data.is_completed !== undefined
-              || data.weight_grams !== undefined
-              || data.reps_completed !== undefined
-              || data.rpe_actual !== undefined
-              || data.actual_rest_seconds !== undefined
-              || data.failed !== undefined;
+              data.is_completed !== undefined ||
+              data.weight_grams !== undefined ||
+              data.reps_completed !== undefined ||
+              data.rpe_actual !== undefined ||
+              data.actual_rest_seconds !== undefined ||
+              data.failed !== undefined;
             return {
               ...s,
               ...data,
@@ -508,9 +518,7 @@ export const useSessionStore = create<SessionState>()(
         set((state) => {
           if (!done) {
             return {
-              warmupCompleted: state.warmupCompleted.filter(
-                (i) => i !== index,
-              ),
+              warmupCompleted: state.warmupCompleted.filter((i) => i !== index),
             };
           }
           if (state.warmupCompleted.includes(index)) {
@@ -631,9 +639,7 @@ export const useSessionStore = create<SessionState>()(
           };
           // Main lift always takes visual precedence
           const activeKey =
-            state.timers['main'] && key !== 'main'
-              ? 'main'
-              : key;
+            state.timers['main'] && key !== 'main' ? 'main' : key;
           return {
             timers: { ...state.timers, [key]: newTimer },
             activeTimerKey: activeKey,
@@ -703,7 +709,10 @@ export const useSessionStore = create<SessionState>()(
             const effectiveDuration = t.durationSeconds + t.offset;
             if (t.elapsed >= effectiveDuration) {
               // Background timer expired — build PostRestState
-              if (t.pendingAuxExercise !== null && t.pendingAuxSetNumber !== null) {
+              if (
+                t.pendingAuxExercise !== null &&
+                t.pendingAuxSetNumber !== null
+              ) {
                 const auxSetPlan = resolveAuxSetPlanForPostRest(
                   state,
                   t.pendingAuxExercise,
@@ -789,9 +798,15 @@ export const useSessionStore = create<SessionState>()(
           };
         }),
 
-      showAuxPostRest: (pendingAuxExercise, pendingAuxSetNumber, elapsedSeconds) =>
+      showAuxPostRest: (
+        pendingAuxExercise,
+        pendingAuxSetNumber,
+        elapsedSeconds
+      ) =>
         set((state) => {
-          const auxWork = state.auxiliaryWork.find((w) => w.exercise === pendingAuxExercise);
+          const auxWork = state.auxiliaryWork.find(
+            (w) => w.exercise === pendingAuxExercise
+          );
           const auxSetPlan = auxWork?.sets[pendingAuxSetNumber];
           if (!auxSetPlan) return {};
           return {
@@ -849,7 +864,11 @@ export const useSessionStore = create<SessionState>()(
           const [first, ...rest] = state.postRestQueue;
           return {
             postRestQueue: [
-              { ...first, actualRestSeconds: first.actualRestSeconds + 15, resetSecondsRemaining: 15 },
+              {
+                ...first,
+                actualRestSeconds: first.actualRestSeconds + 15,
+                resetSecondsRemaining: 15,
+              },
               ...rest,
             ],
           };
@@ -880,8 +899,7 @@ export const useSessionStore = create<SessionState>()(
       setPendingAuxConfirmation: (data) =>
         set({ pendingAuxConfirmation: data }),
 
-      clearPendingAuxConfirmation: () =>
-        set({ pendingAuxConfirmation: null }),
+      clearPendingAuxConfirmation: () => set({ pendingAuxConfirmation: null }),
 
       reset: () =>
         set({
@@ -962,8 +980,7 @@ export const useSessionStore = create<SessionState>()(
           ...current,
           ...p,
           timers,
-          activeTimerKey:
-            p?.activeTimerKey ?? Object.keys(timers)[0] ?? null,
+          activeTimerKey: p?.activeTimerKey ?? Object.keys(timers)[0] ?? null,
           postRestQueue,
           startedAt:
             typeof raw?.startedAt === 'string'

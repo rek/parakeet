@@ -112,7 +112,10 @@ function parsePlannedSets(raw: unknown): PlannedSet[] {
   if (!Array.isArray(raw)) return [];
   return raw.filter(
     (s): s is PlannedSet =>
-      typeof s === 'object' && s !== null && 'set_number' in s && 'weight_kg' in s,
+      typeof s === 'object' &&
+      s !== null &&
+      'set_number' in s &&
+      'weight_kg' in s
   );
 }
 
@@ -120,7 +123,10 @@ function parseActualSets(raw: unknown): ActualSet[] {
   if (!Array.isArray(raw)) return [];
   return raw.filter(
     (s): s is ActualSet =>
-      typeof s === 'object' && s !== null && 'set_number' in s && 'weight_grams' in s,
+      typeof s === 'object' &&
+      s !== null &&
+      'set_number' in s &&
+      'weight_grams' in s
   );
 }
 
@@ -128,7 +134,10 @@ function parseAuxSets(raw: unknown): AuxSet[] {
   if (!Array.isArray(raw)) return [];
   return raw.filter(
     (s): s is AuxSet =>
-      typeof s === 'object' && s !== null && 'exercise' in s && 'weight_grams' in s,
+      typeof s === 'object' &&
+      s !== null &&
+      'exercise' in s &&
+      'weight_grams' in s
   );
 }
 
@@ -139,7 +148,9 @@ function parseAuxSets(raw: unknown): AuxSet[] {
 const warnings: string[] = [];
 
 function warn(msg: string, severity: 'warning' | 'error' = 'warning') {
-  warnings.push(severity === 'error' ? red(`[ERROR] ${msg}`) : yellow(`[WARN]  ${msg}`));
+  warnings.push(
+    severity === 'error' ? red(`[ERROR] ${msg}`) : yellow(`[WARN]  ${msg}`)
+  );
 }
 
 // ---------------------------------------------------------------------------
@@ -186,7 +197,9 @@ async function printProfile(userId: string) {
 
   console.log(`  display_name   : ${data.display_name ?? '(unset)'}`);
   console.log(`  biological_sex : ${data.biological_sex ?? '(unset)'}`);
-  console.log(`  bodyweight_kg  : ${data.bodyweight_kg != null ? `${data.bodyweight_kg} kg` : '(unset)'}`);
+  console.log(
+    `  bodyweight_kg  : ${data.bodyweight_kg != null ? `${data.bodyweight_kg} kg` : '(unset)'}`
+  );
   console.log(`  created_at     : ${fmtDate(data.created_at)}`);
   console.log(`  user_id        : ${userId}`);
 }
@@ -201,7 +214,7 @@ async function printLifterMaxes(userId: string) {
   const { data, error } = await supabase
     .from('lifter_maxes')
     .select(
-      'squat_1rm_grams, bench_1rm_grams, deadlift_1rm_grams, source, recorded_at',
+      'squat_1rm_grams, bench_1rm_grams, deadlift_1rm_grams, source, recorded_at'
     )
     .eq('user_id', userId)
     .order('recorded_at', { ascending: false })
@@ -210,7 +223,10 @@ async function printLifterMaxes(userId: string) {
 
   if (error || !data) {
     console.log(yellow('  No lifter maxes recorded.'));
-    warn('No lifter maxes — JIT cannot generate weight prescriptions.', 'error');
+    warn(
+      'No lifter maxes — JIT cannot generate weight prescriptions.',
+      'error'
+    );
     return;
   }
 
@@ -240,7 +256,7 @@ async function fetchActiveProgram(userId: string) {
   const { data, error } = await supabase
     .from('programs')
     .select(
-      'id, program_mode, start_date, training_days, training_days_per_week, unending_session_counter, version, status',
+      'id, program_mode, start_date, training_days, training_days_per_week, unending_session_counter, version, status'
     )
     .eq('user_id', userId)
     .eq('status', 'active')
@@ -270,7 +286,9 @@ async function printActiveProgram(userId: string) {
   console.log(`  start_date               : ${fmtDate(program.start_date)}`);
   console.log(`  training_days            : [${dayNames}]`);
   console.log(`  training_days_per_week   : ${program.training_days_per_week}`);
-  console.log(`  unending_session_counter : ${program.unending_session_counter}`);
+  console.log(
+    `  unending_session_counter : ${program.unending_session_counter}`
+  );
   console.log(`  version                  : ${program.version}`);
   console.log(`  id                       : ${program.id}`);
 
@@ -294,7 +312,10 @@ async function printFormulaConfig(userId: string) {
 
   if (error || !data) {
     console.log(red('  No active formula config found.'));
-    warn('No active formula_config — JIT cannot generate prescriptions.', 'error');
+    warn(
+      'No active formula_config — JIT cannot generate prescriptions.',
+      'error'
+    );
     return;
   }
 
@@ -320,7 +341,8 @@ async function printFormulaConfig(userId: string) {
 
   if (data.ai_rationale) {
     const rationale = String(data.ai_rationale);
-    const preview = rationale.length > 120 ? rationale.slice(0, 120) + '…' : rationale;
+    const preview =
+      rationale.length > 120 ? rationale.slice(0, 120) + '…' : rationale;
     console.log(`  ai_rationale: ${preview}`);
   }
 }
@@ -348,7 +370,7 @@ async function fetchAllProgramSessions(programId: string) {
   const { data, error } = await supabase
     .from('sessions')
     .select(
-      'id, status, planned_date, primary_lift, intensity_type, week_number, day_number, block_number, planned_sets, jit_strategy, completed_at, program_id',
+      'id, status, planned_date, primary_lift, intensity_type, week_number, day_number, block_number, planned_sets, jit_strategy, completed_at, program_id'
     )
     .eq('program_id', programId)
     .order('planned_date', { ascending: true });
@@ -378,7 +400,7 @@ function printScheduleOverview(sessions: SessionRow[]) {
 
   // Next up: earliest non-completed session
   const upcoming = sessions.filter(
-    (s) => s.status === 'scheduled' || s.status === 'planned',
+    (s) => s.status === 'scheduled' || s.status === 'planned'
   );
 
   if (upcoming.length === 0) {
@@ -390,12 +412,16 @@ function printScheduleOverview(sessions: SessionRow[]) {
 
   const next = upcoming[0];
   const today = new Date().toISOString().slice(0, 10);
-  const hasPlannedSets = Array.isArray(next.planned_sets) && (next.planned_sets as unknown[]).length > 0;
+  const hasPlannedSets =
+    Array.isArray(next.planned_sets) &&
+    (next.planned_sets as unknown[]).length > 0;
 
   printSubHeader('Next Session');
 
   const label =
-    next.week_number === 0 && next.day_number === 0 ? 'ad-hoc' : `W${next.week_number}/D${next.day_number}/B${next.block_number ?? '?'}`;
+    next.week_number === 0 && next.day_number === 0
+      ? 'ad-hoc'
+      : `W${next.week_number}/D${next.day_number}/B${next.block_number ?? '?'}`;
 
   console.log(`  planned_date  : ${fmtDate(next.planned_date)}`);
   console.log(`  primary_lift  : ${next.primary_lift ?? '(none)'}`);
@@ -409,7 +435,9 @@ function printScheduleOverview(sessions: SessionRow[]) {
     warn(`Next session planned_date (${next.planned_date}) is in the past.`);
   }
   if (!hasPlannedSets) {
-    warn(`Next session has no planned_sets — JIT has not generated a prescription yet.`);
+    warn(
+      `Next session has no planned_sets — JIT has not generated a prescription yet.`
+    );
   }
 }
 
@@ -420,12 +448,12 @@ function printScheduleOverview(sessions: SessionRow[]) {
 async function fetchRecentCompletedSessions(
   userId: string,
   programId: string,
-  limit = 8,
+  limit = 8
 ) {
   const { data: sessions, error: sessErr } = await supabase
     .from('sessions')
     .select(
-      'id, planned_date, completed_at, primary_lift, intensity_type, week_number, day_number, block_number, planned_sets, program_id',
+      'id, planned_date, completed_at, primary_lift, intensity_type, week_number, day_number, block_number, planned_sets, program_id'
     )
     .eq('user_id', userId)
     .eq('status', 'completed')
@@ -451,7 +479,7 @@ async function fetchRecentCompletedSessions(
       supabase
         .from('set_logs')
         .select(
-          'session_id, kind, exercise, set_number, weight_grams, reps_completed, rpe_actual, actual_rest_seconds, failed',
+          'session_id, kind, exercise, set_number, weight_grams, reps_completed, rpe_actual, actual_rest_seconds, failed'
         )
         .in('session_id', sessionIds),
     ]);
@@ -504,11 +532,11 @@ function summarizeActual(sets: ActualSet[]) {
   if (sets.length === 0) return '—';
   const reps = sets[0].reps_completed;
   const weightKg = gramsToKg(sets[0].weight_grams);
-  const rpes = sets.map((s) => s.rpe_actual).filter((r): r is number => r != null);
+  const rpes = sets
+    .map((s) => s.rpe_actual)
+    .filter((r): r is number => r != null);
   const rpeStr =
-    rpes.length > 0
-      ? ` ${Math.min(...rpes)}-${Math.max(...rpes)}`
-      : '';
+    rpes.length > 0 ? ` ${Math.min(...rpes)}-${Math.max(...rpes)}` : '';
   return `${sets.length}×${reps}@${weightKg}kg${rpeStr}`;
 }
 
@@ -535,14 +563,22 @@ async function printRecentSessions(userId: string, program: ProgramRow) {
   };
 
   const header =
-    col('Date', H.date) + ' | ' +
-    col('Lift', H.lift) + ' | ' +
-    col('Type', H.type) + ' | ' +
-    col('W/D/B', H.pos) + ' | ' +
-    col('Sets', H.sets) + ' | ' +
-    col('Planned', H.planned) + ' | ' +
-    col('Actual', H.actual) + ' | ' +
-    col('RPE', H.rpe) + ' | ' +
+    col('Date', H.date) +
+    ' | ' +
+    col('Lift', H.lift) +
+    ' | ' +
+    col('Type', H.type) +
+    ' | ' +
+    col('W/D/B', H.pos) +
+    ' | ' +
+    col('Sets', H.sets) +
+    ' | ' +
+    col('Planned', H.planned) +
+    ' | ' +
+    col('Actual', H.actual) +
+    ' | ' +
+    col('RPE', H.rpe) +
+    ' | ' +
     col('Perf', H.perf);
 
   console.log('  ' + header);
@@ -563,14 +599,22 @@ async function printRecentSessions(userId: string, program: ProgramRow) {
     const perf = log?.performance_vs_plan ?? '—';
 
     const row =
-      col(date, H.date) + ' | ' +
-      col(lift, H.lift) + ' | ' +
-      col(session.intensity_type ?? '—', H.type) + ' | ' +
-      col(pos, H.pos) + ' | ' +
-      col(String(planned.length || actual.length), H.sets) + ' | ' +
-      col(summarizePlanned(planned), H.planned) + ' | ' +
-      col(summarizeActual(actual), H.actual) + ' | ' +
-      col(sessionRpe != null ? String(sessionRpe) : '—', H.rpe) + ' | ' +
+      col(date, H.date) +
+      ' | ' +
+      col(lift, H.lift) +
+      ' | ' +
+      col(session.intensity_type ?? '—', H.type) +
+      ' | ' +
+      col(pos, H.pos) +
+      ' | ' +
+      col(String(planned.length || actual.length), H.sets) +
+      ' | ' +
+      col(summarizePlanned(planned), H.planned) +
+      ' | ' +
+      col(summarizeActual(actual), H.actual) +
+      ' | ' +
+      col(sessionRpe != null ? String(sessionRpe) : '—', H.rpe) +
+      ' | ' +
       col(perf, H.perf);
 
     console.log('  ' + row);
@@ -620,30 +664,38 @@ async function printAuxSummary(userId: string, program: ProgramRow) {
   const H = { ex: 28, times: 7, weight: 12, reps: 8, rpe: 12 };
 
   const header =
-    col('Exercise', H.ex) + ' | ' +
-    col('Times', H.times) + ' | ' +
-    col('Avg wt (kg)', H.weight) + ' | ' +
-    col('Avg reps', H.reps) + ' | ' +
+    col('Exercise', H.ex) +
+    ' | ' +
+    col('Times', H.times) +
+    ' | ' +
+    col('Avg wt (kg)', H.weight) +
+    ' | ' +
+    col('Avg reps', H.reps) +
+    ' | ' +
     col('RPE range', H.rpe);
 
   console.log('  ' + header);
   console.log('  ' + '─'.repeat(header.length));
 
-  const sorted = [...buckets.entries()].sort((a, b) => b[1].sessionCount - a[1].sessionCount);
+  const sorted = [...buckets.entries()].sort(
+    (a, b) => b[1].sessionCount - a[1].sessionCount
+  );
 
   for (const [exercise, b] of sorted) {
     const avgWt = b.weights.length > 0 ? avg(b.weights).toFixed(1) : 'BW';
     const avgReps = b.reps.length > 0 ? avg(b.reps).toFixed(1) : '—';
     const rpeRange =
-      b.rpes.length > 0
-        ? `${Math.min(...b.rpes)}-${Math.max(...b.rpes)}`
-        : '—';
+      b.rpes.length > 0 ? `${Math.min(...b.rpes)}-${Math.max(...b.rpes)}` : '—';
 
     const row =
-      col(exercise, H.ex) + ' | ' +
-      col(String(b.sessionCount), H.times) + ' | ' +
-      col(String(avgWt), H.weight) + ' | ' +
-      col(String(avgReps), H.reps) + ' | ' +
+      col(exercise, H.ex) +
+      ' | ' +
+      col(String(b.sessionCount), H.times) +
+      ' | ' +
+      col(String(avgWt), H.weight) +
+      ' | ' +
+      col(String(avgReps), H.reps) +
+      ' | ' +
       col(rpeRange, H.rpe);
 
     console.log('  ' + row);
@@ -673,7 +725,7 @@ function checkScheduleFlags(sessions: SessionRow[]) {
       curr.planned_date < prev.planned_date
     ) {
       warn(
-        `Session completed out of planned_date order: completed ${fmtDate(curr.completed_at)} but planned before ${fmtDate(prev.planned_date)}.`,
+        `Session completed out of planned_date order: completed ${fmtDate(curr.completed_at)} but planned before ${fmtDate(prev.planned_date)}.`
       );
     }
   }
@@ -683,27 +735,33 @@ function checkScheduleFlags(sessions: SessionRow[]) {
     (s) =>
       s.program_id != null &&
       !(s.week_number === 0 && s.day_number === 0) &&
-      s.status !== 'skipped',
+      s.status !== 'skipped'
   );
   const missingStrategy = programSessions.filter((s) => s.jit_strategy == null);
   if (missingStrategy.length > 0) {
     warn(
-      `${missingStrategy.length} program session(s) have jit_strategy = null (not yet generated or stale).`,
+      `${missingStrategy.length} program session(s) have jit_strategy = null (not yet generated or stale).`
     );
   }
 
   // Gaps > 3 days between consecutive planned_dates in upcoming sessions
   const upcoming = sessions
-    .filter((s) => (s.status === 'scheduled' || s.status === 'planned') && s.planned_date != null)
+    .filter(
+      (s) =>
+        (s.status === 'scheduled' || s.status === 'planned') &&
+        s.planned_date != null
+    )
     .sort((a, b) => (a.planned_date ?? '').localeCompare(b.planned_date ?? ''));
 
   for (let i = 1; i < upcoming.length; i++) {
     const prevDate = new Date(upcoming[i - 1].planned_date!);
     const currDate = new Date(upcoming[i].planned_date!);
-    const diffDays = Math.round((currDate.getTime() - prevDate.getTime()) / 86400000);
+    const diffDays = Math.round(
+      (currDate.getTime() - prevDate.getTime()) / 86400000
+    );
     if (diffDays > 3) {
       warn(
-        `Schedule gap of ${diffDays} days between ${fmtDate(upcoming[i - 1].planned_date)} and ${fmtDate(upcoming[i].planned_date)}.`,
+        `Schedule gap of ${diffDays} days between ${fmtDate(upcoming[i - 1].planned_date)} and ${fmtDate(upcoming[i].planned_date)}.`
       );
     }
   }

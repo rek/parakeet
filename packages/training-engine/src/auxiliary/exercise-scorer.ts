@@ -226,10 +226,7 @@ function scoreSpecificity(
  * 0.8, and clears to 1.0 beyond the recent window. Empty / undefined
  * recent list returns the neutral 1.0.
  */
-function scoreRecency(
-  exercise: string,
-  ctx: ExerciseScoringContext
-): number {
+function scoreRecency(exercise: string, ctx: ExerciseScoringContext): number {
   const recent = ctx.recentAuxExercises;
   if (!recent || recent.length === 0) return 1.0;
   const idx = recent.indexOf(exercise);

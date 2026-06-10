@@ -124,7 +124,10 @@ function parsePlannedSets(raw: unknown): PlannedSet[] {
   if (!Array.isArray(raw)) return [];
   return raw.filter(
     (s): s is PlannedSet =>
-      typeof s === 'object' && s !== null && 'set_number' in s && 'weight_kg' in s,
+      typeof s === 'object' &&
+      s !== null &&
+      'set_number' in s &&
+      'weight_kg' in s
   );
 }
 
@@ -132,7 +135,10 @@ function parseActualSets(raw: unknown): ActualSet[] {
   if (!Array.isArray(raw)) return [];
   return raw.filter(
     (s): s is ActualSet =>
-      typeof s === 'object' && s !== null && 'set_number' in s && 'weight_grams' in s,
+      typeof s === 'object' &&
+      s !== null &&
+      'set_number' in s &&
+      'weight_grams' in s
   );
 }
 
@@ -140,7 +146,10 @@ function parseAuxSets(raw: unknown): AuxSet[] {
   if (!Array.isArray(raw)) return [];
   return raw.filter(
     (s): s is AuxSet =>
-      typeof s === 'object' && s !== null && 'exercise' in s && 'weight_grams' in s,
+      typeof s === 'object' &&
+      s !== null &&
+      'exercise' in s &&
+      'weight_grams' in s
   );
 }
 
@@ -174,7 +183,9 @@ function printHeader(title: string): void {
 async function fetchCompletedSessionsWithLogs(): Promise<SessionWithLog[]> {
   const { data: sessions, error: sessErr } = await supabase
     .from('sessions')
-    .select('id, primary_lift, intensity_type, planned_date, completed_at, planned_sets, jit_output_trace')
+    .select(
+      'id, primary_lift, intensity_type, planned_date, completed_at, planned_sets, jit_output_trace'
+    )
     .eq('status', 'completed')
     .not('primary_lift', 'is', null)
     .not('planned_sets', 'is', null)
@@ -198,7 +209,7 @@ async function fetchCompletedSessionsWithLogs(): Promise<SessionWithLog[]> {
       supabase
         .from('set_logs')
         .select(
-          'session_id, kind, exercise, set_number, weight_grams, reps_completed, rpe_actual',
+          'session_id, kind, exercise, set_number, weight_grams, reps_completed, rpe_actual'
         )
         .in('session_id', sessionIds),
     ]);
@@ -253,7 +264,9 @@ interface LiftCalibrationStats {
   repCompletionRate: number;
 }
 
-function analyzeMainLiftCalibration(pairs: SessionWithLog[]): LiftCalibrationStats[] {
+function analyzeMainLiftCalibration(
+  pairs: SessionWithLog[]
+): LiftCalibrationStats[] {
   // Aggregate per (lift, intensity_type)
   const buckets = new Map<
     string,
@@ -270,7 +283,12 @@ function analyzeMainLiftCalibration(pairs: SessionWithLog[]): LiftCalibrationSta
 
     const key = `${session.primary_lift}|${session.intensity_type}`;
     if (!buckets.has(key)) {
-      buckets.set(key, { rpeDeviations: [], weightDeviationsKg: [], repsPairs: [], sessions: new Set() });
+      buckets.set(key, {
+        rpeDeviations: [],
+        weightDeviationsKg: [],
+        repsPairs: [],
+        sessions: new Set(),
+      });
     }
     const bucket = buckets.get(key)!;
     bucket.sessions.add(session.id);
@@ -297,7 +315,10 @@ function analyzeMainLiftCalibration(pairs: SessionWithLog[]): LiftCalibrationSta
   for (const [key, bucket] of buckets) {
     const [lift, intensityType] = key.split('|');
     const totalReps = bucket.repsPairs.reduce((s, p) => s + p.planned, 0);
-    const completedReps = bucket.repsPairs.reduce((s, p) => s + Math.min(p.actual, p.planned), 0);
+    const completedReps = bucket.repsPairs.reduce(
+      (s, p) => s + Math.min(p.actual, p.planned),
+      0
+    );
     results.push({
       lift,
       intensityType,
@@ -308,7 +329,11 @@ function analyzeMainLiftCalibration(pairs: SessionWithLog[]): LiftCalibrationSta
     });
   }
 
-  return results.sort((a, b) => a.lift.localeCompare(b.lift) || a.intensityType.localeCompare(b.intensityType));
+  return results.sort(
+    (a, b) =>
+      a.lift.localeCompare(b.lift) ||
+      a.intensityType.localeCompare(b.intensityType)
+  );
 }
 
 function printMainLiftCalibration(pairs: SessionWithLog[]): void {
@@ -324,28 +349,29 @@ function printMainLiftCalibration(pairs: SessionWithLog[]): void {
 
   console.log(
     col('Lift', 12) +
-    col('Intensity', 12) +
-    col('Sessions', 10) +
-    col('Avg RPE Dev', 13) +
-    col('Avg Wt Dev (kg)', 17) +
-    col('Rep Completion', 16),
+      col('Intensity', 12) +
+      col('Sessions', 10) +
+      col('Avg RPE Dev', 13) +
+      col('Avg Wt Dev (kg)', 17) +
+      col('Rep Completion', 16)
   );
   printSeparator();
 
   for (const s of stats) {
-    const rpeStr = s.avgRpeDeviation === 0 && s.sampleSessions === 0
-      ? 'n/a'
-      : `${s.avgRpeDeviation >= 0 ? '+' : ''}${fmt(s.avgRpeDeviation)}`;
+    const rpeStr =
+      s.avgRpeDeviation === 0 && s.sampleSessions === 0
+        ? 'n/a'
+        : `${s.avgRpeDeviation >= 0 ? '+' : ''}${fmt(s.avgRpeDeviation)}`;
     const wtStr = `${s.avgWeightDeviationKg >= 0 ? '+' : ''}${fmt(s.avgWeightDeviationKg)} kg`;
     const repStr = `${(s.repCompletionRate * 100).toFixed(1)}%`;
 
     console.log(
       col(s.lift, 12) +
-      col(s.intensityType, 12) +
-      col(String(s.sampleSessions), 10) +
-      col(rpeStr, 13) +
-      col(wtStr, 17) +
-      col(repStr, 16),
+        col(s.intensityType, 12) +
+        col(String(s.sampleSessions), 10) +
+        col(rpeStr, 13) +
+        col(wtStr, 17) +
+        col(repStr, 16)
     );
   }
 }
@@ -383,7 +409,13 @@ function analyzeAuxHealth(pairs: SessionWithLog[]): AuxHealthStats[] {
     for (const s of auxSets) {
       const key = s.exercise;
       if (!buckets.has(key)) {
-        buckets.set(key, { rpes: [], reps: [], weights: [], failedSets: 0, totalSets: 0 });
+        buckets.set(key, {
+          rpes: [],
+          reps: [],
+          weights: [],
+          failedSets: 0,
+          totalSets: 0,
+        });
       }
       const b = buckets.get(key)!;
       b.totalSets++;
@@ -427,11 +459,11 @@ function printAuxHealth(pairs: SessionWithLog[]): void {
 
   console.log(
     col('Exercise', 28) +
-    col('Sets', 7) +
-    col('Avg RPE', 10) +
-    col('Fail%', 8) +
-    col('Reps (min/avg/max)', 22) +
-    col('Avg Wt (kg)', 13),
+      col('Sets', 7) +
+      col('Avg RPE', 10) +
+      col('Fail%', 8) +
+      col('Reps (min/avg/max)', 22) +
+      col('Avg Wt (kg)', 13)
   );
   printSeparator();
 
@@ -439,17 +471,19 @@ function printAuxHealth(pairs: SessionWithLog[]): void {
     const flag =
       (s.hasRpeData && s.avgRpe > 9.0) || s.failureRate > 0.2 ? ' ⚠️' : '';
     const rpeStr = s.hasRpeData ? fmt(s.avgRpe) : 'n/a';
-    const failStr = s.hasRpeData ? `${(s.failureRate * 100).toFixed(0)}%` : 'n/a';
+    const failStr = s.hasRpeData
+      ? `${(s.failureRate * 100).toFixed(0)}%`
+      : 'n/a';
     const repsStr = `${s.minReps}/${fmt(s.avgReps, 1)}/${s.maxReps}`;
     const wtStr = s.avgWeightKg > 0 ? fmt(s.avgWeightKg) : 'BW';
 
     console.log(
       col(s.exercise + flag, 30) +
-      col(String(s.totalSets), 7) +
-      col(rpeStr, 10) +
-      col(failStr, 8) +
-      col(repsStr, 22) +
-      col(wtStr, 13),
+        col(String(s.totalSets), 7) +
+        col(rpeStr, 10) +
+        col(failStr, 8) +
+        col(repsStr, 22) +
+        col(wtStr, 13)
     );
   }
 }
@@ -485,7 +519,7 @@ function analyzeSessionFatigue(pairs: SessionWithLog[]): FatigueCascadeRow[] {
 
     const auxSets = parseAuxSets(log.auxiliary_sets);
     const highRpeAuxCount = auxSets.filter(
-      (s) => s.rpe_actual !== undefined && s.rpe_actual >= 9.5,
+      (s) => s.rpe_actual !== undefined && s.rpe_actual >= 9.5
     ).length;
 
     const avgMainRpe = avg(mainRpes);
@@ -519,12 +553,12 @@ function printFatigueCascade(pairs: SessionWithLog[]): void {
 
   console.log(
     col('Date', 12) +
-    col('Lift', 12) +
-    col('Intensity', 12) +
-    col('Sess RPE', 10) +
-    col('Avg Main RPE', 14) +
-    col('Gap', 8) +
-    col('Hi-RPE Aux', 12),
+      col('Lift', 12) +
+      col('Intensity', 12) +
+      col('Sess RPE', 10) +
+      col('Avg Main RPE', 14) +
+      col('Gap', 8) +
+      col('Hi-RPE Aux', 12)
   );
   printSeparator();
 
@@ -532,12 +566,12 @@ function printFatigueCascade(pairs: SessionWithLog[]): void {
     const flag = r.flagged ? ' ⚠️' : '';
     console.log(
       col(r.date, 12) +
-      col(r.lift, 12) +
-      col(r.intensityType, 12) +
-      col(fmt(r.sessionRpe, 1), 10) +
-      col(fmt(r.avgMainRpe, 1), 14) +
-      col(`${r.gap >= 0 ? '+' : ''}${fmt(r.gap, 1)}${flag}`, 12) +
-      col(String(r.highRpeAuxCount), 12),
+        col(r.lift, 12) +
+        col(r.intensityType, 12) +
+        col(fmt(r.sessionRpe, 1), 10) +
+        col(fmt(r.avgMainRpe, 1), 14) +
+        col(`${r.gap >= 0 ? '+' : ''}${fmt(r.gap, 1)}${flag}`, 12) +
+        col(String(r.highRpeAuxCount), 12)
     );
   }
 }
@@ -555,12 +589,11 @@ interface AuxWeightAccuracyRow {
   flagged: boolean;
 }
 
-function analyzeAuxWeightAccuracy(pairs: SessionWithLog[]): AuxWeightAccuracyRow[] {
+function analyzeAuxWeightAccuracy(
+  pairs: SessionWithLog[]
+): AuxWeightAccuracyRow[] {
   // Aggregate prescribed vs actual per exercise
-  const buckets = new Map<
-    string,
-    { prescribed: number[]; actual: number[] }
-  >();
+  const buckets = new Map<string, { prescribed: number[]; actual: number[] }>();
 
   for (const { session, log } of pairs) {
     const trace = parsePrescriptionTrace(session.jit_output_trace);
@@ -574,7 +607,9 @@ function analyzeAuxWeightAccuracy(pairs: SessionWithLog[]): AuxWeightAccuracyRow
       const prescribedKg = auxTrace.weightTrace.finalWeightKg;
       if (prescribedKg <= 0) continue;
 
-      const matchingSets = auxSets.filter((s) => s.exercise === auxTrace.exercise);
+      const matchingSets = auxSets.filter(
+        (s) => s.exercise === auxTrace.exercise
+      );
       const actualWeights = matchingSets
         .map((s) => gramsToKg(s.weight_grams))
         .filter((w) => w > 0);
@@ -622,10 +657,10 @@ function printAuxWeightAccuracy(pairs: SessionWithLog[]): void {
 
   console.log(
     col('Exercise', 28) +
-    col('Samples', 9) +
-    col('Prescribed (kg)', 17) +
-    col('Actual (kg)', 13) +
-    col('Ratio', 10),
+      col('Samples', 9) +
+      col('Prescribed (kg)', 17) +
+      col('Actual (kg)', 13) +
+      col('Ratio', 10)
   );
   printSeparator();
 
@@ -633,10 +668,10 @@ function printAuxWeightAccuracy(pairs: SessionWithLog[]): void {
     const flag = r.flagged ? ' ⚠️  LOW' : '';
     console.log(
       col(r.exercise, 28) +
-      col(String(r.sampleCount), 9) +
-      col(fmt(r.prescribedKg), 17) +
-      col(fmt(r.actualKg), 13) +
-      col(`${fmt(r.ratio, 2)}${flag}`, 18),
+        col(String(r.sampleCount), 9) +
+        col(fmt(r.prescribedKg), 17) +
+        col(fmt(r.actualKg), 13) +
+        col(`${fmt(r.ratio, 2)}${flag}`, 18)
     );
   }
 }
@@ -657,11 +692,13 @@ function printRecommendations(pairs: SessionWithLog[]): void {
   // Weight prescription underuse
   const underPrescribed = weightAccuracy.filter((r) => r.flagged);
   if (underPrescribed.length > 0) {
-    recommendations.push('WEIGHT PRESCRIPTION — exercises where actual weight is < 60% of prescribed:');
+    recommendations.push(
+      'WEIGHT PRESCRIPTION — exercises where actual weight is < 60% of prescribed:'
+    );
     for (const r of underPrescribed) {
       recommendations.push(
         `  - ${r.exercise}: prescribed ${fmt(r.prescribedKg)} kg, actual ${fmt(r.actualKg)} kg (ratio ${fmt(r.ratio, 2)})` +
-        ` — consider reducing weightPct in exercise catalog`,
+          ` — consider reducing weightPct in exercise catalog`
       );
     }
   }
@@ -669,22 +706,28 @@ function printRecommendations(pairs: SessionWithLog[]): void {
   // Chronic high RPE aux exercises
   const highRpeAux = auxHealth.filter((s) => s.hasRpeData && s.avgRpe > 9.0);
   if (highRpeAux.length > 0) {
-    recommendations.push('CHRONIC HIGH RPE — aux exercises averaging RPE > 9.0:');
+    recommendations.push(
+      'CHRONIC HIGH RPE — aux exercises averaging RPE > 9.0:'
+    );
     for (const s of highRpeAux) {
       recommendations.push(
         `  - ${s.exercise}: avg RPE ${fmt(s.avgRpe)} across ${s.totalSets} sets` +
-        ` — reduce prescribed weight or target reps`,
+          ` — reduce prescribed weight or target reps`
       );
     }
   }
 
   // High failure rate aux exercises
-  const highFailure = auxHealth.filter((s) => s.hasRpeData && s.failureRate > 0.2 && s.avgRpe <= 9.0);
+  const highFailure = auxHealth.filter(
+    (s) => s.hasRpeData && s.failureRate > 0.2 && s.avgRpe <= 9.0
+  );
   if (highFailure.length > 0) {
-    recommendations.push('HIGH FAILURE RATE — aux exercises with > 20% sets at RPE >= 9.5:');
+    recommendations.push(
+      'HIGH FAILURE RATE — aux exercises with > 20% sets at RPE >= 9.5:'
+    );
     for (const s of highFailure) {
       recommendations.push(
-        `  - ${s.exercise}: ${(s.failureRate * 100).toFixed(0)}% failure rate across ${s.totalSets} sets`,
+        `  - ${s.exercise}: ${(s.failureRate * 100).toFixed(0)}% failure rate across ${s.totalSets} sets`
       );
     }
   }
@@ -695,11 +738,11 @@ function printRecommendations(pairs: SessionWithLog[]): void {
     const cascadeCount = cascadeSessions.length;
     const avgGap = avg(cascadeSessions.map((r) => r.gap));
     recommendations.push(
-      `FATIGUE CASCADE — ${cascadeCount} session(s) where session RPE exceeded avg main lift RPE by > 1.0:`,
+      `FATIGUE CASCADE — ${cascadeCount} session(s) where session RPE exceeded avg main lift RPE by > 1.0:`
     );
     recommendations.push(
       `  Average gap in flagged sessions: +${fmt(avgGap, 1)} RPE units.` +
-      ` Consider reducing aux volume or intensity on heavy/explosive days.`,
+        ` Consider reducing aux volume or intensity on heavy/explosive days.`
     );
 
     // Break down by lift

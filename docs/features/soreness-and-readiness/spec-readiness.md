@@ -14,12 +14,12 @@ Adds a pure `getReadinessModifier` function that combines sleep quality and ener
 **File: `packages/training-engine/src/adjustments/readiness-adjuster.ts`**
 
 ```typescript
-export type ReadinessLevel = 1 | 2 | 3  // 1=poor/low, 2=ok/normal, 3=great/high
+export type ReadinessLevel = 1 | 2 | 3; // 1=poor/low, 2=ok/normal, 3=great/high
 
 export interface ReadinessModifier {
-  setReduction: number
-  intensityMultiplier: number
-  rationale: string | null
+  setReduction: number;
+  intensityMultiplier: number;
+  rationale: string | null;
 }
 ```
 
@@ -27,17 +27,17 @@ Function: `getReadinessModifier(sleepQuality?: ReadinessLevel, energyLevel?: Rea
 
 Lookup table:
 
-| Sleep | Energy | setReduction | intensityMultiplier | rationale |
-|-------|--------|-------------|--------------------|----|
-| 1 | 1 | 1 | 0.95 | "Poor sleep + low energy — reduced 1 set, intensity −5%" |
-| 1 | 2 | 0 | 0.975 | "Poor sleep — intensity −2.5%" |
-| 1 | 3 | 0 | 0.975 | "Poor sleep — intensity −2.5%" |
-| 2 | 1 | 0 | 0.975 | "Low energy — intensity −2.5%" |
-| 2 | 2 | 0 | 1.0 | null |
-| 2 | 3 | 0 | 1.0 | null |
-| 3 | 1 | 0 | 0.975 | "Low energy — intensity −2.5%" |
-| 3 | 2 | 0 | 1.0 | null |
-| 3 | 3 | 0 | 1.025 | "Good sleep + high energy — intensity +2.5%" |
+| Sleep | Energy | setReduction | intensityMultiplier | rationale                                                |
+| ----- | ------ | ------------ | ------------------- | -------------------------------------------------------- |
+| 1     | 1      | 1            | 0.95                | "Poor sleep + low energy — reduced 1 set, intensity −5%" |
+| 1     | 2      | 0            | 0.975               | "Poor sleep — intensity −2.5%"                           |
+| 1     | 3      | 0            | 0.975               | "Poor sleep — intensity −2.5%"                           |
+| 2     | 1      | 0            | 0.975               | "Low energy — intensity −2.5%"                           |
+| 2     | 2      | 0            | 1.0                 | null                                                     |
+| 2     | 3      | 0            | 1.0                 | null                                                     |
+| 3     | 1      | 0            | 0.975               | "Low energy — intensity −2.5%"                           |
+| 3     | 2      | 0            | 1.0                 | null                                                     |
+| 3     | 3      | 0            | 1.025               | "Good sleep + high energy — intensity +2.5%"             |
 
 When both params are undefined, return the neutral modifier (0, 1.0, null).
 
@@ -52,6 +52,7 @@ Add `export * from './adjustments/readiness-adjuster'` alongside the existing so
 **File: `packages/training-engine/src/generator/jit-session-generator.ts`**
 
 Add to `JITInput`:
+
 ```typescript
 sleepQuality?: 1 | 2 | 3
 energyLevel?: 1 | 2 | 3
@@ -61,12 +62,12 @@ In `generateJITSession`, after Step 2 (RPE history adjustment), add:
 
 ```typescript
 // Step 2b — Readiness adjustment (sleep + energy)
-const readinessModifier = getReadinessModifier(input.sleepQuality, input.energyLevel)
+const readinessModifier = getReadinessModifier(input.sleepQuality, input.energyLevel);
 if (readinessModifier.intensityMultiplier !== 1.0) {
-  intensityMultiplier *= readinessModifier.intensityMultiplier
+  intensityMultiplier *= readinessModifier.intensityMultiplier;
 }
-plannedCount = Math.max(1, plannedCount - readinessModifier.setReduction)
-if (readinessModifier.rationale) rationale.push(readinessModifier.rationale)
+plannedCount = Math.max(1, plannedCount - readinessModifier.setReduction);
+if (readinessModifier.rationale) rationale.push(readinessModifier.rationale);
 ```
 
 ### Tests
@@ -74,6 +75,7 @@ if (readinessModifier.rationale) rationale.push(readinessModifier.rationale)
 **File: `packages/training-engine/src/adjustments/__tests__/readiness-adjuster.test.ts`**
 
 Test cases:
+
 - Both undefined → neutral (no change)
 - Poor sleep + low energy → setReduction 1, intensity 0.95
 - Poor sleep + normal energy → intensity 0.975

@@ -1,8 +1,8 @@
 // @spec docs/features/session/spec-logging.md
-import { useSessionStore } from '../store/sessionStore';
-import { flushUnsyncedSets } from './set-persistence.service';
 import type { JitData, WarmupSet } from '../model/types';
+import { useSessionStore } from '../store/sessionStore';
 import { getSession, startSession } from './session.service';
+import { flushUnsyncedSets } from './set-persistence.service';
 
 export type BootstrapAction =
   | { kind: 'session_init'; sessionId: string; parsed: JitData }
@@ -11,7 +11,14 @@ export type BootstrapAction =
   | { kind: 'free_form_init'; sessionId: string }
   | { kind: 'free_form_resume'; sessionId: string }
   | { kind: 'redirect_soreness'; sessionId: string }
-  | { kind: 'abort_back'; reason: 'missing_session_id' | 'missing_jit' | 'parse_error' | 'session_not_found' };
+  | {
+      kind: 'abort_back';
+      reason:
+        | 'missing_session_id'
+        | 'missing_jit'
+        | 'parse_error'
+        | 'session_not_found';
+    };
 
 export interface BootstrapInput {
   sessionId: string | undefined | null;
@@ -96,14 +103,20 @@ export function decideBootstrap(
     (currentStoreSessionId === sessionId ? store.cachedJitData : null);
 
   if (!effectiveJitData) {
-    return { action: { kind: 'abort_back', reason: 'missing_jit' }, parsed: null };
+    return {
+      action: { kind: 'abort_back', reason: 'missing_jit' },
+      parsed: null,
+    };
   }
 
   let parsed: JitData;
   try {
     parsed = JSON.parse(effectiveJitData) as JitData;
   } catch {
-    return { action: { kind: 'abort_back', reason: 'parse_error' }, parsed: null };
+    return {
+      action: { kind: 'abort_back', reason: 'parse_error' },
+      parsed: null,
+    };
   }
 
   const { mainLiftSets } = parsed;
@@ -139,8 +152,7 @@ export function recoverAdHocExercises(opts: {
     ...new Set(
       opts.auxiliarySets
         .filter(
-          (s) =>
-            s.template_instance_id == null && !prescribed.has(s.exercise)
+          (s) => s.template_instance_id == null && !prescribed.has(s.exercise)
         )
         .map((s) => s.exercise)
     ),
@@ -194,14 +206,22 @@ export async function applyBootstrap(
         activity_name: session.activity_name,
       });
       opts.invalidateSessionCache();
-      return { warmupSets: [], adHocExercises: [], needsSorenessRedirect: false };
+      return {
+        warmupSets: [],
+        adHocExercises: [],
+        needsSorenessRedirect: false,
+      };
     }
 
     case 'free_form_resume': {
       const adHoc = recoverAdHocExercises({
         auxiliarySets: store.auxiliarySets,
       });
-      return { warmupSets: [], adHocExercises: adHoc, needsSorenessRedirect: false };
+      return {
+        warmupSets: [],
+        adHocExercises: adHoc,
+        needsSorenessRedirect: false,
+      };
     }
 
     case 'session_init':
@@ -221,11 +241,7 @@ export async function applyBootstrap(
         opts.oneRmKgRef.current = parsed.oneRmKg;
       }
 
-      if (
-        store.sessionId &&
-        store.sessionId !== action.sessionId &&
-        userId
-      ) {
+      if (store.sessionId && store.sessionId !== action.sessionId && userId) {
         await flushUnsyncedSets(userId);
       }
       store.initSession(action.sessionId, mainLiftSets);
@@ -286,7 +302,11 @@ export async function applyBootstrap(
 
     case 'redirect_soreness':
     case 'abort_back':
-      return { warmupSets: [], adHocExercises: [], needsSorenessRedirect: false };
+      return {
+        warmupSets: [],
+        adHocExercises: [],
+        needsSorenessRedirect: false,
+      };
   }
 }
 

@@ -11,6 +11,7 @@ Improve the training simulation CI pipeline with three capabilities: threshold t
 ## Problem Statement
 
 **Pain points:**
+
 - CI only reports pass/fail. A PR that adds 10 new warnings passes silently — there's no way to detect gradual quality drift.
 - JSON output exists (`--json` flag) but CI doesn't save artifacts. There's no way to track violation trends across builds.
 - Life scripts cover common scenarios but miss important training phases: peaking for competition, competition week itself, and returning to training after extended time off.
@@ -20,6 +21,7 @@ Improve the training simulation CI pipeline with three capabilities: threshold t
 ## User Experience
 
 This feature targets developers (CI pipeline consumers):
+
 - PRs that increase violation counts get a visible warning annotation
 - JSON artifacts are downloadable from GitHub Actions for trend analysis
 - New life scripts catch engine regressions in edge-case training phases

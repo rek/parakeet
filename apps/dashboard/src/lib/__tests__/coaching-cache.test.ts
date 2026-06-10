@@ -10,7 +10,9 @@ import {
 } from '../coaching-cache';
 import type { CoachingRequest } from '../coaching-runner';
 
-function makeRequest(overrides: Partial<CoachingRequest> = {}): CoachingRequest {
+function makeRequest(
+  overrides: Partial<CoachingRequest> = {}
+): CoachingRequest {
   return {
     context: {
       analysis: { fps: 4, reps: [], cameraAngle: 'side' } as never,

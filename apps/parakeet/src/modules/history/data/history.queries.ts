@@ -2,7 +2,6 @@
 import type { Lift } from '@parakeet/shared-types';
 import { queryOptions, skipToken } from '@tanstack/react-query';
 
-import { fetchReviewedProgramIds } from './history.repository';
 import {
   getPerformanceByLift,
   getPerformanceTrends,
@@ -11,6 +10,7 @@ import {
   getWeeklySetsPerLift,
   getWeeklyVolumeKg,
 } from '../lib/performance';
+import { fetchReviewedProgramIds } from './history.repository';
 
 export const historyQueries = {
   all: () => ['performance'] as const,

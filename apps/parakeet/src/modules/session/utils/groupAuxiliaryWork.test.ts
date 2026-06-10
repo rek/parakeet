@@ -1,7 +1,7 @@
-import type { AuxiliaryActualSet } from '../store/sessionStore';
 import { describe, expect, it } from 'vitest';
 
 import type { AuxiliaryWork } from '../model/types';
+import type { AuxiliaryActualSet } from '../store/sessionStore';
 import { groupAuxiliaryWork } from './groupAuxiliaryWork';
 
 const makePlannedSet = () => ({ weight_kg: 60, reps: 10 });

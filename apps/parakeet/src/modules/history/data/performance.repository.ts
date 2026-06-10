@@ -136,9 +136,7 @@ export async function fetchRecentSessionLogsForTrends(userId: string) {
 export async function fetchWeeklySessionLogs(userId: string, fromDate: Date) {
   const { data, error } = await typedSupabase
     .from('session_logs')
-    .select(
-      'session_id, completed_at, sessions!inner(primary_lift, status)'
-    )
+    .select('session_id, completed_at, sessions!inner(primary_lift, status)')
     .eq('user_id', userId)
     .eq('sessions.status', 'completed')
     .gte('completed_at', fromDate.toISOString())

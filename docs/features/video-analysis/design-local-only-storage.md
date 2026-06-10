@@ -4,6 +4,7 @@ status: phases-1-and-2-shipped
 owner: Adam
 last_updated: 2026-04-19
 ---
+
 # Design — Local-Only Video Storage
 
 **Roadmap status**
@@ -37,7 +38,7 @@ All of this is small structured JSON. None of it is the video bytes.
 
 ## What Does NOT Need The Cloud
 
-- The raw `.mp4` file. If the user wants to watch the video, they tap the row on the device that recorded it. If the phone is gone, the form analysis *results* are still there and still useful (metrics, coaching, trend).
+- The raw `.mp4` file. If the user wants to watch the video, they tap the row on the device that recorded it. If the phone is gone, the form analysis _results_ are still there and still useful (metrics, coaching, trend).
 
 ## Proposed State
 
@@ -50,10 +51,12 @@ All of this is small structured JSON. None of it is the video bytes.
 ## Migration Plan (Phased)
 
 ### Phase 0 — Short-term hardening (done)
+
 - [x] Fix 0-byte upload via `arrayBuffer()` conversion (2026-04-18).
 - [x] Guard against empty local file with Sentry breadcrumb.
 
 ### Phase 1 — Stop new uploads (1 PR)
+
 - Remove `uploadVideoToStorage` call from `useVideoAnalysis.ts:166`.
 - Remove `uploadPartnerVideo` call from partner video save flow (pending gym-partner resolution).
 - Keep `remote_uri` column nullable; stop writing to it.
@@ -61,15 +64,18 @@ All of this is small structured JSON. None of it is the video bytes.
 - Feature flag opt-out so we can flip back quickly if the gym-partner story forces it.
 
 ### Phase 2 — Surface local-only state in UI (1 PR)
+
 - Video player shows local file only; if `local_uri` missing (app reinstall, different device), show "Video recorded on another device" with a retry-record CTA.
 - Backlog UI polish for "recorded elsewhere" state.
 
 ### Phase 3 — Clean up legacy Storage rows (1 PR)
+
 - Backfill script: for rows with `remote_uri != null` AND Storage object > 0 bytes, leave alone (legacy viewable).
 - For rows with `remote_uri != null` AND Storage object = 0 bytes (the broken rows), clear `remote_uri`. These are the ghost-uploads from the bug.
 - DB-only change, no UI impact.
 
 ### Phase 4 — Delete bucket (after 6-month soak)
+
 - Confirm no reader code references `remote_uri`.
 - `DROP TABLE session_videos` column `remote_uri` in a migration.
 - Delete the `session-videos` bucket in Supabase dashboard.
@@ -79,6 +85,7 @@ All of this is small structured JSON. None of it is the video bytes.
 This is the only real use case for cloud video transfer: partner records on their phone, lifter wants to see it on their phone.
 
 Options:
+
 - **A — Keep Storage only for partner uploads.** Carve out: lifter's own videos are local; partner videos go through Storage as today. Preserves cross-device path where it's load-bearing. Low complexity, retains the upload code in one place.
 - **B — Peer-to-peer transfer.** AirDrop / local Wi-Fi / React Native Bluetooth → zero cloud. Adds native complexity, worse UX when partners aren't colocated.
 - **C — Analysis-only sharing.** Partner's device runs MediaPipe + analysis locally, only the `analysis` JSONB flows to the lifter's row via a normal row insert. Lifter never sees the raw video; they see metrics + coaching from the partner's footage. Arguably this is the correct design — partners are there to give the lifter feedback, not watch each other's squat form.

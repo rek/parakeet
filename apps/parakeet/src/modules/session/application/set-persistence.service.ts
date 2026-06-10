@@ -3,11 +3,11 @@
 // via the `set_logs` table, falling back to the sync queue on network error.
 // See docs/features/session/design-durability.md.
 
-import { useSessionStore } from '../store/sessionStore';
 import { useSyncStore } from '@platform/store/syncStore';
 import { captureException } from '@platform/utils/captureException';
 
 import { upsertSetLog } from '../data/session.repository';
+import { useSessionStore } from '../store/sessionStore';
 import { isNetworkError } from '../utils/isNetworkError';
 
 export interface PersistSetArgs {
@@ -106,9 +106,7 @@ export async function flushUnsyncedSets(userId: string): Promise<void> {
   const primary = state.actualSets.filter(
     (s) => s.is_completed && !s.synced_at
   );
-  const aux = state.auxiliarySets.filter(
-    (s) => s.is_completed && !s.synced_at
-  );
+  const aux = state.auxiliarySets.filter((s) => s.is_completed && !s.synced_at);
   if (primary.length === 0 && aux.length === 0) return;
 
   const sessionId = state.sessionId;

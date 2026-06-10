@@ -8,6 +8,7 @@
 After generating the regular session (main lift + prescribed aux), the JIT pipeline checks whether any muscle group is below MEV for the week. If so, it selects an exercise from the user's pool that targets that muscle and appends it as a "top-up" aux entry. This makes the program self-correcting when volume is being missed.
 
 Depends on:
+
 - **Muscle mappings** (Feature 1) — `getMusclesForExercise()` in `muscle-mapper.ts`
 - **Exercise type system** (Bug 1) — only `weighted` and `bodyweight` exercises are top-up candidates; `timed` is excluded
 
@@ -24,6 +25,7 @@ Depends on:
 - [x] Catalog metadata: `MovementPattern`, `Equipment`, `ComplexityTier`, `isCompound` on `ExerciseCatalogEntry`; auto-deriving resolvers (`resolveMovementPattern`, `resolveEquipment`, `resolveIsCompound`, `resolveComplexityTier`); 31 entries with explicit overrides
 
 **`buildVolumeTopUp()` actual algorithm:**
+
 1. Build main lift muscle contributions map (from `getMusclesForLift`)
 2. For each muscle where `mev > 0`: `projected = weeklyVol + floor(mainLiftSetCount × contrib)`; pro-rate MEV by week progress: `effectiveMev = ceil(mev × sessionIndex / totalSessionsThisWeek)` (falls back to full `mev` when params are absent); `deficit = effectiveMev - projected`; collect where `deficit > 0`
 3. Take top 2 muscles (max per session). **Core priority (gh#203):** when core is in deficit, one slot is always reserved for core; the other goes to the highest-deficit non-core muscle. Otherwise sort by deficit descending and take top 2. See [session-prescription.md](../../domain/session-prescription.md#core-priority).
@@ -36,6 +38,7 @@ Depends on:
 Note: top-up skipped silently (no warning) when no candidate exists; rationale entry only added when a top-up is actually selected.
 
 **Tests** — 22 tests in `src/generator/jit-session-generator.test.ts`:
+
 - [x] No `auxiliaryPool` → no top-ups
 - [x] Empty `auxiliaryPool` → no top-ups
 - [x] Muscle at/above MEV after main lift → no top-up for it
@@ -76,6 +79,7 @@ Note: top-up skipped silently (no warning) when no candidate exists; rationale e
 - [x] Same `SetRow` / `handleAuxSetUpdate` flow — `origIndex` used instead of `exerciseIndex` to keep rest timer indexing correct
 
 **Visual spec for top-up section:**
+
 ```
 ─── Volume top-up ────────────────────────
 Romanian Dumbbell Deadlift

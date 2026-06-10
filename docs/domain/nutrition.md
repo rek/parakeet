@@ -3,7 +3,7 @@
 Source of truth for the macro-target calculator in the nutrition
 module. Every constant below lives in
 [`apps/parakeet/src/modules/nutrition/lib/macro-targets.ts`](../../apps/parakeet/src/modules/nutrition/lib/macro-targets.ts)
-(`computeMacroTargets`) — update *this* doc when the code changes, not
+(`computeMacroTargets`) — update _this_ doc when the code changes, not
 the other way around.
 
 Protocol-level context (why keto, why RAD, evidence grading) lives in
@@ -14,11 +14,11 @@ the feature docs:
 
 One formula is used, in priority order:
 
-| Formula | When | Source |
-| --- | --- | --- |
-| **Katch-McArdle** | `lean_mass_kg` is known. Most accurate for athletes and for lipedema (pathological adipose ≠ metabolically active tissue). | `BMR = 370 + 21.6 × lean_mass_kg` — Katch & McArdle, *Exercise Physiology*, 1996. |
-| **Mifflin-St Jeor** | `height_cm` known, lean mass not. Clinical default. | `M: BMR = 10×kg + 6.25×cm − 5×age + 5`; `F: … − 161`. Mifflin et al., *Am J Clin Nutr* 1990. |
-| **Bodyweight-only fallback** | Neither lean mass nor height known. Flags `low_confidence=true` so the UI shows a "rough estimate" badge. | `M: 24 × kg`; `F: 22 × kg`. Rule-of-thumb only. |
+| Formula                      | When                                                                                                                       | Source                                                                                       |
+| ---------------------------- | -------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------- |
+| **Katch-McArdle**            | `lean_mass_kg` is known. Most accurate for athletes and for lipedema (pathological adipose ≠ metabolically active tissue). | `BMR = 370 + 21.6 × lean_mass_kg` — Katch & McArdle, _Exercise Physiology_, 1996.            |
+| **Mifflin-St Jeor**          | `height_cm` known, lean mass not. Clinical default.                                                                        | `M: BMR = 10×kg + 6.25×cm − 5×age + 5`; `F: … − 161`. Mifflin et al., _Am J Clin Nutr_ 1990. |
+| **Bodyweight-only fallback** | Neither lean mass nor height known. Flags `low_confidence=true` so the UI shows a "rough estimate" badge.                  | `M: 24 × kg`; `F: 22 × kg`. Rule-of-thumb only.                                              |
 
 Lipedema caveat: bioimpedance-derived "lean mass" from a smart scale is
 **unreliable on affected limbs**. DEXA is the ground truth. Documented
@@ -28,17 +28,17 @@ in `tools/data/labs.md` and surfaced on the profile edit UI.
 
 Standard Harris-Benedict style. Self-reported.
 
-| Level | Multiplier | Description |
-| --- | --- | --- |
-| `sedentary` | 1.2 | Desk job, no training |
-| `light` | 1.375 | 1–2 easy sessions/week |
-| `moderate` | 1.55 | 3–4 general sessions/week or deload week |
-| `active` | 1.725 | **Powerlifter default** — 3 heavy compound sessions/week |
-| `very_active` | 1.9 | 4+ sessions/week, or physically demanding job on top |
+| Level         | Multiplier | Description                                              |
+| ------------- | ---------- | -------------------------------------------------------- |
+| `sedentary`   | 1.2        | Desk job, no training                                    |
+| `light`       | 1.375      | 1–2 easy sessions/week                                   |
+| `moderate`    | 1.55       | 3–4 general sessions/week or deload week                 |
+| `active`      | 1.725      | **Powerlifter default** — 3 heavy compound sessions/week |
+| `very_active` | 1.9        | 4+ sessions/week, or physically demanding job on top     |
 
 **Powerlifter calibration note.** Harris-Benedict / Mifflin-St Jeor
 multipliers were derived for the general population and tend to
-*undercount* NEAT on heavy compound training days. A 3-session/week
+_undercount_ NEAT on heavy compound training days. A 3-session/week
 powerlifting program (squat, bench, deadlift days at RPE 7–9) has
 a thermic cost equivalent to far more frequent general-fitness
 sessions — the `active` multiplier (1.725) is the right anchor, not
@@ -51,22 +51,22 @@ corrective lever.
 
 Applied to TDEE after multiplier.
 
-| Goal | Delta | Rationale |
-| --- | --- | --- |
-| `cut` | −15% | Moderate deficit — protects lean mass better than aggressive cuts, more sustainable. |
-| `maintain` | 0% | **Default** |
-| `bulk` | +10% | Lean-gain surplus; larger surpluses waste into adipose. |
+| Goal       | Delta | Rationale                                                                            |
+| ---------- | ----- | ------------------------------------------------------------------------------------ |
+| `cut`      | −15%  | Moderate deficit — protects lean mass better than aggressive cuts, more sustainable. |
+| `maintain` | 0%    | **Default**                                                                          |
+| `bulk`     | +10%  | Lean-gain surplus; larger surpluses waste into adipose.                              |
 
 ## Protein targets
 
 Lean-mass basis preferred when known (protein scales with metabolically
 active tissue, not total body weight).
 
-| Protocol | g/kg (basis) | Source |
-| --- | --- | --- |
-| Keto | 1.4 g/kg (lean if known else bodyweight) | Cannataro 2021 protocol (~30% kcal from protein in an 1300 kcal plan). |
-| RAD | 1.4 g/kg (lean if known else bodyweight) | Cannataro 2021 (keto-lipedema, only lipedema-specific protein figure in the literature). Standard LIPODIET (Sørlie 2022) implies ~1.0–1.1 g/kg; 1.4 g/kg is a conservative upward adjustment for resistance-training load. **Not from Helms 2014** (bodybuilding) — that citation was an error. |
-| Standard | 1.8 g/kg (lean if known else bodyweight) | ISSN position stand on protein and exercise (Stokes et al. 2018). |
+| Protocol | g/kg (basis)                             | Source                                                                                                                                                                                                                                                                                          |
+| -------- | ---------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Keto     | 1.4 g/kg (lean if known else bodyweight) | Cannataro 2021 protocol (~30% kcal from protein in an 1300 kcal plan).                                                                                                                                                                                                                          |
+| RAD      | 1.4 g/kg (lean if known else bodyweight) | Cannataro 2021 (keto-lipedema, only lipedema-specific protein figure in the literature). Standard LIPODIET (Sørlie 2022) implies ~1.0–1.1 g/kg; 1.4 g/kg is a conservative upward adjustment for resistance-training load. **Not from Helms 2014** (bodybuilding) — that citation was an error. |
+| Standard | 1.8 g/kg (lean if known else bodyweight) | ISSN position stand on protein and exercise (Stokes et al. 2018).                                                                                                                                                                                                                               |
 
 **Training-day bump**: `protein_g × 1.1` on training days, per the ISSN
 position stand on protein timing & training demands.
@@ -128,11 +128,11 @@ interface MacroTarget {
   protein_g: number;
   fat_g: number;
   carb_g: number;
-  net_carb_g_cap: number | null;   // 20 on keto, null on RAD
+  net_carb_g_cap: number | null; // 20 on keto, null on RAD
   bmr_kcal: number;
   tdee_kcal: number;
   bmr_method: 'katch_mcardle' | 'mifflin_st_jeor' | 'fallback';
-  low_confidence: boolean;          // true when fallback used or age missing
+  low_confidence: boolean; // true when fallback used or age missing
 }
 ```
 
@@ -141,14 +141,14 @@ on `MacroTargetsCard` and drives the prompt to complete profile fields.
 
 ## References
 
-- Mifflin et al. *A new predictive equation for resting energy
-  expenditure in healthy individuals.* Am J Clin Nutr 1990.
-- Katch VL, McArdle WD. *Exercise Physiology.* 1996.
+- Mifflin et al. _A new predictive equation for resting energy
+  expenditure in healthy individuals._ Am J Clin Nutr 1990.
+- Katch VL, McArdle WD. _Exercise Physiology._ 1996.
 - Cannataro 2021 — keto protocol example (RCT case): omega-3 3 g,
   vitamin C 1 g, vitamin D 2000 IU (see `tools/data/keto.md`).
 - Sørlie LIPODIET 2022 pilot — 70–75% fat / 5–10% carb / 20% protein
   on 9 women (see `tools/data/keto.md`).
-- Helms et al. *Evidence-based recommendations for natural bodybuilding
-  contest preparation.* Int Soc Sports Nutr, 2014. Protein g/kg.
+- Helms et al. _Evidence-based recommendations for natural bodybuilding
+  contest preparation._ Int Soc Sports Nutr, 2014. Protein g/kg.
 - Full evidence scoping: `tools/data/keto.md`, `tools/data/rad.md`,
   and the 2025 Nutrition Reviews scoping review (cited there).

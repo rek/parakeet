@@ -14,6 +14,7 @@ The History tab showing performance trends, completed sessions, and archived pro
 ### Sections
 
 **Performance Trends (top section):**
+
 - Per-lift trend cards: Squat / Bench / Deadlift
 - Each card: estimated 1RM trend line (chart) over last N sessions with RPE data
 - Fetched via `getPerformanceTrends(userId, lift)` from `apps/parakeet/src/modules/history/lib/performance.ts`
@@ -21,12 +22,14 @@ The History tab showing performance trends, completed sessions, and archived pro
 - Tapping a card expands to show individual session data points
 
 **Completed Sessions (middle section):**
+
 - Chronological list of completed sessions, most recent first
 - Each row: date, lift name, intensity type, actual volume (sets × reps × weight), session RPE
 - Filterable by lift (Squat / Bench / Deadlift / All) via tab chips at section header
 - Tapping a row shows session detail: planned vs. actual sets side-by-side, notes, any PRs earned, disruption if active
 
 **Archived Programs (bottom section):**
+
 - List of completed and abandoned programs, most recent first
 - Each row: program start/end date, week count, final estimated 1RMs
 - "Review" button → navigates to `history/cycle-review/[programId].tsx` (mobile-014)
@@ -44,6 +47,7 @@ The History tab showing performance trends, completed sessions, and archived pro
 ### Data Access
 
 Uses existing module APIs:
+
 - `getCompletedSessions(userId)` from `apps/parakeet/src/modules/session/application/session.service.ts`
 - `getPerformanceTrends(userId, lift)` from `apps/parakeet/src/modules/history/lib/performance.ts`
 - `listPrograms(userId)` from `apps/parakeet/src/modules/program/application/program.service.ts` (returns all statuses including archived)

@@ -1,7 +1,10 @@
 // @spec docs/features/achievements/spec-screen.md
 import { getSessionSetsBySessionIds } from '@modules/session';
 import type { Lift } from '@parakeet/shared-types';
-import type { ConsistencyData, ProgramLoyaltyData } from '@parakeet/training-engine';
+import type {
+  ConsistencyData,
+  ProgramLoyaltyData,
+} from '@parakeet/training-engine';
 import { gramsToKg, kgToGrams } from '@parakeet/training-engine';
 import { typedSupabase } from '@platform/supabase';
 
@@ -25,11 +28,9 @@ export async function upsertPersonalRecords(
     achieved_at: pr.achievedAt,
   }));
 
-  const { error } = await typedSupabase
-    .from('personal_records')
-    .upsert(rows, {
-      onConflict: 'user_id,lift,pr_type,weight_grams',
-    });
+  const { error } = await typedSupabase.from('personal_records').upsert(rows, {
+    onConflict: 'user_id,lift,pr_type,weight_grams',
+  });
   if (error) throw error;
 }
 
@@ -177,7 +178,9 @@ export async function fetchBadgeProfile(userId: string) {
   return data;
 }
 
-export async function fetchCompletedSessionCount(userId: string): Promise<number> {
+export async function fetchCompletedSessionCount(
+  userId: string
+): Promise<number> {
   const { count, error } = await typedSupabase
     .from('sessions')
     .select('id', { count: 'exact', head: true })
@@ -257,7 +260,11 @@ export async function fetchDisruptionContext(userId: string): Promise<{
   if (error) throw error;
 
   if (!data || data.length === 0) {
-    return { hasActiveMajor: false, daysSinceLast: null, lastDurationDays: null };
+    return {
+      hasActiveMajor: false,
+      daysSinceLast: null,
+      lastDurationDays: null,
+    };
   }
 
   const now = new Date();
@@ -571,7 +578,9 @@ export async function fetchConsecutiveFullRestSessions(
   return consecutive;
 }
 
-export async function fetchPartnerCompletedToday(userId: string): Promise<boolean> {
+export async function fetchPartnerCompletedToday(
+  userId: string
+): Promise<boolean> {
   const { data: partners, error: partnerError } = await typedSupabase
     .from('gym_partners')
     .select('requester_id, responder_id')

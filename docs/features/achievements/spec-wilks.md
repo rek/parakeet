@@ -20,6 +20,7 @@ WILKS score calculation using the 2020 updated coefficients. Normalises total li
   - Round result to 2 decimal places
 
 **Unit tests (`packages/training-engine/__tests__/wilks.test.ts`):**
+
 - [ ] Known female reference: 60kg BW, 400kg total → ~371 points (tolerance ±2)
 - [ ] Known male reference: 83kg BW, 600kg total → ~378 points (tolerance ±2)
 - [ ] `computeWilks2020(0, 75, 'male')` → 0
@@ -27,10 +28,11 @@ WILKS score calculation using the 2020 updated coefficients. Normalises total li
 - [ ] Returns a higher score for a lighter lifter with the same total (sex = male, compare 70kg vs 90kg)
 
 **Export from `packages/training-engine/src/index.ts`:**
+
 - [ ] Add exports:
   ```typescript
-  export { computeWilks2020 } from './formulas/wilks'
-  export type { WilksSex } from './formulas/wilks'
+  export { computeWilks2020 } from './formulas/wilks';
+  export type { WilksSex } from './formulas/wilks';
   ```
 
 ## Usage Context

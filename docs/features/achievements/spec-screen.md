@@ -26,6 +26,7 @@ Two surfaces: (1) session completion stars shown immediately after each workout,
 - Cycle badge granted line: shown only when `checkCycleCompletion()` returns `qualifiesForBadge: true` for the now-completed cycle
 
 **`apps/parakeet/src/modules/achievements/application/achievement.service.ts`:**
+
 - `getPRHistory(userId: string, lift: Lift): Promise<HistoricalPRs>` — fetches `personal_records` from Supabase
 - `getStreakData(userId: string): Promise<StreakResult>` — fetches week history from `sessions` + `disruptions`, calls `computeStreak()`
 - `getCycleBadges(userId: string): Promise<CycleBadge[]>` — fetches completed programs where `completion_pct >= 0.80`
@@ -37,6 +38,7 @@ Two surfaces: (1) session completion stars shown immediately after each workout,
 **`apps/parakeet/app/(tabs)/profile.tsx`** — new tab (or extend existing settings profile):
 
 Layout:
+
 ```
 ┌──────────────────────────────────────┐
 │  Cycles Completed      [ 3 badges ]  │
@@ -64,6 +66,7 @@ Layout:
 - WILKS score: computed from `computeWilks2020()` (engine-013), displayed as a rounded integer. Tapping opens WILKS detail page.
 
 **WILKS Detail Page — `apps/parakeet/app/profile/wilks.tsx`:**
+
 - Current WILKS score (large)
 - Chart: one point per completed cycle (Recharts or Victory Native line chart)
 - Table: lift → estimated 1RM used + last-updated date
@@ -72,6 +75,7 @@ Layout:
 - Body weight update link → navigates to Settings → Profile to edit
 
 **Today Tab pill — `apps/parakeet/app/(tabs)/today.tsx`:**
+
 - Add a compact `<StreakPill currentStreak={n} />` component in the Today header area
 - Only shown when `currentStreak >= 1`
 

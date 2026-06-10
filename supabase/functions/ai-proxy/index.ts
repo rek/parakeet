@@ -28,7 +28,9 @@ function errorResponse({
 }) {
   // OpenAI-compatible error shape so the AI SDK can extract the message.
   return new Response(
-    JSON.stringify({ error: { message, type: 'proxy_error', code: code ?? null } }),
+    JSON.stringify({
+      error: { message, type: 'proxy_error', code: code ?? null },
+    }),
     {
       status,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -40,15 +42,29 @@ function errorResponse({
  * Authenticate the request via Supabase JWT.
  * Returns the user ID or an error response.
  */
-async function authenticateRequest({ authHeader }: { authHeader: string | null }) {
+async function authenticateRequest({
+  authHeader,
+}: {
+  authHeader: string | null;
+}) {
   if (!authHeader?.startsWith('Bearer ')) {
-    return { error: errorResponse({ status: 401, message: 'Missing or invalid authorization header' }) };
+    return {
+      error: errorResponse({
+        status: 401,
+        message: 'Missing or invalid authorization header',
+      }),
+    };
   }
 
   const token = authHeader.replace('Bearer ', '');
   const { data, error } = await adminClient.auth.getUser(token);
   if (error || !data.user) {
-    return { error: errorResponse({ status: 401, message: 'Invalid or expired token' }) };
+    return {
+      error: errorResponse({
+        status: 401,
+        message: 'Invalid or expired token',
+      }),
+    };
   }
 
   return { userId: data.user.id };

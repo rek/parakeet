@@ -1,7 +1,7 @@
 import { Badge } from '../components/Badge';
 import { TablePage } from '../components/TablePage';
-import { useSupabaseRows } from '../lib/useSupabaseRows';
 import { theme } from '../lib/theme';
+import { useSupabaseRows } from '../lib/useSupabaseRows';
 
 interface SetLogRow {
   id: string;
@@ -92,7 +92,11 @@ export function SetLogs() {
             {r.exercise ?? '—'}
             {r.exercise_type && (
               <span
-                style={{ color: theme.color.textMuted, marginLeft: 4, fontSize: 10 }}
+                style={{
+                  color: theme.color.textMuted,
+                  marginLeft: 4,
+                  fontSize: 10,
+                }}
               >
                 {r.exercise_type}
               </span>
@@ -105,9 +109,7 @@ export function SetLogs() {
           </span>
           <div style={{ display: 'flex', gap: 4 }}>
             {r.failed && <Badge label="Failed" variant="red" />}
-            {r.corrected_by != null && (
-              <Badge label="Corr." variant="accent" />
-            )}
+            {r.corrected_by != null && <Badge label="Corr." variant="accent" />}
           </div>
         </>
       )}

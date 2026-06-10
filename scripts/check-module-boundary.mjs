@@ -1,5 +1,4 @@
 #!/usr/bin/env node
-
 import fs from 'node:fs';
 import path from 'node:path';
 
@@ -24,7 +23,9 @@ function walk(dir) {
     if (!entry.isFile() || !/\.(ts|tsx)$/.test(entry.name)) continue;
 
     const content = fs.readFileSync(fullPath, 'utf8');
-    const importMatches = content.matchAll(/(?:from\s+|import\s+)['"]([^'"]+)['"]/g);
+    const importMatches = content.matchAll(
+      /(?:from\s+|import\s+)['"]([^'"]+)['"]/g
+    );
     for (const match of importMatches) {
       const source = match[1];
 
@@ -34,7 +35,10 @@ function walk(dir) {
         source.includes('/network/supabase-client') ||
         source.includes('/lib/supabase')
       ) {
-        violations.push({ file: fullPath, reason: `forbidden infra import: ${source}` });
+        violations.push({
+          file: fullPath,
+          reason: `forbidden infra import: ${source}`,
+        });
       }
 
       // UI/shell must not import legacy architecture paths.
@@ -46,7 +50,10 @@ function walk(dir) {
         source.includes('/queries/') ||
         source.includes('/network/')
       ) {
-        violations.push({ file: fullPath, reason: `legacy architecture import: ${source}` });
+        violations.push({
+          file: fullPath,
+          reason: `legacy architecture import: ${source}`,
+        });
       }
 
       // App shell may import module public APIs, not deep internals.

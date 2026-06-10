@@ -4,20 +4,20 @@ Single source of truth for training science decisions in Parakeet. Every constan
 
 ## Documents
 
-| Doc | Covers |
-|-----|--------|
-| [periodization.md](periodization.md) | Cube method, block loading tables (M/F), progressive overload, rest times, training day patterns, unending mode |
-| [volume-landmarks.md](volume-landmarks.md) | MRV/MEV defaults (M/F), training age multipliers, volume status classification |
-| [muscle-mapping.md](muscle-mapping.md) | Lift-to-muscle contribution factors, RPE scaling curve, volume attribution method |
-| [session-prescription.md](session-prescription.md) | JIT pipeline (9 steps), compounding rules, MRV cap, warmup protocols, volume top-up |
-| [adjustments.md](adjustments.md) | Soreness, readiness, cycle phase, disruption, volume recovery, performance adjuster |
-| [sex-differences.md](sex-differences.md) | All male/female differentiation in one place |
-| [exercise-catalog.md](exercise-catalog.md) | Exercise types, weight scaling, rep targets, fatigue factor, pool rotation |
-| [athlete-signals.md](athlete-signals.md) | All inputs collected from the lifter and how they flow through the system |
-| [performance-analysis.md](performance-analysis.md) | 1RM formulas, working 1RM, Wilks, PR detection, modifier calibration |
-| [ai-coaching.md](ai-coaching.md) | LLM models, JIT strategy, constraints, challenge mode, cycle reviews |
-| [nutrition.md](nutrition.md) | Macro-target calculator: BMR cascade, activity multipliers, goal deltas, protocol splits (keto / RAD), training-day bump |
-| [references.md](references.md) | All external citations with URLs |
+| Doc                                                | Covers                                                                                                                   |
+| -------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
+| [periodization.md](periodization.md)               | Cube method, block loading tables (M/F), progressive overload, rest times, training day patterns, unending mode          |
+| [volume-landmarks.md](volume-landmarks.md)         | MRV/MEV defaults (M/F), training age multipliers, volume status classification                                           |
+| [muscle-mapping.md](muscle-mapping.md)             | Lift-to-muscle contribution factors, RPE scaling curve, volume attribution method                                        |
+| [session-prescription.md](session-prescription.md) | JIT pipeline (9 steps), compounding rules, MRV cap, warmup protocols, volume top-up                                      |
+| [adjustments.md](adjustments.md)                   | Soreness, readiness, cycle phase, disruption, volume recovery, performance adjuster                                      |
+| [sex-differences.md](sex-differences.md)           | All male/female differentiation in one place                                                                             |
+| [exercise-catalog.md](exercise-catalog.md)         | Exercise types, weight scaling, rep targets, fatigue factor, pool rotation                                               |
+| [athlete-signals.md](athlete-signals.md)           | All inputs collected from the lifter and how they flow through the system                                                |
+| [performance-analysis.md](performance-analysis.md) | 1RM formulas, working 1RM, Wilks, PR detection, modifier calibration                                                     |
+| [ai-coaching.md](ai-coaching.md)                   | LLM models, JIT strategy, constraints, challenge mode, cycle reviews                                                     |
+| [nutrition.md](nutrition.md)                       | Macro-target calculator: BMR cascade, activity multipliers, goal deltas, protocol splits (keto / RAD), training-day bump |
+| [references.md](references.md)                     | All external citations with URLs                                                                                         |
 
 ## Rules
 

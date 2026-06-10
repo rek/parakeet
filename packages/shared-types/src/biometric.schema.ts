@@ -32,7 +32,9 @@ export const BiometricReadingInsertSchema = BiometricReadingSchema.omit({
   created_at: true,
 });
 
-export type BiometricReadingInsert = z.infer<typeof BiometricReadingInsertSchema>;
+export type BiometricReadingInsert = z.infer<
+  typeof BiometricReadingInsertSchema
+>;
 
 // ── Daily recovery snapshot ───────────────────────────────────────────────────
 
@@ -63,7 +65,9 @@ export const RecoverySnapshotInsertSchema = RecoverySnapshotSchema.omit({
   created_at: true,
 });
 
-export type RecoverySnapshotInsert = z.infer<typeof RecoverySnapshotInsertSchema>;
+export type RecoverySnapshotInsert = z.infer<
+  typeof RecoverySnapshotInsertSchema
+>;
 
 // ── Intra-session HR (Phase 4) ────────────────────────────────────────────────
 

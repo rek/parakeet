@@ -12,9 +12,7 @@ const mockFetchBadgeSessionLog = vi.hoisted(() => vi.fn(async () => null));
 const mockFetchBadgeProfile = vi.hoisted(() =>
   vi.fn(async () => ({ bodyweight_kg: 90 }))
 );
-const mockFetchCompletedSessionCount = vi.hoisted(() =>
-  vi.fn(async () => 0)
-);
+const mockFetchCompletedSessionCount = vi.hoisted(() => vi.fn(async () => 0));
 const mockFetchPreviousSession = vi.hoisted(() => vi.fn(async () => null));
 const mockFetchAllLiftE1RMs = vi.hoisted(() => vi.fn(async () => []));
 const mockFetchSorenessData = vi.hoisted(() =>

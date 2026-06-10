@@ -5,12 +5,12 @@ Authoring sources for the diet protocol catalog. Files here are the
 
 ## Files per protocol
 
-| File | Purpose |
-| --- | --- |
-| `<slug>.csv` | Food allowlist. Columns: `category,food,status,notes`. |
-| `<slug>.md` | Narrative prose. Seeded into `diet_protocols.description_md`. |
-| `<slug>_supplements.csv` | Structured supplements. Optional per protocol. |
-| `<slug>_lifestyle.csv` | Structured lifestyle components (compression, MLD, movement, sleep, stress). Optional. |
+| File                     | Purpose                                                                                |
+| ------------------------ | -------------------------------------------------------------------------------------- |
+| `<slug>.csv`             | Food allowlist. Columns: `category,food,status,notes`.                                 |
+| `<slug>.md`              | Narrative prose. Seeded into `diet_protocols.description_md`.                          |
+| `<slug>_supplements.csv` | Structured supplements. Optional per protocol.                                         |
+| `<slug>_lifestyle.csv`   | Structured lifestyle components (compression, MLD, movement, sleep, stress). Optional. |
 
 Currently: `keto.*` and `rad.*`. See [diets.md](./diets.md) for the index.
 
@@ -77,6 +77,7 @@ slug,name,category,frequency,description,rationale,sort_order
 ## Research + refinement loop
 
 1. **Seed** into local Supabase:
+
    ```bash
    # Daily research loop (CSV/MD edits, no schema change):
    npm run db:seed:diet
@@ -87,6 +88,7 @@ slug,name,category,frequency,description,rationale,sort_order
    npm run db:types            # regen supabase/types.ts
    nx typecheck parakeet       # verify types resolve
    ```
+
 2. **Query** — run research SQL against the DB (see
    [research-queries.sql](./research-queries.sql)). Examples: cross-protocol
    diffs, category coverage, foods present in only one protocol.
@@ -94,7 +96,7 @@ slug,name,category,frequency,description,rationale,sort_order
    reclassify `yes → caution`, split a vague row, update rationale prose.
 4. **Re-seed** and re-query. Seed script is idempotent and prunes rows
    removed from the authoring source.
-5. **Commit** with a message explaining *why* (e.g.
+5. **Commit** with a message explaining _why_ (e.g.
    `diet: move whey to caution on rad — IGF-1 concern, per <source>`).
    Git history is the refinement log.
 

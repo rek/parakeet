@@ -23,11 +23,11 @@ Logging these exercises as weight+reps creates noise in session history, confuse
 
 ## Exercise Types
 
-| Type | Description | Examples |
-|---|---|---|
-| `weighted` | Loaded exercise — weight is meaningful | Romanian DL, Dumbbell Curl, Lat Pulldown, Good Mornings |
-| `bodyweight` | Body-weight movement — no external load by default | Pull-ups, Dips, Push-ups, Pistol Squat, Nordic Hamstring Curl |
-| `timed` | Conditioning/cardio — measured by duration or output, not reps | Assault Bike 5 mins, Sled (if timed), Farmer's Carry |
+| Type         | Description                                                    | Examples                                                      |
+| ------------ | -------------------------------------------------------------- | ------------------------------------------------------------- |
+| `weighted`   | Loaded exercise — weight is meaningful                         | Romanian DL, Dumbbell Curl, Lat Pulldown, Good Mornings       |
+| `bodyweight` | Body-weight movement — no external load by default             | Pull-ups, Dips, Push-ups, Pistol Squat, Nordic Hamstring Curl |
+| `timed`      | Conditioning/cardio — measured by duration or output, not reps | Assault Bike 5 mins, Sled (if timed), Farmer's Carry          |
 
 ## User Experience
 

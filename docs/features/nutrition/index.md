@@ -3,6 +3,7 @@ feature: nutrition
 status: done
 modules: [nutrition]
 ---
+
 # Nutrition
 
 Lipedema / RAD / keto diet protocol catalog — foods, supplements,
@@ -19,14 +20,14 @@ See the canonical handoff: **[gh#199](https://github.com/rek/parakeet/issues/199
 
 ## Specs
 
-| Spec | Status | Concern |
-| --- | --- | --- |
-| [spec-data-layer.md](./spec-data-layer.md) | done | CSV/MD source of truth, 3 migrations, seed pipeline, parsers + tests |
-| [spec-ui.md](./spec-ui.md) | done | 6-tab screen composition, markdown rendering, source extraction |
-| [spec-evidence-calibration.md](./spec-evidence-calibration.md) | done | A/B/C grading, 2025 scoping review calibration, Lundanes 2024 RCT as primary |
-| [spec-nepal-sourcing.md](./spec-nepal-sourcing.md) | done | Daraz brand confirmations, iHerb fallback list, tree-nut-allergy gotcha |
-| [spec-prod-push.md](./spec-prod-push.md) | done | Unified env-driven seed script, migration push, seeder dedupe fix |
-| [spec-macro-targets.md](./spec-macro-targets.md) | done | Macro-target pure fn + hook + Overview card; USDA SR Legacy import; profile body-comp fields; `diet_food_nutrition` table |
+| Spec                                                           | Status | Concern                                                                                                                   |
+| -------------------------------------------------------------- | ------ | ------------------------------------------------------------------------------------------------------------------------- |
+| [spec-data-layer.md](./spec-data-layer.md)                     | done   | CSV/MD source of truth, 3 migrations, seed pipeline, parsers + tests                                                      |
+| [spec-ui.md](./spec-ui.md)                                     | done   | 6-tab screen composition, markdown rendering, source extraction                                                           |
+| [spec-evidence-calibration.md](./spec-evidence-calibration.md) | done   | A/B/C grading, 2025 scoping review calibration, Lundanes 2024 RCT as primary                                              |
+| [spec-nepal-sourcing.md](./spec-nepal-sourcing.md)             | done   | Daraz brand confirmations, iHerb fallback list, tree-nut-allergy gotcha                                                   |
+| [spec-prod-push.md](./spec-prod-push.md)                       | done   | Unified env-driven seed script, migration push, seeder dedupe fix                                                         |
+| [spec-macro-targets.md](./spec-macro-targets.md)               | done   | Macro-target pure fn + hook + Overview card; USDA SR Legacy import; profile body-comp fields; `diet_food_nutrition` table |
 
 ## Phase-2 tracker
 

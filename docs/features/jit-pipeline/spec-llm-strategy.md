@@ -14,7 +14,9 @@ See `../core-engine/design-architecture.md` for the full architecture and the ra
 ### JITAdjustment Schema
 
 **`packages/shared-types/src/jit.schema.ts`:**
+
 - [x] Define and export `AuxOverrideSchema` and `JITAdjustmentSchema`:
+
   ```typescript
   // OpenAI Responses API (strict JSON-Schema mode) rejects `propertyNames`
   // (which `z.record(z.string(), …)` produces). Use an explicit array shape.
@@ -27,22 +29,21 @@ See `../core-engine/design-architecture.md` for the full architecture and the ra
   // `required`. Use `.nullable()` rather than `.optional()` for fields the
   // model may omit — model emits `null` instead of dropping the key.
   export const JITAdjustmentSchema = z.object({
-    intensityModifier: z.number().min(0.40).max(1.20),
+    intensityModifier: z.number().min(0.4).max(1.2),
     setModifier: z.number().int().min(-3).max(2),
     skipMainLift: z.boolean(),
     auxOverrides: z.array(AuxOverrideSchema),
     rationale: z.array(z.string().max(200)).max(5),
     confidence: z.enum(['high', 'medium', 'low']),
-    restAdjustments: z
-      .object({ mainLift: z.number().nullable() })
-      .nullable(),
-  })
-  export type JITAdjustment = z.infer<typeof JITAdjustmentSchema>
+    restAdjustments: z.object({ mainLift: z.number().nullable() }).nullable(),
+  });
+  export type JITAdjustment = z.infer<typeof JITAdjustmentSchema>;
   ```
 
 ### LLMJITGenerator Implementation
 
 **`packages/training-engine/src/generator/llm-jit-generator.ts`:**
+
 - [x] Implement `LLMJITGenerator` class implementing `JITGeneratorStrategy`
   - `name = 'llm' as const`
   - Calls `generateText` with `Output.object({ schema: JITAdjustmentSchema })` and `abortAfter(12000)` per attempt
@@ -53,11 +54,12 @@ See `../core-engine/design-architecture.md` for the full architecture and the ra
 - [x] `buildJITContext(input: JITInput)` — omits `warmupConfig` from context sent to LLM (warmup is always formula-generated via `resolveEffectiveWarmupProtocol()`, never LLM-adjusted; same override logic as formula path)
 - [x] `applyAdjustment` calls `buildVolumeTopUp` (engine-027 / gh#203) after building auxiliaryWork, capped at `MAX_AUX_EXERCISES` (5). Volume top-up is a hard constraint — when a muscle is below MEV, an exercise is appended; when core is below MEV one slot is reserved for it (no compound contributes to core). The LLM only adjusts the configured aux pair; it cannot bypass the top-up rule. See [`../volume/spec-augmentation.md`](../volume/spec-augmentation.md).
 - [x] `applyAdjustment` reads `restAdjustments` and `restAdjustments.mainLift` with `!= null` checks (nullable schema, not optional).
-- [x] (landed) **Clarify the contract between `llmRestSuggestion` and `restRecommendations.mainLift`.** Today the LLM rest delta is *both* written into every per-set `restRecommendations.mainLift` entry AND surfaced as a separate `llmRestSuggestion` string. The mobile rest timer consumes `restRecommendations`, so the delta is silently applied; the "AI suggested X min" chip then describes "what we did" instead of being an opt-in proposal. Either treat the chip as advisory + revert per-set rest to the formula default until accepted, or remove the chip and document that LLM rest is always applied. (Per-set rest is positional in `restRecommendations.mainLift` — intra-session add-backs will misalign indices; consider storing rest on each `PlannedSet` instead.)
+- [x] (landed) **Clarify the contract between `llmRestSuggestion` and `restRecommendations.mainLift`.** Today the LLM rest delta is _both_ written into every per-set `restRecommendations.mainLift` entry AND surfaced as a separate `llmRestSuggestion` string. The mobile rest timer consumes `restRecommendations`, so the delta is silently applied; the "AI suggested X min" chip then describes "what we did" instead of being an opt-in proposal. Either treat the chip as advisory + revert per-set rest to the formula default until accepted, or remove the chip and document that LLM rest is always applied. (Per-set rest is positional in `restRecommendations.mainLift` — intra-session add-backs will misalign indices; consider storing rest on each `PlannedSet` instead.)
 
 ### Integration with JITGeneratorRegistry
 
 **`packages/training-engine/src/generator/jit-registry.ts`:**
+
 - [x] `getJITGenerator(strategy: JITStrategyName, isOnline: boolean)` — returns appropriate generator
   - `'formula'` → `FormulaJITGenerator`
   - `'llm'` → `LLMJITGenerator`
@@ -75,11 +77,10 @@ See `../core-engine/design-architecture.md` for the full architecture and the ra
 ### AI Proxy Path Handling
 
 **`supabase/functions/ai-proxy/index.ts`:**
+
 - [x] Strip whichever prefix the Supabase Edge runtime presents:
   ```ts
-  const pathAfterProxy = url.pathname
-    .replace(/^\/functions\/v1\/ai-proxy/, '')
-    .replace(/^\/ai-proxy/, '');
+  const pathAfterProxy = url.pathname.replace(/^\/functions\/v1\/ai-proxy/, '').replace(/^\/ai-proxy/, '');
   ```
   Inside the function, `url.pathname` arrives as `/ai-proxy/<rest>` (function-name prefix only); the older `/functions/v1/ai-proxy/<rest>` form is also accepted for completeness.
 - [x] Always forward to OpenAI under `/v1/<path>`. AI SDK v6 (Responses API) calls `${baseURL}/responses`, so the proxy must prefix `/v1/` when missing.
@@ -89,11 +90,13 @@ See `../core-engine/design-architecture.md` for the full architecture and the ra
 ### Engine Error Reporter
 
 **`packages/training-engine/src/ai/error-reporter.ts`:**
+
 - [x] Engine packages cannot import the app's Sentry helper directly. The app calls `configureEngineErrorReporter(...)` at bootstrap, and the engine forwards every caught error via `reportEngineError(err, ctx)`. `LLMJITGenerator`, `JudgeReviewer`, `CalibrationReviewer`, and the Hybrid logger path all use it.
 
 ### Unit Tests
 
 **`packages/training-engine/src/generator/__tests__/llm-jit-generator.test.ts`:**
+
 - [x] Valid LLM response → adjustment applied correctly to base weight
 - [x] Timeout → fallback to formula, `jit_strategy === 'formula_fallback'`
 - [x] Zod parse failure (intensityModifier=0.10, below 0.40 floor) → fallback to formula

@@ -1,7 +1,7 @@
 import { StyleSheet, TouchableOpacity } from 'react-native';
 
-import { useFeatureEnabled } from '@modules/feature-flags';
 import { Ionicons } from '@expo/vector-icons';
+import { useFeatureEnabled } from '@modules/feature-flags';
 import { useRouter } from 'expo-router';
 
 import { spacing } from '../../../theme';

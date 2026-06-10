@@ -1,5 +1,6 @@
 import { estimateOneRepMax_Epley } from '@parakeet/training-engine';
 import { describe, expect, it, vi } from 'vitest';
+
 import { inferSource, resolve1Rm } from './lifter-maxes';
 
 // Mock the data repository to prevent pulling in the Supabase/react-native chain.

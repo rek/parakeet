@@ -17,7 +17,11 @@ vi.mock('@platform/supabase', () => ({
   typedSupabase: { from: fromMock },
 }));
 
-function createChain(result: { data: unknown; error: unknown; count?: number }) {
+function createChain(result: {
+  data: unknown;
+  error: unknown;
+  count?: number;
+}) {
   const chain = {
     select: vi.fn(),
     insert: vi.fn(),
@@ -202,7 +206,9 @@ describe('getRehabCapHistory', () => {
 
     expect(chain.eq).toHaveBeenCalledWith('user_id', 'u1');
     expect(chain.range).toHaveBeenCalledWith(0, 19);
-    expect(chain.order).toHaveBeenCalledWith('started_at', { ascending: false });
+    expect(chain.order).toHaveBeenCalledWith('started_at', {
+      ascending: false,
+    });
     expect(result).toEqual({ items: [], total: 0 });
   });
 

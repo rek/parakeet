@@ -5,7 +5,6 @@ import { useFeatureEnabled } from '@modules/feature-flags';
 
 import { radii, spacing, typography } from '../../../theme';
 import { useTheme } from '../../../theme/ThemeContext';
-
 import { RecordVideoSheet } from './RecordVideoSheet';
 
 /**

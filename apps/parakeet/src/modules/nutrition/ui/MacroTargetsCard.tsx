@@ -19,11 +19,7 @@ import type { DietProtocolSlug } from '../lib/macro-targets';
  * `low_confidence`, which surfaces here as a "rough estimate" badge
  * and a CTA to complete the profile.
  */
-export function MacroTargetsCard({
-  protocol,
-}: {
-  protocol: DietProtocolSlug;
-}) {
+export function MacroTargetsCard({ protocol }: { protocol: DietProtocolSlug }) {
   const { colors } = useTheme();
   const styles = useMemo(() => buildStyles(colors), [colors]);
   const { target, missing, isLoading } = useMacroTargets(protocol);
@@ -41,8 +37,8 @@ export function MacroTargetsCard({
             color={colors.textTertiary}
           />
           <Text style={styles.emptyText}>
-            Add {humanizeMissing(missing)} in your profile to see daily
-            macro targets.
+            Add {humanizeMissing(missing)} in your profile to see daily macro
+            targets.
           </Text>
         </View>
       </View>
@@ -119,13 +115,15 @@ function MacroStat({
 
 function humanizeMissing(missing: string[]): string {
   const readable = missing.map((m) =>
-    m === 'bodyweight_kg' ? 'bodyweight' : 'biological sex',
+    m === 'bodyweight_kg' ? 'bodyweight' : 'biological sex'
   );
   if (readable.length === 1) return readable[0];
   return readable.slice(0, -1).join(', ') + ' and ' + readable.at(-1);
 }
 
-function describeMethod(method: 'katch_mcardle' | 'mifflin_st_jeor' | 'fallback'): string {
+function describeMethod(
+  method: 'katch_mcardle' | 'mifflin_st_jeor' | 'fallback'
+): string {
   if (method === 'katch_mcardle') return 'Katch-McArdle';
   if (method === 'mifflin_st_jeor') return 'Mifflin-St Jeor';
   return 'Bodyweight estimate';

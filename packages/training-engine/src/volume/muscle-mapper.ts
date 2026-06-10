@@ -31,9 +31,7 @@ const LIFT_MUSCLES: Record<string, MuscleContribution[]> = {
  * (e.g. "Pec Deck", "Cable Fly") that don't appear in EXERCISE_CATALOG.
  * Each entry's muscles are credited at contribution 1.0.
  */
-export type CustomMuscleMap = Readonly<
-  Record<string, readonly MuscleGroup[]>
->;
+export type CustomMuscleMap = Readonly<Record<string, readonly MuscleGroup[]>>;
 
 /**
  * Build a {@link MuscleMapper} closed over a user-specific custom muscle map.

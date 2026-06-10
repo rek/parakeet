@@ -12,12 +12,12 @@ import {
   computeKneeAngle,
 } from './angle-calculator';
 import { computeBarToShinDistance } from './bar-shin-distance';
+import { computeBarTiltSeries } from './bar-tilt';
 import {
   computeConcentricVelocity,
   computeVelocityLoss,
   estimateRirFromVelocityLoss,
 } from './bar-velocity';
-import { computeBarTiltSeries } from './bar-tilt';
 import { computeChestTouchGap } from './bench-chest-touch';
 import { detectButtWink } from './butt-wink-detector';
 import { detectSquatDepth } from './depth-detector';

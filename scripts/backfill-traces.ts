@@ -9,6 +9,7 @@
  */
 
 import { createClient } from '@supabase/supabase-js';
+
 import { generateJITSessionWithTrace } from '../../packages/training-engine/src/generator/jit-session-generator';
 import type { JITInput } from '../../packages/training-engine/src/generator/jit-session-generator';
 
@@ -48,7 +49,9 @@ Get the service key from: npx supabase status  (the "Secret" key)
   const { count, error: countError } = await supabase
     .from('sessions')
     .select('*', { count: 'exact', head: true });
-  console.log(`Total sessions visible: ${count ?? 0}${countError ? ` (error: ${countError.message})` : ''}`);
+  console.log(
+    `Total sessions visible: ${count ?? 0}${countError ? ` (error: ${countError.message})` : ''}`
+  );
 
   // Fetch all sessions with a snapshot, filter in JS to avoid filter quirks.
   const { data: allSessions, error } = await supabase

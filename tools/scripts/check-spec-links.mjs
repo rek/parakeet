@@ -21,7 +21,6 @@
  *   [code→spec] dangling spec     code points at missing spec
  *   [coverage]  unlinked module   module has no @spec headers (advisory)
  */
-
 import fs from 'node:fs';
 import path from 'node:path';
 
@@ -82,8 +81,9 @@ function resolveCodeRef(ref) {
 
 // ---- spec → code ----
 
-const specFiles = walk(SPEC_GLOB_DIRS[0], (p) =>
-  /\/spec-[^/]+\.md$/.test(p) && !p.includes('/_TEMPLATE/'),
+const specFiles = walk(
+  SPEC_GLOB_DIRS[0],
+  (p) => /\/spec-[^/]+\.md$/.test(p) && !p.includes('/_TEMPLATE/')
 );
 
 const PATH_EXT = /\.(ts|tsx|js|jsx|mjs|md|sql|json|toml)$/;
@@ -120,7 +120,7 @@ for (const spec of specFiles) {
     if (symbol && /\.(ts|tsx|js|jsx|mjs)$/.test(filePath)) {
       const src = fs.readFileSync(filePath, 'utf8');
       const symbolRegex = new RegExp(
-        `\\b${symbol.replace(/[.*+?^${}()|[\\]\\\\]/g, '\\\\$&')}\\b`,
+        `\\b${symbol.replace(/[.*+?^${}()|[\\]\\\\]/g, '\\\\$&')}\\b`
       );
       if (!symbolRegex.test(src)) {
         specToCodeIssues.push({
@@ -140,7 +140,7 @@ for (const spec of specFiles) {
 const codeFiles = [];
 for (const root of CODE_ROOTS) {
   codeFiles.push(
-    ...walk(root, (p) => /\.(ts|tsx|mjs)$/.test(p) && !p.endsWith('.d.ts')),
+    ...walk(root, (p) => /\.(ts|tsx|mjs)$/.test(p) && !p.endsWith('.d.ts'))
   );
 }
 
@@ -151,7 +151,8 @@ for (const file of codeFiles) {
   const moduleMatch = rel.match(/apps\/parakeet\/src\/modules\/([^/]+)\//);
   if (moduleMatch) {
     const mod = moduleMatch[1];
-    if (!moduleCoverage.has(mod)) moduleCoverage.set(mod, { files: 0, linked: 0 });
+    if (!moduleCoverage.has(mod))
+      moduleCoverage.set(mod, { files: 0, linked: 0 });
     moduleCoverage.get(mod).files++;
   }
 
@@ -198,22 +199,28 @@ function print(title, items, formatter) {
   for (const it of items) console.log('  ' + formatter(it));
 }
 
-print('[spec→code] issues', specToCodeIssues, (it) =>
-  `${it.spec}:${it.line}  ${it.kind}: ${it.ref}${it.warn ? '  (warn)' : ''}`,
+print(
+  '[spec→code] issues',
+  specToCodeIssues,
+  (it) =>
+    `${it.spec}:${it.line}  ${it.kind}: ${it.ref}${it.warn ? '  (warn)' : ''}`
 );
-print('[code→spec] issues', codeToSpecIssues, (it) =>
-  `${it.file}  ${it.kind}: ${it.ref}`,
+print(
+  '[code→spec] issues',
+  codeToSpecIssues,
+  (it) => `${it.file}  ${it.kind}: ${it.ref}`
 );
-print('[coverage] modules with zero @spec headers', coverageIssues, (it) =>
-  `${it.module}  (${it.files} files)`,
+print(
+  '[coverage] modules with zero @spec headers',
+  coverageIssues,
+  (it) => `${it.module}  (${it.files} files)`
 );
 
 const hardErrors =
-  specToCodeIssues.filter((i) => !i.warn).length +
-  codeToSpecIssues.length;
+  specToCodeIssues.filter((i) => !i.warn).length + codeToSpecIssues.length;
 
 console.log(
-  `\nsummary: ${specToCodeIssues.length} spec→code, ${codeToSpecIssues.length} code→spec, ${coverageIssues.length}/${moduleCoverage.size} modules unlinked`,
+  `\nsummary: ${specToCodeIssues.length} spec→code, ${codeToSpecIssues.length} code→spec, ${coverageIssues.length}/${moduleCoverage.size} modules unlinked`
 );
 
 if (strict && hardErrors > 0) {

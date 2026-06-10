@@ -21,7 +21,9 @@ export function useHistoryScreen(weeks: number) {
   const sessionsQuery = useQuery(
     queryOptions({
       queryKey: ['session', 'completed', user?.id, 0, 20] as const,
-      queryFn: user?.id ? () => getCompletedSessions(user.id, 0, 20) : skipToken,
+      queryFn: user?.id
+        ? () => getCompletedSessions(user.id, 0, 20)
+        : skipToken,
     })
   );
 
@@ -39,10 +41,18 @@ export function useHistoryScreen(weeks: number) {
     })
   );
 
-  const volumeQuery = useQuery(historyQueries.weeklySetsPerLift(user?.id, weeks));
-  const volumeKgQuery = useQuery(historyQueries.weeklyVolumeKg(user?.id, weeks));
-  const heaviestQuery = useQuery(historyQueries.weeklyHeaviest(user?.id, weeks));
-  const reviewedProgramIdsQuery = useQuery(historyQueries.reviewedProgramIds(user?.id));
+  const volumeQuery = useQuery(
+    historyQueries.weeklySetsPerLift(user?.id, weeks)
+  );
+  const volumeKgQuery = useQuery(
+    historyQueries.weeklyVolumeKg(user?.id, weeks)
+  );
+  const heaviestQuery = useQuery(
+    historyQueries.weeklyHeaviest(user?.id, weeks)
+  );
+  const reviewedProgramIdsQuery = useQuery(
+    historyQueries.reviewedProgramIds(user?.id)
+  );
 
   const isLoading = trendsQuery.isLoading || sessionsQuery.isLoading;
   const isError =

@@ -64,8 +64,7 @@ export async function getCurrentCycleContext(
   const lastStartMs = new Date(config.last_period_start).getTime();
   if (!Number.isNaN(lastStartMs)) {
     const ageMs = Date.now() - lastStartMs;
-    const staleThresholdMs =
-      2 * config.cycle_length_days * 24 * 60 * 60 * 1000;
+    const staleThresholdMs = 2 * config.cycle_length_days * 24 * 60 * 60 * 1000;
     if (ageMs > staleThresholdMs) return null;
   }
 

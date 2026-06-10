@@ -1,15 +1,11 @@
 // @spec docs/features/workout-templates/spec-schema.md
-import {
-  useMutation,
-  useQuery,
-  useQueryClient,
-} from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
+import { workoutTemplatesQueries } from '../data/workout-templates.queries';
 import {
   replaceWorkoutTemplateItems,
   updateWorkoutTemplate,
 } from '../data/workout-templates.repository';
-import { workoutTemplatesQueries } from '../data/workout-templates.queries';
 import type {
   UpdateWorkoutTemplateInput,
   WorkoutTemplateItemInput,

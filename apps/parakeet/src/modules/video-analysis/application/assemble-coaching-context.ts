@@ -145,7 +145,8 @@ export function assembleCoachingContext({
   return {
     analysis,
     lift,
-    sagittalConfidence: sagittalConfidence ?? analysis.sagittalConfidence ?? 0.8,
+    sagittalConfidence:
+      sagittalConfidence ?? analysis.sagittalConfidence ?? 0.8,
     weightKg,
     oneRmKg,
     // Prefer set-level RPE when available (more precise for this video's context).

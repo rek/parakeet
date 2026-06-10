@@ -10,6 +10,7 @@ import {
   getAuxiliaryPools,
   getCurrentOneRmKg,
 } from '@modules/program';
+import { getActiveRehabCapForLift } from '@modules/rehab-mode';
 import {
   getDaysSinceLastSession,
   getProfileSex,
@@ -23,7 +24,6 @@ import {
   getUserRestOverrides,
   getWarmupConfig,
 } from '@modules/settings';
-import { getActiveRehabCapForLift } from '@modules/rehab-mode';
 import { getMrvMevConfig } from '@modules/training-volume';
 import {
   BlockNumberSchema,
@@ -69,7 +69,6 @@ import { firstFromJoin } from '@shared/utils/joins';
 import { weightGramsToKg } from '@shared/utils/weight';
 
 import { fetchModifierCalibrations } from '../data/calibration.repository';
-
 import {
   fetchActiveDisruptions,
   fetchAuxHistory,
@@ -267,15 +266,17 @@ export async function runJITForSession(
       : rotationDefaults[1],
   ];
 
-  const [recentData, recentAuxExercises, activeRehabCapRow] = await Promise.all([
-    fetchRecentSessionLogsForLift(userId, lift, 6),
-    // 4 sessions ≈ slightly more than one full S/B/D rotation; scorer
-    // penalty decays linearly so older entries clear naturally (GH#211).
-    fetchRecentAuxExerciseNames(userId, 4),
-    // Rehab Mode (GH#220): active cap for the current lift, if any. Null when
-    // no cap is active; the engine treats null/undefined the same.
-    getActiveRehabCapForLift(userId, lift),
-  ]);
+  const [recentData, recentAuxExercises, activeRehabCapRow] = await Promise.all(
+    [
+      fetchRecentSessionLogsForLift(userId, lift, 6),
+      // 4 sessions ≈ slightly more than one full S/B/D rotation; scorer
+      // penalty decays linearly so older entries clear naturally (GH#211).
+      fetchRecentAuxExerciseNames(userId, 4),
+      // Rehab Mode (GH#220): active cap for the current lift, if any. Null when
+      // no cap is active; the engine treats null/undefined the same.
+      getActiveRehabCapForLift(userId, lift),
+    ]
+  );
   const activeRehabCap = activeRehabCapRow
     ? { lift, capKg: Number(activeRehabCapRow.cap_kg) }
     : undefined;
@@ -528,7 +529,8 @@ export async function runJITForSession(
     sleepQuality,
     energyLevel,
     weightIncrementKg,
-    recentAuxExercises: recentAuxExercises.length > 0 ? recentAuxExercises : undefined,
+    recentAuxExercises:
+      recentAuxExercises.length > 0 ? recentAuxExercises : undefined,
     cyclePhase,
     sessionIndex,
     totalSessionsThisWeek,
@@ -578,7 +580,8 @@ export async function runJITForSession(
     formulaOutput: JITOutput,
     llmOutput: JITOutput,
     divergence: unknown
-  ) => writeComparisonLog('hybrid', input, formulaOutput, llmOutput, divergence);
+  ) =>
+    writeComparisonLog('hybrid', input, formulaOutput, llmOutput, divergence);
 
   const generator = getJITGenerator(strategyOverride, true, hybridLogger);
   const jitOutput = await generator.generate(jitInput);
@@ -586,7 +589,8 @@ export async function runJITForSession(
   // Generate prescription trace from the same inputs. Re-runs the formula path
   // regardless of which strategy produced jitOutput — the trace explains the
   // deterministic formula reasoning. Cost: one extra formula pass (~1ms).
-  const { output: formulaOutput, trace } = generateJITSessionWithTrace(jitInput);
+  const { output: formulaOutput, trace } =
+    generateJITSessionWithTrace(jitInput);
   if (jitOutput.jit_strategy) {
     trace.strategy = jitOutput.jit_strategy;
   }

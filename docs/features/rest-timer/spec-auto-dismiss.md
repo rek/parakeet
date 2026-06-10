@@ -96,15 +96,15 @@ idle
 
 ```ts
 interface PostRestState {
-  pendingMainSetNumber: number | null   // set whose rest just ended
-  pendingAuxExercise: string | null
-  pendingAuxSetNumber: number | null
-  actualRestSeconds: number
-  liftStartedAt: number
-  plannedReps: number          // next set's planned reps (0-indexed: plannedSets[pendingMain])
-  plannedWeightKg: number | null  // next set's weight for context label
-  nextSetNumber: number | null    // set the user is about to do
-  resetSecondsRemaining: number | null
+  pendingMainSetNumber: number | null; // set whose rest just ended
+  pendingAuxExercise: string | null;
+  pendingAuxSetNumber: number | null;
+  actualRestSeconds: number;
+  liftStartedAt: number;
+  plannedReps: number; // next set's planned reps (0-indexed: plannedSets[pendingMain])
+  plannedWeightKg: number | null; // next set's weight for context label
+  nextSetNumber: number | null; // set the user is about to do
+  resetSecondsRemaining: number | null;
 }
 ```
 
@@ -117,6 +117,7 @@ interface PostRestState {
 ### handleLiftFailed(actualReps: number)
 
 For main lifts:
+
 - Marks `nextSetNumber` as complete with `reps_completed = actualReps, is_completed = true`
 - Queues RPE for `nextSetNumber`
 - Calls `recordSetFailure()` and `adaptRemainingPlan()`
@@ -124,19 +125,21 @@ For main lifts:
 ### PostRestOverlay (`modules/session/ui/PostRestOverlay.tsx`)
 
 Props:
+
 ```ts
 interface PostRestOverlayProps {
-  plannedReps: number
-  plannedWeightKg?: number | null
-  nextSetNumber?: number | null
-  onLiftComplete: () => void
-  onLiftFailed: (reps: number) => void
-  onReset15s: () => void
-  resetCountdown: number | null
+  plannedReps: number;
+  plannedWeightKg?: number | null;
+  nextSetNumber?: number | null;
+  onLiftComplete: () => void;
+  onLiftFailed: (reps: number) => void;
+  onReset15s: () => void;
+  resetCountdown: number | null;
 }
 ```
 
 Local state: `failedReps: number | null`
+
 - `null` → normal mode (Go lift! + Complete/Failed/Reset)
 - `number` → failed-reps-input mode (stepper + Confirm/Back)
 
@@ -144,24 +147,24 @@ Local state: `failedReps: number | null`
 
 ## Files Modified
 
-| File | Change |
-|------|--------|
-| `modules/session/model/types.ts` | Added `plannedWeightKg`, `nextSetNumber` to `PostRestState` |
+| File                                            | Change                                                                                                                                          |
+| ----------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
+| `modules/session/model/types.ts`                | Added `plannedWeightKg`, `nextSetNumber` to `PostRestState`                                                                                     |
 | `modules/session/hooks/useSetCompletionFlow.ts` | `handleTimerDone` clears RPE, fixes plannedReps index, adds context fields; `handleLiftFailed(actualReps)` marks set done with `rpe_actual: 10` |
-| `modules/session/ui/PostRestOverlay.tsx` | Added context label, `onLiftFailed(reps)` sig, failed-reps-input mode |
-| `modules/session/ui/RestTimer.tsx` | `autoHideOnExpiry` prop (fires `onDone` ~1.5s after overtime) |
-| `modules/session/ui/SetRow.tsx` | Added `isCompleted?` prop + one-way sync effect for store-driven completion |
-| `app/(tabs)/session/[sessionId].tsx` | Passes `plannedWeightKg`, `nextSetNumber` to PostRestOverlay; passes `isCompleted` to SetRow |
+| `modules/session/ui/PostRestOverlay.tsx`        | Added context label, `onLiftFailed(reps)` sig, failed-reps-input mode                                                                           |
+| `modules/session/ui/RestTimer.tsx`              | `autoHideOnExpiry` prop (fires `onDone` ~1.5s after overtime)                                                                                   |
+| `modules/session/ui/SetRow.tsx`                 | Added `isCompleted?` prop + one-way sync effect for store-driven completion                                                                     |
+| `app/(tabs)/session/[sessionId].tsx`            | Passes `plannedWeightKg`, `nextSetNumber` to PostRestOverlay; passes `isCompleted` to SetRow                                                    |
 
 ---
 
 ## Edge Cases
 
-| Scenario | Result |
-|---|---|
-| Timer expires while RPE still pending | RPE auto-cleared; PostRestOverlay appears cleanly |
-| User presses "Done resting" early | handleTimerDone fires; RPE cleared; PostRestOverlay appears |
-| Failed with 0 reps | − button disabled at 0; Confirm records 0 reps, marks set complete |
-| "Back" from failed mode | Returns to normal overlay, no store writes, no failure recorded |
-| Aux set failed | Logs rest only; no reps-input shown (aux failures don't trigger adaptation) |
-| Last set failed | No rest timer starts after; RPE queued; "Complete Workout" available |
+| Scenario                              | Result                                                                      |
+| ------------------------------------- | --------------------------------------------------------------------------- |
+| Timer expires while RPE still pending | RPE auto-cleared; PostRestOverlay appears cleanly                           |
+| User presses "Done resting" early     | handleTimerDone fires; RPE cleared; PostRestOverlay appears                 |
+| Failed with 0 reps                    | − button disabled at 0; Confirm records 0 reps, marks set complete          |
+| "Back" from failed mode               | Returns to normal overlay, no store writes, no failure recorded             |
+| Aux set failed                        | Logs rest only; no reps-input shown (aux failures don't trigger adaptation) |
+| Last set failed                       | No rest timer starts after; RPE queued; "Complete Workout" available        |

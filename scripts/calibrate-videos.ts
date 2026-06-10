@@ -13,14 +13,13 @@
  *   --dry-run           Print what would be written without writing
  *   --force             Overwrite existing snapshots
  */
-
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'fs';
 import { resolve } from 'path';
 
 // Relative import from script location to app module — no path aliases available
 import { analyzeVideoFrames } from '../apps/parakeet/src/modules/video-analysis/application/analyze-video';
-import { computeSagittalConfidence } from '../apps/parakeet/src/modules/video-analysis/lib/view-confidence';
 import type { PoseFrame } from '../apps/parakeet/src/modules/video-analysis/lib/pose-types';
+import { computeSagittalConfidence } from '../apps/parakeet/src/modules/video-analysis/lib/view-confidence';
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -148,7 +147,9 @@ function computeMetricSummary(
     if (values.length === 0) continue;
 
     summary[field] = {
-      mean: Math.round((values.reduce((s, v) => s + v, 0) / values.length) * 100) / 100,
+      mean:
+        Math.round((values.reduce((s, v) => s + v, 0) / values.length) * 100) /
+        100,
       min: Math.round(Math.min(...values) * 100) / 100,
       max: Math.round(Math.max(...values) * 100) / 100,
     };
@@ -212,8 +213,7 @@ function main() {
 
     const actual = {
       rep_count: result.reps.length,
-      sagittal_confidence:
-        Math.round(sagittalConfidence * 1000) / 1000,
+      sagittal_confidence: Math.round(sagittalConfidence * 1000) / 1000,
       analysis_version: result.analysisVersion,
       metric_summary: computeMetricSummary(reps),
       fault_types: faultTypes,
@@ -225,10 +225,8 @@ function main() {
       actual.rep_count >= video.expected.rep_count.min &&
       actual.rep_count <= video.expected.rep_count.max;
     const confidenceInRange =
-      actual.sagittal_confidence >=
-        video.expected.sagittal_confidence.min &&
-      actual.sagittal_confidence <=
-        video.expected.sagittal_confidence.max;
+      actual.sagittal_confidence >= video.expected.sagittal_confidence.min &&
+      actual.sagittal_confidence <= video.expected.sagittal_confidence.max;
     const withinRange = repInRange && confidenceInRange;
 
     const statusIcon = withinRange ? '✓' : '✗';
@@ -246,10 +244,7 @@ function main() {
     );
 
     // Write snapshot
-    const snapshotPath = resolve(
-      SNAPSHOTS_DIR,
-      `${video.id}.snapshot.json`
-    );
+    const snapshotPath = resolve(SNAPSHOTS_DIR, `${video.id}.snapshot.json`);
     if (!existsSync(snapshotPath) || force) {
       const snapshot: SnapshotFile = {
         videoId: video.id,
@@ -293,9 +288,7 @@ function main() {
     console.log(`\nDry run: would update ${updated} video(s) in manifest`);
   }
 
-  console.log(
-    `\nDone. ${updated} updated, ${skipped} skipped.`
-  );
+  console.log(`\nDone. ${updated} updated, ${skipped} skipped.`);
 }
 
 main();

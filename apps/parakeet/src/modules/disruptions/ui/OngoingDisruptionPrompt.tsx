@@ -2,8 +2,8 @@
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 import { palette, spacing, typography } from '../../../theme';
-import { useTheme } from '../../../theme/ThemeContext';
 import type { ColorScheme } from '../../../theme';
+import { useTheme } from '../../../theme/ThemeContext';
 import {
   DEFAULT_DISRUPTION_SHELF_LIFE_DAYS,
   DISRUPTION_SHELF_LIFE_DAYS,

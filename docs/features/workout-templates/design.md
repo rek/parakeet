@@ -27,6 +27,7 @@ that pushes people away from doing conditioning work at all.
 ### User Flows
 
 **Insertion (lifter mid-session):**
+
 1. Open in-progress session
 2. Tap "+ Add Workout"
 3. Pick a template (e.g. "HIIT — Bike/Ski/Row")
@@ -36,6 +37,7 @@ that pushes people away from doing conditioning work at all.
    template's per-item rest, not the user's default rest preference
 
 **Management (any authenticated user):**
+
 1. Settings → Workout Templates
 2. See the global library; tap one to edit, or "+ New" to create
 3. Edit: name, description, rounds; ordered item list (add/remove/reorder);
@@ -53,16 +55,16 @@ that pushes people away from doing conditioning work at all.
 
 ## Decisions (locked in via GH#214 discussion)
 
-| Decision | Choice |
-|---|---|
-| Session structure | Flat expansion. No new circuit/superset concept. |
-| Per-item rest | Durable — stored on each in-session entry. Also enables future "plan a session with different rest per exercise" generally. |
-| Template visibility | Global, shared across all users. |
-| Edit permissions | Wiki-style. Any authenticated user. |
-| Catalog reference | Stable slug in `workout_template_items.exercise_slug` (paired with display-name snapshot in `exercise`). Same pattern as `set_logs.exercise_slug` and `auxiliary_exercises.exercise_slug` — see GH#215. Catalog renames no longer require DB sweeps. |
-| Volume credit | Inherited from catalog `primary_muscles`. No override column. |
-| Skip-rounds mid-template | Deferred. |
-| `MAX_AUX_EXERCISES` cap | Templates exempt — cap is for JIT-selected aux only. |
+| Decision                 | Choice                                                                                                                                                                                                                                               |
+| ------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Session structure        | Flat expansion. No new circuit/superset concept.                                                                                                                                                                                                     |
+| Per-item rest            | Durable — stored on each in-session entry. Also enables future "plan a session with different rest per exercise" generally.                                                                                                                          |
+| Template visibility      | Global, shared across all users.                                                                                                                                                                                                                     |
+| Edit permissions         | Wiki-style. Any authenticated user.                                                                                                                                                                                                                  |
+| Catalog reference        | Stable slug in `workout_template_items.exercise_slug` (paired with display-name snapshot in `exercise`). Same pattern as `set_logs.exercise_slug` and `auxiliary_exercises.exercise_slug` — see GH#215. Catalog renames no longer require DB sweeps. |
+| Volume credit            | Inherited from catalog `primary_muscles`. No override column.                                                                                                                                                                                        |
+| Skip-rounds mid-template | Deferred.                                                                                                                                                                                                                                            |
+| `MAX_AUX_EXERCISES` cap  | Templates exempt — cap is for JIT-selected aux only.                                                                                                                                                                                                 |
 
 ## User Benefits
 

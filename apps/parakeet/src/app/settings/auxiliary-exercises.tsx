@@ -10,12 +10,12 @@ import {
 
 import { getPrimaryMuscles } from '@modules/program';
 import type { AuxiliaryPoolCategory } from '@modules/program';
-import { AddExerciseModal } from '@shared/ui/AddExerciseModal';
 import { useAuxiliaryPools } from '@modules/settings';
 import { MuscleChips } from '@modules/training-volume';
 import type { MuscleGroup } from '@parakeet/shared-types';
 import type { ExerciseType } from '@parakeet/training-engine';
 import { TRAINING_LIFTS } from '@shared/constants/training';
+import { AddExerciseModal } from '@shared/ui/AddExerciseModal';
 import { ExerciseName } from '@shared/ui/ExerciseName';
 import { getExerciseType } from '@shared/utils/exercise-lookup';
 import { router } from 'expo-router';
@@ -503,9 +503,7 @@ export default function AuxiliaryExercisesScreen() {
               isDirtyPool={!!dirtyPools[category]}
               initialMuscles={muscleMap}
               onPoolChange={(p) => {
-                setPools((prev) =>
-                  prev ? { ...prev, [category]: p } : prev
-                );
+                setPools((prev) => (prev ? { ...prev, [category]: p } : prev));
                 setDirtyPools((prev) => ({ ...prev, [category]: true }));
               }}
               onSavePool={(customMuscles, customTypes) =>

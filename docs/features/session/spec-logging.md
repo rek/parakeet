@@ -10,6 +10,7 @@ The live workout logging screen where users check off sets, adjust weights and r
 ## Tasks
 
 **`apps/parakeet/app/session/[sessionId].tsx`:**
+
 - On mount:
   1. Fetch session from Supabase — `planned_sets` already populated by JIT (run on soreness screen)
   2. Fetch warmup config for this lift and generate warmup sets via `generateWarmupSets()`
@@ -31,6 +32,7 @@ The live workout logging screen where users check off sets, adjust weights and r
   - "Complete Workout" sticky footer button (enabled after at least 1 set is checked)
 
 **`apps/parakeet/components/training/SetRow.tsx`:**
+
 - Props: `setNumber`, `plannedWeight`, `plannedReps`, `onUpdate: (actualWeight, actualReps, rpe) => void`
 - State: `actualWeight` (starts = plannedWeight), `actualReps` (starts = plannedReps), `rpe` (optional), `isCompleted`
 - Tap weight field → numeric keyboard with +/- 2.5 increment buttons
@@ -46,6 +48,7 @@ The live workout logging screen where users check off sets, adjust weights and r
 - See also [mobile-030-ad-hoc-auxiliary-exercises.md](./mobile-030-ad-hoc-auxiliary-exercises.md) for ad-hoc exercise logging
 
 **`apps/parakeet/app/session/complete.tsx`:**
+
 - Summary view after submitting:
   - Planned vs. actual volume bars
   - Completion percentage
@@ -54,6 +57,7 @@ The live workout logging screen where users check off sets, adjust weights and r
   - "Save & Finish" button → call `completeSession(sessionId, payload)` from `apps/parakeet/lib/sessions.ts`, navigate to `/(tabs)/today`
 
 **Note field (`apps/parakeet/components/training/SessionNotes.tsx`):**
+
 - Expandable text area at bottom of session screen
 - Auto-saved to sessionStore as user types
 

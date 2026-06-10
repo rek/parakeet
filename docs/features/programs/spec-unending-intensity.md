@@ -23,14 +23,14 @@ selection. Scheduled programs are unchanged.
 
 Evaluated in strict priority order. First matching rule wins.
 
-| Priority | Condition | Result |
-|----------|-----------|--------|
-| 1 | Deload week: `weekNumber % 4 === 0` | `'deload'` |
-| 2 | Max soreness across primary muscles ≥ 7 | `'rep'` |
-| 3 | Days since last session for this lift ≥ 10 | `'heavy'` |
-| 4 | Avg RPE of last 3 sessions for this lift ≥ 8.5 | `'explosive'` |
-| 5 | Would repeat last intensity type | next in `heavy → explosive → rep → heavy` |
-| 6 | Default | `'heavy'` |
+| Priority | Condition                                      | Result                                    |
+| -------- | ---------------------------------------------- | ----------------------------------------- |
+| 1        | Deload week: `weekNumber % 4 === 0`            | `'deload'`                                |
+| 2        | Max soreness across primary muscles ≥ 7        | `'rep'`                                   |
+| 3        | Days since last session for this lift ≥ 10     | `'heavy'`                                 |
+| 4        | Avg RPE of last 3 sessions for this lift ≥ 8.5 | `'explosive'`                             |
+| 5        | Would repeat last intensity type               | next in `heavy → explosive → rep → heavy` |
+| 6        | Default                                        | `'heavy'`                                 |
 
 **Null/missing signal treatment:**
 
@@ -52,13 +52,14 @@ Threshold source of truth: `docs/domain/periodization.md` §"Unending Intensity 
 
 All already in DB. No schema changes.
 
-| Signal | Existing function | Location |
-|--------|-------------------|----------|
-| Soreness per muscle | `getLatestSorenessRatings(userId)` | `session.repository.ts:287` |
-| Days since last session for lift | `fetchLastCompletedAtForLift(userId, lift)` | `session.repository.ts:587` |
-| Recent RPE + last intensity type | `getRecentLogsForLift(userId, lift, 3)` | `session.service.ts:564` (private) |
+| Signal                           | Existing function                           | Location                           |
+| -------------------------------- | ------------------------------------------- | ---------------------------------- |
+| Soreness per muscle              | `getLatestSorenessRatings(userId)`          | `session.repository.ts:287`        |
+| Days since last session for lift | `fetchLastCompletedAtForLift(userId, lift)` | `session.repository.ts:587`        |
+| Recent RPE + last intensity type | `getRecentLogsForLift(userId, lift, 3)`     | `session.service.ts:564` (private) |
 
 Primary muscles per lift (source: `soreness-adjuster.ts:111`):
+
 - `squat` → `['quads', 'glutes', 'lower_back']`
 - `bench` → `['chest', 'triceps', 'shoulders']`
 - `deadlift` → `['hamstrings', 'glutes', 'lower_back', 'upper_back']`
@@ -82,17 +83,13 @@ function to `packages/training-engine/src/cube/scheduler.ts`.
 export interface IntensityTypeSignals {
   primaryMuscleSoreness: number | null;
   daysSinceLastSession: number | null;
-  recentRpe: number[];                   // RPEs for last ≤3 sessions, empty = no data
+  recentRpe: number[]; // RPEs for last ≤3 sessions, empty = no data
   lastIntensityType: IntensityType | null;
 }
 
 const INTENSITY_ROTATION: IntensityType[] = ['heavy', 'explosive', 'rep'];
 
-export function selectIntensityTypeForUnending(
-  lift: Lift,
-  weekNumber: number,
-  signals: IntensityTypeSignals
-): IntensityType {
+export function selectIntensityTypeForUnending(lift: Lift, weekNumber: number, signals: IntensityTypeSignals): IntensityType {
   const { primaryMuscleSoreness, daysSinceLastSession, recentRpe, lastIntensityType } = signals;
 
   // 1. Deload
@@ -132,16 +129,10 @@ fetching lift-specific signals, without duplicating the formula.
 ```typescript
 // Add after nextLiftAfter() (line 129), before nextUnendingSession()
 
-export function computeNextUnendingLift(input: {
-  sessionCounter: number;
-  trainingDaysPerWeek: number;
-  lastResolvedLift?: Lift | null;
-}): Lift {
+export function computeNextUnendingLift(input: { sessionCounter: number; trainingDaysPerWeek: number; lastResolvedLift?: Lift | null }): Lift {
   const { sessionCounter, trainingDaysPerWeek, lastResolvedLift } = input;
   const daysPerWeek = Math.max(1, trainingDaysPerWeek);
-  return lastResolvedLift
-    ? nextLiftAfter(lastResolvedLift)
-    : LIFTS[(sessionCounter % daysPerWeek) % LIFTS.length];
+  return lastResolvedLift ? nextLiftAfter(lastResolvedLift) : LIFTS[(sessionCounter % daysPerWeek) % LIFTS.length];
 }
 ```
 
@@ -154,15 +145,11 @@ export interface NextUnendingSessionInput {
   sessionCounter: number;
   trainingDaysPerWeek: number;
   lastResolvedLift?: Lift | null;
-  intensitySignals?: IntensityTypeSignals;   // NEW — triggers dynamic selection
+  intensitySignals?: IntensityTypeSignals; // NEW — triggers dynamic selection
 }
 
 // Updated intensity derivation (replaces lines 151-153)
-const intensityType: IntensityType = input.intensitySignals
-  ? selectIntensityTypeForUnending(lift, weekNumber, input.intensitySignals)
-  : isDeload
-    ? 'deload'
-    : getIntensityTypeForWeek(weekNumber, lift);
+const intensityType: IntensityType = input.intensitySignals ? selectIntensityTypeForUnending(lift, weekNumber, input.intensitySignals) : isDeload ? 'deload' : getIntensityTypeForWeek(weekNumber, lift);
 ```
 
 The CUBE fallback (`isDeload ? 'deload' : getIntensityTypeForWeek(...)`) is
@@ -204,49 +191,31 @@ describe('selectIntensityTypeForUnending', () => {
 
   // Rule 2
   it('soreness >= 7 → rep', () => {
-    expect(
-      selectIntensityTypeForUnending('squat', 1, { ...noSignals, primaryMuscleSoreness: 7 })
-    ).toBe('rep');
-    expect(
-      selectIntensityTypeForUnending('squat', 1, { ...noSignals, primaryMuscleSoreness: 6 })
-    ).not.toBe('rep'); // below threshold
+    expect(selectIntensityTypeForUnending('squat', 1, { ...noSignals, primaryMuscleSoreness: 7 })).toBe('rep');
+    expect(selectIntensityTypeForUnending('squat', 1, { ...noSignals, primaryMuscleSoreness: 6 })).not.toBe('rep'); // below threshold
   });
 
   // Rule 3
   it('days >= 10 → heavy', () => {
-    expect(
-      selectIntensityTypeForUnending('bench', 1, { ...noSignals, daysSinceLastSession: 10 })
-    ).toBe('heavy');
+    expect(selectIntensityTypeForUnending('bench', 1, { ...noSignals, daysSinceLastSession: 10 })).toBe('heavy');
   });
 
   // Rule 4
   it('avg RPE >= 8.5 → explosive', () => {
-    expect(
-      selectIntensityTypeForUnending('deadlift', 1, { ...noSignals, recentRpe: [9, 8, 9] })
-    ).toBe('explosive');
-    expect(
-      selectIntensityTypeForUnending('deadlift', 1, { ...noSignals, recentRpe: [8, 8, 8] })
-    ).not.toBe('explosive');
+    expect(selectIntensityTypeForUnending('deadlift', 1, { ...noSignals, recentRpe: [9, 8, 9] })).toBe('explosive');
+    expect(selectIntensityTypeForUnending('deadlift', 1, { ...noSignals, recentRpe: [8, 8, 8] })).not.toBe('explosive');
   });
 
   // Rule 5 — repeat prevention
   it('avoids repeating last intensity type', () => {
-    expect(
-      selectIntensityTypeForUnending('squat', 1, { ...noSignals, lastIntensityType: 'heavy' })
-    ).toBe('explosive');
-    expect(
-      selectIntensityTypeForUnending('squat', 1, { ...noSignals, lastIntensityType: 'explosive' })
-    ).toBe('rep');
-    expect(
-      selectIntensityTypeForUnending('squat', 1, { ...noSignals, lastIntensityType: 'rep' })
-    ).toBe('heavy');
+    expect(selectIntensityTypeForUnending('squat', 1, { ...noSignals, lastIntensityType: 'heavy' })).toBe('explosive');
+    expect(selectIntensityTypeForUnending('squat', 1, { ...noSignals, lastIntensityType: 'explosive' })).toBe('rep');
+    expect(selectIntensityTypeForUnending('squat', 1, { ...noSignals, lastIntensityType: 'rep' })).toBe('heavy');
   });
 
   // Rule 5 — deload as lastIntensityType is ignored
   it('lastIntensityType=deload treated as null (no repeat guard)', () => {
-    expect(
-      selectIntensityTypeForUnending('squat', 1, { ...noSignals, lastIntensityType: 'deload' })
-    ).toBe('heavy'); // falls through to default
+    expect(selectIntensityTypeForUnending('squat', 1, { ...noSignals, lastIntensityType: 'deload' })).toBe('heavy'); // falls through to default
   });
 
   // Rule 6
@@ -256,14 +225,10 @@ describe('selectIntensityTypeForUnending', () => {
 
   // Null safety
   it('null soreness does not trigger rule 2', () => {
-    expect(
-      selectIntensityTypeForUnending('squat', 1, { ...noSignals, primaryMuscleSoreness: null })
-    ).toBe('heavy');
+    expect(selectIntensityTypeForUnending('squat', 1, { ...noSignals, primaryMuscleSoreness: null })).toBe('heavy');
   });
   it('empty recentRpe does not trigger rule 4', () => {
-    expect(
-      selectIntensityTypeForUnending('squat', 1, { ...noSignals, recentRpe: [] })
-    ).toBe('heavy');
+    expect(selectIntensityTypeForUnending('squat', 1, { ...noSignals, recentRpe: [] })).toBe('heavy');
   });
 });
 ```
@@ -280,18 +245,12 @@ describe('selectIntensityTypeForUnending', () => {
 import { nextUnendingSession, type IntensityTypeSignals } from '@parakeet/training-engine';
 
 // Updated signature (add intensitySignals as last optional param)
-export async function appendNextUnendingSession(
-  program: UnendingProgramRef,
-  userId: string,
-  plannedDate: string,
-  lastResolvedLift?: Lift | null,
-  intensitySignals?: IntensityTypeSignals
-): Promise<void> {
+export async function appendNextUnendingSession(program: UnendingProgramRef, userId: string, plannedDate: string, lastResolvedLift?: Lift | null, intensitySignals?: IntensityTypeSignals): Promise<void> {
   const next = nextUnendingSession({
     sessionCounter: program.unending_session_counter,
     trainingDaysPerWeek: program.training_days_per_week,
     lastResolvedLift,
-    intensitySignals,           // NEW — passed through to engine
+    intensitySignals, // NEW — passed through to engine
   });
   // ... rest unchanged ...
 }
@@ -305,7 +264,9 @@ export async function appendNextUnendingSession(
 `apps/parakeet/src/modules/session/application/session.service.ts` (lines 501–547).
 
 Add to the `@parakeet/training-engine` import block:
+
 ```typescript
+import type { MuscleGroup } from '@parakeet/shared-types';
 import {
   // ... existing imports ...
   computeNextUnendingLift,
@@ -314,7 +275,6 @@ import {
   type IntensityTypeSignals,
   type SorenessLevel,
 } from '@parakeet/training-engine';
-import type { MuscleGroup } from '@parakeet/shared-types';
 ```
 
 Replace `generateNextUnendingSession` body (after `plannedDate` is computed,
@@ -331,31 +291,16 @@ const nextLift = computeNextUnendingLift({
 });
 
 // Fetch signals in parallel — all are independent of each other.
-const [sorenessRatings, lastCompletedAt, recentLogs] = await Promise.all([
-  getLatestSorenessRatings(userId),
-  fetchLastCompletedAtForLift(userId, nextLift),
-  getRecentLogsForLift(userId, nextLift, 3),
-]);
+const [sorenessRatings, lastCompletedAt, recentLogs] = await Promise.all([getLatestSorenessRatings(userId), fetchLastCompletedAtForLift(userId, nextLift), getRecentLogsForLift(userId, nextLift, 3)]);
 
-const primaryMuscleSoreness: number | null = sorenessRatings
-  ? getWorstSoreness(
-      getPrimaryMusclesForSession(nextLift),
-      sorenessRatings as Partial<Record<MuscleGroup, SorenessLevel>>
-    )
-  : null;
+const primaryMuscleSoreness: number | null = sorenessRatings ? getWorstSoreness(getPrimaryMusclesForSession(nextLift), sorenessRatings as Partial<Record<MuscleGroup, SorenessLevel>>) : null;
 
-const daysSinceLastSession: number | null = lastCompletedAt?.completed_at
-  ? Math.floor(
-      (Date.now() - new Date(lastCompletedAt.completed_at).getTime()) / 86_400_000
-    )
-  : null;
+const daysSinceLastSession: number | null = lastCompletedAt?.completed_at ? Math.floor((Date.now() - new Date(lastCompletedAt.completed_at).getTime()) / 86_400_000) : null;
 
 const intensitySignals: IntensityTypeSignals = {
   primaryMuscleSoreness,
   daysSinceLastSession,
-  recentRpe: recentLogs
-    .map((l) => l.actual_rpe)
-    .filter((r): r is number => r !== null),
+  recentRpe: recentLogs.map((l) => l.actual_rpe).filter((r): r is number => r !== null),
   lastIntensityType: recentLogs[0]?.intensity_type ?? null,
 };
 
@@ -365,7 +310,7 @@ try {
     userId,
     plannedDate,
     lastResolvedLift,
-    intensitySignals,          // NEW
+    intensitySignals // NEW
   );
 } catch (err: unknown) {
   // ... existing 23505 unique-constraint guard unchanged ...

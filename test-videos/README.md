@@ -47,6 +47,7 @@ After an intentional algorithm change:
 ## Regression Testing
 
 Videos marked `"calibrated": true` in the manifest get full regression testing:
+
 - **Exact match:** rep count, analysis version, sagittal confidence
 - **Tolerance-based snapshot comparison:** per-rep metrics compared within tolerances (angles +/-5 deg, distances +/-2cm, velocity/timing +/-10%, faults exact set match)
 

@@ -21,16 +21,16 @@ Replace the binary `'side' | 'front'` camera angle classification with a continu
 
 ## Design Decisions
 
-| # | Decision | Choice | Rationale |
-|---|----------|--------|-----------|
-| 1 | Classification model | `sagittalConfidence: number` (0–1) replaces `'side' \| 'front'` | 0 = pure front, 1 = pure side, 0.5 = 45°. Eliminates the binary cliff causing silent failures. |
-| 2 | Metric computation | Always compute all metrics; attach per-metric confidence | No more if/else gating. Every metric carries a confidence score. UI and LLM weight by confidence. |
-| 3 | Rep detection | Joint angle periodicity replaces hip Y periodicity | Joint angles are viewpoint-invariant. Knee 170°→90°→170° is a rep regardless of camera angle. PoseRAC approach (paper 2308.08632v2) without a trained model. |
-| 4 | Confidence formula | `sagittalConfidence = 1 - clamp(avgShoulderSeparation / 0.30, 0, 1)` | Normalizes to 0–1. 0.30 = max expected separation (full front view). Pure side → shoulders overlap → ~1.0. Pure front → separation ~0.25–0.30 → ~0.0. |
-| 5 | Per-metric confidence | Side-dependent: `sagittalConfidence`. Front-dependent: `1 - sagittalConfidence`. View-agnostic: `1.0`. | Simple and honest. Users and LLM see exactly how trustworthy each reading is. |
-| 6 | Storage | `sagittal_confidence real` replaces `camera_angle text` in DB. `VideoAnalysisResult.sagittalConfidence: number` replaces `cameraAngle`. Backwards compat: derived getter `>= 0.5 ? 'side' : 'front'` until coaching prompts are fully migrated. | Clean migration path. |
-| 7 | UI | Remove `CameraAnglePicker`. Replace with positioning guide: "For best results, film from the side." | Reduces friction. No wrong choice to make. |
-| 8 | Depth correction | `value / Math.sqrt(sagittalConfidence)` applied to depth/lean when `sagittalConfidence < 0.8` | Dividing undoes foreshortening (at 45° / confidence ~0.5, raw values are ~30% too small). Floor at 0.1 prevents extreme amplification. Forward lean capped at 90°. |
+| #   | Decision              | Choice                                                                                                                                                                                                                                          | Rationale                                                                                                                                                          |
+| --- | --------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| 1   | Classification model  | `sagittalConfidence: number` (0–1) replaces `'side' \| 'front'`                                                                                                                                                                                 | 0 = pure front, 1 = pure side, 0.5 = 45°. Eliminates the binary cliff causing silent failures.                                                                     |
+| 2   | Metric computation    | Always compute all metrics; attach per-metric confidence                                                                                                                                                                                        | No more if/else gating. Every metric carries a confidence score. UI and LLM weight by confidence.                                                                  |
+| 3   | Rep detection         | Joint angle periodicity replaces hip Y periodicity                                                                                                                                                                                              | Joint angles are viewpoint-invariant. Knee 170°→90°→170° is a rep regardless of camera angle. PoseRAC approach (paper 2308.08632v2) without a trained model.       |
+| 4   | Confidence formula    | `sagittalConfidence = 1 - clamp(avgShoulderSeparation / 0.30, 0, 1)`                                                                                                                                                                            | Normalizes to 0–1. 0.30 = max expected separation (full front view). Pure side → shoulders overlap → ~1.0. Pure front → separation ~0.25–0.30 → ~0.0.              |
+| 5   | Per-metric confidence | Side-dependent: `sagittalConfidence`. Front-dependent: `1 - sagittalConfidence`. View-agnostic: `1.0`.                                                                                                                                          | Simple and honest. Users and LLM see exactly how trustworthy each reading is.                                                                                      |
+| 6   | Storage               | `sagittal_confidence real` replaces `camera_angle text` in DB. `VideoAnalysisResult.sagittalConfidence: number` replaces `cameraAngle`. Backwards compat: derived getter `>= 0.5 ? 'side' : 'front'` until coaching prompts are fully migrated. | Clean migration path.                                                                                                                                              |
+| 7   | UI                    | Remove `CameraAnglePicker`. Replace with positioning guide: "For best results, film from the side."                                                                                                                                             | Reduces friction. No wrong choice to make.                                                                                                                         |
+| 8   | Depth correction      | `value / Math.sqrt(sagittalConfidence)` applied to depth/lean when `sagittalConfidence < 0.8`                                                                                                                                                   | Dividing undoes foreshortening (at 45° / confidence ~0.5, raw values are ~30% too small). Floor at 0.1 prevents extreme amplification. Forward lean capped at 90°. |
 
 ## Phase 1 — Joint-Angle Rep Detection
 
@@ -172,24 +172,24 @@ Phase 7 (calibration tests) ── depends on Phases 1-3, run after each phase t
 
 ## Files Changed
 
-| File | Change |
-|------|--------|
-| `lib/rep-detector.ts` | Replace Y-coordinate signal with joint angle signal |
-| `lib/angle-calculator.ts` | Add `computeElbowAngle` |
-| `lib/detect-camera-angle.ts` | Rename to `view-confidence.ts`, replace binary with continuous |
-| `lib/metrics-assembler.ts` | Remove if/else gates, always compute all metrics, apply correction factor |
-| `lib/fault-detector.ts` | Remove `cameraAngle` param, always detect, confidence-adjusted severity |
-| `lib/analysis-strategy.ts` | Update `FaultDetector` interface |
-| `lib/__tests__/calibration.test.ts` | Update assertions for sagittal confidence, remove angle gates |
-| `packages/shared-types/src/video-analysis.schema.ts` | Replace `cameraAngle` enum with `sagittalConfidence` number |
-| `modules/video-analysis/model/types.ts` | Update `SessionVideo` type |
-| `modules/video-analysis/data/video.repository.ts` | Update insert/read for new column |
-| `test-videos/manifest.json` | Replace `camera_angle` with `sagittal_confidence` ranges |
-| `ui/CameraAnglePicker.tsx` | Delete |
-| `ui/RecordVideoSheet.tsx` | Remove picker, add positioning guide |
-| `application/assemble-coaching-context.ts` | Pass `sagittalConfidence` to LLM context |
-| `packages/training-engine/src/coaching/form-coaching-prompt.ts` | Update system prompt |
-| Supabase migration | Add `sagittal_confidence`, drop `camera_angle` |
+| File                                                            | Change                                                                    |
+| --------------------------------------------------------------- | ------------------------------------------------------------------------- |
+| `lib/rep-detector.ts`                                           | Replace Y-coordinate signal with joint angle signal                       |
+| `lib/angle-calculator.ts`                                       | Add `computeElbowAngle`                                                   |
+| `lib/detect-camera-angle.ts`                                    | Rename to `view-confidence.ts`, replace binary with continuous            |
+| `lib/metrics-assembler.ts`                                      | Remove if/else gates, always compute all metrics, apply correction factor |
+| `lib/fault-detector.ts`                                         | Remove `cameraAngle` param, always detect, confidence-adjusted severity   |
+| `lib/analysis-strategy.ts`                                      | Update `FaultDetector` interface                                          |
+| `lib/__tests__/calibration.test.ts`                             | Update assertions for sagittal confidence, remove angle gates             |
+| `packages/shared-types/src/video-analysis.schema.ts`            | Replace `cameraAngle` enum with `sagittalConfidence` number               |
+| `modules/video-analysis/model/types.ts`                         | Update `SessionVideo` type                                                |
+| `modules/video-analysis/data/video.repository.ts`               | Update insert/read for new column                                         |
+| `test-videos/manifest.json`                                     | Replace `camera_angle` with `sagittal_confidence` ranges                  |
+| `ui/CameraAnglePicker.tsx`                                      | Delete                                                                    |
+| `ui/RecordVideoSheet.tsx`                                       | Remove picker, add positioning guide                                      |
+| `application/assemble-coaching-context.ts`                      | Pass `sagittalConfidence` to LLM context                                  |
+| `packages/training-engine/src/coaching/form-coaching-prompt.ts` | Update system prompt                                                      |
+| Supabase migration                                              | Add `sagittal_confidence`, drop `camera_angle`                            |
 
 ## Enables
 

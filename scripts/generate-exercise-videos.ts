@@ -14,6 +14,7 @@
 
 import * as fs from 'fs';
 import * as path from 'path';
+
 import { GoogleGenAI } from '@google/genai';
 
 // ---------------------------------------------------------------------------
@@ -50,7 +51,8 @@ const EXERCISES: Exercise[] = [
       'the chest at the bottom — full range of motion, no stopping short. It then drives the bar explosively ' +
       'back up to complete full lockout with arms fully extended and elbows locked. The movement then smoothly ' +
       'returns to the descent to complete the loop.',
-    cameraAngle: 'side profile view at bench height, showing the full bar path from chest to lockout',
+    cameraAngle:
+      'side profile view at bench height, showing the full bar path from chest to lockout',
   },
   {
     id: 'barbell_back_squat',
@@ -154,7 +156,8 @@ const EXERCISES: Exercise[] = [
       'The mascot sits in a leg press machine with feet shoulder-width on the platform. It releases the safeties, ' +
       'lowers the platform by bending the knees toward the chest, then presses the platform away to full leg ' +
       'extension without locking the knees. The movement loops smoothly.',
-    cameraAngle: 'side profile view showing the full range of motion on the leg press sled',
+    cameraAngle:
+      'side profile view showing the full range of motion on the leg press sled',
   },
   {
     id: 'hack_squat',
@@ -182,7 +185,8 @@ const EXERCISES: Exercise[] = [
       'The mascot lies on a flat bench, grips the barbell with hands shoulder-width apart. It lowers the bar ' +
       'to the lower chest with elbows tucked close to the body, then presses up to full lockout with arms ' +
       'fully extended. The movement loops smoothly.',
-    cameraAngle: 'side profile view at bench height, showing the full bar path from chest to lockout',
+    cameraAngle:
+      'side profile view at bench height, showing the full bar path from chest to lockout',
   },
   {
     id: 'dumbbell_incline_bench_press',
@@ -191,7 +195,8 @@ const EXERCISES: Exercise[] = [
       'The mascot lies on an incline bench set at 30-45 degrees, holding a dumbbell in each hand. ' +
       'It presses the dumbbells up from shoulder level to full lockout overhead, then lowers them back ' +
       'to the shoulders with control. The movement loops smoothly.',
-    cameraAngle: 'side profile view showing the full pressing arc on the incline',
+    cameraAngle:
+      'side profile view showing the full pressing arc on the incline',
   },
   {
     id: 'barbell_pause_bench_press',
@@ -200,7 +205,8 @@ const EXERCISES: Exercise[] = [
       'The mascot lies on a flat bench, lowers the barbell to the chest and holds a clear 2-second pause ' +
       'with the bar motionless on the chest, then presses up explosively to full lockout. ' +
       'The movement loops smoothly.',
-    cameraAngle: 'side profile view at bench height, showing the full bar path from chest to lockout',
+    cameraAngle:
+      'side profile view at bench height, showing the full bar path from chest to lockout',
   },
   {
     id: 'decline_bench_press',
@@ -208,7 +214,8 @@ const EXERCISES: Exercise[] = [
     formDescription:
       'The mascot lies on a decline bench with feet hooked under the pads. It lowers the barbell to the ' +
       'lower chest, then presses up to full lockout with arms extended. The movement loops smoothly.',
-    cameraAngle: 'side profile view showing the decline angle and full bar path',
+    cameraAngle:
+      'side profile view showing the decline angle and full bar path',
   },
   {
     id: 'barbell_incline_bench_press',
@@ -217,7 +224,8 @@ const EXERCISES: Exercise[] = [
       'The mascot lies on an incline bench set at 30-45 degrees, grips the barbell slightly wider than ' +
       'shoulder width. It lowers the bar to the upper chest, then presses up to full lockout. ' +
       'The movement loops smoothly.',
-    cameraAngle: 'side profile view showing the incline angle and full bar path',
+    cameraAngle:
+      'side profile view showing the incline angle and full bar path',
   },
   {
     id: 'dumbbell_fly',
@@ -235,7 +243,8 @@ const EXERCISES: Exercise[] = [
       'The mascot lies flat on the gym floor with knees bent, holding a barbell above the chest. ' +
       'It lowers the bar until the upper arms touch the floor, pauses briefly, then presses up to full ' +
       'lockout. The movement loops smoothly.',
-    cameraAngle: 'side profile view at floor level, showing the limited range of motion',
+    cameraAngle:
+      'side profile view at floor level, showing the limited range of motion',
   },
   {
     id: 'board_press',
@@ -244,7 +253,8 @@ const EXERCISES: Exercise[] = [
       'The mascot lies on a flat bench. A board rests on the chest. It lowers the barbell to the board, ' +
       'pauses briefly on contact, then presses up to full lockout. The shortened range of motion focuses ' +
       'on the lockout portion. The movement loops smoothly.',
-    cameraAngle: 'side profile view at bench height, showing the partial range of motion',
+    cameraAngle:
+      'side profile view at bench height, showing the partial range of motion',
   },
   {
     id: 'spoto_press',
@@ -253,7 +263,8 @@ const EXERCISES: Exercise[] = [
       'The mascot lies on a flat bench, lowers the barbell to roughly one inch above the chest and holds ' +
       'it motionless in the air, then presses up to full lockout. The bar never touches the chest. ' +
       'The movement loops smoothly.',
-    cameraAngle: 'side profile view at bench height, showing the hover pause above the chest',
+    cameraAngle:
+      'side profile view at bench height, showing the hover pause above the chest',
   },
   {
     id: 'one_inch_pause_bench',
@@ -292,7 +303,7 @@ const EXERCISES: Exercise[] = [
     id: 'barbell_curl',
     name: 'barbell curl',
     formDescription:
-      'The mascot stands upright holding a barbell at arm\'s length with an underhand grip. It curls the ' +
+      "The mascot stands upright holding a barbell at arm's length with an underhand grip. It curls the " +
       'bar up by bending the elbows, keeping the upper arms stationary, until the bar reaches shoulder height, ' +
       'then lowers it back down with control. The movement loops smoothly.',
   },
@@ -300,7 +311,7 @@ const EXERCISES: Exercise[] = [
     id: 'dumbbell_curl',
     name: 'dumbbell curl',
     formDescription:
-      'The mascot stands upright holding a dumbbell in each hand at arm\'s length. It curls both dumbbells ' +
+      "The mascot stands upright holding a dumbbell in each hand at arm's length. It curls both dumbbells " +
       'up simultaneously by bending the elbows, squeezing the biceps at the top, then lowers with control. ' +
       'The movement loops smoothly.',
   },
@@ -316,7 +327,7 @@ const EXERCISES: Exercise[] = [
     id: 'ez_bar_curl',
     name: 'EZ-bar curl',
     formDescription:
-      'The mascot stands upright holding an EZ curl bar at arm\'s length with an underhand angled grip. ' +
+      "The mascot stands upright holding an EZ curl bar at arm's length with an underhand angled grip. " +
       'It curls the bar up to shoulder height, squeezes the biceps, then lowers with control. ' +
       'The movement loops smoothly.',
   },
@@ -327,7 +338,8 @@ const EXERCISES: Exercise[] = [
       'The mascot assumes a push-up position with feet elevated on a bench and hands on the floor. ' +
       'It lowers the chest to the floor by bending the elbows, then pushes up to full arm extension. ' +
       'The movement loops smoothly.',
-    cameraAngle: 'side profile view showing the decline angle and full range of motion',
+    cameraAngle:
+      'side profile view showing the decline angle and full range of motion',
   },
   {
     id: 'diamond_pushups',
@@ -453,7 +465,7 @@ const EXERCISES: Exercise[] = [
     id: 'barbell_row',
     name: 'barbell row',
     formDescription:
-      'The mascot bends over at roughly 45 degrees with a flat back, holding a barbell at arm\'s length. ' +
+      "The mascot bends over at roughly 45 degrees with a flat back, holding a barbell at arm's length. " +
       'It rows the bar into the lower chest by driving the elbows back, squeezes the back, then lowers ' +
       'the bar with control. The movement loops smoothly.',
   },
@@ -512,7 +524,7 @@ const EXERCISES: Exercise[] = [
     formDescription:
       'The mascot stands over a kettlebell with feet shoulder-width apart. It hinges at the hips, grips ' +
       'the kettlebell handle, then drives through the hips and legs to stand tall with the bell hanging ' +
-      'at arm\'s length. It lowers it back to the floor. The movement loops smoothly.',
+      "at arm's length. It lowers it back to the floor. The movement loops smoothly.",
   },
   {
     id: 'good_mornings',
@@ -534,7 +546,7 @@ const EXERCISES: Exercise[] = [
     id: 'stiff_leg_deadlift',
     name: 'stiff-leg deadlift',
     formDescription:
-      'The mascot stands with a barbell at arm\'s length, legs nearly straight with only a slight knee bend. ' +
+      "The mascot stands with a barbell at arm's length, legs nearly straight with only a slight knee bend. " +
       'It hinges at the hips with a flat back, lowering the bar along the legs until a deep hamstring stretch, ' +
       'then drives the hips forward to full standing lockout. The movement loops smoothly.',
   },
@@ -669,7 +681,8 @@ const EXERCISES: Exercise[] = [
       'The mascot positions itself face-down on a hyperextension bench with hips on the pad and feet anchored. ' +
       'It lowers the torso toward the floor, then extends the back and hips to raise the torso in line with ' +
       'the legs. The movement loops smoothly.',
-    cameraAngle: 'side profile view showing the full range from flexion to extension',
+    cameraAngle:
+      'side profile view showing the full range from flexion to extension',
   },
   {
     id: 'single_leg_glute_bridge',
@@ -940,7 +953,8 @@ function parseArgs(): {
 }
 
 async function main(): Promise<void> {
-  const { dryRun, exerciseId, startFrom, force, limit, concurrency } = parseArgs();
+  const { dryRun, exerciseId, startFrom, force, limit, concurrency } =
+    parseArgs();
 
   if (!dryRun && !process.env.GOOGLE_AI_API_KEY) {
     console.error('Error: GOOGLE_AI_API_KEY environment variable is required');
@@ -975,9 +989,7 @@ async function main(): Promise<void> {
     for (const exercise of exercises) {
       console.log(`[${exercise.id}] ${exercise.name}`);
       console.log(`  Prompt:\n${buildPrompt(exercise)}\n`);
-      console.log(
-        `  Output: ${path.join(OUTPUT_DIR, `${exercise.id}.mp4`)}\n`
-      );
+      console.log(`  Output: ${path.join(OUTPUT_DIR, `${exercise.id}.mp4`)}\n`);
     }
     return;
   }
@@ -1031,7 +1043,10 @@ async function main(): Promise<void> {
         succeeded.push(result.value);
       } else {
         const id = batch[results.indexOf(result)].exercise.id;
-        const message = result.reason instanceof Error ? result.reason.message : String(result.reason);
+        const message =
+          result.reason instanceof Error
+            ? result.reason.message
+            : String(result.reason);
         console.log(`  ${id} FAILED: ${message}`);
         failed.push({ id, error: message });
       }

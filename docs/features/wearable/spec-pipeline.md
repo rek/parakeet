@@ -5,9 +5,9 @@
 **Phase**: 1 (everything except `RecoveryCard` UI in §11) + Phase 2 hand-off (JIT wiring in §10)
 **Owner**: any executor agent
 
-> **2026-05-06 update — §10 deferred.** Wearable fields are *not* spread into `JITInput` anymore. The current "first integration" path translates `recovery_snapshots` → subjective sleep/energy pills on the soreness screen via `modules/wearable/utils/prefill.ts`. Engine continues to use `getReadinessModifier`. §§1–9 (sync, baselines, recovery snapshot, hooks, settings) remain accurate. §11 (RecoveryCard UI) is superseded — see [spec-recovery-card.md](./spec-recovery-card.md).
+> **2026-05-06 update — §10 deferred.** Wearable fields are _not_ spread into `JITInput` anymore. The current "first integration" path translates `recovery_snapshots` → subjective sleep/energy pills on the soreness screen via `modules/wearable/utils/prefill.ts`. Engine continues to use `getReadinessModifier`. §§1–9 (sync, baselines, recovery snapshot, hooks, settings) remain accurate. §11 (RecoveryCard UI) is superseded — see [spec-recovery-card.md](./spec-recovery-card.md).
 >
-> **2026-05-11 update — Phase 1.5 contract.** GH#210 exposed three gaps in the prefill path that the original spec didn't cover. The contract is now formalised below in §9.5 *Phase 1.5 soreness-screen contract*. §6 *Foreground sync hook* has been updated to remove the initial-mount call (now owned by `useEnsureFreshSnapshot`) and to re-read `LAST_SYNC_KEY` from storage on every change event.
+> **2026-05-11 update — Phase 1.5 contract.** GH#210 exposed three gaps in the prefill path that the original spec didn't cover. The contract is now formalised below in §9.5 _Phase 1.5 soreness-screen contract_. §6 _Foreground sync hook_ has been updated to remove the initial-mount call (now owned by `useEnsureFreshSnapshot`) and to re-read `LAST_SYNC_KEY` from storage on every change event.
 
 ## What This Covers
 
@@ -54,19 +54,12 @@ apps/parakeet/src/modules/wearable/
 Wrap `react-native-health-connect` so the rest of the module never touches native types directly. Functions:
 
 ```typescript
-import {
-  initialize,
-  requestPermission,
-  getGrantedPermissions,
-  readRecords,
-  type Permission,
-  type RecordType,
-} from 'react-native-health-connect';
+import { getGrantedPermissions, initialize, readRecords, requestPermission, type Permission, type RecordType } from 'react-native-health-connect';
 
 const READ_PERMISSIONS: Permission[] = [
   { accessType: 'read', recordType: 'HeartRateVariabilityRmssd' },
   { accessType: 'read', recordType: 'RestingHeartRate' },
-  { accessType: 'read', recordType: 'HeartRate' },                // intra-session, Phase 4
+  { accessType: 'read', recordType: 'HeartRate' }, // intra-session, Phase 4
   { accessType: 'read', recordType: 'SleepSession' },
   { accessType: 'read', recordType: 'Steps' },
   { accessType: 'read', recordType: 'OxygenSaturation' },
@@ -93,13 +86,18 @@ export async function checkPermissions(): Promise<PermissionStatus>;
 // Read helpers — each returns normalised `{ value, recorded_at }` rows or sleep session shape.
 export async function readHrv(start: Date, end: Date): Promise<Array<{ value: number; recorded_at: string }>>;
 export async function readRestingHr(start: Date, end: Date): Promise<Array<{ value: number; recorded_at: string }>>;
-export async function readSleepSessions(start: Date, end: Date): Promise<Array<{
-  start: string;
-  end: string;
-  durationMin: number;
-  deepSleepPct: number;
-  remSleepPct: number;
-}>>;
+export async function readSleepSessions(
+  start: Date,
+  end: Date
+): Promise<
+  Array<{
+    start: string;
+    end: string;
+    durationMin: number;
+    deepSleepPct: number;
+    remSleepPct: number;
+  }>
+>;
 export async function readSteps(start: Date, end: Date): Promise<number>;
 export async function readSpO2(start: Date, end: Date): Promise<Array<{ value: number; recorded_at: string }>>;
 export async function readActiveMinutes(start: Date, end: Date): Promise<number>;
@@ -107,6 +105,7 @@ export async function readHeartRate(start: Date, end: Date): Promise<Array<{ val
 ```
 
 **Notes:**
+
 - All `value` fields are numbers in canonical units: HRV = ms (RMSSD), HR/RHR = BPM, sleep = minutes, SpO2 = percent.
 - `readSleepSessions` aggregates stage durations into percentages: `deepSleepPct = sum(deep stage durations) / total session duration * 100`.
 - Never `as any` on Health Connect types (per `feedback_zero_type_hacking.md`). If the library's types are incomplete, file an issue and commit a typed shim — don't inline cast.
@@ -117,10 +116,11 @@ export async function readHeartRate(start: Date, end: Date): Promise<Array<{ val
 **File:** `apps/parakeet/src/modules/wearable/application/baseline.service.ts`
 
 ```typescript
-import { fetchReadingsForBaseline } from '../data/biometric.repository';
 import type { BiometricType } from '@parakeet/shared-types';
 
-const MIN_DAYS_FOR_BASELINE = 5;     // 5-day warmup gate (design decision)
+import { fetchReadingsForBaseline } from '../data/biometric.repository';
+
+const MIN_DAYS_FOR_BASELINE = 5; // 5-day warmup gate (design decision)
 
 /**
  * Returns the mean of the best (highest) reading per day for the last `days` days.
@@ -130,11 +130,7 @@ const MIN_DAYS_FOR_BASELINE = 5;     // 5-day warmup gate (design decision)
  * is most rested. We approximate this by taking the lowest RHR and highest HRV
  * reading per day (typical morning physiology).
  */
-export async function computeBaseline(
-  userId: string,
-  type: BiometricType,
-  days: number
-): Promise<number | null> {
+export async function computeBaseline(userId: string, type: BiometricType, days: number): Promise<number | null> {
   const readings = await fetchReadingsForBaseline(userId, type, days);
   if (readings.length === 0) return null;
 
@@ -169,8 +165,8 @@ export function computePctChange(currentValue: number, baseline: number | null):
 **File:** `apps/parakeet/src/modules/wearable/application/recovery.service.ts`
 
 ```typescript
-import { computeReadinessScore } from '@parakeet/training-engine';
 import type { RecoverySnapshotInsert } from '@parakeet/shared-types';
+import { computeReadinessScore } from '@parakeet/training-engine';
 
 import { fetchLatestReading } from '../data/biometric.repository';
 import { upsertRecoverySnapshot } from '../data/recovery.repository';
@@ -180,64 +176,25 @@ const BASELINE_DAYS = 7;
 
 export type NonTrainingLoad = 0 | 1 | 2 | 3;
 
-export function deriveNonTrainingLoad(
-  steps: number | null,
-  activeMinutes: number | null
-): NonTrainingLoad {
-  const stepsLevel: NonTrainingLoad =
-    steps === null ? 0 :
-    steps > 15000 ? 3 :
-    steps >= 7000 ? 2 :
-    steps >= 3000 ? 1 :
-    0;
-  const activeLevel: NonTrainingLoad =
-    activeMinutes === null ? 0 :
-    activeMinutes > 60 ? 3 :
-    activeMinutes >= 30 ? 2 :
-    activeMinutes >= 15 ? 1 :
-    0;
+export function deriveNonTrainingLoad(steps: number | null, activeMinutes: number | null): NonTrainingLoad {
+  const stepsLevel: NonTrainingLoad = steps === null ? 0 : steps > 15000 ? 3 : steps >= 7000 ? 2 : steps >= 3000 ? 1 : 0;
+  const activeLevel: NonTrainingLoad = activeMinutes === null ? 0 : activeMinutes > 60 ? 3 : activeMinutes >= 30 ? 2 : activeMinutes >= 15 ? 1 : 0;
   return Math.max(stepsLevel, activeLevel) as NonTrainingLoad;
 }
 
-export async function computeAndStoreRecoverySnapshot(
-  userId: string
-): Promise<void> {
+export async function computeAndStoreRecoverySnapshot(userId: string): Promise<void> {
   const today = new Date().toISOString().slice(0, 10);
 
   // 1. Fetch today's latest readings + baselines in parallel.
-  const [
-    latestHrv,
-    latestRhr,
-    latestSpo2,
-    hrvBaseline,
-    rhrBaseline,
-    sleepReading,
-    stepsToday,
-    activeMinsToday,
-  ] = await Promise.all([
-    fetchLatestReading(userId, 'hrv_rmssd'),
-    fetchLatestReading(userId, 'resting_hr'),
-    fetchLatestReading(userId, 'spo2'),
-    computeBaseline(userId, 'hrv_rmssd', BASELINE_DAYS),
-    computeBaseline(userId, 'resting_hr', BASELINE_DAYS),
-    fetchLatestReading(userId, 'sleep_duration'),
-    fetchLatestReading(userId, 'steps'),
-    fetchLatestReading(userId, 'active_minutes'),
-  ]);
+  const [latestHrv, latestRhr, latestSpo2, hrvBaseline, rhrBaseline, sleepReading, stepsToday, activeMinsToday] = await Promise.all([fetchLatestReading(userId, 'hrv_rmssd'), fetchLatestReading(userId, 'resting_hr'), fetchLatestReading(userId, 'spo2'), computeBaseline(userId, 'hrv_rmssd', BASELINE_DAYS), computeBaseline(userId, 'resting_hr', BASELINE_DAYS), fetchLatestReading(userId, 'sleep_duration'), fetchLatestReading(userId, 'steps'), fetchLatestReading(userId, 'active_minutes')]);
 
   // 2. Sleep stage readings (deep + REM) — fetched alongside duration if persisted.
-  const [deepReading, remReading] = await Promise.all([
-    fetchLatestReading(userId, 'deep_sleep_pct'),
-    fetchLatestReading(userId, 'rem_sleep_pct'),
-  ]);
+  const [deepReading, remReading] = await Promise.all([fetchLatestReading(userId, 'deep_sleep_pct'), fetchLatestReading(userId, 'rem_sleep_pct')]);
 
   const hrvPctChange = latestHrv ? computePctChange(latestHrv.value, hrvBaseline) : null;
   const rhrPctChange = latestRhr ? computePctChange(latestRhr.value, rhrBaseline) : null;
 
-  const nonTrainingLoad = deriveNonTrainingLoad(
-    stepsToday?.value ?? null,
-    activeMinsToday?.value ?? null
-  );
+  const nonTrainingLoad = deriveNonTrainingLoad(stepsToday?.value ?? null, activeMinsToday?.value ?? null);
 
   const readinessScore = computeReadinessScore({
     hrvPctChange: hrvPctChange ?? undefined,
@@ -269,6 +226,7 @@ export async function computeAndStoreRecoverySnapshot(
 ```
 
 **Notes:**
+
 - `computeReadinessScore` is imported from `@parakeet/training-engine`. If Phase 1 ships without it (alternative ordering), inline `readiness_score: null` and remove the import.
 - Sleep stage percentages are persisted as separate readings (`deep_sleep_pct`, `rem_sleep_pct`) by the sync service — see §4. This simplifies querying in `recovery.service`.
 - SpO2 auto-disruption logic intentionally omitted here. See [spec-spo2-disruption.md](./spec-spo2-disruption.md) for the deferred design.
@@ -278,22 +236,11 @@ export async function computeAndStoreRecoverySnapshot(
 **File:** `apps/parakeet/src/modules/wearable/application/sync.service.ts`
 
 ```typescript
-import {
-  checkPermissions,
-  isHealthConnectAvailable,
-  readActiveMinutes,
-  readHrv,
-  readRestingHr,
-  readSleepSessions,
-  readSpO2,
-  readSteps,
-} from '../lib/health-connect';
 import { upsertBiometricReadings } from '../data/biometric.repository';
+import { checkPermissions, isHealthConnectAvailable, readActiveMinutes, readHrv, readRestingHr, readSleepSessions, readSpO2, readSteps } from '../lib/health-connect';
 import { computeAndStoreRecoverySnapshot } from './recovery.service';
 
-export type SyncResult =
-  | { synced: true; readingsInserted: number }
-  | { synced: false; reason: 'unavailable' | 'permission_denied' };
+export type SyncResult = { synced: true; readingsInserted: number } | { synced: false; reason: 'unavailable' | 'permission_denied' };
 
 export async function syncWearableData(userId: string): Promise<SyncResult> {
   if (!(await isHealthConnectAvailable())) {
@@ -308,14 +255,7 @@ export async function syncWearableData(userId: string): Promise<SyncResult> {
   const end = new Date();
   const start = new Date(end.getTime() - 24 * 60 * 60 * 1000);
 
-  const [hrv, rhr, spo2, sleeps, steps, activeMins] = await Promise.all([
-    readHrv(start, end),
-    readRestingHr(start, end),
-    readSpO2(start, end),
-    readSleepSessions(start, end),
-    readSteps(start, end),
-    readActiveMinutes(start, end),
-  ]);
+  const [hrv, rhr, spo2, sleeps, steps, activeMins] = await Promise.all([readHrv(start, end), readRestingHr(start, end), readSpO2(start, end), readSleepSessions(start, end), readSteps(start, end), readActiveMinutes(start, end)]);
 
   const readings = [
     ...hrv.map((r) => ({ type: 'hrv_rmssd' as const, value: r.value, recorded_at: r.recorded_at, source: 'health_connect' })),
@@ -338,6 +278,7 @@ export async function syncWearableData(userId: string): Promise<SyncResult> {
 ```
 
 **Error handling:**
+
 - Health Connect read errors throw — the foreground sync hook catches and `captureException`s.
 - Supabase write errors throw — caller decides retry. Per `feedback_always_capture_exceptions.md`: never silently swallow, never strip `captureException`.
 
@@ -356,15 +297,15 @@ Background→foreground sync. Mounted once in `RootLayoutNav` (Step 5). Does **n
 ```typescript
 import { useEffect } from 'react';
 import { AppState, type AppStateStatus } from 'react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 
-import { captureException } from '@platform/utils/captureException';
 import { useAuth } from '@modules/auth';
+import { captureException } from '@platform/utils/captureException';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import { syncWearableData } from '../application/sync.service';
 
 const LAST_SYNC_KEY = 'wearable_last_sync_ms';
-const MIN_SYNC_INTERVAL_MS = 5 * 60 * 1000;     // 5 minutes
+const MIN_SYNC_INTERVAL_MS = 5 * 60 * 1000; // 5 minutes
 
 export function useWearableSync(): void {
   const { user } = useAuth();
@@ -405,6 +346,7 @@ Mount once in `RootLayoutNav` (Step 5).
 
 ```typescript
 import { useEffect, useState } from 'react';
+
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import { checkPermissions, isHealthConnectAvailable } from '../lib/health-connect';
@@ -474,9 +416,8 @@ export function todayRecoverySnapshotOptions(userId: string) {
 **File:** `apps/parakeet/src/modules/wearable/hooks/useRecoverySnapshot.ts`
 
 ```typescript
-import { useQuery } from '@tanstack/react-query';
-
 import { useAuth } from '@modules/auth';
+import { useQuery } from '@tanstack/react-query';
 
 import { todayRecoverySnapshotOptions } from '../data/recovery.queries';
 
@@ -587,24 +528,13 @@ When the soreness screen is entered with `?autoGenerate=1`, JIT must run with th
 The screen MUST compute the resolved values inline before invoking `runJIT`:
 
 ```typescript
-const resolvedSleep = sleepTouched
-  ? sleepQuality
-  : (recoverySnapshot
-      ? mapSleepDurationToLevel(recoverySnapshot.sleep_duration_min)
-      : null) ?? sleepQuality;
-const resolvedEnergy = energyTouched
-  ? energyLevel
-  : (recoverySnapshot
-      ? mapAutonomicToLevel(
-          recoverySnapshot.hrv_pct_change,
-          recoverySnapshot.rhr_pct_change
-        )
-      : null) ?? energyLevel;
+const resolvedSleep = sleepTouched ? sleepQuality : ((recoverySnapshot ? mapSleepDurationToLevel(recoverySnapshot.sleep_duration_min) : null) ?? sleepQuality);
+const resolvedEnergy = energyTouched ? energyLevel : ((recoverySnapshot ? mapAutonomicToLevel(recoverySnapshot.hrv_pct_change, recoverySnapshot.rhr_pct_change) : null) ?? energyLevel);
 
 void runJIT(ratings, { sleep: resolvedSleep, energy: resolvedEnergy });
 ```
 
-`runJIT` accepts an optional `readinessOverride` arg that bypasses state read. The manual *Generate* button path doesn't need overrides — by the time the user taps Generate, prefill state has already applied to render N+1.
+`runJIT` accepts an optional `readinessOverride` arg that bypasses state read. The manual _Generate_ button path doesn't need overrides — by the time the user taps Generate, prefill state has already applied to render N+1.
 
 #### Auto-generate gate
 
@@ -639,8 +569,8 @@ When building `jitInput`, spread wearable fields when the snapshot exists:
 ```typescript
 const jitInput: JITInput = {
   // existing fields...
-  sleepQuality,                  // already passed in by caller
-  energyLevel,                   // already passed in by caller
+  sleepQuality, // already passed in by caller
+  energyLevel, // already passed in by caller
   ...(recoverySnapshot && {
     hrvPctChange: recoverySnapshot.hrv_pct_change ?? undefined,
     restingHrPctChange: recoverySnapshot.rhr_pct_change ?? undefined,
@@ -678,20 +608,11 @@ Re-export `deriveNonTrainingLoad` from the wearable module's public API (Step 12
 
 ```typescript
 // Application
-export {
-  syncWearableData,
-  type SyncResult,
-} from './application/sync.service';
-export {
-  computeAndStoreRecoverySnapshot,
-  deriveNonTrainingLoad,
-} from './application/recovery.service';
+export { syncWearableData, type SyncResult } from './application/sync.service';
+export { computeAndStoreRecoverySnapshot, deriveNonTrainingLoad } from './application/recovery.service';
 
 // Data — exposed for JIT wiring + cycle review
-export {
-  fetchTodaySnapshot,
-  fetchSnapshotsForRange,
-} from './data/recovery.repository';
+export { fetchTodaySnapshot, fetchSnapshotsForRange } from './data/recovery.repository';
 
 // Hooks
 export { useEnsureFreshSnapshot } from './hooks/useEnsureFreshSnapshot';
@@ -721,8 +642,8 @@ export { WearableSettings } from './ui/WearableSettings';
 
 - **AppState mount timing.** `AppState.addEventListener` may miss the initial 'active' on cold start. Cold-start coverage is now owned by `useEnsureFreshSnapshot` (§9.5), so `useWearableSync` deliberately does **not** fire on mount. Both hooks share `LAST_SYNC_KEY` to throttle each other.
 - **Date string assumptions.** `new Date().toISOString().slice(0, 10)` returns UTC date. For users near midnight in non-UTC zones the snapshot may bind to "yesterday". Acceptable for v1; if needed, switch to a timezone-aware library (already used elsewhere in the app — search for existing date utils first).
-- **Read race.** Resolved as of 2026-05-11: see §9.5. The soreness screen actively syncs + invalidates the snapshot query on mount and gates auto-generate on the result. Manual *Generate* runs after the user has interacted, so the pre-mount sync has already had time to complete.
-- **Same-commit prefill race.** Auto-generate must compute resolved sleep/energy values inline (not via state) — see §9.5 *Auto-generate race rule*. State updates from the prefill effect do not apply to closures created in the same render commit.
+- **Read race.** Resolved as of 2026-05-11: see §9.5. The soreness screen actively syncs + invalidates the snapshot query on mount and gates auto-generate on the result. Manual _Generate_ runs after the user has interacted, so the pre-mount sync has already had time to complete.
+- **Same-commit prefill race.** Auto-generate must compute resolved sleep/energy values inline (not via state) — see §9.5 _Auto-generate race rule_. State updates from the prefill effect do not apply to closures created in the same render commit.
 
 ## Out of Scope
 

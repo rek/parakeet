@@ -19,7 +19,10 @@ export function buildRepPalette(colors: ColorScheme): readonly string[] {
   ] as const;
 }
 
-export function repColor(repNumber: number, palette: readonly string[]): string {
+export function repColor(
+  repNumber: number,
+  palette: readonly string[]
+): string {
   // Rep numbers are 1-indexed in source data
   const idx = Math.max(0, repNumber - 1) % palette.length;
   return palette[idx];

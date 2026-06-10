@@ -1,5 +1,7 @@
 import { execSync } from 'child_process';
+
 import type { ConfigContext, ExpoConfig } from 'expo/config';
+
 import pkg from './package.json';
 
 const isDev = process.env.APP_ENV === 'development';

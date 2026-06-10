@@ -6,10 +6,10 @@ Map of every place AI interacts with Parakeet. Two types of AI: **LLM** (LLM via
 
 ## Models & SDK
 
-| Model | Use | Timeout |
-|-------|-----|---------|
+| Model         | Use                                           | Timeout                                         |
+| ------------- | --------------------------------------------- | ----------------------------------------------- |
 | `gpt-4o-mini` | JIT session generation, motivational messages | 5s (JIT) / 8s (motivational) → formula fallback |
-| `gpt-5` | Cycle review generation | none (async) |
+| `gpt-5`       | Cycle review generation                       | none (async)                                    |
 
 > See `packages/training-engine/src/ai/models.ts` for current config.
 
@@ -29,6 +29,7 @@ Map of every place AI interacts with Parakeet. Two types of AI: **LLM** (LLM via
 **Trigger:** User opens today's session after soreness check-in.
 
 **Input (`JITInput`):**
+
 - `oneRmKg`, `formulaConfig`, `sorenessRatings`
 - `weeklyVolumeToDate`, `mrvMevConfig`
 - `activeDisruptions`, `recentSessions`
@@ -36,6 +37,7 @@ Map of every place AI interacts with Parakeet. Two types of AI: **LLM** (LLM via
 - `auxiliaryAssignments`, `warmupConfig`
 
 **Strategy (user-selectable):**
+
 - `auto` → LLM if online, formula if offline
 - `formula` → deterministic, always offline-capable
 - `llm` → `getJITModel()` only
@@ -44,6 +46,7 @@ Map of every place AI interacts with Parakeet. Two types of AI: **LLM** (LLM via
 **LLM call:** `generateText()` with `Output.object()` → `JITAdjustmentSchema` (Zod)
 
 **Output:**
+
 - `intensityModifier` (0.40–1.20 × formula weight)
 - `setModifier` (-3 to +2 sets)
 - `skipMainLift`, `auxOverrides`
@@ -55,6 +58,7 @@ Map of every place AI interacts with Parakeet. Two types of AI: **LLM** (LLM via
 **Stored:** `sessions.planned_sets`, `jit_strategy`, `jit_input_snapshot`, `jit_generated_at`
 
 **Key files:**
+
 - `packages/training-engine/src/generator/llm-jit-generator.ts`
 - `packages/training-engine/src/generator/formula-jit-generator.ts`
 - `packages/training-engine/src/generator/jit-registry.ts`
@@ -69,6 +73,7 @@ Map of every place AI interacts with Parakeet. Two types of AI: **LLM** (LLM via
 **Trigger:** JIT strategy = `hybrid`.
 
 **Logic:**
+
 - `Promise.allSettled([formula, llm])`
 - Divergence: weight diff >10% OR setDelta ≠ 0
 - Returns LLM output + `comparisonData` if divergence detected
@@ -79,6 +84,7 @@ Map of every place AI interacts with Parakeet. Two types of AI: **LLM** (LLM via
 **UI:** `settings/developer.tsx` → JIT Strategy selector
 
 **Key files:**
+
 - `packages/training-engine/src/generator/hybrid-jit-generator.ts`
 - `apps/parakeet/src/app/settings/developer.tsx`
 
@@ -97,6 +103,7 @@ Map of every place AI interacts with Parakeet. Two types of AI: **LLM** (LLM via
 **UI:** `RestTimer` component in session screen shows delta.
 
 **Key files:**
+
 - `packages/training-engine/src/ai/constraints.ts`
 - `apps/parakeet/src/app/session/[sessionId].tsx`
 
@@ -109,6 +116,7 @@ Map of every place AI interacts with Parakeet. Two types of AI: **LLM** (LLM via
 **Trigger:** Program reaches ≥80% completion → `onCycleComplete()` fires async (fire-and-forget).
 
 **Input:**
+
 - `CycleReport` (sessions, RPE trends, volume, aux correlations, disruptions, formula changes)
 - `PreviousCycleSummaries[]` (multi-cycle context via engine-025)
 - Menstrual phase overlay (if cycle tracking enabled)
@@ -129,6 +137,7 @@ Map of every place AI interacts with Parakeet. Two types of AI: **LLM** (LLM via
 **Failure mode:** Caught + logged; does not block cycle completion.
 
 **Key files:**
+
 - `packages/training-engine/src/review/cycle-review-generator.ts`
 - `packages/training-engine/src/review/assemble-cycle-report.ts`
 - `apps/parakeet/src/modules/cycle-review/lib/cycle-review.ts` ← routing + storage
@@ -145,10 +154,12 @@ Map of every place AI interacts with Parakeet. Two types of AI: **LLM** (LLM via
 **Stored:** `formula_configs` table — `is_active=false`, `source='ai_suggestion'`, `ai_rationale` text.
 
 **UI:**
+
 - `formula/editor.tsx` → "AI Suggestions" tab — Accept / Dismiss
 - `(tabs)/settings.tsx` → badge with pending count
 
 **Key files:**
+
 - `apps/parakeet/src/app/formula/editor.tsx`
 - `apps/parakeet/src/app/(tabs)/settings.tsx`
 
@@ -163,10 +174,12 @@ Map of every place AI interacts with Parakeet. Two types of AI: **LLM** (LLM via
 **Stored:** `developer_suggestions` table — priority (high/medium/low), status (unreviewed/acknowledged/implemented/dismissed).
 
 **UI:**
+
 - `settings/developer.tsx` → Cycle Feedback section with priority badges
 - `(tabs)/settings.tsx` → badge with unreviewed count
 
 **Key files:**
+
 - `apps/parakeet/src/app/settings/developer.tsx`
 - `apps/parakeet/src/modules/settings/lib/developer-suggestions.ts`
 
@@ -179,6 +192,7 @@ Map of every place AI interacts with Parakeet. Two types of AI: **LLM** (LLM via
 **Trigger:** User views the Today tab after completing one or more sessions.
 
 **Input (`MotivationalContext`):**
+
 - `primaryLifts`, `intensityTypes`, `weekNumber`, `blockNumber`, `isDeload`
 - `sessionRpe`, `performanceVsPlan` (from `session_logs`)
 - `completionPct` — average completion % across sessions (from `session_logs.completion_pct`)
@@ -194,6 +208,7 @@ Map of every place AI interacts with Parakeet. Two types of AI: **LLM** (LLM via
 **Caching:** React Query with `staleTime: Infinity` keyed on session IDs — generated once per set of completed sessions.
 
 **Key files:**
+
 - `apps/parakeet/src/modules/session/application/motivational-message.service.ts`
 - `apps/parakeet/src/app/(tabs)/today.tsx` — `WorkoutDoneCard` component
 
@@ -212,6 +227,7 @@ Map of every place AI interacts with Parakeet. Two types of AI: **LLM** (LLM via
 **UI:** `disruption-report/report.tsx` → Review Adjustments step.
 
 **Key files:**
+
 - `packages/training-engine/src/disruption-adjuster.ts`
 - `apps/parakeet/src/modules/disruptions/lib/disruptions.ts`
 - `apps/parakeet/src/app/disruption-report/report.tsx`
@@ -223,17 +239,20 @@ Map of every place AI interacts with Parakeet. Two types of AI: **LLM** (LLM via
 **What:** Biological sex and menstrual cycle phase are surfaced to LLM as context; they also drive formula defaults.
 
 **How it enters the AI pipeline:**
+
 - `biologicalSex` + `userAge` in `JITInput` → sent to `getJITModel()` in JIT prompt
 - `menstrualCycleInsights` in `CycleReviewSchema` → `getCycleReviewModel()` uses phase data if provided
 - `session_logs.cycle_phase` stamped at session completion
 
 **Formula-level effects (not LLM):**
+
 - `DEFAULT_MRV_MEV_CONFIG_MALE/FEMALE`
 - `DEFAULT_REST_SECONDS_MALE/FEMALE`
 - `DEFAULT_THRESHOLDS_FEMALE`
 - `standard_female` warmup preset
 
 **UI surface:**
+
 - Today screen: cycle phase pill + ovulatory guidance chip
 - Disruption report: menstrual symptoms option (female only)
 
@@ -250,6 +269,7 @@ Map of every place AI interacts with Parakeet. Two types of AI: **LLM** (LLM via
 **LLM call:** `generateText()` with `Output.object()` → `JudgeReviewSchema` (Zod), `getJITModel()`, 8s timeout.
 
 **Output (`JudgeReview`):**
+
 - `score` (0–100)
 - `verdict`: `accept` | `flag`
 - `concerns`: max 3 specific issues
@@ -262,6 +282,7 @@ Map of every place AI interacts with Parakeet. Two types of AI: **LLM** (LLM via
 **Failure mode:** On error returns silent pass (score 100, accept). Does not block session.
 
 **Key files:**
+
 - `packages/training-engine/src/review/judge-reviewer.ts`
 - `apps/parakeet/src/modules/jit/lib/jit.ts` ← fire-and-forget caller
 - `apps/parakeet/src/app/(tabs)/session/[sessionId].tsx` ← banner UI
@@ -279,6 +300,7 @@ Map of every place AI interacts with Parakeet. Two types of AI: **LLM** (LLM via
 **LLM call:** `generateText()` with `Output.object()` → `DecisionReplaySchema` (Zod), `getJITModel()`, 10s timeout.
 
 **Output (`DecisionReplay`):**
+
 - `prescriptionScore` (0–100)
 - `rpeAccuracy` (0–100)
 - `volumeAppropriateness`: `too_much` | `right` | `too_little`
@@ -291,6 +313,7 @@ Map of every place AI interacts with Parakeet. Two types of AI: **LLM** (LLM via
 **Failure mode:** Silently swallowed. Does not block session completion.
 
 **Key files:**
+
 - `packages/training-engine/src/review/decision-replay.ts`
 - `apps/parakeet/src/modules/session/application/decision-replay.service.ts` ← app orchestrator
 - `apps/parakeet/src/modules/session/application/session.service.ts` ← fire-and-forget caller
@@ -304,7 +327,8 @@ Map of every place AI interacts with Parakeet. Two types of AI: **LLM** (LLM via
 **Stored:** `sessions.jit_output_trace` JSONB column.
 
 **How it enriches AI consumers:**
-- **Judge Reviewer (§10)**: Trace provides the *reasoning* behind the formula's output, not just the output itself. Judge can validate: "soreness modifier ×0.85 was applied for soreness level 3 — is that proportional?"
+
+- **Judge Reviewer (§10)**: Trace provides the _reasoning_ behind the formula's output, not just the output itself. Judge can validate: "soreness modifier ×0.85 was applied for soreness level 3 — is that proportional?"
 - **Decision Replay (§11)**: Trace enables attribution — "athlete under-performed because the formula over-reduced (modifier too aggressive)" vs "prescription was correct, execution was off"
 - **Cycle Review (§4)**: Aggregated modifier patterns across a cycle reveal systematic trends: "soreness active on 8/12 squat sessions, averaging ×0.92 — consider calibration"
 - **Motivational Message (§7)**: Trace provides specific modifier context: "You trained through a ×0.9 soreness adjustment and still hit RPE 8"
@@ -312,6 +336,7 @@ Map of every place AI interacts with Parakeet. Two types of AI: **LLM** (LLM via
 **Auto-calibration:** Trace + session outcome data feeds into a per-athlete modifier calibration system that learns whether each modifier is well-calibrated, too aggressive, or too conservative. See [prescription-trace-integration.md](./prescription-trace-integration.md).
 
 **Key files:**
+
 - `packages/training-engine/src/generator/prescription-trace.ts` — types + builder
 - `packages/training-engine/src/generator/jit-session-generator.ts` — `generateJITSessionWithTrace()`
 - `apps/parakeet/src/modules/session/ui/PrescriptionSheet.tsx` — user-facing trace display
@@ -321,12 +346,14 @@ Map of every place AI interacts with Parakeet. Two types of AI: **LLM** (LLM via
 ## Prompts & Constraints
 
 **`packages/training-engine/src/ai/prompts.ts`**
+
 - `JIT_SYSTEM_PROMPT` — expert coach; precedence: disruptions > soreness > RPE
 - `CYCLE_REVIEW_SYSTEM_PROMPT` — multi-dimensional analysis (lift-by-lift, aux, volume, formula, structural)
 - `JUDGE_REVIEW_SYSTEM_PROMPT` — expert coach reviewing generated session; double-penalty detection, aux conflicts, rest checks
 - `DECISION_REPLAY_SYSTEM_PROMPT` — sports scientist scoring prescription accuracy; RPE deviation thresholds, volume appropriateness
 
 **`packages/training-engine/src/ai/constraints.ts`**
+
 - `JIT_INTENSITY_MIN/MAX` = 0.40 / 1.20
 - `JIT_SET_DELTA_MIN/MAX` = -3 / +2
 - `JIT_RATIONALE_MAX_ITEMS` = 5, `JIT_RATIONALE_MAX_CHARS` = 200
@@ -336,6 +363,7 @@ Map of every place AI interacts with Parakeet. Two types of AI: **LLM** (LLM via
 ## Schema Validation (Zod)
 
 All LLM outputs validated before use:
+
 - `JITAdjustmentSchema` → `packages/shared-types/src/jit.schema.ts`
 - `CycleReviewSchema` → `packages/shared-types/src/cycle-review.schema.ts`
 - `JudgeReviewSchema` → `packages/shared-types/src/challenge.schema.ts`

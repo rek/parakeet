@@ -1,6 +1,7 @@
 // @spec docs/features/wearable/spec-pipeline.md
 import { addBreadcrumb } from '@platform/utils/captureException';
 
+import { upsertBiometricReadings } from '../data/biometric.repository';
 import {
   checkPermissions,
   isHealthConnectAvailable,
@@ -11,7 +12,6 @@ import {
   readSpO2,
   readSteps,
 } from '../lib/health-connect';
-import { upsertBiometricReadings } from '../data/biometric.repository';
 import { computeAndStoreRecoverySnapshot } from './recovery.service';
 
 export type SyncResult =

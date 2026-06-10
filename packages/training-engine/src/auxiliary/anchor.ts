@@ -46,11 +46,7 @@ export interface AuxHistoryEntry {
 
 export type AuxAnchorSource = 'formula' | 'blend' | 'history' | 'snap';
 
-export type AuxAnchorConfidence =
-  | 'exploring'
-  | 'low'
-  | 'medium'
-  | 'high';
+export type AuxAnchorConfidence = 'exploring' | 'low' | 'medium' | 'high';
 
 export interface AuxAnchorResult {
   /** Final anchor weight in kg, before plate rounding. Caller rounds. */
@@ -290,7 +286,8 @@ export function computeAuxAnchor(input: AuxAnchorInput): AuxAnchorResult {
     } else {
       anchorKg = formulaWeightKg;
       source = 'formula';
-      rationale = 'Recent sessions had no usable weight — using the catalog formula.';
+      rationale =
+        'Recent sessions had no usable weight — using the catalog formula.';
     }
   }
 

@@ -973,7 +973,9 @@ describe('generateJITSession — equipment_unavailable disruption', () => {
     const skipped = out.auxiliaryWork.filter((ex) => ex.skipped);
     expect(skipped.length).toBeGreaterThanOrEqual(1);
     expect(active.length).toBeGreaterThanOrEqual(1);
-    expect(active.every((ex) => ex.sets.every((s) => s.weight_kg === 0))).toBe(true);
+    expect(active.every((ex) => ex.sets.every((s) => s.weight_kg === 0))).toBe(
+      true
+    );
   });
 
   it('exercise cap: no-equipment + auxiliaryPool combined does not exceed 5 non-skipped aux exercises', () => {
@@ -1241,12 +1243,14 @@ describe('generateJITSession — volume top-up (engine-027)', () => {
         ],
         weeklyVolumeToDate: atMevExcept(DEFAULT_MRV_MEV_CONFIG_MALE, 'quads'),
         mrvMevConfig: DEFAULT_MRV_MEV_CONFIG_MALE,
-        activeDisruptions: [makeEquipmentDisruption({
-          disruption_type: 'injury',
-          severity: 'moderate',
-          affected_lifts: ['squat'],
-          description: 'Knee injury',
-        })],
+        activeDisruptions: [
+          makeEquipmentDisruption({
+            disruption_type: 'injury',
+            severity: 'moderate',
+            affected_lifts: ['squat'],
+            description: 'Knee injury',
+          }),
+        ],
       })
     );
     const topUps = out.auxiliaryWork.filter((a) => a.isTopUp);
@@ -1270,12 +1274,14 @@ describe('generateJITSession — volume top-up (engine-027)', () => {
         ],
         weeklyVolumeToDate: atMevExcept(DEFAULT_MRV_MEV_CONFIG_MALE, 'quads'),
         mrvMevConfig: DEFAULT_MRV_MEV_CONFIG_MALE,
-        activeDisruptions: [makeEquipmentDisruption({
-          disruption_type: 'unprogrammed_event',
-          severity: 'major',
-          affected_lifts: ['squat'],
-          description: 'Sore quads',
-        })],
+        activeDisruptions: [
+          makeEquipmentDisruption({
+            disruption_type: 'unprogrammed_event',
+            severity: 'major',
+            affected_lifts: ['squat'],
+            description: 'Sore quads',
+          }),
+        ],
       })
     );
     const topUps = out.auxiliaryWork.filter((a) => a.isTopUp);
@@ -1291,12 +1297,14 @@ describe('generateJITSession — volume top-up (engine-027)', () => {
         auxiliaryPool: ['Leg Press', 'Barbell Curl'],
         weeklyVolumeToDate: atMevExcept(DEFAULT_MRV_MEV_CONFIG_MALE, 'quads'),
         mrvMevConfig: DEFAULT_MRV_MEV_CONFIG_MALE,
-        activeDisruptions: [makeEquipmentDisruption({
-          disruption_type: 'illness',
-          severity: 'minor',
-          affected_lifts: null,
-          description: 'Mild cold',
-        })],
+        activeDisruptions: [
+          makeEquipmentDisruption({
+            disruption_type: 'illness',
+            severity: 'minor',
+            affected_lifts: null,
+            description: 'Mild cold',
+          }),
+        ],
       })
     );
     const topUps = out.auxiliaryWork.filter((a) => a.isTopUp);
@@ -1319,11 +1327,7 @@ describe('generateJITSession — volume top-up (engine-027)', () => {
       baseInput({
         primaryLift: 'deadlift',
         activeAuxiliaries: ['Romanian Deadlift', 'Good Morning'],
-        auxiliaryPool: [
-          'Pendlay Row',
-          'Barbell Bent-Over Row',
-          'Barbell Curl',
-        ],
+        auxiliaryPool: ['Pendlay Row', 'Barbell Bent-Over Row', 'Barbell Curl'],
         weeklyVolumeToDate: {
           ...atMevExcept(mrvMev, 'upper_back', 'biceps'),
           upper_back: 6, // near MEV, leaves ~6 MRV headroom across all sets

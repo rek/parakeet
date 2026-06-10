@@ -2,6 +2,10 @@ import { JITAdjustmentSchema } from '@parakeet/shared-types';
 import type { JITAdjustment } from '@parakeet/shared-types';
 import { generateText, Output } from 'ai';
 
+import {
+  getPrimaryMusclesForSession,
+  getWorstSoreness,
+} from '../adjustments/soreness-adjuster';
 import { abortAfter } from '../ai/abort-timeout';
 import { reportEngineError } from '../ai/error-reporter';
 import { getJITModel } from '../ai/models';
@@ -13,10 +17,6 @@ import {
   toAnchorCarrier,
 } from '../auxiliary/anchor';
 import { computeAuxWeight } from '../auxiliary/exercise-catalog';
-import {
-  getPrimaryMusclesForSession,
-  getWorstSoreness,
-} from '../adjustments/soreness-adjuster';
 import { createExerciseTyper } from '../auxiliary/exercise-types';
 import {
   effectiveIncrementKg,
@@ -24,15 +24,8 @@ import {
 } from '../formulas/weight-rounding';
 import { createMuscleMapper } from '../volume/muscle-mapper';
 import { FormulaJITGenerator } from './formula-jit-generator';
-import {
-  DELOAD_AUX_INTENSITY_RATIO,
-  DELOAD_AUX_VOLUME_RATIO,
-} from './steps/processAuxExercise';
 import { enforceHardConstraints } from './jit-constraints';
-import {
-  buildVolumeTopUp,
-  MAX_AUX_EXERCISES,
-} from './jit-session-generator';
+import { buildVolumeTopUp, MAX_AUX_EXERCISES } from './jit-session-generator';
 import type {
   AuxiliaryWork,
   JITInput,
@@ -40,6 +33,10 @@ import type {
 } from './jit-session-generator';
 import type { JITGeneratorStrategy } from './jit-strategy';
 import { calculateSets } from './set-calculator';
+import {
+  DELOAD_AUX_INTENSITY_RATIO,
+  DELOAD_AUX_VOLUME_RATIO,
+} from './steps/processAuxExercise';
 import {
   generateWarmupSets,
   resolveEffectiveWarmupProtocol,
@@ -72,7 +69,10 @@ export class LLMJITGenerator implements JITGeneratorStrategy {
           abortSignal: abortAfter(12000),
         });
         const output = applyAdjustment(adj, input);
-        return { ...enforceHardConstraints(output, input), jit_strategy: 'llm' };
+        return {
+          ...enforceHardConstraints(output, input),
+          jit_strategy: 'llm',
+        };
       } catch (err) {
         lastError = err;
         reportEngineError(err, {
@@ -229,7 +229,9 @@ export function applyAdjustment(
   // engine's worst-soreness rule (≥9 → skip aux entirely) so a lifter with
   // severe DOMS doesn't get LLM-prescribed aux through the back door. We
   // don't override the LLM's exercise choice or set count beyond this rule.
-  const primaryMusclesForSession = getPrimaryMusclesForSession(input.primaryLift);
+  const primaryMusclesForSession = getPrimaryMusclesForSession(
+    input.primaryLift
+  );
   const worstSoreness = getWorstSoreness(
     primaryMusclesForSession,
     input.sorenessRatings

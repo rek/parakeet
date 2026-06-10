@@ -10,6 +10,7 @@ CRUD helpers for user formula config overrides. Supabase SDK called directly fro
 ## Tasks
 
 **`apps/parakeet/lib/formulas.ts`:**
+
 - [x] `getFormulaConfig(userId: string): Promise<FormulaConfig>` — returns merged config: defaults + active user override
 - [x] `createFormulaOverride(userId: string, input: { overrides, source, ai_rationale? }): Promise<void>`
   - Deactivates current active row, inserts new active row
@@ -18,10 +19,12 @@ CRUD helpers for user formula config overrides. Supabase SDK called directly fro
   - Deactivates specified version and re-activates the most recent remaining row
 
 **`mergeFormulaConfig` helper (in `packages/training-engine/src/config/merge-formula-config.ts`):**
+
 - [x] Deep-merges `overrides` on top of `DEFAULT_FORMULA_CONFIG`
   - Returns a complete `FormulaConfig` (no missing keys)
 
 **React Query hooks (`apps/parakeet/hooks/useFormulas.ts`):**
+
 - [x] `useFormulaConfig()` — wraps `getFormulaConfig(user.id)`
 - [x] `useFormulaHistory()` — wraps `getFormulaHistory(user.id)`
 

@@ -24,44 +24,52 @@ As Parakeet gains features (cycle tracking, disruptions, warmups, AI rest sugges
 Features are grouped into categories for the settings UI:
 
 **Core** (always on, not toggleable):
+
 - Session logging (sets, reps, weight, RPE)
 - Program view
 - Today screen (basic workout card)
 
 **Training Enhancements** (on by default):
+
 - Warmup display
 - Auxiliary exercises
 - Rest timer
 - Soreness check-in
 
 **Analytics** (on by default):
+
 - Volume dashboard & MRV warnings
 - Achievements & PRs
 - Streak tracking
 
 **AI Features** (on by default):
+
 - AI workout generation (LLM JIT)
 - AI rest suggestions
 - Motivational messages
 - Formula AI suggestions
 
 **Health & Recovery** (on by default):
+
 - Disruption reporting
 - Cycle tracking (already gated on biological sex)
 
 **Advanced** (off by default):
+
 - Wilks score
 - Developer tools (JIT strategy, cycle feedback)
 
 ### User Flows
 
 **Primary Flow — Toggle individual features:**
+
 1. User goes to Settings
 2. New "Features" section shows toggleable features grouped by category
 3. User taps a toggle to enable/disable
 4. Change takes effect immediately — disabled features disappear from relevant screens
 
 **Secondary Flow — Presets:**
+
 1. At the top of the Features screen, preset buttons: "Simple" / "Full"
 2. "Simple" disables all optional categories except Training Enhancements
 3. "Full" enables everything

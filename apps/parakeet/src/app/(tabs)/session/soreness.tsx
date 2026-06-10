@@ -702,17 +702,17 @@ export default function SorenessScreen() {
     // wearable-vs-touched precedence in isolation. Deferred per direction.
     const resolvedSleep = sleepTouched
       ? sleepQuality
-      : (recoverySnapshot
+      : ((recoverySnapshot
           ? mapSleepDurationToLevel(recoverySnapshot.sleep_duration_min)
-          : null) ?? sleepQuality;
+          : null) ?? sleepQuality);
     const resolvedEnergy = energyTouched
       ? energyLevel
-      : (recoverySnapshot
+      : ((recoverySnapshot
           ? mapAutonomicToLevel(
               recoverySnapshot.hrv_pct_change,
               recoverySnapshot.rhr_pct_change
             )
-          : null) ?? energyLevel;
+          : null) ?? energyLevel);
 
     autoGenerateTriggered.current = true;
     setGenerating(true);
@@ -805,7 +805,11 @@ export default function SorenessScreen() {
     if (newLift === session.primary_lift) return;
     setSwappingLift(true);
     try {
-      await swapSessionLift({ sessionId: session.id, userId: user.id, newLift });
+      await swapSessionLift({
+        sessionId: session.id,
+        userId: user.id,
+        newLift,
+      });
       const updated = await getSession(session.id);
       if (updated) setSession(updated);
     } catch (err: unknown) {
@@ -944,7 +948,10 @@ export default function SorenessScreen() {
 
   // ── Derived state ─────────────────────────────────────────────────────────
 
-  const hasSevereSoreness = [...Object.values(ratings), ...Object.values(otherSoreness)].some((r) => r >= 9);
+  const hasSevereSoreness = [
+    ...Object.values(ratings),
+    ...Object.values(otherSoreness),
+  ].some((r) => r >= 9);
   const liftLabel = session ? sessionLabel(session) : 'Loading...';
 
   // ── Render ────────────────────────────────────────────────────────────────

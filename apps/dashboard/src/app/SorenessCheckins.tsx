@@ -1,7 +1,7 @@
 import { Badge } from '../components/Badge';
 import { TablePage } from '../components/TablePage';
-import { useSupabaseRows } from '../lib/useSupabaseRows';
 import { theme } from '../lib/theme';
+import { useSupabaseRows } from '../lib/useSupabaseRows';
 
 interface CheckinRow {
   id: string;
@@ -84,7 +84,9 @@ export function SorenessCheckins() {
         const top = topSoreMuscles(r.ratings);
         return (
           <>
-            <span style={{ color: theme.color.textDim }}>{fmt(r.recorded_at)}</span>
+            <span style={{ color: theme.color.textDim }}>
+              {fmt(r.recorded_at)}
+            </span>
             <span
               style={{
                 color: theme.color.textDim,

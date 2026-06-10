@@ -23,6 +23,7 @@ Adds a `standard_female` warmup preset — a 5-step protocol with finer percenta
 - [ ] No changes to `generateWarmupSets`, `resolveProtocol`, or other functions — they already handle any `WarmupPresetName` generically
 
 **Unit tests (`packages/training-engine/src/__tests__/warmup-calculator.test.ts`):**
+
 - [ ] `getPresetSteps('standard_female')` returns 5 steps
 - [ ] Step 1: pct 0.40, reps 5; Step 2: pct 0.55, reps 4; Step 5: pct 0.925, reps 1
 - [ ] `generateWarmupSets(100, { type: 'preset', name: 'standard_female' })` produces 5 warmup sets (no duplicates expected at 100 kg working weight)

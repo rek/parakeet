@@ -1,17 +1,16 @@
+import { generateCycleReview } from '@parakeet/training-engine';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { generateCycleReview } from '@parakeet/training-engine';
 import {
   insertPendingCycleReviewRow,
   markCycleReviewErrored,
 } from '../data/cycle-review.repository';
-
 import { triggerCycleReview } from './cycle-review';
 
 // vi.mock calls are hoisted to the top of the file by vitest, so their lexical
 // position below the imports does not affect runtime behaviour.
 vi.mock('@parakeet/training-engine', () => ({
-  assembleCycleReport: vi.fn(() => ({ totalWeeks: 4 } as never)),
+  assembleCycleReport: vi.fn(() => ({ totalWeeks: 4 }) as never),
   extractSummary: vi.fn(),
   generateCycleReview: vi.fn(),
 }));
@@ -77,7 +76,9 @@ describe('triggerCycleReview', () => {
   });
 
   it('coerces non-Error throws into a generic message', async () => {
-    vi.mocked(generateCycleReview).mockRejectedValueOnce('string thrown' as never);
+    vi.mocked(generateCycleReview).mockRejectedValueOnce(
+      'string thrown' as never
+    );
 
     await expect(triggerCycleReview('prog-3', 'user-3')).rejects.toBeDefined();
 

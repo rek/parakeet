@@ -28,6 +28,7 @@
 
 import * as fs from 'fs';
 import * as path from 'path';
+
 import { createClient } from '@supabase/supabase-js';
 
 import {
@@ -86,18 +87,23 @@ async function main() {
       .from('diet_protocols')
       .upsert(
         { slug: p.slug, name: p.name, description_md: descriptionMd },
-        { onConflict: 'slug' },
+        { onConflict: 'slug' }
       )
       .select('id')
       .single();
     if (pErr || !protoRow) throw pErr ?? new Error('no protocol row');
-    console.log(`[${p.slug}] protocol upserted (md: ${descriptionMd ? 'yes' : 'no'})`);
+    console.log(
+      `[${p.slug}] protocol upserted (md: ${descriptionMd ? 'yes' : 'no'})`
+    );
 
     // 2. Foods + protocol_foods.
     const foods = parseFoodCsv(fs.readFileSync(foodsPath, 'utf8'));
     console.log(`[${p.slug}] ${foods.length} food rows`);
 
-    const uniqueFoods = new Map<string, { display_name: string; category: string }>();
+    const uniqueFoods = new Map<
+      string,
+      { display_name: string; category: string }
+    >();
     for (const r of foods) {
       const canon = canonical(r.food);
       if (!uniqueFoods.has(canon)) {
@@ -114,7 +120,9 @@ async function main() {
       .upsert(foodUpserts, { onConflict: 'canonical_name' })
       .select('id, canonical_name');
     if (fErr || !foodRows) throw fErr ?? new Error('no food rows');
-    const foodIdByCanon = new Map(foodRows.map((r) => [r.canonical_name, r.id]));
+    const foodIdByCanon = new Map(
+      foodRows.map((r) => [r.canonical_name, r.id])
+    );
 
     // Dedupe by food_id — a food can appear in the CSV under multiple
     // categories (avocado = fat + fruit; tempeh = protein + fermented),
@@ -134,7 +142,7 @@ async function main() {
           (existing.notes ?? '') !== (r.notes || '');
         if (drift) {
           console.warn(
-            `[${p.slug}] duplicate food "${r.food}" differs from first occurrence — first wins`,
+            `[${p.slug}] duplicate food "${r.food}" differs from first occurrence — first wins`
           );
         }
         continue;
@@ -164,13 +172,13 @@ async function main() {
       .not('food_id', 'in', `(${keepFoodIds.join(',')})`);
     if (pfDelErr) throw pfDelErr;
     console.log(
-      `[${p.slug}] upserted ${pfUpserts.length} protocol_foods (${duplicateRowCount} CSV duplicates collapsed)`,
+      `[${p.slug}] upserted ${pfUpserts.length} protocol_foods (${duplicateRowCount} CSV duplicates collapsed)`
     );
 
     // 3. Supplements (optional).
     if (fs.existsSync(supplementsPath)) {
       const supplements = parseSupplementCsv(
-        fs.readFileSync(supplementsPath, 'utf8'),
+        fs.readFileSync(supplementsPath, 'utf8')
       );
       console.log(`[${p.slug}] ${supplements.length} supplement rows`);
       const supUpserts = supplements.map((s) => ({
@@ -203,15 +211,14 @@ async function main() {
     } else {
       console.log(`[${p.slug}] no supplements CSV; skipping`);
       // Prune any existing supplements for this protocol if source file removed.
-      await db
-        .from('diet_supplements')
-        .delete()
-        .eq('protocol_id', protoRow.id);
+      await db.from('diet_supplements').delete().eq('protocol_id', protoRow.id);
     }
 
     // 4. Lifestyle (optional).
     if (fs.existsSync(lifestylePath)) {
-      const lifestyle = parseLifestyleCsv(fs.readFileSync(lifestylePath, 'utf8'));
+      const lifestyle = parseLifestyleCsv(
+        fs.readFileSync(lifestylePath, 'utf8')
+      );
       console.log(`[${p.slug}] ${lifestyle.length} lifestyle rows`);
       const lsUpserts = lifestyle.map((l) => ({
         protocol_id: protoRow.id,
@@ -239,10 +246,7 @@ async function main() {
       console.log(`[${p.slug}] upserted ${lsUpserts.length} lifestyle items`);
     } else {
       console.log(`[${p.slug}] no lifestyle CSV; skipping`);
-      await db
-        .from('diet_lifestyle')
-        .delete()
-        .eq('protocol_id', protoRow.id);
+      await db.from('diet_lifestyle').delete().eq('protocol_id', protoRow.id);
     }
   }
 
@@ -257,7 +261,7 @@ async function main() {
   const nutritionPath = path.join(DATA_DIR, 'food_nutrition.csv');
   if (fs.existsSync(nutritionPath)) {
     const nutritionRows = parseNutritionCsv(
-      fs.readFileSync(nutritionPath, 'utf8'),
+      fs.readFileSync(nutritionPath, 'utf8')
     );
     console.log(`[nutrition] ${nutritionRows.length} nutrition rows`);
 
@@ -268,7 +272,7 @@ async function main() {
     // Normalize both sides through canonical() so lookup is stable even
     // if a DB row was ever written bypassing the seed script.
     const foodIdByCanon = new Map(
-      allFoods.map((r) => [canonical(r.canonical_name), r.id]),
+      allFoods.map((r) => [canonical(r.canonical_name), r.id])
     );
 
     const upserts: {
@@ -307,7 +311,7 @@ async function main() {
     }
     if (missingFoodCount > 0) {
       console.warn(
-        `[nutrition] ${missingFoodCount} nutrition rows had no matching diet_food (skipped)`,
+        `[nutrition] ${missingFoodCount} nutrition rows had no matching diet_food (skipped)`
       );
     }
     const { error: nErr } = await db

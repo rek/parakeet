@@ -25,13 +25,7 @@ function fmt(ts: string) {
   });
 }
 
-type BadgeVariant =
-  | 'accent'
-  | 'green'
-  | 'red'
-  | 'purple'
-  | 'blue'
-  | 'muted';
+type BadgeVariant = 'accent' | 'green' | 'red' | 'purple' | 'blue' | 'muted';
 
 function rpeVariant(rpe: number): BadgeVariant {
   if (rpe >= 9) return 'red';

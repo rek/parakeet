@@ -10,10 +10,12 @@ The formula editor screen in Settings where users view, understand, and override
 ## Tasks
 
 **`apps/parakeet/app/formula/editor.tsx`:**
+
 - Tabs or accordion sections: Block 1 | Block 2 | Block 3 | Deload
 - Navigation to this screen from Settings tab → "Manage Formulas"
 
 **Per block section:**
+
 - Three rows: Heavy | Explosive | Rep
 - Each row shows key fields in plain language:
   - "80% of max — 2 sets × 5 reps — RPE 8.5"
@@ -24,6 +26,7 @@ The formula editor screen in Settings where users view, understand, and override
 - Save button: enabled when any value has changed from the currently active config
 
 **Save flow:**
+
 - Tap "Save" → bottom sheet appears:
   - "Create new formula version" (default) with optional toggle: "Regenerate program with new formula"
   - Confirm → call `createFormulaOverride(userId, { overrides, source: 'user' })` from `apps/parakeet/lib/formulas.ts`
@@ -31,12 +34,14 @@ The formula editor screen in Settings where users view, understand, and override
   - Success toast: "Formula updated — Program regenerated"
 
 **History tab (within formula editor):**
+
 - List of all formula config versions (newest first)
 - Each item: date, source badge (User / AI Suggestion / System), brief change summary
 - Tap version → view full parameters for that version
 - "Reactivate" button on historical versions → `deactivateFormulaConfig(currentActiveId, userId)` then `createFormulaOverride()` with the selected version's overrides
 
 **AI Suggestions tab:**
+
 - List of pending AI suggestions (formula_configs rows where `source='ai_suggestion'` and `is_active=false`)
 - Each suggestion: affected parameter, current value, suggested value, rationale text
 - "Accept" → calls `createFormulaOverride(userId, { overrides: suggestion.overrides, source: 'ai_suggestion' })` from `apps/parakeet/lib/formulas.ts`

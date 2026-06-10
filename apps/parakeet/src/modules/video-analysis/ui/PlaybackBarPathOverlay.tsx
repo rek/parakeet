@@ -4,6 +4,7 @@ import { StyleSheet } from 'react-native';
 import type { VideoAnalysisResult } from '@parakeet/shared-types';
 import Svg, { Circle, G, Polyline, Text as SvgText } from 'react-native-svg';
 
+import type { ColorScheme } from '../../../theme';
 import {
   buildRepPalette,
   findActiveRep,
@@ -11,7 +12,6 @@ import {
   repColor,
 } from '../lib/playback-overlay-math';
 import type { VideoDisplayRect } from '../lib/video-display-rect';
-import type { ColorScheme } from '../../../theme';
 
 const HEAD_DOT_RADIUS = 6;
 const HEAD_DOT_STROKE = 2;
@@ -58,10 +58,7 @@ export function PlaybackBarPathOverlay({
     <Svg
       width={width}
       height={height}
-      style={[
-        styles.absolute,
-        { left: offsetX, top: offsetY, width, height },
-      ]}
+      style={[styles.absolute, { left: offsetX, top: offsetY, width, height }]}
       pointerEvents="none"
     >
       {analysis.reps.map((rep) => {

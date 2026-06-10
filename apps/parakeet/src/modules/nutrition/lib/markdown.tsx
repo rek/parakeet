@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 import { Linking, StyleSheet } from 'react-native';
+
 import MarkdownDisplay from 'react-native-markdown-display';
 
 import { radii, spacing, typography } from '../../../theme';

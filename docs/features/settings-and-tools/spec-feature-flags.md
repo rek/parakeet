@@ -21,24 +21,24 @@ Device-local feature toggle system backed by AsyncStorage. Users can enable/disa
 
 ### Feature IDs
 
-| ID | Category | Default |
-|----|----------|---------|
-| `warmups` | training | on |
-| `auxiliary` | training | on |
-| `restTimer` | training | on |
-| `sorenessCheckin` | training | on |
-| `adHocWorkouts` | training | on |
-| `volumeDashboard` | analytics | on |
-| `achievements` | analytics | on |
-| `streaks` | analytics | on |
-| `aiJit` | ai | on |
-| `aiRest` | ai | on |
-| `motivationalMessages` | ai | on |
-| `formulaSuggestions` | ai | on |
-| `disruptions` | health | on |
-| `cycleTracking` | health | on |
-| `wilks` | advanced | off |
-| `developer` | advanced | off |
+| ID                     | Category  | Default |
+| ---------------------- | --------- | ------- |
+| `warmups`              | training  | on      |
+| `auxiliary`            | training  | on      |
+| `restTimer`            | training  | on      |
+| `sorenessCheckin`      | training  | on      |
+| `adHocWorkouts`        | training  | on      |
+| `volumeDashboard`      | analytics | on      |
+| `achievements`         | analytics | on      |
+| `streaks`              | analytics | on      |
+| `aiJit`                | ai        | on      |
+| `aiRest`               | ai        | on      |
+| `motivationalMessages` | ai        | on      |
+| `formulaSuggestions`   | ai        | on      |
+| `disruptions`          | health    | on      |
+| `cycleTracking`        | health    | on      |
+| `wilks`                | advanced  | off     |
+| `developer`            | advanced  | off     |
 
 ### Presets
 

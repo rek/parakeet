@@ -7,14 +7,14 @@ import {
   stampCyclePhaseOnSession,
 } from '@modules/cycle-tracking';
 import { useNetworkStatus } from '@platform/network/useNetworkStatus';
-import { useSessionStore } from '../store/sessionStore';
 import { useSyncStore } from '@platform/store/syncStore';
 import { captureException } from '@platform/utils/captureException';
 import { useQueryClient } from '@tanstack/react-query';
 
 import { completeSession } from '../application/session.service';
-import { upsertSetLog } from '../data/session.repository';
 import { sessionQueries } from '../data/session.queries';
+import { upsertSetLog } from '../data/session.repository';
+import { useSessionStore } from '../store/sessionStore';
 import { isNetworkError } from '../utils/isNetworkError';
 
 export { isNetworkError };
@@ -110,7 +110,9 @@ export function useSyncQueue() {
                 cyclePhase
               ).catch(captureException);
             } else {
-              stampCyclePhaseOnSession(userId, sessionId).catch(captureException);
+              stampCyclePhaseOnSession(userId, sessionId).catch(
+                captureException
+              );
             }
 
             // Fire-and-forget: run achievement detection now that data is on the server.
@@ -197,9 +199,7 @@ export function useSyncQueue() {
         for (const [sid, count] of droppedSetsBySession) {
           totalDropped += count;
           captureException(
-            new Error(
-              `set_logs sync loss — session=${sid} count=${count}`
-            )
+            new Error(`set_logs sync loss — session=${sid} count=${count}`)
           );
         }
         Alert.alert(

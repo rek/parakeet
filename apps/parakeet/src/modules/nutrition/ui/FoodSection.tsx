@@ -1,6 +1,12 @@
 // @spec docs/features/nutrition/spec-ui.md
 import { useMemo, useState } from 'react';
-import { StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import {
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 
 import { radii, spacing, typography } from '../../../theme';
 import type { ColorScheme } from '../../../theme';
@@ -33,7 +39,7 @@ export function FoodSection({ foods }: { foods: DietFood[] }) {
           ? true
           : f.displayName.toLowerCase().includes(q) ||
             f.category.toLowerCase().includes(q) ||
-            (f.notes ?? '').toLowerCase().includes(q),
+            (f.notes ?? '').toLowerCase().includes(q)
       );
   }, [foods, filter, query]);
 
@@ -72,10 +78,7 @@ export function FoodSection({ foods }: { foods: DietFood[] }) {
               activeOpacity={0.75}
             >
               <Text
-                style={[
-                  styles.filterLabel,
-                  active && styles.filterLabelActive,
-                ]}
+                style={[styles.filterLabel, active && styles.filterLabelActive]}
               >
                 {FILTER_LABELS[f]}
               </Text>

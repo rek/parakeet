@@ -10,6 +10,7 @@ Add overhead press (OHP) as a first-class primary lift and support 4-day trainin
 ## Problem Statement
 
 **Pain points:**
+
 - The `Lift` type is `'squat' | 'bench' | 'deadlift'` — OHP cannot be a primary lift even though it's a standard compound lift in powerbuilding programs.
 - Historical data from imports contains 22 completed OHP sessions. The DB constraint already allows `overhead_press`, but the app ignores it.
 - 4-day programs (Mon/Tue/Thu/Sat) are common. The cube scheduler already defines `DEFAULT_TRAINING_DAYS[4]`, but the lift rotation always cycles through 3 lifts, meaning day 4 would repeat squat instead of introducing OHP.
@@ -37,6 +38,7 @@ Add overhead press (OHP) as a first-class primary lift and support 4-day trainin
 4. Session logging, completion, and history all work identically to S/B/D sessions
 
 **Alternative Flows:**
+
 - 3-day programs remain unchanged — `LIFT_ORDER` is `['squat', 'bench', 'deadlift']` as today
 - Existing programs are unaffected by the migration
 - Historical OHP sessions from imports display correctly with proper labels
@@ -50,6 +52,7 @@ Add overhead press (OHP) as a first-class primary lift and support 4-day trainin
 ## What Already Works
 
 These pieces require no changes:
+
 - **4-day scheduling**: `DEFAULT_TRAINING_DAYS[4] = [1, 2, 4, 6]` (Mon/Tue/Thu/Sat) already exists in `scheduler.ts`
 - **OHP muscle mapping**: `EXERCISE_MUSCLES['Overhead Press']` is defined in `muscle-mapper.ts` (shoulders 1.0, triceps 1.0, upper back 0.5)
 - **DB constraints**: Migration `20260315` already adds `overhead_press` to `sessions.primary_lift` and `auxiliary_exercises.lift` constraints
@@ -59,6 +62,7 @@ These pieces require no changes:
 ## Core Design Decision: Lift Rotation
 
 **Current** — 3 lifts × 3 intensity types = 3-week block cycle:
+
 ```
 Week 1: squat=heavy,    bench=rep,       deadlift=explosive
 Week 2: squat=explosive, bench=heavy,     deadlift=rep
@@ -76,6 +80,7 @@ Week 3: squat=rep,       bench=explosive, deadlift=heavy,     ohp=rep
 Each lift cycles through heavy → explosive → rep across weeks (same 3-week block), but with 4 training days per week. The 4th lift follows the same intensity pattern as the 1st (offset by 3 positions in the rotation).
 
 This approach:
+
 - Preserves backward compatibility for 3-lift programs
 - Doesn't require a 4-week block structure
 - Keeps the deload cadence unchanged
@@ -90,63 +95,69 @@ This approach:
 ## Blast Radius (~30 files)
 
 ### Type System (2 files)
-| File | Change |
-|------|--------|
-| `packages/shared-types/src/program.schema.ts` | Add `'overhead_press'` to `LiftSchema` |
+
+| File                                               | Change                                                                                            |
+| -------------------------------------------------- | ------------------------------------------------------------------------------------------------- |
+| `packages/shared-types/src/program.schema.ts`      | Add `'overhead_press'` to `LiftSchema`                                                            |
 | `packages/shared-types/src/lifter-maxes.schema.ts` | Add optional `overhead_press` field to `LifterMaxesInputSchema` + `overhead_press_kg` to response |
 
 ### Engine (6 files)
-| File | Change |
-|------|--------|
-| `packages/training-engine/src/cube/scheduler.ts` | Extend `CUBE_ROTATION` for 4-lift variant |
-| `packages/training-engine/src/cube/blocks.ts` | Add `overhead_press_min/max` to `FormulaConfig.training_max_increase` defaults |
-| `packages/training-engine/src/generator/program-generator.ts` | `LIFT_ORDER` becomes dynamic from program config |
-| `packages/training-engine/src/auxiliary/exercise-catalog.ts` | Add OHP auxiliary exercise pool |
-| `packages/training-engine/src/auxiliary/auxiliary-rotator.ts` | Loop over dynamic lift list, not hardcoded 3 |
-| `packages/training-engine/src/volume/muscle-mapper.ts` | Add `LIFT_MUSCLES.overhead_press` entry |
+
+| File                                                          | Change                                                                         |
+| ------------------------------------------------------------- | ------------------------------------------------------------------------------ |
+| `packages/training-engine/src/cube/scheduler.ts`              | Extend `CUBE_ROTATION` for 4-lift variant                                      |
+| `packages/training-engine/src/cube/blocks.ts`                 | Add `overhead_press_min/max` to `FormulaConfig.training_max_increase` defaults |
+| `packages/training-engine/src/generator/program-generator.ts` | `LIFT_ORDER` becomes dynamic from program config                               |
+| `packages/training-engine/src/auxiliary/exercise-catalog.ts`  | Add OHP auxiliary exercise pool                                                |
+| `packages/training-engine/src/auxiliary/auxiliary-rotator.ts` | Loop over dynamic lift list, not hardcoded 3                                   |
+| `packages/training-engine/src/volume/muscle-mapper.ts`        | Add `LIFT_MUSCLES.overhead_press` entry                                        |
 
 ### Schemas (2 files)
-| File | Change |
-|------|--------|
-| `packages/shared-types/src/formula.schema.ts` | Add `overhead_press_min/max` to `training_max_increase` |
-| `packages/shared-types/src/disruption.schema.ts` | Add `'overhead_press'` to `affected_lifts` enum |
+
+| File                                             | Change                                                  |
+| ------------------------------------------------ | ------------------------------------------------------- |
+| `packages/shared-types/src/formula.schema.ts`    | Add `overhead_press_min/max` to `training_max_increase` |
+| `packages/shared-types/src/disruption.schema.ts` | Add `'overhead_press'` to `affected_lifts` enum         |
 
 ### App Constants & Services (5 files)
-| File | Change |
-|------|--------|
-| `apps/.../shared/constants/training.ts` | Add OHP to `TRAINING_LIFTS`, `LIFT_LABELS`, `LIFT_PRIMARY_SORENESS_MUSCLES` |
-| `apps/.../modules/settings/lib/warmup-config.ts` | Add OHP warmup defaults |
-| `apps/.../modules/program/lib/auxiliary-config.ts` | Fetch OHP auxiliary pool |
-| `apps/.../modules/jit/lib/max-estimation.ts` | Add OHP bodyweight multipliers + min estimated max |
-| `apps/.../modules/disruptions/lib/disruption-presets.ts` | Auto-inherits from `TRAINING_LIFTS` |
+
+| File                                                     | Change                                                                      |
+| -------------------------------------------------------- | --------------------------------------------------------------------------- |
+| `apps/.../shared/constants/training.ts`                  | Add OHP to `TRAINING_LIFTS`, `LIFT_LABELS`, `LIFT_PRIMARY_SORENESS_MUSCLES` |
+| `apps/.../modules/settings/lib/warmup-config.ts`         | Add OHP warmup defaults                                                     |
+| `apps/.../modules/program/lib/auxiliary-config.ts`       | Fetch OHP auxiliary pool                                                    |
+| `apps/.../modules/jit/lib/max-estimation.ts`             | Add OHP bodyweight multipliers + min estimated max                          |
+| `apps/.../modules/disruptions/lib/disruption-presets.ts` | Auto-inherits from `TRAINING_LIFTS`                                         |
 
 ### UI Screens (8 files)
-| File | Change |
-|------|--------|
-| `app/(auth)/onboarding/lift-maxes.tsx` | Conditionally collect OHP max when 4-day selected |
-| `app/settings/auxiliary-exercises.tsx` | Show OHP pool tab |
-| `app/settings/aux-block-assignments.tsx` | OHP block assignments |
-| `app/settings/warmup-protocol.tsx` | OHP warmup picker |
-| `app/(tabs)/history.tsx` | OHP label + color |
-| `app/history/lift/[lift].tsx` | OHP label + color |
-| `app/history/[sessionId].tsx` | OHP label |
-| `app/(tabs)/session/soreness.tsx` | OHP primary muscles (auto from constant) |
+
+| File                                     | Change                                            |
+| ---------------------------------------- | ------------------------------------------------- |
+| `app/(auth)/onboarding/lift-maxes.tsx`   | Conditionally collect OHP max when 4-day selected |
+| `app/settings/auxiliary-exercises.tsx`   | Show OHP pool tab                                 |
+| `app/settings/aux-block-assignments.tsx` | OHP block assignments                             |
+| `app/settings/warmup-protocol.tsx`       | OHP warmup picker                                 |
+| `app/(tabs)/history.tsx`                 | OHP label + color                                 |
+| `app/history/lift/[lift].tsx`            | OHP label + color                                 |
+| `app/history/[sessionId].tsx`            | OHP label                                         |
+| `app/(tabs)/session/soreness.tsx`        | OHP primary muscles (auto from constant)          |
 
 ### Tests (~5 files)
+
 - `scheduler.test.ts`, `program-generator.test.ts`, `auxiliary-rotator.test.ts`, `blocks.test.ts`, `muscle-mapper.test.ts`
 
 ## Spec Breakdown
 
-| Spec ID | Title | Layer |
-|---------|-------|-------|
-| types-003 | Add `overhead_press` to Lift enum | shared-types |
-| engine-036 | 4-lift cube rotation | training-engine |
+| Spec ID    | Title                                                            | Layer           |
+| ---------- | ---------------------------------------------------------------- | --------------- |
+| types-003  | Add `overhead_press` to Lift enum                                | shared-types    |
+| engine-036 | 4-lift cube rotation                                             | training-engine |
 | engine-037 | OHP formula config defaults (training max increase: 1.25–2.5 kg) | training-engine |
-| engine-038 | OHP auxiliary exercise catalog | training-engine |
-| engine-039 | OHP muscle mapping for primary lift volume | training-engine |
-| mobile-043 | OHP onboarding + app services | mobile |
-| mobile-044 | OHP UI across screens | mobile |
-| data-009 | OHP lifter maxes schema + migration | data |
+| engine-038 | OHP auxiliary exercise catalog                                   | training-engine |
+| engine-039 | OHP muscle mapping for primary lift volume                       | training-engine |
+| mobile-043 | OHP onboarding + app services                                    | mobile          |
+| mobile-044 | OHP UI across screens                                            | mobile          |
+| data-009   | OHP lifter maxes schema + migration                              | data            |
 
 ## Open Questions
 

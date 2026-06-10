@@ -13,20 +13,21 @@ Six royalty-free Pexels videos are already downloaded in `test-videos/`. A `mani
 
 ### Test Videos (`test-videos/`)
 
-| ID | File | Lift | Orientation | Duration | Primary test purpose |
-|---|---|---|---|---|---|
-| `squat-side-clean` | squat-side-clean.mp4 | squat | landscape | 20.5s | Baseline squat — depth, lean, bar path |
-| `squat-front-angle` | squat-front-angle.mp4 | squat | landscape | 28.3s | Camera angle auto-detection |
-| `squat-portrait` | squat-gym-workout.mp4 | squat | portrait | 27.4s | Portrait orientation handling |
-| `deadlift-side` | deadlift-barbell.mp4 | deadlift | portrait | 15.4s | Back rounding, lockout detection |
-| `deadlift-back` | deadlift-back-workout.mp4 | deadlift | landscape | 13.6s | Cross-validation, different conditions |
-| `bench-press` | bench-press.mp4 | bench | landscape | 15.7s | Bar path, touch-point variance |
+| ID                  | File                      | Lift     | Orientation | Duration | Primary test purpose                   |
+| ------------------- | ------------------------- | -------- | ----------- | -------- | -------------------------------------- |
+| `squat-side-clean`  | squat-side-clean.mp4      | squat    | landscape   | 20.5s    | Baseline squat — depth, lean, bar path |
+| `squat-front-angle` | squat-front-angle.mp4     | squat    | landscape   | 28.3s    | Camera angle auto-detection            |
+| `squat-portrait`    | squat-gym-workout.mp4     | squat    | portrait    | 27.4s    | Portrait orientation handling          |
+| `deadlift-side`     | deadlift-barbell.mp4      | deadlift | portrait    | 15.4s    | Back rounding, lockout detection       |
+| `deadlift-back`     | deadlift-back-workout.mp4 | deadlift | landscape   | 13.6s    | Cross-validation, different conditions |
+| `bench-press`       | bench-press.mp4           | bench    | landscape   | 15.7s    | Bar path, touch-point variance         |
 
 All videos are Pexels royalty-free (no attribution required). `.mp4` files are gitignored; `manifest.json` is tracked.
 
 ### Manifest Structure (`test-videos/manifest.json`)
 
 Each video entry has:
+
 - `expected` — predicted camera angle, rep count range, which faults/metrics to check
 - `actual` — `null` until populated by a calibration run
 - `calibrated` — `false` until a human verifies `actual` values visually
@@ -46,6 +47,7 @@ video file → extractFramesFromVideo(uri, duration, 4fps)
 ```
 
 Key entry points in `modules/video-analysis/`:
+
 - `application/analyze-video.ts` — `extractFramesFromVideo()`, `analyzeVideoFrames()`
 - `lib/metrics-assembler.ts` — `assembleAnalysis()` (analysisVersion 6 — v6 added bench chest-touch gap, backlog #26; v5 added front-bench block, backlog #24 Track B)
 - `lib/fault-detector.ts` — thresholds and fault detection
@@ -148,18 +150,18 @@ These tests use **pre-extracted landmark data** (JSON fixtures) from the calibra
 
 These are the thresholds the tests should validate against:
 
-| Fault | Lift | Threshold | Severity |
-|---|---|---|---|
-| `above_parallel` | squat | hip Y ≤ knee Y at bottom | critical |
-| `excessive_lean` | squat | forward lean > 55° | warning |
-| `bar_drift` | all | drift > 0.03 normalized (~7.3cm) | warning |
-| `back_rounding` | deadlift | hip angle deviation > 15° mid-pull | warning |
-| `incomplete_lockout` | deadlift | hip angle < 170° at top | info |
-| `butt_wink` | squat | hip angle drop > 10° in < 200ms at bottom | warning |
-| `elbow_flare` | bench | flare > 80° or < 30° | warning |
-| `early_hip_shoot` | deadlift | hip velocity crossover < 30% of pull | warning |
-| `bar_away_from_shins` | deadlift | wrist-knee distance > 5cm | warning |
-| `unstable_lockout` | all | hip angle CV > 5% in last 10% of rep | warning |
+| Fault                 | Lift     | Threshold                                 | Severity |
+| --------------------- | -------- | ----------------------------------------- | -------- |
+| `above_parallel`      | squat    | hip Y ≤ knee Y at bottom                  | critical |
+| `excessive_lean`      | squat    | forward lean > 55°                        | warning  |
+| `bar_drift`           | all      | drift > 0.03 normalized (~7.3cm)          | warning  |
+| `back_rounding`       | deadlift | hip angle deviation > 15° mid-pull        | warning  |
+| `incomplete_lockout`  | deadlift | hip angle < 170° at top                   | info     |
+| `butt_wink`           | squat    | hip angle drop > 10° in < 200ms at bottom | warning  |
+| `elbow_flare`         | bench    | flare > 80° or < 30°                      | warning  |
+| `early_hip_shoot`     | deadlift | hip velocity crossover < 30% of pull      | warning  |
+| `bar_away_from_shins` | deadlift | wrist-knee distance > 5cm                 | warning  |
+| `unstable_lockout`    | all      | hip angle CV > 5% in last 10% of rep      | warning  |
 
 ## Impact from mobile-052 (View Angle Rework)
 

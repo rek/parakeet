@@ -4,7 +4,6 @@ import { Alert } from 'react-native';
 import { captureException } from '@platform/utils/captureException';
 import { router } from 'expo-router';
 
-import type { JitData, WarmupSet } from '../model/types';
 import {
   applyBootstrap,
   BootstrapError,
@@ -12,6 +11,7 @@ import {
   shouldRedirectToSoreness,
   snapshotStoreForBootstrap,
 } from '../application/session-bootstrap.service';
+import type { JitData, WarmupSet } from '../model/types';
 
 interface UseSessionBootstrapInput {
   sessionId: string | undefined | null;

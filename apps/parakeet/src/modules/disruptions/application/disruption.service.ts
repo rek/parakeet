@@ -1,4 +1,5 @@
 // @spec docs/features/disruptions/spec-apply.md
+import { getDisabledPlates } from '@modules/settings';
 import { DisruptionSchema, LiftSchema } from '@parakeet/shared-types';
 import type {
   AdjustmentSuggestion,
@@ -8,8 +9,10 @@ import type {
   SessionImpactPreview,
   TrainingDisruption,
 } from '@parakeet/shared-types';
-import { getDisabledPlates } from '@modules/settings';
-import { suggestDisruptionAdjustment, plateIncrementKg } from '@parakeet/training-engine';
+import {
+  plateIncrementKg,
+  suggestDisruptionAdjustment,
+} from '@parakeet/training-engine';
 import { roundToNearest } from '@shared/utils/weight';
 
 import {
@@ -29,8 +32,8 @@ import {
   fetchSessionsByIdsUnfiltered,
   insertDisruption,
   insertSorenessCheckin,
-  unskipSessionsOnOrAfter,
   updateDisruptionEndDate as repoUpdateDisruptionEndDate,
+  unskipSessionsOnOrAfter,
   updateDisruptionAdjustmentApplied,
   updateDisruptionResolved,
   updateDisruptionSessionIds,
@@ -146,7 +149,7 @@ function buildSessionImpacts(
         const before = firstSet?.weight_kg ?? null;
         const after =
           before !== null
-            ? Math.round((before * (1 - suggestion.reduction_pct / 100)) * 10) /
+            ? Math.round(before * (1 - suggestion.reduction_pct / 100) * 10) /
               10
             : null;
         return {

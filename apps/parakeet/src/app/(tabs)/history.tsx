@@ -373,7 +373,9 @@ export default function HistoryScreen() {
         <View style={styles.centered}>
           <Text style={styles.emptyText}>Failed to load history.</Text>
           <TouchableOpacity onPress={refetch} style={{ marginTop: spacing[3] }}>
-            <Text style={{ color: colors.primary, fontWeight: '600' }}>Retry</Text>
+            <Text style={{ color: colors.primary, fontWeight: '600' }}>
+              Retry
+            </Text>
           </TouchableOpacity>
         </View>
       </SafeAreaView>
@@ -765,7 +767,9 @@ export default function HistoryScreen() {
                   ) : (
                     // Programs ended early (status === 'archived') don't have
                     // enough data for a meaningful cycle review.
-                    <View style={[styles.reviewButton, styles.reviewButtonDisabled]}>
+                    <View
+                      style={[styles.reviewButton, styles.reviewButtonDisabled]}
+                    >
                       <Text style={styles.reviewButtonDisabledText}>
                         No review — program ended early
                       </Text>

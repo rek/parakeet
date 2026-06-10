@@ -25,6 +25,7 @@ The default formula configuration (system defaults in kg) and the `calculateSets
   - Deep merge — null/undefined fields fall back to system defaults
 
 **Unit tests:**
+
 - [x] Block 1 heavy, Squat 1RM=140kg → weight = 112.5kg (80% = 112, rounded to nearest 2.5 = 112.5), 2 sets, 5 reps
 - [x] Block 2 rep, Bench 1RM=100kg → weight = 80kg (80%), 2-3 sets, 4-8 reps
 - [x] Block 3 heavy, DL 1RM=180kg → weight = 162.5kg (90% = 162, rounds to 162.5), 4 sets, 1-2 reps

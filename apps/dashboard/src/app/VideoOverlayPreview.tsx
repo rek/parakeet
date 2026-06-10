@@ -1,5 +1,16 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 
+import { analyzeVideoFrames } from '@modules/video-analysis/application/analyze-frames';
+import {
+  findActiveRep,
+  pickHeadDot,
+} from '@modules/video-analysis/lib/playback-overlay-math';
+import {
+  LANDMARK,
+  type PoseFrame,
+} from '@modules/video-analysis/lib/pose-types';
+import { SKELETON_CONNECTIONS } from '@modules/video-analysis/lib/skeleton-connections';
+import { computeDisplayRect } from '@modules/video-analysis/lib/video-display-rect';
 import type {
   BarPathPoint,
   FatigueSignatures,
@@ -9,31 +20,23 @@ import type {
   VideoAnalysisResult,
 } from '@parakeet/shared-types';
 
-import { analyzeVideoFrames } from '@modules/video-analysis/application/analyze-frames';
-import {
-  findActiveRep,
-  pickHeadDot,
-} from '@modules/video-analysis/lib/playback-overlay-math';
-import { LANDMARK, type PoseFrame } from '@modules/video-analysis/lib/pose-types';
-import { SKELETON_CONNECTIONS } from '@modules/video-analysis/lib/skeleton-connections';
-import { computeDisplayRect } from '@modules/video-analysis/lib/video-display-rect';
-
+import manifest from '../../../../test-videos/manifest.json';
 import {
   extractLandmarksFromVideo,
   type ExtractionResult,
   type ModelVariant,
 } from '../lib/browser-pose-extractor';
-import manifest from '../../../../test-videos/manifest.json';
 import { CoachPanel } from './coach/CoachPanel';
 
 // Vite resolves these globs at build time. Each entry maps the source path to
 // a dev-server URL (or hashed asset URL in prod build). We never bundle the
 // video bytes — `query: '?url'` keeps them as references the browser fetches
 // on demand.
-const VIDEO_URLS = import.meta.glob(
-  '../../../../test-videos/*.{mp4,3gp,mov}',
-  { query: '?url', import: 'default', eager: true }
-) as Record<string, string>;
+const VIDEO_URLS = import.meta.glob('../../../../test-videos/*.{mp4,3gp,mov}', {
+  query: '?url',
+  import: 'default',
+  eager: true,
+}) as Record<string, string>;
 
 const LANDMARK_URLS = import.meta.glob(
   '../../../../test-videos/landmarks/*.json',
@@ -45,7 +48,9 @@ function videoUrlFor(file: string): string | undefined {
 }
 
 function landmarkUrlFor(id: string): string | undefined {
-  return LANDMARK_URLS[`../../../../test-videos/landmarks/${id}.landmarks.json`];
+  return LANDMARK_URLS[
+    `../../../../test-videos/landmarks/${id}.landmarks.json`
+  ];
 }
 
 interface ManifestVideo {
@@ -126,12 +131,10 @@ function videosWithFixtures(): ManifestVideo[] {
 
 export function VideoOverlayPreview() {
   const fixtures = useMemo(videosWithFixtures, []);
-  const [selectedId, setSelectedId] = useState<string>(
-    fixtures[0]?.id ?? ''
-  );
+  const [selectedId, setSelectedId] = useState<string>(fixtures[0]?.id ?? '');
   const [showBarPath, setShowBarPath] = useState(true);
   const [showSkeleton, setShowSkeleton] = useState(false);
-const [showWorldSkeleton, setShowWorldSkeleton] = useState(false);
+  const [showWorldSkeleton, setShowWorldSkeleton] = useState(false);
   const [landmarks, setLandmarks] = useState<LandmarkFile | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [currentTime, setCurrentTime] = useState(0);
@@ -259,7 +262,9 @@ const [showWorldSkeleton, setShowWorldSkeleton] = useState(false);
     const v = videoRef.current;
     if (!v || !selected) return;
     if (!v.duration || !isFinite(v.duration)) {
-      setExtractError('Video metadata not loaded yet — wait for it to be ready.');
+      setExtractError(
+        'Video metadata not loaded yet — wait for it to be ready.'
+      );
       return;
     }
     setExtracting(true);
@@ -348,9 +353,7 @@ const [showWorldSkeleton, setShowWorldSkeleton] = useState(false);
         >
           Video Overlay Preview
         </h1>
-        <div
-          style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 4 }}
-        >
+        <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 4 }}>
           Test bar-path and skeleton overlays against calibration fixtures.
           Renders the same pure libs the mobile app uses.
         </div>
@@ -467,17 +470,15 @@ const [showWorldSkeleton, setShowWorldSkeleton] = useState(false);
             displayRect={displayRect}
           />
         )}
-        {showWorldSkeleton &&
-          landmarks?.worldFrames &&
-          displayRect && (
-            <WorldSkeletonOverlaySvg
-              imageFrames={landmarks.frames}
-              worldFrames={landmarks.worldFrames}
-              fps={landmarks.fps}
-              currentTime={currentTime}
-              displayRect={displayRect}
-            />
-          )}
+        {showWorldSkeleton && landmarks?.worldFrames && displayRect && (
+          <WorldSkeletonOverlaySvg
+            imageFrames={landmarks.frames}
+            worldFrames={landmarks.worldFrames}
+            fps={landmarks.fps}
+            currentTime={currentTime}
+            displayRect={displayRect}
+          />
+        )}
       </div>
 
       {selected && (
@@ -578,7 +579,11 @@ function ExtractionPanel({
   progress: number;
   error: string | null;
   landmarksSource: 'fixture' | 'browser' | null;
-  extractedMeta: { variant: ModelVariant; delegate: 'GPU' | 'CPU'; elapsedMs: number } | null;
+  extractedMeta: {
+    variant: ModelVariant;
+    delegate: 'GPU' | 'CPU';
+    elapsedMs: number;
+  } | null;
   landmarksFps: number | null;
   landmarksValidFrames: number | null;
   landmarksTotalFrames: number | null;
@@ -630,16 +635,23 @@ function ExtractionPanel({
         )}
         {landmarksSource === 'browser' && extractedMeta && (
           <span style={{ fontSize: 10, color: 'var(--green)' }}>
-            current: {landmarksFps}fps · {extractedMeta.variant} · {extractedMeta.delegate}
+            current: {landmarksFps}fps · {extractedMeta.variant} ·{' '}
+            {extractedMeta.delegate}
             {' · '}
-            {(extractedMeta.elapsedMs / 1000).toFixed(1)}s
-            {' · '}
+            {(extractedMeta.elapsedMs / 1000).toFixed(1)}s{' · '}
             {landmarksValidFrames}/{landmarksTotalFrames} valid
           </span>
         )}
       </div>
 
-      <div style={{ display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap' }}>
+      <div
+        style={{
+          display: 'flex',
+          gap: 12,
+          alignItems: 'center',
+          flexWrap: 'wrap',
+        }}
+      >
         <label style={{ fontSize: 11, color: 'var(--text-dim)' }}>
           fps&nbsp;
           <select
@@ -678,7 +690,9 @@ function ExtractionPanel({
             disabled={!canExtract}
             style={{
               ...buttonStyle,
-              background: canExtract ? 'var(--accent)' : 'var(--surface-overlay)',
+              background: canExtract
+                ? 'var(--accent)'
+                : 'var(--surface-overlay)',
               color: canExtract ? '#000' : 'var(--text-muted)',
               cursor: canExtract ? 'pointer' : 'not-allowed',
             }}
@@ -857,9 +871,7 @@ function ToggleChip({
       style={{
         padding: '6px 14px',
         borderRadius: 999,
-        border: enabled
-          ? '1px solid var(--accent)'
-          : '1px solid var(--border)',
+        border: enabled ? '1px solid var(--accent)' : '1px solid var(--border)',
         background: enabled ? 'var(--accent)' : 'transparent',
         color: enabled ? '#000' : 'var(--text-dim)',
         fontFamily: 'var(--mono)',
@@ -890,7 +902,12 @@ function BarPathOverlaySvg({
 }: {
   analysis: VideoAnalysisResult;
   currentTime: number;
-  displayRect: { width: number; height: number; offsetX: number; offsetY: number };
+  displayRect: {
+    width: number;
+    height: number;
+    offsetX: number;
+    offsetY: number;
+  };
 }) {
   const { width, height, offsetX, offsetY } = displayRect;
   if (width <= 0 || height <= 0) return null;
@@ -986,7 +1003,12 @@ function SkeletonOverlaySvg({
   frames: PoseFrame[];
   fps: number;
   currentTime: number;
-  displayRect: { width: number; height: number; offsetX: number; offsetY: number };
+  displayRect: {
+    width: number;
+    height: number;
+    offsetX: number;
+    offsetY: number;
+  };
 }) {
   const { width, height, offsetX, offsetY } = displayRect;
   if (width <= 0 || height <= 0) return null;
@@ -1160,10 +1182,7 @@ function WorldSkeletonOverlaySvg({
         const la = projected[a];
         const lb = projected[b];
         if (!la || !lb) return null;
-        if (
-          la.visibility < MIN_VISIBILITY ||
-          lb.visibility < MIN_VISIBILITY
-        )
+        if (la.visibility < MIN_VISIBILITY || lb.visibility < MIN_VISIBILITY)
           return null;
         return (
           <line
@@ -1230,9 +1249,7 @@ function MetadataPanel({
       <Stat
         label="Frames stored"
         value={
-          landmarks
-            ? `${landmarks.validFrames}/${landmarks.totalFrames}`
-            : '—'
+          landmarks ? `${landmarks.validFrames}/${landmarks.totalFrames}` : '—'
         }
       />
       <Stat
@@ -1241,15 +1258,11 @@ function MetadataPanel({
       />
       <Stat
         label="Sagittal conf."
-        value={
-          analysis ? analysis.sagittalConfidence.toFixed(2) : '—'
-        }
+        value={analysis ? analysis.sagittalConfidence.toFixed(2) : '—'}
       />
       <Stat
         label="Video dims"
-        value={
-          videoDims ? `${videoDims.width}×${videoDims.height}` : '—'
-        }
+        value={videoDims ? `${videoDims.width}×${videoDims.height}` : '—'}
       />
     </div>
   );
@@ -1315,7 +1328,8 @@ function buildCalibrationChecks(
   if (expected.rep_count) {
     const { min, max } = expected.rep_count;
     const reps = analysis.reps.length;
-    const inRange = (min == null || reps >= min) && (max == null || reps <= max);
+    const inRange =
+      (min == null || reps >= min) && (max == null || reps <= max);
     checks.push({
       label: 'Rep count',
       pass: inRange,
@@ -1617,7 +1631,11 @@ function faultSeverityColor(s: FormFault['severity']) {
   return { color: 'var(--text-dim)', bg: 'var(--surface-overlay)' };
 }
 
-const REP_METRIC_FIELDS: { key: keyof RepAnalysis; label: string; unit: string }[] = [
+const REP_METRIC_FIELDS: {
+  key: keyof RepAnalysis;
+  label: string;
+  unit: string;
+}[] = [
   { key: 'maxDepthCm', label: 'Depth', unit: 'cm' },
   { key: 'forwardLeanDeg', label: 'Lean', unit: '°' },
   { key: 'barDriftCm', label: 'Drift', unit: 'cm' },
@@ -1842,9 +1860,7 @@ function RepTable({
                 })}
               </div>
             </button>
-            {isExpanded && (
-              <RepDetail rep={rep} analysisFps={analysis.fps} />
-            )}
+            {isExpanded && <RepDetail rep={rep} analysisFps={analysis.fps} />}
           </div>
         );
       })}

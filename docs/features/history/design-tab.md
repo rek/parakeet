@@ -26,15 +26,18 @@ The History tab shows estimated 1RM as a single number with a direction arrow (�
 ### History Tab (main screen)
 
 **1RM section** — three lift cards (Squat / Bench / Deadlift):
+
 - Shows rolling best estimated 1RM (max across last 5 sessions) + trend direction
 - Cards are now tappable → navigates to per-lift drill-down
 
 **Volume section** (new):
+
 - `LineChart` (react-native-chart-kit): x-axis = week label (last 8 weeks), y-axis = sets completed
 - Three bars per week group, one per lift, colour-coded
 - Lets users see at a glance when volume was high/low and which lift drove it
 
 **Recent Sessions section**:
+
 - Filter chips: All / Squat / Bench / Deadlift — filters the session list in-component
 - Otherwise unchanged (date, intensity, cycle phase tag, Done badge)
 
@@ -43,15 +46,18 @@ The History tab shows estimated 1RM as a single number with a direction arrow (�
 **Header**: lift name + current estimated 1RM
 
 **1RM chart**:
+
 - `LineChart` (react-native-chart-kit): x = session date, y = estimated 1RM in kg
 - All historical sessions for that lift (no cutoff)
 - Tooltip/label on data points showing date + value
 
 **Intensity filter chips**: Heavy / Explosive / Rep / Deload / All
+
 - Filters the session list below the chart
 - Chart always shows all sessions (filter only affects the list)
 
 **Session list**:
+
 - Date, intensity type, estimated 1RM for that session, session RPE
 - Ordered most recent first
 
@@ -73,7 +79,7 @@ Single phase — spec: [mobile-026-history-tab-upgrade.md](../specs/09-mobile/mo
 ## Additional Enhancements (2026-03-07)
 
 - **Completion time shown**: all three history surfaces (session list, session detail, lift detail) now display `HH:MM` completion time alongside the date (e.g. "7 Mar · 09:30")
-- **Only completed sets stored**: fixed a bug where `completeSession` was saving *all* sets (including skipped/incomplete ones) to `session_logs.actual_sets` and `auxiliary_sets`. Now only sets with `is_completed === true` are persisted. The `completion_pct` and `performance_vs_plan` calculations were already correct (they used `is_completed` before the bug); only the stored set arrays were affected.
+- **Only completed sets stored**: fixed a bug where `completeSession` was saving _all_ sets (including skipped/incomplete ones) to `session_logs.actual_sets` and `auxiliary_sets`. Now only sets with `is_completed === true` are persisted. The `completion_pct` and `performance_vs_plan` calculations were already correct (they used `is_completed` before the bug); only the stored set arrays were affected.
 - **Session detail shows only completed sets**: `history/[sessionId].tsx` naturally shows what was actually performed, since the source data is now clean.
 
 ## References

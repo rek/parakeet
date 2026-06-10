@@ -6,19 +6,18 @@ import { View } from 'react-native';
 import { AuthProvider, useAuth, useAuthContext } from '@modules/auth';
 import {
   useMissedSessionReconciliation,
-  useRestNotificationTapHandler,
   useRestNotifications,
+  useRestNotificationTapHandler,
   useSessionRecovery,
   useSyncQueue,
 } from '@modules/session';
-import { useWearableSync } from '@modules/wearable';
 import { OtaUpdatesProvider, UpdateReadyBanner } from '@modules/updates';
+import { useWearableSync } from '@modules/wearable';
 import { queryClient } from '@platform/query';
 import * as Sentry from '@sentry/react-native';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
-
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import '@platform/supabase/bootstrap';

@@ -12,8 +12,8 @@ import {
   getRehabCapHistory as repoGetRehabCapHistory,
   insertRehabCap as repoInsertRehabCap,
   listActiveRehabCaps as repoListActiveRehabCaps,
-  type RehabCapRow,
   updateRehabCap as repoUpdateRehabCap,
+  type RehabCapRow,
 } from '../data/rehab-mode.repository';
 
 export async function enableRehabCap(
@@ -38,7 +38,9 @@ export async function endRehabCap(
   return repoEndRehabCap(id, userId);
 }
 
-export async function getActiveRehabCaps(userId: string): Promise<RehabCapRow[]> {
+export async function getActiveRehabCaps(
+  userId: string
+): Promise<RehabCapRow[]> {
   return repoListActiveRehabCaps(userId);
 }
 

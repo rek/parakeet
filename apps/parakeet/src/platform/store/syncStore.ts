@@ -69,7 +69,10 @@ export type PendingOperation =
     };
 
 type EnqueueArg =
-  | { operation: 'complete_session' | 'skip_session'; payload: CompleteSessionPayload }
+  | {
+      operation: 'complete_session' | 'skip_session';
+      payload: CompleteSessionPayload;
+    }
   | { operation: 'upsert_set_log'; payload: UpsertSetLogPayload };
 
 interface SyncState {
@@ -102,7 +105,10 @@ export const useSyncStore = create<SyncState>()(
             const key = setLogDedupeKey(op.payload);
             const filtered = state.queue.filter(
               (existing) =>
-                !(isSetLogOp(existing) && setLogDedupeKey(existing.payload) === key)
+                !(
+                  isSetLogOp(existing) &&
+                  setLogDedupeKey(existing.payload) === key
+                )
             );
             return {
               queue: [

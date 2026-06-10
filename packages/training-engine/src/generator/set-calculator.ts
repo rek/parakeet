@@ -1,12 +1,11 @@
 import { IntensityType, Lift, PlannedSet } from '@parakeet/shared-types';
 
 import { InvalidInputError } from '../errors';
-import { effectiveIncrementKg, roundToNearest } from '../formulas/weight-rounding';
 import {
-  DeepPartial,
-  FormulaConfig,
-  FormulaConfigOverrides,
-} from '../types';
+  effectiveIncrementKg,
+  roundToNearest,
+} from '../formulas/weight-rounding';
+import { DeepPartial, FormulaConfig, FormulaConfigOverrides } from '../types';
 
 export function calculateSets(
   _lift: Lift,

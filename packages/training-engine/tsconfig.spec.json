@@ -8,8 +8,5 @@
     "composite": false,
     "declaration": false
   },
-  "include": [
-    "vitest.config.mts",
-    "src/**/*.ts"
-  ]
+  "include": ["vitest.config.mts", "src/**/*.ts"]
 }

@@ -6,7 +6,10 @@ import { upsertModifierCalibration } from '../data/calibration.repository';
 
 const PENDING_PROMPT_KEY = 'pending_calibration_prompt';
 
-export type CalibrationModifierSource = 'readiness' | 'cycle_phase' | 'soreness';
+export type CalibrationModifierSource =
+  | 'readiness'
+  | 'cycle_phase'
+  | 'soreness';
 
 interface AcceptParams {
   userId: string;

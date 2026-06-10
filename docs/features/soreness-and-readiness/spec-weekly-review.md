@@ -52,9 +52,10 @@ New screen. No tab entry — only reachable from the completion screen prompt.
   - Below each row: thin horizontal bar showing `volumePct` (sets/MRV %), colored by volume status
 
 - [x] **Data fetching**:
+
   ```typescript
-  const { weekly, config } = useWeeklyVolume()
-  const predicted = computePredictedFatigue(weekly, config)
+  const { weekly, config } = useWeeklyVolume();
+  const predicted = computePredictedFatigue(weekly, config);
   ```
 
 - [x] **State**: `feltSoreness: Record<MuscleGroup, FatigueLevel>` initialized from predicted values. User adjusts by tapping pills.

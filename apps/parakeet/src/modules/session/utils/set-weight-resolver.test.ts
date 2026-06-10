@@ -150,7 +150,6 @@ describe('resolveNextSetWeight', () => {
       })
     ).toBe(112_500);
   });
-
 });
 
 describe('resolveNextAuxSetWeight', () => {

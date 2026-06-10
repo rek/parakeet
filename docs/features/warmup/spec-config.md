@@ -10,6 +10,7 @@ CRUD operations for the user's warmup protocol preference per lift. Each lift (s
 ## Tasks
 
 **Table: `warmup_configs`**
+
 ```sql
 CREATE TABLE warmup_configs (
   id           UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -28,12 +29,14 @@ CREATE POLICY "users_own_warmup_config" ON warmup_configs
 ```
 
 **`apps/parakeet/lib/warmup-config.ts`:**
+
 - [x] `getWarmupConfig(userId: string, lift: Lift, biologicalSex?): Promise<{ protocol: WarmupProtocol; explicit: boolean }>` — fetch protocol for a lift, falling back to `standard_female` (female) or `standard` (male/unset) if no row. `explicit` is `true` when a user-configured row exists.
 - [x] `getAllWarmupConfigs(userId: string, biologicalSex?): Promise<Record<Lift, WarmupProtocol>>` — fetch all 3 lifts in one call, applying sex-appropriate defaults where rows are missing
 - [x] `updateWarmupConfig(userId: string, lift: Lift, protocol: WarmupProtocol): Promise<void>` — upsert protocol for a lift
 - [x] `resetWarmupConfig(userId: string, lift: Lift): Promise<void>` — delete override row, reverting to standard default
 
 **Settings screen — Warmup Protocols (`apps/parakeet/app/(tabs)/settings.tsx`):**
+
 - [x] Three sections: Squat, Bench, Deadlift
 - [x] Each section has a protocol picker: Standard / Minimal / Extended / Empty Bar First / Custom
 - [x] Below the picker: a preview of the warmup sets based on current 1RM for that lift

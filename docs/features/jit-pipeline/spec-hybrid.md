@@ -15,41 +15,38 @@
 
 ```typescript
 export class HybridJITGenerator implements JITGeneratorStrategy {
-  readonly name = 'hybrid'
-  readonly description = 'Runs formula and LLM in parallel; compares outputs'
+  readonly name = 'hybrid';
+  readonly description = 'Runs formula and LLM in parallel; compares outputs';
 
   constructor(
     private formula: FormulaJITGenerator,
-    private llm: LLMJITGenerator,
+    private llm: LLMJITGenerator
   ) {}
 
   async generate(input: JITInput): Promise<JITOutput> {
-    const [formulaResult, llmResult] = await Promise.allSettled([
-      this.formula.generate(input),
-      this.llm.generate(input),
-    ])
+    const [formulaResult, llmResult] = await Promise.allSettled([this.formula.generate(input), this.llm.generate(input)]);
 
-    const formulaOutput = formulaResult.status === 'fulfilled' ? formulaResult.value : null
-    const llmOutput    = llmResult.status    === 'fulfilled' ? llmResult.value    : null
+    const formulaOutput = formulaResult.status === 'fulfilled' ? formulaResult.value : null;
+    const llmOutput = llmResult.status === 'fulfilled' ? llmResult.value : null;
 
     // The LLM strategy can fail in two ways:
     //   (a) Promise rejects (very rare — LLMJITGenerator catches internally)
     //   (b) LLMJITGenerator caught all retries and resolved with jit_strategy: 'formula_fallback'
     // In either case, surface formula_fallback to the caller — never relabel a fallback as 'llm',
     // or persisted sessions misrepresent which path actually ran.
-    const llmFailed = !llmOutput || llmOutput.jit_strategy === 'formula_fallback'
+    const llmFailed = !llmOutput || llmOutput.jit_strategy === 'formula_fallback';
     if (llmFailed) {
-      return { ...formulaOutput!, jit_strategy: 'formula_fallback' }
+      return { ...formulaOutput!, jit_strategy: 'formula_fallback' };
     }
 
-    const divergence = computeDivergence(formulaOutput!, llmOutput)
+    const divergence = computeDivergence(formulaOutput!, llmOutput);
 
     // Log comparison regardless of divergence level
-    void logComparison(input, formulaOutput!, llmOutput, divergence)
+    void logComparison(input, formulaOutput!, llmOutput, divergence);
 
-    if (divergence.weightPct <= 0.10 && divergence.setDelta === 0) {
+    if (divergence.weightPct <= 0.1 && divergence.setDelta === 0) {
       // Agree within 10% weight + same set count → use LLM (better rationale)
-      return { ...llmOutput, jit_strategy: 'llm', comparisonData: { divergence, formulaOutput } }
+      return { ...llmOutput, jit_strategy: 'llm', comparisonData: { divergence, formulaOutput } };
     }
 
     // Diverge → return LLM output but attach comparison for UI display
@@ -61,28 +58,29 @@ export class HybridJITGenerator implements JITGeneratorStrategy {
         formulaOutput,
         shouldSurfaceToUser: divergence.weightPct > 0.15 || divergence.setDelta !== 0,
       },
-    }
+    };
   }
 }
 
 interface DivergenceResult {
-  weightPct: number       // |llmWeight - formulaWeight| / formulaWeight
-  setDelta: number        // llmSets - formulaSets (signed)
-  rpeContextSummary: string
+  weightPct: number; // |llmWeight - formulaWeight| / formulaWeight
+  setDelta: number; // llmSets - formulaSets (signed)
+  rpeContextSummary: string;
 }
 
 function computeDivergence(formula: JITOutput, llm: JITOutput): DivergenceResult {
-  const formulaWeight = formula.mainLiftSets[0]?.weightKg ?? 0
-  const llmWeight     = llm.mainLiftSets[0]?.weightKg ?? 0
+  const formulaWeight = formula.mainLiftSets[0]?.weightKg ?? 0;
+  const llmWeight = llm.mainLiftSets[0]?.weightKg ?? 0;
   return {
     weightPct: formulaWeight > 0 ? Math.abs(llmWeight - formulaWeight) / formulaWeight : 0,
-    setDelta:  llm.mainLiftSets.length - formula.mainLiftSets.length,
+    setDelta: llm.mainLiftSets.length - formula.mainLiftSets.length,
     rpeContextSummary: llm.rationale?.[0] ?? '',
-  }
+  };
 }
 ```
 
 **`JITOutput` extension (add to type in `jit-session-generator.ts`):**
+
 ```typescript
 comparisonData?: {
   divergence: DivergenceResult
@@ -115,22 +113,20 @@ CREATE TABLE jit_comparison_logs (
 **`logComparison()` in `packages/training-engine/src/generator/hybrid-jit-generator.ts`:**
 
 ```typescript
-async function logComparison(
-  input: JITInput,
-  formula: JITOutput,
-  llm: JITOutput,
-  divergence: DivergenceResult,
-): Promise<void> {
+async function logComparison(input: JITInput, formula: JITOutput, llm: JITOutput, divergence: DivergenceResult): Promise<void> {
   // Fire-and-forget — comparison logging must not block JIT output
-  supabase.from('jit_comparison_logs').insert({
-    user_id: input.userId,
-    session_id: input.sessionId,
-    jit_input: input,
-    formula_output: formula,
-    llm_output: llm,
-    divergence,
-    strategy_used: llm ? 'llm' : 'formula_fallback',
-  }).then()  // intentionally not awaited
+  supabase
+    .from('jit_comparison_logs')
+    .insert({
+      user_id: input.userId,
+      session_id: input.sessionId,
+      jit_input: input,
+      formula_output: formula,
+      llm_output: llm,
+      divergence,
+      strategy_used: llm ? 'llm' : 'formula_fallback',
+    })
+    .then(); // intentionally not awaited
 }
 ```
 
@@ -157,17 +153,17 @@ Selection persisted to Async Storage:
 
 ```typescript
 // apps/parakeet/src/modules/settings/lib/settings.ts
-const JIT_STRATEGY_KEY = 'jit_strategy_override'
-type JITStrategyOverride = 'auto' | 'formula' | 'llm' | 'hybrid'
+const JIT_STRATEGY_KEY = 'jit_strategy_override';
+type JITStrategyOverride = 'auto' | 'formula' | 'llm' | 'hybrid';
 ```
 
 Read by `JITGeneratorRegistry` before generating each session:
 
 ```typescript
 // packages/training-engine/src/generator/jit-generator-registry.ts
-const override = await getJITStrategyOverride()
-const strategy = resolveStrategy(override, isOnline)
-return registry.get(strategy).generate(input)
+const override = await getJITStrategyOverride();
+const strategy = resolveStrategy(override, isOnline);
+return registry.get(strategy).generate(input);
 ```
 
 - [x] Wire `JITGeneratorRegistry` to read strategy override from AsyncStorage — currently calls `getJITGenerator('auto', true)` unconditionally; `hybrid` strategy is never selected

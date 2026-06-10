@@ -10,6 +10,7 @@ Creating a new program when the user updates their maxes or wants a fresh start.
 ## Tasks
 
 **`apps/parakeet/lib/programs.ts` (regeneration helper):**
+
 - [x] `regenerateProgram(input: RegenerateProgramInput): Promise<Program>`
   1. Fetch updated maxes and formula config
   2. Generate new scaffold with `generateProgram()`
@@ -23,16 +24,18 @@ Creating a new program when the user updates their maxes or wants a fresh start.
 **Version counter:** Scoped per user — first program is version 1, each subsequent program increments.
 
 **History integrity:**
+
 - [x] Old program sessions remain in DB with their original statuses (completed, skipped, planned)
 - [x] Old `planned_sets` data on completed sessions is preserved — never deleted
 - [x] Old program `status = 'archived'` — visible in program history list
 
 **`RegenerateProgramInput` type:**
+
 ```typescript
 interface RegenerateProgramInput {
-  totalWeeks: 10 | 12 | 14
-  trainingDaysPerWeek: 3 | 4
-  startDate: Date
+  totalWeeks: 10 | 12 | 14;
+  trainingDaysPerWeek: 3 | 4;
+  startDate: Date;
 }
 ```
 

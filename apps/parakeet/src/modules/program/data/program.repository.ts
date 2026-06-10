@@ -3,7 +3,10 @@ import { safeParseWithParser } from '@parakeet/db';
 import type { FormulaOverrides } from '@parakeet/shared-types';
 import { FormulaOverridesSchema } from '@parakeet/shared-types';
 import type { FormulaConfig } from '@parakeet/training-engine';
-import { getDefaultFormulaConfig, mergeFormulaConfig } from '@parakeet/training-engine';
+import {
+  getDefaultFormulaConfig,
+  mergeFormulaConfig,
+} from '@parakeet/training-engine';
 import type { DbInsert, DbRow } from '@platform/supabase';
 import { typedSupabase } from '@platform/supabase';
 import { captureException } from '@platform/utils/captureException';

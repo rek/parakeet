@@ -7,8 +7,9 @@ import {
   cancelRestNotification,
   scheduleRestNotification,
 } from '@platform/lib/rest-notifications';
-import { useSessionStore } from '../store/sessionStore';
 import { captureException } from '@platform/utils/captureException';
+
+import { useSessionStore } from '../store/sessionStore';
 
 export function useRestNotifications(): void {
   const pendingNotifIdRef = useRef<string | null>(null);

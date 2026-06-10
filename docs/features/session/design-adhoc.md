@@ -27,6 +27,7 @@ Users want to train outside of their scheduled program — an extra squat day, a
 No new migration required. `sessions.program_id` is already nullable (migration `20260314000000_nullable_program_id_for_imports.sql`). `block_number` is already nullable.
 
 Sentinel values for ad-hoc sessions:
+
 - `program_id = null`
 - `block_number = null`
 - `week_number = 0` (DB requires non-null; 0 is the sentinel)
@@ -40,6 +41,7 @@ Ad-hoc sessions are distinguished from import sessions by `intensity_type != 'im
 ### JIT
 
 `runJITForSession` in `modules/jit/lib/jit.ts` is modified to handle `program_id = null`:
+
 - `blockNumber`: derived from `intensityType` (heavy→1, explosive→2, rep→3)
 - `activeAuxiliaries`: `DEFAULT_AUXILIARY_POOLS[lift]` (no block-based rotation)
 - `weeklyVolumeToDate`: empty object (no program-week context; volume MRV logic still applies globally but no historical volume is pre-loaded)
@@ -51,15 +53,18 @@ Ad-hoc sessions are distinguished from import sessions by `intensity_type != 'im
 ### UI
 
 New screen `app/(tabs)/session/adhoc.tsx`:
+
 - Lift picker (squat | bench | deadlift)
 - Intensity picker (heavy | explosive | rep)
 - "Start" button → calls `createAdHocSession` → routes to `/session/soreness?sessionId=<id>`
 - Soreness screen, JIT, and session logging screens are reused unchanged.
 
 Today screen (`app/(tabs)/today.tsx`):
+
 - "Ad-Hoc Workout" secondary button added below the program card section (when a program exists).
 
 WorkoutCard:
+
 - Displays "Ad-Hoc" as the block/week label when `program_id === null`.
 
 ## What doesn't change

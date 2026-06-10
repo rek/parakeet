@@ -78,8 +78,8 @@ export function useCycleReview(programId: string) {
         : RETRY_SHOW_DELAY_NO_ROW_MS;
     const timer = setTimeout(() => setShowRetry(true), delay);
     return () => clearTimeout(timer);
-  // Intentionally omits retryCount.current — ref changes don't re-run effects.
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // Intentionally omits retryCount.current — ref changes don't re-run effects.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [query.data]);
 
   // Realtime subscription for instant update when row is inserted

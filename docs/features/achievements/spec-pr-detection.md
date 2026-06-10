@@ -14,31 +14,31 @@ Pure functions that evaluate session data and return earned personal records (st
 **File: `packages/training-engine/src/achievements/pr-detection.ts`**
 
 ```typescript
-type PRType = 'estimated_1rm' | 'volume' | 'rep_at_weight'
+type PRType = 'estimated_1rm' | 'volume' | 'rep_at_weight';
 
 interface PR {
-  type: PRType
-  lift: Lift
-  value: number           // kg for 1rm, kg³ for volume, reps for rep_at_weight
-  weightKg?: number       // only for rep_at_weight
-  sessionId: string
-  achievedAt: string      // ISO timestamp
+  type: PRType;
+  lift: Lift;
+  value: number; // kg for 1rm, kg³ for volume, reps for rep_at_weight
+  weightKg?: number; // only for rep_at_weight
+  sessionId: string;
+  achievedAt: string; // ISO timestamp
 }
 
 interface PRCheckInput {
-  sessionId: string
-  lift: Lift
+  sessionId: string;
+  lift: Lift;
   completedSets: Array<{
-    weightKg: number
-    reps: number
-    rpe?: number
-    estimated1rmKg?: number   // pre-computed by engine-001 if RPE was logged
-  }>
+    weightKg: number;
+    reps: number;
+    rpe?: number;
+    estimated1rmKg?: number; // pre-computed by engine-001 if RPE was logged
+  }>;
   historicalPRs: {
-    best1rmKg: number
-    bestVolumeKgCubed: number          // max single-session sets×reps×weight
-    repPRs: Record<number, number>     // weightKg → best reps ever at that weight
-  }
+    best1rmKg: number;
+    bestVolumeKgCubed: number; // max single-session sets×reps×weight
+    repPRs: Record<number, number>; // weightKg → best reps ever at that weight
+  };
 }
 ```
 
@@ -49,6 +49,7 @@ interface PRCheckInput {
   - Sessions with an active **Major** disruption: skip all PR detection. Minor/Moderate disruptions: PRs count. "Active" uses the same definition as `disruptions-003`: `status != 'resolved'` AND (`affected_date_end` is null OR `affected_date_end >= today`). The caller (`useAchievementDetection.ts`) must pass `activeDisruptions` from `getActiveDisruptions()`.
 
 **Unit tests (`packages/training-engine/src/achievements/pr-detection.test.ts`):**
+
 - [x] New 1RM (RPE 9.0, 3×140kg) → 1rm PR returned
 - [x] Existing 1RM better than new → no PR
 - [x] RPE < 8.5 → no 1RM PR eligible
@@ -65,17 +66,17 @@ interface PRCheckInput {
 
 ```typescript
 interface WeekStatus {
-  weekStartDate: string      // ISO Monday
-  scheduled: number
-  completed: number
-  skippedWithDisruption: number
-  unaccountedMisses: number
+  weekStartDate: string; // ISO Monday
+  scheduled: number;
+  completed: number;
+  skippedWithDisruption: number;
+  unaccountedMisses: number;
 }
 
 interface StreakResult {
-  currentStreak: number       // consecutive fully-completed program weeks
-  longestStreak: number
-  lastCleanWeekDate: string
+  currentStreak: number; // consecutive fully-completed program weeks
+  longestStreak: number;
+  lastCleanWeekDate: string;
 }
 ```
 
@@ -89,6 +90,7 @@ interface StreakResult {
   - A week with no scheduled sessions (deload, program gap) is skipped (neither breaks nor extends).
 
 **Unit tests:**
+
 - [x] 5 consecutive clean weeks → streak = 5
 - [x] Miss in week 3, then 2 clean → streak = 2, longest = depends on history before week 3
 - [x] Disruption-logged miss → **breaks** streak (strict rule)
@@ -106,15 +108,15 @@ interface StreakResult {
 
 ```typescript
 interface CycleCompletionInput {
-  totalScheduledSessions: number
-  completedSessions: number
-  skippedWithDisruption: number
+  totalScheduledSessions: number;
+  completedSessions: number;
+  skippedWithDisruption: number;
 }
 
 interface CycleCompletionResult {
-  isComplete: boolean
-  completionPct: number
-  qualifiesForBadge: boolean    // completionPct >= 0.80
+  isComplete: boolean;
+  completionPct: number;
+  qualifiesForBadge: boolean; // completionPct >= 0.80
 }
 ```
 
@@ -124,6 +126,7 @@ interface CycleCompletionResult {
   - Called from `onCycleComplete()` in `apps/parakeet/src/modules/program/application/program.service.ts` (already fires at ≥80% — this function provides the formal calculation)
 
 **Unit tests:**
+
 - [x] 16/20 sessions completed, 0 disruptions → 80% → qualifies
 - [x] 15/20 → 75% → does not qualify
 - [x] 18/20 + 2 disruption-skipped → 100% → qualifies
@@ -137,12 +140,12 @@ Called from `apps/parakeet/src/modules/session/application/session.service.ts` �
 
 ```typescript
 // After session completion, in completeSession():
-const historicalPRs = await getPRHistory(userId, lift)
-const earnedPRs = detectSessionPRs({ sessionId, lift, completedSets, historicalPRs })
+const historicalPRs = await getPRHistory(userId, lift);
+const earnedPRs = detectSessionPRs({ sessionId, lift, completedSets, historicalPRs });
 
 if (earnedPRs.length > 0) {
   await supabase.from('personal_records').upsert(
-    earnedPRs.map(pr => ({
+    earnedPRs.map((pr) => ({
       user_id: userId,
       lift: pr.lift,
       pr_type: pr.type,
@@ -151,12 +154,13 @@ if (earnedPRs.length > 0) {
       session_id: pr.sessionId,
       achieved_at: pr.achievedAt,
     })),
-    { onConflict: 'user_id,lift,pr_type,weight_kg' }  // upsert: replace only if new value > old
-  )
+    { onConflict: 'user_id,lift,pr_type,weight_kg' } // upsert: replace only if new value > old
+  );
 }
 ```
 
 **`personal_records` table (add to migration):**
+
 ```sql
 CREATE TABLE personal_records (
   id          uuid DEFAULT gen_random_uuid() PRIMARY KEY,
@@ -172,6 +176,7 @@ CREATE UNIQUE INDEX pr_unique ON personal_records (user_id, lift, pr_type, COALE
 ```
 
 **`getPRHistory(userId, lift)` in `apps/parakeet/src/modules/achievements/application/achievement.service.ts`:**
+
 - Fetch all rows from `personal_records` for this user+lift
 - Map into `historicalPRs` shape expected by `detectSessionPRs`
 

@@ -6,7 +6,10 @@ import { useSupabase } from './SupabaseContext';
 
 type Builder<T> = {
   then: (
-    onfulfilled: (result: { data: T[] | null; error: PostgrestError | null }) => void
+    onfulfilled: (result: {
+      data: T[] | null;
+      error: PostgrestError | null;
+    }) => void
   ) => unknown;
 };
 

@@ -178,7 +178,7 @@ export function parseSupplementCsv(text: string): SupplementRow[] {
   for (let i = 0; i < SUPP_HEADER.length; i++) {
     if ((header[i] ?? '').trim() !== SUPP_HEADER[i]) {
       throw new Error(
-        `Unexpected supplement header at col ${i}: got "${header[i]}" expected "${SUPP_HEADER[i]}"`,
+        `Unexpected supplement header at col ${i}: got "${header[i]}" expected "${SUPP_HEADER[i]}"`
       );
     }
   }
@@ -232,7 +232,7 @@ export function parseLifestyleCsv(text: string): LifestyleRow[] {
   for (let i = 0; i < LIFESTYLE_HEADER.length; i++) {
     if ((header[i] ?? '').trim() !== LIFESTYLE_HEADER[i]) {
       throw new Error(
-        `Unexpected lifestyle header at col ${i}: got "${header[i]}" expected "${LIFESTYLE_HEADER[i]}"`,
+        `Unexpected lifestyle header at col ${i}: got "${header[i]}" expected "${LIFESTYLE_HEADER[i]}"`
       );
     }
   }
@@ -246,7 +246,7 @@ export function parseLifestyleCsv(text: string): LifestyleRow[] {
     const freqT = (frequency ?? '').trim() as LifestyleFrequency;
     if (!LIFESTYLE_FREQUENCIES.has(freqT)) {
       throw new Error(
-        `Row ${i + 2}: invalid lifestyle frequency "${frequency}"`,
+        `Row ${i + 2}: invalid lifestyle frequency "${frequency}"`
       );
     }
     const sortVal = Number.parseInt((sortRaw ?? '0').trim(), 10);
@@ -282,7 +282,10 @@ const NUTRITION_SOURCES = new Set<NutritionSource>([
   'manual',
 ]);
 
-function parseNumber(s: string | undefined, fallback: number | null = null): number | null {
+function parseNumber(
+  s: string | undefined,
+  fallback: number | null = null
+): number | null {
   if (s === undefined) return fallback;
   const trimmed = s.trim();
   if (trimmed.length === 0) return fallback;
@@ -301,7 +304,7 @@ export function parseNutritionCsv(text: string): NutritionRow[] {
   for (let i = 0; i < NUTRITION_HEADER_REQUIRED.length; i++) {
     if ((header[i] ?? '').trim() !== NUTRITION_HEADER_REQUIRED[i]) {
       throw new Error(
-        `Unexpected nutrition header at col ${i}: got "${header[i]}" expected "${NUTRITION_HEADER_REQUIRED[i]}"`,
+        `Unexpected nutrition header at col ${i}: got "${header[i]}" expected "${NUTRITION_HEADER_REQUIRED[i]}"`
       );
     }
   }
@@ -320,7 +323,12 @@ export function parseNutritionCsv(text: string): NutritionRow[] {
     if (!NUTRITION_SOURCES.has(sourceT)) {
       throw new Error(`Row ${i + 2}: invalid source "${cols[7]}"`);
     }
-    if (kcal === null || protein_g === null || fat_g === null || carb_g === null) {
+    if (
+      kcal === null ||
+      protein_g === null ||
+      fat_g === null ||
+      carb_g === null
+    ) {
       throw new Error(`Row ${i + 2}: kcal/protein/fat/carb must be numeric`);
     }
     const sourceIdRaw = (cols[8] ?? '').trim();

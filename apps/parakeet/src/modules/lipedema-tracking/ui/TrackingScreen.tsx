@@ -1,5 +1,4 @@
 // @spec docs/features/lipedema-tracking/spec-data-layer.md
-import { Ionicons } from '@expo/vector-icons';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
@@ -12,6 +11,7 @@ import {
   View,
 } from 'react-native';
 
+import { Ionicons } from '@expo/vector-icons';
 import { captureException } from '@platform/utils/captureException';
 
 import { radii, spacing, typography } from '../../../theme';
@@ -146,7 +146,9 @@ export function TrackingScreen() {
     if (loadedForDate.current === draft.recordedDate) return;
     loadedForDate.current = draft.recordedDate;
     const existing = rows.find((m) => m.recordedDate === draft.recordedDate);
-    setDraft(existing ? measurementToDraft(existing) : emptyDraft(draft.recordedDate));
+    setDraft(
+      existing ? measurementToDraft(existing) : emptyDraft(draft.recordedDate)
+    );
   }, [rows, draft.recordedDate]);
 
   useEffect(() => {
@@ -160,7 +162,7 @@ export function TrackingScreen() {
       setDraft((prev) => ({ ...prev, [key]: value }));
       if (saveError) setSaveError(null);
     },
-    [saveError],
+    [saveError]
   );
 
   const goToDate = useCallback((iso: string) => {
@@ -211,12 +213,12 @@ export function TrackingScreen() {
               captureException(err);
               Alert.alert(
                 'Could not delete',
-                'The entry is still there. Check your connection and try again.',
+                'The entry is still there. Check your connection and try again.'
               );
             }
           },
         },
-      ],
+      ]
     );
   }
 
@@ -237,9 +239,12 @@ export function TrackingScreen() {
   const allRows = rows ?? [];
   const isToday = draft.recordedDate === today;
   const draftIsBlank = draftIsEmpty(draft);
-  const existingForDate = allRows.find((m) => m.recordedDate === draft.recordedDate);
-  const lastEntryDate = allRows.find((m) => m.recordedDate !== draft.recordedDate)
-    ?.recordedDate;
+  const existingForDate = allRows.find(
+    (m) => m.recordedDate === draft.recordedDate
+  );
+  const lastEntryDate = allRows.find(
+    (m) => m.recordedDate !== draft.recordedDate
+  )?.recordedDate;
 
   return (
     <ScrollView
@@ -291,11 +296,7 @@ export function TrackingScreen() {
 
       {existingForDate && (
         <View style={styles.editingBanner}>
-          <Ionicons
-            name="create-outline"
-            size={14}
-            color={colors.primary}
-          />
+          <Ionicons name="create-outline" size={14} color={colors.primary} />
           <Text style={styles.editingBannerText}>
             Editing existing entry · saving will overwrite
           </Text>
@@ -304,8 +305,8 @@ export function TrackingScreen() {
 
       <View style={styles.card}>
         <Text style={styles.hint}>
-          Circumferences in cm (one decimal). Same landmark each time —
-          relaxed muscle, morning if possible. Blank fields stay blank.
+          Circumferences in cm (one decimal). Same landmark each time — relaxed
+          muscle, morning if possible. Blank fields stay blank.
         </Text>
 
         {LIMBS.map((limb) => {
@@ -379,7 +380,8 @@ export function TrackingScreen() {
         <TouchableOpacity
           style={[
             styles.saveButton,
-            (saveMutation.isPending || draftIsBlank) && styles.saveButtonDisabled,
+            (saveMutation.isPending || draftIsBlank) &&
+              styles.saveButtonDisabled,
           ]}
           onPress={handleSave}
           disabled={saveMutation.isPending}
@@ -415,14 +417,10 @@ export function TrackingScreen() {
       <Text style={styles.header}>History</Text>
       {allRows.length === 0 ? (
         <View style={styles.emptyCard}>
-          <Ionicons
-            name="body-outline"
-            size={28}
-            color={colors.textTertiary}
-          />
+          <Ionicons name="body-outline" size={28} color={colors.textTertiary} />
           <Text style={styles.emptyText}>
-            No entries yet. Log your first measurement above — even one limb
-            is enough to start a trend.
+            No entries yet. Log your first measurement above — even one limb is
+            enough to start a trend.
           </Text>
         </View>
       ) : (
@@ -441,10 +439,7 @@ export function TrackingScreen() {
 
       {toast && (
         <View
-          style={[
-            styles.toast,
-            toast === 'deleted' && styles.toastDanger,
-          ]}
+          style={[styles.toast, toast === 'deleted' && styles.toastDanger]}
           pointerEvents="none"
         >
           <Ionicons
@@ -552,7 +547,9 @@ function HistoryCard({
     >
       <View style={styles.historyRow}>
         <View style={styles.historyHeading}>
-          <Text style={styles.historyDate}>{formatDate(entry.recordedDate)}</Text>
+          <Text style={styles.historyDate}>
+            {formatDate(entry.recordedDate)}
+          </Text>
           {isCurrent && (
             <View style={styles.historyActiveBadge}>
               <Text style={styles.historyActiveBadgeText}>EDITING</Text>
@@ -578,9 +575,7 @@ function HistoryCard({
         <View style={styles.historyChips}>
           {entry.painScore != null && (
             <View style={styles.historyChip}>
-              <Text style={styles.historyChipText}>
-                Pain {entry.painScore}
-              </Text>
+              <Text style={styles.historyChipText}>Pain {entry.painScore}</Text>
             </View>
           )}
           {entry.swellingScore != null && (

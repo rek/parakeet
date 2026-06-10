@@ -49,6 +49,7 @@ None of these changes alter loading — they are informational context only.
 **`apps/parakeet/src/app/disruption-report/report.tsx`:**
 
 In the disruption type step, under "Fatigue" type options, add:
+
 - Option: **"Menstrual symptoms"** (shown only if `user.biological_sex === 'female'`)
 - On select: auto-sets severity to `minor`, affected lifts to `['squat', 'bench', 'deadlift']` (all lifts)
 - User can still adjust severity and lifts before submitting
@@ -75,6 +76,7 @@ In the disruption type step, under "Fatigue" type options, add:
 Navigation: History tab → "Cycle Patterns" button (only visible if cycle tracking is enabled and ≥1 session has `cycle_phase` populated).
 
 **Content:**
+
 - Chart: bar or line, X-axis = cycle phase, Y-axis = average session RPE per phase
 - Second chart (or same chart with dual Y): average volume completed per phase
 - Data grouping: aggregate all logged sessions that have a `cycle_phase` value

@@ -247,7 +247,10 @@ describe('applyAdjustment', () => {
 
   // GH#223: LLM aux path consumes engine anchor; LLM may dissent via override
   describe('aux anchor (GH#223)', () => {
-    const historyEntry = (weightKg: number, daysAgo: number): AuxHistoryEntry => ({
+    const historyEntry = (
+      weightKg: number,
+      daysAgo: number
+    ): AuxHistoryEntry => ({
       sessionId: `s-${daysAgo}`,
       completedAt: new Date(
         Date.parse('2026-05-25T12:00:00Z') - daysAgo * 86_400_000
@@ -542,7 +545,10 @@ describe('enforceHardConstraints', () => {
       activeRehabCap: { lift: 'squat', capKg: 82.5 },
       weightIncrementKg: 5,
     });
-    const constrained = enforceHardConstraints(applyAdjustment(adj, input), input);
+    const constrained = enforceHardConstraints(
+      applyAdjustment(adj, input),
+      input
+    );
     expect(constrained.mainLiftSets[0].weight_kg).toBe(85);
     expect(constrained.rehabCapKg).toBe(85);
   });
@@ -553,7 +559,10 @@ describe('enforceHardConstraints', () => {
       primaryLift: 'squat',
       activeRehabCap: { lift: 'bench', capKg: 50 },
     });
-    const constrained = enforceHardConstraints(applyAdjustment(adj, input), input);
+    const constrained = enforceHardConstraints(
+      applyAdjustment(adj, input),
+      input
+    );
     expect(constrained.mainLiftSets[0].weight_kg).toBeGreaterThan(100);
     expect(constrained.cappedByRehab).toBeUndefined();
   });
@@ -643,7 +652,10 @@ describe('enforceHardConstraints — over-reaction guard', () => {
     // Precondition: enough sets that -2 leaves the main lift standing.
     expect(baseCount).toBeGreaterThanOrEqual(3);
 
-    const out = enforceHardConstraints(applyAdjustment(aggressiveAdj, input), input);
+    const out = enforceHardConstraints(
+      applyAdjustment(aggressiveAdj, input),
+      input
+    );
 
     // Volume restored to the documented single-axis ceiling (−1 set)…
     expect(out.mainLiftSets).toHaveLength(baseCount - 1);
@@ -651,15 +663,16 @@ describe('enforceHardConstraints — over-reaction guard', () => {
     expect(out.mainLiftSets[0].weight_kg).toBeGreaterThanOrEqual(
       Math.floor(baseWeight * 0.95)
     );
-    expect(
-      out.warnings.some((w) => /Over-reaction guard/.test(w))
-    ).toBe(true);
+    expect(out.warnings.some((w) => /Over-reaction guard/.test(w))).toBe(true);
   });
 
   it('does NOT clamp when primary-muscle soreness ≥ 7 (strong signal)', () => {
     const input = guardInput({ sorenessRatings: { quads: 8 } });
     const base = baseline(input);
-    const out = enforceHardConstraints(applyAdjustment(aggressiveAdj, input), input);
+    const out = enforceHardConstraints(
+      applyAdjustment(aggressiveAdj, input),
+      input
+    );
     // The LLM's aggressive cut is respected — fewer sets than baseline−1, and
     // weight left below the 95% floor.
     expect(out.mainLiftSets.length).toBeLessThan(base.mainLiftSets.length - 1);
@@ -670,7 +683,10 @@ describe('enforceHardConstraints — over-reaction guard', () => {
     const input = guardInput({
       activeDisruptions: [makeDisruption('moderate')],
     });
-    const out = enforceHardConstraints(applyAdjustment(aggressiveAdj, input), input);
+    const out = enforceHardConstraints(
+      applyAdjustment(aggressiveAdj, input),
+      input
+    );
     expect(out.warnings.some((w) => /Over-reaction guard/.test(w))).toBe(false);
   });
 

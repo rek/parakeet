@@ -1,9 +1,9 @@
 // @spec docs/features/session/spec-set-persistence.md
 import { adaptAuxRemainingPlan } from '@parakeet/training-engine';
-import { useSessionStore } from '../store/sessionStore';
 import { weightGramsToKg, weightKgToGrams } from '@shared/utils/weight';
 
 import type { AuxiliaryWork } from '../model/types';
+import { useSessionStore } from '../store/sessionStore';
 
 // ---------------------------------------------------------------------------
 // Auxiliary failure — shared across post-rest and first-set-confirmation paths

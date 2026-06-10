@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
-import Svg, { Circle, Line, Polyline } from 'react-native-svg';
 
 import type { BiometricReading } from '@parakeet/shared-types';
+import Svg, { Circle, Line, Polyline } from 'react-native-svg';
 
 import { useTheme } from '../../../theme/ThemeContext';
 import { useHrvTrend } from '../hooks/useHrvTrend';
@@ -10,7 +10,9 @@ import { useHrvTrend } from '../hooks/useHrvTrend';
 const CHART_HEIGHT = 40;
 const PADDING = 4;
 
-function bestPerDay(readings: BiometricReading[]): { date: string; value: number }[] {
+function bestPerDay(
+  readings: BiometricReading[]
+): { date: string; value: number }[] {
   const map = new Map<string, number>();
   for (const r of readings) {
     const day = r.recorded_at.slice(0, 10);
@@ -46,10 +48,13 @@ export function HrvTrendChart() {
   const innerH = CHART_HEIGHT - PADDING * 2;
   const toY = (v: number) => PADDING + innerH - ((v - min) / range) * innerH;
 
-  const segW = width > 0 ? (width - PADDING * 2) / Math.max(points.length - 1, 1) : 0;
+  const segW =
+    width > 0 ? (width - PADDING * 2) / Math.max(points.length - 1, 1) : 0;
   const toX = (i: number) => PADDING + i * segW;
 
-  const polylinePoints = points.map((p, i) => `${toX(i)},${toY(p.value)}`).join(' ');
+  const polylinePoints = points
+    .map((p, i) => `${toX(i)},${toY(p.value)}`)
+    .join(' ');
   const baselineY = toY(mean);
   const lastI = points.length - 1;
 

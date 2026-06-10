@@ -38,7 +38,9 @@ Add a `plugins` array. The library ships its own Expo config plugin that injects
 
 ```typescript
 import { execSync } from 'child_process';
+
 import type { ConfigContext, ExpoConfig } from 'expo/config';
+
 import pkg from './package.json';
 
 const isDev = process.env.APP_ENV === 'development';
@@ -57,16 +59,11 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   version: pkg.version,
   android: {
     ...config.android,
-    package: isDev
-      ? 'com.adam.tombleson.parakeet.dev'
-      : 'com.adam.tombleson.parakeet',
+    package: isDev ? 'com.adam.tombleson.parakeet.dev' : 'com.adam.tombleson.parakeet',
     googleServicesFile: './google-services.json',
-    minSdkVersion: 28,                                // Health Connect requirement
+    minSdkVersion: 28, // Health Connect requirement
   },
-  plugins: [
-    ...(config.plugins ?? []),
-    'react-native-health-connect',
-  ],
+  plugins: [...(config.plugins ?? []), 'react-native-health-connect'],
   extra: {
     ...config.extra,
     buildDate: new Date().toISOString(),
@@ -77,6 +74,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
 ```
 
 **Notes:**
+
 - `minSdkVersion: 28` is required — Health Connect APIs are unavailable on Android < 14 in some forms, but the SDK requires API 28+.
 - The plugin string `'react-native-health-connect'` resolves to `node_modules/react-native-health-connect/app.plugin.js` (standard Expo convention; verify the file exists after install).
 - If the library's plugin requires options (e.g. permission scope tuning), use the array form: `['react-native-health-connect', { /* options */ }]`. Check the library README at the pinned version for current options.

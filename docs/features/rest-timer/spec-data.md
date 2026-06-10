@@ -29,6 +29,7 @@ CREATE POLICY "users manage own rest configs"
 ```
 
 **Lookup precedence (most specific wins):**
+
 1. `user_id + lift + intensity_type` (most specific)
 2. `user_id + lift + NULL` (lift-specific, all intensities)
 3. `user_id + NULL + intensity_type`
@@ -42,49 +43,40 @@ CREATE POLICY "users manage own rest configs"
 **File: `apps/parakeet/src/modules/settings/lib/rest-config.ts`**
 
 ```typescript
-import { supabase } from './supabase'
-import type { Lift, IntensityType } from '@parakeet/shared-types'
+import type { IntensityType, Lift } from '@parakeet/shared-types';
+
+import { supabase } from './supabase';
 
 // Fetch all user overrides — called once before JIT and passed in as JITInput.userRestOverrides
 export async function getUserRestOverrides(userId: string) {
-  const { data, error } = await supabase
-    .from('rest_configs')
-    .select('lift, intensity_type, rest_seconds')
-    .eq('user_id', userId)
-  if (error) throw error
-  return data ?? []
+  const { data, error } = await supabase.from('rest_configs').select('lift, intensity_type, rest_seconds').eq('user_id', userId);
+  if (error) throw error;
+  return data ?? [];
 }
 
 // Upsert a single override
-export async function setRestOverride(
-  userId: string,
-  restSeconds: number,
-  lift?: Lift,
-  intensityType?: IntensityType,
-) {
+export async function setRestOverride(userId: string, restSeconds: number, lift?: Lift, intensityType?: IntensityType) {
   const { error } = await supabase.from('rest_configs').upsert({
     user_id: userId,
     lift: lift ?? null,
     intensity_type: intensityType ?? null,
     rest_seconds: restSeconds,
     updated_at: new Date().toISOString(),
-  })
-  if (error) throw error
+  });
+  if (error) throw error;
 }
 
 // Reset all overrides for this user (Settings → Rest Timer → Reset to defaults)
 export async function resetRestOverrides(userId: string) {
-  const { error } = await supabase
-    .from('rest_configs')
-    .delete()
-    .eq('user_id', userId)
-  if (error) throw error
+  const { error } = await supabase.from('rest_configs').delete().eq('user_id', userId);
+  if (error) throw error;
 }
 ```
 
 **Session prep integration** — in `apps/parakeet/src/modules/session/application/session.service.ts`, before calling the JIT generator, fetch overrides:
+
 ```typescript
-const userRestOverrides = await getUserRestOverrides(userId)
+const userRestOverrides = await getUserRestOverrides(userId);
 // Pass as JITInput.userRestOverrides
 ```
 

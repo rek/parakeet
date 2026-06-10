@@ -18,10 +18,10 @@
  *   Device records video → MediaPipe extracts landmarks → analysis runs →
  *   both stored in DB → this script pulls them → calibration tests validate
  */
+import { mkdirSync, writeFileSync } from 'fs';
+import { resolve } from 'path';
 
 import { createClient } from '@supabase/supabase-js';
-import { writeFileSync, mkdirSync } from 'fs';
-import { resolve } from 'path';
 
 const PROJECT_ROOT = resolve(__dirname, '..');
 const LANDMARKS_DIR = resolve(PROJECT_ROOT, 'test-videos/landmarks');
@@ -37,7 +37,10 @@ function getEnvOrDie(name: string): string {
 }
 
 async function main() {
-  const limit = parseInt(process.argv.find((a) => a.startsWith('--limit='))?.split('=')[1] ?? '20', 10);
+  const limit = parseInt(
+    process.argv.find((a) => a.startsWith('--limit='))?.split('=')[1] ?? '20',
+    10
+  );
 
   const supabaseUrl = getEnvOrDie('SUPABASE_URL');
   const supabaseKey = getEnvOrDie('SUPABASE_SERVICE_KEY');
@@ -48,7 +51,9 @@ async function main() {
 
   const { data, error } = await supabase
     .from('session_videos')
-    .select('id, lift, sagittal_confidence, duration_sec, analysis, debug_landmarks, created_at')
+    .select(
+      'id, lift, sagittal_confidence, duration_sec, analysis, debug_landmarks, created_at'
+    )
     .not('debug_landmarks', 'is', null)
     .order('created_at', { ascending: false })
     .limit(limit);
@@ -59,7 +64,9 @@ async function main() {
   }
 
   if (!data || data.length === 0) {
-    console.log('No rows with debug_landmarks found. Run a video analysis on device first.');
+    console.log(
+      'No rows with debug_landmarks found. Run a video analysis on device first.'
+    );
     process.exit(0);
   }
 
@@ -70,18 +77,27 @@ async function main() {
 
   for (const row of data) {
     const shortId = row.id.slice(0, 8);
-    const landmarks = row.debug_landmarks as { frames: unknown[]; fps: number; extractedAt: string };
+    const landmarks = row.debug_landmarks as {
+      frames: unknown[];
+      fps: number;
+      extractedAt: string;
+    };
     const analysis = row.analysis as Record<string, unknown> | null;
 
     // Write landmarks fixture (same format as Python-extracted)
-    const landmarkFile = resolve(LANDMARKS_DIR, `device-${shortId}.landmarks.json`);
+    const landmarkFile = resolve(
+      LANDMARKS_DIR,
+      `device-${shortId}.landmarks.json`
+    );
     const landmarkPayload = {
       videoId: `device-${shortId}`,
       fps: landmarks.fps,
       totalFrames: landmarks.frames.length,
       validFrames: landmarks.frames.filter((f: unknown) => {
         const frame = f as Array<{ visibility: number }>;
-        return Array.isArray(frame) && frame.length > 0 && frame[0].visibility > 0;
+        return (
+          Array.isArray(frame) && frame.length > 0 && frame[0].visibility > 0
+        );
       }).length,
       frames: landmarks.frames,
     };
@@ -90,7 +106,10 @@ async function main() {
 
     // Write analysis result
     if (analysis) {
-      const analysisFile = resolve(RESULTS_DIR, `device-${shortId}.analysis.json`);
+      const analysisFile = resolve(
+        RESULTS_DIR,
+        `device-${shortId}.analysis.json`
+      );
       const analysisPayload = {
         videoId: `device-${shortId}`,
         lift: row.lift,
@@ -105,18 +124,26 @@ async function main() {
 
     // Summary
     const reps = (analysis as { reps?: unknown[] } | null)?.reps ?? [];
-    const faults = reps.flatMap((r: unknown) => ((r as { faults: unknown[] }).faults ?? []));
-    const faultTypes = [...new Set(faults.map((f: unknown) => (f as { type: string }).type))];
+    const faults = reps.flatMap(
+      (r: unknown) => (r as { faults: unknown[] }).faults ?? []
+    );
+    const faultTypes = [
+      ...new Set(faults.map((f: unknown) => (f as { type: string }).type)),
+    ];
     console.log(
       `  → ${row.lift} | confidence=${row.sagittal_confidence ?? '?'} | ${reps.length} reps | ` +
-      `${landmarks.frames.length} frames (${landmarkPayload.validFrames} valid) | ` +
-      `faults: ${faultTypes.join(', ') || 'none'}`
+        `${landmarks.frames.length} frames (${landmarkPayload.validFrames} valid) | ` +
+        `faults: ${faultTypes.join(', ') || 'none'}`
     );
     console.log();
   }
 
-  console.log(`\nDone. Landmark fixtures written to test-videos/landmarks/device-*.landmarks.json`);
-  console.log('Run calibration tests to validate: npx nx test parakeet -- calibration');
+  console.log(
+    `\nDone. Landmark fixtures written to test-videos/landmarks/device-*.landmarks.json`
+  );
+  console.log(
+    'Run calibration tests to validate: npx nx test parakeet -- calibration'
+  );
 }
 
 main().catch((err) => {

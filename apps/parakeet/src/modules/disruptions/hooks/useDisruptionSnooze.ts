@@ -1,8 +1,8 @@
 // @spec docs/features/disruptions/spec-resolution.md
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useCallback, useEffect, useState } from 'react';
 
 import { captureException } from '@platform/utils/captureException';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useFocusEffect } from 'expo-router';
 
 import { DISRUPTION_SNOOZE_DAYS } from '../lib/disruption-shelf-life';
@@ -56,18 +56,15 @@ export function useDisruptionSnooze() {
     void refresh();
   }, [refresh]);
 
-  const snooze = useCallback(
-    async (id: string) => {
-      try {
-        const expiresAt = Date.now() + DISRUPTION_SNOOZE_DAYS * MS_PER_DAY;
-        await AsyncStorage.setItem(`${KEY_PREFIX}${id}`, String(expiresAt));
-        setSnoozedIds((prev) => new Set([...prev, id]));
-      } catch (err) {
-        captureException(err);
-      }
-    },
-    []
-  );
+  const snooze = useCallback(async (id: string) => {
+    try {
+      const expiresAt = Date.now() + DISRUPTION_SNOOZE_DAYS * MS_PER_DAY;
+      await AsyncStorage.setItem(`${KEY_PREFIX}${id}`, String(expiresAt));
+      setSnoozedIds((prev) => new Set([...prev, id]));
+    } catch (err) {
+      captureException(err);
+    }
+  }, []);
 
   return { snoozedIds, snooze };
 }

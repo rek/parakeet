@@ -19,9 +19,10 @@ Production data (GH#130) shows a bench explosive session where every set — mai
 The system had every signal it needed after set 1 (RPE 6.5, target 7.0) to suggest +5kg for set 2. Instead it prescribed the same weight again. The lifter logged another RPE 6.5 set and moved on to auxiliaries that were also too light.
 
 Existing correction mechanisms fail here:
+
 - **Step 2 RPE adjustment**: threshold was ≥ 1.0 (now lowered to ≥ 0.75 with tiered 2.5%/5% boost). The user's -0.875 average now triggers the small boost, but cross-session correction is inherently delayed — it can't fix today's session.
 - **Adaptive volume calibration (#117)**: adds sets, not weight. More sets at RPE 6.5 = more sets at 0.15 multiplier = still negligible.
-- **Working 1RM**: computing e1RM from sub-target-RPE sets yields a *lower* 1RM than stored, making future sessions lighter (perverse outcome).
+- **Working 1RM**: computing e1RM from sub-target-RPE sets yields a _lower_ 1RM than stored, making future sessions lighter (perverse outcome).
 - **Volume recovery**: adds sets back when RPE is below target, but only sets that were previously removed by modifiers. Does not adjust weight.
 
 ### The Downward Problem: Failed Sets
@@ -29,6 +30,7 @@ Existing correction mechanisms fail here:
 When a lifter fails a set, the remaining sets stay unchanged — leaving the lifter to grind through targets their body just told them it cannot hit. Failure is only addressed retroactively by the performance adjuster after the session ends.
 
 **Pain points (both directions):**
+
 - The system watches a too-easy or too-hard set, then prescribes the exact same weight for the next set — a coach would never do this
 - Too-easy sets produce dead volume: high effort perception, negligible effective volume toward MEV
 - Failed sets produce junk volume: high fatigue, low stimulus
@@ -53,21 +55,23 @@ When a lifter fails a set, the remaining sets stay unchanged — leaving the lif
 
 **Suggestion logic:**
 
-| RPE gap (target - actual) | Suggestion |
-|--------------------------|------------|
-| ≥ 1.0 | +2.5 kg (bench/OHP) or +5 kg (squat/deadlift) |
-| ≥ 1.5 | +5 kg (bench/OHP) or +10 kg (squat/deadlift) |
-| < 1.0 | No suggestion (within acceptable tolerance) |
+| RPE gap (target - actual) | Suggestion                                    |
+| ------------------------- | --------------------------------------------- |
+| ≥ 1.0                     | +2.5 kg (bench/OHP) or +5 kg (squat/deadlift) |
+| ≥ 1.5                     | +5 kg (bench/OHP) or +10 kg (squat/deadlift)  |
+| < 1.0                     | No suggestion (within acceptable tolerance)   |
 
 These increments match available plate combinations. Rounded to nearest 2.5 kg as per existing weight rounding.
 
 **When NOT to suggest an increase:**
+
 - Recovery mode (soreness ≥ 9/10) — the weight is intentionally light
 - Deload week — the weight is intentionally light
 - Lifter already adjusted weight on a previous set this session (avoid cascading adjustments)
 - Remaining sets is 0 (last set — too late to adjust)
 
 **Auxiliary exercises:**
+
 - Same logic applies to aux exercises, but only for weighted exercises (not bodyweight/timed)
 - Aux weight adjustments are independent of main lift adjustments
 
@@ -110,16 +114,19 @@ Both aux failure paths (post-rest overlay and first-set confirmation) use the sa
 ### Visual Design Notes
 
 **Upward suggestions:**
+
 - The next set card shows a suggested weight below the current weight, styled as an actionable chip: "Try 82.5 kg?" with a tap to accept
 - If accepted, the weight updates and a small "Adjusted ↑" indicator persists on the set card
 - Dismissing is implicit — the lifter just starts the set at the original weight
 
 **Downward adaptations:**
+
 - Tier 1 indicator: the rest timer displays the extended duration with a subtle visual difference from a normal rest (e.g., an "extended" label); the rationale is shown as a short line beneath the timer
 - Tier 2 indicator: adapted sets show the new weight alongside the originally planned weight in a muted style, so the lifter can see at a glance what changed and why
 - Tier 3 indicator: optional sets are visually distinguished (e.g., a dashed border or "Optional" badge); the rationale is shown at the top of the optional set group
 
 **Both directions:**
+
 - All rationale strings are plain language, not jargon — the lifter should immediately understand what the system did and why
 - Adaptations are visible in session history after completion, showing the original plan alongside what actually happened
 
@@ -133,14 +140,14 @@ See [domain/muscle-mapping.md](../domain/muscle-mapping.md#rpe-to-effective-sets
 
 ## Interaction with Existing Systems
 
-| System | Interaction |
-|--------|-------------|
-| Volume recovery | Upward autoregulation makes volume recovery less likely to fire (sets are closer to target RPE). If both fire, they stack: autoregulation adjusts weight, volume recovery adds sets. |
-| Adaptive volume calibration (#117) | Complementary: Step 0 adjusts set count, autoregulation adjusts weight. Together they close both the volume and intensity gaps. |
-| Working 1RM (engine-042) | Autoregulation-adjusted weights at target RPE feed clean data into working 1RM. Solves the perverse outcome where sub-target-RPE sets produce artificially low e1RM. |
-| Step 2 RPE adjustment | Autoregulation reduces the cross-session RPE gap that Step 2 tries to correct. Step 2 becomes a safety net for patterns that autoregulation doesn't catch (e.g., the lifter dismisses all suggestions). |
-| Prescription trace | Adaptations logged in trace with original and adjusted values, enabling retrospective analysis. |
-| Explosive day philosophy | Explosive sessions use intentionally light weight for bar speed. Upward autoregulation uses the same RPE gap threshold — if the lifter genuinely hits RPE 7.0 at the prescribed weight, no suggestion fires. The suggestion only fires when the weight is too light even for the "light" target. |
+| System                             | Interaction                                                                                                                                                                                                                                                                                      |
+| ---------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Volume recovery                    | Upward autoregulation makes volume recovery less likely to fire (sets are closer to target RPE). If both fire, they stack: autoregulation adjusts weight, volume recovery adds sets.                                                                                                             |
+| Adaptive volume calibration (#117) | Complementary: Step 0 adjusts set count, autoregulation adjusts weight. Together they close both the volume and intensity gaps.                                                                                                                                                                  |
+| Working 1RM (engine-042)           | Autoregulation-adjusted weights at target RPE feed clean data into working 1RM. Solves the perverse outcome where sub-target-RPE sets produce artificially low e1RM.                                                                                                                             |
+| Step 2 RPE adjustment              | Autoregulation reduces the cross-session RPE gap that Step 2 tries to correct. Step 2 becomes a safety net for patterns that autoregulation doesn't catch (e.g., the lifter dismisses all suggestions).                                                                                          |
+| Prescription trace                 | Adaptations logged in trace with original and adjusted values, enabling retrospective analysis.                                                                                                                                                                                                  |
+| Explosive day philosophy           | Explosive sessions use intentionally light weight for bar speed. Upward autoregulation uses the same RPE gap threshold — if the lifter genuinely hits RPE 7.0 at the prescribed weight, no suggestion fires. The suggestion only fires when the weight is too light even for the "light" target. |
 
 ## User Benefits
 
@@ -166,10 +173,12 @@ See [domain/muscle-mapping.md](../domain/muscle-mapping.md#rpe-to-effective-sets
 ## Future Enhancements
 
 **Phase 2:**
+
 - LLM strategy provides smarter adaptation reasoning — interpreting RPE undershoot or failure in context (poor sleep, high soreness, early in a heavy block) rather than applying fixed rules
 - Cross-session pattern detection: if explosive bench consistently undershoots, the performance adjuster is pre-seeded with a higher base %1RM suggestion
 
 **Long-term:**
+
 - Substitution suggestions at Tier 3: instead of just marking sets optional, the system suggests an alternative movement with lower fatigue cost that trains the same pattern
 - Adaptive increment sizing: the system learns how much weight to suggest based on historical RPE response to weight changes for each lifter and lift
 - Wearable velocity integration: bar speed data from wearables could supplement RPE for more objective autoregulation signals

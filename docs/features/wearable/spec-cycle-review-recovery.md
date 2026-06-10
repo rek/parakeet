@@ -83,13 +83,12 @@ function buildRecoverySummary(snapshots: RecoverySnapshot[]): RecoverySummary | 
 
   const sorted = [...snapshots].sort((a, b) => a.date.localeCompare(b.date));
 
-  const mean = (xs: number[]): number | null =>
-    xs.length === 0 ? null : Math.round((xs.reduce((a, b) => a + b, 0) / xs.length) * 10) / 10;
+  const mean = (xs: number[]): number | null => (xs.length === 0 ? null : Math.round((xs.reduce((a, b) => a + b, 0) / xs.length) * 10) / 10);
 
-  const scores       = sorted.map((s) => s.readiness_score).filter((v): v is number => v !== null);
-  const hrvChanges   = sorted.map((s) => s.hrv_pct_change).filter((v): v is number => v !== null);
-  const rhrChanges   = sorted.map((s) => s.rhr_pct_change).filter((v): v is number => v !== null);
-  const sleepDur     = sorted.map((s) => s.sleep_duration_min).filter((v): v is number => v !== null);
+  const scores = sorted.map((s) => s.readiness_score).filter((v): v is number => v !== null);
+  const hrvChanges = sorted.map((s) => s.hrv_pct_change).filter((v): v is number => v !== null);
+  const rhrChanges = sorted.map((s) => s.rhr_pct_change).filter((v): v is number => v !== null);
+  const sleepDur = sorted.map((s) => s.sleep_duration_min).filter((v): v is number => v !== null);
 
   // Identify ≥3 consecutive days with score < 50
   const lowStreaks: RecoverySummary['lowReadinessStreaks'] = [];
@@ -118,12 +117,12 @@ function buildRecoverySummary(snapshots: RecoverySnapshot[]): RecoverySummary | 
 
   return {
     dayCount: sorted.length,
-    avgReadinessScore:    mean(scores),
-    avgHrvPctChange:      mean(hrvChanges),
-    avgRhrPctChange:      mean(rhrChanges),
-    avgSleepDurationMin:  mean(sleepDur),
-    lowReadinessStreaks:  lowStreaks,
-    recent:               sorted.slice(-14),
+    avgReadinessScore: mean(scores),
+    avgHrvPctChange: mean(hrvChanges),
+    avgRhrPctChange: mean(rhrChanges),
+    avgSleepDurationMin: mean(sleepDur),
+    lowReadinessStreaks: lowStreaks,
+    recent: sorted.slice(-14),
   };
 }
 ```

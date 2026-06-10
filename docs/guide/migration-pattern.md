@@ -2,7 +2,7 @@
 
 How to land an app-side change that depends on a Supabase schema change without breaking typecheck or splitting the work across PRs.
 
-The case: you need to rename a column, add a column, or change a column's type. The app code that reads/writes the column has to ship at the same time. But the generated types in `supabase/types.ts` reflect the *current* schema, so any code referencing the new shape fails typecheck until the migration runs and `npm run db:types` regenerates.
+The case: you need to rename a column, add a column, or change a column's type. The app code that reads/writes the column has to ship at the same time. But the generated types in `supabase/types.ts` reflect the _current_ schema, so any code referencing the new shape fails typecheck until the migration runs and `npm run db:types` regenerates.
 
 ## The pattern
 
@@ -47,9 +47,7 @@ Every cast must carry a **`TODO(migration-cleanup)`** token in a nearby comment,
 // TODO(migration-cleanup): once 20260524000000_personal_records_grams.sql is
 // applied and `npm run db:types` regenerates supabase/types.ts, drop the
 // cast and let the generated row type flow through.
-const { error } = await typedSupabase
-  .from('personal_records')
-  .upsert(rows as never, { onConflict: 'user_id,lift,pr_type,weight_grams' });
+const { error } = await typedSupabase.from('personal_records').upsert(rows as never, { onConflict: 'user_id,lift,pr_type,weight_grams' });
 ```
 
 If the cast leaks into more than ~3 call sites, the bridge has outgrown the pattern — consider a narrow typed wrapper instead.
@@ -70,11 +68,12 @@ Then `grep -rn "TODO(migration-cleanup)"` to find every bridge and remove it. Ve
 
 - **Destructive migrations on shared production data** — don't bridge a column drop without your own confirmation pre-check. Run the duplicate-detection / cardinality query and inspect output before applying.
 - **More than ~3 columns changing in one migration** — break it up. The casts compound and become hard to grep for cleanup.
-- **Behavior changes coupled to the migration** — if the new schema implies a new business rule (e.g. a new `status` value), land the behavior change in a follow-up commit *after* the migration is applied, not as a bridged cast.
+- **Behavior changes coupled to the migration** — if the new schema implies a new business rule (e.g. a new `status` value), land the behavior change in a follow-up commit _after_ the migration is applied, not as a bridged cast.
 
 ## Reference
 
 Pattern was used in the 2026-05 review fixes:
+
 - `20260524000000_personal_records_grams.sql` → `achievement.repository.ts` `as never` + `as unknown as '*'`
 - `20260524000001_disruption_event_name.sql` → `disruptions/data/disruptions.repository.ts` `select('*')` bridge + `disruption.service.ts` `as Parameters<...>` cast on insert
 

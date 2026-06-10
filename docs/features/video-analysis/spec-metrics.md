@@ -164,12 +164,12 @@ Bumps `ANALYSIS_VERSION` to **5**. Old rows remain displayable — all new field
 
 The following fault thresholds fire `warning`-severity faults from within `metrics-assembler.ts`:
 
-| Constant | Value | Applies to |
-| --- | --- | --- |
-| `BAR_TILT_FAULT_DEG` | 8° | `uneven_lockout` fault when `barTiltMaxDeg` exceeds this |
-| `PRESS_ASYMMETRY_FAULT_RATIO` | 0.08 | `press_asymmetry` fault when `pressAsymmetryRatio` exceeds this (≈ 8% of torso) |
-| `ELBOW_PATH_SYMMETRY_MIN` / `MAX` | 0.8 / 1.25 | `elbow_asymmetry` fault when `elbowPathSymmetryRatio` falls outside this band |
-| `ELBOW_FLARE_MAX_FAULT_DEG` / `MIN` | 80° / 30° | `elbow_flare` fault on the per-rep max (unchanged thresholds from v4, now driven by the series rather than a midpoint sample) |
+| Constant                            | Value      | Applies to                                                                                                                    |
+| ----------------------------------- | ---------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| `BAR_TILT_FAULT_DEG`                | 8°         | `uneven_lockout` fault when `barTiltMaxDeg` exceeds this                                                                      |
+| `PRESS_ASYMMETRY_FAULT_RATIO`       | 0.08       | `press_asymmetry` fault when `pressAsymmetryRatio` exceeds this (≈ 8% of torso)                                               |
+| `ELBOW_PATH_SYMMETRY_MIN` / `MAX`   | 0.8 / 1.25 | `elbow_asymmetry` fault when `elbowPathSymmetryRatio` falls outside this band                                                 |
+| `ELBOW_FLARE_MAX_FAULT_DEG` / `MIN` | 80° / 30°  | `elbow_flare` fault on the per-rep max (unchanged thresholds from v4, now driven by the series rather than a midpoint sample) |
 
 These were tuned by eye against a single `bench-front-4reps` fixture. They are **provisional** — revisit once we have ≥ 3 independent front-bench fixtures across lifters and phone positions. If real-world usage shows them firing on clean form, widen; if they let through what a coach would flag, tighten. Keep them co-located in `metrics-assembler.ts` (not a domain doc) until the tuning stabilises — promotion to `docs/domain/` is the signal that the values are load-bearing across sessions.
 
@@ -210,10 +210,10 @@ Phase 7 adds a per-rep `chestTouchGap` (signed, torso-normalised) plus two fault
 
 ### Fault thresholds (provisional — tuned on one fixture)
 
-| Constant | Value | Applies to |
-| --- | --- | --- |
-| `NO_CHEST_TOUCH_GAP` | 0.10 | `no_chest_touch` (critical) fault when `chestTouchGap` exceeds this on a front-view bench rep |
-| `SHALLOW_BENCH_GAP` | 0.03 | `shallow_bench` (warning) fault when `chestTouchGap` exceeds this on a front-view bench rep |
+| Constant             | Value | Applies to                                                                                    |
+| -------------------- | ----- | --------------------------------------------------------------------------------------------- |
+| `NO_CHEST_TOUCH_GAP` | 0.10  | `no_chest_touch` (critical) fault when `chestTouchGap` exceeds this on a front-view bench rep |
+| `SHALLOW_BENCH_GAP`  | 0.03  | `shallow_bench` (warning) fault when `chestTouchGap` exceeds this on a front-view bench rep   |
 
 Tuned by eye against `bench-front-4reps` (user-confirmed partial on all 4 reps). **Provisional** — widen or tighten once ≥ 3 independent front-bench fixtures confirm the bands across lifters and phone positions. Constants stay co-located in `metrics-assembler.ts` until the tuning stabilises.
 

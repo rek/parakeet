@@ -19,7 +19,9 @@
 
 import * as fs from 'fs';
 import * as readline from 'readline';
+
 import { createClient } from '@supabase/supabase-js';
+
 import {
   EXERCISE_CATALOG,
   getCatalogEntry,
@@ -322,10 +324,22 @@ const PRESET_MAPPINGS: Record<string, ExerciseResolution> = {
   'pause squat': { kind: 'aux', exerciseName: 'Pause Squat', forLift: 'squat' },
 
   // — Skip (olympic lifts & junk) —
-  'Barbell Clean': { kind: 'aux', exerciseName: 'Power Clean', forLift: 'deadlift' },
-  'barbell clean and jerk': { kind: 'aux', exerciseName: 'Clean and Jerk', forLift: 'deadlift' },
+  'Barbell Clean': {
+    kind: 'aux',
+    exerciseName: 'Power Clean',
+    forLift: 'deadlift',
+  },
+  'barbell clean and jerk': {
+    kind: 'aux',
+    exerciseName: 'Clean and Jerk',
+    forLift: 'deadlift',
+  },
   'Barbell push jerk': { kind: 'skip' },
-  'Hang Clean': { kind: 'aux', exerciseName: 'Barbell Hang Clean', forLift: 'deadlift' },
+  'Hang Clean': {
+    kind: 'aux',
+    exerciseName: 'Barbell Hang Clean',
+    forLift: 'deadlift',
+  },
   Snatch: { kind: 'aux', exerciseName: 'Barbell Snatch', forLift: 'deadlift' },
   'Sumo deadlift high pull': { kind: 'skip' },
   hang: { kind: 'aux', exerciseName: 'Deadhang', forLift: 'deadlift' },
@@ -947,8 +961,7 @@ async function insertSessions(
         user_id: userId,
         kind: 'auxiliary' as const,
         exercise: s.exercise,
-        exercise_slug:
-          getCatalogEntry(s.exercise)?.slug ?? slugify(s.exercise),
+        exercise_slug: getCatalogEntry(s.exercise)?.slug ?? slugify(s.exercise),
         exercise_type: null,
         set_number: s.set_number,
         weight_grams: s.weight_grams,

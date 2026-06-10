@@ -1,7 +1,7 @@
 import type { FormCoachingResult } from '@parakeet/training-engine';
 
-import { theme } from '../../lib/theme';
 import type { CacheEntry } from '../../lib/coaching-cache';
+import { theme } from '../../lib/theme';
 
 const GRADE_STYLE: Record<
   'good' | 'acceptable' | 'needs_work',
@@ -92,9 +92,7 @@ export function CoachResponseCard({ entry }: { entry: CacheEntry }) {
         }}
       >
         <span>
-          <strong style={{ color: theme.color.accent }}>
-            {request.model}
-          </strong>{' '}
+          <strong style={{ color: theme.color.accent }}>{request.model}</strong>{' '}
           · {(latencyMs / 1000).toFixed(2)}s
         </span>
         {tokensIn != null && (
@@ -111,11 +109,7 @@ export function CoachResponseCard({ entry }: { entry: CacheEntry }) {
   );
 }
 
-function ErrorView({
-  error,
-}: {
-  error: NonNullable<CacheEntry['error']>;
-}) {
+function ErrorView({ error }: { error: NonNullable<CacheEntry['error']> }) {
   return (
     <div>
       <SectionLabel>Error — {error.kind}</SectionLabel>
@@ -191,11 +185,15 @@ function ResponseBody({ response }: { response: FormCoachingResult }) {
                     borderTop: `1px solid ${theme.border.light}`,
                   }}
                 >
-                  <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                  <div
+                    style={{ display: 'flex', gap: 8, alignItems: 'center' }}
+                  >
                     <Pill bg={style.bg} fg={style.fg}>
                       {style.label}
                     </Pill>
-                    <span style={{ color: theme.color.textMuted, fontSize: 10 }}>
+                    <span
+                      style={{ color: theme.color.textMuted, fontSize: 10 }}
+                    >
                       reps {cue.repRange}
                     </span>
                   </div>

@@ -14,20 +14,20 @@ Pure function that estimates current menstrual cycle phase from the date of the 
 - [ ] Export `CyclePhase` type:
   ```typescript
   export type CyclePhase =
-    | 'menstrual'    // days 1–5
-    | 'follicular'   // days 6–11
-    | 'ovulatory'    // days 12–16
-    | 'luteal'       // days 17–23
-    | 'late_luteal'  // days 24–cycleLength
+    | 'menstrual' // days 1–5
+    | 'follicular' // days 6–11
+    | 'ovulatory' // days 12–16
+    | 'luteal' // days 17–23
+    | 'late_luteal'; // days 24–cycleLength
   ```
 - [ ] Export `CycleContext` interface:
   ```typescript
   export interface CycleContext {
-    phase: CyclePhase
-    dayOfCycle: number       // 1-indexed; wraps at cycleLength
-    daysUntilNextPeriod: number
-    isOvulatoryWindow: boolean   // days 12–16 (high injury risk)
-    isLateLuteal: boolean        // days 24–cycleLength (disruption routing)
+    phase: CyclePhase;
+    dayOfCycle: number; // 1-indexed; wraps at cycleLength
+    daysUntilNextPeriod: number;
+    isOvulatoryWindow: boolean; // days 12–16 (high injury risk)
+    isLateLuteal: boolean; // days 24–cycleLength (disruption routing)
   }
   ```
 - [ ] `computeCyclePhase(lastPeriodStart: Date, cycleLength?: number, referenceDate?: Date): CycleContext`
@@ -36,6 +36,7 @@ Pure function that estimates current menstrual cycle phase from the date of the 
   - For non-28-day cycles, scale linearly: `scaledDay = Math.round(day * 28 / cycleLength)` before applying boundaries
 
 **Unit tests (`packages/training-engine/__tests__/cycle-phase.test.ts`):**
+
 - [ ] Day 1 (same day as period start) → `menstrual`, dayOfCycle: 1
 - [ ] Day 5 → `menstrual`
 - [ ] Day 6 → `follicular`
@@ -47,10 +48,11 @@ Pure function that estimates current menstrual cycle phase from the date of the 
 - [ ] 35-day cycle, day 17 → scaled to ~14 → `ovulatory`
 
 **Export from `packages/training-engine/src/index.ts`:**
+
 - [ ] Add exports:
   ```typescript
-  export { computeCyclePhase } from './formulas/cycle-phase'
-  export type { CyclePhase, CycleContext } from './formulas/cycle-phase'
+  export { computeCyclePhase } from './formulas/cycle-phase';
+  export type { CyclePhase, CycleContext } from './formulas/cycle-phase';
   ```
 
 ## Usage Context

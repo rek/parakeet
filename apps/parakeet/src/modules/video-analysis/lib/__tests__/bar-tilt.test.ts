@@ -3,11 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { computeBarTiltSeries } from '../bar-tilt';
 import { LANDMARK, type PoseFrame, type PoseLandmark } from '../pose-types';
 
-function makeLandmark(
-  x: number,
-  y: number,
-  visibility = 1
-): PoseLandmark {
+function makeLandmark(x: number, y: number, visibility = 1): PoseLandmark {
   return { x, y, z: 0, visibility };
 }
 
@@ -68,10 +64,16 @@ describe('computeBarTiltSeries', () => {
     const frames: PoseFrame[] = [
       makeFrame({
         leftWrist: makeLandmark(0.4, 0.5),
-        rightWrist: makeLandmark(0.6, 0.5 + 0.2 * Math.tan((10 * Math.PI) / 180)),
+        rightWrist: makeLandmark(
+          0.6,
+          0.5 + 0.2 * Math.tan((10 * Math.PI) / 180)
+        ),
       }),
       makeFrame({
-        leftWrist: makeLandmark(0.4, 0.5 + 0.2 * Math.tan((10 * Math.PI) / 180)),
+        leftWrist: makeLandmark(
+          0.4,
+          0.5 + 0.2 * Math.tan((10 * Math.PI) / 180)
+        ),
         rightWrist: makeLandmark(0.6, 0.5),
       }),
     ];

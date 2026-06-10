@@ -19,11 +19,11 @@ import type { FormulaConfig } from '@modules/formula';
 import { getRatingStyles, getVolumeLevelColors } from '@modules/history';
 import { classifyVolumeLevel } from '@modules/training-volume';
 import type { MuscleGroup } from '@parakeet/shared-types';
-import { ExerciseName } from '@shared/ui/ExerciseName';
 import {
   MUSCLE_GROUPS_ORDER,
   MUSCLE_LABELS_ABBR,
 } from '@shared/constants/training';
+import { ExerciseName } from '@shared/ui/ExerciseName';
 import { router, useLocalSearchParams } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -434,7 +434,8 @@ export default function CycleReviewScreen() {
     } else if (triggerError instanceof Error) {
       pendingSubtitle = `Generation failed: ${triggerError.message}`;
     } else {
-      pendingSubtitle = 'Usually takes under 30 seconds. Checking automatically.';
+      pendingSubtitle =
+        'Usually takes under 30 seconds. Checking automatically.';
     }
 
     const generateButtonLabel = (): string => {
@@ -603,7 +604,10 @@ export default function CycleReviewScreen() {
                 </Text>
                 {aux.mostCorrelated.map((item, i) => (
                   <View key={i} style={styles.auxItem}>
-                    <ExerciseName name={item.exercise} nameStyle={styles.auxExercise} />
+                    <ExerciseName
+                      name={item.exercise}
+                      nameStyle={styles.auxExercise}
+                    />
                     <Text style={styles.auxExplanation}>
                       {item.explanation}
                     </Text>
@@ -619,7 +623,10 @@ export default function CycleReviewScreen() {
                 </Text>
                 {aux.leastEffective.map((item, i) => (
                   <View key={i} style={styles.auxItem}>
-                    <ExerciseName name={item.exercise} nameStyle={styles.auxExercise} />
+                    <ExerciseName
+                      name={item.exercise}
+                      nameStyle={styles.auxExercise}
+                    />
                     <Text style={styles.auxExplanation}>
                       {item.explanation}
                     </Text>

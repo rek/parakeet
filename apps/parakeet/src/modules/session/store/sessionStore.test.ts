@@ -1,6 +1,6 @@
+import { selectPostRestWeight } from '../utils/selectPostRestWeight';
 import type { SessionState } from './sessionStore';
 import { deriveTimerKey, useSessionStore } from './sessionStore';
-import { selectPostRestWeight } from '../utils/selectPostRestWeight';
 
 vi.mock('@react-native-async-storage/async-storage', () => ({
   default: {
@@ -42,10 +42,12 @@ describe('sessionStore persistence', () => {
     const opts = getPersistOptions(store);
     const partialized = opts.partialize(store.getState());
 
-    expect(Array.isArray((partialized as { auxiliaryWork?: unknown }).auxiliaryWork)).toBe(true);
     expect(
-      ((partialized as { auxiliaryWork: { exercise: string }[] })
-        .auxiliaryWork)[0].exercise
+      Array.isArray((partialized as { auxiliaryWork?: unknown }).auxiliaryWork)
+    ).toBe(true);
+    expect(
+      (partialized as { auxiliaryWork: { exercise: string }[] })
+        .auxiliaryWork[0].exercise
     ).toBe('curl');
 
     // Round-trip via JSON.
@@ -240,7 +242,9 @@ describe('sessionStore post-rest state machine', () => {
 
       store.showMainPostRest(5, 180);
 
-      expect(useSessionStore.getState().postRestQueue[0] ?? null).toEqual(before);
+      expect(useSessionStore.getState().postRestQueue[0] ?? null).toEqual(
+        before
+      );
     });
   });
 
@@ -279,7 +283,9 @@ describe('sessionStore post-rest state machine', () => {
 
       store.showAuxPostRest('nonexistent', 1, 90);
 
-      expect(useSessionStore.getState().postRestQueue[0] ?? null).toEqual(before);
+      expect(useSessionStore.getState().postRestQueue[0] ?? null).toEqual(
+        before
+      );
     });
   });
 
@@ -302,7 +308,9 @@ describe('sessionStore post-rest state machine', () => {
 
       store.extendPostRest();
 
-      expect(useSessionStore.getState().postRestQueue[0] ?? null).toEqual(before);
+      expect(useSessionStore.getState().postRestQueue[0] ?? null).toEqual(
+        before
+      );
     });
   });
 
@@ -313,13 +321,19 @@ describe('sessionStore post-rest state machine', () => {
       store.showMainPostRest(0, 180);
       store.extendPostRest();
 
-      expect(useSessionStore.getState().postRestQueue[0]?.resetSecondsRemaining).toBe(15);
+      expect(
+        useSessionStore.getState().postRestQueue[0]?.resetSecondsRemaining
+      ).toBe(15);
 
       store.tickPostRestCountdown();
-      expect(useSessionStore.getState().postRestQueue[0]?.resetSecondsRemaining).toBe(14);
+      expect(
+        useSessionStore.getState().postRestQueue[0]?.resetSecondsRemaining
+      ).toBe(14);
 
       store.tickPostRestCountdown();
-      expect(useSessionStore.getState().postRestQueue[0]?.resetSecondsRemaining).toBe(13);
+      expect(
+        useSessionStore.getState().postRestQueue[0]?.resetSecondsRemaining
+      ).toBe(13);
     });
 
     it('clears countdown when reaching zero', () => {
@@ -332,7 +346,9 @@ describe('sessionStore post-rest state machine', () => {
         store.tickPostRestCountdown();
       }
 
-      expect(useSessionStore.getState().postRestQueue[0]?.resetSecondsRemaining).toBe(null);
+      expect(
+        useSessionStore.getState().postRestQueue[0]?.resetSecondsRemaining
+      ).toBe(null);
     });
   });
 
@@ -346,7 +362,10 @@ describe('sessionStore post-rest state machine', () => {
       store.initAuxiliaryWork([
         {
           exercise: 'leg-curl',
-          sets: [{ weight_kg: 50, reps: 10 }, { weight_kg: 55, reps: 8 }],
+          sets: [
+            { weight_kg: 50, reps: 10 },
+            { weight_kg: 55, reps: 8 },
+          ],
           skipped: false,
         },
       ]);
@@ -354,12 +373,16 @@ describe('sessionStore post-rest state machine', () => {
       store.showAuxPostRest('leg-curl', 1, 90);
 
       expect(useSessionStore.getState().postRestQueue).toHaveLength(2);
-      expect(useSessionStore.getState().postRestQueue[0]?.pendingMainSetNumber).toBe(0);
+      expect(
+        useSessionStore.getState().postRestQueue[0]?.pendingMainSetNumber
+      ).toBe(0);
 
       store.clearPostRestState();
 
       expect(useSessionStore.getState().postRestQueue).toHaveLength(1);
-      expect(useSessionStore.getState().postRestQueue[0]?.pendingAuxExercise).toBe('leg-curl');
+      expect(
+        useSessionStore.getState().postRestQueue[0]?.pendingAuxExercise
+      ).toBe('leg-curl');
 
       store.clearPostRestState();
 
@@ -599,7 +622,9 @@ describe('initSession adaptation state reset (gh#193 regression)', () => {
       sets: [{ set_number: 1, weight_kg: 40, reps: 10 }],
       rationale: 'test',
     });
-    expect(Object.keys(useSessionStore.getState().auxAdaptations)).toHaveLength(1);
+    expect(Object.keys(useSessionStore.getState().auxAdaptations)).toHaveLength(
+      1
+    );
 
     store.initSession('s2', [{ weight_kg: 80, reps: 5 }]);
     expect(useSessionStore.getState().auxAdaptations).toEqual({});
@@ -616,8 +641,16 @@ describe('concurrent timers', () => {
     const store = useSessionStore.getState();
     store.initSession('s1', [{ weight_kg: 100, reps: 5 }]);
 
-    store.openTimer({ durationSeconds: 90, pendingAuxExercise: 'leg-curl', pendingAuxSetNumber: 1 });
-    store.openTimer({ durationSeconds: 60, pendingAuxExercise: 'rdl', pendingAuxSetNumber: 1 });
+    store.openTimer({
+      durationSeconds: 90,
+      pendingAuxExercise: 'leg-curl',
+      pendingAuxSetNumber: 1,
+    });
+    store.openTimer({
+      durationSeconds: 60,
+      pendingAuxExercise: 'rdl',
+      pendingAuxSetNumber: 1,
+    });
 
     const { timers } = useSessionStore.getState();
     expect(timers).toHaveProperty('leg-curl');
@@ -628,8 +661,16 @@ describe('concurrent timers', () => {
     const store = useSessionStore.getState();
     store.initSession('s1', [{ weight_kg: 100, reps: 5 }]);
 
-    store.openTimer({ durationSeconds: 90, pendingAuxExercise: 'leg-curl', pendingAuxSetNumber: 1 });
-    store.openTimer({ durationSeconds: 60, pendingAuxExercise: 'leg-curl', pendingAuxSetNumber: 2 });
+    store.openTimer({
+      durationSeconds: 90,
+      pendingAuxExercise: 'leg-curl',
+      pendingAuxSetNumber: 1,
+    });
+    store.openTimer({
+      durationSeconds: 60,
+      pendingAuxExercise: 'leg-curl',
+      pendingAuxSetNumber: 2,
+    });
 
     const { timers } = useSessionStore.getState();
     const keys = Object.keys(timers);
@@ -642,7 +683,11 @@ describe('concurrent timers', () => {
     const store = useSessionStore.getState();
     store.initSession('s1', [{ weight_kg: 100, reps: 5 }]);
 
-    store.openTimer({ durationSeconds: 90, pendingAuxExercise: 'leg-curl', pendingAuxSetNumber: 1 });
+    store.openTimer({
+      durationSeconds: 90,
+      pendingAuxExercise: 'leg-curl',
+      pendingAuxSetNumber: 1,
+    });
     store.openTimer({ durationSeconds: 180, pendingMainSetNumber: 1 });
 
     const { activeTimerKey } = useSessionStore.getState();
@@ -653,8 +698,16 @@ describe('concurrent timers', () => {
     const store = useSessionStore.getState();
     store.initSession('s1', [{ weight_kg: 100, reps: 5 }]);
 
-    store.openTimer({ durationSeconds: 90, pendingAuxExercise: 'leg-curl', pendingAuxSetNumber: 1 });
-    store.openTimer({ durationSeconds: 60, pendingAuxExercise: 'rdl', pendingAuxSetNumber: 1 });
+    store.openTimer({
+      durationSeconds: 90,
+      pendingAuxExercise: 'leg-curl',
+      pendingAuxSetNumber: 1,
+    });
+    store.openTimer({
+      durationSeconds: 60,
+      pendingAuxExercise: 'rdl',
+      pendingAuxSetNumber: 1,
+    });
 
     const { activeTimerKey: initialActive } = useSessionStore.getState();
     store.closeTimer();
@@ -668,8 +721,16 @@ describe('concurrent timers', () => {
     const store = useSessionStore.getState();
     store.initSession('s1', [{ weight_kg: 100, reps: 5 }]);
 
-    store.openTimer({ durationSeconds: 90, pendingAuxExercise: 'leg-curl', pendingAuxSetNumber: 1 });
-    store.openTimer({ durationSeconds: 60, pendingAuxExercise: 'rdl', pendingAuxSetNumber: 1 });
+    store.openTimer({
+      durationSeconds: 90,
+      pendingAuxExercise: 'leg-curl',
+      pendingAuxSetNumber: 1,
+    });
+    store.openTimer({
+      durationSeconds: 60,
+      pendingAuxExercise: 'rdl',
+      pendingAuxSetNumber: 1,
+    });
 
     // Force active to leg-curl
     store.switchActiveTimer('leg-curl');
@@ -686,8 +747,16 @@ describe('concurrent timers', () => {
     const store = useSessionStore.getState();
     store.initSession('s1', [{ weight_kg: 100, reps: 5 }]);
 
-    store.openTimer({ durationSeconds: 90, pendingAuxExercise: 'leg-curl', pendingAuxSetNumber: 1 });
-    store.openTimer({ durationSeconds: 60, pendingAuxExercise: 'rdl', pendingAuxSetNumber: 1 });
+    store.openTimer({
+      durationSeconds: 90,
+      pendingAuxExercise: 'leg-curl',
+      pendingAuxSetNumber: 1,
+    });
+    store.openTimer({
+      durationSeconds: 60,
+      pendingAuxExercise: 'rdl',
+      pendingAuxSetNumber: 1,
+    });
 
     store.switchActiveTimer('leg-curl');
     expect(useSessionStore.getState().activeTimerKey).toBe('leg-curl');
@@ -700,7 +769,11 @@ describe('concurrent timers', () => {
     const store = useSessionStore.getState();
     store.initSession('s1', [{ weight_kg: 100, reps: 5 }]);
 
-    store.openTimer({ durationSeconds: 90, pendingAuxExercise: 'leg-curl', pendingAuxSetNumber: 1 });
+    store.openTimer({
+      durationSeconds: 90,
+      pendingAuxExercise: 'leg-curl',
+      pendingAuxSetNumber: 1,
+    });
     store.switchActiveTimer('nonexistent');
 
     expect(useSessionStore.getState().activeTimerKey).toBe('leg-curl');
@@ -712,14 +785,21 @@ describe('concurrent timers', () => {
     store.initAuxiliaryWork([
       {
         exercise: 'leg-curl',
-        sets: [{ weight_kg: 50, reps: 10 }, { weight_kg: 55, reps: 8 }],
+        sets: [
+          { weight_kg: 50, reps: 10 },
+          { weight_kg: 55, reps: 8 },
+        ],
         skipped: false,
       },
     ]);
 
     // Open main timer (will be active) and an aux background timer
     store.openTimer({ durationSeconds: 180, pendingMainSetNumber: 1 });
-    store.openTimer({ durationSeconds: 60, pendingAuxExercise: 'leg-curl', pendingAuxSetNumber: 1 });
+    store.openTimer({
+      durationSeconds: 60,
+      pendingAuxExercise: 'leg-curl',
+      pendingAuxSetNumber: 1,
+    });
 
     expect(useSessionStore.getState().activeTimerKey).toBe('main');
 
@@ -757,7 +837,11 @@ describe('concurrent timers', () => {
     ]);
 
     store.openTimer({ durationSeconds: 180, pendingMainSetNumber: 1 });
-    store.openTimer({ durationSeconds: 120, pendingAuxExercise: 'leg-curl', pendingAuxSetNumber: 0 });
+    store.openTimer({
+      durationSeconds: 120,
+      pendingAuxExercise: 'leg-curl',
+      pendingAuxSetNumber: 0,
+    });
 
     // Only advance 30s — not enough to expire the 120s aux timer
     const now = Date.now();
@@ -799,7 +883,9 @@ describe('concurrent timers', () => {
     expect(deriveTimerKey({ pendingMainSetNumber: 1 })).toBe('main');
     expect(deriveTimerKey({ pendingAuxExercise: 'leg-curl' })).toBe('leg-curl');
     expect(deriveTimerKey({})).toBe('warmup');
-    expect(deriveTimerKey({ pendingMainSetNumber: null, pendingAuxExercise: null })).toBe('warmup');
+    expect(
+      deriveTimerKey({ pendingMainSetNumber: null, pendingAuxExercise: null })
+    ).toBe('warmup');
   });
 });
 
@@ -812,10 +898,7 @@ describe('addTemplateBlock', () => {
     exercise: string,
     templateInstanceId: string,
     prescribedRest = 20
-  ): Omit<
-    import('./sessionStore').AuxiliaryActualSet,
-    'set_number'
-  > => ({
+  ): Omit<import('./sessionStore').AuxiliaryActualSet, 'set_number'> => ({
     exercise,
     weight_grams: 0,
     reps_completed: 0,
@@ -864,10 +947,12 @@ describe('addTemplateBlock', () => {
       ],
     });
 
-    useSessionStore.getState().addTemplateBlock([
-      templateEntry('Assault Bike', 't-1'),
-      templateEntry('Assault Bike', 't-1'),
-    ]);
+    useSessionStore
+      .getState()
+      .addTemplateBlock([
+        templateEntry('Assault Bike', 't-1'),
+        templateEntry('Assault Bike', 't-1'),
+      ]);
 
     const numbers = useSessionStore
       .getState()
@@ -877,10 +962,12 @@ describe('addTemplateBlock', () => {
   });
 
   it('preserves prescribed_rest_seconds and template_instance_id on each entry', () => {
-    useSessionStore.getState().addTemplateBlock([
-      templateEntry('Assault Bike', 't-1', 20),
-      templateEntry('Ski Erg', 't-1', 30),
-    ]);
+    useSessionStore
+      .getState()
+      .addTemplateBlock([
+        templateEntry('Assault Bike', 't-1', 20),
+        templateEntry('Ski Erg', 't-1', 30),
+      ]);
 
     const stored = useSessionStore.getState().auxiliarySets;
     expect(stored[0].prescribed_rest_seconds).toBe(20);
@@ -900,10 +987,7 @@ describe('removeTemplateBlock', () => {
     exercise: string,
     templateInstanceId: string,
     prescribedRest = 20
-  ): Omit<
-    import('./sessionStore').AuxiliaryActualSet,
-    'set_number'
-  > => ({
+  ): Omit<import('./sessionStore').AuxiliaryActualSet, 'set_number'> => ({
     exercise,
     weight_grams: 0,
     reps_completed: 0,
@@ -914,11 +998,13 @@ describe('removeTemplateBlock', () => {
   });
 
   it('removes every entry tagged with the given instance id', () => {
-    useSessionStore.getState().addTemplateBlock([
-      templateEntry('Assault Bike', 't-1'),
-      templateEntry('Ski Erg', 't-1'),
-      templateEntry('Assault Bike', 't-2'),
-    ]);
+    useSessionStore
+      .getState()
+      .addTemplateBlock([
+        templateEntry('Assault Bike', 't-1'),
+        templateEntry('Ski Erg', 't-1'),
+        templateEntry('Assault Bike', 't-2'),
+      ]);
 
     useSessionStore.getState().removeTemplateBlock('t-1');
 
@@ -947,14 +1033,16 @@ describe('removeTemplateBlock', () => {
         },
       ],
     });
-    useSessionStore.getState().addTemplateBlock([
-      templateEntry('Assault Bike', 't-1'),
-      templateEntry('Ski Erg', 't-1'),
-      templateEntry('Assault Bike', 't-1'),
-      templateEntry('Ski Erg', 't-1'),
-      templateEntry('Assault Bike', 't-1'),
-      templateEntry('Ski Erg', 't-1'),
-    ]);
+    useSessionStore
+      .getState()
+      .addTemplateBlock([
+        templateEntry('Assault Bike', 't-1'),
+        templateEntry('Ski Erg', 't-1'),
+        templateEntry('Assault Bike', 't-1'),
+        templateEntry('Ski Erg', 't-1'),
+        templateEntry('Assault Bike', 't-1'),
+        templateEntry('Ski Erg', 't-1'),
+      ]);
 
     expect(
       useSessionStore
@@ -967,16 +1055,20 @@ describe('removeTemplateBlock', () => {
 
     const stored = useSessionStore.getState().auxiliarySets;
     expect(
-      stored.filter((s) => s.exercise === 'Assault Bike').map((s) => s.set_number)
+      stored
+        .filter((s) => s.exercise === 'Assault Bike')
+        .map((s) => s.set_number)
     ).toEqual([1, 2]);
     expect(stored.filter((s) => s.exercise === 'Ski Erg')).toEqual([]);
   });
 
   it('is a no-op when no entries match the instance id', () => {
-    useSessionStore.getState().addTemplateBlock([
-      templateEntry('Assault Bike', 't-1'),
-      templateEntry('Ski Erg', 't-1'),
-    ]);
+    useSessionStore
+      .getState()
+      .addTemplateBlock([
+        templateEntry('Assault Bike', 't-1'),
+        templateEntry('Ski Erg', 't-1'),
+      ]);
 
     const before = useSessionStore.getState().auxiliarySets;
     useSessionStore.getState().removeTemplateBlock('does-not-exist');
@@ -992,7 +1084,13 @@ describe('setAuxSetSkipped', () => {
 
   it('marks a single aux set skipped without touching others or renumbering', () => {
     useSessionStore.getState().initAuxiliary([
-      { exercise: 'Leg Press', sets: [{ weight_kg: 100, reps: 10 }, { weight_kg: 100, reps: 10 }] },
+      {
+        exercise: 'Leg Press',
+        sets: [
+          { weight_kg: 100, reps: 10 },
+          { weight_kg: 100, reps: 10 },
+        ],
+      },
     ]);
 
     useSessionStore.getState().setAuxSetSkipped('Leg Press', 2, true);
@@ -1004,15 +1102,15 @@ describe('setAuxSetSkipped', () => {
   });
 
   it('restores a skipped aux set', () => {
-    useSessionStore.getState().initAuxiliary([
-      { exercise: 'Leg Press', sets: [{ weight_kg: 100, reps: 10 }] },
-    ]);
+    useSessionStore
+      .getState()
+      .initAuxiliary([
+        { exercise: 'Leg Press', sets: [{ weight_kg: 100, reps: 10 }] },
+      ]);
 
     useSessionStore.getState().setAuxSetSkipped('Leg Press', 1, true);
     useSessionStore.getState().setAuxSetSkipped('Leg Press', 1, false);
 
-    expect(
-      useSessionStore.getState().auxiliarySets[0].skipped
-    ).toBe(false);
+    expect(useSessionStore.getState().auxiliarySets[0].skipped).toBe(false);
   });
 });

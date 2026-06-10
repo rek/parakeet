@@ -10,6 +10,7 @@ Supabase migration files for the full schema. All weights stored as integer gram
 ## Tasks
 
 **Migration tooling:**
+
 - [x] Migrations live at `supabase/migrations/` (managed by Supabase CLI)
 - [x] Create new migration: `supabase migration new <name>`
 - [x] Apply locally: `supabase db reset`
@@ -275,6 +276,7 @@ CREATE TABLE developer_suggestions (
 **RLS policies (apply to every user table — see infra-003-supabase-setup.md).**
 
 **Indexes:**
+
 ```sql
 CREATE INDEX idx_lifter_maxes_user_time       ON lifter_maxes(user_id, recorded_at DESC);
 CREATE INDEX idx_sessions_user_date           ON sessions(user_id, planned_date);
@@ -290,24 +292,24 @@ CREATE INDEX idx_developer_suggestions_user   ON developer_suggestions(user_id, 
 
 ## Table Summary (16 total)
 
-| Table | Notes |
-|-------|-------|
-| `profiles` | `biological_sex` column added |
-| `lifter_maxes` | Append-only 1RM snapshots |
-| `formula_configs` | Versioned formula overrides |
-| `programs` | Structural scaffold, no sets |
-| `sessions` | `jit_strategy` column added |
-| `session_logs` | Append-only completed sets |
-| `soreness_checkins` | Pre-workout per-muscle ratings |
-| `disruptions` | Renamed from `edge_cases`; `session_ids_affected UUID[]`; `disruption_type` with `unprogrammed_event` |
-| `muscle_volume_config` | MRV/MEV user overrides |
-| `auxiliary_exercises` | Exercise pool per lift |
-| `auxiliary_assignments` | Active 2 exercises per block |
-| `performance_metrics` | Computed locally, synced |
-| `warmup_configs` | Protocol per lift |
-| `recovery_snapshots` | HRV/sleep stub |
-| `cycle_reviews` | AI end-of-cycle review, one per program |
-| `developer_suggestions` | AI structural suggestions for developer |
+| Table                   | Notes                                                                                                 |
+| ----------------------- | ----------------------------------------------------------------------------------------------------- |
+| `profiles`              | `biological_sex` column added                                                                         |
+| `lifter_maxes`          | Append-only 1RM snapshots                                                                             |
+| `formula_configs`       | Versioned formula overrides                                                                           |
+| `programs`              | Structural scaffold, no sets                                                                          |
+| `sessions`              | `jit_strategy` column added                                                                           |
+| `session_logs`          | Append-only completed sets                                                                            |
+| `soreness_checkins`     | Pre-workout per-muscle ratings                                                                        |
+| `disruptions`           | Renamed from `edge_cases`; `session_ids_affected UUID[]`; `disruption_type` with `unprogrammed_event` |
+| `muscle_volume_config`  | MRV/MEV user overrides                                                                                |
+| `auxiliary_exercises`   | Exercise pool per lift                                                                                |
+| `auxiliary_assignments` | Active 2 exercises per block                                                                          |
+| `performance_metrics`   | Computed locally, synced                                                                              |
+| `warmup_configs`        | Protocol per lift                                                                                     |
+| `recovery_snapshots`    | HRV/sleep stub                                                                                        |
+| `cycle_reviews`         | AI end-of-cycle review, one per program                                                               |
+| `developer_suggestions` | AI structural suggestions for developer                                                               |
 
 ## Dependencies
 

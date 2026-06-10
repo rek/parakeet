@@ -41,7 +41,7 @@ async function currentUserId(): Promise<string | null> {
 }
 
 export async function fetchMeasurements(
-  limit = 52,
+  limit = 52
 ): Promise<LipedemaMeasurement[]> {
   const userId = await currentUserId();
   if (!userId) return [];
@@ -65,7 +65,7 @@ export type UpsertInput = Omit<
 };
 
 export async function upsertMeasurement(
-  input: UpsertInput,
+  input: UpsertInput
 ): Promise<LipedemaMeasurement> {
   const userId = await currentUserId();
   if (!userId) throw new Error('Not authenticated');

@@ -1,4 +1,5 @@
 // @spec docs/features/cycle-review/spec-generator.md
+import { fetchSnapshotsForRange } from '@modules/wearable';
 import type { CycleReview } from '@parakeet/shared-types';
 import {
   assembleCycleReport,
@@ -11,7 +12,6 @@ import type {
   RawCycleData,
 } from '@parakeet/training-engine';
 import { fromJson } from '@platform/supabase';
-import { fetchSnapshotsForRange } from '@modules/wearable';
 
 import {
   fetchCycleReportSourceData,

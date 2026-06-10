@@ -25,7 +25,7 @@ export async function fetchProtocols(): Promise<DietProtocol[]> {
 }
 
 export async function fetchProtocolBundle(
-  slug: string,
+  slug: string
 ): Promise<ProtocolBundle | null> {
   const { data: protoRow, error: pErr } = await typedSupabase
     .from('diet_protocols')
@@ -38,21 +38,19 @@ export async function fetchProtocolBundle(
   const [foodsRes, suppsRes, lifestyleRes] = await Promise.all([
     typedSupabase
       .from('diet_protocol_foods')
-      .select(
-        'status, notes, diet_foods(id, display_name, category)',
-      )
+      .select('status, notes, diet_foods(id, display_name, category)')
       .eq('protocol_id', protoRow.id),
     typedSupabase
       .from('diet_supplements')
       .select(
-        'id, slug, name, tier, dose, rationale, evidence_grade, food_equivalent, nepal_sourcing, notes, sort_order',
+        'id, slug, name, tier, dose, rationale, evidence_grade, food_equivalent, nepal_sourcing, notes, sort_order'
       )
       .eq('protocol_id', protoRow.id)
       .order('sort_order'),
     typedSupabase
       .from('diet_lifestyle')
       .select(
-        'id, slug, name, category, frequency, description, rationale, sort_order',
+        'id, slug, name, category, frequency, description, rationale, sort_order'
       )
       .eq('protocol_id', protoRow.id)
       .order('sort_order'),
@@ -117,7 +115,9 @@ export async function fetchProtocolBundle(
 export async function fetchAllFoodNutrition(): Promise<FoodNutritionRow[]> {
   const { data, error } = await typedSupabase
     .from('diet_food_nutrition')
-    .select('food_id, serving_g, kcal, protein_g, fat_g, carb_g, fiber_g, diet_foods(display_name, category)')
+    .select(
+      'food_id, serving_g, kcal, protein_g, fat_g, carb_g, fiber_g, diet_foods(display_name, category)'
+    )
     .order('food_id');
   if (error) throw error;
   return (data ?? [])

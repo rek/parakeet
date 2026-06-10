@@ -101,7 +101,9 @@ export async function listPrograms(userId: string): Promise<ProgramListItem[]> {
   }));
 }
 
-export async function fetchReviewedProgramIds(userId: string): Promise<Set<string>> {
+export async function fetchReviewedProgramIds(
+  userId: string
+): Promise<Set<string>> {
   const { data, error } = await typedSupabase
     .from('cycle_reviews')
     .select('program_id')

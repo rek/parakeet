@@ -14,6 +14,7 @@ GitHub Actions CI (lint/test/typecheck) and local Android APK builds for distrib
 ## CI (GitHub Actions)
 
 **`.github/workflows/ci.yml`:**
+
 - Trigger: push or pull_request to main
 - Steps: checkout → `npm ci` → `nx affected --target=typecheck` → `nx affected --target=lint` → `nx affected --target=test`
 - No build step in CI — builds are done locally
@@ -23,6 +24,7 @@ GitHub Actions CI (lint/test/typecheck) and local Android APK builds for distrib
 Production APK is built locally and sideloaded onto devices.
 
 **One-time setup:**
+
 ```bash
 # Generate native Android project (only needed when native deps change)
 cd apps/parakeet
@@ -32,6 +34,7 @@ npx expo prebuild --platform android --clean
 ```
 
 **Build release APK:**
+
 ```bash
 cd apps/parakeet/android
 ./gradlew assembleRelease
@@ -39,16 +42,19 @@ cd apps/parakeet/android
 ```
 
 **Distribute:**
+
 - Share `app-release.apk` directly (AirDrop, file share, etc.)
 - Enable "Install unknown apps" on device settings
 - No signing config needed for sideloading to personal devices (debug signing is fine)
 
 **Env vars for prod build:**
+
 - Set `EXPO_PUBLIC_SUPABASE_URL` and `EXPO_PUBLIC_SUPABASE_ANON_KEY` as shell env vars before `expo prebuild`, or put them in `.env.production` (gitignored)
 
 ## `apps/parakeet/eas.json`
 
 Kept for local development profiles only (not used in CI):
+
 ```json
 {
   "cli": { "appVersionSource": "remote" },
@@ -75,6 +81,7 @@ Kept for local development profiles only (not used in CI):
 - Keep `supabase/migrations/` committed to git for reproducibility
 
 **Check migration status:**
+
 ```bash
 npx supabase migration list   # shows local vs remote
 npx supabase db push --dry-run  # preview what would be pushed

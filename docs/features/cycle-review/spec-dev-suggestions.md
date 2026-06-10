@@ -12,6 +12,7 @@ The developer suggestions output from cycle review LLM responses — structural 
 ### developer_suggestions Table
 
 Add to migration:
+
 ```sql
 CREATE TABLE developer_suggestions (
   id            uuid DEFAULT gen_random_uuid() PRIMARY KEY,
@@ -49,7 +50,7 @@ The `CycleReview` type already contains `structuralSuggestions`. After the LLM r
 // In apps/parakeet/src/modules/cycle-review/lib/cycle-review.ts — storeCycleReview()
 if (review.structuralSuggestions?.length) {
   await supabase.from('developer_suggestions').insert(
-    review.structuralSuggestions.map(s => ({
+    review.structuralSuggestions.map((s) => ({
       user_id: userId,
       program_id: programId,
       description: s.description,
@@ -57,7 +58,7 @@ if (review.structuralSuggestions?.length) {
       developer_note: s.developerNote,
       priority: s.priority,
     }))
-  )
+  );
 }
 ```
 
@@ -70,26 +71,17 @@ This extends the existing `storeCycleReview()` function in `apps/parakeet/src/mo
 **File: `apps/parakeet/src/modules/settings/lib/developer-suggestions.ts`**
 
 ```typescript
-import { supabase } from './supabase'
+import { supabase } from './supabase';
 
 export async function getDeveloperSuggestions() {
-  const { data, error } = await supabase
-    .from('developer_suggestions')
-    .select('*')
-    .order('created_at', { ascending: false })
-  if (error) throw error
-  return data ?? []
+  const { data, error } = await supabase.from('developer_suggestions').select('*').order('created_at', { ascending: false });
+  if (error) throw error;
+  return data ?? [];
 }
 
-export async function updateSuggestionStatus(
-  id: string,
-  status: 'acknowledged' | 'implemented' | 'dismissed',
-) {
-  const { error } = await supabase
-    .from('developer_suggestions')
-    .update({ status, reviewed_at: new Date().toISOString() })
-    .eq('id', id)
-  if (error) throw error
+export async function updateSuggestionStatus(id: string, status: 'acknowledged' | 'implemented' | 'dismissed') {
+  const { error } = await supabase.from('developer_suggestions').update({ status, reviewed_at: new Date().toISOString() }).eq('id', id);
+  if (error) throw error;
 }
 ```
 
@@ -130,10 +122,7 @@ Acknowledged (3)  Implemented (1)  Dismissed (2)
 **`apps/parakeet/app/(tabs)/settings.tsx`** — extend existing badge logic:
 
 ```typescript
-const unreviewedDeveloperSuggestions = await supabase
-  .from('developer_suggestions')
-  .select('id', { count: 'exact' })
-  .eq('status', 'unreviewed')
+const unreviewedDeveloperSuggestions = await supabase.from('developer_suggestions').select('id', { count: 'exact' }).eq('status', 'unreviewed');
 ```
 
 Show a secondary badge on the "Developer" row in settings (separate from the performance suggestions badge on the Settings tab icon).

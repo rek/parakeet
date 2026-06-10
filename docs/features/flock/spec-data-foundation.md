@@ -33,7 +33,7 @@ no health/medical/bodyweight columns. Mirrors the migration style of
   - `headline_kind text not null check (headline_kind in ('pr','wilks','streak','trained'))`
   - `latest_pr_lift text` / `latest_pr_weight_g integer` / `latest_pr_reps integer` — populated only when kind = `pr`. **Grams** (KG-only app stores integer grams; 142.5kg = 142500).
   - `wilks integer` / `wilks_delta integer` / `streak_weeks integer`
-  (weeks — matches `@modules/achievements` `getStreakData().currentStreak`)
+    (weeks — matches `@modules/achievements` `getStreakData().currentStreak`)
   - `published_at timestamptz not null default now()`
   - **No** bodyweight, cycle, lipedema, raw-set columns (design decisions #3, #4).
 - [ ] `flock_config` table — per-user opt-in:

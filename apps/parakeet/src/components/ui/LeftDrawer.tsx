@@ -10,12 +10,12 @@ import {
   useWindowDimensions,
   View,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { Ionicons } from '@expo/vector-icons';
 import { useFeatureEnabled } from '@modules/feature-flags';
 import { useInProgressSession, useSessionStore } from '@modules/session';
-import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { radii, spacing, typography } from '../../theme';
 import type { ColorScheme } from '../../theme';
@@ -33,7 +33,7 @@ export function LeftDrawer({
   const drawerWidth = Math.min(300, windowWidth * 0.8);
   const styles = useMemo(
     () => buildStyles(colors, drawerWidth),
-    [colors, drawerWidth],
+    [colors, drawerWidth]
   );
   const translateX = useRef(new Animated.Value(-drawerWidth)).current;
   const overlayOpacity = useRef(new Animated.Value(0)).current;
@@ -91,64 +91,65 @@ export function LeftDrawer({
         <Animated.View style={[styles.overlay, { opacity: overlayOpacity }]}>
           <Pressable style={StyleSheet.absoluteFill} onPress={onClose} />
         </Animated.View>
-        <Animated.View
-          style={[styles.drawer, { transform: [{ translateX }] }]}
-        >
-          <SafeAreaView style={styles.drawerInner} edges={['top', 'bottom', 'left']}>
+        <Animated.View style={[styles.drawer, { transform: [{ translateX }] }]}>
+          <SafeAreaView
+            style={styles.drawerInner}
+            edges={['top', 'bottom', 'left']}
+          >
             <View style={styles.top}>
-            <Text style={styles.brand}>PARAKEET</Text>
-            <View style={styles.items}>
-              <DrawerItem
-                icon="flash-outline"
-                label="Today"
-                onPress={() => go('/(tabs)/today')}
-                styles={styles}
-                colors={colors}
-              />
-              {activeSession && (
+              <Text style={styles.brand}>PARAKEET</Text>
+              <View style={styles.items}>
                 <DrawerItem
-                  icon="barbell-outline"
-                  label="Current Session"
-                  onPress={goCurrentSession}
+                  icon="flash-outline"
+                  label="Today"
+                  onPress={() => go('/(tabs)/today')}
                   styles={styles}
                   colors={colors}
                 />
-              )}
-              {nutritionEnabled && (
+                {activeSession && (
+                  <DrawerItem
+                    icon="barbell-outline"
+                    label="Current Session"
+                    onPress={goCurrentSession}
+                    styles={styles}
+                    colors={colors}
+                  />
+                )}
+                {nutritionEnabled && (
+                  <DrawerItem
+                    icon="nutrition-outline"
+                    label="Nutrition"
+                    onPress={() => go('/(tabs)/nutrition')}
+                    styles={styles}
+                    colors={colors}
+                  />
+                )}
+                {lipedemaTrackingEnabled && (
+                  <DrawerItem
+                    icon="body-outline"
+                    label="Lipedema Tracking"
+                    onPress={() => go('/(tabs)/lipedema-tracking')}
+                    styles={styles}
+                    colors={colors}
+                  />
+                )}
+                {flockEnabled && (
+                  <DrawerItem
+                    icon="people-outline"
+                    label="Flock"
+                    onPress={() => go('/(tabs)/flock')}
+                    styles={styles}
+                    colors={colors}
+                  />
+                )}
                 <DrawerItem
-                  icon="nutrition-outline"
-                  label="Nutrition"
-                  onPress={() => go('/(tabs)/nutrition')}
+                  icon="settings-outline"
+                  label="Settings"
+                  onPress={() => go('/(tabs)/settings')}
                   styles={styles}
                   colors={colors}
                 />
-              )}
-              {lipedemaTrackingEnabled && (
-                <DrawerItem
-                  icon="body-outline"
-                  label="Lipedema Tracking"
-                  onPress={() => go('/(tabs)/lipedema-tracking')}
-                  styles={styles}
-                  colors={colors}
-                />
-              )}
-              {flockEnabled && (
-                <DrawerItem
-                  icon="people-outline"
-                  label="Flock"
-                  onPress={() => go('/(tabs)/flock')}
-                  styles={styles}
-                  colors={colors}
-                />
-              )}
-              <DrawerItem
-                icon="settings-outline"
-                label="Settings"
-                onPress={() => go('/(tabs)/settings')}
-                styles={styles}
-                colors={colors}
-              />
-            </View>
+              </View>
             </View>
             <Image
               source={require('../../../assets/images/sidebar.png')}
@@ -176,11 +177,7 @@ function DrawerItem({
   colors: ColorScheme;
 }) {
   return (
-    <TouchableOpacity
-      style={styles.item}
-      onPress={onPress}
-      activeOpacity={0.7}
-    >
+    <TouchableOpacity style={styles.item} onPress={onPress} activeOpacity={0.7}>
       <Ionicons name={icon} size={22} color={colors.text} />
       <Text style={styles.itemLabel}>{label}</Text>
     </TouchableOpacity>

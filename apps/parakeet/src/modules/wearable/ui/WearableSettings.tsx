@@ -9,20 +9,17 @@ import {
   View,
 } from 'react-native';
 
-import { captureException } from '@platform/utils/captureException';
 import { useAuth } from '@modules/auth';
+import { captureException } from '@platform/utils/captureException';
 
 import { radii, spacing, typography } from '../../../theme';
 import type { ColorScheme } from '../../../theme';
 import { useTheme } from '../../../theme/ThemeContext';
 import { syncWearableData } from '../application/sync.service';
-import { openSettings, requestPermissions } from '../lib/health-connect';
 import { useRecoverySnapshot } from '../hooks/useRecoverySnapshot';
 import { useWearableStatus } from '../hooks/useWearableStatus';
-import {
-  mapAutonomicToLevel,
-  mapSleepDurationToLevel,
-} from '../utils/prefill';
+import { openSettings, requestPermissions } from '../lib/health-connect';
+import { mapAutonomicToLevel, mapSleepDurationToLevel } from '../utils/prefill';
 
 type Snapshot = NonNullable<ReturnType<typeof useRecoverySnapshot>['data']>;
 
@@ -364,7 +361,10 @@ export function WearableSettings() {
     try {
       const result = await syncWearableData(user.id);
       if (result.synced) {
-        Alert.alert('Sync complete', `${result.readingsInserted} new readings saved.`);
+        Alert.alert(
+          'Sync complete',
+          `${result.readingsInserted} new readings saved.`
+        );
       } else {
         Alert.alert(
           'Sync skipped',

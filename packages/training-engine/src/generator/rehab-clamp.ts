@@ -32,7 +32,11 @@ export function applyRehabClamp(
   weightKg: number,
   input: JITInput,
   increment: number
-): { finalWeightKg: number; cappedByRehab: boolean; rehabCapKg: number | null } {
+): {
+  finalWeightKg: number;
+  cappedByRehab: boolean;
+  rehabCapKg: number | null;
+} {
   const ceiling = resolveRehabCeilingKg(input, increment);
   if (ceiling === null || weightKg <= ceiling) {
     return { finalWeightKg: weightKg, cappedByRehab: false, rehabCapKg: null };

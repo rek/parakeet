@@ -27,9 +27,9 @@ const FRESH_THRESHOLD_MS = 60 * 1000; // skip sync if last run < 60s ago
  * screen always reads current data even when the user opens the app cold
  * straight onto the check-in flow.
  */
-export function useEnsureFreshSnapshot(opts?: {
-  timeoutMs?: number;
-}): { resolved: boolean } {
+export function useEnsureFreshSnapshot(opts?: { timeoutMs?: number }): {
+  resolved: boolean;
+} {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const [resolved, setResolved] = useState(false);

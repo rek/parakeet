@@ -35,25 +35,10 @@ Every branch throws with a specific message so the caller's `catch` surfaces it.
 interface ReanalyzeDeps {
   fileExists: (uri: string) => boolean;
   getVideoDurationSec: (uri: string) => Promise<number | null>;
-  extractFrames: (args: {
-    videoUri: string;
-    durationSec: number;
-    onProgress?: (pct: number) => void;
-  }) => Promise<{ frames: PoseFrame[]; fps: number }>;
-  analyze: (args: {
-    frames: PoseFrame[];
-    fps: number;
-    lift: SupportedLift;
-  }) => VideoAnalysisResult;
-  update: (args: {
-    id: string;
-    analysis: VideoAnalysisResult;
-  }) => Promise<SessionVideo>;
-  saveDebugLandmarks?: (args: {
-    id: string;
-    frames: PoseFrame[];
-    fps: number;
-  }) => Promise<void> | void;
+  extractFrames: (args: { videoUri: string; durationSec: number; onProgress?: (pct: number) => void }) => Promise<{ frames: PoseFrame[]; fps: number }>;
+  analyze: (args: { frames: PoseFrame[]; fps: number; lift: SupportedLift }) => VideoAnalysisResult;
+  update: (args: { id: string; analysis: VideoAnalysisResult }) => Promise<SessionVideo>;
+  saveDebugLandmarks?: (args: { id: string; frames: PoseFrame[]; fps: number }) => Promise<void> | void;
   onProgress?: (pct: number) => void;
   onBreadcrumb?: (step: string, data?: Record<string, unknown>) => void;
   /** Fires once, between extract and analyze, when `checkLiftMismatch` returns
@@ -63,6 +48,7 @@ interface ReanalyzeDeps {
 ```
 
 Hook wires:
+
 - `fileExists`: `new File(normalizeVideoUri(uri)).exists`
 - `getVideoDurationSec`: `react-native-compressor.getVideoMetaData(uri).duration`
 - `extractFrames`: `application/analyze-video.extractFramesFromVideo`
@@ -74,13 +60,13 @@ Hook wires:
 
 ## Breadcrumbs
 
-| Step | Data |
-| --- | --- |
-| `extract-start` | `{ durationSec, lift }` |
-| `extract-done` | `{ frameCount, fps }` |
-| `analyze-done` | `{ reps, version }` |
-| `db-update-ok` | `{ id, repsReturned }` |
-| `duration-probe-failed` | `{ message }` (non-fatal) |
+| Step                          | Data                      |
+| ----------------------------- | ------------------------- |
+| `extract-start`               | `{ durationSec, lift }`   |
+| `extract-done`                | `{ frameCount, fps }`     |
+| `analyze-done`                | `{ reps, version }`       |
+| `db-update-ok`                | `{ id, repsReturned }`    |
+| `duration-probe-failed`       | `{ message }` (non-fatal) |
 | `debug-landmarks-save-failed` | `{ message }` (non-fatal) |
 
 Breadcrumbs land in Sentry for every build and print to `adb logcat` in dev. The four happy-path steps plus the final success Alert give a clean story: if you tap Re-analyze and don't see at least `extract-start`, the callback never fired; if you see all four plus the Alert, the pipeline succeeded and any "nothing changed" observation is content-identical output (same reps → same analysis shape).

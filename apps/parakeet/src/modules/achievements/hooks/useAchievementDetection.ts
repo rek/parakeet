@@ -1,5 +1,4 @@
 // @spec docs/features/achievements/spec-pr-detection.md
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { getActiveDisruptions } from '@modules/disruptions';
 import {
   getProgramCompletionCounts,
@@ -11,6 +10,7 @@ import {
   checkCycleCompletion,
   estimateOneRepMax_Epley,
 } from '@parakeet/training-engine';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { weightGramsToKg } from '@shared/utils/weight';
 
 import {

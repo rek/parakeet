@@ -411,8 +411,7 @@ function detectDeadliftReps({
   //   WAITING_FOR_LOCKOUT — lifter has been at floor; watch for lockout.
   // We never rewind from LOCKOUT directly to another LOCKOUT without a floor
   // touch in between; that's what suppresses phantom reps on the eccentric.
-  let state: 'WAITING_FOR_FLOOR' | 'WAITING_FOR_LOCKOUT' =
-    'WAITING_FOR_FLOOR';
+  let state: 'WAITING_FOR_FLOOR' | 'WAITING_FOR_LOCKOUT' = 'WAITING_FOR_FLOOR';
   // First floor frame of the *current* rep's setup — used as the rep's
   // startFrame so metrics get the full concentric window (setup → lockout),
   // not just the last floor-ish noise spike before the lockout.

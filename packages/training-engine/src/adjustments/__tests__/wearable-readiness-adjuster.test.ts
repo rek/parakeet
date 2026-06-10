@@ -81,7 +81,9 @@ describe('getWearableReadinessModifier', () => {
       deepSleepPct: 10,
     });
     const withoutDeep = getWearableReadinessModifier({ sleepDurationMin: 480 });
-    expect(withDeep.intensityMultiplier).toBeLessThan(withoutDeep.intensityMultiplier);
+    expect(withDeep.intensityMultiplier).toBeLessThan(
+      withoutDeep.intensityMultiplier
+    );
     expect(withDeep.intensityMultiplier).toBeCloseTo(0.975);
   });
 
@@ -137,7 +139,9 @@ describe('getWearableReadinessModifier', () => {
       nonTrainingLoad: 3,
     });
     const withoutLoad = getWearableReadinessModifier({ sleepDurationMin: 420 });
-    expect(withLoad.intensityMultiplier).toBeLessThan(withoutLoad.intensityMultiplier);
+    expect(withLoad.intensityMultiplier).toBeLessThan(
+      withoutLoad.intensityMultiplier
+    );
     expect(withLoad.intensityMultiplier).toBeCloseTo(0.975);
   });
 });
